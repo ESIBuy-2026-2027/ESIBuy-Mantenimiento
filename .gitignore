@@ -17,3 +17,6 @@ buildNumber.properties
 .classpath
 # Mac files
 .DS_Store
+
+# Claude Code personal instructions (no compartir)
+CLAUDE.local.md
