@@ -17,5 +17,3 @@ buildNumber.properties
 .classpath
 # Mac files
 .DS_Store
-# Sonar Cacheado
-.scannerwork
