@@ -203,3 +203,4 @@ Sugerencia derivada de los formularios: reutilizar entre registro, alta de admin
 - Proyecto React inicializado con Vite (rama `chore/front/inicializacion-react`, subida).
 - ESLint configurado (el de Vite por defecto).
 - Pendiente: instalar Fluent UI, router + layout base, `AuthContext` + `ProtectedRoute`, y empezar por HU30 (home) y HU1 (registro).
+- Para test es necesario importar lo que se use: no hay globals. Si no se hace asi los tests generados podrían fallar o romper el lint.
