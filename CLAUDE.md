@@ -150,7 +150,8 @@ Comunes a todos los usuarios: registro, inicio de sesión, gestión de perfil, d
 - **No dejar código sin utilizar.**
 - Seguir las mejores prácticas de Java, HTML y CSS (y JSX en React); evitar defectos graves o críticos.
 - Los resultados de calidad del **Sprint 1 no deben empeorar** en sprints posteriores.
-- Cada caso de prueba debe quedar trazado en la **matriz de trazabilidad** Casos de Prueba ↔ Historias de Usuario.
+- Cada caso de prueba debe quedar trazado en la **matriz de trazabilidad** Casos de Prueba ↔ Historias de Usuario
+- Se generará un archivo de tests por cada clase existente y dentro de este archivo los tests que afecten directamente a dicha clase. En caso de considerar la necesidad de crear una clase de tests nueva pregutnar y no implementar directamente.
 
 ## Uso de IA generativa
 
