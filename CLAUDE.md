@@ -218,7 +218,10 @@ Comunes a todos los usuarios: registro, inicio de sesión, gestión de perfil, d
 ## Convenciones de Git
 
 - Flujo git-flow: las ramas de trabajo parten de `develop`; `develop` se integra en `main`. Los PRs apuntan a `develop`, no a `main`, salvo indicación contraria.
-- Nombres de rama: `tipo/descripcion` (ej. `chore/configuracion-ia`), sin segmento de área.
+- Nomenclatura de ramas:
+  - **Obligatorio**: `tipo/descripcion` (`feature/`, `chore/`…; ej. `chore/configuracion-ia`), sin segmento de área.
+  - **Recomendado (buena práctica, no obligatorio)**: tras el tipo, indicar la historia de usuario y la task de Azure Boards: `tipo/USx-Tx-descripcion`. Ej.: `feature/US12-T45-alta-producto-service`.
+  - **Recomendado (pendiente de acordar, no obligatorio)**: cada rama debería corresponder a una **task**, no a una historia de usuario completa.
 - Mensajes de commit: `tipo(area): descripción AB#<id>`, donde `<id>` es el ID real del work item de Azure Boards. **Nunca** dejes el placeholder literal `AB#ID`; si no conoces el ID, pregúntalo antes de commitear.
 - Antes de cada commit: `./mvnw test` en verde. Antes de cada PR: revisión de calidad (Sonar/SonarLint) y `npm run lint` si se toca el frontend.
 - CI: Azure Pipelines (aún no configurado). No hay `.github/workflows/`.

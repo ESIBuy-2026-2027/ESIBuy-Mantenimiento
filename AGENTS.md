@@ -133,6 +133,12 @@ Las dependencias apuntan **siempre hacia el interior del hexágono**:
 - No desplegar ni exponer la aplicación sin conexión HTTPS.
 - No delegar en la IA (Copilot) la responsabilidad final sobre el código o las pruebas generadas: siempre debe haber revisión humana.
 
+## Nomenclatura de ramas
+
+- **Obligatorio**: `tipo/descripcion` (`feature/`, `chore/`…; ej. `chore/configuracion-ia`), sin segmento de área.
+- **Recomendado (buena práctica, no obligatorio)**: tras el tipo, indicar la historia de usuario y la task de Azure Boards: `tipo/USx-Tx-descripcion`. Ej.: `feature/US12-T45-alta-producto-service`.
+- **Recomendado (pendiente de acordar, no obligatorio)**: cada rama debería corresponder a una **task**, no a una historia de usuario completa.
+
 ## Flujo de trabajo
 
 - Antes de una tarea no trivial, propón un plan y espera mi OK.
