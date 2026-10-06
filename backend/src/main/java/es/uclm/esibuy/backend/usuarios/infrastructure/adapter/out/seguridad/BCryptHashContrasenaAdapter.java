@@ -5,7 +5,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 public class BCryptHashContrasenaAdapter implements HashContrasenaPort {
 
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    private static final int COSTE_BCRYPT = 10; // D2: mínimo recomendado por OWASP
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(COSTE_BCRYPT);
 
     @Override
     public String hashear(String contrasena) {
