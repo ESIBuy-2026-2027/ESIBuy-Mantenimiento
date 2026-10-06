@@ -4,6 +4,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioComma
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -100,8 +100,11 @@ class RegistroUsuarioServiceTest {
     @Test
     void rechazaEmailYaRegistrado() {
         // HU1-CP03
-        // TODO: simular que el email ya existe en el repositorio.
-        // TODO: comprobar que lanza una excepción de negocio y no guarda nada.
-        fail("Funcionalidad no implementada");
+        when(usuarioRepository.existePorCorreo("juan@uclm.es")).thenReturn(true);
+        RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "clave1234");
+
+        assertThrows(CorreoYaRegistradoException.class, () -> registroUsuarioService.registrar(comando));
+
+        verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
 }
