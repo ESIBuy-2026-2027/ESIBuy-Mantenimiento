@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -47,7 +48,7 @@ class RegistroUsuarioServiceTest {
     @Test
     void registraClienteConRolCliente() {
         // HU1-CP01
-        // PENDIENTE DE REVISAR CON EL EQUIPO: ¿también estado PENDIENTE?
+        // El estado inicial (PENDIENTE) se comprueba en registraClienteEnEstadoPendiente.
         RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "clave1234");
 
         registroUsuarioService.registrar(comando);
@@ -106,5 +107,14 @@ class RegistroUsuarioServiceTest {
         assertThrows(CorreoYaRegistradoException.class, () -> registroUsuarioService.registrar(comando));
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
+    }
+
+    @Test
+    void registraClienteEnEstadoPendiente() {
+        // HU1-CP01 (estado inicial)
+        // PENDIENTE DE DECIDIR (equipo): significado de PENDIENTE y transiciones.
+        // TODO: registrar un usuario con datos válidos.
+        // TODO: comprobar que el usuario guardado tiene estado PENDIENTE.
+        fail("Funcionalidad no implementada");
     }
 }
