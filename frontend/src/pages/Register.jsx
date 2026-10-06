@@ -1,20 +1,57 @@
-import { Field, Input } from '@fluentui/react-components'
+import { Button, Field, Input } from '@fluentui/react-components'
 import { useState } from 'react'
+
+const OBLIGATORIOS = ['nombre', 'apellidos', 'fechaNacimiento', 'dni', 'email', 'password']
 
 export default function Register() {
   const [tipo, setTipo] = useState(null)
+  const [datos, setDatos] = useState({
+    nombre: '',
+    apellidos: '',
+    fechaNacimiento: '',
+    dni: '',
+    email: '',
+    telefono: '',
+    password: '',
+  })
+  const [errores, setErrores] = useState({})
+
+  const cambiar = (campo) => (e, data) => setDatos({ ...datos, [campo]: data.value })
+
+  const enviar = () => {
+    const nuevosErrores = {}
+    OBLIGATORIOS.forEach((campo) => {
+      if (!datos[campo].trim()) nuevosErrores[campo] = 'Este campo es obligatorio'
+    })
+    setErrores(nuevosErrores)
+  }
 
   if (tipo === 'cliente') {
     return (
       <div>
         <h1>Registro de cliente</h1>
-        <Field label="Nombre"><Input /></Field>
-        <Field label="Apellidos"><Input /></Field>
-        <Field label="Fecha de nacimiento"><Input type="date" /></Field>
-        <Field label="DNI"><Input /></Field>
-        <Field label="Email"><Input type="email" /></Field>
-        <Field label="Teléfono"><Input type="tel" /></Field>
-        <Field label="Contraseña"><Input type="password" /></Field>
+        <Field label="Nombre" validationMessage={errores.nombre}>
+          <Input value={datos.nombre} onChange={cambiar('nombre')} />
+        </Field>
+        <Field label="Apellidos" validationMessage={errores.apellidos}>
+          <Input value={datos.apellidos} onChange={cambiar('apellidos')} />
+        </Field>
+        <Field label="Fecha de nacimiento" validationMessage={errores.fechaNacimiento}>
+          <Input type="date" value={datos.fechaNacimiento} onChange={cambiar('fechaNacimiento')} />
+        </Field>
+        <Field label="DNI" validationMessage={errores.dni}>
+          <Input value={datos.dni} onChange={cambiar('dni')} />
+        </Field>
+        <Field label="Email" validationMessage={errores.email}>
+          <Input type="email" value={datos.email} onChange={cambiar('email')} />
+        </Field>
+        <Field label="Teléfono">
+          <Input type="tel" value={datos.telefono} onChange={cambiar('telefono')} />
+        </Field>
+        <Field label="Contraseña" validationMessage={errores.password}>
+          <Input type="password" value={datos.password} onChange={cambiar('password')} />
+        </Field>
+        <Button appearance="primary" onClick={enviar}>Registrarse</Button>
       </div>
     )
   }
