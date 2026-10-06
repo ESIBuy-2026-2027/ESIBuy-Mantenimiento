@@ -58,4 +58,12 @@ describe('Register', () => {
 
     expect(screen.getByText(/mayor de edad/i)).toBeInTheDocument()
   })
+
+  it('register_alIntroducirEmailInvalido_muestraErrorDeFormato', async () => {
+    await renderYElegirCliente()
+    await userEvent.type(screen.getByLabelText(/email/i), 'esto-no-es-un-email')
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getByText(/email válido/i)).toBeInTheDocument()
+  })
 })
