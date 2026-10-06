@@ -4,6 +4,11 @@ import { describe, expect, it } from 'vitest'
 import { renderWithProviders } from '../test/utils'
 import Register from './Register'
 
+async function renderYElegirCliente() {
+  renderWithProviders(<Register />)
+  await userEvent.click(screen.getByRole('button', { name: /cliente/i }))
+}
+
 describe('Register', () => {
   it('register_alRenderizar_muestraOpcionesClienteYVendedor', () => {
     renderWithProviders(<Register />)
@@ -14,9 +19,7 @@ describe('Register', () => {
   })
   
   it('register_alElegirCliente_muestraFormularioDeCliente', async () => {
-    renderWithProviders(<Register />)
-
-    await userEvent.click(screen.getByRole('button', { name: /cliente/i }))
+    await renderYElegirCliente()
 
     expect(screen.getByRole('heading', { name: /registro de cliente/i })).toBeInTheDocument()
   })
@@ -30,9 +33,7 @@ describe('Register', () => {
   })
 
   it('register_alElegirCliente_muestraLosCamposDelFormulario', async () => {
-    renderWithProviders(<Register />)
-
-    await userEvent.click(screen.getByRole('button', { name: /cliente/i }))
+    await renderYElegirCliente()
 
     expect(screen.getByLabelText(/nombre/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/apellidos/i)).toBeInTheDocument()
@@ -44,9 +45,7 @@ describe('Register', () => {
   })
 
   it('register_alEnviarFormularioClienteVacio_muestraErroresDeCamposObligatorios', async () => {
-    renderWithProviders(<Register />)
-
-    await userEvent.click(screen.getByRole('button', { name: /cliente/i }))
+    await renderYElegirCliente()
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
     expect(screen.getAllByText(/obligatorio/i)).toHaveLength(6)
