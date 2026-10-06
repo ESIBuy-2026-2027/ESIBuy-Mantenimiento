@@ -1,8 +1,13 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { registrarCliente } from '../services/authService'
 import { renderWithProviders } from '../test/utils'
 import Register from './Register'
+
+vi.mock('../services/authService', () => ({
+  registrarCliente: vi.fn(),
+}))
 
 async function renderYElegirCliente() {
   renderWithProviders(<Register />)
@@ -10,6 +15,10 @@ async function renderYElegirCliente() {
 }
 
 describe('Register', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   it('register_alRenderizar_muestraOpcionesClienteYVendedor', () => {
     renderWithProviders(<Register />)
 
@@ -80,5 +89,21 @@ describe('Register', () => {
 
     expect(screen.getByLabelText(/tipo/i)).toHaveValue('normal')
     expect(screen.getByRole('option', { name: /premium/i })).toBeInTheDocument()
+  })
+
+  it('register_alEnviarDatosValidosDeCliente_llamaAlServicioConLosDatos', async () => {
+    registrarCliente.mockResolvedValue({})
+    await renderYElegirCliente()
+    await userEvent.type(screen.getByLabelText(/nombre/i), 'Ana')
+    await userEvent.type(screen.getByLabelText(/apellidos/i), 'García')
+    await userEvent.type(screen.getByLabelText(/fecha de nacimiento/i), '1990-05-20')
+    await userEvent.type(screen.getByLabelText(/dni/i), '12345678Z')
+    await userEvent.type(screen.getByLabelText(/email/i), 'ana@correo.com')
+    await userEvent.type(screen.getByLabelText(/contraseña/i), 'Password123')
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(registrarCliente).toHaveBeenCalledWith(
+      expect.objectContaining({ nombre: 'Ana', email: 'ana@correo.com' })
+    )
   })
 })
