@@ -6,7 +6,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 // Test del adaptador real (sin Spring y sin mocks): se crea con new y usa BCrypt de verdad.
 // Se prueba cómo usamos BCrypt (que delegamos en él y con qué configuración), no si BCrypt funciona.
@@ -35,8 +34,9 @@ class BCryptHashContrasenaAdapterTest {
     @Test
     void hashUsaElCosteAcordado() {
         // HU1-CP02 (coste de BCrypt = 10: mínimo recomendado por OWASP y valor por defecto de Spring)
-        // TODO: hashear "clave1234" con el adaptador.
-        // TODO: comprobar que el hash empieza por "$2a$10$" (algoritmo 2a, coste 10).
-        fail("Funcionalidad no implementada");
+        String hash = adapter.hashear("clave1234");
+
+        // Formato BCrypt: $<versión>$<coste>$<sal y hash>. El prefijo "$2a$10$" fija el coste acordado.
+        assertTrue(hash.startsWith("$2a$10$"));
     }
 }
