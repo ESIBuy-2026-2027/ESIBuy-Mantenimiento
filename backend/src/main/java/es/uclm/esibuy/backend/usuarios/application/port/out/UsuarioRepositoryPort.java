@@ -6,4 +6,6 @@ public interface UsuarioRepositoryPort {
 
     void guardar(Usuario usuario);
 
+    boolean existePorCorreo(String correo);
+
 }
