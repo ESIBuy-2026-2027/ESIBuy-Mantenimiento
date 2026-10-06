@@ -1,10 +1,22 @@
+import { Field, Input } from '@fluentui/react-components'
 import { useState } from 'react'
 
 export default function Register() {
   const [tipo, setTipo] = useState(null)
 
   if (tipo === 'cliente') {
-    return <h1>Registro de cliente</h1>
+    return (
+      <div>
+        <h1>Registro de cliente</h1>
+        <Field label="Nombre"><Input /></Field>
+        <Field label="Apellidos"><Input /></Field>
+        <Field label="Fecha de nacimiento"><Input type="date" /></Field>
+        <Field label="DNI"><Input /></Field>
+        <Field label="Email"><Input type="email" /></Field>
+        <Field label="Teléfono"><Input type="tel" /></Field>
+        <Field label="Contraseña"><Input type="password" /></Field>
+      </div>
+    )
   }
 
   if (tipo === 'vendedor') {
