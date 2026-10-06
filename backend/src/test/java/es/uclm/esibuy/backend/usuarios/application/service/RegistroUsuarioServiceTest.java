@@ -1,20 +1,47 @@
 package es.uclm.esibuy.backend.usuarios.application.service;
 
+import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioCommand;
+import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.verify;
 
-// PENDIENTE DE DECIDIR (equipo): paquete raíz es.uclm.esibuy.backend.usuarios
-// o es.uclm.esibuy.usuarios (el CLAUDE.md se contradice).
+// Cómo encaja el test en la arquitectura hexagonal:
+// - RegistrarUsuarioCommand (application.port.in): datos de entrada del caso de uso.
+//   El controlador REST traducirá su DTO a este comando; el núcleo no conoce los DTO.
+// - RegistroUsuarioService (application.service): implementa el caso de uso. Es la clase bajo prueba.
+// - UsuarioRepositoryPort (application.port.out): lo que el servicio necesita del exterior.
+//   En producción lo implementará el adaptador de MongoDB; aquí lo sustituye un mock de Mockito.
+// - Usuario y Rol (domain.model): Java puro, sin Spring ni MongoDB.
+@ExtendWith(MockitoExtension.class)
 class RegistroUsuarioServiceTest {
+
+    @Mock
+    private UsuarioRepositoryPort usuarioRepository;
+
+    @InjectMocks
+    private RegistroUsuarioService registroUsuarioService;
 
     @Test
     void registraClienteConRolCliente() {
         // HU1-CP01
-        // TODO: registrar un usuario con datos válidos.
-        // TODO: comprobar que el usuario guardado tiene rol CLIENTE.
         // PENDIENTE DE REVISAR CON EL EQUIPO: ¿también estado PENDIENTE?
-        fail("Funcionalidad no implementada");
+        RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "clave1234");
+
+        registroUsuarioService.registrar(comando);
+
+        ArgumentCaptor<Usuario> usuarioGuardado = ArgumentCaptor.forClass(Usuario.class);
+        verify(usuarioRepository).guardar(usuarioGuardado.capture());
+        assertEquals(Rol.CLIENTE, usuarioGuardado.getValue().getRol());
     }
 
     @Test
