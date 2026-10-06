@@ -50,4 +50,12 @@ describe('Register', () => {
 
     expect(screen.getAllByText(/obligatorio/i)).toHaveLength(6)
   })
+
+  it('register_alIntroducirFechaDeMenorDeEdad_muestraErrorDeEdad', async () => {
+    await renderYElegirCliente()
+    await userEvent.type(screen.getByLabelText(/fecha de nacimiento/i), '2020-01-01')
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getByText(/mayor de edad/i)).toBeInTheDocument()
+  })
 })
