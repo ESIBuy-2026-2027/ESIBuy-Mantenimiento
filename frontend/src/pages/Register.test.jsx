@@ -14,6 +14,15 @@ async function renderYElegirCliente() {
   await userEvent.click(screen.getByRole('button', { name: /cliente/i }))
 }
 
+async function rellenarFormularioValido() {
+  await userEvent.type(screen.getByLabelText(/nombre/i), 'Ana')
+  await userEvent.type(screen.getByLabelText(/apellidos/i), 'García')
+  await userEvent.type(screen.getByLabelText(/fecha de nacimiento/i), '1990-05-20')
+  await userEvent.type(screen.getByLabelText(/dni/i), '12345678Z')
+  await userEvent.type(screen.getByLabelText(/email/i), 'ana@correo.com')
+  await userEvent.type(screen.getByLabelText(/contraseña/i), 'Password123')
+}
+
 describe('Register', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -94,12 +103,7 @@ describe('Register', () => {
   it('register_alEnviarDatosValidosDeCliente_llamaAlServicioConLosDatos', async () => {
     registrarCliente.mockResolvedValue({})
     await renderYElegirCliente()
-    await userEvent.type(screen.getByLabelText(/nombre/i), 'Ana')
-    await userEvent.type(screen.getByLabelText(/apellidos/i), 'García')
-    await userEvent.type(screen.getByLabelText(/fecha de nacimiento/i), '1990-05-20')
-    await userEvent.type(screen.getByLabelText(/dni/i), '12345678Z')
-    await userEvent.type(screen.getByLabelText(/email/i), 'ana@correo.com')
-    await userEvent.type(screen.getByLabelText(/contraseña/i), 'Password123')
+    await rellenarFormularioValido()
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
     expect(registrarCliente).toHaveBeenCalledWith(
@@ -110,12 +114,7 @@ describe('Register', () => {
   it('register_siElEmailYaEstaRegistrado_muestraErrorEnElCampoEmail', async () => {
     registrarCliente.mockRejectedValue({ status: 409 })
     await renderYElegirCliente()
-    await userEvent.type(screen.getByLabelText(/nombre/i), 'Ana')
-    await userEvent.type(screen.getByLabelText(/apellidos/i), 'García')
-    await userEvent.type(screen.getByLabelText(/fecha de nacimiento/i), '1990-05-20')
-    await userEvent.type(screen.getByLabelText(/dni/i), '12345678Z')
-    await userEvent.type(screen.getByLabelText(/email/i), 'ana@correo.com')
-    await userEvent.type(screen.getByLabelText(/contraseña/i), 'Password123')
+    await rellenarFormularioValido()
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
     expect(await screen.findByText(/ya está registrado/i)).toBeInTheDocument()
