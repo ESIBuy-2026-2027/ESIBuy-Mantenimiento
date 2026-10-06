@@ -42,4 +42,13 @@ describe('Register', () => {
     expect(screen.getByLabelText(/teléfono/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/contraseña/i)).toBeInTheDocument()
   })
+
+  it('register_alEnviarFormularioClienteVacio_muestraErroresDeCamposObligatorios', async () => {
+    renderWithProviders(<Register />)
+
+    await userEvent.click(screen.getByRole('button', { name: /cliente/i }))
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getAllByText(/obligatorio/i)).toHaveLength(6)
+  })
 })
