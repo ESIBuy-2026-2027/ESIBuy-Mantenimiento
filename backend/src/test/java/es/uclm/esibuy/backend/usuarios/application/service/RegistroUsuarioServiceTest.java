@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.junit.jupiter.api.Test;
@@ -14,8 +15,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -81,9 +84,17 @@ class RegistroUsuarioServiceTest {
     @Test
     void rechazaContrasenaDeMenosDe8Caracteres() {
         // HU1-CP05 (frontera: 7 caracteres → excepción)
-        // TODO: intentar registrar con contraseña de 7 caracteres.
-        // TODO: comprobar que lanza una excepción de negocio y no guarda nada.
-        fail("Funcionalidad no implementada");
+        RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "1234567");
+
+        // assertThrows(TipoDeExcepcion.class, () -> codigo) ejecuta el código de la lambda
+        // y comprueba que lanza exactamente esa excepción (o una subclase suya):
+        // - si la lanza, el test sigue;
+        // - si no lanza nada, o lanza otra distinta, el test falla.
+        // El código va dentro de una lambda (() -> ...) y no se llama directamente porque,
+        // si se llamara aquí, la excepción saldría antes de que assertThrows pudiera capturarla.
+        assertThrows(ContrasenaInvalidaException.class, () -> registroUsuarioService.registrar(comando));
+
+        verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
 
     @Test
