@@ -37,6 +37,9 @@ export default function Register() {
     if (datos.fechaNacimiento && !esMayorDeEdad(datos.fechaNacimiento)) {
       nuevosErrores.fechaNacimiento = 'Debes ser mayor de edad para registrarte'
     }
+    if (datos.email && !/^\S+@\S+\.\S+$/.test(datos.email)) {
+      nuevosErrores.email = 'Introduce un email válido'
+    }
     setErrores(nuevosErrores)
   }
 
