@@ -20,4 +20,12 @@ describe('Register', () => {
 
     expect(screen.getByRole('heading', { name: /registro de cliente/i })).toBeInTheDocument()
   })
+
+  it('register_alElegirVendedor_muestraFormularioDeVendedor', async () => {
+    renderWithProviders(<Register />)
+
+    await userEvent.click(screen.getByRole('button', { name: /vendedor/i }))
+
+    expect(screen.getByRole('heading', { name: /registro de vendedor/i })).toBeInTheDocument()
+  })
 })
