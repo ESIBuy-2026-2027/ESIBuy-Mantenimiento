@@ -1,5 +1,6 @@
 import { Button, Field, Input, Select } from '@fluentui/react-components'
 import { useState } from 'react'
+import { registrarCliente } from '../services/authService'
 
 const OBLIGATORIOS = ['nombre', 'apellidos', 'fechaNacimiento', 'dni', 'email', 'password']
 
@@ -30,7 +31,7 @@ export default function Register() {
 
   const cambiar = (campo) => (e, data) => setDatos({ ...datos, [campo]: data.value })
 
-  const enviar = () => {
+  const enviar = async () => {
     const nuevosErrores = {}
     OBLIGATORIOS.forEach((campo) => {
       if (!datos[campo].trim()) nuevosErrores[campo] = 'Este campo es obligatorio'
@@ -45,6 +46,10 @@ export default function Register() {
       nuevosErrores.email = 'Introduce un email válido'
     }
     setErrores(nuevosErrores)
+
+    if (Object.keys(nuevosErrores).length > 0) return
+
+    await registrarCliente(datos)
   }
 
   if (tipo === 'cliente') {
