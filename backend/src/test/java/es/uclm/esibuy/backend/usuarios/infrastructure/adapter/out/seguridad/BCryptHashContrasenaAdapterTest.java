@@ -24,6 +24,11 @@ class BCryptHashContrasenaAdapterTest {
         fail("Funcionalidad no implementada");
     }
 
-    // PENDIENTE DE DECIDIR (equipo, D2): coste de BCrypt. Cuando se decida, añadir aquí
-    // hashUsaElCosteAcordado (ciclo 4).
+    @Test
+    void hashUsaElCosteAcordado() {
+        // HU1-CP02 (coste de BCrypt = 10: mínimo recomendado por OWASP y valor por defecto de Spring)
+        // TODO: hashear "clave1234" con el adaptador.
+        // TODO: comprobar que el hash empieza por "$2a$10$" (algoritmo 2a, coste 10).
+        fail("Funcionalidad no implementada");
+    }
 }
