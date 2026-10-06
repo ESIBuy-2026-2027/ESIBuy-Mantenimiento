@@ -49,7 +49,13 @@ export default function Register() {
 
     if (Object.keys(nuevosErrores).length > 0) return
 
-    await registrarCliente(datos)
+    try {
+      await registrarCliente(datos)
+    } catch (error) {
+      if (error.status === 409) {
+        setErrores({ email: 'Este email ya está registrado' })
+      }
+    }
   }
 
   if (tipo === 'cliente') {
