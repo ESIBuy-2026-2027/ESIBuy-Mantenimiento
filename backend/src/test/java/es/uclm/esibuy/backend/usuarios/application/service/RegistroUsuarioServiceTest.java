@@ -5,6 +5,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
+/* import es.uclm.esibuy.backend.usuarios.domain.model.EstadoUsuario; */
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -109,12 +109,16 @@ class RegistroUsuarioServiceTest {
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
 
-    @Test
+   /*  @Test
     void registraClienteEnEstadoPendiente() {
         // HU1-CP01 (estado inicial)
         // PENDIENTE DE DECIDIR (equipo): significado de PENDIENTE y transiciones.
-        // TODO: registrar un usuario con datos válidos.
-        // TODO: comprobar que el usuario guardado tiene estado PENDIENTE.
-        fail("Funcionalidad no implementada");
-    }
+        RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "clave1234");
+
+        registroUsuarioService.registrar(comando);
+
+        ArgumentCaptor<Usuario> usuarioGuardado = ArgumentCaptor.forClass(Usuario.class);
+        verify(usuarioRepository).guardar(usuarioGuardado.capture());
+        assertEquals(EstadoUsuario.PENDIENTE, usuarioGuardado.getValue().getEstado());
+    } */
 }
