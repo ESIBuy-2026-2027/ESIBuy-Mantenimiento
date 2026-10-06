@@ -3,6 +3,17 @@ import { useState } from 'react'
 
 const OBLIGATORIOS = ['nombre', 'apellidos', 'fechaNacimiento', 'dni', 'email', 'password']
 
+function esMayorDeEdad(fecha) {
+  const nacimiento = new Date(fecha)
+  const hoy = new Date()
+  let edad = hoy.getFullYear() - nacimiento.getFullYear()
+  const cumpleEsteAnio =
+    hoy.getMonth() > nacimiento.getMonth() ||
+    (hoy.getMonth() === nacimiento.getMonth() && hoy.getDate() >= nacimiento.getDate())
+  if (!cumpleEsteAnio) edad--
+  return edad >= 18
+}
+
 export default function Register() {
   const [tipo, setTipo] = useState(null)
   const [datos, setDatos] = useState({
@@ -23,6 +34,9 @@ export default function Register() {
     OBLIGATORIOS.forEach((campo) => {
       if (!datos[campo].trim()) nuevosErrores[campo] = 'Este campo es obligatorio'
     })
+    if (datos.fechaNacimiento && !esMayorDeEdad(datos.fechaNacimiento)) {
+      nuevosErrores.fechaNacimiento = 'Debes ser mayor de edad para registrarte'
+    }
     setErrores(nuevosErrores)
   }
 
