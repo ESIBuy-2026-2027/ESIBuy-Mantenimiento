@@ -28,4 +28,18 @@ describe('Register', () => {
 
     expect(screen.getByRole('heading', { name: /registro de vendedor/i })).toBeInTheDocument()
   })
+
+  it('register_alElegirCliente_muestraLosCamposDelFormulario', async () => {
+    renderWithProviders(<Register />)
+
+    await userEvent.click(screen.getByRole('button', { name: /cliente/i }))
+
+    expect(screen.getByLabelText(/nombre/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/apellidos/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/fecha de nacimiento/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/dni/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/teléfono/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/contraseña/i)).toBeInTheDocument()
+  })
 })
