@@ -66,4 +66,12 @@ describe('Register', () => {
 
     expect(screen.getByText(/email válido/i)).toBeInTheDocument()
   })
+
+  it('register_alIntroducirDniInvalido_muestraErrorDeFormato', async () => {
+    await renderYElegirCliente()
+    await userEvent.type(screen.getByLabelText(/dni/i), '1234')
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getByText(/dni válido/i)).toBeInTheDocument()
+  })
 })
