@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -70,9 +71,11 @@ class RegistroUsuarioServiceTest {
     @Test
     void permiteContrasenaDeExactamente8Caracteres() {
         // HU1-CP05 (frontera: 8 caracteres → permitido)
-        // TODO: registrar un usuario con contraseña de 8 caracteres.
-        // TODO: comprobar que el usuario se guarda.
-        fail("Funcionalidad no implementada");
+        RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "12345678");
+
+        registroUsuarioService.registrar(comando);
+
+        verify(usuarioRepository).guardar(any(Usuario.class));
     }
 
     @Test
