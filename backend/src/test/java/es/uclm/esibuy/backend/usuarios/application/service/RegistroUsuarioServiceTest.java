@@ -22,6 +22,7 @@ import static org.mockito.Mockito.verify;
 // - UsuarioRepositoryPort (application.port.out): lo que el servicio necesita del exterior.
 //   En producción lo implementará el adaptador de MongoDB; aquí lo sustituye un mock de Mockito.
 // - Usuario y Rol (domain.model): Java puro, sin Spring ni MongoDB.
+
 @ExtendWith(MockitoExtension.class)
 class RegistroUsuarioServiceTest {
 
