@@ -74,4 +74,11 @@ describe('Register', () => {
 
     expect(screen.getByText(/dni válido/i)).toBeInTheDocument()
   })
+
+  it('register_alElegirCliente_muestraTipoConNormalPreseleccionado', async () => {
+    await renderYElegirCliente()
+
+    expect(screen.getByLabelText(/tipo/i)).toHaveValue('normal')
+    expect(screen.getByRole('option', { name: /premium/i })).toBeInTheDocument()
+  })
 })
