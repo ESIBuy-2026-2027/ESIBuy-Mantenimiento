@@ -1,19 +1,23 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad;
 
+import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 // Test del adaptador real (sin Spring y sin mocks): se crea con new y usa BCrypt de verdad.
 // Se prueba cómo usamos BCrypt (que delegamos en él y con qué configuración), no si BCrypt funciona.
 class BCryptHashContrasenaAdapterTest {
 
+    private final HashContrasenaPort adapter = new BCryptHashContrasenaAdapter(); // Tipado como el puerto: obliga a implementarlo y se prueba como lo usa el servicio
+
     @Test
     void hashNoEsLaContrasenaEnClaro() {
         // HU1-CP02
-        // TODO: hashear "clave1234" con el adaptador.
-        // TODO: comprobar que el resultado no es "clave1234".
-        fail("Funcionalidad no implementada");
+        String hash = adapter.hashear("clave1234");
+
+        assertNotEquals("clave1234", hash);
     }
 
     @Test
