@@ -1,4 +1,4 @@
-import { Button, Field, Input } from '@fluentui/react-components'
+import { Button, Field, Input, Select } from '@fluentui/react-components'
 import { useState } from 'react'
 
 const OBLIGATORIOS = ['nombre', 'apellidos', 'fechaNacimiento', 'dni', 'email', 'password']
@@ -24,7 +24,8 @@ export default function Register() {
     email: '',
     telefono: '',
     password: '',
-  })
+    tipoCliente: 'normal',
+})
   const [errores, setErrores] = useState({})
 
   const cambiar = (campo) => (e, data) => setDatos({ ...datos, [campo]: data.value })
@@ -70,6 +71,12 @@ export default function Register() {
         </Field>
         <Field label="Contraseña" validationMessage={errores.password}>
           <Input type="password" value={datos.password} onChange={cambiar('password')} />
+        </Field>
+        <Field label="Tipo de cliente">
+          <Select value={datos.tipoCliente} onChange={cambiar('tipoCliente')}>
+            <option value="normal">Normal</option>
+            <option value="premium">Premium</option>
+          </Select>
         </Field>
         <Button appearance="primary" onClick={enviar}>Registrarse</Button>
       </div>
