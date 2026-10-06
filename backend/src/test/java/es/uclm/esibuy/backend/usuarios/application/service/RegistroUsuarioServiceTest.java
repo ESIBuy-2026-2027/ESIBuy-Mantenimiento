@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.application.service;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioCommand;
+import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
@@ -12,8 +13,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 // Cómo encaja el test en la arquitectura hexagonal:
 // - RegistrarUsuarioCommand (application.port.in): datos de entrada del caso de uso.
@@ -21,6 +24,8 @@ import static org.mockito.Mockito.verify;
 // - RegistroUsuarioService (application.service): implementa el caso de uso. Es la clase bajo prueba.
 // - UsuarioRepositoryPort (application.port.out): lo que el servicio necesita del exterior.
 //   En producción lo implementará el adaptador de MongoDB; aquí lo sustituye un mock de Mockito.
+// - HashContrasenaPort (application.port.out): calcula el hash de la contraseña.
+//   En producción lo implementará un adaptador con el algoritmo de hash elegido; aquí, otro mock.
 // - Usuario y Rol (domain.model): Java puro, sin Spring ni MongoDB.
 
 @ExtendWith(MockitoExtension.class)
@@ -28,6 +33,9 @@ class RegistroUsuarioServiceTest {
 
     @Mock
     private UsuarioRepositoryPort usuarioRepository;
+
+    @Mock
+    private HashContrasenaPort hashContrasena;
 
     @InjectMocks
     private RegistroUsuarioService registroUsuarioService;
@@ -48,10 +56,15 @@ class RegistroUsuarioServiceTest {
     @Test
     void guardaContrasenaHasheada() {
         // HU1-CP02
-        // TODO: registrar un usuario con contraseña "clave1234".
-        // TODO: comprobar que se guarda el hash devuelto por el puerto de hash
-        //       y nunca la contraseña en claro.
-        fail("Funcionalidad no implementada");
+        when(hashContrasena.hashear("clave1234")).thenReturn("hash-simulado");
+        RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "clave1234");
+
+        registroUsuarioService.registrar(comando);
+
+        ArgumentCaptor<Usuario> usuarioGuardado = ArgumentCaptor.forClass(Usuario.class);
+        verify(usuarioRepository).guardar(usuarioGuardado.capture());
+        assertEquals("hash-simulado", usuarioGuardado.getValue().getContrasenaHash());
+        assertNotEquals("clave1234", usuarioGuardado.getValue().getContrasenaHash());
     }
 
     @Test
