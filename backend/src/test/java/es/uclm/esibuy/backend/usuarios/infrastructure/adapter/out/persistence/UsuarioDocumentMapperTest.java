@@ -24,4 +24,16 @@ class UsuarioDocumentMapperTest {
         assertEquals("hash-simulado", documento.getPasswordHash());
         assertEquals("CLIENTE", documento.getRol());
     }
+
+    @Test
+    @DisplayName("HU2-CP01: el usuario conserva el email, el hash de la contraseña y el rol del documento")
+    void convierteDocumentoEnUsuario() {
+        UsuarioDocument documento = new UsuarioDocument("juan@uclm.es", "hash-simulado", "CLIENTE");
+
+        Usuario usuario = new UsuarioDocumentMapper().aDominio(documento);
+
+        assertEquals("juan@uclm.es", usuario.getEmail());
+        assertEquals("hash-simulado", usuario.getPasswordHash());
+        assertEquals(Rol.CLIENTE, usuario.getRol());
+    }
 }
