@@ -66,9 +66,18 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP02: rechaza una contraseña incorrecta con la misma respuesta que un correo inexistente")
     void rechazaContrasenaIncorrecta() {
-        // TODO: el usuario existe pero la contraseña no coincide.
-        // TODO: comprobar que lanza CredencialesInvalidasException (no se revela que el correo existe).
-        fail("Funcionalidad no implementada");
+        Usuario usuario = new Usuario("juan@uclm.es", "hash-guardado", Rol.CLIENTE);
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
+        when(hashContrasena.coincide("otraClave", "hash-guardado")).thenReturn(false);
+        when(usuarioRepository.buscarPorCorreo("nadie@uclm.es")).thenReturn(Optional.empty());
+
+        CredencialesInvalidasException contrasenaIncorrecta = assertThrows(CredencialesInvalidasException.class,
+                () -> autenticacion.iniciarSesion(new IniciarSesionCommand("juan@uclm.es", "otraClave")));
+        CredencialesInvalidasException correoInexistente = assertThrows(CredencialesInvalidasException.class,
+                () -> autenticacion.iniciarSesion(new IniciarSesionCommand("nadie@uclm.es", "otraClave")));
+
+        // Mismo mensaje en los dos casos: desde fuera no se distingue si el correo existe (enumeración de usuarios).
+        assertEquals(correoInexistente.getMessage(), contrasenaIncorrecta.getMessage());
     }
 
     @Test
