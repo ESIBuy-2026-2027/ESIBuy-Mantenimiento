@@ -20,6 +20,7 @@ export default function Register() {
   const [datos, setDatos] = useState({
     nombre: '',
     apellidos: '',
+    nombreComercial: '',
     fechaNacimiento: '',
     dni: '',
     email: '',
@@ -125,7 +126,39 @@ export default function Register() {
   }
 
   if (tipo === 'vendedor') {
-    return <h1>Registro de vendedor</h1>
+    return (
+      <div>
+        <h1>Registro de vendedor</h1>
+        <Field label="Nombre">
+          <Input value={datos.nombre} onChange={cambiar('nombre')} />
+        </Field>
+        <Field label="Apellidos">
+          <Input value={datos.apellidos} onChange={cambiar('apellidos')} />
+        </Field>
+        <Field label="Nombre comercial">
+          <Input value={datos.nombreComercial} onChange={cambiar('nombreComercial')} />
+        </Field>
+        <Field label="DNI">
+          <Input value={datos.dni} onChange={cambiar('dni')} />
+        </Field>
+        <Field label="Email">
+          <Input type="email" value={datos.email} onChange={cambiar('email')} />
+        </Field>
+        <Field label="Teléfono">
+          <Input type="tel" value={datos.telefono} onChange={cambiar('telefono')} />
+        </Field>
+        <Field label="Password">
+          <Input type="password" value={datos.password} onChange={cambiar('password')} />
+        </Field>
+        <Field label="Repetir password">
+          <Input
+            type="password"
+            value={datos.repeticionPassword}
+            onChange={cambiar('repeticionPassword')}
+          />
+        </Field>
+      </div>
+    )
   }
 
   return (
