@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.shared.error;
 
+import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -19,5 +20,11 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError correoYaRegistrado() {
         return new RespuestaError("No se ha podido completar el registro");
+    }
+
+    @ExceptionHandler(ContrasenaInvalidaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError contrasenaInvalida() {
+        return new RespuestaError("Datos de registro no válidos");
     }
 }
