@@ -13,6 +13,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -52,9 +54,13 @@ class UsuarioControllerTest {
 
     @Test
     @DisplayName("HU1-CP07: un email con formato inválido devuelve 400 y no registra")
-    void rechazaEmailConFormatoInvalido() {
-        // TODO email "juan.uclm.es" -> 400 y el caso de uso no se llama
-        fail("Funcionalidad no implementada");
+    void rechazaEmailConFormatoInvalido() throws Exception {
+        mockMvc.perform(post(URL_REGISTRO)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("juan.uclm.es", "clave1234")))
+                .andExpect(status().isBadRequest());
+
+        verify(registroUsuario, never()).registrar(any());
     }
 
     @Test
