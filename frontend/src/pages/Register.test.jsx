@@ -14,6 +14,11 @@ async function renderYElegirCliente() {
   await userEvent.click(screen.getByRole('button', { name: /cliente/i }))
 }
 
+async function renderYElegirVendedor() {
+  renderWithProviders(<Register />)
+  await userEvent.click(screen.getByRole('button', { name: /vendedor/i }))
+}
+
 async function rellenarFormularioValido() {
   await userEvent.type(screen.getByLabelText(/nombre/i), 'Ana')
   await userEvent.type(screen.getByLabelText(/apellidos/i), 'García')
@@ -49,6 +54,19 @@ describe('Register', () => {
     await userEvent.click(screen.getByRole('button', { name: /vendedor/i }))
 
     expect(screen.getByRole('heading', { name: /registro de vendedor/i })).toBeInTheDocument()
+  })
+
+  it('register_alElegirVendedor_muestraLosCamposDelFormulario', async () => {
+    await renderYElegirVendedor()
+
+    expect(screen.getByLabelText(/^nombre(?! comercial)/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/apellidos/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/nombre comercial/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/dni/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/teléfono/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^password/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/repetir password/i)).toBeInTheDocument()
   })
 
   it('register_alElegirCliente_muestraLosCamposDelFormulario', async () => {
