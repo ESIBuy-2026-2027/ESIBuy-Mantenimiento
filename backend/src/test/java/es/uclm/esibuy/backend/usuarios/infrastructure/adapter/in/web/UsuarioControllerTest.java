@@ -76,9 +76,13 @@ class UsuarioControllerTest {
 
     @Test
     @DisplayName("HU1-CP08: una contraseña vacía devuelve 400 y no registra")
-    void rechazaPasswordVacia() {
-        // TODO password "" -> 400 y el caso de uso no se llama
-        fail("Funcionalidad no implementada");
+    void rechazaPasswordVacia() throws Exception {
+        mockMvc.perform(post(URL_REGISTRO)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("juan@uclm.es", "")))
+                .andExpect(status().isBadRequest());
+
+        verify(registroUsuario, never()).registrar(any());
     }
 
     @Test
