@@ -24,7 +24,7 @@ public class AutenticacionService implements AutenticacionUseCase {
     @Override
     public ResultadoInicioSesion iniciarSesion(IniciarSesionCommand comando) {
         
-        Usuario usuario = usuarioRepository.buscarPorCorreo(comando.email()).orElseThrow(() -> new CredencialesInvalidasException("Credenciales inválidas")); // <- Este orElseThrow() viene de buscarPorCorreo() que devuelve Optional<>
+        Usuario usuario = usuarioRepository.buscarPorCorreo(comando.email()).orElseThrow(() -> new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS)); // <- Este orElseThrow() viene de buscarPorCorreo() que devuelve Optional<>
 
         if (!hashContrasena.coincide(comando.password(), usuario.getPasswordHash())) {
             throw new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS);
