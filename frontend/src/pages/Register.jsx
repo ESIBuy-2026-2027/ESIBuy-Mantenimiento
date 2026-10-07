@@ -115,6 +115,9 @@ export default function Register() {
     if (datos.email && !/^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test(datos.email)) {
       nuevosErrores.email = 'Introduce un email válido'
     }
+    if (datos.password && datos.repeticionPassword && datos.password !== datos.repeticionPassword) {
+      nuevosErrores.repeticionPassword = 'Las contraseñas no coinciden'
+    }
     setErrores(nuevosErrores)
   }
 
