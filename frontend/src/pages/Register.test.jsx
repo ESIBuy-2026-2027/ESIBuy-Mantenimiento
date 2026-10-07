@@ -140,6 +140,22 @@ describe('Register', () => {
     expect(screen.getByText(/al menos una categoría/i)).toBeInTheDocument()
   })
 
+  it('register_alIntroducirDniInvalidoComoVendedor_muestraErrorDeFormato', async () => {
+    await renderYElegirVendedor()
+    await userEvent.type(screen.getByLabelText(/dni/i), '1234')
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getByText(/dni válido/i)).toBeInTheDocument()
+  })
+
+  it('register_alIntroducirEmailInvalidoComoVendedor_muestraErrorDeFormato', async () => {
+    await renderYElegirVendedor()
+    await userEvent.type(screen.getByLabelText(/email/i), 'esto-no-es-un-email')
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getByText(/email válido/i)).toBeInTheDocument()
+  })
+
   it('register_alEnviarFormularioClienteVacio_muestraErroresDeCamposObligatorios', async () => {
     await renderYElegirCliente()
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
