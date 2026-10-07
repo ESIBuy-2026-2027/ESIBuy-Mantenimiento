@@ -174,7 +174,7 @@ describe('Register', () => {
     await userEvent.type(screen.getByLabelText(/repetir password/i), 'Extra')
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
-    expect(screen.getByText(/no coinciden/i)).toBeInTheDocument()
+    expect(screen.getByText(/los passwords no coinciden/i)).toBeInTheDocument()
   })
 
   it('register_siRepetirPasswordDelVendedorEstaVacio_muestraErrorDeObligatorioYNoDeCoincidencia', async () => {
@@ -255,6 +255,26 @@ describe('Register', () => {
 
     expect(await screen.findByText(/email ya está registrado/i)).toBeInTheDocument()
     expect(screen.getByText(/nombre comercial ya está registrado/i)).toBeInTheDocument()
+  })
+
+  it('register_alPulsarMostrarPassword_alternaEntreVerloYOcultarlo', async () => {
+    await renderYElegirCliente()
+    const password = screen.getByLabelText(/^password/i)
+    const repeticion = screen.getByLabelText(/repetir password/i)
+
+    expect(password).toHaveAttribute('type', 'password')
+    expect(repeticion).toHaveAttribute('type', 'password')
+
+    await userEvent.click(screen.getByRole('button', { name: /^mostrar password$/i }))
+    await userEvent.click(screen.getByRole('button', { name: /^mostrar repetir password$/i }))
+
+    expect(password).toHaveAttribute('type', 'text')
+    expect(repeticion).toHaveAttribute('type', 'text')
+
+    await userEvent.click(screen.getByRole('button', { name: /^ocultar password$/i }))
+
+    expect(password).toHaveAttribute('type', 'password')
+    expect(repeticion).toHaveAttribute('type', 'text')
   })
 
   it('register_alEnviarFormularioClienteVacio_muestraErroresDeCamposObligatorios', async () => {
@@ -361,7 +381,7 @@ describe('Register', () => {
     await userEvent.type(screen.getByLabelText(/repetir password/i), 'Extra')
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
-    expect(screen.getByText(/no coinciden/i)).toBeInTheDocument()
+    expect(screen.getByText(/los passwords no coinciden/i)).toBeInTheDocument()
     expect(registrarCliente).not.toHaveBeenCalled()
   })
 
