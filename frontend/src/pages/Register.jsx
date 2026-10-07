@@ -184,6 +184,13 @@ export default function Register() {
             onChange={cambiar('repeticionPassword')}
           />
         </Field>
+        <Field label="Imagen de perfil">
+          <RadioGroup layout="horizontal" value={datos.avatar} onChange={cambiar('avatar')}>
+            <Radio value="avatar1" label="Avatar 1" />
+            <Radio value="avatar2" label="Avatar 2" />
+            <Radio value="avatar3" label="Avatar 3" />
+          </RadioGroup>
+        </Field>
       </div>
     )
   }
