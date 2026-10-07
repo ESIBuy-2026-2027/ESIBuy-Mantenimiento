@@ -16,6 +16,8 @@ import {
 import {
   BuildingShop24Regular,
   Cart24Regular,
+  CheckmarkCircle16Filled,
+  Circle16Regular,
   Eye20Regular,
   EyeOff20Regular,
 } from '@fluentui/react-icons'
@@ -99,7 +101,34 @@ const useStyles = makeStyles({
     color: tokens.colorPaletteRedForeground1,
     fontSize: tokens.fontSizeBase200,
   },
+  requisitos: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalXXS,
+    listStyleType: 'none',
+    margin: 0,
+    padding: 0,
+  },
+  requisito: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalXS,
+  },
+  cumplido: {
+    color: tokens.colorPaletteGreenForeground1,
+  },
+  pendiente: {
+    color: tokens.colorNeutralForeground3,
+  },
 })
+
+const REQUISITOS_PASSWORD = [
+  { texto: 'Al menos 8 caracteres', cumple: (password) => password.length >= 8 },
+  { texto: 'Una mayúscula', cumple: (password) => /\p{Lu}/u.test(password) },
+  { texto: 'Una minúscula', cumple: (password) => /\p{Ll}/u.test(password) },
+  { texto: 'Un número', cumple: (password) => /\p{N}/u.test(password) },
+  { texto: 'Un símbolo', cumple: (password) => /[^\p{L}\p{N}]/u.test(password) },
+]
 
 function esMayorDeEdad(fecha) {
   const nacimiento = new Date(fecha)
@@ -122,6 +151,9 @@ function validarCamposComunes(datos, obligatorios) {
   }
   if (datos.email && !/^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test(datos.email)) {
     errores.email = 'Introduce un email válido'
+  }
+  if (datos.password && !REQUISITOS_PASSWORD.every(({ cumple }) => cumple(datos.password))) {
+    errores.password = 'El password no cumple los requisitos'
   }
   if (datos.password && datos.repeticionPassword && datos.password !== datos.repeticionPassword) {
     errores.repeticionPassword = 'Los passwords no coinciden'
@@ -260,6 +292,18 @@ export default function Register() {
       {campo('email', 'Email', { type: 'email' })}
       {campo('telefono', 'Teléfono', { type: 'tel', required: false })}
       {campoPassword('password', 'Password')}
+      <ul aria-label="Requisitos del password" className={styles.requisitos}>
+        {REQUISITOS_PASSWORD.map(({ texto, cumple }) => (
+          <li key={texto} className={styles.requisito}>
+            {cumple(datos.password) ? (
+              <CheckmarkCircle16Filled role="img" aria-label="Cumplido" className={styles.cumplido} />
+            ) : (
+              <Circle16Regular role="img" aria-label="Pendiente" className={styles.pendiente} />
+            )}
+            <Text size={200}>{texto}</Text>
+          </li>
+        ))}
+      </ul>
       {campoPassword('repeticionPassword', 'Repetir password')}
     </>
   )
