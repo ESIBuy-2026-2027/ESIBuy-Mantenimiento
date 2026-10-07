@@ -11,6 +11,7 @@ import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -58,5 +59,18 @@ class UsuarioMongoAdapterTest {
     @DisplayName("HU1-CP03: existePorCorreo devuelve false si el email no está guardado")
     void existePorCorreoDevuelveFalseSiNoEstaGuardado() {
         assertFalse(adapter.existePorCorreo("juan@uclm.es"));
+    }
+
+    @Test
+    @DisplayName("HU2-CP01: buscarPorCorreo devuelve el usuario guardado con sus datos")
+    void buscarPorCorreoDevuelveElUsuarioGuardado() {
+        adapter.guardar(new Usuario("juan@uclm.es", "hash-simulado", Rol.CLIENTE));
+
+        Optional<Usuario> encontrado = adapter.buscarPorCorreo("juan@uclm.es");
+
+        assertTrue(encontrado.isPresent());
+        assertEquals("juan@uclm.es", encontrado.get().getEmail());
+        assertEquals("hash-simulado", encontrado.get().getPasswordHash());
+        assertEquals(Rol.CLIENTE, encontrado.get().getRol());
     }
 }
