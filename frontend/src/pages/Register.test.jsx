@@ -24,6 +24,17 @@ async function renderYElegirVendedor() {
   await userEvent.click(screen.getByRole('button', { name: /vendedor/i }))
 }
 
+async function rellenarFormularioVendedorValido() {
+  await userEvent.type(screen.getByLabelText(/^nombre(?! comercial)/i), 'Luis')
+  await userEvent.type(screen.getByLabelText(/apellidos/i), 'Pérez')
+  await userEvent.type(screen.getByLabelText(/nombre comercial/i), 'Tienda Luis')
+  await userEvent.click(await screen.findByRole('checkbox', { name: /tecnología/i }))
+  await userEvent.type(screen.getByLabelText(/dni/i), '12345678Z')
+  await userEvent.type(screen.getByLabelText(/email/i), 'luis@correo.com')
+  await userEvent.type(screen.getByLabelText(/^password/i), 'Password123')
+  await userEvent.type(screen.getByLabelText(/repetir password/i), 'Password123')
+}
+
 async function rellenarFormularioValido() {
   await userEvent.type(screen.getByLabelText(/nombre/i), 'Ana')
   await userEvent.type(screen.getByLabelText(/apellidos/i), 'García')
@@ -154,6 +165,35 @@ describe('Register', () => {
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
     expect(screen.getByText(/email válido/i)).toBeInTheDocument()
+  })
+
+  it('register_siLosPasswordsDelVendedorNoCoinciden_muestraError', async () => {
+    await renderYElegirVendedor()
+    await rellenarFormularioVendedorValido()
+    await userEvent.type(screen.getByLabelText(/repetir password/i), 'Extra')
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getByText(/no coinciden/i)).toBeInTheDocument()
+  })
+
+  it('register_siRepetirPasswordDelVendedorEstaVacio_muestraErrorDeObligatorioYNoDeCoincidencia', async () => {
+    await renderYElegirVendedor()
+    await rellenarFormularioVendedorValido()
+    await userEvent.clear(screen.getByLabelText(/repetir password/i))
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getByText(/obligatorio/i)).toBeInTheDocument()
+    expect(screen.queryByText(/no coinciden/i)).not.toBeInTheDocument()
+  })
+
+  it('register_siPasswordDelVendedorEstaVacio_muestraErrorDeObligatorioYNoDeCoincidencia', async () => {
+    await renderYElegirVendedor()
+    await rellenarFormularioVendedorValido()
+    await userEvent.clear(screen.getByLabelText(/^password/i))
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getByText(/obligatorio/i)).toBeInTheDocument()
+    expect(screen.queryByText(/no coinciden/i)).not.toBeInTheDocument()
   })
 
   it('register_alEnviarFormularioClienteVacio_muestraErroresDeCamposObligatorios', async () => {
