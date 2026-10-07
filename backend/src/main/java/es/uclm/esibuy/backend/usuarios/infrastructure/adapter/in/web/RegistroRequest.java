@@ -12,5 +12,5 @@ import jakarta.validation.constraints.NotBlank;
  */
 public record RegistroRequest(
         @NotBlank @Email String email,
-        String password) {
+        @NotBlank String password) {
 }
