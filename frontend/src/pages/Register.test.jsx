@@ -224,6 +224,39 @@ describe('Register', () => {
     expect(await screen.findByText(/cuenta creada/i)).toBeInTheDocument()
   })
 
+  it('register_siElEmailDelVendedorYaEstaRegistrado_muestraErrorEnElCampoEmail', async () => {
+    registrarVendedor.mockRejectedValue({ status: 409, code: 'EMAIL_ALREADY_REGISTERED' })
+    await renderYElegirVendedor()
+    await rellenarFormularioVendedorValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(await screen.findByText(/email ya está registrado/i)).toBeInTheDocument()
+    expect(screen.queryByText(/nombre comercial ya está registrado/i)).not.toBeInTheDocument()
+  })
+
+  it('register_siElNombreComercialYaEstaRegistrado_muestraErrorEnElCampoNombreComercial', async () => {
+    registrarVendedor.mockRejectedValue({ status: 409, code: 'COMMERCIAL_NAME_ALREADY_REGISTERED' })
+    await renderYElegirVendedor()
+    await rellenarFormularioVendedorValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(await screen.findByText(/nombre comercial ya está registrado/i)).toBeInTheDocument()
+    expect(screen.queryByText(/email ya está registrado/i)).not.toBeInTheDocument()
+  })
+
+  it('register_siEmailYNombreComercialYaEstanRegistrados_muestraAmbosErrores', async () => {
+    registrarVendedor.mockRejectedValue({
+      status: 409,
+      code: 'EMAIL_AND_COMMERCIAL_NAME_ALREADY_REGISTERED',
+    })
+    await renderYElegirVendedor()
+    await rellenarFormularioVendedorValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(await screen.findByText(/email ya está registrado/i)).toBeInTheDocument()
+    expect(screen.getByText(/nombre comercial ya está registrado/i)).toBeInTheDocument()
+  })
+
   it('register_alEnviarFormularioClienteVacio_muestraErroresDeCamposObligatorios', async () => {
     await renderYElegirCliente()
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
