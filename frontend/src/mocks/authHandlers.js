@@ -4,7 +4,7 @@ const CLAVE_VALIDA = 'Mock-Clave-1!'
 const CODIGO_EMAIL = '654321'
 const MAX_INTENTOS_FALLIDOS = 5
 
-const USUARIOS = [
+export const USUARIOS = [
   { id: 'u-1', nombre: 'Ada', apellidos: 'Admin', email: 'admin@esibuy.test', rol: 'ADMINISTRADOR', estado: 'ACTIVO' },
   { id: 'u-2', nombre: 'Vera', apellidos: 'Vendedora', email: 'vendedor@esibuy.test', rol: 'VENDEDOR', estado: 'ACTIVO' },
   { id: 'u-3', nombre: 'Carlos', apellidos: 'Cliente', email: 'cliente@esibuy.test', rol: 'CLIENTE', estado: 'ACTIVO' },
