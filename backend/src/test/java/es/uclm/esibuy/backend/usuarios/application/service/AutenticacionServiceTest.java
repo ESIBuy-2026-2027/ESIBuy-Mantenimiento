@@ -6,6 +6,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.PasoLogin;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ResultadoInicioSesion;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 
@@ -55,9 +57,10 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP02: rechaza un correo inexistente")
     void rechazaCorreoInexistente() {
-        // TODO: el repositorio no encuentra el correo.
-        // TODO: comprobar que lanza CredencialesInvalidasException.
-        fail("Funcionalidad no implementada");
+        when(usuarioRepository.buscarPorCorreo("nadie@uclm.es")).thenReturn(Optional.empty());
+        IniciarSesionCommand comando = new IniciarSesionCommand("nadie@uclm.es", "clave1234");
+
+        assertThrows(CredencialesInvalidasException.class, () -> autenticacion.iniciarSesion(comando));
     }
 
     @Test
