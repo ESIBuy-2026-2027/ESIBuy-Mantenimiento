@@ -44,7 +44,16 @@ const OBLIGATORIOS_VENDEDOR = [
   'repeticionPassword',
 ]
 
-const EMAIL_YA_REGISTRADO = 'Este email ya está registrado'
+const LONGITUD_MAXIMA = {
+  nombre: 30,
+  apellidos: 30,
+  nombreComercial: 30,
+  email: 100,
+  password: 64,
+  repeticionPassword: 64,
+}
+
+const EMAIL_YA_REGISTRADO ='Este email ya está registrado'
 const NOMBRE_COMERCIAL_YA_REGISTRADO = 'Este nombre comercial ya está registrado'
 const ERRORES_VENDEDOR_YA_REGISTRADO = {
   EMAIL_ALREADY_REGISTERED: { email: EMAIL_YA_REGISTRADO },
@@ -262,7 +271,12 @@ export default function Register() {
 
   const campo = (nombre, label, { type, required = true } = {}) => (
     <Field label={label} required={required} validationMessage={errores[nombre]}>
-      <Input type={type} value={datos[nombre]} onChange={cambiar(nombre)} />
+      <Input
+        type={type}
+        maxLength={LONGITUD_MAXIMA[nombre]}
+        value={datos[nombre]}
+        onChange={cambiar(nombre)}
+      />
     </Field>
   )
 
@@ -273,6 +287,7 @@ export default function Register() {
       <Field label={label} required validationMessage={errores[nombre]}>
         <Input
           type={visible ? 'text' : 'password'}
+          maxLength={LONGITUD_MAXIMA[nombre]}
           value={datos[nombre]}
           onChange={cambiar(nombre)}
           contentAfter={
