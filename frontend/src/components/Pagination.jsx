@@ -1,5 +1,10 @@
-import { Text } from '@fluentui/react-components'
+import { Button, Text } from '@fluentui/react-components'
 
 export default function Pagination({ page, totalPages }) {
-  return <Text>{`Página ${page + 1} de ${totalPages}`}</Text>
+  return (
+    <div>
+      <Button disabled={page === 0}>Anterior</Button>
+      <Text>{`Página ${page + 1} de ${totalPages}`}</Text>
+    </div>
+  )
 }
