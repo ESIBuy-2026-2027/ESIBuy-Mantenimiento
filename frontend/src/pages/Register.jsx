@@ -1,4 +1,4 @@
-import { Button, Field, Input, Select } from '@fluentui/react-components'
+import { Button, Field, Input, Radio, RadioGroup, Select } from '@fluentui/react-components'
 import { useState } from 'react'
 import { registrarCliente } from '../services/authService'
 
