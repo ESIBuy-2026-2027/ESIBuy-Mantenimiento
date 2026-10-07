@@ -13,8 +13,8 @@ import org.springframework.context.annotation.Import;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 // Test de integración del adaptador de MongoDB (HU1, AB#216).
 // Usa un MongoDB real en Docker (Testcontainers): Docker Desktop debe estar abierto.
@@ -57,7 +57,6 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU1-CP03: existePorCorreo devuelve false si el email no está guardado")
     void existePorCorreoDevuelveFalseSiNoEstaGuardado() {
-        // TODO colección vacía y existePorCorreo("juan@uclm.es") -> false
-        fail("Funcionalidad no implementada");
+        assertFalse(adapter.existePorCorreo("juan@uclm.es"));
     }
 }
