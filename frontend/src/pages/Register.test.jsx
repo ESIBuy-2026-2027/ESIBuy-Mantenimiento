@@ -352,6 +352,31 @@ describe('Register', () => {
     )
   })
 
+  it('register_alElegirCliente_limitaLaLongitudDeLosCampos', async () => {
+    await renderYElegirCliente()
+
+    expect(screen.getByLabelText(/^nombre/i)).toHaveAttribute('maxlength', '30')
+    expect(screen.getByLabelText(/apellidos/i)).toHaveAttribute('maxlength', '30')
+    expect(screen.getByLabelText(/email/i)).toHaveAttribute('maxlength', '100')
+    expect(screen.getByLabelText(/^password/i)).toHaveAttribute('maxlength', '64')
+    expect(screen.getByLabelText(/^repetir password/i)).toHaveAttribute('maxlength', '64')
+  })
+
+  it('register_alElegirVendedor_limitaLaLongitudDelNombreComercial', async () => {
+    await renderYElegirVendedor()
+
+    expect(screen.getByLabelText(/nombre comercial/i)).toHaveAttribute('maxlength', '30')
+  })
+
+  it('register_alEscribirMasDelLimite_cortaElTextoEnElMaximo', async () => {
+    await renderYElegirCliente()
+    const nombre = screen.getByLabelText(/^nombre/i)
+
+    await userEvent.type(nombre, 'a'.repeat(35))
+
+    expect(nombre).toHaveValue('a'.repeat(30))
+  })
+
   it('register_alEnviarFormularioClienteVacio_muestraErroresDeCamposObligatorios', async () => {
     await renderYElegirCliente()
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
