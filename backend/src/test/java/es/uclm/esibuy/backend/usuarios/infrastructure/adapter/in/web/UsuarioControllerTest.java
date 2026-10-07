@@ -65,9 +65,13 @@ class UsuarioControllerTest {
 
     @Test
     @DisplayName("HU1-CP08: un email vacío devuelve 400 y no registra")
-    void rechazaEmailVacio() {
-        // TODO email "" -> 400 y el caso de uso no se llama
-        fail("Funcionalidad no implementada");
+    void rechazaEmailVacio() throws Exception {
+        mockMvc.perform(post(URL_REGISTRO)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("", "clave1234")))
+                .andExpect(status().isBadRequest());
+
+        verify(registroUsuario, never()).registrar(any());
     }
 
     @Test
