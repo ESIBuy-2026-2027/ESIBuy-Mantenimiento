@@ -68,7 +68,7 @@ describe('Register', () => {
     await renderYElegirCliente()
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
-    expect(screen.getAllByText(/obligatorio/i)).toHaveLength(6)
+    expect(screen.getAllByText(/obligatorio/i)).toHaveLength(7)
   })
 
   it('register_alIntroducirFechaDeMenorDeEdad_muestraErrorDeEdad', async () => {
@@ -169,6 +169,28 @@ describe('Register', () => {
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
     expect(screen.getByText(/no coinciden/i)).toBeInTheDocument()
+    expect(registrarCliente).not.toHaveBeenCalled()
+  })
+
+  it('register_siRepetirPasswordEstaVacio_muestraErrorDeObligatorioYNoDeCoincidencia', async () => {
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.clear(screen.getByLabelText(/repetir password/i))
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getByText(/obligatorio/i)).toBeInTheDocument()
+    expect(screen.queryByText(/no coinciden/i)).not.toBeInTheDocument()
+    expect(registrarCliente).not.toHaveBeenCalled()
+  })
+
+  it('register_siPasswordEstaVacio_muestraErrorDeObligatorioYNoDeCoincidencia', async () => {
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.clear(screen.getByLabelText(/^password/i))
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getByText(/obligatorio/i)).toBeInTheDocument()
+    expect(screen.queryByText(/no coinciden/i)).not.toBeInTheDocument()
     expect(registrarCliente).not.toHaveBeenCalled()
   })
 })
