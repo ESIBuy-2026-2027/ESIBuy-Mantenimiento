@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -129,9 +130,21 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP03: desbloquea la cuenta pasados 15 minutos")
     void desbloqueaLaCuentaPasados15Minutos() {
-        // TODO: cuenta bloqueada; avanzar el reloj 15 minutos.
-        // TODO: comprobar que con la contraseña correcta inicia sesión.
-        fail("Funcionalidad no implementada");
+        // Frontera: justo a los 15 minutos del bloqueo ya se puede entrar.
+        Usuario usuario = new Usuario("juan@uclm.es", "hash-guardado", Rol.CLIENTE);
+        for (int i = 0; i < 5; i++) {
+            usuario.registrarIntentoFallido(AHORA);
+        }
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
+        when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
+
+        // El mismo servicio, pero con el reloj 15 minutos después: no hace falta esperar.
+        Clock relojQuinceMinutosDespues = Clock.fixed(AHORA.plus(Duration.ofMinutes(15)), ZoneOffset.UTC);
+        AutenticacionUseCase autenticacionMasTarde = new AutenticacionService(usuarioRepository, hashContrasena, relojQuinceMinutosDespues);
+
+        ResultadoInicioSesion resultado = autenticacionMasTarde.iniciarSesion(new IniciarSesionCommand("juan@uclm.es", "clave1234"));
+
+        assertEquals(PasoLogin.CODIGO_EMAIL, resultado.siguientePaso());
     }
 
     @Test
