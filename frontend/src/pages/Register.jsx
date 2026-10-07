@@ -25,11 +25,11 @@ export default function Register() {
     email: '',
     telefono: '',
     password: '',
+    repeticionPassword: '',
     tipoCliente: 'normal',
     avatar: '',
   })
   const [errores, setErrores] = useState({})
-
   const [registrado, setRegistrado] = useState(false)
 
   const cambiar = (campo) => (e, data) => setDatos({ ...datos, [campo]: data.value })
@@ -46,7 +46,10 @@ export default function Register() {
       nuevosErrores.dni = 'Introduce un DNI válido (8 números y una letra)'
     }
     if (datos.email && !/^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test(datos.email)) {
-        nuevosErrores.email = 'Introduce un email válido'
+      nuevosErrores.email = 'Introduce un email válido'
+    }
+    if (datos.password !== datos.repeticionPassword) {
+      nuevosErrores.repeticionPassword = 'Las contraseñas no coinciden'
     }
     setErrores(nuevosErrores)
 
@@ -71,7 +74,7 @@ export default function Register() {
     )
   }
 
-    if (tipo === 'cliente') {
+  if (tipo === 'cliente') {
     return (
       <div>
         <h1>Registro de cliente</h1>
@@ -93,8 +96,15 @@ export default function Register() {
         <Field label="Teléfono">
           <Input type="tel" value={datos.telefono} onChange={cambiar('telefono')} />
         </Field>
-        <Field label="Contraseña" required validationMessage={errores.password}>
+        <Field label="Password" required validationMessage={errores.password}>
           <Input type="password" value={datos.password} onChange={cambiar('password')} />
+        </Field>
+        <Field label="Repetir password" required validationMessage={errores.repeticionPassword}>
+          <Input
+            type="password"
+            value={datos.repeticionPassword}
+            onChange={cambiar('repeticionPassword')}
+          />
         </Field>
         <Field label="Tipo de cliente" required>
           <Select value={datos.tipoCliente} onChange={cambiar('tipoCliente')}>
