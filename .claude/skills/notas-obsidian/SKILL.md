@@ -40,7 +40,10 @@ No propongas notas para cambios triviales ni para cosas que ya están en el repo
    - Si no hay sección del día, añádela: `obsidian vault="<vault>" append path="<nota de registro>" content="\n## <YYYY-MM-DD>"`
    - Añade la entrada: `obsidian vault="<vault>" append path="<nota de registro>" content="- [[<Título>]] — <resumen de una línea>"`
    - No uses la nota diaria de Obsidian (`daily:*`): su ruta y formato dependen de la configuración de cada vault.
-6. **Verifica** con `obsidian vault="<vault>" read path="<ruta exacta>"` y reporta al usuario qué se ha escrito y dónde.
+6. **Verifica y reporta** al usuario qué se ha escrito y dónde:
+   - Una escritura es correcta si el CLI responde `Created:` (en `create`) o termina sin error (en `append`).
+   - Obsidian tarda unos segundos en registrar un archivo recién creado: un `read` inmediato puede responder "not found" aunque el archivo exista. No lo trates como error ni repitas el `create`; espera unos segundos y vuelve a hacer `obsidian vault="<vault>" read path="<ruta exacta>"`.
+   - Esto también aplica al paso 5: si acabas de crear la nota de registro, no la leas en ese momento para comprobar la sección del día.
 
 Notas sobre el CLI: los valores con espacios van entre comillas; en `content` los saltos de línea se escriben como `\n`. Ignora en la salida los avisos de "Loading updated app package" y "installer is out of date". Obsidian debe estar abierto para que el CLI funcione.
 
