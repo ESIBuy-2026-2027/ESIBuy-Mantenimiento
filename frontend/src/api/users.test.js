@@ -27,9 +27,14 @@ describe('listUsers', () => {
     expect(respuesta).toEqual(RESPUESTA)
   })
 
-  it('HU19-CP02: envía la búsqueda solo cuando tiene texto', () => {
-    // TODO ciclo 2
-    expect.fail('Funcionalidad no implementada')
+  it('HU19-CP02: envía la búsqueda solo cuando tiene texto', async () => {
+    const peticion = capturarPeticion()
+
+    await listUsers({ search: 'ana', page: 0, size: 10 })
+    expect(peticion.url.searchParams.get('busqueda')).toBe('ana')
+
+    await listUsers({ search: '   ', page: 0, size: 10 })
+    expect(peticion.url.searchParams.has('busqueda')).toBe(false)
   })
 
   it('HU19-CP03: envía el rol cuando se filtra por rol', () => {
