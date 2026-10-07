@@ -128,4 +128,17 @@ describe('Register', () => {
 
     expect(await screen.findByText(/cuenta creada/i)).toBeInTheDocument()
   })
+
+  it('register_alElegirCliente_marcaComoRequeridosLosCamposObligatorios', async () => {
+    await renderYElegirCliente()
+
+    expect(screen.getByLabelText(/nombre/i)).toBeRequired()
+    expect(screen.getByLabelText(/apellidos/i)).toBeRequired()
+    expect(screen.getByLabelText(/fecha de nacimiento/i)).toBeRequired()
+    expect(screen.getByLabelText(/dni/i)).toBeRequired()
+    expect(screen.getByLabelText(/email/i)).toBeRequired()
+    expect(screen.getByLabelText(/contraseña/i)).toBeRequired()
+    expect(screen.getByLabelText(/tipo/i)).toBeRequired()
+    expect(screen.getByLabelText(/teléfono/i)).not.toBeRequired()
+  })
 })
