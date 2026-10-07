@@ -2,11 +2,16 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { registrarCliente } from '../api/auth'
+import { getCategorias } from '../api/categorias'
 import { renderWithProviders } from '../test/utils'
 import Register from './Register'
 
 vi.mock('../api/auth', () => ({
   registrarCliente: vi.fn(),
+}))
+
+vi.mock('../api/categorias', () => ({
+  getCategorias: vi.fn(),
 }))
 
 async function renderYElegirCliente() {
@@ -32,6 +37,10 @@ async function rellenarFormularioValido() {
 describe('Register', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    getCategorias.mockResolvedValue([
+      { id: 'cat-1', nombre: 'Tecnología' },
+      { id: 'cat-2', nombre: 'Hogar' },
+    ])
   })
 
   it('register_alRenderizar_muestraOpcionesClienteYVendedor', () => {
@@ -93,6 +102,18 @@ describe('Register', () => {
     expect(screen.getByLabelText(/^password/i)).toBeRequired()
     expect(screen.getByLabelText(/repetir password/i)).toBeRequired()
     expect(screen.getByLabelText(/teléfono/i)).not.toBeRequired()
+  })
+
+  it('register_alElegirVendedor_muestraUnaCasillaPorCategoriaYPermiteMarcarVarias', async () => {
+    await renderYElegirVendedor()
+
+    const tecnologia = await screen.findByRole('checkbox', { name: /tecnología/i })
+    const hogar = screen.getByRole('checkbox', { name: /hogar/i })
+    await userEvent.click(tecnologia)
+    await userEvent.click(hogar)
+
+    expect(tecnologia).toBeChecked()
+    expect(hogar).toBeChecked()
   })
 
   it('register_alEnviarFormularioClienteVacio_muestraErroresDeCamposObligatorios', async () => {
