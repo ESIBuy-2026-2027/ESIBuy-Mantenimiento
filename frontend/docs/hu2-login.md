@@ -240,4 +240,4 @@ Este documento y el trabajo técnico que describe se hicieron con ayuda de un as
 - **Cómo se comprobó:** el asistente reprodujo el proyecto en un entorno temporal, aparte del repositorio, con los archivos reales del equipo. Allí se ejecutaron **40 tests (todos en verde)**, ESLint sin errores y un build de producción correcto. También se comprobó que el build no contiene los mocks ni sus credenciales, y que el componente de captcha real se monta sin errores con React 19.
 - **Qué NO se comprobó:** el widget de Google en un navegador real (necesita cargar un script externo), ni el flujo contra un backend real. Debe verificarse en el proyecto del equipo.
 - **Cómo guió el proceso:** el asistente propuso el orden de commits y ramas siguiendo las convenciones del proyecto, y explicó cada paso para aplicarlo a mano.
-- **Revisión humana:** el código fue revisado, ejecutado y validado por el equipo antes de su integración. Revisado por: _______________ (completar con nombre y fecha).
+- **Revisión humana:** el código fue revisado, ejecutado y validado por el equipo antes de su integración. Revisado por: Ricardo.
