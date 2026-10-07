@@ -116,4 +116,14 @@ class RegistroUsuarioServiceTest {
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
+
+    @Test
+    @DisplayName("HU1-CP05: rechaza una contraseña nula y no guarda nada")
+    void rechazaContrasenaNula() {
+        RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", null);
+
+        assertThrows(ContrasenaInvalidaException.class, () -> registroUsuario.registrar(comando));
+
+        verify(usuarioRepository, never()).guardar(any(Usuario.class));
+    }
 }
