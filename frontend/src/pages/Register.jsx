@@ -1,9 +1,28 @@
-import { Button, Checkbox, Field, Input, Radio, RadioGroup, Select } from '@fluentui/react-components'
+import {
+  Button,
+  Checkbox,
+  Field,
+  Input,
+  Label,
+  Radio,
+  RadioGroup,
+  Select,
+  Text,
+} from '@fluentui/react-components'
 import { useEffect, useState } from 'react'
 import { registrarCliente } from '../api/auth'
 import { getCategorias } from '../api/categorias'
 
 const OBLIGATORIOS = ['nombre', 'apellidos', 'fechaNacimiento', 'dni', 'email', 'password', 'repeticionPassword']
+const OBLIGATORIOS_VENDEDOR = [
+  'nombre',
+  'apellidos',
+  'nombreComercial',
+  'dni',
+  'email',
+  'password',
+  'repeticionPassword',
+]
 
 function esMayorDeEdad(fecha) {
   const nacimiento = new Date(fecha)
@@ -82,6 +101,17 @@ export default function Register() {
     }
   }
 
+  const enviarVendedor = () => {
+    const nuevosErrores = {}
+    OBLIGATORIOS_VENDEDOR.forEach((campo) => {
+      if (!datos[campo].trim()) nuevosErrores[campo] = 'Este campo es obligatorio'
+    })
+    if (datos.categorias.length === 0) {
+      nuevosErrores.categorias = 'Elige al menos una categoría'
+    }
+    setErrores(nuevosErrores)
+  }
+
   if (registrado) {
     return (
       <div>
@@ -145,17 +175,19 @@ export default function Register() {
     return (
       <div>
         <h1>Registro de vendedor</h1>
-        <Field label="Nombre" required>
+        <Field label="Nombre" required validationMessage={errores.nombre}>
           <Input value={datos.nombre} onChange={cambiar('nombre')} />
         </Field>
-        <Field label="Apellidos" required>
+        <Field label="Apellidos" required validationMessage={errores.apellidos}>
           <Input value={datos.apellidos} onChange={cambiar('apellidos')} />
         </Field>
-        <Field label="Nombre comercial" required>
+        <Field label="Nombre comercial" required validationMessage={errores.nombreComercial}>
           <Input value={datos.nombreComercial} onChange={cambiar('nombreComercial')} />
         </Field>
         <fieldset>
-          <legend>Categorías</legend>
+          <legend>
+            <Label required>Categorías</Label>
+          </legend>
           {categoriasDisponibles.map((categoria) => (
             <Checkbox
               key={categoria.id}
@@ -164,20 +196,21 @@ export default function Register() {
               onChange={cambiarCategoria(categoria.id)}
             />
           ))}
+          {errores.categorias && <Text>{errores.categorias}</Text>}
         </fieldset>
-        <Field label="DNI" required>
+        <Field label="DNI" required validationMessage={errores.dni}>
           <Input value={datos.dni} onChange={cambiar('dni')} />
         </Field>
-        <Field label="Email" required>
+        <Field label="Email" required validationMessage={errores.email}>
           <Input type="email" value={datos.email} onChange={cambiar('email')} />
         </Field>
         <Field label="Teléfono">
           <Input type="tel" value={datos.telefono} onChange={cambiar('telefono')} />
         </Field>
-        <Field label="Password" required>
+        <Field label="Password" required validationMessage={errores.password}>
           <Input type="password" value={datos.password} onChange={cambiar('password')} />
         </Field>
-        <Field label="Repetir password" required>
+        <Field label="Repetir password" required validationMessage={errores.repeticionPassword}>
           <Input
             type="password"
             value={datos.repeticionPassword}
@@ -191,6 +224,7 @@ export default function Register() {
             <Radio value="avatar3" label="Avatar 3" />
           </RadioGroup>
         </Field>
+        <Button appearance="primary" onClick={enviarVendedor}>Registrarse</Button>
       </div>
     )
   }
