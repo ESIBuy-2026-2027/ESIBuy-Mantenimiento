@@ -13,12 +13,11 @@ import { PATHS } from './paths'
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/register" element={<Register />} />
       <Route path={PATHS.LOGIN} element={<LoginPage />} />
 
       <Route element={<AppLayout />}>
         <Route path={PATHS.HOME} element={<Home />} />
+        <Route path={PATHS.REGISTER} element={<Register />} />
         <Route path={PATHS.PRODUCTS} element={<ProductsPage />} />
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
