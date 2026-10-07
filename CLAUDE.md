@@ -55,13 +55,13 @@ Combinamos tres estilos arquitectónicos **complementarios**, cada uno a un nive
 
 1. **Cliente-Servidor** (nivel sistema): el navegador (frontend React) se comunica con el backend Spring Boot mediante peticiones **HTTP/HTTPS**. El frontend no accede nunca directamente a la base de datos.
 2. **MVC** (capa de entrada de Spring): el **Controller** recibe la petición, valida la entrada, **delega** en un puerto de entrada y decide qué JSON devolver. El controller no contiene lógica de negocio.
-3. **Hexagonal / Puertos y Adaptadores organizada por módulos funcionales** (interior del backend): cada funcionalidad del sistema es un módulo bajo el paquete raíz `es.uclm.esibuy` (p. ej. `usuarios`, `catalogo`), y **cada módulo contiene su propio hexágono** con tres capas: dominio, aplicación e infraestructura.
+3. **Hexagonal / Puertos y Adaptadores organizada por módulos funcionales** (interior del backend): cada funcionalidad del sistema es un módulo bajo el paquete raíz `es.uclm.esibuy.backend`, el de `BackendApplication`, para que el escaneo de componentes de Spring lo detecte sin configuración extra (p. ej. `usuarios`, `catalogo`), y **cada módulo contiene su propio hexágono** con tres capas: dominio, aplicación e infraestructura.
 4. **Patrón Repository**: el acceso a datos se expone al núcleo mediante puertos de salida (p. ej. `UsuarioRepositoryPort`), de modo que dominio y aplicación son **independientes de MongoDB y de Spring Data**. La implementación con Spring Data MongoDB vive solo en el adaptador de salida.
 
 ### Estructura de paquetes (backend)
 
 ```
-es.uclm.esibuy
+es.uclm.esibuy.backend
 ├── usuarios
 │   ├── domain
 │   │   ├── model            Entidades, objetos de valor y enumerados
