@@ -170,6 +170,9 @@ function validarCamposComunes(datos, obligatorios) {
   if (datos.password && datos.repeticionPassword && datos.password !== datos.repeticionPassword) {
     errores.repeticionPassword = 'Los passwords no coinciden'
   }
+  if (!datos.aceptaPrivacidad) {
+    errores.aceptaPrivacidad = 'Debes aceptar la política de privacidad'
+  }
   return errores
 }
 
@@ -189,6 +192,7 @@ export default function Register() {
     repeticionPassword: '',
     tipoCliente: 'normal',
     avatar: '',
+    aceptaPrivacidad: false,
   })
   const [errores, setErrores] = useState({})
   const [registrado, setRegistrado] = useState(false)
@@ -326,6 +330,17 @@ export default function Register() {
     </>
   )
 
+  const casillaPrivacidad = (
+    <Field validationMessage={errores.aceptaPrivacidad}>
+      <Checkbox
+        required
+        label="Acepto la política de privacidad"
+        checked={datos.aceptaPrivacidad}
+        onChange={(e, data) => setDatos({ ...datos, aceptaPrivacidad: data.checked })}
+      />
+    </Field>
+  )
+
   const selectorAvatar = (
     <Field label="Imagen de perfil">
       <RadioGroup layout="horizontal" value={datos.avatar} onChange={cambiar('avatar')}>
@@ -351,6 +366,7 @@ export default function Register() {
           </Select>
         </Field>
         {selectorAvatar}
+        {casillaPrivacidad}
         <Button appearance="primary" size="large" onClick={enviarCliente}>
           Registrarse
         </Button>
@@ -381,6 +397,7 @@ export default function Register() {
         </fieldset>
         {camposComunes}
         {selectorAvatar}
+        {casillaPrivacidad}
         <Button appearance="primary" size="large" onClick={enviarVendedor}>
           Registrarse
         </Button>
