@@ -9,6 +9,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoExcept
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -52,8 +53,8 @@ class RegistroUsuarioServiceTest {
     }
 
     @Test
+    @DisplayName("HU1-CP01: registra al cliente con rol CLIENTE")
     void registraClienteConRolCliente() {
-        // HU1-CP01
         RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "clave1234");
 
         registroUsuario.registrar(comando);
@@ -64,8 +65,8 @@ class RegistroUsuarioServiceTest {
     }
 
     @Test
+    @DisplayName("HU1-CP02: guarda la contraseña hasheada, nunca en claro")
     void guardaContrasenaHasheada() {
-        // HU1-CP02
         when(hashContrasena.hashear("clave1234")).thenReturn("hash-simulado");
         RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "clave1234");
 
@@ -78,8 +79,9 @@ class RegistroUsuarioServiceTest {
     }
 
     @Test
+    @DisplayName("HU1-CP05: acepta una contraseña de exactamente 8 caracteres")
     void permiteContrasenaDeExactamente8Caracteres() {
-        // HU1-CP05 (frontera: 8 caracteres → permitido)
+        // Frontera: 8 caracteres → permitido
         RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "12345678");
 
         registroUsuario.registrar(comando);
@@ -88,8 +90,9 @@ class RegistroUsuarioServiceTest {
     }
 
     @Test
+    @DisplayName("HU1-CP05: rechaza una contraseña de menos de 8 caracteres")
     void rechazaContrasenaDeMenosDe8Caracteres() {
-        // HU1-CP05 (frontera: 7 caracteres → excepción)
+        // Frontera: 7 caracteres → excepción
         RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "1234567");
 
         // assertThrows(TipoDeExcepcion.class, () -> codigo) ejecuta el código de la lambda
@@ -104,8 +107,8 @@ class RegistroUsuarioServiceTest {
     }
 
     @Test
+    @DisplayName("HU1-CP03: rechaza un correo ya registrado y no guarda nada")
     void rechazaEmailYaRegistrado() {
-        // HU1-CP03
         when(usuarioRepository.existePorCorreo("juan@uclm.es")).thenReturn(true);
         RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "clave1234");
 
