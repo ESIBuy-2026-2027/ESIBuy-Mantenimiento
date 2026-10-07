@@ -82,6 +82,19 @@ describe('Register', () => {
     expect(screen.getByLabelText(/repetir password/i)).toBeInTheDocument()
   })
 
+  it('register_alElegirVendedor_marcaComoRequeridosLosCamposObligatorios', async () => {
+    await renderYElegirVendedor()
+
+    expect(screen.getByLabelText(/^nombre(?! comercial)/i)).toBeRequired()
+    expect(screen.getByLabelText(/apellidos/i)).toBeRequired()
+    expect(screen.getByLabelText(/nombre comercial/i)).toBeRequired()
+    expect(screen.getByLabelText(/dni/i)).toBeRequired()
+    expect(screen.getByLabelText(/email/i)).toBeRequired()
+    expect(screen.getByLabelText(/^password/i)).toBeRequired()
+    expect(screen.getByLabelText(/repetir password/i)).toBeRequired()
+    expect(screen.getByLabelText(/teléfono/i)).not.toBeRequired()
+  })
+
   it('register_alEnviarFormularioClienteVacio_muestraErroresDeCamposObligatorios', async () => {
     await renderYElegirCliente()
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
