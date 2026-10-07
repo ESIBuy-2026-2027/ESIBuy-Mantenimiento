@@ -1,22 +1,53 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
+import es.uclm.esibuy.backend.shared.config.SecurityConfig;
+import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioCommand;
+import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // Tests del adaptador web del registro (HU1, AB#14).
 // Se prueban también SecurityConfig (shared.config) y ManejadorGlobalErrores (shared.error)
 // a través del endpoint, sin levantar MongoDB: el caso de uso se sustituye por un doble.
 // PENDIENTE DE REVISAR CON EL EQUIPO: los IDs HU1-CP07 y HU1-CP08 son una propuesta.
+@WebMvcTest(UsuarioController.class)
+@Import(SecurityConfig.class)
 class UsuarioControllerTest {
+
+    private static final String URL_REGISTRO = "/api/auth/registro";
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
+    private RegistroUsuarioUseCase registroUsuario;
+
+    private static String json(String email, String password) {
+        return """
+               {"email": "%s", "password": "%s"}
+               """.formatted(email, password);
+    }
 
     @Test
     @DisplayName("HU1-CP01: un registro válido devuelve 201 y delega en el caso de uso")
-    void registroValidoDevuelve201() {
-        // TODO POST /api/auth/registro con email y password válidos -> 201
-        //      y el caso de uso recibe RegistrarUsuarioCommand("juan@uclm.es", "clave1234")
-        fail("Funcionalidad no implementada");
+    void registroValidoDevuelve201() throws Exception {
+        mockMvc.perform(post(URL_REGISTRO)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("juan@uclm.es", "clave1234")))
+                .andExpect(status().isCreated());
+
+        verify(registroUsuario).registrar(new RegistrarUsuarioCommand("juan@uclm.es", "clave1234"));
     }
 
     @Test
