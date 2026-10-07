@@ -1,13 +1,14 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { registrarCliente } from '../api/auth'
+import { registrarCliente, registrarVendedor } from '../api/auth'
 import { getCategorias } from '../api/categorias'
 import { renderWithProviders } from '../test/utils'
 import Register from './Register'
 
 vi.mock('../api/auth', () => ({
   registrarCliente: vi.fn(),
+  registrarVendedor: vi.fn(),
 }))
 
 vi.mock('../api/categorias', () => ({
@@ -194,6 +195,33 @@ describe('Register', () => {
 
     expect(screen.getByText(/obligatorio/i)).toBeInTheDocument()
     expect(screen.queryByText(/no coinciden/i)).not.toBeInTheDocument()
+  })
+
+  it('register_alEnviarDatosValidosDeVendedor_llamaAlServicioConLosDatos', async () => {
+    registrarVendedor.mockResolvedValue({})
+    await renderYElegirVendedor()
+    await rellenarFormularioVendedorValido()
+    await userEvent.click(screen.getByRole('radio', { name: /avatar 2/i }))
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(registrarVendedor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        nombre: 'Luis',
+        nombreComercial: 'Tienda Luis',
+        email: 'luis@correo.com',
+        categorias: ['cat-1'],
+        avatar: 'avatar2',
+      })
+    )
+  })
+
+  it('register_siElRegistroDeVendedorEsCorrecto_muestraMensajeDeConfirmacion', async () => {
+    registrarVendedor.mockResolvedValue({})
+    await renderYElegirVendedor()
+    await rellenarFormularioVendedorValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(await screen.findByText(/cuenta creada/i)).toBeInTheDocument()
   })
 
   it('register_alEnviarFormularioClienteVacio_muestraErroresDeCamposObligatorios', async () => {
