@@ -106,7 +106,7 @@ export default function Register() {
         : datos.categorias.filter((categoria) => categoria !== id),
     })
 
-  const enviar = async () => {
+  const enviarCliente = async () => {
     const nuevosErrores = validarCamposComunes(datos, OBLIGATORIOS_CLIENTE)
     if (datos.fechaNacimiento && !esMayorDeEdad(datos.fechaNacimiento)) {
       nuevosErrores.fechaNacimiento = 'Debes ser mayor de edad para registrarte'
@@ -153,52 +153,48 @@ export default function Register() {
     )
   }
 
+  const campo = (nombre, label, { type, required = true } = {}) => (
+    <Field label={label} required={required} validationMessage={errores[nombre]}>
+      <Input type={type} value={datos[nombre]} onChange={cambiar(nombre)} />
+    </Field>
+  )
+
+  const camposComunes = (
+    <>
+      {campo('dni', 'DNI')}
+      {campo('email', 'Email', { type: 'email' })}
+      {campo('telefono', 'Teléfono', { type: 'tel', required: false })}
+      {campo('password', 'Password', { type: 'password' })}
+      {campo('repeticionPassword', 'Repetir password', { type: 'password' })}
+    </>
+  )
+
+  const selectorAvatar = (
+    <Field label="Imagen de perfil">
+      <RadioGroup layout="horizontal" value={datos.avatar} onChange={cambiar('avatar')}>
+        <Radio value="avatar1" label="Avatar 1" />
+        <Radio value="avatar2" label="Avatar 2" />
+        <Radio value="avatar3" label="Avatar 3" />
+      </RadioGroup>
+    </Field>
+  )
+
   if (tipo === 'cliente') {
     return (
       <div>
         <h1>Registro de cliente</h1>
-        <Field label="Nombre" required validationMessage={errores.nombre}>
-          <Input value={datos.nombre} onChange={cambiar('nombre')} />
-        </Field>
-        <Field label="Apellidos" required validationMessage={errores.apellidos}>
-          <Input value={datos.apellidos} onChange={cambiar('apellidos')} />
-        </Field>
-        <Field label="Fecha de nacimiento" required validationMessage={errores.fechaNacimiento}>
-          <Input type="date" value={datos.fechaNacimiento} onChange={cambiar('fechaNacimiento')} />
-        </Field>
-        <Field label="DNI" required validationMessage={errores.dni}>
-          <Input value={datos.dni} onChange={cambiar('dni')} />
-        </Field>
-        <Field label="Email" required validationMessage={errores.email}>
-          <Input type="email" value={datos.email} onChange={cambiar('email')} />
-        </Field>
-        <Field label="Teléfono">
-          <Input type="tel" value={datos.telefono} onChange={cambiar('telefono')} />
-        </Field>
-        <Field label="Password" required validationMessage={errores.password}>
-          <Input type="password" value={datos.password} onChange={cambiar('password')} />
-        </Field>
-        <Field label="Repetir password" required validationMessage={errores.repeticionPassword}>
-          <Input
-            type="password"
-            value={datos.repeticionPassword}
-            onChange={cambiar('repeticionPassword')}
-          />
-        </Field>
+        {campo('nombre', 'Nombre')}
+        {campo('apellidos', 'Apellidos')}
+        {campo('fechaNacimiento', 'Fecha de nacimiento', { type: 'date' })}
+        {camposComunes}
         <Field label="Tipo de cliente" required>
           <Select value={datos.tipoCliente} onChange={cambiar('tipoCliente')}>
             <option value="normal">Normal</option>
             <option value="premium">Premium</option>
           </Select>
         </Field>
-        <Field label="Imagen de perfil">
-          <RadioGroup layout="horizontal" value={datos.avatar} onChange={cambiar('avatar')}>
-            <Radio value="avatar1" label="Avatar 1" />
-            <Radio value="avatar2" label="Avatar 2" />
-            <Radio value="avatar3" label="Avatar 3" />
-          </RadioGroup>
-        </Field>
-        <Button appearance="primary" onClick={enviar}>Registrarse</Button>
+        {selectorAvatar}
+        <Button appearance="primary" onClick={enviarCliente}>Registrarse</Button>
       </div>
     )
   }
@@ -207,15 +203,9 @@ export default function Register() {
     return (
       <div>
         <h1>Registro de vendedor</h1>
-        <Field label="Nombre" required validationMessage={errores.nombre}>
-          <Input value={datos.nombre} onChange={cambiar('nombre')} />
-        </Field>
-        <Field label="Apellidos" required validationMessage={errores.apellidos}>
-          <Input value={datos.apellidos} onChange={cambiar('apellidos')} />
-        </Field>
-        <Field label="Nombre comercial" required validationMessage={errores.nombreComercial}>
-          <Input value={datos.nombreComercial} onChange={cambiar('nombreComercial')} />
-        </Field>
+        {campo('nombre', 'Nombre')}
+        {campo('apellidos', 'Apellidos')}
+        {campo('nombreComercial', 'Nombre comercial')}
         <fieldset>
           <legend>
             <Label required>Categorías</Label>
@@ -230,32 +220,8 @@ export default function Register() {
           ))}
           {errores.categorias && <Text>{errores.categorias}</Text>}
         </fieldset>
-        <Field label="DNI" required validationMessage={errores.dni}>
-          <Input value={datos.dni} onChange={cambiar('dni')} />
-        </Field>
-        <Field label="Email" required validationMessage={errores.email}>
-          <Input type="email" value={datos.email} onChange={cambiar('email')} />
-        </Field>
-        <Field label="Teléfono">
-          <Input type="tel" value={datos.telefono} onChange={cambiar('telefono')} />
-        </Field>
-        <Field label="Password" required validationMessage={errores.password}>
-          <Input type="password" value={datos.password} onChange={cambiar('password')} />
-        </Field>
-        <Field label="Repetir password" required validationMessage={errores.repeticionPassword}>
-          <Input
-            type="password"
-            value={datos.repeticionPassword}
-            onChange={cambiar('repeticionPassword')}
-          />
-        </Field>
-        <Field label="Imagen de perfil">
-          <RadioGroup layout="horizontal" value={datos.avatar} onChange={cambiar('avatar')}>
-            <Radio value="avatar1" label="Avatar 1" />
-            <Radio value="avatar2" label="Avatar 2" />
-            <Radio value="avatar3" label="Avatar 3" />
-          </RadioGroup>
-        </Field>
+        {camposComunes}
+        {selectorAvatar}
         <Button appearance="primary" onClick={enviarVendedor}>Registrarse</Button>
       </div>
     )
