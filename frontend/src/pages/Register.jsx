@@ -152,6 +152,9 @@ function validarCamposComunes(datos, obligatorios) {
   if (datos.email && !/^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test(datos.email)) {
     errores.email = 'Introduce un email válido'
   }
+  if (datos.telefono && !/^\d{9}$/.test(datos.telefono)) {
+    errores.telefono = 'Introduce un teléfono válido (9 números)'
+  }
   if (datos.password && !REQUISITOS_PASSWORD.every(({ cumple }) => cumple(datos.password))) {
     errores.password = 'El password no cumple los requisitos'
   }
