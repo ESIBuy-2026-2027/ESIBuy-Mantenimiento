@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button, makeStyles, tokens } from '@fluentui/react-components'
 import { ArrowExit20Regular, PersonAdd20Regular } from '@fluentui/react-icons'
 import { Link, useNavigate } from 'react-router-dom'
+import { ROLES } from '../auth/roles'
 import { useAuth } from '../auth/useAuth'
 import { PATHS } from '../routes/paths'
 import LinkButton from './LinkButton'
@@ -48,11 +49,18 @@ function GuestActions() {
   )
 }
 
-function UserActions({ onSignOut, disabled }) {
+function UserActions({ isAdmin, onSignOut, disabled }) {
   return (
-    <Button appearance="primary" icon={<ArrowExit20Regular />} onClick={onSignOut} disabled={disabled}>
-      Cerrar sesión
-    </Button>
+    <>
+      {isAdmin && (
+        <LinkButton to={PATHS.ADMIN} appearance="subtle">
+          Panel de control
+        </LinkButton>
+      )}
+      <Button appearance="primary" icon={<ArrowExit20Regular />} onClick={onSignOut} disabled={disabled}>
+        Cerrar sesión
+      </Button>
+    </>
   )
 }
 
@@ -75,7 +83,7 @@ export default function AppHeader() {
         ESI<span className={styles.logoAccent}>Buy</span>
       </Link>
       <nav className={styles.actions} aria-label="Cuenta">
-        {!loading && (user ? <UserActions onSignOut={handleSignOut} disabled={signingOut} /> : <GuestActions />)}
+        {!loading && (user ? <UserActions isAdmin={user.rol === ROLES.ADMIN} onSignOut={handleSignOut} disabled={signingOut} /> : <GuestActions />)}
       </nav>
     </header>
   )

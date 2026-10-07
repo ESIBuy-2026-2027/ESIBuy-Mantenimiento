@@ -81,6 +81,46 @@ describe('AppHeader', () => {
     expect(await screen.findByLabelText(/correo electrónico/i)).toBeInTheDocument()
   })
 
+  it('appHeader_conSesionDeAdmin_muestraLaOpcionPanelDeControl', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/')
+
+    expect(await screen.findByRole('link', { name: /panel de control/i })).toHaveAttribute('href', '/admin')
+  })
+
+  it('appHeader_conSesionDeCliente_noMuestraLaOpcionPanelDeControl', async () => {
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/')
+
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(screen.queryByRole('link', { name: /panel de control/i })).not.toBeInTheDocument()
+  })
+
+  it('appHeader_conSesionDeVendedor_noMuestraLaOpcionPanelDeControl', async () => {
+    await abrirSesionPorApi('vendedor@esibuy.test')
+    renderApp('/')
+
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(screen.queryByRole('link', { name: /panel de control/i })).not.toBeInTheDocument()
+  })
+
+  it('appHeader_sinSesion_noMuestraLaOpcionPanelDeControl', async () => {
+    renderApp('/')
+
+    await screen.findByRole('link', { name: /iniciar sesión/i })
+    expect(screen.queryByRole('link', { name: /panel de control/i })).not.toBeInTheDocument()
+  })
+
+  it('appHeader_alPulsarPanelDeControl_navegaAlPanelDeAdmin', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/')
+
+    await user.click(await screen.findByRole('link', { name: /panel de control/i }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: /panel de control/i })).toBeInTheDocument()
+  })
+
   it('loginPage_noMuestraLaCabeceraDeLaAplicacion', async () => {
     renderApp('/login')
 
