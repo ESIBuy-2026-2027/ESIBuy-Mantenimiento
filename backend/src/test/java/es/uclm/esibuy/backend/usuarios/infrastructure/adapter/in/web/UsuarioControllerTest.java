@@ -16,7 +16,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -121,8 +120,13 @@ class UsuarioControllerTest {
 
     @Test
     @DisplayName("Seguridad: una ruta distinta del registro exige sesión")
-    void otraRutaSinSesionEstaProtegida() {
-        // TODO POST /api/auth/otra-ruta sin sesión -> 403 y el caso de uso no se llama
-        fail("Funcionalidad no implementada");
+    void otraRutaSinSesionEstaProtegida() throws Exception {
+        // 403 y no 401: todavía no hay ningún mecanismo de login configurado (llegará con la HU2)
+        mockMvc.perform(post("/api/auth/otra-ruta")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("juan@uclm.es", "clave1234")))
+                .andExpect(status().isForbidden());
+
+        verify(registroUsuario, never()).registrar(any());
     }
 }
