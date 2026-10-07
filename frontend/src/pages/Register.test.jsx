@@ -33,7 +33,7 @@ async function rellenarFormularioVendedorValido() {
   await userEvent.type(screen.getByLabelText(/dni/i), '12345678Z')
   await userEvent.type(screen.getByLabelText(/email/i), 'luis@correo.com')
   await userEvent.type(screen.getByLabelText(/^password/i), 'Password123')
-  await userEvent.type(screen.getByLabelText(/repetir password/i), 'Password123')
+  await userEvent.type(screen.getByLabelText(/^repetir password/i), 'Password123')
 }
 
 async function rellenarFormularioValido() {
@@ -43,7 +43,7 @@ async function rellenarFormularioValido() {
   await userEvent.type(screen.getByLabelText(/dni/i), '12345678Z')
   await userEvent.type(screen.getByLabelText(/email/i), 'ana@correo.com')
   await userEvent.type(screen.getByLabelText(/^password/i), 'Password123')
-  await userEvent.type(screen.getByLabelText(/repetir password/i), 'Password123')
+  await userEvent.type(screen.getByLabelText(/^repetir password/i), 'Password123')
 }
 
 describe('Register', () => {
@@ -87,7 +87,7 @@ describe('Register', () => {
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/teléfono/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^password/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/repetir password/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^repetir password/i)).toBeInTheDocument()
   })
 
   it('register_alElegirCliente_muestraLosCamposDelFormulario', async () => {
@@ -100,7 +100,7 @@ describe('Register', () => {
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/teléfono/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^password/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/repetir password/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^repetir password/i)).toBeInTheDocument()
   })
 
   it('register_alElegirVendedor_marcaComoRequeridosLosCamposObligatorios', async () => {
@@ -112,7 +112,7 @@ describe('Register', () => {
     expect(screen.getByLabelText(/dni/i)).toBeRequired()
     expect(screen.getByLabelText(/email/i)).toBeRequired()
     expect(screen.getByLabelText(/^password/i)).toBeRequired()
-    expect(screen.getByLabelText(/repetir password/i)).toBeRequired()
+    expect(screen.getByLabelText(/^repetir password/i)).toBeRequired()
     expect(screen.getByLabelText(/teléfono/i)).not.toBeRequired()
   })
 
@@ -171,7 +171,7 @@ describe('Register', () => {
   it('register_siLosPasswordsDelVendedorNoCoinciden_muestraError', async () => {
     await renderYElegirVendedor()
     await rellenarFormularioVendedorValido()
-    await userEvent.type(screen.getByLabelText(/repetir password/i), 'Extra')
+    await userEvent.type(screen.getByLabelText(/^repetir password/i), 'Extra')
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
     expect(screen.getByText(/los passwords no coinciden/i)).toBeInTheDocument()
@@ -180,7 +180,7 @@ describe('Register', () => {
   it('register_siRepetirPasswordDelVendedorEstaVacio_muestraErrorDeObligatorioYNoDeCoincidencia', async () => {
     await renderYElegirVendedor()
     await rellenarFormularioVendedorValido()
-    await userEvent.clear(screen.getByLabelText(/repetir password/i))
+    await userEvent.clear(screen.getByLabelText(/^repetir password/i))
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
     expect(screen.getByText(/obligatorio/i)).toBeInTheDocument()
@@ -260,7 +260,7 @@ describe('Register', () => {
   it('register_alPulsarMostrarPassword_alternaEntreVerloYOcultarlo', async () => {
     await renderYElegirCliente()
     const password = screen.getByLabelText(/^password/i)
-    const repeticion = screen.getByLabelText(/repetir password/i)
+    const repeticion = screen.getByLabelText(/^repetir password/i)
 
     expect(password).toHaveAttribute('type', 'password')
     expect(repeticion).toHaveAttribute('type', 'password')
@@ -353,7 +353,7 @@ describe('Register', () => {
     expect(screen.getByLabelText(/dni/i)).toBeRequired()
     expect(screen.getByLabelText(/email/i)).toBeRequired()
     expect(screen.getByLabelText(/^password/i)).toBeRequired()
-    expect(screen.getByLabelText(/repetir password/i)).toBeRequired()
+    expect(screen.getByLabelText(/^repetir password/i)).toBeRequired()
     expect(screen.getByLabelText(/tipo/i)).toBeRequired()
     expect(screen.getByLabelText(/teléfono/i)).not.toBeRequired()
   })
@@ -378,7 +378,7 @@ describe('Register', () => {
   it('register_siLosPasswordsNoCoinciden_muestraErrorYNoLlamaAlServicio', async () => {
     await renderYElegirCliente()
     await rellenarFormularioValido()
-    await userEvent.type(screen.getByLabelText(/repetir password/i), 'Extra')
+    await userEvent.type(screen.getByLabelText(/^repetir password/i), 'Extra')
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
     expect(screen.getByText(/los passwords no coinciden/i)).toBeInTheDocument()
@@ -388,7 +388,7 @@ describe('Register', () => {
   it('register_siRepetirPasswordEstaVacio_muestraErrorDeObligatorioYNoDeCoincidencia', async () => {
     await renderYElegirCliente()
     await rellenarFormularioValido()
-    await userEvent.clear(screen.getByLabelText(/repetir password/i))
+    await userEvent.clear(screen.getByLabelText(/^repetir password/i))
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
     expect(screen.getByText(/obligatorio/i)).toBeInTheDocument()

@@ -13,7 +13,12 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { BuildingShop24Regular, Cart24Regular } from '@fluentui/react-icons'
+import {
+  BuildingShop24Regular,
+  Cart24Regular,
+  Eye20Regular,
+  EyeOff20Regular,
+} from '@fluentui/react-icons'
 import { useEffect, useState } from 'react'
 import { registrarCliente, registrarVendedor } from '../api/auth'
 import { getCategorias } from '../api/categorias'
@@ -119,7 +124,7 @@ function validarCamposComunes(datos, obligatorios) {
     errores.email = 'Introduce un email válido'
   }
   if (datos.password && datos.repeticionPassword && datos.password !== datos.repeticionPassword) {
-    errores.repeticionPassword = 'Las contraseñas no coinciden'
+    errores.repeticionPassword = 'Los passwords no coinciden'
   }
   return errores
 }
@@ -144,6 +149,10 @@ export default function Register() {
   const [errores, setErrores] = useState({})
   const [registrado, setRegistrado] = useState(false)
   const [categoriasDisponibles, setCategoriasDisponibles] = useState([])
+  const [passwordsVisibles, setPasswordsVisibles] = useState({
+    password: false,
+    repeticionPassword: false,
+  })
 
   useEffect(() => {
     if (tipo !== 'vendedor') return
@@ -222,13 +231,36 @@ export default function Register() {
     </Field>
   )
 
+  const campoPassword = (nombre, label) => {
+    const visible = passwordsVisibles[nombre]
+    const accion = visible ? 'Ocultar' : 'Mostrar'
+    return (
+      <Field label={label} required validationMessage={errores[nombre]}>
+        <Input
+          type={visible ? 'text' : 'password'}
+          value={datos[nombre]}
+          onChange={cambiar(nombre)}
+          contentAfter={
+            <Button
+              appearance="transparent"
+              size="small"
+              icon={visible ? <EyeOff20Regular /> : <Eye20Regular />}
+              aria-label={`${accion} ${label.toLowerCase()}`}
+              onClick={() => setPasswordsVisibles({ ...passwordsVisibles, [nombre]: !visible })}
+            />
+          }
+        />
+      </Field>
+    )
+  }
+
   const camposComunes = (
     <>
       {campo('dni', 'DNI')}
       {campo('email', 'Email', { type: 'email' })}
       {campo('telefono', 'Teléfono', { type: 'tel', required: false })}
-      {campo('password', 'Password', { type: 'password' })}
-      {campo('repeticionPassword', 'Repetir password', { type: 'password' })}
+      {campoPassword('password', 'Password')}
+      {campoPassword('repeticionPassword', 'Repetir password')}
     </>
   )
 
