@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,6 +28,9 @@ import static org.mockito.Mockito.when;
 // El contrato que debe cumplir sale del frontend (frontend/src/mocks/authHandlers.js).
 @ExtendWith(MockitoExtension.class)
 class AutenticacionServiceTest {
+
+    // Hora fija para los tests: el usuario recibe la hora en vez de consultarla él mismo.
+    private static final Instant AHORA = Instant.parse("2026-10-08T10:00:00Z");
 
     @Mock
     private UsuarioRepositoryPort usuarioRepository;
@@ -84,9 +88,16 @@ class AutenticacionServiceTest {
     @DisplayName("HU2-CP03: tras 4 intentos fallidos la cuenta no se bloquea")
     void permiteCuartoIntentoFallidoSinBloquear() {
         // Frontera: 4 fallos → aún se puede entrar.
-        // TODO: usuario con 4 intentos fallidos.
-        // TODO: comprobar que con la contraseña correcta inicia sesión.
-        fail("Funcionalidad no implementada");
+        Usuario usuario = new Usuario("juan@uclm.es", "hash-guardado", Rol.CLIENTE);
+        for (int i = 0; i < 4; i++) {
+            usuario.registrarIntentoFallido(AHORA);
+        }
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
+        when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
+
+        ResultadoInicioSesion resultado = autenticacion.iniciarSesion(new IniciarSesionCommand("juan@uclm.es", "clave1234"));
+
+        assertEquals(PasoLogin.CODIGO_EMAIL, resultado.siguientePaso());
     }
 
     @Test
