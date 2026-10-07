@@ -1,16 +1,17 @@
 package es.uclm.esibuy.backend.usuarios.application.service;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioCommand;
+import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -23,6 +24,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 // Cómo encaja el test en la arquitectura hexagonal:
+// - RegistroUsuarioUseCase (application.port.in): puerto de entrada, lo que la aplicación ofrece.
+//   El test usa el servicio a través de él, igual que lo hará el controlador REST.
 // - RegistrarUsuarioCommand (application.port.in): datos de entrada del caso de uso.
 //   El controlador REST traducirá su DTO a este comando; el núcleo no conoce los DTO.
 // - RegistroUsuarioService (application.service): implementa el caso de uso. Es la clase bajo prueba.
@@ -41,8 +44,12 @@ class RegistroUsuarioServiceTest {
     @Mock
     private HashContrasenaPort hashContrasena;
 
-    @InjectMocks
-    private RegistroUsuarioService registroUsuarioService;
+    private RegistroUsuarioUseCase registroUsuario; // Tipado como el puerto de entrada: obliga a implementarlo y se prueba como lo usará el controlador
+
+    @BeforeEach
+    void crearServicio() {
+        registroUsuario = new RegistroUsuarioService(usuarioRepository, hashContrasena);
+    }
 
     @Test
     void registraClienteConRolCliente() {
@@ -50,7 +57,7 @@ class RegistroUsuarioServiceTest {
         // PENDIENTE DE REVISAR CON EL EQUIPO: ¿también estado PENDIENTE?
         RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "clave1234");
 
-        registroUsuarioService.registrar(comando);
+        registroUsuario.registrar(comando);
 
         ArgumentCaptor<Usuario> usuarioGuardado = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).guardar(usuarioGuardado.capture());
@@ -63,7 +70,7 @@ class RegistroUsuarioServiceTest {
         when(hashContrasena.hashear("clave1234")).thenReturn("hash-simulado");
         RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "clave1234");
 
-        registroUsuarioService.registrar(comando);
+        registroUsuario.registrar(comando);
 
         ArgumentCaptor<Usuario> usuarioGuardado = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).guardar(usuarioGuardado.capture());
@@ -76,7 +83,7 @@ class RegistroUsuarioServiceTest {
         // HU1-CP05 (frontera: 8 caracteres → permitido)
         RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "12345678");
 
-        registroUsuarioService.registrar(comando);
+        registroUsuario.registrar(comando);
 
         verify(usuarioRepository).guardar(any(Usuario.class));
     }
@@ -92,7 +99,7 @@ class RegistroUsuarioServiceTest {
         // - si no lanza nada, o lanza otra distinta, el test falla.
         // El código va dentro de una lambda (() -> ...) y no se llama directamente porque,
         // si se llamara aquí, la excepción saldría antes de que assertThrows pudiera capturarla.
-        assertThrows(ContrasenaInvalidaException.class, () -> registroUsuarioService.registrar(comando));
+        assertThrows(ContrasenaInvalidaException.class, () -> registroUsuario.registrar(comando));
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
@@ -103,7 +110,7 @@ class RegistroUsuarioServiceTest {
         when(usuarioRepository.existePorCorreo("juan@uclm.es")).thenReturn(true);
         RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "clave1234");
 
-        assertThrows(CorreoYaRegistradoException.class, () -> registroUsuarioService.registrar(comando));
+        assertThrows(CorreoYaRegistradoException.class, () -> registroUsuario.registrar(comando));
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
