@@ -37,9 +37,14 @@ describe('listUsers', () => {
     expect(peticion.url.searchParams.has('busqueda')).toBe(false)
   })
 
-  it('HU19-CP03: envía el rol cuando se filtra por rol', () => {
-    // TODO ciclo 3
-    expect.fail('Funcionalidad no implementada')
+  it('HU19-CP03: envía el rol cuando se filtra por rol', async () => {
+    const peticion = capturarPeticion()
+
+    await listUsers({ role: 'VENDEDOR', page: 0, size: 10 })
+    expect(peticion.url.searchParams.get('rol')).toBe('VENDEDOR')
+
+    await listUsers({ role: '', page: 0, size: 10 })
+    expect(peticion.url.searchParams.has('rol')).toBe(false)
   })
 
   it('HU19-CP04: envía el estado cuando se filtra por estado', () => {
