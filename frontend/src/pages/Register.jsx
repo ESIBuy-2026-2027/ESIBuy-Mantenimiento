@@ -70,32 +70,32 @@ export default function Register() {
     )
   }
 
-  if (tipo === 'cliente') {
+    if (tipo === 'cliente') {
     return (
       <div>
         <h1>Registro de cliente</h1>
-        <Field label="Nombre" validationMessage={errores.nombre}>
+        <Field label="Nombre" required validationMessage={errores.nombre}>
           <Input value={datos.nombre} onChange={cambiar('nombre')} />
         </Field>
-        <Field label="Apellidos" validationMessage={errores.apellidos}>
+        <Field label="Apellidos" required validationMessage={errores.apellidos}>
           <Input value={datos.apellidos} onChange={cambiar('apellidos')} />
         </Field>
-        <Field label="Fecha de nacimiento" validationMessage={errores.fechaNacimiento}>
+        <Field label="Fecha de nacimiento" required validationMessage={errores.fechaNacimiento}>
           <Input type="date" value={datos.fechaNacimiento} onChange={cambiar('fechaNacimiento')} />
         </Field>
-        <Field label="DNI" validationMessage={errores.dni}>
+        <Field label="DNI" required validationMessage={errores.dni}>
           <Input value={datos.dni} onChange={cambiar('dni')} />
         </Field>
-        <Field label="Email" validationMessage={errores.email}>
+        <Field label="Email" required validationMessage={errores.email}>
           <Input type="email" value={datos.email} onChange={cambiar('email')} />
         </Field>
         <Field label="Teléfono">
           <Input type="tel" value={datos.telefono} onChange={cambiar('telefono')} />
         </Field>
-        <Field label="Contraseña" validationMessage={errores.password}>
+        <Field label="Contraseña" required validationMessage={errores.password}>
           <Input type="password" value={datos.password} onChange={cambiar('password')} />
         </Field>
-        <Field label="Tipo de cliente">
+        <Field label="Tipo de cliente" required>
           <Select value={datos.tipoCliente} onChange={cambiar('tipoCliente')}>
             <option value="normal">Normal</option>
             <option value="premium">Premium</option>
