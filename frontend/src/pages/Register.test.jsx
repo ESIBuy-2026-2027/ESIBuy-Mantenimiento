@@ -320,6 +320,38 @@ describe('Register', () => {
     expect(registrarCliente).not.toHaveBeenCalled()
   })
 
+  it('register_siElTelefonoNoTieneNueveDigitos_muestraErrorYNoLlamaAlServicio', async () => {
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.type(screen.getByLabelText(/teléfono/i), '61234')
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getByText(/teléfono válido/i)).toBeInTheDocument()
+    expect(registrarCliente).not.toHaveBeenCalled()
+  })
+
+  it('register_siElTelefonoContieneLetras_muestraErrorYNoLlamaAlServicio', async () => {
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.type(screen.getByLabelText(/teléfono/i), '61234567a')
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getByText(/teléfono válido/i)).toBeInTheDocument()
+    expect(registrarCliente).not.toHaveBeenCalled()
+  })
+
+  it('register_conTelefonoDeNueveDigitos_llamaAlServicio', async () => {
+    registrarCliente.mockResolvedValue({})
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.type(screen.getByLabelText(/teléfono/i), '612345678')
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(registrarCliente).toHaveBeenCalledWith(
+      expect.objectContaining({ telefono: '612345678' })
+    )
+  })
+
   it('register_alEnviarFormularioClienteVacio_muestraErroresDeCamposObligatorios', async () => {
     await renderYElegirCliente()
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
