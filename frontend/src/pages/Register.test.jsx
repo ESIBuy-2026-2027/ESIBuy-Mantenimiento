@@ -141,4 +141,21 @@ describe('Register', () => {
     expect(screen.getByLabelText(/tipo/i)).toBeRequired()
     expect(screen.getByLabelText(/teléfono/i)).not.toBeRequired()
   })
+
+  it('register_alElegirCliente_permiteElegirUnAvatarYLoEnviaConLosDatos', async () => {
+    registrarCliente.mockResolvedValue({})
+    await renderYElegirCliente()
+
+    expect(screen.getAllByRole('radio')).toHaveLength(3)
+
+    await userEvent.click(screen.getByRole('radio', { name: /avatar 2/i }))
+    expect(screen.getByRole('radio', { name: /avatar 2/i })).toBeChecked()
+
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(registrarCliente).toHaveBeenCalledWith(
+      expect.objectContaining({ avatar: 'avatar2' })
+    )
+  })
 })
