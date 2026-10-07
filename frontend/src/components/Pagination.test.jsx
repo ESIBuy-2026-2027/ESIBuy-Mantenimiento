@@ -11,8 +11,14 @@ describe('Pagination', () => {
   })
 
   it('HU19-CP05: en la primera página "Anterior" está deshabilitado', () => {
-    // TODO ciclo 7
-    expect.fail('Funcionalidad no implementada')
+    const { unmount } = renderWithProviders(
+      <Pagination page={0} totalPages={3} onPageChange={() => {}} />,
+    )
+    expect(screen.getByRole('button', { name: 'Anterior' })).toBeDisabled()
+    unmount()
+
+    renderWithProviders(<Pagination page={1} totalPages={3} onPageChange={() => {}} />)
+    expect(screen.getByRole('button', { name: 'Anterior' })).toBeEnabled()
   })
 
   it('HU19-CP05: en la última página "Siguiente" está deshabilitado', () => {
