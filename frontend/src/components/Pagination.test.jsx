@@ -22,8 +22,14 @@ describe('Pagination', () => {
   })
 
   it('HU19-CP05: en la última página "Siguiente" está deshabilitado', () => {
-    // TODO ciclo 8
-    expect.fail('Funcionalidad no implementada')
+    const { unmount } = renderWithProviders(
+      <Pagination page={2} totalPages={3} onPageChange={() => {}} />,
+    )
+    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeDisabled()
+    unmount()
+
+    renderWithProviders(<Pagination page={1} totalPages={3} onPageChange={() => {}} />)
+    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeEnabled()
   })
 
   it('HU19-CP05: al pulsar "Siguiente" pide la página siguiente', () => {
