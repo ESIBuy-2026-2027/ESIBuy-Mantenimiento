@@ -54,7 +54,6 @@ class RegistroUsuarioServiceTest {
     @Test
     void registraClienteConRolCliente() {
         // HU1-CP01
-        // PENDIENTE DE REVISAR CON EL EQUIPO: ¿también estado PENDIENTE?
         RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "clave1234");
 
         registroUsuario.registrar(comando);
