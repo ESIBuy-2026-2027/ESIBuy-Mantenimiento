@@ -7,6 +7,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 // Test del adaptador real (sin Spring y sin mocks): se crea con new y usa BCrypt de verdad.
 // Se prueba cómo usamos BCrypt (que delegamos en él y con qué configuración), no si BCrypt funciona.
@@ -40,5 +41,13 @@ class BCryptHashContrasenaAdapterTest {
 
         // Formato BCrypt: $<versión>$<coste>$<sal y hash>. El prefijo "$2a$10$" fija el coste acordado.
         assertTrue(hash.startsWith("$2a$10$"));
+    }
+
+    @Test
+    @DisplayName("HU2-CP02: coincide con el hash de la misma contraseña y no con otra")
+    void coincideConElHashDeLaMismaContrasena() {
+        // TODO: hashear "clave1234" con el adaptador.
+        // TODO: comprobar que coincide con "clave1234" y no con "otraClave".
+        fail("Funcionalidad no implementada");
     }
 }
