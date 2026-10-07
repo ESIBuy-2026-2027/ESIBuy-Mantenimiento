@@ -9,6 +9,7 @@ const USUARIOS = [
   { id: 'u-1', nombre: 'Ada', apellidos: 'Admin', email: 'admin@esibuy.test', rol: 'ADMINISTRADOR', estado: 'ACTIVO' },
   { id: 'u-2', nombre: 'Vera', apellidos: 'Vendedora', email: 'vendedor@esibuy.test', rol: 'VENDEDOR', estado: 'ACTIVO' },
   { id: 'u-3', nombre: 'Carlos', apellidos: 'Cliente', email: 'cliente@esibuy.test', rol: 'CLIENTE', estado: 'ACTIVO' },
+  { id: 'u-5', nombre: 'Vicente', apellidos: 'Vacío', email: 'vendedor-vacio@esibuy.test', rol: 'VENDEDOR', estado: 'ACTIVO' },
   { id: 'u-4', nombre: 'Dani', apellidos: 'Desactivado', email: 'desactivado@esibuy.test', rol: 'CLIENTE', estado: 'DESACTIVADO' },
 ]
 
@@ -23,6 +24,10 @@ let estado = nuevoEstado()
 
 export function resetAuthMock() {
   estado = nuevoEstado()
+}
+
+export function getUsuarioEnSesion() {
+  return estado.usuarioEnSesion
 }
 
 const sinAutorizacion = () => new HttpResponse(null, { status: 401 })
