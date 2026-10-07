@@ -126,6 +126,20 @@ describe('Register', () => {
     expect(screen.getByRole('radio', { name: /avatar 2/i })).toBeChecked()
   })
 
+  it('register_alElegirVendedor_marcaLasCategoriasComoObligatorias', async () => {
+    await renderYElegirVendedor()
+
+    expect(screen.getByRole('group', { name: /categorías/i })).toHaveTextContent('*')
+  })
+
+  it('register_alEnviarFormularioVendedorVacio_muestraErroresDeCamposObligatoriosYDeCategoria', async () => {
+    await renderYElegirVendedor()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getAllByText(/obligatorio/i)).toHaveLength(7)
+    expect(screen.getByText(/al menos una categoría/i)).toBeInTheDocument()
+  })
+
   it('register_alEnviarFormularioClienteVacio_muestraErroresDeCamposObligatorios', async () => {
     await renderYElegirCliente()
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
