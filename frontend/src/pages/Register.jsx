@@ -129,28 +129,28 @@ export default function Register() {
     return (
       <div>
         <h1>Registro de vendedor</h1>
-        <Field label="Nombre">
+        <Field label="Nombre" required>
           <Input value={datos.nombre} onChange={cambiar('nombre')} />
         </Field>
-        <Field label="Apellidos">
+        <Field label="Apellidos" required>
           <Input value={datos.apellidos} onChange={cambiar('apellidos')} />
         </Field>
-        <Field label="Nombre comercial">
+        <Field label="Nombre comercial" required>
           <Input value={datos.nombreComercial} onChange={cambiar('nombreComercial')} />
         </Field>
-        <Field label="DNI">
+        <Field label="DNI" required>
           <Input value={datos.dni} onChange={cambiar('dni')} />
         </Field>
-        <Field label="Email">
+        <Field label="Email" required>
           <Input type="email" value={datos.email} onChange={cambiar('email')} />
         </Field>
         <Field label="Teléfono">
           <Input type="tel" value={datos.telefono} onChange={cambiar('telefono')} />
         </Field>
-        <Field label="Password">
+        <Field label="Password" required>
           <Input type="password" value={datos.password} onChange={cambiar('password')} />
         </Field>
-        <Field label="Repetir password">
+        <Field label="Repetir password" required>
           <Input
             type="password"
             value={datos.repeticionPassword}
