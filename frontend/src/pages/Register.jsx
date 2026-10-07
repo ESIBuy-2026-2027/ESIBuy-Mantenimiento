@@ -29,6 +29,8 @@ export default function Register() {
 })
   const [errores, setErrores] = useState({})
 
+  const [registrado, setRegistrado] = useState(false)
+
   const cambiar = (campo) => (e, data) => setDatos({ ...datos, [campo]: data.value })
 
   const enviar = async () => {
@@ -51,11 +53,21 @@ export default function Register() {
 
     try {
       await registrarCliente(datos)
+      setRegistrado(true)
     } catch (error) {
       if (error.status === 409) {
         setErrores({ email: 'Este email ya está registrado' })
       }
     }
+  }
+
+  if (registrado) {
+    return (
+      <div>
+        <h1>Cuenta creada</h1>
+        <p>Tu cuenta se ha creado correctamente.</p>
+      </div>
+    )
   }
 
   if (tipo === 'cliente') {
