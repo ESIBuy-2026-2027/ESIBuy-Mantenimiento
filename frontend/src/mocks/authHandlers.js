@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw'
 
 const CLAVE_VALIDA = 'Mock-Clave-1!'
 const CODIGO_EMAIL = '654321'
+const CODIGO_AUTENTICADOR = '123456'
 const MAX_INTENTOS_FALLIDOS = 5
 
 const USUARIOS = [
@@ -56,13 +57,13 @@ export const authHandlers = [
       return sinAutorizacion()
     }
 
-    estado.paso = 'captcha'
-    return HttpResponse.json({ nextStep: 'captcha' })
+    estado.paso = 'authenticator'
+    return HttpResponse.json({ nextStep: 'authenticator' })
   }),
 
-  http.post('/api/auth/verify-captcha', async ({ request }) => {
-    const { token } = await request.json()
-    if (estado.paso !== 'captcha' || typeof token !== 'string' || token.length === 0) {
+  http.post('/api/auth/verify-authenticator-code', async ({ request }) => {
+    const { code } = await request.json()
+    if (estado.paso !== 'authenticator' || code !== CODIGO_AUTENTICADOR) {
       return sinAutorizacion()
     }
 

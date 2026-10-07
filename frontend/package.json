@@ -15,7 +15,6 @@
     "@fluentui/react-icons": "^2.0.343",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-google-recaptcha": "^3.1.0",
     "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
