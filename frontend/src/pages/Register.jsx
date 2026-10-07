@@ -1,5 +1,6 @@
 import {
   Button,
+  Card,
   Checkbox,
   Field,
   Input,
@@ -8,7 +9,11 @@ import {
   RadioGroup,
   Select,
   Text,
+  Title2,
+  makeStyles,
+  tokens,
 } from '@fluentui/react-components'
+import { BuildingShop24Regular, Cart24Regular } from '@fluentui/react-icons'
 import { useEffect, useState } from 'react'
 import { registrarCliente, registrarVendedor } from '../api/auth'
 import { getCategorias } from '../api/categorias'
@@ -43,6 +48,54 @@ const ERRORES_VENDEDOR_YA_REGISTRADO = {
   },
 }
 
+const useStyles = makeStyles({
+  page: {
+    flexGrow: 1,
+    boxSizing: 'border-box',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    paddingTop: tokens.spacingVerticalXXXL,
+    paddingBottom: tokens.spacingVerticalXXXL,
+    paddingLeft: tokens.spacingHorizontalL,
+    paddingRight: tokens.spacingHorizontalL,
+  },
+  card: {
+    width: '100%',
+    maxWidth: '560px',
+    padding: tokens.spacingVerticalXXL,
+    gap: tokens.spacingVerticalL,
+    borderRadius: tokens.borderRadiusXLarge,
+    boxShadow: tokens.shadow28,
+  },
+  title: {
+    margin: 0,
+  },
+  description: {
+    color: tokens.colorNeutralForeground2,
+  },
+  opciones: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+    gap: tokens.spacingHorizontalM,
+  },
+  categorias: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalXS,
+    margin: 0,
+    padding: 0,
+    border: 'none',
+  },
+  leyenda: {
+    padding: 0,
+  },
+  error: {
+    color: tokens.colorPaletteRedForeground1,
+    fontSize: tokens.fontSizeBase200,
+  },
+})
+
 function esMayorDeEdad(fecha) {
   const nacimiento = new Date(fecha)
   const hoy = new Date()
@@ -72,6 +125,7 @@ function validarCamposComunes(datos, obligatorios) {
 }
 
 export default function Register() {
+  const styles = useStyles()
   const [tipo, setTipo] = useState(null)
   const [datos, setDatos] = useState({
     nombre: '',
@@ -144,12 +198,21 @@ export default function Register() {
     }
   }
 
+  const pantalla = (titulo, contenido) => (
+    <main className={styles.page}>
+      <Card className={styles.card}>
+        <Title2 as="h1" className={styles.title}>
+          {titulo}
+        </Title2>
+        {contenido}
+      </Card>
+    </main>
+  )
+
   if (registrado) {
-    return (
-      <div>
-        <h1>Cuenta creada</h1>
-        <p>Tu cuenta se ha creado correctamente.</p>
-      </div>
+    return pantalla(
+      'Cuenta creada',
+      <Text className={styles.description}>Tu cuenta se ha creado correctamente.</Text>
     )
   }
 
@@ -180,9 +243,9 @@ export default function Register() {
   )
 
   if (tipo === 'cliente') {
-    return (
-      <div>
-        <h1>Registro de cliente</h1>
+    return pantalla(
+      'Registro de cliente',
+      <>
         {campo('nombre', 'Nombre')}
         {campo('apellidos', 'Apellidos')}
         {campo('fechaNacimiento', 'Fecha de nacimiento', { type: 'date' })}
@@ -194,20 +257,22 @@ export default function Register() {
           </Select>
         </Field>
         {selectorAvatar}
-        <Button appearance="primary" onClick={enviarCliente}>Registrarse</Button>
-      </div>
+        <Button appearance="primary" size="large" onClick={enviarCliente}>
+          Registrarse
+        </Button>
+      </>
     )
   }
 
   if (tipo === 'vendedor') {
-    return (
-      <div>
-        <h1>Registro de vendedor</h1>
+    return pantalla(
+      'Registro de vendedor',
+      <>
         {campo('nombre', 'Nombre')}
         {campo('apellidos', 'Apellidos')}
         {campo('nombreComercial', 'Nombre comercial')}
-        <fieldset>
-          <legend>
+        <fieldset className={styles.categorias}>
+          <legend className={styles.leyenda}>
             <Label required>Categorías</Label>
           </legend>
           {categoriasDisponibles.map((categoria) => (
@@ -218,20 +283,29 @@ export default function Register() {
               onChange={cambiarCategoria(categoria.id)}
             />
           ))}
-          {errores.categorias && <Text>{errores.categorias}</Text>}
+          {errores.categorias && <Text className={styles.error}>{errores.categorias}</Text>}
         </fieldset>
         {camposComunes}
         {selectorAvatar}
-        <Button appearance="primary" onClick={enviarVendedor}>Registrarse</Button>
-      </div>
+        <Button appearance="primary" size="large" onClick={enviarVendedor}>
+          Registrarse
+        </Button>
+      </>
     )
   }
 
-  return (
-    <div>
-      <h1>Crear cuenta</h1>
-      <button onClick={() => setTipo('cliente')}>Cliente</button>
-      <button onClick={() => setTipo('vendedor')}>Vendedor</button>
-    </div>
+  return pantalla(
+    'Crear cuenta',
+    <>
+      <Text className={styles.description}>Elige el tipo de cuenta que quieres crear.</Text>
+      <div className={styles.opciones}>
+        <Button size="large" icon={<Cart24Regular />} onClick={() => setTipo('cliente')}>
+          Cliente
+        </Button>
+        <Button size="large" icon={<BuildingShop24Regular />} onClick={() => setTipo('vendedor')}>
+          Vendedor
+        </Button>
+      </div>
+    </>
   )
 }
