@@ -11,15 +11,4 @@ export const useFormStyles = makeStyles({
     flexDirection: 'column',
     gap: tokens.spacingVerticalS,
   },
-  captcha: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: tokens.spacingVerticalS,
-    overflowX: 'auto',
-    maxWidth: '100%',
-  },
-  error: {
-    color: tokens.colorPaletteRedForeground1,
-  },
 })

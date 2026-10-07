@@ -14,9 +14,14 @@ package es.uclm.esibuy.backend.usuarios.application.port.in;
  * núcleo de la aplicación no depende de la API web.
  *
  * <p>PENDIENTE: el {@code toString} generado muestra la contraseña en claro;
- * redefinirlo para ocultarla antes de que el comando pueda llegar a un log.
+ * redefinirlo para ocultarla antes de que el comando pueda llegar a un log. SOLUCIONADO
  */
 
 public record RegistrarUsuarioCommand(String correo, String contrasena) {
+
+    @Override
+    public String toString() {
+        return "RegistrarUsuarioCommand[correo=" + correo + ", contrasena=****]"; // Oculta la contraseña en el toString para evitar que se registre en los logs
+    }
 
 }
