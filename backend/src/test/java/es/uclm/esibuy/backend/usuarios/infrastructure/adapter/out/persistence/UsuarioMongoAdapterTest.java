@@ -1,20 +1,48 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
+import es.uclm.esibuy.backend.MongoTestcontainersConfig;
+import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
+import org.springframework.context.annotation.Import;
 
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 // Test de integración del adaptador de MongoDB (HU1, AB#216).
 // Usa un MongoDB real en Docker (Testcontainers): Docker Desktop debe estar abierto.
 // PENDIENTE DE REVISAR CON EL EQUIPO: IDs de caso propuestos.
+@DataMongoTest
+@Import(MongoTestcontainersConfig.class)
 class UsuarioMongoAdapterTest {
+
+    @Autowired
+    private UsuarioMongoRepository usuarioMongoRepository;
+
+    private UsuarioMongoAdapter adapter;
+
+    @BeforeEach
+    void preparar() {
+        usuarioMongoRepository.deleteAll();
+        adapter = new UsuarioMongoAdapter(usuarioMongoRepository, new UsuarioDocumentMapper());
+    }
 
     @Test
     @DisplayName("HU1-CP01: guardar persiste el usuario en la colección usuarios")
     void guardarPersisteElUsuarioEnLaColeccionUsuarios() {
-        // TODO guardar(usuario) -> la colección tiene 1 documento con su email, hash y rol
-        fail("Funcionalidad no implementada");
+        adapter.guardar(new Usuario("juan@uclm.es", "hash-simulado", Rol.CLIENTE));
+
+        List<UsuarioDocument> guardados = usuarioMongoRepository.findAll();
+        assertEquals(1, guardados.size());
+        assertEquals("juan@uclm.es", guardados.get(0).getEmail());
+        assertEquals("hash-simulado", guardados.get(0).getPasswordHash());
+        assertEquals("CLIENTE", guardados.get(0).getRol());
     }
 
     @Test
