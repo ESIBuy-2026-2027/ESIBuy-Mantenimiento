@@ -30,7 +30,7 @@ Funcionalidad básica: administración de productos, gestión de pedidos, carrit
 - **Calidad**: SonarQube y SonarLint
 - **Gestión de proyecto**: SCRUM con Azure DevOps (Azure Boards)
 - **Control de versiones**: Git
-- **CI**: Azure Pipelines (aún no configurado)
+- **CI**: GitHub Actions (`.github/workflows/ci.yml`)
 - **IA de apoyo**: Claude Code (herramienta de IA agéntica del equipo)
 
 ## Estructura del proyecto
@@ -149,8 +149,9 @@ Usar siempre el wrapper de Maven:
 
 - `./mvnw spring-boot:run` — arrancar el servidor en local
 - `./mvnw test` — ejecutar tests JUnit (deben pasar antes de cada commit)
+- `./mvnw verify` — tests + informe de cobertura de JaCoCo (`target/site/jacoco/index.html`) + comprobación del umbral: el build falla si la cobertura de líneas baja del 60 %
 - `./mvnw clean package` — compilar para producción
-- Sonar (`./mvnw sonar:sonar`) y SonarLint: revisión de calidad antes de cada PR. Sonar **aún no está configurado en el repo**; no lo configures sin preguntar.
+- Sonar y SonarLint: revisión de calidad antes de cada PR. El análisis se lanza con `sonar-scanner` desde `backend/` (configurado en `backend/sonar-project.properties`), después de `./mvnw verify` para que incluya la cobertura. No cambies la configuración de Sonar sin preguntar.
 
 ### Frontend (`frontend/`)
 
@@ -206,7 +207,8 @@ Comunes a todos los usuarios: registro, inicio de sesión, gestión de perfil, d
 - **No dejar código sin utilizar.**
 - Seguir las mejores prácticas de Java, HTML y CSS (y JSX en React); evitar defectos graves o críticos.
 - Los resultados de calidad del **Sprint 1 no deben empeorar** en sprints posteriores.
-- Cada caso de prueba debe quedar trazado en la **matriz de trazabilidad** Casos de Prueba ↔ Historias de Usuario
+- Cada caso de prueba debe quedar trazado en la **matriz de trazabilidad** Casos de Prueba ↔ Historias de Usuario, en `docs/calidad/matriz-trazabilidad.md`. Todo PR que añada, modifique o elimine tests la actualiza en el mismo PR (skill `matriz-trazabilidad`).
+- **Cada test lleva un `@DisplayName` que empieza por el ID de su caso de prueba**: `HU<n>-CP<nn>: <descripción del comportamiento>`, p. ej. `@DisplayName("HU1-CP02: el hash no es la contraseña en claro")`. Es el vínculo entre el código y la matriz de trazabilidad, y hace que el caso aparezca en los informes de test y en el IDE (un comentario `// HU1-CP02` no aparece). Los tests técnicos que no validan una HU (p. ej. `contextLoads`) no llevan ID de caso y van en su propia sección de la matriz.
 - Se generará un archivo de tests por cada clase existente y dentro de este archivo los tests que afecten directamente a dicha clase. En caso de considerar la necesidad de crear una clase de tests nueva pregutnar y no implementar directamente.
 
 ## Uso de IA generativa
@@ -224,7 +226,7 @@ Comunes a todos los usuarios: registro, inicio de sesión, gestión de perfil, d
   - **Recomendado (pendiente de acordar, no obligatorio)**: cada rama debería corresponder a una **task**, no a una historia de usuario completa.
 - Mensajes de commit: `tipo(area): descripción AB#<id>`, donde `<id>` es el ID real del work item de Azure Boards. **Nunca** dejes el placeholder literal `AB#ID`; si no conoces el ID, pregúntalo antes de commitear.
 - Antes de cada commit: `./mvnw test` en verde. Antes de cada PR: revisión de calidad (Sonar/SonarLint) y `npm run lint` si se toca el frontend.
-- CI: Azure Pipelines (aún no configurado). No hay `.github/workflows/`.
+- CI: GitHub Actions (`.github/workflows/ci.yml`). En cada push y PR a `develop` o `main` ejecuta `mvn -B verify` en el backend (tests y umbral de cobertura del 60 %) y el lint y el build del frontend.
 
 ## Flujo de trabajo con Claude
 
@@ -232,6 +234,7 @@ Comunes a todos los usuarios: registro, inicio de sesión, gestión de perfil, d
 - Antes de cualquier tarea, propón un plan y espera el OK del equipo; no ejecutes nada sin él.
 - Una tarea a la vez; al terminar, indica qué cambiaste para que se revise y espera instrucciones antes del siguiente paso.
 - Ante cualquier duda, pregunta. No inventes (URIs, IDs de work items, variables de entorno, dependencias…).
+- Al preparar o abrir un PR que toque tests, usa la skill `matriz-trazabilidad` para actualizar la matriz en el mismo PR.
 - Sigue SCRUM: el trabajo se organiza por sprints y se refleja en el panel de Azure DevOps.
 - Respeta la arquitectura descrita arriba (Cliente-Servidor, MVC, Hexagonal y patrón Repository). Aplica otros patrones de ingeniería del software (además de RBAC) solo cuando aporten valor, y evita la sobreingeniería.
 

@@ -23,3 +23,6 @@ CLAUDE.local.md
 
 # Planes de tasks generados con la skill plan-task (locales, no se suben)
 docs/planes/
+
+# Carpeta de trabajo de sonar-scanner (temporales de cada análisis)
+.scannerwork/

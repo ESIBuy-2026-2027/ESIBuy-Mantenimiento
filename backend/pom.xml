@@ -28,6 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>25</java.version>
+		<jacoco.version>0.8.15</jacoco.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -126,6 +127,45 @@
 						<goals><goal>select-jdk-toolchain</goal></goals>
 						<configuration>
 							<version>[25,26)</version>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.version}</version>
+				<executions>
+					<!-- Prepara el agente que registra qué código ejecutan los tests -->
+					<execution>
+						<id>prepare-agent</id>
+						<goals><goal>prepare-agent</goal></goals>
+					</execution>
+					<!-- Genera el informe (HTML y XML) en target/site/jacoco/ -->
+					<execution>
+						<id>report</id>
+						<phase>verify</phase>
+						<goals><goal>report</goal></goals>
+					</execution>
+					<!-- Falla el build si la cobertura de líneas baja del 60 % (requisito del CLAUDE.md) -->
+					<execution>
+						<id>check</id>
+						<phase>verify</phase>
+						<goals><goal>check</goal></goals>
+						<configuration>
+							<rules>
+								<rule>
+									<element>BUNDLE</element>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.60</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
 						</configuration>
 					</execution>
 				</executions>
