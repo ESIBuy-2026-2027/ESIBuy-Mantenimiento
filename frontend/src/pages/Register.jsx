@@ -1,4 +1,5 @@
 import {
+  Avatar,
   Button,
   Card,
   Checkbox,
@@ -14,6 +15,9 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import {
+  AnimalCat24Regular,
+  AnimalDog24Regular,
+  AnimalRabbit24Regular,
   BuildingShop24Regular,
   Cart24Regular,
   CheckmarkCircle16Filled,
@@ -42,6 +46,12 @@ const OBLIGATORIOS_VENDEDOR = [
   'email',
   'password',
   'repeticionPassword',
+]
+
+const AVATARES = [
+  { valor: 'avatar1', etiqueta: 'Avatar 1', icono: <AnimalCat24Regular />, color: 'marigold' },
+  { valor: 'avatar2', etiqueta: 'Avatar 2', icono: <AnimalDog24Regular />, color: 'seafoam' },
+  { valor: 'avatar3', etiqueta: 'Avatar 3', icono: <AnimalRabbit24Regular />, color: 'lavender' },
 ]
 
 const LONGITUD_MAXIMA = {
@@ -344,9 +354,13 @@ export default function Register() {
   const selectorAvatar = (
     <Field label="Imagen de perfil">
       <RadioGroup layout="horizontal" value={datos.avatar} onChange={cambiar('avatar')}>
-        <Radio value="avatar1" label="Avatar 1" />
-        <Radio value="avatar2" label="Avatar 2" />
-        <Radio value="avatar3" label="Avatar 3" />
+        {AVATARES.map(({ valor, etiqueta, icono, color }) => (
+          <Radio
+            key={valor}
+            value={valor}
+            label={<Avatar icon={icono} color={color} size={48} aria-label={etiqueta} />}
+          />
+        ))}
       </RadioGroup>
     </Field>
   )
