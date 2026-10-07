@@ -47,9 +47,14 @@ describe('listUsers', () => {
     expect(peticion.url.searchParams.has('rol')).toBe(false)
   })
 
-  it('HU19-CP04: envía el estado cuando se filtra por estado', () => {
-    // TODO ciclo 4
-    expect.fail('Funcionalidad no implementada')
+  it('HU19-CP04: envía el estado cuando se filtra por estado', async () => {
+    const peticion = capturarPeticion()
+
+    await listUsers({ status: 'PENDIENTE', page: 0, size: 10 })
+    expect(peticion.url.searchParams.get('estado')).toBe('PENDIENTE')
+
+    await listUsers({ status: '', page: 0, size: 10 })
+    expect(peticion.url.searchParams.has('estado')).toBe(false)
   })
 
   it('HU19-CP08: propaga un ApiError si la respuesta no es correcta', () => {
