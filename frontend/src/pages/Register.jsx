@@ -26,7 +26,8 @@ export default function Register() {
     telefono: '',
     password: '',
     tipoCliente: 'normal',
-})
+    avatar: '',
+  })
   const [errores, setErrores] = useState({})
 
   const [registrado, setRegistrado] = useState(false)
@@ -100,6 +101,13 @@ export default function Register() {
             <option value="normal">Normal</option>
             <option value="premium">Premium</option>
           </Select>
+        </Field>
+        <Field label="Imagen de perfil">
+          <RadioGroup layout="horizontal" value={datos.avatar} onChange={cambiar('avatar')}>
+            <Radio value="avatar1" label="Avatar 1" />
+            <Radio value="avatar2" label="Avatar 2" />
+            <Radio value="avatar3" label="Avatar 3" />
+          </RadioGroup>
         </Field>
         <Button appearance="primary" onClick={enviar}>Registrarse</Button>
       </div>
