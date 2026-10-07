@@ -6,6 +6,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.PasoLogin;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ResultadoInicioSesion;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
 public class AutenticacionService implements AutenticacionUseCase {
@@ -21,7 +22,7 @@ public class AutenticacionService implements AutenticacionUseCase {
     @Override
     public ResultadoInicioSesion iniciarSesion(IniciarSesionCommand comando) {
         
-        Usuario usuario = usuarioRepository.buscarPorCorreo(comando.email()).orElseThrow(); // <- Este orElseThrow() viene de buscarPorCorreo() que devuelve Optional<>
+        Usuario usuario = usuarioRepository.buscarPorCorreo(comando.email()).orElseThrow(() -> new CredencialesInvalidasException("Credenciales inválidas")); // <- Este orElseThrow() viene de buscarPorCorreo() que devuelve Optional<>
 
         if (!hashContrasena.coincide(comando.password(), usuario.getPasswordHash())) {
             throw new UnsupportedOperationException("Por implementar");
