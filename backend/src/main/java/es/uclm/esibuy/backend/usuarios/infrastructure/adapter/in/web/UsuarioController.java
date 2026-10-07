@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,7 +28,7 @@ public class UsuarioController {
 
     @PostMapping("/registro")
     @ResponseStatus(HttpStatus.CREATED)
-    public void registrar(@RequestBody RegistroRequest request) {
+    public void registrar(@Valid @RequestBody RegistroRequest request) {
         registroUsuario.registrar(new RegistrarUsuarioCommand(request.email(), request.password()));
     }
 }
