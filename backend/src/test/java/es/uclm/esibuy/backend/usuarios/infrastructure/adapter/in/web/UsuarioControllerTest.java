@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
+import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -107,9 +108,15 @@ class UsuarioControllerTest {
 
     @Test
     @DisplayName("HU1-CP05: una contraseña que no cumple la política devuelve 400")
-    void contrasenaInvalidaDevuelve400() {
-        // TODO el caso de uso lanza ContrasenaInvalidaException -> 400 con {"mensaje": ...}
-        fail("Funcionalidad no implementada");
+    void contrasenaInvalidaDevuelve400() throws Exception {
+        doThrow(new ContrasenaInvalidaException("La contraseña debe tener mínimo 8 caracteres"))
+                .when(registroUsuario).registrar(any());
+
+        mockMvc.perform(post(URL_REGISTRO)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("juan@uclm.es", "1234567")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensaje").exists());
     }
 
     @Test
