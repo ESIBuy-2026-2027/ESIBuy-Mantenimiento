@@ -9,7 +9,7 @@ public class BCryptHashContrasenaAdapter implements HashContrasenaPort {
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(COSTE_BCRYPT);
 
     @Override
-    public String hashear(String contrasena) {
-        return encoder.encode(contrasena);
+    public String hashear(String password) {
+        return encoder.encode(password);
     }
 }

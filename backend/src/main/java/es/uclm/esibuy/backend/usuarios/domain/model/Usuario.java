@@ -2,13 +2,13 @@ package es.uclm.esibuy.backend.usuarios.domain.model;
 
 public class Usuario {
     // Recomendado empezar con objetos inmutables y solo quitar final cuando los test lo requieran
-    private final String correo;
-    private final String contrasenaHash; // REVISAR: Deberia ser final? no podria cambiarse?
+    private final String email;
+    private final String passwordHash; // REVISAR: Deberia ser final? no podria cambiarse?
     private final Rol rol;
 
-    public Usuario(String correo, String contrasenaHash, Rol rol) {
-        this.correo = correo;
-        this.contrasenaHash = contrasenaHash;
+    public Usuario(String email, String passwordHash, Rol rol) {
+        this.email = email;
+        this.passwordHash = passwordHash;
         this.rol = rol;
     }
 
@@ -16,8 +16,8 @@ public class Usuario {
         return rol;
     }
 
-    public String getContrasenaHash() {
-        return contrasenaHash;
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
 }
