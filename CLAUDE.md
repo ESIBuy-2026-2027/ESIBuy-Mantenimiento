@@ -23,7 +23,7 @@ Funcionalidad básica: administración de productos, gestión de pedidos, carrit
 ## Stack
 
 - **Backend**: Java 25 + Spring Boot 4.1.1 (Maven), Spring Data MongoDB, Spring Security, Validation, Web MVC, Lombok
-- **Arquitectura**: Cliente-Servidor + MVC + Hexagonal, con patrón Repository (ver sección Arquitectura)
+- **Arquitectura**: Cliente-Servidor + MVC + Hexagonal por módulos funcionales, con patrón Repository (ver sección Arquitectura)
 - **Base de datos**: MongoDB (MongoDB Atlas, cloud)
 - **Frontend**: React 19 + Vite 8, JavaScript puro (sin TypeScript)
 - **Tests backend**: JUnit (enfoque TDD)
@@ -43,7 +43,7 @@ ESIBuy separa backend y frontend en carpetas independientes, sin tooling unifica
   - `src/test/java/es/uclm/esibuy/backend/` — pruebas unitarias y de integración con JUnit
 - `.claude/` — configuración de Claude Code (incluye `hooks-pendientes.md`)
 
-**Estado actual**: el proyecto está **sin desarrollar**. El backend solo contiene la clase generada `BackendApplication.java`; aún no hay controladores, servicios, repositorios, modelos ni configuración de dominio. No existe todavía ninguna organización de paquetes que respetar: la estructura de la sección "Arquitectura" se acordará con el equipo antes de crear nada.
+**Estado actual**: el proyecto está **sin desarrollar**. El backend solo contiene la clase generada `BackendApplication.java`; aún no hay controladores, servicios, repositorios, modelos ni configuración de dominio. La organización de paquetes ya está acordada: hexagonal por módulos funcionales (ver sección "Arquitectura").
 - `frontend/` — React + Vite
 - `docs/` — documentación y requisitos (política de uso de IA, requisitos académicos, AGR, matriz de trazabilidad)
 
@@ -54,36 +54,92 @@ Se pueden añadir archivos `CLAUDE.md` dentro de `backend/` o `frontend/` para i
 Combinamos tres estilos arquitectónicos **complementarios**, cada uno a un nivel distinto, más el patrón Repository:
 
 1. **Cliente-Servidor** (nivel sistema): el navegador (frontend React) se comunica con el backend Spring Boot mediante peticiones **HTTP/HTTPS**. El frontend no accede nunca directamente a la base de datos.
-2. **MVC** (capa de entrada de Spring): el **Controller** recibe la petición, valida la entrada, **delega** en la capa de aplicación y decide qué vista o JSON devolver. El controller no contiene lógica de negocio.
-3. **Hexagonal / Puertos y Adaptadores** (interior del backend, por debajo del controller): el núcleo (dominio + casos de uso) no depende de frameworks ni de la infraestructura.
-   - **Dominio**: entidades y reglas de negocio puras (pedido, producto, valoración, etc.), sin anotaciones de Spring ni de MongoDB.
-   - **Aplicación**: casos de uso/servicios que orquestan el dominio. Definen **puertos de entrada** (lo que ofrece el núcleo) y **puertos de salida** (lo que necesita del exterior, como la persistencia).
-   - **Adaptadores de entrada**: controllers REST (la parte "C" de MVC) que invocan los puertos de entrada.
-   - **Adaptadores de salida**: implementaciones de los puertos de salida (persistencia en MongoDB, y en el futuro envío de notificaciones, pasarela de pago, etc.).
-4. **Patrón Repository**: el acceso a datos se expone al núcleo mediante interfaces de repositorio (puertos de salida), de modo que dominio y casos de uso son **independientes de MongoDB y de Spring Data**. La implementación con Spring Data MongoDB vive solo en el adaptador de salida.
+2. **MVC** (capa de entrada de Spring): el **Controller** recibe la petición, valida la entrada, **delega** en un puerto de entrada y decide qué JSON devolver. El controller no contiene lógica de negocio.
+3. **Hexagonal / Puertos y Adaptadores organizada por módulos funcionales** (interior del backend): cada funcionalidad del sistema es un módulo bajo el paquete raíz `es.uclm.esibuy` (p. ej. `usuarios`, `catalogo`), y **cada módulo contiene su propio hexágono** con tres capas: dominio, aplicación e infraestructura.
+4. **Patrón Repository**: el acceso a datos se expone al núcleo mediante puertos de salida (p. ej. `UsuarioRepositoryPort`), de modo que dominio y aplicación son **independientes de MongoDB y de Spring Data**. La implementación con Spring Data MongoDB vive solo en el adaptador de salida.
+
+### Estructura de paquetes (backend)
+
+```
+es.uclm.esibuy
+├── usuarios
+│   ├── domain
+│   │   ├── model            Entidades, objetos de valor y enumerados
+│   │   └── exception        Excepciones de negocio
+│   ├── application
+│   │   ├── port
+│   │   │   ├── in           Casos de uso que el módulo ofrece (interfaces)
+│   │   │   └── out          Lo que el módulo necesita del exterior (interfaces)
+│   │   └── service          Implementación de los puertos de entrada
+│   └── infrastructure
+│       ├── adapter
+│       │   ├── in.web       Controladores REST, DTO de petición y respuesta
+│       │   └── out          Adaptadores de salida (persistence, email...)
+│       └── config           Configuración de Spring propia del módulo
+├── catalogo                 Misma estructura
+└── shared                   Elementos transversales (seguridad, errores, config)
+```
+
+Los módulos concretos que existan más allá de los ejemplos (`usuarios`, `catalogo`) se acuerdan con el equipo antes de crearlos.
 
 ### Reglas de dependencia
 
-- Las dependencias apuntan **siempre hacia dentro**: adaptadores → aplicación → dominio. El dominio no importa nada de `org.springframework.*` ni de Spring Data/MongoDB.
-- Los controllers no llaman a repositorios directamente: siempre pasan por un caso de uso.
-- Los casos de uso dependen de **interfaces** de repositorio, nunca de su implementación concreta (inyección de dependencias).
+Las dependencias apuntan **siempre hacia el interior del hexágono**:
+
+- `domain` no depende de ninguna otra capa ni de ningún framework: **Java puro**, sin anotaciones de Spring, Spring Data ni MongoDB.
+- `application` depende únicamente de `domain`. Define los puertos y orquesta los casos de uso. La **única anotación de Spring permitida es `@Service`**.
+- `infrastructure` depende de `application` y de `domain`. Es la **única capa** que conoce Spring Web, Spring Security, MongoDB y cualquier servicio externo.
+- Ninguna clase de `domain` o `application` puede importar nada de `infrastructure`.
 - No exponer entidades de dominio ni documentos de MongoDB directamente en la API: usar DTOs en el borde y mapear en los adaptadores.
-- La seguridad (RBAC, 2FA/3FA, sesión) se aplica en el borde (adaptadores de entrada/configuración de Spring Security); las reglas de negocio que dependan del rol (p. ej. valorar solo si se ha comprado) viven en el dominio/aplicación.
-- Consecuencia para TDD: dominio y casos de uso se prueban con JUnit **sin levantar Spring ni MongoDB**, sustituyendo los repositorios por dobles de prueba.
+- La seguridad (RBAC, 2FA/3FA, sesión) se aplica en el borde (configuración de Spring Security en `shared` / adaptadores de entrada); las reglas de negocio que dependan del rol (p. ej. valorar solo si se ha comprado) viven en el dominio/aplicación.
 
-### Organización orientativa de paquetes (backend)
+### Responsabilidad de cada capa
 
-Esquema de referencia, **no acordado todavía**: no crees paquetes ni clases siguiéndolo sin confirmarlo antes con el equipo. Si más adelante existe otra organización en el repo, respétala y consulta antes de reestructurar.
+**Dominio.** Modelo y reglas de negocio: entidades, objetos de valor, enumerados y excepciones de negocio. Las invariantes se validan aquí (p. ej. precio mayor que cero o stock no negativo).
 
-```
-src/main/java/es/uclm/esibuy/backend/
-├── domain/          # entidades, value objects, reglas de negocio, excepciones de dominio
-├── application/     # casos de uso, puertos de entrada (in) y de salida (out, repositorios)
-└── infrastructure/
-    ├── in/web/      # controllers REST, DTOs, validación de entrada
-    ├── out/mongo/   # adaptadores de persistencia: documentos y repositorios Spring Data
-    └── config/      # configuración de Spring (seguridad, beans, etc.)
-```
+**Aplicación.** Puertos y servicios.
+- **Puertos de entrada** (`port.in`): interfaces que agrupan los casos de uso de **un mismo actor con un mismo propósito**, p. ej. `AdministracionUsuariosUseCase` (crear, consultar, modificar, bloquear y eliminar usuarios). No se crea una interfaz por operación ni una única interfaz por módulo. Si un puerto mezcla actores o intenciones distintas, se divide.
+- **Puertos de salida** (`port.out`): interfaces que expresan lo que el módulo necesita del exterior, agrupadas por recurso o servicio externo, p. ej. `UsuarioRepositoryPort`, `HashContrasenaPort` o `EnvioEmailPort`.
+- **Servicios** (`service`): implementan los puertos de entrada, **uno por puerto**, y solo se comunican con el exterior a través de los puertos de salida.
+
+**Infraestructura.** Adaptadores.
+- **Adaptadores de entrada** (`adapter.in.web`): controladores REST. Reciben DTO, los traducen y llaman a un puerto de entrada. No contienen lógica de negocio ni acceden a repositorios.
+- **Adaptadores de salida** (`adapter.out`): implementan los puertos de salida (persistencia en MongoDB, envío de correo, hash de contraseñas, etc.).
+- La persistencia usa **clases propias anotadas con `@Document`**, distintas de las entidades de dominio, y un **mapper** que convierte entre ambas.
+
+### Convenciones de nombres
+
+| Elemento                   | Ejemplo                         |
+|----------------------------|---------------------------------|
+| Puerto de entrada          | `AdministracionUsuariosUseCase` |
+| Puerto de salida           | `UsuarioRepositoryPort`         |
+| Servicio de aplicación     | `AdministracionUsuariosService` |
+| Controlador REST           | `UsuarioController`             |
+| Adaptador de persistencia  | `UsuarioMongoAdapter`           |
+| Documento de MongoDB       | `UsuarioDocument`               |
+| Repositorio de Spring Data | `UsuarioMongoRepository`        |
+| Mapper dominio-documento   | `UsuarioDocumentMapper`         |
+
+### Comunicación entre módulos
+
+- Un módulo solo puede usar de otro sus **puertos de entrada** (`port.in`).
+- Un módulo **nunca** importa clases de `domain` ni de `infrastructure` de otro.
+- Las referencias entre entidades de módulos distintos se hacen **por identificador**, no por referencia al objeto.
+- Lo realmente transversal (configuración de Spring Security y RBAC, manejo global de errores, utilidades comunes) vive en `shared`.
+
+### Pruebas por capa
+
+- Dominio y servicios de aplicación se prueban con JUnit **sin levantar el contexto de Spring**, sustituyendo los puertos de salida por dobles de prueba.
+- Los adaptadores se prueban con **tests de integración**.
+
+### Reglas al generar o modificar código
+
+1. Ubicar cada clase nueva en el módulo y la capa que le corresponde según esta sección.
+2. No añadir anotaciones de framework al dominio.
+3. No poner lógica de negocio en controladores ni en adaptadores.
+4. Antes de crear un puerto de entrada nuevo, comprobar si el caso de uso encaja en uno existente del mismo actor y propósito.
+5. Toda dependencia externa nueva (base de datos, correo, servicios de terceros) se introduce mediante un puerto de salida y su adaptador.
+6. El código existente organizado por capas tradicionales (`controller`, `service`, `repository`, `model`) debe **reubicarse** en esta estructura, no ampliarse.
 
 ## Comandos
 
@@ -150,7 +206,8 @@ Comunes a todos los usuarios: registro, inicio de sesión, gestión de perfil, d
 - **No dejar código sin utilizar.**
 - Seguir las mejores prácticas de Java, HTML y CSS (y JSX en React); evitar defectos graves o críticos.
 - Los resultados de calidad del **Sprint 1 no deben empeorar** en sprints posteriores.
-- Cada caso de prueba debe quedar trazado en la **matriz de trazabilidad** Casos de Prueba ↔ Historias de Usuario.
+- Cada caso de prueba debe quedar trazado en la **matriz de trazabilidad** Casos de Prueba ↔ Historias de Usuario
+- Se generará un archivo de tests por cada clase existente y dentro de este archivo los tests que afecten directamente a dicha clase. En caso de considerar la necesidad de crear una clase de tests nueva pregutnar y no implementar directamente.
 
 ## Uso de IA generativa
 
@@ -161,7 +218,10 @@ Comunes a todos los usuarios: registro, inicio de sesión, gestión de perfil, d
 ## Convenciones de Git
 
 - Flujo git-flow: las ramas de trabajo parten de `develop`; `develop` se integra en `main`. Los PRs apuntan a `develop`, no a `main`, salvo indicación contraria.
-- Nombres de rama: `tipo/descripcion` (ej. `chore/configuracion-ia`), sin segmento de área.
+- Nomenclatura de ramas:
+  - **Obligatorio**: `tipo/descripcion` (`feature/`, `chore/`…; ej. `chore/configuracion-ia`), sin segmento de área.
+  - **Recomendado (buena práctica, no obligatorio)**: tras el tipo, indicar la historia de usuario y la task de Azure Boards: `tipo/USx-Tx-descripcion`. Ej.: `feature/US12-T45-alta-producto-service`.
+  - **Recomendado (pendiente de acordar, no obligatorio)**: cada rama debería corresponder a una **task**, no a una historia de usuario completa.
 - Mensajes de commit: `tipo(area): descripción AB#<id>`, donde `<id>` es el ID real del work item de Azure Boards. **Nunca** dejes el placeholder literal `AB#ID`; si no conoces el ID, pregúntalo antes de commitear.
 - Antes de cada commit: `./mvnw test` en verde. Antes de cada PR: revisión de calidad (Sonar/SonarLint) y `npm run lint` si se toca el frontend.
 - CI: Azure Pipelines (aún no configurado). No hay `.github/workflows/`.
