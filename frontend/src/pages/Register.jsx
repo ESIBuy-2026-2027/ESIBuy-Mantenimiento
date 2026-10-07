@@ -32,6 +32,17 @@ const OBLIGATORIOS_VENDEDOR = [
   'repeticionPassword',
 ]
 
+const EMAIL_YA_REGISTRADO = 'Este email ya está registrado'
+const NOMBRE_COMERCIAL_YA_REGISTRADO = 'Este nombre comercial ya está registrado'
+const ERRORES_VENDEDOR_YA_REGISTRADO = {
+  EMAIL_ALREADY_REGISTERED: { email: EMAIL_YA_REGISTRADO },
+  COMMERCIAL_NAME_ALREADY_REGISTERED: { nombreComercial: NOMBRE_COMERCIAL_YA_REGISTRADO },
+  EMAIL_AND_COMMERCIAL_NAME_ALREADY_REGISTERED: {
+    email: EMAIL_YA_REGISTRADO,
+    nombreComercial: NOMBRE_COMERCIAL_YA_REGISTRADO,
+  },
+}
+
 function esMayorDeEdad(fecha) {
   const nacimiento = new Date(fecha)
   const hoy = new Date()
@@ -109,7 +120,7 @@ export default function Register() {
       setRegistrado(true)
     } catch (error) {
       if (error.status === 409) {
-        setErrores({ email: 'Este email ya está registrado' })
+        setErrores({ email: EMAIL_YA_REGISTRADO })
       }
     }
   }
@@ -123,8 +134,14 @@ export default function Register() {
 
     if (Object.keys(nuevosErrores).length > 0) return
 
-    await registrarVendedor(datos)
-    setRegistrado(true)
+    try {
+      await registrarVendedor(datos)
+      setRegistrado(true)
+    } catch (error) {
+      if (error.status === 409 && ERRORES_VENDEDOR_YA_REGISTRADO[error.code]) {
+        setErrores(ERRORES_VENDEDOR_YA_REGISTRADO[error.code])
+      }
+    }
   }
 
   if (registrado) {
