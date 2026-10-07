@@ -73,4 +73,10 @@ class UsuarioMongoAdapterTest {
         assertEquals("hash-simulado", encontrado.get().getPasswordHash());
         assertEquals(Rol.CLIENTE, encontrado.get().getRol());
     }
+
+    @Test
+    @DisplayName("HU2-CP02: buscarPorCorreo devuelve vacío si el email no está guardado")
+    void buscarPorCorreoDevuelveVacioSiNoEstaGuardado() {
+        assertTrue(adapter.buscarPorCorreo("nadie@uclm.es").isEmpty());
+    }
 }
