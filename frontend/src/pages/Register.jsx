@@ -2,7 +2,7 @@ import { Button, Field, Input, Radio, RadioGroup, Select } from '@fluentui/react
 import { useState } from 'react'
 import { registrarCliente } from '../api/auth'
 
-const OBLIGATORIOS = ['nombre', 'apellidos', 'fechaNacimiento', 'dni', 'email', 'password']
+const OBLIGATORIOS = ['nombre', 'apellidos', 'fechaNacimiento', 'dni', 'email', 'password', 'repeticionPassword']
 
 function esMayorDeEdad(fecha) {
   const nacimiento = new Date(fecha)
@@ -48,7 +48,7 @@ export default function Register() {
     if (datos.email && !/^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test(datos.email)) {
       nuevosErrores.email = 'Introduce un email válido'
     }
-    if (datos.password !== datos.repeticionPassword) {
+    if (datos.password && datos.repeticionPassword && datos.password !== datos.repeticionPassword) {
       nuevosErrores.repeticionPassword = 'Las contraseñas no coinciden'
     }
     setErrores(nuevosErrores)
