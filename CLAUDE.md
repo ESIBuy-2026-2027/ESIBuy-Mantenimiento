@@ -30,7 +30,7 @@ Funcionalidad básica: administración de productos, gestión de pedidos, carrit
 - **Calidad**: SonarQube y SonarLint
 - **Gestión de proyecto**: SCRUM con Azure DevOps (Azure Boards)
 - **Control de versiones**: Git
-- **CI**: Azure Pipelines (aún no configurado)
+- **CI**: GitHub Actions (`.github/workflows/ci.yml`)
 - **IA de apoyo**: Claude Code (herramienta de IA agéntica del equipo)
 
 ## Estructura del proyecto
@@ -149,8 +149,9 @@ Usar siempre el wrapper de Maven:
 
 - `./mvnw spring-boot:run` — arrancar el servidor en local
 - `./mvnw test` — ejecutar tests JUnit (deben pasar antes de cada commit)
+- `./mvnw verify` — tests + informe de cobertura de JaCoCo (`target/site/jacoco/index.html`) + comprobación del umbral: el build falla si la cobertura de líneas baja del 60 %
 - `./mvnw clean package` — compilar para producción
-- Sonar (`./mvnw sonar:sonar`) y SonarLint: revisión de calidad antes de cada PR. Sonar **aún no está configurado en el repo**; no lo configures sin preguntar.
+- Sonar y SonarLint: revisión de calidad antes de cada PR. El análisis se lanza con `sonar-scanner` desde `backend/` (configurado en `backend/sonar-project.properties`), después de `./mvnw verify` para que incluya la cobertura. No cambies la configuración de Sonar sin preguntar.
 
 ### Frontend (`frontend/`)
 
@@ -225,7 +226,7 @@ Comunes a todos los usuarios: registro, inicio de sesión, gestión de perfil, d
   - **Recomendado (pendiente de acordar, no obligatorio)**: cada rama debería corresponder a una **task**, no a una historia de usuario completa.
 - Mensajes de commit: `tipo(area): descripción AB#<id>`, donde `<id>` es el ID real del work item de Azure Boards. **Nunca** dejes el placeholder literal `AB#ID`; si no conoces el ID, pregúntalo antes de commitear.
 - Antes de cada commit: `./mvnw test` en verde. Antes de cada PR: revisión de calidad (Sonar/SonarLint) y `npm run lint` si se toca el frontend.
-- CI: Azure Pipelines (aún no configurado). No hay `.github/workflows/`.
+- CI: GitHub Actions (`.github/workflows/ci.yml`). En cada push y PR a `develop` o `main` ejecuta `mvn -B verify` en el backend (tests y umbral de cobertura del 60 %) y el lint y el build del frontend.
 
 ## Flujo de trabajo con Claude
 
