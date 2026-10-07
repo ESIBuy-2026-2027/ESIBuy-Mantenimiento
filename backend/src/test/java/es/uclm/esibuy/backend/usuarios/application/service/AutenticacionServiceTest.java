@@ -7,6 +7,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.ResultadoInicioSesion
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,12 +17,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 // Login, paso 1: credenciales, bloqueo por intentos y cuentas desactivadas (HU2, T19/T22).
@@ -42,7 +47,7 @@ class AutenticacionServiceTest {
 
     @BeforeEach
     void crearServicio() {
-        autenticacion = new AutenticacionService(usuarioRepository, hashContrasena);
+        autenticacion = new AutenticacionService(usuarioRepository, hashContrasena, Clock.fixed(AHORA, ZoneOffset.UTC));
     }
 
     @Test
@@ -104,9 +109,21 @@ class AutenticacionServiceTest {
     @DisplayName("HU2-CP03: bloquea la cuenta tras 5 intentos fallidos")
     void bloqueaLaCuentaTrasCincoIntentosFallidos() {
         // Frontera: 5 fallos → bloqueada, incluso con la contraseña correcta.
-        // TODO: provocar 5 intentos fallidos.
-        // TODO: comprobar que la contraseña correcta lanza CuentaBloqueadaException.
-        fail("Funcionalidad no implementada");
+        Usuario usuario = new Usuario("juan@uclm.es", "hash-guardado", Rol.CLIENTE);
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
+        when(hashContrasena.coincide("otraClave", "hash-guardado")).thenReturn(false);
+        IniciarSesionCommand contrasenaIncorrecta = new IniciarSesionCommand("juan@uclm.es", "otraClave");
+        for (int i = 0; i < 5; i++) {
+            assertThrows(CredencialesInvalidasException.class, () -> autenticacion.iniciarSesion(contrasenaIncorrecta));
+        }
+
+        // La contraseña correcta no se llega a comprobar: si se respondiera distinto al acertar,
+        // un atacante sabría cuándo ha dado con ella.
+        IniciarSesionCommand contrasenaCorrecta = new IniciarSesionCommand("juan@uclm.es", "clave1234");
+        assertThrows(CuentaBloqueadaException.class, () -> autenticacion.iniciarSesion(contrasenaCorrecta));
+
+        // Cada fallo se guarda; si no, el contador se perdería entre un login y otro.
+        verify(usuarioRepository, times(5)).guardar(usuario);
     }
 
     @Test
