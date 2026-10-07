@@ -13,7 +13,15 @@ import { useEffect, useState } from 'react'
 import { registrarCliente } from '../api/auth'
 import { getCategorias } from '../api/categorias'
 
-const OBLIGATORIOS = ['nombre', 'apellidos', 'fechaNacimiento', 'dni', 'email', 'password', 'repeticionPassword']
+const OBLIGATORIOS_CLIENTE = [
+  'nombre',
+  'apellidos',
+  'fechaNacimiento',
+  'dni',
+  'email',
+  'password',
+  'repeticionPassword',
+]
 const OBLIGATORIOS_VENDEDOR = [
   'nombre',
   'apellidos',
@@ -33,6 +41,23 @@ function esMayorDeEdad(fecha) {
     (hoy.getMonth() === nacimiento.getMonth() && hoy.getDate() >= nacimiento.getDate())
   if (!cumpleEsteAnio) edad--
   return edad >= 18
+}
+
+function validarCamposComunes(datos, obligatorios) {
+  const errores = {}
+  obligatorios.forEach((campo) => {
+    if (!datos[campo].trim()) errores[campo] = 'Este campo es obligatorio'
+  })
+  if (datos.dni && !/^\d{8}[A-Za-z]$/.test(datos.dni)) {
+    errores.dni = 'Introduce un DNI válido (8 números y una letra)'
+  }
+  if (datos.email && !/^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test(datos.email)) {
+    errores.email = 'Introduce un email válido'
+  }
+  if (datos.password && datos.repeticionPassword && datos.password !== datos.repeticionPassword) {
+    errores.repeticionPassword = 'Las contraseñas no coinciden'
+  }
+  return errores
 }
 
 export default function Register() {
@@ -71,21 +96,9 @@ export default function Register() {
     })
 
   const enviar = async () => {
-    const nuevosErrores = {}
-    OBLIGATORIOS.forEach((campo) => {
-      if (!datos[campo].trim()) nuevosErrores[campo] = 'Este campo es obligatorio'
-    })
+    const nuevosErrores = validarCamposComunes(datos, OBLIGATORIOS_CLIENTE)
     if (datos.fechaNacimiento && !esMayorDeEdad(datos.fechaNacimiento)) {
       nuevosErrores.fechaNacimiento = 'Debes ser mayor de edad para registrarte'
-    }
-    if (datos.dni && !/^\d{8}[A-Za-z]$/.test(datos.dni)) {
-      nuevosErrores.dni = 'Introduce un DNI válido (8 números y una letra)'
-    }
-    if (datos.email && !/^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test(datos.email)) {
-      nuevosErrores.email = 'Introduce un email válido'
-    }
-    if (datos.password && datos.repeticionPassword && datos.password !== datos.repeticionPassword) {
-      nuevosErrores.repeticionPassword = 'Las contraseñas no coinciden'
     }
     setErrores(nuevosErrores)
 
@@ -102,21 +115,9 @@ export default function Register() {
   }
 
   const enviarVendedor = () => {
-    const nuevosErrores = {}
-    OBLIGATORIOS_VENDEDOR.forEach((campo) => {
-      if (!datos[campo].trim()) nuevosErrores[campo] = 'Este campo es obligatorio'
-    })
+    const nuevosErrores = validarCamposComunes(datos, OBLIGATORIOS_VENDEDOR)
     if (datos.categorias.length === 0) {
       nuevosErrores.categorias = 'Elige al menos una categoría'
-    }
-    if (datos.dni && !/^\d{8}[A-Za-z]$/.test(datos.dni)) {
-      nuevosErrores.dni = 'Introduce un DNI válido (8 números y una letra)'
-    }
-    if (datos.email && !/^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test(datos.email)) {
-      nuevosErrores.email = 'Introduce un email válido'
-    }
-    if (datos.password && datos.repeticionPassword && datos.password !== datos.repeticionPassword) {
-      nuevosErrores.repeticionPassword = 'Las contraseñas no coinciden'
     }
     setErrores(nuevosErrores)
   }
