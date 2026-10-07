@@ -1,6 +1,7 @@
-import { Button, Field, Input, Radio, RadioGroup, Select } from '@fluentui/react-components'
-import { useState } from 'react'
+import { Button, Checkbox, Field, Input, Radio, RadioGroup, Select } from '@fluentui/react-components'
+import { useEffect, useState } from 'react'
 import { registrarCliente } from '../api/auth'
+import { getCategorias } from '../api/categorias'
 
 const OBLIGATORIOS = ['nombre', 'apellidos', 'fechaNacimiento', 'dni', 'email', 'password', 'repeticionPassword']
 
@@ -21,6 +22,7 @@ export default function Register() {
     nombre: '',
     apellidos: '',
     nombreComercial: '',
+    categorias: [],
     fechaNacimiento: '',
     dni: '',
     email: '',
@@ -32,8 +34,22 @@ export default function Register() {
   })
   const [errores, setErrores] = useState({})
   const [registrado, setRegistrado] = useState(false)
+  const [categoriasDisponibles, setCategoriasDisponibles] = useState([])
+
+  useEffect(() => {
+    if (tipo !== 'vendedor') return
+    getCategorias().then(setCategoriasDisponibles)
+  }, [tipo])
 
   const cambiar = (campo) => (e, data) => setDatos({ ...datos, [campo]: data.value })
+
+  const cambiarCategoria = (id) => (e, data) =>
+    setDatos({
+      ...datos,
+      categorias: data.checked
+        ? [...datos.categorias, id]
+        : datos.categorias.filter((categoria) => categoria !== id),
+    })
 
   const enviar = async () => {
     const nuevosErrores = {}
@@ -138,6 +154,17 @@ export default function Register() {
         <Field label="Nombre comercial" required>
           <Input value={datos.nombreComercial} onChange={cambiar('nombreComercial')} />
         </Field>
+        <fieldset>
+          <legend>Categorías</legend>
+          {categoriasDisponibles.map((categoria) => (
+            <Checkbox
+              key={categoria.id}
+              label={categoria.nombre}
+              checked={datos.categorias.includes(categoria.id)}
+              onChange={cambiarCategoria(categoria.id)}
+            />
+          ))}
+        </fieldset>
         <Field label="DNI" required>
           <Input value={datos.dni} onChange={cambiar('dni')} />
         </Field>
