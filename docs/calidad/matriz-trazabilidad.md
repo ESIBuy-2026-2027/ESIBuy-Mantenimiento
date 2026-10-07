@@ -18,7 +18,7 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
 | HU1-CP01 | Registra un cliente con rol CLIENTE | Unitario | 1 | ✅ Pasa |
-| HU1-CP02 | Guarda la contraseña hasheada, nunca en claro | Unitario + integración | 4 | ✅ Pasa (1) · 🔍 En revisión (3, PR #20) |
+| HU1-CP02 | Guarda la contraseña hasheada, nunca en claro | Unitario + integración | 4 | ✅ Pasa |
 | HU1-CP03 | Rechaza un correo ya registrado y no guarda nada | Unitario | 1 | ✅ Pasa |
 | HU1-CP04 | Rechaza un username ya registrado | — | 0 | ⏸ Fuera de alcance (no está decidido si existe username) |
 | HU1-CP05 | Rechaza contraseñas de menos de 8 caracteres | Unitario | 2 | ✅ Pasa |
@@ -33,9 +33,9 @@ Notas:
 |---|---|---|---|---|---|---|
 | HU1-CP01 | `RegistroUsuarioServiceTest` | `registraClienteConRolCliente` | Aplicación | AB#16 | PR #14 | ✅ |
 | HU1-CP02 | `RegistroUsuarioServiceTest` | `guardaContrasenaHasheada` | Aplicación | AB#16 | PR #14 | ✅ |
-| HU1-CP02 | `BCryptHashContrasenaAdapterTest` | `hashNoEsLaContrasenaEnClaro` | Infraestructura | AB#15 | PR #20 | 🔍 |
-| HU1-CP02 | `BCryptHashContrasenaAdapterTest` | `hashEsVerificableConBCrypt` | Infraestructura | AB#15 | PR #20 | 🔍 |
-| HU1-CP02 | `BCryptHashContrasenaAdapterTest` | `hashUsaElCosteAcordado` | Infraestructura | AB#15 | PR #20 | 🔍 |
+| HU1-CP02 | `BCryptHashContrasenaAdapterTest` | `hashNoEsLaContrasenaEnClaro` | Infraestructura | AB#15 | PR #20 | ✅ |
+| HU1-CP02 | `BCryptHashContrasenaAdapterTest` | `hashEsVerificableConBCrypt` | Infraestructura | AB#15 | PR #20 | ✅ |
+| HU1-CP02 | `BCryptHashContrasenaAdapterTest` | `hashUsaElCosteAcordado` | Infraestructura | AB#15 | PR #20 | ✅ |
 | HU1-CP03 | `RegistroUsuarioServiceTest` | `rechazaEmailYaRegistrado` | Aplicación | AB#16 | PR #14 | ✅ |
 | HU1-CP05 | `RegistroUsuarioServiceTest` | `permiteContrasenaDeExactamente8Caracteres` | Aplicación | AB#16 | PR #14 | ✅ |
 | HU1-CP05 | `RegistroUsuarioServiceTest` | `rechazaContrasenaDeMenosDe8Caracteres` | Aplicación | AB#16 | PR #14 | ✅ |
