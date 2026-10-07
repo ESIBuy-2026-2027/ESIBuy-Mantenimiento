@@ -82,7 +82,7 @@ describe('SellerProductsPage (HU32): añadir producto', () => {
   it('sellerProductsPage_sinProductos_tambienMuestraElBotonAnadirProductoEnLaCabeceraDelListado', async () => {
     await abrirListado(VENDEDOR_SIN_PRODUCTOS)
 
-    const cabecera = screen.getByRole('heading', { level: 1, name: /mis productos/i }).parentElement
+    const cabecera = screen.getByRole('heading', { level: 1, name: /mis productos/i }).parentElement.parentElement
     expect(within(cabecera).getByRole('link', { name: /añadir producto/i })).toBeInTheDocument()
   })
 
