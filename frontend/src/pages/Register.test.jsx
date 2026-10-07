@@ -34,6 +34,7 @@ async function rellenarFormularioVendedorValido() {
   await userEvent.type(screen.getByLabelText(/email/i), 'luis@correo.com')
   await userEvent.type(screen.getByLabelText(/^password/i), 'Password123!')
   await userEvent.type(screen.getByLabelText(/^repetir password/i), 'Password123!')
+  await userEvent.click(screen.getByRole('checkbox', { name: /política de privacidad/i }))
 }
 
 async function rellenarFormularioValido() {
@@ -44,6 +45,7 @@ async function rellenarFormularioValido() {
   await userEvent.type(screen.getByLabelText(/email/i), 'ana@correo.com')
   await userEvent.type(screen.getByLabelText(/^password/i), 'Password123!')
   await userEvent.type(screen.getByLabelText(/^repetir password/i), 'Password123!')
+  await userEvent.click(screen.getByRole('checkbox', { name: /política de privacidad/i }))
 }
 
 describe('Register', () => {
@@ -375,6 +377,38 @@ describe('Register', () => {
     await userEvent.type(nombre, 'a'.repeat(35))
 
     expect(nombre).toHaveValue('a'.repeat(30))
+  })
+
+  it('register_alElegirCliente_muestraLaPoliticaDePrivacidadComoObligatoria', async () => {
+    await renderYElegirCliente()
+
+    expect(screen.getByRole('checkbox', { name: /acepto la política de privacidad/i })).toBeRequired()
+  })
+
+  it('register_alElegirVendedor_muestraLaPoliticaDePrivacidadComoObligatoria', async () => {
+    await renderYElegirVendedor()
+
+    expect(screen.getByRole('checkbox', { name: /acepto la política de privacidad/i })).toBeRequired()
+  })
+
+  it('register_siElClienteNoAceptaLaPoliticaDePrivacidad_muestraErrorYNoLlamaAlServicio', async () => {
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('checkbox', { name: /política de privacidad/i }))
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getByText(/debes aceptar la política de privacidad/i)).toBeInTheDocument()
+    expect(registrarCliente).not.toHaveBeenCalled()
+  })
+
+  it('register_siElVendedorNoAceptaLaPoliticaDePrivacidad_muestraErrorYNoLlamaAlServicio', async () => {
+    await renderYElegirVendedor()
+    await rellenarFormularioVendedorValido()
+    await userEvent.click(screen.getByRole('checkbox', { name: /política de privacidad/i }))
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getByText(/debes aceptar la política de privacidad/i)).toBeInTheDocument()
+    expect(registrarVendedor).not.toHaveBeenCalled()
   })
 
   it('register_alEnviarFormularioClienteVacio_muestraErroresDeCamposObligatorios', async () => {
