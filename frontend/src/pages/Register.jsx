@@ -109,6 +109,12 @@ export default function Register() {
     if (datos.categorias.length === 0) {
       nuevosErrores.categorias = 'Elige al menos una categoría'
     }
+    if (datos.dni && !/^\d{8}[A-Za-z]$/.test(datos.dni)) {
+      nuevosErrores.dni = 'Introduce un DNI válido (8 números y una letra)'
+    }
+    if (datos.email && !/^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test(datos.email)) {
+      nuevosErrores.email = 'Introduce un email válido'
+    }
     setErrores(nuevosErrores)
   }
 
