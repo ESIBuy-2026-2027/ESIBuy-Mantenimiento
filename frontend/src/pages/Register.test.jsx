@@ -116,6 +116,16 @@ describe('Register', () => {
     expect(hogar).toBeChecked()
   })
 
+  it('register_alElegirVendedor_permiteElegirUnAvatar', async () => {
+    await renderYElegirVendedor()
+
+    expect(screen.getAllByRole('radio')).toHaveLength(3)
+
+    await userEvent.click(screen.getByRole('radio', { name: /avatar 2/i }))
+
+    expect(screen.getByRole('radio', { name: /avatar 2/i })).toBeChecked()
+  })
+
   it('register_alEnviarFormularioClienteVacio_muestraErroresDeCamposObligatorios', async () => {
     await renderYElegirCliente()
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
