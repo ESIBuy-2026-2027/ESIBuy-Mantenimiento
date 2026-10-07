@@ -101,7 +101,7 @@ Y añadir la ruta correspondiente en `routes/paths.js` y `routes/AppRoutes.jsx`,
 
 ### A mano (con `npm run dev`)
 
-1. Iniciar sesión con `admin@esibuy.test` / `Mock-Clave-1!` (código de correo `654321`, captcha de prueba). Debe aterrizar en `/admin`.
+1. Iniciar sesión con `admin@esibuy.test` / `Mock-Clave-1!` (código de correo `654321`, código de Authenticator `123456`). Debe aterrizar en `/admin`.
 2. Comprobar el título **Panel de control** y las tres tarjetas.
 3. Pasar el ratón por cada tarjeta y comprobar la elevación, el icono relleno y la flecha. Repetir con el teclado (Tab) y comprobar el indicador de foco.
 4. Reducir el ancho de la ventana (F12, modo móvil) y comprobar que las tarjetas se apilan sin desbordar.
