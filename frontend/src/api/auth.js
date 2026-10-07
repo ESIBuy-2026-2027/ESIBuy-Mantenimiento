@@ -23,3 +23,7 @@ export function logout() {
 export function registrarCliente(datos) {
   return request('/api/auth/register/cliente', { method: 'POST', body: datos })
 }
+
+export function registrarVendedor(datos) {
+  return request('/api/auth/register/vendedor', { method: 'POST', body: datos })
+}

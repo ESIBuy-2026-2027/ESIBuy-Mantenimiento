@@ -10,7 +10,7 @@ import {
   Text,
 } from '@fluentui/react-components'
 import { useEffect, useState } from 'react'
-import { registrarCliente } from '../api/auth'
+import { registrarCliente, registrarVendedor } from '../api/auth'
 import { getCategorias } from '../api/categorias'
 
 const OBLIGATORIOS_CLIENTE = [
@@ -114,12 +114,17 @@ export default function Register() {
     }
   }
 
-  const enviarVendedor = () => {
+  const enviarVendedor = async () => {
     const nuevosErrores = validarCamposComunes(datos, OBLIGATORIOS_VENDEDOR)
     if (datos.categorias.length === 0) {
       nuevosErrores.categorias = 'Elige al menos una categoría'
     }
     setErrores(nuevosErrores)
+
+    if (Object.keys(nuevosErrores).length > 0) return
+
+    await registrarVendedor(datos)
+    setRegistrado(true)
   }
 
   if (registrado) {
