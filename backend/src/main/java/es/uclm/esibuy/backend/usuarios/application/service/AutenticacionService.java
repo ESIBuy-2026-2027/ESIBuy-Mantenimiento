@@ -11,6 +11,8 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
 public class AutenticacionService implements AutenticacionUseCase {
 
+    private static final String MENSAJE_CREDENCIALES_INVALIDAS = "Credenciales inválidas";
+
     private final UsuarioRepositoryPort usuarioRepository;
     private final HashContrasenaPort hashContrasena;
 
@@ -25,7 +27,7 @@ public class AutenticacionService implements AutenticacionUseCase {
         Usuario usuario = usuarioRepository.buscarPorCorreo(comando.email()).orElseThrow(() -> new CredencialesInvalidasException("Credenciales inválidas")); // <- Este orElseThrow() viene de buscarPorCorreo() que devuelve Optional<>
 
         if (!hashContrasena.coincide(comando.password(), usuario.getPasswordHash())) {
-            throw new UnsupportedOperationException("Por implementar");
+            throw new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS);
         }
 
         return new ResultadoInicioSesion(usuario.getEmail(), PasoLogin.CODIGO_EMAIL);
