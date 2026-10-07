@@ -119,4 +119,13 @@ describe('Register', () => {
 
     expect(await screen.findByText(/ya está registrado/i)).toBeInTheDocument()
   })
+
+  it('register_siElRegistroEsCorrecto_muestraMensajeDeConfirmacion', async () => {
+    registrarCliente.mockResolvedValue({})
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(await screen.findByText(/cuenta creada/i)).toBeInTheDocument()
+  })
 })
