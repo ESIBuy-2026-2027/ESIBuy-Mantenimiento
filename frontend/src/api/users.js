@@ -2,15 +2,13 @@ import { request } from './client'
 
 export function listUsers({ search, role, status, page, size }) {
   const params = new URLSearchParams({ page, size })
-  const busqueda = search?.trim()
-  if (busqueda) {
-    params.set('busqueda', busqueda)
+  const filtros = { busqueda: search?.trim(), rol: role, estado: status }
+
+  for (const [nombre, valor] of Object.entries(filtros)) {
+    if (valor) {
+      params.set(nombre, valor)
+    }
   }
-  if (role) {
-    params.set('rol', role)
-  }
-  if (status) {
-    params.set('estado', status)
-  }
+
   return request(`/api/admin/usuarios?${params}`)
 }
