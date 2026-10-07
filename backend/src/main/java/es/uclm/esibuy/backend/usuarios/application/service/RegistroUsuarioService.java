@@ -10,9 +10,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
 
-public class RegistroUsuarioService implements RegistroUsuarioUseCase{
-
-
+public class RegistroUsuarioService implements RegistroUsuarioUseCase {
 
     private static final int LONGITUD_MINIMA_CONTRASENA = 8;
     private final UsuarioRepositoryPort usuarioRepository; //ANOTACIÓN: Repository salvando distancias es como el DAO
@@ -23,7 +21,7 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase{
         this.hashContrasena = hashContrasena;
     }
 
-    @Override 
+    @Override
     public void registrar(RegistrarUsuarioCommand comando) {
 
         if (comando.contrasena().length() < LONGITUD_MINIMA_CONTRASENA) {
@@ -37,7 +35,5 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase{
         Usuario usuario = new Usuario(comando.correo(), contrasenaHash, Rol.CLIENTE); // Comando → Usuario: el comando es un DTO de entrada, el usuario es un objeto de dominio
         usuarioRepository.guardar(usuario);
     }
-
-    
 
 }
