@@ -12,8 +12,8 @@ export function verifyEmailCode(code) {
   return request('/api/auth/verify-email-code', { method: 'POST', body: { code } })
 }
 
-export function verifyCaptcha(token) {
-  return request('/api/auth/verify-captcha', { method: 'POST', body: { token } })
+export function verifyAuthenticatorCode(code) {
+  return request('/api/auth/verify-authenticator-code', { method: 'POST', body: { code } })
 }
 
 export function logout() {
