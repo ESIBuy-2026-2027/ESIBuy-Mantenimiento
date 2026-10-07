@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
+import { ApiError } from './client'
 import { listUsers } from './users'
 
 const RESPUESTA = { content: [], page: 1, size: 10, totalElements: 0 }
@@ -57,8 +58,14 @@ describe('listUsers', () => {
     expect(peticion.url.searchParams.has('estado')).toBe(false)
   })
 
-  it('HU19-CP08: propaga un ApiError si la respuesta no es correcta', () => {
-    // TODO ciclo 5
-    expect.fail('Funcionalidad no implementada')
+  it('HU19-CP08: propaga un ApiError si la respuesta no es correcta', async () => {
+    server.use(
+      http.get('/api/admin/usuarios', () => new HttpResponse(null, { status: 500 })),
+    )
+
+    const error = await listUsers({ page: 0, size: 10 }).catch((e) => e)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error.status).toBe(500)
   })
 })
