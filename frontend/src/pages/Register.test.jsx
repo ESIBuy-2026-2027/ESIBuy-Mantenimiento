@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { registrarCliente, registrarVendedor } from '../api/auth'
@@ -32,8 +32,8 @@ async function rellenarFormularioVendedorValido() {
   await userEvent.click(await screen.findByRole('checkbox', { name: /tecnología/i }))
   await userEvent.type(screen.getByLabelText(/dni/i), '12345678Z')
   await userEvent.type(screen.getByLabelText(/email/i), 'luis@correo.com')
-  await userEvent.type(screen.getByLabelText(/^password/i), 'Password123')
-  await userEvent.type(screen.getByLabelText(/^repetir password/i), 'Password123')
+  await userEvent.type(screen.getByLabelText(/^password/i), 'Password123!')
+  await userEvent.type(screen.getByLabelText(/^repetir password/i), 'Password123!')
 }
 
 async function rellenarFormularioValido() {
@@ -42,8 +42,8 @@ async function rellenarFormularioValido() {
   await userEvent.type(screen.getByLabelText(/fecha de nacimiento/i), '1990-05-20')
   await userEvent.type(screen.getByLabelText(/dni/i), '12345678Z')
   await userEvent.type(screen.getByLabelText(/email/i), 'ana@correo.com')
-  await userEvent.type(screen.getByLabelText(/^password/i), 'Password123')
-  await userEvent.type(screen.getByLabelText(/^repetir password/i), 'Password123')
+  await userEvent.type(screen.getByLabelText(/^password/i), 'Password123!')
+  await userEvent.type(screen.getByLabelText(/^repetir password/i), 'Password123!')
 }
 
 describe('Register', () => {
@@ -275,6 +275,49 @@ describe('Register', () => {
 
     expect(password).toHaveAttribute('type', 'password')
     expect(repeticion).toHaveAttribute('type', 'text')
+  })
+
+  it('register_antesDeEscribir_muestraLosRequisitosDelPasswordPendientes', async () => {
+    await renderYElegirCliente()
+
+    const requisitos = screen.getByRole('list', { name: /requisitos del password/i })
+    const items = within(requisitos).getAllByRole('listitem')
+
+    expect(items).toHaveLength(5)
+    expect(requisitos).toHaveTextContent(/al menos 8 caracteres/i)
+    expect(requisitos).toHaveTextContent(/una mayúscula/i)
+    expect(requisitos).toHaveTextContent(/una minúscula/i)
+    expect(requisitos).toHaveTextContent(/un número/i)
+    expect(requisitos).toHaveTextContent(/un símbolo/i)
+    items.forEach((item) => {
+      expect(within(item).getByRole('img', { name: /pendiente/i })).toBeInTheDocument()
+    })
+  })
+
+  it('register_alEscribirElPassword_marcaComoCumplidosLosRequisitosQueSatisface', async () => {
+    await renderYElegirCliente()
+    await userEvent.type(screen.getByLabelText(/^password/i), 'abcdefgh')
+
+    const requisito = (texto) => screen.getByText(texto).closest('li')
+
+    expect(within(requisito(/al menos 8 caracteres/i)).getByRole('img', { name: /cumplido/i })).toBeInTheDocument()
+    expect(within(requisito(/una minúscula/i)).getByRole('img', { name: /cumplido/i })).toBeInTheDocument()
+    expect(within(requisito(/una mayúscula/i)).getByRole('img', { name: /pendiente/i })).toBeInTheDocument()
+    expect(within(requisito(/un número/i)).getByRole('img', { name: /pendiente/i })).toBeInTheDocument()
+    expect(within(requisito(/un símbolo/i)).getByRole('img', { name: /pendiente/i })).toBeInTheDocument()
+  })
+
+  it('register_siElPasswordNoCumpleLosRequisitos_muestraErrorYNoLlamaAlServicio', async () => {
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.clear(screen.getByLabelText(/^password/i))
+    await userEvent.clear(screen.getByLabelText(/^repetir password/i))
+    await userEvent.type(screen.getByLabelText(/^password/i), 'password')
+    await userEvent.type(screen.getByLabelText(/^repetir password/i), 'password')
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getByText(/no cumple los requisitos/i)).toBeInTheDocument()
+    expect(registrarCliente).not.toHaveBeenCalled()
   })
 
   it('register_alEnviarFormularioClienteVacio_muestraErroresDeCamposObligatorios', async () => {
