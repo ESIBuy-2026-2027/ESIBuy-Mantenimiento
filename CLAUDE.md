@@ -206,7 +206,8 @@ Comunes a todos los usuarios: registro, inicio de sesión, gestión de perfil, d
 - **No dejar código sin utilizar.**
 - Seguir las mejores prácticas de Java, HTML y CSS (y JSX en React); evitar defectos graves o críticos.
 - Los resultados de calidad del **Sprint 1 no deben empeorar** en sprints posteriores.
-- Cada caso de prueba debe quedar trazado en la **matriz de trazabilidad** Casos de Prueba ↔ Historias de Usuario
+- Cada caso de prueba debe quedar trazado en la **matriz de trazabilidad** Casos de Prueba ↔ Historias de Usuario, en `docs/calidad/matriz-trazabilidad.md`. Todo PR que añada, modifique o elimine tests la actualiza en el mismo PR (skill `matriz-trazabilidad`).
+- **Cada test lleva un `@DisplayName` que empieza por el ID de su caso de prueba**: `HU<n>-CP<nn>: <descripción del comportamiento>`, p. ej. `@DisplayName("HU1-CP02: el hash no es la contraseña en claro")`. Es el vínculo entre el código y la matriz de trazabilidad, y hace que el caso aparezca en los informes de test y en el IDE (un comentario `// HU1-CP02` no aparece). Los tests técnicos que no validan una HU (p. ej. `contextLoads`) no llevan ID de caso y van en su propia sección de la matriz.
 - Se generará un archivo de tests por cada clase existente y dentro de este archivo los tests que afecten directamente a dicha clase. En caso de considerar la necesidad de crear una clase de tests nueva pregutnar y no implementar directamente.
 
 ## Uso de IA generativa
@@ -232,6 +233,7 @@ Comunes a todos los usuarios: registro, inicio de sesión, gestión de perfil, d
 - Antes de cualquier tarea, propón un plan y espera el OK del equipo; no ejecutes nada sin él.
 - Una tarea a la vez; al terminar, indica qué cambiaste para que se revise y espera instrucciones antes del siguiente paso.
 - Ante cualquier duda, pregunta. No inventes (URIs, IDs de work items, variables de entorno, dependencias…).
+- Al preparar o abrir un PR que toque tests, usa la skill `matriz-trazabilidad` para actualizar la matriz en el mismo PR.
 - Sigue SCRUM: el trabajo se organiza por sprints y se refleja en el panel de Azure DevOps.
 - Respeta la arquitectura descrita arriba (Cliente-Servidor, MVC, Hexagonal y patrón Repository). Aplica otros patrones de ingeniería del software (además de RBAC) solo cuando aporten valor, y evita la sobreingeniería.
 
