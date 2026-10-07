@@ -120,6 +120,8 @@ Las dependencias apuntan **siempre hacia el interior del hexágono**:
 | Repositorio de Spring Data | `UsuarioMongoRepository`        |
 | Mapper dominio-documento   | `UsuarioDocumentMapper`         |
 
+**Idioma de los nombres** (acordado en clase): los campos, parámetros y componentes de records para el correo y la contraseña van **en inglés**: `email`, `password` y derivados (`passwordHash`, `getEmail()`, `getPasswordHash()`). Las clases, métodos, puertos y excepciones siguen **en español** (`buscarPorCorreo`, `existePorCorreo`, `HashContrasenaPort`, `ContrasenaInvalidaException`). Los getters siguen la convención de Java: `get` + nombre del campo con la primera letra en mayúscula (`getPasswordHash()`, no `getpasswordHash()`).
+
 ### Comunicación entre módulos
 
 - Un módulo solo puede usar de otro sus **puertos de entrada** (`port.in`).
