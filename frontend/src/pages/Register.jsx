@@ -1,6 +1,6 @@
 import { Button, Field, Input, Radio, RadioGroup, Select } from '@fluentui/react-components'
 import { useState } from 'react'
-import { registrarCliente } from '../services/authService'
+import { registrarCliente } from '../api/auth'
 
 const OBLIGATORIOS = ['nombre', 'apellidos', 'fechaNacimiento', 'dni', 'email', 'password']
 

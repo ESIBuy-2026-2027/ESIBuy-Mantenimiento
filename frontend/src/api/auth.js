@@ -19,3 +19,7 @@ export function verifyCaptcha(token) {
 export function logout() {
   return request('/api/auth/logout', { method: 'POST' })
 }
+
+export function registrarCliente(datos) {
+  return request('/api/auth/register/cliente', { method: 'POST', body: datos })
+}
