@@ -20,3 +20,6 @@ buildNumber.properties
 
 # Claude Code personal instructions (no compartir)
 CLAUDE.local.md
+
+# Planes de tasks generados con la skill plan-task (locales, no se suben)
+docs/planes/
