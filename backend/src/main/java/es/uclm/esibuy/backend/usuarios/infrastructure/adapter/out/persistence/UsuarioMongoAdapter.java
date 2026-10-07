@@ -26,6 +26,6 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
 
     @Override
     public boolean existePorCorreo(String correo) {
-        return false;
+        return repository.existsByEmail(correo);
     }
 }
