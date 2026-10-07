@@ -18,10 +18,10 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
 | HU1-CP01 | Registra un cliente con rol CLIENTE | Unitario | 1 | ✅ Pasa |
-| HU1-CP02 | Guarda la contraseña hasheada, nunca en claro | Unitario + integración | 4 | ✅ Pasa |
+| HU1-CP02 | Guarda la contraseña hasheada, nunca en claro | Unitario + integración | 5 | ✅ Pasa (4) · 🔍 En revisión (1, PR #26) |
 | HU1-CP03 | Rechaza un correo ya registrado y no guarda nada | Unitario | 1 | ✅ Pasa |
 | HU1-CP04 | Rechaza un username ya registrado | — | 0 | ⏸ Fuera de alcance (no está decidido si existe username) |
-| HU1-CP05 | Rechaza contraseñas de menos de 8 caracteres | Unitario | 2 | ✅ Pasa |
+| HU1-CP05 | Rechaza contraseñas de menos de 8 caracteres | Unitario | 3 | ✅ Pasa (2) · 🔍 En revisión (1, PR #26) |
 | HU1-CP06 | Rechaza el registro si no se acepta la política de privacidad | — | 0 | ⏳ Pendiente |
 
 Notas:
@@ -36,12 +36,15 @@ Notas:
 | HU1-CP02 | `BCryptHashContrasenaAdapterTest` | `hashNoEsLaContrasenaEnClaro` | Infraestructura | AB#15 | PR #20 | ✅ |
 | HU1-CP02 | `BCryptHashContrasenaAdapterTest` | `hashEsVerificableConBCrypt` | Infraestructura | AB#15 | PR #20 | ✅ |
 | HU1-CP02 | `BCryptHashContrasenaAdapterTest` | `hashUsaElCosteAcordado` | Infraestructura | AB#15 | PR #20 | ✅ |
+| HU1-CP02 | `RegistrarUsuarioCommandTest` | `toStringNoMuestraLaContrasena` | Aplicación | AB#223 | PR #26 | 🔍 |
 | HU1-CP03 | `RegistroUsuarioServiceTest` | `rechazaEmailYaRegistrado` | Aplicación | AB#16 | PR #14 | ✅ |
 | HU1-CP05 | `RegistroUsuarioServiceTest` | `permiteContrasenaDeExactamente8Caracteres` | Aplicación | AB#16 | PR #14 | ✅ |
 | HU1-CP05 | `RegistroUsuarioServiceTest` | `rechazaContrasenaDeMenosDe8Caracteres` | Aplicación | AB#16 | PR #14 | ✅ |
+| HU1-CP05 | `RegistroUsuarioServiceTest` | `rechazaContrasenaNula` | Aplicación | AB#223 | PR #26 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `RegistroUsuarioServiceTest`: `usuarios/application/service/`
+- `RegistrarUsuarioCommandTest`: `usuarios/application/port/in/`
 - `BCryptHashContrasenaAdapterTest`: `usuarios/infrastructure/adapter/out/seguridad/`
 
 ---

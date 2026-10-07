@@ -24,8 +24,8 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
     @Override
     public void registrar(RegistrarUsuarioCommand comando) {
 
-        if (comando.contrasena().length() < LONGITUD_MINIMA_CONTRASENA) {
-            throw new ContrasenaInvalidaException("La contraseña debe tener mínimo" + LONGITUD_MINIMA_CONTRASENA + " caracteres"); // REVISAR: Aquí deberia ser mensaje poco explicativo no?         
+        if (comando.contrasena() == null || comando.contrasena().length() < LONGITUD_MINIMA_CONTRASENA) {
+            throw new ContrasenaInvalidaException("La contraseña debe tener mínimo " + LONGITUD_MINIMA_CONTRASENA + " caracteres"); // REVISAR: Aquí deberia ser mensaje poco explicativo no?         
         }
         if (usuarioRepository.existePorCorreo(comando.correo())) {
             throw new CorreoYaRegistradoException("El correo ya está registrado");
