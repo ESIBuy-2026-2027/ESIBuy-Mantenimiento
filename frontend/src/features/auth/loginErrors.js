@@ -3,7 +3,7 @@ import { ApiError } from '../../api/client'
 const MESSAGES = {
   generic: 'No se ha podido iniciar sesión. Revisa tus datos e inténtalo de nuevo.',
   code: 'El código no es válido o ha caducado.',
-  captcha: 'No se ha podido verificar el captcha. Inténtalo de nuevo.',
+  authenticatorCode: 'El código de Microsoft Authenticator no es válido o ha caducado.',
   disabled: 'Esta cuenta está desactivada. Contacta con un administrador.',
   tooManyAttempts: 'Demasiados intentos. Espera unos minutos antes de volver a intentarlo.',
   connection: 'No se ha podido conectar con el servidor. Inténtalo de nuevo más tarde.',
@@ -12,7 +12,7 @@ const MESSAGES = {
 const STEP_MESSAGES = {
   credentials: MESSAGES.generic,
   emailCode: MESSAGES.code,
-  captcha: MESSAGES.captcha,
+  authenticator: MESSAGES.authenticatorCode,
 }
 
 export function getLoginErrorMessage(error, step) {

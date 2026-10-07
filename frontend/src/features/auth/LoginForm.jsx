@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { MessageBar, MessageBarBody, Subtitle1 } from '@fluentui/react-components'
-import { login, verifyCaptcha, verifyEmailCode } from '../../api/auth'
+import { login, verifyAuthenticatorCode, verifyEmailCode } from '../../api/auth'
 import { useAuth } from '../../auth/useAuth'
-import CaptchaStep from './CaptchaStep'
 import CodeStep from './CodeStep'
 import CredentialsStep from './CredentialsStep'
 import { getLoginErrorMessage } from './loginErrors'
@@ -34,11 +33,11 @@ export default function LoginForm() {
     run(() => login(credentials), () => setStep('emailCode'))
 
   const handleEmailCode = (code) =>
-    run(() => verifyEmailCode(code), () => setStep('captcha'))
+    run(() => verifyEmailCode(code), () => setStep('authenticator'))
 
-  const handleCaptcha = (token) =>
+  const handleAuthenticatorCode = (code) =>
     run(async () => {
-      const user = await verifyCaptcha(token)
+      const user = await verifyAuthenticatorCode(code)
       if (!user?.rol) {
         throw new TypeError('Respuesta de sesión no válida')
       }
@@ -70,10 +69,16 @@ export default function LoginForm() {
         </>
       )}
 
-      {step === 'captcha' && (
+      {step === 'authenticator' && (
         <>
-          <Subtitle1 as="h2">Verificación de seguridad</Subtitle1>
-          <CaptchaStep onSubmit={handleCaptcha} onBack={restart} submitting={submitting} />
+          <Subtitle1 as="h2">Verificación con Microsoft Authenticator</Subtitle1>
+          <CodeStep
+            label="Código de Microsoft Authenticator"
+            hint="Abre Microsoft Authenticator e introduce el código de 6 dígitos de tu cuenta de ESIBuy."
+            onSubmit={handleAuthenticatorCode}
+            onBack={restart}
+            submitting={submitting}
+          />
         </>
       )}
     </>
