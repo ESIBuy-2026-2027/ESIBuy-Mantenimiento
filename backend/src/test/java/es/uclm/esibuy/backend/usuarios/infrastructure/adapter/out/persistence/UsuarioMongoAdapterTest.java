@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Import;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 // Test de integración del adaptador de MongoDB (HU1, AB#216).
@@ -48,8 +49,9 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU1-CP03: existePorCorreo devuelve true si el email ya está guardado")
     void existePorCorreoDevuelveTrueSiEstaGuardado() {
-        // TODO guardar(usuario) y existePorCorreo("juan@uclm.es") -> true
-        fail("Funcionalidad no implementada");
+        adapter.guardar(new Usuario("juan@uclm.es", "hash-simulado", Rol.CLIENTE));
+
+        assertTrue(adapter.existePorCorreo("juan@uclm.es"));
     }
 
     @Test
