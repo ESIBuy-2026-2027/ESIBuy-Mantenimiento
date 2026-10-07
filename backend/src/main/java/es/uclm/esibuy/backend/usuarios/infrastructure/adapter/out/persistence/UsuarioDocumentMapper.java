@@ -10,6 +10,6 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 public class UsuarioDocumentMapper {
 
     public UsuarioDocument aDocumento(Usuario usuario) {
-        return new UsuarioDocument(usuario.getEmail(), usuario.getContrasenaHash(), usuario.getRol().name());
+        return new UsuarioDocument(usuario.getEmail(), usuario.getPasswordHash(), usuario.getRol().name());
     }
 }

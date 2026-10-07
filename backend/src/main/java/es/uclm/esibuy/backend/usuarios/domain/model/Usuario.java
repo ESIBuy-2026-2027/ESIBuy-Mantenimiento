@@ -12,11 +12,6 @@ public class Usuario {
         this.rol = rol;
     }
 
-    // Mismo nombre que en el Usuario de la T214 (Alberto), que lo devolverá como Email
-    public String getEmail() {
-        return correo;
-    }
-
     public Rol getRol() {
         return rol;
     }
@@ -25,6 +20,7 @@ public class Usuario {
         return passwordHash;
     }
 
+    // Mismo nombre que en el Usuario de la T214 (Alberto)
     public String getEmail() {
         return email;
     }
