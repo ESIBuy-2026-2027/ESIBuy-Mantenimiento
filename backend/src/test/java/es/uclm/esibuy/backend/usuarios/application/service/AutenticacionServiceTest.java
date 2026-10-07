@@ -48,7 +48,7 @@ class AutenticacionServiceTest {
 
         ResultadoInicioSesion resultado = autenticacion.iniciarSesion(new IniciarSesionCommand("juan@uclm.es", "clave1234"));
 
-        assertEquals("juan@uclm.es", resultado.correo());
+        assertEquals("juan@uclm.es", resultado.email());
         assertEquals(PasoLogin.CODIGO_EMAIL, resultado.siguientePaso());
     }
 

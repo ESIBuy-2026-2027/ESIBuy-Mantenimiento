@@ -12,4 +12,11 @@ public class BCryptHashContrasenaAdapter implements HashContrasenaPort {
     public String hashear(String password) {
         return encoder.encode(password);
     }
+
+    @Override
+    public boolean coincide(String password, String hash) {
+        return encoder.matches(password, hash);
+    }
+
+    
 }

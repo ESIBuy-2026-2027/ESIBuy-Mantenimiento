@@ -20,4 +20,8 @@ public class Usuario {
         return passwordHash;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
 }
