@@ -18,7 +18,7 @@ Documento de cierre del trabajo para que SonarQube mida la cobertura del fronten
 | Líneas de código | 7 257 | 4 386 (los tests ya no cuentan como código) |
 | Duplicación | 1,2 % | 0,0 % |
 | Bugs / vulnerabilidades / code smells | 0 / 0 / 0 | 0 / 0 / 0 |
-| Hotspots revisados | 0 % | 0 % (requiere revisión manual, ver sección 6) |
+| Security hotspots | 11, 0 % revisados | 2, 0 % revisados (falsos positivos pendientes de marcar, ver sección 6) |
 
 Cobertura según Vitest (74 archivos, tras integrar la HU24): líneas 95,99 %, sentencias 95,72 %, ramas 94,30 % y funciones 94,69 %. Muy por encima del 60 % que exige el enunciado.
 
@@ -102,23 +102,42 @@ En SonarQube (`http://seralu4.esi.uclm.es:1521/dashboard?id=2026-g02-frontend`):
 
 ---
 
-## 6. Limitaciones y trabajo pendiente
+## 6. Security hotspots
+
+Un security hotspot es código que Sonar considera sensible para la seguridad y que **una persona tiene que revisar** y marcar como seguro (*Safe*) o como a corregir. No es una vulnerabilidad confirmada, no afecta al quality gate y no se arregla cambiando la configuración.
+
+Antes de este trabajo había **11 hotspots**. Al declarar los tests como tests (`sonar.tests`), Sonar dejó de revisar los archivos de test con estas reglas, y quedan **2**, los dos de la regla `javascript:S2068` ("Review this potentially hardcoded credential"):
+
+| Archivo | Línea | Código |
+|---|---|---|
+| `src/features/account/accountRules.js` | 18 | `errores.password = 'El password no cumple los requisitos'` |
+| `src/features/auth/CredentialsStep.jsx` | 16 | `errors.password = 'Introduce tu contraseña.'` |
+
+**Los dos son falsos positivos.** La regla avisa cuando se asigna un texto a algo llamado `password`, por si fuera una contraseña escrita en el código. Aquí el texto es el **mensaje de error de validación** que se muestra al usuario en el formulario, no una credencial. No hay ninguna contraseña en el código.
+
+**Por qué siguen sin marcar.** La cuenta del grupo en SonarQube (`calsoft-2026-g02`) solo tiene el permiso `scan`: puede subir análisis y ver resultados, pero no cambiar el estado de los hotspots. En la web, "Change status" indica que requiere permiso. Para marcarlos como *Safe* hace falta el permiso "Administer Security Hotspots", que gestiona el administrador del servidor, probablemente el profesor (como con el falso positivo del token).
+
+**Qué hacer:** comentarlo en la próxima reunión con el profesor y pedirle que los marque como *Safe* o que dé ese permiso al grupo. Justificación propuesta para cada uno: *"Es un mensaje de error de validación mostrado al usuario, no una credencial."*
+
+---
+
+## 7. Limitaciones y trabajo pendiente
 
 - **Tests inestables de la HU21** (`SellerDetailDialog.test.jsx`): ver sección 3.1.
-- **11 security hotspots sin revisar** ("Hotspots Reviewed 0 %"). No se arreglan con configuración: alguien del equipo tiene que revisarlos en la web de SonarQube.
+- **2 security hotspots sin marcar** ("Hotspots Reviewed 0 %"): son falsos positivos, pero el grupo no tiene permiso para marcarlos. Ver sección 6.
 - **Token de SonarQube** en `sonar-project.properties`: la incidencia está marcada como falso positivo en SonarQube, probablemente por el profesor, y se respeta esa decisión.
 - **Archivos sin cubrir:** `main.jsx`, `App.jsx` y `theme/theme.js` tienen un 0 %. Son el arranque y la configuración de la app y ningún test los ejecuta, lo cual es normal.
 - **CI:** la cobertura del frontend no se genera en GitHub Actions. Se podría añadir más adelante.
 
 ---
 
-## 7. Uso de IA generativa
+## 8. Uso de IA generativa
 
 Este trabajo y este documento se hicieron con ayuda de un asistente de IA generativa, como exige el enunciado.
 
 - **Herramienta:** Claude (modelo de Anthropic), mediante Claude Code, con la skill `matriz-trazabilidad` para comprobar la matriz.
 - **Qué generó la IA:** el diagnóstico de la configuración, los cambios de configuración, el cambio de los 10 tests y este documento. Los análisis se lanzaron con `npx @sonar/scan` y los resultados se leyeron de la API de SonarQube con el token del archivo de configuración (solo en memoria).
-- **Qué decidió el desarrollador:** hacer el cambio, usar `npx @sonar/scan`, activar `reportOnFailure` en lugar de tocar los tests inestables, hacer explícito el `expect` en los 10 tests sin cambiar lo que comprueban, respetar el falso positivo del token y no asociar el trabajo a una task de Azure Boards.
+- **Qué decidió el desarrollador:** hacer el cambio, usar `npx @sonar/scan`, activar `reportOnFailure` en lugar de tocar los tests inestables, hacer explícito el `expect` en los 10 tests sin cambiar lo que comprueban, respetar el falso positivo del token, no asociar el trabajo a una task de Azure Boards y documentar los hotspots como falsos positivos pendientes del profesor.
 - **Cómo se comprobó:** los 3 archivos de test modificados pasan, ESLint sin errores, cada archivo de test con fallos inestables pasa entero ejecutado por separado, la cobertura se genera (95,99 % de líneas) y el análisis de SonarQube da quality gate **Passed** con 95,7 % de cobertura y 0 incidencias, también tras integrar la HU24 (sus tests nuevos no tienen incidencias S2699).
 - **Qué NO se comprobó:** que los tests inestables de la HU21 pasen siempre (fallan al azar al ejecutar todos los tests a la vez, también sin cobertura).
 - **Revisión humana:** pendiente de revisión por el equipo. Documentado por: Daniel.
