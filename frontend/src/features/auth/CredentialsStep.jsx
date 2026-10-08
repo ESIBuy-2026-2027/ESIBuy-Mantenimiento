@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Button, Field, Input, Spinner } from '@fluentui/react-components'
 import { useFormStyles } from './authFormStyles'
@@ -74,4 +75,9 @@ export default function CredentialsStep({ onSubmit, submitting }) {
       </Button>
     </form>
   )
+}
+
+CredentialsStep.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
+  submitting: PropTypes.bool.isRequired,
 }

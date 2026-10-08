@@ -44,7 +44,7 @@ public class AutenticacionService implements AutenticacionUseCase {
             throw new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS);
         }
 
-        if (usuario.estaDesactivado()) {
+        if (!usuario.estaActivo()) {
             throw new CuentaDesactivadaException("Esta cuenta está desactivada"); // <- No es demasiado verboso porque para llegar a este login necesitas haber pasado la contraseña
         }
 

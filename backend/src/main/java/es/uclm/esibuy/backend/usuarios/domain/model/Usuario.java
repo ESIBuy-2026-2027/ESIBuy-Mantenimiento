@@ -17,7 +17,7 @@ public class Usuario {
     private final String passwordHash;
     private final Rol rol;
     private final TipoCliente tipoCliente;
-    private boolean desactivado;         // desactivada por un administrador (HU23/HU24): no puede entrar
+    private boolean activo;              // false = desactivada por un administrador (HU23/HU24): no puede entrar
     private int intentosFallidos;        // intentos de login fallidos seguidos
     private Instant bloqueadoHasta;      // bloqueo temporal por intentos; null = sin bloqueo
 
@@ -30,7 +30,7 @@ public class Usuario {
         this.passwordHash = exigirTexto(passwordHash, "La contraseña es obligatoria");
         this.rol = exigirNoNulo(rol, "El rol es obligatorio");
         this.tipoCliente = exigirTipoClienteCoherente(this.rol, tipoCliente);
-        this.desactivado = false;
+        this.activo = true;
         this.intentosFallidos = 0;
     }
 
@@ -95,16 +95,16 @@ public class Usuario {
         return tipoCliente;
     }
 
-    public boolean estaDesactivado() {
-        return desactivado;
+    public boolean estaActivo() {
+        return activo;
     }
 
     public void desactivar() {
-        desactivado = true;
+        activo = false;
     }
 
     public void activar() {
-        desactivado = false;
+        activo = true;
     }
 
     public void registrarIntentoFallido(Instant ahora) {
@@ -116,5 +116,19 @@ public class Usuario {
 
     public boolean tieneBloqueoPorIntentos(Instant ahora) {
         return bloqueadoHasta != null && ahora.isBefore(bloqueadoHasta);
+    }
+
+    public int getIntentosFallidos() {
+        return intentosFallidos;
+    }
+
+    public Instant getBloqueadoHasta() {
+        return bloqueadoHasta;
+    }
+
+    // Usamos esta operación para obligar a que se restauren a la vez los dos parámetros, además de ser más descriptivos pese a ser dos setters
+    public void restaurarBloqueoPorIntentos(int intentosFallidos, Instant bloqueadoHasta) {
+        this.intentosFallidos = intentosFallidos;
+        this.bloqueadoHasta = bloqueadoHasta;
     }
 }

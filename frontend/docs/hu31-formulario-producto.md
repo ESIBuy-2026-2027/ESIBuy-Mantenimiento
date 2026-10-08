@@ -107,8 +107,9 @@ Todas las rutas son relativas a `frontend/src/`.
 | `ProductForm.jsx` | Los campos del producto (precio y stock en la misma fila, alineados aunque el stock lleve un texto de ayuda) y los botones **Guardar** y **Cancelar**. Hasta el primer intento de guardar no muestra errores; después valida en vivo. Mientras guarda deshabilita **Guardar** (evita el doble envío). Si el envío falla, conserva lo escrito y muestra un mensaje genérico. |
 | `DiscountField.jsx` | Interruptor de un descuento y, solo si está activo, el campo de su porcentaje. Se usa dos veces: descuento y descuento premium. |
 | `productValues.js` | Lógica del formulario sin interfaz: `emptyProductValues`, `valuesFromProduct` (producto del backend a valores del formulario), `validateProduct` (todas las reglas) y `toProductPayload` (valores del formulario al cuerpo de la petición). |
+| `ProductRowActions.jsx` | Botones de editar (lápiz, enlace al formulario) y eliminar (papelera) de cada fila del listado. |
 | `DeleteProductDialog.jsx` | Alerta de confirmación de borrado (`role="alertdialog"`). Cancelar, Escape y el botón de cierre salen sin borrar. Mientras borra, bloquea los botones. Si falla, el mensaje se muestra dentro de la alerta y esta sigue abierta. |
-| `ProductsTable.jsx` | Admite una propiedad opcional `actions` que añade la columna **Acciones**. El listado del vendedor la usa; la tabla del administrador (HU26) no, por lo que sigue siendo de solo lectura. |
+| `ProductsTable.jsx` | Admite una propiedad opcional `renderActions` que añade la columna **Acciones**. El listado del vendedor la usa; la tabla del administrador (HU26) no, por lo que sigue siendo de solo lectura. |
 
 ### Campos del formulario
 

@@ -18,6 +18,7 @@ Marketplace (tienda online) desarrollado como Práctica Integrada de la asignatu
 - **Base de datos**: MongoDB Atlas.
 - **Frontend**: React (Vite, plantilla `react`, JavaScript sin TypeScript) + **Fluent UI**.
 - **Testing**: Vitest + React Testing Library. Metodología **TDD** (al menos el 50 % de las funcionalidades).
+- **Validación de props**: `prop-types` (todo componente con props declara sus `propTypes`; ver `docs/sonar-incidencias.md`).
 - **Calidad**: SonarQube con perfil propio (sección 8).
 - **Control de versiones**: Git + GitHub, Git Flow simplificado (sección 7).
 - **Gestión ágil**: Scrum, tareas en Azure DevOps Boards.

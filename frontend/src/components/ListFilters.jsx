@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types'
+import { categoryPropType } from '../utils/propTypes'
 import { Field, Select, SearchBox, makeStyles, tokens } from '@fluentui/react-components'
 
 const useStyles = makeStyles({
@@ -49,4 +51,14 @@ export default function ListFilters({
       {children}
     </div>
   )
+}
+
+ListFilters.propTypes = {
+  search: PropTypes.string.isRequired,
+  category: PropTypes.string.isRequired,
+  categories: PropTypes.arrayOf(categoryPropType).isRequired,
+  searchPlaceholder: PropTypes.string,
+  onSearchChange: PropTypes.func.isRequired,
+  onCategoryChange: PropTypes.func.isRequired,
+  children: PropTypes.node,
 }

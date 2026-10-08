@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { Spinner } from '@fluentui/react-components'
 import { Navigate, Outlet } from 'react-router-dom'
 import { PATHS } from '../routes/paths'
@@ -20,4 +21,8 @@ export default function ProtectedRoute({ allowedRoles }) {
   }
 
   return <Outlet />
+}
+
+ProtectedRoute.propTypes = {
+  allowedRoles: PropTypes.arrayOf(PropTypes.string),
 }
