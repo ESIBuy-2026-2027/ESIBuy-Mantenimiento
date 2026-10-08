@@ -49,9 +49,15 @@ class CodigoVerificacionTest {
     @DisplayName("HU2-CP10: el código se agota tras 5 intentos fallidos")
     void seAgotaTrasCincoIntentosFallidos() {
         // Frontera: con 4 fallos aún se puede usar; con 5, no.
-        // TODO: registrar 4 intentos fallidos y comprobar que puedeUsarse es true.
-        // TODO: registrar el 5.º y comprobar que puedeUsarse es false.
-        fail("Funcionalidad no implementada");
+        CodigoVerificacion codigo = CodigoVerificacion.nuevo("u-1", "hash-del-codigo", AHORA);
+        for (int intento = 0; intento < 4; intento++) {
+            codigo.registrarIntentoFallido();
+        }
+        assertTrue(codigo.puedeUsarse(AHORA));
+
+        codigo.registrarIntentoFallido();
+
+        assertFalse(codigo.puedeUsarse(AHORA));
     }
 
     @Test
