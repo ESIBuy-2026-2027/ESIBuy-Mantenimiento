@@ -57,6 +57,9 @@ public class CodigoVerificacion {
      */
     public static CodigoVerificacion reconstruir(String id, String usuarioId, String codigoHash, Instant expiraEn,
             Instant usadoEn, int intentosFallidos) {
+        if (intentosFallidos < 0) {
+            throw new CodigoVerificacionInvalidoException("Los intentos fallidos no pueden ser negativos");
+        }
         CodigoVerificacion codigo = new CodigoVerificacion(id, usuarioId, codigoHash, expiraEn);
         codigo.usadoEn = usadoEn;
         codigo.intentosFallidos = intentosFallidos;
