@@ -11,6 +11,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
 public class AutenticacionService implements AutenticacionUseCase {
@@ -41,6 +42,10 @@ public class AutenticacionService implements AutenticacionUseCase {
             usuario.registrarIntentoFallido(ahora);
             usuarioRepository.guardar(usuario);
             throw new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS);
+        }
+
+        if (usuario.estaBloqueado()) {
+            throw new CuentaDesactivadaException("Esta cuenta está desactivada"); // <- No es demasiado verboso porque para llegar a este login necesitas haber pasado la contraseña
         }
 
         return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.CODIGO_EMAIL);
