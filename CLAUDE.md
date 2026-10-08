@@ -161,7 +161,7 @@ Usar siempre el wrapper de Maven:
 
 ## Notas de herramientas y configuración
 
-- **MongoDB**: se usará MongoDB Atlas, pero la URI/credenciales todavía **no están configuradas** en `application.properties`. No asumas ni inventes una variable de entorno o convención de conexión: pregunta antes de añadir configuración de Mongo. Nunca subas credenciales al repositorio.
+- **MongoDB**: MongoDB Atlas (clúster `cluster0`, base `EsiBuy`). La conexión se configura en `application.properties` con `spring.mongodb.uri=${MONGODB_URI}` y `spring.mongodb.database=EsiBuy` (en Spring Boot 4 la propiedad es `spring.mongodb.uri`, no `spring.data.mongodb.uri`; y la base se llama `EsiBuy`, con esas mayúsculas, porque MongoDB no admite dos bases que solo difieran en mayúsculas). La URI con credenciales solo existe en la variable de entorno `MONGODB_URI` de cada desarrollador: **nunca** en el repositorio. Sin esa variable la aplicación no arranca. Los tests no usan Atlas: los que arrancan Spring importan `MongoTestcontainersConfig` (MongoDB en Docker) y el CI no tiene `MONGODB_URI`. Cualquier otro cambio en la configuración de Mongo se consulta antes.
 - No hay Checkstyle ni Spotless; el análisis de estilo/calidad se hará vía Sonar. No añadas linters locales duplicados.
 - Frontend sin test runner (sin Vitest/Jest): no asumas que existen tests de frontend ni los añadas sin consultarlo.
 - `@types/react*` en devDependencies son solo para el editor; no hay `tsconfig.json`.
