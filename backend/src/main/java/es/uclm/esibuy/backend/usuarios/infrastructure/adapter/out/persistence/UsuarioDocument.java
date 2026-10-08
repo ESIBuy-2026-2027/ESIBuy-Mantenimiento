@@ -22,6 +22,10 @@ public class UsuarioDocument {
     private final String email;
     private final String passwordHash;
     private final String rol;
+
+    private String nombre;
+    private String apellidos;
+    private String tipoCliente;
     // Boolean y no boolean: un documento antiguo, sin este campo, se lee como null, que el mapper trata
     // como activo. Con el primitivo se leería false y todos los usuarios antiguos quedarían desactivados.
     private Boolean activo;
@@ -76,5 +80,29 @@ public class UsuarioDocument {
 
     public void setBloqueadoHasta(Instant bloqueadoHasta) {
         this.bloqueadoHasta = bloqueadoHasta;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getApellidos() {
+        return apellidos;
+    }
+
+    public void setApellidos(String apellidos) {
+        this.apellidos = apellidos;
+    }
+
+    public String getTipoCliente() {
+        return tipoCliente;
+    }
+
+    public void setTipoCliente(String tipoCliente) {
+        this.tipoCliente = tipoCliente;
     }
 }
