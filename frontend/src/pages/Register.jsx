@@ -27,7 +27,7 @@ import {
 } from '@fluentui/react-icons'
 import { useEffect, useState } from 'react'
 import { registrarCliente, registrarVendedor } from '../api/auth'
-import { getCategorias } from '../api/categorias'
+import { getCategories } from '../api/products'
 
 const OBLIGATORIOS_CLIENTE = [
   'nombre',
@@ -214,7 +214,7 @@ export default function Register() {
 
   useEffect(() => {
     if (tipo !== 'vendedor') return
-    getCategorias().then(setCategoriasDisponibles)
+    getCategories().then(setCategoriasDisponibles)
   }, [tipo])
 
   const cambiar = (campo) => (e, data) => setDatos({ ...datos, [campo]: data.value })

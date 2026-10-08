@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { registrarCliente, registrarVendedor } from '../api/auth'
-import { getCategorias } from '../api/categorias'
+import { getCategories } from '../api/products'
 import { renderWithProviders } from '../test/utils'
 import Register from './Register'
 
@@ -11,8 +11,8 @@ vi.mock('../api/auth', () => ({
   registrarVendedor: vi.fn(),
 }))
 
-vi.mock('../api/categorias', () => ({
-  getCategorias: vi.fn(),
+vi.mock('../api/products', () => ({
+  getCategories: vi.fn(),
 }))
 
 async function renderYElegirCliente() {
@@ -51,7 +51,7 @@ async function rellenarFormularioValido() {
 describe('Register', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    getCategorias.mockResolvedValue([
+    getCategories.mockResolvedValue([
       { id: 'cat-1', nombre: 'Tecnología' },
       { id: 'cat-2', nombre: 'Hogar' },
     ])
