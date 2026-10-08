@@ -31,7 +31,10 @@ public class CodigoVerificacion {
     private final String usuarioId;
     private final String codigoHash;
     private final Instant expiraEn;
-    private boolean usado;
+
+    // Hora en que se aceptó el código; null = sin usar. Se guarda la hora y no solo un «usado»
+    // para saber cuándo se usó cada código (trazabilidad de la autenticación, T232). En MongoDB, usedAt.
+    private Instant usadoEn;
     private int intentosFallidos;
 
     private CodigoVerificacion(String usuarioId, String codigoHash, Instant expiraEn) {
@@ -52,11 +55,11 @@ public class CodigoVerificacion {
     }
 
     public boolean puedeUsarse(Instant ahora) {
-        return !usado && intentosFallidos < MAX_INTENTOS_FALLIDOS && ahora.isBefore(expiraEn);
+        return usadoEn == null && intentosFallidos < MAX_INTENTOS_FALLIDOS && ahora.isBefore(expiraEn);
     }
 
-    public void marcarUsado() {
-        usado = true;
+    public void marcarUsado(Instant instante) {
+        usadoEn = instante;
     }
 
     public void registrarIntentoFallido() {
@@ -74,4 +77,10 @@ public class CodigoVerificacion {
     public String getUsuarioId() {
         return usuarioId;
     }
+
+    public Instant getUsadoEn() {
+        return usadoEn;
+    }
+
+    
 }
