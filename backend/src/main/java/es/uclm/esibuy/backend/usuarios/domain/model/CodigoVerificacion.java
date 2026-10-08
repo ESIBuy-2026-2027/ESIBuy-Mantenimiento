@@ -24,11 +24,13 @@ import java.time.Instant;
 public class CodigoVerificacion {
 
     private static final Duration VALIDEZ = Duration.ofMinutes(10);
+    private static final int MAX_INTENTOS_FALLIDOS = 5;
 
     private final String usuarioId;
     private final String codigoHash;
     private final Instant expiraEn;
     private boolean usado;
+    private int intentosFallidos;
 
     private CodigoVerificacion(String usuarioId, String codigoHash, Instant expiraEn) {
         this.usuarioId = usuarioId;
@@ -41,10 +43,14 @@ public class CodigoVerificacion {
     }
 
     public boolean puedeUsarse(Instant ahora) {
-        return !usado && ahora.isBefore(expiraEn);
+        return !usado && intentosFallidos < MAX_INTENTOS_FALLIDOS && ahora.isBefore(expiraEn);
     }
 
     public void marcarUsado() {
         usado = true;
+    }
+
+    public void registrarIntentoFallido() {
+        intentosFallidos++;
     }
 }
