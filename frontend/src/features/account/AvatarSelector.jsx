@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { Avatar, Field, Radio, RadioGroup } from '@fluentui/react-components'
 import { AnimalCat24Regular, AnimalDog24Regular, AnimalRabbit24Regular } from '@fluentui/react-icons'
 
@@ -22,4 +23,9 @@ export default function AvatarSelector({ value, onChange }) {
       </RadioGroup>
     </Field>
   )
+}
+
+AvatarSelector.propTypes = {
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
 }

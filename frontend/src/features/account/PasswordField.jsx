@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { Button, Field, Input, Text, makeStyles, tokens } from '@fluentui/react-components'
 import { CheckmarkCircle16Filled, Circle16Regular, Eye20Regular, EyeOff20Regular } from '@fluentui/react-icons'
 import { useState } from 'react'
@@ -69,4 +70,16 @@ export function PasswordRequirements({ password }) {
       ))}
     </ul>
   )
+}
+
+PasswordField.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  error: PropTypes.string,
+  maxLength: PropTypes.number,
+}
+
+PasswordRequirements.propTypes = {
+  password: PropTypes.string.isRequired,
 }

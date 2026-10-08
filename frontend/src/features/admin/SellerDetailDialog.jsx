@@ -219,7 +219,20 @@ SellerOrdersTab.propTypes = {
   sellerId: PropTypes.string.isRequired,
 }
 
+StatusConfirmDialog.propTypes = {
+  accion: PropTypes.shape({
+    boton: PropTypes.string.isRequired,
+    confirmar: PropTypes.string.isRequired,
+    pregunta: PropTypes.func.isRequired,
+  }).isRequired,
+  nombre: PropTypes.string.isRequired,
+  enviando: PropTypes.bool.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
+}
+
 SellerDetailDialog.propTypes = {
   sellerId: PropTypes.string.isRequired,
   onClose: PropTypes.func.isRequired,
+  onStatusChange: PropTypes.func,
 }
