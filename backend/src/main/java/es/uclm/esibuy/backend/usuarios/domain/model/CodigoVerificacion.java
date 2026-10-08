@@ -28,6 +28,7 @@ public class CodigoVerificacion {
     private final String usuarioId;
     private final String codigoHash;
     private final Instant expiraEn;
+    private boolean usado;
 
     private CodigoVerificacion(String usuarioId, String codigoHash, Instant expiraEn) {
         this.usuarioId = usuarioId;
@@ -40,6 +41,10 @@ public class CodigoVerificacion {
     }
 
     public boolean puedeUsarse(Instant ahora) {
-        return ahora.isBefore(expiraEn);
+        return !usado && ahora.isBefore(expiraEn);
+    }
+
+    public void marcarUsado() {
+        usado = true;
     }
 }
