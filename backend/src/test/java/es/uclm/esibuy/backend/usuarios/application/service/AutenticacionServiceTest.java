@@ -311,9 +311,21 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP10: rechaza un código agotado aunque sea correcto")
     void rechazaCodigoAgotadoAunqueSeaCorrecto() {
-        // TODO: código con 5 intentos fallidos; el hash coincide.
-        // TODO: comprobar que lanza CodigoInvalidoException.
-        fail("Funcionalidad no implementada");
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(clienteConId()));
+        CodigoVerificacion codigo = CodigoVerificacion.nuevo("u-1", HASH_CODIGO, AHORA);
+        for (int intento = 0; intento < 5; intento++) {
+            codigo.registrarIntentoFallido();
+        }
+        when(codigoRepository.buscarPorUsuario("u-1")).thenReturn(Optional.of(codigo));
+        // El código es correcto: solo se rechaza por estar agotado (lenient: no se llega a comparar).
+        lenient().when(hashContrasena.coincide(CODIGO, HASH_CODIGO)).thenReturn(true);
+        VerificarCodigoEmailCommand comando = new VerificarCodigoEmailCommand("juan@uclm.es", CODIGO);
+
+        assertThrows(CodigoInvalidoException.class, () -> autenticacion.verificarCodigoEmail(comando));
+
+        // Agotado no suma más intentos ni se guarda: el código ya no vale y hay que repetir el login.
+        assertEquals(5, codigo.getIntentosFallidos());
+        verify(codigoRepository, never()).guardar(any());
     }
 
     @Test
