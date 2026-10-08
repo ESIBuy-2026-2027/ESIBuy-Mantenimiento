@@ -111,6 +111,21 @@ class CodigoVerificacionMongoAdapterTest {
         assertEquals(creado, actualizado.getDate("createdAt"));
     }
 
+    @Test
+    @DisplayName("HU2-CP07: los tokens de otro propósito del mismo usuario no se devuelven ni se borran")
+    void noDevuelveTokensDeOtroProposito() {
+        // tokens_seguridad guarda también, p. ej., los tokens de recuperación de contraseña (P7 del plan de la T232).
+        mongoTemplate.getCollection("tokens_seguridad").insertOne(new Document("usuarioId", "u-1")
+                .append("purpose", "PASSWORD_RECOVERY").append("tokenHash", "hash-de-recuperacion")
+                .append("expiresAt", Date.from(AHORA.plus(Duration.ofHours(1)))));
+        assertTrue(adapter.buscarPorUsuario("u-1").isEmpty());
+
+        adapter.guardar(CodigoVerificacion.nuevo("u-1", "hash-del-codigo", AHORA));
+
+        assertEquals("hash-del-codigo", adapter.buscarPorUsuario("u-1").orElseThrow().getCodigoHash());
+        assertEquals(2, codigoVerificacionMongoRepository.count());
+    }
+
     // MongoTemplate devuelve el documento tal cual está en MongoDB, con los nombres de sus campos.
     private Document documentoEnBruto() {
         Document guardado = mongoTemplate.getCollection("tokens_seguridad").find().first();
