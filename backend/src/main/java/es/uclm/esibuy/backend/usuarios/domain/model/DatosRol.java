@@ -7,7 +7,7 @@ package es.uclm.esibuy.backend.usuarios.domain.model;
  * sabe a qué rol corresponde. Así, el rol de un {@link Usuario} sale de sus datos de rol y no
  * puede haber, por ejemplo, un vendedor con tipo de cliente.
  */
-public sealed interface DatosRol permits DatosCliente, DatosVendedor {
+public sealed interface DatosRol permits DatosCliente, DatosVendedor, DatosAdministrador {
 
     Rol rol();
 }
