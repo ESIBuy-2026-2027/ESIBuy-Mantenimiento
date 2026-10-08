@@ -22,6 +22,7 @@ public class UsuarioDocument {
     private final String email;
     private final String passwordHash;
     private final String rol;
+    private int failedLoginAttempts;
 
     public UsuarioDocument(String email, String passwordHash, String rol) {
         this.email = email;
@@ -31,6 +32,19 @@ public class UsuarioDocument {
 
     public String getId() {
         return id;
+    }
+
+    // Con el id, guardar un usuario ya existente lo actualiza en vez de insertar otro.
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public int getFailedLoginAttempts() {
+        return failedLoginAttempts;
+    }
+
+    public void setFailedLoginAttempts(int failedLoginAttempts) {
+        this.failedLoginAttempts = failedLoginAttempts;
     }
 
     public String getEmail() {

@@ -13,7 +13,11 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 public class UsuarioDocumentMapper {
 
     public UsuarioDocument aDocumento(Usuario usuario) {
-        return new UsuarioDocument(usuario.getEmail().valor(), usuario.getPasswordHash(), usuario.getRol().name());
+        UsuarioDocument documento = new UsuarioDocument(usuario.getEmail().valor(), usuario.getPasswordHash(),
+                usuario.getRol().name());
+        documento.setId(usuario.getId());
+        documento.setFailedLoginAttempts(usuario.getIntentosFallidos());
+        return documento;
     }
 
     // PENDIENTE (persistencia de los campos nuevos): el documento todavía no guarda nombre, apellidos,
