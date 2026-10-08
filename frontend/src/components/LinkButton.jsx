@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { Button } from '@fluentui/react-components'
 import { useHref, useLinkClickHandler } from 'react-router-dom'
 
@@ -6,4 +7,8 @@ export default function LinkButton({ to, ...buttonProps }) {
   const handleClick = useLinkClickHandler(to)
 
   return <Button as="a" href={href} onClick={handleClick} {...buttonProps} />
+}
+
+LinkButton.propTypes = {
+  to: PropTypes.string.isRequired,
 }

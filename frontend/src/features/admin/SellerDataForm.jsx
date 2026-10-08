@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { Field, Input, makeStyles, tokens } from '@fluentui/react-components'
 import { formatDate } from '../../utils/format'
 import { getSellerStatus } from './sellerStatus'
@@ -33,4 +34,17 @@ export default function SellerDataForm({ seller }) {
       ))}
     </div>
   )
+}
+
+SellerDataForm.propTypes = {
+  seller: PropTypes.shape({
+    nombre: PropTypes.string.isRequired,
+    apellidos: PropTypes.string.isRequired,
+    email: PropTypes.string.isRequired,
+    nombreComercial: PropTypes.string.isRequired,
+    nif: PropTypes.string.isRequired,
+    categoriaPrincipal: PropTypes.string.isRequired,
+    estado: PropTypes.string.isRequired,
+    fechaAlta: PropTypes.string.isRequired,
+  }).isRequired,
 }

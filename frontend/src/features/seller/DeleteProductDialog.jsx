@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { useState } from 'react'
 import {
   Button,
@@ -59,4 +60,13 @@ export default function DeleteProductDialog({ product, onClose, onDeleted }) {
       </DialogSurface>
     </Dialog>
   )
+}
+
+DeleteProductDialog.propTypes = {
+  product: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    nombre: PropTypes.string.isRequired,
+  }).isRequired,
+  onClose: PropTypes.func.isRequired,
+  onDeleted: PropTypes.func.isRequired,
 }

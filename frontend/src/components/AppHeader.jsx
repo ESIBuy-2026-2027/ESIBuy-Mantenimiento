@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Button, makeStyles, tokens } from '@fluentui/react-components'
 import { ArrowExit20Regular, PersonAdd20Regular } from '@fluentui/react-icons'
@@ -87,4 +88,10 @@ export default function AppHeader() {
       </nav>
     </header>
   )
+}
+
+UserActions.propTypes = {
+  isAdmin: PropTypes.bool.isRequired,
+  onSignOut: PropTypes.func.isRequired,
+  disabled: PropTypes.bool.isRequired,
 }

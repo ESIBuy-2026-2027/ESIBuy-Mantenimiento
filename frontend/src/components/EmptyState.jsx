@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { Subtitle1, Text, makeStyles, tokens } from '@fluentui/react-components'
 
 const useStyles = makeStyles({
@@ -43,4 +44,11 @@ export default function EmptyState({ icon, title, description, children }) {
       {children}
     </section>
   )
+}
+
+EmptyState.propTypes = {
+  icon: PropTypes.node,
+  title: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  children: PropTypes.node,
 }

@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { Button, Field, Select, makeStyles } from '@fluentui/react-components'
 import { ArrowSortDown20Regular, ArrowSortUp20Regular } from '@fluentui/react-icons'
 
@@ -35,4 +36,11 @@ export default function SellerSortControls({ sort, order, onSortChange, onOrderC
       </Button>
     </>
   )
+}
+
+SellerSortControls.propTypes = {
+  sort: PropTypes.oneOf(['status', 'category', 'name']).isRequired,
+  order: PropTypes.oneOf(['asc', 'desc']).isRequired,
+  onSortChange: PropTypes.func.isRequired,
+  onOrderChange: PropTypes.func.isRequired,
 }

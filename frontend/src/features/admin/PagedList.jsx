@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { useCallback, useState } from 'react'
 import {
   Button,
@@ -64,4 +65,12 @@ export default function PagedList({ load, itemLabel, errorMessage, emptyMessage,
       />
     </div>
   )
+}
+
+PagedList.propTypes = {
+  load: PropTypes.func.isRequired,
+  itemLabel: PropTypes.string.isRequired,
+  errorMessage: PropTypes.string.isRequired,
+  emptyMessage: PropTypes.string.isRequired,
+  renderItems: PropTypes.func.isRequired,
 }
