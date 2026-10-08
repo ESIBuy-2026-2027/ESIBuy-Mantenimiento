@@ -5,6 +5,7 @@ import java.time.Instant;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -19,6 +20,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * ({@code estado} ACTIVO/DESACTIVADO, {@code failedLoginAttempts} y {@code lockedUntil}).
  */
 @Document(collection = "usuarios")
+// MVP del Sprint 1: el DNI es único, pero una persona puede tener cuenta de cliente y de vendedor con
+// el mismo DNI (y distinto correo): es único por rol. El filtro parcial deja fuera a los usuarios sin DNI.
+@CompoundIndex(name = "rol_dni", def = "{'rol': 1, 'dni': 1}", unique = true,
+        partialFilter = "{'dni': {'$exists': true}}")
 public class UsuarioDocument {
 
     @Id

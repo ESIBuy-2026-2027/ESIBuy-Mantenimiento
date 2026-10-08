@@ -33,12 +33,21 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
         }
         try {
             repository.save(documento);
-        } catch (DuplicateKeyException _) {
+        } catch (DuplicateKeyException e) {
             // El índice único de email lo ha rechazado (p. ej. dos registros simultáneos que pasaron
             // a la vez la comprobación de existePorCorreo). Se traduce a la excepción del dominio,
             // que la API devuelve como 409, para que el núcleo no dependa de MongoDB.
-            throw new CorreoYaRegistradoException("El correo ya está registrado");
+            if (esIndiceDeEmail(e)) {
+                throw new CorreoYaRegistradoException("El correo ya está registrado");
+            }
+            // Otro índice único (p. ej. el DNI por rol): su mensaje lo definirá la task que lo pida.
+            throw e;
         }
+    }
+
+    // MongoDB indica en el mensaje el índice que ha rechazado el documento: "... index: email dup key ...".
+    private static boolean esIndiceDeEmail(DuplicateKeyException e) {
+        return e.getMessage() != null && e.getMessage().contains("index: email ");
     }
 
     @Override
