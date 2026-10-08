@@ -1,7 +1,9 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
+import org.springframework.dao.DuplicateKeyException;
 
 /**
  * Adaptador de salida que guarda usuarios en MongoDB (patrón Repository).
@@ -21,7 +23,14 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
 
     @Override
     public void guardar(Usuario usuario) {
-        repository.save(mapper.aDocumento(usuario));
+        try {
+            repository.save(mapper.aDocumento(usuario));
+        } catch (DuplicateKeyException _) {
+            // El índice único de email lo ha rechazado (p. ej. dos registros simultáneos que pasaron
+            // a la vez la comprobación de existePorCorreo). Se traduce a la excepción del dominio,
+            // que la API devuelve como 409, para que el núcleo no dependa de MongoDB.
+            throw new CorreoYaRegistradoException("El correo ya está registrado");
+        }
     }
 
     @Override

@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.dao.DuplicateKeyException;
 
 import java.util.List;
 
@@ -66,12 +66,12 @@ class UsuarioMongoAdapterTest {
     @DisplayName("HU1-CP03: la base de datos rechaza un segundo usuario con el mismo email")
     void rechazaEmailDuplicadoEnLaBaseDeDatos() {
         // Llama a guardar dos veces sin pasar por existePorCorreo: simula dos registros simultáneos,
-        // que solo el índice único de email (AB#210) puede parar.
-        // Cuando la T19 (Jorge) traduzca el rechazo en el adaptador, esperar CorreoYaRegistradoException.
+        // que solo el índice único de email (AB#210) puede parar. El adaptador traduce el rechazo
+        // de MongoDB a la excepción del dominio, que la API devuelve como 409.
         adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-1"));
         Usuario duplicado = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-2");
 
-        assertThrows(DuplicateKeyException.class, () -> adapter.guardar(duplicado));
+        assertThrows(CorreoYaRegistradoException.class, () -> adapter.guardar(duplicado));
         assertEquals(1, usuarioMongoRepository.count());
     }
 }
