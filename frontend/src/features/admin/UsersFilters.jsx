@@ -17,6 +17,21 @@ const useStyles = makeStyles({
   },
 })
 
+function FilterSelect({ label, allLabel, labels, value, onChange, className }) {
+  return (
+    <Field label={label} className={className}>
+      <Select value={value} onChange={(_event, data) => onChange(data.value)}>
+        <option value="">{allLabel}</option>
+        {Object.entries(labels).map(([optionValue, optionLabel]) => (
+          <option key={optionValue} value={optionValue}>
+            {optionLabel}
+          </option>
+        ))}
+      </Select>
+    </Field>
+  )
+}
+
 export default function UsersFilters({ search, role, status, onSearchChange, onRoleChange, onStatusChange }) {
   const styles = useStyles()
 
@@ -29,26 +44,22 @@ export default function UsersFilters({ search, role, status, onSearchChange, onR
           onChange={(_event, data) => onSearchChange(data.value)}
         />
       </Field>
-      <Field label="Rol" className={styles.select}>
-        <Select value={role} onChange={(_event, data) => onRoleChange(data.value)}>
-          <option value="">Todos los roles</option>
-          {Object.entries(ROLE_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </Select>
-      </Field>
-      <Field label="Estado" className={styles.select}>
-        <Select value={status} onChange={(_event, data) => onStatusChange(data.value)}>
-          <option value="">Todos los estados</option>
-          {Object.entries(STATUS_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </Select>
-      </Field>
+      <FilterSelect
+        label="Rol"
+        allLabel="Todos los roles"
+        labels={ROLE_LABELS}
+        value={role}
+        onChange={onRoleChange}
+        className={styles.select}
+      />
+      <FilterSelect
+        label="Estado"
+        allLabel="Todos los estados"
+        labels={STATUS_LABELS}
+        value={status}
+        onChange={onStatusChange}
+        className={styles.select}
+      />
     </div>
   )
 }
