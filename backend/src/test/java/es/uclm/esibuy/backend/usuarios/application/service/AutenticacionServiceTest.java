@@ -150,10 +150,10 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP04: rechaza una cuenta desactivada")
     void rechazaCuentaDesactivada() {
-        // «Desactivada» = bloqueo manual de un administrador (bloquear() de Usuario, T214).
+        // «Desactivada» = desactivada por un administrador (desactivar() de Usuario, T214).
         // Se comprueba después de la contraseña: quien no la conoce no puede averiguar el estado de la cuenta.
         Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado");
-        usuario.bloquear();
+        usuario.desactivar();
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
         when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
         IniciarSesionCommand comando = new IniciarSesionCommand("juan@uclm.es", "clave1234");

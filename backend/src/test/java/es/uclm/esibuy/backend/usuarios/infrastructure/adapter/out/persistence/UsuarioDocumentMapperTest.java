@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 // Test unitario del mapper dominio -> documento de MongoDB (HU1, AB#216).
 // PENDIENTE DE REVISAR CON EL EQUIPO: IDs de caso propuestos.
 // Con el Usuario de la T214 (Alberto), getEmail() ya devuelve Email. PENDIENTE: el mapper
-// aún no persiste nombre, apellidos, tipoCliente ni bloqueado.
+// aún no persiste nombre, apellidos, tipoCliente ni desactivado.
 class UsuarioDocumentMapperTest {
 
     @Test

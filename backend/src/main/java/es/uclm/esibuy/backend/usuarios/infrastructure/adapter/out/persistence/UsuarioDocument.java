@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * campos siguen el «Planteamiento inicial BBDD». El rol se guarda como texto para que el
  * documento no dependa del enum del dominio.
  *
- * <p>Cuando entre el Usuario de la T214 se añadirán nombre, apellidos, tipoCliente y bloqueado.
+ * <p>Cuando entre el Usuario de la T214 se añadirán nombre, apellidos, tipoCliente y desactivado.
  */
 @Document(collection = "usuarios")
 public class UsuarioDocument {

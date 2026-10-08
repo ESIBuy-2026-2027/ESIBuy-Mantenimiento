@@ -17,7 +17,7 @@ public class UsuarioDocumentMapper {
     }
 
     // PENDIENTE (persistencia de los campos nuevos): el documento todavía no guarda nombre, apellidos,
-    // tipoCliente, bloqueado ni los intentos fallidos. Mientras tanto, un CLIENTE se reconstruye como
+    // tipoCliente, desactivado ni los intentos fallidos. Mientras tanto, un CLIENTE se reconstruye como
     // ESTANDAR (igual que Usuario.nuevoCliente) y el resto de roles sin tipo de cliente.
     public Usuario aDominio(UsuarioDocument documento) {
         Rol rol = Rol.valueOf(documento.getRol());

@@ -172,7 +172,7 @@ Usar siempre el wrapper de Maven:
 
 Autenticación y autorización con el patrón **RBAC**. Roles:
 
-- **Administrador**: gestiona usuarios, vendedores, categorías, incidencias y configuración general. Acceso en modo "solo lectura" a la información gestionada por vendedores. Módulo de gestión de usuarios exclusivo suyo: crear otros administradores, modificar, consultar, bloquear/desbloquear y eliminar usuarios.
+- **Administrador**: gestiona usuarios, vendedores, categorías, incidencias y configuración general. Acceso en modo "solo lectura" a la información gestionada por vendedores. Módulo de gestión de usuarios exclusivo suyo: crear otros administradores, modificar, consultar, desactivar/activar y eliminar usuarios.
 - **Vendedor**: crea, modifica, consulta, activa/desactiva y elimina productos; gestiona precios, stock, disponibilidad, ofertas y pedidos de sus productos; consulta estadísticas básicas de ventas, valoraciones y stock.
 - **Cliente** (tipos **Premium** y **Estándar**): busca y filtra productos (categoría, precio, valoración, disponibilidad), consulta detalles, gestiona carrito, realiza pedidos, consulta historial, cancela pedidos cuando sea posible, sigue el estado del envío, gestiona direcciones y métodos de pago, guarda favoritos / listas de deseos y **valora productos solo si los ha comprado**.
 
