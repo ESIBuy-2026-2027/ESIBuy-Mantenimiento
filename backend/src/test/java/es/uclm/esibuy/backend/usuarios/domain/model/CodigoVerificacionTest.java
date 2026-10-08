@@ -3,18 +3,24 @@ package es.uclm.esibuy.backend.usuarios.domain.model;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 // Login, paso 2: reglas del código de verificación por email (HU2, T21/T22).
 // Válido 10 minutos, de un solo uso y se agota tras 5 intentos fallidos (plan de la T21, D3).
 class CodigoVerificacionTest {
 
+    // Hora fija para los tests: el código recibe la hora en vez de consultarla él mismo, como Usuario.
+    private static final Instant AHORA = Instant.parse("2026-10-08T10:00:00Z");
+
     @Test
     @DisplayName("HU2-CP06: un código recién creado se puede usar")
     void codigoNuevoSePuedeUsar() {
-        // TODO: crear un código con CodigoVerificacion.nuevo(usuarioId, codigoHash, ahora).
-        // TODO: comprobar que puedeUsarse(ahora) es true.
-        fail("Funcionalidad no implementada");
+        CodigoVerificacion codigo = CodigoVerificacion.nuevo("u-1", "hash-del-codigo", AHORA);
+
+        assertTrue(codigo.puedeUsarse(AHORA));
     }
 
     @Test
