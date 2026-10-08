@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * campos siguen el «Planteamiento inicial BBDD». El rol se guarda como texto para que el
  * documento no dependa del enum del dominio.
  *
- * <p>Cuando entre el Usuario de la T214 se añadirán nombre, apellidos, tipoCliente y desactivado.
+ * <p>Cuando entre el Usuario de la T214 se añadirán nombre, apellidos, tipoCliente, intentos fallidos y bloqueo.
  */
 @Document(collection = "usuarios")
 public class UsuarioDocument {
@@ -20,7 +20,9 @@ public class UsuarioDocument {
     private final String email;
     private final String passwordHash;
     private final String rol;
-    private boolean desactivado;
+    // Boolean y no boolean: un documento antiguo, sin este campo, se lee como null, que el mapper trata
+    // como activo. Con el primitivo se leería false y todos los usuarios antiguos quedarían desactivados.
+    private Boolean activo;
 
     public UsuarioDocument(String email, String passwordHash, String rol) {
         this.email = email;
@@ -48,12 +50,12 @@ public class UsuarioDocument {
         this.id = id;
     }
 
-    public boolean isDesactivado() {
-        return desactivado;
+    public Boolean getActivo() {
+        return activo;
     }
 
-    public void setDesactivado(boolean desactivado) {
-        this.desactivado = desactivado;
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
     }
 
 }

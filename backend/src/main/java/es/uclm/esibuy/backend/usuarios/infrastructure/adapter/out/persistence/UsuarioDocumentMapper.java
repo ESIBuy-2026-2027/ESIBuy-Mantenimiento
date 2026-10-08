@@ -15,7 +15,7 @@ public class UsuarioDocumentMapper {
     public UsuarioDocument aDocumento(Usuario usuario) {
         UsuarioDocument documento = new UsuarioDocument(usuario.getEmail().valor(), usuario.getPasswordHash(), usuario.getRol().name());
         documento.setId(usuario.getId());
-        documento.setDesactivado(usuario.estaDesactivado());
+        documento.setActivo(usuario.estaActivo());
         return documento;
     }
 
@@ -28,7 +28,8 @@ public class UsuarioDocumentMapper {
         Usuario usuario = new Usuario(documento.getId(), null, null, new Email(documento.getEmail()),
                 documento.getPasswordHash(), rol, tipoCliente);
 
-        if (documento.isDesactivado()) {
+        // Solo se desactiva si el dato es explícitamente false; null (documento antiguo) = activo.
+        if (Boolean.FALSE.equals(documento.getActivo())) {
             usuario.desactivar();
         }
         return usuario;

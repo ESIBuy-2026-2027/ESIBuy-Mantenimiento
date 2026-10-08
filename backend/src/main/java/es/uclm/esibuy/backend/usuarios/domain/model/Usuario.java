@@ -17,7 +17,7 @@ public class Usuario {
     private final String passwordHash;
     private final Rol rol;
     private final TipoCliente tipoCliente;
-    private boolean desactivado;         // desactivada por un administrador (HU23/HU24): no puede entrar
+    private boolean activo;              // false = desactivada por un administrador (HU23/HU24): no puede entrar
     private int intentosFallidos;        // intentos de login fallidos seguidos
     private Instant bloqueadoHasta;      // bloqueo temporal por intentos; null = sin bloqueo
 
@@ -30,7 +30,7 @@ public class Usuario {
         this.passwordHash = exigirTexto(passwordHash, "La contraseña es obligatoria");
         this.rol = exigirNoNulo(rol, "El rol es obligatorio");
         this.tipoCliente = exigirTipoClienteCoherente(this.rol, tipoCliente);
-        this.desactivado = false;
+        this.activo = true;
         this.intentosFallidos = 0;
     }
 
@@ -95,16 +95,16 @@ public class Usuario {
         return tipoCliente;
     }
 
-    public boolean estaDesactivado() {
-        return desactivado;
+    public boolean estaActivo() {
+        return activo;
     }
 
     public void desactivar() {
-        desactivado = true;
+        activo = false;
     }
 
     public void activar() {
-        desactivado = false;
+        activo = true;
     }
 
     public void registrarIntentoFallido(Instant ahora) {

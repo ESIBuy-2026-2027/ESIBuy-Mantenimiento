@@ -100,6 +100,6 @@ class UsuarioMongoAdapterTest {
 
         adapter.guardar(usuario);
 
-        assertTrue(adapter.buscarPorCorreo("juan@uclm.es").orElseThrow().estaDesactivado());
+        assertFalse(adapter.buscarPorCorreo("juan@uclm.es").orElseThrow().estaActivo());
     }
 }
