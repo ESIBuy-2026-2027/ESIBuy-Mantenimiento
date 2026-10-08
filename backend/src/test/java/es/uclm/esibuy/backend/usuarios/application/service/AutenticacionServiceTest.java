@@ -37,7 +37,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
@@ -331,8 +330,15 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP07: rechaza la verificación si no hay código pendiente")
     void rechazaSiNoHayCodigoPendiente() {
-        // TODO: el usuario existe pero no tiene código guardado (no ha pasado el paso 1).
-        // TODO: comprobar que lanza CodigoInvalidoException.
-        fail("Funcionalidad no implementada");
+        // El usuario existe pero no tiene código guardado: no ha pasado el paso 1 (el backend impone el orden).
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(clienteConId()));
+        when(codigoRepository.buscarPorUsuario("u-1")).thenReturn(Optional.empty());
+        VerificarCodigoEmailCommand sinCodigo = new VerificarCodigoEmailCommand("juan@uclm.es", CODIGO);
+        // Un correo que no existe tampoco tiene código pendiente: misma respuesta, para no revelar qué cuentas existen.
+        when(usuarioRepository.buscarPorCorreo("nadie@uclm.es")).thenReturn(Optional.empty());
+        VerificarCodigoEmailCommand sinUsuario = new VerificarCodigoEmailCommand("nadie@uclm.es", CODIGO);
+
+        assertThrows(CodigoInvalidoException.class, () -> autenticacion.verificarCodigoEmail(sinCodigo));
+        assertThrows(CodigoInvalidoException.class, () -> autenticacion.verificarCodigoEmail(sinUsuario));
     }
 }
