@@ -8,8 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.Month;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -17,25 +15,20 @@ class UsuarioTest {
 
     private static final Email EMAIL = new Email("ana@esibuy.es");
     private static final String HASH = "hash-seguro";
-    private static final DatosPersonales ANA = new DatosPersonales("Ana", "García López", null, null);
-    private static final DatosCliente ESTANDAR = new DatosCliente(TipoCliente.ESTANDAR, null);
 
     @Test
     @DisplayName("HU1-CP11: crea un usuario con datos correctos y sin bloquear")
     void creaUsuarioConDatosCorrectos() {
         Email email = new Email("ana@esibuy.es");
-        DatosPersonales datosPersonales = new DatosPersonales("Ana", "García López", "12345678Z", "612345678");
-        DatosCliente datosCliente = new DatosCliente(TipoCliente.PREMIUM, LocalDate.of(2001, Month.APRIL, 12));
 
-        Usuario usuario = new Usuario("u-1", datosPersonales, email, "hash-seguro", datosCliente);
+        Usuario usuario = new Usuario("u-1", "Ana", "García López", email,
+                "hash-seguro", Rol.CLIENTE, TipoCliente.PREMIUM);
 
         assertEquals("u-1", usuario.getId());
-        assertEquals(datosPersonales, usuario.getDatosPersonales());
         assertEquals("Ana", usuario.getNombre());
         assertEquals("García López", usuario.getApellidos());
         assertEquals(email, usuario.getEmail());
         assertEquals("hash-seguro", usuario.getPasswordHash());
-        assertEquals(datosCliente, usuario.getDatosRol());
         assertEquals(Rol.CLIENTE, usuario.getRol());
         assertEquals(TipoCliente.PREMIUM, usuario.getTipoCliente());
         assertFalse(usuario.estaDesactivado());
@@ -44,15 +37,30 @@ class UsuarioTest {
     @Test
     @DisplayName("HU1-CP11: permite un usuario sin id antes de persistirlo")
     void permiteUsuarioSinIdAntesDePersistir() {
-        Usuario usuario = new Usuario(null, ANA, EMAIL, HASH, ESTANDAR);
+        Usuario usuario = new Usuario(null, "Ana", "García López", EMAIL,
+                HASH, Rol.CLIENTE, TipoCliente.ESTANDAR);
 
         assertNull(usuario.getId());
     }
 
     @Test
+    @DisplayName("HU1-CP11: rechaza un nombre en blanco")
+    void rechazaNombreEnBlanco() {
+        assertThrows(UsuarioInvalidoException.class,
+                () -> cliente("   ", "García López"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP11: rechaza unos apellidos en blanco")
+    void rechazaApellidosEnBlanco() {
+        assertThrows(UsuarioInvalidoException.class,
+                () -> cliente("Ana", "   "));
+    }
+
+    @Test
     @DisplayName("HU1-CP11: permite un usuario sin nombre ni apellidos (datos de perfil opcionales)")
     void permiteUsuarioSinNombreNiApellidos() {
-        Usuario usuario = new Usuario("u-1", DatosPersonales.sinDatos(), EMAIL, HASH, ESTANDAR);
+        Usuario usuario = cliente(null, null);
 
         assertNull(usuario.getNombre());
         assertNull(usuario.getApellidos());
@@ -73,47 +81,48 @@ class UsuarioTest {
     }
 
     @Test
-    @DisplayName("HU1-CP11: rechaza un usuario sin datos personales")
-    void rechazaUsuarioSinDatosPersonales() {
-        assertThrows(UsuarioInvalidoException.class, () -> new Usuario("u-1", null, EMAIL, HASH, ESTANDAR));
-    }
-
-    @Test
     @DisplayName("HU1-CP11: rechaza un usuario sin email")
     void rechazaEmailNulo() {
-        assertThrows(UsuarioInvalidoException.class, () -> new Usuario("u-1", ANA, null, HASH, ESTANDAR));
+        assertThrows(UsuarioInvalidoException.class, () -> new Usuario("u-1", "Ana", "García López",
+                null, HASH, Rol.CLIENTE, TipoCliente.ESTANDAR));
     }
 
     @Test
     @DisplayName("HU1-CP11: rechaza un usuario sin hash de contraseña")
     void rechazaContrasenaHashEnBlanco() {
-        assertThrows(UsuarioInvalidoException.class, () -> new Usuario("u-1", ANA, EMAIL, null, ESTANDAR));
-        assertThrows(UsuarioInvalidoException.class, () -> new Usuario("u-1", ANA, EMAIL, "   ", ESTANDAR));
+        assertThrows(UsuarioInvalidoException.class, () -> new Usuario("u-1", "Ana", "García López",
+                EMAIL, null, Rol.CLIENTE, TipoCliente.ESTANDAR));
+        assertThrows(UsuarioInvalidoException.class, () -> new Usuario("u-1", "Ana", "García López",
+                EMAIL, "   ", Rol.CLIENTE, TipoCliente.ESTANDAR));
     }
 
     @Test
-    @DisplayName("HU1-CP11: rechaza un usuario sin datos de rol (sin rol)")
-    void rechazaUsuarioSinDatosDeRol() {
-        assertThrows(UsuarioInvalidoException.class, () -> new Usuario("u-1", ANA, EMAIL, HASH, null));
+    @DisplayName("HU1-CP11: rechaza un usuario sin rol")
+    void rechazaRolNulo() {
+        assertThrows(UsuarioInvalidoException.class, () -> new Usuario("u-1", "Ana", "García López",
+                EMAIL, HASH, null, null));
     }
 
     @Test
-    @DisplayName("HU1-CP11: el rol sale de los datos de rol y solo los clientes tienen tipo de cliente")
-    void elRolSaleDeLosDatosDeRol() {
-        Usuario vendedor = new Usuario("u-1", ANA, EMAIL, HASH, new DatosVendedor("Electrónica La Mancha", "cat-1"));
-        Usuario administrador = new Usuario("u-2", ANA, EMAIL, HASH,
-                new DatosAdministrador("Ciudad Real", LocalDate.of(2026, Month.SEPTEMBER, 1)));
+    @DisplayName("HU1-CP11: rechaza un cliente sin tipo de cliente")
+    void rechazaClienteSinTipoDeCliente() {
+        assertThrows(UsuarioInvalidoException.class, () -> new Usuario("u-1", "Ana", "García López",
+                EMAIL, HASH, Rol.CLIENTE, null));
+    }
 
-        assertEquals(Rol.VENDEDOR, vendedor.getRol());
-        assertNull(vendedor.getTipoCliente());
-        assertEquals(Rol.ADMINISTRADOR, administrador.getRol());
-        assertNull(administrador.getTipoCliente());
+    @Test
+    @DisplayName("HU1-CP11: rechaza un tipo de cliente en un rol que no es cliente")
+    void rechazaTipoDeClienteSiNoEsCliente() {
+        assertThrows(UsuarioInvalidoException.class, () -> new Usuario("u-1", "Ana", "García López",
+                EMAIL, HASH, Rol.VENDEDOR, TipoCliente.PREMIUM));
+        assertThrows(UsuarioInvalidoException.class, () -> new Usuario("u-1", "Ana", "García López",
+                EMAIL, HASH, Rol.ADMINISTRADOR, TipoCliente.ESTANDAR));
     }
 
     @Test
     @DisplayName("HU1-CP11: desactiva un usuario")
     void desactivaUsuario() {
-        Usuario usuario = cliente();
+        Usuario usuario = cliente("Ana", "García López");
 
         usuario.desactivar();
 
@@ -123,7 +132,7 @@ class UsuarioTest {
     @Test
     @DisplayName("HU1-CP11: activa un usuario desactivado")
     void activaUsuarioDesactivado() {
-        Usuario usuario = cliente();
+        Usuario usuario = cliente("Ana", "García López");
         usuario.desactivar();
 
         usuario.activar();
@@ -137,11 +146,10 @@ class UsuarioTest {
         // AB#210: lo usa la persistencia al leer un usuario de MongoDB.
         Instant bloqueadoHasta = Instant.parse("2026-10-08T12:15:00Z");
 
-        Usuario usuario = Usuario.reconstruir(cliente(), true, 3, bloqueadoHasta);
+        Usuario usuario = Usuario.reconstruir(cliente("Ana", "García López"), true, 3, bloqueadoHasta);
 
         assertEquals("u-1", usuario.getId());
-        assertEquals(ANA, usuario.getDatosPersonales());
-        assertEquals(ESTANDAR, usuario.getDatosRol());
+        assertEquals("Ana", usuario.getNombre());
         assertTrue(usuario.estaDesactivado());
         assertEquals(3, usuario.getIntentosFallidos());
         assertEquals(bloqueadoHasta, usuario.getBloqueadoHasta());
@@ -150,7 +158,7 @@ class UsuarioTest {
     @Test
     @DisplayName("HU1-CP11: rechaza reconstruir un usuario con intentos fallidos negativos")
     void rechazaReconstruirConIntentosNegativos() {
-        Usuario datos = cliente();
+        Usuario datos = cliente("Ana", "García López");
 
         assertThrows(UsuarioInvalidoException.class, () -> Usuario.reconstruir(datos, false, -1, null));
     }
@@ -160,12 +168,13 @@ class UsuarioTest {
     void usuarioReconstruidoConBloqueoSigueBloqueado() {
         Instant ahora = Instant.parse("2026-10-08T12:00:00Z");
 
-        Usuario usuario = Usuario.reconstruir(cliente(), false, 5, ahora.plusSeconds(600));
+        Usuario usuario = Usuario.reconstruir(cliente("Ana", "García López"), false, 5,
+                ahora.plusSeconds(600));
 
         assertTrue(usuario.tieneBloqueoPorIntentos(ahora));
     }
 
-    private static Usuario cliente() {
-        return new Usuario("u-1", ANA, EMAIL, HASH, ESTANDAR);
+    private static Usuario cliente(String nombre, String apellidos) {
+        return new Usuario("u-1", nombre, apellidos, EMAIL, HASH, Rol.CLIENTE, TipoCliente.ESTANDAR);
     }
 }

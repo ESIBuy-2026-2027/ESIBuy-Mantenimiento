@@ -4,10 +4,6 @@ import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.shared.config.MongoConfig;
 import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColecciones;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
-import es.uclm.esibuy.backend.usuarios.domain.model.DatosAdministrador;
-import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
-import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
-import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
@@ -19,12 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.Month;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -84,51 +77,6 @@ class UsuarioMongoAdapterTest {
     }
 
     @Test
-    @DisplayName("Persistencia: la base de datos rechaza un DNI repetido en el mismo rol, sin confundirlo con un correo repetido")
-    void rechazaDniDuplicadoEnElMismoRol() {
-        // MVP del Sprint 1: el DNI es único. Una misma persona puede tener cuenta de cliente y de
-        // vendedor con el mismo DNI (con otro correo), así que es único por rol.
-        adapter.guardar(clienteConDni("juan@uclm.es", "12345678Z"));
-        Usuario mismoDni = clienteConDni("otro@uclm.es", "12345678Z");
-
-        assertThrows(DuplicateKeyException.class, () -> adapter.guardar(mismoDni));
-        assertEquals(1, usuarioMongoRepository.count());
-    }
-
-    @Test
-    @DisplayName("Persistencia: el mismo DNI se admite en roles distintos")
-    void permiteMismoDniEnDistintoRol() {
-        adapter.guardar(clienteConDni("juan@uclm.es", "12345678Z"));
-
-        adapter.guardar(new Usuario(null, new DatosPersonales(null, null, "12345678Z", null),
-                new Email("ventas@uclm.es"), "hash-simulado", new DatosVendedor("Electrónica La Mancha", "cat-1")));
-
-        assertEquals(2, usuarioMongoRepository.count());
-    }
-
-    @Test
-    @DisplayName("Persistencia: varios usuarios del mismo rol pueden no tener DNI")
-    void permiteVariosUsuariosSinDni() {
-        // El registro actual solo pide email y contraseña: el índice único no se aplica sin DNI.
-        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
-
-        adapter.guardar(Usuario.nuevoCliente(new Email("ana@uclm.es"), "hash-simulado"));
-
-        assertEquals(2, usuarioMongoRepository.count());
-    }
-
-    @Test
-    @DisplayName("Persistencia: la base de datos rechaza un nombre comercial repetido")
-    void rechazaNombreComercialDuplicado() {
-        // «Planteamiento inicial BBDD»: nombreComercial → único.
-        adapter.guardar(vendedor("ventas@uclm.es", "Electrónica La Mancha"));
-        Usuario mismoNombre = vendedor("otro@uclm.es", "Electrónica La Mancha");
-
-        assertThrows(DuplicateKeyException.class, () -> adapter.guardar(mismoNombre));
-        assertEquals(1, usuarioMongoRepository.count());
-    }
-
-    @Test
     @DisplayName("Persistencia: el documento guardado no incluye el campo _class")
     void elDocumentoNoIncluyeElCampoClass() {
         adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
@@ -181,50 +129,16 @@ class UsuarioMongoAdapterTest {
     }
 
     @Test
-    @DisplayName("HU1-CP01: guardar conserva los datos personales y los de cliente, en su subdocumento")
+    @DisplayName("HU1-CP01: guardar conserva el nombre, los apellidos y el tipo de cliente")
     void conservaLosDatosDePerfil() {
-        DatosPersonales datosPersonales = new DatosPersonales("Juan", "Pérez García", "12345678Z", "612345678");
-        DatosCliente datosCliente = new DatosCliente(TipoCliente.PREMIUM, LocalDate.of(2001, Month.APRIL, 12));
-        adapter.guardar(new Usuario(null, datosPersonales, new Email("juan@uclm.es"), "hash-simulado",
-                datosCliente));
+        adapter.guardar(new Usuario(null, "Juan", "Pérez García", new Email("juan@uclm.es"),
+                "hash-simulado", Rol.CLIENTE, TipoCliente.PREMIUM));
 
         Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
 
-        assertEquals(datosPersonales, leido.getDatosPersonales());
-        assertEquals(datosCliente, leido.getDatosRol());
-        // Forma del documento (opción B): lo común a varios roles en la raíz y lo del rol en su subdocumento.
-        Document guardado = documentoEnBruto();
-        assertEquals("12345678Z", guardado.getString("dni"));
-        assertEquals("612345678", guardado.getString("telefono"));
-        assertEquals("PREMIUM", guardado.get("cliente", Document.class).getString("tipoCliente"));
-        assertFalse(guardado.containsKey("tipoCliente"));
-    }
-
-    @Test
-    @DisplayName("Persistencia: guardar conserva los datos de un vendedor en su subdocumento")
-    void conservaLosDatosDeVendedor() {
-        DatosVendedor datosVendedor = new DatosVendedor("Electrónica La Mancha", "cat-1");
-        adapter.guardar(new Usuario(null, new DatosPersonales("Pedro", "Gómez Sanz", "12345678Z", null),
-                new Email("ventas@uclm.es"), "hash-simulado", datosVendedor));
-
-        Usuario leido = adapter.buscarPorCorreo("ventas@uclm.es").orElseThrow();
-
-        assertEquals(datosVendedor, leido.getDatosRol());
-        assertEquals("Electrónica La Mancha",
-                documentoEnBruto().get("vendedor", Document.class).getString("nombreComercial"));
-    }
-
-    @Test
-    @DisplayName("Persistencia: guardar conserva los datos de un administrador en su subdocumento")
-    void conservaLosDatosDeAdministrador() {
-        DatosAdministrador datosAdministrador = new DatosAdministrador("Ciudad Real", LocalDate.of(2026, Month.SEPTEMBER, 1));
-        adapter.guardar(new Usuario(null, new DatosPersonales("Ana", "López Díaz", null, null),
-                new Email("admin@uclm.es"), "hash-simulado", datosAdministrador));
-
-        Usuario leido = adapter.buscarPorCorreo("admin@uclm.es").orElseThrow();
-
-        assertEquals(datosAdministrador, leido.getDatosRol());
-        assertEquals("Ciudad Real", documentoEnBruto().get("administrador", Document.class).getString("sede"));
+        assertEquals("Juan", leido.getNombre());
+        assertEquals("Pérez García", leido.getApellidos());
+        assertEquals(TipoCliente.PREMIUM, leido.getTipoCliente());
     }
 
     @Test
@@ -274,16 +188,6 @@ class UsuarioMongoAdapterTest {
     @DisplayName("HU2-CP02: buscarPorCorreo devuelve vacío si el email no está guardado")
     void buscarPorCorreoDevuelveVacioSiNoEstaGuardado() {
         assertTrue(adapter.buscarPorCorreo("nadie@uclm.es").isEmpty());
-    }
-
-    private static Usuario clienteConDni(String email, String dni) {
-        return new Usuario(null, new DatosPersonales(null, null, dni, null), new Email(email), "hash-simulado",
-                new DatosCliente(TipoCliente.ESTANDAR, null));
-    }
-
-    private static Usuario vendedor(String email, String nombreComercial) {
-        return new Usuario(null, DatosPersonales.sinDatos(), new Email(email), "hash-simulado",
-                new DatosVendedor(nombreComercial, "cat-1"));
     }
 
     // MongoTemplate devuelve el documento tal cual está en MongoDB; el repositorio lo convertiría
