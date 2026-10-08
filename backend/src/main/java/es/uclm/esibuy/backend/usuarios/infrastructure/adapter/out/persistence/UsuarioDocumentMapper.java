@@ -12,6 +12,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
  * Convierte el {@code Usuario} del dominio en el documento que se guarda en MongoDB.
  *
  * <p>Convierte en los dos sentidos: {@code aDocumento} para guardar y {@code aDominio} para leer.
+ * Los datos personales van en la raíz del documento y los del rol, en su subdocumento.
  */
 public class UsuarioDocumentMapper {
 
@@ -22,10 +23,15 @@ public class UsuarioDocumentMapper {
     public UsuarioDocument aDocumento(Usuario usuario) {
         UsuarioDocument documento = new UsuarioDocument(usuario.getEmail().valor(), usuario.getPasswordHash(),
                 usuario.getRol().name());
+        DatosPersonales datosPersonales = usuario.getDatosPersonales();
         documento.setId(usuario.getId());
-        documento.setNombre(usuario.getNombre());
-        documento.setApellidos(usuario.getApellidos());
-        documento.setTipoCliente(usuario.getTipoCliente() == null ? null : usuario.getTipoCliente().name());
+        documento.setNombre(datosPersonales.nombre());
+        documento.setApellidos(datosPersonales.apellidos());
+        documento.setDni(datosPersonales.dni());
+        documento.setTelefono(datosPersonales.telefono());
+        if (usuario.getDatosRol() instanceof DatosCliente cliente) {
+            documento.setCliente(new DatosClienteDocument(cliente.tipoCliente().name(), cliente.fechaNacimiento()));
+        }
         documento.setEstado(usuario.estaDesactivado() ? ESTADO_DESACTIVADO : ESTADO_ACTIVO);
         documento.setFailedLoginAttempts(usuario.getIntentosFallidos());
         documento.setLockedUntil(usuario.getBloqueadoHasta());
@@ -34,22 +40,28 @@ public class UsuarioDocumentMapper {
 
     public Usuario aDominio(UsuarioDocument documento) {
         DatosPersonales datosPersonales = new DatosPersonales(documento.getNombre(), documento.getApellidos(),
-                null, null);
+                documento.getDni(), documento.getTelefono());
         Usuario datos = new Usuario(documento.getId(), datosPersonales, new Email(documento.getEmail()),
                 documento.getPasswordHash(), datosRol(documento));
         boolean desactivado = ESTADO_DESACTIVADO.equals(documento.getEstado());
         return Usuario.reconstruir(datos, desactivado, documento.getFailedLoginAttempts(), documento.getLockedUntil());
     }
 
-    // Los clientes guardados antes de la T210 no tienen tipoCliente: se leen como ESTANDAR,
-    // igual que Usuario.nuevoCliente. Vendedores y administradores aún no guardan sus datos de rol.
+    // Vendedores y administradores aún no guardan sus datos de rol.
     private static DatosRol datosRol(UsuarioDocument documento) {
         Rol rol = Rol.valueOf(documento.getRol());
         if (rol != Rol.CLIENTE) {
             throw new IllegalStateException("Los datos de rol de " + rol + " todavía no se guardan");
         }
-        TipoCliente tipoCliente = documento.getTipoCliente() == null
-                ? TipoCliente.ESTANDAR : TipoCliente.valueOf(documento.getTipoCliente());
-        return new DatosCliente(tipoCliente, null);
+        return datosCliente(documento.getCliente());
+    }
+
+    // Los clientes guardados antes de la T210 no tienen subdocumento cliente: se leen como ESTANDAR,
+    // igual que Usuario.nuevoCliente.
+    private static DatosCliente datosCliente(DatosClienteDocument cliente) {
+        if (cliente == null) {
+            return new DatosCliente(TipoCliente.ESTANDAR, null);
+        }
+        return new DatosCliente(TipoCliente.valueOf(cliente.tipoCliente()), cliente.fechaNacimiento());
     }
 }

@@ -29,7 +29,9 @@ public class UsuarioDocument {
     private final String rol;
     private String nombre;
     private String apellidos;
-    private String tipoCliente;
+    private String dni;              // clientes y vendedores
+    private String telefono;
+    private DatosClienteDocument cliente;
     private String estado;
     private int failedLoginAttempts;
     private Instant lockedUntil;
@@ -69,12 +71,28 @@ public class UsuarioDocument {
         this.apellidos = apellidos;
     }
 
-    public String getTipoCliente() {
-        return tipoCliente;
+    public String getDni() {
+        return dni;
     }
 
-    public void setTipoCliente(String tipoCliente) {
-        this.tipoCliente = tipoCliente;
+    public void setDni(String dni) {
+        this.dni = dni;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
+    public DatosClienteDocument getCliente() {
+        return cliente;
+    }
+
+    public void setCliente(DatosClienteDocument cliente) {
+        this.cliente = cliente;
     }
 
     public String getEstado() {
