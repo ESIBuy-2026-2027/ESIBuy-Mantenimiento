@@ -5,4 +5,5 @@ export const PATHS = {
   PRODUCTS: '/products',
   ADMIN: '/admin',
   SELLER_PRODUCTS: '/seller/products',
+  SELLER_PRODUCT_NEW: '/seller/products/new',
 }

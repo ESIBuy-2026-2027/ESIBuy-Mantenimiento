@@ -6,7 +6,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
-import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
 
@@ -32,7 +32,7 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
         }
 
         String contrasenaHash = hashContrasena.hashear(comando.password());   
-        Usuario usuario = new Usuario(comando.email(), contrasenaHash, Rol.CLIENTE); // Comando → Usuario: el comando es un DTO de entrada, el usuario es un objeto de dominio
+        Usuario usuario = Usuario.nuevoCliente(new Email(comando.email()), contrasenaHash); // Comando → Usuario: el comando es un DTO de entrada, el usuario es un objeto de dominio
         usuarioRepository.guardar(usuario);
     }
 

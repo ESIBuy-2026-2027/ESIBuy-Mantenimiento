@@ -8,7 +8,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
-import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -54,7 +54,7 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP01: inicia sesión con credenciales correctas y pasa al código por email")
     void iniciaSesionConCredencialesCorrectas() {
-        Usuario usuario = new Usuario("juan@uclm.es", "hash-guardado", Rol.CLIENTE);
+        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado");
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
         when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
 
@@ -76,7 +76,7 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP02: rechaza una contraseña incorrecta con la misma respuesta que un correo inexistente")
     void rechazaContrasenaIncorrecta() {
-        Usuario usuario = new Usuario("juan@uclm.es", "hash-guardado", Rol.CLIENTE);
+        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado");
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
         when(hashContrasena.coincide("otraClave", "hash-guardado")).thenReturn(false);
         when(usuarioRepository.buscarPorCorreo("nadie@uclm.es")).thenReturn(Optional.empty());
@@ -94,7 +94,7 @@ class AutenticacionServiceTest {
     @DisplayName("HU2-CP03: tras 4 intentos fallidos la cuenta no se bloquea")
     void permiteCuartoIntentoFallidoSinBloquear() {
         // Frontera: 4 fallos → aún se puede entrar.
-        Usuario usuario = new Usuario("juan@uclm.es", "hash-guardado", Rol.CLIENTE);
+        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado");
         for (int i = 0; i < 4; i++) {
             usuario.registrarIntentoFallido(AHORA);
         }
@@ -110,7 +110,7 @@ class AutenticacionServiceTest {
     @DisplayName("HU2-CP03: bloquea la cuenta tras 5 intentos fallidos")
     void bloqueaLaCuentaTrasCincoIntentosFallidos() {
         // Frontera: 5 fallos → bloqueada, incluso con la contraseña correcta.
-        Usuario usuario = new Usuario("juan@uclm.es", "hash-guardado", Rol.CLIENTE);
+        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado");
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
         when(hashContrasena.coincide("otraClave", "hash-guardado")).thenReturn(false);
         IniciarSesionCommand contrasenaIncorrecta = new IniciarSesionCommand("juan@uclm.es", "otraClave");
@@ -131,7 +131,7 @@ class AutenticacionServiceTest {
     @DisplayName("HU2-CP03: desbloquea la cuenta pasados 15 minutos")
     void desbloqueaLaCuentaPasados15Minutos() {
         // Frontera: justo a los 15 minutos del bloqueo ya se puede entrar.
-        Usuario usuario = new Usuario("juan@uclm.es", "hash-guardado", Rol.CLIENTE);
+        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado");
         for (int i = 0; i < 5; i++) {
             usuario.registrarIntentoFallido(AHORA);
         }

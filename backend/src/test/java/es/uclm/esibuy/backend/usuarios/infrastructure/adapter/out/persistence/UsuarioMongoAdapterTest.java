@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
+import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,7 +39,7 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU1-CP01: guardar persiste el usuario en la colección usuarios")
     void guardarPersisteElUsuarioEnLaColeccionUsuarios() {
-        adapter.guardar(new Usuario("juan@uclm.es", "hash-simulado", Rol.CLIENTE));
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
 
         List<UsuarioDocument> guardados = usuarioMongoRepository.findAll();
         assertEquals(1, guardados.size());
@@ -50,7 +51,7 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU1-CP03: existePorCorreo devuelve true si el email ya está guardado")
     void existePorCorreoDevuelveTrueSiEstaGuardado() {
-        adapter.guardar(new Usuario("juan@uclm.es", "hash-simulado", Rol.CLIENTE));
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
 
         assertTrue(adapter.existePorCorreo("juan@uclm.es"));
     }
@@ -64,12 +65,12 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU2-CP01: buscarPorCorreo devuelve el usuario guardado con sus datos")
     void buscarPorCorreoDevuelveElUsuarioGuardado() {
-        adapter.guardar(new Usuario("juan@uclm.es", "hash-simulado", Rol.CLIENTE));
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
 
         Optional<Usuario> encontrado = adapter.buscarPorCorreo("juan@uclm.es");
 
         assertTrue(encontrado.isPresent());
-        assertEquals("juan@uclm.es", encontrado.get().getEmail());
+        assertEquals("juan@uclm.es", encontrado.get().getEmail().valor());
         assertEquals("hash-simulado", encontrado.get().getPasswordHash());
         assertEquals(Rol.CLIENTE, encontrado.get().getRol());
     }

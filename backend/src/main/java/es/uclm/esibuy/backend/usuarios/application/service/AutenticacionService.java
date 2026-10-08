@@ -33,7 +33,7 @@ public class AutenticacionService implements AutenticacionUseCase {
         Usuario usuario = usuarioRepository.buscarPorCorreo(comando.email()).orElseThrow(() -> new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS)); // <- Este orElseThrow() viene de buscarPorCorreo() que devuelve Optional<>
 
         Instant ahora = reloj.instant();
-        if (usuario.estaBloqueado(ahora)) {
+        if (usuario.tieneBloqueoPorIntentos(ahora)) {
             throw new CuentaBloqueadaException("Demasiados intentos. Inténtalo más tarde");
         }
 
@@ -43,7 +43,7 @@ public class AutenticacionService implements AutenticacionUseCase {
             throw new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS);
         }
 
-        return new ResultadoInicioSesion(usuario.getEmail(), PasoLogin.CODIGO_EMAIL);
+        return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.CODIGO_EMAIL);
     }
 
     

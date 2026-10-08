@@ -1,6 +1,8 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
+import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
 /**
@@ -11,10 +13,16 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 public class UsuarioDocumentMapper {
 
     public UsuarioDocument aDocumento(Usuario usuario) {
-        return new UsuarioDocument(usuario.getEmail(), usuario.getPasswordHash(), usuario.getRol().name());
+        return new UsuarioDocument(usuario.getEmail().valor(), usuario.getPasswordHash(), usuario.getRol().name());
     }
 
+    // PENDIENTE (persistencia de los campos nuevos): el documento todavía no guarda nombre, apellidos,
+    // tipoCliente, bloqueado ni los intentos fallidos. Mientras tanto, un CLIENTE se reconstruye como
+    // ESTANDAR (igual que Usuario.nuevoCliente) y el resto de roles sin tipo de cliente.
     public Usuario aDominio(UsuarioDocument documento) {
-        return new Usuario(documento.getEmail(), documento.getPasswordHash(), Rol.valueOf(documento.getRol()));
+        Rol rol = Rol.valueOf(documento.getRol());
+        TipoCliente tipoCliente = rol == Rol.CLIENTE ? TipoCliente.ESTANDAR : null;
+        return new Usuario(documento.getId(), null, null, new Email(documento.getEmail()),
+                documento.getPasswordHash(), rol, tipoCliente);
     }
 }
