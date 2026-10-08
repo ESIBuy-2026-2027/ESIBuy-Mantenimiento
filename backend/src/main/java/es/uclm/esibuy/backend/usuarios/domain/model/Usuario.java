@@ -45,6 +45,9 @@ public class Usuario {
      */
     public static Usuario reconstruir(Usuario datos, boolean desactivado, int intentosFallidos,
             Instant bloqueadoHasta) {
+        if (intentosFallidos < 0) {
+            throw new UsuarioInvalidoException("Los intentos fallidos no pueden ser negativos");
+        }
         Usuario usuario = new Usuario(datos.id, datos.nombre, datos.apellidos, datos.email,
                 datos.passwordHash, datos.rol, datos.tipoCliente);
         usuario.desactivado = desactivado;
