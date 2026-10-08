@@ -7,6 +7,9 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.IniciarSesionCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.PasoLogin;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ResultadoInicioSesion;
+import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.EnvioEmailPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.GeneradorCodigoPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
@@ -20,11 +23,17 @@ public class AutenticacionService implements AutenticacionUseCase {
 
     private final UsuarioRepositoryPort usuarioRepository;
     private final HashContrasenaPort hashContrasena;
+    private final CodigoVerificacionRepositoryPort codigoVerificacionRepository;
+    private final GeneradorCodigoPort generadorCodigo;
+    private final EnvioEmailPort envioEmail;
     private final Clock reloj;
 
-    public AutenticacionService(UsuarioRepositoryPort usuarioRepository, HashContrasenaPort hashContrasena, Clock reloj) {
+    public AutenticacionService(UsuarioRepositoryPort usuarioRepository, HashContrasenaPort hashContrasena, CodigoVerificacionRepositoryPort codigoVerificacionRepository, GeneradorCodigoPort generadorCodigo, EnvioEmailPort envioEmail, Clock reloj) {
         this.usuarioRepository = usuarioRepository;
         this.hashContrasena = hashContrasena;
+        this.codigoVerificacionRepository = codigoVerificacionRepository;
+        this.generadorCodigo = generadorCodigo;
+        this.envioEmail = envioEmail;
         this.reloj = reloj;
     }
 
@@ -47,6 +56,9 @@ public class AutenticacionService implements AutenticacionUseCase {
         if (!usuario.estaActivo()) {
             throw new CuentaDesactivadaException("Esta cuenta está desactivada"); // <- No es demasiado verboso porque para llegar a este login necesitas haber pasado la contraseña
         }
+
+        String codigo = generadorCodigo.generar();
+        envioEmail.enviarCodigoVerificacion(usuario.getEmail().valor(), codigo);
 
         return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.CODIGO_EMAIL);
     }
