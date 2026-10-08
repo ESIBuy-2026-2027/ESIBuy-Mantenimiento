@@ -42,4 +42,9 @@ public class UsuarioDocument {
     public String getRol() {
         return rol;
     }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
 }
