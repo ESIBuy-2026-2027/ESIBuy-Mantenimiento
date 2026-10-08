@@ -38,8 +38,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -276,9 +278,19 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP08: rechaza un código caducado aunque sea correcto")
     void rechazaCodigoCaducado() {
-        // TODO: código creado 10 minutos antes de AHORA; el hash coincide.
-        // TODO: comprobar que lanza CodigoInvalidoException.
-        fail("Funcionalidad no implementada");
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(clienteConId()));
+        // Creado hace exactamente 10 minutos: ya ha caducado (frontera del dominio, ciclo 2).
+        CodigoVerificacion codigo = CodigoVerificacion.nuevo("u-1", HASH_CODIGO, AHORA.minus(Duration.ofMinutes(10)));
+        when(codigoRepository.buscarPorUsuario("u-1")).thenReturn(Optional.of(codigo));
+        // El código es correcto: solo se rechaza por caducado. lenient porque, una vez comprobada la
+        // caducidad, el servicio ya no llega a comparar el código.
+        lenient().when(hashContrasena.coincide(CODIGO, HASH_CODIGO)).thenReturn(true);
+        VerificarCodigoEmailCommand comando = new VerificarCodigoEmailCommand("juan@uclm.es", CODIGO);
+
+        assertThrows(CodigoInvalidoException.class, () -> autenticacion.verificarCodigoEmail(comando));
+
+        // Un código caducado se rechaza sin contar el intento ni guardar nada.
+        verify(codigoRepository, never()).guardar(any());
     }
 
     @Test
