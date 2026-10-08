@@ -1,5 +1,8 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosRol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
@@ -30,19 +33,23 @@ public class UsuarioDocumentMapper {
     }
 
     public Usuario aDominio(UsuarioDocument documento) {
-        Rol rol = Rol.valueOf(documento.getRol());
-        Usuario datos = new Usuario(documento.getId(), documento.getNombre(), documento.getApellidos(),
-                new Email(documento.getEmail()), documento.getPasswordHash(), rol, tipoCliente(documento, rol));
+        DatosPersonales datosPersonales = new DatosPersonales(documento.getNombre(), documento.getApellidos(),
+                null, null);
+        Usuario datos = new Usuario(documento.getId(), datosPersonales, new Email(documento.getEmail()),
+                documento.getPasswordHash(), datosRol(documento));
         boolean desactivado = ESTADO_DESACTIVADO.equals(documento.getEstado());
         return Usuario.reconstruir(datos, desactivado, documento.getFailedLoginAttempts(), documento.getLockedUntil());
     }
 
     // Los clientes guardados antes de la T210 no tienen tipoCliente: se leen como ESTANDAR,
-    // igual que Usuario.nuevoCliente. Los demás roles no tienen tipo de cliente.
-    private static TipoCliente tipoCliente(UsuarioDocument documento, Rol rol) {
-        if (documento.getTipoCliente() != null) {
-            return TipoCliente.valueOf(documento.getTipoCliente());
+    // igual que Usuario.nuevoCliente. Vendedores y administradores aún no guardan sus datos de rol.
+    private static DatosRol datosRol(UsuarioDocument documento) {
+        Rol rol = Rol.valueOf(documento.getRol());
+        if (rol != Rol.CLIENTE) {
+            throw new IllegalStateException("Los datos de rol de " + rol + " todavía no se guardan");
         }
-        return rol == Rol.CLIENTE ? TipoCliente.ESTANDAR : null;
+        TipoCliente tipoCliente = documento.getTipoCliente() == null
+                ? TipoCliente.ESTANDAR : TipoCliente.valueOf(documento.getTipoCliente());
+        return new DatosCliente(tipoCliente, null);
     }
 }

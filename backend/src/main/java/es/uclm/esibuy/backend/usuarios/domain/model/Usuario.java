@@ -11,31 +11,28 @@ public class Usuario {
     private static final Duration DURACION_BLOQUEO = Duration.ofMinutes(15);
 
     private final String id;
-    private final String nombre;
-    private final String apellidos;
+    private final DatosPersonales datosPersonales;
     private final Email email;
     private final String passwordHash;
-    private final Rol rol;
-    private final TipoCliente tipoCliente;
+    private final DatosRol datosRol;     // el rol sale de aquí: cliente, vendedor o administrador
     private boolean desactivado;         // desactivada por un administrador (HU23/HU24): no puede entrar
     private int intentosFallidos;        // intentos de login fallidos seguidos
     private Instant bloqueadoHasta;      // bloqueo temporal por intentos; null = sin bloqueo
 
-    public Usuario(String id, String nombre, String apellidos, Email email,
-            String passwordHash, Rol rol, TipoCliente tipoCliente) {
+    public Usuario(String id, DatosPersonales datosPersonales, Email email, String passwordHash,
+            DatosRol datosRol) {
         this.id = id;
-        this.nombre = exigirTextoSiExiste(nombre, "El nombre no puede estar en blanco");
-        this.apellidos = exigirTextoSiExiste(apellidos, "Los apellidos no pueden estar en blanco");
+        this.datosPersonales = exigirNoNulo(datosPersonales, "Los datos personales son obligatorios");
         this.email = exigirNoNulo(email, "El email es obligatorio");
         this.passwordHash = exigirTexto(passwordHash, "La contraseña es obligatoria");
-        this.rol = exigirNoNulo(rol, "El rol es obligatorio");
-        this.tipoCliente = exigirTipoClienteCoherente(this.rol, tipoCliente);
+        this.datosRol = exigirNoNulo(datosRol, "El rol es obligatorio");
         this.desactivado = false;
         this.intentosFallidos = 0;
     }
 
     public static Usuario nuevoCliente(Email email, String passwordHash) {
-        return new Usuario(null, null, null, email, passwordHash, Rol.CLIENTE, TipoCliente.ESTANDAR);
+        return new Usuario(null, DatosPersonales.sinDatos(), email, passwordHash,
+                new DatosCliente(TipoCliente.ESTANDAR, null));
     }
 
     /**
@@ -48,23 +45,12 @@ public class Usuario {
         if (intentosFallidos < 0) {
             throw new UsuarioInvalidoException("Los intentos fallidos no pueden ser negativos");
         }
-        Usuario usuario = new Usuario(datos.id, datos.nombre, datos.apellidos, datos.email,
-                datos.passwordHash, datos.rol, datos.tipoCliente);
+        Usuario usuario = new Usuario(datos.id, datos.datosPersonales, datos.email, datos.passwordHash,
+                datos.datosRol);
         usuario.desactivado = desactivado;
         usuario.intentosFallidos = intentosFallidos;
         usuario.bloqueadoHasta = bloqueadoHasta;
         return usuario;
-    }
-
-    private static TipoCliente exigirTipoClienteCoherente(Rol rol, TipoCliente tipoCliente) {
-        boolean esCliente = rol == Rol.CLIENTE;
-        if (esCliente && tipoCliente == null) {
-            throw new UsuarioInvalidoException("Un cliente debe tener tipo de cliente");
-        }
-        if (!esCliente && tipoCliente != null) {
-            throw new UsuarioInvalidoException("Solo los clientes tienen tipo de cliente");
-        }
-        return tipoCliente;
     }
 
     private static <T> T exigirNoNulo(T valor, String mensaje) {
@@ -72,10 +58,6 @@ public class Usuario {
             throw new UsuarioInvalidoException(mensaje);
         }
         return valor;
-    }
-
-    private static String exigirTextoSiExiste(String valor, String mensaje) {
-        return valor == null ? null : exigirTexto(valor, mensaje);
     }
 
     private static String exigirTexto(String valor, String mensaje) {
@@ -89,12 +71,16 @@ public class Usuario {
         return id;
     }
 
+    public DatosPersonales getDatosPersonales() {
+        return datosPersonales;
+    }
+
     public String getNombre() {
-        return nombre;
+        return datosPersonales.nombre();
     }
 
     public String getApellidos() {
-        return apellidos;
+        return datosPersonales.apellidos();
     }
 
     public Email getEmail() {
@@ -105,12 +91,17 @@ public class Usuario {
         return passwordHash;
     }
 
-    public Rol getRol() {
-        return rol;
+    public DatosRol getDatosRol() {
+        return datosRol;
     }
 
+    public Rol getRol() {
+        return datosRol.rol();
+    }
+
+    // Solo los clientes tienen tipo de cliente; para los demás roles, null.
     public TipoCliente getTipoCliente() {
-        return tipoCliente;
+        return datosRol instanceof DatosCliente cliente ? cliente.tipoCliente() : null;
     }
 
     public boolean estaDesactivado() {

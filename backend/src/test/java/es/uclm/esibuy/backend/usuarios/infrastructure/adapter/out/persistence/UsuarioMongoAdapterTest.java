@@ -3,6 +3,8 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.shared.config.MongoConfig;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
@@ -130,8 +132,8 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU1-CP01: guardar conserva el nombre, los apellidos y el tipo de cliente")
     void conservaLosDatosDePerfil() {
-        adapter.guardar(new Usuario(null, "Juan", "Pérez García", new Email("juan@uclm.es"),
-                "hash-simulado", Rol.CLIENTE, TipoCliente.PREMIUM));
+        adapter.guardar(new Usuario(null, new DatosPersonales("Juan", "Pérez García", null, null),
+                new Email("juan@uclm.es"), "hash-simulado", new DatosCliente(TipoCliente.PREMIUM, null)));
 
         Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
 
