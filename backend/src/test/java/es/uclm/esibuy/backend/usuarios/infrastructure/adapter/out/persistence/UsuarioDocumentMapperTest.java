@@ -7,12 +7,14 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.time.Instant;
 
-// Test unitario del mapper dominio -> documento de MongoDB (HU1, AB#216).
-// PENDIENTE DE REVISAR CON EL EQUIPO: IDs de caso propuestos.
-// Con el Usuario de la T214 (Alberto), getEmail() ya devuelve Email. PENDIENTE: el mapper
-// aún no persiste nombre, apellidos, tipoCliente ni desactivado.
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+// Test unitario del mapper entre Usuario y el documento de MongoDB, en los dos sentidos
+// (AB#216, AB#224 y AB#225). PENDIENTE DE REVISAR CON EL EQUIPO: IDs de caso propuestos.
 class UsuarioDocumentMapperTest {
 
     @Test
@@ -51,5 +53,19 @@ class UsuarioDocumentMapperTest {
         assertEquals("Ana", leido.getNombre());
         assertEquals("García López", leido.getApellidos());
         assertEquals(TipoCliente.PREMIUM, leido.getTipoCliente());
+    }
+
+    @Test
+    @DisplayName("HU2-CP01: un documento antiguo sin los campos nuevos toma los valores por defecto")
+    void unDocumentoAntiguoSinCamposNuevosTomaLosValoresPorDefecto() {
+        // Documento guardado antes de la T225: solo email, hash y rol.
+        UsuarioDocument antiguo = new UsuarioDocument("juan@uclm.es", "hash-simulado", "CLIENTE");
+
+        Usuario leido = new UsuarioDocumentMapper().aDominio(antiguo);
+
+        assertTrue(leido.estaActivo());
+        assertEquals(0, leido.getIntentosFallidos());
+        assertFalse(leido.tieneBloqueoPorIntentos(Instant.parse("2026-10-08T10:00:00Z")));
+        assertEquals(TipoCliente.ESTANDAR, leido.getTipoCliente());
     }
 }
