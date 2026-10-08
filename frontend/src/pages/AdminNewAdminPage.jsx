@@ -138,8 +138,8 @@ export default function AdminNewAdminPage() {
           </Title1>
           <Text className={styles.subtitle}>Da de alta a una persona del equipo con acceso al panel de control.</Text>
         </div>
-        <LinkButton to={PATHS.ADMIN} appearance="subtle" icon={<ArrowLeft20Regular />}>
-          Volver al panel
+        <LinkButton to={PATHS.ADMIN_ADMINS} appearance="subtle" icon={<ArrowLeft20Regular />}>
+          Volver a administradores
         </LinkButton>
       </div>
 
@@ -152,9 +152,10 @@ export default function AdminNewAdminPage() {
             </MessageBarBody>
           </MessageBar>
           <div className={own.actions}>
-            <Button appearance="primary" onClick={crearOtro}>
-              Crear otro administrador
-            </Button>
+            <LinkButton to={PATHS.ADMIN_ADMINS} appearance="primary">
+              Ver administradores
+            </LinkButton>
+            <Button onClick={crearOtro}>Crear otro administrador</Button>
           </div>
         </Card>
       ) : (

@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 import ProtectedRoute from '../auth/ProtectedRoute'
 import { ROLES } from '../auth/roles'
 import AppLayout from '../components/AppLayout'
+import AdminAdminsPage from '../pages/AdminAdminsPage'
 import AdminNewAdminPage from '../pages/AdminNewAdminPage'
 import AdminPage from '../pages/AdminPage'
 import AdminSellersPage from '../pages/AdminSellersPage'
@@ -28,6 +29,7 @@ export default function AppRoutes() {
           <Route path={PATHS.ADMIN} element={<AdminPage />} />
           <Route path={PATHS.ADMIN_SELLERS} element={<AdminSellersPage />} />
           <Route path={PATHS.ADMIN_USERS} element={<AdminUsersPage />} />
+          <Route path={PATHS.ADMIN_ADMINS} element={<AdminAdminsPage />} />
           <Route path={PATHS.ADMIN_NEW_ADMIN} element={<AdminNewAdminPage />} />
         </Route>
 

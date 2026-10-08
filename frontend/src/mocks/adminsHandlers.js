@@ -1,19 +1,19 @@
 import { http, HttpResponse } from 'msw'
 import { USUARIOS, getUsuarioEnSesion } from './authHandlers'
+import { agregarUsuario, existeEmailDeUsuario } from './usersHandlers'
 
-// Emails de los administradores creados durante la sesión. Nunca se guarda el password.
-let emailsCreados = new Set()
 let siguienteId = 1
 
 export function resetAdminsMock() {
-  emailsCreados = new Set()
   siguienteId = 1
 }
 
 const emailYaRegistrado = (email) =>
-  emailsCreados.has(email) || USUARIOS.some((usuario) => usuario.email === email)
+  existeEmailDeUsuario(email) || USUARIOS.some((usuario) => usuario.email === email)
 
 export const adminsHandlers = [
+  // El administrador creado se añade al listado de usuarios (HU19), así que aparece en el de
+  // administradores. Nunca se guarda el password.
   http.post('/api/admin/admins', async ({ request }) => {
     const usuario = getUsuarioEnSesion()
     if (!usuario) return new HttpResponse(null, { status: 401 })
@@ -24,7 +24,7 @@ export const adminsHandlers = [
       return HttpResponse.json({ code: 'EMAIL_ALREADY_REGISTERED' }, { status: 409 })
     }
 
-    emailsCreados.add(email)
+    const ahora = new Date().toISOString().slice(0, 19)
     const administrador = {
       id: `adm-${siguienteId}`,
       nombre,
@@ -33,9 +33,10 @@ export const adminsHandlers = [
       sede,
       rol: 'ADMINISTRADOR',
       estado: 'ACTIVO',
-      fechaIncorporacion: new Date().toISOString().slice(0, 10),
+      fechaAlta: ahora,
     }
     siguienteId += 1
+    agregarUsuario(administrador)
     return HttpResponse.json(administrador, { status: 201 })
   }),
 ]
