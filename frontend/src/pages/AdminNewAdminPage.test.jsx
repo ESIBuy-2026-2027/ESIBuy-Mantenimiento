@@ -194,6 +194,18 @@ describe('AdminNewAdminPage (HU21): alta', () => {
     expect(screen.queryByText(/mongotimeout/i)).not.toBeInTheDocument()
   })
 
+  it('adminNewAdminPage_trasCrear_elNuevoAdministradorApareceEnElListado', async () => {
+    const user = userEvent.setup()
+    await abrirFormulario()
+
+    await rellenarFormularioValido(user)
+    await crear(user)
+    await user.click(await screen.findByRole('link', { name: /ver administradores/i }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: /^administradores$/i })).toBeInTheDocument()
+    expect(await screen.findByText('nora@esibuy.test')).toBeInTheDocument()
+  })
+
   it('adminNewAdminPage_alPulsarCrearOtro_muestraElFormularioVacio', async () => {
     const user = userEvent.setup()
     await abrirFormulario()
@@ -208,13 +220,13 @@ describe('AdminNewAdminPage (HU21): alta', () => {
 })
 
 describe('AdminNewAdminPage (HU21): acceso', () => {
-  it('adminNewAdminPage_alPulsarVolverAlPanel_vuelveAlPanelDeControl', async () => {
+  it('adminNewAdminPage_alPulsarVolver_vuelveAlListadoDeAdministradores', async () => {
     const user = userEvent.setup()
     await abrirFormulario()
 
-    await user.click(screen.getByRole('link', { name: /volver al panel/i }))
+    await user.click(screen.getByRole('link', { name: /volver a administradores/i }))
 
-    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/admin$/))
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/admin\/admins$/))
   })
 
   it('adminNewAdminPage_sinSesion_redirigeAlLogin', async () => {

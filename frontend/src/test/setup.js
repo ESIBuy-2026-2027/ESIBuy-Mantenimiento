@@ -4,6 +4,7 @@ import { cleanup } from '@testing-library/react'
 import { resetAdminSellersMock } from '../mocks/adminSellersHandlers'
 import { resetAdminsMock } from '../mocks/adminsHandlers'
 import { resetAuthMock } from '../mocks/authHandlers'
+import { resetUsersMock } from '../mocks/usersHandlers'
 import { server } from '../mocks/server'
 
 class ResizeObserverStub {
@@ -23,6 +24,7 @@ afterEach(() => {
   resetAuthMock()
   resetAdminSellersMock()
   resetAdminsMock()
+  resetUsersMock()
 })
 
 afterAll(() => {
