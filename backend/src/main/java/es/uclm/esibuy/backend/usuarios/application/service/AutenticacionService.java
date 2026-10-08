@@ -76,8 +76,8 @@ public class AutenticacionService implements AutenticacionUseCase {
 
         Instant ahora = reloj.instant();
         if (!codigo.puedeUsarse(ahora)) {
-        throw new CodigoInvalidoException(CODIGO_INVALIDO);
-}
+            throw new CodigoInvalidoException(CODIGO_INVALIDO);
+        }
 
         if (!hashContrasena.coincide(comando.codigo(), codigo.getCodigoHash())) {
             codigo.registrarIntentoFallido();
