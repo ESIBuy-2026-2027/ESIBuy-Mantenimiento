@@ -1,0 +1,52 @@
+package es.uclm.esibuy.backend.usuarios.domain.model;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.fail;
+
+// Login, paso 2: reglas del código de verificación por email (HU2, T21/T22).
+// Válido 10 minutos, de un solo uso y se agota tras 5 intentos fallidos (plan de la T21, D3).
+class CodigoVerificacionTest {
+
+    @Test
+    @DisplayName("HU2-CP06: un código recién creado se puede usar")
+    void codigoNuevoSePuedeUsar() {
+        // TODO: crear un código con CodigoVerificacion.nuevo(usuarioId, codigoHash, ahora).
+        // TODO: comprobar que puedeUsarse(ahora) es true.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU2-CP08: el código caduca a los 10 minutos")
+    void caducaALosDiezMinutos() {
+        // Frontera: a los 9:59 se puede usar; a los 10:00, no.
+        // TODO: crear el código en un instante fijo.
+        // TODO: comprobar puedeUsarse 9 min 59 s después (true) y 10 min después (false).
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU2-CP09: un código ya usado no se puede volver a usar")
+    void noSePuedeUsarDosVeces() {
+        // TODO: crear el código y llamar a marcarUsado().
+        // TODO: comprobar que puedeUsarse(ahora) es false.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU2-CP10: el código se agota tras 5 intentos fallidos")
+    void seAgotaTrasCincoIntentosFallidos() {
+        // Frontera: con 4 fallos aún se puede usar; con 5, no.
+        // TODO: registrar 4 intentos fallidos y comprobar que puedeUsarse es true.
+        // TODO: registrar el 5.º y comprobar que puedeUsarse es false.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU2-CP12: rechaza un código sin usuario o sin hash")
+    void rechazaCodigoSinUsuarioOSinHash() {
+        // TODO: comprobar que nuevo(null, hash, ahora) y nuevo(usuarioId, null, ahora) lanzan una excepción de dominio.
+        fail("Funcionalidad no implementada");
+    }
+}

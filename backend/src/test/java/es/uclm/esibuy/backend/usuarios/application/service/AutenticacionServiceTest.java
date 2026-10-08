@@ -26,11 +26,13 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 // Login, paso 1: credenciales, bloqueo por intentos y cuentas desactivadas (HU2, T19/T22).
+// Login, paso 2: código de verificación por email (HU2, T21/T22).
 // El contrato que debe cumplir sale del frontend (frontend/src/mocks/authHandlers.js).
 @ExtendWith(MockitoExtension.class)
 class AutenticacionServiceTest {
@@ -159,5 +161,72 @@ class AutenticacionServiceTest {
         IniciarSesionCommand comando = new IniciarSesionCommand("juan@uclm.es", "clave1234");
 
         assertThrows(CuentaDesactivadaException.class, () -> autenticacion.iniciarSesion(comando));
+    }
+
+    // --- Paso 2: código de verificación por email (T21) ---
+
+    @Test
+    @DisplayName("HU2-CP05: al validar las credenciales envía un código al correo del usuario")
+    void enviaElCodigoAlCorreoTrasValidarLasCredenciales() {
+        // TODO: usuario activo con id y credenciales correctas; el generador devuelve un código fijo.
+        // TODO: comprobar que EnvioEmailPort recibe el correo del usuario y ese código.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU2-CP12: el código se guarda hasheado y antes de enviarlo")
+    void guardaElCodigoHasheado() {
+        // TODO: iniciar sesión con credenciales correctas.
+        // TODO: comprobar que el repositorio de códigos guarda el hash (no el código en claro).
+        // TODO: comprobar con InOrder que se guarda antes de enviar el correo (P6).
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU2-CP06: un código correcto pasa al paso de Microsoft Authenticator")
+    void codigoCorrectoPasaAlAuthenticator() {
+        // TODO: código pendiente y vigente; el hash coincide.
+        // TODO: comprobar que el siguiente paso es AUTHENTICATOR y que el código se guarda como usado.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU2-CP07: rechaza un código incorrecto")
+    void rechazaCodigoIncorrecto() {
+        // TODO: código pendiente y vigente; el hash no coincide.
+        // TODO: comprobar que lanza CodigoInvalidoException y que se guarda con un intento fallido más.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU2-CP08: rechaza un código caducado aunque sea correcto")
+    void rechazaCodigoCaducado() {
+        // TODO: código creado 10 minutos antes de AHORA; el hash coincide.
+        // TODO: comprobar que lanza CodigoInvalidoException.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU2-CP09: rechaza un código ya usado")
+    void rechazaCodigoYaUsado() {
+        // TODO: código marcado como usado; el hash coincide.
+        // TODO: comprobar que lanza CodigoInvalidoException.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU2-CP10: rechaza un código agotado aunque sea correcto")
+    void rechazaCodigoAgotadoAunqueSeaCorrecto() {
+        // TODO: código con 5 intentos fallidos; el hash coincide.
+        // TODO: comprobar que lanza CodigoInvalidoException.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU2-CP07: rechaza la verificación si no hay código pendiente")
+    void rechazaSiNoHayCodigoPendiente() {
+        // TODO: el usuario existe pero no tiene código guardado (no ha pasado el paso 1).
+        // TODO: comprobar que lanza CodigoInvalidoException.
+        fail("Funcionalidad no implementada");
     }
 }
