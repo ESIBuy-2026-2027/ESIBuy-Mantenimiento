@@ -4,6 +4,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.IniciarSesionCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.PasoLogin;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ResultadoInicioSesion;
+import es.uclm.esibuy.backend.usuarios.application.port.in.VerificarCodigoEmailCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.EnvioEmailPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.GeneradorCodigoPort;
@@ -33,6 +34,7 @@ import java.time.ZoneOffset;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.inOrder;
@@ -236,9 +238,21 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP06: un código correcto pasa al paso de Microsoft Authenticator")
     void codigoCorrectoPasaAlAuthenticator() {
-        // TODO: código pendiente y vigente; el hash coincide.
-        // TODO: comprobar que el siguiente paso es AUTHENTICATOR y que el código se guarda como usado.
-        fail("Funcionalidad no implementada");
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(clienteConId()));
+        when(codigoRepository.buscarPorUsuario("u-1"))
+                .thenReturn(Optional.of(CodigoVerificacion.nuevo("u-1", HASH_CODIGO, AHORA)));
+        when(hashContrasena.coincide(CODIGO, HASH_CODIGO)).thenReturn(true);
+
+        ResultadoInicioSesion resultado = autenticacion.verificarCodigoEmail(
+                new VerificarCodigoEmailCommand("juan@uclm.es", CODIGO));
+
+        assertEquals("juan@uclm.es", resultado.email());
+        assertEquals(PasoLogin.AUTHENTICATOR, resultado.siguientePaso());
+
+        // Se guarda como usado: el mismo código no sirve para un segundo intento (CP09).
+        ArgumentCaptor<CodigoVerificacion> guardado = ArgumentCaptor.forClass(CodigoVerificacion.class);
+        verify(codigoRepository).guardar(guardado.capture());
+        assertFalse(guardado.getValue().puedeUsarse(AHORA));
     }
 
     @Test
