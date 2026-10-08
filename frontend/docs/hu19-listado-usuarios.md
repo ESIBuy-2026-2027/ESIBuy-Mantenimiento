@@ -92,7 +92,7 @@ Todas las rutas son relativas a `frontend/src/`.
 |---|---|
 | `UsersTable.jsx` | Tabla con nombre, email, rol, estado y fecha de alta. El estado va en una etiqueta de color (`Badge`): Activo en verde, Pendiente en amarillo, Bloqueado en rojo y Desactivado en gris. Mientras llega otra página se atenúa y marca `aria-busy`. Se desplaza en horizontal en pantallas estrechas. |
 | `UsersFilters.jsx` | Buscador "Buscar por nombre o email" y desplegables "Rol" y "Estado". No guarda estado: lo recibe de la página. Los dos desplegables comparten un componente interno (`FilterSelect`). |
-| `useUsersList.js` | Hook que pide el listado cuando cambian los filtros. Descarta las respuestas atrasadas y expone `data`, `failed`, `refreshing` y `retry`. Sigue el mismo patrón que `useSellerProducts` (HU32). |
+| `useUsersList.js` | Hook que pide el listado cuando cambian los filtros. Se apoya en el hook común `useApiQuery`, que descarta las respuestas atrasadas y expone `data`, `failed`, `refreshing` y `retry`, igual que `useSellerProducts` (HU32). |
 | `usersConfig.js` | Constantes: `USERS_PAGE_SIZE` (10), los estados de usuario y las etiquetas legibles de roles y estados. |
 
 ### Reutilizado de otras HU
@@ -101,7 +101,8 @@ Todas las rutas son relativas a `frontend/src/`.
 |---|---|---|
 | `components/Pagination.jsx` | HU32 | Anterior / Siguiente, "Página X de Y" y "Mostrando A–B de N usuarios". |
 | `components/EmptyState.jsx` | HU32 | Estado "No se han encontrado usuarios". |
-| `features/seller/useDebouncedValue.js` | HU32 | Retraso de 300 ms del buscador. Se importa desde la carpeta del vendedor; si más listados lo necesitan, conviene moverlo a una carpeta común de acuerdo con el equipo. |
+| `hooks/useDebouncedValue.js` | HU32 (movido a `hooks/` en la HU26) | Retraso de 300 ms del buscador. |
+| `hooks/useApiQuery.js` | HU26 | Petición con descarte de respuestas atrasadas, reintento y estado `refreshing`. |
 
 ### API y mocks
 
@@ -209,7 +210,7 @@ Pruebas manuales sugeridas:
 ### Tests automáticos
 
 ```bash
-npx vitest run     # 104 tests (22 son de esta HU)
+npx vitest run     # 208 tests (22 son de esta HU)
 npm run lint
 npm run build
 ```
@@ -250,7 +251,6 @@ Cada test empieza por el ID de su caso de prueba (`HU19-CPnn`):
 - Las tarjetas del panel de administración (HU18) aún no enlazan con `/admin/users`.
 - Sin ordenación por columnas ni acciones por fila (ver detalle, activar, desactivar): son las HU20 a HU24.
 - Los nombres de los estados y el contrato están pendientes de confirmar con el backend (sección 5).
-- `useDebouncedValue` vive en `features/seller/`; si se reutiliza en más listados, conviene moverlo a una carpeta común.
 
 ---
 
@@ -261,6 +261,6 @@ Este documento y el trabajo técnico que describe se hicieron con ayuda de un as
 - **Herramienta:** Claude (modelo de Anthropic), mediante Claude Code, con las skills `plan-task` (plan de la task) e `impeccable` (revisión de diseño contra `DESIGN.md`).
 - **Qué generó la IA:** el plan de la task, los tests, la implementación (API, componentes, hook, página), los mocks y este documento.
 - **Qué decidió el desarrollador:** la ruta de la API y de la página, el tamaño de página y su constante, el retardo de la búsqueda, los filtros al instante, la vuelta a la página 1, los casos de prueba, los nombres de tests y archivos, reutilizar la paginación y el contrato de la HU32, cómo reutilizar `useDebouncedValue`, extraer el hook `useUsersList` y el estado de tabla ocupada.
-- **Cómo se comprobó:** **104 tests en verde** (22 de esta HU), ESLint sin errores y build de producción correcto. Los tests se escribieron antes que la implementación, en ciclos rojo-verde con commits separados. El desarrollador revisó la pantalla en el navegador con los mocks.
+- **Cómo se comprobó:** **208 tests en verde** (22 de esta HU), ESLint sin errores y build de producción correcto. Los tests se escribieron antes que la implementación, en ciclos rojo-verde con commits separados. El desarrollador revisó la pantalla en el navegador con los mocks.
 - **Qué NO se comprobó:** el flujo contra un backend real; el contrato de la sección 5 debe acordarse con el backend.
 - **Revisión humana:** el código fue revisado, ejecutado y validado por el desarrollador antes de su integración. Documentado por: Daniel.
