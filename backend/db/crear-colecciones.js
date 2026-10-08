@@ -10,6 +10,10 @@
 // de los campos que existan; admite campos nuevos para no bloquear al equipo mientras el modelo es
 // preliminar. Nivel "moderate": no revalida documentos antiguos que ya no cumplían las reglas.
 //
+// Permisos: hace falta un usuario de base de datos con permiso de administración de colecciones
+// (collMod), por ejemplo atlasAdmin o dbAdmin sobre EsiBuy. El usuario de la aplicación (MONGODB_URI)
+// solo lee y escribe datos, a propósito (mínimo privilegio), y recibirá "not allowed to do action [collMod]".
+//
 // Cómo ejecutarlo contra Atlas (nunca escribas la contraseña en este archivo):
 //   - Compass → conexión al clúster → «Open MongoDB shell» → pegar el contenido de este archivo.
 //   - O con mongosh desde la raíz del repositorio:  mongosh "$env:MONGODB_URI" --file backend/db/crear-colecciones.js
