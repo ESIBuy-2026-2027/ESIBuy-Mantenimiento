@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { Field, Input, Switch, makeStyles, tokens } from '@fluentui/react-components'
 
 const useStyles = makeStyles({
@@ -42,4 +43,14 @@ export default function DiscountField({
       )}
     </div>
   )
+}
+
+DiscountField.propTypes = {
+  switchLabel: PropTypes.string.isRequired,
+  percentLabel: PropTypes.string.isRequired,
+  active: PropTypes.bool.isRequired,
+  percent: PropTypes.string.isRequired,
+  error: PropTypes.string,
+  onActiveChange: PropTypes.func.isRequired,
+  onPercentChange: PropTypes.func.isRequired,
 }

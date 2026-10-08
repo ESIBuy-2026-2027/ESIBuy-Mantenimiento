@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import {
   Badge,
   Table,
@@ -51,4 +52,17 @@ export default function OrdersTable({ orders, refreshing }) {
       </Table>
     </div>
   )
+}
+
+OrdersTable.propTypes = {
+  orders: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      fecha: PropTypes.string.isRequired,
+      articulos: PropTypes.number.isRequired,
+      total: PropTypes.number.isRequired,
+      estado: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  refreshing: PropTypes.bool,
 }

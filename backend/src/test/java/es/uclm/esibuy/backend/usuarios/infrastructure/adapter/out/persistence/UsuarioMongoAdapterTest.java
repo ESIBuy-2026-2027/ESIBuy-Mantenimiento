@@ -17,6 +17,7 @@ import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -85,50 +86,6 @@ class UsuarioMongoAdapterTest {
     }
 
     @Test
-    @DisplayName("HU2-CP03: guardar un usuario existente lo actualiza con sus intentos fallidos")
-    void guardarActualizaUnUsuarioExistente() {
-        // Es lo que hace el login tras una contraseña incorrecta: leer, registrar el intento y guardar.
-        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
-        Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
-        leido.registrarIntentoFallido(AHORA);
-
-        adapter.guardar(leido);
-
-        assertEquals(1, usuarioMongoRepository.count());
-        assertEquals(1, documentoEnBruto().getInteger("failedLoginAttempts"));
-    }
-
-    @Test
-    @DisplayName("HU2-CP03: el bloqueo por intentos fallidos se conserva al volver a leer el usuario")
-    void conservaElBloqueoAlLeer() {
-        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
-        Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
-        for (int intento = 0; intento < 5; intento++) {
-            leido.registrarIntentoFallido(AHORA);
-        }
-        adapter.guardar(leido);
-
-        Usuario releido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
-
-        assertEquals(5, releido.getIntentosFallidos());
-        assertTrue(releido.tieneBloqueoPorIntentos(AHORA));
-    }
-
-    @Test
-    @DisplayName("HU2-CP04: la desactivación de la cuenta se conserva al volver a leer el usuario")
-    void conservaLaDesactivacionAlLeer() {
-        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
-        Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
-        leido.desactivar();
-        adapter.guardar(leido);
-
-        Usuario releido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
-
-        assertTrue(releido.estaDesactivado());
-        assertEquals("DESACTIVADO", documentoEnBruto().getString("estado"));
-    }
-
-    @Test
     @DisplayName("HU1-CP01: guardar conserva el nombre, los apellidos y el tipo de cliente")
     void conservaLosDatosDePerfil() {
         adapter.guardar(new Usuario(null, "Juan", "Pérez García", new Email("juan@uclm.es"),
@@ -188,6 +145,55 @@ class UsuarioMongoAdapterTest {
     @DisplayName("HU2-CP02: buscarPorCorreo devuelve vacío si el email no está guardado")
     void buscarPorCorreoDevuelveVacioSiNoEstaGuardado() {
         assertTrue(adapter.buscarPorCorreo("nadie@uclm.es").isEmpty());
+    }
+
+    @Test
+    @DisplayName("HU2-CP03: guardar un usuario leído lo actualiza en vez de duplicarlo")
+    void guardarUnUsuarioLeidoLoActualizaSinDuplicarlo() {
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+        Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
+
+        adapter.guardar(leido);   // como hace el login tras un intento fallido
+
+        assertEquals(1, usuarioMongoRepository.findAll().size());
+    }
+
+    @Test
+    @DisplayName("HU2-CP04: un usuario desactivado sigue desactivado al leerlo de la base de datos")
+    void conservaLaDesactivacion() {
+        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado");
+        usuario.desactivar();
+
+        adapter.guardar(usuario);
+
+        assertFalse(adapter.buscarPorCorreo("juan@uclm.es").orElseThrow().estaActivo());
+        assertEquals("DESACTIVADO", documentoEnBruto().getString("estado"));   // nombre del modelo de BBDD
+    }
+
+    @Test
+    @DisplayName("HU2-CP04: un usuario activo sigue activo al leerlo de la base de datos")
+    void conservaUnUsuarioActivo() {
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+
+        assertTrue(adapter.buscarPorCorreo("juan@uclm.es").orElseThrow().estaActivo());
+    }
+
+    @Test
+    @DisplayName("HU2-CP03: los intentos fallidos y el bloqueo se conservan entre un login y otro")
+    void conservaLosIntentosFallidosYElBloqueo() {
+        Instant ahora = Instant.parse("2026-10-08T10:00:00Z");
+        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado");
+        for (int i = 0; i < 5; i++) {
+            usuario.registrarIntentoFallido(ahora);
+        }
+
+        adapter.guardar(usuario);
+        Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
+
+        // Se compara el comportamiento y no el Instant exacto: MongoDB guarda las fechas en milisegundos.
+        assertTrue(leido.tieneBloqueoPorIntentos(ahora));
+        assertFalse(leido.tieneBloqueoPorIntentos(ahora.plus(Duration.ofMinutes(15))));
+        assertEquals(5, documentoEnBruto().getInteger("failedLoginAttempts"));   // nombre del modelo de BBDD
     }
 
     // MongoTemplate devuelve el documento tal cual está en MongoDB; el repositorio lo convertiría

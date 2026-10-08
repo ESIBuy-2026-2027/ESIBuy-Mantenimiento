@@ -17,6 +17,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
  *
  * <p>Guarda todos los datos del {@code Usuario}: los de perfil y el estado de acceso
  * ({@code estado} ACTIVO/DESACTIVADO, {@code failedLoginAttempts} y {@code lockedUntil}).
+ * Un documento antiguo no tiene estos campos: el mapper les da los valores por defecto al leerlo.
  */
 @Document(collection = "usuarios")
 public class UsuarioDocument {

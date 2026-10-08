@@ -12,37 +12,38 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
  */
 public class UsuarioDocumentMapper {
 
-    // Valores del campo "estado" del «Planteamiento inicial BBDD»; en el dominio, Usuario.estaDesactivado().
+    // Valores del campo "estado" del «Planteamiento inicial BBDD»; en el dominio, Usuario.estaActivo().
     private static final String ESTADO_ACTIVO = "ACTIVO";
     private static final String ESTADO_DESACTIVADO = "DESACTIVADO";
 
     public UsuarioDocument aDocumento(Usuario usuario) {
-        UsuarioDocument documento = new UsuarioDocument(usuario.getEmail().valor(), usuario.getPasswordHash(),
-                usuario.getRol().name());
+        UsuarioDocument documento = new UsuarioDocument(usuario.getEmail().valor(), usuario.getPasswordHash(), usuario.getRol().name());
         documento.setId(usuario.getId());
+        documento.setEstado(usuario.estaActivo() ? ESTADO_ACTIVO : ESTADO_DESACTIVADO);
+        documento.setFailedLoginAttempts(usuario.getIntentosFallidos());
+        documento.setLockedUntil(usuario.getBloqueadoHasta());
         documento.setNombre(usuario.getNombre());
         documento.setApellidos(usuario.getApellidos());
         documento.setTipoCliente(usuario.getTipoCliente() == null ? null : usuario.getTipoCliente().name());
-        documento.setEstado(usuario.estaDesactivado() ? ESTADO_DESACTIVADO : ESTADO_ACTIVO);
-        documento.setFailedLoginAttempts(usuario.getIntentosFallidos());
-        documento.setLockedUntil(usuario.getBloqueadoHasta());
         return documento;
     }
 
     public Usuario aDominio(UsuarioDocument documento) {
         Rol rol = Rol.valueOf(documento.getRol());
-        Usuario datos = new Usuario(documento.getId(), documento.getNombre(), documento.getApellidos(),
-                new Email(documento.getEmail()), documento.getPasswordHash(), rol, tipoCliente(documento, rol));
-        boolean desactivado = ESTADO_DESACTIVADO.equals(documento.getEstado());
-        return Usuario.reconstruir(datos, desactivado, documento.getFailedLoginAttempts(), documento.getLockedUntil());
-    }
 
-    // Los clientes guardados antes de la T210 no tienen tipoCliente: se leen como ESTANDAR,
-    // igual que Usuario.nuevoCliente. Los demás roles no tienen tipo de cliente.
-    private static TipoCliente tipoCliente(UsuarioDocument documento, Rol rol) {
-        if (documento.getTipoCliente() != null) {
-            return TipoCliente.valueOf(documento.getTipoCliente());
+        // Tipo de cliente: el guardado si existe; si no (documento anterior a la T225), ESTANDAR para
+        // los clientes, igual que Usuario.nuevoCliente. Vendedores y administradores no tienen tipo.
+        TipoCliente tipoCliente = documento.getTipoCliente() != null
+                ? TipoCliente.valueOf(documento.getTipoCliente())
+                : (rol == Rol.CLIENTE ? TipoCliente.ESTANDAR : null);
+        Usuario usuario = new Usuario(documento.getId(), documento.getNombre(), documento.getApellidos(),
+                new Email(documento.getEmail()), documento.getPasswordHash(), rol, tipoCliente);
+
+        // Solo se desactiva si el estado es explícitamente DESACTIVADO; null (documento antiguo) = activo.
+        if (ESTADO_DESACTIVADO.equals(documento.getEstado())) {
+            usuario.desactivar();
         }
-        return rol == Rol.CLIENTE ? TipoCliente.ESTANDAR : null;
+        usuario.restaurarBloqueoPorIntentos(documento.getFailedLoginAttempts(), documento.getLockedUntil());
+        return usuario;
     }
 }

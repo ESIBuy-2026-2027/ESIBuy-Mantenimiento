@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import {
   Badge,
   Table,
@@ -92,4 +93,19 @@ export default function UsersTable({ users, refreshing = false }) {
       </Table>
     </div>
   )
+}
+
+UsersTable.propTypes = {
+  users: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      nombre: PropTypes.string.isRequired,
+      apellidos: PropTypes.string.isRequired,
+      email: PropTypes.string.isRequired,
+      rol: PropTypes.string.isRequired,
+      estado: PropTypes.string.isRequired,
+      fechaAlta: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  refreshing: PropTypes.bool,
 }

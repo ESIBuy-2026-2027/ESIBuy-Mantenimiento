@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Button, Field, Input, Spinner } from '@fluentui/react-components'
 import { useFormStyles } from './authFormStyles'
@@ -61,4 +62,12 @@ export default function CodeStep({ label, hint, onSubmit, onBack, submitting }) 
       </div>
     </form>
   )
+}
+
+CodeStep.propTypes = {
+  label: PropTypes.string.isRequired,
+  hint: PropTypes.string,
+  onSubmit: PropTypes.func.isRequired,
+  onBack: PropTypes.func.isRequired,
+  submitting: PropTypes.bool.isRequired,
 }

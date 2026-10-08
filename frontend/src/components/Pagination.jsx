@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { Button, Text, makeStyles, tokens } from '@fluentui/react-components'
 import { ChevronLeft20Regular, ChevronRight20Regular } from '@fluentui/react-icons'
 
@@ -58,4 +59,13 @@ export default function Pagination({ page, totalPages, totalItems, pageSize, ite
       </div>
     </nav>
   )
+}
+
+Pagination.propTypes = {
+  page: PropTypes.number.isRequired,
+  totalPages: PropTypes.number.isRequired,
+  totalItems: PropTypes.number.isRequired,
+  pageSize: PropTypes.number.isRequired,
+  itemLabel: PropTypes.string,
+  onPageChange: PropTypes.func.isRequired,
 }

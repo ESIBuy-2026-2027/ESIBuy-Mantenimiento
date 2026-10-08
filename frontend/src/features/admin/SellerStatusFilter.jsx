@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { Field, Select, makeStyles } from '@fluentui/react-components'
 import { getSellerStatusOptions } from './sellerStatus'
 
@@ -23,4 +24,9 @@ export default function SellerStatusFilter({ status, onChange }) {
       </Select>
     </Field>
   )
+}
+
+SellerStatusFilter.propTypes = {
+  status: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
 }

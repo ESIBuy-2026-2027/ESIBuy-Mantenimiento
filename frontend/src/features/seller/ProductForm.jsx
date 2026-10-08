@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types'
+import { categoryPropType, productValuesPropType } from '../../utils/propTypes'
 import { useState } from 'react'
 import {
   Button,
@@ -197,4 +199,12 @@ export default function ProductForm({ initialValues, categories, saving, saveFai
       </div>
     </form>
   )
+}
+
+ProductForm.propTypes = {
+  initialValues: productValuesPropType.isRequired,
+  categories: PropTypes.arrayOf(categoryPropType).isRequired,
+  saving: PropTypes.bool.isRequired,
+  saveFailed: PropTypes.bool.isRequired,
+  onSubmit: PropTypes.func.isRequired,
 }

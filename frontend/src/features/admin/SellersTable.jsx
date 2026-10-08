@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import {
   Badge,
   Button,
@@ -67,4 +68,20 @@ export default function SellersTable({ sellers, refreshing, onView }) {
       </Table>
     </div>
   )
+}
+
+SellersTable.propTypes = {
+  sellers: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      nombre: PropTypes.string.isRequired,
+      apellidos: PropTypes.string.isRequired,
+      nombreComercial: PropTypes.string.isRequired,
+      email: PropTypes.string.isRequired,
+      categoriaPrincipal: PropTypes.string.isRequired,
+      estado: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  refreshing: PropTypes.bool,
+  onView: PropTypes.func.isRequired,
 }

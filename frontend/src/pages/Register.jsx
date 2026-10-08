@@ -328,9 +328,9 @@ export default function Register() {
         {REQUISITOS_PASSWORD.map(({ texto, cumple }) => (
           <li key={texto} className={styles.requisito}>
             {cumple(datos.password) ? (
-              <CheckmarkCircle16Filled role="img" aria-label="Cumplido" className={styles.cumplido} />
+              <CheckmarkCircle16Filled aria-label="Cumplido" className={styles.cumplido} />
             ) : (
-              <Circle16Regular role="img" aria-label="Pendiente" className={styles.pendiente} />
+              <Circle16Regular aria-label="Pendiente" className={styles.pendiente} />
             )}
             <Text size={200}>{texto}</Text>
           </li>

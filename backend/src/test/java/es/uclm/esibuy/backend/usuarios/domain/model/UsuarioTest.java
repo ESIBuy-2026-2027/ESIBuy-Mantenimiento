@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
-import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +30,7 @@ class UsuarioTest {
         assertEquals("hash-seguro", usuario.getPasswordHash());
         assertEquals(Rol.CLIENTE, usuario.getRol());
         assertEquals(TipoCliente.PREMIUM, usuario.getTipoCliente());
-        assertFalse(usuario.estaDesactivado());
+        assertTrue(usuario.estaActivo());
     }
 
     @Test
@@ -77,7 +76,7 @@ class UsuarioTest {
         assertEquals(HASH, usuario.getPasswordHash());
         assertEquals(Rol.CLIENTE, usuario.getRol());
         assertEquals(TipoCliente.ESTANDAR, usuario.getTipoCliente());
-        assertFalse(usuario.estaDesactivado());
+        assertTrue(usuario.estaActivo());
     }
 
     @Test
@@ -126,7 +125,7 @@ class UsuarioTest {
 
         usuario.desactivar();
 
-        assertTrue(usuario.estaDesactivado());
+        assertFalse(usuario.estaActivo());
     }
 
     @Test
@@ -137,41 +136,7 @@ class UsuarioTest {
 
         usuario.activar();
 
-        assertFalse(usuario.estaDesactivado());
-    }
-
-    @Test
-    @DisplayName("HU1-CP11: reconstruye un usuario guardado conservando su estado de acceso")
-    void reconstruyeUsuarioConSuEstadoDeAcceso() {
-        // AB#210: lo usa la persistencia al leer un usuario de MongoDB.
-        Instant bloqueadoHasta = Instant.parse("2026-10-08T12:15:00Z");
-
-        Usuario usuario = Usuario.reconstruir(cliente("Ana", "García López"), true, 3, bloqueadoHasta);
-
-        assertEquals("u-1", usuario.getId());
-        assertEquals("Ana", usuario.getNombre());
-        assertTrue(usuario.estaDesactivado());
-        assertEquals(3, usuario.getIntentosFallidos());
-        assertEquals(bloqueadoHasta, usuario.getBloqueadoHasta());
-    }
-
-    @Test
-    @DisplayName("HU1-CP11: rechaza reconstruir un usuario con intentos fallidos negativos")
-    void rechazaReconstruirConIntentosNegativos() {
-        Usuario datos = cliente("Ana", "García López");
-
-        assertThrows(UsuarioInvalidoException.class, () -> Usuario.reconstruir(datos, false, -1, null));
-    }
-
-    @Test
-    @DisplayName("HU2-CP03: un usuario reconstruido con bloqueo vigente sigue bloqueado")
-    void usuarioReconstruidoConBloqueoSigueBloqueado() {
-        Instant ahora = Instant.parse("2026-10-08T12:00:00Z");
-
-        Usuario usuario = Usuario.reconstruir(cliente("Ana", "García López"), false, 5,
-                ahora.plusSeconds(600));
-
-        assertTrue(usuario.tieneBloqueoPorIntentos(ahora));
+        assertTrue(usuario.estaActivo());
     }
 
     private static Usuario cliente(String nombre, String apellidos) {

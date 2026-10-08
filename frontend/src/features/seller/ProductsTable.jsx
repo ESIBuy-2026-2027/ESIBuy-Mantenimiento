@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types'
+import { productPropType } from '../../utils/propTypes'
 import {
   Badge,
   Table,
@@ -26,8 +28,8 @@ const useStyles = makeStyles({
   },
 })
 
-// `actions` es opcional: si se recibe, añade una columna con las acciones de cada fila.
-export default function ProductsTable({ products, refreshing, label = 'Mis productos', actions }) {
+// `renderActions` es opcional: si se recibe, añade una columna con las acciones de cada fila.
+export default function ProductsTable({ products, refreshing, label = 'Mis productos', renderActions }) {
   const styles = useStyles()
   const tableStyles = useTableStyles()
 
@@ -41,7 +43,7 @@ export default function ProductsTable({ products, refreshing, label = 'Mis produ
             <TableHeaderCell>Precio</TableHeaderCell>
             <TableHeaderCell>Stock</TableHeaderCell>
             <TableHeaderCell>Estado</TableHeaderCell>
-            {actions && <TableHeaderCell>Acciones</TableHeaderCell>}
+            {renderActions && <TableHeaderCell>Acciones</TableHeaderCell>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -68,11 +70,18 @@ export default function ProductsTable({ products, refreshing, label = 'Mis produ
                   {product.disponible ? 'Disponible' : 'No disponible'}
                 </Badge>
               </TableCell>
-              {actions && <TableCell>{actions(product)}</TableCell>}
+              {renderActions && <TableCell>{renderActions(product)}</TableCell>}
             </TableRow>
           ))}
         </TableBody>
       </Table>
     </div>
   )
+}
+
+ProductsTable.propTypes = {
+  products: PropTypes.arrayOf(productPropType).isRequired,
+  refreshing: PropTypes.bool,
+  label: PropTypes.string,
+  renderActions: PropTypes.func,
 }

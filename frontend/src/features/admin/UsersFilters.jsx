@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { Field, SearchBox, Select, makeStyles, tokens } from '@fluentui/react-components'
 import { ROLE_LABELS, STATUS_LABELS } from './usersConfig'
 
@@ -62,4 +63,22 @@ export default function UsersFilters({ search, role, status, onSearchChange, onR
       />
     </div>
   )
+}
+
+FilterSelect.propTypes = {
+  label: PropTypes.string.isRequired,
+  allLabel: PropTypes.string.isRequired,
+  labels: PropTypes.objectOf(PropTypes.string).isRequired,
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  className: PropTypes.string,
+}
+
+UsersFilters.propTypes = {
+  search: PropTypes.string.isRequired,
+  role: PropTypes.string.isRequired,
+  status: PropTypes.string.isRequired,
+  onSearchChange: PropTypes.func.isRequired,
+  onRoleChange: PropTypes.func.isRequired,
+  onStatusChange: PropTypes.func.isRequired,
 }

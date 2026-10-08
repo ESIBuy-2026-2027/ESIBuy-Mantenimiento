@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { useCallback, useState } from 'react'
 import {
   Button,
@@ -130,4 +131,17 @@ export default function SellerDetailDialog({ sellerId, onClose }) {
       </DialogSurface>
     </Dialog>
   )
+}
+
+SellerProductsTab.propTypes = {
+  sellerId: PropTypes.string.isRequired,
+}
+
+SellerOrdersTab.propTypes = {
+  sellerId: PropTypes.string.isRequired,
+}
+
+SellerDetailDialog.propTypes = {
+  sellerId: PropTypes.string.isRequired,
+  onClose: PropTypes.func.isRequired,
 }
