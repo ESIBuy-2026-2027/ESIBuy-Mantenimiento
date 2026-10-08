@@ -1,6 +1,7 @@
 import { Text, Title1, makeStyles, tokens } from '@fluentui/react-components'
 import { ArrowLeft20Regular, PersonAdd20Regular } from '@fluentui/react-icons'
 import { ROLES } from '../auth/roles'
+import { useAuth } from '../auth/useAuth'
 import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import RoleUsersList from '../features/admin/RoleUsersList'
@@ -17,6 +18,7 @@ const useStyles = makeStyles({
 // Listado de los administradores de ESIBuy (HU21), con búsqueda, filtro por estado y "Activar" (HU24).
 export default function AdminAdminsPage() {
   const styles = usePageStyles()
+  const { user } = useAuth()
   const own = useStyles()
 
   return (
@@ -43,6 +45,7 @@ export default function AdminAdminsPage() {
         itemLabel="administradores"
         errorMessage="No se ha podido cargar el listado de administradores. Inténtalo de nuevo."
         loadingLabel="Cargando administradores…"
+        currentUserId={user?.id}
       />
     </main>
   )
