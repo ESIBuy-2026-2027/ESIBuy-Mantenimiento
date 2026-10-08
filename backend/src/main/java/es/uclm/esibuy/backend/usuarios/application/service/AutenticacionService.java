@@ -74,6 +74,11 @@ public class AutenticacionService implements AutenticacionUseCase {
         Usuario usuario = usuarioRepository.buscarPorCorreo(comando.email()).orElseThrow();
         CodigoVerificacion codigo = codigoVerificacionRepository.buscarPorUsuario(usuario.getId()).orElseThrow();
 
+        Instant ahora = reloj.instant();
+        if (!codigo.puedeUsarse(ahora)) {
+        throw new CodigoInvalidoException(CODIGO_INVALIDO);
+}
+
         if (!hashContrasena.coincide(comando.codigo(), codigo.getCodigoHash())) {
             codigo.registrarIntentoFallido();
             codigoVerificacionRepository.guardar(codigo);
