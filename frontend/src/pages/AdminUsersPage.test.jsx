@@ -15,6 +15,10 @@ function filasDeDatos() {
   return within(screen.getByRole('table', { name: 'Usuarios' })).getAllByRole('row').slice(1)
 }
 
+function columna(indice) {
+  return filasDeDatos().map((fila) => within(fila).getAllByRole('cell')[indice].textContent)
+}
+
 async function esperarFilas(cantidad) {
   await waitFor(() => expect(filasDeDatos()).toHaveLength(cantidad))
 }
@@ -36,13 +40,18 @@ describe('AdminUsersPage (HU19)', () => {
     await user.type(screen.getByRole('searchbox', { name: 'Buscar por nombre o email' }), 'ana')
 
     await esperarFilas(2)
-    const nombres = filasDeDatos().map((fila) => within(fila).getAllByRole('cell')[0].textContent)
-    expect(nombres.sort()).toEqual(['Ana López García', 'Mariana Ruiz Pascual'])
+    expect(columna(0).sort()).toEqual(['Ana López García', 'Mariana Ruiz Pascual'])
   })
 
-  it('HU19-CP03: al filtrar por Vendedor muestra solo vendedores', () => {
-    // TODO ciclo 14
-    expect.fail('Funcionalidad no implementada')
+  it('HU19-CP03: al filtrar por Vendedor muestra solo vendedores', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await esperarFilas(10)
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Rol' }), 'Vendedor')
+
+    await esperarFilas(7)
+    expect(columna(2).every((rol) => rol === 'Vendedor')).toBe(true)
   })
 
   it('HU19-CP04: al filtrar por Pendiente muestra solo cuentas pendientes', () => {
