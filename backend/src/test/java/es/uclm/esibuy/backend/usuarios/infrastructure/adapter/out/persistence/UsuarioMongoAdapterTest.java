@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.time.Instant;
@@ -78,6 +79,40 @@ class UsuarioMongoAdapterTest {
 
         assertThrows(CorreoYaRegistradoException.class, () -> adapter.guardar(duplicado));
         assertEquals(1, usuarioMongoRepository.count());
+    }
+
+    @Test
+    @DisplayName("Persistencia: la base de datos rechaza un DNI repetido en el mismo rol, sin confundirlo con un correo repetido")
+    void rechazaDniDuplicadoEnElMismoRol() {
+        // MVP del Sprint 1: el DNI es único. Una misma persona puede tener cuenta de cliente y de
+        // vendedor con el mismo DNI (con otro correo), así que es único por rol.
+        adapter.guardar(clienteConDni("juan@uclm.es", "12345678Z"));
+        Usuario mismoDni = clienteConDni("otro@uclm.es", "12345678Z");
+
+        assertThrows(DuplicateKeyException.class, () -> adapter.guardar(mismoDni));
+        assertEquals(1, usuarioMongoRepository.count());
+    }
+
+    @Test
+    @DisplayName("Persistencia: el mismo DNI se admite en roles distintos")
+    void permiteMismoDniEnDistintoRol() {
+        adapter.guardar(clienteConDni("juan@uclm.es", "12345678Z"));
+
+        adapter.guardar(new Usuario(null, new DatosPersonales(null, null, "12345678Z", null),
+                new Email("ventas@uclm.es"), "hash-simulado", new DatosVendedor("Electrónica La Mancha", "cat-1")));
+
+        assertEquals(2, usuarioMongoRepository.count());
+    }
+
+    @Test
+    @DisplayName("Persistencia: varios usuarios del mismo rol pueden no tener DNI")
+    void permiteVariosUsuariosSinDni() {
+        // El registro actual solo pide email y contraseña: el índice único no se aplica sin DNI.
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+
+        adapter.guardar(Usuario.nuevoCliente(new Email("ana@uclm.es"), "hash-simulado"));
+
+        assertEquals(2, usuarioMongoRepository.count());
     }
 
     @Test
@@ -226,6 +261,11 @@ class UsuarioMongoAdapterTest {
     @DisplayName("HU2-CP02: buscarPorCorreo devuelve vacío si el email no está guardado")
     void buscarPorCorreoDevuelveVacioSiNoEstaGuardado() {
         assertTrue(adapter.buscarPorCorreo("nadie@uclm.es").isEmpty());
+    }
+
+    private static Usuario clienteConDni(String email, String dni) {
+        return new Usuario(null, new DatosPersonales(null, null, dni, null), new Email(email), "hash-simulado",
+                new DatosCliente(TipoCliente.ESTANDAR, null));
     }
 
     // MongoTemplate devuelve el documento tal cual está en MongoDB; el repositorio lo convertiría
