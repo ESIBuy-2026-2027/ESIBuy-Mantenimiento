@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Spinner, Text, Title1, makeStyles, tokens } from '@fluentui/react-components'
+import { Button, Spinner, Text, Title1, makeStyles, tokens } from '@fluentui/react-components'
+import { SearchInfo24Regular } from '@fluentui/react-icons'
 import { listUsers } from '../api/users'
+import EmptyState from '../components/EmptyState'
 import Pagination from '../components/Pagination'
 import UsersFilters from '../features/admin/UsersFilters'
 import UsersTable from '../features/admin/UsersTable'
@@ -60,6 +62,13 @@ export default function AdminUsersPage() {
     setPage(1)
   }
 
+  const clearFilters = () => {
+    setSearch('')
+    setRole('')
+    setStatus('')
+    setPage(1)
+  }
+
   return (
     <main className={styles.page}>
       <div className={styles.heading}>
@@ -80,7 +89,17 @@ export default function AdminUsersPage() {
 
       {!data && <Spinner className={styles.loading} label="Cargando usuarios…" />}
 
-      {data && (
+      {data?.totalItems === 0 && (
+        <EmptyState
+          icon={<SearchInfo24Regular />}
+          title="No se han encontrado usuarios"
+          description="Prueba con otro nombre, otro email u otros filtros."
+        >
+          <Button onClick={clearFilters}>Limpiar filtros</Button>
+        </EmptyState>
+      )}
+
+      {data?.totalItems > 0 && (
         <>
           <UsersTable users={data.items} />
           <Pagination
