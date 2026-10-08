@@ -96,6 +96,22 @@ class UsuarioMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU2-CP03: el bloqueo por intentos fallidos se conserva al volver a leer el usuario")
+    void conservaElBloqueoAlLeer() {
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+        Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
+        for (int intento = 0; intento < 5; intento++) {
+            leido.registrarIntentoFallido(AHORA);
+        }
+        adapter.guardar(leido);
+
+        Usuario releido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
+
+        assertEquals(5, releido.getIntentosFallidos());
+        assertTrue(releido.tieneBloqueoPorIntentos(AHORA));
+    }
+
+    @Test
     @DisplayName("HU1-CP03: existePorCorreo devuelve true si el email ya está guardado")
     void existePorCorreoDevuelveTrueSiEstaGuardado() {
         adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
