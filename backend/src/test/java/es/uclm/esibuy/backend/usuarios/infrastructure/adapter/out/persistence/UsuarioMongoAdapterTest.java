@@ -1,20 +1,24 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
+import es.uclm.esibuy.backend.shared.config.MongoConfig;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -22,11 +26,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 // Usa un MongoDB real en Docker (Testcontainers): Docker Desktop debe estar abierto.
 // PENDIENTE DE REVISAR CON EL EQUIPO: IDs de caso propuestos.
 @DataMongoTest
-@Import(MongoTestcontainersConfig.class)
+@Import({MongoTestcontainersConfig.class, MongoConfig.class})
 class UsuarioMongoAdapterTest {
 
     @Autowired
     private UsuarioMongoRepository usuarioMongoRepository;
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
     private UsuarioMongoAdapter adapter;
 
@@ -73,5 +80,17 @@ class UsuarioMongoAdapterTest {
 
         assertThrows(CorreoYaRegistradoException.class, () -> adapter.guardar(duplicado));
         assertEquals(1, usuarioMongoRepository.count());
+    }
+
+    @Test
+    @DisplayName("Persistencia: el documento guardado no incluye el campo _class")
+    void elDocumentoNoIncluyeElCampoClass() {
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+
+        // MongoTemplate devuelve el documento tal cual está en MongoDB; el repositorio lo convierte
+        // a UsuarioDocument y ahí _class no se vería.
+        Document guardado = mongoTemplate.getCollection("usuarios").find().first();
+        assertNotNull(guardado);
+        assertFalse(guardado.containsKey("_class"));
     }
 }
