@@ -15,6 +15,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -88,6 +89,26 @@ class CodigoVerificacionMongoAdapterTest {
 
         assertEquals(1, codigoVerificacionMongoRepository.count());
         assertEquals("hash-segundo-login", adapter.buscarPorUsuario("u-1").orElseThrow().getCodigoHash());
+    }
+
+    @Test
+    @DisplayName("HU2-CP09: guardar un código leído actualiza el mismo documento con su uso y sus intentos")
+    void guardarUnCodigoLeidoLoActualiza() {
+        // Es lo que hace el paso 2 del login: leer el código, registrar un fallo o marcarlo como usado, y guardar.
+        adapter.guardar(CodigoVerificacion.nuevo("u-1", "hash-del-codigo", AHORA));
+        Date creado = documentoEnBruto().getDate("createdAt");
+        CodigoVerificacion leido = adapter.buscarPorUsuario("u-1").orElseThrow();
+        leido.registrarIntentoFallido();
+        leido.marcarUsado(AHORA.plusSeconds(30));
+
+        adapter.guardar(leido);
+
+        Document actualizado = documentoEnBruto();
+        assertEquals(1, codigoVerificacionMongoRepository.count());
+        assertEquals(1, actualizado.getInteger("attempts"));
+        assertEquals(Date.from(AHORA.plusSeconds(30)), actualizado.getDate("usedAt"));
+        assertNotNull(creado);
+        assertEquals(creado, actualizado.getDate("createdAt"));
     }
 
     // MongoTemplate devuelve el documento tal cual está en MongoDB, con los nombres de sus campos.
