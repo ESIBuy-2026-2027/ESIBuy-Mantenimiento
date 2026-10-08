@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
 const ADMIN = 'admin@esibuy.test'
@@ -27,9 +28,16 @@ describe('AdminUsersPage (HU19)', () => {
     expect(screen.getByText(/mostrando 1–10 de 25 usuarios/i)).toBeInTheDocument()
   })
 
-  it('HU19-CP02: al buscar "ana" muestra solo los usuarios que coinciden', () => {
-    // TODO ciclo 13
-    expect.fail('Funcionalidad no implementada')
+  it('HU19-CP02: al buscar "ana" muestra solo los usuarios que coinciden', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await esperarFilas(10)
+
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar por nombre o email' }), 'ana')
+
+    await esperarFilas(2)
+    const nombres = filasDeDatos().map((fila) => within(fila).getAllByRole('cell')[0].textContent)
+    expect(nombres.sort()).toEqual(['Ana López García', 'Mariana Ruiz Pascual'])
   })
 
   it('HU19-CP03: al filtrar por Vendedor muestra solo vendedores', () => {
