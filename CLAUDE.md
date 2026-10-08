@@ -160,12 +160,15 @@ Usar siempre el wrapper de Maven:
 - `npm run dev` — servidor de desarrollo
 - `npm run build` — build de producción
 - `npm run lint` — ESLint (flat config), único linter configurado; no hay Prettier
+- `npm test` — tests de Vitest (React Testing Library + MSW) en modo watch; `npx vitest run` para una sola ejecución
+- `npm run test:coverage` — tests + informe de cobertura LCOV en `coverage/lcov.info` (lo genera aunque falle algún test inestable, por `reportOnFailure`)
+- Sonar del frontend: **primero** `npm run test:coverage` y **después** `npx @sonar/scan` desde `frontend/` (lee `frontend/sonar-project.properties`; no hace falta instalar `sonar-scanner`). Sin el paso de cobertura, Sonar muestra un 0 %. Cada análisis sustituye al anterior en el servidor (no distingue ramas), así que lánzalo desde `develop` o desde una rama con el mismo código. Detalle en `frontend/docs/sonar-cobertura-implementacion.md`.
 
 ## Notas de herramientas y configuración
 
 - **MongoDB**: MongoDB Atlas (clúster `cluster0`, base `EsiBuy`). La conexión se configura en `application.properties` con `spring.mongodb.uri=${MONGODB_URI}` y `spring.mongodb.database=EsiBuy` (en Spring Boot 4 la propiedad es `spring.mongodb.uri`, no `spring.data.mongodb.uri`; y la base se llama `EsiBuy`, con esas mayúsculas, porque MongoDB no admite dos bases que solo difieran en mayúsculas). La URI con credenciales solo existe en la variable de entorno `MONGODB_URI` de cada desarrollador: **nunca** en el repositorio. Sin esa variable la aplicación no arranca. Los tests no usan Atlas: los que arrancan Spring importan `MongoTestcontainersConfig` (MongoDB en Docker) y el CI no tiene `MONGODB_URI`. Cualquier otro cambio en la configuración de Mongo se consulta antes.
 - No hay Checkstyle ni Spotless; el análisis de estilo/calidad se hará vía Sonar. No añadas linters locales duplicados.
-- Frontend sin test runner (sin Vitest/Jest): no asumas que existen tests de frontend ni los añadas sin consultarlo.
+- Frontend con Vitest (React Testing Library y MSW para simular la API; tests junto al código, `*.test.js(x)`). Algunos tests fallan al azar al ejecutar toda la batería a la vez (p. ej. `SellerDetailDialog.test.jsx`); si falla uno, ejecútalo solo antes de darlo por roto.
 - `@types/react*` en devDependencies son solo para el editor; no hay `tsconfig.json`.
 
 ## Roles y requisitos funcionales
