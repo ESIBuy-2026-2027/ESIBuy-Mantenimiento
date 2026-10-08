@@ -34,7 +34,7 @@ import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.shared.config.MongoConfig;
 
 // Test de integración del inicializador de colecciones (T210, HU36; HU36 no tiene casos de prueba en
-// Azure Boards: son tests técnicos). Sustituye a backend/db/probar-colecciones.js.
+// Azure Boards: son tests técnicos). Sustituye al antiguo script probar-colecciones.js.
 // Usa un MongoDB real en Docker (Testcontainers): Docker Desktop debe estar abierto.
 // Los documentos se insertan tal cual (sin Spring Data) para probar las reglas de la base de datos,
 // que deben parar los datos incorrectos aunque fallen las capas de arriba.
