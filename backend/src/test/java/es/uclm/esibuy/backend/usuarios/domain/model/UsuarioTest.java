@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
+import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -137,6 +138,21 @@ class UsuarioTest {
         usuario.activar();
 
         assertFalse(usuario.estaDesactivado());
+    }
+
+    @Test
+    @DisplayName("HU1-CP11: reconstruye un usuario guardado conservando su estado de acceso")
+    void reconstruyeUsuarioConSuEstadoDeAcceso() {
+        // AB#210: lo usa la persistencia al leer un usuario de MongoDB.
+        Instant bloqueadoHasta = Instant.parse("2026-10-08T12:15:00Z");
+
+        Usuario usuario = Usuario.reconstruir(cliente("Ana", "García López"), true, 3, bloqueadoHasta);
+
+        assertEquals("u-1", usuario.getId());
+        assertEquals("Ana", usuario.getNombre());
+        assertTrue(usuario.estaDesactivado());
+        assertEquals(3, usuario.getIntentosFallidos());
+        assertEquals(bloqueadoHasta, usuario.getBloqueadoHasta());
     }
 
     private static Usuario cliente(String nombre, String apellidos) {
