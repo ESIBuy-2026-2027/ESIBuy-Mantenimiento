@@ -6,13 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import java.time.LocalDate;
+import java.time.Month;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 // Datos propios del rol administrador (AB#210, «Planteamiento inicial BBDD» y MVP del Sprint 1).
 class DatosAdministradorTest {
 
-    private static final LocalDate INCORPORACION = LocalDate.of(2026, 9, 1);
+    private static final LocalDate INCORPORACION = LocalDate.of(2026, Month.SEPTEMBER, 1);
 
     @Test
     @DisplayName("HU1-CP11: los datos de administrador tienen rol ADMINISTRADOR, sede y fecha de incorporación")

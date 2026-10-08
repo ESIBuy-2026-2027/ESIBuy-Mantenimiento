@@ -23,6 +23,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -182,7 +183,7 @@ class UsuarioMongoAdapterTest {
     @DisplayName("HU1-CP01: guardar conserva los datos personales y los de cliente, en su subdocumento")
     void conservaLosDatosDePerfil() {
         DatosPersonales datosPersonales = new DatosPersonales("Juan", "Pérez García", "12345678Z", "612345678");
-        DatosCliente datosCliente = new DatosCliente(TipoCliente.PREMIUM, LocalDate.of(2001, 4, 12));
+        DatosCliente datosCliente = new DatosCliente(TipoCliente.PREMIUM, LocalDate.of(2001, Month.APRIL, 12));
         adapter.guardar(new Usuario(null, datosPersonales, new Email("juan@uclm.es"), "hash-simulado",
                 datosCliente));
 
@@ -215,7 +216,7 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("Persistencia: guardar conserva los datos de un administrador en su subdocumento")
     void conservaLosDatosDeAdministrador() {
-        DatosAdministrador datosAdministrador = new DatosAdministrador("Ciudad Real", LocalDate.of(2026, 9, 1));
+        DatosAdministrador datosAdministrador = new DatosAdministrador("Ciudad Real", LocalDate.of(2026, Month.SEPTEMBER, 1));
         adapter.guardar(new Usuario(null, new DatosPersonales("Ana", "López Díaz", null, null),
                 new Email("admin@uclm.es"), "hash-simulado", datosAdministrador));
 

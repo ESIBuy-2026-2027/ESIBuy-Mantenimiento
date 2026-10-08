@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.Month;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +25,7 @@ class UsuarioTest {
     void creaUsuarioConDatosCorrectos() {
         Email email = new Email("ana@esibuy.es");
         DatosPersonales datosPersonales = new DatosPersonales("Ana", "García López", "12345678Z", "612345678");
-        DatosCliente datosCliente = new DatosCliente(TipoCliente.PREMIUM, LocalDate.of(2001, 4, 12));
+        DatosCliente datosCliente = new DatosCliente(TipoCliente.PREMIUM, LocalDate.of(2001, Month.APRIL, 12));
 
         Usuario usuario = new Usuario("u-1", datosPersonales, email, "hash-seguro", datosCliente);
 
@@ -101,7 +102,7 @@ class UsuarioTest {
     void elRolSaleDeLosDatosDeRol() {
         Usuario vendedor = new Usuario("u-1", ANA, EMAIL, HASH, new DatosVendedor("Electrónica La Mancha", "cat-1"));
         Usuario administrador = new Usuario("u-2", ANA, EMAIL, HASH,
-                new DatosAdministrador("Ciudad Real", LocalDate.of(2026, 9, 1)));
+                new DatosAdministrador("Ciudad Real", LocalDate.of(2026, Month.SEPTEMBER, 1)));
 
         assertEquals(Rol.VENDEDOR, vendedor.getRol());
         assertNull(vendedor.getTipoCliente());
