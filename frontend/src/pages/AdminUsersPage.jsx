@@ -55,6 +55,11 @@ export default function AdminUsersPage() {
     }
   }, [debouncedSearch, role, status, page])
 
+  const changeFilter = (setFilter) => (value) => {
+    setFilter(value)
+    setPage(1)
+  }
+
   return (
     <main className={styles.page}>
       <div className={styles.heading}>
@@ -68,9 +73,9 @@ export default function AdminUsersPage() {
         search={search}
         role={role}
         status={status}
-        onSearchChange={setSearch}
-        onRoleChange={setRole}
-        onStatusChange={setStatus}
+        onSearchChange={changeFilter(setSearch)}
+        onRoleChange={changeFilter(setRole)}
+        onStatusChange={changeFilter(setStatus)}
       />
 
       {!data && <Spinner className={styles.loading} label="Cargando usuarios…" />}
