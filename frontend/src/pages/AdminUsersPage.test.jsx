@@ -1,9 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
+import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
 const ADMIN = 'admin@esibuy.test'
+const MENSAJE_ERROR = 'No se ha podido cargar el listado de usuarios. Inténtalo de nuevo.'
 
 async function abrirListado() {
   await abrirSesionPorApi(ADMIN)
@@ -127,8 +130,26 @@ describe('AdminUsersPage (HU19)', () => {
     expect(screen.getByRole('searchbox', { name: 'Buscar por nombre o email' })).toHaveValue('')
   })
 
-  it('HU19-CP08: si la API responde 500 muestra un mensaje de error', () => {
-    // TODO ciclo 19
-    expect.fail('Funcionalidad no implementada')
+  it('HU19-CP08: si la API responde 500 muestra un mensaje de error', async () => {
+    server.use(http.get('/api/admin/usuarios', () => new HttpResponse(null, { status: 500 })))
+
+    await abrirListado()
+
+    expect(await screen.findByText(MENSAJE_ERROR)).toBeInTheDocument()
+    expect(screen.queryByRole('table', { name: 'Usuarios' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/cargando usuarios/i)).not.toBeInTheDocument()
+  })
+
+  it('HU19-CP08: tras un error, "Reintentar" vuelve a cargar el listado', async () => {
+    const user = userEvent.setup()
+    server.use(http.get('/api/admin/usuarios', () => new HttpResponse(null, { status: 500 }), { once: true }))
+    await abrirListado()
+    await screen.findByText(MENSAJE_ERROR)
+
+    await user.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+    await waitFor(() => expect(screen.getByRole('table', { name: 'Usuarios' })).toBeInTheDocument())
+    await esperarFilas(10)
+    expect(screen.queryByText(MENSAJE_ERROR)).not.toBeInTheDocument()
   })
 })
