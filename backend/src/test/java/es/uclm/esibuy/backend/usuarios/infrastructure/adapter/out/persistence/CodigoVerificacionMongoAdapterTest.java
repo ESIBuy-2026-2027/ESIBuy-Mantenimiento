@@ -79,6 +79,17 @@ class CodigoVerificacionMongoAdapterTest {
         assertTrue(adapter.buscarPorUsuario("u-sin-codigo").isEmpty());
     }
 
+    @Test
+    @DisplayName("HU2-CP11: un login nuevo sustituye al código anterior del usuario")
+    void unCodigoNuevoSustituyeAlAnterior() {
+        adapter.guardar(CodigoVerificacion.nuevo("u-1", "hash-primer-login", AHORA));
+
+        adapter.guardar(CodigoVerificacion.nuevo("u-1", "hash-segundo-login", AHORA.plusSeconds(60)));
+
+        assertEquals(1, codigoVerificacionMongoRepository.count());
+        assertEquals("hash-segundo-login", adapter.buscarPorUsuario("u-1").orElseThrow().getCodigoHash());
+    }
+
     // MongoTemplate devuelve el documento tal cual está en MongoDB, con los nombres de sus campos.
     private Document documentoEnBruto() {
         Document guardado = mongoTemplate.getCollection("tokens_seguridad").find().first();
