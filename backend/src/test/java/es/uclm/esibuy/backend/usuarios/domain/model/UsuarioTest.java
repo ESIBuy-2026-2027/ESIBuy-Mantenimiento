@@ -30,7 +30,7 @@ class UsuarioTest {
         assertEquals("hash-seguro", usuario.getPasswordHash());
         assertEquals(Rol.CLIENTE, usuario.getRol());
         assertEquals(TipoCliente.PREMIUM, usuario.getTipoCliente());
-        assertFalse(usuario.estaDesactivado());
+        assertTrue(usuario.estaActivo());
     }
 
     @Test
@@ -76,7 +76,7 @@ class UsuarioTest {
         assertEquals(HASH, usuario.getPasswordHash());
         assertEquals(Rol.CLIENTE, usuario.getRol());
         assertEquals(TipoCliente.ESTANDAR, usuario.getTipoCliente());
-        assertFalse(usuario.estaDesactivado());
+        assertTrue(usuario.estaActivo());
     }
 
     @Test
@@ -125,7 +125,7 @@ class UsuarioTest {
 
         usuario.desactivar();
 
-        assertTrue(usuario.estaDesactivado());
+        assertFalse(usuario.estaActivo());
     }
 
     @Test
@@ -136,7 +136,7 @@ class UsuarioTest {
 
         usuario.activar();
 
-        assertFalse(usuario.estaDesactivado());
+        assertTrue(usuario.estaActivo());
     }
 
     private static Usuario cliente(String nombre, String apellidos) {
