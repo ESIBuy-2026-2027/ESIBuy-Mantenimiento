@@ -5,7 +5,7 @@ const TAMANO_PAGINA_POR_DEFECTO = 10
 
 // [nombre, apellidos, rol, estado, fechaAlta]. 25 usuarios (3 páginas de 10). La búsqueda "ana" coincide
 // solo con Ana López García y Mariana Ruiz Pascual; ningún otro nombre, apellido o email contiene "ana".
-const USUARIOS = [
+const USUARIOS_INICIALES = [
   ['Ana', 'López García', 'ADMINISTRADOR', 'ACTIVO', '2026-01-12T09:15:00'],
   ['Mariana', 'Ruiz Pascual', 'VENDEDOR', 'PENDIENTE', '2026-10-01T10:00:00'],
   ['Carlos', 'Moreno Gil', 'CLIENTE', 'ACTIVO', '2026-02-03T11:30:00'],
@@ -43,6 +43,20 @@ const USUARIOS = [
   }))
   .sort((a, b) => b.fechaAlta.localeCompare(a.fechaAlta))
 
+// Lista que puede crecer durante la sesión (p. ej. con los administradores dados de alta en la HU21).
+let usuarios = [...USUARIOS_INICIALES]
+
+export function resetUsersMock() {
+  usuarios = [...USUARIOS_INICIALES]
+}
+
+export const existeEmailDeUsuario = (email) => usuarios.some((usuario) => usuario.email === email)
+
+// Añade un usuario al principio: el listado va del alta más reciente a la más antigua.
+export function agregarUsuario(usuario) {
+  usuarios = [usuario, ...usuarios]
+}
+
 function normalizar(texto) {
   return texto
     .normalize('NFD')
@@ -66,7 +80,7 @@ export const usersHandlers = [
     const pagina = Math.max(1, Number(params.get('page')) || 1)
     const tamano = Math.max(1, Number(params.get('size')) || TAMANO_PAGINA_POR_DEFECTO)
 
-    const coincidentes = USUARIOS.filter(
+    const coincidentes = usuarios.filter(
       (candidato) =>
         coincideBusqueda(candidato, busqueda) &&
         (!rol || candidato.rol === rol) &&

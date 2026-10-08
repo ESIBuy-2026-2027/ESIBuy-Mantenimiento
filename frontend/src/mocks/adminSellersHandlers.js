@@ -61,6 +61,17 @@ const PEDIDOS_POR_VENDEDOR = new Map([
 
 const TAMANO_PAGINA_PESTANA = 5
 
+// Estados que el administrador ha cambiado durante la sesión (activar o desactivar), por id de vendedor.
+const ESTADOS_ADMITIDOS = new Set(['ACTIVO', 'DESACTIVADO'])
+let estadosModificados = new Map()
+
+export function resetAdminSellersMock() {
+  estadosModificados = new Map()
+}
+
+const conEstadoActual = (vendedor) =>
+  estadosModificados.has(vendedor.id) ? { ...vendedor, estado: estadosModificados.get(vendedor.id) } : vendedor
+
 // Orden ascendente de los estados: primero los pendientes de revisar.
 const ORDEN_ESTADOS = ['PENDIENTE', 'ACTIVO', 'DESACTIVADO']
 
@@ -110,7 +121,7 @@ function conVendedor(params, respuestaPara) {
   if (rechazo) return rechazo
 
   const vendedor = VENDEDORES_DATOS.find((candidato) => candidato.id === params.id)
-  return vendedor ? respuestaPara(vendedor) : new HttpResponse(null, { status: 404 })
+  return vendedor ? respuestaPara(conEstadoActual(vendedor)) : new HttpResponse(null, { status: 404 })
 }
 
 const paginaDePestana = (request) => leerPagina(new URL(request.url).searchParams, TAMANO_PAGINA_PESTANA)
@@ -125,7 +136,7 @@ export const adminSellersHandlers = [
     const categoria = params.get('category')
     const estado = params.get('status')
 
-    const coincidentes = VENDEDORES_DATOS.filter(
+    const coincidentes = VENDEDORES_DATOS.map(conEstadoActual).filter(
       (vendedor) =>
         normalizar(`${vendedor.nombre} ${vendedor.apellidos} ${vendedor.nombreComercial} ${vendedor.email}`).includes(
           busqueda,
@@ -141,6 +152,16 @@ export const adminSellersHandlers = [
   http.get('/api/admin/sellers/:id', ({ params }) =>
     conVendedor(params, (vendedor) => HttpResponse.json(aVendedorDetalle(vendedor))),
   ),
+
+  http.patch('/api/admin/sellers/:id/status', async ({ params, request }) => {
+    const { estado } = await request.json()
+    if (!ESTADOS_ADMITIDOS.has(estado)) return new HttpResponse(null, { status: 400 })
+
+    return conVendedor(params, (vendedor) => {
+      estadosModificados.set(vendedor.id, estado)
+      return HttpResponse.json(aVendedorDetalle({ ...vendedor, estado }))
+    })
+  }),
 
   http.get('/api/admin/sellers/:id/products', ({ params, request }) =>
     conVendedor(params, (vendedor) => {

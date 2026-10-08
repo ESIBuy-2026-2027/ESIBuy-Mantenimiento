@@ -1,33 +1,23 @@
 import {
-  Avatar,
   Button,
   Card,
   Checkbox,
   Field,
   Input,
   Label,
-  Radio,
-  RadioGroup,
   Select,
   Text,
   Title2,
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import {
-  AnimalCat24Regular,
-  AnimalDog24Regular,
-  AnimalRabbit24Regular,
-  BuildingShop24Regular,
-  Cart24Regular,
-  CheckmarkCircle16Filled,
-  Circle16Regular,
-  Eye20Regular,
-  EyeOff20Regular,
-} from '@fluentui/react-icons'
+import { BuildingShop24Regular, Cart24Regular } from '@fluentui/react-icons'
 import { useEffect, useState } from 'react'
 import { registrarCliente, registrarVendedor } from '../api/auth'
 import { getCategories } from '../api/products'
+import AvatarSelector from '../features/account/AvatarSelector'
+import { PasswordField, PasswordRequirements } from '../features/account/PasswordField'
+import { esEmailValido, validarPasswords } from '../features/account/accountRules'
 
 const OBLIGATORIOS_CLIENTE = [
   'nombre',
@@ -46,12 +36,6 @@ const OBLIGATORIOS_VENDEDOR = [
   'email',
   'password',
   'repeticionPassword',
-]
-
-const AVATARES = [
-  { valor: 'avatar1', etiqueta: 'Avatar 1', icono: <AnimalCat24Regular />, color: 'marigold' },
-  { valor: 'avatar2', etiqueta: 'Avatar 2', icono: <AnimalDog24Regular />, color: 'seafoam' },
-  { valor: 'avatar3', etiqueta: 'Avatar 3', icono: <AnimalRabbit24Regular />, color: 'lavender' },
 ]
 
 const LONGITUD_MAXIMA = {
@@ -120,34 +104,7 @@ const useStyles = makeStyles({
     color: tokens.colorPaletteRedForeground1,
     fontSize: tokens.fontSizeBase200,
   },
-  requisitos: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalXXS,
-    listStyleType: 'none',
-    margin: 0,
-    padding: 0,
-  },
-  requisito: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: tokens.spacingHorizontalXS,
-  },
-  cumplido: {
-    color: tokens.colorPaletteGreenForeground1,
-  },
-  pendiente: {
-    color: tokens.colorNeutralForeground3,
-  },
 })
-
-const REQUISITOS_PASSWORD = [
-  { texto: 'Al menos 8 caracteres', cumple: (password) => password.length >= 8 },
-  { texto: 'Una mayúscula', cumple: (password) => /\p{Lu}/u.test(password) },
-  { texto: 'Una minúscula', cumple: (password) => /\p{Ll}/u.test(password) },
-  { texto: 'Un número', cumple: (password) => /\p{N}/u.test(password) },
-  { texto: 'Un símbolo', cumple: (password) => /[^\p{L}\p{N}]/u.test(password) },
-]
 
 function esMayorDeEdad(fecha) {
   const nacimiento = new Date(fecha)
@@ -168,18 +125,13 @@ function validarCamposComunes(datos, obligatorios) {
   if (datos.dni && !/^\d{8}[A-Za-z]$/.test(datos.dni)) {
     errores.dni = 'Introduce un DNI válido (8 números y una letra)'
   }
-  if (datos.email && !/^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test(datos.email)) {
+  if (datos.email && !esEmailValido(datos.email)) {
     errores.email = 'Introduce un email válido'
   }
   if (datos.telefono && !/^\d{9}$/.test(datos.telefono)) {
     errores.telefono = 'Introduce un teléfono válido (9 números)'
   }
-  if (datos.password && !REQUISITOS_PASSWORD.every(({ cumple }) => cumple(datos.password))) {
-    errores.password = 'El password no cumple los requisitos'
-  }
-  if (datos.password && datos.repeticionPassword && datos.password !== datos.repeticionPassword) {
-    errores.repeticionPassword = 'Los passwords no coinciden'
-  }
+  Object.assign(errores, validarPasswords(datos))
   if (!datos.aceptaPrivacidad) {
     errores.aceptaPrivacidad = 'Debes aceptar la política de privacidad'
   }
@@ -207,10 +159,6 @@ export default function Register() {
   const [errores, setErrores] = useState({})
   const [registrado, setRegistrado] = useState(false)
   const [categoriasDisponibles, setCategoriasDisponibles] = useState([])
-  const [passwordsVisibles, setPasswordsVisibles] = useState({
-    password: false,
-    repeticionPassword: false,
-  })
 
   useEffect(() => {
     if (tipo !== 'vendedor') return
@@ -294,29 +242,15 @@ export default function Register() {
     </Field>
   )
 
-  const campoPassword = (nombre, label) => {
-    const visible = passwordsVisibles[nombre]
-    const accion = visible ? 'Ocultar' : 'Mostrar'
-    return (
-      <Field label={label} required validationMessage={errores[nombre]}>
-        <Input
-          type={visible ? 'text' : 'password'}
-          maxLength={LONGITUD_MAXIMA[nombre]}
-          value={datos[nombre]}
-          onChange={cambiar(nombre)}
-          contentAfter={
-            <Button
-              appearance="transparent"
-              size="small"
-              icon={visible ? <EyeOff20Regular /> : <Eye20Regular />}
-              aria-label={`${accion} ${label.toLowerCase()}`}
-              onClick={() => setPasswordsVisibles({ ...passwordsVisibles, [nombre]: !visible })}
-            />
-          }
-        />
-      </Field>
-    )
-  }
+  const campoPassword = (nombre, label) => (
+    <PasswordField
+      label={label}
+      value={datos[nombre]}
+      onChange={cambiar(nombre)}
+      error={errores[nombre]}
+      maxLength={LONGITUD_MAXIMA[nombre]}
+    />
+  )
 
   const camposComunes = (
     <>
@@ -324,18 +258,7 @@ export default function Register() {
       {campo('email', 'Email', { type: 'email' })}
       {campo('telefono', 'Teléfono', { type: 'tel', required: false })}
       {campoPassword('password', 'Password')}
-      <ul aria-label="Requisitos del password" className={styles.requisitos}>
-        {REQUISITOS_PASSWORD.map(({ texto, cumple }) => (
-          <li key={texto} className={styles.requisito}>
-            {cumple(datos.password) ? (
-              <CheckmarkCircle16Filled aria-label="Cumplido" className={styles.cumplido} />
-            ) : (
-              <Circle16Regular aria-label="Pendiente" className={styles.pendiente} />
-            )}
-            <Text size={200}>{texto}</Text>
-          </li>
-        ))}
-      </ul>
+      <PasswordRequirements password={datos.password} />
       {campoPassword('repeticionPassword', 'Repetir password')}
     </>
   )
@@ -351,19 +274,7 @@ export default function Register() {
     </Field>
   )
 
-  const selectorAvatar = (
-    <Field label="Imagen de perfil">
-      <RadioGroup layout="horizontal" value={datos.avatar} onChange={cambiar('avatar')}>
-        {AVATARES.map(({ valor, etiqueta, icono, color }) => (
-          <Radio
-            key={valor}
-            value={valor}
-            label={<Avatar icon={icono} color={color} size={48} aria-label={etiqueta} />}
-          />
-        ))}
-      </RadioGroup>
-    </Field>
-  )
+  const selectorAvatar = <AvatarSelector value={datos.avatar} onChange={cambiar('avatar')} />
 
   if (tipo === 'cliente') {
     return pantalla(
