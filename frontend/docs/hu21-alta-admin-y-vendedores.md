@@ -236,8 +236,8 @@ npm run build
 
 ## 8. Limitaciones y trabajo pendiente
 
-- **HU23:** queda desactivar clientes y administradores, que un usuario desactivado no pueda iniciar sesión y se invalide su sesión, y que un administrador no pueda desactivarse a sí mismo ni al último administrador activo. (La HU24 ya hizo activar clientes y administradores, el listado de clientes y la búsqueda, el filtro y la ordenación de la lista de administradores.)
-- **No se puede editar ni desactivar a un administrador** desde su lista.
+- **HU23 y HU24:** ya están hechas en el frontend: activar y desactivar clientes y administradores, el listado de clientes y la búsqueda, el filtro y la ordenación de la lista de administradores, y las reglas de no desactivarse a sí mismo ni al último administrador activo. Queda invalidar la sesión de un usuario desactivado (ver `docs/hu23-desactivar-usuario.md`).
+- **No se puede editar a un administrador** desde su lista.
 - **Test intermitente conocido:** `sellerDetailDialog_alConfirmarActivarUnVendedorPendiente_loDaDeAlta` falla de vez en cuando con toda la suite en marcha, por cómo Fluent oculta el diálogo a la accesibilidad mientras se abre o se cierra la confirmación. Ejecutado solo, siempre pasa. Si falla en el CI, basta con relanzarlo.
 
 ---

@@ -8,6 +8,7 @@ Documento para entender cómo el administrador activa cuentas desactivadas, cóm
 - **Rama:** `feature/US24-T35-T36-activar-usuario`
 - **Metodología:** sin TDD por decisión del equipo. Primero el código (commits `feat` con AB#35) y después los tests (commits `test` con AB#36).
 - **Depende de:** `docs/hu19-listado-usuarios.md` (listado de usuarios), `docs/hu21-alta-admin-y-vendedores.md` (activar vendedores y lista de administradores), `docs/hu26-supervision-vendedores.md` (supervisión de vendedores) y `docs/mocks-msw.md` (mocks)
+- **Ampliado por la HU23** (`docs/hu23-desactivar-usuario.md`): las filas activas tienen ahora el botón **Desactivar**. `ActivateUserButton.jsx` pasó a ser `UserStatusButton.jsx` (activa y desactiva) y `activateUser` pasó a ser `updateUserStatus`. Las partes afectadas de este documento están actualizadas.
 
 ---
 
@@ -38,7 +39,7 @@ Los dos listados tienen:
 
 Cualquier cambio de búsqueda, estado u orden vuelve a la página 1. **Limpiar filtros** borra la búsqueda y el estado y mantiene la ordenación, como en el listado de vendedores.
 
-> **Desactivar** es la HU23 y no se incluye aquí: los usuarios activos no muestran ningún botón.
+> **Desactivar** es la HU23, que añadió después el botón **Desactivar** a las filas activas.
 
 ---
 
@@ -79,7 +80,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | Archivo | Qué hace |
 |---|---|
 | `RoleUsersList.jsx` | Listado de los usuarios de un rol, compartido por clientes y administradores: búsqueda por nombre, filtro por estado, ordenación, tabla con el botón **Activar** en las cuentas desactivadas, mensajes de resultado, estado vacío y paginación. |
-| `ActivateUserButton.jsx` | Botón **Activar** de una fila: abre la confirmación y llama al backend. Su nombre accesible incluye el del usuario ("Activar a Lucía Torres Vega"). |
+| `UserStatusButton.jsx` (antes `ActivateUserButton.jsx`) | Botón **Activar** de una fila: abre la confirmación y llama al backend. Su nombre accesible incluye el del usuario ("Activar a Lucía Torres Vega"). Desde la HU23 también desactiva. |
 | `StatusConfirmDialog.jsx` | Ventana de confirmación. Se sacó del diálogo de vendedores de la HU21 para usarla también aquí. |
 | `SortControls.jsx` | "Ordenar por" y botón de sentido. Antes era `SellerSortControls.jsx` (HU26); ahora cada listado le pasa sus opciones. |
 | `UsersFilters.jsx` (HU19) | El filtro de rol pasa a ser opcional, se pueden limitar los estados y cambiar el texto del buscador, y admite controles extra en la misma fila. El listado general de usuarios no cambia. |
@@ -91,7 +92,7 @@ Todas las rutas son relativas a `frontend/src/`.
 
 | Archivo | Qué hace |
 |---|---|
-| `api/users.js` | `listUsers` admite `searchBy`, `sort` y `order` (opcionales). Nueva `activateUser(userId)`. |
+| `api/users.js` | `listUsers` admite `searchBy`, `sort` y `order` (opcionales). Nueva `activateUser(userId)`, que la HU23 generalizó en `updateUserStatus(userId, estado)`. |
 | `mocks/usersHandlers.js` | Busca solo por nombre con `searchBy=name`, ordena por nombre o estado y simula la activación. Datos: ningún cliente pendiente ni bloqueado, y un administrador desactivado (Diego Delgado Iglesias). |
 
 ---
@@ -100,7 +101,7 @@ Todas las rutas son relativas a `frontend/src/`.
 
 - **Solo el administrador** accede a los listados (rutas protegidas) y el mock responde 401 sin sesión y 403 con otro rol. La barrera real tiene que ponerla el backend.
 - **Confirmación obligatoria** antes de activar una cuenta.
-- **El mock solo admite pasar a `ACTIVO`** (400 con cualquier otro estado), porque desactivar es otra historia.
+- **El mock admitía solo pasar a `ACTIVO`** (400 con cualquier otro estado). Desde la HU23 admite también `DESACTIVADO`, con sus reglas.
 - **Los errores del servidor se muestran con un mensaje genérico,** sin detalles internos.
 
 ---
@@ -169,7 +170,7 @@ npm run build
 | Archivo | Tests de esta HU | Qué cubre |
 |---|---|---|
 | `features/admin/RoleUsersList.test.jsx` | 12 | Solo el rol pedido, opciones del filtro, filtrar por estado, Activar solo en desactivados, activar con éxito y con error, ordenación por defecto, sentido y estado, búsqueda solo por nombre, estado vacío y error con reintento |
-| `features/admin/ActivateUserButton.test.jsx` | 5 | Botón con el nombre, confirmación, cancelar, activar y error |
+| `features/admin/UserStatusButton.test.jsx` (antes `ActivateUserButton.test.jsx`) | 5 | Botón con el nombre, confirmación, cancelar, activar y error |
 | `features/admin/StatusConfirmDialog.test.jsx` | 4 | Textos, confirmar, cancelar y botones deshabilitados mientras se envía |
 | `features/admin/SortControls.test.jsx` | 3 | Opciones recibidas, cambio de criterio y cambio de sentido |
 | `pages/AdminClientsPage.test.jsx` | 4 | Título y clientes, volver al panel y acceso por rol |
@@ -193,7 +194,7 @@ También se ajustaron un test del panel (la tarjeta **Clientes** ahora navega) y
 
 ## 8. Limitaciones y trabajo pendiente
 
-- **Desactivar usuarios** es la HU23: falta el botón para las cuentas activas, impedir el inicio de sesión de un usuario desactivado e invalidar su sesión, y las reglas sobre administradores (no desactivarse a sí mismo ni al último activo).
+- **Desactivar usuarios** lo hizo después la HU23 (botón, confirmación y reglas sobre administradores). De esa historia queda invalidar la sesión en el frontend; ver su documento.
 - **La ficha de usuario (HU20)** no existe: cuando se haga, la acción de activar pasará de la fila a esa ficha.
 - **La pantalla general de usuarios de la HU19** (`/admin/users`) sigue sin enlace desde el panel.
 - **Los tests intermitentes de la HU21** (`SellerDetailDialog.test.jsx`) pueden seguir fallando de vez en cuando con toda la suite; los de esta HU no.
