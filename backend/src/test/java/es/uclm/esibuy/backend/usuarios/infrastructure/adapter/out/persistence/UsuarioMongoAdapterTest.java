@@ -5,6 +5,7 @@ import es.uclm.esibuy.backend.shared.config.MongoConfig;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -123,6 +124,19 @@ class UsuarioMongoAdapterTest {
 
         assertTrue(releido.estaDesactivado());
         assertEquals("DESACTIVADO", documentoEnBruto().getString("estado"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP01: guardar conserva el nombre, los apellidos y el tipo de cliente")
+    void conservaLosDatosDePerfil() {
+        adapter.guardar(new Usuario(null, "Juan", "Pérez García", new Email("juan@uclm.es"),
+                "hash-simulado", Rol.CLIENTE, TipoCliente.PREMIUM));
+
+        Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
+
+        assertEquals("Juan", leido.getNombre());
+        assertEquals("Pérez García", leido.getApellidos());
+        assertEquals(TipoCliente.PREMIUM, leido.getTipoCliente());
     }
 
     @Test
