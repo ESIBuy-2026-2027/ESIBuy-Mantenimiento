@@ -20,21 +20,29 @@ public class UsuarioDocumentMapper {
         UsuarioDocument documento = new UsuarioDocument(usuario.getEmail().valor(), usuario.getPasswordHash(),
                 usuario.getRol().name());
         documento.setId(usuario.getId());
+        documento.setNombre(usuario.getNombre());
+        documento.setApellidos(usuario.getApellidos());
+        documento.setTipoCliente(usuario.getTipoCliente() == null ? null : usuario.getTipoCliente().name());
         documento.setEstado(usuario.estaDesactivado() ? ESTADO_DESACTIVADO : ESTADO_ACTIVO);
         documento.setFailedLoginAttempts(usuario.getIntentosFallidos());
         documento.setLockedUntil(usuario.getBloqueadoHasta());
         return documento;
     }
 
-    // PENDIENTE (persistencia de los campos nuevos): el documento todavía no guarda nombre, apellidos,
-    // tipoCliente, desactivado ni los intentos fallidos. Mientras tanto, un CLIENTE se reconstruye como
-    // ESTANDAR (igual que Usuario.nuevoCliente) y el resto de roles sin tipo de cliente.
     public Usuario aDominio(UsuarioDocument documento) {
         Rol rol = Rol.valueOf(documento.getRol());
-        TipoCliente tipoCliente = rol == Rol.CLIENTE ? TipoCliente.ESTANDAR : null;
-        Usuario datos = new Usuario(documento.getId(), null, null, new Email(documento.getEmail()),
-                documento.getPasswordHash(), rol, tipoCliente);
+        Usuario datos = new Usuario(documento.getId(), documento.getNombre(), documento.getApellidos(),
+                new Email(documento.getEmail()), documento.getPasswordHash(), rol, tipoCliente(documento, rol));
         boolean desactivado = ESTADO_DESACTIVADO.equals(documento.getEstado());
         return Usuario.reconstruir(datos, desactivado, documento.getFailedLoginAttempts(), documento.getLockedUntil());
+    }
+
+    // Los clientes guardados antes de la T210 no tienen tipoCliente: se leen como ESTANDAR,
+    // igual que Usuario.nuevoCliente. Los demás roles no tienen tipo de cliente.
+    private static TipoCliente tipoCliente(UsuarioDocument documento, Rol rol) {
+        if (documento.getTipoCliente() != null) {
+            return TipoCliente.valueOf(documento.getTipoCliente());
+        }
+        return rol == Rol.CLIENTE ? TipoCliente.ESTANDAR : null;
     }
 }

@@ -13,7 +13,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * campos siguen el «Planteamiento inicial BBDD». El rol se guarda como texto para que el
  * documento no dependa del enum del dominio.
  *
- * <p>Cuando entre el Usuario de la T214 se añadirán nombre, apellidos, tipoCliente y desactivado.
+ * <p>Guarda todos los datos del {@code Usuario}: los de perfil y el estado de acceso
+ * ({@code estado} ACTIVO/DESACTIVADO, {@code failedLoginAttempts} y {@code lockedUntil}).
  */
 @Document(collection = "usuarios")
 public class UsuarioDocument {
@@ -24,6 +25,9 @@ public class UsuarioDocument {
     private final String email;
     private final String passwordHash;
     private final String rol;
+    private String nombre;
+    private String apellidos;
+    private String tipoCliente;
     private String estado;
     private int failedLoginAttempts;
     private Instant lockedUntil;
@@ -41,6 +45,30 @@ public class UsuarioDocument {
     // Con el id, guardar un usuario ya existente lo actualiza en vez de insertar otro.
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getApellidos() {
+        return apellidos;
+    }
+
+    public void setApellidos(String apellidos) {
+        this.apellidos = apellidos;
+    }
+
+    public String getTipoCliente() {
+        return tipoCliente;
+    }
+
+    public void setTipoCliente(String tipoCliente) {
+        this.tipoCliente = tipoCliente;
     }
 
     public String getEstado() {
