@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { Spinner, Text, Title1, makeStyles, tokens } from '@fluentui/react-components'
 import { listUsers } from '../api/users'
 import Pagination from '../components/Pagination'
+import UsersFilters from '../features/admin/UsersFilters'
 import UsersTable from '../features/admin/UsersTable'
 import { USERS_PAGE_SIZE } from '../features/admin/usersConfig'
+import { useDebouncedValue } from '../features/seller/useDebouncedValue'
 
 const useStyles = makeStyles({
   page: {
@@ -35,10 +37,20 @@ const useStyles = makeStyles({
 export default function AdminUsersPage() {
   const styles = useStyles()
   const [data, setData] = useState(null)
+  const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedValue(search)
 
   useEffect(() => {
-    listUsers({ page: 1, size: USERS_PAGE_SIZE }).then(setData)
-  }, [])
+    let cancelled = false
+
+    listUsers({ search: debouncedSearch, page: 1, size: USERS_PAGE_SIZE }).then((result) => {
+      if (!cancelled) setData(result)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [debouncedSearch])
 
   return (
     <main className={styles.page}>
@@ -48,6 +60,15 @@ export default function AdminUsersPage() {
         </Title1>
         <Text className={styles.subtitle}>Busca y filtra las cuentas de ESIBuy.</Text>
       </div>
+
+      <UsersFilters
+        search={search}
+        role=""
+        status=""
+        onSearchChange={setSearch}
+        onRoleChange={() => {}}
+        onStatusChange={() => {}}
+      />
 
       {!data && <Spinner className={styles.loading} label="Cargando usuarios…" />}
 
