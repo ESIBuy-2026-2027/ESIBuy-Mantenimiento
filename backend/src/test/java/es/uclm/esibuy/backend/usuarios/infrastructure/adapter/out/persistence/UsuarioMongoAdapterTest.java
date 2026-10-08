@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.shared.config.MongoConfig;
+import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColecciones;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosAdministrador;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
@@ -38,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 // Usa un MongoDB real en Docker (Testcontainers): Docker Desktop debe estar abierto.
 // PENDIENTE DE REVISAR CON EL EQUIPO: IDs de caso propuestos.
 @DataMongoTest
-@Import({MongoTestcontainersConfig.class, MongoConfig.class})
+@Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class UsuarioMongoAdapterTest {
 
     private static final Instant AHORA = Instant.parse("2026-10-08T12:00:00Z");
