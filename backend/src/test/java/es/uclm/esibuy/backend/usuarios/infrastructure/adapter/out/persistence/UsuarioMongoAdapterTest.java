@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -109,5 +111,22 @@ class UsuarioMongoAdapterTest {
         adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
 
         assertTrue(adapter.buscarPorCorreo("juan@uclm.es").orElseThrow().estaActivo());
+    }
+
+    @Test
+    @DisplayName("HU2-CP03: los intentos fallidos y el bloqueo se conservan entre un login y otro")
+    void conservaLosIntentosFallidosYElBloqueo() {
+        Instant ahora = Instant.parse("2026-10-08T10:00:00Z");
+        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado");
+        for (int i = 0; i < 5; i++) {
+            usuario.registrarIntentoFallido(ahora);
+        }
+
+        adapter.guardar(usuario);
+        Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
+
+        // Se compara el comportamiento y no el Instant exacto: MongoDB guarda las fechas en milisegundos.
+        assertTrue(leido.tieneBloqueoPorIntentos(ahora));
+        assertFalse(leido.tieneBloqueoPorIntentos(ahora.plus(Duration.ofMinutes(15))));
     }
 }
