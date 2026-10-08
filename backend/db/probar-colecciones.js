@@ -12,9 +12,9 @@
 // Resultado esperado: una línea OK por caso y «TODOS LOS CASOS OK». La prueba del TTL tarda hasta
 // 75 segundos, porque MongoDB borra los documentos caducados cada 60 segundos.
 
+// throw (y no quit) para que se detenga en cualquier shell: la de Compass no admite quit().
 if (JSON.stringify(db.hello()).includes("mongodb.net")) {
-  print("Este script inserta datos de prueba: ejecútalo contra un MongoDB de Docker, nunca contra Atlas.");
-  quit(1);
+  throw new Error("Este script inserta datos de prueba: ejecútalo contra un MongoDB de Docker, nunca contra Atlas.");
 }
 
 const b = db.getSiblingDB("EsiBuy");
@@ -106,5 +106,7 @@ const vigentes = b.sesiones.countDocuments({ usuarioId: "u1" });
 if (vigentes !== 1) fallos++;
 print(`${vigentes === 1 ? "OK " : "MAL"} la sesión vigente se conserva`);
 
-print(fallos === 0 ? "TODOS LOS CASOS OK" : `${fallos} CASOS NO ESPERADOS`);
-if (fallos !== 0) quit(1);
+if (fallos !== 0) {
+  throw new Error(`${fallos} CASOS NO ESPERADOS`);
+}
+print("TODOS LOS CASOS OK");
