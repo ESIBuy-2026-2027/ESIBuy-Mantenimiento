@@ -23,15 +23,9 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("No se ha podido completar el registro");
     }
 
-    @ExceptionHandler(ContrasenaInvalidaException.class)
+    @ExceptionHandler({ContrasenaInvalidaException.class, EmailInvalidoException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public RespuestaError contrasenaInvalida() {
+    public RespuestaError datosDeRegistroInvalidos() {
         return new RespuestaError("Datos de registro no válidos");
-    }
-
-    @ExceptionHandler(EmailInvalidoException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public RespuestaError correoInvalido() {
-        return new RespuestaError("Formato inválido");
     }
 }
