@@ -74,6 +74,4 @@ public class CodigoVerificacion {
     public String getUsuarioId() {
         return usuarioId;
     }
-   
-    
 }

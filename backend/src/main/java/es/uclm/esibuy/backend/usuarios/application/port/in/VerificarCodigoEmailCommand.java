@@ -4,9 +4,6 @@ public record VerificarCodigoEmailCommand(String email, String codigo) {
 
     @Override
     public String toString() {
-       return "VerificarCodigoEmailCommand[email=" + email + ", codigo=****]";
+        return "VerificarCodigoEmailCommand[email=" + email + ", codigo=****]";
     }
-
-    
-
 }

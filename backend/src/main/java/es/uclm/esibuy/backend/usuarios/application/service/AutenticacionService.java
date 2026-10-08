@@ -32,7 +32,9 @@ public class AutenticacionService implements AutenticacionUseCase {
     private final EnvioEmailPort envioEmail;
     private final Clock reloj;
 
-    public AutenticacionService(UsuarioRepositoryPort usuarioRepository, HashContrasenaPort hashContrasena, CodigoVerificacionRepositoryPort codigoVerificacionRepository, GeneradorCodigoPort generadorCodigo, EnvioEmailPort envioEmail, Clock reloj) {
+    public AutenticacionService(UsuarioRepositoryPort usuarioRepository, HashContrasenaPort hashContrasena,
+            CodigoVerificacionRepositoryPort codigoVerificacionRepository, GeneradorCodigoPort generadorCodigo,
+            EnvioEmailPort envioEmail, Clock reloj) {
         this.usuarioRepository = usuarioRepository;
         this.hashContrasena = hashContrasena;
         this.codigoVerificacionRepository = codigoVerificacionRepository;
@@ -71,8 +73,10 @@ public class AutenticacionService implements AutenticacionUseCase {
 
     @Override
     public ResultadoInicioSesion verificarCodigoEmail(VerificarCodigoEmailCommand comando) {
-        Usuario usuario = usuarioRepository.buscarPorCorreo(comando.email()).orElseThrow(() -> new CodigoInvalidoException(CODIGO_INVALIDO));
-        CodigoVerificacion codigo = codigoVerificacionRepository.buscarPorUsuario(usuario.getId()).orElseThrow(() -> new CodigoInvalidoException(CODIGO_INVALIDO));
+        Usuario usuario = usuarioRepository.buscarPorCorreo(comando.email())
+                .orElseThrow(() -> new CodigoInvalidoException(CODIGO_INVALIDO));
+        CodigoVerificacion codigo = codigoVerificacionRepository.buscarPorUsuario(usuario.getId())
+                .orElseThrow(() -> new CodigoInvalidoException(CODIGO_INVALIDO));
 
         Instant ahora = reloj.instant();
         if (!codigo.puedeUsarse(ahora)) {
@@ -89,8 +93,6 @@ public class AutenticacionService implements AutenticacionUseCase {
         codigoVerificacionRepository.guardar(codigo);
         return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.AUTHENTICATOR);
     }
-
     
-
 
 }
