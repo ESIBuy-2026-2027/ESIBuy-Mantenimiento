@@ -14,4 +14,6 @@ public interface CodigoVerificacionMongoRepository extends MongoRepository<Codig
 
     // Spring Data deduce la consulta del nombre: el token de ese usuario para ese propósito.
     Optional<CodigoVerificacionDocument> findByUsuarioIdAndPurpose(String usuarioId, String purpose);
+
+    void deleteByUsuarioIdAndPurpose(String usuarioId, String purpose);
 }
