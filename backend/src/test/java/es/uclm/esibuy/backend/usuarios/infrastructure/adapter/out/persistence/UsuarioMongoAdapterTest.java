@@ -91,4 +91,15 @@ class UsuarioMongoAdapterTest {
 
         assertEquals(1, usuarioMongoRepository.findAll().size());
     }
+
+    @Test
+    @DisplayName("HU2-CP04: un usuario desactivado sigue desactivado al leerlo de la base de datos")
+    void conservaLaDesactivacion() {
+        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado");
+        usuario.desactivar();
+
+        adapter.guardar(usuario);
+
+        assertTrue(adapter.buscarPorCorreo("juan@uclm.es").orElseThrow().estaDesactivado());
+    }
 }
