@@ -17,6 +17,7 @@ public class UsuarioDocumentMapper {
                 usuario.getRol().name());
         documento.setId(usuario.getId());
         documento.setFailedLoginAttempts(usuario.getIntentosFallidos());
+        documento.setLockedUntil(usuario.getBloqueadoHasta());
         return documento;
     }
 
@@ -26,7 +27,8 @@ public class UsuarioDocumentMapper {
     public Usuario aDominio(UsuarioDocument documento) {
         Rol rol = Rol.valueOf(documento.getRol());
         TipoCliente tipoCliente = rol == Rol.CLIENTE ? TipoCliente.ESTANDAR : null;
-        return new Usuario(documento.getId(), null, null, new Email(documento.getEmail()),
+        Usuario datos = new Usuario(documento.getId(), null, null, new Email(documento.getEmail()),
                 documento.getPasswordHash(), rol, tipoCliente);
+        return Usuario.reconstruir(datos, false, documento.getFailedLoginAttempts(), documento.getLockedUntil());
     }
 }

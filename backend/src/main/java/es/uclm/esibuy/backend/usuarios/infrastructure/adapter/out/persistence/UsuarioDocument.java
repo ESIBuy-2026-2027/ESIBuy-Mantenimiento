@@ -1,5 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
+import java.time.Instant;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -23,6 +25,7 @@ public class UsuarioDocument {
     private final String passwordHash;
     private final String rol;
     private int failedLoginAttempts;
+    private Instant lockedUntil;
 
     public UsuarioDocument(String email, String passwordHash, String rol) {
         this.email = email;
@@ -45,6 +48,14 @@ public class UsuarioDocument {
 
     public void setFailedLoginAttempts(int failedLoginAttempts) {
         this.failedLoginAttempts = failedLoginAttempts;
+    }
+
+    public Instant getLockedUntil() {
+        return lockedUntil;
+    }
+
+    public void setLockedUntil(Instant lockedUntil) {
+        this.lockedUntil = lockedUntil;
     }
 
     public String getEmail() {
