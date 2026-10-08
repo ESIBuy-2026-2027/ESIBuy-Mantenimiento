@@ -33,7 +33,16 @@ function FilterSelect({ label, allLabel, labels, value, onChange, className }) {
   )
 }
 
-export default function UsersFilters({ search, role, status, onSearchChange, onRoleChange, onStatusChange }) {
+// El filtro de rol solo aparece si se recibe onRoleChange; los listados de un único rol no lo necesitan.
+export default function UsersFilters({
+  search,
+  role = '',
+  status,
+  statusLabels = STATUS_LABELS,
+  onSearchChange,
+  onRoleChange,
+  onStatusChange,
+}) {
   const styles = useStyles()
 
   return (
@@ -45,18 +54,20 @@ export default function UsersFilters({ search, role, status, onSearchChange, onR
           onChange={(_event, data) => onSearchChange(data.value)}
         />
       </Field>
-      <FilterSelect
-        label="Rol"
-        allLabel="Todos los roles"
-        labels={ROLE_LABELS}
-        value={role}
-        onChange={onRoleChange}
-        className={styles.select}
-      />
+      {onRoleChange && (
+        <FilterSelect
+          label="Rol"
+          allLabel="Todos los roles"
+          labels={ROLE_LABELS}
+          value={role}
+          onChange={onRoleChange}
+          className={styles.select}
+        />
+      )}
       <FilterSelect
         label="Estado"
         allLabel="Todos los estados"
-        labels={STATUS_LABELS}
+        labels={statusLabels}
         value={status}
         onChange={onStatusChange}
         className={styles.select}
@@ -76,9 +87,10 @@ FilterSelect.propTypes = {
 
 UsersFilters.propTypes = {
   search: PropTypes.string.isRequired,
-  role: PropTypes.string.isRequired,
+  role: PropTypes.string,
   status: PropTypes.string.isRequired,
+  statusLabels: PropTypes.objectOf(PropTypes.string),
   onSearchChange: PropTypes.func.isRequired,
-  onRoleChange: PropTypes.func.isRequired,
+  onRoleChange: PropTypes.func,
   onStatusChange: PropTypes.func.isRequired,
 }

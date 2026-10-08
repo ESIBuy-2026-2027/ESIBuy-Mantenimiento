@@ -12,3 +12,10 @@ export function listUsers({ search, role, status, page, size }) {
 
   return request(`/api/admin/usuarios?${params}`)
 }
+
+export function activateUser(userId) {
+  return request(`/api/admin/usuarios/${encodeURIComponent(userId)}/status`, {
+    method: 'PATCH',
+    body: { estado: 'ACTIVO' },
+  })
+}
