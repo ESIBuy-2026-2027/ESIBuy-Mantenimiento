@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   Button,
   MessageBar,
@@ -11,12 +11,12 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { SearchInfo24Regular } from '@fluentui/react-icons'
-import { listUsers } from '../api/users'
 import EmptyState from '../components/EmptyState'
 import Pagination from '../components/Pagination'
 import UsersFilters from '../features/admin/UsersFilters'
 import UsersTable from '../features/admin/UsersTable'
 import { USERS_PAGE_SIZE } from '../features/admin/usersConfig'
+import { useUsersList } from '../features/admin/useUsersList'
 import { useDebouncedValue } from '../features/seller/useDebouncedValue'
 
 const useStyles = makeStyles({
@@ -48,34 +48,18 @@ const useStyles = makeStyles({
 
 export default function AdminUsersPage() {
   const styles = useStyles()
-  const [data, setData] = useState(null)
   const [search, setSearch] = useState('')
   const [role, setRole] = useState('')
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(1)
-  const [failed, setFailed] = useState(false)
-  const [attempt, setAttempt] = useState(0)
   const debouncedSearch = useDebouncedValue(search)
-
-  useEffect(() => {
-    let cancelled = false
-
-    listUsers({ search: debouncedSearch, role, status, page, size: USERS_PAGE_SIZE })
-      .then((result) => {
-        if (cancelled) return
-        setData(result)
-        setFailed(false)
-      })
-      .catch(() => {
-        if (cancelled) return
-        setData(null)
-        setFailed(true)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [debouncedSearch, role, status, page, attempt])
+  const { data, failed, retry } = useUsersList({
+    search: debouncedSearch,
+    role,
+    status,
+    page,
+    size: USERS_PAGE_SIZE,
+  })
 
   const changeFilter = (setFilter) => (value) => {
     setFilter(value)
@@ -111,7 +95,7 @@ export default function AdminUsersPage() {
         <MessageBar intent="error">
           <MessageBarBody>No se ha podido cargar el listado de usuarios. Inténtalo de nuevo.</MessageBarBody>
           <MessageBarActions>
-            <Button onClick={() => setAttempt((value) => value + 1)}>Reintentar</Button>
+            <Button onClick={retry}>Reintentar</Button>
           </MessageBarActions>
         </MessageBar>
       )}
