@@ -93,6 +93,16 @@ class CodigoVerificacionTest {
     }
 
     @Test
+    @DisplayName("HU2-CP10: rechaza reconstruir un código con intentos fallidos negativos")
+    void rechazaReconstruirConIntentosNegativos() {
+        // Un documento corrupto no debe convertirse en un código válido (P6 del plan de la T232).
+        Instant expiraEn = AHORA.plus(Duration.ofMinutes(10));
+
+        assertThrows(CodigoVerificacionInvalidoException.class,
+                () -> CodigoVerificacion.reconstruir("c-1", "u-1", "hash-del-codigo", expiraEn, null, -1));
+    }
+
+    @Test
     @DisplayName("HU2-CP12: rechaza un código sin usuario o sin hash")
     void rechazaCodigoSinUsuarioOSinHash() {
         assertThrows(CodigoVerificacionInvalidoException.class,
