@@ -15,6 +15,7 @@ import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class})
 class UsuarioMongoAdapterTest {
+
+    private static final Instant AHORA = Instant.parse("2026-10-08T12:00:00Z");
 
     @Autowired
     private UsuarioMongoRepository usuarioMongoRepository;
@@ -75,11 +78,21 @@ class UsuarioMongoAdapterTest {
     void elDocumentoNoIncluyeElCampoClass() {
         adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
 
-        // MongoTemplate devuelve el documento tal cual está en MongoDB; el repositorio lo convierte
-        // a UsuarioDocument y ahí _class no se vería.
-        Document guardado = mongoTemplate.getCollection("usuarios").find().first();
-        assertNotNull(guardado);
-        assertFalse(guardado.containsKey("_class"));
+        assertFalse(documentoEnBruto().containsKey("_class"));
+    }
+
+    @Test
+    @DisplayName("HU2-CP03: guardar un usuario existente lo actualiza con sus intentos fallidos")
+    void guardarActualizaUnUsuarioExistente() {
+        // Es lo que hace el login tras una contraseña incorrecta: leer, registrar el intento y guardar.
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+        Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
+        leido.registrarIntentoFallido(AHORA);
+
+        adapter.guardar(leido);
+
+        assertEquals(1, usuarioMongoRepository.count());
+        assertEquals(1, documentoEnBruto().getInteger("failedLoginAttempts"));
     }
 
     @Test
@@ -113,5 +126,13 @@ class UsuarioMongoAdapterTest {
     @DisplayName("HU2-CP02: buscarPorCorreo devuelve vacío si el email no está guardado")
     void buscarPorCorreoDevuelveVacioSiNoEstaGuardado() {
         assertTrue(adapter.buscarPorCorreo("nadie@uclm.es").isEmpty());
+    }
+
+    // MongoTemplate devuelve el documento tal cual está en MongoDB; el repositorio lo convertiría
+    // a UsuarioDocument y ahí no se verían campos como _class.
+    private Document documentoEnBruto() {
+        Document guardado = mongoTemplate.getCollection("usuarios").find().first();
+        assertNotNull(guardado);
+        return guardado;
     }
 }
