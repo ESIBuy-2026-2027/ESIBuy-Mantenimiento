@@ -8,6 +8,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +26,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -150,8 +150,14 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP04: rechaza una cuenta desactivada")
     void rechazaCuentaDesactivada() {
-        // TODO: usuario DESACTIVADO con credenciales correctas.
-        // TODO: comprobar que lanza CuentaDesactivadaException.
-        fail("Funcionalidad no implementada");
+        // «Desactivada» = bloqueo manual de un administrador (bloquear() de Usuario, T214).
+        // Se comprueba después de la contraseña: quien no la conoce no puede averiguar el estado de la cuenta.
+        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado");
+        usuario.bloquear();
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
+        when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
+        IniciarSesionCommand comando = new IniciarSesionCommand("juan@uclm.es", "clave1234");
+
+        assertThrows(CuentaDesactivadaException.class, () -> autenticacion.iniciarSesion(comando));
     }
 }
