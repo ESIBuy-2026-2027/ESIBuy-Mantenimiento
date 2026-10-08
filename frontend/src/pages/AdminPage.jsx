@@ -9,6 +9,7 @@ const sections = [
     id: 'customers',
     icon: <People24Regular />,
     title: 'Clientes',
+    to: PATHS.ADMIN_CLIENTS,
     description: 'Consulta y gestiona las cuentas de los clientes de ESIBuy.',
   },
   {

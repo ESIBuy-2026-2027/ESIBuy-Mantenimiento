@@ -30,6 +30,7 @@ import ProductsTable from '../seller/ProductsTable'
 import OrdersTable from './OrdersTable'
 import PagedList from './PagedList'
 import SellerDataForm from './SellerDataForm'
+import StatusConfirmDialog from './StatusConfirmDialog'
 
 const useStyles = makeStyles({
   surface: {
@@ -90,27 +91,6 @@ const ACCIONES_DE_ESTADO = {
     pregunta: (nombre) => `¿Seguro que quieres desactivar a ${nombre}? No podrá iniciar sesión.`,
     exito: 'El vendedor está desactivado.',
   },
-}
-
-function StatusConfirmDialog({ accion, nombre, enviando, onConfirm, onCancel }) {
-  return (
-    <Dialog open modalType="alert" onOpenChange={(_event, data) => !data.open && onCancel()}>
-      <DialogSurface>
-        <DialogBody>
-          <DialogTitle>{accion.boton}</DialogTitle>
-          <DialogContent>{accion.pregunta(nombre)}</DialogContent>
-          <DialogActions>
-            <Button onClick={onCancel} disabled={enviando}>
-              Cancelar
-            </Button>
-            <Button appearance="primary" onClick={onConfirm} disabled={enviando}>
-              {accion.confirmar}
-            </Button>
-          </DialogActions>
-        </DialogBody>
-      </DialogSurface>
-    </Dialog>
-  )
 }
 
 export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }) {
@@ -199,8 +179,9 @@ export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }
         </DialogBody>
         {confirmando && (
           <StatusConfirmDialog
-            accion={accion}
-            nombre={seller.nombreComercial}
+            titulo={accion.boton}
+            pregunta={accion.pregunta(seller.nombreComercial)}
+            confirmar={accion.confirmar}
             enviando={enviando}
             onConfirm={cambiarEstado}
             onCancel={() => setConfirmando(false)}
@@ -217,18 +198,6 @@ SellerProductsTab.propTypes = {
 
 SellerOrdersTab.propTypes = {
   sellerId: PropTypes.string.isRequired,
-}
-
-StatusConfirmDialog.propTypes = {
-  accion: PropTypes.shape({
-    boton: PropTypes.string.isRequired,
-    confirmar: PropTypes.string.isRequired,
-    pregunta: PropTypes.func.isRequired,
-  }).isRequired,
-  nombre: PropTypes.string.isRequired,
-  enviando: PropTypes.bool.isRequired,
-  onConfirm: PropTypes.func.isRequired,
-  onCancel: PropTypes.func.isRequired,
 }
 
 SellerDetailDialog.propTypes = {

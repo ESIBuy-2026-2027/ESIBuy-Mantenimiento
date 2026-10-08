@@ -1,23 +1,9 @@
-import { useState } from 'react'
-import {
-  Button,
-  MessageBar,
-  MessageBarActions,
-  MessageBarBody,
-  Spinner,
-  Text,
-  Title1,
-  makeStyles,
-  tokens,
-} from '@fluentui/react-components'
+import { Text, Title1, makeStyles, tokens } from '@fluentui/react-components'
 import { ArrowLeft20Regular, PersonAdd20Regular } from '@fluentui/react-icons'
 import { ROLES } from '../auth/roles'
 import LinkButton from '../components/LinkButton'
-import Pagination from '../components/Pagination'
 import { usePageStyles } from '../components/pageStyles'
-import UsersTable from '../features/admin/UsersTable'
-import { USERS_PAGE_SIZE } from '../features/admin/usersConfig'
-import { useUsersList } from '../features/admin/useUsersList'
+import RoleUsersList from '../features/admin/RoleUsersList'
 import { PATHS } from '../routes/paths'
 
 const useStyles = makeStyles({
@@ -28,19 +14,10 @@ const useStyles = makeStyles({
   },
 })
 
-// Listado de los administradores de ESIBuy (HU21). Reutiliza el listado de usuarios de la HU19
-// filtrado por rol.
+// Listado de los administradores de ESIBuy (HU21), con búsqueda, filtro por estado y "Activar" (HU24).
 export default function AdminAdminsPage() {
   const styles = usePageStyles()
   const own = useStyles()
-  const [page, setPage] = useState(1)
-  const { data, failed, refreshing, retry } = useUsersList({
-    search: '',
-    role: ROLES.ADMIN,
-    status: '',
-    page,
-    size: USERS_PAGE_SIZE,
-  })
 
   return (
     <main className={styles.page}>
@@ -61,30 +38,12 @@ export default function AdminAdminsPage() {
         </div>
       </div>
 
-      {failed && (
-        <MessageBar intent="error">
-          <MessageBarBody>No se ha podido cargar el listado de administradores. Inténtalo de nuevo.</MessageBarBody>
-          <MessageBarActions>
-            <Button onClick={retry}>Reintentar</Button>
-          </MessageBarActions>
-        </MessageBar>
-      )}
-
-      {!data && !failed && <Spinner className={styles.loading} label="Cargando administradores…" />}
-
-      {data && (
-        <>
-          <UsersTable users={data.items} refreshing={refreshing} />
-          <Pagination
-            page={data.page}
-            totalPages={data.totalPages}
-            totalItems={data.totalItems}
-            pageSize={data.size}
-            itemLabel="administradores"
-            onPageChange={setPage}
-          />
-        </>
-      )}
+      <RoleUsersList
+        role={ROLES.ADMIN}
+        itemLabel="administradores"
+        errorMessage="No se ha podido cargar el listado de administradores. Inténtalo de nuevo."
+        loadingLabel="Cargando administradores…"
+      />
     </main>
   )
 }

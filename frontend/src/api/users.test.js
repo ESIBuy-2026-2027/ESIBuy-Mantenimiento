@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
 import { ApiError } from './client'
-import { listUsers } from './users'
+import { activateUser, listUsers } from './users'
 
 const RESPUESTA = { items: [], page: 1, size: 10, totalItems: 0, totalPages: 0 }
 
@@ -68,4 +68,54 @@ describe('listUsers', () => {
     expect(error).toBeInstanceOf(ApiError)
     expect(error.status).toBe(500)
   })
+
+describe('activateUser', () => {
+  it('activateUser_enviaElEstadoActivoPorPatchALaRutaDelUsuario', async () => {
+    const peticion = {}
+    server.use(
+      http.patch('/api/admin/usuarios/:id/status', async ({ params, request }) => {
+        peticion.id = params.id
+        peticion.metodo = request.method
+        peticion.cuerpo = await request.json()
+        return HttpResponse.json({ id: params.id, estado: 'ACTIVO' })
+      }),
+    )
+
+    const respuesta = await activateUser('usr-4')
+
+    expect(peticion).toEqual({ id: 'usr-4', metodo: 'PATCH', cuerpo: { estado: 'ACTIVO' } })
+    expect(respuesta).toEqual({ id: 'usr-4', estado: 'ACTIVO' })
+  })
+
+  it('activateUser_conErrorDelServidor_lanzaApiError', async () => {
+    server.use(http.patch('/api/admin/usuarios/:id/status', () => new HttpResponse(null, { status: 500 })))
+
+    const error = await activateUser('usr-4').catch((excepcion) => excepcion)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error.status).toBe(500)
+  })
+})
+
+describe('listUsers con búsqueda por nombre y ordenación (HU24)', () => {
+  it('listUsers_conSearchBySortYOrder_losEnviaEnLaConsulta', async () => {
+    const peticion = capturarPeticion()
+
+    await listUsers({ search: 'ana', page: 1, size: 10, searchBy: 'name', sort: 'status', order: 'desc' })
+
+    expect(peticion.url.searchParams.get('searchBy')).toBe('name')
+    expect(peticion.url.searchParams.get('sort')).toBe('status')
+    expect(peticion.url.searchParams.get('order')).toBe('desc')
+  })
+
+  it('listUsers_sinSearchBySortNiOrder_noLosEnvia', async () => {
+    const peticion = capturarPeticion()
+
+    await listUsers({ page: 1, size: 10 })
+
+    expect(peticion.url.searchParams.has('searchBy')).toBe(false)
+    expect(peticion.url.searchParams.has('sort')).toBe(false)
+    expect(peticion.url.searchParams.has('order')).toBe(false)
+  })
+})
 })

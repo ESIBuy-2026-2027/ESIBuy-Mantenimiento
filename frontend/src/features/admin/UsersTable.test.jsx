@@ -46,4 +46,24 @@ describe('UsersTable', () => {
       ['Mariana Ruiz', 'mariana.ruiz@esibuy.test', 'Vendedor', 'Pendiente', '01/10/2026'],
     ])
   })
+
+  it('usersTable_conRenderActions_anadeUnaColumnaDeAcciones', () => {
+    const users = [
+      {
+        id: 'u1',
+        nombre: 'Lucía',
+        apellidos: 'Torres Vega',
+        email: 'lucia.torres@esibuy.test',
+        rol: 'CLIENTE',
+        estado: 'DESACTIVADO',
+        fechaAlta: '2026-09-28T17:45:00',
+      },
+    ]
+
+    renderWithProviders(<UsersTable users={users} renderActions={(user) => <span>acción de {user.nombre}</span>} />)
+
+    const cabeceras = screen.getAllByRole('columnheader').map((cabecera) => cabecera.textContent)
+    expect(cabeceras).toEqual(['Nombre', 'Email', 'Rol', 'Estado', 'Fecha de alta', 'Acciones'])
+    expect(within(screen.getAllByRole('row')[1]).getByText('acción de Lucía')).toBeInTheDocument()
+  })
 })
