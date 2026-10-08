@@ -39,19 +39,20 @@ export default function AdminUsersPage() {
   const [data, setData] = useState(null)
   const [search, setSearch] = useState('')
   const [role, setRole] = useState('')
+  const [status, setStatus] = useState('')
   const debouncedSearch = useDebouncedValue(search)
 
   useEffect(() => {
     let cancelled = false
 
-    listUsers({ search: debouncedSearch, role, page: 1, size: USERS_PAGE_SIZE }).then((result) => {
+    listUsers({ search: debouncedSearch, role, status, page: 1, size: USERS_PAGE_SIZE }).then((result) => {
       if (!cancelled) setData(result)
     })
 
     return () => {
       cancelled = true
     }
-  }, [debouncedSearch, role])
+  }, [debouncedSearch, role, status])
 
   return (
     <main className={styles.page}>
@@ -65,10 +66,10 @@ export default function AdminUsersPage() {
       <UsersFilters
         search={search}
         role={role}
-        status=""
+        status={status}
         onSearchChange={setSearch}
         onRoleChange={setRole}
-        onStatusChange={() => {}}
+        onStatusChange={setStatus}
       />
 
       {!data && <Spinner className={styles.loading} label="Cargando usuarios…" />}
