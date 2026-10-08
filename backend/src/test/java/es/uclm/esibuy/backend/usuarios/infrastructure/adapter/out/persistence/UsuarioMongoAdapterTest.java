@@ -3,8 +3,10 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.shared.config.MongoConfig;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosAdministrador;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
@@ -148,6 +150,33 @@ class UsuarioMongoAdapterTest {
         assertEquals("612345678", guardado.getString("telefono"));
         assertEquals("PREMIUM", guardado.get("cliente", Document.class).getString("tipoCliente"));
         assertFalse(guardado.containsKey("tipoCliente"));
+    }
+
+    @Test
+    @DisplayName("Persistencia: guardar conserva los datos de un vendedor en su subdocumento")
+    void conservaLosDatosDeVendedor() {
+        DatosVendedor datosVendedor = new DatosVendedor("Electrónica La Mancha", "cat-1");
+        adapter.guardar(new Usuario(null, new DatosPersonales("Pedro", "Gómez Sanz", "12345678Z", null),
+                new Email("ventas@uclm.es"), "hash-simulado", datosVendedor));
+
+        Usuario leido = adapter.buscarPorCorreo("ventas@uclm.es").orElseThrow();
+
+        assertEquals(datosVendedor, leido.getDatosRol());
+        assertEquals("Electrónica La Mancha",
+                documentoEnBruto().get("vendedor", Document.class).getString("nombreComercial"));
+    }
+
+    @Test
+    @DisplayName("Persistencia: guardar conserva los datos de un administrador en su subdocumento")
+    void conservaLosDatosDeAdministrador() {
+        DatosAdministrador datosAdministrador = new DatosAdministrador("Ciudad Real", LocalDate.of(2026, 9, 1));
+        adapter.guardar(new Usuario(null, new DatosPersonales("Ana", "López Díaz", null, null),
+                new Email("admin@uclm.es"), "hash-simulado", datosAdministrador));
+
+        Usuario leido = adapter.buscarPorCorreo("admin@uclm.es").orElseThrow();
+
+        assertEquals(datosAdministrador, leido.getDatosRol());
+        assertEquals("Ciudad Real", documentoEnBruto().get("administrador", Document.class).getString("sede"));
     }
 
     @Test
