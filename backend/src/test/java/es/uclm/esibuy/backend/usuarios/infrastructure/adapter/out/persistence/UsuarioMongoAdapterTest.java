@@ -116,6 +116,17 @@ class UsuarioMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("Persistencia: la base de datos rechaza un nombre comercial repetido")
+    void rechazaNombreComercialDuplicado() {
+        // «Planteamiento inicial BBDD»: nombreComercial → único.
+        adapter.guardar(vendedor("ventas@uclm.es", "Electrónica La Mancha"));
+        Usuario mismoNombre = vendedor("otro@uclm.es", "Electrónica La Mancha");
+
+        assertThrows(DuplicateKeyException.class, () -> adapter.guardar(mismoNombre));
+        assertEquals(1, usuarioMongoRepository.count());
+    }
+
+    @Test
     @DisplayName("Persistencia: el documento guardado no incluye el campo _class")
     void elDocumentoNoIncluyeElCampoClass() {
         adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
@@ -266,6 +277,11 @@ class UsuarioMongoAdapterTest {
     private static Usuario clienteConDni(String email, String dni) {
         return new Usuario(null, new DatosPersonales(null, null, dni, null), new Email(email), "hash-simulado",
                 new DatosCliente(TipoCliente.ESTANDAR, null));
+    }
+
+    private static Usuario vendedor(String email, String nombreComercial) {
+        return new Usuario(null, DatosPersonales.sinDatos(), new Email(email), "hash-simulado",
+                new DatosVendedor(nombreComercial, "cat-1"));
     }
 
     // MongoTemplate devuelve el documento tal cual está en MongoDB; el repositorio lo convertiría
