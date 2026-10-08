@@ -8,6 +8,7 @@ Documento para entender qué cubre la HU21 en el frontend, qué hace cada parte 
 - **Rama:** `feature/US21-T50-T51-alta-admin-y-vendedores`
 - **Metodología:** sin TDD por decisión del equipo. Primero el código (commits `feat`, `refactor` y `fix` con AB#50) y después los tests (commits `test` con AB#51).
 - **Depende de:** `docs/hu18-panel-admin.md` (panel), `docs/hu19-listado-usuarios.md` (listado de usuarios), `docs/hu26-supervision-vendedores.md` (supervisión de vendedores), `docs/hu1-registro.md` (password y avatares), `docs/mocks-msw.md` (mocks) y `docs/sonar-incidencias.md` (convención de `propTypes`)
+- **Ampliado por la HU24** (`docs/hu24-activar-usuario.md`): la lista de administradores tiene ahora búsqueda por nombre, filtro por estado, ordenación y el botón **Activar**, y la ventana de confirmación es un componente compartido. Las partes afectadas de este documento están actualizadas.
 
 ---
 
@@ -104,7 +105,7 @@ Todas las rutas son relativas a `frontend/src/`.
 
 | Archivo | Qué hace |
 |---|---|
-| `SellerDetailDialog.jsx` | El botón del diálogo de la HU26 ya funciona. Añade `StatusConfirmDialog` (la ventana de confirmación), los textos de cada acción y la prop `onStatusChange` para avisar al listado. |
+| `SellerDetailDialog.jsx` | El botón del diálogo de la HU26 ya funciona. Añade la ventana de confirmación (desde la HU24 es el componente compartido `StatusConfirmDialog.jsx`), los textos de cada acción y la prop `onStatusChange` para avisar al listado. |
 | `pages/AdminSellersPage.jsx` | Recarga el listado cuando cambia el estado de un vendedor. |
 
 ### Piezas compartidas con el registro (`features/account/`)
@@ -235,9 +236,8 @@ npm run build
 
 ## 8. Limitaciones y trabajo pendiente
 
-- **HU23 y HU24:** queda lo que no es del diálogo de vendedores: que un usuario desactivado no pueda iniciar sesión y se invalide su sesión, que un administrador no pueda desactivarse a sí mismo ni al último administrador activo, y activar o desactivar clientes y administradores.
-- **La lista de administradores no tiene búsqueda ni filtros,** y no se puede editar ni desactivar a un administrador desde ella.
-- **La tarjeta "Clientes" del panel** sigue sin conectar con el listado de la HU19; lo resolverá otra rama.
+- **HU23:** queda desactivar clientes y administradores, que un usuario desactivado no pueda iniciar sesión y se invalide su sesión, y que un administrador no pueda desactivarse a sí mismo ni al último administrador activo. (La HU24 ya hizo activar clientes y administradores, el listado de clientes y la búsqueda, el filtro y la ordenación de la lista de administradores.)
+- **No se puede editar ni desactivar a un administrador** desde su lista.
 - **Test intermitente conocido:** `sellerDetailDialog_alConfirmarActivarUnVendedorPendiente_loDaDeAlta` falla de vez en cuando con toda la suite en marcha, por cómo Fluent oculta el diálogo a la accesibilidad mientras se abre o se cierra la confirmación. Ejecutado solo, siempre pasa. Si falla en el CI, basta con relanzarlo.
 
 ---

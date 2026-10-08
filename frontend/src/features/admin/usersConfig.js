@@ -21,3 +21,15 @@ export const STATUS_LABELS = {
   [USER_STATUS.BLOQUEADO]: 'Bloqueado',
   [USER_STATUS.DESACTIVADO]: 'Desactivado',
 }
+
+// Estados que pueden tener clientes y administradores: solo activos o desactivados.
+export const ACCOUNT_STATUS_LABELS = {
+  [USER_STATUS.ACTIVO]: STATUS_LABELS[USER_STATUS.ACTIVO],
+  [USER_STATUS.DESACTIVADO]: STATUS_LABELS[USER_STATUS.DESACTIVADO],
+}
+
+// Opciones de ordenación de los listados de clientes y administradores.
+export const ACCOUNT_SORT_OPTIONS = [
+  { value: 'name', label: 'Nombre' },
+  { value: 'status', label: 'Estado' },
+]

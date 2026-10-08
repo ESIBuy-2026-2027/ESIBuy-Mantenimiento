@@ -71,7 +71,8 @@ describe('AdminUsersPage (HU19)', () => {
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'Pendiente')
 
-    await esperarFilas(5)
+    // Solo los vendedores pueden estar pendientes (HU24): en el mock hay 2.
+    await esperarFilas(2)
     expect(columna(3).every((estado) => estado === 'Pendiente')).toBe(true)
   })
 
@@ -121,7 +122,7 @@ describe('AdminUsersPage (HU19)', () => {
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'Pendiente')
 
-    await esperarFilas(5)
+    await esperarFilas(2)
   })
 
   it('HU19-CP07: sin coincidencias muestra que no se han encontrado usuarios', async () => {

@@ -49,4 +49,33 @@ describe('UsersFilters', () => {
     expect(opciones).toEqual(['Todos los estados', 'Pendiente', 'Activo', 'Bloqueado', 'Desactivado'])
     expect(onStatusChange).toHaveBeenLastCalledWith('PENDIENTE')
   })
+
+  it('usersFilters_sinOnRoleChange_noMuestraElFiltroDeRol', () => {
+    renderWithProviders(
+      <UsersFilters search="" status="" onSearchChange={vi.fn()} onStatusChange={vi.fn()} />,
+    )
+
+    expect(screen.queryByRole('combobox', { name: 'Rol' })).not.toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Estado' })).toBeInTheDocument()
+  })
+
+  it('usersFilters_conStatusLabels_soloOfreceEsosEstados', () => {
+    renderFilters({ statusLabels: { ACTIVO: 'Activo', DESACTIVADO: 'Desactivado' } })
+
+    const filtroEstado = screen.getByRole('combobox', { name: 'Estado' })
+    const opciones = within(filtroEstado).getAllByRole('option').map((opcion) => opcion.textContent)
+
+    expect(opciones).toEqual(['Todos los estados', 'Activo', 'Desactivado'])
+  })
+
+  it('usersFilters_conSearchLabel_cambiaElTextoDelBuscadorYMuestraLosControlesExtra', () => {
+    renderFilters({
+      searchLabel: 'Buscar por nombre',
+      searchPlaceholder: 'Escribe un nombre',
+      children: <span>control extra</span>,
+    })
+
+    expect(screen.getByRole('searchbox', { name: 'Buscar por nombre' })).toHaveAttribute('placeholder', 'Escribe un nombre')
+    expect(screen.getByText('control extra')).toBeInTheDocument()
+  })
 })

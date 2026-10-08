@@ -60,15 +60,17 @@ const useStyles = makeStyles({
   },
 })
 
-export default function UsersTable({ users, refreshing = false }) {
+// renderActions es opcional: si se recibe, se añade una columna con las acciones de cada usuario.
+export default function UsersTable({ users, refreshing = false, renderActions }) {
   const styles = useStyles()
+  const columns = renderActions ? [...COLUMNS, 'Acciones'] : COLUMNS
 
   return (
     <div className={mergeClasses(styles.wrapper, refreshing && styles.refreshing)} aria-busy={refreshing}>
       <Table aria-label="Usuarios">
         <TableHeader>
           <TableRow>
-            {COLUMNS.map((column) => (
+            {columns.map((column) => (
               <TableHeaderCell key={column}>{column}</TableHeaderCell>
             ))}
           </TableRow>
@@ -87,6 +89,7 @@ export default function UsersTable({ users, refreshing = false }) {
                 </Badge>
               </TableCell>
               <TableCell className={styles.date}>{dateFormatter.format(new Date(user.fechaAlta))}</TableCell>
+              {renderActions && <TableCell>{renderActions(user)}</TableCell>}
             </TableRow>
           ))}
         </TableBody>
@@ -108,4 +111,5 @@ UsersTable.propTypes = {
     }),
   ).isRequired,
   refreshing: PropTypes.bool,
+  renderActions: PropTypes.func,
 }

@@ -117,7 +117,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | `SellerDataForm.jsx` | Rejilla de campos de la pestaña Datos. Son `Input` de Fluent con `readOnly` y la apariencia `filled-darker`, que los pinta con un fondo más oscuro para indicar que no se pueden modificar. Se usa `readOnly` y no `disabled` para que el texto se pueda seleccionar y copiar y lo lean los lectores de pantalla. |
 | `PagedList.jsx` | Lista paginada genérica para las pestañas: pide una página, gestiona carga, error con **Reintentar**, mensaje vacío y paginación. Las pestañas solo le indican qué pedir y cómo pintar las filas. |
 | `SellerStatusFilter.jsx` | Desplegable de filtro por estado. Las opciones salen de `sellerStatus.js`. |
-| `SellerSortControls.jsx` | Desplegable "Ordenar por" (estado, categoría, nombre) y botón que invierte la dirección. El botón cambia de icono y de nombre accesible ("Orden ascendente" / "Orden descendente"). |
+| `SortControls.jsx` | Desplegable "Ordenar por" (estado, categoría, nombre) y botón que invierte la dirección. Se llamaba `SellerSortControls.jsx`; la HU24 lo generalizó para que cada listado le pase sus opciones, y este listado le pasa las suyas. El botón cambia de icono y de nombre accesible ("Orden ascendente" / "Orden descendente"). |
 | `OrdersTable.jsx` | Tabla de pedidos: número, fecha, artículos, total y estado. Solo lectura. |
 | `sellerStatus.js` | Además de traducir los estados, ofrece la lista de estados de vendedor para el filtro. Traduce los estados de vendedor (activo, pendiente, desactivado) y de pedido (pendiente, enviado, entregado, cancelado) a texto y color de `Badge`. Un estado desconocido se muestra como "Desconocido". |
 

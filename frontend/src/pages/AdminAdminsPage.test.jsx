@@ -84,4 +84,18 @@ describe('AdminAdminsPage (HU21)', () => {
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/))
     expect(screen.queryByRole('heading', { name: /^administradores$/i })).not.toBeInTheDocument()
   })
+
+  it('adminAdminsPage_alActivarUnAdministradorDesactivado_loMuestraActivo', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    const fila = () => screen.getByText('diego.delgado@esibuy.test').closest('tr')
+    await screen.findByText('diego.delgado@esibuy.test')
+
+    await user.click(screen.getByRole('button', { name: 'Activar a Diego Delgado Iglesias' }))
+    const pregunta = await screen.findByText(/seguro que quieres activar a diego delgado iglesias/i)
+    await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Activar', { selector: 'button' }))
+
+    expect(await screen.findByText(/diego delgado iglesias ya está activo/i, {}, { timeout: 3000 })).toBeInTheDocument()
+    await waitFor(() => expect(within(fila()).getByText('Activo')).toBeInTheDocument(), { timeout: 3000 })
+  })
 })
