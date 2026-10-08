@@ -26,11 +26,17 @@ public class CodigoVerificacionMongoAdapter implements CodigoVerificacionReposit
 
     @Override
     public void guardar(CodigoVerificacion codigo) {
+        CodigoVerificacionDocument documento = mapper.aDocumento(codigo);
         if (codigo.getId() == null) {
             // Código nuevo (un login nuevo): sustituye al anterior del usuario, que ya no debe valer (HU2-CP11).
             repository.deleteByUsuarioIdAndPurpose(codigo.getUsuarioId(), PROPOSITO_LOGIN);
+        } else {
+            // Actualización (un fallo o el uso del código): el documento se rehace desde el dominio, que no
+            // conoce la fecha de creación, así que se conserva la del documento guardado.
+            repository.findById(codigo.getId())
+                    .ifPresent(guardado -> documento.setCreatedAt(guardado.getCreatedAt()));
         }
-        repository.save(mapper.aDocumento(codigo));
+        repository.save(documento);
     }
 
     @Override
