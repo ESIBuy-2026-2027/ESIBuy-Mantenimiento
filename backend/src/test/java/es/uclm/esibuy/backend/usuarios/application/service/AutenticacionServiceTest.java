@@ -296,9 +296,16 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP09: rechaza un código ya usado")
     void rechazaCodigoYaUsado() {
-        // TODO: código marcado como usado; el hash coincide.
-        // TODO: comprobar que lanza CodigoInvalidoException.
-        fail("Funcionalidad no implementada");
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(clienteConId()));
+        CodigoVerificacion codigo = CodigoVerificacion.nuevo("u-1", HASH_CODIGO, AHORA);
+        codigo.marcarUsado();
+        when(codigoRepository.buscarPorUsuario("u-1")).thenReturn(Optional.of(codigo));
+        // El código es correcto: solo se rechaza por estar usado (lenient: no se llega a comparar).
+        lenient().when(hashContrasena.coincide(CODIGO, HASH_CODIGO)).thenReturn(true);
+        VerificarCodigoEmailCommand comando = new VerificarCodigoEmailCommand("juan@uclm.es", CODIGO);
+
+        assertThrows(CodigoInvalidoException.class, () -> autenticacion.verificarCodigoEmail(comando));
+        verify(codigoRepository, never()).guardar(any());
     }
 
     @Test
