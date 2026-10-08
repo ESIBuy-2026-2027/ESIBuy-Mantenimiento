@@ -12,10 +12,15 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
  */
 public class UsuarioDocumentMapper {
 
+    // Valores del campo "estado" del «Planteamiento inicial BBDD»; en el dominio, Usuario.estaDesactivado().
+    private static final String ESTADO_ACTIVO = "ACTIVO";
+    private static final String ESTADO_DESACTIVADO = "DESACTIVADO";
+
     public UsuarioDocument aDocumento(Usuario usuario) {
         UsuarioDocument documento = new UsuarioDocument(usuario.getEmail().valor(), usuario.getPasswordHash(),
                 usuario.getRol().name());
         documento.setId(usuario.getId());
+        documento.setEstado(usuario.estaDesactivado() ? ESTADO_DESACTIVADO : ESTADO_ACTIVO);
         documento.setFailedLoginAttempts(usuario.getIntentosFallidos());
         documento.setLockedUntil(usuario.getBloqueadoHasta());
         return documento;
@@ -29,6 +34,7 @@ public class UsuarioDocumentMapper {
         TipoCliente tipoCliente = rol == Rol.CLIENTE ? TipoCliente.ESTANDAR : null;
         Usuario datos = new Usuario(documento.getId(), null, null, new Email(documento.getEmail()),
                 documento.getPasswordHash(), rol, tipoCliente);
-        return Usuario.reconstruir(datos, false, documento.getFailedLoginAttempts(), documento.getLockedUntil());
+        boolean desactivado = ESTADO_DESACTIVADO.equals(documento.getEstado());
+        return Usuario.reconstruir(datos, desactivado, documento.getFailedLoginAttempts(), documento.getLockedUntil());
     }
 }

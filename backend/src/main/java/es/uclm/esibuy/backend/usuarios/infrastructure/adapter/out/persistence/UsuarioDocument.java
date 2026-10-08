@@ -24,6 +24,7 @@ public class UsuarioDocument {
     private final String email;
     private final String passwordHash;
     private final String rol;
+    private String estado;
     private int failedLoginAttempts;
     private Instant lockedUntil;
 
@@ -40,6 +41,14 @@ public class UsuarioDocument {
     // Con el id, guardar un usuario ya existente lo actualiza en vez de insertar otro.
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
     }
 
     public int getFailedLoginAttempts() {
