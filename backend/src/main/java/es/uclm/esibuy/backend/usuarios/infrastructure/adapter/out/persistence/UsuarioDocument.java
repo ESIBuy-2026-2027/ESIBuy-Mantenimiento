@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
@@ -17,6 +18,7 @@ public class UsuarioDocument {
 
     @Id
     private String id;
+    @Indexed(unique = true) // «Planteamiento inicial BBDD»: email → único
     private final String email;
     private final String passwordHash;
     private final String rol;

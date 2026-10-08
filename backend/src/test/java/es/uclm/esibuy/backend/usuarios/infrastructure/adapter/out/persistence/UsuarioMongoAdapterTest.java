@@ -9,14 +9,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DuplicateKeyException;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-// Test de integración del adaptador de MongoDB (HU1, AB#216).
+// Test de integración del adaptador de MongoDB (HU1, AB#216; índice único, AB#210).
 // Usa un MongoDB real en Docker (Testcontainers): Docker Desktop debe estar abierto.
 // PENDIENTE DE REVISAR CON EL EQUIPO: IDs de caso propuestos.
 @DataMongoTest
@@ -58,5 +60,18 @@ class UsuarioMongoAdapterTest {
     @DisplayName("HU1-CP03: existePorCorreo devuelve false si el email no está guardado")
     void existePorCorreoDevuelveFalseSiNoEstaGuardado() {
         assertFalse(adapter.existePorCorreo("juan@uclm.es"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP03: la base de datos rechaza un segundo usuario con el mismo email")
+    void rechazaEmailDuplicadoEnLaBaseDeDatos() {
+        // Llama a guardar dos veces sin pasar por existePorCorreo: simula dos registros simultáneos,
+        // que solo el índice único de email (AB#210) puede parar.
+        // Cuando la T19 (Jorge) traduzca el rechazo en el adaptador, esperar CorreoYaRegistradoException.
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-1"));
+        Usuario duplicado = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-2");
+
+        assertThrows(DuplicateKeyException.class, () -> adapter.guardar(duplicado));
+        assertEquals(1, usuarioMongoRepository.count());
     }
 }
