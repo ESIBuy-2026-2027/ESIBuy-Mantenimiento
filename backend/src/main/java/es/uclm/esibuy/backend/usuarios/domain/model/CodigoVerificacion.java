@@ -67,5 +67,11 @@ public class CodigoVerificacion {
         return codigoHash;
     }
 
+    public int getIntentosFallidos() {
+        return intentosFallidos;
+    }
+
+    
+
     
 }

@@ -75,6 +75,8 @@ public class AutenticacionService implements AutenticacionUseCase {
         CodigoVerificacion codigo = codigoVerificacionRepository.buscarPorUsuario(usuario.getId()).orElseThrow();
 
         if (!hashContrasena.coincide(comando.codigo(), codigo.getCodigoHash())) {
+            codigo.registrarIntentoFallido();
+            codigoVerificacionRepository.guardar(codigo);
             throw new CodigoInvalidoException(CODIGO_INVALIDO);
         }
 
