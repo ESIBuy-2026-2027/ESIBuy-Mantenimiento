@@ -48,7 +48,7 @@ function discountError(active, percent, label) {
     : undefined
 }
 
-// Devuelve un objeto con un mensaje por cada campo incorrecto (vacío si todo es válido),
+// Devuelve un objeto con un mensaje por cada campo incorrecto (vacío si no hay ningún error),
 // para poder mostrar todos los errores a la vez.
 export function validateProduct(values) {
   const errors = {}
@@ -63,7 +63,7 @@ export function validateProduct(values) {
   if (values.categoriaIds.length === 0) errors.categoriaIds = 'Elige al menos una categoría.'
 
   if (!price) errors.precio = 'Introduce el precio.'
-  else if (!(Number(price) > 0)) errors.precio = 'El precio debe ser mayor que 0.'
+  else if (Number.isNaN(Number(price)) || Number(price) <= 0) errors.precio = 'El precio debe ser mayor que 0.'
 
   if (stock && !/^\d+$/.test(stock)) errors.stock = 'El stock debe ser un número entero mayor o igual que 0.'
 
