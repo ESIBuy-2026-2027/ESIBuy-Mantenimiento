@@ -4,12 +4,17 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.IniciarSesionCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.PasoLogin;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ResultadoInicioSesion;
+import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.EnvioEmailPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.GeneradorCodigoPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
+import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,6 +32,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -40,23 +46,51 @@ class AutenticacionServiceTest {
     // Hora fija para los tests: el usuario recibe la hora en vez de consultarla él mismo.
     private static final Instant AHORA = Instant.parse("2026-10-08T10:00:00Z");
 
+    // Código que "genera" el generador en los tests y su hash, para poder comprobar qué se envía y qué se guarda.
+    private static final String CODIGO = "654321";
+    private static final String HASH_CODIGO = "hash-del-codigo";
+
     @Mock
     private UsuarioRepositoryPort usuarioRepository;
 
     @Mock
     private HashContrasenaPort hashContrasena;
 
+    @Mock
+    private CodigoVerificacionRepositoryPort codigoRepository;
+
+    @Mock
+    private GeneradorCodigoPort generadorCodigo;
+
+    @Mock
+    private EnvioEmailPort envioEmail;
+
     private AutenticacionUseCase autenticacion; // Tipado como el puerto de entrada, igual que en el registro
 
     @BeforeEach
     void crearServicio() {
-        autenticacion = new AutenticacionService(usuarioRepository, hashContrasena, Clock.fixed(AHORA, ZoneOffset.UTC));
+        // lenient: solo los tests que terminan con un login correcto llegan a generar el código (paso 2, T21);
+        // sin él, Mockito daría por error que los demás tests no usen estas respuestas.
+        lenient().when(generadorCodigo.generar()).thenReturn(CODIGO);
+        lenient().when(hashContrasena.hashear(CODIGO)).thenReturn(HASH_CODIGO);
+        autenticacion = servicioConReloj(Clock.fixed(AHORA, ZoneOffset.UTC));
+    }
+
+    private AutenticacionService servicioConReloj(Clock reloj) {
+        return new AutenticacionService(usuarioRepository, hashContrasena, codigoRepository, generadorCodigo,
+                envioEmail, reloj);
+    }
+
+    // Cliente con id: al iniciar sesión se guarda un código de verificación asociado a su id (T21).
+    private static Usuario clienteConId() {
+        return new Usuario("u-1", null, null, new Email("juan@uclm.es"), "hash-guardado", Rol.CLIENTE,
+                TipoCliente.ESTANDAR);
     }
 
     @Test
     @DisplayName("HU2-CP01: inicia sesión con credenciales correctas y pasa al código por email")
     void iniciaSesionConCredencialesCorrectas() {
-        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado");
+        Usuario usuario = clienteConId();
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
         when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
 
@@ -96,7 +130,7 @@ class AutenticacionServiceTest {
     @DisplayName("HU2-CP03: tras 4 intentos fallidos la cuenta no se bloquea")
     void permiteCuartoIntentoFallidoSinBloquear() {
         // Frontera: 4 fallos → aún se puede entrar.
-        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado");
+        Usuario usuario = clienteConId();
         for (int i = 0; i < 4; i++) {
             usuario.registrarIntentoFallido(AHORA);
         }
@@ -133,7 +167,7 @@ class AutenticacionServiceTest {
     @DisplayName("HU2-CP03: desbloquea la cuenta pasados 15 minutos")
     void desbloqueaLaCuentaPasados15Minutos() {
         // Frontera: justo a los 15 minutos del bloqueo ya se puede entrar.
-        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado");
+        Usuario usuario = clienteConId();
         for (int i = 0; i < 5; i++) {
             usuario.registrarIntentoFallido(AHORA);
         }
@@ -142,7 +176,7 @@ class AutenticacionServiceTest {
 
         // El mismo servicio, pero con el reloj 15 minutos después: no hace falta esperar.
         Clock relojQuinceMinutosDespues = Clock.fixed(AHORA.plus(Duration.ofMinutes(15)), ZoneOffset.UTC);
-        AutenticacionUseCase autenticacionMasTarde = new AutenticacionService(usuarioRepository, hashContrasena, relojQuinceMinutosDespues);
+        AutenticacionUseCase autenticacionMasTarde = servicioConReloj(relojQuinceMinutosDespues);
 
         ResultadoInicioSesion resultado = autenticacionMasTarde.iniciarSesion(new IniciarSesionCommand("juan@uclm.es", "clave1234"));
 
@@ -168,9 +202,13 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP05: al validar las credenciales envía un código al correo del usuario")
     void enviaElCodigoAlCorreoTrasValidarLasCredenciales() {
-        // TODO: usuario activo con id y credenciales correctas; el generador devuelve un código fijo.
-        // TODO: comprobar que EnvioEmailPort recibe el correo del usuario y ese código.
-        fail("Funcionalidad no implementada");
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(clienteConId()));
+        when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
+
+        autenticacion.iniciarSesion(new IniciarSesionCommand("juan@uclm.es", "clave1234"));
+
+        // Se envía el código en claro (el usuario tiene que leerlo); lo que se guarda es su hash (ciclo 7).
+        verify(envioEmail).enviarCodigoVerificacion("juan@uclm.es", CODIGO);
     }
 
     @Test
