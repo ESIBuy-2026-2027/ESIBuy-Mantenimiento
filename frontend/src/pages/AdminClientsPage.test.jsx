@@ -11,7 +11,7 @@ describe('AdminClientsPage (HU24)', () => {
     renderApp(RUTA)
 
     expect(await screen.findByRole('heading', { level: 1, name: /^clientes$/i })).toBeInTheDocument()
-    expect(await screen.findByText('ruben.cortes@esibuy.test')).toBeInTheDocument()
+    expect(await screen.findByText('carlos.moreno@esibuy.test')).toBeInTheDocument()
     expect(screen.queryByText('ana.lopez@esibuy.test')).not.toBeInTheDocument()
   })
 

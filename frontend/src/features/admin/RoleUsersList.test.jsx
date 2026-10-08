@@ -7,7 +7,8 @@ import { abrirSesionPorApi } from '../../test/renderApp'
 import { renderWithProviders } from '../../test/utils'
 import RoleUsersList from './RoleUsersList'
 
-// El mock tiene 15 clientes (dos páginas): 8 activos, 5 desactivados y 2 bloqueados.
+// El mock tiene 15 clientes (dos páginas): 8 activos y 7 desactivados. Por defecto se ordenan por
+// nombre ascendente: la primera página va de Álvaro Campos Serrano a Pablo Gómez Martín.
 const ESPERA = { timeout: 3000 }
 
 async function renderClientes() {
@@ -20,7 +21,7 @@ async function renderClientes() {
       loadingLabel="Cargando clientes…"
     />,
   )
-  await screen.findByText('ruben.cortes@esibuy.test')
+  await screen.findByText('carlos.moreno@esibuy.test')
 }
 
 // Las filas se buscan por texto: no dependen de que Fluent marque la página con aria-hidden
@@ -28,6 +29,7 @@ async function renderClientes() {
 const filaDe = (email) => screen.getByText(email).closest('tr')
 const botonActivarDe = (email) => within(filaDe(email)).queryByText('Activar', { selector: 'button' })
 const filasDeDatos = () => within(screen.getByRole('table')).getAllByRole('row').slice(1)
+const primerNombre = () => within(filasDeDatos()[0]).getAllByRole('cell')[0].textContent
 
 async function confirmarActivacion(user, nombre) {
   await user.click(screen.getByRole('button', { name: `Activar a ${nombre}` }))
@@ -51,7 +53,7 @@ describe('RoleUsersList (HU24)', () => {
     const filtro = screen.getByRole('combobox', { name: 'Estado' })
     const opciones = within(filtro).getAllByRole('option').map((opcion) => opcion.textContent)
 
-    expect(opciones).toEqual(['Todos los estados', 'Activo', 'Bloqueado', 'Desactivado'])
+    expect(opciones).toEqual(['Todos los estados', 'Activo', 'Desactivado'])
     expect(screen.queryByRole('combobox', { name: 'Rol' })).not.toBeInTheDocument()
   })
 
@@ -61,16 +63,58 @@ describe('RoleUsersList (HU24)', () => {
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'Desactivado')
 
-    await waitFor(() => expect(filasDeDatos()).toHaveLength(5))
+    await waitFor(() => expect(filasDeDatos()).toHaveLength(7))
     filasDeDatos().forEach((fila) => expect(within(fila).getByText('Desactivado')).toBeInTheDocument())
   })
 
-  it('roleUsersList_ofreceActivarSoloEnLasCuentasDesactivadasOBloqueadas', async () => {
+  it('roleUsersList_ofreceActivarSoloEnLasCuentasDesactivadas', async () => {
     await renderClientes()
 
     expect(botonActivarDe('lucia.torres@esibuy.test')).toBeInTheDocument()
     expect(botonActivarDe('oscar.leon@esibuy.test')).toBeInTheDocument()
-    expect(botonActivarDe('ruben.cortes@esibuy.test')).not.toBeInTheDocument()
+    expect(botonActivarDe('carlos.moreno@esibuy.test')).not.toBeInTheDocument()
+  })
+
+  it('roleUsersList_porDefecto_ordenaPorNombreAscendente', async () => {
+    await renderClientes()
+
+    expect(screen.getByRole('combobox', { name: 'Ordenar por' })).toHaveValue('name')
+    expect(primerNombre()).toBe('Álvaro Campos Serrano')
+  })
+
+  it('roleUsersList_alCambiarElSentido_ordenaPorNombreDescendente', async () => {
+    const user = userEvent.setup()
+    await renderClientes()
+
+    await user.click(screen.getByRole('button', { name: 'Orden ascendente' }))
+
+    await waitFor(() => expect(primerNombre()).toBe('Sofía Cabrera Soler'))
+  })
+
+  it('roleUsersList_alOrdenarPorEstado_muestraPrimeroLosActivos', async () => {
+    const user = userEvent.setup()
+    await renderClientes()
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Ordenar por' }), 'Estado')
+
+    await waitFor(() => expect(primerNombre()).toBe('Carlos Moreno Gil'))
+    filasDeDatos()
+      .slice(0, 8)
+      .forEach((fila) => expect(within(fila).getByText('Activo')).toBeInTheDocument())
+  })
+
+  it('roleUsersList_buscaSoloPorNombreYNoPorEmail', async () => {
+    const user = userEvent.setup()
+    await renderClientes()
+    const buscador = screen.getByRole('searchbox', { name: 'Buscar por nombre' })
+
+    await user.type(buscador, 'torres')
+    await waitFor(() => expect(filasDeDatos()).toHaveLength(1))
+    expect(screen.getByText('lucia.torres@esibuy.test')).toBeInTheDocument()
+
+    await user.clear(buscador)
+    await user.type(buscador, 'esibuy')
+    expect(await screen.findByText(/no se han encontrado clientes/i)).toBeInTheDocument()
   })
 
   it('roleUsersList_alActivarUnCliente_loMuestraActivoYAvisa', async () => {
@@ -99,11 +143,11 @@ describe('RoleUsersList (HU24)', () => {
     const user = userEvent.setup()
     await renderClientes()
 
-    await user.type(screen.getByRole('searchbox', { name: 'Buscar por nombre o email' }), 'zzz')
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar por nombre' }), 'zzz')
 
     expect(await screen.findByText(/no se han encontrado clientes/i)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /limpiar filtros/i }))
-    expect(await screen.findByText('ruben.cortes@esibuy.test')).toBeInTheDocument()
+    expect(await screen.findByText('carlos.moreno@esibuy.test')).toBeInTheDocument()
   })
 
   it('roleUsersList_conErrorDeServidor_muestraMensajeYPermiteReintentar', async () => {
@@ -122,6 +166,6 @@ describe('RoleUsersList (HU24)', () => {
     expect(await screen.findByText('No se ha podido cargar el listado de clientes.')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /reintentar/i }))
 
-    expect(await screen.findByText('ruben.cortes@esibuy.test')).toBeInTheDocument()
+    expect(await screen.findByText('carlos.moreno@esibuy.test')).toBeInTheDocument()
   })
 })

@@ -96,4 +96,26 @@ describe('activateUser', () => {
     expect(error.status).toBe(500)
   })
 })
+
+describe('listUsers con búsqueda por nombre y ordenación (HU24)', () => {
+  it('listUsers_conSearchBySortYOrder_losEnviaEnLaConsulta', async () => {
+    const peticion = capturarPeticion()
+
+    await listUsers({ search: 'ana', page: 1, size: 10, searchBy: 'name', sort: 'status', order: 'desc' })
+
+    expect(peticion.url.searchParams.get('searchBy')).toBe('name')
+    expect(peticion.url.searchParams.get('sort')).toBe('status')
+    expect(peticion.url.searchParams.get('order')).toBe('desc')
+  })
+
+  it('listUsers_sinSearchBySortNiOrder_noLosEnvia', async () => {
+    const peticion = capturarPeticion()
+
+    await listUsers({ page: 1, size: 10 })
+
+    expect(peticion.url.searchParams.has('searchBy')).toBe(false)
+    expect(peticion.url.searchParams.has('sort')).toBe(false)
+    expect(peticion.url.searchParams.has('order')).toBe(false)
+  })
+})
 })
