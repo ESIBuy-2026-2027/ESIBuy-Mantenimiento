@@ -29,6 +29,7 @@ public class CodigoVerificacionMongoAdapter implements CodigoVerificacionReposit
 
     @Override
     public Optional<CodigoVerificacion> buscarPorUsuario(String usuarioId) {
-        return Optional.empty();
+        return repository.findByUsuarioIdAndPurpose(usuarioId, CodigoVerificacionDocumentMapper.PROPOSITO_LOGIN)
+                .map(mapper::aDominio);
     }
 }
