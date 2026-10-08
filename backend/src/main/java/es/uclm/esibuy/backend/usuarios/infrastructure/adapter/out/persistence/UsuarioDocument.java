@@ -20,6 +20,7 @@ public class UsuarioDocument {
     private final String email;
     private final String passwordHash;
     private final String rol;
+    private boolean desactivado;
 
     public UsuarioDocument(String email, String passwordHash, String rol) {
         this.email = email;
@@ -45,6 +46,14 @@ public class UsuarioDocument {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public boolean isDesactivado() {
+        return desactivado;
+    }
+
+    public void setDesactivado(boolean desactivado) {
+        this.desactivado = desactivado;
     }
 
 }

@@ -15,16 +15,22 @@ public class UsuarioDocumentMapper {
     public UsuarioDocument aDocumento(Usuario usuario) {
         UsuarioDocument documento = new UsuarioDocument(usuario.getEmail().valor(), usuario.getPasswordHash(), usuario.getRol().name());
         documento.setId(usuario.getId());
+        documento.setDesactivado(usuario.estaDesactivado());
         return documento;
     }
 
     // PENDIENTE (persistencia de los campos nuevos): el documento todavía no guarda nombre, apellidos,
-    // tipoCliente, desactivado ni los intentos fallidos. Mientras tanto, un CLIENTE se reconstruye como
+    // tipoCliente ni los intentos fallidos. Mientras tanto, un CLIENTE se reconstruye como
     // ESTANDAR (igual que Usuario.nuevoCliente) y el resto de roles sin tipo de cliente.
     public Usuario aDominio(UsuarioDocument documento) {
         Rol rol = Rol.valueOf(documento.getRol());
         TipoCliente tipoCliente = rol == Rol.CLIENTE ? TipoCliente.ESTANDAR : null;
-        return new Usuario(documento.getId(), null, null, new Email(documento.getEmail()),
+        Usuario usuario = new Usuario(documento.getId(), null, null, new Email(documento.getEmail()),
                 documento.getPasswordHash(), rol, tipoCliente);
+
+        if (documento.isDesactivado()) {
+            usuario.desactivar();
+        }
+        return usuario;
     }
 }
