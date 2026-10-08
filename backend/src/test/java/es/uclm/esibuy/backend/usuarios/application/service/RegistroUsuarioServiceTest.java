@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -127,5 +128,56 @@ class RegistroUsuarioServiceTest {
         assertThrows(ContrasenaInvalidaException.class, () -> registroUsuario.registrar(comando));
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
+    }
+
+    @Test
+    @DisplayName("HU1-CP01: registra un cliente con todos sus datos")
+    void registraClienteConTodosSusDatos() {
+        // TODO: comando completo (nombre, apellidos, fecha de nacimiento, dni, email, teléfono, password x2, tipo, imagen, acepta privacidad).
+        // TODO: el usuario guardado tiene esos datos personales y de cliente, rol CLIENTE y tipo ESTANDAR.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP14: rechaza el registro si las contraseñas no coinciden")
+    void rechazaContrasenasQueNoCoinciden() {
+        // TODO: password y repeticionPassword distintas -> ContrasenaInvalidaException y no se guarda nada.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP06: rechaza el registro si no se acepta la política de privacidad")
+    void rechazaSiNoAceptaLaPrivacidad() {
+        // TODO: aceptaPrivacidad = false -> UsuarioInvalidoException y no se guarda nada.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP06: guarda el consentimiento con la fecha y la versión")
+    void guardaElConsentimientoConLaFechaYLaVersion() {
+        // TODO: el usuario guardado tiene ConsentimientoPrivacidad con el instante del Clock fijo y la versión "1.0".
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP13: rechaza a un cliente menor de edad")
+    void rechazaClienteMenorDeEdad() {
+        // TODO: fecha de nacimiento de hace 17 años según el Clock fijo -> UsuarioInvalidoException y no se guarda nada.
+        // TODO: (pasa sin cambios en producción tras la fase 1: comprueba que el servicio pasa al dominio la fecha del Clock).
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP09: rechaza una contraseña común")
+    void rechazaContrasenaComun() {
+        // TODO: password "password1" (lista negra) -> ContrasenaInvalidaException y no se guarda nada. AB#226
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP10: rechaza una contraseña que contiene el nombre")
+    void rechazaContrasenaConElNombre() {
+        // TODO: password que contiene el nombre del comando -> ContrasenaInvalidaException y no se guarda nada. AB#226
+        fail("Funcionalidad no implementada");
     }
 }

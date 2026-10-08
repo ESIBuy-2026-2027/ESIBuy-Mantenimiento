@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import org.junit.jupiter.api.DisplayName;
@@ -137,6 +138,42 @@ class UsuarioTest {
         usuario.activar();
 
         assertTrue(usuario.estaActivo());
+    }
+
+    @Test
+    @DisplayName("HU1-CP11: rechaza un cliente sin datos de cliente")
+    void rechazaClienteSinDatosDeCliente() {
+        // TODO: construir un CLIENTE con datosCliente = null lanza UsuarioInvalidoException.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP11: rechaza datos de cliente en un rol que no es cliente")
+    void rechazaDatosDeClienteSiNoEsCliente() {
+        // TODO: construir un VENDEDOR o un ADMINISTRADOR con DatosCliente lanza UsuarioInvalidoException.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP13: registra a un cliente mayor de edad")
+    void nuevoClienteMayorDeEdadSeRegistra() {
+        // TODO: Usuario.nuevoCliente(...) con fecha de nacimiento de hace 30 años y hoy fijo devuelve un cliente
+        // TODO: con rol CLIENTE, activo, sin id y con sus DatosCliente.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP13: rechaza a un cliente menor de edad")
+    void rechazaClienteMenorDeEdad() {
+        // TODO: nuevoCliente con fecha de nacimiento de hace 17 años lanza UsuarioInvalidoException.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP13: acepta a un cliente que cumple 18 años hoy")
+    void aceptaClienteQueCumple18Hoy() {
+        // TODO: frontera: fecha de nacimiento = hoy menos 18 años exactos -> se registra.
+        fail("Funcionalidad no implementada");
     }
 
     private static Usuario cliente(String nombre, String apellidos) {

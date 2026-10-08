@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.usuarios.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import org.junit.jupiter.api.DisplayName;
@@ -66,6 +67,20 @@ class PoliticaContrasenasTest {
     @DisplayName("HU1-CP10: rechaza una contraseña que contiene la parte local del email")
     void rechazaContrasenaQueContieneLaParteLocalDelEmail() {
         assertThrows(ContrasenaInvalidaException.class, () -> validar("agarcia-2026"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP05: rechaza una contraseña de 65 caracteres")
+    void rechazaContrasenaDe65Caracteres() {
+        // TODO: frontera superior: 65 caracteres -> ContrasenaInvalidaException. AB#226
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP05: acepta una contraseña de exactamente 64 caracteres")
+    void aceptaContrasenaDe64Caracteres() {
+        // TODO: frontera superior: 64 caracteres válidos -> no lanza. AB#226
+        fail("Funcionalidad no implementada");
     }
 
     private static void validar(String contrasena) {
