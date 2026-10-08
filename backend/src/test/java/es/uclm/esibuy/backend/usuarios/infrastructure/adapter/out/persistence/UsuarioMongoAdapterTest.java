@@ -56,20 +56,6 @@ class UsuarioMongoAdapterTest {
     }
 
     @Test
-    @DisplayName("HU1-CP03: existePorCorreo devuelve true si el email ya está guardado")
-    void existePorCorreoDevuelveTrueSiEstaGuardado() {
-        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
-
-        assertTrue(adapter.existePorCorreo("juan@uclm.es"));
-    }
-
-    @Test
-    @DisplayName("HU1-CP03: existePorCorreo devuelve false si el email no está guardado")
-    void existePorCorreoDevuelveFalseSiNoEstaGuardado() {
-        assertFalse(adapter.existePorCorreo("juan@uclm.es"));
-    }
-
-    @Test
     @DisplayName("HU1-CP03: la base de datos rechaza un segundo usuario con el mismo email")
     void rechazaEmailDuplicadoEnLaBaseDeDatos() {
         // Llama a guardar dos veces sin pasar por existePorCorreo: simula dos registros simultáneos,
@@ -92,5 +78,19 @@ class UsuarioMongoAdapterTest {
         Document guardado = mongoTemplate.getCollection("usuarios").find().first();
         assertNotNull(guardado);
         assertFalse(guardado.containsKey("_class"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP03: existePorCorreo devuelve true si el email ya está guardado")
+    void existePorCorreoDevuelveTrueSiEstaGuardado() {
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+
+        assertTrue(adapter.existePorCorreo("juan@uclm.es"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP03: existePorCorreo devuelve false si el email no está guardado")
+    void existePorCorreoDevuelveFalseSiNoEstaGuardado() {
+        assertFalse(adapter.existePorCorreo("juan@uclm.es"));
     }
 }
