@@ -1,5 +1,7 @@
 import { ROLES } from '../../auth/roles'
 
+export const USERS_PAGE_SIZE = 10
+
 export const USER_STATUS = {
   PENDIENTE: 'PENDIENTE',
   ACTIVO: 'ACTIVO',
