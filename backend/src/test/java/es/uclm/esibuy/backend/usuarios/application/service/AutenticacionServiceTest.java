@@ -235,6 +235,8 @@ class AutenticacionServiceTest {
 
         // En la base de datos solo queda el hash: quien la lea no puede usar el código.
         assertEquals(HASH_CODIGO, guardado.getValue().getCodigoHash());
+        // Y queda asociado al usuario que ha iniciado sesión: el paso 2 lo busca por su id.
+        assertEquals("u-1", guardado.getValue().getUsuarioId());
     }
 
     @Test
