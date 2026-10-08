@@ -112,6 +112,20 @@ class UsuarioMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU2-CP04: la desactivación de la cuenta se conserva al volver a leer el usuario")
+    void conservaLaDesactivacionAlLeer() {
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+        Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
+        leido.desactivar();
+        adapter.guardar(leido);
+
+        Usuario releido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
+
+        assertTrue(releido.estaDesactivado());
+        assertEquals("DESACTIVADO", documentoEnBruto().getString("estado"));
+    }
+
+    @Test
     @DisplayName("HU1-CP03: existePorCorreo devuelve true si el email ya está guardado")
     void existePorCorreoDevuelveTrueSiEstaGuardado() {
         adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
