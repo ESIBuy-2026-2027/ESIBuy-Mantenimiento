@@ -26,7 +26,8 @@ const useStyles = makeStyles({
   },
 })
 
-export default function ProductsTable({ products, refreshing, label = 'Mis productos' }) {
+// `actions` es opcional: si se recibe, añade una columna con las acciones de cada fila.
+export default function ProductsTable({ products, refreshing, label = 'Mis productos', actions }) {
   const styles = useStyles()
   const tableStyles = useTableStyles()
 
@@ -40,6 +41,7 @@ export default function ProductsTable({ products, refreshing, label = 'Mis produ
             <TableHeaderCell>Precio</TableHeaderCell>
             <TableHeaderCell>Stock</TableHeaderCell>
             <TableHeaderCell>Estado</TableHeaderCell>
+            {actions && <TableHeaderCell>Acciones</TableHeaderCell>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -66,6 +68,7 @@ export default function ProductsTable({ products, refreshing, label = 'Mis produ
                   {product.disponible ? 'Disponible' : 'No disponible'}
                 </Badge>
               </TableCell>
+              {actions && <TableCell>{actions(product)}</TableCell>}
             </TableRow>
           ))}
         </TableBody>

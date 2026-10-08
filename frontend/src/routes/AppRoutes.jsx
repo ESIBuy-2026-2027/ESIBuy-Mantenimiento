@@ -9,7 +9,7 @@ import Home from '../pages/Home'
 import LoginPage from '../pages/LoginPage'
 import ProductsPage from '../pages/ProductsPage'
 import Register from '../pages/Register'
-import SellerProductNewPage from '../pages/SellerProductNewPage'
+import SellerProductFormPage from '../pages/SellerProductFormPage'
 import SellerProductsPage from '../pages/SellerProductsPage'
 import { PATHS } from './paths'
 
@@ -31,7 +31,8 @@ export default function AppRoutes() {
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.VENDEDOR]} />}>
           <Route path={PATHS.SELLER_PRODUCTS} element={<SellerProductsPage />} />
-          <Route path={PATHS.SELLER_PRODUCT_NEW} element={<SellerProductNewPage />} />
+          <Route path={PATHS.SELLER_PRODUCT_NEW} element={<SellerProductFormPage />} />
+          <Route path={PATHS.SELLER_PRODUCT_EDIT} element={<SellerProductFormPage />} />
         </Route>
       </Route>
     </Routes>
