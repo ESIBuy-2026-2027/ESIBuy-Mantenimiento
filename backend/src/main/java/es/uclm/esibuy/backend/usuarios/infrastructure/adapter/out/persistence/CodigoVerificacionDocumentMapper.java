@@ -4,7 +4,8 @@ import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
 
 /**
  * Convierte el {@code CodigoVerificacion} del dominio en el documento que se guarda en MongoDB
- * ({@code tokens_seguridad}, T232).
+ * ({@code tokens_seguridad}, T232), en los dos sentidos: {@code aDocumento} para guardar y
+ * {@code aDominio} para leer.
  */
 public class CodigoVerificacionDocumentMapper {
 
@@ -18,5 +19,10 @@ public class CodigoVerificacionDocumentMapper {
         documento.setAttempts(codigo.getIntentosFallidos());
         documento.setUsedAt(codigo.getUsadoEn());
         return documento;
+    }
+
+    public CodigoVerificacion aDominio(CodigoVerificacionDocument documento) {
+        return CodigoVerificacion.reconstruir(documento.getId(), documento.getUsuarioId(), documento.getTokenHash(),
+                documento.getExpiresAt(), documento.getUsedAt(), documento.getAttempts());
     }
 }
