@@ -38,6 +38,21 @@ public class Usuario {
         return new Usuario(null, null, null, email, passwordHash, Rol.CLIENTE, TipoCliente.ESTANDAR);
     }
 
+    /**
+     * Reconstruye un usuario ya guardado, con su estado de acceso (desactivación, intentos fallidos
+     * y bloqueo temporal). Lo usa la persistencia al leer de la base de datos; un usuario nuevo se
+     * crea con el constructor o con {@link #nuevoCliente}, que empiezan sin bloqueo.
+     */
+    public static Usuario reconstruir(Usuario datos, boolean desactivado, int intentosFallidos,
+            Instant bloqueadoHasta) {
+        Usuario usuario = new Usuario(datos.id, datos.nombre, datos.apellidos, datos.email,
+                datos.passwordHash, datos.rol, datos.tipoCliente);
+        usuario.desactivado = desactivado;
+        usuario.intentosFallidos = intentosFallidos;
+        usuario.bloqueadoHasta = bloqueadoHasta;
+        return usuario;
+    }
+
     private static TipoCliente exigirTipoClienteCoherente(Rol rol, TipoCliente tipoCliente) {
         boolean esCliente = rol == Rol.CLIENTE;
         if (esCliente && tipoCliente == null) {
@@ -97,6 +112,14 @@ public class Usuario {
 
     public boolean estaDesactivado() {
         return desactivado;
+    }
+
+    public int getIntentosFallidos() {
+        return intentosFallidos;
+    }
+
+    public Instant getBloqueadoHasta() {
+        return bloqueadoHasta;
     }
 
     public void desactivar() {
