@@ -24,15 +24,15 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
     @Override
     public void registrar(RegistrarUsuarioCommand comando) {
 
-        if (comando.contrasena() == null || comando.contrasena().length() < LONGITUD_MINIMA_CONTRASENA) {
+        if (comando.password() == null || comando.password().length() < LONGITUD_MINIMA_CONTRASENA) {
             throw new ContrasenaInvalidaException("La contraseña debe tener mínimo " + LONGITUD_MINIMA_CONTRASENA + " caracteres"); // REVISAR: Aquí deberia ser mensaje poco explicativo no?         
         }
-        if (usuarioRepository.existePorCorreo(comando.correo())) {
+        if (usuarioRepository.existePorCorreo(comando.email())) {
             throw new CorreoYaRegistradoException("El correo ya está registrado");
         }
 
-        String contrasenaHash = hashContrasena.hashear(comando.contrasena());   
-        Usuario usuario = Usuario.nuevoCliente(new Email(comando.correo()), contrasenaHash); // Comando → Usuario: el comando es un DTO de entrada, el usuario es un objeto de dominio
+        String contrasenaHash = hashContrasena.hashear(comando.password());   
+        Usuario usuario = Usuario.nuevoCliente(new Email(comando.email()), contrasenaHash); // Comando → Usuario: el comando es un DTO de entrada, el usuario es un objeto de dominio
         usuarioRepository.guardar(usuario);
     }
 

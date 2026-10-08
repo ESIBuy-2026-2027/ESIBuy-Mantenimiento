@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -40,5 +41,14 @@ class BCryptHashContrasenaAdapterTest {
 
         // Formato BCrypt: $<versión>$<coste>$<sal y hash>. El prefijo "$2a$10$" fija el coste acordado.
         assertTrue(hash.startsWith("$2a$10$"));
+    }
+
+    @Test
+    @DisplayName("HU2-CP02: coincide con el hash de la misma contraseña y no con otra")
+    void coincideConElHashDeLaMismaContrasena() {
+        String hash = adapter.hashear("clave1234");
+
+        assertTrue(adapter.coincide("clave1234", hash));
+        assertFalse(adapter.coincide("otraClave", hash));
     }
 }

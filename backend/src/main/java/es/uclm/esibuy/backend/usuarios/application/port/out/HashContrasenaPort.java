@@ -5,4 +5,6 @@ public interface HashContrasenaPort {
 
     String hashear(String string);
 
+    boolean coincide(String contrasena, String hash);
+
 }
