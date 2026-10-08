@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -130,16 +131,23 @@ class UsuarioMongoAdapterTest {
     }
 
     @Test
-    @DisplayName("HU1-CP01: guardar conserva el nombre, los apellidos y el tipo de cliente")
+    @DisplayName("HU1-CP01: guardar conserva los datos personales y los de cliente, en su subdocumento")
     void conservaLosDatosDePerfil() {
-        adapter.guardar(new Usuario(null, new DatosPersonales("Juan", "Pérez García", null, null),
-                new Email("juan@uclm.es"), "hash-simulado", new DatosCliente(TipoCliente.PREMIUM, null)));
+        DatosPersonales datosPersonales = new DatosPersonales("Juan", "Pérez García", "12345678Z", "612345678");
+        DatosCliente datosCliente = new DatosCliente(TipoCliente.PREMIUM, LocalDate.of(2001, 4, 12));
+        adapter.guardar(new Usuario(null, datosPersonales, new Email("juan@uclm.es"), "hash-simulado",
+                datosCliente));
 
         Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
 
-        assertEquals("Juan", leido.getNombre());
-        assertEquals("Pérez García", leido.getApellidos());
-        assertEquals(TipoCliente.PREMIUM, leido.getTipoCliente());
+        assertEquals(datosPersonales, leido.getDatosPersonales());
+        assertEquals(datosCliente, leido.getDatosRol());
+        // Forma del documento (opción B): lo común a varios roles en la raíz y lo del rol en su subdocumento.
+        Document guardado = documentoEnBruto();
+        assertEquals("12345678Z", guardado.getString("dni"));
+        assertEquals("612345678", guardado.getString("telefono"));
+        assertEquals("PREMIUM", guardado.get("cliente", Document.class).getString("tipoCliente"));
+        assertFalse(guardado.containsKey("tipoCliente"));
     }
 
     @Test
