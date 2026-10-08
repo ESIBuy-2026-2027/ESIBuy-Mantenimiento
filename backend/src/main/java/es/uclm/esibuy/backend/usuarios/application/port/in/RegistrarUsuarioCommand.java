@@ -17,11 +17,15 @@ package es.uclm.esibuy.backend.usuarios.application.port.in;
  * redefinirlo para ocultarla antes de que el comando pueda llegar a un log. SOLUCIONADO
  */
 
-public record RegistrarUsuarioCommand(String correo, String contrasena) {
+public record RegistrarUsuarioCommand(String email, String password) {
+
+    // Código repetido en IniciarSesionCommand mientras el registro solo tenga correo y contraseña.
+    // Cuando se complete el registro, este toString incluirá sus campos nuevos y dejará de coincidir.
+    // Los comandos se mantienen separados porque cada caso de uso evoluciona por su cuenta.
 
     @Override
     public String toString() {
-        return "RegistrarUsuarioCommand[correo=" + correo + ", contrasena=****]"; // Oculta la contraseña en el toString para evitar que se registre en los logs
+        return "RegistrarUsuarioCommand[email=" + email + ", password=****]"; // Oculta la contraseña en el toString para evitar que se registre en los logs
     }
 
 }

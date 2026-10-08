@@ -75,8 +75,8 @@ class RegistroUsuarioServiceTest {
 
         ArgumentCaptor<Usuario> usuarioGuardado = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).guardar(usuarioGuardado.capture());
-        assertEquals("hash-simulado", usuarioGuardado.getValue().getContrasenaHash());
-        assertNotEquals("clave1234", usuarioGuardado.getValue().getContrasenaHash());
+        assertEquals("hash-simulado", usuarioGuardado.getValue().getPasswordHash());
+        assertNotEquals("clave1234", usuarioGuardado.getValue().getPasswordHash());
     }
 
     @Test
