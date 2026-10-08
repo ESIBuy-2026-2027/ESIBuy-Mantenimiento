@@ -2,12 +2,14 @@ import { http, HttpResponse } from 'msw'
 
 const CLAVE_VALIDA = 'Mock-Clave-1!'
 const CODIGO_EMAIL = '654321'
+const CODIGO_AUTENTICADOR = '123456'
 const MAX_INTENTOS_FALLIDOS = 5
 
 const USUARIOS = [
   { id: 'u-1', nombre: 'Ada', apellidos: 'Admin', email: 'admin@esibuy.test', rol: 'ADMINISTRADOR', estado: 'ACTIVO' },
   { id: 'u-2', nombre: 'Vera', apellidos: 'Vendedora', email: 'vendedor@esibuy.test', rol: 'VENDEDOR', estado: 'ACTIVO' },
   { id: 'u-3', nombre: 'Carlos', apellidos: 'Cliente', email: 'cliente@esibuy.test', rol: 'CLIENTE', estado: 'ACTIVO' },
+  { id: 'u-5', nombre: 'Vicente', apellidos: 'Vacío', email: 'vendedor-vacio@esibuy.test', rol: 'VENDEDOR', estado: 'ACTIVO' },
   { id: 'u-4', nombre: 'Dani', apellidos: 'Desactivado', email: 'desactivado@esibuy.test', rol: 'CLIENTE', estado: 'DESACTIVADO' },
 ]
 
@@ -22,6 +24,10 @@ let estado = nuevoEstado()
 
 export function resetAuthMock() {
   estado = nuevoEstado()
+}
+
+export function getUsuarioEnSesion() {
+  return estado.usuarioEnSesion
 }
 
 const sinAutorizacion = () => new HttpResponse(null, { status: 401 })
@@ -56,13 +62,13 @@ export const authHandlers = [
       return sinAutorizacion()
     }
 
-    estado.paso = 'captcha'
-    return HttpResponse.json({ nextStep: 'captcha' })
+    estado.paso = 'authenticator'
+    return HttpResponse.json({ nextStep: 'authenticator' })
   }),
 
-  http.post('/api/auth/verify-captcha', async ({ request }) => {
-    const { token } = await request.json()
-    if (estado.paso !== 'captcha' || typeof token !== 'string' || token.length === 0) {
+  http.post('/api/auth/verify-authenticator-code', async ({ request }) => {
+    const { code } = await request.json()
+    if (estado.paso !== 'authenticator' || code !== CODIGO_AUTENTICADOR) {
       return sinAutorizacion()
     }
 

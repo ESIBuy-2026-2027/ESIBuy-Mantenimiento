@@ -18,11 +18,11 @@ El usuario inicia sesión en **tres pasos**:
 |---|---|---|
 | 1 | Credenciales | Correo electrónico y contraseña |
 | 2 | Código por correo (2FA) | Código de 6 dígitos que el backend envía a su correo |
-| 3 | Captcha de Google (3FA) | Casilla "No soy un robot" (reCAPTCHA v2) |
+| 3 | Microsoft Authenticator (3FA) | Código de 6 dígitos (TOTP) que genera la aplicación Microsoft Authenticator |
 
 Al completar el tercer paso el backend abre la sesión y el frontend redirige al usuario según su rol. Una vez iniciada la sesión, la cabecera sustituye los botones "Iniciar sesión" y "Registrarse" por "Cerrar sesión".
 
-> **Cambio respecto al diseño inicial.** El documento de contexto describía 2FA con TOTP y 3FA con código por correo. Por decisión del equipo, el 2FA pasa a ser el código por correo y el 3FA un captcha (el enunciado contempla el uso de captcha). Conviene saber que un captcha comprueba que quien accede es una persona, no quién es; protege frente a automatización, no frente al robo de credenciales.
+> **Cambio respecto al diseño anterior.** El tercer factor era un captcha de Google. Se sustituye por un código TOTP de Microsoft Authenticator, que sí comprueba que quien accede posee un dispositivo registrado (un captcha solo comprueba que es una persona). Se elimina la dependencia `react-google-recaptcha`.
 
 ---
 
@@ -40,8 +40,8 @@ sequenceDiagram
     U->>F: Código de 6 dígitos
     F->>B: POST /api/auth/verify-email-code
     B-->>F: 200
-    U->>F: Resuelve el captcha de Google
-    F->>B: POST /api/auth/verify-captcha {token}
+    U->>F: Código de Microsoft Authenticator
+    F->>B: POST /api/auth/verify-authenticator-code {code}
     B-->>F: 200 {usuario} + cookie de sesión httpOnly
     F->>F: Guarda el usuario en memoria y redirige según su rol
 ```
@@ -97,8 +97,7 @@ Todas las rutas son relativas a `frontend/src/`.
 |---|---|
 | `LoginForm.jsx` | Orquesta los tres pasos, controla el estado de envío y los errores. Solo avanza de paso cuando el backend responde bien. |
 | `CredentialsStep.jsx` | Paso 1. Valida que haya correo y contraseña (todos los errores a la vez) y **vacía la contraseña del estado en cuanto se envía**. |
-| `CodeStep.jsx` | Paso 2. Campo de código de 6 dígitos: solo admite números y vacía el valor al enviarlo. |
-| `CaptchaStep.jsx` | Paso 3. Muestra el captcha; exige resolverlo antes de enviar y lo reinicia tras cada intento (el token solo vale una vez). |
+| `CodeStep.jsx` | Pasos 2 y 3. Campo de código de 6 dígitos (se reutiliza para el correo y para Microsoft Authenticator): solo admite números y vacía el valor al enviarlo. |
 | `loginErrors.js` | Traduce los errores del backend a mensajes fijos para el usuario. |
 | `authFormStyles.js` | Estilos compartidos de los formularios. |
 | `LoginFlow.test.jsx` | Tests del flujo completo, los errores y las rutas protegidas. |
@@ -109,7 +108,6 @@ Todas las rutas son relativas a `frontend/src/`.
 |---|---|
 | `components/AppHeader.jsx` | Cabecera con el logo. Sin sesión muestra "Iniciar sesión" y "Registrarse"; con sesión, "Cerrar sesión". Mientras se comprueba la sesión no muestra ningún botón, para evitar parpadeos. |
 | `components/AppLayout.jsx` | Marco común: cabecera y contenido de la ruta. **La página de login queda fuera**, por lo que no lleva cabecera. |
-| `components/Captcha.jsx` | Envoltorio de `react-google-recaptcha`. Es el único archivo que conoce el proveedor del captcha. Si falta la clave, avisa en lugar de romper. |
 | `components/AppHeader.test.jsx` | Tests de la cabecera. |
 | `pages/LoginPage.jsx` | Página de login; redirige si ya hay sesión. |
 | `pages/AdminPage.jsx`, `ProductsPage.jsx`, `SellerProductsPage.jsx` | Páginas de destino, vacías a propósito. |
@@ -121,7 +119,7 @@ Todas las rutas son relativas a `frontend/src/`.
 
 | Archivo | Qué hace |
 |---|---|
-| `api/auth.js` | Funciones `getCurrentUser`, `login`, `verifyEmailCode`, `verifyCaptcha` y `logout`. |
+| `api/auth.js` | Funciones `getCurrentUser`, `login`, `verifyEmailCode`, `verifyAuthenticatorCode` y `logout`. |
 | `api/client.js` | Ahora el error (`ApiError`) incluye `code`, un identificador que envía el backend. Nunca se muestra el texto del error del servidor. |
 | `mocks/authHandlers.js` | Simula el backend de autenticación (ver sección 6). |
 | `test/renderApp.jsx`, `test/LocationProbe.jsx` | Utilidades de test para pintar la app completa y comprobar la ruta actual. |
@@ -138,7 +136,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | Higiene de datos sensibles | La contraseña y los códigos se vacían del estado al enviarse. Los campos usan `autocomplete` correcto (`current-password`, `one-time-code`). |
 | El backend impone el orden | El frontend sigue los pasos por comodidad, pero no se fía de ellos. La contraseña solo se envía en el paso 1. |
 | Sin redirección a URLs externas | Tras el login se va siempre al destino del rol; no se lee ninguna URL de la petición (evita el *open redirect*). |
-| Captcha de un solo uso | El token se descarta y el widget se reinicia tras cada intento. |
+| Código de Authenticator de un solo uso | El campo se vacía tras cada intento. El backend debe rechazar la reutilización de un código ya aceptado. |
 | Sin datos de pruebas en producción | Se comprobó que el build de producción no contiene los mocks ni sus credenciales. |
 
 ---
@@ -151,7 +149,7 @@ Todas las rutas son relativas a `frontend/src/`.
 |---|---|---|
 | `POST /api/auth/login` | `{ email, password }` | 200; envía el código al correo |
 | `POST /api/auth/verify-email-code` | `{ code }` | 200 |
-| `POST /api/auth/verify-captcha` | `{ token }` | 200 con el usuario y cookie de sesión |
+| `POST /api/auth/verify-authenticator-code` | `{ code }` | 200 con el usuario y cookie de sesión |
 | `GET /api/auth/me` | | 200 con el usuario, o 401 sin sesión |
 | `POST /api/auth/logout` | | 204 |
 
@@ -166,7 +164,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | 429 | Demasiados intentos |
 | 5xx o sin respuesta | "No se ha podido conectar con el servidor" |
 
-**Captcha en el backend:** el backend debe validar el `token` contra la API de Google (`siteverify`) con la **clave secreta**, que nunca debe estar en el frontend. El frontend solo conoce la clave pública.
+**Authenticator en el backend:** el backend valida el código TOTP (RFC 6238) con el secreto de cada usuario, que nunca llega al frontend. Queda pendiente definir cómo se **da de alta** el secreto (QR en el primer acceso o en el registro): el frontend aún no tiene esa pantalla.
 
 **Puntos pendientes de acordar con backend:**
 
@@ -184,11 +182,6 @@ Todas las rutas son relativas a `frontend/src/`.
 | Archivo | Variable | Uso |
 |---|---|---|
 | `.env.development` | `VITE_USE_MOCKS=true` | Activa los mocks en `npm run dev` |
-| `.env.development` | `VITE_RECAPTCHA_SITE_KEY` | Clave pública de **prueba** de Google: el captcha siempre se resuelve y muestra un aviso de "solo para pruebas" |
-| `.env.test` | `VITE_RECAPTCHA_SITE_KEY` | Valor ficticio para los tests (el captcha se sustituye por un simulador) |
-| Producción | `VITE_RECAPTCHA_SITE_KEY` | Clave pública real, registrada en la consola de reCAPTCHA v2. Debe definirse al compilar |
-
-Hace falta conexión a internet en desarrollo, porque el widget carga un script de Google.
 
 ### Usuarios del mock (contraseña `Mock-Clave-1!`)
 
@@ -199,7 +192,7 @@ Hace falta conexión a internet en desarrollo, porque el widget carga un script 
 | `cliente@esibuy.test` | Cliente | |
 | `desactivado@esibuy.test` | Cliente | Cuenta desactivada |
 
-Código del correo: `654321`. El captcha de prueba se marca directamente. Tras 5 contraseñas erróneas, el mock responde 429. Al recargar la página la sesión simulada se pierde.
+Código del correo: `654321`. Código de Microsoft Authenticator: `123456`. Tras 5 contraseñas erróneas, el mock responde 429. Al recargar la página la sesión simulada se pierde.
 
 ### Qué probar en el navegador
 
@@ -213,7 +206,7 @@ Código del correo: `654321`. El captcha de prueba se marca directamente. Tras 5
 ### Tests automáticos
 
 ```bash
-npx vitest run     # 40 tests
+npx vitest run     # 51 tests
 npm run lint
 npm run build
 ```
@@ -236,8 +229,8 @@ npm run build
 Este documento y el trabajo técnico que describe se hicieron con ayuda de un asistente de IA generativa, como exige el enunciado.
 
 - **Herramienta:** Claude (modelo de Anthropic), mediante su interfaz de chat.
-- **Qué generó la IA:** la arquitectura del login, todo el código de las secciones anteriores, los tests, los mocks de autenticación y este documento. Las decisiones de producto las tomó el equipo: el captcha como tercer factor, el proveedor (Google), las rutas en inglés, las páginas vacías y la cabecera con cierre de sesión.
-- **Cómo se comprobó:** el asistente reprodujo el proyecto en un entorno temporal, aparte del repositorio, con los archivos reales del equipo. Allí se ejecutaron **40 tests (todos en verde)**, ESLint sin errores y un build de producción correcto. También se comprobó que el build no contiene los mocks ni sus credenciales, y que el componente de captcha real se monta sin errores con React 19.
-- **Qué NO se comprobó:** el widget de Google en un navegador real (necesita cargar un script externo), ni el flujo contra un backend real. Debe verificarse en el proyecto del equipo.
+- **Qué generó la IA:** la arquitectura del login, todo el código de las secciones anteriores, los tests, los mocks de autenticación y este documento. Las decisiones de producto las tomó el equipo: Microsoft Authenticator como tercer factor (en lugar del captcha inicial), las rutas en inglés, las páginas vacías y la cabecera con cierre de sesión.
+- **Cómo se comprobó:** el asistente reprodujo el proyecto en un entorno temporal, aparte del repositorio, con los archivos reales del equipo. Allí se ejecutaron **40 tests (todos en verde)** con el captcha; tras sustituirlo por Authenticator la suite completa del frontend tiene **51 tests en verde**, ESLint sin errores y un build de producción correcto. También se comprobó que el build no contiene los mocks ni sus credenciales.
+- **Qué NO se comprobó:** la app Microsoft Authenticator real, ni el flujo contra un backend real. Debe verificarse en el proyecto del equipo.
 - **Cómo guió el proceso:** el asistente propuso el orden de commits y ramas siguiendo las convenciones del proyecto, y explicó cada paso para aplicarlo a mano.
 - **Revisión humana:** el código fue revisado, ejecutado y validado por el equipo antes de su integración. Revisado por: Ricardo.

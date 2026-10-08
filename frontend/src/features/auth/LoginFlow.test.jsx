@@ -1,21 +1,9 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../../test/renderApp'
-
-vi.mock('react-google-recaptcha', async () => {
-  const { createElement } = await import('react')
-  return {
-    default: ({ onChange }) =>
-      createElement(
-        'button',
-        { type: 'button', onClick: () => onChange('token-de-prueba') },
-        'Simular captcha resuelto',
-      ),
-  }
-})
 
 const CLAVE = 'Mock-Clave-1!'
 
@@ -30,15 +18,15 @@ async function resolverCodigoDeCorreo(user, codigo = '654321') {
   await user.click(screen.getByRole('button', { name: /verificar/i }))
 }
 
-async function resolverCaptcha(user) {
-  await user.click(await screen.findByRole('button', { name: /simular captcha resuelto/i }))
-  await user.click(screen.getByRole('button', { name: /entrar/i }))
+async function resolverCodigoDeAutenticador(user, codigo = '123456') {
+  await user.type(await screen.findByLabelText(/código de microsoft authenticator/i), codigo)
+  await user.click(screen.getByRole('button', { name: /verificar/i }))
 }
 
 async function completarLogin(user, email) {
   await escribirCredenciales(user, email, CLAVE)
   await resolverCodigoDeCorreo(user)
-  await resolverCaptcha(user)
+  await resolverCodigoDeAutenticador(user)
 }
 
 async function esperarRuta(ruta) {
@@ -172,7 +160,7 @@ describe('Login (HU2): paso 2, código por correo', () => {
     await resolverCodigoDeCorreo(user, '000000')
 
     expect(await screen.findByText(/código no es válido o ha caducado/i)).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /simular captcha resuelto/i })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/código de microsoft authenticator/i)).not.toBeInTheDocument()
   })
 
   it('login_enElCampoDeCodigo_ignoraLetrasYLimitaA6Digitos', async () => {
@@ -209,45 +197,43 @@ describe('Login (HU2): paso 2, código por correo', () => {
   })
 })
 
-describe('Login (HU2): paso 3, captcha', () => {
-  it('login_sinResolverElCaptcha_avisaYNoLlamaAlServidor', async () => {
+describe('Login (HU2): paso 3, Microsoft Authenticator', () => {
+  it('login_conCodigoDeAutenticadorIncorrecto_muestraErrorYNoAvanza', async () => {
     const user = userEvent.setup()
     renderApp('/login')
 
     await escribirCredenciales(user, 'admin@esibuy.test', CLAVE)
     await resolverCodigoDeCorreo(user)
-    await user.click(await screen.findByRole('button', { name: /entrar/i }))
+    await resolverCodigoDeAutenticador(user, '000000')
 
-    expect(screen.getByText(/marca la casilla/i)).toBeInTheDocument()
+    expect(await screen.findByText(/código de microsoft authenticator no es válido/i)).toBeInTheDocument()
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/)
   })
 
-  it('login_conCaptchaRechazadoPorElServidor_muestraErrorYPermiteReintentar', async () => {
-    server.use(http.post('/api/auth/verify-captcha', () => new HttpResponse(null, { status: 401 })))
+  it('login_conCodigoDeAutenticadorIncompleto_avisaSinLlamarAlServidor', async () => {
     const user = userEvent.setup()
     renderApp('/login')
 
     await escribirCredenciales(user, 'admin@esibuy.test', CLAVE)
     await resolverCodigoDeCorreo(user)
-    await resolverCaptcha(user)
+    await user.type(await screen.findByLabelText(/código de microsoft authenticator/i), '123')
+    await user.click(screen.getByRole('button', { name: /verificar/i }))
 
-    expect(await screen.findByText(/no se ha podido verificar el captcha/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /simular captcha resuelto/i })).toBeInTheDocument()
+    expect(screen.getByText(/el código tiene 6 dígitos/i)).toBeInTheDocument()
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/)
   })
 
-  it('login_alReintentarTrasUnCaptchaFallido_exigeResolverloDeNuevo', async () => {
-    server.use(http.post('/api/auth/verify-captcha', () => new HttpResponse(null, { status: 401 }), { once: true }))
+  it('login_alReintentarTrasUnCodigoDeAutenticadorFallido_permiteIntroducirloDeNuevo', async () => {
     const user = userEvent.setup()
     renderApp('/login')
 
     await escribirCredenciales(user, 'admin@esibuy.test', CLAVE)
     await resolverCodigoDeCorreo(user)
-    await resolverCaptcha(user)
-    await screen.findByText(/no se ha podido verificar el captcha/i)
-    await user.click(screen.getByRole('button', { name: /entrar/i }))
+    await resolverCodigoDeAutenticador(user, '000000')
+    await screen.findByText(/código de microsoft authenticator no es válido/i)
+    await resolverCodigoDeAutenticador(user)
 
-    expect(screen.getByText(/marca la casilla/i)).toBeInTheDocument()
+    await esperarRuta('/admin')
   })
 })
 
