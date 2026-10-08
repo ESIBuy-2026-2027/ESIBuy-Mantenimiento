@@ -102,4 +102,12 @@ class UsuarioMongoAdapterTest {
 
         assertFalse(adapter.buscarPorCorreo("juan@uclm.es").orElseThrow().estaActivo());
     }
+
+    @Test
+    @DisplayName("HU2-CP04: un usuario activo sigue activo al leerlo de la base de datos")
+    void conservaUnUsuarioActivo() {
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+
+        assertTrue(adapter.buscarPorCorreo("juan@uclm.es").orElseThrow().estaActivo());
+    }
 }
