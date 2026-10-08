@@ -54,9 +54,15 @@ describe('AdminUsersPage (HU19)', () => {
     expect(columna(2).every((rol) => rol === 'Vendedor')).toBe(true)
   })
 
-  it('HU19-CP04: al filtrar por Pendiente muestra solo cuentas pendientes', () => {
-    // TODO ciclo 15
-    expect.fail('Funcionalidad no implementada')
+  it('HU19-CP04: al filtrar por Pendiente muestra solo cuentas pendientes', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await esperarFilas(10)
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'Pendiente')
+
+    await esperarFilas(5)
+    expect(columna(3).every((estado) => estado === 'Pendiente')).toBe(true)
   })
 
   it('HU19-CP05: al pulsar "Siguiente" muestra la página 2 de 3', () => {
