@@ -5,6 +5,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioComma
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -121,12 +121,18 @@ class UsuarioControllerTest {
 
     @Test
     @DisplayName("HU1-CP07: un email sin dominio devuelve 400 con un mensaje genérico")
-    void emailSinDominioDevuelve400ConMensajeGenerico() {
-        // TODO: el caso de uso simulado lanza EmailInvalidoException con el mensaje real del dominio,
-        // que incluye "ana@localhost" (la validación web @Email deja pasar ese email).
-        // TODO: enviar POST /api/auth/registro con "ana@localhost" y "clave1234".
-        // TODO: comprobar 400, que existe $.mensaje y que no contiene "ana@localhost".
-        fail("Funcionalidad no implementada");
+    void emailSinDominioDevuelve400ConMensajeGenerico() throws Exception {
+        // La validación web (@Email) deja pasar "ana@localhost", pero el dominio lo rechaza.
+        // El doble lanza la excepción con el mensaje real del dominio, que incluye el email.
+        doThrow(new EmailInvalidoException("El email no tiene un formato válido: ana@localhost"))
+                .when(registroUsuario).registrar(any());
+
+        mockMvc.perform(post(URL_REGISTRO)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("ana@localhost", "clave1234")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensaje").exists())
+                .andExpect(jsonPath("$.mensaje").value(not(containsString("ana@localhost"))));
     }
 
     @Test
