@@ -41,6 +41,8 @@ caso("usuario como lo guarda la aplicación", "usuarios", { _id: ObjectId(), ema
   passwordHash: "$2a$10$hash", rol: "CLIENTE", tipoCliente: "ESTANDAR", estado: "ACTIVO",
   failedLoginAttempts: NumberInt(0), createdAt: ahora, updatedAt: ahora }, true);
 caso("administrador sin tipoCliente ni nombre", "usuarios", { email: "admin@uclm.es", passwordHash: "h", rol: "ADMINISTRADOR" }, true);
+caso("sin bloqueo con lockedUntil null (como el ejemplo del PDF)", "usuarios", { email: "nulo@uclm.es",
+  passwordHash: "h", rol: "CLIENTE", lockedUntil: null, lastLoginAt: null }, true);
 caso("campo nuevo no previsto (validación permisiva)", "usuarios", { email: "dni@uclm.es", passwordHash: "h", rol: "CLIENTE", dni: "12345678Z" }, true);
 caso("sin passwordHash", "usuarios", { email: "x@uclm.es", rol: "CLIENTE" }, false);
 caso("rol inexistente", "usuarios", { email: "y@uclm.es", passwordHash: "h", rol: "SUPERUSUARIO" }, false);

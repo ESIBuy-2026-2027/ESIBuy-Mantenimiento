@@ -74,7 +74,8 @@ validar("usuarios", ["email", "passwordHash", "rol"], {
   nombre: TEXTO_NO_VACIO,
   apellidos: TEXTO_NO_VACIO,
   failedLoginAttempts: ENTERO_NO_NEGATIVO,
-  lockedUntil: FECHA,
+  lockedUntil: { bsonType: ["date", "null"] }, // null = sin bloqueo, como en el ejemplo del PDF
+  lastLoginAt: { bsonType: ["date", "null"] },
   ...FECHAS_COMUNES,
 });
 
