@@ -53,7 +53,7 @@ export default function AdminUsersPage() {
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(1)
   const debouncedSearch = useDebouncedValue(search)
-  const { data, failed, retry } = useUsersList({
+  const { data, failed, refreshing, retry } = useUsersList({
     search: debouncedSearch,
     role,
     status,
@@ -114,7 +114,7 @@ export default function AdminUsersPage() {
 
       {data?.totalItems > 0 && (
         <>
-          <UsersTable users={data.items} />
+          <UsersTable users={data.items} refreshing={refreshing} />
           <Pagination
             page={data.page}
             totalPages={data.totalPages}

@@ -22,9 +22,12 @@ export function useUsersList({ search, role, status, page, size }) {
     }
   }, [key, search, role, status, page, size])
 
+  const isCurrent = result?.key === key
+
   return {
     data: result?.data ?? null,
-    failed: result?.key === key && result.failed,
+    failed: isCurrent && result.failed,
+    refreshing: Boolean(result) && !isCurrent,
     retry: () => setAttempt((value) => value + 1),
   }
 }

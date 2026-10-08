@@ -8,6 +8,7 @@ import {
   TableRow,
   Text,
   makeStyles,
+  mergeClasses,
   tokens,
 } from '@fluentui/react-components'
 import { ROLE_LABELS, STATUS_LABELS, USER_STATUS } from './usersConfig'
@@ -30,6 +31,15 @@ const useStyles = makeStyles({
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     borderRadius: tokens.borderRadiusXLarge,
     boxShadow: tokens.shadow4,
+    transitionProperty: 'opacity',
+    transitionDuration: tokens.durationNormal,
+    transitionTimingFunction: tokens.curveEasyEase,
+    '@media (prefers-reduced-motion: reduce)': {
+      transitionDuration: '0.01ms',
+    },
+  },
+  refreshing: {
+    opacity: 0.55,
   },
   row: {
     transitionProperty: 'background-color',
@@ -49,11 +59,11 @@ const useStyles = makeStyles({
   },
 })
 
-export default function UsersTable({ users }) {
+export default function UsersTable({ users, refreshing = false }) {
   const styles = useStyles()
 
   return (
-    <div className={styles.wrapper}>
+    <div className={mergeClasses(styles.wrapper, refreshing && styles.refreshing)} aria-busy={refreshing}>
       <Table aria-label="Usuarios">
         <TableHeader>
           <TableRow>
