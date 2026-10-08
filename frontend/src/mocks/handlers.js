@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import { adminSellersHandlers } from './adminSellersHandlers'
+import { adminsHandlers } from './adminsHandlers'
 import { authHandlers } from './authHandlers'
 import { productsHandlers } from './productsHandlers'
 import { registroHandlers } from './registroHandlers'
@@ -10,6 +11,7 @@ export const handlers = [
   ...productsHandlers,
   ...usersHandlers,
   ...adminSellersHandlers,
+  ...adminsHandlers,
   ...registroHandlers,
   http.get('/api/categorias', () =>
     HttpResponse.json([

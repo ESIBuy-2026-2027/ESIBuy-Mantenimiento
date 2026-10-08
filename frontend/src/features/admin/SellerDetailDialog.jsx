@@ -19,7 +19,12 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { Dismiss24Regular, PersonAvailable20Regular, PersonProhibited20Regular } from '@fluentui/react-icons'
-import { getAdminSeller, getAdminSellerOrders, getAdminSellerProducts } from '../../api/adminSellers'
+import {
+  getAdminSeller,
+  getAdminSellerOrders,
+  getAdminSellerProducts,
+  updateAdminSellerStatus,
+} from '../../api/adminSellers'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import ProductsTable from '../seller/ProductsTable'
 import OrdersTable from './OrdersTable'
@@ -69,11 +74,71 @@ function SellerOrdersTab({ sellerId }) {
   )
 }
 
-export default function SellerDetailDialog({ sellerId, onClose }) {
+// Texto de cada acción según el estado al que se quiere pasar al vendedor.
+const ACCIONES_DE_ESTADO = {
+  ACTIVO: {
+    boton: 'Activar usuario',
+    icono: <PersonAvailable20Regular />,
+    confirmar: 'Activar',
+    pregunta: (nombre) => `¿Seguro que quieres activar a ${nombre}? Podrá usar la plataforma como vendedor.`,
+    exito: 'El vendedor está activo y ya puede usar la plataforma.',
+  },
+  DESACTIVADO: {
+    boton: 'Desactivar usuario',
+    icono: <PersonProhibited20Regular />,
+    confirmar: 'Desactivar',
+    pregunta: (nombre) => `¿Seguro que quieres desactivar a ${nombre}? No podrá iniciar sesión.`,
+    exito: 'El vendedor está desactivado.',
+  },
+}
+
+function StatusConfirmDialog({ accion, nombre, enviando, onConfirm, onCancel }) {
+  return (
+    <Dialog open modalType="alert" onOpenChange={(_event, data) => !data.open && onCancel()}>
+      <DialogSurface>
+        <DialogBody>
+          <DialogTitle>{accion.boton}</DialogTitle>
+          <DialogContent>{accion.pregunta(nombre)}</DialogContent>
+          <DialogActions>
+            <Button onClick={onCancel} disabled={enviando}>
+              Cancelar
+            </Button>
+            <Button appearance="primary" onClick={onConfirm} disabled={enviando}>
+              {accion.confirmar}
+            </Button>
+          </DialogActions>
+        </DialogBody>
+      </DialogSurface>
+    </Dialog>
+  )
+}
+
+export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }) {
   const styles = useStyles()
   const [tab, setTab] = useState('data')
   const fetcher = useCallback(() => getAdminSeller(sellerId), [sellerId])
   const { data: seller, failed, retry } = useApiQuery(fetcher)
+  const [confirmando, setConfirmando] = useState(false)
+  const [enviando, setEnviando] = useState(false)
+  const [resultado, setResultado] = useState(null)
+
+  const nuevoEstado = seller?.estado === 'ACTIVO' ? 'DESACTIVADO' : 'ACTIVO'
+  const accion = ACCIONES_DE_ESTADO[nuevoEstado]
+
+  const cambiarEstado = async () => {
+    setEnviando(true)
+    try {
+      await updateAdminSellerStatus(seller.id, nuevoEstado)
+      setResultado({ intent: 'success', texto: accion.exito })
+      retry()
+      onStatusChange?.()
+    } catch {
+      setResultado({ intent: 'error', texto: 'No se ha podido cambiar el estado del vendedor. Inténtalo de nuevo.' })
+    } finally {
+      setEnviando(false)
+      setConfirmando(false)
+    }
+  }
 
   return (
     <Dialog open modalType="modal" onOpenChange={(_event, data) => !data.open && onClose()}>
@@ -93,6 +158,12 @@ export default function SellerDetailDialog({ sellerId, onClose }) {
                 Puedes consultar esta información, pero no modificarla.
               </MessageBarBody>
             </MessageBar>
+
+            {resultado && (
+              <MessageBar intent={resultado.intent}>
+                <MessageBarBody>{resultado.texto}</MessageBarBody>
+              </MessageBar>
+            )}
 
             {failed && (
               <MessageBar intent="error">
@@ -120,14 +191,21 @@ export default function SellerDetailDialog({ sellerId, onClose }) {
           </DialogContent>
           {seller && (
             <DialogActions>
-              {seller.estado === 'DESACTIVADO' ? (
-                <Button icon={<PersonAvailable20Regular />}>Activar usuario</Button>
-              ) : (
-                <Button icon={<PersonProhibited20Regular />}>Desactivar usuario</Button>
-              )}
+              <Button icon={accion.icono} onClick={() => setConfirmando(true)}>
+                {accion.boton}
+              </Button>
             </DialogActions>
           )}
         </DialogBody>
+        {confirmando && (
+          <StatusConfirmDialog
+            accion={accion}
+            nombre={seller.nombreComercial}
+            enviando={enviando}
+            onConfirm={cambiarEstado}
+            onCancel={() => setConfirmando(false)}
+          />
+        )}
       </DialogSurface>
     </Dialog>
   )
@@ -141,7 +219,20 @@ SellerOrdersTab.propTypes = {
   sellerId: PropTypes.string.isRequired,
 }
 
+StatusConfirmDialog.propTypes = {
+  accion: PropTypes.shape({
+    boton: PropTypes.string.isRequired,
+    confirmar: PropTypes.string.isRequired,
+    pregunta: PropTypes.func.isRequired,
+  }).isRequired,
+  nombre: PropTypes.string.isRequired,
+  enviando: PropTypes.bool.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
+}
+
 SellerDetailDialog.propTypes = {
   sellerId: PropTypes.string.isRequired,
   onClose: PropTypes.func.isRequired,
+  onStatusChange: PropTypes.func,
 }

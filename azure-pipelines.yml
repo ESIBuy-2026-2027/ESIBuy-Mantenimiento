@@ -1,0 +1,134 @@
+# CI en Azure Pipelines. Hace lo mismo que .github/workflows/ci.yml (conviven los dos)
+# y además publica en Azure los resultados de los tests y la cobertura del backend.
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+  # Un push nuevo a un PR cancela la ejecución anterior (como el concurrency de GitHub).
+  autoCancel: true
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  MAVEN_CACHE_FOLDER: $(Pipeline.Workspace)/.m2/repository
+  npm_config_cache: $(Pipeline.Workspace)/.npm
+
+jobs:
+  # Equivale a dorny/paths-filter: en un PR solo se lanza el job de la parte que ha cambiado.
+  # En un push a main o develop se lanzan los dos.
+  - job: changes
+    displayName: Detectar cambios
+    timeoutInMinutes: 5
+    steps:
+      - checkout: self
+        fetchDepth: 0
+
+      - bash: |
+          if [ "$BUILD_REASON" != "PullRequest" ]; then
+            backend=true
+            frontend=true
+          else
+            # En GitHub la rama destino llega como "develop"; en Azure Repos, como "refs/heads/develop".
+            target="${TARGET_BRANCH#refs/heads/}"
+            git fetch --no-tags origin "$target"
+            changed=$(git diff --name-only FETCH_HEAD...HEAD)
+            echo "Archivos modificados:"
+            echo "$changed"
+            backend=false
+            frontend=false
+            echo "$changed" | grep -qE '^(backend/|azure-pipelines\.yml$)' && backend=true
+            echo "$changed" | grep -qE '^(frontend/|azure-pipelines\.yml$)' && frontend=true
+          fi
+          echo "backend=$backend frontend=$frontend"
+          echo "##vso[task.setvariable variable=backend;isOutput=true]$backend"
+          echo "##vso[task.setvariable variable=frontend;isOutput=true]$frontend"
+        name: filter
+        displayName: Filtrar rutas modificadas
+        env:
+          BUILD_REASON: $(Build.Reason)
+          TARGET_BRANCH: $(System.PullRequest.TargetBranch)
+
+  - job: backend
+    displayName: Backend (Maven)
+    dependsOn: changes
+    condition: and(succeeded(), eq(dependencies.changes.outputs['filter.backend'], 'true'))
+    timeoutInMinutes: 15
+    steps:
+      - task: JavaToolInstaller@0
+        displayName: Set up JDK 25
+        inputs:
+          versionSpec: '25'
+          jdkArchitectureOption: x64
+          jdkSourceOption: PreInstalled
+
+      - task: Cache@2
+        displayName: Caché de Maven
+        inputs:
+          key: 'maven | "$(Agent.OS)" | backend/pom.xml'
+          restoreKeys: |
+            maven | "$(Agent.OS)"
+          path: $(MAVEN_CACHE_FOLDER)
+
+      - bash: ./mvnw -B verify -Dmaven.repo.local=$(MAVEN_CACHE_FOLDER)
+        displayName: Build and test
+        workingDirectory: backend
+
+      # Se publican aunque fallen los tests, para ver en Azure cuáles han fallado.
+      - task: PublishTestResults@2
+        displayName: Publicar resultados de los tests
+        condition: succeededOrFailed()
+        inputs:
+          testResultsFormat: JUnit
+          testResultsFiles: backend/target/surefire-reports/TEST-*.xml
+          testRunTitle: Backend
+
+      - task: PublishCodeCoverageResults@2
+        displayName: Publicar cobertura (JaCoCo)
+        condition: succeededOrFailed()
+        inputs:
+          summaryFileLocation: backend/target/site/jacoco/jacoco.xml
+
+      - publish: backend/target/surefire-reports
+        displayName: Upload test reports
+        artifact: backend-test-reports
+        condition: failed()
+
+  - job: frontend
+    displayName: Frontend (Vite)
+    dependsOn: changes
+    condition: and(succeeded(), eq(dependencies.changes.outputs['filter.frontend'], 'true'))
+    timeoutInMinutes: 10
+    steps:
+      - task: UseNode@1
+        displayName: Set up Node
+        inputs:
+          version: '22.x'
+
+      - task: Cache@2
+        displayName: Caché de npm
+        inputs:
+          key: 'npm | "$(Agent.OS)" | frontend/package-lock.json'
+          restoreKeys: |
+            npm | "$(Agent.OS)"
+          path: $(npm_config_cache)
+
+      - script: npm ci
+        displayName: Install dependencies
+        workingDirectory: frontend
+
+      - script: npm run lint
+        displayName: Lint
+        workingDirectory: frontend
+
+      - script: npm run build
+        displayName: Build
+        workingDirectory: frontend

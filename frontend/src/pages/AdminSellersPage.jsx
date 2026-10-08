@@ -131,7 +131,11 @@ export default function AdminSellersPage() {
       )}
 
       {selectedSellerId && (
-        <SellerDetailDialog sellerId={selectedSellerId} onClose={() => setSelectedSellerId(null)} />
+        <SellerDetailDialog
+          sellerId={selectedSellerId}
+          onClose={() => setSelectedSellerId(null)}
+          onStatusChange={retry}
+        />
       )}
     </main>
   )

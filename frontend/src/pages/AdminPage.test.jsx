@@ -40,6 +40,16 @@ describe('AdminPage (HU18)', () => {
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/admin$/))
   })
 
+  it('adminPage_alPulsarAdministradores_abreElListadoDeAdministradores', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/admin')
+
+    await user.click(await screen.findByRole('button', { name: /administradores/i }))
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/admin\/admins$/))
+  })
+
   it('adminPage_sinSesion_redirigeAlLogin', async () => {
     renderApp('/admin')
 
