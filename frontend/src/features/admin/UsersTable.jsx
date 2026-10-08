@@ -1,4 +1,5 @@
 import {
+  Badge,
   Table,
   TableBody,
   TableCell,
@@ -9,9 +10,16 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { ROLE_LABELS, STATUS_LABELS } from './usersConfig'
+import { ROLE_LABELS, STATUS_LABELS, USER_STATUS } from './usersConfig'
 
 const COLUMNS = ['Nombre', 'Email', 'Rol', 'Estado', 'Fecha de alta']
+
+const STATUS_BADGE_COLORS = {
+  [USER_STATUS.PENDIENTE]: 'warning',
+  [USER_STATUS.ACTIVO]: 'success',
+  [USER_STATUS.BLOQUEADO]: 'danger',
+  [USER_STATUS.DESACTIVADO]: 'subtle',
+}
 
 const dateFormatter = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
@@ -29,9 +37,15 @@ const useStyles = makeStyles({
     ':hover': {
       backgroundColor: tokens.colorBrandBackground2,
     },
+    '@media (prefers-reduced-motion: reduce)': {
+      transitionDuration: '0.01ms',
+    },
   },
   name: {
     minWidth: '180px',
+  },
+  date: {
+    fontVariantNumeric: 'tabular-nums',
   },
 })
 
@@ -56,8 +70,12 @@ export default function UsersTable({ users }) {
               </TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>{ROLE_LABELS[user.rol]}</TableCell>
-              <TableCell>{STATUS_LABELS[user.estado]}</TableCell>
-              <TableCell>{dateFormatter.format(new Date(user.fechaAlta))}</TableCell>
+              <TableCell>
+                <Badge appearance="tint" color={STATUS_BADGE_COLORS[user.estado]}>
+                  {STATUS_LABELS[user.estado]}
+                </Badge>
+              </TableCell>
+              <TableCell className={styles.date}>{dateFormatter.format(new Date(user.fechaAlta))}</TableCell>
             </TableRow>
           ))}
         </TableBody>
