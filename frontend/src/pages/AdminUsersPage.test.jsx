@@ -112,7 +112,7 @@ describe('AdminUsersPage (HU19)', () => {
 
     await user.type(screen.getByRole('searchbox', { name: 'Buscar por nombre o email' }), 'ana')
 
-    await esperarFilas(2)
+    await waitFor(() => expect(filasDeDatos()).toHaveLength(2))
   })
 
   it('HU19-CP06: estando en la página 2, al filtrar vuelve a la página 1', async () => {
@@ -121,7 +121,7 @@ describe('AdminUsersPage (HU19)', () => {
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'Pendiente')
 
-    await esperarFilas(5)
+    await waitFor(() => expect(filasDeDatos()).toHaveLength(5))
   })
 
   it('HU19-CP07: sin coincidencias muestra que no se han encontrado usuarios', async () => {

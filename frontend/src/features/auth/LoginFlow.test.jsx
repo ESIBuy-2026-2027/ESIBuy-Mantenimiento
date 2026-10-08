@@ -49,7 +49,7 @@ describe('Login (HU2): redirección por rol', () => {
 
     await completarLogin(user, 'vendedor@esibuy.test')
 
-    await esperarRuta('/seller/products')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/seller/products$')))
   })
 
   it('login_cliente_redirigeALosProductos', async () => {
@@ -58,7 +58,7 @@ describe('Login (HU2): redirección por rol', () => {
 
     await completarLogin(user, 'cliente@esibuy.test')
 
-    await esperarRuta('/products')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/products$')))
   })
 
   it('login_tras_completarse_noGuardaNadaEnElAlmacenamientoDelNavegador', async () => {
@@ -233,7 +233,7 @@ describe('Login (HU2): paso 3, Microsoft Authenticator', () => {
     await screen.findByText(/código de microsoft authenticator no es válido/i)
     await resolverCodigoDeAutenticador(user)
 
-    await esperarRuta('/admin')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/admin$')))
   })
 })
 
@@ -241,28 +241,28 @@ describe('Rutas protegidas y sesión', () => {
   it('rutaDeAdmin_sinSesion_redirigeAlLogin', async () => {
     renderApp('/admin')
 
-    await esperarRuta('/login')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/login$')))
   })
 
   it('rutaDeAdmin_conSesionDeCliente_redirigeASusProductos', async () => {
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/admin')
 
-    await esperarRuta('/products')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/products$')))
   })
 
   it('rutaDeVendedor_conSesionDeAdmin_redirigeAlPanelDeAdmin', async () => {
     await abrirSesionPorApi('admin@esibuy.test')
     renderApp('/seller/products')
 
-    await esperarRuta('/admin')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/admin$')))
   })
 
   it('login_conSesionYaIniciada_redirigeSegunElRol', async () => {
     await abrirSesionPorApi('vendedor@esibuy.test')
     renderApp('/login')
 
-    await esperarRuta('/seller/products')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/seller/products$')))
   })
 
   it('productos_sinSesion_esUnaRutaPublica', async () => {
