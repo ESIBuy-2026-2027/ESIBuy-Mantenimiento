@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.time.Instant;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -41,9 +42,20 @@ class CodigoVerificacionTest {
     void noSePuedeUsarDosVeces() {
         CodigoVerificacion codigo = CodigoVerificacion.nuevo("u-1", "hash-del-codigo", AHORA);
 
-        codigo.marcarUsado();
+        codigo.marcarUsado(AHORA);
 
         assertFalse(codigo.puedeUsarse(AHORA));
+    }
+
+    @Test
+    @DisplayName("HU2-CP09: al marcar el código como usado se guarda la hora de uso")
+    void marcarUsadoGuardaLaHoraDeUso() {
+        // Trazabilidad (T232): se sabe cuándo se usó el código, no solo que se usó.
+        CodigoVerificacion codigo = CodigoVerificacion.nuevo("u-1", "hash-del-codigo", AHORA);
+
+        codigo.marcarUsado(AHORA.plusSeconds(30));
+
+        assertEquals(AHORA.plusSeconds(30), codigo.getUsadoEn());
     }
 
     @Test
