@@ -155,6 +155,14 @@ class UsuarioTest {
         assertEquals(bloqueadoHasta, usuario.getBloqueadoHasta());
     }
 
+    @Test
+    @DisplayName("HU1-CP11: rechaza reconstruir un usuario con intentos fallidos negativos")
+    void rechazaReconstruirConIntentosNegativos() {
+        Usuario datos = cliente("Ana", "García López");
+
+        assertThrows(UsuarioInvalidoException.class, () -> Usuario.reconstruir(datos, false, -1, null));
+    }
+
     private static Usuario cliente(String nombre, String apellidos) {
         return new Usuario("u-1", nombre, apellidos, EMAIL, HASH, Rol.CLIENTE, TipoCliente.ESTANDAR);
     }
