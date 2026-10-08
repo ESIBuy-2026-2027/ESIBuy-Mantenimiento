@@ -74,6 +74,25 @@ class CodigoVerificacionTest {
     }
 
     @Test
+    @DisplayName("HU2-CP09: reconstruir un código guardado conserva su id, su caducidad, su uso y sus intentos")
+    void reconstruirConservaElEstado() {
+        // T232: lo usa la persistencia al leer un código de MongoDB.
+        Instant expiraEn = AHORA.plus(Duration.ofMinutes(10));
+        Instant usadoEn = AHORA.plusSeconds(30);
+
+        CodigoVerificacion codigo = CodigoVerificacion.reconstruir("c-1", "u-1", "hash-del-codigo", expiraEn,
+                usadoEn, 2);
+
+        assertEquals("c-1", codigo.getId());
+        assertEquals("u-1", codigo.getUsuarioId());
+        assertEquals("hash-del-codigo", codigo.getCodigoHash());
+        assertEquals(expiraEn, codigo.getExpiraEn());
+        assertEquals(usadoEn, codigo.getUsadoEn());
+        assertEquals(2, codigo.getIntentosFallidos());
+        assertFalse(codigo.puedeUsarse(AHORA));
+    }
+
+    @Test
     @DisplayName("HU2-CP12: rechaza un código sin usuario o sin hash")
     void rechazaCodigoSinUsuarioOSinHash() {
         assertThrows(CodigoVerificacionInvalidoException.class,
