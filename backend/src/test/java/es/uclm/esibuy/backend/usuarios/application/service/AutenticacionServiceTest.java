@@ -12,6 +12,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPor
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
+import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
@@ -20,6 +21,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -32,6 +35,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -214,10 +218,19 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP12: el código se guarda hasheado y antes de enviarlo")
     void guardaElCodigoHasheado() {
-        // TODO: iniciar sesión con credenciales correctas.
-        // TODO: comprobar que el repositorio de códigos guarda el hash (no el código en claro).
-        // TODO: comprobar con InOrder que se guarda antes de enviar el correo (P6).
-        fail("Funcionalidad no implementada");
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(clienteConId()));
+        when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
+
+        autenticacion.iniciarSesion(new IniciarSesionCommand("juan@uclm.es", "clave1234"));
+
+        // Se guarda antes de enviar: si el envío falla basta con repetir el login (plan de la T21, P6).
+        InOrder orden = inOrder(codigoRepository, envioEmail);
+        ArgumentCaptor<CodigoVerificacion> guardado = ArgumentCaptor.forClass(CodigoVerificacion.class);
+        orden.verify(codigoRepository).guardar(guardado.capture());
+        orden.verify(envioEmail).enviarCodigoVerificacion("juan@uclm.es", CODIGO);
+
+        // En la base de datos solo queda el hash: quien la lea no puede usar el código.
+        assertEquals(HASH_CODIGO, guardado.getValue().getCodigoHash());
     }
 
     @Test
