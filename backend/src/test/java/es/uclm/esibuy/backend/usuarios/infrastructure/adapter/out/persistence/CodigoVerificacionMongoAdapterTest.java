@@ -13,11 +13,13 @@ import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+import java.time.Duration;
 import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // Test de integración del adaptador de MongoDB de los códigos de verificación del login (HU2, T232).
 // Usa un MongoDB real en Docker (Testcontainers): Docker Desktop debe estar abierto. InicializadorColecciones
@@ -54,6 +56,21 @@ class CodigoVerificacionMongoAdapterTest {
         assertEquals("LOGIN_2FA", guardado.getString("purpose"));
         assertFalse(guardado.containsKey("codigo"));
         assertFalse(guardado.containsKey("_class"));
+    }
+
+    @Test
+    @DisplayName("HU2-CP08: buscarPorUsuario devuelve el código guardado con su caducidad")
+    void buscarPorUsuarioDevuelveElCodigoGuardado() {
+        adapter.guardar(CodigoVerificacion.nuevo("u-1", "hash-del-codigo", AHORA));
+
+        CodigoVerificacion leido = adapter.buscarPorUsuario("u-1").orElseThrow();
+
+        assertNotNull(leido.getId());
+        assertEquals("u-1", leido.getUsuarioId());
+        assertEquals("hash-del-codigo", leido.getCodigoHash());
+        assertEquals(AHORA.plus(Duration.ofMinutes(10)), leido.getExpiraEn());
+        assertTrue(leido.puedeUsarse(AHORA));
+        assertFalse(leido.puedeUsarse(AHORA.plus(Duration.ofMinutes(10))));
     }
 
     // MongoTemplate devuelve el documento tal cual está en MongoDB, con los nombres de sus campos.
