@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-08T12:00:00Z",
+  "title": "Design System: ESIBuy",
+  "extensions": {
+    "colorMeta": {
+      "brand-orange": { "role": "primary", "displayName": "Naranja Mercado", "canonical": "#EA580C", "tonalRamp": ["#2B0E02", "#5C1F08", "#9A3412", "#C2410C", "#EA580C", "#FB8A3C", "#FEC89F", "#FFF4EA"] },
+      "brand-orange-deep": { "role": "primary", "displayName": "Naranja Tostado", "canonical": "#C2410C", "tonalRamp": ["#2B0E02", "#5C1F08", "#9A3412", "#C2410C", "#EA580C", "#FB8A3C", "#FEC89F", "#FFF4EA"] },
+      "brand-orange-pressed": { "role": "primary", "displayName": "Naranja Brasa", "canonical": "#5C1F08", "tonalRamp": ["#0A0300", "#2B0E02", "#431707", "#5C1F08", "#7C2D12", "#9A3412", "#C2410C", "#EA580C"] },
+      "brand-wash": { "role": "primary", "displayName": "Velo Naranja", "canonical": "#FFF4EA", "tonalRamp": ["#FB8A3C", "#FD9F5C", "#FDB37C", "#FEC89F", "#FED7B9", "#FFE6D3", "#FFF4EA", "#FFFFFF"] },
+      "ink": { "role": "neutral", "displayName": "Tinta", "canonical": "#242424", "tonalRamp": ["#141414", "#242424", "#424242", "#616161", "#9E9E9E", "#D1D1D1", "#E0E0E0", "#F5F5F5"] },
+      "ink-secondary": { "role": "neutral", "displayName": "Tinta Secundaria", "canonical": "#424242", "tonalRamp": ["#141414", "#242424", "#424242", "#616161", "#9E9E9E", "#D1D1D1", "#E0E0E0", "#F5F5F5"] },
+      "ink-muted": { "role": "neutral", "displayName": "Tinta Apagada", "canonical": "#616161", "tonalRamp": ["#141414", "#242424", "#424242", "#616161", "#9E9E9E", "#D1D1D1", "#E0E0E0", "#F5F5F5"] },
+      "surface": { "role": "neutral", "displayName": "Superficie", "canonical": "#FFFFFF", "tonalRamp": ["#242424", "#616161", "#9E9E9E", "#D1D1D1", "#E0E0E0", "#F5F5F5", "#FAFAFA", "#FFFFFF"] },
+      "surface-subtle": { "role": "neutral", "displayName": "Superficie Suave", "canonical": "#F5F5F5", "tonalRamp": ["#242424", "#616161", "#9E9E9E", "#D1D1D1", "#E0E0E0", "#F5F5F5", "#FAFAFA", "#FFFFFF"] },
+      "stroke": { "role": "neutral", "displayName": "Trazo", "canonical": "#D1D1D1", "tonalRamp": ["#242424", "#616161", "#9E9E9E", "#D1D1D1", "#E0E0E0", "#F5F5F5", "#FAFAFA", "#FFFFFF"] },
+      "stroke-soft": { "role": "neutral", "displayName": "Trazo Suave", "canonical": "#E0E0E0", "tonalRamp": ["#242424", "#616161", "#9E9E9E", "#D1D1D1", "#E0E0E0", "#F5F5F5", "#FAFAFA", "#FFFFFF"] },
+      "focus-ring": { "role": "neutral", "displayName": "Anillo de Foco", "canonical": "#000000", "tonalRamp": ["#000000", "#141414", "#242424", "#424242", "#616161", "#9E9E9E", "#D1D1D1", "#F5F5F5"] },
+      "danger": { "role": "neutral", "displayName": "Rojo Aviso", "canonical": "#BC2F32", "tonalRamp": ["#3B0A0B", "#6E0811", "#8F1F22", "#BC2F32", "#D13438", "#E37D80", "#F1BBBC", "#FDF3F4"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Solo el titular de la home; 32 px / 40 px en móvil." },
+      "headline": { "displayName": "Headline (Title1)", "purpose": "Título de cada página de trabajo." },
+      "title": { "displayName": "Title (Subtitle1)", "purpose": "Títulos de estado vacío y de tarjeta." },
+      "body": { "displayName": "Body", "purpose": "Contenido, celdas de tabla y campos." },
+      "label": { "displayName": "Label", "purpose": "Píldoras y etiquetas pequeñas." }
+    },
+    "shadows": [
+      { "name": "shadow4", "value": "0 0 2px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.14)", "purpose": "Tablas y tarjetas en reposo." },
+      { "name": "shadow16", "value": "0 0 2px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.14)", "purpose": "Tarjeta del panel en hover." },
+      { "name": "shadow28", "value": "0 0 8px rgba(0,0,0,0.12), 0 14px 28px rgba(0,0,0,0.14)", "purpose": "Un único panel protagonista por pantalla (login, home)." }
+    ],
+    "motion": [
+      { "name": "durationFast", "value": "150ms", "purpose": "Hover de filas de tabla." },
+      { "name": "durationNormal", "value": "200ms", "purpose": "Elevación de tarjetas, opacidad al refrescar." },
+      { "name": "curveEasyEase", "value": "cubic-bezier(0.33,0,0.67,1)", "purpose": "Curva por defecto de todas las transiciones." }
+    ],
+    "breakpoints": [
+      { "name": "desktop", "value": "900px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "La acción principal de una zona; una por zona.",
+      "html": "<button class=\"ds-btn-primary\">Añadir producto</button>",
+      "css": ".ds-btn-primary { background: #EA580C; color: #fff; border: 1px solid transparent; border-radius: 4px; padding: 5px 12px; min-height: 32px; font: 600 14px/20px 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; cursor: pointer; transition: background-color 150ms cubic-bezier(0.33,0,0.67,1); } .ds-btn-primary:hover { background: #C2410C; } .ds-btn-primary:active { background: #5C1F08; } .ds-btn-primary:focus-visible { outline: 2px solid #000; outline-offset: 2px; }"
+    },
+    {
+      "name": "Botón sutil",
+      "kind": "button",
+      "refersTo": "button-subtle",
+      "description": "Acciones de navegación en cabecera y paginación.",
+      "html": "<button class=\"ds-btn-subtle\">Iniciar sesión</button>",
+      "css": ".ds-btn-subtle { background: transparent; color: #242424; border: 1px solid transparent; border-radius: 4px; padding: 5px 12px; min-height: 32px; font: 600 14px/20px 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; cursor: pointer; transition: background-color 150ms cubic-bezier(0.33,0,0.67,1); } .ds-btn-subtle:hover { background: #F5F5F5; } .ds-btn-subtle:focus-visible { outline: 2px solid #000; outline-offset: 2px; }"
+    },
+    {
+      "name": "Buscador",
+      "kind": "input",
+      "description": "Field + SearchBox de Fluent con etiqueta visible.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Buscar por nombre</span><input class=\"ds-input-search\" type=\"search\" placeholder=\"Escribe el nombre de un producto\"></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 2px; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; } .ds-field-label { font: 400 14px/20px inherit; color: #242424; } .ds-input-search { font: 400 14px/20px inherit; color: #242424; background: #fff; border: 1px solid #D1D1D1; border-bottom-color: #616161; border-radius: 4px; padding: 5px 10px; min-height: 32px; } .ds-input-search:hover { border-color: #C7C7C7; border-bottom-color: #575757; } .ds-input-search:focus-visible { outline: none; border-bottom: 2px solid #EA580C; }"
+    },
+    {
+      "name": "Cabecera",
+      "kind": "nav",
+      "description": "Logotipo textual con 'Buy' en naranja y acciones de cuenta.",
+      "html": "<header class=\"ds-header\"><a class=\"ds-logo\" href=\"#\">ESI<span>Buy</span></a><nav class=\"ds-actions\"><button class=\"ds-h-subtle\">Iniciar sesión</button><button class=\"ds-h-primary\">Registrarse</button></nav></header>",
+      "css": ".ds-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; } .ds-logo { color: #242424; text-decoration: none; font-size: 20px; font-weight: 700; } .ds-logo span { color: #EA580C; } .ds-logo:hover { color: #EA580C; } .ds-actions { display: flex; gap: 8px; } .ds-h-subtle, .ds-h-primary { font: 600 14px/20px inherit; border-radius: 4px; padding: 5px 12px; border: 1px solid transparent; cursor: pointer; } .ds-h-subtle { background: transparent; color: #242424; } .ds-h-subtle:hover { background: #F5F5F5; } .ds-h-primary { background: #EA580C; color: #fff; } .ds-h-primary:hover { background: #C2410C; }"
+    },
+    {
+      "name": "Tabla de datos",
+      "kind": "custom",
+      "refersTo": "data-surface",
+      "description": "Tabla de Fluent en superficie blanca con desplazamiento horizontal y hover naranja pálido.",
+      "html": "<div class=\"ds-table-wrap\"><table class=\"ds-table\"><thead><tr><th>Nombre</th><th>Email</th><th>Rol</th></tr></thead><tbody><tr><td class=\"ds-strong\">Ana López García</td><td>ana.lopez@esibuy.test</td><td>Administrador</td></tr><tr><td class=\"ds-strong\">Mariana Ruiz</td><td>mariana.ruiz@esibuy.test</td><td>Vendedor</td></tr></tbody></table></div>",
+      "css": ".ds-table-wrap { overflow-x: auto; background: #fff; border: 1px solid #E0E0E0; border-radius: 8px; box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.14); } .ds-table { width: 100%; border-collapse: collapse; font: 400 14px/20px 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; color: #242424; } .ds-table th { text-align: left; font-weight: 400; padding: 8px 12px; border-bottom: 1px solid #E0E0E0; } .ds-table td { padding: 8px 12px; border-bottom: 1px solid #E0E0E0; } .ds-table tbody tr { transition: background-color 150ms; } .ds-table tbody tr:hover { background: #FFF4EA; } .ds-strong { font-weight: 600; min-width: 180px; }"
+    },
+    {
+      "name": "Estado vacío",
+      "kind": "card",
+      "refersTo": "empty-state",
+      "description": "Superficie con borde discontinuo, medallón naranja, título, descripción y acción opcional.",
+      "html": "<section class=\"ds-empty\"><span class=\"ds-medallion\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><circle cx=\"11\" cy=\"11\" r=\"6\"/><path d=\"M20 20l-4.5-4.5\"/></svg></span><h2 class=\"ds-empty-title\">No hay productos que coincidan con los filtros</h2><p class=\"ds-empty-text\">Prueba con otro nombre u otra categoría.</p></section>",
+      "css": ".ds-empty { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 32px 16px; text-align: center; background: #fff; border: 1px dashed #D1D1D1; border-radius: 8px; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; } .ds-medallion { display: flex; align-items: center; justify-content: center; width: 72px; height: 72px; border-radius: 9999px; background: #FFF4EA; color: #EA580C; } .ds-empty-title { margin: 0; font: 600 20px/28px inherit; color: #242424; } .ds-empty-text { margin: 0; max-width: 420px; font: 400 14px/20px inherit; color: #616161; }"
+    },
+    {
+      "name": "Tarjeta de sección",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Tarjeta-botón del panel de administración que se eleva en hover.",
+      "html": "<button class=\"ds-section-card\"><span class=\"ds-sc-icon\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><circle cx=\"9\" cy=\"8\" r=\"3\"/><path d=\"M3 19c0-3 3-5 6-5s6 2 6 5\"/><circle cx=\"17\" cy=\"9\" r=\"2.5\"/></svg></span><span class=\"ds-sc-body\"><strong>Clientes</strong><span>Consulta y gestiona las cuentas de los clientes.</span></span><span class=\"ds-sc-arrow\">→</span></button>",
+      "css": ".ds-section-card { display: flex; align-items: center; gap: 16px; width: 100%; padding: 20px; text-align: left; cursor: pointer; background: #fff; border: 1px solid #E0E0E0; border-radius: 8px; box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.14); font: 400 14px/20px 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; color: #242424; transition: transform 200ms cubic-bezier(0.33,0,0.67,1), box-shadow 200ms cubic-bezier(0.33,0,0.67,1), border-color 200ms; } .ds-section-card:hover { transform: translateY(-4px); box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.14); border-color: #EA580C; } .ds-section-card:focus-visible { outline: 2px solid #000; outline-offset: 2px; } .ds-sc-icon { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 56px; height: 56px; border-radius: 9999px; background: #FFF4EA; color: #EA580C; transition: all 200ms; } .ds-section-card:hover .ds-sc-icon { background: #EA580C; color: #fff; transform: scale(1.08); } .ds-sc-body { display: flex; flex-direction: column; gap: 2px; flex-grow: 1; } .ds-sc-body strong { font-size: 20px; line-height: 28px; font-weight: 600; } .ds-sc-body span { color: #616161; } .ds-sc-arrow { color: #EA580C; opacity: 0.4; transition: all 200ms; } .ds-section-card:hover .ds-sc-arrow { opacity: 1; transform: translateX(6px); } @media (prefers-reduced-motion: reduce) { .ds-section-card, .ds-sc-icon, .ds-sc-arrow { transition-duration: 0.01ms; } .ds-section-card:hover { transform: none; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Mercado Práctico",
+    "overview": "ESIBuy se mira en los grandes marketplaces, con Amazon como referencia de patrones: el buscador manda, los listados son densos y fáciles de recorrer, y la información va por delante de la decoración. Esa referencia es de comportamiento, no de marca: no se copian su logotipo, sus colores ni su cabecera. El sistema visual propio es Fluent UI v9 tal cual, sobrio y nativo, con un único acento naranja que marca la acción principal y la identidad.\n\nLa interfaz es mayoritariamente blanca. Un velo naranja muy pálido entra desde arriba en el fondo de las páginas y se disuelve en blanco hacia la mitad, lo único atmosférico del sistema. Todo lo demás es estructura: tarjetas y tablas blancas con borde fino y sombra ligera sobre ese fondo, títulos en Segoe UI seminegrita, texto secundario en gris medio.\n\nLos componentes se usan como Fluent los entrega. La personalidad está en los detalles: el \"Buy\" naranja del logotipo, los medallones circulares con icono naranja, y alguna microinteracción contenida en los puntos de navegación del panel de administración.",
+    "keyCharacteristics": [
+      "Fluent UI v9 nativo y sobrio; sin librerías de componentes paralelas.",
+      "Un solo acento: naranja, reservado para la acción principal, el logotipo y los iconos destacados.",
+      "Superficies blancas con sombra ligera estructural sobre un fondo con velo naranja.",
+      "Listados de trabajo (tablas, filtros, paginación) densos y escaneables, al estilo de un marketplace.",
+      "Movimiento corto (150–200 ms) y siempre con alternativa para movimiento reducido."
+    ],
+    "rules": [
+      { "name": "La Regla de la Voz Única", "body": "El naranja es el único color de acento. Los colores de estado (éxito, aviso, error) llegan solo a través de los componentes de Fluent (`Badge`, `MessageBar`), nunca como colores nuevos inventados.", "section": "colors" },
+      { "name": "La Regla del Naranja Legible", "body": "El Naranja Mercado sobre blanco solo da un contraste de 3,6:1: vale para texto grande (logotipo, cifras de 24 px en negrita) e iconos, no para texto pequeño. El texto naranja pequeño usa Naranja Tostado.", "section": "colors" },
+      { "name": "La Regla de los Componentes Tipográficos", "body": "Los títulos se escriben con los componentes de Fluent (`Display`, `Title1`, `Title2`, `Subtitle1`, `Text`) y sus tokens, nunca con tamaños en píxeles sueltos.", "section": "typography" },
+      { "name": "La Regla del Listado Primero", "body": "En las páginas de trabajo, el listado es el protagonista: sin cabeceras decorativas ni tarjetas resumen antes de la tabla, salvo que la historia de usuario lo pida.", "section": "layout" },
+      { "name": "La Regla de la Sombra Justa", "body": "Cada superficie lleva `shadow4` y borde suave. `shadow28` se reserva a un único panel protagonista por pantalla.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do construir con componentes y tokens de Fluent UI v9 (`makeStyles` + `tokens`) y reutilizar `EmptyState`, `Pagination` y `LinkButton` antes de crear otros.",
+      "Do seguir los patrones de marketplace de la referencia: buscador visible y principal en los listados, filtros a la vista, tablas densas y paginación con resumen de resultados.",
+      "Do envolver toda tabla en el contenedor con desplazamiento horizontal, borde suave, esquinas de 8 px y `shadow4`.",
+      "Do dar a cada animación una duración de `durationFast` o `durationNormal` con `curveEasyEase` y su alternativa `prefers-reduced-motion`.",
+      "Do usar Naranja Tostado (brand-orange-deep) para cualquier texto naranja de menos de 18 px."
+    ],
+    "donts": [
+      "Don't copiar la marca de Amazon (logotipo, cabecera azul marino, amarillo-naranja, iconografía): es una referencia de patrones, no de identidad.",
+      "Don't introducir otra librería de componentes ni colores de acento nuevos fuera de la rampa de marca y los colores de estado de Fluent.",
+      "Don't poner texto blanco pequeño sobre Naranja Mercado fuera de los botones de Fluent, ni texto pequeño en Naranja Mercado sobre blanco.",
+      "Don't usar `shadow28` en listados o tablas; es solo para el panel protagonista.",
+      "Don't escribir tamaños de letra, radios o espaciados en píxeles sueltos cuando existe un token de Fluent equivalente."
+    ]
+  }
+}
