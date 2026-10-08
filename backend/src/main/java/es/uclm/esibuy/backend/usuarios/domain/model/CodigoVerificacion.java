@@ -28,6 +28,8 @@ public class CodigoVerificacion {
     private static final Duration VALIDEZ = Duration.ofMinutes(10);
     private static final int MAX_INTENTOS_FALLIDOS = 5;
 
+    // Id del documento en MongoDB; null en un código nuevo, que todavía no se ha guardado (T232).
+    private final String id;
     private final String usuarioId;
     private final String codigoHash;
     private final Instant expiraEn;
@@ -37,14 +39,28 @@ public class CodigoVerificacion {
     private Instant usadoEn;
     private int intentosFallidos;
 
-    private CodigoVerificacion(String usuarioId, String codigoHash, Instant expiraEn) {
+    private CodigoVerificacion(String id, String usuarioId, String codigoHash, Instant expiraEn) {
+        this.id = id;
         this.usuarioId = exigirNoNulo(usuarioId, "El id del usuario es obligatorio");
         this.codigoHash = exigirNoNulo(codigoHash, "El hash del código es obligatorio");
         this.expiraEn = expiraEn;
     }
 
     public static CodigoVerificacion nuevo(String usuarioId, String codigoHash, Instant ahora) {
-        return new CodigoVerificacion(usuarioId, codigoHash, ahora.plus(VALIDEZ));
+        return new CodigoVerificacion(null, usuarioId, codigoHash, ahora.plus(VALIDEZ));
+    }
+
+    /**
+     * Reconstruye un código ya guardado, con su estado (uso e intentos fallidos). Lo usa la
+     * persistencia al leer de la base de datos (T232); un código nuevo se crea con {@link #nuevo}.
+     * Pasa por el mismo constructor, así que se aplican las mismas validaciones.
+     */
+    public static CodigoVerificacion reconstruir(String id, String usuarioId, String codigoHash, Instant expiraEn,
+            Instant usadoEn, int intentosFallidos) {
+        CodigoVerificacion codigo = new CodigoVerificacion(id, usuarioId, codigoHash, expiraEn);
+        codigo.usadoEn = usadoEn;
+        codigo.intentosFallidos = intentosFallidos;
+        return codigo;
     }
 
     private static String exigirNoNulo(String valor, String mensaje) {
@@ -66,8 +82,16 @@ public class CodigoVerificacion {
         intentosFallidos++;
     }
 
+    public String getId() {
+        return id;
+    }
+
     public String getCodigoHash() {
         return codigoHash;
+    }
+
+    public Instant getExpiraEn() {
+        return expiraEn;
     }
 
     public int getIntentosFallidos() {
