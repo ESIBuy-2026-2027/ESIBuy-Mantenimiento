@@ -3,8 +3,10 @@ package es.uclm.esibuy.backend.usuarios.domain.model;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.time.Instant;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -27,9 +29,10 @@ class CodigoVerificacionTest {
     @DisplayName("HU2-CP08: el código caduca a los 10 minutos")
     void caducaALosDiezMinutos() {
         // Frontera: a los 9:59 se puede usar; a los 10:00, no.
-        // TODO: crear el código en un instante fijo.
-        // TODO: comprobar puedeUsarse 9 min 59 s después (true) y 10 min después (false).
-        fail("Funcionalidad no implementada");
+        CodigoVerificacion codigo = CodigoVerificacion.nuevo("u-1", "hash-del-codigo", AHORA);
+
+        assertTrue(codigo.puedeUsarse(AHORA.plus(Duration.ofMinutes(10)).minusSeconds(1)));
+        assertFalse(codigo.puedeUsarse(AHORA.plus(Duration.ofMinutes(10))));
     }
 
     @Test
