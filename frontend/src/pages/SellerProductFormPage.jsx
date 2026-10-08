@@ -1,5 +1,15 @@
 import { useCallback, useState } from 'react'
-import { Button, MessageBar, MessageBarActions, MessageBarBody, Spinner, Text, Title1 } from '@fluentui/react-components'
+import {
+  Button,
+  MessageBar,
+  MessageBarActions,
+  MessageBarBody,
+  Spinner,
+  Text,
+  Title1,
+  makeStyles,
+  mergeClasses,
+} from '@fluentui/react-components'
 import { useNavigate, useParams } from 'react-router-dom'
 import { createSellerProduct, getSellerProduct, updateSellerProduct } from '../api/products'
 import { usePageStyles } from '../components/pageStyles'
@@ -11,9 +21,17 @@ import { PATHS } from '../routes/paths'
 
 const NOT_FOUND = 404
 
+const useStyles = makeStyles({
+  // Columna más estrecha que la de los listados; sigue centrada en la pantalla (margin auto).
+  page: {
+    maxWidth: '720px',
+  },
+})
+
 // Una sola pantalla para dar de alta (sin :id en la ruta) y para editar (con :id).
 export default function SellerProductFormPage() {
   const styles = usePageStyles()
+  const narrow = useStyles()
   const { id } = useParams()
   const navigate = useNavigate()
   const isEdit = Boolean(id)
@@ -42,7 +60,7 @@ export default function SellerProductFormPage() {
   const formReady = categoriesLoaded && productReady
 
   return (
-    <main className={styles.page}>
+    <main className={mergeClasses(styles.page, narrow.page)}>
       <div className={styles.titleBlock}>
         <Title1 as="h1" className={styles.title}>
           {isEdit ? 'Editar producto' : 'Añadir producto'}

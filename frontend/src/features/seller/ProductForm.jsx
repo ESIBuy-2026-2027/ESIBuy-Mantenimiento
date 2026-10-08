@@ -25,7 +25,6 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     gap: tokens.spacingVerticalL,
     width: '100%',
-    maxWidth: '720px',
     boxSizing: 'border-box',
     padding: tokens.spacingVerticalXXL,
     backgroundColor: tokens.colorNeutralBackground1,
@@ -36,6 +35,8 @@ const useStyles = makeStyles({
   pair: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    // Cada campo conserva su altura: así la ayuda del stock no descuadra el campo del precio.
+    alignItems: 'start',
     gap: tokens.spacingHorizontalL,
   },
   categories: {
@@ -171,7 +172,8 @@ export default function ProductForm({ initialValues, categories, saving, saveFai
         onPercentChange={setField('descuentoPremiumPorcentaje')}
       />
       <Text className={styles.hint}>
-        El descuento se aplica a todos los clientes; el premium, solo a los clientes premium. No se acumulan.
+        El descuento se aplica a todos los clientes y el descuento premium, solo a los clientes premium. Los
+        descuentos se acumulan.
       </Text>
 
       <Switch
