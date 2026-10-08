@@ -3,6 +3,7 @@ import ProtectedRoute from '../auth/ProtectedRoute'
 import { ROLES } from '../auth/roles'
 import AppLayout from '../components/AppLayout'
 import AdminPage from '../pages/AdminPage'
+import AdminSellersPage from '../pages/AdminSellersPage'
 import Home from '../pages/Home'
 import LoginPage from '../pages/LoginPage'
 import ProductsPage from '../pages/ProductsPage'
@@ -23,6 +24,7 @@ export default function AppRoutes() {
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
           <Route path={PATHS.ADMIN} element={<AdminPage />} />
+          <Route path={PATHS.ADMIN_SELLERS} element={<AdminSellersPage />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.VENDEDOR]} />}>

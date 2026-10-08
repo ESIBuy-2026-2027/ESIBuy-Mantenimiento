@@ -11,36 +11,10 @@ import {
   mergeClasses,
   tokens,
 } from '@fluentui/react-components'
-
-const priceFormatter = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' })
+import { useTableStyles } from '../../components/tableStyles'
+import { formatPrice } from '../../utils/format'
 
 const useStyles = makeStyles({
-  wrapper: {
-    overflowX: 'auto',
-    backgroundColor: tokens.colorNeutralBackground1,
-    border: `1px solid ${tokens.colorNeutralStroke2}`,
-    borderRadius: tokens.borderRadiusXLarge,
-    boxShadow: tokens.shadow4,
-    transitionProperty: 'opacity',
-    transitionDuration: tokens.durationNormal,
-    transitionTimingFunction: tokens.curveEasyEase,
-    '@media (prefers-reduced-motion: reduce)': {
-      transitionDuration: '0.01ms',
-    },
-  },
-  refreshing: {
-    opacity: 0.55,
-  },
-  row: {
-    transitionProperty: 'background-color',
-    transitionDuration: tokens.durationFast,
-    ':hover': {
-      backgroundColor: tokens.colorBrandBackground2,
-    },
-  },
-  name: {
-    minWidth: '180px',
-  },
   categories: {
     display: 'flex',
     flexWrap: 'wrap',
@@ -52,12 +26,13 @@ const useStyles = makeStyles({
   },
 })
 
-export default function ProductsTable({ products, refreshing }) {
+export default function ProductsTable({ products, refreshing, label = 'Mis productos' }) {
   const styles = useStyles()
+  const tableStyles = useTableStyles()
 
   return (
-    <div className={mergeClasses(styles.wrapper, refreshing && styles.refreshing)} aria-busy={refreshing}>
-      <Table aria-label="Mis productos">
+    <div className={mergeClasses(tableStyles.wrapper, refreshing && tableStyles.refreshing)} aria-busy={refreshing}>
+      <Table aria-label={label}>
         <TableHeader>
           <TableRow>
             <TableHeaderCell>Producto</TableHeaderCell>
@@ -69,8 +44,8 @@ export default function ProductsTable({ products, refreshing }) {
         </TableHeader>
         <TableBody>
           {products.map((product) => (
-            <TableRow key={product.id} className={styles.row}>
-              <TableCell className={styles.name}>
+            <TableRow key={product.id} className={tableStyles.row}>
+              <TableCell className={tableStyles.name}>
                 <Text weight="semibold">{product.nombre}</Text>
               </TableCell>
               <TableCell>
@@ -82,7 +57,7 @@ export default function ProductsTable({ products, refreshing }) {
                   ))}
                 </span>
               </TableCell>
-              <TableCell>{priceFormatter.format(product.precio)}</TableCell>
+              <TableCell>{formatPrice(product.precio)}</TableCell>
               <TableCell>
                 <span className={product.stock === 0 ? styles.noStock : undefined}>{product.stock}</span>
               </TableCell>

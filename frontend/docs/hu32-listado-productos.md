@@ -17,7 +17,7 @@ El vendedor autenticado ve en `/seller/products` una tabla con **sus** productos
 | Criterio de aceptación | Cómo se cumple |
 |---|---|
 | Solo los productos del vendedor autenticado | El frontend **no envía ningún identificador de vendedor**: el backend lo deduce de la sesión (cookie). El mock lo reproduce y hay un test que lo comprueba. |
-| Buscar por nombre y filtrar por categoría | `ProductFilters`: búsqueda con retardo de 300 ms (sin botón) y desplegable de categorías. Se pueden combinar. |
+| Buscar por nombre y filtrar por categoría | `ListFilters`: búsqueda con retardo de 300 ms (sin botón) y desplegable de categorías. Se pueden combinar. |
 | Listado paginado | `Pagination` + parámetros `page` y `size` en la petición. La paginación y el filtrado los hace el **servidor**. |
 | Estado vacío con acceso a "Añadir producto" | `EmptyState` con el enlace, solo cuando el vendedor no tiene ningún producto (sin filtros activos). |
 
@@ -92,18 +92,24 @@ Todas las rutas son relativas a `frontend/src/`.
 
 | Archivo | Qué hace |
 |---|---|
-| `ProductFilters.jsx` | Campo de búsqueda por nombre (`SearchBox`) y desplegable de categoría (`Select`), con sus etiquetas. No guarda estado: lo recibe de la página. |
 | `ProductsTable.jsx` | Tabla con producto, categorías (etiquetas), precio en euros, stock y estado. El stock 0 se resalta en rojo. Mientras se carga otra página los datos anteriores se atenúan (`aria-busy`) en lugar de desaparecer. |
-| `useSellerProducts.js` | Hook que pide el listado cuando cambian los filtros. Descarta las respuestas atrasadas (si el usuario escribe rápido, solo cuenta la última petición). Expone `data`, `failed`, `refreshing` y `retry`. |
-| `useCategories.js` | Hook que carga las categorías del desplegable. Si falla, el filtro queda solo con "Todas las categorías" y el listado sigue funcionando. |
-| `useDebouncedValue.js` | Retrasa un valor 300 ms para no pedir al servidor una vez por cada tecla. |
+| `useSellerProducts.js` | Pide el listado cuando cambian los filtros. Es un envoltorio de `hooks/useApiQuery.js`. |
 
 ### Componentes reutilizables (`components/`)
 
 | Archivo | Qué hace |
 |---|---|
 | `Pagination.jsx` | Botones **Anterior** y **Siguiente**, "Página X de Y" y "Mostrando A–B de N". No se muestra si solo hay una página. No sabe nada de productos (el texto "productos" llega por la propiedad `itemLabel`), así que sirve para el resto de listados (HU19, HU26). |
+| `ListFilters.jsx` | Campo de búsqueda por nombre (`SearchBox`) y desplegable de categoría (`Select`), con sus etiquetas. No guarda estado: lo recibe de la página. |
 | `EmptyState.jsx` | Tarjeta con icono, título, descripción y un hueco para la acción. Se usa para "sin productos" y "sin coincidencias". |
+
+### Hooks (`hooks/`)
+
+| Archivo | Qué hace |
+|---|---|
+| `useApiQuery.js` | Ejecuta una petición cuando cambia la función recibida. Descarta las respuestas atrasadas (si el usuario escribe rápido, solo cuenta la última). Expone `data`, `failed`, `refreshing` y `retry`. |
+| `useCategories.js` | Carga las categorías del desplegable. Si falla, el filtro queda solo con "Todas las categorías" y el listado sigue funcionando. |
+| `useDebouncedValue.js` | Retrasa un valor 300 ms para no pedir al servidor una vez por cada tecla. |
 
 ### API y mocks
 
