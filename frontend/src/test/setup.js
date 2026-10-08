@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import { resetAdminSellersMock } from '../mocks/adminSellersHandlers'
+import { resetAdminsMock } from '../mocks/adminsHandlers'
 import { resetAuthMock } from '../mocks/authHandlers'
 import { server } from '../mocks/server'
 
@@ -21,6 +22,7 @@ afterEach(() => {
   server.resetHandlers()
   resetAuthMock()
   resetAdminSellersMock()
+  resetAdminsMock()
 })
 
 afterAll(() => {

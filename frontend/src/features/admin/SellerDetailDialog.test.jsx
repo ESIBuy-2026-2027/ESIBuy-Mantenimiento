@@ -25,6 +25,10 @@ async function abrirDialogo(sellerId = VENDEDOR_CON_DATOS) {
   return { dialogo, onClose, onStatusChange }
 }
 
+// Cambiar el estado encadena dos peticiones (el cambio y la recarga del vendedor): con toda la
+// suite en marcha pueden tardar más del segundo que espera Testing Library por defecto.
+const ESPERA = { timeout: 3000 }
+
 async function pedirCambioDeEstado(user, dialogo, boton) {
   await user.click(await within(dialogo).findByRole('button', { name: boton }))
   return screen.findByRole('alertdialog')
@@ -174,8 +178,8 @@ describe('SellerDetailDialog (HU21): activar y desactivar', () => {
     const confirmacion = await pedirCambioDeEstado(user, dialogo, /^desactivar usuario$/i)
     await user.click(within(confirmacion).getByRole('button', { name: /^desactivar$/i }))
 
-    expect(await within(dialogo).findByText(/el vendedor está desactivado/i)).toBeInTheDocument()
-    await waitFor(() => expect(within(dialogo).getByLabelText('Estado')).toHaveValue('Desactivado'))
+    expect(await within(dialogo).findByText(/el vendedor está desactivado/i, {}, ESPERA)).toBeInTheDocument()
+    await waitFor(() => expect(within(dialogo).getByLabelText('Estado')).toHaveValue('Desactivado'), ESPERA)
     expect(within(dialogo).getByRole('button', { name: /^activar usuario$/i })).toBeInTheDocument()
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(onStatusChange).toHaveBeenCalledTimes(1)
@@ -189,8 +193,8 @@ describe('SellerDetailDialog (HU21): activar y desactivar', () => {
     expect(within(confirmacion).getByText(/seguro que quieres activar a hogar hugo/i)).toBeInTheDocument()
     await user.click(within(confirmacion).getByRole('button', { name: /^activar$/i }))
 
-    expect(await within(dialogo).findByText(/ya puede usar la plataforma/i)).toBeInTheDocument()
-    await waitFor(() => expect(within(dialogo).getByLabelText('Estado')).toHaveValue('Activo'))
+    expect(await within(dialogo).findByText(/ya puede usar la plataforma/i, {}, ESPERA)).toBeInTheDocument()
+    await waitFor(() => expect(within(dialogo).getByLabelText('Estado')).toHaveValue('Activo'), ESPERA)
     expect(within(dialogo).getByRole('button', { name: /^desactivar usuario$/i })).toBeInTheDocument()
     expect(onStatusChange).toHaveBeenCalledTimes(1)
   })
@@ -202,7 +206,7 @@ describe('SellerDetailDialog (HU21): activar y desactivar', () => {
     const confirmacion = await pedirCambioDeEstado(user, dialogo, /^activar usuario$/i)
     await user.click(within(confirmacion).getByRole('button', { name: /^activar$/i }))
 
-    await waitFor(() => expect(within(dialogo).getByLabelText('Estado')).toHaveValue('Activo'))
+    await waitFor(() => expect(within(dialogo).getByLabelText('Estado')).toHaveValue('Activo'), ESPERA)
   })
 
   it('sellerDetailDialog_siFallaElCambioDeEstado_muestraErrorYNoCambiaNada', async () => {
@@ -215,7 +219,7 @@ describe('SellerDetailDialog (HU21): activar y desactivar', () => {
     const confirmacion = await pedirCambioDeEstado(user, dialogo, /^desactivar usuario$/i)
     await user.click(within(confirmacion).getByRole('button', { name: /^desactivar$/i }))
 
-    expect(await within(dialogo).findByText(/no se ha podido cambiar el estado del vendedor/i)).toBeInTheDocument()
+    expect(await within(dialogo).findByText(/no se ha podido cambiar el estado del vendedor/i, {}, ESPERA)).toBeInTheDocument()
     expect(within(dialogo).getByLabelText('Estado')).toHaveValue('Activo')
     expect(onStatusChange).not.toHaveBeenCalled()
   })
