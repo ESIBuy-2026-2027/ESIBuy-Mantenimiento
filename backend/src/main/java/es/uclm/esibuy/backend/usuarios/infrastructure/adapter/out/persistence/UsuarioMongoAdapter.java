@@ -48,6 +48,6 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
 
     @Override
     public Optional<Usuario> buscarPorCorreo(String email) {
-        return repository.findByEmail(email).map(documento -> mapper.aDominio(documento));
+        return repository.findByEmail(email).map(mapper::aDominio);
     }
 }
