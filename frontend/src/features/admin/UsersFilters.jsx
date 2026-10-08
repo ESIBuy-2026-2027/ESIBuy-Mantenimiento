@@ -1,5 +1,5 @@
 import { Field, SearchBox, Select, makeStyles, tokens } from '@fluentui/react-components'
-import { ROLE_LABELS } from './usersConfig'
+import { ROLE_LABELS, STATUS_LABELS } from './usersConfig'
 
 const useStyles = makeStyles({
   filters: {
@@ -17,7 +17,7 @@ const useStyles = makeStyles({
   },
 })
 
-export default function UsersFilters({ search, role, onSearchChange, onRoleChange }) {
+export default function UsersFilters({ search, role, status, onSearchChange, onRoleChange, onStatusChange }) {
   const styles = useStyles()
 
   return (
@@ -33,6 +33,16 @@ export default function UsersFilters({ search, role, onSearchChange, onRoleChang
         <Select value={role} onChange={(_event, data) => onRoleChange(data.value)}>
           <option value="">Todos los roles</option>
           {Object.entries(ROLE_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </Select>
+      </Field>
+      <Field label="Estado" className={styles.select}>
+        <Select value={status} onChange={(_event, data) => onStatusChange(data.value)}>
+          <option value="">Todos los estados</option>
+          {Object.entries(STATUS_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
               {label}
             </option>
