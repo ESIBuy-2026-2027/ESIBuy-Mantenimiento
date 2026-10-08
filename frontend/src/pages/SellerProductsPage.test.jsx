@@ -261,3 +261,151 @@ describe('SellerProductsPage (HU32): paginación', () => {
     expect(screen.queryByRole('navigation', { name: /paginación/i })).not.toBeInTheDocument()
   })
 })
+
+describe('SellerProductsPage (HU31): editar y eliminar desde el listado', () => {
+  async function abrirListadoConFilas() {
+    await abrirListado()
+    await esperarFilas(10)
+  }
+
+  function capturarBorrado(respuesta = () => new HttpResponse(null, { status: 204 })) {
+    const borrado = { id: null, llamadas: 0 }
+    server.use(
+      http.delete('/api/seller/products/:id', ({ params }) => {
+        borrado.llamadas += 1
+        borrado.id = params.id
+        return respuesta()
+      }),
+    )
+    return borrado
+  }
+
+  it('sellerProductsPage_cadaFilaTieneUnBotonParaEditarElProducto', async () => {
+    await abrirListadoConFilas()
+
+    expect(screen.getAllByRole('link', { name: /^editar /i })).toHaveLength(10)
+    expect(screen.getByRole('link', { name: 'Editar Auriculares inalámbricos' })).toHaveAttribute(
+      'href',
+      '/seller/products/p-1/edit',
+    )
+  })
+
+  it('sellerProductsPage_cadaFilaTieneUnBotonParaEliminarElProducto', async () => {
+    await abrirListadoConFilas()
+
+    expect(screen.getAllByRole('button', { name: /^eliminar /i })).toHaveLength(10)
+  })
+
+  it('sellerProductsPage_alPulsarEditar_abreElFormularioConLosDatosDelProducto', async () => {
+    const user = userEvent.setup()
+    await abrirListadoConFilas()
+
+    await user.click(screen.getByRole('link', { name: 'Editar Teclado mecánico' }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: /editar producto/i })).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Teclado mecánico'))
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/seller\/products\/p-2\/edit$/)
+  })
+
+  it('sellerProductsPage_alPulsarEliminar_pideConfirmacionSinBorrarNada', async () => {
+    const user = userEvent.setup()
+    const borrado = capturarBorrado()
+    await abrirListadoConFilas()
+
+    await user.click(screen.getByRole('button', { name: 'Eliminar Auriculares inalámbricos' }))
+
+    const alerta = await screen.findByRole('alertdialog', { name: /eliminar producto/i })
+    expect(within(alerta).getByText(/auriculares inalámbricos/i)).toBeInTheDocument()
+    expect(within(alerta).getByText(/no se puede deshacer/i)).toBeInTheDocument()
+    expect(borrado.llamadas).toBe(0)
+  })
+
+  it('sellerProductsPage_alCancelarLaEliminacion_cierraLaAlertaSinBorrar', async () => {
+    const user = userEvent.setup()
+    const borrado = capturarBorrado()
+    await abrirListadoConFilas()
+    await user.click(screen.getByRole('button', { name: 'Eliminar Auriculares inalámbricos' }))
+    const alerta = await screen.findByRole('alertdialog', { name: /eliminar producto/i })
+
+    await user.click(within(alerta).getByRole('button', { name: /^cancelar$/i }))
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(borrado.llamadas).toBe(0)
+    expect(screen.queryByText(/producto eliminado/i)).not.toBeInTheDocument()
+  })
+
+  it('sellerProductsPage_alConfirmarLaEliminacion_pideBorrarElProductoIndicado', async () => {
+    const user = userEvent.setup()
+    const borrado = capturarBorrado()
+    await abrirListadoConFilas()
+    await user.click(screen.getByRole('button', { name: 'Eliminar Teclado mecánico' }))
+    const alerta = await screen.findByRole('alertdialog', { name: /eliminar producto/i })
+
+    await user.click(within(alerta).getByRole('button', { name: /^eliminar$/i }))
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(borrado).toMatchObject({ llamadas: 1, id: 'p-2' })
+    expect(await screen.findByText(/producto eliminado/i)).toBeInTheDocument()
+  })
+
+  it('sellerProductsPage_tras_eliminar_vuelveACargarElListado', async () => {
+    const user = userEvent.setup()
+    let peticionesDelListado = 0
+    server.events.on('request:start', ({ request }) => {
+      if (request.method === 'GET' && new URL(request.url).pathname === '/api/seller/products') peticionesDelListado += 1
+    })
+    capturarBorrado()
+    await abrirListadoConFilas()
+    const antes = peticionesDelListado
+    await user.click(screen.getByRole('button', { name: 'Eliminar Teclado mecánico' }))
+    const alerta = await screen.findByRole('alertdialog', { name: /eliminar producto/i })
+
+    await user.click(within(alerta).getByRole('button', { name: /^eliminar$/i }))
+
+    try {
+      await waitFor(() => expect(peticionesDelListado).toBeGreaterThan(antes))
+    } finally {
+      server.events.removeAllListeners()
+    }
+  })
+
+  it('sellerProductsPage_siFallaLaEliminacion_avisaSinDetallesInternosYMantieneLaAlerta', async () => {
+    const user = userEvent.setup()
+    capturarBorrado(() => HttpResponse.json({ message: 'MongoTimeoutException' }, { status: 500 }))
+    await abrirListadoConFilas()
+    await user.click(screen.getByRole('button', { name: 'Eliminar Auriculares inalámbricos' }))
+    const alerta = await screen.findByRole('alertdialog', { name: /eliminar producto/i })
+
+    await user.click(within(alerta).getByRole('button', { name: /^eliminar$/i }))
+
+    expect(await within(alerta).findByText(/no se ha podido eliminar el producto/i)).toBeInTheDocument()
+    expect(screen.queryByText(/mongotimeout/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/producto eliminado/i)).not.toBeInTheDocument()
+  })
+
+  it('sellerProductsPage_alPulsarEscapeEnLaAlerta_laCierraSinBorrar', async () => {
+    const user = userEvent.setup()
+    const borrado = capturarBorrado()
+    await abrirListadoConFilas()
+    await user.click(screen.getByRole('button', { name: 'Eliminar Auriculares inalámbricos' }))
+    await screen.findByRole('alertdialog', { name: /eliminar producto/i })
+
+    await user.keyboard('{Escape}')
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(borrado.llamadas).toBe(0)
+  })
+
+  it('sellerProductsPage_laTablaDeProductosDelAdministrador_noTieneEsosBotones', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/admin/sellers')
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: /ver información de casa vicente/i }))
+    const dialogo = await screen.findByRole('dialog', { name: /información del vendedor/i })
+    await user.click(within(dialogo).getByRole('tab', { name: 'Productos' }))
+
+    expect(await within(dialogo).findByText(/todavía no tiene productos/i)).toBeInTheDocument()
+    expect(within(dialogo).queryByRole('link', { name: /^editar /i })).not.toBeInTheDocument()
+    expect(within(dialogo).queryByRole('button', { name: /^eliminar /i })).not.toBeInTheDocument()
+  })
+})
