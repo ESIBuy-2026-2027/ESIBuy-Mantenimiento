@@ -1,5 +1,6 @@
-package es.uclm.esibuy.backend.usuarios.dominio;
+package es.uclm.esibuy.backend.usuarios.domain.model;
 
+import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
 import java.util.regex.Pattern;
 
 public record Email(String valor) {

@@ -1,7 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
-import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,7 +37,7 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU1-CP01: guardar persiste el usuario en la colección usuarios")
     void guardarPersisteElUsuarioEnLaColeccionUsuarios() {
-        adapter.guardar(new Usuario("juan@uclm.es", "hash-simulado", Rol.CLIENTE));
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
 
         List<UsuarioDocument> guardados = usuarioMongoRepository.findAll();
         assertEquals(1, guardados.size());
@@ -49,7 +49,7 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU1-CP03: existePorCorreo devuelve true si el email ya está guardado")
     void existePorCorreoDevuelveTrueSiEstaGuardado() {
-        adapter.guardar(new Usuario("juan@uclm.es", "hash-simulado", Rol.CLIENTE));
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
 
         assertTrue(adapter.existePorCorreo("juan@uclm.es"));
     }

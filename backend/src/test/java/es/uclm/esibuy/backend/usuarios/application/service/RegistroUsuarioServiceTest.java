@@ -55,6 +55,7 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP01: registra al cliente con rol CLIENTE")
     void registraClienteConRolCliente() {
+        when(hashContrasena.hashear("clave1234")).thenReturn("hash-simulado");
         RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "clave1234");
 
         registroUsuario.registrar(comando);
@@ -82,6 +83,7 @@ class RegistroUsuarioServiceTest {
     @DisplayName("HU1-CP05: acepta una contraseña de exactamente 8 caracteres")
     void permiteContrasenaDeExactamente8Caracteres() {
         // Frontera: 8 caracteres → permitido
+        when(hashContrasena.hashear("12345678")).thenReturn("hash-simulado");
         RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("juan@uclm.es", "12345678");
 
         registroUsuario.registrar(comando);

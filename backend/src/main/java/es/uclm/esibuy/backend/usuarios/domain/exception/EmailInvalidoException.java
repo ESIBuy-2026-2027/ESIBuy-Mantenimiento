@@ -1,4 +1,4 @@
-package es.uclm.esibuy.backend.usuarios.dominio;
+package es.uclm.esibuy.backend.usuarios.domain.exception;
 
 public class EmailInvalidoException extends RuntimeException {
 
