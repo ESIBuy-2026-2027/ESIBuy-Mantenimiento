@@ -97,14 +97,14 @@ Todas las rutas son relativas a `frontend/src/`.
 
 | Archivo | Qué hace |
 |---|---|
-| `pages/SellerProductFormPage.jsx` | Una sola pantalla para alta (ruta sin `:id`) y edición (ruta con `:id`). Carga las categorías y, si edita, el producto; gestiona los estados (cargando, categorías que fallan, producto no encontrado, error con **Reintentar**), envía los datos y, si todo va bien, vuelve al listado con un aviso. Sustituye a la antigua página vacía `SellerProductNewPage`. |
+| `pages/SellerProductFormPage.jsx` | Una sola pantalla para alta (ruta sin `:id`) y edición (ruta con `:id`), en una columna centrada de 720 px. Carga las categorías y, si edita, el producto; gestiona los estados (cargando, categorías que fallan, producto no encontrado, error con **Reintentar**), envía los datos y, si todo va bien, vuelve al listado con un aviso. Sustituye a la antigua página vacía `SellerProductNewPage`. |
 | `routes/paths.js` / `routes/AppRoutes.jsx` | Nueva ruta `SELLER_PRODUCT_EDIT` (`/seller/products/:id/edit`) y la función `getSellerProductEditPath(id)`. Ambas rutas están protegidas igual que el listado (solo vendedor). |
 
 ### Formulario (`features/seller/`)
 
 | Archivo | Qué hace |
 |---|---|
-| `ProductForm.jsx` | Los campos del producto y los botones **Guardar** y **Cancelar**. Hasta el primer intento de guardar no muestra errores; después valida en vivo. Mientras guarda deshabilita **Guardar** (evita el doble envío). Si el envío falla, conserva lo escrito y muestra un mensaje genérico. |
+| `ProductForm.jsx` | Los campos del producto (precio y stock en la misma fila, alineados aunque el stock lleve un texto de ayuda) y los botones **Guardar** y **Cancelar**. Hasta el primer intento de guardar no muestra errores; después valida en vivo. Mientras guarda deshabilita **Guardar** (evita el doble envío). Si el envío falla, conserva lo escrito y muestra un mensaje genérico. |
 | `DiscountField.jsx` | Interruptor de un descuento y, solo si está activo, el campo de su porcentaje. Se usa dos veces: descuento y descuento premium. |
 | `productValues.js` | Lógica del formulario sin interfaz: `emptyProductValues`, `valuesFromProduct` (producto del backend a valores del formulario), `validateProduct` (todas las reglas) y `toProductPayload` (valores del formulario al cuerpo de la petición). |
 | `DeleteProductDialog.jsx` | Alerta de confirmación de borrado (`role="alertdialog"`). Cancelar, Escape y el botón de cierre salen sin borrar. Mientras borra, bloquea los botones. Si falla, el mensaje se muestra dentro de la alerta y esta sigue abierta. |
@@ -124,7 +124,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | Activar descuento premium / Descuento premium (%) | No | Igual que el anterior |
 | Disponible para la venta | No | Activado por defecto |
 
-El descuento se aplica a todos los clientes y el premium solo a los premium; no se acumulan (el formulario lo recuerda con un texto).
+El descuento se aplica a todos los clientes y el premium solo a los premium. **Los descuentos se acumulan**: un cliente premium recibe ambos. El formulario lo recuerda con un texto. Cómo se combinan los porcentajes al calcular el precio final (sumarlos o aplicarlos uno tras otro) lo decide el backend.
 
 ### Páginas, hooks y mocks que cambian
 
@@ -209,7 +209,7 @@ Pruebas manuales sugeridas:
 ### Tests automáticos
 
 ```bash
-npx vitest run     # 263 tests (77 son de esta HU)
+npx vitest run     # 264 tests (78 son de esta HU)
 npm run lint
 npm run build
 ```
@@ -217,10 +217,12 @@ npm run build
 | Archivo | Qué cubre |
 |---|---|
 | `features/seller/productValues.test.js` | 39 tests: cada regla de validación (valores límite incluidos), conversión a la petición y vuelta atrás. |
-| `pages/SellerProductFormPage.test.jsx` | 28 tests: campos, alta, validación, guardado (datos enviados, sin vendedor, errores del servidor, doble clic), edición, producto ajeno o inexistente y acceso por rol. |
+| `pages/SellerProductFormPage.test.jsx` | 29 tests: campos, texto de acumulación de descuentos, alta, validación, guardado (datos enviados, sin vendedor, errores del servidor, doble clic), edición, producto ajeno o inexistente y acceso por rol. |
 | `pages/SellerProductsPage.test.jsx` | 10 tests nuevos: botones por fila, apertura del formulario de edición, alerta de borrado (cancelar, confirmar, error, Escape), recarga del listado y que la tabla del administrador no tiene esos botones. |
 
 Los 186 tests anteriores siguen pasando.
+
+La centrada del formulario y la alineación de precio y stock se comprobaron midiendo los elementos en el navegador (mismo borde superior y márgenes laterales equivalentes), no con tests automáticos.
 
 ---
 
@@ -240,7 +242,7 @@ Los 186 tests anteriores siguen pasando.
 - No hay vista previa de la imagen ni se ofrecen imágenes predefinidas.
 - No hay aviso de cambios sin guardar al salir del formulario.
 - La edición no avisa si el producto cambió en el servidor mientras se editaba.
-- Está pendiente decidir si el descuento premium debe ser mayor o igual que el normal.
+- Está pendiente decidir si el descuento premium debe ser mayor o igual que el normal, y cómo se combinan los porcentajes (ver la sección 3).
 
 ---
 
@@ -250,7 +252,7 @@ Este documento y el trabajo técnico que describe se hicieron con ayuda de un as
 
 - **Herramienta:** Claude (modelo de Anthropic), mediante Claude Code.
 - **Qué generó la IA:** el formulario, su validación, las acciones de editar y eliminar, los mocks, los tests y este documento. Las decisiones de producto las tomó el equipo: los criterios de la HU31, que el formulario sirva también para editar, la alerta de confirmación al eliminar, y que en el frontend no se añadan ni eliminen productos de verdad.
-- **Cómo se comprobó:** se ejecutaron los **263 tests (todos en verde)**, ESLint sin errores y un build de producción correcto. Los tests se escribieron antes que la implementación.
-- **Qué NO se comprobó:** la pantalla en un navegador real ni su aspecto visual, ni el flujo contra un backend real. El contrato de la sección 5 debe acordarse con el backend.
+- **Cómo se comprobó:** se ejecutaron los **264 tests (todos en verde)**, ESLint sin errores y un build de producción correcto. Los tests se escribieron antes que la implementación.
+- **Qué NO se comprobó:** el aspecto visual completo (solo se midió la alineación de precio y stock y la centrada del formulario), ni el flujo contra un backend real. El contrato de la sección 5 debe acordarse con el backend.
 - **Cómo guió el proceso:** el asistente siguió el flujo de ramas y commits del proyecto (mocks, tests, implementación y documentación en commits separados) y el sistema de diseño de `DESIGN.md`.
 - **Revisión humana:** el código fue revisado, ejecutado y validado por el equipo antes de su integración. Revisado por: Ricardo.
