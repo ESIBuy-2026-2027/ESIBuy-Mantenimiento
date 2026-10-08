@@ -10,6 +10,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.EnvioEmailPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.GeneradorCodigoPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
@@ -258,9 +259,18 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP07: rechaza un código incorrecto")
     void rechazaCodigoIncorrecto() {
-        // TODO: código pendiente y vigente; el hash no coincide.
-        // TODO: comprobar que lanza CodigoInvalidoException y que se guarda con un intento fallido más.
-        fail("Funcionalidad no implementada");
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(clienteConId()));
+        CodigoVerificacion codigo = CodigoVerificacion.nuevo("u-1", HASH_CODIGO, AHORA);
+        when(codigoRepository.buscarPorUsuario("u-1")).thenReturn(Optional.of(codigo));
+        when(hashContrasena.coincide("000000", HASH_CODIGO)).thenReturn(false);
+        VerificarCodigoEmailCommand comando = new VerificarCodigoEmailCommand("juan@uclm.es", "000000");
+
+        assertThrows(CodigoInvalidoException.class, () -> autenticacion.verificarCodigoEmail(comando));
+
+        // El fallo se cuenta y se guarda: si no, el límite de 5 intentos (CP10) no funcionaría
+        // entre una petición y otra.
+        assertEquals(1, codigo.getIntentosFallidos());
+        verify(codigoRepository).guardar(codigo);
     }
 
     @Test
