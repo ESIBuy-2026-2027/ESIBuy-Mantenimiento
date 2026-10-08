@@ -63,6 +63,13 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
     expect(screen.getByRole('checkbox', { name: 'Tecnología' })).not.toBeChecked()
   })
 
+  it('sellerProductFormPage_explicaQueLosDescuentosSeAcumulan', async () => {
+    await abrirFormulario()
+
+    expect(screen.getByText(/los descuentos se acumulan/i)).toBeInTheDocument()
+    expect(screen.queryByText(/no se acumulan/i)).not.toBeInTheDocument()
+  })
+
   it('sellerProductFormPage_losCamposDeDescuento_aparecenAlActivarElDescuento', async () => {
     const user = userEvent.setup()
     await abrirFormulario()
