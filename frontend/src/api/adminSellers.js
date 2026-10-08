@@ -17,6 +17,13 @@ export function getAdminSeller(sellerId) {
   return request(`/api/admin/sellers/${encodeURIComponent(sellerId)}`)
 }
 
+export function updateAdminSellerStatus(sellerId, estado) {
+  return request(`/api/admin/sellers/${encodeURIComponent(sellerId)}/status`, {
+    method: 'PATCH',
+    body: { estado },
+  })
+}
+
 export function getAdminSellerProducts(sellerId, { page = 1, size = 5 } = {}) {
   return request(`/api/admin/sellers/${encodeURIComponent(sellerId)}/products?${buildQuery({ page, size })}`)
 }
