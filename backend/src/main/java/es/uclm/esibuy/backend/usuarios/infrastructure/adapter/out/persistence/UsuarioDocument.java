@@ -1,5 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
+import java.time.Instant;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -23,6 +25,8 @@ public class UsuarioDocument {
     // Boolean y no boolean: un documento antiguo, sin este campo, se lee como null, que el mapper trata
     // como activo. Con el primitivo se leería false y todos los usuarios antiguos quedarían desactivados.
     private Boolean activo;
+    private int intentosFallidos;
+    private Instant bloqueadoHasta;
 
     public UsuarioDocument(String email, String passwordHash, String rol) {
         this.email = email;
@@ -58,4 +62,19 @@ public class UsuarioDocument {
         this.activo = activo;
     }
 
+    public int getIntentosFallidos() {
+        return intentosFallidos;
+    }
+
+    public void setIntentosFallidos(int intentosFallidos) {
+        this.intentosFallidos = intentosFallidos;
+    }
+
+    public Instant getBloqueadoHasta() {
+        return bloqueadoHasta;
+    }
+
+    public void setBloqueadoHasta(Instant bloqueadoHasta) {
+        this.bloqueadoHasta = bloqueadoHasta;
+    }
 }

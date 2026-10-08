@@ -117,4 +117,18 @@ public class Usuario {
     public boolean tieneBloqueoPorIntentos(Instant ahora) {
         return bloqueadoHasta != null && ahora.isBefore(bloqueadoHasta);
     }
+
+    public int getIntentosFallidos() {
+        return intentosFallidos;
+    }
+
+    public Instant getBloqueadoHasta() {
+        return bloqueadoHasta;
+    }
+
+    // Usamos esta operación para obligar a que se restauren a la vez los dos parámetros, además de ser más descriptivos pese a ser dos setters
+    public void restaurarBloqueoPorIntentos(int intentosFallidos, Instant bloqueadoHasta) {
+        this.intentosFallidos = intentosFallidos;
+        this.bloqueadoHasta = bloqueadoHasta;
+    }
 }
