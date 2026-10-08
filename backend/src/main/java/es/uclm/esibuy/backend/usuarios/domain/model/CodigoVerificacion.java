@@ -62,4 +62,10 @@ public class CodigoVerificacion {
     public void registrarIntentoFallido() {
         intentosFallidos++;
     }
+
+    public String getCodigoHash() {
+        return codigoHash;
+    }
+
+    
 }

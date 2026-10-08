@@ -15,6 +15,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPor
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
+import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
 public class AutenticacionService implements AutenticacionUseCase {
@@ -58,6 +59,8 @@ public class AutenticacionService implements AutenticacionUseCase {
         }
 
         String codigo = generadorCodigo.generar();
+        String codigoHash = hashContrasena.hashear(codigo);
+        codigoVerificacionRepository.guardar(CodigoVerificacion.nuevo(usuario.getId(), codigoHash, ahora));
         envioEmail.enviarCodigoVerificacion(usuario.getEmail().valor(), codigo);
 
         return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.CODIGO_EMAIL);
