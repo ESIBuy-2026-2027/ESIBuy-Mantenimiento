@@ -102,9 +102,29 @@ describe('AdminUsersPage (HU19)', () => {
     await esperarFilas(5)
   })
 
-  it('HU19-CP07: sin coincidencias muestra que no se han encontrado usuarios', () => {
-    // TODO ciclo 18
-    expect.fail('Funcionalidad no implementada')
+  it('HU19-CP07: sin coincidencias muestra que no se han encontrado usuarios', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await esperarFilas(10)
+
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar por nombre o email' }), 'zzz')
+
+    expect(await screen.findByRole('heading', { name: 'No se han encontrado usuarios' })).toBeInTheDocument()
+    expect(screen.queryByRole('table', { name: 'Usuarios' })).not.toBeInTheDocument()
+  })
+
+  it('HU19-CP07: sin coincidencias, "Limpiar filtros" vuelve a mostrar todos los usuarios', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await esperarFilas(10)
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar por nombre o email' }), 'zzz')
+    await screen.findByRole('heading', { name: 'No se han encontrado usuarios' })
+
+    await user.click(screen.getByRole('button', { name: 'Limpiar filtros' }))
+
+    await waitFor(() => expect(screen.getByRole('table', { name: 'Usuarios' })).toBeInTheDocument())
+    await esperarFilas(10)
+    expect(screen.getByRole('searchbox', { name: 'Buscar por nombre o email' })).toHaveValue('')
   })
 
   it('HU19-CP08: si la API responde 500 muestra un mensaje de error', () => {
