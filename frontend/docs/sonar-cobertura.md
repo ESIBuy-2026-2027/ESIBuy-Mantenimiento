@@ -1,6 +1,6 @@
 # Cobertura del frontend en SonarQube (propuesta)
 
-Documento para explicar al equipo por qué SonarQube muestra el frontend con un 0 % de cobertura, qué habría que cambiar para que la mida y qué supone ese cambio. Es una **propuesta pendiente de decidir**: todavía no se ha cambiado ningún archivo de configuración.
+Documento para explicar al equipo por qué SonarQube muestra el frontend con un 0 % de cobertura, qué habría que cambiar para que la mida y qué supone ese cambio. Es la **propuesta inicial**; la implementación y su resultado están en `docs/sonar-cobertura-implementacion.md`.
 
 - **Fecha:** 8 de octubre de 2026
 - **Análisis de partida:** proyecto `2026-g02-frontend`, código de `develop` en el commit `8677342`
