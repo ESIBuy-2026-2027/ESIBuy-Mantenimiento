@@ -23,6 +23,13 @@ async function esperarFilas(cantidad) {
   await waitFor(() => expect(filasDeDatos()).toHaveLength(cantidad))
 }
 
+async function abrirEnLaSegundaPagina(user) {
+  await abrirListado()
+  await esperarFilas(10)
+  await user.click(screen.getByRole('button', { name: /siguiente/i }))
+  await screen.findByText(/página 2 de 3/i)
+}
+
 describe('AdminUsersPage (HU19)', () => {
   it('HU19-CP01: con sesión de admin muestra el título y los 10 primeros usuarios', async () => {
     await abrirListado()
@@ -77,9 +84,22 @@ describe('AdminUsersPage (HU19)', () => {
     await esperarFilas(10)
   })
 
-  it('HU19-CP06: estando en la página 2, al buscar vuelve a la página 1', () => {
-    // TODO ciclo 17
-    expect.fail('Funcionalidad no implementada')
+  it('HU19-CP06: estando en la página 2, al buscar vuelve a la página 1', async () => {
+    const user = userEvent.setup()
+    await abrirEnLaSegundaPagina(user)
+
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar por nombre o email' }), 'ana')
+
+    await esperarFilas(2)
+  })
+
+  it('HU19-CP06: estando en la página 2, al filtrar vuelve a la página 1', async () => {
+    const user = userEvent.setup()
+    await abrirEnLaSegundaPagina(user)
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'Pendiente')
+
+    await esperarFilas(5)
   })
 
   it('HU19-CP07: sin coincidencias muestra que no se han encontrado usuarios', () => {
