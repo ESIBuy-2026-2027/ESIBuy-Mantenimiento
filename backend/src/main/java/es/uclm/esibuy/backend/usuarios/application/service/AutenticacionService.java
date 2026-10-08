@@ -71,8 +71,8 @@ public class AutenticacionService implements AutenticacionUseCase {
 
     @Override
     public ResultadoInicioSesion verificarCodigoEmail(VerificarCodigoEmailCommand comando) {
-        Usuario usuario = usuarioRepository.buscarPorCorreo(comando.email()).orElseThrow();
-        CodigoVerificacion codigo = codigoVerificacionRepository.buscarPorUsuario(usuario.getId()).orElseThrow();
+        Usuario usuario = usuarioRepository.buscarPorCorreo(comando.email()).orElseThrow(() -> new CodigoInvalidoException(CODIGO_INVALIDO));
+        CodigoVerificacion codigo = codigoVerificacionRepository.buscarPorUsuario(usuario.getId()).orElseThrow(() -> new CodigoInvalidoException(CODIGO_INVALIDO));
 
         Instant ahora = reloj.instant();
         if (!codigo.puedeUsarse(ahora)) {
