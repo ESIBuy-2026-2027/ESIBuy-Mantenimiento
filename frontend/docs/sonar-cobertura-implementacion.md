@@ -3,7 +3,7 @@
 Documento de cierre del trabajo para que SonarQube mida la cobertura del frontend. Explica qué se ha cambiado, qué problemas aparecieron por el camino, cómo se resolvieron y cómo lanzar el análisis a partir de ahora. La propuesta inicial, con el diagnóstico y el porqué, está en `docs/sonar-cobertura.md`.
 
 - **Fecha:** 9 de octubre de 2026
-- **Rama:** `chore/sonar-cobertura-frontend` (sale de `develop` en el commit `8677342`)
+- **Rama:** `chore/sonar-cobertura-frontend` (sale de `develop` en el commit `8677342` y se actualizó con `develop` tras el PR #50 de la HU24)
 - **Task:** ninguna de Azure Boards; es un trabajo de configuración de calidad, no una task del backlog
 - **Depende de:** `docs/sonar-cobertura.md` (propuesta) y `docs/sonar-incidencias.md` (corrección anterior de incidencias)
 
@@ -14,13 +14,13 @@ Documento de cierre del trabajo para que SonarQube mida la cobertura del fronten
 | Métrica (SonarQube, `2026-g02-frontend`) | Antes | Después |
 |---|---|---|
 | Quality gate | Passed | **Passed** |
-| Cobertura | 0,0 % | **96,4 %** (líneas 97,5 %) |
-| Líneas de código | 7 257 | 4 145 (los tests ya no cuentan como código) |
+| Cobertura | 0,0 % | **95,7 %** (líneas 96,5 %) |
+| Líneas de código | 7 257 | 4 386 (los tests ya no cuentan como código) |
 | Duplicación | 1,2 % | 0,0 % |
 | Bugs / vulnerabilidades / code smells | 0 / 0 / 0 | 0 / 0 / 0 |
 | Hotspots revisados | 0 % | 0 % (requiere revisión manual, ver sección 6) |
 
-Cobertura según Vitest (70 archivos): líneas 97,11 %, sentencias 96,72 %, ramas 94,51 % y funciones 94,80 %. Muy por encima del 60 % que exige el enunciado.
+Cobertura según Vitest (74 archivos, tras integrar la HU24): líneas 95,99 %, sentencias 95,72 %, ramas 94,30 % y funciones 94,69 %. Muy por encima del 60 % que exige el enunciado.
 
 ---
 
@@ -50,7 +50,7 @@ Cobertura según Vitest (70 archivos): líneas 97,11 %, sentencias 96,72 %, rama
 
 ### 3.1 Tests inestables que impedían generar el informe
 
-Al ejecutar todos los tests a la vez, algunos de `src/features/admin/SellerDetailDialog.test.jsx` (HU21, llegados con el PR #49) **fallan al azar**: no encuentran el diálogo a tiempo. Ejecutados solos pasan siempre (26 de 26). Medir la cobertura añade carga y hace que fallen más a menudo, incluso alguno de `Login` o `Register` por tiempo agotado.
+Al ejecutar todos los tests a la vez, algunos de `src/features/admin/SellerDetailDialog.test.jsx` (HU21, llegados con el PR #49) **fallan al azar**: no encuentran el diálogo a tiempo. Ejecutados solos pasan siempre (26 de 26). Medir la cobertura añade carga y hace que fallen más a menudo, incluso alguno de `LoginFlow`, `Register` o `AdminNewAdminPage` por tiempo agotado (tras integrar la HU24 llegaron a fallar 12 de 381 en una ejecución con cobertura; cada archivo, ejecutado por separado, pasa entero).
 
 Por defecto, Vitest **no genera el informe de cobertura si falla algún test**, así que no llegaba nada a Sonar.
 
@@ -94,7 +94,7 @@ npx @sonar/scan         # sube el análisis, lee sonar-project.properties
 ## 5. Cómo comprobarlo
 
 ```bash
-npm run test:coverage   # 344 tests; los únicos que pueden fallar son los inestables de la sección 3.1
+npm run test:coverage   # 381 tests; los únicos que pueden fallar son los inestables de la sección 3.1
 npm run lint            # sin errores
 ```
 
@@ -119,6 +119,6 @@ Este trabajo y este documento se hicieron con ayuda de un asistente de IA genera
 - **Herramienta:** Claude (modelo de Anthropic), mediante Claude Code, con la skill `matriz-trazabilidad` para comprobar la matriz.
 - **Qué generó la IA:** el diagnóstico de la configuración, los cambios de configuración, el cambio de los 10 tests y este documento. Los análisis se lanzaron con `npx @sonar/scan` y los resultados se leyeron de la API de SonarQube con el token del archivo de configuración (solo en memoria).
 - **Qué decidió el desarrollador:** hacer el cambio, usar `npx @sonar/scan`, activar `reportOnFailure` en lugar de tocar los tests inestables, hacer explícito el `expect` en los 10 tests sin cambiar lo que comprueban, respetar el falso positivo del token y no asociar el trabajo a una task de Azure Boards.
-- **Cómo se comprobó:** los 3 archivos de test modificados pasan (64 de 64), ESLint sin errores, la cobertura se genera (97,11 % de líneas) y el análisis de SonarQube da quality gate **Passed** con 96,4 % de cobertura y 0 incidencias.
+- **Cómo se comprobó:** los 3 archivos de test modificados pasan, ESLint sin errores, cada archivo de test con fallos inestables pasa entero ejecutado por separado, la cobertura se genera (95,99 % de líneas) y el análisis de SonarQube da quality gate **Passed** con 95,7 % de cobertura y 0 incidencias, también tras integrar la HU24 (sus tests nuevos no tienen incidencias S2699).
 - **Qué NO se comprobó:** que los tests inestables de la HU21 pasen siempre (fallan al azar al ejecutar todos los tests a la vez, también sin cobertura).
 - **Revisión humana:** pendiente de revisión por el equipo. Documentado por: Daniel.
