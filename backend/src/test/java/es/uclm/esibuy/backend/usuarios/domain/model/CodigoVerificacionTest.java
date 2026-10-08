@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.usuarios.domain.model;
 
+import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoVerificacionInvalidoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -7,8 +8,8 @@ import java.time.Duration;
 import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 // Login, paso 2: reglas del código de verificación por email (HU2, T21/T22).
 // Válido 10 minutos, de un solo uso y se agota tras 5 intentos fallidos (plan de la T21, D3).
@@ -63,7 +64,9 @@ class CodigoVerificacionTest {
     @Test
     @DisplayName("HU2-CP12: rechaza un código sin usuario o sin hash")
     void rechazaCodigoSinUsuarioOSinHash() {
-        // TODO: comprobar que nuevo(null, hash, ahora) y nuevo(usuarioId, null, ahora) lanzan una excepción de dominio.
-        fail("Funcionalidad no implementada");
+        assertThrows(CodigoVerificacionInvalidoException.class,
+                () -> CodigoVerificacion.nuevo(null, "hash-del-codigo", AHORA));
+        assertThrows(CodigoVerificacionInvalidoException.class,
+                () -> CodigoVerificacion.nuevo("u-1", null, AHORA));
     }
 }
