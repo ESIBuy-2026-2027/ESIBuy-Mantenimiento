@@ -5,6 +5,8 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoExcept
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.springframework.dao.DuplicateKeyException;
 
+import java.util.Optional;
+
 /**
  * Adaptador de salida que guarda usuarios en MongoDB (patrón Repository).
  *
@@ -36,5 +38,10 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
     @Override
     public boolean existePorCorreo(String correo) {
         return repository.existsByEmail(correo);
+    }
+
+    @Override
+    public Optional<Usuario> buscarPorCorreo(String email) {
+        return repository.findByEmail(email).map(documento -> mapper.aDominio(documento));
     }
 }

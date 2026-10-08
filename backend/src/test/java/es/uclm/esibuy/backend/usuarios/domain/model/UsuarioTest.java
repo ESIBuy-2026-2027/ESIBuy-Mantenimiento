@@ -27,10 +27,10 @@ class UsuarioTest {
         assertEquals("Ana", usuario.getNombre());
         assertEquals("García López", usuario.getApellidos());
         assertEquals(email, usuario.getEmail());
-        assertEquals("hash-seguro", usuario.getContrasenaHash());
+        assertEquals("hash-seguro", usuario.getPasswordHash());
         assertEquals(Rol.CLIENTE, usuario.getRol());
         assertEquals(TipoCliente.PREMIUM, usuario.getTipoCliente());
-        assertFalse(usuario.estaBloqueado());
+        assertFalse(usuario.estaDesactivado());
     }
 
     @Test
@@ -73,10 +73,10 @@ class UsuarioTest {
         assertNull(usuario.getNombre());
         assertNull(usuario.getApellidos());
         assertEquals(EMAIL, usuario.getEmail());
-        assertEquals(HASH, usuario.getContrasenaHash());
+        assertEquals(HASH, usuario.getPasswordHash());
         assertEquals(Rol.CLIENTE, usuario.getRol());
         assertEquals(TipoCliente.ESTANDAR, usuario.getTipoCliente());
-        assertFalse(usuario.estaBloqueado());
+        assertFalse(usuario.estaDesactivado());
     }
 
     @Test
@@ -119,24 +119,24 @@ class UsuarioTest {
     }
 
     @Test
-    @DisplayName("HU1-CP11: bloquea un usuario")
-    void bloqueaUsuario() {
+    @DisplayName("HU1-CP11: desactiva un usuario")
+    void desactivaUsuario() {
         Usuario usuario = cliente("Ana", "García López");
 
-        usuario.bloquear();
+        usuario.desactivar();
 
-        assertTrue(usuario.estaBloqueado());
+        assertTrue(usuario.estaDesactivado());
     }
 
     @Test
-    @DisplayName("HU1-CP11: desbloquea un usuario bloqueado")
-    void desbloqueaUsuarioBloqueado() {
+    @DisplayName("HU1-CP11: activa un usuario desactivado")
+    void activaUsuarioDesactivado() {
         Usuario usuario = cliente("Ana", "García López");
-        usuario.bloquear();
+        usuario.desactivar();
 
-        usuario.desbloquear();
+        usuario.activar();
 
-        assertFalse(usuario.estaBloqueado());
+        assertFalse(usuario.estaDesactivado());
     }
 
     private static Usuario cliente(String nombre, String apellidos) {

@@ -120,6 +120,8 @@ Las dependencias apuntan **siempre hacia el interior del hexágono**:
 | Repositorio de Spring Data | `UsuarioMongoRepository`        |
 | Mapper dominio-documento   | `UsuarioDocumentMapper`         |
 
+**Idioma de los nombres** (acordado en clase): los campos, parámetros y componentes de records para el correo y la contraseña van **en inglés**: `email`, `password` y derivados (`passwordHash`, `getEmail()`, `getPasswordHash()`). Las clases, métodos, puertos y excepciones siguen **en español** (`buscarPorCorreo`, `existePorCorreo`, `HashContrasenaPort`, `ContrasenaInvalidaException`). Los getters siguen la convención de Java: `get` + nombre del campo con la primera letra en mayúscula (`getPasswordHash()`, no `getpasswordHash()`).
+
 ### Comunicación entre módulos
 
 - Un módulo solo puede usar de otro sus **puertos de entrada** (`port.in`).
@@ -170,7 +172,7 @@ Usar siempre el wrapper de Maven:
 
 Autenticación y autorización con el patrón **RBAC**. Roles:
 
-- **Administrador**: gestiona usuarios, vendedores, categorías, incidencias y configuración general. Acceso en modo "solo lectura" a la información gestionada por vendedores. Módulo de gestión de usuarios exclusivo suyo: crear otros administradores, modificar, consultar, bloquear/desbloquear y eliminar usuarios.
+- **Administrador**: gestiona usuarios, vendedores, categorías, incidencias y configuración general. Acceso en modo "solo lectura" a la información gestionada por vendedores. Módulo de gestión de usuarios exclusivo suyo: crear otros administradores, modificar, consultar, desactivar/activar y eliminar usuarios.
 - **Vendedor**: crea, modifica, consulta, activa/desactiva y elimina productos; gestiona precios, stock, disponibilidad, ofertas y pedidos de sus productos; consulta estadísticas básicas de ventas, valoraciones y stock.
 - **Cliente** (tipos **Premium** y **Estándar**): busca y filtra productos (categoría, precio, valoración, disponibilidad), consulta detalles, gestiona carrito, realiza pedidos, consulta historial, cancela pedidos cuando sea posible, sigue el estado del envío, gestiona direcciones y métodos de pago, guarda favoritos / listas de deseos y **valora productos solo si los ha comprado**.
 

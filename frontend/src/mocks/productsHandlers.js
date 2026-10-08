@@ -1,18 +1,18 @@
 import { http, HttpResponse } from 'msw'
 import { getUsuarioEnSesion } from './authHandlers'
+import { leerPagina, normalizar, paginar } from './paginar'
 
-const VENDEDOR_CON_PRODUCTOS = 'u-2'
-const OTRO_VENDEDOR = 'u-99'
-const TAMANO_PAGINA_POR_DEFECTO = 10
+export const VENDEDOR_CON_PRODUCTOS = 'u-2'
+export const OTRO_VENDEDOR = 'u-99'
 
-const CATEGORIAS = new Map([
+export const CATEGORIAS = new Map([
   ['cat-1', 'Tecnología'],
   ['cat-2', 'Hogar'],
 ])
 
 // [nombre, precio, stock, disponible, categorías]. El vendedor u-2 tiene 23 (3 páginas de 10);
 // u-5 (vendedor-vacio@esibuy.test) no tiene ninguno; u-99 tiene los últimos 3, que u-2 nunca debe ver.
-const PRODUCTOS = [
+export const PRODUCTOS = [
   ['Auriculares inalámbricos', 59.9, 34, true, ['cat-1']],
   ['Teclado mecánico', 89.5, 12, true, ['cat-1']],
   ['Ratón ergonómico', 34.99, 0, true, ['cat-1']],
@@ -49,13 +49,7 @@ const PRODUCTOS = [
   vendedorId,
 }))
 
-const normalizar = (texto) =>
-  texto
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .toLowerCase()
-
-const aRespuesta = ({ id, nombre, precio, stock, disponible, categorias }) => ({
+export const aRespuesta = ({ id, nombre, precio, stock, disponible, categorias }) => ({
   id,
   nombre,
   precio,
@@ -73,23 +67,12 @@ export const productsHandlers = [
     const params = new URL(request.url).searchParams
     const busqueda = normalizar(params.get('search') ?? '')
     const categoria = params.get('category')
-    const pagina = Math.max(1, Number(params.get('page')) || 1)
-    const tamano = Math.max(1, Number(params.get('size')) || TAMANO_PAGINA_POR_DEFECTO)
-
     const coincidentes = PRODUCTOS.filter(
       (producto) =>
         producto.vendedorId === usuario.id &&
         normalizar(producto.nombre).includes(busqueda) &&
         (!categoria || producto.categorias.includes(categoria)),
     )
-    const inicio = (pagina - 1) * tamano
-
-    return HttpResponse.json({
-      items: coincidentes.slice(inicio, inicio + tamano).map(aRespuesta),
-      page: pagina,
-      size: tamano,
-      totalItems: coincidentes.length,
-      totalPages: Math.ceil(coincidentes.length / tamano),
-    })
+    return HttpResponse.json(paginar(coincidentes, leerPagina(params), aRespuesta))
   }),
 ]

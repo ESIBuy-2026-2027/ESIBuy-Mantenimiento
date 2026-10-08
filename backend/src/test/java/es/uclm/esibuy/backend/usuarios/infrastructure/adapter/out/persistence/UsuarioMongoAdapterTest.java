@@ -4,6 +4,7 @@ import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.shared.config.MongoConfig;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
+import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +16,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -92,5 +94,24 @@ class UsuarioMongoAdapterTest {
     @DisplayName("HU1-CP03: existePorCorreo devuelve false si el email no está guardado")
     void existePorCorreoDevuelveFalseSiNoEstaGuardado() {
         assertFalse(adapter.existePorCorreo("juan@uclm.es"));
+    }
+
+    @Test
+    @DisplayName("HU2-CP01: buscarPorCorreo devuelve el usuario guardado con sus datos")
+    void buscarPorCorreoDevuelveElUsuarioGuardado() {
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+
+        Optional<Usuario> encontrado = adapter.buscarPorCorreo("juan@uclm.es");
+
+        assertTrue(encontrado.isPresent());
+        assertEquals("juan@uclm.es", encontrado.get().getEmail().valor());
+        assertEquals("hash-simulado", encontrado.get().getPasswordHash());
+        assertEquals(Rol.CLIENTE, encontrado.get().getRol());
+    }
+
+    @Test
+    @DisplayName("HU2-CP02: buscarPorCorreo devuelve vacío si el email no está guardado")
+    void buscarPorCorreoDevuelveVacioSiNoEstaGuardado() {
+        assertTrue(adapter.buscarPorCorreo("nadie@uclm.es").isEmpty());
     }
 }
