@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -137,6 +138,22 @@ class UsuarioMongoAdapterTest {
         assertEquals("Juan", leido.getNombre());
         assertEquals("Pérez García", leido.getApellidos());
         assertEquals(TipoCliente.PREMIUM, leido.getTipoCliente());
+    }
+
+    @Test
+    @DisplayName("Persistencia: guarda createdAt y updatedAt, y createdAt no cambia al actualizar")
+    void guardaFechasDeCreacionYModificacion() {
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+        Date creado = documentoEnBruto().getDate("createdAt");
+        Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
+        leido.registrarIntentoFallido(AHORA);
+
+        adapter.guardar(leido);
+
+        Document actualizado = documentoEnBruto();
+        assertNotNull(creado);
+        assertEquals(creado, actualizado.getDate("createdAt"));
+        assertFalse(actualizado.getDate("updatedAt").before(creado));
     }
 
     @Test
