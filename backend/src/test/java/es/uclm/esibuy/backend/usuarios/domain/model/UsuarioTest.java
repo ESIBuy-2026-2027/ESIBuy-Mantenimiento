@@ -163,6 +163,17 @@ class UsuarioTest {
         assertThrows(UsuarioInvalidoException.class, () -> Usuario.reconstruir(datos, false, -1, null));
     }
 
+    @Test
+    @DisplayName("HU2-CP03: un usuario reconstruido con bloqueo vigente sigue bloqueado")
+    void usuarioReconstruidoConBloqueoSigueBloqueado() {
+        Instant ahora = Instant.parse("2026-10-08T12:00:00Z");
+
+        Usuario usuario = Usuario.reconstruir(cliente("Ana", "García López"), false, 5,
+                ahora.plusSeconds(600));
+
+        assertTrue(usuario.tieneBloqueoPorIntentos(ahora));
+    }
+
     private static Usuario cliente(String nombre, String apellidos) {
         return new Usuario("u-1", nombre, apellidos, EMAIL, HASH, Rol.CLIENTE, TipoCliente.ESTANDAR);
     }
