@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   Button,
   MessageBar,
@@ -7,63 +6,26 @@ import {
   Spinner,
   Text,
   Title1,
-  makeStyles,
-  tokens,
 } from '@fluentui/react-components'
 import { Add20Regular, BoxMultiple24Regular, SearchInfo24Regular } from '@fluentui/react-icons'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
+import ListFilters from '../components/ListFilters'
 import Pagination from '../components/Pagination'
-import ProductFilters from '../features/seller/ProductFilters'
+import { usePageStyles } from '../components/pageStyles'
 import ProductsTable from '../features/seller/ProductsTable'
-import { useCategories } from '../features/seller/useCategories'
-import { useDebouncedValue } from '../features/seller/useDebouncedValue'
 import { useSellerProducts } from '../features/seller/useSellerProducts'
+import { useCategories } from '../hooks/useCategories'
+import { useListFilters } from '../hooks/useListFilters'
 import { PATHS } from '../routes/paths'
 
 const PAGE_SIZE = 10
 
-const useStyles = makeStyles({
-  page: {
-    width: '100%',
-    maxWidth: '1000px',
-    margin: '0 auto',
-    boxSizing: 'border-box',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalXL,
-    padding: `${tokens.spacingVerticalXL} ${tokens.spacingHorizontalL} ${tokens.spacingVerticalXXXL}`,
-  },
-  heading: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: tokens.spacingHorizontalL,
-  },
-  titleBlock: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalXS,
-  },
-  title: {
-    margin: 0,
-  },
-  subtitle: {
-    color: tokens.colorNeutralForeground3,
-  },
-  loading: {
-    padding: tokens.spacingVerticalXXXL,
-  },
-})
-
 export default function SellerProductsPage() {
-  const styles = useStyles()
-  const [search, setSearch] = useState('')
-  const [category, setCategory] = useState('')
-  const [page, setPage] = useState(1)
-  const debouncedSearch = useDebouncedValue(search)
+  const styles = usePageStyles()
   const categories = useCategories()
+  const { search, category, page, debouncedSearch, filtersActive, setPage, changeSearch, changeCategory, clearFilters } =
+    useListFilters()
   const { data, failed, refreshing, retry } = useSellerProducts({
     search: debouncedSearch,
     category,
@@ -71,25 +33,8 @@ export default function SellerProductsPage() {
     size: PAGE_SIZE,
   })
 
-  const filtersActive = Boolean(search || category)
   const hasNoProducts = data?.totalItems === 0 && !debouncedSearch && !category
   const showFilters = filtersActive || (data?.totalItems ?? 0) > 0
-
-  const changeSearch = (value) => {
-    setSearch(value)
-    setPage(1)
-  }
-
-  const changeCategory = (value) => {
-    setCategory(value)
-    setPage(1)
-  }
-
-  const clearFilters = () => {
-    setSearch('')
-    setCategory('')
-    setPage(1)
-  }
 
   return (
     <main className={styles.page}>
@@ -106,10 +51,11 @@ export default function SellerProductsPage() {
       </div>
 
       {showFilters && (
-        <ProductFilters
+        <ListFilters
           search={search}
           category={category}
           categories={categories}
+          searchPlaceholder="Escribe el nombre de un producto"
           onSearchChange={changeSearch}
           onCategoryChange={changeCategory}
         />

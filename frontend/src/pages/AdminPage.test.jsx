@@ -30,12 +30,12 @@ describe('AdminPage (HU18)', () => {
     expect(boton).toHaveFocus()
   })
 
-  it('adminPage_alPulsarUnBoton_deMomentoNoNavegaANingunaParte', async () => {
+  it('adminPage_alPulsarClientes_deMomentoNoNavegaANingunaParte', async () => {
     const user = userEvent.setup()
     await abrirSesionPorApi('admin@esibuy.test')
     renderApp('/admin')
 
-    await user.click(await screen.findByRole('button', { name: /vendedores/i }))
+    await user.click(await screen.findByRole('button', { name: /clientes/i }))
 
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/admin$/))
   })

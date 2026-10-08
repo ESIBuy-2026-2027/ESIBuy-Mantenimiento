@@ -1,5 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
+import java.util.Optional;
+
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 /**
@@ -12,4 +14,6 @@ public interface UsuarioMongoRepository extends MongoRepository<UsuarioDocument,
 
     // Spring Data deduce la consulta del nombre: ¿hay algún documento con ese email?
     boolean existsByEmail(String email);
+
+    Optional<UsuarioDocument> findByEmail(String email);
 }

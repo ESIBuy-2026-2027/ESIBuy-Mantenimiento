@@ -1,6 +1,8 @@
 import { Text, Title1, makeStyles, tokens } from '@fluentui/react-components'
 import { BuildingShop24Regular, People24Regular, PersonKey24Regular } from '@fluentui/react-icons'
+import { useNavigate } from 'react-router-dom'
 import AdminSectionCard from '../features/admin/AdminSectionCard'
+import { PATHS } from '../routes/paths'
 
 const sections = [
   {
@@ -13,6 +15,7 @@ const sections = [
     id: 'sellers',
     icon: <BuildingShop24Regular />,
     title: 'Vendedores',
+    to: PATHS.ADMIN_SELLERS,
     description: 'Supervisa a los vendedores y consulta sus catálogos.',
   },
   {
@@ -54,6 +57,7 @@ const useStyles = makeStyles({
 
 export default function AdminPage() {
   const styles = useStyles()
+  const navigate = useNavigate()
 
   return (
     <main className={styles.page}>
@@ -71,6 +75,7 @@ export default function AdminPage() {
             icon={section.icon}
             title={section.title}
             description={section.description}
+            onClick={section.to ? () => navigate(section.to) : undefined}
           />
         ))}
       </div>

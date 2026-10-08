@@ -17,7 +17,7 @@ import UsersFilters from '../features/admin/UsersFilters'
 import UsersTable from '../features/admin/UsersTable'
 import { USERS_PAGE_SIZE } from '../features/admin/usersConfig'
 import { useUsersList } from '../features/admin/useUsersList'
-import { useDebouncedValue } from '../features/seller/useDebouncedValue'
+import { useDebouncedValue } from '../hooks/useDebouncedValue'
 
 const useStyles = makeStyles({
   page: {
