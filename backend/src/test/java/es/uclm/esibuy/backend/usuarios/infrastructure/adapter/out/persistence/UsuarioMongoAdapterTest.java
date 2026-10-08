@@ -80,4 +80,15 @@ class UsuarioMongoAdapterTest {
     void buscarPorCorreoDevuelveVacioSiNoEstaGuardado() {
         assertTrue(adapter.buscarPorCorreo("nadie@uclm.es").isEmpty());
     }
+
+    @Test
+    @DisplayName("HU2-CP03: guardar un usuario leído lo actualiza en vez de duplicarlo")
+    void guardarUnUsuarioLeidoLoActualizaSinDuplicarlo() {
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+        Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
+
+        adapter.guardar(leido);   // como hace el login tras un intento fallido
+
+        assertEquals(1, usuarioMongoRepository.findAll().size());
+    }
 }
