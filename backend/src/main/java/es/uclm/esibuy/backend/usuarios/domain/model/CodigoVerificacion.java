@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.usuarios.domain.model;
 
+import java.time.Duration;
 import java.time.Instant;
 
 /**
@@ -22,19 +23,23 @@ import java.time.Instant;
  */
 public class CodigoVerificacion {
 
+    private static final Duration VALIDEZ = Duration.ofMinutes(10);
+
     private final String usuarioId;
     private final String codigoHash;
+    private final Instant expiraEn;
 
-    private CodigoVerificacion(String usuarioId, String codigoHash) {
+    private CodigoVerificacion(String usuarioId, String codigoHash, Instant expiraEn) {
         this.usuarioId = usuarioId;
         this.codigoHash = codigoHash;
+        this.expiraEn = expiraEn;
     }
 
     public static CodigoVerificacion nuevo(String usuarioId, String codigoHash, Instant ahora) {
-        return new CodigoVerificacion(usuarioId, codigoHash);
+        return new CodigoVerificacion(usuarioId, codigoHash, ahora.plus(VALIDEZ));
     }
 
     public boolean puedeUsarse(Instant ahora) {
-        return true;
+        return ahora.isBefore(expiraEn);
     }
 }
