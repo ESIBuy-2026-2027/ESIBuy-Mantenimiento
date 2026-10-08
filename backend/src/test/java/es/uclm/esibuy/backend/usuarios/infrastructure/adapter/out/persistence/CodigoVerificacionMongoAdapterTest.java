@@ -73,6 +73,12 @@ class CodigoVerificacionMongoAdapterTest {
         assertFalse(leido.puedeUsarse(AHORA.plus(Duration.ofMinutes(10))));
     }
 
+    @Test
+    @DisplayName("HU2-CP07: buscarPorUsuario devuelve vacío si el usuario no tiene código")
+    void buscarPorUsuarioDevuelveVacioSinCodigo() {
+        assertTrue(adapter.buscarPorUsuario("u-sin-codigo").isEmpty());
+    }
+
     // MongoTemplate devuelve el documento tal cual está en MongoDB, con los nombres de sus campos.
     private Document documentoEnBruto() {
         Document guardado = mongoTemplate.getCollection("tokens_seguridad").find().first();
