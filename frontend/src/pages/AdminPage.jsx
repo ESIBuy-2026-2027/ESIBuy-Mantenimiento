@@ -22,6 +22,7 @@ const sections = [
     id: 'admins',
     icon: <PersonKey24Regular />,
     title: 'Administradores',
+    to: PATHS.ADMIN_NEW_ADMIN,
     description: 'Gestiona al equipo con acceso al panel de control.',
   },
 ]
