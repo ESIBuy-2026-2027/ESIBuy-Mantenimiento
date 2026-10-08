@@ -164,11 +164,23 @@ class InicializadorColeccionesTest {
     @Test
     @DisplayName("Validación de productos: precio mayor que cero, stock no negativo y nombre obligatorio")
     void validaProductos() {
-        acepta("productos", producto(29.99, 10).append("descuentoPremium", 5));
+        acepta("productos", producto(29.99, 10));
         rechaza(VALIDACION, "productos", producto(0, 1));
         rechaza(VALIDACION, "productos", producto(5, -1));
         rechaza(VALIDACION, "productos", producto(5, 1).append("precio", "29.99"));
         rechaza(VALIDACION, "productos", new Document("vendedorId", "v1").append("precio", 5).append("stock", 1));
+    }
+
+    @Test
+    @DisplayName("Validación de productos: descuentos como en el formulario de producto (activo y porcentaje hasta 100)")
+    void validaDescuentosDeProductos() {
+        // Formato del formulario de producto del frontend (HU31): {activo, porcentaje}.
+        acepta("productos", producto(29.99, 10).append("descuento", descuento(true, 10))
+                .append("descuentoPremium", descuento(false, null)));
+        rechaza(VALIDACION, "productos", producto(5, 1).append("descuento", descuento(true, 150)));
+        rechaza(VALIDACION, "productos", producto(5, 1).append("descuentoPremium", descuento(true, 0)));
+        rechaza(VALIDACION, "productos", producto(5, 1).append("descuento", 10));
+        rechaza(VALIDACION, "productos", producto(5, 1).append("descuento", new Document("porcentaje", 10)));
     }
 
     @Test
@@ -244,6 +256,10 @@ class InicializadorColeccionesTest {
     private static Document producto(double precio, int stock) {
         return new Document("vendedorId", "v1").append("nombre", "Teclado").append("precio", precio)
                 .append("stock", stock);
+    }
+
+    private static Document descuento(boolean activo, Integer porcentaje) {
+        return new Document("activo", activo).append("porcentaje", porcentaje);
     }
 
     private static Document pedido(String clienteId, int cantidad) {

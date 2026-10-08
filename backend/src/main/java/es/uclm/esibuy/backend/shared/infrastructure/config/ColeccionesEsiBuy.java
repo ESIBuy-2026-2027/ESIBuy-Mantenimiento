@@ -144,7 +144,8 @@ final class ColeccionesEsiBuy {
     }
 
     // 5. productos: catálogo y stock. Reglas del modelo: precio > 0, stock >= 0, nombre y vendedorId
-    // obligatorios. descuentoPremium sale del MVP del Sprint 1.
+    // obligatorios. Los descuentos siguen el formulario de producto del frontend (HU31): descuento y
+    // descuentoPremium (MVP del Sprint 1) son {activo, porcentaje}, no un número como en el modelo.
     private static Coleccion productos() {
         return new Coleccion("productos", esquema(List.of(VENDEDOR_ID, NOMBRE, "precio", "stock"),
                 textoNoVacio(VENDEDOR_ID),
@@ -152,8 +153,8 @@ final class ColeccionesEsiBuy {
                 string("descripcion"),
                 number("precio").gt(0),
                 enteroNoNegativo("stock"),
-                importe("descuento"),
-                importe("descuentoPremium"),
+                descuento("descuento"),
+                descuento("descuentoPremium"),
                 importe("precioFinal"),
                 array("categoriaIds").items(JsonSchemaObject.string()),
                 string("imagen"),
@@ -257,6 +258,13 @@ final class ColeccionesEsiBuy {
     // Decimal128 (@Field(targetType = FieldType.DECIMAL128)): por defecto Spring Data lo guardaría como texto.
     private static JsonSchemaProperty importe(String nombre) {
         return number(nombre).gte(0);
+    }
+
+    // Descuento de un producto (HU31): si está activo, porcentaje mayor que 0 y hasta 100; si no, null.
+    private static JsonSchemaProperty descuento(String nombre) {
+        return object(nombre).required("activo").properties(
+                bool("activo"),
+                untyped("porcentaje").anyOf(JsonSchemaObject.number().gt(0).lte(100), JsonSchemaObject.nil()));
     }
 
     // Fecha que puede ser null, como lockedUntil en el ejemplo del modelo.
