@@ -1,18 +1,18 @@
 import { http, HttpResponse } from 'msw'
 import { getUsuarioEnSesion } from './authHandlers'
+import { leerPagina, normalizar, paginar } from './paginar'
 
-const VENDEDOR_CON_PRODUCTOS = 'u-2'
-const OTRO_VENDEDOR = 'u-99'
-const TAMANO_PAGINA_POR_DEFECTO = 10
+export const VENDEDOR_CON_PRODUCTOS = 'u-2'
+export const OTRO_VENDEDOR = 'u-99'
 
-const CATEGORIAS = new Map([
+export const CATEGORIAS = new Map([
   ['cat-1', 'Tecnología'],
   ['cat-2', 'Hogar'],
 ])
 
 // [nombre, precio, stock, disponible, categorías]. El vendedor u-2 tiene 23 (3 páginas de 10);
 // u-5 (vendedor-vacio@esibuy.test) no tiene ninguno; u-99 tiene los últimos 3, que u-2 nunca debe ver.
-const PRODUCTOS = [
+export const PRODUCTOS = [
   ['Auriculares inalámbricos', 59.9, 34, true, ['cat-1']],
   ['Teclado mecánico', 89.5, 12, true, ['cat-1']],
   ['Ratón ergonómico', 34.99, 0, true, ['cat-1']],
@@ -47,15 +47,14 @@ const PRODUCTOS = [
   disponible,
   categorias,
   vendedorId,
+  descripcion: `Descripción de ${nombre}.`,
+  imagen: '',
+  // Algunos productos de ejemplo tienen descuentos activos para probar la edición.
+  descuento: { activo: indice % 5 === 0, porcentaje: indice % 5 === 0 ? 10 : null },
+  descuentoPremium: { activo: indice % 7 === 0, porcentaje: indice % 7 === 0 ? 15 : null },
 }))
 
-const normalizar = (texto) =>
-  texto
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .toLowerCase()
-
-const aRespuesta = ({ id, nombre, precio, stock, disponible, categorias }) => ({
+export const aRespuesta = ({ id, nombre, precio, stock, disponible, categorias }) => ({
   id,
   nombre,
   precio,
@@ -64,32 +63,101 @@ const aRespuesta = ({ id, nombre, precio, stock, disponible, categorias }) => ({
   categorias: categorias.map((idCategoria) => CATEGORIAS.get(idCategoria)),
 })
 
-export const productsHandlers = [
-  http.get('/api/seller/products', ({ request }) => {
-    const usuario = getUsuarioEnSesion()
-    if (!usuario) return new HttpResponse(null, { status: 401 })
-    if (usuario.rol !== 'VENDEDOR') return new HttpResponse(null, { status: 403 })
+// Detalle completo del producto, con los datos que necesita el formulario de edición.
+const aDetalle = ({ id, nombre, descripcion, precio, stock, disponible, categorias, imagen, descuento, descuentoPremium }) => ({
+  id,
+  nombre,
+  descripcion,
+  precio,
+  stock,
+  disponible,
+  categoriaIds: categorias,
+  imagen,
+  descuento,
+  descuentoPremium,
+})
 
+const esPorcentajeValido = (descuento) =>
+  !descuento?.activo || (Number(descuento.porcentaje) > 0 && Number(descuento.porcentaje) <= 100)
+
+// Reglas mínimas de la HU31 que el backend real también debe imponer.
+function esProductoValido(producto) {
+  return (
+    typeof producto?.nombre === 'string' &&
+    producto.nombre.trim() !== '' &&
+    Array.isArray(producto.categoriaIds) &&
+    producto.categoriaIds.length > 0 &&
+    Number(producto.precio) > 0 &&
+    Number.isInteger(producto.stock) &&
+    producto.stock >= 0 &&
+    esPorcentajeValido(producto.descuento) &&
+    esPorcentajeValido(producto.descuentoPremium)
+  )
+}
+
+// Devuelve la respuesta de error si quien pregunta no es vendedor, o null si puede continuar.
+function rechazarSiNoEsVendedor() {
+  const usuario = getUsuarioEnSesion()
+  if (!usuario) return new HttpResponse(null, { status: 401 })
+  if (usuario.rol !== 'VENDEDOR') return new HttpResponse(null, { status: 403 })
+  return null
+}
+
+// Solo el dueño del producto puede verlo o tocarlo; para el resto no existe.
+function conProductoPropio(params, respuestaPara) {
+  const rechazo = rechazarSiNoEsVendedor()
+  if (rechazo) return rechazo
+
+  const producto = PRODUCTOS.find(
+    (candidato) => candidato.id === params.id && candidato.vendedorId === getUsuarioEnSesion().id,
+  )
+  return producto ? respuestaPara(producto) : new HttpResponse(null, { status: 404 })
+}
+
+const errorDeValidacion = () => HttpResponse.json({ code: 'VALIDATION_ERROR' }, { status: 400 })
+
+// Las escrituras (POST, PUT y DELETE) validan y responden como el backend real, pero NO modifican
+// los datos de ejemplo: a efectos prácticos, el frontend no añade ni elimina productos.
+export const productsHandlers = [
+  http.get('/api/seller/products/:id', ({ params }) =>
+    conProductoPropio(params, (producto) => HttpResponse.json(aDetalle(producto))),
+  ),
+
+  http.post('/api/seller/products', async ({ request }) => {
+    const rechazo = rechazarSiNoEsVendedor()
+    if (rechazo) return rechazo
+
+    const producto = await request.json()
+    return esProductoValido(producto)
+      ? HttpResponse.json({ ...producto, id: 'p-nuevo' }, { status: 201 })
+      : errorDeValidacion()
+  }),
+
+  http.put('/api/seller/products/:id', ({ params, request }) =>
+    conProductoPropio(params, async (existente) => {
+      const producto = await request.json()
+      return esProductoValido(producto) ? HttpResponse.json({ ...producto, id: existente.id }) : errorDeValidacion()
+    }),
+  ),
+
+  http.delete('/api/seller/products/:id', ({ params }) =>
+    conProductoPropio(params, () => new HttpResponse(null, { status: 204 })),
+  ),
+
+  http.get('/api/seller/products', ({ request }) => {
+    const rechazo = rechazarSiNoEsVendedor()
+    if (rechazo) return rechazo
+
+    const usuario = getUsuarioEnSesion()
     const params = new URL(request.url).searchParams
     const busqueda = normalizar(params.get('search') ?? '')
     const categoria = params.get('category')
-    const pagina = Math.max(1, Number(params.get('page')) || 1)
-    const tamano = Math.max(1, Number(params.get('size')) || TAMANO_PAGINA_POR_DEFECTO)
-
     const coincidentes = PRODUCTOS.filter(
       (producto) =>
         producto.vendedorId === usuario.id &&
         normalizar(producto.nombre).includes(busqueda) &&
         (!categoria || producto.categorias.includes(categoria)),
     )
-    const inicio = (pagina - 1) * tamano
-
-    return HttpResponse.json({
-      items: coincidentes.slice(inicio, inicio + tamano).map(aRespuesta),
-      page: pagina,
-      size: tamano,
-      totalItems: coincidentes.length,
-      totalPages: Math.ceil(coincidentes.length / tamano),
-    })
+    return HttpResponse.json(paginar(coincidentes, leerPagina(params), aRespuesta))
   }),
 ]

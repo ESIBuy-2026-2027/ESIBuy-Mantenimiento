@@ -27,7 +27,7 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | HU1-CP08 | Rechaza el registro si falta un campo obligatorio | Integración (capa web) | 2 | ✅ Pasa |
 | HU1-CP09 | Rechaza contraseñas de la lista de contraseñas comunes | Unitario | 2 | ✅ Pasa |
 | HU1-CP10 | Rechaza contraseñas que contienen datos personales del usuario | Unitario | 3 | ✅ Pasa |
-| HU1-CP11 | El usuario cumple sus invariantes de dominio (datos obligatorios, rol y tipo de cliente coherentes, desactivación) | Unitario | 12 | ✅ Pasa (10) · 🔍 En revisión (2 renombrados, PR #36) |
+| HU1-CP11 | El usuario cumple sus invariantes de dominio (datos obligatorios, rol y tipo de cliente coherentes, desactivación) | Unitario | 12 | ✅ Pasa |
 
 Notas:
 - **HU1-CP11:** en el PR #36, el bloqueo manual de la T214 se renombra a desactivar/activar (`desactivar()`, `activar()`, `estaDesactivado()`) para no confundirlo con el bloqueo temporal por intentos del login (HU2-CP03).
@@ -85,8 +85,8 @@ Notas:
 | HU1-CP11 | `UsuarioTest` | `rechazaRolNulo` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaClienteSinTipoDeCliente` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaTipoDeClienteSiNoEsCliente` | Dominio | AB#214 | PR #34 | ✅ |
-| HU1-CP11 | `UsuarioTest` | `desactivaUsuario` | Dominio | AB#214 | PR #34 (renombrado en PR #36) | 🔍 |
-| HU1-CP11 | `UsuarioTest` | `activaUsuarioDesactivado` | Dominio | AB#214 | PR #34 (renombrado en PR #36) | 🔍 |
+| HU1-CP11 | `UsuarioTest` | `desactivaUsuario` | Dominio | AB#214 | PR #34 (renombrado en PR #36) | ✅ |
+| HU1-CP11 | `UsuarioTest` | `activaUsuarioDesactivado` | Dominio | AB#214 | PR #34 (renombrado en PR #36) | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `RegistroUsuarioServiceTest`: `usuarios/application/service/`
@@ -107,10 +107,10 @@ Los tests de integración de MongoDB (`UsuarioMongoAdapterTest`, `UsuariosConfig
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU2-CP01 | Inicia sesión con credenciales correctas y pasa al paso del código por email | Unitario + integración | 3 | 🔍 En revisión (3, PR #36) |
-| HU2-CP02 | Rechaza credenciales incorrectas sin revelar si el correo existe | Unitario + integración | 4 | 🔍 En revisión (4, PR #36) |
-| HU2-CP03 | Bloquea la cuenta durante 15 minutos tras 5 intentos fallidos | Unitario | 3 | 🔍 En revisión (3, PR #36) |
-| HU2-CP04 | Rechaza el acceso a una cuenta desactivada | Unitario | 1 | 🔍 En revisión (1, PR #36) |
+| HU2-CP01 | Inicia sesión con credenciales correctas y pasa al paso del código por email | Unitario + integración | 3 | ✅ Pasa |
+| HU2-CP02 | Rechaza credenciales incorrectas sin revelar si el correo existe | Unitario + integración | 4 | ✅ Pasa |
+| HU2-CP03 | Bloquea la cuenta durante 15 minutos tras 5 intentos fallidos | Unitario | 3 | ✅ Pasa |
+| HU2-CP04 | Rechaza el acceso a una cuenta desactivada | Unitario | 1 | ✅ Pasa |
 
 Notas:
 - **HU2-CP01 a CP04:** casos definidos en la T19/T22 a partir del contrato del frontend (`frontend/src/mocks/authHandlers.js`). Pendientes de añadir a la descripción de la T22 en Azure Boards.
@@ -122,22 +122,77 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU2-CP01 | `AutenticacionServiceTest` | `iniciaSesionConCredencialesCorrectas` | Aplicación | AB#22 | PR #36 | 🔍 |
-| HU2-CP01 | `UsuarioDocumentMapperTest` | `convierteDocumentoEnUsuario` | Infraestructura | AB#224 | PR #36 | 🔍 |
-| HU2-CP01 | `UsuarioMongoAdapterTest` | `buscarPorCorreoDevuelveElUsuarioGuardado` | Infraestructura | AB#224 | PR #36 | 🔍 |
-| HU2-CP02 | `AutenticacionServiceTest` | `rechazaCorreoInexistente` | Aplicación | AB#22 | PR #36 | 🔍 |
-| HU2-CP02 | `AutenticacionServiceTest` | `rechazaContrasenaIncorrecta` | Aplicación | AB#22 | PR #36 | 🔍 |
-| HU2-CP02 | `BCryptHashContrasenaAdapterTest` | `coincideConElHashDeLaMismaContrasena` | Infraestructura | AB#22 | PR #36 | 🔍 |
-| HU2-CP02 | `UsuarioMongoAdapterTest` | `buscarPorCorreoDevuelveVacioSiNoEstaGuardado` | Infraestructura | AB#224 | PR #36 | 🔍 |
-| HU2-CP03 | `AutenticacionServiceTest` | `permiteCuartoIntentoFallidoSinBloquear` | Aplicación | AB#22 | PR #36 | 🔍 |
-| HU2-CP03 | `AutenticacionServiceTest` | `bloqueaLaCuentaTrasCincoIntentosFallidos` | Aplicación | AB#22 | PR #36 | 🔍 |
-| HU2-CP03 | `AutenticacionServiceTest` | `desbloqueaLaCuentaPasados15Minutos` | Aplicación | AB#22 | PR #36 | 🔍 |
-| HU2-CP04 | `AutenticacionServiceTest` | `rechazaCuentaDesactivada` | Aplicación | AB#22 | PR #36 | 🔍 |
+| HU2-CP01 | `AutenticacionServiceTest` | `iniciaSesionConCredencialesCorrectas` | Aplicación | AB#22 | PR #36 | ✅ |
+| HU2-CP01 | `UsuarioDocumentMapperTest` | `convierteDocumentoEnUsuario` | Infraestructura | AB#224 | PR #36 | ✅ |
+| HU2-CP01 | `UsuarioMongoAdapterTest` | `buscarPorCorreoDevuelveElUsuarioGuardado` | Infraestructura | AB#224 | PR #36 | ✅ |
+| HU2-CP02 | `AutenticacionServiceTest` | `rechazaCorreoInexistente` | Aplicación | AB#22 | PR #36 | ✅ |
+| HU2-CP02 | `AutenticacionServiceTest` | `rechazaContrasenaIncorrecta` | Aplicación | AB#22 | PR #36 | ✅ |
+| HU2-CP02 | `BCryptHashContrasenaAdapterTest` | `coincideConElHashDeLaMismaContrasena` | Infraestructura | AB#22 | PR #36 | ✅ |
+| HU2-CP02 | `UsuarioMongoAdapterTest` | `buscarPorCorreoDevuelveVacioSiNoEstaGuardado` | Infraestructura | AB#224 | PR #36 | ✅ |
+| HU2-CP03 | `AutenticacionServiceTest` | `permiteCuartoIntentoFallidoSinBloquear` | Aplicación | AB#22 | PR #36 | ✅ |
+| HU2-CP03 | `AutenticacionServiceTest` | `bloqueaLaCuentaTrasCincoIntentosFallidos` | Aplicación | AB#22 | PR #36 | ✅ |
+| HU2-CP03 | `AutenticacionServiceTest` | `desbloqueaLaCuentaPasados15Minutos` | Aplicación | AB#22 | PR #36 | ✅ |
+| HU2-CP04 | `AutenticacionServiceTest` | `rechazaCuentaDesactivada` | Aplicación | AB#22 | PR #36 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AutenticacionServiceTest`: `usuarios/application/service/` (Mockito, con `Clock` fijo)
 - `BCryptHashContrasenaAdapterTest`: `usuarios/infrastructure/adapter/out/seguridad/`
 - `UsuarioDocumentMapperTest` y `UsuarioMongoAdapterTest`: `usuarios/infrastructure/adapter/out/persistence/` (el adaptador, con Testcontainers)
+
+---
+
+## HU19 · Listar y buscar usuarios
+
+### Tabla A · HU19 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU19-CP01 | Muestra nombre, email, rol, estado y fecha de alta de cada usuario | Unitario + integración | 3 | 🔍 En revisión (AB#64) |
+| HU19-CP02 | Busca por nombre o email | Unitario + integración | 3 | 🔍 En revisión (AB#63, AB#64) |
+| HU19-CP03 | Filtra por rol | Unitario + integración | 3 | 🔍 En revisión (AB#63, AB#64) |
+| HU19-CP04 | Filtra por estado | Unitario + integración | 3 | 🔍 En revisión (AB#63, AB#64) |
+| HU19-CP05 | El listado está paginado de 10 en 10 | Unitario + integración | 3 | 🔍 En revisión (AB#63, AB#64) |
+| HU19-CP06 | Al cambiar la búsqueda o un filtro vuelve a la primera página | Integración | 2 | 🔍 En revisión (AB#64) |
+| HU19-CP07 | Sin coincidencias muestra que no se han encontrado usuarios | Integración | 2 | 🔍 En revisión (AB#64) |
+| HU19-CP08 | Si la API falla muestra un mensaje de error con reintento | Unitario + integración | 3 | 🔍 En revisión (AB#63, AB#64) |
+
+Notas:
+- **HU19-CP01 a CP08:** casos definidos en la T63/T64 a partir de los criterios de aceptación de la HU19 más los estados vacío y de error. Pendientes de añadir a la descripción de las tasks en Azure Boards.
+- **Frontend:** son los primeros tests de frontend de la matriz (Vitest + React Testing Library + MSW). En lugar de `@DisplayName`, el ID del caso va al principio del nombre del test: `it('HU19-CPnn: ...')`. Los tests de integración recorren la página completa contra el mock de MSW (`mocks/usersHandlers.js`).
+- **Backend:** el contrato que usan estos tests (`GET /api/admin/usuarios`) está pendiente de confirmar con el backend de la HU19 (AB#61/62). Ver `frontend/docs/hu19-listado-usuarios.md`.
+- **AB#63 / AB#64:** los tests de `users.test.js` se escribieron en la T63 (ciclos 1 a 5, antes de separar las tasks); el resto, en la T64.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Archivo de test | Test | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU19-CP01 | `UsersTable.test.jsx` | `muestra las cabeceras de las cinco columnas` | Frontend · componente | AB#64 | PR por abrir | 🔍 |
+| HU19-CP01 | `UsersTable.test.jsx` | `muestra cada usuario con rol y estado legibles y la fecha en dd/mm/aaaa` | Frontend · componente | AB#64 | PR por abrir | 🔍 |
+| HU19-CP01 | `AdminUsersPage.test.jsx` | `con sesión de admin muestra el título y los 10 primeros usuarios` | Frontend · página | AB#64 | PR por abrir | 🔍 |
+| HU19-CP02 | `users.test.js` | `envía la búsqueda solo cuando tiene texto` | Frontend · API | AB#63 | PR por abrir | 🔍 |
+| HU19-CP02 | `UsersFilters.test.jsx` | `avisa del texto escrito en el buscador por nombre o email` | Frontend · componente | AB#64 | PR por abrir | 🔍 |
+| HU19-CP02 | `AdminUsersPage.test.jsx` | `al buscar "ana" muestra solo los usuarios que coinciden` | Frontend · página | AB#64 | PR por abrir | 🔍 |
+| HU19-CP03 | `users.test.js` | `envía el rol cuando se filtra por rol` | Frontend · API | AB#63 | PR por abrir | 🔍 |
+| HU19-CP03 | `UsersFilters.test.jsx` | `avisa del rol elegido en el filtro de rol` | Frontend · componente | AB#64 | PR por abrir | 🔍 |
+| HU19-CP03 | `AdminUsersPage.test.jsx` | `al filtrar por Vendedor muestra solo vendedores` | Frontend · página | AB#64 | PR por abrir | 🔍 |
+| HU19-CP04 | `users.test.js` | `envía el estado cuando se filtra por estado` | Frontend · API | AB#63 | PR por abrir | 🔍 |
+| HU19-CP04 | `UsersFilters.test.jsx` | `avisa del estado elegido en el filtro de estado` | Frontend · componente | AB#64 | PR por abrir | 🔍 |
+| HU19-CP04 | `AdminUsersPage.test.jsx` | `al filtrar por Pendiente muestra solo cuentas pendientes` | Frontend · página | AB#64 | PR por abrir | 🔍 |
+| HU19-CP05 | `users.test.js` | `pide la página y el tamaño indicados` | Frontend · API | AB#63 | PR por abrir | 🔍 |
+| HU19-CP05 | `AdminUsersPage.test.jsx` | `al pulsar "Siguiente" muestra la página 2 de 3` | Frontend · página | AB#64 | PR por abrir | 🔍 |
+| HU19-CP05 | `AdminUsersPage.test.jsx` | `mientras llega la página siguiente la tabla se marca como ocupada` | Frontend · página | AB#64 | PR por abrir | 🔍 |
+| HU19-CP06 | `AdminUsersPage.test.jsx` | `estando en la página 2, al buscar vuelve a la página 1` | Frontend · página | AB#64 | PR por abrir | 🔍 |
+| HU19-CP06 | `AdminUsersPage.test.jsx` | `estando en la página 2, al filtrar vuelve a la página 1` | Frontend · página | AB#64 | PR por abrir | 🔍 |
+| HU19-CP07 | `AdminUsersPage.test.jsx` | `sin coincidencias muestra que no se han encontrado usuarios` | Frontend · página | AB#64 | PR por abrir | 🔍 |
+| HU19-CP07 | `AdminUsersPage.test.jsx` | `sin coincidencias, "Limpiar filtros" vuelve a mostrar todos los usuarios` | Frontend · página | AB#64 | PR por abrir | 🔍 |
+| HU19-CP08 | `users.test.js` | `propaga un ApiError si la respuesta no es correcta` | Frontend · API | AB#63 | PR por abrir | 🔍 |
+| HU19-CP08 | `AdminUsersPage.test.jsx` | `si la API responde 500 muestra un mensaje de error` | Frontend · página | AB#64 | PR por abrir | 🔍 |
+| HU19-CP08 | `AdminUsersPage.test.jsx` | `tras un error, "Reintentar" vuelve a cargar el listado` | Frontend · página | AB#64 | PR por abrir | 🔍 |
+
+Rutas de los archivos de test (bajo `frontend/src/`):
+- `users.test.js`: `api/`
+- `UsersTable.test.jsx` y `UsersFilters.test.jsx`: `features/admin/`
+- `AdminUsersPage.test.jsx`: `pages/` (integración: rutas protegidas, sesión simulada y mock de MSW)
 
 ---
 

@@ -19,3 +19,11 @@ export function verifyAuthenticatorCode(code) {
 export function logout() {
   return request('/api/auth/logout', { method: 'POST' })
 }
+
+export function registrarCliente(datos) {
+  return request('/api/auth/register/cliente', { method: 'POST', body: datos })
+}
+
+export function registrarVendedor(datos) {
+  return request('/api/auth/register/vendedor', { method: 'POST', body: datos })
+}

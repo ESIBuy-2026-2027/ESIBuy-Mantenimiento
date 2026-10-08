@@ -1,0 +1,95 @@
+import {
+  Badge,
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+  Text,
+  makeStyles,
+  mergeClasses,
+  tokens,
+} from '@fluentui/react-components'
+import { ROLE_LABELS, STATUS_LABELS, USER_STATUS } from './usersConfig'
+
+const COLUMNS = ['Nombre', 'Email', 'Rol', 'Estado', 'Fecha de alta']
+
+const STATUS_BADGE_COLORS = {
+  [USER_STATUS.PENDIENTE]: 'warning',
+  [USER_STATUS.ACTIVO]: 'success',
+  [USER_STATUS.BLOQUEADO]: 'danger',
+  [USER_STATUS.DESACTIVADO]: 'subtle',
+}
+
+const dateFormatter = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+
+const useStyles = makeStyles({
+  wrapper: {
+    overflowX: 'auto',
+    backgroundColor: tokens.colorNeutralBackground1,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusXLarge,
+    boxShadow: tokens.shadow4,
+    transitionProperty: 'opacity',
+    transitionDuration: tokens.durationNormal,
+    transitionTimingFunction: tokens.curveEasyEase,
+    '@media (prefers-reduced-motion: reduce)': {
+      transitionDuration: '0.01ms',
+    },
+  },
+  refreshing: {
+    opacity: 0.55,
+  },
+  row: {
+    transitionProperty: 'background-color',
+    transitionDuration: tokens.durationFast,
+    ':hover': {
+      backgroundColor: tokens.colorBrandBackground2,
+    },
+    '@media (prefers-reduced-motion: reduce)': {
+      transitionDuration: '0.01ms',
+    },
+  },
+  name: {
+    minWidth: '180px',
+  },
+  date: {
+    fontVariantNumeric: 'tabular-nums',
+  },
+})
+
+export default function UsersTable({ users, refreshing = false }) {
+  const styles = useStyles()
+
+  return (
+    <div className={mergeClasses(styles.wrapper, refreshing && styles.refreshing)} aria-busy={refreshing}>
+      <Table aria-label="Usuarios">
+        <TableHeader>
+          <TableRow>
+            {COLUMNS.map((column) => (
+              <TableHeaderCell key={column}>{column}</TableHeaderCell>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {users.map((user) => (
+            <TableRow key={user.id} className={styles.row}>
+              <TableCell className={styles.name}>
+                <Text weight="semibold">{`${user.nombre} ${user.apellidos}`}</Text>
+              </TableCell>
+              <TableCell>{user.email}</TableCell>
+              <TableCell>{ROLE_LABELS[user.rol]}</TableCell>
+              <TableCell>
+                <Badge appearance="tint" color={STATUS_BADGE_COLORS[user.estado]}>
+                  {STATUS_LABELS[user.estado]}
+                </Badge>
+              </TableCell>
+              <TableCell className={styles.date}>{dateFormatter.format(new Date(user.fechaAlta))}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}

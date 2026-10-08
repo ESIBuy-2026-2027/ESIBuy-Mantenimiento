@@ -16,7 +16,15 @@ const useStyles = makeStyles({
   },
 })
 
-export default function ProductFilters({ search, category, categories, onSearchChange, onCategoryChange }) {
+export default function ListFilters({
+  search,
+  category,
+  categories,
+  searchPlaceholder,
+  onSearchChange,
+  onCategoryChange,
+  children,
+}) {
   const styles = useStyles()
 
   return (
@@ -24,7 +32,7 @@ export default function ProductFilters({ search, category, categories, onSearchC
       <Field label="Buscar por nombre" className={styles.search}>
         <SearchBox
           value={search}
-          placeholder="Escribe el nombre de un producto"
+          placeholder={searchPlaceholder}
           onChange={(_event, data) => onSearchChange(data.value)}
         />
       </Field>
@@ -38,6 +46,7 @@ export default function ProductFilters({ search, category, categories, onSearchC
           ))}
         </Select>
       </Field>
+      {children}
     </div>
   )
 }
