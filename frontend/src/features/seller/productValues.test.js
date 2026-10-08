@@ -12,7 +12,7 @@ describe('validateProduct', () => {
   it('validateProduct_conFormularioVacio_devuelveTodosLosObligatoriosAlaVez', () => {
     const errores = validateProduct(emptyProductValues())
 
-    expect(Object.keys(errores).sort()).toEqual(['categoriaIds', 'nombre', 'precio'])
+    expect(Object.keys(errores).sort((a, b) => a.localeCompare(b))).toEqual(['categoriaIds', 'nombre', 'precio'])
   })
 
   it('validateProduct_conDatosValidos_noDevuelveErrores', () => {

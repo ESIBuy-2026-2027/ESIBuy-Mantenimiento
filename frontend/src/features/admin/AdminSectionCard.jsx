@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Text, makeStyles, mergeClasses, tokens } from '@fluentui/react-components'
 import { ArrowRight20Regular } from '@fluentui/react-icons'
@@ -115,4 +116,11 @@ export default function AdminSectionCard({ icon, title, description, onClick }) 
       />
     </button>
   )
+}
+
+AdminSectionCard.propTypes = {
+  icon: PropTypes.node.isRequired,
+  title: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  onClick: PropTypes.func,
 }

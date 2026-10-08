@@ -50,7 +50,7 @@ describe('AdminUsersPage (HU19)', () => {
     await user.type(screen.getByRole('searchbox', { name: 'Buscar por nombre o email' }), 'ana')
 
     await esperarFilas(2)
-    expect(columna(0).sort()).toEqual(['Ana López García', 'Mariana Ruiz Pascual'])
+    expect(columna(0).sort((a, b) => a.localeCompare(b))).toEqual(['Ana López García', 'Mariana Ruiz Pascual'])
   })
 
   it('HU19-CP03: al filtrar por Vendedor muestra solo vendedores', async () => {

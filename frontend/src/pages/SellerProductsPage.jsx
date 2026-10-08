@@ -11,9 +11,7 @@ import {
 import {
   Add20Regular,
   BoxMultiple24Regular,
-  Delete20Regular,
   Dismiss20Regular,
-  Edit20Regular,
   SearchInfo24Regular,
 } from '@fluentui/react-icons'
 import { useLocation } from 'react-router-dom'
@@ -23,11 +21,12 @@ import ListFilters from '../components/ListFilters'
 import Pagination from '../components/Pagination'
 import { usePageStyles } from '../components/pageStyles'
 import DeleteProductDialog from '../features/seller/DeleteProductDialog'
+import ProductRowActions from '../features/seller/ProductRowActions'
 import ProductsTable from '../features/seller/ProductsTable'
 import { useSellerProducts } from '../features/seller/useSellerProducts'
 import { useCategories } from '../hooks/useCategories'
 import { useListFilters } from '../hooks/useListFilters'
-import { PATHS, getSellerProductEditPath } from '../routes/paths'
+import { PATHS } from '../routes/paths'
 
 const PAGE_SIZE = 10
 
@@ -129,22 +128,7 @@ export default function SellerProductsPage() {
           <ProductsTable
             products={data.items}
             refreshing={refreshing}
-            actions={(product) => (
-              <>
-                <LinkButton
-                  to={getSellerProductEditPath(product.id)}
-                  appearance="subtle"
-                  icon={<Edit20Regular />}
-                  aria-label={`Editar ${product.nombre}`}
-                />
-                <Button
-                  appearance="subtle"
-                  icon={<Delete20Regular />}
-                  aria-label={`Eliminar ${product.nombre}`}
-                  onClick={() => setProductToDelete(product)}
-                />
-              </>
-            )}
+            renderActions={(product) => <ProductRowActions product={product} onDelete={setProductToDelete} />}
           />
           <Pagination
             page={data.page}
