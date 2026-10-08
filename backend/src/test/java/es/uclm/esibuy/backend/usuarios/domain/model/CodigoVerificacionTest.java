@@ -38,9 +38,11 @@ class CodigoVerificacionTest {
     @Test
     @DisplayName("HU2-CP09: un código ya usado no se puede volver a usar")
     void noSePuedeUsarDosVeces() {
-        // TODO: crear el código y llamar a marcarUsado().
-        // TODO: comprobar que puedeUsarse(ahora) es false.
-        fail("Funcionalidad no implementada");
+        CodigoVerificacion codigo = CodigoVerificacion.nuevo("u-1", "hash-del-codigo", AHORA);
+
+        codigo.marcarUsado();
+
+        assertFalse(codigo.puedeUsarse(AHORA));
     }
 
     @Test
