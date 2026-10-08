@@ -32,7 +32,7 @@ export default function AdminSellersPage() {
   const [status, setStatus] = useState('')
   const [sort, setSort] = useState('status')
   const [order, setOrder] = useState('asc')
-  const categories = useCategories()
+  const { categories } = useCategories()
   const { search, category, page, debouncedSearch, filtersActive, setPage, changeSearch, changeCategory, clearFilters } =
     useListFilters()
   const fetcher = useCallback(

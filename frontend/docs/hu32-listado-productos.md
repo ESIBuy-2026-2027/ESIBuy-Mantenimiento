@@ -85,7 +85,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | Archivo | Qué hace |
 |---|---|
 | `pages/SellerProductsPage.jsx` | Orquesta la pantalla. Guarda el estado de los filtros (`search`, `category`, `page`), decide cuál de los cinco estados mostrar (cargando, error, vacío, sin coincidencias, tabla) y coloca el botón **Añadir producto**. Cada cambio de filtro vuelve a la página 1. |
-| `pages/SellerProductNewPage.jsx` | Destino de **Añadir producto**. Está vacía a propósito (devuelve `null`): el formulario es la HU31. Existe para que el enlace no lleve a una ruta sin definir. |
+| `pages/SellerProductFormPage.jsx` | Destino de **Añadir producto**: el formulario de alta y edición de la HU31 (ver `docs/hu31-formulario-producto.md`). |
 | `routes/paths.js` / `routes/AppRoutes.jsx` | Nueva ruta `SELLER_PRODUCT_NEW` (`/seller/products/new`), protegida igual que el listado (solo vendedor). |
 
 ### Funcionalidad del vendedor (`features/seller/`)
@@ -107,8 +107,8 @@ Todas las rutas son relativas a `frontend/src/`.
 
 | Archivo | Qué hace |
 |---|---|
-| `useApiQuery.js` | Ejecuta una petición cuando cambia la función recibida. Descarta las respuestas atrasadas (si el usuario escribe rápido, solo cuenta la última). Expone `data`, `failed`, `refreshing` y `retry`. |
-| `useCategories.js` | Carga las categorías del desplegable. Si falla, el filtro queda solo con "Todas las categorías" y el listado sigue funcionando. |
+| `useApiQuery.js` | Ejecuta una petición cuando cambia la función recibida. Descarta las respuestas atrasadas (si el usuario escribe rápido, solo cuenta la última). Expone `data`, `error`, `failed`, `refreshing` y `retry`. |
+| `useCategories.js` | Carga las categorías del desplegable y devuelve `{ categories, loaded, failed, retry }`. Si falla, el filtro queda solo con "Todas las categorías" y el listado sigue funcionando. |
 | `useDebouncedValue.js` | Retrasa un valor 300 ms para no pedir al servidor una vez por cada tecla. |
 
 ### API y mocks
@@ -218,8 +218,8 @@ npm run build
 
 ## 8. Limitaciones y trabajo pendiente
 
-- **Añadir producto** lleva a una página vacía hasta que se desarrolle la HU31.
-- Sin ordenación por columnas ni acciones por fila (editar, activar/desactivar): son otras historias.
+- Las acciones de editar y eliminar por fila y el formulario de alta se añadieron con la HU31 (ver `docs/hu31-formulario-producto.md`).
+- Sin ordenación por columnas ni activar/desactivar por fila: son otras historias.
 - No hay imagen del producto en el listado.
 - El tamaño de página es fijo (10); no hay selector.
 - La vista es utilizable en móvil (la tabla se desplaza en horizontal), pero la adaptación fina es la HU29.
