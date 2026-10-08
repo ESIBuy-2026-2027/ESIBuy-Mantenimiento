@@ -48,4 +48,11 @@ class EmailTest {
     void rechazaEmailSinDominio() {
         assertThrows(EmailInvalidoException.class, () -> new Email("ana@"));
     }
+
+    @Test
+    @DisplayName("HU1-CP07: rechaza un email sin punto en el dominio")
+    void rechazaEmailSinPuntoEnElDominio() {
+        // Frontera en la que discrepan la validación web (@Email acepta "ana@localhost") y el dominio
+        assertThrows(EmailInvalidoException.class, () -> new Email("ana@localhost"));
+    }
 }
