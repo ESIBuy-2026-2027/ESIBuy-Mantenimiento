@@ -71,7 +71,9 @@ public class CodigoVerificacion {
         return intentosFallidos;
     }
 
-    
-
+    public String getUsuarioId() {
+        return usuarioId;
+    }
+   
     
 }
