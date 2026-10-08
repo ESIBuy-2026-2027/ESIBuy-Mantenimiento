@@ -27,7 +27,7 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | HU1-CP08 | Rechaza el registro si falta un campo obligatorio | Integración (capa web) | 2 | ✅ Pasa |
 | HU1-CP09 | Rechaza contraseñas de la lista de contraseñas comunes | Unitario | 2 | ✅ Pasa |
 | HU1-CP10 | Rechaza contraseñas que contienen datos personales del usuario | Unitario | 3 | ✅ Pasa |
-| HU1-CP11 | El usuario cumple sus invariantes de dominio (datos obligatorios, rol y tipo de cliente coherentes, desactivación) | Unitario | 27 | ✅ Pasa (7) · 🔍 En revisión (20, AB#210) |
+| HU1-CP11 | El usuario cumple sus invariantes de dominio (datos obligatorios, rol y tipo de cliente coherentes, desactivación) | Unitario | 14 | ✅ Pasa (12) · 🔍 En revisión (2, AB#210) |
 
 Notas:
 - **HU1-CP11:** en el PR #36, el bloqueo manual de la T214 se renombra a desactivar/activar (`desactivar()`, `activar()`, `estaDesactivado()`) para no confundirlo con el bloqueo temporal por intentos del login (HU2-CP03).
@@ -37,10 +37,6 @@ Notas:
 - **HU1-CP09, HU1-CP10 y HU1-CP11:** casos propuestos en la T214 (AB#214, PR #34) para la capa de dominio. Pendientes de confirmar con el equipo y de dar de alta en Azure Boards. CP09 y CP10 salen de los requisitos de Seguridad (lista negra y «evitar datos personales»).
 - **AB#214:** los tests de `PoliticaContrasenasTest` (CP05, CP09 y CP10) prueban la política de contraseñas en el dominio, pero el registro todavía no la usa: la validación de longitud sigue en `RegistroUsuarioService`. Conectarla será una task posterior.
 - **AB#210:** el test de email duplicado (CP03) comprueba el índice único de `email` a nivel de base de datos, sin pasar por `existePorCorreo`. Los tests de HU2-CP03 y CP04 en `UsuarioMongoAdapterTest` comprueban contra MongoDB que el estado de acceso (intentos, bloqueo y desactivación) se guarda y se recupera; los de `UsuarioTest` (`Usuario.reconstruir`) lo permiten en el dominio.
-- **HU1-CP11 (AB#210, ciclos 9 a 13):** `Usuario` pasa a construirse con `DatosPersonales` (nombre, apellidos, DNI y teléfono) y `DatosRol` (`DatosCliente`, `DatosVendedor` o `DatosAdministrador`), según el «Planteamiento inicial BBDD» y el MVP del Sprint 1. Por eso:
-  - `rechazaNombreEnBlanco` y `rechazaApellidosEnBlanco` pasan de `UsuarioTest` a `DatosPersonalesTest`, y `rechazaClienteSinTipoDeCliente`, a `DatosClienteTest`;
-  - `rechazaRolNulo` se renombra a `rechazaUsuarioSinDatosDeRol`;
-  - `rechazaTipoDeClienteSiNoEsCliente` se elimina: con `DatosRol` ya no se puede construir un vendedor o un administrador con tipo de cliente. Lo sustituye `elRolSaleDeLosDatosDeRol`.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -84,31 +80,18 @@ Notas:
 | HU1-CP10 | `PoliticaContrasenasTest` | `rechazaContrasenaQueContieneLaParteLocalDelEmail` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `creaUsuarioConDatosCorrectos` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `permiteUsuarioSinIdAntesDePersistir` | Dominio | AB#214 | PR #34 | ✅ |
+| HU1-CP11 | `UsuarioTest` | `rechazaNombreEnBlanco` | Dominio | AB#214 | PR #34 | ✅ |
+| HU1-CP11 | `UsuarioTest` | `rechazaApellidosEnBlanco` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `permiteUsuarioSinNombreNiApellidos` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaEmailNulo` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaContrasenaHashEnBlanco` | Dominio | AB#214 | PR #34 | ✅ |
-| HU1-CP11 | `UsuarioTest` | `rechazaUsuarioSinDatosPersonales` | Dominio | AB#210 | PR #43 | 🔍 |
-| HU1-CP11 | `UsuarioTest` | `rechazaUsuarioSinDatosDeRol` | Dominio | AB#210 | PR #43 (antes `rechazaRolNulo`, AB#214) | 🔍 |
-| HU1-CP11 | `UsuarioTest` | `elRolSaleDeLosDatosDeRol` | Dominio | AB#210 | PR #43 | 🔍 |
+| HU1-CP11 | `UsuarioTest` | `rechazaRolNulo` | Dominio | AB#214 | PR #34 | ✅ |
+| HU1-CP11 | `UsuarioTest` | `rechazaClienteSinTipoDeCliente` | Dominio | AB#214 | PR #34 | ✅ |
+| HU1-CP11 | `UsuarioTest` | `rechazaTipoDeClienteSiNoEsCliente` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `desactivaUsuario` | Dominio | AB#214 | PR #34 (renombrado en PR #36) | ✅ |
 | HU1-CP11 | `UsuarioTest` | `activaUsuarioDesactivado` | Dominio | AB#214 | PR #34 (renombrado en PR #36) | ✅ |
 | HU1-CP11 | `UsuarioTest` | `reconstruyeUsuarioConSuEstadoDeAcceso` | Dominio | AB#210 | PR #43 | 🔍 |
 | HU1-CP11 | `UsuarioTest` | `rechazaReconstruirConIntentosNegativos` | Dominio | AB#210 | PR #43 | 🔍 |
-| HU1-CP11 | `DatosPersonalesTest` | `creaDatosPersonales` | Dominio | AB#210 | PR #43 | 🔍 |
-| HU1-CP11 | `DatosPersonalesTest` | `permiteDatosPersonalesVacios` | Dominio | AB#210 | PR #43 | 🔍 |
-| HU1-CP11 | `DatosPersonalesTest` | `rechazaNombreEnBlanco` | Dominio | AB#210 | PR #43 (antes en `UsuarioTest`, AB#214) | 🔍 |
-| HU1-CP11 | `DatosPersonalesTest` | `rechazaApellidosEnBlanco` | Dominio | AB#210 | PR #43 (antes en `UsuarioTest`, AB#214) | 🔍 |
-| HU1-CP11 | `DatosPersonalesTest` | `rechazaDniEnBlanco` | Dominio | AB#210 | PR #43 | 🔍 |
-| HU1-CP11 | `DatosPersonalesTest` | `rechazaTelefonoEnBlanco` | Dominio | AB#210 | PR #43 | 🔍 |
-| HU1-CP11 | `DatosClienteTest` | `creaDatosDeClienteSinFechaDeNacimiento` | Dominio | AB#210 | PR #43 | 🔍 |
-| HU1-CP11 | `DatosClienteTest` | `rechazaClienteSinTipoDeCliente` | Dominio | AB#210 | PR #43 (antes en `UsuarioTest`, AB#214) | 🔍 |
-| HU1-CP11 | `DatosVendedorTest` | `creaDatosDeVendedor` | Dominio | AB#210 | PR #43 | 🔍 |
-| HU1-CP11 | `DatosVendedorTest` | `rechazaVendedorSinNombreComercial` | Dominio | AB#210 | PR #43 | 🔍 |
-| HU1-CP11 | `DatosVendedorTest` | `rechazaVendedorSinCategoriaPrincipal` | Dominio | AB#210 | PR #43 | 🔍 |
-| HU1-CP11 | `DatosAdministradorTest` | `creaDatosDeAdministrador` | Dominio | AB#210 | PR #43 | 🔍 |
-| HU1-CP11 | `DatosAdministradorTest` | `permiteAdministradorSinSede` | Dominio | AB#210 | PR #43 | 🔍 |
-| HU1-CP11 | `DatosAdministradorTest` | `rechazaSedeEnBlanco` | Dominio | AB#210 | PR #43 | 🔍 |
-| HU1-CP11 | `DatosAdministradorTest` | `rechazaAdministradorSinFechaDeIncorporacion` | Dominio | AB#210 | PR #43 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `RegistroUsuarioServiceTest`: `usuarios/application/service/`
@@ -116,7 +99,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `BCryptHashContrasenaAdapterTest`: `usuarios/infrastructure/adapter/out/seguridad/`
 - `UsuarioDocumentMapperTest` y `UsuarioMongoAdapterTest`: `usuarios/infrastructure/adapter/out/persistence/`
 - `UsuariosConfigTest`: `usuarios/infrastructure/config/`
-- `EmailTest`, `PoliticaContrasenasTest`, `UsuarioTest`, `DatosPersonalesTest`, `DatosClienteTest`, `DatosVendedorTest` y `DatosAdministradorTest`: `usuarios/domain/model/` (JUnit puro, sin Spring)
+- `EmailTest`, `PoliticaContrasenasTest` y `UsuarioTest`: `usuarios/domain/model/` (JUnit puro, sin Spring)
 - `UsuarioControllerTest`: `usuarios/infrastructure/adapter/in/web/` (con `@WebMvcTest`; prueba también `SecurityConfig` y `ManejadorGlobalErrores` de `shared`)
 
 Los tests de integración de MongoDB (`UsuarioMongoAdapterTest`, `UsuariosConfigTest`) usan Testcontainers (`MongoTestcontainersConfig`) y requieren Docker.
@@ -234,21 +217,17 @@ Tests que no validan una HU concreta.
 | `EmailTest` | `dosEmailsConElMismoValorSonIguales` | Que `Email` es un value object con igualdad por valor (AB#214, PR #34) |
 | `UsuarioTest` | `creaClienteNuevoEstandarSinNombreNiId` | Que la factoría `Usuario.nuevoCliente` crea un cliente `ESTANDAR` sin id ni datos de perfil, como lo usa el registro (AB#214, PR #34) |
 | `UsuarioMongoAdapterTest` | `elDocumentoNoIncluyeElCampoClass` | Que los documentos guardados no incluyen el campo `_class` de Spring Data (`MongoConfig`; AB#210, PR #43) |
-| `UsuarioMongoAdapterTest` | `guardaFechasDeCreacionYModificacion` | Que se guardan `createdAt` y `updatedAt` (auditoría de Spring Data, en `DocumentoBase`) y que `createdAt` no cambia al actualizar (AB#210, PR #43) |
-| `UsuarioMongoAdapterTest` | `conservaLosDatosDeVendedor` | Que los datos de un vendedor se guardan en el subdocumento `vendedor` y se recuperan (AB#210, PR #43) |
-| `UsuarioMongoAdapterTest` | `conservaLosDatosDeAdministrador` | Que los datos de un administrador se guardan en el subdocumento `administrador` y se recuperan (AB#210, PR #43) |
-| `UsuarioMongoAdapterTest` | `rechazaDniDuplicadoEnElMismoRol` | Que MongoDB rechaza un DNI repetido en el mismo rol y que no se confunde con un correo repetido (AB#210, PR #43) |
-| `UsuarioMongoAdapterTest` | `permiteMismoDniEnDistintoRol` | Que una persona puede tener cuenta de cliente y de vendedor con el mismo DNI (AB#210, PR #43) |
-| `UsuarioMongoAdapterTest` | `permiteVariosUsuariosSinDni` | Que el índice único del DNI no se aplica a usuarios sin DNI (AB#210, PR #43) |
-| `UsuarioMongoAdapterTest` | `rechazaNombreComercialDuplicado` | Que MongoDB rechaza un nombre comercial repetido (AB#210, PR #43) |
+| `UsuarioMongoAdapterTest` | `guardaFechasDeCreacionYModificacion` | Que se guardan `createdAt` y `updatedAt` (auditoría de Spring Data) y que `createdAt` no cambia al actualizar (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `creaLasDiezColecciones` | Que al arrancar se crean las 10 colecciones del modelo de BBDD (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `sePuedeEjecutarOtraVez` | Que el inicializador se puede ejecutar en cada arranque sin fallar ni duplicar índices (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `actualizaLaValidacionDeUnaColeccionExistente` | Que aplica la validación a una colección que ya existía sin ella (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `sinPermisoParaCambiarLaValidacionNoFalla` | Que sin permiso `collMod` (usuario de la aplicación en Atlas) avisa y la aplicación arranca igual (AB#210, PR #43) |
-| `InicializadorColeccionesTest` | `aceptaUsuariosValidos` | Que la validación de `usuarios` acepta los documentos de la aplicación, `lockedUntil` nulo y campos nuevos (AB#210, PR #43) |
+| `InicializadorColeccionesTest` | `aceptaUsuariosValidos` | Que la validación de `usuarios` acepta los documentos de la aplicación, los campos de vendedor y administrador, `lockedUntil` nulo y campos nuevos (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `rechazaUsuariosInvalidos` | Que la validación de `usuarios` rechaza campos obligatorios ausentes y valores fuera del modelo (AB#210, PR #43) |
+| `InicializadorColeccionesTest` | `usuariosConDniYNombreComercialUnicos` | Índices de `usuarios`: DNI único por rol (opcional) y nombre comercial único (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `validaSesionesFactoresYTokens` | Validación de `sesiones`, `factores_autenticacion` y `tokens_seguridad` (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `validaProductos` | Validación de `productos`: precio mayor que 0, stock no negativo, nombre obligatorio (AB#210, PR #43) |
+| `InicializadorColeccionesTest` | `validaDescuentosDeProductos` | Descuentos de `productos` con el formato del formulario de producto (HU31): `{activo, porcentaje}` (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `validaElRestoDeColecciones` | Validación de `pedidos`, `carritos`, `valoraciones`, `categorias` y `listas_deseos` (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `rechazaDuplicadosEnLosIndicesUnicos` | Índices únicos de `carritos`, `valoraciones`, `categorias`, `listas_deseos` y `factores_autenticacion` (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `creaLosIndicesDeLasAnotaciones` | Que también crea los índices de las anotaciones de los `@Document` (email único en `usuarios`) (AB#210, PR #43) |
