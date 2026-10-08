@@ -12,7 +12,8 @@ const useStyles = makeStyles({
   },
 })
 
-export default function SellerSortControls({ sort, order, onSortChange, onOrderChange }) {
+// Criterio de ordenación (las opciones las da cada listado) y botón para alternar el sentido.
+export default function SortControls({ options, sort, order, onSortChange, onOrderChange }) {
   const styles = useStyles()
   const ascending = order === 'asc'
 
@@ -20,9 +21,11 @@ export default function SellerSortControls({ sort, order, onSortChange, onOrderC
     <>
       <Field label="Ordenar por" className={styles.field}>
         <Select value={sort} onChange={(_event, data) => onSortChange(data.value)}>
-          <option value="status">Estado</option>
-          <option value="category">Categoría</option>
-          <option value="name">Nombre</option>
+          {options.map(({ value, label }) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
         </Select>
       </Field>
       <Button
@@ -38,8 +41,14 @@ export default function SellerSortControls({ sort, order, onSortChange, onOrderC
   )
 }
 
-SellerSortControls.propTypes = {
-  sort: PropTypes.oneOf(['status', 'category', 'name']).isRequired,
+SortControls.propTypes = {
+  options: PropTypes.arrayOf(
+    PropTypes.shape({
+      value: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  sort: PropTypes.string.isRequired,
   order: PropTypes.oneOf(['asc', 'desc']).isRequired,
   onSortChange: PropTypes.func.isRequired,
   onOrderChange: PropTypes.func.isRequired,

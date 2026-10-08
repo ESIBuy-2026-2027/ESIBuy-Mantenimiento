@@ -34,23 +34,27 @@ function FilterSelect({ label, allLabel, labels, value, onChange, className }) {
 }
 
 // El filtro de rol solo aparece si se recibe onRoleChange; los listados de un único rol no lo necesitan.
+// children permite añadir otros controles a la misma fila (p. ej. la ordenación).
 export default function UsersFilters({
   search,
+  searchLabel = 'Buscar por nombre o email',
+  searchPlaceholder = 'Escribe un nombre o un email',
   role = '',
   status,
   statusLabels = STATUS_LABELS,
   onSearchChange,
   onRoleChange,
   onStatusChange,
+  children,
 }) {
   const styles = useStyles()
 
   return (
     <div className={styles.filters}>
-      <Field label="Buscar por nombre o email" className={styles.search}>
+      <Field label={searchLabel} className={styles.search}>
         <SearchBox
           value={search}
-          placeholder="Escribe un nombre o un email"
+          placeholder={searchPlaceholder}
           onChange={(_event, data) => onSearchChange(data.value)}
         />
       </Field>
@@ -72,6 +76,7 @@ export default function UsersFilters({
         onChange={onStatusChange}
         className={styles.select}
       />
+      {children}
     </div>
   )
 }
@@ -87,10 +92,13 @@ FilterSelect.propTypes = {
 
 UsersFilters.propTypes = {
   search: PropTypes.string.isRequired,
+  searchLabel: PropTypes.string,
+  searchPlaceholder: PropTypes.string,
   role: PropTypes.string,
   status: PropTypes.string.isRequired,
   statusLabels: PropTypes.objectOf(PropTypes.string),
   onSearchChange: PropTypes.func.isRequired,
   onRoleChange: PropTypes.func,
   onStatusChange: PropTypes.func.isRequired,
+  children: PropTypes.node,
 }

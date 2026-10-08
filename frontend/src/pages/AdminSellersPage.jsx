@@ -16,7 +16,7 @@ import ListFilters from '../components/ListFilters'
 import Pagination from '../components/Pagination'
 import { usePageStyles } from '../components/pageStyles'
 import SellerDetailDialog from '../features/admin/SellerDetailDialog'
-import SellerSortControls from '../features/admin/SellerSortControls'
+import SortControls from '../features/admin/SortControls'
 import SellerStatusFilter from '../features/admin/SellerStatusFilter'
 import SellersTable from '../features/admin/SellersTable'
 import { useApiQuery } from '../hooks/useApiQuery'
@@ -25,6 +25,12 @@ import { useListFilters } from '../hooks/useListFilters'
 import { PATHS } from '../routes/paths'
 
 const PAGE_SIZE = 10
+
+const SELLER_SORT_OPTIONS = [
+  { value: 'status', label: 'Estado' },
+  { value: 'category', label: 'Categoría' },
+  { value: 'name', label: 'Nombre' },
+]
 
 export default function AdminSellersPage() {
   const styles = usePageStyles()
@@ -78,7 +84,8 @@ export default function AdminSellersPage() {
           onCategoryChange={changeCategory}
         >
           <SellerStatusFilter status={status} onChange={changeAndGoToFirstPage(setStatus)} />
-          <SellerSortControls
+          <SortControls
+            options={SELLER_SORT_OPTIONS}
             sort={sort}
             order={order}
             onSortChange={changeAndGoToFirstPage(setSort)}

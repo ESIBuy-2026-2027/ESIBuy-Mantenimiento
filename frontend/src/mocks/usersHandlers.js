@@ -5,14 +5,14 @@ const TAMANO_PAGINA_POR_DEFECTO = 10
 
 // [nombre, apellidos, rol, estado, fechaAlta]. 25 usuarios (3 páginas de 10). La búsqueda "ana" coincide
 // solo con Ana López García y Mariana Ruiz Pascual; ningún otro nombre, apellido o email contiene "ana".
-// Los clientes no pueden estar pendientes (no necesitan que un administrador los acepte).
+// Los clientes solo pueden estar activos o desactivados: no necesitan que un administrador los acepte.
 const USUARIOS_INICIALES = [
   ['Ana', 'López García', 'ADMINISTRADOR', 'ACTIVO', '2026-01-12T09:15:00'],
   ['Mariana', 'Ruiz Pascual', 'VENDEDOR', 'PENDIENTE', '2026-10-01T10:00:00'],
   ['Carlos', 'Moreno Gil', 'CLIENTE', 'ACTIVO', '2026-02-03T11:30:00'],
   ['Lucía', 'Torres Vega', 'CLIENTE', 'DESACTIVADO', '2026-09-28T17:45:00'],
   ['Javier', 'Romero Díaz', 'VENDEDOR', 'ACTIVO', '2026-03-14T08:20:00'],
-  ['Elena', 'Muñoz Alonso', 'CLIENTE', 'BLOQUEADO', '2026-04-02T12:00:00'],
+  ['Elena', 'Muñoz Alonso', 'CLIENTE', 'DESACTIVADO', '2026-04-02T12:00:00'],
   ['Pablo', 'Gómez Martín', 'CLIENTE', 'ACTIVO', '2026-04-18T16:10:00'],
   ['Marta', 'Sanz Ramos', 'VENDEDOR', 'DESACTIVADO', '2026-05-06T10:40:00'],
   ['Sergio', 'Castro Ortega', 'CLIENTE', 'ACTIVO', '2026-05-21T19:05:00'],
@@ -27,7 +27,7 @@ const USUARIOS_INICIALES = [
   ['Sofía', 'Cabrera Soler', 'CLIENTE', 'DESACTIVADO', '2026-09-15T12:35:00'],
   ['Iván', 'Morales Reyes', 'VENDEDOR', 'ACTIVO', '2026-08-04T09:55:00'],
   ['Claudia', 'Peña Calvo', 'CLIENTE', 'ACTIVO', '2026-08-12T17:00:00'],
-  ['Óscar', 'León Garrido', 'CLIENTE', 'BLOQUEADO', '2026-08-20T13:40:00'],
+  ['Óscar', 'León Garrido', 'CLIENTE', 'DESACTIVADO', '2026-08-20T13:40:00'],
   ['Beatriz', 'Vargas Méndez', 'VENDEDOR', 'PENDIENTE', '2026-09-05T11:10:00'],
   ['Rubén', 'Cortés Pastor', 'CLIENTE', 'ACTIVO', '2026-08-28T16:25:00'],
   ['Carmen', 'Hidalgo Rojas', 'ADMINISTRADOR', 'ACTIVO', '2026-02-27T10:30:00'],
@@ -65,8 +65,32 @@ function normalizar(texto) {
     .toLowerCase()
 }
 
-const coincideBusqueda = (usuario, busqueda) =>
-  [usuario.nombre, usuario.apellidos, usuario.email].some((campo) => normalizar(campo).includes(busqueda))
+// Con searchBy=name (listados de clientes y administradores) no se busca en el email.
+const coincideBusqueda = (usuario, busqueda, soloNombre) =>
+  [usuario.nombre, usuario.apellidos, ...(soloNombre ? [] : [usuario.email])].some((campo) =>
+    normalizar(campo).includes(busqueda),
+  )
+
+const ORDEN_ESTADOS = ['PENDIENTE', 'ACTIVO', 'BLOQUEADO', 'DESACTIVADO']
+const nombreCompleto = (usuario) => `${usuario.nombre} ${usuario.apellidos}`
+
+const COMPARADORES = new Map([
+  ['name', (a, b) => nombreCompleto(a).localeCompare(nombreCompleto(b), 'es')],
+  [
+    'status',
+    (a, b) =>
+      ORDEN_ESTADOS.indexOf(a.estado) - ORDEN_ESTADOS.indexOf(b.estado) ||
+      nombreCompleto(a).localeCompare(nombreCompleto(b), 'es'),
+  ],
+])
+
+// Sin sort se mantiene el orden por fecha de alta, de la más reciente a la más antigua (HU19).
+function ordenar(lista, criterio, sentido) {
+  const comparar = COMPARADORES.get(criterio)
+  if (!comparar) return lista
+  const signo = sentido === 'desc' ? -1 : 1
+  return [...lista].sort((a, b) => signo * comparar(a, b))
+}
 
 // Devuelve la respuesta de error si quien pregunta no es administrador, o null si puede continuar.
 function rechazarSiNoEsAdmin() {
@@ -85,14 +109,19 @@ export const usersHandlers = [
     const busqueda = normalizar(params.get('search') ?? '')
     const rol = params.get('role')
     const estado = params.get('status')
+    const soloNombre = params.get('searchBy') === 'name'
     const pagina = Math.max(1, Number(params.get('page')) || 1)
     const tamano = Math.max(1, Number(params.get('size')) || TAMANO_PAGINA_POR_DEFECTO)
 
-    const coincidentes = usuarios.filter(
-      (candidato) =>
-        coincideBusqueda(candidato, busqueda) &&
-        (!rol || candidato.rol === rol) &&
-        (!estado || candidato.estado === estado),
+    const coincidentes = ordenar(
+      usuarios.filter(
+        (candidato) =>
+          coincideBusqueda(candidato, busqueda, soloNombre) &&
+          (!rol || candidato.rol === rol) &&
+          (!estado || candidato.estado === estado),
+      ),
+      params.get('sort'),
+      params.get('order'),
     )
     const inicio = (pagina - 1) * tamano
 

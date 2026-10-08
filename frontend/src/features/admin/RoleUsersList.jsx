@@ -14,9 +14,10 @@ import EmptyState from '../../components/EmptyState'
 import Pagination from '../../components/Pagination'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 import ActivateUserButton from './ActivateUserButton'
+import SortControls from './SortControls'
 import UsersFilters from './UsersFilters'
 import UsersTable from './UsersTable'
-import { ACCOUNT_STATUS_LABELS, ACTIVATABLE_STATUSES, USERS_PAGE_SIZE } from './usersConfig'
+import { ACCOUNT_SORT_OPTIONS, ACCOUNT_STATUS_LABELS, USERS_PAGE_SIZE, USER_STATUS } from './usersConfig'
 import { useUsersList } from './useUsersList'
 
 const useStyles = makeStyles({
@@ -25,12 +26,15 @@ const useStyles = makeStyles({
   },
 })
 
-// Listado de los usuarios de un rol (clientes o administradores) con búsqueda, filtro por estado y
-// el botón "Activar" en las cuentas desactivadas o bloqueadas (HU24). Reutiliza el listado de la HU19.
+// Listado de los usuarios de un rol (clientes o administradores) con búsqueda por nombre, filtro por
+// estado, ordenación por nombre o estado y el botón "Activar" en las cuentas desactivadas (HU24).
+// Reutiliza el listado de la HU19.
 export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLabel }) {
   const styles = useStyles()
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
+  const [sort, setSort] = useState('name')
+  const [order, setOrder] = useState('asc')
   const [page, setPage] = useState(1)
   const [resultado, setResultado] = useState(null)
   const debouncedSearch = useDebouncedValue(search)
@@ -40,6 +44,9 @@ export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLa
     status,
     page,
     size: USERS_PAGE_SIZE,
+    searchBy: 'name',
+    sort,
+    order,
   })
 
   const changeFilter = (setFilter) => (value) => {
@@ -47,6 +54,7 @@ export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLa
     setPage(1)
   }
 
+  // Limpiar filtros mantiene la ordenación elegida, como en el listado de vendedores (HU26).
   const clearFilters = () => {
     setSearch('')
     setStatus('')
@@ -62,7 +70,7 @@ export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLa
     setResultado({ intent: 'error', texto: `No se ha podido activar a ${nombre}. Inténtalo de nuevo.` })
 
   const renderActions = (user) =>
-    ACTIVATABLE_STATUSES.has(user.estado) ? (
+    user.estado === USER_STATUS.DESACTIVADO ? (
       <ActivateUserButton user={user} onActivated={avisarActivado} onError={avisarError} />
     ) : null
 
@@ -70,11 +78,21 @@ export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLa
     <>
       <UsersFilters
         search={search}
+        searchLabel="Buscar por nombre"
+        searchPlaceholder="Escribe un nombre"
         status={status}
         statusLabels={ACCOUNT_STATUS_LABELS}
         onSearchChange={changeFilter(setSearch)}
         onStatusChange={changeFilter(setStatus)}
-      />
+      >
+        <SortControls
+          options={ACCOUNT_SORT_OPTIONS}
+          sort={sort}
+          order={order}
+          onSortChange={changeFilter(setSort)}
+          onOrderChange={changeFilter(setOrder)}
+        />
+      </UsersFilters>
 
       {resultado && (
         <MessageBar intent={resultado.intent}>
@@ -97,7 +115,7 @@ export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLa
         <EmptyState
           icon={<SearchInfo24Regular />}
           title={`No se han encontrado ${itemLabel}`}
-          description="Prueba con otro nombre, otro email u otro estado."
+          description="Prueba con otro nombre u otro estado."
         >
           <Button onClick={clearFilters}>Limpiar filtros</Button>
         </EmptyState>
