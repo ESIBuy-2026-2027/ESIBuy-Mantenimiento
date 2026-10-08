@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,5 +37,19 @@ class UsuarioDocumentMapperTest {
         assertEquals("juan@uclm.es", usuario.getEmail().valor());
         assertEquals("hash-simulado", usuario.getPasswordHash());
         assertEquals(Rol.CLIENTE, usuario.getRol());
+    }
+
+    @Test
+    @DisplayName("HU1-CP01: el usuario conserva nombre, apellidos y tipo de cliente")
+    void conservaNombreApellidosYTipoDeCliente() {
+        Usuario premium = new Usuario("u-1", "Ana", "García López", new Email("ana@uclm.es"),
+                "hash-simulado", Rol.CLIENTE, TipoCliente.PREMIUM);
+        UsuarioDocumentMapper mapper = new UsuarioDocumentMapper();
+
+        Usuario leido = mapper.aDominio(mapper.aDocumento(premium));
+
+        assertEquals("Ana", leido.getNombre());
+        assertEquals("García López", leido.getApellidos());
+        assertEquals(TipoCliente.PREMIUM, leido.getTipoCliente());
     }
 }
