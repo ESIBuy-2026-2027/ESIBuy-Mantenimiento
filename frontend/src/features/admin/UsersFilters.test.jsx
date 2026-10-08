@@ -38,8 +38,15 @@ describe('UsersFilters', () => {
     expect(onRoleChange).toHaveBeenLastCalledWith('VENDEDOR')
   })
 
-  it('HU19-CP04: avisa del estado elegido en el filtro de estado', () => {
-    // TODO ciclo 11
-    expect.fail('Funcionalidad no implementada')
+  it('HU19-CP04: avisa del estado elegido en el filtro de estado', async () => {
+    const user = userEvent.setup()
+    const { onStatusChange } = renderFilters()
+
+    const filtroEstado = screen.getByRole('combobox', { name: 'Estado' })
+    const opciones = within(filtroEstado).getAllByRole('option').map((opcion) => opcion.textContent)
+    await user.selectOptions(filtroEstado, 'Pendiente')
+
+    expect(opciones).toEqual(['Todos los estados', 'Pendiente', 'Activo', 'Bloqueado', 'Desactivado'])
+    expect(onStatusChange).toHaveBeenLastCalledWith('PENDIENTE')
   })
 })
