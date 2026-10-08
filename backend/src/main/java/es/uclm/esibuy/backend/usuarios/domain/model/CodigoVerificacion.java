@@ -3,6 +3,8 @@ package es.uclm.esibuy.backend.usuarios.domain.model;
 import java.time.Duration;
 import java.time.Instant;
 
+import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoVerificacionInvalidoException;
+
 /**
  * Código de verificación del segundo factor del login (HU2, T21): el código de 6 dígitos que el
  * backend envía por correo tras validar la contraseña y que está pendiente de que el usuario lo
@@ -33,13 +35,20 @@ public class CodigoVerificacion {
     private int intentosFallidos;
 
     private CodigoVerificacion(String usuarioId, String codigoHash, Instant expiraEn) {
-        this.usuarioId = usuarioId;
-        this.codigoHash = codigoHash;
+        this.usuarioId = exigirNoNulo(usuarioId, "El id del usuario es obligatorio");
+        this.codigoHash = exigirNoNulo(codigoHash, "El hash del código es obligatorio");
         this.expiraEn = expiraEn;
     }
 
     public static CodigoVerificacion nuevo(String usuarioId, String codigoHash, Instant ahora) {
         return new CodigoVerificacion(usuarioId, codigoHash, ahora.plus(VALIDEZ));
+    }
+
+    private static String exigirNoNulo(String valor, String mensaje) {
+        if (valor == null) {
+            throw new CodigoVerificacionInvalidoException(mensaje);
+        }
+        return valor;
     }
 
     public boolean puedeUsarse(Instant ahora) {
