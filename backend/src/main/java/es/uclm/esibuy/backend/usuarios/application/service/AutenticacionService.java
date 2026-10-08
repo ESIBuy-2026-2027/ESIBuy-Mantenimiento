@@ -7,11 +7,13 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.IniciarSesionCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.PasoLogin;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ResultadoInicioSesion;
+import es.uclm.esibuy.backend.usuarios.application.port.in.VerificarCodigoEmailCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.EnvioEmailPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.GeneradorCodigoPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
@@ -21,6 +23,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 public class AutenticacionService implements AutenticacionUseCase {
 
     private static final String MENSAJE_CREDENCIALES_INVALIDAS = "Credenciales inválidas";
+    private static final String CODIGO_INVALIDO = "Código inválido";
 
     private final UsuarioRepositoryPort usuarioRepository;
     private final HashContrasenaPort hashContrasena;
@@ -66,6 +69,21 @@ public class AutenticacionService implements AutenticacionUseCase {
         return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.CODIGO_EMAIL);
     }
 
+    @Override
+    public ResultadoInicioSesion verificarCodigoEmail(VerificarCodigoEmailCommand comando) {
+        Usuario usuario = usuarioRepository.buscarPorCorreo(comando.email()).orElseThrow();
+        CodigoVerificacion codigo = codigoVerificacionRepository.buscarPorUsuario(usuario.getId()).orElseThrow();
+
+        if (!hashContrasena.coincide(comando.codigo(), codigo.getCodigoHash())) {
+            throw new CodigoInvalidoException(CODIGO_INVALIDO);
+        }
+
+        codigo.marcarUsado();
+        codigoVerificacionRepository.guardar(codigo);
+        return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.AUTHENTICATOR);
+    }
+
     
+
 
 }
