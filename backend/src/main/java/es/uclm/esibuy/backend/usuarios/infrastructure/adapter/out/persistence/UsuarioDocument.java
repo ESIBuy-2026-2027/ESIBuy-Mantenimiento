@@ -31,7 +31,9 @@ public class UsuarioDocument {
     private String apellidos;
     private String dni;              // clientes y vendedores
     private String telefono;
-    private DatosClienteDocument cliente;
+    private DatosClienteDocument cliente;              // solo uno de los tres, el del rol
+    private DatosVendedorDocument vendedor;
+    private DatosAdministradorDocument administrador;
     private String estado;
     private int failedLoginAttempts;
     private Instant lockedUntil;
@@ -93,6 +95,22 @@ public class UsuarioDocument {
 
     public void setCliente(DatosClienteDocument cliente) {
         this.cliente = cliente;
+    }
+
+    public DatosVendedorDocument getVendedor() {
+        return vendedor;
+    }
+
+    public void setVendedor(DatosVendedorDocument vendedor) {
+        this.vendedor = vendedor;
+    }
+
+    public DatosAdministradorDocument getAdministrador() {
+        return administrador;
+    }
+
+    public void setAdministrador(DatosAdministradorDocument administrador) {
+        this.administrador = administrador;
     }
 
     public String getEstado() {

@@ -1,8 +1,10 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosAdministrador;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosRol;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
@@ -12,7 +14,8 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
  * Convierte el {@code Usuario} del dominio en el documento que se guarda en MongoDB.
  *
  * <p>Convierte en los dos sentidos: {@code aDocumento} para guardar y {@code aDominio} para leer.
- * Los datos personales van en la raíz del documento y los del rol, en su subdocumento.
+ * Los datos personales van en la raíz del documento y los del rol, en su subdocumento
+ * ({@code cliente}, {@code vendedor} o {@code administrador}).
  */
 public class UsuarioDocumentMapper {
 
@@ -29,8 +32,13 @@ public class UsuarioDocumentMapper {
         documento.setApellidos(datosPersonales.apellidos());
         documento.setDni(datosPersonales.dni());
         documento.setTelefono(datosPersonales.telefono());
-        if (usuario.getDatosRol() instanceof DatosCliente cliente) {
-            documento.setCliente(new DatosClienteDocument(cliente.tipoCliente().name(), cliente.fechaNacimiento()));
+        switch (usuario.getDatosRol()) {
+            case DatosCliente cliente -> documento.setCliente(
+                    new DatosClienteDocument(cliente.tipoCliente().name(), cliente.fechaNacimiento()));
+            case DatosVendedor vendedor -> documento.setVendedor(
+                    new DatosVendedorDocument(vendedor.nombreComercial(), vendedor.categoriaPrincipalId()));
+            case DatosAdministrador administrador -> documento.setAdministrador(
+                    new DatosAdministradorDocument(administrador.sede(), administrador.fechaIncorporacion()));
         }
         documento.setEstado(usuario.estaDesactivado() ? ESTADO_DESACTIVADO : ESTADO_ACTIVO);
         documento.setFailedLoginAttempts(usuario.getIntentosFallidos());
@@ -47,13 +55,19 @@ public class UsuarioDocumentMapper {
         return Usuario.reconstruir(datos, desactivado, documento.getFailedLoginAttempts(), documento.getLockedUntil());
     }
 
-    // Vendedores y administradores aún no guardan sus datos de rol.
     private static DatosRol datosRol(UsuarioDocument documento) {
         Rol rol = Rol.valueOf(documento.getRol());
-        if (rol != Rol.CLIENTE) {
-            throw new IllegalStateException("Los datos de rol de " + rol + " todavía no se guardan");
-        }
-        return datosCliente(documento.getCliente());
+        return switch (rol) {
+            case CLIENTE -> datosCliente(documento.getCliente());
+            case VENDEDOR -> {
+                DatosVendedorDocument vendedor = exigirSubdocumento(documento.getVendedor(), rol);
+                yield new DatosVendedor(vendedor.nombreComercial(), vendedor.categoriaPrincipalId());
+            }
+            case ADMINISTRADOR -> {
+                DatosAdministradorDocument administrador = exigirSubdocumento(documento.getAdministrador(), rol);
+                yield new DatosAdministrador(administrador.sede(), administrador.fechaIncorporacion());
+            }
+        };
     }
 
     // Los clientes guardados antes de la T210 no tienen subdocumento cliente: se leen como ESTANDAR,
@@ -63,5 +77,13 @@ public class UsuarioDocumentMapper {
             return new DatosCliente(TipoCliente.ESTANDAR, null);
         }
         return new DatosCliente(TipoCliente.valueOf(cliente.tipoCliente()), cliente.fechaNacimiento());
+    }
+
+    // Vendedores y administradores no existían antes de la T210: sin sus datos de rol, el documento está mal.
+    private static <T> T exigirSubdocumento(T subdocumento, Rol rol) {
+        if (subdocumento == null) {
+            throw new IllegalStateException("Usuario con rol " + rol + " guardado sin sus datos de rol");
+        }
+        return subdocumento;
     }
 }
