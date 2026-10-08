@@ -8,6 +8,7 @@ Documento para entender el listado de usuarios del administrador: qué muestra, 
 - **Rama:** `feature/US19-T63-T64-tabla-usuarios-admin`
 - **Metodología:** TDD, ciclo a ciclo: cada comportamiento tiene un commit `test(front)` en rojo (AB#64) antes de su `feat(front)` en verde (AB#63)
 - **Depende de:** `docs/hu2-login.md` (sesión y rutas protegidas), `docs/hu18-panel-admin.md` (zona de administración), `docs/hu32-listado-productos.md` (componentes reutilizados) y `docs/mocks-msw.md` (mocks)
+- **Ampliado por la HU24** (`docs/hu24-activar-usuario.md`): los listados de clientes y administradores reutilizan este. Para ello, `UsersFilters` y `UsersTable` admiten opciones nuevas (todas opcionales), `listUsers` admite `searchBy`, `sort` y `order`, y el mock permite activar cuentas. Esta pantalla no cambia. Las partes afectadas de este documento están actualizadas.
 
 ---
 
@@ -130,7 +131,7 @@ Los filtros están siempre visibles, a diferencia del listado de productos, porq
 
 ## 5. Contrato esperado del backend
 
-La ruta y el formato los ha propuesto el frontend, alineados con el listado de productos de la HU32. **Hay que confirmarlos con quien desarrolla el backend de la HU19 (AB#61/62).** Si cambian, solo hay que tocar `api/users.js`, `usersConfig.js` y el mock.
+La ruta y el formato los ha propuesto el frontend, alineados con el listado de productos de la HU32. **Hay que confirmarlos con quien desarrolla el backend de la HU19 (AB#61/62).** Si cambian, solo hay que tocar `api/users.js`, `usersConfig.js` y el mock. La HU24 añadió los parámetros opcionales `searchBy`, `sort` y `order` y el endpoint para activar una cuenta; se describen en su documento.
 
 `GET /api/admin/usuarios?page=1&size=10&search=ana&role=VENDEDOR&status=PENDIENTE`
 
@@ -195,14 +196,14 @@ La sesión simulada se pierde al recargar la página y el panel de control aún 
 history.pushState({}, '', '/admin/users'); dispatchEvent(new PopStateEvent('popstate'))
 ```
 
-El mock tiene 25 usuarios ficticios (3 páginas: 10, 10 y 5) de los tres roles y los cuatro estados.
+El mock tiene 25 usuarios ficticios (3 páginas: 10, 10 y 5) de los tres roles y los cuatro estados. Desde la HU24, los clientes solo están activos o desactivados: los pendientes son solo vendedores.
 
 Pruebas manuales sugeridas:
 
 1. Recorrer las tres páginas.
 2. Buscar `ana`: solo aparecen Ana López García y Mariana Ruiz Pascual.
 3. Buscar `alvaro` (sin acento): encuentra a Álvaro Campos Serrano.
-4. Filtrar por **Vendedor** (7 usuarios) y por **Pendiente** (5 usuarios); combinar **Administrador** + **Activo** (3 usuarios).
+4. Filtrar por **Vendedor** (7 usuarios) y por **Pendiente** (2 usuarios); combinar **Administrador** + **Activo** (2 usuarios).
 5. Ir a la página 2 y cambiar un filtro: vuelve a la página 1.
 6. Buscar `zzz`: aparece "No se han encontrado usuarios"; pulsar **Limpiar filtros**.
 7. Reducir la ventana a ancho móvil: la tabla se desplaza en horizontal sin romper la página.
@@ -248,8 +249,8 @@ Cada test empieza por el ID de su caso de prueba (`HU19-CPnn`):
 
 ## 8. Limitaciones y trabajo pendiente
 
-- Las tarjetas del panel de administración (HU18) aún no enlazan con `/admin/users`.
-- Sin ordenación por columnas ni acciones por fila (ver detalle, activar, desactivar): son las HU20 a HU24.
+- Ninguna tarjeta del panel de administración (HU18) enlaza con `/admin/users`. Las de **Clientes** y **Administradores** llevan a sus propios listados (HU24 y HU21), que reutilizan este.
+- En esta pantalla no hay ordenación por columnas ni acciones por fila (ver detalle, activar, desactivar). La ordenación y el botón Activar existen en los listados de clientes y administradores (HU24).
 - Los nombres de los estados y el contrato están pendientes de confirmar con el backend (sección 5).
 
 ---
