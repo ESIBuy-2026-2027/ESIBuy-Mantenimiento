@@ -12,12 +12,11 @@ import {
   ArrowRight20Regular,
   BuildingShop24Regular,
   Cart24Regular,
-  PersonAdd20Regular,
   ShieldCheckmark16Filled,
   ShieldCheckmark24Regular,
 } from '@fluentui/react-icons'
-import { Link } from 'react-router-dom'
 import LinkButton from '../components/LinkButton'
+import { PATHS } from '../routes/paths'
 
 const DESKTOP = '@media (min-width: 900px)'
 
@@ -61,12 +60,6 @@ const steps = [
 ]
 
 const useStyles = makeStyles({
-  page: {
-    minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    backgroundImage: `linear-gradient(180deg, ${tokens.colorBrandBackground2} 0%, ${tokens.colorNeutralBackground1} 55%)`,
-  },
   container: {
     width: '100%',
     maxWidth: '1200px',
@@ -74,29 +67,6 @@ const useStyles = makeStyles({
     boxSizing: 'border-box',
     paddingLeft: tokens.spacingHorizontalL,
     paddingRight: tokens.spacingHorizontalL,
-  },
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: tokens.spacingHorizontalM,
-    paddingTop: tokens.spacingVerticalL,
-    paddingBottom: tokens.spacingVerticalL,
-  },
-  logo: {
-    color: tokens.colorNeutralForeground1,
-    textDecorationLine: 'none',
-    fontSize: tokens.fontSizeBase500,
-    fontWeight: tokens.fontWeightBold,
-    ':hover': { color: tokens.colorBrandForeground1 },
-  },
-  logoAccent: {
-    color: tokens.colorBrandForeground1,
-  },
-  actions: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: tokens.spacingHorizontalS,
   },
   hero: {
     display: 'grid',
@@ -245,25 +215,7 @@ export default function Home() {
   const styles = useStyles()
 
   return (
-    <div className={styles.page}>
-      <header className={`${styles.container} ${styles.header}`}>
-        <Link to="/" className={styles.logo}>
-          ESI<span className={styles.logoAccent}>Buy</span>
-        </Link>
-        <nav className={styles.actions} aria-label="Acceso a la cuenta">
-          <LinkButton to="/login" appearance="subtle">
-            Iniciar sesión
-          </LinkButton>
-          <LinkButton
-            to="/register"
-            appearance="primary"
-            icon={<PersonAdd20Regular />}
-          >
-            Registrarse
-          </LinkButton>
-        </nav>
-      </header>
-
+    <>
       <main>
         <section className={`${styles.container} ${styles.hero}`}>
           <div className={styles.heroText}>
@@ -286,7 +238,7 @@ export default function Home() {
 
             <div className={styles.ctas}>
               <LinkButton
-                to="/register"
+                to={PATHS.REGISTER}
                 appearance="primary"
                 size="large"
                 icon={<ArrowRight20Regular />}
@@ -351,6 +303,6 @@ export default function Home() {
           © {new Date().getFullYear()} ESIBuy · Práctica Integrada ISO
         </Text>
       </footer>
-    </div>
+    </>
   )
 }

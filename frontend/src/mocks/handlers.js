@@ -1,7 +1,10 @@
 import { http, HttpResponse } from 'msw'
+import { authHandlers } from './authHandlers'
+import { productsHandlers } from './productsHandlers'
 
 export const handlers = [
-  http.get('/api/auth/me', () => new HttpResponse(null, { status: 401 })),
+  ...authHandlers,
+  ...productsHandlers,
   http.get('/api/categorias', () =>
     HttpResponse.json([
       { id: 'cat-1', nombre: 'Tecnología' },
