@@ -19,6 +19,13 @@ Plataforma web de comercio electrónico que permite a usuarios registrados busca
 - `mvn sonar:sonar` / SonarLint — revisa la calidad y el estilo del código (antes de cada PR)
 - `mvn clean package` — compila para producción
 
+Frontend (`frontend/`, React + Vite, tests con Vitest):
+
+- `npm run lint` — ESLint
+- `npx vitest run` — ejecuta los tests una vez. Algunos fallan al azar al ejecutar toda la batería (p. ej. `SellerDetailDialog.test.jsx`); si falla uno, ejecútalo solo antes de darlo por roto
+- `npm run test:coverage` — tests + informe de cobertura LCOV en `coverage/lcov.info`
+- Sonar del frontend: **primero** `npm run test:coverage` y **después** `npx @sonar/scan` desde `frontend/`. Sin el paso de cobertura, Sonar muestra un 0 %. Cada análisis sustituye al anterior en el servidor, así que se lanza desde `develop`. Detalle en `frontend/docs/sonar-cobertura-implementacion.md`
+
 ## Estructura del proyecto
 
 - `src/main/java/` — código fuente del backend, organizado en módulos funcionales con arquitectura hexagonal (ver sección "Arquitectura del backend")
