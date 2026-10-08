@@ -40,19 +40,20 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState('')
   const [role, setRole] = useState('')
   const [status, setStatus] = useState('')
+  const [page, setPage] = useState(1)
   const debouncedSearch = useDebouncedValue(search)
 
   useEffect(() => {
     let cancelled = false
 
-    listUsers({ search: debouncedSearch, role, status, page: 1, size: USERS_PAGE_SIZE }).then((result) => {
+    listUsers({ search: debouncedSearch, role, status, page, size: USERS_PAGE_SIZE }).then((result) => {
       if (!cancelled) setData(result)
     })
 
     return () => {
       cancelled = true
     }
-  }, [debouncedSearch, role, status])
+  }, [debouncedSearch, role, status, page])
 
   return (
     <main className={styles.page}>
@@ -83,7 +84,7 @@ export default function AdminUsersPage() {
             totalItems={data.totalItems}
             pageSize={data.size}
             itemLabel="usuarios"
-            onPageChange={() => {}}
+            onPageChange={setPage}
           />
         </>
       )}
