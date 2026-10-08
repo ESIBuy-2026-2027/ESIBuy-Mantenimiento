@@ -25,8 +25,14 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
 
     @Override
     public void guardar(Usuario usuario) {
+        UsuarioDocument documento = mapper.aDocumento(usuario);
+        if (usuario.getId() != null) {
+            // Actualización: el documento se rehace desde el dominio, que no conoce la fecha de creación.
+            repository.findById(usuario.getId())
+                    .ifPresent(guardado -> documento.setCreatedAt(guardado.getCreatedAt()));
+        }
         try {
-            repository.save(mapper.aDocumento(usuario));
+            repository.save(documento);
         } catch (DuplicateKeyException _) {
             // El índice único de email lo ha rechazado (p. ej. dos registros simultáneos que pasaron
             // a la vez la comprobación de existePorCorreo). Se traduce a la excepción del dominio,

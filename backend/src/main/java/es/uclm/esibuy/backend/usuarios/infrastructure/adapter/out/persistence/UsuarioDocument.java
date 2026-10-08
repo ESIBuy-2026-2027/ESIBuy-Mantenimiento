@@ -2,7 +2,9 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
 import java.time.Instant;
 
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -31,6 +33,10 @@ public class UsuarioDocument {
     private String estado;
     private int failedLoginAttempts;
     private Instant lockedUntil;
+    @CreatedDate // «Convenciones comunes» del documento de BBDD; lo rellena Spring (MongoConfig)
+    private Instant createdAt;
+    @LastModifiedDate
+    private Instant updatedAt;
 
     public UsuarioDocument(String email, String passwordHash, String rol) {
         this.email = email;
@@ -93,6 +99,20 @@ public class UsuarioDocument {
 
     public void setLockedUntil(Instant lockedUntil) {
         this.lockedUntil = lockedUntil;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    // Al actualizar un usuario hay que conservar su fecha de creación: el documento se rehace desde
+    // el dominio, que no la conoce, y Spring solo rellena createdAt en los documentos nuevos.
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
     }
 
     public String getEmail() {
