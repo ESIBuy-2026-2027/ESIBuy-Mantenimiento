@@ -65,9 +65,16 @@ describe('AdminUsersPage (HU19)', () => {
     expect(columna(3).every((estado) => estado === 'Pendiente')).toBe(true)
   })
 
-  it('HU19-CP05: al pulsar "Siguiente" muestra la página 2 de 3', () => {
-    // TODO ciclo 16
-    expect.fail('Funcionalidad no implementada')
+  it('HU19-CP05: al pulsar "Siguiente" muestra la página 2 de 3', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await esperarFilas(10)
+
+    await user.click(screen.getByRole('button', { name: /siguiente/i }))
+
+    expect(await screen.findByText(/página 2 de 3/i)).toBeInTheDocument()
+    expect(screen.getByText(/mostrando 11–20 de 25 usuarios/i)).toBeInTheDocument()
+    await esperarFilas(10)
   })
 
   it('HU19-CP06: estando en la página 2, al buscar vuelve a la página 1', () => {
