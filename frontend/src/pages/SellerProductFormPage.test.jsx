@@ -96,7 +96,7 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
   it('sellerProductFormPage_sinSesion_redirigeAlLogin', async () => {
     renderApp(RUTA_NUEVO)
 
-    await esperarRuta('/login')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/login$')))
   })
 
   it('sellerProductFormPage_conSesionDeCliente_noMuestraElFormulario', async () => {
