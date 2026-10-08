@@ -87,6 +87,25 @@ describe('AdminUsersPage (HU19)', () => {
     await esperarFilas(10)
   })
 
+  it('HU19-CP05: mientras llega la página siguiente la tabla se marca como ocupada', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await esperarFilas(10)
+    let liberarPeticion
+    const peticionRetenida = new Promise((resolve) => {
+      liberarPeticion = resolve
+    })
+    server.use(http.get('/api/admin/usuarios', () => peticionRetenida, { once: true }))
+    const contenedorTabla = () => screen.getByRole('table', { name: 'Usuarios' }).closest('[aria-busy]')
+
+    await user.click(screen.getByRole('button', { name: /siguiente/i }))
+
+    await waitFor(() => expect(contenedorTabla()).toHaveAttribute('aria-busy', 'true'))
+    liberarPeticion()
+    expect(await screen.findByText(/página 2 de 3/i)).toBeInTheDocument()
+    expect(contenedorTabla()).toHaveAttribute('aria-busy', 'false')
+  })
+
   it('HU19-CP06: estando en la página 2, al buscar vuelve a la página 1', async () => {
     const user = userEvent.setup()
     await abrirEnLaSegundaPagina(user)
