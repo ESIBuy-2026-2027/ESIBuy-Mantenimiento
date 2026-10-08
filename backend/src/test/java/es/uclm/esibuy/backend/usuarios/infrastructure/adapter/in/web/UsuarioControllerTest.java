@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -116,6 +117,16 @@ class UsuarioControllerTest {
                         .content(json("juan@uclm.es", "1234567")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @Test
+    @DisplayName("HU1-CP07: un email sin dominio devuelve 400 con un mensaje genérico")
+    void emailSinDominioDevuelve400ConMensajeGenerico() {
+        // TODO: el caso de uso simulado lanza EmailInvalidoException con el mensaje real del dominio,
+        // que incluye "ana@localhost" (la validación web @Email deja pasar ese email).
+        // TODO: enviar POST /api/auth/registro con "ana@localhost" y "clave1234".
+        // TODO: comprobar 400, que existe $.mensaje y que no contiene "ana@localhost".
+        fail("Funcionalidad no implementada");
     }
 
     @Test

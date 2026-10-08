@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.usuarios.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
 import org.junit.jupiter.api.DisplayName;
@@ -47,5 +48,13 @@ class EmailTest {
     @DisplayName("HU1-CP07: rechaza un email sin dominio")
     void rechazaEmailSinDominio() {
         assertThrows(EmailInvalidoException.class, () -> new Email("ana@"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP07: rechaza un email sin punto en el dominio")
+    void rechazaEmailSinPuntoEnElDominio() {
+        // TODO: comprobar que new Email("ana@localhost") lanza EmailInvalidoException.
+        // Es la frontera en la que discrepan la validación web (@Email) y el dominio.
+        fail("Funcionalidad no implementada");
     }
 }
