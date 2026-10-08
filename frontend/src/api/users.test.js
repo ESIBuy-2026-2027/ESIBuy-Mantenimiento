@@ -4,7 +4,7 @@ import { server } from '../mocks/server'
 import { ApiError } from './client'
 import { listUsers } from './users'
 
-const RESPUESTA = { content: [], page: 1, size: 10, totalElements: 0 }
+const RESPUESTA = { items: [], page: 1, size: 10, totalItems: 0, totalPages: 0 }
 
 function capturarPeticion() {
   const peticion = {}
@@ -31,31 +31,31 @@ describe('listUsers', () => {
   it('HU19-CP02: envía la búsqueda solo cuando tiene texto', async () => {
     const peticion = capturarPeticion()
 
-    await listUsers({ search: 'ana', page: 0, size: 10 })
-    expect(peticion.url.searchParams.get('busqueda')).toBe('ana')
+    await listUsers({ search: 'ana', page: 1, size: 10 })
+    expect(peticion.url.searchParams.get('search')).toBe('ana')
 
-    await listUsers({ search: '   ', page: 0, size: 10 })
-    expect(peticion.url.searchParams.has('busqueda')).toBe(false)
+    await listUsers({ search: '   ', page: 1, size: 10 })
+    expect(peticion.url.searchParams.has('search')).toBe(false)
   })
 
   it('HU19-CP03: envía el rol cuando se filtra por rol', async () => {
     const peticion = capturarPeticion()
 
-    await listUsers({ role: 'VENDEDOR', page: 0, size: 10 })
-    expect(peticion.url.searchParams.get('rol')).toBe('VENDEDOR')
+    await listUsers({ role: 'VENDEDOR', page: 1, size: 10 })
+    expect(peticion.url.searchParams.get('role')).toBe('VENDEDOR')
 
-    await listUsers({ role: '', page: 0, size: 10 })
-    expect(peticion.url.searchParams.has('rol')).toBe(false)
+    await listUsers({ role: '', page: 1, size: 10 })
+    expect(peticion.url.searchParams.has('role')).toBe(false)
   })
 
   it('HU19-CP04: envía el estado cuando se filtra por estado', async () => {
     const peticion = capturarPeticion()
 
-    await listUsers({ status: 'PENDIENTE', page: 0, size: 10 })
-    expect(peticion.url.searchParams.get('estado')).toBe('PENDIENTE')
+    await listUsers({ status: 'PENDIENTE', page: 1, size: 10 })
+    expect(peticion.url.searchParams.get('status')).toBe('PENDIENTE')
 
-    await listUsers({ status: '', page: 0, size: 10 })
-    expect(peticion.url.searchParams.has('estado')).toBe(false)
+    await listUsers({ status: '', page: 1, size: 10 })
+    expect(peticion.url.searchParams.has('status')).toBe(false)
   })
 
   it('HU19-CP08: propaga un ApiError si la respuesta no es correcta', async () => {
@@ -63,7 +63,7 @@ describe('listUsers', () => {
       http.get('/api/admin/usuarios', () => new HttpResponse(null, { status: 500 })),
     )
 
-    const error = await listUsers({ page: 0, size: 10 }).catch((e) => e)
+    const error = await listUsers({ page: 1, size: 10 }).catch((e) => e)
 
     expect(error).toBeInstanceOf(ApiError)
     expect(error.status).toBe(500)
