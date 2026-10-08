@@ -1,24 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useCallback } from 'react'
 import { getCategories } from '../api/products'
+import { useApiQuery } from './useApiQuery'
 
+// Si las categorías no cargan, los filtros se quedan solo con "Todas las categorías" y el
+// listado sigue funcionando; el formulario de producto sí avisa con `failed` y ofrece `retry`.
 export function useCategories() {
-  const [categories, setCategories] = useState([])
+  const fetcher = useCallback(() => getCategories(), [])
+  const { data, failed, retry } = useApiQuery(fetcher)
 
-  useEffect(() => {
-    let cancelled = false
-
-    getCategories()
-      .then((data) => {
-        if (!cancelled) setCategories(data)
-      })
-      .catch(() => {
-        // Sin categorías el filtro queda solo con "Todas las categorías"; el listado sigue funcionando.
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  return categories
+  return { categories: data ?? [], loaded: data !== null, failed, retry }
 }

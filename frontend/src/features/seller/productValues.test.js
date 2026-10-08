@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { emptyProductValues, toProductPayload, validateProduct, valuesFromProduct } from './productForm'
+import { emptyProductValues, toProductPayload, validateProduct, valuesFromProduct } from './productValues'
 
 const valoresValidos = () => ({
   ...emptyProductValues(),

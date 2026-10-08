@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Button,
   MessageBar,
@@ -7,23 +8,36 @@ import {
   Text,
   Title1,
 } from '@fluentui/react-components'
-import { Add20Regular, BoxMultiple24Regular, SearchInfo24Regular } from '@fluentui/react-icons'
+import {
+  Add20Regular,
+  BoxMultiple24Regular,
+  Delete20Regular,
+  Dismiss20Regular,
+  Edit20Regular,
+  SearchInfo24Regular,
+} from '@fluentui/react-icons'
+import { useLocation } from 'react-router-dom'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
 import ListFilters from '../components/ListFilters'
 import Pagination from '../components/Pagination'
 import { usePageStyles } from '../components/pageStyles'
+import DeleteProductDialog from '../features/seller/DeleteProductDialog'
 import ProductsTable from '../features/seller/ProductsTable'
 import { useSellerProducts } from '../features/seller/useSellerProducts'
 import { useCategories } from '../hooks/useCategories'
 import { useListFilters } from '../hooks/useListFilters'
-import { PATHS } from '../routes/paths'
+import { PATHS, getSellerProductEditPath } from '../routes/paths'
 
 const PAGE_SIZE = 10
 
 export default function SellerProductsPage() {
   const styles = usePageStyles()
-  const categories = useCategories()
+  const location = useLocation()
+  // Aviso que deja el formulario de producto al guardar (llega en el estado de la navegación).
+  const [notice, setNotice] = useState(location.state?.notice ?? '')
+  const [productToDelete, setProductToDelete] = useState(null)
+  const { categories } = useCategories()
   const { search, category, page, debouncedSearch, filtersActive, setPage, changeSearch, changeCategory, clearFilters } =
     useListFilters()
   const { data, failed, refreshing, retry } = useSellerProducts({
@@ -49,6 +63,22 @@ export default function SellerProductsPage() {
           Añadir producto
         </LinkButton>
       </div>
+
+      {notice && (
+        <MessageBar intent="success">
+          <MessageBarBody>{notice}</MessageBarBody>
+          <MessageBarActions
+            containerAction={
+              <Button
+                appearance="transparent"
+                aria-label="Cerrar aviso"
+                icon={<Dismiss20Regular />}
+                onClick={() => setNotice('')}
+              />
+            }
+          />
+        </MessageBar>
+      )}
 
       {showFilters && (
         <ListFilters
@@ -96,7 +126,26 @@ export default function SellerProductsPage() {
 
       {data && data.totalItems > 0 && (
         <>
-          <ProductsTable products={data.items} refreshing={refreshing} />
+          <ProductsTable
+            products={data.items}
+            refreshing={refreshing}
+            actions={(product) => (
+              <>
+                <LinkButton
+                  to={getSellerProductEditPath(product.id)}
+                  appearance="subtle"
+                  icon={<Edit20Regular />}
+                  aria-label={`Editar ${product.nombre}`}
+                />
+                <Button
+                  appearance="subtle"
+                  icon={<Delete20Regular />}
+                  aria-label={`Eliminar ${product.nombre}`}
+                  onClick={() => setProductToDelete(product)}
+                />
+              </>
+            )}
+          />
           <Pagination
             page={data.page}
             totalPages={data.totalPages}
@@ -106,6 +155,18 @@ export default function SellerProductsPage() {
             onPageChange={setPage}
           />
         </>
+      )}
+
+      {productToDelete && (
+        <DeleteProductDialog
+          product={productToDelete}
+          onClose={() => setProductToDelete(null)}
+          onDeleted={() => {
+            setProductToDelete(null)
+            setNotice('Producto eliminado.')
+            retry()
+          }}
+        />
       )}
     </main>
   )

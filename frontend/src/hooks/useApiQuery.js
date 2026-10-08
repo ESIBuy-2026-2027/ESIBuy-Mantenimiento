@@ -11,10 +11,10 @@ export function useApiQuery(fetcher) {
 
     fetcher()
       .then((data) => {
-        if (!cancelled) setResult({ fetcher, attempt, data, failed: false })
+        if (!cancelled) setResult({ fetcher, attempt, data, error: null })
       })
-      .catch(() => {
-        if (!cancelled) setResult({ fetcher, attempt, data: null, failed: true })
+      .catch((error) => {
+        if (!cancelled) setResult({ fetcher, attempt, data: null, error })
       })
 
     return () => {
@@ -26,7 +26,8 @@ export function useApiQuery(fetcher) {
 
   return {
     data: result?.data ?? null,
-    failed: isCurrent && result.failed,
+    error: isCurrent ? result.error : null,
+    failed: isCurrent && result.error !== null,
     refreshing: Boolean(result) && !isCurrent,
     retry: () => setAttempt((value) => value + 1),
   }
