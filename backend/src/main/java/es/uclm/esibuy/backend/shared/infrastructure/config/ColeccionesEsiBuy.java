@@ -16,6 +16,8 @@ import java.util.List;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.index.Index;
+import org.springframework.data.mongodb.core.index.PartialIndexFilter;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
@@ -30,12 +32,22 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
  * modelo de los campos que existan; admite campos nuevos para no bloquear al equipo mientras el
  * modelo es preliminar.
  *
- * <p>Índices: los de las colecciones que ya tienen clase {@code @Document} se declaran en esa clase
- * con {@code @Indexed} y {@code @CompoundIndex} (p. ej. {@code usuarios}); aquí solo están los de
- * las colecciones que todavía no la tienen. Cuando una colección tenga su documento, sus índices se
- * pasan a las anotaciones y se quitan de aquí.
+ * <p>Índices: los de los campos que ya tiene una clase {@code @Document} se declaran en esa clase
+ * con {@code @Indexed} y {@code @CompoundIndex} (p. ej. el email de {@code usuarios}); aquí están los
+ * demás. Cuando un campo llegue a su documento, su índice pasa a las anotaciones y se quita de aquí.
  */
 final class ColeccionesEsiBuy {
+
+    // Campos que se repiten en varias colecciones.
+    private static final String ESTADO = "estado";
+    private static final String NOMBRE = "nombre";
+    private static final String EXPIRES_AT = "expiresAt";
+    private static final String USUARIO_ID = "usuarioId";
+    private static final String PURPOSE = "purpose";
+    private static final String VENDEDOR_ID = "vendedorId";
+    private static final String CLIENTE_ID = "clienteId";
+    private static final String CANTIDAD = "cantidad";
+    private static final String PRODUCTO_ID = "productoId";
 
     /** Una colección: su nombre, su validación y los índices que no vienen de anotaciones. */
     record Coleccion(String nombre, MongoJsonSchema esquema, List<Index> indices) {
@@ -49,89 +61,94 @@ final class ColeccionesEsiBuy {
                 pedidos(), carritos(), valoraciones(), categorias(), listasDeseos());
     }
 
-    // 1. usuarios: identidad, rol, estado y perfil. Los datos personales comunes a varios roles van en la
-    // raíz y los propios de cada rol, en su subdocumento (opción B). Índices: anotaciones de UsuarioDocument.
+    // 1. usuarios: identidad, rol, estado y perfil, con los campos del modelo en la raíz del documento,
+    // también los propios de vendedores y administradores. El índice único de email lo declara UsuarioDocument
+    // (@Indexed); los de dni y nombreComercial van aquí porque UsuarioDocument todavía no tiene esos campos.
     private static Coleccion usuarios() {
         return new Coleccion("usuarios", esquema(List.of("email", "passwordHash", "rol"),
                 textoNoVacio("email"),
                 textoNoVacio("passwordHash"),
                 string("rol").possibleValues("ADMINISTRADOR", "VENDEDOR", "CLIENTE"),
+                string("tipoCliente").possibleValues("PREMIUM", "ESTANDAR"),
                 // PENDIENTE solo para vendedores a la espera de verificación (decisión del equipo del 07/10/2026).
-                string("estado").possibleValues("ACTIVO", "DESACTIVADO", "PENDIENTE"),
-                textoNoVacio("nombre"),
+                string(ESTADO).possibleValues("ACTIVO", "DESACTIVADO", "PENDIENTE"),
+                textoNoVacio(NOMBRE),
                 textoNoVacio("apellidos"),
                 textoNoVacio("dni"),
                 textoNoVacio("telefono"),
                 string("imagenPerfil"),
                 bool("emailVerificado"),
+                date("fechaNacimiento"),
                 bool("privacyPolicyAccepted"),
                 date("privacyPolicyAcceptedAt"),
                 string("privacyPolicyVersion"),
                 enteroNoNegativo("failedLoginAttempts"),
                 fechaOpcional("lockedUntil"), // null = sin bloqueo, como en el ejemplo del modelo
                 fechaOpcional("lastLoginAt"),
-                object("cliente").required("tipoCliente").properties(
-                        string("tipoCliente").possibleValues("PREMIUM", "ESTANDAR"),
-                        date("fechaNacimiento")),
-                object("vendedor").required("nombreComercial", "categoriaPrincipalId").properties(
-                        textoNoVacio("nombreComercial"),
-                        textoNoVacio("categoriaPrincipalId")),
-                object("administrador").required("fechaIncorporacion").properties(
-                        textoNoVacio("sede"),
-                        date("fechaIncorporacion"))),
-                List.of());
+                // Vendedor y administrador (modelo: «campos específicos»).
+                textoNoVacio("nombreComercial"),
+                textoNoVacio("categoriaPrincipalId"),
+                textoNoVacio("sede"),
+                date("fechaIncorporacion")),
+                // MVP del Sprint 1: el DNI es único, pero una persona puede tener cuenta de cliente y de
+                // vendedor con el mismo DNI (y distinto correo): es único por rol. El filtro parcial deja
+                // fuera a los usuarios sin DNI, porque el registro actual no lo pide.
+                List.of(indice("rol").on("dni", Sort.Direction.ASC).unique().named("rol_dni")
+                                .partial(PartialIndexFilter.of(Criteria.where("dni").exists(true))),
+                        // Modelo: nombreComercial → único, si aplica (sparse: solo cuentan los vendedores).
+                        indice("nombreComercial").unique().sparse()));
     }
 
     // 2. sesiones: revocables y caducables. TTL: MongoDB borra la sesión al llegar a expiresAt.
     private static Coleccion sesiones() {
-        return new Coleccion("sesiones", esquema(List.of("usuarioId", "tokenHash", "estado", "expiresAt"),
-                textoNoVacio("usuarioId"),
+        return new Coleccion("sesiones", esquema(List.of(USUARIO_ID, "tokenHash", ESTADO, EXPIRES_AT),
+                textoNoVacio(USUARIO_ID),
                 textoNoVacio("tokenHash"),
-                string("estado").possibleValues("ACTIVA", "REVOCADA", "EXPIRADA"),
-                date("expiresAt"),
+                string(ESTADO).possibleValues("ACTIVA", "REVOCADA", "EXPIRADA"),
+                date(EXPIRES_AT),
                 fechaOpcional("revokedAt"),
                 date("lastUsedAt"),
                 string("ipHash"),
                 string("userAgent"),
                 string("deviceIdentifier")),
-                List.of(caducidad("expiresAt"), indice("usuarioId")));
+                List.of(caducidad(EXPIRES_AT), indice(USUARIO_ID)));
     }
 
     // 3. factores_autenticacion: configuración 2FA/3FA, una por usuario.
     // El secreto TOTP se guarda cifrado; la clave no va ni en MongoDB ni en el repositorio.
     private static Coleccion factoresAutenticacion() {
-        return new Coleccion("factores_autenticacion", esquema(List.of("usuarioId"),
-                textoNoVacio("usuarioId"),
+        return new Coleccion("factores_autenticacion", esquema(List.of(USUARIO_ID),
+                textoNoVacio(USUARIO_ID),
                 bool("totpEnabled"),
                 textoNoVacio("totpSecretEncrypted"),
                 bool("emailFactorEnabled"),
                 date("verifiedAt"),
                 date("lastUsedAt")),
-                List.of(indice("usuarioId").unique()));
+                List.of(indice(USUARIO_ID).unique()));
     }
 
     // 4. tokens_seguridad: códigos temporales (login, verificación de email) y recuperación de contraseña,
-    // distinguidos por "purpose" (decisión del equipo: una colección en vez de codigos_verificacion y
+    // distinguidos por PURPOSE (decisión del equipo: una colección en vez de codigos_verificacion y
     // recuperaciones_password por separado).
     // PENDIENTE: índice del hash del código/token cuando se fije el nombre del campo.
     private static Coleccion tokensSeguridad() {
-        return new Coleccion("tokens_seguridad", esquema(List.of("usuarioId", "purpose", "expiresAt"),
-                textoNoVacio("usuarioId"),
-                string("purpose").possibleValues("LOGIN_2FA", "EMAIL_VERIFICATION", "PASSWORD_RECOVERY"),
+        return new Coleccion("tokens_seguridad", esquema(List.of(USUARIO_ID, PURPOSE, EXPIRES_AT),
+                textoNoVacio(USUARIO_ID),
+                string(PURPOSE).possibleValues("LOGIN_2FA", "EMAIL_VERIFICATION", "PASSWORD_RECOVERY"),
                 string("status"),
                 enteroNoNegativo("attempts"),
                 int32("maxAttempts").gte(1),
-                date("expiresAt"),
+                date(EXPIRES_AT),
                 fechaOpcional("usedAt")),
-                List.of(caducidad("expiresAt"), indice("usuarioId").on("purpose", Sort.Direction.ASC)));
+                List.of(caducidad(EXPIRES_AT), indice(USUARIO_ID).on(PURPOSE, Sort.Direction.ASC)));
     }
 
     // 5. productos: catálogo y stock. Reglas del modelo: precio > 0, stock >= 0, nombre y vendedorId
     // obligatorios. descuentoPremium sale del MVP del Sprint 1.
     private static Coleccion productos() {
-        return new Coleccion("productos", esquema(List.of("vendedorId", "nombre", "precio", "stock"),
-                textoNoVacio("vendedorId"),
-                textoNoVacio("nombre"),
+        return new Coleccion("productos", esquema(List.of(VENDEDOR_ID, NOMBRE, "precio", "stock"),
+                textoNoVacio(VENDEDOR_ID),
+                textoNoVacio(NOMBRE),
                 string("descripcion"),
                 number("precio").gt(0),
                 enteroNoNegativo("stock"),
@@ -140,27 +157,27 @@ final class ColeccionesEsiBuy {
                 importe("precioFinal"),
                 array("categoriaIds").items(JsonSchemaObject.string()),
                 string("imagen"),
-                string("estado"),
+                string(ESTADO),
                 bool("visible"),
                 bool("disponible"),
                 number("valoracionMedia").gte(0).lte(5),
                 enteroNoNegativo("numeroValoraciones")),
-                List.of(indice("vendedorId"), indice("categoriaIds"), indice("nombre"), indice("estado"),
+                List.of(indice(VENDEDOR_ID), indice("categoriaIds"), indice(NOMBRE), indice(ESTADO),
                         indice("visible")));
     }
 
     // 6. pedidos: compras y precios históricos. Los estados posibles están pendientes de acordar: solo se exige texto.
     private static Coleccion pedidos() {
-        return new Coleccion("pedidos", esquema(List.of("clienteId", "estado", "lineas"),
-                textoNoVacio("clienteId"),
-                textoNoVacio("estado"),
+        return new Coleccion("pedidos", esquema(List.of(CLIENTE_ID, ESTADO, "lineas"),
+                textoNoVacio(CLIENTE_ID),
+                textoNoVacio(ESTADO),
                 array("lineas").minItems(1).items(JsonSchemaObject.object()
-                        .required("productoId", "cantidad", "precioUnitario")
+                        .required(PRODUCTO_ID, CANTIDAD, "precioUnitario")
                         .properties(
-                                textoNoVacio("productoId"),
+                                textoNoVacio(PRODUCTO_ID),
                                 string("nombreProducto"),
-                                string("vendedorId"),
-                                int32("cantidad").gte(1),
+                                string(VENDEDOR_ID),
+                                int32(CANTIDAD).gte(1),
                                 importe("precioUnitario"),
                                 importe("descuento"),
                                 importe("subtotal"))),
@@ -170,50 +187,50 @@ final class ColeccionesEsiBuy {
                 importe("total"),
                 object("direccionEnvio"),
                 string("paymentMethodId")),
-                List.of(indice("clienteId"), indice("estado"), indice("createdAt"), indice("lineas.productoId"),
+                List.of(indice(CLIENTE_ID), indice(ESTADO), indice("createdAt"), indice("lineas.productoId"),
                         indice("lineas.vendedorId")));
     }
 
     // 7. carritos: un carrito activo por cliente.
     private static Coleccion carritos() {
-        return new Coleccion("carritos", esquema(List.of("clienteId"),
-                textoNoVacio("clienteId"),
+        return new Coleccion("carritos", esquema(List.of(CLIENTE_ID),
+                textoNoVacio(CLIENTE_ID),
                 array("items").items(JsonSchemaObject.object()
-                        .required("productoId", "cantidad")
-                        .properties(textoNoVacio("productoId"), int32("cantidad").gte(1), date("addedAt"),
+                        .required(PRODUCTO_ID, CANTIDAD)
+                        .properties(textoNoVacio(PRODUCTO_ID), int32(CANTIDAD).gte(1), date("addedAt"),
                                 date("updatedAt")))),
-                List.of(indice("clienteId").unique()));
+                List.of(indice(CLIENTE_ID).unique()));
     }
 
     // 8. valoraciones: una por usuario y producto. Regla del modelo: 1 <= puntuacion <= 5.
     private static Coleccion valoraciones() {
-        return new Coleccion("valoraciones", esquema(List.of("usuarioId", "productoId", "puntuacion"),
-                textoNoVacio("usuarioId"),
-                textoNoVacio("productoId"),
+        return new Coleccion("valoraciones", esquema(List.of(USUARIO_ID, PRODUCTO_ID, "puntuacion"),
+                textoNoVacio(USUARIO_ID),
+                textoNoVacio(PRODUCTO_ID),
                 int32("puntuacion").gte(1).lte(5),
                 string("comentario"),
-                string("estado")),
-                List.of(indice("usuarioId").on("productoId", Sort.Direction.ASC).unique()));
+                string(ESTADO)),
+                List.of(indice(USUARIO_ID).on(PRODUCTO_ID, Sort.Direction.ASC).unique()));
     }
 
     // 9. categorias: clasificación de productos.
     private static Coleccion categorias() {
-        return new Coleccion("categorias", esquema(List.of("nombre"),
-                textoNoVacio("nombre"),
+        return new Coleccion("categorias", esquema(List.of(NOMBRE),
+                textoNoVacio(NOMBRE),
                 string("descripcion"),
-                string("estado")),
-                List.of(indice("nombre").unique()));
+                string(ESTADO)),
+                List.of(indice(NOMBRE).unique()));
     }
 
     // 10. listas_deseos: una lista principal por cliente (decisión del equipo).
     private static Coleccion listasDeseos() {
-        return new Coleccion("listas_deseos", esquema(List.of("usuarioId"),
-                textoNoVacio("usuarioId"),
-                string("nombre"),
+        return new Coleccion("listas_deseos", esquema(List.of(USUARIO_ID),
+                textoNoVacio(USUARIO_ID),
+                string(NOMBRE),
                 array("items").items(JsonSchemaObject.object()
-                        .required("productoId")
-                        .properties(textoNoVacio("productoId"), date("addedAt")))),
-                List.of(indice("usuarioId").unique()));
+                        .required(PRODUCTO_ID)
+                        .properties(textoNoVacio(PRODUCTO_ID), date("addedAt")))),
+                List.of(indice(USUARIO_ID).unique()));
     }
 
     // Todas las colecciones llevan createdAt y updatedAt («Convenciones comunes» del modelo).

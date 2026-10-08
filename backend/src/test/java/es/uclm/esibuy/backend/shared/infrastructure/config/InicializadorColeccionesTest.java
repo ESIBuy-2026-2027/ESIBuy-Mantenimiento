@@ -10,6 +10,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -28,6 +29,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoWriteException;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.ServerAddress;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
@@ -110,11 +112,13 @@ class InicializadorColeccionesTest {
     @DisplayName("Validación de usuarios: acepta un usuario como lo guarda la aplicación y los campos opcionales")
     void aceptaUsuariosValidos() {
         acepta("usuarios", new Document("email", "app@uclm.es").append("passwordHash", "$2a$10$hash")
-                .append("rol", "CLIENTE").append("estado", "ACTIVO").append("dni", "12345678Z")
-                .append("cliente", new Document("tipoCliente", "ESTANDAR").append("fechaNacimiento", AHORA))
+                .append("rol", "CLIENTE").append("tipoCliente", "ESTANDAR").append("estado", "ACTIVO")
+                .append("dni", "12345678Z").append("fechaNacimiento", AHORA)
                 .append("failedLoginAttempts", 0).append("createdAt", AHORA).append("updatedAt", AHORA));
-        acepta("usuarios", usuario("admin@uclm.es", "ADMINISTRADOR")
-                .append("administrador", new Document("fechaIncorporacion", AHORA)));
+        acepta("usuarios", usuario("ventas@uclm.es", "VENDEDOR").append("nombreComercial", "Electrónica La Mancha")
+                .append("categoriaPrincipalId", "cat-1"));
+        acepta("usuarios", usuario("admin@uclm.es", "ADMINISTRADOR").append("sede", "Ciudad Real")
+                .append("fechaIncorporacion", AHORA));
         acepta("usuarios", usuario("nulo@uclm.es", "CLIENTE").append("lockedUntil", null).append("lastLoginAt", null));
         acepta("usuarios", usuario("nuevo@uclm.es", "CLIENTE").append("campoNoPrevisto", "valor"));
     }
@@ -124,13 +128,25 @@ class InicializadorColeccionesTest {
     void rechazaUsuariosInvalidos() {
         rechaza(VALIDACION, "usuarios", new Document("email", "x@uclm.es").append("rol", "CLIENTE"));
         rechaza(VALIDACION, "usuarios", usuario("y@uclm.es", "SUPERUSUARIO"));
-        rechaza(VALIDACION, "usuarios", usuario("z@uclm.es", "CLIENTE")
-                .append("cliente", new Document("tipoCliente", "VIP")));
+        rechaza(VALIDACION, "usuarios", usuario("z@uclm.es", "CLIENTE").append("tipoCliente", "VIP"));
         rechaza(VALIDACION, "usuarios", usuario("w@uclm.es", "CLIENTE").append("failedLoginAttempts", -1));
-        rechaza(VALIDACION, "usuarios", usuario("v@uclm.es", "VENDEDOR")
-                .append("vendedor", new Document("categoriaPrincipalId", "cat-1")));
-        rechaza(VALIDACION, "usuarios", usuario("a@uclm.es", "ADMINISTRADOR")
-                .append("administrador", new Document("sede", "Ciudad Real")));
+        rechaza(VALIDACION, "usuarios", usuario("v@uclm.es", "VENDEDOR").append("nombreComercial", ""));
+        rechaza(VALIDACION, "usuarios", usuario("a@uclm.es", "ADMINISTRADOR").append("fechaIncorporacion", "ayer"));
+    }
+
+    @Test
+    @DisplayName("Índices de usuarios: DNI único por rol (opcional) y nombre comercial único")
+    void usuariosConDniYNombreComercialUnicos() {
+        // MVP del Sprint 1: una persona puede tener cuenta de cliente y de vendedor con el mismo DNI.
+        acepta("usuarios", usuario("juan@uclm.es", "CLIENTE").append("dni", "12345678Z"));
+        rechaza(DUPLICADO, "usuarios", usuario("otro@uclm.es", "CLIENTE").append("dni", "12345678Z"));
+        acepta("usuarios", usuario("ventas@uclm.es", "VENDEDOR").append("dni", "12345678Z")
+                .append("nombreComercial", "Electrónica La Mancha"));
+        rechaza(DUPLICADO, "usuarios", usuario("tienda@uclm.es", "VENDEDOR")
+                .append("nombreComercial", "Electrónica La Mancha"));
+        // Sin DNI ni nombre comercial no hay duplicados: el registro actual solo pide email y contraseña.
+        acepta("usuarios", usuario("ana@uclm.es", "CLIENTE"));
+        acepta("usuarios", usuario("luis@uclm.es", "CLIENTE"));
     }
 
     @Test
@@ -197,7 +213,7 @@ class InicializadorColeccionesTest {
     void sesionesYTokensCaducan() {
         // Se comprueba el índice y no el borrado, que MongoDB hace cada 60 segundos.
         for (String coleccion : List.of("sesiones", "tokens_seguridad")) {
-            Document indice = mongoTemplate.getCollection(coleccion).listIndexes().into(new java.util.ArrayList<>())
+            Document indice = mongoTemplate.getCollection(coleccion).listIndexes().into(new ArrayList<>())
                     .stream().filter(i -> i.get("key", Document.class).containsKey("expiresAt"))
                     .findFirst().orElseThrow();
             assertEquals(0, ((Number) indice.get("expireAfterSeconds")).intValue(), coleccion);
@@ -210,8 +226,8 @@ class InicializadorColeccionesTest {
     }
 
     private void rechaza(int codigo, String coleccion, Document documento) {
-        MongoWriteException error = assertThrows(MongoWriteException.class,
-                () -> mongoTemplate.getCollection(coleccion).insertOne(documento),
+        MongoCollection<Document> destino = mongoTemplate.getCollection(coleccion);
+        MongoWriteException error = assertThrows(MongoWriteException.class, () -> destino.insertOne(documento),
                 () -> coleccion + " debería rechazar " + documento.toJson());
         assertEquals(codigo, error.getCode(), () -> coleccion + ": " + error.getMessage());
     }
