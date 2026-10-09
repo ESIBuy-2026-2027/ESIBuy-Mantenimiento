@@ -1,6 +1,7 @@
 import { Text, Title1 } from '@fluentui/react-components'
 import { ArrowLeft20Regular } from '@fluentui/react-icons'
 import { ROLES } from '../auth/roles'
+import { useAuth } from '../auth/useAuth'
 import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import RoleUsersList from '../features/admin/RoleUsersList'
@@ -9,6 +10,7 @@ import { PATHS } from '../routes/paths'
 // Listado de los clientes de ESIBuy, con búsqueda, filtro por estado y "Activar" (HU24).
 export default function AdminClientsPage() {
   const styles = usePageStyles()
+  const { user } = useAuth()
 
   return (
     <main className={styles.page}>
@@ -29,6 +31,7 @@ export default function AdminClientsPage() {
         itemLabel="clientes"
         errorMessage="No se ha podido cargar el listado de clientes. Inténtalo de nuevo."
         loadingLabel="Cargando clientes…"
+        currentUserId={user?.id}
       />
     </main>
   )

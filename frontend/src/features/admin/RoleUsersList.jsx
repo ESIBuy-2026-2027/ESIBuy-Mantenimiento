@@ -13,12 +13,23 @@ import { SearchInfo24Regular } from '@fluentui/react-icons'
 import EmptyState from '../../components/EmptyState'
 import Pagination from '../../components/Pagination'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
-import ActivateUserButton from './ActivateUserButton'
 import SortControls from './SortControls'
 import UsersFilters from './UsersFilters'
+import UserStatusButton from './UserStatusButton'
 import UsersTable from './UsersTable'
 import { ACCOUNT_SORT_OPTIONS, ACCOUNT_STATUS_LABELS, USERS_PAGE_SIZE, USER_STATUS } from './usersConfig'
 import { useUsersList } from './useUsersList'
+
+const MENSAJES_EXITO = {
+  activar: (nombre) => `${nombre} ya está activo y puede usar la plataforma.`,
+  desactivar: (nombre) => `${nombre} está desactivado y ya no puede iniciar sesión.`,
+}
+
+// Errores del backend al desactivar que tienen un mensaje propio (HU23).
+const MENSAJES_CONFLICTO = {
+  CANNOT_DEACTIVATE_SELF: 'No puedes desactivar tu propia cuenta.',
+  LAST_ACTIVE_ADMIN: 'No se puede desactivar al último administrador activo.',
+}
 
 const useStyles = makeStyles({
   loading: {
@@ -27,9 +38,9 @@ const useStyles = makeStyles({
 })
 
 // Listado de los usuarios de un rol (clientes o administradores) con búsqueda por nombre, filtro por
-// estado, ordenación por nombre o estado y el botón "Activar" en las cuentas desactivadas (HU24).
-// Reutiliza el listado de la HU19.
-export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLabel }) {
+// estado, ordenación por nombre o estado y los botones "Activar" (cuentas desactivadas, HU24) y
+// "Desactivar" (cuentas activas salvo la propia, HU23). Reutiliza el listado de la HU19.
+export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLabel, currentUserId }) {
   const styles = useStyles()
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
@@ -61,18 +72,29 @@ export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLa
     setPage(1)
   }
 
-  const avisarActivado = (nombre) => {
-    setResultado({ intent: 'success', texto: `${nombre} ya está activo y puede usar la plataforma.` })
+  const accionPara = (user) => {
+    if (user.estado === USER_STATUS.DESACTIVADO) return 'activar'
+    if (user.estado === USER_STATUS.ACTIVO && user.id !== currentUserId) return 'desactivar'
+    return null
+  }
+
+  const avisarHecho = (accion) => (nombre) => {
+    setResultado({ intent: 'success', texto: MENSAJES_EXITO[accion](nombre) })
     retry()
   }
 
-  const avisarError = (nombre) =>
-    setResultado({ intent: 'error', texto: `No se ha podido activar a ${nombre}. Inténtalo de nuevo.` })
+  const avisarError = (accion) => (nombre, error) =>
+    setResultado({
+      intent: 'error',
+      texto: MENSAJES_CONFLICTO[error?.code] ?? `No se ha podido ${accion} a ${nombre}. Inténtalo de nuevo.`,
+    })
 
-  const renderActions = (user) =>
-    user.estado === USER_STATUS.DESACTIVADO ? (
-      <ActivateUserButton user={user} onActivated={avisarActivado} onError={avisarError} />
+  const renderActions = (user) => {
+    const accion = accionPara(user)
+    return accion ? (
+      <UserStatusButton user={user} accion={accion} onDone={avisarHecho(accion)} onError={avisarError(accion)} />
     ) : null
+  }
 
   return (
     <>
@@ -143,4 +165,5 @@ RoleUsersList.propTypes = {
   itemLabel: PropTypes.string.isRequired,
   errorMessage: PropTypes.string.isRequired,
   loadingLabel: PropTypes.string.isRequired,
+  currentUserId: PropTypes.string,
 }
