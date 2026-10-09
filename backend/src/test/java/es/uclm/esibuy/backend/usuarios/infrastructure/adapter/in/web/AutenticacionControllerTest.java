@@ -27,6 +27,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -51,6 +52,7 @@ class AutenticacionControllerTest {
     private static final String URL_LOGIN = "/api/auth/login";
     private static final String URL_CODIGO_EMAIL = "/api/auth/verify-email-code";
     private static final String URL_ME = "/api/auth/me";
+    private static final String URL_LOGOUT = "/api/auth/logout";
 
     @Autowired
     private MockMvc mockMvc;
@@ -252,5 +254,21 @@ class AutenticacionControllerTest {
                 // El DTO elige qué sale: nunca el hash de la contraseña ni datos internos
                 .andExpect(content().string(not(containsString("hash-guardado"))))
                 .andExpect(jsonPath("$.passwordHash").doesNotExist());
+    }
+
+    @Test
+    @WithMockUser(username = "juan@uclm.es")
+    @DisplayName("HU2-CP15: cerrar sesión devuelve 204 e invalida la sesión en el servidor")
+    void logoutCierraLaSesion() throws Exception {
+        MockHttpSession sesion = new MockHttpSession();
+
+        mockMvc.perform(post(URL_LOGOUT)
+                        .session(sesion)
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        // El frontend no puede borrar la cookie HttpOnly: es el servidor quien invalida la sesión,
+        // y la cookie deja de valer aunque alguien la tenga
+        assertTrue(sesion.isInvalid(), "La sesión debe quedar invalidada");
     }
 }
