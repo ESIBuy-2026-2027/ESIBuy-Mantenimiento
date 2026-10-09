@@ -1,5 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,6 +46,11 @@ public class AutenticacionController {
     private static void recordarCorreo(HttpServletRequest peticion, String email) {
         peticion.getSession().setAttribute(CORREO_PENDIENTE, email);
         peticion.changeSessionId();
+    }
+
+    @GetMapping("/me")
+    public UsuarioSesionResponse me(Authentication autenticado) {
+        return UsuarioSesionResponse.desde(autenticacion.consultarUsuarioEnSesion(autenticado.getName()));
     }
     
 }

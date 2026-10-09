@@ -3,8 +3,10 @@ package es.uclm.esibuy.backend.shared.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
 /**
  * Configuración mínima de Spring Security.
@@ -35,7 +37,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, RUTA_REGISTRO, RUTA_LOGIN, RUTA_CODIGO_EMAIL).permitAll()
                         .requestMatchers(RUTAS_ADMINISTRACION).hasRole(ROL_ADMINISTRADOR)
                         .anyRequest().authenticated())
+                        .exceptionHandling(excepciones -> excepciones.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .csrf(csrf -> csrf.ignoringRequestMatchers(RUTA_REGISTRO));
         return http.build();
     }
+
+    
 }
