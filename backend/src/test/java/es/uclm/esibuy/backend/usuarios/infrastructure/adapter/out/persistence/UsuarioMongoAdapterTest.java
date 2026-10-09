@@ -154,6 +154,24 @@ class UsuarioMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU24-CP01: buscarPorId devuelve el usuario guardado")
+    void buscarPorIdDevuelveElUsuarioGuardado() {
+        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+        String id = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow().getId();
+
+        Usuario encontrado = adapter.buscarPorId(id).orElseThrow();
+
+        assertEquals(id, encontrado.getId());
+        assertEquals("juan@uclm.es", encontrado.getEmail().valor());
+    }
+
+    @Test
+    @DisplayName("HU24-CP03: buscarPorId devuelve vacío si el usuario no existe")
+    void buscarPorIdDevuelveVacioSiNoExiste() {
+        assertTrue(adapter.buscarPorId("000000000000000000000000").isEmpty());
+    }
+
+    @Test
     @DisplayName("HU2-CP03: guardar un usuario leído lo actualiza en vez de duplicarlo")
     void guardarUnUsuarioLeidoLoActualizaSinDuplicarlo() {
         adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
