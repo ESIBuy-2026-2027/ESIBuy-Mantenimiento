@@ -97,8 +97,9 @@ export default function UserDetailDialog({ userId, currentUserId, onClose, onSta
   const { data: usuario, failed, retry } = useApiQuery(fetcher)
   const [resultado, setResultado] = useState(null)
 
+  // Una cuenta pendiente (HU1) se acepta activándola, como los vendedores pendientes.
   let accion = null
-  if (usuario?.estado === USER_STATUS.DESACTIVADO) accion = 'activar'
+  if (usuario?.estado === USER_STATUS.DESACTIVADO || usuario?.estado === USER_STATUS.PENDIENTE) accion = 'activar'
   else if (usuario?.estado === USER_STATUS.ACTIVO && usuario.id !== currentUserId) accion = 'desactivar'
 
   const avisarHecho = (nombre) => {

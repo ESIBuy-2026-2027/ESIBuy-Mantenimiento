@@ -38,8 +38,8 @@ describe('AdminUsersPage (HU19)', () => {
     await abrirListado()
 
     await esperarFilas(10)
-    expect(within(filasDeDatos()[0]).getByText('Mariana Ruiz Pascual')).toBeInTheDocument()
-    expect(screen.getByText(/mostrando 1–10 de 25 usuarios/i)).toBeInTheDocument()
+    expect(within(filasDeDatos()[0]).getByText('Marcos Aguilar Bravo')).toBeInTheDocument()
+    expect(screen.getByText(/mostrando 1–10 de 28 usuarios/i)).toBeInTheDocument()
   })
 
   it('HU19-CP02: al buscar "ana" muestra solo los usuarios que coinciden', async () => {
@@ -71,8 +71,8 @@ describe('AdminUsersPage (HU19)', () => {
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'Pendiente')
 
-    // Solo los vendedores pueden estar pendientes (HU24): en el mock hay 2.
-    await esperarFilas(2)
+    // Toda cuenta nueva queda pendiente (HU1): en el mock hay 2 vendedores, 2 clientes y 1 administrador.
+    await esperarFilas(5)
     expect(columna(3).every((estado) => estado === 'Pendiente')).toBe(true)
   })
 
@@ -84,7 +84,7 @@ describe('AdminUsersPage (HU19)', () => {
     await user.click(screen.getByRole('button', { name: /siguiente/i }))
 
     expect(await screen.findByText(/página 2 de 3/i)).toBeInTheDocument()
-    expect(screen.getByText(/mostrando 11–20 de 25 usuarios/i)).toBeInTheDocument()
+    expect(screen.getByText(/mostrando 11–20 de 28 usuarios/i)).toBeInTheDocument()
     await esperarFilas(10)
   })
 
@@ -122,7 +122,7 @@ describe('AdminUsersPage (HU19)', () => {
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'Pendiente')
 
-    await waitFor(() => expect(filasDeDatos()).toHaveLength(2))
+    await waitFor(() => expect(filasDeDatos()).toHaveLength(5))
   })
 
   it('HU19-CP07: sin coincidencias muestra que no se han encontrado usuarios', async () => {

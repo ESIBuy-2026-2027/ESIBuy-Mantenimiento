@@ -227,7 +227,10 @@ export default function Register() {
   if (registrado) {
     return pantalla(
       'Cuenta creada',
-      <Text className={styles.description}>Tu cuenta se ha creado correctamente.</Text>
+      <Text className={styles.description}>
+        Tu cuenta se ha creado correctamente y está pendiente de que un administrador la verifique.
+        Podrás iniciar sesión cuando esté activada.
+      </Text>
     )
   }
 
