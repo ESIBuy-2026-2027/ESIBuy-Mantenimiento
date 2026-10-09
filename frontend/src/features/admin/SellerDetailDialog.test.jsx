@@ -81,10 +81,17 @@ describe('SellerDetailDialog (HU26): datos', () => {
     expect(within(dialogo).getByText(/modo solo lectura/i)).toBeInTheDocument()
   })
 
-  it('sellerDetailDialog_noOfreceBotonesDeEditarNiEliminarVendedor', async () => {
+  it('sellerDetailDialog_noOfreceBotonesDeEliminarVendedor', async () => {
+    const { dialogo } = await abrirDialogo()
+    await within(dialogo).findByLabelText('Nombre')
+
+    expect(within(dialogo).queryByRole('button', { name: /eliminar|borrar/i })).not.toBeInTheDocument()
+  })
+
+  it('sellerDetailDialog_enLaPestanaDatos_ofreceElBotonEditar', async () => {
     const { dialogo } = await abrirDialogo()
 
-    expect(within(dialogo).queryByRole('button', { name: /editar|eliminar|borrar/i })).not.toBeInTheDocument()
+    expect(await within(dialogo).findByRole('button', { name: 'Editar' })).toBeEnabled()
   })
 
   it('sellerDetailDialog_conVendedorActivo_muestraElBotonDesactivarUsuarioHabilitado', async () => {
@@ -324,5 +331,206 @@ describe('SellerDetailDialog (HU26): pedidos', () => {
     await within(dialogo).findByText('PED-1012')
 
     expect(botonesDeEdicion(dialogo)).toHaveLength(0)
+  })
+})
+
+describe('SellerDetailDialog (HU22): edición', () => {
+  async function entrarEnEdicion(sellerId = VENDEDOR_CON_DATOS) {
+    const ficha = await abrirDialogo(sellerId)
+    const user = userEvent.setup()
+    await user.click(await within(ficha.dialogo).findByRole('button', { name: 'Editar' }))
+    await within(ficha.dialogo).findByText('Modo edición', undefined, ESPERA)
+    await within(ficha.dialogo).findByLabelText(/^categoría principal/i, undefined, ESPERA)
+    return { ...ficha, user }
+  }
+
+  function capturarGuardado() {
+    const envio = { cuerpo: null, llamadas: 0 }
+    server.use(
+      http.put('/api/admin/sellers/:id', async ({ params, request }) => {
+        envio.llamadas += 1
+        envio.id = params.id
+        envio.cuerpo = await request.json()
+        return HttpResponse.json({ id: params.id })
+      }),
+    )
+    return envio
+  }
+
+  const campo = (dialogo, etiqueta) => within(dialogo).getByLabelText(etiqueta)
+  const esDeSoloLectura = (dialogo, etiqueta) => campo(dialogo, etiqueta).hasAttribute('readonly')
+  const guardar = (user, dialogo) => user.click(within(dialogo).getByRole('button', { name: /^guardar$/i }))
+
+  async function escribir(user, dialogo, etiqueta, texto) {
+    await user.clear(campo(dialogo, etiqueta))
+    if (texto) await user.type(campo(dialogo, etiqueta), texto)
+  }
+
+  it('sellerDetailDialog_alPulsarEditar_pasaAlModoEdicionConLosDatosDelVendedor', async () => {
+    const { dialogo } = await entrarEnEdicion()
+
+    expect(campo(dialogo, /^nombre comercial/i)).toHaveValue('TecnoVera')
+    expect(campo(dialogo, /^categoría principal/i)).toHaveValue('cat-1')
+    expect(within(dialogo).getByRole('button', { name: /^guardar$/i })).toBeInTheDocument()
+    expect(within(dialogo).queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
+    expect(within(dialogo).queryByRole('button', { name: /desactivar usuario/i })).not.toBeInTheDocument()
+  })
+
+  it('sellerDetailDialog_enEdicion_dejaModificarTodoMenosElEstadoYLaFechaDeAlta', async () => {
+    const { dialogo } = await entrarEnEdicion()
+
+    for (const etiqueta of [/^nombre(?! comercial)/i, /^apellidos/i, /^correo electrónico/i, /^nombre comercial/i, /^nif\/dni/i]) {
+      expect(esDeSoloLectura(dialogo, etiqueta)).toBe(false)
+    }
+    expect(campo(dialogo, /^categoría principal/i)).not.toBeDisabled()
+    expect(esDeSoloLectura(dialogo, 'Estado')).toBe(true)
+    expect(esDeSoloLectura(dialogo, 'Fecha de alta')).toBe(true)
+  })
+
+  it('sellerDetailDialog_enEdicion_losProductosYLosPedidosNoSePuedenTocar', async () => {
+    const { dialogo } = await entrarEnEdicion()
+
+    expect(within(dialogo).getByRole('tab', { name: 'Productos' })).toBeDisabled()
+    expect(within(dialogo).getByRole('tab', { name: 'Pedidos' })).toBeDisabled()
+    expect(within(dialogo).getByText(/productos, precios y pedidos no se pueden cambiar/i)).toBeInTheDocument()
+  })
+
+  it('sellerDetailDialog_enLasPestanasDeProductosYPedidos_noOfreceEditar', async () => {
+    const user = userEvent.setup()
+    const { dialogo } = await abrirDialogo()
+    await within(dialogo).findByLabelText('Nombre')
+
+    await abrirPestana(user, dialogo, 'Productos')
+    await within(dialogo).findByText('Auriculares inalámbricos')
+    expect(within(dialogo).queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
+
+    await abrirPestana(user, dialogo, 'Pedidos')
+    await within(dialogo).findByText('PED-1012')
+    expect(within(dialogo).queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
+  })
+
+  it('sellerDetailDialog_alGuardar_enviaSoloLosDatosDelVendedor', async () => {
+    const envio = capturarGuardado()
+    const { dialogo, user } = await entrarEnEdicion()
+
+    await escribir(user, dialogo, /^nombre comercial/i, 'TecnoVera Plus')
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(envio.llamadas).toBe(1), ESPERA)
+    expect(envio.id).toBe('u-2')
+    expect(envio.cuerpo).toEqual({
+      nombre: 'Vera',
+      apellidos: 'Vendedora',
+      email: 'vendedor@esibuy.test',
+      nombreComercial: 'TecnoVera Plus',
+      nif: 'B12345601',
+      categoriaPrincipalId: 'cat-1',
+    })
+  })
+
+  it('sellerDetailDialog_tras_guardar_vuelveALaFichaConLosDatosNuevosYAvisaAlListado', async () => {
+    const { dialogo, user, onStatusChange } = await entrarEnEdicion()
+
+    await escribir(user, dialogo, /^nombre comercial/i, 'TecnoVera Plus')
+    await guardar(user, dialogo)
+
+    expect(await within(dialogo).findByText('Los cambios se han guardado.', undefined, ESPERA)).toBeInTheDocument()
+    await waitFor(() => expect(campo(dialogo, 'Nombre comercial')).toHaveValue('TecnoVera Plus'), ESPERA)
+    expect(within(dialogo).getByText('Modo solo lectura')).toBeInTheDocument()
+    expect(onStatusChange).toHaveBeenCalled()
+  })
+
+  it('sellerDetailDialog_alCambiarLaCategoriaPrincipal_laFichaMuestraLaNueva', async () => {
+    const { dialogo, user } = await entrarEnEdicion()
+
+    await user.selectOptions(campo(dialogo, /^categoría principal/i), 'cat-2')
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(campo(dialogo, 'Categoría principal')).toHaveValue('Hogar'), ESPERA)
+  })
+
+  it('sellerDetailDialog_conElNombreComercialDeOtroVendedor_muestraElErrorYNoSale', async () => {
+    const { dialogo, user } = await entrarEnEdicion()
+
+    await escribir(user, dialogo, /^nombre comercial/i, 'Casa Vicente')
+    await guardar(user, dialogo)
+
+    expect(await within(dialogo).findByText('Este nombre comercial ya está registrado', undefined, ESPERA)).toBeInTheDocument()
+    expect(within(dialogo).getByText('Modo edición')).toBeInTheDocument()
+  })
+
+  it('sellerDetailDialog_alGuardarSinCambiarElNombreComercial_noLoTomaPorRepetido', async () => {
+    const { dialogo, user } = await entrarEnEdicion()
+
+    await escribir(user, dialogo, /^apellidos/i, 'Vendedora Nueva')
+    await guardar(user, dialogo)
+
+    expect(await within(dialogo).findByText('Los cambios se han guardado.', undefined, ESPERA)).toBeInTheDocument()
+  })
+
+  it('sellerDetailDialog_conElEmailDeOtraCuenta_muestraElErrorEnElCampo', async () => {
+    const { dialogo, user } = await entrarEnEdicion()
+
+    await escribir(user, dialogo, /^correo electrónico/i, 'hugo@esibuy.test')
+    await guardar(user, dialogo)
+
+    expect(await within(dialogo).findByText('Este email ya está registrado', undefined, ESPERA)).toBeInTheDocument()
+  })
+
+  it('sellerDetailDialog_conCamposVaciosOIncorrectos_losMuestraTodosALaVezYNoGuarda', async () => {
+    const envio = capturarGuardado()
+    const { dialogo, user } = await entrarEnEdicion()
+
+    await escribir(user, dialogo, /^nombre comercial/i, '')
+    await escribir(user, dialogo, /^correo electrónico/i, 'no-es-un-email')
+    await escribir(user, dialogo, /^nif\/dni/i, 'ABC')
+    await guardar(user, dialogo)
+
+    expect(within(dialogo).getByText(/este campo es obligatorio/i)).toBeInTheDocument()
+    expect(within(dialogo).getByText(/introduce un email válido/i)).toBeInTheDocument()
+    expect(within(dialogo).getByText(/introduce un nif\/dni válido/i)).toBeInTheDocument()
+    expect(envio.llamadas).toBe(0)
+  })
+
+  it('sellerDetailDialog_alPulsarCancelar_vuelveALaFichaSinGuardarNada', async () => {
+    const envio = capturarGuardado()
+    const { dialogo, user } = await entrarEnEdicion()
+
+    await escribir(user, dialogo, /^nombre comercial/i, 'Cambio descartado')
+    await user.click(within(dialogo).getByRole('button', { name: /^cancelar$/i }))
+
+    expect(await within(dialogo).findByText('Modo solo lectura')).toBeInTheDocument()
+    expect(campo(dialogo, 'Nombre comercial')).toHaveValue('TecnoVera')
+    expect(envio.llamadas).toBe(0)
+    expect(within(dialogo).getByRole('tab', { name: 'Productos' })).toBeEnabled()
+  })
+
+  it('sellerDetailDialog_conErrorDelServidor_muestraElMensajeYSigueEnEdicion', async () => {
+    server.use(http.put('/api/admin/sellers/:id', () => HttpResponse.json({ message: 'Mongo' }, { status: 500 })))
+    const { dialogo, user } = await entrarEnEdicion()
+
+    await guardar(user, dialogo)
+
+    expect(await within(dialogo).findByText(/no se han podido guardar los cambios/i, undefined, ESPERA)).toBeInTheDocument()
+    expect(within(dialogo).queryByText(/mongo/i)).not.toBeInTheDocument()
+    expect(within(dialogo).getByText('Modo edición')).toBeInTheDocument()
+  })
+
+  it('sellerDetailDialog_siNoCarganLasCategorias_avisaYPermiteReintentar', async () => {
+    server.use(http.get('/api/categorias', () => new HttpResponse(null, { status: 500 }), { once: true }))
+    const user = userEvent.setup()
+    const { dialogo } = await abrirDialogo()
+    await user.click(await within(dialogo).findByRole('button', { name: 'Editar' }))
+
+    expect(await within(dialogo).findByText(/no se han podido cargar las categorías/i, undefined, ESPERA)).toBeInTheDocument()
+    await user.click(within(dialogo).getByRole('button', { name: /reintentar/i }))
+
+    expect(await within(dialogo).findByLabelText(/^categoría principal/i, undefined, ESPERA)).toBeInTheDocument()
+  })
+
+  it('sellerDetailDialog_conUnVendedorPendiente_tambienSePuedeEditar', async () => {
+    const { dialogo } = await entrarEnEdicion(VENDEDOR_PENDIENTE)
+
+    expect(campo(dialogo, /^nombre comercial/i)).toHaveValue('Hogar Hugo')
   })
 })

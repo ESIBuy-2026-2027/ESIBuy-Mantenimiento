@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
-import { updateAdminSellerStatus } from './adminSellers'
+import { updateAdminSeller, updateAdminSellerStatus } from './adminSellers'
 import { ApiError } from './client'
 
 describe('updateAdminSellerStatus', () => {
@@ -43,5 +43,35 @@ describe('updateAdminSellerStatus', () => {
 
     expect(error).toBeInstanceOf(ApiError)
     expect(error.status).toBe(500)
+  })
+})
+
+describe('updateAdminSeller', () => {
+  it('updateAdminSeller_enviaLosDatosPorPutALaRutaDelVendedor', async () => {
+    const peticion = {}
+    server.use(
+      http.put('/api/admin/sellers/:id', async ({ params, request }) => {
+        peticion.id = params.id
+        peticion.cuerpo = await request.json()
+        return HttpResponse.json({ id: params.id })
+      }),
+    )
+
+    await updateAdminSeller('u-2', { nombreComercial: 'TecnoVera Plus' })
+
+    expect(peticion).toEqual({ id: 'u-2', cuerpo: { nombreComercial: 'TecnoVera Plus' } })
+  })
+
+  it('updateAdminSeller_conNombreComercialRepetido_lanzaApiErrorConElCodigo', async () => {
+    server.use(
+      http.put('/api/admin/sellers/:id', () =>
+        HttpResponse.json({ code: 'COMMERCIAL_NAME_ALREADY_REGISTERED' }, { status: 409 }),
+      ),
+    )
+
+    const error = await updateAdminSeller('u-2', {}).catch((excepcion) => excepcion)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({ status: 409, code: 'COMMERCIAL_NAME_ALREADY_REGISTERED' })
   })
 })

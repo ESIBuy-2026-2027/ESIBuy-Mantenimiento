@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { REQUISITOS_PASSWORD, esEmailValido, validarPasswords } from './accountRules'
+import {
+  REQUISITOS_PASSWORD,
+  esDniValido,
+  esEmailValido,
+  esMayorDeEdad,
+  esTelefonoValido,
+  validarPasswords,
+} from './accountRules'
 
 const requisito = (texto) => REQUISITOS_PASSWORD.find((candidato) => candidato.texto === texto)
 
@@ -70,5 +77,63 @@ describe('validarPasswords', () => {
   it('validarPasswords_conCamposVacios_noDevuelveErrores', () => {
     expect(validarPasswords({ password: '', repeticionPassword: '' })).toEqual({})
     expect(validarPasswords({ password: 'Password123!', repeticionPassword: '' })).toEqual({})
+  })
+})
+
+const haceAnios = (anios, dias = 0) => {
+  const fecha = new Date()
+  fecha.setFullYear(fecha.getFullYear() - anios)
+  fecha.setDate(fecha.getDate() + dias)
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0')
+  const dia = String(fecha.getDate()).padStart(2, '0')
+  return `${fecha.getFullYear()}-${mes}-${dia}`
+}
+
+describe('esDniValido', () => {
+  it('esDniValido_conOchoNumerosYUnaLetra_devuelveTrue', () => {
+    expect(esDniValido('12345678Z')).toBe(true)
+    expect(esDniValido('12345678z')).toBe(true)
+  })
+
+  it('esDniValido_conOtroFormato_devuelveFalse', () => {
+    expect(esDniValido('1234567Z')).toBe(false)
+    expect(esDniValido('123456789')).toBe(false)
+    expect(esDniValido('ABCDEFGHZ')).toBe(false)
+    expect(esDniValido('')).toBe(false)
+  })
+})
+
+describe('esTelefonoValido', () => {
+  it('esTelefonoValido_conNueveNumeros_devuelveTrue', () => {
+    expect(esTelefonoValido('612345678')).toBe(true)
+  })
+
+  it('esTelefonoValido_conLetrasOOtraLongitud_devuelveFalse', () => {
+    expect(esTelefonoValido('61234567')).toBe(false)
+    expect(esTelefonoValido('6123456789')).toBe(false)
+    expect(esTelefonoValido('61234567a')).toBe(false)
+  })
+})
+
+describe('esMayorDeEdad', () => {
+  it('esMayorDeEdad_conMasDe18Anios_devuelveTrue', () => {
+    expect(esMayorDeEdad(haceAnios(30))).toBe(true)
+  })
+
+  it('esMayorDeEdad_elDiaQueCumple18_devuelveTrue', () => {
+    expect(esMayorDeEdad(haceAnios(18))).toBe(true)
+  })
+
+  it('esMayorDeEdad_aUnDiaDeCumplir18_devuelveFalse', () => {
+    expect(esMayorDeEdad(haceAnios(18, 1))).toBe(false)
+  })
+
+  it('esMayorDeEdad_conUnMenor_devuelveFalse', () => {
+    expect(esMayorDeEdad(haceAnios(10))).toBe(false)
+  })
+
+  it('esMayorDeEdad_conUnaFechaNoValida_devuelveFalse', () => {
+    expect(esMayorDeEdad('')).toBe(false)
+    expect(esMayorDeEdad('no es una fecha')).toBe(false)
   })
 })

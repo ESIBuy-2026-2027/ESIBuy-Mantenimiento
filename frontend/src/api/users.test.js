@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
 import { ApiError } from './client'
-import { getUser, listUsers, updateUserStatus } from './users'
+import { getUser, listUsers, updateUser, updateUserStatus } from './users'
 
 const RESPUESTA = { items: [], page: 1, size: 10, totalItems: 0, totalPages: 0 }
 
@@ -161,5 +161,48 @@ describe('getUser', () => {
 
     expect(error).toBeInstanceOf(ApiError)
     expect(error.status).toBe(404)
+  })
+})
+
+describe('updateUser', () => {
+  it('updateUser_enviaLosDatosPorPutALaRutaDelUsuario', async () => {
+    const peticion = {}
+    server.use(
+      http.put('/api/admin/usuarios/:id', async ({ params, request }) => {
+        peticion.id = params.id
+        peticion.cuerpo = await request.json()
+        return HttpResponse.json({ id: params.id })
+      }),
+    )
+
+    const respuesta = await updateUser('usr-3', { nombre: 'Carla', apellidos: 'Moreno Gil' })
+
+    expect(peticion).toEqual({ id: 'usr-3', cuerpo: { nombre: 'Carla', apellidos: 'Moreno Gil' } })
+    expect(respuesta).toEqual({ id: 'usr-3' })
+  })
+
+  it('updateUser_codificaElIdentificadorEnLaRuta', async () => {
+    let id
+    server.use(
+      http.put('/api/admin/usuarios/:id', ({ params }) => {
+        id = params.id
+        return HttpResponse.json({})
+      }),
+    )
+
+    await updateUser('a b/c', {})
+
+    expect(id).toBe('a b/c')
+  })
+
+  it('updateUser_conDatosRechazados_lanzaApiErrorConElCodigo', async () => {
+    server.use(
+      http.put('/api/admin/usuarios/:id', () => HttpResponse.json({ code: 'VALIDATION_ERROR' }, { status: 400 })),
+    )
+
+    const error = await updateUser('usr-3', {}).catch((excepcion) => excepcion)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({ status: 400, code: 'VALIDATION_ERROR' })
   })
 })
