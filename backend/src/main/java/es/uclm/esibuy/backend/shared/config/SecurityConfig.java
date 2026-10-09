@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 
 /**
  * Configuración mínima de Spring Security.
@@ -25,6 +26,7 @@ public class SecurityConfig {
 
     private static final String RUTA_REGISTRO = "/api/auth/registro";
     private static final String RUTA_LOGIN = "/api/auth/login";
+    private static final String RUTA_LOGOUT = "/api/auth/logout";
     private static final String RUTA_CODIGO_EMAIL = "/api/auth/verify-email-code";
     private static final String RUTAS_ADMINISTRACION = "/api/admin/**";
     // Texto y no el enum Rol: shared no depende del dominio de ningún módulo. Es el mismo valor que Rol.ADMINISTRADOR.
@@ -38,6 +40,8 @@ public class SecurityConfig {
                         .requestMatchers(RUTAS_ADMINISTRACION).hasRole(ROL_ADMINISTRADOR)
                         .anyRequest().authenticated())
                         .exceptionHandling(excepciones -> excepciones.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                        .logout(logout -> logout.logoutUrl(RUTA_LOGOUT).logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
+                    .deleteCookies("JSESSIONID"))
                 .csrf(csrf -> csrf.ignoringRequestMatchers(RUTA_REGISTRO));
         return http.build();
     }
