@@ -261,6 +261,49 @@ class UsuarioControllerTest {
         verify(administracionUsuarios, never()).activar(any());
     }
 
+    // Acceso por rol a los endpoints reales de administración (HU18, T60). La regla la puso la T58
+    // en SecurityConfig; aquí se comprueba sobre el listado (HU19) y la activación (HU24).
+
+    @Test
+    @DisplayName("HU18-CP02: un cliente no accede al listado de usuarios de administración")
+    @WithMockUser(roles = "CLIENTE")
+    void clienteNoAccedeAlListado() throws Exception {
+        mockMvc.perform(get("/api/admin/usuarios"))
+                .andExpect(status().isForbidden());
+
+        verify(listadoUsuarios, never()).listar(any());
+    }
+
+    @Test
+    @DisplayName("HU18-CP02: un vendedor no accede al listado de usuarios de administración")
+    @WithMockUser(roles = "VENDEDOR")
+    void vendedorNoAccedeAlListado() throws Exception {
+        mockMvc.perform(get("/api/admin/usuarios"))
+                .andExpect(status().isForbidden());
+
+        verify(listadoUsuarios, never()).listar(any());
+    }
+
+    @Test
+    @DisplayName("HU18-CP01: sin sesión no se puede activar una cuenta")
+    void activarSinSesionEstaProtegido() throws Exception {
+        // 403 y no 401: todavía no hay ningún mecanismo de login configurado (task 230).
+        mockMvc.perform(cambiarEstado("usr-1", "ACTIVO"))
+                .andExpect(status().isForbidden());
+
+        verify(administracionUsuarios, never()).activar(any());
+    }
+
+    @Test
+    @DisplayName("HU18-CP02: un vendedor no puede activar cuentas")
+    @WithMockUser(roles = "VENDEDOR")
+    void unVendedorNoPuedeActivarCuentas() throws Exception {
+        mockMvc.perform(cambiarEstado("usr-1", "ACTIVO"))
+                .andExpect(status().isForbidden());
+
+        verify(administracionUsuarios, never()).activar(any());
+    }
+
     // PATCH con sesión: lleva el token CSRF (la estrategia de CSRF se decidirá con el login, task 230).
     private static MockHttpServletRequestBuilder cambiarEstado(String id, String estado) {
         return patch("/api/admin/usuarios/{id}/status", id).with(csrf())
