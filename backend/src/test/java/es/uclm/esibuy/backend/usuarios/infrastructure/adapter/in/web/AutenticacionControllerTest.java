@@ -5,6 +5,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.IniciarSesionCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.PasoLogin;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ResultadoInicioSesion;
+import es.uclm.esibuy.backend.usuarios.application.port.out.exception.EnvioEmailException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
@@ -114,5 +115,23 @@ class AutenticacionControllerTest {
                 .andExpect(status().isForbidden())
                 // El frontend lee "code" para mostrar «cuenta desactivada» (client.js, loginErrors.js)
                 .andExpect(jsonPath("$.code").value("ACCOUNT_DISABLED"));
+    }
+
+    @Test
+    @DisplayName("HU2-CP05: si no se puede enviar el código por correo, devuelve 503 sin detalles internos")
+    void falloDelCorreoDevuelve503() throws Exception {
+        // El adaptador de correo (T231) traduce el fallo de Brevo a EnvioEmailException y conserva la causa
+        when(autenticacion.iniciarSesion(any()))
+                .thenThrow(new EnvioEmailException("No se ha podido enviar el código de verificación",
+                        new RuntimeException("535 Authentication failed")));
+
+        mockMvc.perform(post(URL_LOGIN)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonLogin("juan@uclm.es", "clave1234")))
+                // 503 Service Unavailable: el fallo es de un servicio externo, no de los datos del usuario
+                .andExpect(status().isServiceUnavailable())
+                // La causa (p. ej. el error SMTP) se queda en el log, nunca en la respuesta
+                .andExpect(content().string(not(containsString("535"))));
     }
 }
