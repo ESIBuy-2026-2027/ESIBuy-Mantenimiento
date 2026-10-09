@@ -30,8 +30,8 @@ class SecurityConfigTest {
     @Test
     @DisplayName("HU18-CP01: sin sesión no se accede a la zona de administración")
     void sinSesionNoSeAccedeAAdministracion() throws Exception {
-        // 403 y no 401: todavía no hay ningún mecanismo de login configurado (task 230).
-        mockMvc.perform(get(RUTA_ADMINISTRACION)).andExpect(status().isForbidden());
+        // 401 sin sesión («no sé quién eres») y 403 con sesión sin permiso: T230, D10 (antes, el 403 por defecto de Spring)
+        mockMvc.perform(get(RUTA_ADMINISTRACION)).andExpect(status().isUnauthorized());
     }
 
     @Test

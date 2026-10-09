@@ -11,6 +11,10 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
+import es.uclm.esibuy.backend.usuarios.domain.model.Email;
+import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
+import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +22,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -28,6 +33,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -44,6 +50,7 @@ class AutenticacionControllerTest {
 
     private static final String URL_LOGIN = "/api/auth/login";
     private static final String URL_CODIGO_EMAIL = "/api/auth/verify-email-code";
+    private static final String URL_ME = "/api/auth/me";
 
     @Autowired
     private MockMvc mockMvc;
@@ -213,5 +220,37 @@ class AutenticacionControllerTest {
                                  {"code": "000000"}
                                  """))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("HU2-CP14: sin sesión iniciada, /me devuelve 401")
+    void meSinSesionDevuelve401() throws Exception {
+        // El frontend lo llama al cargar la app (AuthProvider.jsx): 401 = visitante, no un error
+        mockMvc.perform(get(URL_ME))
+                .andExpect(status().isUnauthorized());
+
+        verify(autenticacion, never()).consultarUsuarioEnSesion(any());
+    }
+
+    @Test
+    @WithMockUser(username = "juan@uclm.es") // simula el usuario autenticado que dejará el paso 3 (T20)
+    @DisplayName("HU2-CP14: con sesión iniciada, /me devuelve los datos del usuario y nada más")
+    void meConSesionDevuelveElUsuario() throws Exception {
+        Usuario usuario = new Usuario("u-1", "Juan", "García", new Email("juan@uclm.es"), "hash-guardado",
+                Rol.CLIENTE, TipoCliente.ESTANDAR);
+        when(autenticacion.consultarUsuarioEnSesion("juan@uclm.es")).thenReturn(usuario);
+
+        mockMvc.perform(get(URL_ME))
+                .andExpect(status().isOk())
+                // Contrato del frontend (hu2-login.md): { id, nombre, apellidos, email, rol, estado }
+                .andExpect(jsonPath("$.id").value("u-1"))
+                .andExpect(jsonPath("$.nombre").value("Juan"))
+                .andExpect(jsonPath("$.apellidos").value("García"))
+                .andExpect(jsonPath("$.email").value("juan@uclm.es"))
+                .andExpect(jsonPath("$.rol").value("CLIENTE"))
+                .andExpect(jsonPath("$.estado").value("ACTIVO"))
+                // El DTO elige qué sale: nunca el hash de la contraseña ni datos internos
+                .andExpect(content().string(not(containsString("hash-guardado"))))
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
     }
 }
