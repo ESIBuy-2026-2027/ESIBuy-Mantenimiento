@@ -80,8 +80,9 @@ const PROFILE_FIELDS = {
     },
     imagen,
     estado,
-    fechaAlta,
   ],
+  // No se pueden cambiar el email ni la fecha de incorporación (ni la contraseña). Es el único tipo
+  // de usuario con fecha de alta: la de clientes y vendedores no se guarda.
   // No se pueden cambiar el email ni la fecha de incorporación (ni la contraseña).
   [ROLES.ADMIN]: [
     nombre,
@@ -136,11 +137,10 @@ const PROFILE_FIELDS = {
       edit: { type: 'select', required: true },
     },
     estado,
-    fechaAlta,
   ],
 }
 
-const FALLBACK_FIELDS = [nombre, apellidos, email, estado, fechaAlta]
+const FALLBACK_FIELDS = [nombre, apellidos, email, estado]
 
 export const profileFieldsFor = (rol) => PROFILE_FIELDS[rol] ?? FALLBACK_FIELDS
 

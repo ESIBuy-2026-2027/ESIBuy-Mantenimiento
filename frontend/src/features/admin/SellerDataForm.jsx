@@ -16,6 +16,5 @@ SellerDataForm.propTypes = {
     nif: PropTypes.string.isRequired,
     categoriaPrincipal: PropTypes.string.isRequired,
     estado: PropTypes.string.isRequired,
-    fechaAlta: PropTypes.string.isRequired,
   }).isRequired,
 }
