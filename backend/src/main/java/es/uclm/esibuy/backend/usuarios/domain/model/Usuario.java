@@ -19,7 +19,6 @@ public class Usuario {
     private final TipoCliente tipoCliente;
     private final Instant fechaAlta;
     private String estado;
-    private boolean activo;              // false = desactivada por un administrador (HU23/HU24): no puede entrar
     private int intentosFallidos;        // intentos de login fallidos seguidos
     private Instant bloqueadoHasta;      // bloqueo temporal por intentos; null = sin bloqueo
 
@@ -39,14 +38,12 @@ public class Usuario {
         this.tipoCliente = exigirTipoClienteCoherente(this.rol, tipoCliente);
         this.fechaAlta = fechaAlta;
         this.estado = "PENDIENTE";
-        this.activo = true;
         this.intentosFallidos = 0;
     }
 
     public void restaurarEstado(String estado) {
         if (estado != null) {
             this.estado = estado;
-            this.activo = !"DESACTIVADO".equals(estado);
         }
     }
 
@@ -124,12 +121,10 @@ public class Usuario {
     }
 
     public void desactivar() {
-        activo = false;
         estado = "DESACTIVADO";
     }
 
     public void activar() {
-        activo = true;
         estado = "ACTIVO";
     }
 

@@ -91,8 +91,14 @@ class AutenticacionServiceTest {
 
     // Cliente con id: al iniciar sesión se guarda un código de verificación asociado a su id (T21).
     private static Usuario clienteConId() {
-        return new Usuario("u-1", null, null, new Email("juan@uclm.es"), "hash-guardado", Rol.CLIENTE,
-                TipoCliente.ESTANDAR);
+        return activo(new Usuario("u-1", null, null, new Email("juan@uclm.es"), "hash-guardado", Rol.CLIENTE,
+                TipoCliente.ESTANDAR));
+    }
+
+    // Una cuenta nueva nace PENDIENTE (T233) y el login la rechaza: los tests de login usan cuentas verificadas.
+    private static Usuario activo(Usuario usuario) {
+        usuario.activar();
+        return usuario;
     }
 
     @Test
@@ -120,7 +126,7 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP02: rechaza una contraseña incorrecta con la misma respuesta que un correo inexistente")
     void rechazaContrasenaIncorrecta() {
-        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado");
+        Usuario usuario = activo(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado"));
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
         when(hashContrasena.coincide("otraClave", "hash-guardado")).thenReturn(false);
         when(usuarioRepository.buscarPorCorreo("nadie@uclm.es")).thenReturn(Optional.empty());
@@ -154,7 +160,7 @@ class AutenticacionServiceTest {
     @DisplayName("HU2-CP03: bloquea la cuenta tras 5 intentos fallidos")
     void bloqueaLaCuentaTrasCincoIntentosFallidos() {
         // Frontera: 5 fallos → bloqueada, incluso con la contraseña correcta.
-        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado");
+        Usuario usuario = activo(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado"));
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
         when(hashContrasena.coincide("otraClave", "hash-guardado")).thenReturn(false);
         IniciarSesionCommand contrasenaIncorrecta = new IniciarSesionCommand("juan@uclm.es", "otraClave");
@@ -196,7 +202,7 @@ class AutenticacionServiceTest {
     void rechazaCuentaDesactivada() {
         // «Desactivada» = desactivada por un administrador (desactivar() de Usuario, T214).
         // Se comprueba después de la contraseña: quien no la conoce no puede averiguar el estado de la cuenta.
-        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado");
+        Usuario usuario = activo(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado"));
         usuario.desactivar();
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
         when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);

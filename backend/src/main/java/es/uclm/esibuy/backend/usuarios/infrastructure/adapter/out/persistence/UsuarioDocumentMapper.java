@@ -38,10 +38,8 @@ public class UsuarioDocumentMapper {
                 new Email(documento.getEmail()), documento.getPasswordHash(), rol, tipoCliente,
                 documento.getCreatedAt());
 
-        // Solo se desactiva si el estado es explícitamente DESACTIVADO; null (documento antiguo) = activo.
-        if ("DESACTIVADO".equals(documento.getEstado())) {
-            usuario.desactivar();
-        }
+        // Un documento anterior a la T225, sin estado, se lee como ACTIVO: es una cuenta creada antes de que
+        // existiera la verificación por un administrador (T233).
         usuario.restaurarEstado(documento.getEstado() == null ? ESTADO_ACTIVO : documento.getEstado());
         usuario.restaurarBloqueoPorIntentos(documento.getFailedLoginAttempts(), documento.getLockedUntil());
         return usuario;

@@ -71,7 +71,7 @@ final class ColeccionesEsiBuy {
                 textoNoVacio("passwordHash"),
                 string("rol").possibleValues("ADMINISTRADOR", "VENDEDOR", "CLIENTE"),
                 string("tipoCliente").possibleValues("PREMIUM", "ESTANDAR"),
-                // PENDIENTE solo para vendedores a la espera de verificación (decisión del equipo del 07/10/2026).
+                // Toda cuenta nueva nace PENDIENTE hasta que un administrador la verifica (decisión del equipo del 09/10/2026).
                 string(ESTADO).possibleValues("ACTIVO", "DESACTIVADO", "PENDIENTE"),
                 textoNoVacio(NOMBRE),
                 textoNoVacio("apellidos"),

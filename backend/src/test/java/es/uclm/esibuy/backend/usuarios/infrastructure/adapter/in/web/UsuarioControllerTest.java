@@ -178,6 +178,7 @@ class UsuarioControllerTest {
                 "hash-no-debe-salir", Rol.CLIENTE, TipoCliente.ESTANDAR,
                 java.time.Instant.parse("2026-10-01T10:00:00Z")
         );
+        usuario.activar();   // una cuenta nueva nace PENDIENTE (T233): el test lista una cuenta ya verificada
         when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(
                 java.util.List.of(usuario), 0, 10, 1
         ));
