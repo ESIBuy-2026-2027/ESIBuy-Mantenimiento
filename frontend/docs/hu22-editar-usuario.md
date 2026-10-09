@@ -25,9 +25,11 @@ Al pulsar **Editar**, la ficha pasa a **modo edición**: los campos que se puede
 
 | Tipo | Se puede modificar | No se puede modificar |
 |---|---|---|
-| **Cliente** | Nombre, apellidos, DNI, teléfono, fecha de nacimiento (siempre que sea **mayor de edad**), tipo de cliente (Estándar o Premium) e imagen de perfil | **Email**, estado, fecha de alta |
-| **Administrador** | Nombre, apellidos, sede e imagen de perfil | **Email**, **fecha de incorporación**, estado, fecha de alta |
-| **Vendedor** | **Todos sus datos**: nombre, apellidos, email, nombre comercial (que siga siendo **único**), NIF/DNI y categoría principal | Estado y fecha de alta |
+| **Cliente** | Nombre, apellidos, DNI, teléfono, fecha de nacimiento (siempre que sea **mayor de edad**), tipo de cliente (Estándar o Premium) e imagen de perfil | **Email** y estado |
+| **Administrador** | Nombre, apellidos, sede e imagen de perfil | **Email**, **fecha de incorporación**, estado y fecha de alta |
+| **Vendedor** | **Todos sus datos**: nombre, apellidos, email, nombre comercial (que siga siendo **único**), NIF/DNI y categoría principal | Estado |
+
+La **fecha de alta** solo se muestra en la ficha del **administrador**: la de clientes y vendedores no se guarda, así que su ficha no tiene ese campo.
 
 Para los tres tipos:
 
@@ -169,7 +171,7 @@ Con `npm run dev` (mocks activos): `admin@esibuy.test`, contraseña `Mock-Clave-
 
 | Prueba | Resultado |
 |---|---|
-| **Clientes** → lupa de `Carlos Moreno Gil` → **Editar** | Nombre, apellidos, DNI, teléfono, fecha de nacimiento, tipo e imagen se pueden cambiar; email, estado y fecha de alta, oscuros |
+| **Clientes** → lupa de `Carlos Moreno Gil` → **Editar** | Nombre, apellidos, DNI, teléfono, fecha de nacimiento, tipo e imagen se pueden cambiar; email y estado, oscuros; no hay fecha de alta |
 | Poner una fecha de nacimiento de hace 10 años → **Guardar** | "Debe ser mayor de edad" |
 | Vaciar nombre y DNI → **Guardar** | Los dos errores a la vez |
 | Cambiar el nombre → **Guardar** | Vuelve a la ficha con el aviso "Los cambios se han guardado." y el listado muestra el nombre nuevo |
@@ -184,17 +186,17 @@ Con `npm run dev` (mocks activos): `admin@esibuy.test`, contraseña `Mock-Clave-
 ### Tests automáticos
 
 ```bash
-npx vitest run     # 508 tests (103 son de esta HU)
+npx vitest run     # 513 tests (108 son de esta HU)
 npm run lint
 npm run build
 ```
 
 | Archivo | Tests nuevos | Qué cubre |
 |---|---|---|
-| `features/admin/profileFields.test.js` | 36 | Qué campos son modificables en cada tipo, que nunca se pueda cambiar la contraseña, valores iniciales, validación (valores límite de la mayoría de edad incluidos) y cuerpo de la petición |
-| `features/admin/ProfileEditor.test.jsx` | 20 | Campos modificables y de solo lectura por tipo, obligatorios a la vez, validación en vivo, guardado, errores 409 junto al campo, error genérico, doble clic y cancelar |
-| `features/admin/UserDetailDialog.test.jsx` | 15 | Botón Editar, modo edición de clientes y administradores, guardado y datos enviados, tipo de cliente, mayoría de edad, sede, edición de la propia cuenta y cancelar |
-| `features/admin/SellerDetailDialog.test.jsx` | 16 (y 1 modificado) | Editar solo en la pestaña Datos, pestañas deshabilitadas, guardado, categoría, nombre comercial y email únicos, errores, categorías que no cargan y cancelar. El test que decía que la ficha no tenía botón de editar ya no aplica y se sustituyó |
+| `features/admin/profileFields.test.js` | 38 | Qué campos son modificables en cada tipo, que nunca se pueda cambiar la contraseña, valores iniciales, validación (valores límite de la mayoría de edad incluidos) y cuerpo de la petición |
+| `features/admin/ProfileEditor.test.jsx` | 21 | Campos modificables y de solo lectura por tipo, obligatorios a la vez, validación en vivo, guardado, errores 409 junto al campo, error genérico, doble clic y cancelar |
+| `features/admin/UserDetailDialog.test.jsx` | 16 | Botón Editar, modo edición de clientes y administradores, guardado y datos enviados, tipo de cliente, mayoría de edad, sede, edición de la propia cuenta y cancelar |
+| `features/admin/SellerDetailDialog.test.jsx` | 17 (y 1 modificado) | Editar solo en la pestaña Datos, pestañas deshabilitadas, guardado, categoría, nombre comercial y email únicos, errores, categorías que no cargan y cancelar. El test que decía que la ficha no tenía botón de editar ya no aplica y se sustituyó |
 | `features/account/accountRules.test.js` | 9 | DNI, teléfono y mayoría de edad |
 | `api/users.test.js`, `api/adminSellers.test.js` | 3 y 2 | Las dos llamadas nuevas |
 | `pages/AdminClientsPage.test.jsx`, `pages/AdminSellersPage.test.jsx` | 1 y 1 | Que el listado muestra el nombre nuevo tras editar desde la ficha |
@@ -208,7 +210,8 @@ Los 405 tests anteriores siguen pasando.
 - **No se ha añadido ninguna librería nueva.**
 - **Una sola definición de campos (`profileFields.js`)** para los dos modos y para los tres tipos de usuario: evita repetir etiquetas y reglas, y hace que "qué se puede editar" esté en un solo sitio. Cambiar una regla de edición es tocar una línea.
 - **El formulario edita en la propia ficha** (no en una página aparte), igual que la ficha y su estado: el administrador no pierde el listado ni su posición.
-- **Vendedor, "todo se puede modificar":** se ha entendido como todos los datos de su cuenta, incluido el email, y no el estado ni la fecha de alta (que no son datos que se editen). Si el email del vendedor tampoco debe cambiar, basta con quitar la propiedad `edit` de ese campo en `profileFields.js`.
+- **Vendedor, "todo se puede modificar":** se ha entendido como todos los datos de su cuenta, incluido el email, y no el estado (que se cambia con su propio botón). Si el email del vendedor tampoco debe cambiar, basta con quitar la propiedad `edit` de ese campo en `profileFields.js`.
+- **Fecha de alta solo en administradores:** la de clientes y vendedores no se guarda, así que se quitó de sus fichas. El listado general de usuarios (HU19) y el de clientes siguen teniendo la columna "Fecha de alta" de `UsersTable`; si tampoco debe mostrarse, hay que quitarla de la tabla y del contrato.
 - **El rol no se cambia en esta pantalla.** El título de la HU habla de "datos y rol", pero lo pedido por el equipo no incluye cambiar el rol de un usuario. Por eso las reglas "no quitarse el propio rol" y "no degradar al último administrador" no aplican hoy en el frontend (no hay forma de hacerlo). Si se añade cambiar el rol, esas dos reglas las impondría el backend y el frontend mostraría el motivo, como en la HU23.
 - **Cliente Premium:** el administrador puede pasar a un cliente de Estándar a Premium y al revés. Pasar a Premium en el registro lleva a un flujo de pago que aún no existe; no hay que confundirlos.
 - **Los mensajes del servidor** son fijos y genéricos, como en el resto de pantallas.
@@ -230,7 +233,7 @@ Este documento y el trabajo técnico que describe se hicieron con ayuda de un as
 
 - **Herramienta:** Claude (modelo de Anthropic), mediante Claude Code.
 - **Qué generó la IA:** la definición de campos, el formulario de edición, los cambios en las dos fichas, los mocks, los tests y este documento. Las decisiones de producto las tomó el equipo: quién puede editar a quién, qué campos se pueden modificar en cada tipo de usuario (incluida la regla de mayoría de edad y la unicidad del nombre comercial), que la contraseña solo se cambie con "He olvidado mi contraseña" y que los productos, precios y pedidos del vendedor sigan siendo de solo lectura.
-- **Cómo se comprobó:** se ejecutaron los **508 tests (todos en verde)**, ESLint sin errores y un build de producción correcto.
+- **Cómo se comprobó:** se ejecutaron los **513 tests (todos en verde)**, ESLint sin errores y un build de producción correcto.
 - **Qué NO se comprobó:** la pantalla en un navegador real ni su aspecto visual (por ejemplo, el contraste entre campos modificables y de solo lectura), ni el flujo contra un backend real. El contrato de la sección 6 debe acordarse con el backend.
 - **Cómo guió el proceso:** el asistente siguió el flujo de ramas y commits del proyecto (refactor, mocks, código, tests y documentación en commits separados, con los AB# de las tasks).
 - **Revisión humana:** el código fue revisado, ejecutado y validado por el equipo antes de su integración. Revisado por: Ricardo.

@@ -37,9 +37,9 @@ Para dejarlo igual que en los vendedores, **los botones Activar y Desactivar han
 | DNI, teléfono y fecha de nacimiento | Sede y fecha de incorporación |
 | Tipo de cliente (Estándar o Premium) | — |
 | Imagen de perfil | Imagen de perfil |
-| Estado y fecha de alta | Estado y fecha de alta |
+| Estado | Estado y fecha de alta |
 
-Los campos son de solo lectura y se ven más oscuros, con el aviso "Modo solo lectura", igual que en la ficha del vendedor. Debajo está el botón de estado:
+La fecha de alta solo se muestra en la ficha de los **administradores**: la de clientes y vendedores no se guarda. Los campos son de solo lectura y se ven más oscuros, con el aviso "Modo solo lectura", igual que en la ficha del vendedor. Debajo está el botón de estado:
 
 | Estado | Botón |
 |---|---|

@@ -17,7 +17,7 @@ Desde el panel de control, la tarjeta **Vendedores** lleva a `/admin/sellers`: u
 
 | Pestaña | Contenido |
 |---|---|
-| Datos | Nombre, apellidos, correo, nombre comercial, NIF/DNI, categoría principal, estado y fecha de alta |
+| Datos | Nombre, apellidos, correo, nombre comercial, NIF/DNI, categoría principal y estado (los vendedores no tienen fecha de alta: no se guarda) |
 | Productos | Productos del vendedor con su precio, stock y estado, paginados |
 | Pedidos | Pedidos de los productos del vendedor, con fecha, artículos, total y estado, paginados |
 
@@ -166,7 +166,7 @@ Vendedor en el listado:
   "email": "vendedor@esibuy.test", "categoriaPrincipal": "Tecnología", "estado": "ACTIVO" }
 ```
 
-Datos del vendedor: lo anterior más `"nif": "B12345601"` y `"fechaAlta": "2026-09-14"`.
+Datos del vendedor: lo anterior más `"nif": "B12345601"`.
 
 Pedido: `{ "id": "PED-1012", "fecha": "2026-10-06", "articulos": 2, "total": 94.4, "estado": "PENDIENTE" }`.
 
