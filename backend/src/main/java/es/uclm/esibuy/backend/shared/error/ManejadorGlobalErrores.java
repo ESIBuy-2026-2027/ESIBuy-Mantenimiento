@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.shared.error;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
 import org.springframework.http.HttpStatus;
@@ -36,10 +37,16 @@ public class ManejadorGlobalErrores {
     public RespuestaError credencialesInvalidas() {
         return new RespuestaError("Credenciales Incorrectas");
     }
-    
+
     @ExceptionHandler(CuentaBloqueadaException.class)
     @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
     public RespuestaError cuentaBloqueada() {
         return new RespuestaError("Demasiados intentos. Inténtalo más tarde");
-    }   
+    }
+
+    @ExceptionHandler(CuentaDesactivadaException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public RespuestaError cuentaDesactivada() {
+        return new RespuestaError("Esta cuenta está desactivada", "ACCOUNT_DISABLED");
+    }
 }
