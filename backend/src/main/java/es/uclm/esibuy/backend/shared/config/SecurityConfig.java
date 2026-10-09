@@ -12,9 +12,16 @@ import org.springframework.security.web.authentication.logout.HttpStatusReturnin
 /**
  * Configuración mínima de Spring Security.
  *
- * <p>Por defecto se deniega todo (mínimo privilegio) y solo se abre el registro, porque quien
- * se registra todavía no tiene sesión. CSRF se ignora únicamente en el registro por el mismo
- * motivo: no hay sesión que un ataque CSRF pueda aprovechar. El login (HU2) añadirá aquí sus reglas.
+ * <p>Por defecto se deniega todo (mínimo privilegio) y solo se abren el registro y los dos primeros
+ * pasos del login (HU2, T230), porque quien los usa todavía no tiene sesión. Sin sesión se responde
+ * 401 («no sé quién eres»); con sesión pero sin permiso, 403.
+ *
+ * <p>CSRF: el token va en la cookie {@code XSRF-TOKEN}, que el frontend puede leer, y el frontend lo
+ * devuelve en la cabecera {@code X-XSRF-TOKEN} en cada petición que cambia datos (T230, D4). Se ignora
+ * solo en el registro: no hay sesión que un ataque CSRF pueda aprovechar.
+ *
+ * <p>El logout ({@code POST /api/auth/logout}) lo hace Spring Security: invalida la sesión, borra la
+ * cookie y responde 204 (T230, D14).
  *
  * <p>La zona de administración ({@code /api/admin/**}) solo la usa el rol ADMINISTRADOR (HU18, T58):
  * ocultar el menú en el frontend es solo experiencia de usuario, la barrera real es esta. Spring
@@ -39,10 +46,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, RUTA_REGISTRO, RUTA_LOGIN, RUTA_CODIGO_EMAIL).permitAll()
                         .requestMatchers(RUTAS_ADMINISTRACION).hasRole(ROL_ADMINISTRADOR)
                         .anyRequest().authenticated())
-                        .exceptionHandling(excepciones -> excepciones.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
-                        .logout(logout -> logout.logoutUrl(RUTA_LOGOUT).logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
-                    .deleteCookies("JSESSIONID"))
-                .csrf(csrf -> csrf.ignoringRequestMatchers(RUTA_REGISTRO));
+                .exceptionHandling(excepciones -> excepciones
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .logout(logout -> logout
+                        .logoutUrl(RUTA_LOGOUT)
+                        .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
+                        .deleteCookies("JSESSIONID"))
+                // spa(): el token CSRF va en la cookie XSRF-TOKEN (legible por el frontend, sin HttpOnly) y
+                // el frontend lo devuelve en la cabecera X-XSRF-TOKEN (T230, D4)
+                .csrf(csrf -> csrf
+                        .spa()
+                        .ignoringRequestMatchers(RUTA_REGISTRO));
         return http.build();
     }
 
