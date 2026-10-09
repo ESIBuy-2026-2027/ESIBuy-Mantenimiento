@@ -35,6 +35,29 @@ class SecureRandomGeneradorCodigoAdapterTest {
         assertEquals("000042", generador.generar());
     }
 
+    @Test
+    @DisplayName("HU2-CP13: usa todo el rango de 6 dígitos, del 000000 al 999999")
+    void usaTodoElRangoDeSeisDigitos() {
+        // Array de un elemento para apuntar el límite desde dentro de la clase anónima: dentro solo
+        // se pueden usar variables que no se reasignan, pero sí cambiar el contenido de un array
+        int[] limitePedido = new int[1];
+        SecureRandom fuente = new SecureRandom() {
+            @Override
+            public int nextInt(int limite) {
+                limitePedido[0] = limite;
+                return limite - 1; // el mayor número que puede devolver nextInt(limite)
+            }
+        };
+        GeneradorCodigoPort generador = new SecureRandomGeneradorCodigoAdapter(fuente);
+
+        String codigo = generador.generar();
+
+        // Límite 1.000.000: salen todos los códigos posibles (con uno menor habría menos combinaciones
+        // y serían más fáciles de adivinar; con uno mayor saldrían códigos de 7 cifras)
+        assertEquals(1_000_000, limitePedido[0]);
+        assertEquals("999999", codigo);
+    }
+
     // Fuente controlada: un SecureRandom que siempre devuelve el mismo número. Se sobrescribe
     // nextInt(int), que es el método que usa el adaptador para pedir un número por debajo del límite.
     private static SecureRandom fuenteQueDevuelve(int valor) {
