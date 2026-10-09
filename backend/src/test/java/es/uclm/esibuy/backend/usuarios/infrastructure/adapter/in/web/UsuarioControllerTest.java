@@ -169,11 +169,12 @@ class UsuarioControllerTest {
     }
 
     @Test
-    @DisplayName("Seguridad: el listado administrativo sin sesión devuelve 403")
+    @DisplayName("Seguridad: el listado administrativo sin sesión devuelve 401")
     void listadoSinSesionEstaProtegido() throws Exception {
+        // 401 sin sesión y 403 con sesión sin permiso (T230, D10); antes, el 403 por defecto de Spring
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
                         .get("/api/admin/usuarios"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(listadoUsuarios, never()).listar(any());
     }
