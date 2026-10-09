@@ -7,6 +7,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.PasoLogin;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ResultadoInicioSesion;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,5 +98,21 @@ class AutenticacionControllerTest {
                         .content(jsonLogin("juan@uclm.es", "clave1234")))
                 // 429 Too Many Requests: el frontend lo muestra como «demasiados intentos» (hu2-login.md)
                 .andExpect(status().isTooManyRequests());
+    }
+
+    @Test
+    @DisplayName("HU2-CP04: una cuenta desactivada devuelve 403 con el código ACCOUNT_DISABLED")
+    void cuentaDesactivadaDevuelve403ConCodigo() throws Exception {
+        // El servicio solo la lanza cuando la contraseña es correcta (T19), como pide el frontend
+        when(autenticacion.iniciarSesion(any()))
+                .thenThrow(new CuentaDesactivadaException("Esta cuenta está desactivada"));
+
+        mockMvc.perform(post(URL_LOGIN)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonLogin("juan@uclm.es", "clave1234")))
+                .andExpect(status().isForbidden())
+                // El frontend lee "code" para mostrar «cuenta desactivada» (client.js, loginErrors.js)
+                .andExpect(jsonPath("$.code").value("ACCOUNT_DISABLED"));
     }
 }
