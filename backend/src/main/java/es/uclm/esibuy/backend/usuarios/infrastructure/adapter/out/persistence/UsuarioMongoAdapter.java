@@ -68,6 +68,11 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
     }
 
     @Override
+    public Optional<Usuario> buscarPorId(String id) {
+        return repository.findById(id).map(mapper::aDominio);
+    }
+
+    @Override
     public UsuarioPage listar(ListarUsuariosQuery query) {
         Query mongoQuery = construirConsulta(query);
         long total = mongoTemplate.count(mongoQuery, UsuarioDocument.class);

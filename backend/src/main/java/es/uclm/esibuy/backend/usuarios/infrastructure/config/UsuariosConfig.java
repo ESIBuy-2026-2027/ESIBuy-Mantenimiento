@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.config;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
@@ -8,6 +9,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.EnvioEmailPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.GeneradorCodigoPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.application.service.AdministracionUsuariosService;
 import es.uclm.esibuy.backend.usuarios.application.service.AutenticacionService;
 import es.uclm.esibuy.backend.usuarios.application.service.ListadoUsuariosService;
 import es.uclm.esibuy.backend.usuarios.application.service.RegistroUsuarioService;
@@ -61,6 +63,7 @@ public class UsuariosConfig {
     ListadoUsuariosUseCase listadoUsuariosUseCase(UsuarioRepositoryPort usuarioRepositoryPort) {
         return new ListadoUsuariosService(usuarioRepositoryPort);
     }
+
     @Bean
     CodigoVerificacionRepositoryPort codigoVerificacionRepositoryPort(CodigoVerificacionMongoRepository repository) {
         return new CodigoVerificacionMongoAdapter(repository, new CodigoVerificacionDocumentMapper());
@@ -91,5 +94,10 @@ public class UsuariosConfig {
                                             Clock reloj) {
         return new AutenticacionService(usuarioRepositoryPort, hashContrasenaPort,
                 codigoVerificacionRepositoryPort, generadorCodigoPort, envioEmailPort, reloj);
+    }
+
+    @Bean
+    AdministracionUsuariosUseCase administracionUsuariosUseCase(UsuarioRepositoryPort usuarioRepositoryPort) {
+        return new AdministracionUsuariosService(usuarioRepositoryPort);
     }
 }

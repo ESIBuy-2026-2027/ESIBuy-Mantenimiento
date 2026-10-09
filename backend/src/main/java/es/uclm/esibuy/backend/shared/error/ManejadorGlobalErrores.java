@@ -8,6 +8,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -62,5 +63,11 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public RespuestaError codigoInvalido() {
         return new RespuestaError("Código incorrecto");
+    }
+
+    @ExceptionHandler(UsuarioNoEncontradoException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public RespuestaError usuarioNoEncontrado() {
+        return new RespuestaError("El usuario no existe");
     }
 }

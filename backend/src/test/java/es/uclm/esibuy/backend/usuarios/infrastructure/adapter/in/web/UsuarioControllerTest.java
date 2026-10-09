@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
@@ -13,6 +14,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -31,6 +35,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -52,6 +58,9 @@ class UsuarioControllerTest {
 
     @MockitoBean
     private ListadoUsuariosUseCase listadoUsuarios;
+
+    @MockitoBean
+    private AdministracionUsuariosUseCase administracionUsuarios;
 
     private static String json(String email, String password) {
         return """
@@ -200,5 +209,62 @@ class UsuarioControllerTest {
         verify(listadoUsuarios).listar(new ListarUsuariosQuery(
                 "ana", Rol.CLIENTE, "ACTIVO", 0, 10
         ));
+    }
+
+    @Test
+    @DisplayName("HU24-CP01: un administrador activa una cuenta y recibe sus datos con estado ACTIVO")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void administradorActivaUnaCuentaYRecibeSusDatos() throws Exception {
+        Usuario activado = new Usuario("usr-1", "Lucía", "Torres Vega", new Email("lucia@esibuy.test"),
+                "hash-no-debe-salir", Rol.CLIENTE, TipoCliente.ESTANDAR);
+        when(administracionUsuarios.activar("usr-1")).thenReturn(activado);
+
+        mockMvc.perform(cambiarEstado("usr-1", "ACTIVO"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("usr-1"))
+                .andExpect(jsonPath("$.estado").value("ACTIVO"))
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+
+        verify(administracionUsuarios).activar("usr-1");
+    }
+
+    @Test
+    @DisplayName("HU24-CP02: rechaza un estado distinto de ACTIVO y no cambia nada")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void rechazaUnEstadoDistintoDeActivo() throws Exception {
+        // DESACTIVADO lo añadirá la HU23 con sus reglas.
+        mockMvc.perform(cambiarEstado("usr-1", "DESACTIVADO"))
+                .andExpect(status().isBadRequest());
+
+        verify(administracionUsuarios, never()).activar(any());
+    }
+
+    @Test
+    @DisplayName("HU24-CP03: activar un usuario que no existe devuelve 404")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void activarUnUsuarioInexistenteDevuelve404() throws Exception {
+        when(administracionUsuarios.activar("no-existe"))
+                .thenThrow(new UsuarioNoEncontradoException("El usuario no existe"));
+
+        mockMvc.perform(cambiarEstado("no-existe", "ACTIVO"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @Test
+    @DisplayName("HU24-CP04: un usuario que no es administrador no puede activar cuentas")
+    @WithMockUser(roles = "CLIENTE")
+    void unClienteNoPuedeActivarCuentas() throws Exception {
+        mockMvc.perform(cambiarEstado("usr-1", "ACTIVO"))
+                .andExpect(status().isForbidden());
+
+        verify(administracionUsuarios, never()).activar(any());
+    }
+
+    // PATCH con sesión: lleva el token CSRF (la estrategia de CSRF se decidirá con el login, task 230).
+    private static MockHttpServletRequestBuilder cambiarEstado(String id, String estado) {
+        return patch("/api/admin/usuarios/{id}/status", id).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"estado\":\"" + estado + "\"}");
     }
 }
