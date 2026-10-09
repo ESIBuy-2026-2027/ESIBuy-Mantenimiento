@@ -47,7 +47,12 @@ describe('UserDetailDialog (HU20): datos', () => {
     expect(valorDe(dialogo, 'Tipo de cliente')).toHaveValue('Estándar')
     expect(valorDe(dialogo, 'Imagen de perfil')).toHaveValue('Avatar 2')
     expect(valorDe(dialogo, 'Estado')).toHaveValue('Desactivado')
-    expect(valorDe(dialogo, 'Fecha de alta')).toHaveValue('28/09/2026')
+  })
+
+  it('userDetailDialog_deUnCliente_noMuestraLaFechaDeAlta', async () => {
+    const { dialogo } = await abrirFicha(LUCIA)
+
+    expect(within(dialogo).queryByLabelText('Fecha de alta')).not.toBeInTheDocument()
   })
 
   it('userDetailDialog_deUnAdministrador_muestraSedeYFechaDeIncorporacion', async () => {
@@ -56,6 +61,7 @@ describe('UserDetailDialog (HU20): datos', () => {
     expect(valorDe(dialogo, 'Nombre')).toHaveValue('Diego')
     expect(valorDe(dialogo, 'Sede')).toHaveValue('Cuenca')
     expect(valorDe(dialogo, 'Fecha de incorporación')).toHaveValue('20/01/2026')
+    expect(valorDe(dialogo, 'Fecha de alta')).toHaveValue('20/01/2026')
     expect(within(dialogo).queryByLabelText('DNI')).not.toBeInTheDocument()
     expect(within(dialogo).queryByLabelText('Tipo de cliente')).not.toBeInTheDocument()
   })
@@ -217,7 +223,7 @@ describe('UserDetailDialog (HU22): edición', () => {
     }
     expect(esDeSoloLectura(dialogo, 'Email')).toBe(true)
     expect(esDeSoloLectura(dialogo, 'Estado')).toBe(true)
-    expect(esDeSoloLectura(dialogo, 'Fecha de alta')).toBe(true)
+    expect(within(dialogo).queryByLabelText('Fecha de alta')).not.toBeInTheDocument()
   })
 
   it('userDetailDialog_deUnAdministrador_enEdicionNoDejaModificarEmailNiFechaDeIncorporacion', async () => {
@@ -225,6 +231,7 @@ describe('UserDetailDialog (HU22): edición', () => {
 
     expect(esDeSoloLectura(dialogo, 'Email')).toBe(true)
     expect(esDeSoloLectura(dialogo, 'Fecha de incorporación')).toBe(true)
+    expect(esDeSoloLectura(dialogo, 'Fecha de alta')).toBe(true)
     expect(esDeSoloLectura(dialogo, /^sede/i)).toBe(false)
     expect(within(dialogo).queryByLabelText(/^dni/i)).not.toBeInTheDocument()
   })

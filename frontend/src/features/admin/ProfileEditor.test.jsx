@@ -69,7 +69,11 @@ describe('ProfileEditor (HU22): campos', () => {
     expect(screen.getByLabelText(/^tipo de cliente/i)).not.toBeDisabled()
     expect(esDeSoloLectura('Email')).toBe(true)
     expect(esDeSoloLectura('Estado')).toBe(true)
-    expect(esDeSoloLectura('Fecha de alta')).toBe(true)
+  })
+
+  it('profileEditor_deUnClienteOUnVendedor_noMuestraLaFechaDeAlta', () => {
+    renderizar()
+    expect(screen.queryByLabelText('Fecha de alta')).not.toBeInTheDocument()
   })
 
   it('profileEditor_deUnCliente_muestraSusDatosActualesEnLosCampos', () => {
@@ -88,6 +92,7 @@ describe('ProfileEditor (HU22): campos', () => {
 
     expect(esDeSoloLectura('Email')).toBe(true)
     expect(esDeSoloLectura('Fecha de incorporación')).toBe(true)
+    expect(esDeSoloLectura('Fecha de alta')).toBe(true)
     expect(esDeSoloLectura(/^sede/i)).toBe(false)
     expect(esDeSoloLectura(/^nombre/i)).toBe(false)
     expect(screen.queryByLabelText(/^dni/i)).not.toBeInTheDocument()
@@ -100,7 +105,7 @@ describe('ProfileEditor (HU22): campos', () => {
       expect(esDeSoloLectura(etiqueta)).toBe(false)
     }
     expect(esDeSoloLectura('Estado')).toBe(true)
-    expect(esDeSoloLectura('Fecha de alta')).toBe(true)
+    expect(screen.queryByLabelText('Fecha de alta')).not.toBeInTheDocument()
     const categoria = screen.getByLabelText(/^categoría principal/i)
     expect(categoria).toHaveValue('cat-1')
     expect(Array.from(categoria.options).map((opcion) => opcion.textContent)).toEqual(['Tecnología', 'Hogar'])

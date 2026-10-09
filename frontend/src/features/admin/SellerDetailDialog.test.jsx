@@ -53,7 +53,13 @@ describe('SellerDetailDialog (HU26): datos', () => {
     expect(within(dialogo).getByLabelText('NIF/DNI')).toHaveValue('B12345601')
     expect(within(dialogo).getByLabelText('Categoría principal')).toHaveValue('Tecnología')
     expect(within(dialogo).getByLabelText('Estado')).toHaveValue('Activo')
-    expect(within(dialogo).getByLabelText('Fecha de alta')).toHaveValue('14/09/2026')
+  })
+
+  it('sellerDetailDialog_noMuestraLaFechaDeAlta', async () => {
+    const { dialogo } = await abrirDialogo()
+    await within(dialogo).findByLabelText('Nombre')
+
+    expect(within(dialogo).queryByLabelText('Fecha de alta')).not.toBeInTheDocument()
   })
 
   it('sellerDetailDialog_todosLosCamposSonDeSoloLectura', async () => {
@@ -61,7 +67,7 @@ describe('SellerDetailDialog (HU26): datos', () => {
     await within(dialogo).findByLabelText('Nombre')
 
     const campos = within(dialogo).getAllByRole('textbox')
-    expect(campos).toHaveLength(8)
+    expect(campos).toHaveLength(7)
     campos.forEach((campo) => expect(campo).toHaveAttribute('readonly'))
   })
 
@@ -376,7 +382,7 @@ describe('SellerDetailDialog (HU22): edición', () => {
     expect(within(dialogo).queryByRole('button', { name: /desactivar usuario/i })).not.toBeInTheDocument()
   })
 
-  it('sellerDetailDialog_enEdicion_dejaModificarTodoMenosElEstadoYLaFechaDeAlta', async () => {
+  it('sellerDetailDialog_enEdicion_dejaModificarTodoMenosElEstado', async () => {
     const { dialogo } = await entrarEnEdicion()
 
     for (const etiqueta of [/^nombre(?! comercial)/i, /^apellidos/i, /^correo electrónico/i, /^nombre comercial/i, /^nif\/dni/i]) {
@@ -384,7 +390,7 @@ describe('SellerDetailDialog (HU22): edición', () => {
     }
     expect(campo(dialogo, /^categoría principal/i)).not.toBeDisabled()
     expect(esDeSoloLectura(dialogo, 'Estado')).toBe(true)
-    expect(esDeSoloLectura(dialogo, 'Fecha de alta')).toBe(true)
+    expect(within(dialogo).queryByLabelText('Fecha de alta')).not.toBeInTheDocument()
   })
 
   it('sellerDetailDialog_enEdicion_losProductosYLosPedidosNoSePuedenTocar', async () => {

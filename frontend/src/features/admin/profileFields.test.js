@@ -90,12 +90,19 @@ describe('campos editables por tipo de usuario (HU22)', () => {
     expect(nombres.some((nombre) => nombre.includes('password') || nombre.includes('contrasena'))).toBe(false)
   })
 
-  it.each([ROLES.CLIENTE, ROLES.ADMIN, ROLES.VENDEDOR])('profileFields_de_%s_elEstadoYLaFechaDeAltaSonDeSoloLectura', (rol) => {
-    const soloLectura = profileFieldsFor(rol)
+  const soloLectura = (rol) =>
+    profileFieldsFor(rol)
       .filter((campo) => !campo.edit)
       .map((campo) => campo.name)
 
-    expect(soloLectura).toEqual(expect.arrayContaining(['estado', 'fechaAlta']))
+  it.each([ROLES.CLIENTE, ROLES.ADMIN, ROLES.VENDEDOR])('profileFields_de_%s_elEstadoEsDeSoloLectura', (rol) => {
+    expect(soloLectura(rol)).toContain('estado')
+  })
+
+  it('profileFields_soloElAdministradorTieneFechaDeAlta', () => {
+    expect(soloLectura(ROLES.ADMIN)).toContain('fechaAlta')
+    expect(profileFieldsFor(ROLES.CLIENTE).map((campo) => campo.name)).not.toContain('fechaAlta')
+    expect(profileFieldsFor(ROLES.VENDEDOR).map((campo) => campo.name)).not.toContain('fechaAlta')
   })
 
   it('profileFields_conUnRolDesconocido_muestraSoloLosDatosComunes', () => {
@@ -104,7 +111,6 @@ describe('campos editables por tipo de usuario (HU22)', () => {
       'apellidos',
       'email',
       'estado',
-      'fechaAlta',
     ])
   })
 })
@@ -122,6 +128,14 @@ describe('readFields', () => {
       'Imagen de perfil': 'Avatar 1',
       Estado: 'Activo',
     })
+  })
+
+  it('readFields_soloLaFichaDelAdministradorIncluyeLaFechaDeAlta', () => {
+    const etiquetas = (rol, usuario) => readFields(rol, usuario).map(([etiqueta]) => etiqueta)
+
+    expect(etiquetas(ROLES.ADMIN, ADMINISTRADOR)).toContain('Fecha de alta')
+    expect(etiquetas(ROLES.CLIENTE, CLIENTE)).not.toContain('Fecha de alta')
+    expect(etiquetas(ROLES.VENDEDOR, VENDEDOR)).not.toContain('Fecha de alta')
   })
 
   it('readFields_conDatosQueFaltan_muestraUnGuion', () => {
