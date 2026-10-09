@@ -5,6 +5,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.IniciarSesionCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.PasoLogin;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ResultadoInicioSesion;
+import es.uclm.esibuy.backend.usuarios.application.port.in.VerificarCodigoEmailCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.exception.EnvioEmailException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -39,6 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AutenticacionControllerTest {
 
     private static final String URL_LOGIN = "/api/auth/login";
+    private static final String URL_CODIGO_EMAIL = "/api/auth/verify-email-code";
 
     @Autowired
     private MockMvc mockMvc;
@@ -133,5 +136,37 @@ class AutenticacionControllerTest {
                 .andExpect(status().isServiceUnavailable())
                 // La causa (p. ej. el error SMTP) se queda en el log, nunca en la respuesta
                 .andExpect(content().string(not(containsString("535"))));
+    }
+
+    @Test
+    @DisplayName("HU2-CP06: un código correcto tras el login pasa al paso de Microsoft Authenticator")
+    void codigoCorrectoPasaAlAuthenticator() throws Exception {
+        when(autenticacion.iniciarSesion(any()))
+                .thenReturn(new ResultadoInicioSesion("juan@uclm.es", PasoLogin.CODIGO_EMAIL));
+        when(autenticacion.verificarCodigoEmail(any()))
+                .thenReturn(new ResultadoInicioSesion("juan@uclm.es", PasoLogin.AUTHENTICATOR));
+        // La misma sesión en las dos peticiones: es lo que hace el navegador con la cookie JSESSIONID
+        MockHttpSession sesion = new MockHttpSession();
+
+        // Paso 1: login correcto
+        mockMvc.perform(post(URL_LOGIN)
+                        .session(sesion)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonLogin("juan@uclm.es", "clave1234")))
+                .andExpect(status().isOk());
+
+        // Paso 2: el cuerpo solo lleva el código; el correo lo recuerda la sesión (T230, D3)
+        mockMvc.perform(post(URL_CODIGO_EMAIL)
+                        .session(sesion)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                 {"code": "123456"}
+                                 """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nextStep").value("authenticator"));
+
+        verify(autenticacion).verificarCodigoEmail(new VerificarCodigoEmailCommand("juan@uclm.es", "123456"));
     }
 }
