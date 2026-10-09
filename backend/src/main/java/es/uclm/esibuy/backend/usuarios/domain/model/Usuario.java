@@ -38,7 +38,7 @@ public class Usuario {
         this.rol = exigirNoNulo(rol, "El rol es obligatorio");
         this.tipoCliente = exigirTipoClienteCoherente(this.rol, tipoCliente);
         this.fechaAlta = fechaAlta;
-        this.estado = "ACTIVO";
+        this.estado = "PENDIENTE";
         this.activo = true;
         this.intentosFallidos = 0;
     }
@@ -120,7 +120,7 @@ public class Usuario {
     }
 
     public boolean estaActivo() {
-        return activo;
+        return "ACTIVO".equals(estado);
     }
 
     public void desactivar() {
