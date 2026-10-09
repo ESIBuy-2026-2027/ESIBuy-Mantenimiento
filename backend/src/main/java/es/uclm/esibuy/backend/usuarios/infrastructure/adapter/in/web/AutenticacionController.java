@@ -4,13 +4,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.SessionAttribute;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.IniciarSesionCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ResultadoInicioSesion;
 import es.uclm.esibuy.backend.usuarios.application.port.in.VerificarCodigoEmailCommand;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
+
 
 
 
@@ -32,8 +34,10 @@ public class AutenticacionController {
     }
 
     @PostMapping ("/verify-email-code")
-    public SiguientePasoResponse verificarCodigoEmail(@RequestBody VerificarCodigoRequest request, HttpSession sesion) {
-        String email = (String) sesion.getAttribute(CORREO_PENDIENTE);
+    public SiguientePasoResponse verificarCodigoEmail(@RequestBody VerificarCodigoRequest request, @SessionAttribute(name = CORREO_PENDIENTE, required = false) String email) {
+        if (email == null) {
+            throw new CodigoInvalidoException("Código Inválido");
+        }
         return SiguientePasoResponse.desde(autenticacion.verificarCodigoEmail(new VerificarCodigoEmailCommand(email, request.code())).siguientePaso());
     }
 

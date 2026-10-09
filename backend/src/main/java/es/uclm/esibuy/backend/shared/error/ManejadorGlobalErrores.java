@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.shared.error;
 
 import es.uclm.esibuy.backend.usuarios.application.port.out.exception.EnvioEmailException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
@@ -55,5 +56,11 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     public RespuestaError envioEmailFallido() {
         return new RespuestaError("No se ha podido completar el inicio de sesión. Inténtalo más tarde");
+    }
+
+    @ExceptionHandler(CodigoInvalidoException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public RespuestaError codigoInvalido() {
+        return new RespuestaError("Código incorrecto");
     }
 }
