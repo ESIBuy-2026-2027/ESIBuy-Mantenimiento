@@ -17,6 +17,8 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -37,6 +39,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -251,10 +254,33 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.mensaje").exists());
     }
 
-    @Test
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "VENDEDOR"})
     @DisplayName("HU24-CP04: un usuario que no es administrador no puede activar cuentas")
-    @WithMockUser(roles = "CLIENTE")
-    void unClienteNoPuedeActivarCuentas() throws Exception {
+    void unNoAdministradorNoPuedeActivarCuentas(String rol) throws Exception {
+        mockMvc.perform(cambiarEstado("usr-1", "ACTIVO").with(user("usuario").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(administracionUsuarios, never()).activar(any());
+    }
+
+    // Acceso por rol a los endpoints reales de administración (HU18, T60). La regla la puso la T58
+    // en SecurityConfig; aquí se comprueba sobre el listado (HU19) y la activación (HU24).
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "VENDEDOR"})
+    @DisplayName("HU18-CP02: un cliente o un vendedor no accede al listado de usuarios de administración")
+    void noAdministradorNoAccedeAlListado(String rol) throws Exception {
+        mockMvc.perform(get("/api/admin/usuarios").with(user("usuario").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(listadoUsuarios, never()).listar(any());
+    }
+
+    @Test
+    @DisplayName("HU18-CP01: sin sesión no se puede activar una cuenta")
+    void activarSinSesionEstaProtegido() throws Exception {
+        // 403 y no 401: todavía no hay ningún mecanismo de login configurado (task 230).
         mockMvc.perform(cambiarEstado("usr-1", "ACTIVO"))
                 .andExpect(status().isForbidden());
 
