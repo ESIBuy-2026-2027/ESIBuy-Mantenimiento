@@ -11,7 +11,7 @@ import RoleUsersList from './RoleUsersList'
 // nombre ascendente: la primera página va de Álvaro Campos Serrano a Pablo Gómez Martín.
 const ESPERA = { timeout: 3000 }
 
-async function renderClientes() {
+async function renderClientes(currentUserId) {
   await abrirSesionPorApi('admin@esibuy.test')
   renderWithProviders(
     <RoleUsersList
@@ -19,6 +19,7 @@ async function renderClientes() {
       itemLabel="clientes"
       errorMessage="No se ha podido cargar el listado de clientes."
       loadingLabel="Cargando clientes…"
+      currentUserId={currentUserId}
     />,
   )
   await screen.findByText('carlos.moreno@esibuy.test')
@@ -28,15 +29,19 @@ async function renderClientes() {
 // mientras se abre o se cierra la confirmación.
 const filaDe = (email) => screen.getByText(email).closest('tr')
 const botonActivarDe = (email) => within(filaDe(email)).queryByText('Activar', { selector: 'button' })
+const botonDesactivarDe = (email) => within(filaDe(email)).queryByText('Desactivar', { selector: 'button' })
 const filasDeDatos = () => within(screen.getByRole('table')).getAllByRole('row').slice(1)
 const primerNombre = () => within(filasDeDatos()[0]).getAllByRole('cell')[0].textContent
 
-async function confirmarActivacion(user, nombre) {
-  await user.click(screen.getByRole('button', { name: `Activar a ${nombre}` }))
-  const pregunta = await screen.findByText(new RegExp(`seguro que quieres activar a ${nombre}`, 'i'))
+async function confirmarAccion(user, accion, nombre) {
+  await user.click(screen.getByRole('button', { name: `${accion} a ${nombre}` }))
+  const pregunta = await screen.findByText(new RegExp(`seguro que quieres ${accion} a ${nombre}`, 'i'))
   const confirmacion = pregunta.closest('[role="alertdialog"]')
-  await user.click(within(confirmacion).getByText('Activar', { selector: 'button' }))
+  await user.click(within(confirmacion).getByText(accion, { selector: 'button' }))
 }
+
+const confirmarActivacion = (user, nombre) => confirmarAccion(user, 'Activar', nombre)
+const confirmarDesactivacion = (user, nombre) => confirmarAccion(user, 'Desactivar', nombre)
 
 describe('RoleUsersList (HU24)', () => {
   it('roleUsersList_muestraSoloLosUsuariosDelRolPedido', async () => {
@@ -167,5 +172,55 @@ describe('RoleUsersList (HU24)', () => {
     await user.click(screen.getByRole('button', { name: /reintentar/i }))
 
     expect(await screen.findByText('carlos.moreno@esibuy.test')).toBeInTheDocument()
+  })
+
+  it('roleUsersList_ofreceDesactivarSoloEnLasCuentasActivas', async () => {
+    await renderClientes()
+
+    expect(botonDesactivarDe('carlos.moreno@esibuy.test')).toBeInTheDocument()
+    expect(botonDesactivarDe('lucia.torres@esibuy.test')).not.toBeInTheDocument()
+  })
+
+  it('roleUsersList_enLaFilaDelUsuarioEnSesion_noOfreceDesactivar', async () => {
+    await renderClientes('usr-3')
+
+    expect(botonDesactivarDe('carlos.moreno@esibuy.test')).not.toBeInTheDocument()
+    expect(botonDesactivarDe('claudia.pena@esibuy.test')).toBeInTheDocument()
+  })
+
+  it('roleUsersList_alDesactivarUnCliente_loMuestraDesactivadoYAvisa', async () => {
+    const user = userEvent.setup()
+    await renderClientes()
+
+    await confirmarDesactivacion(user, 'Carlos Moreno Gil')
+
+    expect(await screen.findByText(/carlos moreno gil está desactivado/i, {}, ESPERA)).toBeInTheDocument()
+    await waitFor(() => expect(within(filaDe('carlos.moreno@esibuy.test')).getByText('Desactivado')).toBeInTheDocument(), ESPERA)
+    expect(botonActivarDe('carlos.moreno@esibuy.test')).toBeInTheDocument()
+  })
+
+  it('roleUsersList_siElBackendNoDejaDesactivarseASiMismo_muestraElMotivo', async () => {
+    server.use(
+      http.patch('/api/admin/usuarios/:id/status', () =>
+        HttpResponse.json({ code: 'CANNOT_DEACTIVATE_SELF' }, { status: 409 }),
+      ),
+    )
+    const user = userEvent.setup()
+    await renderClientes()
+
+    await confirmarDesactivacion(user, 'Carlos Moreno Gil')
+
+    expect(await screen.findByText('No puedes desactivar tu propia cuenta.', {}, ESPERA)).toBeInTheDocument()
+  })
+
+  it('roleUsersList_siFallaLaDesactivacion_muestraUnErrorGenerico', async () => {
+    server.use(http.patch('/api/admin/usuarios/:id/status', () => new HttpResponse(null, { status: 500 })))
+    const user = userEvent.setup()
+    await renderClientes()
+
+    await confirmarDesactivacion(user, 'Carlos Moreno Gil')
+
+    expect(await screen.findByText(/no se ha podido desactivar a carlos moreno gil/i, {}, ESPERA)).toBeInTheDocument()
+    expect(within(filaDe('carlos.moreno@esibuy.test')).getByText('Activo')).toBeInTheDocument()
   })
 })
