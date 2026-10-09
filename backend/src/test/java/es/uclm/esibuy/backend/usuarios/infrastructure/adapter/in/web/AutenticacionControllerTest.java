@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -168,5 +169,21 @@ class AutenticacionControllerTest {
                 .andExpect(jsonPath("$.nextStep").value("authenticator"));
 
         verify(autenticacion).verificarCodigoEmail(new VerificarCodigoEmailCommand("juan@uclm.es", "123456"));
+    }
+
+    @Test
+    @DisplayName("HU2-CP07: un código enviado sin haber hecho antes el login devuelve 401")
+    void codigoSinLoginPrevioDevuelve401() throws Exception {
+        // Sin el paso 1 la sesión no tiene correo: el backend impone el orden de los pasos (hu2-login.md)
+        mockMvc.perform(post(URL_CODIGO_EMAIL)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                 {"code": "123456"}
+                                 """))
+                .andExpect(status().isUnauthorized());
+
+        // Sin saber de quién es el código no tiene sentido consultarlo
+        verify(autenticacion, never()).verificarCodigoEmail(any());
     }
 }
