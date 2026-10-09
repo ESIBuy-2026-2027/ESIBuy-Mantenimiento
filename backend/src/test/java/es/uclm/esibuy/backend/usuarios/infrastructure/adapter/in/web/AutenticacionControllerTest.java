@@ -5,6 +5,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.IniciarSesionCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.PasoLogin;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ResultadoInicioSesion;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,11 +15,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -60,5 +64,22 @@ class AutenticacionControllerTest {
                 .andExpect(jsonPath("$.nextStep").value("emailCode"));
 
         verify(autenticacion).iniciarSesion(new IniciarSesionCommand("juan@uclm.es", "clave1234"));
+    }
+
+    @Test
+    @DisplayName("HU2-CP02: unas credenciales incorrectas devuelven 401 sin revelar si el correo existe")
+    void loginConCredencialesIncorrectasDevuelve401() throws Exception {
+        // El servicio lanza la misma excepción si el correo no existe o si la contraseña no coincide (T19)
+        when(autenticacion.iniciarSesion(any()))
+                .thenThrow(new CredencialesInvalidasException("Credenciales inválidas"));
+
+        mockMvc.perform(post(URL_LOGIN)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonLogin("juan@uclm.es", "otraClave")))
+                .andExpect(status().isUnauthorized())
+                // Mensaje genérico: la respuesta no devuelve el correo ni la contraseña enviados
+                .andExpect(content().string(not(containsString("juan@uclm.es"))))
+                .andExpect(content().string(not(containsString("otraClave"))));
     }
 }
