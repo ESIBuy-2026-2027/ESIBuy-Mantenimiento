@@ -7,10 +7,16 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.Cookie;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // Acceso a la zona de administración por rol (HU18, T58). Todavía no hay login ni endpoints de
@@ -23,6 +29,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SecurityConfigTest {
 
     private static final String RUTA_ADMINISTRACION = "/api/admin/prueba";
+    private static final String RUTA_LOGIN = "/api/auth/login";
+    private static final String COOKIE_CSRF = "XSRF-TOKEN";
+    private static final String CABECERA_CSRF = "X-XSRF-TOKEN";
 
     @Autowired
     private MockMvc mockMvc;
@@ -53,6 +62,43 @@ class SecurityConfigTest {
     @DisplayName("HU18-CP03: un administrador accede a la zona de administración")
     void administradorAccedeAAdministracion() throws Exception {
         mockMvc.perform(get(RUTA_ADMINISTRACION)).andExpect(status().isOk());
+    }
+
+    // Protección CSRF para el frontend (T230, D4): el backend da el token en una cookie que el
+    // JavaScript del frontend puede leer, y el frontend lo devuelve en una cabecera en cada POST.
+    // Tests técnicos: no validan una HU concreta, sino la configuración de seguridad.
+
+    @Test
+    @DisplayName("Seguridad: cualquier respuesta, aunque sea un 401, entrega el token CSRF en una cookie legible por el frontend")
+    void unaPeticionRecibeElTokenCsrfEnUnaCookie() throws Exception {
+        // Es lo primero que hace el frontend al arrancar (GET /api/auth/me sin sesión): necesita el token
+        // antes de su primer POST, que es el login
+        mockMvc.perform(get(RUTA_ADMINISTRACION))
+                .andExpect(status().isUnauthorized())
+                .andExpect(cookie().exists(COOKIE_CSRF))
+                // Sin HttpOnly: el JavaScript del frontend tiene que poder leerla (la de sesión sí es HttpOnly)
+                .andExpect(cookie().httpOnly(COOKIE_CSRF, false));
+    }
+
+    @Test
+    @DisplayName("Seguridad: un POST sin token CSRF se rechaza con 403")
+    void unPostSinTokenCsrfSeRechaza() throws Exception {
+        mockMvc.perform(post(RUTA_LOGIN)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("Seguridad: un POST que devuelve en la cabecera el token de la cookie pasa el filtro CSRF")
+    void unPostConElTokenDeLaCookieEnLaCabeceraSeAcepta() throws Exception {
+        // Lo que hará el frontend: leer la cookie y copiarla en la cabecera X-XSRF-TOKEN
+        MvcResult primeraPeticion = mockMvc.perform(get(RUTA_ADMINISTRACION)).andReturn();
+        Cookie tokenCsrf = primeraPeticion.getResponse().getCookie(COOKIE_CSRF);
+        assertNotNull(tokenCsrf, "La primera respuesta debe traer la cookie del token CSRF");
+
+        // 404 y no 403: el filtro CSRF deja pasar la petición, y no hay controlador de login en este test
+        mockMvc.perform(post(RUTA_LOGIN)
+                        .cookie(tokenCsrf)
+                        .header(CABECERA_CSRF, tokenCsrf.getValue()))
+                .andExpect(status().isNotFound());
     }
 
     // Endpoint de administración de prueba: así el test comprueba un 200 real sin depender de los
