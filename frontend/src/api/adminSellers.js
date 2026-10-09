@@ -17,6 +17,11 @@ export function getAdminSeller(sellerId) {
   return request(`/api/admin/sellers/${encodeURIComponent(sellerId)}`)
 }
 
+// Modifica los datos de un vendedor (HU22). Los productos, los precios y los pedidos no se tocan desde aquí.
+export function updateAdminSeller(sellerId, datos) {
+  return request(`/api/admin/sellers/${encodeURIComponent(sellerId)}`, { method: 'PUT', body: datos })
+}
+
 export function updateAdminSellerStatus(sellerId, estado) {
   return request(`/api/admin/sellers/${encodeURIComponent(sellerId)}/status`, {
     method: 'PATCH',
