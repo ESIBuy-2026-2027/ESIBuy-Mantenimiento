@@ -194,6 +194,28 @@ class UsuarioTest {
         assertFalse(usuario.estaActivo());
     }
 
+    @Test
+    @DisplayName("HU1-CP16: una cuenta restaurada como PENDIENTE no cuenta como activa")
+    void restaurarEstadoPendienteNoCuentaComoActivo() {
+        Usuario usuario = cliente("Ana", "García López");
+
+        usuario.restaurarEstado("PENDIENTE");
+
+        assertEquals("PENDIENTE", usuario.getEstado());
+        assertFalse(usuario.estaActivo());
+    }
+
+    @Test
+    @DisplayName("HU1-CP16: una cuenta restaurada como ACTIVO cuenta como activa")
+    void restaurarEstadoActivoCuentaComoActivo() {
+        Usuario usuario = cliente("Ana", "García López");
+
+        usuario.restaurarEstado("ACTIVO");
+
+        assertEquals("ACTIVO", usuario.getEstado());
+        assertTrue(usuario.estaActivo());
+    }
+
     private static Usuario cliente(String nombre, String apellidos) {
         return new Usuario("u-1", nombre, apellidos, EMAIL, HASH, Rol.CLIENTE, TipoCliente.ESTANDAR);
     }
