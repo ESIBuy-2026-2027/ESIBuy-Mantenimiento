@@ -23,6 +23,7 @@ public class SecurityConfig {
 
     private static final String RUTA_REGISTRO = "/api/auth/registro";
     private static final String RUTA_LOGIN = "/api/auth/login";
+    private static final String RUTA_CODIGO_EMAIL = "/api/auth/verify-email-code";
     private static final String RUTAS_ADMINISTRACION = "/api/admin/**";
     // Texto y no el enum Rol: shared no depende del dominio de ningún módulo. Es el mismo valor que Rol.ADMINISTRADOR.
     private static final String ROL_ADMINISTRADOR = "ADMINISTRADOR";
@@ -31,7 +32,7 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, RUTA_REGISTRO, RUTA_LOGIN).permitAll()
+                        .requestMatchers(HttpMethod.POST, RUTA_REGISTRO, RUTA_LOGIN, RUTA_CODIGO_EMAIL).permitAll()
                         .requestMatchers(RUTAS_ADMINISTRACION).hasRole(ROL_ADMINISTRADOR)
                         .anyRequest().authenticated())
                 .csrf(csrf -> csrf.ignoringRequestMatchers(RUTA_REGISTRO));
