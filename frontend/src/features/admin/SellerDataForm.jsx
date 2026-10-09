@@ -1,21 +1,10 @@
 import PropTypes from 'prop-types'
-import { formatDate } from '../../utils/format'
+import { ROLES } from '../../auth/roles'
 import ReadOnlyFields from './ReadOnlyFields'
-import { getSellerStatus } from './sellerStatus'
+import { readFields } from './profileFields'
 
 export default function SellerDataForm({ seller }) {
-  const fields = [
-    ['Nombre', seller.nombre],
-    ['Apellidos', seller.apellidos],
-    ['Correo electrónico', seller.email],
-    ['Nombre comercial', seller.nombreComercial],
-    ['NIF/DNI', seller.nif],
-    ['Categoría principal', seller.categoriaPrincipal],
-    ['Estado', getSellerStatus(seller.estado).label],
-    ['Fecha de alta', formatDate(seller.fechaAlta)],
-  ]
-
-  return <ReadOnlyFields fields={fields} />
+  return <ReadOnlyFields fields={readFields(ROLES.VENDEDOR, seller)} />
 }
 
 SellerDataForm.propTypes = {
