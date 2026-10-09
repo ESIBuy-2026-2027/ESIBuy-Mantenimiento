@@ -179,7 +179,10 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU2-CP04: un usuario activo sigue activo al leerlo de la base de datos")
     void conservaUnUsuarioActivo() {
-        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado");
+        usuario.activar();   // una cuenta nueva nace PENDIENTE (T233): se activa para probar la lectura de un activo
+
+        adapter.guardar(usuario);
 
         assertTrue(adapter.buscarPorCorreo("juan@uclm.es").orElseThrow().estaActivo());
     }

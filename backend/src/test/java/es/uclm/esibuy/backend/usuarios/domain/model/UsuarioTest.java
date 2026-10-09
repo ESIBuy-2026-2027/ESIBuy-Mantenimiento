@@ -17,7 +17,7 @@ class UsuarioTest {
     private static final String HASH = "hash-seguro";
 
     @Test
-    @DisplayName("HU1-CP11: crea un usuario con datos correctos y sin bloquear")
+    @DisplayName("HU1-CP11: crea un usuario con datos correctos, pendiente de verificar")
     void creaUsuarioConDatosCorrectos() {
         Email email = new Email("ana@esibuy.es");
 
@@ -31,7 +31,7 @@ class UsuarioTest {
         assertEquals("hash-seguro", usuario.getPasswordHash());
         assertEquals(Rol.CLIENTE, usuario.getRol());
         assertEquals(TipoCliente.PREMIUM, usuario.getTipoCliente());
-        assertTrue(usuario.estaActivo());
+        assertEquals("PENDIENTE", usuario.getEstado());
     }
 
     @Test
@@ -77,7 +77,7 @@ class UsuarioTest {
         assertEquals(HASH, usuario.getPasswordHash());
         assertEquals(Rol.CLIENTE, usuario.getRol());
         assertEquals(TipoCliente.ESTANDAR, usuario.getTipoCliente());
-        assertTrue(usuario.estaActivo());
+        assertEquals("PENDIENTE", usuario.getEstado());
     }
 
     @Test
@@ -174,6 +174,24 @@ class UsuarioTest {
     void aceptaClienteQueCumple18Hoy() {
         // TODO: frontera: fecha de nacimiento = hoy menos 18 años exactos -> se registra.
         fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP16: una cuenta nueva nace en estado PENDIENTE y no cuenta como activa")
+    void unUsuarioNuevoNaceEnEstadoPendiente() {
+        Usuario usuario = cliente("Ana", "García López");
+
+        assertEquals("PENDIENTE", usuario.getEstado());
+        assertFalse(usuario.estaActivo());
+    }
+
+    @Test
+    @DisplayName("HU1-CP16: un cliente creado con nuevoCliente nace en estado PENDIENTE")
+    void unClienteNuevoNaceEnEstadoPendiente() {
+        Usuario usuario = Usuario.nuevoCliente(EMAIL, HASH);
+
+        assertEquals("PENDIENTE", usuario.getEstado());
+        assertFalse(usuario.estaActivo());
     }
 
     private static Usuario cliente(String nombre, String apellidos) {
