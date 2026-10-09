@@ -331,6 +331,43 @@ Rutas de los archivos de test (bajo `frontend/src/`):
 
 ---
 
+## HU24 · Activar usuario
+
+### Tabla A · HU24 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU24-CP01 | Un administrador activa una cuenta desactivada y recibe sus datos con estado ACTIVO | Unitario + integración | 3 | 🔍 En revisión |
+| HU24-CP02 | Rechaza un estado distinto de ACTIVO (400) y no cambia nada | Integración (capa web) | 1 | 🔍 En revisión |
+| HU24-CP03 | Activar un usuario que no existe devuelve 404 | Unitario + integración | 3 | 🔍 En revisión |
+| HU24-CP04 | Un usuario que no es administrador no puede activar cuentas (403) | Integración (capa web) | 1 | 🔍 En revisión |
+
+Notas:
+- **HU24-CP01 a CP04:** casos propuestos en la T33/T34 (AB#33, AB#34) a partir del contrato del frontend (`frontend/docs/hu24-activar-usuario.md`). Pendientes de confirmar con el equipo y de añadir a la HU24 en Azure Boards.
+- **Backend (T33/T34):** `PATCH /api/admin/usuarios/{id}/status` con `{ "estado": "ACTIVO" }`, en `AdministracionUsuariosUseCase`. Solo admite `ACTIVO`: la HU23 añadirá `DESACTIVADO` en el mismo endpoint. El 403 lo da la regla de `SecurityConfig` de la T58.
+- **Pendiente con el equipo:** el `PATCH` real necesitará el token CSRF (se decide con el login, task 230); y en la aplicación arrancada el 400 de CP02 sale como 403 por el fallo de `/error` bloqueado en `SecurityConfig`. Con MockMvc se ve el 400.
+- **Frontend:** los tests de la HU24 (AB#36) no tienen todavía filas en la matriz.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU24-CP01 | `AdministracionUsuariosServiceTest` | `activaUnaCuentaDesactivadaYLaGuarda` | Aplicación | AB#34 | PR por abrir | 🔍 |
+| HU24-CP01 | `UsuarioControllerTest` | `administradorActivaUnaCuentaYRecibeSusDatos` | Infraestructura | AB#34 | PR por abrir | 🔍 |
+| HU24-CP01 | `UsuarioMongoAdapterTest` | `buscarPorIdDevuelveElUsuarioGuardado` | Infraestructura | AB#34 | PR por abrir | 🔍 |
+| HU24-CP02 | `UsuarioControllerTest` | `rechazaUnEstadoDistintoDeActivo` | Infraestructura | AB#34 | PR por abrir | 🔍 |
+| HU24-CP03 | `AdministracionUsuariosServiceTest` | `rechazaActivarUnUsuarioQueNoExiste` | Aplicación | AB#34 | PR por abrir | 🔍 |
+| HU24-CP03 | `UsuarioControllerTest` | `activarUnUsuarioInexistenteDevuelve404` | Infraestructura | AB#34 | PR por abrir | 🔍 |
+| HU24-CP03 | `UsuarioMongoAdapterTest` | `buscarPorIdDevuelveVacioSiNoExiste` | Infraestructura | AB#34 | PR por abrir | 🔍 |
+| HU24-CP04 | `UsuarioControllerTest` | `unClienteNoPuedeActivarCuentas` | Infraestructura | AB#34 | PR por abrir | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
+- `UsuarioControllerTest`: `usuarios/infrastructure/adapter/in/web/` (con `@WebMvcTest` y `@WithMockUser`)
+- `UsuarioMongoAdapterTest`: `usuarios/infrastructure/adapter/out/persistence/` (con Testcontainers)
+
+---
+
 ## Tests técnicos sin caso de prueba
 
 Tests que no validan una HU concreta.
