@@ -8,6 +8,8 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
+import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
+import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,7 +51,11 @@ class UsuarioMongoAdapterTest {
     @BeforeEach
     void preparar() {
         usuarioMongoRepository.deleteAll();
-        adapter = new UsuarioMongoAdapter(usuarioMongoRepository, new UsuarioDocumentMapper());
+        adapter = new UsuarioMongoAdapter(
+                usuarioMongoRepository,
+                new UsuarioDocumentMapper(),
+                mongoTemplate
+        );
     }
 
     @Test
@@ -202,5 +208,115 @@ class UsuarioMongoAdapterTest {
         Document guardado = mongoTemplate.getCollection("usuarios").find().first();
         assertNotNull(guardado);
         return guardado;
+    }
+
+    @Test
+    @DisplayName("HU19-CP02: el adaptador busca por email, nombre y apellidos")
+    void listarBuscaEnLosCamposVisiblesDelUsuario() {
+        usuarioMongoRepository.saveAll(List.of(
+                new UsuarioDocument("ana@esibuy.test", "hash-1", "CLIENTE"),
+                new UsuarioDocument("bruno@esibuy.test", "hash-2", "VENDEDOR")
+        ));
+        UsuarioDocument ana = usuarioMongoRepository.findByEmail("ana@esibuy.test").orElseThrow();
+        ana.setNombre("Ana");
+        ana.setApellidos("García");
+        ana.setTipoCliente("ESTANDAR");
+        ana.setEstado("ACTIVO");
+        usuarioMongoRepository.save(ana);
+
+        UsuarioPage resultado = adapter.listar(
+                new ListarUsuariosQuery("García", null, null, 0, 10)
+        );
+
+        assertEquals(1, resultado.totalElementos());
+        assertEquals("ana@esibuy.test", resultado.usuarios().get(0).getEmail().valor());
+    }
+
+    @Test
+    @DisplayName("HU19-CP03: el adaptador aplica el filtro por rol")
+    void listarFiltraPorRol() {
+        UsuarioDocument ana = new UsuarioDocument("ana@esibuy.test", "hash-1", "CLIENTE");
+        ana.setEstado("ACTIVO");
+        UsuarioDocument bruno = new UsuarioDocument("bruno@esibuy.test", "hash-2", "VENDEDOR");
+        bruno.setEstado("ACTIVO");
+        usuarioMongoRepository.saveAll(List.of(ana, bruno));
+
+        UsuarioPage resultado = adapter.listar(
+                new ListarUsuariosQuery(null, Rol.VENDEDOR, null, 0, 10)
+        );
+
+        assertEquals(1, resultado.totalElementos());
+        assertEquals(Rol.VENDEDOR, resultado.usuarios().get(0).getRol());
+    }
+
+    @Test
+    @DisplayName("HU19-CP04: el adaptador aplica el filtro por estado activo")
+    void listarFiltraPorEstadoActivo() {
+        UsuarioDocument activo = new UsuarioDocument("ana@esibuy.test", "hash-1", "CLIENTE");
+        activo.setEstado("ACTIVO");
+        UsuarioDocument desactivado = new UsuarioDocument("bruno@esibuy.test", "hash-2", "VENDEDOR");
+        desactivado.setEstado("DESACTIVADO");
+        usuarioMongoRepository.saveAll(List.of(activo, desactivado));
+
+        UsuarioPage resultado = adapter.listar(
+                new ListarUsuariosQuery(null, null, "ACTIVO", 0, 10)
+        );
+
+        assertEquals(1, resultado.totalElementos());
+        assertTrue(resultado.usuarios().get(0).estaActivo());
+    }
+
+    @Test
+    @DisplayName("HU19-CP05: el adaptador devuelve la página solicitada y el total completo")
+    void listarAplicaPaginacionYConservaElTotal() {
+        UsuarioDocument primero = new UsuarioDocument("ana@esibuy.test", "hash-1", "CLIENTE");
+        primero.setEstado("ACTIVO");
+        UsuarioDocument segundo = new UsuarioDocument("bruno@esibuy.test", "hash-2", "VENDEDOR");
+        segundo.setEstado("ACTIVO");
+        UsuarioDocument tercero = new UsuarioDocument("carla@esibuy.test", "hash-3", "CLIENTE");
+        tercero.setEstado("ACTIVO");
+        usuarioMongoRepository.saveAll(List.of(primero, segundo, tercero));
+
+        UsuarioPage resultado = adapter.listar(
+                new ListarUsuariosQuery(null, null, null, 1, 1)
+        );
+
+        assertEquals(1, resultado.pagina());
+        assertEquals(1, resultado.tamano());
+        assertEquals(1, resultado.usuarios().size());
+        assertEquals(3, resultado.totalElementos());
+    }
+
+    @Test
+    @DisplayName("HU19-CP02: la búsqueda trata los caracteres especiales como texto literal")
+    void listarEscapaCaracteresEspecialesDeLaBusqueda() {
+        UsuarioDocument usuario = new UsuarioDocument("ana+vip@esibuy.test", "hash-1", "CLIENTE");
+        usuario.setEstado("ACTIVO");
+        usuarioMongoRepository.save(usuario);
+
+        UsuarioPage resultado = adapter.listar(
+                new ListarUsuariosQuery("ana+", null, null, 0, 10)
+        );
+
+        assertEquals(1, resultado.totalElementos());
+        assertEquals("ana+vip@esibuy.test", resultado.usuarios().get(0).getEmail().valor());
+    }
+
+    @Test
+    @DisplayName("HU19-CP10: el adaptador filtra BLOQUEADO por lockedUntil")
+    void listarFiltraPorBloqueoTemporal() {
+        UsuarioDocument bloqueado = new UsuarioDocument("bloqueado@esibuy.test", "hash-1", "CLIENTE");
+        bloqueado.setEstado("ACTIVO");
+        bloqueado.setLockedUntil(Instant.now().plus(Duration.ofMinutes(10)));
+        UsuarioDocument activo = new UsuarioDocument("activo@esibuy.test", "hash-2", "CLIENTE");
+        activo.setEstado("ACTIVO");
+        usuarioMongoRepository.saveAll(List.of(bloqueado, activo));
+
+        UsuarioPage resultado = adapter.listar(
+                new ListarUsuariosQuery(null, null, "BLOQUEADO", 0, 10)
+        );
+
+        assertEquals(1, resultado.totalElementos());
+        assertEquals("bloqueado@esibuy.test", resultado.usuarios().get(0).getEmail().valor());
     }
 }

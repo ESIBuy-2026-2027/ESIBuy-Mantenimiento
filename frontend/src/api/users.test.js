@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
 import { ApiError } from './client'
-import { activateUser, listUsers } from './users'
+import { getUser, listUsers, updateUserStatus } from './users'
 
 const RESPUESTA = { items: [], page: 1, size: 10, totalItems: 0, totalPages: 0 }
 
@@ -69,31 +69,49 @@ describe('listUsers', () => {
     expect(error.status).toBe(500)
   })
 
-describe('activateUser', () => {
-  it('activateUser_enviaElEstadoActivoPorPatchALaRutaDelUsuario', async () => {
+describe('updateUserStatus', () => {
+  function capturarCambio() {
     const peticion = {}
     server.use(
       http.patch('/api/admin/usuarios/:id/status', async ({ params, request }) => {
         peticion.id = params.id
         peticion.metodo = request.method
         peticion.cuerpo = await request.json()
-        return HttpResponse.json({ id: params.id, estado: 'ACTIVO' })
+        return HttpResponse.json({ id: params.id, ...peticion.cuerpo })
       }),
     )
+    return peticion
+  }
 
-    const respuesta = await activateUser('usr-4')
+  it('updateUserStatus_paraActivar_enviaActivoPorPatchALaRutaDelUsuario', async () => {
+    const peticion = capturarCambio()
+
+    const respuesta = await updateUserStatus('usr-4', 'ACTIVO')
 
     expect(peticion).toEqual({ id: 'usr-4', metodo: 'PATCH', cuerpo: { estado: 'ACTIVO' } })
     expect(respuesta).toEqual({ id: 'usr-4', estado: 'ACTIVO' })
   })
 
-  it('activateUser_conErrorDelServidor_lanzaApiError', async () => {
-    server.use(http.patch('/api/admin/usuarios/:id/status', () => new HttpResponse(null, { status: 500 })))
+  it('updateUserStatus_paraDesactivar_enviaDesactivado', async () => {
+    const peticion = capturarCambio()
 
-    const error = await activateUser('usr-4').catch((excepcion) => excepcion)
+    await updateUserStatus('usr-3', 'DESACTIVADO')
+
+    expect(peticion.cuerpo).toEqual({ estado: 'DESACTIVADO' })
+  })
+
+  it('updateUserStatus_conConflicto_lanzaApiErrorConSuCodigo', async () => {
+    server.use(
+      http.patch('/api/admin/usuarios/:id/status', () =>
+        HttpResponse.json({ code: 'CANNOT_DEACTIVATE_SELF' }, { status: 409 }),
+      ),
+    )
+
+    const error = await updateUserStatus('u-1', 'DESACTIVADO').catch((excepcion) => excepcion)
 
     expect(error).toBeInstanceOf(ApiError)
-    expect(error.status).toBe(500)
+    expect(error.status).toBe(409)
+    expect(error.code).toBe('CANNOT_DEACTIVATE_SELF')
   })
 })
 
@@ -118,4 +136,30 @@ describe('listUsers con búsqueda por nombre y ordenación (HU24)', () => {
     expect(peticion.url.searchParams.has('order')).toBe(false)
   })
 })
+})
+
+describe('getUser', () => {
+  it('getUser_pideLaFichaALaRutaDelUsuario', async () => {
+    let ruta = null
+    server.use(
+      http.get('/api/admin/usuarios/:id', ({ request, params }) => {
+        ruta = new URL(request.url).pathname
+        return HttpResponse.json({ id: params.id, nombre: 'Lucía' })
+      }),
+    )
+
+    const usuario = await getUser('usr-4')
+
+    expect(ruta).toBe('/api/admin/usuarios/usr-4')
+    expect(usuario).toEqual({ id: 'usr-4', nombre: 'Lucía' })
+  })
+
+  it('getUser_conUsuarioInexistente_lanzaApiErrorConEstado404', async () => {
+    server.use(http.get('/api/admin/usuarios/:id', () => new HttpResponse(null, { status: 404 })))
+
+    const error = await getUser('no-existe').catch((excepcion) => excepcion)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error.status).toBe(404)
+  })
 })

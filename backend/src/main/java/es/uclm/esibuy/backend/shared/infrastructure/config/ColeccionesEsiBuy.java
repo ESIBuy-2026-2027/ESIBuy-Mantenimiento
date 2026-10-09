@@ -48,6 +48,7 @@ final class ColeccionesEsiBuy {
     private static final String CLIENTE_ID = "clienteId";
     private static final String CANTIDAD = "cantidad";
     private static final String PRODUCTO_ID = "productoId";
+    private static final String TOKEN_HASH = "tokenHash";
 
     /** Una colección: su nombre, su validación y los índices que no vienen de anotaciones. */
     record Coleccion(String nombre, MongoJsonSchema esquema, List<Index> indices) {
@@ -101,9 +102,9 @@ final class ColeccionesEsiBuy {
 
     // 2. sesiones: revocables y caducables. TTL: MongoDB borra la sesión al llegar a expiresAt.
     private static Coleccion sesiones() {
-        return new Coleccion("sesiones", esquema(List.of(USUARIO_ID, "tokenHash", ESTADO, EXPIRES_AT),
+        return new Coleccion("sesiones", esquema(List.of(USUARIO_ID, TOKEN_HASH, ESTADO, EXPIRES_AT),
                 textoNoVacio(USUARIO_ID),
-                textoNoVacio("tokenHash"),
+                textoNoVacio(TOKEN_HASH),
                 string(ESTADO).possibleValues("ACTIVA", "REVOCADA", "EXPIRADA"),
                 date(EXPIRES_AT),
                 fechaOpcional("revokedAt"),
@@ -128,12 +129,14 @@ final class ColeccionesEsiBuy {
     }
 
     // 4. tokens_seguridad: códigos temporales (login, verificación de email) y recuperación de contraseña,
-    // distinguidos por PURPOSE (decisión del equipo: una colección en vez de codigos_verificacion y
+    // distinguidos por purpose (decisión del equipo: una colección en vez de codigos_verificacion y
     // recuperaciones_password por separado).
-    // PENDIENTE: índice del hash del código/token cuando se fije el nombre del campo.
+    // Solo se guarda el hash del código o token (tokenHash, obligatorio; T232), nunca en claro.
+    // PENDIENTE: índice de tokenHash si la recuperación de contraseña busca por él.
     private static Coleccion tokensSeguridad() {
-        return new Coleccion("tokens_seguridad", esquema(List.of(USUARIO_ID, PURPOSE, EXPIRES_AT),
+        return new Coleccion("tokens_seguridad", esquema(List.of(USUARIO_ID, PURPOSE, TOKEN_HASH, EXPIRES_AT),
                 textoNoVacio(USUARIO_ID),
+                textoNoVacio(TOKEN_HASH),
                 string(PURPOSE).possibleValues("LOGIN_2FA", "EMAIL_VERIFICATION", "PASSWORD_RECOVERY"),
                 string("status"),
                 enteroNoNegativo("attempts"),

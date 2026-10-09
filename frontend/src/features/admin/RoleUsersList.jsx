@@ -9,15 +9,15 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { SearchInfo24Regular } from '@fluentui/react-icons'
+import { Search20Regular, SearchInfo24Regular } from '@fluentui/react-icons'
 import EmptyState from '../../components/EmptyState'
 import Pagination from '../../components/Pagination'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
-import ActivateUserButton from './ActivateUserButton'
 import SortControls from './SortControls'
 import UsersFilters from './UsersFilters'
+import UserDetailDialog from './UserDetailDialog'
 import UsersTable from './UsersTable'
-import { ACCOUNT_SORT_OPTIONS, ACCOUNT_STATUS_LABELS, USERS_PAGE_SIZE, USER_STATUS } from './usersConfig'
+import { ACCOUNT_SORT_OPTIONS, ACCOUNT_STATUS_LABELS, USERS_PAGE_SIZE } from './usersConfig'
 import { useUsersList } from './useUsersList'
 
 const useStyles = makeStyles({
@@ -27,16 +27,16 @@ const useStyles = makeStyles({
 })
 
 // Listado de los usuarios de un rol (clientes o administradores) con búsqueda por nombre, filtro por
-// estado, ordenación por nombre o estado y el botón "Activar" en las cuentas desactivadas (HU24).
-// Reutiliza el listado de la HU19.
-export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLabel }) {
+// estado y ordenación por nombre o estado. La lupa de cada fila abre su ficha (HU20), donde se activa
+// (HU24) o desactiva (HU23) la cuenta, como en el listado de vendedores. Reutiliza el listado de la HU19.
+export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLabel, currentUserId }) {
   const styles = useStyles()
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
   const [sort, setSort] = useState('name')
   const [order, setOrder] = useState('asc')
   const [page, setPage] = useState(1)
-  const [resultado, setResultado] = useState(null)
+  const [selectedUserId, setSelectedUserId] = useState(null)
   const debouncedSearch = useDebouncedValue(search)
   const { data, failed, refreshing, retry } = useUsersList({
     search: debouncedSearch,
@@ -61,18 +61,14 @@ export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLa
     setPage(1)
   }
 
-  const avisarActivado = (nombre) => {
-    setResultado({ intent: 'success', texto: `${nombre} ya está activo y puede usar la plataforma.` })
-    retry()
-  }
-
-  const avisarError = (nombre) =>
-    setResultado({ intent: 'error', texto: `No se ha podido activar a ${nombre}. Inténtalo de nuevo.` })
-
-  const renderActions = (user) =>
-    user.estado === USER_STATUS.DESACTIVADO ? (
-      <ActivateUserButton user={user} onActivated={avisarActivado} onError={avisarError} />
-    ) : null
+  const renderActions = (user) => (
+    <Button
+      appearance="subtle"
+      icon={<Search20Regular />}
+      aria-label={`Ver información de ${user.nombre} ${user.apellidos}`}
+      onClick={() => setSelectedUserId(user.id)}
+    />
+  )
 
   return (
     <>
@@ -93,12 +89,6 @@ export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLa
           onOrderChange={changeFilter(setOrder)}
         />
       </UsersFilters>
-
-      {resultado && (
-        <MessageBar intent={resultado.intent}>
-          <MessageBarBody>{resultado.texto}</MessageBarBody>
-        </MessageBar>
-      )}
 
       {failed && (
         <MessageBar intent="error">
@@ -134,6 +124,15 @@ export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLa
           />
         </>
       )}
+
+      {selectedUserId && (
+        <UserDetailDialog
+          userId={selectedUserId}
+          currentUserId={currentUserId}
+          onClose={() => setSelectedUserId(null)}
+          onStatusChange={retry}
+        />
+      )}
     </>
   )
 }
@@ -143,4 +142,5 @@ RoleUsersList.propTypes = {
   itemLabel: PropTypes.string.isRequired,
   errorMessage: PropTypes.string.isRequired,
   loadingLabel: PropTypes.string.isRequired,
+  currentUserId: PropTypes.string,
 }

@@ -3,6 +3,8 @@ package es.uclm.esibuy.backend.usuarios.application.port.out;
 import java.util.Optional;
 
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
+import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
+import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
 
 public interface UsuarioRepositoryPort {
 
@@ -20,5 +22,7 @@ public interface UsuarioRepositoryPort {
  * en ejecución.
  */
     Optional<Usuario> buscarPorCorreo(String email);
+
+    UsuarioPage listar(ListarUsuariosQuery query);
 
 }

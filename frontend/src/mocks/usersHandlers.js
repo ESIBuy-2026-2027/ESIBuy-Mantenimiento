@@ -30,7 +30,6 @@ const USUARIOS_INICIALES = [
   ['Óscar', 'León Garrido', 'CLIENTE', 'DESACTIVADO', '2026-08-20T13:40:00'],
   ['Beatriz', 'Vargas Méndez', 'VENDEDOR', 'PENDIENTE', '2026-09-05T11:10:00'],
   ['Rubén', 'Cortés Pastor', 'CLIENTE', 'ACTIVO', '2026-08-28T16:25:00'],
-  ['Carmen', 'Hidalgo Rojas', 'ADMINISTRADOR', 'ACTIVO', '2026-02-27T10:30:00'],
   ['Jorge', 'Benítez Sáez', 'CLIENTE', 'DESACTIVADO', '2026-09-10T15:15:00'],
 ]
   .map(([nombre, apellidos, rol, estado, fechaAlta], indice) => ({
@@ -42,6 +41,17 @@ const USUARIOS_INICIALES = [
     estado,
     fechaAlta,
   }))
+  // El administrador con el que se inicia sesión en el mock (mismo id que en authHandlers), para que
+  // la regla "un administrador no puede desactivarse a sí mismo" (HU23) se vea en la lista.
+  .concat({
+    id: 'u-1',
+    nombre: 'Ada',
+    apellidos: 'Admin',
+    email: 'admin@esibuy.test',
+    rol: 'ADMINISTRADOR',
+    estado: 'ACTIVO',
+    fechaAlta: '2026-02-27T10:30:00',
+  })
   .sort((a, b) => b.fechaAlta.localeCompare(a.fechaAlta))
 
 // Lista que puede crecer durante la sesión (p. ej. con los administradores dados de alta en la HU21).
@@ -92,6 +102,42 @@ function ordenar(lista, criterio, sentido) {
   return [...lista].sort((a, b) => signo * comparar(a, b))
 }
 
+const ESTADOS_ADMITIDOS = new Set(['ACTIVO', 'DESACTIVADO'])
+
+// Datos de la ficha (HU20) que no salen en el listado. Son ficticios y se calculan a partir del id para
+// que cada usuario tenga siempre los mismos. Nunca incluyen la contraseña.
+const LETRAS_DNI = 'TRWAGMYFPDXBNJZSQVHLCKE'
+const SEDES = ['Ciudad Real', 'Toledo', 'Albacete', 'Cuenca']
+
+function detalleDe(usuario) {
+  const n = Number(usuario.id.replace(/\D/g, ''))
+  const avatar = `avatar${1 + (n % 3)}`
+
+  if (usuario.rol === 'CLIENTE') {
+    const numeroDni = 10000000 + n * 1373
+    return {
+      dni: `${numeroDni}${LETRAS_DNI[numeroDni % 23]}`,
+      telefono: `6${String(20000000 + n * 7919).slice(0, 8)}`,
+      fechaNacimiento: `${1975 + (n % 25)}-0${1 + (n % 9)}-1${n % 9}`,
+      tipoCliente: n % 3 === 0 ? 'PREMIUM' : 'ESTANDAR',
+      avatar,
+    }
+  }
+  if (usuario.rol === 'ADMINISTRADOR') {
+    return { sede: SEDES[n % SEDES.length], fechaIncorporacion: usuario.fechaAlta.slice(0, 10), avatar }
+  }
+  return {}
+}
+
+const esAdminActivo = (usuario) => usuario.rol === 'ADMINISTRADOR' && usuario.estado === 'ACTIVO'
+
+// Código de error si la cuenta no se puede desactivar, o null si se puede.
+function conflictoAlDesactivar(usuario) {
+  if (usuario.id === getUsuarioEnSesion()?.id) return 'CANNOT_DEACTIVATE_SELF'
+  if (esAdminActivo(usuario) && usuarios.filter(esAdminActivo).length === 1) return 'LAST_ACTIVE_ADMIN'
+  return null
+}
+
 // Devuelve la respuesta de error si quien pregunta no es administrador, o null si puede continuar.
 function rechazarSiNoEsAdmin() {
   const usuario = getUsuarioEnSesion()
@@ -134,16 +180,31 @@ export const usersHandlers = [
     })
   }),
 
-  // Activar una cuenta (HU24). Desactivar es la HU23 y todavía no existe.
+  // Ficha de un usuario (HU20).
+  http.get('/api/admin/usuarios/:id', ({ params }) => {
+    const rechazo = rechazarSiNoEsAdmin()
+    if (rechazo) return rechazo
+
+    const usuario = usuarios.find((candidato) => candidato.id === params.id)
+    return usuario ? HttpResponse.json({ ...usuario, ...detalleDe(usuario) }) : new HttpResponse(null, { status: 404 })
+  }),
+
+  // Activar (HU24) o desactivar (HU23) una cuenta. Un administrador no puede desactivarse a sí mismo
+  // ni desactivar al último administrador activo.
   http.patch('/api/admin/usuarios/:id/status', async ({ params, request }) => {
     const rechazo = rechazarSiNoEsAdmin()
     if (rechazo) return rechazo
 
     const { estado } = await request.json()
-    if (estado !== 'ACTIVO') return new HttpResponse(null, { status: 400 })
+    if (!ESTADOS_ADMITIDOS.has(estado)) return new HttpResponse(null, { status: 400 })
 
     const existente = usuarios.find((candidato) => candidato.id === params.id)
     if (!existente) return new HttpResponse(null, { status: 404 })
+
+    if (estado === 'DESACTIVADO') {
+      const conflicto = conflictoAlDesactivar(existente)
+      if (conflicto) return HttpResponse.json({ code: conflicto }, { status: 409 })
+    }
 
     const actualizado = { ...existente, estado }
     usuarios = usuarios.map((candidato) => (candidato.id === params.id ? actualizado : candidato))

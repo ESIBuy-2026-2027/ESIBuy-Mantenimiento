@@ -11,7 +11,7 @@ import RoleUsersList from './RoleUsersList'
 // nombre ascendente: la primera página va de Álvaro Campos Serrano a Pablo Gómez Martín.
 const ESPERA = { timeout: 3000 }
 
-async function renderClientes() {
+async function renderClientes(currentUserId) {
   await abrirSesionPorApi('admin@esibuy.test')
   renderWithProviders(
     <RoleUsersList
@@ -19,6 +19,7 @@ async function renderClientes() {
       itemLabel="clientes"
       errorMessage="No se ha podido cargar el listado de clientes."
       loadingLabel="Cargando clientes…"
+      currentUserId={currentUserId}
     />,
   )
   await screen.findByText('carlos.moreno@esibuy.test')
@@ -27,15 +28,17 @@ async function renderClientes() {
 // Las filas se buscan por texto: no dependen de que Fluent marque la página con aria-hidden
 // mientras se abre o se cierra la confirmación.
 const filaDe = (email) => screen.getByText(email).closest('tr')
-const botonActivarDe = (email) => within(filaDe(email)).queryByText('Activar', { selector: 'button' })
 const filasDeDatos = () => within(screen.getByRole('table')).getAllByRole('row').slice(1)
 const primerNombre = () => within(filasDeDatos()[0]).getAllByRole('cell')[0].textContent
 
-async function confirmarActivacion(user, nombre) {
-  await user.click(screen.getByRole('button', { name: `Activar a ${nombre}` }))
+// La confirmación se busca por texto: mientras se abre o se cierra, Fluent marca partes de la página
+// con aria-hidden y las búsquedas por rol pueden fallar por tiempos.
+async function activarDesdeLaFicha(user, nombre) {
+  await user.click(screen.getByRole('button', { name: `Ver información de ${nombre}` }))
+  const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
+  await user.click(await within(dialogo).findByText('Activar', { selector: 'button' }))
   const pregunta = await screen.findByText(new RegExp(`seguro que quieres activar a ${nombre}`, 'i'))
-  const confirmacion = pregunta.closest('[role="alertdialog"]')
-  await user.click(within(confirmacion).getByText('Activar', { selector: 'button' }))
+  await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Activar', { selector: 'button' }))
 }
 
 describe('RoleUsersList (HU24)', () => {
@@ -65,14 +68,6 @@ describe('RoleUsersList (HU24)', () => {
 
     await waitFor(() => expect(filasDeDatos()).toHaveLength(7))
     filasDeDatos().forEach((fila) => expect(within(fila).getByText('Desactivado')).toBeInTheDocument())
-  })
-
-  it('roleUsersList_ofreceActivarSoloEnLasCuentasDesactivadas', async () => {
-    await renderClientes()
-
-    expect(botonActivarDe('lucia.torres@esibuy.test')).toBeInTheDocument()
-    expect(botonActivarDe('oscar.leon@esibuy.test')).toBeInTheDocument()
-    expect(botonActivarDe('carlos.moreno@esibuy.test')).not.toBeInTheDocument()
   })
 
   it('roleUsersList_porDefecto_ordenaPorNombreAscendente', async () => {
@@ -117,28 +112,6 @@ describe('RoleUsersList (HU24)', () => {
     expect(await screen.findByText(/no se han encontrado clientes/i)).toBeInTheDocument()
   })
 
-  it('roleUsersList_alActivarUnCliente_loMuestraActivoYAvisa', async () => {
-    const user = userEvent.setup()
-    await renderClientes()
-
-    await confirmarActivacion(user, 'Lucía Torres Vega')
-
-    expect(await screen.findByText(/lucía torres vega ya está activo/i, {}, ESPERA)).toBeInTheDocument()
-    await waitFor(() => expect(within(filaDe('lucia.torres@esibuy.test')).getByText('Activo')).toBeInTheDocument(), ESPERA)
-    expect(botonActivarDe('lucia.torres@esibuy.test')).not.toBeInTheDocument()
-  })
-
-  it('roleUsersList_siFallaLaActivacion_muestraErrorYNoCambiaElEstado', async () => {
-    server.use(http.patch('/api/admin/usuarios/:id/status', () => new HttpResponse(null, { status: 500 })))
-    const user = userEvent.setup()
-    await renderClientes()
-
-    await confirmarActivacion(user, 'Lucía Torres Vega')
-
-    expect(await screen.findByText(/no se ha podido activar a lucía torres vega/i, {}, ESPERA)).toBeInTheDocument()
-    expect(within(filaDe('lucia.torres@esibuy.test')).getByText('Desactivado')).toBeInTheDocument()
-  })
-
   it('roleUsersList_conBusquedaSinCoincidencias_muestraEstadoVacioYPermiteLimpiar', async () => {
     const user = userEvent.setup()
     await renderClientes()
@@ -167,5 +140,45 @@ describe('RoleUsersList (HU24)', () => {
     await user.click(screen.getByRole('button', { name: /reintentar/i }))
 
     expect(await screen.findByText('carlos.moreno@esibuy.test')).toBeInTheDocument()
+  })
+
+
+  it('roleUsersList_cadaFilaTieneUnaLupaParaVerLaFicha', async () => {
+    await renderClientes()
+
+    expect(within(filaDe('carlos.moreno@esibuy.test')).getByRole('button', { name: 'Ver información de Carlos Moreno Gil' })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /^ver información de/i })).toHaveLength(10)
+    expect(screen.queryByText('Activar', { selector: 'button' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Desactivar', { selector: 'button' })).not.toBeInTheDocument()
+  })
+
+  it('roleUsersList_alPulsarLaLupa_abreLaFichaDeEseUsuario', async () => {
+    const user = userEvent.setup()
+    await renderClientes()
+
+    await user.click(screen.getByRole('button', { name: 'Ver información de Lucía Torres Vega' }))
+
+    const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
+    expect(await within(dialogo).findByLabelText('Email')).toHaveValue('lucia.torres@esibuy.test')
+  })
+
+  it('roleUsersList_laFichaRecibeElUsuarioEnSesion_yNoOfreceDesactivarse', async () => {
+    const user = userEvent.setup()
+    await renderClientes('usr-3')
+
+    await user.click(screen.getByRole('button', { name: 'Ver información de Carlos Moreno Gil' }))
+
+    const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
+    await within(dialogo).findByLabelText('Nombre')
+    expect(within(dialogo).queryByText('Desactivar', { selector: 'button' })).not.toBeInTheDocument()
+  })
+
+  it('roleUsersList_alCambiarElEstadoEnLaFicha_actualizaElListado', async () => {
+    const user = userEvent.setup()
+    await renderClientes()
+
+    await activarDesdeLaFicha(user, 'Lucía Torres Vega')
+
+    await waitFor(() => expect(within(filaDe('lucia.torres@esibuy.test')).getByText('Activo')).toBeInTheDocument(), ESPERA)
   })
 })

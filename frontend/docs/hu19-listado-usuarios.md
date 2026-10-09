@@ -250,7 +250,7 @@ Cada test empieza por el ID de su caso de prueba (`HU19-CPnn`):
 ## 8. Limitaciones y trabajo pendiente
 
 - Ninguna tarjeta del panel de administración (HU18) enlaza con `/admin/users`. Las de **Clientes** y **Administradores** llevan a sus propios listados (HU24 y HU21), que reutilizan este.
-- En esta pantalla no hay ordenación por columnas ni acciones por fila (ver detalle, activar, desactivar). La ordenación y el botón Activar existen en los listados de clientes y administradores (HU24).
+- En esta pantalla no hay ordenación por columnas ni acciones por fila (ver detalle, activar, desactivar). La ordenación y la ficha de cada usuario, con activar y desactivar, existen en los listados de clientes y administradores (HU24, HU23 y HU20).
 - Los nombres de los estados y el contrato están pendientes de confirmar con el backend (sección 5).
 
 ---

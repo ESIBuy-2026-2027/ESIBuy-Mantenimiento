@@ -14,9 +14,15 @@ export function listUsers({ search, role, status, page, size, searchBy, sort, or
   return request(`/api/admin/usuarios?${params}`)
 }
 
-export function activateUser(userId) {
+// Ficha completa de un usuario, sin la contraseña (HU20).
+export function getUser(userId) {
+  return request(`/api/admin/usuarios/${encodeURIComponent(userId)}`)
+}
+
+// Activa (HU24) o desactiva (HU23) una cuenta: estado es 'ACTIVO' o 'DESACTIVADO'.
+export function updateUserStatus(userId, estado) {
   return request(`/api/admin/usuarios/${encodeURIComponent(userId)}/status`, {
     method: 'PATCH',
-    body: { estado: 'ACTIVO' },
+    body: { estado },
   })
 }

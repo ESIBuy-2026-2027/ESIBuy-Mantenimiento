@@ -23,7 +23,7 @@ describe('AdminAdminsPage (HU21)', () => {
     expect(filas).toHaveLength(3)
     expect(within(tabla).getByText('ana.lopez@esibuy.test')).toBeInTheDocument()
     expect(within(tabla).getByText('diego.delgado@esibuy.test')).toBeInTheDocument()
-    expect(within(tabla).getByText('carmen.hidalgo@esibuy.test')).toBeInTheDocument()
+    expect(within(tabla).getByText('admin@esibuy.test')).toBeInTheDocument()
     filas.forEach((fila) => expect(within(fila).getByText('Administrador')).toBeInTheDocument())
   })
 
@@ -85,17 +85,30 @@ describe('AdminAdminsPage (HU21)', () => {
     expect(screen.queryByRole('heading', { name: /^administradores$/i })).not.toBeInTheDocument()
   })
 
-  it('adminAdminsPage_alActivarUnAdministradorDesactivado_loMuestraActivo', async () => {
+
+  it('adminAdminsPage_enLaFichaDelAdministradorEnSesion_noOfreceDesactivar', async () => {
     const user = userEvent.setup()
     await abrirListado()
-    const fila = () => screen.getByText('diego.delgado@esibuy.test').closest('tr')
-    await screen.findByText('diego.delgado@esibuy.test')
 
-    await user.click(screen.getByRole('button', { name: 'Activar a Diego Delgado Iglesias' }))
+    await user.click(await screen.findByRole('button', { name: 'Ver información de Ada Admin' }))
+
+    const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
+    expect(await within(dialogo).findByLabelText('Email')).toHaveValue('admin@esibuy.test')
+    expect(within(dialogo).queryByText('Desactivar', { selector: 'button' })).not.toBeInTheDocument()
+  })
+
+  it('adminAdminsPage_alActivarUnAdministradorDesdeSuFicha_elListadoLoMuestraActivo', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.click(await screen.findByRole('button', { name: 'Ver información de Diego Delgado Iglesias' }))
+    const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
+    await user.click(await within(dialogo).findByText('Activar', { selector: 'button' }))
     const pregunta = await screen.findByText(/seguro que quieres activar a diego delgado iglesias/i)
     await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Activar', { selector: 'button' }))
 
-    expect(await screen.findByText(/diego delgado iglesias ya está activo/i, {}, { timeout: 3000 })).toBeInTheDocument()
+    expect(await within(dialogo).findByText(/diego delgado iglesias ya está activo/i, {}, { timeout: 3000 })).toBeInTheDocument()
+    const fila = () => screen.getByText('diego.delgado@esibuy.test').closest('tr')
     await waitFor(() => expect(within(fila()).getByText('Activo')).toBeInTheDocument(), { timeout: 3000 })
   })
 })

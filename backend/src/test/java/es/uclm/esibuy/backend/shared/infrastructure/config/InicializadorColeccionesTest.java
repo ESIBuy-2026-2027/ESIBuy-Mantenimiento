@@ -157,8 +157,15 @@ class InicializadorColeccionesTest {
         rechaza(VALIDACION, "sesiones", new Document("usuarioId", "u1").append("tokenHash", "t").append("estado", "ACTIVA"));
         acepta("factores_autenticacion", new Document("usuarioId", "u1").append("totpEnabled", true));
         rechaza(VALIDACION, "factores_autenticacion", new Document("usuarioId", "u2").append("totpEnabled", "sí"));
-        rechaza(VALIDACION, "tokens_seguridad", new Document("usuarioId", "u1").append("purpose", "OTRO")
-                .append("expiresAt", AHORA));
+        acepta("tokens_seguridad", token("LOGIN_2FA").append("tokenHash", "hash-del-codigo"));
+        rechaza(VALIDACION, "tokens_seguridad", token("OTRO").append("tokenHash", "hash-del-codigo"));
+        // T232: el hash del código o token es obligatorio (nunca se guarda en claro).
+        rechaza(VALIDACION, "tokens_seguridad", token("LOGIN_2FA"));
+        rechaza(VALIDACION, "tokens_seguridad", token("LOGIN_2FA").append("tokenHash", ""));
+    }
+
+    private static Document token(String purpose) {
+        return new Document("usuarioId", "u1").append("purpose", purpose).append("expiresAt", AHORA);
     }
 
     @Test

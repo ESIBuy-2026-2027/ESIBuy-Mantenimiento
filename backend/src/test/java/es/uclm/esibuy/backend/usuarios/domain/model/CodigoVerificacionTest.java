@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.time.Instant;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -41,9 +42,20 @@ class CodigoVerificacionTest {
     void noSePuedeUsarDosVeces() {
         CodigoVerificacion codigo = CodigoVerificacion.nuevo("u-1", "hash-del-codigo", AHORA);
 
-        codigo.marcarUsado();
+        codigo.marcarUsado(AHORA);
 
         assertFalse(codigo.puedeUsarse(AHORA));
+    }
+
+    @Test
+    @DisplayName("HU2-CP09: al marcar el código como usado se guarda la hora de uso")
+    void marcarUsadoGuardaLaHoraDeUso() {
+        // Trazabilidad (T232): se sabe cuándo se usó el código, no solo que se usó.
+        CodigoVerificacion codigo = CodigoVerificacion.nuevo("u-1", "hash-del-codigo", AHORA);
+
+        codigo.marcarUsado(AHORA.plusSeconds(30));
+
+        assertEquals(AHORA.plusSeconds(30), codigo.getUsadoEn());
     }
 
     @Test
@@ -59,6 +71,35 @@ class CodigoVerificacionTest {
         codigo.registrarIntentoFallido();
 
         assertFalse(codigo.puedeUsarse(AHORA));
+    }
+
+    @Test
+    @DisplayName("HU2-CP09: reconstruir un código guardado conserva su id, su caducidad, su uso y sus intentos")
+    void reconstruirConservaElEstado() {
+        // T232: lo usa la persistencia al leer un código de MongoDB.
+        Instant expiraEn = AHORA.plus(Duration.ofMinutes(10));
+        Instant usadoEn = AHORA.plusSeconds(30);
+
+        CodigoVerificacion codigo = CodigoVerificacion.reconstruir("c-1", "u-1", "hash-del-codigo", expiraEn,
+                usadoEn, 2);
+
+        assertEquals("c-1", codigo.getId());
+        assertEquals("u-1", codigo.getUsuarioId());
+        assertEquals("hash-del-codigo", codigo.getCodigoHash());
+        assertEquals(expiraEn, codigo.getExpiraEn());
+        assertEquals(usadoEn, codigo.getUsadoEn());
+        assertEquals(2, codigo.getIntentosFallidos());
+        assertFalse(codigo.puedeUsarse(AHORA));
+    }
+
+    @Test
+    @DisplayName("HU2-CP10: rechaza reconstruir un código con intentos fallidos negativos")
+    void rechazaReconstruirConIntentosNegativos() {
+        // Un documento corrupto no debe convertirse en un código válido (P6 del plan de la T232).
+        Instant expiraEn = AHORA.plus(Duration.ofMinutes(10));
+
+        assertThrows(CodigoVerificacionInvalidoException.class,
+                () -> CodigoVerificacion.reconstruir("c-1", "u-1", "hash-del-codigo", expiraEn, null, -1));
     }
 
     @Test

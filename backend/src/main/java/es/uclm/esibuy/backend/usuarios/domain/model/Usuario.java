@@ -17,12 +17,19 @@ public class Usuario {
     private final String passwordHash;
     private final Rol rol;
     private final TipoCliente tipoCliente;
+    private final Instant fechaAlta;
+    private String estado;
     private boolean activo;              // false = desactivada por un administrador (HU23/HU24): no puede entrar
     private int intentosFallidos;        // intentos de login fallidos seguidos
     private Instant bloqueadoHasta;      // bloqueo temporal por intentos; null = sin bloqueo
 
     public Usuario(String id, String nombre, String apellidos, Email email,
             String passwordHash, Rol rol, TipoCliente tipoCliente) {
+        this(id, nombre, apellidos, email, passwordHash, rol, tipoCliente, null);
+    }
+
+    public Usuario(String id, String nombre, String apellidos, Email email,
+            String passwordHash, Rol rol, TipoCliente tipoCliente, Instant fechaAlta) {
         this.id = id;
         this.nombre = exigirTextoSiExiste(nombre, "El nombre no puede estar en blanco");
         this.apellidos = exigirTextoSiExiste(apellidos, "Los apellidos no pueden estar en blanco");
@@ -30,8 +37,17 @@ public class Usuario {
         this.passwordHash = exigirTexto(passwordHash, "La contraseña es obligatoria");
         this.rol = exigirNoNulo(rol, "El rol es obligatorio");
         this.tipoCliente = exigirTipoClienteCoherente(this.rol, tipoCliente);
+        this.fechaAlta = fechaAlta;
+        this.estado = "ACTIVO";
         this.activo = true;
         this.intentosFallidos = 0;
+    }
+
+    public void restaurarEstado(String estado) {
+        if (estado != null) {
+            this.estado = estado;
+            this.activo = !"DESACTIVADO".equals(estado);
+        }
     }
 
     public static Usuario nuevoCliente(Email email, String passwordHash) {
@@ -95,16 +111,26 @@ public class Usuario {
         return tipoCliente;
     }
 
+    public Instant getFechaAlta() {
+        return fechaAlta;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
     public boolean estaActivo() {
         return activo;
     }
 
     public void desactivar() {
         activo = false;
+        estado = "DESACTIVADO";
     }
 
     public void activar() {
         activo = true;
+        estado = "ACTIVO";
     }
 
     public void registrarIntentoFallido(Instant ahora) {
