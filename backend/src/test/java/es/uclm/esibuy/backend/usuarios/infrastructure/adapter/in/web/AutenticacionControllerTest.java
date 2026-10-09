@@ -7,6 +7,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.PasoLogin;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ResultadoInicioSesion;
 import es.uclm.esibuy.backend.usuarios.application.port.in.VerificarCodigoEmailCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.exception.EnvioEmailException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
@@ -185,5 +186,32 @@ class AutenticacionControllerTest {
 
         // Sin saber de quién es el código no tiene sentido consultarlo
         verify(autenticacion, never()).verificarCodigoEmail(any());
+    }
+
+    @Test
+    @DisplayName("HU2-CP07: un código rechazado por el servicio tras el login devuelve 401")
+    void codigoIncorrectoDevuelve401() throws Exception {
+        when(autenticacion.iniciarSesion(any()))
+                .thenReturn(new ResultadoInicioSesion("juan@uclm.es", PasoLogin.CODIGO_EMAIL));
+        // El servicio lanza la misma excepción si el código es incorrecto, ha caducado, ya se usó o está agotado
+        when(autenticacion.verificarCodigoEmail(any()))
+                .thenThrow(new CodigoInvalidoException("Código inválido"));
+        MockHttpSession sesion = new MockHttpSession();
+
+        mockMvc.perform(post(URL_LOGIN)
+                        .session(sesion)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonLogin("juan@uclm.es", "clave1234")))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post(URL_CODIGO_EMAIL)
+                        .session(sesion)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                 {"code": "000000"}
+                                 """))
+                .andExpect(status().isUnauthorized());
     }
 }
