@@ -12,14 +12,12 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
  */
 public class UsuarioDocumentMapper {
 
-    // Valores del campo "estado" del «Planteamiento inicial BBDD»; en el dominio, Usuario.estaActivo().
     private static final String ESTADO_ACTIVO = "ACTIVO";
-    private static final String ESTADO_DESACTIVADO = "DESACTIVADO";
 
     public UsuarioDocument aDocumento(Usuario usuario) {
         UsuarioDocument documento = new UsuarioDocument(usuario.getEmail().valor(), usuario.getPasswordHash(), usuario.getRol().name());
         documento.setId(usuario.getId());
-        documento.setEstado(usuario.estaActivo() ? ESTADO_ACTIVO : ESTADO_DESACTIVADO);
+        documento.setEstado(usuario.getEstado());
         documento.setFailedLoginAttempts(usuario.getIntentosFallidos());
         documento.setLockedUntil(usuario.getBloqueadoHasta());
         documento.setNombre(usuario.getNombre());
@@ -37,12 +35,14 @@ public class UsuarioDocumentMapper {
                 ? TipoCliente.valueOf(documento.getTipoCliente())
                 : (rol == Rol.CLIENTE ? TipoCliente.ESTANDAR : null);
         Usuario usuario = new Usuario(documento.getId(), documento.getNombre(), documento.getApellidos(),
-                new Email(documento.getEmail()), documento.getPasswordHash(), rol, tipoCliente);
+                new Email(documento.getEmail()), documento.getPasswordHash(), rol, tipoCliente,
+                documento.getCreatedAt());
 
         // Solo se desactiva si el estado es explícitamente DESACTIVADO; null (documento antiguo) = activo.
-        if (ESTADO_DESACTIVADO.equals(documento.getEstado())) {
+        if ("DESACTIVADO".equals(documento.getEstado())) {
             usuario.desactivar();
         }
+        usuario.restaurarEstado(documento.getEstado() == null ? ESTADO_ACTIVO : documento.getEstado());
         usuario.restaurarBloqueoPorIntentos(documento.getFailedLoginAttempts(), documento.getLockedUntil());
         return usuario;
     }

@@ -1,8 +1,10 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.config;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.application.service.ListadoUsuariosService;
 import es.uclm.esibuy.backend.usuarios.application.service.RegistroUsuarioService;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.UsuarioDocumentMapper;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.UsuarioMongoAdapter;
@@ -10,6 +12,7 @@ import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.Us
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.BCryptHashContrasenaAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 /**
  * Presenta a Spring las piezas del módulo de usuarios y cómo se conectan entre sí.
@@ -27,13 +30,19 @@ public class UsuariosConfig {
     }
 
     @Bean
-    UsuarioRepositoryPort usuarioRepositoryPort(UsuarioMongoRepository usuarioMongoRepository) {
-        return new UsuarioMongoAdapter(usuarioMongoRepository, new UsuarioDocumentMapper());
+    UsuarioRepositoryPort usuarioRepositoryPort(UsuarioMongoRepository usuarioMongoRepository,
+            MongoTemplate mongoTemplate) {
+        return new UsuarioMongoAdapter(usuarioMongoRepository, new UsuarioDocumentMapper(), mongoTemplate);
     }
 
     @Bean
     RegistroUsuarioUseCase registroUsuarioUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
                                                   HashContrasenaPort hashContrasenaPort) {
         return new RegistroUsuarioService(usuarioRepositoryPort, hashContrasenaPort);
+    }
+
+    @Bean
+    ListadoUsuariosUseCase listadoUsuariosUseCase(UsuarioRepositoryPort usuarioRepositoryPort) {
+        return new ListadoUsuariosService(usuarioRepositoryPort);
     }
 }

@@ -68,4 +68,17 @@ class UsuarioDocumentMapperTest {
         assertFalse(leido.tieneBloqueoPorIntentos(Instant.parse("2026-10-08T10:00:00Z")));
         assertEquals(TipoCliente.ESTANDAR, leido.getTipoCliente());
     }
+
+    @Test
+    @DisplayName("HU19-CP09: conserva PENDIENTE al mapear y volver a guardar")
+    void conservaEstadoPendienteEnElMapeo() {
+        UsuarioDocument pendiente = new UsuarioDocument("pendiente@esibuy.test", "hash", "CLIENTE");
+        pendiente.setEstado("PENDIENTE");
+
+        UsuarioDocument guardado = new UsuarioDocumentMapper().aDocumento(
+                new UsuarioDocumentMapper().aDominio(pendiente)
+        );
+
+        assertEquals("PENDIENTE", guardado.getEstado());
+    }
 }

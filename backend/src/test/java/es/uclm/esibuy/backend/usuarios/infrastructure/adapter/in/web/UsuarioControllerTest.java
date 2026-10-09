@@ -3,6 +3,13 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
+import es.uclm.esibuy.backend.usuarios.domain.model.Email;
+import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
+import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
+import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
@@ -21,7 +28,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -40,6 +49,9 @@ class UsuarioControllerTest {
 
     @MockitoBean
     private RegistroUsuarioUseCase registroUsuario;
+
+    @MockitoBean
+    private ListadoUsuariosUseCase listadoUsuarios;
 
     private static String json(String email, String password) {
         return """
@@ -145,5 +157,48 @@ class UsuarioControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(registroUsuario, never()).registrar(any());
+    }
+
+    @Test
+    @DisplayName("Seguridad: el listado administrativo sin sesión devuelve 403")
+    void listadoSinSesionEstaProtegido() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .get("/api/admin/usuarios"))
+                .andExpect(status().isForbidden());
+
+        verify(listadoUsuarios, never()).listar(any());
+    }
+
+    @Test
+    @DisplayName("HU19-CP08: un administrador recibe el listado sin datos sensibles")
+    @org.springframework.security.test.context.support.WithMockUser(roles = "ADMINISTRADOR")
+    void administradorRecibeElListado() throws Exception {
+        Usuario usuario = new Usuario(
+                "usr-1", "Ana", "García", new Email("ana@esibuy.test"),
+                "hash-no-debe-salir", Rol.CLIENTE, TipoCliente.ESTANDAR,
+                java.time.Instant.parse("2026-10-01T10:00:00Z")
+        );
+        when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(
+                java.util.List.of(usuario), 0, 10, 1
+        ));
+
+        mockMvc.perform(get("/api/admin/usuarios")
+                        .param("page", "1")
+                        .param("size", "10")
+                        .param("search", "ana")
+                        .param("role", "CLIENTE")
+                        .param("status", "ACTIVO"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value("usr-1"))
+                .andExpect(jsonPath("$.items[0].email").value("ana@esibuy.test"))
+                .andExpect(jsonPath("$.items[0].estado").value("ACTIVO"))
+                .andExpect(jsonPath("$.items[0].fechaAlta").value("2026-10-01T10:00:00Z"))
+                .andExpect(jsonPath("$.items[0].passwordHash").doesNotExist())
+                .andExpect(jsonPath("$.page").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
+
+        verify(listadoUsuarios).listar(new ListarUsuariosQuery(
+                "ana", Rol.CLIENTE, "ACTIVO", 0, 10
+        ));
     }
 }
