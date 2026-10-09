@@ -23,6 +23,9 @@ public interface UsuarioRepositoryPort {
  */
     Optional<Usuario> buscarPorCorreo(String email);
 
+    // Busca un usuario por su id (p. ej. para activar su cuenta, HU24). Vacío si no existe.
+    Optional<Usuario> buscarPorId(String id);
+
     UsuarioPage listar(ListarUsuariosQuery query);
 
 }
