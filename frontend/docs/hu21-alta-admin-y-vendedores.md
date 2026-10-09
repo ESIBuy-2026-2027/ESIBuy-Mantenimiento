@@ -8,7 +8,7 @@ Documento para entender qué cubre la HU21 en el frontend, qué hace cada parte 
 - **Rama:** `feature/US21-T50-T51-alta-admin-y-vendedores`
 - **Metodología:** sin TDD por decisión del equipo. Primero el código (commits `feat`, `refactor` y `fix` con AB#50) y después los tests (commits `test` con AB#51).
 - **Depende de:** `docs/hu18-panel-admin.md` (panel), `docs/hu19-listado-usuarios.md` (listado de usuarios), `docs/hu26-supervision-vendedores.md` (supervisión de vendedores), `docs/hu1-registro.md` (password y avatares), `docs/mocks-msw.md` (mocks) y `docs/sonar-incidencias.md` (convención de `propTypes`)
-- **Ampliado por la HU24** (`docs/hu24-activar-usuario.md`): la lista de administradores tiene ahora búsqueda por nombre, filtro por estado, ordenación y el botón **Activar**, y la ventana de confirmación es un componente compartido. Las partes afectadas de este documento están actualizadas.
+- **Ampliado por la HU24** (`docs/hu24-activar-usuario.md`): la lista de administradores tiene ahora búsqueda por nombre, filtro por estado, ordenación y una ficha por administrador (HU20) con **Activar** y **Desactivar**, y la ventana de confirmación es un componente compartido. Las partes afectadas de este documento están actualizadas.
 
 ---
 

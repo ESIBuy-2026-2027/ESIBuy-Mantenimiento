@@ -8,6 +8,7 @@ Documento para entender cómo el administrador activa cuentas desactivadas, cóm
 - **Rama:** `feature/US24-T35-T36-activar-usuario`
 - **Metodología:** sin TDD por decisión del equipo. Primero el código (commits `feat` con AB#35) y después los tests (commits `test` con AB#36).
 - **Depende de:** `docs/hu19-listado-usuarios.md` (listado de usuarios), `docs/hu21-alta-admin-y-vendedores.md` (activar vendedores y lista de administradores), `docs/hu26-supervision-vendedores.md` (supervisión de vendedores) y `docs/mocks-msw.md` (mocks)
+- **Actualizado por la HU20** (`docs/hu20-ficha-usuario.md`): los botones **Activar** y **Desactivar** están ahora en la **ficha** del usuario, que se abre con la lupa de cada fila, como en los vendedores. Las partes afectadas de este documento están actualizadas y sus tests sobre la fila se sustituyeron por los de la ficha.
 - **Ampliado por la HU23** (`docs/hu23-desactivar-usuario.md`): las filas activas tienen ahora el botón **Desactivar**. `ActivateUserButton.jsx` pasó a ser `UserStatusButton.jsx` (activa y desactiva) y `activateUser` pasó a ser `updateUserStatus`. Las partes afectadas de este documento están actualizadas.
 
 ---
@@ -19,15 +20,15 @@ El administrador activa las cuentas **desactivadas** de cualquier tipo de usuari
 | Usuarios | Dónde se activan | Estados posibles |
 |---|---|---|
 | Vendedores | **Vendedores** → lupa → diálogo → **Activar usuario** (hecho en la HU21) | Pendiente, activo y desactivado |
-| Clientes | **Clientes** → botón **Activar** en la fila | Activo y desactivado |
-| Administradores | **Administradores** → botón **Activar** en la fila | Activo y desactivado |
+| Clientes | **Clientes** → lupa → ficha → **Activar** (en esta HU estaba en la fila; la HU20 lo pasó a la ficha) | Activo y desactivado |
+| Administradores | **Administradores** → lupa → ficha → **Activar** (ídem) | Activo y desactivado |
 
 > Los clientes nunca están **pendientes**: no necesitan que un administrador los acepte. Solo los vendedores pasan por ese estado.
 
 Para esto se han conectado y completado los listados:
 
 - **Clientes** (`/admin/clients`): nueva. La tarjeta **Clientes** del panel no llevaba a ningún sitio y ahora abre este listado, que reutiliza el de la HU19.
-- **Administradores** (`/admin/admins`): ya existía (HU21) y ahora tiene los mismos filtros y el botón **Activar**.
+- **Administradores** (`/admin/admins`): ya existía (HU21) y ahora tiene los mismos filtros y el botón **Activar** (desde la HU20, en la ficha).
 
 Los dos listados tienen:
 
@@ -56,7 +57,7 @@ flowchart TD
     F --> G[Ventana de confirmación]
     G -- Cancelar --> H[No cambia nada]
     G -- Activar --> I[PATCH al backend]
-    I -- Correcto --> J[Mensaje de éxito y la fila pasa a Activo]
+    I -- Correcto --> J[Mensaje de éxito y la cuenta pasa a Activo]
     I -- Error --> K[Mensaje de error, el estado no cambia]
 ```
 
@@ -79,12 +80,12 @@ Todas las rutas son relativas a `frontend/src/`.
 
 | Archivo | Qué hace |
 |---|---|
-| `RoleUsersList.jsx` | Listado de los usuarios de un rol, compartido por clientes y administradores: búsqueda por nombre, filtro por estado, ordenación, tabla con el botón **Activar** en las cuentas desactivadas, mensajes de resultado, estado vacío y paginación. |
-| `UserStatusButton.jsx` (antes `ActivateUserButton.jsx`) | Botón **Activar** de una fila: abre la confirmación y llama al backend. Su nombre accesible incluye el del usuario ("Activar a Lucía Torres Vega"). Desde la HU23 también desactiva. |
+| `RoleUsersList.jsx` | Listado de los usuarios de un rol, compartido por clientes y administradores: búsqueda por nombre, filtro por estado, ordenación, tabla, estado vacío y paginación. En esta HU la fila tenía el botón **Activar** y la lista mostraba los mensajes; desde la HU20 la fila tiene la lupa y ambos están en la ficha. |
+| `UserStatusButton.jsx` (antes `ActivateUserButton.jsx`) | Botón **Activar** (en la fila; desde la HU20, en la ficha): abre la confirmación y llama al backend. Su nombre accesible incluye el del usuario ("Activar a Lucía Torres Vega"). Desde la HU23 también desactiva. |
 | `StatusConfirmDialog.jsx` | Ventana de confirmación. Se sacó del diálogo de vendedores de la HU21 para usarla también aquí. |
 | `SortControls.jsx` | "Ordenar por" y botón de sentido. Antes era `SellerSortControls.jsx` (HU26); ahora cada listado le pasa sus opciones. |
 | `UsersFilters.jsx` (HU19) | El filtro de rol pasa a ser opcional, se pueden limitar los estados y cambiar el texto del buscador, y admite controles extra en la misma fila. El listado general de usuarios no cambia. |
-| `UsersTable.jsx` (HU19) | Columna **Acciones** opcional: solo aparece si la página la pide. |
+| `UsersTable.jsx` (HU19) | Columna opcional que solo aparece si la página la pide. Se llamaba **Acciones**; desde la HU20 se llama **Información** y contiene la lupa. |
 | `useUsersList.js` y `usersConfig.js` (HU19) | Pasan los parámetros nuevos (búsqueda por nombre y ordenación) y definen los estados y las opciones de orden de clientes y administradores. |
 | `SellerDetailDialog.jsx` (HU26/HU21) | Usa la ventana de confirmación compartida; su comportamiento no cambia. |
 
@@ -151,7 +152,7 @@ Con `npm run dev` (mocks activos): `admin@esibuy.test`, contraseña `Mock-Clave-
 
 Pruebas manuales sugeridas:
 
-1. **Panel → Clientes**, filtrar por **Desactivado** y activar a Lucía Torres Vega: pide confirmación, sale el mensaje y la fila pasa a **Activo**.
+1. **Panel → Clientes**, filtrar por **Desactivado**, abrir la ficha (lupa) de Lucía Torres Vega y activarla: pide confirmación, sale el mensaje y en el listado pasa a **Activo**.
 2. Pulsar **Activar** y luego **Cancelar**: no cambia nada.
 3. **Ordenar por: Estado** y cambiar entre ascendente y descendente.
 4. Buscar `torres` (encuentra a Lucía) y `esibuy` (no encuentra a nadie, porque no busca en el email).
@@ -185,7 +186,7 @@ También se ajustaron un test del panel (la tarjeta **Clientes** ahora navega) y
 
 ## 7. Decisiones
 
-- **Botón Activar en la fila** para clientes y administradores. Cuando exista la ficha de usuario (HU20) se cambiará a un diálogo como el de los vendedores, para que todo quede igual.
+- **Botón Activar en la fila** para clientes y administradores. La HU20 lo pasó después a la ficha, como en los vendedores, para que todo quede igual.
 - **Los clientes y los administradores solo están activos o desactivados.** "Bloqueado" se ha quitado de los datos de los clientes porque en la práctica es lo mismo que desactivado.
 - **Un único componente (`RoleUsersList`) para los dos listados,** para no duplicar código, reutilizando la API, la tabla y los filtros de la HU19.
 - **Los cambios en los componentes de la HU19 son opcionales,** así que la pantalla general de usuarios no cambia.
@@ -195,7 +196,7 @@ También se ajustaron un test del panel (la tarjeta **Clientes** ahora navega) y
 ## 8. Limitaciones y trabajo pendiente
 
 - **Desactivar usuarios** lo hizo después la HU23 (botón, confirmación y reglas sobre administradores). De esa historia queda invalidar la sesión en el frontend; ver su documento.
-- **La ficha de usuario (HU20)** no existe: cuando se haga, la acción de activar pasará de la fila a esa ficha.
+- **La ficha de usuario** la hizo después la HU20, y activar está ahora en ella.
 - **La pantalla general de usuarios de la HU19** (`/admin/users`) sigue sin enlace desde el panel.
 - **Los tests intermitentes de la HU21** (`SellerDetailDialog.test.jsx`) pueden seguir fallando de vez en cuando con toda la suite; los de esta HU no.
 

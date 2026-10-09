@@ -28,20 +28,18 @@ async function renderClientes(currentUserId) {
 // Las filas se buscan por texto: no dependen de que Fluent marque la página con aria-hidden
 // mientras se abre o se cierra la confirmación.
 const filaDe = (email) => screen.getByText(email).closest('tr')
-const botonActivarDe = (email) => within(filaDe(email)).queryByText('Activar', { selector: 'button' })
-const botonDesactivarDe = (email) => within(filaDe(email)).queryByText('Desactivar', { selector: 'button' })
 const filasDeDatos = () => within(screen.getByRole('table')).getAllByRole('row').slice(1)
 const primerNombre = () => within(filasDeDatos()[0]).getAllByRole('cell')[0].textContent
 
-async function confirmarAccion(user, accion, nombre) {
-  await user.click(screen.getByRole('button', { name: `${accion} a ${nombre}` }))
-  const pregunta = await screen.findByText(new RegExp(`seguro que quieres ${accion} a ${nombre}`, 'i'))
-  const confirmacion = pregunta.closest('[role="alertdialog"]')
-  await user.click(within(confirmacion).getByText(accion, { selector: 'button' }))
+// La confirmación se busca por texto: mientras se abre o se cierra, Fluent marca partes de la página
+// con aria-hidden y las búsquedas por rol pueden fallar por tiempos.
+async function activarDesdeLaFicha(user, nombre) {
+  await user.click(screen.getByRole('button', { name: `Ver información de ${nombre}` }))
+  const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
+  await user.click(await within(dialogo).findByText('Activar', { selector: 'button' }))
+  const pregunta = await screen.findByText(new RegExp(`seguro que quieres activar a ${nombre}`, 'i'))
+  await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Activar', { selector: 'button' }))
 }
-
-const confirmarActivacion = (user, nombre) => confirmarAccion(user, 'Activar', nombre)
-const confirmarDesactivacion = (user, nombre) => confirmarAccion(user, 'Desactivar', nombre)
 
 describe('RoleUsersList (HU24)', () => {
   it('roleUsersList_muestraSoloLosUsuariosDelRolPedido', async () => {
@@ -70,14 +68,6 @@ describe('RoleUsersList (HU24)', () => {
 
     await waitFor(() => expect(filasDeDatos()).toHaveLength(7))
     filasDeDatos().forEach((fila) => expect(within(fila).getByText('Desactivado')).toBeInTheDocument())
-  })
-
-  it('roleUsersList_ofreceActivarSoloEnLasCuentasDesactivadas', async () => {
-    await renderClientes()
-
-    expect(botonActivarDe('lucia.torres@esibuy.test')).toBeInTheDocument()
-    expect(botonActivarDe('oscar.leon@esibuy.test')).toBeInTheDocument()
-    expect(botonActivarDe('carlos.moreno@esibuy.test')).not.toBeInTheDocument()
   })
 
   it('roleUsersList_porDefecto_ordenaPorNombreAscendente', async () => {
@@ -122,28 +112,6 @@ describe('RoleUsersList (HU24)', () => {
     expect(await screen.findByText(/no se han encontrado clientes/i)).toBeInTheDocument()
   })
 
-  it('roleUsersList_alActivarUnCliente_loMuestraActivoYAvisa', async () => {
-    const user = userEvent.setup()
-    await renderClientes()
-
-    await confirmarActivacion(user, 'Lucía Torres Vega')
-
-    expect(await screen.findByText(/lucía torres vega ya está activo/i, {}, ESPERA)).toBeInTheDocument()
-    await waitFor(() => expect(within(filaDe('lucia.torres@esibuy.test')).getByText('Activo')).toBeInTheDocument(), ESPERA)
-    expect(botonActivarDe('lucia.torres@esibuy.test')).not.toBeInTheDocument()
-  })
-
-  it('roleUsersList_siFallaLaActivacion_muestraErrorYNoCambiaElEstado', async () => {
-    server.use(http.patch('/api/admin/usuarios/:id/status', () => new HttpResponse(null, { status: 500 })))
-    const user = userEvent.setup()
-    await renderClientes()
-
-    await confirmarActivacion(user, 'Lucía Torres Vega')
-
-    expect(await screen.findByText(/no se ha podido activar a lucía torres vega/i, {}, ESPERA)).toBeInTheDocument()
-    expect(within(filaDe('lucia.torres@esibuy.test')).getByText('Desactivado')).toBeInTheDocument()
-  })
-
   it('roleUsersList_conBusquedaSinCoincidencias_muestraEstadoVacioYPermiteLimpiar', async () => {
     const user = userEvent.setup()
     await renderClientes()
@@ -174,53 +142,43 @@ describe('RoleUsersList (HU24)', () => {
     expect(await screen.findByText('carlos.moreno@esibuy.test')).toBeInTheDocument()
   })
 
-  it('roleUsersList_ofreceDesactivarSoloEnLasCuentasActivas', async () => {
+
+  it('roleUsersList_cadaFilaTieneUnaLupaParaVerLaFicha', async () => {
     await renderClientes()
 
-    expect(botonDesactivarDe('carlos.moreno@esibuy.test')).toBeInTheDocument()
-    expect(botonDesactivarDe('lucia.torres@esibuy.test')).not.toBeInTheDocument()
+    expect(within(filaDe('carlos.moreno@esibuy.test')).getByRole('button', { name: 'Ver información de Carlos Moreno Gil' })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /^ver información de/i })).toHaveLength(10)
+    expect(screen.queryByText('Activar', { selector: 'button' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Desactivar', { selector: 'button' })).not.toBeInTheDocument()
   })
 
-  it('roleUsersList_enLaFilaDelUsuarioEnSesion_noOfreceDesactivar', async () => {
+  it('roleUsersList_alPulsarLaLupa_abreLaFichaDeEseUsuario', async () => {
+    const user = userEvent.setup()
+    await renderClientes()
+
+    await user.click(screen.getByRole('button', { name: 'Ver información de Lucía Torres Vega' }))
+
+    const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
+    expect(await within(dialogo).findByLabelText('Email')).toHaveValue('lucia.torres@esibuy.test')
+  })
+
+  it('roleUsersList_laFichaRecibeElUsuarioEnSesion_yNoOfreceDesactivarse', async () => {
+    const user = userEvent.setup()
     await renderClientes('usr-3')
 
-    expect(botonDesactivarDe('carlos.moreno@esibuy.test')).not.toBeInTheDocument()
-    expect(botonDesactivarDe('claudia.pena@esibuy.test')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Ver información de Carlos Moreno Gil' }))
+
+    const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
+    await within(dialogo).findByLabelText('Nombre')
+    expect(within(dialogo).queryByText('Desactivar', { selector: 'button' })).not.toBeInTheDocument()
   })
 
-  it('roleUsersList_alDesactivarUnCliente_loMuestraDesactivadoYAvisa', async () => {
+  it('roleUsersList_alCambiarElEstadoEnLaFicha_actualizaElListado', async () => {
     const user = userEvent.setup()
     await renderClientes()
 
-    await confirmarDesactivacion(user, 'Carlos Moreno Gil')
+    await activarDesdeLaFicha(user, 'Lucía Torres Vega')
 
-    expect(await screen.findByText(/carlos moreno gil está desactivado/i, {}, ESPERA)).toBeInTheDocument()
-    await waitFor(() => expect(within(filaDe('carlos.moreno@esibuy.test')).getByText('Desactivado')).toBeInTheDocument(), ESPERA)
-    expect(botonActivarDe('carlos.moreno@esibuy.test')).toBeInTheDocument()
-  })
-
-  it('roleUsersList_siElBackendNoDejaDesactivarseASiMismo_muestraElMotivo', async () => {
-    server.use(
-      http.patch('/api/admin/usuarios/:id/status', () =>
-        HttpResponse.json({ code: 'CANNOT_DEACTIVATE_SELF' }, { status: 409 }),
-      ),
-    )
-    const user = userEvent.setup()
-    await renderClientes()
-
-    await confirmarDesactivacion(user, 'Carlos Moreno Gil')
-
-    expect(await screen.findByText('No puedes desactivar tu propia cuenta.', {}, ESPERA)).toBeInTheDocument()
-  })
-
-  it('roleUsersList_siFallaLaDesactivacion_muestraUnErrorGenerico', async () => {
-    server.use(http.patch('/api/admin/usuarios/:id/status', () => new HttpResponse(null, { status: 500 })))
-    const user = userEvent.setup()
-    await renderClientes()
-
-    await confirmarDesactivacion(user, 'Carlos Moreno Gil')
-
-    expect(await screen.findByText(/no se ha podido desactivar a carlos moreno gil/i, {}, ESPERA)).toBeInTheDocument()
-    expect(within(filaDe('carlos.moreno@esibuy.test')).getByText('Activo')).toBeInTheDocument()
+    await waitFor(() => expect(within(filaDe('lucia.torres@esibuy.test')).getByText('Activo')).toBeInTheDocument(), ESPERA)
   })
 })

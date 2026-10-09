@@ -85,61 +85,30 @@ describe('AdminAdminsPage (HU21)', () => {
     expect(screen.queryByRole('heading', { name: /^administradores$/i })).not.toBeInTheDocument()
   })
 
-  it('adminAdminsPage_alActivarUnAdministradorDesactivado_loMuestraActivo', async () => {
+
+  it('adminAdminsPage_enLaFichaDelAdministradorEnSesion_noOfreceDesactivar', async () => {
     const user = userEvent.setup()
     await abrirListado()
-    const fila = () => screen.getByText('diego.delgado@esibuy.test').closest('tr')
-    await screen.findByText('diego.delgado@esibuy.test')
 
-    await user.click(screen.getByRole('button', { name: 'Activar a Diego Delgado Iglesias' }))
+    await user.click(await screen.findByRole('button', { name: 'Ver información de Ada Admin' }))
+
+    const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
+    expect(await within(dialogo).findByLabelText('Email')).toHaveValue('admin@esibuy.test')
+    expect(within(dialogo).queryByText('Desactivar', { selector: 'button' })).not.toBeInTheDocument()
+  })
+
+  it('adminAdminsPage_alActivarUnAdministradorDesdeSuFicha_elListadoLoMuestraActivo', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.click(await screen.findByRole('button', { name: 'Ver información de Diego Delgado Iglesias' }))
+    const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
+    await user.click(await within(dialogo).findByText('Activar', { selector: 'button' }))
     const pregunta = await screen.findByText(/seguro que quieres activar a diego delgado iglesias/i)
     await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Activar', { selector: 'button' }))
 
-    expect(await screen.findByText(/diego delgado iglesias ya está activo/i, {}, { timeout: 3000 })).toBeInTheDocument()
+    expect(await within(dialogo).findByText(/diego delgado iglesias ya está activo/i, {}, { timeout: 3000 })).toBeInTheDocument()
+    const fila = () => screen.getByText('diego.delgado@esibuy.test').closest('tr')
     await waitFor(() => expect(within(fila()).getByText('Activo')).toBeInTheDocument(), { timeout: 3000 })
-  })
-
-  it('adminAdminsPage_enLaFilaDelAdministradorEnSesion_noOfreceDesactivar', async () => {
-    await abrirListado()
-    await screen.findByText('admin@esibuy.test')
-
-    const filaPropia = screen.getByText('admin@esibuy.test').closest('tr')
-    const filaDeOtro = screen.getByText('ana.lopez@esibuy.test').closest('tr')
-
-    expect(within(filaPropia).queryByText('Desactivar', { selector: 'button' })).not.toBeInTheDocument()
-    expect(within(filaDeOtro).getByText('Desactivar', { selector: 'button' })).toBeInTheDocument()
-  })
-
-  it('adminAdminsPage_alDesactivarOtroAdministrador_loMuestraDesactivado', async () => {
-    const user = userEvent.setup()
-    await abrirListado()
-    const fila = () => screen.getByText('ana.lopez@esibuy.test').closest('tr')
-    await screen.findByText('ana.lopez@esibuy.test')
-
-    await user.click(screen.getByRole('button', { name: 'Desactivar a Ana López García' }))
-    const pregunta = await screen.findByText(/seguro que quieres desactivar a ana lópez garcía/i)
-    await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Desactivar', { selector: 'button' }))
-
-    expect(await screen.findByText(/ana lópez garcía está desactivado/i, {}, { timeout: 3000 })).toBeInTheDocument()
-    await waitFor(() => expect(within(fila()).getByText('Desactivado')).toBeInTheDocument(), { timeout: 3000 })
-  })
-
-  it('adminAdminsPage_siEsElUltimoAdministradorActivo_muestraElMotivo', async () => {
-    server.use(
-      http.patch('/api/admin/usuarios/:id/status', () =>
-        HttpResponse.json({ code: 'LAST_ACTIVE_ADMIN' }, { status: 409 }),
-      ),
-    )
-    const user = userEvent.setup()
-    await abrirListado()
-    await screen.findByText('ana.lopez@esibuy.test')
-
-    await user.click(screen.getByRole('button', { name: 'Desactivar a Ana López García' }))
-    const pregunta = await screen.findByText(/seguro que quieres desactivar a ana lópez garcía/i)
-    await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Desactivar', { selector: 'button' }))
-
-    expect(
-      await screen.findByText('No se puede desactivar al último administrador activo.', {}, { timeout: 3000 }),
-    ).toBeInTheDocument()
   })
 })

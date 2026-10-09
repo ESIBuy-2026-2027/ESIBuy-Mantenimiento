@@ -60,10 +60,11 @@ const useStyles = makeStyles({
   },
 })
 
-// renderActions es opcional: si se recibe, se añade una columna con las acciones de cada usuario.
+// renderActions es opcional: si se recibe, se añade la columna "Información" con lo que devuelva para
+// cada usuario (la lupa que abre su ficha, como en el listado de vendedores).
 export default function UsersTable({ users, refreshing = false, renderActions }) {
   const styles = useStyles()
-  const columns = renderActions ? [...COLUMNS, 'Acciones'] : COLUMNS
+  const columns = renderActions ? [...COLUMNS, 'Información'] : COLUMNS
 
   return (
     <div className={mergeClasses(styles.wrapper, refreshing && styles.refreshing)} aria-busy={refreshing}>

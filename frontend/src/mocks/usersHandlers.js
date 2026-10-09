@@ -104,6 +104,31 @@ function ordenar(lista, criterio, sentido) {
 
 const ESTADOS_ADMITIDOS = new Set(['ACTIVO', 'DESACTIVADO'])
 
+// Datos de la ficha (HU20) que no salen en el listado. Son ficticios y se calculan a partir del id para
+// que cada usuario tenga siempre los mismos. Nunca incluyen la contraseña.
+const LETRAS_DNI = 'TRWAGMYFPDXBNJZSQVHLCKE'
+const SEDES = ['Ciudad Real', 'Toledo', 'Albacete', 'Cuenca']
+
+function detalleDe(usuario) {
+  const n = Number(usuario.id.replace(/\D/g, ''))
+  const avatar = `avatar${1 + (n % 3)}`
+
+  if (usuario.rol === 'CLIENTE') {
+    const numeroDni = 10000000 + n * 1373
+    return {
+      dni: `${numeroDni}${LETRAS_DNI[numeroDni % 23]}`,
+      telefono: `6${String(20000000 + n * 7919).slice(0, 8)}`,
+      fechaNacimiento: `${1975 + (n % 25)}-0${1 + (n % 9)}-1${n % 9}`,
+      tipoCliente: n % 3 === 0 ? 'PREMIUM' : 'ESTANDAR',
+      avatar,
+    }
+  }
+  if (usuario.rol === 'ADMINISTRADOR') {
+    return { sede: SEDES[n % SEDES.length], fechaIncorporacion: usuario.fechaAlta.slice(0, 10), avatar }
+  }
+  return {}
+}
+
 const esAdminActivo = (usuario) => usuario.rol === 'ADMINISTRADOR' && usuario.estado === 'ACTIVO'
 
 // Código de error si la cuenta no se puede desactivar, o null si se puede.
@@ -153,6 +178,15 @@ export const usersHandlers = [
       totalItems: coincidentes.length,
       totalPages: Math.ceil(coincidentes.length / tamano),
     })
+  }),
+
+  // Ficha de un usuario (HU20).
+  http.get('/api/admin/usuarios/:id', ({ params }) => {
+    const rechazo = rechazarSiNoEsAdmin()
+    if (rechazo) return rechazo
+
+    const usuario = usuarios.find((candidato) => candidato.id === params.id)
+    return usuario ? HttpResponse.json({ ...usuario, ...detalleDe(usuario) }) : new HttpResponse(null, { status: 404 })
   }),
 
   // Activar (HU24) o desactivar (HU23) una cuenta. Un administrador no puede desactivarse a sí mismo

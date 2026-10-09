@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
 import { ApiError } from './client'
-import { listUsers, updateUserStatus } from './users'
+import { getUser, listUsers, updateUserStatus } from './users'
 
 const RESPUESTA = { items: [], page: 1, size: 10, totalItems: 0, totalPages: 0 }
 
@@ -136,4 +136,30 @@ describe('listUsers con búsqueda por nombre y ordenación (HU24)', () => {
     expect(peticion.url.searchParams.has('order')).toBe(false)
   })
 })
+})
+
+describe('getUser', () => {
+  it('getUser_pideLaFichaALaRutaDelUsuario', async () => {
+    let ruta = null
+    server.use(
+      http.get('/api/admin/usuarios/:id', ({ request, params }) => {
+        ruta = new URL(request.url).pathname
+        return HttpResponse.json({ id: params.id, nombre: 'Lucía' })
+      }),
+    )
+
+    const usuario = await getUser('usr-4')
+
+    expect(ruta).toBe('/api/admin/usuarios/usr-4')
+    expect(usuario).toEqual({ id: 'usr-4', nombre: 'Lucía' })
+  })
+
+  it('getUser_conUsuarioInexistente_lanzaApiErrorConEstado404', async () => {
+    server.use(http.get('/api/admin/usuarios/:id', () => new HttpResponse(null, { status: 404 })))
+
+    const error = await getUser('no-existe').catch((excepcion) => excepcion)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error.status).toBe(404)
+  })
 })

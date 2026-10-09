@@ -8,6 +8,7 @@ Documento para entender cómo el administrador desactiva cuentas, qué reglas se
 - **Rama:** `feature/US23-T40-T41-desactivar-usuario`
 - **Metodología:** sin TDD por decisión del equipo. Primero el código (commit `feat` con AB#40) y después los tests (commit `test` con AB#41).
 - **Depende de:** `docs/hu24-activar-usuario.md` (listados de clientes y administradores y botón de la fila), `docs/hu21-alta-admin-y-vendedores.md` (desactivar vendedores), `docs/hu2-login.md` (mensaje de cuenta desactivada) y `docs/mocks-msw.md` (mocks)
+- **Actualizado por la HU20** (`docs/hu20-ficha-usuario.md`): los botones **Activar** y **Desactivar** están ahora en la **ficha** del usuario, que se abre con la lupa de cada fila, como en los vendedores. Las partes afectadas de este documento están actualizadas y sus tests sobre la fila se sustituyeron por los de la ficha.
 
 ---
 
@@ -18,14 +19,14 @@ El administrador desactiva las cuentas **activas** de cualquier tipo de usuario.
 | Usuarios | Dónde se desactivan |
 |---|---|
 | Vendedores | **Vendedores** → lupa → diálogo → **Desactivar usuario** (hecho en la HU21) |
-| Clientes | **Clientes** → botón **Desactivar** en la fila |
-| Administradores | **Administradores** → botón **Desactivar** en la fila |
+| Clientes | **Clientes** → lupa → ficha → **Desactivar** (en esta HU estaba en la fila; la HU20 lo pasó a la ficha) |
+| Administradores | **Administradores** → lupa → ficha → **Desactivar** (ídem) |
 
-En los listados de clientes y administradores, cada fila muestra el botón que le corresponde:
+En la ficha de cada cliente o administrador (en la fila hasta la HU20) aparece el botón que le corresponde:
 
 | Estado de la cuenta | Botón |
 |---|---|
-| Activo | **Desactivar** (salvo en la fila del propio administrador) |
+| Activo | **Desactivar** (salvo en la ficha del propio administrador) |
 | Desactivado | **Activar** (HU24) |
 
 ### Criterios de la HU y cómo se cumplen
@@ -33,7 +34,7 @@ En los listados de clientes y administradores, cada fila muestra el botón que l
 | Criterio (`Contexto_frontend.md`) | Cómo se cumple en el frontend |
 |---|---|
 | Requiere confirmación | Ventana "Desactivar usuario" con **Cancelar** y **Desactivar** |
-| Un administrador no puede desactivarse a sí mismo | En su propia fila no aparece **Desactivar**. Si la petición llegara igualmente, el backend responde con un error y se muestra *"No puedes desactivar tu propia cuenta."* |
+| Un administrador no puede desactivarse a sí mismo | En su propia ficha no aparece **Desactivar**. Si la petición llegara igualmente, el backend responde con un error y se muestra *"No puedes desactivar tu propia cuenta."* |
 | No se puede desactivar al último administrador activo | Lo comprueba el backend; el frontend muestra *"No se puede desactivar al último administrador activo."* |
 | El usuario desactivado no puede iniciar sesión (mensaje específico) | El login ya muestra *"Esta cuenta está desactivada. Contacta con un administrador."* (HU2) cuando el backend responde `403` con `ACCOUNT_DISABLED` |
 | Su sesión se invalida | Es tarea del backend. En el frontend queda pendiente (sección 8) |
@@ -46,14 +47,14 @@ En los listados de clientes y administradores, cada fila muestra el botón que l
 
 ```mermaid
 flowchart TD
-    A[Listado de clientes o administradores] --> B{Estado de la fila}
+    A[Ficha de un cliente o administrador] --> B{Estado de la cuenta}
     B -- Activo y no es la propia cuenta --> C[Botón Desactivar]
     B -- Activo y es la propia cuenta --> D[Sin botón]
     B -- Desactivado --> E[Botón Activar, HU24]
     C --> F[Confirmación: no podrá iniciar sesión]
     F -- Cancelar --> G[No cambia nada]
     F -- Desactivar --> H[PATCH al backend]
-    H -- Correcto --> I[Mensaje de éxito y la fila pasa a Desactivado]
+    H -- Correcto --> I[Mensaje de éxito y la cuenta pasa a Desactivado]
     H -- 409 propia cuenta o último admin --> J[Mensaje con el motivo]
     H -- Otro error --> K[Mensaje de error genérico]
 ```
@@ -66,8 +67,8 @@ Todas las rutas son relativas a `frontend/src/`.
 
 | Archivo | Qué hace |
 |---|---|
-| `features/admin/UserStatusButton.jsx` | Botón de la fila que **activa o desactiva** según la acción que recibe, siempre con confirmación. Sustituye a `ActivateUserButton.jsx` de la HU24, para no tener dos botones casi iguales. Su nombre accesible incluye el del usuario ("Desactivar a Carlos Moreno Gil"). |
-| `features/admin/RoleUsersList.jsx` | Decide qué botón lleva cada fila (activar, desactivar o ninguno en la propia cuenta) y traduce los errores del backend a mensajes. Recibe el usuario de la sesión en `currentUserId`. |
+| `features/admin/UserStatusButton.jsx` | Botón que **activa o desactiva** (en la fila; desde la HU20, en la ficha) según la acción que recibe, siempre con confirmación. Sustituye a `ActivateUserButton.jsx` de la HU24, para no tener dos botones casi iguales. Su nombre accesible incluye el del usuario ("Desactivar a Carlos Moreno Gil"). |
+| `features/admin/RoleUsersList.jsx` | Decidía qué botón llevaba cada fila (activar, desactivar o ninguno en la propia cuenta) y traducía los errores del backend a mensajes. Desde la HU20 esa lógica está en `UserDetailDialog.jsx` y la fila solo tiene la lupa. Recibe el usuario de la sesión en `currentUserId` y se lo pasa a la ficha. |
 | `pages/AdminClientsPage.jsx` / `pages/AdminAdminsPage.jsx` | Pasan a la lista el usuario de la sesión, que obtienen con `useAuth`. |
 | `features/admin/StatusConfirmDialog.jsx` | La misma ventana de confirmación de la HU21 y la HU24. |
 | `api/users.js` | `updateUserStatus(userId, estado)`, que sirve para activar y para desactivar. Sustituye a `activateUser`. |
@@ -78,7 +79,7 @@ Todas las rutas son relativas a `frontend/src/`.
 ## 4. Seguridad
 
 - **Confirmación obligatoria** antes de desactivar, avisando de la consecuencia (no podrá iniciar sesión).
-- **Las reglas se aplican en el backend.** El frontend oculta el botón en la propia fila por comodidad, pero el backend debe rechazar la petición igualmente.
+- **Las reglas se aplican en el backend.** El frontend oculta el botón en la propia ficha por comodidad, pero el backend debe rechazar la petición igualmente.
 - **Solo el administrador** accede a los listados (rutas protegidas), y el mock responde 401 sin sesión y 403 con otro rol.
 - **Los errores se muestran sin detalles internos:** solo los dos motivos conocidos tienen un mensaje propio; el resto, uno genérico.
 
@@ -119,8 +120,8 @@ Con `npm run dev` (mocks activos): `admin@esibuy.test`, contraseña `Mock-Clave-
 
 Pruebas manuales sugeridas:
 
-1. **Panel → Administradores:** la fila de **Ada Admin** no tiene **Desactivar**; la de Ana López García sí.
-2. Desactivar a Ana López García: pide confirmación, sale el mensaje y la fila pasa a **Desactivado** con el botón **Activar**.
+1. **Panel → Administradores:** la ficha (lupa) de **Ada Admin** no tiene **Desactivar**; la de Ana López García sí.
+2. Desactivar a Ana López García desde su ficha: pide confirmación, sale el mensaje y pasa a **Desactivado**, con el botón **Activar**.
 3. **Panel → Clientes:** desactivar a Carlos Moreno Gil y volver a activarlo.
 4. Pulsar **Desactivar** y luego **Cancelar**: no cambia nada.
 5. Cerrar sesión e intentar entrar con `desactivado@esibuy.test`: aparece el mensaje de cuenta desactivada (HU2).
@@ -156,7 +157,7 @@ npm run build
 
 - **Invalidar la sesión en el frontend.** Si el backend invalida la sesión de un usuario desactivado, sus siguientes peticiones responderán 401. Hoy el frontend solo comprueba la sesión al cargar la aplicación, así que habría que cerrar la sesión y volver al login cuando cualquier petición responda 401. Afecta a toda la aplicación, por lo que se deja para una tarea propia.
 - **Cuentas desactivadas desde el panel e inicio de sesión en el mock.** El mock del login y el de usuarios son independientes: un usuario desactivado desde el panel puede seguir entrando con el mock. Con el backend real será la misma cuenta.
-- **La ficha de usuario (HU20)** no existe: cuando se haga, activar y desactivar pasarán de la fila a esa ficha, como en los vendedores.
+- **La ficha de usuario** la hizo después la HU20: activar y desactivar están ahora en ella, como en los vendedores.
 - **Tests intermitentes:** con toda la suite en marcha, algunos tests largos de otras HU (diálogo de vendedores, registro y login) superan a veces el límite de 5 s de Vitest. Los de esta HU no. Se podría subir el límite en la configuración, decisión del equipo.
 
 ---
