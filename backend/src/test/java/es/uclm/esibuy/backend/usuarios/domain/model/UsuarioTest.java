@@ -216,6 +216,17 @@ class UsuarioTest {
         assertTrue(usuario.estaActivo());
     }
 
+    @Test
+    @DisplayName("HU24-CP01: activar pasa una cuenta pendiente a activa")
+    void activarPasaUnaCuentaPendienteAActiva() {
+        Usuario usuario = cliente("Ana", "García López");   // nace PENDIENTE
+
+        usuario.activar();
+
+        assertEquals("ACTIVO", usuario.getEstado());
+        assertTrue(usuario.estaActivo());
+    }
+
     private static Usuario cliente(String nombre, String apellidos) {
         return new Usuario("u-1", nombre, apellidos, EMAIL, HASH, Rol.CLIENTE, TipoCliente.ESTANDAR);
     }
