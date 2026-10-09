@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.Cookie;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -99,6 +100,17 @@ class SecurityConfigTest {
                         .cookie(tokenCsrf)
                         .header(CABECERA_CSRF, tokenCsrf.getValue()))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Seguridad: la página de error de Spring es accesible sin sesión y conserva el código del error")
+    void laPaginaDeErrorConservaElCodigoSinSesion() throws Exception {
+        // Cuando Spring Security rechaza una petición (p. ej. un POST sin token CSRF → 403), Spring Boot
+        // reenvía internamente a /error para construir la respuesta. Si /error exigiera sesión, el 403 se
+        // convertiría en un 401 (y cualquier 500 también). MockMvc no hace ese reenvío: se simula aquí
+        // pidiendo /error con el código original, como hace el servidor real.
+        mockMvc.perform(get("/error").requestAttr(RequestDispatcher.ERROR_STATUS_CODE, 403))
+                .andExpect(status().isForbidden());
     }
 
     // Endpoint de administración de prueba: así el test comprueba un 200 real sin depender de los
