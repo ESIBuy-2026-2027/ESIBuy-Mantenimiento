@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
@@ -52,6 +53,9 @@ class UsuarioControllerTest {
 
     @MockitoBean
     private ListadoUsuariosUseCase listadoUsuarios;
+
+    @MockitoBean
+    private AdministracionUsuariosUseCase administracionUsuarios;
 
     private static String json(String email, String password) {
         return """
