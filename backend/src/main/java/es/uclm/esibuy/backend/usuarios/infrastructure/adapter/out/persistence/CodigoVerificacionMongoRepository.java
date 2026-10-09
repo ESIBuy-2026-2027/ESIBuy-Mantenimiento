@@ -1,0 +1,19 @@
+package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
+
+import java.util.Optional;
+
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+/**
+ * Repositorio técnico de Spring Data sobre la colección {@code tokens_seguridad} (T232).
+ *
+ * <p>Solo se declara la interfaz: Spring Data genera la implementación al arrancar.
+ * El resto de la aplicación no lo usa directamente, sino a través de {@code CodigoVerificacionMongoAdapter}.
+ */
+public interface CodigoVerificacionMongoRepository extends MongoRepository<CodigoVerificacionDocument, String> {
+
+    // Spring Data deduce la consulta del nombre: el token de ese usuario para ese propósito.
+    Optional<CodigoVerificacionDocument> findByUsuarioIdAndPurpose(String usuarioId, String purpose);
+
+    void deleteByUsuarioIdAndPurpose(String usuarioId, String purpose);
+}

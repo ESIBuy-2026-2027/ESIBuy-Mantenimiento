@@ -257,6 +257,7 @@ class AutenticacionServiceTest {
         ArgumentCaptor<CodigoVerificacion> guardado = ArgumentCaptor.forClass(CodigoVerificacion.class);
         verify(codigoRepository).guardar(guardado.capture());
         assertFalse(guardado.getValue().puedeUsarse(AHORA));
+        assertEquals(AHORA, guardado.getValue().getUsadoEn());   // con la hora del servicio (su Clock)
     }
 
     @Test
@@ -299,7 +300,7 @@ class AutenticacionServiceTest {
     void rechazaCodigoYaUsado() {
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(clienteConId()));
         CodigoVerificacion codigo = CodigoVerificacion.nuevo("u-1", HASH_CODIGO, AHORA);
-        codigo.marcarUsado();
+        codigo.marcarUsado(AHORA);
         when(codigoRepository.buscarPorUsuario("u-1")).thenReturn(Optional.of(codigo));
         // El código es correcto: solo se rechaza por estar usado (lenient: no se llega a comparar).
         lenient().when(hashContrasena.coincide(CODIGO, HASH_CODIGO)).thenReturn(true);

@@ -89,7 +89,7 @@ public class AutenticacionService implements AutenticacionUseCase {
             throw new CodigoInvalidoException(CODIGO_INVALIDO);
         }
 
-        codigo.marcarUsado();
+        codigo.marcarUsado(ahora);
         codigoVerificacionRepository.guardar(codigo);
         return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.AUTHENTICATOR);
     }
