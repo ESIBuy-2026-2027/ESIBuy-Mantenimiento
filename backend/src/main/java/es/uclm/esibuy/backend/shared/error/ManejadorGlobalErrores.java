@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.shared.error;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
 import org.springframework.http.HttpStatus;
@@ -27,5 +28,11 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError datosDeRegistroInvalidos() {
         return new RespuestaError("Datos de registro no válidos");
+    }
+
+    @ExceptionHandler(CredencialesInvalidasException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public RespuestaError credencialesInvalidas() {
+        return new RespuestaError("Credenciales Incorrectas");
     }
 }
