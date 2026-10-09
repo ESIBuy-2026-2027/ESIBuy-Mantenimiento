@@ -39,7 +39,7 @@ public class Usuario {
         this.tipoCliente = exigirTipoClienteCoherente(this.rol, tipoCliente);
         this.fechaAlta = fechaAlta;
         this.estado = "ACTIVO";
-        this.activo = true;
+        this.activo = true; 
         this.intentosFallidos = 0;
     }
 
@@ -50,8 +50,15 @@ public class Usuario {
         }
     }
 
+    /*
+    * Método público nuevoCliente, 
+    * que usa el registro público, crea la cuenta en PENDIENTE.
+    *
+    */
     public static Usuario nuevoCliente(Email email, String passwordHash) {
-        return new Usuario(null, null, null, email, passwordHash, Rol.CLIENTE, TipoCliente.ESTANDAR);
+        Usuario usuario = new Usuario(null, null, null, email, passwordHash, Rol.CLIENTE, TipoCliente.ESTANDAR);
+        usuario.estado = "PENDIENTE";
+        return usuario;
     }
 
     private static TipoCliente exigirTipoClienteCoherente(Rol rol, TipoCliente tipoCliente) {
