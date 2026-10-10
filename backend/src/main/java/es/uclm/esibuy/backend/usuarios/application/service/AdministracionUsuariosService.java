@@ -64,6 +64,10 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         if (comando.rol() != usuario.getRol() && usuario.getEmail().valor().equalsIgnoreCase(emailAdministrador)) {
             throw new CambioDePropioRolException("Un administrador no puede cambiar su propio rol");
         }
+        if (usuario.getRol() == Rol.ADMINISTRADOR && comando.rol() != Rol.ADMINISTRADOR && usuario.estaActivo()
+                && usuarioRepository.contarAdministradoresActivos() <= 1) {
+            throw new UltimoAdministradorActivoException("No se puede degradar al último administrador activo");
+        }
         // PENDIENTE: pasar una cuenta a vendedor, cuando existan sus datos (nombre comercial, NIF y categoría).
         if (comando.rol() == Rol.VENDEDOR && usuario.getRol() != Rol.VENDEDOR) {
             throw new UsuarioInvalidoException("Pasar una cuenta a vendedor todavía no está disponible");
