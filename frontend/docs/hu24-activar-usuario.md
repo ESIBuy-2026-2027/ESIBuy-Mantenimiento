@@ -8,7 +8,8 @@ Documento para entender cómo el administrador activa cuentas desactivadas, cóm
 - **Rama:** `feature/US24-T35-T36-activar-usuario`
 - **Metodología:** sin TDD por decisión del equipo. Primero el código (commits `feat` con AB#35) y después los tests (commits `test` con AB#36).
 - **Depende de:** `docs/hu19-listado-usuarios.md` (listado de usuarios), `docs/hu21-alta-admin-y-vendedores.md` (activar vendedores y lista de administradores), `docs/hu26-supervision-vendedores.md` (supervisión de vendedores) y `docs/mocks-msw.md` (mocks)
-- **Corregido por la HU1** (task AB#234, `docs/hu1-registro.md`): toda cuenta nueva, también la de clientes y administradores, queda **pendiente** hasta que un administrador la verifica. Los listados de clientes y administradores tienen ahora el estado **Pendiente** y la ficha de una cuenta pendiente ofrece **Activar**. Las partes afectadas de este documento están actualizadas.
+- **Corregido por la HU1** (task AB#234, `docs/hu1-registro.md`): toda cuenta nueva de cliente o vendedor queda **pendiente** hasta que un administrador la verifica. El listado de clientes tiene ahora el estado **Pendiente** y la ficha de una cuenta pendiente ofrece **Activar**. Las partes afectadas de este documento están actualizadas.
+- **Corregido por la HU22:** los **administradores nunca están pendientes** (los da de alta otro administrador): su listado no tiene el estado Pendiente. Ver `docs/hu22-editar-usuario.md`.
 - **Actualizado por la HU20** (`docs/hu20-ficha-usuario.md`): los botones **Activar** y **Desactivar** están ahora en la **ficha** del usuario, que se abre con la lupa de cada fila, como en los vendedores. Las partes afectadas de este documento están actualizadas y sus tests sobre la fila se sustituyeron por los de la ficha.
 - **Ampliado por la HU23** (`docs/hu23-desactivar-usuario.md`): las filas activas tienen ahora el botón **Desactivar**. `ActivateUserButton.jsx` pasó a ser `UserStatusButton.jsx` (activa y desactiva) y `activateUser` pasó a ser `updateUserStatus`. Las partes afectadas de este documento están actualizadas.
 
@@ -24,7 +25,7 @@ El administrador activa las cuentas **desactivadas** de cualquier tipo de usuari
 | Clientes | **Clientes** → lupa → ficha → **Activar** (en esta HU estaba en la fila; la HU20 lo pasó a la ficha) | Pendiente, activo y desactivado |
 | Administradores | **Administradores** → lupa → ficha → **Activar** (ídem) | Pendiente, activo y desactivado |
 
-> Toda cuenta nueva, también la de clientes y administradores, queda **pendiente** hasta que un administrador la verifica (HU1, task AB#234). Se acepta igual que un vendedor pendiente: con **Activar** en su ficha. En esta HU se decía que solo los vendedores pasaban por ese estado; el equipo lo corrigió después.
+> Toda cuenta nueva de cliente o de vendedor queda **pendiente** hasta que un administrador la verifica (HU1, task AB#234). Se acepta igual que un vendedor pendiente: con **Activar** en su ficha. Los administradores no pasan por ese estado: los da de alta otro administrador (HU22).
 
 Para esto se han conectado y completado los listados:
 
@@ -149,7 +150,7 @@ Con `npm run dev` (mocks activos): `admin@esibuy.test`, contraseña `Mock-Clave-
 | Usuarios | Datos del mock |
 |---|---|
 | Clientes | 17: 2 pendientes (Gonzalo Ibáñez Roca y Marcos Aguilar Bravo), 8 activos y 7 desactivados (dos páginas) |
-| Administradores | 4: 2 activos, Diego Delgado Iglesias desactivado y Manuel Esteve Pons pendiente |
+| Administradores | 4: 3 activos (con Manuel Esteve Pons) y Diego Delgado Iglesias desactivado; ninguno pendiente |
 
 Pruebas manuales sugeridas:
 

@@ -38,7 +38,7 @@ Los campos obligatorios llevan el asterisco rojo de Fluent UI.
 
 ### 1.1 Cuenta pendiente de verificación (task AB#234)
 
-El equipo decidió que **toda cuenta nueva**, de cliente o de vendedor, nace en estado **pendiente** y no puede iniciar sesión hasta que un administrador la active. Antes solo los vendedores pasaban por ese estado. La pantalla de confirmación dice ahora:
+El equipo decidió que **toda cuenta nueva**, de cliente o de vendedor, nace en estado **pendiente** (los administradores no: los da de alta otro administrador, HU22) y no puede iniciar sesión hasta que un administrador la active. Antes solo los vendedores pasaban por ese estado. La pantalla de confirmación dice ahora:
 
 > Tu cuenta se ha creado correctamente y está pendiente de que un administrador la verifique. Podrás iniciar sesión cuando esté activada.
 
@@ -46,9 +46,9 @@ Para que el administrador pueda aceptar esas cuentas, la misma task completa los
 
 | Dónde | Cambio |
 |---|---|
-| Listados de clientes y administradores | El filtro de estado incluye **Pendiente**, y al ordenar por estado salen primero los pendientes, como en vendedores |
-| Ficha de un cliente o administrador (HU20) | Si la cuenta está pendiente ofrece **Activar** (y no **Desactivar**), como con los vendedores pendientes |
-| Mock de usuarios | Dos clientes pendientes (Gonzalo Ibáñez Roca y Marcos Aguilar Bravo) y un administrador pendiente (Manuel Esteve Pons). **Crear administrador** (HU21) sigue creándolos activos |
+| Listado de clientes | El filtro de estado incluye **Pendiente**, y al ordenar por estado salen primero los pendientes, como en vendedores (los administradores ya no tienen ese estado: HU22) |
+| Ficha de un cliente (HU20) | Si la cuenta está pendiente ofrece **Activar** (y no **Desactivar**), como con los vendedores pendientes |
+| Mock de usuarios | Dos clientes pendientes (Gonzalo Ibáñez Roca y Marcos Aguilar Bravo) (el administrador pendiente Manuel Esteve Pons pasó a activo con la HU22: los administradores no están pendientes). **Crear administrador** (HU21) sigue creándolos activos |
 
 En el backend, otra task de la HU1 hace que `Usuario` nazca en `PENDIENTE` y que esa cuenta no cuente como activa. Los documentos de la HU19, la HU20, la HU23 y la HU24 están actualizados.
 

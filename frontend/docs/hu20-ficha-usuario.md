@@ -13,7 +13,7 @@ Documento para entender cómo el administrador consulta la ficha de un cliente o
 
 ## 1. Resumen
 
-El administrador pulsa la **lupa** de una fila de **Clientes** o de **Administradores** y se abre, por encima del listado, la **ficha** del usuario: sus datos en solo lectura, **sin la contraseña**, y el botón para **activar** o **desactivar** la cuenta. Desde la HU22 la ficha tiene el botón **Editar** (ver `docs/hu22-editar-usuario.md`).
+El administrador pulsa la **lupa** de una fila de **Clientes** o de **Administradores** y se abre, por encima del listado, la **ficha** del usuario: sus datos en solo lectura, **sin la contraseña**, y el botón para **activar** o **desactivar** la cuenta. Desde la HU22 la ficha tiene el botón **Editar** y muestra el **rol** de la cuenta, que el administrador también puede cambiar (ver `docs/hu22-editar-usuario.md`).
 
 ### Solapamiento con la HU26
 
