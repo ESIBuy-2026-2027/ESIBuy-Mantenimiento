@@ -10,6 +10,8 @@ import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.Us
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.UsuarioMongoAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.UsuarioMongoRepository;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.BCryptHashContrasenaAdapter;
+import java.time.Clock;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -35,10 +37,17 @@ public class UsuariosConfig {
         return new UsuarioMongoAdapter(usuarioMongoRepository, new UsuarioDocumentMapper(), mongoTemplate);
     }
 
+    // Reloj del sistema para los servicios que necesitan la fecha actual (registro: mayoría de edad y
+    // consentimiento). En los tests se sustituye por Clock.fixed(...).
+    @Bean
+    Clock reloj() {
+        return Clock.systemUTC();
+    }
+
     @Bean
     RegistroUsuarioUseCase registroUsuarioUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-                                                  HashContrasenaPort hashContrasenaPort) {
-        return new RegistroUsuarioService(usuarioRepositoryPort, hashContrasenaPort);
+                                                  HashContrasenaPort hashContrasenaPort, Clock reloj) {
+        return new RegistroUsuarioService(usuarioRepositoryPort, hashContrasenaPort, reloj);
     }
 
     @Bean

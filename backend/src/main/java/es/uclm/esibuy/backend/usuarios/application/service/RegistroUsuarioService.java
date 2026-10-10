@@ -1,39 +1,65 @@
 package es.uclm.esibuy.backend.usuarios.application.service;
 
+import java.time.Clock;
+import java.time.LocalDate;
+
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
+import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
-
+/**
+ * Caso de uso de registro de un cliente (HU1).
+ *
+ * <p>Orquesta el dominio: construye los value objects a partir del comando (y con ello aplica sus
+ * reglas), comprueba lo que necesita del exterior a través de los puertos y guarda el usuario.
+ * El reloj se inyecta para que la fecha de hoy y el instante del consentimiento se puedan fijar
+ * en los tests.
+ */
 public class RegistroUsuarioService implements RegistroUsuarioUseCase {
 
     private static final int LONGITUD_MINIMA_CONTRASENA = 8;
-    private final UsuarioRepositoryPort usuarioRepository; //ANOTACIÓN: Repository salvando distancias es como el DAO
+    // Versión fija de la política de privacidad mientras no se gestione desde la aplicación (decisión del 2026-10-08).
+    private static final String VERSION_POLITICA_PRIVACIDAD = "1.0";
+
+    private final UsuarioRepositoryPort usuarioRepository;
     private final HashContrasenaPort hashContrasena;
-    
-    public RegistroUsuarioService(UsuarioRepositoryPort usuarioRepository, HashContrasenaPort hashContrasena) {
+    private final Clock reloj;
+
+    public RegistroUsuarioService(UsuarioRepositoryPort usuarioRepository, HashContrasenaPort hashContrasena,
+            Clock reloj) {
         this.usuarioRepository = usuarioRepository;
         this.hashContrasena = hashContrasena;
+        this.reloj = reloj;
     }
 
     @Override
     public void registrar(RegistrarUsuarioCommand comando) {
-
         if (comando.password() == null || comando.password().length() < LONGITUD_MINIMA_CONTRASENA) {
-            throw new ContrasenaInvalidaException("La contraseña debe tener mínimo " + LONGITUD_MINIMA_CONTRASENA + " caracteres"); // REVISAR: Aquí deberia ser mensaje poco explicativo no?         
+            throw new ContrasenaInvalidaException("La contraseña debe tener mínimo " + LONGITUD_MINIMA_CONTRASENA + " caracteres");
         }
         if (usuarioRepository.existePorCorreo(comando.email())) {
             throw new CorreoYaRegistradoException("El correo ya está registrado");
         }
 
-        String contrasenaHash = hashContrasena.hashear(comando.password());   
-        Usuario usuario = Usuario.nuevoCliente(new Email(comando.email()), contrasenaHash); // Comando → Usuario: el comando es un DTO de entrada, el usuario es un objeto de dominio
+        String contrasenaHash = hashContrasena.hashear(comando.password());
+        Usuario usuario = Usuario.nuevoCliente(
+                new DatosPersonales(comando.nombre(), comando.apellidos(), comando.imagenPerfil()),
+                new Email(comando.email()),
+                contrasenaHash,
+                new DatosCliente(comando.tipoCliente(), new Dni(comando.dni()), comando.fechaNacimiento(),
+                        comando.telefono() == null ? null : new Telefono(comando.telefono())),
+                new ConsentimientoPrivacidad(reloj.instant(), VERSION_POLITICA_PRIVACIDAD),
+                LocalDate.now(reloj));
         usuarioRepository.guardar(usuario);
     }
-
 }

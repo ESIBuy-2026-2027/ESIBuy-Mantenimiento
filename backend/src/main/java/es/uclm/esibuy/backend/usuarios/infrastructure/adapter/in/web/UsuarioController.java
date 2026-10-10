@@ -36,7 +36,10 @@ public class UsuarioController {
     @PostMapping("/auth/registro")
     @ResponseStatus(HttpStatus.CREATED)
     public void registrar(@Valid @RequestBody RegistroRequest request) {
-        registroUsuario.registrar(new RegistrarUsuarioCommand(request.email(), request.password()));
+        registroUsuario.registrar(new RegistrarUsuarioCommand(
+                request.nombre(), request.apellidos(), request.fechaNacimiento(), request.dni(), request.email(),
+                request.telefono(), request.password(), request.repeticionPassword(), request.tipoCliente(),
+                request.imagenPerfil(), request.aceptaPrivacidad()));
     }
 
     @GetMapping("/admin/usuarios")

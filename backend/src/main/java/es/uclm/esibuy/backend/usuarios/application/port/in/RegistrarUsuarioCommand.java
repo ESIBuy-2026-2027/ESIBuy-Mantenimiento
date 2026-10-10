@@ -1,31 +1,38 @@
 package es.uclm.esibuy.backend.usuarios.application.port.in;
 
+import java.time.LocalDate;
+
+import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
+
 /**
- * Datos de entrada del caso de uso de registro de usuario.
+ * Datos de entrada del caso de uso de registro de un cliente (T229).
  *
- * <p>Se declara como {@code record} porque es un objeto que solo transporta datos:
- * no tiene lógica y no debe cambiar desde que lo crea el adaptador web hasta que
- * lo recibe el servicio. Un record es inmutable y genera automáticamente el
- * constructor, los métodos de acceso, {@code equals}, {@code hashCode} y
- * {@code toString}, lo que evita escribir código repetitivo.
+ * <p>Es un record porque solo transporta datos del adaptador web al servicio. Lleva texto plano
+ * (DNI, teléfono...) y no los value objects del dominio: es el servicio quien los construye y, con
+ * ellos, quien aplica las reglas. {@code fechaNacimiento} y {@code tipoCliente} sí llegan tipados
+ * porque el adaptador web ya los ha convertido desde el JSON.
  *
- * <p>Vive en {@code application.port.in} porque forma parte del contrato del caso
- * de uso. El controlador REST traducirá su DTO a este comando, de modo que el
- * núcleo de la aplicación no depende de la API web.
- *
- * <p>PENDIENTE: el {@code toString} generado muestra la contraseña en claro;
- * redefinirlo para ocultarla antes de que el comando pueda llegar a un log. SOLUCIONADO
+ * <p>El {@code toString} oculta las dos contraseñas para que no acaben en un log.
  */
-
-public record RegistrarUsuarioCommand(String email, String password) {
-
-    // Código repetido en IniciarSesionCommand mientras el registro solo tenga correo y contraseña.
-    // Cuando se complete el registro, este toString incluirá sus campos nuevos y dejará de coincidir.
-    // Los comandos se mantienen separados porque cada caso de uso evoluciona por su cuenta.
+public record RegistrarUsuarioCommand(
+        String nombre,
+        String apellidos,
+        LocalDate fechaNacimiento,
+        String dni,
+        String email,
+        String telefono,
+        String password,
+        String repeticionPassword,
+        TipoCliente tipoCliente,
+        String imagenPerfil,
+        boolean aceptaPrivacidad) {
 
     @Override
     public String toString() {
-        return "RegistrarUsuarioCommand[email=" + email + ", password=****]"; // Oculta la contraseña en el toString para evitar que se registre en los logs
+        return "RegistrarUsuarioCommand[nombre=" + nombre + ", apellidos=" + apellidos
+                + ", fechaNacimiento=" + fechaNacimiento + ", dni=" + dni + ", email=" + email
+                + ", telefono=" + telefono + ", password=****, repeticionPassword=****"
+                + ", tipoCliente=" + tipoCliente + ", imagenPerfil=" + imagenPerfil
+                + ", aceptaPrivacidad=" + aceptaPrivacidad + "]";
     }
-
 }

@@ -20,8 +20,8 @@ public record UsuarioListadoResponse(
     static UsuarioListadoResponse desde(Usuario usuario) {
         return new UsuarioListadoResponse(
                 usuario.getId(),
-                usuario.getNombre(),
-                usuario.getApellidos(),
+                usuario.getDatosPersonales().nombre(),
+                usuario.getDatosPersonales().apellidos(),
                 usuario.getEmail().valor(),
                 usuario.getRol().name(),
                 usuario.tieneBloqueoPorIntentos(java.time.Instant.now())

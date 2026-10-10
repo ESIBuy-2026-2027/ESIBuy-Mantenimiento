@@ -5,6 +5,9 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioComma
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
@@ -181,10 +184,11 @@ class UsuarioControllerTest {
     @org.springframework.security.test.context.support.WithMockUser(roles = "ADMINISTRADOR")
     void administradorRecibeElListado() throws Exception {
         Usuario usuario = new Usuario(
-                "usr-1", "Ana", "García", new Email("ana@esibuy.test"),
-                "hash-no-debe-salir", Rol.CLIENTE, TipoCliente.ESTANDAR,
-                java.time.Instant.parse("2026-10-01T10:00:00Z")
+                "usr-1", new DatosPersonales("Ana", "García", null), new Email("ana@esibuy.test"),
+                "hash-no-debe-salir", Rol.CLIENTE,
+                new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1996, 5, 20), null), null
         );
+        usuario.restaurarFechaAlta(java.time.Instant.parse("2026-10-01T10:00:00Z"));
         usuario.activar();   // una cuenta nueva nace PENDIENTE (T233): el test lista una cuenta ya verificada
         when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(
                 java.util.List.of(usuario), 0, 10, 1
