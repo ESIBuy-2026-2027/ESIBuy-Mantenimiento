@@ -6,6 +6,10 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
+import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import java.time.Clock;
@@ -147,9 +151,22 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP01: registra un cliente con todos sus datos")
     void registraClienteConTodosSusDatos() {
-        // TODO: comando completo (nombre, apellidos, fecha de nacimiento, dni, email, teléfono, password x2, tipo, imagen, acepta privacidad).
-        // TODO: el usuario guardado tiene esos datos personales y de cliente, rol CLIENTE y tipo ESTANDAR.
-        fail("Funcionalidad no implementada");
+        when(hashContrasena.hashear("clave1234")).thenReturn("hash-simulado");
+        RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("Juan", "Pérez García",
+                LocalDate.of(1996, 5, 20), "12345678Z", "juan@uclm.es", "612345678", "clave1234", "clave1234",
+                TipoCliente.PREMIUM, "avatar2", true);
+
+        registroUsuario.registrar(comando);
+
+        ArgumentCaptor<Usuario> usuarioGuardado = ArgumentCaptor.forClass(Usuario.class);
+        verify(usuarioRepository).guardar(usuarioGuardado.capture());
+        Usuario usuario = usuarioGuardado.getValue();
+        assertEquals(new DatosPersonales("Juan", "Pérez García", "avatar2"), usuario.getDatosPersonales());
+        assertEquals(new DatosCliente(TipoCliente.PREMIUM, new Dni("12345678Z"), LocalDate.of(1996, 5, 20),
+                new Telefono("612345678")), usuario.getDatosCliente());
+        assertEquals("juan@uclm.es", usuario.getEmail().valor());
+        assertEquals("hash-simulado", usuario.getPasswordHash());
+        assertEquals(Rol.CLIENTE, usuario.getRol());
     }
 
     @Test
