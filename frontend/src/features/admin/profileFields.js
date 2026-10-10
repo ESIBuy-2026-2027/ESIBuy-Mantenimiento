@@ -47,7 +47,7 @@ const imagen = {
   edit: { type: AVATAR },
 }
 const estado = { name: 'estado', label: 'Estado', read: (u) => STATUS_LABELS[u.estado] ?? u.estado }
-const fechaAlta = { name: 'fechaAlta', label: 'Fecha de alta', read: (u) => formatDate(u.fechaAlta) }
+const fechaAlta = { name: 'fechaAlta', label: 'Fecha de alta', read: (u) => fechaOSinDato(u.fechaAlta) }
 
 const PROFILE_FIELDS = {
   // Todo menos el email (y la contraseña, que solo se cambia con "He olvidado mi contraseña").

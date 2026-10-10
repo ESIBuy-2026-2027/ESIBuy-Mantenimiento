@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
-import { ApiError } from './client'
+import { abrirSesionPorApi } from '../test/renderApp'
+import { ApiError, request } from './client'
 import { getUser, listUsers, updateUser, updateUserStatus } from './users'
 
 const RESPUESTA = { items: [], page: 1, size: 10, totalItems: 0, totalPages: 0 }
@@ -204,5 +205,103 @@ describe('updateUser', () => {
 
     expect(error).toBeInstanceOf(ApiError)
     expect(error).toMatchObject({ status: 400, code: 'VALIDATION_ERROR' })
+  })
+})
+
+describe('PUT /api/admin/usuarios/{id} con el mock (HU22)', () => {
+  const datosDeCliente = {
+    rol: 'CLIENTE',
+    nombre: 'Elena',
+    apellidos: 'Pérez',
+    dni: '12345678Z',
+    telefono: '',
+    fechaNacimiento: '1990-05-20',
+    tipoCliente: 'ESTANDAR',
+    avatar: 'avatar1',
+  }
+
+  it('updateUser_conElMock_unAdministradorNoPuedeCambiarSuPropioRol', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+
+    const error = await updateUser('u-1', datosDeCliente).catch((excepcion) => excepcion)
+
+    expect(error).toMatchObject({ status: 409, code: 'CANNOT_CHANGE_OWN_ROLE' })
+  })
+
+  it('updateUser_conElMock_unAdministradorSiPuedeEditarSusPropiosDatosSinCambiarElRol', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+
+    const respuesta = await updateUser('u-1', {
+      rol: 'ADMINISTRADOR',
+      nombre: 'Adela',
+      apellidos: 'Admin',
+      sede: 'Toledo',
+      avatar: 'avatar2',
+    })
+
+    expect(respuesta).toMatchObject({ rol: 'ADMINISTRADOR', nombre: 'Adela' })
+  })
+
+  it('updateUser_conElMock_unRolInexistenteDevuelve400', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+
+    const error = await updateUser('usr-3', { ...datosDeCliente, rol: 'SUPERUSUARIO' }).catch((e) => e)
+
+    expect(error).toMatchObject({ status: 400 })
+  })
+
+  it('updateUser_conElMock_unClientePendientePasaAAdministradorYQuedaActivo', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    expect((await getUser('usr-25')).estado).toBe('PENDIENTE')
+
+    const respuesta = await updateUser('usr-25', {
+      rol: 'ADMINISTRADOR',
+      nombre: 'Gonzalo',
+      apellidos: 'Ibáñez Roca',
+      sede: '',
+      avatar: '',
+    })
+
+    expect(respuesta).toMatchObject({ rol: 'ADMINISTRADOR', estado: 'ACTIVO' })
+  })
+
+  it('updateUser_conElMock_unVendedorQuePasaAClienteDejaDeSerVendedor', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+
+    await updateUser('u-5', { ...datosDeCliente, nombre: 'Vicente', apellidos: 'Vacío' })
+
+    expect((await getUser('u-5')).rol).toBe('CLIENTE')
+    const error = await request('/api/admin/sellers/u-5').catch((excepcion) => excepcion)
+    expect(error).toMatchObject({ status: 404 })
+  })
+
+  it('updateUser_conElMock_unNombreComercialRepetidoDevuelve409', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+
+    const error = await updateUser('usr-3', {
+      rol: 'VENDEDOR',
+      nombre: 'Carlos',
+      apellidos: 'Moreno Gil',
+      nombreComercial: 'Casa Vicente',
+      nif: 'B12345678',
+      categoriaPrincipalId: 'cat-1',
+    }).catch((excepcion) => excepcion)
+
+    expect(error).toMatchObject({ status: 409, code: 'COMMERCIAL_NAME_ALREADY_REGISTERED' })
+  })
+
+  it('updateUser_conElMock_unDatoInvalidoDelRolDestinoDevuelve400', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+
+    const error = await updateUser('usr-3', {
+      rol: 'VENDEDOR',
+      nombre: 'Carlos',
+      apellidos: 'Moreno Gil',
+      nombreComercial: '',
+      nif: 'ABC',
+      categoriaPrincipalId: 'no-existe',
+    }).catch((excepcion) => excepcion)
+
+    expect(error).toMatchObject({ status: 400 })
   })
 })
