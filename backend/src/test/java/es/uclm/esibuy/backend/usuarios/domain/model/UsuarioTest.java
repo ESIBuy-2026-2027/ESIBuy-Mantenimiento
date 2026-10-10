@@ -1,11 +1,11 @@
 package es.uclm.esibuy.backend.usuarios.domain.model;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -195,23 +195,38 @@ class UsuarioTest {
     @Test
     @DisplayName("HU1-CP13: registra a un cliente mayor de edad")
     void nuevoClienteMayorDeEdadSeRegistra() {
-        // TODO: Usuario.nuevoCliente(...) con fecha de nacimiento de hace 30 años y hoy fijo devuelve un cliente
-        // con rol CLIENTE, sin id y con sus DatosCliente.
-        fail("Funcionalidad no implementada");
+        DatosCliente nacidoHace30Anos = datosClienteNacidoEl(HOY.minusYears(30));
+
+        Usuario usuario = Usuario.nuevoCliente(DATOS_PERSONALES, EMAIL, HASH, nacidoHace30Anos, CONSENTIMIENTO, HOY);
+
+        assertNull(usuario.getId());
+        assertEquals(Rol.CLIENTE, usuario.getRol());
+        assertEquals(nacidoHace30Anos, usuario.getDatosCliente());
     }
 
     @Test
     @DisplayName("HU1-CP13: rechaza a un cliente menor de edad")
     void rechazaClienteMenorDeEdad() {
-        // TODO: nuevoCliente con fecha de nacimiento de hace 17 años lanza UsuarioInvalidoException.
-        fail("Funcionalidad no implementada");
+        DatosCliente nacidoHace17Anos = datosClienteNacidoEl(HOY.minusYears(17));
+
+        assertThrows(UsuarioInvalidoException.class,
+                () -> Usuario.nuevoCliente(DATOS_PERSONALES, EMAIL, HASH, nacidoHace17Anos, CONSENTIMIENTO, HOY));
     }
 
     @Test
     @DisplayName("HU1-CP13: acepta a un cliente que cumple 18 años hoy")
     void aceptaClienteQueCumple18Hoy() {
-        // TODO: frontera: fecha de nacimiento = hoy menos 18 años exactos -> se registra.
-        fail("Funcionalidad no implementada");
+        // Frontera: cumple 18 hoy -> mayor de edad; con un día más de nacimiento (mañana cumpliría) -> menor
+        DatosCliente cumple18Hoy = datosClienteNacidoEl(HOY.minusYears(18));
+        DatosCliente cumple18Manana = datosClienteNacidoEl(HOY.minusYears(18).plusDays(1));
+
+        assertDoesNotThrow(() -> Usuario.nuevoCliente(DATOS_PERSONALES, EMAIL, HASH, cumple18Hoy, CONSENTIMIENTO, HOY));
+        assertThrows(UsuarioInvalidoException.class,
+                () -> Usuario.nuevoCliente(DATOS_PERSONALES, EMAIL, HASH, cumple18Manana, CONSENTIMIENTO, HOY));
+    }
+
+    private static DatosCliente datosClienteNacidoEl(LocalDate fechaNacimiento) {
+        return new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), fechaNacimiento, null);
     }
 
     private static Usuario cliente() {
