@@ -196,14 +196,14 @@ La sesión simulada se pierde al recargar la página y el panel de control aún 
 history.pushState({}, '', '/admin/users'); dispatchEvent(new PopStateEvent('popstate'))
 ```
 
-El mock tiene 25 usuarios ficticios (3 páginas: 10, 10 y 5) de los tres roles y los cuatro estados. Desde la HU24, los clientes solo están activos o desactivados: los pendientes son solo vendedores.
+El mock tiene 28 usuarios ficticios (3 páginas: 10, 10 y 8) de los tres roles y los cuatro estados. Desde la task AB#234 (HU1), toda cuenta nueva queda pendiente: hay 5 pendientes (2 vendedores, 2 clientes y 1 administrador). Los clientes no tienen el estado bloqueado (HU24).
 
 Pruebas manuales sugeridas:
 
 1. Recorrer las tres páginas.
 2. Buscar `ana`: solo aparecen Ana López García y Mariana Ruiz Pascual.
 3. Buscar `alvaro` (sin acento): encuentra a Álvaro Campos Serrano.
-4. Filtrar por **Vendedor** (7 usuarios) y por **Pendiente** (2 usuarios); combinar **Administrador** + **Activo** (2 usuarios).
+4. Filtrar por **Vendedor** (7 usuarios) y por **Pendiente** (5 usuarios); combinar **Administrador** + **Activo** (2 usuarios).
 5. Ir a la página 2 y cambiar un filtro: vuelve a la página 1.
 6. Buscar `zzz`: aparece "No se han encontrado usuarios"; pulsar **Limpiar filtros**.
 7. Reducir la ventana a ancho móvil: la tabla se desplaza en horizontal sin romper la página.

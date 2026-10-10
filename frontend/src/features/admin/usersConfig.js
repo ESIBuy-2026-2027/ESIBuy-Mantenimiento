@@ -22,8 +22,10 @@ export const STATUS_LABELS = {
   [USER_STATUS.DESACTIVADO]: 'Desactivado',
 }
 
-// Estados que pueden tener clientes y administradores: solo activos o desactivados.
+// Estados que pueden tener clientes y administradores: pendientes hasta que un administrador los
+// verifica (HU1), activos o desactivados.
 export const ACCOUNT_STATUS_LABELS = {
+  [USER_STATUS.PENDIENTE]: STATUS_LABELS[USER_STATUS.PENDIENTE],
   [USER_STATUS.ACTIVO]: STATUS_LABELS[USER_STATUS.ACTIVO],
   [USER_STATUS.DESACTIVADO]: STATUS_LABELS[USER_STATUS.DESACTIVADO],
 }

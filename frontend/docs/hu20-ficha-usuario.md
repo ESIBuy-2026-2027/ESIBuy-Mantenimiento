@@ -43,7 +43,7 @@ Los campos son de solo lectura y se ven más oscuros, con el aviso "Modo solo le
 
 | Estado | Botón |
 |---|---|
-| Desactivado | **Activar** |
+| Pendiente o desactivado | **Activar** (pendiente desde la task AB#234 de la HU1: así se acepta la cuenta, como un vendedor pendiente) |
 | Activo | **Desactivar** (salvo en la ficha del propio administrador) |
 
 > **Fuera de esta HU:** editar los datos es la HU22 y eliminar usuarios no tiene HU en este sprint, así que la ficha no tiene esos botones.
@@ -60,7 +60,7 @@ flowchart TD
     D --> B
     C -- Sí --> E[Datos en solo lectura]
     E --> F{Estado}
-    F -- Desactivado --> G[Botón Activar]
+    F -- Pendiente o desactivado --> G[Botón Activar]
     F -- Activo y no es la propia cuenta --> H[Botón Desactivar]
     F -- Activo y es la propia cuenta --> I[Sin botón]
     G --> J[Confirmación]
@@ -163,6 +163,8 @@ npm run build
 | `pages/AdminAdminsPage.test.jsx` | 2 | Ficha de la sesión sin Desactivar y activar un administrador desde su ficha |
 | `features/admin/ReadOnlyFields.test.jsx` | 2 | Etiquetas y valores, y que no se pueden editar |
 | `api/users.test.js` | 2 | `getUser`: ruta y error 404 |
+
+La task AB#234 (HU1) añadió 2 tests a `UserDetailDialog.test.jsx`: la ficha de una cuenta pendiente ofrece **Activar** y no **Desactivar**, y activarla la deja activa.
 
 Los tests de activar y desactivar que la HU23 y la HU24 hacían sobre los botones de la fila se han sustituido por los de la ficha. También se ajustó el de la columna de `UsersTable.test.jsx` (ahora se llama **Información**).
 

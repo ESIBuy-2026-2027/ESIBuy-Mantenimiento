@@ -8,10 +8,12 @@ import { renderWithProviders } from '../../test/utils'
 import UserDetailDialog from './UserDetailDialog'
 
 // Del mock de usuarios: Lucía Torres Vega (usr-4) es clienta desactivada, Carlos Moreno Gil (usr-3) cliente
-// activo y Diego Delgado Iglesias (usr-11) administrador desactivado.
+// activo, Diego Delgado Iglesias (usr-11) administrador desactivado y Gonzalo Ibáñez Roca (usr-25) cliente
+// pendiente de verificación (HU1).
 const LUCIA = 'usr-4'
 const CARLOS = 'usr-3'
 const DIEGO = 'usr-11'
+const GONZALO = 'usr-25'
 const ESPERA = { timeout: 3000 }
 
 async function abrirFicha(userId, currentUserId = 'u-1') {
@@ -112,6 +114,25 @@ describe('UserDetailDialog (HU20): activar y desactivar desde la ficha', () => {
 
     expect(botonDeEstado(dialogo, 'Desactivar')).toBeInTheDocument()
     expect(botonDeEstado(dialogo, 'Activar')).not.toBeInTheDocument()
+  })
+
+  it('userDetailDialog_deUnaCuentaPendiente_ofreceActivarYNoDesactivar', async () => {
+    const { dialogo } = await abrirFicha(GONZALO)
+
+    expect(valorDe(dialogo, 'Estado')).toHaveValue('Pendiente')
+    expect(botonDeEstado(dialogo, 'Activar')).toBeInTheDocument()
+    expect(botonDeEstado(dialogo, 'Desactivar')).not.toBeInTheDocument()
+  })
+
+  it('userDetailDialog_alActivarUnaCuentaPendiente_laAceptaYPasaAActivo', async () => {
+    const user = userEvent.setup()
+    const { dialogo, onStatusChange } = await abrirFicha(GONZALO)
+
+    await confirmar(user, dialogo, 'Activar', /seguro que quieres activar a gonzalo ibáñez roca/i)
+
+    expect(await within(dialogo).findByText(/gonzalo ibáñez roca ya está activo/i, {}, ESPERA)).toBeInTheDocument()
+    await waitFor(() => expect(valorDe(dialogo, 'Estado')).toHaveValue('Activo'), ESPERA)
+    expect(onStatusChange).toHaveBeenCalledTimes(1)
   })
 
   it('userDetailDialog_deLaPropiaCuenta_noOfreceDesactivar', async () => {

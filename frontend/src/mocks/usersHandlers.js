@@ -3,9 +3,10 @@ import { getUsuarioEnSesion } from './authHandlers'
 
 const TAMANO_PAGINA_POR_DEFECTO = 10
 
-// [nombre, apellidos, rol, estado, fechaAlta]. 25 usuarios (3 páginas de 10). La búsqueda "ana" coincide
+// [nombre, apellidos, rol, estado, fechaAlta]. 28 usuarios (3 páginas de 10). La búsqueda "ana" coincide
 // solo con Ana López García y Mariana Ruiz Pascual; ningún otro nombre, apellido o email contiene "ana".
-// Los clientes solo pueden estar activos o desactivados: no necesitan que un administrador los acepte.
+// Toda cuenta nueva queda pendiente hasta que un administrador la verifica (HU1): los tres últimos son
+// un cliente, otro cliente y un administrador pendientes. Van al final para no cambiar los ids de los demás.
 const USUARIOS_INICIALES = [
   ['Ana', 'López García', 'ADMINISTRADOR', 'ACTIVO', '2026-01-12T09:15:00'],
   ['Mariana', 'Ruiz Pascual', 'VENDEDOR', 'PENDIENTE', '2026-10-01T10:00:00'],
@@ -31,6 +32,9 @@ const USUARIOS_INICIALES = [
   ['Beatriz', 'Vargas Méndez', 'VENDEDOR', 'PENDIENTE', '2026-09-05T11:10:00'],
   ['Rubén', 'Cortés Pastor', 'CLIENTE', 'ACTIVO', '2026-08-28T16:25:00'],
   ['Jorge', 'Benítez Sáez', 'CLIENTE', 'DESACTIVADO', '2026-09-10T15:15:00'],
+  ['Gonzalo', 'Ibáñez Roca', 'CLIENTE', 'PENDIENTE', '2026-10-06T18:20:00'],
+  ['Marcos', 'Aguilar Bravo', 'CLIENTE', 'PENDIENTE', '2026-10-08T09:40:00'],
+  ['Manuel', 'Esteve Pons', 'ADMINISTRADOR', 'PENDIENTE', '2026-10-04T12:05:00'],
 ]
   .map(([nombre, apellidos, rol, estado, fechaAlta], indice) => ({
     id: `usr-${indice + 1}`,
