@@ -85,7 +85,9 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         if (rol != Rol.CLIENTE) {
             return null;
         }
-        Telefono telefono = comando.telefono() == null ? null : new Telefono(comando.telefono());
+        // El teléfono es opcional: en blanco (el frontend envía "") es que no tiene
+        Telefono telefono = comando.telefono() == null || comando.telefono().isBlank()
+                ? null : new Telefono(comando.telefono());
         return new DatosCliente(comando.tipoCliente(), new Dni(comando.dni()), comando.fechaNacimiento(), telefono);
     }
 
