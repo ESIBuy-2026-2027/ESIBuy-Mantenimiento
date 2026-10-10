@@ -152,4 +152,8 @@ public class Usuario {
     public void restaurarFechaAlta(Instant fechaAlta) {
         this.fechaAlta = fechaAlta;
     }
+
+    public boolean estaPendiente() {
+        return "PENDIENTE".equals(this.estado); 
+    }
 }

@@ -11,6 +11,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
@@ -133,6 +134,22 @@ class AutenticacionControllerTest {
                 .andExpect(status().isForbidden())
                 // El frontend lee "code" para mostrar «cuenta desactivada» (client.js, loginErrors.js)
                 .andExpect(jsonPath("$.code").value("ACCOUNT_DISABLED"));
+    }
+
+    @Test
+    @DisplayName("HU2-CP16: una cuenta pendiente de verificación devuelve 403 con el código ACCOUNT_PENDING")
+    void cuentaPendienteDevuelve403ConCodigo() throws Exception {
+        // El servicio solo la lanza cuando la contraseña es correcta (T235), igual que la cuenta desactivada
+        when(autenticacion.iniciarSesion(any()))
+                .thenThrow(new CuentaPendienteException("La cuenta está pendiente de verificación."));
+
+        mockMvc.perform(post(URL_LOGIN)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonLogin("juan@uclm.es", "clave1234")))
+                .andExpect(status().isForbidden())
+                // El frontend lee "code" para mostrar su mensaje de cuenta pendiente (T236)
+                .andExpect(jsonPath("$.code").value("ACCOUNT_PENDING"));
     }
 
     @Test

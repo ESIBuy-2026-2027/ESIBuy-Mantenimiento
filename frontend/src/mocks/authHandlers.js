@@ -11,6 +11,7 @@ export const USUARIOS = [
   { id: 'u-3', nombre: 'Carlos', apellidos: 'Cliente', email: 'cliente@esibuy.test', rol: 'CLIENTE', estado: 'ACTIVO' },
   { id: 'u-5', nombre: 'Vicente', apellidos: 'Vacío', email: 'vendedor-vacio@esibuy.test', rol: 'VENDEDOR', estado: 'ACTIVO' },
   { id: 'u-4', nombre: 'Dani', apellidos: 'Desactivado', email: 'desactivado@esibuy.test', rol: 'CLIENTE', estado: 'DESACTIVADO' },
+  { id: 'u-6', nombre: 'Paula', apellidos: 'Pendiente', email: 'pendiente@esibuy.test', rol: 'CLIENTE', estado: 'PENDIENTE' },
 ]
 
 const nuevoEstado = () => ({
@@ -44,6 +45,10 @@ export const authHandlers = [
     if (!usuario || password !== CLAVE_VALIDA) {
       estado.intentosFallidos += 1
       return sinAutorizacion()
+    }
+
+    if (usuario.estado === 'PENDIENTE') {
+      return HttpResponse.json({ code: 'ACCOUNT_PENDING' }, { status: 403 })
     }
 
     if (usuario.estado !== 'ACTIVO') {

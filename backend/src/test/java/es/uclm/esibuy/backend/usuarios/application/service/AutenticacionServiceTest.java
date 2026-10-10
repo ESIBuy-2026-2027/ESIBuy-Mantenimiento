@@ -23,6 +23,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -364,6 +365,19 @@ class AutenticacionServiceTest {
 
         assertThrows(CodigoInvalidoException.class, () -> autenticacion.verificarCodigoEmail(sinCodigo));
         assertThrows(CodigoInvalidoException.class, () -> autenticacion.verificarCodigoEmail(sinUsuario));
+    }
+
+    @Test
+    @DisplayName("HU2-CP16: rechaza el acceso a una cuenta en estado PENDIENTE")
+    void rechazaCuentaPendiente() {
+        // Una cuenta nueva nace en estado PENDIENTE (T233); clienteNuevo() la crea con los datos del registro (T229)
+        Usuario usuario = clienteNuevo();
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
+        
+        // Se comprueba después de validar la contraseña para no revelar el estado de la cuenta a atacantes
+        when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
+        IniciarSesionCommand comando = new IniciarSesionCommand("juan@uclm.es", "clave1234");
+        assertThrows(CuentaPendienteException.class, () -> autenticacion.iniciarSesion(comando));
     }
 
     @Test
