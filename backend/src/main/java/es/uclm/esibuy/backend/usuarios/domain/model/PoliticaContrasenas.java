@@ -15,11 +15,11 @@ public final class PoliticaContrasenas {
     private PoliticaContrasenas() {
     }
 
-    public static void validar(String contrasena, String nombre, String apellidos, Email email) {
+    public static void validar(String contrasena, DatosPersonales datosPersonales, Email email) {
         exigirLongitud(contrasena);
         String normalizada = contrasena.toLowerCase(Locale.ROOT);
         exigirNoComun(normalizada);
-        exigirSinDatosPersonales(normalizada, nombre, apellidos, email);
+        exigirSinDatosPersonales(normalizada, datosPersonales, email);
     }
 
     private static void exigirLongitud(String contrasena) {
@@ -39,9 +39,9 @@ public final class PoliticaContrasenas {
         }
     }
 
-    private static void exigirSinDatosPersonales(String normalizada, String nombre, String apellidos, Email email) {
+    private static void exigirSinDatosPersonales(String normalizada, DatosPersonales datosPersonales, Email email) {
         String parteLocalEmail = email.valor().substring(0, email.valor().indexOf('@'));
-        for (String dato : new String[] {nombre, apellidos, parteLocalEmail}) {
+        for (String dato : new String[] {datosPersonales.nombre(), datosPersonales.apellidos(), parteLocalEmail}) {
             if (normalizada.contains(dato.toLowerCase(Locale.ROOT))) {
                 throw new ContrasenaInvalidaException("La contraseña no puede contener datos personales");
             }

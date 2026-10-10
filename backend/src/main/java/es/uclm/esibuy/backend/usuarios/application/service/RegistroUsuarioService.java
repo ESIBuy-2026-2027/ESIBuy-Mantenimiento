@@ -15,6 +15,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
+import es.uclm.esibuy.backend.usuarios.domain.model.PoliticaContrasenas;
 import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
@@ -28,7 +29,6 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
  */
 public class RegistroUsuarioService implements RegistroUsuarioUseCase {
 
-    private static final int LONGITUD_MINIMA_CONTRASENA = 8;
     // Versión fija de la política de privacidad mientras no se gestione desde la aplicación (decisión del 2026-10-08).
     private static final String VERSION_POLITICA_PRIVACIDAD = "1.0";
 
@@ -45,27 +45,24 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
 
     @Override
     public void registrar(RegistrarUsuarioCommand comando) {
-        if (comando.password() == null || comando.password().length() < LONGITUD_MINIMA_CONTRASENA) {
-            throw new ContrasenaInvalidaException("La contraseña debe tener mínimo " + LONGITUD_MINIMA_CONTRASENA + " caracteres");
-        }
-
-        // Evita consultar en la BBDD con una petición que ya sabemos que no es válida.
+        // Todo lo que se puede comprobar sin salir del núcleo va antes de consultar la base de datos.
+        DatosPersonales datosPersonales = new DatosPersonales(comando.nombre(), comando.apellidos(), comando.imagenPerfil());
+        Email email = new Email(comando.email());
+        PoliticaContrasenas.validar(comando.password(), datosPersonales, email);   // también rechaza la contraseña nula
         if (!comando.password().equals(comando.repeticionPassword())) {
             throw new ContrasenaInvalidaException("Las contraseñas no coinciden");
         }
-
         if (!comando.aceptaPrivacidad()) {
             throw new UsuarioInvalidoException("Es obligatorio aceptar la política de privacidad");
         }
-
         if (usuarioRepository.existePorCorreo(comando.email())) {
             throw new CorreoYaRegistradoException("El correo ya está registrado");
         }
 
         String contrasenaHash = hashContrasena.hashear(comando.password());
         Usuario usuario = Usuario.nuevoCliente(
-                new DatosPersonales(comando.nombre(), comando.apellidos(), comando.imagenPerfil()),
-                new Email(comando.email()),
+                datosPersonales,
+                email,
                 contrasenaHash,
                 new DatosCliente(comando.tipoCliente(), new Dni(comando.dni()), comando.fechaNacimiento(),
                         comando.telefono() == null ? null : new Telefono(comando.telefono())),
