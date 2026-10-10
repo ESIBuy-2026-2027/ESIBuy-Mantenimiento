@@ -98,8 +98,7 @@ class PoliticaContrasenasTest {
     @Test
     @DisplayName("HU1-CP17: rechaza una contraseña sin número")
     void rechazaContrasenaSinNumero() {
-        // TODO ciclo 4
-        fail("Funcionalidad no implementada");
+        assertThrows(ContrasenaInvalidaException.class, () -> validar("Treboles-Azules!"));
     }
 
     @Test
