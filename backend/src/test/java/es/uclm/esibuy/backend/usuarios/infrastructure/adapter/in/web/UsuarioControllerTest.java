@@ -16,6 +16,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import java.time.LocalDate;
@@ -126,7 +127,7 @@ class UsuarioControllerTest {
     }
 
     @Test
-    @DisplayName("HU1-CP03: un correo ya registrado devuelve 409 con mensaje genérico")
+    @DisplayName("HU1-CP03: un correo ya registrado devuelve 409 con su código y mensaje genérico")
     void correoYaRegistradoDevuelve409() throws Exception {
         // registrar devuelve void: por eso doThrow(...).when(...) y no when(...).thenThrow(...)
         doThrow(new CorreoYaRegistradoException("El correo ya está registrado"))
@@ -136,8 +137,23 @@ class UsuarioControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json("juan@uclm.es", "clave1234")))
                 .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("EMAIL_ALREADY_REGISTERED"))   // el frontend marca el campo por el código
                 .andExpect(jsonPath("$.mensaje").exists())
                 .andExpect(jsonPath("$.mensaje").value(not(containsString("juan@uclm.es"))));
+    }
+
+    @Test
+    @DisplayName("HU1-CP16: un DNI ya registrado devuelve 409 con su código y mensaje genérico")
+    void dniYaRegistradoDevuelve409ConCodigo() throws Exception {
+        doThrow(new DniYaRegistradoException("El DNI ya está registrado"))
+                .when(registroUsuario).registrar(any());
+
+        mockMvc.perform(post(URL_REGISTRO)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("juan@uclm.es", "clave1234")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("DNI_ALREADY_REGISTERED"))
+                .andExpect(jsonPath("$.mensaje").value(not(containsString("12345678Z"))));
     }
 
     @Test
