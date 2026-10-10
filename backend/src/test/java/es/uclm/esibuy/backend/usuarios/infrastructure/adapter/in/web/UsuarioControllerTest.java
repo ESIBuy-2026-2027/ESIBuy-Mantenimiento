@@ -55,7 +55,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(SecurityConfig.class)
 class UsuarioControllerTest {
 
-    private static final String URL_REGISTRO = "/api/auth/registro";
+    private static final String URL_REGISTRO = "/api/auth/register/cliente";   // contrato acordado con el frontend (T229)
 
     @Autowired
     private MockMvc mockMvc;
