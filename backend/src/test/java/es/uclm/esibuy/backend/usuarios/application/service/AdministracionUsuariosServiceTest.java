@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
@@ -169,6 +170,32 @@ class AdministracionUsuariosServiceTest {
 
         assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", sinRol));
         verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU22-CP06: editar un cliente con el DNI de otra cuenta falla y no guarda nada")
+    void rechazaEditarUnClienteConElDniDeOtraCuenta() {
+        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
+        when(usuarioRepository.existePorDni("10004119A")).thenReturn(true);
+        EditarUsuarioCommand dniDeOtro = new EditarUsuarioCommand(Rol.CLIENTE, "Lucía", "Torres Vega", null,
+                "10004119A", null, LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR);
+
+        assertThrows(DniYaRegistradoException.class, () -> servicio.editar("u-1", dniDeOtro));
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU22-CP06: editar un cliente que conserva su DNI no comprueba si está repetido y lo guarda")
+    void editarUnClienteQueConservaSuDniNoLoComprueba() {
+        Usuario cliente = clienteLucia();
+        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(cliente));
+        EditarUsuarioCommand mismoDni = new EditarUsuarioCommand(Rol.CLIENTE, "Lucía", "Torres Vega", null,
+                "12345678Z", "620023757", LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR);
+
+        servicio.editar("u-1", mismoDni);
+
+        verify(usuarioRepository, never()).existePorDni(any());
+        verify(usuarioRepository).guardar(cliente);
     }
 
     private static Usuario vendedorVera() {
