@@ -3,7 +3,9 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
+import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
 /**
@@ -31,6 +33,10 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         Usuario usuario = buscar(usuarioId);
         if (usuario.getEmail().valor().equalsIgnoreCase(emailAdministrador)) {
             throw new AutodesactivacionNoPermitidaException("Un administrador no puede desactivar su propia cuenta");
+        }
+        if (usuario.getRol() == Rol.ADMINISTRADOR && usuario.estaActivo()
+                && usuarioRepository.contarAdministradoresActivos() <= 1) {
+            throw new UltimoAdministradorActivoException("No se puede desactivar al último administrador activo");
         }
         usuario.desactivar();
         usuarioRepository.guardar(usuario);

@@ -70,6 +70,11 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
     }
 
     @Override
+    public long contarAdministradoresActivos() {
+        return repository.countByRolAndEstado("ADMINISTRADOR", "ACTIVO");
+    }
+
+    @Override
     public boolean existePorCorreo(String correo) {
         return repository.existsByEmail(correo);
     }
