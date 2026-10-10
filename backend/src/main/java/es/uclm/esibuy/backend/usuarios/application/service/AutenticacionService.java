@@ -19,7 +19,6 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasExc
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
-import es.uclm.esibuy.backend.usuarios.domain.model.FactorAutenticacion;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
 
@@ -113,7 +112,7 @@ public class AutenticacionService implements AutenticacionUseCase {
 
     private boolean tieneAuthenticatorConfirmado(Usuario usuario) {
         return factorAutenticacionRepository.buscarPorUsuario(usuario.getId())
-        .map(FactorAutenticacion::estaConfirmado).orElse(false);
+        .map(factor -> factor.estaConfirmado()).orElse(false);
     }
 
     
