@@ -91,6 +91,36 @@ class AdministracionUsuariosServiceTest {
     }
 
     @Test
+    @DisplayName("HU22-CP03: editar un vendedor cambia sus datos personales y lo guarda")
+    void editaUnVendedorYLoGuarda() {
+        when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(vendedorVera()));
+        EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.VENDEDOR, "Vera", "Vendedora Ruiz",
+                null, null, null, null, null);
+
+        Usuario editado = servicio.editar("u-4", comando);
+
+        assertEquals(new DatosPersonales("Vera", "Vendedora Ruiz", null), editado.getDatosPersonales());
+        verify(usuarioRepository).guardar(editado);
+    }
+
+    @Test
+    @DisplayName("HU22-CP04: editar no cambia el email, la contraseña, el estado ni el rol de la cuenta")
+    void editarNoCambiaEmailContrasenaEstadoNiRol() {
+        Usuario vendedor = vendedorVera();
+        vendedor.activar();
+        when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(vendedor));
+        EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.VENDEDOR, "Vera", "Vendedora Ruiz",
+                null, null, null, null, null);
+
+        Usuario editado = servicio.editar("u-4", comando);
+
+        assertEquals(new Email("vendedor@esibuy.test"), editado.getEmail());
+        assertEquals("hash-simulado", editado.getPasswordHash());
+        assertEquals("ACTIVO", editado.getEstado());
+        assertEquals(Rol.VENDEDOR, editado.getRol());
+    }
+
+    @Test
     @DisplayName("HU22-CP05: editar un cliente con datos no válidos falla y no guarda nada")
     void rechazaEditarUnClienteConDatosNoValidos() {
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
@@ -139,6 +169,11 @@ class AdministracionUsuariosServiceTest {
 
         assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", sinRol));
         verify(usuarioRepository, never()).guardar(any());
+    }
+
+    private static Usuario vendedorVera() {
+        return new Usuario("u-4", new DatosPersonales("Vera", "Vendedora", null), new Email("vendedor@esibuy.test"),
+                "hash-simulado", Rol.VENDEDOR, null, null);
     }
 
     private static Usuario clienteLucia() {
