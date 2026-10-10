@@ -106,6 +106,13 @@ class PoliticaContrasenasTest {
         assertThrows(ContrasenaInvalidaException.class, () -> validar("Tr3bolesAzules"));
     }
 
+    @Test
+    @DisplayName("HU1-CP17: acepta letras con tilde y la ñ como mayúsculas y minúsculas")
+    void aceptaLetrasConTildeYEnie() {
+        // La única mayúscula es la Ñ y las minúsculas llevan tilde: las clases Unicode las reconocen
+        assertDoesNotThrow(() -> validar("Ñandú-pájaro9"));
+    }
+
     private static void validar(String contrasena) {
         PoliticaContrasenas.validar(contrasena, DATOS_PERSONALES, EMAIL);
     }
