@@ -604,6 +604,59 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU31 · Dar de alta un producto
+
+### Tabla A · HU31 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU31-CP01 | Se crea un producto con datos correctos, con o sin id antes de persistirlo | Unitario (dominio) | 2 | 🔍 En revisión |
+| HU31-CP02 | Un producto sin vendedor se rechaza | Unitario (dominio) | 1 | 🔍 En revisión |
+| HU31-CP03 | El nombre es obligatorio y admite hasta 100 caracteres | Unitario (dominio) | 2 | 🔍 En revisión |
+| HU31-CP04 | El precio tiene que ser mayor que 0 | Unitario (dominio) | 2 | 🔍 En revisión |
+| HU31-CP05 | El stock no puede ser negativo (0 es válido) | Unitario (dominio) | 1 | 🔍 En revisión |
+| HU31-CP06 | Un producto sin categoría se rechaza (una sola categoría por producto) | Unitario (dominio) | 1 | 🔍 En revisión |
+| HU31-CP07 | Los dos descuentos (normal y premium) son obligatorios, y un descuento inactivo no lleva porcentaje | Unitario (dominio) | 5 | 🔍 En revisión |
+| HU31-CP08 | Un descuento activo lleva un porcentaje mayor que 0 y no superior a 100 | Unitario (dominio) | 2 | 🔍 En revisión |
+| HU31-CP09 | La imagen es opcional y, si existe, es una dirección http o https | Unitario (dominio) | 2 | 🔍 En revisión |
+| HU31-CP10 | La descripción es opcional y admite hasta 1000 caracteres | Unitario (dominio) | 1 | 🔍 En revisión |
+
+Notas:
+- **HU31-CP01 a CP10:** casos propuestos en la T201 (AB#201) a partir del contrato del formulario de producto del frontend (`frontend/docs/hu31-formulario-producto.md`). Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards.
+- **Backend (T201):** solo la entidad `Producto` y el objeto de valor `Descuento` (`productos/domain/model`), en Java puro. Aún no hay repositorio, servicio ni endpoint: llegarán con las tasks AB#202, AB#204 y AB#205. Los casos de capa web y de persistencia (400/409, guardado en MongoDB) se añadirán con ellas.
+- **Una sola categoría por producto:** decisión del equipo; el producto guarda `categoriaId`, no una lista.
+- **Estado 🔍:** los tests pasan en la rama, pero el PR aún no está abierto. Al abrirlo hay que poner su número en «Origen», y pasar a ✅ cuando se mergee.
+- **Frontend:** los tests de la HU31 (AB#182) no tienen todavía filas en la matriz.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU31-CP01 | `ProductoTest` | `creaUnProductoConDatosCorrectos` | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP01 | `ProductoTest` | `permiteUnProductoSinIdAntesDePersistir` | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP02 | `ProductoTest` | `rechazaUnProductoSinVendedor` (nulo, vacío y en blanco) | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP03 | `ProductoTest` | `rechazaUnProductoSinNombre` (nulo, vacío y en blanco) | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP03 | `ProductoTest` | `elNombreTieneUnMaximoDe100Caracteres` | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP04 | `ProductoTest` | `rechazaUnPrecioNoPositivo` (0, 0.00, -1 y -0.01) | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP04 | `ProductoTest` | `rechazaUnPrecioNuloYAceptaElMinimo` | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP05 | `ProductoTest` | `rechazaUnStockNegativoYAceptaCero` | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP06 | `ProductoTest` | `rechazaUnProductoSinCategoria` (nulo, vacío y en blanco) | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP07 | `DescuentoTest` | `conservaUnDescuentoActivoValido` | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP07 | `DescuentoTest` | `aceptaLosPorcentajesLimite` (0,01, 50 y 100) | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP07 | `DescuentoTest` | `sinDescuentoEsInactivoYSinPorcentaje` | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP07 | `DescuentoTest` | `unDescuentoInactivoIgnoraElPorcentaje` | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP07 | `ProductoTest` | `rechazaUnProductoSinDescuentos` | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP08 | `DescuentoTest` | `rechazaPorcentajesFueraDeRango` (0, -5, 100.01 y 150) | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP08 | `DescuentoTest` | `rechazaUnDescuentoActivoSinPorcentaje` | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP09 | `ProductoTest` | `aceptaImagenesHttpOVacias` (http, https y vacía) | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP09 | `ProductoTest` | `rechazaImagenesQueNoSonHttp` (javascript:, ftp:, texto libre y data:) | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+| HU31-CP10 | `ProductoTest` | `laDescripcionTieneUnMaximoDe1000Caracteres` | Dominio | AB#201 | rama `feature/US31-T201-entidad-producto` (PR sin abrir) | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `ProductoTest` y `DescuentoTest`: `productos/domain/model/` (JUnit, sin Spring)
+
+---
+
 ## Tests técnicos sin caso de prueba
 
 Tests que no validan una HU concreta.
