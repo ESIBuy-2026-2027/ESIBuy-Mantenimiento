@@ -47,6 +47,11 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
         if (comando.password() == null || comando.password().length() < LONGITUD_MINIMA_CONTRASENA) {
             throw new ContrasenaInvalidaException("La contraseña debe tener mínimo " + LONGITUD_MINIMA_CONTRASENA + " caracteres");
         }
+
+        if (!comando.password().equals(comando.repeticionPassword())) {
+            throw new ContrasenaInvalidaException("Las contraseñas no coinciden");
+        }
+        
         if (usuarioRepository.existePorCorreo(comando.email())) {
             throw new CorreoYaRegistradoException("El correo ya está registrado");
         }
