@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.shared.error;
 
 import es.uclm.esibuy.backend.usuarios.application.port.out.exception.EnvioEmailException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.AuthenticatorYaDadoDeAltaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
@@ -90,5 +91,12 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public RespuestaError cuentaPendiente() {
         return new RespuestaError("La cuenta está pendiente de verificación", "ACCOUNT_PENDING");
+    }
+
+    // Quien ya tiene Authenticator no puede volver a darse de alta: impediría saltarse el tercer factor (T20)
+    @ExceptionHandler(AuthenticatorYaDadoDeAltaException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public RespuestaError authenticatorYaDadoDeAlta() {
+        return new RespuestaError("El usuario ya tiene Authenticator", "AUTHENTICATOR_ALREADY_ENROLLED");
     }
 }

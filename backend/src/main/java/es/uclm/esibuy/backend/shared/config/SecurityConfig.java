@@ -37,6 +37,8 @@ public class SecurityConfig {
     // Página de error interna de Spring Boot: abierta para que un 403 o un 500 no se conviertan en 401
     private static final String RUTA_ERROR = "/error";
     private static final String RUTA_CODIGO_EMAIL = "/api/auth/verify-email-code";
+    private static final String RUTA_ALTA_AUTHENTICATOR = "/api/auth/enroll-authenticator";
+    private static final String RUTA_CODIGO_AUTHENTICATOR = "/api/auth/verify-authenticator-code";
     private static final String RUTAS_ADMINISTRACION = "/api/admin/**";
     // Texto y no el enum Rol: shared no depende del dominio de ningún módulo. Es el mismo valor que Rol.ADMINISTRADOR.
     private static final String ROL_ADMINISTRADOR = "ADMINISTRADOR";
@@ -45,7 +47,8 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, RUTA_REGISTRO, RUTA_LOGIN, RUTA_CODIGO_EMAIL).permitAll()
+                        .requestMatchers(HttpMethod.POST, RUTA_REGISTRO, RUTA_LOGIN, RUTA_CODIGO_EMAIL,
+                                RUTA_ALTA_AUTHENTICATOR, RUTA_CODIGO_AUTHENTICATOR).permitAll()
                         .requestMatchers(RUTA_ERROR).permitAll()
                         .requestMatchers(RUTAS_ADMINISTRACION).hasRole(ROL_ADMINISTRADOR)
                         .anyRequest().authenticated())

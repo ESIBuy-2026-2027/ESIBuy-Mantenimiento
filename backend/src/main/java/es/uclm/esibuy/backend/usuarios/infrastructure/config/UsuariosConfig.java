@@ -3,15 +3,19 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.config;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.AuthenticatorUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.out.CifradoSecretoPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.EnvioEmailPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.FactorAutenticacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.GeneradorCodigoPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.TotpPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.service.AdministracionUsuariosService;
 import es.uclm.esibuy.backend.usuarios.application.service.AutenticacionService;
+import es.uclm.esibuy.backend.usuarios.application.service.AuthenticatorService;
 import es.uclm.esibuy.backend.usuarios.application.service.ListadoUsuariosService;
 import es.uclm.esibuy.backend.usuarios.application.service.RegistroUsuarioService;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.email.SmtpEnvioEmailAdapter;
@@ -24,7 +28,9 @@ import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.Fa
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.UsuarioDocumentMapper;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.UsuarioMongoAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.UsuarioMongoRepository;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.AesGcmCifradoSecretoAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.BCryptHashContrasenaAdapter;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.JavaTotpAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.SecureRandomGeneradorCodigoAdapter;
 
 import java.security.SecureRandom;
@@ -109,5 +115,24 @@ public class UsuariosConfig {
     @Bean
     FactorAutenticacionRepositoryPort factorAutenticacionRepositoryPort(FactorAutenticacionMongoRepository repository) {
         return new FactorAutenticacionMongoAdapter(repository, new FactorAutenticacionDocumentMapper());
+    }
+
+    @Bean
+    TotpPort totpPort() {
+        return new JavaTotpAdapter();
+    }
+
+    // La clave AES del secreto TOTP sale de application.properties (T20, D3: riesgo asumido)
+    @Bean
+    CifradoSecretoPort cifradoSecretoPort(@Value("${esibuy.totp.clave-cifrado}") String clave) {
+        return new AesGcmCifradoSecretoAdapter(clave);
+    }
+
+    @Bean
+    AuthenticatorUseCase authenticatorUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
+                                              FactorAutenticacionRepositoryPort factorAutenticacionRepositoryPort,
+                                              TotpPort totpPort, CifradoSecretoPort cifradoSecretoPort, Clock reloj) {
+        return new AuthenticatorService(usuarioRepositoryPort, factorAutenticacionRepositoryPort, totpPort,
+                cifradoSecretoPort, reloj);
     }
 }
