@@ -172,8 +172,13 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP14: rechaza el registro si las contraseñas no coinciden")
     void rechazaContrasenasQueNoCoinciden() {
-        // TODO: password y repeticionPassword distintas -> ContrasenaInvalidaException y no se guarda nada.
-        fail("Funcionalidad no implementada");
+        RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("Juan", "Pérez García",
+                LocalDate.of(1996, 5, 20), "12345678Z", "juan@uclm.es", null, "clave1234", "clave1235",
+                TipoCliente.ESTANDAR, null, true);
+
+        assertThrows(ContrasenaInvalidaException.class, () -> registroUsuario.registrar(comando));
+
+        verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
 
     @Test
