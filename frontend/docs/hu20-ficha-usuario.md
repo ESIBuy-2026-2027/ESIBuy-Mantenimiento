@@ -13,7 +13,7 @@ Documento para entender cómo el administrador consulta la ficha de un cliente o
 
 ## 1. Resumen
 
-El administrador pulsa la **lupa** de una fila de **Clientes** o de **Administradores** y se abre, por encima del listado, la **ficha** del usuario: sus datos en solo lectura, **sin la contraseña**, y el botón para **activar** o **desactivar** la cuenta.
+El administrador pulsa la **lupa** de una fila de **Clientes** o de **Administradores** y se abre, por encima del listado, la **ficha** del usuario: sus datos en solo lectura, **sin la contraseña**, y el botón para **activar** o **desactivar** la cuenta. Desde la HU22 la ficha tiene el botón **Editar** (ver `docs/hu22-editar-usuario.md`).
 
 ### Solapamiento con la HU26
 
@@ -37,16 +37,16 @@ Para dejarlo igual que en los vendedores, **los botones Activar y Desactivar han
 | DNI, teléfono y fecha de nacimiento | Sede y fecha de incorporación |
 | Tipo de cliente (Estándar o Premium) | — |
 | Imagen de perfil | Imagen de perfil |
-| Estado y fecha de alta | Estado y fecha de alta |
+| Estado | Estado y fecha de alta |
 
-Los campos son de solo lectura y se ven más oscuros, con el aviso "Modo solo lectura", igual que en la ficha del vendedor. Debajo está el botón de estado:
+La fecha de alta solo se muestra en la ficha de los **administradores**: la de clientes y vendedores no se guarda. Los campos son de solo lectura y se ven más oscuros, con el aviso "Modo solo lectura", igual que en la ficha del vendedor. Debajo está el botón de estado:
 
 | Estado | Botón |
 |---|---|
 | Pendiente o desactivado | **Activar** (pendiente desde la task AB#234 de la HU1: así se acepta la cuenta, como un vendedor pendiente) |
 | Activo | **Desactivar** (salvo en la ficha del propio administrador) |
 
-> **Fuera de esta HU:** editar los datos es la HU22 y eliminar usuarios no tiene HU en este sprint, así que la ficha no tiene esos botones.
+> **Fuera de esta HU:** editar los datos es la HU22, que añadió a la ficha el botón **Editar** (`docs/hu22-editar-usuario.md`). Eliminar usuarios no tiene HU en este sprint, así que la ficha no tiene ese botón.
 
 ---
 
@@ -77,7 +77,7 @@ Todas las rutas son relativas a `frontend/src/`.
 
 | Archivo | Qué hace |
 |---|---|
-| `features/admin/UserDetailDialog.jsx` | La ficha: pide los datos, muestra los campos según el rol, el aviso de solo lectura, los errores con **Reintentar** y el botón de estado con sus mensajes. |
+| `features/admin/UserDetailDialog.jsx` | La ficha: pide los datos, muestra los campos según el rol (definidos en `profileFields.js` desde la HU22), el aviso de solo lectura, los errores con **Reintentar**, el botón de estado con sus mensajes y, desde la HU22, el botón **Editar**. |
 | `features/admin/ReadOnlyFields.jsx` | Rejilla de campos de solo lectura. Se sacó de `SellerDataForm.jsx` (HU26), que ahora la usa sin cambiar su aspecto. |
 | `features/admin/RoleUsersList.jsx` (HU24) | La fila muestra la lupa en lugar de los botones de estado y abre la ficha. Cuando la ficha cambia un estado, el listado se recarga. |
 | `features/admin/UsersTable.jsx` (HU19) | La columna opcional se llama ahora **Información**, como en el listado de vendedores. |
@@ -179,7 +179,7 @@ Los tests de activar y desactivar que la HU23 y la HU24 hacían sobre los botone
 
 ## 8. Limitaciones y trabajo pendiente
 
-- **Editar los datos** desde la ficha es la HU22; **eliminar** usuarios no tiene HU en este sprint.
+- **Editar los datos** desde la ficha lo hace la HU22 (`docs/hu22-editar-usuario.md`); **eliminar** usuarios no tiene HU en este sprint.
 - **La imagen de perfil** se muestra como texto ("Avatar 2"), no como el dibujo del avatar.
 - **La pantalla general de Usuarios** (`/admin/users`, HU19) no tiene lupa ni enlace desde el panel; se decidirá más adelante si se unifica con estos listados.
 - **El título del diálogo** es genérico ("Información del usuario") para clientes y administradores.

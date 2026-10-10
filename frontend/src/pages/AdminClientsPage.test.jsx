@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
@@ -37,5 +37,27 @@ describe('AdminClientsPage (HU24)', () => {
 
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/seller\/products$/))
     expect(screen.queryByRole('heading', { name: /^clientes$/i })).not.toBeInTheDocument()
+  })
+})
+
+describe('AdminClientsPage (HU22): editar desde la ficha', () => {
+  it('adminClientsPage_alEditarUnClienteDesdeSuFicha_elListadoMuestraElNombreNuevo', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp(RUTA)
+    await user.click(await screen.findByRole('button', { name: /ver información de carlos moreno gil/i }))
+    const ficha = await screen.findByRole('dialog', { name: /información del usuario/i })
+
+    await user.click(await within(ficha).findByRole('button', { name: 'Editar' }))
+    await user.clear(await within(ficha).findByLabelText(/^nombre/i))
+    await user.type(within(ficha).getByLabelText(/^nombre/i), 'Carla')
+    await user.click(within(ficha).getByRole('button', { name: /^guardar$/i }))
+
+    expect(await within(ficha).findByText('Los cambios se han guardado.', undefined, { timeout: 3000 })).toBeInTheDocument()
+    await user.click(within(ficha).getByRole('button', { name: 'Cerrar' }))
+    // Mientras se cierra la ficha, Fluent marca la página como oculta: se busca también entre lo oculto.
+    expect(
+      await screen.findByRole('button', { name: /ver información de carla moreno gil/i, hidden: true }),
+    ).toBeInTheDocument()
   })
 })

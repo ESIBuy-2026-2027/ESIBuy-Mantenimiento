@@ -114,7 +114,7 @@ Se sacaron del registro (HU1) para que el registro y el alta de administradores 
 
 | Archivo | Qué hace |
 |---|---|
-| `accountRules.js` | Requisitos del password, validación del email y comprobación de que los dos passwords coinciden. |
+| `accountRules.js` | Requisitos del password, validación del email y comprobación de que los dos passwords coinciden. Desde la HU22 también valida DNI, teléfono y mayoría de edad. |
 | `PasswordField.jsx` | `PasswordField` (campo con botón para mostrar u ocultar) y `PasswordRequirements` (lista de requisitos con tick verde). |
 | `AvatarSelector.jsx` | Los tres avatares con iconos de animales. |
 

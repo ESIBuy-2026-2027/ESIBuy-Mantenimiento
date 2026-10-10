@@ -18,17 +18,26 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { Dismiss24Regular, PersonAvailable20Regular, PersonProhibited20Regular } from '@fluentui/react-icons'
+import {
+  Dismiss24Regular,
+  Edit20Regular,
+  PersonAvailable20Regular,
+  PersonProhibited20Regular,
+} from '@fluentui/react-icons'
 import {
   getAdminSeller,
   getAdminSellerOrders,
   getAdminSellerProducts,
+  updateAdminSeller,
   updateAdminSellerStatus,
 } from '../../api/adminSellers'
+import { ROLES } from '../../auth/roles'
 import { useApiQuery } from '../../hooks/useApiQuery'
+import { useCategories } from '../../hooks/useCategories'
 import ProductsTable from '../seller/ProductsTable'
 import OrdersTable from './OrdersTable'
 import PagedList from './PagedList'
+import ProfileEditor from './ProfileEditor'
 import SellerDataForm from './SellerDataForm'
 import StatusConfirmDialog from './StatusConfirmDialog'
 
@@ -75,6 +84,34 @@ function SellerOrdersTab({ sellerId }) {
   )
 }
 
+// Edición de los datos del vendedor (HU22). Necesita las categorías para elegir la principal.
+function SellerEditor({ seller, onSaved, onCancel }) {
+  const { categories, loaded, failed, retry } = useCategories()
+
+  if (failed) {
+    return (
+      <MessageBar intent="error">
+        <MessageBarBody>No se han podido cargar las categorías.</MessageBarBody>
+        <MessageBarActions>
+          <Button onClick={retry}>Reintentar</Button>
+        </MessageBarActions>
+      </MessageBar>
+    )
+  }
+  if (!loaded) return <Spinner label="Cargando el formulario…" />
+
+  return (
+    <ProfileEditor
+      rol={ROLES.VENDEDOR}
+      usuario={seller}
+      categories={categories}
+      save={(datos) => updateAdminSeller(seller.id, datos)}
+      onSaved={onSaved}
+      onCancel={onCancel}
+    />
+  )
+}
+
 // Texto de cada acción según el estado al que se quiere pasar al vendedor.
 const ACCIONES_DE_ESTADO = {
   ACTIVO: {
@@ -101,6 +138,7 @@ export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }
   const [confirmando, setConfirmando] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [resultado, setResultado] = useState(null)
+  const [editando, setEditando] = useState(false)
 
   const nuevoEstado = seller?.estado === 'ACTIVO' ? 'DESACTIVADO' : 'ACTIVO'
   const accion = ACCIONES_DE_ESTADO[nuevoEstado]
@@ -120,6 +158,18 @@ export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }
     }
   }
 
+  const avisarGuardado = () => {
+    setEditando(false)
+    setResultado({ intent: 'success', texto: 'Los cambios se han guardado.' })
+    retry()
+    onStatusChange?.()
+  }
+
+  const empezarAEditar = () => {
+    setResultado(null)
+    setEditando(true)
+  }
+
   return (
     <Dialog open modalType="modal" onOpenChange={(_event, data) => !data.open && onClose()}>
       <DialogSurface className={styles.surface}>
@@ -134,8 +184,10 @@ export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }
           <DialogContent className={styles.content}>
             <MessageBar intent="info">
               <MessageBarBody>
-                <MessageBarTitle>Modo solo lectura</MessageBarTitle>
-                Puedes consultar esta información, pero no modificarla.
+                <MessageBarTitle>{editando ? 'Modo edición' : 'Modo solo lectura'}</MessageBarTitle>
+                {editando
+                  ? 'Solo se pueden modificar los datos del vendedor. Sus productos, precios y pedidos no se pueden cambiar.'
+                  : 'Puedes consultar esta información. Los datos del vendedor se cambian con Editar; sus productos, precios y pedidos, no.'}
               </MessageBarBody>
             </MessageBar>
 
@@ -160,17 +212,29 @@ export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }
               <>
                 <TabList selectedValue={tab} onTabSelect={(_event, data) => setTab(data.value)}>
                   <Tab value="data">Datos</Tab>
-                  <Tab value="products">Productos</Tab>
-                  <Tab value="orders">Pedidos</Tab>
+                  <Tab value="products" disabled={editando}>
+                    Productos
+                  </Tab>
+                  <Tab value="orders" disabled={editando}>
+                    Pedidos
+                  </Tab>
                 </TabList>
-                {tab === 'data' && <SellerDataForm seller={seller} />}
+                {tab === 'data' && !editando && <SellerDataForm seller={seller} />}
+                {tab === 'data' && editando && (
+                  <SellerEditor seller={seller} onSaved={avisarGuardado} onCancel={() => setEditando(false)} />
+                )}
                 {tab === 'products' && <SellerProductsTab sellerId={seller.id} />}
                 {tab === 'orders' && <SellerOrdersTab sellerId={seller.id} />}
               </>
             )}
           </DialogContent>
-          {seller && (
+          {seller && !editando && (
             <DialogActions>
+              {tab === 'data' && (
+                <Button icon={<Edit20Regular />} onClick={empezarAEditar}>
+                  Editar
+                </Button>
+              )}
               <Button icon={accion.icono} onClick={() => setConfirmando(true)}>
                 {accion.boton}
               </Button>
@@ -190,6 +254,12 @@ export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }
       </DialogSurface>
     </Dialog>
   )
+}
+
+SellerEditor.propTypes = {
+  seller: PropTypes.shape({ id: PropTypes.string.isRequired }).isRequired,
+  onSaved: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
 }
 
 SellerProductsTab.propTypes = {
