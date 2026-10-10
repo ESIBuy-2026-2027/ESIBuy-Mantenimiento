@@ -121,7 +121,7 @@ class UsuarioTest {
     }
 
     @Test
-    @DisplayName("HU1-CP16: una cuenta nueva nace en estado PENDIENTE y no cuenta como activa")
+    @DisplayName("HU1-CP12: una cuenta nueva nace en estado PENDIENTE y no cuenta como activa")
     void unUsuarioNuevoNaceEnEstadoPendiente() {
         Usuario usuario = cliente();
 
@@ -130,7 +130,7 @@ class UsuarioTest {
     }
 
     @Test
-    @DisplayName("HU1-CP16: una cuenta restaurada como PENDIENTE no cuenta como activa")
+    @DisplayName("HU1-CP12: una cuenta restaurada como PENDIENTE no cuenta como activa")
     void restaurarEstadoPendienteNoCuentaComoActivo() {
         Usuario usuario = cliente();
 
@@ -141,7 +141,7 @@ class UsuarioTest {
     }
 
     @Test
-    @DisplayName("HU1-CP16: una cuenta restaurada como ACTIVO cuenta como activa")
+    @DisplayName("HU1-CP12: una cuenta restaurada como ACTIVO cuenta como activa")
     void restaurarEstadoActivoCuentaComoActivo() {
         Usuario usuario = cliente();
 
@@ -184,7 +184,7 @@ class UsuarioTest {
     }
 
     @Test
-    @DisplayName("HU1-CP16: un cliente creado con nuevoCliente nace en estado PENDIENTE")
+    @DisplayName("HU1-CP12: un cliente creado con nuevoCliente nace en estado PENDIENTE")
     void unClienteNuevoNaceEnEstadoPendiente() {
         Usuario usuario = Usuario.nuevoCliente(DATOS_PERSONALES, EMAIL, HASH, DATOS_CLIENTE, CONSENTIMIENTO, HOY);
 

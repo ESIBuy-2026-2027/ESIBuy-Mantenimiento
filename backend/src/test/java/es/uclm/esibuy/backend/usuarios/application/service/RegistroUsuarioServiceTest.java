@@ -143,7 +143,7 @@ class RegistroUsuarioServiceTest {
     }
 
     @Test
-    @DisplayName("HU1-CP12: rechaza un DNI ya registrado y no guarda nada")
+    @DisplayName("HU1-CP16: rechaza un DNI ya registrado y no guarda nada")
     void rechazaDniYaRegistrado() {
         when(usuarioRepository.existePorDni("12345678Z")).thenReturn(true);
         lenient().when(hashContrasena.hashear("clave1234")).thenReturn("hash-simulado");

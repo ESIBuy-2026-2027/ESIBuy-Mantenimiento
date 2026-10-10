@@ -90,7 +90,7 @@ class UsuarioMongoAdapterTest {
     }
 
     @Test
-    @DisplayName("HU1-CP12: la base de datos rechaza un segundo cliente con el mismo DNI y lo distingue del email repetido")
+    @DisplayName("HU1-CP16: la base de datos rechaza un segundo cliente con el mismo DNI y lo distingue del email repetido")
     void rechazaDniDuplicadoEnLaBaseDeDatos() {
         // Dos emails distintos y el mismo DNI: solo el índice único rol_dni (AB#210) lo para. El adaptador
         // tiene que distinguir qué índice ha fallado para no confundirlo con un correo repetido.
@@ -102,7 +102,7 @@ class UsuarioMongoAdapterTest {
     }
 
     @Test
-    @DisplayName("HU1-CP12: existePorDni devuelve true si el DNI ya está guardado y false si no")
+    @DisplayName("HU1-CP16: existePorDni devuelve true si el DNI ya está guardado y false si no")
     void existePorDniDistingueLosDniGuardados() {
         adapter.guardar(cliente("juan@uclm.es", "hash-1"));
 
