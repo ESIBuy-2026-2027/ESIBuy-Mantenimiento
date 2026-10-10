@@ -57,14 +57,18 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         Usuario usuario = buscar(usuarioId);
         DatosPersonales datosPersonales = new DatosPersonales(comando.nombre(), comando.apellidos(),
                 comando.imagenPerfil());
-        // Los datos de cliente solo se construyen para un cliente; los de otros roles se ignoran.
-        DatosCliente datosCliente = usuario.getRol() == Rol.CLIENTE
-                ? new DatosCliente(comando.tipoCliente(), new Dni(comando.dni()), comando.fechaNacimiento(),
-                        comando.telefono() == null ? null : new Telefono(comando.telefono()))
-                : null;
-        usuario.modificarDatos(datosPersonales, datosCliente, LocalDate.now(reloj));
+        usuario.modificarDatos(datosPersonales, datosCliente(usuario.getRol(), comando), LocalDate.now(reloj));
         usuarioRepository.guardar(usuario);
         return usuario;
+    }
+
+    // Los datos de cliente solo se construyen para un cliente; en otros roles se ignoran.
+    private static DatosCliente datosCliente(Rol rol, EditarUsuarioCommand comando) {
+        if (rol != Rol.CLIENTE) {
+            return null;
+        }
+        Telefono telefono = comando.telefono() == null ? null : new Telefono(comando.telefono());
+        return new DatosCliente(comando.tipoCliente(), new Dni(comando.dni()), comando.fechaNacimiento(), telefono);
     }
 
     private Usuario buscar(String usuarioId) {
