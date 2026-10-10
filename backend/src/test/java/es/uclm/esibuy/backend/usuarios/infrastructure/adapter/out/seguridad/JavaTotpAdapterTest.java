@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.OptionalLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // Test del adaptador real con la librería java-totp (T20, D2), sin Spring y sin mocks.
@@ -48,5 +49,24 @@ class JavaTotpAdapterTest {
         assertEquals(OptionalLong.of(1), totp.periodoDelCodigo(SECRETO_RFC, "287082", Instant.ofEpochSecond(29)));
         // 60 s después (periodo 3): demasiado lejos → se rechaza
         assertTrue(totp.periodoDelCodigo(SECRETO_RFC, "287082", Instant.ofEpochSecond(119)).isEmpty());
+    }
+
+    @Test
+    @DisplayName("HU2-CP22: genera un secreto aleatorio en Base32, como lo guardan las apps de autenticación")
+    void generaUnSecretoAleatorioEnBase32() {
+        String secreto = totp.generarSecreto();
+
+        // Base32: solo letras mayúsculas y los dígitos del 2 al 7. 32 caracteres = 160 bits (RFC 4226)
+        assertTrue(secreto.matches("[A-Z2-7]{32}"), "Secreto con formato inesperado: " + secreto);
+        assertNotEquals(secreto, totp.generarSecreto(), "Cada alta debe tener un secreto distinto");
+    }
+
+    @Test
+    @DisplayName("HU2-CP22: genera el QR del alta como imagen que el frontend puede mostrar directamente")
+    void generaElQrComoImagen() {
+        String qr = totp.generarQr("juan@uclm.es", SECRETO_RFC);
+
+        // Data URI: la imagen PNG dentro del propio texto, lista para un <img src="..."> del frontend
+        assertTrue(qr.startsWith("data:image/png;base64,"), "El QR debe ser una imagen PNG en data URI");
     }
 }
