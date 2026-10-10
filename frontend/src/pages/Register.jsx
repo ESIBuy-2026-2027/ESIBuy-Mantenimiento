@@ -5,6 +5,8 @@ import {
   Field,
   Input,
   Label,
+  Radio,
+  RadioGroup,
   Select,
   Text,
   Title2,
@@ -140,7 +142,7 @@ export default function Register() {
     nombre: '',
     apellidos: '',
     nombreComercial: '',
-    categorias: [],
+    categoriaPrincipalId: '',
     fechaNacimiento: '',
     dni: '',
     email: '',
@@ -162,13 +164,7 @@ export default function Register() {
 
   const cambiar = (campo) => (e, data) => setDatos({ ...datos, [campo]: data.value })
 
-  const cambiarCategoria = (id) => (e, data) =>
-    setDatos({
-      ...datos,
-      categorias: data.checked
-        ? [...datos.categorias, id]
-        : datos.categorias.filter((categoria) => categoria !== id),
-    })
+  const cambiarCategoria = (e, data) => setDatos({ ...datos, categoriaPrincipalId: data.value })
 
   const enviarCliente = async () => {
     const nuevosErrores = validarCamposComunes(datos, OBLIGATORIOS_CLIENTE)
@@ -191,8 +187,8 @@ export default function Register() {
 
   const enviarVendedor = async () => {
     const nuevosErrores = validarCamposComunes(datos, OBLIGATORIOS_VENDEDOR)
-    if (datos.categorias.length === 0) {
-      nuevosErrores.categorias = 'Elige al menos una categoría'
+    if (!datos.categoriaPrincipalId) {
+      nuevosErrores.categoriaPrincipalId = 'Elige una categoría'
     }
     setErrores(nuevosErrores)
 
@@ -306,17 +302,14 @@ export default function Register() {
         {campo('nombreComercial', 'Nombre comercial')}
         <fieldset className={styles.categorias}>
           <legend className={styles.leyenda}>
-            <Label required>Categorías</Label>
+            <Label required>Categoría</Label>
           </legend>
-          {categoriasDisponibles.map((categoria) => (
-            <Checkbox
-              key={categoria.id}
-              label={categoria.nombre}
-              checked={datos.categorias.includes(categoria.id)}
-              onChange={cambiarCategoria(categoria.id)}
-            />
-          ))}
-          {errores.categorias && <Text className={styles.error}>{errores.categorias}</Text>}
+          <RadioGroup value={datos.categoriaPrincipalId} onChange={cambiarCategoria}>
+            {categoriasDisponibles.map((categoria) => (
+              <Radio key={categoria.id} value={categoria.id} label={categoria.nombre} />
+            ))}
+          </RadioGroup>
+          {errores.categoriaPrincipalId && <Text className={styles.error}>{errores.categoriaPrincipalId}</Text>}
         </fieldset>
         {camposComunes}
         {selectorAvatar}

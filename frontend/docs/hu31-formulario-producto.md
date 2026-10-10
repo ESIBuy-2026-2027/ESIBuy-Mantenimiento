@@ -116,7 +116,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | Campo | Obligatorio | Regla |
 |---|---|---|
 | Nombre | Sí | No vacío; hasta 100 caracteres |
-| Categorías | Sí | Al menos una, de las que devuelve `GET /api/categorias` |
+| Categoría | Sí | **Una sola**, de las que devuelve `GET /api/categorias` (decisión del equipo: un producto no tiene categorías secundarias) |
 | Precio (€) | Sí | Número **mayor que 0** |
 | Stock | No | Entero **mayor o igual que 0**; si se deja vacío se envía 0 |
 | Descripción | No | Hasta 1000 caracteres |
@@ -167,7 +167,7 @@ Cuerpo de `POST` y `PUT` (y respuesta de `GET`, que además incluye `id`):
   "descripcion": "",
   "precio": 45.5,
   "stock": 7,
-  "categoriaIds": ["cat-2"],
+  "categoriaId": "cat-2",
   "imagen": "",
   "disponible": true,
   "descuento": { "activo": true, "porcentaje": 10 },
@@ -180,12 +180,12 @@ Cuerpo de `POST` y `PUT` (y respuesta de `GET`, que además incluye `id`):
 | 400 (con `{ "code": "VALIDATION_ERROR" }`), 401, 403, 5xx | Mensaje genérico de error |
 | 404 en `GET` | "No se ha encontrado el producto" |
 
-Reglas que el backend debe imponer (las mismas del formulario): nombre no vacío, al menos una categoría existente, `precio > 0`, `stock` entero ≥ 0, y porcentajes entre 0 (excluido) y 100 cuando el descuento está activo.
+Reglas que el backend debe imponer (las mismas del formulario): nombre no vacío, una categoría existente, `precio > 0`, `stock` entero ≥ 0, y porcentajes entre 0 (excluido) y 100 cuando el descuento está activo.
 
 Notas:
 
 - **El vendedor no viaja en el cuerpo.** El backend lo toma de la sesión y asocia el producto automáticamente. En `GET`, `PUT` y `DELETE` solo debe poder actuar sobre productos propios (404 para los ajenos, para no revelar su existencia).
-- En el listado (`GET /api/seller/products`) las categorías llegan como **nombres**, y en el detalle como **identificadores** (`categoriaIds`), que son los que usa el formulario. Hay que mantener esa diferencia o unificarla.
+- En el listado (`GET /api/seller/products`) las categorías llegan como **nombres**, y en el detalle como **identificador** (`categoriaId`, una sola), que es el que usa el formulario. Hay que mantener esa diferencia o unificarla. Antes el cuerpo llevaba `categoriaIds`, una lista; el nombre `categoriaId` lo ha propuesto el frontend y hay que acordarlo con el backend (el esquema de MongoDB todavía tiene `categoriaIds` como lista).
 - La imagen es, por ahora, una **URL**. Si se decide subir archivos, habrá que cambiar el contrato (envío multipart) y el cliente HTTP.
 - Tras crear o editar un producto con `disponible: true`, debe aparecer en el catálogo de clientes.
 
@@ -198,7 +198,7 @@ Con `npm run dev` (mocks activos), entra como `vendedor@esibuy.test` (contraseñ
 Pruebas manuales sugeridas:
 
 1. En **Mis productos**, pulsar **Añadir producto**: aparece el formulario vacío.
-2. Pulsar **Guardar** sin rellenar nada: salen a la vez el nombre, las categorías y el precio. Corregir uno y ver que su error desaparece.
+2. Pulsar **Guardar** sin rellenar nada: salen a la vez el nombre, la categoría y el precio. Corregir uno y ver que su error desaparece.
 3. Probar precio `0`, stock `-1`, stock `1.5` y una imagen que no sea una dirección web.
 4. Activar **Activar descuento**: aparece el porcentaje. Dejarlo vacío y guardar.
 5. Rellenar un producto válido y guardar: se vuelve al listado con "Producto guardado correctamente." (el producto no se añade a la lista, ver la sección 1).
@@ -229,9 +229,9 @@ La centrada del formulario y la alineación de precio y stock se comprobaron mid
 
 ## 7. Decisiones y librerías
 
-- **No se ha añadido ninguna librería nueva.** Todo sale de Fluent UI (`Field`, `Input`, `Textarea`, `Checkbox`, `Switch`, `Dialog`) y de los iconos que ya usa el proyecto.
+- **No se ha añadido ninguna librería nueva.** Todo sale de Fluent UI (`Field`, `Input`, `Textarea`, `RadioGroup`, `Switch`, `Dialog`) y de los iconos que ya usa el proyecto.
 - **Una pantalla para alta y edición:** evita duplicar el formulario y garantiza que ambas acciones validan igual.
-- **Categorías con casillas y no con desplegable múltiple:** es el mismo patrón del registro de vendedor y es más fácil de usar y de probar con teclado.
+- **Categoría con botones de opción:** es el mismo patrón del registro de vendedor, y al ser una sola categoría se ven todas las opciones y es fácil de usar y de probar con teclado.
 - **Imagen como URL:** subir archivos exigiría un envío distinto (multipart) que el cliente HTTP no tiene. Se deja como decisión pendiente con backend.
 - **Aviso al volver al listado:** como los mocks no añaden el producto, el aviso es la única confirmación visible. Viaja en el estado de la navegación, así que reaparece si se recarga la página; no se guarda en el navegador.
 - **Nombre del archivo `productValues.js`:** un archivo `productForm.js` convivía mal con `ProductForm.jsx` en sistemas de ficheros que no distinguen mayúsculas (Windows), y un `import` acababa cogiendo el archivo equivocado.

@@ -3,11 +3,12 @@ import { categoryPropType, productValuesPropType } from '../../utils/propTypes'
 import { useState } from 'react'
 import {
   Button,
-  Checkbox,
   Field,
   Input,
   MessageBar,
   MessageBarBody,
+  Radio,
+  RadioGroup,
   Spinner,
   Switch,
   Text,
@@ -77,11 +78,6 @@ export default function ProductForm({ initialValues, categories, saving, saveFai
   const setField = (field) => (value) => setValues((current) => ({ ...current, [field]: value }))
   const onText = (field) => (_event, data) => setField(field)(data.value)
 
-  const toggleCategory = (categoryId, checked) =>
-    setField('categoriaIds')(
-      checked ? [...values.categoriaIds, categoryId] : values.categoriaIds.filter((id) => id !== categoryId),
-    )
-
   const handleSubmit = (event) => {
     event.preventDefault()
     if (saving) return
@@ -104,18 +100,15 @@ export default function ProductForm({ initialValues, categories, saving, saveFai
       </Field>
 
       <fieldset className={styles.categories}>
-        <legend className={styles.legend}>Categorías *</legend>
-        {categories.map((category) => (
-          <Checkbox
-            key={category.id}
-            label={category.nombre}
-            checked={values.categoriaIds.includes(category.id)}
-            onChange={(_event, data) => toggleCategory(category.id, Boolean(data.checked))}
-          />
-        ))}
-        {errors.categoriaIds && (
+        <legend className={styles.legend}>Categoría *</legend>
+        <RadioGroup value={values.categoriaId} onChange={(_event, data) => setField('categoriaId')(data.value)}>
+          {categories.map((category) => (
+            <Radio key={category.id} value={category.id} label={category.nombre} />
+          ))}
+        </RadioGroup>
+        {errors.categoriaId && (
           <Text role="alert" className={styles.error}>
-            {errors.categoriaIds}
+            {errors.categoriaId}
           </Text>
         )}
       </fieldset>

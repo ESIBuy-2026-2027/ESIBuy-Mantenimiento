@@ -91,12 +91,11 @@ const todosLosVendedores = () =>
 export const vendedoresMock = () => todosLosVendedores().map(conCambios)
 export const buscarVendedorMock = (id) => vendedoresMock().find((vendedor) => vendedor.id === id)
 
-export function editarVendedorMock(id, { nombre, apellidos, email, nombreComercial, nif, categoriaPrincipalId }) {
+export function editarVendedorMock(id, { nombre, apellidos, nombreComercial, nif, categoriaPrincipalId }) {
   datosModificados.set(id, {
     ...datosModificados.get(id),
     nombre,
     apellidos,
-    email,
     nombreComercial,
     nif,
     categoria: categoriaPrincipalId,

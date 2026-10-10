@@ -36,9 +36,9 @@ Marketplace (tienda online) desarrollado como Práctica Integrada de la asignatu
 
 - **Usuario** (abstracto) → Administrador / Vendedor / Cliente. Campos comunes: nombre, apellidos, email, rol, estado (pendiente / activo / bloqueado / desactivado), imagen de perfil.
 - **Cliente**: tipo (Normal/Premium), fecha de nacimiento, DNI, teléfono, direcciones (varias, una principal), métodos de pago (tokenizados).
-- **Vendedor**: nombre comercial (único), NIF/DNI, categoría principal de productos.
+- **Vendedor**: nombre comercial (único), NIF/DNI y **una sola categoría** (no hay categorías secundarias).
 - **Administrador**: sede, fecha de incorporación.
-- **Producto**: nombre, descripción, precio, stock, descuentos, visible/disponible, imagen, **categorías (varias)**, valoración media, vendedor.
+- **Producto**: nombre, descripción, precio, stock, descuentos, visible/disponible, imagen, **una sola categoría**, valoración media, vendedor.
 - **Categoría**: nombre, descripción (las define el sistema).
 - **Carrito**, **Pedido** (precio congelado en la compra), **Reseña**, **ListaDeseos**, **AlertaProducto**, **Notificación**, **Incidencia**.
 
@@ -111,7 +111,7 @@ El tipo de usuario se elige en el propio formulario (botones, tarjetas, desplega
 - Casilla de aceptación de política de privacidad (RGPD).
 
 **Vendedor**
-- Nombre\*, apellidos\*, **categoría principal\*** (elegida de las del sistema; puede vender en otras), **nombre comercial\* (único)**, DNI/NIF\*, email\*, imagen de perfil, contraseña\*.
+- Nombre\*, apellidos\*, **categoría\*** (una sola, elegida de las del sistema), **nombre comercial\* (único)**, DNI/NIF\*, email\*, imagen de perfil, contraseña\*.
 
 **Imagen de perfil (todos los roles)**: elegir una de una selección predefinida o subir una propia. Si no elige, se asigna una por defecto.
 
@@ -143,7 +143,7 @@ El tipo de usuario se elige en el propio formulario (botones, tarjetas, desplega
 - **Recuperación de contraseña**: siempre mediante correo con enlace; la página de destino permite fijar la nueva contraseña (mismo formulario/validaciones de contraseña).
 
 ### 6.6 Alta de producto (HU31)
-- Nombre\*, **categorías\*** (selección múltiple entre las categorías del sistema; mínimo una), precio\* (> 0), stock (≥ 0; si se deja vacío se inicializa a **0**), descripción, imagen, **descuento** y **descuento premium**, visible/disponible.
+- Nombre\*, **categoría\*** (una sola, entre las categorías del sistema), precio\* (> 0), stock (≥ 0; si se deja vacío se inicializa a **0**), descripción, imagen, **descuento** y **descuento premium**, visible/disponible.
 - **Descuentos**: cada uno se puede activar o desactivar. Un cliente normal recibe el descuento normal; uno premium recibe el descuento premium. El descuento normal se aplica a todos los clientes; **No se acumulan**.
 - **Disponible/visible** se puede cambiar después (activar/desactivar producto).
 
