@@ -9,6 +9,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
@@ -57,6 +58,9 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
         }
         if (usuarioRepository.existePorCorreo(comando.email())) {
             throw new CorreoYaRegistradoException("El correo ya está registrado");
+        }
+        if (usuarioRepository.existePorDni(comando.dni())) {
+            throw new DniYaRegistradoException("El DNI ya está registrado");
         }
 
         String contrasenaHash = hashContrasena.hashear(comando.password());
