@@ -31,4 +31,12 @@ public interface AdministracionUsuariosUseCase {
      *         o no es un vendedor
      */
     Usuario consultarVendedor(String usuarioId);
+
+    /**
+     * Modifica los datos del usuario y lo devuelve ya modificado (HU22).
+     *
+     * @throws es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException si no existe
+     * @throws es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException si los datos no son válidos
+     */
+    Usuario editar(String usuarioId, EditarUsuarioCommand comando);
 }
