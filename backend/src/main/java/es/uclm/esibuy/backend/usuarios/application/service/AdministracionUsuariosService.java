@@ -19,10 +19,19 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
 
     @Override
     public Usuario activar(String usuarioId) {
-        Usuario usuario = usuarioRepository.buscarPorId(usuarioId)
-                .orElseThrow(() -> new UsuarioNoEncontradoException("El usuario no existe"));
+        Usuario usuario = buscar(usuarioId);
         usuario.activar();
         usuarioRepository.guardar(usuario);
         return usuario;
+    }
+
+    @Override
+    public Usuario consultar(String usuarioId) {
+        return buscar(usuarioId);
+    }
+
+    private Usuario buscar(String usuarioId) {
+        return usuarioRepository.buscarPorId(usuarioId)
+                .orElseThrow(() -> new UsuarioNoEncontradoException("El usuario no existe"));
     }
 }
