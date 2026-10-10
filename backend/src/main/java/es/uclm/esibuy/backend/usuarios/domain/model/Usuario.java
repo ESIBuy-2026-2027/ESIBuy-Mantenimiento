@@ -48,8 +48,8 @@ public class Usuario {
         // Se comprueba todo antes de asignar: si algo falla, el usuario se queda como estaba.
         DatosPersonales personales = exigirNoNulo(datosPersonales, "Los datos personales son obligatorios");
         DatosCliente cliente = exigirDatosClienteCoherente(rol, datosCliente);
-        if (cliente != null && cliente.fechaNacimiento().plusYears(MAYORIA_EDAD).isAfter(hoy)) {
-            throw new UsuarioInvalidoException("El cliente debe ser mayor de edad");
+        if (cliente != null) {
+            exigirMayoriaDeEdad(cliente, hoy);
         }
         this.datosPersonales = personales;
         this.datosCliente = cliente;
@@ -57,10 +57,14 @@ public class Usuario {
 
     public static Usuario nuevoCliente(DatosPersonales datosPersonales, Email email, String passwordHash,
         DatosCliente datosCliente, ConsentimientoPrivacidad consentimiento, LocalDate hoy) {
+        exigirMayoriaDeEdad(datosCliente, hoy);
+        return new Usuario(null, datosPersonales, email, passwordHash, Rol.CLIENTE, datosCliente, consentimiento);
+    }
+
+    private static void exigirMayoriaDeEdad(DatosCliente datosCliente, LocalDate hoy) {
         if (datosCliente.fechaNacimiento().plusYears(MAYORIA_EDAD).isAfter(hoy)) {
             throw new UsuarioInvalidoException("El cliente debe ser mayor de edad");
         }
-        return new Usuario(null, datosPersonales, email, passwordHash, Rol.CLIENTE, datosCliente, consentimiento);
     }
 
     private static DatosCliente exigirDatosClienteCoherente(Rol rol, DatosCliente datosCliente) {
