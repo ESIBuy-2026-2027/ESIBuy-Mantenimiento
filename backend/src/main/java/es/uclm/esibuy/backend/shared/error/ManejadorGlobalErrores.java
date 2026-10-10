@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.shared.error;
 
 import es.uclm.esibuy.backend.usuarios.application.port.out.exception.EnvioEmailException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
@@ -9,6 +10,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaExcepti
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import org.springframework.http.HttpStatus;
@@ -90,5 +92,18 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public RespuestaError cuentaPendiente() {
         return new RespuestaError("La cuenta está pendiente de verificación", "ACCOUNT_PENDING");
+    }
+
+    // 409 + code al desactivar (HU23): códigos acordados con el frontend (frontend/docs/hu23-desactivar-usuario.md).
+    @ExceptionHandler(AutodesactivacionNoPermitidaException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError autodesactivacionNoPermitida() {
+        return new RespuestaError("No puedes desactivar tu propia cuenta", "CANNOT_DEACTIVATE_SELF");
+    }
+
+    @ExceptionHandler(UltimoAdministradorActivoException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError ultimoAdministradorActivo() {
+        return new RespuestaError("No se puede desactivar al último administrador activo", "LAST_ACTIVE_ADMIN");
     }
 }
