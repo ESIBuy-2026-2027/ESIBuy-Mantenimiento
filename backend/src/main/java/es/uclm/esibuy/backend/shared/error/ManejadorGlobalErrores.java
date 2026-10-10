@@ -72,8 +72,11 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("El usuario no existe");
     }
 
+    // Sin @ResponseStatus Spring respondería 200 y el frontend lo tomaría por un login correcto.
+    // 403 + code, como la cuenta desactivada: el frontend elige su mensaje por el code (T236).
     @ExceptionHandler(CuentaPendienteException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
     public RespuestaError cuentaPendiente() {
-        return new RespuestaError("La cuenta está pendiente de verificación");
+        return new RespuestaError("La cuenta está pendiente de verificación", "ACCOUNT_PENDING");
     }
 }
