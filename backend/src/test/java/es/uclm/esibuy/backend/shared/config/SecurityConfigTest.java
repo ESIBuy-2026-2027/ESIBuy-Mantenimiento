@@ -2,6 +2,8 @@ package es.uclm.esibuy.backend.shared.config;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -17,6 +19,7 @@ import jakarta.servlet.http.Cookie;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -25,11 +28,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // que solo existe en este test.
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU18-CP01 a CP03, propuestos a partir de los criterios
 // de aceptación de la HU18.
-@WebMvcTest(SecurityConfigTest.AdministracionDePruebaController.class)
-@Import({SecurityConfig.class, SecurityConfigTest.AdministracionDePruebaController.class})
+@WebMvcTest({SecurityConfigTest.AdministracionDePruebaController.class, SecurityConfigTest.VendedorDePruebaController.class})
+@Import({SecurityConfig.class, SecurityConfigTest.AdministracionDePruebaController.class,
+        SecurityConfigTest.VendedorDePruebaController.class})
 class SecurityConfigTest {
 
     private static final String RUTA_ADMINISTRACION = "/api/admin/prueba";
+    private static final String RUTA_VENDEDOR = "/api/seller/prueba";
     private static final String RUTA_LOGIN = "/api/auth/login";
     private static final String COOKIE_CSRF = "XSRF-TOKEN";
     private static final String CABECERA_CSRF = "X-XSRF-TOKEN";
@@ -113,12 +118,47 @@ class SecurityConfigTest {
                 .andExpect(status().isForbidden());
     }
 
+    // Zona de vendedor (HU15, T57): misma idea que la de administración, con su propio endpoint de prueba.
+    // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU15-CP01 a CP03, propuestos a partir de los criterios
+    // de la HU15.
+
+    @Test
+    @DisplayName("HU15-CP01: sin sesión no se accede a la zona de vendedor")
+    void sinSesionNoSeAccedeALaZonaDeVendedor() throws Exception {
+        mockMvc.perform(get(RUTA_VENDEDOR)).andExpect(status().isUnauthorized());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "ADMINISTRADOR"})
+    @DisplayName("HU15-CP02: un cliente o un administrador no accede a la zona de vendedor")
+    void otroRolNoAccedeALaZonaDeVendedor(String rol) throws Exception {
+        mockMvc.perform(get(RUTA_VENDEDOR).with(user("usuario").roles(rol))).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "VENDEDOR")
+    @DisplayName("HU15-CP03: un vendedor accede a la zona de vendedor")
+    void vendedorAccedeALaZonaDeVendedor() throws Exception {
+        mockMvc.perform(get(RUTA_VENDEDOR)).andExpect(status().isOk());
+    }
+
     // Endpoint de administración de prueba: así el test comprueba un 200 real sin depender de los
     // endpoints de otras tasks (HU19 a HU24).
     @RestController
     static class AdministracionDePruebaController {
 
         @GetMapping(RUTA_ADMINISTRACION)
+        String responder() {
+            return "ok";
+        }
+    }
+
+    // Endpoint de la zona de vendedor de prueba: todavía no hay endpoints de vendedor (llegarán con
+    // los productos, HU31 y HU32).
+    @RestController
+    static class VendedorDePruebaController {
+
+        @GetMapping(RUTA_VENDEDOR)
         String responder() {
             return "ok";
         }

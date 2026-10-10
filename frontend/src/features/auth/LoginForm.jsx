@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { MessageBar, MessageBarBody, Subtitle1 } from '@fluentui/react-components'
-import { login, verifyAuthenticatorCode, verifyEmailCode } from '../../api/auth'
+import { enrollAuthenticator, login, verifyAuthenticatorCode, verifyEmailCode } from '../../api/auth'
 import { useAuth } from '../../auth/useAuth'
 import CodeStep from './CodeStep'
 import CredentialsStep from './CredentialsStep'
+import EnrollAuthenticatorStep from './EnrollAuthenticatorStep'
 import { getLoginErrorMessage, isPendingAccountError } from './loginErrors'
 import PendingAccountScreen from './PendingAccountScreen'
 
@@ -13,6 +14,7 @@ export default function LoginForm() {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [pendingEmail, setPendingEmail] = useState('')
+  const [qr, setQr] = useState('')
 
   const run = async (action, onSuccess) => {
     setSubmitting(true)
@@ -40,8 +42,22 @@ export default function LoginForm() {
     return run(() => login(credentials), () => setStep('emailCode'))
   }
 
+  // Tras el código del correo: si el usuario aún no tiene Authenticator, se pide el QR del alta (T20)
   const handleEmailCode = (code) =>
-    run(() => verifyEmailCode(code), () => setStep('authenticator'))
+    run(
+      async () => {
+        const respuesta = await verifyEmailCode(code)
+        if (respuesta?.nextStep !== 'enrollAuthenticator') {
+          return { siguiente: 'authenticator' }
+        }
+        const { qr: imagen } = await enrollAuthenticator()
+        return { siguiente: 'enrollAuthenticator', imagen }
+      },
+      ({ siguiente, imagen }) => {
+        setQr(imagen ?? '')
+        setStep(siguiente)
+      },
+    )
 
   const handleAuthenticatorCode = (code) =>
     run(async () => {
@@ -77,6 +93,15 @@ export default function LoginForm() {
             submitting={submitting}
           />
         </>
+      )}
+
+      {step === 'enrollAuthenticator' && (
+        <EnrollAuthenticatorStep
+          qr={qr}
+          onSubmit={handleAuthenticatorCode}
+          onBack={restart}
+          submitting={submitting}
+        />
       )}
 
       {step === 'authenticator' && (

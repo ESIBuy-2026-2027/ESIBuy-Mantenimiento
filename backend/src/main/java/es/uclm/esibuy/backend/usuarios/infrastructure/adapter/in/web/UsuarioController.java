@@ -64,6 +64,12 @@ public class UsuarioController {
         );
     }
 
+    // Ficha de un usuario (HU20). 404 si no existe (UsuarioNoEncontradoException, en ManejadorGlobalErrores).
+    @GetMapping("/admin/usuarios/{id}")
+    public UsuarioDetalleResponse consultar(@PathVariable String id) {
+        return UsuarioDetalleResponse.desde(administracionUsuarios.consultar(id));
+    }
+
     // Activar (HU24) o desactivar (HU23) una cuenta. La validación de CambiarEstadoRequest ya garantiza
     // que el estado pedido es ACTIVO o DESACTIVADO. Al desactivar se pasa el email del administrador en sesión.
     @PatchMapping("/admin/usuarios/{id}/status")
@@ -73,5 +79,40 @@ public class UsuarioController {
             return UsuarioListadoResponse.desde(administracionUsuarios.desactivar(id, autenticado.getName()));
         }
         return UsuarioListadoResponse.desde(administracionUsuarios.activar(id));
+    }
+
+    // Supervisión de vendedores, solo lectura (HU26): el listado de la HU19 con el rol VENDEDOR fijo.
+    // PENDIENTE: el filtro y el orden por categoría (category, sort=category) se ignoran hasta que
+    // exista el registro de vendedores.
+    @GetMapping("/admin/sellers")
+    public VendedorPageResponse listarVendedores(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String order) {
+        if (page < 1 || size < 1) {
+            throw new IllegalArgumentException("La página y el tamaño deben ser positivos");
+        }
+        return VendedorPageResponse.desde(listadoUsuarios.listar(new ListarUsuariosQuery(
+                search, Rol.VENDEDOR, status, page - 1, size, orden(sort), "desc".equals(order))));
+    }
+
+    // Ficha de un vendedor (HU26). 404 si no existe o no es vendedor.
+    // PENDIENTE: /admin/sellers/{id}/products y /orders, cuando existan los productos y los pedidos.
+    @GetMapping("/admin/sellers/{id}")
+    public VendedorResponse consultarVendedor(@PathVariable String id) {
+        return VendedorResponse.desde(administracionUsuarios.consultarVendedor(id));
+    }
+
+    private static ListarUsuariosQuery.Orden orden(String sort) {
+        if ("name".equals(sort)) {
+            return ListarUsuariosQuery.Orden.NOMBRE;
+        }
+        if ("status".equals(sort)) {
+            return ListarUsuariosQuery.Orden.ESTADO;
+        }
+        return null;
     }
 }

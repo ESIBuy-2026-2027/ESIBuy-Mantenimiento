@@ -294,6 +294,58 @@ describe('Login (HU2): paso 3, Microsoft Authenticator', () => {
   })
 })
 
+// Alta de Microsoft Authenticator en el primer login (HU2, T20): tras el código del correo, un usuario
+// sin Authenticator escanea un QR y confirma el alta con su primer código, que también abre la sesión.
+describe('Login (HU2): alta de Microsoft Authenticator', () => {
+  it('login_sinAuthenticator_trasElCodigoDeCorreo_muestraElQrDelAlta', async () => {
+    const user = userEvent.setup()
+    renderApp('/login')
+
+    await escribirCredenciales(user, 'nuevo@esibuy.test', CLAVE)
+    await resolverCodigoDeCorreo(user)
+
+    const qr = await screen.findByRole('img', { name: /código qr.*microsoft authenticator/i })
+    expect(qr).toHaveAttribute('src', expect.stringMatching(/^data:image\/png;base64,/))
+    expect(screen.getByText(/escanea/i)).toBeInTheDocument()
+  })
+
+  it('login_sinAuthenticator_conElPrimerCodigo_confirmaElAltaYEntra', async () => {
+    const user = userEvent.setup()
+    renderApp('/login')
+
+    await escribirCredenciales(user, 'nuevo@esibuy.test', CLAVE)
+    await resolverCodigoDeCorreo(user)
+    await screen.findByRole('img', { name: /código qr.*microsoft authenticator/i })
+    await resolverCodigoDeAutenticador(user)
+
+    await esperarRuta('/products')
+  })
+
+  it('login_sinAuthenticator_conUnPrimerCodigoIncorrecto_muestraErrorYSigueEnElAlta', async () => {
+    const user = userEvent.setup()
+    renderApp('/login')
+
+    await escribirCredenciales(user, 'nuevo@esibuy.test', CLAVE)
+    await resolverCodigoDeCorreo(user)
+    await screen.findByRole('img', { name: /código qr.*microsoft authenticator/i })
+    await resolverCodigoDeAutenticador(user, '000000')
+
+    expect(await screen.findByText(/código de microsoft authenticator no es válido/i)).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /código qr.*microsoft authenticator/i })).toBeInTheDocument()
+  })
+
+  it('login_conAuthenticatorYaDadoDeAlta_noMuestraElQr', async () => {
+    const user = userEvent.setup()
+    renderApp('/login')
+
+    await escribirCredenciales(user, 'cliente@esibuy.test', CLAVE)
+    await resolverCodigoDeCorreo(user)
+
+    await screen.findByLabelText(/código de microsoft authenticator/i)
+    expect(screen.queryByRole('img', { name: /código qr/i })).not.toBeInTheDocument()
+  })
+})
+
 describe('Rutas protegidas y sesión', () => {
   it('rutaDeAdmin_sinSesion_redirigeAlLogin', async () => {
     renderApp('/admin')

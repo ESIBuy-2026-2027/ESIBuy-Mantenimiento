@@ -11,6 +11,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
@@ -449,6 +450,82 @@ class UsuarioControllerTest {
                 .andExpect(status().isUnauthorized());
 
         verify(administracionUsuarios, never()).activar(any());
+    }
+
+    // Ficha de un usuario (HU20, T54): GET /api/admin/usuarios/{id} con UsuarioDetalleResponse.
+    // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU20-CP01 a CP04, propuestos a partir del contrato.
+
+    @Test
+    @DisplayName("HU20-CP01: la ficha de un cliente trae sus datos personales y de cliente, sin datos sensibles")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void fichaDeUnClienteConSusDatos() throws Exception {
+        Usuario cliente = new Usuario("usr-4", new DatosPersonales("Lucía", "Torres Vega", "avatar2"),
+                new Email("lucia@esibuy.test"), "hash-no-debe-salir", Rol.CLIENTE,
+                new DatosCliente(TipoCliente.PREMIUM, new Dni("12345678Z"), LocalDate.of(1979, 5, 14),
+                        new Telefono("620031676")), null);
+        when(administracionUsuarios.consultar("usr-4")).thenReturn(cliente);
+
+        mockMvc.perform(get("/api/admin/usuarios/{id}", "usr-4"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("usr-4"))
+                .andExpect(jsonPath("$.nombre").value("Lucía"))
+                .andExpect(jsonPath("$.email").value("lucia@esibuy.test"))
+                .andExpect(jsonPath("$.rol").value("CLIENTE"))
+                .andExpect(jsonPath("$.dni").value("12345678Z"))
+                .andExpect(jsonPath("$.telefono").value("620031676"))
+                .andExpect(jsonPath("$.fechaNacimiento").value("1979-05-14"))
+                .andExpect(jsonPath("$.tipoCliente").value("PREMIUM"))
+                .andExpect(jsonPath("$.avatar").value("avatar2"))
+                .andExpect(jsonPath("$.imagenPerfil").doesNotExist())
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("HU20-CP02: la ficha de un administrador no trae datos de cliente")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void fichaDeUnAdministradorSinDatosDeCliente() throws Exception {
+        Usuario administrador = new Usuario("usr-9", new DatosPersonales("Ana", "López Díaz", null),
+                new Email("ana@esibuy.test"), "hash-no-debe-salir", Rol.ADMINISTRADOR, null, null);
+        when(administracionUsuarios.consultar("usr-9")).thenReturn(administrador);
+
+        mockMvc.perform(get("/api/admin/usuarios/{id}", "usr-9"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rol").value("ADMINISTRADOR"))
+                .andExpect(jsonPath("$.dni").doesNotExist())
+                .andExpect(jsonPath("$.telefono").doesNotExist())
+                .andExpect(jsonPath("$.fechaNacimiento").doesNotExist())
+                .andExpect(jsonPath("$.tipoCliente").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("HU20-CP03: la ficha de un usuario que no existe devuelve 404")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void fichaDeUnUsuarioInexistenteDevuelve404() throws Exception {
+        when(administracionUsuarios.consultar("no-existe"))
+                .thenThrow(new UsuarioNoEncontradoException("El usuario no existe"));
+
+        mockMvc.perform(get("/api/admin/usuarios/{id}", "no-existe"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @Test
+    @DisplayName("HU20-CP04: sin sesión no se ve la ficha de un usuario")
+    void fichaSinSesionDevuelve401() throws Exception {
+        mockMvc.perform(get("/api/admin/usuarios/{id}", "usr-4"))
+                .andExpect(status().isUnauthorized());
+
+        verify(administracionUsuarios, never()).consultar(any());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "VENDEDOR"})
+    @DisplayName("HU20-CP04: un usuario que no es administrador no ve la ficha de otro")
+    void noAdministradorNoVeLaFicha(String rol) throws Exception {
+        mockMvc.perform(get("/api/admin/usuarios/{id}", "usr-4").with(user("usuario").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(administracionUsuarios, never()).consultar(any());
     }
 
     // PATCH con sesión: lleva el token CSRF (la estrategia de CSRF se decidirá con el login, task 230).

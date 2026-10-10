@@ -29,6 +29,21 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
     }
 
     @Override
+    public Usuario consultar(String usuarioId) {
+        return buscar(usuarioId);
+    }
+
+    @Override
+    public Usuario consultarVendedor(String usuarioId) {
+        Usuario usuario = buscar(usuarioId);
+        if (usuario.getRol() != Rol.VENDEDOR) {
+            // Por la zona de vendedores solo se ven vendedores: otro usuario es como si no existiera.
+            throw new UsuarioNoEncontradoException("El vendedor no existe");
+        }
+        return usuario;
+    }
+
+    @Override
     public Usuario desactivar(String usuarioId, String emailAdministrador) {
         Usuario usuario = buscar(usuarioId);
         if (usuario.getEmail().valor().equalsIgnoreCase(emailAdministrador)) {

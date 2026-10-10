@@ -6,9 +6,13 @@ import java.util.regex.Pattern;
 import java.time.Instant;
 
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
+import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Switch.CaseOperator;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
@@ -28,6 +32,9 @@ import java.util.Optional;
  * repositorio de Spring Data. Así, dominio y aplicación no dependen de MongoDB.
  */
 public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
+
+    private static final String CAMPO_ESTADO = "estado";
+    private static final String CAMPO_RANGO_ESTADO = "rangoEstado";
 
     // Nombre del índice único de DNI por rol, fijado en ColeccionesEsiBuy.
     private static final String INDICE_DNI = "rol_dni";
@@ -91,23 +98,50 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
 
     @Override
     public UsuarioPage listar(ListarUsuariosQuery query) {
-        Query mongoQuery = construirConsulta(query);
-        long total = mongoTemplate.count(mongoQuery, UsuarioDocument.class);
-        Pageable pageable = PageRequest.of(
-                query.pagina(),
-                query.tamano(),
-                Sort.by(Sort.Direction.DESC, "createdAt")
-        );
-        mongoQuery.with(pageable);
+        Criteria criterios = construirCriterios(query);
+        long total = mongoTemplate.count(new Query(criterios), UsuarioDocument.class);
+        List<UsuarioDocument> documentos = query.ordenarPor() == ListarUsuariosQuery.Orden.ESTADO
+                ? buscarOrdenadosPorEstado(criterios, query)
+                : mongoTemplate.find(new Query(criterios).with(PageRequest.of(query.pagina(), query.tamano(),
+                        ordenSimple(query))), UsuarioDocument.class);
 
-        List<Usuario> usuarios = mongoTemplate.find(mongoQuery, UsuarioDocument.class)
-                .stream()
+        List<Usuario> usuarios = documentos.stream()
                 .map(mapper::aDominio)
                 .toList();
         return new UsuarioPage(usuarios, query.pagina(), query.tamano(), total);
     }
 
-    private Query construirConsulta(ListarUsuariosQuery query) {
+    // Sin orden propio, por fecha de alta (HU19); por nombre, nombre y apellidos (HU26).
+    private static Sort ordenSimple(ListarUsuariosQuery query) {
+        if (query.ordenarPor() == ListarUsuariosQuery.Orden.NOMBRE) {
+            return Sort.by(direccion(query), "nombre", "apellidos");
+        }
+        return Sort.by(Sort.Direction.DESC, "createdAt");
+    }
+
+    // Por estado (HU26): el orden ascendente es pendientes, activos y desactivados, no el alfabético,
+    // así que se calcula un rango con una agregación. A igualdad de estado, por nombre.
+    private List<UsuarioDocument> buscarOrdenadosPorEstado(Criteria criterios, ListarUsuariosQuery query) {
+        AggregationExpression rango = ConditionalOperators.switchCases(
+                CaseOperator.when(ComparisonOperators.valueOf(CAMPO_ESTADO).equalToValue("PENDIENTE")).then(0),
+                CaseOperator.when(ComparisonOperators.valueOf(CAMPO_ESTADO).equalToValue("ACTIVO")).then(1),
+                CaseOperator.when(ComparisonOperators.valueOf(CAMPO_ESTADO).equalToValue("DESACTIVADO")).then(2))
+                .defaultTo(3);
+        Aggregation agregacion = Aggregation.newAggregation(
+                Aggregation.match(criterios),
+                Aggregation.addFields().addField(CAMPO_RANGO_ESTADO).withValue(rango).build(),
+                Aggregation.sort(Sort.by(direccion(query), CAMPO_RANGO_ESTADO)
+                        .and(Sort.by(Sort.Direction.ASC, "nombre", "apellidos"))),
+                Aggregation.skip((long) query.pagina() * query.tamano()),
+                Aggregation.limit(query.tamano()));
+        return mongoTemplate.aggregate(agregacion, UsuarioDocument.class, UsuarioDocument.class).getMappedResults();
+    }
+
+    private static Sort.Direction direccion(ListarUsuariosQuery query) {
+        return query.descendente() ? Sort.Direction.DESC : Sort.Direction.ASC;
+    }
+
+    private Criteria construirCriterios(ListarUsuariosQuery query) {
         List<Criteria> criterios = new ArrayList<>();
         if (query.busqueda() != null && !query.busqueda().isBlank()) {
             String textoEscapado = Pattern.quote(query.busqueda().trim());
@@ -123,16 +157,12 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
         }
         if ("BLOQUEADO".equals(query.estado())) {
             criterios.add(new Criteria().andOperator(
-                    Criteria.where("estado").is("ACTIVO"),
+                    Criteria.where(CAMPO_ESTADO).is("ACTIVO"),
                     Criteria.where("lockedUntil").gt(Instant.now())
             ));
         } else if (query.estado() != null) {
-            criterios.add(Criteria.where("estado").is(query.estado()));
+            criterios.add(Criteria.where(CAMPO_ESTADO).is(query.estado()));
         }
-        Query mongoQuery = new Query();
-        if (!criterios.isEmpty()) {
-            mongoQuery.addCriteria(new Criteria().andOperator(criterios));
-        }
-        return mongoQuery;
+        return criterios.isEmpty() ? new Criteria() : new Criteria().andOperator(criterios);
     }
 }

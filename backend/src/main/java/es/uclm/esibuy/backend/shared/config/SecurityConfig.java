@@ -27,6 +27,10 @@ import org.springframework.security.web.authentication.logout.HttpStatusReturnin
  * ocultar el menú en el frontend es solo experiencia de usuario, la barrera real es esta. Spring
  * comprueba la autoridad {@code ROLE_ADMINISTRADOR}, que el login tendrá que dar a cada usuario según
  * su rol.
+ *
+ * <p>La zona de vendedor ({@code /api/seller/**}) solo la usa el rol VENDEDOR (HU15, T57). El
+ * administrador ve la información de los vendedores en solo lectura por su propia zona
+ * ({@code /api/admin/sellers/...}, HU26). Que el vendedor esté activo lo comprueba el login.
  */
 @Configuration
 public class SecurityConfig {
@@ -37,17 +41,23 @@ public class SecurityConfig {
     // Página de error interna de Spring Boot: abierta para que un 403 o un 500 no se conviertan en 401
     private static final String RUTA_ERROR = "/error";
     private static final String RUTA_CODIGO_EMAIL = "/api/auth/verify-email-code";
+    private static final String RUTA_ALTA_AUTHENTICATOR = "/api/auth/enroll-authenticator";
+    private static final String RUTA_CODIGO_AUTHENTICATOR = "/api/auth/verify-authenticator-code";
     private static final String RUTAS_ADMINISTRACION = "/api/admin/**";
     // Texto y no el enum Rol: shared no depende del dominio de ningún módulo. Es el mismo valor que Rol.ADMINISTRADOR.
     private static final String ROL_ADMINISTRADOR = "ADMINISTRADOR";
+    private static final String RUTAS_VENDEDOR = "/api/seller/**";
+    private static final String ROL_VENDEDOR = "VENDEDOR";
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, RUTA_REGISTRO, RUTA_LOGIN, RUTA_CODIGO_EMAIL).permitAll()
+                        .requestMatchers(HttpMethod.POST, RUTA_REGISTRO, RUTA_LOGIN, RUTA_CODIGO_EMAIL,
+                                RUTA_ALTA_AUTHENTICATOR, RUTA_CODIGO_AUTHENTICATOR).permitAll()
                         .requestMatchers(RUTA_ERROR).permitAll()
                         .requestMatchers(RUTAS_ADMINISTRACION).hasRole(ROL_ADMINISTRADOR)
+                        .requestMatchers(RUTAS_VENDEDOR).hasRole(ROL_VENDEDOR)
                         .anyRequest().authenticated())
                 .exceptionHandling(excepciones -> excepciones
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
