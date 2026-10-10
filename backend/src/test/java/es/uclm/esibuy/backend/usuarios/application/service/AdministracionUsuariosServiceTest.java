@@ -68,4 +68,39 @@ class AdministracionUsuariosServiceTest {
         assertThrows(UsuarioNoEncontradoException.class, () -> servicio.activar("no-existe"));
         verify(usuarioRepository, never()).guardar(any());
     }
+
+    // Desactivar una cuenta de usuario (HU23, T37/T38/T39). El segundo parámetro es el email del
+    // administrador que hace la petición: el usuario en sesión se identifica por su email (/api/auth/me).
+    // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU23-CPnn, propuestos a partir del contrato del frontend
+    // (frontend/docs/hu23-desactivar-usuario.md).
+    private static final String EMAIL_ADMINISTRADOR = "admin@esibuy.test";
+
+    @Test
+    @DisplayName("HU23-CP01: desactivar una cuenta activa la deja desactivada y la guarda")
+    void desactivaUnaCuentaActivaYLaGuarda() {
+        Usuario activo = cliente("u-2", "carlos@uclm.es");
+        activo.activar();
+        when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(activo));
+
+        Usuario desactivado = servicio.desactivar("u-2", EMAIL_ADMINISTRADOR);
+
+        assertSame(activo, desactivado);
+        assertEquals("DESACTIVADO", desactivado.getEstado());
+        verify(usuarioRepository).guardar(desactivado);
+    }
+
+    @Test
+    @DisplayName("HU23-CP02: desactivar un usuario que no existe falla y no guarda nada")
+    void rechazaDesactivarUnUsuarioQueNoExiste() {
+        when(usuarioRepository.buscarPorId("no-existe")).thenReturn(Optional.empty());
+
+        assertThrows(UsuarioNoEncontradoException.class, () -> servicio.desactivar("no-existe", EMAIL_ADMINISTRADOR));
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    private static Usuario cliente(String id, String email) {
+        return new Usuario(id, new DatosPersonales("Carlos", "Moreno Gil", null), new Email(email), "hash-simulado",
+                Rol.CLIENTE, new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1990, 3, 14), null),
+                null);
+    }
 }
