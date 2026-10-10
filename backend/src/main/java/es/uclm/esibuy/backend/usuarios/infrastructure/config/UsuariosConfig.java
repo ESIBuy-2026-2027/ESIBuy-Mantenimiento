@@ -108,8 +108,9 @@ public class UsuariosConfig {
     }
 
     @Bean
-    AdministracionUsuariosUseCase administracionUsuariosUseCase(UsuarioRepositoryPort usuarioRepositoryPort) {
-        return new AdministracionUsuariosService(usuarioRepositoryPort);
+    AdministracionUsuariosUseCase administracionUsuariosUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
+                                                                Clock reloj) {
+        return new AdministracionUsuariosService(usuarioRepositoryPort, reloj);
     }
 
     @Bean
