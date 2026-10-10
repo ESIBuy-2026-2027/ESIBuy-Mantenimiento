@@ -662,7 +662,7 @@ class UsuarioControllerTest {
     @DisplayName("HU22-CP01: el administrador edita un cliente y recibe su ficha actualizada")
     @WithMockUser(roles = "ADMINISTRADOR")
     void administradorEditaUnClienteYRecibeSuFicha() throws Exception {
-        when(administracionUsuarios.editar(eq("usr-1"), any())).thenReturn(clienteCarla());
+        when(administracionUsuarios.editar(eq("usr-1"), any(), any())).thenReturn(clienteCarla());
 
         mockMvc.perform(editar("usr-1", CUERPO_CLIENTE))
                 .andExpect(status().isOk())
@@ -673,7 +673,7 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.passwordHash").doesNotExist());
 
         ArgumentCaptor<EditarUsuarioCommand> comando = ArgumentCaptor.forClass(EditarUsuarioCommand.class);
-        verify(administracionUsuarios).editar(eq("usr-1"), comando.capture());
+        verify(administracionUsuarios).editar(eq("usr-1"), comando.capture(), eq("user"));   // el email del administrador en sesión
         assertEquals(new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", "avatar1", "10004119A",
                 "620023757", LocalDate.of(1978, 4, 13), TipoCliente.PREMIUM), comando.getValue());
     }
@@ -682,7 +682,7 @@ class UsuarioControllerTest {
     @DisplayName("HU22-CP04: el email, la contraseña y el estado del cuerpo se ignoran")
     @WithMockUser(roles = "ADMINISTRADOR")
     void editarIgnoraEmailContrasenaYEstadoDelCuerpo() throws Exception {
-        when(administracionUsuarios.editar(eq("usr-1"), any())).thenReturn(clienteCarla());
+        when(administracionUsuarios.editar(eq("usr-1"), any(), any())).thenReturn(clienteCarla());
         String cuerpo = CUERPO_CLIENTE.replace("}",
                 ",\"email\":\"otro@esibuy.test\",\"password\":\"Nueva-Clave-1!\",\"estado\":\"DESACTIVADO\"}");
 
@@ -691,7 +691,7 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.email").value("carla@esibuy.test"));
 
         ArgumentCaptor<EditarUsuarioCommand> comando = ArgumentCaptor.forClass(EditarUsuarioCommand.class);
-        verify(administracionUsuarios).editar(eq("usr-1"), comando.capture());
+        verify(administracionUsuarios).editar(eq("usr-1"), comando.capture(), eq("user"));   // el email del administrador en sesión
         assertEquals("Carla", comando.getValue().nombre());   // el resto del cuerpo sí llega
     }
 
@@ -708,14 +708,14 @@ class UsuarioControllerTest {
         mockMvc.perform(editar("usr-1", cuerpo))
                 .andExpect(status().isBadRequest());
 
-        verify(administracionUsuarios, never()).editar(any(), any());
+        verify(administracionUsuarios, never()).editar(any(), any(), any());
     }
 
     @Test
     @DisplayName("HU22-CP05: datos que el dominio rechaza (p. ej. un menor de edad) devuelven 400")
     @WithMockUser(roles = "ADMINISTRADOR")
     void editarConDatosQueElDominioRechazaDevuelve400() throws Exception {
-        when(administracionUsuarios.editar(eq("usr-1"), any()))
+        when(administracionUsuarios.editar(eq("usr-1"), any(), any()))
                 .thenThrow(new UsuarioInvalidoException("El cliente debe ser mayor de edad"));
 
         mockMvc.perform(editar("usr-1", CUERPO_CLIENTE))
@@ -727,7 +727,7 @@ class UsuarioControllerTest {
     @DisplayName("HU22-CP06: editar con el DNI de otra cuenta devuelve 409 con DNI_ALREADY_REGISTERED")
     @WithMockUser(roles = "ADMINISTRADOR")
     void editarConElDniDeOtraCuentaDevuelve409() throws Exception {
-        when(administracionUsuarios.editar(eq("usr-1"), any()))
+        when(administracionUsuarios.editar(eq("usr-1"), any(), any()))
                 .thenThrow(new DniYaRegistradoException("El DNI ya está registrado"));
 
         mockMvc.perform(editar("usr-1", CUERPO_CLIENTE))
@@ -739,7 +739,7 @@ class UsuarioControllerTest {
     @DisplayName("HU22-CP07: editar un usuario que no existe devuelve 404")
     @WithMockUser(roles = "ADMINISTRADOR")
     void editarUnUsuarioInexistenteDevuelve404() throws Exception {
-        when(administracionUsuarios.editar(eq("no-existe"), any()))
+        when(administracionUsuarios.editar(eq("no-existe"), any(), any()))
                 .thenThrow(new UsuarioNoEncontradoException("El usuario no existe"));
 
         mockMvc.perform(editar("no-existe", CUERPO_CLIENTE))
@@ -754,7 +754,7 @@ class UsuarioControllerTest {
         mockMvc.perform(editar("usr-1", CUERPO_CLIENTE).with(user("usuario").roles(rol)))
                 .andExpect(status().isForbidden());
 
-        verify(administracionUsuarios, never()).editar(any(), any());
+        verify(administracionUsuarios, never()).editar(any(), any(), any());
     }
 
     @Test
@@ -763,7 +763,7 @@ class UsuarioControllerTest {
         mockMvc.perform(editar("usr-1", CUERPO_CLIENTE))
                 .andExpect(status().isUnauthorized());
 
-        verify(administracionUsuarios, never()).editar(any(), any());
+        verify(administracionUsuarios, never()).editar(any(), any(), any());
     }
 
     @Test
@@ -775,7 +775,7 @@ class UsuarioControllerTest {
                         .content(CUERPO_CLIENTE))
                 .andExpect(status().isForbidden());
 
-        verify(administracionUsuarios, never()).editar(any(), any());
+        verify(administracionUsuarios, never()).editar(any(), any(), any());
     }
 
     private static Usuario clienteCarla() {
