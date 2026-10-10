@@ -39,7 +39,7 @@ public class UsuarioController {
         this.administracionUsuarios = administracionUsuarios;
     }
 
-    @PostMapping("/auth/registro")
+    @PostMapping("/auth/register/cliente")   // contrato acordado con el frontend (T229)
     @ResponseStatus(HttpStatus.CREATED)
     public void registrar(@Valid @RequestBody RegistroRequest request) {
         registroUsuario.registrar(new RegistrarUsuarioCommand(
