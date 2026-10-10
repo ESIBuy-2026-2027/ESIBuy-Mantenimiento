@@ -16,6 +16,10 @@ public final class PoliticaContrasenas {
     private static final Pattern MINUSCULA = Pattern.compile("\\p{Ll}");
     private static final Pattern NUMERO = Pattern.compile("\\p{N}");
 
+    // Se busca algo que no sea una letra y que al mismo tiempo tampoco sea un número,
+    // el uso de ^ es lo que garantiza que ambas condiciones se ejecuten de forma conjunta y negada.
+    private static final Pattern SIMBOLO = Pattern.compile("[^\\p{L}\\p{N}]");
+
     private PoliticaContrasenas() {
     }
 
@@ -36,8 +40,12 @@ public final class PoliticaContrasenas {
             throw new ContrasenaInvalidaException("La contraseña debe tener al menos una minúscula");
         }
 
-        if(!NUMERO.matcher(contrasena).find()) {
+        if (!NUMERO.matcher(contrasena).find()) {
             throw new ContrasenaInvalidaException("La contraseña debe tener al menos un número");
+        }
+
+        if (!SIMBOLO.matcher(contrasena).find()) {
+            throw new ContrasenaInvalidaException("La contraseña debe tener al menos un símbolo");
         }
     }
 
