@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
+import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
 /**
@@ -28,6 +29,16 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
     @Override
     public Usuario consultar(String usuarioId) {
         return buscar(usuarioId);
+    }
+
+    @Override
+    public Usuario consultarVendedor(String usuarioId) {
+        Usuario usuario = buscar(usuarioId);
+        if (usuario.getRol() != Rol.VENDEDOR) {
+            // Por la zona de vendedores solo se ven vendedores: otro usuario es como si no existiera.
+            throw new UsuarioNoEncontradoException("El vendedor no existe");
+        }
+        return usuario;
     }
 
     private Usuario buscar(String usuarioId) {
