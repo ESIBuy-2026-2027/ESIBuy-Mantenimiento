@@ -7,6 +7,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPor
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
@@ -201,8 +202,13 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP06: guarda el consentimiento con la fecha y la versión")
     void guardaElConsentimientoConLaFechaYLaVersion() {
-        // TODO: el usuario guardado tiene ConsentimientoPrivacidad con el instante del Clock fijo y la versión "1.0".
-        fail("Funcionalidad no implementada");
+        when(hashContrasena.hashear("clave1234")).thenReturn("hash-simulado");
+
+        registroUsuario.registrar(comando("juan@uclm.es", "clave1234"));
+
+        ArgumentCaptor<Usuario> usuarioGuardado = ArgumentCaptor.forClass(Usuario.class);
+        verify(usuarioRepository).guardar(usuarioGuardado.capture());
+        assertEquals(new ConsentimientoPrivacidad(RELOJ.instant(), "1.0"), usuarioGuardado.getValue().getConsentimiento());
     }
 
     @Test
