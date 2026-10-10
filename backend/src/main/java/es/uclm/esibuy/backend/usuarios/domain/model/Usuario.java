@@ -42,17 +42,18 @@ public class Usuario {
         }
     }
 
-    public static Usuario nuevoCliente(DatosPersonales datosPersonales, Email email, String passwordHash, DatosCliente datosCliente, ConsentimientoPrivacidad consentimiento, LocalDate hoy) {
+    public static Usuario nuevoCliente(DatosPersonales datosPersonales, Email email, String passwordHash,
+            DatosCliente datosCliente, ConsentimientoPrivacidad consentimiento, LocalDate hoy) {
         return new Usuario(null, datosPersonales, email, passwordHash, Rol.CLIENTE, datosCliente, consentimiento);
     }
 
     private static DatosCliente exigirDatosClienteCoherente(Rol rol, DatosCliente datosCliente) {
         boolean esCliente = rol == Rol.CLIENTE;
         if (esCliente && datosCliente == null) {
-            throw new UsuarioInvalidoException("Un cliente debe tener tipo de cliente");
+            throw new UsuarioInvalidoException("Un cliente debe tener datos de cliente");
         }
         if (!esCliente && datosCliente != null) {
-            throw new UsuarioInvalidoException("Solo los clientes tienen tipo de cliente");
+            throw new UsuarioInvalidoException("Solo los clientes tienen datos de cliente");
         }
         return datosCliente;
     }
@@ -144,7 +145,7 @@ public class Usuario {
         this.bloqueadoHasta = bloqueadoHasta;
     }
 
-    public void restaurarFechaAlta (Instant fechaAlta) {
+    public void restaurarFechaAlta(Instant fechaAlta) {
         this.fechaAlta = fechaAlta;
     }
 }
