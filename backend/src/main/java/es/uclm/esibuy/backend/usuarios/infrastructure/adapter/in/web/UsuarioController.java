@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 
 /**
  * Adaptador de entrada web del módulo de usuarios.
@@ -68,6 +69,13 @@ public class UsuarioController {
     @GetMapping("/admin/usuarios/{id}")
     public UsuarioDetalleResponse consultar(@PathVariable String id) {
         return UsuarioDetalleResponse.desde(administracionUsuarios.consultar(id));
+    }
+
+    // Editar los datos de un usuario (HU22). 400 si los datos no son válidos, 404 si no existe y 409 si el
+    // DNI es de otra cuenta (ManejadorGlobalErrores). Devuelve la ficha actualizada, como el GET de la HU20.
+    @PutMapping("/admin/usuarios/{id}")
+    public UsuarioDetalleResponse editar(@PathVariable String id, @Valid @RequestBody EditarUsuarioRequest request) {
+        return UsuarioDetalleResponse.desde(administracionUsuarios.editar(id, request.aComando()));
     }
 
     // Activar (HU24) o desactivar (HU23) una cuenta. La validación de CambiarEstadoRequest ya garantiza
