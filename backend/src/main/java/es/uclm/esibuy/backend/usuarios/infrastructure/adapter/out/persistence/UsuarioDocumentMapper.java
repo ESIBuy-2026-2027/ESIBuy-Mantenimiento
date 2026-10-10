@@ -1,5 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
+import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
@@ -18,8 +20,9 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
  * de {@code Usuario} no conoce porque describe un usuario nuevo.
  *
  * <p>Un documento sin nombre, apellidos o, en un cliente, sin DNI o fecha de nacimiento, no se
- * puede reconstruir: el dominio los exige desde la T229. PENDIENTE DE REVISAR CON EL EQUIPO qué
- * hacer con las cuentas de prueba anteriores guardadas en Atlas.
+ * puede reconstruir: el dominio los exige desde la T229 y se lanza
+ * {@link UsuarioPersistidoInvalidoException} (T228). PENDIENTE DE REVISAR CON EL EQUIPO qué hacer
+ * con las cuentas de prueba anteriores guardadas en Atlas.
  */
 public class UsuarioDocumentMapper {
 
@@ -57,6 +60,15 @@ public class UsuarioDocumentMapper {
     }
 
     public Usuario aDominio(UsuarioDocument documento) {
+        try {
+            return reconstruir(documento);
+        } catch (UsuarioInvalidoException | EmailInvalidoException e) {
+            // Las reglas del dominio han rechazado datos ya guardados: es un fallo del servidor, no del cliente.
+            throw new UsuarioPersistidoInvalidoException(documento.getId(), e);
+        }
+    }
+
+    private static Usuario reconstruir(UsuarioDocument documento) {
         Rol rol = Rol.valueOf(documento.getRol());
         Usuario usuario = new Usuario(documento.getId(),
                 new DatosPersonales(documento.getNombre(), documento.getApellidos(), documento.getImagenPerfil()),
