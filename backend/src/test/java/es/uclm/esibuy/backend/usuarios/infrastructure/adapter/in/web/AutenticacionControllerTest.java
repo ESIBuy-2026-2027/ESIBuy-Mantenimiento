@@ -1,12 +1,16 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
+import es.uclm.esibuy.backend.usuarios.application.port.in.AltaAuthenticator;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.AuthenticatorUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.IniciarSesionCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.PasoLogin;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ResultadoInicioSesion;
+import es.uclm.esibuy.backend.usuarios.application.port.in.VerificarCodigoAuthenticatorCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.VerificarCodigoEmailCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.exception.EnvioEmailException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.AuthenticatorYaDadoDeAltaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
@@ -27,11 +31,17 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
@@ -58,12 +68,17 @@ class AutenticacionControllerTest {
     private static final String URL_CODIGO_EMAIL = "/api/auth/verify-email-code";
     private static final String URL_ME = "/api/auth/me";
     private static final String URL_LOGOUT = "/api/auth/logout";
+    private static final String URL_ALTA_AUTHENTICATOR = "/api/auth/enroll-authenticator";
+    private static final String URL_CODIGO_AUTHENTICATOR = "/api/auth/verify-authenticator-code";
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
     private AutenticacionUseCase autenticacion;
+
+    @MockitoBean
+    private AuthenticatorUseCase authenticator;
 
     private static String jsonLogin(String email, String password) {
         return """
@@ -292,5 +307,133 @@ class AutenticacionControllerTest {
         // El frontend no puede borrar la cookie HttpOnly: es el servidor quien invalida la sesión,
         // y la cookie deja de valer aunque alguien la tenga
         assertTrue(sesion.isInvalid(), "La sesión debe quedar invalidada");
+    }
+
+    // --- Paso 3: Microsoft Authenticator (T20) ---
+
+    private static Usuario clienteActivo() {
+        Usuario usuario = new Usuario("u-1", new DatosPersonales("Juan", "García", null), new Email("juan@uclm.es"),
+                "hash-guardado", Rol.CLIENTE, new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"),
+                LocalDate.of(1996, 5, 20), null), null);
+        usuario.activar();
+        return usuario;
+    }
+
+    private static String jsonCodigo(String codigo) {
+        return """
+               {"code": "%s"}
+               """.formatted(codigo);
+    }
+
+    // Hace el paso 1 (login) en la sesión dada
+    private void hacerPasoUno(MockHttpSession sesion) throws Exception {
+        when(autenticacion.iniciarSesion(any()))
+                .thenReturn(new ResultadoInicioSesion("juan@uclm.es", PasoLogin.CODIGO_EMAIL));
+        mockMvc.perform(post(URL_LOGIN).session(sesion).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(jsonLogin("juan@uclm.es", "clave1234")))
+                .andExpect(status().isOk());
+    }
+
+    // Hace los pasos 1 y 2 en la sesión dada; el paso 2 lleva a siguientePaso (authenticator o alta)
+    private void hacerPasosUnoYDos(MockHttpSession sesion, PasoLogin siguientePaso) throws Exception {
+        hacerPasoUno(sesion);
+        when(autenticacion.verificarCodigoEmail(any()))
+                .thenReturn(new ResultadoInicioSesion("juan@uclm.es", siguientePaso));
+        mockMvc.perform(post(URL_CODIGO_EMAIL).session(sesion).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(jsonCodigo("123456")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("HU2-CP17: el código de Authenticator sin haber superado el código del correo devuelve 401")
+    void codigoAuthenticatorSinPasoDosDevuelve401() throws Exception {
+        // Solo el paso 1: quien sepa la contraseña no puede saltarse el código del correo (T20, D8)
+        MockHttpSession sesion = new MockHttpSession();
+        hacerPasoUno(sesion);
+
+        mockMvc.perform(post(URL_CODIGO_AUTHENTICATOR).session(sesion).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(jsonCodigo("287082")))
+                .andExpect(status().isUnauthorized());
+
+        verify(authenticator, never()).verificarCodigo(any());
+    }
+
+    @Test
+    @DisplayName("HU2-CP17: el alta de Authenticator sin haber superado el código del correo devuelve 401")
+    void altaSinPasoDosDevuelve401() throws Exception {
+        MockHttpSession sesion = new MockHttpSession();
+        hacerPasoUno(sesion);
+
+        mockMvc.perform(post(URL_ALTA_AUTHENTICATOR).session(sesion).with(csrf()))
+                .andExpect(status().isUnauthorized());
+
+        verify(authenticator, never()).prepararAlta(any());
+    }
+
+    @Test
+    @DisplayName("HU2-CP22: tras el código del correo, un usuario sin Authenticator recibe el QR del alta")
+    void altaTrasPasoDosDevuelveElQr() throws Exception {
+        MockHttpSession sesion = new MockHttpSession();
+        hacerPasosUnoYDos(sesion, PasoLogin.ALTA_AUTHENTICATOR);
+        when(authenticator.prepararAlta("juan@uclm.es"))
+                .thenReturn(new AltaAuthenticator("data:image/png;base64,qr-de-prueba"));
+
+        mockMvc.perform(post(URL_ALTA_AUTHENTICATOR).session(sesion).with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.qr").value("data:image/png;base64,qr-de-prueba"));
+    }
+
+    @Test
+    @DisplayName("HU2-CP22: quien ya tiene Authenticator no puede volver a darse de alta (403)")
+    void altaDeQuienYaTieneAuthenticatorDevuelve403() throws Exception {
+        MockHttpSession sesion = new MockHttpSession();
+        hacerPasosUnoYDos(sesion, PasoLogin.AUTHENTICATOR);
+        when(authenticator.prepararAlta("juan@uclm.es"))
+                .thenThrow(new AuthenticatorYaDadoDeAltaException("El usuario ya tiene Authenticator"));
+
+        mockMvc.perform(post(URL_ALTA_AUTHENTICATOR).session(sesion).with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("HU2-CP18: un código de Authenticator correcto abre la sesión con el rol del usuario")
+    void codigoAuthenticatorCorrectoAbreLaSesion() throws Exception {
+        MockHttpSession sesion = new MockHttpSession();
+        hacerPasosUnoYDos(sesion, PasoLogin.AUTHENTICATOR);
+        when(authenticator.verificarCodigo(new VerificarCodigoAuthenticatorCommand("juan@uclm.es", "287082")))
+                .thenReturn(clienteActivo());
+
+        mockMvc.perform(post(URL_CODIGO_AUTHENTICATOR).session(sesion).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(jsonCodigo("287082")))
+                .andExpect(status().isOk())
+                // Contrato del frontend: 200 con el usuario (el mismo JSON que /me)
+                .andExpect(jsonPath("$.email").value("juan@uclm.es"))
+                .andExpect(jsonPath("$.rol").value("CLIENTE"));
+
+        // La sesión queda autenticada: Spring Security guarda en ella el usuario y su rol
+        SecurityContext contexto = (SecurityContext) sesion.getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+        assertNotNull(contexto, "Tras el paso 3 la sesión debe estar autenticada");
+        Authentication autenticado = contexto.getAuthentication();
+        assertEquals("juan@uclm.es", autenticado.getName());
+        assertTrue(autenticado.getAuthorities().stream().map(GrantedAuthority::getAuthority)
+                .anyMatch("ROLE_CLIENTE"::equals), "Con ROLE_<rol>, que es lo que comprueba /api/admin");
+    }
+
+    @Test
+    @DisplayName("HU2-CP18: tras el paso 3, /me con esa misma sesión devuelve el usuario")
+    void trasElPasoTresMeDevuelveElUsuario() throws Exception {
+        MockHttpSession sesion = new MockHttpSession();
+        hacerPasosUnoYDos(sesion, PasoLogin.AUTHENTICATOR);
+        when(authenticator.verificarCodigo(any())).thenReturn(clienteActivo());
+        mockMvc.perform(post(URL_CODIGO_AUTHENTICATOR).session(sesion).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(jsonCodigo("287082")))
+                .andExpect(status().isOk());
+        when(autenticacion.consultarUsuarioEnSesion("juan@uclm.es")).thenReturn(clienteActivo());
+
+        // Sin @WithMockUser: la sesión la ha abierto el login de verdad
+        mockMvc.perform(get(URL_ME).session(sesion))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("juan@uclm.es"));
     }
 }

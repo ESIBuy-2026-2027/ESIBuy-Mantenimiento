@@ -4,6 +4,8 @@ const CLAVE_VALIDA = 'Mock-Clave-1!'
 const CODIGO_EMAIL = '654321'
 const CODIGO_AUTENTICADOR = '123456'
 const MAX_INTENTOS_FALLIDOS = 5
+// Imagen de 1x1 píxel: en los mocks basta con una imagen PNG cualquiera para el QR del alta (T20)
+const QR_DE_PRUEBA = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg=='
 
 export const USUARIOS = [
   { id: 'u-1', nombre: 'Ada', apellidos: 'Admin', email: 'admin@esibuy.test', rol: 'ADMINISTRADOR', estado: 'ACTIVO' },
@@ -12,6 +14,8 @@ export const USUARIOS = [
   { id: 'u-5', nombre: 'Vicente', apellidos: 'Vacío', email: 'vendedor-vacio@esibuy.test', rol: 'VENDEDOR', estado: 'ACTIVO' },
   { id: 'u-4', nombre: 'Dani', apellidos: 'Desactivado', email: 'desactivado@esibuy.test', rol: 'CLIENTE', estado: 'DESACTIVADO' },
   { id: 'u-6', nombre: 'Paula', apellidos: 'Pendiente', email: 'pendiente@esibuy.test', rol: 'CLIENTE', estado: 'PENDIENTE' },
+  // Sin Microsoft Authenticator todavía: tras el código del correo pasa al alta con QR (T20)
+  { id: 'u-7', nombre: 'Nora', apellidos: 'Nueva', email: 'nuevo@esibuy.test', rol: 'CLIENTE', estado: 'ACTIVO', sinAuthenticator: true },
 ]
 
 const nuevoEstado = () => ({
@@ -67,13 +71,26 @@ export const authHandlers = [
       return sinAutorizacion()
     }
 
+    if (estado.usuarioPendiente.sinAuthenticator) {
+      estado.paso = 'enrollAuthenticator'
+      return HttpResponse.json({ nextStep: 'enrollAuthenticator' })
+    }
+
     estado.paso = 'authenticator'
     return HttpResponse.json({ nextStep: 'authenticator' })
   }),
 
+  http.post('/api/auth/enroll-authenticator', () => {
+    if (estado.paso !== 'enrollAuthenticator') {
+      return sinAutorizacion()
+    }
+    return HttpResponse.json({ qr: QR_DE_PRUEBA })
+  }),
+
   http.post('/api/auth/verify-authenticator-code', async ({ request }) => {
     const { code } = await request.json()
-    if (estado.paso !== 'authenticator' || code !== CODIGO_AUTENTICADOR) {
+    const enPasoTres = estado.paso === 'authenticator' || estado.paso === 'enrollAuthenticator'
+    if (!enPasoTres || code !== CODIGO_AUTENTICADOR) {
       return sinAutorizacion()
     }
 

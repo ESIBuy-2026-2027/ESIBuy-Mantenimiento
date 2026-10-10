@@ -13,6 +13,7 @@ const STEP_MESSAGES = {
   credentials: MESSAGES.generic,
   emailCode: MESSAGES.code,
   authenticator: MESSAGES.authenticatorCode,
+  enrollAuthenticator: MESSAGES.authenticatorCode,
 }
 
 // La cuenta existe y la contraseña es correcta, pero un administrador aún no la ha activado (HU2, AB#236).
