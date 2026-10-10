@@ -110,6 +110,11 @@ public class AutenticacionService implements AutenticacionUseCase {
         return usuarioRepository.buscarPorCorreo(email).orElseThrow(() -> new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS));
     }
 
+    @Override
+    public String consultarIdUsuarioEnSesion(String email) {
+        return consultarUsuarioEnSesion(email).getId();
+    }
+
     private boolean tieneAuthenticatorConfirmado(Usuario usuario) {
         return factorAutenticacionRepository.buscarPorUsuario(usuario.getId())
         .map(factor -> factor.estaConfirmado()).orElse(false);
