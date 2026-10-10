@@ -14,13 +14,16 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
+import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import java.time.LocalDate;
+import java.time.Month;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -309,14 +312,15 @@ class UsuarioControllerTest {
     }
 
     @Test
-    @DisplayName("HU24-CP02: rechaza un estado distinto de ACTIVO y no cambia nada")
+    @DisplayName("HU24-CP02: rechaza un estado que no es ACTIVO ni DESACTIVADO y no cambia nada")
     @WithMockUser(roles = "ADMINISTRADOR")
-    void rechazaUnEstadoDistintoDeActivo() throws Exception {
-        // DESACTIVADO lo añadirá la HU23 con sus reglas.
-        mockMvc.perform(cambiarEstado("usr-1", "DESACTIVADO"))
+    void rechazaUnEstadoNoAdmitido() throws Exception {
+        // Desde la HU23 se admiten ACTIVO y DESACTIVADO; cualquier otro estado es un 400.
+        mockMvc.perform(cambiarEstado("usr-1", "BLOQUEADO"))
                 .andExpect(status().isBadRequest());
 
         verify(administracionUsuarios, never()).activar(any());
+        verify(administracionUsuarios, never()).desactivar(any(), any());
     }
 
     @Test
@@ -339,6 +343,89 @@ class UsuarioControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(administracionUsuarios, never()).activar(any());
+    }
+
+    // Desactivar una cuenta (HU23, T37/T38/T39): mismo endpoint que activar, con {"estado": "DESACTIVADO"}.
+    // El usuario en sesión se identifica por su email (como en /api/auth/me): con @WithMockUser es el username.
+    // Los códigos de los 409 son los que espera el frontend (frontend/docs/hu23-desactivar-usuario.md).
+    private static final String EMAIL_ADMINISTRADOR = "admin@esibuy.test";
+
+    @Test
+    @DisplayName("HU23-CP01: un administrador desactiva una cuenta y recibe sus datos con estado DESACTIVADO")
+    @WithMockUser(username = EMAIL_ADMINISTRADOR, roles = "ADMINISTRADOR")
+    void administradorDesactivaUnaCuentaYRecibeSusDatos() throws Exception {
+        Usuario desactivado = new Usuario("usr-1", new DatosPersonales("Carlos", "Moreno Gil", null),
+                new Email("carlos@esibuy.test"), "hash-no-debe-salir", Rol.CLIENTE,
+                new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1990, Month.MARCH, 14), null),
+                null);
+        desactivado.desactivar();
+        when(administracionUsuarios.desactivar("usr-1", EMAIL_ADMINISTRADOR)).thenReturn(desactivado);
+
+        mockMvc.perform(cambiarEstado("usr-1", "DESACTIVADO"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("usr-1"))
+                .andExpect(jsonPath("$.estado").value("DESACTIVADO"))
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+
+        verify(administracionUsuarios).desactivar("usr-1", EMAIL_ADMINISTRADOR);
+        verify(administracionUsuarios, never()).activar(any());
+    }
+
+    @Test
+    @DisplayName("HU23-CP02: desactivar un usuario que no existe devuelve 404")
+    @WithMockUser(username = EMAIL_ADMINISTRADOR, roles = "ADMINISTRADOR")
+    void desactivarUnUsuarioInexistenteDevuelve404() throws Exception {
+        when(administracionUsuarios.desactivar("no-existe", EMAIL_ADMINISTRADOR))
+                .thenThrow(new UsuarioNoEncontradoException("El usuario no existe"));
+
+        mockMvc.perform(cambiarEstado("no-existe", "DESACTIVADO"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @Test
+    @DisplayName("HU23-CP03: si el administrador intenta desactivarse a sí mismo devuelve 409 CANNOT_DEACTIVATE_SELF")
+    @WithMockUser(username = EMAIL_ADMINISTRADOR, roles = "ADMINISTRADOR")
+    void desactivarseASiMismoDevuelve409() throws Exception {
+        when(administracionUsuarios.desactivar("u-1", EMAIL_ADMINISTRADOR))
+                .thenThrow(new AutodesactivacionNoPermitidaException("Un administrador no puede desactivar su propia cuenta"));
+
+        mockMvc.perform(cambiarEstado("u-1", "DESACTIVADO"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CANNOT_DEACTIVATE_SELF"))
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @Test
+    @DisplayName("HU23-CP04: desactivar al último administrador activo devuelve 409 LAST_ACTIVE_ADMIN")
+    @WithMockUser(username = EMAIL_ADMINISTRADOR, roles = "ADMINISTRADOR")
+    void desactivarAlUltimoAdministradorActivoDevuelve409() throws Exception {
+        when(administracionUsuarios.desactivar("u-3", EMAIL_ADMINISTRADOR))
+                .thenThrow(new UltimoAdministradorActivoException("No se puede desactivar al último administrador activo"));
+
+        mockMvc.perform(cambiarEstado("u-3", "DESACTIVADO"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("LAST_ACTIVE_ADMIN"))
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "VENDEDOR"})
+    @DisplayName("HU23-CP06: un usuario que no es administrador no puede desactivar cuentas")
+    void unNoAdministradorNoPuedeDesactivarCuentas(String rol) throws Exception {
+        mockMvc.perform(cambiarEstado("usr-1", "DESACTIVADO").with(user("usuario").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(administracionUsuarios, never()).desactivar(any(), any());
+    }
+
+    @Test
+    @DisplayName("HU23-CP06: sin sesión no se puede desactivar una cuenta")
+    void desactivarSinSesionEstaProtegido() throws Exception {
+        mockMvc.perform(cambiarEstado("usr-1", "DESACTIVADO"))
+                .andExpect(status().isUnauthorized());
+
+        verify(administracionUsuarios, never()).desactivar(any(), any());
     }
 
     // Acceso por rol a los endpoints reales de administración (HU18, T60). La regla la puso la T58
