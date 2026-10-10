@@ -39,14 +39,15 @@ class PoliticaContrasenasTest {
     @Test
     @DisplayName("HU1-CP09: rechaza una contraseña de la lista de contraseñas comunes")
     void rechazaContrasenaDeListaNegra() {
-        assertThrows(ContrasenaInvalidaException.class, () -> validar("12345678"));
-        assertThrows(ContrasenaInvalidaException.class, () -> validar("password"));
+        // Contraseñas comunes que cumplen la composición (T239): solo la lista negra puede rechazarlas
+        assertThrows(ContrasenaInvalidaException.class, () -> validar("Password1!"));
+        assertThrows(ContrasenaInvalidaException.class, () -> validar("P@ssw0rd"));
     }
 
     @Test
     @DisplayName("HU1-CP09: rechaza una contraseña común aunque cambie mayúsculas y minúsculas")
     void rechazaContrasenaDeListaNegraConMayusculas() {
-        assertThrows(ContrasenaInvalidaException.class, () -> validar("PASSWORD"));
+        assertThrows(ContrasenaInvalidaException.class, () -> validar("pASSWORD1!"));
     }
 
     @Test

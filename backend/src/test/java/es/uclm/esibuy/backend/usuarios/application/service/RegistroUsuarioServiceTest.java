@@ -241,9 +241,9 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP09: rechaza una contraseña común")
     void rechazaContrasenaComun() {
-        lenient().when(hashContrasena.hashear("password1")).thenReturn("hash-simulado");
+        lenient().when(hashContrasena.hashear("Password1!")).thenReturn("hash-simulado");
 
-        assertThrows(ContrasenaInvalidaException.class, () -> registroUsuario.registrar(comando("juan@uclm.es", "password1")));
+        assertThrows(ContrasenaInvalidaException.class, () -> registroUsuario.registrar(comando("juan@uclm.es", "Password1!")));
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
