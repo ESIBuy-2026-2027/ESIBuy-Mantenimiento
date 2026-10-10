@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
@@ -62,7 +63,13 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         }
         DatosPersonales datosPersonales = new DatosPersonales(comando.nombre(), comando.apellidos(),
                 comando.imagenPerfil());
-        usuario.modificarDatos(datosPersonales, datosCliente(usuario.getRol(), comando), LocalDate.now(reloj));
+        DatosCliente datosCliente = datosCliente(usuario.getRol(), comando);
+        // Solo se comprueba si el DNI cambia: si no, el cliente chocaría consigo mismo.
+        if (datosCliente != null && !datosCliente.dni().equals(usuario.getDatosCliente().dni())
+                && usuarioRepository.existePorDni(datosCliente.dni().valor())) {
+            throw new DniYaRegistradoException("El DNI ya está registrado");
+        }
+        usuario.modificarDatos(datosPersonales, datosCliente, LocalDate.now(reloj));
         usuarioRepository.guardar(usuario);
         return usuario;
     }
