@@ -182,6 +182,58 @@ class AdministracionUsuariosServiceTest {
     }
 
     @Test
+    @DisplayName("HU22-CP12: degradar al último administrador activo falla y no se guarda nada")
+    void rechazaDegradarAlUltimoAdministradorActivo() {
+        Usuario administrador = administradorDiegoActivo();
+        when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(administrador));
+        when(usuarioRepository.contarAdministradoresActivos()).thenReturn(1L);
+
+        assertThrows(UltimoAdministradorActivoException.class,
+                () -> servicio.editar("u-2", diegoACliente(), EMAIL_ADMINISTRADOR));
+        assertEquals(Rol.ADMINISTRADOR, administrador.getRol());
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU22-CP12: se puede degradar a un administrador activo si queda otro administrador activo")
+    void degradaAUnAdministradorSiQuedaOtroActivo() {
+        Usuario administrador = administradorDiegoActivo();
+        when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(administrador));
+        when(usuarioRepository.contarAdministradoresActivos()).thenReturn(2L);
+
+        Usuario editado = servicio.editar("u-2", diegoACliente(), EMAIL_ADMINISTRADOR);
+
+        assertEquals(Rol.CLIENTE, editado.getRol());
+        verify(usuarioRepository).guardar(editado);
+    }
+
+    @Test
+    @DisplayName("HU22-CP12: degradar a un administrador desactivado no resta administradores activos")
+    void degradarAUnAdministradorDesactivadoNoConsultaElConteo() {
+        Usuario administrador = administradorDiegoActivo();
+        administrador.desactivar();
+        when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(administrador));
+
+        Usuario editado = servicio.editar("u-2", diegoACliente(), EMAIL_ADMINISTRADOR);
+
+        assertEquals(Rol.CLIENTE, editado.getRol());
+        verify(usuarioRepository, never()).contarAdministradoresActivos();
+        verify(usuarioRepository).guardar(editado);
+    }
+
+    private static Usuario administradorDiegoActivo() {
+        Usuario administrador = new Usuario("u-2", new DatosPersonales("Diego", "Delgado", null),
+                new Email("diego@uclm.es"), "hash-simulado", Rol.ADMINISTRADOR, null, null);
+        administrador.activar();
+        return administrador;
+    }
+
+    private static EditarUsuarioCommand diegoACliente() {
+        return new EditarUsuarioCommand(Rol.CLIENTE, "Diego", "Delgado", null,
+                "10004119A", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
+    }
+
+    @Test
     @DisplayName("HU22-CP13: pasar una cuenta a vendedor falla y no guarda nada (aún no existen los datos del vendedor)")
     void rechazaPasarUnaCuentaAVendedor() {
         Usuario cliente = clienteLucia();
