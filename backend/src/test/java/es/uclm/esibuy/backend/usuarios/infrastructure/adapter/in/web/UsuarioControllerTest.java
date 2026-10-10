@@ -17,6 +17,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CambioDePropioRolException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
@@ -776,6 +777,47 @@ class UsuarioControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(administracionUsuarios, never()).editar(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("HU22-CP09: un cambio de rol responde 200 con la ficha del rol nuevo")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void cambioDeRolDevuelveLaFichaDelRolNuevo() throws Exception {
+        Usuario ahoraAdministrador = new Usuario("usr-1", new DatosPersonales("Carla", "Moreno Gil", "avatar1"),
+                new Email("carla@esibuy.test"), "hash-no-debe-salir", Rol.ADMINISTRADOR, null, null);
+        when(administracionUsuarios.editar(eq("usr-1"), any(), any())).thenReturn(ahoraAdministrador);
+        String cuerpo = "{\"rol\":\"ADMINISTRADOR\",\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\",\"avatar\":\"avatar1\"}";
+
+        mockMvc.perform(editar("usr-1", cuerpo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rol").value("ADMINISTRADOR"))
+                .andExpect(jsonPath("$.dni").doesNotExist())
+                .andExpect(jsonPath("$.fechaNacimiento").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("HU22-CP11: cambiar el propio rol devuelve 409 con CANNOT_CHANGE_OWN_ROLE")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void cambiarElPropioRolDevuelve409() throws Exception {
+        when(administracionUsuarios.editar(eq("usr-1"), any(), any()))
+                .thenThrow(new CambioDePropioRolException("Un administrador no puede cambiar su propio rol"));
+
+        mockMvc.perform(editar("usr-1", CUERPO_CLIENTE))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CANNOT_CHANGE_OWN_ROLE"))
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @Test
+    @DisplayName("HU22-CP12: degradar al último administrador activo devuelve 409 con LAST_ACTIVE_ADMIN")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void degradarAlUltimoAdministradorActivoDevuelve409() throws Exception {
+        when(administracionUsuarios.editar(eq("usr-1"), any(), any()))
+                .thenThrow(new UltimoAdministradorActivoException("No se puede degradar al último administrador activo"));
+
+        mockMvc.perform(editar("usr-1", CUERPO_CLIENTE))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("LAST_ACTIVE_ADMIN"));
     }
 
     private static Usuario clienteCarla() {
