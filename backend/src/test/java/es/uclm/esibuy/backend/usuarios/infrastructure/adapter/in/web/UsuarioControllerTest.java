@@ -13,6 +13,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
+import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,10 +54,14 @@ class UsuarioControllerTest {
     @MockitoBean
     private ListadoUsuariosUseCase listadoUsuarios;
 
+    // Cuerpo completo del registro de cliente (T229); solo varían el email y la contraseña.
     private static String json(String email, String password) {
         return """
-               {"email": "%s", "password": "%s"}
-               """.formatted(email, password);
+               {"nombre": "Juan", "apellidos": "Pérez García", "fechaNacimiento": "1996-05-20",
+                "dni": "12345678Z", "email": "%s", "telefono": null, "password": "%s",
+                "repeticionPassword": "%s", "tipoCliente": "ESTANDAR", "imagenPerfil": null,
+                "aceptaPrivacidad": true}
+               """.formatted(email, password, password);
     }
 
     @Test
@@ -67,7 +72,9 @@ class UsuarioControllerTest {
                         .content(json("juan@uclm.es", "clave1234")))
                 .andExpect(status().isCreated());
 
-        verify(registroUsuario).registrar(new RegistrarUsuarioCommand("juan@uclm.es", "clave1234"));
+        verify(registroUsuario).registrar(new RegistrarUsuarioCommand("Juan", "Pérez García",
+                LocalDate.of(1996, 5, 20), "12345678Z", "juan@uclm.es", null, "clave1234", "clave1234",
+                TipoCliente.ESTANDAR, null, true));
     }
 
     @Test
