@@ -19,7 +19,8 @@ export function getUser(userId) {
   return request(`/api/admin/usuarios/${encodeURIComponent(userId)}`)
 }
 
-// Modifica los datos de un cliente o de un administrador (HU22). Nunca se envían el email ni la contraseña.
+// Modifica los datos de cualquier usuario (cliente, administrador o vendedor) y su rol (HU22). Nunca se envía la
+// contraseña, ni el email de clientes y administradores.
 export function updateUser(userId, datos) {
   return request(`/api/admin/usuarios/${encodeURIComponent(userId)}`, { method: 'PUT', body: datos })
 }

@@ -1,7 +1,6 @@
 import { http, HttpResponse } from 'msw'
-import { USUARIOS, getUsuarioEnSesion } from './authHandlers'
+import { getUsuarioEnSesion } from './authHandlers'
 import { leerPagina, normalizar, paginar } from './paginar'
-import { existeEmailDeUsuario } from './usersHandlers'
 import { CATEGORIAS, OTRO_VENDEDOR, PRODUCTOS, VENDEDOR_CON_PRODUCTOS, aRespuesta } from './productsHandlers'
 
 const VENDEDORES_DATOS = [
@@ -67,9 +66,15 @@ let estadosModificados = new Map()
 // Datos que el administrador ha modificado durante la sesión (HU22), por id de vendedor.
 let datosModificados = new Map()
 
+// Vendedores que han llegado o se han ido por un cambio de rol (HU22) durante la sesión.
+let vendedoresAnadidos = []
+let vendedoresRetirados = new Set()
+
 export function resetAdminSellersMock() {
   estadosModificados = new Map()
   datosModificados = new Map()
+  vendedoresAnadidos = []
+  vendedoresRetirados = new Set()
 }
 
 const conCambios = (vendedor) => ({
@@ -77,6 +82,38 @@ const conCambios = (vendedor) => ({
   ...datosModificados.get(vendedor.id),
   ...(estadosModificados.has(vendedor.id) && { estado: estadosModificados.get(vendedor.id) }),
 })
+
+const todosLosVendedores = () =>
+  [...VENDEDORES_DATOS, ...vendedoresAnadidos].filter((vendedor) => !vendedoresRetirados.has(vendedor.id))
+
+// Funciones que usa el mock de usuarios (usersHandlers): el administrador edita a los vendedores con el mismo
+// endpoint que al resto de usuarios y, al cambiar de rol, un vendedor sale de este almacén o entra en él.
+export const vendedoresMock = () => todosLosVendedores().map(conCambios)
+export const buscarVendedorMock = (id) => vendedoresMock().find((vendedor) => vendedor.id === id)
+
+export function editarVendedorMock(id, { nombre, apellidos, email, nombreComercial, nif, categoriaPrincipalId }) {
+  datosModificados.set(id, {
+    ...datosModificados.get(id),
+    nombre,
+    apellidos,
+    email,
+    nombreComercial,
+    nif,
+    categoria: categoriaPrincipalId,
+  })
+}
+
+export const retirarVendedorMock = (id) => vendedoresRetirados.add(id)
+
+export function incorporarVendedorMock({ id, nombre, apellidos, email, nombreComercial, nif, categoriaPrincipalId, estado }) {
+  const datos = { nombre, apellidos, email, nombreComercial, nif, categoria: categoriaPrincipalId, estado }
+  if (VENDEDORES_DATOS.some((vendedor) => vendedor.id === id)) {
+    vendedoresRetirados.delete(id)
+    datosModificados.set(id, datos)
+  } else {
+    vendedoresAnadidos = [...vendedoresAnadidos, { id, ...datos }]
+  }
+}
 
 // Orden ascendente de los estados: primero los pendientes de revisar.
 const ORDEN_ESTADOS = ['PENDIENTE', 'ACTIVO', 'DESACTIVADO']
@@ -126,34 +163,8 @@ function conVendedor(params, respuestaPara) {
   const rechazo = rechazarSiNoEsAdmin()
   if (rechazo) return rechazo
 
-  const vendedor = VENDEDORES_DATOS.find((candidato) => candidato.id === params.id)
-  return vendedor ? respuestaPara(conCambios(vendedor)) : new HttpResponse(null, { status: 404 })
-}
-
-const hayTexto = (valor) => typeof valor === 'string' && valor.trim() !== ''
-
-// El backend real también valida: lo mínimo que el formulario ya comprueba.
-const datosValidos = (datos) =>
-  hayTexto(datos.nombre) &&
-  hayTexto(datos.apellidos) &&
-  hayTexto(datos.nombreComercial) &&
-  /^[^\s@]+@[^\s@]+$/.test(datos.email ?? '') &&
-  /^[A-Za-z0-9]{9}$/.test(datos.nif ?? '') &&
-  CATEGORIAS.has(datos.categoriaPrincipalId)
-
-// Código de error si el nombre comercial o el email ya son de otra cuenta, o null si están libres.
-function conflictoDeDatos(idVendedor, { nombreComercial, email }) {
-  const otros = VENDEDORES_DATOS.filter((candidato) => candidato.id !== idVendedor).map(conCambios)
-  if (otros.some((otro) => otro.nombreComercial.toLowerCase() === nombreComercial.trim().toLowerCase())) {
-    return 'COMMERCIAL_NAME_ALREADY_REGISTERED'
-  }
-
-  const propio = USUARIOS.find((usuario) => usuario.id === idVendedor)
-  const emailPropio = conCambios(VENDEDORES_DATOS.find((candidato) => candidato.id === idVendedor)).email
-  const usadoPorOtroVendedor = otros.some((otro) => otro.email === email)
-  const usadoPorOtroUsuario = email !== emailPropio && email !== propio?.email && existeEmailDeUsuario(email)
-  const usadoPorOtraCuenta = USUARIOS.some((usuario) => usuario.id !== idVendedor && usuario.email === email)
-  return usadoPorOtroVendedor || usadoPorOtroUsuario || usadoPorOtraCuenta ? 'EMAIL_ALREADY_REGISTERED' : null
+  const vendedor = buscarVendedorMock(params.id)
+  return vendedor ? respuestaPara(vendedor) : new HttpResponse(null, { status: 404 })
 }
 
 const paginaDePestana = (request) => leerPagina(new URL(request.url).searchParams, TAMANO_PAGINA_PESTANA)
@@ -168,7 +179,7 @@ export const adminSellersHandlers = [
     const categoria = params.get('category')
     const estado = params.get('status')
 
-    const coincidentes = VENDEDORES_DATOS.map(conCambios).filter(
+    const coincidentes = vendedoresMock().filter(
       (vendedor) =>
         normalizar(`${vendedor.nombre} ${vendedor.apellidos} ${vendedor.nombreComercial} ${vendedor.email}`).includes(
           busqueda,
@@ -184,30 +195,6 @@ export const adminSellersHandlers = [
   http.get('/api/admin/sellers/:id', ({ params }) =>
     conVendedor(params, (vendedor) => HttpResponse.json(aVendedorDetalle(vendedor))),
   ),
-
-  // Modificar los datos de un vendedor (HU22): el nombre comercial y el email tienen que seguir siendo únicos.
-  http.put('/api/admin/sellers/:id', async ({ params, request }) => {
-    const datos = await request.json()
-
-    return conVendedor(params, (vendedor) => {
-      if (!datosValidos(datos)) return HttpResponse.json({ code: 'VALIDATION_ERROR' }, { status: 400 })
-
-      const conflicto = conflictoDeDatos(vendedor.id, datos)
-      if (conflicto) return HttpResponse.json({ code: conflicto }, { status: 409 })
-
-      const { nombre, apellidos, email, nombreComercial, nif, categoriaPrincipalId } = datos
-      datosModificados.set(vendedor.id, {
-        ...datosModificados.get(vendedor.id),
-        nombre,
-        apellidos,
-        email,
-        nombreComercial,
-        nif,
-        categoria: categoriaPrincipalId,
-      })
-      return HttpResponse.json(aVendedorDetalle(conCambios(vendedor)))
-    })
-  }),
 
   http.patch('/api/admin/sellers/:id/status', async ({ params, request }) => {
     const { estado } = await request.json()

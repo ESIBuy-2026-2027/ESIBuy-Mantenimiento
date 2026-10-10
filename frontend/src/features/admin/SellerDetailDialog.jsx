@@ -28,9 +28,9 @@ import {
   getAdminSeller,
   getAdminSellerOrders,
   getAdminSellerProducts,
-  updateAdminSeller,
   updateAdminSellerStatus,
 } from '../../api/adminSellers'
+import { updateUser } from '../../api/users'
 import { ROLES } from '../../auth/roles'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { useCategories } from '../../hooks/useCategories'
@@ -105,7 +105,7 @@ function SellerEditor({ seller, onSaved, onCancel }) {
       rol={ROLES.VENDEDOR}
       usuario={seller}
       categories={categories}
-      save={(datos) => updateAdminSeller(seller.id, datos)}
+      save={(datos) => updateUser(seller.id, datos)}
       onSaved={onSaved}
       onCancel={onCancel}
     />
@@ -158,11 +158,16 @@ export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }
     }
   }
 
-  const avisarGuardado = () => {
+  const avisarGuardado = (datos) => {
+    onStatusChange?.()
+    // Si deja de ser vendedor, ya no tiene ficha de vendedor: se cierra y el listado se actualiza.
+    if (datos.rol !== ROLES.VENDEDOR) {
+      onClose()
+      return
+    }
     setEditando(false)
     setResultado({ intent: 'success', texto: 'Los cambios se han guardado.' })
     retry()
-    onStatusChange?.()
   }
 
   const empezarAEditar = () => {
