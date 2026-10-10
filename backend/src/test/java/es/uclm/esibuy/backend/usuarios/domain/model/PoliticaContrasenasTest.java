@@ -113,6 +113,13 @@ class PoliticaContrasenasTest {
         assertDoesNotThrow(() -> validar("Ñandú-pájaro9"));
     }
 
+    @Test
+    @DisplayName("HU1-CP17: el espacio cuenta como símbolo, igual que en el frontend")
+    void aceptaElEspacioComoSimbolo() {
+        // El único carácter que no es letra ni número es el espacio
+        assertDoesNotThrow(() -> validar("Treboles Azules9"));
+    }
+
     private static void validar(String contrasena) {
         PoliticaContrasenas.validar(contrasena, DATOS_PERSONALES, EMAIL);
     }
