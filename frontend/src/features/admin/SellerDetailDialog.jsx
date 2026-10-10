@@ -18,17 +18,25 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { Dismiss24Regular, PersonAvailable20Regular, PersonProhibited20Regular } from '@fluentui/react-icons'
+import {
+  Dismiss24Regular,
+  Edit20Regular,
+  PersonAvailable20Regular,
+  PersonProhibited20Regular,
+} from '@fluentui/react-icons'
 import {
   getAdminSeller,
   getAdminSellerOrders,
   getAdminSellerProducts,
   updateAdminSellerStatus,
 } from '../../api/adminSellers'
+import { updateUser } from '../../api/users'
+import { ROLES } from '../../auth/roles'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import ProductsTable from '../seller/ProductsTable'
 import OrdersTable from './OrdersTable'
 import PagedList from './PagedList'
+import EditableProfile from './EditableProfile'
 import SellerDataForm from './SellerDataForm'
 import StatusConfirmDialog from './StatusConfirmDialog'
 
@@ -101,6 +109,7 @@ export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }
   const [confirmando, setConfirmando] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [resultado, setResultado] = useState(null)
+  const [editando, setEditando] = useState(false)
 
   const nuevoEstado = seller?.estado === 'ACTIVO' ? 'DESACTIVADO' : 'ACTIVO'
   const accion = ACCIONES_DE_ESTADO[nuevoEstado]
@@ -120,6 +129,23 @@ export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }
     }
   }
 
+  const avisarGuardado = (datos) => {
+    onStatusChange?.()
+    // Si deja de ser vendedor, ya no tiene ficha de vendedor: se cierra y el listado se actualiza.
+    if (datos.rol !== ROLES.VENDEDOR) {
+      onClose()
+      return
+    }
+    setEditando(false)
+    setResultado({ intent: 'success', texto: 'Los cambios se han guardado.' })
+    retry()
+  }
+
+  const empezarAEditar = () => {
+    setResultado(null)
+    setEditando(true)
+  }
+
   return (
     <Dialog open modalType="modal" onOpenChange={(_event, data) => !data.open && onClose()}>
       <DialogSurface className={styles.surface}>
@@ -134,8 +160,10 @@ export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }
           <DialogContent className={styles.content}>
             <MessageBar intent="info">
               <MessageBarBody>
-                <MessageBarTitle>Modo solo lectura</MessageBarTitle>
-                Puedes consultar esta información, pero no modificarla.
+                <MessageBarTitle>{editando ? 'Modo edición' : 'Modo solo lectura'}</MessageBarTitle>
+                {editando
+                  ? 'Solo se pueden modificar los datos del vendedor. Sus productos, precios y pedidos no se pueden cambiar.'
+                  : 'Puedes consultar esta información. Los datos del vendedor se cambian con Editar; sus productos, precios y pedidos, no.'}
               </MessageBarBody>
             </MessageBar>
 
@@ -160,17 +188,35 @@ export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }
               <>
                 <TabList selectedValue={tab} onTabSelect={(_event, data) => setTab(data.value)}>
                   <Tab value="data">Datos</Tab>
-                  <Tab value="products">Productos</Tab>
-                  <Tab value="orders">Pedidos</Tab>
+                  <Tab value="products" disabled={editando}>
+                    Productos
+                  </Tab>
+                  <Tab value="orders" disabled={editando}>
+                    Pedidos
+                  </Tab>
                 </TabList>
-                {tab === 'data' && <SellerDataForm seller={seller} />}
+                {tab === 'data' && !editando && <SellerDataForm seller={seller} />}
+                {tab === 'data' && editando && (
+                  <EditableProfile
+                    rol={ROLES.VENDEDOR}
+                    usuario={seller}
+                    save={(datos) => updateUser(seller.id, datos)}
+                    onSaved={avisarGuardado}
+                    onCancel={() => setEditando(false)}
+                  />
+                )}
                 {tab === 'products' && <SellerProductsTab sellerId={seller.id} />}
                 {tab === 'orders' && <SellerOrdersTab sellerId={seller.id} />}
               </>
             )}
           </DialogContent>
-          {seller && (
+          {seller && !editando && (
             <DialogActions>
+              {tab === 'data' && (
+                <Button icon={<Edit20Regular />} onClick={empezarAEditar}>
+                  Editar
+                </Button>
+              )}
               <Button icon={accion.icono} onClick={() => setConfirmando(true)}>
                 {accion.boton}
               </Button>

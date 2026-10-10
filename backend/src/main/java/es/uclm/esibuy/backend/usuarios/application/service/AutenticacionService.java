@@ -93,6 +93,13 @@ public class AutenticacionService implements AutenticacionUseCase {
         codigoVerificacionRepository.guardar(codigo);
         return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.AUTHENTICATOR);
     }
+
+    @Override
+    public Usuario consultarUsuarioEnSesion(String email) {
+        return usuarioRepository.buscarPorCorreo(email).orElseThrow(() -> new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS));
+    }
+
+    
     
 
 }

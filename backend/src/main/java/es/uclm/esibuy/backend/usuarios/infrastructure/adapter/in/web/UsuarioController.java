@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
+import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 /**
  * Adaptador de entrada web del módulo de usuarios.
@@ -27,10 +30,13 @@ public class UsuarioController {
 
     private final RegistroUsuarioUseCase registroUsuario;
     private final ListadoUsuariosUseCase listadoUsuarios;
+    private final AdministracionUsuariosUseCase administracionUsuarios;
 
-    public UsuarioController(RegistroUsuarioUseCase registroUsuario, ListadoUsuariosUseCase listadoUsuarios) {
+    public UsuarioController(RegistroUsuarioUseCase registroUsuario, ListadoUsuariosUseCase listadoUsuarios,
+            AdministracionUsuariosUseCase administracionUsuarios) {
         this.registroUsuario = registroUsuario;
         this.listadoUsuarios = listadoUsuarios;
+        this.administracionUsuarios = administracionUsuarios;
     }
 
     @PostMapping("/auth/registro")
@@ -55,5 +61,13 @@ public class UsuarioController {
         return UsuarioListadoPageResponse.desde(
                 listadoUsuarios.listar(new ListarUsuariosQuery(search, role, status, page - 1, size))
         );
+    }
+
+    // Activar una cuenta (HU24). La validación de CambiarEstadoRequest ya garantiza que el estado
+    // pedido es ACTIVO; la HU23 añadirá DESACTIVADO.
+    @PatchMapping("/admin/usuarios/{id}/status")
+    public UsuarioListadoResponse cambiarEstado(@PathVariable String id,
+            @Valid @RequestBody CambiarEstadoRequest request) {
+        return UsuarioListadoResponse.desde(administracionUsuarios.activar(id));
     }
 }

@@ -1,12 +1,20 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.config;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
+import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.EnvioEmailPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.GeneradorCodigoPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.application.service.AutenticacionService;
 import es.uclm.esibuy.backend.usuarios.application.service.RegistroUsuarioService;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.email.SmtpEnvioEmailAdapter;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.CodigoVerificacionMongoAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.UsuarioMongoAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.BCryptHashContrasenaAdapter;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.SecureRandomGeneradorCodigoAdapter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,5 +39,15 @@ class UsuariosConfigTest {
         assertInstanceOf(RegistroUsuarioService.class, contexto.getBean(RegistroUsuarioUseCase.class));
         assertInstanceOf(BCryptHashContrasenaAdapter.class, contexto.getBean(HashContrasenaPort.class));
         assertInstanceOf(UsuarioMongoAdapter.class, contexto.getBean(UsuarioRepositoryPort.class));
+    }
+
+    @Test
+    @DisplayName("Configuración: el contexto conecta el login con sus adaptadores de códigos, generador y correo")
+    void elContextoConectaLasPiezasDelLogin() {
+        // T230: el login es el único que usa los adaptadores de la T231 y la T232, y se registran con él
+        assertInstanceOf(AutenticacionService.class, contexto.getBean(AutenticacionUseCase.class));
+        assertInstanceOf(CodigoVerificacionMongoAdapter.class, contexto.getBean(CodigoVerificacionRepositoryPort.class));
+        assertInstanceOf(SecureRandomGeneradorCodigoAdapter.class, contexto.getBean(GeneradorCodigoPort.class));
+        assertInstanceOf(SmtpEnvioEmailAdapter.class, contexto.getBean(EnvioEmailPort.class));
     }
 }

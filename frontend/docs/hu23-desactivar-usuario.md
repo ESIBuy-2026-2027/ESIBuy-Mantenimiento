@@ -27,7 +27,7 @@ En la ficha de cada cliente o administrador (en la fila hasta la HU20) aparece e
 | Estado de la cuenta | Botón |
 |---|---|
 | Activo | **Desactivar** (salvo en la ficha del propio administrador) |
-| Desactivado | **Activar** (HU24) |
+| Pendiente o desactivado | **Activar** (HU24; pendiente desde la task AB#234 de la HU1) |
 
 ### Criterios de la HU y cómo se cumplen
 
@@ -115,8 +115,8 @@ Con `npm run dev` (mocks activos): `admin@esibuy.test`, contraseña `Mock-Clave-
 
 | Usuarios | Datos del mock |
 |---|---|
-| Clientes | 15: 8 activos y 7 desactivados |
-| Administradores | 3: Ana López García y Ada Admin (la sesión) activos; Diego Delgado Iglesias desactivado |
+| Clientes | 17: 2 pendientes, 8 activos y 7 desactivados (pendientes desde la task AB#234) |
+| Administradores | 4: Ana López García, Manuel Esteve Pons y Ada Admin (la sesión) activos; Diego Delgado Iglesias desactivado (ninguno pendiente: HU22) |
 
 Pruebas manuales sugeridas:
 

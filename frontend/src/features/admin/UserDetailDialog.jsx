@@ -16,14 +16,15 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { Dismiss24Regular } from '@fluentui/react-icons'
-import { getUser } from '../../api/users'
+import { Dismiss24Regular, Edit20Regular } from '@fluentui/react-icons'
+import { getUser, updateUser } from '../../api/users'
 import { ROLES } from '../../auth/roles'
 import { useApiQuery } from '../../hooks/useApiQuery'
-import { formatDate } from '../../utils/format'
+import EditableProfile from './EditableProfile'
 import ReadOnlyFields from './ReadOnlyFields'
 import UserStatusButton from './UserStatusButton'
-import { STATUS_LABELS, USER_STATUS } from './usersConfig'
+import { readFields } from './profileFields'
+import { USER_STATUS } from './usersConfig'
 
 const useStyles = makeStyles({
   surface: {
@@ -38,9 +39,6 @@ const useStyles = makeStyles({
   },
 })
 
-const TIPOS_CLIENTE = { ESTANDAR: 'Estándar', PREMIUM: 'Premium' }
-const SIN_DATO = '—'
-
 const MENSAJES_EXITO = {
   activar: (nombre) => `${nombre} ya está activo y puede usar la plataforma.`,
   desactivar: (nombre) => `${nombre} está desactivado y ya no puede iniciar sesión.`,
@@ -52,53 +50,21 @@ const MENSAJES_CONFLICTO = {
   LAST_ACTIVE_ADMIN: 'No se puede desactivar al último administrador activo.',
 }
 
-const imagenDePerfil = (avatar) => (avatar ? `Avatar ${avatar.replace('avatar', '')}` : 'Sin elegir')
-
-// Campos de la ficha según el rol. Nunca se muestra la contraseña.
-function camposDe(usuario) {
-  const comunes = [
-    ['Nombre', usuario.nombre],
-    ['Apellidos', usuario.apellidos],
-    ['Email', usuario.email],
-  ]
-  const finales = [
-    ['Estado', STATUS_LABELS[usuario.estado] ?? usuario.estado],
-    ['Fecha de alta', formatDate(usuario.fechaAlta)],
-  ]
-
-  if (usuario.rol === ROLES.CLIENTE) {
-    return [
-      ...comunes,
-      ['DNI', usuario.dni ?? SIN_DATO],
-      ['Teléfono', usuario.telefono || SIN_DATO],
-      ['Fecha de nacimiento', usuario.fechaNacimiento ? formatDate(usuario.fechaNacimiento) : SIN_DATO],
-      ['Tipo de cliente', TIPOS_CLIENTE[usuario.tipoCliente] ?? SIN_DATO],
-      ['Imagen de perfil', imagenDePerfil(usuario.avatar)],
-      ...finales,
-    ]
-  }
-  if (usuario.rol === ROLES.ADMIN) {
-    return [
-      ...comunes,
-      ['Sede', usuario.sede || SIN_DATO],
-      ['Fecha de incorporación', usuario.fechaIncorporacion ? formatDate(usuario.fechaIncorporacion) : SIN_DATO],
-      ['Imagen de perfil', imagenDePerfil(usuario.avatar)],
-      ...finales,
-    ]
-  }
-  return [...comunes, ...finales]
-}
-
-// Ficha de un cliente o de un administrador (HU20), como la del vendedor (HU26): datos en solo lectura
-// y el botón para activar o desactivar la cuenta (HU24 y HU23), salvo la propia.
+// Ficha de un cliente o de un administrador (HU20), como la del vendedor (HU26): datos en solo lectura,
+// el botón para activar o desactivar la cuenta (HU24 y HU23), salvo la propia, y el botón Editar (HU22), que
+// convierte en modificables los campos que se pueden cambiar (incluido el rol, salvo en la cuenta propia) y deja
+// el resto en solo lectura.
+// `onStatusChange` avisa al listado de que la cuenta ha cambiado (de estado o de datos).
 export default function UserDetailDialog({ userId, currentUserId, onClose, onStatusChange }) {
   const styles = useStyles()
   const fetcher = useCallback(() => getUser(userId), [userId])
   const { data: usuario, failed, retry } = useApiQuery(fetcher)
   const [resultado, setResultado] = useState(null)
+  const [editando, setEditando] = useState(false)
 
+  // Una cuenta pendiente (HU1) se acepta activándola, como los vendedores pendientes.
   let accion = null
-  if (usuario?.estado === USER_STATUS.DESACTIVADO) accion = 'activar'
+  if (usuario?.estado === USER_STATUS.DESACTIVADO || usuario?.estado === USER_STATUS.PENDIENTE) accion = 'activar'
   else if (usuario?.estado === USER_STATUS.ACTIVO && usuario.id !== currentUserId) accion = 'desactivar'
 
   const avisarHecho = (nombre) => {
@@ -113,6 +79,18 @@ export default function UserDetailDialog({ userId, currentUserId, onClose, onSta
       texto: MENSAJES_CONFLICTO[error?.code] ?? `No se ha podido ${accion} a ${nombre}. Inténtalo de nuevo.`,
     })
 
+  const avisarGuardado = () => {
+    setEditando(false)
+    setResultado({ intent: 'success', texto: 'Los cambios se han guardado.' })
+    retry()
+    onStatusChange()
+  }
+
+  const empezarAEditar = () => {
+    setResultado(null)
+    setEditando(true)
+  }
+
   return (
     <Dialog open modalType="modal" onOpenChange={(_event, data) => !data.open && onClose()}>
       <DialogSurface className={styles.surface}>
@@ -125,12 +103,21 @@ export default function UserDetailDialog({ userId, currentUserId, onClose, onSta
             Información del usuario
           </DialogTitle>
           <DialogContent className={styles.content}>
-            <MessageBar intent="info">
-              <MessageBarBody>
-                <MessageBarTitle>Modo solo lectura</MessageBarTitle>
-                Puedes consultar esta información, pero no modificarla.
-              </MessageBarBody>
-            </MessageBar>
+            {editando ? (
+              <MessageBar intent="info">
+                <MessageBarBody>
+                  <MessageBarTitle>Modo edición</MessageBarTitle>
+                  Solo se pueden modificar los campos con fondo claro. Los oscuros no se pueden cambiar.
+                </MessageBarBody>
+              </MessageBar>
+            ) : (
+              <MessageBar intent="info">
+                <MessageBarBody>
+                  <MessageBarTitle>Modo solo lectura</MessageBarTitle>
+                  Puedes consultar esta información. Para cambiarla, pulsa Editar.
+                </MessageBarBody>
+              </MessageBar>
+            )}
 
             {resultado && (
               <MessageBar intent={resultado.intent}>
@@ -149,11 +136,24 @@ export default function UserDetailDialog({ userId, currentUserId, onClose, onSta
 
             {!usuario && !failed && <Spinner label="Cargando usuario…" />}
 
-            {usuario && <ReadOnlyFields fields={camposDe(usuario)} />}
+            {usuario && !editando && <ReadOnlyFields fields={readFields(usuario.rol, usuario)} />}
+            {usuario && editando && (
+              <EditableProfile
+                rol={usuario.rol}
+                usuario={usuario}
+                lockRol={usuario.rol === ROLES.ADMIN && usuario.id === currentUserId}
+                save={(datos) => updateUser(usuario.id, datos)}
+                onSaved={avisarGuardado}
+                onCancel={() => setEditando(false)}
+              />
+            )}
           </DialogContent>
-          {usuario && accion && (
+          {usuario && !editando && (
             <DialogActions>
-              <UserStatusButton user={usuario} accion={accion} onDone={avisarHecho} onError={avisarError} />
+              <Button icon={<Edit20Regular />} onClick={empezarAEditar}>
+                Editar
+              </Button>
+              {accion && <UserStatusButton user={usuario} accion={accion} onDone={avisarHecho} onError={avisarError} />}
             </DialogActions>
           )}
         </DialogBody>

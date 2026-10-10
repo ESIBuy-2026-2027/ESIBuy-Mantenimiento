@@ -38,8 +38,8 @@ describe('AdminUsersPage (HU19)', () => {
     await abrirListado()
 
     await esperarFilas(10)
-    expect(within(filasDeDatos()[0]).getByText('Mariana Ruiz Pascual')).toBeInTheDocument()
-    expect(screen.getByText(/mostrando 1–10 de 25 usuarios/i)).toBeInTheDocument()
+    expect(within(filasDeDatos()[0]).getByText('Marcos Aguilar Bravo')).toBeInTheDocument()
+    expect(screen.getByText(/mostrando 1–10 de 28 usuarios/i)).toBeInTheDocument()
   })
 
   it('HU19-CP02: al buscar "ana" muestra solo los usuarios que coinciden', async () => {
@@ -71,8 +71,9 @@ describe('AdminUsersPage (HU19)', () => {
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'Pendiente')
 
-    // Solo los vendedores pueden estar pendientes (HU24): en el mock hay 2.
-    await esperarFilas(2)
+    // Los clientes y los vendedores nuevos quedan pendientes (HU1); los administradores nunca (HU22): en el
+    // mock hay 2 vendedores y 2 clientes pendientes.
+    await esperarFilas(4)
     expect(columna(3).every((estado) => estado === 'Pendiente')).toBe(true)
   })
 
@@ -84,7 +85,7 @@ describe('AdminUsersPage (HU19)', () => {
     await user.click(screen.getByRole('button', { name: /siguiente/i }))
 
     expect(await screen.findByText(/página 2 de 3/i)).toBeInTheDocument()
-    expect(screen.getByText(/mostrando 11–20 de 25 usuarios/i)).toBeInTheDocument()
+    expect(screen.getByText(/mostrando 11–20 de 28 usuarios/i)).toBeInTheDocument()
     await esperarFilas(10)
   })
 
@@ -122,7 +123,7 @@ describe('AdminUsersPage (HU19)', () => {
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'Pendiente')
 
-    await waitFor(() => expect(filasDeDatos()).toHaveLength(2))
+    await waitFor(() => expect(filasDeDatos()).toHaveLength(4))
   })
 
   it('HU19-CP07: sin coincidencias muestra que no se han encontrado usuarios', async () => {
@@ -171,5 +172,47 @@ describe('AdminUsersPage (HU19)', () => {
     await waitFor(() => expect(screen.getByRole('table', { name: 'Usuarios' })).toBeInTheDocument())
     await esperarFilas(10)
     expect(screen.queryByText(MENSAJE_ERROR)).not.toBeInTheDocument()
+  })
+})
+
+describe('AdminUsersPage (HU22): los administradores no están pendientes', () => {
+  const opcionesDeEstado = () =>
+    within(screen.getByRole('combobox', { name: 'Estado' }))
+      .getAllByRole('option')
+      .map((opcion) => opcion.textContent)
+
+  it('adminUsersPage_alFiltrarPorAdministrador_elFiltroDeEstadoNoOfrecePendiente', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await esperarFilas(10)
+    expect(opcionesDeEstado()).toContain('Pendiente')
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Rol' }), 'Administrador')
+
+    expect(opcionesDeEstado()).not.toContain('Pendiente')
+    expect(opcionesDeEstado()).toEqual(['Todos los estados', 'Activo', 'Desactivado'])
+  })
+
+  it('adminUsersPage_alElegirAdministradorConEstadoPendiente_quitaElEstadoPendiente', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await esperarFilas(10)
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'Pendiente')
+    await esperarFilas(4)
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Rol' }), 'Administrador')
+
+    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Estado' })).toHaveValue(''))
+    await esperarFilas(4)
+  })
+
+  it('adminUsersPage_alFiltrarPorCliente_elFiltroDeEstadoSigueOfreciendoPendiente', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await esperarFilas(10)
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Rol' }), 'Cliente')
+
+    expect(opcionesDeEstado()).toContain('Pendiente')
   })
 })

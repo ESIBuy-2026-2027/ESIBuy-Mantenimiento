@@ -1,11 +1,21 @@
 import { http, HttpResponse } from 'msw'
-import { getUsuarioEnSesion } from './authHandlers'
+import {
+  buscarVendedorMock,
+  editarVendedorMock,
+  incorporarVendedorMock,
+  retirarVendedorMock,
+  vendedoresMock,
+} from './adminSellersHandlers'
+import { USUARIOS, getUsuarioEnSesion } from './authHandlers'
+import { esMayorDeEdadMock } from './fechas'
+import { CATEGORIAS } from './productsHandlers'
 
 const TAMANO_PAGINA_POR_DEFECTO = 10
 
-// [nombre, apellidos, rol, estado, fechaAlta]. 25 usuarios (3 páginas de 10). La búsqueda "ana" coincide
+// [nombre, apellidos, rol, estado, fechaAlta]. 28 usuarios (3 páginas de 10). La búsqueda "ana" coincide
 // solo con Ana López García y Mariana Ruiz Pascual; ningún otro nombre, apellido o email contiene "ana".
-// Los clientes solo pueden estar activos o desactivados: no necesitan que un administrador los acepte.
+// Toda cuenta nueva queda pendiente hasta que un administrador la verifica (HU1): los tres últimos son
+// un cliente, otro cliente y un administrador pendientes. Van al final para no cambiar los ids de los demás.
 const USUARIOS_INICIALES = [
   ['Ana', 'López García', 'ADMINISTRADOR', 'ACTIVO', '2026-01-12T09:15:00'],
   ['Mariana', 'Ruiz Pascual', 'VENDEDOR', 'PENDIENTE', '2026-10-01T10:00:00'],
@@ -31,6 +41,9 @@ const USUARIOS_INICIALES = [
   ['Beatriz', 'Vargas Méndez', 'VENDEDOR', 'PENDIENTE', '2026-09-05T11:10:00'],
   ['Rubén', 'Cortés Pastor', 'CLIENTE', 'ACTIVO', '2026-08-28T16:25:00'],
   ['Jorge', 'Benítez Sáez', 'CLIENTE', 'DESACTIVADO', '2026-09-10T15:15:00'],
+  ['Gonzalo', 'Ibáñez Roca', 'CLIENTE', 'PENDIENTE', '2026-10-06T18:20:00'],
+  ['Marcos', 'Aguilar Bravo', 'CLIENTE', 'PENDIENTE', '2026-10-08T09:40:00'],
+  ['Manuel', 'Esteve Pons', 'ADMINISTRADOR', 'ACTIVO', '2026-10-04T12:05:00'],
 ]
   .map(([nombre, apellidos, rol, estado, fechaAlta], indice) => ({
     id: `usr-${indice + 1}`,
@@ -56,9 +69,12 @@ const USUARIOS_INICIALES = [
 
 // Lista que puede crecer durante la sesión (p. ej. con los administradores dados de alta en la HU21).
 let usuarios = [...USUARIOS_INICIALES]
+// Datos de la ficha que el administrador ha modificado durante la sesión (HU22), por id de usuario.
+let detallesModificados = new Map()
 
 export function resetUsersMock() {
   usuarios = [...USUARIOS_INICIALES]
+  detallesModificados = new Map()
 }
 
 export const existeEmailDeUsuario = (email) => usuarios.some((usuario) => usuario.email === email)
@@ -129,6 +145,66 @@ function detalleDe(usuario) {
   return {}
 }
 
+function detalleActual(usuario) {
+  const detalle = { ...usuario, ...detalleDe(usuario), ...detallesModificados.get(usuario.id) }
+  return detalle.categoriaPrincipalId
+    ? { ...detalle, categoriaPrincipal: CATEGORIAS.get(detalle.categoriaPrincipalId) }
+    : detalle
+}
+
+// Campos de la ficha que se pueden modificar según el rol que queda (aparte del nombre y los apellidos).
+const CAMPOS_EDITABLES = new Map([
+  ['CLIENTE', ['dni', 'telefono', 'fechaNacimiento', 'tipoCliente', 'avatar']],
+  ['ADMINISTRADOR', ['sede', 'avatar']],
+  ['VENDEDOR', ['nombreComercial', 'nif', 'categoriaPrincipalId']],
+])
+
+const hayTexto = (valor) => typeof valor === 'string' && valor.trim() !== ''
+
+// El backend real también valida: lo mínimo que el formulario ya comprueba, según el rol que queda.
+function datosValidos(rol, datos) {
+  if (!hayTexto(datos.nombre) || !hayTexto(datos.apellidos)) return false
+  if (rol === 'CLIENTE') {
+    return (
+      /^\d{8}[A-Za-z]$/.test(datos.dni ?? '') &&
+      (!datos.telefono || /^\d{9}$/.test(datos.telefono)) &&
+      esMayorDeEdadMock(datos.fechaNacimiento)
+    )
+  }
+  if (rol === 'VENDEDOR') {
+    return (
+      hayTexto(datos.nombreComercial) &&
+      /^[A-Za-z0-9]{9}$/.test(datos.nif ?? '') &&
+      CATEGORIAS.has(datos.categoriaPrincipalId)
+    )
+  }
+  return true
+}
+
+// Los administradores los da de alta otro administrador: nunca están pendientes.
+const estadoParaRol = (estado, rol) => (rol === 'ADMINISTRADOR' && estado === 'PENDIENTE' ? 'ACTIVO' : estado)
+
+// Código de error si la cuenta no puede cambiar de rol, o null si puede (HU22).
+function conflictoAlCambiarDeRol(cuenta) {
+  if (cuenta.id === getUsuarioEnSesion()?.id) return 'CANNOT_CHANGE_OWN_ROLE'
+  if (esAdminActivo(cuenta) && usuarios.filter(esAdminActivo).length === 1) return 'LAST_ACTIVE_ADMIN'
+  return null
+}
+
+// Código de error si el nombre comercial o el email ya son de otra cuenta, o null si están libres.
+function conflictoDeVendedor(idCuenta, { nombreComercial, email }) {
+  const otros = vendedoresMock().filter((vendedor) => vendedor.id !== idCuenta)
+  if (otros.some((otro) => otro.nombreComercial.toLowerCase() === nombreComercial.trim().toLowerCase())) {
+    return 'COMMERCIAL_NAME_ALREADY_REGISTERED'
+  }
+
+  const enUso =
+    otros.some((otro) => otro.email === email) ||
+    usuarios.some((usuario) => usuario.id !== idCuenta && usuario.email === email) ||
+    USUARIOS.some((usuario) => usuario.id !== idCuenta && usuario.email === email)
+  return enUso ? 'EMAIL_ALREADY_REGISTERED' : null
+}
+
 const esAdminActivo = (usuario) => usuario.rol === 'ADMINISTRADOR' && usuario.estado === 'ACTIVO'
 
 // Código de error si la cuenta no se puede desactivar, o null si se puede.
@@ -186,7 +262,66 @@ export const usersHandlers = [
     if (rechazo) return rechazo
 
     const usuario = usuarios.find((candidato) => candidato.id === params.id)
-    return usuario ? HttpResponse.json({ ...usuario, ...detalleDe(usuario) }) : new HttpResponse(null, { status: 404 })
+    return usuario ? HttpResponse.json(detalleActual(usuario)) : new HttpResponse(null, { status: 404 })
+  }),
+
+  // Modificar los datos de CUALQUIER usuario, incluido el rol (HU22): cliente, administrador o vendedor se
+  // editan con el mismo endpoint. El email solo lo cambia un vendedor que sigue siéndolo; la contraseña no
+  // se toca desde aquí. Un administrador no cambia su propio rol ni degrada al último administrador activo.
+  http.put('/api/admin/usuarios/:id', async ({ params, request }) => {
+    const rechazo = rechazarSiNoEsAdmin()
+    if (rechazo) return rechazo
+
+    const vendedor = buscarVendedorMock(params.id)
+    const existente = vendedor ?? usuarios.find((candidato) => candidato.id === params.id)
+    if (!existente) return new HttpResponse(null, { status: 404 })
+
+    const datos = await request.json()
+    const rolActual = vendedor ? 'VENDEDOR' : existente.rol
+    const rolDestino = datos.rol ?? rolActual
+    if (!CAMPOS_EDITABLES.has(rolDestino) || !datosValidos(rolDestino, datos)) {
+      return HttpResponse.json({ code: 'VALIDATION_ERROR' }, { status: 400 })
+    }
+
+    const conflictoDeRol = rolDestino === rolActual ? null : conflictoAlCambiarDeRol({ ...existente, rol: rolActual })
+    const conflictoDeDatos =
+      rolDestino === 'VENDEDOR'
+        ? conflictoDeVendedor(existente.id, { nombreComercial: datos.nombreComercial, email: datos.email ?? existente.email })
+        : null
+    const conflicto = conflictoDeRol ?? conflictoDeDatos
+    if (conflicto) return HttpResponse.json({ code: conflicto }, { status: 409 })
+
+    const estado = estadoParaRol(existente.estado, rolDestino)
+    const emailNuevo = rolActual === 'VENDEDOR' && rolDestino === 'VENDEDOR' && datos.email ? datos.email : existente.email
+    const { nombre, apellidos, ...resto } = datos
+    const detalle = Object.fromEntries(
+      CAMPOS_EDITABLES.get(rolDestino)
+        .filter((campo) => campo in resto)
+        .map((campo) => [campo, resto[campo]]),
+    )
+    const cuenta = { id: existente.id, nombre, apellidos, email: emailNuevo, rol: rolDestino, estado }
+
+    if (vendedor && rolDestino === 'VENDEDOR') {
+      editarVendedorMock(existente.id, { ...datos, email: emailNuevo })
+    } else if (vendedor) {
+      retirarVendedorMock(existente.id)
+    } else if (rolDestino === 'VENDEDOR' && rolActual !== 'VENDEDOR') {
+      incorporarVendedorMock({ ...cuenta, ...detalle })
+    }
+
+    const enLaLista = usuarios.some((candidato) => candidato.id === existente.id)
+    const fechaAlta = existente.fechaAlta ?? new Date().toISOString().slice(0, 19)
+    if (enLaLista) {
+      usuarios = usuarios.map((candidato) =>
+        candidato.id === existente.id ? { ...candidato, ...cuenta } : candidato,
+      )
+    } else if (rolDestino !== 'VENDEDOR') {
+      agregarUsuario({ ...cuenta, fechaAlta })
+    }
+    detallesModificados.set(existente.id, { ...detallesModificados.get(existente.id), ...detalle })
+
+    const actualizado = usuarios.find((candidato) => candidato.id === existente.id) ?? { ...cuenta, fechaAlta }
+    return HttpResponse.json(detalleActual(actualizado))
   }),
 
   // Activar (HU24) o desactivar (HU23) una cuenta. Un administrador no puede desactivarse a sí mismo

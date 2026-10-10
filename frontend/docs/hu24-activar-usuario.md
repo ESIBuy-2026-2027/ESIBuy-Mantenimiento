@@ -8,6 +8,8 @@ Documento para entender cómo el administrador activa cuentas desactivadas, cóm
 - **Rama:** `feature/US24-T35-T36-activar-usuario`
 - **Metodología:** sin TDD por decisión del equipo. Primero el código (commits `feat` con AB#35) y después los tests (commits `test` con AB#36).
 - **Depende de:** `docs/hu19-listado-usuarios.md` (listado de usuarios), `docs/hu21-alta-admin-y-vendedores.md` (activar vendedores y lista de administradores), `docs/hu26-supervision-vendedores.md` (supervisión de vendedores) y `docs/mocks-msw.md` (mocks)
+- **Corregido por la HU1** (task AB#234, `docs/hu1-registro.md`): toda cuenta nueva de cliente o vendedor queda **pendiente** hasta que un administrador la verifica. El listado de clientes tiene ahora el estado **Pendiente** y la ficha de una cuenta pendiente ofrece **Activar**. Las partes afectadas de este documento están actualizadas.
+- **Corregido por la HU22:** los **administradores nunca están pendientes** (los da de alta otro administrador): su listado no tiene el estado Pendiente. Ver `docs/hu22-editar-usuario.md`.
 - **Actualizado por la HU20** (`docs/hu20-ficha-usuario.md`): los botones **Activar** y **Desactivar** están ahora en la **ficha** del usuario, que se abre con la lupa de cada fila, como en los vendedores. Las partes afectadas de este documento están actualizadas y sus tests sobre la fila se sustituyeron por los de la ficha.
 - **Ampliado por la HU23** (`docs/hu23-desactivar-usuario.md`): las filas activas tienen ahora el botón **Desactivar**. `ActivateUserButton.jsx` pasó a ser `UserStatusButton.jsx` (activa y desactiva) y `activateUser` pasó a ser `updateUserStatus`. Las partes afectadas de este documento están actualizadas.
 
@@ -15,15 +17,15 @@ Documento para entender cómo el administrador activa cuentas desactivadas, cóm
 
 ## 1. Resumen
 
-El administrador activa las cuentas **desactivadas** de cualquier tipo de usuario. Antes de activar se pide confirmación.
+El administrador activa las cuentas **desactivadas** de cualquier tipo de usuario y, desde la task AB#234 (HU1), también acepta las **pendientes**. Antes de activar se pide confirmación.
 
 | Usuarios | Dónde se activan | Estados posibles |
 |---|---|---|
 | Vendedores | **Vendedores** → lupa → diálogo → **Activar usuario** (hecho en la HU21) | Pendiente, activo y desactivado |
-| Clientes | **Clientes** → lupa → ficha → **Activar** (en esta HU estaba en la fila; la HU20 lo pasó a la ficha) | Activo y desactivado |
-| Administradores | **Administradores** → lupa → ficha → **Activar** (ídem) | Activo y desactivado |
+| Clientes | **Clientes** → lupa → ficha → **Activar** (en esta HU estaba en la fila; la HU20 lo pasó a la ficha) | Pendiente, activo y desactivado |
+| Administradores | **Administradores** → lupa → ficha → **Activar** (ídem) | Pendiente, activo y desactivado |
 
-> Los clientes nunca están **pendientes**: no necesitan que un administrador los acepte. Solo los vendedores pasan por ese estado.
+> Toda cuenta nueva de cliente o de vendedor queda **pendiente** hasta que un administrador la verifica (HU1, task AB#234). Se acepta igual que un vendedor pendiente: con **Activar** en su ficha. Los administradores no pasan por ese estado: los da de alta otro administrador (HU22).
 
 Para esto se han conectado y completado los listados:
 
@@ -35,8 +37,8 @@ Los dos listados tienen:
 | Control | Qué hace |
 |---|---|
 | Buscar por nombre | Busca en el nombre y los apellidos, no en el email |
-| Estado | Todos los estados, Activo o Desactivado |
-| Ordenar por | Nombre o Estado, con un botón para cambiar entre ascendente y descendente. Por defecto, nombre ascendente. Por estado, primero los activos; a igualdad, por nombre |
+| Estado | Todos los estados, Pendiente, Activo o Desactivado (Pendiente desde la task AB#234) |
+| Ordenar por | Nombre o Estado, con un botón para cambiar entre ascendente y descendente. Por defecto, nombre ascendente. Por estado, primero los pendientes, después los activos y al final los desactivados; a igualdad, por nombre |
 
 Cualquier cambio de búsqueda, estado u orden vuelve a la página 1. **Limpiar filtros** borra la búsqueda y el estado y mantiene la ordenación, como en el listado de vendedores.
 
@@ -50,7 +52,7 @@ Cualquier cambio de búsqueda, estado u orden vuelve a la página 1. **Limpiar f
 flowchart TD
     A[Panel de control] -- Clientes --> B[Listado de clientes]
     A -- Administradores --> C[Listado de administradores]
-    B --> D{¿Cuenta desactivada?}
+    B --> D{¿Cuenta pendiente o desactivada?}
     C --> D
     D -- No --> E[Sin acciones]
     D -- Sí --> F[Botón Activar]
@@ -94,7 +96,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | Archivo | Qué hace |
 |---|---|
 | `api/users.js` | `listUsers` admite `searchBy`, `sort` y `order` (opcionales). Nueva `activateUser(userId)`, que la HU23 generalizó en `updateUserStatus(userId, estado)`. |
-| `mocks/usersHandlers.js` | Busca solo por nombre con `searchBy=name`, ordena por nombre o estado y simula la activación. Datos: ningún cliente pendiente ni bloqueado, y un administrador desactivado (Diego Delgado Iglesias). |
+| `mocks/usersHandlers.js` | Busca solo por nombre con `searchBy=name`, ordena por nombre o estado y simula la activación. Datos: ningún cliente bloqueado, un administrador desactivado (Diego Delgado Iglesias) y, desde la task AB#234, dos clientes y un administrador pendientes. |
 
 ---
 
@@ -147,8 +149,8 @@ Con `npm run dev` (mocks activos): `admin@esibuy.test`, contraseña `Mock-Clave-
 
 | Usuarios | Datos del mock |
 |---|---|
-| Clientes | 15: 8 activos y 7 desactivados (dos páginas) |
-| Administradores | 3: 2 activos y Diego Delgado Iglesias desactivado |
+| Clientes | 17: 2 pendientes (Gonzalo Ibáñez Roca y Marcos Aguilar Bravo), 8 activos y 7 desactivados (dos páginas) |
+| Administradores | 4: 3 activos (con Manuel Esteve Pons) y Diego Delgado Iglesias desactivado; ninguno pendiente |
 
 Pruebas manuales sugeridas:
 
@@ -157,6 +159,7 @@ Pruebas manuales sugeridas:
 3. **Ordenar por: Estado** y cambiar entre ascendente y descendente.
 4. Buscar `torres` (encuentra a Lucía) y `esibuy` (no encuentra a nadie, porque no busca en el email).
 5. **Panel → Administradores** y activar a Diego Delgado Iglesias.
+6. **Panel → Clientes**, filtrar por **Pendiente** y aceptar a Gonzalo Ibáñez Roca desde su ficha con **Activar** (task AB#234).
 
 Los cambios se olvidan al recargar la página.
 
@@ -180,14 +183,14 @@ npm run build
 | `api/users.test.js` | 4 | Petición de activar, error, y envío o no de los parámetros nuevos |
 | `pages/AdminAdminsPage.test.jsx` | 1 | Activar un administrador desactivado |
 
-También se ajustaron un test del panel (la tarjeta **Clientes** ahora navega) y dos de la HU19 (con los datos nuevos solo hay 2 cuentas pendientes, las de los vendedores).
+También se ajustaron un test del panel (la tarjeta **Clientes** ahora navega) y dos de la HU19 (con los datos nuevos solo había 2 cuentas pendientes, las de los vendedores; desde la task AB#234 hay 5: 2 vendedores, 2 clientes y 1 administrador).
 
 ---
 
 ## 7. Decisiones
 
 - **Botón Activar en la fila** para clientes y administradores. La HU20 lo pasó después a la ficha, como en los vendedores, para que todo quede igual.
-- **Los clientes y los administradores solo están activos o desactivados.** "Bloqueado" se ha quitado de los datos de los clientes porque en la práctica es lo mismo que desactivado.
+- **Los clientes y los administradores no tienen el estado "bloqueado"**, que se ha quitado de los datos de los clientes porque en la práctica es lo mismo que desactivado. En esta HU tampoco tenían "pendiente"; la task AB#234 (HU1) lo añadió porque toda cuenta nueva queda pendiente.
 - **Un único componente (`RoleUsersList`) para los dos listados,** para no duplicar código, reutilizando la API, la tabla y los filtros de la HU19.
 - **Los cambios en los componentes de la HU19 son opcionales,** así que la pantalla general de usuarios no cambia.
 - **`SortControls` generalizado** a partir del de la HU26, en lugar de crear otro control de ordenación.
@@ -210,7 +213,7 @@ Este documento y el trabajo técnico que describe se hicieron con ayuda de un as
 - **Qué generó la IA:** los listados, el botón Activar, la confirmación compartida, la ordenación, los cambios en los componentes y mocks de la HU19, los tests y este documento. También hizo los commits, a petición del equipo.
 - **Qué hizo el equipo:**
   - decidió dónde y cómo se activa cada tipo de usuario (fila por ahora, ficha cuando exista la HU20);
-  - decidió que los clientes no tengan estados pendiente ni bloqueado;
+  - decidió que los clientes no tengan el estado bloqueado (y en esta HU tampoco pendiente, algo que corrigió después la task AB#234 de la HU1);
   - pidió la búsqueda solo por nombre y la ordenación por nombre o estado;
   - revisó cada paso y comprobó las pantallas en el navegador con los mocks.
 - **Cómo se comprobó:** tests (381 en la suite), ESLint sin errores y build de producción correcto.

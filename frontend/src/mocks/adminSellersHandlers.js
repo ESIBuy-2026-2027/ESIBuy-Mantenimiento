@@ -4,22 +4,22 @@ import { leerPagina, normalizar, paginar } from './paginar'
 import { CATEGORIAS, OTRO_VENDEDOR, PRODUCTOS, VENDEDOR_CON_PRODUCTOS, aRespuesta } from './productsHandlers'
 
 const VENDEDORES_DATOS = [
-  // [id, nombre, apellidos, nombreComercial, email, nif, categoría principal, estado, fecha de alta]
-  [VENDEDOR_CON_PRODUCTOS, 'Vera', 'Vendedora', 'TecnoVera', 'vendedor@esibuy.test', 'B12345601', 'cat-1', 'ACTIVO', '2026-09-14'],
-  ['u-5', 'Vicente', 'Vacío', 'Casa Vicente', 'vendedor-vacio@esibuy.test', 'B12345602', 'cat-2', 'ACTIVO', '2026-09-20'],
-  [OTRO_VENDEDOR, 'Otto', 'Otero', 'Otero Hogar y Tecnología', 'otto@esibuy.test', 'B12345603', 'cat-1', 'ACTIVO', '2026-09-22'],
-  ['s-04', 'Marta', 'Gil Prieto', 'Electro Marta', 'marta@esibuy.test', 'B12345604', 'cat-1', 'ACTIVO', '2026-09-25'],
-  ['s-05', 'Hugo', 'Ramos León', 'Hogar Hugo', 'hugo@esibuy.test', 'B12345605', 'cat-2', 'PENDIENTE', '2026-10-01'],
-  ['s-06', 'Lucía', 'Navarro Sanz', 'Lucía Digital', 'lucia@esibuy.test', 'B12345606', 'cat-1', 'ACTIVO', '2026-10-02'],
-  ['s-07', 'Pablo', 'Iglesias Mora', 'Cocina Pablo', 'pablo@esibuy.test', 'B12345607', 'cat-2', 'DESACTIVADO', '2026-08-30'],
-  ['s-08', 'Elena', 'Soto Vidal', 'Soto Gadgets', 'elena@esibuy.test', 'B12345608', 'cat-1', 'ACTIVO', '2026-09-03'],
-  ['s-09', 'Raúl', 'Ortega Pons', 'Ortega Muebles', 'raul@esibuy.test', 'B12345609', 'cat-2', 'ACTIVO', '2026-09-07'],
-  ['s-10', 'Irene', 'Campos Ruiz', 'Irene Smart Home', 'irene@esibuy.test', 'B12345610', 'cat-2', 'ACTIVO', '2026-09-11'],
-  ['s-11', 'Sergio', 'Molina Vega', 'Molina Informática', 'sergio@esibuy.test', 'B12345611', 'cat-1', 'PENDIENTE', '2026-10-03'],
-  ['s-12', 'Noelia', 'Prado Ferrer', 'Noelia Decoración', 'noelia@esibuy.test', 'B12345612', 'cat-2', 'ACTIVO', '2026-09-17'],
-  ['s-13', 'Adrián', 'Bravo Cano', 'Bravo Audio', 'adrian@esibuy.test', 'B12345613', 'cat-1', 'DESACTIVADO', '2026-08-21'],
-  ['s-14', 'Carmen', 'Lara Duque', 'Carmen Electrodomésticos', 'carmen@esibuy.test', 'B12345614', 'cat-2', 'ACTIVO', '2026-09-28'],
-].map(([id, nombre, apellidos, nombreComercial, email, nif, categoria, estado, fechaAlta]) => ({
+  // [id, nombre, apellidos, nombreComercial, email, nif, categoría principal, estado]
+  [VENDEDOR_CON_PRODUCTOS, 'Vera', 'Vendedora', 'TecnoVera', 'vendedor@esibuy.test', 'B12345601', 'cat-1', 'ACTIVO'],
+  ['u-5', 'Vicente', 'Vacío', 'Casa Vicente', 'vendedor-vacio@esibuy.test', 'B12345602', 'cat-2', 'ACTIVO'],
+  [OTRO_VENDEDOR, 'Otto', 'Otero', 'Otero Hogar y Tecnología', 'otto@esibuy.test', 'B12345603', 'cat-1', 'ACTIVO'],
+  ['s-04', 'Marta', 'Gil Prieto', 'Electro Marta', 'marta@esibuy.test', 'B12345604', 'cat-1', 'ACTIVO'],
+  ['s-05', 'Hugo', 'Ramos León', 'Hogar Hugo', 'hugo@esibuy.test', 'B12345605', 'cat-2', 'PENDIENTE'],
+  ['s-06', 'Lucía', 'Navarro Sanz', 'Lucía Digital', 'lucia@esibuy.test', 'B12345606', 'cat-1', 'ACTIVO'],
+  ['s-07', 'Pablo', 'Iglesias Mora', 'Cocina Pablo', 'pablo@esibuy.test', 'B12345607', 'cat-2', 'DESACTIVADO'],
+  ['s-08', 'Elena', 'Soto Vidal', 'Soto Gadgets', 'elena@esibuy.test', 'B12345608', 'cat-1', 'ACTIVO'],
+  ['s-09', 'Raúl', 'Ortega Pons', 'Ortega Muebles', 'raul@esibuy.test', 'B12345609', 'cat-2', 'ACTIVO'],
+  ['s-10', 'Irene', 'Campos Ruiz', 'Irene Smart Home', 'irene@esibuy.test', 'B12345610', 'cat-2', 'ACTIVO'],
+  ['s-11', 'Sergio', 'Molina Vega', 'Molina Informática', 'sergio@esibuy.test', 'B12345611', 'cat-1', 'PENDIENTE'],
+  ['s-12', 'Noelia', 'Prado Ferrer', 'Noelia Decoración', 'noelia@esibuy.test', 'B12345612', 'cat-2', 'ACTIVO'],
+  ['s-13', 'Adrián', 'Bravo Cano', 'Bravo Audio', 'adrian@esibuy.test', 'B12345613', 'cat-1', 'DESACTIVADO'],
+  ['s-14', 'Carmen', 'Lara Duque', 'Carmen Electrodomésticos', 'carmen@esibuy.test', 'B12345614', 'cat-2', 'ACTIVO'],
+].map(([id, nombre, apellidos, nombreComercial, email, nif, categoria, estado]) => ({
   id,
   nombre,
   apellidos,
@@ -28,7 +28,6 @@ const VENDEDORES_DATOS = [
   nif,
   categoria,
   estado,
-  fechaAlta,
 }))
 
 // [id, fecha, artículos, total, estado]. El vendedor u-2 tiene 12 (3 páginas de 5); u-99 tiene 2; el resto, ninguno.
@@ -64,13 +63,57 @@ const TAMANO_PAGINA_PESTANA = 5
 // Estados que el administrador ha cambiado durante la sesión (activar o desactivar), por id de vendedor.
 const ESTADOS_ADMITIDOS = new Set(['ACTIVO', 'DESACTIVADO'])
 let estadosModificados = new Map()
+// Datos que el administrador ha modificado durante la sesión (HU22), por id de vendedor.
+let datosModificados = new Map()
+
+// Vendedores que han llegado o se han ido por un cambio de rol (HU22) durante la sesión.
+let vendedoresAnadidos = []
+let vendedoresRetirados = new Set()
 
 export function resetAdminSellersMock() {
   estadosModificados = new Map()
+  datosModificados = new Map()
+  vendedoresAnadidos = []
+  vendedoresRetirados = new Set()
 }
 
-const conEstadoActual = (vendedor) =>
-  estadosModificados.has(vendedor.id) ? { ...vendedor, estado: estadosModificados.get(vendedor.id) } : vendedor
+const conCambios = (vendedor) => ({
+  ...vendedor,
+  ...datosModificados.get(vendedor.id),
+  ...(estadosModificados.has(vendedor.id) && { estado: estadosModificados.get(vendedor.id) }),
+})
+
+const todosLosVendedores = () =>
+  [...VENDEDORES_DATOS, ...vendedoresAnadidos].filter((vendedor) => !vendedoresRetirados.has(vendedor.id))
+
+// Funciones que usa el mock de usuarios (usersHandlers): el administrador edita a los vendedores con el mismo
+// endpoint que al resto de usuarios y, al cambiar de rol, un vendedor sale de este almacén o entra en él.
+export const vendedoresMock = () => todosLosVendedores().map(conCambios)
+export const buscarVendedorMock = (id) => vendedoresMock().find((vendedor) => vendedor.id === id)
+
+export function editarVendedorMock(id, { nombre, apellidos, email, nombreComercial, nif, categoriaPrincipalId }) {
+  datosModificados.set(id, {
+    ...datosModificados.get(id),
+    nombre,
+    apellidos,
+    email,
+    nombreComercial,
+    nif,
+    categoria: categoriaPrincipalId,
+  })
+}
+
+export const retirarVendedorMock = (id) => vendedoresRetirados.add(id)
+
+export function incorporarVendedorMock({ id, nombre, apellidos, email, nombreComercial, nif, categoriaPrincipalId, estado }) {
+  const datos = { nombre, apellidos, email, nombreComercial, nif, categoria: categoriaPrincipalId, estado }
+  if (VENDEDORES_DATOS.some((vendedor) => vendedor.id === id)) {
+    vendedoresRetirados.delete(id)
+    datosModificados.set(id, datos)
+  } else {
+    vendedoresAnadidos = [...vendedoresAnadidos, { id, ...datos }]
+  }
+}
 
 // Orden ascendente de los estados: primero los pendientes de revisar.
 const ORDEN_ESTADOS = ['PENDIENTE', 'ACTIVO', 'DESACTIVADO']
@@ -102,8 +145,8 @@ const aVendedorResumen = ({ id, nombre, apellidos, nombreComercial, email, categ
 
 const aVendedorDetalle = (vendedor) => ({
   ...aVendedorResumen(vendedor),
+  categoriaPrincipalId: vendedor.categoria,
   nif: vendedor.nif,
-  fechaAlta: vendedor.fechaAlta,
 })
 
 const aPedido = ([id, fecha, articulos, total, estado]) => ({ id, fecha, articulos, total, estado })
@@ -120,8 +163,8 @@ function conVendedor(params, respuestaPara) {
   const rechazo = rechazarSiNoEsAdmin()
   if (rechazo) return rechazo
 
-  const vendedor = VENDEDORES_DATOS.find((candidato) => candidato.id === params.id)
-  return vendedor ? respuestaPara(conEstadoActual(vendedor)) : new HttpResponse(null, { status: 404 })
+  const vendedor = buscarVendedorMock(params.id)
+  return vendedor ? respuestaPara(vendedor) : new HttpResponse(null, { status: 404 })
 }
 
 const paginaDePestana = (request) => leerPagina(new URL(request.url).searchParams, TAMANO_PAGINA_PESTANA)
@@ -136,7 +179,7 @@ export const adminSellersHandlers = [
     const categoria = params.get('category')
     const estado = params.get('status')
 
-    const coincidentes = VENDEDORES_DATOS.map(conEstadoActual).filter(
+    const coincidentes = vendedoresMock().filter(
       (vendedor) =>
         normalizar(`${vendedor.nombre} ${vendedor.apellidos} ${vendedor.nombreComercial} ${vendedor.email}`).includes(
           busqueda,

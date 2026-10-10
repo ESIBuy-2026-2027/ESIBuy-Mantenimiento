@@ -4,16 +4,17 @@ Documento para entender la pantalla de registro: qué pide a cada tipo de usuari
 
 - **Fecha:** 8 de octubre de 2026
 - **HU:** HU1 · Registro de usuario
-- **Tasks:** AB#17 y AB#18
-- **Rama:** `feature/front/registro`
+- **Tasks:** AB#17 y AB#18; después, AB#234 (cuenta pendiente tras el registro)
+- **Rama:** `feature/front/registro`; la task AB#234, en `feature/US1-T234-cuenta-pendiente`
 - **Metodología:** TDD. Cada ciclo tiene su commit de rojo (`test(HU1)`) y su commit de verde (`feat(HU1)`), y los refactors van en commits `refactor(HU1)` aparte.
 - **Depende de:** `docs/Contexto_frontend.md` (sección 6.3, requisitos del registro) y `docs/mocks-msw.md` (mocks)
+- **Ampliado por la task AB#234:** la cuenta creada queda **pendiente** hasta que un administrador la verifica. Ver la sección 1.1.
 
 ---
 
 ## 1. Resumen
 
-En `/register` el usuario elige si quiere una cuenta de **cliente** o de **vendedor** y rellena el formulario correspondiente. Al pulsar **Registrarse** se validan todos los campos y se muestran **todos los errores a la vez**, no campo a campo. Si no hay errores, se envían los datos y aparece la pantalla **Cuenta creada**.
+En `/register` el usuario elige si quiere una cuenta de **cliente** o de **vendedor** y rellena el formulario correspondiente. Al pulsar **Registrarse** se validan todos los campos y se muestran **todos los errores a la vez**, no campo a campo. Si no hay errores, se envían los datos y aparece la pantalla **Cuenta creada**, que avisa de que la cuenta queda **pendiente** hasta que un administrador la verifique.
 
 | Campo | Cliente | Vendedor | Reglas |
 |---|---|---|---|
@@ -35,6 +36,22 @@ Los campos obligatorios llevan el asterisco rojo de Fluent UI.
 
 > Las validaciones del frontend son **experiencia de usuario**. La unicidad del email y del nombre comercial solo la puede garantizar el backend, y el backend debe volver a validar todos los datos.
 
+### 1.1 Cuenta pendiente de verificación (task AB#234)
+
+El equipo decidió que **toda cuenta nueva**, de cliente o de vendedor, nace en estado **pendiente** (los administradores no: los da de alta otro administrador, HU22) y no puede iniciar sesión hasta que un administrador la active. Antes solo los vendedores pasaban por ese estado. La pantalla de confirmación dice ahora:
+
+> Tu cuenta se ha creado correctamente y está pendiente de que un administrador la verifique. Podrás iniciar sesión cuando esté activada.
+
+Para que el administrador pueda aceptar esas cuentas, la misma task completa los listados de la HU24 (se dejó aquí para que la corrección quedara junta en una sola task):
+
+| Dónde | Cambio |
+|---|---|
+| Listado de clientes | El filtro de estado incluye **Pendiente**, y al ordenar por estado salen primero los pendientes, como en vendedores (los administradores ya no tienen ese estado: HU22) |
+| Ficha de un cliente (HU20) | Si la cuenta está pendiente ofrece **Activar** (y no **Desactivar**), como con los vendedores pendientes |
+| Mock de usuarios | Dos clientes pendientes (Gonzalo Ibáñez Roca y Marcos Aguilar Bravo) (el administrador pendiente Manuel Esteve Pons pasó a activo con la HU22: los administradores no están pendientes). **Crear administrador** (HU21) sigue creándolos activos |
+
+En el backend, otra task de la HU1 hace que `Usuario` nazca en `PENDIENTE` y que esa cuenta no cuente como activa. Los documentos de la HU19, la HU20, la HU23 y la HU24 están actualizados.
+
 ---
 
 ## 2. Flujo
@@ -50,7 +67,7 @@ flowchart TD
     F --> E
     E -- No --> G[Envía los datos al backend]
     G --> H{¿Respuesta?}
-    H -- 201 --> I[Pantalla Cuenta creada]
+    H -- 201 --> I[Pantalla Cuenta creada: pendiente de verificación]
     H -- 409 --> J[Marca el email y/o el nombre comercial como ya registrados]
     J --> E
 ```
@@ -134,7 +151,7 @@ Cuerpo (JSON): el objeto completo del formulario.
 
 | Respuesta | Significado para el frontend |
 |---|---|
-| 201 | Cuenta creada: se muestra la confirmación |
+| 201 | Cuenta creada: se muestra la confirmación. La cuenta queda en `PENDIENTE` hasta que un administrador la active (task AB#234) |
 | 409 + `{ "code": "EMAIL_ALREADY_REGISTERED" }` | "Este email ya está registrado" |
 | 409 + `{ "code": "COMMERCIAL_NAME_ALREADY_REGISTERED" }` | "Este nombre comercial ya está registrado" (solo vendedor) |
 | 409 + `{ "code": "EMAIL_AND_COMMERCIAL_NAME_ALREADY_REGISTERED" }` | Los dos mensajes (solo vendedor) |
@@ -151,7 +168,7 @@ Con `npm run dev` (mocks activos con `VITE_USE_MOCKS=true` en `.env.development`
 
 | Prueba | Resultado |
 |---|---|
-| Cliente o vendedor con un email nuevo | Pantalla **Cuenta creada** |
+| Cliente o vendedor con un email nuevo | Pantalla **Cuenta creada**, con el aviso de que queda pendiente de verificación |
 | Email `cliente@esibuy.test`, `vendedor@esibuy.test` o cualquier otro usuario del mock de login | "Este email ya está registrado" |
 | Vendedor con nombre comercial `Tienda Vera` | "Este nombre comercial ya está registrado" |
 | Las dos cosas a la vez | Los dos mensajes |
@@ -179,6 +196,15 @@ npm run build
 
 Los tests sustituyen `api/auth` y `api/products` con `vi.mock`, así que no dependen de los mocks de MSW.
 
+**Task AB#234** (con TDD: primero los tests en rojo y después el código):
+
+| Archivo | Tests | Qué cubre |
+|---|---|---|
+| `pages/Register.test.jsx` | 2 nuevos | La confirmación del cliente y la del vendedor avisan de que la cuenta queda pendiente de verificación |
+| `features/admin/RoleUsersList.test.jsx` | 1 nuevo y 3 cambiados | El filtro ofrece Pendiente, filtrar por Pendiente, los pendientes primero al ordenar por estado y el total de clientes (17) |
+| `features/admin/UserDetailDialog.test.jsx` | 2 nuevos | La ficha de una cuenta pendiente ofrece Activar y no Desactivar, y activarla la deja activa |
+| `pages/AdminUsersPage.test.jsx` (HU19) y `pages/AdminAdminsPage.test.jsx` (HU21) | Recuentos | 28 usuarios, 5 pendientes y 4 administradores con los datos nuevos del mock |
+
 ---
 
 ## 7. Decisiones
@@ -188,6 +214,7 @@ Los tests sustituyen `api/auth` y `api/products` con `vi.mock`, así que no depe
 - **Límite de longitud con `maxLength`:** se impide escribir de más en lugar de dejarlo y mostrar un error después.
 - **Códigos de error 409** con el campo `code`, siguiendo el patrón del login (`ACCOUNT_DISABLED`) y sin tocar `api/client.js`.
 - **Avatares con iconos de Fluent UI**, sin imágenes externas. Para cambiarlos basta con editar la lista `AVATARES`.
+- **Cuenta pendiente tras el registro (task AB#234):** decisión del equipo. Las cuentas pendientes de clientes y administradores se aceptan con **Activar** desde su ficha, igual que los vendedores. El administrador pendiente del mock solo sirve para probar el filtro: **Crear administrador** sigue creándolos activos.
 - **No se ha añadido ninguna librería nueva.** Todo sale de `@fluentui/react-components`, `@fluentui/react-icons` y `react-router-dom`.
 
 ## 8. Limitaciones y trabajo pendiente
@@ -209,4 +236,5 @@ Este documento y el trabajo técnico que describe se hicieron con ayuda de un as
 - **Qué hizo el equipo:** definió los requisitos de cada campo (obligatoriedad, longitudes, formato del teléfono, reglas del password), decidió la convención Email/Password, el formato de las categorías, los códigos de error y el estilo. Aprobó cada ciclo antes de pasar al siguiente e hizo cada commit.
 - **Cómo se comprobó:** en cada ciclo se ejecutaron los tests (129 en verde al final), ESLint sin errores y el build de producción. La pantalla se revisó en el navegador con los mocks.
 - **Qué NO se comprobó:** el flujo contra un backend real. El contrato de la sección 5 debe acordarse con el backend.
+- **Task AB#234:** la IA escribió los tests, el código, los datos del mock y los cambios en la documentación, e hizo los commits a petición del equipo. El equipo decidió que toda cuenta nueva quede pendiente, el texto de la pantalla, que la ficha ofrezca Activar como en vendedores y que el administrador pendiente sea solo un dato del mock. Se comprobó con los tests (los archivos afectados, en verde), ESLint y el build.
 - **Revisión humana:** el código fue revisado, ejecutado y validado por el equipo antes de su integración. Revisado por: Alejandro.

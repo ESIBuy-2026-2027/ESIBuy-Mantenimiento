@@ -85,6 +85,7 @@ class RegistroUsuarioServiceTest {
         ArgumentCaptor<Usuario> usuarioGuardado = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).guardar(usuarioGuardado.capture());
         assertEquals(Rol.CLIENTE, usuarioGuardado.getValue().getRol());
+        assertEquals("PENDIENTE", usuarioGuardado.getValue().getEstado()); // La cuenta se crea en estado PENDIENTE de activación por un administrador.
     }
 
     @Test

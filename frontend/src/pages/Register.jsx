@@ -17,7 +17,13 @@ import { registrarCliente, registrarVendedor } from '../api/auth'
 import { getCategories } from '../api/products'
 import AvatarSelector from '../features/account/AvatarSelector'
 import { PasswordField, PasswordRequirements } from '../features/account/PasswordField'
-import { esEmailValido, validarPasswords } from '../features/account/accountRules'
+import {
+  esDniValido,
+  esEmailValido,
+  esMayorDeEdad,
+  esTelefonoValido,
+  validarPasswords,
+} from '../features/account/accountRules'
 
 const OBLIGATORIOS_CLIENTE = [
   'nombre',
@@ -106,29 +112,18 @@ const useStyles = makeStyles({
   },
 })
 
-function esMayorDeEdad(fecha) {
-  const nacimiento = new Date(fecha)
-  const hoy = new Date()
-  let edad = hoy.getFullYear() - nacimiento.getFullYear()
-  const cumpleEsteAnio =
-    hoy.getMonth() > nacimiento.getMonth() ||
-    (hoy.getMonth() === nacimiento.getMonth() && hoy.getDate() >= nacimiento.getDate())
-  if (!cumpleEsteAnio) edad--
-  return edad >= 18
-}
-
 function validarCamposComunes(datos, obligatorios) {
   const errores = {}
   obligatorios.forEach((campo) => {
     if (!datos[campo].trim()) errores[campo] = 'Este campo es obligatorio'
   })
-  if (datos.dni && !/^\d{8}[A-Za-z]$/.test(datos.dni)) {
+  if (datos.dni && !esDniValido(datos.dni)) {
     errores.dni = 'Introduce un DNI válido (8 números y una letra)'
   }
   if (datos.email && !esEmailValido(datos.email)) {
     errores.email = 'Introduce un email válido'
   }
-  if (datos.telefono && !/^\d{9}$/.test(datos.telefono)) {
+  if (datos.telefono && !esTelefonoValido(datos.telefono)) {
     errores.telefono = 'Introduce un teléfono válido (9 números)'
   }
   Object.assign(errores, validarPasswords(datos))
@@ -227,7 +222,10 @@ export default function Register() {
   if (registrado) {
     return pantalla(
       'Cuenta creada',
-      <Text className={styles.description}>Tu cuenta se ha creado correctamente.</Text>
+      <Text className={styles.description}>
+        Tu cuenta se ha creado correctamente y está pendiente de que un administrador la verifique.
+        Podrás iniciar sesión cuando esté activada.
+      </Text>
     )
   }
 

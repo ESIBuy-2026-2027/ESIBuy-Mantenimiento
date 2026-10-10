@@ -79,7 +79,7 @@ Marketplace (tienda online) desarrollado como Práctica Integrada de la asignatu
 - **HU19**: listado con nombre, email, rol, estado, fecha de alta; búsqueda por nombre/email; filtro por rol y estado; paginado.
 - **HU20**: ficha completa sin contraseña; accesos a editar, bloquear/desbloquear, eliminar.
 - **HU21**: validación de campos y email único; asignación de rol; cuenta creada ya activa; contraseña cifrada o temporal con cambio en primer acceso.
-- **HU22**: mismas validaciones que HU21; un admin no puede quitarse su rol ni degradar al último administrador.
+- **HU22**: mismas validaciones que HU21; un admin no puede quitarse su rol ni degradar al último administrador. Implementada en el frontend: el administrador edita los datos de clientes, administradores y vendedores y **cambia su rol** (no el propio, ni degradando al último administrador); los administradores nunca están pendientes. Ver `docs/hu22-editar-usuario.md`.
 - **HU23**: el usuario desactivado no puede iniciar sesión (mensaje específico); su sesión se invalida; requiere confirmación; un admin no puede desactivarse a sí mismo ni al último admin activo.
 - **HU24**: activa cuentas pendientes o desactivadas; el listado (HU19) filtra por "pendiente".
 - **HU26**: el admin ve productos/precios/pedidos de un vendedor con **todas las acciones de edición/borrado deshabilitadas**.
@@ -135,6 +135,7 @@ El tipo de usuario se elige en el propio formulario (botones, tarjetas, desplega
   2. Se envía un enlace por correo y el nuevo admin elige su contraseña en esa página, reutilizando el formulario de cambio de contraseña (más correcto).
 
 ### 6.5 Perfil y credenciales
+- **Edición por un administrador (HU22):** el administrador edita los datos de cualquier usuario desde su ficha. Cliente: todo menos el email (la fecha de nacimiento siempre de un mayor de edad). Administrador: todo menos el email y la fecha de incorporación. Vendedor: todo, con el nombre comercial único. Detalle en `docs/hu22-editar-usuario.md`.
 - La **contraseña** solo se cambia desde el **formulario de cambio de contraseña**.
 - Desde el perfil se puede editar todo lo demás **excepto email y nombre**.
 - Vendedor: el nombre comercial se puede cambiar mientras siga siendo único.

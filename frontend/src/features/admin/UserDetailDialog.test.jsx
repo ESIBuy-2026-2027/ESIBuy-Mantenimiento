@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../../mocks/server'
@@ -8,10 +8,12 @@ import { renderWithProviders } from '../../test/utils'
 import UserDetailDialog from './UserDetailDialog'
 
 // Del mock de usuarios: Lucía Torres Vega (usr-4) es clienta desactivada, Carlos Moreno Gil (usr-3) cliente
-// activo y Diego Delgado Iglesias (usr-11) administrador desactivado.
+// activo, Diego Delgado Iglesias (usr-11) administrador desactivado y Gonzalo Ibáñez Roca (usr-25) cliente
+// pendiente de verificación (HU1).
 const LUCIA = 'usr-4'
 const CARLOS = 'usr-3'
 const DIEGO = 'usr-11'
+const GONZALO = 'usr-25'
 const ESPERA = { timeout: 3000 }
 
 async function abrirFicha(userId, currentUserId = 'u-1') {
@@ -47,7 +49,12 @@ describe('UserDetailDialog (HU20): datos', () => {
     expect(valorDe(dialogo, 'Tipo de cliente')).toHaveValue('Estándar')
     expect(valorDe(dialogo, 'Imagen de perfil')).toHaveValue('Avatar 2')
     expect(valorDe(dialogo, 'Estado')).toHaveValue('Desactivado')
-    expect(valorDe(dialogo, 'Fecha de alta')).toHaveValue('28/09/2026')
+  })
+
+  it('userDetailDialog_deUnCliente_noMuestraLaFechaDeAlta', async () => {
+    const { dialogo } = await abrirFicha(LUCIA)
+
+    expect(within(dialogo).queryByLabelText('Fecha de alta')).not.toBeInTheDocument()
   })
 
   it('userDetailDialog_deUnAdministrador_muestraSedeYFechaDeIncorporacion', async () => {
@@ -56,6 +63,7 @@ describe('UserDetailDialog (HU20): datos', () => {
     expect(valorDe(dialogo, 'Nombre')).toHaveValue('Diego')
     expect(valorDe(dialogo, 'Sede')).toHaveValue('Cuenca')
     expect(valorDe(dialogo, 'Fecha de incorporación')).toHaveValue('20/01/2026')
+    expect(valorDe(dialogo, 'Fecha de alta')).toHaveValue('20/01/2026')
     expect(within(dialogo).queryByLabelText('DNI')).not.toBeInTheDocument()
     expect(within(dialogo).queryByLabelText('Tipo de cliente')).not.toBeInTheDocument()
   })
@@ -114,6 +122,25 @@ describe('UserDetailDialog (HU20): activar y desactivar desde la ficha', () => {
     expect(botonDeEstado(dialogo, 'Activar')).not.toBeInTheDocument()
   })
 
+  it('userDetailDialog_deUnaCuentaPendiente_ofreceActivarYNoDesactivar', async () => {
+    const { dialogo } = await abrirFicha(GONZALO)
+
+    expect(valorDe(dialogo, 'Estado')).toHaveValue('Pendiente')
+    expect(botonDeEstado(dialogo, 'Activar')).toBeInTheDocument()
+    expect(botonDeEstado(dialogo, 'Desactivar')).not.toBeInTheDocument()
+  })
+
+  it('userDetailDialog_alActivarUnaCuentaPendiente_laAceptaYPasaAActivo', async () => {
+    const user = userEvent.setup()
+    const { dialogo, onStatusChange } = await abrirFicha(GONZALO)
+
+    await confirmar(user, dialogo, 'Activar', /seguro que quieres activar a gonzalo ibáñez roca/i)
+
+    expect(await within(dialogo).findByText(/gonzalo ibáñez roca ya está activo/i, {}, ESPERA)).toBeInTheDocument()
+    await waitFor(() => expect(valorDe(dialogo, 'Estado')).toHaveValue('Activo'), ESPERA)
+    expect(onStatusChange).toHaveBeenCalledTimes(1)
+  })
+
   it('userDetailDialog_deLaPropiaCuenta_noOfreceDesactivar', async () => {
     const { dialogo } = await abrirFicha(CARLOS, CARLOS)
 
@@ -169,5 +196,385 @@ describe('UserDetailDialog (HU20): activar y desactivar desde la ficha', () => {
 
     expect(await within(dialogo).findByText(/no se ha podido activar a lucía torres vega/i, {}, ESPERA)).toBeInTheDocument()
     expect(valorDe(dialogo, 'Estado')).toHaveValue('Desactivado')
+  })
+})
+
+describe('UserDetailDialog (HU22): edición', () => {
+  const ADA = 'u-1'
+
+  async function entrarEnEdicion(userId, currentUserId) {
+    const ficha = await abrirFicha(userId, currentUserId)
+    const user = userEvent.setup()
+    await user.click(within(ficha.dialogo).getByRole('button', { name: 'Editar' }))
+    await within(ficha.dialogo).findByText('Modo edición')
+    return { ...ficha, user }
+  }
+
+  function capturarGuardado(estado = 200) {
+    const envio = { cuerpo: null, llamadas: 0, id: null }
+    server.use(
+      http.put('/api/admin/usuarios/:id', async ({ params, request }) => {
+        envio.llamadas += 1
+        envio.id = params.id
+        envio.cuerpo = await request.json()
+        return HttpResponse.json({ id: params.id }, { status: estado })
+      }),
+    )
+    return envio
+  }
+
+  const esDeSoloLectura = (dialogo, etiqueta) => within(dialogo).getByLabelText(etiqueta).hasAttribute('readonly')
+  const guardar = (user, dialogo) => user.click(within(dialogo).getByRole('button', { name: /^guardar$/i }))
+
+  it('userDetailDialog_alPulsarEditar_pasaAlModoEdicionSinLosBotonesDeLaFicha', async () => {
+    const { dialogo } = await entrarEnEdicion(CARLOS)
+
+    expect(within(dialogo).getByRole('button', { name: /^guardar$/i })).toBeInTheDocument()
+    expect(within(dialogo).getByRole('button', { name: /^cancelar$/i })).toBeInTheDocument()
+    expect(within(dialogo).queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
+    expect(botonDeEstado(dialogo, 'Desactivar')).toBeNull()
+    expect(within(dialogo).queryByText('Modo solo lectura')).not.toBeInTheDocument()
+  })
+
+  it('userDetailDialog_deUnCliente_enEdicionSoloDejaModificarLoQueSePuede', async () => {
+    const { dialogo } = await entrarEnEdicion(CARLOS)
+
+    for (const etiqueta of [/^nombre/i, /^apellidos/i, /^dni/i, /^teléfono/i, /^fecha de nacimiento/i]) {
+      expect(esDeSoloLectura(dialogo, etiqueta)).toBe(false)
+    }
+    expect(esDeSoloLectura(dialogo, 'Email')).toBe(true)
+    expect(esDeSoloLectura(dialogo, 'Estado')).toBe(true)
+    expect(within(dialogo).queryByLabelText('Fecha de alta')).not.toBeInTheDocument()
+  })
+
+  it('userDetailDialog_deUnAdministrador_enEdicionNoDejaModificarEmailNiFechaDeIncorporacion', async () => {
+    const { dialogo } = await entrarEnEdicion(DIEGO)
+
+    expect(esDeSoloLectura(dialogo, 'Email')).toBe(true)
+    expect(esDeSoloLectura(dialogo, 'Fecha de incorporación')).toBe(true)
+    expect(esDeSoloLectura(dialogo, 'Fecha de alta')).toBe(true)
+    expect(esDeSoloLectura(dialogo, /^sede/i)).toBe(false)
+    expect(within(dialogo).queryByLabelText(/^dni/i)).not.toBeInTheDocument()
+  })
+
+  it('userDetailDialog_enEdicion_nuncaMuestraLaContrasena', async () => {
+    const { dialogo } = await entrarEnEdicion(CARLOS)
+
+    expect(within(dialogo).queryByLabelText(/contraseña|password/i)).not.toBeInTheDocument()
+  })
+
+  it('userDetailDialog_alGuardarUnCliente_enviaSusDatosSinElEmailNiElEstado', async () => {
+    const envio = capturarGuardado()
+    const { dialogo, user } = await entrarEnEdicion(CARLOS)
+
+    await user.clear(within(dialogo).getByLabelText(/^nombre/i))
+    await user.type(within(dialogo).getByLabelText(/^nombre/i), 'Carla')
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(envio.llamadas).toBe(1), ESPERA)
+    expect(envio.id).toBe(CARLOS)
+    expect(Object.keys(envio.cuerpo)).toEqual([
+      'nombre',
+      'apellidos',
+      'rol',
+      'dni',
+      'telefono',
+      'fechaNacimiento',
+      'tipoCliente',
+      'avatar',
+    ])
+    expect(envio.cuerpo).toMatchObject({ nombre: 'Carla', apellidos: 'Moreno Gil', tipoCliente: 'PREMIUM' })
+  })
+
+  it('userDetailDialog_tras_guardar_vuelveALaFichaConLosDatosNuevosYAvisaAlListado', async () => {
+    const { dialogo, user, onStatusChange } = await entrarEnEdicion(CARLOS)
+
+    await user.clear(within(dialogo).getByLabelText(/^nombre/i))
+    await user.type(within(dialogo).getByLabelText(/^nombre/i), 'Carla')
+    await guardar(user, dialogo)
+
+    expect(await within(dialogo).findByText('Los cambios se han guardado.', undefined, ESPERA)).toBeInTheDocument()
+    await waitFor(() => expect(valorDe(dialogo, 'Nombre')).toHaveValue('Carla'), ESPERA)
+    expect(within(dialogo).getByText('Modo solo lectura')).toBeInTheDocument()
+    expect(within(dialogo).getByRole('button', { name: 'Editar' })).toBeInTheDocument()
+    expect(onStatusChange).toHaveBeenCalled()
+  })
+
+  it('userDetailDialog_alCambiarElTipoDeCliente_laFichaMuestraElNuevoTipo', async () => {
+    const { dialogo, user } = await entrarEnEdicion(CARLOS)
+
+    await user.selectOptions(within(dialogo).getByLabelText(/^tipo de cliente/i), 'ESTANDAR')
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(valorDe(dialogo, 'Tipo de cliente')).toHaveValue('Estándar'), ESPERA)
+  })
+
+  it('userDetailDialog_alCambiarLaFechaDeNacimientoAOtraDeUnMayor_laGuarda', async () => {
+    const envio = capturarGuardado()
+    const { dialogo, user } = await entrarEnEdicion(CARLOS)
+
+    fireEvent.change(within(dialogo).getByLabelText(/^fecha de nacimiento/i), { target: { value: '1990-05-20' } })
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(envio.cuerpo?.fechaNacimiento).toBe('1990-05-20'), ESPERA)
+  })
+
+  it('userDetailDialog_conUnaFechaDeNacimientoDeUnMenor_muestraElErrorYNoGuarda', async () => {
+    const envio = capturarGuardado()
+    const { dialogo, user } = await entrarEnEdicion(CARLOS)
+
+    fireEvent.change(within(dialogo).getByLabelText(/^fecha de nacimiento/i), {
+      target: { value: `${new Date().getFullYear() - 10}-01-01` },
+    })
+    await guardar(user, dialogo)
+
+    expect(within(dialogo).getByText(/debe ser mayor de edad/i)).toBeInTheDocument()
+    expect(envio.llamadas).toBe(0)
+  })
+
+  it('userDetailDialog_conCamposObligatoriosVacios_losMuestraTodosALaVezYNoGuarda', async () => {
+    const envio = capturarGuardado()
+    const { dialogo, user } = await entrarEnEdicion(CARLOS)
+
+    await user.clear(within(dialogo).getByLabelText(/^nombre/i))
+    await user.clear(within(dialogo).getByLabelText(/^apellidos/i))
+    await user.clear(within(dialogo).getByLabelText(/^dni/i))
+    await guardar(user, dialogo)
+
+    expect(within(dialogo).getAllByText(/este campo es obligatorio/i)).toHaveLength(3)
+    expect(envio.llamadas).toBe(0)
+  })
+
+  it('userDetailDialog_alPulsarCancelar_vuelveALaFichaSinGuardarNada', async () => {
+    const envio = capturarGuardado()
+    const { dialogo, user } = await entrarEnEdicion(CARLOS)
+
+    await user.type(within(dialogo).getByLabelText(/^nombre/i), 'XYZ')
+    await user.click(within(dialogo).getByRole('button', { name: /^cancelar$/i }))
+
+    expect(await within(dialogo).findByText('Modo solo lectura')).toBeInTheDocument()
+    expect(valorDe(dialogo, 'Nombre')).toHaveValue('Carlos')
+    expect(envio.llamadas).toBe(0)
+  })
+
+  it('userDetailDialog_conErrorDelServidor_muestraElMensajeYSigueEnEdicion', async () => {
+    server.use(http.put('/api/admin/usuarios/:id', () => HttpResponse.json({ message: 'Mongo' }, { status: 500 })))
+    const { dialogo, user } = await entrarEnEdicion(CARLOS)
+
+    await guardar(user, dialogo)
+
+    expect(await within(dialogo).findByText(/no se han podido guardar los cambios/i, undefined, ESPERA)).toBeInTheDocument()
+    expect(within(dialogo).queryByText(/mongo/i)).not.toBeInTheDocument()
+    expect(within(dialogo).getByText('Modo edición')).toBeInTheDocument()
+  })
+
+  it('userDetailDialog_alEditarLaSedeDeUnAdministrador_laFichaMuestraLaNueva', async () => {
+    const envio = capturarGuardado()
+    const { dialogo, user } = await entrarEnEdicion(DIEGO)
+
+    await user.clear(within(dialogo).getByLabelText(/^sede/i))
+    await user.type(within(dialogo).getByLabelText(/^sede/i), 'Albacete')
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(envio.llamadas).toBe(1), ESPERA)
+    expect(Object.keys(envio.cuerpo)).toEqual(['nombre', 'apellidos', 'rol', 'sede', 'avatar'])
+    expect(envio.cuerpo.sede).toBe('Albacete')
+  })
+
+  it('userDetailDialog_laSedeDeUnAdministradorPuedeQuedarVacia', async () => {
+    const envio = capturarGuardado()
+    const { dialogo, user } = await entrarEnEdicion(DIEGO)
+
+    await user.clear(within(dialogo).getByLabelText(/^sede/i))
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(envio.cuerpo?.sede).toBe(''), ESPERA)
+  })
+
+  it('userDetailDialog_unAdministradorPuedeEditarSusPropiosDatos', async () => {
+    const { dialogo, user } = await entrarEnEdicion(ADA, ADA)
+
+    await user.clear(within(dialogo).getByLabelText(/^nombre/i))
+    await user.type(within(dialogo).getByLabelText(/^nombre/i), 'Adela')
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(valorDe(dialogo, 'Nombre')).toHaveValue('Adela'), ESPERA)
+  })
+})
+
+describe('UserDetailDialog (HU22): cambio de rol', () => {
+  const ADA = 'u-1'
+  const GONZALO = 'usr-25'
+
+  async function entrarEnEdicion(userId, currentUserId = ADA) {
+    const ficha = await abrirFicha(userId, currentUserId)
+    const user = userEvent.setup()
+    await user.click(within(ficha.dialogo).getByRole('button', { name: 'Editar' }))
+    await within(ficha.dialogo).findByLabelText(/^rol/i, undefined, ESPERA)
+    return { ...ficha, user }
+  }
+
+  const rol = (dialogo) => within(dialogo).getByLabelText(/^rol/i)
+  const elegirRol = (user, dialogo, valor) => user.selectOptions(rol(dialogo), valor)
+  const guardar = (user, dialogo) => user.click(within(dialogo).getByRole('button', { name: /^guardar$/i }))
+
+  function capturarGuardado(respuesta = () => HttpResponse.json({ id: 'x' })) {
+    const envio = { cuerpo: null, llamadas: 0 }
+    server.use(
+      http.put('/api/admin/usuarios/:id', async ({ request }) => {
+        envio.llamadas += 1
+        envio.cuerpo = await request.json()
+        return respuesta()
+      }),
+    )
+    return envio
+  }
+
+  it('userDetailDialog_enLaFichaPropiaDeUnAdministrador_elRolEstaBloqueado', async () => {
+    const { dialogo } = await entrarEnEdicion(ADA, ADA)
+
+    expect(rol(dialogo)).toBeDisabled()
+    expect(within(dialogo).getByText('No puedes cambiar tu propio rol.')).toBeInTheDocument()
+  })
+
+  it('userDetailDialog_enLaFichaDeOtroAdministrador_elRolSePuedeCambiar', async () => {
+    const { dialogo } = await entrarEnEdicion(DIEGO, ADA)
+
+    expect(rol(dialogo)).toBeEnabled()
+    expect(rol(dialogo)).toHaveValue('ADMINISTRADOR')
+  })
+
+  it('userDetailDialog_enLaFichaDeUnCliente_elRolSePuedeCambiar', async () => {
+    const { dialogo } = await entrarEnEdicion(CARLOS)
+
+    expect(rol(dialogo)).toBeEnabled()
+    expect(rol(dialogo)).toHaveValue('CLIENTE')
+  })
+
+  it('userDetailDialog_enModoLectura_muestraElRolDeLaCuenta', async () => {
+    const { dialogo } = await abrirFicha(CARLOS)
+
+    expect(valorDe(dialogo, 'Rol')).toHaveValue('Cliente')
+  })
+
+  it('userDetailDialog_alPasarUnClienteAAdministrador_ofreceLaSedeYQuitaElDni', async () => {
+    const { dialogo, user } = await entrarEnEdicion(CARLOS)
+
+    await elegirRol(user, dialogo, 'ADMINISTRADOR')
+
+    expect(within(dialogo).getByLabelText(/^sede/i)).toBeInTheDocument()
+    expect(within(dialogo).queryByLabelText(/^dni/i)).not.toBeInTheDocument()
+  })
+
+  it('userDetailDialog_alGuardarUnClienteComoAdministrador_envíaElRolYLaFichaMuestraElRolNuevo', async () => {
+    const envio = capturarGuardado()
+    const { dialogo, user, onStatusChange } = await entrarEnEdicion(CARLOS)
+
+    await elegirRol(user, dialogo, 'ADMINISTRADOR')
+    await user.type(within(dialogo).getByLabelText(/^sede/i), 'Toledo')
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(envio.llamadas).toBe(1), ESPERA)
+    expect(envio.cuerpo).toMatchObject({ rol: 'ADMINISTRADOR', sede: 'Toledo' })
+    expect(envio.cuerpo).not.toHaveProperty('dni')
+    expect(envio.cuerpo).not.toHaveProperty('email')
+    expect(onStatusChange).toHaveBeenCalled()
+  })
+
+  it('userDetailDialog_tras_ascenderAUnClienteAAdministrador_laFichaMuestraRolYSede', async () => {
+    const { dialogo, user } = await entrarEnEdicion(CARLOS)
+
+    await elegirRol(user, dialogo, 'ADMINISTRADOR')
+    await user.type(within(dialogo).getByLabelText(/^sede/i), 'Toledo')
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(valorDe(dialogo, 'Rol')).toHaveValue('Administrador'), ESPERA)
+    expect(valorDe(dialogo, 'Sede')).toHaveValue('Toledo')
+    expect(within(dialogo).queryByLabelText('DNI')).not.toBeInTheDocument()
+  })
+
+  it('userDetailDialog_alPasarUnClienteAVendedor_exigeLosDatosDelVendedor', async () => {
+    const { dialogo, user } = await entrarEnEdicion(CARLOS)
+
+    await elegirRol(user, dialogo, 'VENDEDOR')
+    await guardar(user, dialogo)
+
+    expect(within(dialogo).getAllByText(/este campo es obligatorio/i)).toHaveLength(3)
+  })
+
+  it('userDetailDialog_alGuardarUnClienteComoVendedor_laFichaMuestraLosDatosDelVendedor', async () => {
+    const { dialogo, user } = await entrarEnEdicion(CARLOS)
+
+    await elegirRol(user, dialogo, 'VENDEDOR')
+    await user.type(within(dialogo).getByLabelText(/^nombre comercial/i), 'Tienda Carlos')
+    await user.type(within(dialogo).getByLabelText(/^nif\/dni/i), 'B12345678')
+    await user.selectOptions(within(dialogo).getByLabelText(/^categoría principal/i), 'cat-1')
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(valorDe(dialogo, 'Rol')).toHaveValue('Vendedor'), ESPERA)
+    expect(valorDe(dialogo, 'Nombre comercial')).toHaveValue('Tienda Carlos')
+    expect(valorDe(dialogo, 'Categoría principal')).toHaveValue('Tecnología')
+  })
+
+  it('userDetailDialog_alPasarUnAdministradorACliente_laFichaMuestraLosDatosDeCliente', async () => {
+    const { dialogo, user } = await entrarEnEdicion(DIEGO)
+
+    await elegirRol(user, dialogo, 'CLIENTE')
+    await user.type(within(dialogo).getByLabelText(/^dni/i), '12345678Z')
+    fireEvent.change(within(dialogo).getByLabelText(/^fecha de nacimiento/i), { target: { value: '1990-05-20' } })
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(valorDe(dialogo, 'Rol')).toHaveValue('Cliente'), ESPERA)
+    expect(valorDe(dialogo, 'DNI')).toHaveValue('12345678Z')
+    expect(within(dialogo).queryByLabelText('Sede')).not.toBeInTheDocument()
+  })
+
+  it('userDetailDialog_alPasarUnClientePendienteAAdministrador_avisaYQuedaActivo', async () => {
+    const { dialogo, user } = await entrarEnEdicion(GONZALO)
+    expect(valorDe(dialogo, 'Estado')).toHaveValue('Pendiente')
+
+    await elegirRol(user, dialogo, 'ADMINISTRADOR')
+    expect(within(dialogo).getByText(/los administradores no pueden estar pendientes/i)).toBeInTheDocument()
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(valorDe(dialogo, 'Rol')).toHaveValue('Administrador'), ESPERA)
+    await waitFor(() => expect(valorDe(dialogo, 'Estado')).toHaveValue('Activo'), ESPERA)
+  })
+
+  it('userDetailDialog_cuandoElBackendNoDejaCambiarElPropioRol_muestraElMotivo', async () => {
+    capturarGuardado(() => HttpResponse.json({ code: 'CANNOT_CHANGE_OWN_ROLE' }, { status: 409 }))
+    const { dialogo, user } = await entrarEnEdicion(DIEGO)
+
+    await elegirRol(user, dialogo, 'ADMINISTRADOR')
+    await guardar(user, dialogo)
+
+    expect(await within(dialogo).findByText('No puedes cambiar tu propio rol.', undefined, ESPERA)).toBeInTheDocument()
+    expect(within(dialogo).getByText('Modo edición')).toBeInTheDocument()
+  })
+
+  it('userDetailDialog_cuandoSeDegradariaAlUltimoAdministrador_muestraElMotivo', async () => {
+    capturarGuardado(() => HttpResponse.json({ code: 'LAST_ACTIVE_ADMIN' }, { status: 409 }))
+    const { dialogo, user } = await entrarEnEdicion(DIEGO)
+
+    await elegirRol(user, dialogo, 'CLIENTE')
+    await user.type(within(dialogo).getByLabelText(/^dni/i), '12345678Z')
+    fireEvent.change(within(dialogo).getByLabelText(/^fecha de nacimiento/i), { target: { value: '1990-05-20' } })
+    await guardar(user, dialogo)
+
+    expect(
+      await within(dialogo).findByText('No se puede degradar al último administrador.', undefined, ESPERA),
+    ).toBeInTheDocument()
+  })
+
+  it('userDetailDialog_alCancelarTrasElegirOtroRol_laFichaConservaElRolOriginal', async () => {
+    const envio = capturarGuardado()
+    const { dialogo, user } = await entrarEnEdicion(CARLOS)
+
+    await elegirRol(user, dialogo, 'ADMINISTRADOR')
+    await user.click(within(dialogo).getByRole('button', { name: /^cancelar$/i }))
+
+    expect(await within(dialogo).findByText('Modo solo lectura')).toBeInTheDocument()
+    expect(valorDe(dialogo, 'Rol')).toHaveValue('Cliente')
+    expect(envio.llamadas).toBe(0)
   })
 })

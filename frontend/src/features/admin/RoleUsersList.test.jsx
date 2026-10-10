@@ -7,8 +7,8 @@ import { abrirSesionPorApi } from '../../test/renderApp'
 import { renderWithProviders } from '../../test/utils'
 import RoleUsersList from './RoleUsersList'
 
-// El mock tiene 15 clientes (dos páginas): 8 activos y 7 desactivados. Por defecto se ordenan por
-// nombre ascendente: la primera página va de Álvaro Campos Serrano a Pablo Gómez Martín.
+// El mock tiene 17 clientes (dos páginas): 2 pendientes, 8 activos y 7 desactivados. Por defecto se
+// ordenan por nombre ascendente: la primera página va de Álvaro Campos Serrano a Marcos Aguilar Bravo.
 const ESPERA = { timeout: 3000 }
 
 async function renderClientes(currentUserId) {
@@ -47,17 +47,27 @@ describe('RoleUsersList (HU24)', () => {
 
     expect(filasDeDatos()).toHaveLength(10)
     filasDeDatos().forEach((fila) => expect(within(fila).getByText('Cliente')).toBeInTheDocument())
-    expect(screen.getByText(/mostrando 1–10 de 15 clientes/i)).toBeInTheDocument()
+    expect(screen.getByText(/mostrando 1–10 de 17 clientes/i)).toBeInTheDocument()
   })
 
-  it('roleUsersList_elFiltroDeEstadoNoOfrecePendienteNiFiltroDeRol', async () => {
+  it('roleUsersList_elFiltroDeEstadoOfrecePendienteYNoHayFiltroDeRol', async () => {
     await renderClientes()
 
     const filtro = screen.getByRole('combobox', { name: 'Estado' })
     const opciones = within(filtro).getAllByRole('option').map((opcion) => opcion.textContent)
 
-    expect(opciones).toEqual(['Todos los estados', 'Activo', 'Desactivado'])
+    expect(opciones).toEqual(['Todos los estados', 'Pendiente', 'Activo', 'Desactivado'])
     expect(screen.queryByRole('combobox', { name: 'Rol' })).not.toBeInTheDocument()
+  })
+
+  it('roleUsersList_alFiltrarPorPendiente_muestraSoloEsasCuentas', async () => {
+    const user = userEvent.setup()
+    await renderClientes()
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'Pendiente')
+
+    await waitFor(() => expect(filasDeDatos()).toHaveLength(2))
+    filasDeDatos().forEach((fila) => expect(within(fila).getByText('Pendiente')).toBeInTheDocument())
   })
 
   it('roleUsersList_alFiltrarPorDesactivado_muestraSoloEsasCuentas', async () => {
@@ -86,16 +96,16 @@ describe('RoleUsersList (HU24)', () => {
     await waitFor(() => expect(primerNombre()).toBe('Sofía Cabrera Soler'))
   })
 
-  it('roleUsersList_alOrdenarPorEstado_muestraPrimeroLosActivos', async () => {
+  it('roleUsersList_alOrdenarPorEstado_muestraPrimeroLosPendientesYLuegoLosActivos', async () => {
     const user = userEvent.setup()
     await renderClientes()
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Ordenar por' }), 'Estado')
 
-    await waitFor(() => expect(primerNombre()).toBe('Carlos Moreno Gil'))
-    filasDeDatos()
-      .slice(0, 8)
-      .forEach((fila) => expect(within(fila).getByText('Activo')).toBeInTheDocument())
+    await waitFor(() => expect(primerNombre()).toBe('Gonzalo Ibáñez Roca'))
+    const filas = filasDeDatos()
+    filas.slice(0, 2).forEach((fila) => expect(within(fila).getByText('Pendiente')).toBeInTheDocument())
+    filas.slice(2, 10).forEach((fila) => expect(within(fila).getByText('Activo')).toBeInTheDocument())
   })
 
   it('roleUsersList_buscaSoloPorNombreYNoPorEmail', async () => {
@@ -180,5 +190,41 @@ describe('RoleUsersList (HU24)', () => {
     await activarDesdeLaFicha(user, 'Lucía Torres Vega')
 
     await waitFor(() => expect(within(filaDe('lucia.torres@esibuy.test')).getByText('Activo')).toBeInTheDocument(), ESPERA)
+  })
+})
+
+describe('RoleUsersList (HU22): los administradores no están pendientes', () => {
+  it('roleUsersList_deAdministradores_elFiltroDeEstadoNoOfrecePendiente', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderWithProviders(
+      <RoleUsersList
+        role="ADMINISTRADOR"
+        itemLabel="administradores"
+        errorMessage="No se ha podido cargar el listado de administradores."
+        loadingLabel="Cargando administradores…"
+      />,
+    )
+    await screen.findByText('ana.lopez@esibuy.test')
+
+    const opciones = within(screen.getByRole('combobox', { name: 'Estado' }))
+      .getAllByRole('option')
+      .map((opcion) => opcion.textContent)
+
+    expect(opciones).toEqual(['Todos los estados', 'Activo', 'Desactivado'])
+  })
+
+  it('roleUsersList_deAdministradores_ningunoApareceComoPendiente', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderWithProviders(
+      <RoleUsersList
+        role="ADMINISTRADOR"
+        itemLabel="administradores"
+        errorMessage="No se ha podido cargar el listado de administradores."
+        loadingLabel="Cargando administradores…"
+      />,
+    )
+    await screen.findByText('ana.lopez@esibuy.test')
+
+    expect(screen.queryByText('Pendiente')).not.toBeInTheDocument()
   })
 })

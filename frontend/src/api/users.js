@@ -19,6 +19,12 @@ export function getUser(userId) {
   return request(`/api/admin/usuarios/${encodeURIComponent(userId)}`)
 }
 
+// Modifica los datos de cualquier usuario (cliente, administrador o vendedor) y su rol (HU22). Nunca se envía la
+// contraseña, ni el email de clientes y administradores.
+export function updateUser(userId, datos) {
+  return request(`/api/admin/usuarios/${encodeURIComponent(userId)}`, { method: 'PUT', body: datos })
+}
+
 // Activa (HU24) o desactiva (HU23) una cuenta: estado es 'ACTIVO' o 'DESACTIVADO'.
 export function updateUserStatus(userId, estado) {
   return request(`/api/admin/usuarios/${encodeURIComponent(userId)}/status`, {
