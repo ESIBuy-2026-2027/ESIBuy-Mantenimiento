@@ -31,6 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -266,5 +267,12 @@ class RegistroUsuarioServiceTest {
         assertThrows(ContrasenaInvalidaException.class, () -> registroUsuario.registrar(comando("juan@uclm.es", "Clave1234")));
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
+    }
+
+    @Test
+    @DisplayName("HU1-CP18: rechaza un correo ya registrado aunque cambien las mayúsculas")
+    void rechazaUnCorreoYaRegistradoAunqueCambienLasMayusculas() {
+        // TODO ciclo 4 (T240): el duplicado se comprueba con el email normalizado
+        fail("Funcionalidad no implementada");
     }
 }

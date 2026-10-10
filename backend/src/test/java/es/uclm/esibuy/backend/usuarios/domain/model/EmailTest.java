@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.usuarios.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
 import org.junit.jupiter.api.DisplayName;
@@ -54,5 +55,21 @@ class EmailTest {
     void rechazaEmailSinPuntoEnElDominio() {
         // Frontera en la que discrepan la validación web (@Email acepta "ana@localhost") y el dominio
         assertThrows(EmailInvalidoException.class, () -> new Email("ana@localhost"));
+    }
+
+    // Normalización del email (T240): minúsculas y sin espacios en los extremos.
+
+    @Test
+    @DisplayName("HU1-CP18: guarda el email en minúsculas")
+    void guardaElEmailEnMinusculas() {
+        // TODO ciclo 1
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP18: quita los espacios de los extremos del email")
+    void quitaLosEspaciosDeLosExtremos() {
+        // TODO ciclo 2
+        fail("Funcionalidad no implementada");
     }
 }
