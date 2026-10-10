@@ -7,6 +7,8 @@ import java.util.Set;
 public final class PoliticaContrasenas {
 
     private static final int LONGITUD_MINIMA = 8;
+    // BCrypt solo usa los primeros 72 bytes de la contraseña: con 64 caracteres nunca se trunca.
+    private static final int LONGITUD_MAXIMA = 64;
     private static final Set<String> LISTA_NEGRA = Set.of(
             "12345678", "password", "password1", "qwertyui", "contrasena", "11111111", "abcdefgh");
 
@@ -14,16 +16,20 @@ public final class PoliticaContrasenas {
     }
 
     public static void validar(String contrasena, String nombre, String apellidos, Email email) {
-        exigirLongitudMinima(contrasena);
+        exigirLongitud(contrasena);
         String normalizada = contrasena.toLowerCase(Locale.ROOT);
         exigirNoComun(normalizada);
         exigirSinDatosPersonales(normalizada, nombre, apellidos, email);
     }
 
-    private static void exigirLongitudMinima(String contrasena) {
+    private static void exigirLongitud(String contrasena) {
         if (contrasena == null || contrasena.length() < LONGITUD_MINIMA) {
             throw new ContrasenaInvalidaException(
                     "La contraseña debe tener al menos " + LONGITUD_MINIMA + " caracteres");
+        }
+        if (contrasena.length() > LONGITUD_MAXIMA) {
+            throw new ContrasenaInvalidaException(
+                    "La contraseña no puede tener más de " + LONGITUD_MAXIMA + " caracteres");
         }
     }
 
