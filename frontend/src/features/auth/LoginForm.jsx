@@ -4,13 +4,15 @@ import { login, verifyAuthenticatorCode, verifyEmailCode } from '../../api/auth'
 import { useAuth } from '../../auth/useAuth'
 import CodeStep from './CodeStep'
 import CredentialsStep from './CredentialsStep'
-import { getLoginErrorMessage } from './loginErrors'
+import { getLoginErrorMessage, isPendingAccountError } from './loginErrors'
+import PendingAccountScreen from './PendingAccountScreen'
 
 export default function LoginForm() {
   const { signIn } = useAuth()
   const [step, setStep] = useState('credentials')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [pendingEmail, setPendingEmail] = useState('')
 
   const run = async (action, onSuccess) => {
     setSubmitting(true)
@@ -18,7 +20,11 @@ export default function LoginForm() {
     try {
       onSuccess(await action())
     } catch (err) {
-      setError(getLoginErrorMessage(err, step))
+      if (isPendingAccountError(err)) {
+        setStep('pending')
+      } else {
+        setError(getLoginErrorMessage(err, step))
+      }
     } finally {
       setSubmitting(false)
     }
@@ -29,8 +35,10 @@ export default function LoginForm() {
     setStep('credentials')
   }
 
-  const handleCredentials = (credentials) =>
-    run(() => login(credentials), () => setStep('emailCode'))
+  const handleCredentials = (credentials) => {
+    setPendingEmail(credentials.email)
+    return run(() => login(credentials), () => setStep('emailCode'))
+  }
 
   const handleEmailCode = (code) =>
     run(() => verifyEmailCode(code), () => setStep('authenticator'))
@@ -55,6 +63,8 @@ export default function LoginForm() {
       {step === 'credentials' && (
         <CredentialsStep onSubmit={handleCredentials} submitting={submitting} />
       )}
+
+      {step === 'pending' && <PendingAccountScreen email={pendingEmail} onBack={restart} />}
 
       {step === 'emailCode' && (
         <>
