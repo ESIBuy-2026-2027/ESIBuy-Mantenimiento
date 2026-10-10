@@ -1,13 +1,19 @@
 package es.uclm.esibuy.backend.usuarios.application.service;
 
+import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -28,11 +35,14 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-// Activar una cuenta de usuario (HU24, T33/T34). El repositorio es un doble de prueba (Mockito):
-// se prueba el caso de uso sin MongoDB ni Spring.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU24-CP01 a CP04, propuestos a partir del contrato.
+// Gestión de cuentas por el administrador: activar (HU24, T33/T34), consultar (HU20) y editar (HU22, T42/T44).
+// El repositorio es un doble de prueba (Mockito): se prueba el caso de uso sin MongoDB ni Spring.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU24-CP01 a CP04 y HU22-CP01 a CP08, propuestos a partir del contrato.
 @ExtendWith(MockitoExtension.class)
 class AdministracionUsuariosServiceTest {
+
+    // Reloj fijo: la mayoría de edad de la edición se calcula con esta fecha
+    private static final Clock RELOJ = Clock.fixed(Instant.parse("2026-10-10T10:00:00Z"), ZoneOffset.UTC);
 
     @Mock
     private UsuarioRepositoryPort usuarioRepository;
@@ -41,7 +51,72 @@ class AdministracionUsuariosServiceTest {
 
     @BeforeEach
     void preparar() {
-        servicio = new AdministracionUsuariosService(usuarioRepository);
+        servicio = new AdministracionUsuariosService(usuarioRepository, RELOJ);
+    }
+
+    @Test
+    @DisplayName("HU22-CP01: editar un cliente cambia sus datos personales y de cliente y lo guarda")
+    void editaUnClienteYLoGuarda() {
+        Usuario cliente = clienteLucia();
+        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(cliente));
+        EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", "avatar1", null,
+                "10004119A", "620023757", LocalDate.of(1978, 4, 13), TipoCliente.PREMIUM);
+
+        Usuario editado = servicio.editar("u-1", comando);
+
+        assertSame(cliente, editado);
+        assertEquals(new DatosPersonales("Carla", "Moreno Gil", "avatar1"), editado.getDatosPersonales());
+        assertEquals(new DatosCliente(TipoCliente.PREMIUM, new Dni("10004119A"), LocalDate.of(1978, 4, 13),
+                new Telefono("620023757")), editado.getDatosCliente());
+        assertEquals(new Email("lucia@uclm.es"), editado.getEmail());
+        verify(usuarioRepository).guardar(editado);
+    }
+
+    @Test
+    @DisplayName("HU22-CP02: editar un administrador cambia sus datos personales y lo guarda")
+    void editaUnAdministradorYLoGuarda() {
+        Usuario administrador = new Usuario("u-2", new DatosPersonales("Diego", "Delgado", null),
+                new Email("diego@uclm.es"), "hash-simulado", Rol.ADMINISTRADOR, null, null);
+        when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(administrador));
+        EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.ADMINISTRADOR, "Diego", "Delgado Iglesias",
+                "avatar3", null, null, null, null, null);
+
+        Usuario editado = servicio.editar("u-2", comando);
+
+        assertEquals(new DatosPersonales("Diego", "Delgado Iglesias", "avatar3"), editado.getDatosPersonales());
+        assertNull(editado.getDatosCliente());
+        verify(usuarioRepository).guardar(editado);
+    }
+
+    @Test
+    @DisplayName("HU22-CP05: editar un cliente con datos no válidos falla y no guarda nada")
+    void rechazaEditarUnClienteConDatosNoValidos() {
+        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
+        EditarUsuarioCommand dniNoValido = new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", null, null,
+                "1234", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
+        EditarUsuarioCommand menorDeEdad = new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", null, null,
+                "10004119A", null, LocalDate.of(2010, 1, 1), TipoCliente.ESTANDAR);
+
+        assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", dniNoValido));
+        assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", menorDeEdad));
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU22-CP07: editar un usuario que no existe falla y no guarda nada")
+    void rechazaEditarUnUsuarioQueNoExiste() {
+        when(usuarioRepository.buscarPorId("no-existe")).thenReturn(Optional.empty());
+        EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.ADMINISTRADOR, "Diego", "Delgado Iglesias",
+                null, null, null, null, null, null);
+
+        assertThrows(UsuarioNoEncontradoException.class, () -> servicio.editar("no-existe", comando));
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    private static Usuario clienteLucia() {
+        return new Usuario("u-1", new DatosPersonales("Lucía", "Torres Vega", null), new Email("lucia@uclm.es"),
+                "hash-simulado", Rol.CLIENTE,
+                new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1996, 5, 20), null), null);
     }
 
     @Test
