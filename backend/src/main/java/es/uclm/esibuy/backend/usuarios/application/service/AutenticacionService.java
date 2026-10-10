@@ -10,6 +10,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.ResultadoInicioSesion
 import es.uclm.esibuy.backend.usuarios.application.port.in.VerificarCodigoEmailCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.EnvioEmailPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.FactorAutenticacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.GeneradorCodigoPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
@@ -18,6 +19,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasExc
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
+import es.uclm.esibuy.backend.usuarios.domain.model.FactorAutenticacion;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
 
@@ -29,18 +31,20 @@ public class AutenticacionService implements AutenticacionUseCase {
     private final UsuarioRepositoryPort usuarioRepository;
     private final HashContrasenaPort hashContrasena;
     private final CodigoVerificacionRepositoryPort codigoVerificacionRepository;
+    private final FactorAutenticacionRepositoryPort factorAutenticacionRepository;
     private final GeneradorCodigoPort generadorCodigo;
     private final EnvioEmailPort envioEmail;
     private final Clock reloj;
 
     public AutenticacionService(UsuarioRepositoryPort usuarioRepository, HashContrasenaPort hashContrasena,
             CodigoVerificacionRepositoryPort codigoVerificacionRepository, GeneradorCodigoPort generadorCodigo,
-            EnvioEmailPort envioEmail, Clock reloj) {
+            EnvioEmailPort envioEmail, FactorAutenticacionRepositoryPort factorAutenticacionRepository, Clock reloj) {
         this.usuarioRepository = usuarioRepository;
         this.hashContrasena = hashContrasena;
         this.codigoVerificacionRepository = codigoVerificacionRepository;
         this.generadorCodigo = generadorCodigo;
         this.envioEmail = envioEmail;
+        this.factorAutenticacionRepository = factorAutenticacionRepository;
         this.reloj = reloj;
     }
 
@@ -96,12 +100,20 @@ public class AutenticacionService implements AutenticacionUseCase {
 
         codigo.marcarUsado(ahora);
         codigoVerificacionRepository.guardar(codigo);
-        return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.AUTHENTICATOR);
+        PasoLogin siguientePaso = tieneAuthenticatorConfirmado(usuario)
+        ? PasoLogin.AUTHENTICATOR
+        : PasoLogin.ALTA_AUTHENTICATOR;
+        return new ResultadoInicioSesion(usuario.getEmail().valor(), siguientePaso);
     }
 
     @Override
     public Usuario consultarUsuarioEnSesion(String email) {
         return usuarioRepository.buscarPorCorreo(email).orElseThrow(() -> new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS));
+    }
+
+    private boolean tieneAuthenticatorConfirmado(Usuario usuario) {
+        return factorAutenticacionRepository.buscarPorUsuario(usuario.getId())
+        .map(FactorAutenticacion::estaConfirmado).orElse(false);
     }
 
     

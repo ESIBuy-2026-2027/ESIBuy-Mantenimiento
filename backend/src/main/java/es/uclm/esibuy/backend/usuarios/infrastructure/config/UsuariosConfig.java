@@ -6,6 +6,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.EnvioEmailPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.FactorAutenticacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.GeneradorCodigoPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
@@ -17,6 +18,9 @@ import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.email.SmtpEnvi
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.CodigoVerificacionDocumentMapper;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.CodigoVerificacionMongoAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.CodigoVerificacionMongoRepository;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.FactorAutenticacionDocumentMapper;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.FactorAutenticacionMongoAdapter;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.FactorAutenticacionMongoRepository;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.UsuarioDocumentMapper;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.UsuarioMongoAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.UsuarioMongoRepository;
@@ -91,13 +95,19 @@ public class UsuariosConfig {
                                             CodigoVerificacionRepositoryPort codigoVerificacionRepositoryPort,
                                             GeneradorCodigoPort generadorCodigoPort,
                                             EnvioEmailPort envioEmailPort,
+                                            FactorAutenticacionRepositoryPort factorAutenticacionRepositoryPort,
                                             Clock reloj) {
         return new AutenticacionService(usuarioRepositoryPort, hashContrasenaPort,
-                codigoVerificacionRepositoryPort, generadorCodigoPort, envioEmailPort, reloj);
+                codigoVerificacionRepositoryPort, generadorCodigoPort, envioEmailPort, factorAutenticacionRepositoryPort, reloj);
     }
 
     @Bean
     AdministracionUsuariosUseCase administracionUsuariosUseCase(UsuarioRepositoryPort usuarioRepositoryPort) {
         return new AdministracionUsuariosService(usuarioRepositoryPort);
+    }
+
+    @Bean
+    FactorAutenticacionRepositoryPort factorAutenticacionRepositoryPort(FactorAutenticacionMongoRepository repository) {
+        return new FactorAutenticacionMongoAdapter(repository, new FactorAutenticacionDocumentMapper());
     }
 }

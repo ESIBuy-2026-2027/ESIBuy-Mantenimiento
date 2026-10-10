@@ -12,6 +12,7 @@ public record SiguientePasoResponse(String nextStep) { // <- "nextStep va en ing
         return new SiguientePasoResponse(switch (paso) {
             case CODIGO_EMAIL -> "emailCode";
             case AUTHENTICATOR -> "authenticator";
+            case ALTA_AUTHENTICATOR -> "enrollAuthenticator";
         });
 
     }
