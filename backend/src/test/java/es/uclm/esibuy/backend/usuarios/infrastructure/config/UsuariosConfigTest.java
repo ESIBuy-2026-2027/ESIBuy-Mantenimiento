@@ -15,6 +15,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPor
 import es.uclm.esibuy.backend.usuarios.application.service.AutenticacionService;
 import es.uclm.esibuy.backend.usuarios.application.service.AuthenticatorService;
 import es.uclm.esibuy.backend.usuarios.application.service.RegistroUsuarioService;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web.CuentaActivaFilter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.email.SmtpEnvioEmailAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.CodigoVerificacionMongoAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.FactorAutenticacionMongoAdapter;
@@ -31,6 +32,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Import;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 // Test técnico: Spring monta la cadena del registro al arrancar (HU1, AB#216).
 // Arranca la aplicación entera con un MongoDB de Testcontainers: Docker Desktop debe estar abierto.
@@ -67,5 +69,12 @@ class UsuariosConfigTest {
         assertInstanceOf(JavaTotpAdapter.class, contexto.getBean(TotpPort.class));
         assertInstanceOf(AesGcmCifradoSecretoAdapter.class, contexto.getBean(CifradoSecretoPort.class));
         assertInstanceOf(FactorAutenticacionMongoAdapter.class, contexto.getBean(FactorAutenticacionRepositoryPort.class));
+    }
+
+    @Test
+    @DisplayName("Configuración: el contexto registra el filtro que invalida la sesión de las cuentas desactivadas")
+    void elContextoRegistraElFiltroDeCuentaActiva() {
+        // HU23, T206: como bean de Spring, Spring Boot lo añade a los filtros de cada petición
+        assertNotNull(contexto.getBean(CuentaActivaFilter.class));
     }
 }
