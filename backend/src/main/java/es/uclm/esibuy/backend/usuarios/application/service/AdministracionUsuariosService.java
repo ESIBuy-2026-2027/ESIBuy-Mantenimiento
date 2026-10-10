@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
@@ -27,8 +28,10 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
 
     @Override
     public Usuario desactivar(String usuarioId, String emailAdministrador) {
-        // emailAdministrador aún no se usa: servirá para impedir que el administrador se desactive a sí mismo.
         Usuario usuario = buscar(usuarioId);
+        if (usuario.getEmail().valor().equalsIgnoreCase(emailAdministrador)) {
+            throw new AutodesactivacionNoPermitidaException("Un administrador no puede desactivar su propia cuenta");
+        }
         usuario.desactivar();
         usuarioRepository.guardar(usuario);
         return usuario;
