@@ -45,19 +45,13 @@ public class Usuario {
 
     // Edición de los datos por un administrador (HU22). El email, el rol y la contraseña no cambian por aquí.
     public void modificarDatos(DatosPersonales datosPersonales, DatosCliente datosCliente, LocalDate hoy) {
-        // Se comprueba todo antes de asignar: si algo falla, el usuario se queda como estaba.
-        DatosPersonales personales = exigirNoNulo(datosPersonales, "Los datos personales son obligatorios");
-        DatosCliente cliente = exigirDatosClienteCoherente(rol, datosCliente);
-        if (cliente != null) {
-            exigirMayoriaDeEdad(cliente, hoy);
-        }
-        this.datosPersonales = personales;
-        this.datosCliente = cliente;
+        cambiarRol(rol, datosPersonales, datosCliente, hoy);
     }
 
     // Cambio de rol por un administrador (HU22, T43), con los datos del rol nuevo. Al dejar de ser cliente se
     // borran sus datos de cliente (minimización de datos). Un administrador nunca está pendiente.
     public void cambiarRol(Rol nuevoRol, DatosPersonales datosPersonales, DatosCliente datosCliente, LocalDate hoy) {
+        // Se comprueba todo antes de asignar: si algo falla, el usuario se queda como estaba.
         Rol rolNuevo = exigirNoNulo(nuevoRol, "El rol es obligatorio");
         DatosPersonales personales = exigirNoNulo(datosPersonales, "Los datos personales son obligatorios");
         DatosCliente cliente = exigirDatosClienteCoherente(rolNuevo, datosCliente);
