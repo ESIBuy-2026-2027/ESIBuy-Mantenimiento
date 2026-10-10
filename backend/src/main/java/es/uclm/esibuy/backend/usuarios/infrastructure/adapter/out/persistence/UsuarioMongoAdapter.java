@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
 import org.springframework.dao.DuplicateKeyException;
@@ -27,6 +28,9 @@ import java.util.Optional;
  * repositorio de Spring Data. Así, dominio y aplicación no dependen de MongoDB.
  */
 public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
+
+    // Nombre del índice único de DNI por rol, fijado en ColeccionesEsiBuy.
+    private static final String INDICE_DNI = "rol_dni";
 
     private final UsuarioMongoRepository repository;
     private final UsuarioDocumentMapper mapper;
@@ -50,11 +54,19 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
         try {
             repository.save(documento);
         } catch (DuplicateKeyException e) {
-            // El índice único de email lo ha rechazado (p. ej. dos registros simultáneos que pasaron
-            // a la vez la comprobación de existePorCorreo). Se traduce a la excepción del dominio,
-            // que la API devuelve como 409, para que el núcleo no dependa de MongoDB.
+            // Un índice único lo ha rechazado (p. ej. dos registros simultáneos que pasaron a la vez la
+            // comprobación de existePorCorreo o existePorDni). MongoDB indica en el mensaje qué índice es;
+            // se traduce a la excepción del dominio que corresponde, que la API devuelve como 409.
+            if (e.getMessage() != null && e.getMessage().contains(INDICE_DNI)) {
+                throw new DniYaRegistradoException("El DNI ya está registrado");
+            }
             throw new CorreoYaRegistradoException("El correo ya está registrado");
         }
+    }
+
+    @Override
+    public boolean existePorDni(String dni) {
+        return repository.existsByDni(dni);
     }
 
     @Override

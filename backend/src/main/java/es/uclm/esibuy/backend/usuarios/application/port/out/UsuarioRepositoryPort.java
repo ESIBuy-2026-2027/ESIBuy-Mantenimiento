@@ -12,6 +12,8 @@ public interface UsuarioRepositoryPort {
 
     boolean existePorCorreo(String email);
 
+    boolean existePorDni(String dni);
+
 /**
  * Busca un usuario por su correo.
  *

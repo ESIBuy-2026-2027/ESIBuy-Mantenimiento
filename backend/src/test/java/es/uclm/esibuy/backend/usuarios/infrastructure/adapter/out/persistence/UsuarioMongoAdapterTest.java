@@ -83,7 +83,7 @@ class UsuarioMongoAdapterTest {
         // que solo el índice único de email (AB#210) puede parar. El adaptador traduce el rechazo
         // de MongoDB a la excepción del dominio, que la API devuelve como 409.
         adapter.guardar(cliente("juan@uclm.es", "hash-1"));
-        Usuario duplicado = cliente("juan@uclm.es", "hash-2");
+        Usuario duplicado = cliente("juan@uclm.es", "hash-2", "87654321X");   // mismo email, distinto DNI
 
         assertThrows(CorreoYaRegistradoException.class, () -> adapter.guardar(duplicado));
         assertEquals(1, usuarioMongoRepository.count());
@@ -241,6 +241,11 @@ class UsuarioMongoAdapterTest {
     // Cliente recién registrado (T229): nace PENDIENTE y sin id.
     private static Usuario cliente(String email, String hash) {
         return Usuario.nuevoCliente(DATOS_PERSONALES, new Email(email), hash, DATOS_CLIENTE, CONSENTIMIENTO, HOY);
+    }
+
+    private static Usuario cliente(String email, String hash, String dni) {
+        DatosCliente datosCliente = new DatosCliente(TipoCliente.PREMIUM, new Dni(dni), LocalDate.of(1996, 5, 20), null);
+        return Usuario.nuevoCliente(DATOS_PERSONALES, new Email(email), hash, datosCliente, CONSENTIMIENTO, HOY);
     }
 
     // Documento con los campos que el dominio exige para reconstruir el usuario (T229). Los tests del
