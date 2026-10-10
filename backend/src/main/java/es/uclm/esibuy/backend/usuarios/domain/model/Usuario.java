@@ -10,6 +10,7 @@ public class Usuario {
 
     private static final int MAX_INTENTOS = 5;
     private static final Duration DURACION_BLOQUEO = Duration.ofMinutes(15);
+    private static final int MAYORIA_EDAD = 18;
 
     private final String id;
     private final DatosPersonales datosPersonales;
@@ -42,8 +43,11 @@ public class Usuario {
         }
     }
 
-    public static Usuario nuevoCliente(DatosPersonales datosPersonales, Email email, String passwordHash,
-            DatosCliente datosCliente, ConsentimientoPrivacidad consentimiento, LocalDate hoy) {
+    public static Usuario nuevoCliente(DatosPersonales datosPersonales, Email email, String passwordHash, 
+        DatosCliente datosCliente, ConsentimientoPrivacidad consentimiento, LocalDate hoy) {
+        if (datosCliente.fechaNacimiento().plusYears(MAYORIA_EDAD).isAfter(hoy)) {
+            throw new UsuarioInvalidoException("El cliente debe ser mayor de edad");
+        }
         return new Usuario(null, datosPersonales, email, passwordHash, Rol.CLIENTE, datosCliente, consentimiento);
     }
 
