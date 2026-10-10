@@ -12,7 +12,7 @@ async function abrirFormulario(ruta = RUTA_NUEVO, titulo = /añadir producto/i) 
   await abrirSesionPorApi(VENDEDOR)
   renderApp(ruta)
   await screen.findByRole('heading', { level: 1, name: titulo })
-  await screen.findByRole('checkbox', { name: 'Tecnología' })
+  await screen.findByRole('radio', { name: 'Tecnología' })
 }
 
 function capturarEnvio(metodo, ruta, respuesta) {
@@ -29,7 +29,7 @@ function capturarEnvio(metodo, ruta, respuesta) {
 
 async function rellenarFormularioValido(user) {
   await user.type(screen.getByLabelText(/^nombre/i), 'Lámpara de pie')
-  await user.click(screen.getByRole('checkbox', { name: 'Hogar' }))
+  await user.click(screen.getByRole('radio', { name: 'Hogar' }))
   await user.type(screen.getByLabelText(/^precio/i), '45.5')
 }
 
@@ -46,9 +46,9 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
     expect(screen.getByLabelText(/^precio/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^stock/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^url de la imagen/i)).toBeInTheDocument()
-    expect(screen.getByRole('group', { name: /categorías/i })).toBeInTheDocument()
-    expect(screen.getByRole('checkbox', { name: 'Tecnología' })).toBeInTheDocument()
-    expect(screen.getByRole('checkbox', { name: 'Hogar' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: /categoría/i })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Tecnología' })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Hogar' })).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: 'Disponible para la venta' })).toBeChecked()
     expect(screen.getByRole('switch', { name: 'Activar descuento' })).not.toBeChecked()
     expect(screen.getByRole('switch', { name: 'Activar descuento premium' })).not.toBeChecked()
@@ -60,7 +60,7 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
 
     expect(screen.getByLabelText(/^nombre/i)).toHaveValue('')
     expect(screen.getByLabelText(/^precio/i)).toHaveValue(null)
-    expect(screen.getByRole('checkbox', { name: 'Tecnología' })).not.toBeChecked()
+    expect(screen.getByRole('radio', { name: 'Tecnología' })).not.toBeChecked()
   })
 
   it('sellerProductFormPage_explicaQueLosDescuentosSeAcumulan', async () => {
@@ -116,7 +116,7 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
     expect(await screen.findByText(/no se han podido cargar las categorías/i)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /reintentar/i }))
 
-    expect(await screen.findByRole('checkbox', { name: 'Tecnología' })).toBeInTheDocument()
+    expect(await screen.findByRole('radio', { name: 'Tecnología' })).toBeInTheDocument()
   })
 })
 
@@ -129,7 +129,7 @@ describe('SellerProductFormPage (HU31): validación', () => {
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
     expect(screen.getByText(/introduce el nombre del producto/i)).toBeInTheDocument()
-    expect(screen.getByText(/elige al menos una categoría/i)).toBeInTheDocument()
+    expect(screen.getByText(/elige una categoría/i)).toBeInTheDocument()
     expect(screen.getByText(/introduce el precio/i)).toBeInTheDocument()
     expect(envio.llamadas).toBe(0)
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp(`^${RUTA_NUEVO}$`))
@@ -221,7 +221,7 @@ describe('SellerProductFormPage (HU31): alta, guardado', () => {
       descripcion: '',
       precio: 45.5,
       stock: 7,
-      categoriaIds: ['cat-2'],
+      categoriaId: 'cat-2',
       imagen: '',
       disponible: true,
       descuento: { activo: true, porcentaje: 10 },
@@ -315,8 +315,8 @@ describe('SellerProductFormPage (HU31): edición', () => {
     await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Auriculares inalámbricos'))
     expect(screen.getByLabelText(/^precio/i)).toHaveValue(59.9)
     expect(screen.getByLabelText(/^stock/i)).toHaveValue(34)
-    expect(screen.getByRole('checkbox', { name: 'Tecnología' })).toBeChecked()
-    expect(screen.getByRole('checkbox', { name: 'Hogar' })).not.toBeChecked()
+    expect(screen.getByRole('radio', { name: 'Tecnología' })).toBeChecked()
+    expect(screen.getByRole('radio', { name: 'Hogar' })).not.toBeChecked()
     expect(screen.getByLabelText(/^descripción/i)).toHaveValue('Descripción de Auriculares inalámbricos.')
   })
 

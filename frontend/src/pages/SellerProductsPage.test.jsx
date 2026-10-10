@@ -176,7 +176,7 @@ describe('SellerProductsPage (HU32): filtros', () => {
 
     await user.selectOptions(await screen.findByLabelText(/categoría/i), 'Hogar')
 
-    await waitFor(() => expect(screen.getByText(/mostrando 1–10 de 12/i)).toBeInTheDocument())
+    await esperarFilas(9)
   })
 
   it('sellerProductsPage_combinaBusquedaYCategoria', async () => {
@@ -246,7 +246,7 @@ describe('SellerProductsPage (HU32): paginación', () => {
 
     await user.click(screen.getByRole('button', { name: /siguiente/i }))
     await screen.findByText(/página 2 de 3/i)
-    await user.selectOptions(screen.getByLabelText(/categoría/i), 'Hogar')
+    await user.selectOptions(screen.getByLabelText(/categoría/i), 'Tecnología')
 
     await waitFor(() => expect(screen.getByText(/página 1 de 2/i)).toBeInTheDocument())
   })
