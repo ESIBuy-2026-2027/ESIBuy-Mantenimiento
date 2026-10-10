@@ -113,6 +113,32 @@ class AdministracionUsuariosServiceTest {
         verify(usuarioRepository, never()).guardar(any());
     }
 
+    @Test
+    @DisplayName("HU22-CP05: editar con un rol distinto del actual falla y no guarda nada (el cambio de rol llega en la T43)")
+    void rechazaEditarConUnRolDistintoDelActual() {
+        Usuario cliente = clienteLucia();
+        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(cliente));
+        // Datos de cliente válidos: solo falla el rol
+        EditarUsuarioCommand aAdministrador = new EditarUsuarioCommand(Rol.ADMINISTRADOR, "Carla", "Moreno Gil",
+                null, null, "10004119A", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
+
+        assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", aAdministrador));
+        assertEquals(Rol.CLIENTE, cliente.getRol());
+        assertEquals(new DatosPersonales("Lucía", "Torres Vega", null), cliente.getDatosPersonales());
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU22-CP05: editar sin rol falla y no guarda nada")
+    void rechazaEditarSinRol() {
+        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
+        EditarUsuarioCommand sinRol = new EditarUsuarioCommand(null, "Carla", "Moreno Gil", null, null,
+                "10004119A", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
+
+        assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", sinRol));
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
     private static Usuario clienteLucia() {
         return new Usuario("u-1", new DatosPersonales("Lucía", "Torres Vega", null), new Email("lucia@uclm.es"),
                 "hash-simulado", Rol.CLIENTE,
