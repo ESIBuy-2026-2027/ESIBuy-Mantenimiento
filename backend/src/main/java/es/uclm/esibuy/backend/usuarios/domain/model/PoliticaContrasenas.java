@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.usuarios.domain.model;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public final class PoliticaContrasenas {
 
@@ -11,15 +12,23 @@ public final class PoliticaContrasenas {
     private static final int LONGITUD_MAXIMA = 64;
     private static final Set<String> LISTA_NEGRA = Set.of(
             "12345678", "password", "password1", "qwertyui", "contrasena", "11111111", "abcdefgh");
+    private static final Pattern MAYUSCULA = Pattern.compile("\\p{Lu}");
 
     private PoliticaContrasenas() {
     }
 
     public static void validar(String contrasena, DatosPersonales datosPersonales, Email email) {
         exigirLongitud(contrasena);
+        exigirComposicion(contrasena);
         String normalizada = contrasena.toLowerCase(Locale.ROOT);
         exigirNoComun(normalizada);
         exigirSinDatosPersonales(normalizada, datosPersonales, email);
+    }
+
+    private static void exigirComposicion(String contrasena) {
+        if (!MAYUSCULA.matcher(contrasena).find()) {
+            throw new ContrasenaInvalidaException("La contraseña debe tener al menos una mayúscula");
+        }
     }
 
     private static void exigirLongitud(String contrasena) {
