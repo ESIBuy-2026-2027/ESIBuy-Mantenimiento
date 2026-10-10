@@ -1,6 +1,11 @@
 package es.uclm.esibuy.backend.shared.error;
 
+import es.uclm.esibuy.backend.usuarios.application.port.out.exception.EnvioEmailException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
@@ -28,6 +33,36 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError datosDeRegistroInvalidos() {
         return new RespuestaError("Datos de registro no válidos");
+    }
+
+    @ExceptionHandler(CredencialesInvalidasException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public RespuestaError credencialesInvalidas() {
+        return new RespuestaError("Credenciales Incorrectas");
+    }
+
+    @ExceptionHandler(CuentaBloqueadaException.class)
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    public RespuestaError cuentaBloqueada() {
+        return new RespuestaError("Demasiados intentos. Inténtalo más tarde");
+    }
+
+    @ExceptionHandler(CuentaDesactivadaException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public RespuestaError cuentaDesactivada() {
+        return new RespuestaError("Esta cuenta está desactivada", "ACCOUNT_DISABLED");
+    }
+
+    @ExceptionHandler(EnvioEmailException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public RespuestaError envioEmailFallido() {
+        return new RespuestaError("No se ha podido completar el inicio de sesión. Inténtalo más tarde");
+    }
+
+    @ExceptionHandler(CodigoInvalidoException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public RespuestaError codigoInvalido() {
+        return new RespuestaError("Código incorrecto");
     }
 
     @ExceptionHandler(UsuarioNoEncontradoException.class)

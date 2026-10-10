@@ -18,12 +18,38 @@ async function readErrorCode(response) {
   }
 }
 
+// Protección CSRF (T230, D4): el backend deja el token en la cookie XSRF-TOKEN (legible desde
+// JavaScript, a diferencia de la de sesión) y espera recibirlo en esta cabecera en cada petición que
+// cambia datos. Una web maliciosa no puede leer las cookies de ESIBuy, así que no puede copiarlo.
+const COOKIE_CSRF = 'XSRF-TOKEN'
+const CABECERA_CSRF = 'X-XSRF-TOKEN'
+const METODOS_SIN_CSRF = new Set(['GET', 'HEAD', 'OPTIONS'])
+
+function leerTokenCsrf() {
+  const cookie = document.cookie
+    .split('; ')
+    .find((par) => par.startsWith(`${COOKIE_CSRF}=`))
+  return cookie ? decodeURIComponent(cookie.slice(COOKIE_CSRF.length + 1)) : null
+}
+
+function construirCabeceras(method, body) {
+  const headers = {}
+  if (body) {
+    headers['Content-Type'] = 'application/json'
+  }
+  const tokenCsrf = METODOS_SIN_CSRF.has(method) ? null : leerTokenCsrf()
+  if (tokenCsrf) {
+    headers[CABECERA_CSRF] = tokenCsrf
+  }
+  return Object.keys(headers).length > 0 ? headers : undefined
+}
+
 export async function request(path, { method = 'GET', body } = {}) {
   const url = new URL(`${BASE_URL}${path}`, window.location.origin)
   const response = await fetch(url, {
     method,
     credentials: 'include',
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    headers: construirCabeceras(method, body),
     body: body ? JSON.stringify(body) : undefined,
   })
 

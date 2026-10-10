@@ -172,11 +172,12 @@ class UsuarioControllerTest {
     }
 
     @Test
-    @DisplayName("Seguridad: el listado administrativo sin sesión devuelve 403")
+    @DisplayName("Seguridad: el listado administrativo sin sesión devuelve 401")
     void listadoSinSesionEstaProtegido() throws Exception {
+        // 401 sin sesión y 403 con sesión sin permiso (T230, D10); antes, el 403 por defecto de Spring
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
                         .get("/api/admin/usuarios"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(listadoUsuarios, never()).listar(any());
     }
@@ -280,9 +281,9 @@ class UsuarioControllerTest {
     @Test
     @DisplayName("HU18-CP01: sin sesión no se puede activar una cuenta")
     void activarSinSesionEstaProtegido() throws Exception {
-        // 403 y no 401: todavía no hay ningún mecanismo de login configurado (task 230).
+        // 401 sin sesión y 403 con sesión sin permiso (T230, D10)
         mockMvc.perform(cambiarEstado("usr-1", "ACTIVO"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         verify(administracionUsuarios, never()).activar(any());
     }

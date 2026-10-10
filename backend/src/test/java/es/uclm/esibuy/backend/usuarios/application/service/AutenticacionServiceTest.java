@@ -36,6 +36,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
@@ -343,5 +344,18 @@ class AutenticacionServiceTest {
 
         assertThrows(CodigoInvalidoException.class, () -> autenticacion.verificarCodigoEmail(sinCodigo));
         assertThrows(CodigoInvalidoException.class, () -> autenticacion.verificarCodigoEmail(sinUsuario));
+    }
+
+    @Test
+    @DisplayName("HU2-CP14: con sesión iniciada devuelve el usuario de esa sesión")
+    void consultaElUsuarioEnSesion() {
+        // GET /api/auth/me (T230): el controlador pasa el correo del usuario autenticado y el servicio lo busca.
+        // Devuelve el Usuario del dominio; el controlador elige qué campos salen en el JSON (DTO).
+        Usuario usuario = clienteConId();
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
+
+        Usuario enSesion = autenticacion.consultarUsuarioEnSesion("juan@uclm.es");
+
+        assertSame(usuario, enSesion);
     }
 }
