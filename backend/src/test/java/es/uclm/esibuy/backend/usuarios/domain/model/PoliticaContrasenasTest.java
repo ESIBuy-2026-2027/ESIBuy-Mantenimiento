@@ -86,8 +86,7 @@ class PoliticaContrasenasTest {
     @Test
     @DisplayName("HU1-CP17: rechaza una contraseña sin mayúscula")
     void rechazaContrasenaSinMayuscula() {
-        // TODO ciclo 2
-        fail("Funcionalidad no implementada");
+        assertThrows(ContrasenaInvalidaException.class, () -> validar("tr3boles-azules!"));
     }
 
     @Test
