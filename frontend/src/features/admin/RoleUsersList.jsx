@@ -17,7 +17,7 @@ import SortControls from './SortControls'
 import UsersFilters from './UsersFilters'
 import UserDetailDialog from './UserDetailDialog'
 import UsersTable from './UsersTable'
-import { ACCOUNT_SORT_OPTIONS, ACCOUNT_STATUS_LABELS, USERS_PAGE_SIZE } from './usersConfig'
+import { ACCOUNT_SORT_OPTIONS, USERS_PAGE_SIZE, statusLabelsForRole } from './usersConfig'
 import { useUsersList } from './useUsersList'
 
 const useStyles = makeStyles({
@@ -77,7 +77,7 @@ export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLa
         searchLabel="Buscar por nombre"
         searchPlaceholder="Escribe un nombre"
         status={status}
-        statusLabels={ACCOUNT_STATUS_LABELS}
+        statusLabels={statusLabelsForRole(role)}
         onSearchChange={changeFilter(setSearch)}
         onStatusChange={changeFilter(setStatus)}
       >

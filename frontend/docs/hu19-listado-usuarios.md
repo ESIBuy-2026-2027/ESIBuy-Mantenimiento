@@ -196,7 +196,7 @@ La sesión simulada se pierde al recargar la página y el panel de control aún 
 history.pushState({}, '', '/admin/users'); dispatchEvent(new PopStateEvent('popstate'))
 ```
 
-El mock tiene 28 usuarios ficticios (3 páginas: 10, 10 y 8) de los tres roles y los cuatro estados. Desde la task AB#234 (HU1), toda cuenta nueva queda pendiente: hay 5 pendientes (2 vendedores, 2 clientes y 1 administrador). Los clientes no tienen el estado bloqueado (HU24).
+El mock tiene 28 usuarios ficticios (3 páginas: 10, 10 y 8) de los tres roles y los cuatro estados. Desde la task AB#234 (HU1), toda cuenta nueva queda pendiente: hay 4 pendientes (2 vendedores y 2 clientes): desde la HU22 los administradores no tienen el estado pendiente, así que al filtrar por Administrador el filtro de estado no ofrece "Pendiente". Los clientes no tienen el estado bloqueado (HU24).
 
 Pruebas manuales sugeridas:
 

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { updateUser } from '../api/users'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
 const RUTA = '/admin/clients'
@@ -59,5 +60,35 @@ describe('AdminClientsPage (HU22): editar desde la ficha', () => {
     expect(
       await screen.findByRole('button', { name: /ver información de carla moreno gil/i, hidden: true }),
     ).toBeInTheDocument()
+  })
+})
+
+describe('AdminClientsPage (HU22): un cliente que cambia de rol', () => {
+  it('adminClientsPage_alPasarUnClienteAAdministrador_yaNoApareceEnElListadoDeClientes', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp(RUTA)
+    await user.click(await screen.findByRole('button', { name: /ver información de carlos moreno gil/i }))
+    const ficha = await screen.findByRole('dialog', { name: /información del usuario/i })
+
+    await user.click(await within(ficha).findByRole('button', { name: 'Editar' }))
+    await user.selectOptions(await within(ficha).findByLabelText(/^rol/i), 'ADMINISTRADOR')
+    await user.click(within(ficha).getByRole('button', { name: /^guardar$/i }))
+    expect(await within(ficha).findByText('Los cambios se han guardado.', undefined, { timeout: 3000 })).toBeInTheDocument()
+    await user.click(within(ficha).getByRole('button', { name: 'Cerrar' }))
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('button', { name: /ver información de carlos moreno gil/i, hidden: true }),
+      ).not.toBeInTheDocument(),
+    )
+  })
+
+  it('adminClientsPage_unAdministradorPromovidoDesdeLaApi_noApareceEnClientesYSiEnAdministradores', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    await updateUser('usr-3', { rol: 'ADMINISTRADOR', nombre: 'Carlos', apellidos: 'Moreno Gil', sede: '', avatar: '' })
+    renderApp('/admin/admins')
+
+    expect(await screen.findByRole('button', { name: /ver información de carlos moreno gil/i })).toBeInTheDocument()
   })
 })

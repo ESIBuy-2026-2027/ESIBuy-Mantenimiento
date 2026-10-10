@@ -15,8 +15,9 @@ import EmptyState from '../components/EmptyState'
 import Pagination from '../components/Pagination'
 import UsersFilters from '../features/admin/UsersFilters'
 import UsersTable from '../features/admin/UsersTable'
-import { USERS_PAGE_SIZE } from '../features/admin/usersConfig'
+import { USER_STATUS, USERS_PAGE_SIZE, statusLabelsForRole } from '../features/admin/usersConfig'
 import { useUsersList } from '../features/admin/useUsersList'
+import { ROLES } from '../auth/roles'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
 
 const useStyles = makeStyles({
@@ -66,6 +67,13 @@ export default function AdminUsersPage() {
     setPage(1)
   }
 
+  // Al elegir administradores se quita el estado pendiente, que ellos no pueden tener.
+  const changeRole = (value) => {
+    setRole(value)
+    if (value === ROLES.ADMIN && status === USER_STATUS.PENDIENTE) setStatus('')
+    setPage(1)
+  }
+
   const clearFilters = () => {
     setSearch('')
     setRole('')
@@ -87,7 +95,8 @@ export default function AdminUsersPage() {
         role={role}
         status={status}
         onSearchChange={changeFilter(setSearch)}
-        onRoleChange={changeFilter(setRole)}
+        onRoleChange={changeRole}
+        statusLabels={statusLabelsForRole(role)}
         onStatusChange={changeFilter(setStatus)}
       />
 

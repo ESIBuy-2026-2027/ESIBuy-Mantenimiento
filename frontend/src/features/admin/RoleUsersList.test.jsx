@@ -192,3 +192,39 @@ describe('RoleUsersList (HU24)', () => {
     await waitFor(() => expect(within(filaDe('lucia.torres@esibuy.test')).getByText('Activo')).toBeInTheDocument(), ESPERA)
   })
 })
+
+describe('RoleUsersList (HU22): los administradores no están pendientes', () => {
+  it('roleUsersList_deAdministradores_elFiltroDeEstadoNoOfrecePendiente', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderWithProviders(
+      <RoleUsersList
+        role="ADMINISTRADOR"
+        itemLabel="administradores"
+        errorMessage="No se ha podido cargar el listado de administradores."
+        loadingLabel="Cargando administradores…"
+      />,
+    )
+    await screen.findByText('ana.lopez@esibuy.test')
+
+    const opciones = within(screen.getByRole('combobox', { name: 'Estado' }))
+      .getAllByRole('option')
+      .map((opcion) => opcion.textContent)
+
+    expect(opciones).toEqual(['Todos los estados', 'Activo', 'Desactivado'])
+  })
+
+  it('roleUsersList_deAdministradores_ningunoApareceComoPendiente', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderWithProviders(
+      <RoleUsersList
+        role="ADMINISTRADOR"
+        itemLabel="administradores"
+        errorMessage="No se ha podido cargar el listado de administradores."
+        loadingLabel="Cargando administradores…"
+      />,
+    )
+    await screen.findByText('ana.lopez@esibuy.test')
+
+    expect(screen.queryByText('Pendiente')).not.toBeInTheDocument()
+  })
+})

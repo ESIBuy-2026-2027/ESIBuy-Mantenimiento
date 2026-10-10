@@ -116,7 +116,7 @@ Con `npm run dev` (mocks activos): `admin@esibuy.test`, contraseña `Mock-Clave-
 | Usuarios | Datos del mock |
 |---|---|
 | Clientes | 17: 2 pendientes, 8 activos y 7 desactivados (pendientes desde la task AB#234) |
-| Administradores | 4: Ana López García y Ada Admin (la sesión) activos; Diego Delgado Iglesias desactivado y Manuel Esteve Pons pendiente |
+| Administradores | 4: Ana López García, Manuel Esteve Pons y Ada Admin (la sesión) activos; Diego Delgado Iglesias desactivado (ninguno pendiente: HU22) |
 
 Pruebas manuales sugeridas:
 
