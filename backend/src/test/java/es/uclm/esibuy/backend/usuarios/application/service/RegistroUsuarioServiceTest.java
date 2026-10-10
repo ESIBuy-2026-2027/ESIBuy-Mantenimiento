@@ -6,6 +6,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
@@ -30,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -184,8 +186,16 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP06: rechaza el registro si no se acepta la política de privacidad")
     void rechazaSiNoAceptaLaPrivacidad() {
-        // TODO: aceptaPrivacidad = false -> UsuarioInvalidoException y no se guarda nada.
-        fail("Funcionalidad no implementada");
+        // lenient: si el servicio rechaza antes de hashear (lo correcto), este stub no se usa y Mockito no debe quejarse.
+        // Sin el stub, el hash nulo haría fallar al dominio por otro motivo y el test pasaría sin comprobar la privacidad.
+        lenient().when(hashContrasena.hashear("clave1234")).thenReturn("hash-simulado");
+        RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("Juan", "Pérez García",
+                LocalDate.of(1996, 5, 20), "12345678Z", "juan@uclm.es", null, "clave1234", "clave1234",
+                TipoCliente.ESTANDAR, null, false);
+
+        assertThrows(UsuarioInvalidoException.class, () -> registroUsuario.registrar(comando));
+
+        verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
 
     @Test
