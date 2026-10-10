@@ -9,6 +9,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaExcepti
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -40,7 +41,7 @@ public class ManejadorGlobalErrores {
         return new RespuestaError(REGISTRO_NO_COMPLETADO, "DNI_ALREADY_REGISTERED");
     }
 
-    @ExceptionHandler({ContrasenaInvalidaException.class, EmailInvalidoException.class})
+    @ExceptionHandler({ContrasenaInvalidaException.class, EmailInvalidoException.class, UsuarioInvalidoException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError datosDeRegistroInvalidos() {
         return new RespuestaError("Datos de registro no válidos");
