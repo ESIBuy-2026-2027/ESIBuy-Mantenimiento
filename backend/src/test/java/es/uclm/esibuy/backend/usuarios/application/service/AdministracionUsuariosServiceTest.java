@@ -198,6 +198,20 @@ class AdministracionUsuariosServiceTest {
         verify(usuarioRepository).guardar(cliente);
     }
 
+    @Test
+    @DisplayName("HU22-CP01: editar un cliente con el teléfono en blanco lo deja sin teléfono (es opcional)")
+    void editarUnClienteConElTelefonoEnBlancoLoDejaSinTelefono() {
+        // El frontend envía los campos sin rellenar como "" (profilePayload)
+        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
+        EditarUsuarioCommand telefonoEnBlanco = new EditarUsuarioCommand(Rol.CLIENTE, "Lucía", "Torres Vega", null,
+                "12345678Z", "  ", LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR);
+
+        Usuario editado = servicio.editar("u-1", telefonoEnBlanco);
+
+        assertNull(editado.getDatosCliente().telefono());
+        verify(usuarioRepository).guardar(editado);
+    }
+
     private static Usuario vendedorVera() {
         return new Usuario("u-4", new DatosPersonales("Vera", "Vendedora", null), new Email("vendedor@esibuy.test"),
                 "hash-simulado", Rol.VENDEDOR, null, null);
