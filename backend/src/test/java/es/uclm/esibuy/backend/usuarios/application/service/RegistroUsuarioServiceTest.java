@@ -267,4 +267,28 @@ class RegistroUsuarioServiceTest {
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
+
+    @Test
+    @DisplayName("HU1-CP18: rechaza un correo ya registrado aunque cambien las mayúsculas")
+    void rechazaUnCorreoYaRegistradoAunqueCambienLasMayusculas() {
+        // El duplicado se comprueba con el email normalizado, no con el texto del comando
+        when(usuarioRepository.existePorCorreo("juan@uclm.es")).thenReturn(true);
+
+        assertThrows(CorreoYaRegistradoException.class,
+                () -> registroUsuario.registrar(comando("Juan@UCLM.es", "Clave-1234")));
+
+        verify(usuarioRepository, never()).guardar(any(Usuario.class));
+    }
+
+    @Test
+    @DisplayName("HU1-CP18: guarda el email normalizado")
+    void guardaElEmailNormalizado() {
+        when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
+        ArgumentCaptor<Usuario> usuarioGuardado = ArgumentCaptor.forClass(Usuario.class);
+
+        registroUsuario.registrar(comando("  Juan@UCLM.es ", "Clave-1234"));
+
+        verify(usuarioRepository).guardar(usuarioGuardado.capture());
+        assertEquals("juan@uclm.es", usuarioGuardado.getValue().getEmail().valor());
+    }
 }
