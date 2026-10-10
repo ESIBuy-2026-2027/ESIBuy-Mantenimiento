@@ -66,6 +66,7 @@ class UsuarioTest {
     }
 
     @Test
+    @DisplayName("HU1-CP12: crea un cliente nuevo en estado PENDIENTE")
     void creaClienteNuevoEstandarSinNombreNiId() {
         Usuario usuario = Usuario.nuevoCliente(EMAIL, HASH);
 
@@ -76,6 +77,7 @@ class UsuarioTest {
         assertEquals(HASH, usuario.getPasswordHash());
         assertEquals(Rol.CLIENTE, usuario.getRol());
         assertEquals(TipoCliente.ESTANDAR, usuario.getTipoCliente());
+        assertEquals("PENDIENTE", usuario.getEstado());
         assertTrue(usuario.estaActivo());
     }
 
