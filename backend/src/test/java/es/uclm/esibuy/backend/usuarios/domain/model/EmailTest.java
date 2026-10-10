@@ -70,4 +70,10 @@ class EmailTest {
         // Un espacio al copiar y pegar no debe impedir el registro
         assertEquals("ana@uclm.es", new Email("  ana@uclm.es ").valor());
     }
+
+    @Test
+    @DisplayName("HU1-CP18: dos emails que solo difieren en mayúsculas son iguales")
+    void dosEmailsQueSoloDifierenEnMayusculasSonIguales() {
+        assertEquals(new Email("Ana@UCLM.es"), new Email("ana@uclm.es"));
+    }
 }
