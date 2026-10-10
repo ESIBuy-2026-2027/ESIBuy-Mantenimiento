@@ -62,8 +62,7 @@ class EmailTest {
     @Test
     @DisplayName("HU1-CP18: guarda el email en minúsculas")
     void guardaElEmailEnMinusculas() {
-        // TODO ciclo 1
-        fail("Funcionalidad no implementada");
+        assertEquals("ana@uclm.es", new Email("Ana@UCLM.es").valor());
     }
 
     @Test
