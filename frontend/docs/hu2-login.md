@@ -6,6 +6,7 @@ Documento para entender cómo funciona el login del frontend de ESIBuy: qué hac
 - **HU:** HU2 (inicio de sesión seguro) y la parte de redirección por rol de HU15 y HU18
 - **Rama:** `feature/front/login`
 - **Metodología:** esta HU **no se desarrolló con TDD**; los tests se añadieron después
+- **Ampliada por la task AB#236** (rama `feature/US2-T236-mensaje-cuenta-pendiente-login`): pantalla animada para las cuentas pendientes de activación. Ver la sección 2.1.
 - **Depende de:** `docs/mocks-msw.md` (MSW y cliente HTTP)
 
 ---
@@ -45,6 +46,30 @@ sequenceDiagram
     B-->>F: 200 {usuario} + cookie de sesión httpOnly
     F->>F: Guarda el usuario en memoria y redirige según su rol
 ```
+
+### 2.1 Cuenta pendiente de activación (task AB#236)
+
+Las cuentas de clientes y vendedores nacen **pendientes** (HU1) y no pueden iniciar sesión hasta que un administrador las activa. Si alguien intenta entrar con una cuenta así, **justo después de pulsar "Continuar" en el paso 1** el formulario se sustituye por una pantalla que se lo explica, en lugar de un mensaje de error.
+
+```mermaid
+flowchart TD
+    A[Correo + contraseña] --> B[POST /api/auth/login]
+    B -- 200 --> C[Paso 2: código por correo]
+    B -- 403 ACCOUNT_PENDING --> D[Pantalla: cuenta pendiente de activación]
+    B -- 403 ACCOUNT_DISABLED --> E[Mensaje: cuenta desactivada]
+    B -- 401 --> F[Mensaje genérico]
+    D -- Volver al inicio de sesión --> A
+```
+
+La pantalla (`PendingAccountScreen`):
+
+- **Es dinámica:** nombra la cuenta que se ha intentado usar (el correo que escribió el usuario) y muestra en qué punto está: *Cuenta creada* (hecho) → *Verificación por un administrador* (en curso) → *Acceso a ESIBuy* (pendiente).
+- **Es animada:** aparece con un fundido y un desplazamiento suaves, el icono tiene un aro que pulsa, los tres pasos entran uno tras otro y el icono del paso en curso se mueve. Con la preferencia del sistema *reducir movimiento* (`prefers-reduced-motion`) **todas las animaciones se desactivan**.
+- **Es accesible:** el título recibe el foco al aparecer y la región se anuncia con `aria-live="polite"`. Los iconos son decorativos.
+- **Tiene una única salida:** "Volver al inicio de sesión", que devuelve el formulario **vacío** (la contraseña ya se vació al enviarse).
+- **No se dejan pasar los pasos 2 y 3:** el backend no envía ningún código a una cuenta pendiente.
+
+> **Seguridad.** Para no revelar qué correos existen, el backend solo debe responder `ACCOUNT_PENDING` **cuando la contraseña es correcta**, igual que con `ACCOUNT_DISABLED`. Con contraseña errónea, una cuenta pendiente da el mismo mensaje genérico que cualquier otra (hay un test).
 
 ### Redirección por rol
 
@@ -95,10 +120,11 @@ Todas las rutas son relativas a `frontend/src/`.
 
 | Archivo | Qué hace |
 |---|---|
-| `LoginForm.jsx` | Orquesta los tres pasos, controla el estado de envío y los errores. Solo avanza de paso cuando el backend responde bien. |
+| `LoginForm.jsx` | Orquesta los tres pasos, controla el estado de envío y los errores. Solo avanza de paso cuando el backend responde bien. Si el backend indica cuenta pendiente, muestra `PendingAccountScreen`. |
 | `CredentialsStep.jsx` | Paso 1. Valida que haya correo y contraseña (todos los errores a la vez) y **vacía la contraseña del estado en cuanto se envía**. |
 | `CodeStep.jsx` | Pasos 2 y 3. Campo de código de 6 dígitos (se reutiliza para el correo y para Microsoft Authenticator): solo admite números y vacía el valor al enviarlo. |
-| `loginErrors.js` | Traduce los errores del backend a mensajes fijos para el usuario. |
+| `loginErrors.js` | Traduce los errores del backend a mensajes fijos para el usuario. `isPendingAccountError` detecta la cuenta pendiente, que no se muestra como mensaje sino con su propia pantalla. |
+| `PendingAccountScreen.jsx` | Pantalla animada de "cuenta pendiente de activación" (task AB#236). Recibe el correo y la función para volver. |
 | `authFormStyles.js` | Estilos compartidos de los formularios. |
 | `LoginFlow.test.jsx` | Tests del flujo completo, los errores y las rutas protegidas. |
 
@@ -161,6 +187,7 @@ Todas las rutas son relativas a `frontend/src/`.
 |---|---|
 | 401 (u otro 4xx) | Dato incorrecto: mensaje genérico según el paso |
 | 403 con `{ "code": "ACCOUNT_DISABLED" }` | Cuenta desactivada. Solo debe enviarse cuando la contraseña es correcta |
+| 403 con `{ "code": "ACCOUNT_PENDING" }` | Cuenta pendiente de activación (task AB#236). Solo debe enviarse en el paso 1 y cuando la contraseña es correcta. **Código propuesto por el frontend: hay que acordarlo con el backend** |
 | 429 | Demasiados intentos |
 | 5xx o sin respuesta | "No se ha podido conectar con el servidor" |
 
@@ -170,7 +197,7 @@ Todas las rutas son relativas a `frontend/src/`.
 
 - Dónde guardan el estado de los pasos 1 y 2 (se recomienda una cookie temporal de caducidad corta, no algo accesible desde JavaScript).
 - Mecanismo anti-CSRF (si usan un token en cabecera, hay que añadirlo a `api/client.js`).
-- Si una cuenta pendiente de activación (HU1) debe mostrar un mensaje propio.
+- Que el backend responda `403` con `ACCOUNT_PENDING` para las cuentas pendientes (HU1). El login real todavía no está conectado en el backend, así que el código no existe: el frontend lo ha definido con mocks.
 - Que los valores de `rol` coinciden con los indicados.
 
 ---
@@ -191,6 +218,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | `vendedor@esibuy.test` | Vendedor | |
 | `cliente@esibuy.test` | Cliente | |
 | `desactivado@esibuy.test` | Cliente | Cuenta desactivada |
+| `pendiente@esibuy.test` | Cliente | Cuenta pendiente de activación: muestra la pantalla animada |
 
 Código del correo: `654321`. Código de Microsoft Authenticator: `123456`. Tras 5 contraseñas erróneas, el mock responde 429. Al recargar la página la sesión simulada se pierde.
 
@@ -202,11 +230,14 @@ Código del correo: `654321`. Código de Microsoft Authenticator: `123456`. Tras
 4. En F12 → Application, comprobar que **Local Storage y Session Storage están vacíos**.
 5. En F12 → Network, comprobar que la contraseña solo viaja en el cuerpo de `login`.
 6. Comparar el mensaje de "contraseña errónea" con el de "usuario inexistente": deben ser idénticos.
+7. Entrar con `pendiente@esibuy.test`: debe aparecer la pantalla animada con ese correo y sin pedir códigos. "Volver al inicio de sesión" devuelve el formulario vacío.
+8. Repetir el punto 7 con la contraseña mal escrita: debe salir el mensaje genérico, **no** la pantalla de cuenta pendiente.
+9. Activar en el sistema *reducir movimiento* y repetir el punto 7: la pantalla aparece sin animaciones.
 
 ### Tests automáticos
 
 ```bash
-npx vitest run     # 51 tests
+npx vitest run     # 523 tests (5 de ellos de la cuenta pendiente, AB#236)
 npm run lint
 npm run build
 ```
@@ -221,6 +252,7 @@ npm run build
 - La ruta `/register` aún no existe (la desarrolla otra persona del equipo).
 - Las rutas en inglés sustituyen a las que mencionaba HU15 (`/vendedor/productos`): `/seller/products`.
 - El login real depende de que el backend cumpla el contrato de la sección 5.
+- **Cuenta pendiente (AB#236):** la pantalla no se ha revisado en un navegador real (sí hay tests); el texto y los tres pasos son propuesta del frontend y conviene que el equipo los valide. No ofrece "reenviar la solicitud" ni contactar con nadie porque esa funcionalidad no existe.
 
 ---
 
@@ -233,4 +265,5 @@ Este documento y el trabajo técnico que describe se hicieron con ayuda de un as
 - **Cómo se comprobó:** el asistente reprodujo el proyecto en un entorno temporal, aparte del repositorio, con los archivos reales del equipo. Allí se ejecutaron **40 tests (todos en verde)** con el captcha; tras sustituirlo por Authenticator la suite completa del frontend tiene **51 tests en verde**, ESLint sin errores y un build de producción correcto. También se comprobó que el build no contiene los mocks ni sus credenciales.
 - **Qué NO se comprobó:** la app Microsoft Authenticator real, ni el flujo contra un backend real. Debe verificarse en el proyecto del equipo.
 - **Cómo guió el proceso:** el asistente propuso el orden de commits y ramas siguiendo las convenciones del proyecto, y explicó cada paso para aplicarlo a mano.
+- **Task AB#236:** la IA escribió la pantalla animada, el cambio en el formulario, el usuario pendiente del mock, los 5 tests y esta sección. La decisión de mostrar una pantalla (en lugar de un mensaje) tras pulsar "Continuar", que sea animada y dinámica y que no se haga push, fue del equipo. Suite completa: **523 tests en verde**, ESLint sin errores y build correcto.
 - **Revisión humana:** el código fue revisado, ejecutado y validado por el equipo antes de su integración. Revisado por: Ricardo.
