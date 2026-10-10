@@ -739,7 +739,7 @@ Notas:
 - **HU31-CP11 y CP12:** casos propuestos en la T202 (AB#202) para la persistencia. Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards.
 - **Backend (T202):** repositorio de productos: puerto `ProductoRepositoryPort` (`guardar` y `buscarPorId`) y su adaptador de MongoDB, con documento y mapper propios. El listado por vendedor llegará con la AB#183.
 - **Una sola categoría por producto:** decisión del equipo; el producto guarda `categoriaId`, no una lista. Desde la T202 el validador de MongoDB también lo exige (antes era una lista `categoriaIds`).; desde la T202 el validador de MongoDB también exige `categoriaId` (antes era una lista `categoriaIds`).
-- **Estado:** los tests de la T201 están en `develop` (PR #83). Los de la T202 están en revisión: al abrir su PR se pone su número en «Origen», y pasan a ✅ cuando se mergee.
+- **Estado:** los tests de la T201 están en `develop` (PR #83). Los de la T202 están en revisión (PR #86) y pasan a ✅ cuando se mergee.
 - **Frontend:** los tests de la HU31 (AB#182) no tienen todavía filas en la matriz.
 
 ### Tabla B · casos de prueba ↔ tests
@@ -765,11 +765,11 @@ Notas:
 | HU31-CP09 | `ProductoTest` | `aceptaImagenesHttpOVacias` (http, https y vacía) | Dominio | AB#201 | PR #83 | ✅ |
 | HU31-CP09 | `ProductoTest` | `rechazaImagenesQueNoSonHttp` (javascript:, ftp:, texto libre y data:) | Dominio | AB#201 | PR #83 | ✅ |
 | HU31-CP10 | `ProductoTest` | `laDescripcionTieneUnMaximoDe1000Caracteres` | Dominio | AB#201 | PR #83 | ✅ |
-| HU31-CP11 | `ProductoDocumentMapperTest` | `convierteProductoEnDocumento` | Infraestructura | AB#202 | rama `feature/US31-T202-repositorio-producto` (PR sin abrir) | 🔍 |
-| HU31-CP11 | `ProductoDocumentMapperTest` | `convierteDocumentoEnProducto` | Infraestructura | AB#202 | rama `feature/US31-T202-repositorio-producto` (PR sin abrir) | 🔍 |
-| HU31-CP11 | `ProductoMongoAdapterTest` | `guardarAsignaIdYLoGuardaEnProductos` | Infraestructura | AB#202 | rama `feature/US31-T202-repositorio-producto` (PR sin abrir) | 🔍 |
-| HU31-CP11 | `ProductoMongoAdapterTest` | `buscarPorIdDevuelveElProductoGuardado` | Infraestructura | AB#202 | rama `feature/US31-T202-repositorio-producto` (PR sin abrir) | 🔍 |
-| HU31-CP12 | `ProductoMongoAdapterTest` | `buscarPorIdDevuelveVacioSiNoExiste` | Infraestructura | AB#202 | rama `feature/US31-T202-repositorio-producto` (PR sin abrir) | 🔍 |
+| HU31-CP11 | `ProductoDocumentMapperTest` | `convierteProductoEnDocumento` | Infraestructura | AB#202 | PR #86 | 🔍 |
+| HU31-CP11 | `ProductoDocumentMapperTest` | `convierteDocumentoEnProducto` | Infraestructura | AB#202 | PR #86 | 🔍 |
+| HU31-CP11 | `ProductoMongoAdapterTest` | `guardarAsignaIdYLoGuardaEnProductos` | Infraestructura | AB#202 | PR #86 | 🔍 |
+| HU31-CP11 | `ProductoMongoAdapterTest` | `buscarPorIdDevuelveElProductoGuardado` | Infraestructura | AB#202 | PR #86 | 🔍 |
+| HU31-CP12 | `ProductoMongoAdapterTest` | `buscarPorIdDevuelveVacioSiNoExiste` | Infraestructura | AB#202 | PR #86 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `ProductoTest` y `DescuentoTest`: `productos/domain/model/` (JUnit, sin Spring)
@@ -799,8 +799,8 @@ Tests que no validan una HU concreta.
 | `UsuarioControllerTest` | `listadoSinSesionEstaProtegido` | Que el listado administrativo sin sesión devuelve 401 (`SecurityConfig`) |
 | `UsuarioMongoAdapterTest` | `elDocumentoNoIncluyeElCampoClass` | Que los documentos guardados no incluyen el campo `_class` de Spring Data (`MongoConfig`; AB#210, PR #43) |
 | `UsuarioMongoAdapterTest` | `guardaFechasDeCreacionYModificacion` | Que se guardan `createdAt` y `updatedAt` (auditoría de Spring Data) y que `createdAt` no cambia al actualizar (AB#210, PR #43) |
-| `ProductoMongoAdapterTest` | `guardarUnProductoLeidoLoActualiza` | Que guardar un producto leído lo actualiza sin duplicarlo y conserva `createdAt` (AB#202, PR sin abrir) |
-| `ProductoMongoAdapterTest` | `elPrecioSeGuardaComoNumero` | Que el precio y los porcentajes de descuento se guardan como `Decimal128`, no como texto (AB#202, PR sin abrir) |
+| `ProductoMongoAdapterTest` | `guardarUnProductoLeidoLoActualiza` | Que guardar un producto leído lo actualiza sin duplicarlo y conserva `createdAt` (AB#202, PR #86) |
+| `ProductoMongoAdapterTest` | `elPrecioSeGuardaComoNumero` | Que el precio y los porcentajes de descuento se guardan como `Decimal128`, no como texto (AB#202, PR #86) |
 | `InicializadorColeccionesTest` | `creaLasDiezColecciones` | Que al arrancar se crean las 10 colecciones del modelo de BBDD (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `sePuedeEjecutarOtraVez` | Que el inicializador se puede ejecutar en cada arranque sin fallar ni duplicar índices (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `actualizaLaValidacionDeUnaColeccionExistente` | Que aplica la validación a una colección que ya existía sin ella (AB#210, PR #43) |
@@ -809,7 +809,7 @@ Tests que no validan una HU concreta.
 | `InicializadorColeccionesTest` | `rechazaUsuariosInvalidos` | Que la validación de `usuarios` rechaza campos obligatorios ausentes y valores fuera del modelo (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `usuariosConDniYNombreComercialUnicos` | Índices de `usuarios`: DNI único por rol (opcional) y nombre comercial único (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `validaSesionesFactoresYTokens` | Validación de `sesiones`, `factores_autenticacion` y `tokens_seguridad`, con `tokenHash` obligatorio (AB#210, PR #43; ampliado en AB#232, PR #56) |
-| `InicializadorColeccionesTest` | `validaProductos` | Validación de `productos`: precio mayor que 0, stock no negativo, y nombre y categoría (`categoriaId`) obligatorios (AB#210, PR #43; ampliado en AB#202, PR sin abrir) |
+| `InicializadorColeccionesTest` | `validaProductos` | Validación de `productos`: precio mayor que 0, stock no negativo, y nombre y categoría (`categoriaId`) obligatorios (AB#210, PR #43; ampliado en AB#202, PR #86) |
 | `InicializadorColeccionesTest` | `validaDescuentosDeProductos` | Descuentos de `productos` con el formato del formulario de producto (HU31): `{activo, porcentaje}` (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `validaElRestoDeColecciones` | Validación de `pedidos`, `carritos`, `valoraciones`, `categorias` y `listas_deseos` (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `rechazaDuplicadosEnLosIndicesUnicos` | Índices únicos de `carritos`, `valoraciones`, `categorias`, `listas_deseos` y `factores_autenticacion` (AB#210, PR #43) |
