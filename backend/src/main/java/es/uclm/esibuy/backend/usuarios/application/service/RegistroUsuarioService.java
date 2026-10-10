@@ -9,6 +9,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
@@ -48,10 +49,15 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
             throw new ContrasenaInvalidaException("La contraseña debe tener mínimo " + LONGITUD_MINIMA_CONTRASENA + " caracteres");
         }
 
+        // Evita consultar en la BBDD con una petición que ya sabemos que no es válida.
         if (!comando.password().equals(comando.repeticionPassword())) {
             throw new ContrasenaInvalidaException("Las contraseñas no coinciden");
         }
-        
+
+        if (!comando.aceptaPrivacidad()) {
+            throw new UsuarioInvalidoException("Es obligatorio aceptar la política de privacidad");
+        }
+
         if (usuarioRepository.existePorCorreo(comando.email())) {
             throw new CorreoYaRegistradoException("El correo ya está registrado");
         }
