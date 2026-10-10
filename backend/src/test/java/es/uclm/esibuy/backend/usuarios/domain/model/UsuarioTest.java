@@ -291,6 +291,66 @@ class UsuarioTest {
         assertNull(administrador.getDatosCliente());
     }
 
+    @Test
+    @DisplayName("HU22-CP09: un cliente que pasa a administrador cambia de rol y pierde sus datos de cliente")
+    void cambiarRolDeClienteAAdministradorBorraLosDatosDeCliente() {
+        Usuario usuario = cliente();
+        DatosPersonales nuevosDatosPersonales = new DatosPersonales("Ana", "García López", "avatar3");
+
+        usuario.cambiarRol(Rol.ADMINISTRADOR, nuevosDatosPersonales, null, HOY);
+
+        assertEquals(Rol.ADMINISTRADOR, usuario.getRol());
+        assertEquals(nuevosDatosPersonales, usuario.getDatosPersonales());
+        assertNull(usuario.getDatosCliente());
+        assertEquals(EMAIL, usuario.getEmail());
+    }
+
+    @Test
+    @DisplayName("HU22-CP09: un administrador que pasa a cliente cambia de rol con sus nuevos datos de cliente")
+    void cambiarRolDeAdministradorAClienteGuardaLosDatosDeCliente() {
+        Usuario administrador = new Usuario("u-3", DATOS_PERSONALES, EMAIL, HASH, Rol.ADMINISTRADOR, null, null);
+
+        administrador.cambiarRol(Rol.CLIENTE, DATOS_PERSONALES, DATOS_CLIENTE, HOY);
+
+        assertEquals(Rol.CLIENTE, administrador.getRol());
+        assertEquals(DATOS_CLIENTE, administrador.getDatosCliente());
+    }
+
+    @Test
+    @DisplayName("HU22-CP09: pasar a cliente sin datos de cliente o siendo menor de edad falla y no cambia nada")
+    void cambiarRolAClienteExigeDatosDeClienteValidos() {
+        Usuario administrador = new Usuario("u-3", DATOS_PERSONALES, EMAIL, HASH, Rol.ADMINISTRADOR, null, null);
+        DatosCliente menorDeEdad = datosClienteNacidoEl(HOY.minusYears(17));
+
+        assertThrows(UsuarioInvalidoException.class,
+                () -> administrador.cambiarRol(Rol.CLIENTE, DATOS_PERSONALES, null, HOY));
+        assertThrows(UsuarioInvalidoException.class,
+                () -> administrador.cambiarRol(Rol.CLIENTE, DATOS_PERSONALES, menorDeEdad, HOY));
+        assertEquals(Rol.ADMINISTRADOR, administrador.getRol());
+        assertNull(administrador.getDatosCliente());
+    }
+
+    @Test
+    @DisplayName("HU22-CP10: una cuenta pendiente que pasa a administrador queda activa")
+    void unaCuentaPendienteQuePasaAAdministradorQuedaActiva() {
+        Usuario usuario = cliente();   // nace PENDIENTE
+
+        usuario.cambiarRol(Rol.ADMINISTRADOR, DATOS_PERSONALES, null, HOY);
+
+        assertEquals("ACTIVO", usuario.getEstado());
+    }
+
+    @Test
+    @DisplayName("HU22-CP10: una cuenta desactivada que pasa a administrador sigue desactivada")
+    void unaCuentaDesactivadaQuePasaAAdministradorSigueDesactivada() {
+        Usuario usuario = cliente();
+        usuario.desactivar();
+
+        usuario.cambiarRol(Rol.ADMINISTRADOR, DATOS_PERSONALES, null, HOY);
+
+        assertEquals("DESACTIVADO", usuario.getEstado());
+    }
+
     private static DatosCliente datosClienteNacidoEl(LocalDate fechaNacimiento) {
         return new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), fechaNacimiento, null);
     }
