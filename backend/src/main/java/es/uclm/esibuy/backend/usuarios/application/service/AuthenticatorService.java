@@ -1,15 +1,20 @@
 package es.uclm.esibuy.backend.usuarios.application.service;
 
 import java.time.Clock;
+import java.time.Instant;
+import java.util.OptionalLong;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.AltaAuthenticator;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AuthenticatorUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.VerificarCodigoAuthenticatorCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CifradoSecretoPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.FactorAutenticacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.TotpPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AuthenticatorYaDadoDeAltaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.model.FactorAutenticacion;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
@@ -29,12 +34,13 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 public class AuthenticatorService implements AuthenticatorUseCase {
 
     private static final String MENSAJE_CREDENCIALES_INVALIDAS = "Credenciales inválidas";
+    private static final String MENSAJE_CODIGO_INVALIDO = "Código inválido";
 
     private final UsuarioRepositoryPort usuarioRepository;
     private final FactorAutenticacionRepositoryPort factorAutenticacionRepository;
     private final TotpPort totp;
     private final CifradoSecretoPort cifrado;
-    private final Clock reloj;   // lo usará verificarCodigo (ciclo 7)
+    private final Clock reloj;
 
     public AuthenticatorService(UsuarioRepositoryPort usuarioRepository,
             FactorAutenticacionRepositoryPort factorAutenticacionRepository, TotpPort totp,
@@ -61,8 +67,39 @@ public class AuthenticatorService implements AuthenticatorUseCase {
         }
 
         String secreto = totp.generarSecreto();
-        // Se guarda cifrado y sin confirmar: el alta se confirma con el primer código correcto (ciclo 7)
+        // Se guarda cifrado y sin confirmar: el alta se confirma con el primer código correcto (verificarCodigo)
         factorAutenticacionRepository.guardar(FactorAutenticacion.nuevo(usuario.getId(), cifrado.cifrar(secreto)));
         return new AltaAuthenticator(totp.generarQr(email, secreto));
+    }
+
+    @Override
+    public Usuario verificarCodigo(VerificarCodigoAuthenticatorCommand comando) {
+        Usuario usuario = usuarioRepository.buscarPorCorreo(comando.email())
+                .orElseThrow(() -> new CodigoInvalidoException(MENSAJE_CODIGO_INVALIDO));
+
+        // Con la cuenta bloqueada por intentos ni siquiera se calcula el código, como en el paso 1
+        Instant ahora = reloj.instant();
+        if (usuario.tieneBloqueoPorIntentos(ahora)) {
+            throw new CuentaBloqueadaException("Demasiados intentos. Inténtalo más tarde");
+        }
+
+        FactorAutenticacion factor = factorAutenticacionRepository.buscarPorUsuario(usuario.getId())
+                .orElseThrow(() -> new CodigoInvalidoException(MENSAJE_CODIGO_INVALIDO));
+
+        // El secreto solo existe en claro en memoria, durante esta llamada
+        String secreto = cifrado.descifrar(factor.getSecretoCifrado());
+        OptionalLong periodo = totp.periodoDelCodigo(secreto, comando.codigo(), ahora);
+
+        // Incorrecto, o correcto pero ya usado: el mismo 401, y cuenta para el bloqueo del usuario (T20, D5 y D7)
+        if (periodo.isEmpty() || !factor.puedeUsarPeriodo(periodo.getAsLong())) {
+            usuario.registrarIntentoFallido(ahora);
+            usuarioRepository.guardar(usuario);
+            throw new CodigoInvalidoException(MENSAJE_CODIGO_INVALIDO);
+        }
+
+        // Si era el primer código tras el alta, la confirma
+        factor.registrarUso(periodo.getAsLong(), ahora);
+        factorAutenticacionRepository.guardar(factor);
+        return usuario;
     }
 }
