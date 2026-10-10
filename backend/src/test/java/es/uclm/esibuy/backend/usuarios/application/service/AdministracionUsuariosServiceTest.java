@@ -68,4 +68,24 @@ class AdministracionUsuariosServiceTest {
         assertThrows(UsuarioNoEncontradoException.class, () -> servicio.activar("no-existe"));
         verify(usuarioRepository, never()).guardar(any());
     }
+
+    @Test
+    @DisplayName("HU20-CP01: consultar devuelve el usuario y no cambia nada")
+    void consultarDevuelveElUsuario() {
+        Usuario usuario = new Usuario("u-1", new DatosPersonales("Lucía", "Torres Vega", null),
+                new Email("lucia@uclm.es"), "hash-simulado", Rol.CLIENTE,
+                new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1996, 5, 20), null), null);
+        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(usuario));
+
+        assertSame(usuario, servicio.consultar("u-1"));
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU20-CP03: consultar un usuario que no existe falla")
+    void consultarUnUsuarioQueNoExisteFalla() {
+        when(usuarioRepository.buscarPorId("no-existe")).thenReturn(Optional.empty());
+
+        assertThrows(UsuarioNoEncontradoException.class, () -> servicio.consultar("no-existe"));
+    }
 }
