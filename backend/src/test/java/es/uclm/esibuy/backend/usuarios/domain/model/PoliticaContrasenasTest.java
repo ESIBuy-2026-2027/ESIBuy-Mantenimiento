@@ -65,7 +65,7 @@ class PoliticaContrasenasTest {
     @Test
     @DisplayName("HU1-CP10: rechaza una contraseña que contiene la parte local del email")
     void rechazaContrasenaQueContieneLaParteLocalDelEmail() {
-        assertThrows(ContrasenaInvalidaException.class, () -> validar("agarcia-2026"));
+        assertThrows(ContrasenaInvalidaException.class, () -> validar("Agarcia-2026"));
     }
 
     @Test

@@ -78,8 +78,8 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP01: registra al cliente con rol CLIENTE")
     void registraClienteConRolCliente() {
-        when(hashContrasena.hashear("clave1234")).thenReturn("hash-simulado");
-        RegistrarUsuarioCommand comando = comando("juan@uclm.es", "clave1234");
+        when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
+        RegistrarUsuarioCommand comando = comando("juan@uclm.es", "Clave-1234");
 
         registroUsuario.registrar(comando);
 
@@ -92,15 +92,15 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP02: guarda la contraseña hasheada, nunca en claro")
     void guardaContrasenaHasheada() {
-        when(hashContrasena.hashear("clave1234")).thenReturn("hash-simulado");
-        RegistrarUsuarioCommand comando = comando("juan@uclm.es", "clave1234");
+        when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
+        RegistrarUsuarioCommand comando = comando("juan@uclm.es", "Clave-1234");
 
         registroUsuario.registrar(comando);
 
         ArgumentCaptor<Usuario> usuarioGuardado = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).guardar(usuarioGuardado.capture());
         assertEquals("hash-simulado", usuarioGuardado.getValue().getPasswordHash());
-        assertNotEquals("clave1234", usuarioGuardado.getValue().getPasswordHash());
+        assertNotEquals("Clave-1234", usuarioGuardado.getValue().getPasswordHash());
     }
 
     @Test
@@ -136,7 +136,7 @@ class RegistroUsuarioServiceTest {
     @DisplayName("HU1-CP03: rechaza un correo ya registrado y no guarda nada")
     void rechazaEmailYaRegistrado() {
         when(usuarioRepository.existePorCorreo("juan@uclm.es")).thenReturn(true);
-        RegistrarUsuarioCommand comando = comando("juan@uclm.es", "clave1234");
+        RegistrarUsuarioCommand comando = comando("juan@uclm.es", "Clave-1234");
 
         assertThrows(CorreoYaRegistradoException.class, () -> registroUsuario.registrar(comando));
 
@@ -147,9 +147,9 @@ class RegistroUsuarioServiceTest {
     @DisplayName("HU1-CP16: rechaza un DNI ya registrado y no guarda nada")
     void rechazaDniYaRegistrado() {
         when(usuarioRepository.existePorDni("12345678Z")).thenReturn(true);
-        lenient().when(hashContrasena.hashear("clave1234")).thenReturn("hash-simulado");
+        lenient().when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
 
-        assertThrows(DniYaRegistradoException.class, () -> registroUsuario.registrar(comando("juan@uclm.es", "clave1234")));
+        assertThrows(DniYaRegistradoException.class, () -> registroUsuario.registrar(comando("juan@uclm.es", "Clave-1234")));
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
@@ -167,9 +167,9 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP01: registra un cliente con todos sus datos")
     void registraClienteConTodosSusDatos() {
-        when(hashContrasena.hashear("clave1234")).thenReturn("hash-simulado");
+        when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
         RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("Juan", "Pérez García",
-                LocalDate.of(1996, 5, 20), "12345678Z", "juan@uclm.es", "612345678", "clave1234", "clave1234",
+                LocalDate.of(1996, 5, 20), "12345678Z", "juan@uclm.es", "612345678", "Clave-1234", "Clave-1234",
                 TipoCliente.PREMIUM, "avatar2", true);
 
         registroUsuario.registrar(comando);
@@ -189,7 +189,7 @@ class RegistroUsuarioServiceTest {
     @DisplayName("HU1-CP14: rechaza el registro si las contraseñas no coinciden")
     void rechazaContrasenasQueNoCoinciden() {
         RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("Juan", "Pérez García",
-                LocalDate.of(1996, 5, 20), "12345678Z", "juan@uclm.es", null, "clave1234", "clave1235",
+                LocalDate.of(1996, 5, 20), "12345678Z", "juan@uclm.es", null, "Clave-1234", "Clave-1235",
                 TipoCliente.ESTANDAR, null, true);
 
         assertThrows(ContrasenaInvalidaException.class, () -> registroUsuario.registrar(comando));
@@ -202,9 +202,9 @@ class RegistroUsuarioServiceTest {
     void rechazaSiNoAceptaLaPrivacidad() {
         // lenient: si el servicio rechaza antes de hashear (lo correcto), este stub no se usa y Mockito no debe quejarse.
         // Sin el stub, el hash nulo haría fallar al dominio por otro motivo y el test pasaría sin comprobar la privacidad.
-        lenient().when(hashContrasena.hashear("clave1234")).thenReturn("hash-simulado");
+        lenient().when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
         RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("Juan", "Pérez García",
-                LocalDate.of(1996, 5, 20), "12345678Z", "juan@uclm.es", null, "clave1234", "clave1234",
+                LocalDate.of(1996, 5, 20), "12345678Z", "juan@uclm.es", null, "Clave-1234", "Clave-1234",
                 TipoCliente.ESTANDAR, null, false);
 
         assertThrows(UsuarioInvalidoException.class, () -> registroUsuario.registrar(comando));
@@ -215,9 +215,9 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP06: guarda el consentimiento con la fecha y la versión")
     void guardaElConsentimientoConLaFechaYLaVersion() {
-        when(hashContrasena.hashear("clave1234")).thenReturn("hash-simulado");
+        when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
 
-        registroUsuario.registrar(comando("juan@uclm.es", "clave1234"));
+        registroUsuario.registrar(comando("juan@uclm.es", "Clave-1234"));
 
         ArgumentCaptor<Usuario> usuarioGuardado = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).guardar(usuarioGuardado.capture());
@@ -228,10 +228,10 @@ class RegistroUsuarioServiceTest {
     @DisplayName("HU1-CP13: rechaza a un cliente menor de edad")
     void rechazaClienteMenorDeEdad() {
         // Comprueba que el servicio pasa al dominio la fecha del reloj: la regla vive en Usuario.nuevoCliente.
-        when(hashContrasena.hashear("clave1234")).thenReturn("hash-simulado");
+        when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
         LocalDate hace17Anos = LocalDate.now(RELOJ).minusYears(17);
         RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("Juan", "Pérez García", hace17Anos,
-                "12345678Z", "juan@uclm.es", null, "clave1234", "clave1234", TipoCliente.ESTANDAR, null, true);
+                "12345678Z", "juan@uclm.es", null, "Clave-1234", "Clave-1234", TipoCliente.ESTANDAR, null, true);
 
         assertThrows(UsuarioInvalidoException.class, () -> registroUsuario.registrar(comando));
 
