@@ -50,8 +50,6 @@ class AdministracionUsuariosServiceTest {
 
     // Reloj fijo: la mayoría de edad de la edición se calcula con esta fecha
     private static final Clock RELOJ = Clock.fixed(Instant.parse("2026-10-10T10:00:00Z"), ZoneOffset.UTC);
-    // Administrador en sesión que edita (HU22): no es ninguna de las cuentas editadas salvo que se diga
-    private static final String EMAIL_ADMINISTRADOR = "admin@esibuy.test";
 
     @Mock
     private UsuarioRepositoryPort usuarioRepository;
