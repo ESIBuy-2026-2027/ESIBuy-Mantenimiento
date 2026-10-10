@@ -6,7 +6,8 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
  * Casos de uso con los que el administrador gestiona las cuentas de los usuarios.
  *
  * <p>Agrupa las operaciones de un mismo actor con un mismo propósito (CLAUDE.md): de momento,
- * activar una cuenta (HU24), consultar su ficha (HU20) y la de un vendedor (HU26). Aquí irán también desactivar (HU23) y editar (HU22).
+ * activar una cuenta (HU24), consultar su ficha (HU20) y la de un vendedor (HU26), y desactivarla (HU23).
+ * Aquí irá también editar (HU22).
  */
 public interface AdministracionUsuariosUseCase {
 
@@ -31,4 +32,13 @@ public interface AdministracionUsuariosUseCase {
      *         o no es un vendedor
      */
     Usuario consultarVendedor(String usuarioId);
+
+    /**
+     * Desactiva la cuenta del usuario y la devuelve ya desactivada.
+     *
+     * @param usuarioId          id del usuario que se quiere desactivar
+     * @param emailAdministrador email del administrador que hace la petición
+     * @throws es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException si no existe
+     */
+    Usuario desactivar(String usuarioId, String emailAdministrador);
 }
