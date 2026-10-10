@@ -6,6 +6,8 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCas
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorCommand;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,12 +33,14 @@ public class UsuarioController {
     private final RegistroUsuarioUseCase registroUsuario;
     private final ListadoUsuariosUseCase listadoUsuarios;
     private final AdministracionUsuariosUseCase administracionUsuarios;
+    private final CrearAdministradorUseCase crearAdministrador; 
 
     public UsuarioController(RegistroUsuarioUseCase registroUsuario, ListadoUsuariosUseCase listadoUsuarios,
-            AdministracionUsuariosUseCase administracionUsuarios) {
+            AdministracionUsuariosUseCase administracionUsuarios, CrearAdministradorUseCase crearAdministrador) {
         this.registroUsuario = registroUsuario;
         this.listadoUsuarios = listadoUsuarios;
         this.administracionUsuarios = administracionUsuarios;
+        this.crearAdministrador = crearAdministrador;
     }
 
     @PostMapping("/auth/register/cliente")   // contrato acordado con el frontend (T229)
@@ -69,5 +73,13 @@ public class UsuarioController {
     public UsuarioListadoResponse cambiarEstado(@PathVariable String id,
             @Valid @RequestBody CambiarEstadoRequest request) {
         return UsuarioListadoResponse.desde(administracionUsuarios.activar(id));
+    }
+
+    // Crear un administrador (HU21).  
+    @PostMapping("/admin/admins")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void crearAdministrador(@Valid @RequestBody CrearAdministradorRequest request) {
+        crearAdministrador.crear(new CrearAdministradorCommand(
+                request.nombre(), request.apellidos(), request.email(), request.password()));
     }
 }

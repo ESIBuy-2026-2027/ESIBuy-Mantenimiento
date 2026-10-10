@@ -6,6 +6,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCas
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
+import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorUseCase;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
@@ -71,6 +72,9 @@ class UsuarioControllerTest {
 
     @MockitoBean
     private AdministracionUsuariosUseCase administracionUsuarios;
+
+    @MockitoBean
+    private CrearAdministradorUseCase crearAdministrador;
 
     // Cuerpo completo del registro de cliente (T229); solo varían el email y la contraseña.
     private static String json(String email, String password) {
@@ -369,5 +373,70 @@ class UsuarioControllerTest {
         return patch("/api/admin/usuarios/{id}/status", id).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"estado\":\"" + estado + "\"}");
+    }
+
+    @Test
+    @DisplayName("HU21-CP06: crear administrador con datos correctos devuelve 201")
+    void crearAdministradorValidoDevuelve201() throws Exception {
+        String peticionJson = """
+            {
+              "nombre": "Nora",
+              "apellidos": "Díaz Ruiz",
+              "email": "nora@esibuy.test",
+              "password": "Password123!"
+            }
+            """;
+
+        mockMvc.perform(post("/api/admin/admins")
+                .with(user("admin").roles("ADMINISTRADOR")) 
+                .with(csrf()) 
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(peticionJson))
+                .andExpect(status().isCreated());
+
+        verify(crearAdministrador).crear(any());
+    }
+
+    @Test
+    @DisplayName("HU21-CP07: crear administrador rechaza campos obligatorios vacíos devolviendo 400")
+    void crearAdministradorRechazaCamposVacios() throws Exception {
+        String peticionInvalidaJson = """
+            {
+              "nombre": "",
+              "email": "correo-sin-arroba",
+              "password": ""
+            }
+            """;
+
+        mockMvc.perform(post("/api/admin/admins")
+                .with(user("admin").roles("ADMINISTRADOR"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(peticionInvalidaJson))
+                .andExpect(status().isBadRequest());
+
+        verify(crearAdministrador, never()).crear(any());
+    }
+
+    @Test
+    @DisplayName("HU21-CP08: usuarios sin rol ADMINISTRADOR no pueden crear administradores")
+    void crearAdministradorRechazaNoAdministradores() throws Exception {
+        String peticionJson = """
+            {
+              "nombre": "Nora",
+              "apellidos": "Díaz Ruiz",
+              "email": "nora@esibuy.test",
+              "password": "Password123!"
+            }
+            """;
+
+        mockMvc.perform(post("/api/admin/admins")
+                .with(user("cliente").roles("CLIENTE"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(peticionJson))
+                .andExpect(status().isForbidden());
+
+        verify(crearAdministrador, never()).crear(any());
     }
 }

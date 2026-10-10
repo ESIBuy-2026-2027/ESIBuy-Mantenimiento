@@ -22,6 +22,8 @@ import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.Us
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.UsuarioMongoRepository;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.BCryptHashContrasenaAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.SecureRandomGeneradorCodigoAdapter;
+import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorUseCase;
+import es.uclm.esibuy.backend.usuarios.application.service.CrearAdministradorService;
 
 import java.security.SecureRandom;
 import java.time.Clock;
@@ -62,6 +64,12 @@ public class UsuariosConfig {
     @Bean
     ListadoUsuariosUseCase listadoUsuariosUseCase(UsuarioRepositoryPort usuarioRepositoryPort) {
         return new ListadoUsuariosService(usuarioRepositoryPort);
+    }
+
+    @Bean
+    CrearAdministradorUseCase crearAdministradorUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
+                                                        HashContrasenaPort hashContrasenaPort) {
+        return new CrearAdministradorService(usuarioRepositoryPort, hashContrasenaPort);
     }
 
     @Bean
