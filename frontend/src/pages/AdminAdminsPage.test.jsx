@@ -20,10 +20,11 @@ describe('AdminAdminsPage (HU21)', () => {
     const tabla = await screen.findByRole('table')
     const filas = within(tabla).getAllByRole('row').slice(1)
 
-    expect(filas).toHaveLength(3)
+    expect(filas).toHaveLength(4)
     expect(within(tabla).getByText('ana.lopez@esibuy.test')).toBeInTheDocument()
     expect(within(tabla).getByText('diego.delgado@esibuy.test')).toBeInTheDocument()
     expect(within(tabla).getByText('admin@esibuy.test')).toBeInTheDocument()
+    expect(within(tabla).getByText('manuel.esteve@esibuy.test')).toBeInTheDocument()
     filas.forEach((fila) => expect(within(fila).getByText('Administrador')).toBeInTheDocument())
   })
 

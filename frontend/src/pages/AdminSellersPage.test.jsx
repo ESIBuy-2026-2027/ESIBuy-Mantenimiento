@@ -411,3 +411,24 @@ describe('AdminSellersPage (HU26): el servidor protege los datos', () => {
     expect(respuesta.status).toBe(403)
   })
 })
+
+describe('AdminSellersPage (HU22): editar desde la ficha', () => {
+  it('adminSellersPage_alEditarUnVendedorDesdeSuFicha_elListadoMuestraSuNombreComercialNuevo', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await user.click(await screen.findByRole('button', { name: /ver información de casa vicente/i }))
+    const ficha = await screen.findByRole('dialog', { name: /información del vendedor/i })
+
+    await user.click(await within(ficha).findByRole('button', { name: 'Editar' }))
+    const campo = await within(ficha).findByLabelText(/^nombre comercial/i)
+    await user.clear(campo)
+    await user.type(campo, 'Casa Vicente Plus')
+    await user.click(within(ficha).getByRole('button', { name: /^guardar$/i }))
+
+    expect(await within(ficha).findByText('Los cambios se han guardado.', undefined, { timeout: 3000 })).toBeInTheDocument()
+    await user.click(within(ficha).getByRole('button', { name: 'Cerrar' }))
+    expect(
+      await screen.findByRole('button', { name: /ver información de casa vicente plus/i, hidden: true }),
+    ).toBeInTheDocument()
+  })
+})

@@ -226,6 +226,17 @@ describe('Register', () => {
     expect(await screen.findByText(/cuenta creada/i)).toBeInTheDocument()
   })
 
+  it('register_siElRegistroDeVendedorEsCorrecto_avisaDeQueLaCuentaQuedaPendienteDeVerificacion', async () => {
+    registrarVendedor.mockResolvedValue({})
+    await renderYElegirVendedor()
+    await rellenarFormularioVendedorValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(
+      await screen.findByText(/pendiente de que un administrador la verifique/i)
+    ).toBeInTheDocument()
+  })
+
   it('register_siElEmailDelVendedorYaEstaRegistrado_muestraErrorEnElCampoEmail', async () => {
     registrarVendedor.mockRejectedValue({ status: 409, code: 'EMAIL_ALREADY_REGISTERED' })
     await renderYElegirVendedor()
@@ -476,6 +487,18 @@ describe('Register', () => {
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
     expect(await screen.findByText(/cuenta creada/i)).toBeInTheDocument()
+  })
+
+  it('register_siElRegistroEsCorrecto_avisaDeQueLaCuentaQuedaPendienteDeVerificacion', async () => {
+    registrarCliente.mockResolvedValue({})
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(
+      await screen.findByText(/pendiente de que un administrador la verifique/i)
+    ).toBeInTheDocument()
+    expect(screen.getByText(/podrás iniciar sesión cuando esté activada/i)).toBeInTheDocument()
   })
 
   it('register_alElegirCliente_marcaComoRequeridosLosCamposObligatorios', async () => {
