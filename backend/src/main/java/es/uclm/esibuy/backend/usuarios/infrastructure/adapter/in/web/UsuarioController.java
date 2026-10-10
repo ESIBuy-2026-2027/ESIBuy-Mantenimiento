@@ -63,6 +63,12 @@ public class UsuarioController {
         );
     }
 
+    // Ficha de un usuario (HU20). 404 si no existe (UsuarioNoEncontradoException, en ManejadorGlobalErrores).
+    @GetMapping("/admin/usuarios/{id}")
+    public UsuarioDetalleResponse consultar(@PathVariable String id) {
+        return UsuarioDetalleResponse.desde(administracionUsuarios.consultar(id));
+    }
+
     // Activar una cuenta (HU24). La validación de CambiarEstadoRequest ya garantiza que el estado
     // pedido es ACTIVO; la HU23 añadirá DESACTIVADO.
     @PatchMapping("/admin/usuarios/{id}/status")
