@@ -19,7 +19,7 @@ export const productValuesPropType = PropTypes.shape({
   descripcion: PropTypes.string.isRequired,
   precio: PropTypes.string.isRequired,
   stock: PropTypes.string.isRequired,
-  categoriaIds: PropTypes.arrayOf(PropTypes.string).isRequired,
+  categoriaId: PropTypes.string.isRequired,
   imagen: PropTypes.string.isRequired,
   disponible: PropTypes.bool.isRequired,
   descuentoActivo: PropTypes.bool.isRequired,

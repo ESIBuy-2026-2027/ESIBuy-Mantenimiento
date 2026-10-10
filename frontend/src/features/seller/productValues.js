@@ -7,7 +7,7 @@ export const emptyProductValues = () => ({
   descripcion: '',
   precio: '',
   stock: '',
-  categoriaIds: [],
+  categoriaId: '',
   imagen: '',
   disponible: true,
   descuentoActivo: false,
@@ -23,7 +23,7 @@ export const valuesFromProduct = (product) => ({
   descripcion: product.descripcion,
   precio: String(product.precio),
   stock: String(product.stock),
-  categoriaIds: product.categoriaIds,
+  categoriaId: product.categoriaId,
   imagen: product.imagen,
   disponible: product.disponible,
   descuentoActivo: product.descuento.activo,
@@ -60,7 +60,7 @@ export function validateProduct(values) {
   if (!name) errors.nombre = 'Introduce el nombre del producto.'
   else if (name.length > NAME_MAX_LENGTH) errors.nombre = `El nombre no puede superar los ${NAME_MAX_LENGTH} caracteres.`
 
-  if (values.categoriaIds.length === 0) errors.categoriaIds = 'Elige al menos una categoría.'
+  if (!values.categoriaId) errors.categoriaId = 'Elige una categoría.'
 
   if (!price) errors.precio = 'Introduce el precio.'
   else if (Number.isNaN(Number(price)) || Number(price) <= 0) errors.precio = 'El precio debe ser mayor que 0.'
@@ -94,7 +94,7 @@ export const toProductPayload = (values) => ({
   descripcion: values.descripcion.trim(),
   precio: Number(values.precio),
   stock: values.stock.trim() === '' ? 0 : Number(values.stock),
-  categoriaIds: values.categoriaIds,
+  categoriaId: values.categoriaId,
   imagen: values.imagen.trim(),
   disponible: values.disponible,
   descuento: toDiscount(values.descuentoActivo, values.descuentoPorcentaje),
