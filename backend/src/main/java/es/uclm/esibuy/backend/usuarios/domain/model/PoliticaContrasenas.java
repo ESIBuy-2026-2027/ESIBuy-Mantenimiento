@@ -14,6 +14,7 @@ public final class PoliticaContrasenas {
             "12345678", "password", "password1", "qwertyui", "contrasena", "11111111", "abcdefgh");
     private static final Pattern MAYUSCULA = Pattern.compile("\\p{Lu}");
     private static final Pattern MINUSCULA = Pattern.compile("\\p{Ll}");
+    private static final Pattern NUMERO = Pattern.compile("\\p{N}");
 
     private PoliticaContrasenas() {
     }
@@ -33,6 +34,10 @@ public final class PoliticaContrasenas {
 
         if (!MINUSCULA.matcher(contrasena).find()) {
             throw new ContrasenaInvalidaException("La contraseña debe tener al menos una minúscula");
+        }
+
+        if(!NUMERO.matcher(contrasena).find()) {
+            throw new ContrasenaInvalidaException("La contraseña debe tener al menos un número");
         }
     }
 
