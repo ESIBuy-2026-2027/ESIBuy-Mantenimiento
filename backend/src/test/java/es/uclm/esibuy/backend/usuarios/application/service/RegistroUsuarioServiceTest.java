@@ -30,7 +30,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -105,8 +104,8 @@ class RegistroUsuarioServiceTest {
     @DisplayName("HU1-CP05: acepta una contraseña de exactamente 8 caracteres")
     void permiteContrasenaDeExactamente8Caracteres() {
         // Frontera: 8 caracteres → permitido
-        when(hashContrasena.hashear("12345678")).thenReturn("hash-simulado");
-        RegistrarUsuarioCommand comando = comando("juan@uclm.es", "12345678");
+        when(hashContrasena.hashear("Xk9#pQ2m")).thenReturn("hash-simulado");
+        RegistrarUsuarioCommand comando = comando("juan@uclm.es", "Xk9#pQ2m");
 
         registroUsuario.registrar(comando);
 
@@ -228,14 +227,21 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP09: rechaza una contraseña común")
     void rechazaContrasenaComun() {
-        // TODO: password "password1" (lista negra) -> ContrasenaInvalidaException y no se guarda nada. AB#226
-        fail("Funcionalidad no implementada");
+        lenient().when(hashContrasena.hashear("password1")).thenReturn("hash-simulado");
+
+        assertThrows(ContrasenaInvalidaException.class, () -> registroUsuario.registrar(comando("juan@uclm.es", "password1")));
+
+        verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
 
     @Test
     @DisplayName("HU1-CP10: rechaza una contraseña que contiene el nombre")
     void rechazaContrasenaConElNombre() {
-        // TODO: password que contiene el nombre del comando -> ContrasenaInvalidaException y no se guarda nada. AB#226
-        fail("Funcionalidad no implementada");
+        // El comando lleva nombre "Juan": la política lo recibe a través de DatosPersonales
+        lenient().when(hashContrasena.hashear("clave-Juan-2026")).thenReturn("hash-simulado");
+
+        assertThrows(ContrasenaInvalidaException.class, () -> registroUsuario.registrar(comando("juan@uclm.es", "clave-Juan-2026")));
+
+        verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
 }
