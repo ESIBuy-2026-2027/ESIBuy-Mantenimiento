@@ -225,6 +225,34 @@ class UsuarioTest {
                 () -> Usuario.nuevoCliente(DATOS_PERSONALES, EMAIL, HASH, cumple18Manana, CONSENTIMIENTO, HOY));
     }
 
+    @Test
+    @DisplayName("HU22-CP01: modificar los datos de un cliente cambia sus datos personales y de cliente")
+    void modificarDatosCambiaLosDatosDeUnCliente() {
+        Usuario usuario = cliente();
+        DatosPersonales nuevosDatosPersonales = new DatosPersonales("Carla", "Moreno Gil", "avatar1");
+        DatosCliente nuevosDatosCliente = new DatosCliente(
+                TipoCliente.ESTANDAR, new Dni("10004119A"), LocalDate.of(1978, 4, 13), new Telefono("620023757"));
+
+        usuario.modificarDatos(nuevosDatosPersonales, nuevosDatosCliente, HOY);
+
+        assertEquals(nuevosDatosPersonales, usuario.getDatosPersonales());
+        assertEquals(nuevosDatosCliente, usuario.getDatosCliente());
+        assertEquals(EMAIL, usuario.getEmail());
+        assertEquals(Rol.CLIENTE, usuario.getRol());
+    }
+
+    @Test
+    @DisplayName("HU22-CP02: modificar los datos de un administrador cambia sus datos personales")
+    void modificarDatosCambiaLosDatosDeUnAdministrador() {
+        Usuario administrador = new Usuario("u-3", DATOS_PERSONALES, EMAIL, HASH, Rol.ADMINISTRADOR, null, null);
+        DatosPersonales nuevosDatosPersonales = new DatosPersonales("Diego", "Delgado Iglesias", "avatar3");
+
+        administrador.modificarDatos(nuevosDatosPersonales, null, HOY);
+
+        assertEquals(nuevosDatosPersonales, administrador.getDatosPersonales());
+        assertNull(administrador.getDatosCliente());
+    }
+
     private static DatosCliente datosClienteNacidoEl(LocalDate fechaNacimiento) {
         return new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), fechaNacimiento, null);
     }
