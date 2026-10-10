@@ -7,6 +7,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuario
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CambioDePropioRolException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
@@ -57,8 +58,12 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
     }
 
     @Override
-    public Usuario editar(String usuarioId, EditarUsuarioCommand comando) {
+    public Usuario editar(String usuarioId, EditarUsuarioCommand comando, String emailAdministrador) {
         Usuario usuario = buscar(usuarioId);
+        // Puede editar sus propios datos, pero no degradarse a sí mismo
+        if (comando.rol() != usuario.getRol() && usuario.getEmail().valor().equalsIgnoreCase(emailAdministrador)) {
+            throw new CambioDePropioRolException("Un administrador no puede cambiar su propio rol");
+        }
         // PENDIENTE: pasar una cuenta a vendedor, cuando existan sus datos (nombre comercial, NIF y categoría).
         if (comando.rol() == Rol.VENDEDOR && usuario.getRol() != Rol.VENDEDOR) {
             throw new UsuarioInvalidoException("Pasar una cuenta a vendedor todavía no está disponible");
