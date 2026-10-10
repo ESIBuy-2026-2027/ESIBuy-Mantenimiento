@@ -64,9 +64,8 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         if (comando.rol() != usuario.getRol() && usuario.getEmail().valor().equalsIgnoreCase(emailAdministrador)) {
             throw new CambioDePropioRolException("Un administrador no puede cambiar su propio rol");
         }
-        if (usuario.getRol() == Rol.ADMINISTRADOR && comando.rol() != Rol.ADMINISTRADOR && usuario.estaActivo()
-                && usuarioRepository.contarAdministradoresActivos() <= 1) {
-            throw new UltimoAdministradorActivoException("No se puede degradar al último administrador activo");
+        if (comando.rol() != Rol.ADMINISTRADOR) {
+            exigirQueNoSeaElUltimoAdministradorActivo(usuario, "No se puede degradar al último administrador activo");
         }
         // PENDIENTE: pasar una cuenta a vendedor, cuando existan sus datos (nombre comercial, NIF y categoría).
         if (comando.rol() == Rol.VENDEDOR && usuario.getRol() != Rol.VENDEDOR) {
@@ -90,13 +89,19 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         if (usuario.getEmail().valor().equalsIgnoreCase(emailAdministrador)) {
             throw new AutodesactivacionNoPermitidaException("Un administrador no puede desactivar su propia cuenta");
         }
-        if (usuario.getRol() == Rol.ADMINISTRADOR && usuario.estaActivo()
-                && usuarioRepository.contarAdministradoresActivos() <= 1) {
-            throw new UltimoAdministradorActivoException("No se puede desactivar al último administrador activo");
-        }
+        exigirQueNoSeaElUltimoAdministradorActivo(usuario, "No se puede desactivar al último administrador activo");
         usuario.desactivar();
         usuarioRepository.guardar(usuario);
         return usuario;
+    }
+
+    // Siempre tiene que quedar al menos un administrador activo: ni desactivarlo (HU23) ni degradarlo (HU22).
+    // Un administrador que no está activo no cuenta, así que no hace falta consultar.
+    private void exigirQueNoSeaElUltimoAdministradorActivo(Usuario usuario, String mensaje) {
+        if (usuario.getRol() == Rol.ADMINISTRADOR && usuario.estaActivo()
+                && usuarioRepository.contarAdministradoresActivos() <= 1) {
+            throw new UltimoAdministradorActivoException(mensaje);
+        }
     }
 
     // Solo se comprueba si el DNI cambia: si no, el cliente chocaría consigo mismo. Quien pasa a cliente no tiene DNI.
