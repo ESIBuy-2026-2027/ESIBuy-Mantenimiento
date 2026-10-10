@@ -432,3 +432,23 @@ describe('AdminSellersPage (HU22): editar desde la ficha', () => {
     ).toBeInTheDocument()
   })
 })
+
+describe('AdminSellersPage (HU22): un vendedor que cambia de rol', () => {
+  it('adminSellersPage_alPasarUnVendedorAAdministrador_yaNoApareceEnElListadoDeVendedores', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await user.click(await screen.findByRole('button', { name: /ver información de casa vicente/i }))
+    const ficha = await screen.findByRole('dialog', { name: /información del vendedor/i })
+
+    await user.click(await within(ficha).findByRole('button', { name: 'Editar' }))
+    await user.selectOptions(await within(ficha).findByLabelText(/^rol/i), 'ADMINISTRADOR')
+    await user.click(within(ficha).getByRole('button', { name: /^guardar$/i }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('button', { name: /ver información de casa vicente/i, hidden: true }),
+      ).not.toBeInTheDocument(),
+    )
+  })
+})

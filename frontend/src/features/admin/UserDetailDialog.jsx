@@ -18,8 +18,9 @@ import {
 } from '@fluentui/react-components'
 import { Dismiss24Regular, Edit20Regular } from '@fluentui/react-icons'
 import { getUser, updateUser } from '../../api/users'
+import { ROLES } from '../../auth/roles'
 import { useApiQuery } from '../../hooks/useApiQuery'
-import ProfileEditor from './ProfileEditor'
+import EditableProfile from './EditableProfile'
 import ReadOnlyFields from './ReadOnlyFields'
 import UserStatusButton from './UserStatusButton'
 import { readFields } from './profileFields'
@@ -51,7 +52,8 @@ const MENSAJES_CONFLICTO = {
 
 // Ficha de un cliente o de un administrador (HU20), como la del vendedor (HU26): datos en solo lectura,
 // el botón para activar o desactivar la cuenta (HU24 y HU23), salvo la propia, y el botón Editar (HU22), que
-// convierte en modificables los campos que se pueden cambiar y deja el resto en solo lectura.
+// convierte en modificables los campos que se pueden cambiar (incluido el rol, salvo en la cuenta propia) y deja
+// el resto en solo lectura.
 // `onStatusChange` avisa al listado de que la cuenta ha cambiado (de estado o de datos).
 export default function UserDetailDialog({ userId, currentUserId, onClose, onStatusChange }) {
   const styles = useStyles()
@@ -136,9 +138,10 @@ export default function UserDetailDialog({ userId, currentUserId, onClose, onSta
 
             {usuario && !editando && <ReadOnlyFields fields={readFields(usuario.rol, usuario)} />}
             {usuario && editando && (
-              <ProfileEditor
+              <EditableProfile
                 rol={usuario.rol}
                 usuario={usuario}
+                lockRol={usuario.rol === ROLES.ADMIN && usuario.id === currentUserId}
                 save={(datos) => updateUser(usuario.id, datos)}
                 onSaved={avisarGuardado}
                 onCancel={() => setEditando(false)}

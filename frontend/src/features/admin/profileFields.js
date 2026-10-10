@@ -1,7 +1,7 @@
 import { ROLES } from '../../auth/roles'
 import { formatDate } from '../../utils/format'
 import { esDniValido, esEmailValido, esMayorDeEdad, esTelefonoValido } from '../account/accountRules'
-import { STATUS_LABELS } from './usersConfig'
+import { ROLE_LABELS, STATUS_LABELS } from './usersConfig'
 
 // Campos de la ficha de cada tipo de usuario (HU20, HU22 y HU26). Una sola definición sirve para los dos modos:
 // - modo lectura: cada campo muestra el texto de `read`;
@@ -13,6 +13,7 @@ export const TIPOS_CLIENTE = { ESTANDAR: 'Estándar', PREMIUM: 'Premium' }
 const SIN_DATO = '—'
 const AVATAR = 'avatar'
 const DNI_NIF_LENGTH = 9
+const TIPO_CLIENTE_POR_DEFECTO = 'ESTANDAR'
 
 const textoOSinDato = (valor) => valor || SIN_DATO
 const fechaOSinDato = (valor) => (valor ? formatDate(valor) : SIN_DATO)
@@ -27,6 +28,18 @@ const apellidos = {
   edit: { required: true, maxLength: 30 },
 }
 const email = { name: 'email', label: 'Email', read: (u) => u.email }
+// Un administrador puede cambiar el rol de cualquier cuenta menos el suyo (lo impone el backend; el formulario
+// además lo bloquea).
+const rol = {
+  name: 'rol',
+  label: 'Rol',
+  read: (_u, rolActual) => ROLE_LABELS[rolActual] ?? rolActual,
+  edit: {
+    type: 'select',
+    required: true,
+    validate: (valor) => (ROLE_LABELS[valor] ? undefined : 'Elige un rol válido'),
+  },
+}
 const imagen = {
   name: AVATAR,
   label: 'Imagen de perfil',
@@ -34,7 +47,7 @@ const imagen = {
   edit: { type: AVATAR },
 }
 const estado = { name: 'estado', label: 'Estado', read: (u) => STATUS_LABELS[u.estado] ?? u.estado }
-const fechaAlta = { name: 'fechaAlta', label: 'Fecha de alta', read: (u) => formatDate(u.fechaAlta) }
+const fechaAlta = { name: 'fechaAlta', label: 'Fecha de alta', read: (u) => fechaOSinDato(u.fechaAlta) }
 
 const PROFILE_FIELDS = {
   // Todo menos el email (y la contraseña, que solo se cambia con "He olvidado mi contraseña").
@@ -42,6 +55,7 @@ const PROFILE_FIELDS = {
     nombre,
     apellidos,
     email,
+    rol,
     {
       name: 'dni',
       label: 'DNI',
@@ -82,12 +96,13 @@ const PROFILE_FIELDS = {
     estado,
   ],
   // No se pueden cambiar el email ni la fecha de incorporación (ni la contraseña). Es el único tipo
-  // de usuario con fecha de alta: la de clientes y vendedores no se guarda.
-  // No se pueden cambiar el email ni la fecha de incorporación (ni la contraseña).
+  // de usuario con fecha de alta: la de clientes y vendedores no se guarda. Un administrador nunca está
+  // pendiente: lo da de alta otro administrador.
   [ROLES.ADMIN]: [
     nombre,
     apellidos,
     email,
+    rol,
     { name: 'sede', label: 'Sede', read: (u) => textoOSinDato(u.sede), edit: { maxLength: 30 } },
     {
       name: 'fechaIncorporacion',
@@ -114,16 +129,17 @@ const PROFILE_FIELDS = {
         validate: (valor) => (esEmailValido(valor) ? undefined : 'Introduce un email válido'),
       },
     },
+    rol,
     {
       name: 'nombreComercial',
       label: 'Nombre comercial',
-      read: (u) => u.nombreComercial,
+      read: (u) => textoOSinDato(u.nombreComercial),
       edit: { required: true, maxLength: 30 },
     },
     {
       name: 'nif',
       label: 'NIF/DNI',
-      read: (u) => u.nif,
+      read: (u) => textoOSinDato(u.nif),
       edit: {
         required: true,
         maxLength: DNI_NIF_LENGTH,
@@ -133,7 +149,7 @@ const PROFILE_FIELDS = {
     {
       name: 'categoriaPrincipalId',
       label: 'Categoría principal',
-      read: (u) => u.categoriaPrincipal,
+      read: (u) => textoOSinDato(u.categoriaPrincipal),
       edit: { type: 'select', required: true },
     },
     estado,
@@ -142,26 +158,60 @@ const PROFILE_FIELDS = {
 
 const FALLBACK_FIELDS = [nombre, apellidos, email, estado]
 
-export const profileFieldsFor = (rol) => PROFILE_FIELDS[rol] ?? FALLBACK_FIELDS
+export const profileFieldsFor = (rolDeLaCuenta) => PROFILE_FIELDS[rolDeLaCuenta] ?? FALLBACK_FIELDS
 
 const isEditable = (field) => Boolean(field.edit)
 
-// Pares [etiqueta, texto] para el modo lectura. Nunca incluye la contraseña.
-export const readFields = (rol, usuario) => profileFieldsFor(rol).map((field) => [field.label, field.read(usuario)])
+// Campos del formulario de edición cuando la cuenta se queda con el rol `rolDestino`. Si el administrador
+// cambia el rol, el formulario pasa a los campos del rol nuevo. El email solo se puede cambiar si la cuenta ya
+// era de vendedor y lo sigue siendo.
+export function editFieldsFor(rolDestino, rolOriginal = rolDestino) {
+  const emailEditable = rolOriginal === ROLES.VENDEDOR && rolDestino === ROLES.VENDEDOR
 
-// Valores iniciales del formulario: solo los campos que se pueden modificar, siempre como texto.
-export function initialValues(rol, usuario) {
-  return Object.fromEntries(
-    profileFieldsFor(rol)
-      .filter(isEditable)
-      .map((field) => [field.name, String(usuario[field.name] ?? '').slice(0, field.edit.type === 'date' ? 10 : undefined)]),
-  )
+  return profileFieldsFor(rolDestino).map((field) => {
+    if (field.name !== 'email' || !field.edit || emailEditable) return field
+    return { name: field.name, label: field.label, read: field.read }
+  })
 }
 
-// Un mensaje por cada campo incorrecto (vacío si todo es correcto), para mostrarlos todos a la vez.
-export function validateProfile(rol, values) {
+// Pares [etiqueta, texto] para el modo lectura. Nunca incluye la contraseña.
+export const readFields = (rolDeLaCuenta, usuario) =>
+  profileFieldsFor(rolDeLaCuenta).map((field) => [field.label, field.read(usuario, rolDeLaCuenta)])
+
+// Todos los campos que se pueden modificar en algún rol (sin repetir), para poder cambiar de rol sin perder lo
+// escrito ni pedir de nuevo lo común.
+const ALL_EDITABLE_FIELDS = new Map(
+  Object.values(PROFILE_FIELDS)
+    .flat()
+    .filter(isEditable)
+    .map((field) => [field.name, field]),
+)
+
+// Valores iniciales del formulario: todos los campos modificables de cualquier rol, siempre como texto, y el
+// rol actual de la cuenta.
+export function initialValues(rolDeLaCuenta, usuario) {
+  const valores = Object.fromEntries(
+    [...ALL_EDITABLE_FIELDS.values()].map((field) => {
+      const texto = String(usuario[field.name] ?? '')
+      return [field.name, field.edit.type === 'date' ? texto.slice(0, 10) : texto]
+    }),
+  )
+
+  return {
+    ...valores,
+    rol: rolDeLaCuenta,
+    tipoCliente: valores.tipoCliente || TIPO_CLIENTE_POR_DEFECTO,
+  }
+}
+
+// Un mensaje por cada campo incorrecto (vacío si todo es correcto), para mostrarlos todos a la vez. Se valida
+// con los campos del rol que queda (`values.rol`).
+export function validateProfile(rolDeLaCuenta, values) {
   const errors = {}
-  for (const field of profileFieldsFor(rol).filter(isEditable)) {
+  const rolDestino = values.rol ?? rolDeLaCuenta
+  if (!ROLE_LABELS[rolDestino]) errors.rol = 'Elige un rol válido'
+
+  for (const field of editFieldsFor(rolDestino, rolDeLaCuenta).filter(isEditable)) {
     const valor = (values[field.name] ?? '').trim()
     if (field.edit.required && !valor) errors[field.name] = 'Este campo es obligatorio'
     else if (valor && field.edit.validate) {
@@ -172,11 +222,13 @@ export function validateProfile(rol, values) {
   return errors
 }
 
-// Cuerpo de la petición: solo los campos modificables. El email de clientes y administradores, la fecha de
-// incorporación y la contraseña no viajan nunca.
-export function profilePayload(rol, values) {
+// Cuerpo de la petición: el rol que queda y solo los campos modificables de ese rol. El email de clientes y
+// administradores, la fecha de incorporación y la contraseña no viajan nunca.
+export function profilePayload(rolDeLaCuenta, values) {
+  const rolDestino = values.rol ?? rolDeLaCuenta
+
   return Object.fromEntries(
-    profileFieldsFor(rol)
+    editFieldsFor(rolDestino, rolDeLaCuenta)
       .filter(isEditable)
       .map((field) => [field.name, (values[field.name] ?? '').trim()]),
   )

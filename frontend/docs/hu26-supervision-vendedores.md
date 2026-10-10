@@ -24,7 +24,7 @@ Desde el panel de control, la tarjeta **Vendedores** lleva a `/admin/sellers`: u
 | Criterio de aceptación | Cómo se cumple |
 |---|---|
 | El administrador entra en la sección de un vendedor y revisa sus productos, precios o pedidos | Lupa de cada fila, diálogo con las pestañas Datos, Productos y Pedidos. |
-| Se ve toda la información pero se bloquea cualquier edición o borrado | Los campos son de solo lectura y se ven más oscuros, hay un aviso de "Modo solo lectura", no existen botones de eliminar y las tablas no tienen ninguna acción. Desde la HU22 la pestaña Datos tiene el botón **Editar** para modificar los datos del vendedor (no sus productos, precios ni pedidos, que siguen en solo lectura; ver `docs/hu22-editar-usuario.md`). La otra acción es **Desactivar usuario** si el vendedor está activo, o **Activar usuario** si está pendiente o desactivado. Pide confirmación y cambia el estado (añadido en la HU21). |
+| Se ve toda la información pero se bloquea cualquier edición o borrado | Los campos son de solo lectura y se ven más oscuros, hay un aviso de "Modo solo lectura", no existen botones de eliminar y las tablas no tienen ninguna acción. Desde la HU22 la pestaña Datos tiene el botón **Editar** para modificar los datos del vendedor y su rol (no sus productos, precios ni pedidos, que siguen en solo lectura). Se edita con el mismo endpoint que el resto de usuarios, `PUT /api/admin/usuarios/{id}`, y si el vendedor deja de serlo se cierra su ficha (ver `docs/hu22-editar-usuario.md`). La otra acción es **Desactivar usuario** si el vendedor está activo, o **Activar usuario** si está pendiente o desactivado. Pide confirmación y cambia el estado (añadido en la HU21). |
 
 ### Filtros y ordenación del listado
 

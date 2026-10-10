@@ -206,6 +206,7 @@ describe('ProfileEditor (HU22): guardado', () => {
     expect(save).toHaveBeenCalledWith({
       nombre: 'Carla',
       apellidos: 'Moreno Gil',
+      rol: 'CLIENTE',
       dni: '10004119A',
       telefono: '620023757',
       fechaNacimiento: '1978-04-13',
@@ -307,5 +308,167 @@ describe('ProfileEditor (HU22): guardado', () => {
 
     expect(onCancel).toHaveBeenCalled()
     expect(save).not.toHaveBeenCalled()
+  })
+})
+
+describe('ProfileEditor (HU22): cambio de rol', () => {
+  const rolSeleccionado = () => screen.getByLabelText(/^rol/i)
+  const elegirRol = (user, valor) => user.selectOptions(rolSeleccionado(), valor)
+
+  it('profileEditor_ofreceElSelectorDeRolConElRolActualSeleccionado', () => {
+    renderizar()
+
+    expect(rolSeleccionado()).toHaveValue('CLIENTE')
+    expect(Array.from(rolSeleccionado().options).map((opcion) => opcion.textContent)).toEqual([
+      'Administrador',
+      'Vendedor',
+      'Cliente',
+    ])
+    expect(rolSeleccionado()).toBeEnabled()
+  })
+
+  it('profileEditor_conElRolBloqueado_deshabilitaElSelectorYExplicaPorQue', () => {
+    renderizar({ rol: ROLES.ADMIN, usuario: ADMINISTRADOR, lockRol: true })
+
+    expect(rolSeleccionado()).toBeDisabled()
+    expect(rolSeleccionado()).toHaveValue('ADMINISTRADOR')
+    expect(screen.getByText('No puedes cambiar tu propio rol.')).toBeInTheDocument()
+  })
+
+  it('profileEditor_sinBloqueo_noMuestraLaAyudaDelRolPropio', () => {
+    renderizar({ rol: ROLES.ADMIN, usuario: ADMINISTRADOR })
+
+    expect(screen.queryByText('No puedes cambiar tu propio rol.')).not.toBeInTheDocument()
+  })
+
+  it('profileEditor_alElegirAdministrador_pasaALosCamposDeUnAdministrador', async () => {
+    const user = userEvent.setup()
+    renderizar()
+
+    await elegirRol(user, 'ADMINISTRADOR')
+
+    expect(screen.getByLabelText(/^sede/i)).toBeInTheDocument()
+    expect(screen.queryByLabelText(/^dni/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/^fecha de nacimiento/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/vas a cambiar el rol de esta cuenta a administrador/i)).toBeInTheDocument()
+  })
+
+  it('profileEditor_alElegirVendedor_ofreceNombreComercialNifYCategoria', async () => {
+    const user = userEvent.setup()
+    renderizar()
+
+    await elegirRol(user, 'VENDEDOR')
+
+    expect(screen.getByLabelText(/^nombre comercial/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^nif\/dni/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^categoría principal/i)).toHaveValue('')
+  })
+
+  it('profileEditor_alElegirVendedorYGuardarSinDatos_losExigeTodosALaVezYNoGuarda', async () => {
+    const user = userEvent.setup()
+    const { save } = renderizar()
+
+    await elegirRol(user, 'VENDEDOR')
+    await guardar(user)
+
+    expect(screen.getAllByText(/este campo es obligatorio/i)).toHaveLength(3)
+    expect(save).not.toHaveBeenCalled()
+  })
+
+  it('profileEditor_alElegirVendedor_elEmailQuedaEnSoloLectura', async () => {
+    const user = userEvent.setup()
+    renderizar()
+
+    await elegirRol(user, 'VENDEDOR')
+
+    expect(screen.getByLabelText(/^correo electrónico/i)).toHaveAttribute('readonly')
+  })
+
+  it('profileEditor_alElegirAdministrador_enviaElRolNuevoYSoloLosCamposDeEseRol', async () => {
+    const user = userEvent.setup()
+    const { save } = renderizar()
+
+    await elegirRol(user, 'ADMINISTRADOR')
+    await user.type(screen.getByLabelText(/^sede/i), 'Toledo')
+    await guardar(user)
+
+    await waitFor(() => expect(save).toHaveBeenCalled())
+    expect(save).toHaveBeenCalledWith({
+      rol: 'ADMINISTRADOR',
+      nombre: 'Carlos',
+      apellidos: 'Moreno Gil',
+      sede: 'Toledo',
+      avatar: 'avatar1',
+    })
+  })
+
+  it('profileEditor_alElegirDeNuevoElRolOriginal_vuelveASusCampos', async () => {
+    const user = userEvent.setup()
+    renderizar()
+
+    await elegirRol(user, 'ADMINISTRADOR')
+    await elegirRol(user, 'CLIENTE')
+
+    expect(screen.getByLabelText(/^dni/i)).toHaveValue('10004119A')
+    expect(screen.queryByText(/vas a cambiar el rol/i)).not.toBeInTheDocument()
+  })
+
+  it('profileEditor_alElegirClienteDesdeVendedor_pideLosDatosDeClienteVacios', async () => {
+    const user = userEvent.setup()
+    renderizar({ rol: ROLES.VENDEDOR, usuario: VENDEDOR })
+
+    await elegirRol(user, 'CLIENTE')
+    await guardar(user)
+
+    expect(screen.getByLabelText(/^dni/i)).toHaveValue('')
+    expect(screen.getAllByText(/este campo es obligatorio/i)).toHaveLength(2)
+  })
+
+  it('profileEditor_conUnClientePendienteQuePasaAAdministrador_avisaDeQueQuedaraActivo', async () => {
+    const user = userEvent.setup()
+    renderizar({ usuario: { ...CLIENTE, estado: 'PENDIENTE' } })
+    expect(screen.getByLabelText('Estado')).toHaveValue('Pendiente')
+    expect(screen.queryByText(/no pueden estar pendientes/i)).not.toBeInTheDocument()
+
+    await elegirRol(user, 'ADMINISTRADOR')
+
+    expect(screen.getByText(/los administradores no pueden estar pendientes/i)).toBeInTheDocument()
+    expect(screen.getByLabelText('Estado')).toHaveValue('Activo')
+  })
+
+  it('profileEditor_conUnClienteActivoQuePasaAAdministrador_noMuestraElAvisoDePendiente', async () => {
+    const user = userEvent.setup()
+    renderizar()
+
+    await elegirRol(user, 'ADMINISTRADOR')
+
+    expect(screen.queryByText(/no pueden estar pendientes/i)).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Estado')).toHaveValue('Activo')
+  })
+
+  it('profileEditor_conElBackendRechazandoElCambioDeRolPropio_muestraSuMensaje', async () => {
+    const user = userEvent.setup()
+    const save = vi.fn().mockRejectedValue(new ApiError(409, 'conflicto', 'CANNOT_CHANGE_OWN_ROLE'))
+    const { onSaved } = renderizar({ save })
+
+    await elegirRol(user, 'ADMINISTRADOR')
+    await guardar(user)
+
+    expect(await screen.findByText('No puedes cambiar tu propio rol.')).toBeInTheDocument()
+    expect(onSaved).not.toHaveBeenCalled()
+  })
+
+  it('profileEditor_conElBackendRechazandoDegradarAlUltimoAdministrador_muestraSuMensaje', async () => {
+    const user = userEvent.setup()
+    const save = vi.fn().mockRejectedValue(new ApiError(409, 'conflicto', 'LAST_ACTIVE_ADMIN'))
+    renderizar({ rol: ROLES.ADMIN, usuario: ADMINISTRADOR, save })
+
+    await elegirRol(user, 'CLIENTE')
+    await user.type(screen.getByLabelText(/^dni/i), '12345678Z')
+    fireEvent.change(screen.getByLabelText(/^fecha de nacimiento/i), { target: { value: '1990-05-20' } })
+    await guardar(user)
+
+    expect(await screen.findByText('No se puede degradar al último administrador.')).toBeInTheDocument()
+    expect(screen.getByText(/vas a cambiar el rol/i)).toBeInTheDocument()
   })
 })
