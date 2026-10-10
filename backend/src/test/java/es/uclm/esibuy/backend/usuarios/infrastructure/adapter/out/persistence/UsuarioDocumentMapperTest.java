@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 
+import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
@@ -17,6 +18,8 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -130,6 +133,21 @@ class UsuarioDocumentMapperTest {
         UsuarioDocument guardado = mapper.aDocumento(mapper.aDominio(pendiente));
 
         assertEquals("PENDIENTE", guardado.getEstado());
+    }
+
+    @Test
+    @DisplayName("HU1-CP11: un documento que no cumple las reglas del dominio no se confunde con un error del cliente")
+    void documentoInvalidoNoSeConfundeConUnErrorDelCliente() {
+        // Un documento corrupto (p. ej. un DNI mal formado guardado a mano) es un fallo del servidor, no del
+        // cliente: el mapper lo envuelve en una excepción de infraestructura para que acabe en un 500 y no en
+        // el 400 del registro. La causa original se conserva para el log.
+        UsuarioDocument corrupto = documentoDeCliente("juan@uclm.es");
+        corrupto.setDni("DNI-INVALIDO");
+
+        UsuarioPersistidoInvalidoException excepcion = assertThrows(UsuarioPersistidoInvalidoException.class,
+                () -> mapper.aDominio(corrupto));
+
+        assertInstanceOf(UsuarioInvalidoException.class, excepcion.getCause());
     }
 
     private static Usuario clienteNuevo() {
