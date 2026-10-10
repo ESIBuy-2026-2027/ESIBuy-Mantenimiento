@@ -38,6 +38,7 @@ import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -183,6 +184,35 @@ class UsuarioControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.mensaje").exists())
                 .andExpect(jsonPath("$.mensaje").value(not(containsString("ana@localhost"))));
+    }
+
+    @Test
+    @DisplayName("HU1-CP08: un nombre de 31 caracteres devuelve 400 y no registra")
+    void nombreDe31CaracteresDevuelve400() throws Exception {
+        // Frontera del máximo del Product Owner (30): la capa web la comprueba antes de llegar al caso de uso
+        String cuerpo = json("juan@uclm.es", "clave1234").replace("\"nombre\": \"Juan\"", "\"nombre\": \"" + "J".repeat(31) + "\"");
+
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(cuerpo))
+                .andExpect(status().isBadRequest());
+
+        verify(registroUsuario, never()).registrar(any());
+    }
+
+    @Test
+    @DisplayName("HU1-CP08: un email de 101 caracteres devuelve 400 y no registra")
+    void emailDe101CaracteresDevuelve400() throws Exception {
+        // Parte local de 61 y dominio de 39: cada trozo respeta los límites de @Email, así que lo único
+        // que puede rechazar los 101 caracteres es el máximo de 100 del contrato (frontera: 100 se acepta).
+        String dominio = "@" + "b".repeat(36) + ".es";
+        String de100 = "a".repeat(100 - dominio.length()) + dominio;
+        String de101 = "a".repeat(101 - dominio.length()) + dominio;
+
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(json(de100, "clave1234")))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(json(de101, "clave1234")))
+                .andExpect(status().isBadRequest());
+
+        verify(registroUsuario, times(1)).registrar(any());
     }
 
     @Test
