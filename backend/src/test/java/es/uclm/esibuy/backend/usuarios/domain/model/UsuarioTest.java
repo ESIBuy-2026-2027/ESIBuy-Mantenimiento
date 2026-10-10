@@ -233,7 +233,7 @@ class UsuarioTest {
         DatosCliente nuevosDatosCliente = new DatosCliente(
                 TipoCliente.ESTANDAR, new Dni("10004119A"), LocalDate.of(1978, 4, 13), new Telefono("620023757"));
 
-        usuario.modificarDatos(nuevosDatosPersonales, nuevosDatosCliente, HOY);
+        usuario.cambiarRol(Rol.CLIENTE, nuevosDatosPersonales, nuevosDatosCliente, HOY);
 
         assertEquals(nuevosDatosPersonales, usuario.getDatosPersonales());
         assertEquals(nuevosDatosCliente, usuario.getDatosCliente());
@@ -247,7 +247,7 @@ class UsuarioTest {
         Usuario administrador = new Usuario("u-3", DATOS_PERSONALES, EMAIL, HASH, Rol.ADMINISTRADOR, null, null);
         DatosPersonales nuevosDatosPersonales = new DatosPersonales("Diego", "Delgado Iglesias", "avatar3");
 
-        administrador.modificarDatos(nuevosDatosPersonales, null, HOY);
+        administrador.cambiarRol(Rol.ADMINISTRADOR, nuevosDatosPersonales, null, HOY);
 
         assertEquals(nuevosDatosPersonales, administrador.getDatosPersonales());
         assertNull(administrador.getDatosCliente());
@@ -261,7 +261,7 @@ class UsuarioTest {
         DatosCliente nacidoHace17Anos = datosClienteNacidoEl(HOY.minusYears(17));
 
         assertThrows(UsuarioInvalidoException.class,
-                () -> usuario.modificarDatos(nuevosDatosPersonales, nacidoHace17Anos, HOY));
+                () -> usuario.cambiarRol(Rol.CLIENTE, nuevosDatosPersonales, nacidoHace17Anos, HOY));
         assertEquals(DATOS_PERSONALES, usuario.getDatosPersonales());
         assertEquals(DATOS_CLIENTE, usuario.getDatosCliente());
     }
@@ -273,9 +273,9 @@ class UsuarioTest {
         DatosCliente cumple18Hoy = datosClienteNacidoEl(HOY.minusYears(18));
         DatosCliente cumple18Manana = datosClienteNacidoEl(HOY.minusYears(18).plusDays(1));
 
-        assertDoesNotThrow(() -> usuario.modificarDatos(DATOS_PERSONALES, cumple18Hoy, HOY));
+        assertDoesNotThrow(() -> usuario.cambiarRol(Rol.CLIENTE, DATOS_PERSONALES, cumple18Hoy, HOY));
         assertThrows(UsuarioInvalidoException.class,
-                () -> usuario.modificarDatos(DATOS_PERSONALES, cumple18Manana, HOY));
+                () -> usuario.cambiarRol(Rol.CLIENTE, DATOS_PERSONALES, cumple18Manana, HOY));
     }
 
     @Test
@@ -284,9 +284,9 @@ class UsuarioTest {
         Usuario usuario = cliente();
         Usuario administrador = new Usuario("u-3", DATOS_PERSONALES, EMAIL, HASH, Rol.ADMINISTRADOR, null, null);
 
-        assertThrows(UsuarioInvalidoException.class, () -> usuario.modificarDatos(DATOS_PERSONALES, null, HOY));
+        assertThrows(UsuarioInvalidoException.class, () -> usuario.cambiarRol(Rol.CLIENTE, DATOS_PERSONALES, null, HOY));
         assertThrows(UsuarioInvalidoException.class,
-                () -> administrador.modificarDatos(DATOS_PERSONALES, DATOS_CLIENTE, HOY));
+                () -> administrador.cambiarRol(Rol.ADMINISTRADOR, DATOS_PERSONALES, DATOS_CLIENTE, HOY));
         assertEquals(DATOS_CLIENTE, usuario.getDatosCliente());
         assertNull(administrador.getDatosCliente());
     }

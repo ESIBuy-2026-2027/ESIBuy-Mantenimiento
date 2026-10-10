@@ -206,7 +206,7 @@ class UsuarioMongoAdapterTest {
         DatosCliente nuevosDatosCliente = new DatosCliente(TipoCliente.ESTANDAR, new Dni("10004119A"),
                 LocalDate.of(1978, 4, 13), new Telefono("620023757"));
 
-        guardado.modificarDatos(new DatosPersonales("Carla", "Moreno Gil", "avatar1"), nuevosDatosCliente, HOY);
+        guardado.cambiarRol(Rol.CLIENTE, new DatosPersonales("Carla", "Moreno Gil", "avatar1"), nuevosDatosCliente, HOY);
         adapter.guardar(guardado);
 
         assertEquals(1, usuarioMongoRepository.count());
@@ -226,7 +226,7 @@ class UsuarioMongoAdapterTest {
         DatosCliente conDniDeJuan = new DatosCliente(TipoCliente.PREMIUM, new Dni("12345678Z"),
                 LocalDate.of(1996, 5, 20), null);
 
-        ana.modificarDatos(ana.getDatosPersonales(), conDniDeJuan, HOY);
+        ana.cambiarRol(Rol.CLIENTE, ana.getDatosPersonales(), conDniDeJuan, HOY);
 
         assertThrows(DniYaRegistradoException.class, () -> adapter.guardar(ana));
         assertEquals("87654321X", adapter.buscarPorCorreo("ana@uclm.es").orElseThrow().getDatosCliente().dni().valor());
