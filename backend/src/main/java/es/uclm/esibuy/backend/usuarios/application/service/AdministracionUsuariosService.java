@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
@@ -55,6 +56,10 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
     @Override
     public Usuario editar(String usuarioId, EditarUsuarioCommand comando) {
         Usuario usuario = buscar(usuarioId);
+        // PENDIENTE (T43): el cambio de rol, con sus reglas (propio rol, último administrador).
+        if (comando.rol() != usuario.getRol()) {
+            throw new UsuarioInvalidoException("El cambio de rol todavía no está disponible");
+        }
         DatosPersonales datosPersonales = new DatosPersonales(comando.nombre(), comando.apellidos(),
                 comando.imagenPerfil());
         usuario.modificarDatos(datosPersonales, datosCliente(usuario.getRol(), comando), LocalDate.now(reloj));
