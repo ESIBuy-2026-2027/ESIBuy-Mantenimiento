@@ -2,7 +2,6 @@ package es.uclm.esibuy.backend.usuarios.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
 import org.junit.jupiter.api.DisplayName;
@@ -68,7 +67,7 @@ class EmailTest {
     @Test
     @DisplayName("HU1-CP18: quita los espacios de los extremos del email")
     void quitaLosEspaciosDeLosExtremos() {
-        // TODO ciclo 2
-        fail("Funcionalidad no implementada");
+        // Un espacio al copiar y pegar no debe impedir el registro
+        assertEquals("ana@uclm.es", new Email("  ana@uclm.es ").valor());
     }
 }
