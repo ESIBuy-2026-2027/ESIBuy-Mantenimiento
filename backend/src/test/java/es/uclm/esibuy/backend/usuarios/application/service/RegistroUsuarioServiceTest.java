@@ -31,7 +31,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -262,7 +261,10 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP17: rechaza una contraseña sin símbolo y no guarda nada")
     void rechazaContrasenaSinSimboloYNoGuardaNada() {
-        // TODO ciclo 9 (T239): la composición de la contraseña se aplica también al registrar
-        fail("Funcionalidad no implementada");
+        lenient().when(hashContrasena.hashear("Clave1234")).thenReturn("hash-simulado");
+
+        assertThrows(ContrasenaInvalidaException.class, () -> registroUsuario.registrar(comando("juan@uclm.es", "Clave1234")));
+
+        verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
 }
