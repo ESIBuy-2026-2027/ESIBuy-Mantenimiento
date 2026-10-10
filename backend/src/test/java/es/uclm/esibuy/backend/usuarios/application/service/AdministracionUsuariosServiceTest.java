@@ -150,17 +150,64 @@ class AdministracionUsuariosServiceTest {
     }
 
     @Test
-    @DisplayName("HU22-CP05: editar con un rol distinto del actual falla y no guarda nada (el cambio de rol llega en la T43)")
-    void rechazaEditarConUnRolDistintoDelActual() {
+    @DisplayName("HU22-CP13: pasar una cuenta a vendedor falla y no guarda nada (aún no existen los datos del vendedor)")
+    void rechazaPasarUnaCuentaAVendedor() {
         Usuario cliente = clienteLucia();
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(cliente));
-        // Datos de cliente válidos: solo falla el rol
-        EditarUsuarioCommand aAdministrador = new EditarUsuarioCommand(Rol.ADMINISTRADOR, "Carla", "Moreno Gil",
-                null, "10004119A", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
+        EditarUsuarioCommand aVendedor = new EditarUsuarioCommand(Rol.VENDEDOR, "Lucía", "Torres Vega",
+                null, null, null, null, null);
 
-        assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", aAdministrador));
+        assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", aVendedor));
         assertEquals(Rol.CLIENTE, cliente.getRol());
         assertEquals(new DatosPersonales("Lucía", "Torres Vega", null), cliente.getDatosPersonales());
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU22-CP09: un cliente que pasa a administrador se guarda con el rol nuevo y sin datos de cliente")
+    void editarPasaUnClienteAAdministrador() {
+        Usuario cliente = clienteLucia();
+        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(cliente));
+        // Los datos de cliente que lleguen se ignoran: el rol que queda es administrador
+        EditarUsuarioCommand aAdministrador = new EditarUsuarioCommand(Rol.ADMINISTRADOR, "Lucía", "Torres Vega",
+                "avatar3", "12345678Z", null, LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR);
+
+        Usuario editado = servicio.editar("u-1", aAdministrador);
+
+        assertEquals(Rol.ADMINISTRADOR, editado.getRol());
+        assertNull(editado.getDatosCliente());
+        assertEquals(new DatosPersonales("Lucía", "Torres Vega", "avatar3"), editado.getDatosPersonales());
+        verify(usuarioRepository).guardar(editado);
+    }
+
+    @Test
+    @DisplayName("HU22-CP09: un administrador que pasa a cliente se guarda con sus nuevos datos de cliente")
+    void editarPasaUnAdministradorACliente() {
+        Usuario administrador = new Usuario("u-2", new DatosPersonales("Diego", "Delgado", null),
+                new Email("diego@uclm.es"), "hash-simulado", Rol.ADMINISTRADOR, null, null);
+        when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(administrador));
+        EditarUsuarioCommand aCliente = new EditarUsuarioCommand(Rol.CLIENTE, "Diego", "Delgado", null,
+                "10004119A", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
+
+        Usuario editado = servicio.editar("u-2", aCliente);
+
+        assertEquals(Rol.CLIENTE, editado.getRol());
+        assertEquals(new Dni("10004119A"), editado.getDatosCliente().dni());
+        verify(usuarioRepository).guardar(editado);
+    }
+
+    @Test
+    @DisplayName("HU22-CP06: un administrador que pasa a cliente con el DNI de otra cuenta falla y no guarda nada")
+    void rechazaPasarAClienteConElDniDeOtraCuenta() {
+        Usuario administrador = new Usuario("u-2", new DatosPersonales("Diego", "Delgado", null),
+                new Email("diego@uclm.es"), "hash-simulado", Rol.ADMINISTRADOR, null, null);
+        when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(administrador));
+        when(usuarioRepository.existePorDni("10004119A")).thenReturn(true);
+        EditarUsuarioCommand aCliente = new EditarUsuarioCommand(Rol.CLIENTE, "Diego", "Delgado", null,
+                "10004119A", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
+
+        assertThrows(DniYaRegistradoException.class, () -> servicio.editar("u-2", aCliente));
+        assertEquals(Rol.ADMINISTRADOR, administrador.getRol());
         verify(usuarioRepository, never()).guardar(any());
     }
 
