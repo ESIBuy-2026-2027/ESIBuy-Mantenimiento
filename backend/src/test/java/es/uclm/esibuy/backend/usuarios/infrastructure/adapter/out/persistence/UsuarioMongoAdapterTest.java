@@ -4,6 +4,7 @@ import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.shared.config.MongoConfig;
 import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColecciones;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
@@ -86,6 +87,27 @@ class UsuarioMongoAdapterTest {
 
         assertThrows(CorreoYaRegistradoException.class, () -> adapter.guardar(duplicado));
         assertEquals(1, usuarioMongoRepository.count());
+    }
+
+    @Test
+    @DisplayName("HU1-CP12: la base de datos rechaza un segundo cliente con el mismo DNI y lo distingue del email repetido")
+    void rechazaDniDuplicadoEnLaBaseDeDatos() {
+        // Dos emails distintos y el mismo DNI: solo el índice único rol_dni (AB#210) lo para. El adaptador
+        // tiene que distinguir qué índice ha fallado para no confundirlo con un correo repetido.
+        adapter.guardar(cliente("juan@uclm.es", "hash-1"));
+        Usuario mismoDni = cliente("otro@uclm.es", "hash-2");
+
+        assertThrows(DniYaRegistradoException.class, () -> adapter.guardar(mismoDni));
+        assertEquals(1, usuarioMongoRepository.count());
+    }
+
+    @Test
+    @DisplayName("HU1-CP12: existePorDni devuelve true si el DNI ya está guardado y false si no")
+    void existePorDniDistingueLosDniGuardados() {
+        adapter.guardar(cliente("juan@uclm.es", "hash-1"));
+
+        assertTrue(adapter.existePorDni("12345678Z"));
+        assertFalse(adapter.existePorDni("87654321X"));
     }
 
     @Test
