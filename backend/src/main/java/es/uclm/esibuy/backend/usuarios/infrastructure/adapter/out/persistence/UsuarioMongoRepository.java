@@ -18,4 +18,6 @@ public interface UsuarioMongoRepository extends MongoRepository<UsuarioDocument,
     boolean existsByDni(String dni);
 
     Optional<UsuarioDocument> findByEmail(String email);
+
+    long countByRolAndEstado(String rol, String estado);
 }

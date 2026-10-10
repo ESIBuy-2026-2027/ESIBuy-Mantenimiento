@@ -525,6 +525,113 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU22 · Modificar datos y rol de un usuario
+
+### Tabla A · HU22 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU22-CP01 | El administrador edita los datos de un cliente y recibe su ficha actualizada (el teléfono es opcional) | Unitario + integración | 5 | 🔍 En revisión |
+| HU22-CP02 | El administrador edita los datos de un administrador (nombre, apellidos e imagen) | Unitario | 2 | 🔍 En revisión |
+| HU22-CP03 | El administrador edita los datos de un vendedor (nombre, apellidos e imagen) | Unitario | 1 | 🔍 En revisión |
+| HU22-CP04 | El email, la contraseña, el estado y el rol no cambian aunque lleguen en el cuerpo | Unitario + integración (capa web) | 2 | 🔍 En revisión |
+| HU22-CP05 | Rechaza datos no válidos (400): sin rol o con un rol distinto del actual, nombre o apellidos no válidos, DNI mal formado o cliente menor de edad; no guarda nada | Unitario + integración (capa web) | 8 | 🔍 En revisión |
+| HU22-CP06 | Rechaza un DNI que ya es de otra cuenta (409 `DNI_ALREADY_REGISTERED`); conservar el propio DNI no cuenta | Unitario + integración | 4 | 🔍 En revisión |
+| HU22-CP07 | Editar un usuario que no existe devuelve 404 | Unitario + integración (capa web) | 2 | 🔍 En revisión |
+| HU22-CP08 | Solo un administrador con sesión y token CSRF puede editar usuarios (401 / 403) | Integración (capa web) | 3 | 🔍 En revisión |
+
+Notas:
+- **HU22-CP01 a CP08:** casos propuestos en la T42/T44 (AB#42, AB#44) a partir del contrato del frontend (`frontend/docs/hu22-editar-usuario.md`). Pendientes de confirmar con el equipo y de añadir a la HU22 en Azure Boards. Se desarrollaron con TDD (ciclos rojo, verde y refactor); los de CP03, CP04, CP06 (persistencia) y CP08 son tests de protección sobre código que ya existía y pasaron a la primera.
+- **Backend (T42):** `PUT /api/admin/usuarios/{id}` con `EditarUsuarioRequest`, en `AdministracionUsuariosUseCase.editar`. Devuelve la ficha de la HU20 (`UsuarioDetalleResponse`).
+- **Decisiones del equipo (10/10/2026):** el email no se edita en ningún rol (también en el vendedor, PR #81), así que el 409 `EMAIL_ALREADY_REGISTERED` ya no forma parte de la HU22. El teléfono es opcional: en blanco (`""`) deja al cliente sin teléfono.
+- **Cambio de rol:** hasta la T43 (AB#43) un `rol` distinto del actual se rechaza con 400 (CP05). La T43 añadirá el cambio de rol y sus reglas (propio rol, último administrador).
+- **Pendiente:** la sede del administrador y el nombre comercial, el NIF y la categoría del vendedor no existen todavía en el modelo (ver `UsuarioDetalleResponse` y `VendedorResponse`); cuando existan se añadirán a la edición, con el 409 `COMMERCIAL_NAME_ALREADY_REGISTERED`. `existePorDni` no distingue rol, aunque el índice `rol_dni` sí: revisar cuando los vendedores tengan DNI.
+- **Frontend:** los tests de la HU22 (AB#46) no tienen todavía filas en la matriz.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU22-CP01 | `UsuarioTest` | `modificarDatosCambiaLosDatosDeUnCliente` | Dominio | AB#44 | PR #82 | 🔍 |
+| HU22-CP01 | `AdministracionUsuariosServiceTest` | `editaUnClienteYLoGuarda` | Aplicación | AB#44 | PR #82 | 🔍 |
+| HU22-CP01 | `AdministracionUsuariosServiceTest` | `editarUnClienteConElTelefonoEnBlancoLoDejaSinTelefono` | Aplicación | AB#44 | PR #82 | 🔍 |
+| HU22-CP01 | `UsuarioControllerTest` | `administradorEditaUnClienteYRecibeSuFicha` | Infraestructura | AB#44 | PR #82 | 🔍 |
+| HU22-CP01 | `UsuarioMongoAdapterTest` | `guardarUnUsuarioEditadoActualizaSuDocumento` | Infraestructura | AB#44 | PR #82 | 🔍 |
+| HU22-CP02 | `UsuarioTest` | `modificarDatosCambiaLosDatosDeUnAdministrador` | Dominio | AB#44 | PR #82 | 🔍 |
+| HU22-CP02 | `AdministracionUsuariosServiceTest` | `editaUnAdministradorYLoGuarda` | Aplicación | AB#44 | PR #82 | 🔍 |
+| HU22-CP03 | `AdministracionUsuariosServiceTest` | `editaUnVendedorYLoGuarda` | Aplicación | AB#44 | PR #82 | 🔍 |
+| HU22-CP04 | `AdministracionUsuariosServiceTest` | `editarNoCambiaEmailContrasenaEstadoNiRol` | Aplicación | AB#44 | PR #82 | 🔍 |
+| HU22-CP04 | `UsuarioControllerTest` | `editarIgnoraEmailContrasenaYEstadoDelCuerpo` | Infraestructura | AB#44 | PR #82 | 🔍 |
+| HU22-CP05 | `UsuarioTest` | `modificarDatosRechazaUnClienteMenorDeEdad` | Dominio | AB#44 | PR #82 | 🔍 |
+| HU22-CP05 | `UsuarioTest` | `modificarDatosAceptaUnClienteQueCumple18Hoy` | Dominio | AB#44 | PR #82 | 🔍 |
+| HU22-CP05 | `UsuarioTest` | `modificarDatosExigeDatosDeClienteCoherentesConElRol` | Dominio | AB#44 | PR #82 | 🔍 |
+| HU22-CP05 | `AdministracionUsuariosServiceTest` | `rechazaEditarUnClienteConDatosNoValidos` | Aplicación | AB#44 | PR #82 | 🔍 |
+| HU22-CP05 | `AdministracionUsuariosServiceTest` | `rechazaEditarConUnRolDistintoDelActual` | Aplicación | AB#44 | PR #82 | 🔍 |
+| HU22-CP05 | `AdministracionUsuariosServiceTest` | `rechazaEditarSinRol` | Aplicación | AB#44 | PR #82 | 🔍 |
+| HU22-CP05 | `UsuarioControllerTest` | `rechazaUnCuerpoDeEdicionNoValido` (5 variantes) | Infraestructura | AB#44 | PR #82 | 🔍 |
+| HU22-CP05 | `UsuarioControllerTest` | `editarConDatosQueElDominioRechazaDevuelve400` | Infraestructura | AB#44 | PR #82 | 🔍 |
+| HU22-CP06 | `AdministracionUsuariosServiceTest` | `rechazaEditarUnClienteConElDniDeOtraCuenta` | Aplicación | AB#44 | PR #82 | 🔍 |
+| HU22-CP06 | `AdministracionUsuariosServiceTest` | `editarUnClienteQueConservaSuDniNoLoComprueba` | Aplicación | AB#44 | PR #82 | 🔍 |
+| HU22-CP06 | `UsuarioControllerTest` | `editarConElDniDeOtraCuentaDevuelve409` | Infraestructura | AB#44 | PR #82 | 🔍 |
+| HU22-CP06 | `UsuarioMongoAdapterTest` | `rechazaEditarUnClienteConElDniDeOtroEnLaBaseDeDatos` | Infraestructura | AB#44 | PR #82 | 🔍 |
+| HU22-CP07 | `AdministracionUsuariosServiceTest` | `rechazaEditarUnUsuarioQueNoExiste` | Aplicación | AB#44 | PR #82 | 🔍 |
+| HU22-CP07 | `UsuarioControllerTest` | `editarUnUsuarioInexistenteDevuelve404` | Infraestructura | AB#44 | PR #82 | 🔍 |
+| HU22-CP08 | `UsuarioControllerTest` | `unNoAdministradorNoPuedeEditarUsuarios` (cliente y vendedor) | Infraestructura | AB#44 | PR #82 | 🔍 |
+| HU22-CP08 | `UsuarioControllerTest` | `editarSinSesionEstaProtegido` | Infraestructura | AB#44 | PR #82 | 🔍 |
+| HU22-CP08 | `UsuarioControllerTest` | `editarSinTokenCsrfSeRechaza` | Infraestructura | AB#44 | PR #82 | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `UsuarioTest`: `usuarios/domain/model/` (JUnit, sin Spring)
+- `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
+- `UsuarioControllerTest`: `usuarios/infrastructure/adapter/in/web/` (con `@WebMvcTest` y usuarios simulados)
+- `UsuarioMongoAdapterTest`: `usuarios/infrastructure/adapter/out/persistence/` (con Testcontainers)
+
+---
+
+## HU23 · Desactivar usuario
+
+### Tabla A · HU23 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU23-CP01 | Un administrador desactiva una cuenta activa y recibe sus datos con estado DESACTIVADO | Unitario + integración (capa web) | 2 | 🔍 En revisión |
+| HU23-CP02 | Desactivar un usuario que no existe devuelve 404 y no guarda nada | Unitario + integración (capa web) | 2 | 🔍 En revisión |
+| HU23-CP03 | Un administrador no puede desactivar su propia cuenta (409 `CANNOT_DEACTIVATE_SELF`) | Unitario + integración (capa web) | 2 | 🔍 En revisión |
+| HU23-CP04 | No se puede desactivar al último administrador activo (409 `LAST_ACTIVE_ADMIN`) | Unitario + integración | 4 | 🔍 En revisión |
+| HU23-CP05 | Se puede desactivar a un administrador activo si queda otro administrador activo | Unitario | 1 | 🔍 En revisión |
+| HU23-CP06 | Sin sesión (401) o sin ser administrador (403) no se puede desactivar una cuenta | Integración (capa web) | 2 | 🔍 En revisión |
+
+Notas:
+- **HU23-CP01 a CP06:** casos propuestos en la T39 (AB#39) a partir del contrato del frontend (`frontend/docs/hu23-desactivar-usuario.md`). Pendientes de confirmar con el equipo y de añadir a la HU23 en Azure Boards.
+- **Backend (T37/T38, AB#37 y AB#38):** el mismo `PATCH /api/admin/usuarios/{id}/status` de la HU24, ahora con `{ "estado": "DESACTIVADO" }`, en `AdministracionUsuariosUseCase.desactivar`. El controlador pasa el email del usuario en sesión (`Authentication.getName()`, como `/api/auth/me`) para la regla de no desactivarse a sí mismo. El conteo de administradores activos es `UsuarioRepositoryPort.contarAdministradoresActivos()`. Los 409 llevan los códigos que espera el frontend.
+- **Pendiente (otra task de la HU23):** invalidar la sesión del usuario desactivado, que depende de que el login (HU2) cree la sesión. Entonces habrá que confirmar que el usuario en sesión se identifica por su email.
+- **Frontend:** los tests de la HU23 (AB#41) no tienen todavía filas en la matriz.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU23-CP01 | `AdministracionUsuariosServiceTest` | `desactivaUnaCuentaActivaYLaGuarda` | Aplicación | AB#39 | PR #79 | 🔍 |
+| HU23-CP01 | `UsuarioControllerTest` | `administradorDesactivaUnaCuentaYRecibeSusDatos` | Infraestructura | AB#39 | PR #79 | 🔍 |
+| HU23-CP02 | `AdministracionUsuariosServiceTest` | `rechazaDesactivarUnUsuarioQueNoExiste` | Aplicación | AB#39 | PR #79 | 🔍 |
+| HU23-CP02 | `UsuarioControllerTest` | `desactivarUnUsuarioInexistenteDevuelve404` | Infraestructura | AB#39 | PR #79 | 🔍 |
+| HU23-CP03 | `AdministracionUsuariosServiceTest` | `rechazaQueUnAdministradorSeDesactiveASiMismo` | Aplicación | AB#39 | PR #79 | 🔍 |
+| HU23-CP03 | `UsuarioControllerTest` | `desactivarseASiMismoDevuelve409` | Infraestructura | AB#39 | PR #79 | 🔍 |
+| HU23-CP04 | `AdministracionUsuariosServiceTest` | `rechazaDesactivarAlUltimoAdministradorActivo` | Aplicación | AB#39 | PR #79 | 🔍 |
+| HU23-CP04 | `UsuarioControllerTest` | `desactivarAlUltimoAdministradorActivoDevuelve409` | Infraestructura | AB#39 | PR #79 | 🔍 |
+| HU23-CP04 | `UsuarioMongoAdapterTest` | `contarAdministradoresActivosSoloCuentaLosAdministradoresActivos` | Infraestructura | AB#39 | PR #79 | 🔍 |
+| HU23-CP04 | `UsuarioMongoAdapterTest` | `contarAdministradoresActivosDevuelveCeroSinAdministradoresActivos` | Infraestructura | AB#39 | PR #79 | 🔍 |
+| HU23-CP05 | `AdministracionUsuariosServiceTest` | `desactivaAUnAdministradorSiQuedaOtroActivo` | Aplicación | AB#39 | PR #79 | 🔍 |
+| HU23-CP06 | `UsuarioControllerTest` | `unNoAdministradorNoPuedeDesactivarCuentas` (cliente y vendedor) | Infraestructura | AB#39 | PR #79 | 🔍 |
+| HU23-CP06 | `UsuarioControllerTest` | `desactivarSinSesionEstaProtegido` | Infraestructura | AB#39 | PR #79 | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
+- `UsuarioControllerTest`: `usuarios/infrastructure/adapter/in/web/` (con `@WebMvcTest` y `@WithMockUser`)
+- `UsuarioMongoAdapterTest`: `usuarios/infrastructure/adapter/out/persistence/` (con Testcontainers)
+
+---
+
 ## HU24 · Activar usuario
 
 ### Tabla A · HU24 ↔ casos de prueba
@@ -532,13 +639,14 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
 | HU24-CP01 | Un administrador activa una cuenta desactivada y recibe sus datos con estado ACTIVO | Unitario + integración | 3 | ✅ Pasa |
-| HU24-CP02 | Rechaza un estado distinto de ACTIVO (400) y no cambia nada | Integración (capa web) | 1 | ✅ Pasa |
+| HU24-CP02 | Rechaza un estado que no es ACTIVO ni DESACTIVADO (400) y no cambia nada | Integración (capa web) | 1 | 🔍 En revisión |
 | HU24-CP03 | Activar un usuario que no existe devuelve 404 | Unitario + integración | 3 | ✅ Pasa |
 | HU24-CP04 | Un usuario que no es administrador no puede activar cuentas (403) | Integración (capa web) | 1 | ✅ Pasa |
 
 Notas:
 - **HU24-CP01 a CP04:** casos propuestos en la T33/T34 (AB#33, AB#34) a partir del contrato del frontend (`frontend/docs/hu24-activar-usuario.md`). Pendientes de confirmar con el equipo y de añadir a la HU24 en Azure Boards.
-- **Backend (T33/T34):** `PATCH /api/admin/usuarios/{id}/status` con `{ "estado": "ACTIVO" }`, en `AdministracionUsuariosUseCase`. Solo admite `ACTIVO`: la HU23 añadirá `DESACTIVADO` en el mismo endpoint. El 403 lo da la regla de `SecurityConfig` de la T58.
+- **Backend (T33/T34):** `PATCH /api/admin/usuarios/{id}/status` con `{ "estado": "ACTIVO" }`, en `AdministracionUsuariosUseCase`. El 403 lo da la regla de `SecurityConfig` de la T58.
+- **HU23 (T39):** el mismo endpoint admite ahora también `DESACTIVADO` (ver la HU23). Por eso HU24-CP02 envía `BLOQUEADO` en lugar de `DESACTIVADO`, y su método pasó de `rechazaUnEstadoDistintoDeActivo` a `rechazaUnEstadoNoAdmitido`.
 - **Pendiente con el equipo:** el `PATCH` real necesitará el token CSRF (se decide con el login, task 230); y en la aplicación arrancada el 400 de CP02 sale como 403 por el fallo de `/error` bloqueado en `SecurityConfig`. Con MockMvc se ve el 400.
 - **Frontend:** los tests de la HU24 (AB#36) no tienen todavía filas en la matriz.
 
@@ -549,7 +657,7 @@ Notas:
 | HU24-CP01 | `AdministracionUsuariosServiceTest` | `activaUnaCuentaDesactivadaYLaGuarda` | Aplicación | AB#34 | PR #63 | ✅ |
 | HU24-CP01 | `UsuarioControllerTest` | `administradorActivaUnaCuentaYRecibeSusDatos` | Infraestructura | AB#34 | PR #63 | ✅ |
 | HU24-CP01 | `UsuarioMongoAdapterTest` | `buscarPorIdDevuelveElUsuarioGuardado` | Infraestructura | AB#34 | PR #63 | ✅ |
-| HU24-CP02 | `UsuarioControllerTest` | `rechazaUnEstadoDistintoDeActivo` | Infraestructura | AB#34 | PR #63 | ✅ |
+| HU24-CP02 | `UsuarioControllerTest` | `rechazaUnEstadoNoAdmitido` | Infraestructura | AB#34 · AB#39 | PR #63 (modificado en PR #79) | 🔍 |
 | HU24-CP03 | `AdministracionUsuariosServiceTest` | `rechazaActivarUnUsuarioQueNoExiste` | Aplicación | AB#34 | PR #63 | ✅ |
 | HU24-CP03 | `UsuarioControllerTest` | `activarUnUsuarioInexistenteDevuelve404` | Infraestructura | AB#34 | PR #63 | ✅ |
 | HU24-CP03 | `UsuarioMongoAdapterTest` | `buscarPorIdDevuelveVacioSiNoExiste` | Infraestructura | AB#34 | PR #63 | ✅ |
