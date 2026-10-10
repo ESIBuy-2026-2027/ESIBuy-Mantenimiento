@@ -15,6 +15,12 @@ const STEP_MESSAGES = {
   authenticator: MESSAGES.authenticatorCode,
 }
 
+// La cuenta existe y la contraseña es correcta, pero un administrador aún no la ha activado (HU2, AB#236).
+// No es un error de formulario: el login lo muestra con una pantalla propia, no con un mensaje.
+export function isPendingAccountError(error) {
+  return error instanceof ApiError && error.status === 403 && error.code === 'ACCOUNT_PENDING'
+}
+
 export function getLoginErrorMessage(error, step) {
   if (!(error instanceof ApiError) || error.status >= 500) {
     return MESSAGES.connection
