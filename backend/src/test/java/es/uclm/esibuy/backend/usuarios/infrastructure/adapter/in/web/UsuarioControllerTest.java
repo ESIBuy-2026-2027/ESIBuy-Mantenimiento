@@ -18,6 +18,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaExcept
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
@@ -213,6 +214,21 @@ class UsuarioControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(registroUsuario, times(1)).registrar(any());
+    }
+
+    @Test
+    @DisplayName("HU1-CP15: unos datos de cliente inválidos devuelven 400 con un mensaje genérico")
+    void datosDelClienteInvalidosDevuelven400() throws Exception {
+        // El dominio rechaza, por ejemplo, un DNI mal formado o un menor de edad con UsuarioInvalidoException:
+        // es un error del cliente y debe ser un 400, no un 500. El mensaje no repite el dato.
+        doThrow(new UsuarioInvalidoException("El DNI no tiene un formato válido"))
+                .when(registroUsuario).registrar(any());
+
+        mockMvc.perform(post(URL_REGISTRO)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("juan@uclm.es", "clave1234")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensaje").value("Datos de registro no válidos"));
     }
 
     @Test
