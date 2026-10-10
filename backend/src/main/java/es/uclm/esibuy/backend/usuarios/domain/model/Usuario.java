@@ -45,8 +45,14 @@ public class Usuario {
 
     // Edición de los datos por un administrador (HU22). El email, el rol y la contraseña no cambian por aquí.
     public void modificarDatos(DatosPersonales datosPersonales, DatosCliente datosCliente, LocalDate hoy) {
-        this.datosPersonales = exigirNoNulo(datosPersonales, "Los datos personales son obligatorios");
-        this.datosCliente = exigirDatosClienteCoherente(rol, datosCliente);
+        // Se comprueba todo antes de asignar: si algo falla, el usuario se queda como estaba.
+        DatosPersonales personales = exigirNoNulo(datosPersonales, "Los datos personales son obligatorios");
+        DatosCliente cliente = exigirDatosClienteCoherente(rol, datosCliente);
+        if (cliente != null && cliente.fechaNacimiento().plusYears(MAYORIA_EDAD).isAfter(hoy)) {
+            throw new UsuarioInvalidoException("El cliente debe ser mayor de edad");
+        }
+        this.datosPersonales = personales;
+        this.datosCliente = cliente;
     }
 
     public static Usuario nuevoCliente(DatosPersonales datosPersonales, Email email, String passwordHash,
