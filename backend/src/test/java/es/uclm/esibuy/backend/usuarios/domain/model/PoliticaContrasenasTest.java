@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.usuarios.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import org.junit.jupiter.api.DisplayName;
@@ -78,6 +79,36 @@ class PoliticaContrasenasTest {
     @DisplayName("HU1-CP05: acepta una contraseña de exactamente 64 caracteres")
     void aceptaContrasenaDe64Caracteres() {
         assertDoesNotThrow(() -> validar("Tr3boles-Azules!".repeat(4)));
+    }
+
+    // Composición de la contraseña (T239): las mismas reglas que el frontend (REQUISITOS_PASSWORD).
+
+    @Test
+    @DisplayName("HU1-CP17: rechaza una contraseña sin mayúscula")
+    void rechazaContrasenaSinMayuscula() {
+        // TODO ciclo 2
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP17: rechaza una contraseña sin minúscula")
+    void rechazaContrasenaSinMinuscula() {
+        // TODO ciclo 3
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP17: rechaza una contraseña sin número")
+    void rechazaContrasenaSinNumero() {
+        // TODO ciclo 4
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP17: rechaza una contraseña sin símbolo")
+    void rechazaContrasenaSinSimbolo() {
+        // TODO ciclo 5
+        fail("Funcionalidad no implementada");
     }
 
     private static void validar(String contrasena) {
