@@ -1,11 +1,13 @@
 package es.uclm.esibuy.backend.usuarios.application.service;
 
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import java.time.LocalDate;
+import java.time.Month;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
@@ -98,9 +100,27 @@ class AdministracionUsuariosServiceTest {
         verify(usuarioRepository, never()).guardar(any());
     }
 
+    @Test
+    @DisplayName("HU23-CP03: un administrador no puede desactivar su propia cuenta y no se guarda nada")
+    void rechazaQueUnAdministradorSeDesactiveASiMismo() {
+        Usuario administrador = administrador("u-1", EMAIL_ADMINISTRADOR);
+        administrador.activar();
+        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(administrador));
+
+        assertThrows(AutodesactivacionNoPermitidaException.class, () -> servicio.desactivar("u-1", EMAIL_ADMINISTRADOR));
+        assertEquals("ACTIVO", administrador.getEstado());
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
     private static Usuario cliente(String id, String email) {
         return new Usuario(id, new DatosPersonales("Carlos", "Moreno Gil", null), new Email(email), "hash-simulado",
-                Rol.CLIENTE, new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1990, 3, 14), null),
+                Rol.CLIENTE,
+                new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1990, Month.MARCH, 14), null),
                 null);
+    }
+
+    private static Usuario administrador(String id, String email) {
+        return new Usuario(id, new DatosPersonales("Ada", "Admin", null), new Email(email), "hash-simulado",
+                Rol.ADMINISTRADOR, null, null);
     }
 }
