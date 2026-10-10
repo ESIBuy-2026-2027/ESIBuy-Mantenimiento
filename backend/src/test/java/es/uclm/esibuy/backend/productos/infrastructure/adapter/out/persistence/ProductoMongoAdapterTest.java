@@ -44,7 +44,7 @@ class ProductoMongoAdapterTest {
     @BeforeEach
     void preparar() {
         productoMongoRepository.deleteAll();
-        adapter = new ProductoMongoAdapter(productoMongoRepository, new ProductoDocumentMapper());
+        adapter = new ProductoMongoAdapter(productoMongoRepository, new ProductoDocumentMapper(), mongoTemplate);
     }
 
     private static Producto producto(String id, int stock) {
