@@ -209,6 +209,7 @@ export function initialValues(rolDeLaCuenta, usuario) {
 export function validateProfile(rolDeLaCuenta, values) {
   const errors = {}
   const rolDestino = values.rol ?? rolDeLaCuenta
+  if (!ROLE_LABELS[rolDestino]) errors.rol = 'Elige un rol válido'
 
   for (const field of editFieldsFor(rolDestino, rolDeLaCuenta).filter(isEditable)) {
     const valor = (values[field.name] ?? '').trim()

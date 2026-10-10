@@ -33,11 +33,10 @@ import {
 import { updateUser } from '../../api/users'
 import { ROLES } from '../../auth/roles'
 import { useApiQuery } from '../../hooks/useApiQuery'
-import { useCategories } from '../../hooks/useCategories'
 import ProductsTable from '../seller/ProductsTable'
 import OrdersTable from './OrdersTable'
 import PagedList from './PagedList'
-import ProfileEditor from './ProfileEditor'
+import EditableProfile from './EditableProfile'
 import SellerDataForm from './SellerDataForm'
 import StatusConfirmDialog from './StatusConfirmDialog'
 
@@ -80,34 +79,6 @@ function SellerOrdersTab({ sellerId }) {
       errorMessage="No se han podido cargar los pedidos del vendedor."
       emptyMessage="Este vendedor todavía no tiene pedidos."
       renderItems={(items, refreshing) => <OrdersTable orders={items} refreshing={refreshing} />}
-    />
-  )
-}
-
-// Edición de los datos del vendedor (HU22). Necesita las categorías para elegir la principal.
-function SellerEditor({ seller, onSaved, onCancel }) {
-  const { categories, loaded, failed, retry } = useCategories()
-
-  if (failed) {
-    return (
-      <MessageBar intent="error">
-        <MessageBarBody>No se han podido cargar las categorías.</MessageBarBody>
-        <MessageBarActions>
-          <Button onClick={retry}>Reintentar</Button>
-        </MessageBarActions>
-      </MessageBar>
-    )
-  }
-  if (!loaded) return <Spinner label="Cargando el formulario…" />
-
-  return (
-    <ProfileEditor
-      rol={ROLES.VENDEDOR}
-      usuario={seller}
-      categories={categories}
-      save={(datos) => updateUser(seller.id, datos)}
-      onSaved={onSaved}
-      onCancel={onCancel}
     />
   )
 }
@@ -226,7 +197,13 @@ export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }
                 </TabList>
                 {tab === 'data' && !editando && <SellerDataForm seller={seller} />}
                 {tab === 'data' && editando && (
-                  <SellerEditor seller={seller} onSaved={avisarGuardado} onCancel={() => setEditando(false)} />
+                  <EditableProfile
+                    rol={ROLES.VENDEDOR}
+                    usuario={seller}
+                    save={(datos) => updateUser(seller.id, datos)}
+                    onSaved={avisarGuardado}
+                    onCancel={() => setEditando(false)}
+                  />
                 )}
                 {tab === 'products' && <SellerProductsTab sellerId={seller.id} />}
                 {tab === 'orders' && <SellerOrdersTab sellerId={seller.id} />}
@@ -259,12 +236,6 @@ export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }
       </DialogSurface>
     </Dialog>
   )
-}
-
-SellerEditor.propTypes = {
-  seller: PropTypes.shape({ id: PropTypes.string.isRequired }).isRequired,
-  onSaved: PropTypes.func.isRequired,
-  onCancel: PropTypes.func.isRequired,
 }
 
 SellerProductsTab.propTypes = {

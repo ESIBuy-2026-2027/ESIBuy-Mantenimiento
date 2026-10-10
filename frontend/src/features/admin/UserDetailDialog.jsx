@@ -20,7 +20,7 @@ import { Dismiss24Regular, Edit20Regular } from '@fluentui/react-icons'
 import { getUser, updateUser } from '../../api/users'
 import { ROLES } from '../../auth/roles'
 import { useApiQuery } from '../../hooks/useApiQuery'
-import ProfileEditor from './ProfileEditor'
+import EditableProfile from './EditableProfile'
 import ReadOnlyFields from './ReadOnlyFields'
 import UserStatusButton from './UserStatusButton'
 import { readFields } from './profileFields'
@@ -138,7 +138,7 @@ export default function UserDetailDialog({ userId, currentUserId, onClose, onSta
 
             {usuario && !editando && <ReadOnlyFields fields={readFields(usuario.rol, usuario)} />}
             {usuario && editando && (
-              <ProfileEditor
+              <EditableProfile
                 rol={usuario.rol}
                 usuario={usuario}
                 lockRol={usuario.rol === ROLES.ADMIN && usuario.id === currentUserId}
