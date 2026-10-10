@@ -7,7 +7,9 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasExc
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -24,13 +26,23 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException
 @RestControllerAdvice
 public class ManejadorGlobalErrores {
 
+    // El 409 del registro lleva un código para que el frontend marque el campo repetido; el mensaje sigue
+    // siendo genérico. Decisión acordada con el frontend (T229), con la convención de ACCOUNT_DISABLED.
+    private static final String REGISTRO_NO_COMPLETADO = "No se ha podido completar el registro";
+
     @ExceptionHandler(CorreoYaRegistradoException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError correoYaRegistrado() {
-        return new RespuestaError("No se ha podido completar el registro");
+        return new RespuestaError(REGISTRO_NO_COMPLETADO, "EMAIL_ALREADY_REGISTERED");
     }
 
-    @ExceptionHandler({ContrasenaInvalidaException.class, EmailInvalidoException.class})
+    @ExceptionHandler(DniYaRegistradoException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError dniYaRegistrado() {
+        return new RespuestaError(REGISTRO_NO_COMPLETADO, "DNI_ALREADY_REGISTERED");
+    }
+
+    @ExceptionHandler({ContrasenaInvalidaException.class, EmailInvalidoException.class, UsuarioInvalidoException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError datosDeRegistroInvalidos() {
         return new RespuestaError("Datos de registro no válidos");

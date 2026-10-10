@@ -31,7 +31,7 @@ import org.springframework.security.web.authentication.logout.HttpStatusReturnin
 @Configuration
 public class SecurityConfig {
 
-    private static final String RUTA_REGISTRO = "/api/auth/registro";
+    private static final String RUTA_REGISTRO = "/api/auth/register/cliente";
     private static final String RUTA_LOGIN = "/api/auth/login";
     private static final String RUTA_LOGOUT = "/api/auth/logout";
     // Página de error interna de Spring Boot: abierta para que un 403 o un 500 no se conviertan en 401

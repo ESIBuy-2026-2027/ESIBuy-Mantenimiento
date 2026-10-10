@@ -6,6 +6,9 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCas
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
@@ -13,8 +16,11 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
+import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -33,6 +39,7 @@ import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -51,7 +58,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(SecurityConfig.class)
 class UsuarioControllerTest {
 
-    private static final String URL_REGISTRO = "/api/auth/registro";
+    private static final String URL_REGISTRO = "/api/auth/register/cliente";   // contrato acordado con el frontend (T229)
 
     @Autowired
     private MockMvc mockMvc;
@@ -65,10 +72,14 @@ class UsuarioControllerTest {
     @MockitoBean
     private AdministracionUsuariosUseCase administracionUsuarios;
 
+    // Cuerpo completo del registro de cliente (T229); solo varían el email y la contraseña.
     private static String json(String email, String password) {
         return """
-               {"email": "%s", "password": "%s"}
-               """.formatted(email, password);
+               {"nombre": "Juan", "apellidos": "Pérez García", "fechaNacimiento": "1996-05-20",
+                "dni": "12345678Z", "email": "%s", "telefono": null, "password": "%s",
+                "repeticionPassword": "%s", "tipoCliente": "ESTANDAR", "imagenPerfil": null,
+                "aceptaPrivacidad": true}
+               """.formatted(email, password, password);
     }
 
     @Test
@@ -79,7 +90,9 @@ class UsuarioControllerTest {
                         .content(json("juan@uclm.es", "clave1234")))
                 .andExpect(status().isCreated());
 
-        verify(registroUsuario).registrar(new RegistrarUsuarioCommand("juan@uclm.es", "clave1234"));
+        verify(registroUsuario).registrar(new RegistrarUsuarioCommand("Juan", "Pérez García",
+                LocalDate.of(1996, 5, 20), "12345678Z", "juan@uclm.es", null, "clave1234", "clave1234",
+                TipoCliente.ESTANDAR, null, true));
     }
 
     @Test
@@ -116,7 +129,7 @@ class UsuarioControllerTest {
     }
 
     @Test
-    @DisplayName("HU1-CP03: un correo ya registrado devuelve 409 con mensaje genérico")
+    @DisplayName("HU1-CP03: un correo ya registrado devuelve 409 con su código y mensaje genérico")
     void correoYaRegistradoDevuelve409() throws Exception {
         // registrar devuelve void: por eso doThrow(...).when(...) y no when(...).thenThrow(...)
         doThrow(new CorreoYaRegistradoException("El correo ya está registrado"))
@@ -126,8 +139,23 @@ class UsuarioControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json("juan@uclm.es", "clave1234")))
                 .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("EMAIL_ALREADY_REGISTERED"))   // el frontend marca el campo por el código
                 .andExpect(jsonPath("$.mensaje").exists())
                 .andExpect(jsonPath("$.mensaje").value(not(containsString("juan@uclm.es"))));
+    }
+
+    @Test
+    @DisplayName("HU1-CP16: un DNI ya registrado devuelve 409 con su código y mensaje genérico")
+    void dniYaRegistradoDevuelve409ConCodigo() throws Exception {
+        doThrow(new DniYaRegistradoException("El DNI ya está registrado"))
+                .when(registroUsuario).registrar(any());
+
+        mockMvc.perform(post(URL_REGISTRO)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("juan@uclm.es", "clave1234")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("DNI_ALREADY_REGISTERED"))
+                .andExpect(jsonPath("$.mensaje").value(not(containsString("12345678Z"))));
     }
 
     @Test
@@ -160,6 +188,50 @@ class UsuarioControllerTest {
     }
 
     @Test
+    @DisplayName("HU1-CP08: un nombre de 31 caracteres devuelve 400 y no registra")
+    void nombreDe31CaracteresDevuelve400() throws Exception {
+        // Frontera del máximo del Product Owner (30): la capa web la comprueba antes de llegar al caso de uso
+        String cuerpo = json("juan@uclm.es", "clave1234").replace("\"nombre\": \"Juan\"", "\"nombre\": \"" + "J".repeat(31) + "\"");
+
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(cuerpo))
+                .andExpect(status().isBadRequest());
+
+        verify(registroUsuario, never()).registrar(any());
+    }
+
+    @Test
+    @DisplayName("HU1-CP08: un email de 101 caracteres devuelve 400 y no registra")
+    void emailDe101CaracteresDevuelve400() throws Exception {
+        // Parte local de 61 y dominio de 39: cada trozo respeta los límites de @Email, así que lo único
+        // que puede rechazar los 101 caracteres es el máximo de 100 del contrato (frontera: 100 se acepta).
+        String dominio = "@" + "b".repeat(36) + ".es";
+        String de100 = "a".repeat(100 - dominio.length()) + dominio;
+        String de101 = "a".repeat(101 - dominio.length()) + dominio;
+
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(json(de100, "clave1234")))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(json(de101, "clave1234")))
+                .andExpect(status().isBadRequest());
+
+        verify(registroUsuario, times(1)).registrar(any());
+    }
+
+    @Test
+    @DisplayName("HU1-CP15: unos datos de cliente inválidos devuelven 400 con un mensaje genérico")
+    void datosDelClienteInvalidosDevuelven400() throws Exception {
+        // El dominio rechaza, por ejemplo, un DNI mal formado o un menor de edad con UsuarioInvalidoException:
+        // es un error del cliente y debe ser un 400, no un 500. El mensaje no repite el dato.
+        doThrow(new UsuarioInvalidoException("El DNI no tiene un formato válido"))
+                .when(registroUsuario).registrar(any());
+
+        mockMvc.perform(post(URL_REGISTRO)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json("juan@uclm.es", "clave1234")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensaje").value("Datos de registro no válidos"));
+    }
+
+    @Test
     @DisplayName("Seguridad: una ruta distinta del registro exige sesión")
     void otraRutaSinSesionEstaProtegida() throws Exception {
         // 403 y no 401: todavía no hay ningún mecanismo de login configurado (llegará con la HU2)
@@ -187,10 +259,12 @@ class UsuarioControllerTest {
     @org.springframework.security.test.context.support.WithMockUser(roles = "ADMINISTRADOR")
     void administradorRecibeElListado() throws Exception {
         Usuario usuario = new Usuario(
-                "usr-1", "Ana", "García", new Email("ana@esibuy.test"),
-                "hash-no-debe-salir", Rol.CLIENTE, TipoCliente.ESTANDAR,
-                java.time.Instant.parse("2026-10-01T10:00:00Z")
+                "usr-1", new DatosPersonales("Ana", "García", null), new Email("ana@esibuy.test"),
+                "hash-no-debe-salir", Rol.CLIENTE,
+                new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1996, 5, 20), null), null
         );
+        usuario.restaurarFechaAlta(java.time.Instant.parse("2026-10-01T10:00:00Z"));
+        usuario.activar();   // una cuenta nueva nace PENDIENTE (T233): el test lista una cuenta ya verificada
         when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(
                 java.util.List.of(usuario), 0, 10, 1
         ));
@@ -219,8 +293,10 @@ class UsuarioControllerTest {
     @DisplayName("HU24-CP01: un administrador activa una cuenta y recibe sus datos con estado ACTIVO")
     @WithMockUser(roles = "ADMINISTRADOR")
     void administradorActivaUnaCuentaYRecibeSusDatos() throws Exception {
-        Usuario activado = new Usuario("usr-1", "Lucía", "Torres Vega", new Email("lucia@esibuy.test"),
-                "hash-no-debe-salir", Rol.CLIENTE, TipoCliente.ESTANDAR);
+        Usuario activado = new Usuario("usr-1", new DatosPersonales("Lucía", "Torres Vega", null),
+                new Email("lucia@esibuy.test"), "hash-no-debe-salir", Rol.CLIENTE,
+                new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1996, 5, 20), null), null);
+        activado.activar();   // el caso de uso devuelve la cuenta ya activada (una nueva nace PENDIENTE, T233)
         when(administracionUsuarios.activar("usr-1")).thenReturn(activado);
 
         mockMvc.perform(cambiarEstado("usr-1", "ACTIVO"))

@@ -4,6 +4,12 @@ import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.shared.config.MongoConfig;
 import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColecciones;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
+import java.time.LocalDate;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
@@ -61,7 +67,7 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU1-CP01: guardar persiste el usuario en la colección usuarios")
     void guardarPersisteElUsuarioEnLaColeccionUsuarios() {
-        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+        adapter.guardar(cliente("juan@uclm.es", "hash-simulado"));
 
         List<UsuarioDocument> guardados = usuarioMongoRepository.findAll();
         assertEquals(1, guardados.size());
@@ -76,38 +82,58 @@ class UsuarioMongoAdapterTest {
         // Llama a guardar dos veces sin pasar por existePorCorreo: simula dos registros simultáneos,
         // que solo el índice único de email (AB#210) puede parar. El adaptador traduce el rechazo
         // de MongoDB a la excepción del dominio, que la API devuelve como 409.
-        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-1"));
-        Usuario duplicado = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-2");
+        adapter.guardar(cliente("juan@uclm.es", "hash-1"));
+        Usuario duplicado = cliente("juan@uclm.es", "hash-2", "87654321X");   // mismo email, distinto DNI
 
         assertThrows(CorreoYaRegistradoException.class, () -> adapter.guardar(duplicado));
         assertEquals(1, usuarioMongoRepository.count());
     }
 
     @Test
+    @DisplayName("HU1-CP16: la base de datos rechaza un segundo cliente con el mismo DNI y lo distingue del email repetido")
+    void rechazaDniDuplicadoEnLaBaseDeDatos() {
+        // Dos emails distintos y el mismo DNI: solo el índice único rol_dni (AB#210) lo para. El adaptador
+        // tiene que distinguir qué índice ha fallado para no confundirlo con un correo repetido.
+        adapter.guardar(cliente("juan@uclm.es", "hash-1"));
+        Usuario mismoDni = cliente("otro@uclm.es", "hash-2");
+
+        assertThrows(DniYaRegistradoException.class, () -> adapter.guardar(mismoDni));
+        assertEquals(1, usuarioMongoRepository.count());
+    }
+
+    @Test
+    @DisplayName("HU1-CP16: existePorDni devuelve true si el DNI ya está guardado y false si no")
+    void existePorDniDistingueLosDniGuardados() {
+        adapter.guardar(cliente("juan@uclm.es", "hash-1"));
+
+        assertTrue(adapter.existePorDni("12345678Z"));
+        assertFalse(adapter.existePorDni("87654321X"));
+    }
+
+    @Test
     @DisplayName("Persistencia: el documento guardado no incluye el campo _class")
     void elDocumentoNoIncluyeElCampoClass() {
-        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+        adapter.guardar(cliente("juan@uclm.es", "hash-simulado"));
 
         assertFalse(documentoEnBruto().containsKey("_class"));
     }
 
     @Test
-    @DisplayName("HU1-CP01: guardar conserva el nombre, los apellidos y el tipo de cliente")
+    @DisplayName("HU1-CP01: guardar conserva los datos personales, los de cliente y el consentimiento")
     void conservaLosDatosDePerfil() {
-        adapter.guardar(new Usuario(null, "Juan", "Pérez García", new Email("juan@uclm.es"),
-                "hash-simulado", Rol.CLIENTE, TipoCliente.PREMIUM));
+        adapter.guardar(cliente("juan@uclm.es", "hash-simulado"));
 
         Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
 
-        assertEquals("Juan", leido.getNombre());
-        assertEquals("Pérez García", leido.getApellidos());
-        assertEquals(TipoCliente.PREMIUM, leido.getTipoCliente());
+        assertEquals(DATOS_PERSONALES, leido.getDatosPersonales());
+        assertEquals(DATOS_CLIENTE, leido.getDatosCliente());
+        assertEquals(CONSENTIMIENTO, leido.getConsentimiento());
     }
 
     @Test
     @DisplayName("Persistencia: guarda createdAt y updatedAt, y createdAt no cambia al actualizar")
     void guardaFechasDeCreacionYModificacion() {
-        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+        adapter.guardar(cliente("juan@uclm.es", "hash-simulado"));
         Date creado = documentoEnBruto().getDate("createdAt");
         Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
         leido.registrarIntentoFallido(AHORA);
@@ -123,7 +149,7 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU1-CP03: existePorCorreo devuelve true si el email ya está guardado")
     void existePorCorreoDevuelveTrueSiEstaGuardado() {
-        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+        adapter.guardar(cliente("juan@uclm.es", "hash-simulado"));
 
         assertTrue(adapter.existePorCorreo("juan@uclm.es"));
     }
@@ -137,7 +163,7 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU2-CP01: buscarPorCorreo devuelve el usuario guardado con sus datos")
     void buscarPorCorreoDevuelveElUsuarioGuardado() {
-        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+        adapter.guardar(cliente("juan@uclm.es", "hash-simulado"));
 
         Optional<Usuario> encontrado = adapter.buscarPorCorreo("juan@uclm.es");
 
@@ -156,7 +182,7 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU24-CP01: buscarPorId devuelve el usuario guardado")
     void buscarPorIdDevuelveElUsuarioGuardado() {
-        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+        adapter.guardar(cliente("juan@uclm.es", "hash-simulado"));
         String id = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow().getId();
 
         Usuario encontrado = adapter.buscarPorId(id).orElseThrow();
@@ -174,7 +200,7 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU2-CP03: guardar un usuario leído lo actualiza en vez de duplicarlo")
     void guardarUnUsuarioLeidoLoActualizaSinDuplicarlo() {
-        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+        adapter.guardar(cliente("juan@uclm.es", "hash-simulado"));
         Usuario leido = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
 
         adapter.guardar(leido);   // como hace el login tras un intento fallido
@@ -185,7 +211,7 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU2-CP04: un usuario desactivado sigue desactivado al leerlo de la base de datos")
     void conservaLaDesactivacion() {
-        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado");
+        Usuario usuario = cliente("juan@uclm.es", "hash-simulado");
         usuario.desactivar();
 
         adapter.guardar(usuario);
@@ -197,7 +223,10 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU2-CP04: un usuario activo sigue activo al leerlo de la base de datos")
     void conservaUnUsuarioActivo() {
-        adapter.guardar(Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado"));
+        Usuario usuario = cliente("juan@uclm.es", "hash-simulado");
+        usuario.activar();   // una cuenta nueva nace PENDIENTE (T233): se activa para probar la lectura de un activo
+
+        adapter.guardar(usuario);
 
         assertTrue(adapter.buscarPorCorreo("juan@uclm.es").orElseThrow().estaActivo());
     }
@@ -206,7 +235,7 @@ class UsuarioMongoAdapterTest {
     @DisplayName("HU2-CP03: los intentos fallidos y el bloqueo se conservan entre un login y otro")
     void conservaLosIntentosFallidosYElBloqueo() {
         Instant ahora = Instant.parse("2026-10-08T10:00:00Z");
-        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-simulado");
+        Usuario usuario = cliente("juan@uclm.es", "hash-simulado");
         for (int i = 0; i < 5; i++) {
             usuario.registrarIntentoFallido(ahora);
         }
@@ -218,6 +247,37 @@ class UsuarioMongoAdapterTest {
         assertTrue(leido.tieneBloqueoPorIntentos(ahora));
         assertFalse(leido.tieneBloqueoPorIntentos(ahora.plus(Duration.ofMinutes(15))));
         assertEquals(5, documentoEnBruto().getInteger("failedLoginAttempts"));   // nombre del modelo de BBDD
+    }
+
+    private static final LocalDate HOY = LocalDate.of(2026, 10, 10);
+    private static final DatosPersonales DATOS_PERSONALES = new DatosPersonales("Juan", "Pérez García", null);
+    private static final DatosCliente DATOS_CLIENTE = new DatosCliente(
+            TipoCliente.PREMIUM, new Dni("12345678Z"), LocalDate.of(1996, 5, 20), null);
+    private static final ConsentimientoPrivacidad CONSENTIMIENTO = new ConsentimientoPrivacidad(
+            Instant.parse("2026-10-10T10:00:00Z"), "1.0");
+
+    // Cliente recién registrado (T229): nace PENDIENTE y sin id.
+    private static Usuario cliente(String email, String hash) {
+        return Usuario.nuevoCliente(DATOS_PERSONALES, new Email(email), hash, DATOS_CLIENTE, CONSENTIMIENTO, HOY);
+    }
+
+    private static Usuario cliente(String email, String hash, String dni) {
+        DatosCliente datosCliente = new DatosCliente(TipoCliente.PREMIUM, new Dni(dni), LocalDate.of(1996, 5, 20), null);
+        return Usuario.nuevoCliente(DATOS_PERSONALES, new Email(email), hash, datosCliente, CONSENTIMIENTO, HOY);
+    }
+
+    // Documento con los campos que el dominio exige para reconstruir el usuario (T229). Los tests del
+    // listado lo guardan directamente con el repositorio y después lo leen a través del mapper.
+    private static UsuarioDocument documento(String email, String hash, String rol) {
+        UsuarioDocument doc = new UsuarioDocument(email, hash, rol);
+        doc.setNombre("Nombre");
+        doc.setApellidos("Apellidos");
+        if ("CLIENTE".equals(rol)) {
+            doc.setTipoCliente("ESTANDAR");
+            doc.setDni("0000000" + (Math.abs(email.hashCode()) % 10) + "A");   // DNI distinto por email: índice único rol_dni
+            doc.setFechaNacimiento(LocalDate.of(1990, 1, 1));
+        }
+        return doc;
     }
 
     // MongoTemplate devuelve el documento tal cual está en MongoDB; el repositorio lo convertiría
@@ -232,8 +292,8 @@ class UsuarioMongoAdapterTest {
     @DisplayName("HU19-CP02: el adaptador busca por email, nombre y apellidos")
     void listarBuscaEnLosCamposVisiblesDelUsuario() {
         usuarioMongoRepository.saveAll(List.of(
-                new UsuarioDocument("ana@esibuy.test", "hash-1", "CLIENTE"),
-                new UsuarioDocument("bruno@esibuy.test", "hash-2", "VENDEDOR")
+                documento("ana@esibuy.test", "hash-1", "CLIENTE"),
+                documento("bruno@esibuy.test", "hash-2", "VENDEDOR")
         ));
         UsuarioDocument ana = usuarioMongoRepository.findByEmail("ana@esibuy.test").orElseThrow();
         ana.setNombre("Ana");
@@ -253,9 +313,9 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU19-CP03: el adaptador aplica el filtro por rol")
     void listarFiltraPorRol() {
-        UsuarioDocument ana = new UsuarioDocument("ana@esibuy.test", "hash-1", "CLIENTE");
+        UsuarioDocument ana = documento("ana@esibuy.test", "hash-1", "CLIENTE");
         ana.setEstado("ACTIVO");
-        UsuarioDocument bruno = new UsuarioDocument("bruno@esibuy.test", "hash-2", "VENDEDOR");
+        UsuarioDocument bruno = documento("bruno@esibuy.test", "hash-2", "VENDEDOR");
         bruno.setEstado("ACTIVO");
         usuarioMongoRepository.saveAll(List.of(ana, bruno));
 
@@ -270,9 +330,9 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU19-CP04: el adaptador aplica el filtro por estado activo")
     void listarFiltraPorEstadoActivo() {
-        UsuarioDocument activo = new UsuarioDocument("ana@esibuy.test", "hash-1", "CLIENTE");
+        UsuarioDocument activo = documento("ana@esibuy.test", "hash-1", "CLIENTE");
         activo.setEstado("ACTIVO");
-        UsuarioDocument desactivado = new UsuarioDocument("bruno@esibuy.test", "hash-2", "VENDEDOR");
+        UsuarioDocument desactivado = documento("bruno@esibuy.test", "hash-2", "VENDEDOR");
         desactivado.setEstado("DESACTIVADO");
         usuarioMongoRepository.saveAll(List.of(activo, desactivado));
 
@@ -287,11 +347,11 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU19-CP05: el adaptador devuelve la página solicitada y el total completo")
     void listarAplicaPaginacionYConservaElTotal() {
-        UsuarioDocument primero = new UsuarioDocument("ana@esibuy.test", "hash-1", "CLIENTE");
+        UsuarioDocument primero = documento("ana@esibuy.test", "hash-1", "CLIENTE");
         primero.setEstado("ACTIVO");
-        UsuarioDocument segundo = new UsuarioDocument("bruno@esibuy.test", "hash-2", "VENDEDOR");
+        UsuarioDocument segundo = documento("bruno@esibuy.test", "hash-2", "VENDEDOR");
         segundo.setEstado("ACTIVO");
-        UsuarioDocument tercero = new UsuarioDocument("carla@esibuy.test", "hash-3", "CLIENTE");
+        UsuarioDocument tercero = documento("carla@esibuy.test", "hash-3", "CLIENTE");
         tercero.setEstado("ACTIVO");
         usuarioMongoRepository.saveAll(List.of(primero, segundo, tercero));
 
@@ -308,7 +368,7 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU19-CP02: la búsqueda trata los caracteres especiales como texto literal")
     void listarEscapaCaracteresEspecialesDeLaBusqueda() {
-        UsuarioDocument usuario = new UsuarioDocument("ana+vip@esibuy.test", "hash-1", "CLIENTE");
+        UsuarioDocument usuario = documento("ana+vip@esibuy.test", "hash-1", "CLIENTE");
         usuario.setEstado("ACTIVO");
         usuarioMongoRepository.save(usuario);
 
@@ -323,10 +383,10 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU19-CP10: el adaptador filtra BLOQUEADO por lockedUntil")
     void listarFiltraPorBloqueoTemporal() {
-        UsuarioDocument bloqueado = new UsuarioDocument("bloqueado@esibuy.test", "hash-1", "CLIENTE");
+        UsuarioDocument bloqueado = documento("bloqueado@esibuy.test", "hash-1", "CLIENTE");
         bloqueado.setEstado("ACTIVO");
         bloqueado.setLockedUntil(Instant.now().plus(Duration.ofMinutes(10)));
-        UsuarioDocument activo = new UsuarioDocument("activo@esibuy.test", "hash-2", "CLIENTE");
+        UsuarioDocument activo = documento("activo@esibuy.test", "hash-2", "CLIENTE");
         activo.setEstado("ACTIVO");
         usuarioMongoRepository.saveAll(List.of(bloqueado, activo));
 

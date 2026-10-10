@@ -15,6 +15,10 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasExc
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
+import java.time.LocalDate;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
@@ -52,6 +56,10 @@ import static org.mockito.Mockito.when;
 // El contrato que debe cumplir sale del frontend (frontend/src/mocks/authHandlers.js).
 @ExtendWith(MockitoExtension.class)
 class AutenticacionServiceTest {
+
+    private static final DatosPersonales DATOS_PERSONALES = new DatosPersonales("Juan", "Pérez García", null);
+    private static final DatosCliente DATOS_CLIENTE = new DatosCliente(
+            TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1996, 5, 20), null);
 
     // Hora fija para los tests: el usuario recibe la hora en vez de consultarla él mismo.
     private static final Instant AHORA = Instant.parse("2026-10-08T10:00:00Z");
@@ -93,8 +101,20 @@ class AutenticacionServiceTest {
 
     // Cliente con id: al iniciar sesión se guarda un código de verificación asociado a su id (T21).
     private static Usuario clienteConId() {
-        return new Usuario("u-1", null, null, new Email("juan@uclm.es"), "hash-guardado", Rol.CLIENTE,
-                TipoCliente.ESTANDAR);
+        return activo(new Usuario("u-1", DATOS_PERSONALES, new Email("juan@uclm.es"), "hash-guardado", Rol.CLIENTE,
+                DATOS_CLIENTE, null));
+    }
+
+    // Cliente sin id, como el que sale del registro (T229): datos personales y de cliente válidos.
+    private static Usuario clienteNuevo() {
+        return new Usuario(null, DATOS_PERSONALES, new Email("juan@uclm.es"), "hash-guardado", Rol.CLIENTE,
+                DATOS_CLIENTE, null);
+    }
+
+    // Una cuenta nueva nace PENDIENTE (T233) y el login la rechaza: los tests de login usan cuentas verificadas.
+    private static Usuario activo(Usuario usuario) {
+        usuario.activar();
+        return usuario;
     }
 
     @Test
@@ -122,7 +142,7 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP02: rechaza una contraseña incorrecta con la misma respuesta que un correo inexistente")
     void rechazaContrasenaIncorrecta() {
-        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado");
+        Usuario usuario = activo(clienteNuevo());
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
         when(hashContrasena.coincide("otraClave", "hash-guardado")).thenReturn(false);
         when(usuarioRepository.buscarPorCorreo("nadie@uclm.es")).thenReturn(Optional.empty());
@@ -156,7 +176,7 @@ class AutenticacionServiceTest {
     @DisplayName("HU2-CP03: bloquea la cuenta tras 5 intentos fallidos")
     void bloqueaLaCuentaTrasCincoIntentosFallidos() {
         // Frontera: 5 fallos → bloqueada, incluso con la contraseña correcta.
-        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado");
+        Usuario usuario = activo(clienteNuevo());
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
         when(hashContrasena.coincide("otraClave", "hash-guardado")).thenReturn(false);
         IniciarSesionCommand contrasenaIncorrecta = new IniciarSesionCommand("juan@uclm.es", "otraClave");
@@ -198,7 +218,7 @@ class AutenticacionServiceTest {
     void rechazaCuentaDesactivada() {
         // «Desactivada» = desactivada por un administrador (desactivar() de Usuario, T214).
         // Se comprueba después de la contraseña: quien no la conoce no puede averiguar el estado de la cuenta.
-        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado");
+        Usuario usuario = activo(clienteNuevo());
         usuario.desactivar();
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
         when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
@@ -350,8 +370,8 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP16: rechaza el acceso a una cuenta en estado PENDIENTE")
     void rechazaCuentaPendiente() {
-        // Al usar nuevoCliente(), la cuenta nace en estado PENDIENTE 
-        Usuario usuario = Usuario.nuevoCliente(new Email("juan@uclm.es"), "hash-guardado");
+        // Una cuenta nueva nace en estado PENDIENTE (T233); clienteNuevo() la crea con los datos del registro (T229)
+        Usuario usuario = clienteNuevo();
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
         
         // Se comprueba después de validar la contraseña para no revelar el estado de la cuenta a atacantes

@@ -12,6 +12,10 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasExc
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
+import java.time.LocalDate;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
@@ -255,8 +259,9 @@ class AutenticacionControllerTest {
     @WithMockUser(username = "juan@uclm.es") // simula el usuario autenticado que dejará el paso 3 (T20)
     @DisplayName("HU2-CP14: con sesión iniciada, /me devuelve los datos del usuario y nada más")
     void meConSesionDevuelveElUsuario() throws Exception {
-        Usuario usuario = new Usuario("u-1", "Juan", "García", new Email("juan@uclm.es"), "hash-guardado",
-                Rol.CLIENTE, TipoCliente.ESTANDAR);
+        Usuario usuario = new Usuario("u-1", new DatosPersonales("Juan", "García", null), new Email("juan@uclm.es"),
+                "hash-guardado", Rol.CLIENTE, new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1996, 5, 20), null), null);
+        usuario.activar();   // un usuario con sesión es una cuenta verificada (una nueva nace PENDIENTE, T233)
         when(autenticacion.consultarUsuarioEnSesion("juan@uclm.es")).thenReturn(usuario);
 
         mockMvc.perform(get(URL_ME))

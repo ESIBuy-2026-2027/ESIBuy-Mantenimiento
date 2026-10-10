@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.usuarios.domain.model;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 
@@ -9,67 +10,56 @@ public class Usuario {
 
     private static final int MAX_INTENTOS = 5;
     private static final Duration DURACION_BLOQUEO = Duration.ofMinutes(15);
+    private static final int MAYORIA_EDAD = 18;
 
     private final String id;
-    private final String nombre;
-    private final String apellidos;
+    private final DatosPersonales datosPersonales;
+    private final DatosCliente datosCliente;
+    private final ConsentimientoPrivacidad consentimiento;
     private final Email email;
     private final String passwordHash;
     private final Rol rol;
-    private final TipoCliente tipoCliente;
-    private final Instant fechaAlta;
+    private Instant fechaAlta;
     private String estado;
-    private boolean activo;              // false = desactivada por un administrador (HU23/HU24): no puede entrar
     private int intentosFallidos;        // intentos de login fallidos seguidos
     private Instant bloqueadoHasta;      // bloqueo temporal por intentos; null = sin bloqueo
 
-    public Usuario(String id, String nombre, String apellidos, Email email,
-            String passwordHash, Rol rol, TipoCliente tipoCliente) {
-        this(id, nombre, apellidos, email, passwordHash, rol, tipoCliente, null);
-    }
-
-    public Usuario(String id, String nombre, String apellidos, Email email,
-            String passwordHash, Rol rol, TipoCliente tipoCliente, Instant fechaAlta) {
+    public Usuario(String id, DatosPersonales datosPersonales, Email email,
+            String passwordHash, Rol rol, DatosCliente datosCliente, ConsentimientoPrivacidad consentimiento) {
         this.id = id;
-        this.nombre = exigirTextoSiExiste(nombre, "El nombre no puede estar en blanco");
-        this.apellidos = exigirTextoSiExiste(apellidos, "Los apellidos no pueden estar en blanco");
+        this.datosPersonales = exigirNoNulo(datosPersonales, "Los datos personales son obligatorios");
         this.email = exigirNoNulo(email, "El email es obligatorio");
         this.passwordHash = exigirTexto(passwordHash, "La contraseña es obligatoria");
         this.rol = exigirNoNulo(rol, "El rol es obligatorio");
-        this.tipoCliente = exigirTipoClienteCoherente(this.rol, tipoCliente);
-        this.fechaAlta = fechaAlta;
-        this.estado = "ACTIVO"; //las cuentas creadas por un administrador se crean activas, las creadas por registro público se crean pendientes
-        this.activo = true; 
+        this.datosCliente = exigirDatosClienteCoherente(this.rol, datosCliente);
+        this.consentimiento = consentimiento;
+        this.estado = "PENDIENTE";
         this.intentosFallidos = 0;
     }
 
     public void restaurarEstado(String estado) {
         if (estado != null) {
             this.estado = estado;
-            this.activo = !"DESACTIVADO".equals(estado);
         }
     }
 
-    /**
-    * Método público nuevoCliente, 
-    * que usa el registro público, crea la cuenta en PENDIENTE.
-    * 
-    */
-    public static Usuario nuevoCliente(Email email, String passwordHash) {
-        Usuario usuario = new Usuario(null, null, null, email, passwordHash, Rol.CLIENTE, TipoCliente.ESTANDAR);
-        usuario.estado = "PENDIENTE";
-        return usuario;
+    public static Usuario nuevoCliente(DatosPersonales datosPersonales, Email email, String passwordHash, 
+        DatosCliente datosCliente, ConsentimientoPrivacidad consentimiento, LocalDate hoy) {
+        if (datosCliente.fechaNacimiento().plusYears(MAYORIA_EDAD).isAfter(hoy)) {
+            throw new UsuarioInvalidoException("El cliente debe ser mayor de edad");
+        }
+        return new Usuario(null, datosPersonales, email, passwordHash, Rol.CLIENTE, datosCliente, consentimiento);
     }
 
-    private static TipoCliente exigirTipoClienteCoherente(Rol rol, TipoCliente tipoCliente) {
+    private static DatosCliente exigirDatosClienteCoherente(Rol rol, DatosCliente datosCliente) {
         boolean esCliente = rol == Rol.CLIENTE;
-        if (esCliente && tipoCliente == null) {
-            throw new UsuarioInvalidoException("Un cliente debe tener tipo de cliente");
+        if (esCliente && datosCliente == null) {
+            throw new UsuarioInvalidoException("Un cliente debe tener datos de cliente");
         }
-        if (!esCliente && tipoCliente != null) {
-            throw new UsuarioInvalidoException("Solo los clientes tienen tipo de cliente");
+        if (!esCliente && datosCliente != null) {
+            throw new UsuarioInvalidoException("Solo los clientes tienen datos de cliente");
         }
-        return tipoCliente;
+        return datosCliente;
     }
 
     private static <T> T exigirNoNulo(T valor, String mensaje) {
@@ -77,10 +67,6 @@ public class Usuario {
             throw new UsuarioInvalidoException(mensaje);
         }
         return valor;
-    }
-
-    private static String exigirTextoSiExiste(String valor, String mensaje) {
-        return valor == null ? null : exigirTexto(valor, mensaje);
     }
 
     private static String exigirTexto(String valor, String mensaje) {
@@ -94,12 +80,12 @@ public class Usuario {
         return id;
     }
 
-    public String getNombre() {
-        return nombre;
+    public DatosPersonales getDatosPersonales() {
+        return datosPersonales;
     }
 
-    public String getApellidos() {
-        return apellidos;
+    public DatosCliente getDatosCliente() {
+        return datosCliente;
     }
 
     public Email getEmail() {
@@ -114,8 +100,8 @@ public class Usuario {
         return rol;
     }
 
-    public TipoCliente getTipoCliente() {
-        return tipoCliente;
+    public ConsentimientoPrivacidad getConsentimiento() {
+        return consentimiento;
     }
 
     public Instant getFechaAlta() {
@@ -127,16 +113,14 @@ public class Usuario {
     }
 
     public boolean estaActivo() {
-        return activo;
+        return "ACTIVO".equals(estado);
     }
 
     public void desactivar() {
-        activo = false;
         estado = "DESACTIVADO";
     }
 
     public void activar() {
-        activo = true;
         estado = "ACTIVO";
     }
 
@@ -163,6 +147,10 @@ public class Usuario {
     public void restaurarBloqueoPorIntentos(int intentosFallidos, Instant bloqueadoHasta) {
         this.intentosFallidos = intentosFallidos;
         this.bloqueadoHasta = bloqueadoHasta;
+    }
+
+    public void restaurarFechaAlta(Instant fechaAlta) {
+        this.fechaAlta = fechaAlta;
     }
 
     public boolean estaPendiente() {

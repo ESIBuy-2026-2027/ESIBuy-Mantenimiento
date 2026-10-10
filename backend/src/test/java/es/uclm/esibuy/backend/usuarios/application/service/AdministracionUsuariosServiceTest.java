@@ -2,6 +2,10 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
+import java.time.LocalDate;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
@@ -43,8 +47,8 @@ class AdministracionUsuariosServiceTest {
     @Test
     @DisplayName("HU24-CP01: activar una cuenta desactivada la deja activa y la guarda")
     void activaUnaCuentaDesactivadaYLaGuarda() {
-        Usuario desactivado = new Usuario("u-1", "Lucía", "Torres Vega", new Email("lucia@uclm.es"),
-                "hash-simulado", Rol.CLIENTE, TipoCliente.ESTANDAR);
+        Usuario desactivado = new Usuario("u-1", new DatosPersonales("Lucía", "Torres Vega", null),
+                new Email("lucia@uclm.es"), "hash-simulado", Rol.CLIENTE, new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1996, 5, 20), null), null);
         desactivado.desactivar();
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(desactivado));
 

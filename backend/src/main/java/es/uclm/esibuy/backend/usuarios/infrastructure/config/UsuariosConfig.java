@@ -55,8 +55,8 @@ public class UsuariosConfig {
 
     @Bean
     RegistroUsuarioUseCase registroUsuarioUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-                                                  HashContrasenaPort hashContrasenaPort) {
-        return new RegistroUsuarioService(usuarioRepositoryPort, hashContrasenaPort);
+                                                  HashContrasenaPort hashContrasenaPort, Clock reloj) {
+        return new RegistroUsuarioService(usuarioRepositoryPort, hashContrasenaPort, reloj);
     }
 
     @Bean
@@ -82,7 +82,7 @@ public class UsuariosConfig {
 
     @Bean
     Clock reloj() {
-        return Clock.systemUTC(); // la hora real; los tests de AutenticacionService usan un Clock fijo
+        return Clock.systemUTC(); // la hora real; los tests de AutenticacionService y RegistroUsuarioService usan un Clock fijo
     }
 
     @Bean

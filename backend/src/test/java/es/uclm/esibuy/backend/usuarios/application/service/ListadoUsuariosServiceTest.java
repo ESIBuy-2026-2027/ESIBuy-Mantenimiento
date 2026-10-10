@@ -3,6 +3,10 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
+import java.time.LocalDate;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
@@ -66,12 +70,12 @@ class ListadoUsuariosServiceTest {
         ListarUsuariosQuery query = new ListarUsuariosQuery(null, null, null, 1, 20);
         Usuario usuario = new Usuario(
                 "usuario-1",
-                "Ana",
-                "García",
+                new DatosPersonales("Ana", "García", null),
                 new Email("ana@esibuy.test"),
                 "hash",
                 Rol.CLIENTE,
-                TipoCliente.ESTANDAR
+                new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1996, 5, 20), null),
+                null
         );
         UsuarioPage paginaEsperada = new UsuarioPage(List.of(usuario), 1, 20, 1);
 

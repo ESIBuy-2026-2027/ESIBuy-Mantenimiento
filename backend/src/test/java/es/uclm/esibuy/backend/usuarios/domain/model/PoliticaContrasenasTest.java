@@ -9,8 +9,7 @@ import org.junit.jupiter.api.Test;
 
 class PoliticaContrasenasTest {
 
-    private static final String NOMBRE = "Ana";
-    private static final String APELLIDOS = "García López";
+    private static final DatosPersonales DATOS_PERSONALES = new DatosPersonales("Ana", "García López", null);
     private static final Email EMAIL = new Email("agarcia@esibuy.es");
 
     @Test
@@ -68,7 +67,20 @@ class PoliticaContrasenasTest {
         assertThrows(ContrasenaInvalidaException.class, () -> validar("agarcia-2026"));
     }
 
+    @Test
+    @DisplayName("HU1-CP05: rechaza una contraseña de 65 caracteres")
+    void rechazaContrasenaDe65Caracteres() {
+        // Frontera superior: BCrypt solo usa los primeros 72 bytes; el máximo de 64 lo evita
+        assertThrows(ContrasenaInvalidaException.class, () -> validar("Tr3boles-Azules!".repeat(4) + "x"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP05: acepta una contraseña de exactamente 64 caracteres")
+    void aceptaContrasenaDe64Caracteres() {
+        assertDoesNotThrow(() -> validar("Tr3boles-Azules!".repeat(4)));
+    }
+
     private static void validar(String contrasena) {
-        PoliticaContrasenas.validar(contrasena, NOMBRE, APELLIDOS, EMAIL);
+        PoliticaContrasenas.validar(contrasena, DATOS_PERSONALES, EMAIL);
     }
 }
