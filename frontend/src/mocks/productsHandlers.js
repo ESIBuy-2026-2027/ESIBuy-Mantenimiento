@@ -10,13 +10,13 @@ export const CATEGORIAS = new Map([
   ['cat-2', 'Hogar'],
 ])
 
-// [nombre, precio, stock, disponible, categorías]. El vendedor u-2 tiene 23 (3 páginas de 10);
+// [nombre, precio, stock, disponible, categoría]. El vendedor u-2 tiene 23 (3 páginas de 10);
 // u-5 (vendedor-vacio@esibuy.test) no tiene ninguno; u-99 tiene los últimos 3, que u-2 nunca debe ver.
 export const PRODUCTOS = [
-  ['Auriculares inalámbricos', 59.9, 34, true, ['cat-1']],
-  ['Teclado mecánico', 89.5, 12, true, ['cat-1']],
-  ['Ratón ergonómico', 34.99, 0, true, ['cat-1']],
-  ['Monitor 27 pulgadas', 249, 7, true, ['cat-1']],
+  ['Auriculares inalámbricos', 59.9, 34, true, 'cat-1'],
+  ['Teclado mecánico', 89.5, 12, true, 'cat-1'],
+  ['Ratón ergonómico', 34.99, 0, true, 'cat-1'],
+  ['Monitor 27 pulgadas', 249, 7, true, 'cat-1'],
   ['Cargador USB-C 65 W', 29.95, 80, true, 'cat-1'],
   ['Webcam Full HD', 49, 0, false, 'cat-1'],
   ['Altavoz Bluetooth', 39.9, 22, true, 'cat-1'],
