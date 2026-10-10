@@ -1,6 +1,6 @@
 import { ROLES } from '../../auth/roles'
 import { formatDate } from '../../utils/format'
-import { esDniValido, esEmailValido, esMayorDeEdad, esTelefonoValido } from '../account/accountRules'
+import { esDniValido, esMayorDeEdad, esTelefonoValido } from '../account/accountRules'
 import { ROLE_LABELS, STATUS_LABELS } from './usersConfig'
 
 // Campos de la ficha de cada tipo de usuario (HU20, HU22 y HU26). Una sola definición sirve para los dos modos:
@@ -113,22 +113,13 @@ const PROFILE_FIELDS = {
     estado,
     fechaAlta,
   ],
-  // Se puede modificar todo, y el nombre comercial tiene que seguir siendo único (lo comprueba el backend).
-  // Sus productos, precios y pedidos no se modifican desde aquí (HU26).
+  // Se puede modificar todo menos el email (por diseño del backend, de momento no se puede cambiar el correo
+  // de un vendedor), y el nombre comercial tiene que seguir siendo único (lo comprueba el backend). Un vendedor
+  // tiene una sola categoría. Sus productos, precios y pedidos no se modifican desde aquí (HU26).
   [ROLES.VENDEDOR]: [
     nombre,
     apellidos,
-    {
-      name: 'email',
-      label: 'Correo electrónico',
-      read: (u) => u.email,
-      edit: {
-        type: 'email',
-        required: true,
-        maxLength: 100,
-        validate: (valor) => (esEmailValido(valor) ? undefined : 'Introduce un email válido'),
-      },
-    },
+    { ...email, label: 'Correo electrónico' },
     rol,
     {
       name: 'nombreComercial',
@@ -163,16 +154,8 @@ export const profileFieldsFor = (rolDeLaCuenta) => PROFILE_FIELDS[rolDeLaCuenta]
 const isEditable = (field) => Boolean(field.edit)
 
 // Campos del formulario de edición cuando la cuenta se queda con el rol `rolDestino`. Si el administrador
-// cambia el rol, el formulario pasa a los campos del rol nuevo. El email solo se puede cambiar si la cuenta ya
-// era de vendedor y lo sigue siendo.
-export function editFieldsFor(rolDestino, rolOriginal = rolDestino) {
-  const emailEditable = rolOriginal === ROLES.VENDEDOR && rolDestino === ROLES.VENDEDOR
-
-  return profileFieldsFor(rolDestino).map((field) => {
-    if (field.name !== 'email' || !field.edit || emailEditable) return field
-    return { name: field.name, label: field.label, read: field.read }
-  })
-}
+// cambia el rol, el formulario pasa a los campos del rol nuevo. El email no se puede cambiar en ningún rol.
+export const editFieldsFor = (rolDestino) => profileFieldsFor(rolDestino)
 
 // Pares [etiqueta, texto] para el modo lectura. Nunca incluye la contraseña.
 export const readFields = (rolDeLaCuenta, usuario) =>
@@ -211,7 +194,7 @@ export function validateProfile(rolDeLaCuenta, values) {
   const rolDestino = values.rol ?? rolDeLaCuenta
   if (!ROLE_LABELS[rolDestino]) errors.rol = 'Elige un rol válido'
 
-  for (const field of editFieldsFor(rolDestino, rolDeLaCuenta).filter(isEditable)) {
+  for (const field of editFieldsFor(rolDestino).filter(isEditable)) {
     const valor = (values[field.name] ?? '').trim()
     if (field.edit.required && !valor) errors[field.name] = 'Este campo es obligatorio'
     else if (valor && field.edit.validate) {
@@ -222,13 +205,13 @@ export function validateProfile(rolDeLaCuenta, values) {
   return errors
 }
 
-// Cuerpo de la petición: el rol que queda y solo los campos modificables de ese rol. El email de clientes y
-// administradores, la fecha de incorporación y la contraseña no viajan nunca.
+// Cuerpo de la petición: el rol que queda y solo los campos modificables de ese rol. El email, la fecha de
+// incorporación y la contraseña no viajan nunca.
 export function profilePayload(rolDeLaCuenta, values) {
   const rolDestino = values.rol ?? rolDeLaCuenta
 
   return Object.fromEntries(
-    editFieldsFor(rolDestino, rolDeLaCuenta)
+    editFieldsFor(rolDestino)
       .filter(isEditable)
       .map((field) => [field.name, (values[field.name] ?? '').trim()]),
   )

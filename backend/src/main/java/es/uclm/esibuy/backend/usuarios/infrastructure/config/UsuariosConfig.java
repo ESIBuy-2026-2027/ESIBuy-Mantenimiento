@@ -18,6 +18,7 @@ import es.uclm.esibuy.backend.usuarios.application.service.AutenticacionService;
 import es.uclm.esibuy.backend.usuarios.application.service.AuthenticatorService;
 import es.uclm.esibuy.backend.usuarios.application.service.ListadoUsuariosService;
 import es.uclm.esibuy.backend.usuarios.application.service.RegistroUsuarioService;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web.CuentaActivaFilter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.email.SmtpEnvioEmailAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.CodigoVerificacionDocumentMapper;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.CodigoVerificacionMongoAdapter;
@@ -107,9 +108,16 @@ public class UsuariosConfig {
                 codigoVerificacionRepositoryPort, generadorCodigoPort, envioEmailPort, factorAutenticacionRepositoryPort, reloj);
     }
 
+    // HU23 (T206): Spring Boot añade este filtro a cada petición e invalida la sesión de las cuentas desactivadas
     @Bean
-    AdministracionUsuariosUseCase administracionUsuariosUseCase(UsuarioRepositoryPort usuarioRepositoryPort) {
-        return new AdministracionUsuariosService(usuarioRepositoryPort);
+    CuentaActivaFilter cuentaActivaFilter(AutenticacionUseCase autenticacionUseCase) {
+        return new CuentaActivaFilter(autenticacionUseCase);
+    }
+
+    @Bean
+    AdministracionUsuariosUseCase administracionUsuariosUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
+                                                                Clock reloj) {
+        return new AdministracionUsuariosService(usuarioRepositoryPort, reloj);
     }
 
     @Bean
