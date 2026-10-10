@@ -6,6 +6,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
@@ -136,6 +137,17 @@ class RegistroUsuarioServiceTest {
         RegistrarUsuarioCommand comando = comando("juan@uclm.es", "clave1234");
 
         assertThrows(CorreoYaRegistradoException.class, () -> registroUsuario.registrar(comando));
+
+        verify(usuarioRepository, never()).guardar(any(Usuario.class));
+    }
+
+    @Test
+    @DisplayName("HU1-CP12: rechaza un DNI ya registrado y no guarda nada")
+    void rechazaDniYaRegistrado() {
+        when(usuarioRepository.existePorDni("12345678Z")).thenReturn(true);
+        lenient().when(hashContrasena.hashear("clave1234")).thenReturn("hash-simulado");
+
+        assertThrows(DniYaRegistradoException.class, () -> registroUsuario.registrar(comando("juan@uclm.es", "clave1234")));
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
