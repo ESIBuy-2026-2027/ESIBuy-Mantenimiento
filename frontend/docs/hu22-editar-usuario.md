@@ -27,7 +27,7 @@ Al pulsar **Editar**, la ficha pasa a **modo edición**: los campos que se puede
 |---|---|---|
 | **Cliente** | **Rol**, nombre, apellidos, DNI, teléfono, fecha de nacimiento (siempre que sea **mayor de edad**), tipo de cliente (Estándar o Premium) e imagen de perfil | **Email** y estado |
 | **Administrador** | **Rol**, nombre, apellidos, sede e imagen de perfil | **Email**, **fecha de incorporación**, estado y fecha de alta |
-| **Vendedor** | **Rol** y **todos sus datos**: nombre, apellidos, email, nombre comercial (que siga siendo **único**), NIF/DNI y categoría principal | Estado |
+| **Vendedor** | **Rol**, nombre, apellidos, nombre comercial (que siga siendo **único**), NIF/DNI y **una sola categoría** | **Email** (por diseño del backend, de momento no se puede cambiar) y estado |
 
 La **fecha de alta** solo se muestra en la ficha del **administrador**: la de clientes y vendedores no se guarda, así que su ficha no tiene ese campo.
 
@@ -48,7 +48,7 @@ El campo **Rol** es un desplegable con Administrador, Vendedor y Cliente. Al ele
 | Administrador o vendedor → cliente | Aparecen **DNI** y **fecha de nacimiento** (obligatorios y vacíos), teléfono, tipo de cliente (Estándar por defecto) e imagen |
 
 - Se avisa con un mensaje: "Vas a cambiar el rol de esta cuenta a …". Si se vuelve a elegir el rol original, el formulario recupera sus datos.
-- El **email no cambia** al cambiar de rol: pasa a ser de solo lectura. Solo un vendedor que lo sigue siendo puede cambiar su email.
+- El **email nunca se cambia desde esta pantalla**, tampoco el de un vendedor (decisión del equipo por diseño del backend: de momento no se puede cambiar el correo de un vendedor). En todos los roles es un campo de solo lectura.
 - **Un administrador no puede cambiar su propio rol** (no puede degradarse a sí mismo): en su propia ficha el desplegable de rol está deshabilitado y lo explica ("No puedes cambiar tu propio rol."). Si el backend lo rechaza igualmente, se muestra ese mismo mensaje.
 - **No se puede degradar al último administrador.** El frontend no puede saber con seguridad cuántos administradores activos hay (solo ve una página del listado), así que lo impone el backend y el frontend muestra el motivo: "No se puede degradar al último administrador.".
 - Si el vendedor deja de serlo, su ficha de vendedor se cierra y el listado de vendedores se actualiza; la cuenta pasa al listado que le corresponde según su rol nuevo.
@@ -77,7 +77,7 @@ flowchart TD
     E -- Corrige un campo --> F[Se revalida en vivo]
     F --> D
     D -- Sí --> G[PUT al backend]
-    G -- 409 email o nombre comercial repetido --> H[Error junto al campo, sigue en edición]
+    G -- 409 nombre comercial repetido --> H[Error junto al campo, sigue en edición]
     G -- 409 propio rol o último administrador --> M[Mensaje con el motivo, sigue en edición]
     G -- Otro error --> I[Mensaje genérico, conserva lo escrito]
     H --> C
@@ -114,7 +114,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | `features/account/accountRules.js` | `esDniValido`, `esTelefonoValido` y `esMayorDeEdad`, que antes estaban dentro del registro. `pages/Register.jsx` las usa desde aquí. |
 | `api/users.js` | `updateUser(userId, datos)`: **una sola llamada para los tres tipos de usuario**. |
 | `api/adminSellers.js` | Ya no tiene función de edición: los vendedores se editan con `updateUser`. |
-| `mocks/usersHandlers.js` | Simula `PUT /api/admin/usuarios/{id}` para cualquier cuenta, también vendedores y cambios de rol: valida según el rol que queda, impide cambiar el propio rol y degradar al último administrador activo, comprueba la unicidad del nombre comercial y del email, y deja activo a un administrador que estaba pendiente. |
+| `mocks/usersHandlers.js` | Simula `PUT /api/admin/usuarios/{id}` para cualquier cuenta, también vendedores y cambios de rol: valida según el rol que queda, impide cambiar el propio rol y degradar al último administrador activo, comprueba la unicidad del nombre comercial y deja activo a un administrador que estaba pendiente. |
 | `mocks/adminSellersHandlers.js` | Almacén de vendedores del mock: ahora permite que un vendedor salga (al dejar de serlo) o entre (al pasar a vendedor una cuenta). Ya no tiene `PUT` propio. |
 | `mocks/fechas.js` | Comprobación de mayoría de edad de los mocks. |
 
@@ -131,15 +131,14 @@ Todas las rutas son relativas a `frontend/src/`.
 | Fecha de nacimiento (cliente) | Obligatoria y de una persona **mayor de edad** (un día antes de cumplir los 18 ya no vale) |
 | Tipo de cliente | Estándar o Premium |
 | Sede (administrador) | Opcional, máximo 30 caracteres |
-| Email (vendedor que sigue siéndolo) | Obligatorio, formato válido, máximo 100 caracteres, único |
 | Nombre comercial (vendedor) | Obligatorio, máximo 30 caracteres, único |
 | NIF/DNI (vendedor) | Obligatorio, 9 caracteres alfanuméricos |
-| Categoría principal (vendedor) | Obligatoria, una de las categorías del sistema |
+| Categoría (vendedor) | Obligatoria, **una sola**, de las categorías del sistema (campo `categoriaPrincipalId`) |
 
 - **Se valida con los campos del rol que queda**, no con los del rol anterior.
 - **Todos los errores a la vez** al pulsar **Guardar**, sin llamar al servidor si hay alguno.
 - **En vivo después del primer intento:** el error de un campo desaparece en cuanto se corrige.
-- **El servidor también valida.** Si el email o el nombre comercial ya son de otra cuenta, el mensaje sale junto a su campo. Los errores del cambio de rol (propio rol, último administrador) salen como mensaje del formulario. Cualquier otro fallo da el mensaje genérico "No se han podido guardar los cambios", sin detalles internos, y el formulario conserva lo escrito.
+- **El servidor también valida.** Si el nombre comercial ya es de otro vendedor, el mensaje sale junto a su campo. Los errores del cambio de rol (propio rol, último administrador) salen como mensaje del formulario. Cualquier otro fallo da el mensaje genérico "No se han podido guardar los cambios", sin detalles internos, y el formulario conserva lo escrito.
 - **Doble clic:** mientras se guarda, los botones se deshabilitan y solo se envía una petición.
 
 ---
@@ -147,7 +146,7 @@ Todas las rutas son relativas a `frontend/src/`.
 ## 5. Seguridad
 
 - **Solo administradores.** Las rutas están protegidas y los mocks responden 401 sin sesión y 403 con otro rol. La barrera real es el backend.
-- **No viajan datos que no se pueden cambiar:** nunca se envían el email de clientes y administradores, la fecha de incorporación, el estado ni la contraseña (`profilePayload` solo incluye los campos modificables del rol que queda). Si el backend recibiera uno, debe ignorarlo o rechazarlo.
+- **No viajan datos que no se pueden cambiar:** nunca se envían el email (de ningún rol), la fecha de incorporación, el estado ni la contraseña (`profilePayload` solo incluye los campos modificables del rol que queda). Si el backend recibiera uno, debe ignorarlo o rechazarlo.
 - **El cambio de rol es una operación sensible:** lo impone el backend (no el propio rol, no el último administrador). El bloqueo del desplegable en la propia cuenta es solo una ayuda de interfaz.
 - **No existe campo de contraseña** en ninguna ficha, ni en lectura ni en edición.
 - **Los errores del servidor no se muestran tal cual,** solo mensajes fijos.
@@ -172,11 +171,11 @@ Todas las rutas son relativas a `frontend/src/`.
 ```
 
 ```json
-{ "rol": "VENDEDOR", "nombre": "Vera", "apellidos": "Vendedora", "email": "vendedor@esibuy.test",
+{ "rol": "VENDEDOR", "nombre": "Vera", "apellidos": "Vendedora",
   "nombreComercial": "TecnoVera", "nif": "B12345601", "categoriaPrincipalId": "cat-1" }
 ```
 
-En un **cambio de rol** el cuerpo lleva el rol nuevo y los datos de ese rol (p. ej. un cliente que pasa a administrador envía `rol: "ADMINISTRADOR"`, `sede` y `avatar`, y ya no envía DNI ni fecha de nacimiento). El email solo viaja cuando la cuenta ya era de vendedor y lo sigue siendo.
+En un **cambio de rol** el cuerpo lleva el rol nuevo y los datos de ese rol (p. ej. un cliente que pasa a administrador envía `rol: "ADMINISTRADOR"`, `sede` y `avatar`, y ya no envía DNI ni fecha de nacimiento). El email no viaja nunca.
 
 ### Respuestas
 
@@ -184,7 +183,6 @@ En un **cambio de rol** el cuerpo lleva el rol nuevo y los datos de ese rol (p. 
 |---|---|
 | 200 + datos del usuario | Guardado. La ficha se recarga |
 | 400 (`VALIDATION_ERROR`) | Mensaje genérico |
-| 409 + `{ "code": "EMAIL_ALREADY_REGISTERED" }` | "Este email ya está registrado" (junto al campo) |
 | 409 + `{ "code": "COMMERCIAL_NAME_ALREADY_REGISTERED" }` | "Este nombre comercial ya está registrado" (junto al campo) |
 | 409 + `{ "code": "CANNOT_CHANGE_OWN_ROLE" }` | "No puedes cambiar tu propio rol." |
 | 409 + `{ "code": "LAST_ACTIVE_ADMIN" }` | "No se puede degradar al último administrador." (el mismo código que HU23 usa al desactivar) |
@@ -194,9 +192,9 @@ En un **cambio de rol** el cuerpo lleva el rol nuevo y los datos de ese rol (p. 
 
 - Que solo el administrador pueda llamar a este endpoint.
 - Que un administrador **no pueda cambiar el rol de su propia cuenta** y que **no se pueda degradar al último administrador activo**.
-- Que el email de clientes y administradores y la fecha de incorporación **no cambien nunca**, aunque lleguen en el cuerpo.
+- Que el email (de cualquier rol) y la fecha de incorporación **no cambien nunca**, aunque lleguen en el cuerpo.
 - Que la contraseña no se pueda cambiar por esta vía.
-- La mayoría de edad de la fecha de nacimiento y la unicidad del nombre comercial y del email.
+- La mayoría de edad de la fecha de nacimiento y la unicidad del nombre comercial.
 - **Un administrador nunca queda pendiente:** si una cuenta pendiente pasa a administrador, debe quedar activa.
 - Que el detalle del vendedor (`GET /api/admin/sellers/{id}`) incluya `categoriaPrincipalId` además de `categoriaPrincipal` (el nombre), porque el formulario elige la categoría por identificador.
 - Que `GET /api/admin/usuarios/{id}` devuelva, para una cuenta que ha cambiado de rol, los datos del rol nuevo.
@@ -220,7 +218,7 @@ Con `npm run dev` (mocks activos): `admin@esibuy.test`, contraseña `Mock-Clave-
 | **Usuarios** → rol **Administrador** | El filtro de estado tampoco ofrece Pendiente |
 | **Vendedores** → lupa de `TecnoVera` → **Editar** | Todos los datos y el rol se pueden cambiar; las pestañas Productos y Pedidos están deshabilitadas |
 | Cambiar el nombre comercial a `Casa Vicente` | "Este nombre comercial ya está registrado" |
-| Cambiar el email a `hugo@esibuy.test` | "Este email ya está registrado" |
+| Intentar escribir en el campo **Correo electrónico** | No se puede: es de solo lectura (fondo oscuro) |
 | **Vendedores** → `Casa Vicente` → **Editar** → rol **Administrador** → **Guardar** | La ficha se cierra y `Casa Vicente` desaparece del listado de vendedores |
 | **Cancelar** | Vuelve a la ficha sin guardar nada y con el rol original |
 
@@ -236,7 +234,7 @@ Esta rama pasa de 518 a 590 tests (74 nuevos y 2 menos, los de la función de ed
 
 | Archivo | Qué cubre |
 |---|---|
-| `features/admin/profileFields.test.js` | El campo rol, los campos que ofrece cada rol destino, que el email solo sea editable en un vendedor que sigue siéndolo, valores iniciales con los campos de todos los roles, validación y cuerpo de la petición en un cambio de rol |
+| `features/admin/profileFields.test.js` | El campo rol, los campos que ofrece cada rol destino, que el email no sea editable en ningún rol, valores iniciales con los campos de todos los roles, validación y cuerpo de la petición en un cambio de rol |
 | `features/admin/ProfileEditor.test.jsx` | El desplegable de rol, su bloqueo y su ayuda, el cambio de campos al elegir otro rol, los datos exigidos al pasar a vendedor o a cliente, el aviso de cuenta pendiente que pasa a administrador, y los mensajes de "propio rol" y "último administrador" |
 | `features/admin/EditableProfile.test.jsx` (nuevo) | Carga de las categorías, error con reintento y bloqueo del rol |
 | `features/admin/UserDetailDialog.test.jsx` | Rol bloqueado en la propia ficha, ascenso de un cliente a administrador, paso a vendedor y a cliente, cuenta pendiente que queda activa, errores del backend y cancelar |
@@ -258,7 +256,8 @@ Se ajustaron tests existentes de la HU19 (con los datos nuevos hay 4 cuentas pen
 - **Un único endpoint de edición** (`PUT /api/admin/usuarios/{id}`) en lugar de uno para vendedores: es más simple, es lo que encaja con el backend (una sola colección de usuarios) y permite cambiar el rol con la misma llamada. Si el backend decide otra cosa, el cambio en el frontend es `updateUser` y poco más.
 - **El formulario edita en la propia ficha** (no en una página aparte), igual que la ficha y su estado: el administrador no pierde el listado ni su posición.
 - **El formulario cambia de campos al elegir otro rol** en lugar de mostrar todos a la vez: así solo se piden y validan los datos del rol que queda.
-- **El email no se puede cambiar al cambiar de rol:** solo es editable si la cuenta ya era de vendedor y lo sigue siendo. Es la lectura más segura de "vendedor: se puede modificar todo, y el resto no el email". Si no debe cambiar ni siquiera en un vendedor, basta con quitar la propiedad `edit` de ese campo en `profileFields.js`.
+- **El email no se puede cambiar:** ni en clientes, ni en administradores, ni en vendedores. Al principio se permitía en los vendedores; el equipo decidió quitarlo porque, por diseño del backend, de momento no se puede cambiar el correo de un vendedor. Para volver a permitirlo bastaría con darle `edit` al campo en `profileFields.js`.
+- **Un vendedor tiene una sola categoría** (decisión del equipo): el formulario sigue usando `categoriaPrincipalId`, un único identificador.
 - **Un administrador que cambia a otro rol conserva su estado, salvo si estaba pendiente y pasa a administrador:** entonces queda activo (los administradores no están pendientes).
 - **Cliente Premium:** el administrador puede pasar a un cliente de Estándar a Premium y al revés. Pasar a Premium en el registro lleva a un flujo de pago que aún no existe; no hay que confundirlos.
 - **Fecha de alta solo en administradores:** la de clientes y vendedores no se guarda, así que se quitó de sus fichas. El listado general de usuarios (HU19) y el de clientes siguen teniendo la columna "Fecha de alta" de `UsersTable`; si tampoco debe mostrarse, hay que quitarla de la tabla y del contrato.
@@ -268,7 +267,6 @@ Se ajustaron tests existentes de la HU19 (con los datos nuevos hay 4 cuentas pen
 
 - **"He olvidado mi contraseña"** es la única vía de cambio de contraseña para los tres tipos de usuario, pero **esa pantalla todavía no existe** (el login no tiene el enlace). Hasta entonces, nadie puede cambiar su contraseña.
 - **El último administrador solo lo comprueba el backend**, por la misma razón que en la HU23: el frontend solo ve una página del listado.
-- **Cambiar el email de un vendedor** puede afectar a su inicio de sesión; conviene confirmar con el backend si ese cambio exige verificar el nuevo correo.
 - **Un cambio de rol puede dejar datos huérfanos** (por ejemplo, un vendedor que pasa a cliente conserva sus productos). Qué hacer con ellos no está definido y lo decide el backend.
 - **La sesión de la cuenta cuyo rol cambia** debería actualizarse o invalidarse; es tarea del backend.
 - **Imagen de perfil del vendedor:** la ficha del vendedor no tiene imagen de perfil, así que no se edita.

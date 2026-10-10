@@ -35,9 +35,11 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-// Gestión de cuentas por el administrador: activar (HU24, T33/T34), consultar (HU20) y editar (HU22, T42/T44).
-// El repositorio es un doble de prueba (Mockito): se prueba el caso de uso sin MongoDB ni Spring.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU24-CP01 a CP04 y HU22-CP01 a CP08, propuestos a partir del contrato.
+// Gestión de cuentas por el administrador: activar (HU24, T33/T34), consultar la ficha de un usuario (HU20)
+// y de un vendedor (HU26) y editar (HU22, T42/T44). El repositorio es un doble de prueba (Mockito): se prueba
+// el caso de uso sin MongoDB ni Spring.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU24-CP01 a CP04, HU20-CP01 a CP04, HU26-CP01 a CP05 y
+// HU22-CP01 a CP08, propuestos.
 @ExtendWith(MockitoExtension.class)
 class AdministracionUsuariosServiceTest {
 
@@ -188,5 +190,35 @@ class AdministracionUsuariosServiceTest {
         when(usuarioRepository.buscarPorId("no-existe")).thenReturn(Optional.empty());
 
         assertThrows(UsuarioNoEncontradoException.class, () -> servicio.consultar("no-existe"));
+    }
+
+    @Test
+    @DisplayName("HU26-CP03: consultarVendedor devuelve el vendedor y no cambia nada")
+    void consultarVendedorDevuelveElVendedor() {
+        Usuario vendedor = new Usuario("v-1", new DatosPersonales("Marta", "Ruiz Gil", null),
+                new Email("marta@esibuy.test"), "hash-simulado", Rol.VENDEDOR, null, null);
+        when(usuarioRepository.buscarPorId("v-1")).thenReturn(Optional.of(vendedor));
+
+        assertSame(vendedor, servicio.consultarVendedor("v-1"));
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU26-CP04: consultarVendedor de un usuario que no es vendedor falla como si no existiera")
+    void consultarVendedorDeOtroRolFalla() {
+        Usuario cliente = new Usuario("u-1", new DatosPersonales("Lucía", "Torres Vega", null),
+                new Email("lucia@uclm.es"), "hash-simulado", Rol.CLIENTE,
+                new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1996, 5, 20), null), null);
+        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(cliente));
+
+        assertThrows(UsuarioNoEncontradoException.class, () -> servicio.consultarVendedor("u-1"));
+    }
+
+    @Test
+    @DisplayName("HU26-CP04: consultarVendedor de un usuario que no existe falla")
+    void consultarVendedorQueNoExisteFalla() {
+        when(usuarioRepository.buscarPorId("no-existe")).thenReturn(Optional.empty());
+
+        assertThrows(UsuarioNoEncontradoException.class, () -> servicio.consultarVendedor("no-existe"));
     }
 }

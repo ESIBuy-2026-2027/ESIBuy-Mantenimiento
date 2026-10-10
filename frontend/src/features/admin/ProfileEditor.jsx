@@ -48,7 +48,6 @@ const useStyles = makeStyles({
 
 // Errores del backend que se muestran junto al campo que los provoca.
 const ERRORES_DE_CAMPO = {
-  EMAIL_ALREADY_REGISTERED: ['email', 'Este email ya está registrado'],
   COMMERCIAL_NAME_ALREADY_REGISTERED: ['nombreComercial', 'Este nombre comercial ya está registrado'],
 }
 
@@ -202,7 +201,7 @@ export default function ProfileEditor({ rol, usuario, categories = [], lockRol =
           </MessageBarBody>
         </MessageBar>
       )}
-      <div className={styles.grid}>{editFieldsFor(rolDestino, rol).map(renderField)}</div>
+      <div className={styles.grid}>{editFieldsFor(rolDestino).map(renderField)}</div>
       <div className={styles.actions}>
         <Button
           type="submit"
