@@ -59,17 +59,18 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
     @Override
     public Usuario editar(String usuarioId, EditarUsuarioCommand comando) {
         Usuario usuario = buscar(usuarioId);
-        // PENDIENTE (T43): el cambio de rol, con sus reglas (propio rol, último administrador).
-        if (comando.rol() != usuario.getRol()) {
-            throw new UsuarioInvalidoException("El cambio de rol todavía no está disponible");
+        // PENDIENTE: pasar una cuenta a vendedor, cuando existan sus datos (nombre comercial, NIF y categoría).
+        if (comando.rol() == Rol.VENDEDOR && usuario.getRol() != Rol.VENDEDOR) {
+            throw new UsuarioInvalidoException("Pasar una cuenta a vendedor todavía no está disponible");
         }
         DatosPersonales datosPersonales = new DatosPersonales(comando.nombre(), comando.apellidos(),
                 comando.imagenPerfil());
-        DatosCliente datosCliente = datosCliente(usuario.getRol(), comando);
+        // Los datos son los del rol que queda (el nuevo si cambia)
+        DatosCliente datosCliente = datosCliente(comando.rol(), comando);
         if (datosCliente != null) {
             exigirDniLibre(usuario, datosCliente.dni());
         }
-        usuario.modificarDatos(datosPersonales, datosCliente, LocalDate.now(reloj));
+        usuario.cambiarRol(comando.rol(), datosPersonales, datosCliente, LocalDate.now(reloj));
         usuarioRepository.guardar(usuario);
         return usuario;
     }
@@ -89,10 +90,12 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         return usuario;
     }
 
-    // Solo se comprueba si el DNI cambia: si no, el cliente chocaría consigo mismo.
+    // Solo se comprueba si el DNI cambia: si no, el cliente chocaría consigo mismo. Quien pasa a cliente no tiene DNI.
     // PENDIENTE: existePorDni no distingue rol, aunque el índice rol_dni sí; revisar cuando los vendedores tengan DNI.
     private void exigirDniLibre(Usuario usuario, Dni nuevoDni) {
-        if (!nuevoDni.equals(usuario.getDatosCliente().dni()) && usuarioRepository.existePorDni(nuevoDni.valor())) {
+        DatosCliente actuales = usuario.getDatosCliente();
+        boolean esSuDni = actuales != null && nuevoDni.equals(actuales.dni());
+        if (!esSuDni && usuarioRepository.existePorDni(nuevoDni.valor())) {
             throw new DniYaRegistradoException("El DNI ya está registrado");
         }
     }
