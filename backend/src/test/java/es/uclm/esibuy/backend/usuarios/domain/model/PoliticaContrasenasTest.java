@@ -2,7 +2,6 @@ package es.uclm.esibuy.backend.usuarios.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import org.junit.jupiter.api.DisplayName;
@@ -72,15 +71,14 @@ class PoliticaContrasenasTest {
     @Test
     @DisplayName("HU1-CP05: rechaza una contraseña de 65 caracteres")
     void rechazaContrasenaDe65Caracteres() {
-        // TODO: frontera superior: 65 caracteres -> ContrasenaInvalidaException. AB#226
-        fail("Funcionalidad no implementada");
+        // Frontera superior: BCrypt solo usa los primeros 72 bytes; el máximo de 64 lo evita
+        assertThrows(ContrasenaInvalidaException.class, () -> validar("Tr3boles-Azules!".repeat(4) + "x"));
     }
 
     @Test
     @DisplayName("HU1-CP05: acepta una contraseña de exactamente 64 caracteres")
     void aceptaContrasenaDe64Caracteres() {
-        // TODO: frontera superior: 64 caracteres válidos -> no lanza. AB#226
-        fail("Funcionalidad no implementada");
+        assertDoesNotThrow(() -> validar("Tr3boles-Azules!".repeat(4)));
     }
 
     private static void validar(String contrasena) {
