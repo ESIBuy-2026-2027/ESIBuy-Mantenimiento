@@ -28,6 +28,7 @@ import java.time.Month;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -526,6 +527,124 @@ class UsuarioControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(administracionUsuarios, never()).consultar(any());
+    }
+
+    // Supervisión de vendedores (HU26, T30): GET /api/admin/sellers y /api/admin/sellers/{id}.
+    // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU26-CP01 a CP05, propuestos a partir de los
+    // criterios de aceptación y del contrato.
+
+    private static Usuario vendedor() {
+        return new Usuario("v-1", new DatosPersonales("Marta", "Ruiz Gil", null),
+                new Email("marta@esibuy.test"), "hash-no-debe-salir", Rol.VENDEDOR, null, null);
+    }
+
+    @Test
+    @DisplayName("HU26-CP01: un administrador recibe el listado de vendedores sin datos sensibles")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void administradorRecibeElListadoDeVendedores() throws Exception {
+        when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(java.util.List.of(vendedor()), 1, 10, 11));
+
+        mockMvc.perform(get("/api/admin/sellers")
+                        .param("page", "2")
+                        .param("size", "10")
+                        .param("search", "marta")
+                        .param("status", "PENDIENTE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value("v-1"))
+                .andExpect(jsonPath("$.items[0].nombre").value("Marta"))
+                .andExpect(jsonPath("$.items[0].apellidos").value("Ruiz Gil"))
+                .andExpect(jsonPath("$.items[0].email").value("marta@esibuy.test"))
+                .andExpect(jsonPath("$.items[0].estado").value("PENDIENTE"))
+                .andExpect(jsonPath("$.items[0].passwordHash").doesNotExist())
+                .andExpect(jsonPath("$.page").value(2))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalItems").value(11))
+                .andExpect(jsonPath("$.totalPages").value(2));
+
+        verify(listadoUsuarios).listar(new ListarUsuariosQuery(
+                "marta", Rol.VENDEDOR, "PENDIENTE", 1, 10, null, false));
+    }
+
+    // Una celda vacía llega como null: sin parámetro de orden o sin orden esperado.
+    @ParameterizedTest(name = "sort={0}, order={1}")
+    @CsvSource({
+            "name,     asc,  NOMBRE, false",
+            "status,   desc, ESTADO, true",
+            "category, asc,  ,       false",
+            ",         ,     ,       false"
+    })
+    @DisplayName("HU26-CP02: el listado de vendedores traduce la ordenación pedida")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void listadoDeVendedoresTraduceLaOrdenacion(String sort, String order, ListarUsuariosQuery.Orden orden,
+            boolean descendente) throws Exception {
+        when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(java.util.List.of(), 0, 10, 0));
+        MockHttpServletRequestBuilder peticion = get("/api/admin/sellers");
+        if (sort != null) {
+            peticion.param("sort", sort);
+        }
+        if (order != null) {
+            peticion.param("order", order);
+        }
+
+        mockMvc.perform(peticion).andExpect(status().isOk());
+
+        verify(listadoUsuarios).listar(new ListarUsuariosQuery(
+                null, Rol.VENDEDOR, null, 0, 10, orden, descendente));
+    }
+
+    @Test
+    @DisplayName("HU26-CP03: la ficha de un vendedor trae sus datos, sin datos sensibles")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void fichaDeUnVendedor() throws Exception {
+        when(administracionUsuarios.consultarVendedor("v-1")).thenReturn(vendedor());
+
+        mockMvc.perform(get("/api/admin/sellers/{id}", "v-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("v-1"))
+                .andExpect(jsonPath("$.nombre").value("Marta"))
+                .andExpect(jsonPath("$.apellidos").value("Ruiz Gil"))
+                .andExpect(jsonPath("$.email").value("marta@esibuy.test"))
+                .andExpect(jsonPath("$.estado").value("PENDIENTE"))
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("HU26-CP04: la ficha de un usuario que no existe o no es vendedor devuelve 404")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void fichaDeUnNoVendedorDevuelve404() throws Exception {
+        when(administracionUsuarios.consultarVendedor("usr-4"))
+                .thenThrow(new UsuarioNoEncontradoException("El vendedor no existe"));
+
+        mockMvc.perform(get("/api/admin/sellers/{id}", "usr-4"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"/api/admin/sellers", "/api/admin/sellers/v-1"})
+    @DisplayName("HU26-CP05: sin sesión no se ven los vendedores")
+    void vendedoresSinSesionDevuelve401(String ruta) throws Exception {
+        mockMvc.perform(get(ruta))
+                .andExpect(status().isUnauthorized());
+
+        verify(listadoUsuarios, never()).listar(any());
+        verify(administracionUsuarios, never()).consultarVendedor(any());
+    }
+
+    @ParameterizedTest(name = "rol {0} en {1}")
+    @CsvSource({
+            "CLIENTE,  /api/admin/sellers",
+            "CLIENTE,  /api/admin/sellers/v-1",
+            "VENDEDOR, /api/admin/sellers",
+            "VENDEDOR, /api/admin/sellers/v-1"
+    })
+    @DisplayName("HU26-CP05: un usuario que no es administrador no ve los vendedores")
+    void noAdministradorNoVeLosVendedores(String rol, String ruta) throws Exception {
+        mockMvc.perform(get(ruta).with(user("usuario").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(listadoUsuarios, never()).listar(any());
+        verify(administracionUsuarios, never()).consultarVendedor(any());
     }
 
     // PATCH con sesión: lleva el token CSRF (la estrategia de CSRF se decidirá con el login, task 230).

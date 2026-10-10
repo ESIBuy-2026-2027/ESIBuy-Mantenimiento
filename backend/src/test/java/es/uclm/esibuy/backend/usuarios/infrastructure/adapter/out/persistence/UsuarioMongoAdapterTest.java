@@ -399,6 +399,65 @@ class UsuarioMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU26-CP02: el adaptador ordena por estado ascendente: pendientes, activos y desactivados")
+    void listarOrdenaPorEstadoAscendente() {
+        guardarVendedoresConEstadosDesordenados();
+
+        UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(
+                null, Rol.VENDEDOR, null, 0, 10, ListarUsuariosQuery.Orden.ESTADO, false));
+
+        assertEquals(List.of("PENDIENTE", "ACTIVO", "DESACTIVADO"), estados(resultado));
+    }
+
+    @Test
+    @DisplayName("HU26-CP02: el adaptador ordena por estado descendente: desactivados, activos y pendientes")
+    void listarOrdenaPorEstadoDescendente() {
+        guardarVendedoresConEstadosDesordenados();
+
+        UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(
+                null, Rol.VENDEDOR, null, 0, 10, ListarUsuariosQuery.Orden.ESTADO, true));
+
+        assertEquals(List.of("DESACTIVADO", "ACTIVO", "PENDIENTE"), estados(resultado));
+    }
+
+    @Test
+    @DisplayName("HU26-CP02: el adaptador ordena por nombre")
+    void listarOrdenaPorNombre() {
+        usuarioMongoRepository.saveAll(List.of(
+                vendedorLlamado("carla@esibuy.test", "Carla"),
+                vendedorLlamado("ana@esibuy.test", "Ana"),
+                vendedorLlamado("bruno@esibuy.test", "Bruno")));
+
+        UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(
+                null, Rol.VENDEDOR, null, 0, 10, ListarUsuariosQuery.Orden.NOMBRE, false));
+
+        assertEquals(List.of("Ana", "Bruno", "Carla"),
+                resultado.usuarios().stream().map(u -> u.getDatosPersonales().nombre()).toList());
+    }
+
+    // Se guardan en un orden que no coincide con el esperado, para que el orden lo ponga la consulta.
+    private void guardarVendedoresConEstadosDesordenados() {
+        UsuarioDocument activo = documento("activo@esibuy.test", "hash-1", "VENDEDOR");
+        activo.setEstado("ACTIVO");
+        UsuarioDocument desactivado = documento("desactivado@esibuy.test", "hash-2", "VENDEDOR");
+        desactivado.setEstado("DESACTIVADO");
+        UsuarioDocument pendiente = documento("pendiente@esibuy.test", "hash-3", "VENDEDOR");
+        pendiente.setEstado("PENDIENTE");
+        usuarioMongoRepository.saveAll(List.of(activo, desactivado, pendiente));
+    }
+
+    private static UsuarioDocument vendedorLlamado(String email, String nombre) {
+        UsuarioDocument doc = documento(email, "hash", "VENDEDOR");
+        doc.setNombre(nombre);
+        doc.setEstado("ACTIVO");
+        return doc;
+    }
+
+    private static List<String> estados(UsuarioPage pagina) {
+        return pagina.usuarios().stream().map(Usuario::getEstado).toList();
+    }
+
+    @Test
     @DisplayName("HU23-CP04: contarAdministradoresActivos solo cuenta los administradores en estado ACTIVO")
     void contarAdministradoresActivosSoloCuentaLosAdministradoresActivos() {
         usuarioMongoRepository.saveAll(List.of(
