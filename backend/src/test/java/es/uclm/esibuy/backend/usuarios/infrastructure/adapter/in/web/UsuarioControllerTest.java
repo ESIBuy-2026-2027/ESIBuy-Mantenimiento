@@ -660,6 +660,37 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.mensaje").exists());
     }
 
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "VENDEDOR"})
+    @DisplayName("HU22-CP08: un usuario que no es administrador no puede editar usuarios (403)")
+    void unNoAdministradorNoPuedeEditarUsuarios(String rol) throws Exception {
+        mockMvc.perform(editar("usr-1", CUERPO_CLIENTE).with(user("usuario").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(administracionUsuarios, never()).editar(any(), any());
+    }
+
+    @Test
+    @DisplayName("HU22-CP08: sin sesión no se puede editar un usuario (401)")
+    void editarSinSesionEstaProtegido() throws Exception {
+        mockMvc.perform(editar("usr-1", CUERPO_CLIENTE))
+                .andExpect(status().isUnauthorized());
+
+        verify(administracionUsuarios, never()).editar(any(), any());
+    }
+
+    @Test
+    @DisplayName("HU22-CP08: un administrador sin token CSRF no puede editar un usuario (403)")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void editarSinTokenCsrfSeRechaza() throws Exception {
+        mockMvc.perform(put("/api/admin/usuarios/{id}", "usr-1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(CUERPO_CLIENTE))
+                .andExpect(status().isForbidden());
+
+        verify(administracionUsuarios, never()).editar(any(), any());
+    }
+
     private static Usuario clienteCarla() {
         return new Usuario("usr-1", new DatosPersonales("Carla", "Moreno Gil", "avatar1"),
                 new Email("carla@esibuy.test"), "hash-no-debe-salir", Rol.CLIENTE,
