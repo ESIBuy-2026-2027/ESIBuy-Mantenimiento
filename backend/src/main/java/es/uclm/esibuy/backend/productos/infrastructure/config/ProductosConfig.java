@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.productos.infrastructure.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence.ProductoDocumentMapper;
@@ -16,7 +17,8 @@ import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence.P
 public class ProductosConfig {
 
     @Bean
-    ProductoRepositoryPort productoRepositoryPort(ProductoMongoRepository productoMongoRepository) {
-        return new ProductoMongoAdapter(productoMongoRepository, new ProductoDocumentMapper());
+    ProductoRepositoryPort productoRepositoryPort(ProductoMongoRepository productoMongoRepository,
+            MongoTemplate mongoTemplate) {
+        return new ProductoMongoAdapter(productoMongoRepository, new ProductoDocumentMapper(), mongoTemplate);
     }
 }
