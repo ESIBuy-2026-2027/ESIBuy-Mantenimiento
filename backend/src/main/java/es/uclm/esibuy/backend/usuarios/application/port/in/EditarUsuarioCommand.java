@@ -16,7 +16,8 @@ import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
  * El email no se edita en ningún rol (decisión del equipo, 10/10/2026).
  *
  * <p>PENDIENTE: la sede del administrador y el nombre comercial, el NIF y la categoría del vendedor,
- * cuando existan en el modelo (ver {@code UsuarioDetalleResponse} y {@code VendedorResponse}).
+ * cuando existan en el modelo (ver {@code UsuarioDetalleResponse} y {@code VendedorResponse}). La fecha de
+ * incorporación del administrador, cuando exista, NO se añade aquí: es de solo lectura (decisión del equipo).
  */
 public record EditarUsuarioCommand(
         Rol rol,

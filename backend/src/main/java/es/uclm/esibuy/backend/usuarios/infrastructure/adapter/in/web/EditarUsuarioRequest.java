@@ -18,7 +18,8 @@ import jakarta.validation.constraints.Size;
  * Los campos que no están aquí (email, contraseña, estado...) se ignoran aunque lleguen en el cuerpo.
  *
  * <p>PENDIENTE: {@code sede} del administrador y {@code nombreComercial}, {@code nif} y
- * {@code categoriaPrincipalId} del vendedor, cuando existan en el modelo.
+ * {@code categoriaPrincipalId} del vendedor, cuando existan en el modelo. {@code fechaIncorporacion} del
+ * administrador, cuando exista, NO se añade aquí: es de solo lectura (decisión del equipo).
  */
 public record EditarUsuarioRequest(
         @NotNull Rol rol,
