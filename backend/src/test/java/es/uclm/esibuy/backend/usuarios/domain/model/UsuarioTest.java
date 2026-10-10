@@ -253,6 +253,44 @@ class UsuarioTest {
         assertNull(administrador.getDatosCliente());
     }
 
+    @Test
+    @DisplayName("HU22-CP05: rechaza modificar los datos de un cliente a los de un menor de edad y no cambia nada")
+    void modificarDatosRechazaUnClienteMenorDeEdad() {
+        Usuario usuario = cliente();
+        DatosPersonales nuevosDatosPersonales = new DatosPersonales("Carla", "Moreno Gil", null);
+        DatosCliente nacidoHace17Anos = datosClienteNacidoEl(HOY.minusYears(17));
+
+        assertThrows(UsuarioInvalidoException.class,
+                () -> usuario.modificarDatos(nuevosDatosPersonales, nacidoHace17Anos, HOY));
+        assertEquals(DATOS_PERSONALES, usuario.getDatosPersonales());
+        assertEquals(DATOS_CLIENTE, usuario.getDatosCliente());
+    }
+
+    @Test
+    @DisplayName("HU22-CP05: al modificar los datos acepta a un cliente que cumple 18 años hoy y rechaza al que los cumple mañana")
+    void modificarDatosAceptaUnClienteQueCumple18Hoy() {
+        Usuario usuario = cliente();
+        DatosCliente cumple18Hoy = datosClienteNacidoEl(HOY.minusYears(18));
+        DatosCliente cumple18Manana = datosClienteNacidoEl(HOY.minusYears(18).plusDays(1));
+
+        assertDoesNotThrow(() -> usuario.modificarDatos(DATOS_PERSONALES, cumple18Hoy, HOY));
+        assertThrows(UsuarioInvalidoException.class,
+                () -> usuario.modificarDatos(DATOS_PERSONALES, cumple18Manana, HOY));
+    }
+
+    @Test
+    @DisplayName("HU22-CP05: al modificar los datos no se quitan los datos de cliente a un cliente ni se ponen a otro rol")
+    void modificarDatosExigeDatosDeClienteCoherentesConElRol() {
+        Usuario usuario = cliente();
+        Usuario administrador = new Usuario("u-3", DATOS_PERSONALES, EMAIL, HASH, Rol.ADMINISTRADOR, null, null);
+
+        assertThrows(UsuarioInvalidoException.class, () -> usuario.modificarDatos(DATOS_PERSONALES, null, HOY));
+        assertThrows(UsuarioInvalidoException.class,
+                () -> administrador.modificarDatos(DATOS_PERSONALES, DATOS_CLIENTE, HOY));
+        assertEquals(DATOS_CLIENTE, usuario.getDatosCliente());
+        assertNull(administrador.getDatosCliente());
+    }
+
     private static DatosCliente datosClienteNacidoEl(LocalDate fechaNacimiento) {
         return new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), fechaNacimiento, null);
     }
