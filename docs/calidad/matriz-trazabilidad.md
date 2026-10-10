@@ -18,7 +18,7 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
 | HU1-CP01 | Registra un cliente con rol CLIENTE y estado PENDIENTE | Unitario + integración | 5 | ✅ Pasa |
-| HU1-CP02 | Guarda la contraseña hasheada, nunca en claro | Unitario + integración | 7 | ✅ Pasa (6) · 🔍 En revisión (1, AB#230) |
+| HU1-CP02 | Guarda la contraseña hasheada, nunca en claro | Unitario + integración | 7 | ✅ Pasa |
 | HU1-CP03 | Rechaza un correo ya registrado y no guarda nada | Unitario + integración | 5 | ✅ Pasa |
 | HU1-CP04 | Rechaza un username ya registrado | — | 0 | ⏸ Fuera de alcance (no está decidido si existe username) |
 | HU1-CP05 | Rechaza contraseñas de menos de 8 caracteres | Unitario + integración | 8 | ✅ Pasa |
@@ -28,7 +28,7 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | HU1-CP09 | Rechaza contraseñas de la lista de contraseñas comunes | Unitario | 2 | ✅ Pasa |
 | HU1-CP10 | Rechaza contraseñas que contienen datos personales del usuario | Unitario | 3 | ✅ Pasa |
 | HU1-CP11 | El usuario cumple sus invariantes de dominio (datos obligatorios, rol y tipo de cliente coherentes, desactivación) | Unitario | 12 | ✅ Pasa |
-| HU1-CP12 | Toda cuenta nueva registrada públicamente nace en estado PENDIENTE | Unitario | 1 | 🔍 En revisión |
+| HU1-CP12 | Toda cuenta nueva registrada públicamente nace en estado PENDIENTE | Unitario | 1 | ✅ Pasa |
 
 Notas:
 - **HU1-CP11:** en el PR #36, el bloqueo manual de la T214 se renombra a desactivar/activar (`desactivar()`, `activar()`, `estaDesactivado()`) para no confundirlo con el bloqueo temporal por intentos del login (HU2-CP03). En la T225 (AB#225) la consulta pasa a nombrarse en positivo: `estaActivo()`.
@@ -55,7 +55,7 @@ Notas:
 | HU1-CP02 | `BCryptHashContrasenaAdapterTest` | `hashUsaElCosteAcordado` | Infraestructura | AB#15 | PR #20 | ✅ |
 | HU1-CP02 | `RegistrarUsuarioCommandTest` | `toStringNoMuestraLaContrasena` | Aplicación | AB#223 | PR #26 | ✅ |
 | HU1-CP02 | `UsuarioDocumentMapperTest` | `convierteUsuarioEnDocumento` | Infraestructura | AB#216 | PR #28 | ✅ |
-| HU1-CP02 | `LoginRequestTest` | `toStringNoMuestraLaContrasena` | Infraestructura | AB#230 | PR #67 | 🔍 |
+| HU1-CP02 | `LoginRequestTest` | `toStringNoMuestraLaContrasena` | Infraestructura | AB#230 | PR #67 | ✅ |
 | HU1-CP03 | `RegistroUsuarioServiceTest` | `rechazaEmailYaRegistrado` | Aplicación | AB#16 | PR #14 | ✅ |
 | HU1-CP03 | `UsuarioMongoAdapterTest` | `existePorCorreoDevuelveTrueSiEstaGuardado` | Infraestructura | AB#216 | PR #28 | ✅ |
 | HU1-CP03 | `UsuarioMongoAdapterTest` | `existePorCorreoDevuelveFalseSiNoEstaGuardado` | Infraestructura | AB#216 | PR #28 | ✅ |
@@ -152,21 +152,22 @@ Los tests de integración de MongoDB (`UsuarioMongoAdapterTest`, `UsuariosConfig
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU2-CP01 | Inicia sesión con credenciales correctas y pasa al paso del código por email | Unitario + integración | 5 | ✅ Pasa (4) · 🔍 En revisión (1, AB#230) |
-| HU2-CP02 | Rechaza credenciales incorrectas sin revelar si el correo existe | Unitario + integración | 5 | ✅ Pasa (4) · 🔍 En revisión (1, AB#230) |
-| HU2-CP03 | Bloquea la cuenta durante 15 minutos tras 5 intentos fallidos | Unitario + integración | 6 | ✅ Pasa (5) · 🔍 En revisión (1, AB#230) |
-| HU2-CP04 | Rechaza el acceso a una cuenta desactivada | Unitario + integración | 4 | ✅ Pasa (3) · 🔍 En revisión (1, AB#230) |
-| HU2-CP05 | Al validar las credenciales, envía al correo del usuario un código de verificación | Unitario + integración | 4 | ✅ Pasa (3) · 🔍 En revisión (1, AB#230) |
-| HU2-CP06 | Un código correcto pasa al paso de Microsoft Authenticator | Unitario + integración | 3 | ✅ Pasa (2) · 🔍 En revisión (1, AB#230) |
-| HU2-CP07 | Rechaza un código incorrecto | Unitario + integración | 6 | ✅ Pasa (4) · 🔍 En revisión (2, AB#230) |
+| HU2-CP01 | Inicia sesión con credenciales correctas y pasa al paso del código por email | Unitario + integración | 5 | ✅ Pasa |
+| HU2-CP02 | Rechaza credenciales incorrectas sin revelar si el correo existe | Unitario + integración | 5 | ✅ Pasa |
+| HU2-CP03 | Bloquea la cuenta durante 15 minutos tras 5 intentos fallidos | Unitario + integración | 6 | ✅ Pasa |
+| HU2-CP04 | Rechaza el acceso a una cuenta desactivada | Unitario + integración | 4 | ✅ Pasa |
+| HU2-CP05 | Al validar las credenciales, envía al correo del usuario un código de verificación | Unitario + integración | 4 | ✅ Pasa |
+| HU2-CP06 | Un código correcto pasa al paso de Microsoft Authenticator | Unitario + integración | 3 | ✅ Pasa |
+| HU2-CP07 | Rechaza un código incorrecto | Unitario + integración | 6 | ✅ Pasa |
 | HU2-CP08 | Rechaza un código caducado (más de 10 minutos) | Unitario + integración | 3 | ✅ Pasa |
 | HU2-CP09 | Un código ya usado no se puede volver a usar | Unitario + integración | 6 | ✅ Pasa |
 | HU2-CP10 | Tras 5 intentos fallidos el código deja de valer, incluso el correcto | Unitario | 3 | ✅ Pasa |
 | HU2-CP11 | Un login nuevo sustituye al código anterior | Integración | 1 | ✅ Pasa |
-| HU2-CP12 | El código se guarda hasheado y asociado al usuario, nunca en claro | Unitario + integración | 6 | ✅ Pasa (5) · 🔍 En revisión (1, AB#230) |
+| HU2-CP12 | El código se guarda hasheado y asociado al usuario, nunca en claro | Unitario + integración | 6 | ✅ Pasa |
 | HU2-CP13 | El código de verificación tiene 6 dígitos aleatorios | Unitario | 3 | ✅ Pasa |
-| HU2-CP14 | Con sesión iniciada devuelve los datos del usuario; sin sesión, 401 | Unitario + integración | 3 | 🔍 En revisión (AB#230) |
-| HU2-CP15 | Cerrar sesión invalida la sesión | Integración | 1 | 🔍 En revisión (AB#230) |
+| HU2-CP14 | Con sesión iniciada devuelve los datos del usuario; sin sesión, 401 | Unitario + integración | 3 | ✅ Pasa |
+| HU2-CP15 | Cerrar sesión invalida la sesión | Integración | 1 | ✅ Pasa |
+| HU2-CP16 | Rechaza el acceso a una cuenta pendiente de verificación | Unitario + integración | 2 | 🔍 En revisión (AB#235) |
 
 Notas:
 - **HU2-CP01 a CP04:** casos definidos en la T19/T22 a partir del contrato del frontend (`frontend/src/mocks/authHandlers.js`). Pendientes de añadir a la descripción de la T22 en Azure Boards.
@@ -181,7 +182,8 @@ Notas:
 - **HU2-CP13:** caso nuevo de la T231 para el formato del código (6 dígitos, con ceros a la izquierda, de 000000 a 999999), que es una regla propia (D3 de la T21) y no la cubría ningún caso. Pendiente de añadir a la descripción de la HU2 en Azure Boards.
 - **T230 (AB#230):** endpoints del login (`AutenticacionController`): `POST /api/auth/login`, `POST /api/auth/verify-email-code`, `GET /api/auth/me` y `POST /api/auth/logout` (este último lo hace Spring Security). Los tests de `AutenticacionControllerTest` (`@WebMvcTest`) prueban CP01 a CP07 a través de HTTP: códigos 200, 401, 429, 403 con `code: ACCOUNT_DISABLED` y 503, y que el paso 2 sin el paso 1 se rechaza (CP07). Prueba manual de los pasos 1 y 2 contra el backend real (MongoDB local, correo por Brevo) el 10/10/2026.
 - **HU2-CP14 y CP15:** casos nuevos de la T230 para `/me` y el cierre de sesión. Pendientes de añadir a la descripción de la HU2 en Azure Boards. Hasta la T20 (paso 3), `/me` responde siempre 401 en la aplicación real: la sesión no se abre todavía.
-- Los casos de Microsoft Authenticator (T20) se añadirán como CP16 en adelante (CP13 lo ocupa la T231 y CP14-CP15 la T230).
+- **HU2-CP16 (T235, AB#235):** la comprobación de cuenta pendiente se realiza intencionadamente después de validar la contraseña para evitar la enumeración de cuentas inactivas por parte de posibles atacantes. El PR #70 lo propuso como CP14, pero CP14 y CP15 ya los usaba la T230 (PR #67): se renumeró a CP16 al integrar develop. Responde **403 con `code: ACCOUNT_PENDING`** (como la cuenta desactivada), que es lo que leerá el frontend en la T236; el test del controlador lo comprueba (sin `@ResponseStatus` respondía 200).
+- Los casos de Microsoft Authenticator (T20) se añadirán como CP17 en adelante (CP13 lo ocupa la T231, CP14-CP15 la T230 y CP16 la T235).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -233,19 +235,21 @@ Notas:
 | HU2-CP13 | `SecureRandomGeneradorCodigoAdapterTest` | `generaUnCodigoDeSeisDigitos` | Infraestructura | AB#231 | PR #54 | ✅ |
 | HU2-CP13 | `SecureRandomGeneradorCodigoAdapterTest` | `rellenaConCerosALaIzquierda` | Infraestructura | AB#231 | PR #54 | ✅ |
 | HU2-CP13 | `SecureRandomGeneradorCodigoAdapterTest` | `usaTodoElRangoDeSeisDigitos` | Infraestructura | AB#231 | PR #54 | ✅ |
-| HU2-CP01 | `AutenticacionControllerTest` | `loginCorrectoPasaAlCodigoDelCorreo` | Infraestructura | AB#230 | PR #67 | 🔍 |
-| HU2-CP02 | `AutenticacionControllerTest` | `loginConCredencialesIncorrectasDevuelve401` | Infraestructura | AB#230 | PR #67 | 🔍 |
-| HU2-CP03 | `AutenticacionControllerTest` | `cuentaBloqueadaDevuelve429` | Infraestructura | AB#230 | PR #67 | 🔍 |
-| HU2-CP04 | `AutenticacionControllerTest` | `cuentaDesactivadaDevuelve403ConCodigo` | Infraestructura | AB#230 | PR #67 | 🔍 |
-| HU2-CP05 | `AutenticacionControllerTest` | `falloDelCorreoDevuelve503` | Infraestructura | AB#230 | PR #67 | 🔍 |
-| HU2-CP06 | `AutenticacionControllerTest` | `codigoCorrectoPasaAlAuthenticator` | Infraestructura | AB#230 | PR #67 | 🔍 |
-| HU2-CP07 | `AutenticacionControllerTest` | `codigoSinLoginPrevioDevuelve401` | Infraestructura | AB#230 | PR #67 | 🔍 |
-| HU2-CP07 | `AutenticacionControllerTest` | `codigoIncorrectoDevuelve401` | Infraestructura | AB#230 | PR #67 | 🔍 |
-| HU2-CP12 | `VerificarCodigoRequestTest` | `toStringNoMuestraElCodigo` | Infraestructura | AB#230 | PR #67 | 🔍 |
-| HU2-CP14 | `AutenticacionServiceTest` | `consultaElUsuarioEnSesion` | Aplicación | AB#230 | PR #67 | 🔍 |
-| HU2-CP14 | `AutenticacionControllerTest` | `meSinSesionDevuelve401` | Infraestructura | AB#230 | PR #67 | 🔍 |
-| HU2-CP14 | `AutenticacionControllerTest` | `meConSesionDevuelveElUsuario` | Infraestructura | AB#230 | PR #67 | 🔍 |
-| HU2-CP15 | `AutenticacionControllerTest` | `logoutCierraLaSesion` | Infraestructura | AB#230 | PR #67 | 🔍 |
+| HU2-CP01 | `AutenticacionControllerTest` | `loginCorrectoPasaAlCodigoDelCorreo` | Infraestructura | AB#230 | PR #67 | ✅ |
+| HU2-CP02 | `AutenticacionControllerTest` | `loginConCredencialesIncorrectasDevuelve401` | Infraestructura | AB#230 | PR #67 | ✅ |
+| HU2-CP03 | `AutenticacionControllerTest` | `cuentaBloqueadaDevuelve429` | Infraestructura | AB#230 | PR #67 | ✅ |
+| HU2-CP04 | `AutenticacionControllerTest` | `cuentaDesactivadaDevuelve403ConCodigo` | Infraestructura | AB#230 | PR #67 | ✅ |
+| HU2-CP05 | `AutenticacionControllerTest` | `falloDelCorreoDevuelve503` | Infraestructura | AB#230 | PR #67 | ✅ |
+| HU2-CP06 | `AutenticacionControllerTest` | `codigoCorrectoPasaAlAuthenticator` | Infraestructura | AB#230 | PR #67 | ✅ |
+| HU2-CP07 | `AutenticacionControllerTest` | `codigoSinLoginPrevioDevuelve401` | Infraestructura | AB#230 | PR #67 | ✅ |
+| HU2-CP07 | `AutenticacionControllerTest` | `codigoIncorrectoDevuelve401` | Infraestructura | AB#230 | PR #67 | ✅ |
+| HU2-CP12 | `VerificarCodigoRequestTest` | `toStringNoMuestraElCodigo` | Infraestructura | AB#230 | PR #67 | ✅ |
+| HU2-CP14 | `AutenticacionServiceTest` | `consultaElUsuarioEnSesion` | Aplicación | AB#230 | PR #67 | ✅ |
+| HU2-CP14 | `AutenticacionControllerTest` | `meSinSesionDevuelve401` | Infraestructura | AB#230 | PR #67 | ✅ |
+| HU2-CP14 | `AutenticacionControllerTest` | `meConSesionDevuelveElUsuario` | Infraestructura | AB#230 | PR #67 | ✅ |
+| HU2-CP15 | `AutenticacionControllerTest` | `logoutCierraLaSesion` | Infraestructura | AB#230 | PR #67 | ✅ |
+| HU2-CP16 | `AutenticacionServiceTest` | `rechazaCuentaPendiente` | Aplicación | AB#235 | PR #70 | 🔍 |
+| HU2-CP16 | `AutenticacionControllerTest` | `cuentaPendienteDevuelve403ConCodigo` | Infraestructura | AB#235 | PR #70 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AutenticacionServiceTest`: `usuarios/application/service/` (Mockito, con `Clock` fijo)
@@ -264,7 +268,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU18-CP01 | Sin sesión no se accede a la zona de administración | Integración (capa web) | 2 | 🔍 En revisión (2, AB#230: pasan a esperar 401) |
+| HU18-CP01 | Sin sesión no se accede a la zona de administración | Integración (capa web) | 2 | ✅ Pasa |
 | HU18-CP02 | Un cliente o un vendedor no accede a la zona de administración | Integración (capa web) | 3 | ✅ Pasa |
 | HU18-CP03 | Un administrador accede a la zona de administración | Integración (capa web) | 1 | ✅ Pasa |
 
@@ -279,12 +283,12 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU18-CP01 | `SecurityConfigTest` | `sinSesionNoSeAccedeAAdministracion` | Infraestructura | AB#58 · AB#230 | PR #57 (401 en PR #67) | 🔍 |
+| HU18-CP01 | `SecurityConfigTest` | `sinSesionNoSeAccedeAAdministracion` | Infraestructura | AB#58 · AB#230 | PR #57 (401 en PR #67) | ✅ |
 | HU18-CP02 | `SecurityConfigTest` | `clienteNoAccedeAAdministracion` | Infraestructura | AB#58 | PR #57 | ✅ |
 | HU18-CP02 | `SecurityConfigTest` | `vendedorNoAccedeAAdministracion` | Infraestructura | AB#58 | PR #57 | ✅ |
 | HU18-CP03 | `SecurityConfigTest` | `administradorAccedeAAdministracion` | Infraestructura | AB#58 | PR #57 | ✅ |
 | HU18-CP02 | `UsuarioControllerTest` | `noAdministradorNoAccedeAlListado` (cliente y vendedor) | Infraestructura | AB#60 | PR #64 | ✅ |
-| HU18-CP01 | `UsuarioControllerTest` | `activarSinSesionEstaProtegido` | Infraestructura | AB#60 · AB#230 | PR #64 (401 en PR #67) | 🔍 |
+| HU18-CP01 | `UsuarioControllerTest` | `activarSinSesionEstaProtegido` | Infraestructura | AB#60 · AB#230 | PR #64 (401 en PR #67) | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `SecurityConfigTest`: `shared/config/` (con `@WebMvcTest` y usuarios simulados con `@WithMockUser`)

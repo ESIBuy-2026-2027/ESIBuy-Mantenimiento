@@ -19,6 +19,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
 
 public class AutenticacionService implements AutenticacionUseCase {
 
@@ -57,6 +58,10 @@ public class AutenticacionService implements AutenticacionUseCase {
             usuario.registrarIntentoFallido(ahora);
             usuarioRepository.guardar(usuario);
             throw new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS);
+        }
+
+        if (usuario.estaPendiente()) { //comprobamos que la cuenta haya sido activada por un administrador.
+            throw new CuentaPendienteException("La cuenta está pendiente de verificación.");
         }
 
         if (!usuario.estaActivo()) {

@@ -164,4 +164,8 @@ public class Usuario {
         this.intentosFallidos = intentosFallidos;
         this.bloqueadoHasta = bloqueadoHasta;
     }
+
+    public boolean estaPendiente() {
+        return "PENDIENTE".equals(this.estado); 
+    }
 }
