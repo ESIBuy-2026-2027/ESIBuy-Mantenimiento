@@ -2,7 +2,6 @@ package es.uclm.esibuy.backend.usuarios.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import org.junit.jupiter.api.DisplayName;
@@ -104,8 +103,7 @@ class PoliticaContrasenasTest {
     @Test
     @DisplayName("HU1-CP17: rechaza una contraseña sin símbolo")
     void rechazaContrasenaSinSimbolo() {
-        // TODO ciclo 5
-        fail("Funcionalidad no implementada");
+        assertThrows(ContrasenaInvalidaException.class, () -> validar("Tr3bolesAzules"));
     }
 
     private static void validar(String contrasena) {
