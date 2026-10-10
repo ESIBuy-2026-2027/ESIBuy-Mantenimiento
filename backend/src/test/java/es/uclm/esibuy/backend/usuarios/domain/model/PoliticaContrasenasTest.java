@@ -39,14 +39,15 @@ class PoliticaContrasenasTest {
     @Test
     @DisplayName("HU1-CP09: rechaza una contraseña de la lista de contraseñas comunes")
     void rechazaContrasenaDeListaNegra() {
-        assertThrows(ContrasenaInvalidaException.class, () -> validar("12345678"));
-        assertThrows(ContrasenaInvalidaException.class, () -> validar("password"));
+        // Contraseñas comunes que cumplen la composición (T239): solo la lista negra puede rechazarlas
+        assertThrows(ContrasenaInvalidaException.class, () -> validar("Password1!"));
+        assertThrows(ContrasenaInvalidaException.class, () -> validar("P@ssw0rd"));
     }
 
     @Test
     @DisplayName("HU1-CP09: rechaza una contraseña común aunque cambie mayúsculas y minúsculas")
     void rechazaContrasenaDeListaNegraConMayusculas() {
-        assertThrows(ContrasenaInvalidaException.class, () -> validar("PASSWORD"));
+        assertThrows(ContrasenaInvalidaException.class, () -> validar("pASSWORD1!"));
     }
 
     @Test
@@ -64,7 +65,7 @@ class PoliticaContrasenasTest {
     @Test
     @DisplayName("HU1-CP10: rechaza una contraseña que contiene la parte local del email")
     void rechazaContrasenaQueContieneLaParteLocalDelEmail() {
-        assertThrows(ContrasenaInvalidaException.class, () -> validar("agarcia-2026"));
+        assertThrows(ContrasenaInvalidaException.class, () -> validar("Agarcia-2026"));
     }
 
     @Test
@@ -78,6 +79,46 @@ class PoliticaContrasenasTest {
     @DisplayName("HU1-CP05: acepta una contraseña de exactamente 64 caracteres")
     void aceptaContrasenaDe64Caracteres() {
         assertDoesNotThrow(() -> validar("Tr3boles-Azules!".repeat(4)));
+    }
+
+    // Composición de la contraseña (T239): las mismas reglas que el frontend (REQUISITOS_PASSWORD).
+
+    @Test
+    @DisplayName("HU1-CP17: rechaza una contraseña sin mayúscula")
+    void rechazaContrasenaSinMayuscula() {
+        assertThrows(ContrasenaInvalidaException.class, () -> validar("tr3boles-azules!"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP17: rechaza una contraseña sin minúscula")
+    void rechazaContrasenaSinMinuscula() {
+        assertThrows(ContrasenaInvalidaException.class, () -> validar("TR3BOLES-AZULES!"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP17: rechaza una contraseña sin número")
+    void rechazaContrasenaSinNumero() {
+        assertThrows(ContrasenaInvalidaException.class, () -> validar("Treboles-Azules!"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP17: rechaza una contraseña sin símbolo")
+    void rechazaContrasenaSinSimbolo() {
+        assertThrows(ContrasenaInvalidaException.class, () -> validar("Tr3bolesAzules"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP17: acepta letras con tilde y la ñ como mayúsculas y minúsculas")
+    void aceptaLetrasConTildeYEnie() {
+        // La única mayúscula es la Ñ y las minúsculas llevan tilde: las clases Unicode las reconocen
+        assertDoesNotThrow(() -> validar("Ñandú-pájaro9"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP17: el espacio cuenta como símbolo, igual que en el frontend")
+    void aceptaElEspacioComoSimbolo() {
+        // El único carácter que no es letra ni número es el espacio
+        assertDoesNotThrow(() -> validar("Treboles Azules9"));
     }
 
     private static void validar(String contrasena) {
