@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
 
 /**
  * Traduce las excepciones que salen de los controladores a respuestas HTTP con un mensaje
@@ -34,5 +35,10 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public RespuestaError usuarioNoEncontrado() {
         return new RespuestaError("El usuario no existe");
+    }
+
+    @ExceptionHandler(CuentaPendienteException.class)
+    public RespuestaError cuentaPendiente() {
+        return new RespuestaError("La cuenta está pendiente de verificación");
     }
 }
