@@ -61,7 +61,7 @@ class AdministracionUsuariosServiceTest {
     void editaUnClienteYLoGuarda() {
         Usuario cliente = clienteLucia();
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(cliente));
-        EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", "avatar1", null,
+        EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", "avatar1",
                 "10004119A", "620023757", LocalDate.of(1978, 4, 13), TipoCliente.PREMIUM);
 
         Usuario editado = servicio.editar("u-1", comando);
@@ -81,7 +81,7 @@ class AdministracionUsuariosServiceTest {
                 new Email("diego@uclm.es"), "hash-simulado", Rol.ADMINISTRADOR, null, null);
         when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(administrador));
         EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.ADMINISTRADOR, "Diego", "Delgado Iglesias",
-                "avatar3", null, null, null, null, null);
+                "avatar3", null, null, null, null);
 
         Usuario editado = servicio.editar("u-2", comando);
 
@@ -94,9 +94,9 @@ class AdministracionUsuariosServiceTest {
     @DisplayName("HU22-CP05: editar un cliente con datos no válidos falla y no guarda nada")
     void rechazaEditarUnClienteConDatosNoValidos() {
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
-        EditarUsuarioCommand dniNoValido = new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", null, null,
+        EditarUsuarioCommand dniNoValido = new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", null,
                 "1234", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
-        EditarUsuarioCommand menorDeEdad = new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", null, null,
+        EditarUsuarioCommand menorDeEdad = new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", null,
                 "10004119A", null, LocalDate.of(2010, 1, 1), TipoCliente.ESTANDAR);
 
         assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", dniNoValido));
@@ -109,7 +109,7 @@ class AdministracionUsuariosServiceTest {
     void rechazaEditarUnUsuarioQueNoExiste() {
         when(usuarioRepository.buscarPorId("no-existe")).thenReturn(Optional.empty());
         EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.ADMINISTRADOR, "Diego", "Delgado Iglesias",
-                null, null, null, null, null, null);
+                null, null, null, null, null);
 
         assertThrows(UsuarioNoEncontradoException.class, () -> servicio.editar("no-existe", comando));
         verify(usuarioRepository, never()).guardar(any());
@@ -122,7 +122,7 @@ class AdministracionUsuariosServiceTest {
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(cliente));
         // Datos de cliente válidos: solo falla el rol
         EditarUsuarioCommand aAdministrador = new EditarUsuarioCommand(Rol.ADMINISTRADOR, "Carla", "Moreno Gil",
-                null, null, "10004119A", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
+                null, "10004119A", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
 
         assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", aAdministrador));
         assertEquals(Rol.CLIENTE, cliente.getRol());
@@ -134,7 +134,7 @@ class AdministracionUsuariosServiceTest {
     @DisplayName("HU22-CP05: editar sin rol falla y no guarda nada")
     void rechazaEditarSinRol() {
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
-        EditarUsuarioCommand sinRol = new EditarUsuarioCommand(null, "Carla", "Moreno Gil", null, null,
+        EditarUsuarioCommand sinRol = new EditarUsuarioCommand(null, "Carla", "Moreno Gil", null,
                 "10004119A", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
 
         assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", sinRol));
