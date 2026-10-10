@@ -214,9 +214,15 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP13: rechaza a un cliente menor de edad")
     void rechazaClienteMenorDeEdad() {
-        // TODO: fecha de nacimiento de hace 17 años según el Clock fijo -> UsuarioInvalidoException y no se guarda nada.
-        // TODO: (pasa sin cambios en producción tras la fase 1: comprueba que el servicio pasa al dominio la fecha del Clock).
-        fail("Funcionalidad no implementada");
+        // Comprueba que el servicio pasa al dominio la fecha del reloj: la regla vive en Usuario.nuevoCliente.
+        when(hashContrasena.hashear("clave1234")).thenReturn("hash-simulado");
+        LocalDate hace17Anos = LocalDate.now(RELOJ).minusYears(17);
+        RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("Juan", "Pérez García", hace17Anos,
+                "12345678Z", "juan@uclm.es", null, "clave1234", "clave1234", TipoCliente.ESTANDAR, null, true);
+
+        assertThrows(UsuarioInvalidoException.class, () -> registroUsuario.registrar(comando));
+
+        verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
 
     @Test
