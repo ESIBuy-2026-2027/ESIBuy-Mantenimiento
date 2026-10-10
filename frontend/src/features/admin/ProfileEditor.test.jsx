@@ -98,12 +98,13 @@ describe('ProfileEditor (HU22): campos', () => {
     expect(screen.queryByLabelText(/^dni/i)).not.toBeInTheDocument()
   })
 
-  it('profileEditor_deUnVendedor_dejaModificableTodoYMuestraLasCategorias', () => {
+  it('profileEditor_deUnVendedor_dejaModificableTodoMenosElEmailYMuestraLasCategorias', () => {
     renderizar({ rol: ROLES.VENDEDOR, usuario: VENDEDOR })
 
-    for (const etiqueta of [/^nombre(?! comercial)/i, /^apellidos/i, /^correo electrónico/i, /^nombre comercial/i, /^nif\/dni/i]) {
+    for (const etiqueta of [/^nombre(?! comercial)/i, /^apellidos/i, /^nombre comercial/i, /^nif\/dni/i]) {
       expect(esDeSoloLectura(etiqueta)).toBe(false)
     }
+    expect(esDeSoloLectura(/^correo electrónico/i)).toBe(true)
     expect(esDeSoloLectura('Estado')).toBe(true)
     expect(screen.queryByLabelText('Fecha de alta')).not.toBeInTheDocument()
     const categoria = screen.getByLabelText(/^categoría principal/i)
@@ -233,17 +234,6 @@ describe('ProfileEditor (HU22): guardado', () => {
     await guardar(user)
 
     await waitFor(() => expect(save).toHaveBeenCalledWith(expect.objectContaining({ telefono: '' })))
-  })
-
-  it('profileEditor_conEmailRepetido_loMuestraEnElCampoYNoSale', async () => {
-    const user = userEvent.setup()
-    const save = vi.fn().mockRejectedValue(new ApiError(409, 'conflicto', 'EMAIL_ALREADY_REGISTERED'))
-    const { onSaved } = renderizar({ rol: ROLES.VENDEDOR, usuario: VENDEDOR, save })
-
-    await guardar(user)
-
-    expect(await screen.findByText('Este email ya está registrado')).toBeInTheDocument()
-    expect(onSaved).not.toHaveBeenCalled()
   })
 
   it('profileEditor_conNombreComercialRepetido_loMuestraEnElCampoYNoSale', async () => {
