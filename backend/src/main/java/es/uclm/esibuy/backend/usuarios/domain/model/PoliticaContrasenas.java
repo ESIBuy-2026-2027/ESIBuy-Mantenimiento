@@ -10,8 +10,11 @@ public final class PoliticaContrasenas {
     private static final int LONGITUD_MINIMA = 8;
     // BCrypt solo usa los primeros 72 bytes de la contraseña: con 64 caracteres nunca se trunca.
     private static final int LONGITUD_MAXIMA = 64;
+    // Contraseñas comunes que cumplen la composición: son las únicas que pueden llegar hasta aquí.
+    // Van en minúsculas porque se comparan con la contraseña normalizada.
     private static final Set<String> LISTA_NEGRA = Set.of(
-            "12345678", "password", "password1", "qwertyui", "contrasena", "11111111", "abcdefgh");
+            "p@ssw0rd", "password1!", "passw0rd!", "password123!", "qwerty123!",
+            "qwerty1!", "contraseña1!", "contrasena1!", "admin123!", "welcome1!");
     private static final Pattern MAYUSCULA = Pattern.compile("\\p{Lu}");
     private static final Pattern MINUSCULA = Pattern.compile("\\p{Ll}");
     private static final Pattern NUMERO = Pattern.compile("\\p{N}");
