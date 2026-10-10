@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
@@ -110,6 +111,33 @@ class AdministracionUsuariosServiceTest {
         assertThrows(AutodesactivacionNoPermitidaException.class, () -> servicio.desactivar("u-1", EMAIL_ADMINISTRADOR));
         assertEquals("ACTIVO", administrador.getEstado());
         verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU23-CP04: no se puede desactivar al último administrador activo y no se guarda nada")
+    void rechazaDesactivarAlUltimoAdministradorActivo() {
+        Usuario ultimoAdministrador = administrador("u-3", "ana@esibuy.test");
+        ultimoAdministrador.activar();
+        when(usuarioRepository.buscarPorId("u-3")).thenReturn(Optional.of(ultimoAdministrador));
+        when(usuarioRepository.contarAdministradoresActivos()).thenReturn(1L);
+
+        assertThrows(UltimoAdministradorActivoException.class, () -> servicio.desactivar("u-3", EMAIL_ADMINISTRADOR));
+        assertEquals("ACTIVO", ultimoAdministrador.getEstado());
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU23-CP05: se puede desactivar a un administrador activo si queda otro administrador activo")
+    void desactivaAUnAdministradorSiQuedaOtroActivo() {
+        Usuario otroAdministrador = administrador("u-3", "ana@esibuy.test");
+        otroAdministrador.activar();
+        when(usuarioRepository.buscarPorId("u-3")).thenReturn(Optional.of(otroAdministrador));
+        when(usuarioRepository.contarAdministradoresActivos()).thenReturn(2L);
+
+        Usuario desactivado = servicio.desactivar("u-3", EMAIL_ADMINISTRADOR);
+
+        assertEquals("DESACTIVADO", desactivado.getEstado());
+        verify(usuarioRepository).guardar(desactivado);
     }
 
     private static Usuario cliente(String id, String email) {

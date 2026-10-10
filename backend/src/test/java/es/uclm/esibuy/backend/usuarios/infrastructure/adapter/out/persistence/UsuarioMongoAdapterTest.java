@@ -397,4 +397,32 @@ class UsuarioMongoAdapterTest {
         assertEquals(1, resultado.totalElementos());
         assertEquals("bloqueado@esibuy.test", resultado.usuarios().get(0).getEmail().valor());
     }
+
+    @Test
+    @DisplayName("HU23-CP04: contarAdministradoresActivos solo cuenta los administradores en estado ACTIVO")
+    void contarAdministradoresActivosSoloCuentaLosAdministradoresActivos() {
+        usuarioMongoRepository.saveAll(List.of(
+                documentoConEstado("ana@esibuy.test", "ADMINISTRADOR", "ACTIVO"),
+                documentoConEstado("ada@esibuy.test", "ADMINISTRADOR", "ACTIVO"),
+                documentoConEstado("diego@esibuy.test", "ADMINISTRADOR", "DESACTIVADO"),
+                documentoConEstado("carlos@esibuy.test", "CLIENTE", "ACTIVO"),
+                documentoConEstado("vera@esibuy.test", "VENDEDOR", "ACTIVO")
+        ));
+
+        assertEquals(2, adapter.contarAdministradoresActivos());
+    }
+
+    @Test
+    @DisplayName("HU23-CP04: contarAdministradoresActivos devuelve 0 si no hay administradores activos")
+    void contarAdministradoresActivosDevuelveCeroSinAdministradoresActivos() {
+        usuarioMongoRepository.save(documentoConEstado("diego@esibuy.test", "ADMINISTRADOR", "DESACTIVADO"));
+
+        assertEquals(0, adapter.contarAdministradoresActivos());
+    }
+
+    private static UsuarioDocument documentoConEstado(String email, String rol, String estado) {
+        UsuarioDocument doc = documento(email, "hash-simulado", rol);
+        doc.setEstado(estado);
+        return doc;
+    }
 }
