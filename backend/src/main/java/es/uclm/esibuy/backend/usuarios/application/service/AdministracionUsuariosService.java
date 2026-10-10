@@ -64,14 +64,20 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         DatosPersonales datosPersonales = new DatosPersonales(comando.nombre(), comando.apellidos(),
                 comando.imagenPerfil());
         DatosCliente datosCliente = datosCliente(usuario.getRol(), comando);
-        // Solo se comprueba si el DNI cambia: si no, el cliente chocaría consigo mismo.
-        if (datosCliente != null && !datosCliente.dni().equals(usuario.getDatosCliente().dni())
-                && usuarioRepository.existePorDni(datosCliente.dni().valor())) {
-            throw new DniYaRegistradoException("El DNI ya está registrado");
+        if (datosCliente != null) {
+            exigirDniLibre(usuario, datosCliente.dni());
         }
         usuario.modificarDatos(datosPersonales, datosCliente, LocalDate.now(reloj));
         usuarioRepository.guardar(usuario);
         return usuario;
+    }
+
+    // Solo se comprueba si el DNI cambia: si no, el cliente chocaría consigo mismo.
+    // PENDIENTE: existePorDni no distingue rol, aunque el índice rol_dni sí; revisar cuando los vendedores tengan DNI.
+    private void exigirDniLibre(Usuario usuario, Dni nuevoDni) {
+        if (!nuevoDni.equals(usuario.getDatosCliente().dni()) && usuarioRepository.existePorDni(nuevoDni.valor())) {
+            throw new DniYaRegistradoException("El DNI ya está registrado");
+        }
     }
 
     // Los datos de cliente solo se construyen para un cliente; en otros roles se ignoran.
