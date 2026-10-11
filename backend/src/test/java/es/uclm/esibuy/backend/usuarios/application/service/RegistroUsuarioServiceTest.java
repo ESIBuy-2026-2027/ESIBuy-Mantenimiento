@@ -8,6 +8,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPor
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
@@ -351,8 +352,13 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP20: rechaza un nombre comercial ya registrado y no guarda nada")
     void rechazaNombreComercialYaRegistradoYNoGuardaNada() {
-        // TODO ciclo 9 (T241)
-        fail("Funcionalidad no implementada");
+        lenient().when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
+        when(usuarioRepository.existePorNombreComercial("Tienda Luis")).thenReturn(true);
+
+        assertThrows(NombreComercialYaRegistradoException.class,
+                () -> registroUsuario.registrarVendedor(comandoVendedor("luis@uclm.es", "Clave-1234")));
+
+        verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
 
     @Test
