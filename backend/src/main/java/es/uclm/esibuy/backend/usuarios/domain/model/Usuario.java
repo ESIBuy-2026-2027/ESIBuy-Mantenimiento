@@ -170,10 +170,21 @@ public class Usuario {
     }
 
     public void registrarIntentoFallido(Instant ahora) {
+        // Un bloqueo ya caducado es una serie cerrada: el fallo nuevo empieza a contar desde cero
+        // (fallos de la demo del Sprint 1: antes cada fallo tras el bloqueo volvía a bloquear 15 minutos).
+        if (bloqueadoHasta != null && !ahora.isBefore(bloqueadoHasta)) {
+            reiniciarIntentos();
+        }
         intentosFallidos++;
         if (intentosFallidos >= MAX_INTENTOS) {
             bloqueadoHasta = ahora.plus(DURACION_BLOQUEO);
         }
+    }
+
+    // Al completar el login (paso 3) y al caducar un bloqueo: la cuenta vuelve a tener sus 5 intentos
+    public void reiniciarIntentos() {
+        intentosFallidos = 0;
+        bloqueadoHasta = null;
     }
 
     public boolean tieneBloqueoPorIntentos(Instant ahora) {
