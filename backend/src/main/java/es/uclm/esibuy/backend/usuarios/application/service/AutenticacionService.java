@@ -19,6 +19,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasExc
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
+import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
 
@@ -50,7 +51,9 @@ public class AutenticacionService implements AutenticacionUseCase {
     @Override
     public ResultadoInicioSesion iniciarSesion(IniciarSesionCommand comando) {
         
-        Usuario usuario = usuarioRepository.buscarPorCorreo(comando.email()).orElseThrow(() -> new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS)); // <- Este orElseThrow() viene de buscarPorCorreo() que devuelve Optional<>
+        // El email se busca normalizado (minúsculas, sin espacios), como se guardó en el registro (T240, fallos de la demo)
+        String email = new Email(comando.email()).valor();
+        Usuario usuario = usuarioRepository.buscarPorCorreo(email).orElseThrow(() -> new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS)); // <- Este orElseThrow() viene de buscarPorCorreo() que devuelve Optional<>
 
         Instant ahora = reloj.instant();
         if (usuario.tieneBloqueoPorIntentos(ahora)) {
