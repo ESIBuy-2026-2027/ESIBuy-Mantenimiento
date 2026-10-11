@@ -1,7 +1,6 @@
 package es.uclm.esibuy.backend.usuarios.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -319,14 +318,16 @@ class UsuarioTest {
     @Test
     @DisplayName("HU1-CP21: rechaza datos de vendedor si el rol no es VENDEDOR")
     void rechazaDatosDeVendedorSiNoEsVendedor() {
-        // TODO ciclo 4 (T241)
-        fail("Funcionalidad no implementada");
+        assertThrows(UsuarioInvalidoException.class,
+                () -> new Usuario("u-1", DATOS_PERSONALES, EMAIL, HASH, Rol.CLIENTE, DATOS_VENDEDOR, CONSENTIMIENTO));
+        assertThrows(UsuarioInvalidoException.class,
+                () -> new Usuario("u-1", DATOS_PERSONALES, EMAIL, HASH, Rol.ADMINISTRADOR, DATOS_VENDEDOR, null));
     }
 
     @Test
     @DisplayName("HU1-CP21: nuevoVendedor exige los datos de vendedor")
     void nuevoVendedorExigeDatosDeVendedor() {
-        // TODO ciclo 4 (T241)
-        fail("Funcionalidad no implementada");
+        assertThrows(UsuarioInvalidoException.class,
+                () -> Usuario.nuevoVendedor(DATOS_PERSONALES, EMAIL, HASH, null, CONSENTIMIENTO));
     }
 }
