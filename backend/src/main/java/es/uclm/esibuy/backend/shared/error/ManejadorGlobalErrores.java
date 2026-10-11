@@ -129,12 +129,12 @@ public class ManejadorGlobalErrores {
     @ExceptionHandler(ProductoInvalidoException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError productoInvalido() {
-        return new RespuestaError("El producto es inválido", "INVALID_PRODUCT");
+        return new RespuestaError("El producto es inválido", "VALIDATION_ERROR");
     }
 
     @ExceptionHandler(ProductoDuplicadoException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError productoDuplicado() {
-        return new RespuestaError("El producto ya existe con el mismo nombre", "DUPLICATE_PRODUCT");
+        return new RespuestaError("El producto ya existe con el mismo nombre", "PRODUCT_NAME_ALREADY_EXISTS");
     }
 }
