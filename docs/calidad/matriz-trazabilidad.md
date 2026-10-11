@@ -803,6 +803,50 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU32 · Listar mis productos
+
+### Tabla A · HU32 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU32-CP01 | Solo se listan los productos del vendedor con sesión (el vendedor sale de la sesión, no de un parámetro) | Unitario + integración (MongoDB y capa web) | 5 | 🔍 En revisión |
+| HU32-CP02 | Búsqueda por nombre (sin distinguir mayúsculas, texto literal) y filtro por categoría, combinables | Integración MongoDB | 2 | 🔍 En revisión |
+| HU32-CP03 | Listado paginado, del más reciente al más antiguo, con `totalPages` 0 si no hay resultados | Integración (MongoDB y capa web) | 2 | 🔍 En revisión |
+| HU32-CP04 | Una página o un tamaño menor que 1 devuelve 400 | Integración (capa web) | 1 | 🔍 En revisión |
+| HU32-CP05 | Sin sesión (401) o sin ser vendedor (403) no se ve el listado | Integración (capa web) | 2 | 🔍 En revisión |
+
+Notas:
+- **HU32-CP01 a CP05:** casos propuestos en la T184 (AB#184) a partir de los criterios de aceptación de la HU32 (`frontend/docs/hu32-listado-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU32 en Azure Boards.
+- **Backend (T183, AB#183, PR #88):** `GET /api/seller/products`. El vendedor sale de la sesión: productos pide su id al módulo de usuarios por su puerto de entrada (`UsuarioEnSesionPort`).
+- **Pendiente:** el contrato del frontend pide `categorias` con el nombre de la categoría; hasta que exista el módulo de categorías se devuelve `categoriaId`. La búsqueda todavía distingue acentos.
+- **Frontend:** los tests de la HU32 (AB#187) no tienen todavía filas en la matriz.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU32-CP01 | `AutenticacionServiceTest` | `consultaElIdDelUsuarioEnSesion` | Aplicación | AB#184 | PR por abrir | 🔍 |
+| HU32-CP01 | `UsuarioEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP01 | `ListadoProductosServiceTest` | `listaLosProductosDelVendedorDeLaSesion` | Aplicación | AB#184 | PR por abrir | 🔍 |
+| HU32-CP01 | `ProductoMongoAdapterTest` | `listarPorVendedorSoloDevuelveLosSuyos` | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP01 | `ProductoControllerTest` | `vendedorRecibeSuListado` | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP02 | `ProductoMongoAdapterTest` | `listarPorVendedorBuscaPorNombreSinDistinguirMayusculas` | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP02 | `ProductoMongoAdapterTest` | `listarPorVendedorFiltraPorCategoriaYBusqueda` | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP03 | `ProductoMongoAdapterTest` | `listarPorVendedorPaginaDelMasRecienteAlMasAntiguo` | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP03 | `ProductoControllerTest` | `listadoVacioTieneCeroPaginas` | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP04 | `ProductoControllerTest` | `paginaOTamanoMenorQueUnoDevuelve400` (`page` y `size`) | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP05 | `ProductoControllerTest` | `sinSesionDevuelve401` | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP05 | `ProductoControllerTest` | `noVendedorNoVeElListado` (cliente y administrador) | Infraestructura | AB#184 | PR por abrir | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AutenticacionServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
+- `UsuarioEnSesionAdapterTest`: `productos/infrastructure/adapter/out/usuarios/` (Mockito, sin Spring)
+- `ListadoProductosServiceTest`: `productos/application/service/` (Mockito, sin Spring)
+- `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/` (con Testcontainers)
+- `ProductoControllerTest`: `productos/infrastructure/adapter/in/web/` (con `@WebMvcTest`)
+
+---
+
 ## Tests técnicos sin caso de prueba
 
 Tests que no validan una HU concreta.
