@@ -1,7 +1,8 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
-import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioCommand;
+import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarClienteCommand;
+import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarVendedorCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
@@ -19,9 +20,11 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYNombreComercialYaRegistradosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
@@ -70,6 +73,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UsuarioControllerTest {
 
     private static final String URL_REGISTRO = "/api/auth/register/cliente";   // contrato acordado con el frontend (T229)
+    private static final String URL_REGISTRO_VENDEDOR = "/api/auth/register/vendedor";   // contrato del frontend (T241)
 
     @Autowired
     private MockMvc mockMvc;
@@ -96,6 +100,16 @@ class UsuarioControllerTest {
                """.formatted(email, password, password);
     }
 
+    // Cuerpo del formulario de vendedor tras el PR #81: una única categoría en categoriaPrincipalId.
+    private static String jsonVendedor() {
+        return """
+               {"nombre": "Luis", "apellidos": "Pérez García", "nombreComercial": "Tienda Luis",
+                "categoriaPrincipalId": "cat-1", "dni": "87654321X", "email": "luis@uclm.es",
+                "telefono": "612345678", "password": "Clave-1234", "repeticionPassword": "Clave-1234",
+                "imagenPerfil": "avatar1", "aceptaPrivacidad": true}
+               """;
+    }
+
     @Test
     @DisplayName("HU1-CP01: un registro válido devuelve 201 y delega en el caso de uso")
     void registroValidoDevuelve201() throws Exception {
@@ -104,7 +118,7 @@ class UsuarioControllerTest {
                         .content(json("juan@uclm.es", "clave1234")))
                 .andExpect(status().isCreated());
 
-        verify(registroUsuario).registrar(new RegistrarUsuarioCommand("Juan", "Pérez García",
+        verify(registroUsuario).registrarCliente(new RegistrarClienteCommand("Juan", "Pérez García",
                 LocalDate.of(1996, 5, 20), "12345678Z", "juan@uclm.es", null, "clave1234", "clave1234",
                 TipoCliente.ESTANDAR, null, true));
     }
@@ -117,7 +131,7 @@ class UsuarioControllerTest {
                         .content(json("juan.uclm.es", "clave1234")))
                 .andExpect(status().isBadRequest());
 
-        verify(registroUsuario, never()).registrar(any());
+        verify(registroUsuario, never()).registrarCliente(any());
     }
 
     @Test
@@ -128,7 +142,7 @@ class UsuarioControllerTest {
                         .content(json("", "clave1234")))
                 .andExpect(status().isBadRequest());
 
-        verify(registroUsuario, never()).registrar(any());
+        verify(registroUsuario, never()).registrarCliente(any());
     }
 
     @Test
@@ -139,15 +153,15 @@ class UsuarioControllerTest {
                         .content(json("juan@uclm.es", "")))
                 .andExpect(status().isBadRequest());
 
-        verify(registroUsuario, never()).registrar(any());
+        verify(registroUsuario, never()).registrarCliente(any());
     }
 
     @Test
     @DisplayName("HU1-CP03: un correo ya registrado devuelve 409 con su código y mensaje genérico")
     void correoYaRegistradoDevuelve409() throws Exception {
-        // registrar devuelve void: por eso doThrow(...).when(...) y no when(...).thenThrow(...)
+        // registrarCliente devuelve void: por eso doThrow(...).when(...) y no when(...).thenThrow(...)
         doThrow(new CorreoYaRegistradoException("El correo ya está registrado"))
-                .when(registroUsuario).registrar(any());
+                .when(registroUsuario).registrarCliente(any());
 
         mockMvc.perform(post(URL_REGISTRO)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -162,7 +176,7 @@ class UsuarioControllerTest {
     @DisplayName("HU1-CP16: un DNI ya registrado devuelve 409 con su código y mensaje genérico")
     void dniYaRegistradoDevuelve409ConCodigo() throws Exception {
         doThrow(new DniYaRegistradoException("El DNI ya está registrado"))
-                .when(registroUsuario).registrar(any());
+                .when(registroUsuario).registrarCliente(any());
 
         mockMvc.perform(post(URL_REGISTRO)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -176,7 +190,7 @@ class UsuarioControllerTest {
     @DisplayName("HU1-CP05: una contraseña que no cumple la política devuelve 400")
     void contrasenaInvalidaDevuelve400() throws Exception {
         doThrow(new ContrasenaInvalidaException("La contraseña debe tener mínimo 8 caracteres"))
-                .when(registroUsuario).registrar(any());
+                .when(registroUsuario).registrarCliente(any());
 
         mockMvc.perform(post(URL_REGISTRO)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -191,7 +205,7 @@ class UsuarioControllerTest {
         // La validación web (@Email) deja pasar "ana@localhost", pero el dominio lo rechaza.
         // El doble lanza la excepción con el mensaje real del dominio, que incluye el email.
         doThrow(new EmailInvalidoException("El email no tiene un formato válido: ana@localhost"))
-                .when(registroUsuario).registrar(any());
+                .when(registroUsuario).registrarCliente(any());
 
         mockMvc.perform(post(URL_REGISTRO)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -210,7 +224,7 @@ class UsuarioControllerTest {
         mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(cuerpo))
                 .andExpect(status().isBadRequest());
 
-        verify(registroUsuario, never()).registrar(any());
+        verify(registroUsuario, never()).registrarCliente(any());
     }
 
     @Test
@@ -227,7 +241,7 @@ class UsuarioControllerTest {
         mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(json(de101, "clave1234")))
                 .andExpect(status().isBadRequest());
 
-        verify(registroUsuario, times(1)).registrar(any());
+        verify(registroUsuario, times(1)).registrarCliente(any());
     }
 
     @Test
@@ -236,7 +250,7 @@ class UsuarioControllerTest {
         // El dominio rechaza, por ejemplo, un DNI mal formado o un menor de edad con UsuarioInvalidoException:
         // es un error del cliente y debe ser un 400, no un 500. El mensaje no repite el dato.
         doThrow(new UsuarioInvalidoException("El DNI no tiene un formato válido"))
-                .when(registroUsuario).registrar(any());
+                .when(registroUsuario).registrarCliente(any());
 
         mockMvc.perform(post(URL_REGISTRO)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -254,7 +268,7 @@ class UsuarioControllerTest {
                         .content(json("juan@uclm.es", "clave1234")))
                 .andExpect(status().isForbidden());
 
-        verify(registroUsuario, never()).registrar(any());
+        verify(registroUsuario, never()).registrarCliente(any());
     }
 
     @Test
@@ -849,6 +863,54 @@ class UsuarioControllerTest {
         return patch("/api/admin/usuarios/{id}/status", id).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"estado\":\"" + estado + "\"}");
+    }
+
+    // Registro del vendedor (T241).
+
+    @Test
+    @DisplayName("HU1-CP19: un registro de vendedor válido devuelve 201")
+    void registroDeVendedorValidoDevuelve201() throws Exception {
+        mockMvc.perform(post(URL_REGISTRO_VENDEDOR).contentType(MediaType.APPLICATION_JSON).content(jsonVendedor()))
+                .andExpect(status().isCreated());
+
+        verify(registroUsuario).registrarVendedor(new RegistrarVendedorCommand("Luis", "Pérez García", "Tienda Luis",
+                "cat-1", "87654321X", "luis@uclm.es", "612345678", "Clave-1234", "Clave-1234", "avatar1", true));
+    }
+
+    @Test
+    @DisplayName("HU1-CP21: un vendedor sin categoría principal devuelve 400")
+    void vendedorSinCategoriaDevuelve400() throws Exception {
+        // La categoría es obligatoria en el formulario; la capa web la comprueba antes de llegar al caso de uso
+        String cuerpo = jsonVendedor().replace("\"categoriaPrincipalId\": \"cat-1\"", "\"categoriaPrincipalId\": \"\"");
+
+        mockMvc.perform(post(URL_REGISTRO_VENDEDOR).contentType(MediaType.APPLICATION_JSON).content(cuerpo))
+                .andExpect(status().isBadRequest());
+
+        verify(registroUsuario, never()).registrarVendedor(any());
+    }
+
+    @Test
+    @DisplayName("HU1-CP20: un nombre comercial ya registrado devuelve 409 con su código")
+    void nombreComercialYaRegistradoDevuelve409ConCodigo() throws Exception {
+        doThrow(new NombreComercialYaRegistradoException("El nombre comercial ya está registrado"))
+                .when(registroUsuario).registrarVendedor(any());
+
+        mockMvc.perform(post(URL_REGISTRO_VENDEDOR).contentType(MediaType.APPLICATION_JSON).content(jsonVendedor()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("COMMERCIAL_NAME_ALREADY_REGISTERED"))
+                .andExpect(jsonPath("$.mensaje").value(not(containsString("Tienda Luis"))));
+    }
+
+    @Test
+    @DisplayName("HU1-CP20: correo y nombre comercial ya registrados devuelven 409 con su código")
+    void correoYNombreComercialYaRegistradosDevuelve409ConCodigo() throws Exception {
+        doThrow(new CorreoYNombreComercialYaRegistradosException("El correo y el nombre comercial ya están registrados"))
+                .when(registroUsuario).registrarVendedor(any());
+
+        mockMvc.perform(post(URL_REGISTRO_VENDEDOR).contentType(MediaType.APPLICATION_JSON).content(jsonVendedor()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("EMAIL_AND_COMMERCIAL_NAME_ALREADY_REGISTERED"))
+                .andExpect(jsonPath("$.mensaje").value(not(containsString("luis@uclm.es"))));
     }
 
     @Test

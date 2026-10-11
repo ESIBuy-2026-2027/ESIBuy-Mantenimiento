@@ -5,9 +5,11 @@ import es.uclm.esibuy.backend.shared.config.MongoConfig;
 import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColecciones;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import java.time.LocalDate;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
@@ -296,6 +298,15 @@ class UsuarioMongoAdapterTest {
         return Usuario.nuevoCliente(DATOS_PERSONALES, new Email(email), hash, DATOS_CLIENTE, CONSENTIMIENTO, HOY);
     }
 
+    private static Usuario vendedor(String email, String hash, String nombreComercial) {
+        return vendedor(email, hash, nombreComercial, "87654321X");
+    }
+
+    private static Usuario vendedor(String email, String hash, String nombreComercial, String dni) {
+        DatosVendedor datosVendedor = new DatosVendedor(nombreComercial, "cat-1", new Dni(dni), null);
+        return Usuario.nuevoVendedor(DATOS_PERSONALES, new Email(email), hash, datosVendedor, CONSENTIMIENTO);
+    }
+
     private static Usuario cliente(String email, String hash, String dni) {
         DatosCliente datosCliente = new DatosCliente(TipoCliente.PREMIUM, new Dni(dni), LocalDate.of(1996, 5, 20), null);
         return Usuario.nuevoCliente(DATOS_PERSONALES, new Email(email), hash, datosCliente, CONSENTIMIENTO, HOY);
@@ -518,5 +529,28 @@ class UsuarioMongoAdapterTest {
         UsuarioDocument doc = documento(email, "hash-simulado", rol);
         doc.setEstado(estado);
         return doc;
+    }
+
+    // Registro del vendedor (T241).
+
+    @Test
+    @DisplayName("HU1-CP20: existePorNombreComercial distingue los nombres comerciales guardados")
+    void existePorNombreComercialDistingueLosGuardados() {
+        adapter.guardar(vendedor("tienda@uclm.es", "hash-1", "Tienda Luis"));
+
+        assertTrue(adapter.existePorNombreComercial("Tienda Luis"));
+        assertFalse(adapter.existePorNombreComercial("Otra tienda"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP20: rechaza un nombre comercial duplicado en la base de datos")
+    void rechazaNombreComercialDuplicadoEnLaBaseDeDatos() {
+        // Distinto email y distinto DNI: solo el índice único de nombreComercial (AB#210) lo para, y el adaptador
+        // tiene que distinguirlo del correo y del DNI repetidos.
+        adapter.guardar(vendedor("tienda@uclm.es", "hash-1", "Tienda Luis"));
+        Usuario mismoNombreComercial = vendedor("otra@uclm.es", "hash-2", "Tienda Luis", "11111111H");
+
+        assertThrows(NombreComercialYaRegistradoException.class, () -> adapter.guardar(mismoNombreComercial));
+        assertEquals(1, usuarioMongoRepository.count());
     }
 }

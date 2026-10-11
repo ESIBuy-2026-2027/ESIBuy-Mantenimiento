@@ -3,17 +3,21 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 import java.time.Clock;
 import java.time.LocalDate;
 
-import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioCommand;
+import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarClienteCommand;
+import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarVendedorCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYNombreComercialYaRegistradosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.PoliticaContrasenas;
@@ -45,33 +49,88 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
     }
 
     @Override
-    public void registrar(RegistrarUsuarioCommand comando) {
+    public void registrarCliente(RegistrarClienteCommand comando) {
         // Todo lo que se puede comprobar sin salir del núcleo va antes de consultar la base de datos.
         DatosPersonales datosPersonales = new DatosPersonales(comando.nombre(), comando.apellidos(), comando.imagenPerfil());
         Email email = new Email(comando.email());
-        PoliticaContrasenas.validar(comando.password(), datosPersonales, email);   // también rechaza la contraseña nula
-        if (!comando.password().equals(comando.repeticionPassword())) {
-            throw new ContrasenaInvalidaException("Las contraseñas no coinciden");
-        }
-        if (!comando.aceptaPrivacidad()) {
-            throw new UsuarioInvalidoException("Es obligatorio aceptar la política de privacidad");
-        }
+        exigirContrasenaValida(comando.password(), comando.repeticionPassword(), datosPersonales, email);
+        exigirPrivacidadAceptada(comando.aceptaPrivacidad());
         if (usuarioRepository.existePorCorreo(email.valor())) {   // con el email normalizado (T240)
             throw new CorreoYaRegistradoException("El correo ya está registrado");
         }
-        if (usuarioRepository.existePorDni(comando.dni())) {
-            throw new DniYaRegistradoException("El DNI ya está registrado");
-        }
+        exigirDniLibre(comando.dni());
 
-        String contrasenaHash = hashContrasena.hashear(comando.password());
         Usuario usuario = Usuario.nuevoCliente(
                 datosPersonales,
                 email,
-                contrasenaHash,
+                hashContrasena.hashear(comando.password()),
                 new DatosCliente(comando.tipoCliente(), new Dni(comando.dni()), comando.fechaNacimiento(),
-                        comando.telefono() == null ? null : new Telefono(comando.telefono())),
-                new ConsentimientoPrivacidad(reloj.instant(), VERSION_POLITICA_PRIVACIDAD),
+                        telefono(comando.telefono())),
+                consentimientoAhora(),
                 LocalDate.now(reloj));
         usuarioRepository.guardar(usuario);
+    }
+
+    // Registro del vendedor (T241): las mismas reglas que el cliente, sin mayoría de edad y con nombre comercial.
+    @Override
+    public void registrarVendedor(RegistrarVendedorCommand comando) {
+        DatosPersonales datosPersonales = new DatosPersonales(comando.nombre(), comando.apellidos(), comando.imagenPerfil());
+        Email email = new Email(comando.email());
+        exigirContrasenaValida(comando.password(), comando.repeticionPassword(), datosPersonales, email);
+        exigirPrivacidadAceptada(comando.aceptaPrivacidad());
+        exigirCorreoYNombreComercialLibres(email, comando.nombreComercial());
+        exigirDniLibre(comando.dni());
+
+        Usuario usuario = Usuario.nuevoVendedor(
+                datosPersonales,
+                email,
+                hashContrasena.hashear(comando.password()),
+                new DatosVendedor(comando.nombreComercial(), comando.categoriaPrincipalId(), new Dni(comando.dni()),
+                        telefono(comando.telefono())),
+                consentimientoAhora());
+        usuarioRepository.guardar(usuario);
+    }
+
+    private static void exigirContrasenaValida(String password, String repeticion, DatosPersonales datosPersonales,
+            Email email) {
+        PoliticaContrasenas.validar(password, datosPersonales, email);   // también rechaza la contraseña nula
+        if (!password.equals(repeticion)) {
+            throw new ContrasenaInvalidaException("Las contraseñas no coinciden");
+        }
+    }
+
+    private static void exigirPrivacidadAceptada(boolean aceptaPrivacidad) {
+        if (!aceptaPrivacidad) {
+            throw new UsuarioInvalidoException("Es obligatorio aceptar la política de privacidad");
+        }
+    }
+
+    // Se consultan los dos antes de decidir: si se repiten ambos, el frontend espera un único 409 que lo diga.
+    private void exigirCorreoYNombreComercialLibres(Email email, String nombreComercial) {
+        boolean correoRepetido = usuarioRepository.existePorCorreo(email.valor());
+        boolean nombreComercialRepetido = usuarioRepository.existePorNombreComercial(nombreComercial);
+        if (correoRepetido && nombreComercialRepetido) {
+            throw new CorreoYNombreComercialYaRegistradosException("El correo y el nombre comercial ya están registrados");
+        }
+        if (correoRepetido) {
+            throw new CorreoYaRegistradoException("El correo ya está registrado");
+        }
+        if (nombreComercialRepetido) {
+            throw new NombreComercialYaRegistradoException("El nombre comercial ya está registrado");
+        }
+    }
+
+    private void exigirDniLibre(String dni) {
+        if (usuarioRepository.existePorDni(dni)) {
+            throw new DniYaRegistradoException("El DNI ya está registrado");
+        }
+    }
+
+    private static Telefono telefono(String telefono) {
+        return telefono == null ? null : new Telefono(telefono);
+    }
+
+    private ConsentimientoPrivacidad consentimientoAhora() {
+        return new ConsentimientoPrivacidad(reloj.instant(), VERSION_POLITICA_PRIVACIDAD);
     }
 }

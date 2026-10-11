@@ -14,7 +14,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
  *
  * <p>El {@code toString} oculta las dos contraseñas para que no acaben en un log.
  */
-public record RegistrarUsuarioCommand(
+public record RegistrarClienteCommand(
         String nombre,
         String apellidos,
         LocalDate fechaNacimiento,
@@ -29,7 +29,7 @@ public record RegistrarUsuarioCommand(
 
     @Override
     public String toString() {
-        return "RegistrarUsuarioCommand[nombre=" + nombre + ", apellidos=" + apellidos
+        return "RegistrarClienteCommand[nombre=" + nombre + ", apellidos=" + apellidos
                 + ", fechaNacimiento=" + fechaNacimiento + ", dni=" + dni + ", email=" + email
                 + ", telefono=" + telefono + ", password=****, repeticionPassword=****"
                 + ", tipoCliente=" + tipoCliente + ", imagenPerfil=" + imagenPerfil

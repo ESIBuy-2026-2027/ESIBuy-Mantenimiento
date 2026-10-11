@@ -7,12 +7,12 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-class RegistrarUsuarioCommandTest {
+class RegistrarClienteCommandTest {
 
     @Test
     @DisplayName("HU1-CP02: el toString del comando no muestra la contraseña ni su repetición")
     void toStringNoMuestraLaContrasena() {
-        RegistrarUsuarioCommand comando = new RegistrarUsuarioCommand("Juan", "Pérez García",
+        RegistrarClienteCommand comando = new RegistrarClienteCommand("Juan", "Pérez García",
                 LocalDate.of(1996, 5, 20), "12345678Z", "juan@uclm.es", null, "clave1234", "clave1234",
                 TipoCliente.ESTANDAR, null, true);
 

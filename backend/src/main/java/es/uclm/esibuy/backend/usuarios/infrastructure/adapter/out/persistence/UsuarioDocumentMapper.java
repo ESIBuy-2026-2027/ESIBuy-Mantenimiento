@@ -5,8 +5,10 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
+import es.uclm.esibuy.backend.usuarios.domain.model.PerfilUsuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
@@ -45,9 +47,14 @@ public class UsuarioDocumentMapper {
         DatosCliente datosCliente = usuario.getDatosCliente();
         if (datosCliente != null) {
             documento.setTipoCliente(datosCliente.tipoCliente().name());
-            documento.setDni(datosCliente.dni().valor());
             documento.setFechaNacimiento(datosCliente.fechaNacimiento());
-            documento.setTelefono(datosCliente.telefono() == null ? null : datosCliente.telefono().valor());
+            escribirDniYTelefono(documento, datosCliente);
+        }
+        DatosVendedor datosVendedor = usuario.getDatosVendedor();
+        if (datosVendedor != null) {
+            documento.setNombreComercial(datosVendedor.nombreComercial());
+            documento.setCategoriaPrincipalId(datosVendedor.categoriaPrincipalId());
+            escribirDniYTelefono(documento, datosVendedor);
         }
 
         ConsentimientoPrivacidad consentimiento = usuario.getConsentimiento();
@@ -73,7 +80,7 @@ public class UsuarioDocumentMapper {
         Usuario usuario = new Usuario(documento.getId(),
                 new DatosPersonales(documento.getNombre(), documento.getApellidos(), documento.getImagenPerfil()),
                 new Email(documento.getEmail()), documento.getPasswordHash(), rol,
-                rol == Rol.CLIENTE ? datosCliente(documento) : null,
+                perfil(rol, documento),
                 consentimiento(documento));
 
         usuario.restaurarEstado(documento.getEstado() == null ? ESTADO_ACTIVO : documento.getEstado());
@@ -82,13 +89,37 @@ public class UsuarioDocumentMapper {
         return usuario;
     }
 
+    // El DNI y el teléfono van en la raíz del documento sea cual sea el perfil.
+    private static void escribirDniYTelefono(UsuarioDocument documento, PerfilUsuario perfil) {
+        documento.setDni(perfil.dni().valor());
+        documento.setTelefono(perfil.telefono() == null ? null : perfil.telefono().valor());
+    }
+
+    // El perfil se elige por rol. Un vendedor sin nombre comercial (anterior a la T241) se lee sin perfil.
+    private static PerfilUsuario perfil(Rol rol, UsuarioDocument documento) {
+        return switch (rol) {
+            case CLIENTE -> datosCliente(documento);
+            case VENDEDOR -> documento.getNombreComercial() == null ? null : datosVendedor(documento);
+            case ADMINISTRADOR -> null;
+        };
+    }
+
+    private static DatosVendedor datosVendedor(UsuarioDocument documento) {
+        return new DatosVendedor(documento.getNombreComercial(), documento.getCategoriaPrincipalId(),
+                new Dni(documento.getDni()), telefono(documento));
+    }
+
+    private static Telefono telefono(UsuarioDocument documento) {
+        return documento.getTelefono() == null ? null : new Telefono(documento.getTelefono());
+    }
+
     // Tipo de cliente: el guardado si existe; si no (documento anterior a la T225), ESTANDAR.
     private static DatosCliente datosCliente(UsuarioDocument documento) {
         TipoCliente tipoCliente = documento.getTipoCliente() == null
                 ? TipoCliente.ESTANDAR
                 : TipoCliente.valueOf(documento.getTipoCliente());
         return new DatosCliente(tipoCliente, new Dni(documento.getDni()), documento.getFechaNacimiento(),
-                documento.getTelefono() == null ? null : new Telefono(documento.getTelefono()));
+                telefono(documento));
     }
 
     private static ConsentimientoPrivacidad consentimiento(UsuarioDocument documento) {

@@ -4,6 +4,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
@@ -34,6 +35,8 @@ class UsuarioDocumentMapperTest {
     private static final DatosCliente DATOS_CLIENTE = new DatosCliente(
             TipoCliente.PREMIUM, new Dni("12345678Z"), NACIMIENTO, new Telefono("612345678"));
     private static final ConsentimientoPrivacidad CONSENTIMIENTO = new ConsentimientoPrivacidad(ACEPTADA_EN, "1.0");
+    private static final DatosVendedor DATOS_VENDEDOR = new DatosVendedor(
+            "Tienda Luis", "cat-1", new Dni("87654321X"), new Telefono("612345678"));
 
     private final UsuarioDocumentMapper mapper = new UsuarioDocumentMapper();
 
@@ -150,6 +153,11 @@ class UsuarioDocumentMapperTest {
         assertInstanceOf(UsuarioInvalidoException.class, excepcion.getCause());
     }
 
+    private static Usuario vendedorNuevo() {
+        return Usuario.nuevoVendedor(new DatosPersonales("Luis", "Martín", null), new Email("tienda@uclm.es"),
+                "hash-simulado", DATOS_VENDEDOR, CONSENTIMIENTO);
+    }
+
     private static Usuario clienteNuevo() {
         return Usuario.nuevoCliente(DATOS_PERSONALES, new Email("juan@uclm.es"), "hash-simulado",
                 DATOS_CLIENTE, CONSENTIMIENTO, HOY);
@@ -166,6 +174,49 @@ class UsuarioDocumentMapperTest {
         documento.setEstado("ACTIVO");
         return documento;
     }
+
+    // Registro del vendedor (T241).
+
+    @Test
+    @DisplayName("HU1-CP19: convierte los datos del vendedor en documento")
+    void convierteLosDatosDelVendedorEnDocumento() {
+        UsuarioDocument documento = mapper.aDocumento(vendedorNuevo());
+
+        assertEquals("VENDEDOR", documento.getRol());
+        assertEquals("PENDIENTE", documento.getEstado());
+        assertEquals("Tienda Luis", documento.getNombreComercial());
+        assertEquals("cat-1", documento.getCategoriaPrincipalId());
+        assertEquals("87654321X", documento.getDni());
+        assertEquals("612345678", documento.getTelefono());
+        assertNull(documento.getTipoCliente());
+        assertNull(documento.getFechaNacimiento());
+    }
+
+    @Test
+    @DisplayName("HU1-CP19: conserva los datos del vendedor en el mapeo de ida y vuelta")
+    void conservaLosDatosDelVendedorEnElMapeo() {
+        Usuario leido = mapper.aDominio(mapper.aDocumento(vendedorNuevo()));
+
+        assertEquals(Rol.VENDEDOR, leido.getRol());
+        assertEquals(DATOS_VENDEDOR, leido.getDatosVendedor());
+        assertNull(leido.getDatosCliente());
+        assertEquals(CONSENTIMIENTO, leido.getConsentimiento());
+    }
+
+    @Test
+    @DisplayName("HU1-CP19: un vendedor sin nombre comercial se lee sin perfil")
+    void unVendedorSinNombreComercialSeLeeSinPerfil() {
+        // Vendedores anteriores a la T241 (p. ej. los de Atlas): no tienen nombre comercial y se leen sin perfil
+        UsuarioDocument documento = new UsuarioDocument("tienda@uclm.es", "hash-simulado", "VENDEDOR");
+        documento.setNombre("Luis");
+        documento.setApellidos("Martín");
+
+        Usuario leido = mapper.aDominio(documento);
+
+        assertNull(leido.getDatosVendedor());
+        assertNull(leido.getDatosCliente());
+    }
+
     
     @Test
     @DisplayName("HU21-CP19: un administrador se lee sin datos de cliente ni consentimiento")
