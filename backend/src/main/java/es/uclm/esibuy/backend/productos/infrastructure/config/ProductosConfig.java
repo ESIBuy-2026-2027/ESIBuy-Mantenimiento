@@ -18,6 +18,8 @@ import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.usuarios.Usua
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.usuarios.VendedorAdapter;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
+import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
+import es.uclm.esibuy.backend.productos.application.service.GestionProductosService;
 
 /**
  * Configuración de Spring del módulo de productos: conecta cada puerto con su adaptador, como
@@ -52,5 +54,11 @@ public class ProductosConfig {
     SupervisionProductosUseCase supervisionProductosUseCase(ProductoRepositoryPort productoRepositoryPort,
             VendedorPort vendedorPort) {
         return new SupervisionProductosService(productoRepositoryPort, vendedorPort);
+    }
+
+    @Bean
+    GestionProductosUseCase gestionProductosUseCase(ProductoRepositoryPort productoRepositoryPort,
+            UsuarioEnSesionPort usuarioEnSesionPort) {
+        return new GestionProductosService(productoRepositoryPort, usuarioEnSesionPort);
     }
 }
