@@ -512,7 +512,8 @@ describe('Register', () => {
   })
 
   it('register_siElEmailYaEstaRegistrado_muestraErrorEnElCampoEmail', async () => {
-    registrarCliente.mockRejectedValue({ status: 409 })
+    // El backend acompaña cada 409 de su code (PR #104)
+    registrarCliente.mockRejectedValue({ status: 409, code: 'EMAIL_ALREADY_REGISTERED' })
     await renderYElegirCliente()
     await rellenarFormularioValido()
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
@@ -602,5 +603,20 @@ describe('Register', () => {
     expect(screen.getByText(/obligatorio/i)).toBeInTheDocument()
     expect(screen.queryByText(/no coinciden/i)).not.toBeInTheDocument()
     expect(registrarCliente).not.toHaveBeenCalled()
+  })
+
+  // Fallos de la demo del Sprint 1: el formulario marca en su campo el motivo que da el backend (PR #104)
+
+  it('HU1-CP23: una contraseña con datos personales se marca en el campo de la contraseña', async () => {
+    registrarCliente.mockRejectedValue({ status: 400, code: 'PASSWORD_CONTAINS_PERSONAL_DATA' })
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(await screen.findByText('La contraseña no puede contener tu nombre, tus apellidos ni tu email'))
+      .toBeInTheDocument()
+    expect(screen.getByLabelText(/^password/i)).toHaveAccessibleDescription(
+      'La contraseña no puede contener tu nombre, tus apellidos ni tu email'
+    )
   })
 })
