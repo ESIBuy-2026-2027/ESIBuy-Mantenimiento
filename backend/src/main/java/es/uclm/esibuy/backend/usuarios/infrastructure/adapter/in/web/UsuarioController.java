@@ -177,6 +177,9 @@ public class UsuarioController {
         if ("status".equals(sort)) {
             return ListarUsuariosQuery.Orden.ESTADO;
         }
+        if ("category".equals(sort)) {
+            return ListarUsuariosQuery.Orden.CATEGORIA;
+        }
         return null;
     }
 }

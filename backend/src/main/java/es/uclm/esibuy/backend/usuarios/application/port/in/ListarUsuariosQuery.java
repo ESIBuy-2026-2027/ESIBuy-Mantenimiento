@@ -31,7 +31,8 @@ public record ListarUsuariosQuery(
     }
 
     // Orden del listado (HU26). Por estado, el orden ascendente es pendientes, activos y desactivados.
-    public enum Orden { NOMBRE, ESTADO }
+    // Por categoría (fallos de la demo del Sprint 1): por el nombre de la categoría principal, no por su id.
+    public enum Orden { NOMBRE, ESTADO, CATEGORIA }
 
     // Listado sin orden propio (HU19): por fecha de alta, como hasta ahora.
     public ListarUsuariosQuery(String busqueda, Rol rol, String estado, int pagina, int tamano) {
