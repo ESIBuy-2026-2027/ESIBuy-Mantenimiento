@@ -1227,4 +1227,32 @@ class UsuarioControllerTest {
 
         verify(registroUsuario, never()).registrarCliente(any());
     }
+
+    // Fallos de la demo del Sprint 1: el formulario envía la imagen como "avatar", igual que el resto de la API.
+
+    @Test
+    @DisplayName("HU1-CP01: el registro del cliente guarda el avatar elegido")
+    void elRegistroDelClienteGuardaElAvatar() throws Exception {
+        String cuerpo = json("juan@uclm.es", "Clave-1234").replace("\"imagenPerfil\": null", "\"avatar\": \"avatar2\"");
+
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(cuerpo))
+                .andExpect(status().isCreated());
+
+        ArgumentCaptor<RegistrarClienteCommand> comando = ArgumentCaptor.forClass(RegistrarClienteCommand.class);
+        verify(registroUsuario).registrarCliente(comando.capture());
+        assertEquals("avatar2", comando.getValue().imagenPerfil());
+    }
+
+    @Test
+    @DisplayName("HU1-CP19: el registro del vendedor guarda el avatar elegido")
+    void elRegistroDelVendedorGuardaElAvatar() throws Exception {
+        String cuerpo = jsonVendedor().replace("\"imagenPerfil\": \"avatar1\"", "\"avatar\": \"avatar3\"");
+
+        mockMvc.perform(post(URL_REGISTRO_VENDEDOR).contentType(MediaType.APPLICATION_JSON).content(cuerpo))
+                .andExpect(status().isCreated());
+
+        ArgumentCaptor<RegistrarVendedorCommand> comando = ArgumentCaptor.forClass(RegistrarVendedorCommand.class);
+        verify(registroUsuario).registrarVendedor(comando.capture());
+        assertEquals("avatar3", comando.getValue().imagenPerfil());
+    }
 }
