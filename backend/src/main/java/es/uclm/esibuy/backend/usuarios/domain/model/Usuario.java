@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 
+import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 
 public class Usuario {
@@ -74,7 +75,7 @@ public class Usuario {
 
     private static void exigirMayoriaDeEdad(DatosCliente datosCliente, LocalDate hoy) {
         if (datosCliente.fechaNacimiento().plusYears(MAYORIA_EDAD).isAfter(hoy)) {
-            throw new UsuarioInvalidoException("El cliente debe ser mayor de edad");
+            throw new UsuarioInvalidoException(MotivoRechazo.MENOR_DE_EDAD, "El cliente debe ser mayor de edad");
         }
     }
 
