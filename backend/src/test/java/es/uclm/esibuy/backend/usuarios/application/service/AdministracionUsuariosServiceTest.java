@@ -3,7 +3,6 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.CambioDePropioRolException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
@@ -69,7 +68,7 @@ class AdministracionUsuariosServiceTest {
         EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", "avatar1",
                 "10004119A", "620023757", LocalDate.of(1978, 4, 13), TipoCliente.PREMIUM);
 
-        Usuario editado = servicio.editar("u-1", comando, EMAIL_ADMINISTRADOR);
+        Usuario editado = servicio.editar("u-1", comando);
 
         assertSame(cliente, editado);
         assertEquals(new DatosPersonales("Carla", "Moreno Gil", "avatar1"), editado.getDatosPersonales());
@@ -88,7 +87,7 @@ class AdministracionUsuariosServiceTest {
         EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.ADMINISTRADOR, "Diego", "Delgado Iglesias",
                 "avatar3", null, null, null, null);
 
-        Usuario editado = servicio.editar("u-2", comando, EMAIL_ADMINISTRADOR);
+        Usuario editado = servicio.editar("u-2", comando);
 
         assertEquals(new DatosPersonales("Diego", "Delgado Iglesias", "avatar3"), editado.getDatosPersonales());
         assertNull(editado.getDatosCliente());
@@ -102,7 +101,7 @@ class AdministracionUsuariosServiceTest {
         EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.VENDEDOR, "Vera", "Vendedora Ruiz",
                 null, null, null, null, null);
 
-        Usuario editado = servicio.editar("u-4", comando, EMAIL_ADMINISTRADOR);
+        Usuario editado = servicio.editar("u-4", comando);
 
         assertEquals(new DatosPersonales("Vera", "Vendedora Ruiz", null), editado.getDatosPersonales());
         verify(usuarioRepository).guardar(editado);
@@ -117,7 +116,7 @@ class AdministracionUsuariosServiceTest {
         EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.VENDEDOR, "Vera", "Vendedora Ruiz",
                 null, null, null, null, null);
 
-        Usuario editado = servicio.editar("u-4", comando, EMAIL_ADMINISTRADOR);
+        Usuario editado = servicio.editar("u-4", comando);
 
         assertEquals(new Email("vendedor@esibuy.test"), editado.getEmail());
         assertEquals("hash-simulado", editado.getPasswordHash());
@@ -134,8 +133,8 @@ class AdministracionUsuariosServiceTest {
         EditarUsuarioCommand menorDeEdad = new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", null,
                 "10004119A", null, LocalDate.of(2010, 1, 1), TipoCliente.ESTANDAR);
 
-        assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", dniNoValido, EMAIL_ADMINISTRADOR));
-        assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", menorDeEdad, EMAIL_ADMINISTRADOR));
+        assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", dniNoValido));
+        assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", menorDeEdad));
         verify(usuarioRepository, never()).guardar(any());
     }
 
@@ -146,152 +145,22 @@ class AdministracionUsuariosServiceTest {
         EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.ADMINISTRADOR, "Diego", "Delgado Iglesias",
                 null, null, null, null, null);
 
-        assertThrows(UsuarioNoEncontradoException.class, () -> servicio.editar("no-existe", comando, EMAIL_ADMINISTRADOR));
+        assertThrows(UsuarioNoEncontradoException.class, () -> servicio.editar("no-existe", comando));
         verify(usuarioRepository, never()).guardar(any());
     }
 
     @Test
-    @DisplayName("HU22-CP11: un administrador no puede cambiar su propio rol y no se guarda nada")
-    void rechazaQueUnAdministradorCambieSuPropioRol() {
-        Usuario administrador = new Usuario("u-2", new DatosPersonales("Diego", "Delgado", null),
-                new Email("diego@uclm.es"), "hash-simulado", Rol.ADMINISTRADOR, null, null);
-        when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(administrador));
-        EditarUsuarioCommand aCliente = new EditarUsuarioCommand(Rol.CLIENTE, "Diego", "Delgado", null,
-                "10004119A", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
-
-        // El email de la sesión se compara sin distinguir mayúsculas, como al desactivar (HU23)
-        assertThrows(CambioDePropioRolException.class, () -> servicio.editar("u-2", aCliente, "DIEGO@uclm.es"));
-        assertEquals(Rol.ADMINISTRADOR, administrador.getRol());
-        verify(usuarioRepository, never()).guardar(any());
-    }
-
-    @Test
-    @DisplayName("HU22-CP11: un administrador sí puede editar sus propios datos si mantiene su rol")
-    void unAdministradorEditaSusPropiosDatos() {
-        Usuario administrador = new Usuario("u-2", new DatosPersonales("Diego", "Delgado", null),
-                new Email("diego@uclm.es"), "hash-simulado", Rol.ADMINISTRADOR, null, null);
-        when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(administrador));
-        EditarUsuarioCommand mismoRol = new EditarUsuarioCommand(Rol.ADMINISTRADOR, "Diego", "Delgado Iglesias",
-                "avatar3", null, null, null, null);
-
-        Usuario editado = servicio.editar("u-2", mismoRol, "diego@uclm.es");
-
-        assertEquals(new DatosPersonales("Diego", "Delgado Iglesias", "avatar3"), editado.getDatosPersonales());
-        assertEquals(new Email("diego@uclm.es"), editado.getEmail());
-        verify(usuarioRepository).guardar(editado);
-    }
-
-    @Test
-    @DisplayName("HU22-CP12: degradar al último administrador activo falla y no se guarda nada")
-    void rechazaDegradarAlUltimoAdministradorActivo() {
-        Usuario administrador = administradorDiegoActivo();
-        when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(administrador));
-        when(usuarioRepository.contarAdministradoresActivos()).thenReturn(1L);
-
-        assertThrows(UltimoAdministradorActivoException.class,
-                () -> servicio.editar("u-2", diegoACliente(), EMAIL_ADMINISTRADOR));
-        assertEquals(Rol.ADMINISTRADOR, administrador.getRol());
-        verify(usuarioRepository, never()).guardar(any());
-    }
-
-    @Test
-    @DisplayName("HU22-CP12: se puede degradar a un administrador activo si queda otro administrador activo")
-    void degradaAUnAdministradorSiQuedaOtroActivo() {
-        Usuario administrador = administradorDiegoActivo();
-        when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(administrador));
-        when(usuarioRepository.contarAdministradoresActivos()).thenReturn(2L);
-
-        Usuario editado = servicio.editar("u-2", diegoACliente(), EMAIL_ADMINISTRADOR);
-
-        assertEquals(Rol.CLIENTE, editado.getRol());
-        verify(usuarioRepository).guardar(editado);
-    }
-
-    @Test
-    @DisplayName("HU22-CP12: degradar a un administrador desactivado no resta administradores activos")
-    void degradarAUnAdministradorDesactivadoNoConsultaElConteo() {
-        Usuario administrador = administradorDiegoActivo();
-        administrador.desactivar();
-        when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(administrador));
-
-        Usuario editado = servicio.editar("u-2", diegoACliente(), EMAIL_ADMINISTRADOR);
-
-        assertEquals(Rol.CLIENTE, editado.getRol());
-        verify(usuarioRepository, never()).contarAdministradoresActivos();
-        verify(usuarioRepository).guardar(editado);
-    }
-
-    private static Usuario administradorDiegoActivo() {
-        Usuario administrador = new Usuario("u-2", new DatosPersonales("Diego", "Delgado", null),
-                new Email("diego@uclm.es"), "hash-simulado", Rol.ADMINISTRADOR, null, null);
-        administrador.activar();
-        return administrador;
-    }
-
-    private static EditarUsuarioCommand diegoACliente() {
-        return new EditarUsuarioCommand(Rol.CLIENTE, "Diego", "Delgado", null,
-                "10004119A", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
-    }
-
-    @Test
-    @DisplayName("HU22-CP13: pasar una cuenta a vendedor falla y no guarda nada (aún no existen los datos del vendedor)")
-    void rechazaPasarUnaCuentaAVendedor() {
+    @DisplayName("HU22-CP05: editar con un rol distinto del actual falla y no guarda nada (el cambio de rol llega en la T43)")
+    void rechazaEditarConUnRolDistintoDelActual() {
         Usuario cliente = clienteLucia();
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(cliente));
-        EditarUsuarioCommand aVendedor = new EditarUsuarioCommand(Rol.VENDEDOR, "Lucía", "Torres Vega",
-                null, null, null, null, null);
+        // Datos de cliente válidos: solo falla el rol
+        EditarUsuarioCommand aAdministrador = new EditarUsuarioCommand(Rol.ADMINISTRADOR, "Carla", "Moreno Gil",
+                null, "10004119A", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
 
-        assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", aVendedor, EMAIL_ADMINISTRADOR));
+        assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", aAdministrador));
         assertEquals(Rol.CLIENTE, cliente.getRol());
         assertEquals(new DatosPersonales("Lucía", "Torres Vega", null), cliente.getDatosPersonales());
-        verify(usuarioRepository, never()).guardar(any());
-    }
-
-    @Test
-    @DisplayName("HU22-CP09: un cliente que pasa a administrador se guarda con el rol nuevo y sin datos de cliente")
-    void editarPasaUnClienteAAdministrador() {
-        Usuario cliente = clienteLucia();
-        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(cliente));
-        // Los datos de cliente que lleguen se ignoran: el rol que queda es administrador
-        EditarUsuarioCommand aAdministrador = new EditarUsuarioCommand(Rol.ADMINISTRADOR, "Lucía", "Torres Vega",
-                "avatar3", "12345678Z", null, LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR);
-
-        Usuario editado = servicio.editar("u-1", aAdministrador, EMAIL_ADMINISTRADOR);
-
-        assertEquals(Rol.ADMINISTRADOR, editado.getRol());
-        assertNull(editado.getDatosCliente());
-        assertEquals(new DatosPersonales("Lucía", "Torres Vega", "avatar3"), editado.getDatosPersonales());
-        verify(usuarioRepository).guardar(editado);
-    }
-
-    @Test
-    @DisplayName("HU22-CP09: un administrador que pasa a cliente se guarda con sus nuevos datos de cliente")
-    void editarPasaUnAdministradorACliente() {
-        Usuario administrador = new Usuario("u-2", new DatosPersonales("Diego", "Delgado", null),
-                new Email("diego@uclm.es"), "hash-simulado", Rol.ADMINISTRADOR, null, null);
-        when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(administrador));
-        EditarUsuarioCommand aCliente = new EditarUsuarioCommand(Rol.CLIENTE, "Diego", "Delgado", null,
-                "10004119A", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
-
-        Usuario editado = servicio.editar("u-2", aCliente, EMAIL_ADMINISTRADOR);
-
-        assertEquals(Rol.CLIENTE, editado.getRol());
-        assertEquals(new Dni("10004119A"), editado.getDatosCliente().dni());
-        verify(usuarioRepository).guardar(editado);
-    }
-
-    @Test
-    @DisplayName("HU22-CP06: un administrador que pasa a cliente con el DNI de otra cuenta falla y no guarda nada")
-    void rechazaPasarAClienteConElDniDeOtraCuenta() {
-        Usuario administrador = new Usuario("u-2", new DatosPersonales("Diego", "Delgado", null),
-                new Email("diego@uclm.es"), "hash-simulado", Rol.ADMINISTRADOR, null, null);
-        when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(administrador));
-        when(usuarioRepository.existePorDni("10004119A")).thenReturn(true);
-        EditarUsuarioCommand aCliente = new EditarUsuarioCommand(Rol.CLIENTE, "Diego", "Delgado", null,
-                "10004119A", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
-
-        assertThrows(DniYaRegistradoException.class, () -> servicio.editar("u-2", aCliente, EMAIL_ADMINISTRADOR));
-        assertEquals(Rol.ADMINISTRADOR, administrador.getRol());
         verify(usuarioRepository, never()).guardar(any());
     }
 
@@ -302,7 +171,7 @@ class AdministracionUsuariosServiceTest {
         EditarUsuarioCommand sinRol = new EditarUsuarioCommand(null, "Carla", "Moreno Gil", null,
                 "10004119A", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
 
-        assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", sinRol, EMAIL_ADMINISTRADOR));
+        assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", sinRol));
         verify(usuarioRepository, never()).guardar(any());
     }
 
@@ -314,7 +183,7 @@ class AdministracionUsuariosServiceTest {
         EditarUsuarioCommand dniDeOtro = new EditarUsuarioCommand(Rol.CLIENTE, "Lucía", "Torres Vega", null,
                 "10004119A", null, LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR);
 
-        assertThrows(DniYaRegistradoException.class, () -> servicio.editar("u-1", dniDeOtro, EMAIL_ADMINISTRADOR));
+        assertThrows(DniYaRegistradoException.class, () -> servicio.editar("u-1", dniDeOtro));
         verify(usuarioRepository, never()).guardar(any());
     }
 
@@ -326,7 +195,7 @@ class AdministracionUsuariosServiceTest {
         EditarUsuarioCommand mismoDni = new EditarUsuarioCommand(Rol.CLIENTE, "Lucía", "Torres Vega", null,
                 "12345678Z", "620023757", LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR);
 
-        servicio.editar("u-1", mismoDni, EMAIL_ADMINISTRADOR);
+        servicio.editar("u-1", mismoDni);
 
         verify(usuarioRepository, never()).existePorDni(any());
         verify(usuarioRepository).guardar(cliente);
@@ -340,7 +209,7 @@ class AdministracionUsuariosServiceTest {
         EditarUsuarioCommand telefonoEnBlanco = new EditarUsuarioCommand(Rol.CLIENTE, "Lucía", "Torres Vega", null,
                 "12345678Z", "  ", LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR);
 
-        Usuario editado = servicio.editar("u-1", telefonoEnBlanco, EMAIL_ADMINISTRADOR);
+        Usuario editado = servicio.editar("u-1", telefonoEnBlanco);
 
         assertNull(editado.getDatosCliente().telefono());
         verify(usuarioRepository).guardar(editado);

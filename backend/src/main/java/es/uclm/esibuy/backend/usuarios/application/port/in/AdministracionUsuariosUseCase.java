@@ -34,16 +34,12 @@ public interface AdministracionUsuariosUseCase {
     Usuario consultarVendedor(String usuarioId);
 
     /**
-     * Modifica los datos del usuario, y su rol si cambia, y lo devuelve ya modificado (HU22).
+     * Modifica los datos del usuario y lo devuelve ya modificado (HU22).
      *
-     * @param usuarioId          id del usuario que se quiere editar
-     * @param comando            datos del rol que queda
-     * @param emailAdministrador email del administrador que hace la petición
      * @throws es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException si no existe
      * @throws es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException si los datos no son válidos
-     * @throws es.uclm.esibuy.backend.usuarios.domain.exception.CambioDePropioRolException si cambia su propio rol
      */
-    Usuario editar(String usuarioId, EditarUsuarioCommand comando, String emailAdministrador);
+    Usuario editar(String usuarioId, EditarUsuarioCommand comando);
 
     /**
      * Desactiva la cuenta del usuario y la devuelve ya desactivada.
