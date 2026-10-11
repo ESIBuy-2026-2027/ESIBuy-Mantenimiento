@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 
 /**
  * Traduce las excepciones que salen de los controladores a respuestas HTTP con un mensaje
@@ -122,5 +123,11 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError cambioDePropioRol() {
         return new RespuestaError("No puedes cambiar tu propio rol", "CANNOT_CHANGE_OWN_ROLE");
+    }
+
+    @ExceptionHandler(ProductoInvalidoException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError productoInvalido() {
+        return new RespuestaError("El producto es inválido", "INVALID_PRODUCT");
     }
 }
