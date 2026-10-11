@@ -446,4 +446,19 @@ class AutenticacionServiceTest {
 
         assertEquals("u-1", autenticacion.consultarIdUsuarioEnSesion("juan@uclm.es"));
     }
+
+    // Fallos de la demo del Sprint 1: el paso 1 busca la cuenta con el email normalizado (T240).
+
+    @Test
+    @DisplayName("HU2-CP25: inicia sesión aunque el email lleve mayúsculas o espacios")
+    void iniciaSesionAunqueElEmailLleveMayusculas() {
+        Usuario usuario = clienteConId();
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
+        when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
+
+        ResultadoInicioSesion resultado = autenticacion.iniciarSesion(new IniciarSesionCommand(" Juan@UCLM.es ", "clave1234"));
+
+        assertEquals("juan@uclm.es", resultado.email());
+        assertEquals(PasoLogin.CODIGO_EMAIL, resultado.siguientePaso());
+    }
 }
