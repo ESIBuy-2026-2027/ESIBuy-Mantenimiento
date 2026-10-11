@@ -13,7 +13,7 @@ const VENDEDOR = {
   apellidos: 'Vendedora',
   email: 'vendedor@esibuy.test',
   nombreComercial: 'TecnoVera',
-  nif: 'B12345601',
+  dni: '12345601V',
   categoriaPrincipal: 'Tecnología',
   categoriaPrincipalId: 'cat-1',
   estado: 'ACTIVO',

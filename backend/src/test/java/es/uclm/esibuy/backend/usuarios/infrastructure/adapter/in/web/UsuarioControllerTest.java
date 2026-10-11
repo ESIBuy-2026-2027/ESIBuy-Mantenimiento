@@ -6,11 +6,14 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarVendedorComm
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
+import es.uclm.esibuy.backend.categorias.application.port.in.ConsultaCategoriasUseCase;
+import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
 import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorUseCase;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
@@ -89,6 +92,10 @@ class UsuarioControllerTest {
 
     @MockitoBean
     private CrearAdministradorUseCase crearAdministrador;
+
+    // El nombre de la categoría principal del vendedor sale del módulo de categorías (su puerto de entrada).
+    @MockitoBean
+    private ConsultaCategoriasUseCase consultaCategorias;
 
     // Cuerpo completo del registro de cliente (T229); solo varían el email y la contraseña.
     private static String json(String email, String password) {
@@ -553,6 +560,23 @@ class UsuarioControllerTest {
     }
 
     @Test
+    @DisplayName("HU20-CP06: la ficha de un vendedor trae sus datos de vendedor y no los de cliente")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void fichaDeUnVendedorConSusDatosDeVendedor() throws Exception {
+        when(administracionUsuarios.consultar("v-1")).thenReturn(vendedor());
+
+        mockMvc.perform(get("/api/admin/usuarios/{id}", "v-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rol").value("VENDEDOR"))
+                .andExpect(jsonPath("$.nombreComercial").value("Tienda Marta"))
+                .andExpect(jsonPath("$.categoriaPrincipalId").value("cat-1"))
+                .andExpect(jsonPath("$.dni").value("87654321X"))
+                .andExpect(jsonPath("$.telefono").value("612345678"))
+                .andExpect(jsonPath("$.fechaNacimiento").doesNotExist())
+                .andExpect(jsonPath("$.tipoCliente").doesNotExist());
+    }
+
+    @Test
     @DisplayName("HU20-CP03: la ficha de un usuario que no existe devuelve 404")
     @WithMockUser(roles = "ADMINISTRADOR")
     void fichaDeUnUsuarioInexistenteDevuelve404() throws Exception {
@@ -589,7 +613,8 @@ class UsuarioControllerTest {
 
     private static Usuario vendedor() {
         return new Usuario("v-1", new DatosPersonales("Marta", "Ruiz Gil", null),
-                new Email("marta@esibuy.test"), "hash-no-debe-salir", Rol.VENDEDOR, null, null);
+                new Email("marta@esibuy.test"), "hash-no-debe-salir", Rol.VENDEDOR,
+                new DatosVendedor("Tienda Marta", "cat-1", new Dni("87654321X"), new Telefono("612345678")), null);
     }
 
     @Test
@@ -597,6 +622,7 @@ class UsuarioControllerTest {
     @WithMockUser(roles = "ADMINISTRADOR")
     void administradorRecibeElListadoDeVendedores() throws Exception {
         when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(java.util.List.of(vendedor()), 1, 10, 11));
+        when(consultaCategorias.listar()).thenReturn(java.util.List.of(new Categoria("cat-1", "Tecnología")));
 
         mockMvc.perform(get("/api/admin/sellers")
                         .param("page", "2")
@@ -609,6 +635,9 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.items[0].apellidos").value("Ruiz Gil"))
                 .andExpect(jsonPath("$.items[0].email").value("marta@esibuy.test"))
                 .andExpect(jsonPath("$.items[0].estado").value("PENDIENTE"))
+                .andExpect(jsonPath("$.items[0].nombreComercial").value("Tienda Marta"))
+                .andExpect(jsonPath("$.items[0].categoriaPrincipalId").value("cat-1"))
+                .andExpect(jsonPath("$.items[0].categoriaPrincipal").value("Tecnología"))
                 .andExpect(jsonPath("$.items[0].passwordHash").doesNotExist())
                 .andExpect(jsonPath("$.page").value(2))
                 .andExpect(jsonPath("$.size").value(10))
@@ -651,6 +680,7 @@ class UsuarioControllerTest {
     @WithMockUser(roles = "ADMINISTRADOR")
     void fichaDeUnVendedor() throws Exception {
         when(administracionUsuarios.consultarVendedor("v-1")).thenReturn(vendedor());
+        when(consultaCategorias.listar()).thenReturn(java.util.List.of(new Categoria("cat-1", "Tecnología")));
 
         mockMvc.perform(get("/api/admin/sellers/{id}", "v-1"))
                 .andExpect(status().isOk())
@@ -659,6 +689,11 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.apellidos").value("Ruiz Gil"))
                 .andExpect(jsonPath("$.email").value("marta@esibuy.test"))
                 .andExpect(jsonPath("$.estado").value("PENDIENTE"))
+                .andExpect(jsonPath("$.nombreComercial").value("Tienda Marta"))
+                .andExpect(jsonPath("$.categoriaPrincipalId").value("cat-1"))
+                .andExpect(jsonPath("$.categoriaPrincipal").value("Tecnología"))
+                .andExpect(jsonPath("$.dni").value("87654321X"))
+                .andExpect(jsonPath("$.telefono").value("612345678"))
                 .andExpect(jsonPath("$.passwordHash").doesNotExist());
     }
 
@@ -707,6 +742,10 @@ class UsuarioControllerTest {
             {"nombre":"Carla","apellidos":"Moreno Gil","dni":"10004119A",
              "telefono":"620023757","fechaNacimiento":"1978-04-13","tipoCliente":"PREMIUM","avatar":"avatar1"}""";
 
+    private static final String CUERPO_VENDEDOR = """
+            {"nombre":"Marta","apellidos":"Ruiz Gil","dni":"87654321X","telefono":"612345678",
+             "nombreComercial":"Tienda Marta","categoriaPrincipalId":"cat-1"}""";
+
     @Test
     @DisplayName("HU22-CP01: el administrador edita un cliente y recibe su ficha actualizada")
     @WithMockUser(roles = "ADMINISTRADOR")
@@ -724,7 +763,36 @@ class UsuarioControllerTest {
         ArgumentCaptor<EditarUsuarioCommand> comando = ArgumentCaptor.forClass(EditarUsuarioCommand.class);
         verify(administracionUsuarios).editar(eq("usr-1"), comando.capture());
         assertEquals(new EditarUsuarioCommand("Carla", "Moreno Gil", "avatar1", "10004119A",
-                "620023757", LocalDate.of(1978, 4, 13), TipoCliente.PREMIUM), comando.getValue());
+                "620023757", LocalDate.of(1978, 4, 13), TipoCliente.PREMIUM, null, null), comando.getValue());
+    }
+
+    @Test
+    @DisplayName("HU22-CP03: el administrador edita un vendedor con sus datos de vendedor y recibe su ficha")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void administradorEditaUnVendedorYRecibeSuFicha() throws Exception {
+        when(administracionUsuarios.editar(eq("v-1"), any())).thenReturn(vendedor());
+
+        mockMvc.perform(editar("v-1", CUERPO_VENDEDOR))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombreComercial").value("Tienda Marta"))
+                .andExpect(jsonPath("$.categoriaPrincipalId").value("cat-1"));
+
+        ArgumentCaptor<EditarUsuarioCommand> comando = ArgumentCaptor.forClass(EditarUsuarioCommand.class);
+        verify(administracionUsuarios).editar(eq("v-1"), comando.capture());
+        assertEquals(new EditarUsuarioCommand("Marta", "Ruiz Gil", null, "87654321X", "612345678",
+                null, null, "Tienda Marta", "cat-1"), comando.getValue());
+    }
+
+    @Test
+    @DisplayName("HU22-CP06: editar con el nombre comercial de otro vendedor devuelve 409 con COMMERCIAL_NAME_ALREADY_REGISTERED")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void editarConElNombreComercialDeOtroDevuelve409() throws Exception {
+        when(administracionUsuarios.editar(eq("v-1"), any()))
+                .thenThrow(new NombreComercialYaRegistradoException("El nombre comercial ya está registrado"));
+
+        mockMvc.perform(editar("v-1", CUERPO_VENDEDOR))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("COMMERCIAL_NAME_ALREADY_REGISTERED"));
     }
 
     @Test

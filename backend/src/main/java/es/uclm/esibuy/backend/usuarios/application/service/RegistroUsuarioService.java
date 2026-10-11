@@ -21,6 +21,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.PoliticaContrasenas;
+import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
@@ -58,7 +59,7 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
         if (usuarioRepository.existePorCorreo(email.valor())) {   // con el email normalizado (T240)
             throw new CorreoYaRegistradoException("El correo ya está registrado");
         }
-        exigirDniLibre(comando.dni());
+        exigirDniLibre(comando.dni(), Rol.CLIENTE);
 
         Usuario usuario = Usuario.nuevoCliente(
                 datosPersonales,
@@ -79,7 +80,7 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
         exigirContrasenaValida(comando.password(), comando.repeticionPassword(), datosPersonales, email);
         exigirPrivacidadAceptada(comando.aceptaPrivacidad());
         exigirCorreoYNombreComercialLibres(email, comando.nombreComercial());
-        exigirDniLibre(comando.dni());
+        exigirDniLibre(comando.dni(), Rol.VENDEDOR);
 
         Usuario usuario = Usuario.nuevoVendedor(
                 datosPersonales,
@@ -120,8 +121,9 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
         }
     }
 
-    private void exigirDniLibre(String dni) {
-        if (usuarioRepository.existePorDni(dni)) {
+    // El DNI es único por rol: el mismo DNI puede tener una cuenta de cliente y otra de vendedor.
+    private void exigirDniLibre(String dni, Rol rol) {
+        if (usuarioRepository.existePorDniYRol(dni, rol)) {
             throw new DniYaRegistradoException("El DNI ya está registrado");
         }
     }

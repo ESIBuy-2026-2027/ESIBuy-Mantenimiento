@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.usuarios.application.port.out;
 
 import java.util.Optional;
 
+import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
@@ -12,7 +13,8 @@ public interface UsuarioRepositoryPort {
 
     boolean existePorCorreo(String email);
 
-    boolean existePorDni(String dni);
+    // El DNI es único por rol (índice rol_dni): una persona puede tener cuenta de cliente y de vendedor.
+    boolean existePorDniYRol(String dni, Rol rol);
 
     boolean existePorNombreComercial(String nombreComercial);
 

@@ -156,7 +156,7 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP16: rechaza un DNI ya registrado y no guarda nada")
     void rechazaDniYaRegistrado() {
-        when(usuarioRepository.existePorDni("12345678Z")).thenReturn(true);
+        when(usuarioRepository.existePorDniYRol("12345678Z", Rol.CLIENTE)).thenReturn(true);
         lenient().when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
 
         assertThrows(DniYaRegistradoException.class, () -> registroUsuario.registrarCliente(comando("juan@uclm.es", "Clave-1234")));
@@ -345,6 +345,19 @@ class RegistroUsuarioServiceTest {
                 "cat-1", "87654321X", "luis@uclm.es", null, "Clave-1234", "Clave-1234", null, false);
 
         assertThrows(UsuarioInvalidoException.class, () -> registroUsuario.registrarVendedor(comando));
+
+        verify(usuarioRepository, never()).guardar(any(Usuario.class));
+    }
+
+    // El DNI es único por rol (índice rol_dni): el mismo DNI puede tener una cuenta de cliente y otra de vendedor.
+    @Test
+    @DisplayName("HU1-CP16: el registro de un vendedor rechaza el DNI de otro vendedor y no guarda nada")
+    void rechazaElDniDeOtroVendedor() {
+        lenient().when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
+        when(usuarioRepository.existePorDniYRol("87654321X", Rol.VENDEDOR)).thenReturn(true);
+
+        assertThrows(DniYaRegistradoException.class,
+                () -> registroUsuario.registrarVendedor(comandoVendedor("luis@uclm.es", "Clave-1234")));
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }

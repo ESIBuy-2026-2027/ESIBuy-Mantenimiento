@@ -4,11 +4,13 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import java.time.Clock;
 import java.time.Instant;
@@ -66,7 +68,7 @@ class AdministracionUsuariosServiceTest {
         Usuario cliente = clienteLucia();
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(cliente));
         EditarUsuarioCommand comando = new EditarUsuarioCommand("Carla", "Moreno Gil", "avatar1",
-                "10004119A", "620023757", LocalDate.of(1978, 4, 13), TipoCliente.PREMIUM);
+                "10004119A", "620023757", LocalDate.of(1978, 4, 13), TipoCliente.PREMIUM, null, null);
 
         Usuario editado = servicio.editar("u-1", comando);
 
@@ -85,7 +87,7 @@ class AdministracionUsuariosServiceTest {
                 new Email("diego@uclm.es"), "hash-simulado", Rol.ADMINISTRADOR, null, null);
         when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(administrador));
         EditarUsuarioCommand comando = new EditarUsuarioCommand("Diego", "Delgado Iglesias",
-                "avatar3", null, null, null, null);
+                "avatar3", null, null, null, null, null, null);
 
         Usuario editado = servicio.editar("u-2", comando);
 
@@ -95,16 +97,31 @@ class AdministracionUsuariosServiceTest {
     }
 
     @Test
-    @DisplayName("HU22-CP03: editar un vendedor cambia sus datos personales y lo guarda")
+    @DisplayName("HU22-CP03: editar un vendedor cambia sus datos personales y de vendedor y lo guarda")
     void editaUnVendedorYLoGuarda() {
         when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(vendedorVera()));
-        EditarUsuarioCommand comando = new EditarUsuarioCommand("Vera", "Vendedora Ruiz",
-                null, null, null, null, null);
+        EditarUsuarioCommand comando = new EditarUsuarioCommand("Vera", "Vendedora Ruiz", "avatar2",
+                "10004119A", "620023757", null, null, "TecnoVera", "cat-2");
 
         Usuario editado = servicio.editar("u-4", comando);
 
-        assertEquals(new DatosPersonales("Vera", "Vendedora Ruiz", null), editado.getDatosPersonales());
+        assertEquals(new DatosPersonales("Vera", "Vendedora Ruiz", "avatar2"), editado.getDatosPersonales());
+        assertEquals(new DatosVendedor("TecnoVera", "cat-2", new Dni("10004119A"), new Telefono("620023757")),
+                editado.getDatosVendedor());
         verify(usuarioRepository).guardar(editado);
+    }
+
+    @Test
+    @DisplayName("HU22-CP05: editar un vendedor sin sus datos de vendedor falla y no los borra")
+    void rechazaEditarUnVendedorSinSusDatosDeVendedor() {
+        Usuario vendedor = vendedorVera();
+        when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(vendedor));
+        EditarUsuarioCommand soloDatosPersonales = new EditarUsuarioCommand("Vera", "Vendedora Ruiz",
+                null, null, null, null, null, null, null);
+
+        assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-4", soloDatosPersonales));
+        assertEquals(DATOS_VERA, vendedor.getDatosVendedor());
+        verify(usuarioRepository, never()).guardar(any());
     }
 
     @Test
@@ -114,7 +131,7 @@ class AdministracionUsuariosServiceTest {
         vendedor.activar();
         when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(vendedor));
         EditarUsuarioCommand comando = new EditarUsuarioCommand("Vera", "Vendedora Ruiz",
-                null, null, null, null, null);
+                null, "87654321X", null, null, null, "Tienda Vera", "cat-1");
 
         Usuario editado = servicio.editar("u-4", comando);
 
@@ -129,9 +146,9 @@ class AdministracionUsuariosServiceTest {
     void rechazaEditarUnClienteConDatosNoValidos() {
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
         EditarUsuarioCommand dniNoValido = new EditarUsuarioCommand("Carla", "Moreno Gil", null,
-                "1234", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
+                "1234", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR, null, null);
         EditarUsuarioCommand menorDeEdad = new EditarUsuarioCommand("Carla", "Moreno Gil", null,
-                "10004119A", null, LocalDate.of(2010, 1, 1), TipoCliente.ESTANDAR);
+                "10004119A", null, LocalDate.of(2010, 1, 1), TipoCliente.ESTANDAR, null, null);
 
         assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", dniNoValido));
         assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", menorDeEdad));
@@ -143,7 +160,7 @@ class AdministracionUsuariosServiceTest {
     void rechazaEditarUnUsuarioQueNoExiste() {
         when(usuarioRepository.buscarPorId("no-existe")).thenReturn(Optional.empty());
         EditarUsuarioCommand comando = new EditarUsuarioCommand("Diego", "Delgado Iglesias",
-                null, null, null, null, null);
+                null, null, null, null, null, null, null);
 
         assertThrows(UsuarioNoEncontradoException.class, () -> servicio.editar("no-existe", comando));
         verify(usuarioRepository, never()).guardar(any());
@@ -153,9 +170,9 @@ class AdministracionUsuariosServiceTest {
     @DisplayName("HU22-CP06: editar un cliente con el DNI de otra cuenta falla y no guarda nada")
     void rechazaEditarUnClienteConElDniDeOtraCuenta() {
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
-        when(usuarioRepository.existePorDni("10004119A")).thenReturn(true);
+        when(usuarioRepository.existePorDniYRol("10004119A", Rol.CLIENTE)).thenReturn(true);
         EditarUsuarioCommand dniDeOtro = new EditarUsuarioCommand("Lucía", "Torres Vega", null,
-                "10004119A", null, LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR);
+                "10004119A", null, LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR, null, null);
 
         assertThrows(DniYaRegistradoException.class, () -> servicio.editar("u-1", dniDeOtro));
         verify(usuarioRepository, never()).guardar(any());
@@ -167,12 +184,51 @@ class AdministracionUsuariosServiceTest {
         Usuario cliente = clienteLucia();
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(cliente));
         EditarUsuarioCommand mismoDni = new EditarUsuarioCommand("Lucía", "Torres Vega", null,
-                "12345678Z", "620023757", LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR);
+                "12345678Z", "620023757", LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR, null, null);
 
         servicio.editar("u-1", mismoDni);
 
-        verify(usuarioRepository, never()).existePorDni(any());
+        verify(usuarioRepository, never()).existePorDniYRol(any(), any());
         verify(usuarioRepository).guardar(cliente);
+    }
+
+    @Test
+    @DisplayName("HU22-CP06: editar un vendedor con el DNI de otro vendedor falla y no guarda nada")
+    void rechazaEditarUnVendedorConElDniDeOtroVendedor() {
+        when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(vendedorVera()));
+        when(usuarioRepository.existePorDniYRol("10004119A", Rol.VENDEDOR)).thenReturn(true);
+        EditarUsuarioCommand dniDeOtro = new EditarUsuarioCommand("Vera", "Vendedora", null,
+                "10004119A", null, null, null, "Tienda Vera", "cat-1");
+
+        assertThrows(DniYaRegistradoException.class, () -> servicio.editar("u-4", dniDeOtro));
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU22-CP06: editar un vendedor con el nombre comercial de otro falla y no guarda nada")
+    void rechazaEditarUnVendedorConElNombreComercialDeOtro() {
+        when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(vendedorVera()));
+        when(usuarioRepository.existePorNombreComercial("TecnoVera")).thenReturn(true);
+        EditarUsuarioCommand nombreDeOtro = new EditarUsuarioCommand("Vera", "Vendedora", null,
+                "87654321X", null, null, null, "TecnoVera", "cat-1");
+
+        assertThrows(NombreComercialYaRegistradoException.class, () -> servicio.editar("u-4", nombreDeOtro));
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU22-CP06: editar un vendedor que conserva su DNI y su nombre comercial no los comprueba y lo guarda")
+    void editarUnVendedorQueConservaSuDniYSuNombreComercialNoLosComprueba() {
+        Usuario vendedor = vendedorVera();
+        when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(vendedor));
+        EditarUsuarioCommand mismosDatos = new EditarUsuarioCommand("Vera", "Vendedora Ruiz", null,
+                "87654321X", "620023757", null, null, "Tienda Vera", "cat-2");
+
+        servicio.editar("u-4", mismosDatos);
+
+        verify(usuarioRepository, never()).existePorDniYRol(any(), any());
+        verify(usuarioRepository, never()).existePorNombreComercial(any());
+        verify(usuarioRepository).guardar(vendedor);
     }
 
     @Test
@@ -181,7 +237,7 @@ class AdministracionUsuariosServiceTest {
         // El frontend envía los campos sin rellenar como "" (profilePayload)
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
         EditarUsuarioCommand telefonoEnBlanco = new EditarUsuarioCommand("Lucía", "Torres Vega", null,
-                "12345678Z", "  ", LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR);
+                "12345678Z", "  ", LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR, null, null);
 
         Usuario editado = servicio.editar("u-1", telefonoEnBlanco);
 
@@ -189,9 +245,11 @@ class AdministracionUsuariosServiceTest {
         verify(usuarioRepository).guardar(editado);
     }
 
+    private static final DatosVendedor DATOS_VERA = new DatosVendedor("Tienda Vera", "cat-1", new Dni("87654321X"), null);
+
     private static Usuario vendedorVera() {
         return new Usuario("u-4", new DatosPersonales("Vera", "Vendedora", null), new Email("vendedor@esibuy.test"),
-                "hash-simulado", Rol.VENDEDOR, null, null);
+                "hash-simulado", Rol.VENDEDOR, DATOS_VERA, null);
     }
 
     private static Usuario clienteLucia() {

@@ -12,8 +12,8 @@ import org.springframework.security.web.authentication.logout.HttpStatusReturnin
 /**
  * Configuración mínima de Spring Security.
  *
- * <p>Por defecto se deniega todo (mínimo privilegio) y solo se abren el registro y los dos primeros
- * pasos del login (HU2, T230), porque quien los usa todavía no tiene sesión. Sin sesión se responde
+ * <p>Por defecto se deniega todo (mínimo privilegio) y solo se abren el registro, los dos primeros
+ * pasos del login (HU2, T230) y la consulta de las categorías, porque quien los usa todavía no tiene sesión. Sin sesión se responde
  * 401 («no sé quién eres»); con sesión pero sin permiso, 403.
  *
  * <p>CSRF: el token va en la cookie {@code XSRF-TOKEN}, que el frontend puede leer, y el frontend lo
@@ -44,6 +44,8 @@ public class SecurityConfig {
     private static final String RUTA_CODIGO_EMAIL = "/api/auth/verify-email-code";
     private static final String RUTA_ALTA_AUTHENTICATOR = "/api/auth/enroll-authenticator";
     private static final String RUTA_CODIGO_AUTHENTICATOR = "/api/auth/verify-authenticator-code";
+    // Las categorías del catálogo son públicas: el registro del vendedor las elige sin sesión.
+    private static final String RUTA_CATEGORIAS = "/api/categorias";
     private static final String RUTAS_ADMINISTRACION = "/api/admin/**";
     // Texto y no el enum Rol: shared no depende del dominio de ningún módulo. Es el mismo valor que Rol.ADMINISTRADOR.
     private static final String ROL_ADMINISTRADOR = "ADMINISTRADOR";
@@ -56,6 +58,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, RUTA_REGISTRO, RUTA_REGISTRO_VENDEDOR, RUTA_LOGIN, RUTA_CODIGO_EMAIL,
                                 RUTA_ALTA_AUTHENTICATOR, RUTA_CODIGO_AUTHENTICATOR).permitAll()
+                        .requestMatchers(HttpMethod.GET, RUTA_CATEGORIAS).permitAll()
                         .requestMatchers(RUTA_ERROR).permitAll()
                         .requestMatchers(RUTAS_ADMINISTRACION).hasRole(ROL_ADMINISTRADOR)
                         .requestMatchers(RUTAS_VENDEDOR).hasRole(ROL_VENDEDOR)

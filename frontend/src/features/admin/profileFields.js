@@ -12,13 +12,12 @@ export const TIPOS_CLIENTE = { ESTANDAR: 'Estándar', PREMIUM: 'Premium' }
 
 const SIN_DATO = '—'
 const AVATAR = 'avatar'
-const DNI_NIF_LENGTH = 9
+const DNI_LENGTH = 9
 const TIPO_CLIENTE_POR_DEFECTO = 'ESTANDAR'
 
 const textoOSinDato = (valor) => valor || SIN_DATO
 const fechaOSinDato = (valor) => (valor ? formatDate(valor) : SIN_DATO)
 const imagenDePerfil = (avatar) => (avatar ? `Avatar ${avatar.replace('avatar', '')}` : 'Sin elegir')
-const esNifValido = (nif) => new RegExp(`^[A-Za-z0-9]{${DNI_NIF_LENGTH}}$`).test(nif)
 
 const nombre = { name: 'nombre', label: 'Nombre', read: (u) => u.nombre, edit: { required: true, maxLength: 30 } }
 const apellidos = {
@@ -37,6 +36,27 @@ const imagen = {
   read: (u) => imagenDePerfil(u.avatar),
   edit: { type: AVATAR },
 }
+// El DNI y el teléfono (opcional) son iguales en el cliente y en el vendedor, como en el backend.
+const dni = {
+  name: 'dni',
+  label: 'DNI',
+  read: (u) => textoOSinDato(u.dni),
+  edit: {
+    required: true,
+    maxLength: DNI_LENGTH,
+    validate: (valor) => (esDniValido(valor) ? undefined : 'Introduce un DNI válido (8 números y una letra)'),
+  },
+}
+const telefono = {
+  name: 'telefono',
+  label: 'Teléfono',
+  read: (u) => textoOSinDato(u.telefono),
+  edit: {
+    type: 'tel',
+    maxLength: 9,
+    validate: (valor) => (!valor || esTelefonoValido(valor) ? undefined : 'Introduce un teléfono válido (9 números)'),
+  },
+}
 const estado = { name: 'estado', label: 'Estado', read: (u) => STATUS_LABELS[u.estado] ?? u.estado }
 const fechaAlta = { name: 'fechaAlta', label: 'Fecha de alta', read: (u) => fechaOSinDato(u.fechaAlta) }
 
@@ -47,26 +67,8 @@ const PROFILE_FIELDS = {
     apellidos,
     email,
     rol,
-    {
-      name: 'dni',
-      label: 'DNI',
-      read: (u) => u.dni ?? SIN_DATO,
-      edit: {
-        required: true,
-        maxLength: DNI_NIF_LENGTH,
-        validate: (valor) => (esDniValido(valor) ? undefined : 'Introduce un DNI válido (8 números y una letra)'),
-      },
-    },
-    {
-      name: 'telefono',
-      label: 'Teléfono',
-      read: (u) => textoOSinDato(u.telefono),
-      edit: {
-        type: 'tel',
-        maxLength: 9,
-        validate: (valor) => (!valor || esTelefonoValido(valor) ? undefined : 'Introduce un teléfono válido (9 números)'),
-      },
-    },
+    dni,
+    telefono,
     {
       name: 'fechaNacimiento',
       label: 'Fecha de nacimiento',
@@ -106,7 +108,8 @@ const PROFILE_FIELDS = {
   ],
   // Se puede modificar todo menos el email (por diseño del backend, de momento no se puede cambiar el correo
   // de un vendedor), y el nombre comercial tiene que seguir siendo único (lo comprueba el backend). Un vendedor
-  // tiene una sola categoría. Sus productos, precios y pedidos no se modifican desde aquí (HU26).
+  // tiene una sola categoría. El backend guarda el perfil entero, así que el teléfono y la imagen también viajan:
+  // si no, se borrarían. Sus productos, precios y pedidos no se modifican desde aquí (HU26).
   [ROLES.VENDEDOR]: [
     nombre,
     apellidos,
@@ -118,22 +121,15 @@ const PROFILE_FIELDS = {
       read: (u) => textoOSinDato(u.nombreComercial),
       edit: { required: true, maxLength: 30 },
     },
-    {
-      name: 'nif',
-      label: 'NIF/DNI',
-      read: (u) => textoOSinDato(u.nif),
-      edit: {
-        required: true,
-        maxLength: DNI_NIF_LENGTH,
-        validate: (valor) => (esNifValido(valor) ? undefined : `Introduce un NIF/DNI válido (${DNI_NIF_LENGTH} caracteres)`),
-      },
-    },
+    dni,
+    telefono,
     {
       name: 'categoriaPrincipalId',
       label: 'Categoría principal',
       read: (u) => textoOSinDato(u.categoriaPrincipal),
       edit: { type: 'select', required: true },
     },
+    imagen,
     estado,
   ],
 }
