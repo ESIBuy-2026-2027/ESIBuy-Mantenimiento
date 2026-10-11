@@ -19,6 +19,7 @@ import { registrarCliente, registrarVendedor } from '../api/auth'
 import { getCategories } from '../api/products'
 import AvatarSelector from '../features/account/AvatarSelector'
 import { PasswordField, PasswordRequirements } from '../features/account/PasswordField'
+import { erroresDelServidor } from '../features/account/registroErrors'
 import {
   esDniValido,
   esEmailValido,
@@ -185,9 +186,9 @@ export default function Register() {
       await registrarCliente(sinTelefonoVacio(datos))
       setRegistrado(true)
     } catch (error) {
-      if (error.status === 409) {
-        setErrores({ email: EMAIL_YA_REGISTRADO })
-      }
+      // El backend indica con un code qué dato rechaza (PR #104): se marca en su campo
+      const { campos } = erroresDelServidor(error)
+      if (campos) setErrores(campos)
     }
   }
 
