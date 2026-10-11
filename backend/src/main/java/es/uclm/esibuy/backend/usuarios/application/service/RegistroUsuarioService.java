@@ -12,6 +12,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaExcept
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYNombreComercialYaRegistradosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
@@ -96,13 +97,14 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
             Email email) {
         PoliticaContrasenas.validar(password, datosPersonales, email);   // también rechaza la contraseña nula
         if (!password.equals(repeticion)) {
-            throw new ContrasenaInvalidaException("Las contraseñas no coinciden");
+            throw new ContrasenaInvalidaException(MotivoRechazo.CONTRASENAS_DISTINTAS, "Las contraseñas no coinciden");
         }
     }
 
     private static void exigirPrivacidadAceptada(boolean aceptaPrivacidad) {
         if (!aceptaPrivacidad) {
-            throw new UsuarioInvalidoException("Es obligatorio aceptar la política de privacidad");
+            throw new UsuarioInvalidoException(MotivoRechazo.PRIVACIDAD_NO_ACEPTADA,
+                    "Es obligatorio aceptar la política de privacidad");
         }
     }
 
