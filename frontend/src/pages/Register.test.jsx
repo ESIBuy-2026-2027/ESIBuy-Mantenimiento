@@ -649,4 +649,14 @@ describe('Register', () => {
 
     expect(await screen.findByText('Revisa los datos del formulario')).toBeInTheDocument()
   })
+
+  it('HU1-CP24: tras registrarse ofrece ir a iniciar sesión', async () => {
+    registrarCliente.mockResolvedValue({})
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    const enlace = await screen.findByRole('link', { name: /ir a iniciar sesión/i })
+    expect(enlace).toHaveAttribute('href', '/login')
+  })
 })
