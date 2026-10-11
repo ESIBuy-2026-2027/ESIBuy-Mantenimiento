@@ -20,6 +20,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActiv
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -83,6 +84,14 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError emailInvalido() {
         return new RespuestaError(DATOS_DE_REGISTRO_INVALIDOS, "INVALID_EMAIL");
+    }
+
+    // Un @Valid que falla en el cuerpo de la petición (campo vacío o demasiado largo) responde con el mismo
+    // formato que el resto de 400, y no con el cuerpo por defecto de Spring. Afecta a todos los endpoints con @Valid.
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError cuerpoDeLaPeticionInvalido() {
+        return new RespuestaError(DATOS_DE_REGISTRO_INVALIDOS, "INVALID_FIELD");
     }
 
     // Switch exhaustivo: si el dominio añade un motivo, esto deja de compilar hasta darle su code.
