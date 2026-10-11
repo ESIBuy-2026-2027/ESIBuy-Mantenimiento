@@ -127,6 +127,7 @@ export default function SellerProductsPage() {
         <>
           <ProductsTable
             products={data.items}
+            categories={categories}
             refreshing={refreshing}
             renderActions={(product) => <ProductRowActions product={product} onDelete={setProductToDelete} />}
           />

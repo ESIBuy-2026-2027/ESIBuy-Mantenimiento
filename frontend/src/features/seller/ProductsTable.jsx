@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { productPropType } from '../../utils/propTypes'
+import { categoryPropType, productPropType } from '../../utils/propTypes'
 import {
   Badge,
   Table,
@@ -16,22 +16,23 @@ import {
 import { useTableStyles } from '../../components/tableStyles'
 import { formatPrice } from '../../utils/format'
 
+const SIN_CATEGORIA = '—'
+
 const useStyles = makeStyles({
-  categories: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: tokens.spacingHorizontalXS,
-  },
   noStock: {
     color: tokens.colorPaletteRedForeground1,
     fontWeight: tokens.fontWeightSemibold,
   },
 })
 
+// El backend devuelve el identificador de la categoría de cada producto (`categoriaId`), no su nombre: la tabla lo
+// traduce con la lista de categorías que recibe en `categories`. Si no la tiene (todavía carga o ha fallado) o la
+// categoría no existe, muestra un guion en lugar de un identificador.
 // `renderActions` es opcional: si se recibe, añade una columna con las acciones de cada fila.
-export default function ProductsTable({ products, refreshing, label = 'Mis productos', renderActions }) {
+export default function ProductsTable({ products, categories = [], refreshing, label = 'Mis productos', renderActions }) {
   const styles = useStyles()
   const tableStyles = useTableStyles()
+  const categoryNames = new Map(categories.map(({ id, nombre }) => [id, nombre]))
 
   return (
     <div className={mergeClasses(tableStyles.wrapper, refreshing && tableStyles.refreshing)} aria-busy={refreshing}>
@@ -39,7 +40,7 @@ export default function ProductsTable({ products, refreshing, label = 'Mis produ
         <TableHeader>
           <TableRow>
             <TableHeaderCell>Producto</TableHeaderCell>
-            <TableHeaderCell>Categorías</TableHeaderCell>
+            <TableHeaderCell>Categoría</TableHeaderCell>
             <TableHeaderCell>Precio</TableHeaderCell>
             <TableHeaderCell>Stock</TableHeaderCell>
             <TableHeaderCell>Estado</TableHeaderCell>
@@ -53,13 +54,13 @@ export default function ProductsTable({ products, refreshing, label = 'Mis produ
                 <Text weight="semibold">{product.nombre}</Text>
               </TableCell>
               <TableCell>
-                <span className={styles.categories}>
-                  {product.categorias.map((category) => (
-                    <Badge key={category} appearance="outline" color="brand" size="medium">
-                      {category}
-                    </Badge>
-                  ))}
-                </span>
+                {categoryNames.has(product.categoriaId) ? (
+                  <Badge appearance="outline" color="brand" size="medium">
+                    {categoryNames.get(product.categoriaId)}
+                  </Badge>
+                ) : (
+                  <Text>{SIN_CATEGORIA}</Text>
+                )}
               </TableCell>
               <TableCell>{formatPrice(product.precio)}</TableCell>
               <TableCell>
@@ -81,6 +82,7 @@ export default function ProductsTable({ products, refreshing, label = 'Mis produ
 
 ProductsTable.propTypes = {
   products: PropTypes.arrayOf(productPropType).isRequired,
+  categories: PropTypes.arrayOf(categoryPropType),
   refreshing: PropTypes.bool,
   label: PropTypes.string,
   renderActions: PropTypes.func,

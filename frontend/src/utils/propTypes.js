@@ -11,7 +11,7 @@ export const productPropType = PropTypes.shape({
   precio: PropTypes.number.isRequired,
   stock: PropTypes.number.isRequired,
   disponible: PropTypes.bool.isRequired,
-  categorias: PropTypes.arrayOf(PropTypes.string).isRequired,
+  categoriaId: PropTypes.string.isRequired,
 })
 
 export const productValuesPropType = PropTypes.shape({

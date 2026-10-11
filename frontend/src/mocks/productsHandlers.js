@@ -60,7 +60,8 @@ export const aRespuesta = ({ id, nombre, precio, stock, disponible, categoria })
   precio,
   stock,
   disponible,
-  categorias: [CATEGORIAS.get(categoria)],
+  // Como el backend real: el identificador de la categoría, no su nombre.
+  categoriaId: categoria,
 })
 
 // Detalle completo del producto, con los datos que necesita el formulario de edición.
