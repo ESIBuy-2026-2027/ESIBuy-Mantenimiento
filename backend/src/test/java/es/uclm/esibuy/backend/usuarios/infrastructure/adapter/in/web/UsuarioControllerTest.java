@@ -507,6 +507,37 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.tipoCliente").doesNotExist());
     }
 
+    // Contrato del frontend: la fecha de incorporación del administrador es su fecha de alta (automática y no
+    // editable). Como el rol no cambia nunca, la fecha de alta de un administrador es la de su incorporación.
+    @Test
+    @DisplayName("HU20-CP05: la ficha de un administrador trae su fecha de incorporación, que es su fecha de alta")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void fichaDeUnAdministradorConSuFechaDeIncorporacion() throws Exception {
+        Usuario administrador = new Usuario("usr-9", new DatosPersonales("Ana", "López Díaz", null),
+                new Email("ana@esibuy.test"), "hash-no-debe-salir", Rol.ADMINISTRADOR, null, null);
+        administrador.restaurarFechaAlta(java.time.Instant.parse("2026-10-01T10:00:00Z"));
+        when(administracionUsuarios.consultar("usr-9")).thenReturn(administrador);
+
+        mockMvc.perform(get("/api/admin/usuarios/{id}", "usr-9"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fechaAlta").value("2026-10-01T10:00:00Z"))
+                .andExpect(jsonPath("$.fechaIncorporacion").value("2026-10-01T10:00:00Z"));
+    }
+
+    @Test
+    @DisplayName("HU20-CP05: la ficha de un cliente no trae fecha de incorporación")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void fichaDeUnClienteSinFechaDeIncorporacion() throws Exception {
+        Usuario cliente = clienteCarla();
+        cliente.restaurarFechaAlta(java.time.Instant.parse("2026-10-01T10:00:00Z"));
+        when(administracionUsuarios.consultar("usr-1")).thenReturn(cliente);
+
+        mockMvc.perform(get("/api/admin/usuarios/{id}", "usr-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fechaAlta").value("2026-10-01T10:00:00Z"))
+                .andExpect(jsonPath("$.fechaIncorporacion").doesNotExist());
+    }
+
     @Test
     @DisplayName("HU20-CP03: la ficha de un usuario que no existe devuelve 404")
     @WithMockUser(roles = "ADMINISTRADOR")
