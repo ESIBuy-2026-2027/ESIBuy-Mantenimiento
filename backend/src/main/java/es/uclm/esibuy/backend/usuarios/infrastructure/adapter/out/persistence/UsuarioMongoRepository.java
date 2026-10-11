@@ -15,7 +15,7 @@ public interface UsuarioMongoRepository extends MongoRepository<UsuarioDocument,
     // Spring Data deduce la consulta del nombre: ¿hay algún documento con ese email?
     boolean existsByEmail(String email);
 
-    boolean existsByDni(String dni);
+    boolean existsByDniAndRol(String dni, String rol);
 
     boolean existsByNombreComercial(String nombreComercial);
 

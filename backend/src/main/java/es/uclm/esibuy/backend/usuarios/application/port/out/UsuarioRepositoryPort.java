@@ -13,8 +13,7 @@ public interface UsuarioRepositoryPort {
 
     boolean existePorCorreo(String email);
 
-    boolean existePorDni(String dni);
-
+    // El DNI es único por rol (índice rol_dni): una persona puede tener cuenta de cliente y de vendedor.
     boolean existePorDniYRol(String dni, Rol rol);
 
     boolean existePorNombreComercial(String nombreComercial);

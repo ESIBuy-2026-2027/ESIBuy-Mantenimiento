@@ -65,7 +65,7 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
             repository.save(documento);
         } catch (DuplicateKeyException e) {
             // Un índice único lo ha rechazado (p. ej. dos registros simultáneos que pasaron a la vez la
-            // comprobación de existePorCorreo o existePorDni). MongoDB indica en el mensaje qué índice es;
+            // comprobación de existePorCorreo o existePorDniYRol). MongoDB indica en el mensaje qué índice es;
             // se traduce a la excepción del dominio que corresponde, que la API devuelve como 409.
             String mensaje = e.getMessage() == null ? "" : e.getMessage();
             if (mensaje.contains(INDICE_DNI)) {
@@ -79,13 +79,8 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
     }
 
     @Override
-    public boolean existePorDni(String dni) {
-        return repository.existsByDni(dni);
-    }
-
-    @Override
     public boolean existePorDniYRol(String dni, Rol rol) {
-        throw new UnsupportedOperationException("Pendiente (rojo)");
+        return repository.existsByDniAndRol(dni, rol.name());
     }
 
     @Override
