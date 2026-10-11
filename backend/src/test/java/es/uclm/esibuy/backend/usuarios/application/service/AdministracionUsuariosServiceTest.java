@@ -65,7 +65,7 @@ class AdministracionUsuariosServiceTest {
     void editaUnClienteYLoGuarda() {
         Usuario cliente = clienteLucia();
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(cliente));
-        EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", "avatar1",
+        EditarUsuarioCommand comando = new EditarUsuarioCommand("Carla", "Moreno Gil", "avatar1",
                 "10004119A", "620023757", LocalDate.of(1978, 4, 13), TipoCliente.PREMIUM);
 
         Usuario editado = servicio.editar("u-1", comando);
@@ -84,7 +84,7 @@ class AdministracionUsuariosServiceTest {
         Usuario administrador = new Usuario("u-2", new DatosPersonales("Diego", "Delgado", null),
                 new Email("diego@uclm.es"), "hash-simulado", Rol.ADMINISTRADOR, null, null);
         when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(administrador));
-        EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.ADMINISTRADOR, "Diego", "Delgado Iglesias",
+        EditarUsuarioCommand comando = new EditarUsuarioCommand("Diego", "Delgado Iglesias",
                 "avatar3", null, null, null, null);
 
         Usuario editado = servicio.editar("u-2", comando);
@@ -98,7 +98,7 @@ class AdministracionUsuariosServiceTest {
     @DisplayName("HU22-CP03: editar un vendedor cambia sus datos personales y lo guarda")
     void editaUnVendedorYLoGuarda() {
         when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(vendedorVera()));
-        EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.VENDEDOR, "Vera", "Vendedora Ruiz",
+        EditarUsuarioCommand comando = new EditarUsuarioCommand("Vera", "Vendedora Ruiz",
                 null, null, null, null, null);
 
         Usuario editado = servicio.editar("u-4", comando);
@@ -113,7 +113,7 @@ class AdministracionUsuariosServiceTest {
         Usuario vendedor = vendedorVera();
         vendedor.activar();
         when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(vendedor));
-        EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.VENDEDOR, "Vera", "Vendedora Ruiz",
+        EditarUsuarioCommand comando = new EditarUsuarioCommand("Vera", "Vendedora Ruiz",
                 null, null, null, null, null);
 
         Usuario editado = servicio.editar("u-4", comando);
@@ -128,9 +128,9 @@ class AdministracionUsuariosServiceTest {
     @DisplayName("HU22-CP05: editar un cliente con datos no válidos falla y no guarda nada")
     void rechazaEditarUnClienteConDatosNoValidos() {
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
-        EditarUsuarioCommand dniNoValido = new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", null,
+        EditarUsuarioCommand dniNoValido = new EditarUsuarioCommand("Carla", "Moreno Gil", null,
                 "1234", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
-        EditarUsuarioCommand menorDeEdad = new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", null,
+        EditarUsuarioCommand menorDeEdad = new EditarUsuarioCommand("Carla", "Moreno Gil", null,
                 "10004119A", null, LocalDate.of(2010, 1, 1), TipoCliente.ESTANDAR);
 
         assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", dniNoValido));
@@ -142,36 +142,10 @@ class AdministracionUsuariosServiceTest {
     @DisplayName("HU22-CP07: editar un usuario que no existe falla y no guarda nada")
     void rechazaEditarUnUsuarioQueNoExiste() {
         when(usuarioRepository.buscarPorId("no-existe")).thenReturn(Optional.empty());
-        EditarUsuarioCommand comando = new EditarUsuarioCommand(Rol.ADMINISTRADOR, "Diego", "Delgado Iglesias",
+        EditarUsuarioCommand comando = new EditarUsuarioCommand("Diego", "Delgado Iglesias",
                 null, null, null, null, null);
 
         assertThrows(UsuarioNoEncontradoException.class, () -> servicio.editar("no-existe", comando));
-        verify(usuarioRepository, never()).guardar(any());
-    }
-
-    @Test
-    @DisplayName("HU22-CP05: editar con un rol distinto del actual falla y no guarda nada (el cambio de rol llega en la T43)")
-    void rechazaEditarConUnRolDistintoDelActual() {
-        Usuario cliente = clienteLucia();
-        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(cliente));
-        // Datos de cliente válidos: solo falla el rol
-        EditarUsuarioCommand aAdministrador = new EditarUsuarioCommand(Rol.ADMINISTRADOR, "Carla", "Moreno Gil",
-                null, "10004119A", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
-
-        assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", aAdministrador));
-        assertEquals(Rol.CLIENTE, cliente.getRol());
-        assertEquals(new DatosPersonales("Lucía", "Torres Vega", null), cliente.getDatosPersonales());
-        verify(usuarioRepository, never()).guardar(any());
-    }
-
-    @Test
-    @DisplayName("HU22-CP05: editar sin rol falla y no guarda nada")
-    void rechazaEditarSinRol() {
-        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
-        EditarUsuarioCommand sinRol = new EditarUsuarioCommand(null, "Carla", "Moreno Gil", null,
-                "10004119A", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR);
-
-        assertThrows(UsuarioInvalidoException.class, () -> servicio.editar("u-1", sinRol));
         verify(usuarioRepository, never()).guardar(any());
     }
 
@@ -180,7 +154,7 @@ class AdministracionUsuariosServiceTest {
     void rechazaEditarUnClienteConElDniDeOtraCuenta() {
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
         when(usuarioRepository.existePorDni("10004119A")).thenReturn(true);
-        EditarUsuarioCommand dniDeOtro = new EditarUsuarioCommand(Rol.CLIENTE, "Lucía", "Torres Vega", null,
+        EditarUsuarioCommand dniDeOtro = new EditarUsuarioCommand("Lucía", "Torres Vega", null,
                 "10004119A", null, LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR);
 
         assertThrows(DniYaRegistradoException.class, () -> servicio.editar("u-1", dniDeOtro));
@@ -192,7 +166,7 @@ class AdministracionUsuariosServiceTest {
     void editarUnClienteQueConservaSuDniNoLoComprueba() {
         Usuario cliente = clienteLucia();
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(cliente));
-        EditarUsuarioCommand mismoDni = new EditarUsuarioCommand(Rol.CLIENTE, "Lucía", "Torres Vega", null,
+        EditarUsuarioCommand mismoDni = new EditarUsuarioCommand("Lucía", "Torres Vega", null,
                 "12345678Z", "620023757", LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR);
 
         servicio.editar("u-1", mismoDni);
@@ -206,7 +180,7 @@ class AdministracionUsuariosServiceTest {
     void editarUnClienteConElTelefonoEnBlancoLoDejaSinTelefono() {
         // El frontend envía los campos sin rellenar como "" (profilePayload)
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
-        EditarUsuarioCommand telefonoEnBlanco = new EditarUsuarioCommand(Rol.CLIENTE, "Lucía", "Torres Vega", null,
+        EditarUsuarioCommand telefonoEnBlanco = new EditarUsuarioCommand("Lucía", "Torres Vega", null,
                 "12345678Z", "  ", LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR);
 
         Usuario editado = servicio.editar("u-1", telefonoEnBlanco);

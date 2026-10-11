@@ -9,7 +9,6 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPor
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
@@ -59,10 +58,6 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
     @Override
     public Usuario editar(String usuarioId, EditarUsuarioCommand comando) {
         Usuario usuario = buscar(usuarioId);
-        // PENDIENTE (T43): el cambio de rol, con sus reglas (propio rol, último administrador).
-        if (comando.rol() != usuario.getRol()) {
-            throw new UsuarioInvalidoException("El cambio de rol todavía no está disponible");
-        }
         DatosPersonales datosPersonales = new DatosPersonales(comando.nombre(), comando.apellidos(),
                 comando.imagenPerfil());
         DatosCliente datosCliente = datosCliente(usuario.getRol(), comando);

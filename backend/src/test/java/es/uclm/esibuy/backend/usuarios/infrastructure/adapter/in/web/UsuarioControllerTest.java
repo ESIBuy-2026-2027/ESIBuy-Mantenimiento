@@ -659,7 +659,7 @@ class UsuarioControllerTest {
     // Editar un usuario (HU22, T42/T44): PUT /api/admin/usuarios/{id}, contrato de frontend/docs/hu22-editar-usuario.md.
 
     private static final String CUERPO_CLIENTE = """
-            {"rol":"CLIENTE","nombre":"Carla","apellidos":"Moreno Gil","dni":"10004119A",
+            {"nombre":"Carla","apellidos":"Moreno Gil","dni":"10004119A",
              "telefono":"620023757","fechaNacimiento":"1978-04-13","tipoCliente":"PREMIUM","avatar":"avatar1"}""";
 
     @Test
@@ -678,7 +678,7 @@ class UsuarioControllerTest {
 
         ArgumentCaptor<EditarUsuarioCommand> comando = ArgumentCaptor.forClass(EditarUsuarioCommand.class);
         verify(administracionUsuarios).editar(eq("usr-1"), comando.capture());
-        assertEquals(new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", "avatar1", "10004119A",
+        assertEquals(new EditarUsuarioCommand("Carla", "Moreno Gil", "avatar1", "10004119A",
                 "620023757", LocalDate.of(1978, 4, 13), TipoCliente.PREMIUM), comando.getValue());
     }
 
@@ -720,12 +720,10 @@ class UsuarioControllerTest {
 
     @ParameterizedTest(name = "{0}")
     @CsvSource(delimiter = '|', value = {
-            "sin rol | {\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\"}",
-            "nombre vacío | {\"rol\":\"ADMINISTRADOR\",\"nombre\":\"\",\"apellidos\":\"Moreno Gil\"}",
-            "nombre de 31 caracteres | {\"rol\":\"ADMINISTRADOR\",\"nombre\":\"JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ\",\"apellidos\":\"Moreno Gil\"}",
-            "apellidos vacíos | {\"rol\":\"ADMINISTRADOR\",\"nombre\":\"Carla\",\"apellidos\":\"  \"}",
-            "rol inexistente | {\"rol\":\"SUPERUSUARIO\",\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\"}"})
-    @DisplayName("HU22-CP05: rechaza un cuerpo sin rol o con nombre o apellidos no válidos (400) sin llamar al caso de uso")
+            "nombre vacío | {\"nombre\":\"\",\"apellidos\":\"Moreno Gil\"}",
+            "nombre de 31 caracteres | {\"nombre\":\"JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ\",\"apellidos\":\"Moreno Gil\"}",
+            "apellidos vacíos | {\"nombre\":\"Carla\",\"apellidos\":\"  \"}"})
+    @DisplayName("HU22-CP05: rechaza un cuerpo con nombre o apellidos no válidos (400) sin llamar al caso de uso")
     @WithMockUser(roles = "ADMINISTRADOR")
     void rechazaUnCuerpoDeEdicionNoValido(String caso, String cuerpo) throws Exception {
         mockMvc.perform(editar("usr-1", cuerpo))

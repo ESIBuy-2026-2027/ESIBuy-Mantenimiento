@@ -2,7 +2,6 @@ package es.uclm.esibuy.backend.usuarios.application.port.in;
 
 import java.time.LocalDate;
 
-import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 
 /**
@@ -12,14 +11,14 @@ import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
  * objects del dominio. Trae los campos de los tres roles; solo se usan los del rol del usuario
  * ({@code dni}, {@code telefono}, {@code fechaNacimiento} y {@code tipoCliente} para un cliente).
  *
- * <p>No lleva email, contraseña, estado ni fecha de incorporación: no se pueden cambiar por esta vía.
- * El email no se edita en ningún rol (decisión del equipo, 10/10/2026).
+ * <p>No lleva email, contraseña, estado, rol ni fecha de incorporación: no se pueden cambiar por esta vía.
+ * El email no se edita en ningún rol (decisión del equipo, 10/10/2026) y el rol de una cuenta no cambia
+ * nunca ("el que nace cliente muere cliente", decisión del equipo, 11/10/2026).
  *
  * <p>PENDIENTE: la sede del administrador y el nombre comercial, el NIF y la categoría del vendedor,
  * cuando existan en el modelo (ver {@code UsuarioDetalleResponse} y {@code VendedorResponse}).
  */
 public record EditarUsuarioCommand(
-        Rol rol,
         String nombre,
         String apellidos,
         String imagenPerfil,
