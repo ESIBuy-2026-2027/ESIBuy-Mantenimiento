@@ -206,7 +206,7 @@ class UsuarioMongoAdapterTest {
         DatosCliente nuevosDatosCliente = new DatosCliente(TipoCliente.ESTANDAR, new Dni("10004119A"),
                 LocalDate.of(1978, 4, 13), new Telefono("620023757"));
 
-        guardado.modificarDatos(new DatosPersonales("Carla", "Moreno Gil", "avatar1"), nuevosDatosCliente, HOY);
+        guardado.cambiarRol(Rol.CLIENTE, new DatosPersonales("Carla", "Moreno Gil", "avatar1"), nuevosDatosCliente, HOY);
         adapter.guardar(guardado);
 
         assertEquals(1, usuarioMongoRepository.count());
@@ -214,6 +214,37 @@ class UsuarioMongoAdapterTest {
         assertEquals(new DatosPersonales("Carla", "Moreno Gil", "avatar1"), leido.getDatosPersonales());
         assertEquals(nuevosDatosCliente, leido.getDatosCliente());
         assertEquals("juan@uclm.es", leido.getEmail().valor());
+    }
+
+    @Test
+    @DisplayName("HU22-CP09: un cliente que pasa a administrador ya no tiene sus datos de cliente en la base de datos")
+    void unClienteQuePasaAAdministradorPierdeSusDatosDeClienteEnLaBaseDeDatos() {
+        adapter.guardar(cliente("juan@uclm.es", "hash-simulado"));
+        Usuario guardado = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
+
+        guardado.cambiarRol(Rol.ADMINISTRADOR, guardado.getDatosPersonales(), null, HOY);
+        adapter.guardar(guardado);
+
+        Document enBruto = documentoEnBruto();
+        assertEquals("ADMINISTRADOR", enBruto.getString("rol"));
+        assertFalse(enBruto.containsKey("dni"));
+        assertFalse(enBruto.containsKey("fechaNacimiento"));
+        assertFalse(enBruto.containsKey("telefono"));
+        assertFalse(enBruto.containsKey("tipoCliente"));
+        assertEquals("juan@uclm.es", enBruto.getString("email"));
+    }
+
+    @Test
+    @DisplayName("HU22-CP10: una cuenta pendiente que pasa a administrador queda activa en la base de datos")
+    void unaCuentaPendienteQuePasaAAdministradorQuedaActivaEnLaBaseDeDatos() {
+        adapter.guardar(cliente("juan@uclm.es", "hash-simulado"));   // nace PENDIENTE
+        Usuario guardado = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
+
+        guardado.cambiarRol(Rol.ADMINISTRADOR, guardado.getDatosPersonales(), null, HOY);
+        adapter.guardar(guardado);
+
+        assertEquals("ACTIVO", documentoEnBruto().getString("estado"));
+        assertTrue(adapter.buscarPorId(guardado.getId()).orElseThrow().estaActivo());
     }
 
     @Test
@@ -226,7 +257,7 @@ class UsuarioMongoAdapterTest {
         DatosCliente conDniDeJuan = new DatosCliente(TipoCliente.PREMIUM, new Dni("12345678Z"),
                 LocalDate.of(1996, 5, 20), null);
 
-        ana.modificarDatos(ana.getDatosPersonales(), conDniDeJuan, HOY);
+        ana.cambiarRol(Rol.CLIENTE, ana.getDatosPersonales(), conDniDeJuan, HOY);
 
         assertThrows(DniYaRegistradoException.class, () -> adapter.guardar(ana));
         assertEquals("87654321X", adapter.buscarPorCorreo("ana@uclm.es").orElseThrow().getDatosCliente().dni().valor());

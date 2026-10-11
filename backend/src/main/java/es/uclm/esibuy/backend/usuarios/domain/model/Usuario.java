@@ -18,7 +18,7 @@ public class Usuario {
     private final ConsentimientoPrivacidad consentimiento;
     private final Email email;
     private final String passwordHash;
-    private final Rol rol;
+    private Rol rol;
     private Instant fechaAlta;
     private String estado;
     private int intentosFallidos;        // intentos de login fallidos seguidos
@@ -43,16 +43,23 @@ public class Usuario {
         }
     }
 
-    // Edición de los datos por un administrador (HU22). El email, el rol y la contraseña no cambian por aquí.
-    public void modificarDatos(DatosPersonales datosPersonales, DatosCliente datosCliente, LocalDate hoy) {
+    // Edición de los datos por un administrador (HU22), con el mismo rol o con uno nuevo (T43), y los datos del rol
+    // que queda. Al dejar de ser cliente se borran sus datos de cliente (minimización de datos). Un administrador
+    // nunca está pendiente. El email y la contraseña no cambian por aquí.
+    public void cambiarRol(Rol nuevoRol, DatosPersonales datosPersonales, DatosCliente datosCliente, LocalDate hoy) {
         // Se comprueba todo antes de asignar: si algo falla, el usuario se queda como estaba.
+        Rol rolNuevo = exigirNoNulo(nuevoRol, "El rol es obligatorio");
         DatosPersonales personales = exigirNoNulo(datosPersonales, "Los datos personales son obligatorios");
-        DatosCliente cliente = exigirDatosClienteCoherente(rol, datosCliente);
+        DatosCliente cliente = exigirDatosClienteCoherente(rolNuevo, datosCliente);
         if (cliente != null) {
             exigirMayoriaDeEdad(cliente, hoy);
         }
+        this.rol = rolNuevo;
         this.datosPersonales = personales;
         this.datosCliente = cliente;
+        if (rolNuevo == Rol.ADMINISTRADOR && estaPendiente()) {
+            activar();
+        }
     }
 
     public static Usuario nuevoCliente(DatosPersonales datosPersonales, Email email, String passwordHash,

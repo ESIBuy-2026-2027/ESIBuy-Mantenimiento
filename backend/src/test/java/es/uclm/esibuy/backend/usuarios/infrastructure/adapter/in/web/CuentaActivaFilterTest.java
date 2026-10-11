@@ -2,10 +2,14 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
+import java.time.LocalDate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -121,10 +125,30 @@ class CuentaActivaFilterTest {
         assertSesionCerrada();
     }
 
+    @Test
+    @DisplayName("HU22-CP14: si al usuario en sesión le han cambiado el rol, se invalida su sesión y responde 401")
+    void rolCambiadoInvalidaLaSesionYDevuelve401() throws Exception {
+        // Inició sesión como administrador y otro administrador lo ha pasado a cliente (HU22, T43)
+        iniciarSesionComo(EMAIL, "ROLE_ADMINISTRADOR");
+        Usuario ahoraCliente = new Usuario("u-2", new DatosPersonales("Vera", "Vendedora", null), new Email(EMAIL),
+                "hash-simulado", Rol.CLIENTE,
+                new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1996, 5, 20), null), null);
+        ahoraCliente.activar();
+        when(autenticacion.consultarUsuarioEnSesion(EMAIL)).thenReturn(ahoraCliente);
+
+        filtro.doFilter(peticion, respuesta, cadena);
+
+        assertSesionCerrada();
+    }
+
     // Como lo deja el login tras el tercer paso: el email como nombre y ROLE_<rol> como permiso.
     private static void iniciarSesionComo(String email) {
+        iniciarSesionComo(email, "ROLE_VENDEDOR");
+    }
+
+    private static void iniciarSesionComo(String email, String permiso) {
         SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationToken.authenticated(
-                email, null, AuthorityUtils.createAuthorityList("ROLE_VENDEDOR")));
+                email, null, AuthorityUtils.createAuthorityList(permiso)));
     }
 
     private void assertSesionCerrada() {
