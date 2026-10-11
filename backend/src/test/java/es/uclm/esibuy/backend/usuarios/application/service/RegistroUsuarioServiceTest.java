@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.application.service;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarClienteCommand;
+import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarVendedorCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
@@ -11,6 +12,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
@@ -31,6 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
@@ -73,6 +76,12 @@ class RegistroUsuarioServiceTest {
     private static RegistrarClienteCommand comando(String email, String password) {
         return new RegistrarClienteCommand("Juan", "Pérez García", LocalDate.of(1996, 5, 20), "12345678Z",
                 email, null, password, password, TipoCliente.ESTANDAR, null, true);
+    }
+
+    // Comando de un vendedor válido (T241): solo cambian el email y la contraseña, como en el del cliente.
+    private static RegistrarVendedorCommand comandoVendedor(String email, String password) {
+        return new RegistrarVendedorCommand("Luis", "Pérez García", "Tienda Luis", "cat-1", "87654321X",
+                email, "612345678", password, password, "avatar1", true);
     }
 
     @Test
@@ -298,8 +307,22 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP19: registra un vendedor con todos sus datos")
     void registraVendedorConTodosSusDatos() {
-        // TODO ciclo 7 (T241)
-        fail("Funcionalidad no implementada");
+        when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
+
+        registroUsuario.registrarVendedor(comandoVendedor("luis@uclm.es", "Clave-1234"));
+
+        ArgumentCaptor<Usuario> usuarioGuardado = ArgumentCaptor.forClass(Usuario.class);
+        verify(usuarioRepository).guardar(usuarioGuardado.capture());
+        Usuario usuario = usuarioGuardado.getValue();
+        assertEquals(Rol.VENDEDOR, usuario.getRol());
+        assertEquals("PENDIENTE", usuario.getEstado());
+        assertEquals(new DatosPersonales("Luis", "Pérez García", "avatar1"), usuario.getDatosPersonales());
+        assertEquals(new DatosVendedor("Tienda Luis", "cat-1", new Dni("87654321X"), new Telefono("612345678")),
+                usuario.getDatosVendedor());
+        assertNull(usuario.getDatosCliente());
+        assertEquals("luis@uclm.es", usuario.getEmail().valor());
+        assertEquals("hash-simulado", usuario.getPasswordHash());
+        assertEquals(new ConsentimientoPrivacidad(RELOJ.instant(), "1.0"), usuario.getConsentimiento());
     }
 
     @Test
