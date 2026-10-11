@@ -12,7 +12,9 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActiv
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
+import es.uclm.esibuy.backend.usuarios.domain.model.PerfilUsuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
@@ -60,11 +62,11 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         Usuario usuario = buscar(usuarioId);
         DatosPersonales datosPersonales = new DatosPersonales(comando.nombre(), comando.apellidos(),
                 comando.imagenPerfil());
-        DatosCliente datosCliente = datosCliente(usuario.getRol(), comando);
-        if (datosCliente != null) {
+        PerfilUsuario perfil = perfil(usuario.getRol(), comando);
+        if (perfil instanceof DatosCliente datosCliente) {
             exigirDniLibre(usuario, datosCliente.dni());
         }
-        usuario.modificarDatos(datosPersonales, datosCliente, LocalDate.now(reloj));
+        usuario.modificarDatos(datosPersonales, perfil, LocalDate.now(reloj));
         usuarioRepository.guardar(usuario);
         return usuario;
     }
@@ -92,15 +94,20 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         }
     }
 
-    // Los datos de cliente solo se construyen para un cliente; en otros roles se ignoran.
-    private static DatosCliente datosCliente(Rol rol, EditarUsuarioCommand comando) {
-        if (rol != Rol.CLIENTE) {
-            return null;
-        }
-        // El teléfono es opcional: en blanco (el frontend envía "") es que no tiene
-        Telefono telefono = comando.telefono() == null || comando.telefono().isBlank()
-                ? null : new Telefono(comando.telefono());
-        return new DatosCliente(comando.tipoCliente(), new Dni(comando.dni()), comando.fechaNacimiento(), telefono);
+    // Solo se construyen los datos del rol de la cuenta; los de otros roles se ignoran. Un administrador no tiene perfil.
+    private static PerfilUsuario perfil(Rol rol, EditarUsuarioCommand comando) {
+        return switch (rol) {
+            case CLIENTE -> new DatosCliente(comando.tipoCliente(), new Dni(comando.dni()), comando.fechaNacimiento(),
+                    telefono(comando));
+            case VENDEDOR -> new DatosVendedor(comando.nombreComercial(), comando.categoriaPrincipalId(),
+                    new Dni(comando.dni()), telefono(comando));
+            case ADMINISTRADOR -> null;
+        };
+    }
+
+    // El teléfono es opcional: en blanco (el frontend envía "") es que no tiene
+    private static Telefono telefono(EditarUsuarioCommand comando) {
+        return comando.telefono() == null || comando.telefono().isBlank() ? null : new Telefono(comando.telefono());
     }
 
     private Usuario buscar(String usuarioId) {
