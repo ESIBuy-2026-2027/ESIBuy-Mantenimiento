@@ -18,6 +18,21 @@ public class GestionProductosService implements GestionProductosUseCase {
 
     @Override
     public Producto crear(CrearProductoCommand comando) {
-        throw new UnsupportedOperationException("pendiente");
+        String vendedorId = usuarioEnSesion.idPorCorreo(comando.emailVendedor());
+
+        Producto producto = new Producto(
+                null,
+                vendedorId,
+                comando.nombre(),
+                comando.descripcion(),
+                comando.precio(),
+                comando.stock(),
+                comando.categoriaId(),
+                comando.imagen(),
+                comando.disponible(),
+                comando.descuento(),
+                comando.descuentoPremium()
+        );
+        return productoRepository.guardar(producto);
     }
 }
