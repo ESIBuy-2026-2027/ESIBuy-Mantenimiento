@@ -28,6 +28,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYNombreComercialYa
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
@@ -1162,5 +1163,54 @@ class UsuarioControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(crearAdministrador, never()).crear(any());
+    }
+
+    // Fallos de la demo del Sprint 1: cada 400 del registro lleva un code para que el frontend marque el campo.
+
+    @Test
+    @DisplayName("HU1-CP22: una contraseña con datos personales devuelve 400 con su código")
+    void contrasenaConDatosPersonalesDevuelve400ConSuCodigo() throws Exception {
+        doThrow(new ContrasenaInvalidaException(MotivoRechazo.CONTRASENA_CON_DATOS_PERSONALES,
+                "La contraseña no puede contener datos personales"))
+                .when(registroUsuario).registrarCliente(any());
+
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(json("juan@uclm.es", "clave-Juan-2026")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PASSWORD_CONTAINS_PERSONAL_DATA"))
+                .andExpect(jsonPath("$.mensaje").value("Datos de registro no válidos"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP22: un DNI inválido devuelve 400 con su código")
+    void dniInvalidoDevuelve400ConSuCodigo() throws Exception {
+        doThrow(new UsuarioInvalidoException(MotivoRechazo.DNI_INVALIDO, "El DNI no tiene un formato válido"))
+                .when(registroUsuario).registrarCliente(any());
+
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(json("juan@uclm.es", "Clave-1234")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_DNI"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP22: un email inválido devuelve 400 con su código")
+    void emailInvalidoDevuelve400ConSuCodigo() throws Exception {
+        doThrow(new EmailInvalidoException("El email no tiene un formato válido: ana@localhost"))
+                .when(registroUsuario).registrarCliente(any());
+
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(json("ana@localhost", "Clave-1234")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_EMAIL"))
+                .andExpect(jsonPath("$.mensaje").value(not(containsString("ana@localhost"))));
+    }
+
+    @Test
+    @DisplayName("HU1-CP22: un dato inválido sin motivo concreto devuelve 400 con INVALID_FIELD")
+    void datoInvalidoGenericoDevuelve400ConInvalidField() throws Exception {
+        doThrow(new UsuarioInvalidoException("Un cliente debe tener datos de cliente"))
+                .when(registroUsuario).registrarCliente(any());
+
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(json("juan@uclm.es", "Clave-1234")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_FIELD"));
     }
 }
