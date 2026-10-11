@@ -699,6 +699,25 @@ class UsuarioControllerTest {
         assertEquals("Carla", comando.getValue().nombre());   // el resto del cuerpo sí llega
     }
 
+    // El rol de una cuenta no cambia nunca ("el que nace cliente muere cliente", decisión del equipo).
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', value = {
+            "sin rol | {\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\"}",
+            "con otro rol | {\"rol\":\"VENDEDOR\",\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\"}",
+            "con un rol inexistente | {\"rol\":\"SUPERUSUARIO\",\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\"}"})
+    @DisplayName("HU22-CP04: el rol del cuerpo se ignora: sin rol o con otro rol se edita igual")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void editarIgnoraElRolDelCuerpo(String caso, String cuerpo) throws Exception {
+        when(administracionUsuarios.editar(eq("usr-1"), any())).thenReturn(clienteCarla());
+
+        mockMvc.perform(editar("usr-1", cuerpo))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<EditarUsuarioCommand> comando = ArgumentCaptor.forClass(EditarUsuarioCommand.class);
+        verify(administracionUsuarios).editar(eq("usr-1"), comando.capture());
+        assertEquals("Carla", comando.getValue().nombre());
+    }
+
     @ParameterizedTest(name = "{0}")
     @CsvSource(delimiter = '|', value = {
             "sin rol | {\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\"}",
