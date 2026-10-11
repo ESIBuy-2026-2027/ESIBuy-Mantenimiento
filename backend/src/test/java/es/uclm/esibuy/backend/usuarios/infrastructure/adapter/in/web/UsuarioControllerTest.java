@@ -10,6 +10,7 @@ import es.uclm.esibuy.backend.categorias.application.port.in.ConsultaCategoriasU
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
+import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorUseCase;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
@@ -1093,6 +1094,31 @@ class UsuarioControllerTest {
                 .andExpect(status().isCreated());
 
         verify(crearAdministrador).crear(any());
+    }
+
+    @Test
+    @DisplayName("HU21-CP18: crear administrador pasa al caso de uso el avatar elegido")
+    void crearAdministradorPasaElAvatar() throws Exception {
+        String peticionJson = """
+            {
+              "nombre": "Nora",
+              "apellidos": "Díaz Ruiz",
+              "email": "nora@esibuy.test",
+              "sede": "Ciudad Real",
+              "avatar": "avatar2",
+              "password": "Password123!"
+            }
+            """;
+
+        mockMvc.perform(post("/api/admin/admins")
+                .with(user("admin").roles("ADMINISTRADOR"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(peticionJson))
+                .andExpect(status().isCreated());
+
+        verify(crearAdministrador).crear(new CrearAdministradorCommand(
+                "Nora", "Díaz Ruiz", "nora@esibuy.test", "avatar2", "Password123!"));
     }
 
     @Test

@@ -48,7 +48,7 @@ class CrearAdministradorServiceTest {
 
     // Comando de un administrador válido para reutilizar en los tests.
     private static CrearAdministradorCommand comando(String email, String password) {
-        return new CrearAdministradorCommand("Nora", "Díaz Ruiz", email, password);
+        return new CrearAdministradorCommand("Nora", "Díaz Ruiz", email, null, password);
     }
 
     @Test
@@ -104,5 +104,19 @@ class CrearAdministradorServiceTest {
         assertThrows(ContrasenaInvalidaException.class, () -> crearAdministrador.crear(comando));
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
+    }
+
+    @Test
+    @DisplayName("HU21-CP18: guarda el avatar elegido como imagen de perfil del administrador")
+    void guardaElAvatarComoImagenDePerfil() {
+        when(hashContrasena.hashear("Adm1n.S3gur0_2026!")).thenReturn("hash-simulado");
+        CrearAdministradorCommand comando = new CrearAdministradorCommand("Nora", "Díaz Ruiz", "nora@esibuy.test",
+                "avatar2", "Adm1n.S3gur0_2026!");
+
+        crearAdministrador.crear(comando);
+
+        ArgumentCaptor<Usuario> usuarioGuardado = ArgumentCaptor.forClass(Usuario.class);
+        verify(usuarioRepository).guardar(usuarioGuardado.capture());
+        assertEquals("avatar2", usuarioGuardado.getValue().getDatosPersonales().imagenPerfil());
     }
 }
