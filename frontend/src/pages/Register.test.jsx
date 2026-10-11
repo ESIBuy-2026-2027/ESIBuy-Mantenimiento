@@ -619,4 +619,15 @@ describe('Register', () => {
       'La contraseña no puede contener tu nombre, tus apellidos ni tu email'
     )
   })
+
+  it('HU1-CP23: un DNI ya registrado se marca en el DNI y no en el email', async () => {
+    registrarCliente.mockRejectedValue({ status: 409, code: 'DNI_ALREADY_REGISTERED' })
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(await screen.findByText('Este DNI ya está registrado')).toBeInTheDocument()
+    expect(screen.getByLabelText(/dni/i)).toHaveAccessibleDescription('Este DNI ya está registrado')
+    expect(screen.queryByText(/email ya está registrado/i)).not.toBeInTheDocument()
+  })
 })
