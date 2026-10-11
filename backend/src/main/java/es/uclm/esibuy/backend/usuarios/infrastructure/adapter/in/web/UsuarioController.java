@@ -80,13 +80,15 @@ public class UsuarioController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Rol role,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String order) {
         if (page < 1 || size < 1) {
             throw new IllegalArgumentException("La página y el tamaño deben ser positivos");
         }
-        return UsuarioListadoPageResponse.desde(
-                listadoUsuarios.listar(new ListarUsuariosQuery(search, role, status, page - 1, size))
-        );
+        // sort y order como en /admin/sellers (fallos de la demo del Sprint 1: la pantalla de clientes ya los enviaba)
+        return UsuarioListadoPageResponse.desde(listadoUsuarios.listar(new ListarUsuariosQuery(
+                search, role, status, page - 1, size, orden(sort), "desc".equals(order))));
     }
 
     // Ficha de un usuario (HU20). 404 si no existe (UsuarioNoEncontradoException, en ManejadorGlobalErrores).
