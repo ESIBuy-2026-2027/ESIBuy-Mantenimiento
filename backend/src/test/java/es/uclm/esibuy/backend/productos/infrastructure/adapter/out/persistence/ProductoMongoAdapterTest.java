@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 // (Testcontainers): Docker Desktop debe estar abierto. InicializadorColecciones crea la colección productos
 // con su validación, como en la aplicación real, así que un documento que no la cumpla hace fallar el test.
 // También prueba el listado de los productos propios del vendedor (HU32, T184).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP11 y CP12, y HU32-CP01 a CP03, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP11, CP12 y CP23, y HU32-CP01 a CP03, propuestos.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class ProductoMongoAdapterTest {
@@ -107,6 +107,28 @@ class ProductoMongoAdapterTest {
     @DisplayName("HU31-CP12: buscar un producto que no existe devuelve vacío")
     void buscarPorIdDevuelveVacioSiNoExiste() {
         assertTrue(adapter.buscarPorId("6a0000000000000000000000").isEmpty());
+    }
+
+    @Test
+    @DisplayName("HU31-CP23: el nombre cuenta como repetido aunque cambien las mayúsculas, pero solo para el mismo vendedor")
+    void existePorVendedorYNombreNoDistingueMayusculas() {
+        guardarProducto("v-1", "Teclado", "cat-1", "2026-10-01T10:00:00Z");
+
+        assertTrue(adapter.existePorVendedorYNombre("v-1", "Teclado"));
+        assertTrue(adapter.existePorVendedorYNombre("v-1", "teclado"));
+        assertTrue(adapter.existePorVendedorYNombre("v-1", "TECLADO"));
+        assertFalse(adapter.existePorVendedorYNombre("v-2", "Teclado"));
+        assertFalse(adapter.existePorVendedorYNombre("v-1", "Ratón"));
+    }
+
+    @Test
+    @DisplayName("HU31-CP23: el nombre se compara completo y como texto literal, no como expresión regular")
+    void existePorVendedorYNombreComparaElNombreCompletoYLiteral() {
+        guardarProducto("v-1", "Ratón (inalámbrico)", "cat-1", "2026-10-01T10:00:00Z");
+
+        assertTrue(adapter.existePorVendedorYNombre("v-1", "Ratón (inalámbrico)"));
+        assertFalse(adapter.existePorVendedorYNombre("v-1", "Ratón"));
+        assertFalse(adapter.existePorVendedorYNombre("v-1", "Ratón (.*)"));
     }
 
     @Test
