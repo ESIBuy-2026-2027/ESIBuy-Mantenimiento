@@ -9,10 +9,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
 import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Switch.CaseOperator;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
@@ -37,6 +39,10 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
 
     private static final String CAMPO_ESTADO = "estado";
     private static final String CAMPO_RANGO_ESTADO = "rangoEstado";
+
+    // Orden alfabético en español, sin distinguir mayúsculas ni tildes (fallos de la demo del Sprint 1): sin collation,
+    // MongoDB ordena por bytes y «Beatriz» va antes que «ana», y «Álvaro» al final.
+    private static final Collation ORDEN_ALFABETICO_ES = Collation.of("es").strength(Collation.ComparisonLevel.primary());
 
     // Nombres de los índices únicos de DNI por rol y de nombre comercial, fijados en ColeccionesEsiBuy.
     private static final String INDICE_DNI = "rol_dni";
@@ -114,8 +120,8 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
         long total = mongoTemplate.count(new Query(criterios), UsuarioDocument.class);
         List<UsuarioDocument> documentos = query.ordenarPor() == ListarUsuariosQuery.Orden.ESTADO
                 ? buscarOrdenadosPorEstado(criterios, query)
-                : mongoTemplate.find(new Query(criterios).with(PageRequest.of(query.pagina(), query.tamano(),
-                        ordenSimple(query))), UsuarioDocument.class);
+                : mongoTemplate.find(new Query(criterios).collation(ORDEN_ALFABETICO_ES)
+                        .with(PageRequest.of(query.pagina(), query.tamano(), ordenSimple(query))), UsuarioDocument.class);
 
         List<Usuario> usuarios = documentos.stream()
                 .map(mapper::aDominio)
@@ -145,7 +151,8 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
                 Aggregation.sort(Sort.by(direccion(query), CAMPO_RANGO_ESTADO)
                         .and(Sort.by(Sort.Direction.ASC, "nombre", "apellidos"))),
                 Aggregation.skip((long) query.pagina() * query.tamano()),
-                Aggregation.limit(query.tamano()));
+                Aggregation.limit(query.tamano()))
+                .withOptions(AggregationOptions.builder().collation(ORDEN_ALFABETICO_ES).build());
         return mongoTemplate.aggregate(agregacion, UsuarioDocument.class, UsuarioDocument.class).getMappedResults();
     }
 
