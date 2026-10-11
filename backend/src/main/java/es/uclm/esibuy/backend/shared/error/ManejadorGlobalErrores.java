@@ -14,6 +14,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYNombreComercialYa
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
@@ -62,10 +63,43 @@ public class ManejadorGlobalErrores {
         return new RespuestaError(REGISTRO_NO_COMPLETADO, "EMAIL_AND_COMMERCIAL_NAME_ALREADY_REGISTERED");
     }
 
-    @ExceptionHandler({ContrasenaInvalidaException.class, EmailInvalidoException.class, UsuarioInvalidoException.class})
+    // Los 400 del registro llevan un code por motivo (fallos de la demo del Sprint 1) para que el frontend
+    // marque el campo. El mensaje sigue siendo genérico; el motivo lo pone el dominio y el texto del code, aquí.
+    private static final String DATOS_DE_REGISTRO_INVALIDOS = "Datos de registro no válidos";
+
+    @ExceptionHandler(ContrasenaInvalidaException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public RespuestaError datosDeRegistroInvalidos() {
-        return new RespuestaError("Datos de registro no válidos");
+    public RespuestaError contrasenaInvalida(ContrasenaInvalidaException e) {
+        return new RespuestaError(DATOS_DE_REGISTRO_INVALIDOS, codigo(e.getMotivo()));
+    }
+
+    @ExceptionHandler(UsuarioInvalidoException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError usuarioInvalido(UsuarioInvalidoException e) {
+        return new RespuestaError(DATOS_DE_REGISTRO_INVALIDOS, codigo(e.getMotivo()));
+    }
+
+    @ExceptionHandler(EmailInvalidoException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError emailInvalido() {
+        return new RespuestaError(DATOS_DE_REGISTRO_INVALIDOS, "INVALID_EMAIL");
+    }
+
+    // Switch exhaustivo: si el dominio añade un motivo, esto deja de compilar hasta darle su code.
+    private static String codigo(MotivoRechazo motivo) {
+        return switch (motivo) {
+            case CONTRASENA_CORTA -> "PASSWORD_TOO_SHORT";
+            case CONTRASENA_LARGA -> "PASSWORD_TOO_LONG";
+            case CONTRASENA_DEBIL -> "PASSWORD_WEAK";
+            case CONTRASENA_COMUN -> "PASSWORD_TOO_COMMON";
+            case CONTRASENA_CON_DATOS_PERSONALES -> "PASSWORD_CONTAINS_PERSONAL_DATA";
+            case CONTRASENAS_DISTINTAS -> "PASSWORDS_DO_NOT_MATCH";
+            case DNI_INVALIDO -> "INVALID_DNI";
+            case TELEFONO_INVALIDO -> "INVALID_PHONE";
+            case MENOR_DE_EDAD -> "UNDERAGE";
+            case PRIVACIDAD_NO_ACEPTADA -> "PRIVACY_NOT_ACCEPTED";
+            case DATO_INVALIDO -> "INVALID_FIELD";
+        };
     }
 
     @ExceptionHandler(CredencialesInvalidasException.class)
