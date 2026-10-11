@@ -64,6 +64,7 @@ public class Usuario {
     // El vendedor no tiene fecha de nacimiento: no hay mayoría de edad que comprobar (T241).
     public static Usuario nuevoVendedor(DatosPersonales datosPersonales, Email email, String passwordHash,
             DatosVendedor datosVendedor, ConsentimientoPrivacidad consentimiento) {
+        exigirNoNulo(datosVendedor, "Un vendedor debe tener datos de vendedor");
         return new Usuario(null, datosPersonales, email, passwordHash, Rol.VENDEDOR, datosVendedor, consentimiento);
     }
 
@@ -82,6 +83,10 @@ public class Usuario {
         }
         if (!esCliente && perfil instanceof DatosCliente) {
             throw new UsuarioInvalidoException("Solo los clientes tienen datos de cliente");
+        }
+
+        if (rol != Rol.VENDEDOR && perfil instanceof DatosVendedor) {
+            throw new UsuarioInvalidoException("Solo los vendedores tienen datos de vendedor");
         }
         return perfil;
     }
