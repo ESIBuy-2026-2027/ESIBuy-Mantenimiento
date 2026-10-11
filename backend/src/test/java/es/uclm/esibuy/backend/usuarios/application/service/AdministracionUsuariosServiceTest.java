@@ -401,6 +401,56 @@ class AdministracionUsuariosServiceTest {
         verify(usuarioRepository).guardar(desactivado);
     }
 
+    // Activar y desactivar vendedores desde la supervisión (HU21, T47): PATCH /api/admin/sellers/{id}/status.
+    // Por la zona de vendedores solo se cambia el estado de un vendedor, como en consultarVendedor (HU26).
+    // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU21-CP10 a CP12, propuestos.
+
+    @Test
+    @DisplayName("HU21-CP10: activar un vendedor pendiente lo deja activo y lo guarda")
+    void activarVendedorPendienteLoDejaActivoYLoGuarda() {
+        Usuario pendiente = vendedorVera();   // una cuenta nueva nace PENDIENTE (T233)
+        when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(pendiente));
+
+        Usuario activado = servicio.activarVendedor("u-4");
+
+        assertSame(pendiente, activado);
+        assertEquals("ACTIVO", activado.getEstado());
+        verify(usuarioRepository).guardar(activado);
+    }
+
+    @Test
+    @DisplayName("HU21-CP11: desactivar un vendedor activo lo deja desactivado y lo guarda")
+    void desactivarVendedorActivoLoDejaDesactivadoYLoGuarda() {
+        Usuario activo = vendedorVera();
+        activo.activar();
+        when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(activo));
+
+        Usuario desactivado = servicio.desactivarVendedor("u-4");
+
+        assertSame(activo, desactivado);
+        assertEquals("DESACTIVADO", desactivado.getEstado());
+        verify(usuarioRepository).guardar(desactivado);
+    }
+
+    @Test
+    @DisplayName("HU21-CP12: activar a un usuario que no es vendedor falla como si no existiera y no guarda nada")
+    void activarVendedorDeOtroRolFalla() {
+        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(cliente("u-1", "carlos@esibuy.test")));
+
+        assertThrows(UsuarioNoEncontradoException.class, () -> servicio.activarVendedor("u-1"));
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU21-CP12: desactivar a un usuario que no es vendedor falla como si no existiera y no guarda nada")
+    void desactivarVendedorDeOtroRolFalla() {
+        when(usuarioRepository.buscarPorId("u-3"))
+                .thenReturn(Optional.of(administrador("u-3", "otro@esibuy.test")));
+
+        assertThrows(UsuarioNoEncontradoException.class, () -> servicio.desactivarVendedor("u-3"));
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
     private static Usuario cliente(String id, String email) {
         return new Usuario(id, new DatosPersonales("Carlos", "Moreno Gil", null), new Email(email), "hash-simulado",
                 Rol.CLIENTE,

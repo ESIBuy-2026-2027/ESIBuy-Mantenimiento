@@ -49,4 +49,20 @@ public interface AdministracionUsuariosUseCase {
      * @throws es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException si no existe
      */
     Usuario desactivar(String usuarioId, String emailAdministrador);
+
+    /**
+     * Activa la cuenta de un vendedor desde su supervisión (HU21) y la devuelve ya activada.
+     *
+     * @throws es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException si no existe
+     *         o no es un vendedor
+     */
+    Usuario activarVendedor(String usuarioId);
+
+    /**
+     * Desactiva la cuenta de un vendedor desde su supervisión (HU21) y la devuelve ya desactivada.
+     *
+     * @throws es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException si no existe
+     *         o no es un vendedor
+     */
+    Usuario desactivarVendedor(String usuarioId);
 }

@@ -87,6 +87,23 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         return usuario;
     }
 
+    @Override
+    public Usuario activarVendedor(String usuarioId) {
+        Usuario vendedor = consultarVendedor(usuarioId);
+        vendedor.activar();
+        usuarioRepository.guardar(vendedor);
+        return vendedor;
+    }
+
+    // Un vendedor nunca es el administrador en sesión ni otro administrador: no aplican las reglas de desactivar.
+    @Override
+    public Usuario desactivarVendedor(String usuarioId) {
+        Usuario vendedor = consultarVendedor(usuarioId);
+        vendedor.desactivar();
+        usuarioRepository.guardar(vendedor);
+        return vendedor;
+    }
+
     // Solo se comprueba lo que cambia: si no, la cuenta chocaría consigo misma. El DNI es único por rol
     // (índice rol_dni) y el nombre comercial, entre todos los vendedores.
     private void exigirDatosUnicosLibres(Usuario usuario, PerfilUsuario nuevoPerfil) {

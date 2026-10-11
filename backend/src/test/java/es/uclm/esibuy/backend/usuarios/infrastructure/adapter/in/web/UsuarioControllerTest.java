@@ -10,6 +10,7 @@ import es.uclm.esibuy.backend.categorias.application.port.in.ConsultaCategoriasU
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
+import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorUseCase;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
@@ -736,6 +737,98 @@ class UsuarioControllerTest {
         verify(administracionUsuarios, never()).consultarVendedor(any());
     }
 
+    // Activar y desactivar un vendedor desde su supervisión (HU21, T47): PATCH /api/admin/sellers/{id}/status,
+    // contrato de frontend/docs/hu21-alta-admin-y-vendedores.md. Responde con los datos del vendedor.
+    // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU21-CP13 a CP17, propuestos.
+
+    @Test
+    @DisplayName("HU21-CP13: un administrador activa un vendedor y recibe sus datos con estado ACTIVO")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void administradorActivaUnVendedorYRecibeSusDatos() throws Exception {
+        Usuario activado = vendedor();
+        activado.activar();
+        when(administracionUsuarios.activarVendedor("v-1")).thenReturn(activado);
+        when(consultaCategorias.listar()).thenReturn(java.util.List.of(new Categoria("cat-1", "Tecnología")));
+
+        mockMvc.perform(cambiarEstadoVendedor("v-1", "ACTIVO"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("v-1"))
+                .andExpect(jsonPath("$.estado").value("ACTIVO"))
+                .andExpect(jsonPath("$.nombreComercial").value("Tienda Marta"))
+                .andExpect(jsonPath("$.categoriaPrincipal").value("Tecnología"))
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+
+        verify(administracionUsuarios).activarVendedor("v-1");
+        verify(administracionUsuarios, never()).desactivarVendedor(any());
+    }
+
+    @Test
+    @DisplayName("HU21-CP14: un administrador desactiva un vendedor y recibe sus datos con estado DESACTIVADO")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void administradorDesactivaUnVendedorYRecibeSusDatos() throws Exception {
+        Usuario desactivado = vendedor();
+        desactivado.desactivar();
+        when(administracionUsuarios.desactivarVendedor("v-1")).thenReturn(desactivado);
+
+        mockMvc.perform(cambiarEstadoVendedor("v-1", "DESACTIVADO"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("v-1"))
+                .andExpect(jsonPath("$.estado").value("DESACTIVADO"))
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+
+        verify(administracionUsuarios).desactivarVendedor("v-1");
+        verify(administracionUsuarios, never()).activarVendedor(any());
+    }
+
+    @Test
+    @DisplayName("HU21-CP15: cambiar un vendedor a un estado que no es ACTIVO ni DESACTIVADO devuelve 400 y no cambia nada")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void cambiarVendedorAUnEstadoNoAdmitidoDevuelve400() throws Exception {
+        mockMvc.perform(cambiarEstadoVendedor("v-1", "PENDIENTE"))
+                .andExpect(status().isBadRequest());
+
+        verify(administracionUsuarios, never()).activarVendedor(any());
+        verify(administracionUsuarios, never()).desactivarVendedor(any());
+    }
+
+    @Test
+    @DisplayName("HU21-CP16: cambiar el estado de un usuario que no existe o no es vendedor devuelve 404")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void cambiarEstadoDeUnNoVendedorDevuelve404() throws Exception {
+        when(administracionUsuarios.activarVendedor("usr-4"))
+                .thenThrow(new UsuarioNoEncontradoException("El vendedor no existe"));
+
+        mockMvc.perform(cambiarEstadoVendedor("usr-4", "ACTIVO"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @Test
+    @DisplayName("HU21-CP17: sin sesión no se puede cambiar el estado de un vendedor")
+    void cambiarEstadoDeVendedorSinSesionDevuelve401() throws Exception {
+        mockMvc.perform(cambiarEstadoVendedor("v-1", "ACTIVO"))
+                .andExpect(status().isUnauthorized());
+
+        verify(administracionUsuarios, never()).activarVendedor(any());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "VENDEDOR"})
+    @DisplayName("HU21-CP17: un usuario que no es administrador no puede cambiar el estado de un vendedor")
+    void noAdministradorNoCambiaElEstadoDeUnVendedor(String rol) throws Exception {
+        mockMvc.perform(cambiarEstadoVendedor("v-1", "ACTIVO").with(user("usuario").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(administracionUsuarios, never()).activarVendedor(any());
+    }
+
+    // PATCH con sesión: lleva el token CSRF, como el de /api/admin/usuarios/{id}/status.
+    private static MockHttpServletRequestBuilder cambiarEstadoVendedor(String id, String estado) {
+        return patch("/api/admin/sellers/{id}/status", id).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"estado\":\"" + estado + "\"}");
+    }
+
     // Editar un usuario (HU22, T42/T44): PUT /api/admin/usuarios/{id}, contrato de frontend/docs/hu22-editar-usuario.md.
 
     private static final String CUERPO_CLIENTE = """
@@ -1001,6 +1094,31 @@ class UsuarioControllerTest {
                 .andExpect(status().isCreated());
 
         verify(crearAdministrador).crear(any());
+    }
+
+    @Test
+    @DisplayName("HU21-CP18: crear administrador pasa al caso de uso el avatar elegido")
+    void crearAdministradorPasaElAvatar() throws Exception {
+        String peticionJson = """
+            {
+              "nombre": "Nora",
+              "apellidos": "Díaz Ruiz",
+              "email": "nora@esibuy.test",
+              "sede": "Ciudad Real",
+              "avatar": "avatar2",
+              "password": "Password123!"
+            }
+            """;
+
+        mockMvc.perform(post("/api/admin/admins")
+                .with(user("admin").roles("ADMINISTRADOR"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(peticionJson))
+                .andExpect(status().isCreated());
+
+        verify(crearAdministrador).crear(new CrearAdministradorCommand(
+                "Nora", "Díaz Ruiz", "nora@esibuy.test", "avatar2", "Password123!"));
     }
 
     @Test

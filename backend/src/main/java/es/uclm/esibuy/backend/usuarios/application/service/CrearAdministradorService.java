@@ -23,8 +23,7 @@ public class CrearAdministradorService implements CrearAdministradorUseCase {
     @Override
     public void crear(CrearAdministradorCommand comando) {
         // Todo lo que se puede comprobar sin salir del núcleo va antes de consultar la base de datos.
-        // se asume null por defecto para la imagenPerfil de un administrador al crearse.
-        DatosPersonales datosPersonales = new DatosPersonales(comando.nombre(), comando.apellidos(), null);
+        DatosPersonales datosPersonales = new DatosPersonales(comando.nombre(), comando.apellidos(), comando.avatar());
         Email email = new Email(comando.email());
         
         // Reutilizamos la clase de dominio de contraseñas
