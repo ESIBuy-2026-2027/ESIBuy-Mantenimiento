@@ -73,6 +73,9 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
 
     @Override
     public boolean existePorVendedorYNombre(String vendedorId, String nombre) {
-        throw new UnsupportedOperationException("pendiente");
+        Criteria criterios = new Criteria().andOperator(
+                Criteria.where("vendedorId").is(vendedorId),
+                Criteria.where("nombre").regex("^" + Pattern.quote(nombre.trim()) + "$", "i"));
+        return mongoTemplate.exists(new Query(criterios), ProductoDocument.class);
     }
 }
