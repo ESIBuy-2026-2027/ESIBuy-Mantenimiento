@@ -135,6 +135,12 @@ function validarCamposComunes(datos, obligatorios) {
   return errores
 }
 
+// El teléfono es opcional: si está vacío no se envía, porque el backend solo lo da por ausente si no llega
+function sinTelefonoVacio(datos) {
+  const { telefono, ...resto } = datos
+  return telefono ? datos : resto
+}
+
 export default function Register() {
   const styles = useStyles()
   const [tipo, setTipo] = useState(null)
@@ -149,7 +155,7 @@ export default function Register() {
     telefono: '',
     password: '',
     repeticionPassword: '',
-    tipoCliente: 'normal',
+    tipoCliente: 'ESTANDAR',
     avatar: '',
     aceptaPrivacidad: false,
   })
@@ -176,7 +182,7 @@ export default function Register() {
     if (Object.keys(nuevosErrores).length > 0) return
 
     try {
-      await registrarCliente(datos)
+      await registrarCliente(sinTelefonoVacio(datos))
       setRegistrado(true)
     } catch (error) {
       if (error.status === 409) {
@@ -195,7 +201,7 @@ export default function Register() {
     if (Object.keys(nuevosErrores).length > 0) return
 
     try {
-      await registrarVendedor(datos)
+      await registrarVendedor(sinTelefonoVacio(datos))
       setRegistrado(true)
     } catch (error) {
       if (error.status === 409 && ERRORES_VENDEDOR_YA_REGISTRADO[error.code]) {
@@ -280,8 +286,8 @@ export default function Register() {
         {camposComunes}
         <Field label="Tipo de cliente" required>
           <Select value={datos.tipoCliente} onChange={cambiar('tipoCliente')}>
-            <option value="normal">Normal</option>
-            <option value="premium">Premium</option>
+            <option value="ESTANDAR">Estándar</option>
+            <option value="PREMIUM">Premium</option>
           </Select>
         </Field>
         {selectorAvatar}
