@@ -44,6 +44,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -797,5 +798,35 @@ class UsuarioControllerTest {
         return patch("/api/admin/usuarios/{id}/status", id).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"estado\":\"" + estado + "\"}");
+    }
+
+    // Registro del vendedor (T241).
+
+    @Test
+    @DisplayName("HU1-CP19: un registro de vendedor válido devuelve 201")
+    void registroDeVendedorValidoDevuelve201() {
+        // TODO ciclo 13 (T241)
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP21: un vendedor sin categoría principal devuelve 400")
+    void vendedorSinCategoriaDevuelve400() {
+        // TODO ciclo 13 (T241)
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP20: un nombre comercial ya registrado devuelve 409 con su código")
+    void nombreComercialYaRegistradoDevuelve409ConCodigo() {
+        // TODO ciclo 13 (T241)
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP20: correo y nombre comercial ya registrados devuelven 409 con su código")
+    void correoYNombreComercialYaRegistradosDevuelve409ConCodigo() {
+        // TODO ciclo 13 (T241)
+        fail("Funcionalidad no implementada");
     }
 }

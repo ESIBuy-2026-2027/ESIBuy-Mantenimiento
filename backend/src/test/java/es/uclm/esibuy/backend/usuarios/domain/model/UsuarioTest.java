@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -297,5 +298,28 @@ class UsuarioTest {
 
     private static Usuario cliente() {
         return new Usuario("u-1", DATOS_PERSONALES, EMAIL, HASH, Rol.CLIENTE, DATOS_CLIENTE, CONSENTIMIENTO);
+    }
+
+    // Registro del vendedor (T241): perfil sellado y factoría nuevoVendedor.
+
+    @Test
+    @DisplayName("HU1-CP19: nuevoVendedor nace en estado PENDIENTE con sus datos comerciales")
+    void nuevoVendedorNaceEnEstadoPendienteConSusDatosComerciales() {
+        // TODO ciclo 3 (T241)
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP21: rechaza datos de vendedor si el rol no es VENDEDOR")
+    void rechazaDatosDeVendedorSiNoEsVendedor() {
+        // TODO ciclo 4 (T241)
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP21: nuevoVendedor exige los datos de vendedor")
+    void nuevoVendedorExigeDatosDeVendedor() {
+        // TODO ciclo 4 (T241)
+        fail("Funcionalidad no implementada");
     }
 }

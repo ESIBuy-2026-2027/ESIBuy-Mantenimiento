@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -518,5 +519,21 @@ class UsuarioMongoAdapterTest {
         UsuarioDocument doc = documento(email, "hash-simulado", rol);
         doc.setEstado(estado);
         return doc;
+    }
+
+    // Registro del vendedor (T241).
+
+    @Test
+    @DisplayName("HU1-CP20: existePorNombreComercial distingue los nombres comerciales guardados")
+    void existePorNombreComercialDistingueLosGuardados() {
+        // TODO ciclo 12 (T241)
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP20: rechaza un nombre comercial duplicado en la base de datos")
+    void rechazaNombreComercialDuplicadoEnLaBaseDeDatos() {
+        // TODO ciclo 12 (T241)
+        fail("Funcionalidad no implementada");
     }
 }

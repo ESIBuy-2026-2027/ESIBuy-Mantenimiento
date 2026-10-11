@@ -29,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -290,5 +291,42 @@ class RegistroUsuarioServiceTest {
 
         verify(usuarioRepository).guardar(usuarioGuardado.capture());
         assertEquals("juan@uclm.es", usuarioGuardado.getValue().getEmail().valor());
+    }
+
+    // Registro del vendedor (T241).
+
+    @Test
+    @DisplayName("HU1-CP19: registra un vendedor con todos sus datos")
+    void registraVendedorConTodosSusDatos() {
+        // TODO ciclo 7 (T241)
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP09: el vendedor pasa por la política de contraseñas")
+    void elVendedorPasaPorLaPoliticaDeContrasenas() {
+        // TODO ciclo 8 (T241)
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP06: rechaza el registro del vendedor si no acepta la política de privacidad")
+    void rechazaVendedorSiNoAceptaLaPrivacidad() {
+        // TODO ciclo 8 (T241)
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP20: rechaza un nombre comercial ya registrado y no guarda nada")
+    void rechazaNombreComercialYaRegistradoYNoGuardaNada() {
+        // TODO ciclo 9 (T241)
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP20: si se repiten el correo y el nombre comercial lo dice de una vez y no guarda nada")
+    void rechazaCorreoYNombreComercialYaRegistradosYNoGuardaNada() {
+        // TODO ciclo 10 (T241)
+        fail("Funcionalidad no implementada");
     }
 }

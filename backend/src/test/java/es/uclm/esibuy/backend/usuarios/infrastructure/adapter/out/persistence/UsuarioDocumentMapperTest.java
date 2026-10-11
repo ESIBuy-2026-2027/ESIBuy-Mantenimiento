@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -165,5 +166,28 @@ class UsuarioDocumentMapperTest {
         documento.setFechaNacimiento(NACIMIENTO);
         documento.setEstado("ACTIVO");
         return documento;
+    }
+
+    // Registro del vendedor (T241).
+
+    @Test
+    @DisplayName("HU1-CP19: convierte los datos del vendedor en documento")
+    void convierteLosDatosDelVendedorEnDocumento() {
+        // TODO ciclo 11 (T241)
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP19: conserva los datos del vendedor en el mapeo de ida y vuelta")
+    void conservaLosDatosDelVendedorEnElMapeo() {
+        // TODO ciclo 11 (T241)
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU1-CP19: un vendedor sin nombre comercial se lee sin perfil")
+    void unVendedorSinNombreComercialSeLeeSinPerfil() {
+        // TODO ciclo 11 (T241)
+        fail("Funcionalidad no implementada");
     }
 }
