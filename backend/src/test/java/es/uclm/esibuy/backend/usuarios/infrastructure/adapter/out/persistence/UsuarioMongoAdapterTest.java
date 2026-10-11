@@ -554,4 +554,39 @@ class UsuarioMongoAdapterTest {
         assertThrows(NombreComercialYaRegistradoException.class, () -> adapter.guardar(mismoNombreComercial));
         assertEquals(1, usuarioMongoRepository.count());
     }
+
+    // Fallos de la demo del Sprint 1: orden en los listados de clientes y administradores, y orden alfabético en español.
+
+    @Test
+    @DisplayName("HU19-CP11: ordena los clientes por estado descendente, como pide la pantalla de clientes")
+    void ordenaClientesPorEstadoDescendente() {
+        UsuarioDocument activo = documento("activo@esibuy.test", "hash", "CLIENTE");
+        activo.setEstado("ACTIVO");
+        UsuarioDocument pendiente = documento("pendiente@esibuy.test", "hash", "CLIENTE");
+        pendiente.setEstado("PENDIENTE");
+        UsuarioDocument desactivado = documento("desactivado@esibuy.test", "hash", "CLIENTE");
+        desactivado.setEstado("DESACTIVADO");
+        usuarioMongoRepository.saveAll(List.of(activo, pendiente, desactivado));
+
+        UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(
+                null, Rol.CLIENTE, null, 0, 10, ListarUsuariosQuery.Orden.ESTADO, true));
+
+        assertEquals(List.of("DESACTIVADO", "ACTIVO", "PENDIENTE"), estados(resultado));
+    }
+
+    @Test
+    @DisplayName("HU19-CP12: el orden por nombre no distingue mayúsculas ni tildes")
+    void ordenaPorNombreSinDistinguirMayusculasNiTildes() {
+        // Por bytes saldría «Beatriz, ana, Álvaro»: las mayúsculas antes que las minúsculas y las tildes al final
+        usuarioMongoRepository.saveAll(List.of(
+                vendedorLlamado("beatriz@esibuy.test", "Beatriz"),
+                vendedorLlamado("ana@esibuy.test", "ana"),
+                vendedorLlamado("alvaro@esibuy.test", "Álvaro")));
+
+        UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(
+                null, Rol.VENDEDOR, null, 0, 10, ListarUsuariosQuery.Orden.NOMBRE, false));
+
+        assertEquals(List.of("Álvaro", "ana", "Beatriz"),
+                resultado.usuarios().stream().map(u -> u.getDatosPersonales().nombre()).toList());
+    }
 }
