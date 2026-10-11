@@ -7,9 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 
+import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -376,5 +378,51 @@ class UsuarioTest {
         assertNull(admin.getConsentimiento(), "Los administradores no registran consentimiento de privacidad en su creación");
         assertEquals(datosPersonales, admin.getDatosPersonales());
         assertEquals(email, admin.getEmail());
+    }
+
+    @Test
+    @DisplayName("HU1-CP22: el rechazo por minoría de edad indica su motivo")
+    void menorDeEdadIndicaSuMotivo() {
+        DatosCliente nacidoHace17Anos = datosClienteNacidoEl(HOY.minusYears(17));
+
+        UsuarioInvalidoException excepcion = assertThrows(UsuarioInvalidoException.class,
+                () -> Usuario.nuevoCliente(DATOS_PERSONALES, EMAIL, HASH, nacidoHace17Anos, CONSENTIMIENTO, HOY));
+
+        assertEquals(MotivoRechazo.MENOR_DE_EDAD, excepcion.getMotivo());
+    }
+
+    // Fallos de la demo del Sprint 1: el contador de intentos fallidos no se reiniciaba nunca.
+
+    @Test
+    @DisplayName("HU2-CP26: tras caducar el bloqueo, el contador de intentos empieza de cero")
+    void trasCaducarElBloqueoElContadorEmpiezaDeCero() {
+        Usuario usuario = cliente();
+        Instant ahora = Instant.parse("2026-10-12T10:00:00Z");
+        for (int i = 0; i < 5; i++) {
+            usuario.registrarIntentoFallido(ahora);
+        }
+        assertTrue(usuario.tieneBloqueoPorIntentos(ahora));
+
+        // 16 minutos después el bloqueo de 15 ha caducado: un fallo más es el primero de una serie nueva
+        Instant masTarde = ahora.plus(Duration.ofMinutes(16));
+        usuario.registrarIntentoFallido(masTarde);
+
+        assertEquals(1, usuario.getIntentosFallidos());
+        assertFalse(usuario.tieneBloqueoPorIntentos(masTarde));
+    }
+
+    @Test
+    @DisplayName("HU2-CP26: reiniciar los intentos quita el contador y el bloqueo")
+    void reiniciarIntentosQuitaElContadorYElBloqueo() {
+        Usuario usuario = cliente();
+        Instant ahora = Instant.parse("2026-10-12T10:00:00Z");
+        for (int i = 0; i < 5; i++) {
+            usuario.registrarIntentoFallido(ahora);
+        }
+
+        usuario.reiniciarIntentos();
+
+        assertEquals(0, usuario.getIntentosFallidos());
+        assertFalse(usuario.tieneBloqueoPorIntentos(ahora));
     }
 }

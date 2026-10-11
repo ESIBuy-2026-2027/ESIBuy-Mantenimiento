@@ -6,6 +6,7 @@ import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColeccio
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
+import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
@@ -63,7 +64,9 @@ class UsuarioMongoAdapterTest {
         adapter = new UsuarioMongoAdapter(
                 usuarioMongoRepository,
                 new UsuarioDocumentMapper(),
-                mongoTemplate
+                mongoTemplate,
+                () -> List.of(new Categoria("cat-1", "Tecnología"), new Categoria("cat-2", "Hogar"),
+                        new Categoria("cat-3", "Alimentación"))
         );
     }
 
@@ -553,5 +556,80 @@ class UsuarioMongoAdapterTest {
 
         assertThrows(NombreComercialYaRegistradoException.class, () -> adapter.guardar(mismoNombreComercial));
         assertEquals(1, usuarioMongoRepository.count());
+    }
+
+    // Fallos de la demo del Sprint 1: orden en los listados de clientes y administradores, y orden alfabético en español.
+
+    @Test
+    @DisplayName("HU19-CP11: ordena los clientes por estado descendente, como pide la pantalla de clientes")
+    void ordenaClientesPorEstadoDescendente() {
+        UsuarioDocument activo = documento("activo@esibuy.test", "hash", "CLIENTE");
+        activo.setEstado("ACTIVO");
+        UsuarioDocument pendiente = documento("pendiente@esibuy.test", "hash", "CLIENTE");
+        pendiente.setEstado("PENDIENTE");
+        UsuarioDocument desactivado = documento("desactivado@esibuy.test", "hash", "CLIENTE");
+        desactivado.setEstado("DESACTIVADO");
+        usuarioMongoRepository.saveAll(List.of(activo, pendiente, desactivado));
+
+        UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(
+                null, Rol.CLIENTE, null, 0, 10, ListarUsuariosQuery.Orden.ESTADO, true));
+
+        assertEquals(List.of("DESACTIVADO", "ACTIVO", "PENDIENTE"), estados(resultado));
+    }
+
+    @Test
+    @DisplayName("HU19-CP12: el orden por nombre no distingue mayúsculas ni tildes")
+    void ordenaPorNombreSinDistinguirMayusculasNiTildes() {
+        // Por bytes saldría «Beatriz, ana, Álvaro»: las mayúsculas antes que las minúsculas y las tildes al final
+        usuarioMongoRepository.saveAll(List.of(
+                vendedorLlamado("beatriz@esibuy.test", "Beatriz"),
+                vendedorLlamado("ana@esibuy.test", "ana"),
+                vendedorLlamado("alvaro@esibuy.test", "Álvaro")));
+
+        UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(
+                null, Rol.VENDEDOR, null, 0, 10, ListarUsuariosQuery.Orden.NOMBRE, false));
+
+        assertEquals(List.of("Álvaro", "ana", "Beatriz"),
+                resultado.usuarios().stream().map(u -> u.getDatosPersonales().nombre()).toList());
+    }
+
+    @Test
+    @DisplayName("HU26-CP06: el adaptador filtra los vendedores por su categoría principal")
+    void filtraVendedoresPorCategoria() {
+        usuarioMongoRepository.saveAll(List.of(
+                vendedorDeCategoria("tecno@esibuy.test", "cat-1"),
+                vendedorDeCategoria("hogar@esibuy.test", "cat-2"),
+                vendedorDeCategoria("moda@esibuy.test", "cat-1")));
+
+        UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(
+                null, Rol.VENDEDOR, null, "cat-1", 0, 10, null));
+
+        assertEquals(2, resultado.totalElementos());
+        assertTrue(resultado.usuarios().stream()
+                .allMatch(u -> "cat-1".equals(u.getDatosVendedor().categoriaPrincipalId())));
+    }
+
+    private static UsuarioDocument vendedorDeCategoria(String email, String categoriaId) {
+        UsuarioDocument doc = vendedorLlamado(email, "Nombre");
+        doc.setNombreComercial("Tienda " + email);
+        doc.setCategoriaPrincipalId(categoriaId);
+        doc.setDni("0000000" + (Math.abs(email.hashCode()) % 10) + "B");
+        return doc;
+    }
+
+    @Test
+    @DisplayName("HU26-CP07: el adaptador ordena los vendedores por el nombre de su categoría")
+    void ordenaVendedoresPorNombreDeCategoria() {
+        // Los ids no siguen el orden de los nombres: cat-1 es Tecnología, cat-2 es Hogar y cat-3 es Alimentación
+        usuarioMongoRepository.saveAll(List.of(
+                vendedorDeCategoria("tecno@esibuy.test", "cat-1"),
+                vendedorDeCategoria("hogar@esibuy.test", "cat-2"),
+                vendedorDeCategoria("alimentos@esibuy.test", "cat-3")));
+
+        UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(null, Rol.VENDEDOR, null, null, 0, 10,
+                new ListarUsuariosQuery.Ordenacion(ListarUsuariosQuery.Orden.CATEGORIA, false)));
+
+        assertEquals(List.of("cat-3", "cat-2", "cat-1"),
+                resultado.usuarios().stream().map(u -> u.getDatosVendedor().categoriaPrincipalId()).toList());
     }
 }

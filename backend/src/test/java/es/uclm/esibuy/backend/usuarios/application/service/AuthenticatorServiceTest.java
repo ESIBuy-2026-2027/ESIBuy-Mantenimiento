@@ -239,4 +239,21 @@ class AuthenticatorServiceTest {
 
         assertThrows(CodigoInvalidoException.class, () -> authenticator.verificarCodigo(comando(CODIGO)));
     }
+
+    // Fallos de la demo del Sprint 1: completar el login reinicia el contador de intentos fallidos.
+
+    @Test
+    @DisplayName("HU2-CP26: completar el tercer paso reinicia el contador de intentos fallidos")
+    void completarElTercerPasoReiniciaElContador() {
+        Usuario usuario = prepararUsuarioConFactor(factorConfirmado(null));
+        usuario.registrarIntentoFallido(AHORA);
+        usuario.registrarIntentoFallido(AHORA);
+        when(totp.periodoDelCodigo(SECRETO, CODIGO, AHORA)).thenReturn(OptionalLong.of(PERIODO));
+
+        authenticator.verificarCodigo(comando(CODIGO));
+
+        ArgumentCaptor<Usuario> guardado = ArgumentCaptor.forClass(Usuario.class);
+        verify(usuarioRepository).guardar(guardado.capture());
+        assertEquals(0, guardado.getValue().getIntentosFallidos());
+    }
 }

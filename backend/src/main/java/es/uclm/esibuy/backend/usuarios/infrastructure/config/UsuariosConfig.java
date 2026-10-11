@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.config;
 
+import es.uclm.esibuy.backend.categorias.application.port.in.ConsultaCategoriasUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
@@ -62,8 +63,9 @@ public class UsuariosConfig {
 
     @Bean
     UsuarioRepositoryPort usuarioRepositoryPort(UsuarioMongoRepository usuarioMongoRepository,
-            MongoTemplate mongoTemplate) {
-        return new UsuarioMongoAdapter(usuarioMongoRepository, new UsuarioDocumentMapper(), mongoTemplate);
+            MongoTemplate mongoTemplate, ConsultaCategoriasUseCase consultaCategorias) {
+        return new UsuarioMongoAdapter(usuarioMongoRepository, new UsuarioDocumentMapper(), mongoTemplate,
+                consultaCategorias);
     }
 
     @Bean

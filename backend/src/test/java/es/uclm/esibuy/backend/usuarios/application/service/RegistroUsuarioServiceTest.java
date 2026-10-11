@@ -9,6 +9,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaExcept
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYNombreComercialYaRegistradosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
@@ -386,5 +387,34 @@ class RegistroUsuarioServiceTest {
                 () -> registroUsuario.registrarVendedor(comandoVendedor("luis@uclm.es", "Clave-1234")));
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
+    }
+
+    // Fallos de la demo del Sprint 1: los rechazos del servicio indican su motivo para el code de la API.
+
+    @Test
+    @DisplayName("HU1-CP22: el rechazo por contraseñas distintas indica su motivo")
+    void contrasenasDistintasIndicanSuMotivo() {
+        RegistrarClienteCommand comando = new RegistrarClienteCommand("Juan", "Pérez García",
+                LocalDate.of(1996, 5, 20), "12345678Z", "juan@uclm.es", null, "Clave-1234", "Clave-1235",
+                TipoCliente.ESTANDAR, null, true);
+
+        ContrasenaInvalidaException excepcion = assertThrows(ContrasenaInvalidaException.class,
+                () -> registroUsuario.registrarCliente(comando));
+
+        assertEquals(MotivoRechazo.CONTRASENAS_DISTINTAS, excepcion.getMotivo());
+    }
+
+    @Test
+    @DisplayName("HU1-CP22: el rechazo por no aceptar la privacidad indica su motivo")
+    void privacidadNoAceptadaIndicaSuMotivo() {
+        lenient().when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
+        RegistrarClienteCommand comando = new RegistrarClienteCommand("Juan", "Pérez García",
+                LocalDate.of(1996, 5, 20), "12345678Z", "juan@uclm.es", null, "Clave-1234", "Clave-1234",
+                TipoCliente.ESTANDAR, null, false);
+
+        UsuarioInvalidoException excepcion = assertThrows(UsuarioInvalidoException.class,
+                () -> registroUsuario.registrarCliente(comando));
+
+        assertEquals(MotivoRechazo.PRIVACIDAD_NO_ACEPTADA, excepcion.getMotivo());
     }
 }

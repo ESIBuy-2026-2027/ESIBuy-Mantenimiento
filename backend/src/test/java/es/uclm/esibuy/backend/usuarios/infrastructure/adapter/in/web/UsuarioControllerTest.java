@@ -28,6 +28,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYNombreComercialYa
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
@@ -103,7 +104,7 @@ class UsuarioControllerTest {
         return """
                {"nombre": "Juan", "apellidos": "Pérez García", "fechaNacimiento": "1996-05-20",
                 "dni": "12345678Z", "email": "%s", "telefono": null, "password": "%s",
-                "repeticionPassword": "%s", "tipoCliente": "ESTANDAR", "imagenPerfil": null,
+                "repeticionPassword": "%s", "tipoCliente": "ESTANDAR", "avatar": null,
                 "aceptaPrivacidad": true}
                """.formatted(email, password, password);
     }
@@ -114,7 +115,7 @@ class UsuarioControllerTest {
                {"nombre": "Luis", "apellidos": "Pérez García", "nombreComercial": "Tienda Luis",
                 "categoriaPrincipalId": "cat-1", "dni": "87654321X", "email": "luis@uclm.es",
                 "telefono": "612345678", "password": "Clave-1234", "repeticionPassword": "Clave-1234",
-                "imagenPerfil": "avatar1", "aceptaPrivacidad": true}
+                "avatar": "avatar1", "aceptaPrivacidad": true}
                """;
     }
 
@@ -654,7 +655,7 @@ class UsuarioControllerTest {
     @CsvSource({
             "name,     asc,  NOMBRE, false",
             "status,   desc, ESTADO, true",
-            "category, asc,  ,       false",
+            "category, asc,  CATEGORIA, false",
             ",         ,     ,       false"
     })
     @DisplayName("HU26-CP02: el listado de vendedores traduce la ordenación pedida")
@@ -1162,5 +1163,129 @@ class UsuarioControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(crearAdministrador, never()).crear(any());
+    }
+
+    // Fallos de la demo del Sprint 1: cada 400 del registro lleva un code para que el frontend marque el campo.
+
+    @Test
+    @DisplayName("HU1-CP22: una contraseña con datos personales devuelve 400 con su código")
+    void contrasenaConDatosPersonalesDevuelve400ConSuCodigo() throws Exception {
+        doThrow(new ContrasenaInvalidaException(MotivoRechazo.CONTRASENA_CON_DATOS_PERSONALES,
+                "La contraseña no puede contener datos personales"))
+                .when(registroUsuario).registrarCliente(any());
+
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(json("juan@uclm.es", "clave-Juan-2026")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PASSWORD_CONTAINS_PERSONAL_DATA"))
+                .andExpect(jsonPath("$.mensaje").value("Datos de registro no válidos"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP22: un DNI inválido devuelve 400 con su código")
+    void dniInvalidoDevuelve400ConSuCodigo() throws Exception {
+        doThrow(new UsuarioInvalidoException(MotivoRechazo.DNI_INVALIDO, "El DNI no tiene un formato válido"))
+                .when(registroUsuario).registrarCliente(any());
+
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(json("juan@uclm.es", "Clave-1234")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_DNI"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP22: un email inválido devuelve 400 con su código")
+    void emailInvalidoDevuelve400ConSuCodigo() throws Exception {
+        doThrow(new EmailInvalidoException("El email no tiene un formato válido: ana@localhost"))
+                .when(registroUsuario).registrarCliente(any());
+
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(json("ana@localhost", "Clave-1234")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_EMAIL"))
+                .andExpect(jsonPath("$.mensaje").value(not(containsString("ana@localhost"))));
+    }
+
+    @Test
+    @DisplayName("HU1-CP22: un dato inválido sin motivo concreto devuelve 400 con INVALID_FIELD")
+    void datoInvalidoGenericoDevuelve400ConInvalidField() throws Exception {
+        doThrow(new UsuarioInvalidoException("Un cliente debe tener datos de cliente"))
+                .when(registroUsuario).registrarCliente(any());
+
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(json("juan@uclm.es", "Clave-1234")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_FIELD"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP22: un error de validación del formulario devuelve 400 con INVALID_FIELD y mensaje genérico")
+    void errorDeValidacionDelFormularioDevuelve400ConInvalidField() throws Exception {
+        // La capa web (@Valid) rechaza el nombre vacío antes del caso de uso: también con el formato de error de la API
+        String cuerpo = json("juan@uclm.es", "Clave-1234").replace("\"nombre\": \"Juan\"", "\"nombre\": \"\"");
+
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(cuerpo))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_FIELD"))
+                .andExpect(jsonPath("$.mensaje").value("Datos de registro no válidos"));
+
+        verify(registroUsuario, never()).registrarCliente(any());
+    }
+
+    // Fallos de la demo del Sprint 1: el formulario envía la imagen como "avatar", igual que el resto de la API.
+
+    @Test
+    @DisplayName("HU1-CP01: el registro del cliente guarda el avatar elegido")
+    void elRegistroDelClienteGuardaElAvatar() throws Exception {
+        String cuerpo = json("juan@uclm.es", "Clave-1234").replace("\"avatar\": null", "\"avatar\": \"avatar2\"");
+
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(cuerpo))
+                .andExpect(status().isCreated());
+
+        ArgumentCaptor<RegistrarClienteCommand> comando = ArgumentCaptor.forClass(RegistrarClienteCommand.class);
+        verify(registroUsuario).registrarCliente(comando.capture());
+        assertEquals("avatar2", comando.getValue().imagenPerfil());
+    }
+
+    @Test
+    @DisplayName("HU1-CP19: el registro del vendedor guarda el avatar elegido")
+    void elRegistroDelVendedorGuardaElAvatar() throws Exception {
+        String cuerpo = jsonVendedor().replace("\"avatar\": \"avatar1\"", "\"avatar\": \"avatar3\"");
+
+        mockMvc.perform(post(URL_REGISTRO_VENDEDOR).contentType(MediaType.APPLICATION_JSON).content(cuerpo))
+                .andExpect(status().isCreated());
+
+        ArgumentCaptor<RegistrarVendedorCommand> comando = ArgumentCaptor.forClass(RegistrarVendedorCommand.class);
+        verify(registroUsuario).registrarVendedor(comando.capture());
+        assertEquals("avatar3", comando.getValue().imagenPerfil());
+    }
+
+    // Fallos de la demo del Sprint 1: el listado de clientes y administradores no ordenaba (HU19).
+
+    @Test
+    @DisplayName("HU19-CP11: el listado de usuarios acepta el orden y el sentido, como el de vendedores")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void elListadoDeUsuariosAceptaOrdenYSentido() throws Exception {
+        when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(java.util.List.of(), 0, 10, 0));
+
+        mockMvc.perform(get("/api/admin/usuarios")
+                        .param("role", "CLIENTE")
+                        .param("sort", "status")
+                        .param("order", "desc"))
+                .andExpect(status().isOk());
+
+        verify(listadoUsuarios).listar(new ListarUsuariosQuery(
+                null, Rol.CLIENTE, null, 0, 10, ListarUsuariosQuery.Orden.ESTADO, true));
+    }
+
+    // Fallos de la demo del Sprint 1: el listado de vendedores ignoraba la categoría (HU26).
+
+    @Test
+    @DisplayName("HU26-CP06: el listado de vendedores filtra por categoría")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void elListadoDeVendedoresFiltraPorCategoria() throws Exception {
+        when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(java.util.List.of(), 0, 10, 0));
+
+        mockMvc.perform(get("/api/admin/sellers").param("category", "cat-1"))
+                .andExpect(status().isOk());
+
+        verify(listadoUsuarios).listar(new ListarUsuariosQuery(
+                null, Rol.VENDEDOR, null, "cat-1", 0, 10, null));
     }
 }

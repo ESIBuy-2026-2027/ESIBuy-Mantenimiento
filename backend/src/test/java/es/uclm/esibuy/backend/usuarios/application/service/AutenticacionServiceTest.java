@@ -446,4 +446,44 @@ class AutenticacionServiceTest {
 
         assertEquals("u-1", autenticacion.consultarIdUsuarioEnSesion("juan@uclm.es"));
     }
+
+    // Fallos de la demo del Sprint 1: el paso 1 busca la cuenta con el email normalizado (T240).
+
+    @Test
+    @DisplayName("HU2-CP25: inicia sesión aunque el email lleve mayúsculas o espacios")
+    void iniciaSesionAunqueElEmailLleveMayusculas() {
+        Usuario usuario = clienteConId();
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
+        when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
+
+        ResultadoInicioSesion resultado = autenticacion.iniciarSesion(new IniciarSesionCommand(" Juan@UCLM.es ", "clave1234"));
+
+        assertEquals("juan@uclm.es", resultado.email());
+        assertEquals(PasoLogin.CODIGO_EMAIL, resultado.siguientePaso());
+    }
+
+    @Test
+    @DisplayName("HU2-CP25: un email mal formado en el login responde como unas credenciales inválidas")
+    void unEmailMalFormadoEnElLoginNoRevelaNada() {
+        // Sin stubs: con un email mal formado no se llega a consultar el repositorio
+        assertThrows(CredencialesInvalidasException.class,
+                () -> autenticacion.iniciarSesion(new IniciarSesionCommand("ana@", "clave1234")));
+    }
+
+    @Test
+    @DisplayName("HU2-CP26: acertar la contraseña no reinicia el contador de intentos")
+    void acertarLaContrasenaNoReiniciaElContador() {
+        // Frontera de la decisión: el contador solo se reinicia al completar el tercer paso. Si se reiniciara aquí,
+        // quien tuviera la contraseña podría probar códigos sin que el contador llegara nunca a 5.
+        Usuario usuario = clienteConId();
+        usuario.registrarIntentoFallido(AHORA);
+        usuario.registrarIntentoFallido(AHORA);
+        usuario.registrarIntentoFallido(AHORA);
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
+        when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
+
+        autenticacion.iniciarSesion(new IniciarSesionCommand("juan@uclm.es", "clave1234"));
+
+        assertEquals(3, usuario.getIntentosFallidos());
+    }
 }

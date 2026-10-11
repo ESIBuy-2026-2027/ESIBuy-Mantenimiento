@@ -100,6 +100,11 @@ public class AuthenticatorService implements AuthenticatorUseCase {
         // Si era el primer código tras el alta, la confirma
         factor.registrarUso(periodo.getAsLong(), ahora);
         factorAutenticacionRepository.guardar(factor);
+
+        // Login completado: la cuenta recupera sus 5 intentos (fallos de la demo del Sprint 1). Se reinicia aquí
+        // y no al acertar la contraseña: quien tenga solo la contraseña no debe poder probar códigos sin límite.
+        usuario.reiniciarIntentos();
+        usuarioRepository.guardar(usuario);
         return usuario;
     }
 }

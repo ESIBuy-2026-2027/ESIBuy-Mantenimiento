@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.domain.model;
 
 import java.util.regex.Pattern;
+import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 
 public record Telefono(String valor) {
@@ -9,7 +10,7 @@ public record Telefono(String valor) {
 
     public Telefono {
         if (valor == null || !PATRON.matcher(valor).matches()) {
-            throw new UsuarioInvalidoException("El teléfono no tiene un formato válido");
+            throw new UsuarioInvalidoException(MotivoRechazo.TELEFONO_INVALIDO, "El teléfono no tiene un formato válido");
         }
     }
 }

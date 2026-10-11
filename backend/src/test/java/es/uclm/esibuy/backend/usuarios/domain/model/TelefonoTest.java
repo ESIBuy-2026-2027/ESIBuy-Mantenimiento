@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.usuarios.domain.model;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,5 +29,14 @@ class TelefonoTest {
     void rechazaTelefonoDeOchoDigitos() {
         // Frontera: 8 dígitos no valen; 9 sí. Sin prefijo de país (solo España)
         assertThrows(UsuarioInvalidoException.class, () -> new Telefono("61234567"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP22: un teléfono inválido indica su motivo")
+    void telefonoInvalidoIndicaSuMotivo() {
+        UsuarioInvalidoException excepcion = assertThrows(UsuarioInvalidoException.class,
+                () -> new Telefono("61234567"));
+
+        assertEquals(MotivoRechazo.TELEFONO_INVALIDO, excepcion.getMotivo());
     }
 }

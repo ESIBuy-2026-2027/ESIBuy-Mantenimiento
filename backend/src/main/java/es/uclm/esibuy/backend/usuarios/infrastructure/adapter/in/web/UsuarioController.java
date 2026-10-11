@@ -62,7 +62,7 @@ public class UsuarioController {
         registroUsuario.registrarCliente(new RegistrarClienteCommand(
                 request.nombre(), request.apellidos(), request.fechaNacimiento(), request.dni(), request.email(),
                 request.telefono(), request.password(), request.repeticionPassword(), request.tipoCliente(),
-                request.imagenPerfil(), request.aceptaPrivacidad()));
+                request.avatar(), request.aceptaPrivacidad()));
     }
 
     @PostMapping("/auth/register/vendedor")   // contrato del frontend (T241)
@@ -71,7 +71,7 @@ public class UsuarioController {
         registroUsuario.registrarVendedor(new RegistrarVendedorCommand(
                 request.nombre(), request.apellidos(), request.nombreComercial(), request.categoriaPrincipalId(),
                 request.dni(), request.email(), request.telefono(), request.password(), request.repeticionPassword(),
-                request.imagenPerfil(), request.aceptaPrivacidad()));
+                request.avatar(), request.aceptaPrivacidad()));
     }
 
     @GetMapping("/admin/usuarios")
@@ -80,13 +80,15 @@ public class UsuarioController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Rol role,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String order) {
         if (page < 1 || size < 1) {
             throw new IllegalArgumentException("La página y el tamaño deben ser positivos");
         }
-        return UsuarioListadoPageResponse.desde(
-                listadoUsuarios.listar(new ListarUsuariosQuery(search, role, status, page - 1, size))
-        );
+        // sort y order como en /admin/sellers (fallos de la demo del Sprint 1: la pantalla de clientes ya los enviaba)
+        return UsuarioListadoPageResponse.desde(listadoUsuarios.listar(new ListarUsuariosQuery(
+                search, role, status, page - 1, size, orden(sort), "desc".equals(order))));
     }
 
     // Ficha de un usuario (HU20). 404 si no existe (UsuarioNoEncontradoException, en ManejadorGlobalErrores).
@@ -122,22 +124,27 @@ public class UsuarioController {
     }
 
     // Supervisión de vendedores, solo lectura (HU26): el listado de la HU19 con el rol VENDEDOR fijo.
-    // PENDIENTE: el filtro y el orden por categoría (category, sort=category) se ignoran hasta que
-    // exista el registro de vendedores.
     @GetMapping("/admin/sellers")
     public VendedorPageResponse listarVendedores(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String category,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) String order) {
         if (page < 1 || size < 1) {
             throw new IllegalArgumentException("La página y el tamaño deben ser positivos");
         }
+        // category: id de la categoría principal del vendedor (fallos de la demo del Sprint 1: antes se ignoraba)
         return VendedorPageResponse.desde(listadoUsuarios.listar(new ListarUsuariosQuery(
-                search, Rol.VENDEDOR, status, page - 1, size, orden(sort), "desc".equals(order))),
+                search, Rol.VENDEDOR, status, category, page - 1, size, ordenacion(sort, order))),
                 nombresDeCategorias());
+    }
+
+    private static ListarUsuariosQuery.Ordenacion ordenacion(String sort, String order) {
+        ListarUsuariosQuery.Orden campo = orden(sort);
+        return campo == null ? null : new ListarUsuariosQuery.Ordenacion(campo, "desc".equals(order));
     }
 
     // Ficha de un vendedor (HU26). 404 si no existe o no es vendedor.
@@ -169,6 +176,9 @@ public class UsuarioController {
         }
         if ("status".equals(sort)) {
             return ListarUsuariosQuery.Orden.ESTADO;
+        }
+        if ("category".equals(sort)) {
+            return ListarUsuariosQuery.Orden.CATEGORIA;
         }
         return null;
     }

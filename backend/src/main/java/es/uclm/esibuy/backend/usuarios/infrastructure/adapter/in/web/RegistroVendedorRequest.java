@@ -19,6 +19,6 @@ public record RegistroVendedorRequest(
         String telefono,
         @NotBlank @Size(max = 64) String password,
         @NotBlank @Size(max = 64) String repeticionPassword,
-        String imagenPerfil,
+        String avatar,   // la imagen se llama "avatar" en toda la API (fallos de la demo del Sprint 1); en el dominio, imagenPerfil
         boolean aceptaPrivacidad) {
 }

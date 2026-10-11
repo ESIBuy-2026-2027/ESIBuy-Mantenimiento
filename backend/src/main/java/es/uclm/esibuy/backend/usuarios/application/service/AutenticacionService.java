@@ -18,7 +18,9 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
+import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
 
@@ -50,7 +52,9 @@ public class AutenticacionService implements AutenticacionUseCase {
     @Override
     public ResultadoInicioSesion iniciarSesion(IniciarSesionCommand comando) {
         
-        Usuario usuario = usuarioRepository.buscarPorCorreo(comando.email()).orElseThrow(() -> new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS)); // <- Este orElseThrow() viene de buscarPorCorreo() que devuelve Optional<>
+        // El email se busca normalizado (minúsculas, sin espacios), como se guardó en el registro (T240, fallos de la demo)
+        String email = emailNormalizado(comando.email());
+        Usuario usuario = usuarioRepository.buscarPorCorreo(email).orElseThrow(() -> new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS)); // <- Este orElseThrow() viene de buscarPorCorreo() que devuelve Optional<>
 
         Instant ahora = reloj.instant();
         if (usuario.tieneBloqueoPorIntentos(ahora)) {
@@ -123,4 +127,13 @@ public class AutenticacionService implements AutenticacionUseCase {
     
     
 
+
+    // Un email mal formado responde igual que uno inexistente: 401 y nada más (fallos de la demo del Sprint 1)
+    private static String emailNormalizado(String email) {
+        try {
+            return new Email(email).valor();
+        } catch (EmailInvalidoException e) {
+            throw new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS);
+        }
+    }
 }
