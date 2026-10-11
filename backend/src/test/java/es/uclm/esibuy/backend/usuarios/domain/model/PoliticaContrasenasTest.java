@@ -137,4 +137,31 @@ class PoliticaContrasenasTest {
 
         assertEquals(MotivoRechazo.CONTRASENA_CON_DATOS_PERSONALES, excepcion.getMotivo());
     }
+
+    @Test
+    @DisplayName("HU1-CP22: el rechazo por longitud indica si es corta o larga")
+    void rechazoPorLongitudIndicaSuMotivo() {
+        assertEquals(MotivoRechazo.CONTRASENA_CORTA, motivoDe("Xk9#pQ2"));
+        assertEquals(MotivoRechazo.CONTRASENA_CORTA, motivoDe(null));
+        assertEquals(MotivoRechazo.CONTRASENA_LARGA, motivoDe("Tr3boles-Azules!".repeat(4) + "x"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP22: el rechazo por composición indica que la contraseña es débil")
+    void rechazoPorComposicionIndicaSuMotivo() {
+        assertEquals(MotivoRechazo.CONTRASENA_DEBIL, motivoDe("tr3boles-azules!"));
+        assertEquals(MotivoRechazo.CONTRASENA_DEBIL, motivoDe("TR3BOLES-AZULES!"));
+        assertEquals(MotivoRechazo.CONTRASENA_DEBIL, motivoDe("Treboles-Azules!"));
+        assertEquals(MotivoRechazo.CONTRASENA_DEBIL, motivoDe("Tr3bolesAzules"));
+    }
+
+    @Test
+    @DisplayName("HU1-CP22: el rechazo por contraseña común indica su motivo")
+    void rechazoPorContrasenaComunIndicaSuMotivo() {
+        assertEquals(MotivoRechazo.CONTRASENA_COMUN, motivoDe("Password1!"));
+    }
+
+    private static MotivoRechazo motivoDe(String contrasena) {
+        return assertThrows(ContrasenaInvalidaException.class, () -> validar(contrasena)).getMotivo();
+    }
 }
