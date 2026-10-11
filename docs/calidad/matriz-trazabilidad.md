@@ -32,7 +32,7 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | HU1-CP13 | Rechaza a un cliente menor de edad | Unitario | 4 | ✅ Pasa |
 | HU1-CP14 | Rechaza el registro si las contraseñas no coinciden | Unitario | 1 | ✅ Pasa |
 | HU1-CP15 | Rechaza un DNI o un teléfono con formato inválido | Unitario + integración (capa web) | 7 | ✅ Pasa |
-| HU1-CP16 | Rechaza un DNI ya registrado en otra cuenta del mismo rol | Unitario + integración | 5 | ✅ Pasa (2) · 🔍 En revisión (3, AB#43, PR por abrir) |
+| HU1-CP16 | Rechaza un DNI ya registrado en otra cuenta del mismo rol | Unitario + integración | 5 | ✅ Pasa |
 | HU1-CP17 | Rechaza contraseñas sin mayúscula, minúscula, número o símbolo (misma composición que el frontend) | Unitario | 7 | ✅ Pasa |
 | HU1-CP18 | El email no distingue mayúsculas ni espacios en los extremos: se guarda normalizado y no se duplica | Unitario | 5 | ✅ Pasa |
 | HU1-CP19 | Registra un vendedor en estado PENDIENTE con su nombre comercial y su categoría principal | Unitario + integración | 8 | 🔍 En revisión (8, AB#241, PR por abrir) |
@@ -154,10 +154,10 @@ Notas:
 | HU1-CP15 | `TelefonoTest` | `rechazaTelefonoConLetras` | Dominio | AB#229 | PR #72 | ✅ |
 | HU1-CP15 | `TelefonoTest` | `rechazaTelefonoDeOchoDigitos` | Dominio | AB#229 | PR #72 | ✅ |
 | HU1-CP15 | `UsuarioControllerTest` | `datosDelClienteInvalidosDevuelven400` | Infraestructura | AB#228 | PR #72 | ✅ |
-| HU1-CP16 | `RegistroUsuarioServiceTest` | `rechazaDniYaRegistrado` | Aplicación | AB#229, AB#43 | PR #72, PR por abrir | 🔍 |
-| HU1-CP16 | `RegistroUsuarioServiceTest` | `rechazaElDniDeOtroVendedor` | Aplicación | AB#43 | PR por abrir | 🔍 |
+| HU1-CP16 | `RegistroUsuarioServiceTest` | `rechazaDniYaRegistrado` | Aplicación | AB#229, AB#43 | PR #72, PR #100 | ✅ |
+| HU1-CP16 | `RegistroUsuarioServiceTest` | `rechazaElDniDeOtroVendedor` | Aplicación | AB#43 | PR #100 | ✅ |
 | HU1-CP16 | `UsuarioMongoAdapterTest` | `rechazaDniDuplicadoEnLaBaseDeDatos` | Infraestructura | AB#229 | PR #72 | ✅ |
-| HU1-CP16 | `UsuarioMongoAdapterTest` | `existePorDniYRolDistingueLosDniGuardadosPorRol` (antes `existePorDniDistingueLosDniGuardados`) | Infraestructura | AB#229, AB#43 | PR #72, PR por abrir | 🔍 |
+| HU1-CP16 | `UsuarioMongoAdapterTest` | `existePorDniYRolDistingueLosDniGuardadosPorRol` (antes `existePorDniDistingueLosDniGuardados`) | Infraestructura | AB#229, AB#43 | PR #72, PR #100 | ✅ |
 | HU1-CP16 | `UsuarioControllerTest` | `dniYaRegistradoDevuelve409ConCodigo` | Infraestructura | AB#229 | PR #72 | ✅ |
 | HU1-CP17 | `PoliticaContrasenasTest` | `rechazaContrasenaSinMayuscula` | Dominio | AB#239 | PR #87 | ✅ |
 | HU1-CP17 | `PoliticaContrasenasTest` | `rechazaContrasenaSinMinuscula` | Dominio | AB#239 | PR #87 | ✅ |
@@ -585,7 +585,7 @@ Notas:
 | HU20-CP03 | Consultar un usuario que no existe devuelve 404 | Unitario + integración (capa web) | 2 | ✅ Pasa |
 | HU20-CP04 | Sin sesión (401) o sin ser administrador (403) no se ve la ficha | Integración (capa web) | 2 | ✅ Pasa |
 | HU20-CP05 | La ficha de un administrador trae su fecha de incorporación, que es su fecha de alta; la de un cliente no la trae | Integración (capa web) | 2 | ✅ Pasa |
-| HU20-CP06 | La ficha de un vendedor trae sus datos de vendedor (nombre comercial, categoría principal, DNI y teléfono) y no los de cliente | Integración (capa web) | 1 | 🔍 En revisión |
+| HU20-CP06 | La ficha de un vendedor trae sus datos de vendedor (nombre comercial, categoría principal, DNI y teléfono) y no los de cliente | Integración (capa web) | 1 | ✅ Pasa |
 
 Notas:
 - **HU20-CP01 a CP04:** casos propuestos en la T54 (AB#54) a partir del contrato del frontend (`frontend/docs/hu20-ficha-usuario.md`). Pendientes de confirmar con el equipo y de añadir a la HU20 en Azure Boards.
@@ -607,7 +607,7 @@ Notas:
 | HU20-CP04 | `UsuarioControllerTest` | `noAdministradorNoVeLaFicha` (cliente y vendedor) | Infraestructura | AB#54 | PR #77 | ✅ |
 | HU20-CP05 | `UsuarioControllerTest` | `fichaDeUnAdministradorConSuFechaDeIncorporacion` | Infraestructura | AB#43 | PR #96 | ✅ |
 | HU20-CP05 | `UsuarioControllerTest` | `fichaDeUnClienteSinFechaDeIncorporacion` | Infraestructura | AB#43 | PR #96 | ✅ |
-| HU20-CP06 | `UsuarioControllerTest` | `fichaDeUnVendedorConSusDatosDeVendedor` | Infraestructura | AB#43 | PR por abrir | 🔍 |
+| HU20-CP06 | `UsuarioControllerTest` | `fichaDeUnVendedorConSusDatosDeVendedor` | Infraestructura | AB#43 | PR #100 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
@@ -623,13 +623,13 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 |---|---|---|---|---|
 | HU22-CP01 | El administrador edita los datos de un cliente y recibe su ficha actualizada (el teléfono es opcional) | Unitario + integración | 5 | ✅ Pasa |
 | HU22-CP02 | El administrador edita los datos de un administrador (nombre, apellidos e imagen) | Unitario | 2 | ✅ Pasa |
-| HU22-CP03 | El administrador edita los datos de un vendedor (nombre, apellidos, imagen, nombre comercial, DNI, teléfono y categoría principal) y recibe su ficha | Unitario + integración (capa web) | 3 | 🔍 En revisión |
-| HU22-CP04 | El email, la contraseña, el estado y el rol no cambian aunque lleguen en el cuerpo (sin rol, con otro rol o con uno inexistente se edita igual) | Unitario + integración (capa web) | 3 | ✅ Pasa (2) · 🔍 En revisión (1) |
-| HU22-CP05 | Rechaza datos no válidos (400): nombre o apellidos no válidos, DNI mal formado, cliente menor de edad o vendedor sin sus datos de vendedor; no guarda nada | Unitario + integración (capa web) | 8 | ✅ Pasa (6) · 🔍 En revisión (2) |
-| HU22-CP06 | Rechaza un DNI que ya es de otra cuenta del mismo rol (409 `DNI_ALREADY_REGISTERED`) o el nombre comercial de otro vendedor (409 `COMMERCIAL_NAME_ALREADY_REGISTERED`); conservar los propios no cuenta | Unitario + integración | 8 | ✅ Pasa (2) · 🔍 En revisión (6) |
+| HU22-CP03 | El administrador edita los datos de un vendedor (nombre, apellidos, imagen, nombre comercial, DNI, teléfono y categoría principal) y recibe su ficha | Unitario + integración (capa web) | 3 | ✅ Pasa |
+| HU22-CP04 | El email, la contraseña, el estado y el rol no cambian aunque lleguen en el cuerpo (sin rol, con otro rol o con uno inexistente se edita igual) | Unitario + integración (capa web) | 3 | ✅ Pasa |
+| HU22-CP05 | Rechaza datos no válidos (400): nombre o apellidos no válidos, DNI mal formado, cliente menor de edad o vendedor sin sus datos de vendedor; no guarda nada | Unitario + integración (capa web) | 8 | ✅ Pasa |
+| HU22-CP06 | Rechaza un DNI que ya es de otra cuenta del mismo rol (409 `DNI_ALREADY_REGISTERED`) o el nombre comercial de otro vendedor (409 `COMMERCIAL_NAME_ALREADY_REGISTERED`); conservar los propios no cuenta | Unitario + integración | 8 | ✅ Pasa |
 | HU22-CP07 | Editar un usuario que no existe devuelve 404 | Unitario + integración (capa web) | 2 | ✅ Pasa |
 | HU22-CP08 | Solo un administrador con sesión y token CSRF puede editar usuarios (401 / 403) | Integración (capa web) | 3 | ✅ Pasa |
-| HU22-CP15 | `GET /api/categorias` devuelve las categorías (id y nombre) ordenadas por nombre, también sin sesión | Unitario + integración | 5 | 🔍 En revisión |
+| HU22-CP15 | `GET /api/categorias` devuelve las categorías (id y nombre) ordenadas por nombre, también sin sesión | Unitario + integración | 5 | ✅ Pasa |
 
 Notas:
 - **HU22-CP01 a CP08:** casos propuestos en la T42/T44 (AB#42, AB#44) a partir del contrato del frontend (`frontend/docs/hu22-editar-usuario.md`). Pendientes de confirmar con el equipo y de añadir a la HU22 en Azure Boards. Se desarrollaron con TDD (ciclos rojo, verde y refactor); los de CP03, CP04, CP06 (persistencia) y CP08 son tests de protección sobre código que ya existía y pasaron a la primera.
@@ -637,7 +637,7 @@ Notas:
 - **Decisiones del equipo (10/10/2026):** el email no se edita en ningún rol (también en el vendedor, PR #81), así que el 409 `EMAIL_ALREADY_REGISTERED` ya no forma parte de la HU22. El teléfono es opcional: en blanco (`""`) deja al cliente sin teléfono.
 - **El rol no se puede cambiar (decisión del equipo, 11/10/2026: "el que nace cliente muere cliente"):** el PR #92 (T43) añadió el cambio de rol con sus reglas (propio rol, último administrador, cuenta pendiente que pasa a administrador, cierre de la sesión) y sus casos HU22-CP09 a CP14. Se mergeó, y después el equipo decidió que el rol no cambia nunca. La T43 (rama `fix/US22-T43-rol-no-editable`) **revierte el PR #92** (con él salen CP09 a CP14 y sus tests) y hace que la edición **ignore el `rol` del cuerpo**, como el email: `EditarUsuarioRequest` y `EditarUsuarioCommand` ya no lo llevan y los datos se validan según el rol de la cuenta. Por eso CP04 gana `editarIgnoraElRolDelCuerpo` y CP05 pierde `rechazaEditarConUnRolDistintoDelActual`, `rechazaEditarSinRol` y las variantes "sin rol" y "rol inexistente" de `rechazaUnCuerpoDeEdicionNoValido` (antes eran un 400).
 - **Frontend (T43):** el rol es de solo lectura en el formulario, no viaja al guardar y las categorías solo se cargan al editar un vendedor (ver `frontend/docs/hu22-editar-usuario.md`).
-- **Edición del vendedor (AB#43, rama `fix/US22-T43-editar-vendedor`):** al mergear el registro de vendedores (T241, PR #98), editar un vendedor **borraba sus datos de vendedor**: la edición solo construía datos de cliente y `Usuario.modificarDatos` dejaba el perfil del vendedor a `null`. Ahora la edición recibe `nombreComercial` y `categoriaPrincipalId` (el DNI y el teléfono son los mismos campos que en el cliente) y `modificarDatos` exige `DatosVendedor` a un vendedor (CP05). Un vendedor anterior a la T241, sin datos de vendedor, tiene que rellenarlos la primera vez que se edita. El DNI se comprueba dentro de su rol (`existePorDniYRol`, como el índice `rol_dni`) y el nombre comercial solo si cambia (CP06). Por eso CP03 pasa a usar un vendedor con datos de vendedor (también `editarNoCambiaEmailContrasenaEstadoNiRol` de CP04) y los dos tests de servicio de CP06 del cliente cambian de puerto.
+- **Edición del vendedor (AB#43, PR #100):** al mergear el registro de vendedores (T241, PR #98), editar un vendedor **borraba sus datos de vendedor**: la edición solo construía datos de cliente y `Usuario.modificarDatos` dejaba el perfil del vendedor a `null`. Ahora la edición recibe `nombreComercial` y `categoriaPrincipalId` (el DNI y el teléfono son los mismos campos que en el cliente) y `modificarDatos` exige `DatosVendedor` a un vendedor (CP05). Un vendedor anterior a la T241, sin datos de vendedor, tiene que rellenarlos la primera vez que se edita. El DNI se comprueba dentro de su rol (`existePorDniYRol`, como el índice `rol_dni`) y el nombre comercial solo si cambia (CP06). Por eso CP03 pasa a usar un vendedor con datos de vendedor (también `editarNoCambiaEmailContrasenaEstadoNiRol` de CP04) y los dos tests de servicio de CP06 del cliente cambian de puerto.
 - **HU22-CP15 (AB#43):** caso propuesto. El formulario del vendedor elige su categoría principal entre las de `GET /api/categorias`, que no existía en el backend. Se crea el módulo `categorias` (decisión del equipo, 11/10/2026), solo con la consulta. El endpoint es público porque el registro del vendedor lo usa sin sesión. Pendiente de confirmar con el equipo y de añadir a Azure Boards.
 - **Pendiente:** la sede del administrador (el equipo la deja pendiente en este sprint; la HU21, PR #94, la acepta en el alta pero no la guarda).
 - **Frontend:** los tests de la HU22 (AB#46, y los que cambia la T43) no tienen todavía filas en la matriz.
@@ -656,38 +656,38 @@ Notas:
 | HU22-CP01 | `UsuarioMongoAdapterTest` | `guardarUnUsuarioEditadoActualizaSuDocumento` | Infraestructura | AB#44 | PR #82 | ✅ |
 | HU22-CP02 | `UsuarioTest` | `modificarDatosCambiaLosDatosDeUnAdministrador` | Dominio | AB#44 | PR #82 | ✅ |
 | HU22-CP02 | `AdministracionUsuariosServiceTest` | `editaUnAdministradorYLoGuarda` | Aplicación | AB#44 | PR #82 | ✅ |
-| HU22-CP03 | `UsuarioTest` | `modificarDatosCambiaLosDatosDeUnVendedor` | Dominio | AB#43 | PR por abrir | 🔍 |
-| HU22-CP03 | `AdministracionUsuariosServiceTest` | `editaUnVendedorYLoGuarda` | Aplicación | AB#44, AB#43 | PR #82, PR por abrir | 🔍 |
-| HU22-CP03 | `UsuarioControllerTest` | `administradorEditaUnVendedorYRecibeSuFicha` | Infraestructura | AB#43 | PR por abrir | 🔍 |
-| HU22-CP04 | `AdministracionUsuariosServiceTest` | `editarNoCambiaEmailContrasenaEstadoNiRol` | Aplicación | AB#44, AB#43 | PR #82, PR por abrir | 🔍 |
+| HU22-CP03 | `UsuarioTest` | `modificarDatosCambiaLosDatosDeUnVendedor` | Dominio | AB#43 | PR #100 | ✅ |
+| HU22-CP03 | `AdministracionUsuariosServiceTest` | `editaUnVendedorYLoGuarda` | Aplicación | AB#44, AB#43 | PR #82, PR #100 | ✅ |
+| HU22-CP03 | `UsuarioControllerTest` | `administradorEditaUnVendedorYRecibeSuFicha` | Infraestructura | AB#43 | PR #100 | ✅ |
+| HU22-CP04 | `AdministracionUsuariosServiceTest` | `editarNoCambiaEmailContrasenaEstadoNiRol` | Aplicación | AB#44, AB#43 | PR #82, PR #100 | ✅ |
 | HU22-CP04 | `UsuarioControllerTest` | `editarIgnoraEmailContrasenaYEstadoDelCuerpo` | Infraestructura | AB#44 | PR #82 | ✅ |
 | HU22-CP04 | `UsuarioControllerTest` | `editarIgnoraElRolDelCuerpo` (sin rol, con otro rol y con uno inexistente) | Infraestructura | AB#43 | PR #96 | ✅ |
 | HU22-CP05 | `UsuarioTest` | `modificarDatosRechazaUnClienteMenorDeEdad` | Dominio | AB#44 | PR #82 | ✅ |
 | HU22-CP05 | `UsuarioTest` | `modificarDatosAceptaUnClienteQueCumple18Hoy` | Dominio | AB#44 | PR #82 | ✅ |
 | HU22-CP05 | `UsuarioTest` | `modificarDatosExigeDatosDeClienteCoherentesConElRol` | Dominio | AB#44 | PR #82 | ✅ |
-| HU22-CP05 | `UsuarioTest` | `modificarDatosNoQuitaLosDatosDeVendedorAUnVendedor` | Dominio | AB#43 | PR por abrir | 🔍 |
+| HU22-CP05 | `UsuarioTest` | `modificarDatosNoQuitaLosDatosDeVendedorAUnVendedor` | Dominio | AB#43 | PR #100 | ✅ |
 | HU22-CP05 | `AdministracionUsuariosServiceTest` | `rechazaEditarUnClienteConDatosNoValidos` | Aplicación | AB#44 | PR #82 | ✅ |
-| HU22-CP05 | `AdministracionUsuariosServiceTest` | `rechazaEditarUnVendedorSinSusDatosDeVendedor` | Aplicación | AB#43 | PR por abrir | 🔍 |
+| HU22-CP05 | `AdministracionUsuariosServiceTest` | `rechazaEditarUnVendedorSinSusDatosDeVendedor` | Aplicación | AB#43 | PR #100 | ✅ |
 | HU22-CP05 | `UsuarioControllerTest` | `rechazaUnCuerpoDeEdicionNoValido` (3 variantes: nombre vacío, nombre de 31 caracteres y apellidos vacíos; T43 quita "sin rol" y "rol inexistente") | Infraestructura | AB#44, AB#43 | PR #82, PR #96 | ✅ |
 | HU22-CP05 | `UsuarioControllerTest` | `editarConDatosQueElDominioRechazaDevuelve400` | Infraestructura | AB#44 | PR #82 | ✅ |
-| HU22-CP06 | `AdministracionUsuariosServiceTest` | `rechazaEditarUnClienteConElDniDeOtraCuenta` | Aplicación | AB#44, AB#43 | PR #82, PR por abrir | 🔍 |
-| HU22-CP06 | `AdministracionUsuariosServiceTest` | `editarUnClienteQueConservaSuDniNoLoComprueba` | Aplicación | AB#44, AB#43 | PR #82, PR por abrir | 🔍 |
-| HU22-CP06 | `AdministracionUsuariosServiceTest` | `rechazaEditarUnVendedorConElDniDeOtroVendedor` | Aplicación | AB#43 | PR por abrir | 🔍 |
-| HU22-CP06 | `AdministracionUsuariosServiceTest` | `rechazaEditarUnVendedorConElNombreComercialDeOtro` | Aplicación | AB#43 | PR por abrir | 🔍 |
-| HU22-CP06 | `AdministracionUsuariosServiceTest` | `editarUnVendedorQueConservaSuDniYSuNombreComercialNoLosComprueba` | Aplicación | AB#43 | PR por abrir | 🔍 |
+| HU22-CP06 | `AdministracionUsuariosServiceTest` | `rechazaEditarUnClienteConElDniDeOtraCuenta` | Aplicación | AB#44, AB#43 | PR #82, PR #100 | ✅ |
+| HU22-CP06 | `AdministracionUsuariosServiceTest` | `editarUnClienteQueConservaSuDniNoLoComprueba` | Aplicación | AB#44, AB#43 | PR #82, PR #100 | ✅ |
+| HU22-CP06 | `AdministracionUsuariosServiceTest` | `rechazaEditarUnVendedorConElDniDeOtroVendedor` | Aplicación | AB#43 | PR #100 | ✅ |
+| HU22-CP06 | `AdministracionUsuariosServiceTest` | `rechazaEditarUnVendedorConElNombreComercialDeOtro` | Aplicación | AB#43 | PR #100 | ✅ |
+| HU22-CP06 | `AdministracionUsuariosServiceTest` | `editarUnVendedorQueConservaSuDniYSuNombreComercialNoLosComprueba` | Aplicación | AB#43 | PR #100 | ✅ |
 | HU22-CP06 | `UsuarioControllerTest` | `editarConElDniDeOtraCuentaDevuelve409` | Infraestructura | AB#44 | PR #82 | ✅ |
-| HU22-CP06 | `UsuarioControllerTest` | `editarConElNombreComercialDeOtroDevuelve409` | Infraestructura | AB#43 | PR por abrir | 🔍 |
+| HU22-CP06 | `UsuarioControllerTest` | `editarConElNombreComercialDeOtroDevuelve409` | Infraestructura | AB#43 | PR #100 | ✅ |
 | HU22-CP06 | `UsuarioMongoAdapterTest` | `rechazaEditarUnClienteConElDniDeOtroEnLaBaseDeDatos` | Infraestructura | AB#44 | PR #82 | ✅ |
 | HU22-CP07 | `AdministracionUsuariosServiceTest` | `rechazaEditarUnUsuarioQueNoExiste` | Aplicación | AB#44 | PR #82 | ✅ |
 | HU22-CP07 | `UsuarioControllerTest` | `editarUnUsuarioInexistenteDevuelve404` | Infraestructura | AB#44 | PR #82 | ✅ |
 | HU22-CP08 | `UsuarioControllerTest` | `unNoAdministradorNoPuedeEditarUsuarios` (cliente y vendedor) | Infraestructura | AB#44 | PR #82 | ✅ |
 | HU22-CP08 | `UsuarioControllerTest` | `editarSinSesionEstaProtegido` | Infraestructura | AB#44 | PR #82 | ✅ |
 | HU22-CP08 | `UsuarioControllerTest` | `editarSinTokenCsrfSeRechaza` | Infraestructura | AB#44 | PR #82 | ✅ |
-| HU22-CP15 | `ConsultaCategoriasServiceTest` | `listarDevuelveLasCategoriasDelRepositorio` | Aplicación | AB#43 | PR por abrir | 🔍 |
-| HU22-CP15 | `CategoriaMongoAdapterTest` | `listarDevuelveLasCategoriasOrdenadasPorNombre` | Infraestructura | AB#43 | PR por abrir | 🔍 |
-| HU22-CP15 | `CategoriaMongoAdapterTest` | `sinCategoriasDevuelveUnaListaVacia` | Infraestructura | AB#43 | PR por abrir | 🔍 |
-| HU22-CP15 | `CategoriaControllerTest` | `sinSesionSeRecibenLasCategorias` | Infraestructura | AB#43 | PR por abrir | 🔍 |
-| HU22-CP15 | `CategoriaControllerTest` | `unAdministradorRecibeLasCategorias` | Infraestructura | AB#43 | PR por abrir | 🔍 |
+| HU22-CP15 | `ConsultaCategoriasServiceTest` | `listarDevuelveLasCategoriasDelRepositorio` | Aplicación | AB#43 | PR #100 | ✅ |
+| HU22-CP15 | `CategoriaMongoAdapterTest` | `listarDevuelveLasCategoriasOrdenadasPorNombre` | Infraestructura | AB#43 | PR #100 | ✅ |
+| HU22-CP15 | `CategoriaMongoAdapterTest` | `sinCategoriasDevuelveUnaListaVacia` | Infraestructura | AB#43 | PR #100 | ✅ |
+| HU22-CP15 | `CategoriaControllerTest` | `sinSesionSeRecibenLasCategorias` | Infraestructura | AB#43 | PR #100 | ✅ |
+| HU22-CP15 | `CategoriaControllerTest` | `unAdministradorRecibeLasCategorias` | Infraestructura | AB#43 | PR #100 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `UsuarioTest`: `usuarios/domain/model/` (JUnit, sin Spring)
@@ -797,9 +797,9 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU26-CP01 | El listado solo trae vendedores, con sus datos (también el nombre comercial y la categoría principal) y sin datos sensibles | Integración (capa web) | 1 | 🔍 En revisión |
+| HU26-CP01 | El listado solo trae vendedores, con sus datos (también el nombre comercial y la categoría principal) y sin datos sensibles | Integración (capa web) | 1 | ✅ Pasa |
 | HU26-CP02 | El listado se ordena por nombre o por estado (pendientes, activos, desactivados), en sentido ascendente o descendente | Integración (capa web y MongoDB) | 4 | ✅ Pasa |
-| HU26-CP03 | La ficha de un vendedor trae sus datos (también el nombre comercial, la categoría principal con su nombre, el DNI y el teléfono), sin datos sensibles | Unitario + integración (capa web) | 2 | ✅ Pasa (1) · 🔍 En revisión (1) |
+| HU26-CP03 | La ficha de un vendedor trae sus datos (también el nombre comercial, la categoría principal con su nombre, el DNI y el teléfono), sin datos sensibles | Unitario + integración (capa web) | 2 | ✅ Pasa |
 | HU26-CP04 | La ficha de un usuario que no existe o que no es vendedor devuelve 404 | Unitario + integración (capa web) | 3 | ✅ Pasa |
 | HU26-CP05 | Sin sesión (401) o sin ser administrador (403) no se ve ni el listado ni la ficha | Integración (capa web) | 2 | ✅ Pasa |
 
@@ -814,13 +814,13 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU26-CP01 | `UsuarioControllerTest` | `administradorRecibeElListadoDeVendedores` | Infraestructura | AB#30, AB#43 | PR #80, PR por abrir | 🔍 |
+| HU26-CP01 | `UsuarioControllerTest` | `administradorRecibeElListadoDeVendedores` | Infraestructura | AB#30, AB#43 | PR #80, PR #100 | ✅ |
 | HU26-CP02 | `UsuarioControllerTest` | `listadoDeVendedoresTraduceLaOrdenacion` (nombre, estado, categoría y sin orden) | Infraestructura | AB#30 | PR #80 | ✅ |
 | HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorEstadoAscendente` | Infraestructura | AB#30 | PR #80 | ✅ |
 | HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorEstadoDescendente` | Infraestructura | AB#30 | PR #80 | ✅ |
 | HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorNombre` | Infraestructura | AB#30 | PR #80 | ✅ |
 | HU26-CP03 | `AdministracionUsuariosServiceTest` | `consultarVendedorDevuelveElVendedor` | Aplicación | AB#30 | PR #80 | ✅ |
-| HU26-CP03 | `UsuarioControllerTest` | `fichaDeUnVendedor` | Infraestructura | AB#30, AB#43 | PR #80, PR por abrir | 🔍 |
+| HU26-CP03 | `UsuarioControllerTest` | `fichaDeUnVendedor` | Infraestructura | AB#30, AB#43 | PR #80, PR #100 | ✅ |
 | HU26-CP04 | `AdministracionUsuariosServiceTest` | `consultarVendedorDeOtroRolFalla` | Aplicación | AB#30 | PR #80 | ✅ |
 | HU26-CP04 | `AdministracionUsuariosServiceTest` | `consultarVendedorQueNoExisteFalla` | Aplicación | AB#30 | PR #80 | ✅ |
 | HU26-CP04 | `UsuarioControllerTest` | `fichaDeUnNoVendedorDevuelve404` | Infraestructura | AB#30 | PR #80 | ✅ |
