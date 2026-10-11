@@ -6,7 +6,7 @@ import {
   retirarVendedorMock,
   vendedoresMock,
 } from './adminSellersHandlers'
-import { USUARIOS, getUsuarioEnSesion } from './authHandlers'
+import { getUsuarioEnSesion } from './authHandlers'
 import { esMayorDeEdadMock } from './fechas'
 import { CATEGORIAS } from './productsHandlers'
 
@@ -191,18 +191,13 @@ function conflictoAlCambiarDeRol(cuenta) {
   return null
 }
 
-// Código de error si el nombre comercial o el email ya son de otra cuenta, o null si están libres.
-function conflictoDeVendedor(idCuenta, { nombreComercial, email }) {
-  const otros = vendedoresMock().filter((vendedor) => vendedor.id !== idCuenta)
-  if (otros.some((otro) => otro.nombreComercial.toLowerCase() === nombreComercial.trim().toLowerCase())) {
-    return 'COMMERCIAL_NAME_ALREADY_REGISTERED'
-  }
-
-  const enUso =
-    otros.some((otro) => otro.email === email) ||
-    usuarios.some((usuario) => usuario.id !== idCuenta && usuario.email === email) ||
-    USUARIOS.some((usuario) => usuario.id !== idCuenta && usuario.email === email)
-  return enUso ? 'EMAIL_ALREADY_REGISTERED' : null
+// Código de error si el nombre comercial ya es de otro vendedor, o null si está libre. El email no se
+// comprueba: no se puede cambiar.
+function conflictoDeVendedor(idCuenta, { nombreComercial }) {
+  const repetido = vendedoresMock().some(
+    (vendedor) => vendedor.id !== idCuenta && vendedor.nombreComercial.toLowerCase() === nombreComercial.trim().toLowerCase(),
+  )
+  return repetido ? 'COMMERCIAL_NAME_ALREADY_REGISTERED' : null
 }
 
 const esAdminActivo = (usuario) => usuario.rol === 'ADMINISTRADOR' && usuario.estado === 'ACTIVO'
@@ -266,8 +261,7 @@ export const usersHandlers = [
   }),
 
   // Modificar los datos de CUALQUIER usuario, incluido el rol (HU22): cliente, administrador o vendedor se
-  // editan con el mismo endpoint. El email solo lo cambia un vendedor que sigue siéndolo; la contraseña no
-  // se toca desde aquí. Un administrador no cambia su propio rol ni degrada al último administrador activo.
+  // editan con el mismo endpoint. El email y la contraseña no se tocan desde aquí. Un administrador no cambia su propio rol ni degrada al último administrador activo.
   http.put('/api/admin/usuarios/:id', async ({ params, request }) => {
     const rechazo = rechazarSiNoEsAdmin()
     if (rechazo) return rechazo
@@ -285,24 +279,21 @@ export const usersHandlers = [
 
     const conflictoDeRol = rolDestino === rolActual ? null : conflictoAlCambiarDeRol({ ...existente, rol: rolActual })
     const conflictoDeDatos =
-      rolDestino === 'VENDEDOR'
-        ? conflictoDeVendedor(existente.id, { nombreComercial: datos.nombreComercial, email: datos.email ?? existente.email })
-        : null
+      rolDestino === 'VENDEDOR' ? conflictoDeVendedor(existente.id, { nombreComercial: datos.nombreComercial }) : null
     const conflicto = conflictoDeRol ?? conflictoDeDatos
     if (conflicto) return HttpResponse.json({ code: conflicto }, { status: 409 })
 
     const estado = estadoParaRol(existente.estado, rolDestino)
-    const emailNuevo = rolActual === 'VENDEDOR' && rolDestino === 'VENDEDOR' && datos.email ? datos.email : existente.email
     const { nombre, apellidos, ...resto } = datos
     const detalle = Object.fromEntries(
       CAMPOS_EDITABLES.get(rolDestino)
         .filter((campo) => campo in resto)
         .map((campo) => [campo, resto[campo]]),
     )
-    const cuenta = { id: existente.id, nombre, apellidos, email: emailNuevo, rol: rolDestino, estado }
+    const cuenta = { id: existente.id, nombre, apellidos, email: existente.email, rol: rolDestino, estado }
 
     if (vendedor && rolDestino === 'VENDEDOR') {
-      editarVendedorMock(existente.id, { ...datos, email: emailNuevo })
+      editarVendedorMock(existente.id, datos)
     } else if (vendedor) {
       retirarVendedorMock(existente.id)
     } else if (rolDestino === 'VENDEDOR' && rolActual !== 'VENDEDOR') {

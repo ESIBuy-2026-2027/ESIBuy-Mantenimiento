@@ -7,6 +7,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.ResultadoInicioSesion
 import es.uclm.esibuy.backend.usuarios.application.port.in.VerificarCodigoEmailCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.EnvioEmailPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.FactorAutenticacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.GeneradorCodigoPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
@@ -20,6 +21,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import java.time.LocalDate;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
+import es.uclm.esibuy.backend.usuarios.domain.model.FactorAutenticacion;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
@@ -83,6 +85,9 @@ class AutenticacionServiceTest {
     @Mock
     private EnvioEmailPort envioEmail;
 
+    @Mock
+    private FactorAutenticacionRepositoryPort factorRepository;
+
     private AutenticacionUseCase autenticacion; // Tipado como el puerto de entrada, igual que en el registro
 
     @BeforeEach
@@ -96,7 +101,12 @@ class AutenticacionServiceTest {
 
     private AutenticacionService servicioConReloj(Clock reloj) {
         return new AutenticacionService(usuarioRepository, hashContrasena, codigoRepository, generadorCodigo,
-                envioEmail, reloj);
+                envioEmail, factorRepository, reloj);
+    }
+
+    // Factor de Authenticator con el alta ya confirmada (T20): el usuario pasa a verificar su código
+    private static FactorAutenticacion factorConfirmado() {
+        return FactorAutenticacion.reconstruir("f-1", "u-1", "secreto-cifrado", true, AHORA, null);
     }
 
     // Cliente con id: al iniciar sesión se guarda un código de verificación asociado a su id (T21).
@@ -265,6 +275,7 @@ class AutenticacionServiceTest {
     @DisplayName("HU2-CP06: un código correcto pasa al paso de Microsoft Authenticator")
     void codigoCorrectoPasaAlAuthenticator() {
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(clienteConId()));
+        when(factorRepository.buscarPorUsuario("u-1")).thenReturn(Optional.of(factorConfirmado())); // T20
         when(codigoRepository.buscarPorUsuario("u-1"))
                 .thenReturn(Optional.of(CodigoVerificacion.nuevo("u-1", HASH_CODIGO, AHORA)));
         when(hashContrasena.coincide(CODIGO, HASH_CODIGO)).thenReturn(true);
@@ -280,6 +291,40 @@ class AutenticacionServiceTest {
         verify(codigoRepository).guardar(guardado.capture());
         assertFalse(guardado.getValue().puedeUsarse(AHORA));
         assertEquals(AHORA, guardado.getValue().getUsadoEn());   // con la hora del servicio (su Clock)
+    }
+
+    @Test
+    @DisplayName("HU2-CP22: un código correcto de un usuario sin Authenticator pasa al alta")
+    void sinAuthenticatorPasaAlAlta() {
+        prepararCodigoCorrecto();
+        when(factorRepository.buscarPorUsuario("u-1")).thenReturn(Optional.empty());
+
+        ResultadoInicioSesion resultado = autenticacion.verificarCodigoEmail(
+                new VerificarCodigoEmailCommand("juan@uclm.es", CODIGO));
+
+        assertEquals(PasoLogin.ALTA_AUTHENTICATOR, resultado.siguientePaso());
+    }
+
+    @Test
+    @DisplayName("HU2-CP22: con un alta de Authenticator sin confirmar vuelve al alta")
+    void conAltaSinConfirmarVuelveAlAlta() {
+        // Escaneó el QR pero nunca introdujo el primer código: tiene que poder volver a darse de alta
+        prepararCodigoCorrecto();
+        when(factorRepository.buscarPorUsuario("u-1"))
+                .thenReturn(Optional.of(FactorAutenticacion.nuevo("u-1", "secreto-cifrado")));
+
+        ResultadoInicioSesion resultado = autenticacion.verificarCodigoEmail(
+                new VerificarCodigoEmailCommand("juan@uclm.es", CODIGO));
+
+        assertEquals(PasoLogin.ALTA_AUTHENTICATOR, resultado.siguientePaso());
+    }
+
+    // Usuario con un código del correo pendiente y correcto (paso 2 superado)
+    private void prepararCodigoCorrecto() {
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(clienteConId()));
+        when(codigoRepository.buscarPorUsuario("u-1"))
+                .thenReturn(Optional.of(CodigoVerificacion.nuevo("u-1", HASH_CODIGO, AHORA)));
+        when(hashContrasena.coincide(CODIGO, HASH_CODIGO)).thenReturn(true);
     }
 
     @Test
@@ -391,5 +436,14 @@ class AutenticacionServiceTest {
         Usuario enSesion = autenticacion.consultarUsuarioEnSesion("juan@uclm.es");
 
         assertSame(usuario, enSesion);
+    }
+
+    @Test
+    @DisplayName("HU32-CP01: devuelve solo el id del usuario en sesión, para otros módulos")
+    void consultaElIdDelUsuarioEnSesion() {
+        // Productos (HU32) guarda el id del vendedor, pero la sesión solo tiene su correo.
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(clienteConId()));
+
+        assertEquals("u-1", autenticacion.consultarIdUsuarioEnSesion("juan@uclm.es"));
     }
 }

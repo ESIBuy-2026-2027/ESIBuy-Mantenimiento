@@ -382,13 +382,14 @@ describe('SellerDetailDialog (HU22): edición', () => {
     expect(within(dialogo).queryByRole('button', { name: /desactivar usuario/i })).not.toBeInTheDocument()
   })
 
-  it('sellerDetailDialog_enEdicion_dejaModificarTodoMenosElEstado', async () => {
+  it('sellerDetailDialog_enEdicion_dejaModificarTodoMenosElEmailYElEstado', async () => {
     const { dialogo } = await entrarEnEdicion()
 
-    for (const etiqueta of [/^nombre(?! comercial)/i, /^apellidos/i, /^correo electrónico/i, /^nombre comercial/i, /^nif\/dni/i]) {
+    for (const etiqueta of [/^nombre(?! comercial)/i, /^apellidos/i, /^nombre comercial/i, /^nif\/dni/i]) {
       expect(esDeSoloLectura(dialogo, etiqueta)).toBe(false)
     }
     expect(campo(dialogo, /^categoría principal/i)).not.toBeDisabled()
+    expect(esDeSoloLectura(dialogo, /^correo electrónico/i)).toBe(true)
     expect(esDeSoloLectura(dialogo, 'Estado')).toBe(true)
     expect(within(dialogo).queryByLabelText('Fecha de alta')).not.toBeInTheDocument()
   })
@@ -427,7 +428,6 @@ describe('SellerDetailDialog (HU22): edición', () => {
     expect(envio.cuerpo).toEqual({
       nombre: 'Vera',
       apellidos: 'Vendedora',
-      email: 'vendedor@esibuy.test',
       rol: 'VENDEDOR',
       nombreComercial: 'TecnoVera Plus',
       nif: 'B12345601',
@@ -475,13 +475,13 @@ describe('SellerDetailDialog (HU22): edición', () => {
     expect(await within(dialogo).findByText('Los cambios se han guardado.', undefined, ESPERA)).toBeInTheDocument()
   })
 
-  it('sellerDetailDialog_conElEmailDeOtraCuenta_muestraElErrorEnElCampo', async () => {
+  it('sellerDetailDialog_conElNombreComercialDeOtroVendedor_muestraElErrorEnElCampo', async () => {
     const { dialogo, user } = await entrarEnEdicion()
 
-    await escribir(user, dialogo, /^correo electrónico/i, 'hugo@esibuy.test')
+    await escribir(user, dialogo, /^nombre comercial/i, 'Casa Vicente')
     await guardar(user, dialogo)
 
-    expect(await within(dialogo).findByText('Este email ya está registrado', undefined, ESPERA)).toBeInTheDocument()
+    expect(await within(dialogo).findByText('Este nombre comercial ya está registrado', undefined, ESPERA)).toBeInTheDocument()
   })
 
   it('sellerDetailDialog_conCamposVaciosOIncorrectos_losMuestraTodosALaVezYNoGuarda', async () => {
@@ -489,12 +489,10 @@ describe('SellerDetailDialog (HU22): edición', () => {
     const { dialogo, user } = await entrarEnEdicion()
 
     await escribir(user, dialogo, /^nombre comercial/i, '')
-    await escribir(user, dialogo, /^correo electrónico/i, 'no-es-un-email')
     await escribir(user, dialogo, /^nif\/dni/i, 'ABC')
     await guardar(user, dialogo)
 
     expect(within(dialogo).getByText(/este campo es obligatorio/i)).toBeInTheDocument()
-    expect(within(dialogo).getByText(/introduce un email válido/i)).toBeInTheDocument()
     expect(within(dialogo).getByText(/introduce un nif\/dni válido/i)).toBeInTheDocument()
     expect(envio.llamadas).toBe(0)
   })

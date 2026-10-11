@@ -4,7 +4,7 @@ import { emptyProductValues, toProductPayload, validateProduct, valuesFromProduc
 const valoresValidos = () => ({
   ...emptyProductValues(),
   nombre: 'Teclado mecánico',
-  categoriaIds: ['cat-1'],
+  categoriaId: 'cat-1',
   precio: '89.5',
 })
 
@@ -12,7 +12,7 @@ describe('validateProduct', () => {
   it('validateProduct_conFormularioVacio_devuelveTodosLosObligatoriosAlaVez', () => {
     const errores = validateProduct(emptyProductValues())
 
-    expect(Object.keys(errores).sort((a, b) => a.localeCompare(b))).toEqual(['categoriaIds', 'nombre', 'precio'])
+    expect(Object.keys(errores).sort((a, b) => a.localeCompare(b))).toEqual(['categoriaId', 'nombre', 'precio'])
   })
 
   it('validateProduct_conDatosValidos_noDevuelveErrores', () => {
@@ -44,8 +44,8 @@ describe('validateProduct', () => {
     expect(validateProduct({ ...valoresValidos(), stock }).stock).toMatch(/mayor o igual que 0/i)
   })
 
-  it('validateProduct_sinCategorias_devuelveError', () => {
-    expect(validateProduct({ ...valoresValidos(), categoriaIds: [] }).categoriaIds).toBeDefined()
+  it('validateProduct_sinCategoria_devuelveError', () => {
+    expect(validateProduct({ ...valoresValidos(), categoriaId: '' }).categoriaId).toBeDefined()
   })
 
   it('validateProduct_conDescripcionDeMasDe1000Caracteres_devuelveError', () => {
@@ -144,7 +144,7 @@ describe('valuesFromProduct', () => {
       precio: 59.9,
       stock: 34,
       disponible: false,
-      categoriaIds: ['cat-1', 'cat-2'],
+      categoriaId: 'cat-2',
       imagen: '',
       descuento: { activo: true, porcentaje: 10 },
       descuentoPremium: { activo: false, porcentaje: null },
@@ -155,7 +155,7 @@ describe('valuesFromProduct', () => {
       descripcion: 'Con cable',
       precio: '59.9',
       stock: '34',
-      categoriaIds: ['cat-1', 'cat-2'],
+      categoriaId: 'cat-2',
       imagen: '',
       disponible: false,
       descuentoActivo: true,
@@ -171,7 +171,7 @@ describe('valuesFromProduct', () => {
       descripcion: 'Con cable',
       precio: 59.9,
       stock: 34,
-      categoriaIds: ['cat-1'],
+      categoriaId: 'cat-1',
       imagen: 'https://esibuy.test/a.png',
       disponible: true,
       descuento: { activo: true, porcentaje: 10 },
@@ -188,7 +188,7 @@ describe('emptyProductValues', () => {
       disponible: true,
       descuentoActivo: false,
       descuentoPremiumActivo: false,
-      categoriaIds: [],
+      categoriaId: '',
     })
   })
 })

@@ -81,11 +81,10 @@ describe('campos editables por tipo de usuario (HU22)', () => {
     expect(nombresEditables(ROLES.ADMIN)).toEqual(['nombre', 'apellidos', 'rol', 'sede', 'avatar'])
   })
 
-  it('profileFields_deUnVendedor_permiteModificarTodosSusDatos', () => {
+  it('profileFields_deUnVendedor_permiteModificarTodosSusDatosMenosElEmail', () => {
     expect(nombresEditables(ROLES.VENDEDOR)).toEqual([
       'nombre',
       'apellidos',
-      'email',
       'rol',
       'nombreComercial',
       'nif',
@@ -252,31 +251,24 @@ describe('validateProfile', () => {
     expect(validateProfile(ROLES.ADMIN, { ...initialValues(ROLES.ADMIN, ADMINISTRADOR), sede: '' })).toEqual({})
   })
 
-  it('validateProfile_deUnVendedor_exigeNombreComercialEmailNifYCategoria', () => {
+  it('validateProfile_deUnVendedor_exigeNombreComercialNifYCategoria', () => {
     const errores = validateProfile(ROLES.VENDEDOR, {
       ...initialValues(ROLES.VENDEDOR, VENDEDOR),
       nombreComercial: '',
-      email: '',
       nif: '',
       categoriaPrincipalId: '',
     })
 
     expect(Object.keys(errores).sort((a, b) => a.localeCompare(b))).toEqual([
       'categoriaPrincipalId',
-      'email',
       'nif',
       'nombreComercial',
     ])
   })
 
-  it('validateProfile_deUnVendedorConEmailOnifIncorrectos_devuelveError', () => {
-    const errores = validateProfile(ROLES.VENDEDOR, {
-      ...initialValues(ROLES.VENDEDOR, VENDEDOR),
-      email: 'esto-no-es-un-email',
-      nif: 'ABC',
-    })
+  it('validateProfile_deUnVendedorConNifIncorrecto_devuelveError', () => {
+    const errores = validateProfile(ROLES.VENDEDOR, { ...initialValues(ROLES.VENDEDOR, VENDEDOR), nif: 'ABC' })
 
-    expect(errores.email).toMatch(/email válido/i)
     expect(errores.nif).toMatch(/nif\/dni válido/i)
   })
 })
@@ -315,12 +307,11 @@ describe('profilePayload', () => {
     expect(payload).toEqual({ rol: 'ADMINISTRADOR', nombre: 'Diego', apellidos: 'D', sede: 'Cuenca', avatar: 'avatar3' })
   })
 
-  it('profilePayload_deUnVendedor_enviaLaCategoriaPorIdentificador', () => {
+  it('profilePayload_deUnVendedor_enviaUnaSolaCategoriaPorIdentificadorYNuncaElEmail', () => {
     expect(profilePayload(ROLES.VENDEDOR, initialValues(ROLES.VENDEDOR, VENDEDOR))).toEqual({
       rol: 'VENDEDOR',
       nombre: 'Vera',
       apellidos: 'Vendedora',
-      email: 'vendedor@esibuy.test',
       nombreComercial: 'TecnoVera',
       nif: 'B12345601',
       categoriaPrincipalId: 'cat-1',
@@ -332,24 +323,21 @@ describe('cambio de rol (HU22)', () => {
   const nombresDe = (campos) => campos.filter((campo) => campo.edit).map((campo) => campo.name)
 
   it('editFieldsFor_alPasarAAdministrador_ofreceLosCamposDeUnAdministrador', () => {
-    expect(nombresDe(editFieldsFor(ROLES.ADMIN, ROLES.CLIENTE))).toEqual(['nombre', 'apellidos', 'rol', 'sede', 'avatar'])
+    expect(nombresDe(editFieldsFor(ROLES.ADMIN))).toEqual(['nombre', 'apellidos', 'rol', 'sede', 'avatar'])
   })
 
   it('editFieldsFor_alPasarAVendedor_ofreceLosCamposDeUnVendedor', () => {
-    expect(nombresDe(editFieldsFor(ROLES.VENDEDOR, ROLES.ADMIN))).toEqual(
+    expect(nombresDe(editFieldsFor(ROLES.VENDEDOR))).toEqual(
       expect.arrayContaining(['nombreComercial', 'nif', 'categoriaPrincipalId']),
     )
   })
 
-  it('editFieldsFor_elEmailSoloEsEditableSiLaCuentaYaEraDeVendedorYLoSigueSiendo', () => {
-    expect(nombresDe(editFieldsFor(ROLES.VENDEDOR, ROLES.VENDEDOR))).toContain('email')
-    expect(nombresDe(editFieldsFor(ROLES.VENDEDOR, ROLES.CLIENTE))).not.toContain('email')
-    expect(nombresDe(editFieldsFor(ROLES.CLIENTE, ROLES.VENDEDOR))).not.toContain('email')
-    expect(nombresDe(editFieldsFor(ROLES.ADMIN, ROLES.ADMIN))).not.toContain('email')
+  it.each([ROLES.CLIENTE, ROLES.ADMIN, ROLES.VENDEDOR])('editFieldsFor_de_%s_nuncaOfreceElEmailComoModificable', (rol) => {
+    expect(nombresDe(editFieldsFor(rol))).not.toContain('email')
   })
 
-  it('editFieldsFor_alConvertirEnVendedorElEmailSeMuestraEnSoloLectura', () => {
-    const email = editFieldsFor(ROLES.VENDEDOR, ROLES.CLIENTE).find((campo) => campo.name === 'email')
+  it('editFieldsFor_deUnVendedor_muestraElEmailEnSoloLectura', () => {
+    const email = editFieldsFor(ROLES.VENDEDOR).find((campo) => campo.name === 'email')
 
     expect(email).toBeDefined()
     expect(email.edit).toBeUndefined()

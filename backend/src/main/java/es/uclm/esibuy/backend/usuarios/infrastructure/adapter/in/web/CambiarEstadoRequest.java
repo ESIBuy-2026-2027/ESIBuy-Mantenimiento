@@ -6,11 +6,11 @@ import jakarta.validation.constraints.Pattern;
 /**
  * DTO de entrada para cambiar el estado de una cuenta ({@code PATCH /api/admin/usuarios/{id}/status}).
  *
- * <p>De momento solo se admite {@code ACTIVO} (activar, HU24); cualquier otro estado es un 400.
- * La HU23 añadirá {@code DESACTIVADO} con sus reglas.
+ * <p>Se admiten {@code ACTIVO} (activar, HU24) y {@code DESACTIVADO} (desactivar, HU23);
+ * cualquier otro estado es un 400.
  */
 public record CambiarEstadoRequest(
         @NotBlank
-        @Pattern(regexp = "ACTIVO", message = "Estado no admitido")
+        @Pattern(regexp = "ACTIVO|DESACTIVADO", message = "Estado no admitido")
         String estado) {
 }

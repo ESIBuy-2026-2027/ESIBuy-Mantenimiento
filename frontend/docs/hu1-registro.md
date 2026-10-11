@@ -22,7 +22,7 @@ En `/register` el usuario elige si quiere una cuenta de **cliente** o de **vende
 | Apellidos | Obligatorio | Obligatorio | Máximo 30 caracteres |
 | Fecha de nacimiento | Obligatorio | — | Mayor de 18 años |
 | Nombre comercial | — | Obligatorio | Máximo 30 caracteres. Único |
-| Categorías | — | Obligatorio | Al menos una; se pueden marcar varias |
+| Categoría | — | Obligatorio | **Una sola** (se elige con botones de opción); un vendedor no tiene categorías secundarias |
 | DNI | Obligatorio | Obligatorio | 8 números y una letra |
 | Email | Obligatorio | Obligatorio | Formato válido, máximo 100 caracteres. Único |
 | Teléfono | Opcional | Opcional | Si se rellena: 9 números, sin letras |
@@ -97,7 +97,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | `AVATARES` | Los tres avatares: un `Avatar` de Fluent con un icono de animal (gato, perro y conejo) y su color. |
 | `ERRORES_VENDEDOR_YA_REGISTRADO` | Traduce cada código 409 del backend a los campos que hay que marcar. |
 | `validarCamposComunes()` | Valida lo que comparten los dos formularios: obligatorios, DNI, email, teléfono, requisitos del password, que los dos passwords coincidan y la política de privacidad. |
-| `enviarCliente()` / `enviarVendedor()` | Añaden su validación propia (mayoría de edad o categorías), envían los datos y gestionan el 409. |
+| `enviarCliente()` / `enviarVendedor()` | Añaden su validación propia (mayoría de edad o categoría), envían los datos y gestionan el 409. |
 | `campo()`, `campoPassword()`, `camposComunes`, `selectorAvatar`, `casillaPrivacidad` | Piezas de la interfaz que comparten los dos formularios, para no repetir código. |
 | `pantalla()` | Tarjeta centrada con su título, común a las cuatro pantallas (elección, cliente, vendedor y confirmación). |
 
@@ -136,7 +136,7 @@ Cuerpo (JSON): el objeto completo del formulario.
   "nombre": "Luis",
   "apellidos": "Pérez",
   "nombreComercial": "Tienda Luis",
-  "categorias": ["cat-1"],
+  "categoriaPrincipalId": "cat-1",
   "fechaNacimiento": "",
   "dni": "12345678Z",
   "email": "luis@correo.com",
@@ -157,7 +157,7 @@ Cuerpo (JSON): el objeto completo del formulario.
 | 409 + `{ "code": "EMAIL_AND_COMMERCIAL_NAME_ALREADY_REGISTERED" }` | Los dos mensajes (solo vendedor) |
 
 - En el cliente, cualquier 409 marca el email.
-- `categorias` envía los **identificadores** que devuelve `GET /api/categorias`.
+- `categoriaPrincipalId` envía **un solo identificador**, de los que devuelve `GET /api/categorias` (decisión del equipo: un vendedor tiene una única categoría). Antes se enviaba `categorias`, una lista; el nombre del campo se ha tomado del que ya usan la edición del vendedor y el esquema de la base de datos, y hay que acordarlo con el backend.
 - Se envían también campos que el backend no necesita (`repeticionPassword`, y los del otro tipo de usuario vacíos). Se filtrarán al unir con el backend.
 
 ---
@@ -179,7 +179,7 @@ Pruebas manuales sugeridas:
 1. Pulsar **Registrarse** con el formulario vacío y comprobar que aparecen todos los errores a la vez.
 2. Escribir un password poco a poco y ver cómo se marcan los requisitos.
 3. Pulsar el ojo de cada password para mostrarlo y ocultarlo.
-4. Como vendedor, marcar varias categorías.
+4. Como vendedor, elegir una categoría: al elegir otra, la anterior se desmarca.
 5. Intentar escribir más de 30 caracteres en el nombre.
 
 ### Tests automáticos
@@ -210,7 +210,7 @@ Los tests sustituyen `api/auth` y `api/products` con `vi.mock`, así que no depe
 ## 7. Decisiones
 
 - **Convención de nombres:** en la interfaz se usan "Email" y "Password", acordado en una reunión del equipo para todo el proyecto.
-- **Categorías con casillas** (`Checkbox` dentro de un `fieldset`) y no con un desplegable. No se usa `Field` porque está pensado para un solo control y daba el mismo `id` a todas las casillas. Se puede cambiar a un desplegable múltiple si el equipo lo prefiere.
+- **Categoría con botones de opción** (`RadioGroup` dentro de un `fieldset`) y no con un desplegable: solo se puede elegir una y las opciones son pocas, así que se ven todas. Antes eran casillas con selección múltiple; se cambió cuando el equipo decidió que vendedores y productos tienen una única categoría.
 - **Límite de longitud con `maxLength`:** se impide escribir de más en lugar de dejarlo y mostrar un error después.
 - **Códigos de error 409** con el campo `code`, siguiendo el patrón del login (`ACCOUNT_DISABLED`) y sin tocar `api/client.js`.
 - **Avatares con iconos de Fluent UI**, sin imágenes externas. Para cambiarlos basta con editar la lista `AVATARES`.

@@ -13,14 +13,26 @@ import java.util.Set;
  * @param estado filtro opcional por estado persistido
  * @param pagina índice de página, empezando en cero
  * @param tamano número máximo de usuarios por página
+ * @param ordenarPor orden opcional (por nombre o por estado); null = por fecha de alta, de la más reciente a la más antigua
+ * @param descendente si el orden es descendente (solo cuenta con ordenarPor)
  */
 public record ListarUsuariosQuery(
         String busqueda,
         Rol rol,
         String estado,
         int pagina,
-        int tamano
+        int tamano,
+        Orden ordenarPor,
+        boolean descendente
 ) {
+
+    // Orden del listado (HU26). Por estado, el orden ascendente es pendientes, activos y desactivados.
+    public enum Orden { NOMBRE, ESTADO }
+
+    // Listado sin orden propio (HU19): por fecha de alta, como hasta ahora.
+    public ListarUsuariosQuery(String busqueda, Rol rol, String estado, int pagina, int tamano) {
+        this(busqueda, rol, estado, pagina, tamano, null, false);
+    }
 
     public ListarUsuariosQuery {
         // La consulta se valida en el borde de aplicación para que ningún adaptador
