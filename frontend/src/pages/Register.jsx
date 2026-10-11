@@ -5,6 +5,8 @@ import {
   Field,
   Input,
   Label,
+  MessageBar,
+  MessageBarBody,
   Radio,
   RadioGroup,
   Select,
@@ -151,6 +153,7 @@ export default function Register() {
     aceptaPrivacidad: false,
   })
   const [errores, setErrores] = useState({})
+  const [errorGeneral, setErrorGeneral] = useState(null)
   const [registrado, setRegistrado] = useState(false)
   const [categoriasDisponibles, setCategoriasDisponibles] = useState([])
 
@@ -163,7 +166,15 @@ export default function Register() {
 
   const cambiarCategoria = (e, data) => setDatos({ ...datos, categoriaPrincipalId: data.value })
 
+  // El backend indica con un code qué dato rechaza (PR #104): se marca en su campo o, si no tiene, encima del botón
+  const mostrarErroresDelServidor = (error) => {
+    const { campos, general } = erroresDelServidor(error)
+    if (campos) setErrores(campos)
+    setErrorGeneral(general ?? null)
+  }
+
   const enviarCliente = async () => {
+    setErrorGeneral(null)
     const nuevosErrores = validarCamposComunes(datos, OBLIGATORIOS_CLIENTE)
     if (datos.fechaNacimiento && !esMayorDeEdad(datos.fechaNacimiento)) {
       nuevosErrores.fechaNacimiento = 'Debes ser mayor de edad para registrarte'
@@ -176,13 +187,12 @@ export default function Register() {
       await registrarCliente(sinTelefonoVacio(datos))
       setRegistrado(true)
     } catch (error) {
-      // El backend indica con un code qué dato rechaza (PR #104): se marca en su campo
-      const { campos } = erroresDelServidor(error)
-      if (campos) setErrores(campos)
+      mostrarErroresDelServidor(error)
     }
   }
 
   const enviarVendedor = async () => {
+    setErrorGeneral(null)
     const nuevosErrores = validarCamposComunes(datos, OBLIGATORIOS_VENDEDOR)
     if (!datos.categoriaPrincipalId) {
       nuevosErrores.categoriaPrincipalId = 'Elige una categoría'
@@ -195,8 +205,7 @@ export default function Register() {
       await registrarVendedor(sinTelefonoVacio(datos))
       setRegistrado(true)
     } catch (error) {
-      const { campos } = erroresDelServidor(error)
-      if (campos) setErrores(campos)
+      mostrarErroresDelServidor(error)
     }
   }
 
@@ -282,6 +291,11 @@ export default function Register() {
         </Field>
         {selectorAvatar}
         {casillaPrivacidad}
+        {errorGeneral && (
+          <MessageBar intent="error">
+            <MessageBarBody>{errorGeneral}</MessageBarBody>
+          </MessageBar>
+        )}
         <Button appearance="primary" size="large" onClick={enviarCliente}>
           Registrarse
         </Button>
@@ -310,6 +324,11 @@ export default function Register() {
         {camposComunes}
         {selectorAvatar}
         {casillaPrivacidad}
+        {errorGeneral && (
+          <MessageBar intent="error">
+            <MessageBarBody>{errorGeneral}</MessageBarBody>
+          </MessageBar>
+        )}
         <Button appearance="primary" size="large" onClick={enviarVendedor}>
           Registrarse
         </Button>
