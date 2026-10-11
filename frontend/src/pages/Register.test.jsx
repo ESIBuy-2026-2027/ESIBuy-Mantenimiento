@@ -640,4 +640,13 @@ describe('Register', () => {
     expect(await screen.findByText('Este DNI ya está registrado')).toBeInTheDocument()
     expect(screen.getByLabelText(/dni/i)).toHaveAccessibleDescription('Este DNI ya está registrado')
   })
+
+  it('HU1-CP23: un error sin campo muestra un mensaje general', async () => {
+    registrarCliente.mockRejectedValue({ status: 400, code: 'INVALID_FIELD' })
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(await screen.findByText('Revisa los datos del formulario')).toBeInTheDocument()
+  })
 })
