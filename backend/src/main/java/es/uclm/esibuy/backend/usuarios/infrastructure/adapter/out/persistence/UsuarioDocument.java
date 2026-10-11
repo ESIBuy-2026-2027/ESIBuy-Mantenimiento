@@ -38,6 +38,9 @@ public class UsuarioDocument {
     private LocalDate fechaNacimiento;
     private String telefono;
     private String imagenPerfil;
+    // Vendedor (T241): nombres del esquema de la T210; el índice único de nombreComercial lo declara ColeccionesEsiBuy.
+    private String nombreComercial;
+    private String categoriaPrincipalId;
     private boolean privacyPolicyAccepted;
     private Instant privacyPolicyAcceptedAt;
     private String privacyPolicyVersion;
@@ -156,6 +159,22 @@ public class UsuarioDocument {
 
     public void setImagenPerfil(String imagenPerfil) {
         this.imagenPerfil = imagenPerfil;
+    }
+
+    public String getNombreComercial() {
+        return nombreComercial;
+    }
+
+    public void setNombreComercial(String nombreComercial) {
+        this.nombreComercial = nombreComercial;
+    }
+
+    public String getCategoriaPrincipalId() {
+        return categoriaPrincipalId;
+    }
+
+    public void setCategoriaPrincipalId(String categoriaPrincipalId) {
+        this.categoriaPrincipalId = categoriaPrincipalId;
     }
 
     public boolean isPrivacyPolicyAccepted() {
