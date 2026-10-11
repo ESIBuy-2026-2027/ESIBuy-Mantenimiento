@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
@@ -26,10 +27,12 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // Test de integración del adaptador de MongoDB de productos (HU31, T202). Usa un MongoDB real en Docker
@@ -224,5 +227,20 @@ class ProductoMongoAdapterTest {
         assertEquals(List.of("Reciente", "Intermedio"), nombres(primera));
         assertEquals(List.of("Antiguo"), nombres(segunda));
         assertEquals(3, segunda.totalElementos());
+    }
+
+        @Test
+    @DisplayName("HU31-CP24: la base de datos rechaza un nombre repetido del mismo vendedor aunque se salte la comprobación previa")
+    void guardarRechazaUnNombreRepetidoDelMismoVendedor() {
+        adapter.guardar(productoNuevo("v-1", "Teclado"));
+
+        assertThrows(ProductoDuplicadoException.class, () -> adapter.guardar(productoNuevo("v-1", "TECLADO")));
+        assertDoesNotThrow(() -> adapter.guardar(productoNuevo("v-2", "Teclado")));
+        assertEquals(2, mongoTemplate.getCollection(COLECCION).countDocuments());
+    }
+
+    private static Producto productoNuevo(String vendedorId, String nombre) {
+        return new Producto(null, vendedorId, nombre, "", new BigDecimal("10"), 1, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento());
     }
 }
