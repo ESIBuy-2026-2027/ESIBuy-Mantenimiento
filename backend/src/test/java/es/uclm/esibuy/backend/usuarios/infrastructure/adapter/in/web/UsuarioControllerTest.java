@@ -1255,4 +1255,22 @@ class UsuarioControllerTest {
         verify(registroUsuario).registrarVendedor(comando.capture());
         assertEquals("avatar3", comando.getValue().imagenPerfil());
     }
+
+    // Fallos de la demo del Sprint 1: el listado de clientes y administradores no ordenaba (HU19).
+
+    @Test
+    @DisplayName("HU19-CP11: el listado de usuarios acepta el orden y el sentido, como el de vendedores")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void elListadoDeUsuariosAceptaOrdenYSentido() throws Exception {
+        when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(java.util.List.of(), 0, 10, 0));
+
+        mockMvc.perform(get("/api/admin/usuarios")
+                        .param("role", "CLIENTE")
+                        .param("sort", "status")
+                        .param("order", "desc"))
+                .andExpect(status().isOk());
+
+        verify(listadoUsuarios).listar(new ListarUsuariosQuery(
+                null, Rol.CLIENTE, null, 0, 10, ListarUsuariosQuery.Orden.ESTADO, true));
+    }
 }
