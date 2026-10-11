@@ -11,6 +11,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPor
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
@@ -78,6 +79,9 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
         exigirPrivacidadAceptada(comando.aceptaPrivacidad());
         if (usuarioRepository.existePorCorreo(email.valor())) {
             throw new CorreoYaRegistradoException("El correo ya está registrado");
+        }
+        if (usuarioRepository.existePorNombreComercial(comando.nombreComercial())) {
+            throw new NombreComercialYaRegistradoException("El nombre comercial ya está registrado");
         }
         exigirDniLibre(comando.dni());
 
