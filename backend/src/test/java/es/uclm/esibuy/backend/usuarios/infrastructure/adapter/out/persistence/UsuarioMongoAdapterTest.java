@@ -589,4 +589,28 @@ class UsuarioMongoAdapterTest {
         assertEquals(List.of("Álvaro", "ana", "Beatriz"),
                 resultado.usuarios().stream().map(u -> u.getDatosPersonales().nombre()).toList());
     }
+
+    @Test
+    @DisplayName("HU26-CP06: el adaptador filtra los vendedores por su categoría principal")
+    void filtraVendedoresPorCategoria() {
+        usuarioMongoRepository.saveAll(List.of(
+                vendedorDeCategoria("tecno@esibuy.test", "cat-1"),
+                vendedorDeCategoria("hogar@esibuy.test", "cat-2"),
+                vendedorDeCategoria("moda@esibuy.test", "cat-1")));
+
+        UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(
+                null, Rol.VENDEDOR, null, "cat-1", 0, 10, null));
+
+        assertEquals(2, resultado.totalElementos());
+        assertTrue(resultado.usuarios().stream()
+                .allMatch(u -> "cat-1".equals(u.getDatosVendedor().categoriaPrincipalId())));
+    }
+
+    private static UsuarioDocument vendedorDeCategoria(String email, String categoriaId) {
+        UsuarioDocument doc = vendedorLlamado(email, "Nombre");
+        doc.setNombreComercial("Tienda " + email);
+        doc.setCategoriaPrincipalId(categoriaId);
+        doc.setDni("0000000" + (Math.abs(email.hashCode()) % 10) + "B");
+        return doc;
+    }
 }

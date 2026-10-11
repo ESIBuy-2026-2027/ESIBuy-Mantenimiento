@@ -1273,4 +1273,19 @@ class UsuarioControllerTest {
         verify(listadoUsuarios).listar(new ListarUsuariosQuery(
                 null, Rol.CLIENTE, null, 0, 10, ListarUsuariosQuery.Orden.ESTADO, true));
     }
+
+    // Fallos de la demo del Sprint 1: el listado de vendedores ignoraba la categoría (HU26).
+
+    @Test
+    @DisplayName("HU26-CP06: el listado de vendedores filtra por categoría")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void elListadoDeVendedoresFiltraPorCategoria() throws Exception {
+        when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(java.util.List.of(), 0, 10, 0));
+
+        mockMvc.perform(get("/api/admin/sellers").param("category", "cat-1"))
+                .andExpect(status().isOk());
+
+        verify(listadoUsuarios).listar(new ListarUsuariosQuery(
+                null, Rol.VENDEDOR, null, "cat-1", 0, 10, null));
+    }
 }
