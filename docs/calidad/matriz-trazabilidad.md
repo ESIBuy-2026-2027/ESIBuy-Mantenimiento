@@ -157,11 +157,11 @@ Notas:
 | HU1-CP17 | `PoliticaContrasenasTest` | `aceptaLetrasConTildeYEnie` | Dominio | AB#239 | PR #87 | ✅ |
 | HU1-CP17 | `PoliticaContrasenasTest` | `aceptaElEspacioComoSimbolo` | Dominio | AB#239 | PR #87 | ✅ |
 | HU1-CP17 | `RegistroUsuarioServiceTest` | `rechazaContrasenaSinSimboloYNoGuardaNada` | Aplicación | AB#239 | PR #87 | ✅ |
-| HU1-CP18 | `EmailTest` | `guardaElEmailEnMinusculas` | Dominio | AB#240 | PR por abrir | 🔍 |
-| HU1-CP18 | `EmailTest` | `quitaLosEspaciosDeLosExtremos` | Dominio | AB#240 | PR por abrir | 🔍 |
-| HU1-CP18 | `EmailTest` | `dosEmailsQueSoloDifierenEnMayusculasSonIguales` | Dominio | AB#240 | PR por abrir | 🔍 |
-| HU1-CP18 | `RegistroUsuarioServiceTest` | `rechazaUnCorreoYaRegistradoAunqueCambienLasMayusculas` | Aplicación | AB#240 | PR por abrir | 🔍 |
-| HU1-CP18 | `RegistroUsuarioServiceTest` | `guardaElEmailNormalizado` | Aplicación | AB#240 | PR por abrir | 🔍 |
+| HU1-CP18 | `EmailTest` | `guardaElEmailEnMinusculas` | Dominio | AB#240 | PR #92 | 🔍 |
+| HU1-CP18 | `EmailTest` | `quitaLosEspaciosDeLosExtremos` | Dominio | AB#240 | PR #92 | 🔍 |
+| HU1-CP18 | `EmailTest` | `dosEmailsQueSoloDifierenEnMayusculasSonIguales` | Dominio | AB#240 | PR #92 | 🔍 |
+| HU1-CP18 | `RegistroUsuarioServiceTest` | `rechazaUnCorreoYaRegistradoAunqueCambienLasMayusculas` | Aplicación | AB#240 | PR #92 | 🔍 |
+| HU1-CP18 | `RegistroUsuarioServiceTest` | `guardaElEmailNormalizado` | Aplicación | AB#240 | PR #92 | 🔍 |
 
 ---
 
@@ -552,15 +552,15 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU22-CP03 | El administrador edita los datos de un vendedor (nombre, apellidos e imagen) | Unitario | 1 | ✅ Pasa |
 | HU22-CP04 | El email, la contraseña, el estado y el rol no cambian aunque lleguen en el cuerpo | Unitario + integración (capa web) | 2 | ✅ Pasa |
 | HU22-CP05 | Rechaza datos no válidos (400): sin rol, nombre o apellidos no válidos, DNI mal formado o cliente menor de edad; no guarda nada | Unitario + integración (capa web) | 7 | ✅ Pasa |
-| HU22-CP06 | Rechaza un DNI que ya es de otra cuenta (409 `DNI_ALREADY_REGISTERED`), también al pasar a cliente; conservar el propio DNI no cuenta | Unitario + integración | 5 | ✅ Pasa (4) · 🔍 En revisión (1, PR por abrir) |
+| HU22-CP06 | Rechaza un DNI que ya es de otra cuenta (409 `DNI_ALREADY_REGISTERED`), también al pasar a cliente; conservar el propio DNI no cuenta | Unitario + integración | 5 | ✅ Pasa (4) · 🔍 En revisión (1, PR #92) |
 | HU22-CP07 | Editar un usuario que no existe devuelve 404 | Unitario + integración (capa web) | 2 | ✅ Pasa |
 | HU22-CP08 | Solo un administrador con sesión y token CSRF puede editar usuarios (401 / 403) | Integración (capa web) | 3 | ✅ Pasa |
-| HU22-CP09 | El administrador cambia el rol de una cuenta entre cliente y administrador con los datos del rol nuevo; al dejar de ser cliente se borran sus datos de cliente, también en la base de datos | Unitario + integración | 7 | 🔍 En revisión (PR por abrir) |
-| HU22-CP10 | Una cuenta pendiente que pasa a administrador queda activa (una desactivada sigue desactivada) | Unitario + integración | 3 | 🔍 En revisión (PR por abrir) |
-| HU22-CP11 | Un administrador no puede cambiar su propio rol (409 `CANNOT_CHANGE_OWN_ROLE`), pero sí editar sus propios datos | Unitario + integración (capa web) | 3 | 🔍 En revisión (PR por abrir) |
-| HU22-CP12 | No se puede degradar al último administrador activo (409 `LAST_ACTIVE_ADMIN`); sí si queda otro activo o si el degradado no está activo | Unitario + integración (capa web) | 4 | 🔍 En revisión (PR por abrir) |
-| HU22-CP13 | Pasar una cuenta a vendedor se rechaza (400) mientras no existan los datos del vendedor | Unitario | 1 | 🔍 En revisión (PR por abrir) |
-| HU22-CP14 | Si al usuario en sesión le cambian el rol, se invalida su sesión y responde 401 | Unitario | 1 | 🔍 En revisión (PR por abrir) |
+| HU22-CP09 | El administrador cambia el rol de una cuenta entre cliente y administrador con los datos del rol nuevo; al dejar de ser cliente se borran sus datos de cliente, también en la base de datos | Unitario + integración | 7 | 🔍 En revisión |
+| HU22-CP10 | Una cuenta pendiente que pasa a administrador queda activa (una desactivada sigue desactivada) | Unitario + integración | 3 | 🔍 En revisión |
+| HU22-CP11 | Un administrador no puede cambiar su propio rol (409 `CANNOT_CHANGE_OWN_ROLE`), pero sí editar sus propios datos | Unitario + integración (capa web) | 3 | 🔍 En revisión |
+| HU22-CP12 | No se puede degradar al último administrador activo (409 `LAST_ACTIVE_ADMIN`); sí si queda otro activo o si el degradado no está activo | Unitario + integración (capa web) | 4 | 🔍 En revisión |
+| HU22-CP13 | Pasar una cuenta a vendedor se rechaza (400) mientras no existan los datos del vendedor | Unitario | 1 | 🔍 En revisión |
+| HU22-CP14 | Si al usuario en sesión le cambian el rol, se invalida su sesión y responde 401 | Unitario | 1 | 🔍 En revisión |
 
 Notas:
 - **HU22-CP01 a CP08:** casos propuestos en la T42/T44 (AB#42, AB#44) a partir del contrato del frontend (`frontend/docs/hu22-editar-usuario.md`). Pendientes de confirmar con el equipo y de añadir a la HU22 en Azure Boards. Se desarrollaron con TDD (ciclos rojo, verde y refactor); los de CP03, CP04, CP06 (persistencia) y CP08 son tests de protección sobre código que ya existía y pasaron a la primera.
@@ -622,31 +622,31 @@ Observación ajena a la HU22, vista en la verificación: las fechas de nacimient
 | HU22-CP06 | `AdministracionUsuariosServiceTest` | `editarUnClienteQueConservaSuDniNoLoComprueba` | Aplicación | AB#44 | PR #82 | ✅ |
 | HU22-CP06 | `UsuarioControllerTest` | `editarConElDniDeOtraCuentaDevuelve409` | Infraestructura | AB#44 | PR #82 | ✅ |
 | HU22-CP06 | `UsuarioMongoAdapterTest` | `rechazaEditarUnClienteConElDniDeOtroEnLaBaseDeDatos` | Infraestructura | AB#44 | PR #82 | ✅ |
-| HU22-CP06 | `AdministracionUsuariosServiceTest` | `rechazaPasarAClienteConElDniDeOtraCuenta` | Aplicación | AB#43 | PR por abrir | 🔍 |
+| HU22-CP06 | `AdministracionUsuariosServiceTest` | `rechazaPasarAClienteConElDniDeOtraCuenta` | Aplicación | AB#43 | PR #92 | 🔍 |
 | HU22-CP07 | `AdministracionUsuariosServiceTest` | `rechazaEditarUnUsuarioQueNoExiste` | Aplicación | AB#44 | PR #82 | ✅ |
 | HU22-CP07 | `UsuarioControllerTest` | `editarUnUsuarioInexistenteDevuelve404` | Infraestructura | AB#44 | PR #82 | ✅ |
 | HU22-CP08 | `UsuarioControllerTest` | `unNoAdministradorNoPuedeEditarUsuarios` (cliente y vendedor) | Infraestructura | AB#44 | PR #82 | ✅ |
 | HU22-CP08 | `UsuarioControllerTest` | `editarSinSesionEstaProtegido` | Infraestructura | AB#44 | PR #82 | ✅ |
 | HU22-CP08 | `UsuarioControllerTest` | `editarSinTokenCsrfSeRechaza` | Infraestructura | AB#44 | PR #82 | ✅ |
-| HU22-CP09 | `UsuarioTest` | `cambiarRolDeClienteAAdministradorBorraLosDatosDeCliente` | Dominio | AB#43 | PR por abrir | 🔍 |
-| HU22-CP09 | `UsuarioTest` | `cambiarRolDeAdministradorAClienteGuardaLosDatosDeCliente` | Dominio | AB#43 | PR por abrir | 🔍 |
-| HU22-CP09 | `UsuarioTest` | `cambiarRolAClienteExigeDatosDeClienteValidos` | Dominio | AB#43 | PR por abrir | 🔍 |
-| HU22-CP09 | `AdministracionUsuariosServiceTest` | `editarPasaUnClienteAAdministrador` | Aplicación | AB#43 | PR por abrir | 🔍 |
-| HU22-CP09 | `AdministracionUsuariosServiceTest` | `editarPasaUnAdministradorACliente` | Aplicación | AB#43 | PR por abrir | 🔍 |
-| HU22-CP09 | `UsuarioControllerTest` | `cambioDeRolDevuelveLaFichaDelRolNuevo` | Infraestructura | AB#43 | PR por abrir | 🔍 |
-| HU22-CP09 | `UsuarioMongoAdapterTest` | `unClienteQuePasaAAdministradorPierdeSusDatosDeClienteEnLaBaseDeDatos` | Infraestructura | AB#43 | PR por abrir | 🔍 |
-| HU22-CP10 | `UsuarioTest` | `unaCuentaPendienteQuePasaAAdministradorQuedaActiva` | Dominio | AB#43 | PR por abrir | 🔍 |
-| HU22-CP10 | `UsuarioTest` | `unaCuentaDesactivadaQuePasaAAdministradorSigueDesactivada` | Dominio | AB#43 | PR por abrir | 🔍 |
-| HU22-CP10 | `UsuarioMongoAdapterTest` | `unaCuentaPendienteQuePasaAAdministradorQuedaActivaEnLaBaseDeDatos` | Infraestructura | AB#43 | PR por abrir | 🔍 |
-| HU22-CP11 | `AdministracionUsuariosServiceTest` | `rechazaQueUnAdministradorCambieSuPropioRol` | Aplicación | AB#43 | PR por abrir | 🔍 |
-| HU22-CP11 | `AdministracionUsuariosServiceTest` | `unAdministradorEditaSusPropiosDatos` | Aplicación | AB#43 | PR por abrir | 🔍 |
-| HU22-CP11 | `UsuarioControllerTest` | `cambiarElPropioRolDevuelve409` | Infraestructura | AB#43 | PR por abrir | 🔍 |
-| HU22-CP12 | `AdministracionUsuariosServiceTest` | `rechazaDegradarAlUltimoAdministradorActivo` | Aplicación | AB#43 | PR por abrir | 🔍 |
-| HU22-CP12 | `AdministracionUsuariosServiceTest` | `degradaAUnAdministradorSiQuedaOtroActivo` | Aplicación | AB#43 | PR por abrir | 🔍 |
-| HU22-CP12 | `AdministracionUsuariosServiceTest` | `degradarAUnAdministradorDesactivadoNoConsultaElConteo` | Aplicación | AB#43 | PR por abrir | 🔍 |
-| HU22-CP12 | `UsuarioControllerTest` | `degradarAlUltimoAdministradorActivoDevuelve409` | Infraestructura | AB#43 | PR por abrir | 🔍 |
-| HU22-CP13 | `AdministracionUsuariosServiceTest` | `rechazaPasarUnaCuentaAVendedor` | Aplicación | AB#43 | PR por abrir (sustituye a `rechazaEditarConUnRolDistintoDelActual`, PR #82) | 🔍 |
-| HU22-CP14 | `CuentaActivaFilterTest` | `rolCambiadoInvalidaLaSesionYDevuelve401` | Infraestructura | AB#43 | PR por abrir | 🔍 |
+| HU22-CP09 | `UsuarioTest` | `cambiarRolDeClienteAAdministradorBorraLosDatosDeCliente` | Dominio | AB#43 | PR #92 | 🔍 |
+| HU22-CP09 | `UsuarioTest` | `cambiarRolDeAdministradorAClienteGuardaLosDatosDeCliente` | Dominio | AB#43 | PR #92 | 🔍 |
+| HU22-CP09 | `UsuarioTest` | `cambiarRolAClienteExigeDatosDeClienteValidos` | Dominio | AB#43 | PR #92 | 🔍 |
+| HU22-CP09 | `AdministracionUsuariosServiceTest` | `editarPasaUnClienteAAdministrador` | Aplicación | AB#43 | PR #92 | 🔍 |
+| HU22-CP09 | `AdministracionUsuariosServiceTest` | `editarPasaUnAdministradorACliente` | Aplicación | AB#43 | PR #92 | 🔍 |
+| HU22-CP09 | `UsuarioControllerTest` | `cambioDeRolDevuelveLaFichaDelRolNuevo` | Infraestructura | AB#43 | PR #92 | 🔍 |
+| HU22-CP09 | `UsuarioMongoAdapterTest` | `unClienteQuePasaAAdministradorPierdeSusDatosDeClienteEnLaBaseDeDatos` | Infraestructura | AB#43 | PR #92 | 🔍 |
+| HU22-CP10 | `UsuarioTest` | `unaCuentaPendienteQuePasaAAdministradorQuedaActiva` | Dominio | AB#43 | PR #92 | 🔍 |
+| HU22-CP10 | `UsuarioTest` | `unaCuentaDesactivadaQuePasaAAdministradorSigueDesactivada` | Dominio | AB#43 | PR #92 | 🔍 |
+| HU22-CP10 | `UsuarioMongoAdapterTest` | `unaCuentaPendienteQuePasaAAdministradorQuedaActivaEnLaBaseDeDatos` | Infraestructura | AB#43 | PR #92 | 🔍 |
+| HU22-CP11 | `AdministracionUsuariosServiceTest` | `rechazaQueUnAdministradorCambieSuPropioRol` | Aplicación | AB#43 | PR #92 | 🔍 |
+| HU22-CP11 | `AdministracionUsuariosServiceTest` | `unAdministradorEditaSusPropiosDatos` | Aplicación | AB#43 | PR #92 | 🔍 |
+| HU22-CP11 | `UsuarioControllerTest` | `cambiarElPropioRolDevuelve409` | Infraestructura | AB#43 | PR #92 | 🔍 |
+| HU22-CP12 | `AdministracionUsuariosServiceTest` | `rechazaDegradarAlUltimoAdministradorActivo` | Aplicación | AB#43 | PR #92 | 🔍 |
+| HU22-CP12 | `AdministracionUsuariosServiceTest` | `degradaAUnAdministradorSiQuedaOtroActivo` | Aplicación | AB#43 | PR #92 | 🔍 |
+| HU22-CP12 | `AdministracionUsuariosServiceTest` | `degradarAUnAdministradorDesactivadoNoConsultaElConteo` | Aplicación | AB#43 | PR #92 | 🔍 |
+| HU22-CP12 | `UsuarioControllerTest` | `degradarAlUltimoAdministradorActivoDevuelve409` | Infraestructura | AB#43 | PR #92 | 🔍 |
+| HU22-CP13 | `AdministracionUsuariosServiceTest` | `rechazaPasarUnaCuentaAVendedor` | Aplicación | AB#43 | PR #92 (sustituye a `rechazaEditarConUnRolDistintoDelActual`, PR #82) | 🔍 |
+| HU22-CP14 | `CuentaActivaFilterTest` | `rolCambiadoInvalidaLaSesionYDevuelve401` | Infraestructura | AB#43 | PR #92 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `UsuarioTest`: `usuarios/domain/model/` (JUnit, sin Spring)
@@ -878,18 +878,18 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU32-CP01 | `AutenticacionServiceTest` | `consultaElIdDelUsuarioEnSesion` | Aplicación | AB#184 | PR por abrir | 🔍 |
-| HU32-CP01 | `UsuarioEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#184 | PR por abrir | 🔍 |
-| HU32-CP01 | `ListadoProductosServiceTest` | `listaLosProductosDelVendedorDeLaSesion` | Aplicación | AB#184 | PR por abrir | 🔍 |
-| HU32-CP01 | `ProductoMongoAdapterTest` | `listarPorVendedorSoloDevuelveLosSuyos` | Infraestructura | AB#184 | PR por abrir | 🔍 |
-| HU32-CP01 | `ProductoControllerTest` | `vendedorRecibeSuListado` | Infraestructura | AB#184 | PR por abrir | 🔍 |
-| HU32-CP02 | `ProductoMongoAdapterTest` | `listarPorVendedorBuscaPorNombreSinDistinguirMayusculas` | Infraestructura | AB#184 | PR por abrir | 🔍 |
-| HU32-CP02 | `ProductoMongoAdapterTest` | `listarPorVendedorFiltraPorCategoriaYBusqueda` | Infraestructura | AB#184 | PR por abrir | 🔍 |
-| HU32-CP03 | `ProductoMongoAdapterTest` | `listarPorVendedorPaginaDelMasRecienteAlMasAntiguo` | Infraestructura | AB#184 | PR por abrir | 🔍 |
-| HU32-CP03 | `ProductoControllerTest` | `listadoVacioTieneCeroPaginas` | Infraestructura | AB#184 | PR por abrir | 🔍 |
-| HU32-CP04 | `ProductoControllerTest` | `paginaOTamanoMenorQueUnoDevuelve400` (`page` y `size`) | Infraestructura | AB#184 | PR por abrir | 🔍 |
-| HU32-CP05 | `ProductoControllerTest` | `sinSesionDevuelve401` | Infraestructura | AB#184 | PR por abrir | 🔍 |
-| HU32-CP05 | `ProductoControllerTest` | `noVendedorNoVeElListado` (cliente y administrador) | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP01 | `AutenticacionServiceTest` | `consultaElIdDelUsuarioEnSesion` | Aplicación | AB#184 | PR #92 | 🔍 |
+| HU32-CP01 | `UsuarioEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#184 | PR #92 | 🔍 |
+| HU32-CP01 | `ListadoProductosServiceTest` | `listaLosProductosDelVendedorDeLaSesion` | Aplicación | AB#184 | PR #92 | 🔍 |
+| HU32-CP01 | `ProductoMongoAdapterTest` | `listarPorVendedorSoloDevuelveLosSuyos` | Infraestructura | AB#184 | PR #92 | 🔍 |
+| HU32-CP01 | `ProductoControllerTest` | `vendedorRecibeSuListado` | Infraestructura | AB#184 | PR #92 | 🔍 |
+| HU32-CP02 | `ProductoMongoAdapterTest` | `listarPorVendedorBuscaPorNombreSinDistinguirMayusculas` | Infraestructura | AB#184 | PR #92 | 🔍 |
+| HU32-CP02 | `ProductoMongoAdapterTest` | `listarPorVendedorFiltraPorCategoriaYBusqueda` | Infraestructura | AB#184 | PR #92 | 🔍 |
+| HU32-CP03 | `ProductoMongoAdapterTest` | `listarPorVendedorPaginaDelMasRecienteAlMasAntiguo` | Infraestructura | AB#184 | PR #92 | 🔍 |
+| HU32-CP03 | `ProductoControllerTest` | `listadoVacioTieneCeroPaginas` | Infraestructura | AB#184 | PR #92 | 🔍 |
+| HU32-CP04 | `ProductoControllerTest` | `paginaOTamanoMenorQueUnoDevuelve400` (`page` y `size`) | Infraestructura | AB#184 | PR #92 | 🔍 |
+| HU32-CP05 | `ProductoControllerTest` | `sinSesionDevuelve401` | Infraestructura | AB#184 | PR #92 | 🔍 |
+| HU32-CP05 | `ProductoControllerTest` | `noVendedorNoVeElListado` (cliente y administrador) | Infraestructura | AB#184 | PR #92 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AutenticacionServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
