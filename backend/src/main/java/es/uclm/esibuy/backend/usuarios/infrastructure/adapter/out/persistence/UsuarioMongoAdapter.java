@@ -77,6 +77,11 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
     }
 
     @Override
+    public boolean existePorNombreComercial(String nombreComercial) {
+        return repository.existsByNombreComercial(nombreComercial);
+    }
+
+    @Override
     public long contarAdministradoresActivos() {
         return repository.countByRolAndEstado("ADMINISTRADOR", "ACTIVO");
     }

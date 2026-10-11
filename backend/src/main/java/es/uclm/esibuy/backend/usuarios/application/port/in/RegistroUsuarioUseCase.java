@@ -4,4 +4,6 @@ public interface RegistroUsuarioUseCase {
 
     void registrarCliente(RegistrarClienteCommand comando);
 
+    void registrarVendedor(RegistrarVendedorCommand comando);
+
 }
