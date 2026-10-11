@@ -20,6 +20,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
 import org.springframework.dao.DuplicateKeyException;
@@ -80,6 +81,11 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
     @Override
     public boolean existePorDni(String dni) {
         return repository.existsByDni(dni);
+    }
+
+    @Override
+    public boolean existePorDniYRol(String dni, Rol rol) {
+        throw new UnsupportedOperationException("Pendiente (rojo)");
     }
 
     @Override

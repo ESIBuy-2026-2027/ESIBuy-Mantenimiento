@@ -4,6 +4,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
@@ -169,7 +170,7 @@ class AdministracionUsuariosServiceTest {
     @DisplayName("HU22-CP06: editar un cliente con el DNI de otra cuenta falla y no guarda nada")
     void rechazaEditarUnClienteConElDniDeOtraCuenta() {
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
-        when(usuarioRepository.existePorDni("10004119A")).thenReturn(true);
+        when(usuarioRepository.existePorDniYRol("10004119A", Rol.CLIENTE)).thenReturn(true);
         EditarUsuarioCommand dniDeOtro = new EditarUsuarioCommand("Lucía", "Torres Vega", null,
                 "10004119A", null, LocalDate.of(1996, 5, 20), TipoCliente.ESTANDAR, null, null);
 
@@ -187,8 +188,47 @@ class AdministracionUsuariosServiceTest {
 
         servicio.editar("u-1", mismoDni);
 
-        verify(usuarioRepository, never()).existePorDni(any());
+        verify(usuarioRepository, never()).existePorDniYRol(any(), any());
         verify(usuarioRepository).guardar(cliente);
+    }
+
+    @Test
+    @DisplayName("HU22-CP06: editar un vendedor con el DNI de otro vendedor falla y no guarda nada")
+    void rechazaEditarUnVendedorConElDniDeOtroVendedor() {
+        when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(vendedorVera()));
+        when(usuarioRepository.existePorDniYRol("10004119A", Rol.VENDEDOR)).thenReturn(true);
+        EditarUsuarioCommand dniDeOtro = new EditarUsuarioCommand("Vera", "Vendedora", null,
+                "10004119A", null, null, null, "Tienda Vera", "cat-1");
+
+        assertThrows(DniYaRegistradoException.class, () -> servicio.editar("u-4", dniDeOtro));
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU22-CP06: editar un vendedor con el nombre comercial de otro falla y no guarda nada")
+    void rechazaEditarUnVendedorConElNombreComercialDeOtro() {
+        when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(vendedorVera()));
+        when(usuarioRepository.existePorNombreComercial("TecnoVera")).thenReturn(true);
+        EditarUsuarioCommand nombreDeOtro = new EditarUsuarioCommand("Vera", "Vendedora", null,
+                "87654321X", null, null, null, "TecnoVera", "cat-1");
+
+        assertThrows(NombreComercialYaRegistradoException.class, () -> servicio.editar("u-4", nombreDeOtro));
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU22-CP06: editar un vendedor que conserva su DNI y su nombre comercial no los comprueba y lo guarda")
+    void editarUnVendedorQueConservaSuDniYSuNombreComercialNoLosComprueba() {
+        Usuario vendedor = vendedorVera();
+        when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(vendedor));
+        EditarUsuarioCommand mismosDatos = new EditarUsuarioCommand("Vera", "Vendedora Ruiz", null,
+                "87654321X", "620023757", null, null, "Tienda Vera", "cat-2");
+
+        servicio.editar("u-4", mismosDatos);
+
+        verify(usuarioRepository, never()).existePorDniYRol(any(), any());
+        verify(usuarioRepository, never()).existePorNombreComercial(any());
+        verify(usuarioRepository).guardar(vendedor);
     }
 
     @Test

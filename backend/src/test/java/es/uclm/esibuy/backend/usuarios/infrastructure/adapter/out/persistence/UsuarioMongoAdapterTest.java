@@ -105,12 +105,13 @@ class UsuarioMongoAdapterTest {
     }
 
     @Test
-    @DisplayName("HU1-CP16: existePorDni devuelve true si el DNI ya está guardado y false si no")
-    void existePorDniDistingueLosDniGuardados() {
+    @DisplayName("HU1-CP16: existePorDniYRol solo encuentra el DNI guardado en una cuenta de ese rol")
+    void existePorDniYRolDistingueLosDniGuardadosPorRol() {
         adapter.guardar(cliente("juan@uclm.es", "hash-1"));
 
-        assertTrue(adapter.existePorDni("12345678Z"));
-        assertFalse(adapter.existePorDni("87654321X"));
+        assertTrue(adapter.existePorDniYRol("12345678Z", Rol.CLIENTE));
+        assertFalse(adapter.existePorDniYRol("12345678Z", Rol.VENDEDOR));   // índice rol_dni: único por rol
+        assertFalse(adapter.existePorDniYRol("87654321X", Rol.CLIENTE));
     }
 
     @Test
