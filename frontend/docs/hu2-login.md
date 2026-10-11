@@ -175,6 +175,7 @@ Todas las rutas son relativas a `frontend/src/`.
 |---|---|---|
 | `POST /api/auth/login` | `{ email, password }` | 200; envía el código al correo |
 | `POST /api/auth/verify-email-code` | `{ code }` | 200 |
+| `POST /api/auth/enroll-authenticator` | | 200 `{ qr }`: imagen PNG del QR en *data URI*. Solo tras un `verify-email-code` que devolvió `nextStep: "enrollAuthenticator"` (T20) |
 | `POST /api/auth/verify-authenticator-code` | `{ code }` | 200 con el usuario y cookie de sesión |
 | `GET /api/auth/me` | | 200 con el usuario, o 401 sin sesión |
 | `POST /api/auth/logout` | | 204 |
@@ -191,7 +192,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | 429 | Demasiados intentos |
 | 5xx o sin respuesta | "No se ha podido conectar con el servidor" |
 
-**Authenticator en el backend:** el backend valida el código TOTP (RFC 6238) con el secreto de cada usuario, que nunca llega al frontend. Queda pendiente definir cómo se **da de alta** el secreto (QR en el primer acceso o en el registro): el frontend aún no tiene esa pantalla.
+**Authenticator en el backend:** el backend valida el código TOTP (RFC 6238) con el secreto de cada usuario, que nunca llega al frontend. **Alta del secreto (T20):** en el primer login. Si el usuario aún no tiene Authenticator, `verify-email-code` responde `{ nextStep: "enrollAuthenticator" }`; el frontend pide el QR a `enroll-authenticator`, lo muestra (`EnrollAuthenticatorStep.jsx`) y el primer código correcto en `verify-authenticator-code` confirma el alta y abre la sesión. En los mocks, el usuario `nuevo@esibuy.test` no tiene Authenticator.
 
 **Puntos pendientes de acordar con backend:**
 

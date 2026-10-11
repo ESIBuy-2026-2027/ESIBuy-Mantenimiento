@@ -56,7 +56,7 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
         if (!comando.aceptaPrivacidad()) {
             throw new UsuarioInvalidoException("Es obligatorio aceptar la política de privacidad");
         }
-        if (usuarioRepository.existePorCorreo(comando.email())) {
+        if (usuarioRepository.existePorCorreo(email.valor())) {   // con el email normalizado (T240)
             throw new CorreoYaRegistradoException("El correo ya está registrado");
         }
         if (usuarioRepository.existePorDni(comando.dni())) {

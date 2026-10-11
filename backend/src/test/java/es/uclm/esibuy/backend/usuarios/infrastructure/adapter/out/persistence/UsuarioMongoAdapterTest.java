@@ -12,6 +12,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import java.time.LocalDate;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
@@ -195,6 +196,40 @@ class UsuarioMongoAdapterTest {
     @DisplayName("HU24-CP03: buscarPorId devuelve vacío si el usuario no existe")
     void buscarPorIdDevuelveVacioSiNoExiste() {
         assertTrue(adapter.buscarPorId("000000000000000000000000").isEmpty());
+    }
+
+    @Test
+    @DisplayName("HU22-CP01: guardar un usuario editado actualiza su documento sin crear otro")
+    void guardarUnUsuarioEditadoActualizaSuDocumento() {
+        adapter.guardar(cliente("juan@uclm.es", "hash-simulado"));
+        Usuario guardado = adapter.buscarPorCorreo("juan@uclm.es").orElseThrow();
+        DatosCliente nuevosDatosCliente = new DatosCliente(TipoCliente.ESTANDAR, new Dni("10004119A"),
+                LocalDate.of(1978, 4, 13), new Telefono("620023757"));
+
+        guardado.modificarDatos(new DatosPersonales("Carla", "Moreno Gil", "avatar1"), nuevosDatosCliente, HOY);
+        adapter.guardar(guardado);
+
+        assertEquals(1, usuarioMongoRepository.count());
+        Usuario leido = adapter.buscarPorId(guardado.getId()).orElseThrow();
+        assertEquals(new DatosPersonales("Carla", "Moreno Gil", "avatar1"), leido.getDatosPersonales());
+        assertEquals(nuevosDatosCliente, leido.getDatosCliente());
+        assertEquals("juan@uclm.es", leido.getEmail().valor());
+    }
+
+    @Test
+    @DisplayName("HU22-CP06: la base de datos rechaza editar un cliente con el DNI de otro cliente")
+    void rechazaEditarUnClienteConElDniDeOtroEnLaBaseDeDatos() {
+        // Sin pasar por existePorDni (p. ej. dos ediciones simultáneas): solo el índice rol_dni lo para.
+        adapter.guardar(cliente("juan@uclm.es", "hash-1", "12345678Z"));
+        adapter.guardar(cliente("ana@uclm.es", "hash-2", "87654321X"));
+        Usuario ana = adapter.buscarPorCorreo("ana@uclm.es").orElseThrow();
+        DatosCliente conDniDeJuan = new DatosCliente(TipoCliente.PREMIUM, new Dni("12345678Z"),
+                LocalDate.of(1996, 5, 20), null);
+
+        ana.modificarDatos(ana.getDatosPersonales(), conDniDeJuan, HOY);
+
+        assertThrows(DniYaRegistradoException.class, () -> adapter.guardar(ana));
+        assertEquals("87654321X", adapter.buscarPorCorreo("ana@uclm.es").orElseThrow().getDatosCliente().dni().valor());
     }
 
     @Test
@@ -396,5 +431,92 @@ class UsuarioMongoAdapterTest {
 
         assertEquals(1, resultado.totalElementos());
         assertEquals("bloqueado@esibuy.test", resultado.usuarios().get(0).getEmail().valor());
+    }
+
+    @Test
+    @DisplayName("HU26-CP02: el adaptador ordena por estado ascendente: pendientes, activos y desactivados")
+    void listarOrdenaPorEstadoAscendente() {
+        guardarVendedoresConEstadosDesordenados();
+
+        UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(
+                null, Rol.VENDEDOR, null, 0, 10, ListarUsuariosQuery.Orden.ESTADO, false));
+
+        assertEquals(List.of("PENDIENTE", "ACTIVO", "DESACTIVADO"), estados(resultado));
+    }
+
+    @Test
+    @DisplayName("HU26-CP02: el adaptador ordena por estado descendente: desactivados, activos y pendientes")
+    void listarOrdenaPorEstadoDescendente() {
+        guardarVendedoresConEstadosDesordenados();
+
+        UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(
+                null, Rol.VENDEDOR, null, 0, 10, ListarUsuariosQuery.Orden.ESTADO, true));
+
+        assertEquals(List.of("DESACTIVADO", "ACTIVO", "PENDIENTE"), estados(resultado));
+    }
+
+    @Test
+    @DisplayName("HU26-CP02: el adaptador ordena por nombre")
+    void listarOrdenaPorNombre() {
+        usuarioMongoRepository.saveAll(List.of(
+                vendedorLlamado("carla@esibuy.test", "Carla"),
+                vendedorLlamado("ana@esibuy.test", "Ana"),
+                vendedorLlamado("bruno@esibuy.test", "Bruno")));
+
+        UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(
+                null, Rol.VENDEDOR, null, 0, 10, ListarUsuariosQuery.Orden.NOMBRE, false));
+
+        assertEquals(List.of("Ana", "Bruno", "Carla"),
+                resultado.usuarios().stream().map(u -> u.getDatosPersonales().nombre()).toList());
+    }
+
+    // Se guardan en un orden que no coincide con el esperado, para que el orden lo ponga la consulta.
+    private void guardarVendedoresConEstadosDesordenados() {
+        UsuarioDocument activo = documento("activo@esibuy.test", "hash-1", "VENDEDOR");
+        activo.setEstado("ACTIVO");
+        UsuarioDocument desactivado = documento("desactivado@esibuy.test", "hash-2", "VENDEDOR");
+        desactivado.setEstado("DESACTIVADO");
+        UsuarioDocument pendiente = documento("pendiente@esibuy.test", "hash-3", "VENDEDOR");
+        pendiente.setEstado("PENDIENTE");
+        usuarioMongoRepository.saveAll(List.of(activo, desactivado, pendiente));
+    }
+
+    private static UsuarioDocument vendedorLlamado(String email, String nombre) {
+        UsuarioDocument doc = documento(email, "hash", "VENDEDOR");
+        doc.setNombre(nombre);
+        doc.setEstado("ACTIVO");
+        return doc;
+    }
+
+    private static List<String> estados(UsuarioPage pagina) {
+        return pagina.usuarios().stream().map(Usuario::getEstado).toList();
+    }
+
+    @Test
+    @DisplayName("HU23-CP04: contarAdministradoresActivos solo cuenta los administradores en estado ACTIVO")
+    void contarAdministradoresActivosSoloCuentaLosAdministradoresActivos() {
+        usuarioMongoRepository.saveAll(List.of(
+                documentoConEstado("ana@esibuy.test", "ADMINISTRADOR", "ACTIVO"),
+                documentoConEstado("ada@esibuy.test", "ADMINISTRADOR", "ACTIVO"),
+                documentoConEstado("diego@esibuy.test", "ADMINISTRADOR", "DESACTIVADO"),
+                documentoConEstado("carlos@esibuy.test", "CLIENTE", "ACTIVO"),
+                documentoConEstado("vera@esibuy.test", "VENDEDOR", "ACTIVO")
+        ));
+
+        assertEquals(2, adapter.contarAdministradoresActivos());
+    }
+
+    @Test
+    @DisplayName("HU23-CP04: contarAdministradoresActivos devuelve 0 si no hay administradores activos")
+    void contarAdministradoresActivosDevuelveCeroSinAdministradoresActivos() {
+        usuarioMongoRepository.save(documentoConEstado("diego@esibuy.test", "ADMINISTRADOR", "DESACTIVADO"));
+
+        assertEquals(0, adapter.contarAdministradoresActivos());
+    }
+
+    private static UsuarioDocument documentoConEstado(String email, String rol, String estado) {
+        UsuarioDocument doc = documento(email, "hash-simulado", rol);
+        doc.setEstado(estado);
+        return doc;
     }
 }

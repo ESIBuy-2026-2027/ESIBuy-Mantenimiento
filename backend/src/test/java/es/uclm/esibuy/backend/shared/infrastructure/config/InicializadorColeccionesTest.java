@@ -169,13 +169,15 @@ class InicializadorColeccionesTest {
     }
 
     @Test
-    @DisplayName("Validación de productos: precio mayor que cero, stock no negativo y nombre obligatorio")
+    @DisplayName("Validación de productos: precio mayor que cero, stock no negativo, y nombre y categoría obligatorios")
     void validaProductos() {
         acepta("productos", producto(29.99, 10));
         rechaza(VALIDACION, "productos", producto(0, 1));
         rechaza(VALIDACION, "productos", producto(5, -1));
         rechaza(VALIDACION, "productos", producto(5, 1).append("precio", "29.99"));
         rechaza(VALIDACION, "productos", new Document("vendedorId", "v1").append("precio", 5).append("stock", 1));
+        rechaza(VALIDACION, "productos", producto(5, 1).append("categoriaId", null));
+        rechaza(VALIDACION, "productos", producto(5, 1).append("categoriaId", ""));
     }
 
     @Test
@@ -262,7 +264,7 @@ class InicializadorColeccionesTest {
 
     private static Document producto(double precio, int stock) {
         return new Document("vendedorId", "v1").append("nombre", "Teclado").append("precio", precio)
-                .append("stock", stock);
+                .append("stock", stock).append("categoriaId", "cat-1");
     }
 
     private static Document descuento(boolean activo, Integer porcentaje) {

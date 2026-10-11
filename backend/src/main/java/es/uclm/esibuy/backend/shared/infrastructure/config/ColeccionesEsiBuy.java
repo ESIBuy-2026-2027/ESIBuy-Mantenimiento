@@ -49,6 +49,7 @@ final class ColeccionesEsiBuy {
     private static final String CANTIDAD = "cantidad";
     private static final String PRODUCTO_ID = "productoId";
     private static final String TOKEN_HASH = "tokenHash";
+    private static final String CATEGORIA_ID = "categoriaId";
 
     /** Una colección: su nombre, su validación y los índices que no vienen de anotaciones. */
     record Coleccion(String nombre, MongoJsonSchema esquema, List<Index> indices) {
@@ -64,7 +65,8 @@ final class ColeccionesEsiBuy {
 
     // 1. usuarios: identidad, rol, estado y perfil, con los campos del modelo en la raíz del documento,
     // también los propios de vendedores y administradores. El índice único de email lo declara UsuarioDocument
-    // (@Indexed); los de dni y nombreComercial van aquí porque UsuarioDocument todavía no tiene esos campos.
+    // (@Indexed); los de dni y nombreComercial van aquí: el del dni es compuesto con el rol, y UsuarioDocument
+    // todavía no tiene nombreComercial.
     private static Coleccion usuarios() {
         return new Coleccion("usuarios", esquema(List.of("email", "passwordHash", "rol"),
                 textoNoVacio("email"),
@@ -149,8 +151,9 @@ final class ColeccionesEsiBuy {
     // 5. productos: catálogo y stock. Reglas del modelo: precio > 0, stock >= 0, nombre y vendedorId
     // obligatorios. Los descuentos siguen el formulario de producto del frontend (HU31): descuento y
     // descuentoPremium (MVP del Sprint 1) son {activo, porcentaje}, no un número como en el modelo.
+    // Una sola categoría por producto (decisión del equipo, T201): categoriaId obligatorio, no una lista.
     private static Coleccion productos() {
-        return new Coleccion("productos", esquema(List.of(VENDEDOR_ID, NOMBRE, "precio", "stock"),
+        return new Coleccion("productos", esquema(List.of(VENDEDOR_ID, NOMBRE, "precio", "stock", CATEGORIA_ID),
                 textoNoVacio(VENDEDOR_ID),
                 textoNoVacio(NOMBRE),
                 string("descripcion"),
@@ -159,14 +162,14 @@ final class ColeccionesEsiBuy {
                 descuento("descuento"),
                 descuento("descuentoPremium"),
                 importe("precioFinal"),
-                array("categoriaIds").items(JsonSchemaObject.string()),
+                textoNoVacio(CATEGORIA_ID),
                 string("imagen"),
                 string(ESTADO),
                 bool("visible"),
                 bool("disponible"),
                 number("valoracionMedia").gte(0).lte(5),
                 enteroNoNegativo("numeroValoraciones")),
-                List.of(indice(VENDEDOR_ID), indice("categoriaIds"), indice(NOMBRE), indice(ESTADO),
+                List.of(indice(VENDEDOR_ID), indice(CATEGORIA_ID), indice(NOMBRE), indice(ESTADO),
                         indice("visible")));
     }
 

@@ -29,7 +29,7 @@ async function rellenarFormularioVendedorValido() {
   await userEvent.type(screen.getByLabelText(/^nombre(?! comercial)/i), 'Luis')
   await userEvent.type(screen.getByLabelText(/apellidos/i), 'Pérez')
   await userEvent.type(screen.getByLabelText(/nombre comercial/i), 'Tienda Luis')
-  await userEvent.click(await screen.findByRole('checkbox', { name: /tecnología/i }))
+  await userEvent.click(await screen.findByRole('radio', { name: /tecnología/i }))
   await userEvent.type(screen.getByLabelText(/dni/i), '12345678Z')
   await userEvent.type(screen.getByLabelText(/email/i), 'luis@correo.com')
   await userEvent.type(screen.getByLabelText(/^password/i), 'Password123!')
@@ -118,32 +118,32 @@ describe('Register', () => {
     expect(screen.getByLabelText(/teléfono/i)).not.toBeRequired()
   })
 
-  it('register_alElegirVendedor_muestraUnaCasillaPorCategoriaYPermiteMarcarVarias', async () => {
+  it('register_alElegirVendedor_muestraUnaOpcionPorCategoriaYSoloPermiteElegirUna', async () => {
     await renderYElegirVendedor()
 
-    const tecnologia = await screen.findByRole('checkbox', { name: /tecnología/i })
-    const hogar = screen.getByRole('checkbox', { name: /hogar/i })
+    const tecnologia = await screen.findByRole('radio', { name: /tecnología/i })
+    const hogar = screen.getByRole('radio', { name: /hogar/i })
     await userEvent.click(tecnologia)
     await userEvent.click(hogar)
 
-    expect(tecnologia).toBeChecked()
     expect(hogar).toBeChecked()
+    expect(tecnologia).not.toBeChecked()
   })
 
   it('register_alElegirVendedor_permiteElegirUnAvatar', async () => {
     await renderYElegirVendedor()
 
-    expect(screen.getAllByRole('radio')).toHaveLength(3)
+    expect(screen.getAllByRole('radio', { name: /avatar/i })).toHaveLength(3)
 
     await userEvent.click(screen.getByRole('radio', { name: /avatar 2/i }))
 
     expect(screen.getByRole('radio', { name: /avatar 2/i })).toBeChecked()
   })
 
-  it('register_alElegirVendedor_marcaLasCategoriasComoObligatorias', async () => {
+  it('register_alElegirVendedor_marcaLaCategoriaComoObligatoria', async () => {
     await renderYElegirVendedor()
 
-    expect(screen.getByRole('group', { name: /categorías/i })).toHaveTextContent('*')
+    expect(screen.getByRole('group', { name: /categoría/i })).toHaveTextContent('*')
   })
 
   it('register_alEnviarFormularioVendedorVacio_muestraErroresDeCamposObligatoriosYDeCategoria', async () => {
@@ -151,7 +151,7 @@ describe('Register', () => {
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
     expect(screen.getAllByText(/obligatorio/i)).toHaveLength(7)
-    expect(screen.getByText(/al menos una categoría/i)).toBeInTheDocument()
+    expect(screen.getByText(/elige una categoría/i)).toBeInTheDocument()
   })
 
   it('register_alIntroducirDniInvalidoComoVendedor_muestraErrorDeFormato', async () => {
@@ -211,7 +211,7 @@ describe('Register', () => {
         nombre: 'Luis',
         nombreComercial: 'Tienda Luis',
         email: 'luis@correo.com',
-        categorias: ['cat-1'],
+        categoriaPrincipalId: 'cat-1',
         avatar: 'avatar2',
       })
     )

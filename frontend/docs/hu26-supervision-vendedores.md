@@ -17,7 +17,7 @@ Desde el panel de control, la tarjeta **Vendedores** lleva a `/admin/sellers`: u
 
 | Pestaña | Contenido |
 |---|---|
-| Datos | Nombre, apellidos, correo, nombre comercial, NIF/DNI, categoría principal y estado (los vendedores no tienen fecha de alta: no se guarda) |
+| Datos | Nombre, apellidos, correo, nombre comercial, NIF/DNI, categoría (una sola) y estado (los vendedores no tienen fecha de alta: no se guarda) |
 | Productos | Productos del vendedor con su precio, stock y estado, paginados |
 | Pedidos | Pedidos de los productos del vendedor, con fecha, artículos, total y estado, paginados |
 
@@ -184,7 +184,7 @@ Notas:
 - La búsqueda debe cubrir nombre, apellidos, nombre comercial y correo, sin distinguir mayúsculas ni acentos.
 - `status` admite `ACTIVO`, `PENDIENTE` o `DESACTIVADO`. Si falta, no se filtra.
 - `sort` admite `status`, `category` o `name`; `order` admite `asc` o `desc`. El frontend los envía siempre (por defecto `status` y `asc`). El orden por estado ascendente es pendientes, activos, desactivados. La ordenación debe hacerla el servidor sobre **todo** el conjunto filtrado, no sobre la página.
-- `category` filtra por la **categoría principal** del vendedor (la que elige en el registro).
+- `category` filtra por la **categoría** del vendedor (la única que elige en el registro: no hay categorías secundarias).
 - Hay que acordar si el estado `BLOQUEADO` (mencionado en el documento de contexto) existe también para vendedores; hoy el frontend lo mostraría como "Desconocido".
 - Un pedido muestra solo datos agregados. No incluye datos personales del cliente.
 

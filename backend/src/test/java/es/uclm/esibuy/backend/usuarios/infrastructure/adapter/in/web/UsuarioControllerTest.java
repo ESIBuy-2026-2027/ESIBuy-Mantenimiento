@@ -4,6 +4,7 @@ import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
 import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorUseCase;
@@ -12,20 +13,26 @@ import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
+import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import java.time.LocalDate;
+import java.time.Month;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -37,7 +44,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -46,6 +55,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -313,14 +323,15 @@ class UsuarioControllerTest {
     }
 
     @Test
-    @DisplayName("HU24-CP02: rechaza un estado distinto de ACTIVO y no cambia nada")
+    @DisplayName("HU24-CP02: rechaza un estado que no es ACTIVO ni DESACTIVADO y no cambia nada")
     @WithMockUser(roles = "ADMINISTRADOR")
-    void rechazaUnEstadoDistintoDeActivo() throws Exception {
-        // DESACTIVADO lo añadirá la HU23 con sus reglas.
-        mockMvc.perform(cambiarEstado("usr-1", "DESACTIVADO"))
+    void rechazaUnEstadoNoAdmitido() throws Exception {
+        // Desde la HU23 se admiten ACTIVO y DESACTIVADO; cualquier otro estado es un 400.
+        mockMvc.perform(cambiarEstado("usr-1", "BLOQUEADO"))
                 .andExpect(status().isBadRequest());
 
         verify(administracionUsuarios, never()).activar(any());
+        verify(administracionUsuarios, never()).desactivar(any(), any());
     }
 
     @Test
@@ -345,6 +356,89 @@ class UsuarioControllerTest {
         verify(administracionUsuarios, never()).activar(any());
     }
 
+    // Desactivar una cuenta (HU23, T37/T38/T39): mismo endpoint que activar, con {"estado": "DESACTIVADO"}.
+    // El usuario en sesión se identifica por su email (como en /api/auth/me): con @WithMockUser es el username.
+    // Los códigos de los 409 son los que espera el frontend (frontend/docs/hu23-desactivar-usuario.md).
+    private static final String EMAIL_ADMINISTRADOR = "admin@esibuy.test";
+
+    @Test
+    @DisplayName("HU23-CP01: un administrador desactiva una cuenta y recibe sus datos con estado DESACTIVADO")
+    @WithMockUser(username = EMAIL_ADMINISTRADOR, roles = "ADMINISTRADOR")
+    void administradorDesactivaUnaCuentaYRecibeSusDatos() throws Exception {
+        Usuario desactivado = new Usuario("usr-1", new DatosPersonales("Carlos", "Moreno Gil", null),
+                new Email("carlos@esibuy.test"), "hash-no-debe-salir", Rol.CLIENTE,
+                new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1990, Month.MARCH, 14), null),
+                null);
+        desactivado.desactivar();
+        when(administracionUsuarios.desactivar("usr-1", EMAIL_ADMINISTRADOR)).thenReturn(desactivado);
+
+        mockMvc.perform(cambiarEstado("usr-1", "DESACTIVADO"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("usr-1"))
+                .andExpect(jsonPath("$.estado").value("DESACTIVADO"))
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+
+        verify(administracionUsuarios).desactivar("usr-1", EMAIL_ADMINISTRADOR);
+        verify(administracionUsuarios, never()).activar(any());
+    }
+
+    @Test
+    @DisplayName("HU23-CP02: desactivar un usuario que no existe devuelve 404")
+    @WithMockUser(username = EMAIL_ADMINISTRADOR, roles = "ADMINISTRADOR")
+    void desactivarUnUsuarioInexistenteDevuelve404() throws Exception {
+        when(administracionUsuarios.desactivar("no-existe", EMAIL_ADMINISTRADOR))
+                .thenThrow(new UsuarioNoEncontradoException("El usuario no existe"));
+
+        mockMvc.perform(cambiarEstado("no-existe", "DESACTIVADO"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @Test
+    @DisplayName("HU23-CP03: si el administrador intenta desactivarse a sí mismo devuelve 409 CANNOT_DEACTIVATE_SELF")
+    @WithMockUser(username = EMAIL_ADMINISTRADOR, roles = "ADMINISTRADOR")
+    void desactivarseASiMismoDevuelve409() throws Exception {
+        when(administracionUsuarios.desactivar("u-1", EMAIL_ADMINISTRADOR))
+                .thenThrow(new AutodesactivacionNoPermitidaException("Un administrador no puede desactivar su propia cuenta"));
+
+        mockMvc.perform(cambiarEstado("u-1", "DESACTIVADO"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CANNOT_DEACTIVATE_SELF"))
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @Test
+    @DisplayName("HU23-CP04: desactivar al último administrador activo devuelve 409 LAST_ACTIVE_ADMIN")
+    @WithMockUser(username = EMAIL_ADMINISTRADOR, roles = "ADMINISTRADOR")
+    void desactivarAlUltimoAdministradorActivoDevuelve409() throws Exception {
+        when(administracionUsuarios.desactivar("u-3", EMAIL_ADMINISTRADOR))
+                .thenThrow(new UltimoAdministradorActivoException("No se puede desactivar al último administrador activo"));
+
+        mockMvc.perform(cambiarEstado("u-3", "DESACTIVADO"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("LAST_ACTIVE_ADMIN"))
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "VENDEDOR"})
+    @DisplayName("HU23-CP06: un usuario que no es administrador no puede desactivar cuentas")
+    void unNoAdministradorNoPuedeDesactivarCuentas(String rol) throws Exception {
+        mockMvc.perform(cambiarEstado("usr-1", "DESACTIVADO").with(user("usuario").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(administracionUsuarios, never()).desactivar(any(), any());
+    }
+
+    @Test
+    @DisplayName("HU23-CP06: sin sesión no se puede desactivar una cuenta")
+    void desactivarSinSesionEstaProtegido() throws Exception {
+        mockMvc.perform(cambiarEstado("usr-1", "DESACTIVADO"))
+                .andExpect(status().isUnauthorized());
+
+        verify(administracionUsuarios, never()).desactivar(any(), any());
+    }
+
     // Acceso por rol a los endpoints reales de administración (HU18, T60). La regla la puso la T58
     // en SecurityConfig; aquí se comprueba sobre el listado (HU19) y la activación (HU24).
 
@@ -366,6 +460,340 @@ class UsuarioControllerTest {
                 .andExpect(status().isUnauthorized());
 
         verify(administracionUsuarios, never()).activar(any());
+    }
+
+    // Ficha de un usuario (HU20, T54): GET /api/admin/usuarios/{id} con UsuarioDetalleResponse.
+    // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU20-CP01 a CP04, propuestos a partir del contrato.
+
+    @Test
+    @DisplayName("HU20-CP01: la ficha de un cliente trae sus datos personales y de cliente, sin datos sensibles")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void fichaDeUnClienteConSusDatos() throws Exception {
+        Usuario cliente = new Usuario("usr-4", new DatosPersonales("Lucía", "Torres Vega", "avatar2"),
+                new Email("lucia@esibuy.test"), "hash-no-debe-salir", Rol.CLIENTE,
+                new DatosCliente(TipoCliente.PREMIUM, new Dni("12345678Z"), LocalDate.of(1979, 5, 14),
+                        new Telefono("620031676")), null);
+        when(administracionUsuarios.consultar("usr-4")).thenReturn(cliente);
+
+        mockMvc.perform(get("/api/admin/usuarios/{id}", "usr-4"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("usr-4"))
+                .andExpect(jsonPath("$.nombre").value("Lucía"))
+                .andExpect(jsonPath("$.email").value("lucia@esibuy.test"))
+                .andExpect(jsonPath("$.rol").value("CLIENTE"))
+                .andExpect(jsonPath("$.dni").value("12345678Z"))
+                .andExpect(jsonPath("$.telefono").value("620031676"))
+                .andExpect(jsonPath("$.fechaNacimiento").value("1979-05-14"))
+                .andExpect(jsonPath("$.tipoCliente").value("PREMIUM"))
+                .andExpect(jsonPath("$.avatar").value("avatar2"))
+                .andExpect(jsonPath("$.imagenPerfil").doesNotExist())
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("HU20-CP02: la ficha de un administrador no trae datos de cliente")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void fichaDeUnAdministradorSinDatosDeCliente() throws Exception {
+        Usuario administrador = new Usuario("usr-9", new DatosPersonales("Ana", "López Díaz", null),
+                new Email("ana@esibuy.test"), "hash-no-debe-salir", Rol.ADMINISTRADOR, null, null);
+        when(administracionUsuarios.consultar("usr-9")).thenReturn(administrador);
+
+        mockMvc.perform(get("/api/admin/usuarios/{id}", "usr-9"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rol").value("ADMINISTRADOR"))
+                .andExpect(jsonPath("$.dni").doesNotExist())
+                .andExpect(jsonPath("$.telefono").doesNotExist())
+                .andExpect(jsonPath("$.fechaNacimiento").doesNotExist())
+                .andExpect(jsonPath("$.tipoCliente").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("HU20-CP03: la ficha de un usuario que no existe devuelve 404")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void fichaDeUnUsuarioInexistenteDevuelve404() throws Exception {
+        when(administracionUsuarios.consultar("no-existe"))
+                .thenThrow(new UsuarioNoEncontradoException("El usuario no existe"));
+
+        mockMvc.perform(get("/api/admin/usuarios/{id}", "no-existe"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @Test
+    @DisplayName("HU20-CP04: sin sesión no se ve la ficha de un usuario")
+    void fichaSinSesionDevuelve401() throws Exception {
+        mockMvc.perform(get("/api/admin/usuarios/{id}", "usr-4"))
+                .andExpect(status().isUnauthorized());
+
+        verify(administracionUsuarios, never()).consultar(any());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "VENDEDOR"})
+    @DisplayName("HU20-CP04: un usuario que no es administrador no ve la ficha de otro")
+    void noAdministradorNoVeLaFicha(String rol) throws Exception {
+        mockMvc.perform(get("/api/admin/usuarios/{id}", "usr-4").with(user("usuario").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(administracionUsuarios, never()).consultar(any());
+    }
+
+    // Supervisión de vendedores (HU26, T30): GET /api/admin/sellers y /api/admin/sellers/{id}.
+    // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU26-CP01 a CP05, propuestos a partir de los
+    // criterios de aceptación y del contrato.
+
+    private static Usuario vendedor() {
+        return new Usuario("v-1", new DatosPersonales("Marta", "Ruiz Gil", null),
+                new Email("marta@esibuy.test"), "hash-no-debe-salir", Rol.VENDEDOR, null, null);
+    }
+
+    @Test
+    @DisplayName("HU26-CP01: un administrador recibe el listado de vendedores sin datos sensibles")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void administradorRecibeElListadoDeVendedores() throws Exception {
+        when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(java.util.List.of(vendedor()), 1, 10, 11));
+
+        mockMvc.perform(get("/api/admin/sellers")
+                        .param("page", "2")
+                        .param("size", "10")
+                        .param("search", "marta")
+                        .param("status", "PENDIENTE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value("v-1"))
+                .andExpect(jsonPath("$.items[0].nombre").value("Marta"))
+                .andExpect(jsonPath("$.items[0].apellidos").value("Ruiz Gil"))
+                .andExpect(jsonPath("$.items[0].email").value("marta@esibuy.test"))
+                .andExpect(jsonPath("$.items[0].estado").value("PENDIENTE"))
+                .andExpect(jsonPath("$.items[0].passwordHash").doesNotExist())
+                .andExpect(jsonPath("$.page").value(2))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalItems").value(11))
+                .andExpect(jsonPath("$.totalPages").value(2));
+
+        verify(listadoUsuarios).listar(new ListarUsuariosQuery(
+                "marta", Rol.VENDEDOR, "PENDIENTE", 1, 10, null, false));
+    }
+
+    // Una celda vacía llega como null: sin parámetro de orden o sin orden esperado.
+    @ParameterizedTest(name = "sort={0}, order={1}")
+    @CsvSource({
+            "name,     asc,  NOMBRE, false",
+            "status,   desc, ESTADO, true",
+            "category, asc,  ,       false",
+            ",         ,     ,       false"
+    })
+    @DisplayName("HU26-CP02: el listado de vendedores traduce la ordenación pedida")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void listadoDeVendedoresTraduceLaOrdenacion(String sort, String order, ListarUsuariosQuery.Orden orden,
+            boolean descendente) throws Exception {
+        when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(java.util.List.of(), 0, 10, 0));
+        MockHttpServletRequestBuilder peticion = get("/api/admin/sellers");
+        if (sort != null) {
+            peticion.param("sort", sort);
+        }
+        if (order != null) {
+            peticion.param("order", order);
+        }
+
+        mockMvc.perform(peticion).andExpect(status().isOk());
+
+        verify(listadoUsuarios).listar(new ListarUsuariosQuery(
+                null, Rol.VENDEDOR, null, 0, 10, orden, descendente));
+    }
+
+    @Test
+    @DisplayName("HU26-CP03: la ficha de un vendedor trae sus datos, sin datos sensibles")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void fichaDeUnVendedor() throws Exception {
+        when(administracionUsuarios.consultarVendedor("v-1")).thenReturn(vendedor());
+
+        mockMvc.perform(get("/api/admin/sellers/{id}", "v-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("v-1"))
+                .andExpect(jsonPath("$.nombre").value("Marta"))
+                .andExpect(jsonPath("$.apellidos").value("Ruiz Gil"))
+                .andExpect(jsonPath("$.email").value("marta@esibuy.test"))
+                .andExpect(jsonPath("$.estado").value("PENDIENTE"))
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("HU26-CP04: la ficha de un usuario que no existe o no es vendedor devuelve 404")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void fichaDeUnNoVendedorDevuelve404() throws Exception {
+        when(administracionUsuarios.consultarVendedor("usr-4"))
+                .thenThrow(new UsuarioNoEncontradoException("El vendedor no existe"));
+
+        mockMvc.perform(get("/api/admin/sellers/{id}", "usr-4"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"/api/admin/sellers", "/api/admin/sellers/v-1"})
+    @DisplayName("HU26-CP05: sin sesión no se ven los vendedores")
+    void vendedoresSinSesionDevuelve401(String ruta) throws Exception {
+        mockMvc.perform(get(ruta))
+                .andExpect(status().isUnauthorized());
+
+        verify(listadoUsuarios, never()).listar(any());
+        verify(administracionUsuarios, never()).consultarVendedor(any());
+    }
+
+    @ParameterizedTest(name = "rol {0} en {1}")
+    @CsvSource({
+            "CLIENTE,  /api/admin/sellers",
+            "CLIENTE,  /api/admin/sellers/v-1",
+            "VENDEDOR, /api/admin/sellers",
+            "VENDEDOR, /api/admin/sellers/v-1"
+    })
+    @DisplayName("HU26-CP05: un usuario que no es administrador no ve los vendedores")
+    void noAdministradorNoVeLosVendedores(String rol, String ruta) throws Exception {
+        mockMvc.perform(get(ruta).with(user("usuario").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(listadoUsuarios, never()).listar(any());
+        verify(administracionUsuarios, never()).consultarVendedor(any());
+    }
+
+    // Editar un usuario (HU22, T42/T44): PUT /api/admin/usuarios/{id}, contrato de frontend/docs/hu22-editar-usuario.md.
+
+    private static final String CUERPO_CLIENTE = """
+            {"rol":"CLIENTE","nombre":"Carla","apellidos":"Moreno Gil","dni":"10004119A",
+             "telefono":"620023757","fechaNacimiento":"1978-04-13","tipoCliente":"PREMIUM","avatar":"avatar1"}""";
+
+    @Test
+    @DisplayName("HU22-CP01: el administrador edita un cliente y recibe su ficha actualizada")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void administradorEditaUnClienteYRecibeSuFicha() throws Exception {
+        when(administracionUsuarios.editar(eq("usr-1"), any())).thenReturn(clienteCarla());
+
+        mockMvc.perform(editar("usr-1", CUERPO_CLIENTE))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("usr-1"))
+                .andExpect(jsonPath("$.nombre").value("Carla"))
+                .andExpect(jsonPath("$.dni").value("10004119A"))
+                .andExpect(jsonPath("$.avatar").value("avatar1"))
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+
+        ArgumentCaptor<EditarUsuarioCommand> comando = ArgumentCaptor.forClass(EditarUsuarioCommand.class);
+        verify(administracionUsuarios).editar(eq("usr-1"), comando.capture());
+        assertEquals(new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", "avatar1", "10004119A",
+                "620023757", LocalDate.of(1978, 4, 13), TipoCliente.PREMIUM), comando.getValue());
+    }
+
+    @Test
+    @DisplayName("HU22-CP04: el email, la contraseña y el estado del cuerpo se ignoran")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void editarIgnoraEmailContrasenaYEstadoDelCuerpo() throws Exception {
+        when(administracionUsuarios.editar(eq("usr-1"), any())).thenReturn(clienteCarla());
+        String cuerpo = CUERPO_CLIENTE.replace("}",
+                ",\"email\":\"otro@esibuy.test\",\"password\":\"Nueva-Clave-1!\",\"estado\":\"DESACTIVADO\"}");
+
+        mockMvc.perform(editar("usr-1", cuerpo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("carla@esibuy.test"));
+
+        ArgumentCaptor<EditarUsuarioCommand> comando = ArgumentCaptor.forClass(EditarUsuarioCommand.class);
+        verify(administracionUsuarios).editar(eq("usr-1"), comando.capture());
+        assertEquals("Carla", comando.getValue().nombre());   // el resto del cuerpo sí llega
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', value = {
+            "sin rol | {\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\"}",
+            "nombre vacío | {\"rol\":\"ADMINISTRADOR\",\"nombre\":\"\",\"apellidos\":\"Moreno Gil\"}",
+            "nombre de 31 caracteres | {\"rol\":\"ADMINISTRADOR\",\"nombre\":\"JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ\",\"apellidos\":\"Moreno Gil\"}",
+            "apellidos vacíos | {\"rol\":\"ADMINISTRADOR\",\"nombre\":\"Carla\",\"apellidos\":\"  \"}",
+            "rol inexistente | {\"rol\":\"SUPERUSUARIO\",\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\"}"})
+    @DisplayName("HU22-CP05: rechaza un cuerpo sin rol o con nombre o apellidos no válidos (400) sin llamar al caso de uso")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void rechazaUnCuerpoDeEdicionNoValido(String caso, String cuerpo) throws Exception {
+        mockMvc.perform(editar("usr-1", cuerpo))
+                .andExpect(status().isBadRequest());
+
+        verify(administracionUsuarios, never()).editar(any(), any());
+    }
+
+    @Test
+    @DisplayName("HU22-CP05: datos que el dominio rechaza (p. ej. un menor de edad) devuelven 400")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void editarConDatosQueElDominioRechazaDevuelve400() throws Exception {
+        when(administracionUsuarios.editar(eq("usr-1"), any()))
+                .thenThrow(new UsuarioInvalidoException("El cliente debe ser mayor de edad"));
+
+        mockMvc.perform(editar("usr-1", CUERPO_CLIENTE))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @Test
+    @DisplayName("HU22-CP06: editar con el DNI de otra cuenta devuelve 409 con DNI_ALREADY_REGISTERED")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void editarConElDniDeOtraCuentaDevuelve409() throws Exception {
+        when(administracionUsuarios.editar(eq("usr-1"), any()))
+                .thenThrow(new DniYaRegistradoException("El DNI ya está registrado"));
+
+        mockMvc.perform(editar("usr-1", CUERPO_CLIENTE))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("DNI_ALREADY_REGISTERED"));
+    }
+
+    @Test
+    @DisplayName("HU22-CP07: editar un usuario que no existe devuelve 404")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void editarUnUsuarioInexistenteDevuelve404() throws Exception {
+        when(administracionUsuarios.editar(eq("no-existe"), any()))
+                .thenThrow(new UsuarioNoEncontradoException("El usuario no existe"));
+
+        mockMvc.perform(editar("no-existe", CUERPO_CLIENTE))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "VENDEDOR"})
+    @DisplayName("HU22-CP08: un usuario que no es administrador no puede editar usuarios (403)")
+    void unNoAdministradorNoPuedeEditarUsuarios(String rol) throws Exception {
+        mockMvc.perform(editar("usr-1", CUERPO_CLIENTE).with(user("usuario").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(administracionUsuarios, never()).editar(any(), any());
+    }
+
+    @Test
+    @DisplayName("HU22-CP08: sin sesión no se puede editar un usuario (401)")
+    void editarSinSesionEstaProtegido() throws Exception {
+        mockMvc.perform(editar("usr-1", CUERPO_CLIENTE))
+                .andExpect(status().isUnauthorized());
+
+        verify(administracionUsuarios, never()).editar(any(), any());
+    }
+
+    @Test
+    @DisplayName("HU22-CP08: un administrador sin token CSRF no puede editar un usuario (403)")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void editarSinTokenCsrfSeRechaza() throws Exception {
+        mockMvc.perform(put("/api/admin/usuarios/{id}", "usr-1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(CUERPO_CLIENTE))
+                .andExpect(status().isForbidden());
+
+        verify(administracionUsuarios, never()).editar(any(), any());
+    }
+
+    private static Usuario clienteCarla() {
+        return new Usuario("usr-1", new DatosPersonales("Carla", "Moreno Gil", "avatar1"),
+                new Email("carla@esibuy.test"), "hash-no-debe-salir", Rol.CLIENTE,
+                new DatosCliente(TipoCliente.PREMIUM, new Dni("10004119A"), LocalDate.of(1978, 4, 13),
+                        new Telefono("620023757")), null);
+    }
+
+    // PUT con sesión: lleva el token CSRF, como el PATCH de la HU24.
+    private static MockHttpServletRequestBuilder editar(String id, String cuerpo) {
+        return put("/api/admin/usuarios/{id}", id).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(cuerpo);
     }
 
     // PATCH con sesión: lleva el token CSRF (la estrategia de CSRF se decidirá con el login, task 230).

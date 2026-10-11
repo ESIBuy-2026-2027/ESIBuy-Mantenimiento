@@ -54,8 +54,8 @@ class CrearAdministradorServiceTest {
     @Test
     @DisplayName("HU21-CP01: crea el administrador en estado ACTIVO y con la contraseña cifrada")
     void creaAdministradorActivoYConContrasenaCifrada() {
-        when(hashContrasena.hashear("Password123!")).thenReturn("hash-simulado");
-        CrearAdministradorCommand comando = comando("nora@esibuy.test", "Password123!");
+        when(hashContrasena.hashear("Adm1n.S3gur0_2026!")).thenReturn("hash-simulado");
+        CrearAdministradorCommand comando = comando("nora@esibuy.test", "Adm1n.S3gur0_2026!");
 
         crearAdministrador.crear(comando);
 
@@ -75,7 +75,7 @@ class CrearAdministradorServiceTest {
     @DisplayName("HU21-CP02: rechaza la creación si el correo ya está registrado y no guarda nada")
     void rechazaEmailYaRegistrado() {
         when(usuarioRepository.existePorCorreo("nora@esibuy.test")).thenReturn(true);
-        CrearAdministradorCommand comando = comando("nora@esibuy.test", "Password123!");
+        CrearAdministradorCommand comando = comando("nora@esibuy.test", "Adm1n.S3gur0_2026!");
 
         assertThrows(CorreoYaRegistradoException.class, () -> crearAdministrador.crear(comando));
 

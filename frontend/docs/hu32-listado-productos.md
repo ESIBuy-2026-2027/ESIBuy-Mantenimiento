@@ -167,7 +167,7 @@ Respuesta 200:
 |---|---|
 | 401 / 403 / 5xx | Mensaje de error con **Reintentar** |
 
-- Las categorías de cada producto llegan como **nombres**; el filtro envía el **identificador** (el que devuelve `GET /api/categorias`).
+- La categoría de cada producto llega como **nombre** (en una lista `categorias` que tiene un solo elemento, porque un producto tiene una única categoría); el filtro envía el **identificador** (el que devuelve `GET /api/categorias`).
 - El backend debe obtener al vendedor de la **sesión**, nunca de un parámetro.
 - `totalPages` es 0 cuando no hay resultados.
 
@@ -179,14 +179,14 @@ Con `npm run dev` (mocks activos), contraseña `Mock-Clave-1!`, código de corre
 
 | Usuario | Qué muestra |
 |---|---|
-| `vendedor@esibuy.test` | 23 productos: tres páginas (10, 10 y 3). Incluye productos sin stock, no disponibles y con varias categorías. |
+| `vendedor@esibuy.test` | 23 productos: tres páginas (10, 10 y 3). Incluye productos sin stock y no disponibles. Cada producto tiene una sola categoría (14 de Tecnología y 9 de Hogar). |
 | `vendedor-vacio@esibuy.test` | Ningún producto: estado vacío con **Añadir producto**. |
 
 Pruebas manuales sugeridas:
 
 1. Entrar como `vendedor@esibuy.test` y recorrer las tres páginas.
 2. Buscar `lampara` (sin acento) y comprobar que encuentra "Lámpara de escritorio LED".
-3. Filtrar por **Hogar**, ir a la página 2 y cambiar de categoría: debe volver a la página 1.
+3. Filtrar por **Tecnología** (14 productos, dos páginas), ir a la página 2 y cambiar de categoría: debe volver a la página 1.
 4. Buscar `zzzz`: aparece "sin coincidencias"; pulsar **Limpiar filtros**.
 5. Buscar `smartwatch`: no aparece, porque pertenece a otro vendedor del mock.
 6. Entrar como `vendedor-vacio@esibuy.test` y comprobar el estado vacío.
