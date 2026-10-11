@@ -322,4 +322,17 @@ describe('ProfileEditor (HU22): el rol no se puede cambiar', () => {
     await waitFor(() => expect(save).toHaveBeenCalled())
     expect(save.mock.calls[0][0]).not.toHaveProperty('rol')
   })
+
+  // Fallos de la demo del Sprint 1: un DNI repetido se marca en el DNI, no como error genérico (PR #104)
+  it('HU22-CP16: un DNI ya registrado se marca en el DNI', async () => {
+    const user = userEvent.setup()
+    const save = vi.fn().mockRejectedValue(new ApiError(409, 'conflicto', 'DNI_ALREADY_REGISTERED'))
+    const { onSaved } = renderizar({ save })
+
+    await guardar(user)
+
+    expect(await screen.findByText('Este DNI ya está registrado')).toBeInTheDocument()
+    expect(screen.queryByText(/no se han podido guardar los cambios/i)).not.toBeInTheDocument()
+    expect(onSaved).not.toHaveBeenCalled()
+  })
 })
