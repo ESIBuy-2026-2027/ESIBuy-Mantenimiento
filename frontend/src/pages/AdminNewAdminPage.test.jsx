@@ -250,4 +250,23 @@ describe('AdminNewAdminPage (HU21): acceso', () => {
     expect(avatares.getByRole('radio', { name: /avatar 1/i })).toBeInTheDocument()
     expect(avatares.getByRole('radio', { name: /avatar 3/i })).toBeInTheDocument()
   })
+
+  // Fallos de la demo del Sprint 1: el backend indica con un code qué dato rechaza (PR #104)
+  it('HU21-CP19: una contraseña rechazada por el backend se marca en su campo', async () => {
+    server.use(
+      http.post('/api/admin/admins', () => HttpResponse.json(
+        { mensaje: 'Datos de registro no válidos', code: 'PASSWORD_CONTAINS_PERSONAL_DATA' },
+        { status: 400 },
+      )),
+    )
+    const user = userEvent.setup()
+    await abrirFormulario()
+
+    await rellenarFormularioValido(user)
+    await crear(user)
+
+    expect(await screen.findByText('La contraseña no puede contener tu nombre, tus apellidos ni tu email'))
+      .toBeInTheDocument()
+    expect(screen.queryByText(/no se ha podido crear el administrador/i)).not.toBeInTheDocument()
+  })
 })
