@@ -143,7 +143,7 @@ Cuerpo (JSON): el objeto completo del formulario.
   "telefono": "612345678",
   "password": "Password123!",
   "repeticionPassword": "Password123!",
-  "tipoCliente": "normal",
+  "tipoCliente": "ESTANDAR",
   "avatar": "avatar2",
   "aceptaPrivacidad": true
 }
@@ -157,6 +157,8 @@ Cuerpo (JSON): el objeto completo del formulario.
 | 409 + `{ "code": "EMAIL_AND_COMMERCIAL_NAME_ALREADY_REGISTERED" }` | Los dos mensajes (solo vendedor) |
 
 - En el cliente, cualquier 409 marca el email.
+- `tipoCliente` usa los valores del enum del backend: `ESTANDAR` (por defecto) o `PREMIUM`. Con otro valor (antes se enviaba `normal` o `premium`) el backend responde 400 sin llegar al registro.
+- `telefono` es opcional: si está vacío, **no se envía**. El backend solo lo trata como ausente si no llega; un texto vacío lo rechaza como teléfono inválido.
 - `categoriaPrincipalId` envía **un solo identificador**, de los que devuelve `GET /api/categorias` (decisión del equipo: un vendedor tiene una única categoría). Antes se enviaba `categorias`, una lista; el nombre del campo se ha tomado del que ya usan la edición del vendedor y el esquema de la base de datos, y hay que acordarlo con el backend.
 - Se envían también campos que el backend no necesita (`repeticionPassword`, y los del otro tipo de usuario vacíos). Se filtrarán al unir con el backend.
 
