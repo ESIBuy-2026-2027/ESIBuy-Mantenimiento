@@ -127,4 +127,21 @@ describe('AppHeader', () => {
     expect(await screen.findByRole('heading', { level: 1, name: /iniciar sesión/i })).toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: /cuenta/i })).not.toBeInTheDocument()
   })
+
+  // Fallos de la demo del Sprint 1: el vendedor no tenía acceso a sus productos desde el menú
+  it('HU15-CP04: con sesión de vendedor muestra el enlace a sus productos', async () => {
+    await abrirSesionPorApi('vendedor@esibuy.test')
+    renderApp('/')
+
+    const enlace = await screen.findByRole('link', { name: /mis productos/i })
+    expect(enlace).toHaveAttribute('href', '/seller/products')
+  })
+
+  it('HU15-CP04: con sesión de cliente no muestra el enlace a los productos del vendedor', async () => {
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/')
+
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(screen.queryByRole('link', { name: /mis productos/i })).not.toBeInTheDocument()
+  })
 })
