@@ -36,6 +36,7 @@ import org.springframework.security.web.authentication.logout.HttpStatusReturnin
 public class SecurityConfig {
 
     private static final String RUTA_REGISTRO = "/api/auth/register/cliente";
+    private static final String RUTA_REGISTRO_VENDEDOR = "/api/auth/register/vendedor";
     private static final String RUTA_LOGIN = "/api/auth/login";
     private static final String RUTA_LOGOUT = "/api/auth/logout";
     // Página de error interna de Spring Boot: abierta para que un 403 o un 500 no se conviertan en 401
@@ -53,7 +54,7 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, RUTA_REGISTRO, RUTA_LOGIN, RUTA_CODIGO_EMAIL,
+                        .requestMatchers(HttpMethod.POST, RUTA_REGISTRO, RUTA_REGISTRO_VENDEDOR, RUTA_LOGIN, RUTA_CODIGO_EMAIL,
                                 RUTA_ALTA_AUTHENTICATOR, RUTA_CODIGO_AUTHENTICATOR).permitAll()
                         .requestMatchers(RUTA_ERROR).permitAll()
                         .requestMatchers(RUTAS_ADMINISTRACION).hasRole(ROL_ADMINISTRADOR)
@@ -69,7 +70,7 @@ public class SecurityConfig {
                 // el frontend lo devuelve en la cabecera X-XSRF-TOKEN (T230, D4)
                 .csrf(csrf -> csrf
                         .spa()
-                        .ignoringRequestMatchers(RUTA_REGISTRO));
+                        .ignoringRequestMatchers(RUTA_REGISTRO, RUTA_REGISTRO_VENDEDOR));
         return http.build();
     }
 

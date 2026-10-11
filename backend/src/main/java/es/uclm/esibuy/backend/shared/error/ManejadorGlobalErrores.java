@@ -8,9 +8,11 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaExcept
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYNombreComercialYaRegistradosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
@@ -43,6 +45,19 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError dniYaRegistrado() {
         return new RespuestaError(REGISTRO_NO_COMPLETADO, "DNI_ALREADY_REGISTERED");
+    }
+
+    // Registro del vendedor (T241): los códigos que espera el formulario del frontend.
+    @ExceptionHandler(NombreComercialYaRegistradoException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError nombreComercialYaRegistrado() {
+        return new RespuestaError(REGISTRO_NO_COMPLETADO, "COMMERCIAL_NAME_ALREADY_REGISTERED");
+    }
+
+    @ExceptionHandler(CorreoYNombreComercialYaRegistradosException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError correoYNombreComercialYaRegistrados() {
+        return new RespuestaError(REGISTRO_NO_COMPLETADO, "EMAIL_AND_COMMERCIAL_NAME_ALREADY_REGISTERED");
     }
 
     @ExceptionHandler({ContrasenaInvalidaException.class, EmailInvalidoException.class, UsuarioInvalidoException.class})
