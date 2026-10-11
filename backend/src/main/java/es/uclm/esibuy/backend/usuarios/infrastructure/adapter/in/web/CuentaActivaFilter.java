@@ -9,7 +9,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
-import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,12 +16,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 /**
- * Invalida la sesión de un usuario cuya cuenta ha sido desactivada (HU23, T206) o cuyo rol ha cambiado
- * (HU22, T43).
+ * Invalida la sesión de un usuario cuya cuenta ha sido desactivada (HU23, T206).
  *
- * <p>En cada petición con un usuario en sesión comprueba que su cuenta sigue activa y con el mismo rol; si no
- * (o el usuario ya no existe), invalida la sesión y responde 401 sin llegar al endpoint. Al volver a iniciar
- * sesión, el login le da el permiso de su rol nuevo.
+ * <p>En cada petición con un usuario en sesión comprueba que su cuenta sigue activa; si no lo está
+ * (o el usuario ya no existe), invalida la sesión y responde 401 sin llegar al endpoint.
  * El usuario en sesión se identifica por su email, como lo guarda el login.
  */
 public class CuentaActivaFilter extends OncePerRequestFilter {
@@ -41,7 +38,7 @@ public class CuentaActivaFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        if (sesionVigente(autenticado)) {
+        if (cuentaActiva(autenticado.getName())) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -53,14 +50,9 @@ public class CuentaActivaFilter extends OncePerRequestFilter {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
     }
 
-    // La sesión sigue valiendo si la cuenta está activa (HU23) y conserva el rol con el que inició sesión (HU22):
-    // si un administrador le ha cambiado el rol, el permiso ROLE_<rol> de la sesión ya no es el suyo.
-    private boolean sesionVigente(Authentication autenticado) {
+    private boolean cuentaActiva(String email) {
         try {
-            Usuario usuario = autenticacion.consultarUsuarioEnSesion(autenticado.getName());
-            String permisoActual = "ROLE_" + usuario.getRol().name();
-            return usuario.estaActivo() && autenticado.getAuthorities().stream()
-                    .anyMatch(permiso -> permisoActual.equals(permiso.getAuthority()));
+            return autenticacion.consultarUsuarioEnSesion(email).estaActivo();
         } catch (CredencialesInvalidasException e) {
             return false;
         }

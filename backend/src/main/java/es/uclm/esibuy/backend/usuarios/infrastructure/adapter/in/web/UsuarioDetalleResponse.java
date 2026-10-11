@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
+import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
 /**
@@ -16,7 +17,10 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
  * (en el dominio, {@code imagenPerfil}). Cada ficha trae solo los campos de su rol: los datos de cliente
  * no aparecen en la de un administrador ({@code NON_NULL}).
  *
- * <p>PENDIENTE (HU21): {@code sede} y {@code fechaIncorporacion} del administrador, cuando existan.
+ * <p>La {@code fechaIncorporacion} del administrador es su fecha de alta, como pide el contrato del frontend
+ * (automática y no editable); solo sale en la ficha de un administrador.
+ *
+ * <p>PENDIENTE: {@code sede} del administrador, cuando exista en el modelo.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record UsuarioDetalleResponse(
@@ -31,7 +35,8 @@ public record UsuarioDetalleResponse(
         String telefono,
         LocalDate fechaNacimiento,
         String tipoCliente,
-        String avatar) {
+        String avatar,
+        Instant fechaIncorporacion) {
 
     static UsuarioDetalleResponse desde(Usuario usuario) {
         DatosCliente cliente = usuario.getDatosCliente();
@@ -48,6 +53,7 @@ public record UsuarioDetalleResponse(
                 cliente == null || cliente.telefono() == null ? null : cliente.telefono().valor(),
                 cliente == null ? null : cliente.fechaNacimiento(),
                 cliente == null || cliente.tipoCliente() == null ? null : cliente.tipoCliente().name(),
-                usuario.getDatosPersonales().imagenPerfil());
+                usuario.getDatosPersonales().imagenPerfil(),
+                usuario.getRol() == Rol.ADMINISTRADOR ? usuario.getFechaAlta() : null);
     }
 }
