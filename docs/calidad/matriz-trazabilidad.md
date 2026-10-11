@@ -535,6 +535,42 @@ Rutas de los archivos de test (bajo `frontend/src/`):
 - `AdminUsersPage.test.jsx`: `pages/` (integración: rutas protegidas, sesión simulada y mock de MSW)
 
 ---
+## HU21 · Alta de administradores
+
+### Tabla A · HU21 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU21-CP01 | Crea el administrador en estado ACTIVO y con la contraseña cifrada | Unitario | 1 | ✅ Pasa |
+| HU21-CP02 | Rechaza la creación si el correo ya está registrado y no guarda nada | Unitario | 1 | ✅ Pasa |
+| HU21-CP03 | Delega a la política de contraseñas y rechaza una muy corta | Unitario | 1 | ✅ Pasa |
+| HU21-CP04 | Rechaza una contraseña que contiene el nombre del administrador | Unitario | 1 | ✅ Pasa |
+| HU21-CP05 | El factory method crea un administrador activo y sin datos de cliente | Unitario | 1 | ✅ Pasa |
+| HU21-CP06 | Crear administrador con datos correctos devuelve 201 | Integración (capa web) | 1 | ✅ Pasa |
+| HU21-CP07 | Crear administrador rechaza campos obligatorios vacíos devolviendo 400 | Integración (capa web) | 1 | ✅ Pasa |
+| HU21-CP08 | Usuarios sin rol ADMINISTRADOR no pueden crear administradores | Integración (capa web) | 1 | ✅ Pasa |
+| HU21-CP09 | Un administrador se lee sin datos de cliente ni consentimiento | Unitario | 1 | ✅ Pasa |
+
+Notas:
+- **Alta de administradores (AB#49):** Siguiendo el acuerdo con el frontend, la creación la realiza un administrador autenticado que establece manualmente la contraseña (opción "a" del documento `Contexto_frontend.md`).
+- **HU21-CP05:** Las cuentas con rol `ADMINISTRADOR` nacen directamente en estado `ACTIVO` porque la creación la realiza otro administrador ya verificado.
+- **HU21-CP06 y CP07:** El endpoint `POST /api/admin/admins` acepta los campos `sede` y `avatar` en el JSON para ser 100% compatible con la llamada de la API del frontend, aunque por ahora el backend los ignore al crear el dominio.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU21-CP01 | `CrearAdministradorServiceTest` | `creaAdministradorActivoYConContrasenaCifrada` | Aplicación | AB#49 | PR actual | ✅ |
+| HU21-CP02 | `CrearAdministradorServiceTest` | `rechazaEmailYaRegistrado` | Aplicación | AB#49 | PR actual | ✅ |
+| HU21-CP03 | `CrearAdministradorServiceTest` | `rechazaContrasenaMuyCorta` | Aplicación | AB#49 | PR actual | ✅ |
+| HU21-CP04 | `CrearAdministradorServiceTest` | `rechazaContrasenaConElNombre` | Aplicación | AB#49 | PR actual | ✅ |
+| HU21-CP05 | `UsuarioTest` | `creaAdministradorNuevoActivoYSinDatosCliente` | Dominio | AB#49 | PR actual | ✅ |
+| HU21-CP06 | `UsuarioControllerTest` | `crearAdministradorValidoDevuelve201` | Infraestructura | AB#49 | PR actual | ✅ |
+| HU21-CP07 | `UsuarioControllerTest` | `crearAdministradorRechazaCamposVacios` | Infraestructura | AB#49 | PR actual | ✅ |
+| HU21-CP08 | `UsuarioControllerTest` | `crearAdministradorRechazaNoAdministradores` | Infraestructura | AB#49 | PR actual | ✅ |
+| HU21-CP09 | `UsuarioDocumentMapperTest` | `unAdministradorSeLeeSinDatosDeClienteYConsentimiento` | Infraestructura | AB#49 | PR actual | ✅ |
+
+---
 
 ## HU20 · Consultar el detalle de un usuario
 
@@ -546,10 +582,12 @@ Rutas de los archivos de test (bajo `frontend/src/`):
 | HU20-CP02 | La ficha de un administrador no trae datos de cliente | Integración (capa web) | 1 | ✅ Pasa |
 | HU20-CP03 | Consultar un usuario que no existe devuelve 404 | Unitario + integración (capa web) | 2 | ✅ Pasa |
 | HU20-CP04 | Sin sesión (401) o sin ser administrador (403) no se ve la ficha | Integración (capa web) | 2 | ✅ Pasa |
+| HU20-CP05 | La ficha de un administrador trae su fecha de incorporación, que es su fecha de alta; la de un cliente no la trae | Integración (capa web) | 2 | ✅ Pasa |
 
 Notas:
 - **HU20-CP01 a CP04:** casos propuestos en la T54 (AB#54) a partir del contrato del frontend (`frontend/docs/hu20-ficha-usuario.md`). Pendientes de confirmar con el equipo y de añadir a la HU20 en Azure Boards.
-- **Backend (T52, AB#52, PR #76):** `GET /api/admin/usuarios/{id}` con `UsuarioDetalleResponse`. La imagen sale como `avatar` (en el dominio, `imagenPerfil`) y cada ficha trae solo los campos de su rol. `sede` y `fechaIncorporacion` del administrador llegarán con la HU21.
+- **Backend (T52, AB#52, PR #76):** `GET /api/admin/usuarios/{id}` con `UsuarioDetalleResponse`. La imagen sale como `avatar` (en el dominio, `imagenPerfil`) y cada ficha trae solo los campos de su rol.
+- **HU20-CP05 (AB#43):** caso propuesto en la T43. El contrato del frontend dice que la fecha de incorporación del administrador es su fecha de alta, automática y no editable (`Contexto_frontend.md`). La HU21 (PR #94) no añadió ningún campo nuevo, así que la ficha devuelve `fechaIncorporacion` con el mismo instante que `fechaAlta` (`createdAt` en MongoDB). Como el rol de una cuenta no cambia nunca (decisión del equipo, 11/10/2026), la fecha de alta de un administrador es siempre la de su incorporación. Pendiente de confirmar con el equipo y de añadir a Azure Boards. La `sede` del administrador sigue sin existir en el modelo: el equipo decide dejarla pendiente en este sprint.
 - **Frontend:** los tests de la HU20 (AB#211) no tienen todavía filas en la matriz.
 
 ### Tabla B · casos de prueba ↔ tests
@@ -563,6 +601,8 @@ Notas:
 | HU20-CP03 | `UsuarioControllerTest` | `fichaDeUnUsuarioInexistenteDevuelve404` | Infraestructura | AB#54 | PR #77 | ✅ |
 | HU20-CP04 | `UsuarioControllerTest` | `fichaSinSesionDevuelve401` | Infraestructura | AB#54 | PR #77 | ✅ |
 | HU20-CP04 | `UsuarioControllerTest` | `noAdministradorNoVeLaFicha` (cliente y vendedor) | Infraestructura | AB#54 | PR #77 | ✅ |
+| HU20-CP05 | `UsuarioControllerTest` | `fichaDeUnAdministradorConSuFechaDeIncorporacion` | Infraestructura | AB#43 | PR #96 | ✅ |
+| HU20-CP05 | `UsuarioControllerTest` | `fichaDeUnClienteSinFechaDeIncorporacion` | Infraestructura | AB#43 | PR #96 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
@@ -579,8 +619,8 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU22-CP01 | El administrador edita los datos de un cliente y recibe su ficha actualizada (el teléfono es opcional) | Unitario + integración | 5 | ✅ Pasa |
 | HU22-CP02 | El administrador edita los datos de un administrador (nombre, apellidos e imagen) | Unitario | 2 | ✅ Pasa |
 | HU22-CP03 | El administrador edita los datos de un vendedor (nombre, apellidos e imagen) | Unitario | 1 | ✅ Pasa |
-| HU22-CP04 | El email, la contraseña, el estado y el rol no cambian aunque lleguen en el cuerpo | Unitario + integración (capa web) | 2 | ✅ Pasa |
-| HU22-CP05 | Rechaza datos no válidos (400): sin rol o con un rol distinto del actual, nombre o apellidos no válidos, DNI mal formado o cliente menor de edad; no guarda nada | Unitario + integración (capa web) | 8 | ✅ Pasa |
+| HU22-CP04 | El email, la contraseña, el estado y el rol no cambian aunque lleguen en el cuerpo (sin rol, con otro rol o con uno inexistente se edita igual) | Unitario + integración (capa web) | 3 | ✅ Pasa |
+| HU22-CP05 | Rechaza datos no válidos (400): nombre o apellidos no válidos, DNI mal formado o cliente menor de edad; no guarda nada | Unitario + integración (capa web) | 6 | ✅ Pasa |
 | HU22-CP06 | Rechaza un DNI que ya es de otra cuenta (409 `DNI_ALREADY_REGISTERED`); conservar el propio DNI no cuenta | Unitario + integración | 4 | ✅ Pasa |
 | HU22-CP07 | Editar un usuario que no existe devuelve 404 | Unitario + integración (capa web) | 2 | ✅ Pasa |
 | HU22-CP08 | Solo un administrador con sesión y token CSRF puede editar usuarios (401 / 403) | Integración (capa web) | 3 | ✅ Pasa |
@@ -589,9 +629,14 @@ Notas:
 - **HU22-CP01 a CP08:** casos propuestos en la T42/T44 (AB#42, AB#44) a partir del contrato del frontend (`frontend/docs/hu22-editar-usuario.md`). Pendientes de confirmar con el equipo y de añadir a la HU22 en Azure Boards. Se desarrollaron con TDD (ciclos rojo, verde y refactor); los de CP03, CP04, CP06 (persistencia) y CP08 son tests de protección sobre código que ya existía y pasaron a la primera.
 - **Backend (T42):** `PUT /api/admin/usuarios/{id}` con `EditarUsuarioRequest`, en `AdministracionUsuariosUseCase.editar`. Devuelve la ficha de la HU20 (`UsuarioDetalleResponse`).
 - **Decisiones del equipo (10/10/2026):** el email no se edita en ningún rol (también en el vendedor, PR #81), así que el 409 `EMAIL_ALREADY_REGISTERED` ya no forma parte de la HU22. El teléfono es opcional: en blanco (`""`) deja al cliente sin teléfono.
-- **Cambio de rol:** hasta la T43 (AB#43) un `rol` distinto del actual se rechaza con 400 (CP05). La T43 añadirá el cambio de rol y sus reglas (propio rol, último administrador).
-- **Pendiente:** la sede del administrador y el nombre comercial, el NIF y la categoría del vendedor no existen todavía en el modelo (ver `UsuarioDetalleResponse` y `VendedorResponse`); cuando existan se añadirán a la edición, con el 409 `COMMERCIAL_NAME_ALREADY_REGISTERED`. `existePorDni` no distingue rol, aunque el índice `rol_dni` sí: revisar cuando los vendedores tengan DNI.
-- **Frontend:** los tests de la HU22 (AB#46) no tienen todavía filas en la matriz.
+- **El rol no se puede cambiar (decisión del equipo, 11/10/2026: "el que nace cliente muere cliente"):** el PR #92 (T43) añadió el cambio de rol con sus reglas (propio rol, último administrador, cuenta pendiente que pasa a administrador, cierre de la sesión) y sus casos HU22-CP09 a CP14. Se mergeó, y después el equipo decidió que el rol no cambia nunca. La T43 (rama `fix/US22-T43-rol-no-editable`) **revierte el PR #92** (con él salen CP09 a CP14 y sus tests) y hace que la edición **ignore el `rol` del cuerpo**, como el email: `EditarUsuarioRequest` y `EditarUsuarioCommand` ya no lo llevan y los datos se validan según el rol de la cuenta. Por eso CP04 gana `editarIgnoraElRolDelCuerpo` y CP05 pierde `rechazaEditarConUnRolDistintoDelActual`, `rechazaEditarSinRol` y las variantes "sin rol" y "rol inexistente" de `rechazaUnCuerpoDeEdicionNoValido` (antes eran un 400).
+- **Frontend (T43):** el rol es de solo lectura en el formulario, no viaja al guardar y las categorías solo se cargan al editar un vendedor (ver `frontend/docs/hu22-editar-usuario.md`).
+- **Pendiente:** la sede del administrador (el equipo la deja pendiente en este sprint; la HU21, PR #94, la acepta en el alta pero no la guarda) y el nombre comercial, el NIF y la categoría del vendedor no existen todavía en el modelo (ver `UsuarioDetalleResponse` y `VendedorResponse`); cuando existan se añadirán a la edición, con el 409 `COMMERCIAL_NAME_ALREADY_REGISTERED`. `existePorDni` no distingue rol, aunque el índice `rol_dni` sí: revisar cuando los vendedores tengan DNI.
+- **Frontend:** los tests de la HU22 (AB#46, y los que cambia la T43) no tienen todavía filas en la matriz.
+- **Qué no se puede usar todavía contra el backend real** (el backend de la HU22 funciona; fallan piezas de otras historias):
+  - **Editar un vendedor:** el formulario carga `GET /api/categorias`, que no existe en el backend. Desde la T43 solo lo carga para un vendedor, así que clientes y administradores ya se pueden editar. Depende del endpoint de categorías (sin task; encaja en la HU31).
+  - **Iniciar sesión:** Brevo rechaza la clave SMTP de `application.properties`, así que el código por correo no se envía. El equipo tiene que generar una clave nueva y pasarla por la variable de entorno `SPRING_MAIL_PASSWORD`.
+  - **Editar los datos propios del vendedor** (nombre comercial, NIF, categoría): no existen en el modelo; dependen del registro de vendedores (T241).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -607,13 +652,12 @@ Notas:
 | HU22-CP03 | `AdministracionUsuariosServiceTest` | `editaUnVendedorYLoGuarda` | Aplicación | AB#44 | PR #82 | ✅ |
 | HU22-CP04 | `AdministracionUsuariosServiceTest` | `editarNoCambiaEmailContrasenaEstadoNiRol` | Aplicación | AB#44 | PR #82 | ✅ |
 | HU22-CP04 | `UsuarioControllerTest` | `editarIgnoraEmailContrasenaYEstadoDelCuerpo` | Infraestructura | AB#44 | PR #82 | ✅ |
+| HU22-CP04 | `UsuarioControllerTest` | `editarIgnoraElRolDelCuerpo` (sin rol, con otro rol y con uno inexistente) | Infraestructura | AB#43 | PR #96 | ✅ |
 | HU22-CP05 | `UsuarioTest` | `modificarDatosRechazaUnClienteMenorDeEdad` | Dominio | AB#44 | PR #82 | ✅ |
 | HU22-CP05 | `UsuarioTest` | `modificarDatosAceptaUnClienteQueCumple18Hoy` | Dominio | AB#44 | PR #82 | ✅ |
 | HU22-CP05 | `UsuarioTest` | `modificarDatosExigeDatosDeClienteCoherentesConElRol` | Dominio | AB#44 | PR #82 | ✅ |
 | HU22-CP05 | `AdministracionUsuariosServiceTest` | `rechazaEditarUnClienteConDatosNoValidos` | Aplicación | AB#44 | PR #82 | ✅ |
-| HU22-CP05 | `AdministracionUsuariosServiceTest` | `rechazaEditarConUnRolDistintoDelActual` | Aplicación | AB#44 | PR #82 | ✅ |
-| HU22-CP05 | `AdministracionUsuariosServiceTest` | `rechazaEditarSinRol` | Aplicación | AB#44 | PR #82 | ✅ |
-| HU22-CP05 | `UsuarioControllerTest` | `rechazaUnCuerpoDeEdicionNoValido` (5 variantes) | Infraestructura | AB#44 | PR #82 | ✅ |
+| HU22-CP05 | `UsuarioControllerTest` | `rechazaUnCuerpoDeEdicionNoValido` (3 variantes: nombre vacío, nombre de 31 caracteres y apellidos vacíos; T43 quita "sin rol" y "rol inexistente") | Infraestructura | AB#44, AB#43 | PR #82, PR #96 | ✅ |
 | HU22-CP05 | `UsuarioControllerTest` | `editarConDatosQueElDominioRechazaDevuelve400` | Infraestructura | AB#44 | PR #82 | ✅ |
 | HU22-CP06 | `AdministracionUsuariosServiceTest` | `rechazaEditarUnClienteConElDniDeOtraCuenta` | Aplicación | AB#44 | PR #82 | ✅ |
 | HU22-CP06 | `AdministracionUsuariosServiceTest` | `editarUnClienteQueConservaSuDniNoLoComprueba` | Aplicación | AB#44 | PR #82 | ✅ |
@@ -829,6 +873,50 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `ProductoTest` y `DescuentoTest`: `productos/domain/model/` (JUnit, sin Spring)
 - `ProductoDocumentMapperTest`: `productos/infrastructure/adapter/out/persistence/` (JUnit, sin Spring)
 - `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/` (con Testcontainers)
+
+---
+
+## HU32 · Listar mis productos
+
+### Tabla A · HU32 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU32-CP01 | Solo se listan los productos del vendedor con sesión (el vendedor sale de la sesión, no de un parámetro) | Unitario + integración (MongoDB y capa web) | 5 | 🔍 En revisión |
+| HU32-CP02 | Búsqueda por nombre (sin distinguir mayúsculas, texto literal) y filtro por categoría, combinables | Integración MongoDB | 2 | 🔍 En revisión |
+| HU32-CP03 | Listado paginado, del más reciente al más antiguo, con `totalPages` 0 si no hay resultados | Integración (MongoDB y capa web) | 2 | 🔍 En revisión |
+| HU32-CP04 | Una página o un tamaño menor que 1 devuelve 400 | Integración (capa web) | 1 | 🔍 En revisión |
+| HU32-CP05 | Sin sesión (401) o sin ser vendedor (403) no se ve el listado | Integración (capa web) | 2 | 🔍 En revisión |
+
+Notas:
+- **HU32-CP01 a CP05:** casos propuestos en la T184 (AB#184) a partir de los criterios de aceptación de la HU32 (`frontend/docs/hu32-listado-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU32 en Azure Boards.
+- **Backend (T183, AB#183, PR #88):** `GET /api/seller/products`. El vendedor sale de la sesión: productos pide su id al módulo de usuarios por su puerto de entrada (`UsuarioEnSesionPort`).
+- **Pendiente:** el contrato del frontend pide `categorias` con el nombre de la categoría; hasta que exista el módulo de categorías se devuelve `categoriaId`. La búsqueda todavía distingue acentos.
+- **Frontend:** los tests de la HU32 (AB#187) no tienen todavía filas en la matriz.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU32-CP01 | `AutenticacionServiceTest` | `consultaElIdDelUsuarioEnSesion` | Aplicación | AB#184 | PR por abrir | 🔍 |
+| HU32-CP01 | `UsuarioEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP01 | `ListadoProductosServiceTest` | `listaLosProductosDelVendedorDeLaSesion` | Aplicación | AB#184 | PR por abrir | 🔍 |
+| HU32-CP01 | `ProductoMongoAdapterTest` | `listarPorVendedorSoloDevuelveLosSuyos` | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP01 | `ProductoControllerTest` | `vendedorRecibeSuListado` | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP02 | `ProductoMongoAdapterTest` | `listarPorVendedorBuscaPorNombreSinDistinguirMayusculas` | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP02 | `ProductoMongoAdapterTest` | `listarPorVendedorFiltraPorCategoriaYBusqueda` | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP03 | `ProductoMongoAdapterTest` | `listarPorVendedorPaginaDelMasRecienteAlMasAntiguo` | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP03 | `ProductoControllerTest` | `listadoVacioTieneCeroPaginas` | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP04 | `ProductoControllerTest` | `paginaOTamanoMenorQueUnoDevuelve400` (`page` y `size`) | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP05 | `ProductoControllerTest` | `sinSesionDevuelve401` | Infraestructura | AB#184 | PR por abrir | 🔍 |
+| HU32-CP05 | `ProductoControllerTest` | `noVendedorNoVeElListado` (cliente y administrador) | Infraestructura | AB#184 | PR por abrir | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AutenticacionServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
+- `UsuarioEnSesionAdapterTest`: `productos/infrastructure/adapter/out/usuarios/` (Mockito, sin Spring)
+- `ListadoProductosServiceTest`: `productos/application/service/` (Mockito, sin Spring)
+- `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/` (con Testcontainers)
+- `ProductoControllerTest`: `productos/infrastructure/adapter/in/web/` (con `@WebMvcTest`)
 
 ---
 

@@ -92,7 +92,7 @@ Todas las rutas son relativas a `frontend/src/`.
 
 | Archivo | Qué hace |
 |---|---|
-| `ProductsTable.jsx` | Tabla con producto, categorías (etiquetas), precio en euros, stock y estado. El stock 0 se resalta en rojo. Mientras se carga otra página los datos anteriores se atenúan (`aria-busy`) en lugar de desaparecer. |
+| `ProductsTable.jsx` | Tabla con producto, categoría (una etiqueta con su nombre, traducido a partir de `categoriaId` con la lista de categorías que recibe por prop; si no la tiene, un guion), precio en euros, stock y estado. El stock 0 se resalta en rojo. Mientras se carga otra página los datos anteriores se atenúan (`aria-busy`) en lugar de desaparecer. |
 | `useSellerProducts.js` | Pide el listado cuando cambian los filtros. Es un envoltorio de `hooks/useApiQuery.js`. |
 
 ### Componentes reutilizables (`components/`)
@@ -154,7 +154,7 @@ Respuesta 200:
 ```json
 {
   "items": [
-    { "id": "p-1", "nombre": "Teclado mecánico", "precio": 89.5, "stock": 12, "disponible": true, "categorias": ["Tecnología"] }
+    { "id": "p-1", "nombre": "Teclado mecánico", "precio": 89.5, "stock": 12, "disponible": true, "categoriaId": "cat-1" }
   ],
   "page": 1,
   "size": 10,
@@ -167,7 +167,7 @@ Respuesta 200:
 |---|---|
 | 401 / 403 / 5xx | Mensaje de error con **Reintentar** |
 
-- La categoría de cada producto llega como **nombre** (en una lista `categorias` que tiene un solo elemento, porque un producto tiene una única categoría); el filtro envía el **identificador** (el que devuelve `GET /api/categorias`).
+- La categoría de cada producto llega como **identificador** (`categoriaId`, un solo valor porque un producto tiene una única categoría), no como nombre: el backend aún no tiene módulo de categorías. El frontend lo traduce al nombre con la lista de `GET /api/categorias` que ya carga para el filtro; mientras esa lista no esté, o si la categoría no existe, la tabla muestra un guion. El filtro envía el identificador. Antes el contrato era `categorias: ["Tecnología"]` (nombres); cuando el backend pueda dar el nombre, bastará con que añada un campo `categoria` y la tabla lo use.
 - El backend debe obtener al vendedor de la **sesión**, nunca de un parámetro.
 - `totalPages` es 0 cuando no hay resultados.
 

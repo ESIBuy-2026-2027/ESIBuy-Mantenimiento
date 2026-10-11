@@ -330,4 +330,23 @@ class UsuarioTest {
         assertThrows(UsuarioInvalidoException.class,
                 () -> Usuario.nuevoVendedor(DATOS_PERSONALES, EMAIL, HASH, null, CONSENTIMIENTO));
     }
+
+    @Test
+    @DisplayName("HU21-CP05: el factory method crea un administrador activo y sin datos de cliente")
+    void creaAdministradorNuevoActivoYSinDatosCliente() {
+        DatosPersonales datosPersonales = new DatosPersonales("Nora", "Díaz", null);
+        Email email = new Email("nora@esibuy.test");
+        String hash = "hash-seguro";
+
+        Usuario admin = Usuario.nuevoAdministrador(datosPersonales, email, hash);
+
+        // Validamos el estado interno que fuerza el dominio
+        assertEquals(Rol.ADMINISTRADOR, admin.getRol());
+        assertEquals("ACTIVO", admin.getEstado());
+        assertNull(admin.getId(), "Un usuario recién creado no debe tener ID hasta que se guarda");
+        assertNull(admin.getDatosCliente(), "Los administradores no tienen datos de cliente");
+        assertNull(admin.getConsentimiento(), "Los administradores no registran consentimiento de privacidad en su creación");
+        assertEquals(datosPersonales, admin.getDatosPersonales());
+        assertEquals(email, admin.getEmail());
+    }
 }

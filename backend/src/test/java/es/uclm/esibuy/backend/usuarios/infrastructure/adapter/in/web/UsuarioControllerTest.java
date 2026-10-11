@@ -8,6 +8,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuario
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
+import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorUseCase;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
@@ -85,6 +86,9 @@ class UsuarioControllerTest {
 
     @MockitoBean
     private AdministracionUsuariosUseCase administracionUsuarios;
+
+    @MockitoBean
+    private CrearAdministradorUseCase crearAdministrador;
 
     // Cuerpo completo del registro de cliente (T229); solo varían el email y la contraseña.
     private static String json(String email, String password) {
@@ -517,6 +521,37 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.tipoCliente").doesNotExist());
     }
 
+    // Contrato del frontend: la fecha de incorporación del administrador es su fecha de alta (automática y no
+    // editable). Como el rol no cambia nunca, la fecha de alta de un administrador es la de su incorporación.
+    @Test
+    @DisplayName("HU20-CP05: la ficha de un administrador trae su fecha de incorporación, que es su fecha de alta")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void fichaDeUnAdministradorConSuFechaDeIncorporacion() throws Exception {
+        Usuario administrador = new Usuario("usr-9", new DatosPersonales("Ana", "López Díaz", null),
+                new Email("ana@esibuy.test"), "hash-no-debe-salir", Rol.ADMINISTRADOR, null, null);
+        administrador.restaurarFechaAlta(java.time.Instant.parse("2026-10-01T10:00:00Z"));
+        when(administracionUsuarios.consultar("usr-9")).thenReturn(administrador);
+
+        mockMvc.perform(get("/api/admin/usuarios/{id}", "usr-9"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fechaAlta").value("2026-10-01T10:00:00Z"))
+                .andExpect(jsonPath("$.fechaIncorporacion").value("2026-10-01T10:00:00Z"));
+    }
+
+    @Test
+    @DisplayName("HU20-CP05: la ficha de un cliente no trae fecha de incorporación")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void fichaDeUnClienteSinFechaDeIncorporacion() throws Exception {
+        Usuario cliente = clienteCarla();
+        cliente.restaurarFechaAlta(java.time.Instant.parse("2026-10-01T10:00:00Z"));
+        when(administracionUsuarios.consultar("usr-1")).thenReturn(cliente);
+
+        mockMvc.perform(get("/api/admin/usuarios/{id}", "usr-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fechaAlta").value("2026-10-01T10:00:00Z"))
+                .andExpect(jsonPath("$.fechaIncorporacion").doesNotExist());
+    }
+
     @Test
     @DisplayName("HU20-CP03: la ficha de un usuario que no existe devuelve 404")
     @WithMockUser(roles = "ADMINISTRADOR")
@@ -669,7 +704,7 @@ class UsuarioControllerTest {
     // Editar un usuario (HU22, T42/T44): PUT /api/admin/usuarios/{id}, contrato de frontend/docs/hu22-editar-usuario.md.
 
     private static final String CUERPO_CLIENTE = """
-            {"rol":"CLIENTE","nombre":"Carla","apellidos":"Moreno Gil","dni":"10004119A",
+            {"nombre":"Carla","apellidos":"Moreno Gil","dni":"10004119A",
              "telefono":"620023757","fechaNacimiento":"1978-04-13","tipoCliente":"PREMIUM","avatar":"avatar1"}""";
 
     @Test
@@ -688,7 +723,7 @@ class UsuarioControllerTest {
 
         ArgumentCaptor<EditarUsuarioCommand> comando = ArgumentCaptor.forClass(EditarUsuarioCommand.class);
         verify(administracionUsuarios).editar(eq("usr-1"), comando.capture());
-        assertEquals(new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", "avatar1", "10004119A",
+        assertEquals(new EditarUsuarioCommand("Carla", "Moreno Gil", "avatar1", "10004119A",
                 "620023757", LocalDate.of(1978, 4, 13), TipoCliente.PREMIUM), comando.getValue());
     }
 
@@ -709,14 +744,31 @@ class UsuarioControllerTest {
         assertEquals("Carla", comando.getValue().nombre());   // el resto del cuerpo sí llega
     }
 
+    // El rol de una cuenta no cambia nunca ("el que nace cliente muere cliente", decisión del equipo).
     @ParameterizedTest(name = "{0}")
     @CsvSource(delimiter = '|', value = {
             "sin rol | {\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\"}",
-            "nombre vacío | {\"rol\":\"ADMINISTRADOR\",\"nombre\":\"\",\"apellidos\":\"Moreno Gil\"}",
-            "nombre de 31 caracteres | {\"rol\":\"ADMINISTRADOR\",\"nombre\":\"JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ\",\"apellidos\":\"Moreno Gil\"}",
-            "apellidos vacíos | {\"rol\":\"ADMINISTRADOR\",\"nombre\":\"Carla\",\"apellidos\":\"  \"}",
-            "rol inexistente | {\"rol\":\"SUPERUSUARIO\",\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\"}"})
-    @DisplayName("HU22-CP05: rechaza un cuerpo sin rol o con nombre o apellidos no válidos (400) sin llamar al caso de uso")
+            "con otro rol | {\"rol\":\"VENDEDOR\",\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\"}",
+            "con un rol inexistente | {\"rol\":\"SUPERUSUARIO\",\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\"}"})
+    @DisplayName("HU22-CP04: el rol del cuerpo se ignora: sin rol o con otro rol se edita igual")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void editarIgnoraElRolDelCuerpo(String caso, String cuerpo) throws Exception {
+        when(administracionUsuarios.editar(eq("usr-1"), any())).thenReturn(clienteCarla());
+
+        mockMvc.perform(editar("usr-1", cuerpo))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<EditarUsuarioCommand> comando = ArgumentCaptor.forClass(EditarUsuarioCommand.class);
+        verify(administracionUsuarios).editar(eq("usr-1"), comando.capture());
+        assertEquals("Carla", comando.getValue().nombre());
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', value = {
+            "nombre vacío | {\"nombre\":\"\",\"apellidos\":\"Moreno Gil\"}",
+            "nombre de 31 caracteres | {\"nombre\":\"JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ\",\"apellidos\":\"Moreno Gil\"}",
+            "apellidos vacíos | {\"nombre\":\"Carla\",\"apellidos\":\"  \"}"})
+    @DisplayName("HU22-CP05: rechaza un cuerpo con nombre o apellidos no válidos (400) sin llamar al caso de uso")
     @WithMockUser(roles = "ADMINISTRADOR")
     void rechazaUnCuerpoDeEdicionNoValido(String caso, String cuerpo) throws Exception {
         mockMvc.perform(editar("usr-1", cuerpo))
@@ -859,5 +911,70 @@ class UsuarioControllerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("EMAIL_AND_COMMERCIAL_NAME_ALREADY_REGISTERED"))
                 .andExpect(jsonPath("$.mensaje").value(not(containsString("luis@uclm.es"))));
+    }
+
+    @Test
+    @DisplayName("HU21-CP06: crear administrador con datos correctos devuelve 201")
+    void crearAdministradorValidoDevuelve201() throws Exception {
+        String peticionJson = """
+            {
+              "nombre": "Nora",
+              "apellidos": "Díaz Ruiz",
+              "email": "nora@esibuy.test",
+              "password": "Password123!"
+            }
+            """;
+
+        mockMvc.perform(post("/api/admin/admins")
+                .with(user("admin").roles("ADMINISTRADOR")) 
+                .with(csrf()) 
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(peticionJson))
+                .andExpect(status().isCreated());
+
+        verify(crearAdministrador).crear(any());
+    }
+
+    @Test
+    @DisplayName("HU21-CP07: crear administrador rechaza campos obligatorios vacíos devolviendo 400")
+    void crearAdministradorRechazaCamposVacios() throws Exception {
+        String peticionInvalidaJson = """
+            {
+              "nombre": "",
+              "email": "correo-sin-arroba",
+              "password": ""
+            }
+            """;
+
+        mockMvc.perform(post("/api/admin/admins")
+                .with(user("admin").roles("ADMINISTRADOR"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(peticionInvalidaJson))
+                .andExpect(status().isBadRequest());
+
+        verify(crearAdministrador, never()).crear(any());
+    }
+
+    @Test
+    @DisplayName("HU21-CP08: usuarios sin rol ADMINISTRADOR no pueden crear administradores")
+    void crearAdministradorRechazaNoAdministradores() throws Exception {
+        String peticionJson = """
+            {
+              "nombre": "Nora",
+              "apellidos": "Díaz Ruiz",
+              "email": "nora@esibuy.test",
+              "password": "Password123!"
+            }
+            """;
+
+        mockMvc.perform(post("/api/admin/admins")
+                .with(user("cliente").roles("CLIENTE"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(peticionJson))
+                .andExpect(status().isForbidden());
+
+        verify(crearAdministrador, never()).crear(any());
     }
 }

@@ -3,10 +3,8 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 import java.time.LocalDate;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
-import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -15,13 +13,13 @@ import jakarta.validation.constraints.Size;
  *
  * <p>Aquí solo se comprueba la forma de la entrada común a todos los roles; los datos de cliente (DNI,
  * teléfono, mayoría de edad...) los valida el dominio a través del servicio, porque dependen del rol.
- * Los campos que no están aquí (email, contraseña, estado...) se ignoran aunque lleguen en el cuerpo.
+ * Los campos que no están aquí (email, contraseña, estado, rol...) se ignoran aunque lleguen en el cuerpo:
+ * el rol de una cuenta no cambia nunca, así que los datos se validan según el rol que ya tiene.
  *
  * <p>PENDIENTE: {@code sede} del administrador y {@code nombreComercial}, {@code nif} y
  * {@code categoriaPrincipalId} del vendedor, cuando existan en el modelo.
  */
 public record EditarUsuarioRequest(
-        @NotNull Rol rol,
         @NotBlank @Size(max = 30) String nombre,
         @NotBlank @Size(max = 30) String apellidos,
         String avatar,
@@ -31,6 +29,6 @@ public record EditarUsuarioRequest(
         TipoCliente tipoCliente) {
 
     EditarUsuarioCommand aComando() {
-        return new EditarUsuarioCommand(rol, nombre, apellidos, avatar, dni, telefono, fechaNacimiento, tipoCliente);
+        return new EditarUsuarioCommand(nombre, apellidos, avatar, dni, telefono, fechaNacimiento, tipoCliente);
     }
 }

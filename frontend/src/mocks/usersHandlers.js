@@ -1,11 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import {
-  buscarVendedorMock,
-  editarVendedorMock,
-  incorporarVendedorMock,
-  retirarVendedorMock,
-  vendedoresMock,
-} from './adminSellersHandlers'
+import { buscarVendedorMock, editarVendedorMock, vendedoresMock } from './adminSellersHandlers'
 import { getUsuarioEnSesion } from './authHandlers'
 import { esMayorDeEdadMock } from './fechas'
 import { CATEGORIAS } from './productsHandlers'
@@ -152,7 +146,7 @@ function detalleActual(usuario) {
     : detalle
 }
 
-// Campos de la ficha que se pueden modificar según el rol que queda (aparte del nombre y los apellidos).
+// Campos de la ficha que se pueden modificar según el rol (aparte del nombre y los apellidos).
 const CAMPOS_EDITABLES = new Map([
   ['CLIENTE', ['dni', 'telefono', 'fechaNacimiento', 'tipoCliente', 'avatar']],
   ['ADMINISTRADOR', ['sede', 'avatar']],
@@ -161,7 +155,7 @@ const CAMPOS_EDITABLES = new Map([
 
 const hayTexto = (valor) => typeof valor === 'string' && valor.trim() !== ''
 
-// El backend real también valida: lo mínimo que el formulario ya comprueba, según el rol que queda.
+// El backend real también valida: lo mínimo que el formulario ya comprueba, según el rol de la cuenta.
 function datosValidos(rol, datos) {
   if (!hayTexto(datos.nombre) || !hayTexto(datos.apellidos)) return false
   if (rol === 'CLIENTE') {
@@ -179,16 +173,6 @@ function datosValidos(rol, datos) {
     )
   }
   return true
-}
-
-// Los administradores los da de alta otro administrador: nunca están pendientes.
-const estadoParaRol = (estado, rol) => (rol === 'ADMINISTRADOR' && estado === 'PENDIENTE' ? 'ACTIVO' : estado)
-
-// Código de error si la cuenta no puede cambiar de rol, o null si puede (HU22).
-function conflictoAlCambiarDeRol(cuenta) {
-  if (cuenta.id === getUsuarioEnSesion()?.id) return 'CANNOT_CHANGE_OWN_ROLE'
-  if (esAdminActivo(cuenta) && usuarios.filter(esAdminActivo).length === 1) return 'LAST_ACTIVE_ADMIN'
-  return null
 }
 
 // Código de error si el nombre comercial ya es de otro vendedor, o null si está libre. El email no se
@@ -260,8 +244,9 @@ export const usersHandlers = [
     return usuario ? HttpResponse.json(detalleActual(usuario)) : new HttpResponse(null, { status: 404 })
   }),
 
-  // Modificar los datos de CUALQUIER usuario, incluido el rol (HU22): cliente, administrador o vendedor se
-  // editan con el mismo endpoint. El email y la contraseña no se tocan desde aquí. Un administrador no cambia su propio rol ni degrada al último administrador activo.
+  // Modificar los datos de CUALQUIER usuario (HU22): cliente, administrador o vendedor se editan con el mismo
+  // endpoint. El email, la contraseña y el rol no se tocan desde aquí: el rol de una cuenta no cambia nunca
+  // ("el que nace cliente muere cliente") y, como en el backend, se ignora aunque llegue en el cuerpo.
   http.put('/api/admin/usuarios/:id', async ({ params, request }) => {
     const rechazo = rechazarSiNoEsAdmin()
     if (rechazo) return rechazo
@@ -271,47 +256,35 @@ export const usersHandlers = [
     if (!existente) return new HttpResponse(null, { status: 404 })
 
     const datos = await request.json()
-    const rolActual = vendedor ? 'VENDEDOR' : existente.rol
-    const rolDestino = datos.rol ?? rolActual
-    if (!CAMPOS_EDITABLES.has(rolDestino) || !datosValidos(rolDestino, datos)) {
-      return HttpResponse.json({ code: 'VALIDATION_ERROR' }, { status: 400 })
+    const rol = vendedor ? 'VENDEDOR' : existente.rol
+    if (!datosValidos(rol, datos)) return HttpResponse.json({ code: 'VALIDATION_ERROR' }, { status: 400 })
+
+    if (vendedor) {
+      const conflicto = conflictoDeVendedor(existente.id, { nombreComercial: datos.nombreComercial })
+      if (conflicto) return HttpResponse.json({ code: conflicto }, { status: 409 })
+      editarVendedorMock(existente.id, datos)
     }
 
-    const conflictoDeRol = rolDestino === rolActual ? null : conflictoAlCambiarDeRol({ ...existente, rol: rolActual })
-    const conflictoDeDatos =
-      rolDestino === 'VENDEDOR' ? conflictoDeVendedor(existente.id, { nombreComercial: datos.nombreComercial }) : null
-    const conflicto = conflictoDeRol ?? conflictoDeDatos
-    if (conflicto) return HttpResponse.json({ code: conflicto }, { status: 409 })
-
-    const estado = estadoParaRol(existente.estado, rolDestino)
     const { nombre, apellidos, ...resto } = datos
     const detalle = Object.fromEntries(
-      CAMPOS_EDITABLES.get(rolDestino)
+      CAMPOS_EDITABLES.get(rol)
         .filter((campo) => campo in resto)
         .map((campo) => [campo, resto[campo]]),
     )
-    const cuenta = { id: existente.id, nombre, apellidos, email: existente.email, rol: rolDestino, estado }
-
-    if (vendedor && rolDestino === 'VENDEDOR') {
-      editarVendedorMock(existente.id, datos)
-    } else if (vendedor) {
-      retirarVendedorMock(existente.id)
-    } else if (rolDestino === 'VENDEDOR' && rolActual !== 'VENDEDOR') {
-      incorporarVendedorMock({ ...cuenta, ...detalle })
-    }
-
-    const enLaLista = usuarios.some((candidato) => candidato.id === existente.id)
-    const fechaAlta = existente.fechaAlta ?? new Date().toISOString().slice(0, 19)
-    if (enLaLista) {
-      usuarios = usuarios.map((candidato) =>
-        candidato.id === existente.id ? { ...candidato, ...cuenta } : candidato,
-      )
-    } else if (rolDestino !== 'VENDEDOR') {
-      agregarUsuario({ ...cuenta, fechaAlta })
-    }
+    usuarios = usuarios.map((candidato) =>
+      candidato.id === existente.id ? { ...candidato, nombre, apellidos } : candidato,
+    )
     detallesModificados.set(existente.id, { ...detallesModificados.get(existente.id), ...detalle })
 
-    const actualizado = usuarios.find((candidato) => candidato.id === existente.id) ?? { ...cuenta, fechaAlta }
+    const actualizado = usuarios.find((candidato) => candidato.id === existente.id) ?? {
+      id: existente.id,
+      nombre,
+      apellidos,
+      email: existente.email,
+      rol,
+      estado: existente.estado,
+      fechaAlta: existente.fechaAlta,
+    }
     return HttpResponse.json(detalleActual(actualizado))
   }),
 

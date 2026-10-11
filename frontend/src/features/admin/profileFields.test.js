@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { ROLES } from '../../auth/roles'
 import {
-  editFieldsFor,
   initialValues,
   profileFieldsFor,
   profilePayload,
@@ -67,7 +66,6 @@ describe('campos editables por tipo de usuario (HU22)', () => {
     expect(nombresEditables(ROLES.CLIENTE)).toEqual([
       'nombre',
       'apellidos',
-      'rol',
       'dni',
       'telefono',
       'fechaNacimiento',
@@ -78,14 +76,13 @@ describe('campos editables por tipo de usuario (HU22)', () => {
   })
 
   it('profileFields_deUnAdministrador_noPermiteModificarEmailNiFechaDeIncorporacion', () => {
-    expect(nombresEditables(ROLES.ADMIN)).toEqual(['nombre', 'apellidos', 'rol', 'sede', 'avatar'])
+    expect(nombresEditables(ROLES.ADMIN)).toEqual(['nombre', 'apellidos', 'sede', 'avatar'])
   })
 
   it('profileFields_deUnVendedor_permiteModificarTodosSusDatosMenosElEmail', () => {
     expect(nombresEditables(ROLES.VENDEDOR)).toEqual([
       'nombre',
       'apellidos',
-      'rol',
       'nombreComercial',
       'nif',
       'categoriaPrincipalId',
@@ -105,6 +102,15 @@ describe('campos editables por tipo de usuario (HU22)', () => {
 
   it.each([ROLES.CLIENTE, ROLES.ADMIN, ROLES.VENDEDOR])('profileFields_de_%s_elEstadoEsDeSoloLectura', (rol) => {
     expect(soloLectura(rol)).toContain('estado')
+  })
+
+  // El rol de una cuenta no se puede cambiar ("el que nace cliente muere cliente", decisión del equipo).
+  it.each([ROLES.CLIENTE, ROLES.ADMIN, ROLES.VENDEDOR])('profileFields_de_%s_elRolEsDeSoloLectura', (rol) => {
+    expect(soloLectura(rol)).toContain('rol')
+  })
+
+  it.each([ROLES.CLIENTE, ROLES.ADMIN, ROLES.VENDEDOR])('profileFields_de_%s_elEmailEsDeSoloLectura', (rol) => {
+    expect(soloLectura(rol)).toContain('email')
   })
 
   it('profileFields_soloElAdministradorTieneFechaDeAlta', () => {
@@ -152,12 +158,17 @@ describe('readFields', () => {
     expect(campos.Teléfono).toBe('—')
     expect(campos['Imagen de perfil']).toBe('Sin elegir')
   })
+
+  it('readFields_incluyeElRolDeLaCuentaEnTexto', () => {
+    expect(Object.fromEntries(readFields(ROLES.CLIENTE, CLIENTE)).Rol).toBe('Cliente')
+    expect(Object.fromEntries(readFields(ROLES.ADMIN, ADMINISTRADOR)).Rol).toBe('Administrador')
+    expect(Object.fromEntries(readFields(ROLES.VENDEDOR, VENDEDOR)).Rol).toBe('Vendedor')
+  })
 })
 
 describe('initialValues', () => {
-  it('initialValues_deUnCliente_devuelveSusDatosComoTextoYSuRol', () => {
-    expect(initialValues(ROLES.CLIENTE, CLIENTE)).toMatchObject({
-      rol: 'CLIENTE',
+  it('initialValues_deUnCliente_devuelveSusDatosComoTexto', () => {
+    expect(initialValues(ROLES.CLIENTE, CLIENTE)).toEqual({
       nombre: 'Carlos',
       apellidos: 'Moreno Gil',
       dni: '10004119A',
@@ -168,14 +179,12 @@ describe('initialValues', () => {
     })
   })
 
-  it('initialValues_incluyeLosCamposDeTodosLosRolesParaPoderCambiarDeRol', () => {
-    expect(Object.keys(initialValues(ROLES.CLIENTE, CLIENTE))).toEqual(
-      expect.arrayContaining(['sede', 'nombreComercial', 'nif', 'categoriaPrincipalId', 'dni', 'rol']),
-    )
+  it('initialValues_soloIncluyeLosCamposModificablesDeSuRol', () => {
+    expect(Object.keys(initialValues(ROLES.ADMIN, ADMINISTRADOR))).toEqual(['nombre', 'apellidos', 'sede', 'avatar'])
   })
 
-  it('initialValues_deUnaCuentaSinTipoDeCliente_proponeEstandar', () => {
-    expect(initialValues(ROLES.ADMIN, ADMINISTRADOR).tipoCliente).toBe('ESTANDAR')
+  it('initialValues_deUnClienteSinTipoDeCliente_proponeEstandar', () => {
+    expect(initialValues(ROLES.CLIENTE, { ...CLIENTE, tipoCliente: undefined }).tipoCliente).toBe('ESTANDAR')
   })
 
   it('initialValues_conDatosQueFaltan_losDejaVacios', () => {
@@ -280,7 +289,6 @@ describe('profilePayload', () => {
     expect(Object.keys(payload)).toEqual([
       'nombre',
       'apellidos',
-      'rol',
       'dni',
       'telefono',
       'fechaNacimiento',
@@ -292,24 +300,22 @@ describe('profilePayload', () => {
   it('profilePayload_deUnAdministrador_noEnviaEmailNiFechaDeIncorporacion', () => {
     const claves = Object.keys(profilePayload(ROLES.ADMIN, initialValues(ROLES.ADMIN, ADMINISTRADOR)))
 
-    expect(claves).toEqual(['nombre', 'apellidos', 'rol', 'sede', 'avatar'])
+    expect(claves).toEqual(['nombre', 'apellidos', 'sede', 'avatar'])
   })
 
   it('profilePayload_recortaLosEspaciosDeLosTextos', () => {
     const payload = profilePayload(ROLES.ADMIN, {
-      rol: ROLES.ADMIN,
       nombre: '  Diego ',
       apellidos: ' D ',
       sede: ' Cuenca ',
       avatar: 'avatar3',
     })
 
-    expect(payload).toEqual({ rol: 'ADMINISTRADOR', nombre: 'Diego', apellidos: 'D', sede: 'Cuenca', avatar: 'avatar3' })
+    expect(payload).toEqual({ nombre: 'Diego', apellidos: 'D', sede: 'Cuenca', avatar: 'avatar3' })
   })
 
   it('profilePayload_deUnVendedor_enviaUnaSolaCategoriaPorIdentificadorYNuncaElEmail', () => {
     expect(profilePayload(ROLES.VENDEDOR, initialValues(ROLES.VENDEDOR, VENDEDOR))).toEqual({
-      rol: 'VENDEDOR',
       nombre: 'Vera',
       apellidos: 'Vendedora',
       nombreComercial: 'TecnoVera',
@@ -319,89 +325,16 @@ describe('profilePayload', () => {
   })
 })
 
-describe('cambio de rol (HU22)', () => {
-  const nombresDe = (campos) => campos.filter((campo) => campo.edit).map((campo) => campo.name)
+describe('el rol no se puede cambiar (HU22)', () => {
+  it('profilePayload_nuncaEnviaElRolAunqueVengaEnLosValores', () => {
+    const valores = { ...initialValues(ROLES.CLIENTE, CLIENTE), rol: ROLES.ADMIN }
 
-  it('editFieldsFor_alPasarAAdministrador_ofreceLosCamposDeUnAdministrador', () => {
-    expect(nombresDe(editFieldsFor(ROLES.ADMIN))).toEqual(['nombre', 'apellidos', 'rol', 'sede', 'avatar'])
+    expect(profilePayload(ROLES.CLIENTE, valores)).not.toHaveProperty('rol')
   })
 
-  it('editFieldsFor_alPasarAVendedor_ofreceLosCamposDeUnVendedor', () => {
-    expect(nombresDe(editFieldsFor(ROLES.VENDEDOR))).toEqual(
-      expect.arrayContaining(['nombreComercial', 'nif', 'categoriaPrincipalId']),
-    )
-  })
+  it('validateProfile_conUnRolEnLosValores_validaConLosCamposDelRolDeLaCuenta', () => {
+    const valores = { ...initialValues(ROLES.CLIENTE, CLIENTE), rol: ROLES.VENDEDOR, dni: '' }
 
-  it.each([ROLES.CLIENTE, ROLES.ADMIN, ROLES.VENDEDOR])('editFieldsFor_de_%s_nuncaOfreceElEmailComoModificable', (rol) => {
-    expect(nombresDe(editFieldsFor(rol))).not.toContain('email')
-  })
-
-  it('editFieldsFor_deUnVendedor_muestraElEmailEnSoloLectura', () => {
-    const email = editFieldsFor(ROLES.VENDEDOR).find((campo) => campo.name === 'email')
-
-    expect(email).toBeDefined()
-    expect(email.edit).toBeUndefined()
-  })
-
-  it('profilePayload_alCambiarDeClienteAAdministrador_enviaElRolNuevoYSoloSusCampos', () => {
-    const valores = { ...initialValues(ROLES.CLIENTE, CLIENTE), rol: ROLES.ADMIN, sede: 'Toledo' }
-
-    expect(profilePayload(ROLES.CLIENTE, valores)).toEqual({
-      rol: 'ADMINISTRADOR',
-      nombre: 'Carlos',
-      apellidos: 'Moreno Gil',
-      sede: 'Toledo',
-      avatar: 'avatar1',
-    })
-  })
-
-  it('profilePayload_alCambiarDeAdministradorAVendedor_nuncaEnviaElEmail', () => {
-    const valores = {
-      ...initialValues(ROLES.ADMIN, ADMINISTRADOR),
-      rol: ROLES.VENDEDOR,
-      nombreComercial: 'Tienda Diego',
-      nif: 'B12345678',
-      categoriaPrincipalId: 'cat-2',
-    }
-
-    const payload = profilePayload(ROLES.ADMIN, valores)
-
-    expect(payload).toEqual({
-      rol: 'VENDEDOR',
-      nombre: 'Diego',
-      apellidos: 'Delgado Iglesias',
-      nombreComercial: 'Tienda Diego',
-      nif: 'B12345678',
-      categoriaPrincipalId: 'cat-2',
-    })
-    expect(payload).not.toHaveProperty('email')
-  })
-
-  it('validateProfile_alCambiarAVendedor_exigeLosDatosDelRolNuevo', () => {
-    const errores = validateProfile(ROLES.CLIENTE, { ...initialValues(ROLES.CLIENTE, CLIENTE), rol: ROLES.VENDEDOR })
-
-    expect(Object.keys(errores).sort((a, b) => a.localeCompare(b))).toEqual([
-      'categoriaPrincipalId',
-      'nif',
-      'nombreComercial',
-    ])
-  })
-
-  it('validateProfile_alCambiarAAdministrador_noExigeLosDatosDelRolAnterior', () => {
-    const valores = { ...initialValues(ROLES.CLIENTE, { ...CLIENTE, dni: '', fechaNacimiento: '' }), rol: ROLES.ADMIN }
-
-    expect(validateProfile(ROLES.CLIENTE, valores)).toEqual({})
-  })
-
-  it('validateProfile_conUnRolQueNoExiste_devuelveError', () => {
-    const errores = validateProfile(ROLES.CLIENTE, { ...initialValues(ROLES.CLIENTE, CLIENTE), rol: 'SUPERUSUARIO' })
-
-    expect(errores.rol).toMatch(/rol válido/i)
-  })
-
-  it('readFields_incluyeElRolDeLaCuentaEnTexto', () => {
-    expect(Object.fromEntries(readFields(ROLES.CLIENTE, CLIENTE)).Rol).toBe('Cliente')
-    expect(Object.fromEntries(readFields(ROLES.ADMIN, ADMINISTRADOR)).Rol).toBe('Administrador')
-    expect(Object.fromEntries(readFields(ROLES.VENDEDOR, VENDEDOR)).Rol).toBe('Vendedor')
+    expect(Object.keys(validateProfile(ROLES.CLIENTE, valores))).toEqual(['dni'])
   })
 })

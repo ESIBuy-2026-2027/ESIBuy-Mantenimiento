@@ -250,6 +250,30 @@ describe('SellerDetailDialog (HU26): productos', () => {
     expect(within(dialogo).getByText(/mostrando 1–5 de 23 productos/i)).toBeInTheDocument()
   })
 
+  it('sellerDetailDialog_pestanaProductos_muestraElNombreDeLaCategoriaDeCadaProducto', async () => {
+    server.use(
+      http.get('/api/admin/sellers/:id/products', () =>
+        HttpResponse.json({
+          items: [
+            { id: 'p-1', nombre: 'Teclado mecánico', precio: 89.5, stock: 12, disponible: true, categoriaId: 'cat-1' },
+          ],
+          page: 1,
+          size: 5,
+          totalItems: 1,
+          totalPages: 1,
+        }),
+      ),
+    )
+    const user = userEvent.setup()
+    const { dialogo } = await abrirDialogo()
+
+    await abrirPestana(user, dialogo, 'Productos')
+
+    const fila = (await within(dialogo).findByText('Teclado mecánico')).closest('tr')
+    await waitFor(() => expect(within(fila).getByText('Tecnología')).toBeInTheDocument(), ESPERA)
+    expect(within(fila).queryByText('cat-1')).not.toBeInTheDocument()
+  })
+
   it('sellerDetailDialog_pestanaProductos_sinAccionesDeEdicionNiBorrado', async () => {
     const user = userEvent.setup()
     const { dialogo } = await abrirDialogo()
@@ -428,7 +452,6 @@ describe('SellerDetailDialog (HU22): edición', () => {
     expect(envio.cuerpo).toEqual({
       nombre: 'Vera',
       apellidos: 'Vendedora',
-      rol: 'VENDEDOR',
       nombreComercial: 'TecnoVera Plus',
       nif: 'B12345601',
       categoriaPrincipalId: 'cat-1',
@@ -540,7 +563,7 @@ describe('SellerDetailDialog (HU22): edición', () => {
   })
 })
 
-describe('SellerDetailDialog (HU22): cambio de rol', () => {
+describe('SellerDetailDialog (HU22): el rol no se puede cambiar', () => {
   async function entrarEnEdicion(sellerId = VENDEDOR_CON_DATOS) {
     const ficha = await abrirDialogo(sellerId)
     const user = userEvent.setup()
@@ -549,7 +572,6 @@ describe('SellerDetailDialog (HU22): cambio de rol', () => {
     return { ...ficha, user }
   }
 
-  const rol = (dialogo) => within(dialogo).getByLabelText(/^rol/i)
   const guardar = (user, dialogo) => user.click(within(dialogo).getByRole('button', { name: /^guardar$/i }))
 
   function capturarGuardado() {
@@ -571,14 +593,14 @@ describe('SellerDetailDialog (HU22): cambio de rol', () => {
     expect(await within(dialogo).findByLabelText('Rol')).toHaveValue('Vendedor')
   })
 
-  it('sellerDetailDialog_enEdicion_ofreceElSelectorDeRolConVendedorSeleccionado', async () => {
+  it('sellerDetailDialog_enEdicion_elRolEsDeSoloLectura', async () => {
     const { dialogo } = await entrarEnEdicion()
 
-    expect(rol(dialogo)).toHaveValue('VENDEDOR')
-    expect(rol(dialogo)).toBeEnabled()
+    expect(within(dialogo).getByLabelText('Rol')).toHaveValue('Vendedor')
+    expect(within(dialogo).getByLabelText('Rol')).toHaveAttribute('readonly')
   })
 
-  it('sellerDetailDialog_alEditarSeUsaElMismoEndpointQueConElRestoDeUsuarios', async () => {
+  it('sellerDetailDialog_alEditarSeUsaElMismoEndpointQueConElRestoDeUsuariosSinEnviarElRol', async () => {
     const envio = capturarGuardado()
     const { dialogo, user } = await entrarEnEdicion()
 
@@ -586,57 +608,10 @@ describe('SellerDetailDialog (HU22): cambio de rol', () => {
 
     await waitFor(() => expect(envio.llamadas).toBe(1), ESPERA)
     expect(envio.id).toBe('u-2')
-    expect(envio.cuerpo.rol).toBe('VENDEDOR')
+    expect(envio.cuerpo).not.toHaveProperty('rol')
   })
 
-  it('sellerDetailDialog_alPasarAAdministrador_ofreceLaSedeYQuitaLosDatosDelVendedor', async () => {
-    const { dialogo, user } = await entrarEnEdicion()
-
-    await user.selectOptions(rol(dialogo), 'ADMINISTRADOR')
-
-    expect(within(dialogo).getByLabelText(/^sede/i)).toBeInTheDocument()
-    expect(within(dialogo).queryByLabelText(/^nombre comercial/i)).not.toBeInTheDocument()
-    expect(within(dialogo).getByLabelText('Email')).toHaveAttribute('readonly')
-  })
-
-  it('sellerDetailDialog_alPasarAAdministradorYGuardar_enviaElRolSinElEmailNiLosDatosDelVendedor', async () => {
-    const envio = capturarGuardado()
-    const { dialogo, user } = await entrarEnEdicion()
-
-    await user.selectOptions(rol(dialogo), 'ADMINISTRADOR')
-    await guardar(user, dialogo)
-
-    await waitFor(() => expect(envio.llamadas).toBe(1), ESPERA)
-    expect(envio.cuerpo).toEqual({
-      nombre: 'Vera',
-      apellidos: 'Vendedora',
-      rol: 'ADMINISTRADOR',
-      sede: '',
-      avatar: '',
-    })
-  })
-
-  it('sellerDetailDialog_alDejarDeSerVendedor_cierraLaFichaYAvisaAlListado', async () => {
-    const { dialogo, user, onClose, onStatusChange } = await entrarEnEdicion()
-
-    await user.selectOptions(rol(dialogo), 'ADMINISTRADOR')
-    await guardar(user, dialogo)
-
-    await waitFor(() => expect(onClose).toHaveBeenCalled(), ESPERA)
-    expect(onStatusChange).toHaveBeenCalled()
-  })
-
-  it('sellerDetailDialog_alPasarAClienteSinSusDatos_loExigeYNoCierra', async () => {
-    const { dialogo, user, onClose } = await entrarEnEdicion()
-
-    await user.selectOptions(rol(dialogo), 'CLIENTE')
-    await guardar(user, dialogo)
-
-    expect(within(dialogo).getAllByText(/este campo es obligatorio/i)).toHaveLength(2)
-    expect(onClose).not.toHaveBeenCalled()
-  })
-
-  it('sellerDetailDialog_siSeguiaSiendoVendedor_noSeCierraAlGuardar', async () => {
+  it('sellerDetailDialog_alGuardar_noSeCierraYAvisaDeQueSeHaGuardado', async () => {
     const { dialogo, user, onClose } = await entrarEnEdicion()
 
     await guardar(user, dialogo)

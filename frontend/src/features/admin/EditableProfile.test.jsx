@@ -59,9 +59,13 @@ describe('EditableProfile (HU22)', () => {
     expect(await screen.findByLabelText(/^categoría principal/i)).toBeInTheDocument()
   })
 
-  it('editableProfile_conLockRol_deshabilitaElSelectorDeRol', async () => {
-    renderizar({ rol: ROLES.ADMIN, usuario: { id: 'u-1', nombre: 'Ada', apellidos: 'Admin', estado: 'ACTIVO' }, lockRol: true })
+  // Las categorías solo hacen falta para elegir la principal de un vendedor: el rol de una cuenta no cambia.
+  it.each([ROLES.CLIENTE, ROLES.ADMIN])('editableProfile_de_%s_muestraElFormularioSinCargarLasCategorias', (rol) => {
+    server.use(http.get('/api/categorias', () => new HttpResponse(null, { status: 500 })))
+    renderizar({ rol, usuario: { id: 'u-1', nombre: 'Ada', apellidos: 'Admin', estado: 'ACTIVO' } })
 
-    expect(await screen.findByLabelText(/^rol/i)).toBeDisabled()
+    expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Ada')
+    expect(screen.queryByText(/no se han podido cargar las categorías/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/cargando el formulario/i)).not.toBeInTheDocument()
   })
 })

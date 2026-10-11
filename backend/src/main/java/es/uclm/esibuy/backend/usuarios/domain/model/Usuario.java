@@ -74,6 +74,13 @@ public class Usuario {
         }
     }
 
+    public static Usuario nuevoAdministrador(DatosPersonales datosPersonales, Email email, String passwordHash) {
+        // A un administrador no le exigimos DatosCliente ni ConsentimientoPrivacidad
+        Usuario admin = new Usuario(null, datosPersonales, email, passwordHash, Rol.ADMINISTRADOR, null, null);
+        admin.restaurarEstado("ACTIVO"); // Nace activo directamente
+        return admin;
+    }
+
     // Un cliente lleva siempre DatosCliente; un vendedor o un administrador pueden no tener perfil
     // (cuentas anteriores a la T241 o creadas por un administrador).
     private static PerfilUsuario exigirPerfilCoherente(Rol rol, PerfilUsuario perfil) {

@@ -66,15 +66,9 @@ let estadosModificados = new Map()
 // Datos que el administrador ha modificado durante la sesión (HU22), por id de vendedor.
 let datosModificados = new Map()
 
-// Vendedores que han llegado o se han ido por un cambio de rol (HU22) durante la sesión.
-let vendedoresAnadidos = []
-let vendedoresRetirados = new Set()
-
 export function resetAdminSellersMock() {
   estadosModificados = new Map()
   datosModificados = new Map()
-  vendedoresAnadidos = []
-  vendedoresRetirados = new Set()
 }
 
 const conCambios = (vendedor) => ({
@@ -83,12 +77,9 @@ const conCambios = (vendedor) => ({
   ...(estadosModificados.has(vendedor.id) && { estado: estadosModificados.get(vendedor.id) }),
 })
 
-const todosLosVendedores = () =>
-  [...VENDEDORES_DATOS, ...vendedoresAnadidos].filter((vendedor) => !vendedoresRetirados.has(vendedor.id))
-
 // Funciones que usa el mock de usuarios (usersHandlers): el administrador edita a los vendedores con el mismo
-// endpoint que al resto de usuarios y, al cambiar de rol, un vendedor sale de este almacén o entra en él.
-export const vendedoresMock = () => todosLosVendedores().map(conCambios)
+// endpoint que al resto de usuarios.
+export const vendedoresMock = () => VENDEDORES_DATOS.map(conCambios)
 export const buscarVendedorMock = (id) => vendedoresMock().find((vendedor) => vendedor.id === id)
 
 export function editarVendedorMock(id, { nombre, apellidos, nombreComercial, nif, categoriaPrincipalId }) {
@@ -100,18 +91,6 @@ export function editarVendedorMock(id, { nombre, apellidos, nombreComercial, nif
     nif,
     categoria: categoriaPrincipalId,
   })
-}
-
-export const retirarVendedorMock = (id) => vendedoresRetirados.add(id)
-
-export function incorporarVendedorMock({ id, nombre, apellidos, email, nombreComercial, nif, categoriaPrincipalId, estado }) {
-  const datos = { nombre, apellidos, email, nombreComercial, nif, categoria: categoriaPrincipalId, estado }
-  if (VENDEDORES_DATOS.some((vendedor) => vendedor.id === id)) {
-    vendedoresRetirados.delete(id)
-    datosModificados.set(id, datos)
-  } else {
-    vendedoresAnadidos = [...vendedoresAnadidos, { id, ...datos }]
-  }
 }
 
 // Orden ascendente de los estados: primero los pendientes de revisar.

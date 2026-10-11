@@ -437,4 +437,13 @@ class AutenticacionServiceTest {
 
         assertSame(usuario, enSesion);
     }
+
+    @Test
+    @DisplayName("HU32-CP01: devuelve solo el id del usuario en sesión, para otros módulos")
+    void consultaElIdDelUsuarioEnSesion() {
+        // Productos (HU32) guarda el id del vendedor, pero la sesión solo tiene su correo.
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(clienteConId()));
+
+        assertEquals("u-1", autenticacion.consultarIdUsuarioEnSesion("juan@uclm.es"));
+    }
 }

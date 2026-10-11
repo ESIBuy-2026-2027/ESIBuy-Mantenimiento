@@ -33,6 +33,7 @@ import {
 import { updateUser } from '../../api/users'
 import { ROLES } from '../../auth/roles'
 import { useApiQuery } from '../../hooks/useApiQuery'
+import { useCategories } from '../../hooks/useCategories'
 import ProductsTable from '../seller/ProductsTable'
 import OrdersTable from './OrdersTable'
 import PagedList from './PagedList'
@@ -55,6 +56,7 @@ const useStyles = makeStyles({
 
 function SellerProductsTab({ sellerId }) {
   const load = useCallback((page) => getAdminSellerProducts(sellerId, { page }), [sellerId])
+  const { categories } = useCategories()
 
   return (
     <PagedList
@@ -63,7 +65,12 @@ function SellerProductsTab({ sellerId }) {
       errorMessage="No se han podido cargar los productos del vendedor."
       emptyMessage="Este vendedor todavía no tiene productos."
       renderItems={(items, refreshing) => (
-        <ProductsTable products={items} refreshing={refreshing} label="Productos del vendedor" />
+        <ProductsTable
+          products={items}
+          categories={categories}
+          refreshing={refreshing}
+          label="Productos del vendedor"
+        />
       )}
     />
   )
@@ -129,13 +136,8 @@ export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }
     }
   }
 
-  const avisarGuardado = (datos) => {
+  const avisarGuardado = () => {
     onStatusChange?.()
-    // Si deja de ser vendedor, ya no tiene ficha de vendedor: se cierra y el listado se actualiza.
-    if (datos.rol !== ROLES.VENDEDOR) {
-      onClose()
-      return
-    }
     setEditando(false)
     setResultado({ intent: 'success', texto: 'Los cambios se han guardado.' })
     retry()
