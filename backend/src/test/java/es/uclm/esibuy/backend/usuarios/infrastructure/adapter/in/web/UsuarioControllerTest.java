@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarClienteCommand;
+import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarVendedorCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
@@ -18,9 +19,11 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYNombreComercialYaRegistradosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
@@ -44,7 +47,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -70,6 +72,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UsuarioControllerTest {
 
     private static final String URL_REGISTRO = "/api/auth/register/cliente";   // contrato acordado con el frontend (T229)
+    private static final String URL_REGISTRO_VENDEDOR = "/api/auth/register/vendedor";   // contrato del frontend (T241)
 
     @Autowired
     private MockMvc mockMvc;
@@ -91,6 +94,16 @@ class UsuarioControllerTest {
                 "repeticionPassword": "%s", "tipoCliente": "ESTANDAR", "imagenPerfil": null,
                 "aceptaPrivacidad": true}
                """.formatted(email, password, password);
+    }
+
+    // Cuerpo del formulario de vendedor tras el PR #81: una única categoría en categoriaPrincipalId.
+    private static String jsonVendedor() {
+        return """
+               {"nombre": "Luis", "apellidos": "Pérez García", "nombreComercial": "Tienda Luis",
+                "categoriaPrincipalId": "cat-1", "dni": "87654321X", "email": "luis@uclm.es",
+                "telefono": "612345678", "password": "Clave-1234", "repeticionPassword": "Clave-1234",
+                "imagenPerfil": "avatar1", "aceptaPrivacidad": true}
+               """;
     }
 
     @Test
@@ -804,29 +817,47 @@ class UsuarioControllerTest {
 
     @Test
     @DisplayName("HU1-CP19: un registro de vendedor válido devuelve 201")
-    void registroDeVendedorValidoDevuelve201() {
-        // TODO ciclo 13 (T241)
-        fail("Funcionalidad no implementada");
+    void registroDeVendedorValidoDevuelve201() throws Exception {
+        mockMvc.perform(post(URL_REGISTRO_VENDEDOR).contentType(MediaType.APPLICATION_JSON).content(jsonVendedor()))
+                .andExpect(status().isCreated());
+
+        verify(registroUsuario).registrarVendedor(new RegistrarVendedorCommand("Luis", "Pérez García", "Tienda Luis",
+                "cat-1", "87654321X", "luis@uclm.es", "612345678", "Clave-1234", "Clave-1234", "avatar1", true));
     }
 
     @Test
     @DisplayName("HU1-CP21: un vendedor sin categoría principal devuelve 400")
-    void vendedorSinCategoriaDevuelve400() {
-        // TODO ciclo 13 (T241)
-        fail("Funcionalidad no implementada");
+    void vendedorSinCategoriaDevuelve400() throws Exception {
+        // La categoría es obligatoria en el formulario; la capa web la comprueba antes de llegar al caso de uso
+        String cuerpo = jsonVendedor().replace("\"categoriaPrincipalId\": \"cat-1\"", "\"categoriaPrincipalId\": \"\"");
+
+        mockMvc.perform(post(URL_REGISTRO_VENDEDOR).contentType(MediaType.APPLICATION_JSON).content(cuerpo))
+                .andExpect(status().isBadRequest());
+
+        verify(registroUsuario, never()).registrarVendedor(any());
     }
 
     @Test
     @DisplayName("HU1-CP20: un nombre comercial ya registrado devuelve 409 con su código")
-    void nombreComercialYaRegistradoDevuelve409ConCodigo() {
-        // TODO ciclo 13 (T241)
-        fail("Funcionalidad no implementada");
+    void nombreComercialYaRegistradoDevuelve409ConCodigo() throws Exception {
+        doThrow(new NombreComercialYaRegistradoException("El nombre comercial ya está registrado"))
+                .when(registroUsuario).registrarVendedor(any());
+
+        mockMvc.perform(post(URL_REGISTRO_VENDEDOR).contentType(MediaType.APPLICATION_JSON).content(jsonVendedor()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("COMMERCIAL_NAME_ALREADY_REGISTERED"))
+                .andExpect(jsonPath("$.mensaje").value(not(containsString("Tienda Luis"))));
     }
 
     @Test
     @DisplayName("HU1-CP20: correo y nombre comercial ya registrados devuelven 409 con su código")
-    void correoYNombreComercialYaRegistradosDevuelve409ConCodigo() {
-        // TODO ciclo 13 (T241)
-        fail("Funcionalidad no implementada");
+    void correoYNombreComercialYaRegistradosDevuelve409ConCodigo() throws Exception {
+        doThrow(new CorreoYNombreComercialYaRegistradosException("El correo y el nombre comercial ya están registrados"))
+                .when(registroUsuario).registrarVendedor(any());
+
+        mockMvc.perform(post(URL_REGISTRO_VENDEDOR).contentType(MediaType.APPLICATION_JSON).content(jsonVendedor()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("EMAIL_AND_COMMERCIAL_NAME_ALREADY_REGISTERED"))
+                .andExpect(jsonPath("$.mensaje").value(not(containsString("luis@uclm.es"))));
     }
 }
