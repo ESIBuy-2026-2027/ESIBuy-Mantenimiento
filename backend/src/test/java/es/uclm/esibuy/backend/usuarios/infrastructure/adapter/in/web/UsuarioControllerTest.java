@@ -655,7 +655,7 @@ class UsuarioControllerTest {
     @CsvSource({
             "name,     asc,  NOMBRE, false",
             "status,   desc, ESTADO, true",
-            "category, asc,  ,       false",
+            "category, asc,  CATEGORIA, false",
             ",         ,     ,       false"
     })
     @DisplayName("HU26-CP02: el listado de vendedores traduce la ordenación pedida")

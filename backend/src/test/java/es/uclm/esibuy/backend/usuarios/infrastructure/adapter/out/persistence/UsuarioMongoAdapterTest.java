@@ -6,6 +6,7 @@ import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColeccio
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
+import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
@@ -63,7 +64,9 @@ class UsuarioMongoAdapterTest {
         adapter = new UsuarioMongoAdapter(
                 usuarioMongoRepository,
                 new UsuarioDocumentMapper(),
-                mongoTemplate
+                mongoTemplate,
+                () -> List.of(new Categoria("cat-1", "Tecnología"), new Categoria("cat-2", "Hogar"),
+                        new Categoria("cat-3", "Alimentación"))
         );
     }
 
@@ -612,5 +615,21 @@ class UsuarioMongoAdapterTest {
         doc.setCategoriaPrincipalId(categoriaId);
         doc.setDni("0000000" + (Math.abs(email.hashCode()) % 10) + "B");
         return doc;
+    }
+
+    @Test
+    @DisplayName("HU26-CP07: el adaptador ordena los vendedores por el nombre de su categoría")
+    void ordenaVendedoresPorNombreDeCategoria() {
+        // Los ids no siguen el orden de los nombres: cat-1 es Tecnología, cat-2 es Hogar y cat-3 es Alimentación
+        usuarioMongoRepository.saveAll(List.of(
+                vendedorDeCategoria("tecno@esibuy.test", "cat-1"),
+                vendedorDeCategoria("hogar@esibuy.test", "cat-2"),
+                vendedorDeCategoria("alimentos@esibuy.test", "cat-3")));
+
+        UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(null, Rol.VENDEDOR, null, null, 0, 10,
+                new ListarUsuariosQuery.Ordenacion(ListarUsuariosQuery.Orden.CATEGORIA, false)));
+
+        assertEquals(List.of("cat-3", "cat-2", "cat-1"),
+                resultado.usuarios().stream().map(u -> u.getDatosVendedor().categoriaPrincipalId()).toList());
     }
 }

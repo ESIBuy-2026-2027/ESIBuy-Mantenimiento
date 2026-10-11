@@ -124,7 +124,6 @@ public class UsuarioController {
     }
 
     // Supervisión de vendedores, solo lectura (HU26): el listado de la HU19 con el rol VENDEDOR fijo.
-    // exista el registro de vendedores.
     @GetMapping("/admin/sellers")
     public VendedorPageResponse listarVendedores(
             @RequestParam(defaultValue = "1") int page,
