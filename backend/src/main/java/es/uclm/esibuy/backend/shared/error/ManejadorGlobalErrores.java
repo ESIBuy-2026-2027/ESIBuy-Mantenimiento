@@ -3,7 +3,6 @@ package es.uclm.esibuy.backend.shared.error;
 import es.uclm.esibuy.backend.usuarios.application.port.out.exception.EnvioEmailException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AuthenticatorYaDadoDeAltaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.CambioDePropioRolException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
@@ -114,13 +113,5 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError ultimoAdministradorActivo() {
         return new RespuestaError("No se puede desactivar al último administrador activo", "LAST_ACTIVE_ADMIN");
-    }
-
-    // 409 + code al cambiar el rol (HU22, T43): código acordado con el frontend (frontend/docs/hu22-editar-usuario.md).
-    // El último administrador usa el mismo LAST_ACTIVE_ADMIN de la HU23 (decisión del equipo: mismo handler).
-    @ExceptionHandler(CambioDePropioRolException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public RespuestaError cambioDePropioRol() {
-        return new RespuestaError("No puedes cambiar tu propio rol", "CANNOT_CHANGE_OWN_ROLE");
     }
 }

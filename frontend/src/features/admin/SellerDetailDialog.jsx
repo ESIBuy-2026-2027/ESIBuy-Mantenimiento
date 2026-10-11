@@ -136,13 +136,8 @@ export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }
     }
   }
 
-  const avisarGuardado = (datos) => {
+  const avisarGuardado = () => {
     onStatusChange?.()
-    // Si deja de ser vendedor, ya no tiene ficha de vendedor: se cierra y el listado se actualiza.
-    if (datos.rol !== ROLES.VENDEDOR) {
-      onClose()
-      return
-    }
     setEditando(false)
     setResultado({ intent: 'success', texto: 'Los cambios se han guardado.' })
     retry()

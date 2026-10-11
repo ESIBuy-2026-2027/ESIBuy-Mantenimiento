@@ -7,10 +7,8 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuario
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.CambioDePropioRolException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
@@ -58,27 +56,15 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
     }
 
     @Override
-    public Usuario editar(String usuarioId, EditarUsuarioCommand comando, String emailAdministrador) {
+    public Usuario editar(String usuarioId, EditarUsuarioCommand comando) {
         Usuario usuario = buscar(usuarioId);
-        // Puede editar sus propios datos, pero no degradarse a sí mismo
-        if (comando.rol() != usuario.getRol() && usuario.getEmail().valor().equalsIgnoreCase(emailAdministrador)) {
-            throw new CambioDePropioRolException("Un administrador no puede cambiar su propio rol");
-        }
-        if (comando.rol() != Rol.ADMINISTRADOR) {
-            exigirQueNoSeaElUltimoAdministradorActivo(usuario, "No se puede degradar al último administrador activo");
-        }
-        // PENDIENTE: pasar una cuenta a vendedor, cuando existan sus datos (nombre comercial, NIF y categoría).
-        if (comando.rol() == Rol.VENDEDOR && usuario.getRol() != Rol.VENDEDOR) {
-            throw new UsuarioInvalidoException("Pasar una cuenta a vendedor todavía no está disponible");
-        }
         DatosPersonales datosPersonales = new DatosPersonales(comando.nombre(), comando.apellidos(),
                 comando.imagenPerfil());
-        // Los datos son los del rol que queda (el nuevo si cambia)
-        DatosCliente datosCliente = datosCliente(comando.rol(), comando);
+        DatosCliente datosCliente = datosCliente(usuario.getRol(), comando);
         if (datosCliente != null) {
             exigirDniLibre(usuario, datosCliente.dni());
         }
-        usuario.cambiarRol(comando.rol(), datosPersonales, datosCliente, LocalDate.now(reloj));
+        usuario.modificarDatos(datosPersonales, datosCliente, LocalDate.now(reloj));
         usuarioRepository.guardar(usuario);
         return usuario;
     }
@@ -89,27 +75,19 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         if (usuario.getEmail().valor().equalsIgnoreCase(emailAdministrador)) {
             throw new AutodesactivacionNoPermitidaException("Un administrador no puede desactivar su propia cuenta");
         }
-        exigirQueNoSeaElUltimoAdministradorActivo(usuario, "No se puede desactivar al último administrador activo");
+        if (usuario.getRol() == Rol.ADMINISTRADOR && usuario.estaActivo()
+                && usuarioRepository.contarAdministradoresActivos() <= 1) {
+            throw new UltimoAdministradorActivoException("No se puede desactivar al último administrador activo");
+        }
         usuario.desactivar();
         usuarioRepository.guardar(usuario);
         return usuario;
     }
 
-    // Siempre tiene que quedar al menos un administrador activo: ni desactivarlo (HU23) ni degradarlo (HU22).
-    // Un administrador que no está activo no cuenta, así que no hace falta consultar.
-    private void exigirQueNoSeaElUltimoAdministradorActivo(Usuario usuario, String mensaje) {
-        if (usuario.getRol() == Rol.ADMINISTRADOR && usuario.estaActivo()
-                && usuarioRepository.contarAdministradoresActivos() <= 1) {
-            throw new UltimoAdministradorActivoException(mensaje);
-        }
-    }
-
-    // Solo se comprueba si el DNI cambia: si no, el cliente chocaría consigo mismo. Quien pasa a cliente no tiene DNI.
+    // Solo se comprueba si el DNI cambia: si no, el cliente chocaría consigo mismo.
     // PENDIENTE: existePorDni no distingue rol, aunque el índice rol_dni sí; revisar cuando los vendedores tengan DNI.
     private void exigirDniLibre(Usuario usuario, Dni nuevoDni) {
-        DatosCliente actuales = usuario.getDatosCliente();
-        boolean esSuDni = actuales != null && nuevoDni.equals(actuales.dni());
-        if (!esSuDni && usuarioRepository.existePorDni(nuevoDni.valor())) {
+        if (!nuevoDni.equals(usuario.getDatosCliente().dni()) && usuarioRepository.existePorDni(nuevoDni.valor())) {
             throw new DniYaRegistradoException("El DNI ya está registrado");
         }
     }

@@ -18,7 +18,6 @@ import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.CambioDePropioRolException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
@@ -508,6 +507,37 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.tipoCliente").doesNotExist());
     }
 
+    // Contrato del frontend: la fecha de incorporación del administrador es su fecha de alta (automática y no
+    // editable). Como el rol no cambia nunca, la fecha de alta de un administrador es la de su incorporación.
+    @Test
+    @DisplayName("HU20-CP05: la ficha de un administrador trae su fecha de incorporación, que es su fecha de alta")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void fichaDeUnAdministradorConSuFechaDeIncorporacion() throws Exception {
+        Usuario administrador = new Usuario("usr-9", new DatosPersonales("Ana", "López Díaz", null),
+                new Email("ana@esibuy.test"), "hash-no-debe-salir", Rol.ADMINISTRADOR, null, null);
+        administrador.restaurarFechaAlta(java.time.Instant.parse("2026-10-01T10:00:00Z"));
+        when(administracionUsuarios.consultar("usr-9")).thenReturn(administrador);
+
+        mockMvc.perform(get("/api/admin/usuarios/{id}", "usr-9"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fechaAlta").value("2026-10-01T10:00:00Z"))
+                .andExpect(jsonPath("$.fechaIncorporacion").value("2026-10-01T10:00:00Z"));
+    }
+
+    @Test
+    @DisplayName("HU20-CP05: la ficha de un cliente no trae fecha de incorporación")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void fichaDeUnClienteSinFechaDeIncorporacion() throws Exception {
+        Usuario cliente = clienteCarla();
+        cliente.restaurarFechaAlta(java.time.Instant.parse("2026-10-01T10:00:00Z"));
+        when(administracionUsuarios.consultar("usr-1")).thenReturn(cliente);
+
+        mockMvc.perform(get("/api/admin/usuarios/{id}", "usr-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fechaAlta").value("2026-10-01T10:00:00Z"))
+                .andExpect(jsonPath("$.fechaIncorporacion").doesNotExist());
+    }
+
     @Test
     @DisplayName("HU20-CP03: la ficha de un usuario que no existe devuelve 404")
     @WithMockUser(roles = "ADMINISTRADOR")
@@ -660,14 +690,14 @@ class UsuarioControllerTest {
     // Editar un usuario (HU22, T42/T44): PUT /api/admin/usuarios/{id}, contrato de frontend/docs/hu22-editar-usuario.md.
 
     private static final String CUERPO_CLIENTE = """
-            {"rol":"CLIENTE","nombre":"Carla","apellidos":"Moreno Gil","dni":"10004119A",
+            {"nombre":"Carla","apellidos":"Moreno Gil","dni":"10004119A",
              "telefono":"620023757","fechaNacimiento":"1978-04-13","tipoCliente":"PREMIUM","avatar":"avatar1"}""";
 
     @Test
     @DisplayName("HU22-CP01: el administrador edita un cliente y recibe su ficha actualizada")
     @WithMockUser(roles = "ADMINISTRADOR")
     void administradorEditaUnClienteYRecibeSuFicha() throws Exception {
-        when(administracionUsuarios.editar(eq("usr-1"), any(), any())).thenReturn(clienteCarla());
+        when(administracionUsuarios.editar(eq("usr-1"), any())).thenReturn(clienteCarla());
 
         mockMvc.perform(editar("usr-1", CUERPO_CLIENTE))
                 .andExpect(status().isOk())
@@ -678,8 +708,8 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.passwordHash").doesNotExist());
 
         ArgumentCaptor<EditarUsuarioCommand> comando = ArgumentCaptor.forClass(EditarUsuarioCommand.class);
-        verify(administracionUsuarios).editar(eq("usr-1"), comando.capture(), eq("user"));   // el email del administrador en sesión
-        assertEquals(new EditarUsuarioCommand(Rol.CLIENTE, "Carla", "Moreno Gil", "avatar1", "10004119A",
+        verify(administracionUsuarios).editar(eq("usr-1"), comando.capture());
+        assertEquals(new EditarUsuarioCommand("Carla", "Moreno Gil", "avatar1", "10004119A",
                 "620023757", LocalDate.of(1978, 4, 13), TipoCliente.PREMIUM), comando.getValue());
     }
 
@@ -687,7 +717,7 @@ class UsuarioControllerTest {
     @DisplayName("HU22-CP04: el email, la contraseña y el estado del cuerpo se ignoran")
     @WithMockUser(roles = "ADMINISTRADOR")
     void editarIgnoraEmailContrasenaYEstadoDelCuerpo() throws Exception {
-        when(administracionUsuarios.editar(eq("usr-1"), any(), any())).thenReturn(clienteCarla());
+        when(administracionUsuarios.editar(eq("usr-1"), any())).thenReturn(clienteCarla());
         String cuerpo = CUERPO_CLIENTE.replace("}",
                 ",\"email\":\"otro@esibuy.test\",\"password\":\"Nueva-Clave-1!\",\"estado\":\"DESACTIVADO\"}");
 
@@ -696,31 +726,48 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.email").value("carla@esibuy.test"));
 
         ArgumentCaptor<EditarUsuarioCommand> comando = ArgumentCaptor.forClass(EditarUsuarioCommand.class);
-        verify(administracionUsuarios).editar(eq("usr-1"), comando.capture(), eq("user"));   // el email del administrador en sesión
+        verify(administracionUsuarios).editar(eq("usr-1"), comando.capture());
         assertEquals("Carla", comando.getValue().nombre());   // el resto del cuerpo sí llega
+    }
+
+    // El rol de una cuenta no cambia nunca ("el que nace cliente muere cliente", decisión del equipo).
+    @ParameterizedTest(name = "{0}")
+    @CsvSource(delimiter = '|', value = {
+            "sin rol | {\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\"}",
+            "con otro rol | {\"rol\":\"VENDEDOR\",\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\"}",
+            "con un rol inexistente | {\"rol\":\"SUPERUSUARIO\",\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\"}"})
+    @DisplayName("HU22-CP04: el rol del cuerpo se ignora: sin rol o con otro rol se edita igual")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void editarIgnoraElRolDelCuerpo(String caso, String cuerpo) throws Exception {
+        when(administracionUsuarios.editar(eq("usr-1"), any())).thenReturn(clienteCarla());
+
+        mockMvc.perform(editar("usr-1", cuerpo))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<EditarUsuarioCommand> comando = ArgumentCaptor.forClass(EditarUsuarioCommand.class);
+        verify(administracionUsuarios).editar(eq("usr-1"), comando.capture());
+        assertEquals("Carla", comando.getValue().nombre());
     }
 
     @ParameterizedTest(name = "{0}")
     @CsvSource(delimiter = '|', value = {
-            "sin rol | {\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\"}",
-            "nombre vacío | {\"rol\":\"ADMINISTRADOR\",\"nombre\":\"\",\"apellidos\":\"Moreno Gil\"}",
-            "nombre de 31 caracteres | {\"rol\":\"ADMINISTRADOR\",\"nombre\":\"JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ\",\"apellidos\":\"Moreno Gil\"}",
-            "apellidos vacíos | {\"rol\":\"ADMINISTRADOR\",\"nombre\":\"Carla\",\"apellidos\":\"  \"}",
-            "rol inexistente | {\"rol\":\"SUPERUSUARIO\",\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\"}"})
-    @DisplayName("HU22-CP05: rechaza un cuerpo sin rol o con nombre o apellidos no válidos (400) sin llamar al caso de uso")
+            "nombre vacío | {\"nombre\":\"\",\"apellidos\":\"Moreno Gil\"}",
+            "nombre de 31 caracteres | {\"nombre\":\"JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ\",\"apellidos\":\"Moreno Gil\"}",
+            "apellidos vacíos | {\"nombre\":\"Carla\",\"apellidos\":\"  \"}"})
+    @DisplayName("HU22-CP05: rechaza un cuerpo con nombre o apellidos no válidos (400) sin llamar al caso de uso")
     @WithMockUser(roles = "ADMINISTRADOR")
     void rechazaUnCuerpoDeEdicionNoValido(String caso, String cuerpo) throws Exception {
         mockMvc.perform(editar("usr-1", cuerpo))
                 .andExpect(status().isBadRequest());
 
-        verify(administracionUsuarios, never()).editar(any(), any(), any());
+        verify(administracionUsuarios, never()).editar(any(), any());
     }
 
     @Test
     @DisplayName("HU22-CP05: datos que el dominio rechaza (p. ej. un menor de edad) devuelven 400")
     @WithMockUser(roles = "ADMINISTRADOR")
     void editarConDatosQueElDominioRechazaDevuelve400() throws Exception {
-        when(administracionUsuarios.editar(eq("usr-1"), any(), any()))
+        when(administracionUsuarios.editar(eq("usr-1"), any()))
                 .thenThrow(new UsuarioInvalidoException("El cliente debe ser mayor de edad"));
 
         mockMvc.perform(editar("usr-1", CUERPO_CLIENTE))
@@ -732,7 +779,7 @@ class UsuarioControllerTest {
     @DisplayName("HU22-CP06: editar con el DNI de otra cuenta devuelve 409 con DNI_ALREADY_REGISTERED")
     @WithMockUser(roles = "ADMINISTRADOR")
     void editarConElDniDeOtraCuentaDevuelve409() throws Exception {
-        when(administracionUsuarios.editar(eq("usr-1"), any(), any()))
+        when(administracionUsuarios.editar(eq("usr-1"), any()))
                 .thenThrow(new DniYaRegistradoException("El DNI ya está registrado"));
 
         mockMvc.perform(editar("usr-1", CUERPO_CLIENTE))
@@ -744,7 +791,7 @@ class UsuarioControllerTest {
     @DisplayName("HU22-CP07: editar un usuario que no existe devuelve 404")
     @WithMockUser(roles = "ADMINISTRADOR")
     void editarUnUsuarioInexistenteDevuelve404() throws Exception {
-        when(administracionUsuarios.editar(eq("no-existe"), any(), any()))
+        when(administracionUsuarios.editar(eq("no-existe"), any()))
                 .thenThrow(new UsuarioNoEncontradoException("El usuario no existe"));
 
         mockMvc.perform(editar("no-existe", CUERPO_CLIENTE))
@@ -759,7 +806,7 @@ class UsuarioControllerTest {
         mockMvc.perform(editar("usr-1", CUERPO_CLIENTE).with(user("usuario").roles(rol)))
                 .andExpect(status().isForbidden());
 
-        verify(administracionUsuarios, never()).editar(any(), any(), any());
+        verify(administracionUsuarios, never()).editar(any(), any());
     }
 
     @Test
@@ -768,7 +815,7 @@ class UsuarioControllerTest {
         mockMvc.perform(editar("usr-1", CUERPO_CLIENTE))
                 .andExpect(status().isUnauthorized());
 
-        verify(administracionUsuarios, never()).editar(any(), any(), any());
+        verify(administracionUsuarios, never()).editar(any(), any());
     }
 
     @Test
@@ -780,48 +827,7 @@ class UsuarioControllerTest {
                         .content(CUERPO_CLIENTE))
                 .andExpect(status().isForbidden());
 
-        verify(administracionUsuarios, never()).editar(any(), any(), any());
-    }
-
-    @Test
-    @DisplayName("HU22-CP09: un cambio de rol responde 200 con la ficha del rol nuevo")
-    @WithMockUser(roles = "ADMINISTRADOR")
-    void cambioDeRolDevuelveLaFichaDelRolNuevo() throws Exception {
-        Usuario ahoraAdministrador = new Usuario("usr-1", new DatosPersonales("Carla", "Moreno Gil", "avatar1"),
-                new Email("carla@esibuy.test"), "hash-no-debe-salir", Rol.ADMINISTRADOR, null, null);
-        when(administracionUsuarios.editar(eq("usr-1"), any(), any())).thenReturn(ahoraAdministrador);
-        String cuerpo = "{\"rol\":\"ADMINISTRADOR\",\"nombre\":\"Carla\",\"apellidos\":\"Moreno Gil\",\"avatar\":\"avatar1\"}";
-
-        mockMvc.perform(editar("usr-1", cuerpo))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.rol").value("ADMINISTRADOR"))
-                .andExpect(jsonPath("$.dni").doesNotExist())
-                .andExpect(jsonPath("$.fechaNacimiento").doesNotExist());
-    }
-
-    @Test
-    @DisplayName("HU22-CP11: cambiar el propio rol devuelve 409 con CANNOT_CHANGE_OWN_ROLE")
-    @WithMockUser(roles = "ADMINISTRADOR")
-    void cambiarElPropioRolDevuelve409() throws Exception {
-        when(administracionUsuarios.editar(eq("usr-1"), any(), any()))
-                .thenThrow(new CambioDePropioRolException("Un administrador no puede cambiar su propio rol"));
-
-        mockMvc.perform(editar("usr-1", CUERPO_CLIENTE))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("CANNOT_CHANGE_OWN_ROLE"))
-                .andExpect(jsonPath("$.mensaje").exists());
-    }
-
-    @Test
-    @DisplayName("HU22-CP12: degradar al último administrador activo devuelve 409 con LAST_ACTIVE_ADMIN")
-    @WithMockUser(roles = "ADMINISTRADOR")
-    void degradarAlUltimoAdministradorActivoDevuelve409() throws Exception {
-        when(administracionUsuarios.editar(eq("usr-1"), any(), any()))
-                .thenThrow(new UltimoAdministradorActivoException("No se puede degradar al último administrador activo"));
-
-        mockMvc.perform(editar("usr-1", CUERPO_CLIENTE))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("LAST_ACTIVE_ADMIN"));
+        verify(administracionUsuarios, never()).editar(any(), any());
     }
 
     private static Usuario clienteCarla() {
