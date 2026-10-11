@@ -2,7 +2,9 @@ package es.uclm.esibuy.backend.productos.application.port.out;
 
 import java.util.Optional;
 
+import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
+import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
 
 /**
  * Lo que el módulo de productos necesita de la base de datos (patrón Repository). La aplicación
@@ -14,4 +16,7 @@ public interface ProductoRepositoryPort {
     Producto guardar(Producto producto);
 
     Optional<Producto> buscarPorId(String id);
+
+    // Productos de un vendedor (HU32), del más reciente al más antiguo.
+    ProductoPage listarPorVendedor(String vendedorId, ListarProductosQuery query);
 }

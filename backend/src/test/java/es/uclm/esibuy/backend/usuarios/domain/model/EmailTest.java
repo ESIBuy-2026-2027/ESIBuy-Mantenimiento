@@ -55,4 +55,25 @@ class EmailTest {
         // Frontera en la que discrepan la validación web (@Email acepta "ana@localhost") y el dominio
         assertThrows(EmailInvalidoException.class, () -> new Email("ana@localhost"));
     }
+
+    // Normalización del email (T240): minúsculas y sin espacios en los extremos.
+
+    @Test
+    @DisplayName("HU1-CP18: guarda el email en minúsculas")
+    void guardaElEmailEnMinusculas() {
+        assertEquals("ana@uclm.es", new Email("Ana@UCLM.es").valor());
+    }
+
+    @Test
+    @DisplayName("HU1-CP18: quita los espacios de los extremos del email")
+    void quitaLosEspaciosDeLosExtremos() {
+        // Un espacio al copiar y pegar no debe impedir el registro
+        assertEquals("ana@uclm.es", new Email("  ana@uclm.es ").valor());
+    }
+
+    @Test
+    @DisplayName("HU1-CP18: dos emails que solo difieren en mayúsculas son iguales")
+    void dosEmailsQueSoloDifierenEnMayusculasSonIguales() {
+        assertEquals(new Email("Ana@UCLM.es"), new Email("ana@uclm.es"));
+    }
 }
