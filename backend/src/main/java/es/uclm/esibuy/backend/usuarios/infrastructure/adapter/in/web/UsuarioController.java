@@ -12,6 +12,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCas
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorCommand;
 import jakarta.validation.Valid;
@@ -144,6 +145,17 @@ public class UsuarioController {
     @GetMapping("/admin/sellers/{id}")
     public VendedorResponse consultarVendedor(@PathVariable String id) {
         return VendedorResponse.desde(administracionUsuarios.consultarVendedor(id), nombresDeCategorias());
+    }
+
+    // Activar o desactivar un vendedor desde su supervisión (HU21). Misma validación que el PATCH de usuarios
+    // (CambiarEstadoRequest). 404 si no existe o no es vendedor. Devuelve la ficha, como el GET de la HU26.
+    @PatchMapping("/admin/sellers/{id}/status")
+    public VendedorResponse cambiarEstadoVendedor(@PathVariable String id,
+            @Valid @RequestBody CambiarEstadoRequest request) {
+        Usuario vendedor = "DESACTIVADO".equals(request.estado())
+                ? administracionUsuarios.desactivarVendedor(id)
+                : administracionUsuarios.activarVendedor(id);
+        return VendedorResponse.desde(vendedor, nombresDeCategorias());
     }
 
     // Nombre de cada categoría por su identificador, para traducir la categoría principal de los vendedores.
