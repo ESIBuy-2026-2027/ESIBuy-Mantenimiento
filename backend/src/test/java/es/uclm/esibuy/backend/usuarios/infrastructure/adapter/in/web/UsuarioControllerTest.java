@@ -6,6 +6,8 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarVendedorComm
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
+import es.uclm.esibuy.backend.categorias.application.port.in.ConsultaCategoriasUseCase;
+import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
 import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorUseCase;
@@ -90,6 +92,10 @@ class UsuarioControllerTest {
 
     @MockitoBean
     private CrearAdministradorUseCase crearAdministrador;
+
+    // El nombre de la categoría principal del vendedor sale del módulo de categorías (su puerto de entrada).
+    @MockitoBean
+    private ConsultaCategoriasUseCase consultaCategorias;
 
     // Cuerpo completo del registro de cliente (T229); solo varían el email y la contraseña.
     private static String json(String email, String password) {
@@ -616,6 +622,7 @@ class UsuarioControllerTest {
     @WithMockUser(roles = "ADMINISTRADOR")
     void administradorRecibeElListadoDeVendedores() throws Exception {
         when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(java.util.List.of(vendedor()), 1, 10, 11));
+        when(consultaCategorias.listar()).thenReturn(java.util.List.of(new Categoria("cat-1", "Tecnología")));
 
         mockMvc.perform(get("/api/admin/sellers")
                         .param("page", "2")
@@ -630,6 +637,7 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.items[0].estado").value("PENDIENTE"))
                 .andExpect(jsonPath("$.items[0].nombreComercial").value("Tienda Marta"))
                 .andExpect(jsonPath("$.items[0].categoriaPrincipalId").value("cat-1"))
+                .andExpect(jsonPath("$.items[0].categoriaPrincipal").value("Tecnología"))
                 .andExpect(jsonPath("$.items[0].passwordHash").doesNotExist())
                 .andExpect(jsonPath("$.page").value(2))
                 .andExpect(jsonPath("$.size").value(10))
@@ -672,6 +680,7 @@ class UsuarioControllerTest {
     @WithMockUser(roles = "ADMINISTRADOR")
     void fichaDeUnVendedor() throws Exception {
         when(administracionUsuarios.consultarVendedor("v-1")).thenReturn(vendedor());
+        when(consultaCategorias.listar()).thenReturn(java.util.List.of(new Categoria("cat-1", "Tecnología")));
 
         mockMvc.perform(get("/api/admin/sellers/{id}", "v-1"))
                 .andExpect(status().isOk())
@@ -682,6 +691,7 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.estado").value("PENDIENTE"))
                 .andExpect(jsonPath("$.nombreComercial").value("Tienda Marta"))
                 .andExpect(jsonPath("$.categoriaPrincipalId").value("cat-1"))
+                .andExpect(jsonPath("$.categoriaPrincipal").value("Tecnología"))
                 .andExpect(jsonPath("$.dni").value("87654321X"))
                 .andExpect(jsonPath("$.telefono").value("612345678"))
                 .andExpect(jsonPath("$.passwordHash").doesNotExist());
