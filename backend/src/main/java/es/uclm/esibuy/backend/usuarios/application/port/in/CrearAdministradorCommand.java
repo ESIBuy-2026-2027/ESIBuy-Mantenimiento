@@ -4,5 +4,6 @@ public record CrearAdministradorCommand(
         String nombre,
         String apellidos,
         String email,
+        String avatar,
         String password
 ) {}

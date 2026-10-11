@@ -118,7 +118,7 @@ public class UsuarioController {
     @ResponseStatus(HttpStatus.CREATED)
     public void crearAdministrador(@Valid @RequestBody CrearAdministradorRequest request) {
         crearAdministrador.crear(new CrearAdministradorCommand(
-                request.nombre(), request.apellidos(), request.email(), request.password()));
+                request.nombre(), request.apellidos(), request.email(), request.avatar(), request.password()));
     }
 
     // Supervisión de vendedores, solo lectura (HU26): el listado de la HU19 con el rol VENDEDOR fijo.
