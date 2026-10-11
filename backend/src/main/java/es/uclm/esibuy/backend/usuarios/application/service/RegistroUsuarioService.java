@@ -9,6 +9,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCas
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYNombreComercialYaRegistradosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
@@ -77,12 +78,7 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
         Email email = new Email(comando.email());
         exigirContrasenaValida(comando.password(), comando.repeticionPassword(), datosPersonales, email);
         exigirPrivacidadAceptada(comando.aceptaPrivacidad());
-        if (usuarioRepository.existePorCorreo(email.valor())) {
-            throw new CorreoYaRegistradoException("El correo ya está registrado");
-        }
-        if (usuarioRepository.existePorNombreComercial(comando.nombreComercial())) {
-            throw new NombreComercialYaRegistradoException("El nombre comercial ya está registrado");
-        }
+        exigirCorreoYNombreComercialLibres(email, comando.nombreComercial());
         exigirDniLibre(comando.dni());
 
         Usuario usuario = Usuario.nuevoVendedor(
@@ -106,6 +102,21 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
     private static void exigirPrivacidadAceptada(boolean aceptaPrivacidad) {
         if (!aceptaPrivacidad) {
             throw new UsuarioInvalidoException("Es obligatorio aceptar la política de privacidad");
+        }
+    }
+
+    // Se consultan los dos antes de decidir: si se repiten ambos, el frontend espera un único 409 que lo diga.
+    private void exigirCorreoYNombreComercialLibres(Email email, String nombreComercial) {
+        boolean correoRepetido = usuarioRepository.existePorCorreo(email.valor());
+        boolean nombreComercialRepetido = usuarioRepository.existePorNombreComercial(nombreComercial);
+        if (correoRepetido && nombreComercialRepetido) {
+            throw new CorreoYNombreComercialYaRegistradosException("El correo y el nombre comercial ya están registrados");
+        }
+        if (correoRepetido) {
+            throw new CorreoYaRegistradoException("El correo ya está registrado");
+        }
+        if (nombreComercialRepetido) {
+            throw new NombreComercialYaRegistradoException("El nombre comercial ya está registrado");
         }
     }
 
