@@ -16,6 +16,9 @@ import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryP
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
 
+import org.springframework.dao.DuplicateKeyException;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
+
 /** Adaptador de salida que implementa el repositorio de productos con Spring Data MongoDB. */
 public class ProductoMongoAdapter implements ProductoRepositoryPort {
 
@@ -38,7 +41,12 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
             repository.findById(producto.getId())
                     .ifPresent(guardado -> documento.setCreatedAt(guardado.getCreatedAt()));
         }
-        return mapper.aDominio(repository.save(documento));
+        try {
+            return mapper.aDominio(repository.save(documento));
+        } catch (DuplicateKeyException duplicateKeyException) {
+            // El índice único (vendedorId, nombre) lo ha rechazado: dos altas simultáneas con el mismo nombre.
+            throw new ProductoDuplicadoException(duplicateKeyException);
+        }
     }
 
     @Override
