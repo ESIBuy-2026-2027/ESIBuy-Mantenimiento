@@ -12,9 +12,12 @@ SellerDataForm.propTypes = {
     nombre: PropTypes.string.isRequired,
     apellidos: PropTypes.string.isRequired,
     email: PropTypes.string.isRequired,
-    nombreComercial: PropTypes.string.isRequired,
-    nif: PropTypes.string.isRequired,
-    categoriaPrincipal: PropTypes.string.isRequired,
+    // Un vendedor anterior a su registro (T241) no tiene datos de vendedor.
+    nombreComercial: PropTypes.string,
+    dni: PropTypes.string,
+    telefono: PropTypes.string,
+    categoriaPrincipal: PropTypes.string,
+    avatar: PropTypes.string,
     estado: PropTypes.string.isRequired,
   }).isRequired,
 }

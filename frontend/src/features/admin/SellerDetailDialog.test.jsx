@@ -67,7 +67,7 @@ describe('SellerDetailDialog (HU26): datos', () => {
     await within(dialogo).findByLabelText('Nombre')
 
     const campos = within(dialogo).getAllByRole('textbox')
-    expect(campos).toHaveLength(8)
+    expect(campos).toHaveLength(10)   // con el teléfono y la imagen del vendedor
     campos.forEach((campo) => expect(campo).toHaveAttribute('readonly'))
   })
 
