@@ -154,7 +154,7 @@ Las rutas y los formatos los ha definido el frontend; **hay que acordarlos con q
 |---|---|---|
 | `GET /api/admin/sellers` | `page`, `size`, `search`, `category` (id), `status`, `sort`, `order` (todos opcionales salvo `page` y `size`) | Página de vendedores |
 | `GET /api/admin/sellers/{id}` | | Datos del vendedor |
-| `GET /api/admin/sellers/{id}/products` | `page`, `size` | Página de productos (mismo formato que `GET /api/seller/products`) |
+| `GET /api/admin/sellers/{id}/products` | `page`, `size` | Página de productos (mismo formato que `GET /api/seller/products`: cada producto lleva `categoriaId`, que la ficha traduce a nombre con `GET /api/categorias`) |
 | `GET /api/admin/sellers/{id}/orders` | `page`, `size` | Página de pedidos |
 
 Las páginas tienen el formato `{ items, page, size, totalItems, totalPages }`.

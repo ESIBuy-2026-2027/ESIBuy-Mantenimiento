@@ -47,6 +47,50 @@ describe('SellerProductsPage (HU32): listado', () => {
     expect(within(fila).getByText('No disponible')).toBeInTheDocument()
   })
 
+  it('sellerProductsPage_traduceElIdentificadorDeCategoriaAlNombre', async () => {
+    server.use(
+      http.get('/api/seller/products', () =>
+        HttpResponse.json({
+          items: [
+            { id: 'p-1', nombre: 'Teclado mecánico', precio: 89.5, stock: 12, disponible: true, categoriaId: 'cat-2' },
+          ],
+          page: 1,
+          size: 10,
+          totalItems: 1,
+          totalPages: 1,
+        }),
+      ),
+    )
+    await abrirListado()
+
+    const fila = (await screen.findByText('Teclado mecánico')).closest('tr')
+    expect(await within(fila).findByText('Hogar')).toBeInTheDocument()
+    expect(within(fila).queryByText('cat-2')).not.toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Categoría' })).toBeInTheDocument()
+  })
+
+  it('sellerProductsPage_siLasCategoriasNoCargan_muestraUnGuionEnVezDelIdentificador', async () => {
+    server.use(
+      http.get('/api/categorias', () => new HttpResponse(null, { status: 500 })),
+      http.get('/api/seller/products', () =>
+        HttpResponse.json({
+          items: [
+            { id: 'p-1', nombre: 'Teclado mecánico', precio: 89.5, stock: 12, disponible: true, categoriaId: 'cat-2' },
+          ],
+          page: 1,
+          size: 10,
+          totalItems: 1,
+          totalPages: 1,
+        }),
+      ),
+    )
+    await abrirListado()
+
+    const fila = (await screen.findByText('Teclado mecánico')).closest('tr')
+    expect(within(fila).getByText('—')).toBeInTheDocument()
+    expect(within(fila).queryByText('cat-2')).not.toBeInTheDocument()
+  })
+
   it('sellerProductsPage_soloMuestraLosProductosDelVendedorAutenticado', async () => {
     const user = userEvent.setup()
     await abrirListado()
