@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.domain.model;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -73,7 +74,8 @@ public final class PoliticaContrasenas {
         String parteLocalEmail = email.valor().substring(0, email.valor().indexOf('@'));
         for (String dato : new String[] {datosPersonales.nombre(), datosPersonales.apellidos(), parteLocalEmail}) {
             if (normalizada.contains(dato.toLowerCase(Locale.ROOT))) {
-                throw new ContrasenaInvalidaException("La contraseña no puede contener datos personales");
+                throw new ContrasenaInvalidaException(MotivoRechazo.CONTRASENA_CON_DATOS_PERSONALES,
+                        "La contraseña no puede contener datos personales");
             }
         }
     }
