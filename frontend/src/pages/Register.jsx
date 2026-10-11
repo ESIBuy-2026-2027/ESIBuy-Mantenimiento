@@ -19,9 +19,11 @@ import { BuildingShop24Regular, Cart24Regular } from '@fluentui/react-icons'
 import { useEffect, useState } from 'react'
 import { registrarCliente, registrarVendedor } from '../api/auth'
 import { getCategories } from '../api/products'
+import LinkButton from '../components/LinkButton'
 import AvatarSelector from '../features/account/AvatarSelector'
 import { PasswordField, PasswordRequirements } from '../features/account/PasswordField'
 import { erroresDelServidor } from '../features/account/registroErrors'
+import { PATHS } from '../routes/paths'
 import {
   esDniValido,
   esEmailValido,
@@ -223,10 +225,16 @@ export default function Register() {
   if (registrado) {
     return pantalla(
       'Cuenta creada',
-      <Text className={styles.description}>
-        Tu cuenta se ha creado correctamente y está pendiente de que un administrador la verifique.
-        Podrás iniciar sesión cuando esté activada.
-      </Text>
+      <>
+        <Text className={styles.description}>
+          Tu cuenta se ha creado correctamente y está pendiente de que un administrador la verifique.
+          Podrás iniciar sesión cuando esté activada.
+        </Text>
+        {/* Sin redirección automática, para que dé tiempo a leer el aviso (fallos de la demo del Sprint 1) */}
+        <LinkButton to={PATHS.LOGIN} appearance="primary">
+          Ir a iniciar sesión
+        </LinkButton>
+      </>
     )
   }
 
