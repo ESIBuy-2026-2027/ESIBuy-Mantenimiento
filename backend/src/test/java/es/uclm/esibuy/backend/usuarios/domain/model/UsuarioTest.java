@@ -25,6 +25,8 @@ class UsuarioTest {
             TipoCliente.PREMIUM, new Dni("12345678Z"), LocalDate.of(1996, 5, 20), new Telefono("612345678"));
     private static final ConsentimientoPrivacidad CONSENTIMIENTO = new ConsentimientoPrivacidad(
             Instant.parse("2026-10-10T10:00:00Z"), "1.0");
+    private static final DatosVendedor DATOS_VENDEDOR = new DatosVendedor(
+            "Tienda Ana", "cat-1", new Dni("87654321X"), null);
 
     @Test
     @DisplayName("HU1-CP11: crea un usuario con datos correctos, pendiente de verificar")
@@ -305,8 +307,13 @@ class UsuarioTest {
     @Test
     @DisplayName("HU1-CP19: nuevoVendedor nace en estado PENDIENTE con sus datos comerciales")
     void nuevoVendedorNaceEnEstadoPendienteConSusDatosComerciales() {
-        // TODO ciclo 3 (T241)
-        fail("Funcionalidad no implementada");
+        Usuario vendedor = Usuario.nuevoVendedor(DATOS_PERSONALES, EMAIL, HASH, DATOS_VENDEDOR, CONSENTIMIENTO);
+
+        assertNull(vendedor.getId());
+        assertEquals(Rol.VENDEDOR, vendedor.getRol());
+        assertEquals("PENDIENTE", vendedor.getEstado());
+        assertEquals(DATOS_VENDEDOR, vendedor.getDatosVendedor());
+        assertNull(vendedor.getDatosCliente());
     }
 
     @Test
