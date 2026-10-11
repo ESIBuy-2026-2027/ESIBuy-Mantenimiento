@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Button, Field, Input, Spinner } from '@fluentui/react-components'
+import { PasswordField } from '../account/PasswordField'
 import { useFormStyles } from './authFormStyles'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+$/
@@ -52,19 +53,15 @@ export default function CredentialsStep({ onSubmit, submitting }) {
           maxLength={254}
         />
       </Field>
-      <Field
+      <PasswordField
         label="Contraseña"
-        validationState={errors.password ? 'error' : 'none'}
-        validationMessage={errors.password}
-      >
-        <Input
-          type="password"
-          value={password}
-          onChange={(_event, data) => setPassword(data.value)}
-          autoComplete="current-password"
-          maxLength={128}
-        />
-      </Field>
+        value={password}
+        onChange={(_event, data) => setPassword(data.value)}
+        error={errors.password}
+        autoComplete="current-password"
+        maxLength={128}
+        required={false}
+      />
       <Button
         type="submit"
         appearance="primary"

@@ -9,7 +9,7 @@ const CLAVE = 'Mock-Clave-1!'
 
 async function escribirCredenciales(user, email, clave) {
   await user.type(await screen.findByLabelText(/correo electrónico/i), email)
-  await user.type(screen.getByLabelText(/contraseña/i), clave)
+  await user.type(screen.getByLabelText(/^contraseña/i), clave)
   await user.click(screen.getByRole('button', { name: /continuar/i }))
 }
 
@@ -109,7 +109,7 @@ describe('Login (HU2): paso 1, credenciales', () => {
     await escribirCredenciales(user, 'admin@esibuy.test', 'otra-clave')
     await screen.findByText(/no se ha podido iniciar sesión/i)
 
-    expect(screen.getByLabelText(/contraseña/i)).toHaveValue('')
+    expect(screen.getByLabelText(/^contraseña/i)).toHaveValue('')
   })
 
   it('login_conCuentaDesactivada_muestraMensajeEspecifico', async () => {
@@ -131,7 +131,7 @@ describe('Login (HU2): paso 1, credenciales', () => {
     expect(screen.getByText('pendiente@esibuy.test')).toBeInTheDocument()
     expect(screen.getByText(/verificación por un administrador/i)).toBeInTheDocument()
     expect(screen.queryByLabelText(/recibido por correo/i)).not.toBeInTheDocument()
-    expect(screen.queryByLabelText(/contraseña/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/^contraseña/i)).not.toBeInTheDocument()
   })
 
   it('login_cuentaPendiente_noMuestraUnMensajeDeError', async () => {
@@ -153,7 +153,7 @@ describe('Login (HU2): paso 1, credenciales', () => {
     await user.click(await screen.findByRole('button', { name: /volver al inicio de sesión/i }))
 
     expect(await screen.findByLabelText(/correo electrónico/i)).toHaveValue('')
-    expect(screen.getByLabelText(/contraseña/i)).toHaveValue('')
+    expect(screen.getByLabelText(/^contraseña/i)).toHaveValue('')
     expect(screen.queryByRole('heading', { name: /pendiente de activación/i })).not.toBeInTheDocument()
   })
 
