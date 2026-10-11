@@ -402,9 +402,8 @@ describe('UserDetailDialog (HU22): edición', () => {
   })
 })
 
-describe('UserDetailDialog (HU22): cambio de rol', () => {
+describe('UserDetailDialog (HU22): el rol no se puede cambiar', () => {
   const ADA = 'u-1'
-  const GONZALO = 'usr-25'
 
   async function entrarEnEdicion(userId, currentUserId = ADA) {
     const ficha = await abrirFicha(userId, currentUserId)
@@ -414,42 +413,19 @@ describe('UserDetailDialog (HU22): cambio de rol', () => {
     return { ...ficha, user }
   }
 
-  const rol = (dialogo) => within(dialogo).getByLabelText(/^rol/i)
-  const elegirRol = (user, dialogo, valor) => user.selectOptions(rol(dialogo), valor)
   const guardar = (user, dialogo) => user.click(within(dialogo).getByRole('button', { name: /^guardar$/i }))
 
-  function capturarGuardado(respuesta = () => HttpResponse.json({ id: 'x' })) {
+  function capturarGuardado() {
     const envio = { cuerpo: null, llamadas: 0 }
     server.use(
       http.put('/api/admin/usuarios/:id', async ({ request }) => {
         envio.llamadas += 1
         envio.cuerpo = await request.json()
-        return respuesta()
+        return HttpResponse.json({ id: 'x' })
       }),
     )
     return envio
   }
-
-  it('userDetailDialog_enLaFichaPropiaDeUnAdministrador_elRolEstaBloqueado', async () => {
-    const { dialogo } = await entrarEnEdicion(ADA, ADA)
-
-    expect(rol(dialogo)).toBeDisabled()
-    expect(within(dialogo).getByText('No puedes cambiar tu propio rol.')).toBeInTheDocument()
-  })
-
-  it('userDetailDialog_enLaFichaDeOtroAdministrador_elRolSePuedeCambiar', async () => {
-    const { dialogo } = await entrarEnEdicion(DIEGO, ADA)
-
-    expect(rol(dialogo)).toBeEnabled()
-    expect(rol(dialogo)).toHaveValue('ADMINISTRADOR')
-  })
-
-  it('userDetailDialog_enLaFichaDeUnCliente_elRolSePuedeCambiar', async () => {
-    const { dialogo } = await entrarEnEdicion(CARLOS)
-
-    expect(rol(dialogo)).toBeEnabled()
-    expect(rol(dialogo)).toHaveValue('CLIENTE')
-  })
 
   it('userDetailDialog_enModoLectura_muestraElRolDeLaCuenta', async () => {
     const { dialogo } = await abrirFicha(CARLOS)
@@ -457,124 +433,25 @@ describe('UserDetailDialog (HU22): cambio de rol', () => {
     expect(valorDe(dialogo, 'Rol')).toHaveValue('Cliente')
   })
 
-  it('userDetailDialog_alPasarUnClienteAAdministrador_ofreceLaSedeYQuitaElDni', async () => {
-    const { dialogo, user } = await entrarEnEdicion(CARLOS)
+  it.each([
+    ['un cliente', CARLOS, 'Cliente'],
+    ['otro administrador', DIEGO, 'Administrador'],
+    ['el propio administrador', ADA, 'Administrador'],
+  ])('userDetailDialog_elRolEsDeSoloLectura_enLaFichaDe %s', async (_caso, userId, texto) => {
+    const { dialogo } = await entrarEnEdicion(userId)
 
-    await elegirRol(user, dialogo, 'ADMINISTRADOR')
-
-    expect(within(dialogo).getByLabelText(/^sede/i)).toBeInTheDocument()
-    expect(within(dialogo).queryByLabelText(/^dni/i)).not.toBeInTheDocument()
+    expect(valorDe(dialogo, 'Rol')).toHaveValue(texto)
+    expect(valorDe(dialogo, 'Rol')).toHaveAttribute('readonly')
   })
 
-  it('userDetailDialog_alGuardarUnClienteComoAdministrador_envíaElRolYLaFichaMuestraElRolNuevo', async () => {
+  it('userDetailDialog_alGuardar_noEnviaElRolNiElEmail', async () => {
     const envio = capturarGuardado()
-    const { dialogo, user, onStatusChange } = await entrarEnEdicion(CARLOS)
+    const { dialogo, user } = await entrarEnEdicion(CARLOS)
 
-    await elegirRol(user, dialogo, 'ADMINISTRADOR')
-    await user.type(within(dialogo).getByLabelText(/^sede/i), 'Toledo')
     await guardar(user, dialogo)
 
     await waitFor(() => expect(envio.llamadas).toBe(1), ESPERA)
-    expect(envio.cuerpo).toMatchObject({ rol: 'ADMINISTRADOR', sede: 'Toledo' })
-    expect(envio.cuerpo).not.toHaveProperty('dni')
+    expect(envio.cuerpo).not.toHaveProperty('rol')
     expect(envio.cuerpo).not.toHaveProperty('email')
-    expect(onStatusChange).toHaveBeenCalled()
-  })
-
-  it('userDetailDialog_tras_ascenderAUnClienteAAdministrador_laFichaMuestraRolYSede', async () => {
-    const { dialogo, user } = await entrarEnEdicion(CARLOS)
-
-    await elegirRol(user, dialogo, 'ADMINISTRADOR')
-    await user.type(within(dialogo).getByLabelText(/^sede/i), 'Toledo')
-    await guardar(user, dialogo)
-
-    await waitFor(() => expect(valorDe(dialogo, 'Rol')).toHaveValue('Administrador'), ESPERA)
-    expect(valorDe(dialogo, 'Sede')).toHaveValue('Toledo')
-    expect(within(dialogo).queryByLabelText('DNI')).not.toBeInTheDocument()
-  })
-
-  it('userDetailDialog_alPasarUnClienteAVendedor_exigeLosDatosDelVendedor', async () => {
-    const { dialogo, user } = await entrarEnEdicion(CARLOS)
-
-    await elegirRol(user, dialogo, 'VENDEDOR')
-    await guardar(user, dialogo)
-
-    expect(within(dialogo).getAllByText(/este campo es obligatorio/i)).toHaveLength(3)
-  })
-
-  it('userDetailDialog_alGuardarUnClienteComoVendedor_laFichaMuestraLosDatosDelVendedor', async () => {
-    const { dialogo, user } = await entrarEnEdicion(CARLOS)
-
-    await elegirRol(user, dialogo, 'VENDEDOR')
-    await user.type(within(dialogo).getByLabelText(/^nombre comercial/i), 'Tienda Carlos')
-    await user.type(within(dialogo).getByLabelText(/^nif\/dni/i), 'B12345678')
-    await user.selectOptions(within(dialogo).getByLabelText(/^categoría principal/i), 'cat-1')
-    await guardar(user, dialogo)
-
-    await waitFor(() => expect(valorDe(dialogo, 'Rol')).toHaveValue('Vendedor'), ESPERA)
-    expect(valorDe(dialogo, 'Nombre comercial')).toHaveValue('Tienda Carlos')
-    expect(valorDe(dialogo, 'Categoría principal')).toHaveValue('Tecnología')
-  })
-
-  it('userDetailDialog_alPasarUnAdministradorACliente_laFichaMuestraLosDatosDeCliente', async () => {
-    const { dialogo, user } = await entrarEnEdicion(DIEGO)
-
-    await elegirRol(user, dialogo, 'CLIENTE')
-    await user.type(within(dialogo).getByLabelText(/^dni/i), '12345678Z')
-    fireEvent.change(within(dialogo).getByLabelText(/^fecha de nacimiento/i), { target: { value: '1990-05-20' } })
-    await guardar(user, dialogo)
-
-    await waitFor(() => expect(valorDe(dialogo, 'Rol')).toHaveValue('Cliente'), ESPERA)
-    expect(valorDe(dialogo, 'DNI')).toHaveValue('12345678Z')
-    expect(within(dialogo).queryByLabelText('Sede')).not.toBeInTheDocument()
-  })
-
-  it('userDetailDialog_alPasarUnClientePendienteAAdministrador_avisaYQuedaActivo', async () => {
-    const { dialogo, user } = await entrarEnEdicion(GONZALO)
-    expect(valorDe(dialogo, 'Estado')).toHaveValue('Pendiente')
-
-    await elegirRol(user, dialogo, 'ADMINISTRADOR')
-    expect(within(dialogo).getByText(/los administradores no pueden estar pendientes/i)).toBeInTheDocument()
-    await guardar(user, dialogo)
-
-    await waitFor(() => expect(valorDe(dialogo, 'Rol')).toHaveValue('Administrador'), ESPERA)
-    await waitFor(() => expect(valorDe(dialogo, 'Estado')).toHaveValue('Activo'), ESPERA)
-  })
-
-  it('userDetailDialog_cuandoElBackendNoDejaCambiarElPropioRol_muestraElMotivo', async () => {
-    capturarGuardado(() => HttpResponse.json({ code: 'CANNOT_CHANGE_OWN_ROLE' }, { status: 409 }))
-    const { dialogo, user } = await entrarEnEdicion(DIEGO)
-
-    await elegirRol(user, dialogo, 'ADMINISTRADOR')
-    await guardar(user, dialogo)
-
-    expect(await within(dialogo).findByText('No puedes cambiar tu propio rol.', undefined, ESPERA)).toBeInTheDocument()
-    expect(within(dialogo).getByText('Modo edición')).toBeInTheDocument()
-  })
-
-  it('userDetailDialog_cuandoSeDegradariaAlUltimoAdministrador_muestraElMotivo', async () => {
-    capturarGuardado(() => HttpResponse.json({ code: 'LAST_ACTIVE_ADMIN' }, { status: 409 }))
-    const { dialogo, user } = await entrarEnEdicion(DIEGO)
-
-    await elegirRol(user, dialogo, 'CLIENTE')
-    await user.type(within(dialogo).getByLabelText(/^dni/i), '12345678Z')
-    fireEvent.change(within(dialogo).getByLabelText(/^fecha de nacimiento/i), { target: { value: '1990-05-20' } })
-    await guardar(user, dialogo)
-
-    expect(
-      await within(dialogo).findByText('No se puede degradar al último administrador.', undefined, ESPERA),
-    ).toBeInTheDocument()
-  })
-
-  it('userDetailDialog_alCancelarTrasElegirOtroRol_laFichaConservaElRolOriginal', async () => {
-    const envio = capturarGuardado()
-    const { dialogo, user } = await entrarEnEdicion(CARLOS)
-
-    await elegirRol(user, dialogo, 'ADMINISTRADOR')
-    await user.click(within(dialogo).getByRole('button', { name: /^cancelar$/i }))
-
-    expect(await within(dialogo).findByText('Modo solo lectura')).toBeInTheDocument()
-    expect(valorDe(dialogo, 'Rol')).toHaveValue('Cliente')
-    expect(envio.llamadas).toBe(0)
   })
 })
