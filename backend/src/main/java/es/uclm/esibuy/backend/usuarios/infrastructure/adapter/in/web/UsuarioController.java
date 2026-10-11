@@ -62,7 +62,7 @@ public class UsuarioController {
         registroUsuario.registrarCliente(new RegistrarClienteCommand(
                 request.nombre(), request.apellidos(), request.fechaNacimiento(), request.dni(), request.email(),
                 request.telefono(), request.password(), request.repeticionPassword(), request.tipoCliente(),
-                request.imagenPerfil(), request.aceptaPrivacidad()));
+                request.avatar(), request.aceptaPrivacidad()));
     }
 
     @PostMapping("/auth/register/vendedor")   // contrato del frontend (T241)
@@ -71,7 +71,7 @@ public class UsuarioController {
         registroUsuario.registrarVendedor(new RegistrarVendedorCommand(
                 request.nombre(), request.apellidos(), request.nombreComercial(), request.categoriaPrincipalId(),
                 request.dni(), request.email(), request.telefono(), request.password(), request.repeticionPassword(),
-                request.imagenPerfil(), request.aceptaPrivacidad()));
+                request.avatar(), request.aceptaPrivacidad()));
     }
 
     @GetMapping("/admin/usuarios")

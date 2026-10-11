@@ -104,7 +104,7 @@ class UsuarioControllerTest {
         return """
                {"nombre": "Juan", "apellidos": "Pérez García", "fechaNacimiento": "1996-05-20",
                 "dni": "12345678Z", "email": "%s", "telefono": null, "password": "%s",
-                "repeticionPassword": "%s", "tipoCliente": "ESTANDAR", "imagenPerfil": null,
+                "repeticionPassword": "%s", "tipoCliente": "ESTANDAR", "avatar": null,
                 "aceptaPrivacidad": true}
                """.formatted(email, password, password);
     }
@@ -115,7 +115,7 @@ class UsuarioControllerTest {
                {"nombre": "Luis", "apellidos": "Pérez García", "nombreComercial": "Tienda Luis",
                 "categoriaPrincipalId": "cat-1", "dni": "87654321X", "email": "luis@uclm.es",
                 "telefono": "612345678", "password": "Clave-1234", "repeticionPassword": "Clave-1234",
-                "imagenPerfil": "avatar1", "aceptaPrivacidad": true}
+                "avatar": "avatar1", "aceptaPrivacidad": true}
                """;
     }
 
@@ -1233,7 +1233,7 @@ class UsuarioControllerTest {
     @Test
     @DisplayName("HU1-CP01: el registro del cliente guarda el avatar elegido")
     void elRegistroDelClienteGuardaElAvatar() throws Exception {
-        String cuerpo = json("juan@uclm.es", "Clave-1234").replace("\"imagenPerfil\": null", "\"avatar\": \"avatar2\"");
+        String cuerpo = json("juan@uclm.es", "Clave-1234").replace("\"avatar\": null", "\"avatar\": \"avatar2\"");
 
         mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(cuerpo))
                 .andExpect(status().isCreated());
@@ -1246,7 +1246,7 @@ class UsuarioControllerTest {
     @Test
     @DisplayName("HU1-CP19: el registro del vendedor guarda el avatar elegido")
     void elRegistroDelVendedorGuardaElAvatar() throws Exception {
-        String cuerpo = jsonVendedor().replace("\"imagenPerfil\": \"avatar1\"", "\"avatar\": \"avatar3\"");
+        String cuerpo = jsonVendedor().replace("\"avatar\": \"avatar1\"", "\"avatar\": \"avatar3\"");
 
         mockMvc.perform(post(URL_REGISTRO_VENDEDOR).contentType(MediaType.APPLICATION_JSON).content(cuerpo))
                 .andExpect(status().isCreated());
