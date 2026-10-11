@@ -6,6 +6,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCas
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYNombreComercialYaRegistradosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
@@ -32,7 +33,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -364,7 +364,14 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP20: si se repiten el correo y el nombre comercial lo dice de una vez y no guarda nada")
     void rechazaCorreoYNombreComercialYaRegistradosYNoGuardaNada() {
-        // TODO ciclo 10 (T241)
-        fail("Funcionalidad no implementada");
+        // El frontend muestra los dos errores a la vez, así que el backend los comunica en un único 409
+        lenient().when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
+        when(usuarioRepository.existePorCorreo("luis@uclm.es")).thenReturn(true);
+        when(usuarioRepository.existePorNombreComercial("Tienda Luis")).thenReturn(true);
+
+        assertThrows(CorreoYNombreComercialYaRegistradosException.class,
+                () -> registroUsuario.registrarVendedor(comandoVendedor("luis@uclm.es", "Clave-1234")));
+
+        verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
 }
