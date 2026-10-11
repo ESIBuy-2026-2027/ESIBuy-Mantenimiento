@@ -174,6 +174,9 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
         if (query.rol() != null) {
             criterios.add(Criteria.where("rol").is(query.rol().name()));
         }
+        if (query.categoriaId() != null && !query.categoriaId().isBlank()) {
+            criterios.add(Criteria.where("categoriaPrincipalId").is(query.categoriaId()));
+        }
         if ("BLOQUEADO".equals(query.estado())) {
             criterios.add(new Criteria().andOperator(
                     Criteria.where(CAMPO_ESTADO).is("ACTIVO"),

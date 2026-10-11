@@ -124,7 +124,6 @@ public class UsuarioController {
     }
 
     // Supervisión de vendedores, solo lectura (HU26): el listado de la HU19 con el rol VENDEDOR fijo.
-    // PENDIENTE: el filtro y el orden por categoría (category, sort=category) se ignoran hasta que
     // exista el registro de vendedores.
     @GetMapping("/admin/sellers")
     public VendedorPageResponse listarVendedores(
@@ -132,14 +131,21 @@ public class UsuarioController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String category,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) String order) {
         if (page < 1 || size < 1) {
             throw new IllegalArgumentException("La página y el tamaño deben ser positivos");
         }
+        // category: id de la categoría principal del vendedor (fallos de la demo del Sprint 1: antes se ignoraba)
         return VendedorPageResponse.desde(listadoUsuarios.listar(new ListarUsuariosQuery(
-                search, Rol.VENDEDOR, status, page - 1, size, orden(sort), "desc".equals(order))),
+                search, Rol.VENDEDOR, status, category, page - 1, size, ordenacion(sort, order))),
                 nombresDeCategorias());
+    }
+
+    private static ListarUsuariosQuery.Ordenacion ordenacion(String sort, String order) {
+        ListarUsuariosQuery.Orden campo = orden(sort);
+        return campo == null ? null : new ListarUsuariosQuery.Ordenacion(campo, "desc".equals(order));
     }
 
     // Ficha de un vendedor (HU26). 404 si no existe o no es vendedor.
