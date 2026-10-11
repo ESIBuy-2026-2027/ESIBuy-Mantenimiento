@@ -223,7 +223,7 @@ describe('PUT /api/admin/usuarios/{id} con el mock (HU22)', () => {
     nombre: 'Vicente',
     apellidos: 'Vacío',
     nombreComercial: 'Casa Vicente',
-    nif: 'B12345602',
+    dni: '12345602V',
     categoriaPrincipalId: 'cat-2',
   }
 
@@ -265,7 +265,7 @@ describe('PUT /api/admin/usuarios/{id} con el mock (HU22)', () => {
   it('updateUser_conElMock_unDatoInvalidoDelRolDeLaCuentaDevuelve400', async () => {
     await abrirSesionPorApi('admin@esibuy.test')
 
-    const error = await updateUser('u-5', { ...datosDeVendedor, nif: 'ABC' }).catch((excepcion) => excepcion)
+    const error = await updateUser('u-5', { ...datosDeVendedor, dni: 'ABC' }).catch((excepcion) => excepcion)
 
     expect(error).toMatchObject({ status: 400 })
   })

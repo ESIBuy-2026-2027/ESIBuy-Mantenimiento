@@ -150,7 +150,7 @@ function detalleActual(usuario) {
 const CAMPOS_EDITABLES = new Map([
   ['CLIENTE', ['dni', 'telefono', 'fechaNacimiento', 'tipoCliente', 'avatar']],
   ['ADMINISTRADOR', ['sede', 'avatar']],
-  ['VENDEDOR', ['nombreComercial', 'nif', 'categoriaPrincipalId']],
+  ['VENDEDOR', ['nombreComercial', 'dni', 'telefono', 'categoriaPrincipalId', 'avatar']],
 ])
 
 const hayTexto = (valor) => typeof valor === 'string' && valor.trim() !== ''
@@ -158,19 +158,11 @@ const hayTexto = (valor) => typeof valor === 'string' && valor.trim() !== ''
 // El backend real también valida: lo mínimo que el formulario ya comprueba, según el rol de la cuenta.
 function datosValidos(rol, datos) {
   if (!hayTexto(datos.nombre) || !hayTexto(datos.apellidos)) return false
-  if (rol === 'CLIENTE') {
-    return (
-      /^\d{8}[A-Za-z]$/.test(datos.dni ?? '') &&
-      (!datos.telefono || /^\d{9}$/.test(datos.telefono)) &&
-      esMayorDeEdadMock(datos.fechaNacimiento)
-    )
-  }
+  // El DNI y el teléfono (opcional) siguen las mismas reglas en el cliente y en el vendedor.
+  const dniYTelefonoValidos = /^\d{8}[A-Za-z]$/.test(datos.dni ?? '') && (!datos.telefono || /^\d{9}$/.test(datos.telefono))
+  if (rol === 'CLIENTE') return dniYTelefonoValidos && esMayorDeEdadMock(datos.fechaNacimiento)
   if (rol === 'VENDEDOR') {
-    return (
-      hayTexto(datos.nombreComercial) &&
-      /^[A-Za-z0-9]{9}$/.test(datos.nif ?? '') &&
-      CATEGORIAS.has(datos.categoriaPrincipalId)
-    )
+    return dniYTelefonoValidos && hayTexto(datos.nombreComercial) && CATEGORIAS.has(datos.categoriaPrincipalId)
   }
   return true
 }

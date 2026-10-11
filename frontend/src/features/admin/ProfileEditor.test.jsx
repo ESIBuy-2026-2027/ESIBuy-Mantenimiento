@@ -38,7 +38,7 @@ const VENDEDOR = {
   apellidos: 'Vendedora',
   email: 'vendedor@esibuy.test',
   nombreComercial: 'TecnoVera',
-  nif: 'B12345601',
+  dni: '12345601V',
   categoriaPrincipal: 'Tecnología',
   categoriaPrincipalId: 'cat-1',
   estado: 'ACTIVO',
@@ -101,7 +101,7 @@ describe('ProfileEditor (HU22): campos', () => {
   it('profileEditor_deUnVendedor_dejaModificableTodoMenosElEmailYMuestraLasCategorias', () => {
     renderizar({ rol: ROLES.VENDEDOR, usuario: VENDEDOR })
 
-    for (const etiqueta of [/^nombre(?! comercial)/i, /^apellidos/i, /^nombre comercial/i, /^nif\/dni/i]) {
+    for (const etiqueta of [/^nombre(?! comercial)/i, /^apellidos/i, /^nombre comercial/i, /^dni/i]) {
       expect(esDeSoloLectura(etiqueta)).toBe(false)
     }
     expect(esDeSoloLectura(/^correo electrónico/i)).toBe(true)

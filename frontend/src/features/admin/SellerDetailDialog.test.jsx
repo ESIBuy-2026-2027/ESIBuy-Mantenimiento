@@ -50,7 +50,7 @@ describe('SellerDetailDialog (HU26): datos', () => {
     expect(within(dialogo).getByLabelText('Apellidos')).toHaveValue('Vendedora')
     expect(within(dialogo).getByLabelText('Correo electrónico')).toHaveValue('vendedor@esibuy.test')
     expect(within(dialogo).getByLabelText('Nombre comercial')).toHaveValue('TecnoVera')
-    expect(within(dialogo).getByLabelText('NIF/DNI')).toHaveValue('B12345601')
+    expect(within(dialogo).getByLabelText('DNI')).toHaveValue('12345601V')
     expect(within(dialogo).getByLabelText('Categoría principal')).toHaveValue('Tecnología')
     expect(within(dialogo).getByLabelText('Estado')).toHaveValue('Activo')
   })
@@ -409,7 +409,7 @@ describe('SellerDetailDialog (HU22): edición', () => {
   it('sellerDetailDialog_enEdicion_dejaModificarTodoMenosElEmailYElEstado', async () => {
     const { dialogo } = await entrarEnEdicion()
 
-    for (const etiqueta of [/^nombre(?! comercial)/i, /^apellidos/i, /^nombre comercial/i, /^nif\/dni/i]) {
+    for (const etiqueta of [/^nombre(?! comercial)/i, /^apellidos/i, /^nombre comercial/i, /^dni/i]) {
       expect(esDeSoloLectura(dialogo, etiqueta)).toBe(false)
     }
     expect(campo(dialogo, /^categoría principal/i)).not.toBeDisabled()
@@ -453,8 +453,10 @@ describe('SellerDetailDialog (HU22): edición', () => {
       nombre: 'Vera',
       apellidos: 'Vendedora',
       nombreComercial: 'TecnoVera Plus',
-      nif: 'B12345601',
+      dni: '12345601V',
+      telefono: '',
       categoriaPrincipalId: 'cat-1',
+      avatar: '',
     })
   })
 
@@ -512,11 +514,11 @@ describe('SellerDetailDialog (HU22): edición', () => {
     const { dialogo, user } = await entrarEnEdicion()
 
     await escribir(user, dialogo, /^nombre comercial/i, '')
-    await escribir(user, dialogo, /^nif\/dni/i, 'ABC')
+    await escribir(user, dialogo, /^dni/i, 'ABC')
     await guardar(user, dialogo)
 
     expect(within(dialogo).getByText(/este campo es obligatorio/i)).toBeInTheDocument()
-    expect(within(dialogo).getByText(/introduce un nif\/dni válido/i)).toBeInTheDocument()
+    expect(within(dialogo).getByText(/introduce un dni válido/i)).toBeInTheDocument()
     expect(envio.llamadas).toBe(0)
   })
 

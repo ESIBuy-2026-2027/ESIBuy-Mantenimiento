@@ -4,28 +4,28 @@ import { leerPagina, normalizar, paginar } from './paginar'
 import { CATEGORIAS, OTRO_VENDEDOR, PRODUCTOS, VENDEDOR_CON_PRODUCTOS, aRespuesta } from './productsHandlers'
 
 const VENDEDORES_DATOS = [
-  // [id, nombre, apellidos, nombreComercial, email, nif, categoría principal, estado]
-  [VENDEDOR_CON_PRODUCTOS, 'Vera', 'Vendedora', 'TecnoVera', 'vendedor@esibuy.test', 'B12345601', 'cat-1', 'ACTIVO'],
-  ['u-5', 'Vicente', 'Vacío', 'Casa Vicente', 'vendedor-vacio@esibuy.test', 'B12345602', 'cat-2', 'ACTIVO'],
-  [OTRO_VENDEDOR, 'Otto', 'Otero', 'Otero Hogar y Tecnología', 'otto@esibuy.test', 'B12345603', 'cat-1', 'ACTIVO'],
-  ['s-04', 'Marta', 'Gil Prieto', 'Electro Marta', 'marta@esibuy.test', 'B12345604', 'cat-1', 'ACTIVO'],
-  ['s-05', 'Hugo', 'Ramos León', 'Hogar Hugo', 'hugo@esibuy.test', 'B12345605', 'cat-2', 'PENDIENTE'],
-  ['s-06', 'Lucía', 'Navarro Sanz', 'Lucía Digital', 'lucia@esibuy.test', 'B12345606', 'cat-1', 'ACTIVO'],
-  ['s-07', 'Pablo', 'Iglesias Mora', 'Cocina Pablo', 'pablo@esibuy.test', 'B12345607', 'cat-2', 'DESACTIVADO'],
-  ['s-08', 'Elena', 'Soto Vidal', 'Soto Gadgets', 'elena@esibuy.test', 'B12345608', 'cat-1', 'ACTIVO'],
-  ['s-09', 'Raúl', 'Ortega Pons', 'Ortega Muebles', 'raul@esibuy.test', 'B12345609', 'cat-2', 'ACTIVO'],
-  ['s-10', 'Irene', 'Campos Ruiz', 'Irene Smart Home', 'irene@esibuy.test', 'B12345610', 'cat-2', 'ACTIVO'],
-  ['s-11', 'Sergio', 'Molina Vega', 'Molina Informática', 'sergio@esibuy.test', 'B12345611', 'cat-1', 'PENDIENTE'],
-  ['s-12', 'Noelia', 'Prado Ferrer', 'Noelia Decoración', 'noelia@esibuy.test', 'B12345612', 'cat-2', 'ACTIVO'],
-  ['s-13', 'Adrián', 'Bravo Cano', 'Bravo Audio', 'adrian@esibuy.test', 'B12345613', 'cat-1', 'DESACTIVADO'],
-  ['s-14', 'Carmen', 'Lara Duque', 'Carmen Electrodomésticos', 'carmen@esibuy.test', 'B12345614', 'cat-2', 'ACTIVO'],
-].map(([id, nombre, apellidos, nombreComercial, email, nif, categoria, estado]) => ({
+  // [id, nombre, apellidos, nombreComercial, email, dni, categoría principal, estado]
+  [VENDEDOR_CON_PRODUCTOS, 'Vera', 'Vendedora', 'TecnoVera', 'vendedor@esibuy.test', '12345601V', 'cat-1', 'ACTIVO'],
+  ['u-5', 'Vicente', 'Vacío', 'Casa Vicente', 'vendedor-vacio@esibuy.test', '12345602V', 'cat-2', 'ACTIVO'],
+  [OTRO_VENDEDOR, 'Otto', 'Otero', 'Otero Hogar y Tecnología', 'otto@esibuy.test', '12345603V', 'cat-1', 'ACTIVO'],
+  ['s-04', 'Marta', 'Gil Prieto', 'Electro Marta', 'marta@esibuy.test', '12345604V', 'cat-1', 'ACTIVO'],
+  ['s-05', 'Hugo', 'Ramos León', 'Hogar Hugo', 'hugo@esibuy.test', '12345605V', 'cat-2', 'PENDIENTE'],
+  ['s-06', 'Lucía', 'Navarro Sanz', 'Lucía Digital', 'lucia@esibuy.test', '12345606V', 'cat-1', 'ACTIVO'],
+  ['s-07', 'Pablo', 'Iglesias Mora', 'Cocina Pablo', 'pablo@esibuy.test', '12345607V', 'cat-2', 'DESACTIVADO'],
+  ['s-08', 'Elena', 'Soto Vidal', 'Soto Gadgets', 'elena@esibuy.test', '12345608V', 'cat-1', 'ACTIVO'],
+  ['s-09', 'Raúl', 'Ortega Pons', 'Ortega Muebles', 'raul@esibuy.test', '12345609V', 'cat-2', 'ACTIVO'],
+  ['s-10', 'Irene', 'Campos Ruiz', 'Irene Smart Home', 'irene@esibuy.test', '12345610V', 'cat-2', 'ACTIVO'],
+  ['s-11', 'Sergio', 'Molina Vega', 'Molina Informática', 'sergio@esibuy.test', '12345611V', 'cat-1', 'PENDIENTE'],
+  ['s-12', 'Noelia', 'Prado Ferrer', 'Noelia Decoración', 'noelia@esibuy.test', '12345612V', 'cat-2', 'ACTIVO'],
+  ['s-13', 'Adrián', 'Bravo Cano', 'Bravo Audio', 'adrian@esibuy.test', '12345613V', 'cat-1', 'DESACTIVADO'],
+  ['s-14', 'Carmen', 'Lara Duque', 'Carmen Electrodomésticos', 'carmen@esibuy.test', '12345614V', 'cat-2', 'ACTIVO'],
+].map(([id, nombre, apellidos, nombreComercial, email, dni, categoria, estado]) => ({
   id,
   nombre,
   apellidos,
   nombreComercial,
   email,
-  nif,
+  dni,
   categoria,
   estado,
 }))
@@ -82,14 +82,16 @@ const conCambios = (vendedor) => ({
 export const vendedoresMock = () => VENDEDORES_DATOS.map(conCambios)
 export const buscarVendedorMock = (id) => vendedoresMock().find((vendedor) => vendedor.id === id)
 
-export function editarVendedorMock(id, { nombre, apellidos, nombreComercial, nif, categoriaPrincipalId }) {
+export function editarVendedorMock(id, { nombre, apellidos, nombreComercial, dni, telefono, categoriaPrincipalId, avatar }) {
   datosModificados.set(id, {
     ...datosModificados.get(id),
     nombre,
     apellidos,
     nombreComercial,
-    nif,
+    dni,
+    telefono,
     categoria: categoriaPrincipalId,
+    avatar,
   })
 }
 
@@ -124,7 +126,9 @@ const aVendedorResumen = ({ id, nombre, apellidos, nombreComercial, email, categ
 const aVendedorDetalle = (vendedor) => ({
   ...aVendedorResumen(vendedor),
   categoriaPrincipalId: vendedor.categoria,
-  nif: vendedor.nif,
+  dni: vendedor.dni,
+  telefono: vendedor.telefono,
+  avatar: vendedor.avatar,
 })
 
 const aPedido = ([id, fecha, articulos, total, estado]) => ({ id, fecha, articulos, total, estado })

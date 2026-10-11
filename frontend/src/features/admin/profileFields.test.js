@@ -40,7 +40,9 @@ const VENDEDOR = {
   apellidos: 'Vendedora',
   email: 'vendedor@esibuy.test',
   nombreComercial: 'TecnoVera',
-  nif: 'B12345601',
+  dni: '12345601V',
+  telefono: '612345601',
+  avatar: 'avatar2',
   categoriaPrincipal: 'Tecnología',
   categoriaPrincipalId: 'cat-1',
   estado: 'ACTIVO',
@@ -79,13 +81,17 @@ describe('campos editables por tipo de usuario (HU22)', () => {
     expect(nombresEditables(ROLES.ADMIN)).toEqual(['nombre', 'apellidos', 'sede', 'avatar'])
   })
 
+  // El backend guarda el perfil completo: lo que no se envía se borra, así que el teléfono y la imagen también
+  // se editan aquí. El DNI se llama igual que en el registro del vendedor (T241).
   it('profileFields_deUnVendedor_permiteModificarTodosSusDatosMenosElEmail', () => {
     expect(nombresEditables(ROLES.VENDEDOR)).toEqual([
       'nombre',
       'apellidos',
       'nombreComercial',
-      'nif',
+      'dni',
+      'telefono',
       'categoriaPrincipalId',
+      'avatar',
     ])
   })
 
@@ -260,25 +266,26 @@ describe('validateProfile', () => {
     expect(validateProfile(ROLES.ADMIN, { ...initialValues(ROLES.ADMIN, ADMINISTRADOR), sede: '' })).toEqual({})
   })
 
-  it('validateProfile_deUnVendedor_exigeNombreComercialNifYCategoria', () => {
+  it('validateProfile_deUnVendedor_exigeNombreComercialDniYCategoriaPeroNoTelefono', () => {
     const errores = validateProfile(ROLES.VENDEDOR, {
       ...initialValues(ROLES.VENDEDOR, VENDEDOR),
       nombreComercial: '',
-      nif: '',
+      dni: '',
+      telefono: '',
       categoriaPrincipalId: '',
     })
 
     expect(Object.keys(errores).sort((a, b) => a.localeCompare(b))).toEqual([
       'categoriaPrincipalId',
-      'nif',
+      'dni',
       'nombreComercial',
     ])
   })
 
-  it('validateProfile_deUnVendedorConNifIncorrecto_devuelveError', () => {
-    const errores = validateProfile(ROLES.VENDEDOR, { ...initialValues(ROLES.VENDEDOR, VENDEDOR), nif: 'ABC' })
+  it('validateProfile_deUnVendedorConDniIncorrecto_devuelveElMismoErrorQueUnCliente', () => {
+    const errores = validateProfile(ROLES.VENDEDOR, { ...initialValues(ROLES.VENDEDOR, VENDEDOR), dni: 'B12345601' })
 
-    expect(errores.nif).toMatch(/nif\/dni válido/i)
+    expect(errores.dni).toMatch(/dni válido \(8 números y una letra\)/i)
   })
 })
 
@@ -319,8 +326,10 @@ describe('profilePayload', () => {
       nombre: 'Vera',
       apellidos: 'Vendedora',
       nombreComercial: 'TecnoVera',
-      nif: 'B12345601',
+      dni: '12345601V',
+      telefono: '612345601',
       categoriaPrincipalId: 'cat-1',
+      avatar: 'avatar2',
     })
   })
 })
