@@ -453,11 +453,51 @@ describe('Register', () => {
     expect(screen.getByText(/dni válido/i)).toBeInTheDocument()
   })
 
-  it('register_alElegirCliente_muestraTipoConNormalPreseleccionado', async () => {
+  it('register_alElegirCliente_muestraTipoEstandarPreseleccionadoConLosValoresDelBackend', async () => {
     await renderYElegirCliente()
 
-    expect(screen.getByLabelText(/tipo/i)).toHaveValue('normal')
-    expect(screen.getByRole('option', { name: /premium/i })).toBeInTheDocument()
+    expect(screen.getByLabelText(/tipo/i)).toHaveValue('ESTANDAR')
+    expect(screen.getByRole('option', { name: /estándar/i })).toHaveValue('ESTANDAR')
+    expect(screen.getByRole('option', { name: /premium/i })).toHaveValue('PREMIUM')
+  })
+
+  it('register_alEnviarDatosValidosDeCliente_enviaElTipoEstandarPorDefecto', async () => {
+    registrarCliente.mockResolvedValue({})
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(registrarCliente).toHaveBeenCalledWith(expect.objectContaining({ tipoCliente: 'ESTANDAR' }))
+  })
+
+  it('register_alElegirPremium_enviaElTipoPremium', async () => {
+    registrarCliente.mockResolvedValue({})
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.selectOptions(screen.getByLabelText(/tipo/i), 'PREMIUM')
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(registrarCliente).toHaveBeenCalledWith(expect.objectContaining({ tipoCliente: 'PREMIUM' }))
+  })
+
+  it('register_siElClienteNoIndicaTelefono_noEnviaElTelefono', async () => {
+    registrarCliente.mockResolvedValue({})
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(registrarCliente).toHaveBeenCalledTimes(1)
+    expect(registrarCliente.mock.calls[0][0]).not.toHaveProperty('telefono')
+  })
+
+  it('register_siElVendedorNoIndicaTelefono_noEnviaElTelefono', async () => {
+    registrarVendedor.mockResolvedValue({})
+    await renderYElegirVendedor()
+    await rellenarFormularioVendedorValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(registrarVendedor).toHaveBeenCalledTimes(1)
+    expect(registrarVendedor.mock.calls[0][0]).not.toHaveProperty('telefono')
   })
 
   it('register_alEnviarDatosValidosDeCliente_llamaAlServicioConLosDatos', async () => {
