@@ -461,4 +461,12 @@ class AutenticacionServiceTest {
         assertEquals("juan@uclm.es", resultado.email());
         assertEquals(PasoLogin.CODIGO_EMAIL, resultado.siguientePaso());
     }
+
+    @Test
+    @DisplayName("HU2-CP25: un email mal formado en el login responde como unas credenciales inválidas")
+    void unEmailMalFormadoEnElLoginNoRevelaNada() {
+        // Sin stubs: con un email mal formado no se llega a consultar el repositorio
+        assertThrows(CredencialesInvalidasException.class,
+                () -> autenticacion.iniciarSesion(new IniciarSesionCommand("ana@", "clave1234")));
+    }
 }
