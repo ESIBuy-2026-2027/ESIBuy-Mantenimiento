@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.time.Instant;
 import java.time.LocalDate;
 
+import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -376,5 +377,16 @@ class UsuarioTest {
         assertNull(admin.getConsentimiento(), "Los administradores no registran consentimiento de privacidad en su creación");
         assertEquals(datosPersonales, admin.getDatosPersonales());
         assertEquals(email, admin.getEmail());
+    }
+
+    @Test
+    @DisplayName("HU1-CP22: el rechazo por minoría de edad indica su motivo")
+    void menorDeEdadIndicaSuMotivo() {
+        DatosCliente nacidoHace17Anos = datosClienteNacidoEl(HOY.minusYears(17));
+
+        UsuarioInvalidoException excepcion = assertThrows(UsuarioInvalidoException.class,
+                () -> Usuario.nuevoCliente(DATOS_PERSONALES, EMAIL, HASH, nacidoHace17Anos, CONSENTIMIENTO, HOY));
+
+        assertEquals(MotivoRechazo.MENOR_DE_EDAD, excepcion.getMotivo());
     }
 }
