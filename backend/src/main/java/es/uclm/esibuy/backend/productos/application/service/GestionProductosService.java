@@ -1,0 +1,45 @@
+package es.uclm.esibuy.backend.productos.application.service;
+
+import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
+import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
+import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
+import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
+import es.uclm.esibuy.backend.productos.domain.model.Producto;
+
+public class GestionProductosService implements GestionProductosUseCase {
+
+    private final ProductoRepositoryPort productoRepository;
+    private final UsuarioEnSesionPort usuarioEnSesion;
+
+    public GestionProductosService(ProductoRepositoryPort productoRepository, UsuarioEnSesionPort usuarioEnSesion) {
+        this.productoRepository = productoRepository;
+        this.usuarioEnSesion = usuarioEnSesion;
+    }
+
+    @Override
+    public Producto crear(CrearProductoCommand comando) {
+        String vendedorId = usuarioEnSesion.idPorCorreo(comando.emailVendedor());
+
+        // Las reglas del producto se validan en el dominio: si algo está mal, el constructor de Producto lanza
+        // la excepción y no se guarda nada. No se comprueba que el vendedor exista: el correo viene de la sesión.
+        Producto producto = new Producto(
+                null,
+                vendedorId,
+                comando.nombre(),
+                comando.descripcion(),
+                comando.precio(),
+                comando.stock(),
+                comando.categoriaId(),
+                comando.imagen(),
+                comando.disponible(),
+                comando.descuento(),
+                comando.descuentoPremium()
+        );
+        // Comprobación previa para dar el 409 en el caso normal; el índice único de MongoDB cubre la carrera.
+        if (productoRepository.existePorVendedorYNombre(vendedorId, producto.getNombre())) {
+            throw new ProductoDuplicadoException();
+        }
+        return productoRepository.guardar(producto);
+    }
+}

@@ -1,7 +1,11 @@
 package es.uclm.esibuy.backend.productos.infrastructure.adapter.in.web;
 
+import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
+import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
@@ -9,28 +13,39 @@ import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Stream;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// Listado de los productos propios del vendedor (HU32, T184): GET /api/seller/products. El caso de uso es un
-// doble de prueba; la seguridad es la real (SecurityConfig: /api/seller/** solo para VENDEDOR).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU32-CP01 a CP05, propuestos a partir de los criterios de aceptación.
+// Listado de los productos propios del vendedor (HU32, T184): GET /api/seller/products, y alta de un producto
+// (HU31, T205 y T179): POST /api/seller/products. Los casos de uso son dobles de prueba; la seguridad es la real
+// (SecurityConfig: /api/seller/** solo para VENDEDOR, con CSRF).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU32-CP01 a CP05 y HU31-CP17 a CP22, propuestos.
 @WebMvcTest(ProductoController.class)
 @Import(SecurityConfig.class)
 class ProductoControllerTest {
@@ -43,6 +58,9 @@ class ProductoControllerTest {
 
     @MockitoBean
     private ListadoProductosUseCase listadoProductos;
+
+    @MockitoBean
+    private GestionProductosUseCase gestionProductos;
 
     @Test
     @DisplayName("HU32-CP01: el vendedor recibe su listado con el formato del contrato y sin el id del vendedor")
@@ -111,5 +129,179 @@ class ProductoControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(listadoProductos, never()).listarMisProductos(any(), any());
+    }
+
+    // ---- Alta de producto (HU31) ----
+
+    private static final String SIN_DESCUENTO = "{\"activo\": false, \"porcentaje\": null}";
+
+    @Test
+    @DisplayName("HU31-CP17: el vendedor crea un producto y recibe 201 con el producto creado")
+    void vendedorCreaUnProducto() throws Exception {
+        Producto creado = new Producto("p-9", "v-1", "Lámpara de pie", "Con regulador", new BigDecimal("45.50"), 7,
+                "cat-2", "https://esibuy.test/lampara.png", true, new Descuento(true, new BigDecimal("10")),
+                Descuento.sinDescuento());
+        when(gestionProductos.crear(any())).thenReturn(creado);
+
+        mockMvc.perform(post(URL).with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nombre": "Lámpara de pie", "descripcion": "Con regulador", "precio": 45.5,
+                                 "stock": 7, "categoriaId": "cat-2", "imagen": "https://esibuy.test/lampara.png",
+                                 "disponible": true, "descuento": {"activo": true, "porcentaje": 10},
+                                 "descuentoPremium": {"activo": false, "porcentaje": null}}
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value("p-9"))
+                .andExpect(jsonPath("$.nombre").value("Lámpara de pie"))
+                .andExpect(jsonPath("$.descripcion").value("Con regulador"))
+                .andExpect(jsonPath("$.precio").value(45.5))
+                .andExpect(jsonPath("$.stock").value(7))
+                .andExpect(jsonPath("$.categoriaId").value("cat-2"))
+                .andExpect(jsonPath("$.imagen").value("https://esibuy.test/lampara.png"))
+                .andExpect(jsonPath("$.disponible").value(true))
+                .andExpect(jsonPath("$.descuento.activo").value(true))
+                .andExpect(jsonPath("$.descuento.porcentaje").value(10))
+                .andExpect(jsonPath("$.descuentoPremium.activo").value(false))
+                .andExpect(jsonPath("$.vendedorId").doesNotExist());
+
+        ArgumentCaptor<CrearProductoCommand> captor = ArgumentCaptor.forClass(CrearProductoCommand.class);
+        verify(gestionProductos).crear(captor.capture());
+        CrearProductoCommand comando = captor.getValue();
+        assertEquals(VENDEDOR, comando.emailVendedor());
+        assertEquals("Lámpara de pie", comando.nombre());
+        assertEquals(0, new BigDecimal("45.5").compareTo(comando.precio()));
+        assertEquals(7, comando.stock());
+        assertEquals("cat-2", comando.categoriaId());
+        assertEquals(true, comando.descuento().activo());
+        assertEquals(0, BigDecimal.TEN.compareTo(comando.descuento().porcentaje()));
+        assertEquals(false, comando.descuentoPremium().activo());
+    }
+
+    @Test
+    @DisplayName("HU31-CP18: el vendedor sale de la sesión: un vendedorId en el cuerpo se ignora")
+    void elVendedorSaleDeLaSesionYNoDelCuerpo() throws Exception {
+        Producto creado = new Producto("p-9", "v-1", "Teclado", "", new BigDecimal("10"), 1, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento());
+        when(gestionProductos.crear(any())).thenReturn(creado);
+        String conVendedor = cuerpoValido().replace("{\"nombre\"", "{\"vendedorId\": \"v-otro\", \"nombre\"");
+
+        mockMvc.perform(post(URL).with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(conVendedor))
+                .andExpect(status().isCreated());
+
+        ArgumentCaptor<CrearProductoCommand> captor = ArgumentCaptor.forClass(CrearProductoCommand.class);
+        verify(gestionProductos).crear(captor.capture());
+        assertEquals(VENDEDOR, captor.getValue().emailVendedor());
+    }
+
+    @Test
+    @DisplayName("HU31-CP19: sin sesión no se puede crear un producto")
+    void sinSesionNoSeCreaUnProducto() throws Exception {
+        mockMvc.perform(post(URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isUnauthorized());
+
+        verify(gestionProductos, never()).crear(any());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "ADMINISTRADOR"})
+    @DisplayName("HU31-CP19: un usuario que no es vendedor no puede crear un producto")
+    void noVendedorNoCreaUnProducto(String rol) throws Exception {
+        mockMvc.perform(post(URL).with(csrf()).with(user("usuario@esibuy.test").roles(rol))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isForbidden());
+
+        verify(gestionProductos, never()).crear(any());
+    }
+
+    @Test
+    @DisplayName("HU31-CP19: una petición sin token CSRF se rechaza")
+    void sinTokenCsrfNoSeCreaUnProducto() throws Exception {
+        mockMvc.perform(post(URL).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isForbidden());
+
+        verify(gestionProductos, never()).crear(any());
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("cuerposInvalidos")
+    @DisplayName("HU31-CP20: un cuerpo con datos no válidos devuelve 400 y no llega al caso de uso")
+    void cuerpoInvalidoDevuelve400(String descripcion, String cuerpo) throws Exception {
+        mockMvc.perform(post(URL).with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpo))
+                .andExpect(status().isBadRequest());
+
+        verify(gestionProductos, never()).crear(any());
+    }
+
+    @Test
+    @DisplayName("HU31-CP20: un cuerpo que no es JSON válido devuelve 400")
+    void cuerpoQueNoEsJsonDevuelve400() throws Exception {
+        mockMvc.perform(post(URL).with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{esto no es json"))
+                .andExpect(status().isBadRequest());
+
+        verify(gestionProductos, never()).crear(any());
+    }
+
+    @Test
+    @DisplayName("HU31-CP21: una regla del dominio incumplida devuelve 400 con un mensaje genérico")
+    void reglaDeDominioIncumplidaDevuelve400Generico() throws Exception {
+        when(gestionProductos.crear(any()))
+                .thenThrow(new ProductoInvalidoException("detalle interno que no debe salir"));
+
+        mockMvc.perform(post(URL).with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.mensaje").value(not(containsString("detalle interno"))));
+    }
+
+    @Test
+    @DisplayName("HU31-CP22: un nombre repetido del mismo vendedor devuelve 409 con el código PRODUCT_NAME_ALREADY_EXISTS")
+    void nombreRepetidoDevuelve409() throws Exception {
+        when(gestionProductos.crear(any())).thenThrow(new ProductoDuplicadoException());
+
+        mockMvc.perform(post(URL).with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("PRODUCT_NAME_ALREADY_EXISTS"));
+    }
+
+    private static Stream<Arguments> cuerposInvalidos() {
+        String nombreLargo = "\"" + "a".repeat(101) + "\"";
+        return Stream.of(
+                Arguments.of("nombre vacío", cuerpo("\"\"", "89.5", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO)),
+                Arguments.of("nombre de más de 100 caracteres",
+                        cuerpo(nombreLargo, "89.5", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO)),
+                Arguments.of("precio cero", cuerpo("\"Teclado\"", "0", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO)),
+                Arguments.of("precio negativo", cuerpo("\"Teclado\"", "-5", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO)),
+                Arguments.of("precio ausente", cuerpo("\"Teclado\"", "null", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO)),
+                Arguments.of("stock negativo", cuerpo("\"Teclado\"", "89.5", "-1", "\"cat-1\"", "\"\"", SIN_DESCUENTO)),
+                Arguments.of("categoría vacía", cuerpo("\"Teclado\"", "89.5", "12", "\"\"", "\"\"", SIN_DESCUENTO)),
+                Arguments.of("imagen con esquema javascript",
+                        cuerpo("\"Teclado\"", "89.5", "12", "\"cat-1\"", "\"javascript:alert(1)\"", SIN_DESCUENTO)),
+                Arguments.of("descuento activo sin porcentaje",
+                        cuerpo("\"Teclado\"", "89.5", "12", "\"cat-1\"", "\"\"",
+                                "{\"activo\": true, \"porcentaje\": null}")),
+                Arguments.of("descuento con porcentaje mayor que 100",
+                        cuerpo("\"Teclado\"", "89.5", "12", "\"cat-1\"", "\"\"",
+                                "{\"activo\": true, \"porcentaje\": 101}")));
+    }
+
+    private static String cuerpoValido() {
+        return cuerpo("\"Teclado mecánico\"", "89.5", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO);
+    }
+
+    // Cada argumento es un valor JSON ya escrito (con sus comillas), para poder probar también los nulos.
+    private static String cuerpo(String nombre, String precio, String stock, String categoriaId, String imagen,
+            String descuento) {
+        return """
+                {"nombre": %s, "descripcion": "", "precio": %s, "stock": %s, "categoriaId": %s, "imagen": %s,
+                 "disponible": true, "descuento": %s,
+                 "descuentoPremium": {"activo": false, "porcentaje": null}}
+                """.formatted(nombre, precio, stock, categoriaId, imagen, descuento);
     }
 }

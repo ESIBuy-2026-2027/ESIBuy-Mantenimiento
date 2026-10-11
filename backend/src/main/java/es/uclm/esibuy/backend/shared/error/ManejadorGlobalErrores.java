@@ -1,5 +1,7 @@
 package es.uclm.esibuy.backend.shared.error;
 
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.application.port.out.exception.EnvioEmailException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AuthenticatorYaDadoDeAltaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
@@ -113,5 +115,20 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError ultimoAdministradorActivo() {
         return new RespuestaError("No se puede desactivar al último administrador activo", "LAST_ACTIVE_ADMIN");
+    }
+
+    // 400 + code al dar de alta un producto (HU31, T179): el mensaje es genérico, nunca el detalle de la regla.
+    @ExceptionHandler(ProductoInvalidoException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError productoInvalido() {
+        return new RespuestaError("El producto es inválido", "VALIDATION_ERROR");
+    }
+
+    // 409 + code cuando el vendedor ya tiene un producto con ese nombre (HU31, T179).
+    // PENDIENTE: confirmar el code con el frontend (el contrato actual no define ningún 409 de productos).
+    @ExceptionHandler(ProductoDuplicadoException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError productoDuplicado() {
+        return new RespuestaError("El producto ya existe con el mismo nombre", "PRODUCT_NAME_ALREADY_EXISTS");
     }
 }

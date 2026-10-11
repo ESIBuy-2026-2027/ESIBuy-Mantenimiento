@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -13,6 +14,7 @@ import org.springframework.data.mongodb.core.query.Query;
 
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
 
@@ -38,7 +40,12 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
             repository.findById(producto.getId())
                     .ifPresent(guardado -> documento.setCreatedAt(guardado.getCreatedAt()));
         }
-        return mapper.aDominio(repository.save(documento));
+        try {
+            return mapper.aDominio(repository.save(documento));
+        } catch (DuplicateKeyException duplicateKeyException) {
+            // El índice único (vendedorId, nombre) lo ha rechazado: dos altas simultáneas con el mismo nombre.
+            throw new ProductoDuplicadoException(duplicateKeyException);
+        }
     }
 
     @Override
@@ -56,6 +63,15 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
                 .map(mapper::aDominio)
                 .toList();
         return new ProductoPage(productos, query.pagina(), query.tamano(), total);
+    }
+
+    // Mismo vendedor y mismo nombre completo, sin distinguir mayúsculas y como texto literal (Pattern.quote).
+    @Override
+    public boolean existePorVendedorYNombre(String vendedorId, String nombre) {
+        Criteria criterios = new Criteria().andOperator(
+                Criteria.where("vendedorId").is(vendedorId),
+                Criteria.where("nombre").regex("^" + Pattern.quote(nombre.trim()) + "$", "i"));
+        return mongoTemplate.exists(new Query(criterios), ProductoDocument.class);
     }
 
     // Siempre del vendedor; el nombre se busca como texto literal (Pattern.quote), sin distinguir mayúsculas.

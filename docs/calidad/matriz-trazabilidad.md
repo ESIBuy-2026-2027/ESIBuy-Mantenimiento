@@ -799,6 +799,18 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU31-CP10 | La descripción es opcional y admite hasta 1000 caracteres | Unitario (dominio) | 1 | ✅ Pasa |
 | HU31-CP11 | Un producto se guarda en la colección `productos` con todos sus datos y se recupera igual | Unitario + integración MongoDB | 4 | ✅ Pasa |
 | HU31-CP12 | Buscar un producto que no existe devuelve vacío | Integración MongoDB | 1 | ✅ Pasa |
+| HU31-CP13 | El servicio crea el producto con el vendedor de la sesión y lo guarda | Unitario (servicio) | 1 | 🔍 En revisión |
+| HU31-CP14 | El servicio devuelve el producto guardado, con el id asignado por la base de datos | Unitario (servicio) | 1 | 🔍 En revisión |
+| HU31-CP15 | Unos datos que incumplen las reglas del producto se rechazan y no se guarda nada | Unitario (servicio) | 1 | 🔍 En revisión |
+| HU31-CP16 | Un vendedor no puede tener dos productos con el mismo nombre (sin distinguir mayúsculas) y no se guarda el segundo | Unitario (servicio) | 1 | 🔍 En revisión |
+| HU31-CP17 | `POST /api/seller/products` crea el producto y responde 201 con el producto creado, sin `vendedorId` | Integración (capa web) | 1 | 🔍 En revisión |
+| HU31-CP18 | El vendedor sale de la sesión: un `vendedorId` en el cuerpo se ignora | Integración (capa web) | 1 | 🔍 En revisión |
+| HU31-CP19 | Sin sesión (401), sin ser vendedor o sin token CSRF (403) no se crea el producto | Integración (capa web) | 3 | 🔍 En revisión |
+| HU31-CP20 | Un cuerpo con datos no válidos o que no es JSON devuelve 400 y no llega al caso de uso | Integración (capa web) | 2 | 🔍 En revisión |
+| HU31-CP21 | Una regla del dominio incumplida devuelve 400 con `code: VALIDATION_ERROR` y un mensaje genérico | Integración (capa web) | 1 | 🔍 En revisión |
+| HU31-CP22 | Un nombre repetido del mismo vendedor devuelve 409 con `code: PRODUCT_NAME_ALREADY_EXISTS` | Integración (capa web) | 1 | 🔍 En revisión |
+| HU31-CP23 | La comprobación de nombre repetido no distingue mayúsculas, compara el nombre completo como texto literal y solo cuenta los productos del mismo vendedor | Integración MongoDB | 2 | 🔍 En revisión |
+| HU31-CP24 | La base de datos rechaza un nombre repetido del mismo vendedor aunque se salte la comprobación previa (condición de carrera) | Integración MongoDB | 1 | 🔍 En revisión |
 
 Notas:
 - **HU31-CP01 a CP10:** casos propuestos en la T201 (AB#201) a partir del contrato del formulario de producto del frontend (`frontend/docs/hu31-formulario-producto.md`). Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards.
@@ -809,6 +821,12 @@ Notas:
 - **Backend (T202):** repositorio de productos: puerto `ProductoRepositoryPort` (`guardar` y `buscarPorId`) y su adaptador de MongoDB, con documento y mapper propios. El listado por vendedor llegará con la AB#183.
 - **Una sola categoría por producto:** decisión del equipo; el producto guarda `categoriaId`, no una lista. Desde la T202 el validador de MongoDB también lo exige (antes era una lista `categoriaIds`).; desde la T202 el validador de MongoDB también exige `categoriaId` (antes era una lista `categoriaIds`).
 - **Estado:** los tests de la T201 (PR #83) y de la T202 (PR #86) están en `develop`.
+- **HU31-CP13 a CP24:** casos propuestos en las tasks AB#179, AB#180, AB#204 y AB#205 (alta de producto, TDD). Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards. El orden de los casos sigue el orden de las capas (servicio, capa web, MongoDB); CP11 y CP12 ya eran de la persistencia (T202).
+- **Backend (AB#204 y AB#205):** `GestionProductosUseCase.crear` y su servicio, y `POST /api/seller/products` (201; 400 y 409 con `code`). El vendedor sale de la sesión. Al guardar, la comprobación `existePorVendedorYNombre` se complementa con un índice único `(vendedorId, nombre)` con collation de nivel 2 (sin distinguir mayúsculas, sí tildes) y el adaptador traduce `DuplicateKeyException` a `ProductoDuplicadoException`.
+- **Decisión del equipo:** «teclado» y «Teclado» cuentan como el mismo nombre de producto de un vendedor.
+- **Pendiente de acordar con el frontend:** el `code` del 409 (`PRODUCT_NAME_ALREADY_EXISTS`); el contrato (`frontend/docs/hu31-formulario-producto.md`) solo define el 400. Los 400 de validación de campos (Bean Validation) devuelven el cuerpo por defecto de Spring, sin `code`; solo el 400 de una regla del dominio lleva `VALIDATION_ERROR` (CP21).
+- **Sin comprobar:** que la categoría exista (aún no hay módulo de categorías). La condición de carrera de CP24 se prueba creando el segundo producto directamente en el adaptador, sin hilos concurrentes.
+- **Estado:** los tests de AB#179, AB#180, AB#204 y AB#205 están en la rama `feature/US31-T179-T180-T204-T205-alta-producto` (PR sin abrir); pasan de 🔍 a ✅ al mergear el PR.
 - **Frontend:** los tests de la HU31 (AB#182) no tienen todavía filas en la matriz.
 
 ### Tabla B · casos de prueba ↔ tests
@@ -839,11 +857,29 @@ Notas:
 | HU31-CP11 | `ProductoMongoAdapterTest` | `guardarAsignaIdYLoGuardaEnProductos` | Infraestructura | AB#202 | PR #86 | ✅ |
 | HU31-CP11 | `ProductoMongoAdapterTest` | `buscarPorIdDevuelveElProductoGuardado` | Infraestructura | AB#202 | PR #86 | ✅ |
 | HU31-CP12 | `ProductoMongoAdapterTest` | `buscarPorIdDevuelveVacioSiNoExiste` | Infraestructura | AB#202 | PR #86 | ✅ |
+| HU31-CP13 | `GestionProductosServiceTest` | `creaElProductoConElVendedorDeLaSesion` | Aplicación | AB#204 | PR sin abrir | 🔍 |
+| HU31-CP14 | `GestionProductosServiceTest` | `devuelveElProductoGuardadoConSuId` | Aplicación | AB#204 | PR sin abrir | 🔍 |
+| HU31-CP15 | `GestionProductosServiceTest` | `rechazaDatosInvalidosYNoGuardaNada (precio 0, stock negativo y categoría en blanco)` | Aplicación | AB#204 | PR sin abrir | 🔍 |
+| HU31-CP16 | `GestionProductosServiceTest` | `rechazaUnNombreRepetidoDelMismoVendedor` | Aplicación | AB#204 | PR sin abrir | 🔍 |
+| HU31-CP17 | `ProductoControllerTest` | `vendedorCreaUnProducto` | Infraestructura | AB#205 | PR sin abrir | 🔍 |
+| HU31-CP18 | `ProductoControllerTest` | `elVendedorSaleDeLaSesionYNoDelCuerpo` | Infraestructura | AB#205 | PR sin abrir | 🔍 |
+| HU31-CP19 | `ProductoControllerTest` | `sinSesionNoSeCreaUnProducto` | Infraestructura | AB#205 | PR sin abrir | 🔍 |
+| HU31-CP19 | `ProductoControllerTest` | `noVendedorNoCreaUnProducto (cliente y administrador)` | Infraestructura | AB#205 | PR sin abrir | 🔍 |
+| HU31-CP19 | `ProductoControllerTest` | `sinTokenCsrfNoSeCreaUnProducto` | Infraestructura | AB#205 | PR sin abrir | 🔍 |
+| HU31-CP20 | `ProductoControllerTest` | `cuerpoInvalidoDevuelve400 (nombre vacío o de más de 100 caracteres, precio 0, negativo o ausente, stock negativo, categoría vacía, imagen `javascript:`, descuento activo sin porcentaje y porcentaje 101)` | Infraestructura | AB#179 | PR sin abrir | 🔍 |
+| HU31-CP20 | `ProductoControllerTest` | `cuerpoQueNoEsJsonDevuelve400` | Infraestructura | AB#179 | PR sin abrir | 🔍 |
+| HU31-CP21 | `ProductoControllerTest` | `reglaDeDominioIncumplidaDevuelve400Generico` | Infraestructura | AB#179 | PR sin abrir | 🔍 |
+| HU31-CP22 | `ProductoControllerTest` | `nombreRepetidoDevuelve409` | Infraestructura | AB#179 | PR sin abrir | 🔍 |
+| HU31-CP23 | `ProductoMongoAdapterTest` | `existePorVendedorYNombreNoDistingueMayusculas` | Infraestructura | AB#204 | PR sin abrir | 🔍 |
+| HU31-CP23 | `ProductoMongoAdapterTest` | `existePorVendedorYNombreComparaElNombreCompletoYLiteral` | Infraestructura | AB#204 | PR sin abrir | 🔍 |
+| HU31-CP24 | `ProductoMongoAdapterTest` | `guardarRechazaUnNombreRepetidoDelMismoVendedor` | Infraestructura | AB#179 | PR sin abrir | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `ProductoTest` y `DescuentoTest`: `productos/domain/model/` (JUnit, sin Spring)
 - `ProductoDocumentMapperTest`: `productos/infrastructure/adapter/out/persistence/` (JUnit, sin Spring)
 - `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/` (con Testcontainers)
+- `GestionProductosServiceTest`: `productos/application/service/` (Mockito, sin Spring)
+- `ProductoControllerTest`: `productos/infrastructure/adapter/in/web/` (con `@WebMvcTest`; la seguridad es la real de `SecurityConfig`)
 
 ---
 

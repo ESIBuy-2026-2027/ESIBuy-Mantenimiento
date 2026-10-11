@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
@@ -26,17 +27,19 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // Test de integración del adaptador de MongoDB de productos (HU31, T202). Usa un MongoDB real en Docker
 // (Testcontainers): Docker Desktop debe estar abierto. InicializadorColecciones crea la colección productos
 // con su validación, como en la aplicación real, así que un documento que no la cumpla hace fallar el test.
 // También prueba el listado de los productos propios del vendedor (HU32, T184).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP11 y CP12, y HU32-CP01 a CP03, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP11, CP12 y CP23, y HU32-CP01 a CP03, propuestos.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class ProductoMongoAdapterTest {
@@ -107,6 +110,28 @@ class ProductoMongoAdapterTest {
     @DisplayName("HU31-CP12: buscar un producto que no existe devuelve vacío")
     void buscarPorIdDevuelveVacioSiNoExiste() {
         assertTrue(adapter.buscarPorId("6a0000000000000000000000").isEmpty());
+    }
+
+    @Test
+    @DisplayName("HU31-CP23: el nombre cuenta como repetido aunque cambien las mayúsculas, pero solo para el mismo vendedor")
+    void existePorVendedorYNombreNoDistingueMayusculas() {
+        guardarProducto("v-1", "Teclado", "cat-1", "2026-10-01T10:00:00Z");
+
+        assertTrue(adapter.existePorVendedorYNombre("v-1", "Teclado"));
+        assertTrue(adapter.existePorVendedorYNombre("v-1", "teclado"));
+        assertTrue(adapter.existePorVendedorYNombre("v-1", "TECLADO"));
+        assertFalse(adapter.existePorVendedorYNombre("v-2", "Teclado"));
+        assertFalse(adapter.existePorVendedorYNombre("v-1", "Ratón"));
+    }
+
+    @Test
+    @DisplayName("HU31-CP23: el nombre se compara completo y como texto literal, no como expresión regular")
+    void existePorVendedorYNombreComparaElNombreCompletoYLiteral() {
+        guardarProducto("v-1", "Ratón (inalámbrico)", "cat-1", "2026-10-01T10:00:00Z");
+
+        assertTrue(adapter.existePorVendedorYNombre("v-1", "Ratón (inalámbrico)"));
+        assertFalse(adapter.existePorVendedorYNombre("v-1", "Ratón"));
+        assertFalse(adapter.existePorVendedorYNombre("v-1", "Ratón (.*)"));
     }
 
     @Test
@@ -202,5 +227,20 @@ class ProductoMongoAdapterTest {
         assertEquals(List.of("Reciente", "Intermedio"), nombres(primera));
         assertEquals(List.of("Antiguo"), nombres(segunda));
         assertEquals(3, segunda.totalElementos());
+    }
+
+        @Test
+    @DisplayName("HU31-CP24: la base de datos rechaza un nombre repetido del mismo vendedor aunque se salte la comprobación previa")
+    void guardarRechazaUnNombreRepetidoDelMismoVendedor() {
+        adapter.guardar(productoNuevo("v-1", "Teclado"));
+
+        assertThrows(ProductoDuplicadoException.class, () -> adapter.guardar(productoNuevo("v-1", "TECLADO")));
+        assertDoesNotThrow(() -> adapter.guardar(productoNuevo("v-2", "Teclado")));
+        assertEquals(2, mongoTemplate.getCollection(COLECCION).countDocuments());
+    }
+
+    private static Producto productoNuevo(String vendedorId, String nombre) {
+        return new Producto(null, vendedorId, nombre, "", new BigDecimal("10"), 1, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento());
     }
 }
