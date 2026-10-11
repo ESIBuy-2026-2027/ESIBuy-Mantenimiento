@@ -12,9 +12,9 @@ import jakarta.validation.constraints.Size;
 
 import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
 
-
-
-public record ProductoRequest (@NotBlank @Size(max = 100) String nombre,
+/** Cuerpo del alta de producto (HU31). No lleva vendedor: sale de la sesión. */
+public record ProductoRequest(
+        @NotBlank @Size(max = 100) String nombre,
         @Size(max = 1000) String descripcion,
         @NotNull @DecimalMin(value = "0", inclusive = false) BigDecimal precio,
         @NotNull @Min(0) Integer stock,
@@ -22,12 +22,11 @@ public record ProductoRequest (@NotBlank @Size(max = 100) String nombre,
         @Pattern(regexp = "(?i)(https?://\\S+)?") String imagen,
         boolean disponible,
         @NotNull @Valid DescuentoDto descuento,
-        @NotNull @Valid DescuentoDto descuentoPremium) {
+        @NotNull @Valid DescuentoDto descuentoPremium
+) {
 
     CrearProductoCommand aComando(String emailVendedor) {
-        return new CrearProductoCommand(emailVendedor, nombre, descripcion, precio, stock, categoriaId, imagen, disponible,
-                descuento.aDominio(), descuentoPremium.aDominio());
+        return new CrearProductoCommand(emailVendedor, nombre, descripcion, precio, stock, categoriaId, imagen,
+                disponible, descuento.aDominio(), descuentoPremium.aDominio());
     }
-
-
 }

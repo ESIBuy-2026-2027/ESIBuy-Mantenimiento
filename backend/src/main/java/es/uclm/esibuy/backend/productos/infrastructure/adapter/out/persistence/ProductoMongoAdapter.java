@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -13,11 +14,9 @@ import org.springframework.data.mongodb.core.query.Query;
 
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
-
-import org.springframework.dao.DuplicateKeyException;
-import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 
 /** Adaptador de salida que implementa el repositorio de productos con Spring Data MongoDB. */
 public class ProductoMongoAdapter implements ProductoRepositoryPort {
@@ -66,6 +65,15 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         return new ProductoPage(productos, query.pagina(), query.tamano(), total);
     }
 
+    // Mismo vendedor y mismo nombre completo, sin distinguir mayúsculas y como texto literal (Pattern.quote).
+    @Override
+    public boolean existePorVendedorYNombre(String vendedorId, String nombre) {
+        Criteria criterios = new Criteria().andOperator(
+                Criteria.where("vendedorId").is(vendedorId),
+                Criteria.where("nombre").regex("^" + Pattern.quote(nombre.trim()) + "$", "i"));
+        return mongoTemplate.exists(new Query(criterios), ProductoDocument.class);
+    }
+
     // Siempre del vendedor; el nombre se busca como texto literal (Pattern.quote), sin distinguir mayúsculas.
     private static Criteria construirCriterios(String vendedorId, ListarProductosQuery query) {
         List<Criteria> criterios = new ArrayList<>();
@@ -77,13 +85,5 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
             criterios.add(Criteria.where("categoriaId").is(query.categoriaId()));
         }
         return new Criteria().andOperator(criterios);
-    }
-
-    @Override
-    public boolean existePorVendedorYNombre(String vendedorId, String nombre) {
-        Criteria criterios = new Criteria().andOperator(
-                Criteria.where("vendedorId").is(vendedorId),
-                Criteria.where("nombre").regex("^" + Pattern.quote(nombre.trim()) + "$", "i"));
-        return mongoTemplate.exists(new Query(criterios), ProductoDocument.class);
     }
 }

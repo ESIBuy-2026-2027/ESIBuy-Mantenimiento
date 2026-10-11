@@ -9,7 +9,6 @@ import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.ob
 import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.string;
 import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.untyped;
 
-
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,11 +17,12 @@ import java.util.List;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.PartialIndexFilter;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
-import org.springframework.data.mongodb.core.query.Collation;
+
 /**
  * Colecciones de la base de datos de ESIBuy, con su validación y sus índices (T210, HU36).
  *
@@ -171,13 +171,13 @@ final class ColeccionesEsiBuy {
                 number("valoracionMedia").gte(0).lte(5),
                 enteroNoNegativo("numeroValoraciones")),
                 List.of(indice(VENDEDOR_ID), indice(CATEGORIA_ID), indice(NOMBRE), indice(ESTADO),
-                    indice("visible"),
+                        indice("visible"),
                         // Un vendedor no repite nombre de producto (HU31). La collation de nivel 2 ignora
                         // mayúsculas y minúsculas pero no tildes. Cierra la condición de carrera de dos
                         // altas simultáneas que pasaron a la vez existePorVendedorYNombre.
-                    indice(VENDEDOR_ID).on(NOMBRE, Sort.Direction.ASC).unique()
-                        .named("vendedor_nombre")
-                        .collation(Collation.of("es").strength(Collation.ComparisonLevel.secondary()))));
+                        indice(VENDEDOR_ID).on(NOMBRE, Sort.Direction.ASC).unique()
+                                .named("vendedor_nombre")
+                                .collation(Collation.of("es").strength(Collation.ComparisonLevel.secondary()))));
     }
 
     // 6. pedidos: compras y precios históricos. Los estados posibles están pendientes de acordar: solo se exige texto.

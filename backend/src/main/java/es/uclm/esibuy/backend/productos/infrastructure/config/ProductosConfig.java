@@ -4,11 +4,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.SupervisionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.application.port.out.VendedorPort;
+import es.uclm.esibuy.backend.productos.application.service.GestionProductosService;
 import es.uclm.esibuy.backend.productos.application.service.ListadoProductosService;
 import es.uclm.esibuy.backend.productos.application.service.SupervisionProductosService;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence.ProductoDocumentMapper;
@@ -18,8 +20,6 @@ import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.usuarios.Usua
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.usuarios.VendedorAdapter;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
-import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
-import es.uclm.esibuy.backend.productos.application.service.GestionProductosService;
 
 /**
  * Configuración de Spring del módulo de productos: conecta cada puerto con su adaptador, como

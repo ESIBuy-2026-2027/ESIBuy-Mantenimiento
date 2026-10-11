@@ -4,8 +4,8 @@ import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand
 import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
-import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
+import es.uclm.esibuy.backend.productos.domain.model.Producto;
 
 public class GestionProductosService implements GestionProductosUseCase {
 
@@ -21,7 +21,8 @@ public class GestionProductosService implements GestionProductosUseCase {
     public Producto crear(CrearProductoCommand comando) {
         String vendedorId = usuarioEnSesion.idPorCorreo(comando.emailVendedor());
 
-        // Las relgas del producto se validan en dominio, si huubiese algo mal, saltaría la excepción desde el constructor de Producto. No se valida que el vendedor exista, porque se asume que el correo de la sesión es válido.
+        // Las reglas del producto se validan en el dominio: si algo está mal, el constructor de Producto lanza
+        // la excepción y no se guarda nada. No se comprueba que el vendedor exista: el correo viene de la sesión.
         Producto producto = new Producto(
                 null,
                 vendedorId,
@@ -35,6 +36,7 @@ public class GestionProductosService implements GestionProductosUseCase {
                 comando.descuento(),
                 comando.descuentoPremium()
         );
+        // Comprobación previa para dar el 409 en el caso normal; el índice único de MongoDB cubre la carrera.
         if (productoRepository.existePorVendedorYNombre(vendedorId, producto.getNombre())) {
             throw new ProductoDuplicadoException();
         }
