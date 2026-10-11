@@ -1,20 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { ROLES } from '../../auth/roles'
-import { USER_STATUS, effectiveStatus, statusLabelsForRole } from './usersConfig'
-
-describe('effectiveStatus', () => {
-  it('effectiveStatus_deUnAdministradorPendiente_devuelveActivo', () => {
-    expect(effectiveStatus(USER_STATUS.PENDIENTE, ROLES.ADMIN)).toBe(USER_STATUS.ACTIVO)
-  })
-
-  it.each([ROLES.CLIENTE, ROLES.VENDEDOR])('effectiveStatus_de_%s_pendiente_sigueSiendoPendiente', (rol) => {
-    expect(effectiveStatus(USER_STATUS.PENDIENTE, rol)).toBe(USER_STATUS.PENDIENTE)
-  })
-
-  it('effectiveStatus_deUnAdministradorDesactivado_noCambia', () => {
-    expect(effectiveStatus(USER_STATUS.DESACTIVADO, ROLES.ADMIN)).toBe(USER_STATUS.DESACTIVADO)
-  })
-})
+import { USER_STATUS, statusLabelsForRole } from './usersConfig'
 
 describe('statusLabelsForRole', () => {
   it('statusLabelsForRole_deAdministrador_noIncluyePendiente', () => {

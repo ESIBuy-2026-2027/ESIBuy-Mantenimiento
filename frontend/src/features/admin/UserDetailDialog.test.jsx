@@ -276,7 +276,6 @@ describe('UserDetailDialog (HU22): edición', () => {
     expect(Object.keys(envio.cuerpo)).toEqual([
       'nombre',
       'apellidos',
-      'rol',
       'dni',
       'telefono',
       'fechaNacimiento',
@@ -377,7 +376,7 @@ describe('UserDetailDialog (HU22): edición', () => {
     await guardar(user, dialogo)
 
     await waitFor(() => expect(envio.llamadas).toBe(1), ESPERA)
-    expect(Object.keys(envio.cuerpo)).toEqual(['nombre', 'apellidos', 'rol', 'sede', 'avatar'])
+    expect(Object.keys(envio.cuerpo)).toEqual(['nombre', 'apellidos', 'sede', 'avatar'])
     expect(envio.cuerpo.sede).toBe('Albacete')
   })
 

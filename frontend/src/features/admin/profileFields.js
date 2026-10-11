@@ -28,18 +28,9 @@ const apellidos = {
   edit: { required: true, maxLength: 30 },
 }
 const email = { name: 'email', label: 'Email', read: (u) => u.email }
-// Un administrador puede cambiar el rol de cualquier cuenta menos el suyo (lo impone el backend; el formulario
-// además lo bloquea).
-const rol = {
-  name: 'rol',
-  label: 'Rol',
-  read: (_u, rolActual) => ROLE_LABELS[rolActual] ?? rolActual,
-  edit: {
-    type: 'select',
-    required: true,
-    validate: (valor) => (ROLE_LABELS[valor] ? undefined : 'Elige un rol válido'),
-  },
-}
+// El rol de una cuenta no se puede cambiar ("el que nace cliente muere cliente", decisión del equipo): siempre
+// es de solo lectura.
+const rol = { name: 'rol', label: 'Rol', read: (_u, rolActual) => ROLE_LABELS[rolActual] ?? rolActual }
 const imagen = {
   name: AVATAR,
   label: 'Imagen de perfil',
@@ -152,49 +143,29 @@ const FALLBACK_FIELDS = [nombre, apellidos, email, estado]
 export const profileFieldsFor = (rolDeLaCuenta) => PROFILE_FIELDS[rolDeLaCuenta] ?? FALLBACK_FIELDS
 
 const isEditable = (field) => Boolean(field.edit)
-
-// Campos del formulario de edición cuando la cuenta se queda con el rol `rolDestino`. Si el administrador
-// cambia el rol, el formulario pasa a los campos del rol nuevo. El email no se puede cambiar en ningún rol.
-export const editFieldsFor = (rolDestino) => profileFieldsFor(rolDestino)
+const editableFieldsFor = (rolDeLaCuenta) => profileFieldsFor(rolDeLaCuenta).filter(isEditable)
 
 // Pares [etiqueta, texto] para el modo lectura. Nunca incluye la contraseña.
 export const readFields = (rolDeLaCuenta, usuario) =>
   profileFieldsFor(rolDeLaCuenta).map((field) => [field.label, field.read(usuario, rolDeLaCuenta)])
 
-// Todos los campos que se pueden modificar en algún rol (sin repetir), para poder cambiar de rol sin perder lo
-// escrito ni pedir de nuevo lo común.
-const ALL_EDITABLE_FIELDS = new Map(
-  Object.values(PROFILE_FIELDS)
-    .flat()
-    .filter(isEditable)
-    .map((field) => [field.name, field]),
-)
-
-// Valores iniciales del formulario: todos los campos modificables de cualquier rol, siempre como texto, y el
-// rol actual de la cuenta.
+// Valores iniciales del formulario: los campos modificables del rol de la cuenta, siempre como texto.
 export function initialValues(rolDeLaCuenta, usuario) {
   const valores = Object.fromEntries(
-    [...ALL_EDITABLE_FIELDS.values()].map((field) => {
+    editableFieldsFor(rolDeLaCuenta).map((field) => {
       const texto = String(usuario[field.name] ?? '')
       return [field.name, field.edit.type === 'date' ? texto.slice(0, 10) : texto]
     }),
   )
-
-  return {
-    ...valores,
-    rol: rolDeLaCuenta,
-    tipoCliente: valores.tipoCliente || TIPO_CLIENTE_POR_DEFECTO,
-  }
+  if ('tipoCliente' in valores) valores.tipoCliente ||= TIPO_CLIENTE_POR_DEFECTO
+  return valores
 }
 
 // Un mensaje por cada campo incorrecto (vacío si todo es correcto), para mostrarlos todos a la vez. Se valida
-// con los campos del rol que queda (`values.rol`).
+// con los campos del rol de la cuenta.
 export function validateProfile(rolDeLaCuenta, values) {
   const errors = {}
-  const rolDestino = values.rol ?? rolDeLaCuenta
-  if (!ROLE_LABELS[rolDestino]) errors.rol = 'Elige un rol válido'
-
-  for (const field of editFieldsFor(rolDestino).filter(isEditable)) {
+  for (const field of editableFieldsFor(rolDeLaCuenta)) {
     const valor = (values[field.name] ?? '').trim()
     if (field.edit.required && !valor) errors[field.name] = 'Este campo es obligatorio'
     else if (valor && field.edit.validate) {
@@ -205,14 +176,10 @@ export function validateProfile(rolDeLaCuenta, values) {
   return errors
 }
 
-// Cuerpo de la petición: el rol que queda y solo los campos modificables de ese rol. El email, la fecha de
+// Cuerpo de la petición: solo los campos modificables del rol de la cuenta. El email, el rol, la fecha de
 // incorporación y la contraseña no viajan nunca.
 export function profilePayload(rolDeLaCuenta, values) {
-  const rolDestino = values.rol ?? rolDeLaCuenta
-
   return Object.fromEntries(
-    editFieldsFor(rolDestino)
-      .filter(isEditable)
-      .map((field) => [field.name, (values[field.name] ?? '').trim()]),
+    editableFieldsFor(rolDeLaCuenta).map((field) => [field.name, (values[field.name] ?? '').trim()]),
   )
 }
