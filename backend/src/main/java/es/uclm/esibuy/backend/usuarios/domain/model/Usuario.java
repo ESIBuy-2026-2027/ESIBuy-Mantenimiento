@@ -44,15 +44,15 @@ public class Usuario {
     }
 
     // Edición de los datos por un administrador (HU22). El email, el rol y la contraseña no cambian por aquí.
-    public void modificarDatos(DatosPersonales datosPersonales, DatosCliente datosCliente, LocalDate hoy) {
+    public void modificarDatos(DatosPersonales datosPersonales, PerfilUsuario nuevoPerfil, LocalDate hoy) {
         // Se comprueba todo antes de asignar: si algo falla, el usuario se queda como estaba.
         DatosPersonales personales = exigirNoNulo(datosPersonales, "Los datos personales son obligatorios");
-        PerfilUsuario cliente = exigirPerfilCoherente(rol, datosCliente);
-        if (cliente != null) {
+        PerfilUsuario perfilCoherente = exigirPerfilCoherente(rol, nuevoPerfil);
+        if (perfilCoherente instanceof DatosCliente datosCliente) {
             exigirMayoriaDeEdad(datosCliente, hoy);
         }
         this.datosPersonales = personales;
-        this.perfil = cliente;
+        this.perfil = perfilCoherente;
     }
 
     public static Usuario nuevoCliente(DatosPersonales datosPersonales, Email email, String passwordHash,

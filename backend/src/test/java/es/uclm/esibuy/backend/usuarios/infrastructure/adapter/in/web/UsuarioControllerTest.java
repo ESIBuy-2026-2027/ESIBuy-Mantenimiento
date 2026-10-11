@@ -724,7 +724,7 @@ class UsuarioControllerTest {
         ArgumentCaptor<EditarUsuarioCommand> comando = ArgumentCaptor.forClass(EditarUsuarioCommand.class);
         verify(administracionUsuarios).editar(eq("usr-1"), comando.capture());
         assertEquals(new EditarUsuarioCommand("Carla", "Moreno Gil", "avatar1", "10004119A",
-                "620023757", LocalDate.of(1978, 4, 13), TipoCliente.PREMIUM), comando.getValue());
+                "620023757", LocalDate.of(1978, 4, 13), TipoCliente.PREMIUM, null, null), comando.getValue());
     }
 
     @Test

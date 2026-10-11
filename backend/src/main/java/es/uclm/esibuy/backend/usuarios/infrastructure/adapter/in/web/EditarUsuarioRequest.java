@@ -29,6 +29,6 @@ public record EditarUsuarioRequest(
         TipoCliente tipoCliente) {
 
     EditarUsuarioCommand aComando() {
-        return new EditarUsuarioCommand(nombre, apellidos, avatar, dni, telefono, fechaNacimiento, tipoCliente);
+        return new EditarUsuarioCommand(nombre, apellidos, avatar, dni, telefono, fechaNacimiento, tipoCliente, null, null);
     }
 }

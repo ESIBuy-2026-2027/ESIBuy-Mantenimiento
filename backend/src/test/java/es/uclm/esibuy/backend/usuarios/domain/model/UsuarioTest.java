@@ -293,6 +293,34 @@ class UsuarioTest {
         assertNull(administrador.getDatosCliente());
     }
 
+    @Test
+    @DisplayName("HU22-CP03: modificar los datos de un vendedor cambia sus datos personales y de vendedor")
+    void modificarDatosCambiaLosDatosDeUnVendedor() {
+        Usuario vendedor = Usuario.nuevoVendedor(DATOS_PERSONALES, EMAIL, HASH, DATOS_VENDEDOR, CONSENTIMIENTO);
+        DatosPersonales nuevosDatosPersonales = new DatosPersonales("Vera", "Vendedora Ruiz", "avatar2");
+        DatosVendedor nuevosDatosVendedor = new DatosVendedor(
+                "TecnoVera", "cat-2", new Dni("10004119A"), new Telefono("620023757"));
+
+        vendedor.modificarDatos(nuevosDatosPersonales, nuevosDatosVendedor, HOY);
+
+        assertEquals(nuevosDatosPersonales, vendedor.getDatosPersonales());
+        assertEquals(nuevosDatosVendedor, vendedor.getDatosVendedor());
+        assertEquals(Rol.VENDEDOR, vendedor.getRol());
+    }
+
+    // Sin esta regla, editar un vendedor de la T241 sin sus datos de vendedor los borraba de MongoDB.
+    @Test
+    @DisplayName("HU22-CP05: al modificar los datos no se quitan los datos de vendedor a un vendedor")
+    void modificarDatosNoQuitaLosDatosDeVendedorAUnVendedor() {
+        Usuario vendedor = Usuario.nuevoVendedor(DATOS_PERSONALES, EMAIL, HASH, DATOS_VENDEDOR, CONSENTIMIENTO);
+        DatosPersonales nuevosDatosPersonales = new DatosPersonales("Vera", "Vendedora Ruiz", null);
+
+        assertThrows(UsuarioInvalidoException.class,
+                () -> vendedor.modificarDatos(nuevosDatosPersonales, null, HOY));
+        assertEquals(DATOS_PERSONALES, vendedor.getDatosPersonales());
+        assertEquals(DATOS_VENDEDOR, vendedor.getDatosVendedor());
+    }
+
     private static DatosCliente datosClienteNacidoEl(LocalDate fechaNacimiento) {
         return new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), fechaNacimiento, null);
     }
