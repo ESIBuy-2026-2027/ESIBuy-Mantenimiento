@@ -469,4 +469,21 @@ class AutenticacionServiceTest {
         assertThrows(CredencialesInvalidasException.class,
                 () -> autenticacion.iniciarSesion(new IniciarSesionCommand("ana@", "clave1234")));
     }
+
+    @Test
+    @DisplayName("HU2-CP26: acertar la contraseña no reinicia el contador de intentos")
+    void acertarLaContrasenaNoReiniciaElContador() {
+        // Frontera de la decisión: el contador solo se reinicia al completar el tercer paso. Si se reiniciara aquí,
+        // quien tuviera la contraseña podría probar códigos sin que el contador llegara nunca a 5.
+        Usuario usuario = clienteConId();
+        usuario.registrarIntentoFallido(AHORA);
+        usuario.registrarIntentoFallido(AHORA);
+        usuario.registrarIntentoFallido(AHORA);
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
+        when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
+
+        autenticacion.iniciarSesion(new IniciarSesionCommand("juan@uclm.es", "clave1234"));
+
+        assertEquals(3, usuario.getIntentosFallidos());
+    }
 }
