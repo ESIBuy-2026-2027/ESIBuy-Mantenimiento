@@ -219,7 +219,7 @@ class UsuarioDocumentMapperTest {
 
     
     @Test
-    @DisplayName("HU21-CP19: un administrador se lee sin datos de cliente ni consentimiento")
+    @DisplayName("HU21-CP09: un administrador se lee sin datos de cliente ni consentimiento")
     void unAdministradorSeLeeSinDatosDeClienteYConsentimiento() {
         UsuarioDocument adminDoc = new UsuarioDocument("admin@esibuy.test", "hash-simulado", "ADMINISTRADOR");
         adminDoc.setNombre("Nora");
