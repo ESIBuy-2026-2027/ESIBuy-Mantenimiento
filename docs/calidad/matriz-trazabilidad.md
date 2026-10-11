@@ -17,15 +17,15 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU1-CP01 | Registra un cliente con rol CLIENTE y estado PENDIENTE | Unitario + integración | 7 | ✅ Pasa |
-| HU1-CP02 | Guarda la contraseña hasheada, nunca en claro | Unitario + integración | 8 | ✅ Pasa (7) · 🔍 En revisión (1, AB#241, PR por abrir) |
+| HU1-CP01 | Registra un cliente con rol CLIENTE y estado PENDIENTE | Unitario + integración | 8 | ✅ Pasa (7) · 🔍 En revisión (1, AB#229, PR por abrir) |
+| HU1-CP02 | Guarda la contraseña hasheada, nunca en claro | Unitario + integración | 8 | ✅ Pasa |
 | HU1-CP03 | Rechaza un correo ya registrado y no guarda nada | Unitario + integración | 5 | ✅ Pasa |
 | HU1-CP04 | Rechaza un username ya registrado | — | 0 | ⏸ Fuera de alcance (no está decidido si existe username) |
 | HU1-CP05 | Rechaza contraseñas de menos de 8 caracteres o de más de 64 | Unitario + integración | 10 | ✅ Pasa |
-| HU1-CP06 | Rechaza el registro si no se acepta la política de privacidad y guarda el consentimiento | Unitario | 5 | ✅ Pasa (4) · 🔍 En revisión (1, AB#241, PR por abrir) |
+| HU1-CP06 | Rechaza el registro si no se acepta la política de privacidad y guarda el consentimiento | Unitario | 5 | ✅ Pasa |
 | HU1-CP07 | Rechaza un email con formato inválido | Unitario + integración (capa web) | 8 | ✅ Pasa |
 | HU1-CP08 | Rechaza el registro si falta un campo obligatorio o supera su longitud máxima | Unitario + integración (capa web) | 11 | ✅ Pasa |
-| HU1-CP09 | Rechaza contraseñas de la lista de contraseñas comunes | Unitario | 4 | ✅ Pasa (3) · 🔍 En revisión (1, AB#241, PR por abrir) |
+| HU1-CP09 | Rechaza contraseñas de la lista de contraseñas comunes | Unitario | 4 | ✅ Pasa |
 | HU1-CP10 | Rechaza contraseñas que contienen datos personales del usuario | Unitario | 4 | ✅ Pasa |
 | HU1-CP11 | El usuario cumple sus invariantes de dominio (datos personales y de cliente obligatorios y coherentes con el rol, desactivación, fecha de alta) | Unitario | 17 | ✅ Pasa |
 | HU1-CP12 | Toda cuenta nueva nace en estado PENDIENTE hasta que un administrador la verifica | Unitario | 4 | ✅ Pasa |
@@ -35,9 +35,10 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | HU1-CP16 | Rechaza un DNI ya registrado en otra cuenta del mismo rol | Unitario + integración | 5 | ✅ Pasa |
 | HU1-CP17 | Rechaza contraseñas sin mayúscula, minúscula, número o símbolo (misma composición que el frontend) | Unitario | 7 | ✅ Pasa |
 | HU1-CP18 | El email no distingue mayúsculas ni espacios en los extremos: se guarda normalizado y no se duplica | Unitario | 5 | ✅ Pasa |
-| HU1-CP19 | Registra un vendedor en estado PENDIENTE con su nombre comercial y su categoría principal | Unitario + integración | 8 | 🔍 En revisión (8, AB#241, PR por abrir) |
-| HU1-CP20 | Rechaza un nombre comercial ya registrado, también cuando se repite junto con el correo | Unitario + integración | 6 | 🔍 En revisión (6, AB#241, PR por abrir) |
-| HU1-CP21 | Rechaza datos de vendedor inválidos o un perfil que no corresponde al rol | Unitario + integración (capa web) | 8 | 🔍 En revisión (8, AB#241, PR por abrir) |
+| HU1-CP19 | Registra un vendedor en estado PENDIENTE con su nombre comercial y su categoría principal | Unitario + integración | 9 | ✅ Pasa (8) · 🔍 En revisión (1, AB#241, PR por abrir) |
+| HU1-CP20 | Rechaza un nombre comercial ya registrado, también cuando se repite junto con el correo | Unitario + integración | 6 | ✅ Pasa |
+| HU1-CP21 | Rechaza datos de vendedor inválidos o un perfil que no corresponde al rol | Unitario + integración (capa web) | 8 | ✅ Pasa |
+| HU1-CP22 | Los errores 400 del registro indican el motivo con un `code` (contraseña, DNI, teléfono, edad, privacidad, email o campo) | Unitario + integración (capa web) | 14 | 🔍 En revisión (14, AB#229, PR por abrir) |
 
 Notas:
 - **HU1-CP11:** en el PR #36, el bloqueo manual de la T214 se renombra a desactivar/activar (`desactivar()`, `activar()`, `estaDesactivado()`) para no confundirlo con el bloqueo temporal por intentos del login (HU2-CP03). En la T225 (AB#225) la consulta pasa a nombrarse en positivo: `estaActivo()`.
@@ -52,6 +53,7 @@ Notas:
 - **AB#239 (HU1-CP17):** la contraseña exige al menos una mayúscula, una minúscula, un número y un símbolo, con las mismas clases Unicode que el frontend (`accountRules.js`): las tildes y la ñ cuentan como letras y el espacio como símbolo. Con esta regla, las entradas antiguas de la lista negra (`password`, `12345678`…) ya no podían llegar a compararse, así que la lista se sustituye por contraseñas comunes que sí cumplen la composición (`P@ssw0rd`, `Password1!`…) y los tres tests de CP09 cambian sus contraseñas para seguir probando la lista negra y no la composición. Las contraseñas de los tests que esperan un registro correcto pasan de `clave1234` a `Clave-1234`.
 - **AB#240 (HU1-CP18):** el value object `Email` normaliza en su constructor (`strip()` y minúsculas con `Locale.ROOT`) antes de validar el formato, y `RegistroUsuarioService` comprueba el duplicado con ese valor. Los puertos siguen recibiendo `String`; cambiarlos a `Email` queda como refactor posible. El paso 1 del login (`AutenticacionService.iniciarSesion`) sigue buscando con el email tal como llega: se propone a la HU2 como task propia (buscar con el email normalizado y responder credenciales inválidas ante un email mal formado). PENDIENTE DE REVISAR CON EL EQUIPO: las cuentas de Atlas con mayúsculas en el email dejarán de encontrarse; migrarlas a minúsculas o borrarlas.
 - **AB#241 (HU1-CP19 a CP21, registro del vendedor):** `POST /api/auth/register/vendedor` con el contrato del frontend (una única categoría en `categoriaPrincipalId`, PR #81). El perfil del usuario pasa a la interfaz sellada `PerfilUsuario` (`DatosCliente` o `DatosVendedor`) como sexto parámetro de `Usuario`, sin cambiar las llamadas existentes; la factoría `nuevoVendedor` exige `DatosVendedor`, pero el constructor admite un VENDEDOR sin perfil para no romper las cuentas anteriores de Atlas ni los tests de otras HU (endurecer cuando se limpie Atlas). Los identificadores de categoría se guardan sin comprobarlos contra el catálogo (decisión del equipo). Un nombre comercial repetido devuelve 409 `COMMERCIAL_NAME_ALREADY_REGISTERED`, y si además se repite el correo, `EMAIL_AND_COMMERCIAL_NAME_ALREADY_REGISTERED`; un DNI repetido devuelve `DNI_ALREADY_REGISTERED`, que el formulario del vendedor no trata (comunicado al frontend). `registrar` pasa a `registrarCliente` y `RegistrarUsuarioCommand` a `RegistrarClienteCommand`.
+- **Fallos de la demo del Sprint 1 (HU1-CP22, rama `fix/sprint1-demo-backend`):** el dominio indica el motivo del rechazo con el enum `MotivoRechazo` dentro de `ContrasenaInvalidaException` y `UsuarioInvalidoException`, y `ManejadorGlobalErrores` lo traduce a un `code` en inglés (`PASSWORD_TOO_SHORT`, `PASSWORD_TOO_LONG`, `PASSWORD_WEAK`, `PASSWORD_TOO_COMMON`, `PASSWORD_CONTAINS_PERSONAL_DATA`, `PASSWORDS_DO_NOT_MATCH`, `INVALID_EMAIL`, `INVALID_DNI`, `INVALID_PHONE`, `UNDERAGE`, `PRIVACY_NOT_ACCEPTED`, `INVALID_FIELD`). Los errores de `@Valid` de cualquier endpoint responden con el mismo formato e `INVALID_FIELD`. El registro recibe la imagen como `avatar`, igual que el resto de la API. Sin tasks nuevas en Azure: los commits llevan el `AB#` de la task original de cada parte.
 - **HU1-CP16 (AB#43):** la comprobación del DNI repetido pasa de `existePorDni` a `existePorDniYRol`, en el registro del cliente y en el del vendedor, para que coincida con el índice `rol_dni` (una persona puede tener una cuenta de cliente y otra de vendedor con el mismo DNI). Antes, un vendedor con el DNI de un cliente recibía un 409 aunque MongoDB lo habría aceptado. Lo pidió el equipo en la edición del vendedor (HU22); cambia código de la T241.
 - **AB#210:** el test de email duplicado (CP03) comprueba el índice único de `email` a nivel de base de datos, sin pasar por `existePorCorreo`. `conservaLosDatosDePerfil` (CP01) comprueba contra MongoDB lo que `conservaNombreApellidosYTipoDeCliente` (T225) prueba en el mapper. Al integrar `develop`, el PR #43 deja la persistencia del estado de acceso de la T225 (sin `Usuario.reconstruir` ni sus tests) y guarda sus campos con los nombres del modelo de BBDD (`estado`, `failedLoginAttempts`, `lockedUntil`); decisión del equipo del 08/10/2026.
 
@@ -66,12 +68,13 @@ Notas:
 | HU1-CP01 | `UsuarioMongoAdapterTest` | `conservaLosDatosDePerfil` | Infraestructura | AB#210 | PR #43 | ✅ |
 | HU1-CP01 | `RegistroUsuarioServiceTest` | `registraClienteConTodosSusDatos` | Aplicación | AB#229 | PR #72 | ✅ |
 | HU1-CP01 | `UsuarioDocumentMapperTest` | `convierteLosDatosDelClienteEnDocumento` | Infraestructura | AB#229 | PR #72 | ✅ |
+| HU1-CP01 | `UsuarioControllerTest` | `elRegistroDelClienteGuardaElAvatar` | Infraestructura | AB#229 | PR por abrir | 🔍 |
 | HU1-CP02 | `RegistroUsuarioServiceTest` | `guardaContrasenaHasheada` | Aplicación | AB#16 | PR #14 | ✅ |
 | HU1-CP02 | `BCryptHashContrasenaAdapterTest` | `hashNoEsLaContrasenaEnClaro` | Infraestructura | AB#15 | PR #20 | ✅ |
 | HU1-CP02 | `BCryptHashContrasenaAdapterTest` | `hashEsVerificableConBCrypt` | Infraestructura | AB#15 | PR #20 | ✅ |
 | HU1-CP02 | `BCryptHashContrasenaAdapterTest` | `hashUsaElCosteAcordado` | Infraestructura | AB#15 | PR #20 | ✅ |
-| HU1-CP02 | `RegistrarClienteCommandTest` (antes `RegistrarUsuarioCommandTest`) | `toStringNoMuestraLaContrasena` | Aplicación | AB#223 · AB#241 | PR #26 (renombrado en PR por abrir) | 🔍 |
-| HU1-CP02 | `RegistrarVendedorCommandTest` | `toStringNoMuestraLaContrasena` | Aplicación | AB#241 | PR por abrir | 🔍 |
+| HU1-CP02 | `RegistrarClienteCommandTest` (antes `RegistrarUsuarioCommandTest`) | `toStringNoMuestraLaContrasena` | Aplicación | AB#223 · AB#241 | PR #26 (renombrado en PR #98) | ✅ |
+| HU1-CP02 | `RegistrarVendedorCommandTest` | `toStringNoMuestraLaContrasena` | Aplicación | AB#241 | PR #98 | ✅ |
 | HU1-CP02 | `UsuarioDocumentMapperTest` | `convierteUsuarioEnDocumento` | Infraestructura | AB#216 | PR #28 | ✅ |
 | HU1-CP02 | `LoginRequestTest` | `toStringNoMuestraLaContrasena` | Infraestructura | AB#230 | PR #67 | ✅ |
 | HU1-CP03 | `RegistroUsuarioServiceTest` | `rechazaEmailYaRegistrado` | Aplicación | AB#16 | PR #14 | ✅ |
@@ -93,7 +96,7 @@ Notas:
 | HU1-CP06 | `ConsentimientoPrivacidadTest` | `rechazaConsentimientoIncompleto` | Dominio | AB#229 | PR #72 | ✅ |
 | HU1-CP06 | `RegistroUsuarioServiceTest` | `rechazaSiNoAceptaLaPrivacidad` | Aplicación | AB#229 | PR #72 | ✅ |
 | HU1-CP06 | `RegistroUsuarioServiceTest` | `guardaElConsentimientoConLaFechaYLaVersion` | Aplicación | AB#229 | PR #72 | ✅ |
-| HU1-CP06 | `RegistroUsuarioServiceTest` | `rechazaVendedorSiNoAceptaLaPrivacidad` | Aplicación | AB#241 | PR por abrir | 🔍 |
+| HU1-CP06 | `RegistroUsuarioServiceTest` | `rechazaVendedorSiNoAceptaLaPrivacidad` | Aplicación | AB#241 | PR #98 | ✅ |
 | HU1-CP07 | `UsuarioControllerTest` | `rechazaEmailConFormatoInvalido` | Infraestructura | AB#14 | PR #30 | ✅ |
 | HU1-CP07 | `UsuarioControllerTest` | `emailSinDominioDevuelve400ConMensajeGenerico` | Infraestructura | AB#227 | PR #47 | ✅ |
 | HU1-CP07 | `EmailTest` | `creaEmailConFormatoValido` | Dominio | AB#214 | PR #34 | ✅ |
@@ -116,7 +119,7 @@ Notas:
 | HU1-CP09 | `PoliticaContrasenasTest` | `rechazaContrasenaDeListaNegra` | Dominio | AB#214 · AB#239 | PR #34 (modificado en PR #87) | ✅ |
 | HU1-CP09 | `PoliticaContrasenasTest` | `rechazaContrasenaDeListaNegraConMayusculas` | Dominio | AB#214 · AB#239 | PR #34 (modificado en PR #87) | ✅ |
 | HU1-CP09 | `RegistroUsuarioServiceTest` | `rechazaContrasenaComun` | Aplicación | AB#226 · AB#239 | PR #72 (modificado en PR #87) | ✅ |
-| HU1-CP09 | `RegistroUsuarioServiceTest` | `elVendedorPasaPorLaPoliticaDeContrasenas` | Aplicación | AB#241 | PR por abrir | 🔍 |
+| HU1-CP09 | `RegistroUsuarioServiceTest` | `elVendedorPasaPorLaPoliticaDeContrasenas` | Aplicación | AB#241 | PR #98 | ✅ |
 | HU1-CP10 | `PoliticaContrasenasTest` | `rechazaContrasenaQueContieneElNombre` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP10 | `PoliticaContrasenasTest` | `rechazaContrasenaQueContieneLosApellidos` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP10 | `PoliticaContrasenasTest` | `rechazaContrasenaQueContieneLaParteLocalDelEmail` | Dominio | AB#214 | PR #34 | ✅ |
@@ -171,28 +174,43 @@ Notas:
 | HU1-CP18 | `EmailTest` | `dosEmailsQueSoloDifierenEnMayusculasSonIguales` | Dominio | AB#240 | PR #89 | ✅ |
 | HU1-CP18 | `RegistroUsuarioServiceTest` | `rechazaUnCorreoYaRegistradoAunqueCambienLasMayusculas` | Aplicación | AB#240 | PR #89 | ✅ |
 | HU1-CP18 | `RegistroUsuarioServiceTest` | `guardaElEmailNormalizado` | Aplicación | AB#240 | PR #89 | ✅ |
-| HU1-CP19 | `DatosVendedorTest` | `creaDatosVendedorValidos` | Dominio | AB#241 | PR por abrir | 🔍 |
-| HU1-CP19 | `DatosVendedorTest` | `permiteVendedorSinTelefono` | Dominio | AB#241 | PR por abrir | 🔍 |
-| HU1-CP19 | `UsuarioTest` | `nuevoVendedorNaceEnEstadoPendienteConSusDatosComerciales` | Dominio | AB#241 | PR por abrir | 🔍 |
-| HU1-CP19 | `RegistroUsuarioServiceTest` | `registraVendedorConTodosSusDatos` | Aplicación | AB#241 | PR por abrir | 🔍 |
-| HU1-CP19 | `UsuarioDocumentMapperTest` | `convierteLosDatosDelVendedorEnDocumento` | Infraestructura | AB#241 | PR por abrir | 🔍 |
-| HU1-CP19 | `UsuarioDocumentMapperTest` | `conservaLosDatosDelVendedorEnElMapeo` | Infraestructura | AB#241 | PR por abrir | 🔍 |
-| HU1-CP19 | `UsuarioDocumentMapperTest` | `unVendedorSinNombreComercialSeLeeSinPerfil` | Infraestructura | AB#241 | PR por abrir | 🔍 |
-| HU1-CP19 | `UsuarioControllerTest` | `registroDeVendedorValidoDevuelve201` | Infraestructura | AB#241 | PR por abrir | 🔍 |
-| HU1-CP20 | `RegistroUsuarioServiceTest` | `rechazaNombreComercialYaRegistradoYNoGuardaNada` | Aplicación | AB#241 | PR por abrir | 🔍 |
-| HU1-CP20 | `RegistroUsuarioServiceTest` | `rechazaCorreoYNombreComercialYaRegistradosYNoGuardaNada` | Aplicación | AB#241 | PR por abrir | 🔍 |
-| HU1-CP20 | `UsuarioMongoAdapterTest` | `existePorNombreComercialDistingueLosGuardados` | Infraestructura | AB#241 | PR por abrir | 🔍 |
-| HU1-CP20 | `UsuarioMongoAdapterTest` | `rechazaNombreComercialDuplicadoEnLaBaseDeDatos` | Infraestructura | AB#241 | PR por abrir | 🔍 |
-| HU1-CP20 | `UsuarioControllerTest` | `nombreComercialYaRegistradoDevuelve409ConCodigo` | Infraestructura | AB#241 | PR por abrir | 🔍 |
-| HU1-CP20 | `UsuarioControllerTest` | `correoYNombreComercialYaRegistradosDevuelve409ConCodigo` | Infraestructura | AB#241 | PR por abrir | 🔍 |
-| HU1-CP21 | `DatosVendedorTest` | `rechazaSinNombreComercial` | Dominio | AB#241 | PR por abrir | 🔍 |
-| HU1-CP21 | `DatosVendedorTest` | `rechazaNombreComercialDe31Caracteres` | Dominio | AB#241 | PR por abrir | 🔍 |
-| HU1-CP21 | `DatosVendedorTest` | `aceptaNombreComercialDe30Caracteres` | Dominio | AB#241 | PR por abrir | 🔍 |
-| HU1-CP21 | `DatosVendedorTest` | `rechazaSinCategoriaPrincipal` | Dominio | AB#241 | PR por abrir | 🔍 |
-| HU1-CP21 | `DatosVendedorTest` | `rechazaSinDni` | Dominio | AB#241 | PR por abrir | 🔍 |
-| HU1-CP21 | `UsuarioTest` | `rechazaDatosDeVendedorSiNoEsVendedor` | Dominio | AB#241 | PR por abrir | 🔍 |
-| HU1-CP21 | `UsuarioTest` | `nuevoVendedorExigeDatosDeVendedor` | Dominio | AB#241 | PR por abrir | 🔍 |
-| HU1-CP21 | `UsuarioControllerTest` | `vendedorSinCategoriaDevuelve400` | Infraestructura | AB#241 | PR por abrir | 🔍 |
+| HU1-CP19 | `DatosVendedorTest` | `creaDatosVendedorValidos` | Dominio | AB#241 | PR #98 | ✅ |
+| HU1-CP19 | `DatosVendedorTest` | `permiteVendedorSinTelefono` | Dominio | AB#241 | PR #98 | ✅ |
+| HU1-CP19 | `UsuarioTest` | `nuevoVendedorNaceEnEstadoPendienteConSusDatosComerciales` | Dominio | AB#241 | PR #98 | ✅ |
+| HU1-CP19 | `RegistroUsuarioServiceTest` | `registraVendedorConTodosSusDatos` | Aplicación | AB#241 | PR #98 | ✅ |
+| HU1-CP19 | `UsuarioDocumentMapperTest` | `convierteLosDatosDelVendedorEnDocumento` | Infraestructura | AB#241 | PR #98 | ✅ |
+| HU1-CP19 | `UsuarioDocumentMapperTest` | `conservaLosDatosDelVendedorEnElMapeo` | Infraestructura | AB#241 | PR #98 | ✅ |
+| HU1-CP19 | `UsuarioDocumentMapperTest` | `unVendedorSinNombreComercialSeLeeSinPerfil` | Infraestructura | AB#241 | PR #98 | ✅ |
+| HU1-CP19 | `UsuarioControllerTest` | `registroDeVendedorValidoDevuelve201` | Infraestructura | AB#241 | PR #98 | ✅ |
+| HU1-CP19 | `UsuarioControllerTest` | `elRegistroDelVendedorGuardaElAvatar` | Infraestructura | AB#229 · AB#241 | PR por abrir | 🔍 |
+| HU1-CP20 | `RegistroUsuarioServiceTest` | `rechazaNombreComercialYaRegistradoYNoGuardaNada` | Aplicación | AB#241 | PR #98 | ✅ |
+| HU1-CP20 | `RegistroUsuarioServiceTest` | `rechazaCorreoYNombreComercialYaRegistradosYNoGuardaNada` | Aplicación | AB#241 | PR #98 | ✅ |
+| HU1-CP20 | `UsuarioMongoAdapterTest` | `existePorNombreComercialDistingueLosGuardados` | Infraestructura | AB#241 | PR #98 | ✅ |
+| HU1-CP20 | `UsuarioMongoAdapterTest` | `rechazaNombreComercialDuplicadoEnLaBaseDeDatos` | Infraestructura | AB#241 | PR #98 | ✅ |
+| HU1-CP20 | `UsuarioControllerTest` | `nombreComercialYaRegistradoDevuelve409ConCodigo` | Infraestructura | AB#241 | PR #98 | ✅ |
+| HU1-CP20 | `UsuarioControllerTest` | `correoYNombreComercialYaRegistradosDevuelve409ConCodigo` | Infraestructura | AB#241 | PR #98 | ✅ |
+| HU1-CP21 | `DatosVendedorTest` | `rechazaSinNombreComercial` | Dominio | AB#241 | PR #98 | ✅ |
+| HU1-CP21 | `DatosVendedorTest` | `rechazaNombreComercialDe31Caracteres` | Dominio | AB#241 | PR #98 | ✅ |
+| HU1-CP21 | `DatosVendedorTest` | `aceptaNombreComercialDe30Caracteres` | Dominio | AB#241 | PR #98 | ✅ |
+| HU1-CP21 | `DatosVendedorTest` | `rechazaSinCategoriaPrincipal` | Dominio | AB#241 | PR #98 | ✅ |
+| HU1-CP21 | `DatosVendedorTest` | `rechazaSinDni` | Dominio | AB#241 | PR #98 | ✅ |
+| HU1-CP21 | `UsuarioTest` | `rechazaDatosDeVendedorSiNoEsVendedor` | Dominio | AB#241 | PR #98 | ✅ |
+| HU1-CP21 | `UsuarioTest` | `nuevoVendedorExigeDatosDeVendedor` | Dominio | AB#241 | PR #98 | ✅ |
+| HU1-CP21 | `UsuarioControllerTest` | `vendedorSinCategoriaDevuelve400` | Infraestructura | AB#241 | PR #98 | ✅ |
+| HU1-CP22 | `PoliticaContrasenasTest` | `rechazoConDatosPersonalesIndicaSuMotivo` | Dominio | AB#229 | PR por abrir | 🔍 |
+| HU1-CP22 | `PoliticaContrasenasTest` | `rechazoPorLongitudIndicaSuMotivo` | Dominio | AB#229 | PR por abrir | 🔍 |
+| HU1-CP22 | `PoliticaContrasenasTest` | `rechazoPorComposicionIndicaSuMotivo` | Dominio | AB#229 | PR por abrir | 🔍 |
+| HU1-CP22 | `PoliticaContrasenasTest` | `rechazoPorContrasenaComunIndicaSuMotivo` | Dominio | AB#229 | PR por abrir | 🔍 |
+| HU1-CP22 | `DniTest` | `dniInvalidoIndicaSuMotivo` | Dominio | AB#229 | PR por abrir | 🔍 |
+| HU1-CP22 | `TelefonoTest` | `telefonoInvalidoIndicaSuMotivo` | Dominio | AB#229 | PR por abrir | 🔍 |
+| HU1-CP22 | `UsuarioTest` | `menorDeEdadIndicaSuMotivo` | Dominio | AB#229 | PR por abrir | 🔍 |
+| HU1-CP22 | `RegistroUsuarioServiceTest` | `contrasenasDistintasIndicanSuMotivo` | Aplicación | AB#229 | PR por abrir | 🔍 |
+| HU1-CP22 | `RegistroUsuarioServiceTest` | `privacidadNoAceptadaIndicaSuMotivo` | Aplicación | AB#229 | PR por abrir | 🔍 |
+| HU1-CP22 | `UsuarioControllerTest` | `contrasenaConDatosPersonalesDevuelve400ConSuCodigo` | Infraestructura | AB#229 | PR por abrir | 🔍 |
+| HU1-CP22 | `UsuarioControllerTest` | `dniInvalidoDevuelve400ConSuCodigo` | Infraestructura | AB#229 | PR por abrir | 🔍 |
+| HU1-CP22 | `UsuarioControllerTest` | `emailInvalidoDevuelve400ConSuCodigo` | Infraestructura | AB#229 | PR por abrir | 🔍 |
+| HU1-CP22 | `UsuarioControllerTest` | `datoInvalidoGenericoDevuelve400ConInvalidField` | Infraestructura | AB#229 | PR por abrir | 🔍 |
+| HU1-CP22 | `UsuarioControllerTest` | `errorDeValidacionDelFormularioDevuelve400ConInvalidField` | Infraestructura | AB#229 | PR por abrir | 🔍 |
 
 ---
 
@@ -212,6 +230,8 @@ Notas:
 | HU19-CP08 | Un administrador accede al listado HTTP sin exponer datos sensibles | Integración web | 1 | 🔍 En revisión |
 | HU19-CP09 | Conserva el estado PENDIENTE al mapear el usuario | Unitario | 1 | 🔍 En revisión |
 | HU19-CP10 | El adaptador filtra usuarios BLOQUEADO mediante lockedUntil | Integración MongoDB | 1 | 🔍 En revisión |
+| HU19-CP11 | El listado se ordena por nombre o por estado, en los dos sentidos | Integración (capa web y MongoDB) | 2 | 🔍 En revisión (2, AB#61, PR por abrir) |
+| HU19-CP12 | El orden por nombre no distingue mayúsculas ni tildes | Integración MongoDB | 1 | 🔍 En revisión (1, AB#29, PR por abrir) |
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -227,6 +247,9 @@ Notas:
 | HU19-CP08 | `UsuarioControllerTest` | `administradorRecibeElListado` | Infraestructura | AB#61/AB#62 | PR #59 | ✅ |
 | HU19-CP09 | `UsuarioDocumentMapperTest` | `conservaEstadoPendienteEnElMapeo` | Infraestructura | AB#61 | PR #59 | ✅ |
 | HU19-CP10 | `UsuarioMongoAdapterTest` | `listarFiltraPorBloqueoTemporal` | Infraestructura | AB#61 | PR #59 | ✅ |
+| HU19-CP11 | `UsuarioControllerTest` | `elListadoDeUsuariosAceptaOrdenYSentido` | Infraestructura | AB#61 | PR por abrir | 🔍 |
+| HU19-CP11 | `UsuarioMongoAdapterTest` | `ordenaClientesPorEstadoDescendente` | Infraestructura | AB#61 | PR por abrir | 🔍 |
+| HU19-CP12 | `UsuarioMongoAdapterTest` | `ordenaPorNombreSinDistinguirMayusculasNiTildes` | Infraestructura | AB#29 | PR por abrir | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `RegistroUsuarioServiceTest`: `usuarios/application/service/`
@@ -272,8 +295,11 @@ Los tests de integración de MongoDB (`UsuarioMongoAdapterTest`, `UsuariosConfig
 | HU2-CP22 | Un usuario sin Authenticator pasa al alta y recibe un QR | Unitario + integración | 13 | 🔍 En revisión (AB#20) |
 | HU2-CP23 | El primer código correcto confirma el alta | Unitario + integración | 7 | 🔍 En revisión (AB#20) |
 | HU2-CP24 | El secreto se guarda cifrado, nunca en claro | Unitario + integración | 7 | 🔍 En revisión (AB#20) |
+| HU2-CP25 | El login no distingue mayúsculas ni espacios en el email, y un email mal formado responde como unas credenciales inválidas | Unitario | 2 | 🔍 En revisión (2, AB#240, PR por abrir) |
+| HU2-CP26 | El contador de intentos fallidos se reinicia al completar el login y al caducar el bloqueo, no al acertar solo la contraseña | Unitario | 4 | 🔍 En revisión (4, AB#19, PR por abrir) |
 
 Notas:
+- **HU2-CP25 y CP26 (fallos de la demo del Sprint 1):** el paso 1 busca el email normalizado (`Email`, T240) y responde «Credenciales inválidas» si está mal formado. El contador de intentos se reinicia al caducar el bloqueo (`Usuario.registrarIntentoFallido`) y al completar el tercer paso (`AuthenticatorService.verificarCodigo`), no al acertar la contraseña: así quien solo tenga la contraseña no puede probar códigos sin límite.
 - **HU2-CP01 a CP04:** casos definidos en la T19/T22 a partir del contrato del frontend (`frontend/src/mocks/authHandlers.js`). Pendientes de añadir a la descripción de la T22 en Azure Boards.
 - **HU2-CP04:** «desactivada» es la cuenta desactivada por un administrador (`desactivar()` de `Usuario`), distinta del bloqueo temporal de CP03.
 - **Persistencia (T225, AB#225):** `UsuarioDocument` guarda los intentos fallidos, el bloqueo y la desactivación, así que CP03 y CP04 se cumplen también en la aplicación real. Los tests de integración de `UsuarioMongoAdapterTest` lo comprueban contra MongoDB.
@@ -399,6 +425,12 @@ Notas:
 | HU2-CP24 | `FactorAutenticacionDocumentMapperTest` | `convierteFactorEnDocumento` | Infraestructura | AB#20 | PR #75 | 🔍 |
 | HU2-CP24 | `FactorAutenticacionMongoAdapterTest` | `guardaElFactorEnFactoresAutenticacion` | Infraestructura | AB#20 | PR #75 | 🔍 |
 | HU2-CP24 | `AuthenticatorServiceTest` | `prepararAltaNoGuardaElSecretoEnClaro` | Aplicación | AB#20 | PR #75 | 🔍 |
+| HU2-CP25 | `AutenticacionServiceTest` | `iniciaSesionAunqueElEmailLleveMayusculas` | Aplicación | AB#240 | PR por abrir | 🔍 |
+| HU2-CP25 | `AutenticacionServiceTest` | `unEmailMalFormadoEnElLoginNoRevelaNada` | Aplicación | AB#240 | PR por abrir | 🔍 |
+| HU2-CP26 | `UsuarioTest` | `trasCaducarElBloqueoElContadorEmpiezaDeCero` | Dominio | AB#19 | PR por abrir | 🔍 |
+| HU2-CP26 | `UsuarioTest` | `reiniciarIntentosQuitaElContadorYElBloqueo` | Dominio | AB#19 | PR por abrir | 🔍 |
+| HU2-CP26 | `AuthenticatorServiceTest` | `completarElTercerPasoReiniciaElContador` | Aplicación | AB#19 | PR por abrir | 🔍 |
+| HU2-CP26 | `AutenticacionServiceTest` | `acertarLaContrasenaNoReiniciaElContador` | Aplicación | AB#19 | PR por abrir | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AutenticacionServiceTest`: `usuarios/application/service/` (Mockito, con `Clock` fijo)
@@ -821,16 +853,19 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
 | HU26-CP01 | El listado solo trae vendedores, con sus datos (también el nombre comercial y la categoría principal) y sin datos sensibles | Integración (capa web) | 1 | ✅ Pasa |
-| HU26-CP02 | El listado se ordena por nombre o por estado (pendientes, activos, desactivados), en sentido ascendente o descendente | Integración (capa web y MongoDB) | 4 | ✅ Pasa |
+| HU26-CP02 | El listado se ordena por nombre o por estado (pendientes, activos, desactivados), en sentido ascendente o descendente | Integración (capa web y MongoDB) | 4 | ✅ Pasa (3) · 🔍 En revisión (1, AB#29, PR por abrir) |
 | HU26-CP03 | La ficha de un vendedor trae sus datos (también el nombre comercial, la categoría principal con su nombre, el DNI y el teléfono), sin datos sensibles | Unitario + integración (capa web) | 2 | ✅ Pasa |
 | HU26-CP04 | La ficha de un usuario que no existe o que no es vendedor devuelve 404 | Unitario + integración (capa web) | 3 | ✅ Pasa |
 | HU26-CP05 | Sin sesión (401) o sin ser administrador (403) no se ve ni el listado ni la ficha | Integración (capa web) | 2 | ✅ Pasa |
+| HU26-CP06 | Filtra los vendedores por su categoría principal | Integración (capa web y MongoDB) | 2 | 🔍 En revisión (2, AB#29, PR por abrir) |
+| HU26-CP07 | Ordena los vendedores por el nombre de su categoría, en los dos sentidos | Integración (capa web y MongoDB) | 1 | 🔍 En revisión (1, AB#29, PR por abrir) |
 
 Notas:
 - **HU26-CP01 a CP05:** casos propuestos en la T30 (AB#30) a partir de los criterios de aceptación de la HU26 y del contrato del frontend (`frontend/docs/hu26-supervision-vendedores.md`). Pendientes de confirmar con el equipo y de añadir a la HU26 en Azure Boards.
 - **Backend (T29, AB#29, PR #78):** `GET /api/admin/sellers` (el listado de la HU19 con el rol `VENDEDOR` fijo y ordenación por nombre o estado) y `GET /api/admin/sellers/{id}` (`consultarVendedor`).
 - **Datos del vendedor (AB#43):** con el registro de vendedores (T241), el listado y la ficha devuelven `nombreComercial`, `categoriaPrincipalId`, `categoriaPrincipal` (el nombre, que da el módulo `categorias` por su puerto de entrada), `dni` y `telefono`. El contrato del frontend decía `nif`; el equipo decidió usar `dni`, como el registro (11/10/2026).
-- **Sin tests todavía, porque no existe el código:** los pedidos del vendedor (`/sellers/{id}/orders`) y el filtro y orden por categoría.
+- **Sin tests todavía, porque no existe el código:** los pedidos del vendedor (`/sellers/{id}/orders`).
+- **HU26-CP06 y CP07 (fallos de la demo del Sprint 1):** `category` filtra por `categoriaPrincipalId` y `sort=category` ordena por el **nombre** de la categoría: el adaptador lo obtiene del módulo `categorias` por su puerto de entrada (`ConsultaCategoriasUseCase`) y ordena con un `$switch`, como el rango del estado. Todos los listados ordenan con la *collation* `es` (HU19-CP12). `ListarUsuariosQuery` agrupa campo y sentido en `Ordenacion` para no pasar de 7 componentes.
 - **Frontend:** los tests de la HU26 no tienen todavía filas en la matriz.
 
 ### Tabla B · casos de prueba ↔ tests
@@ -838,7 +873,7 @@ Notas:
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
 | HU26-CP01 | `UsuarioControllerTest` | `administradorRecibeElListadoDeVendedores` | Infraestructura | AB#30, AB#43 | PR #80, PR #100 | ✅ |
-| HU26-CP02 | `UsuarioControllerTest` | `listadoDeVendedoresTraduceLaOrdenacion` (nombre, estado, categoría y sin orden) | Infraestructura | AB#30 | PR #80 | ✅ |
+| HU26-CP02 | `UsuarioControllerTest` | `listadoDeVendedoresTraduceLaOrdenacion` (nombre, estado, categoría y sin orden) | Infraestructura | AB#30 · AB#29 | PR #80 (modificado en PR por abrir: `category` pasa a `CATEGORIA`) | 🔍 |
 | HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorEstadoAscendente` | Infraestructura | AB#30 | PR #80 | ✅ |
 | HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorEstadoDescendente` | Infraestructura | AB#30 | PR #80 | ✅ |
 | HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorNombre` | Infraestructura | AB#30 | PR #80 | ✅ |
@@ -849,6 +884,9 @@ Notas:
 | HU26-CP04 | `UsuarioControllerTest` | `fichaDeUnNoVendedorDevuelve404` | Infraestructura | AB#30 | PR #80 | ✅ |
 | HU26-CP05 | `UsuarioControllerTest` | `vendedoresSinSesionDevuelve401` (listado y ficha) | Infraestructura | AB#30 | PR #80 | ✅ |
 | HU26-CP05 | `UsuarioControllerTest` | `noAdministradorNoVeLosVendedores` (cliente y vendedor, en el listado y la ficha) | Infraestructura | AB#30 | PR #80 | ✅ |
+| HU26-CP06 | `UsuarioControllerTest` | `elListadoDeVendedoresFiltraPorCategoria` | Infraestructura | AB#29 | PR por abrir | 🔍 |
+| HU26-CP06 | `UsuarioMongoAdapterTest` | `filtraVendedoresPorCategoria` | Infraestructura | AB#29 | PR por abrir | 🔍 |
+| HU26-CP07 | `UsuarioMongoAdapterTest` | `ordenaVendedoresPorNombreDeCategoria` | Infraestructura | AB#29 | PR por abrir | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
