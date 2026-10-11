@@ -19,6 +19,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPor
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
 import org.springframework.dao.DuplicateKeyException;
@@ -36,8 +37,9 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
     private static final String CAMPO_ESTADO = "estado";
     private static final String CAMPO_RANGO_ESTADO = "rangoEstado";
 
-    // Nombre del índice único de DNI por rol, fijado en ColeccionesEsiBuy.
+    // Nombres de los índices únicos de DNI por rol y de nombre comercial, fijados en ColeccionesEsiBuy.
     private static final String INDICE_DNI = "rol_dni";
+    private static final String INDICE_NOMBRE_COMERCIAL = "nombreComercial";
 
     private final UsuarioMongoRepository repository;
     private final UsuarioDocumentMapper mapper;
@@ -64,8 +66,12 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
             // Un índice único lo ha rechazado (p. ej. dos registros simultáneos que pasaron a la vez la
             // comprobación de existePorCorreo o existePorDni). MongoDB indica en el mensaje qué índice es;
             // se traduce a la excepción del dominio que corresponde, que la API devuelve como 409.
-            if (e.getMessage() != null && e.getMessage().contains(INDICE_DNI)) {
+            String mensaje = e.getMessage() == null ? "" : e.getMessage();
+            if (mensaje.contains(INDICE_DNI)) {
                 throw new DniYaRegistradoException("El DNI ya está registrado");
+            }
+            if (mensaje.contains(INDICE_NOMBRE_COMERCIAL)) {
+                throw new NombreComercialYaRegistradoException("El nombre comercial ya está registrado");
             }
             throw new CorreoYaRegistradoException("El correo ya está registrado");
         }
