@@ -70,4 +70,9 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         }
         return new Criteria().andOperator(criterios);
     }
+
+    @Override
+    public boolean existePorVendedorYNombre(String vendedorId, String nombre) {
+        throw new UnsupportedOperationException("pendiente");
+    }
 }

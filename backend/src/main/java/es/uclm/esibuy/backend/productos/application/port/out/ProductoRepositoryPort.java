@@ -19,4 +19,7 @@ public interface ProductoRepositoryPort {
 
     // Productos de un vendedor (HU32), del más reciente al más antiguo.
     ProductoPage listarPorVendedor(String vendedorId, ListarProductosQuery query);
+
+    // ¿Tiene ya el vendedor un producto con ese nombre? No distingue mayúsculas (HU31).
+    boolean existePorVendedorYNombre(String vendedorId, String nombre);
 }
