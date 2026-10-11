@@ -410,4 +410,19 @@ class UsuarioTest {
         assertEquals(1, usuario.getIntentosFallidos());
         assertFalse(usuario.tieneBloqueoPorIntentos(masTarde));
     }
+
+    @Test
+    @DisplayName("HU2-CP26: reiniciar los intentos quita el contador y el bloqueo")
+    void reiniciarIntentosQuitaElContadorYElBloqueo() {
+        Usuario usuario = cliente();
+        Instant ahora = Instant.parse("2026-10-12T10:00:00Z");
+        for (int i = 0; i < 5; i++) {
+            usuario.registrarIntentoFallido(ahora);
+        }
+
+        usuario.reiniciarIntentos();
+
+        assertEquals(0, usuario.getIntentosFallidos());
+        assertFalse(usuario.tieneBloqueoPorIntentos(ahora));
+    }
 }
