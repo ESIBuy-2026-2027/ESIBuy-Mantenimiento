@@ -56,16 +56,6 @@ const LONGITUD_MAXIMA = {
   repeticionPassword: 64,
 }
 
-const EMAIL_YA_REGISTRADO ='Este email ya está registrado'
-const NOMBRE_COMERCIAL_YA_REGISTRADO = 'Este nombre comercial ya está registrado'
-const ERRORES_VENDEDOR_YA_REGISTRADO = {
-  EMAIL_ALREADY_REGISTERED: { email: EMAIL_YA_REGISTRADO },
-  COMMERCIAL_NAME_ALREADY_REGISTERED: { nombreComercial: NOMBRE_COMERCIAL_YA_REGISTRADO },
-  EMAIL_AND_COMMERCIAL_NAME_ALREADY_REGISTERED: {
-    email: EMAIL_YA_REGISTRADO,
-    nombreComercial: NOMBRE_COMERCIAL_YA_REGISTRADO,
-  },
-}
 
 const useStyles = makeStyles({
   page: {
@@ -205,9 +195,8 @@ export default function Register() {
       await registrarVendedor(sinTelefonoVacio(datos))
       setRegistrado(true)
     } catch (error) {
-      if (error.status === 409 && ERRORES_VENDEDOR_YA_REGISTRADO[error.code]) {
-        setErrores(ERRORES_VENDEDOR_YA_REGISTRADO[error.code])
-      }
+      const { campos } = erroresDelServidor(error)
+      if (campos) setErrores(campos)
     }
   }
 
