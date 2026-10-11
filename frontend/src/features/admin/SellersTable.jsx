@@ -42,7 +42,7 @@ export default function SellersTable({ sellers, refreshing, onView }) {
                 <TableCell>
                   <Text weight="semibold">{seller.nombreComercial}</Text>
                 </TableCell>
-                <TableCell>{seller.email}</TableCell>
+                <TableCell className={tableStyles.email}>{seller.email}</TableCell>
                 <TableCell>
                   <Badge appearance="outline" color="brand" size="medium">
                     {seller.categoriaPrincipal}

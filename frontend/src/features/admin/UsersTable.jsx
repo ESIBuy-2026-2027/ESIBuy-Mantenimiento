@@ -55,6 +55,13 @@ const useStyles = makeStyles({
   name: {
     minWidth: '180px',
   },
+  // Un email largo se parte dentro de su celda en vez de montarse sobre las columnas de al lado
+  // (fallos de la demo del Sprint 1)
+  email: {
+    minWidth: '200px',
+    overflowWrap: 'anywhere',
+    wordBreak: 'break-word',
+  },
   date: {
     fontVariantNumeric: 'tabular-nums',
   },
@@ -82,7 +89,7 @@ export default function UsersTable({ users, refreshing = false, renderActions })
               <TableCell className={styles.name}>
                 <Text weight="semibold">{`${user.nombre} ${user.apellidos}`}</Text>
               </TableCell>
-              <TableCell>{user.email}</TableCell>
+              <TableCell className={styles.email}>{user.email}</TableCell>
               <TableCell>{ROLE_LABELS[user.rol]}</TableCell>
               <TableCell>
                 <Badge appearance="tint" color={STATUS_BADGE_COLORS[user.estado]}>

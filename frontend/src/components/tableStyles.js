@@ -27,4 +27,11 @@ export const useTableStyles = makeStyles({
   name: {
     minWidth: '180px',
   },
+  // Un email largo se parte dentro de su celda en vez de montarse sobre las columnas de al lado
+  // (fallos de la demo del Sprint 1)
+  email: {
+    minWidth: '200px',
+    overflowWrap: 'anywhere',
+    wordBreak: 'break-word',
+  },
 })
