@@ -1,9 +1,11 @@
 package es.uclm.esibuy.backend.usuarios.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -123,5 +125,16 @@ class PoliticaContrasenasTest {
 
     private static void validar(String contrasena) {
         PoliticaContrasenas.validar(contrasena, DATOS_PERSONALES, EMAIL);
+    }
+
+    // Fallos de la demo del Sprint 1: el rechazo indica su motivo para que la API pueda devolver un code.
+
+    @Test
+    @DisplayName("HU1-CP22: el rechazo por datos personales indica su motivo")
+    void rechazoConDatosPersonalesIndicaSuMotivo() {
+        ContrasenaInvalidaException excepcion = assertThrows(ContrasenaInvalidaException.class,
+                () -> validar("clave-ANA-2026"));
+
+        assertEquals(MotivoRechazo.CONTRASENA_CON_DATOS_PERSONALES, excepcion.getMotivo());
     }
 }
