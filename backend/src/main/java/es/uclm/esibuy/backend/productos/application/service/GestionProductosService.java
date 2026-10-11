@@ -5,6 +5,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseC
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 
 public class GestionProductosService implements GestionProductosUseCase {
 
@@ -20,6 +21,7 @@ public class GestionProductosService implements GestionProductosUseCase {
     public Producto crear(CrearProductoCommand comando) {
         String vendedorId = usuarioEnSesion.idPorCorreo(comando.emailVendedor());
 
+        // Las relgas del producto se validan en dominio, si huubiese algo mal, saltaría la excepción desde el constructor de Producto. No se valida que el vendedor exista, porque se asume que el correo de la sesión es válido.
         Producto producto = new Producto(
                 null,
                 vendedorId,
@@ -33,6 +35,9 @@ public class GestionProductosService implements GestionProductosUseCase {
                 comando.descuento(),
                 comando.descuentoPremium()
         );
+        if (productoRepository.existePorVendedorYNombre(vendedorId, producto.getNombre())) {
+            throw new ProductoDuplicadoException();
+        }
         return productoRepository.guardar(producto);
     }
 }
