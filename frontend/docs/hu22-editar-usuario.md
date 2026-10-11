@@ -5,9 +5,10 @@ Documento para entender cómo el administrador edita los datos de clientes, admi
 - **Fecha:** 10 de octubre de 2026
 - **HU:** HU22 · Modificar datos y rol de un usuario (2 puntos)
 - **Tasks:** AB#45 (formulario de edición), AB#46 (tests del formulario de edición) y AB#43 (el rol no se puede cambiar)
-- **Ramas:** `feature/US22-T45-T46-edicion-usuario` (primera entrega: datos), `feature/US22-T45-T46-cambio-de-rol-y-endpoint-unico` (segunda: cambio de rol, endpoint único y administradores sin estado pendiente) y `fix/US22-T43-rol-no-editable` (tercera, 11/10/2026: se quita el cambio de rol)
+- **Ramas:** `feature/US22-T45-T46-edicion-usuario` (primera entrega: datos), `feature/US22-T45-T46-cambio-de-rol-y-endpoint-unico` (segunda: cambio de rol, endpoint único y administradores sin estado pendiente) `fix/US22-T43-rol-no-editable` (tercera, 11/10/2026: se quita el cambio de rol) y `fix/US22-T43-editar-vendedor` (cuarta, 11/10/2026: la edición del vendedor usa los datos del registro de vendedores)
 - **Metodología:** sin TDD por decisión del equipo. Primero el código (commits `refactor`, `chore`, `feat` y `fix` con AB#45) y después los tests (commits `test` con AB#46).
 - **Actualización del 11/10/2026:** el equipo ha decidido que **el rol de una cuenta no se puede cambiar** ("el que nace cliente muere cliente"). Se quitó el cambio de rol del frontend y del backend (AB#43); el resto de la HU22 sigue igual. Lo que este documento contaba del cambio de rol ya no aplica y se ha reescrito.
+- **Actualización del 11/10/2026 (edición del vendedor):** con el registro de vendedores (T241) el backend ya guarda el nombre comercial, el DNI, el teléfono y la categoría del vendedor. El formulario del vendedor envía `dni` (antes `nif`, con otra validación), el teléfono y la imagen, y la lista de categorías llega de `GET /api/categorias`, que ya existe en el backend.
 - **Depende de:** `docs/hu20-ficha-usuario.md` (ficha de clientes y administradores), `docs/hu26-supervision-vendedores.md` (ficha del vendedor), `docs/hu21-alta-admin-y-vendedores.md` (validaciones y piezas de cuenta), `docs/hu1-registro.md` (reglas del registro), `docs/mocks-msw.md` (mocks) y `docs/sonar-incidencias.md` (convención de `propTypes`)
 
 ---
@@ -28,7 +29,7 @@ Al pulsar **Editar**, la ficha pasa a **modo edición**: los campos que se puede
 |---|---|---|
 | **Cliente** | Nombre, apellidos, DNI, teléfono, fecha de nacimiento (siempre que sea **mayor de edad**), tipo de cliente (Estándar o Premium) e imagen de perfil | **Email**, **rol** y estado |
 | **Administrador** | Nombre, apellidos, sede e imagen de perfil | **Email**, **rol**, **fecha de incorporación** (es la fecha de alta), estado y fecha de alta |
-| **Vendedor** | Nombre, apellidos, nombre comercial (que siga siendo **único**), NIF/DNI y **una sola categoría** | **Email** (por diseño del backend, de momento no se puede cambiar), **rol** y estado |
+| **Vendedor** | Nombre, apellidos, nombre comercial (que siga siendo **único**), DNI, teléfono, **una sola categoría** e imagen de perfil | **Email** (por diseño del backend, de momento no se puede cambiar), **rol** y estado |
 
 La **fecha de alta** solo se muestra en la ficha del **administrador**: la de clientes y vendedores no se guarda, así que su ficha no tiene ese campo.
 
@@ -112,13 +113,12 @@ Todas las rutas son relativas a `frontend/src/`.
 | Campo | Regla |
 |---|---|
 | Nombre y apellidos | Obligatorios, máximo 30 caracteres |
-| DNI (cliente) | Obligatorio, 8 números y una letra |
-| Teléfono (cliente) | Opcional; si se rellena, 9 números |
+| DNI (cliente y vendedor) | Obligatorio, 8 números y una letra. Único entre las cuentas del mismo rol: un cliente y un vendedor pueden tener el mismo DNI |
+| Teléfono (cliente y vendedor) | Opcional; si se rellena, 9 números |
 | Fecha de nacimiento (cliente) | Obligatoria y de una persona **mayor de edad** (un día antes de cumplir los 18 ya no vale) |
 | Tipo de cliente | Estándar o Premium |
 | Sede (administrador) | Opcional, máximo 30 caracteres |
 | Nombre comercial (vendedor) | Obligatorio, máximo 30 caracteres, único |
-| NIF/DNI (vendedor) | Obligatorio, 9 caracteres alfanuméricos |
 | Categoría (vendedor) | Obligatoria, **una sola**, de las categorías del sistema (campo `categoriaPrincipalId`) |
 
 - **Se valida con los campos del rol de la cuenta.**
@@ -158,7 +158,8 @@ Todas las rutas son relativas a `frontend/src/`.
 
 ```json
 { "nombre": "Vera", "apellidos": "Vendedora",
-  "nombreComercial": "TecnoVera", "nif": "B12345601", "categoriaPrincipalId": "cat-1" }
+  "nombreComercial": "TecnoVera", "dni": "12345601V", "telefono": "612345601",
+  "categoriaPrincipalId": "cat-1", "avatar": "avatar2" }
 ```
 
 El email y el rol no viajan nunca. El backend (AB#43) ignora el `rol` si llega en el cuerpo y valida los datos según el rol que ya tiene la cuenta.
@@ -170,6 +171,7 @@ El email y el rol no viajan nunca. El backend (AB#43) ignora el `rol` si llega e
 | 200 + datos del usuario | Guardado. La ficha se recarga |
 | 400 (`VALIDATION_ERROR`) | Mensaje genérico |
 | 409 + `{ "code": "COMMERCIAL_NAME_ALREADY_REGISTERED" }` | "Este nombre comercial ya está registrado" (junto al campo) |
+| 409 + `{ "code": "DNI_ALREADY_REGISTERED" }` | Mensaje genérico (otra cuenta del mismo rol tiene ese DNI) |
 | 401 / 403 / 404 / 5xx | Mensaje genérico |
 
 ### Qué debe imponer el backend
@@ -178,8 +180,10 @@ El email y el rol no viajan nunca. El backend (AB#43) ignora el `rol` si llega e
 - Que el **rol no cambie nunca**, aunque llegue en el cuerpo.
 - Que el email (de cualquier rol) y la fecha de incorporación **no cambien nunca**, aunque lleguen en el cuerpo.
 - Que la contraseña no se pueda cambiar por esta vía.
-- La mayoría de edad de la fecha de nacimiento y la unicidad del nombre comercial.
-- Que el detalle del vendedor (`GET /api/admin/sellers/{id}`) incluya `categoriaPrincipalId` además de `categoriaPrincipal` (el nombre), porque el formulario elige la categoría por identificador.
+- La mayoría de edad de la fecha de nacimiento, la unicidad del nombre comercial y la del DNI dentro de cada rol.
+- Que el vendedor guarde siempre sus datos de vendedor: el backend guarda el perfil completo, así que si falta el nombre comercial, el DNI o la categoría responde 400, y lo que no se envía (teléfono o imagen) se borra.
+- Que el detalle del vendedor (`GET /api/admin/sellers/{id}`) incluya `categoriaPrincipalId` además de `categoriaPrincipal` (el nombre), porque el formulario elige la categoría por identificador. Lo hace desde AB#43, junto con `dni` y `telefono`.
+- Que `GET /api/categorias` devuelva `[{ "id", "nombre" }]`. Existe desde AB#43 (módulo `categorias` del backend), es público y ordena por nombre.
 - Que la ficha de un administrador (`GET /api/admin/usuarios/{id}`) traiga `fechaIncorporacion`. El backend la devuelve con el mismo instante que `fechaAlta` (AB#43), y el frontend la formatea igual que la fecha de alta.
 
 ---
@@ -227,6 +231,8 @@ Esta rama pasa de 518 a 590 tests (74 nuevos y 2 menos, los de la función de ed
 
 Se ajustaron tests existentes de la HU19 (con los datos nuevos hay 4 cuentas pendientes, no 5, porque ya no hay ningún administrador pendiente).
 
+**AB#43 (edición del vendedor, 571 tests):** los tests del vendedor usan `dni` en lugar de `nif` (con la validación del DNI del cliente) y esperan el teléfono y la imagen en el formulario, en el cuerpo y en el mock. La ficha del vendedor tiene 10 campos en lugar de 8.
+
 ---
 
 ## 8. Decisiones y librerías
@@ -245,7 +251,9 @@ Se ajustaron tests existentes de la HU19 (con los datos nuevos hay 4 cuentas pen
 ## 9. Limitaciones y trabajo pendiente
 
 - **"He olvidado mi contraseña"** es la única vía de cambio de contraseña para los tres tipos de usuario, pero **esa pantalla todavía no existe** (el login no tiene el enlace). Hasta entonces, nadie puede cambiar su contraseña.
-- **Imagen de perfil del vendedor:** la ficha del vendedor no tiene imagen de perfil, así que no se edita.
+- **Vendedores anteriores al registro de vendedores (T241):** no tienen nombre comercial, DNI ni categoría; la primera vez que se editan hay que rellenarlos.
+- **Categorías:** si la colección `categorias` de MongoDB está vacía, el formulario del vendedor (y el del registro) no tiene categorías que elegir.
+- **El DNI repetido** muestra el mensaje genérico, no uno junto al campo.
 - **Matriz de trazabilidad:** los casos de la HU22 (`HU22-CPnn`) de la matriz solo trazan los tests del backend; los tests del frontend (AB#46) todavía no están en `docs/calidad/matriz-trazabilidad.md`.
 - Aspecto visual sin revisar en un navegador real (ver la sección 10).
 
