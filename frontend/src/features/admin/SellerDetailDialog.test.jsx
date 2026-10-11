@@ -250,6 +250,30 @@ describe('SellerDetailDialog (HU26): productos', () => {
     expect(within(dialogo).getByText(/mostrando 1–5 de 23 productos/i)).toBeInTheDocument()
   })
 
+  it('sellerDetailDialog_pestanaProductos_muestraElNombreDeLaCategoriaDeCadaProducto', async () => {
+    server.use(
+      http.get('/api/admin/sellers/:id/products', () =>
+        HttpResponse.json({
+          items: [
+            { id: 'p-1', nombre: 'Teclado mecánico', precio: 89.5, stock: 12, disponible: true, categoriaId: 'cat-1' },
+          ],
+          page: 1,
+          size: 5,
+          totalItems: 1,
+          totalPages: 1,
+        }),
+      ),
+    )
+    const user = userEvent.setup()
+    const { dialogo } = await abrirDialogo()
+
+    await abrirPestana(user, dialogo, 'Productos')
+
+    const fila = (await within(dialogo).findByText('Teclado mecánico')).closest('tr')
+    await waitFor(() => expect(within(fila).getByText('Tecnología')).toBeInTheDocument(), ESPERA)
+    expect(within(fila).queryByText('cat-1')).not.toBeInTheDocument()
+  })
+
   it('sellerDetailDialog_pestanaProductos_sinAccionesDeEdicionNiBorrado', async () => {
     const user = userEvent.setup()
     const { dialogo } = await abrirDialogo()
