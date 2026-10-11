@@ -1,7 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
-import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioCommand;
+import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarClienteCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
@@ -43,8 +43,8 @@ public class UsuarioController {
 
     @PostMapping("/auth/register/cliente")   // contrato acordado con el frontend (T229)
     @ResponseStatus(HttpStatus.CREATED)
-    public void registrar(@Valid @RequestBody RegistroRequest request) {
-        registroUsuario.registrar(new RegistrarUsuarioCommand(
+    public void registrarCliente(@Valid @RequestBody RegistroRequest request) {
+        registroUsuario.registrarCliente(new RegistrarClienteCommand(
                 request.nombre(), request.apellidos(), request.fechaNacimiento(), request.dni(), request.email(),
                 request.telefono(), request.password(), request.repeticionPassword(), request.tipoCliente(),
                 request.imagenPerfil(), request.aceptaPrivacidad()));

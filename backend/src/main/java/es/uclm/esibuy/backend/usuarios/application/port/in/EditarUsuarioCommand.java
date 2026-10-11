@@ -8,7 +8,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 /**
  * Datos de entrada del caso de uso de edición de un usuario por el administrador (HU22, T42).
  *
- * <p>Como {@link RegistrarUsuarioCommand}, lleva texto plano y es el servicio quien construye los value
+ * <p>Como {@link RegistrarClienteCommand}, lleva texto plano y es el servicio quien construye los value
  * objects del dominio. Trae los campos de los tres roles; solo se usan los del rol del usuario
  * ({@code dni}, {@code telefono}, {@code fechaNacimiento} y {@code tipoCliente} para un cliente).
  *

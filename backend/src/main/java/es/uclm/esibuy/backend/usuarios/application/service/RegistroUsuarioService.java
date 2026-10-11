@@ -3,7 +3,7 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 import java.time.Clock;
 import java.time.LocalDate;
 
-import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarUsuarioCommand;
+import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarClienteCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
@@ -45,7 +45,7 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
     }
 
     @Override
-    public void registrar(RegistrarUsuarioCommand comando) {
+    public void registrarCliente(RegistrarClienteCommand comando) {
         // Todo lo que se puede comprobar sin salir del núcleo va antes de consultar la base de datos.
         DatosPersonales datosPersonales = new DatosPersonales(comando.nombre(), comando.apellidos(), comando.imagenPerfil());
         Email email = new Email(comando.email());
