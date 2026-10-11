@@ -328,15 +328,24 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP09: el vendedor pasa por la política de contraseñas")
     void elVendedorPasaPorLaPoliticaDeContrasenas() {
-        // TODO ciclo 8 (T241)
-        fail("Funcionalidad no implementada");
+        lenient().when(hashContrasena.hashear("Password1!")).thenReturn("hash-simulado");
+
+        assertThrows(ContrasenaInvalidaException.class,
+                () -> registroUsuario.registrarVendedor(comandoVendedor("luis@uclm.es", "Password1!")));
+
+        verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
 
     @Test
     @DisplayName("HU1-CP06: rechaza el registro del vendedor si no acepta la política de privacidad")
     void rechazaVendedorSiNoAceptaLaPrivacidad() {
-        // TODO ciclo 8 (T241)
-        fail("Funcionalidad no implementada");
+        lenient().when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
+        RegistrarVendedorCommand comando = new RegistrarVendedorCommand("Luis", "Pérez García", "Tienda Luis",
+                "cat-1", "87654321X", "luis@uclm.es", null, "Clave-1234", "Clave-1234", null, false);
+
+        assertThrows(UsuarioInvalidoException.class, () -> registroUsuario.registrarVendedor(comando));
+
+        verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
 
     @Test
