@@ -15,6 +15,7 @@ import {
   ShieldCheckmark16Filled,
   ShieldCheckmark24Regular,
 } from '@fluentui/react-icons'
+import { useAuth } from '../auth/useAuth'
 import LinkButton from '../components/LinkButton'
 import { PATHS } from '../routes/paths'
 
@@ -213,6 +214,7 @@ const useStyles = makeStyles({
 
 export default function Home() {
   const styles = useStyles()
+  const { user } = useAuth()
 
   return (
     <>
@@ -237,15 +239,18 @@ export default function Home() {
             </p>
 
             <div className={styles.ctas}>
-              <LinkButton
-                to={PATHS.REGISTER}
-                appearance="primary"
-                size="large"
-                icon={<ArrowRight20Regular />}
-                iconPosition="after"
-              >
-                Crear mi cuenta
-              </LinkButton>
+              {/* Con la sesión iniciada no se ofrece crear otra cuenta (fallos de la demo del Sprint 1) */}
+              {!user && (
+                <LinkButton
+                  to={PATHS.REGISTER}
+                  appearance="primary"
+                  size="large"
+                  icon={<ArrowRight20Regular />}
+                  iconPosition="after"
+                >
+                  Crear mi cuenta
+                </LinkButton>
+              )}
               <Button as="a" href="#como-funciona" size="large">
                 Cómo funciona
               </Button>
