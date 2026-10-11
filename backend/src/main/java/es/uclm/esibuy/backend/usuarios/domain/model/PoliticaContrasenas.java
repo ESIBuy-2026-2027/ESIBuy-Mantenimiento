@@ -37,36 +37,36 @@ public final class PoliticaContrasenas {
 
     private static void exigirComposicion(String contrasena) {
         if (!MAYUSCULA.matcher(contrasena).find()) {
-            throw new ContrasenaInvalidaException("La contraseña debe tener al menos una mayúscula");
+            throw new ContrasenaInvalidaException(MotivoRechazo.CONTRASENA_DEBIL, "La contraseña debe tener al menos una mayúscula");
         }
 
         if (!MINUSCULA.matcher(contrasena).find()) {
-            throw new ContrasenaInvalidaException("La contraseña debe tener al menos una minúscula");
+            throw new ContrasenaInvalidaException(MotivoRechazo.CONTRASENA_DEBIL, "La contraseña debe tener al menos una minúscula");
         }
 
         if (!NUMERO.matcher(contrasena).find()) {
-            throw new ContrasenaInvalidaException("La contraseña debe tener al menos un número");
+            throw new ContrasenaInvalidaException(MotivoRechazo.CONTRASENA_DEBIL, "La contraseña debe tener al menos un número");
         }
 
         if (!SIMBOLO.matcher(contrasena).find()) {
-            throw new ContrasenaInvalidaException("La contraseña debe tener al menos un símbolo");
+            throw new ContrasenaInvalidaException(MotivoRechazo.CONTRASENA_DEBIL, "La contraseña debe tener al menos un símbolo");
         }
     }
 
     private static void exigirLongitud(String contrasena) {
         if (contrasena == null || contrasena.length() < LONGITUD_MINIMA) {
-            throw new ContrasenaInvalidaException(
+            throw new ContrasenaInvalidaException(MotivoRechazo.CONTRASENA_CORTA,
                     "La contraseña debe tener al menos " + LONGITUD_MINIMA + " caracteres");
         }
         if (contrasena.length() > LONGITUD_MAXIMA) {
-            throw new ContrasenaInvalidaException(
+            throw new ContrasenaInvalidaException(MotivoRechazo.CONTRASENA_LARGA,
                     "La contraseña no puede tener más de " + LONGITUD_MAXIMA + " caracteres");
         }
     }
 
     private static void exigirNoComun(String normalizada) {
         if (LISTA_NEGRA.contains(normalizada)) {
-            throw new ContrasenaInvalidaException("La contraseña es demasiado común");
+            throw new ContrasenaInvalidaException(MotivoRechazo.CONTRASENA_COMUN, "La contraseña es demasiado común");
         }
     }
 
