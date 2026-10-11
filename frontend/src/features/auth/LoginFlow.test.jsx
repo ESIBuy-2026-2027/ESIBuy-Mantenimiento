@@ -380,4 +380,18 @@ describe('Rutas protegidas y sesión', () => {
     expect(await screen.findByRole('link', { name: /iniciar sesión/i })).toBeInTheDocument()
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/)
   })
+
+  // Fallos de la demo del Sprint 1: en el login no se podía ver la contraseña escrita
+  it('HU2-CP27: el campo de la contraseña tiene un botón para mostrarla y ocultarla', async () => {
+    const user = userEvent.setup()
+    renderApp('/login')
+    const contrasena = await screen.findByLabelText(/^contraseña/i)
+    expect(contrasena).toHaveAttribute('type', 'password')
+
+    await user.click(screen.getByRole('button', { name: /mostrar contraseña/i }))
+
+    expect(contrasena).toHaveAttribute('type', 'text')
+    await user.click(screen.getByRole('button', { name: /ocultar contraseña/i }))
+    expect(contrasena).toHaveAttribute('type', 'password')
+  })
 })
