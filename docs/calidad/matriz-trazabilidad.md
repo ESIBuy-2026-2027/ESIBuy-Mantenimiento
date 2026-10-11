@@ -570,8 +570,32 @@ Notas:
 - **Backend (T43):** el mismo `PUT`, ahora con cambio de rol (`Usuario.cambiarRol`, que sustituye a `modificarDatos`). `AdministracionUsuariosUseCase.editar` recibe el email del administrador en sesión, como `desactivar` (HU23). La regla del último administrador activo es la misma para desactivar y degradar (`exigirQueNoSeaElUltimoAdministradorActivo`) y reutiliza el 409 `LAST_ACTIVE_ADMIN` de la HU23. CP14 amplía `CuentaActivaFilter` (HU23, T206): la sesión también se invalida si su permiso `ROLE_<rol>` ya no es el del usuario.
 - **Cambios en tests de la T42 (T43):** `rechazaEditarConUnRolDistintoDelActual` (CP05) se convierte en `rechazaPasarUnaCuentaAVendedor` (CP13), porque el cambio de rol ya está permitido. Los tests de `UsuarioTest` y `UsuarioMongoAdapterTest` que llamaban a `modificarDatos` llaman ahora a `cambiarRol` con el mismo rol, y las llamadas a `editar` llevan el email del administrador en sesión; no cambia lo que comprueban.
 - **Decisiones del equipo (T43):** pasar a vendedor queda en 400 hasta que existan sus datos; al dejar de ser cliente se borran los datos de cliente (minimización de datos); el último administrador usa el handler de la HU23 tal cual; la fecha de incorporación, cuando exista, no se podrá editar.
-- **Pendiente:** la sede del administrador y el nombre comercial, el NIF y la categoría del vendedor no existen todavía en el modelo (ver `UsuarioDetalleResponse` y `VendedorResponse`); cuando existan se añadirán a la edición, con el 409 `COMMERCIAL_NAME_ALREADY_REGISTERED`, y se podrá pasar a vendedor (CP13). `existePorDni` no distingue rol, aunque el índice `rol_dni` sí: revisar cuando los vendedores tengan DNI.
-- **Frontend:** los tests de la HU22 (AB#46) no tienen todavía filas en la matriz.
+- **Verificación de punta a punta (11/10/2026, T43):** además de los tests, se probó el backend arrancado contra un MongoDB local (Docker), con una sesión real de administrador (contraseña, código por correo y Authenticator). Se comprobaron contra la API y en la base de datos CP01 a CP11, CP13 y CP14 con el resultado esperado. **No reproducibles por la API** (solo los cubren los tests): el 409 de CP12, porque quien edita es siempre un administrador activo que no puede degradarse a sí mismo, así que siempre queda él; y en CP14 el cambio de rol se simuló en la base de datos en lugar de hacerlo otro administrador (el filtro se comporta igual).
+
+**Qué no se puede usar correctamente todavía, y por qué** (el backend de la HU22 funciona; fallan piezas de otras historias):
+
+| Qué | Síntoma | Causa | Depende de |
+|---|---|---|---|
+| **Editar cualquier usuario desde la interfaz** (botón Editar de las fichas) | "No se han podido cargar las categorías"; Reintentar no lo arregla | El formulario (`EditableProfile.jsx`) carga `GET /api/categorias` antes de mostrarse, por si la cuenta pasa a vendedor, y ese endpoint **no existe en el backend**. Con los mocks (MSW) funcionaba porque el mock sí lo simula | Endpoint de consulta de categorías (sin task asignada; encaja en la HU31). Mejora opcional del frontend (AB#45): cargar las categorías solo al editar o crear un vendedor |
+| **Iniciar sesión en la aplicación real** (y, con ello, usar la HU22 entera) | El primer paso del login responde 503 | Brevo rechaza la clave SMTP de `application.properties` (`AUTH LOGIN failed`): el código por correo no se puede enviar. En la verificación se usó un servidor de correo local (Mailpit) | Equipo: generar una clave nueva en Brevo y pasarla por la variable de entorno `SPRING_MAIL_PASSWORD`, no en el archivo |
+| **Editar la sede de un administrador** | El campo se envía, pero se ignora | `sede` no existe en el modelo (`Usuario`, `UsuarioDocument`) | HU21 (alta de administradores) |
+| **Editar un vendedor completo** (nombre comercial, NIF, categoría) | Solo se guardan nombre, apellidos e imagen; el 409 `COMMERCIAL_NAME_ALREADY_REGISTERED` no puede darse | Los datos del vendedor no existen en el modelo (ver `VendedorResponse`) | Registro de vendedores (datos del vendedor) |
+| **Pasar una cuenta a vendedor** (CP13) | 400 "Datos de registro no válidos" | Decisión del equipo: rechazarlo mientras no existan los datos del vendedor | Registro de vendedores |
+| **Degradar al último administrador** (CP12) | No se puede provocar desde la aplicación | Comportamiento correcto: siempre queda el administrador que edita. La regla protege frente a dos administradores que se degradan el uno al otro a la vez (sin transacciones no lo evita del todo) | — |
+
+**Pendientes de la HU22** (anotados como `PENDIENTE` en el código):
+
+| Pendiente | Dónde | Cuándo se resuelve |
+|---|---|---|
+| Añadir `sede` a la edición del administrador | `EditarUsuarioCommand`, `EditarUsuarioRequest`, `Usuario.cambiarRol` | Cuando la HU21 la guarde en el modelo |
+| Añadir nombre comercial, NIF y categoría del vendedor, con el 409 `COMMERCIAL_NAME_ALREADY_REGISTERED`, y permitir pasar a vendedor (quitar el 400 de CP13) | Los mismos, y `AdministracionUsuariosService.editar` | Cuando existan los datos del vendedor |
+| La **fecha de incorporación** del administrador, cuando exista, **no** debe entrar en la edición (solo lectura) | `EditarUsuarioCommand`, `EditarUsuarioRequest` | Al añadirla en la HU21 |
+| `existePorDni` no distingue rol, aunque el índice `rol_dni` sí: un DNI de vendedor bloquearía el mismo DNI en un cliente (falso 409, también en el registro de la HU1) | `AdministracionUsuariosService.exigirDniLibre` | Cuando los vendedores tengan DNI (según cómo se modele) |
+| Textos de los mensajes: el 400 y el 409 del DNI reutilizan los del registro ("Datos de registro no válidos", "No se ha podido completar el registro"); el frontend decide por `code` | `ManejadorGlobalErrores` | Decisión del equipo (ya marcada como pendiente en ese archivo) |
+| Confirmar los casos HU22-CP01 a CP14 y darlos de alta en la HU22 de Azure Boards | — | Equipo |
+| Tests del frontend de la HU22 (AB#46) sin filas en esta matriz | — | Equipo de frontend |
+
+Observación ajena a la HU22, vista en la verificación: las fechas de nacimiento se guardan en MongoDB a medianoche de la hora local convertida a UTC (`1996-05-19T22:00Z` para el 20/05/1996) y se leen bien; pasa igual en el registro (HU1).
 
 ### Tabla B · casos de prueba ↔ tests
 
