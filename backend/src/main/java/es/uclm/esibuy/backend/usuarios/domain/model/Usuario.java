@@ -67,6 +67,13 @@ public class Usuario {
         }
     }
 
+    public static Usuario nuevoAdministrador(DatosPersonales datosPersonales, Email email, String passwordHash) {
+        // A un administrador no le exigimos DatosCliente ni ConsentimientoPrivacidad
+        Usuario admin = new Usuario(null, datosPersonales, email, passwordHash, Rol.ADMINISTRADOR, null, null);
+        admin.restaurarEstado("ACTIVO"); // Nace activo directamente
+        return admin;
+    }
+
     private static DatosCliente exigirDatosClienteCoherente(Rol rol, DatosCliente datosCliente) {
         boolean esCliente = rol == Rol.CLIENTE;
         if (esCliente && datosCliente == null) {

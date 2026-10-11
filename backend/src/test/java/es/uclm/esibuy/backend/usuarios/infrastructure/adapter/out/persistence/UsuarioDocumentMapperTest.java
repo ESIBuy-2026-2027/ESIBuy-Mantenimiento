@@ -166,4 +166,20 @@ class UsuarioDocumentMapperTest {
         documento.setEstado("ACTIVO");
         return documento;
     }
+    
+    @Test
+    @DisplayName("HU21-CP19: un administrador se lee sin datos de cliente ni consentimiento")
+    void unAdministradorSeLeeSinDatosDeClienteYConsentimiento() {
+        UsuarioDocument adminDoc = new UsuarioDocument("admin@esibuy.test", "hash-simulado", "ADMINISTRADOR");
+        adminDoc.setNombre("Nora");
+        adminDoc.setApellidos("Díaz");
+        adminDoc.setEstado("ACTIVO");
+
+        Usuario leido = mapper.aDominio(adminDoc);
+
+        assertEquals(Rol.ADMINISTRADOR, leido.getRol());
+        assertEquals("ACTIVO", leido.getEstado());
+        assertNull(leido.getDatosCliente());
+        assertNull(leido.getConsentimiento());
+    }
 }

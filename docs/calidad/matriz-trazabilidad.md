@@ -506,6 +506,42 @@ Rutas de los archivos de test (bajo `frontend/src/`):
 - `AdminUsersPage.test.jsx`: `pages/` (integración: rutas protegidas, sesión simulada y mock de MSW)
 
 ---
+## HU21 · Alta de administradores
+
+### Tabla A · HU21 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU21-CP01 | Crea el administrador en estado ACTIVO y con la contraseña cifrada | Unitario | 1 | ✅ Pasa |
+| HU21-CP02 | Rechaza la creación si el correo ya está registrado y no guarda nada | Unitario | 1 | ✅ Pasa |
+| HU21-CP03 | Delega a la política de contraseñas y rechaza una muy corta | Unitario | 1 | ✅ Pasa |
+| HU21-CP04 | Rechaza una contraseña que contiene el nombre del administrador | Unitario | 1 | ✅ Pasa |
+| HU21-CP05 | El factory method crea un administrador activo y sin datos de cliente | Unitario | 1 | ✅ Pasa |
+| HU21-CP06 | Crear administrador con datos correctos devuelve 201 | Integración (capa web) | 1 | ✅ Pasa |
+| HU21-CP07 | Crear administrador rechaza campos obligatorios vacíos devolviendo 400 | Integración (capa web) | 1 | ✅ Pasa |
+| HU21-CP08 | Usuarios sin rol ADMINISTRADOR no pueden crear administradores | Integración (capa web) | 1 | ✅ Pasa |
+| HU21-CP09 | Un administrador se lee sin datos de cliente ni consentimiento | Unitario | 1 | ✅ Pasa |
+
+Notas:
+- **Alta de administradores (AB#49):** Siguiendo el acuerdo con el frontend, la creación la realiza un administrador autenticado que establece manualmente la contraseña (opción "a" del documento `Contexto_frontend.md`).
+- **HU21-CP05:** Las cuentas con rol `ADMINISTRADOR` nacen directamente en estado `ACTIVO` porque la creación la realiza otro administrador ya verificado.
+- **HU21-CP06 y CP07:** El endpoint `POST /api/admin/admins` acepta los campos `sede` y `avatar` en el JSON para ser 100% compatible con la llamada de la API del frontend, aunque por ahora el backend los ignore al crear el dominio.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU21-CP01 | `CrearAdministradorServiceTest` | `creaAdministradorActivoYConContrasenaCifrada` | Aplicación | AB#49 | PR actual | ✅ |
+| HU21-CP02 | `CrearAdministradorServiceTest` | `rechazaEmailYaRegistrado` | Aplicación | AB#49 | PR actual | ✅ |
+| HU21-CP03 | `CrearAdministradorServiceTest` | `rechazaContrasenaMuyCorta` | Aplicación | AB#49 | PR actual | ✅ |
+| HU21-CP04 | `CrearAdministradorServiceTest` | `rechazaContrasenaConElNombre` | Aplicación | AB#49 | PR actual | ✅ |
+| HU21-CP05 | `UsuarioTest` | `creaAdministradorNuevoActivoYSinDatosCliente` | Dominio | AB#49 | PR actual | ✅ |
+| HU21-CP06 | `UsuarioControllerTest` | `crearAdministradorValidoDevuelve201` | Infraestructura | AB#49 | PR actual | ✅ |
+| HU21-CP07 | `UsuarioControllerTest` | `crearAdministradorRechazaCamposVacios` | Infraestructura | AB#49 | PR actual | ✅ |
+| HU21-CP08 | `UsuarioControllerTest` | `crearAdministradorRechazaNoAdministradores` | Infraestructura | AB#49 | PR actual | ✅ |
+| HU21-CP09 | `UsuarioDocumentMapperTest` | `unAdministradorSeLeeSinDatosDeClienteYConsentimiento` | Infraestructura | AB#49 | PR actual | ✅ |
+
+---
 
 ## HU20 · Consultar el detalle de un usuario
 
