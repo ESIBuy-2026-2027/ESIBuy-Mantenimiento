@@ -552,11 +552,22 @@ Rutas de los archivos de test (bajo `frontend/src/`):
 | HU21-CP07 | Crear administrador rechaza campos obligatorios vacíos devolviendo 400 | Integración (capa web) | 1 | ✅ Pasa |
 | HU21-CP08 | Usuarios sin rol ADMINISTRADOR no pueden crear administradores | Integración (capa web) | 1 | ✅ Pasa |
 | HU21-CP09 | Un administrador se lee sin datos de cliente ni consentimiento | Unitario | 1 | ✅ Pasa |
+| HU21-CP10 | Activar un vendedor pendiente lo deja activo y lo guarda | Unitario | 1 | 🔍 En revisión (AB#47, PR por abrir) |
+| HU21-CP11 | Desactivar un vendedor activo lo deja desactivado y lo guarda | Unitario | 1 | 🔍 En revisión (AB#47, PR por abrir) |
+| HU21-CP12 | Activar o desactivar a un usuario que no es vendedor falla como si no existiera y no guarda nada | Unitario | 2 | 🔍 En revisión (AB#47, PR por abrir) |
+| HU21-CP13 | Un administrador activa un vendedor y recibe sus datos con estado ACTIVO | Integración (capa web) | 1 | 🔍 En revisión (AB#47, PR por abrir) |
+| HU21-CP14 | Un administrador desactiva un vendedor y recibe sus datos con estado DESACTIVADO | Integración (capa web) | 1 | 🔍 En revisión (AB#47, PR por abrir) |
+| HU21-CP15 | Cambiar un vendedor a un estado que no es ACTIVO ni DESACTIVADO devuelve 400 y no cambia nada | Integración (capa web) | 1 | 🔍 En revisión (AB#47, PR por abrir) |
+| HU21-CP16 | Cambiar el estado de un usuario que no existe o no es vendedor devuelve 404 | Integración (capa web) | 1 | 🔍 En revisión (AB#47, PR por abrir) |
+| HU21-CP17 | Sin sesión o sin rol ADMINISTRADOR no se puede cambiar el estado de un vendedor | Integración (capa web) | 2 | 🔍 En revisión (AB#47, PR por abrir) |
+| HU21-CP18 | Guarda el avatar elegido como imagen de perfil del administrador | Unitario + integración (capa web) | 2 | 🔍 En revisión (AB#47, PR por abrir) |
 
 Notas:
 - **Alta de administradores (AB#49):** Siguiendo el acuerdo con el frontend, la creación la realiza un administrador autenticado que establece manualmente la contraseña (opción "a" del documento `Contexto_frontend.md`).
 - **HU21-CP05:** Las cuentas con rol `ADMINISTRADOR` nacen directamente en estado `ACTIVO` porque la creación la realiza otro administrador ya verificado.
-- **HU21-CP06 y CP07:** El endpoint `POST /api/admin/admins` acepta los campos `sede` y `avatar` en el JSON para ser 100% compatible con la llamada de la API del frontend, aunque por ahora el backend los ignore al crear el dominio.
+- **HU21-CP06 y CP07:** El endpoint `POST /api/admin/admins` acepta los campos `sede` y `avatar` en el JSON para ser 100% compatible con la llamada de la API del frontend. Desde la T47 (HU21-CP18) el `avatar` se guarda como imagen de perfil; la `sede` sigue sin guardarse (pendiente por decisión del equipo).
+- **HU21-CP10 a CP17 (AB#47):** activar y desactivar vendedores desde su supervisión con `PATCH /api/admin/sellers/{id}/status`, el contrato de `frontend/docs/hu21-alta-admin-y-vendedores.md`, que hasta ahora solo respondía el mock. Solo cambia el estado de un vendedor: otro usuario devuelve 404, como la ficha de la HU26. Casos propuestos, pendientes de confirmar con el equipo y de añadir a Azure Boards.
+- **HU21-CP18 (AB#47):** caso propuesto, pendiente de confirmar con el equipo y de añadir a Azure Boards.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -571,6 +582,18 @@ Notas:
 | HU21-CP07 | `UsuarioControllerTest` | `crearAdministradorRechazaCamposVacios` | Infraestructura | AB#49 | PR actual | ✅ |
 | HU21-CP08 | `UsuarioControllerTest` | `crearAdministradorRechazaNoAdministradores` | Infraestructura | AB#49 | PR actual | ✅ |
 | HU21-CP09 | `UsuarioDocumentMapperTest` | `unAdministradorSeLeeSinDatosDeClienteYConsentimiento` | Infraestructura | AB#49 | PR actual | ✅ |
+| HU21-CP10 | `AdministracionUsuariosServiceTest` | `activarVendedorPendienteLoDejaActivoYLoGuarda` | Aplicación | AB#47 | PR por abrir | 🔍 |
+| HU21-CP11 | `AdministracionUsuariosServiceTest` | `desactivarVendedorActivoLoDejaDesactivadoYLoGuarda` | Aplicación | AB#47 | PR por abrir | 🔍 |
+| HU21-CP12 | `AdministracionUsuariosServiceTest` | `activarVendedorDeOtroRolFalla` | Aplicación | AB#47 | PR por abrir | 🔍 |
+| HU21-CP12 | `AdministracionUsuariosServiceTest` | `desactivarVendedorDeOtroRolFalla` | Aplicación | AB#47 | PR por abrir | 🔍 |
+| HU21-CP13 | `UsuarioControllerTest` | `administradorActivaUnVendedorYRecibeSusDatos` | Infraestructura | AB#47 | PR por abrir | 🔍 |
+| HU21-CP14 | `UsuarioControllerTest` | `administradorDesactivaUnVendedorYRecibeSusDatos` | Infraestructura | AB#47 | PR por abrir | 🔍 |
+| HU21-CP15 | `UsuarioControllerTest` | `cambiarVendedorAUnEstadoNoAdmitidoDevuelve400` | Infraestructura | AB#47 | PR por abrir | 🔍 |
+| HU21-CP16 | `UsuarioControllerTest` | `cambiarEstadoDeUnNoVendedorDevuelve404` | Infraestructura | AB#47 | PR por abrir | 🔍 |
+| HU21-CP17 | `UsuarioControllerTest` | `cambiarEstadoDeVendedorSinSesionDevuelve401` | Infraestructura | AB#47 | PR por abrir | 🔍 |
+| HU21-CP17 | `UsuarioControllerTest` | `noAdministradorNoCambiaElEstadoDeUnVendedor` | Infraestructura | AB#47 | PR por abrir | 🔍 |
+| HU21-CP18 | `CrearAdministradorServiceTest` | `guardaElAvatarComoImagenDePerfil` | Aplicación | AB#47 | PR por abrir | 🔍 |
+| HU21-CP18 | `UsuarioControllerTest` | `crearAdministradorPasaElAvatar` | Infraestructura | AB#47 | PR por abrir | 🔍 |
 
 ---
 
