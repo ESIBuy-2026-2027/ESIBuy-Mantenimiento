@@ -2,6 +2,8 @@ package es.uclm.esibuy.backend.categorias.infrastructure.adapter.out.persistence
 
 import java.util.List;
 
+import org.springframework.data.domain.Sort;
+
 import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 
@@ -16,6 +18,8 @@ public class CategoriaMongoAdapter implements CategoriaRepositoryPort {
 
     @Override
     public List<Categoria> listar() {
-        return List.of();
+        return repository.findAll(Sort.by("nombre")).stream()
+                .map(documento -> new Categoria(documento.getId(), documento.getNombre()))
+                .toList();
     }
 }

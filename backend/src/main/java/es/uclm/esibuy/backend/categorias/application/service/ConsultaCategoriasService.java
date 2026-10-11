@@ -17,6 +17,6 @@ public class ConsultaCategoriasService implements ConsultaCategoriasUseCase {
 
     @Override
     public List<Categoria> listar() {
-        return List.of();
+        return categoriaRepository.listar();
     }
 }

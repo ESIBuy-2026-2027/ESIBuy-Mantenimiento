@@ -25,6 +25,6 @@ public class CategoriaController {
 
     @GetMapping
     public List<CategoriaResponse> listar() {
-        return List.of();
+        return consultaCategorias.listar().stream().map(CategoriaResponse::desde).toList();
     }
 }
