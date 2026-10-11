@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
 import java.util.List;
+import java.util.Map;
 
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
 
@@ -12,10 +13,10 @@ public record VendedorPageResponse(
         long totalPages
 ) {
 
-    static VendedorPageResponse desde(UsuarioPage pagina) {
+    static VendedorPageResponse desde(UsuarioPage pagina, Map<String, String> nombresDeCategorias) {
         long totalPages = (pagina.totalElementos() + pagina.tamano() - 1) / pagina.tamano();
         return new VendedorPageResponse(
-                pagina.usuarios().stream().map(VendedorResponse::desde).toList(),
+                pagina.usuarios().stream().map(usuario -> VendedorResponse.desde(usuario, nombresDeCategorias)).toList(),
                 pagina.pagina() + 1,
                 pagina.tamano(),
                 pagina.totalElementos(),

@@ -1,5 +1,10 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import es.uclm.esibuy.backend.categorias.application.port.in.ConsultaCategoriasUseCase;
+import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarClienteCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarVendedorCommand;
@@ -36,14 +41,18 @@ public class UsuarioController {
     private final RegistroUsuarioUseCase registroUsuario;
     private final ListadoUsuariosUseCase listadoUsuarios;
     private final AdministracionUsuariosUseCase administracionUsuarios;
-    private final CrearAdministradorUseCase crearAdministrador; 
+    private final CrearAdministradorUseCase crearAdministrador;
+    // Módulo de categorías, por su puerto de entrada: da el nombre de la categoría principal de un vendedor.
+    private final ConsultaCategoriasUseCase consultaCategorias;
 
     public UsuarioController(RegistroUsuarioUseCase registroUsuario, ListadoUsuariosUseCase listadoUsuarios,
-            AdministracionUsuariosUseCase administracionUsuarios, CrearAdministradorUseCase crearAdministrador) {
+            AdministracionUsuariosUseCase administracionUsuarios, CrearAdministradorUseCase crearAdministrador,
+            ConsultaCategoriasUseCase consultaCategorias) {
         this.registroUsuario = registroUsuario;
         this.listadoUsuarios = listadoUsuarios;
         this.administracionUsuarios = administracionUsuarios;
         this.crearAdministrador = crearAdministrador;
+        this.consultaCategorias = consultaCategorias;
     }
 
     @PostMapping("/auth/register/cliente")   // contrato acordado con el frontend (T229)
@@ -126,14 +135,20 @@ public class UsuarioController {
             throw new IllegalArgumentException("La página y el tamaño deben ser positivos");
         }
         return VendedorPageResponse.desde(listadoUsuarios.listar(new ListarUsuariosQuery(
-                search, Rol.VENDEDOR, status, page - 1, size, orden(sort), "desc".equals(order))));
+                search, Rol.VENDEDOR, status, page - 1, size, orden(sort), "desc".equals(order))),
+                nombresDeCategorias());
     }
 
     // Ficha de un vendedor (HU26). 404 si no existe o no es vendedor.
     // PENDIENTE: /admin/sellers/{id}/products y /orders, cuando existan los productos y los pedidos.
     @GetMapping("/admin/sellers/{id}")
     public VendedorResponse consultarVendedor(@PathVariable String id) {
-        return VendedorResponse.desde(administracionUsuarios.consultarVendedor(id));
+        return VendedorResponse.desde(administracionUsuarios.consultarVendedor(id), nombresDeCategorias());
+    }
+
+    // Nombre de cada categoría por su identificador, para traducir la categoría principal de los vendedores.
+    private Map<String, String> nombresDeCategorias() {
+        return consultaCategorias.listar().stream().collect(Collectors.toMap(Categoria::id, Categoria::nombre));
     }
 
     private static ListarUsuariosQuery.Orden orden(String sort) {
