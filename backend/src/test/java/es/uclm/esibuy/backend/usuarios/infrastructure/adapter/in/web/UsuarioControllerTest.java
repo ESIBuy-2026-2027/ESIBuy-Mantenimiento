@@ -1213,4 +1213,18 @@ class UsuarioControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_FIELD"));
     }
+
+    @Test
+    @DisplayName("HU1-CP22: un error de validación del formulario devuelve 400 con INVALID_FIELD y mensaje genérico")
+    void errorDeValidacionDelFormularioDevuelve400ConInvalidField() throws Exception {
+        // La capa web (@Valid) rechaza el nombre vacío antes del caso de uso: también con el formato de error de la API
+        String cuerpo = json("juan@uclm.es", "Clave-1234").replace("\"nombre\": \"Juan\"", "\"nombre\": \"\"");
+
+        mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(cuerpo))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_FIELD"))
+                .andExpect(jsonPath("$.mensaje").value("Datos de registro no válidos"));
+
+        verify(registroUsuario, never()).registrarCliente(any());
+    }
 }
