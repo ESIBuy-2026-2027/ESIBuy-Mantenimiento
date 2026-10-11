@@ -147,6 +147,8 @@ Se sacaron del registro (HU1) para que el registro y el alta de administradores 
 
 **El frontend se ha desarrollado y probado con mocks (MSW).** Las rutas y formatos de esta sección los ha definido el frontend para poder comprobar las pantallas. Si al unirlo con el backend hay diferencias, se ajustará el frontend.
 
+**Estado en el backend (11 de octubre de 2026, AB#47):** los dos endpoints existen en el backend con este contrato. El cambio de estado de un vendedor ya no depende solo del mock y el alta de administradores guarda el avatar. No se ha probado todavía el flujo completo en el navegador contra el backend real.
+
 ### Cambiar el estado de un vendedor
 
 `PATCH /api/admin/sellers/{id}/status`
@@ -160,6 +162,8 @@ Se sacaron del registro (HU1) para que el registro y el alta de administradores 
 | 200 + datos del vendedor | Estado cambiado |
 | 400 | Estado no admitido (solo `ACTIVO` o `DESACTIVADO`) |
 | 401 / 403 / 404 / 5xx | Mensaje de error; el estado no cambia |
+
+En el backend, el 404 también se devuelve si el usuario existe pero no es un vendedor, como en la ficha de la HU26. La respuesta 200 trae la misma ficha que `GET /api/admin/sellers/{id}`.
 
 ### Crear un administrador
 
@@ -181,6 +185,8 @@ Se sacaron del registro (HU1) para que el registro y el alta de administradores 
 | 201 | Administrador creado |
 | 409 + `{ "code": "EMAIL_ALREADY_REGISTERED" }` | "Este email ya está registrado" |
 | 401 / 403 / 5xx | Mensaje de error genérico |
+
+En el backend, el `avatar` se guarda como imagen de perfil del administrador. La `sede` se acepta pero todavía no se guarda (pendiente por decisión del equipo).
 
 ### Listar los administradores
 
