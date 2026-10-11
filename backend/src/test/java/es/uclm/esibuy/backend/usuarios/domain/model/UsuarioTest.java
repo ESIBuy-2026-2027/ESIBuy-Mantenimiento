@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -388,5 +389,25 @@ class UsuarioTest {
                 () -> Usuario.nuevoCliente(DATOS_PERSONALES, EMAIL, HASH, nacidoHace17Anos, CONSENTIMIENTO, HOY));
 
         assertEquals(MotivoRechazo.MENOR_DE_EDAD, excepcion.getMotivo());
+    }
+
+    // Fallos de la demo del Sprint 1: el contador de intentos fallidos no se reiniciaba nunca.
+
+    @Test
+    @DisplayName("HU2-CP26: tras caducar el bloqueo, el contador de intentos empieza de cero")
+    void trasCaducarElBloqueoElContadorEmpiezaDeCero() {
+        Usuario usuario = cliente();
+        Instant ahora = Instant.parse("2026-10-12T10:00:00Z");
+        for (int i = 0; i < 5; i++) {
+            usuario.registrarIntentoFallido(ahora);
+        }
+        assertTrue(usuario.tieneBloqueoPorIntentos(ahora));
+
+        // 16 minutos después el bloqueo de 15 ha caducado: un fallo más es el primero de una serie nueva
+        Instant masTarde = ahora.plus(Duration.ofMinutes(16));
+        usuario.registrarIntentoFallido(masTarde);
+
+        assertEquals(1, usuario.getIntentosFallidos());
+        assertFalse(usuario.tieneBloqueoPorIntentos(masTarde));
     }
 }
