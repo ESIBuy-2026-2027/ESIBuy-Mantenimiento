@@ -210,7 +210,6 @@ describe('updateUser', () => {
 
 describe('PUT /api/admin/usuarios/{id} con el mock (HU22)', () => {
   const datosDeCliente = {
-    rol: 'CLIENTE',
     nombre: 'Elena',
     apellidos: 'Pérez',
     dni: '12345678Z',
@@ -220,87 +219,53 @@ describe('PUT /api/admin/usuarios/{id} con el mock (HU22)', () => {
     avatar: 'avatar1',
   }
 
-  it('updateUser_conElMock_unAdministradorNoPuedeCambiarSuPropioRol', async () => {
+  const datosDeVendedor = {
+    nombre: 'Vicente',
+    apellidos: 'Vacío',
+    nombreComercial: 'Casa Vicente',
+    nif: 'B12345602',
+    categoriaPrincipalId: 'cat-2',
+  }
+
+  it('updateUser_conElMock_unAdministradorPuedeEditarSusPropiosDatos', async () => {
     await abrirSesionPorApi('admin@esibuy.test')
 
-    const error = await updateUser('u-1', datosDeCliente).catch((excepcion) => excepcion)
-
-    expect(error).toMatchObject({ status: 409, code: 'CANNOT_CHANGE_OWN_ROLE' })
-  })
-
-  it('updateUser_conElMock_unAdministradorSiPuedeEditarSusPropiosDatosSinCambiarElRol', async () => {
-    await abrirSesionPorApi('admin@esibuy.test')
-
-    const respuesta = await updateUser('u-1', {
-      rol: 'ADMINISTRADOR',
-      nombre: 'Adela',
-      apellidos: 'Admin',
-      sede: 'Toledo',
-      avatar: 'avatar2',
-    })
+    const respuesta = await updateUser('u-1', { nombre: 'Adela', apellidos: 'Admin', sede: 'Toledo', avatar: 'avatar2' })
 
     expect(respuesta).toMatchObject({ rol: 'ADMINISTRADOR', nombre: 'Adela' })
   })
 
-  it('updateUser_conElMock_unRolInexistenteDevuelve400', async () => {
+  // El rol de una cuenta no se puede cambiar ("el que nace cliente muere cliente"): como el backend, se ignora.
+  it('updateUser_conElMock_elRolDelCuerpoSeIgnora', async () => {
     await abrirSesionPorApi('admin@esibuy.test')
 
-    const error = await updateUser('usr-3', { ...datosDeCliente, rol: 'SUPERUSUARIO' }).catch((e) => e)
+    const respuesta = await updateUser('usr-3', { ...datosDeCliente, rol: 'ADMINISTRADOR' })
 
-    expect(error).toMatchObject({ status: 400 })
+    expect(respuesta).toMatchObject({ rol: 'CLIENTE', nombre: 'Elena', dni: '12345678Z' })
   })
 
-  it('updateUser_conElMock_unClientePendientePasaAAdministradorYQuedaActivo', async () => {
-    await abrirSesionPorApi('admin@esibuy.test')
-    expect((await getUser('usr-25')).estado).toBe('PENDIENTE')
-
-    const respuesta = await updateUser('usr-25', {
-      rol: 'ADMINISTRADOR',
-      nombre: 'Gonzalo',
-      apellidos: 'Ibáñez Roca',
-      sede: '',
-      avatar: '',
-    })
-
-    expect(respuesta).toMatchObject({ rol: 'ADMINISTRADOR', estado: 'ACTIVO' })
-  })
-
-  it('updateUser_conElMock_unVendedorQuePasaAClienteDejaDeSerVendedor', async () => {
+  it('updateUser_conElMock_unVendedorConOtroRolEnElCuerpoSigueSiendoVendedor', async () => {
     await abrirSesionPorApi('admin@esibuy.test')
 
-    await updateUser('u-5', { ...datosDeCliente, nombre: 'Vicente', apellidos: 'Vacío' })
+    await updateUser('u-5', { ...datosDeVendedor, rol: 'CLIENTE', nombreComercial: 'Casa Vicente Nueva' })
 
-    expect((await getUser('u-5')).rol).toBe('CLIENTE')
-    const error = await request('/api/admin/sellers/u-5').catch((excepcion) => excepcion)
-    expect(error).toMatchObject({ status: 404 })
+    expect(await request('/api/admin/sellers/u-5')).toMatchObject({ nombreComercial: 'Casa Vicente Nueva' })
   })
 
   it('updateUser_conElMock_unNombreComercialRepetidoDevuelve409', async () => {
     await abrirSesionPorApi('admin@esibuy.test')
 
-    const error = await updateUser('usr-3', {
-      rol: 'VENDEDOR',
-      nombre: 'Carlos',
-      apellidos: 'Moreno Gil',
-      nombreComercial: 'Casa Vicente',
-      nif: 'B12345678',
-      categoriaPrincipalId: 'cat-1',
-    }).catch((excepcion) => excepcion)
+    const error = await updateUser('u-5', { ...datosDeVendedor, nombreComercial: 'TecnoVera' }).catch(
+      (excepcion) => excepcion,
+    )
 
     expect(error).toMatchObject({ status: 409, code: 'COMMERCIAL_NAME_ALREADY_REGISTERED' })
   })
 
-  it('updateUser_conElMock_unDatoInvalidoDelRolDestinoDevuelve400', async () => {
+  it('updateUser_conElMock_unDatoInvalidoDelRolDeLaCuentaDevuelve400', async () => {
     await abrirSesionPorApi('admin@esibuy.test')
 
-    const error = await updateUser('usr-3', {
-      rol: 'VENDEDOR',
-      nombre: 'Carlos',
-      apellidos: 'Moreno Gil',
-      nombreComercial: '',
-      nif: 'ABC',
-      categoriaPrincipalId: 'no-existe',
-    }).catch((excepcion) => excepcion)
+    const error = await updateUser('u-5', { ...datosDeVendedor, nif: 'ABC' }).catch((excepcion) => excepcion)
 
     expect(error).toMatchObject({ status: 400 })
   })
