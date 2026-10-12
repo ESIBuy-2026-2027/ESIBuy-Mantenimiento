@@ -61,6 +61,7 @@ En la demo del Sprint 1 se vieron tres fallos del registro, corregidos con TDD e
 | Cuando el backend rechazaba los datos (por ejemplo, una contraseña con el nombre o un DNI repetido), el formulario no decía por qué, o marcaba el email aunque el problema fuera el DNI | El backend indica el motivo con un `code` (PR #104) y `features/account/registroErrors.js` lo traduce al campo que hay que marcar y a su mensaje (sección 5). Si el error no tiene campo, aparece un mensaje general encima del botón **Registrarse** |
 | Tras registrarse no había forma de ir al login | La pantalla **Cuenta creada** tiene un botón **Ir a iniciar sesión** |
 | Con la sesión iniciada, la home seguía ofreciendo **Crear mi cuenta** y `/register` mostraba el formulario | La home solo muestra **Crear mi cuenta** sin sesión, y `/register` lleva a la página de inicio del rol (`auth/GuestOnlyRoute.jsx`) |
+| Contra el backend real, un registro correcto mostraba «No se ha podido completar la operación» aunque la cuenta se creaba | El backend responde **201 sin cuerpo** y `api/client.js` lo leía como JSON. Ahora una respuesta sin cuerpo devuelve `null`. El mock del registro responde igual que el backend, para que no vuelva a esconder la diferencia |
 
 `registroErrors.js` lo comparten el registro, el alta de administrador (HU21) y la edición de usuarios (HU22), para que los tres formularios traduzcan los errores igual.
 
@@ -124,7 +125,7 @@ Todas las rutas son relativas a `frontend/src/`.
 |---|---|
 | `api/auth.js` | `registrarCliente(datos)` y `registrarVendedor(datos)`. |
 | `api/products.js` | `getCategories()`, compartida con el listado de productos del vendedor (HU32). |
-| `mocks/registroHandlers.js` | Simula los dos endpoints de registro: crea la cuenta o responde 409 si el email o el nombre comercial ya existen. Nunca guarda el password. |
+| `mocks/registroHandlers.js` | Simula los dos endpoints de registro: crea la cuenta (201 sin cuerpo, como el backend) o responde 409 si el email o el nombre comercial ya existen. Nunca guarda el password. |
 | `mocks/authHandlers.js` | Exporta `USUARIOS` para que el mock del registro sepa qué emails ya existen. |
 | `mocks/handlers.js` | Registra los handlers del registro. |
 
@@ -168,7 +169,7 @@ Cuerpo (JSON): el objeto completo del formulario.
 
 | Respuesta | Significado para el frontend |
 |---|---|
-| 201 | Cuenta creada: se muestra la confirmación. La cuenta queda en `PENDIENTE` hasta que un administrador la active (task AB#234) |
+| 201 (sin cuerpo) | Cuenta creada: se muestra la confirmación. La cuenta queda en `PENDIENTE` hasta que un administrador la active (task AB#234) |
 | 409 + `{ "code": "EMAIL_ALREADY_REGISTERED" }` | "Este email ya está registrado" |
 | 409 + `{ "code": "DNI_ALREADY_REGISTERED" }` | "Este DNI ya está registrado" |
 | 409 + `{ "code": "COMMERCIAL_NAME_ALREADY_REGISTERED" }` | "Este nombre comercial ya está registrado" (solo vendedor) |
@@ -221,7 +222,7 @@ npm run build
 
 Los tests sustituyen `api/auth` y `api/products` con `vi.mock`, así que no dependen de los mocks de MSW.
 
-**Fallos de la demo del Sprint 1** (con TDD; casos HU1-CP23 a CP25 de la matriz):
+**Fallos de la demo del Sprint 1** (con TDD; casos HU1-CP23 a CP26 de la matriz):
 
 | Archivo | Tests | Qué cubre |
 |---|---|---|
@@ -229,6 +230,7 @@ Los tests sustituyen `api/auth` y `api/products` con `vi.mock`, así que no depe
 | `pages/Register.test.jsx` | 5 nuevos y 1 cambiado | Contraseña con datos personales, DNI repetido en cliente y en vendedor, error sin campo y botón **Ir a iniciar sesión**. El test del email repetido ahora envía su `code` |
 | `pages/Home.test.jsx` | 1 nuevo | Con la sesión iniciada no se ofrece **Crear mi cuenta** |
 | `auth/GuestOnlyRoute.test.jsx` (nuevo) | 2 | Con sesión, `/register` lleva a la página del rol; sin sesión, muestra el formulario |
+| `api/client.test.js` | 1 nuevo | Una respuesta 201 sin cuerpo devuelve `null` en lugar de un error |
 
 **Task AB#234** (con TDD: primero los tests en rojo y después el código):
 
@@ -272,5 +274,5 @@ Este documento y el trabajo técnico que describe se hicieron con ayuda de un as
 - **Cómo se comprobó:** en cada ciclo se ejecutaron los tests (129 en verde al final), ESLint sin errores y el build de producción. La pantalla se revisó en el navegador con los mocks.
 - **Qué NO se comprobó:** el flujo contra un backend real. El contrato de la sección 5 debe acordarse con el backend.
 - **Task AB#234:** la IA escribió los tests, el código, los datos del mock y los cambios en la documentación, e hizo los commits a petición del equipo. El equipo decidió que toda cuenta nueva quede pendiente, el texto de la pantalla, que la ficha ofrezca Activar como en vendedores y que el administrador pendiente sea solo un dato del mock. Se comprobó con los tests (los archivos afectados, en verde), ESLint y el build.
-- **Fallos de la demo del Sprint 1:** la IA escribió los tests y el código de cada ciclo, y los cambios en este documento. El equipo decidió qué fallos se corregían, que fueran en una rama `fix` sin tasks nuevas y que tras el registro hubiera un botón y no una redirección. Se comprobó con la suite completa (591 tests en verde), ESLint y el build.
+- **Fallos de la demo del Sprint 1:** la IA escribió los tests y el código de cada ciclo, y los cambios en este documento. El equipo decidió qué fallos se corregían, que fueran en una rama `fix` sin tasks nuevas y que tras el registro hubiera un botón y no una redirección. Se comprobó con la suite completa (592 tests en verde), ESLint y el build.
 - **Revisión humana:** el código fue revisado, ejecutado y validado por el equipo antes de su integración. Revisado por: Alejandro.
