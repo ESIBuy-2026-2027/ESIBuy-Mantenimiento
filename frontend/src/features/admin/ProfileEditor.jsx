@@ -14,6 +14,7 @@ import {
 import { Save20Regular } from '@fluentui/react-icons'
 import { categoryPropType } from '../../utils/propTypes'
 import AvatarSelector from '../account/AvatarSelector'
+import { erroresDelServidor } from '../account/registroErrors'
 import { TIPOS_CLIENTE, initialValues, profileFieldsFor, profilePayload, validateProfile } from './profileFields'
 
 const useStyles = makeStyles({
@@ -37,11 +38,6 @@ const useStyles = makeStyles({
     gap: tokens.spacingHorizontalM,
   },
 })
-
-// Errores del backend que se muestran junto al campo que los provoca.
-const ERRORES_DE_CAMPO = {
-  COMMERCIAL_NAME_ALREADY_REGISTERED: ['nombreComercial', 'Este nombre comercial ya está registrado'],
-}
 
 const MENSAJE_GENERICO = 'No se han podido guardar los cambios. Inténtalo de nuevo.'
 const PLACEHOLDER_OPCION = 'Elige una opción'
@@ -82,8 +78,10 @@ export default function ProfileEditor({ rol, usuario, categories = [], save, onS
       await save(payload)
       onSaved(payload)
     } catch (error) {
-      const [field, message] = ERRORES_DE_CAMPO[error?.code] ?? []
-      if (field) setServerErrors({ [field]: message })
+      // Los errores del backend con campo (nombre comercial o DNI repetidos, formatos…) se muestran junto a él
+      // (PR #104); el resto, con el mensaje genérico
+      const { campos } = erroresDelServidor(error)
+      if (campos) setServerErrors(campos)
       else setSaveError(MENSAJE_GENERICO)
       setSaving(false)
     }

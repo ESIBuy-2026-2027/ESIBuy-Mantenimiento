@@ -69,7 +69,7 @@ flowchart TD
     E -- Corrige un campo --> F[Se revalida en vivo]
     F --> D
     D -- Sí --> G[PUT al backend]
-    G -- 409 nombre comercial repetido --> H[Error junto al campo, sigue en edición]
+    G -- 400 o 409 con un code de campo --> H[Error junto al campo, sigue en edición]
     G -- Otro error --> I[Mensaje genérico, conserva lo escrito]
     H --> C
     I --> C
@@ -99,6 +99,7 @@ Todas las rutas son relativas a `frontend/src/`.
 
 | Archivo | Qué hace |
 |---|---|
+| `features/account/registroErrors.js` | `erroresDelServidor(error)`: traduce el `code` de un 400 o 409 del backend al campo y su mensaje, igual que en el registro (fallos de la demo del Sprint 1; ver `docs/hu1-registro.md`, sección 1.2). |
 | `features/account/accountRules.js` | `esDniValido`, `esTelefonoValido` y `esMayorDeEdad`, que antes estaban dentro del registro. `pages/Register.jsx` las usa desde aquí. |
 | `api/users.js` | `updateUser(userId, datos)`: **una sola llamada para los tres tipos de usuario**. |
 | `api/adminSellers.js` | Ya no tiene función de edición: los vendedores se editan con `updateUser`. |
@@ -135,7 +136,7 @@ Todas las rutas son relativas a `frontend/src/`.
 - **No viajan datos que no se pueden cambiar:** nunca se envían el email (de ningún rol), el rol, la fecha de incorporación, el estado ni la contraseña (`profilePayload` solo incluye los campos modificables del rol de la cuenta). Si el backend recibiera uno, debe ignorarlo o rechazarlo.
 - **El rol no se puede cambiar:** el frontend no lo envía y el backend lo ignora aunque llegue.
 - **No existe campo de contraseña** en ninguna ficha, ni en lectura ni en edición.
-- **Los errores del servidor no se muestran tal cual,** solo mensajes fijos.
+- **Los errores del servidor no se muestran tal cual,** solo mensajes fijos: junto al campo si el `code` lo indica, o uno genérico.
 
 ---
 
@@ -169,9 +170,10 @@ El email y el rol no viajan nunca. El backend (AB#43) ignora el `rol` si llega e
 | Respuesta | Significado para el frontend |
 |---|---|
 | 200 + datos del usuario | Guardado. La ficha se recarga |
-| 400 (`VALIDATION_ERROR`) | Mensaje genérico |
+| 400 con un `code` de campo (`INVALID_DNI`, `INVALID_PHONE`, `UNDERAGE`...) | El motivo, junto a su campo (los mismos códigos que el registro, `docs/hu1-registro.md`, sección 5) |
+| 400 con otro `code` (`VALIDATION_ERROR`, `INVALID_FIELD`...) | Mensaje genérico |
 | 409 + `{ "code": "COMMERCIAL_NAME_ALREADY_REGISTERED" }` | "Este nombre comercial ya está registrado" (junto al campo) |
-| 409 + `{ "code": "DNI_ALREADY_REGISTERED" }` | Mensaje genérico (otra cuenta del mismo rol tiene ese DNI) |
+| 409 + `{ "code": "DNI_ALREADY_REGISTERED" }` | "Este DNI ya está registrado" (junto al campo; otra cuenta del mismo rol tiene ese DNI) |
 | 401 / 403 / 404 / 5xx | Mensaje genérico |
 
 ### Qué debe imponer el backend
@@ -231,6 +233,8 @@ Esta rama pasa de 518 a 590 tests (74 nuevos y 2 menos, los de la función de ed
 
 Se ajustaron tests existentes de la HU19 (con los datos nuevos hay 4 cuentas pendientes, no 5, porque ya no hay ningún administrador pendiente).
 
+**Fallos de la demo del Sprint 1:** un test nuevo en `features/admin/ProfileEditor.test.jsx`, `HU22-CP16: un DNI ya registrado se marca en el DNI` (antes salía el mensaje genérico). Es el único test del frontend de la HU22 que ya está en la matriz.
+
 **AB#43 (edición del vendedor, 571 tests):** los tests del vendedor usan `dni` en lugar de `nif` (con la validación del DNI del cliente) y esperan el teléfono y la imagen en el formulario, en el cuerpo y en el mock. La ficha del vendedor tiene 10 campos en lugar de 8.
 
 ---
@@ -253,8 +257,7 @@ Se ajustaron tests existentes de la HU19 (con los datos nuevos hay 4 cuentas pen
 - **"He olvidado mi contraseña"** es la única vía de cambio de contraseña para los tres tipos de usuario, pero **esa pantalla todavía no existe** (el login no tiene el enlace). Hasta entonces, nadie puede cambiar su contraseña.
 - **Vendedores anteriores al registro de vendedores (T241):** no tienen nombre comercial, DNI ni categoría; la primera vez que se editan hay que rellenarlos.
 - **Categorías:** si la colección `categorias` de MongoDB está vacía, el formulario del vendedor (y el del registro) no tiene categorías que elegir.
-- **El DNI repetido** muestra el mensaje genérico, no uno junto al campo.
-- **Matriz de trazabilidad:** los casos de la HU22 (`HU22-CPnn`) de la matriz solo trazan los tests del backend; los tests del frontend (AB#46) todavía no están en `docs/calidad/matriz-trazabilidad.md`.
+- **Matriz de trazabilidad:** los casos de la HU22 (`HU22-CPnn`) de la matriz solo trazan los tests del backend; los tests del frontend (AB#46), salvo el HU22-CP16 de los fallos de la demo, todavía no están en `docs/calidad/matriz-trazabilidad.md`.
 - Aspecto visual sin revisar en un navegador real (ver la sección 10).
 
 ---
@@ -268,4 +271,5 @@ Este documento y el trabajo técnico que describe se hicieron con ayuda de un as
 - **Cómo se comprobó:** se ejecutaron los **590 tests (todos en verde)**, ESLint sin errores y un build de producción correcto. Tras la AB#43, **571 tests en verde**, ESLint sin errores y build correcto.
 - **Qué NO se comprobó:** la pantalla en un navegador real ni su aspecto visual (por ejemplo, el contraste entre campos modificables y de solo lectura), ni el flujo contra un backend real. El contrato de la sección 6 debe acordarse con el backend.
 - **Cómo guió el proceso:** el asistente siguió el flujo de ramas y commits del proyecto (refactor, mocks, código, tests y documentación en commits separados, con los AB# de las tasks).
+- **Fallos de la demo del Sprint 1:** la IA escribió con TDD el test HU22-CP16 y el cambio para que la edición marque en su campo los errores del backend (con el módulo compartido con el registro), y actualizó este documento. El equipo decidió qué fallos se corregían. Suite completa: **591 tests en verde**, ESLint sin errores y build correcto.
 - **Revisión humana:** el código fue revisado, ejecutado y validado por el equipo antes de su integración. Revisado por: Ricardo.

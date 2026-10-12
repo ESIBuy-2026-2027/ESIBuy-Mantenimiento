@@ -26,6 +26,15 @@ describe('request', () => {
     expect(resultado).toBeNull()
   })
 
+  // Fallos de la demo del Sprint 1: el backend responde al registro con un 201 sin cuerpo
+  it('HU1-CP26: una respuesta 201 sin cuerpo devuelve null', async () => {
+    server.use(http.post('/api/auth/register/cliente', () => new HttpResponse(null, { status: 201 })))
+
+    const resultado = await request('/api/auth/register/cliente', { method: 'POST', body: { email: 'a@b.es' } })
+
+    expect(resultado).toBeNull()
+  })
+
   it('request_conBody_enviaJsonYCookies', async () => {
     let recibido
     server.use(

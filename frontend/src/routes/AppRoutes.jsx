@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom'
+import GuestOnlyRoute from '../auth/GuestOnlyRoute'
 import ProtectedRoute from '../auth/ProtectedRoute'
 import { ROLES } from '../auth/roles'
 import AppLayout from '../components/AppLayout'
@@ -23,7 +24,9 @@ export default function AppRoutes() {
 
       <Route element={<AppLayout />}>
         <Route path={PATHS.HOME} element={<Home />} />
-        <Route path={PATHS.REGISTER} element={<Register />} />
+        <Route element={<GuestOnlyRoute />}>
+          <Route path={PATHS.REGISTER} element={<Register />} />
+        </Route>
         <Route path={PATHS.PRODUCTS} element={<ProductsPage />} />
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>

@@ -20,6 +20,7 @@ import { usePageStyles } from '../components/pageStyles'
 import AvatarSelector from '../features/account/AvatarSelector'
 import { PasswordField, PasswordRequirements } from '../features/account/PasswordField'
 import { esEmailValido, validarPasswords } from '../features/account/accountRules'
+import { erroresDelServidor } from '../features/account/registroErrors'
 import { PATHS } from '../routes/paths'
 
 const OBLIGATORIOS = ['nombre', 'apellidos', 'email', 'password', 'repeticionPassword']
@@ -97,8 +98,10 @@ export default function AdminNewAdminPage() {
       await createAdmin({ nombre, apellidos, email, sede, avatar, password })
       setCreado(`${nombre} ${apellidos}`)
     } catch (error) {
-      if (error.status === 409) {
-        setErrores({ email: 'Este email ya está registrado' })
+      // El backend indica con un code qué dato rechaza (PR #104): se marca en su campo; si no, el mensaje genérico
+      const { campos } = erroresDelServidor(error)
+      if (campos) {
+        setErrores(campos)
       } else {
         setErrorServidor(true)
       }

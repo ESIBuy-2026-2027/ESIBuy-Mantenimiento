@@ -512,7 +512,8 @@ describe('Register', () => {
   })
 
   it('register_siElEmailYaEstaRegistrado_muestraErrorEnElCampoEmail', async () => {
-    registrarCliente.mockRejectedValue({ status: 409 })
+    // El backend acompaña cada 409 de su code (PR #104)
+    registrarCliente.mockRejectedValue({ status: 409, code: 'EMAIL_ALREADY_REGISTERED' })
     await renderYElegirCliente()
     await rellenarFormularioValido()
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
@@ -602,5 +603,60 @@ describe('Register', () => {
     expect(screen.getByText(/obligatorio/i)).toBeInTheDocument()
     expect(screen.queryByText(/no coinciden/i)).not.toBeInTheDocument()
     expect(registrarCliente).not.toHaveBeenCalled()
+  })
+
+  // Fallos de la demo del Sprint 1: el formulario marca en su campo el motivo que da el backend (PR #104)
+
+  it('HU1-CP23: una contraseña con datos personales se marca en el campo de la contraseña', async () => {
+    registrarCliente.mockRejectedValue({ status: 400, code: 'PASSWORD_CONTAINS_PERSONAL_DATA' })
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(await screen.findByText('La contraseña no puede contener tu nombre, tus apellidos ni tu email'))
+      .toBeInTheDocument()
+    expect(screen.getByLabelText(/^password/i)).toHaveAccessibleDescription(
+      'La contraseña no puede contener tu nombre, tus apellidos ni tu email'
+    )
+  })
+
+  it('HU1-CP23: un DNI ya registrado se marca en el DNI y no en el email', async () => {
+    registrarCliente.mockRejectedValue({ status: 409, code: 'DNI_ALREADY_REGISTERED' })
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(await screen.findByText('Este DNI ya está registrado')).toBeInTheDocument()
+    expect(screen.getByLabelText(/dni/i)).toHaveAccessibleDescription('Este DNI ya está registrado')
+    expect(screen.queryByText(/email ya está registrado/i)).not.toBeInTheDocument()
+  })
+
+  it('HU1-CP23: en el vendedor, un DNI ya registrado se marca en el DNI', async () => {
+    registrarVendedor.mockRejectedValue({ status: 409, code: 'DNI_ALREADY_REGISTERED' })
+    await renderYElegirVendedor()
+    await rellenarFormularioVendedorValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(await screen.findByText('Este DNI ya está registrado')).toBeInTheDocument()
+    expect(screen.getByLabelText(/dni/i)).toHaveAccessibleDescription('Este DNI ya está registrado')
+  })
+
+  it('HU1-CP23: un error sin campo muestra un mensaje general', async () => {
+    registrarCliente.mockRejectedValue({ status: 400, code: 'INVALID_FIELD' })
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(await screen.findByText('Revisa los datos del formulario')).toBeInTheDocument()
+  })
+
+  it('HU1-CP24: tras registrarse ofrece ir a iniciar sesión', async () => {
+    registrarCliente.mockResolvedValue({})
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    const enlace = await screen.findByRole('link', { name: /ir a iniciar sesión/i })
+    expect(enlace).toHaveAttribute('href', '/login')
   })
 })

@@ -5,6 +5,8 @@ import {
   Field,
   Input,
   Label,
+  MessageBar,
+  MessageBarBody,
   Radio,
   RadioGroup,
   Select,
@@ -17,8 +19,11 @@ import { BuildingShop24Regular, Cart24Regular } from '@fluentui/react-icons'
 import { useEffect, useState } from 'react'
 import { registrarCliente, registrarVendedor } from '../api/auth'
 import { getCategories } from '../api/products'
+import LinkButton from '../components/LinkButton'
 import AvatarSelector from '../features/account/AvatarSelector'
 import { PasswordField, PasswordRequirements } from '../features/account/PasswordField'
+import { erroresDelServidor } from '../features/account/registroErrors'
+import { PATHS } from '../routes/paths'
 import {
   esDniValido,
   esEmailValido,
@@ -55,16 +60,6 @@ const LONGITUD_MAXIMA = {
   repeticionPassword: 64,
 }
 
-const EMAIL_YA_REGISTRADO ='Este email ya está registrado'
-const NOMBRE_COMERCIAL_YA_REGISTRADO = 'Este nombre comercial ya está registrado'
-const ERRORES_VENDEDOR_YA_REGISTRADO = {
-  EMAIL_ALREADY_REGISTERED: { email: EMAIL_YA_REGISTRADO },
-  COMMERCIAL_NAME_ALREADY_REGISTERED: { nombreComercial: NOMBRE_COMERCIAL_YA_REGISTRADO },
-  EMAIL_AND_COMMERCIAL_NAME_ALREADY_REGISTERED: {
-    email: EMAIL_YA_REGISTRADO,
-    nombreComercial: NOMBRE_COMERCIAL_YA_REGISTRADO,
-  },
-}
 
 const useStyles = makeStyles({
   page: {
@@ -160,6 +155,7 @@ export default function Register() {
     aceptaPrivacidad: false,
   })
   const [errores, setErrores] = useState({})
+  const [errorGeneral, setErrorGeneral] = useState(null)
   const [registrado, setRegistrado] = useState(false)
   const [categoriasDisponibles, setCategoriasDisponibles] = useState([])
 
@@ -172,7 +168,15 @@ export default function Register() {
 
   const cambiarCategoria = (e, data) => setDatos({ ...datos, categoriaPrincipalId: data.value })
 
+  // El backend indica con un code qué dato rechaza (PR #104): se marca en su campo o, si no tiene, encima del botón
+  const mostrarErroresDelServidor = (error) => {
+    const { campos, general } = erroresDelServidor(error)
+    if (campos) setErrores(campos)
+    setErrorGeneral(general ?? null)
+  }
+
   const enviarCliente = async () => {
+    setErrorGeneral(null)
     const nuevosErrores = validarCamposComunes(datos, OBLIGATORIOS_CLIENTE)
     if (datos.fechaNacimiento && !esMayorDeEdad(datos.fechaNacimiento)) {
       nuevosErrores.fechaNacimiento = 'Debes ser mayor de edad para registrarte'
@@ -185,13 +189,12 @@ export default function Register() {
       await registrarCliente(sinTelefonoVacio(datos))
       setRegistrado(true)
     } catch (error) {
-      if (error.status === 409) {
-        setErrores({ email: EMAIL_YA_REGISTRADO })
-      }
+      mostrarErroresDelServidor(error)
     }
   }
 
   const enviarVendedor = async () => {
+    setErrorGeneral(null)
     const nuevosErrores = validarCamposComunes(datos, OBLIGATORIOS_VENDEDOR)
     if (!datos.categoriaPrincipalId) {
       nuevosErrores.categoriaPrincipalId = 'Elige una categoría'
@@ -204,9 +207,7 @@ export default function Register() {
       await registrarVendedor(sinTelefonoVacio(datos))
       setRegistrado(true)
     } catch (error) {
-      if (error.status === 409 && ERRORES_VENDEDOR_YA_REGISTRADO[error.code]) {
-        setErrores(ERRORES_VENDEDOR_YA_REGISTRADO[error.code])
-      }
+      mostrarErroresDelServidor(error)
     }
   }
 
@@ -224,10 +225,16 @@ export default function Register() {
   if (registrado) {
     return pantalla(
       'Cuenta creada',
-      <Text className={styles.description}>
-        Tu cuenta se ha creado correctamente y está pendiente de que un administrador la verifique.
-        Podrás iniciar sesión cuando esté activada.
-      </Text>
+      <>
+        <Text className={styles.description}>
+          Tu cuenta se ha creado correctamente y está pendiente de que un administrador la verifique.
+          Podrás iniciar sesión cuando esté activada.
+        </Text>
+        {/* Sin redirección automática, para que dé tiempo a leer el aviso (fallos de la demo del Sprint 1) */}
+        <LinkButton to={PATHS.LOGIN} appearance="primary">
+          Ir a iniciar sesión
+        </LinkButton>
+      </>
     )
   }
 
@@ -292,6 +299,11 @@ export default function Register() {
         </Field>
         {selectorAvatar}
         {casillaPrivacidad}
+        {errorGeneral && (
+          <MessageBar intent="error">
+            <MessageBarBody>{errorGeneral}</MessageBarBody>
+          </MessageBar>
+        )}
         <Button appearance="primary" size="large" onClick={enviarCliente}>
           Registrarse
         </Button>
@@ -320,6 +332,11 @@ export default function Register() {
         {camposComunes}
         {selectorAvatar}
         {casillaPrivacidad}
+        {errorGeneral && (
+          <MessageBar intent="error">
+            <MessageBarBody>{errorGeneral}</MessageBarBody>
+          </MessageBar>
+        )}
         <Button appearance="primary" size="large" onClick={enviarVendedor}>
           Registrarse
         </Button>

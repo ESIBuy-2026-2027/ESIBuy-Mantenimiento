@@ -26,16 +26,17 @@ const useStyles = makeStyles({
   },
 })
 
-// Campo de password obligatorio con un botón para mostrarlo u ocultarlo.
-export function PasswordField({ label, value, onChange, error, maxLength }) {
+// Campo de password (obligatorio por defecto) con un botón para mostrarlo u ocultarlo.
+export function PasswordField({ label, value, onChange, error, maxLength, autoComplete, required = true }) {
   const [visible, setVisible] = useState(false)
   const accion = visible ? 'Ocultar' : 'Mostrar'
 
   return (
-    <Field label={label} required validationMessage={error}>
+    <Field label={label} required={required} validationMessage={error}>
       <Input
         type={visible ? 'text' : 'password'}
         maxLength={maxLength}
+        autoComplete={autoComplete}
         value={value}
         onChange={onChange}
         contentAfter={
@@ -78,6 +79,9 @@ PasswordField.propTypes = {
   onChange: PropTypes.func.isRequired,
   error: PropTypes.string,
   maxLength: PropTypes.number,
+  // El login lo usa sin asterisco y con el autocompletado de la contraseña guardada (fallos de la demo del Sprint 1)
+  autoComplete: PropTypes.string,
+  required: PropTypes.bool,
 }
 
 PasswordRequirements.propTypes = {

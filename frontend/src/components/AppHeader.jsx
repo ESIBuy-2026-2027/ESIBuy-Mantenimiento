@@ -50,12 +50,18 @@ function GuestActions() {
   )
 }
 
-function UserActions({ isAdmin, onSignOut, disabled }) {
+function UserActions({ rol, onSignOut, disabled }) {
   return (
     <>
-      {isAdmin && (
+      {rol === ROLES.ADMIN && (
         <LinkButton to={PATHS.ADMIN} appearance="subtle">
           Panel de control
+        </LinkButton>
+      )}
+      {/* Fallos de la demo del Sprint 1: el vendedor no tenía acceso a sus productos desde el menú */}
+      {rol === ROLES.VENDEDOR && (
+        <LinkButton to={PATHS.SELLER_PRODUCTS} appearance="subtle">
+          Mis productos
         </LinkButton>
       )}
       <Button appearance="primary" icon={<ArrowExit20Regular />} onClick={onSignOut} disabled={disabled}>
@@ -84,14 +90,14 @@ export default function AppHeader() {
         ESI<span className={styles.logoAccent}>Buy</span>
       </Link>
       <nav className={styles.actions} aria-label="Cuenta">
-        {!loading && (user ? <UserActions isAdmin={user.rol === ROLES.ADMIN} onSignOut={handleSignOut} disabled={signingOut} /> : <GuestActions />)}
+        {!loading && (user ? <UserActions rol={user.rol} onSignOut={handleSignOut} disabled={signingOut} /> : <GuestActions />)}
       </nav>
     </header>
   )
 }
 
 UserActions.propTypes = {
-  isAdmin: PropTypes.bool.isRequired,
+  rol: PropTypes.string.isRequired,
   onSignOut: PropTypes.func.isRequired,
   disabled: PropTypes.bool.isRequired,
 }

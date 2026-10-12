@@ -121,7 +121,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | Archivo | Qué hace |
 |---|---|
 | `LoginForm.jsx` | Orquesta los tres pasos, controla el estado de envío y los errores. Solo avanza de paso cuando el backend responde bien. Si el backend indica cuenta pendiente, muestra `PendingAccountScreen`. |
-| `CredentialsStep.jsx` | Paso 1. Valida que haya correo y contraseña (todos los errores a la vez) y **vacía la contraseña del estado en cuanto se envía**. |
+| `CredentialsStep.jsx` | Paso 1. Valida que haya correo y contraseña (todos los errores a la vez) y **vacía la contraseña del estado en cuanto se envía**. La contraseña usa `PasswordField` (de `features/account/`, el mismo del registro), con un botón para mostrarla u ocultarla; aquí no se marca como obligatoria ni se muestran los requisitos. |
 | `CodeStep.jsx` | Pasos 2 y 3. Campo de código de 6 dígitos (se reutiliza para el correo y para Microsoft Authenticator): solo admite números y vacía el valor al enviarlo. |
 | `loginErrors.js` | Traduce los errores del backend a mensajes fijos para el usuario. `isPendingAccountError` detecta la cuenta pendiente, que no se muestra como mensaje sino con su propia pantalla. |
 | `PendingAccountScreen.jsx` | Pantalla animada de "cuenta pendiente de activación" (task AB#236). Recibe el correo y la función para volver. |
@@ -132,7 +132,7 @@ Todas las rutas son relativas a `frontend/src/`.
 
 | Archivo | Qué hace |
 |---|---|
-| `components/AppHeader.jsx` | Cabecera con el logo. Sin sesión muestra "Iniciar sesión" y "Registrarse"; con sesión, "Cerrar sesión". Mientras se comprueba la sesión no muestra ningún botón, para evitar parpadeos. |
+| `components/AppHeader.jsx` | Cabecera con el logo. Sin sesión muestra "Iniciar sesión" y "Registrarse"; con sesión, "Cerrar sesión", más "Panel de control" si es administrador (HU18) o "Mis productos" si es vendedor (HU15, fallos de la demo del Sprint 1). Mientras se comprueba la sesión no muestra ningún botón, para evitar parpadeos. |
 | `components/AppLayout.jsx` | Marco común: cabecera y contenido de la ruta. **La página de login queda fuera**, por lo que no lleva cabecera. |
 | `components/AppHeader.test.jsx` | Tests de la cabecera. |
 | `pages/LoginPage.jsx` | Página de login; redirige si ya hay sesión. |
@@ -226,7 +226,7 @@ Código del correo: `654321`. Código de Microsoft Authenticator: `123456`. Tras
 ### Qué probar en el navegador
 
 1. Con cada rol, completar los tres pasos y comprobar el destino (`/admin`, `/seller/products`, `/products`).
-2. Comprobar que, con sesión iniciada, la cabecera muestra solo "Cerrar sesión" y que al pulsarlo vuelve la home con los botones de invitado.
+2. Comprobar que, con sesión iniciada, la cabecera muestra "Cerrar sesión" (y "Mis productos" con el vendedor) y que al pulsarlo vuelve la home con los botones de invitado.
 3. Abrir `/admin` sin sesión (debe llevar al login) y con un cliente (debe llevar a `/products`).
 4. En F12 → Application, comprobar que **Local Storage y Session Storage están vacíos**.
 5. En F12 → Network, comprobar que la contraseña solo viaja en el cuerpo de `login`.
@@ -234,6 +234,7 @@ Código del correo: `654321`. Código de Microsoft Authenticator: `123456`. Tras
 7. Entrar con `pendiente@esibuy.test`: debe aparecer la pantalla animada con ese correo y sin pedir códigos. "Volver al inicio de sesión" devuelve el formulario vacío.
 8. Repetir el punto 7 con la contraseña mal escrita: debe salir el mensaje genérico, **no** la pantalla de cuenta pendiente.
 9. Activar en el sistema *reducir movimiento* y repetir el punto 7: la pantalla aparece sin animaciones.
+10. Pulsar el ojo del campo de la contraseña: se muestra y se vuelve a ocultar.
 
 ### Tests automáticos
 
@@ -249,8 +250,6 @@ npm run build
 
 - Falta el enlace "¿Has olvidado tu contraseña?" (no existe aún esa historia ni su ruta).
 - La página de login no tiene enlace para volver a la home.
-- Un usuario con sesión que visita la home sigue viendo la llamada "Crear mi cuenta".
-- La ruta `/register` aún no existe (la desarrolla otra persona del equipo).
 - Las rutas en inglés sustituyen a las que mencionaba HU15 (`/vendedor/productos`): `/seller/products`.
 - El login real depende de que el backend cumpla el contrato de la sección 5.
 - **Cuenta pendiente (AB#236):** la pantalla no se ha revisado en un navegador real (sí hay tests); el texto y los tres pasos son propuesta del frontend y conviene que el equipo los valide. No ofrece "reenviar la solicitud" ni contactar con nadie porque esa funcionalidad no existe.
@@ -267,4 +266,5 @@ Este documento y el trabajo técnico que describe se hicieron con ayuda de un as
 - **Qué NO se comprobó:** la app Microsoft Authenticator real, ni el flujo contra un backend real. Debe verificarse en el proyecto del equipo.
 - **Cómo guió el proceso:** el asistente propuso el orden de commits y ramas siguiendo las convenciones del proyecto, y explicó cada paso para aplicarlo a mano.
 - **Task AB#236:** la IA escribió la pantalla animada, el cambio en el formulario, el usuario pendiente del mock, los 5 tests y esta sección. La decisión de mostrar una pantalla (en lugar de un mensaje) tras pulsar "Continuar", que sea animada y dinámica y que no se haga push, fue del equipo. Suite completa: **523 tests en verde**, ESLint sin errores y build correcto.
+- **Fallos de la demo del Sprint 1:** la IA escribió con TDD el botón para mostrar la contraseña en el login (HU2-CP27, en `LoginFlow.test.jsx`) y el enlace "Mis productos" de la cabecera para el vendedor (HU15-CP04, en `AppHeader.test.jsx`), y actualizó este documento. Los tests del login buscan ahora el campo con `/^contraseña/i`, porque `/contraseña/i` también encontraba el botón "Mostrar contraseña". El equipo decidió qué fallos se corregían. Suite completa: **591 tests en verde**, ESLint sin errores y build correcto.
 - **Revisión humana:** el código fue revisado, ejecutado y validado por el equipo antes de su integración. Revisado por: Ricardo.
