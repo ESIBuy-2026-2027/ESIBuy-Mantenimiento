@@ -61,5 +61,7 @@ export async function request(path, { method = 'GET', body } = {}) {
     )
   }
 
-  return response.status === 204 ? null : response.json()
+  // Una respuesta sin cuerpo (204, o un 201 como el del registro) no es un error: devuelve null
+  const texto = await response.text()
+  return texto ? JSON.parse(texto) : null
 }
