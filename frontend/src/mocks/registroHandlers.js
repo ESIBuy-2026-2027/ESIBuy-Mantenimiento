@@ -3,15 +3,13 @@ import { USUARIOS } from './authHandlers'
 
 const emailsRegistrados = new Set(USUARIOS.map((usuario) => usuario.email))
 const nombresComercialesRegistrados = new Set(['Tienda Vera'])
-let siguienteId = USUARIOS.length + 1
 
 const conflicto = (code) => HttpResponse.json({ code }, { status: 409 })
 
-function crearUsuario(email, rol) {
+// Como el backend real: 201 sin cuerpo (fallos de la demo del Sprint 1)
+function crearUsuario(email) {
   emailsRegistrados.add(email)
-  const usuario = { id: `u-${siguienteId}`, email, rol }
-  siguienteId += 1
-  return HttpResponse.json(usuario, { status: 201 })
+  return new HttpResponse(null, { status: 201 })
 }
 
 export const registroHandlers = [
@@ -20,7 +18,7 @@ export const registroHandlers = [
     if (emailsRegistrados.has(email)) {
       return conflicto('EMAIL_ALREADY_REGISTERED')
     }
-    return crearUsuario(email, 'CLIENTE')
+    return crearUsuario(email)
   }),
 
   http.post('/api/auth/register/vendedor', async ({ request }) => {
@@ -39,6 +37,6 @@ export const registroHandlers = [
     }
 
     nombresComercialesRegistrados.add(nombreComercial)
-    return crearUsuario(email, 'VENDEDOR')
+    return crearUsuario(email)
   }),
 ]
