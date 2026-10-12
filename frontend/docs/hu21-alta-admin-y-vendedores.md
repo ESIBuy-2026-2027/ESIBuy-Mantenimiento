@@ -80,7 +80,7 @@ flowchart TD
     E --> D
     D -- No --> F[POST al backend]
     F -- 201 --> G[Administrador creado]
-    F -- 409 --> H[Email ya registrado]
+    F -- 400 o 409 con un code de campo --> H[Marca el campo con su motivo]
     F -- Otro error --> I[Mensaje de error genérico]
     G -- Ver administradores --> B
     G -- Crear otro administrador --> C
@@ -117,6 +117,7 @@ Se sacaron del registro (HU1) para que el registro y el alta de administradores 
 | `accountRules.js` | Requisitos del password, validación del email y comprobación de que los dos passwords coinciden. Desde la HU22 también valida DNI, teléfono y mayoría de edad. |
 | `PasswordField.jsx` | `PasswordField` (campo con botón para mostrar u ocultar) y `PasswordRequirements` (lista de requisitos con tick verde). |
 | `AvatarSelector.jsx` | Los tres avatares con iconos de animales. |
+| `registroErrors.js` | `erroresDelServidor(error)`: traduce el `code` de un 400 o 409 del backend al campo y su mensaje (fallos de la demo del Sprint 1; ver `docs/hu1-registro.md`, sección 1.2). |
 
 `pages/Register.jsx` usa ahora estas piezas, sin cambiar su comportamiento.
 
@@ -139,7 +140,7 @@ Se sacaron del registro (HU1) para que el registro y el alta de administradores 
 - **Confirmación obligatoria** antes de activar o desactivar a un vendedor.
 - **Misma política de password que el registro**, con los requisitos visibles desde el principio.
 - **El password no se guarda** ni en el navegador ni en el mock, y la repetición del password **no se envía** al backend.
-- **Los errores del servidor se muestran con un mensaje genérico,** sin detalles internos.
+- **Los errores del servidor no se muestran tal cual:** un 400 o 409 con un `code` conocido se marca en su campo con un mensaje fijo; el resto, con un mensaje genérico.
 
 ---
 
@@ -184,7 +185,9 @@ En el backend, el 404 también se devuelve si el usuario existe pero no es un ve
 |---|---|
 | 201 | Administrador creado |
 | 409 + `{ "code": "EMAIL_ALREADY_REGISTERED" }` | "Este email ya está registrado" |
-| 401 / 403 / 5xx | Mensaje de error genérico |
+| 400 + `{ "code": "PASSWORD_..." }` (corta, larga, débil, común o con datos personales) | El motivo, en el campo **Password** |
+| 400 o 409 con otro `code` de campo | El motivo, en su campo (los mismos códigos que el registro, `docs/hu1-registro.md`, sección 5) |
+| 401 / 403 / 5xx, o un `code` sin campo | Mensaje de error genérico |
 
 En el backend, el `avatar` se guarda como imagen de perfil del administrador. La `sede` se acepta pero todavía no se guarda (pendiente por decisión del equipo).
 
@@ -205,6 +208,7 @@ Con `npm run dev` (mocks activos): `admin@esibuy.test`, contraseña `Mock-Clave-
 | Administradores | Lista con 3 administradores |
 | Crear administrador con un email nuevo → **Ver administradores** | El nuevo aparece el primero de la lista |
 | Crear administrador con el email `cliente@esibuy.test` | "Este email ya está registrado" |
+| Con el backend real, un password que contiene el nombre | El motivo aparece en el campo **Password** (el mock no comprueba los datos personales) |
 
 Los cambios se olvidan al recargar la página.
 
@@ -219,7 +223,7 @@ npm run build
 | Archivo | Tests de esta HU | Qué cubre |
 |---|---|---|
 | `features/admin/SellerDetailDialog.test.jsx` | 7 | Botón según el estado, confirmación, cancelar, activar un pendiente, activar un desactivado, desactivar y error del servidor |
-| `pages/AdminNewAdminPage.test.jsx` | 19 | Campos, obligatorios, fecha, longitudes, validaciones, alta, datos enviados, email repetido, error del servidor, crear otro, navegación y acceso por rol |
+| `pages/AdminNewAdminPage.test.jsx` | 20 | Campos, obligatorios, fecha, longitudes, validaciones, alta, datos enviados, email repetido, password rechazado por el backend (HU21-CP19), error del servidor, crear otro, navegación y acceso por rol |
 | `pages/AdminAdminsPage.test.jsx` | 7 | Solo administradores, filtro por rol, botón de crear, volver al panel, error con reintento y acceso por rol |
 | `pages/AdminPage.test.jsx` | 1 | La tarjeta **Administradores** abre la lista |
 | `features/account/accountRules.test.js` | 11 | Requisitos del password (con acentos y ñ), formato del email y comparación de passwords |
@@ -260,4 +264,5 @@ Este documento y el trabajo técnico que describe se hicieron con ayuda de un as
   - revisó cada paso y comprobó las pantallas en el navegador con los mocks.
 - **Cómo se comprobó:** tests (344 en la suite), ESLint sin errores y build de producción correcto.
 - **Qué NO se comprobó:** el flujo contra un backend real.
+- **Fallos de la demo del Sprint 1:** la IA escribió con TDD el test HU21-CP19 y el cambio para que el formulario marque en su campo el error del backend, y actualizó este documento. El equipo decidió qué fallos se corregían. Suite completa: **591 tests en verde**, ESLint sin errores y build correcto.
 - **Revisión humana:** el código fue revisado, ejecutado y validado por el equipo antes de su integración. Revisado por: Alejandro.
