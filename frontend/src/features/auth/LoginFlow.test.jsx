@@ -318,7 +318,7 @@ describe('Login (HU2): alta de Microsoft Authenticator', () => {
     await screen.findByRole('img', { name: /código qr.*microsoft authenticator/i })
     await resolverCodigoDeAutenticador(user)
 
-    await esperarRuta('/products')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/))
   })
 
   it('login_sinAuthenticator_conUnPrimerCodigoIncorrecto_muestraErrorYSigueEnElAlta', async () => {

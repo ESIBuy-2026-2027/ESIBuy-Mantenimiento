@@ -220,7 +220,7 @@ describe('SellerProductsPage (HU32): filtros', () => {
 
     await user.selectOptions(await screen.findByLabelText(/categoría/i), 'Hogar')
 
-    await esperarFilas(9)
+    await waitFor(() => expect(filasDeDatos()).toHaveLength(9))
   })
 
   it('sellerProductsPage_combinaBusquedaYCategoria', async () => {
