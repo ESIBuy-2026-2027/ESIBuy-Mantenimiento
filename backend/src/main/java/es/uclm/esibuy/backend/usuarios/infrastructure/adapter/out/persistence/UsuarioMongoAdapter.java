@@ -41,6 +41,10 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
     private static final String CAMPO_ESTADO = "estado";
     private static final String CAMPO_RANGO_ESTADO = "rangoEstado";
     private static final String CAMPO_NOMBRE_CATEGORIA = "nombreCategoria";
+    private static final String CAMPO_NOMBRE = "nombre";
+    private static final String CAMPO_APELLIDOS = "apellidos";
+    private static final String CAMPO_CATEGORIA_PRINCIPAL_ID = "categoriaPrincipalId";
+    private static final String ESTADO_ACTIVO = "ACTIVO";
 
     // Orden alfabético en español, sin distinguir mayúsculas ni tildes (fallos de la demo del Sprint 1): sin collation,
     // MongoDB ordena por bytes y «Beatriz» va antes que «ana», y «Álvaro» al final.
@@ -101,7 +105,7 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
 
     @Override
     public long contarAdministradoresActivos() {
-        return repository.countByRolAndEstado("ADMINISTRADOR", "ACTIVO");
+        return repository.countByRolAndEstado("ADMINISTRADOR", ESTADO_ACTIVO);
     }
 
     @Override
@@ -150,17 +154,17 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
     // nombre. Se traduce con un $switch sobre el catálogo, como el rango del estado. Sin categoría, al final.
     private List<UsuarioDocument> buscarOrdenadosPorCategoria(Criteria criterios, ListarUsuariosQuery query) {
         List<CaseOperator> casos = consultaCategorias.listar().stream()
-                .map(categoria -> CaseOperator.when(ComparisonOperators.valueOf("categoriaPrincipalId")
+                .map(categoria -> CaseOperator.when(ComparisonOperators.valueOf(CAMPO_CATEGORIA_PRINCIPAL_ID)
                         .equalToValue(categoria.id())).then(categoria.nombre()))
                 .toList();
         AggregationExpression nombreCategoria = casos.isEmpty()
-                ? ConditionalOperators.ifNull("categoriaPrincipalId").then("")
+                ? ConditionalOperators.ifNull(CAMPO_CATEGORIA_PRINCIPAL_ID).then("")
                 : ConditionalOperators.switchCases(casos).defaultTo("\uFFFF");
         Aggregation agregacion = Aggregation.newAggregation(
                 Aggregation.match(criterios),
                 Aggregation.addFields().addField(CAMPO_NOMBRE_CATEGORIA).withValue(nombreCategoria).build(),
                 Aggregation.sort(Sort.by(direccion(query), CAMPO_NOMBRE_CATEGORIA)
-                        .and(Sort.by(Sort.Direction.ASC, "nombre", "apellidos"))),
+                        .and(Sort.by(Sort.Direction.ASC, CAMPO_NOMBRE, CAMPO_APELLIDOS))),
                 Aggregation.skip((long) query.pagina() * query.tamano()),
                 Aggregation.limit(query.tamano()))
                 .withOptions(AggregationOptions.builder().collation(ORDEN_ALFABETICO_ES).build());
@@ -170,7 +174,7 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
     // Sin orden propio, por fecha de alta (HU19); por nombre, nombre y apellidos (HU26).
     private static Sort ordenSimple(ListarUsuariosQuery query) {
         if (query.ordenarPor() == ListarUsuariosQuery.Orden.NOMBRE) {
-            return Sort.by(direccion(query), "nombre", "apellidos");
+            return Sort.by(direccion(query), CAMPO_NOMBRE, CAMPO_APELLIDOS);
         }
         return Sort.by(Sort.Direction.DESC, "createdAt");
     }
@@ -180,14 +184,14 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
     private List<UsuarioDocument> buscarOrdenadosPorEstado(Criteria criterios, ListarUsuariosQuery query) {
         AggregationExpression rango = ConditionalOperators.switchCases(
                 CaseOperator.when(ComparisonOperators.valueOf(CAMPO_ESTADO).equalToValue("PENDIENTE")).then(0),
-                CaseOperator.when(ComparisonOperators.valueOf(CAMPO_ESTADO).equalToValue("ACTIVO")).then(1),
+                CaseOperator.when(ComparisonOperators.valueOf(CAMPO_ESTADO).equalToValue(ESTADO_ACTIVO)).then(1),
                 CaseOperator.when(ComparisonOperators.valueOf(CAMPO_ESTADO).equalToValue("DESACTIVADO")).then(2))
                 .defaultTo(3);
         Aggregation agregacion = Aggregation.newAggregation(
                 Aggregation.match(criterios),
                 Aggregation.addFields().addField(CAMPO_RANGO_ESTADO).withValue(rango).build(),
                 Aggregation.sort(Sort.by(direccion(query), CAMPO_RANGO_ESTADO)
-                        .and(Sort.by(Sort.Direction.ASC, "nombre", "apellidos"))),
+                        .and(Sort.by(Sort.Direction.ASC, CAMPO_NOMBRE, CAMPO_APELLIDOS))),
                 Aggregation.skip((long) query.pagina() * query.tamano()),
                 Aggregation.limit(query.tamano()))
                 .withOptions(AggregationOptions.builder().collation(ORDEN_ALFABETICO_ES).build());
@@ -205,19 +209,19 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
             String patron = ".*" + textoEscapado + ".*";
             criterios.add(new Criteria().orOperator(
                     Criteria.where("email").regex(patron, "i"),
-                    Criteria.where("nombre").regex(patron, "i"),
-                    Criteria.where("apellidos").regex(patron, "i")
+                    Criteria.where(CAMPO_NOMBRE).regex(patron, "i"),
+                    Criteria.where(CAMPO_APELLIDOS).regex(patron, "i")
             ));
         }
         if (query.rol() != null) {
             criterios.add(Criteria.where("rol").is(query.rol().name()));
         }
         if (query.categoriaId() != null && !query.categoriaId().isBlank()) {
-            criterios.add(Criteria.where("categoriaPrincipalId").is(query.categoriaId()));
+            criterios.add(Criteria.where(CAMPO_CATEGORIA_PRINCIPAL_ID).is(query.categoriaId()));
         }
         if ("BLOQUEADO".equals(query.estado())) {
             criterios.add(new Criteria().andOperator(
-                    Criteria.where(CAMPO_ESTADO).is("ACTIVO"),
+                    Criteria.where(CAMPO_ESTADO).is(ESTADO_ACTIVO),
                     Criteria.where("lockedUntil").gt(Instant.now())
             ));
         } else if (query.estado() != null) {

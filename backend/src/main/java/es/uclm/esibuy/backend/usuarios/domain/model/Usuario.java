@@ -12,6 +12,7 @@ public class Usuario {
     private static final int MAX_INTENTOS = 5;
     private static final Duration DURACION_BLOQUEO = Duration.ofMinutes(15);
     private static final int MAYORIA_EDAD = 18;
+    private static final String ESTADO_ACTIVO = "ACTIVO";
 
     private final String id;
     private DatosPersonales datosPersonales;
@@ -82,7 +83,7 @@ public class Usuario {
     public static Usuario nuevoAdministrador(DatosPersonales datosPersonales, Email email, String passwordHash) {
         // A un administrador no le exigimos DatosCliente ni ConsentimientoPrivacidad
         Usuario admin = new Usuario(null, datosPersonales, email, passwordHash, Rol.ADMINISTRADOR, null, null);
-        admin.restaurarEstado("ACTIVO"); // Nace activo directamente
+        admin.restaurarEstado(ESTADO_ACTIVO); // Nace activo directamente
         return admin;
     }
 
@@ -158,7 +159,7 @@ public class Usuario {
     }
 
     public boolean estaActivo() {
-        return "ACTIVO".equals(estado);
+        return ESTADO_ACTIVO.equals(estado);
     }
 
     public void desactivar() {
@@ -166,7 +167,7 @@ public class Usuario {
     }
 
     public void activar() {
-        estado = "ACTIVO";
+        estado = ESTADO_ACTIVO;
     }
 
     public void registrarIntentoFallido(Instant ahora) {
