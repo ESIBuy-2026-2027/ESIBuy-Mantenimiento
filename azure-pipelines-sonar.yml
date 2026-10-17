@@ -1,0 +1,173 @@
+# Análisis de calidad con SonarQube desde un agente self-hosted (bloque 5 del vídeo).
+# Se ejecuta en NUESTRO ordenador porque SonarQube está en el servidor de la UCLM, dentro
+# de su red: solo se llega con la VPN de la universidad, y los agentes de Microsoft no pueden.
+# Si el servidor no responde (p. ej. sin VPN), el análisis se SALTA con un aviso y el
+# pipeline sigue: no falla por un problema de red.
+#
+# Vale para un agente en macOS o en Windows:
+#   - Los pasos usan "script" (bash en macOS, cmd en Windows) y tareas de Azure, sin cp/rm.
+#   - Maven se lanza con ./mvnw en macOS y con mvnw.cmd en Windows (condición por Agent.OS).
+#
+# Requisitos en el ordenador donde corre el agente:
+#   - JDK 25, Node 22 y Docker Desktop arrancado (los tests usan Testcontainers)
+#   - sonar-scanner en el PATH
+#       macOS:   brew install sonar-scanner
+#       Windows: descargar el zip de SonarScanner CLI y añadir su carpeta bin al PATH
+#   - VPN de la UCLM conectada
+# Variable secreta en Azure: SQ_TOKEN (Pipelines → Edit → Variables → Keep this value secret)
+
+trigger:
+  branches:
+    include:
+      - develop
+      - main
+
+pr: none            # Las PRs ya las valida azure-pipelines.yml; este pipeline solo analiza lo integrado.
+
+variables:
+  # Dónde está SonarQube: el servidor de la asignatura (red de la UCLM / VPN).
+  # Para probar con un SonarQube local en Docker: http://localhost:9000
+  SQ_URL: http://seralu4.esi.uclm.es:1521
+
+pool:
+  name: Default
+  demands:
+    - agent.name -equals NOMBRE_DE_NUESTRO_AGENTE   # ← cambiar por el nombre real del agente
+
+stages:
+  # 1 ─────────────────────────────────────────────────────────────
+  - stage: Preparar
+    displayName: Preparar
+    jobs:
+      - job: entorno
+        displayName: Comprobar herramientas del agente
+        steps:
+          - checkout: self
+            fetchDepth: 0            # Sonar necesita el historial para el "blame" y el código nuevo
+          - script: java -version
+            displayName: Java
+          - script: node --version
+            displayName: Node
+          - script: docker version
+            displayName: Docker
+          - script: sonar-scanner --version
+            displayName: sonar-scanner
+
+  # 2 ─────────────────────────────────────────────────────────────
+  - stage: Compilar
+    displayName: Compilar y testear
+    dependsOn: Preparar
+    jobs:
+      - job: backend
+        displayName: Backend (Maven)
+        steps:
+          - checkout: self
+          - script: ./mvnw -B verify
+            displayName: Compilar, tests y cobertura JaCoCo (macOS)
+            workingDirectory: backend
+            condition: and(succeeded(), ne(variables['Agent.OS'], 'Windows_NT'))
+          - script: mvnw.cmd -B verify
+            displayName: Compilar, tests y cobertura JaCoCo (Windows)
+            workingDirectory: backend
+            condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
+          - publish: backend/target
+            artifact: backend-target
+            displayName: Guardar clases e informe de cobertura
+
+      - job: frontend
+        displayName: Frontend (Vite)
+        steps:
+          - checkout: self
+          # Un step por comando: en Windows npm es un .cmd y encadenarlos en cmd no es fiable.
+          - script: npm ci
+            displayName: Instalar dependencias
+            workingDirectory: frontend
+          - script: npm run lint
+            displayName: Lint
+            workingDirectory: frontend
+          - script: npm run test:coverage
+            displayName: Tests con cobertura
+            workingDirectory: frontend
+          - script: npm run build
+            displayName: Build
+            workingDirectory: frontend
+          - publish: frontend/coverage
+            artifact: frontend-coverage
+            displayName: Guardar informe de cobertura
+          - publish: frontend/dist
+            artifact: frontend-dist
+            displayName: Guardar build del frontend
+
+  # 3 ─────────────────────────────────────────────────────────────
+  - stage: Analizar
+    displayName: Analizar con SonarQube
+    dependsOn: Compilar
+    jobs:
+      - job: sonar
+        displayName: sonar-scanner
+        steps:
+          - checkout: self
+            fetchDepth: 0
+          # Recupera los resultados del stage Compilar en las carpetas donde los busca Sonar.
+          - task: DownloadPipelineArtifact@2
+            displayName: Recuperar clases y cobertura del backend
+            inputs:
+              artifact: backend-target
+              path: $(Build.SourcesDirectory)/backend/target
+          - task: DownloadPipelineArtifact@2
+            displayName: Recuperar cobertura del frontend
+            inputs:
+              artifact: frontend-coverage
+              path: $(Build.SourcesDirectory)/frontend/coverage
+
+          # ¿Se llega al servidor? Si no responde, este paso queda en naranja (aviso),
+          # el job pasa a "SucceededWithIssues" y los dos análisis de abajo se saltan.
+          - script: curl -sSf -m 15 $(SQ_URL)/api/system/status
+            displayName: Comprobar que SonarQube responde (¿VPN conectada?)
+            continueOnError: true
+
+          # El token NO está en el código: llega de la variable secreta SQ_TOKEN.
+          # sonar-scanner lee la variable de entorno SONAR_TOKEN; en los logs sale como ***.
+          - script: sonar-scanner -Dsonar.host.url=$(SQ_URL)
+            displayName: Analizar backend
+            workingDirectory: backend
+            condition: eq(variables['Agent.JobStatus'], 'Succeeded')
+            env:
+              SONAR_TOKEN: $(SQ_TOKEN)
+          - script: sonar-scanner -Dsonar.host.url=$(SQ_URL)
+            displayName: Analizar frontend
+            workingDirectory: frontend
+            condition: eq(variables['Agent.JobStatus'], 'Succeeded')
+            env:
+              SONAR_TOKEN: $(SQ_TOKEN)
+          # Para que el pipeline se pare si no se pasa el Quality Gate (escena 5),
+          # añadir a los dos comandos:  -Dsonar.qualitygate.wait=true
+
+  # 4 ─────────────────────────────────────────────────────────────
+  - stage: Desplegar
+    displayName: Desplegar
+    dependsOn: Analizar       # Si el análisis falla, este stage no se ejecuta: no se despliega.
+    jobs:
+      - job: entrega
+        displayName: Publicar entregables
+        steps:
+          - checkout: none
+          - download: current
+            artifact: backend-target
+          - download: current
+            artifact: frontend-dist
+          - task: CopyFiles@2
+            displayName: Copiar el .jar del backend
+            inputs:
+              SourceFolder: $(Pipeline.Workspace)/backend-target
+              Contents: '*.jar'
+              TargetFolder: $(Build.ArtifactStagingDirectory)/esibuy
+          - task: CopyFiles@2
+            displayName: Copiar el build del frontend
+            inputs:
+              SourceFolder: $(Pipeline.Workspace)/frontend-dist
+              Contents: '**'
+              TargetFolder: $(Build.ArtifactStagingDirectory)/esibuy/frontend
+          - publish: $(Build.ArtifactStagingDirectory)/esibuy
+            artifact: esibuy-release
+            displayName: Publicar versión lista para desplegar
