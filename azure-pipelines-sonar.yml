@@ -126,20 +126,17 @@ stages:
             displayName: Comprobar que SonarQube responde (¿VPN conectada?)
             continueOnError: true
 
-          # El token NO está en el código: llega de la variable secreta SQ_TOKEN.
-          # sonar-scanner lee la variable de entorno SONAR_TOKEN; en los logs sale como ***.
-          - script: sonar-scanner -Dsonar.host.url=$(SQ_URL)
+          # El token llega de la variable secreta SQ_TOKEN (en los logs sale como ***).
+          # El -D de la línea de comandos tiene prioridad sobre el sonar.token de
+          # sonar-project.properties, que solo está ahí para los análisis en local.
+          - script: sonar-scanner -Dsonar.host.url=$(SQ_URL) -Dsonar.token=$(SQ_TOKEN)
             displayName: Analizar backend
             workingDirectory: backend
             condition: eq(variables['Agent.JobStatus'], 'Succeeded')
-            env:
-              SONAR_TOKEN: $(SQ_TOKEN)
-          - script: sonar-scanner -Dsonar.host.url=$(SQ_URL)
+          - script: sonar-scanner -Dsonar.host.url=$(SQ_URL) -Dsonar.token=$(SQ_TOKEN)
             displayName: Analizar frontend
             workingDirectory: frontend
             condition: eq(variables['Agent.JobStatus'], 'Succeeded')
-            env:
-              SONAR_TOKEN: $(SQ_TOKEN)
           # Para que el pipeline se pare si no se pasa el Quality Gate (escena 5),
           # añadir a los dos comandos:  -Dsonar.qualitygate.wait=true
 
