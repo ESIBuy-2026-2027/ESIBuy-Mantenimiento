@@ -12,7 +12,7 @@ export const USUARIOS = [
   { id: 'u-2', nombre: 'Vera', apellidos: 'Vendedora', email: 'vendedor@esibuy.test', rol: 'VENDEDOR', estado: 'ACTIVO' },
   { id: 'u-3', nombre: 'Carlos', apellidos: 'Cliente', email: 'cliente@esibuy.test', rol: 'CLIENTE', estado: 'ACTIVO' },
   { id: 'u-5', nombre: 'Vicente', apellidos: 'Vacío', email: 'vendedor-vacio@esibuy.test', rol: 'VENDEDOR', estado: 'ACTIVO' },
-  { id: 'u-4', nombre: 'Dani', apellidos: 'Desactivado', email: 'desactivado@esibuy.test', rol: 'CLIENTE', estado: 'DESACTIVADO' },
+  { id: 'u-4', nombre: 'Dani', apellidos: 'Bloqueado', email: 'bloqueado@esibuy.test', rol: 'CLIENTE', estado: 'BLOQUEADO' },
   { id: 'u-6', nombre: 'Paula', apellidos: 'Pendiente', email: 'pendiente@esibuy.test', rol: 'CLIENTE', estado: 'PENDIENTE' },
   // Sin Microsoft Authenticator todavía: tras el código del correo pasa al alta con QR (T20)
   { id: 'u-7', nombre: 'Nora', apellidos: 'Nueva', email: 'nuevo@esibuy.test', rol: 'CLIENTE', estado: 'ACTIVO', sinAuthenticator: true },
@@ -56,7 +56,7 @@ export const authHandlers = [
     }
 
     if (usuario.estado !== 'ACTIVO') {
-      return HttpResponse.json({ code: 'ACCOUNT_DISABLED' }, { status: 403 })
+      return HttpResponse.json({ code: 'ACCOUNT_BLOCKED' }, { status: 403 })
     }
 
     estado.intentosFallidos = 0

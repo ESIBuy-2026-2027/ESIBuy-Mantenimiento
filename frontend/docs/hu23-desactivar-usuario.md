@@ -36,7 +36,7 @@ En la ficha de cada cliente o administrador (en la fila hasta la HU20) aparece e
 | Requiere confirmación | Ventana "Desactivar usuario" con **Cancelar** y **Desactivar** |
 | Un administrador no puede desactivarse a sí mismo | En su propia ficha no aparece **Desactivar**. Si la petición llegara igualmente, el backend responde con un error y se muestra *"No puedes desactivar tu propia cuenta."* |
 | No se puede desactivar al último administrador activo | Lo comprueba el backend; el frontend muestra *"No se puede desactivar al último administrador activo."* |
-| El usuario desactivado no puede iniciar sesión (mensaje específico) | El login ya muestra *"Esta cuenta está desactivada. Contacta con un administrador."* (HU2) cuando el backend responde `403` con `ACCOUNT_DISABLED` |
+| El usuario desactivado no puede iniciar sesión (mensaje específico) | El login muestra *"Esta cuenta está bloqueada. Contacta con un administrador."* (HU2, AB#245: desde el Sprint 2 las cuentas se bloquean en lugar de desactivarse) cuando el backend responde `403` con `ACCOUNT_BLOCKED` |
 | Su sesión se invalida | Es tarea del backend. En el frontend queda pendiente (sección 8) |
 
 > **Sobre el "último administrador activo".** Desde la pantalla siempre queda al menos un administrador activo, el que la está usando, porque no puede desactivarse a sí mismo. La regla protege de casos que no se ven en la pantalla: por ejemplo, dos administradores que se desactivan el uno al otro a la vez, o peticiones que llegan al backend sin pasar por la interfaz. Por eso la comprueba el backend y el frontend se limita a mostrar el motivo.
@@ -105,7 +105,7 @@ Todas las rutas son relativas a `frontend/src/`.
 
 Los vendedores se desactivan con su propio endpoint, `PATCH /api/admin/sellers/{id}/status` (HU21).
 
-Para el login, el backend debe responder `403` con `{ "code": "ACCOUNT_DISABLED" }` cuando una cuenta desactivada intente entrar (contrato de la HU2).
+Para el login, el backend debe responder `403` con `{ "code": "ACCOUNT_BLOCKED" }` cuando una cuenta bloqueada intente entrar (contrato de la HU2, task AB#245; antes `ACCOUNT_DISABLED`).
 
 ---
 
@@ -124,7 +124,7 @@ Pruebas manuales sugeridas:
 2. Desactivar a Ana López García desde su ficha: pide confirmación, sale el mensaje y pasa a **Desactivado**, con el botón **Activar**.
 3. **Panel → Clientes:** desactivar a Carlos Moreno Gil y volver a activarlo.
 4. Pulsar **Desactivar** y luego **Cancelar**: no cambia nada.
-5. Cerrar sesión e intentar entrar con `desactivado@esibuy.test`: aparece el mensaje de cuenta desactivada (HU2).
+5. Cerrar sesión e intentar entrar con `bloqueado@esibuy.test`: aparece el mensaje de cuenta bloqueada (HU2).
 
 Los cambios se olvidan al recargar la página.
 

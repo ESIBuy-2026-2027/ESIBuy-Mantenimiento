@@ -112,13 +112,27 @@ describe('Login (HU2): paso 1, credenciales', () => {
     expect(screen.getByLabelText(/^contraseña/i)).toHaveValue('')
   })
 
-  it('login_conCuentaDesactivada_muestraMensajeEspecifico', async () => {
+  it('HU2-CP28: una cuenta bloqueada muestra su mensaje antes del código del correo y no avanza al 2FA', async () => {
     const user = userEvent.setup()
     renderApp('/login')
 
-    await escribirCredenciales(user, 'desactivado@esibuy.test', CLAVE)
+    await escribirCredenciales(user, 'bloqueado@esibuy.test', CLAVE)
 
-    expect(await screen.findByText(/cuenta está desactivada/i)).toBeInTheDocument()
+    expect(await screen.findByText(/cuenta está bloqueada/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument()
+    expect(screen.queryByLabelText(/recibido por correo/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/código de microsoft authenticator/i)).not.toBeInTheDocument()
+  })
+
+  it('HU2-CP28: el mensaje de cuenta bloqueada no es el de demasiados intentos ni el genérico', async () => {
+    const user = userEvent.setup()
+    renderApp('/login')
+
+    await escribirCredenciales(user, 'bloqueado@esibuy.test', CLAVE)
+    await screen.findByText(/cuenta está bloqueada/i)
+
+    expect(screen.queryByText(/demasiados intentos/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/no se ha podido iniciar sesión/i)).not.toBeInTheDocument()
   })
 
   it('login_cuentaPendiente_muestraLaPantallaDeActivacionConSuCorreo', async () => {
@@ -142,7 +156,7 @@ describe('Login (HU2): paso 1, credenciales', () => {
     await screen.findByRole('heading', { name: /pendiente de activación/i })
 
     expect(screen.queryByText(/no se ha podido iniciar sesión/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/desactivada/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/bloqueada/i)).not.toBeInTheDocument()
   })
 
   it('login_cuentaPendiente_volverRecuperaElFormularioVacio', async () => {

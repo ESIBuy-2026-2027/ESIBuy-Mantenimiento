@@ -100,7 +100,7 @@ Leyenda: **\*** = obligatorio · **(único)** = no repetible (validación real e
 ### 6.2 Login (HU2)
 - Pantalla estándar: usuario/email + contraseña, enlace "¿Has olvidado tu contraseña?" y enlace al registro.
 - **Mensajes de error asépticos y genéricos**: nunca revelar si falla el usuario o la contraseña, ni si la cuenta existe.
-- Excepción acordada en HU23: cuenta desactivada → mensaje específico.
+- Excepción acordada en HU23: cuenta bloqueada por un administrador (antes "desactivada", AB#245) → mensaje específico.
 
 ### 6.3 Registro (HU1)
 El tipo de usuario se elige en el propio formulario (botones, tarjetas, desplegable o checklist, libre elección de diseño). Solo se registran **Cliente** y **Vendedor**; el Administrador se crea desde la zona de administración (6.4).
