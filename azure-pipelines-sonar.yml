@@ -17,6 +17,9 @@
 # Variable secreta en Azure: SQ_TOKEN (Pipelines → Edit → Variables → Keep this value secret)
 
 trigger:
+  # Si se acumulan varias fusiones mientras no hay ningún agente conectado,
+  # se lanza UNA sola ejecución con el último estado en vez de una por fusión.
+  batch: true
   branches:
     include:
       - develop
@@ -29,10 +32,13 @@ variables:
   # Para probar con un SonarQube local en Docker: http://localhost:9000
   SQ_URL: http://seralu4.esi.uclm.es:1521
 
+# Pool de agentes propios del equipo. Lo ejecuta cualquier agente conectado del pool
+# (cada miembro puede registrar el suyo). Los agentes de Microsoft están en otro pool,
+# así que aquí solo entran los nuestros. Para forzar un agente concreto:
+#   demands:
+#     - agent.name -equals MacBook-Air-de-Jorge
 pool:
   name: Default
-  demands:
-    - agent.name -equals MacBook-Air-de-Jorge   # agente self-hosted en el Mac de Jorge
 
 stages:
   # 1 ─────────────────────────────────────────────────────────────
