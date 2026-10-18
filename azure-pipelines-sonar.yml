@@ -32,7 +32,7 @@ variables:
 pool:
   name: Default
   demands:
-    - agent.name -equals NOMBRE_DE_NUESTRO_AGENTE   # ← cambiar por el nombre real del agente
+    - agent.name -equals MacBook-Air-de-Jorge   # agente self-hosted en el Mac de Jorge
 
 stages:
   # 1 ─────────────────────────────────────────────────────────────
