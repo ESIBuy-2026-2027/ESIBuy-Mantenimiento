@@ -5,26 +5,27 @@ import { PersonAvailable20Regular, PersonProhibited20Regular } from '@fluentui/r
 import { updateUserStatus } from '../../api/users'
 import StatusConfirmDialog from './StatusConfirmDialog'
 
-// Textos de cada acción: activar (HU24) o desactivar (HU23).
+// Textos de cada acción: desbloquear (HU24, también acepta las cuentas pendientes) o bloquear (HU23).
 const ACCIONES = {
-  activar: {
-    boton: 'Activar',
+  desbloquear: {
+    boton: 'Desbloquear',
     icono: <PersonAvailable20Regular />,
-    titulo: 'Activar usuario',
-    pregunta: (nombre) => `¿Seguro que quieres activar a ${nombre}? Podrá volver a usar la plataforma.`,
+    titulo: 'Desbloquear usuario',
+    pregunta: (nombre) => `¿Seguro que quieres desbloquear a ${nombre}? Podrá volver a usar la plataforma.`,
     estado: 'ACTIVO',
   },
-  desactivar: {
-    boton: 'Desactivar',
+  bloquear: {
+    boton: 'Bloquear',
     icono: <PersonProhibited20Regular />,
-    titulo: 'Desactivar usuario',
-    pregunta: (nombre) => `¿Seguro que quieres desactivar a ${nombre}? No podrá iniciar sesión.`,
+    titulo: 'Bloquear usuario',
+    pregunta: (nombre) => `¿Seguro que quieres bloquear a ${nombre}? No podrá iniciar sesión.`,
     estado: 'BLOQUEADO',
   },
 }
 
-// Botón de una fila de usuarios que activa o desactiva la cuenta, siempre con confirmación.
-export default function UserStatusButton({ user, accion, onDone, onError }) {
+// Botón de una fila de usuarios que bloquea o desbloquea la cuenta, siempre con confirmación. Es solo un icono:
+// su nombre accesible lleva el del usuario. Deshabilitado, `reason` explica por qué no se puede usar.
+export default function UserStatusButton({ user, accion, disabled = false, reason, onDone, onError }) {
   const [confirmando, setConfirmando] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const nombre = `${user.nombre} ${user.apellidos}`
@@ -46,13 +47,13 @@ export default function UserStatusButton({ user, accion, onDone, onError }) {
   return (
     <>
       <Button
-        size="small"
+        appearance="subtle"
         icon={textos.icono}
         aria-label={`${textos.boton} a ${nombre}`}
+        title={disabled && reason ? reason : textos.boton}
+        disabled={disabled}
         onClick={() => setConfirmando(true)}
-      >
-        {textos.boton}
-      </Button>
+      />
       {confirmando && (
         <StatusConfirmDialog
           titulo={textos.titulo}
@@ -73,7 +74,9 @@ UserStatusButton.propTypes = {
     nombre: PropTypes.string.isRequired,
     apellidos: PropTypes.string.isRequired,
   }).isRequired,
-  accion: PropTypes.oneOf(['activar', 'desactivar']).isRequired,
+  accion: PropTypes.oneOf(['desbloquear', 'bloquear']).isRequired,
+  disabled: PropTypes.bool,
+  reason: PropTypes.string,
   onDone: PropTypes.func.isRequired,
   onError: PropTypes.func.isRequired,
 }

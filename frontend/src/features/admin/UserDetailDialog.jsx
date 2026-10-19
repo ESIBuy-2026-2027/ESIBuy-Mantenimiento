@@ -21,9 +21,7 @@ import { getUser, updateUser } from '../../api/users'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import EditableProfile from './EditableProfile'
 import ReadOnlyFields from './ReadOnlyFields'
-import UserStatusButton from './UserStatusButton'
 import { readFields } from './profileFields'
-import { USER_STATUS } from './usersConfig'
 
 const useStyles = makeStyles({
   surface: {
@@ -38,44 +36,16 @@ const useStyles = makeStyles({
   },
 })
 
-const MENSAJES_EXITO = {
-  activar: (nombre) => `${nombre} ya está activo y puede usar la plataforma.`,
-  desactivar: (nombre) => `${nombre} está desactivado y ya no puede iniciar sesión.`,
-}
-
-// Errores del backend al desactivar que tienen un mensaje propio (HU23).
-const MENSAJES_CONFLICTO = {
-  CANNOT_DEACTIVATE_SELF: 'No puedes desactivar tu propia cuenta.',
-  LAST_ACTIVE_ADMIN: 'No se puede desactivar al último administrador activo.',
-}
-
-// Ficha de un cliente o de un administrador (HU20), como la del vendedor (HU26): datos en solo lectura,
-// el botón para activar o desactivar la cuenta (HU24 y HU23), salvo la propia, y el botón Editar (HU22), que
-// convierte en modificables los campos que se pueden cambiar y deja el resto en solo lectura (el rol, siempre).
-// `onStatusChange` avisa al listado de que la cuenta ha cambiado (de estado o de datos).
-export default function UserDetailDialog({ userId, currentUserId, onClose, onStatusChange }) {
+// Ficha de un cliente o de un administrador (HU20), como la del vendedor (HU26): datos en solo lectura y el
+// botón Editar (HU22), que convierte en modificables los campos que se pueden cambiar y deja el resto en solo
+// lectura (el rol, siempre). Bloquear y desbloquear la cuenta ya no se hace aquí, sino desde la fila de la tabla
+// (HU23 y HU24). `onStatusChange` avisa al listado de que los datos de la cuenta han cambiado.
+export default function UserDetailDialog({ userId, onClose, onStatusChange }) {
   const styles = useStyles()
   const fetcher = useCallback(() => getUser(userId), [userId])
   const { data: usuario, failed, retry } = useApiQuery(fetcher)
   const [resultado, setResultado] = useState(null)
   const [editando, setEditando] = useState(false)
-
-  // Una cuenta pendiente (HU1) se acepta activándola, como los vendedores pendientes.
-  let accion = null
-  if (usuario?.estado === USER_STATUS.BLOQUEADO || usuario?.estado === USER_STATUS.PENDIENTE) accion = 'activar'
-  else if (usuario?.estado === USER_STATUS.ACTIVO && usuario.id !== currentUserId) accion = 'desactivar'
-
-  const avisarHecho = (nombre) => {
-    setResultado({ intent: 'success', texto: MENSAJES_EXITO[accion](nombre) })
-    retry()
-    onStatusChange()
-  }
-
-  const avisarError = (nombre, error) =>
-    setResultado({
-      intent: 'error',
-      texto: MENSAJES_CONFLICTO[error?.code] ?? `No se ha podido ${accion} a ${nombre}. Inténtalo de nuevo.`,
-    })
 
   const avisarGuardado = () => {
     setEditando(false)
@@ -150,7 +120,6 @@ export default function UserDetailDialog({ userId, currentUserId, onClose, onSta
               <Button icon={<Edit20Regular />} onClick={empezarAEditar}>
                 Editar
               </Button>
-              {accion && <UserStatusButton user={usuario} accion={accion} onDone={avisarHecho} onError={avisarError} />}
             </DialogActions>
           )}
         </DialogBody>
@@ -161,7 +130,6 @@ export default function UserDetailDialog({ userId, currentUserId, onClose, onSta
 
 UserDetailDialog.propTypes = {
   userId: PropTypes.string.isRequired,
-  currentUserId: PropTypes.string,
   onClose: PropTypes.func.isRequired,
   onStatusChange: PropTypes.func.isRequired,
 }

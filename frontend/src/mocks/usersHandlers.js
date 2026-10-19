@@ -49,7 +49,7 @@ const USUARIOS_INICIALES = [
     fechaAlta,
   }))
   // El administrador con el que se inicia sesión en el mock (mismo id que en authHandlers), para que
-  // la regla "un administrador no puede desactivarse a sí mismo" (HU23) se vea en la lista.
+  // la regla "un administrador no puede bloquearse a sí mismo" (HU23) se vea en la lista.
   .concat({
     id: 'u-1',
     nombre: 'Ada',
@@ -178,9 +178,9 @@ function conflictoDeVendedor(idCuenta, { nombreComercial }) {
 
 const esAdminActivo = (usuario) => usuario.rol === 'ADMINISTRADOR' && usuario.estado === 'ACTIVO'
 
-// Código de error si la cuenta no se puede desactivar, o null si se puede.
-function conflictoAlDesactivar(usuario) {
-  if (usuario.id === getUsuarioEnSesion()?.id) return 'CANNOT_DEACTIVATE_SELF'
+// Código de error si la cuenta no se puede bloquear, o null si se puede.
+function conflictoAlBloquear(usuario) {
+  if (usuario.id === getUsuarioEnSesion()?.id) return 'CANNOT_BLOCK_SELF'
   if (esAdminActivo(usuario) && usuarios.filter(esAdminActivo).length === 1) return 'LAST_ACTIVE_ADMIN'
   return null
 }
@@ -293,7 +293,7 @@ export const usersHandlers = [
     if (!existente) return new HttpResponse(null, { status: 404 })
 
     if (estado === 'BLOQUEADO') {
-      const conflicto = conflictoAlDesactivar(existente)
+      const conflicto = conflictoAlBloquear(existente)
       if (conflicto) return HttpResponse.json({ code: conflicto }, { status: 409 })
     }
 

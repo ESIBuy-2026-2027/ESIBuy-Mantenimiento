@@ -19,7 +19,7 @@ export default function AdminClientsPage() {
           <Title1 as="h1" className={styles.title}>
             Clientes
           </Title1>
-          <Text className={styles.subtitle}>Consulta las cuentas de los clientes y activa las desactivadas.</Text>
+          <Text className={styles.subtitle}>Consulta las cuentas de los clientes, bloquéalas o desbloquéalas.</Text>
         </div>
         <LinkButton to={PATHS.ADMIN} appearance="subtle" icon={<ArrowLeft20Regular />}>
           Volver al panel
