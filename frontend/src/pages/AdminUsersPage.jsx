@@ -17,6 +17,7 @@ import UserRowActions from '../features/admin/UserRowActions'
 import UsersFilters from '../features/admin/UsersFilters'
 import UsersTable from '../features/admin/UsersTable'
 import { USER_STATUS, USERS_PAGE_SIZE, statusLabelsForRole } from '../features/admin/usersConfig'
+import { useLastActiveAdmin } from '../features/admin/useLastActiveAdmin'
 import { useUsersList } from '../features/admin/useUsersList'
 import { ROLES } from '../auth/roles'
 import { useAuth } from '../auth/useAuth'
@@ -85,8 +86,20 @@ export default function AdminUsersPage() {
     setPage(1)
   }
 
+  const { lastAdminId, refresh: refreshLastAdmin } = useLastActiveAdmin()
+  const changed = () => {
+    retry()
+    refreshLastAdmin()
+  }
+
   const renderActions = (user) => (
-    <UserRowActions user={user} currentUserId={currentUser?.id} onResult={setFeedback} onChanged={retry} />
+    <UserRowActions
+      user={user}
+      currentUserId={currentUser?.id}
+      lastAdminId={lastAdminId}
+      onResult={setFeedback}
+      onChanged={changed}
+    />
   )
 
   return (

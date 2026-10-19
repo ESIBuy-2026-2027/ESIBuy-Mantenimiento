@@ -10,6 +10,7 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { SearchInfo24Regular } from '@fluentui/react-icons'
+import { ROLES } from '../../auth/roles'
 import EmptyState from '../../components/EmptyState'
 import Pagination from '../../components/Pagination'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
@@ -18,6 +19,7 @@ import UsersFilters from './UsersFilters'
 import UserRowActions from './UserRowActions'
 import UsersTable from './UsersTable'
 import { ACCOUNT_SORT_OPTIONS, USERS_PAGE_SIZE, statusLabelsForRole } from './usersConfig'
+import { useLastActiveAdmin } from './useLastActiveAdmin'
 import { useUsersList } from './useUsersList'
 
 const useStyles = makeStyles({
@@ -61,8 +63,21 @@ export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLa
     setPage(1)
   }
 
+  // Solo los administradores pueden ser el último administrador activo.
+  const { lastAdminId, refresh: refreshLastAdmin } = useLastActiveAdmin(role === ROLES.ADMIN)
+  const changed = () => {
+    retry()
+    refreshLastAdmin()
+  }
+
   const renderActions = (user) => (
-    <UserRowActions user={user} currentUserId={currentUserId} onResult={setFeedback} onChanged={retry} />
+    <UserRowActions
+      user={user}
+      currentUserId={currentUserId}
+      lastAdminId={lastAdminId}
+      onResult={setFeedback}
+      onChanged={changed}
+    />
   )
 
   return (

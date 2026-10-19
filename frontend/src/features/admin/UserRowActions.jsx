@@ -34,20 +34,22 @@ const MENSAJES_CONFLICTO_ELIMINACION = {
   LAST_ACTIVE_ADMIN: 'No se puede eliminar al último administrador activo.',
 }
 
-const MOTIVO_PROPIA_CUENTA = 'No puedes bloquear tu propia cuenta.'
-
 // Acciones de una fila de la tabla de usuarios (HU19): la lupa que abre su ficha de solo lectura (HU20), el lápiz
 // que abre el formulario de edición (HU22), el botón para bloquear o desbloquear la cuenta (HU23 y HU24) y la
 // papelera para eliminarla. Una cuenta activa se bloquea; una bloqueada o pendiente (HU1) se desbloquea, que es
-// como se acepta. Bloquear y eliminar piden confirmación.
+// como se acepta. Bloquear y eliminar piden confirmación. Un administrador no puede bloquearse ni eliminarse a sí
+// mismo, ni se puede bloquear o eliminar al último administrador activo (`lastAdminId`, AB#250): esos botones
+// quedan deshabilitados y explican por qué.
 // `onResult` recibe el aviso que debe ver el administrador; `onChanged`, que la lista se actualice.
-export default function UserRowActions({ user, currentUserId, onResult, onChanged }) {
+export default function UserRowActions({ user, currentUserId, lastAdminId = null, onResult, onChanged }) {
   const styles = useStyles()
   const [dialogo, setDialogo] = useState(null)
   const [eliminando, setEliminando] = useState(false)
   const nombre = `${user.nombre} ${user.apellidos}`
   const accion = user.estado === USER_STATUS.ACTIVO ? 'bloquear' : 'desbloquear'
   const esPropia = user.id === currentUserId
+  const esUltimoAdministrador = user.id === lastAdminId
+  const protegida = esPropia || esUltimoAdministrador
   const cerrar = () => setDialogo(null)
 
   const avisarEstadoCambiado = (nombreDelUsuario) => {
@@ -105,8 +107,8 @@ export default function UserRowActions({ user, currentUserId, onResult, onChange
       <UserStatusButton
         user={user}
         accion={accion}
-        disabled={accion === 'bloquear' && esPropia}
-        reason={MOTIVO_PROPIA_CUENTA}
+        disabled={accion === 'bloquear' && protegida}
+        reason={esPropia ? MENSAJES_CONFLICTO_BLOQUEO.CANNOT_BLOCK_SELF : MENSAJES_CONFLICTO_BLOQUEO.LAST_ACTIVE_ADMIN}
         onDone={avisarEstadoCambiado}
         onError={avisarErrorDeEstado}
       />
@@ -114,7 +116,12 @@ export default function UserRowActions({ user, currentUserId, onResult, onChange
         appearance="subtle"
         icon={<Delete20Regular />}
         aria-label={`Eliminar a ${nombre}`}
-        title="Eliminar"
+        title={
+          protegida
+            ? MENSAJES_CONFLICTO_ELIMINACION[esPropia ? 'CANNOT_DELETE_SELF' : 'LAST_ACTIVE_ADMIN']
+            : 'Eliminar'
+        }
+        disabled={protegida}
         onClick={() => setDialogo('eliminar')}
       />
 
@@ -142,6 +149,7 @@ UserRowActions.propTypes = {
     estado: PropTypes.string.isRequired,
   }).isRequired,
   currentUserId: PropTypes.string,
+  lastAdminId: PropTypes.string,
   onResult: PropTypes.func.isRequired,
   onChanged: PropTypes.func.isRequired,
 }
