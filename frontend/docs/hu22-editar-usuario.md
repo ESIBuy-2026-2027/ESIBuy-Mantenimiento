@@ -13,6 +13,10 @@ Documento para entender cómo el administrador edita los datos de clientes, admi
 
 ---
 
+> **Cambio del Sprint 2 (AB#249):** el formulario de edición se abre desde el lápiz de la fila de la tabla (`UserEditDialog`) y ya no desde la ficha, que es de solo lectura. Los campos, las validaciones y el contrato no cambian. Al guardar, el formulario se cierra y el aviso sale en la barra de la página (ver `docs/hu19-listado-usuarios.md`, sección 1.1). Lo que el texto de abajo dice sobre el *modo edición* de la ficha describe el diseño anterior.
+
+---
+
 ## 1. Resumen
 
 ### Quién edita a quién

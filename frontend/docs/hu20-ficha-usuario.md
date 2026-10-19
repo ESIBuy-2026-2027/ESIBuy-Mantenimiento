@@ -11,6 +11,10 @@ Documento para entender cómo el administrador consulta la ficha de un cliente o
 
 ---
 
+> **Cambio del Sprint 2 (AB#248 y AB#249):** la ficha es ahora **solo de lectura**. Editar, bloquear, desbloquear y eliminar se hacen desde los botones de la fila de la tabla (`UserRowActions`, ver `docs/hu19-listado-usuarios.md`, sección 1.1). Las secciones de abajo que hablan de los botones *Activar*, *Desactivar* o *Editar* dentro de la ficha describen el diseño anterior.
+
+---
+
 ## 1. Resumen
 
 El administrador pulsa la **lupa** de una fila de **Clientes** o de **Administradores** y se abre, por encima del listado, la **ficha** del usuario: sus datos en solo lectura, **sin la contraseña**, y el botón para **activar** o **desactivar** la cuenta. Desde la HU22 la ficha tiene el botón **Editar** y muestra el **rol** de la cuenta, que el administrador también puede cambiar (ver `docs/hu22-editar-usuario.md`).
