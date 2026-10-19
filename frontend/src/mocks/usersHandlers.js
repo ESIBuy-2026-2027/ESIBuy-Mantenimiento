@@ -14,27 +14,27 @@ const USUARIOS_INICIALES = [
   ['Ana', 'López García', 'ADMINISTRADOR', 'ACTIVO', '2026-01-12T09:15:00'],
   ['Mariana', 'Ruiz Pascual', 'VENDEDOR', 'PENDIENTE', '2026-10-01T10:00:00'],
   ['Carlos', 'Moreno Gil', 'CLIENTE', 'ACTIVO', '2026-02-03T11:30:00'],
-  ['Lucía', 'Torres Vega', 'CLIENTE', 'DESACTIVADO', '2026-09-28T17:45:00'],
+  ['Lucía', 'Torres Vega', 'CLIENTE', 'BLOQUEADO', '2026-09-28T17:45:00'],
   ['Javier', 'Romero Díaz', 'VENDEDOR', 'ACTIVO', '2026-03-14T08:20:00'],
-  ['Elena', 'Muñoz Alonso', 'CLIENTE', 'DESACTIVADO', '2026-04-02T12:00:00'],
+  ['Elena', 'Muñoz Alonso', 'CLIENTE', 'BLOQUEADO', '2026-04-02T12:00:00'],
   ['Pablo', 'Gómez Martín', 'CLIENTE', 'ACTIVO', '2026-04-18T16:10:00'],
-  ['Marta', 'Sanz Ramos', 'VENDEDOR', 'DESACTIVADO', '2026-05-06T10:40:00'],
+  ['Marta', 'Sanz Ramos', 'VENDEDOR', 'BLOQUEADO', '2026-05-06T10:40:00'],
   ['Sergio', 'Castro Ortega', 'CLIENTE', 'ACTIVO', '2026-05-21T19:05:00'],
-  ['Laura', 'Rubio Molina', 'CLIENTE', 'DESACTIVADO', '2026-09-30T09:00:00'],
-  ['Diego', 'Delgado Iglesias', 'ADMINISTRADOR', 'DESACTIVADO', '2026-01-20T13:25:00'],
+  ['Laura', 'Rubio Molina', 'CLIENTE', 'BLOQUEADO', '2026-09-30T09:00:00'],
+  ['Diego', 'Delgado Iglesias', 'ADMINISTRADOR', 'BLOQUEADO', '2026-01-20T13:25:00'],
   ['Paula', 'Medina Cruz', 'CLIENTE', 'ACTIVO', '2026-06-09T15:50:00'],
   ['Hugo', 'Herrera Blanco', 'VENDEDOR', 'BLOQUEADO', '2026-06-25T11:15:00'],
   ['Irene', 'Prieto Vidal', 'CLIENTE', 'ACTIVO', '2026-07-03T18:30:00'],
-  ['Álvaro', 'Campos Serrano', 'CLIENTE', 'DESACTIVADO', '2026-07-11T08:45:00'],
+  ['Álvaro', 'Campos Serrano', 'CLIENTE', 'BLOQUEADO', '2026-07-11T08:45:00'],
   ['Nuria', 'Navarro Lozano', 'VENDEDOR', 'ACTIVO', '2026-07-19T14:20:00'],
   ['Raúl', 'Ortiz Fuentes', 'CLIENTE', 'ACTIVO', '2026-07-27T10:05:00'],
-  ['Sofía', 'Cabrera Soler', 'CLIENTE', 'DESACTIVADO', '2026-09-15T12:35:00'],
+  ['Sofía', 'Cabrera Soler', 'CLIENTE', 'BLOQUEADO', '2026-09-15T12:35:00'],
   ['Iván', 'Morales Reyes', 'VENDEDOR', 'ACTIVO', '2026-08-04T09:55:00'],
   ['Claudia', 'Peña Calvo', 'CLIENTE', 'ACTIVO', '2026-08-12T17:00:00'],
-  ['Óscar', 'León Garrido', 'CLIENTE', 'DESACTIVADO', '2026-08-20T13:40:00'],
+  ['Óscar', 'León Garrido', 'CLIENTE', 'BLOQUEADO', '2026-08-20T13:40:00'],
   ['Beatriz', 'Vargas Méndez', 'VENDEDOR', 'PENDIENTE', '2026-09-05T11:10:00'],
   ['Rubén', 'Cortés Pastor', 'CLIENTE', 'ACTIVO', '2026-08-28T16:25:00'],
-  ['Jorge', 'Benítez Sáez', 'CLIENTE', 'DESACTIVADO', '2026-09-10T15:15:00'],
+  ['Jorge', 'Benítez Sáez', 'CLIENTE', 'BLOQUEADO', '2026-09-10T15:15:00'],
   ['Gonzalo', 'Ibáñez Roca', 'CLIENTE', 'PENDIENTE', '2026-10-06T18:20:00'],
   ['Marcos', 'Aguilar Bravo', 'CLIENTE', 'PENDIENTE', '2026-10-08T09:40:00'],
   ['Manuel', 'Esteve Pons', 'ADMINISTRADOR', 'ACTIVO', '2026-10-04T12:05:00'],
@@ -91,7 +91,7 @@ const coincideBusqueda = (usuario, busqueda, soloNombre) =>
     normalizar(campo).includes(busqueda),
   )
 
-const ORDEN_ESTADOS = ['PENDIENTE', 'ACTIVO', 'BLOQUEADO', 'DESACTIVADO']
+const ORDEN_ESTADOS = ['PENDIENTE', 'ACTIVO', 'BLOQUEADO']
 const nombreCompleto = (usuario) => `${usuario.nombre} ${usuario.apellidos}`
 
 const COMPARADORES = new Map([
@@ -112,7 +112,7 @@ function ordenar(lista, criterio, sentido) {
   return [...lista].sort((a, b) => signo * comparar(a, b))
 }
 
-const ESTADOS_ADMITIDOS = new Set(['ACTIVO', 'DESACTIVADO'])
+const ESTADOS_ADMITIDOS = new Set(['ACTIVO', 'BLOQUEADO'])
 
 // Datos de la ficha (HU20) que no salen en el listado. Son ficticios y se calculan a partir del id para
 // que cada usuario tenga siempre los mismos. Nunca incluyen la contraseña.
@@ -292,7 +292,7 @@ export const usersHandlers = [
     const existente = usuarios.find((candidato) => candidato.id === params.id)
     if (!existente) return new HttpResponse(null, { status: 404 })
 
-    if (estado === 'DESACTIVADO') {
+    if (estado === 'BLOQUEADO') {
       const conflicto = conflictoAlDesactivar(existente)
       if (conflicto) return HttpResponse.json({ code: conflicto }, { status: 409 })
     }

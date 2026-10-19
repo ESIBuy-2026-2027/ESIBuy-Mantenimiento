@@ -7,7 +7,7 @@ import { abrirSesionPorApi } from '../../test/renderApp'
 import { renderWithProviders } from '../../test/utils'
 import RoleUsersList from './RoleUsersList'
 
-// El mock tiene 17 clientes (dos páginas): 2 pendientes, 8 activos y 7 desactivados. Por defecto se
+// El mock tiene 17 clientes (dos páginas): 2 pendientes, 8 activos y 7 bloqueados. Por defecto se
 // ordenan por nombre ascendente: la primera página va de Álvaro Campos Serrano a Marcos Aguilar Bravo.
 const ESPERA = { timeout: 3000 }
 
@@ -56,7 +56,7 @@ describe('RoleUsersList (HU24)', () => {
     const filtro = screen.getByRole('combobox', { name: 'Estado' })
     const opciones = within(filtro).getAllByRole('option').map((opcion) => opcion.textContent)
 
-    expect(opciones).toEqual(['Todos los estados', 'Pendiente', 'Activo', 'Desactivado'])
+    expect(opciones).toEqual(['Todos los estados', 'Pendiente', 'Activo', 'Bloqueado'])
     expect(screen.queryByRole('combobox', { name: 'Rol' })).not.toBeInTheDocument()
   })
 
@@ -70,14 +70,14 @@ describe('RoleUsersList (HU24)', () => {
     filasDeDatos().forEach((fila) => expect(within(fila).getByText('Pendiente')).toBeInTheDocument())
   })
 
-  it('roleUsersList_alFiltrarPorDesactivado_muestraSoloEsasCuentas', async () => {
+  it('roleUsersList_alFiltrarPorBloqueado_muestraSoloEsasCuentas', async () => {
     const user = userEvent.setup()
     await renderClientes()
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'Desactivado')
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'Bloqueado')
 
     await waitFor(() => expect(filasDeDatos()).toHaveLength(7))
-    filasDeDatos().forEach((fila) => expect(within(fila).getByText('Desactivado')).toBeInTheDocument())
+    filasDeDatos().forEach((fila) => expect(within(fila).getByText('Bloqueado')).toBeInTheDocument())
   })
 
   it('roleUsersList_porDefecto_ordenaPorNombreAscendente', async () => {
@@ -210,7 +210,7 @@ describe('RoleUsersList (HU22): los administradores no están pendientes', () =>
       .getAllByRole('option')
       .map((opcion) => opcion.textContent)
 
-    expect(opciones).toEqual(['Todos los estados', 'Activo', 'Desactivado'])
+    expect(opciones).toEqual(['Todos los estados', 'Activo', 'Bloqueado'])
   })
 
   it('roleUsersList_deAdministradores_ningunoApareceComoPendiente', async () => {

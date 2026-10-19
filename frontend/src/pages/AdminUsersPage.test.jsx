@@ -190,7 +190,7 @@ describe('AdminUsersPage (HU22): los administradores no están pendientes', () =
     await user.selectOptions(screen.getByRole('combobox', { name: 'Rol' }), 'Administrador')
 
     expect(opcionesDeEstado()).not.toContain('Pendiente')
-    expect(opcionesDeEstado()).toEqual(['Todos los estados', 'Activo', 'Desactivado'])
+    expect(opcionesDeEstado()).toEqual(['Todos los estados', 'Activo', 'Bloqueado'])
   })
 
   it('adminUsersPage_alElegirAdministradorConEstadoPendiente_quitaElEstadoPendiente', async () => {

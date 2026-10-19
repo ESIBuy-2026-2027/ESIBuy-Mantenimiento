@@ -7,8 +7,8 @@ import { abrirSesionPorApi } from '../../test/renderApp'
 import { renderWithProviders } from '../../test/utils'
 import UserDetailDialog from './UserDetailDialog'
 
-// Del mock de usuarios: Lucía Torres Vega (usr-4) es clienta desactivada, Carlos Moreno Gil (usr-3) cliente
-// activo, Diego Delgado Iglesias (usr-11) administrador desactivado y Gonzalo Ibáñez Roca (usr-25) cliente
+// Del mock de usuarios: Lucía Torres Vega (usr-4) es clienta bloqueada, Carlos Moreno Gil (usr-3) cliente
+// activo, Diego Delgado Iglesias (usr-11) administrador bloqueado y Gonzalo Ibáñez Roca (usr-25) cliente
 // pendiente de verificación (HU1).
 const LUCIA = 'usr-4'
 const CARLOS = 'usr-3'
@@ -48,7 +48,7 @@ describe('UserDetailDialog (HU20): datos', () => {
     expect(valorDe(dialogo, 'Fecha de nacimiento').value).toMatch(/^\d{2}\/\d{2}\/\d{4}$/)
     expect(valorDe(dialogo, 'Tipo de cliente')).toHaveValue('Estándar')
     expect(valorDe(dialogo, 'Imagen de perfil')).toHaveValue('Avatar 2')
-    expect(valorDe(dialogo, 'Estado')).toHaveValue('Desactivado')
+    expect(valorDe(dialogo, 'Estado')).toHaveValue('Bloqueado')
   })
 
   it('userDetailDialog_deUnCliente_noMuestraLaFechaDeAlta', async () => {
@@ -166,7 +166,7 @@ describe('UserDetailDialog (HU20): activar y desactivar desde la ficha', () => {
     await confirmar(user, dialogo, 'Desactivar', /seguro que quieres desactivar a carlos moreno gil/i)
 
     expect(await within(dialogo).findByText(/carlos moreno gil está desactivado/i, {}, ESPERA)).toBeInTheDocument()
-    await waitFor(() => expect(valorDe(dialogo, 'Estado')).toHaveValue('Desactivado'), ESPERA)
+    await waitFor(() => expect(valorDe(dialogo, 'Estado')).toHaveValue('Bloqueado'), ESPERA)
     expect(onStatusChange).toHaveBeenCalledTimes(1)
   })
 
@@ -195,7 +195,7 @@ describe('UserDetailDialog (HU20): activar y desactivar desde la ficha', () => {
     await confirmar(user, dialogo, 'Activar', /seguro que quieres activar/i)
 
     expect(await within(dialogo).findByText(/no se ha podido activar a lucía torres vega/i, {}, ESPERA)).toBeInTheDocument()
-    expect(valorDe(dialogo, 'Estado')).toHaveValue('Desactivado')
+    expect(valorDe(dialogo, 'Estado')).toHaveValue('Bloqueado')
   })
 })
 

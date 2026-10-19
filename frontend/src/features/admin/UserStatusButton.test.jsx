@@ -7,7 +7,7 @@ import { abrirSesionPorApi } from '../../test/renderApp'
 import { renderWithProviders } from '../../test/utils'
 import UserStatusButton from './UserStatusButton'
 
-// Lucía Torres Vega es una clienta desactivada y Carlos Moreno Gil un cliente activo del mock de usuarios.
+// Lucía Torres Vega es una clienta bloqueada y Carlos Moreno Gil un cliente activo del mock de usuarios.
 const DESACTIVADA = { id: 'usr-4', nombre: 'Lucía', apellidos: 'Torres Vega' }
 const ACTIVO = { id: 'usr-3', nombre: 'Carlos', apellidos: 'Moreno Gil' }
 const ESPERA = { timeout: 3000 }
@@ -125,7 +125,7 @@ describe('UserStatusButton: desactivar (HU23)', () => {
     await user.click(botonDe(confirmacion, 'Desactivar'))
 
     await waitFor(() => expect(onDone).toHaveBeenCalledWith('Carlos Moreno Gil'), ESPERA)
-    expect(peticion).toEqual({ id: 'usr-3', cuerpo: { estado: 'DESACTIVADO' } })
+    expect(peticion).toEqual({ id: 'usr-3', cuerpo: { estado: 'BLOQUEADO' } })
   })
 
   it('userStatusButton_desactivar_conConflicto_pasaElErrorConSuCodigo', async () => {

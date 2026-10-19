@@ -55,7 +55,7 @@ describe('UsersTable', () => {
         apellidos: 'Torres Vega',
         email: 'lucia.torres@esibuy.test',
         rol: 'CLIENTE',
-        estado: 'DESACTIVADO',
+        estado: 'BLOQUEADO',
         fechaAlta: '2026-09-28T17:45:00',
       },
     ]

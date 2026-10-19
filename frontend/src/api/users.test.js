@@ -93,12 +93,12 @@ describe('updateUserStatus', () => {
     expect(respuesta).toEqual({ id: 'usr-4', estado: 'ACTIVO' })
   })
 
-  it('updateUserStatus_paraDesactivar_enviaDesactivado', async () => {
+  it('updateUserStatus_paraBloquear_enviaBloqueado', async () => {
     const peticion = capturarCambio()
 
-    await updateUserStatus('usr-3', 'DESACTIVADO')
+    await updateUserStatus('usr-3', 'BLOQUEADO')
 
-    expect(peticion.cuerpo).toEqual({ estado: 'DESACTIVADO' })
+    expect(peticion.cuerpo).toEqual({ estado: 'BLOQUEADO' })
   })
 
   it('updateUserStatus_conConflicto_lanzaApiErrorConSuCodigo', async () => {
@@ -108,7 +108,7 @@ describe('updateUserStatus', () => {
       ),
     )
 
-    const error = await updateUserStatus('u-1', 'DESACTIVADO').catch((excepcion) => excepcion)
+    const error = await updateUserStatus('u-1', 'BLOQUEADO').catch((excepcion) => excepcion)
 
     expect(error).toBeInstanceOf(ApiError)
     expect(error.status).toBe(409)
