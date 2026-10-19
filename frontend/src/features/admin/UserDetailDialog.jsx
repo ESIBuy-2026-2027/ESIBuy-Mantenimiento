@@ -1,9 +1,8 @@
 import PropTypes from 'prop-types'
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import {
   Button,
   Dialog,
-  DialogActions,
   DialogBody,
   DialogContent,
   DialogSurface,
@@ -16,10 +15,9 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { Dismiss24Regular, Edit20Regular } from '@fluentui/react-icons'
-import { getUser, updateUser } from '../../api/users'
+import { Dismiss24Regular } from '@fluentui/react-icons'
+import { getUser } from '../../api/users'
 import { useApiQuery } from '../../hooks/useApiQuery'
-import EditableProfile from './EditableProfile'
 import ReadOnlyFields from './ReadOnlyFields'
 import { readFields } from './profileFields'
 
@@ -36,28 +34,13 @@ const useStyles = makeStyles({
   },
 })
 
-// Ficha de un cliente o de un administrador (HU20), como la del vendedor (HU26): datos en solo lectura y el
-// botón Editar (HU22), que convierte en modificables los campos que se pueden cambiar y deja el resto en solo
-// lectura (el rol, siempre). Bloquear y desbloquear la cuenta ya no se hace aquí, sino desde la fila de la tabla
-// (HU23 y HU24). `onStatusChange` avisa al listado de que los datos de la cuenta han cambiado.
-export default function UserDetailDialog({ userId, onClose, onStatusChange }) {
+// Ficha de un cliente o de un administrador (HU20), como la del vendedor (HU26): sus datos en solo lectura y
+// nada más. Editar, bloquear, desbloquear y eliminar la cuenta se hacen desde los botones de su fila en la tabla
+// (HU19, HU22, HU23 y HU24).
+export default function UserDetailDialog({ userId, onClose }) {
   const styles = useStyles()
   const fetcher = useCallback(() => getUser(userId), [userId])
   const { data: usuario, failed, retry } = useApiQuery(fetcher)
-  const [resultado, setResultado] = useState(null)
-  const [editando, setEditando] = useState(false)
-
-  const avisarGuardado = () => {
-    setEditando(false)
-    setResultado({ intent: 'success', texto: 'Los cambios se han guardado.' })
-    retry()
-    onStatusChange()
-  }
-
-  const empezarAEditar = () => {
-    setResultado(null)
-    setEditando(true)
-  }
 
   return (
     <Dialog open modalType="modal" onOpenChange={(_event, data) => !data.open && onClose()}>
@@ -71,27 +54,12 @@ export default function UserDetailDialog({ userId, onClose, onStatusChange }) {
             Información del usuario
           </DialogTitle>
           <DialogContent className={styles.content}>
-            {editando ? (
-              <MessageBar intent="info">
-                <MessageBarBody>
-                  <MessageBarTitle>Modo edición</MessageBarTitle>
-                  Solo se pueden modificar los campos con fondo claro. Los oscuros no se pueden cambiar.
-                </MessageBarBody>
-              </MessageBar>
-            ) : (
-              <MessageBar intent="info">
-                <MessageBarBody>
-                  <MessageBarTitle>Modo solo lectura</MessageBarTitle>
-                  Puedes consultar esta información. Para cambiarla, pulsa Editar.
-                </MessageBarBody>
-              </MessageBar>
-            )}
-
-            {resultado && (
-              <MessageBar intent={resultado.intent}>
-                <MessageBarBody>{resultado.texto}</MessageBarBody>
-              </MessageBar>
-            )}
+            <MessageBar intent="info">
+              <MessageBarBody>
+                <MessageBarTitle>Modo solo lectura</MessageBarTitle>
+                Puedes consultar esta información. Para cambiarla, usa el botón Editar de la tabla.
+              </MessageBarBody>
+            </MessageBar>
 
             {failed && (
               <MessageBar intent="error">
@@ -104,24 +72,8 @@ export default function UserDetailDialog({ userId, onClose, onStatusChange }) {
 
             {!usuario && !failed && <Spinner label="Cargando usuario…" />}
 
-            {usuario && !editando && <ReadOnlyFields fields={readFields(usuario.rol, usuario)} />}
-            {usuario && editando && (
-              <EditableProfile
-                rol={usuario.rol}
-                usuario={usuario}
-                save={(datos) => updateUser(usuario.id, datos)}
-                onSaved={avisarGuardado}
-                onCancel={() => setEditando(false)}
-              />
-            )}
+            {usuario && <ReadOnlyFields fields={readFields(usuario.rol, usuario)} />}
           </DialogContent>
-          {usuario && !editando && (
-            <DialogActions>
-              <Button icon={<Edit20Regular />} onClick={empezarAEditar}>
-                Editar
-              </Button>
-            </DialogActions>
-          )}
         </DialogBody>
       </DialogSurface>
     </Dialog>
@@ -131,5 +83,4 @@ export default function UserDetailDialog({ userId, onClose, onStatusChange }) {
 UserDetailDialog.propTypes = {
   userId: PropTypes.string.isRequired,
   onClose: PropTypes.func.isRequired,
-  onStatusChange: PropTypes.func.isRequired,
 }

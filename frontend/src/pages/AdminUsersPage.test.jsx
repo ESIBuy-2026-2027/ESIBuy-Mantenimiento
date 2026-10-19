@@ -298,7 +298,8 @@ describe('AdminUsersPage (HU19): acciones en la tabla', () => {
     await user.click(within(edicion).getByRole('button', { name: /^guardar$/i }))
 
     expect(await screen.findByText('Los cambios se han guardado.', undefined, { timeout: 3000 })).toBeInTheDocument()
-    await waitFor(() => expect(columna(0)).toEqual(['Carla Moreno Gil']), { timeout: 3000 })
+    // Mientras se cierra el formulario, Fluent marca la tabla como oculta: se busca por texto y no por rol.
+    expect(await screen.findByText('Carla Moreno Gil', {}, { timeout: 3000 })).toBeInTheDocument()
   })
 
   it('adminUsersPage_alEliminarDesdeLaTabla_laFilaDesapareceYAvisa', async () => {
