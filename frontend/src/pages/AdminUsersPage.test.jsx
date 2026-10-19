@@ -272,6 +272,29 @@ describe('AdminUsersPage (HU19): acciones en la tabla', () => {
     await buscar(user, 'admin@esibuy')
 
     expect(screen.getByRole('button', { name: 'Bloquear a Ada Admin' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Eliminar a Ada Admin' })).toBeDisabled()
+  })
+
+  it('adminUsersPage_siSoloQuedaUnAdministradorActivo_nadieMasPuedeBloquearloNiEliminarlo', async () => {
+    server.use(
+      http.get('/api/admin/usuarios', ({ request }) => {
+        const params = new URL(request.url).searchParams
+        if (params.get('role') !== 'ADMINISTRADOR' || params.get('status') !== 'ACTIVO') return undefined
+        return HttpResponse.json({
+          items: [{ id: 'usr-1', nombre: 'Ana', apellidos: 'López García', rol: 'ADMINISTRADOR', estado: 'ACTIVO' }],
+          page: 1,
+          size: 1,
+          totalItems: 1,
+          totalPages: 1,
+        })
+      }),
+    )
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'ana.lopez')
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Bloquear a Ana López García' })).toBeDisabled(), { timeout: 3000 })
+    expect(screen.getByRole('button', { name: 'Eliminar a Ana López García' })).toBeDisabled()
   })
 
   it('adminUsersPage_alPulsarLaLupa_abreLaFichaSinAccionesDeEstado', async () => {

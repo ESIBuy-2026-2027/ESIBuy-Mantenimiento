@@ -178,6 +178,8 @@ describe('RoleUsersList (HU24)', () => {
     await renderClientes('usr-3')
 
     expect(screen.getByRole('button', { name: 'Bloquear a Carlos Moreno Gil' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Eliminar a Carlos Moreno Gil' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Eliminar a Claudia Peña Calvo' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Bloquear a Claudia Peña Calvo' })).toBeEnabled()
   })
 
@@ -199,6 +201,20 @@ describe('RoleUsersList (HU24)', () => {
 
     await waitFor(() => expect(within(filaDe('carlos.moreno@esibuy.test')).getByText('Bloqueado')).toBeInTheDocument(), ESPERA)
     expect(await screen.findByText('Carlos Moreno Gil está bloqueado y ya no puede iniciar sesión.')).toBeInTheDocument()
+  })
+
+  it('roleUsersList_deClientes_noPideCuantosAdministradoresActivosQuedan', async () => {
+    const roles = []
+    server.use(
+      http.get('/api/admin/usuarios', ({ request }) => {
+        roles.push(new URL(request.url).searchParams.get('role'))
+      }),
+    )
+
+    await renderClientes()
+
+    expect(roles.length).toBeGreaterThan(0)
+    expect(roles.every((rol) => rol === 'CLIENTE')).toBe(true)
   })
 
   it('roleUsersList_alEliminarDesdeLaFila_laFilaDesapareceYAvisa', async () => {

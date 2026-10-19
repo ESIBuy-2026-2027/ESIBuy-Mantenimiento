@@ -372,3 +372,63 @@ describe('UserRowActions (HU19): eliminar', () => {
     expect(onChanged).not.toHaveBeenCalled()
   })
 })
+
+describe('UserRowActions (HU19, AB#250): el administrador en sesión y el último', () => {
+  const ANA = { id: 'usr-1', nombre: 'Ana', apellidos: 'López García', estado: 'ACTIVO' }
+
+  it('userRowActions_deLaPropiaCuenta_dejaEliminarDeshabilitadoYExplicaElMotivo', async () => {
+    await renderAcciones(ADA)
+
+    const boton = screen.getByRole('button', { name: 'Eliminar a Ada Admin' })
+    expect(boton).toBeDisabled()
+    expect(boton).toHaveAttribute('title', 'No puedes eliminar tu propia cuenta.')
+  })
+
+  it('userRowActions_deLaPropiaCuenta_dejaVerYEditarDisponibles', async () => {
+    await renderAcciones(ADA)
+
+    expect(screen.getByRole('button', { name: 'Ver información de Ada Admin' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Editar a Ada Admin' })).toBeEnabled()
+  })
+
+  it('userRowActions_delUltimoAdministradorActivo_dejaBloquearYEliminarDeshabilitadosConSuMotivo', async () => {
+    await renderAcciones(ANA, { lastAdminId: 'usr-1' })
+
+    const bloquear = screen.getByRole('button', { name: 'Bloquear a Ana López García' })
+    const eliminar = screen.getByRole('button', { name: 'Eliminar a Ana López García' })
+    expect(bloquear).toBeDisabled()
+    expect(bloquear).toHaveAttribute('title', 'No se puede bloquear al último administrador activo.')
+    expect(eliminar).toBeDisabled()
+    expect(eliminar).toHaveAttribute('title', 'No se puede eliminar al último administrador activo.')
+  })
+
+  it('userRowActions_delUltimoAdministradorActivo_dejaVerYEditarDisponibles', async () => {
+    await renderAcciones(ANA, { lastAdminId: 'usr-1' })
+
+    expect(screen.getByRole('button', { name: 'Ver información de Ana López García' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Editar a Ana López García' })).toBeEnabled()
+  })
+
+  it('userRowActions_siElUltimoAdministradorEsOtro_dejaBloquearYEliminarDisponibles', async () => {
+    await renderAcciones(ANA, { lastAdminId: 'usr-99' })
+
+    expect(screen.getByRole('button', { name: 'Bloquear a Ana López García' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Eliminar a Ana López García' })).toBeEnabled()
+  })
+
+  it('userRowActions_sinDatosDelUltimoAdministrador_dejaBloquearYEliminarDisponibles', async () => {
+    await renderAcciones(CARLOS)
+
+    expect(screen.getByRole('button', { name: 'Bloquear a Carlos Moreno Gil' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Eliminar a Carlos Moreno Gil' })).toBeEnabled()
+  })
+
+  it('userRowActions_deUnaCuentaDeshabilitada_noAbreLaConfirmacionAlPulsar', async () => {
+    const user = userEvent.setup()
+    await renderAcciones(ADA)
+
+    await user.click(screen.getByRole('button', { name: 'Eliminar a Ada Admin' }))
+
+    expect(screen.queryByText(/seguro que quieres eliminar/i)).not.toBeInTheDocument()
+  })
+})
