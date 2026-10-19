@@ -62,7 +62,7 @@ export default function UserDetailDialog({ userId, currentUserId, onClose, onSta
 
   // Una cuenta pendiente (HU1) se acepta activándola, como los vendedores pendientes.
   let accion = null
-  if (usuario?.estado === USER_STATUS.DESACTIVADO || usuario?.estado === USER_STATUS.PENDIENTE) accion = 'activar'
+  if (usuario?.estado === USER_STATUS.BLOQUEADO || usuario?.estado === USER_STATUS.PENDIENTE) accion = 'activar'
   else if (usuario?.estado === USER_STATUS.ACTIVO && usuario.id !== currentUserId) accion = 'desactivar'
 
   const avisarHecho = (nombre) => {

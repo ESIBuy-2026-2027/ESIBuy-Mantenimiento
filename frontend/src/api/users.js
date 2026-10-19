@@ -25,7 +25,7 @@ export function updateUser(userId, datos) {
   return request(`/api/admin/usuarios/${encodeURIComponent(userId)}`, { method: 'PUT', body: datos })
 }
 
-// Activa (HU24) o desactiva (HU23) una cuenta: estado es 'ACTIVO' o 'DESACTIVADO'.
+// Activa (HU24) o desactiva (HU23) una cuenta: estado es 'ACTIVO' o 'BLOQUEADO'.
 export function updateUserStatus(userId, estado) {
   return request(`/api/admin/usuarios/${encodeURIComponent(userId)}/status`, {
     method: 'PATCH',

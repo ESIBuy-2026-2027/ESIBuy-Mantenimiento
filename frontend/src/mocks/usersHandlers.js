@@ -280,8 +280,8 @@ export const usersHandlers = [
     return HttpResponse.json(detalleActual(actualizado))
   }),
 
-  // Activar (HU24) o desactivar (HU23) una cuenta. Un administrador no puede desactivarse a sí mismo
-  // ni desactivar al último administrador activo.
+  // Activar (HU24) o bloquear (antes desactivar, HU23) una cuenta. Un administrador no puede bloquearse a sí mismo
+  // ni bloquear al último administrador activo.
   http.patch('/api/admin/usuarios/:id/status', async ({ params, request }) => {
     const rechazo = rechazarSiNoEsAdmin()
     if (rechazo) return rechazo

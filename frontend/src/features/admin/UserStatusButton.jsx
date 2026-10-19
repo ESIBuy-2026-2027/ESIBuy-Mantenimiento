@@ -19,7 +19,7 @@ const ACCIONES = {
     icono: <PersonProhibited20Regular />,
     titulo: 'Desactivar usuario',
     pregunta: (nombre) => `¿Seguro que quieres desactivar a ${nombre}? No podrá iniciar sesión.`,
-    estado: 'DESACTIVADO',
+    estado: 'BLOQUEADO',
   },
 }
 

@@ -20,7 +20,6 @@ const STATUS_BADGE_COLORS = {
   [USER_STATUS.PENDIENTE]: 'warning',
   [USER_STATUS.ACTIVO]: 'success',
   [USER_STATUS.BLOQUEADO]: 'danger',
-  [USER_STATUS.DESACTIVADO]: 'subtle',
 }
 
 const dateFormatter = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -93,7 +92,7 @@ export default function UsersTable({ users, refreshing = false, renderActions })
               <TableCell>{ROLE_LABELS[user.rol]}</TableCell>
               <TableCell>
                 <Badge appearance="tint" color={STATUS_BADGE_COLORS[user.estado]}>
-                  {STATUS_LABELS[user.estado]}
+                  {STATUS_LABELS[user.estado] ?? user.estado}
                 </Badge>
               </TableCell>
               <TableCell className={styles.date}>{dateFormatter.format(new Date(user.fechaAlta))}</TableCell>

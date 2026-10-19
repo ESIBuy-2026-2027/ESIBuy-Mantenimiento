@@ -6,7 +6,6 @@ export const USER_STATUS = {
   PENDIENTE: 'PENDIENTE',
   ACTIVO: 'ACTIVO',
   BLOQUEADO: 'BLOQUEADO',
-  DESACTIVADO: 'DESACTIVADO',
 }
 
 export const ROLE_LABELS = {
@@ -19,15 +18,14 @@ export const STATUS_LABELS = {
   [USER_STATUS.PENDIENTE]: 'Pendiente',
   [USER_STATUS.ACTIVO]: 'Activo',
   [USER_STATUS.BLOQUEADO]: 'Bloqueado',
-  [USER_STATUS.DESACTIVADO]: 'Desactivado',
 }
 
 // Estados que pueden tener clientes y administradores: pendientes hasta que un administrador los
-// verifica (HU1), activos o desactivados.
+// verifica (HU1), activos o bloqueados (los administradores no tienen el estado pendiente).
 export const ACCOUNT_STATUS_LABELS = {
   [USER_STATUS.PENDIENTE]: STATUS_LABELS[USER_STATUS.PENDIENTE],
   [USER_STATUS.ACTIVO]: STATUS_LABELS[USER_STATUS.ACTIVO],
-  [USER_STATUS.DESACTIVADO]: STATUS_LABELS[USER_STATUS.DESACTIVADO],
+  [USER_STATUS.BLOQUEADO]: STATUS_LABELS[USER_STATUS.BLOQUEADO],
 }
 
 // Estados que se pueden elegir al filtrar por un rol. Los administradores no tienen el estado pendiente; los
