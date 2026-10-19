@@ -47,7 +47,7 @@ describe('UsersTable', () => {
     ])
   })
 
-  it('usersTable_conRenderActions_anadeLaColumnaInformacion', () => {
+  it('usersTable_conRenderActions_anadeLaColumnaAcciones', () => {
     const users = [
       {
         id: 'u1',
@@ -63,7 +63,7 @@ describe('UsersTable', () => {
     renderWithProviders(<UsersTable users={users} renderActions={(user) => <span>acción de {user.nombre}</span>} />)
 
     const cabeceras = screen.getAllByRole('columnheader').map((cabecera) => cabecera.textContent)
-    expect(cabeceras).toEqual(['Nombre', 'Email', 'Rol', 'Estado', 'Fecha de alta', 'Información'])
+    expect(cabeceras).toEqual(['Nombre', 'Email', 'Rol', 'Estado', 'Fecha de alta', 'Acciones'])
     expect(within(screen.getAllByRole('row')[1]).getByText('acción de Lucía')).toBeInTheDocument()
   })
 })

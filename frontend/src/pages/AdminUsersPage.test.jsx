@@ -216,3 +216,71 @@ describe('AdminUsersPage (HU22): los administradores no están pendientes', () =
     expect(opcionesDeEstado()).toContain('Pendiente')
   })
 })
+
+describe('AdminUsersPage (HU19): acciones en la tabla', () => {
+  async function buscar(user, texto, cantidad = 1) {
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar por nombre o email' }), texto)
+    await esperarFilas(cantidad)
+  }
+
+  it('adminUsersPage_laTablaTieneUnaColumnaAcciones_conLupaYBloqueoEnCadaFila', async () => {
+    await abrirListado()
+    await esperarFilas(10)
+
+    expect(screen.getAllByRole('columnheader').map((cabecera) => cabecera.textContent)).toEqual([
+      'Nombre',
+      'Email',
+      'Rol',
+      'Estado',
+      'Fecha de alta',
+      'Acciones',
+    ])
+    expect(screen.getAllByRole('button', { name: /^ver información de/i })).toHaveLength(10)
+    expect(screen.getAllByRole('button', { name: /^(bloquear|desbloquear) a /i })).toHaveLength(10)
+  })
+
+  it('adminUsersPage_alBloquearDesdeLaTabla_laFilaPasaABloqueadoYAvisa', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'carlos')
+
+    await user.click(screen.getByRole('button', { name: 'Bloquear a Carlos Moreno Gil' }))
+    const pregunta = await screen.findByText(/seguro que quieres bloquear a carlos moreno gil/i)
+    await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Bloquear', { selector: 'button' }))
+
+    expect(await screen.findByText('Carlos Moreno Gil está bloqueado y ya no puede iniciar sesión.', {}, { timeout: 3000 })).toBeInTheDocument()
+    await waitFor(() => expect(columna(3)).toEqual(['Bloqueado']), { timeout: 3000 })
+  })
+
+  it('adminUsersPage_alDesbloquearUnaCuentaPendiente_laAcepta', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'gonzalo')
+
+    await user.click(screen.getByRole('button', { name: 'Desbloquear a Gonzalo Ibáñez Roca' }))
+    const pregunta = await screen.findByText(/seguro que quieres desbloquear a gonzalo ibáñez roca/i)
+    await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Desbloquear', { selector: 'button' }))
+
+    await waitFor(() => expect(columna(3)).toEqual(['Activo']), { timeout: 3000 })
+  })
+
+  it('adminUsersPage_laFilaDelAdministradorEnSesion_noPermiteBloquearse', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'admin@esibuy')
+
+    expect(screen.getByRole('button', { name: 'Bloquear a Ada Admin' })).toBeDisabled()
+  })
+
+  it('adminUsersPage_alPulsarLaLupa_abreLaFichaSinAccionesDeEstado', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'carlos')
+
+    await user.click(screen.getByRole('button', { name: 'Ver información de Carlos Moreno Gil' }))
+
+    const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
+    expect(await within(dialogo).findByLabelText('Email')).toHaveValue('carlos.moreno@esibuy.test')
+    expect(within(dialogo).queryByRole('button', { name: /bloquear|activar/i })).not.toBeInTheDocument()
+  })
+})

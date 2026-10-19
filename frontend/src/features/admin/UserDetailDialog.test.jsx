@@ -16,25 +16,18 @@ const DIEGO = 'usr-11'
 const GONZALO = 'usr-25'
 const ESPERA = { timeout: 3000 }
 
-async function abrirFicha(userId, currentUserId = 'u-1') {
+async function abrirFicha(userId) {
   await abrirSesionPorApi('admin@esibuy.test')
   const handlers = { onClose: vi.fn(), onStatusChange: vi.fn() }
-  renderWithProviders(<UserDetailDialog userId={userId} currentUserId={currentUserId} {...handlers} />)
+  renderWithProviders(<UserDetailDialog userId={userId} {...handlers} />)
   const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
   await within(dialogo).findByLabelText('Nombre')
   return { dialogo, ...handlers }
 }
 
 const valorDe = (dialogo, etiqueta) => within(dialogo).getByLabelText(etiqueta)
-const botonDeEstado = (dialogo, texto) => within(dialogo).queryByText(texto, { selector: 'button' })
-
-// La confirmación se busca por texto: mientras se abre o se cierra, Fluent marca partes de la página
-// con aria-hidden y las búsquedas por rol pueden fallar por tiempos.
-async function confirmar(user, dialogo, accion, pregunta) {
-  await user.click(botonDeEstado(dialogo, accion))
-  const confirmacion = (await screen.findByText(pregunta)).closest('[role="alertdialog"]')
-  await user.click(within(confirmacion).getByText(accion, { selector: 'button' }))
-}
+const botonDeEstado = (dialogo) =>
+  within(dialogo).queryByRole('button', { name: /bloquear|desbloquear|activar|desactivar/i })
 
 describe('UserDetailDialog (HU20): datos', () => {
   it('userDetailDialog_deUnCliente_muestraSusDatosEnSoloLectura', async () => {
@@ -107,95 +100,25 @@ describe('UserDetailDialog (HU20): datos', () => {
   })
 })
 
-describe('UserDetailDialog (HU20): activar y desactivar desde la ficha', () => {
-  it('userDetailDialog_deUnaCuentaDesactivada_ofreceActivar', async () => {
-    const { dialogo } = await abrirFicha(LUCIA)
-
-    expect(botonDeEstado(dialogo, 'Activar')).toBeInTheDocument()
-    expect(botonDeEstado(dialogo, 'Desactivar')).not.toBeInTheDocument()
-  })
-
-  it('userDetailDialog_deUnaCuentaActiva_ofreceDesactivar', async () => {
+describe('UserDetailDialog (HU19): la ficha no cambia el estado', () => {
+  it('userDetailDialog_deUnaCuentaActiva_noOfreceBloquear', async () => {
     const { dialogo } = await abrirFicha(CARLOS)
 
-    expect(botonDeEstado(dialogo, 'Desactivar')).toBeInTheDocument()
-    expect(botonDeEstado(dialogo, 'Activar')).not.toBeInTheDocument()
+    expect(botonDeEstado(dialogo)).not.toBeInTheDocument()
   })
 
-  it('userDetailDialog_deUnaCuentaPendiente_ofreceActivarYNoDesactivar', async () => {
+  it('userDetailDialog_deUnaCuentaBloqueada_noOfreceDesbloquearNiActivar', async () => {
+    const { dialogo } = await abrirFicha(LUCIA)
+
+    expect(valorDe(dialogo, 'Estado')).toHaveValue('Bloqueado')
+    expect(botonDeEstado(dialogo)).not.toBeInTheDocument()
+  })
+
+  it('userDetailDialog_deUnaCuentaPendiente_noOfreceActivar', async () => {
     const { dialogo } = await abrirFicha(GONZALO)
 
     expect(valorDe(dialogo, 'Estado')).toHaveValue('Pendiente')
-    expect(botonDeEstado(dialogo, 'Activar')).toBeInTheDocument()
-    expect(botonDeEstado(dialogo, 'Desactivar')).not.toBeInTheDocument()
-  })
-
-  it('userDetailDialog_alActivarUnaCuentaPendiente_laAceptaYPasaAActivo', async () => {
-    const user = userEvent.setup()
-    const { dialogo, onStatusChange } = await abrirFicha(GONZALO)
-
-    await confirmar(user, dialogo, 'Activar', /seguro que quieres activar a gonzalo ibáñez roca/i)
-
-    expect(await within(dialogo).findByText(/gonzalo ibáñez roca ya está activo/i, {}, ESPERA)).toBeInTheDocument()
-    await waitFor(() => expect(valorDe(dialogo, 'Estado')).toHaveValue('Activo'), ESPERA)
-    expect(onStatusChange).toHaveBeenCalledTimes(1)
-  })
-
-  it('userDetailDialog_deLaPropiaCuenta_noOfreceDesactivar', async () => {
-    const { dialogo } = await abrirFicha(CARLOS, CARLOS)
-
-    expect(botonDeEstado(dialogo, 'Desactivar')).not.toBeInTheDocument()
-  })
-
-  it('userDetailDialog_alActivar_muestraActivoAvisaYAvisaAlListado', async () => {
-    const user = userEvent.setup()
-    const { dialogo, onStatusChange } = await abrirFicha(LUCIA)
-
-    await confirmar(user, dialogo, 'Activar', /seguro que quieres activar a lucía torres vega/i)
-
-    expect(await within(dialogo).findByText(/lucía torres vega ya está activo/i, {}, ESPERA)).toBeInTheDocument()
-    await waitFor(() => expect(valorDe(dialogo, 'Estado')).toHaveValue('Activo'), ESPERA)
-    expect(botonDeEstado(dialogo, 'Desactivar')).toBeInTheDocument()
-    expect(onStatusChange).toHaveBeenCalledTimes(1)
-  })
-
-  it('userDetailDialog_alDesactivar_muestraDesactivadoYAvisa', async () => {
-    const user = userEvent.setup()
-    const { dialogo, onStatusChange } = await abrirFicha(CARLOS)
-
-    await confirmar(user, dialogo, 'Desactivar', /seguro que quieres desactivar a carlos moreno gil/i)
-
-    expect(await within(dialogo).findByText(/carlos moreno gil está desactivado/i, {}, ESPERA)).toBeInTheDocument()
-    await waitFor(() => expect(valorDe(dialogo, 'Estado')).toHaveValue('Bloqueado'), ESPERA)
-    expect(onStatusChange).toHaveBeenCalledTimes(1)
-  })
-
-  it('userDetailDialog_siEsElUltimoAdministradorActivo_muestraElMotivo', async () => {
-    server.use(
-      http.patch('/api/admin/usuarios/:id/status', () =>
-        HttpResponse.json({ code: 'LAST_ACTIVE_ADMIN' }, { status: 409 }),
-      ),
-    )
-    const user = userEvent.setup()
-    const { dialogo, onStatusChange } = await abrirFicha(CARLOS)
-
-    await confirmar(user, dialogo, 'Desactivar', /seguro que quieres desactivar/i)
-
-    expect(
-      await within(dialogo).findByText('No se puede desactivar al último administrador activo.', {}, ESPERA),
-    ).toBeInTheDocument()
-    expect(onStatusChange).not.toHaveBeenCalled()
-  })
-
-  it('userDetailDialog_siFallaElCambio_muestraUnErrorGenericoYNoCambiaElEstado', async () => {
-    server.use(http.patch('/api/admin/usuarios/:id/status', () => new HttpResponse(null, { status: 500 })))
-    const user = userEvent.setup()
-    const { dialogo } = await abrirFicha(LUCIA)
-
-    await confirmar(user, dialogo, 'Activar', /seguro que quieres activar/i)
-
-    expect(await within(dialogo).findByText(/no se ha podido activar a lucía torres vega/i, {}, ESPERA)).toBeInTheDocument()
-    expect(valorDe(dialogo, 'Estado')).toHaveValue('Bloqueado')
+    expect(botonDeEstado(dialogo)).not.toBeInTheDocument()
   })
 })
 
@@ -232,7 +155,7 @@ describe('UserDetailDialog (HU22): edición', () => {
     expect(within(dialogo).getByRole('button', { name: /^guardar$/i })).toBeInTheDocument()
     expect(within(dialogo).getByRole('button', { name: /^cancelar$/i })).toBeInTheDocument()
     expect(within(dialogo).queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
-    expect(botonDeEstado(dialogo, 'Desactivar')).toBeNull()
+    expect(botonDeEstado(dialogo)).toBeNull()
     expect(within(dialogo).queryByText('Modo solo lectura')).not.toBeInTheDocument()
   })
 
