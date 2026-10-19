@@ -185,6 +185,13 @@ function conflictoAlBloquear(usuario) {
   return null
 }
 
+// Código de error si la cuenta no se puede eliminar, o null si se puede (mismas reglas que para bloquear).
+function conflictoAlEliminar(usuario) {
+  if (usuario.id === getUsuarioEnSesion()?.id) return 'CANNOT_DELETE_SELF'
+  if (esAdminActivo(usuario) && usuarios.filter(esAdminActivo).length === 1) return 'LAST_ACTIVE_ADMIN'
+  return null
+}
+
 // Devuelve la respuesta de error si quien pregunta no es administrador, o null si puede continuar.
 function rechazarSiNoEsAdmin() {
   const usuario = getUsuarioEnSesion()
@@ -300,5 +307,22 @@ export const usersHandlers = [
     const actualizado = { ...existente, estado }
     usuarios = usuarios.map((candidato) => (candidato.id === params.id ? actualizado : candidato))
     return HttpResponse.json(actualizado)
+  }),
+
+  // Eliminar una cuenta (contrato propuesto por el frontend, AB#249). Un administrador no puede eliminarse a sí
+  // mismo ni eliminar al último administrador activo.
+  http.delete('/api/admin/usuarios/:id', ({ params }) => {
+    const rechazo = rechazarSiNoEsAdmin()
+    if (rechazo) return rechazo
+
+    const existente = usuarios.find((candidato) => candidato.id === params.id)
+    if (!existente) return new HttpResponse(null, { status: 404 })
+
+    const conflicto = conflictoAlEliminar(existente)
+    if (conflicto) return HttpResponse.json({ code: conflicto }, { status: 409 })
+
+    usuarios = usuarios.filter((candidato) => candidato.id !== params.id)
+    detallesModificados.delete(params.id)
+    return new HttpResponse(null, { status: 204 })
   }),
 ]

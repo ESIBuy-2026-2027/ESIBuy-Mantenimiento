@@ -237,6 +237,8 @@ describe('AdminUsersPage (HU19): acciones en la tabla', () => {
     ])
     expect(screen.getAllByRole('button', { name: /^ver información de/i })).toHaveLength(10)
     expect(screen.getAllByRole('button', { name: /^(bloquear|desbloquear) a /i })).toHaveLength(10)
+    expect(screen.getAllByRole('button', { name: /^editar a /i })).toHaveLength(10)
+    expect(screen.getAllByRole('button', { name: /^eliminar a /i })).toHaveLength(10)
   })
 
   it('adminUsersPage_alBloquearDesdeLaTabla_laFilaPasaABloqueadoYAvisa', async () => {
@@ -282,5 +284,33 @@ describe('AdminUsersPage (HU19): acciones en la tabla', () => {
     const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
     expect(await within(dialogo).findByLabelText('Email')).toHaveValue('carlos.moreno@esibuy.test')
     expect(within(dialogo).queryByRole('button', { name: /bloquear|activar/i })).not.toBeInTheDocument()
+  })
+
+  it('adminUsersPage_alEditarDesdeLaTabla_laFilaMuestraElNombreNuevo', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'carlos.moreno')
+
+    await user.click(screen.getByRole('button', { name: 'Editar a Carlos Moreno Gil' }))
+    const edicion = await screen.findByRole('dialog', { name: /editar usuario/i })
+    await user.clear(await within(edicion).findByLabelText(/^nombre/i))
+    await user.type(within(edicion).getByLabelText(/^nombre/i), 'Carla')
+    await user.click(within(edicion).getByRole('button', { name: /^guardar$/i }))
+
+    expect(await screen.findByText('Los cambios se han guardado.', undefined, { timeout: 3000 })).toBeInTheDocument()
+    await waitFor(() => expect(columna(0)).toEqual(['Carla Moreno Gil']), { timeout: 3000 })
+  })
+
+  it('adminUsersPage_alEliminarDesdeLaTabla_laFilaDesapareceYAvisa', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'carlos.moreno')
+
+    await user.click(screen.getByRole('button', { name: 'Eliminar a Carlos Moreno Gil' }))
+    const pregunta = await screen.findByText(/seguro que quieres eliminar a carlos moreno gil/i)
+    await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Eliminar', { selector: 'button' }))
+
+    expect(await screen.findByText('Carlos Moreno Gil se ha eliminado.', {}, { timeout: 3000 })).toBeInTheDocument()
+    expect(await screen.findByText('No se han encontrado usuarios', {}, { timeout: 3000 })).toBeInTheDocument()
   })
 })

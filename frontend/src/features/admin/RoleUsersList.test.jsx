@@ -160,6 +160,8 @@ describe('RoleUsersList (HU24)', () => {
     expect(screen.getAllByRole('button', { name: /^ver información de/i })).toHaveLength(10)
     expect(screen.getAllByRole('button', { name: /^(bloquear|desbloquear) a /i })).toHaveLength(10)
     expect(screen.queryByRole('button', { name: /desactivar|^activar/i })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /^editar a /i })).toHaveLength(10)
+    expect(screen.getAllByRole('button', { name: /^eliminar a /i })).toHaveLength(10)
   })
 
   it('roleUsersList_alPulsarLaLupa_abreLaFichaDeEseUsuario', async () => {
@@ -197,6 +199,16 @@ describe('RoleUsersList (HU24)', () => {
 
     await waitFor(() => expect(within(filaDe('carlos.moreno@esibuy.test')).getByText('Bloqueado')).toBeInTheDocument(), ESPERA)
     expect(await screen.findByText('Carlos Moreno Gil está bloqueado y ya no puede iniciar sesión.')).toBeInTheDocument()
+  })
+
+  it('roleUsersList_alEliminarDesdeLaFila_laFilaDesapareceYAvisa', async () => {
+    const user = userEvent.setup()
+    await renderClientes()
+
+    await cambiarEstadoDesdeLaFila(user, 'Eliminar', 'Carlos Moreno Gil')
+
+    expect(await screen.findByText('Carlos Moreno Gil se ha eliminado.')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText('carlos.moreno@esibuy.test')).not.toBeInTheDocument(), ESPERA)
   })
 
   it('roleUsersList_siFallaElBloqueo_muestraElErrorYNoCambiaLaFila', async () => {
