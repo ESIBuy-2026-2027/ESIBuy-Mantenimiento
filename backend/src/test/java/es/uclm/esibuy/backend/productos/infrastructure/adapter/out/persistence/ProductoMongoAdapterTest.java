@@ -239,6 +239,17 @@ class ProductoMongoAdapterTest {
         assertEquals(2, mongoTemplate.getCollection(COLECCION).countDocuments());
     }
 
+    // T258: el dominio guarda el nombre recortado, así que el índice único también para los espacios.
+    @Test
+    @DisplayName("HU31-CP25: la base de datos rechaza el mismo nombre con espacios en los extremos")
+    void guardarRechazaUnNombreRepetidoConEspacios() {
+        adapter.guardar(productoNuevo("v-1", "Teclado"));
+        Producto conEspacios = productoNuevo("v-1", "  Teclado ");
+
+        assertThrows(ProductoDuplicadoException.class, () -> adapter.guardar(conEspacios));
+        assertEquals(1, mongoTemplate.getCollection(COLECCION).countDocuments());
+    }
+
     private static Producto productoNuevo(String vendedorId, String nombre) {
         return new Producto(null, vendedorId, nombre, "", new BigDecimal("10"), 1, "cat-1", "", true,
                 Descuento.sinDescuento(), Descuento.sinDescuento());
