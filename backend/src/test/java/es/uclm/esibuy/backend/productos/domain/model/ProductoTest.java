@@ -74,6 +74,23 @@ class ProductoTest {
         assertThrows(ProductoInvalidoException.class, () -> productoConNombre("a".repeat(101)));
     }
 
+    // T258: el nombre se guarda recortado para que el índice único lo compare igual que la aplicación.
+    @Test
+    @DisplayName("HU31-CP25: el nombre se guarda sin los espacios de los extremos")
+    void quitaLosEspaciosDeLosExtremosDelNombre() {
+        assertEquals("Teclado mecánico", productoConNombre(" \tTeclado mecánico  ").getNombre());
+    }
+
+    @Test
+    @DisplayName("HU31-CP25: el límite de 100 caracteres se cuenta sin los espacios de los extremos")
+    void elLimiteDelNombreSeCuentaSinLosEspacios() {
+        String cienConEspacios = "  " + "a".repeat(100) + "  ";
+        String cientoUnoConEspacios = " " + "a".repeat(101) + " ";
+
+        assertEquals("a".repeat(100), productoConNombre(cienConEspacios).getNombre());
+        assertThrows(ProductoInvalidoException.class, () -> productoConNombre(cientoUnoConEspacios));
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"0", "0.00", "-1", "-0.01"})
     @DisplayName("HU31-CP04: rechaza un precio que no es mayor que 0")
