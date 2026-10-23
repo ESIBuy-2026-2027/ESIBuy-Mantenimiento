@@ -292,7 +292,7 @@ Los tests de integración de MongoDB (`UsuarioMongoAdapterTest`, `UsuariosConfig
 | HU2-CP01 | Inicia sesión con credenciales correctas y pasa al paso del código por email | Unitario + integración | 5 | ✅ Pasa |
 | HU2-CP02 | Rechaza credenciales incorrectas sin revelar si el correo existe | Unitario + integración | 5 | ✅ Pasa |
 | HU2-CP03 | Bloquea la cuenta durante 15 minutos tras 5 intentos fallidos | Unitario + integración | 6 | ✅ Pasa |
-| HU2-CP04 | Rechaza el acceso a una cuenta desactivada | Unitario + integración | 4 | ✅ Pasa |
+| HU2-CP04 | Rechaza el acceso a una cuenta desactivada | Unitario + integración | 3 | ✅ Pasa |
 | HU2-CP05 | Al validar las credenciales, envía al correo del usuario un código de verificación | Unitario + integración | 4 | ✅ Pasa |
 | HU2-CP06 | Un código correcto pasa al paso de Microsoft Authenticator | Unitario + integración | 3 | ✅ Pasa |
 | HU2-CP07 | Rechaza un código incorrecto | Unitario + integración | 6 | ✅ Pasa |
@@ -316,7 +316,7 @@ Los tests de integración de MongoDB (`UsuarioMongoAdapterTest`, `UsuariosConfig
 | HU2-CP25 | El login no distingue mayúsculas ni espacios en el email, y un email mal formado responde como unas credenciales inválidas | Unitario | 2 | ✅ Pasa |
 | HU2-CP26 | El contador de intentos fallidos se reinicia al completar el login y al caducar el bloqueo, no al acertar solo la contraseña | Unitario | 4 | ✅ Pasa |
 | HU2-CP27 | El campo de la contraseña del login tiene un botón para mostrarla y ocultarla | Frontend (página) | 1 | ✅ Pasa (1, AB#19, PR #105) |
-| HU2-CP28 | Una cuenta bloqueada por un administrador muestra su mensaje en el paso 1, antes del código del correo, y no avanza al 2FA | Frontend (página) | 2 | ✅ Pasa (2, AB#245, PR #108) |
+| HU2-CP28 | Una cuenta bloqueada por un administrador muestra su mensaje en el paso 1, antes del código del correo, y no avanza al 2FA | Frontend (página) + unitario + integración | 4 | 🔍 En revisión (2, AB#246, PR por abrir) |
 
 Notas:
 - **HU2-CP25 y CP26 (fallos de la demo del Sprint 1):** el paso 1 busca el email normalizado (`Email`, T240) y responde «Credenciales inválidas» si está mal formado. El contador de intentos se reinicia al caducar el bloqueo (`Usuario.registrarIntentoFallido`) y al completar el tercer paso (`AuthenticatorService.verificarCodigo`), no al acertar la contraseña: así quien solo tenga la contraseña no puede probar códigos sin límite.
@@ -335,7 +335,7 @@ Notas:
 - **HU2-CP16 (T235, AB#235):** la comprobación de cuenta pendiente se realiza intencionadamente después de validar la contraseña para evitar la enumeración de cuentas inactivas por parte de posibles atacantes. El PR #70 lo propuso como CP14, pero CP14 y CP15 ya los usaba la T230 (PR #67): se renumeró a CP16 al integrar develop. Responde **403 con `code: ACCOUNT_PENDING`** (como la cuenta desactivada), que es lo que leerá el frontend en la T236; el test del controlador lo comprueba (sin `@ResponseStatus` respondía 200).
 - **T20 (AB#20, paso 3 con Microsoft Authenticator):** TOTP (RFC 6238) con la librería java-totp (`JavaTotpAdapter`), secreto cifrado con AES-GCM (`AesGcmCifradoSecretoAdapter`) en `factores_autenticacion`, alta con QR en el primer login y apertura de la sesión de Spring Security con `ROLE_<rol>`. El paso 3 va en su propio servicio (`AuthenticatorService`). `codigoCorrectoPasaAlAuthenticator` (CP06) se amplía: ahora prepara un usuario con Authenticator confirmado. Prueba manual de punta a punta (login, correo real, alta con QR escaneado en el móvil, sesión abierta, `/me` y logout) el 10/10/2026.
 - **HU2-CP17 a CP24:** casos nuevos de la T20 (plan `docs/planes/task-20.md`). Pendientes de añadir a la descripción de la T20 en Azure Boards.
-- **HU2-CP28 (AB#245, Sprint 2):** las cuentas ya no se desactivan, se bloquean (decisión del equipo). El frontend deja de esperar `ACCOUNT_DISABLED` y espera `403` con `ACCOUNT_BLOCKED` (estado `BLOQUEADO`); solo cambia el login. Hasta que el backend renombre su código, CP04 (`CuentaDesactivadaException`, `ACCOUNT_DISABLED`) sigue describiendo la cuenta «desactivada»: no se ha tocado el backend.
+- **HU2-CP28 (AB#245, Sprint 2):** las cuentas ya no se desactivan, se bloquean (decisión del equipo). El frontend deja de esperar `ACCOUNT_DISABLED` y espera `403` con `ACCOUNT_BLOCKED` (estado `BLOQUEADO`); solo cambia el login. El backend lo completa en la T246 (AB#246): el `403` de `CuentaDesactivadaException` responde `ACCOUNT_BLOCKED` y un test fija que la cuenta se rechaza sin generar ni enviar el código del correo. El test del controlador que esperaba `ACCOUNT_DISABLED` (antes en CP04) pasa a CP28. El estado `DESACTIVADO` y la excepción no se renombran todavía, así que CP04 sigue cubriendo el rechazo y la persistencia de ese estado.
 - **Frontend (T20):** los tests de `LoginFlow.test.jsx` no llevan el ID del caso en el nombre (estilo del archivo, anterior a la convención de la HU19); se trazan aquí por su nombre.
 
 ### Tabla B · casos de prueba ↔ tests
@@ -391,7 +391,7 @@ Notas:
 | HU2-CP01 | `AutenticacionControllerTest` | `loginCorrectoPasaAlCodigoDelCorreo` | Infraestructura | AB#230 | PR #67 | ✅ |
 | HU2-CP02 | `AutenticacionControllerTest` | `loginConCredencialesIncorrectasDevuelve401` | Infraestructura | AB#230 | PR #67 | ✅ |
 | HU2-CP03 | `AutenticacionControllerTest` | `cuentaBloqueadaDevuelve429` | Infraestructura | AB#230 | PR #67 | ✅ |
-| HU2-CP04 | `AutenticacionControllerTest` | `cuentaDesactivadaDevuelve403ConCodigo` | Infraestructura | AB#230 | PR #67 | ✅ |
+| HU2-CP28 | `AutenticacionControllerTest` | `cuentaBloqueadaPorAdministradorDevuelve403ConCodigo` | Infraestructura | AB#230 · AB#246 | PR #67 (cambiado en PR por abrir) | 🔍 |
 | HU2-CP05 | `AutenticacionControllerTest` | `falloDelCorreoDevuelve503` | Infraestructura | AB#230 | PR #67 | ✅ |
 | HU2-CP06 | `AutenticacionControllerTest` | `codigoCorrectoPasaAlAuthenticator` | Infraestructura | AB#230 | PR #67 | ✅ |
 | HU2-CP07 | `AutenticacionControllerTest` | `codigoSinLoginPrevioDevuelve401` | Infraestructura | AB#230 | PR #67 | ✅ |
@@ -455,6 +455,7 @@ Notas:
 | HU2-CP27 | `LoginFlow.test.jsx` | `HU2-CP27: el campo de la contraseña tiene un botón para mostrarla y ocultarla` | Frontend · página | AB#19 | PR #105 | ✅ |
 | HU2-CP28 | `LoginFlow.test.jsx` | `HU2-CP28: una cuenta bloqueada muestra su mensaje antes del código del correo y no avanza al 2FA` | Frontend · página | AB#245 | PR #108 | ✅ |
 | HU2-CP28 | `LoginFlow.test.jsx` | `HU2-CP28: el mensaje de cuenta bloqueada no es el de demasiados intentos ni el genérico` | Frontend · página | AB#245 | PR #108 | ✅ |
+| HU2-CP28 | `AutenticacionServiceTest` | `cuentaBloqueadaPorAdministradorNoRecibeCodigo` | Aplicación | AB#246 | PR por abrir | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AutenticacionServiceTest`: `usuarios/application/service/` (Mockito, con `Clock` fijo)
@@ -956,7 +957,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU31-CP22 | Un nombre repetido del mismo vendedor devuelve 409 con `code: PRODUCT_NAME_ALREADY_EXISTS` | Integración (capa web) | 1 | ✅ Pasa |
 | HU31-CP23 | La comprobación de nombre repetido no distingue mayúsculas, compara el nombre completo como texto literal y solo cuenta los productos del mismo vendedor | Integración MongoDB | 2 | ✅ Pasa |
 | HU31-CP24 | La base de datos rechaza un nombre repetido del mismo vendedor aunque se salte la comprobación previa (condición de carrera) | Integración MongoDB | 1 | ✅ Pasa |
-| HU31-CP25 | El nombre se guarda sin espacios en los extremos, así que con espacios cuenta como repetido también para el índice único | Unitario + integración MongoDB | 3 | 🔍 En revisión |
+| HU31-CP25 | El nombre se guarda sin espacios en los extremos, así que con espacios cuenta como repetido también para el índice único | Unitario + integración MongoDB | 3 | ✅ Pasa |
 
 Notas:
 - **HU31-CP01 a CP10:** casos propuestos en la T201 (AB#201) a partir del contrato del formulario de producto del frontend (`frontend/docs/hu31-formulario-producto.md`). Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards.
@@ -1020,9 +1021,9 @@ Notas:
 | HU31-CP23 | `ProductoMongoAdapterTest` | `existePorVendedorYNombreNoDistingueMayusculas` | Infraestructura | AB#204 | PR #99 | ✅ |
 | HU31-CP23 | `ProductoMongoAdapterTest` | `existePorVendedorYNombreComparaElNombreCompletoYLiteral` | Infraestructura | AB#204 | PR #99 | ✅ |
 | HU31-CP24 | `ProductoMongoAdapterTest` | `guardarRechazaUnNombreRepetidoDelMismoVendedor` | Infraestructura | AB#179 | PR #99 | ✅ |
-| HU31-CP25 | `ProductoTest` | `quitaLosEspaciosDeLosExtremosDelNombre` | Dominio | AB#258 | PR por abrir | 🔍 |
-| HU31-CP25 | `ProductoTest` | `elLimiteDelNombreSeCuentaSinLosEspacios` | Dominio | AB#258 | PR por abrir | 🔍 |
-| HU31-CP25 | `ProductoMongoAdapterTest` | `guardarRechazaUnNombreRepetidoConEspacios` | Infraestructura | AB#258 | PR por abrir | 🔍 |
+| HU31-CP25 | `ProductoTest` | `quitaLosEspaciosDeLosExtremosDelNombre` | Dominio | AB#258 | PR #113 | ✅ |
+| HU31-CP25 | `ProductoTest` | `elLimiteDelNombreSeCuentaSinLosEspacios` | Dominio | AB#258 | PR #113 | ✅ |
+| HU31-CP25 | `ProductoMongoAdapterTest` | `guardarRechazaUnNombreRepetidoConEspacios` | Infraestructura | AB#258 | PR #113 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `ProductoTest` y `DescuentoTest`: `productos/domain/model/` (JUnit, sin Spring)
