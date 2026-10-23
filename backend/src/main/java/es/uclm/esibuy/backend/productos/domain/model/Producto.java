@@ -45,8 +45,10 @@ public class Producto {
         this.descuentoPremium = exigirNoNulo(descuentoPremium, "El descuento premium es obligatorio");
     }
 
+    // Se guarda sin espacios en los extremos: así el índice único (vendedorId, nombre) trata " Teclado" y
+    // "Teclado" como el mismo nombre, igual que la comprobación previa (T258). El límite cuenta sin ellos.
     private static String exigirNombre(String nombre) {
-        String valor = exigirTexto(nombre, "El nombre es obligatorio");
+        String valor = exigirTexto(nombre, "El nombre es obligatorio").strip();
         if (valor.length() > NOMBRE_MAXIMO) {
             throw new ProductoInvalidoException("El nombre no puede superar los " + NOMBRE_MAXIMO + " caracteres");
         }
