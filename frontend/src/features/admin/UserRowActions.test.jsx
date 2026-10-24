@@ -432,3 +432,105 @@ describe('UserRowActions (HU19, AB#250): el administrador en sesión y el últim
     expect(screen.queryByText(/seguro que quieres eliminar/i)).not.toBeInTheDocument()
   })
 })
+
+describe('UserRowActions (HU26): vendedores', () => {
+  const TECNOVERA = { id: 'u-2', nombre: 'Vera', apellidos: 'Vendedora', estado: 'ACTIVO' }
+  const HOGAR_HUGO = { id: 's-05', nombre: 'Hugo', apellidos: 'Ramos León', estado: 'PENDIENTE' }
+
+  function capturarPeticion(metodo, estado = 200) {
+    const peticion = { id: null, cuerpo: null, llamadas: 0 }
+    server.use(
+      http[metodo](metodo === 'patch' ? '/api/admin/usuarios/:id/status' : '/api/admin/usuarios/:id', async ({ params, request }) => {
+        peticion.llamadas += 1
+        peticion.id = params.id
+        peticion.cuerpo = metodo === 'delete' ? null : await request.json()
+        return estado === 204 ? new HttpResponse(null, { status: 204 }) : HttpResponse.json({ id: params.id })
+      }),
+    )
+    return peticion
+  }
+
+  it('userRowActions_conUnNombreIndicado_losBotonesYLosAvisosLoUsan', async () => {
+    const user = userEvent.setup()
+    const { onResult } = await renderAcciones(TECNOVERA, { label: 'TecnoVera' })
+
+    expect(screen.getByRole('button', { name: 'Ver información de TecnoVera' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Editar a TecnoVera' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Eliminar a TecnoVera' })).toBeInTheDocument()
+    await confirmar(user, 'Bloquear a TecnoVera', /seguro que quieres bloquear a tecnovera/i, 'Bloquear')
+
+    await waitFor(
+      () =>
+        expect(onResult).toHaveBeenCalledWith({
+          intent: 'success',
+          texto: 'TecnoVera está bloqueado y ya no puede iniciar sesión.',
+        }),
+      ESPERA,
+    )
+  })
+
+  it('userRowActions_conRenderDetail_laLupaAbreEseDialogoYSePuedeCerrar', async () => {
+    const user = userEvent.setup()
+    await renderAcciones(TECNOVERA, {
+      label: 'TecnoVera',
+      renderDetail: (onClose) => (
+        <div role="dialog" aria-label="Ficha de prueba">
+          <button type="button" onClick={onClose}>
+            Cerrar ficha de prueba
+          </button>
+        </div>
+      ),
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Ver información de TecnoVera' }))
+    expect(await screen.findByRole('dialog', { name: 'Ficha de prueba' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: /información del usuario/i })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Cerrar ficha de prueba' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Ficha de prueba' })).not.toBeInTheDocument(), ESPERA)
+  })
+
+  it('userRowActions_alBloquearUnVendedor_usaElMismoEndpointDeEstadoQueElRestoDeUsuarios', async () => {
+    const peticion = capturarPeticion('patch')
+    const user = userEvent.setup()
+    await renderAcciones(TECNOVERA, { label: 'TecnoVera' })
+
+    await confirmar(user, 'Bloquear a TecnoVera', /seguro que quieres bloquear a tecnovera/i, 'Bloquear')
+
+    await waitFor(() => expect(peticion.llamadas).toBe(1), ESPERA)
+    expect(peticion.id).toBe('u-2')
+    expect(peticion.cuerpo).toEqual({ estado: 'BLOQUEADO' })
+  })
+
+  it('userRowActions_alDesbloquearUnVendedorPendiente_loAcepta', async () => {
+    const peticion = capturarPeticion('patch')
+    const user = userEvent.setup()
+    await renderAcciones(HOGAR_HUGO, { label: 'Hogar Hugo' })
+
+    await confirmar(user, 'Desbloquear a Hogar Hugo', /seguro que quieres desbloquear a hogar hugo/i, 'Desbloquear')
+
+    await waitFor(() => expect(peticion.cuerpo).toEqual({ estado: 'ACTIVO' }), ESPERA)
+    expect(peticion.id).toBe('s-05')
+  })
+
+  it('userRowActions_alEliminarUnVendedor_usaElMismoEndpointQueElRestoDeUsuarios', async () => {
+    const peticion = capturarPeticion('delete', 204)
+    const user = userEvent.setup()
+    const { onResult } = await renderAcciones(TECNOVERA, { label: 'TecnoVera' })
+
+    await confirmar(user, 'Eliminar a TecnoVera', /seguro que quieres eliminar a tecnovera/i, 'Eliminar')
+
+    await waitFor(() => expect(onResult).toHaveBeenCalledWith({ intent: 'success', texto: 'TecnoVera se ha eliminado.' }), ESPERA)
+    expect(peticion.id).toBe('u-2')
+  })
+
+  it('userRowActions_alEditarUnVendedor_abreElFormularioConSusDatos', async () => {
+    const user = userEvent.setup()
+    await renderAcciones(TECNOVERA, { label: 'TecnoVera' })
+
+    await user.click(screen.getByRole('button', { name: 'Editar a TecnoVera' }))
+
+    const dialogo = await screen.findByRole('dialog', { name: /editar usuario/i })
+    expect(await within(dialogo).findByLabelText(/^nombre comercial/i, undefined, ESPERA)).toHaveValue('TecnoVera')
+  })
+})

@@ -61,14 +61,17 @@ const PEDIDOS_POR_VENDEDOR = new Map([
 const TAMANO_PAGINA_PESTANA = 5
 
 // Estados que el administrador ha cambiado durante la sesión (activar o bloquear), por id de vendedor.
-const ESTADOS_ADMITIDOS = new Set(['ACTIVO', 'BLOQUEADO'])
 let estadosModificados = new Map()
 // Datos que el administrador ha modificado durante la sesión (HU22), por id de vendedor.
 let datosModificados = new Map()
 
+// Vendedores que el administrador ha eliminado durante la sesión.
+const eliminados = new Set()
+
 export function resetAdminSellersMock() {
   estadosModificados = new Map()
   datosModificados = new Map()
+  eliminados.clear()
 }
 
 const conCambios = (vendedor) => ({
@@ -77,10 +80,23 @@ const conCambios = (vendedor) => ({
   ...(estadosModificados.has(vendedor.id) && { estado: estadosModificados.get(vendedor.id) }),
 })
 
-// Funciones que usa el mock de usuarios (usersHandlers): el administrador edita a los vendedores con el mismo
-// endpoint que al resto de usuarios.
-export const vendedoresMock = () => VENDEDORES_DATOS.map(conCambios)
+// Funciones que usa el mock de usuarios (usersHandlers): el administrador edita, bloquea y elimina a los
+// vendedores con los mismos endpoints que al resto de usuarios.
+export const vendedoresMock = () => VENDEDORES_DATOS.filter((vendedor) => !eliminados.has(vendedor.id)).map(conCambios)
 export const buscarVendedorMock = (id) => vendedoresMock().find((vendedor) => vendedor.id === id)
+
+// Ficha del vendedor tal y como la devuelve GET /api/admin/usuarios/{id}: la de siempre más su rol.
+export const detalleVendedorMock = (id) => {
+  const vendedor = buscarVendedorMock(id)
+  return vendedor && { ...aVendedorDetalle(vendedor), rol: 'VENDEDOR' }
+}
+
+export function cambiarEstadoVendedorMock(id, estado) {
+  estadosModificados.set(id, estado)
+  return buscarVendedorMock(id)
+}
+
+export const eliminarVendedorMock = (id) => eliminados.add(id)
 
 export function editarVendedorMock(id, { nombre, apellidos, nombreComercial, dni, telefono, categoriaPrincipalId, avatar }) {
   datosModificados.set(id, {
@@ -177,16 +193,6 @@ export const adminSellersHandlers = [
   http.get('/api/admin/sellers/:id', ({ params }) =>
     conVendedor(params, (vendedor) => HttpResponse.json(aVendedorDetalle(vendedor))),
   ),
-
-  http.patch('/api/admin/sellers/:id/status', async ({ params, request }) => {
-    const { estado } = await request.json()
-    if (!ESTADOS_ADMITIDOS.has(estado)) return new HttpResponse(null, { status: 400 })
-
-    return conVendedor(params, (vendedor) => {
-      estadosModificados.set(vendedor.id, estado)
-      return HttpResponse.json(aVendedorDetalle({ ...vendedor, estado }))
-    })
-  }),
 
   http.get('/api/admin/sellers/:id/products', ({ params, request }) =>
     conVendedor(params, (vendedor) => {

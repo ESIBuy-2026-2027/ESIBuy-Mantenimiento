@@ -262,3 +262,169 @@ describe('UserEditDialog (HU22): el rol no se puede cambiar', () => {
     expect(envio.cuerpo).not.toHaveProperty('email')
   })
 })
+
+describe('UserEditDialog (HU22): vendedor', () => {
+  const TECNOVERA = 'u-2'
+  const HOGAR_HUGO = 's-05'
+
+  async function abrirEdicionDeVendedor(userId = TECNOVERA) {
+    await abrirSesionPorApi('admin@esibuy.test')
+    const handlers = { onClose: vi.fn(), onSaved: vi.fn() }
+    renderWithProviders(<UserEditDialog userId={userId} {...handlers} />)
+    const dialogo = await screen.findByRole('dialog', { name: /editar usuario/i })
+    await within(dialogo).findByLabelText(/^categoría principal/i, undefined, ESPERA)
+    return { dialogo, user: userEvent.setup(), ...handlers }
+  }
+
+  const campo = (dialogo, etiqueta) => within(dialogo).getByLabelText(etiqueta)
+
+  async function escribir(user, dialogo, etiqueta, texto) {
+    await user.clear(campo(dialogo, etiqueta))
+    if (texto) await user.type(campo(dialogo, etiqueta), texto)
+  }
+
+  it('userEditDialog_deUnVendedor_muestraSusDatosParaEditar', async () => {
+    const { dialogo } = await abrirEdicionDeVendedor()
+
+    expect(campo(dialogo, /^nombre comercial/i)).toHaveValue('TecnoVera')
+    expect(campo(dialogo, /^categoría principal/i)).toHaveValue('cat-1')
+    expect(within(dialogo).getByRole('button', { name: /^guardar$/i })).toBeInTheDocument()
+  })
+
+  it('userEditDialog_deUnVendedor_dejaModificarTodoMenosElEmailYElEstado', async () => {
+    const { dialogo } = await abrirEdicionDeVendedor()
+
+    for (const etiqueta of [/^nombre(?! comercial)/i, /^apellidos/i, /^nombre comercial/i, /^dni/i]) {
+      expect(esDeSoloLectura(dialogo, etiqueta)).toBe(false)
+    }
+    expect(campo(dialogo, /^categoría principal/i)).not.toBeDisabled()
+    expect(esDeSoloLectura(dialogo, /^correo electrónico/i)).toBe(true)
+    expect(esDeSoloLectura(dialogo, 'Estado')).toBe(true)
+    expect(within(dialogo).queryByLabelText('Fecha de alta')).not.toBeInTheDocument()
+  })
+
+  it('userEditDialog_deUnVendedor_alGuardarEnviaSoloLosDatosDelVendedor', async () => {
+    const envio = capturarGuardado()
+    const { dialogo, user } = await abrirEdicionDeVendedor()
+
+    await escribir(user, dialogo, /^nombre comercial/i, 'TecnoVera Plus')
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(envio.llamadas).toBe(1), ESPERA)
+    expect(envio.id).toBe(TECNOVERA)
+    expect(envio.cuerpo).toEqual({
+      nombre: 'Vera',
+      apellidos: 'Vendedora',
+      nombreComercial: 'TecnoVera Plus',
+      dni: '12345601V',
+      telefono: '',
+      categoriaPrincipalId: 'cat-1',
+      avatar: '',
+    })
+  })
+
+  it('userEditDialog_deUnVendedor_tras_guardar_avisaUnaSolaVez', async () => {
+    const { dialogo, user, onSaved } = await abrirEdicionDeVendedor()
+
+    await escribir(user, dialogo, /^nombre comercial/i, 'TecnoVera Plus')
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1), ESPERA)
+  })
+
+  it('userEditDialog_deUnVendedor_alCambiarLaCategoriaPrincipal_laEnvia', async () => {
+    const envio = capturarGuardado()
+    const { dialogo, user } = await abrirEdicionDeVendedor()
+
+    await user.selectOptions(campo(dialogo, /^categoría principal/i), 'cat-2')
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(envio.cuerpo?.categoriaPrincipalId).toBe('cat-2'), ESPERA)
+  })
+
+  it('userEditDialog_conElNombreComercialDeOtroVendedor_muestraElErrorEnElCampoYSigueEnEdicion', async () => {
+    const { dialogo, user, onSaved } = await abrirEdicionDeVendedor()
+
+    await escribir(user, dialogo, /^nombre comercial/i, 'Casa Vicente')
+    await guardar(user, dialogo)
+
+    expect(await within(dialogo).findByText('Este nombre comercial ya está registrado', undefined, ESPERA)).toBeInTheDocument()
+    expect(within(dialogo).getByText('Modo edición')).toBeInTheDocument()
+    expect(onSaved).not.toHaveBeenCalled()
+  })
+
+  it('userEditDialog_alGuardarSinCambiarElNombreComercial_noLoTomaPorRepetido', async () => {
+    const { dialogo, user, onSaved } = await abrirEdicionDeVendedor()
+
+    await escribir(user, dialogo, /^apellidos/i, 'Vendedora Nueva')
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1), ESPERA)
+  })
+
+  it('userEditDialog_deUnVendedor_conCamposVaciosOIncorrectos_losMuestraTodosALaVezYNoGuarda', async () => {
+    const envio = capturarGuardado()
+    const { dialogo, user } = await abrirEdicionDeVendedor()
+
+    await escribir(user, dialogo, /^nombre comercial/i, '')
+    await escribir(user, dialogo, /^dni/i, 'ABC')
+    await guardar(user, dialogo)
+
+    expect(within(dialogo).getByText(/este campo es obligatorio/i)).toBeInTheDocument()
+    expect(within(dialogo).getByText(/introduce un dni válido/i)).toBeInTheDocument()
+    expect(envio.llamadas).toBe(0)
+  })
+
+  it('userEditDialog_deUnVendedor_alPulsarCancelar_cierraSinGuardarNada', async () => {
+    const envio = capturarGuardado()
+    const { dialogo, user, onClose } = await abrirEdicionDeVendedor()
+
+    await escribir(user, dialogo, /^nombre comercial/i, 'Cambio descartado')
+    await user.click(within(dialogo).getByRole('button', { name: /^cancelar$/i }))
+
+    expect(onClose).toHaveBeenCalledTimes(1)
+    expect(envio.llamadas).toBe(0)
+  })
+
+  it('userEditDialog_deUnVendedor_conErrorDelServidor_muestraElMensajeYSigueEnEdicion', async () => {
+    server.use(http.put('/api/admin/usuarios/:id', () => HttpResponse.json({ message: 'Mongo' }, { status: 500 })))
+    const { dialogo, user } = await abrirEdicionDeVendedor()
+
+    await guardar(user, dialogo)
+
+    expect(await within(dialogo).findByText(/no se han podido guardar los cambios/i, undefined, ESPERA)).toBeInTheDocument()
+    expect(within(dialogo).queryByText(/mongo/i)).not.toBeInTheDocument()
+    expect(within(dialogo).getByText('Modo edición')).toBeInTheDocument()
+  })
+
+  it('userEditDialog_deUnVendedor_siNoCarganLasCategorias_avisaYPermiteReintentar', async () => {
+    server.use(http.get('/api/categorias', () => new HttpResponse(null, { status: 500 }), { once: true }))
+    const user = userEvent.setup()
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderWithProviders(<UserEditDialog userId={TECNOVERA} onClose={vi.fn()} onSaved={vi.fn()} />)
+    const dialogo = await screen.findByRole('dialog', { name: /editar usuario/i })
+
+    expect(await within(dialogo).findByText(/no se han podido cargar las categorías/i, undefined, ESPERA)).toBeInTheDocument()
+    await user.click(within(dialogo).getByRole('button', { name: /reintentar/i }))
+
+    expect(await within(dialogo).findByLabelText(/^categoría principal/i, undefined, ESPERA)).toBeInTheDocument()
+  })
+
+  it('userEditDialog_deUnVendedorPendiente_tambienSePuedeEditar', async () => {
+    const { dialogo } = await abrirEdicionDeVendedor(HOGAR_HUGO)
+
+    expect(campo(dialogo, /^nombre comercial/i)).toHaveValue('Hogar Hugo')
+  })
+
+  it('userEditDialog_deUnVendedor_elRolEsDeSoloLecturaYNoSeEnvia', async () => {
+    const envio = capturarGuardado()
+    const { dialogo, user } = await abrirEdicionDeVendedor()
+
+    expect(campo(dialogo, 'Rol')).toHaveValue('Vendedor')
+    expect(campo(dialogo, 'Rol')).toHaveAttribute('readonly')
+    await guardar(user, dialogo)
+
+    await waitFor(() => expect(envio.llamadas).toBe(1), ESPERA)
+    expect(envio.cuerpo).not.toHaveProperty('rol')
+  })
+})

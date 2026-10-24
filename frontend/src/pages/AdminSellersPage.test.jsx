@@ -96,11 +96,29 @@ describe('AdminSellersPage (HU26): listado', () => {
     expect(screen.getByRole('button', { name: /ver información de casa vicente/i })).toBeInTheDocument()
   })
 
-  it('adminSellersPage_noOfreceAccionesDeEdicionNiBorradoEnLasFilas', async () => {
+  it('adminSellersPage_laTablaTieneUnaColumnaAcciones', async () => {
     await abrirListado()
 
     await esperarFilas(10)
-    expect(screen.queryByRole('button', { name: /editar|eliminar|borrar/i })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('columnheader').map((cabecera) => cabecera.textContent)).toEqual([
+      'Vendedor',
+      'Nombre comercial',
+      'Correo electrónico',
+      'Categoría',
+      'Estado',
+      'Acciones',
+    ])
+  })
+
+  it('adminSellersPage_cadaFilaTieneVerEditarBloquearOEliminar', async () => {
+    await abrirListado()
+
+    await esperarFilas(10)
+    expect(screen.getAllByRole('button', { name: /^ver información de /i })).toHaveLength(10)
+    expect(screen.getAllByRole('button', { name: /^editar a /i })).toHaveLength(10)
+    expect(screen.getAllByRole('button', { name: /^(bloquear|desbloquear) a /i })).toHaveLength(10)
+    expect(screen.getAllByRole('button', { name: /^eliminar a /i })).toHaveLength(10)
+    expect(screen.queryByRole('button', { name: /desactivar|^activar/i })).not.toBeInTheDocument()
   })
 
   it('adminSellersPage_conErrorDeServidor_muestraMensajeSinDetallesInternosYPermiteReintentar', async () => {
@@ -412,23 +430,89 @@ describe('AdminSellersPage (HU26): el servidor protege los datos', () => {
   })
 })
 
-describe('AdminSellersPage (HU22): editar desde la ficha', () => {
-  it('adminSellersPage_alEditarUnVendedorDesdeSuFicha_elListadoMuestraSuNombreComercialNuevo', async () => {
+describe('AdminSellersPage (HU19): acciones en la tabla', () => {
+  async function buscar(user, texto) {
+    await user.type(await screen.findByLabelText(/buscar por nombre/i), texto)
+    await esperarFilas(1)
+  }
+
+  async function confirmar(user, boton, pregunta, textoDelBoton) {
+    await user.click(screen.getByRole('button', { name: boton }))
+    const confirmacion = (await screen.findByText(pregunta)).closest('[role="alertdialog"]')
+    await user.click(within(confirmacion).getByText(textoDelBoton, { selector: 'button' }))
+  }
+
+  it('adminSellersPage_alBloquearUnVendedor_laFilaPasaABloqueadoYAvisa', async () => {
     const user = userEvent.setup()
     await abrirListado()
-    await user.click(await screen.findByRole('button', { name: /ver información de casa vicente/i }))
-    const ficha = await screen.findByRole('dialog', { name: /información del vendedor/i })
+    await buscar(user, 'casa vicente')
 
-    await user.click(await within(ficha).findByRole('button', { name: 'Editar' }))
-    const campo = await within(ficha).findByLabelText(/^nombre comercial/i)
+    await confirmar(user, 'Bloquear a Casa Vicente', /seguro que quieres bloquear a casa vicente/i, 'Bloquear')
+
+    expect(await screen.findByText('Casa Vicente está bloqueado y ya no puede iniciar sesión.', {}, { timeout: 3000 })).toBeInTheDocument()
+    await waitFor(() => expect(within(filasDeDatos()[0]).getByText('Bloqueado')).toBeInTheDocument(), { timeout: 3000 })
+    expect(screen.getByRole('button', { name: 'Desbloquear a Casa Vicente' })).toBeInTheDocument()
+  })
+
+  it('adminSellersPage_alDesbloquearUnVendedorPendiente_loAcepta', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'hogar hugo')
+
+    await confirmar(user, 'Desbloquear a Hogar Hugo', /seguro que quieres desbloquear a hogar hugo/i, 'Desbloquear')
+
+    await waitFor(() => expect(within(filasDeDatos()[0]).getByText('Activo')).toBeInTheDocument(), { timeout: 3000 })
+  })
+
+  it('adminSellersPage_alEliminarUnVendedor_laFilaDesapareceYAvisa', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'casa vicente')
+
+    await confirmar(user, 'Eliminar a Casa Vicente', /seguro que quieres eliminar a casa vicente/i, 'Eliminar')
+
+    expect(await screen.findByText('Casa Vicente se ha eliminado.', {}, { timeout: 3000 })).toBeInTheDocument()
+    expect(await screen.findByText(/no hay vendedores que coincidan/i, {}, { timeout: 3000 })).toBeInTheDocument()
+  })
+
+  it('adminSellersPage_siFallaElBloqueo_muestraElErrorYNoCambiaLaFila', async () => {
+    server.use(http.patch('/api/admin/usuarios/:id/status', () => new HttpResponse(null, { status: 500 })))
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'casa vicente')
+
+    await confirmar(user, 'Bloquear a Casa Vicente', /seguro que quieres bloquear a casa vicente/i, 'Bloquear')
+
+    expect(await screen.findByText('No se ha podido bloquear a Casa Vicente. Inténtalo de nuevo.', {}, { timeout: 3000 })).toBeInTheDocument()
+    expect(within(filasDeDatos()[0]).getByText('Activo')).toBeInTheDocument()
+  })
+
+  it('adminSellersPage_alEditarUnVendedorDesdeLaTabla_elListadoMuestraSuNombreComercialNuevo', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.click(await screen.findByRole('button', { name: 'Editar a Casa Vicente' }))
+    const edicion = await screen.findByRole('dialog', { name: /editar usuario/i })
+    const campo = await within(edicion).findByLabelText(/^nombre comercial/i, undefined, { timeout: 3000 })
     await user.clear(campo)
     await user.type(campo, 'Casa Vicente Plus')
-    await user.click(within(ficha).getByRole('button', { name: /^guardar$/i }))
+    await user.click(within(edicion).getByRole('button', { name: /^guardar$/i }))
 
-    expect(await within(ficha).findByText('Los cambios se han guardado.', undefined, { timeout: 3000 })).toBeInTheDocument()
-    await user.click(within(ficha).getByRole('button', { name: 'Cerrar' }))
+    expect(await screen.findByText('Los cambios se han guardado.', undefined, { timeout: 3000 })).toBeInTheDocument()
+    // Mientras se cierra el formulario, Fluent marca la página como oculta: se busca también entre lo oculto.
     expect(
-      await screen.findByRole('button', { name: /ver información de casa vicente plus/i, hidden: true }),
+      await screen.findByRole('button', { name: 'Editar a Casa Vicente Plus', hidden: true }, { timeout: 3000 }),
     ).toBeInTheDocument()
+  })
+
+  it('adminSellersPage_laFichaDelVendedorNoTieneEditarNiBloquear', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.click(await screen.findByRole('button', { name: /ver información de casa vicente/i }))
+
+    const ficha = await screen.findByRole('dialog', { name: /información del vendedor/i })
+    await within(ficha).findByLabelText('Nombre comercial')
+    expect(within(ficha).queryByRole('button', { name: /editar|bloquear|desbloquear|eliminar/i })).not.toBeInTheDocument()
   })
 })

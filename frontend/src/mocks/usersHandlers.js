@@ -1,5 +1,12 @@
 import { http, HttpResponse } from 'msw'
-import { buscarVendedorMock, editarVendedorMock, vendedoresMock } from './adminSellersHandlers'
+import {
+  buscarVendedorMock,
+  cambiarEstadoVendedorMock,
+  detalleVendedorMock,
+  editarVendedorMock,
+  eliminarVendedorMock,
+  vendedoresMock,
+} from './adminSellersHandlers'
 import { getUsuarioEnSesion } from './authHandlers'
 import { esMayorDeEdadMock } from './fechas'
 import { CATEGORIAS } from './productsHandlers'
@@ -240,7 +247,11 @@ export const usersHandlers = [
     if (rechazo) return rechazo
 
     const usuario = usuarios.find((candidato) => candidato.id === params.id)
-    return usuario ? HttpResponse.json(detalleActual(usuario)) : new HttpResponse(null, { status: 404 })
+    if (usuario) return HttpResponse.json(detalleActual(usuario))
+
+    // Los vendedores de la tabla de vendedores (HU26) también se consultan con este endpoint.
+    const vendedor = detalleVendedorMock(params.id)
+    return vendedor ? HttpResponse.json(vendedor) : new HttpResponse(null, { status: 404 })
   }),
 
   // Modificar los datos de CUALQUIER usuario (HU22): cliente, administrador o vendedor se editan con el mismo
@@ -296,6 +307,9 @@ export const usersHandlers = [
     const { estado } = await request.json()
     if (!ESTADOS_ADMITIDOS.has(estado)) return new HttpResponse(null, { status: 400 })
 
+    // Un vendedor se bloquea y se desbloquea con el mismo endpoint que el resto de usuarios.
+    if (buscarVendedorMock(params.id)) return HttpResponse.json(cambiarEstadoVendedorMock(params.id, estado))
+
     const existente = usuarios.find((candidato) => candidato.id === params.id)
     if (!existente) return new HttpResponse(null, { status: 404 })
 
@@ -314,6 +328,11 @@ export const usersHandlers = [
   http.delete('/api/admin/usuarios/:id', ({ params }) => {
     const rechazo = rechazarSiNoEsAdmin()
     if (rechazo) return rechazo
+
+    if (buscarVendedorMock(params.id)) {
+      eliminarVendedorMock(params.id)
+      return new HttpResponse(null, { status: 204 })
+    }
 
     const existente = usuarios.find((candidato) => candidato.id === params.id)
     if (!existente) return new HttpResponse(null, { status: 404 })
