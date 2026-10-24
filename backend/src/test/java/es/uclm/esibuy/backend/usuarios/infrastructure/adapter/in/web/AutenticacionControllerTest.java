@@ -136,9 +136,10 @@ class AutenticacionControllerTest {
     }
 
     @Test
-    @DisplayName("HU2-CP04: una cuenta desactivada devuelve 403 con el código ACCOUNT_DISABLED")
-    void cuentaDesactivadaDevuelve403ConCodigo() throws Exception {
-        // El servicio solo la lanza cuando la contraseña es correcta (T19), como pide el frontend
+    @DisplayName("HU2-CP28: una cuenta bloqueada por un administrador devuelve 403 con el código ACCOUNT_BLOCKED")
+    void cuentaBloqueadaPorAdministradorDevuelve403ConCodigo() throws Exception {
+        // El servicio solo la lanza cuando la contraseña es correcta (T19). Desde el Sprint 2 las cuentas
+        // se bloquean en lugar de desactivarse: el frontend espera ACCOUNT_BLOCKED (T245, loginErrors.js)
         when(autenticacion.iniciarSesion(any()))
                 .thenThrow(new CuentaDesactivadaException("Esta cuenta está desactivada"));
 
@@ -147,8 +148,7 @@ class AutenticacionControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonLogin("juan@uclm.es", "clave1234")))
                 .andExpect(status().isForbidden())
-                // El frontend lee "code" para mostrar «cuenta desactivada» (client.js, loginErrors.js)
-                .andExpect(jsonPath("$.code").value("ACCOUNT_DISABLED"));
+                .andExpect(jsonPath("$.code").value("ACCOUNT_BLOCKED"));
     }
 
     @Test

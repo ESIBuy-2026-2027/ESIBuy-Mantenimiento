@@ -36,7 +36,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException
 public class ManejadorGlobalErrores {
 
     // El 409 del registro lleva un código para que el frontend marque el campo repetido; el mensaje sigue
-    // siendo genérico. Decisión acordada con el frontend (T229), con la convención de ACCOUNT_DISABLED.
+    // siendo genérico. Decisión acordada con el frontend (T229), con la convención de ACCOUNT_BLOCKED.
     private static final String REGISTRO_NO_COMPLETADO = "No se ha podido completar el registro";
 
     @ExceptionHandler(CorreoYaRegistradoException.class)
@@ -126,7 +126,7 @@ public class ManejadorGlobalErrores {
     @ExceptionHandler(CuentaDesactivadaException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public RespuestaError cuentaDesactivada() {
-        return new RespuestaError("Esta cuenta está desactivada", "ACCOUNT_DISABLED");
+        return new RespuestaError("Esta cuenta está bloqueada", "ACCOUNT_BLOCKED");
     }
 
     @ExceptionHandler(EnvioEmailException.class)

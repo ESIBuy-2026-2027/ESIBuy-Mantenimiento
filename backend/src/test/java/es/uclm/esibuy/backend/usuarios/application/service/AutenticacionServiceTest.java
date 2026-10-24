@@ -237,6 +237,22 @@ class AutenticacionServiceTest {
         assertThrows(CuentaDesactivadaException.class, () -> autenticacion.iniciarSesion(comando));
     }
 
+    @Test
+    @DisplayName("HU2-CP28: una cuenta bloqueada por un administrador se rechaza antes de enviar el código del correo")
+    void cuentaBloqueadaPorAdministradorNoRecibeCodigo() {
+        // Bloqueada por un administrador = estado DESACTIVADO (desactivar() de Usuario) hasta que se renombre (T246).
+        Usuario usuario = activo(clienteNuevo());
+        usuario.desactivar();
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
+        when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
+        IniciarSesionCommand comando = new IniciarSesionCommand("juan@uclm.es", "clave1234");
+
+        assertThrows(CuentaDesactivadaException.class, () -> autenticacion.iniciarSesion(comando));
+        verify(generadorCodigo, never()).generar();
+        verify(codigoRepository, never()).guardar(any());
+        verify(envioEmail, never()).enviarCodigoVerificacion(any(), any());
+    }
+
     // --- Paso 2: código de verificación por email (T21) ---
 
     @Test
