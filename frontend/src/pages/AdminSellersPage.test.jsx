@@ -75,13 +75,13 @@ describe('AdminSellersPage (HU26): listado', () => {
     expect(within(fila).getByText('Activo')).toBeInTheDocument()
   })
 
-  it('adminSellersPage_distingueLosEstadosPendienteYDesactivado', async () => {
+  it('adminSellersPage_distingueLosEstadosPendienteYBloqueado', async () => {
     const user = userEvent.setup()
     await abrirListado()
 
-    await user.selectOptions(await screen.findByLabelText('Estado'), 'Desactivado')
+    await user.selectOptions(await screen.findByLabelText('Estado'), 'Bloqueado')
     await esperarFilas(2)
-    expect(within(screen.getByText('Cocina Pablo').closest('tr')).getByText('Desactivado')).toBeInTheDocument()
+    expect(within(screen.getByText('Cocina Pablo').closest('tr')).getByText('Bloqueado')).toBeInTheDocument()
 
     await user.selectOptions(screen.getByLabelText('Estado'), 'Pendiente')
     await esperarFilas(2)
@@ -201,7 +201,7 @@ describe('AdminSellersPage (HU26): filtros', () => {
     const user = userEvent.setup()
     await abrirListado()
 
-    await user.selectOptions(await screen.findByLabelText('Estado'), 'Desactivado')
+    await user.selectOptions(await screen.findByLabelText('Estado'), 'Bloqueado')
     await user.type(screen.getByLabelText(/buscar por nombre/i), 'zzzz')
     expect(await screen.findByText(/no hay vendedores que coincidan/i)).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /todavía no hay vendedores/i })).not.toBeInTheDocument()
@@ -254,7 +254,7 @@ describe('AdminSellersPage (HU26): filtro por estado', () => {
       'Todos los estados',
       'Activo',
       'Pendiente',
-      'Desactivado',
+      'Bloqueado',
     ])
   })
 })
@@ -280,7 +280,7 @@ describe('AdminSellersPage (HU26): ordenación', () => {
     await user.click(screen.getByRole('button', { name: /orden ascendente/i }))
 
     expect(await screen.findByRole('button', { name: /orden descendente/i })).toBeInTheDocument()
-    await waitFor(() => expect(within(primeraFila()).getByText('Desactivado')).toBeInTheDocument())
+    await waitFor(() => expect(within(primeraFila()).getByText('Bloqueado')).toBeInTheDocument())
   })
 
   it('adminSellersPage_alOrdenarPorNombre_ordenaAlfabeticamenteSegunElNombre', async () => {

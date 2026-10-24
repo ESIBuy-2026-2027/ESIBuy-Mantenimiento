@@ -11,13 +11,13 @@ const VENDEDORES_DATOS = [
   ['s-04', 'Marta', 'Gil Prieto', 'Electro Marta', 'marta@esibuy.test', '12345604V', 'cat-1', 'ACTIVO'],
   ['s-05', 'Hugo', 'Ramos León', 'Hogar Hugo', 'hugo@esibuy.test', '12345605V', 'cat-2', 'PENDIENTE'],
   ['s-06', 'Lucía', 'Navarro Sanz', 'Lucía Digital', 'lucia@esibuy.test', '12345606V', 'cat-1', 'ACTIVO'],
-  ['s-07', 'Pablo', 'Iglesias Mora', 'Cocina Pablo', 'pablo@esibuy.test', '12345607V', 'cat-2', 'DESACTIVADO'],
+  ['s-07', 'Pablo', 'Iglesias Mora', 'Cocina Pablo', 'pablo@esibuy.test', '12345607V', 'cat-2', 'BLOQUEADO'],
   ['s-08', 'Elena', 'Soto Vidal', 'Soto Gadgets', 'elena@esibuy.test', '12345608V', 'cat-1', 'ACTIVO'],
   ['s-09', 'Raúl', 'Ortega Pons', 'Ortega Muebles', 'raul@esibuy.test', '12345609V', 'cat-2', 'ACTIVO'],
   ['s-10', 'Irene', 'Campos Ruiz', 'Irene Smart Home', 'irene@esibuy.test', '12345610V', 'cat-2', 'ACTIVO'],
   ['s-11', 'Sergio', 'Molina Vega', 'Molina Informática', 'sergio@esibuy.test', '12345611V', 'cat-1', 'PENDIENTE'],
   ['s-12', 'Noelia', 'Prado Ferrer', 'Noelia Decoración', 'noelia@esibuy.test', '12345612V', 'cat-2', 'ACTIVO'],
-  ['s-13', 'Adrián', 'Bravo Cano', 'Bravo Audio', 'adrian@esibuy.test', '12345613V', 'cat-1', 'DESACTIVADO'],
+  ['s-13', 'Adrián', 'Bravo Cano', 'Bravo Audio', 'adrian@esibuy.test', '12345613V', 'cat-1', 'BLOQUEADO'],
   ['s-14', 'Carmen', 'Lara Duque', 'Carmen Electrodomésticos', 'carmen@esibuy.test', '12345614V', 'cat-2', 'ACTIVO'],
 ].map(([id, nombre, apellidos, nombreComercial, email, dni, categoria, estado]) => ({
   id,
@@ -60,8 +60,8 @@ const PEDIDOS_POR_VENDEDOR = new Map([
 
 const TAMANO_PAGINA_PESTANA = 5
 
-// Estados que el administrador ha cambiado durante la sesión (activar o desactivar), por id de vendedor.
-const ESTADOS_ADMITIDOS = new Set(['ACTIVO', 'DESACTIVADO'])
+// Estados que el administrador ha cambiado durante la sesión (activar o bloquear), por id de vendedor.
+const ESTADOS_ADMITIDOS = new Set(['ACTIVO', 'BLOQUEADO'])
 let estadosModificados = new Map()
 // Datos que el administrador ha modificado durante la sesión (HU22), por id de vendedor.
 let datosModificados = new Map()
@@ -96,7 +96,7 @@ export function editarVendedorMock(id, { nombre, apellidos, nombreComercial, dni
 }
 
 // Orden ascendente de los estados: primero los pendientes de revisar.
-const ORDEN_ESTADOS = ['PENDIENTE', 'ACTIVO', 'DESACTIVADO']
+const ORDEN_ESTADOS = ['PENDIENTE', 'ACTIVO', 'BLOQUEADO']
 
 const COMPARADORES = new Map([
   ['status', (a, b) => ORDEN_ESTADOS.indexOf(a.estado) - ORDEN_ESTADOS.indexOf(b.estado)],

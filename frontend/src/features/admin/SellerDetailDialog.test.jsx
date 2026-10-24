@@ -9,7 +9,7 @@ import SellerDetailDialog from './SellerDetailDialog'
 
 const VENDEDOR_CON_DATOS = 'u-2'
 const VENDEDOR_SIN_NADA = 'u-5'
-const VENDEDOR_DESACTIVADO = 's-07'
+const VENDEDOR_BLOQUEADO = 's-07'
 const VENDEDOR_PENDIENTE = 's-05'
 
 async function abrirDialogo(sellerId = VENDEDOR_CON_DATOS) {
@@ -107,8 +107,8 @@ describe('SellerDetailDialog (HU26): datos', () => {
     expect(within(dialogo).queryByRole('button', { name: /^activar usuario$/i })).not.toBeInTheDocument()
   })
 
-  it('sellerDetailDialog_conVendedorDesactivado_muestraElBotonActivarUsuarioHabilitado', async () => {
-    const { dialogo } = await abrirDialogo(VENDEDOR_DESACTIVADO)
+  it('sellerDetailDialog_conVendedorBloqueado_muestraElBotonActivarUsuarioHabilitado', async () => {
+    const { dialogo } = await abrirDialogo(VENDEDOR_BLOQUEADO)
 
     expect(await within(dialogo).findByRole('button', { name: /^activar usuario$/i })).toBeEnabled()
     expect(within(dialogo).queryByRole('button', { name: /^desactivar usuario$/i })).not.toBeInTheDocument()
@@ -192,7 +192,7 @@ describe('SellerDetailDialog (HU21): activar y desactivar', () => {
     await user.click(within(confirmacion).getByRole('button', { name: /^desactivar$/i }))
 
     expect(await within(dialogo).findByText(/el vendedor está desactivado/i, {}, ESPERA)).toBeInTheDocument()
-    await waitFor(() => expect(within(dialogo).getByLabelText('Estado')).toHaveValue('Desactivado'), ESPERA)
+    await waitFor(() => expect(within(dialogo).getByLabelText('Estado')).toHaveValue('Bloqueado'), ESPERA)
     expect(within(dialogo).getByRole('button', { name: /^activar usuario$/i })).toBeInTheDocument()
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(onStatusChange).toHaveBeenCalledTimes(1)
@@ -212,9 +212,9 @@ describe('SellerDetailDialog (HU21): activar y desactivar', () => {
     expect(onStatusChange).toHaveBeenCalledTimes(1)
   })
 
-  it('sellerDetailDialog_alConfirmarActivarUnVendedorDesactivado_loActiva', async () => {
+  it('sellerDetailDialog_alConfirmarActivarUnVendedorBloqueado_loActiva', async () => {
     const user = userEvent.setup()
-    const { dialogo } = await abrirDialogo(VENDEDOR_DESACTIVADO)
+    const { dialogo } = await abrirDialogo(VENDEDOR_BLOQUEADO)
 
     const confirmacion = await pedirCambioDeEstado(user, dialogo, /^activar usuario$/i)
     await user.click(within(confirmacion).getByRole('button', { name: /^activar$/i }))
