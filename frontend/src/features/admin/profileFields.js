@@ -57,9 +57,7 @@ const telefono = {
     validate: (valor) => (!valor || esTelefonoValido(valor) ? undefined : 'Introduce un teléfono válido (9 números)'),
   },
 }
-// Los vendedores (HU26) todavía tienen el estado desactivado: su diálogo se renombra en otra task del Sprint 2.
-const ESTADO_LABELS = { ...STATUS_LABELS, DESACTIVADO: 'Desactivado' }
-const estado = { name: 'estado', label: 'Estado', read: (u) => ESTADO_LABELS[u.estado] ?? u.estado }
+const estado = { name: 'estado', label: 'Estado', read: (u) => STATUS_LABELS[u.estado] ?? u.estado }
 const fechaAlta = { name: 'fechaAlta', label: 'Fecha de alta', read: (u) => fechaOSinDato(u.fechaAlta) }
 
 const PROFILE_FIELDS = {

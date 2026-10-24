@@ -1,7 +1,7 @@
 const SELLER_STATUS = new Map([
   ['ACTIVO', { label: 'Activo', color: 'success' }],
   ['PENDIENTE', { label: 'Pendiente', color: 'warning' }],
-  ['DESACTIVADO', { label: 'Desactivado', color: 'subtle' }],
+  ['BLOQUEADO', { label: 'Bloqueado', color: 'danger' }],
 ])
 
 const ORDER_STATUS = new Map([

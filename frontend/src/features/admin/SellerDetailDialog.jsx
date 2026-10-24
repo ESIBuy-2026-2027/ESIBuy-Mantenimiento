@@ -99,7 +99,7 @@ const ACCIONES_DE_ESTADO = {
     pregunta: (nombre) => `¿Seguro que quieres activar a ${nombre}? Podrá usar la plataforma como vendedor.`,
     exito: 'El vendedor está activo y ya puede usar la plataforma.',
   },
-  DESACTIVADO: {
+  BLOQUEADO: {
     boton: 'Desactivar usuario',
     icono: <PersonProhibited20Regular />,
     confirmar: 'Desactivar',
@@ -118,7 +118,7 @@ export default function SellerDetailDialog({ sellerId, onClose, onStatusChange }
   const [resultado, setResultado] = useState(null)
   const [editando, setEditando] = useState(false)
 
-  const nuevoEstado = seller?.estado === 'ACTIVO' ? 'DESACTIVADO' : 'ACTIVO'
+  const nuevoEstado = seller?.estado === 'ACTIVO' ? 'BLOQUEADO' : 'ACTIVO'
   const accion = ACCIONES_DE_ESTADO[nuevoEstado]
 
   const cambiarEstado = async () => {
