@@ -27,7 +27,7 @@ Columnas: nombre completo, email, rol, estado (etiqueta de color), fecha de alta
 
 ### 1.1 Acciones de cada fila y filtro de estado (Sprint 2, AB#247 a AB#250)
 
-Desde el Sprint 2 las cuentas **no se desactivan, se bloquean** (decisión del equipo), y las acciones sobre una cuenta **ya no están en la ficha, sino en su fila de la tabla**. La misma columna **Acciones** la usan este listado y los de **Clientes** y **Administradores** (`RoleUsersList`):
+Desde el Sprint 2 las cuentas **no se desactivan, se bloquean** (decisión del equipo), y las acciones sobre una cuenta **ya no están en la ficha, sino en su fila de la tabla**. La misma columna **Acciones** la usan este listado, los de **Clientes** y **Administradores** (`RoleUsersList`) y la tabla de **Vendedores** (HU26, `/admin/sellers`):
 
 | Botón | Qué hace | Cuándo está disponible |
 |---|---|---|
@@ -38,6 +38,7 @@ Desde el Sprint 2 las cuentas **no se desactivan, se bloquean** (decisión del e
 
 - **Botones deshabilitados con su motivo:** el botón que no se puede usar queda deshabilitado y su texto emergente (`title`) explica por qué (*No puedes bloquear tu propia cuenta*, *No se puede eliminar al último administrador activo*…).
 - **El último administrador activo:** la tabla pagina y filtra, así que no sabe cuántos administradores activos quedan. El hook `useLastActiveAdmin` lo pregunta al propio listado (`role=ADMINISTRADOR&status=ACTIVO&size=1`): si `totalItems` es 1, ese administrador queda protegido. Se vuelve a calcular tras cada cambio. Solo lo piden este listado y el de administradores; el de clientes no. El backend sigue imponiendo la regla con un `409`.
+- **Vendedores:** su tabla usa los mismos botones (`UserRowActions`) con el **nombre comercial** como nombre de la cuenta (*Editar a TecnoVera*) y su lupa abre la ficha propia del vendedor, con las pestañas Datos, Productos y Pedidos, que también es de solo lectura. Bloquear, desbloquear y eliminar a un vendedor usan los **mismos endpoints** que al resto de usuarios; el formulario de edición es el mismo (`UserEditDialog`). Un vendedor no puede ser el propio administrador ni el último, así que no lleva esas protecciones. Su estado es *Pendiente*, *Activo* o *Bloqueado*.
 - **Avisos:** el resultado de cada acción (éxito o error) aparece en una barra sobre la tabla, no dentro de ningún diálogo.
 - **Filtro de estado:** ofrece *Pendiente*, *Activo* y *Bloqueado* (los administradores no tienen *Pendiente*). *Desactivado* ya no existe. *Bloqueado* cubre también el bloqueo temporal por intentos fallidos del login.
 
@@ -292,7 +293,7 @@ Cada test empieza por el ID de su caso de prueba (`HU19-CPnn`):
 - Ninguna tarjeta del panel de administración (HU18) enlaza con `/admin/users`. Las de **Clientes** y **Administradores** llevan a sus propios listados (HU24 y HU21), que reutilizan este.
 - En esta pantalla no hay ordenación por columnas (sí en los listados de clientes y administradores, HU24). Las acciones por fila (ver, editar, bloquear o desbloquear y eliminar) existen desde el Sprint 2 (sección 1.1).
 - **Eliminar es nuevo y no tiene backend todavía:** el contrato de la sección 5 es una propuesta del frontend y solo existe en el mock.
-- **El diálogo de vendedores (HU26) no se ha renombrado:** su botón sigue diciendo *Desactivar* y envía el estado `DESACTIVADO`, y la tabla de vendedores sigue como estaba. Va en otra task del Sprint 2.
+- **Vendedores (HU26):** ya tienen las mismas acciones y el mismo vocabulario (*Bloquear*, estado `BLOQUEADO`). Desaparece `PATCH /api/admin/sellers/{id}/status`: ahora se usa `PATCH /api/admin/usuarios/{id}/status`, como con el resto de usuarios.
 - Los nombres de los estados y el contrato están pendientes de confirmar con el backend (sección 5).
 
 ---
