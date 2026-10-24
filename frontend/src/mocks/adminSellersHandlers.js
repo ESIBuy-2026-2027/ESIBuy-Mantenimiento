@@ -11,13 +11,13 @@ const VENDEDORES_DATOS = [
   ['s-04', 'Marta', 'Gil Prieto', 'Electro Marta', 'marta@esibuy.test', '12345604V', 'cat-1', 'ACTIVO'],
   ['s-05', 'Hugo', 'Ramos León', 'Hogar Hugo', 'hugo@esibuy.test', '12345605V', 'cat-2', 'PENDIENTE'],
   ['s-06', 'Lucía', 'Navarro Sanz', 'Lucía Digital', 'lucia@esibuy.test', '12345606V', 'cat-1', 'ACTIVO'],
-  ['s-07', 'Pablo', 'Iglesias Mora', 'Cocina Pablo', 'pablo@esibuy.test', '12345607V', 'cat-2', 'DESACTIVADO'],
+  ['s-07', 'Pablo', 'Iglesias Mora', 'Cocina Pablo', 'pablo@esibuy.test', '12345607V', 'cat-2', 'BLOQUEADO'],
   ['s-08', 'Elena', 'Soto Vidal', 'Soto Gadgets', 'elena@esibuy.test', '12345608V', 'cat-1', 'ACTIVO'],
   ['s-09', 'Raúl', 'Ortega Pons', 'Ortega Muebles', 'raul@esibuy.test', '12345609V', 'cat-2', 'ACTIVO'],
   ['s-10', 'Irene', 'Campos Ruiz', 'Irene Smart Home', 'irene@esibuy.test', '12345610V', 'cat-2', 'ACTIVO'],
   ['s-11', 'Sergio', 'Molina Vega', 'Molina Informática', 'sergio@esibuy.test', '12345611V', 'cat-1', 'PENDIENTE'],
   ['s-12', 'Noelia', 'Prado Ferrer', 'Noelia Decoración', 'noelia@esibuy.test', '12345612V', 'cat-2', 'ACTIVO'],
-  ['s-13', 'Adrián', 'Bravo Cano', 'Bravo Audio', 'adrian@esibuy.test', '12345613V', 'cat-1', 'DESACTIVADO'],
+  ['s-13', 'Adrián', 'Bravo Cano', 'Bravo Audio', 'adrian@esibuy.test', '12345613V', 'cat-1', 'BLOQUEADO'],
   ['s-14', 'Carmen', 'Lara Duque', 'Carmen Electrodomésticos', 'carmen@esibuy.test', '12345614V', 'cat-2', 'ACTIVO'],
 ].map(([id, nombre, apellidos, nombreComercial, email, dni, categoria, estado]) => ({
   id,
@@ -60,15 +60,18 @@ const PEDIDOS_POR_VENDEDOR = new Map([
 
 const TAMANO_PAGINA_PESTANA = 5
 
-// Estados que el administrador ha cambiado durante la sesión (activar o desactivar), por id de vendedor.
-const ESTADOS_ADMITIDOS = new Set(['ACTIVO', 'DESACTIVADO'])
+// Estados que el administrador ha cambiado durante la sesión (activar o bloquear), por id de vendedor.
 let estadosModificados = new Map()
 // Datos que el administrador ha modificado durante la sesión (HU22), por id de vendedor.
 let datosModificados = new Map()
 
+// Vendedores que el administrador ha eliminado durante la sesión.
+const eliminados = new Set()
+
 export function resetAdminSellersMock() {
   estadosModificados = new Map()
   datosModificados = new Map()
+  eliminados.clear()
 }
 
 const conCambios = (vendedor) => ({
@@ -77,10 +80,23 @@ const conCambios = (vendedor) => ({
   ...(estadosModificados.has(vendedor.id) && { estado: estadosModificados.get(vendedor.id) }),
 })
 
-// Funciones que usa el mock de usuarios (usersHandlers): el administrador edita a los vendedores con el mismo
-// endpoint que al resto de usuarios.
-export const vendedoresMock = () => VENDEDORES_DATOS.map(conCambios)
+// Funciones que usa el mock de usuarios (usersHandlers): el administrador edita, bloquea y elimina a los
+// vendedores con los mismos endpoints que al resto de usuarios.
+export const vendedoresMock = () => VENDEDORES_DATOS.filter((vendedor) => !eliminados.has(vendedor.id)).map(conCambios)
 export const buscarVendedorMock = (id) => vendedoresMock().find((vendedor) => vendedor.id === id)
+
+// Ficha del vendedor tal y como la devuelve GET /api/admin/usuarios/{id}: la de siempre más su rol.
+export const detalleVendedorMock = (id) => {
+  const vendedor = buscarVendedorMock(id)
+  return vendedor && { ...aVendedorDetalle(vendedor), rol: 'VENDEDOR' }
+}
+
+export function cambiarEstadoVendedorMock(id, estado) {
+  estadosModificados.set(id, estado)
+  return buscarVendedorMock(id)
+}
+
+export const eliminarVendedorMock = (id) => eliminados.add(id)
 
 export function editarVendedorMock(id, { nombre, apellidos, nombreComercial, dni, telefono, categoriaPrincipalId, avatar }) {
   datosModificados.set(id, {
@@ -96,7 +112,7 @@ export function editarVendedorMock(id, { nombre, apellidos, nombreComercial, dni
 }
 
 // Orden ascendente de los estados: primero los pendientes de revisar.
-const ORDEN_ESTADOS = ['PENDIENTE', 'ACTIVO', 'DESACTIVADO']
+const ORDEN_ESTADOS = ['PENDIENTE', 'ACTIVO', 'BLOQUEADO']
 
 const COMPARADORES = new Map([
   ['status', (a, b) => ORDEN_ESTADOS.indexOf(a.estado) - ORDEN_ESTADOS.indexOf(b.estado)],
@@ -177,16 +193,6 @@ export const adminSellersHandlers = [
   http.get('/api/admin/sellers/:id', ({ params }) =>
     conVendedor(params, (vendedor) => HttpResponse.json(aVendedorDetalle(vendedor))),
   ),
-
-  http.patch('/api/admin/sellers/:id/status', async ({ params, request }) => {
-    const { estado } = await request.json()
-    if (!ESTADOS_ADMITIDOS.has(estado)) return new HttpResponse(null, { status: 400 })
-
-    return conVendedor(params, (vendedor) => {
-      estadosModificados.set(vendedor.id, estado)
-      return HttpResponse.json(aVendedorDetalle({ ...vendedor, estado }))
-    })
-  }),
 
   http.get('/api/admin/sellers/:id/products', ({ params, request }) =>
     conVendedor(params, (vendedor) => {

@@ -46,7 +46,7 @@ describe('UsersFilters', () => {
     const opciones = within(filtroEstado).getAllByRole('option').map((opcion) => opcion.textContent)
     await user.selectOptions(filtroEstado, 'Pendiente')
 
-    expect(opciones).toEqual(['Todos los estados', 'Pendiente', 'Activo', 'Bloqueado', 'Desactivado'])
+    expect(opciones).toEqual(['Todos los estados', 'Pendiente', 'Activo', 'Bloqueado'])
     expect(onStatusChange).toHaveBeenLastCalledWith('PENDIENTE')
   })
 
@@ -60,12 +60,12 @@ describe('UsersFilters', () => {
   })
 
   it('usersFilters_conStatusLabels_soloOfreceEsosEstados', () => {
-    renderFilters({ statusLabels: { ACTIVO: 'Activo', DESACTIVADO: 'Desactivado' } })
+    renderFilters({ statusLabels: { ACTIVO: 'Activo', BLOQUEADO: 'Bloqueado' } })
 
     const filtroEstado = screen.getByRole('combobox', { name: 'Estado' })
     const opciones = within(filtroEstado).getAllByRole('option').map((opcion) => opcion.textContent)
 
-    expect(opciones).toEqual(['Todos los estados', 'Activo', 'Desactivado'])
+    expect(opciones).toEqual(['Todos los estados', 'Activo', 'Bloqueado'])
   })
 
   it('usersFilters_conSearchLabel_cambiaElTextoDelBuscadorYMuestraLosControlesExtra', () => {

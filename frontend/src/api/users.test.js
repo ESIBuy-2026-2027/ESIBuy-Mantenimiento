@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi } from '../test/renderApp'
 import { ApiError, request } from './client'
-import { getUser, listUsers, updateUser, updateUserStatus } from './users'
+import { deleteUser, getUser, listUsers, updateUser, updateUserStatus } from './users'
 
 const RESPUESTA = { items: [], page: 1, size: 10, totalItems: 0, totalPages: 0 }
 
@@ -93,12 +93,12 @@ describe('updateUserStatus', () => {
     expect(respuesta).toEqual({ id: 'usr-4', estado: 'ACTIVO' })
   })
 
-  it('updateUserStatus_paraDesactivar_enviaDesactivado', async () => {
+  it('updateUserStatus_paraBloquear_enviaBloqueado', async () => {
     const peticion = capturarCambio()
 
-    await updateUserStatus('usr-3', 'DESACTIVADO')
+    await updateUserStatus('usr-3', 'BLOQUEADO')
 
-    expect(peticion.cuerpo).toEqual({ estado: 'DESACTIVADO' })
+    expect(peticion.cuerpo).toEqual({ estado: 'BLOQUEADO' })
   })
 
   it('updateUserStatus_conConflicto_lanzaApiErrorConSuCodigo', async () => {
@@ -108,7 +108,7 @@ describe('updateUserStatus', () => {
       ),
     )
 
-    const error = await updateUserStatus('u-1', 'DESACTIVADO').catch((excepcion) => excepcion)
+    const error = await updateUserStatus('u-1', 'BLOQUEADO').catch((excepcion) => excepcion)
 
     expect(error).toBeInstanceOf(ApiError)
     expect(error.status).toBe(409)
@@ -268,5 +268,49 @@ describe('PUT /api/admin/usuarios/{id} con el mock (HU22)', () => {
     const error = await updateUser('u-5', { ...datosDeVendedor, dni: 'ABC' }).catch((excepcion) => excepcion)
 
     expect(error).toMatchObject({ status: 400 })
+  })
+})
+
+describe('deleteUser', () => {
+  it('deleteUser_envia_DELETE_ALaRutaDelUsuario_yDevuelveNullSinCuerpo', async () => {
+    const peticion = {}
+    server.use(
+      http.delete('/api/admin/usuarios/:id', ({ params, request }) => {
+        peticion.id = params.id
+        peticion.metodo = request.method
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+
+    const respuesta = await deleteUser('usr-3')
+
+    expect(peticion).toEqual({ id: 'usr-3', metodo: 'DELETE' })
+    expect(respuesta).toBeNull()
+  })
+
+  it('deleteUser_codificaElIdEnLaRuta', async () => {
+    let ruta = null
+    server.use(
+      http.delete('/api/admin/usuarios/:id', ({ request }) => {
+        ruta = new URL(request.url).pathname
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+
+    await deleteUser('a/b')
+
+    expect(ruta).toBe('/api/admin/usuarios/a%2Fb')
+  })
+
+  it('deleteUser_conConflicto_lanzaApiErrorConSuCodigo', async () => {
+    server.use(
+      http.delete('/api/admin/usuarios/:id', () => HttpResponse.json({ code: 'LAST_ACTIVE_ADMIN' }, { status: 409 })),
+    )
+
+    const error = await deleteUser('usr-1').catch((excepcion) => excepcion)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error.status).toBe(409)
+    expect(error.code).toBe('LAST_ACTIVE_ADMIN')
   })
 })

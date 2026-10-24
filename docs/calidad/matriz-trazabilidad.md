@@ -250,6 +250,17 @@ Notas:
 | HU19-CP10 | El adaptador filtra usuarios BLOQUEADO mediante lockedUntil | Integración MongoDB | 1 | ✅ Pasa |
 | HU19-CP11 | El listado se ordena por nombre o por estado, en los dos sentidos | Integración (capa web y MongoDB) | 2 | ✅ Pasa |
 | HU19-CP12 | El orden por nombre no distingue mayúsculas ni tildes | Integración MongoDB | 1 | ✅ Pasa |
+| HU19-CP13 | El filtro de estado ofrece Pendiente, Activo y Bloqueado, sin Desactivado (los administradores no tienen Pendiente) | Frontend (componente y página) | 9 | 🔍 En revisión (9, AB#247, PR sin abrir) |
+| HU19-CP14 | Cada fila de la tabla permite bloquear o desbloquear la cuenta con confirmación (una pendiente se acepta desbloqueándola) y la ficha ya no cambia el estado | Frontend (componente y página) | 32 | 🔍 En revisión (32, AB#248, PR sin abrir) |
+| HU19-CP15 | Cada fila de la tabla permite editar y eliminar la cuenta (con confirmación), y la ficha es de solo lectura | Frontend (componente y página) | 44 | 🔍 En revisión (44, AB#249, PR sin abrir) |
+| HU19-CP16 | El administrador en sesión y el último administrador activo no se pueden bloquear ni eliminar: los botones quedan deshabilitados y explican el motivo | Frontend (componente y página) | 20 | 🔍 En revisión (20, AB#250, PR sin abrir) |
+| HU19-CP17 | En la tabla de vendedores, el filtro, la etiqueta y la ordenación del estado usan Bloqueado en lugar de Desactivado | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#247, PR sin abrir) |
+| HU19-CP18 | Cada fila de la tabla de vendedores permite bloquear o desbloquear la cuenta con confirmación (nombre comercial en los botones y avisos), con los mismos endpoints que el resto de usuarios | Frontend (componente y página) | 8 | 🔍 En revisión (8, AB#248, PR sin abrir) |
+| HU19-CP19 | Cada fila de la tabla de vendedores permite editar y eliminar la cuenta, y su ficha (datos, productos y pedidos) es de solo lectura | Frontend (componente y página) | 25 | 🔍 En revisión (25, AB#249, PR sin abrir) |
+
+Notas:
+- **HU19-CP13 a CP19 (Sprint 2, frontend):** CP17 a CP19 son los mismos comportamientos en la tabla de vendedores (HU26). Las cuentas ya no se desactivan, se bloquean (decisión del equipo), y sus acciones salen de la ficha a la fila de la tabla (ver, editar, bloquear o desbloquear y eliminar). El frontend espera el estado `BLOQUEADO` (ya no `DESACTIVADO`), `DELETE /api/admin/usuarios/{id}` y los `409` `CANNOT_BLOCK_SELF`, `CANNOT_DELETE_SELF` y `LAST_ACTIVE_ADMIN`: es un **contrato propuesto por el frontend, pendiente de implementar y validar en el backend**. Los tests de `frontend/src` de estas tareas no llevan el ID del caso en el nombre (estilo de esos archivos); se trazan aquí por su nombre.
+- **Último administrador (HU19-CP16):** el frontend lo calcula con una consulta al listado (`role=ADMINISTRADOR&status=ACTIVO&size=1`); el backend debe imponerlo igualmente con un `409`.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -268,6 +279,148 @@ Notas:
 | HU19-CP11 | `UsuarioControllerTest` | `elListadoDeUsuariosAceptaOrdenYSentido` | Infraestructura | AB#61 | PR #104 | ✅ |
 | HU19-CP11 | `UsuarioMongoAdapterTest` | `ordenaClientesPorEstadoDescendente` | Infraestructura | AB#61 | PR #104 | ✅ |
 | HU19-CP12 | `UsuarioMongoAdapterTest` | `ordenaPorNombreSinDistinguirMayusculasNiTildes` | Infraestructura | AB#29 | PR #104 | ✅ |
+| HU19-CP13 | `usersConfig.test.js` | `statusLabelsForRole_deAdministrador_noIncluyePendiente` | Frontend | AB#247 | PR sin abrir | 🔍 |
+| HU19-CP13 | `usersConfig.test.js` | `statusLabelsForRole_ningunRol_ofreceDesactivado` | Frontend | AB#247 | PR sin abrir | 🔍 |
+| HU19-CP13 | `usersConfig.test.js` | `statusLabelsForRole_deCliente_ofrecePendienteActivoYBloqueado` | Frontend | AB#247 | PR sin abrir | 🔍 |
+| HU19-CP13 | `UsersFilters.test.jsx` | `HU19-CP04: avisa del estado elegido en el filtro de estado` | Frontend | AB#247 | PR sin abrir | 🔍 |
+| HU19-CP13 | `UsersFilters.test.jsx` | `usersFilters_conStatusLabels_soloOfreceEsosEstados` | Frontend | AB#247 | PR sin abrir | 🔍 |
+| HU19-CP13 | `RoleUsersList.test.jsx` | `roleUsersList_elFiltroDeEstadoOfrecePendienteYNoHayFiltroDeRol` | Frontend | AB#247 | PR sin abrir | 🔍 |
+| HU19-CP13 | `RoleUsersList.test.jsx` | `roleUsersList_alFiltrarPorBloqueado_muestraSoloEsasCuentas` | Frontend | AB#247 | PR sin abrir | 🔍 |
+| HU19-CP13 | `RoleUsersList.test.jsx` | `roleUsersList_deAdministradores_elFiltroDeEstadoNoOfrecePendiente` | Frontend | AB#247 | PR sin abrir | 🔍 |
+| HU19-CP13 | `AdminUsersPage.test.jsx` | `adminUsersPage_alFiltrarPorAdministrador_elFiltroDeEstadoNoOfrecePendiente` | Frontend | AB#247 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_desbloquear_muestraUnBotonConElNombreDelUsuario` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_desbloquear_pideConfirmacionSinDesbloquearTodavia` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_desbloquear_alCancelar_noCambiaNada` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_desbloquear_alConfirmar_enviaActivoYAvisaConElNombre` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_desbloquear_siFalla_avisaDelError` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_bloquear_muestraUnBotonConElNombreDelUsuario` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_bloquear_pideConfirmacionAvisandoDeQueNoPodraIniciarSesion` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_bloquear_alConfirmar_enviaBloqueadoYAvisaConElNombre` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_bloquear_conConflicto_pasaElErrorConSuCodigo` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_deUnaCuentaActiva_ofreceVerYBloquear` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_deUnaCuentaBloqueada_ofreceDesbloquearYNoBloquear` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_deUnaCuentaPendiente_ofreceDesbloquearParaAceptarla` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_nuncaOfreceDesactivarNiActivar` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_alBloquear_avisaConElMensajeYActualizaElListado` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_alDesbloquear_avisaConElMensajeYActualizaElListado` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_alDesbloquearUnaCuentaPendiente_laAcepta` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_siEsElUltimoAdministradorActivo_muestraElMotivoYNoActualiza` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_siElBackendDiceQueEsLaPropiaCuenta_muestraElMotivo` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_siFallaElCambio_muestraUnErrorGenericoYNoActualiza` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserDetailDialog.test.jsx` | `userDetailDialog_deUnaCuentaActiva_noOfreceBloquear` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserDetailDialog.test.jsx` | `userDetailDialog_deUnaCuentaBloqueada_noOfreceDesbloquearNiActivar` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UserDetailDialog.test.jsx` | `userDetailDialog_deUnaCuentaPendiente_noOfreceActivar` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `UsersTable.test.jsx` | `usersTable_conRenderActions_anadeLaColumnaAcciones` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `users.test.js` | `updateUserStatus_paraBloquear_enviaBloqueado` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `RoleUsersList.test.jsx` | `roleUsersList_cadaFilaTieneLupaYBotonDeBloqueo` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `RoleUsersList.test.jsx` | `roleUsersList_alDesbloquearDesdeLaFila_actualizaElListadoYAvisa` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `RoleUsersList.test.jsx` | `roleUsersList_alBloquearDesdeLaFila_actualizaElListadoYAvisa` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `RoleUsersList.test.jsx` | `roleUsersList_siFallaElBloqueo_muestraElErrorYNoCambiaLaFila` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `AdminUsersPage.test.jsx` | `adminUsersPage_laTablaTieneUnaColumnaAcciones_conLupaYBloqueoEnCadaFila` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `AdminUsersPage.test.jsx` | `adminUsersPage_alBloquearDesdeLaTabla_laFilaPasaABloqueadoYAvisa` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `AdminUsersPage.test.jsx` | `adminUsersPage_alDesbloquearUnaCuentaPendiente_laAcepta` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP14 | `AdminAdminsPage.test.jsx` | `adminAdminsPage_alDesbloquearUnAdministradorDesdeLaTabla_elListadoLoMuestraActivo` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alAbrirse_muestraElModoEdicionConGuardarYCancelar` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_deUnCliente_soloDejaModificarLoQueSePuede` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_deUnAdministrador_noDejaModificarEmailNiFechaDeIncorporacion` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_nuncaMuestraLaContrasena` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alPulsarCerrar_avisaDelCierre` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_conErrorAlCargar_muestraMensajeYPermiteReintentar` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alGuardarUnCliente_enviaSusDatosSinElEmailNiElEstado` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_tras_guardar_avisaUnaSolaVez` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alCambiarElTipoDeCliente_loEnvia` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alCambiarLaFechaDeNacimientoAOtraDeUnMayor_laGuarda` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_conUnaFechaDeNacimientoDeUnMenor_muestraElErrorYNoGuarda` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_conCamposObligatoriosVacios_losMuestraTodosALaVezYNoGuarda` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alPulsarCancelar_cierraSinGuardarNada` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_conErrorDelServidor_muestraElMensajeYSigueEnEdicion` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alEditarLaSedeDeUnAdministrador_laEnvia` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_laSedeDeUnAdministradorPuedeQuedarVacia` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_unAdministradorPuedeEditarSusPropiosDatos` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_elRolEsDeSoloLectura_enLaEdicionDe %s` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alGuardar_noEnviaElRolNiElEmail` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alPulsarLaLupa_abreLaFichaDeEseUsuario` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alCerrarLaFicha_vuelveALaFila` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_ofreceEditarYEliminarAunqueLaCuentaEsteBloqueada` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alPulsarEditar_abreElFormularioDeEdicionConSusDatos` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alGuardarLaEdicion_avisaActualizaElListadoYCierraElFormulario` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alCancelarLaEdicion_cierraElFormularioSinAvisar` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alPulsarEliminar_pideConfirmacionAvisandoDeQueNoSePuedeDeshacer` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alCancelarLaEliminacion_noBorraNada` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alConfirmarLaEliminacion_borraAvisaYActualizaElListado` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_siEsElUltimoAdministradorActivo_muestraElMotivoDeLaEliminacion` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_siElBackendDiceQueEsLaPropiaCuenta_muestraElMotivoDeLaEliminacion` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_siFallaLaEliminacion_muestraUnErrorGenericoYNoActualiza` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserDetailDialog.test.jsx` | `userDetailDialog_noOfreceEditar_laEdicionSeHaceDesdeLaTabla` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserDetailDialog.test.jsx` | `userDetailDialog_soloOfreceCerrar` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserDetailDialog.test.jsx` | `userDetailDialog_muestraElRolDeLaCuenta` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `UserDetailDialog.test.jsx` | `userDetailDialog_deUnAdministrador_muestraSuSedeYSuRol` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `users.test.js` | `deleteUser_envia_DELETE_ALaRutaDelUsuario_yDevuelveNullSinCuerpo` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `users.test.js` | `deleteUser_codificaElIdEnLaRuta` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `users.test.js` | `deleteUser_conConflicto_lanzaApiErrorConSuCodigo` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `RoleUsersList.test.jsx` | `roleUsersList_alEliminarDesdeLaFila_laFilaDesapareceYAvisa` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `AdminUsersPage.test.jsx` | `adminUsersPage_alEditarDesdeLaTabla_laFilaMuestraElNombreNuevo` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `AdminUsersPage.test.jsx` | `adminUsersPage_alEliminarDesdeLaTabla_laFilaDesapareceYAvisa` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `AdminUsersPage.test.jsx` | `adminUsersPage_alPulsarLaLupa_abreLaFichaSinAccionesDeEstado` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `AdminClientsPage.test.jsx` | `adminClientsPage_alEditarUnClienteDesdeLaTabla_elListadoMuestraElNombreNuevo` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP15 | `AdminClientsPage.test.jsx` | `adminClientsPage_laFichaNoTieneEditar` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP16 | `UserStatusButton.test.jsx` | `userStatusButton_bloquear_deshabilitado_noSePuedePulsarYExplicaElMotivo` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_deLaPropiaCuenta_dejaElBloqueoDeshabilitadoYExplicaElMotivo` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_deLaPropiaCuenta_dejaEliminarDeshabilitadoYExplicaElMotivo` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_deLaPropiaCuenta_dejaVerYEditarDisponibles` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_delUltimoAdministradorActivo_dejaBloquearYEliminarDeshabilitadosConSuMotivo` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_delUltimoAdministradorActivo_dejaVerYEditarDisponibles` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_siElUltimoAdministradorEsOtro_dejaBloquearYEliminarDisponibles` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_sinDatosDelUltimoAdministrador_dejaBloquearYEliminarDisponibles` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_deUnaCuentaDeshabilitada_noAbreLaConfirmacionAlPulsar` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `useLastActiveAdmin.test.jsx` | `useLastActiveAdmin_pideSoloLosAdministradoresActivos` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `useLastActiveAdmin.test.jsx` | `useLastActiveAdmin_conVariosAdministradoresActivos_noHayUltimo` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `useLastActiveAdmin.test.jsx` | `useLastActiveAdmin_conUnSoloAdministradorActivo_devuelveSuId` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `useLastActiveAdmin.test.jsx` | `useLastActiveAdmin_deshabilitado_noPideNadaYNoHayUltimo` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `useLastActiveAdmin.test.jsx` | `useLastActiveAdmin_alRefrescar_vuelveAPedirlo` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `RoleUsersList.test.jsx` | `roleUsersList_conElUsuarioEnSesion_suFilaNoPermiteBloquearse` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `RoleUsersList.test.jsx` | `roleUsersList_deClientes_noPideCuantosAdministradoresActivosQuedan` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `AdminAdminsPage.test.jsx` | `adminAdminsPage_laFilaDelAdministradorEnSesion_noPermiteBloquearse` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `AdminAdminsPage.test.jsx` | `adminAdminsPage_siSoloQuedaUnAdministradorActivo_noSePuedeBloquearNiEliminar` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `AdminUsersPage.test.jsx` | `adminUsersPage_laFilaDelAdministradorEnSesion_noPermiteBloquearse` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP16 | `AdminUsersPage.test.jsx` | `adminUsersPage_siSoloQuedaUnAdministradorActivo_nadieMasPuedeBloquearloNiEliminarlo` | Frontend | AB#250 | PR sin abrir | 🔍 |
+| HU19-CP17 | `AdminSellersPage.test.jsx` | `adminSellersPage_distingueLosEstadosPendienteYBloqueado` | Frontend | AB#247 | PR sin abrir | 🔍 |
+| HU19-CP17 | `AdminSellersPage.test.jsx` | `adminSellersPage_elFiltroDeEstado_ofreceTodosLosEstados` | Frontend | AB#247 | PR sin abrir | 🔍 |
+| HU19-CP17 | `AdminSellersPage.test.jsx` | `adminSellersPage_alInvertirElOrdenDeEstado_losPendientesPasanAlFinal` | Frontend | AB#247 | PR sin abrir | 🔍 |
+| HU19-CP17 | `AdminSellersPage.test.jsx` | `adminSellersPage_sinCoincidencias_ofreceLimpiarLosFiltros` | Frontend | AB#247 | PR sin abrir | 🔍 |
+| HU19-CP18 | `AdminSellersPage.test.jsx` | `adminSellersPage_laTablaTieneUnaColumnaAcciones` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP18 | `AdminSellersPage.test.jsx` | `adminSellersPage_cadaFilaTieneVerEditarBloquearOEliminar` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP18 | `AdminSellersPage.test.jsx` | `adminSellersPage_alBloquearUnVendedor_laFilaPasaABloqueadoYAvisa` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP18 | `AdminSellersPage.test.jsx` | `adminSellersPage_alDesbloquearUnVendedorPendiente_loAcepta` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP18 | `AdminSellersPage.test.jsx` | `adminSellersPage_siFallaElBloqueo_muestraElErrorYNoCambiaLaFila` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP18 | `UserRowActions.test.jsx` | `userRowActions_conUnNombreIndicado_losBotonesYLosAvisosLoUsan` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP18 | `UserRowActions.test.jsx` | `userRowActions_alBloquearUnVendedor_usaElMismoEndpointDeEstadoQueElRestoDeUsuarios` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP18 | `UserRowActions.test.jsx` | `userRowActions_alDesbloquearUnVendedorPendiente_loAcepta` | Frontend | AB#248 | PR sin abrir | 🔍 |
+| HU19-CP19 | `AdminSellersPage.test.jsx` | `adminSellersPage_alEliminarUnVendedor_laFilaDesapareceYAvisa` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `AdminSellersPage.test.jsx` | `adminSellersPage_alEditarUnVendedorDesdeLaTabla_elListadoMuestraSuNombreComercialNuevo` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `AdminSellersPage.test.jsx` | `adminSellersPage_laFichaDelVendedorNoTieneEditarNiBloquear` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `UserRowActions.test.jsx` | `userRowActions_conRenderDetail_laLupaAbreEseDialogoYSePuedeCerrar` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `UserRowActions.test.jsx` | `userRowActions_alEliminarUnVendedor_usaElMismoEndpointQueElRestoDeUsuarios` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `UserRowActions.test.jsx` | `userRowActions_alEditarUnVendedor_abreElFormularioConSusDatos` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_muestraSusDatosParaEditar` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_dejaModificarTodoMenosElEmailYElEstado` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_alGuardarEnviaSoloLosDatosDelVendedor` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_tras_guardar_avisaUnaSolaVez` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_alCambiarLaCategoriaPrincipal_laEnvia` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_conElNombreComercialDeOtroVendedor_muestraElErrorEnElCampoYSigueEnEdicion` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_alGuardarSinCambiarElNombreComercial_noLoTomaPorRepetido` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_conCamposVaciosOIncorrectos_losMuestraTodosALaVezYNoGuarda` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_alPulsarCancelar_cierraSinGuardarNada` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_conErrorDelServidor_muestraElMensajeYSigueEnEdicion` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_siNoCarganLasCategorias_avisaYPermiteReintentar` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedorPendiente_tambienSePuedeEditar` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_elRolEsDeSoloLecturaYNoSeEnvia` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_enLaPestanaDatos_noOfreceEditarNiCambiarElEstado` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_conVendedorBloqueado_tampocoOfreceDesbloquear` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_conVendedorPendiente_tampocoOfreceActivar` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_elAvisoRemiteALosBotonesDeLaTabla` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_enLasPestanasDeProductosYPedidos_noOfreceEditar` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_muestraElRolVendedor` | Frontend | AB#249 | PR sin abrir | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `RegistroUsuarioServiceTest`: `usuarios/application/service/`

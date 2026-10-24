@@ -11,6 +11,10 @@ Documento para entender cómo el administrador consulta la información de los v
 
 ---
 
+> **Cambio del Sprint 2 (AB#247 a AB#250):** la tabla de vendedores tiene ahora una columna **Acciones** con la lupa, *Editar*, *Bloquear* o *Desbloquear* y *Eliminar* (los botones de `UserRowActions`, ver `docs/hu19-listado-usuarios.md`, sección 1.1), y la ficha del vendedor es **solo de lectura**: ya no tiene *Editar* ni *Activar usuario* / *Desactivar usuario*. El estado *Desactivado* pasa a ser *Bloqueado* en la tabla, el filtro y la ficha. El cambio de estado y la eliminación usan los endpoints generales de usuarios, así que `PATCH /api/admin/sellers/{id}/status` ya no existe. Donde el texto de abajo dice *desactivar* o *desactivado*, léase *bloquear* o *bloqueado*.
+
+---
+
 ## 1. Resumen
 
 Desde el panel de control, la tarjeta **Vendedores** lleva a `/admin/sellers`: una tabla paginada de vendedores con búsqueda, filtros por categoría y por estado y ordenación. Cada fila tiene un botón con una **lupa**. Al pulsarlo se abre, **por encima del listado** (un diálogo modal, no una pestaña ni una página nueva), la información del vendedor en tres pestañas:

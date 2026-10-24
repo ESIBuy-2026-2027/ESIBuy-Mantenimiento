@@ -1,5 +1,12 @@
 import { http, HttpResponse } from 'msw'
-import { buscarVendedorMock, editarVendedorMock, vendedoresMock } from './adminSellersHandlers'
+import {
+  buscarVendedorMock,
+  cambiarEstadoVendedorMock,
+  detalleVendedorMock,
+  editarVendedorMock,
+  eliminarVendedorMock,
+  vendedoresMock,
+} from './adminSellersHandlers'
 import { getUsuarioEnSesion } from './authHandlers'
 import { esMayorDeEdadMock } from './fechas'
 import { CATEGORIAS } from './productsHandlers'
@@ -14,27 +21,27 @@ const USUARIOS_INICIALES = [
   ['Ana', 'López García', 'ADMINISTRADOR', 'ACTIVO', '2026-01-12T09:15:00'],
   ['Mariana', 'Ruiz Pascual', 'VENDEDOR', 'PENDIENTE', '2026-10-01T10:00:00'],
   ['Carlos', 'Moreno Gil', 'CLIENTE', 'ACTIVO', '2026-02-03T11:30:00'],
-  ['Lucía', 'Torres Vega', 'CLIENTE', 'DESACTIVADO', '2026-09-28T17:45:00'],
+  ['Lucía', 'Torres Vega', 'CLIENTE', 'BLOQUEADO', '2026-09-28T17:45:00'],
   ['Javier', 'Romero Díaz', 'VENDEDOR', 'ACTIVO', '2026-03-14T08:20:00'],
-  ['Elena', 'Muñoz Alonso', 'CLIENTE', 'DESACTIVADO', '2026-04-02T12:00:00'],
+  ['Elena', 'Muñoz Alonso', 'CLIENTE', 'BLOQUEADO', '2026-04-02T12:00:00'],
   ['Pablo', 'Gómez Martín', 'CLIENTE', 'ACTIVO', '2026-04-18T16:10:00'],
-  ['Marta', 'Sanz Ramos', 'VENDEDOR', 'DESACTIVADO', '2026-05-06T10:40:00'],
+  ['Marta', 'Sanz Ramos', 'VENDEDOR', 'BLOQUEADO', '2026-05-06T10:40:00'],
   ['Sergio', 'Castro Ortega', 'CLIENTE', 'ACTIVO', '2026-05-21T19:05:00'],
-  ['Laura', 'Rubio Molina', 'CLIENTE', 'DESACTIVADO', '2026-09-30T09:00:00'],
-  ['Diego', 'Delgado Iglesias', 'ADMINISTRADOR', 'DESACTIVADO', '2026-01-20T13:25:00'],
+  ['Laura', 'Rubio Molina', 'CLIENTE', 'BLOQUEADO', '2026-09-30T09:00:00'],
+  ['Diego', 'Delgado Iglesias', 'ADMINISTRADOR', 'BLOQUEADO', '2026-01-20T13:25:00'],
   ['Paula', 'Medina Cruz', 'CLIENTE', 'ACTIVO', '2026-06-09T15:50:00'],
   ['Hugo', 'Herrera Blanco', 'VENDEDOR', 'BLOQUEADO', '2026-06-25T11:15:00'],
   ['Irene', 'Prieto Vidal', 'CLIENTE', 'ACTIVO', '2026-07-03T18:30:00'],
-  ['Álvaro', 'Campos Serrano', 'CLIENTE', 'DESACTIVADO', '2026-07-11T08:45:00'],
+  ['Álvaro', 'Campos Serrano', 'CLIENTE', 'BLOQUEADO', '2026-07-11T08:45:00'],
   ['Nuria', 'Navarro Lozano', 'VENDEDOR', 'ACTIVO', '2026-07-19T14:20:00'],
   ['Raúl', 'Ortiz Fuentes', 'CLIENTE', 'ACTIVO', '2026-07-27T10:05:00'],
-  ['Sofía', 'Cabrera Soler', 'CLIENTE', 'DESACTIVADO', '2026-09-15T12:35:00'],
+  ['Sofía', 'Cabrera Soler', 'CLIENTE', 'BLOQUEADO', '2026-09-15T12:35:00'],
   ['Iván', 'Morales Reyes', 'VENDEDOR', 'ACTIVO', '2026-08-04T09:55:00'],
   ['Claudia', 'Peña Calvo', 'CLIENTE', 'ACTIVO', '2026-08-12T17:00:00'],
-  ['Óscar', 'León Garrido', 'CLIENTE', 'DESACTIVADO', '2026-08-20T13:40:00'],
+  ['Óscar', 'León Garrido', 'CLIENTE', 'BLOQUEADO', '2026-08-20T13:40:00'],
   ['Beatriz', 'Vargas Méndez', 'VENDEDOR', 'PENDIENTE', '2026-09-05T11:10:00'],
   ['Rubén', 'Cortés Pastor', 'CLIENTE', 'ACTIVO', '2026-08-28T16:25:00'],
-  ['Jorge', 'Benítez Sáez', 'CLIENTE', 'DESACTIVADO', '2026-09-10T15:15:00'],
+  ['Jorge', 'Benítez Sáez', 'CLIENTE', 'BLOQUEADO', '2026-09-10T15:15:00'],
   ['Gonzalo', 'Ibáñez Roca', 'CLIENTE', 'PENDIENTE', '2026-10-06T18:20:00'],
   ['Marcos', 'Aguilar Bravo', 'CLIENTE', 'PENDIENTE', '2026-10-08T09:40:00'],
   ['Manuel', 'Esteve Pons', 'ADMINISTRADOR', 'ACTIVO', '2026-10-04T12:05:00'],
@@ -49,7 +56,7 @@ const USUARIOS_INICIALES = [
     fechaAlta,
   }))
   // El administrador con el que se inicia sesión en el mock (mismo id que en authHandlers), para que
-  // la regla "un administrador no puede desactivarse a sí mismo" (HU23) se vea en la lista.
+  // la regla "un administrador no puede bloquearse a sí mismo" (HU23) se vea en la lista.
   .concat({
     id: 'u-1',
     nombre: 'Ada',
@@ -91,7 +98,7 @@ const coincideBusqueda = (usuario, busqueda, soloNombre) =>
     normalizar(campo).includes(busqueda),
   )
 
-const ORDEN_ESTADOS = ['PENDIENTE', 'ACTIVO', 'BLOQUEADO', 'DESACTIVADO']
+const ORDEN_ESTADOS = ['PENDIENTE', 'ACTIVO', 'BLOQUEADO']
 const nombreCompleto = (usuario) => `${usuario.nombre} ${usuario.apellidos}`
 
 const COMPARADORES = new Map([
@@ -112,7 +119,7 @@ function ordenar(lista, criterio, sentido) {
   return [...lista].sort((a, b) => signo * comparar(a, b))
 }
 
-const ESTADOS_ADMITIDOS = new Set(['ACTIVO', 'DESACTIVADO'])
+const ESTADOS_ADMITIDOS = new Set(['ACTIVO', 'BLOQUEADO'])
 
 // Datos de la ficha (HU20) que no salen en el listado. Son ficticios y se calculan a partir del id para
 // que cada usuario tenga siempre los mismos. Nunca incluyen la contraseña.
@@ -178,9 +185,16 @@ function conflictoDeVendedor(idCuenta, { nombreComercial }) {
 
 const esAdminActivo = (usuario) => usuario.rol === 'ADMINISTRADOR' && usuario.estado === 'ACTIVO'
 
-// Código de error si la cuenta no se puede desactivar, o null si se puede.
-function conflictoAlDesactivar(usuario) {
-  if (usuario.id === getUsuarioEnSesion()?.id) return 'CANNOT_DEACTIVATE_SELF'
+// Código de error si la cuenta no se puede bloquear, o null si se puede.
+function conflictoAlBloquear(usuario) {
+  if (usuario.id === getUsuarioEnSesion()?.id) return 'CANNOT_BLOCK_SELF'
+  if (esAdminActivo(usuario) && usuarios.filter(esAdminActivo).length === 1) return 'LAST_ACTIVE_ADMIN'
+  return null
+}
+
+// Código de error si la cuenta no se puede eliminar, o null si se puede (mismas reglas que para bloquear).
+function conflictoAlEliminar(usuario) {
+  if (usuario.id === getUsuarioEnSesion()?.id) return 'CANNOT_DELETE_SELF'
   if (esAdminActivo(usuario) && usuarios.filter(esAdminActivo).length === 1) return 'LAST_ACTIVE_ADMIN'
   return null
 }
@@ -233,7 +247,11 @@ export const usersHandlers = [
     if (rechazo) return rechazo
 
     const usuario = usuarios.find((candidato) => candidato.id === params.id)
-    return usuario ? HttpResponse.json(detalleActual(usuario)) : new HttpResponse(null, { status: 404 })
+    if (usuario) return HttpResponse.json(detalleActual(usuario))
+
+    // Los vendedores de la tabla de vendedores (HU26) también se consultan con este endpoint.
+    const vendedor = detalleVendedorMock(params.id)
+    return vendedor ? HttpResponse.json(vendedor) : new HttpResponse(null, { status: 404 })
   }),
 
   // Modificar los datos de CUALQUIER usuario (HU22): cliente, administrador o vendedor se editan con el mismo
@@ -280,8 +298,8 @@ export const usersHandlers = [
     return HttpResponse.json(detalleActual(actualizado))
   }),
 
-  // Activar (HU24) o desactivar (HU23) una cuenta. Un administrador no puede desactivarse a sí mismo
-  // ni desactivar al último administrador activo.
+  // Activar (HU24) o bloquear (antes desactivar, HU23) una cuenta. Un administrador no puede bloquearse a sí mismo
+  // ni bloquear al último administrador activo.
   http.patch('/api/admin/usuarios/:id/status', async ({ params, request }) => {
     const rechazo = rechazarSiNoEsAdmin()
     if (rechazo) return rechazo
@@ -289,16 +307,41 @@ export const usersHandlers = [
     const { estado } = await request.json()
     if (!ESTADOS_ADMITIDOS.has(estado)) return new HttpResponse(null, { status: 400 })
 
+    // Un vendedor se bloquea y se desbloquea con el mismo endpoint que el resto de usuarios.
+    if (buscarVendedorMock(params.id)) return HttpResponse.json(cambiarEstadoVendedorMock(params.id, estado))
+
     const existente = usuarios.find((candidato) => candidato.id === params.id)
     if (!existente) return new HttpResponse(null, { status: 404 })
 
-    if (estado === 'DESACTIVADO') {
-      const conflicto = conflictoAlDesactivar(existente)
+    if (estado === 'BLOQUEADO') {
+      const conflicto = conflictoAlBloquear(existente)
       if (conflicto) return HttpResponse.json({ code: conflicto }, { status: 409 })
     }
 
     const actualizado = { ...existente, estado }
     usuarios = usuarios.map((candidato) => (candidato.id === params.id ? actualizado : candidato))
     return HttpResponse.json(actualizado)
+  }),
+
+  // Eliminar una cuenta (contrato propuesto por el frontend, AB#249). Un administrador no puede eliminarse a sí
+  // mismo ni eliminar al último administrador activo.
+  http.delete('/api/admin/usuarios/:id', ({ params }) => {
+    const rechazo = rechazarSiNoEsAdmin()
+    if (rechazo) return rechazo
+
+    if (buscarVendedorMock(params.id)) {
+      eliminarVendedorMock(params.id)
+      return new HttpResponse(null, { status: 204 })
+    }
+
+    const existente = usuarios.find((candidato) => candidato.id === params.id)
+    if (!existente) return new HttpResponse(null, { status: 404 })
+
+    const conflicto = conflictoAlEliminar(existente)
+    if (conflicto) return HttpResponse.json({ code: conflicto }, { status: 409 })
+
+    usuarios = usuarios.filter((candidato) => candidato.id !== params.id)
+    detallesModificados.delete(params.id)
+    return new HttpResponse(null, { status: 204 })
   }),
 ]

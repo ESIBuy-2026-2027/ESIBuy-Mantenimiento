@@ -25,10 +25,16 @@ export function updateUser(userId, datos) {
   return request(`/api/admin/usuarios/${encodeURIComponent(userId)}`, { method: 'PUT', body: datos })
 }
 
-// Activa (HU24) o desactiva (HU23) una cuenta: estado es 'ACTIVO' o 'DESACTIVADO'.
+// Activa (HU24) o desactiva (HU23) una cuenta: estado es 'ACTIVO' o 'BLOQUEADO'.
 export function updateUserStatus(userId, estado) {
   return request(`/api/admin/usuarios/${encodeURIComponent(userId)}/status`, {
     method: 'PATCH',
     body: { estado },
   })
+}
+
+// Elimina una cuenta (HU19, AB#249). Contrato propuesto por el frontend: responde 204 sin cuerpo, o 409 con
+// CANNOT_DELETE_SELF si es la propia cuenta del administrador y LAST_ACTIVE_ADMIN si es el último activo.
+export function deleteUser(userId) {
+  return request(`/api/admin/usuarios/${encodeURIComponent(userId)}`, { method: 'DELETE' })
 }

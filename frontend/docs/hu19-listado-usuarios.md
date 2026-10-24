@@ -9,6 +9,7 @@ Documento para entender el listado de usuarios del administrador: qué muestra, 
 - **Metodología:** TDD, ciclo a ciclo: cada comportamiento tiene un commit `test(front)` en rojo (AB#64) antes de su `feat(front)` en verde (AB#63)
 - **Depende de:** `docs/hu2-login.md` (sesión y rutas protegidas), `docs/hu18-panel-admin.md` (zona de administración), `docs/hu32-listado-productos.md` (componentes reutilizados) y `docs/mocks-msw.md` (mocks)
 - **Ampliado por la HU24** (`docs/hu24-activar-usuario.md`): los listados de clientes y administradores reutilizan este. Para ello, `UsersFilters` y `UsersTable` admiten opciones nuevas (todas opcionales), `listUsers` admite `searchBy`, `sort` y `order`, y el mock permite activar cuentas. Esta pantalla no cambia. Las partes afectadas de este documento están actualizadas.
+- **Ampliado por las tasks AB#247, AB#248, AB#249 y AB#250 (Sprint 2)** (rama `feature/US19-T247-T248-T249-T250-acciones-en-la-tabla-de-usuarios`): cada fila tiene sus acciones (ver, editar, bloquear o desbloquear y eliminar) y el filtro de estado ya no ofrece Desactivado, sino Bloqueado. Ver la sección 1.1.
 
 ---
 
@@ -22,7 +23,24 @@ El administrador ve en `/admin/users` una tabla con todos los usuarios, paginada
 | Filtrar por rol y estado | Dos desplegables (`Select`) con "Todos los roles" / "Todos los estados". Se aplican al instante y se pueden combinar con la búsqueda. |
 | El listado está paginado | `Pagination` + parámetros `page` y `size`. La paginación y el filtrado los hace el **servidor**. |
 
-Columnas: nombre completo, email, rol, estado (etiqueta de color) y fecha de alta (`dd/mm/aaaa`).
+Columnas: nombre completo, email, rol, estado (etiqueta de color), fecha de alta (`dd/mm/aaaa`) y **Acciones** (Sprint 2).
+
+### 1.1 Acciones de cada fila y filtro de estado (Sprint 2, AB#247 a AB#250)
+
+Desde el Sprint 2 las cuentas **no se desactivan, se bloquean** (decisión del equipo), y las acciones sobre una cuenta **ya no están en la ficha, sino en su fila de la tabla**. La misma columna **Acciones** la usan este listado, los de **Clientes** y **Administradores** (`RoleUsersList`) y la tabla de **Vendedores** (HU26, `/admin/sellers`):
+
+| Botón | Qué hace | Cuándo está disponible |
+|---|---|---|
+| Lupa (*Ver información de…*) | Abre la ficha, que ahora es **solo de lectura** (HU20) | Siempre |
+| Lápiz (*Editar a…*) | Abre el formulario de edición `UserEditDialog` (HU22), sin pasar por la ficha | Siempre |
+| Candado (*Bloquear a…* o *Desbloquear a…*) | Pide confirmación y cambia el estado. Una cuenta **activa** se bloquea; una **bloqueada o pendiente** se desbloquea, que es cómo se acepta una cuenta pendiente (HU1) | Bloquear no está disponible para la propia cuenta ni para el último administrador activo |
+| Papelera (*Eliminar a…*) | Pide confirmación (*Esta acción no se puede deshacer*) y elimina la cuenta | No está disponible para la propia cuenta ni para el último administrador activo |
+
+- **Botones deshabilitados con su motivo:** el botón que no se puede usar queda deshabilitado y su texto emergente (`title`) explica por qué (*No puedes bloquear tu propia cuenta*, *No se puede eliminar al último administrador activo*…).
+- **El último administrador activo:** la tabla pagina y filtra, así que no sabe cuántos administradores activos quedan. El hook `useLastActiveAdmin` lo pregunta al propio listado (`role=ADMINISTRADOR&status=ACTIVO&size=1`): si `totalItems` es 1, ese administrador queda protegido. Se vuelve a calcular tras cada cambio. Solo lo piden este listado y el de administradores; el de clientes no. El backend sigue imponiendo la regla con un `409`.
+- **Vendedores:** su tabla usa los mismos botones (`UserRowActions`) con el **nombre comercial** como nombre de la cuenta (*Editar a TecnoVera*) y su lupa abre la ficha propia del vendedor, con las pestañas Datos, Productos y Pedidos, que también es de solo lectura. Bloquear, desbloquear y eliminar a un vendedor usan los **mismos endpoints** que al resto de usuarios; el formulario de edición es el mismo (`UserEditDialog`). Un vendedor no puede ser el propio administrador ni el último, así que no lleva esas protecciones. Su estado es *Pendiente*, *Activo* o *Bloqueado*.
+- **Avisos:** el resultado de cada acción (éxito o error) aparece en una barra sobre la tabla, no dentro de ningún diálogo.
+- **Filtro de estado:** ofrece *Pendiente*, *Activo* y *Bloqueado* (los administradores no tienen *Pendiente*). *Desactivado* ya no existe. *Bloqueado* cubre también el bloqueo temporal por intentos fallidos del login.
 
 > Ocultar o mostrar pantallas es **experiencia de usuario**. El backend debe responder 401 sin sesión y 403 si quien consulta no es administrador.
 
@@ -91,10 +109,14 @@ Todas las rutas son relativas a `frontend/src/`.
 
 | Archivo | Qué hace |
 |---|---|
-| `UsersTable.jsx` | Tabla con nombre, email, rol, estado y fecha de alta. El estado va en una etiqueta de color (`Badge`): Activo en verde, Pendiente en amarillo, Bloqueado en rojo y Desactivado en gris. Mientras llega otra página se atenúa y marca `aria-busy`. Se desplaza en horizontal en pantallas estrechas. |
+| `UsersTable.jsx` | Tabla con nombre, email, rol, estado y fecha de alta. El estado va en una etiqueta de color (`Badge`): Activo en verde, Pendiente en amarillo y Bloqueado en rojo. Mientras llega otra página se atenúa y marca `aria-busy`. Se desplaza en horizontal en pantallas estrechas. |
 | `UsersFilters.jsx` | Buscador "Buscar por nombre o email" y desplegables "Rol" y "Estado". No guarda estado: lo recibe de la página. Los dos desplegables comparten un componente interno (`FilterSelect`). |
 | `useUsersList.js` | Hook que pide el listado cuando cambian los filtros. Se apoya en el hook común `useApiQuery`, que descarta las respuestas atrasadas y expone `data`, `failed`, `refreshing` y `retry`, igual que `useSellerProducts` (HU32). |
-| `usersConfig.js` | Constantes: `USERS_PAGE_SIZE` (10), los estados de usuario y las etiquetas legibles de roles y estados. |
+| `usersConfig.js` | Constantes: `USERS_PAGE_SIZE` (10), los estados de usuario (Pendiente, Activo y Bloqueado) y las etiquetas legibles de roles y estados. |
+| `UserRowActions.jsx` | **Sprint 2.** Las acciones de una fila: lupa, lápiz, bloquear o desbloquear y eliminar, con sus confirmaciones, sus avisos y los botones deshabilitados de la propia cuenta y del último administrador. Abre `UserDetailDialog` y `UserEditDialog`. |
+| `UserEditDialog.jsx` | **Sprint 2.** Formulario de edición de un usuario (HU22) en su propio diálogo. Antes era un modo de la ficha. |
+| `UserStatusButton.jsx` | **Sprint 2.** Botón de icono para bloquear o desbloquear, con confirmación. |
+| `useLastActiveAdmin.js` | **Sprint 2.** Calcula si solo queda un administrador activo y cuál es. |
 
 ### Reutilizado de otras HU
 
@@ -109,7 +131,7 @@ Todas las rutas son relativas a `frontend/src/`.
 
 | Archivo | Qué hace |
 |---|---|
-| `api/users.js` | `listUsers({ search, role, status, page, size })`. Construye la consulta con `URLSearchParams` y omite los filtros vacíos y la búsqueda formada solo por espacios. |
+| `api/users.js` | `deleteUser(userId)` (Sprint 2: `DELETE /api/admin/usuarios/{id}`) y `listUsers({ search, role, status, page, size })`. Construye la consulta con `URLSearchParams` y omite los filtros vacíos y la búsqueda formada solo por espacios. |
 | `mocks/usersHandlers.js` | Simula `GET /api/admin/usuarios`: 401 sin sesión, 403 si no es administrador, búsqueda sin distinguir mayúsculas ni acentos, filtros y paginación. |
 | `mocks/handlers.js` | Registra el nuevo handler. |
 
@@ -141,7 +163,7 @@ La ruta y el formato los ha propuesto el frontend, alineados con el listado de p
 | `size` | Sí | Elementos por página (el frontend envía 10) |
 | `search` | No | Texto contenido en nombre, apellidos o email, sin distinguir mayúsculas |
 | `role` | No | `ADMINISTRADOR`, `VENDEDOR` o `CLIENTE` |
-| `status` | No | `PENDIENTE`, `ACTIVO`, `BLOQUEADO` o `DESACTIVADO` |
+| `status` | No | `PENDIENTE`, `ACTIVO` o `BLOQUEADO` (Sprint 2: `DESACTIVADO` ya no existe) |
 
 Respuesta 200:
 
@@ -172,6 +194,25 @@ Respuesta 200:
 - Los usuarios llegan ordenados por fecha de alta, del más reciente al más antiguo.
 - `email` llega como texto y **nunca** se envía `contrasenaHash` (DTO en el borde, como pide el CLAUDE.md).
 - `totalPages` es 0 cuando no hay resultados.
+
+### Acciones sobre una cuenta (Sprint 2, AB#248 a AB#250)
+
+**Contrato propuesto por el frontend, pendiente de validar con el backend.** Todos los endpoints responden 401 sin sesión y 403 si quien llama no es administrador.
+
+| Acción | Petición | Respuesta |
+|---|---|---|
+| Bloquear | `PATCH /api/admin/usuarios/{id}/status` con `{ "estado": "BLOQUEADO" }` | 200 con la cuenta |
+| Desbloquear o aceptar una cuenta pendiente | `PATCH /api/admin/usuarios/{id}/status` con `{ "estado": "ACTIVO" }` | 200 con la cuenta |
+| Editar | `PUT /api/admin/usuarios/{id}` (sin cambios, HU22) | 200 con la ficha |
+| Eliminar | `DELETE /api/admin/usuarios/{id}` | 204 sin cuerpo |
+
+| `409` con `code` | Cuándo |
+|---|---|
+| `CANNOT_BLOCK_SELF` | Un administrador intenta bloquear su propia cuenta (antes `CANNOT_DEACTIVATE_SELF`) |
+| `CANNOT_DELETE_SELF` | Un administrador intenta eliminar su propia cuenta |
+| `LAST_ACTIVE_ADMIN` | Se intenta bloquear o eliminar al último administrador activo |
+
+El frontend no espera ya el estado `DESACTIVADO`. Los mensajes de error que ve el administrador son fijos y no incluyen detalles internos.
 
 ### Diferencias detectadas con el backend actual
 
@@ -211,7 +252,7 @@ Pruebas manuales sugeridas:
 ### Tests automáticos
 
 ```bash
-npx vitest run     # 208 tests (22 son de esta HU)
+npx vitest run     # 647 tests (incluidos los de las tasks AB#247 a AB#250: UserRowActions, UserEditDialog, useLastActiveAdmin y las tablas de usuarios, clientes y administradores)
 npm run lint
 npm run build
 ```
@@ -250,7 +291,9 @@ Cada test empieza por el ID de su caso de prueba (`HU19-CPnn`):
 ## 8. Limitaciones y trabajo pendiente
 
 - Ninguna tarjeta del panel de administración (HU18) enlaza con `/admin/users`. Las de **Clientes** y **Administradores** llevan a sus propios listados (HU24 y HU21), que reutilizan este.
-- En esta pantalla no hay ordenación por columnas ni acciones por fila (ver detalle, activar, desactivar). La ordenación y la ficha de cada usuario, con activar y desactivar, existen en los listados de clientes y administradores (HU24, HU23 y HU20).
+- En esta pantalla no hay ordenación por columnas (sí en los listados de clientes y administradores, HU24). Las acciones por fila (ver, editar, bloquear o desbloquear y eliminar) existen desde el Sprint 2 (sección 1.1).
+- **Eliminar es nuevo y no tiene backend todavía:** el contrato de la sección 5 es una propuesta del frontend y solo existe en el mock.
+- **Vendedores (HU26):** ya tienen las mismas acciones y el mismo vocabulario (*Bloquear*, estado `BLOQUEADO`). Desaparece `PATCH /api/admin/sellers/{id}/status`: ahora se usa `PATCH /api/admin/usuarios/{id}/status`, como con el resto de usuarios.
 - Los nombres de los estados y el contrato están pendientes de confirmar con el backend (sección 5).
 
 ---
@@ -264,4 +307,5 @@ Este documento y el trabajo técnico que describe se hicieron con ayuda de un as
 - **Qué decidió el desarrollador:** la ruta de la API y de la página, el tamaño de página y su constante, el retardo de la búsqueda, los filtros al instante, la vuelta a la página 1, los casos de prueba, los nombres de tests y archivos, reutilizar la paginación y el contrato de la HU32, cómo reutilizar `useDebouncedValue`, extraer el hook `useUsersList` y el estado de tabla ocupada.
 - **Cómo se comprobó:** **208 tests en verde** (22 de esta HU), ESLint sin errores y build de producción correcto. Los tests se escribieron antes que la implementación, en ciclos rojo-verde con commits separados. El desarrollador revisó la pantalla en el navegador con los mocks.
 - **Qué NO se comprobó:** el flujo contra un backend real; el contrato de la sección 5 debe acordarse con el backend.
+- **Tasks AB#247 a AB#250 (Sprint 2):** la IA escribió con TDD, en cuatro ciclos rojo-verde (filtro de estado, bloquear y desbloquear en la tabla, editar y eliminar en la tabla, propia cuenta y último administrador), `UserRowActions`, `UserEditDialog`, `useLastActiveAdmin`, `deleteUser`, el `DELETE` del mock, los tests y esta sección. El equipo decidió que las cuentas se bloquean en lugar de desactivarse, que las acciones salgan de la ficha a la tabla, que el filtro ofrezca Pendiente, Activo y Bloqueado, cómo detectar al último administrador y el contrato propuesto de la sección 5.
 - **Revisión humana:** el código fue revisado, ejecutado y validado por el desarrollador antes de su integración. Documentado por: Daniel.

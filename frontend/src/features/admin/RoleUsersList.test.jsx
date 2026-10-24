@@ -7,7 +7,7 @@ import { abrirSesionPorApi } from '../../test/renderApp'
 import { renderWithProviders } from '../../test/utils'
 import RoleUsersList from './RoleUsersList'
 
-// El mock tiene 17 clientes (dos páginas): 2 pendientes, 8 activos y 7 desactivados. Por defecto se
+// El mock tiene 17 clientes (dos páginas): 2 pendientes, 8 activos y 7 bloqueados. Por defecto se
 // ordenan por nombre ascendente: la primera página va de Álvaro Campos Serrano a Marcos Aguilar Bravo.
 const ESPERA = { timeout: 3000 }
 
@@ -33,12 +33,10 @@ const primerNombre = () => within(filasDeDatos()[0]).getAllByRole('cell')[0].tex
 
 // La confirmación se busca por texto: mientras se abre o se cierra, Fluent marca partes de la página
 // con aria-hidden y las búsquedas por rol pueden fallar por tiempos.
-async function activarDesdeLaFicha(user, nombre) {
-  await user.click(screen.getByRole('button', { name: `Ver información de ${nombre}` }))
-  const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
-  await user.click(await within(dialogo).findByText('Activar', { selector: 'button' }))
-  const pregunta = await screen.findByText(new RegExp(`seguro que quieres activar a ${nombre}`, 'i'))
-  await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Activar', { selector: 'button' }))
+async function cambiarEstadoDesdeLaFila(user, accion, nombre) {
+  await user.click(screen.getByRole('button', { name: `${accion} a ${nombre}` }))
+  const pregunta = await screen.findByText(new RegExp(`seguro que quieres ${accion.toLowerCase()} a ${nombre}`, 'i'))
+  await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText(accion, { selector: 'button' }))
 }
 
 describe('RoleUsersList (HU24)', () => {
@@ -56,7 +54,7 @@ describe('RoleUsersList (HU24)', () => {
     const filtro = screen.getByRole('combobox', { name: 'Estado' })
     const opciones = within(filtro).getAllByRole('option').map((opcion) => opcion.textContent)
 
-    expect(opciones).toEqual(['Todos los estados', 'Pendiente', 'Activo', 'Desactivado'])
+    expect(opciones).toEqual(['Todos los estados', 'Pendiente', 'Activo', 'Bloqueado'])
     expect(screen.queryByRole('combobox', { name: 'Rol' })).not.toBeInTheDocument()
   })
 
@@ -70,14 +68,14 @@ describe('RoleUsersList (HU24)', () => {
     filasDeDatos().forEach((fila) => expect(within(fila).getByText('Pendiente')).toBeInTheDocument())
   })
 
-  it('roleUsersList_alFiltrarPorDesactivado_muestraSoloEsasCuentas', async () => {
+  it('roleUsersList_alFiltrarPorBloqueado_muestraSoloEsasCuentas', async () => {
     const user = userEvent.setup()
     await renderClientes()
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'Desactivado')
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'Bloqueado')
 
     await waitFor(() => expect(filasDeDatos()).toHaveLength(7))
-    filasDeDatos().forEach((fila) => expect(within(fila).getByText('Desactivado')).toBeInTheDocument())
+    filasDeDatos().forEach((fila) => expect(within(fila).getByText('Bloqueado')).toBeInTheDocument())
   })
 
   it('roleUsersList_porDefecto_ordenaPorNombreAscendente', async () => {
@@ -153,13 +151,17 @@ describe('RoleUsersList (HU24)', () => {
   })
 
 
-  it('roleUsersList_cadaFilaTieneUnaLupaParaVerLaFicha', async () => {
+  it('roleUsersList_cadaFilaTieneLupaYBotonDeBloqueo', async () => {
     await renderClientes()
 
     expect(within(filaDe('carlos.moreno@esibuy.test')).getByRole('button', { name: 'Ver información de Carlos Moreno Gil' })).toBeInTheDocument()
+    expect(within(filaDe('carlos.moreno@esibuy.test')).getByRole('button', { name: 'Bloquear a Carlos Moreno Gil' })).toBeInTheDocument()
+    expect(within(filaDe('lucia.torres@esibuy.test')).getByRole('button', { name: 'Desbloquear a Lucía Torres Vega' })).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /^ver información de/i })).toHaveLength(10)
-    expect(screen.queryByText('Activar', { selector: 'button' })).not.toBeInTheDocument()
-    expect(screen.queryByText('Desactivar', { selector: 'button' })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /^(bloquear|desbloquear) a /i })).toHaveLength(10)
+    expect(screen.queryByRole('button', { name: /desactivar|^activar/i })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /^editar a /i })).toHaveLength(10)
+    expect(screen.getAllByRole('button', { name: /^eliminar a /i })).toHaveLength(10)
   })
 
   it('roleUsersList_alPulsarLaLupa_abreLaFichaDeEseUsuario', async () => {
@@ -172,24 +174,68 @@ describe('RoleUsersList (HU24)', () => {
     expect(await within(dialogo).findByLabelText('Email')).toHaveValue('lucia.torres@esibuy.test')
   })
 
-  it('roleUsersList_laFichaRecibeElUsuarioEnSesion_yNoOfreceDesactivarse', async () => {
-    const user = userEvent.setup()
+  it('roleUsersList_conElUsuarioEnSesion_suFilaNoPermiteBloquearse', async () => {
     await renderClientes('usr-3')
 
-    await user.click(screen.getByRole('button', { name: 'Ver información de Carlos Moreno Gil' }))
-
-    const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
-    await within(dialogo).findByLabelText('Nombre')
-    expect(within(dialogo).queryByText('Desactivar', { selector: 'button' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Bloquear a Carlos Moreno Gil' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Eliminar a Carlos Moreno Gil' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Eliminar a Claudia Peña Calvo' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Bloquear a Claudia Peña Calvo' })).toBeEnabled()
   })
 
-  it('roleUsersList_alCambiarElEstadoEnLaFicha_actualizaElListado', async () => {
+  it('roleUsersList_alDesbloquearDesdeLaFila_actualizaElListadoYAvisa', async () => {
     const user = userEvent.setup()
     await renderClientes()
 
-    await activarDesdeLaFicha(user, 'Lucía Torres Vega')
+    await cambiarEstadoDesdeLaFila(user, 'Desbloquear', 'Lucía Torres Vega')
 
     await waitFor(() => expect(within(filaDe('lucia.torres@esibuy.test')).getByText('Activo')).toBeInTheDocument(), ESPERA)
+    expect(await screen.findByText('Lucía Torres Vega ya está activo y puede usar la plataforma.')).toBeInTheDocument()
+  })
+
+  it('roleUsersList_alBloquearDesdeLaFila_actualizaElListadoYAvisa', async () => {
+    const user = userEvent.setup()
+    await renderClientes()
+
+    await cambiarEstadoDesdeLaFila(user, 'Bloquear', 'Carlos Moreno Gil')
+
+    await waitFor(() => expect(within(filaDe('carlos.moreno@esibuy.test')).getByText('Bloqueado')).toBeInTheDocument(), ESPERA)
+    expect(await screen.findByText('Carlos Moreno Gil está bloqueado y ya no puede iniciar sesión.')).toBeInTheDocument()
+  })
+
+  it('roleUsersList_deClientes_noPideCuantosAdministradoresActivosQuedan', async () => {
+    const roles = []
+    server.use(
+      http.get('/api/admin/usuarios', ({ request }) => {
+        roles.push(new URL(request.url).searchParams.get('role'))
+      }),
+    )
+
+    await renderClientes()
+
+    expect(roles.length).toBeGreaterThan(0)
+    expect(roles.every((rol) => rol === 'CLIENTE')).toBe(true)
+  })
+
+  it('roleUsersList_alEliminarDesdeLaFila_laFilaDesapareceYAvisa', async () => {
+    const user = userEvent.setup()
+    await renderClientes()
+
+    await cambiarEstadoDesdeLaFila(user, 'Eliminar', 'Carlos Moreno Gil')
+
+    expect(await screen.findByText('Carlos Moreno Gil se ha eliminado.')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText('carlos.moreno@esibuy.test')).not.toBeInTheDocument(), ESPERA)
+  })
+
+  it('roleUsersList_siFallaElBloqueo_muestraElErrorYNoCambiaLaFila', async () => {
+    server.use(http.patch('/api/admin/usuarios/:id/status', () => new HttpResponse(null, { status: 500 })))
+    const user = userEvent.setup()
+    await renderClientes()
+
+    await cambiarEstadoDesdeLaFila(user, 'Bloquear', 'Carlos Moreno Gil')
+
+    expect(await screen.findByText('No se ha podido bloquear a Carlos Moreno Gil. Inténtalo de nuevo.')).toBeInTheDocument()
+    expect(within(filaDe('carlos.moreno@esibuy.test')).getByText('Activo')).toBeInTheDocument()
   })
 })
 
@@ -210,7 +256,7 @@ describe('RoleUsersList (HU22): los administradores no están pendientes', () =>
       .getAllByRole('option')
       .map((opcion) => opcion.textContent)
 
-    expect(opciones).toEqual(['Todos los estados', 'Activo', 'Desactivado'])
+    expect(opciones).toEqual(['Todos los estados', 'Activo', 'Bloqueado'])
   })
 
   it('roleUsersList_deAdministradores_ningunoApareceComoPendiente', async () => {

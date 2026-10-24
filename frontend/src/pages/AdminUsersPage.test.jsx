@@ -190,7 +190,7 @@ describe('AdminUsersPage (HU22): los administradores no están pendientes', () =
     await user.selectOptions(screen.getByRole('combobox', { name: 'Rol' }), 'Administrador')
 
     expect(opcionesDeEstado()).not.toContain('Pendiente')
-    expect(opcionesDeEstado()).toEqual(['Todos los estados', 'Activo', 'Desactivado'])
+    expect(opcionesDeEstado()).toEqual(['Todos los estados', 'Activo', 'Bloqueado'])
   })
 
   it('adminUsersPage_alElegirAdministradorConEstadoPendiente_quitaElEstadoPendiente', async () => {
@@ -214,5 +214,127 @@ describe('AdminUsersPage (HU22): los administradores no están pendientes', () =
     await user.selectOptions(screen.getByRole('combobox', { name: 'Rol' }), 'Cliente')
 
     expect(opcionesDeEstado()).toContain('Pendiente')
+  })
+})
+
+describe('AdminUsersPage (HU19): acciones en la tabla', () => {
+  async function buscar(user, texto, cantidad = 1) {
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar por nombre o email' }), texto)
+    await esperarFilas(cantidad)
+  }
+
+  it('adminUsersPage_laTablaTieneUnaColumnaAcciones_conLupaYBloqueoEnCadaFila', async () => {
+    await abrirListado()
+    await esperarFilas(10)
+
+    expect(screen.getAllByRole('columnheader').map((cabecera) => cabecera.textContent)).toEqual([
+      'Nombre',
+      'Email',
+      'Rol',
+      'Estado',
+      'Fecha de alta',
+      'Acciones',
+    ])
+    expect(screen.getAllByRole('button', { name: /^ver información de/i })).toHaveLength(10)
+    expect(screen.getAllByRole('button', { name: /^(bloquear|desbloquear) a /i })).toHaveLength(10)
+    expect(screen.getAllByRole('button', { name: /^editar a /i })).toHaveLength(10)
+    expect(screen.getAllByRole('button', { name: /^eliminar a /i })).toHaveLength(10)
+  })
+
+  it('adminUsersPage_alBloquearDesdeLaTabla_laFilaPasaABloqueadoYAvisa', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'carlos')
+
+    await user.click(screen.getByRole('button', { name: 'Bloquear a Carlos Moreno Gil' }))
+    const pregunta = await screen.findByText(/seguro que quieres bloquear a carlos moreno gil/i)
+    await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Bloquear', { selector: 'button' }))
+
+    expect(await screen.findByText('Carlos Moreno Gil está bloqueado y ya no puede iniciar sesión.', {}, { timeout: 3000 })).toBeInTheDocument()
+    await waitFor(() => expect(columna(3)).toEqual(['Bloqueado']), { timeout: 3000 })
+  })
+
+  it('adminUsersPage_alDesbloquearUnaCuentaPendiente_laAcepta', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'gonzalo')
+
+    await user.click(screen.getByRole('button', { name: 'Desbloquear a Gonzalo Ibáñez Roca' }))
+    const pregunta = await screen.findByText(/seguro que quieres desbloquear a gonzalo ibáñez roca/i)
+    await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Desbloquear', { selector: 'button' }))
+
+    await waitFor(() => expect(columna(3)).toEqual(['Activo']), { timeout: 3000 })
+  })
+
+  it('adminUsersPage_laFilaDelAdministradorEnSesion_noPermiteBloquearse', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'admin@esibuy')
+
+    expect(screen.getByRole('button', { name: 'Bloquear a Ada Admin' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Eliminar a Ada Admin' })).toBeDisabled()
+  })
+
+  it('adminUsersPage_siSoloQuedaUnAdministradorActivo_nadieMasPuedeBloquearloNiEliminarlo', async () => {
+    server.use(
+      http.get('/api/admin/usuarios', ({ request }) => {
+        const params = new URL(request.url).searchParams
+        if (params.get('role') !== 'ADMINISTRADOR' || params.get('status') !== 'ACTIVO') return undefined
+        return HttpResponse.json({
+          items: [{ id: 'usr-1', nombre: 'Ana', apellidos: 'López García', rol: 'ADMINISTRADOR', estado: 'ACTIVO' }],
+          page: 1,
+          size: 1,
+          totalItems: 1,
+          totalPages: 1,
+        })
+      }),
+    )
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'ana.lopez')
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Bloquear a Ana López García' })).toBeDisabled(), { timeout: 3000 })
+    expect(screen.getByRole('button', { name: 'Eliminar a Ana López García' })).toBeDisabled()
+  })
+
+  it('adminUsersPage_alPulsarLaLupa_abreLaFichaSinAccionesDeEstado', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'carlos')
+
+    await user.click(screen.getByRole('button', { name: 'Ver información de Carlos Moreno Gil' }))
+
+    const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
+    expect(await within(dialogo).findByLabelText('Email')).toHaveValue('carlos.moreno@esibuy.test')
+    expect(within(dialogo).queryByRole('button', { name: /bloquear|activar/i })).not.toBeInTheDocument()
+  })
+
+  it('adminUsersPage_alEditarDesdeLaTabla_laFilaMuestraElNombreNuevo', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'carlos.moreno')
+
+    await user.click(screen.getByRole('button', { name: 'Editar a Carlos Moreno Gil' }))
+    const edicion = await screen.findByRole('dialog', { name: /editar usuario/i })
+    await user.clear(await within(edicion).findByLabelText(/^nombre/i))
+    await user.type(within(edicion).getByLabelText(/^nombre/i), 'Carla')
+    await user.click(within(edicion).getByRole('button', { name: /^guardar$/i }))
+
+    expect(await screen.findByText('Los cambios se han guardado.', undefined, { timeout: 3000 })).toBeInTheDocument()
+    // Mientras se cierra el formulario, Fluent marca la tabla como oculta: se busca por texto y no por rol.
+    expect(await screen.findByText('Carla Moreno Gil', {}, { timeout: 3000 })).toBeInTheDocument()
+  })
+
+  it('adminUsersPage_alEliminarDesdeLaTabla_laFilaDesapareceYAvisa', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'carlos.moreno')
+
+    await user.click(screen.getByRole('button', { name: 'Eliminar a Carlos Moreno Gil' }))
+    const pregunta = await screen.findByText(/seguro que quieres eliminar a carlos moreno gil/i)
+    await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Eliminar', { selector: 'button' }))
+
+    expect(await screen.findByText('Carlos Moreno Gil se ha eliminado.', {}, { timeout: 3000 })).toBeInTheDocument()
+    expect(await screen.findByText('No se han encontrado usuarios', {}, { timeout: 3000 })).toBeInTheDocument()
   })
 })

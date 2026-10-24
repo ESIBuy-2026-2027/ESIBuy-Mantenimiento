@@ -87,29 +87,47 @@ describe('AdminAdminsPage (HU21)', () => {
   })
 
 
-  it('adminAdminsPage_enLaFichaDelAdministradorEnSesion_noOfreceDesactivar', async () => {
-    const user = userEvent.setup()
+  it('adminAdminsPage_laFilaDelAdministradorEnSesion_noPermiteBloquearse', async () => {
     await abrirListado()
 
-    await user.click(await screen.findByRole('button', { name: 'Ver información de Ada Admin' }))
-
-    const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
-    expect(await within(dialogo).findByLabelText('Email')).toHaveValue('admin@esibuy.test')
-    expect(within(dialogo).queryByText('Desactivar', { selector: 'button' })).not.toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Bloquear a Ada Admin' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Eliminar a Ada Admin' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Bloquear a Ana López García' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Eliminar a Ana López García' })).toBeEnabled()
   })
 
-  it('adminAdminsPage_alActivarUnAdministradorDesdeSuFicha_elListadoLoMuestraActivo', async () => {
+  it('adminAdminsPage_alDesbloquearUnAdministradorDesdeLaTabla_elListadoLoMuestraActivo', async () => {
     const user = userEvent.setup()
     await abrirListado()
 
-    await user.click(await screen.findByRole('button', { name: 'Ver información de Diego Delgado Iglesias' }))
-    const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
-    await user.click(await within(dialogo).findByText('Activar', { selector: 'button' }))
-    const pregunta = await screen.findByText(/seguro que quieres activar a diego delgado iglesias/i)
-    await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Activar', { selector: 'button' }))
+    await user.click(await screen.findByRole('button', { name: 'Desbloquear a Diego Delgado Iglesias' }))
+    const pregunta = await screen.findByText(/seguro que quieres desbloquear a diego delgado iglesias/i)
+    await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Desbloquear', { selector: 'button' }))
 
-    expect(await within(dialogo).findByText(/diego delgado iglesias ya está activo/i, {}, { timeout: 3000 })).toBeInTheDocument()
+    expect(await screen.findByText('Diego Delgado Iglesias ya está activo y puede usar la plataforma.', {}, { timeout: 3000 })).toBeInTheDocument()
     const fila = () => screen.getByText('diego.delgado@esibuy.test').closest('tr')
     await waitFor(() => expect(within(fila()).getByText('Activo')).toBeInTheDocument(), { timeout: 3000 })
+  })
+
+  it('adminAdminsPage_siSoloQuedaUnAdministradorActivo_noSePuedeBloquearNiEliminar', async () => {
+    server.use(
+      http.get('/api/admin/usuarios', ({ request }) => {
+        if (new URL(request.url).searchParams.get('status') !== 'ACTIVO') return undefined
+        return HttpResponse.json({
+          items: [{ id: 'usr-1', nombre: 'Ana', apellidos: 'López García', rol: 'ADMINISTRADOR', estado: 'ACTIVO' }],
+          page: 1,
+          size: 1,
+          totalItems: 1,
+          totalPages: 1,
+        })
+      }),
+    )
+    await abrirListado()
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Bloquear a Ana López García' })).toBeDisabled(), { timeout: 3000 })
+    expect(screen.getByRole('button', { name: 'Eliminar a Ana López García' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Editar a Ana López García' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Ver información de Ana López García' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Bloquear a Manuel Esteve Pons' })).toBeEnabled()
   })
 })

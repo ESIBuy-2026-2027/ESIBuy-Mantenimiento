@@ -40,24 +40,34 @@ describe('AdminClientsPage (HU24)', () => {
   })
 })
 
-describe('AdminClientsPage (HU22): editar desde la ficha', () => {
-  it('adminClientsPage_alEditarUnClienteDesdeSuFicha_elListadoMuestraElNombreNuevo', async () => {
+describe('AdminClientsPage (HU22): editar desde la tabla', () => {
+  it('adminClientsPage_alEditarUnClienteDesdeLaTabla_elListadoMuestraElNombreNuevo', async () => {
     const user = userEvent.setup()
     await abrirSesionPorApi('admin@esibuy.test')
     renderApp(RUTA)
-    await user.click(await screen.findByRole('button', { name: /ver información de carlos moreno gil/i }))
-    const ficha = await screen.findByRole('dialog', { name: /información del usuario/i })
+    await user.click(await screen.findByRole('button', { name: 'Editar a Carlos Moreno Gil' }))
+    const edicion = await screen.findByRole('dialog', { name: /editar usuario/i })
 
-    await user.click(await within(ficha).findByRole('button', { name: 'Editar' }))
-    await user.clear(await within(ficha).findByLabelText(/^nombre/i))
-    await user.type(within(ficha).getByLabelText(/^nombre/i), 'Carla')
-    await user.click(within(ficha).getByRole('button', { name: /^guardar$/i }))
+    await user.clear(await within(edicion).findByLabelText(/^nombre/i))
+    await user.type(within(edicion).getByLabelText(/^nombre/i), 'Carla')
+    await user.click(within(edicion).getByRole('button', { name: /^guardar$/i }))
 
-    expect(await within(ficha).findByText('Los cambios se han guardado.', undefined, { timeout: 3000 })).toBeInTheDocument()
-    await user.click(within(ficha).getByRole('button', { name: 'Cerrar' }))
-    // Mientras se cierra la ficha, Fluent marca la página como oculta: se busca también entre lo oculto.
+    expect(await screen.findByText('Los cambios se han guardado.', undefined, { timeout: 3000 })).toBeInTheDocument()
+    // Mientras se cierra el formulario, Fluent marca la página como oculta: se busca también entre lo oculto.
     expect(
-      await screen.findByRole('button', { name: /ver información de carla moreno gil/i, hidden: true }),
+      await screen.findByRole('button', { name: 'Editar a Carla Moreno Gil', hidden: true }, { timeout: 3000 }),
     ).toBeInTheDocument()
+  })
+
+  it('adminClientsPage_laFichaNoTieneEditar', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp(RUTA)
+
+    await user.click(await screen.findByRole('button', { name: /ver información de carlos moreno gil/i }))
+
+    const ficha = await screen.findByRole('dialog', { name: /información del usuario/i })
+    await within(ficha).findByLabelText('Email')
+    expect(within(ficha).queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
   })
 })

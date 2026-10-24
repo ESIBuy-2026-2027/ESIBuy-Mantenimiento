@@ -9,15 +9,17 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { Search20Regular, SearchInfo24Regular } from '@fluentui/react-icons'
+import { SearchInfo24Regular } from '@fluentui/react-icons'
+import { ROLES } from '../../auth/roles'
 import EmptyState from '../../components/EmptyState'
 import Pagination from '../../components/Pagination'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 import SortControls from './SortControls'
 import UsersFilters from './UsersFilters'
-import UserDetailDialog from './UserDetailDialog'
+import UserRowActions from './UserRowActions'
 import UsersTable from './UsersTable'
 import { ACCOUNT_SORT_OPTIONS, USERS_PAGE_SIZE, statusLabelsForRole } from './usersConfig'
+import { useLastActiveAdmin } from './useLastActiveAdmin'
 import { useUsersList } from './useUsersList'
 
 const useStyles = makeStyles({
@@ -27,8 +29,8 @@ const useStyles = makeStyles({
 })
 
 // Listado de los usuarios de un rol (clientes o administradores) con búsqueda por nombre, filtro por
-// estado y ordenación por nombre o estado. La lupa de cada fila abre su ficha (HU20), donde se activa
-// (HU24) o desactiva (HU23) la cuenta, como en el listado de vendedores. Reutiliza el listado de la HU19.
+// estado y ordenación por nombre o estado. Cada fila tiene la lupa que abre su ficha (HU20) y el botón para
+// bloquear (HU23) o desbloquear (HU24) la cuenta. Reutiliza el listado de la HU19.
 export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLabel, currentUserId }) {
   const styles = useStyles()
   const [search, setSearch] = useState('')
@@ -36,7 +38,7 @@ export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLa
   const [sort, setSort] = useState('name')
   const [order, setOrder] = useState('asc')
   const [page, setPage] = useState(1)
-  const [selectedUserId, setSelectedUserId] = useState(null)
+  const [feedback, setFeedback] = useState(null)
   const debouncedSearch = useDebouncedValue(search)
   const { data, failed, refreshing, retry } = useUsersList({
     search: debouncedSearch,
@@ -61,12 +63,20 @@ export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLa
     setPage(1)
   }
 
+  // Solo los administradores pueden ser el último administrador activo.
+  const { lastAdminId, refresh: refreshLastAdmin } = useLastActiveAdmin(role === ROLES.ADMIN)
+  const changed = () => {
+    retry()
+    refreshLastAdmin()
+  }
+
   const renderActions = (user) => (
-    <Button
-      appearance="subtle"
-      icon={<Search20Regular />}
-      aria-label={`Ver información de ${user.nombre} ${user.apellidos}`}
-      onClick={() => setSelectedUserId(user.id)}
+    <UserRowActions
+      user={user}
+      currentUserId={currentUserId}
+      lastAdminId={lastAdminId}
+      onResult={setFeedback}
+      onChanged={changed}
     />
   )
 
@@ -89,6 +99,12 @@ export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLa
           onOrderChange={changeFilter(setOrder)}
         />
       </UsersFilters>
+
+      {feedback && (
+        <MessageBar intent={feedback.intent}>
+          <MessageBarBody>{feedback.texto}</MessageBarBody>
+        </MessageBar>
+      )}
 
       {failed && (
         <MessageBar intent="error">
@@ -123,15 +139,6 @@ export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLa
             onPageChange={setPage}
           />
         </>
-      )}
-
-      {selectedUserId && (
-        <UserDetailDialog
-          userId={selectedUserId}
-          currentUserId={currentUserId}
-          onClose={() => setSelectedUserId(null)}
-          onStatusChange={retry}
-        />
       )}
     </>
   )

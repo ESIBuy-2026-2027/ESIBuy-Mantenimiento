@@ -12,6 +12,10 @@ Documento para entender qué cubre la HU21 en el frontend, qué hace cada parte 
 
 ---
 
+> **Cambio del Sprint 2 (AB#248):** activar y desactivar vendedores se hace ahora desde los botones *Desbloquear* y *Bloquear* de la fila de la tabla de vendedores, no desde su ficha. Ver `docs/hu19-listado-usuarios.md`, sección 1.1. La parte B (administradores) no cambia.
+
+---
+
 ## 1. Resumen
 
 El título de la HU ("crear usuario") puede confundir. El equipo confirmó que la HU21 consiste en dos cosas:

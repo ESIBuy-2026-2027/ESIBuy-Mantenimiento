@@ -12,6 +12,10 @@ Documento para entender cómo el administrador desactiva cuentas, qué reglas se
 
 ---
 
+> **Cambio del Sprint 2 (AB#247, AB#248 y AB#250):** las cuentas **no se desactivan, se bloquean**. El botón *Bloquear* está en la fila de la tabla, no en la ficha. En la API el estado es `BLOQUEADO` (antes `DESACTIVADO`) y los `409` son `CANNOT_BLOCK_SELF` (antes `CANNOT_DEACTIVATE_SELF`) y `LAST_ACTIVE_ADMIN`. Un administrador no puede bloquearse ni eliminarse a sí mismo ni al último administrador activo: esos botones quedan deshabilitados y explican el motivo. Ver `docs/hu19-listado-usuarios.md`, sección 1.1. Donde el texto de abajo dice *desactivar* o *desactivado*, léase *bloquear* o *bloqueado*.
+
+---
+
 ## 1. Resumen
 
 El administrador desactiva las cuentas **activas** de cualquier tipo de usuario. Antes de desactivar se pide confirmación, avisando de que el usuario ya no podrá iniciar sesión.

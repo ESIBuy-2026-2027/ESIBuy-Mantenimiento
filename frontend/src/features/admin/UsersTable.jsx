@@ -20,7 +20,6 @@ const STATUS_BADGE_COLORS = {
   [USER_STATUS.PENDIENTE]: 'warning',
   [USER_STATUS.ACTIVO]: 'success',
   [USER_STATUS.BLOQUEADO]: 'danger',
-  [USER_STATUS.DESACTIVADO]: 'subtle',
 }
 
 const dateFormatter = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -67,11 +66,11 @@ const useStyles = makeStyles({
   },
 })
 
-// renderActions es opcional: si se recibe, se añade la columna "Información" con lo que devuelva para
-// cada usuario (la lupa que abre su ficha, como en el listado de vendedores).
+// renderActions es opcional: si se recibe, se añade la columna "Acciones" con lo que devuelva para
+// cada usuario (la lupa que abre su ficha y los botones de la cuenta).
 export default function UsersTable({ users, refreshing = false, renderActions }) {
   const styles = useStyles()
-  const columns = renderActions ? [...COLUMNS, 'Información'] : COLUMNS
+  const columns = renderActions ? [...COLUMNS, 'Acciones'] : COLUMNS
 
   return (
     <div className={mergeClasses(styles.wrapper, refreshing && styles.refreshing)} aria-busy={refreshing}>
@@ -93,7 +92,7 @@ export default function UsersTable({ users, refreshing = false, renderActions })
               <TableCell>{ROLE_LABELS[user.rol]}</TableCell>
               <TableCell>
                 <Badge appearance="tint" color={STATUS_BADGE_COLORS[user.estado]}>
-                  {STATUS_LABELS[user.estado]}
+                  {STATUS_LABELS[user.estado] ?? user.estado}
                 </Badge>
               </TableCell>
               <TableCell className={styles.date}>{dateFormatter.format(new Date(user.fechaAlta))}</TableCell>

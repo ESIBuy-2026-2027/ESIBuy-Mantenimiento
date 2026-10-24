@@ -13,11 +13,14 @@ import {
 import { SearchInfo24Regular } from '@fluentui/react-icons'
 import EmptyState from '../components/EmptyState'
 import Pagination from '../components/Pagination'
+import UserRowActions from '../features/admin/UserRowActions'
 import UsersFilters from '../features/admin/UsersFilters'
 import UsersTable from '../features/admin/UsersTable'
 import { USER_STATUS, USERS_PAGE_SIZE, statusLabelsForRole } from '../features/admin/usersConfig'
+import { useLastActiveAdmin } from '../features/admin/useLastActiveAdmin'
 import { useUsersList } from '../features/admin/useUsersList'
 import { ROLES } from '../auth/roles'
+import { useAuth } from '../auth/useAuth'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
 
 const useStyles = makeStyles({
@@ -49,6 +52,8 @@ const useStyles = makeStyles({
 
 export default function AdminUsersPage() {
   const styles = useStyles()
+  const { user: currentUser } = useAuth()
+  const [feedback, setFeedback] = useState(null)
   const [search, setSearch] = useState('')
   const [role, setRole] = useState('')
   const [status, setStatus] = useState('')
@@ -81,6 +86,22 @@ export default function AdminUsersPage() {
     setPage(1)
   }
 
+  const { lastAdminId, refresh: refreshLastAdmin } = useLastActiveAdmin()
+  const changed = () => {
+    retry()
+    refreshLastAdmin()
+  }
+
+  const renderActions = (user) => (
+    <UserRowActions
+      user={user}
+      currentUserId={currentUser?.id}
+      lastAdminId={lastAdminId}
+      onResult={setFeedback}
+      onChanged={changed}
+    />
+  )
+
   return (
     <main className={styles.page}>
       <div className={styles.heading}>
@@ -99,6 +120,12 @@ export default function AdminUsersPage() {
         statusLabels={statusLabelsForRole(role)}
         onStatusChange={changeFilter(setStatus)}
       />
+
+      {feedback && (
+        <MessageBar intent={feedback.intent}>
+          <MessageBarBody>{feedback.texto}</MessageBarBody>
+        </MessageBar>
+      )}
 
       {failed && (
         <MessageBar intent="error">
@@ -123,7 +150,7 @@ export default function AdminUsersPage() {
 
       {data?.totalItems > 0 && (
         <>
-          <UsersTable users={data.items} refreshing={refreshing} />
+          <UsersTable users={data.items} refreshing={refreshing} renderActions={renderActions} />
           <Pagination
             page={data.page}
             totalPages={data.totalPages}

@@ -15,6 +15,10 @@ Documento para entender cómo el administrador activa cuentas desactivadas, cóm
 
 ---
 
+> **Cambio del Sprint 2 (AB#247 y AB#248):** *Activar* pasa a llamarse **Desbloquear** y el botón está en la fila de la tabla, no en la ficha. Una cuenta pendiente (HU1) se acepta igualmente con *Desbloquear*. El estado *Desactivado* del filtro es ahora *Bloqueado*. Ver `docs/hu19-listado-usuarios.md`, sección 1.1. Donde el texto de abajo dice *activar* o *desactivado*, léase *desbloquear* o *bloqueado*.
+
+---
+
 ## 1. Resumen
 
 El administrador activa las cuentas **desactivadas** de cualquier tipo de usuario y, desde la task AB#234 (HU1), también acepta las **pendientes**. Antes de activar se pide confirmación.
