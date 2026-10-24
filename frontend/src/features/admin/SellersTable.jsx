@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types'
 import {
   Badge,
-  Button,
   Table,
   TableBody,
   TableCell,
@@ -11,11 +10,11 @@ import {
   Text,
   mergeClasses,
 } from '@fluentui/react-components'
-import { Search20Regular } from '@fluentui/react-icons'
 import { useTableStyles } from '../../components/tableStyles'
 import { getSellerStatus } from './sellerStatus'
 
-export default function SellersTable({ sellers, refreshing, onView }) {
+// renderActions devuelve los botones de cada vendedor (la lupa, editar, bloquear o desbloquear y eliminar).
+export default function SellersTable({ sellers, refreshing, renderActions }) {
   const tableStyles = useTableStyles()
 
   return (
@@ -28,7 +27,7 @@ export default function SellersTable({ sellers, refreshing, onView }) {
             <TableHeaderCell>Correo electrónico</TableHeaderCell>
             <TableHeaderCell>Categoría</TableHeaderCell>
             <TableHeaderCell>Estado</TableHeaderCell>
-            <TableHeaderCell>Información</TableHeaderCell>
+            <TableHeaderCell>Acciones</TableHeaderCell>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -53,14 +52,7 @@ export default function SellersTable({ sellers, refreshing, onView }) {
                     {status.label}
                   </Badge>
                 </TableCell>
-                <TableCell>
-                  <Button
-                    appearance="subtle"
-                    icon={<Search20Regular />}
-                    aria-label={`Ver información de ${seller.nombreComercial}`}
-                    onClick={() => onView(seller.id)}
-                  />
-                </TableCell>
+                <TableCell>{renderActions(seller)}</TableCell>
               </TableRow>
             )
           })}
@@ -83,5 +75,5 @@ SellersTable.propTypes = {
     }),
   ).isRequired,
   refreshing: PropTypes.bool,
-  onView: PropTypes.func.isRequired,
+  renderActions: PropTypes.func.isRequired,
 }

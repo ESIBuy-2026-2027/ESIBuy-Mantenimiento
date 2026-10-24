@@ -24,11 +24,12 @@ const ACCIONES = {
 }
 
 // Botón de una fila de usuarios que bloquea o desbloquea la cuenta, siempre con confirmación. Es solo un icono:
-// su nombre accesible lleva el del usuario. Deshabilitado, `reason` explica por qué no se puede usar.
-export default function UserStatusButton({ user, accion, disabled = false, reason, onDone, onError }) {
+// su nombre accesible lleva el del usuario (o el `label` que se indique, como el nombre comercial de un vendedor).
+// Deshabilitado, `reason` explica por qué no se puede usar.
+export default function UserStatusButton({ user, accion, label, disabled = false, reason, onDone, onError }) {
   const [confirmando, setConfirmando] = useState(false)
   const [enviando, setEnviando] = useState(false)
-  const nombre = `${user.nombre} ${user.apellidos}`
+  const nombre = label ?? `${user.nombre} ${user.apellidos}`
   const textos = ACCIONES[accion]
 
   const confirmar = async () => {
@@ -75,6 +76,7 @@ UserStatusButton.propTypes = {
     apellidos: PropTypes.string.isRequired,
   }).isRequired,
   accion: PropTypes.oneOf(['desbloquear', 'bloquear']).isRequired,
+  label: PropTypes.string,
   disabled: PropTypes.bool,
   reason: PropTypes.string,
   onDone: PropTypes.func.isRequired,

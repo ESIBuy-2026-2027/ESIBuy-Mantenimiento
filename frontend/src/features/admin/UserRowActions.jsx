@@ -40,12 +40,23 @@ const MENSAJES_CONFLICTO_ELIMINACION = {
 // como se acepta. Bloquear y eliminar piden confirmación. Un administrador no puede bloquearse ni eliminarse a sí
 // mismo, ni se puede bloquear o eliminar al último administrador activo (`lastAdminId`, AB#250): esos botones
 // quedan deshabilitados y explican por qué.
+// `label` es el nombre con el que se nombra a la cuenta en los botones y en los avisos (por defecto, nombre y
+// apellidos; en la tabla de vendedores, su nombre comercial). `renderDetail(onClose)` devuelve la ficha que abre
+// la lupa (por defecto, la de cualquier usuario; los vendedores tienen la suya, con sus productos y pedidos).
 // `onResult` recibe el aviso que debe ver el administrador; `onChanged`, que la lista se actualice.
-export default function UserRowActions({ user, currentUserId, lastAdminId = null, onResult, onChanged }) {
+export default function UserRowActions({
+  user,
+  currentUserId,
+  lastAdminId = null,
+  label,
+  renderDetail,
+  onResult,
+  onChanged,
+}) {
   const styles = useStyles()
   const [dialogo, setDialogo] = useState(null)
   const [eliminando, setEliminando] = useState(false)
-  const nombre = `${user.nombre} ${user.apellidos}`
+  const nombre = label ?? `${user.nombre} ${user.apellidos}`
   const accion = user.estado === USER_STATUS.ACTIVO ? 'bloquear' : 'desbloquear'
   const esPropia = user.id === currentUserId
   const esUltimoAdministrador = user.id === lastAdminId
@@ -107,6 +118,7 @@ export default function UserRowActions({ user, currentUserId, lastAdminId = null
       <UserStatusButton
         user={user}
         accion={accion}
+        label={nombre}
         disabled={accion === 'bloquear' && protegida}
         reason={esPropia ? MENSAJES_CONFLICTO_BLOQUEO.CANNOT_BLOCK_SELF : MENSAJES_CONFLICTO_BLOQUEO.LAST_ACTIVE_ADMIN}
         onDone={avisarEstadoCambiado}
@@ -125,7 +137,7 @@ export default function UserRowActions({ user, currentUserId, lastAdminId = null
         onClick={() => setDialogo('eliminar')}
       />
 
-      {dialogo === 'ficha' && <UserDetailDialog userId={user.id} onClose={cerrar} />}
+      {dialogo === 'ficha' && (renderDetail ? renderDetail(cerrar) : <UserDetailDialog userId={user.id} onClose={cerrar} />)}
       {dialogo === 'editar' && <UserEditDialog userId={user.id} onClose={cerrar} onSaved={avisarEdicionGuardada} />}
       {dialogo === 'eliminar' && (
         <StatusConfirmDialog
@@ -150,6 +162,8 @@ UserRowActions.propTypes = {
   }).isRequired,
   currentUserId: PropTypes.string,
   lastAdminId: PropTypes.string,
+  label: PropTypes.string,
+  renderDetail: PropTypes.func,
   onResult: PropTypes.func.isRequired,
   onChanged: PropTypes.func.isRequired,
 }

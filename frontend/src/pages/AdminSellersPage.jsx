@@ -16,6 +16,7 @@ import ListFilters from '../components/ListFilters'
 import Pagination from '../components/Pagination'
 import { usePageStyles } from '../components/pageStyles'
 import SellerDetailDialog from '../features/admin/SellerDetailDialog'
+import UserRowActions from '../features/admin/UserRowActions'
 import SortControls from '../features/admin/SortControls'
 import SellerStatusFilter from '../features/admin/SellerStatusFilter'
 import SellersTable from '../features/admin/SellersTable'
@@ -34,7 +35,7 @@ const SELLER_SORT_OPTIONS = [
 
 export default function AdminSellersPage() {
   const styles = usePageStyles()
-  const [selectedSellerId, setSelectedSellerId] = useState(null)
+  const [feedback, setFeedback] = useState(null)
   const [status, setStatus] = useState('')
   const [sort, setSort] = useState('status')
   const [order, setOrder] = useState('asc')
@@ -60,6 +61,17 @@ export default function AdminSellersPage() {
     setStatus('')
   }
 
+  // Cada vendedor se nombra por su nombre comercial y su lupa abre su propia ficha, con sus productos y pedidos.
+  const renderActions = (seller) => (
+    <UserRowActions
+      user={seller}
+      label={seller.nombreComercial}
+      renderDetail={(onClose) => <SellerDetailDialog sellerId={seller.id} onClose={onClose} />}
+      onResult={setFeedback}
+      onChanged={retry}
+    />
+  )
+
   return (
     <main className={styles.page}>
       <div className={styles.heading}>
@@ -67,7 +79,7 @@ export default function AdminSellersPage() {
           <Title1 as="h1" className={styles.title}>
             Vendedores
           </Title1>
-          <Text className={styles.subtitle}>Supervisa a los vendedores en modo solo lectura.</Text>
+          <Text className={styles.subtitle}>Supervisa a los vendedores y gestiona sus cuentas.</Text>
         </div>
         <LinkButton to={PATHS.ADMIN} appearance="subtle" icon={<ArrowLeft20Regular />}>
           Volver al panel
@@ -92,6 +104,12 @@ export default function AdminSellersPage() {
             onOrderChange={changeAndGoToFirstPage(setOrder)}
           />
         </ListFilters>
+      )}
+
+      {feedback && (
+        <MessageBar intent={feedback.intent}>
+          <MessageBarBody>{feedback.texto}</MessageBarBody>
+        </MessageBar>
       )}
 
       {failed && (
@@ -125,7 +143,7 @@ export default function AdminSellersPage() {
 
       {data && data.totalItems > 0 && (
         <>
-          <SellersTable sellers={data.items} refreshing={refreshing} onView={setSelectedSellerId} />
+          <SellersTable sellers={data.items} refreshing={refreshing} renderActions={renderActions} />
           <Pagination
             page={data.page}
             totalPages={data.totalPages}
@@ -135,14 +153,6 @@ export default function AdminSellersPage() {
             onPageChange={setPage}
           />
         </>
-      )}
-
-      {selectedSellerId && (
-        <SellerDetailDialog
-          sellerId={selectedSellerId}
-          onClose={() => setSelectedSellerId(null)}
-          onStatusChange={retry}
-        />
       )}
     </main>
   )
