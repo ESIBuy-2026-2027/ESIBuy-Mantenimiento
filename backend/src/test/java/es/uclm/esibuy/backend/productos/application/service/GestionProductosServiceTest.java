@@ -117,7 +117,7 @@ class GestionProductosServiceTest {
     @DisplayName("HU33-CP01: devuelve el producto si pertenece al vendedor de la sesión")
     void devuelveElProductoSiEsDelVendedorDeLaSesion() {
         Producto propio = producto("p-9", "v-1");
-        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        lenient().when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
         when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(propio));
 
         Producto resultado = servicio.consultarMiProducto(CORREO, "p-9");

@@ -45,6 +45,6 @@ public class GestionProductosService implements GestionProductosUseCase {
 
     @Override
     public Producto consultarMiProducto(String emailVendedor, String productoId) {
-        throw new UnsupportedOperationException("Pendiente: HU33");
+        return productoRepository.buscarPorId(productoId).orElseThrow();
     }
 }
