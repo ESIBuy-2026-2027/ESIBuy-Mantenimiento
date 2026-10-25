@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { FluentProvider, webLightTheme } from '@fluentui/react-components'
 import { http, HttpResponse } from 'msw'
 import { server } from '../../mocks/server'
@@ -75,5 +76,20 @@ describe('ProductDetailDialog (HU33): producto no encontrado', () => {
     const { dialogo } = await abrirFicha()
 
     expect(await within(dialogo).findByText('No se ha encontrado el producto.')).toBeInTheDocument()
+  })
+})
+
+describe('ProductDetailDialog (HU33): error de carga', () => {
+  it('HU33-CP10: si la carga falla por otro motivo, muestra un error genérico y permite reintentar', async () => {
+    const user = userEvent.setup()
+    server.use(http.get('/api/seller/products/:id', () => new HttpResponse(null, { status: 500 }), { once: true }))
+    const { dialogo } = await abrirFicha()
+
+    expect(await within(dialogo).findByText('No se ha podido cargar el producto.')).toBeInTheDocument()
+    expect(within(dialogo).queryByText('No se ha encontrado el producto.')).not.toBeInTheDocument()
+
+    await user.click(within(dialogo).getByRole('button', { name: 'Reintentar' }))
+
+    expect(await within(dialogo).findByLabelText('Nombre')).toHaveValue('Auriculares inalámbricos')
   })
 })
