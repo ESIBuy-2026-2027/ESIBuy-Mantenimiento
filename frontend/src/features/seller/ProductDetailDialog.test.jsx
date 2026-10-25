@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { FluentProvider, webLightTheme } from '@fluentui/react-components'
+import { MemoryRouter } from 'react-router-dom'
 import { http, HttpResponse } from 'msw'
 import { server } from '../../mocks/server'
 import { abrirSesionPorApi } from '../../test/renderApp'
@@ -16,9 +17,11 @@ async function abrirFicha(productId = PRODUCTO_CON_DESCUENTOS) {
   await abrirSesionPorApi('vendedor@esibuy.test')
   const onClose = vi.fn()
   render(
-    <FluentProvider theme={webLightTheme}>
-      <ProductDetailDialog productId={productId} onClose={onClose} />
-    </FluentProvider>,
+    <MemoryRouter>
+      <FluentProvider theme={webLightTheme}>
+        <ProductDetailDialog productId={productId} onClose={onClose} />
+      </FluentProvider>
+    </MemoryRouter>,
   )
   const dialogo = await screen.findByRole('dialog', { name: /información del producto/i })
   return { dialogo, onClose }
@@ -51,12 +54,12 @@ describe('ProductDetailDialog (HU33): datos', () => {
 })
 
 describe('ProductDetailDialog (HU33): acciones', () => {
-  // Editar y eliminar son de la HU34 y la HU35: en la ficha se ven, pero todavía no se pueden usar.
-  it('HU33-CP08: muestra los botones Editar y Eliminar, deshabilitados', async () => {
+  // Editar funciona desde la HU34; eliminar es de la HU35: se ve, pero todavía no se puede usar.
+  it('HU33-CP08: muestra las acciones Editar, que lleva al formulario de edición, y Eliminar, deshabilitada', async () => {
     const { dialogo } = await abrirFicha()
     await within(dialogo).findByLabelText('Nombre')
 
-    expect(within(dialogo).getByRole('button', { name: 'Editar' })).toBeDisabled()
+    expect(within(dialogo).getByRole('link', { name: 'Editar' })).toHaveAttribute('href', '/seller/products/p-1/edit')
     expect(within(dialogo).getByRole('button', { name: 'Eliminar' })).toBeDisabled()
   })
 })
@@ -67,7 +70,7 @@ describe('ProductDetailDialog (HU33): producto no encontrado', () => {
 
     expect(await within(dialogo).findByText('No se ha encontrado el producto.')).toBeInTheDocument()
     expect(within(dialogo).queryByLabelText('Nombre')).not.toBeInTheDocument()
-    expect(within(dialogo).queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
+    expect(within(dialogo).queryByRole('link', { name: 'Editar' })).not.toBeInTheDocument()
     expect(within(dialogo).queryByRole('button', { name: 'Eliminar' })).not.toBeInTheDocument()
   })
 
