@@ -56,6 +56,7 @@ public class GestionProductosService implements GestionProductosUseCase {
 
     @Override
     public Producto modificarMiProducto(ModificarProductoCommand comando) {
-        throw new UnsupportedOperationException("Pendiente de implementar (HU34)");
+        Producto actual = consultarMiProducto(comando.emailVendedor(), comando.productoId());
+        return productoRepository.guardar(actual);
     }
 }
