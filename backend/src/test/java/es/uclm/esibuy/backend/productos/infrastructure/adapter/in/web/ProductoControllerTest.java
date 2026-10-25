@@ -388,6 +388,17 @@ class ProductoControllerTest {
                 .andExpect(jsonPath("$.mensaje").value(not(containsString("detalle interno"))));
     }
 
+    @Test
+    @DisplayName("HU34-CP08: cambiar el nombre por uno repetido del mismo vendedor devuelve 409 con el código PRODUCT_NAME_ALREADY_EXISTS")
+    void nombreRepetidoAlModificarDevuelve409() throws Exception {
+        when(gestionProductos.modificarMiProducto(any())).thenThrow(new ProductoDuplicadoException());
+
+        mockMvc.perform(put(URL + "/p-9").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("PRODUCT_NAME_ALREADY_EXISTS"));
+    }
+
     private static Stream<Arguments> cuerposInvalidos() {
         String nombreLargo = "\"" + "a".repeat(101) + "\"";
         return Stream.of(
