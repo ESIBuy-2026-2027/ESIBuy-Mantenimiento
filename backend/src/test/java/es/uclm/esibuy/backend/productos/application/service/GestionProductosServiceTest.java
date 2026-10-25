@@ -13,6 +13,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -197,6 +199,21 @@ class GestionProductosServiceTest {
                 () -> servicio.modificarMiProducto(modificacion("p-9", "Ratón inalámbrico", new BigDecimal("99.90"))));
 
         verify(productoRepository, never()).guardar(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Teclado mecánico", "TECLADO MECÁNICO"})
+    @DisplayName("HU34-CP04: conservar el nombre del producto, aunque cambien las mayúsculas, no es un nombre repetido")
+    void conservarElNombreNoEsUnNombreRepetido(String nombre) {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-1")));
+        // El propio producto ya tiene ese nombre: la consulta al repositorio lo encontraría a él.
+        lenient().when(productoRepository.existePorVendedorYNombre("v-1", nombre)).thenReturn(true);
+        when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        Producto resultado = servicio.modificarMiProducto(modificacion("p-9", nombre, new BigDecimal("99.90")));
+
+        assertEquals(nombre, resultado.getNombre());
     }
 
     @Test
