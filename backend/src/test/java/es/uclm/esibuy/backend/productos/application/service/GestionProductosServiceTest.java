@@ -117,7 +117,7 @@ class GestionProductosServiceTest {
     @DisplayName("HU33-CP01: devuelve el producto si pertenece al vendedor de la sesión")
     void devuelveElProductoSiEsDelVendedorDeLaSesion() {
         Producto propio = producto("p-9", "v-1");
-        lenient().when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
         when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(propio));
 
         Producto resultado = servicio.consultarMiProducto(CORREO, "p-9");
@@ -128,7 +128,7 @@ class GestionProductosServiceTest {
     @Test
     @DisplayName("HU33-CP02: un producto que no existe no se encuentra")
     void unProductoQueNoExisteNoSeEncuentra() {
-        lenient().when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
         when(productoRepository.buscarPorId("p-404")).thenReturn(Optional.empty());
 
         assertThrows(ProductoNoEncontradoException.class, () -> servicio.consultarMiProducto(CORREO, "p-404"));
