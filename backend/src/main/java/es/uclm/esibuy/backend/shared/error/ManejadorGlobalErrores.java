@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.shared.error;
 
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.usuarios.application.port.out.exception.EnvioEmailException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AuthenticatorYaDadoDeAltaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
@@ -188,5 +189,13 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError productoDuplicado() {
         return new RespuestaError("El producto ya existe con el mismo nombre", "PRODUCT_NAME_ALREADY_EXISTS");
+    }
+
+    // 404 + code al consultar un producto propio (HU33, T348): un producto ajeno se responde igual que uno
+    // inexistente, para no revelar que existe (frontend/docs/hu31-formulario-producto.md).
+    @ExceptionHandler(ProductoNoEncontradoException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public RespuestaError productoNoEncontrado() {
+        return new RespuestaError("El producto no existe", "PRODUCT_NOT_FOUND");
     }
 }
