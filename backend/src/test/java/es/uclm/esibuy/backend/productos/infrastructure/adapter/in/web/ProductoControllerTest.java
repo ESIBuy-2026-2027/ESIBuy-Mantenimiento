@@ -364,6 +364,30 @@ class ProductoControllerTest {
         assertEquals("cat-2", comando.categoriaId());
     }
 
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("cuerposInvalidos")
+    @DisplayName("HU34-CP07: un cuerpo con datos no válidos devuelve 400 y no llega al caso de uso")
+    void cuerpoInvalidoNoModificaElProducto(String descripcion, String cuerpo) throws Exception {
+        mockMvc.perform(put(URL + "/p-9").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpo))
+                .andExpect(status().isBadRequest());
+
+        verify(gestionProductos, never()).modificarMiProducto(any());
+    }
+
+    @Test
+    @DisplayName("HU34-CP07: una regla del dominio incumplida al modificar devuelve 400 con un mensaje genérico")
+    void reglaDeDominioIncumplidaAlModificarDevuelve400Generico() throws Exception {
+        when(gestionProductos.modificarMiProducto(any()))
+                .thenThrow(new ProductoInvalidoException("detalle interno que no debe salir"));
+
+        mockMvc.perform(put(URL + "/p-9").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.mensaje").value(not(containsString("detalle interno"))));
+    }
+
     private static Stream<Arguments> cuerposInvalidos() {
         String nombreLargo = "\"" + "a".repeat(101) + "\"";
         return Stream.of(
