@@ -8,6 +8,8 @@ import {
   DialogContent,
   DialogSurface,
   DialogTitle,
+  MessageBar,
+  MessageBarBody,
   Spinner,
   makeStyles,
   tokens,
@@ -20,6 +22,8 @@ import { formatPrice } from '../../utils/format'
 import ReadOnlyFields from '../admin/ReadOnlyFields'
 
 const SIN_CATEGORIA = '—'
+// El backend responde 404 a un producto ajeno; 403 se trata igual por si cambia (criterio de la HU33).
+const NOT_FOUND_STATUSES = new Set([403, 404])
 
 const useStyles = makeStyles({
   surface: {
@@ -55,7 +59,8 @@ function productFields(product, categoryName) {
 export default function ProductDetailDialog({ productId, onClose }) {
   const styles = useStyles()
   const fetcher = useCallback(() => getSellerProduct(productId), [productId])
-  const { data: product } = useApiQuery(fetcher)
+  const { data: product, error, failed } = useApiQuery(fetcher)
+  const notFound = failed && NOT_FOUND_STATUSES.has(error?.status)
   const { categories } = useCategories()
   const categoryName = categories.find(({ id }) => id === product?.categoriaId)?.nombre
 
@@ -71,11 +76,15 @@ export default function ProductDetailDialog({ productId, onClose }) {
             Información del producto
           </DialogTitle>
           <DialogContent className={styles.content}>
-            {product ? (
-              <ReadOnlyFields fields={productFields(product, categoryName)} />
-            ) : (
-              <Spinner label="Cargando producto…" />
+            {notFound && (
+              <MessageBar intent="warning">
+                <MessageBarBody>No se ha encontrado el producto.</MessageBarBody>
+              </MessageBar>
             )}
+
+            {!product && !failed && <Spinner label="Cargando producto…" />}
+
+            {product && <ReadOnlyFields fields={productFields(product, categoryName)} />}
           </DialogContent>
           {product && (
             <DialogActions>
