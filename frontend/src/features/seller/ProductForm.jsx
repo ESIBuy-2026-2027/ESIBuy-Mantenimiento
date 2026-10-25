@@ -68,7 +68,7 @@ const useStyles = makeStyles({
   },
 })
 
-export default function ProductForm({ initialValues, categories, saving, saveFailed, onSubmit }) {
+export default function ProductForm({ initialValues, categories, saving, saveError, onSubmit }) {
   const styles = useStyles()
   const [values, setValues] = useState(initialValues)
   const [attempted, setAttempted] = useState(false)
@@ -89,9 +89,9 @@ export default function ProductForm({ initialValues, categories, saving, saveFai
 
   return (
     <form className={styles.form} onSubmit={handleSubmit} noValidate>
-      {saveFailed && (
+      {saveError && (
         <MessageBar intent="error">
-          <MessageBarBody>No se ha podido guardar el producto. Inténtalo de nuevo.</MessageBarBody>
+          <MessageBarBody>{saveError}</MessageBarBody>
         </MessageBar>
       )}
 
@@ -198,6 +198,6 @@ ProductForm.propTypes = {
   initialValues: productValuesPropType.isRequired,
   categories: PropTypes.arrayOf(categoryPropType).isRequired,
   saving: PropTypes.bool.isRequired,
-  saveFailed: PropTypes.bool.isRequired,
+  saveError: PropTypes.string,
   onSubmit: PropTypes.func.isRequired,
 }

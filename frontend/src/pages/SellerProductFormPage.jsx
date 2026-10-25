@@ -20,6 +20,8 @@ import { useCategories } from '../hooks/useCategories'
 import { PATHS } from '../routes/paths'
 
 const NOT_FOUND = 404
+const DUPLICATE_NAME = 'PRODUCT_NAME_ALREADY_EXISTS'
+const GENERIC_SAVE_ERROR = 'No se ha podido guardar el producto. Inténtalo de nuevo.'
 
 const useStyles = makeStyles({
   // Columna más estrecha que la de los listados; sigue centrada en la pantalla (margin auto).
@@ -36,21 +38,23 @@ export default function SellerProductFormPage() {
   const navigate = useNavigate()
   const isEdit = Boolean(id)
   const [saving, setSaving] = useState(false)
-  const [saveFailed, setSaveFailed] = useState(false)
+  const [saveError, setSaveError] = useState(null)
   const { categories, loaded: categoriesLoaded, failed: categoriesFailed, retry: retryCategories } = useCategories()
   const loadProduct = useCallback(() => (id ? getSellerProduct(id) : Promise.resolve(null)), [id])
   const { data: product, error: productError, failed: productFailed, retry: retryProduct } = useApiQuery(loadProduct)
 
   const handleSubmit = async (payload) => {
     setSaving(true)
-    setSaveFailed(false)
+    setSaveError(null)
     try {
       await (isEdit ? updateSellerProduct(id, payload) : createSellerProduct(payload))
       navigate(PATHS.SELLER_PRODUCTS, {
         state: { notice: isEdit ? 'Cambios guardados.' : 'Producto guardado correctamente.' },
       })
-    } catch {
-      setSaveFailed(true)
+    } catch (error) {
+      // El 409 del nombre repetido solo se explica al editar (HU34); el alta mantiene el mensaje genérico.
+      const duplicateName = isEdit && error?.code === DUPLICATE_NAME
+      setSaveError(duplicateName ? 'Ya tienes un producto con ese nombre.' : GENERIC_SAVE_ERROR)
       setSaving(false)
     }
   }
@@ -102,7 +106,7 @@ export default function SellerProductFormPage() {
           initialValues={product ? valuesFromProduct(product) : emptyProductValues()}
           categories={categories}
           saving={saving}
-          saveFailed={saveFailed}
+          saveError={saveError}
           onSubmit={handleSubmit}
         />
       )}
