@@ -44,3 +44,14 @@ describe('ProductDetailDialog (HU33): datos', () => {
     campos.forEach((campo) => expect(campo).toHaveAttribute('readonly'))
   })
 })
+
+describe('ProductDetailDialog (HU33): acciones', () => {
+  // Editar y eliminar son de la HU34 y la HU35: en la ficha se ven, pero todavía no se pueden usar.
+  it('HU33-CP08: muestra los botones Editar y Eliminar, deshabilitados', async () => {
+    const { dialogo } = await abrirFicha()
+    await within(dialogo).findByLabelText('Nombre')
+
+    expect(within(dialogo).getByRole('button', { name: 'Editar' })).toBeDisabled()
+    expect(within(dialogo).getByRole('button', { name: 'Eliminar' })).toBeDisabled()
+  })
+})
