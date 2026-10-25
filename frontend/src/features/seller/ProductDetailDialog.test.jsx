@@ -1,0 +1,45 @@
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen, within } from '@testing-library/react'
+import { FluentProvider, webLightTheme } from '@fluentui/react-components'
+import { abrirSesionPorApi } from '../../test/renderApp'
+import ProductDetailDialog from './ProductDetailDialog'
+
+// p-1 (Auriculares inalámbricos) es del vendedor y en los datos de ejemplo tiene los dos descuentos activos.
+const PRODUCTO_CON_DESCUENTOS = 'p-1'
+
+async function abrirFicha(productId = PRODUCTO_CON_DESCUENTOS) {
+  await abrirSesionPorApi('vendedor@esibuy.test')
+  const onClose = vi.fn()
+  render(
+    <FluentProvider theme={webLightTheme}>
+      <ProductDetailDialog productId={productId} onClose={onClose} />
+    </FluentProvider>,
+  )
+  const dialogo = await screen.findByRole('dialog', { name: /información del producto/i })
+  return { dialogo, onClose }
+}
+
+describe('ProductDetailDialog (HU33): datos', () => {
+  it('HU33-CP07: muestra todos los datos del producto, con el nombre de su categoría', async () => {
+    const { dialogo } = await abrirFicha()
+
+    expect(await within(dialogo).findByLabelText('Nombre')).toHaveValue('Auriculares inalámbricos')
+    expect(within(dialogo).getByLabelText('Descripción')).toHaveValue('Descripción de Auriculares inalámbricos.')
+    expect(within(dialogo).getByLabelText('Precio')).toHaveValue('59,90 €')
+    expect(within(dialogo).getByLabelText('Stock')).toHaveValue('34')
+    expect(await within(dialogo).findByDisplayValue('Tecnología')).toBe(within(dialogo).getByLabelText('Categoría'))
+    expect(within(dialogo).getByLabelText('Imagen')).toHaveValue('Sin imagen')
+    expect(within(dialogo).getByLabelText('Estado')).toHaveValue('Disponible')
+    expect(within(dialogo).getByLabelText('Descuento')).toHaveValue('10 %')
+    expect(within(dialogo).getByLabelText('Descuento premium')).toHaveValue('15 %')
+  })
+
+  it('HU33-CP07: todos los campos son de solo lectura', async () => {
+    const { dialogo } = await abrirFicha()
+    await within(dialogo).findByLabelText('Nombre')
+
+    const campos = within(dialogo).getAllByRole('textbox')
+    expect(campos).toHaveLength(9)
+    campos.forEach((campo) => expect(campo).toHaveAttribute('readonly'))
+  })
+})
