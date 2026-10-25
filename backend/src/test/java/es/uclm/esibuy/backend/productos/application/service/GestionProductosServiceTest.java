@@ -76,8 +76,7 @@ class GestionProductosServiceTest {
     @Test
     @DisplayName("HU31-CP14: devuelve el producto guardado, con el id que le ha asignado la base de datos")
     void devuelveElProductoGuardadoConSuId() {
-        Producto conId = new Producto("p-9", "v-1", "Teclado mecánico", "Con cable", new BigDecimal("89.50"), 12,
-                "cat-1", "", true, Descuento.sinDescuento(), Descuento.sinDescuento());
+        Producto conId = producto("p-9", "v-1");
         when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
         when(productoRepository.guardar(any(Producto.class))).thenReturn(conId);
 
