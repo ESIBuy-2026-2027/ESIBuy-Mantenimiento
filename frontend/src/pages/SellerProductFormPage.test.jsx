@@ -355,6 +355,23 @@ describe('SellerProductFormPage (HU34): edición', () => {
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp(`^${RUTA_EDITAR}$`))
   })
 
+  it('HU34-CP18: si el nombre ya lo tiene otro producto del vendedor, lo indica y no sale del formulario', async () => {
+    const user = userEvent.setup()
+    capturarEnvio('put', '/api/seller/products/:id', () =>
+      HttpResponse.json({ code: 'PRODUCT_NAME_ALREADY_EXISTS' }, { status: 409 }),
+    )
+    await abrirFormulario(RUTA_EDITAR, /editar producto/i)
+    await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Auriculares inalámbricos'))
+
+    await user.clear(screen.getByLabelText(/^nombre/i))
+    await user.type(screen.getByLabelText(/^nombre/i), 'Teclado mecánico')
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+
+    expect(await screen.findByText('Ya tienes un producto con ese nombre.')).toBeInTheDocument()
+    expect(screen.queryByText(/no se ha podido guardar el producto/i)).not.toBeInTheDocument()
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp(`^${RUTA_EDITAR}$`))
+  })
+
   it('HU34-CP15: un producto de otro vendedor no muestra el formulario', async () => {
     await abrirSesionPorApi(VENDEDOR)
     renderApp('/seller/products/p-24/edit')
