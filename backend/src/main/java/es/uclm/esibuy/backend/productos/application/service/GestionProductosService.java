@@ -46,6 +46,10 @@ public class GestionProductosService implements GestionProductosUseCase {
 
     @Override
     public Producto consultarMiProducto(String emailVendedor, String productoId) {
-        return productoRepository.buscarPorId(productoId).orElseThrow(ProductoNoEncontradoException::new);
+        String vendedorId = usuarioEnSesion.idPorCorreo(emailVendedor);
+        // Un producto de otro vendedor se trata igual que uno inexistente, para no revelar que existe.
+        return productoRepository.buscarPorId(productoId)
+                .filter(producto -> producto.getVendedorId().equals(vendedorId))
+                .orElseThrow(ProductoNoEncontradoException::new);
     }
 }
