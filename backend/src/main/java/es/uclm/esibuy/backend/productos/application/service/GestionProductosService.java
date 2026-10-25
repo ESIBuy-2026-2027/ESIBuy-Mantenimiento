@@ -5,6 +5,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseC
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 
 public class GestionProductosService implements GestionProductosUseCase {
@@ -45,6 +46,6 @@ public class GestionProductosService implements GestionProductosUseCase {
 
     @Override
     public Producto consultarMiProducto(String emailVendedor, String productoId) {
-        return productoRepository.buscarPorId(productoId).orElseThrow();
+        return productoRepository.buscarPorId(productoId).orElseThrow(ProductoNoEncontradoException::new);
     }
 }
