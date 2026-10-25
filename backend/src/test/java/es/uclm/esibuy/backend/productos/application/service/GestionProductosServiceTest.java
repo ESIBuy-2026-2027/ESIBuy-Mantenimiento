@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.productos.application.service;
 
 import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
+import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
@@ -30,7 +31,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-// Alta de un producto por el vendedor (HU31, T204). El repositorio y el puerto hacia usuarios son dobles de
+// Alta (HU31, T204), consulta (HU33, T349) y modificación (HU34, T343) de los productos propios del vendedor. El repositorio y el puerto hacia usuarios son dobles de
 // prueba (Mockito): se prueba el caso de uso sin MongoDB ni Spring.
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP13 a CP16, propuestos a partir del contrato del frontend.
 @ExtendWith(MockitoExtension.class)
@@ -143,6 +144,30 @@ class GestionProductosServiceTest {
         assertThrows(ProductoNoEncontradoException.class, () -> servicio.consultarMiProducto(CORREO, "p-9"));
     }
 
+    @Test
+    @DisplayName("HU34-CP05: un producto que no existe no se puede modificar y no se guarda nada")
+    void unProductoQueNoExisteNoSeModifica() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-404")).thenReturn(Optional.empty());
+
+        assertThrows(ProductoNoEncontradoException.class,
+                () -> servicio.modificarMiProducto(modificacion("p-404", "Teclado mecánico RGB", new BigDecimal("99.90"))));
+
+        verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU34-CP05: un vendedor no puede modificar un producto de otro vendedor y no se guarda nada")
+    void unProductoDeOtroVendedorNoSeModifica() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-2")));
+
+        assertThrows(ProductoNoEncontradoException.class,
+                () -> servicio.modificarMiProducto(modificacion("p-9", "Teclado mecánico RGB", new BigDecimal("99.90"))));
+
+        verify(productoRepository, never()).guardar(any());
+    }
+
     private static Producto producto(String id, String vendedorId) {
         return new Producto(id, vendedorId, "Teclado mecánico", "Con cable", new BigDecimal("89.50"), 12,
                 "cat-1", "", true, Descuento.sinDescuento(), Descuento.sinDescuento());
@@ -152,5 +177,11 @@ class GestionProductosServiceTest {
         return new CrearProductoCommand(CORREO, "Teclado mecánico", "Con cable", precio, stock, categoriaId,
                 "https://esibuy.test/teclado.png", true, new Descuento(true, new BigDecimal("10")),
                 Descuento.sinDescuento());
+    }
+
+    private static ModificarProductoCommand modificacion(String productoId, String nombre, BigDecimal precio) {
+        return new ModificarProductoCommand(CORREO, productoId, nombre, "Inalámbrico", precio, 5, "cat-2",
+                "https://esibuy.test/rgb.png", false, new Descuento(true, new BigDecimal("20")),
+                new Descuento(true, new BigDecimal("25")));
     }
 }

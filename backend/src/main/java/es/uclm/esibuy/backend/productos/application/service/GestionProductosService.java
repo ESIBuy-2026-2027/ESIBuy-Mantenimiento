@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.productos.application.service;
 
 import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
+import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
@@ -51,5 +52,10 @@ public class GestionProductosService implements GestionProductosUseCase {
         return productoRepository.buscarPorId(productoId)
                 .filter(producto -> producto.getVendedorId().equals(vendedorId))
                 .orElseThrow(ProductoNoEncontradoException::new);
+    }
+
+    @Override
+    public Producto modificarMiProducto(ModificarProductoCommand comando) {
+        throw new UnsupportedOperationException("Pendiente de implementar (HU34)");
     }
 }
