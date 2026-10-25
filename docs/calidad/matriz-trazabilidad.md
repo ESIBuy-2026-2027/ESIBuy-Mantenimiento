@@ -1269,6 +1269,40 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU34 · Modificar un producto propio
+
+### Tabla A · HU34 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU34-CP01 | El vendedor guarda los cambios de un producto suyo, con el mismo id y el mismo vendedor | Unitario | 1 | 🔍 En revisión |
+| HU34-CP02 | Se aplican las mismas validaciones que en el alta y unos datos inválidos no se guardan | Unitario | 1 | 🔍 En revisión |
+| HU34-CP03 | No se puede cambiar el nombre por el de otro producto del vendedor (`ProductoDuplicadoException`) | Unitario | 1 | 🔍 En revisión |
+| HU34-CP04 | Conservar el nombre del producto, aunque cambien las mayúsculas, no es un nombre repetido | Unitario | 1 | 🔍 En revisión |
+| HU34-CP05 | Un vendedor no puede modificar un producto de otro vendedor ni uno inexistente (`ProductoNoEncontradoException`) | Unitario | 2 | 🔍 En revisión |
+
+Notas:
+- **HU34-CP01 a CP05:** casos propuestos en la T343 (AB#343) a partir de los criterios de aceptación de la HU34. Pendientes de añadir a la HU34 en Azure Boards.
+- **Campos editables (decisión del equipo):** el id y el vendedor no se modifican; el nombre sí, controlando duplicados, y `disponible` también.
+- **HU34-CP02:** sin rojo real, porque el constructor de `Producto` ya aplica las validaciones del alta.
+- **Pendiente:** el endpoint (T342), donde se comprobará que los cambios llegan al catálogo, y la vista de edición (T341).
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU34-CP01 | `GestionProductosServiceTest` | `guardaLosCambiosConElMismoIdYVendedor` | Aplicación | AB#343 | PR #120 | 🔍 |
+| HU34-CP02 | `GestionProductosServiceTest` | `rechazaUnaModificacionConDatosInvalidos` | Aplicación | AB#343 | PR #120 | 🔍 |
+| HU34-CP03 | `GestionProductosServiceTest` | `rechazaCambiarElNombrePorUnoRepetido` | Aplicación | AB#343 | PR #120 | 🔍 |
+| HU34-CP04 | `GestionProductosServiceTest` | `conservarElNombreNoEsUnNombreRepetido` (mismo nombre y en mayúsculas) | Aplicación | AB#343 | PR #120 | 🔍 |
+| HU34-CP05 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoSeModifica` | Aplicación | AB#343 | PR #120 | 🔍 |
+| HU34-CP05 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoSeModifica` | Aplicación | AB#343 | PR #120 | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `GestionProductosServiceTest`: `productos/application/service/` (Mockito, sin Spring)
+
+---
+
 ## Tests técnicos sin caso de prueba
 
 Tests que no validan una HU concreta.
