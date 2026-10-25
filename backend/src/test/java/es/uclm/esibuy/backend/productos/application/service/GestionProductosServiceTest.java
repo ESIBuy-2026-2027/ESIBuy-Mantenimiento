@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -110,6 +111,23 @@ class GestionProductosServiceTest {
                 () -> servicio.crear(comando(new BigDecimal("89.50"), 12, "cat-1")));
 
         verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU33-CP01: devuelve el producto si pertenece al vendedor de la sesión")
+    void devuelveElProductoSiEsDelVendedorDeLaSesion() {
+        Producto propio = producto("p-9", "v-1");
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(propio));
+
+        Producto resultado = servicio.consultarMiProducto(CORREO, "p-9");
+
+        assertSame(propio, resultado);
+    }
+
+    private static Producto producto(String id, String vendedorId) {
+        return new Producto(id, vendedorId, "Teclado mecánico", "Con cable", new BigDecimal("89.50"), 12,
+                "cat-1", "", true, Descuento.sinDescuento(), Descuento.sinDescuento());
     }
 
     private static CrearProductoCommand comando(BigDecimal precio, int stock, String categoriaId) {

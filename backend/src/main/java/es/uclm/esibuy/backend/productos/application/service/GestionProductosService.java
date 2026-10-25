@@ -42,4 +42,9 @@ public class GestionProductosService implements GestionProductosUseCase {
         }
         return productoRepository.guardar(producto);
     }
+
+    @Override
+    public Producto consultarMiProducto(String emailVendedor, String productoId) {
+        throw new UnsupportedOperationException("Pendiente: HU33");
+    }
 }
