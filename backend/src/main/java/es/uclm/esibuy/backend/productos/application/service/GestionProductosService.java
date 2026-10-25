@@ -71,6 +71,9 @@ public class GestionProductosService implements GestionProductosUseCase {
                 comando.descuento(),
                 comando.descuentoPremium()
         );
+        if (productoRepository.existePorVendedorYNombre(modificado.getVendedorId(), modificado.getNombre())) {
+            throw new ProductoDuplicadoException();
+        }
         return productoRepository.guardar(modificado);
     }
 }
