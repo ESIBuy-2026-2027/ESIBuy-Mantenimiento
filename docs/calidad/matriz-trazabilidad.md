@@ -1247,7 +1247,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 Notas:
 - **HU33-CP01 a CP06:** casos propuestos en la T349 (AB#349) y la T348 (AB#348) y acordados con el equipo durante el desarrollo. Pendientes de añadir a la HU33 en Azure Boards.
 - **Backend (T349, AB#349, PR #117):** `consultarMiProducto` en `GestionProductosUseCase`. Un producto ajeno se trata como inexistente.
-- **Backend (T348, AB#348):** `GET /api/seller/products/{id}`, con el contrato de `frontend/docs/hu31-formulario-producto.md`. El producto inexistente y el ajeno dan 404, no 403.
+- **Backend (T348, AB#348, PR #118):** `GET /api/seller/products/{id}`, con el contrato de `frontend/docs/hu31-formulario-producto.md`. El producto inexistente y el ajeno dan 404, no 403.
 - **HU33-CP06:** sin rojo real, porque `SecurityConfig` ya limita `/api/seller/**` al rol VENDEDOR.
 - **Pendiente:** la vista del frontend (T347).
 
@@ -1258,10 +1258,10 @@ Notas:
 | HU33-CP01 | `GestionProductosServiceTest` | `devuelveElProductoSiEsDelVendedorDeLaSesion` | Aplicación | AB#349 | PR #117 | 🔍 |
 | HU33-CP02 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoSeEncuentra` | Aplicación | AB#349 | PR #117 | 🔍 |
 | HU33-CP03 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoSeEncuentra` | Aplicación | AB#349 | PR #117 | 🔍 |
-| HU33-CP04 | `ProductoControllerTest` | `vendedorConsultaSuProducto` | Infraestructura | AB#348 | rama `feature/US33-T348-endpoint-consulta-producto-propio` | 🔍 |
-| HU33-CP05 | `ProductoControllerTest` | `productoNoEncontradoDevuelve404` | Infraestructura | AB#348 | rama `feature/US33-T348-endpoint-consulta-producto-propio` | 🔍 |
-| HU33-CP06 | `ProductoControllerTest` | `sinSesionNoSeConsultaUnProducto` | Infraestructura | AB#348 | rama `feature/US33-T348-endpoint-consulta-producto-propio` | 🔍 |
-| HU33-CP06 | `ProductoControllerTest` | `noVendedorNoConsultaUnProducto` (cliente y administrador) | Infraestructura | AB#348 | rama `feature/US33-T348-endpoint-consulta-producto-propio` | 🔍 |
+| HU33-CP04 | `ProductoControllerTest` | `vendedorConsultaSuProducto` | Infraestructura | AB#348 | PR #118 | 🔍 |
+| HU33-CP05 | `ProductoControllerTest` | `productoNoEncontradoDevuelve404` | Infraestructura | AB#348 | PR #118 | 🔍 |
+| HU33-CP06 | `ProductoControllerTest` | `sinSesionNoSeConsultaUnProducto` | Infraestructura | AB#348 | PR #118 | 🔍 |
+| HU33-CP06 | `ProductoControllerTest` | `noVendedorNoConsultaUnProducto` (cliente y administrador) | Infraestructura | AB#348 | PR #118 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `GestionProductosServiceTest`: `productos/application/service/` (Mockito, sin Spring)
