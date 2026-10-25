@@ -134,6 +134,15 @@ class GestionProductosServiceTest {
         assertThrows(ProductoNoEncontradoException.class, () -> servicio.consultarMiProducto(CORREO, "p-404"));
     }
 
+    @Test
+    @DisplayName("HU33-CP03: un producto de otro vendedor no se encuentra, para no revelar que existe")
+    void unProductoDeOtroVendedorNoSeEncuentra() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-2")));
+
+        assertThrows(ProductoNoEncontradoException.class, () -> servicio.consultarMiProducto(CORREO, "p-9"));
+    }
+
     private static Producto producto(String id, String vendedorId) {
         return new Producto(id, vendedorId, "Teclado mecánico", "Con cable", new BigDecimal("89.50"), 12,
                 "cat-1", "", true, Descuento.sinDescuento(), Descuento.sinDescuento());
