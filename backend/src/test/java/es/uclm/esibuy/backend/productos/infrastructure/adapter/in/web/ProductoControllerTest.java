@@ -410,6 +410,36 @@ class ProductoControllerTest {
                 .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
     }
 
+    @Test
+    @DisplayName("HU34-CP10: sin sesión no se puede modificar un producto")
+    void sinSesionNoSeModificaUnProducto() throws Exception {
+        mockMvc.perform(put(URL + "/p-9").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isUnauthorized());
+
+        verify(gestionProductos, never()).modificarMiProducto(any());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "ADMINISTRADOR"})
+    @DisplayName("HU34-CP10: un usuario que no es vendedor no puede modificar un producto")
+    void noVendedorNoModificaUnProducto(String rol) throws Exception {
+        mockMvc.perform(put(URL + "/p-9").with(csrf()).with(user("usuario@esibuy.test").roles(rol))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isForbidden());
+
+        verify(gestionProductos, never()).modificarMiProducto(any());
+    }
+
+    @Test
+    @DisplayName("HU34-CP10: una modificación sin token CSRF se rechaza")
+    void sinTokenCsrfNoSeModificaUnProducto() throws Exception {
+        mockMvc.perform(put(URL + "/p-9").with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isForbidden());
+
+        verify(gestionProductos, never()).modificarMiProducto(any());
+    }
+
     private static Stream<Arguments> cuerposInvalidos() {
         String nombreLargo = "\"" + "a".repeat(101) + "\"";
         return Stream.of(
