@@ -4,6 +4,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand
 import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
+import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
@@ -40,12 +41,14 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // Listado de los productos propios del vendedor (HU32, T184): GET /api/seller/products, y alta de un producto
 // (HU31, T205 y T179): POST /api/seller/products, y consulta de un producto propio (HU33, T348):
-// GET /api/seller/products/{id}. Los casos de uso son dobles de prueba; la seguridad es la real
+// GET /api/seller/products/{id}, y modificación de un producto propio (HU34, T342): PUT /api/seller/products/{id}.
+// Los casos de uso son dobles de prueba; la seguridad es la real
 // (SecurityConfig: /api/seller/** solo para VENDEDOR, con CSRF).
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU32-CP01 a CP05 y HU31-CP17 a CP22, propuestos.
 @WebMvcTest(ProductoController.class)
@@ -325,6 +328,40 @@ class ProductoControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(gestionProductos, never()).consultarMiProducto(any(), any());
+    }
+
+    // ---- Modificación de un producto propio (HU34) ----
+
+    @Test
+    @DisplayName("HU34-CP06: el vendedor modifica su producto y recibe 200 con el producto actualizado; el vendedor sale de la sesión")
+    void vendedorModificaSuProducto() throws Exception {
+        Producto modificado = new Producto("p-9", "v-1", "Lámpara de pie LED", "Con regulador", new BigDecimal("39.90"),
+                3, "cat-2", "https://esibuy.test/lampara.png", false, Descuento.sinDescuento(),
+                new Descuento(true, new BigDecimal("15")));
+        when(gestionProductos.modificarMiProducto(any())).thenReturn(modificado);
+        String conVendedor = cuerpo("\"Lámpara de pie LED\"", "39.9", "3", "\"cat-2\"", "\"\"", SIN_DESCUENTO)
+                .replace("{\"nombre\"", "{\"vendedorId\": \"v-otro\", \"nombre\"");
+
+        mockMvc.perform(put(URL + "/p-9").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(conVendedor))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("p-9"))
+                .andExpect(jsonPath("$.nombre").value("Lámpara de pie LED"))
+                .andExpect(jsonPath("$.precio").value(39.9))
+                .andExpect(jsonPath("$.stock").value(3))
+                .andExpect(jsonPath("$.disponible").value(false))
+                .andExpect(jsonPath("$.descuentoPremium.porcentaje").value(15))
+                .andExpect(jsonPath("$.vendedorId").doesNotExist());
+
+        ArgumentCaptor<ModificarProductoCommand> captor = ArgumentCaptor.forClass(ModificarProductoCommand.class);
+        verify(gestionProductos).modificarMiProducto(captor.capture());
+        ModificarProductoCommand comando = captor.getValue();
+        assertEquals(VENDEDOR, comando.emailVendedor());
+        assertEquals("p-9", comando.productoId());
+        assertEquals("Lámpara de pie LED", comando.nombre());
+        assertEquals(0, new BigDecimal("39.9").compareTo(comando.precio()));
+        assertEquals(3, comando.stock());
+        assertEquals("cat-2", comando.categoriaId());
     }
 
     private static Stream<Arguments> cuerposInvalidos() {
