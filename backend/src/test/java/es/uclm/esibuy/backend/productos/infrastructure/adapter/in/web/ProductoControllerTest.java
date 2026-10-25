@@ -44,7 +44,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // Listado de los productos propios del vendedor (HU32, T184): GET /api/seller/products, y alta de un producto
-// (HU31, T205 y T179): POST /api/seller/products. Los casos de uso son dobles de prueba; la seguridad es la real
+// (HU31, T205 y T179): POST /api/seller/products, y consulta de un producto propio (HU33, T348):
+// GET /api/seller/products/{id}. Los casos de uso son dobles de prueba; la seguridad es la real
 // (SecurityConfig: /api/seller/** solo para VENDEDOR, con CSRF).
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU32-CP01 a CP05 y HU31-CP17 a CP22, propuestos.
 @WebMvcTest(ProductoController.class)
