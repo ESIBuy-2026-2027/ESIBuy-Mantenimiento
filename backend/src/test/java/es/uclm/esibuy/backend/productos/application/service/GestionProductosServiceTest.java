@@ -173,6 +173,20 @@ class GestionProductosServiceTest {
     }
 
     @Test
+    @DisplayName("HU34-CP02: se aplican las mismas validaciones que en el alta y unos datos inválidos no se guardan")
+    void rechazaUnaModificacionConDatosInvalidos() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-1")));
+
+        assertThrows(ProductoInvalidoException.class,
+                () -> servicio.modificarMiProducto(modificacion("p-9", "Teclado mecánico RGB", BigDecimal.ZERO)));
+        assertThrows(ProductoInvalidoException.class,
+                () -> servicio.modificarMiProducto(modificacion("p-9", " ", new BigDecimal("99.90"))));
+
+        verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
     @DisplayName("HU34-CP05: un producto que no existe no se puede modificar y no se guarda nada")
     void unProductoQueNoExisteNoSeModifica() {
         when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
