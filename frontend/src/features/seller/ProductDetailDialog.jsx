@@ -9,6 +9,7 @@ import {
   DialogSurface,
   DialogTitle,
   MessageBar,
+  MessageBarActions,
   MessageBarBody,
   Spinner,
   makeStyles,
@@ -59,7 +60,7 @@ function productFields(product, categoryName) {
 export default function ProductDetailDialog({ productId, onClose }) {
   const styles = useStyles()
   const fetcher = useCallback(() => getSellerProduct(productId), [productId])
-  const { data: product, error, failed } = useApiQuery(fetcher)
+  const { data: product, error, failed, retry } = useApiQuery(fetcher)
   const notFound = failed && NOT_FOUND_STATUSES.has(error?.status)
   const { categories } = useCategories()
   const categoryName = categories.find(({ id }) => id === product?.categoriaId)?.nombre
@@ -79,6 +80,15 @@ export default function ProductDetailDialog({ productId, onClose }) {
             {notFound && (
               <MessageBar intent="warning">
                 <MessageBarBody>No se ha encontrado el producto.</MessageBarBody>
+              </MessageBar>
+            )}
+
+            {failed && !notFound && (
+              <MessageBar intent="error">
+                <MessageBarBody>No se ha podido cargar el producto.</MessageBarBody>
+                <MessageBarActions>
+                  <Button onClick={retry}>Reintentar</Button>
+                </MessageBarActions>
               </MessageBar>
             )}
 
