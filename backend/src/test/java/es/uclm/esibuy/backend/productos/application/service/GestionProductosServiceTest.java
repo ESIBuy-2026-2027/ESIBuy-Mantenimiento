@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -142,6 +143,33 @@ class GestionProductosServiceTest {
         when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-2")));
 
         assertThrows(ProductoNoEncontradoException.class, () -> servicio.consultarMiProducto(CORREO, "p-9"));
+    }
+
+    @Test
+    @DisplayName("HU34-CP01: guarda los cambios del producto, con el mismo id y el mismo vendedor, y devuelve el guardado")
+    void guardaLosCambiosConElMismoIdYVendedor() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-1")));
+        when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        Producto resultado = servicio.modificarMiProducto(
+                modificacion("p-9", "Teclado mecánico RGB", new BigDecimal("99.90")));
+
+        ArgumentCaptor<Producto> captor = ArgumentCaptor.forClass(Producto.class);
+        verify(productoRepository).guardar(captor.capture());
+        Producto guardado = captor.getValue();
+        assertSame(guardado, resultado);
+        assertEquals("p-9", guardado.getId());
+        assertEquals("v-1", guardado.getVendedorId());
+        assertEquals("Teclado mecánico RGB", guardado.getNombre());
+        assertEquals("Inalámbrico", guardado.getDescripcion());
+        assertEquals(new BigDecimal("99.90"), guardado.getPrecio());
+        assertEquals(5, guardado.getStock());
+        assertEquals("cat-2", guardado.getCategoriaId());
+        assertEquals("https://esibuy.test/rgb.png", guardado.getImagen());
+        assertFalse(guardado.isDisponible());
+        assertEquals(new Descuento(true, new BigDecimal("20")), guardado.getDescuento());
+        assertEquals(new Descuento(true, new BigDecimal("25")), guardado.getDescuentoPremium());
     }
 
     @Test
