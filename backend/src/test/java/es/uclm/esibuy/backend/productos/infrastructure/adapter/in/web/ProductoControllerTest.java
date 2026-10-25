@@ -399,6 +399,17 @@ class ProductoControllerTest {
                 .andExpect(jsonPath("$.code").value("PRODUCT_NAME_ALREADY_EXISTS"));
     }
 
+    @Test
+    @DisplayName("HU34-CP09: modificar un producto inexistente o de otro vendedor devuelve 404 con el código PRODUCT_NOT_FOUND")
+    void modificarUnProductoNoEncontradoDevuelve404() throws Exception {
+        when(gestionProductos.modificarMiProducto(any())).thenThrow(new ProductoNoEncontradoException());
+
+        mockMvc.perform(put(URL + "/p-404").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
+    }
+
     private static Stream<Arguments> cuerposInvalidos() {
         String nombreLargo = "\"" + "a".repeat(101) + "\"";
         return Stream.of(
