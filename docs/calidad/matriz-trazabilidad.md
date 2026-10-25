@@ -1231,6 +1231,42 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU33 · Consultar el detalle de un producto propio
+
+### Tabla A · HU33 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU33-CP07 | Desde el listado, Ver abre la ficha del producto con todos sus datos en solo lectura y la categoría con su nombre | Frontend (componente y página) | 4 | 🔍 En revisión |
+| HU33-CP08 | La ficha muestra los botones Editar y Eliminar, deshabilitados | Frontend (componente) | 1 | 🔍 En revisión |
+| HU33-CP09 | Un producto no encontrado (403 o 404, p. ej. de otro vendedor) lo indica y no ofrece acciones | Frontend (componente) | 2 | 🔍 En revisión |
+| HU33-CP10 | Si la carga falla por otro motivo, la ficha muestra un error genérico y permite reintentar | Frontend (componente) | 1 | 🔍 En revisión |
+
+Notas:
+- **HU33-CP07 a CP10:** casos propuestos en la T347 (AB#347) a partir de los criterios de aceptación de la HU33 y acordados con el equipo. Pendientes de añadir a la HU33 en Azure Boards.
+- **Frontend (T347, AB#347):** `ProductDetailDialog`, que se abre con el botón Ver de cada fila del listado (`ProductRowActions`). Usa `GET /api/seller/products/:id` (mock de MSW).
+- **Editar y Eliminar** se ven en la ficha pero están deshabilitados por decisión del equipo: su funcionamiento es de la HU34 y la HU35.
+- **HU33-CP01 a CP06** (backend, T349 y T348) se trazan en los PR #117 y #118; al integrarlos, esta sección se une con la suya.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU33-CP07 | `ProductDetailDialog.test.jsx` | `HU33-CP07: muestra todos los datos del producto, con el nombre de su categoría` | Frontend · componente | AB#347 | rama `feature/US33-T347-vista-consulta-producto` | 🔍 |
+| HU33-CP07 | `ProductDetailDialog.test.jsx` | `HU33-CP07: todos los campos son de solo lectura` | Frontend · componente | AB#347 | rama `feature/US33-T347-vista-consulta-producto` | 🔍 |
+| HU33-CP07 | `SellerProductsPage.test.jsx` | `HU33-CP07: cada fila tiene un botón para ver la ficha del producto` | Frontend · página | AB#347 | rama `feature/US33-T347-vista-consulta-producto` | 🔍 |
+| HU33-CP07 | `SellerProductsPage.test.jsx` | `HU33-CP07: al pulsar Ver se abre la ficha de ese producto` | Frontend · página | AB#347 | rama `feature/US33-T347-vista-consulta-producto` | 🔍 |
+| HU33-CP08 | `ProductDetailDialog.test.jsx` | `HU33-CP08: muestra los botones Editar y Eliminar, deshabilitados` | Frontend · componente | AB#347 | rama `feature/US33-T347-vista-consulta-producto` | 🔍 |
+| HU33-CP09 | `ProductDetailDialog.test.jsx` | `HU33-CP09: un producto de otro vendedor muestra que no se ha encontrado y no ofrece acciones` | Frontend · componente | AB#347 | rama `feature/US33-T347-vista-consulta-producto` | 🔍 |
+| HU33-CP09 | `ProductDetailDialog.test.jsx` | `HU33-CP09: una respuesta %i muestra que no se ha encontrado el producto` (403 y 404) | Frontend · componente | AB#347 | rama `feature/US33-T347-vista-consulta-producto` | 🔍 |
+| HU33-CP10 | `ProductDetailDialog.test.jsx` | `HU33-CP10: si la carga falla por otro motivo, muestra un error genérico y permite reintentar` | Frontend · componente | AB#347 | rama `feature/US33-T347-vista-consulta-producto` | 🔍 |
+
+Rutas de las clases de test (bajo `frontend/src/`):
+- `ProductDetailDialog.test.jsx`: `features/seller/` (Vitest, RTL y MSW)
+- `SellerProductsPage.test.jsx`: `pages/` (Vitest, RTL y MSW)
+
+---
+
 ## Tests técnicos sin caso de prueba
 
 Tests que no validan una HU concreta.
