@@ -6,6 +6,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseC
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
@@ -294,6 +295,16 @@ class ProductoControllerTest {
                 .andExpect(jsonPath("$.descuento.porcentaje").value(10))
                 .andExpect(jsonPath("$.descuentoPremium.activo").value(false))
                 .andExpect(jsonPath("$.vendedorId").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("HU33-CP05: un producto inexistente o de otro vendedor devuelve 404 con el código PRODUCT_NOT_FOUND")
+    void productoNoEncontradoDevuelve404() throws Exception {
+        when(gestionProductos.consultarMiProducto(VENDEDOR, "p-404")).thenThrow(new ProductoNoEncontradoException());
+
+        mockMvc.perform(get(URL + "/p-404").with(user(VENDEDOR).roles("VENDEDOR")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
     }
 
     private static Stream<Arguments> cuerposInvalidos() {
