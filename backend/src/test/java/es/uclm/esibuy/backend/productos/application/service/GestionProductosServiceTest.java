@@ -187,6 +187,19 @@ class GestionProductosServiceTest {
     }
 
     @Test
+    @DisplayName("HU34-CP03: no se puede cambiar el nombre por el de otro producto del vendedor y no se guarda nada")
+    void rechazaCambiarElNombrePorUnoRepetido() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-1")));
+        when(productoRepository.existePorVendedorYNombre("v-1", "Ratón inalámbrico")).thenReturn(true);
+
+        assertThrows(ProductoDuplicadoException.class,
+                () -> servicio.modificarMiProducto(modificacion("p-9", "Ratón inalámbrico", new BigDecimal("99.90"))));
+
+        verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
     @DisplayName("HU34-CP05: un producto que no existe no se puede modificar y no se guarda nada")
     void unProductoQueNoExisteNoSeModifica() {
         when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
