@@ -8,6 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -58,5 +59,13 @@ public class ProductoController {
     @ResponseStatus(HttpStatus.CREATED)
     public ProductoResponse crearProducto(@Valid @RequestBody ProductoRequest request, Authentication autenticado) {
         return ProductoResponse.desde(gestionProductos.crear(request.aComando(autenticado.getName())));
+    }
+
+    // Modificación de un producto propio (HU34): el vendedor sale de la sesión; uno ajeno o inexistente da 404.
+    @PutMapping("/seller/products/{id}")
+    public ProductoResponse modificarMiProducto(@PathVariable String id, @Valid @RequestBody ProductoRequest request,
+            Authentication autenticado) {
+        return ProductoResponse.desde(
+                gestionProductos.modificarMiProducto(request.aComandoModificacion(autenticado.getName(), id)));
     }
 }
