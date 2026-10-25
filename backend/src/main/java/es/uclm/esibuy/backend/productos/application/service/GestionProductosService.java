@@ -71,7 +71,11 @@ public class GestionProductosService implements GestionProductosUseCase {
                 comando.descuento(),
                 comando.descuentoPremium()
         );
-        if (productoRepository.existePorVendedorYNombre(modificado.getVendedorId(), modificado.getNombre())) {
+        // Solo se comprueba si cambia el nombre: si no, el repositorio encontraría el propio producto. Como el índice
+        // único, no se distinguen mayúsculas; la carrera con otra modificación la sigue cubriendo ese índice.
+        boolean cambiaElNombre = !modificado.getNombre().equalsIgnoreCase(actual.getNombre());
+        if (cambiaElNombre
+                && productoRepository.existePorVendedorYNombre(modificado.getVendedorId(), modificado.getNombre())) {
             throw new ProductoDuplicadoException();
         }
         return productoRepository.guardar(modificado);
