@@ -3,6 +3,7 @@ import { useCallback } from 'react'
 import {
   Button,
   Dialog,
+  DialogActions,
   DialogBody,
   DialogContent,
   DialogSurface,
@@ -11,7 +12,7 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { Dismiss24Regular } from '@fluentui/react-icons'
+import { Delete20Regular, Dismiss24Regular, Edit20Regular } from '@fluentui/react-icons'
 import { getSellerProduct } from '../../api/products'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { useCategories } from '../../hooks/useCategories'
@@ -50,6 +51,7 @@ function productFields(product, categoryName) {
 
 // Ficha de un producto propio del vendedor (HU33), en solo lectura. El producto se pide al backend, que solo
 // devuelve los del vendedor en sesión; la categoría llega como identificador y se muestra con su nombre.
+// Editar y Eliminar se ven pero están deshabilitados: su funcionamiento es de la HU34 y la HU35.
 export default function ProductDetailDialog({ productId, onClose }) {
   const styles = useStyles()
   const fetcher = useCallback(() => getSellerProduct(productId), [productId])
@@ -75,6 +77,16 @@ export default function ProductDetailDialog({ productId, onClose }) {
               <Spinner label="Cargando producto…" />
             )}
           </DialogContent>
+          {product && (
+            <DialogActions>
+              <Button icon={<Edit20Regular />} disabled>
+                Editar
+              </Button>
+              <Button icon={<Delete20Regular />} disabled>
+                Eliminar
+              </Button>
+            </DialogActions>
+          )}
         </DialogBody>
       </DialogSurface>
     </Dialog>
