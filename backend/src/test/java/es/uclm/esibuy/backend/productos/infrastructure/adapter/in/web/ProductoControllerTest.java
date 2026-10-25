@@ -270,6 +270,32 @@ class ProductoControllerTest {
                 .andExpect(jsonPath("$.code").value("PRODUCT_NAME_ALREADY_EXISTS"));
     }
 
+    // ---- Consulta de un producto propio (HU33) ----
+
+    @Test
+    @DisplayName("HU33-CP04: el vendedor recibe 200 con su producto en el formato del contrato y sin el id del vendedor")
+    void vendedorConsultaSuProducto() throws Exception {
+        Producto propio = new Producto("p-9", "v-1", "Lámpara de pie", "Con regulador", new BigDecimal("45.50"), 7,
+                "cat-2", "https://esibuy.test/lampara.png", true, new Descuento(true, new BigDecimal("10")),
+                Descuento.sinDescuento());
+        when(gestionProductos.consultarMiProducto(VENDEDOR, "p-9")).thenReturn(propio);
+
+        mockMvc.perform(get(URL + "/p-9").with(user(VENDEDOR).roles("VENDEDOR")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("p-9"))
+                .andExpect(jsonPath("$.nombre").value("Lámpara de pie"))
+                .andExpect(jsonPath("$.descripcion").value("Con regulador"))
+                .andExpect(jsonPath("$.precio").value(45.5))
+                .andExpect(jsonPath("$.stock").value(7))
+                .andExpect(jsonPath("$.categoriaId").value("cat-2"))
+                .andExpect(jsonPath("$.imagen").value("https://esibuy.test/lampara.png"))
+                .andExpect(jsonPath("$.disponible").value(true))
+                .andExpect(jsonPath("$.descuento.activo").value(true))
+                .andExpect(jsonPath("$.descuento.porcentaje").value(10))
+                .andExpect(jsonPath("$.descuentoPremium.activo").value(false))
+                .andExpect(jsonPath("$.vendedorId").doesNotExist());
+    }
+
     private static Stream<Arguments> cuerposInvalidos() {
         String nombreLargo = "\"" + "a".repeat(101) + "\"";
         return Stream.of(
