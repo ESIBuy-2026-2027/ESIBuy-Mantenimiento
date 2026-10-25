@@ -1238,14 +1238,14 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
 | HU33-CP07 | Desde el listado, Ver abre la ficha del producto con todos sus datos en solo lectura y la categoría con su nombre | Frontend (componente y página) | 4 | 🔍 En revisión |
-| HU33-CP08 | La ficha muestra los botones Editar y Eliminar, deshabilitados | Frontend (componente) | 1 | 🔍 En revisión |
+| HU33-CP08 | La ficha muestra las acciones Editar, que lleva al formulario de edición (HU34), y Eliminar, deshabilitada | Frontend (componente) | 1 | 🔍 En revisión |
 | HU33-CP09 | Un producto no encontrado (403 o 404, p. ej. de otro vendedor) lo indica y no ofrece acciones | Frontend (componente) | 2 | 🔍 En revisión |
 | HU33-CP10 | Si la carga falla por otro motivo, la ficha muestra un error genérico y permite reintentar | Frontend (componente) | 1 | 🔍 En revisión |
 
 Notas:
 - **HU33-CP07 a CP10:** casos propuestos en la T347 (AB#347) a partir de los criterios de aceptación de la HU33 y acordados con el equipo. Pendientes de añadir a la HU33 en Azure Boards.
 - **Frontend (T347, AB#347):** `ProductDetailDialog`, que se abre con el botón Ver de cada fila del listado (`ProductRowActions`). Usa `GET /api/seller/products/:id` (mock de MSW).
-- **Editar y Eliminar** se ven en la ficha pero están deshabilitados por decisión del equipo: su funcionamiento es de la HU34 y la HU35.
+- **Editar y Eliminar** se ven en la ficha. Eliminar está deshabilitado por decisión del equipo hasta la HU35; Editar se activa en la HU34 (T341, PR #122), que cambia el HU33-CP08.
 - **HU33-CP01 a CP06** (backend, T349 y T348) se trazan en los PR #117 y #118; al integrarlos, esta sección se une con la suya.
 
 ### Tabla B · casos de prueba ↔ tests
@@ -1256,7 +1256,7 @@ Notas:
 | HU33-CP07 | `ProductDetailDialog.test.jsx` | `HU33-CP07: todos los campos son de solo lectura` | Frontend · componente | AB#347 | PR #119 | 🔍 |
 | HU33-CP07 | `SellerProductsPage.test.jsx` | `HU33-CP07: cada fila tiene un botón para ver la ficha del producto` | Frontend · página | AB#347 | PR #119 | 🔍 |
 | HU33-CP07 | `SellerProductsPage.test.jsx` | `HU33-CP07: al pulsar Ver se abre la ficha de ese producto` | Frontend · página | AB#347 | PR #119 | 🔍 |
-| HU33-CP08 | `ProductDetailDialog.test.jsx` | `HU33-CP08: muestra los botones Editar y Eliminar, deshabilitados` | Frontend · componente | AB#347 | PR #119 | 🔍 |
+| HU33-CP08 | `ProductDetailDialog.test.jsx` | `HU33-CP08: muestra las acciones Editar, que lleva al formulario de edición, y Eliminar, deshabilitada` | Frontend · componente | AB#347 · AB#341 | PR #119 · PR #122 | 🔍 |
 | HU33-CP09 | `ProductDetailDialog.test.jsx` | `HU33-CP09: un producto de otro vendedor muestra que no se ha encontrado y no ofrece acciones` | Frontend · componente | AB#347 | PR #119 | 🔍 |
 | HU33-CP09 | `ProductDetailDialog.test.jsx` | `HU33-CP09: una respuesta %i muestra que no se ha encontrado el producto` (403 y 404) | Frontend · componente | AB#347 | PR #119 | 🔍 |
 | HU33-CP10 | `ProductDetailDialog.test.jsx` | `HU33-CP10: si la carga falla por otro motivo, muestra un error genérico y permite reintentar` | Frontend · componente | AB#347 | PR #119 | 🔍 |
@@ -1264,6 +1264,43 @@ Notas:
 Rutas de las clases de test (bajo `frontend/src/`):
 - `ProductDetailDialog.test.jsx`: `features/seller/` (Vitest, RTL y MSW)
 - `SellerProductsPage.test.jsx`: `pages/` (Vitest, RTL y MSW)
+
+---
+
+## HU34 · Modificar un producto propio
+
+### Tabla A · HU34 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU34-CP12 | La vista de edición se abre con los datos actuales del producto ya cargados (también los descuentos) | Frontend (página) | 2 | 🔍 En revisión |
+| HU34-CP13 | Al guardar, se envían los cambios al producto indicado y se vuelve al listado con un aviso | Frontend (página) | 1 | 🔍 En revisión |
+| HU34-CP14 | La edición aplica las mismas validaciones que el alta | Frontend (página) | 1 | 🔍 En revisión |
+| HU34-CP15 | Un producto de otro vendedor o inexistente no muestra el formulario | Frontend (página) | 2 | 🔍 En revisión |
+| HU34-CP16 | Si el producto no carga, la vista muestra un error y permite reintentar | Frontend (página) | 1 | 🔍 En revisión |
+| HU34-CP17 | Desde la ficha del producto, Editar abre el formulario de edición con sus datos | Frontend (página) | 1 | 🔍 En revisión |
+| HU34-CP18 | Si el nombre ya lo tiene otro producto del vendedor (409), la edición lo indica y no sale del formulario | Frontend (página) | 1 | 🔍 En revisión |
+
+Notas:
+- **HU34-CP12 a CP16:** la vista de edición se hizo en la HU31 (formulario compartido con el alta). Por decisión del equipo, sus 7 tests se renombran en la T341 (AB#341, PR #122) con el ID de su caso de la HU34 y se trazan aquí; no tienen ciclo rojo porque no hay código nuevo detrás.
+- **HU34-CP17 y CP18:** casos nuevos de la T341. El mensaje del nombre repetido es solo de la edición (decisión del equipo); el alta mantiene el genérico.
+- **HU34-CP01 a CP11** (backend, T343 y T342) se trazan en los PR #120 y #121, incluido el **HU34-CP11 pendiente** (catálogo de clientes); al integrarlos, esta sección se une con la suya.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU34-CP12 | `SellerProductFormPage.test.jsx` | `HU34-CP12: la vista de edición se abre con los datos actuales del producto` | Frontend · página | AB#341 | PR #122 | 🔍 |
+| HU34-CP12 | `SellerProductFormPage.test.jsx` | `HU34-CP12: la vista de edición muestra los descuentos activos del producto` | Frontend · página | AB#341 | PR #122 | 🔍 |
+| HU34-CP13 | `SellerProductFormPage.test.jsx` | `HU34-CP13: al guardar, envía los cambios al producto indicado y vuelve al listado con un aviso` | Frontend · página | AB#341 | PR #122 | 🔍 |
+| HU34-CP14 | `SellerProductFormPage.test.jsx` | `HU34-CP14: la edición aplica las mismas validaciones que el alta` | Frontend · página | AB#341 | PR #122 | 🔍 |
+| HU34-CP15 | `SellerProductFormPage.test.jsx` | `HU34-CP15: un producto de otro vendedor no muestra el formulario` | Frontend · página | AB#341 | PR #122 | 🔍 |
+| HU34-CP15 | `SellerProductFormPage.test.jsx` | `HU34-CP15: un producto inexistente no muestra el formulario` | Frontend · página | AB#341 | PR #122 | 🔍 |
+| HU34-CP16 | `SellerProductFormPage.test.jsx` | `HU34-CP16: si el producto no carga, muestra un error y permite reintentar` | Frontend · página | AB#341 | PR #122 | 🔍 |
+| HU34-CP17 | `SellerProductsPage.test.jsx` | `HU34-CP17: desde la ficha, Editar abre el formulario de edición con los datos del producto` | Frontend · página | AB#341 | PR #122 | 🔍 |
+| HU34-CP18 | `SellerProductFormPage.test.jsx` | `HU34-CP18: si el nombre ya lo tiene otro producto del vendedor, lo indica y no sale del formulario` | Frontend · página | AB#341 | PR #122 | 🔍 |
+
+Rutas de los tests (bajo `frontend/src/`): `pages/SellerProductFormPage.test.jsx` y `pages/SellerProductsPage.test.jsx`.
 
 ---
 
