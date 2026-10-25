@@ -1231,6 +1231,34 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU33 · Consultar el detalle de un producto propio
+
+### Tabla A · HU33 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU33-CP01 | El vendedor consulta el detalle de un producto suyo (el vendedor sale de la sesión) | Unitario | 1 | 🔍 En revisión |
+| HU33-CP02 | Un producto que no existe no se encuentra (`ProductoNoEncontradoException`) | Unitario | 1 | 🔍 En revisión |
+| HU33-CP03 | Un producto de otro vendedor no se encuentra, con el mismo error que si no existiera, para no revelar que existe | Unitario | 1 | 🔍 En revisión |
+
+Notas:
+- **HU33-CP01 a CP03:** casos propuestos en la T349 (AB#349) y acordados con el equipo durante el desarrollo. Pendientes de añadir a la HU33 en Azure Boards.
+- **Backend (T349, AB#349):** `consultarMiProducto` en `GestionProductosUseCase`. Un producto ajeno se trata como inexistente: el endpoint (T348) responderá 404 en los dos casos, no 403.
+- **Pendiente:** el endpoint `GET /api/seller/products/{id}` (T348) y la vista del frontend (T347).
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU33-CP01 | `GestionProductosServiceTest` | `devuelveElProductoSiEsDelVendedorDeLaSesion` | Aplicación | AB#349 | rama `feature/US33-T349-consulta-producto-propio` | 🔍 |
+| HU33-CP02 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoSeEncuentra` | Aplicación | AB#349 | rama `feature/US33-T349-consulta-producto-propio` | 🔍 |
+| HU33-CP03 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoSeEncuentra` | Aplicación | AB#349 | rama `feature/US33-T349-consulta-producto-propio` | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `GestionProductosServiceTest`: `productos/application/service/` (Mockito, sin Spring)
+
+---
+
 ## Tests técnicos sin caso de prueba
 
 Tests que no validan una HU concreta.
