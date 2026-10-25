@@ -25,7 +25,8 @@ describe('ProductDetailDialog (HU33): datos', () => {
 
     expect(await within(dialogo).findByLabelText('Nombre')).toHaveValue('Auriculares inalámbricos')
     expect(within(dialogo).getByLabelText('Descripción')).toHaveValue('Descripción de Auriculares inalámbricos.')
-    expect(within(dialogo).getByLabelText('Precio')).toHaveValue('59,90 €')
+    // Intl separa el importe del símbolo con un espacio irrompible
+    expect(within(dialogo).getByLabelText('Precio').value).toMatch(/^59,90\s€$/)
     expect(within(dialogo).getByLabelText('Stock')).toHaveValue('34')
     expect(await within(dialogo).findByDisplayValue('Tecnología')).toBe(within(dialogo).getByLabelText('Categoría'))
     expect(within(dialogo).getByLabelText('Imagen')).toHaveValue('Sin imagen')

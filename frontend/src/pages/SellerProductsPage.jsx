@@ -21,6 +21,7 @@ import ListFilters from '../components/ListFilters'
 import Pagination from '../components/Pagination'
 import { usePageStyles } from '../components/pageStyles'
 import DeleteProductDialog from '../features/seller/DeleteProductDialog'
+import ProductDetailDialog from '../features/seller/ProductDetailDialog'
 import ProductRowActions from '../features/seller/ProductRowActions'
 import ProductsTable from '../features/seller/ProductsTable'
 import { useSellerProducts } from '../features/seller/useSellerProducts'
@@ -35,6 +36,7 @@ export default function SellerProductsPage() {
   const location = useLocation()
   // Aviso que deja el formulario de producto al guardar (llega en el estado de la navegación).
   const [notice, setNotice] = useState(location.state?.notice ?? '')
+  const [productToView, setProductToView] = useState(null)
   const [productToDelete, setProductToDelete] = useState(null)
   const { categories } = useCategories()
   const { search, category, page, debouncedSearch, filtersActive, setPage, changeSearch, changeCategory, clearFilters } =
@@ -129,7 +131,9 @@ export default function SellerProductsPage() {
             products={data.items}
             categories={categories}
             refreshing={refreshing}
-            renderActions={(product) => <ProductRowActions product={product} onDelete={setProductToDelete} />}
+            renderActions={(product) => (
+              <ProductRowActions product={product} onView={setProductToView} onDelete={setProductToDelete} />
+            )}
           />
           <Pagination
             page={data.page}
@@ -141,6 +145,8 @@ export default function SellerProductsPage() {
           />
         </>
       )}
+
+      {productToView && <ProductDetailDialog productId={productToView.id} onClose={() => setProductToView(null)} />}
 
       {productToDelete && (
         <DeleteProductDialog
