@@ -1,11 +1,15 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import { FluentProvider, webLightTheme } from '@fluentui/react-components'
+import { http, HttpResponse } from 'msw'
+import { server } from '../../mocks/server'
 import { abrirSesionPorApi } from '../../test/renderApp'
 import ProductDetailDialog from './ProductDetailDialog'
 
 // p-1 (Auriculares inalámbricos) es del vendedor y en los datos de ejemplo tiene los dos descuentos activos.
 const PRODUCTO_CON_DESCUENTOS = 'p-1'
+// p-24 (Smartwatch deportivo) es de otro vendedor: el mock responde 404, como el backend.
+const PRODUCTO_DE_OTRO_VENDEDOR = 'p-24'
 
 async function abrirFicha(productId = PRODUCTO_CON_DESCUENTOS) {
   await abrirSesionPorApi('vendedor@esibuy.test')
@@ -53,5 +57,23 @@ describe('ProductDetailDialog (HU33): acciones', () => {
 
     expect(within(dialogo).getByRole('button', { name: 'Editar' })).toBeDisabled()
     expect(within(dialogo).getByRole('button', { name: 'Eliminar' })).toBeDisabled()
+  })
+})
+
+describe('ProductDetailDialog (HU33): producto no encontrado', () => {
+  it('HU33-CP09: un producto de otro vendedor muestra que no se ha encontrado y no ofrece acciones', async () => {
+    const { dialogo } = await abrirFicha(PRODUCTO_DE_OTRO_VENDEDOR)
+
+    expect(await within(dialogo).findByText('No se ha encontrado el producto.')).toBeInTheDocument()
+    expect(within(dialogo).queryByLabelText('Nombre')).not.toBeInTheDocument()
+    expect(within(dialogo).queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
+    expect(within(dialogo).queryByRole('button', { name: 'Eliminar' })).not.toBeInTheDocument()
+  })
+
+  it.each([403, 404])('HU33-CP09: una respuesta %i muestra que no se ha encontrado el producto', async (status) => {
+    server.use(http.get('/api/seller/products/:id', () => new HttpResponse(null, { status })))
+    const { dialogo } = await abrirFicha()
+
+    expect(await within(dialogo).findByText('No se ha encontrado el producto.')).toBeInTheDocument()
   })
 })
