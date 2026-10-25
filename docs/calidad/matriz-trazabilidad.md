@@ -1240,11 +1240,16 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU33-CP01 | El vendedor consulta el detalle de un producto suyo (el vendedor sale de la sesión) | Unitario | 1 | 🔍 En revisión |
 | HU33-CP02 | Un producto que no existe no se encuentra (`ProductoNoEncontradoException`) | Unitario | 1 | 🔍 En revisión |
 | HU33-CP03 | Un producto de otro vendedor no se encuentra, con el mismo error que si no existiera, para no revelar que existe | Unitario | 1 | 🔍 En revisión |
+| HU33-CP04 | `GET /api/seller/products/{id}` devuelve 200 con el producto en el formato del contrato y sin el id del vendedor | Integración (capa web) | 1 | 🔍 En revisión |
+| HU33-CP05 | Un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | 🔍 En revisión |
+| HU33-CP06 | Sin sesión (401) o sin ser vendedor (403) no se consulta un producto | Integración (capa web) | 2 | 🔍 En revisión |
 
 Notas:
-- **HU33-CP01 a CP03:** casos propuestos en la T349 (AB#349) y acordados con el equipo durante el desarrollo. Pendientes de añadir a la HU33 en Azure Boards.
-- **Backend (T349, AB#349):** `consultarMiProducto` en `GestionProductosUseCase`. Un producto ajeno se trata como inexistente: el endpoint (T348) responderá 404 en los dos casos, no 403.
-- **Pendiente:** el endpoint `GET /api/seller/products/{id}` (T348) y la vista del frontend (T347).
+- **HU33-CP01 a CP06:** casos propuestos en la T349 (AB#349) y la T348 (AB#348) y acordados con el equipo durante el desarrollo. Pendientes de añadir a la HU33 en Azure Boards.
+- **Backend (T349, AB#349, PR #117):** `consultarMiProducto` en `GestionProductosUseCase`. Un producto ajeno se trata como inexistente.
+- **Backend (T348, AB#348):** `GET /api/seller/products/{id}`, con el contrato de `frontend/docs/hu31-formulario-producto.md`. El producto inexistente y el ajeno dan 404, no 403.
+- **HU33-CP06:** sin rojo real, porque `SecurityConfig` ya limita `/api/seller/**` al rol VENDEDOR.
+- **Pendiente:** la vista del frontend (T347).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1253,9 +1258,14 @@ Notas:
 | HU33-CP01 | `GestionProductosServiceTest` | `devuelveElProductoSiEsDelVendedorDeLaSesion` | Aplicación | AB#349 | PR #117 | 🔍 |
 | HU33-CP02 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoSeEncuentra` | Aplicación | AB#349 | PR #117 | 🔍 |
 | HU33-CP03 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoSeEncuentra` | Aplicación | AB#349 | PR #117 | 🔍 |
+| HU33-CP04 | `ProductoControllerTest` | `vendedorConsultaSuProducto` | Infraestructura | AB#348 | rama `feature/US33-T348-endpoint-consulta-producto-propio` | 🔍 |
+| HU33-CP05 | `ProductoControllerTest` | `productoNoEncontradoDevuelve404` | Infraestructura | AB#348 | rama `feature/US33-T348-endpoint-consulta-producto-propio` | 🔍 |
+| HU33-CP06 | `ProductoControllerTest` | `sinSesionNoSeConsultaUnProducto` | Infraestructura | AB#348 | rama `feature/US33-T348-endpoint-consulta-producto-propio` | 🔍 |
+| HU33-CP06 | `ProductoControllerTest` | `noVendedorNoConsultaUnProducto` (cliente y administrador) | Infraestructura | AB#348 | rama `feature/US33-T348-endpoint-consulta-producto-propio` | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `GestionProductosServiceTest`: `productos/application/service/` (Mockito, sin Spring)
+- `ProductoControllerTest`: `productos/infrastructure/adapter/in/web/` (con `@WebMvcTest`)
 
 ---
 
