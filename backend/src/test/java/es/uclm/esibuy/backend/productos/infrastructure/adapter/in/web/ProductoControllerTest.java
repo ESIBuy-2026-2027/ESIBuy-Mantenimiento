@@ -307,6 +307,25 @@ class ProductoControllerTest {
                 .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
     }
 
+    @Test
+    @DisplayName("HU33-CP06: sin sesión no se consulta un producto")
+    void sinSesionNoSeConsultaUnProducto() throws Exception {
+        mockMvc.perform(get(URL + "/p-9"))
+                .andExpect(status().isUnauthorized());
+
+        verify(gestionProductos, never()).consultarMiProducto(any(), any());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "ADMINISTRADOR"})
+    @DisplayName("HU33-CP06: un usuario que no es vendedor no consulta un producto")
+    void noVendedorNoConsultaUnProducto(String rol) throws Exception {
+        mockMvc.perform(get(URL + "/p-9").with(user("usuario@esibuy.test").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(gestionProductos, never()).consultarMiProducto(any(), any());
+    }
+
     private static Stream<Arguments> cuerposInvalidos() {
         String nombreLargo = "\"" + "a".repeat(101) + "\"";
         return Stream.of(
