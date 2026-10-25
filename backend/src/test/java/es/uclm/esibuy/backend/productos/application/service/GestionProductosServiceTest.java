@@ -5,6 +5,7 @@ import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryP
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import org.junit.jupiter.api.BeforeEach;
@@ -122,6 +123,15 @@ class GestionProductosServiceTest {
         Producto resultado = servicio.consultarMiProducto(CORREO, "p-9");
 
         assertSame(propio, resultado);
+    }
+
+    @Test
+    @DisplayName("HU33-CP02: un producto que no existe no se encuentra")
+    void unProductoQueNoExisteNoSeEncuentra() {
+        lenient().when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-404")).thenReturn(Optional.empty());
+
+        assertThrows(ProductoNoEncontradoException.class, () -> servicio.consultarMiProducto(CORREO, "p-404"));
     }
 
     private static Producto producto(String id, String vendedorId) {
