@@ -57,6 +57,20 @@ public class GestionProductosService implements GestionProductosUseCase {
     @Override
     public Producto modificarMiProducto(ModificarProductoCommand comando) {
         Producto actual = consultarMiProducto(comando.emailVendedor(), comando.productoId());
-        return productoRepository.guardar(actual);
+        // El id y el vendedor se conservan: así se actualiza el mismo documento y sigue siendo del mismo vendedor.
+        Producto modificado = new Producto(
+                actual.getId(),
+                actual.getVendedorId(),
+                comando.nombre(),
+                comando.descripcion(),
+                comando.precio(),
+                comando.stock(),
+                comando.categoriaId(),
+                comando.imagen(),
+                comando.disponible(),
+                comando.descuento(),
+                comando.descuentoPremium()
+        );
+        return productoRepository.guardar(modificado);
     }
 }
