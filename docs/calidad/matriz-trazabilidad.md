@@ -621,6 +621,63 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU7 · Búsqueda y filtrado de productos
+
+### Tabla A · HU7 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU7-CP01 | La vista de productos es lo primero que ve el cliente al iniciar sesión, y solo la ve un cliente (sin sesión lleva al login; otro rol, a su página) | Frontend (página) | 3 | 🔍 En revisión (3, AB#350, PR sin abrir) |
+| HU7-CP02 | Cada producto se muestra en una tarjeta con su nombre, imagen, categoría y valoración (estrellas y número de valoraciones; con avisos si no tiene imagen o valoraciones) | Frontend (componente y página) | 6 | 🔍 En revisión (6, AB#350, PR sin abrir) |
+| HU7-CP03 | Las tarjetas se colocan de dos en dos y paginadas de 12 en 12; hay estados de carga, error con reintento y catálogo vacío | Frontend (página) | 5 | 🔍 En revisión (5, AB#350, PR sin abrir) |
+| HU7-CP04 | Se puede buscar por nombre (sin distinguir mayúsculas ni tildes) y filtrar por categoría; cualquier cambio vuelve a la primera página, y si nada coincide se ofrece limpiar los filtros | Frontend (página) | 5 | 🔍 En revisión (5, AB#351, PR sin abrir) |
+| HU7-CP05 | Se puede filtrar por valoración mínima (4, 3 o 2 estrellas o más) y volver a «Cualquiera» | Frontend (página) | 3 | 🔍 En revisión (3, AB#351, PR sin abrir) |
+| HU7-CP06 | Se puede ordenar por nombre, categoría y valoración, ascendente y descendente; por defecto, nombre de la A a la Z | Frontend (página) | 6 | 🔍 En revisión (6, AB#351, PR sin abrir) |
+
+Notas:
+- **HU7-CP01 a CP06 (Sprint 2, frontend):** casos propuestos en las tasks AB#350 (vista de productos) y AB#351 (vista de filtrado y búsqueda), a partir de lo pedido en ellas (`frontend/docs/hu7-busqueda-y-filtrado-de-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU7 (AB#69) en Azure Boards.
+- **Backend:** las tasks AB#352 (lógica de filtrado) y AB#353 (endpoint para obtener productos) están sin hacer; los tests de esta HU usan el contrato propuesto por el frontend y los mocks (MSW).
+- **Cambio de comportamiento:** `/products` ya no es una ruta pública: sin sesión lleva a `/login`. Se ha cambiado en consecuencia el test técnico `productos_sinSesion_llevaAIniciarSesion` de `LoginFlow.test.jsx` (antes `productos_sinSesion_esUnaRutaPublica`).
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU7-CP01 | `ProductsPage.test.jsx` | `HU7-CP01: tras iniciar sesión, el cliente aterriza en la vista de productos` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP01 | `ProductsPage.test.jsx` | `HU7-CP01: sin sesión, la vista de productos lleva a iniciar sesión` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP01 | `ProductsPage.test.jsx` | `HU7-CP01: un vendedor no ve la vista de productos del cliente: va a la suya` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP02 | `ProductCard.test.jsx` | `HU7-CP02: muestra el nombre, la imagen y la categoría del producto` | Frontend · componente | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP02 | `ProductCard.test.jsx` | `HU7-CP02: muestra la valoración en estrellas y cuántas valoraciones tiene` | Frontend · componente | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP02 | `ProductCard.test.jsx` | `HU7-CP02: un producto sin valoraciones lo indica en lugar de mostrar estrellas` | Frontend · componente | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP02 | `ProductCard.test.jsx` | `HU7-CP02: un producto sin imagen muestra un marcador en su lugar` | Frontend · componente | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP02 | `ProductCard.test.jsx` | `HU7-CP02: si no se conoce la categoría muestra un guion` | Frontend · componente | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP02 | `ProductsPage.test.jsx` | `HU7-CP02: cada tarjeta muestra el nombre, la categoría y la valoración del producto` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP03 | `ProductsPage.test.jsx` | `HU7-CP03: muestra la primera página con doce tarjetas y solo los productos disponibles` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP03 | `ProductsPage.test.jsx` | `HU7-CP03: las tarjetas se colocan de dos en dos` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP03 | `ProductsPage.test.jsx` | `HU7-CP03: al pasar de página muestra las tarjetas siguientes` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP03 | `ProductsPage.test.jsx` | `HU7-CP03: si falla la carga avisa y permite reintentar` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP03 | `ProductsPage.test.jsx` | `HU7-CP03: si todavía no hay productos lo indica` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al escribir en el buscador pide los productos con ese nombre` | Frontend · página | AB#351 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: la búsqueda no distingue mayúsculas ni tildes` | Frontend · página | AB#351 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al elegir una categoría pide solo los productos de esa categoría` | Frontend · página | AB#351 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al filtrar vuelve a la primera página` | Frontend · página | AB#351 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: si ningún producto coincide lo indica y permite limpiar los filtros` | Frontend · página | AB#351 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP05 | `ProductsPage.test.jsx` | `HU7-CP05: al elegir una valoración mínima pide solo los productos con esa valoración o más` | Frontend · página | AB#351 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP05 | `ProductsPage.test.jsx` | `HU7-CP05: con la valoración mínima, todos los productos mostrados la alcanzan` | Frontend · página | AB#351 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP05 | `ProductsPage.test.jsx` | `HU7-CP05: al volver a «Cualquiera» deja de filtrar por valoración` | Frontend · página | AB#351 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP06 | `ProductsPage.test.jsx` | `HU7-CP06: por defecto pide los productos ordenados por nombre de la A a la Z y sin filtros` | Frontend · página | AB#351 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP06 | `ProductsPage.test.jsx` | `HU7-CP06: permite ordenar por nombre, categoría y valoración` | Frontend · página | AB#351 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP06 | `ProductsPage.test.jsx` | `HU7-CP06: el botón de sentido alterna entre ascendente y descendente` | Frontend · página | AB#351 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP06 | `ProductsPage.test.jsx` | `HU7-CP06: ordenados por nombre, los productos salen de la A a la Z` | Frontend · página | AB#351 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP06 | `ProductsPage.test.jsx` | `HU7-CP06: ordenados por valoración descendente, el mejor valorado sale primero` | Frontend · página | AB#351 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP06 | `ProductsPage.test.jsx` | `HU7-CP06: ordenados por categoría, los de Hogar salen antes que los de Tecnología` | Frontend · página | AB#351 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+
+Rutas de las clases de test (bajo `frontend/src/`):
+- `ProductCard.test.jsx`: `features/catalog/` (Vitest y React Testing Library)
+- `ProductsPage.test.jsx`: `pages/` (Vitest, React Testing Library y MSW)
+
+---
+
 ## HU15 · Acceso a la zona de vendedor
 
 ### Tabla A · HU15 ↔ casos de prueba
