@@ -116,6 +116,29 @@ function conProductoPropio(params, respuestaPara) {
 
 const errorDeValidacion = () => HttpResponse.json({ code: 'VALIDATION_ERROR' }, { status: 400 })
 
+// Como el backend (HU31): un vendedor no puede tener dos productos con el mismo nombre, sin distinguir mayúsculas
+// ni contar los espacios de los extremos. Al editar, el propio producto no cuenta.
+const nombreEnUso = (nombre, idEditado = null) =>
+  PRODUCTOS.some(
+    (producto) =>
+      producto.vendedorId === getUsuarioEnSesion().id &&
+      producto.id !== idEditado &&
+      producto.nombre.toLowerCase() === nombre.trim().toLowerCase(),
+  )
+
+const errorDeNombreEnUso = () =>
+  HttpResponse.json(
+    { message: 'El producto ya existe con el mismo nombre', code: 'PRODUCT_NAME_ALREADY_EXISTS' },
+    { status: 409 },
+  )
+
+// Valida el producto y, si es correcto, comprueba que su nombre no esté ya en uso antes de responder.
+function responderAlGuardar(producto, respuestaCorrecta, idEditado) {
+  if (!esProductoValido(producto)) return errorDeValidacion()
+  if (nombreEnUso(producto.nombre, idEditado)) return errorDeNombreEnUso()
+  return respuestaCorrecta()
+}
+
 // Las escrituras (POST, PUT y DELETE) validan y responden como el backend real, pero NO modifican
 // los datos de ejemplo: a efectos prácticos, el frontend no añade ni elimina productos.
 export const productsHandlers = [
@@ -128,15 +151,13 @@ export const productsHandlers = [
     if (rechazo) return rechazo
 
     const producto = await request.json()
-    return esProductoValido(producto)
-      ? HttpResponse.json({ ...producto, id: 'p-nuevo' }, { status: 201 })
-      : errorDeValidacion()
+    return responderAlGuardar(producto, () => HttpResponse.json({ ...producto, id: 'p-nuevo' }, { status: 201 }))
   }),
 
   http.put('/api/seller/products/:id', ({ params, request }) =>
     conProductoPropio(params, async (existente) => {
       const producto = await request.json()
-      return esProductoValido(producto) ? HttpResponse.json({ ...producto, id: existente.id }) : errorDeValidacion()
+      return responderAlGuardar(producto, () => HttpResponse.json({ ...producto, id: existente.id }), existente.id)
     }),
   ),
 

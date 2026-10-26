@@ -20,6 +20,7 @@ import { useCategories } from '../hooks/useCategories'
 import { PATHS } from '../routes/paths'
 
 const NOT_FOUND = 404
+const NOMBRE_EN_USO = 'PRODUCT_NAME_ALREADY_EXISTS'
 
 const useStyles = makeStyles({
   // Columna más estrecha que la de los listados; sigue centrada en la pantalla (margin auto).
@@ -37,6 +38,7 @@ export default function SellerProductFormPage() {
   const isEdit = Boolean(id)
   const [saving, setSaving] = useState(false)
   const [saveFailed, setSaveFailed] = useState(false)
+  const [takenName, setTakenName] = useState(null)
   const { categories, loaded: categoriesLoaded, failed: categoriesFailed, retry: retryCategories } = useCategories()
   const loadProduct = useCallback(() => (id ? getSellerProduct(id) : Promise.resolve(null)), [id])
   const { data: product, error: productError, failed: productFailed, retry: retryProduct } = useApiQuery(loadProduct)
@@ -44,13 +46,16 @@ export default function SellerProductFormPage() {
   const handleSubmit = async (payload) => {
     setSaving(true)
     setSaveFailed(false)
+    setTakenName(null)
     try {
       await (isEdit ? updateSellerProduct(id, payload) : createSellerProduct(payload))
       navigate(PATHS.SELLER_PRODUCTS, {
         state: { notice: isEdit ? 'Cambios guardados.' : 'Producto guardado correctamente.' },
       })
-    } catch {
-      setSaveFailed(true)
+    } catch (error) {
+      // Un nombre repetido se marca en su campo (HU31); cualquier otro fallo, con el mensaje genérico.
+      if (error?.code === NOMBRE_EN_USO) setTakenName(payload.nombre)
+      else setSaveFailed(true)
       setSaving(false)
     }
   }
@@ -103,6 +108,7 @@ export default function SellerProductFormPage() {
           categories={categories}
           saving={saving}
           saveFailed={saveFailed}
+          takenName={takenName}
           onSubmit={handleSubmit}
         />
       )}

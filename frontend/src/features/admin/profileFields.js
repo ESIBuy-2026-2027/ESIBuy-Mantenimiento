@@ -127,7 +127,7 @@ const PROFILE_FIELDS = {
       name: 'categoriaPrincipalId',
       label: 'Categoría principal',
       read: (u) => textoOSinDato(u.categoriaPrincipal),
-      edit: { type: 'select', required: true },
+      edit: { type: 'category', required: true },
     },
     imagen,
     estado,

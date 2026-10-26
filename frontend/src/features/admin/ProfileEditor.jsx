@@ -12,6 +12,7 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { Save20Regular } from '@fluentui/react-icons'
+import CategoryCombobox from '../../components/CategoryCombobox'
 import { categoryPropType } from '../../utils/propTypes'
 import AvatarSelector from '../account/AvatarSelector'
 import { erroresDelServidor } from '../account/registroErrors'
@@ -87,10 +88,19 @@ export default function ProfileEditor({ rol, usuario, categories = [], save, onS
     }
   }
 
-  const optionsFor = (name) => {
-    if (name === 'categoriaPrincipalId') return categories.map(({ id, nombre }) => ({ value: id, label: nombre }))
-    return Object.entries(OPCIONES[name]).map(([value, label]) => ({ value, label }))
-  }
+  const optionsFor = (name) => Object.entries(OPCIONES[name]).map(([value, label]) => ({ value, label }))
+
+  // La categoría principal se elige en el desplegable con búsqueda de las categorías (HU31).
+  const renderCategory = (field, fieldProps) => (
+    <Field key={field.name} {...fieldProps}>
+      <CategoryCombobox
+        value={values[field.name]}
+        categories={categories}
+        placeholder={PLACEHOLDER_OPCION}
+        onChange={(value) => change(field.name, value)}
+      />
+    </Field>
+  )
 
   const renderSelect = (field, fieldProps) => (
     <Field key={field.name} {...fieldProps}>
@@ -135,6 +145,7 @@ export default function ProfileEditor({ rol, usuario, categories = [], save, onS
       validationState: errors[field.name] ? 'error' : 'none',
       validationMessage: errors[field.name],
     }
+    if (edit.type === 'category') return renderCategory(field, fieldProps)
     if (edit.type === 'select') return renderSelect(field, fieldProps)
 
     return (
