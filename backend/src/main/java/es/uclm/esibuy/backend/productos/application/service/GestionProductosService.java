@@ -83,6 +83,8 @@ public class GestionProductosService implements GestionProductosUseCase {
 
     @Override
     public void eliminarMiProducto(String emailVendedor, String productoId) {
-        productoRepository.eliminar(productoId);
+        // Si el producto no existe o es de otro vendedor, consultarMiProducto lanza la excepción y no se borra nada.
+        Producto propio = consultarMiProducto(emailVendedor, productoId);
+        productoRepository.eliminar(propio.getId());
     }
 }
