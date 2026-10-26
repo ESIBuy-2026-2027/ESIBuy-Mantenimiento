@@ -5,6 +5,7 @@ import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryP
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -75,8 +77,7 @@ class GestionProductosServiceTest {
     @Test
     @DisplayName("HU31-CP14: devuelve el producto guardado, con el id que le ha asignado la base de datos")
     void devuelveElProductoGuardadoConSuId() {
-        Producto conId = new Producto("p-9", "v-1", "Teclado mecánico", "Con cable", new BigDecimal("89.50"), 12,
-                "cat-1", "", true, Descuento.sinDescuento(), Descuento.sinDescuento());
+        Producto conId = producto("p-9", "v-1");
         when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
         when(productoRepository.guardar(any(Producto.class))).thenReturn(conId);
 
@@ -110,6 +111,41 @@ class GestionProductosServiceTest {
                 () -> servicio.crear(comando(new BigDecimal("89.50"), 12, "cat-1")));
 
         verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU33-CP01: devuelve el producto si pertenece al vendedor de la sesión")
+    void devuelveElProductoSiEsDelVendedorDeLaSesion() {
+        Producto propio = producto("p-9", "v-1");
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(propio));
+
+        Producto resultado = servicio.consultarMiProducto(CORREO, "p-9");
+
+        assertSame(propio, resultado);
+    }
+
+    @Test
+    @DisplayName("HU33-CP02: un producto que no existe no se encuentra")
+    void unProductoQueNoExisteNoSeEncuentra() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-404")).thenReturn(Optional.empty());
+
+        assertThrows(ProductoNoEncontradoException.class, () -> servicio.consultarMiProducto(CORREO, "p-404"));
+    }
+
+    @Test
+    @DisplayName("HU33-CP03: un producto de otro vendedor no se encuentra, para no revelar que existe")
+    void unProductoDeOtroVendedorNoSeEncuentra() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-2")));
+
+        assertThrows(ProductoNoEncontradoException.class, () -> servicio.consultarMiProducto(CORREO, "p-9"));
+    }
+
+    private static Producto producto(String id, String vendedorId) {
+        return new Producto(id, vendedorId, "Teclado mecánico", "Con cable", new BigDecimal("89.50"), 12,
+                "cat-1", "", true, Descuento.sinDescuento(), Descuento.sinDescuento());
     }
 
     private static CrearProductoCommand comando(BigDecimal precio, int stock, String categoriaId) {
