@@ -69,13 +69,18 @@ const useStyles = makeStyles({
     transitionProperty: 'opacity',
     transitionDuration: '500ms',
   },
+  // Cada imagen va en su propia capa (will-change). Con el contorno transparente y backface-visibility los bordes
+  // inclinados de las tiras se suavizan: sin ellos, el navegador los dibuja con escalones («dientes de sierra»).
   tile: {
     position: 'absolute',
+    willChange: 'transform',
   },
   strip: {
     position: 'absolute',
     top: 0,
     overflow: 'hidden',
+    outline: '1px solid transparent',
+    backfaceVisibility: 'hidden',
     backgroundColor: tokens.colorNeutralBackground3,
   },
   firstStrip: {

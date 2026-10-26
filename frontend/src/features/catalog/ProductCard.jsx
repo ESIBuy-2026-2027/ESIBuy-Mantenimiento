@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
-import { Badge, Card, CardPreview, Text, makeStyles, tokens } from '@fluentui/react-components'
+import { Text, makeStyles, tokens } from '@fluentui/react-components'
 import { ImageOff24Regular } from '@fluentui/react-icons'
 import { catalogProductPropType } from '../../utils/propTypes'
 import { formatRating } from '../../utils/format'
@@ -9,17 +9,43 @@ import RatingStars from './RatingStars'
 const SIN_CATEGORIA = '—'
 
 const useStyles = makeStyles({
+  // Toda la tarjeta es un botón: se puede pulsar, o activar con el teclado, para abrir la ficha del producto.
   card: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
     height: '100%',
-    transitionProperty: 'box-shadow, transform',
+    margin: 0,
+    padding: 0,
+    overflow: 'hidden',
+    textAlign: 'left',
+    font: 'inherit',
+    color: 'inherit',
+    cursor: 'pointer',
+    backgroundColor: tokens.colorNeutralBackground1,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusXLarge,
+    boxShadow: tokens.shadow2,
+    transitionProperty: 'box-shadow, transform, border-color',
     transitionDuration: tokens.durationNormal,
+    transitionTimingFunction: tokens.curveEasyEase,
     ':hover': {
+      transform: 'translateY(-3px)',
       boxShadow: tokens.shadow16,
-      transform: 'translateY(-2px)',
+      borderColor: tokens.colorNeutralStroke1,
+    },
+    ':active': {
+      transform: 'translateY(-1px)',
+    },
+    ':focus-visible': {
+      outline: `2px solid ${tokens.colorStrokeFocus2}`,
+      outlineOffset: '2px',
     },
   },
-  preview: {
-    aspectRatio: '16 / 10',
+  media: {
+    position: 'relative',
+    display: 'block',
+    aspectRatio: '4 / 3',
     overflow: 'hidden',
     backgroundColor: tokens.colorNeutralBackground3,
   },
@@ -29,17 +55,13 @@ const useStyles = makeStyles({
     height: '100%',
     objectFit: 'cover',
     transitionProperty: 'transform',
-    transitionDuration: tokens.durationSlow,
-    ':hover': {
-      transform: 'scale(1.06)',
-    },
+    transitionDuration: tokens.durationUltraSlow,
+    transitionTimingFunction: tokens.curveEasyEase,
   },
   placeholder: {
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: tokens.spacingVerticalXS,
     width: '100%',
     height: '100%',
     color: tokens.colorNeutralForeground4,
@@ -47,8 +69,18 @@ const useStyles = makeStyles({
   body: {
     display: 'flex',
     flexDirection: 'column',
-    gap: tokens.spacingVerticalS,
-    padding: `0 ${tokens.spacingHorizontalM} ${tokens.spacingVerticalM}`,
+    flexGrow: 1,
+    gap: tokens.spacingVerticalXS,
+    padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalM} ${tokens.spacingVerticalM}`,
+    '@media (min-width: 600px)': {
+      padding: `${tokens.spacingVerticalL} ${tokens.spacingHorizontalL}`,
+    },
+  },
+  category: {
+    color: tokens.colorBrandForeground1,
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+    fontWeight: tokens.fontWeightSemibold,
   },
   name: {
     display: '-webkit-box',
@@ -56,15 +88,16 @@ const useStyles = makeStyles({
     WebkitBoxOrient: 'vertical',
     overflow: 'hidden',
     overflowWrap: 'anywhere',
-  },
-  category: {
-    alignSelf: 'flex-start',
+    lineHeight: tokens.lineHeightBase300,
+    minHeight: `calc(2 * ${tokens.lineHeightBase300})`,
   },
   rating: {
     display: 'flex',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: tokens.spacingHorizontalXS,
     marginTop: 'auto',
+    paddingTop: tokens.spacingVerticalXS,
   },
   muted: {
     color: tokens.colorNeutralForeground3,
@@ -72,8 +105,9 @@ const useStyles = makeStyles({
 })
 
 // Tarjeta de un producto del catálogo: solo lo que se ve desde fuera (imagen, nombre, categoría y valoración).
-// `categoryName` lo traduce la página a partir del identificador de categoría del producto.
-export default function ProductCard({ product, categoryName }) {
+// `categoryName` lo traduce la página a partir del identificador de categoría del producto; `onSelect` recibe el
+// producto al pulsarla.
+export default function ProductCard({ product, categoryName, onSelect }) {
   const styles = useStyles()
   // Si la imagen no carga (dirección rota), se enseña el mismo marcador que cuando no hay imagen.
   const [imageFailed, setImageFailed] = useState(false)
@@ -81,8 +115,8 @@ export default function ProductCard({ product, categoryName }) {
   const rated = product.valoracion !== null && product.numValoraciones > 0
 
   return (
-    <Card className={styles.card}>
-      <CardPreview className={styles.preview}>
+    <button type="button" className={styles.card} onClick={() => onSelect?.(product)}>
+      <span className={styles.media}>
         {hasImage ? (
           <img
             className={styles.image}
@@ -96,15 +130,15 @@ export default function ProductCard({ product, categoryName }) {
             <ImageOff24Regular />
           </span>
         )}
-      </CardPreview>
-      <div className={styles.body}>
+      </span>
+      <span className={styles.body}>
+        <Text size={200} className={styles.category}>
+          {categoryName ?? SIN_CATEGORIA}
+        </Text>
         <Text weight="semibold" size={400} className={styles.name}>
           {product.nombre}
         </Text>
-        <Badge className={styles.category} appearance="outline" color="brand" size="medium">
-          {categoryName ?? SIN_CATEGORIA}
-        </Badge>
-        <div className={styles.rating}>
+        <span className={styles.rating}>
           {rated ? (
             <>
               <RatingStars value={product.valoracion} />
@@ -114,13 +148,14 @@ export default function ProductCard({ product, categoryName }) {
           ) : (
             <Text className={styles.muted}>Sin valoraciones</Text>
           )}
-        </div>
-      </div>
-    </Card>
+        </span>
+      </span>
+    </button>
   )
 }
 
 ProductCard.propTypes = {
   product: catalogProductPropType.isRequired,
   categoryName: PropTypes.string,
+  onSelect: PropTypes.func,
 }

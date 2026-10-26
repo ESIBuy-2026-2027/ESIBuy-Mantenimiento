@@ -95,7 +95,7 @@ describe('ProductsPage (HU7): vista de productos del cliente', () => {
     await abrirCatalogo()
 
     await esperarTarjetas(10)
-    const tarjeta = screen.getByText('Auriculares inalámbricos').closest('li')
+    const tarjeta = within(screen.getByRole('list', { name: /productos/i })).getByText('Auriculares inalámbricos').closest('li')
     expect(within(tarjeta).getByText('Tecnología')).toBeInTheDocument()
     expect(within(tarjeta).getByRole('img', { name: /valoración: \d,\d de 5/i })).toBeInTheDocument()
     expect(within(tarjeta).getByRole('img', { name: 'Auriculares inalámbricos' })).toBeInTheDocument()
@@ -223,7 +223,8 @@ function capturarPeticiones(items = PRODUCTOS_DE_EJEMPLO) {
 }
 
 const ultima = (peticiones) => peticiones[peticiones.length - 1]
-const nombresDeLasTarjetas = () => tarjetas().map((tarjeta) => within(tarjeta).getAllByText(/./)[0].textContent)
+// En cada tarjeta el primer texto es la categoría y el segundo, el nombre del producto.
+const nombresDeLasTarjetas = () => tarjetas().map((tarjeta) => within(tarjeta).getAllByText(/./)[1].textContent)
 const valoracionesDeLasTarjetas = () =>
   tarjetas().map((tarjeta) => {
     const estrellas = within(tarjeta).queryByRole('img', { name: /valoración: /i })
