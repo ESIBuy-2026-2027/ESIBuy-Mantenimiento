@@ -6,7 +6,12 @@ const dateFormatter = new Intl.DateTimeFormat('es-ES', {
   timeZone: 'UTC',
 })
 
+const ratingFormatter = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+
 export const formatPrice = (amount) => priceFormatter.format(amount)
+
+// Valoración media con un decimal y coma: 4,5.
+export const formatRating = (value) => ratingFormatter.format(value)
 
 // Recibe una fecha ISO sin hora (AAAA-MM-DD) y la muestra como DD/MM/AAAA.
 export const formatDate = (isoDate) => dateFormatter.format(new Date(isoDate))

@@ -1,0 +1,73 @@
+import { screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { describe, expect, it, vi } from 'vitest'
+import { renderWithProviders } from '../../test/utils'
+import ProductCard from './ProductCard'
+
+const PRODUCTO = {
+  id: 'p-1',
+  nombre: 'Teclado mecánico',
+  imagen: 'https://tienda.test/teclado.png',
+  categoriaId: 'cat-1',
+  valoracion: 4.5,
+  numValoraciones: 12,
+}
+
+describe('ProductCard', () => {
+  it('HU7-CP02: muestra el nombre, la imagen y la categoría del producto', () => {
+    renderWithProviders(<ProductCard product={PRODUCTO} categoryName="Tecnología" />)
+
+    expect(screen.getByText('Teclado mecánico')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Teclado mecánico' })).toHaveAttribute('src', PRODUCTO.imagen)
+    expect(screen.getByText('Tecnología')).toBeInTheDocument()
+  })
+
+  it('HU7-CP02: muestra la valoración en estrellas y cuántas valoraciones tiene', () => {
+    renderWithProviders(<ProductCard product={PRODUCTO} categoryName="Tecnología" />)
+
+    expect(screen.getByRole('img', { name: /valoración: 4,5 de 5/i })).toBeInTheDocument()
+    expect(screen.getByText('4,5')).toBeInTheDocument()
+    expect(screen.getByText('(12)')).toBeInTheDocument()
+  })
+
+  it('HU7-CP02: un producto sin valoraciones lo indica en lugar de mostrar estrellas', () => {
+    renderWithProviders(
+      <ProductCard product={{ ...PRODUCTO, valoracion: null, numValoraciones: 0 }} categoryName="Tecnología" />,
+    )
+
+    expect(screen.getByText(/sin valoraciones/i)).toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: /valoración:/i })).not.toBeInTheDocument()
+  })
+
+  it('HU7-CP02: un producto sin imagen muestra un marcador en su lugar', () => {
+    renderWithProviders(<ProductCard product={{ ...PRODUCTO, imagen: '' }} categoryName="Tecnología" />)
+
+    expect(screen.queryByRole('img', { name: 'Teclado mecánico' })).not.toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /sin imagen/i })).toBeInTheDocument()
+  })
+
+  it('HU7-CP08: al pulsarla avisa con el producto, para abrir su ficha', async () => {
+    const onSelect = vi.fn()
+    renderWithProviders(<ProductCard product={PRODUCTO} categoryName="Tecnología" onSelect={onSelect} />)
+
+    await userEvent.click(screen.getByRole('button', { name: /teclado mecánico/i }))
+
+    expect(onSelect).toHaveBeenCalledWith(PRODUCTO)
+  })
+
+  it('HU7-CP08: con el teclado se puede abrir igual que con el ratón', async () => {
+    const onSelect = vi.fn()
+    renderWithProviders(<ProductCard product={PRODUCTO} categoryName="Tecnología" onSelect={onSelect} />)
+
+    screen.getByRole('button', { name: /teclado mecánico/i }).focus()
+    await userEvent.keyboard('{Enter}')
+
+    expect(onSelect).toHaveBeenCalledTimes(1)
+  })
+
+  it('HU7-CP02: si no se conoce la categoría muestra un guion', () => {
+    renderWithProviders(<ProductCard product={PRODUCTO} />)
+
+    expect(screen.getByText('—')).toBeInTheDocument()
+  })
+})
