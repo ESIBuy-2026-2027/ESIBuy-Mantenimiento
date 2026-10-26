@@ -5,6 +5,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseC
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 
 public class GestionProductosService implements GestionProductosUseCase {
@@ -41,5 +42,14 @@ public class GestionProductosService implements GestionProductosUseCase {
             throw new ProductoDuplicadoException();
         }
         return productoRepository.guardar(producto);
+    }
+
+    @Override
+    public Producto consultarMiProducto(String emailVendedor, String productoId) {
+        String vendedorId = usuarioEnSesion.idPorCorreo(emailVendedor);
+        // Un producto de otro vendedor se trata igual que uno inexistente, para no revelar que existe.
+        return productoRepository.buscarPorId(productoId)
+                .filter(producto -> producto.getVendedorId().equals(vendedorId))
+                .orElseThrow(ProductoNoEncontradoException::new);
     }
 }
