@@ -13,8 +13,17 @@ class ResizeObserverStub {
   disconnect = vi.fn()
 }
 
+// jsdom no trae IntersectionObserver: por defecto no avisa nunca (la vista de productos cargaría solo la primera
+// página). Los tests del scroll infinito ponen uno propio que dispara a mano.
+class IntersectionObserverStub {
+  observe = vi.fn()
+  unobserve = vi.fn()
+  disconnect = vi.fn()
+}
+
 beforeAll(() => {
   vi.stubGlobal('ResizeObserver', ResizeObserverStub)
+  vi.stubGlobal('IntersectionObserver', IntersectionObserverStub)
   server.listen({ onUnhandledRequest: 'error' })
 })
 

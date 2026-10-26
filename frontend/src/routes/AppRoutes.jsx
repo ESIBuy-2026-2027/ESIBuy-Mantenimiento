@@ -27,7 +27,10 @@ export default function AppRoutes() {
         <Route element={<GuestOnlyRoute />}>
           <Route path={PATHS.REGISTER} element={<Register />} />
         </Route>
-        <Route path={PATHS.PRODUCTS} element={<ProductsPage />} />
+
+        <Route element={<ProtectedRoute allowedRoles={[ROLES.CLIENTE]} />}>
+          <Route path={PATHS.PRODUCTS} element={<ProductsPage />} />
+        </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
           <Route path={PATHS.ADMIN} element={<AdminPage />} />

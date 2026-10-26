@@ -64,6 +64,50 @@ export const aRespuesta = ({ id, nombre, precio, stock, disponible, categoria })
   categoriaId: categoria,
 })
 
+const TAMANO_CATALOGO = 10
+
+// Imagen de ejemplo: un dibujo con la inicial del producto, para que el catálogo se vea sin depender de internet.
+const COLORES_IMAGEN = ['#0f6cbd', '#0e700e', '#c239b3', '#da3b01', '#005b70', '#8764b8']
+const imagenDeEjemplo = (nombre, numero) => {
+  const color = COLORES_IMAGEN[numero % COLORES_IMAGEN.length]
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400" viewBox="0 0 640 400">` +
+    `<rect width="640" height="400" fill="${color}"/>` +
+    `<text x="320" y="240" font-family="Segoe UI, Arial" font-size="160" font-weight="600" fill="#ffffff" ` +
+    `text-anchor="middle">${nombre.charAt(0)}</text></svg>`
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`
+}
+
+// Para tener variedad sin escribirla a mano: cada séptimo producto no tiene valoraciones y cada noveno, imagen.
+// Las demás valoraciones salen de su número, así que son siempre las mismas.
+const aCatalogo = ({ id, nombre, categoria }) => {
+  const numero = Number(id.slice(2))
+  const sinValorar = numero % 7 === 0
+  return {
+    id,
+    nombre,
+    imagen: numero % 9 === 0 ? '' : imagenDeEjemplo(nombre, numero),
+    categoriaId: categoria,
+    valoracion: sinValorar ? null : Math.round(25 + ((numero * 37) % 26)) / 10,
+    numValoraciones: sinValorar ? 0 : 3 + ((numero * 13) % 90),
+  }
+}
+
+const comparar = (a, b) => a.localeCompare(b, 'es')
+
+// Como el backend: por nombre (por defecto) o por valoración (sin valoraciones cuentan como 0). Los empates se
+// desempatan por nombre, siempre de la A a la Z.
+function ordenDelCatalogo(criterio, sentido) {
+  const signo = sentido === 'desc' ? -1 : 1
+  const porNombre = (a, b) => comparar(a.nombre, b.nombre)
+  const porCriterio = {
+    valoracion: (a, b) => (a.valoracion ?? 0) - (b.valoracion ?? 0),
+  }[criterio]
+
+  if (!porCriterio) return (a, b) => signo * porNombre(a, b)
+  return (a, b) => signo * porCriterio(a, b) || porNombre(a, b)
+}
+
 // Detalle completo del producto, con los datos que necesita el formulario de edición.
 const aDetalle = ({ id, nombre, descripcion, precio, stock, disponible, categoria, imagen, descuento, descuentoPremium }) => ({
   id,
@@ -164,6 +208,28 @@ export const productsHandlers = [
   http.delete('/api/seller/products/:id', ({ params }) =>
     conProductoPropio(params, () => new HttpResponse(null, { status: 204 })),
   ),
+
+  // Catálogo del cliente (HU7): los productos disponibles de todos los vendedores.
+  http.get('/api/products', ({ request }) => {
+    const usuario = getUsuarioEnSesion()
+    if (!usuario) return new HttpResponse(null, { status: 401 })
+    if (usuario.rol !== 'CLIENTE') return new HttpResponse(null, { status: 403 })
+
+    const params = new URL(request.url).searchParams
+    const busqueda = normalizar(params.get('search') ?? '')
+    const categoria = params.get('category')
+    const minima = Number(params.get('minRating')) || 0
+    const coincidentes = PRODUCTOS.filter((producto) => producto.disponible)
+      .map((producto) => aCatalogo(producto))
+      .filter(
+        (producto) =>
+          normalizar(producto.nombre).includes(busqueda) &&
+          (!categoria || producto.categoriaId === categoria) &&
+          (producto.valoracion ?? 0) >= minima,
+      )
+      .sort(ordenDelCatalogo(params.get('sort'), params.get('order')))
+    return HttpResponse.json(paginar(coincidentes, leerPagina(params, TAMANO_CATALOGO)))
+  }),
 
   http.get('/api/seller/products', ({ request }) => {
     const rechazo = rechazarSiNoEsVendedor()
