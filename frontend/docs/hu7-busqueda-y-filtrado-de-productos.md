@@ -24,10 +24,10 @@ La vista de productos (`/products`) es lo primero que ve el cliente al iniciar s
 | De diez en diez, cargando más al llegar al final | Scroll infinito: una marca al final de la lista (`IntersectionObserver`) pide la página siguiente 400 px antes de llegar. El botón **Ver más productos** hace lo mismo para quien no use el scroll |
 | Ordenar por nombre y valoración | `Ordenar por` + botón de sentido ascendente / descendente. Por defecto, nombre de la A a la Z. **No se ordena por categoría** (decisión del equipo: no tiene sentido) |
 | Filtrar por nombre, categoría y valoración | Buscador por nombre, desplegable de categoría y **valoración mínima** (4, 3 o 2 estrellas o más) |
-| Selección de los mejores productos arriba | `FeaturedProducts`: **los diez** productos mejor valorados, de mejor a peor, con sus imágenes en una banda curva (`TiltedGridHero`, **sin marco**: se difumina por los lados sobre la página) y debajo la lista numerada del 1 al 10 |
-| Productos clicables | Al pulsar una tarjeta, o un producto de la selección, se abre su **ficha** (`ProductDialog`) con la imagen en grande, el nombre, la categoría y la valoración. Se pueden abrir también con el teclado |
+| Selección de los mejores productos arriba | `FeaturedProducts`: **los diez** productos mejor valorados, de mejor a peor, como **tarjetas dentro de una banda curva** (`TiltedGridHero`) que ocupa **todo el ancho de la página**, sin marco ni bordes y difuminada por los lados. Cada tarjeta lleva su puesto, su nombre y su valoración |
+| Productos clicables | Al pulsar una tarjeta del listado **o una tarjeta de la banda animada** se abre la **ficha** del producto (`ProductDialog`) con la imagen en grande, el nombre, la categoría y la valoración. Para quien navega con teclado o lector de pantalla, la banda va acompañada de la **lista numerada del 1 al 10**, que aparece al enfocarla y también abre la ficha |
 | Dinámica y profesional | Banda de imágenes curva con bordes suavizados que se desplaza sola; tarjetas con borde suave que entran subiendo y apareciendo una tras otra y se elevan al pasar el ratón, con la imagen que se acerca; estrellas con medias estrellas; marcador cuando no hay imagen; barra de filtros en una tarjeta; la lista se atenúa mientras se recarga |
-| Responsive | Siempre dos columnas de tarjetas; la banda se adapta al ancho (menos alta en móvil); la lista de los diez mejores va en cinco columnas en pantallas anchas y, en estrechas, en una fila que se desliza hacia los lados |
+| Responsive | Siempre dos columnas de tarjetas; la banda ocupa el ancho de la pantalla y su altura se adapta (260 px en móvil, 320 en tableta y 380 en pantallas anchas). **Al cambiar el tamaño de la página, la banda se reinicia** (ver abajo) para que las tarjetas no se solapen |
 
 > Ocultar o mostrar pantallas es **experiencia de usuario**. El backend debe responder 401 o 403 si quien consulta no es un cliente.
 
@@ -78,7 +78,7 @@ La búsqueda por nombre espera 300 ms desde la última tecla antes de pedir (`us
 | `ProductDialog.jsx` | La ficha de un producto: imagen en grande, nombre, categoría, valoración y el número de valoraciones, con un botón **Cerrar**. Solo enseña lo que ya llega en el catálogo; el precio, la descripción y la compra llegarán con las historias del detalle del producto y del carrito |
 | `RatingStars.jsx` | Cinco estrellas: llena por cada punto, media si sobra al menos medio punto y vacía en el resto. Para los lectores de pantalla es **una sola imagen** con su valor («Valoración: 4,5 de 5») |
 | `FeaturedProducts.jsx` | Pide los diez productos mejor valorados (`sort=valoracion&order=desc&size=10`, sin mínimo de estrellas) y los pasa a `FeaturedShowcase`. Solo se muestra con 3 o más productos con valoración; si no hay o la petición falla, no aparece y el listado sigue funcionando |
-| `FeaturedShowcase.jsx` | Pinta la selección: título, la banda curva con las imágenes de los que la tienen y la lista numerada del 1 al 10, cuyos productos se pueden pulsar. No pide nada (recibe los productos), así que se puede ver con datos fijos |
+| `FeaturedShowcase.jsx` | Pinta la selección: el título (en la columna de contenido), la banda curva a todo el ancho con las tarjetas de los que tienen imagen (puesto, nombre y valoración dibujados sobre la imagen) y la lista numerada del 1 al 10 para teclado y lectores de pantalla. No pide nada (recibe los productos) |
 | `CatalogFilters.jsx` | Buscador y categoría (`ListFilters`, el mismo del listado del vendedor) más la valoración mínima y el orden (`SortControls`, el mismo de los listados del administrador) |
 | `useCatalogFilters.js` | Estado de los filtros y del orden. Reutiliza `useListFilters` (búsqueda y categoría) y añade `minRating`, `sort` y `order` |
 | `useCatalogFeed.js` | El scroll infinito: pide la primera página, acumula las siguientes con `loadMore` y empieza de cero cuando cambia un filtro. Distingue el fallo de la primera página (no hay nada que enseñar) del de las siguientes (se conserva lo cargado) |
@@ -90,7 +90,11 @@ La búsqueda por nombre espera 300 ms desde la última tecla antes de pedir (`us
 | `components/TiltedGridHero.jsx` | La banda de imágenes curva. **Adaptada** de «Tilted Grid Hero» (shadcn, TypeScript y Tailwind) a JavaScript y a los estilos de Fluent UI, con su lógica y su geometría originales (ver abajo) |
 | `hooks/useOnReachEnd.js` | Devuelve un `ref` para poner al final de una lista y avisa cuando está a la vista o a 400 px de estarlo. Se vuelve a observar tras cada carga, así que sigue cargando si la lista no llena la pantalla |
 
-**`TiltedGridHero`:** una fila de imágenes que avanza de derecha a izquierda por el interior de un cilindro: el centro mira de frente y los extremos se curvan hacia quien mira y se difuminan. Como una caja CSS no se puede curvar, cada imagen se corta en 16 tiras con su parte de la imagen, giradas alrededor del eje; solo usa transformaciones (va en el compositor). La banda es **decorativa** (`aria-hidden`), no recibe clics y con `prefers-reduced-motion` se queda quieta. Al montarse pide todas las imágenes de antemano. **Bordes suaves:** cada imagen va en su propia capa (`will-change`) y sus tiras llevan contorno transparente y `backface-visibility: hidden`; sin ello el navegador dibuja con escalones («dientes de sierra») los bordes inclinados. El componente no tiene marco, borde ni fondo propios. Lo que se adaptó respecto al original: sin Tailwind (estilos de Fluent con `makeStyles`), sin `cn` (`mergeClasses`), `PropTypes` en lugar de tipos de TypeScript, y sin `"use client"`. No hizo falta añadir shadcn, Tailwind ni TypeScript, ni ninguna librería.
+**`TiltedGridHero`:** una fila de imágenes que avanza de derecha a izquierda por el interior de un cilindro: el centro mira de frente y los extremos se curvan hacia quien mira y se difuminan. Como una caja CSS no se puede curvar, cada imagen se corta en 16 tiras con su parte de la imagen, giradas alrededor del eje; solo usa transformaciones (va en el compositor). La banda es **decorativa** (`aria-hidden`), no recibe clics y con `prefers-reduced-motion` se queda quieta. Al montarse pide todas las imágenes de antemano. **Tarjetas pulsables:** con `onSelect`, cada imagen de la banda avisa con la imagen pulsada (es un botón para el ratón, con el nombre del producto). La banda sigue siendo `aria-hidden` y no se puede enfocar con el teclado (se mueve sin parar, no tendría sentido): para eso está la lista de `FeaturedShowcase`. Cada imagen admite un **pie** (`caption`) que se corta en tiras igual que la imagen, así que se curva con ella; su tamaño de letra es una fracción del alto de la tarjeta (se escribe en `em`).
+
+**Reinicio al cambiar el tamaño:** la fila de imágenes está en un componente interno (`Band`) con `key` igual al tamaño medido. Cada vez que cambia el tamaño de la página se espera 150 ms a que termine (la primera medida es inmediata) y la banda se reinicia entera: vuelven a empezar a la vez todas las animaciones y la imagen de cada una, y aparece con un fundido de 400 ms. Antes se recalculaba en caliente y, al cambiar el número de imágenes o el arco con las animaciones en marcha, se solapaban. Si el tamaño no cambia, no se reinicia.
+
+**Bordes suaves:** cada imagen va en su propia capa (`will-change`) y sus tiras llevan contorno transparente y `backface-visibility: hidden`; sin ello el navegador dibuja con escalones («dientes de sierra») los bordes inclinados. El componente no tiene marco, borde ni fondo propios. Lo que se adaptó respecto al original: sin Tailwind (estilos de Fluent con `makeStyles`), sin `cn` (`mergeClasses`), `PropTypes` en lugar de tipos de TypeScript, y sin `"use client"`. No hizo falta añadir shadcn, Tailwind ni TypeScript, ni ninguna librería.
 
 ### API, mocks y utilidades
 
@@ -178,8 +182,9 @@ Respuesta 200:
 
 Con `VITE_USE_MOCKS=true` (`frontend/.env.development`), `npm run dev` y la cuenta de cliente `cliente@esibuy.test` (contraseña `Mock-Clave-1!`, códigos `654321` y `123456`, ver `docs/hu2-login.md`):
 
-1. Tras iniciar sesión se abre `/products`: arriba, la banda curva (sin recuadro) con los mejor valorados y, debajo, la lista del 1 al 10 (Teclado mecánico 4,7, Memoria USB 128 GB 4,5, Hub USB-C 7 en 1 4,4…); debajo, 10 tarjetas.
-2. Pulsar una tarjeta o un producto de la lista del 1 al 10: se abre su ficha con la imagen en grande; **Cerrar** (o Escape) la cierra. Se pueden recorrer con el tabulador y abrir con Intro.
+1. Tras iniciar sesión se abre `/products`: arriba, la banda curva a todo el ancho (sin recuadro) con las tarjetas de los mejor valorados (Teclado mecánico 4,7, Memoria USB 128 GB 4,5, Hub USB-C 7 en 1 4,4…), cada una con su puesto, nombre y valoración; debajo, 10 tarjetas.
+2. Pulsar una tarjeta de la banda o del listado: se abre su ficha con la imagen en grande; **Cerrar** (o Escape) la cierra. Con el tabulador se llega a las tarjetas del listado y, en la selección de los mejores, aparece la lista del 1 al 10 (se abre con Intro).
+   Cambiar el tamaño de la ventana: tras un instante, la banda se reinicia con un fundido y las tarjetas quedan bien repartidas, sin solaparse.
 3. Bajar hasta el final: se cargan otras 10, y luego las 3 últimas con «Has visto todos los productos». Hay 23 productos disponibles.
 4. Escribir «lampara»: queda la lámpara de escritorio (no distingue tildes ni mayúsculas) y la banda desaparece.
 5. Elegir la categoría **Hogar** y subir la valoración mínima a **4 estrellas o más**.
@@ -191,7 +196,7 @@ Con `VITE_USE_MOCKS=true` (`frontend/.env.development`), `npm run dev` y la cuen
 ### Tests automáticos
 
 ```bash
-npx vitest run     # 689 tests (43 son de esta HU)
+npx vitest run     # 696 tests (50 son de esta HU)
 npm run lint
 npm run build
 ```
@@ -199,8 +204,8 @@ npm run build
 | Archivo | Tests | Qué cubre |
 |---|---|---|
 | `features/catalog/ProductCard.test.jsx` (nuevo) | 7 | Nombre, imagen y categoría; valoración con estrellas y número de valoraciones; sin valoraciones; sin imagen; categoría desconocida; avisa al pulsarla y se abre con el teclado |
-| `components/TiltedGridHero.test.jsx` (nuevo) | 3 | Muestra su contenido; la banda es decorativa y reparte las imágenes recibidas; sin imágenes no falla |
-| `pages/ProductsPage.test.jsx` (nuevo) | 33 | Destino tras iniciar sesión y acceso por rol; tarjetas; diez por página y dos columnas; scroll infinito (más al llegar al final, última página, botón **Ver más productos**, error al cargar más con reintento); error y catálogo vacío; búsqueda sin distinguir tildes; categoría; valoración mínima; orden (sin categoría) y sentido; limpiar filtros; los diez mejor valorados (se muestran numerados, qué piden, se ocultan con filtros, con pocos productos y si falla); ficha de un producto (se abre desde una tarjeta o desde la selección y se cierra) |
+| `components/TiltedGridHero.test.jsx` (nuevo) | 9 | Muestra su contenido; la banda es decorativa y reparte las imágenes recibidas; sin imágenes no falla; el pie de cada imagen; avisa al pulsar una imagen y, sin `onSelect`, no hay botones; **reinicio al cambiar el tamaño** (se reinicia, espera a que termine de cambiar y no se reinicia si el tamaño no cambia) |
+| `pages/ProductsPage.test.jsx` (nuevo) | 34 | Destino tras iniciar sesión y acceso por rol; tarjetas; diez por página y dos columnas; scroll infinito (más al llegar al final, última página, botón **Ver más productos**, error al cargar más con reintento); error y catálogo vacío; búsqueda sin distinguir tildes; categoría; valoración mínima; orden (sin categoría) y sentido; los diez mejor valorados (se muestran numerados, qué piden, se ocultan con filtros, con pocos productos y si falla); ficha de un producto (desde una tarjeta del listado, desde una tarjeta de la animación y con el teclado desde la lista; se cierra) |
 | `features/auth/LoginFlow.test.jsx` | 1 cambiado | `/products` ya no es pública: sin sesión lleva a `/login` |
 
 Los tests de filtros, orden y selección comprueban **la petición que envía el frontend** (con un handler que captura los parámetros) y, con el mock por defecto, que el resultado se ve ordenado. El final de la página se simula con un `IntersectionObserver` de mentira que el test dispara.
@@ -219,7 +224,9 @@ Los tests de filtros, orden y selección comprueban **la petición que envía el
 - **Valoración mínima en lugar de «ordenar por valoración» solamente:** se puede filtrar por 4, 3 o 2 estrellas o más y, además, ordenar.
 - **Se reutiliza** lo que ya había: `ListFilters`, `SortControls`, `EmptyState`, `useListFilters`, `useApiQuery`, `useCategories` y las tarjetas de Fluent UI. Se retira `Pagination` de esta vista y el hook `useCatalogProducts`, que ya no se usaban.
 - **Productos clicables sin página de detalle:** al pulsar un producto se abre una **ficha** en una ventana, con lo que ya llega en el catálogo. No hay página ni endpoint de detalle para clientes, y no se ha inventado ninguno. Cuando exista, bastará con que la tarjeta lleve a ella.
-- **Banda sin marco y con bordes suaves** (decisión del equipo tras verla): sin recuadro, borde, sombra ni fondo; se difumina por los lados.
+- **Las tarjetas de los mejores están dentro de la animación** (decisión del equipo): la lista numerada de debajo desaparece de la vista y pasa a ser solo la alternativa accesible. Se mantiene porque la banda es decorativa para los lectores de pantalla y no se puede recorrer con el teclado.
+- **Banda a todo el ancho de la página** (decisión del equipo): la página deja de ser una única columna; el título y el resto del contenido siguen en una columna de 860 px y solo la banda se extiende.
+- **Banda sin marco ni bordes y con bordes suaves** (decisión del equipo tras verla): sin recuadro, borde, sombra ni fondo, tampoco en las tarjetas; se difumina por los lados.
 
 ---
 
@@ -228,10 +235,11 @@ Los tests de filtros, orden y selección comprueban **la petición que envía el
 - **Backend:** falta `GET /api/products` y guardar valoraciones (AB#352 y AB#353). Hasta entonces la vista solo funciona con los mocks.
 - **Desplegable de categorías:** usa el `Select` de `ListFilters`. Si se integra el desplegable con búsqueda (`CategoryCombobox`, HU31), este filtro lo heredará, y los tests de categoría de esta vista habrá que adaptarlos.
 - **Sin detalle de producto, precio ni carrito:** la tarjeta solo enseña lo que se ve desde fuera.
-- **Verificación visual parcial:** la banda, las tarjetas, la lista de los diez mejores y la ficha se vieron en el navegador con datos fijos (escritorio y móvil), pero no la pantalla completa con los mocks (MSW no se registra en el navegador integrado de Claude Code). Conviene que el equipo compruebe el conjunto: el scroll infinito en el navegador, las animaciones de entrada y que los bordes de la banda se ven suaves en su pantalla.
+- **Verificación visual parcial:** la banda a todo el ancho, las tarjetas con su pie, el clic, el reinicio al cambiar el tamaño, la ficha y el listado se vieron en el navegador con datos fijos (escritorio y móvil), pero no la pantalla completa con los mocks (MSW no se registra en el navegador integrado de Claude Code). Conviene que el equipo compruebe el conjunto: el scroll infinito, las animaciones de entrada y los bordes de la banda en su pantalla.
 - **Rendimiento de la banda:** son hasta 60 imágenes por 16 tiras; está pensada para el compositor, pero conviene vigilarla en móviles antiguos. Con `prefers-reduced-motion` la banda se queda quieta.
 - **Páginas repetidas o saltadas:** ver la última nota de la sección 5.
-- **Parámetros de la banda:** altura (220 px en móvil y 280 en pantallas anchas), tamaño de imagen, curvatura y velocidad están en `FeaturedShowcase.jsx` (`tileHeight`, `aspectRatio`, `gap`, `axis`, `curve`, `speed`).
+- **Parámetros de la banda:** altura (260, 320 y 380 px según el ancho), tamaño de imagen, curvatura y velocidad están en `FeaturedShowcase.jsx` (`tileHeight`, `aspectRatio`, `gap`, `axis`, `curve`, `speed`). El tiempo que se espera antes de reiniciar al cambiar el tamaño (150 ms) está en `TiltedGridHero.jsx` (`REINICIO_MS`).
+- **La banda solo se puede pulsar con el ratón** (o con el dedo): sus tarjetas se mueven sin parar y no reciben el foco del teclado. El teclado y los lectores de pantalla usan la lista del 1 al 10.
 - **Valoración mínima fija:** 4, 3 y 2 estrellas. Si se quiere otro tramo, es la constante `RATING_OPTIONS` de `CatalogFilters.jsx`.
 
 ---
