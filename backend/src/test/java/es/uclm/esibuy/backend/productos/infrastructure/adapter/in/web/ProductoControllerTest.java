@@ -6,6 +6,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseC
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
@@ -43,7 +44,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // Listado de los productos propios del vendedor (HU32, T184): GET /api/seller/products, y alta de un producto
-// (HU31, T205 y T179): POST /api/seller/products. Los casos de uso son dobles de prueba; la seguridad es la real
+// (HU31, T205 y T179): POST /api/seller/products, y consulta de un producto propio (HU33, T348):
+// GET /api/seller/products/{id}. Los casos de uso son dobles de prueba; la seguridad es la real
 // (SecurityConfig: /api/seller/** solo para VENDEDOR, con CSRF).
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU32-CP01 a CP05 y HU31-CP17 a CP22, propuestos.
 @WebMvcTest(ProductoController.class)
@@ -268,6 +270,61 @@ class ProductoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("PRODUCT_NAME_ALREADY_EXISTS"));
+    }
+
+    // ---- Consulta de un producto propio (HU33) ----
+
+    @Test
+    @DisplayName("HU33-CP04: el vendedor recibe 200 con su producto en el formato del contrato y sin el id del vendedor")
+    void vendedorConsultaSuProducto() throws Exception {
+        Producto propio = new Producto("p-9", "v-1", "Lámpara de pie", "Con regulador", new BigDecimal("45.50"), 7,
+                "cat-2", "https://esibuy.test/lampara.png", true, new Descuento(true, new BigDecimal("10")),
+                Descuento.sinDescuento());
+        when(gestionProductos.consultarMiProducto(VENDEDOR, "p-9")).thenReturn(propio);
+
+        mockMvc.perform(get(URL + "/p-9").with(user(VENDEDOR).roles("VENDEDOR")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("p-9"))
+                .andExpect(jsonPath("$.nombre").value("Lámpara de pie"))
+                .andExpect(jsonPath("$.descripcion").value("Con regulador"))
+                .andExpect(jsonPath("$.precio").value(45.5))
+                .andExpect(jsonPath("$.stock").value(7))
+                .andExpect(jsonPath("$.categoriaId").value("cat-2"))
+                .andExpect(jsonPath("$.imagen").value("https://esibuy.test/lampara.png"))
+                .andExpect(jsonPath("$.disponible").value(true))
+                .andExpect(jsonPath("$.descuento.activo").value(true))
+                .andExpect(jsonPath("$.descuento.porcentaje").value(10))
+                .andExpect(jsonPath("$.descuentoPremium.activo").value(false))
+                .andExpect(jsonPath("$.vendedorId").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("HU33-CP05: un producto inexistente o de otro vendedor devuelve 404 con el código PRODUCT_NOT_FOUND")
+    void productoNoEncontradoDevuelve404() throws Exception {
+        when(gestionProductos.consultarMiProducto(VENDEDOR, "p-404")).thenThrow(new ProductoNoEncontradoException());
+
+        mockMvc.perform(get(URL + "/p-404").with(user(VENDEDOR).roles("VENDEDOR")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("HU33-CP06: sin sesión no se consulta un producto")
+    void sinSesionNoSeConsultaUnProducto() throws Exception {
+        mockMvc.perform(get(URL + "/p-9"))
+                .andExpect(status().isUnauthorized());
+
+        verify(gestionProductos, never()).consultarMiProducto(any(), any());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "ADMINISTRADOR"})
+    @DisplayName("HU33-CP06: un usuario que no es vendedor no consulta un producto")
+    void noVendedorNoConsultaUnProducto(String rol) throws Exception {
+        mockMvc.perform(get(URL + "/p-9").with(user("usuario@esibuy.test").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(gestionProductos, never()).consultarMiProducto(any(), any());
     }
 
     private static Stream<Arguments> cuerposInvalidos() {

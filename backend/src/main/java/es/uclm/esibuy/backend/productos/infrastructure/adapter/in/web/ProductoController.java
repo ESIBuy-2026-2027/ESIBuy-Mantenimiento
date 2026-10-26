@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,6 +45,12 @@ public class ProductoController {
             Authentication autenticado) {
         return ProductoListadoPageResponse.desde(listadoProductos.listarMisProductos(
                 autenticado.getName(), new ListarProductosQuery(search, category, page - 1, size)));
+    }
+
+    // Detalle de un producto propio (HU33): el vendedor sale de la sesión; uno ajeno o inexistente da 404.
+    @GetMapping("/seller/products/{id}")
+    public ProductoResponse consultarMiProducto(@PathVariable String id, Authentication autenticado) {
+        return ProductoResponse.desde(gestionProductos.consultarMiProducto(autenticado.getName(), id));
     }
 
     // Alta de producto (HU31): el vendedor sale de la sesión; un vendedorId en el cuerpo se ignora.
