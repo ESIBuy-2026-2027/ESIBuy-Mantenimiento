@@ -69,7 +69,15 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
 
     @Override
     public ProductoPage buscarEnCatalogo(BuscarCatalogoQuery query) {
-        throw new UnsupportedOperationException("Catálogo todavía sin implementar");
+        Criteria criterios = Criteria.where("disponible").is(true);
+        long total = mongoTemplate.count(new Query(criterios), ProductoDocument.class);
+       List<Producto> productos = mongoTemplate.find(new Query(criterios).with(PageRequest.of(
+                        query.pagina(), query.tamano())),
+                        ProductoDocument.class).stream()
+                .map(mapper::aDominio)
+                .toList();
+
+        return new ProductoPage(productos, query.pagina(), query.tamano(), total);
     }
 
     // Mismo vendedor y mismo nombre completo, sin distinguir mayúsculas y como texto literal (Pattern.quote).
