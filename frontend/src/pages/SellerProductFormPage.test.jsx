@@ -4,15 +4,19 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
+import { elegirCategoria } from '../test/utils'
 
 const VENDEDOR = 'vendedor@esibuy.test'
 const RUTA_NUEVO = '/seller/products/new'
+const NOMBRE_EN_USO = 'Este nombre ya está en uso en tus productos. Usa uno distinto.'
+
+const campoCategoria = () => screen.getByRole('combobox', { name: /categoría/i })
 
 async function abrirFormulario(ruta = RUTA_NUEVO, titulo = /añadir producto/i) {
   await abrirSesionPorApi(VENDEDOR)
   renderApp(ruta)
   await screen.findByRole('heading', { level: 1, name: titulo })
-  await screen.findByRole('radio', { name: 'Tecnología' })
+  await screen.findByRole('combobox', { name: /categoría/i })
 }
 
 function capturarEnvio(metodo, ruta, respuesta) {
@@ -29,7 +33,7 @@ function capturarEnvio(metodo, ruta, respuesta) {
 
 async function rellenarFormularioValido(user) {
   await user.type(screen.getByLabelText(/^nombre/i), 'Lámpara de pie')
-  await user.click(screen.getByRole('radio', { name: 'Hogar' }))
+  await elegirCategoria(user, 'Hogar')
   await user.type(screen.getByLabelText(/^precio/i), '45.5')
 }
 
@@ -46,9 +50,7 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
     expect(screen.getByLabelText(/^precio/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^stock/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^url de la imagen/i)).toBeInTheDocument()
-    expect(screen.getByRole('group', { name: /categoría/i })).toBeInTheDocument()
-    expect(screen.getByRole('radio', { name: 'Tecnología' })).toBeInTheDocument()
-    expect(screen.getByRole('radio', { name: 'Hogar' })).toBeInTheDocument()
+    expect(campoCategoria()).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: 'Disponible para la venta' })).toBeChecked()
     expect(screen.getByRole('switch', { name: 'Activar descuento' })).not.toBeChecked()
     expect(screen.getByRole('switch', { name: 'Activar descuento premium' })).not.toBeChecked()
@@ -60,7 +62,7 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
 
     expect(screen.getByLabelText(/^nombre/i)).toHaveValue('')
     expect(screen.getByLabelText(/^precio/i)).toHaveValue(null)
-    expect(screen.getByRole('radio', { name: 'Tecnología' })).not.toBeChecked()
+    expect(campoCategoria()).toHaveValue('')
   })
 
   it('sellerProductFormPage_explicaQueLosDescuentosSeAcumulan', async () => {
@@ -116,7 +118,7 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
     expect(await screen.findByText(/no se han podido cargar las categorías/i)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /reintentar/i }))
 
-    expect(await screen.findByRole('radio', { name: 'Tecnología' })).toBeInTheDocument()
+    expect(await screen.findByRole('combobox', { name: /categoría/i })).toBeInTheDocument()
   })
 })
 
@@ -306,6 +308,84 @@ describe('SellerProductFormPage (HU31): alta, guardado', () => {
   })
 })
 
+describe('SellerProductFormPage (HU31): categoría en un desplegable', () => {
+  it('HU31-CP26: la categoría se elige en un desplegable con las categorías actuales', async () => {
+    const user = userEvent.setup()
+    await abrirFormulario()
+
+    await user.click(campoCategoria())
+
+    expect(screen.getAllByRole('option').map((opcion) => opcion.textContent)).toEqual(['Tecnología', 'Hogar'])
+    expect(screen.queryByRole('radio', { name: 'Tecnología' })).not.toBeInTheDocument()
+  })
+
+  it('HU31-CP26: se puede escribir para buscar la categoría y se envía su identificador', async () => {
+    const user = userEvent.setup()
+    const envio = capturarEnvio('post', '/api/seller/products', () => HttpResponse.json({ id: 'p-nuevo' }, { status: 201 }))
+    await abrirFormulario()
+
+    await user.type(screen.getByLabelText(/^nombre/i), 'Lámpara de pie')
+    await user.type(campoCategoria(), 'hog')
+    await user.click(screen.getByRole('option', { name: 'Hogar' }))
+    await user.type(screen.getByLabelText(/^precio/i), '45.5')
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+
+    await esperarRuta('/seller/products')
+    expect(envio.cuerpo.categoriaId).toBe('cat-2')
+  })
+})
+
+describe('SellerProductFormPage (HU31): nombre repetido', () => {
+  it('HU31-CP27: un nombre que el vendedor ya usa se marca en el campo Nombre con un mensaje propio', async () => {
+    const user = userEvent.setup()
+    await abrirFormulario()
+
+    await user.type(screen.getByLabelText(/^nombre/i), 'teclado MECÁNICO')
+    await elegirCategoria(user, 'Tecnología')
+    await user.type(screen.getByLabelText(/^precio/i), '20')
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+
+    expect(await screen.findByText(NOMBRE_EN_USO)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^nombre/i)).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.queryByText(/no se ha podido guardar el producto/i)).not.toBeInTheDocument()
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp(`^${RUTA_NUEVO}$`))
+  })
+
+  it('HU31-CP27: al cambiar el nombre desaparece el aviso de nombre repetido', async () => {
+    server.use(
+      http.post('/api/seller/products', () =>
+        HttpResponse.json({ code: 'PRODUCT_NAME_ALREADY_EXISTS' }, { status: 409 }),
+      ),
+    )
+    const user = userEvent.setup()
+    await abrirFormulario()
+
+    await rellenarFormularioValido(user)
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+    expect(await screen.findByText(NOMBRE_EN_USO)).toBeInTheDocument()
+
+    await user.type(screen.getByLabelText(/^nombre/i), ' grande')
+
+    expect(screen.queryByText(NOMBRE_EN_USO)).not.toBeInTheDocument()
+  })
+
+  it('HU31-CP27: al editar, un nombre repetido también se marca en el campo Nombre', async () => {
+    server.use(
+      http.put('/api/seller/products/:id', () =>
+        HttpResponse.json({ code: 'PRODUCT_NAME_ALREADY_EXISTS' }, { status: 409 }),
+      ),
+    )
+    const user = userEvent.setup()
+    await abrirFormulario('/seller/products/p-1/edit', /editar producto/i)
+    await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Auriculares inalámbricos'))
+
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+
+    expect(await screen.findByText(NOMBRE_EN_USO)).toBeInTheDocument()
+    expect(screen.queryByText(/no se ha podido guardar el producto/i)).not.toBeInTheDocument()
+  })
+})
+
 describe('SellerProductFormPage (HU31): edición', () => {
   const RUTA_EDITAR = '/seller/products/p-1/edit'
 
@@ -315,8 +395,7 @@ describe('SellerProductFormPage (HU31): edición', () => {
     await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Auriculares inalámbricos'))
     expect(screen.getByLabelText(/^precio/i)).toHaveValue(59.9)
     expect(screen.getByLabelText(/^stock/i)).toHaveValue(34)
-    expect(screen.getByRole('radio', { name: 'Tecnología' })).toBeChecked()
-    expect(screen.getByRole('radio', { name: 'Hogar' })).not.toBeChecked()
+    expect(campoCategoria()).toHaveValue('Tecnología')
     expect(screen.getByLabelText(/^descripción/i)).toHaveValue('Descripción de Auriculares inalámbricos.')
   })
 

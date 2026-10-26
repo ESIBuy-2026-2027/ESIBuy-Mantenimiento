@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
+import { elegirCategoria } from '../test/utils'
 
 const ADMIN = 'admin@esibuy.test'
 
@@ -198,7 +199,7 @@ describe('AdminSellersPage (HU26): filtros', () => {
     const user = userEvent.setup()
     await abrirListado()
 
-    await user.selectOptions(await screen.findByLabelText(/categoría/i), 'Hogar')
+    await elegirCategoria(user, 'Hogar')
 
     await esperarFilas(7)
     filasDeDatos().forEach((fila) => expect(within(fila).getByText('Hogar')).toBeInTheDocument())
@@ -208,7 +209,7 @@ describe('AdminSellersPage (HU26): filtros', () => {
     const user = userEvent.setup()
     await abrirListado()
 
-    await user.selectOptions(await screen.findByLabelText(/categoría/i), 'Hogar')
+    await elegirCategoria(user, 'Hogar')
     await user.type(screen.getByLabelText(/buscar por nombre/i), 'hugo')
 
     await esperarFilas(1)
@@ -258,7 +259,7 @@ describe('AdminSellersPage (HU26): filtro por estado', () => {
     await abrirListado()
 
     await user.selectOptions(await screen.findByLabelText('Estado'), 'Pendiente')
-    await user.selectOptions(screen.getByLabelText(/categoría/i), 'Hogar')
+    await elegirCategoria(user, 'Hogar')
 
     await esperarFilas(1)
     expect(screen.getByText('Hogar Hugo')).toBeInTheDocument()

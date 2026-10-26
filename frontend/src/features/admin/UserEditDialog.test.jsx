@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../../mocks/server'
 import { abrirSesionPorApi } from '../../test/renderApp'
-import { renderWithProviders } from '../../test/utils'
+import { elegirCategoria, renderWithProviders } from '../../test/utils'
 import UserEditDialog from './UserEditDialog'
 
 // Del mock de usuarios: Carlos Moreno Gil (usr-3) es un cliente activo, Diego Delgado Iglesias (usr-11) un
@@ -287,7 +287,7 @@ describe('UserEditDialog (HU22): vendedor', () => {
     const { dialogo } = await abrirEdicionDeVendedor()
 
     expect(campo(dialogo, /^nombre comercial/i)).toHaveValue('TecnoVera')
-    expect(campo(dialogo, /^categoría principal/i)).toHaveValue('cat-1')
+    expect(campo(dialogo, /^categoría principal/i)).toHaveValue('Tecnología')
     expect(within(dialogo).getByRole('button', { name: /^guardar$/i })).toBeInTheDocument()
   })
 
@@ -336,7 +336,7 @@ describe('UserEditDialog (HU22): vendedor', () => {
     const envio = capturarGuardado()
     const { dialogo, user } = await abrirEdicionDeVendedor()
 
-    await user.selectOptions(campo(dialogo, /^categoría principal/i), 'cat-2')
+    await elegirCategoria(user, 'Hogar', { campo: /^categoría principal/i, dentro: dialogo })
     await guardar(user, dialogo)
 
     await waitFor(() => expect(envio.cuerpo?.categoriaPrincipalId).toBe('cat-2'), ESPERA)

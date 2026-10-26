@@ -42,10 +42,13 @@ describe('EditableProfile (HU22)', () => {
   it('editableProfile_cuandoLlegan_muestraElFormularioConLasCategoriasDelSistema', async () => {
     renderizar()
 
-    const categoria = await screen.findByLabelText(/^categoría principal/i)
+    const user = userEvent.setup()
+    const categoria = await screen.findByRole('combobox', { name: /^categoría principal/i })
+    expect(categoria).toHaveValue('Tecnología')
 
-    expect(Array.from(categoria.options).map((opcion) => opcion.textContent)).toEqual(['Tecnología', 'Hogar'])
-    expect(categoria).toHaveValue('cat-1')
+    await user.click(categoria)
+
+    expect(screen.getAllByRole('option').map((opcion) => opcion.textContent)).toEqual(['Tecnología', 'Hogar'])
   })
 
   it('editableProfile_siNoCarganLasCategorias_avisaYPermiteReintentar', async () => {

@@ -107,9 +107,18 @@ describe('ProfileEditor (HU22): campos', () => {
     expect(esDeSoloLectura(/^correo electrónico/i)).toBe(true)
     expect(esDeSoloLectura('Estado')).toBe(true)
     expect(screen.queryByLabelText('Fecha de alta')).not.toBeInTheDocument()
-    const categoria = screen.getByLabelText(/^categoría principal/i)
-    expect(categoria).toHaveValue('cat-1')
-    expect(Array.from(categoria.options).map((opcion) => opcion.textContent)).toEqual(['Tecnología', 'Hogar'])
+    expect(screen.getByRole('combobox', { name: /^categoría principal/i })).toHaveValue('Tecnología')
+  })
+
+  it('profileEditor_deUnVendedor_laCategoriaPrincipalSeEligeEnUnDesplegableConLasCategorias', async () => {
+    const user = userEvent.setup()
+    renderizar({ rol: ROLES.VENDEDOR, usuario: VENDEDOR })
+
+    await user.click(screen.getByRole('combobox', { name: /^categoría principal/i }))
+    expect(screen.getAllByRole('option').map((opcion) => opcion.textContent)).toEqual(['Tecnología', 'Hogar'])
+    await user.click(screen.getByRole('option', { name: 'Hogar' }))
+
+    expect(screen.getByRole('combobox', { name: /^categoría principal/i })).toHaveValue('Hogar')
   })
 
   it('profileEditor_ningunTipoDeUsuario_muestraCamposDeContrasena', () => {
@@ -127,10 +136,15 @@ describe('ProfileEditor (HU22): campos', () => {
     }
   })
 
-  it('profileEditor_sinCategorias_noFallaYMuestraElSelectorVacio', () => {
+  it('profileEditor_sinCategorias_noFallaYMuestraElSelectorVacio', async () => {
+    const user = userEvent.setup()
     renderizar({ rol: ROLES.VENDEDOR, usuario: VENDEDOR, categories: undefined })
+    const categoria = screen.getByRole('combobox', { name: /^categoría principal/i })
 
-    expect(screen.getByLabelText(/^categoría principal/i).options).toHaveLength(0)
+    await user.click(categoria)
+
+    expect(categoria).toHaveValue('')
+    expect(screen.queryAllByRole('option')).toHaveLength(0)
   })
 })
 
