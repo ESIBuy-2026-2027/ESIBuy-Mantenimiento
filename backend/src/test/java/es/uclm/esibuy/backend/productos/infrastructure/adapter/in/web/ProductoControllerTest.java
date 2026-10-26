@@ -39,15 +39,18 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // Listado de los productos propios del vendedor (HU32, T184): GET /api/seller/products, y alta de un producto
 // (HU31, T205 y T179): POST /api/seller/products, y consulta de un producto propio (HU33, T348):
-// GET /api/seller/products/{id}, y modificación de un producto propio (HU34, T342): PUT /api/seller/products/{id}.
+// GET /api/seller/products/{id}, modificación de un producto propio (HU34, T342): PUT /api/seller/products/{id},
+// y eliminación de un producto propio (HU35, T345): DELETE /api/seller/products/{id}.
 // Los casos de uso son dobles de prueba; la seguridad es la real
 // (SecurityConfig: /api/seller/** solo para VENDEDOR, con CSRF).
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU32-CP01 a CP05 y HU31-CP17 a CP22, propuestos.
@@ -438,6 +441,18 @@ class ProductoControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(gestionProductos, never()).modificarMiProducto(any());
+    }
+
+    // ---- Eliminación de un producto propio (HU35) ----
+
+    @Test
+    @DisplayName("HU35-CP05: el vendedor elimina su producto y recibe 204 sin cuerpo; el vendedor sale de la sesión")
+    void vendedorEliminaSuProducto() throws Exception {
+        mockMvc.perform(delete(URL + "/p-9").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR")))
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(""));
+
+        verify(gestionProductos).eliminarMiProducto(VENDEDOR, "p-9");
     }
 
     private static Stream<Arguments> cuerposInvalidos() {
