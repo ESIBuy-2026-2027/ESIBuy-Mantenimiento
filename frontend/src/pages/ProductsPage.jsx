@@ -27,8 +27,25 @@ const PAGE_SIZE = 10
 const ENTRADA_ESCALONADA_MS = 60
 
 const useStyles = makeStyles({
-  page: {
+  // La página ocupa todo el ancho (la selección de los mejores, también); el resto del contenido va en una columna.
+  main: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalXL,
+    width: '100%',
+    boxSizing: 'border-box',
+    paddingTop: tokens.spacingVerticalXL,
+    paddingBottom: tokens.spacingVerticalXXXL,
+  },
+  column: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalXL,
+    width: '100%',
     maxWidth: '860px',
+    boxSizing: 'border-box',
+    margin: '0 auto',
+    padding: `0 ${tokens.spacingHorizontalL}`,
   },
   // Las tarjetas se colocan siempre de dos en dos, también en pantallas estrechas.
   grid: {
@@ -101,8 +118,8 @@ export default function ProductsPage() {
   const showFilters = filtersActive || hasItems
 
   return (
-    <main className={mergeClasses(pageStyles.page, styles.page)}>
-      <div className={pageStyles.titleBlock}>
+    <main className={styles.main}>
+      <div className={mergeClasses(styles.column, pageStyles.titleBlock)}>
         <Title1 as="h1" className={pageStyles.title}>
           Productos
         </Title1>
@@ -111,106 +128,108 @@ export default function ProductsPage() {
 
       {!filtersActive && <FeaturedProducts onSelect={setSelected} />}
 
-      {showFilters && (
-        <CatalogFilters
-          search={search}
-          category={category}
-          categories={categories}
-          minRating={minRating}
-          sort={sort}
-          order={order}
-          onSearchChange={filters.changeSearch}
-          onCategoryChange={filters.changeCategory}
-          onMinRatingChange={filters.changeMinRating}
-          onSortChange={filters.changeSort}
-          onOrderChange={filters.changeOrder}
-        />
-      )}
+      <div className={styles.column}>
+        {showFilters && (
+          <CatalogFilters
+            search={search}
+            category={category}
+            categories={categories}
+            minRating={minRating}
+            sort={sort}
+            order={order}
+            onSearchChange={filters.changeSearch}
+            onCategoryChange={filters.changeCategory}
+            onMinRatingChange={filters.changeMinRating}
+            onSortChange={filters.changeSort}
+            onOrderChange={filters.changeOrder}
+          />
+        )}
 
-      {feed.failed && (
-        <MessageBar intent="error">
-          <MessageBarBody>No se han podido cargar los productos. Inténtalo de nuevo.</MessageBarBody>
-          <MessageBarActions>
-            <Button onClick={feed.retry}>Reintentar</Button>
-          </MessageBarActions>
-        </MessageBar>
-      )}
+        {feed.failed && (
+          <MessageBar intent="error">
+            <MessageBarBody>No se han podido cargar los productos. Inténtalo de nuevo.</MessageBarBody>
+            <MessageBarActions>
+              <Button onClick={feed.retry}>Reintentar</Button>
+            </MessageBarActions>
+          </MessageBar>
+        )}
 
-      {!feed.loaded && !feed.failed && <Spinner className={pageStyles.loading} label="Cargando productos…" />}
+        {!feed.loaded && !feed.failed && <Spinner className={pageStyles.loading} label="Cargando productos…" />}
 
-      {catalogEmpty && (
-        <EmptyState
-          icon={<Box24Regular />}
-          title="Todavía no hay productos"
-          description="Cuando los vendedores publiquen sus productos, los verás aquí."
-        />
-      )}
+        {catalogEmpty && (
+          <EmptyState
+            icon={<Box24Regular />}
+            title="Todavía no hay productos"
+            description="Cuando los vendedores publiquen sus productos, los verás aquí."
+          />
+        )}
 
-      {noMatches && (
-        <EmptyState
-          icon={<SearchInfo24Regular />}
-          title="No hay productos que coincidan con los filtros"
-          description="Prueba con otro nombre, otra categoría u otra valoración."
-        >
-          <Button onClick={filters.clearFilters}>Limpiar filtros</Button>
-        </EmptyState>
-      )}
-
-      {hasItems && (
-        <>
-          <ul
-            className={mergeClasses(styles.grid, feed.refreshing && styles.refreshing)}
-            aria-label="Productos"
-            aria-busy={feed.refreshing || feed.loadingMore}
+        {noMatches && (
+          <EmptyState
+            icon={<SearchInfo24Regular />}
+            title="No hay productos que coincidan con los filtros"
+            description="Prueba con otro nombre, otra categoría u otra valoración."
           >
-            {feed.items.map((product, index) => (
-              <li
-                key={product.id}
-                className={styles.entry}
-                style={{ animationDelay: `${(index % PAGE_SIZE) * ENTRADA_ESCALONADA_MS}ms` }}
-              >
-                <ProductCard product={product} categoryName={categoryNames.get(product.categoriaId)} onSelect={setSelected} />
-              </li>
-            ))}
-          </ul>
+            <Button onClick={filters.clearFilters}>Limpiar filtros</Button>
+          </EmptyState>
+        )}
 
-          <div className={styles.footer}>
-            {feed.loadingMore && <Spinner label="Cargando más productos…" />}
+        {hasItems && (
+          <>
+            <ul
+              className={mergeClasses(styles.grid, feed.refreshing && styles.refreshing)}
+              aria-label="Productos"
+              aria-busy={feed.refreshing || feed.loadingMore}
+            >
+              {feed.items.map((product, index) => (
+                <li
+                  key={product.id}
+                  className={styles.entry}
+                  style={{ animationDelay: `${(index % PAGE_SIZE) * ENTRADA_ESCALONADA_MS}ms` }}
+                >
+                  <ProductCard product={product} categoryName={categoryNames.get(product.categoriaId)} onSelect={setSelected} />
+                </li>
+              ))}
+            </ul>
 
-            {feed.failedMore && (
-              <MessageBar intent="error">
-                <MessageBarBody>No se han podido cargar más productos. Inténtalo de nuevo.</MessageBarBody>
-                <MessageBarActions>
-                  <Button onClick={feed.retry}>Reintentar</Button>
-                </MessageBarActions>
-              </MessageBar>
-            )}
+            <div className={styles.footer}>
+              {feed.loadingMore && <Spinner label="Cargando más productos…" />}
 
-            {feed.hasMore && !feed.loadingMore && !feed.failedMore && (
-              <Button appearance="subtle" icon={<ArrowDown20Regular />} onClick={feed.loadMore}>
-                Ver más productos
-              </Button>
-            )}
+              {feed.failedMore && (
+                <MessageBar intent="error">
+                  <MessageBarBody>No se han podido cargar más productos. Inténtalo de nuevo.</MessageBarBody>
+                  <MessageBarActions>
+                    <Button onClick={feed.retry}>Reintentar</Button>
+                  </MessageBarActions>
+                </MessageBar>
+              )}
 
-            {!feed.hasMore && feed.loaded && !feed.refreshing && (
-              <Text className={styles.end}>
-                <CheckmarkCircle20Regular className={styles.endIcon} />
-                Has visto todos los productos
-              </Text>
-            )}
+              {feed.hasMore && !feed.loadingMore && !feed.failedMore && (
+                <Button appearance="subtle" icon={<ArrowDown20Regular />} onClick={feed.loadMore}>
+                  Ver más productos
+                </Button>
+              )}
 
-            {/* Cuando esta marca llega a la vista (o casi), se cargan los diez siguientes. */}
-            <div ref={endRef} aria-hidden="true" />
-          </div>
-        </>
-      )}
-      {selected && (
-        <ProductDialog
-          product={selected}
-          categoryName={categoryNames.get(selected.categoriaId)}
-          onClose={() => setSelected(null)}
-        />
-      )}
+              {!feed.hasMore && feed.loaded && !feed.refreshing && (
+                <Text className={styles.end}>
+                  <CheckmarkCircle20Regular className={styles.endIcon} />
+                  Has visto todos los productos
+                </Text>
+              )}
+
+              {/* Cuando esta marca llega a la vista (o casi), se cargan los diez siguientes. */}
+              <div ref={endRef} aria-hidden="true" />
+            </div>
+          </>
+        )}
+        {selected && (
+          <ProductDialog
+            product={selected}
+            categoryName={categoryNames.get(selected.categoriaId)}
+            onClose={() => setSelected(null)}
+          />
+        )}
+      </div>
     </main>
   )
 }

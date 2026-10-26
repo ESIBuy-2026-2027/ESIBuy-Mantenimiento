@@ -496,12 +496,13 @@ describe('ProductsPage (HU7): ficha de un producto', () => {
     expect(within(ficha).getByRole('heading', { name: nombre })).toBeInTheDocument()
   })
 
-  it('HU7-CP08: los productos de la selección de los mejores también se abren al pulsarlos', async () => {
+  it('HU7-CP08: con el teclado se abren los productos de la selección de los mejores desde su lista', async () => {
     const user = userEvent.setup()
     await abrirCatalogo()
     const seleccion = await screen.findByRole('list', { name: /selección destacada/i })
 
-    await user.click(within(seleccion).getByRole('button', { name: /teclado mecánico/i }))
+    within(seleccion).getByRole('button', { name: /teclado mecánico/i }).focus()
+    await user.keyboard('{Enter}')
 
     const ficha = await screen.findByRole('dialog')
     expect(within(ficha).getByRole('heading', { name: 'Teclado mecánico' })).toBeInTheDocument()

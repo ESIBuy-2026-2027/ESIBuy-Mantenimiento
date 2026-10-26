@@ -6,15 +6,22 @@ import { catalogProductPropType } from '../../utils/propTypes'
 import { formatRating } from '../../utils/format'
 
 const useStyles = makeStyles({
+  // A todo lo ancho de la página: solo el título se queda en la columna de contenido.
   section: {
     display: 'flex',
     flexDirection: 'column',
     gap: tokens.spacingVerticalM,
+    width: '100%',
   },
   header: {
     display: 'flex',
     flexDirection: 'column',
     gap: tokens.spacingVerticalXXS,
+    width: '100%',
+    maxWidth: '860px',
+    boxSizing: 'border-box',
+    margin: '0 auto',
+    padding: `0 ${tokens.spacingHorizontalL}`,
   },
   title: {
     display: 'flex',
@@ -28,56 +35,55 @@ const useStyles = makeStyles({
   subtitle: {
     color: tokens.colorNeutralForeground3,
   },
+  stage: {
+    position: 'relative',
+  },
   // Sin marco: la banda se difumina por los lados sobre el fondo de la página.
   band: {
-    height: '220px',
+    height: '260px',
     '@media (min-width: 600px)': {
-      height: '280px',
+      height: '320px',
+    },
+    '@media (min-width: 1100px)': {
+      height: '380px',
     },
   },
-  // Cinco por fila en pantallas anchas; en estrechas, una fila que se desliza hacia los lados.
+  // La misma lista de productos, para el teclado y los lectores de pantalla: la banda se mueve y solo se puede
+  // pulsar con el ratón. Está siempre en la página, pero solo se ve cuando se navega por ella con el teclado.
   list: {
-    display: 'grid',
-    gridAutoFlow: 'column',
-    gridAutoColumns: 'minmax(168px, 1fr)',
-    gap: tokens.spacingHorizontalM,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: tokens.spacingHorizontalS,
     margin: 0,
-    padding: `${tokens.spacingVerticalXS} 0 ${tokens.spacingVerticalS}`,
-    overflowX: 'auto',
+    padding: tokens.spacingHorizontalM,
     listStyleType: 'none',
-    scrollSnapType: 'x proximity',
-    '@media (min-width: 760px)': {
-      gridAutoFlow: 'row',
-      gridAutoColumns: 'unset',
-      gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
-      overflowX: 'visible',
+    backgroundColor: tokens.colorNeutralBackground1,
+    boxShadow: tokens.shadow16,
+    opacity: 0,
+    pointerEvents: 'none',
+    transitionProperty: 'opacity',
+    transitionDuration: tokens.durationFast,
+    ':focus-within': {
+      opacity: 1,
+      pointerEvents: 'auto',
     },
-  },
-  item: {
-    scrollSnapAlign: 'start',
   },
   button: {
     display: 'flex',
     alignItems: 'center',
     gap: tokens.spacingHorizontalS,
-    width: '100%',
-    height: '100%',
-    boxSizing: 'border-box',
-    padding: tokens.spacingHorizontalM,
-    textAlign: 'left',
+    padding: `${tokens.spacingVerticalXS} ${tokens.spacingHorizontalM}`,
     font: 'inherit',
     color: 'inherit',
     cursor: 'pointer',
     backgroundColor: tokens.colorNeutralBackground1,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
-    borderRadius: tokens.borderRadiusXLarge,
-    transitionProperty: 'box-shadow, transform, border-color',
-    transitionDuration: tokens.durationNormal,
-    ':hover': {
-      transform: 'translateY(-2px)',
-      boxShadow: tokens.shadow8,
-      borderColor: tokens.colorBrandStroke1,
-    },
+    borderRadius: tokens.borderRadiusCircular,
     ':focus-visible': {
       outline: `2px solid ${tokens.colorStrokeFocus2}`,
       outlineOffset: '2px',
@@ -88,28 +94,13 @@ const useStyles = makeStyles({
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-    width: '28px',
-    height: '28px',
+    width: '24px',
+    height: '24px',
     borderRadius: tokens.borderRadiusCircular,
     color: tokens.colorNeutralForegroundOnBrand,
     backgroundColor: tokens.colorBrandBackground,
     fontWeight: tokens.fontWeightBold,
     fontSize: tokens.fontSizeBase200,
-  },
-  first: {
-    backgroundColor: tokens.colorPaletteMarigoldForeground2,
-  },
-  text: {
-    display: 'flex',
-    flexDirection: 'column',
-    minWidth: 0,
-  },
-  name: {
-    display: '-webkit-box',
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: 'vertical',
-    overflow: 'hidden',
-    overflowWrap: 'anywhere',
   },
   rating: {
     display: 'inline-flex',
@@ -117,13 +108,87 @@ const useStyles = makeStyles({
     gap: tokens.spacingHorizontalXXS,
     color: tokens.colorPaletteMarigoldForeground2,
   },
+  // Lo que se dibuja sobre cada tarjeta de la animación. Todo en `em`: la banda fija el tamaño de letra según el
+  // tamaño de la tarjeta.
+  captionRank: {
+    position: 'absolute',
+    top: '0.7em',
+    left: '0.7em',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: '2em',
+    height: '2em',
+    borderRadius: '1em',
+    backgroundColor: tokens.colorBrandBackground,
+    fontWeight: tokens.fontWeightBold,
+    fontSize: '0.9em',
+    boxShadow: tokens.shadow4,
+  },
+  captionFirst: {
+    backgroundColor: tokens.colorPaletteMarigoldForeground2,
+  },
+  captionInfo: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: '2.4em 0.8em 0.7em',
+    backgroundImage: 'linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0))',
+  },
+  captionName: {
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+    overflowWrap: 'anywhere',
+    fontWeight: tokens.fontWeightSemibold,
+    lineHeight: 1.2,
+  },
+  captionRating: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.3em',
+    marginTop: '0.3em',
+    fontSize: '0.9em',
+    fontWeight: tokens.fontWeightSemibold,
+  },
+  star: {
+    color: tokens.colorPaletteMarigoldForeground3,
+  },
 })
 
-// Los productos mejor valorados: sus imágenes en una banda curva (decorativa) y, debajo, la lista numerada, cuyos
-// productos se pueden pulsar. `products` llega ya ordenado de mejor a peor.
+// El pie de cada tarjeta de la animación: su puesto, su nombre y su valoración.
+function CardCaption({ rank, product, styles }) {
+  return (
+    <>
+      <span className={mergeClasses(styles.captionRank, rank === 1 && styles.captionFirst)}>{rank}</span>
+      <div className={styles.captionInfo}>
+        <div className={styles.captionName}>{product.nombre}</div>
+        <div className={styles.captionRating}>
+          <Star16Filled className={styles.star} fontSize="1em" />
+          {formatRating(product.valoracion)}
+        </div>
+      </div>
+    </>
+  )
+}
+
+// Los productos mejor valorados: una banda curva de tarjetas (a todo el ancho de la página) que se pueden pulsar
+// con el ratón y, para el teclado y los lectores de pantalla, la lista numerada de los mismos productos.
+// `products` llega ya ordenado de mejor a peor.
 export default function FeaturedShowcase({ products, onSelect }) {
   const styles = useStyles()
-  const images = products.filter((product) => product.imagen).map((product) => ({ src: product.imagen, alt: product.nombre }))
+  // Solo entran en la banda los que tienen imagen; el puesto es el de la clasificación completa.
+  const cards = products
+    .map((product, index) => ({ product, rank: index + 1 }))
+    .filter(({ product }) => product.imagen)
+    .map(({ product, rank }) => ({
+      src: product.imagen,
+      alt: product.nombre,
+      caption: <CardCaption rank={rank} product={product} styles={styles} />,
+      product,
+    }))
 
   return (
     <section className={styles.section} aria-labelledby="mejor-valorados">
@@ -135,26 +200,29 @@ export default function FeaturedShowcase({ products, onSelect }) {
         <Text className={styles.subtitle}>La selección de ESIBuy, con las mejores opiniones de los clientes.</Text>
       </div>
 
-      {images.length > 0 && (
-        <TiltedGridHero
-          className={styles.band}
-          images={images}
-          tileHeight={56}
-          aspectRatio={4 / 3}
-          gap={4}
-          axis={50}
-          curve={66}
-          speed={4}
-        />
-      )}
+      <div className={styles.stage}>
+        {cards.length > 0 && (
+          <TiltedGridHero
+            role="group"
+            aria-label="Los mejor valorados en movimiento"
+            className={styles.band}
+            images={cards}
+            onSelect={(card) => onSelect(card.product)}
+            tileHeight={56}
+            aspectRatio={4 / 3}
+            gap={5}
+            axis={50}
+            curve={68}
+            speed={4}
+          />
+        )}
 
-      <ul className={styles.list} aria-label="Selección destacada">
-        {products.map((product, index) => (
-          <li key={product.id} className={styles.item}>
-            <button type="button" className={styles.button} onClick={() => onSelect(product)}>
-              <span className={mergeClasses(styles.rank, index === 0 && styles.first)}>{index + 1}</span>
-              <span className={styles.text}>
-                <Text weight="semibold" size={300} className={styles.name}>
+        <ul className={styles.list} aria-label="Selección destacada">
+          {products.map((product, index) => (
+            <li key={product.id}>
+              <button type="button" className={styles.button} onClick={() => onSelect(product)}>
+                <span className={styles.rank}>{index + 1}</span>
+                <Text weight="semibold" size={300}>
                   {product.nombre}
                 </Text>
                 <span className={styles.rating}>
@@ -163,13 +231,19 @@ export default function FeaturedShowcase({ products, onSelect }) {
                     {formatRating(product.valoracion)}
                   </Text>
                 </span>
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   )
+}
+
+CardCaption.propTypes = {
+  rank: PropTypes.number.isRequired,
+  product: catalogProductPropType.isRequired,
+  styles: PropTypes.object.isRequired,
 }
 
 FeaturedShowcase.propTypes = {
