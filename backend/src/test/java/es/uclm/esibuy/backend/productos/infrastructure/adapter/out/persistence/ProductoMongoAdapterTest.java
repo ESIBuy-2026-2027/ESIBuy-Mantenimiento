@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 // Test de integración del adaptador de MongoDB de productos (HU31, T202). Usa un MongoDB real en Docker
 // (Testcontainers): Docker Desktop debe estar abierto. InicializadorColecciones crea la colección productos
 // con su validación, como en la aplicación real, así que un documento que no la cumpla hace fallar el test.
-// También prueba el listado de los productos propios del vendedor (HU32, T184).
+// También prueba el listado de los productos propios del vendedor (HU32, T184) y el borrado físico (HU35, T346).
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP11, CP12 y CP23, y HU32-CP01 a CP03, propuestos.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
@@ -247,6 +247,19 @@ class ProductoMongoAdapterTest {
         Producto conEspacios = productoNuevo("v-1", "  Teclado ");
 
         assertThrows(ProductoDuplicadoException.class, () -> adapter.guardar(conEspacios));
+        assertEquals(1, mongoTemplate.getCollection(COLECCION).countDocuments());
+    }
+
+    @Test
+    @DisplayName("HU35-CP03: eliminar un producto lo borra de la colección (borrado físico) y deja los demás")
+    void eliminarBorraElDocumentoYDejaLosDemas() {
+        String id = adapter.guardar(productoNuevo("v-1", "Teclado")).getId();
+        String otro = adapter.guardar(productoNuevo("v-1", "Ratón")).getId();
+
+        adapter.eliminar(id);
+
+        assertTrue(adapter.buscarPorId(id).isEmpty());
+        assertTrue(adapter.buscarPorId(otro).isPresent());
         assertEquals(1, mongoTemplate.getCollection(COLECCION).countDocuments());
     }
 

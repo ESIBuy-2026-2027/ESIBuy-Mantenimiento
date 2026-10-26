@@ -22,4 +22,7 @@ public interface ProductoRepositoryPort {
 
     // ¿Tiene ya el vendedor un producto con ese nombre? No distingue mayúsculas (HU31).
     boolean existePorVendedorYNombre(String vendedorId, String nombre);
+
+    // Borrado físico del producto (HU35): el documento desaparece de la colección.
+    void eliminar(String id);
 }
