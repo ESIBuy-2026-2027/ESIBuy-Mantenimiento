@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__azure-devops__core_list_projects",
+      "mcp__azure-devops__core_list_project_teams",
+      "mcp__azure-devops__core_get_identity_ids",
+      "mcp__azure-devops__work",
+      "mcp__azure-devops__wit_work_item",
+      "mcp__azure-devops__wit_query"
+    ],
+    "ask": [
+      "mcp__azure-devops__wit_backlog",
+      "mcp__azure-devops__wit_work_item_write",
+      "mcp__azure-devops__wit_work_item_comment_write",
+      "mcp__azure-devops__wit_work_item_link_write"
+    ]
+  }
+}

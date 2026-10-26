@@ -41,7 +41,8 @@ ESIBuy separa backend y frontend en carpetas independientes, sin tooling unifica
   - `src/main/java/es/uclm/esibuy/backend/` — código fuente (paquete base `es.uclm.esibuy.backend`)
   - `src/main/resources/` — configuración de la aplicación
   - `src/test/java/es/uclm/esibuy/backend/` — pruebas unitarias y de integración con JUnit
-- `.claude/` — configuración de Claude Code (incluye `hooks-pendientes.md`)
+- `.claude/` — configuración de Claude Code (incluye `hooks-pendientes.md` y `settings.json` con los permisos compartidos)
+- `.mcp.json` — servidor MCP de Azure DevOps (Boards) compartido por el equipo
 
 **Estado actual**: el proyecto está **sin desarrollar**. El backend solo contiene la clase generada `BackendApplication.java`; aún no hay controladores, servicios, repositorios, modelos ni configuración de dominio. La organización de paquetes ya está acordada: hexagonal por módulos funcionales (ver sección "Arquitectura").
 - `frontend/` — React + Vite
@@ -220,6 +221,7 @@ Comunes a todos los usuarios: registro, inicio de sesión, gestión de perfil, d
 
 - El uso de IA debe estar **documentado y justificado**: especificaciones, prompts, instrucciones o skills que guíen su uso (generación de componentes de interfaz, mejora de usabilidad y aspecto visual, generación de pruebas unitarias/de integración).
 - Claude Code es la herramienta de IA agéntica que usa el equipo de desarrollo, en backend y frontend, incluida la propuesta o revisión de casos de prueba.
+- Claude Code usa el **MCP oficial de Azure DevOps** (`.mcp.json`, paquete `@azure-devops/mcp` con versión fijada, dominios `core`, `work` y `work-items`) para leer HU, tasks y el sprint de Azure Boards. Las herramientas de lectura están autorizadas en `.claude/settings.json`; las de escritura (crear o modificar work items, comentarios, enlaces, reordenar el backlog) **siempre piden confirmación** y lo que se cambie en Boards lo revisa una persona. Cada miembro aprueba el servidor la primera vez que abre `claude` en el repo, inicia sesión con su cuenta de la organización y lo comprueba con `/mcp`. **Nunca** se versionan tokens ni PAT.
 - Todo código o caso de prueba generado con IA debe ser **revisado, entendido, adaptado y probado** por el equipo antes de integrarse. La responsabilidad final es siempre humana; no la delegues en la IA.
 
 ## Convenciones de Git

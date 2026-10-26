@@ -4,11 +4,8 @@ import {
   Checkbox,
   Field,
   Input,
-  Label,
   MessageBar,
   MessageBarBody,
-  Radio,
-  RadioGroup,
   Select,
   Text,
   Title2,
@@ -19,6 +16,7 @@ import { BuildingShop24Regular, Cart24Regular } from '@fluentui/react-icons'
 import { useEffect, useState } from 'react'
 import { registrarCliente, registrarVendedor } from '../api/auth'
 import { getCategories } from '../api/products'
+import CategoryCombobox from '../components/CategoryCombobox'
 import LinkButton from '../components/LinkButton'
 import AvatarSelector from '../features/account/AvatarSelector'
 import { PasswordField, PasswordRequirements } from '../features/account/PasswordField'
@@ -92,21 +90,6 @@ const useStyles = makeStyles({
     gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
     gap: tokens.spacingHorizontalM,
   },
-  categorias: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalXS,
-    margin: 0,
-    padding: 0,
-    border: 'none',
-  },
-  leyenda: {
-    padding: 0,
-  },
-  error: {
-    color: tokens.colorPaletteRedForeground1,
-    fontSize: tokens.fontSizeBase200,
-  },
 })
 
 function validarCamposComunes(datos, obligatorios) {
@@ -166,7 +149,7 @@ export default function Register() {
 
   const cambiar = (campo) => (e, data) => setDatos({ ...datos, [campo]: data.value })
 
-  const cambiarCategoria = (e, data) => setDatos({ ...datos, categoriaPrincipalId: data.value })
+  const cambiarCategoria = (categoriaPrincipalId) => setDatos({ ...datos, categoriaPrincipalId })
 
   // El backend indica con un code qué dato rechaza (PR #104): se marca en su campo o, si no tiene, encima del botón
   const mostrarErroresDelServidor = (error) => {
@@ -256,6 +239,7 @@ export default function Register() {
       onChange={cambiar(nombre)}
       error={errores[nombre]}
       maxLength={LONGITUD_MAXIMA[nombre]}
+      bloquearPegado
     />
   )
 
@@ -318,17 +302,19 @@ export default function Register() {
         {campo('nombre', 'Nombre')}
         {campo('apellidos', 'Apellidos')}
         {campo('nombreComercial', 'Nombre comercial')}
-        <fieldset className={styles.categorias}>
-          <legend className={styles.leyenda}>
-            <Label required>Categoría</Label>
-          </legend>
-          <RadioGroup value={datos.categoriaPrincipalId} onChange={cambiarCategoria}>
-            {categoriasDisponibles.map((categoria) => (
-              <Radio key={categoria.id} value={categoria.id} label={categoria.nombre} />
-            ))}
-          </RadioGroup>
-          {errores.categoriaPrincipalId && <Text className={styles.error}>{errores.categoriaPrincipalId}</Text>}
-        </fieldset>
+        <Field
+          label="Categoría"
+          required
+          validationState={errores.categoriaPrincipalId ? 'error' : 'none'}
+          validationMessage={errores.categoriaPrincipalId}
+        >
+          <CategoryCombobox
+            value={datos.categoriaPrincipalId}
+            categories={categoriasDisponibles}
+            placeholder="Escribe o elige una categoría"
+            onChange={cambiarCategoria}
+          />
+        </Field>
         {camposComunes}
         {selectorAvatar}
         {casillaPrivacidad}

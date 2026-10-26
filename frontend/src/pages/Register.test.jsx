@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { registrarCliente, registrarVendedor } from '../api/auth'
 import { getCategories } from '../api/products'
-import { renderWithProviders } from '../test/utils'
+import { elegirCategoria, renderWithProviders } from '../test/utils'
 import Register from './Register'
 
 vi.mock('../api/auth', () => ({
@@ -29,7 +29,7 @@ async function rellenarFormularioVendedorValido() {
   await userEvent.type(screen.getByLabelText(/^nombre(?! comercial)/i), 'Luis')
   await userEvent.type(screen.getByLabelText(/apellidos/i), 'Pérez')
   await userEvent.type(screen.getByLabelText(/nombre comercial/i), 'Tienda Luis')
-  await userEvent.click(await screen.findByRole('radio', { name: /tecnología/i }))
+  await elegirCategoria(userEvent, /tecnología/i)
   await userEvent.type(screen.getByLabelText(/dni/i), '12345678Z')
   await userEvent.type(screen.getByLabelText(/email/i), 'luis@correo.com')
   await userEvent.type(screen.getByLabelText(/^password/i), 'Password123!')
@@ -118,16 +118,15 @@ describe('Register', () => {
     expect(screen.getByLabelText(/teléfono/i)).not.toBeRequired()
   })
 
-  it('register_alElegirVendedor_muestraUnaOpcionPorCategoriaYSoloPermiteElegirUna', async () => {
+  it('register_alElegirVendedor_muestraUnDesplegableConLasCategoriasYSoloPermiteElegirUna', async () => {
     await renderYElegirVendedor()
 
-    const tecnologia = await screen.findByRole('radio', { name: /tecnología/i })
-    const hogar = screen.getByRole('radio', { name: /hogar/i })
-    await userEvent.click(tecnologia)
-    await userEvent.click(hogar)
+    await userEvent.click(screen.getByRole('combobox', { name: /categoría/i }))
+    expect((await screen.findAllByRole('option')).map((opcion) => opcion.textContent)).toEqual(['Tecnología', 'Hogar'])
+    await userEvent.click(screen.getByRole('option', { name: /tecnología/i }))
+    await elegirCategoria(userEvent, /hogar/i)
 
-    expect(hogar).toBeChecked()
-    expect(tecnologia).not.toBeChecked()
+    expect(screen.getByRole('combobox', { name: /categoría/i })).toHaveValue('Hogar')
   })
 
   it('register_alElegirVendedor_permiteElegirUnAvatar', async () => {
@@ -143,7 +142,7 @@ describe('Register', () => {
   it('register_alElegirVendedor_marcaLaCategoriaComoObligatoria', async () => {
     await renderYElegirVendedor()
 
-    expect(screen.getByRole('group', { name: /categoría/i })).toHaveTextContent('*')
+    expect(screen.getByRole('combobox', { name: /categoría/i })).toBeRequired()
   })
 
   it('register_alEnviarFormularioVendedorVacio_muestraErroresDeCamposObligatoriosYDeCategoria', async () => {
@@ -658,5 +657,34 @@ describe('Register', () => {
 
     const enlace = await screen.findByRole('link', { name: /ir a iniciar sesión/i })
     expect(enlace).toHaveAttribute('href', '/login')
+  })
+
+  it('HU1-CP27: en el registro de cliente no se puede pegar el password ni su repetición', async () => {
+    await renderYElegirCliente()
+
+    for (const campo of [screen.getByLabelText(/^password/i), screen.getByLabelText(/^repetir password/i)]) {
+      await userEvent.click(campo)
+      await userEvent.paste('Password123!')
+      expect(campo).toHaveValue('')
+    }
+  })
+
+  it('HU1-CP27: en el registro de vendedor no se puede pegar el password ni su repetición', async () => {
+    await renderYElegirVendedor()
+
+    for (const campo of [screen.getByLabelText(/^password/i), screen.getByLabelText(/^repetir password/i)]) {
+      await userEvent.click(campo)
+      await userEvent.paste('Password123!')
+      expect(campo).toHaveValue('')
+    }
+  })
+
+  it('HU1-CP27: el password escrito a mano en los dos campos sigue permitiendo registrarse', async () => {
+    registrarCliente.mockResolvedValue({})
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(registrarCliente).toHaveBeenCalledTimes(1)
   })
 })

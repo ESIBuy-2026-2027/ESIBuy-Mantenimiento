@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { FluentProvider, webLightTheme } from '@fluentui/react-components'
 import { PasswordField, PasswordRequirements } from './PasswordField'
@@ -45,6 +45,47 @@ describe('PasswordField', () => {
     renderConTema(<PasswordField label="Password" value="" onChange={vi.fn()} error="Este campo es obligatorio" />)
 
     expect(screen.getByText('Este campo es obligatorio')).toBeInTheDocument()
+  })
+
+  it('HU1-CP27: con bloquearPegado no deja pegar texto en el campo', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    renderConTema(<PasswordField label="Password" value="" onChange={onChange} bloquearPegado />)
+
+    await user.click(screen.getByLabelText(/^password/i))
+    await user.paste('Password123!')
+
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('HU1-CP27: con bloquearPegado tampoco deja copiar, cortar ni soltar texto arrastrado en el campo', () => {
+    renderConTema(<PasswordField label="Password" value="Password123!" onChange={vi.fn()} bloquearPegado />)
+    const campo = screen.getByLabelText(/^password/i)
+
+    // fireEvent devuelve false cuando el evento se ha cancelado
+    expect(fireEvent.copy(campo)).toBe(false)
+    expect(fireEvent.cut(campo)).toBe(false)
+    expect(fireEvent.drop(campo, { dataTransfer: { getData: () => 'Password123!' } })).toBe(false)
+  })
+
+  it('HU1-CP27: con el password visible sigue sin dejar copiarlo', async () => {
+    const user = userEvent.setup()
+    renderConTema(<PasswordField label="Password" value="Password123!" onChange={vi.fn()} bloquearPegado />)
+
+    await user.click(screen.getByRole('button', { name: /^mostrar password$/i }))
+
+    expect(fireEvent.copy(screen.getByLabelText(/^password/i))).toBe(false)
+  })
+
+  it('HU1-CP27: sin bloquearPegado (como en el login) se puede pegar', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    renderConTema(<PasswordField label="Password" value="" onChange={onChange} />)
+
+    await user.click(screen.getByLabelText(/^password/i))
+    await user.paste('Password123!')
+
+    expect(onChange).toHaveBeenCalled()
   })
 })
 

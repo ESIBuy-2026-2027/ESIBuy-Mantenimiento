@@ -43,6 +43,7 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | HU1-CP24 | Tras registrarse se ofrece ir a iniciar sesión | Frontend (página) | 1 | ✅ Pasa (1, AB#234, PR #105) |
 | HU1-CP25 | Con la sesión iniciada no se ofrece crear una cuenta y /register lleva a la página del rol | Frontend (página y rutas) | 3 | ✅ Pasa (3, AB#17 · AB#18, PR #105) |
 | HU1-CP26 | Un registro correcto no se trata como un error aunque el backend responda 201 sin cuerpo | Frontend (API) | 1 | ✅ Pasa (1, AB#17 · AB#18, PR #105) |
+| HU1-CP27 | En el registro, el password y su repetición solo se pueden escribir a mano: no admiten copiar, cortar, pegar ni soltar texto, y el login sigue admitiendo pegar | Frontend (componente y página) | 7 | 🔍 En revisión (7, AB#242, PR sin abrir) |
 
 Notas:
 - **HU1-CP11:** en el PR #36, el bloqueo manual de la T214 se renombra a desactivar/activar (`desactivar()`, `activar()`, `estaDesactivado()`) para no confundirlo con el bloqueo temporal por intentos del login (HU2-CP03). En la T225 (AB#225) la consulta pasa a nombrarse en positivo: `estaActivo()`.
@@ -229,6 +230,13 @@ Notas:
 | HU1-CP25 | `GuestOnlyRoute.test.jsx` | `HU1-CP25: con la sesión iniciada /register lleva a la página de inicio del rol` | Frontend · rutas | AB#17 · AB#18 | PR #105 | ✅ |
 | HU1-CP25 | `GuestOnlyRoute.test.jsx` | `HU1-CP25: sin sesión /register muestra el formulario de registro` | Frontend · rutas | AB#17 · AB#18 | PR #105 | ✅ |
 | HU1-CP26 | `client.test.js` | `HU1-CP26: una respuesta 201 sin cuerpo devuelve null` | Frontend · API | AB#17 · AB#18 | PR #105 | ✅ |
+| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con bloquearPegado no deja pegar texto en el campo` | Frontend · componente | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
+| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con bloquearPegado tampoco deja copiar, cortar ni soltar texto arrastrado en el campo` | Frontend · componente | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
+| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con el password visible sigue sin dejar copiarlo` | Frontend · componente | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
+| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: sin bloquearPegado (como en el login) se puede pegar` | Frontend · componente | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
+| HU1-CP27 | `Register.test.jsx` | `HU1-CP27: en el registro de cliente no se puede pegar el password ni su repetición` | Frontend · página | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
+| HU1-CP27 | `Register.test.jsx` | `HU1-CP27: en el registro de vendedor no se puede pegar el password ni su repetición` | Frontend · página | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
+| HU1-CP27 | `Register.test.jsx` | `HU1-CP27: el password escrito a mano en los dos campos sigue permitiendo registrarse` | Frontend · página | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
 
 ---
 
@@ -1111,6 +1119,8 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU31-CP23 | La comprobación de nombre repetido no distingue mayúsculas, compara el nombre completo como texto literal y solo cuenta los productos del mismo vendedor | Integración MongoDB | 2 | ✅ Pasa |
 | HU31-CP24 | La base de datos rechaza un nombre repetido del mismo vendedor aunque se salte la comprobación previa (condición de carrera) | Integración MongoDB | 1 | ✅ Pasa |
 | HU31-CP25 | El nombre se guarda sin espacios en los extremos, así que con espacios cuenta como repetido también para el índice único | Unitario + integración MongoDB | 3 | ✅ Pasa |
+| HU31-CP26 | La categoría se elige en un desplegable con búsqueda con las categorías actuales: se puede escribir para filtrar sin distinguir mayúsculas ni tildes, y en los filtros la primera opción es «Todas las categorías» | Frontend (componente y página) | 11 | 🔍 En revisión (11, AB#256, PR #123) |
+| HU31-CP27 | Un nombre que el vendedor ya usa (409 `PRODUCT_NAME_ALREADY_EXISTS`) se marca en el campo Nombre con un mensaje propio al dar de alta, y el aviso desaparece al cambiar el nombre | Frontend (página) | 2 | 🔍 En revisión (2, AB#257, PR #123) |
 
 Notas:
 - **HU31-CP01 a CP10:** casos propuestos en la T201 (AB#201) a partir del contrato del formulario de producto del frontend (`frontend/docs/hu31-formulario-producto.md`). Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards.
@@ -1129,6 +1139,7 @@ Notas:
 - **Sin comprobar:** que la categoría exista (aún no hay módulo de categorías). La condición de carrera de CP24 se prueba creando el segundo producto directamente en el adaptador, sin hilos concurrentes.
 - **Estado:** los tests de AB#179, AB#180, AB#204 y AB#205 están en `develop` (PR #99).
 - **Frontend:** los tests de la HU31 (AB#182) no tienen todavía filas en la matriz.
+- **HU31-CP26 y CP27 (revisión del Sprint 1, R5 y R6):** casos propuestos en las T256 (AB#256) y T257 (AB#257). Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards. El desplegable es el componente compartido `CategoryCombobox` y, por decisión del equipo, se usa en todas las vistas que eligen una categoría: formulario de producto, registro de vendedor, edición de un vendedor por el administrador y filtros de los listados. Los tests de esas otras pantallas (`Register.test.jsx`, `ProfileEditor.test.jsx`, `EditableProfile.test.jsx`, `UserEditDialog.test.jsx`, `SellerProductsPage.test.jsx` y `AdminSellersPage.test.jsx`) solo se adaptan para elegir la categoría en el desplegable; no llevan ID de caso y no tienen filas en la Tabla B. `ProfileEditor.test.jsx` añade además `profileEditor_deUnVendedor_laCategoriaPrincipalSeEligeEnUnDesplegableConLasCategorias`, que por decisión del equipo tampoco lleva ID de caso. El 409 ya lo devolvía el backend (CP22); el mock del frontend lo devuelve ahora igual. Al editar, el mismo mensaje en el campo Nombre lo comprueba HU34-CP18 (decisión del equipo al resolver el conflicto con el PR #122: un único mensaje, junto al campo, en alta y en edición).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1177,6 +1188,19 @@ Notas:
 | HU31-CP25 | `ProductoTest` | `quitaLosEspaciosDeLosExtremosDelNombre` | Dominio | AB#258 | PR #113 | ✅ |
 | HU31-CP25 | `ProductoTest` | `elLimiteDelNombreSeCuentaSinLosEspacios` | Dominio | AB#258 | PR #113 | ✅ |
 | HU31-CP25 | `ProductoMongoAdapterTest` | `guardarRechazaUnNombreRepetidoConEspacios` | Infraestructura | AB#258 | PR #113 | ✅ |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: al abrirlo muestra todas las categorías en el orden en que llegan` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: al escribir filtra las categorías sin distinguir mayúsculas ni tildes` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: si ninguna categoría coincide lo indica` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: al elegir una categoría avisa con su identificador` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: muestra el nombre de la categoría elegida` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: con una categoría elegida, al abrirlo sigue ofreciendo todas` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: si se escribe y se sale sin elegir, vuelve a mostrar la categoría elegida` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: con una opción para todas, la ofrece la primera y elegirla avisa con un valor vacío` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: con una opción para todas y sin categoría elegida, muestra esa opción` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `SellerProductFormPage.test.jsx` | `HU31-CP26: la categoría se elige en un desplegable con las categorías actuales` | Frontend · página | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `SellerProductFormPage.test.jsx` | `HU31-CP26: se puede escribir para buscar la categoría y se envía su identificador` | Frontend · página | AB#256 | PR #123 | 🔍 |
+| HU31-CP27 | `SellerProductFormPage.test.jsx` | `HU31-CP27: un nombre que el vendedor ya usa se marca en el campo Nombre con un mensaje propio` | Frontend · página | AB#257 | PR #123 | 🔍 |
+| HU31-CP27 | `SellerProductFormPage.test.jsx` | `HU31-CP27: al cambiar el nombre desaparece el aviso de nombre repetido` | Frontend · página | AB#257 | PR #123 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `ProductoTest` y `DescuentoTest`: `productos/domain/model/` (JUnit, sin Spring)
@@ -1184,6 +1208,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/` (con Testcontainers)
 - `GestionProductosServiceTest`: `productos/application/service/` (Mockito, sin Spring)
 - `ProductoControllerTest`: `productos/infrastructure/adapter/in/web/` (con `@WebMvcTest`; la seguridad es la real de `SecurityConfig`)
+- `CategoryCombobox.test.jsx` y `SellerProductFormPage.test.jsx` (frontend): `frontend/src/components/` y `frontend/src/pages/` (Vitest, React Testing Library y MSW)
 
 ---
 
@@ -1308,7 +1333,7 @@ Rutas de las clases de test:
 | HU34-CP15 | Un producto de otro vendedor o inexistente no muestra el formulario | Frontend (página) | 2 | ✅ Pasa |
 | HU34-CP16 | Si el producto no carga, la vista muestra un error y permite reintentar | Frontend (página) | 1 | ✅ Pasa |
 | HU34-CP17 | Desde la ficha del producto, Editar abre el formulario de edición con sus datos | Frontend (página) | 1 | ✅ Pasa |
-| HU34-CP18 | Si el nombre ya lo tiene otro producto del vendedor (409), la edición lo indica y no sale del formulario | Frontend (página) | 1 | ✅ Pasa |
+| HU34-CP18 | Si el nombre ya lo tiene otro producto del vendedor (409), la edición lo indica en el campo Nombre con el mismo mensaje que el alta (HU31-CP27) y no sale del formulario | Frontend (página) | 1 | ✅ Pasa |
 
 Notas:
 - **HU34-CP01 a CP05:** casos propuestos en la T343 (AB#343) a partir de los criterios de aceptación de la HU34. Pendientes de añadir a la HU34 en Azure Boards.

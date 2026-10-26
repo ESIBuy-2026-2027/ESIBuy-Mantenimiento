@@ -39,6 +39,7 @@ export default function SellerProductFormPage() {
   const isEdit = Boolean(id)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
+  const [takenName, setTakenName] = useState(null)
   const { categories, loaded: categoriesLoaded, failed: categoriesFailed, retry: retryCategories } = useCategories()
   const loadProduct = useCallback(() => (id ? getSellerProduct(id) : Promise.resolve(null)), [id])
   const { data: product, error: productError, failed: productFailed, retry: retryProduct } = useApiQuery(loadProduct)
@@ -46,15 +47,17 @@ export default function SellerProductFormPage() {
   const handleSubmit = async (payload) => {
     setSaving(true)
     setSaveError(null)
+    setTakenName(null)
     try {
       await (isEdit ? updateSellerProduct(id, payload) : createSellerProduct(payload))
       navigate(PATHS.SELLER_PRODUCTS, {
         state: { notice: isEdit ? 'Cambios guardados.' : 'Producto guardado correctamente.' },
       })
     } catch (error) {
-      // El 409 del nombre repetido solo se explica al editar (HU34); el alta mantiene el mensaje genérico.
-      const duplicateName = isEdit && error?.code === DUPLICATE_NAME
-      setSaveError(duplicateName ? 'Ya tienes un producto con ese nombre.' : GENERIC_SAVE_ERROR)
+      // Un nombre repetido se marca en su campo, al dar de alta (HU31) y al editar (HU34); el resto de fallos,
+      // con el mensaje genérico.
+      if (error?.code === DUPLICATE_NAME) setTakenName(payload.nombre)
+      else setSaveError(GENERIC_SAVE_ERROR)
       setSaving(false)
     }
   }
@@ -107,6 +110,7 @@ export default function SellerProductFormPage() {
           categories={categories}
           saving={saving}
           saveError={saveError}
+          takenName={takenName}
           onSubmit={handleSubmit}
         />
       )}

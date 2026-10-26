@@ -26,10 +26,26 @@ const useStyles = makeStyles({
   },
 })
 
+// Cancela el evento para que el navegador no copie, corte, pegue ni suelte nada en el campo.
+const cancelar = (event) => event.preventDefault()
+
 // Campo de password (obligatorio por defecto) con un botón para mostrarlo u ocultarlo.
-export function PasswordField({ label, value, onChange, error, maxLength, autoComplete, required = true }) {
+// Con bloquearPegado no se puede copiar, cortar, pegar ni soltar texto: hay que escribirlo a mano (T242).
+export function PasswordField({
+  label,
+  value,
+  onChange,
+  error,
+  maxLength,
+  autoComplete,
+  required = true,
+  bloquearPegado = false,
+}) {
   const [visible, setVisible] = useState(false)
   const accion = visible ? 'Ocultar' : 'Mostrar'
+  const sinPortapapeles = bloquearPegado
+    ? { onCopy: cancelar, onCut: cancelar, onPaste: cancelar, onDrop: cancelar }
+    : {}
 
   return (
     <Field label={label} required={required} validationMessage={error}>
@@ -39,6 +55,7 @@ export function PasswordField({ label, value, onChange, error, maxLength, autoCo
         autoComplete={autoComplete}
         value={value}
         onChange={onChange}
+        {...sinPortapapeles}
         contentAfter={
           <Button
             appearance="transparent"
@@ -82,6 +99,8 @@ PasswordField.propTypes = {
   // El login lo usa sin asterisco y con el autocompletado de la contraseña guardada (fallos de la demo del Sprint 1)
   autoComplete: PropTypes.string,
   required: PropTypes.bool,
+  // El registro lo activa para obligar a escribir el password a mano, también en el campo de repetirlo
+  bloquearPegado: PropTypes.bool,
 }
 
 PasswordRequirements.propTypes = {
