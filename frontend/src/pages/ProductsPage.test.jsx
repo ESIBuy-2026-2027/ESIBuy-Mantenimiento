@@ -7,7 +7,6 @@ import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
 const CLIENTE = 'cliente@esibuy.test'
 const TAMANO_PAGINA = '10'
-const TAMANO_DESTACADOS = '8'
 
 // IntersectionObserver de mentira: no avisa solo, los tests dicen cuándo se llega al final de la página.
 let observadores = []
@@ -181,7 +180,7 @@ describe('ProductsPage (HU7): vista de productos del cliente', () => {
     let fallado = false
     server.use(
       http.get('/api/products', ({ request }) => {
-        if (new URL(request.url).searchParams.get('size') === TAMANO_PAGINA && !fallado) {
+        if (new URL(request.url).searchParams.get('sort') === 'nombre' && !fallado) {
           fallado = true
           return new HttpResponse(null, { status: 500 })
         }
@@ -210,15 +209,13 @@ const PRODUCTOS_DE_EJEMPLO = [
   { id: 'p-2', nombre: 'Cafetera de cápsulas', imagen: '', categoriaId: 'cat-2', valoracion: null, numValoraciones: 0 },
 ]
 
-// Guarda los parámetros de cada petición al catálogo (las del listado y las de la selección de los mejores,
-// por separado) y responde con unos productos de ejemplo.
+// Guarda los parámetros de cada petición al catálogo (las del listado y las de la selección de los mejores) y
+// responde con unos productos de ejemplo. La selección se pide al montar la página, antes de cualquier interacción.
 function capturarPeticiones(items = PRODUCTOS_DE_EJEMPLO) {
-  const peticiones = { listado: [], destacados: [] }
+  const peticiones = []
   server.use(
     http.get('/api/products', ({ request }) => {
-      const params = new URL(request.url).searchParams
-      const destino = params.get('size') === TAMANO_DESTACADOS ? peticiones.destacados : peticiones.listado
-      destino.push(params)
+      peticiones.push(new URL(request.url).searchParams)
       return respuesta(items)
     }),
   )
@@ -235,11 +232,11 @@ const valoracionesDeLasTarjetas = () =>
 
 describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
   it('HU7-CP06: por defecto pide diez productos ordenados por nombre de la A a la Z y sin filtros', async () => {
-    const { listado } = capturarPeticiones()
+    const peticiones = capturarPeticiones()
     await abrirCatalogo()
 
-    await waitFor(() => expect(listado.length).toBeGreaterThan(0))
-    const peticion = listado[0]
+    await waitFor(() => expect(peticiones.some((peticion) => peticion.get('sort') === 'nombre')).toBe(true))
+    const peticion = peticiones.find((candidata) => candidata.get('sort') === 'nombre')
     expect(peticion.get('sort')).toBe('nombre')
     expect(peticion.get('order')).toBe('asc')
     expect(peticion.get('page')).toBe('1')
@@ -271,13 +268,13 @@ describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
 
   it('HU7-CP04: al elegir una categoría pide solo los productos de esa categoría', async () => {
     const user = userEvent.setup()
-    const { listado } = capturarPeticiones()
+    const peticiones = capturarPeticiones()
     await abrirCatalogo()
     await screen.findByRole('option', { name: 'Hogar' })
 
     await user.selectOptions(screen.getByRole('combobox', { name: /categoría/i }), 'Hogar')
 
-    await waitFor(() => expect(ultima(listado).get('category')).toBe('cat-2'))
+    await waitFor(() => expect(ultima(peticiones).get('category')).toBe('cat-2'))
   })
 
   it('HU7-CP04: al filtrar vuelve a empezar desde la primera página, sin conservar lo cargado', async () => {
@@ -308,12 +305,12 @@ describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
 
   it('HU7-CP05: al elegir una valoración mínima pide solo los productos con esa valoración o más', async () => {
     const user = userEvent.setup()
-    const { listado } = capturarPeticiones()
+    const peticiones = capturarPeticiones()
     await abrirCatalogo()
 
     await user.selectOptions(await screen.findByRole('combobox', { name: /valoración mínima/i }), '4 estrellas o más')
 
-    await waitFor(() => expect(ultima(listado).get('minRating')).toBe('4'))
+    await waitFor(() => expect(ultima(peticiones).get('minRating')).toBe('4'))
   })
 
   it('HU7-CP05: con la valoración mínima, todos los productos mostrados la alcanzan', async () => {
@@ -329,20 +326,20 @@ describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
 
   it('HU7-CP05: al volver a «Cualquiera» deja de filtrar por valoración', async () => {
     const user = userEvent.setup()
-    const { listado } = capturarPeticiones()
+    const peticiones = capturarPeticiones()
     await abrirCatalogo()
     const selector = await screen.findByRole('combobox', { name: /valoración mínima/i })
 
     await user.selectOptions(selector, '3 estrellas o más')
-    await waitFor(() => expect(ultima(listado).get('minRating')).toBe('3'))
+    await waitFor(() => expect(ultima(peticiones).get('minRating')).toBe('3'))
     await user.selectOptions(selector, 'Cualquiera')
 
-    await waitFor(() => expect(ultima(listado).has('minRating')).toBe(false))
+    await waitFor(() => expect(ultima(peticiones).has('minRating')).toBe(false))
   })
 
   it('HU7-CP06: permite ordenar por nombre y por valoración, y no por categoría', async () => {
     const user = userEvent.setup()
-    const { listado } = capturarPeticiones()
+    const peticiones = capturarPeticiones()
     await abrirCatalogo()
     const selector = await screen.findByRole('combobox', { name: /ordenar por/i })
 
@@ -351,17 +348,17 @@ describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
       'Valoración',
     ])
     await user.selectOptions(selector, 'Valoración')
-    await waitFor(() => expect(ultima(listado).get('sort')).toBe('valoracion'))
+    await waitFor(() => expect(ultima(peticiones).get('sort')).toBe('valoracion'))
   })
 
   it('HU7-CP06: el botón de sentido alterna entre ascendente y descendente', async () => {
     const user = userEvent.setup()
-    const { listado } = capturarPeticiones()
+    const peticiones = capturarPeticiones()
     await abrirCatalogo()
 
     await user.click(await screen.findByRole('button', { name: /orden ascendente/i }))
 
-    await waitFor(() => expect(ultima(listado).get('order')).toBe('desc'))
+    await waitFor(() => expect(ultima(peticiones).get('order')).toBe('desc'))
     expect(screen.getByRole('button', { name: /orden descendente/i })).toBeInTheDocument()
   })
 
@@ -393,26 +390,29 @@ describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
 describe('ProductsPage (HU7): selección de los mejores productos', () => {
   const MEJORES = /mejor valorados/i
 
-  it('HU7-CP07: arriba muestra una selección de los productos mejor valorados con su valoración', async () => {
+  it('HU7-CP07: arriba muestra los diez productos mejor valorados, numerados y con su valoración', async () => {
     await abrirCatalogo()
 
     expect(await screen.findByRole('heading', { level: 2, name: MEJORES })).toBeInTheDocument()
     const seleccion = screen.getByRole('list', { name: /selección destacada/i })
     const destacados = within(seleccion).getAllByRole('listitem')
-    expect(destacados).toHaveLength(3)
+    expect(destacados).toHaveLength(10)
+    expect(within(destacados[0]).getByText('1')).toBeInTheDocument()
     expect(within(destacados[0]).getByText('Teclado mecánico')).toBeInTheDocument()
     expect(within(destacados[0]).getByText('4,7')).toBeInTheDocument()
+    expect(within(destacados[9]).getByText('10')).toBeInTheDocument()
   })
 
-  it('HU7-CP07: la selección pide los mejor valorados: valoración descendente y de 4 estrellas en adelante', async () => {
-    const { destacados } = capturarPeticiones()
+  it('HU7-CP07: la selección pide los diez mejor valorados: valoración descendente y sin mínimo de estrellas', async () => {
+    const peticiones = capturarPeticiones()
     await abrirCatalogo()
 
-    await waitFor(() => expect(destacados.length).toBeGreaterThan(0))
-    expect(destacados[0].get('sort')).toBe('valoracion')
-    expect(destacados[0].get('order')).toBe('desc')
-    expect(destacados[0].get('minRating')).toBe('4')
-    expect(destacados[0].get('page')).toBe('1')
+    await waitFor(() => expect(peticiones.some((peticion) => peticion.get('sort') === 'valoracion')).toBe(true))
+    const peticion = peticiones.find((candidata) => candidata.get('sort') === 'valoracion')
+    expect(peticion.get('order')).toBe('desc')
+    expect(peticion.get('size')).toBe('10')
+    expect(peticion.get('page')).toBe('1')
+    expect(peticion.has('minRating')).toBe(false)
   })
 
   it('HU7-CP07: con algún filtro activo la selección se oculta para centrarse en los resultados', async () => {
@@ -425,7 +425,7 @@ describe('ProductsPage (HU7): selección de los mejores productos', () => {
     await waitFor(() => expect(screen.queryByRole('heading', { level: 2, name: MEJORES })).not.toBeInTheDocument())
   })
 
-  it('HU7-CP07: si hay pocos productos con imagen no se muestra la selección', async () => {
+  it('HU7-CP07: si hay menos de tres productos valorados no se muestra la selección', async () => {
     capturarPeticiones()
     await abrirCatalogo()
 
@@ -436,7 +436,7 @@ describe('ProductsPage (HU7): selección de los mejores productos', () => {
   it('HU7-CP07: si la selección no carga, el listado sigue funcionando sin ella', async () => {
     server.use(
       http.get('/api/products', ({ request }) =>
-        new URL(request.url).searchParams.get('size') === TAMANO_DESTACADOS
+        new URL(request.url).searchParams.get('sort') === 'valoracion'
           ? new HttpResponse(null, { status: 500 })
           : undefined,
       ),
@@ -445,5 +445,48 @@ describe('ProductsPage (HU7): selección de los mejores productos', () => {
 
     await esperarTarjetas(10)
     expect(screen.queryByRole('heading', { level: 2, name: MEJORES })).not.toBeInTheDocument()
+  })
+})
+
+describe('ProductsPage (HU7): ficha de un producto', () => {
+  const abrirAuriculares = (user) =>
+    user.click(within(screen.getByRole('list', { name: /productos/i })).getByRole('button', { name: /auriculares/i }))
+
+  it('HU7-CP08: al pulsar una tarjeta se abre su ficha con su imagen, nombre, categoría y valoración', async () => {
+    const user = userEvent.setup()
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    await abrirAuriculares(user)
+
+    const ficha = await screen.findByRole('dialog')
+    expect(within(ficha).getByRole('heading', { name: 'Auriculares inalámbricos' })).toBeInTheDocument()
+    expect(within(ficha).getByText('Tecnología')).toBeInTheDocument()
+    expect(within(ficha).getByRole('img', { name: 'Auriculares inalámbricos' })).toBeInTheDocument()
+    expect(within(ficha).getByRole('img', { name: /valoración: \d,\d de 5/i })).toBeInTheDocument()
+  })
+
+  it('HU7-CP08: la ficha se cierra con el botón Cerrar y se vuelve al listado', async () => {
+    const user = userEvent.setup()
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+    await abrirAuriculares(user)
+    const ficha = await screen.findByRole('dialog')
+
+    await user.click(within(ficha).getByRole('button', { name: /cerrar/i }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(tarjetas()).toHaveLength(10)
+  })
+
+  it('HU7-CP08: los productos de la selección de los mejores también se abren al pulsarlos', async () => {
+    const user = userEvent.setup()
+    await abrirCatalogo()
+    const seleccion = await screen.findByRole('list', { name: /selección destacada/i })
+
+    await user.click(within(seleccion).getByRole('button', { name: /teclado mecánico/i }))
+
+    const ficha = await screen.findByRole('dialog')
+    expect(within(ficha).getByRole('heading', { name: 'Teclado mecánico' })).toBeInTheDocument()
   })
 })

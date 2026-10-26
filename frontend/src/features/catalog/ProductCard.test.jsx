@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import userEvent from '@testing-library/user-event'
+import { describe, expect, it, vi } from 'vitest'
 import { renderWithProviders } from '../../test/utils'
 import ProductCard from './ProductCard'
 
@@ -43,6 +44,25 @@ describe('ProductCard', () => {
 
     expect(screen.queryByRole('img', { name: 'Teclado mecánico' })).not.toBeInTheDocument()
     expect(screen.getByRole('img', { name: /sin imagen/i })).toBeInTheDocument()
+  })
+
+  it('HU7-CP08: al pulsarla avisa con el producto, para abrir su ficha', async () => {
+    const onSelect = vi.fn()
+    renderWithProviders(<ProductCard product={PRODUCTO} categoryName="Tecnología" onSelect={onSelect} />)
+
+    await userEvent.click(screen.getByRole('button', { name: /teclado mecánico/i }))
+
+    expect(onSelect).toHaveBeenCalledWith(PRODUCTO)
+  })
+
+  it('HU7-CP08: con el teclado se puede abrir igual que con el ratón', async () => {
+    const onSelect = vi.fn()
+    renderWithProviders(<ProductCard product={PRODUCTO} categoryName="Tecnología" onSelect={onSelect} />)
+
+    screen.getByRole('button', { name: /teclado mecánico/i }).focus()
+    await userEvent.keyboard('{Enter}')
+
+    expect(onSelect).toHaveBeenCalledTimes(1)
   })
 
   it('HU7-CP02: si no se conoce la categoría muestra un guion', () => {
