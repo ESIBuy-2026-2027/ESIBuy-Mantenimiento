@@ -1364,10 +1364,12 @@ Rutas de las clases de test:
 | HU35-CP01 | El vendedor elimina un producto suyo (el vendedor sale de la sesión) | Unitario | 1 | 🔍 En revisión |
 | HU35-CP02 | Un vendedor no puede eliminar un producto de otro vendedor ni uno inexistente (`ProductoNoEncontradoException`) y no se borra nada | Unitario | 2 | 🔍 En revisión |
 | HU35-CP03 | Eliminar un producto lo borra de la colección `productos` (borrado físico) y deja los demás | Integración | 1 | 🔍 En revisión |
+| HU35-CP04 | No se puede eliminar un producto que está o ha estado en algún pedido | — | 0 | ⏳ Pendiente (sin verificar hasta que exista el módulo de pedidos) |
 
 Notas:
 - **HU35-CP01 a CP03:** casos propuestos en la T346 (AB#346, PR #126). Pendientes de contrastar con los criterios de aceptación de la HU35 y de añadir a la HU35 en Azure Boards.
 - **Borrado físico (decisión del equipo):** el documento desaparece de la colección. Los `pedidos` guardan `nombreProducto` y `precioUnitario` en cada línea, así que el historial no depende del producto. `carritos`, `listas_deseos` y `valoraciones` aún no tienen código: sus HU tendrán que tratar las referencias a productos borrados.
+- **HU35-CP04 · PENDIENTE DE IMPLEMENTAR (regla acordada en la reunión del Sprint 2):** un producto que está o ha estado en algún pedido no se puede eliminar. **No se comprueba todavía**, porque en el backend aún no existe el módulo de pedidos. **Cuando se desarrolle, hay que añadir la comprobación a `eliminarMiProducto` (a través de un puerto de salida hacia pedidos), su respuesta en el endpoint, el test de este caso y pasarlo a ✅.**
 - **Pendiente:** el endpoint `DELETE /api/seller/products/{id}` (T345) y la vista (T344).
 
 ### Tabla B · casos de prueba ↔ tests
@@ -1378,6 +1380,7 @@ Notas:
 | HU35-CP02 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoSeElimina` | Aplicación | AB#346 | PR #126 | 🔍 |
 | HU35-CP02 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoSeElimina` | Aplicación | AB#346 | PR #126 | 🔍 |
 | HU35-CP03 | `ProductoMongoAdapterTest` | `eliminarBorraElDocumentoYDejaLosDemas` | Infraestructura | AB#346 | PR #126 | 🔍 |
+| HU35-CP04 | — | — (pendiente: sin módulo de pedidos) | — | — | — | ⏳ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `GestionProductosServiceTest`: `productos/application/service/` (Mockito, sin Spring)
