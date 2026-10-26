@@ -24,13 +24,11 @@ class MetodosPagoClienteTest {
 
     // Método ya guardado, como los que se cargan del repositorio
     private static MetodoPago metodoGuardado(String id) {
-        return new MetodoPago(id, CLIENTE, TipoMetodoPago.TARJETA, "•••• 4444", "bloque-cifrado");
+        return new MetodoPago(id, CLIENTE, TipoMetodoPago.TARJETA, "•••• 4444", "bloque-cifrado", false);
     }
 
     private static MetodoPago metodoGuardadoPredeterminado(String id) {
-        MetodoPago metodo = metodoGuardado(id);
-        metodo.marcarPredeterminado();
-        return metodo;
+        return new MetodoPago(id, CLIENTE, TipoMetodoPago.TARJETA, "•••• 4444", "bloque-cifrado", true);
     }
 
     @Test

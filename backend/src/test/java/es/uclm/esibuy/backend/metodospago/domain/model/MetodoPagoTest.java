@@ -29,6 +29,17 @@ class MetodoPagoTest {
     }
 
     @Test
+    @DisplayName("HU6-CP07: un método guardado se reconstruye conservando si es predeterminado")
+    void reconstruyeMetodoGuardadoConservandoElPredeterminado() {
+        // Lo usa el mapper al leer de MongoDB
+        MetodoPago metodo = new MetodoPago("m1", "cliente-1", TipoMetodoPago.TARJETA, "•••• 4444",
+                DATOS_CIFRADOS, true);
+
+        assertEquals("m1", metodo.getId());
+        assertTrue(metodo.isPredeterminado());
+    }
+
+    @Test
     @DisplayName("HU6-CP07: rechaza un método sin cliente, sin tipo, sin máscara o sin datos cifrados")
     void rechazaMetodoConDatosObligatoriosAusentes() {
         TipoMetodoPago tarjeta = TipoMetodoPago.TARJETA;

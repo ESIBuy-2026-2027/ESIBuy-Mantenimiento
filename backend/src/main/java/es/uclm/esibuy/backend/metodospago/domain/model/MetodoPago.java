@@ -16,8 +16,11 @@ public class MetodoPago {
     private final String datosCifrados;
     private boolean predeterminado;
 
-    public MetodoPago(String id, String clienteId, TipoMetodoPago tipo, String mascara, String datosCifrados) {
+    // Constructor completo: también reconstruye un método ya guardado (el mapper de MongoDB)
+    public MetodoPago(String id, String clienteId, TipoMetodoPago tipo, String mascara, String datosCifrados,
+            boolean predeterminado) {
         this.id = id;
+        this.predeterminado = predeterminado;
         this.clienteId = exigirTexto(clienteId, "El cliente es obligatorio");
         if (tipo == null) {
             throw new MetodoPagoInvalidoException("El tipo de método de pago es obligatorio");
@@ -34,9 +37,9 @@ public class MetodoPago {
         return valor;
     }
 
-    // Alta de un método nuevo: sin id hasta que se guarda
+    // Alta de un método nuevo: sin id hasta que se guarda y no predeterminado (lo decide MetodosPagoCliente)
     public static MetodoPago nuevo(String clienteId, TipoMetodoPago tipo, String mascara, String datosCifrados) {
-        return new MetodoPago(null, clienteId, tipo, mascara, datosCifrados);
+        return new MetodoPago(null, clienteId, tipo, mascara, datosCifrados, false);
     }
 
     public String getId() {

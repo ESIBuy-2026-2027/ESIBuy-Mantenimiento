@@ -322,12 +322,8 @@ class GestionMetodosPagoServiceTest {
         }
 
         private static MetodoPago copia(MetodoPago metodo, String id) {
-            MetodoPago copia = new MetodoPago(id, metodo.getClienteId(), metodo.getTipo(), metodo.getMascara(),
-                    metodo.getDatosCifrados());
-            if (metodo.isPredeterminado()) {
-                copia.marcarPredeterminado();
-            }
-            return copia;
+            return new MetodoPago(id, metodo.getClienteId(), metodo.getTipo(), metodo.getMascara(),
+                    metodo.getDatosCifrados(), metodo.isPredeterminado());
         }
     }
 
