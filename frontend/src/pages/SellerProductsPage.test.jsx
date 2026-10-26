@@ -492,3 +492,35 @@ describe('SellerProductsPage (HU34): editar desde la ficha', () => {
     expect(screen.queryByRole('dialog', { name: /información del producto/i })).not.toBeInTheDocument()
   })
 })
+
+describe('SellerProductsPage (HU35): eliminar desde la ficha', () => {
+  it('HU35-CP14: desde la ficha, Eliminar pide confirmación y al confirmar borra el producto y avisa', async () => {
+    const user = userEvent.setup()
+    const borrado = { id: null, llamadas: 0 }
+    server.use(
+      http.delete('/api/seller/products/:id', ({ params }) => {
+        borrado.llamadas += 1
+        borrado.id = params.id
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+    await abrirListado()
+    await esperarFilas(10)
+
+    await user.click(screen.getByRole('button', { name: 'Ver Teclado mecánico' }))
+    const ficha = await screen.findByRole('dialog', { name: /información del producto/i })
+    await within(ficha).findByLabelText('Nombre')
+    await user.click(within(ficha).getByRole('button', { name: 'Eliminar' }))
+
+    const alerta = await screen.findByRole('alertdialog', { name: /eliminar producto/i })
+    expect(within(alerta).getByText(/teclado mecánico/i)).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: /información del producto/i })).not.toBeInTheDocument()
+    expect(borrado.llamadas).toBe(0)
+
+    await user.click(within(alerta).getByRole('button', { name: /^eliminar$/i }))
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(borrado).toMatchObject({ llamadas: 1, id: 'p-2' })
+    expect(await screen.findByText(/producto eliminado/i)).toBeInTheDocument()
+  })
+})
