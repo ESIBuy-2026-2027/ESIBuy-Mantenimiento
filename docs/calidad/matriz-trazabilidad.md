@@ -1429,7 +1429,7 @@ Notas:
 - **HU34-CP02 y CP07 a CP10:** sin rojo real. El CP02, porque el constructor de `Producto` ya aplica las validaciones del alta; los CP07 a CP10, porque la validación de `ProductoRequest`, `ManejadorGlobalErrores` y `SecurityConfig` ya los cubrían.
 - **HU34-CP11 · PENDIENTE DE VERIFICAR (decisión del equipo):** el criterio «los cambios se reflejan inmediatamente en el catálogo que ven los clientes» **no se verifica todavía**, porque en el backend aún no existe el catálogo de clientes. La modificación actualiza el mismo documento de la colección `productos` (lo prueba el test técnico «Persistencia: guardar un producto leído lo actualiza sin duplicarlo y conserva createdAt» de `ProductoMongoAdapterTest`), que es la que leerá el catálogo. **Cuando se desarrolle el catálogo de clientes, hay que añadir el test de este caso y pasarlo a ✅.**
 - **HU34-CP12 a CP16:** la vista de edición se hizo en la HU31 (formulario compartido con el alta). Por decisión del equipo, sus 7 tests se renombran en la T341 (AB#341, PR #122) con el ID de su caso de la HU34 y se trazan aquí; no tienen ciclo rojo porque no hay código nuevo detrás.
-- **HU34-CP17 y CP18:** casos nuevos de la T341. El mensaje del nombre repetido es solo de la edición (decisión del equipo); el alta mantiene el genérico.
+- **HU34-CP17 y CP18:** casos nuevos de la T341. El nombre repetido se indica en el campo Nombre con el mismo mensaje en el alta y en la edición (decisión del equipo al resolver el conflicto del #123 con el #122; ver HU31-CP27).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1473,30 +1473,40 @@ Rutas de las clases de test:
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU35-CP01 | El vendedor elimina un producto suyo (el vendedor sale de la sesión) | Unitario | 1 | 🔍 En revisión |
-| HU35-CP02 | Un vendedor no puede eliminar un producto de otro vendedor ni uno inexistente (`ProductoNoEncontradoException`) y no se borra nada | Unitario | 2 | 🔍 En revisión |
-| HU35-CP03 | Eliminar un producto lo borra de la colección `productos` (borrado físico) y deja los demás | Integración | 1 | 🔍 En revisión |
+| HU35-CP01 | El vendedor elimina un producto suyo (el vendedor sale de la sesión) | Unitario | 1 | ✅ Pasa |
+| HU35-CP02 | Un vendedor no puede eliminar un producto de otro vendedor ni uno inexistente (`ProductoNoEncontradoException`) y no se borra nada | Unitario | 2 | ✅ Pasa |
+| HU35-CP03 | Eliminar un producto lo borra de la colección `productos` (borrado físico) y deja los demás | Integración | 1 | ✅ Pasa |
 | HU35-CP04 | No se puede eliminar un producto que está o ha estado en algún pedido | — | 0 | ⏳ Pendiente (sin verificar hasta que exista el módulo de pedidos) |
+| HU35-CP05 | `DELETE /api/seller/products/{id}` devuelve 204 sin cuerpo; el vendedor sale de la sesión | Integración (capa web) | 1 | 🔍 En revisión |
+| HU35-CP06 | Eliminar un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | 🔍 En revisión |
+| HU35-CP07 | Sin sesión (401), sin ser vendedor (403) o sin token CSRF (403) no se elimina un producto | Integración (capa web) | 3 | 🔍 En revisión |
 
 Notas:
 - **HU35-CP01 a CP03:** casos propuestos en la T346 (AB#346, PR #126). Pendientes de contrastar con los criterios de aceptación de la HU35 y de añadir a la HU35 en Azure Boards.
 - **Borrado físico (decisión del equipo):** el documento desaparece de la colección. Los `pedidos` guardan `nombreProducto` y `precioUnitario` en cada línea, así que el historial no depende del producto. `carritos`, `listas_deseos` y `valoraciones` aún no tienen código: sus HU tendrán que tratar las referencias a productos borrados.
 - **HU35-CP04 · PENDIENTE DE IMPLEMENTAR (regla acordada en la reunión del Sprint 2):** un producto que está o ha estado en algún pedido no se puede eliminar. **No se comprueba todavía**, porque en el backend aún no existe el módulo de pedidos. **Cuando se desarrolle, hay que añadir la comprobación a `eliminarMiProducto` (a través de un puerto de salida hacia pedidos), su respuesta en el endpoint, el test de este caso y pasarlo a ✅.**
-- **Pendiente:** el endpoint `DELETE /api/seller/products/{id}` (T345) y la vista (T344).
+- **HU35-CP05 a CP07:** casos propuestos en la T345 (AB#345, PR #129). `DELETE /api/seller/products/{id}` sigue el contrato de `frontend/docs/hu31-formulario-producto.md`. CP06 y CP07 sin rojo real, porque `ManejadorGlobalErrores` y `SecurityConfig` ya los cubrían.
+- **Pendiente:** la vista (T344).
 
 ### Tabla B · casos de prueba ↔ tests
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU35-CP01 | `GestionProductosServiceTest` | `elVendedorEliminaSuProducto` | Aplicación | AB#346 | PR #126 | 🔍 |
-| HU35-CP02 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoSeElimina` | Aplicación | AB#346 | PR #126 | 🔍 |
-| HU35-CP02 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoSeElimina` | Aplicación | AB#346 | PR #126 | 🔍 |
-| HU35-CP03 | `ProductoMongoAdapterTest` | `eliminarBorraElDocumentoYDejaLosDemas` | Infraestructura | AB#346 | PR #126 | 🔍 |
+| HU35-CP01 | `GestionProductosServiceTest` | `elVendedorEliminaSuProducto` | Aplicación | AB#346 | PR #126 | ✅ |
+| HU35-CP02 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoSeElimina` | Aplicación | AB#346 | PR #126 | ✅ |
+| HU35-CP02 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoSeElimina` | Aplicación | AB#346 | PR #126 | ✅ |
+| HU35-CP03 | `ProductoMongoAdapterTest` | `eliminarBorraElDocumentoYDejaLosDemas` | Infraestructura | AB#346 | PR #126 | ✅ |
 | HU35-CP04 | — | — (pendiente: sin módulo de pedidos) | — | — | — | ⏳ |
+| HU35-CP05 | `ProductoControllerTest` | `vendedorEliminaSuProducto` | Infraestructura | AB#345 | PR #129 | 🔍 |
+| HU35-CP06 | `ProductoControllerTest` | `eliminarUnProductoNoEncontradoDevuelve404` | Infraestructura | AB#345 | PR #129 | 🔍 |
+| HU35-CP07 | `ProductoControllerTest` | `sinSesionNoSeEliminaUnProducto` | Infraestructura | AB#345 | PR #129 | 🔍 |
+| HU35-CP07 | `ProductoControllerTest` | `noVendedorNoEliminaUnProducto` (cliente y administrador) | Infraestructura | AB#345 | PR #129 | 🔍 |
+| HU35-CP07 | `ProductoControllerTest` | `sinTokenCsrfNoSeEliminaUnProducto` | Infraestructura | AB#345 | PR #129 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `GestionProductosServiceTest`: `productos/application/service/` (Mockito, sin Spring)
 - `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/` (Testcontainers)
+- `ProductoControllerTest`: `productos/infrastructure/adapter/in/web/` (con `@WebMvcTest`)
 
 ---
 
