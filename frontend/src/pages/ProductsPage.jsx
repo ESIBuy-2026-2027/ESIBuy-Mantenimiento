@@ -10,17 +10,19 @@ import {
   mergeClasses,
   tokens,
 } from '@fluentui/react-components'
-import { Box24Regular, SearchInfo24Regular } from '@fluentui/react-icons'
+import { ArrowDown20Regular, Box24Regular, CheckmarkCircle20Regular, SearchInfo24Regular } from '@fluentui/react-icons'
 import EmptyState from '../components/EmptyState'
-import Pagination from '../components/Pagination'
 import { usePageStyles } from '../components/pageStyles'
 import CatalogFilters from '../features/catalog/CatalogFilters'
+import FeaturedProducts from '../features/catalog/FeaturedProducts'
 import ProductCard from '../features/catalog/ProductCard'
+import { useCatalogFeed } from '../features/catalog/useCatalogFeed'
 import { useCatalogFilters } from '../features/catalog/useCatalogFilters'
-import { useCatalogProducts } from '../features/catalog/useCatalogProducts'
 import { useCategories } from '../hooks/useCategories'
+import { useOnReachEnd } from '../hooks/useOnReachEnd'
 
-const PAGE_SIZE = 12
+const PAGE_SIZE = 10
+const ENTRADA_ESCALONADA_MS = 60
 
 const useStyles = makeStyles({
   page: {
@@ -34,32 +36,66 @@ const useStyles = makeStyles({
     margin: 0,
     padding: 0,
     listStyleType: 'none',
+    transitionProperty: 'opacity',
+    transitionDuration: tokens.durationNormal,
   },
   refreshing: {
-    opacity: 0.6,
+    opacity: 0.55,
+  },
+  // Cada tarjeta entra subiendo y apareciendo, una detrás de otra dentro de cada tanda de diez.
+  entry: {
+    animationName: {
+      from: { opacity: 0, transform: 'translateY(16px)' },
+      to: { opacity: 1, transform: 'translateY(0)' },
+    },
+    animationDuration: tokens.durationSlow,
+    animationTimingFunction: tokens.curveDecelerateMid,
+    animationFillMode: 'both',
+    '@media (prefers-reduced-motion: reduce)': {
+      animationName: 'none',
+    },
+  },
+  footer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: tokens.spacingVerticalM,
+    minHeight: '64px',
+  },
+  end: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalS,
+    color: tokens.colorNeutralForeground3,
+  },
+  endIcon: {
+    color: tokens.colorPaletteGreenForeground1,
   },
 })
 
-// Vista de productos: lo primero que ve el cliente al iniciar sesión (HU7).
+// Vista de productos: lo primero que ve el cliente al iniciar sesión (HU7). Arriba, los mejor valorados; debajo, los
+// productos de diez en diez, que se cargan solos al llegar al final de la página.
 export default function ProductsPage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
   const { categories } = useCategories()
   const filters = useCatalogFilters()
-  const { search, category, minRating, sort, order, page, debouncedSearch, filtersActive } = filters
-  const { data, failed, refreshing, retry } = useCatalogProducts({
+  const { search, category, minRating, sort, order, debouncedSearch, filtersActive } = filters
+  const feed = useCatalogFeed({
     search: debouncedSearch,
     category,
     minRating,
     sort,
     order,
-    page,
     size: PAGE_SIZE,
   })
-  // Sin ningún filtro, que no haya productos significa que el catálogo está vacío; con filtros, que no coinciden.
-  const catalogEmpty = data?.totalItems === 0 && !debouncedSearch && !category && !minRating
-  const showFilters = filtersActive || (data?.totalItems ?? 0) > 0
+  const endRef = useOnReachEnd(feed.loadMore, feed.hasMore && !feed.loadingMore && !feed.failedMore)
   const categoryNames = new Map(categories.map(({ id, nombre }) => [id, nombre]))
+  // Sin ningún filtro, que no haya productos significa que el catálogo está vacío; con filtros, que no coinciden.
+  const catalogEmpty = feed.loaded && feed.totalItems === 0 && !debouncedSearch && !category && !minRating
+  const noMatches = feed.loaded && feed.totalItems === 0 && !catalogEmpty
+  const hasItems = feed.items.length > 0
+  const showFilters = filtersActive || hasItems
 
   return (
     <main className={mergeClasses(pageStyles.page, styles.page)}>
@@ -69,6 +105,8 @@ export default function ProductsPage() {
         </Title1>
         <Text className={pageStyles.subtitle}>Descubre lo que ofrecen los vendedores de ESIBuy.</Text>
       </div>
+
+      {!filtersActive && <FeaturedProducts />}
 
       {showFilters && (
         <CatalogFilters
@@ -86,16 +124,16 @@ export default function ProductsPage() {
         />
       )}
 
-      {failed && (
+      {feed.failed && (
         <MessageBar intent="error">
           <MessageBarBody>No se han podido cargar los productos. Inténtalo de nuevo.</MessageBarBody>
           <MessageBarActions>
-            <Button onClick={retry}>Reintentar</Button>
+            <Button onClick={feed.retry}>Reintentar</Button>
           </MessageBarActions>
         </MessageBar>
       )}
 
-      {!data && !failed && <Spinner className={pageStyles.loading} label="Cargando productos…" />}
+      {!feed.loaded && !feed.failed && <Spinner className={pageStyles.loading} label="Cargando productos…" />}
 
       {catalogEmpty && (
         <EmptyState
@@ -105,7 +143,7 @@ export default function ProductsPage() {
         />
       )}
 
-      {data && data.totalItems === 0 && !catalogEmpty && (
+      {noMatches && (
         <EmptyState
           icon={<SearchInfo24Regular />}
           title="No hay productos que coincidan con los filtros"
@@ -115,27 +153,52 @@ export default function ProductsPage() {
         </EmptyState>
       )}
 
-      {data && data.totalItems > 0 && (
+      {hasItems && (
         <>
           <ul
-            className={mergeClasses(styles.grid, refreshing && styles.refreshing)}
+            className={mergeClasses(styles.grid, feed.refreshing && styles.refreshing)}
             aria-label="Productos"
-            aria-busy={refreshing}
+            aria-busy={feed.refreshing || feed.loadingMore}
           >
-            {data.items.map((product) => (
-              <li key={product.id}>
+            {feed.items.map((product, index) => (
+              <li
+                key={product.id}
+                className={styles.entry}
+                style={{ animationDelay: `${(index % PAGE_SIZE) * ENTRADA_ESCALONADA_MS}ms` }}
+              >
                 <ProductCard product={product} categoryName={categoryNames.get(product.categoriaId)} />
               </li>
             ))}
           </ul>
-          <Pagination
-            page={data.page}
-            totalPages={data.totalPages}
-            totalItems={data.totalItems}
-            pageSize={data.size}
-            itemLabel="productos"
-            onPageChange={filters.setPage}
-          />
+
+          <div className={styles.footer}>
+            {feed.loadingMore && <Spinner label="Cargando más productos…" />}
+
+            {feed.failedMore && (
+              <MessageBar intent="error">
+                <MessageBarBody>No se han podido cargar más productos. Inténtalo de nuevo.</MessageBarBody>
+                <MessageBarActions>
+                  <Button onClick={feed.retry}>Reintentar</Button>
+                </MessageBarActions>
+              </MessageBar>
+            )}
+
+            {feed.hasMore && !feed.loadingMore && !feed.failedMore && (
+              <Button appearance="subtle" icon={<ArrowDown20Regular />} onClick={feed.loadMore}>
+                Ver más productos
+              </Button>
+            )}
+
+            {!feed.hasMore && feed.loaded && !feed.refreshing && (
+              <Text className={styles.end}>
+                <CheckmarkCircle20Regular className={styles.endIcon} />
+                Has visto todos los productos
+              </Text>
+            )}
+
+            {/* Cuando esta marca llega a la vista (o casi), se cargan los diez siguientes. */}
+            <div ref={endRef} aria-hidden="true" />
+          </div>
         </>
       )}
     </main>

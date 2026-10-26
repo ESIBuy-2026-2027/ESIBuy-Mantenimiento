@@ -64,7 +64,7 @@ export const aRespuesta = ({ id, nombre, precio, stock, disponible, categoria })
   categoriaId: categoria,
 })
 
-const TAMANO_CATALOGO = 12
+const TAMANO_CATALOGO = 10
 
 // Imagen de ejemplo: un dibujo con la inicial del producto, para que el catálogo se vea sin depender de internet.
 const COLORES_IMAGEN = ['#0f6cbd', '#0e700e', '#c239b3', '#da3b01', '#005b70', '#8764b8']
@@ -95,13 +95,12 @@ const aCatalogo = ({ id, nombre, categoria }) => {
 
 const comparar = (a, b) => a.localeCompare(b, 'es')
 
-// Como el backend: por nombre (por defecto), por el nombre de su categoría o por valoración (sin valoraciones cuentan
-// como 0). Los empates se desempatan por nombre, siempre de la A a la Z.
+// Como el backend: por nombre (por defecto) o por valoración (sin valoraciones cuentan como 0). Los empates se
+// desempatan por nombre, siempre de la A a la Z.
 function ordenDelCatalogo(criterio, sentido) {
   const signo = sentido === 'desc' ? -1 : 1
   const porNombre = (a, b) => comparar(a.nombre, b.nombre)
   const porCriterio = {
-    categoria: (a, b) => comparar(CATEGORIAS.get(a.categoriaId), CATEGORIAS.get(b.categoriaId)),
     valoracion: (a, b) => (a.valoracion ?? 0) - (b.valoracion ?? 0),
   }[criterio]
 

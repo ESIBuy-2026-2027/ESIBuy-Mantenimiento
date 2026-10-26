@@ -20,6 +20,7 @@ const useStyles = makeStyles({
   },
   preview: {
     aspectRatio: '16 / 10',
+    overflow: 'hidden',
     backgroundColor: tokens.colorNeutralBackground3,
   },
   image: {
@@ -27,6 +28,11 @@ const useStyles = makeStyles({
     width: '100%',
     height: '100%',
     objectFit: 'cover',
+    transitionProperty: 'transform',
+    transitionDuration: tokens.durationSlow,
+    ':hover': {
+      transform: 'scale(1.06)',
+    },
   },
   placeholder: {
     display: 'flex',

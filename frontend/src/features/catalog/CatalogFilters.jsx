@@ -6,7 +6,6 @@ import { categoryPropType } from '../../utils/propTypes'
 
 const SORT_OPTIONS = [
   { value: 'nombre', label: 'Nombre' },
-  { value: 'categoria', label: 'Categoría' },
   { value: 'valoracion', label: 'Valoración' },
 ]
 
