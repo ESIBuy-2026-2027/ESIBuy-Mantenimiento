@@ -1237,9 +1237,9 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU33-CP01 | El vendedor consulta el detalle de un producto suyo (el vendedor sale de la sesión) | Unitario | 1 | 🔍 En revisión |
-| HU33-CP02 | Un producto que no existe no se encuentra (`ProductoNoEncontradoException`) | Unitario | 1 | 🔍 En revisión |
-| HU33-CP03 | Un producto de otro vendedor no se encuentra, con el mismo error que si no existiera, para no revelar que existe | Unitario | 1 | 🔍 En revisión |
+| HU33-CP01 | El vendedor consulta el detalle de un producto suyo (el vendedor sale de la sesión) | Unitario | 1 | ✅ Pasa |
+| HU33-CP02 | Un producto que no existe no se encuentra (`ProductoNoEncontradoException`) | Unitario | 1 | ✅ Pasa |
+| HU33-CP03 | Un producto de otro vendedor no se encuentra, con el mismo error que si no existiera, para no revelar que existe | Unitario | 1 | ✅ Pasa |
 | HU33-CP04 | `GET /api/seller/products/{id}` devuelve 200 con el producto en el formato del contrato y sin el id del vendedor | Integración (capa web) | 1 | 🔍 En revisión |
 | HU33-CP05 | Un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | 🔍 En revisión |
 | HU33-CP06 | Sin sesión (401) o sin ser vendedor (403) no se consulta un producto | Integración (capa web) | 2 | 🔍 En revisión |
@@ -1255,9 +1255,9 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU33-CP01 | `GestionProductosServiceTest` | `devuelveElProductoSiEsDelVendedorDeLaSesion` | Aplicación | AB#349 | PR #117 | 🔍 |
-| HU33-CP02 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoSeEncuentra` | Aplicación | AB#349 | PR #117 | 🔍 |
-| HU33-CP03 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoSeEncuentra` | Aplicación | AB#349 | PR #117 | 🔍 |
+| HU33-CP01 | `GestionProductosServiceTest` | `devuelveElProductoSiEsDelVendedorDeLaSesion` | Aplicación | AB#349 | PR #117 | ✅ |
+| HU33-CP02 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoSeEncuentra` | Aplicación | AB#349 | PR #117 | ✅ |
+| HU33-CP03 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoSeEncuentra` | Aplicación | AB#349 | PR #117 | ✅ |
 | HU33-CP04 | `ProductoControllerTest` | `vendedorConsultaSuProducto` | Infraestructura | AB#348 | PR #118 | 🔍 |
 | HU33-CP05 | `ProductoControllerTest` | `productoNoEncontradoDevuelve404` | Infraestructura | AB#348 | PR #118 | 🔍 |
 | HU33-CP06 | `ProductoControllerTest` | `sinSesionNoSeConsultaUnProducto` | Infraestructura | AB#348 | PR #118 | 🔍 |
