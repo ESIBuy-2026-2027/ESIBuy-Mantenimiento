@@ -119,7 +119,7 @@ Se sacaron del registro (HU1) para que el registro y el alta de administradores 
 | Archivo | Qué hace |
 |---|---|
 | `accountRules.js` | Requisitos del password, validación del email y comprobación de que los dos passwords coinciden. Desde la HU22 también valida DNI, teléfono y mayoría de edad. |
-| `PasswordField.jsx` | `PasswordField` (campo con botón para mostrar u ocultar) y `PasswordRequirements` (lista de requisitos con tick verde). |
+| `PasswordField.jsx` | `PasswordField` (campo con botón para mostrar u ocultar) y `PasswordRequirements` (lista de requisitos con tick verde). Con la propiedad `bloquearPegado` el campo no admite copiar ni pegar; la usa el registro de la HU1, no el alta de administradores. |
 | `AvatarSelector.jsx` | Los tres avatares con iconos de animales. |
 | `registroErrors.js` | `erroresDelServidor(error)`: traduce el `code` de un 400 o 409 del backend al campo y su mensaje (fallos de la demo del Sprint 1; ver `docs/hu1-registro.md`, sección 1.2). |
 

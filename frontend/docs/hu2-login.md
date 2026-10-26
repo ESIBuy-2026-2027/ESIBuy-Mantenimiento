@@ -136,7 +136,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | Archivo | Qué hace |
 |---|---|
 | `LoginForm.jsx` | Orquesta los tres pasos, controla el estado de envío y los errores. Solo avanza de paso cuando el backend responde bien. Si el backend indica cuenta pendiente, muestra `PendingAccountScreen`. |
-| `CredentialsStep.jsx` | Paso 1. Valida que haya correo y contraseña (todos los errores a la vez) y **vacía la contraseña del estado en cuanto se envía**. La contraseña usa `PasswordField` (de `features/account/`, el mismo del registro), con un botón para mostrarla u ocultarla; aquí no se marca como obligatoria ni se muestran los requisitos. |
+| `CredentialsStep.jsx` | Paso 1. Valida que haya correo y contraseña (todos los errores a la vez) y **vacía la contraseña del estado en cuanto se envía**. La contraseña usa `PasswordField` (de `features/account/`, el mismo del registro), con un botón para mostrarla u ocultarla; aquí no se marca como obligatoria ni se muestran los requisitos, y se puede pegar la contraseña (el registro la bloquea, ver `hu1-registro.md`, sección 1.3). |
 | `CodeStep.jsx` | Pasos 2 y 3. Campo de código de 6 dígitos (se reutiliza para el correo y para Microsoft Authenticator): solo admite números y vacía el valor al enviarlo. |
 | `loginErrors.js` | Traduce los errores del backend a mensajes fijos para el usuario. `isPendingAccountError` detecta la cuenta pendiente, que no se muestra como mensaje sino con su propia pantalla. |
 | `PendingAccountScreen.jsx` | Pantalla animada de "cuenta pendiente de activación" (task AB#236). Recibe el correo y la función para volver. |
