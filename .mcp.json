@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "azure-devops": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@azure-devops/mcp@2.11.0",
+        "RicardoMoragon0873",
+        "-d",
+        "core",
+        "work",
+        "work-items"
+      ],
+      "env": {}
+    }
+  }
+}
