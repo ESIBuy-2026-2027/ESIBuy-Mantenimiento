@@ -466,6 +466,34 @@ class ProductoControllerTest {
                 .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
     }
 
+    @Test
+    @DisplayName("HU35-CP07: sin sesión no se puede eliminar un producto")
+    void sinSesionNoSeEliminaUnProducto() throws Exception {
+        mockMvc.perform(delete(URL + "/p-9").with(csrf()))
+                .andExpect(status().isUnauthorized());
+
+        verify(gestionProductos, never()).eliminarMiProducto(any(), any());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "ADMINISTRADOR"})
+    @DisplayName("HU35-CP07: un usuario que no es vendedor no puede eliminar un producto")
+    void noVendedorNoEliminaUnProducto(String rol) throws Exception {
+        mockMvc.perform(delete(URL + "/p-9").with(csrf()).with(user("usuario@esibuy.test").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(gestionProductos, never()).eliminarMiProducto(any(), any());
+    }
+
+    @Test
+    @DisplayName("HU35-CP07: una eliminación sin token CSRF se rechaza")
+    void sinTokenCsrfNoSeEliminaUnProducto() throws Exception {
+        mockMvc.perform(delete(URL + "/p-9").with(user(VENDEDOR).roles("VENDEDOR")))
+                .andExpect(status().isForbidden());
+
+        verify(gestionProductos, never()).eliminarMiProducto(any(), any());
+    }
+
     private static Stream<Arguments> cuerposInvalidos() {
         String nombreLargo = "\"" + "a".repeat(101) + "\"";
         return Stream.of(
