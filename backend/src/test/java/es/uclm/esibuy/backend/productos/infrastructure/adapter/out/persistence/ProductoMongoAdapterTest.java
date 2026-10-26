@@ -286,8 +286,12 @@ class ProductoMongoAdapterTest {
     @Test
     @DisplayName("HU7-CP12: la búsqueda por nombre no distingue mayúsculas ni tildes")
     void buscarEnCatalogoBuscaSinDistinguirMayusculasNiTildes() {
-        // TODO: guardar «Lámpara de escritorio» y «Teclado»; buscar «LAMPARA» y «lámpara» devuelve solo la lámpara.
-        fail("Funcionalidad no implementada");
+        adapter.guardar(productoNuevo("v-1", "Lámpara de escritorio"));
+        adapter.guardar(productoNuevo("v-2", "Teclado"));
+
+        // Sin tilde y en mayúsculas, y con tilde en minúsculas: las dos encuentran «Lámpara».
+        assertEquals(List.of("Lámpara de escritorio"), nombres(adapter.buscarEnCatalogo(buscando("LAMPARA"))));
+        assertEquals(List.of("Lámpara de escritorio"), nombres(adapter.buscarEnCatalogo(buscando("lámpara"))));
     }
 
     @Test
@@ -329,6 +333,11 @@ class ProductoMongoAdapterTest {
     // Catálogo sin búsqueda, categoría ni valoración mínima, por nombre de la A a la Z, primera página de 10.
     private static BuscarCatalogoQuery sinFiltros() {
         return new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
+    }
+
+    // Como sinFiltros, pero buscando ese texto en el nombre.
+    private static BuscarCatalogoQuery buscando(String texto) {
+        return new BuscarCatalogoQuery(texto, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
     }
 
     private static Producto productoNuevo(String vendedorId, String nombre) {
