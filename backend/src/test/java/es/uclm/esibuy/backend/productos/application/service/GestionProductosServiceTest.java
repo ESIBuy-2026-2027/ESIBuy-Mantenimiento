@@ -251,6 +251,28 @@ class GestionProductosServiceTest {
         verify(productoRepository).eliminar("p-9");
     }
 
+    @Test
+    @DisplayName("HU35-CP02: un producto que no existe no se puede eliminar y no se borra nada")
+    void unProductoQueNoExisteNoSeElimina() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-404")).thenReturn(Optional.empty());
+
+        assertThrows(ProductoNoEncontradoException.class, () -> servicio.eliminarMiProducto(CORREO, "p-404"));
+
+        verify(productoRepository, never()).eliminar(any());
+    }
+
+    @Test
+    @DisplayName("HU35-CP02: un vendedor no puede eliminar un producto de otro vendedor y no se borra nada")
+    void unProductoDeOtroVendedorNoSeElimina() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-2")));
+
+        assertThrows(ProductoNoEncontradoException.class, () -> servicio.eliminarMiProducto(CORREO, "p-9"));
+
+        verify(productoRepository, never()).eliminar(any());
+    }
+
     private static Producto producto(String id, String vendedorId) {
         return new Producto(id, vendedorId, "Teclado mecánico", "Con cable", new BigDecimal("89.50"), 12,
                 "cat-1", "", true, Descuento.sinDescuento(), Descuento.sinDescuento());
