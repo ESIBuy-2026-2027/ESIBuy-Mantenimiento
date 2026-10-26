@@ -480,6 +480,22 @@ describe('ProductsPage (HU7): ficha de un producto', () => {
     expect(tarjetas()).toHaveLength(10)
   })
 
+  it('HU7-CP08: las tarjetas de la animación de los mejores también abren la ficha de su producto', async () => {
+    const user = userEvent.setup()
+    await abrirCatalogo()
+    const animacion = await screen.findByRole('group', { name: /en movimiento/i })
+    const tarjetasDeLaAnimacion = within(animacion)
+      .getAllByRole('button', { hidden: true })
+      .filter((boton) => boton.closest('[aria-hidden="true"]'))
+    expect(tarjetasDeLaAnimacion.length).toBeGreaterThan(0)
+    const nombre = tarjetasDeLaAnimacion[0].getAttribute('aria-label')
+
+    await user.click(tarjetasDeLaAnimacion[0])
+
+    const ficha = await screen.findByRole('dialog')
+    expect(within(ficha).getByRole('heading', { name: nombre })).toBeInTheDocument()
+  })
+
   it('HU7-CP08: los productos de la selección de los mejores también se abren al pulsarlos', async () => {
     const user = userEvent.setup()
     await abrirCatalogo()
