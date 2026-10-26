@@ -1386,9 +1386,9 @@ Rutas de las clases de test:
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU35-CP01 | El vendedor elimina un producto suyo (el vendedor sale de la sesión) | Unitario | 1 | 🔍 En revisión |
-| HU35-CP02 | Un vendedor no puede eliminar un producto de otro vendedor ni uno inexistente (`ProductoNoEncontradoException`) y no se borra nada | Unitario | 2 | 🔍 En revisión |
-| HU35-CP03 | Eliminar un producto lo borra de la colección `productos` (borrado físico) y deja los demás | Integración | 1 | 🔍 En revisión |
+| HU35-CP01 | El vendedor elimina un producto suyo (el vendedor sale de la sesión) | Unitario | 1 | ✅ Pasa |
+| HU35-CP02 | Un vendedor no puede eliminar un producto de otro vendedor ni uno inexistente (`ProductoNoEncontradoException`) y no se borra nada | Unitario | 2 | ✅ Pasa |
+| HU35-CP03 | Eliminar un producto lo borra de la colección `productos` (borrado físico) y deja los demás | Integración | 1 | ✅ Pasa |
 | HU35-CP04 | No se puede eliminar un producto que está o ha estado en algún pedido | — | 0 | ⏳ Pendiente (sin verificar hasta que exista el módulo de pedidos) |
 | HU35-CP05 | `DELETE /api/seller/products/{id}` devuelve 204 sin cuerpo; el vendedor sale de la sesión | Integración (capa web) | 1 | 🔍 En revisión |
 | HU35-CP06 | Eliminar un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | 🔍 En revisión |
@@ -1405,10 +1405,10 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU35-CP01 | `GestionProductosServiceTest` | `elVendedorEliminaSuProducto` | Aplicación | AB#346 | PR #126 | 🔍 |
-| HU35-CP02 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoSeElimina` | Aplicación | AB#346 | PR #126 | 🔍 |
-| HU35-CP02 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoSeElimina` | Aplicación | AB#346 | PR #126 | 🔍 |
-| HU35-CP03 | `ProductoMongoAdapterTest` | `eliminarBorraElDocumentoYDejaLosDemas` | Infraestructura | AB#346 | PR #126 | 🔍 |
+| HU35-CP01 | `GestionProductosServiceTest` | `elVendedorEliminaSuProducto` | Aplicación | AB#346 | PR #126 | ✅ |
+| HU35-CP02 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoSeElimina` | Aplicación | AB#346 | PR #126 | ✅ |
+| HU35-CP02 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoSeElimina` | Aplicación | AB#346 | PR #126 | ✅ |
+| HU35-CP03 | `ProductoMongoAdapterTest` | `eliminarBorraElDocumentoYDejaLosDemas` | Infraestructura | AB#346 | PR #126 | ✅ |
 | HU35-CP04 | — | — (pendiente: sin módulo de pedidos) | — | — | — | ⏳ |
 | HU35-CP05 | `ProductoControllerTest` | `vendedorEliminaSuProducto` | Infraestructura | AB#345 | PR #129 | 🔍 |
 | HU35-CP06 | `ProductoControllerTest` | `eliminarUnProductoNoEncontradoDevuelve404` | Infraestructura | AB#345 | PR #129 | 🔍 |
