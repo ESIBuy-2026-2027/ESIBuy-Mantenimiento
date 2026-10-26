@@ -26,7 +26,7 @@ Documento para entender el formulario de producto del vendedor, que sirve para a
 | Vista dedicada con los campos del producto | Página propia, no un diálogo: `SellerProductFormPage`. |
 | Se validan obligatorios, precio > 0 y stock ≥ 0 | `validateProduct` (sección 4). Se muestran **todos los errores a la vez** y no se llama al servidor si hay alguno. |
 | El producto queda asociado al vendedor autenticado | El frontend **no envía ningún identificador de vendedor**: el backend lo deduce de la sesión. Hay un test que lo comprueba. |
-| Tras guardarlo, aparece en el catálogo visible para los clientes | Depende del backend (el producto se guarda con `disponible: true` por defecto). El catálogo de clientes (`/products`) es todavía una página vacía; esta condición no es comprobable en el frontend hasta que exista. |
+| Tras guardarlo, aparece en el catálogo visible para los clientes | Depende del backend (el producto se guarda con `disponible: true` por defecto). El catálogo de clientes (`/products`) ya existe (HU7), pero con datos simulados: esta condición no es comprobable hasta que el backend tenga `GET /api/products`. |
 
 > Ocultar o mostrar pantallas es **experiencia de usuario**. El backend debe validar de nuevo todo lo que se valida aquí, responder 401 o 403 si quien llama no es vendedor, y no dejar que un vendedor lea, modifique o borre productos de otro.
 
