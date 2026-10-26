@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -67,5 +68,12 @@ public class ProductoController {
             Authentication autenticado) {
         return ProductoResponse.desde(
                 gestionProductos.modificarMiProducto(request.aComandoModificacion(autenticado.getName(), id)));
+    }
+
+    // Eliminación de un producto propio (HU35): el vendedor sale de la sesión; uno ajeno o inexistente da 404.
+    @DeleteMapping("/seller/products/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminarMiProducto(@PathVariable String id, Authentication autenticado) {
+        gestionProductos.eliminarMiProducto(autenticado.getName(), id);
     }
 }
