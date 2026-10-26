@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types'
 import { categoryPropType } from '../utils/propTypes'
-import { Field, Select, SearchBox, makeStyles, tokens } from '@fluentui/react-components'
+import { Field, SearchBox, makeStyles, tokens } from '@fluentui/react-components'
+import CategoryCombobox from './CategoryCombobox'
 
 const useStyles = makeStyles({
   filters: {
@@ -39,14 +40,12 @@ export default function ListFilters({
         />
       </Field>
       <Field label="Categoría" className={styles.category}>
-        <Select value={category} onChange={(_event, data) => onCategoryChange(data.value)}>
-          <option value="">Todas las categorías</option>
-          {categories.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.nombre}
-            </option>
-          ))}
-        </Select>
+        <CategoryCombobox
+          value={category}
+          categories={categories}
+          allLabel="Todas las categorías"
+          onChange={onCategoryChange}
+        />
       </Field>
       {children}
     </div>

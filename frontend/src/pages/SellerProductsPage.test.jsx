@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
+import { elegirCategoria } from '../test/utils'
 
 const VENDEDOR = 'vendedor@esibuy.test'
 const VENDEDOR_SIN_PRODUCTOS = 'vendedor-vacio@esibuy.test'
@@ -218,7 +219,7 @@ describe('SellerProductsPage (HU32): filtros', () => {
     const user = userEvent.setup()
     await abrirListado()
 
-    await user.selectOptions(await screen.findByLabelText(/categoría/i), 'Hogar')
+    await elegirCategoria(user, 'Hogar')
 
     await waitFor(() => expect(filasDeDatos()).toHaveLength(9))
   })
@@ -227,7 +228,7 @@ describe('SellerProductsPage (HU32): filtros', () => {
     const user = userEvent.setup()
     await abrirListado()
 
-    await user.selectOptions(await screen.findByLabelText(/categoría/i), 'Hogar')
+    await elegirCategoria(user, 'Hogar')
     await user.type(screen.getByLabelText(/buscar por nombre/i), 'lámpara')
 
     await esperarFilas(1)
@@ -290,7 +291,7 @@ describe('SellerProductsPage (HU32): paginación', () => {
 
     await user.click(screen.getByRole('button', { name: /siguiente/i }))
     await screen.findByText(/página 2 de 3/i)
-    await user.selectOptions(screen.getByLabelText(/categoría/i), 'Tecnología')
+    await elegirCategoria(user, 'Tecnología')
 
     await waitFor(() => expect(screen.getByText(/página 1 de 2/i)).toBeInTheDocument())
   })

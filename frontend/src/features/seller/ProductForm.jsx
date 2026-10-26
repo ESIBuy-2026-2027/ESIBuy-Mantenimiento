@@ -7,8 +7,6 @@ import {
   Input,
   MessageBar,
   MessageBarBody,
-  Radio,
-  RadioGroup,
   Spinner,
   Switch,
   Text,
@@ -17,10 +15,13 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { Save20Regular } from '@fluentui/react-icons'
+import CategoryCombobox from '../../components/CategoryCombobox'
 import LinkButton from '../../components/LinkButton'
 import { PATHS } from '../../routes/paths'
 import DiscountField from './DiscountField'
 import { toProductPayload, validateProduct } from './productValues'
+
+const NOMBRE_EN_USO = 'Este nombre ya está en uso en tus productos. Usa uno distinto.'
 
 const useStyles = makeStyles({
   form: {
@@ -42,22 +43,6 @@ const useStyles = makeStyles({
     alignItems: 'start',
     gap: tokens.spacingHorizontalL,
   },
-  categories: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalXS,
-    margin: 0,
-    padding: 0,
-    border: 'none',
-  },
-  legend: {
-    padding: 0,
-    fontWeight: tokens.fontWeightSemibold,
-  },
-  error: {
-    color: tokens.colorPaletteRedForeground1,
-    fontSize: tokens.fontSizeBase200,
-  },
   hint: {
     color: tokens.colorNeutralForeground3,
   },
@@ -68,12 +53,16 @@ const useStyles = makeStyles({
   },
 })
 
-export default function ProductForm({ initialValues, categories, saving, saveError, onSubmit }) {
+export default function ProductForm({ initialValues, categories, saving, saveError, takenName = null, onSubmit }) {
   const styles = useStyles()
   const [values, setValues] = useState(initialValues)
   const [attempted, setAttempted] = useState(false)
   // Hasta el primer intento de guardar no se muestra ningún error; después se validan en vivo.
   const errors = attempted ? validateProduct(values) : {}
+  // El backend rechaza el nombre si el vendedor ya lo usa (409); el aviso se quita en cuanto se cambia el nombre.
+  // Como el backend, sin distinguir mayúsculas ni contar los espacios de los extremos.
+  const nameTaken = takenName !== null && values.nombre.trim().toLowerCase() === takenName.toLowerCase()
+  const nameError = errors.nombre ?? (nameTaken ? NOMBRE_EN_USO : undefined)
 
   const setField = (field) => (value) => setValues((current) => ({ ...current, [field]: value }))
   const onText = (field) => (_event, data) => setField(field)(data.value)
@@ -95,23 +84,23 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
         </MessageBar>
       )}
 
-      <Field label="Nombre" required validationState={errors.nombre ? 'error' : 'none'} validationMessage={errors.nombre}>
+      <Field label="Nombre" required validationState={nameError ? 'error' : 'none'} validationMessage={nameError}>
         <Input value={values.nombre} onChange={onText('nombre')} maxLength={120} />
       </Field>
 
-      <fieldset className={styles.categories}>
-        <legend className={styles.legend}>Categoría *</legend>
-        <RadioGroup value={values.categoriaId} onChange={(_event, data) => setField('categoriaId')(data.value)}>
-          {categories.map((category) => (
-            <Radio key={category.id} value={category.id} label={category.nombre} />
-          ))}
-        </RadioGroup>
-        {errors.categoriaId && (
-          <Text role="alert" className={styles.error}>
-            {errors.categoriaId}
-          </Text>
-        )}
-      </fieldset>
+      <Field
+        label="Categoría"
+        required
+        validationState={errors.categoriaId ? 'error' : 'none'}
+        validationMessage={errors.categoriaId}
+      >
+        <CategoryCombobox
+          value={values.categoriaId}
+          categories={categories}
+          placeholder="Escribe o elige una categoría"
+          onChange={setField('categoriaId')}
+        />
+      </Field>
 
       <div className={styles.pair}>
         <Field
@@ -199,5 +188,7 @@ ProductForm.propTypes = {
   categories: PropTypes.arrayOf(categoryPropType).isRequired,
   saving: PropTypes.bool.isRequired,
   saveError: PropTypes.string,
+  // Nombre que el servidor ha rechazado por estar ya en uso, si lo hay.
+  takenName: PropTypes.string,
   onSubmit: PropTypes.func.isRequired,
 }
