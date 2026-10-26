@@ -12,6 +12,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
+import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
@@ -63,6 +64,12 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
                 .map(mapper::aDominio)
                 .toList();
         return new ProductoPage(productos, query.pagina(), query.tamano(), total);
+    }
+    
+
+    @Override
+    public ProductoPage buscarEnCatalogo(BuscarCatalogoQuery query) {
+        throw new UnsupportedOperationException("Catálogo todavía sin implementar");
     }
 
     // Mismo vendedor y mismo nombre completo, sin distinguir mayúsculas y como texto literal (Pattern.quote).
