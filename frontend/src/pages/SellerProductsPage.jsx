@@ -146,7 +146,17 @@ export default function SellerProductsPage() {
         </>
       )}
 
-      {productToView && <ProductDetailDialog productId={productToView.id} onClose={() => setProductToView(null)} />}
+      {productToView && (
+        <ProductDetailDialog
+          productId={productToView.id}
+          onClose={() => setProductToView(null)}
+          onDelete={(product) => {
+            // Se cierra la ficha y se pide la misma confirmación que desde la fila del listado.
+            setProductToView(null)
+            setProductToDelete(product)
+          }}
+        />
+      )}
 
       {productToDelete && (
         <DeleteProductDialog

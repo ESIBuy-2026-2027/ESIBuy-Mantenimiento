@@ -512,15 +512,16 @@ describe('SellerProductsPage (HU35): eliminar desde la ficha', () => {
     await within(ficha).findByLabelText('Nombre')
     await user.click(within(ficha).getByRole('button', { name: 'Eliminar' }))
 
-    const alerta = await screen.findByRole('alertdialog', { name: /eliminar producto/i })
-    expect(within(alerta).getByText(/teclado mecánico/i)).toBeInTheDocument()
-    expect(screen.queryByRole('dialog', { name: /información del producto/i })).not.toBeInTheDocument()
+    // Como en UserRowActions.test.jsx, la confirmación se busca por texto: mientras un diálogo se cierra y otro
+    // se abre, Fluent marca partes de la página con aria-hidden y las búsquedas por rol fallan por tiempos.
+    const alerta = (await screen.findByText(/seguro que quieres eliminar/i)).closest('[role="alertdialog"]')
+    expect(alerta).toHaveTextContent(/teclado mecánico/i)
+    expect(screen.queryByText('Información del producto')).not.toBeInTheDocument()
     expect(borrado.llamadas).toBe(0)
 
-    await user.click(within(alerta).getByRole('button', { name: /^eliminar$/i }))
+    await user.click(within(alerta).getByText('Eliminar', { selector: 'button' }))
 
-    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
-    expect(borrado).toMatchObject({ llamadas: 1, id: 'p-2' })
+    await waitFor(() => expect(borrado).toMatchObject({ llamadas: 1, id: 'p-2' }))
     expect(await screen.findByText(/producto eliminado/i)).toBeInTheDocument()
   })
 })
