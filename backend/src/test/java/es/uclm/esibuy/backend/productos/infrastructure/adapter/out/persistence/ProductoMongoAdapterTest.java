@@ -34,12 +34,14 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 // Test de integración del adaptador de MongoDB de productos (HU31, T202). Usa un MongoDB real en Docker
 // (Testcontainers): Docker Desktop debe estar abierto. InicializadorColecciones crea la colección productos
 // con su validación, como en la aplicación real, así que un documento que no la cumpla hace fallar el test.
-// También prueba el listado de los productos propios del vendedor (HU32, T184) y el borrado físico (HU35, T346).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP11, CP12 y CP23, y HU32-CP01 a CP03, propuestos.
+// También prueba el listado de los productos propios del vendedor (HU32, T184), el borrado físico (HU35, T346)
+// y el catálogo del cliente (HU7, T352).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP11, CP12 y CP23, HU32-CP01 a CP03 y HU7-CP11 a CP15, propuestos.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class ProductoMongoAdapterTest {
@@ -261,6 +263,57 @@ class ProductoMongoAdapterTest {
         assertTrue(adapter.buscarPorId(id).isEmpty());
         assertTrue(adapter.buscarPorId(otro).isPresent());
         assertEquals(1, mongoTemplate.getCollection(COLECCION).countDocuments());
+    }
+
+    @Test
+    @DisplayName("HU7-CP11: el catálogo solo devuelve productos disponibles, de todos los vendedores")
+    void buscarEnCatalogoSoloDevuelveDisponiblesDeTodosLosVendedores() {
+        // TODO: guardar disponibles de v-1 y v-2 y uno no disponible; buscarEnCatalogo sin filtros devuelve los
+        // dos disponibles y totalElementos = 2.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU7-CP12: la búsqueda por nombre no distingue mayúsculas ni tildes")
+    void buscarEnCatalogoBuscaSinDistinguirMayusculasNiTildes() {
+        // TODO: guardar «Lámpara de escritorio» y «Teclado»; buscar «LAMPARA» y «lámpara» devuelve solo la lámpara.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU7-CP12: la búsqueda trata el texto como literal, no como expresión regular")
+    void buscarEnCatalogoTrataLaBusquedaComoTextoLiteral() {
+        // TODO: guardar «Cable (USB-C)» y «Cable USB»; buscar «(usb» devuelve solo el primero, y «.*» no devuelve nada.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU7-CP13: el filtro por categoría se puede combinar con la búsqueda")
+    void buscarEnCatalogoFiltraPorCategoriaYBusqueda() {
+        // TODO: «Teclado» en cat-1 y en cat-2 y «Ratón» en cat-2; buscar «teclado» en cat-2 devuelve solo uno.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU7-CP14: el catálogo se ordena por nombre en los dos sentidos, paginado y con el total completo")
+    void buscarEnCatalogoOrdenaPorNombreYPagina() {
+        // TODO: guardar «Cesta», «Atril», «Banco» (sin tilde inicial). NOMBRE ascendente, página 0 de tamaño 2:
+        // Atril y Banco, total 3. Descendente, página 0: Cesta y Banco.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU7-CP15: con una valoración mínima no sale ningún producto mientras no haya valoraciones")
+    void buscarEnCatalogoConValoracionMinimaNoDevuelveNada() {
+        // TODO: guardar dos disponibles; valoracionMinima = 2 devuelve lista vacía y total 0.
+        fail("Funcionalidad no implementada");
+    }
+
+    @Test
+    @DisplayName("HU7-CP15: ordenar por valoración desempata por nombre de la A a la Z mientras no haya valoraciones")
+    void buscarEnCatalogoPorValoracionDesempataPorNombre() {
+        // TODO: «Cesta», «Atril», «Banco»; VALORACION descendente devuelve Atril, Banco, Cesta (el empate siempre es A→Z).
+        fail("Funcionalidad no implementada");
     }
 
     private static Producto productoNuevo(String vendedorId, String nombre) {
