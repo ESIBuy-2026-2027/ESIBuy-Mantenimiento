@@ -93,6 +93,22 @@ const aCatalogo = ({ id, nombre, categoria }) => {
   }
 }
 
+const comparar = (a, b) => a.localeCompare(b, 'es')
+
+// Como el backend: por nombre (por defecto), por el nombre de su categoría o por valoración (sin valoraciones cuentan
+// como 0). Los empates se desempatan por nombre, siempre de la A a la Z.
+function ordenDelCatalogo(criterio, sentido) {
+  const signo = sentido === 'desc' ? -1 : 1
+  const porNombre = (a, b) => comparar(a.nombre, b.nombre)
+  const porCriterio = {
+    categoria: (a, b) => comparar(CATEGORIAS.get(a.categoriaId), CATEGORIAS.get(b.categoriaId)),
+    valoracion: (a, b) => (a.valoracion ?? 0) - (b.valoracion ?? 0),
+  }[criterio]
+
+  if (!porCriterio) return (a, b) => signo * porNombre(a, b)
+  return (a, b) => signo * porCriterio(a, b) || porNombre(a, b)
+}
+
 // Detalle completo del producto, con los datos que necesita el formulario de edición.
 const aDetalle = ({ id, nombre, descripcion, precio, stock, disponible, categoria, imagen, descuento, descuentoPremium }) => ({
   id,
@@ -180,8 +196,19 @@ export const productsHandlers = [
     if (usuario.rol !== 'CLIENTE') return new HttpResponse(null, { status: 403 })
 
     const params = new URL(request.url).searchParams
-    const disponibles = PRODUCTOS.filter((producto) => producto.disponible)
-    return HttpResponse.json(paginar(disponibles, leerPagina(params, TAMANO_CATALOGO), aCatalogo))
+    const busqueda = normalizar(params.get('search') ?? '')
+    const categoria = params.get('category')
+    const minima = Number(params.get('minRating')) || 0
+    const coincidentes = PRODUCTOS.filter((producto) => producto.disponible)
+      .map((producto) => aCatalogo(producto))
+      .filter(
+        (producto) =>
+          normalizar(producto.nombre).includes(busqueda) &&
+          (!categoria || producto.categoriaId === categoria) &&
+          (producto.valoracion ?? 0) >= minima,
+      )
+      .sort(ordenDelCatalogo(params.get('sort'), params.get('order')))
+    return HttpResponse.json(paginar(coincidentes, leerPagina(params, TAMANO_CATALOGO)))
   }),
 
   http.get('/api/seller/products', ({ request }) => {

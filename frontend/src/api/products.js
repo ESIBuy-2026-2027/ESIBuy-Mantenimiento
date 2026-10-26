@@ -22,8 +22,17 @@ export function deleteSellerProduct(productId) {
 }
 
 // Catálogo del cliente (HU7). Contrato propuesto por el frontend: el backend (T352 y T353) aún no lo tiene.
-export function getCatalogProducts({ page = 1, size = 12 } = {}) {
-  return request(`/api/products?${buildQuery({ page, size })}`)
+// sort: nombre, categoria o valoracion. order: asc o desc. minRating: valoración media mínima (de 1 a 5).
+export function getCatalogProducts({
+  search = '',
+  category = '',
+  minRating = '',
+  sort = 'nombre',
+  order = 'asc',
+  page = 1,
+  size = 12,
+} = {}) {
+  return request(`/api/products?${buildQuery({ page, size, search, category, minRating, sort, order })}`)
 }
 
 export function getSellerProducts({ search = '', category = '', page = 1, size = 10 } = {}) {

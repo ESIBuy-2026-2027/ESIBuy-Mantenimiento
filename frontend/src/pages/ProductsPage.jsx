@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   Button,
   MessageBar,
@@ -11,11 +10,13 @@ import {
   mergeClasses,
   tokens,
 } from '@fluentui/react-components'
-import { Box24Regular } from '@fluentui/react-icons'
+import { Box24Regular, SearchInfo24Regular } from '@fluentui/react-icons'
 import EmptyState from '../components/EmptyState'
 import Pagination from '../components/Pagination'
 import { usePageStyles } from '../components/pageStyles'
+import CatalogFilters from '../features/catalog/CatalogFilters'
 import ProductCard from '../features/catalog/ProductCard'
+import { useCatalogFilters } from '../features/catalog/useCatalogFilters'
 import { useCatalogProducts } from '../features/catalog/useCatalogProducts'
 import { useCategories } from '../hooks/useCategories'
 
@@ -43,9 +44,21 @@ const useStyles = makeStyles({
 export default function ProductsPage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
-  const [page, setPage] = useState(1)
   const { categories } = useCategories()
-  const { data, failed, refreshing, retry } = useCatalogProducts({ page, size: PAGE_SIZE })
+  const filters = useCatalogFilters()
+  const { search, category, minRating, sort, order, page, debouncedSearch, filtersActive } = filters
+  const { data, failed, refreshing, retry } = useCatalogProducts({
+    search: debouncedSearch,
+    category,
+    minRating,
+    sort,
+    order,
+    page,
+    size: PAGE_SIZE,
+  })
+  // Sin ningún filtro, que no haya productos significa que el catálogo está vacío; con filtros, que no coinciden.
+  const catalogEmpty = data?.totalItems === 0 && !debouncedSearch && !category && !minRating
+  const showFilters = filtersActive || (data?.totalItems ?? 0) > 0
   const categoryNames = new Map(categories.map(({ id, nombre }) => [id, nombre]))
 
   return (
@@ -56,6 +69,22 @@ export default function ProductsPage() {
         </Title1>
         <Text className={pageStyles.subtitle}>Descubre lo que ofrecen los vendedores de ESIBuy.</Text>
       </div>
+
+      {showFilters && (
+        <CatalogFilters
+          search={search}
+          category={category}
+          categories={categories}
+          minRating={minRating}
+          sort={sort}
+          order={order}
+          onSearchChange={filters.changeSearch}
+          onCategoryChange={filters.changeCategory}
+          onMinRatingChange={filters.changeMinRating}
+          onSortChange={filters.changeSort}
+          onOrderChange={filters.changeOrder}
+        />
+      )}
 
       {failed && (
         <MessageBar intent="error">
@@ -68,12 +97,22 @@ export default function ProductsPage() {
 
       {!data && !failed && <Spinner className={pageStyles.loading} label="Cargando productos…" />}
 
-      {data && data.totalItems === 0 && (
+      {catalogEmpty && (
         <EmptyState
           icon={<Box24Regular />}
           title="Todavía no hay productos"
           description="Cuando los vendedores publiquen sus productos, los verás aquí."
         />
+      )}
+
+      {data && data.totalItems === 0 && !catalogEmpty && (
+        <EmptyState
+          icon={<SearchInfo24Regular />}
+          title="No hay productos que coincidan con los filtros"
+          description="Prueba con otro nombre, otra categoría u otra valoración."
+        >
+          <Button onClick={filters.clearFilters}>Limpiar filtros</Button>
+        </EmptyState>
       )}
 
       {data && data.totalItems > 0 && (
@@ -95,7 +134,7 @@ export default function ProductsPage() {
             totalItems={data.totalItems}
             pageSize={data.size}
             itemLabel="productos"
-            onPageChange={setPage}
+            onPageChange={filters.setPage}
           />
         </>
       )}

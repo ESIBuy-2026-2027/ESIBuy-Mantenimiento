@@ -103,7 +103,12 @@ describe('ProductsPage (HU7): vista de productos del cliente', () => {
 })
 
 // Guarda los parámetros de cada petición al catálogo y responde con unos productos de ejemplo.
-function capturarPeticiones(items = []) {
+const PRODUCTOS_DE_EJEMPLO = [
+  { id: 'p-1', nombre: 'Teclado mecánico', imagen: '', categoriaId: 'cat-1', valoracion: 4.5, numValoraciones: 12 },
+  { id: 'p-2', nombre: 'Cafetera de cápsulas', imagen: '', categoriaId: 'cat-2', valoracion: null, numValoraciones: 0 },
+]
+
+function capturarPeticiones(items = PRODUCTOS_DE_EJEMPLO) {
   const peticiones = []
   server.use(
     http.get('/api/products', ({ request }) => {
@@ -199,7 +204,7 @@ describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
     const peticiones = capturarPeticiones()
     await abrirCatalogo()
 
-    await user.selectOptions(screen.getByRole('combobox', { name: /valoración mínima/i }), '4 estrellas o más')
+    await user.selectOptions(await screen.findByRole('combobox', { name: /valoración mínima/i }), '4 estrellas o más')
 
     await waitFor(() => expect(ultima(peticiones).get('minRating')).toBe('4'))
   })
@@ -219,7 +224,7 @@ describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
     const user = userEvent.setup()
     const peticiones = capturarPeticiones()
     await abrirCatalogo()
-    const selector = screen.getByRole('combobox', { name: /valoración mínima/i })
+    const selector = await screen.findByRole('combobox', { name: /valoración mínima/i })
 
     await user.selectOptions(selector, '3 estrellas o más')
     await waitFor(() => expect(ultima(peticiones).get('minRating')).toBe('3'))
@@ -232,7 +237,7 @@ describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
     const user = userEvent.setup()
     const peticiones = capturarPeticiones()
     await abrirCatalogo()
-    const selector = screen.getByRole('combobox', { name: /ordenar por/i })
+    const selector = await screen.findByRole('combobox', { name: /ordenar por/i })
 
     expect(within(selector).getAllByRole('option').map((opcion) => opcion.textContent)).toEqual([
       'Nombre',
@@ -250,7 +255,7 @@ describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
     const peticiones = capturarPeticiones()
     await abrirCatalogo()
 
-    await user.click(screen.getByRole('button', { name: /orden ascendente/i }))
+    await user.click(await screen.findByRole('button', { name: /orden ascendente/i }))
 
     await waitFor(() => expect(ultima(peticiones).get('order')).toBe('desc'))
     expect(screen.getByRole('button', { name: /orden descendente/i })).toBeInTheDocument()
