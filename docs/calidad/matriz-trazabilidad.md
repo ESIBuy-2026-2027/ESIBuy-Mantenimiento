@@ -633,12 +633,14 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU7-CP04 | Se puede buscar por nombre (sin distinguir mayúsculas ni tildes) y filtrar por categoría; cualquier cambio empieza de nuevo desde la primera página, y si nada coincide se ofrece limpiar los filtros | Frontend (página) | 5 | 🔍 En revisión (5, AB#351, PR sin abrir) |
 | HU7-CP05 | Se puede filtrar por valoración mínima (4, 3 o 2 estrellas o más) y volver a «Cualquiera» | Frontend (página) | 3 | 🔍 En revisión (3, AB#351, PR sin abrir) |
 | HU7-CP06 | Se puede ordenar por nombre y por valoración (no por categoría), ascendente y descendente; por defecto, nombre de la A a la Z | Frontend (página) | 5 | 🔍 En revisión (5, AB#351, PR sin abrir) |
-| HU7-CP07 | Arriba se muestra una selección de los productos mejor valorados (4 estrellas o más) en una banda curva de imágenes, con su valoración; se oculta con filtros activos, con pocas imágenes o si falla | Frontend (componente y página) | 8 | 🔍 En revisión (8, AB#350, PR sin abrir) |
+| HU7-CP07 | Arriba se muestran los diez productos mejor valorados, numerados y con su valoración, en una banda curva de imágenes sin marco; se ocultan con filtros activos, con pocos productos valorados o si falla | Frontend (componente y página) | 8 | 🔍 En revisión (8, AB#350, PR sin abrir) |
+| HU7-CP08 | Los productos son clicables: al pulsar una tarjeta, o un producto de la selección de los mejores, se abre su ficha (imagen, nombre, categoría y valoración) y se cierra con Cerrar; también con el teclado | Frontend (componente y página) | 5 | 🔍 En revisión (5, AB#350, PR sin abrir) |
 
 Notas:
-- **HU7-CP01 a CP07 (Sprint 2, frontend):** casos propuestos en las tasks AB#350 (vista de productos) y AB#351 (vista de filtrado y búsqueda), a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu7-busqueda-y-filtrado-de-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU7 (AB#69) en Azure Boards.
+- **HU7-CP01 a CP08 (Sprint 2, frontend):** casos propuestos en las tasks AB#350 (vista de productos) y AB#351 (vista de filtrado y búsqueda), a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu7-busqueda-y-filtrado-de-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU7 (AB#69) en Azure Boards.
 - **Backend:** las tasks AB#352 (lógica de filtrado) y AB#353 (endpoint para obtener productos) están sin hacer; los tests de esta HU usan el contrato propuesto por el frontend y los mocks (MSW).
-- **Decisión del equipo:** no se ordena por categoría (no tiene sentido); el listado es un scroll infinito de diez en diez y no una paginación numérica.
+- **Decisión del equipo:** no se ordena por categoría (no tiene sentido); el listado es un scroll infinito de diez en diez y no una paginación numérica; la selección son los diez mejor valorados.
+- **HU7-CP08:** la ficha del producto es una ventana con lo que ya llega en el catálogo; no hay página ni endpoint de detalle para clientes.
 - **Cambio de comportamiento:** `/products` ya no es una ruta pública: sin sesión lleva a `/login`. Se ha cambiado en consecuencia el test técnico `productos_sinSesion_llevaAIniciarSesion` de `LoginFlow.test.jsx` (antes `productos_sinSesion_esUnaRutaPublica`).
 - **Infraestructura de tests:** `test/setup.js` añade un `IntersectionObserver` que no avisa nunca (jsdom no lo trae); los tests del scroll infinito lo sustituyen por uno que dispara a mano.
 
@@ -679,11 +681,16 @@ Notas:
 | HU7-CP07 | `TiltedGridHero.test.jsx` | `HU7-CP07: muestra su contenido por encima de la banda de imágenes` | Frontend · componente | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
 | HU7-CP07 | `TiltedGridHero.test.jsx` | `HU7-CP07: la banda de imágenes es decorativa y reparte las imágenes recibidas` | Frontend · componente | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
 | HU7-CP07 | `TiltedGridHero.test.jsx` | `HU7-CP07: sin imágenes no falla y sigue mostrando su contenido` | Frontend · componente | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
-| HU7-CP07 | `ProductsPage.test.jsx` | `HU7-CP07: arriba muestra una selección de los productos mejor valorados con su valoración` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
-| HU7-CP07 | `ProductsPage.test.jsx` | `HU7-CP07: la selección pide los mejor valorados: valoración descendente y de 4 estrellas en adelante` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP07 | `ProductsPage.test.jsx` | `HU7-CP07: arriba muestra los diez productos mejor valorados, numerados y con su valoración` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP07 | `ProductsPage.test.jsx` | `HU7-CP07: la selección pide los diez mejor valorados: valoración descendente y sin mínimo de estrellas` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
 | HU7-CP07 | `ProductsPage.test.jsx` | `HU7-CP07: con algún filtro activo la selección se oculta para centrarse en los resultados` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
-| HU7-CP07 | `ProductsPage.test.jsx` | `HU7-CP07: si hay pocos productos con imagen no se muestra la selección` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP07 | `ProductsPage.test.jsx` | `HU7-CP07: si hay menos de tres productos valorados no se muestra la selección` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
 | HU7-CP07 | `ProductsPage.test.jsx` | `HU7-CP07: si la selección no carga, el listado sigue funcionando sin ella` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP08 | `ProductCard.test.jsx` | `HU7-CP08: al pulsarla avisa con el producto, para abrir su ficha` | Frontend · componente | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP08 | `ProductCard.test.jsx` | `HU7-CP08: con el teclado se puede abrir igual que con el ratón` | Frontend · componente | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP08 | `ProductsPage.test.jsx` | `HU7-CP08: al pulsar una tarjeta se abre su ficha con su imagen, nombre, categoría y valoración` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP08 | `ProductsPage.test.jsx` | `HU7-CP08: la ficha se cierra con el botón Cerrar y se vuelve al listado` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
+| HU7-CP08 | `ProductsPage.test.jsx` | `HU7-CP08: los productos de la selección de los mejores también se abren al pulsarlos` | Frontend · página | AB#350 | Rama `feature/US7-T350-T351-vista-de-productos-del-cliente` (PR sin abrir) | 🔍 |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `ProductCard.test.jsx`: `features/catalog/` (Vitest y React Testing Library)
