@@ -1,6 +1,8 @@
 package es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
+import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
+import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalogo;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
@@ -26,6 +28,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -268,9 +271,16 @@ class ProductoMongoAdapterTest {
     @Test
     @DisplayName("HU7-CP11: el catálogo solo devuelve productos disponibles, de todos los vendedores")
     void buscarEnCatalogoSoloDevuelveDisponiblesDeTodosLosVendedores() {
-        // TODO: guardar disponibles de v-1 y v-2 y uno no disponible; buscarEnCatalogo sin filtros devuelve los
-        // dos disponibles y totalElementos = 2.
-        fail("Funcionalidad no implementada");
+        adapter.guardar(productoNuevo("v-1", "Teclado"));
+        adapter.guardar(productoNuevo("v-2", "Ratón"));
+        adapter.guardar(new Producto(null, "v-1", "Monitor retirado", "", new BigDecimal("10"), 1, "cat-1", "", false,
+                Descuento.sinDescuento(), Descuento.sinDescuento()));
+
+        ProductoPage pagina = adapter.buscarEnCatalogo(sinFiltros());
+
+        // Como un Set: el orden del catálogo no se fija hasta el ciclo 6.
+        assertEquals(Set.of("Teclado", "Ratón"), Set.copyOf(nombres(pagina)));
+        assertEquals(2, pagina.totalElementos());
     }
 
     @Test
@@ -314,6 +324,11 @@ class ProductoMongoAdapterTest {
     void buscarEnCatalogoPorValoracionDesempataPorNombre() {
         // TODO: «Cesta», «Atril», «Banco»; VALORACION descendente devuelve Atril, Banco, Cesta (el empate siempre es A→Z).
         fail("Funcionalidad no implementada");
+    }
+
+    // Catálogo sin búsqueda, categoría ni valoración mínima, por nombre de la A a la Z, primera página de 10.
+    private static BuscarCatalogoQuery sinFiltros() {
+        return new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
     }
 
     private static Producto productoNuevo(String vendedorId, String nombre) {
