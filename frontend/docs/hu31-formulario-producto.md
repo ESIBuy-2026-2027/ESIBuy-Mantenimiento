@@ -116,7 +116,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | Campo | Obligatorio | Regla |
 |---|---|---|
 | Nombre | Sí | No vacío; hasta 100 caracteres |
-| Categoría | Sí | **Una sola**, de las que devuelve `GET /api/categorias` (decisión del equipo: un producto no tiene categorías secundarias) |
+| Categoría | Sí | **Una sola**, de las que devuelve `GET /api/categorias` (decisión del equipo: un producto no tiene categorías secundarias). Se elige en un desplegable con búsqueda (T256) |
 | Precio (€) | Sí | Número **mayor que 0** |
 | Stock | No | Entero **mayor o igual que 0**; si se deja vacío se envía 0 |
 | Descripción | No | Hasta 1000 caracteres |
@@ -178,6 +178,7 @@ Cuerpo de `POST` y `PUT` (y respuesta de `GET`, que además incluye `id`):
 | Estado | Significado para el frontend |
 |---|---|
 | 400 (con `{ "code": "VALIDATION_ERROR" }`), 401, 403, 5xx | Mensaje genérico de error |
+| 409 con `{ "code": "PRODUCT_NAME_ALREADY_EXISTS" }` | El vendedor ya tiene un producto con ese nombre: "Este nombre ya está en uso en tus productos. Usa uno distinto." en el campo Nombre (T257) |
 | 404 en `GET` | "No se ha encontrado el producto" |
 
 Reglas que el backend debe imponer (las mismas del formulario): nombre no vacío, una categoría existente, `precio > 0`, `stock` entero ≥ 0, y porcentajes entre 0 (excluido) y 100 cuando el descuento está activo.
@@ -229,9 +230,9 @@ La centrada del formulario y la alineación de precio y stock se comprobaron mid
 
 ## 7. Decisiones y librerías
 
-- **No se ha añadido ninguna librería nueva.** Todo sale de Fluent UI (`Field`, `Input`, `Textarea`, `RadioGroup`, `Switch`, `Dialog`) y de los iconos que ya usa el proyecto.
+- **No se ha añadido ninguna librería nueva.** Todo sale de Fluent UI (`Field`, `Input`, `Textarea`, `Combobox`, `Switch`, `Dialog`) y de los iconos que ya usa el proyecto.
 - **Una pantalla para alta y edición:** evita duplicar el formulario y garantiza que ambas acciones validan igual.
-- **Categoría con botones de opción:** es el mismo patrón del registro de vendedor, y al ser una sola categoría se ven todas las opciones y es fácil de usar y de probar con teclado.
+- **Categoría en un desplegable con búsqueda (Sprint 2, T256):** en el Sprint 1 era un grupo de botones de opción, que se vuelve una lista muy larga si crecen las categorías (revisión del Sprint 1, R5). Ver la sección 9.
 - **Imagen como URL:** subir archivos exigiría un envío distinto (multipart) que el cliente HTTP no tiene. Se deja como decisión pendiente con backend.
 - **Aviso al volver al listado:** como los mocks no añaden el producto, el aviso es la única confirmación visible. Viaja en el estado de la navegación, así que reaparece si se recarga la página; no se guarda en el navegador.
 - **Nombre del archivo `productValues.js`:** un archivo `productForm.js` convivía mal con `ProductForm.jsx` en sistemas de ficheros que no distinguen mayúsculas (Windows), y un `import` acababa cogiendo el archivo equivocado.
@@ -257,3 +258,31 @@ Este documento y el trabajo técnico que describe se hicieron con ayuda de un as
 - **Qué NO se comprobó:** el aspecto visual completo (solo se midió la alineación de precio y stock y la centrada del formulario), ni el flujo contra un backend real. El contrato de la sección 5 debe acordarse con el backend.
 - **Cómo guió el proceso:** el asistente siguió el flujo de ramas y commits del proyecto (mocks, tests, implementación y documentación en commits separados) y el sistema de diseño de `DESIGN.md`.
 - **Revisión humana:** el código fue revisado, ejecutado y validado por el equipo antes de su integración. Revisado por: Ricardo.
+
+## 9. Cambios del Sprint 2: desplegable de categorías y nombre repetido (T256 y T257)
+
+Vienen de la revisión del Sprint 1 (comentarios R5 y R6) y vuelven a abrir la HU31.
+
+### T256 · Desplegable de categorías
+
+- **Componente nuevo `components/CategoryCombobox.jsx`:** un `Combobox` de Fluent UI con las categorías de `GET /api/categorias`. Se despliega como una lista y, además, se puede escribir para filtrar, sin distinguir mayúsculas ni tildes («jardin» encuentra «Jardín»). Si nada coincide, dice "No hay categorías que coincidan". Si se escribe y se sale sin elegir, vuelve a mostrar la categoría elegida.
+- **Dónde se usa (decisión del equipo: en todas las vistas que eligen una categoría, para que se comporten igual):**
+  - formulario de producto, alta y edición (`ProductForm.jsx`), antes con botones de opción;
+  - registro de vendedor (`pages/Register.jsx`), antes con botones de opción;
+  - edición de un vendedor por el administrador (`ProfileEditor.jsx`, campo de tipo `category` en `profileFields.js`), antes un `Select`;
+  - filtros de los listados (`components/ListFilters.jsx`), antes un `Select`. Aquí la primera opción es «Todas las categorías», que equivale a no filtrar.
+- **El valor no cambia:** el componente recibe y devuelve el identificador de la categoría (`''` si no hay ninguna), así que las peticiones al backend son las mismas.
+
+### T257 · Mensaje personalizado para un nombre repetido
+
+- Si al guardar (alta o edición) el backend responde 409 con `code: PRODUCT_NAME_ALREADY_EXISTS`, el campo **Nombre** se marca con "Este nombre ya está en uso en tus productos. Usa uno distinto." en lugar del aviso genérico, y se sigue en el formulario.
+- El aviso desaparece en cuanto se cambia el nombre. Como en el backend, no distingue mayúsculas ni cuenta los espacios de los extremos.
+- **Mock:** `POST` y `PUT /api/seller/products` responden ese 409 cuando el vendedor ya tiene un producto con el mismo nombre (al editar, el propio producto no cuenta). Para probarlo en el navegador, dar de alta un producto llamado "teclado mecánico".
+
+### Tests
+
+| Archivo | Qué cubre |
+|---|---|
+| `components/CategoryCombobox.test.jsx` (nuevo) | HU31-CP26: lista y orden de las categorías, filtro sin mayúsculas ni tildes, sin coincidencias, elegir, nombre de la elegida, salir sin elegir y la opción «Todas las categorías». |
+| `pages/SellerProductFormPage.test.jsx` | HU31-CP26 (desplegable con las categorías y búsqueda al escribir) y HU31-CP27 (nombre repetido en alta y edición, y que el aviso desaparece al cambiarlo). Los tests anteriores eligen ahora la categoría en el desplegable. |
+| `Register.test.jsx`, `ProfileEditor.test.jsx`, `EditableProfile.test.jsx`, `UserEditDialog.test.jsx`, `SellerProductsPage.test.jsx`, `AdminSellersPage.test.jsx` | Adaptados al desplegable; el helper `elegirCategoria` de `test/utils.jsx` abre el desplegable y elige la opción. |
