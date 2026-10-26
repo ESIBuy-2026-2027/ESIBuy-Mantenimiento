@@ -11,8 +11,9 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
+import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
 
-/** Cuerpo del alta de producto (HU31). No lleva vendedor: sale de la sesión. */
+/** Cuerpo del alta (HU31) y de la modificación (HU34) de un producto. No lleva vendedor: sale de la sesión. */
 public record ProductoRequest(
         @NotBlank @Size(max = 100) String nombre,
         @Size(max = 1000) String descripcion,
@@ -28,5 +29,10 @@ public record ProductoRequest(
     CrearProductoCommand aComando(String emailVendedor) {
         return new CrearProductoCommand(emailVendedor, nombre, descripcion, precio, stock, categoriaId, imagen,
                 disponible, descuento.aDominio(), descuentoPremium.aDominio());
+    }
+
+    ModificarProductoCommand aComandoModificacion(String emailVendedor, String productoId) {
+        return new ModificarProductoCommand(emailVendedor, productoId, nombre, descripcion, precio, stock, categoriaId,
+                imagen, disponible, descuento.aDominio(), descuentoPremium.aDominio());
     }
 }

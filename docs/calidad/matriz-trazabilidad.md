@@ -1111,8 +1111,8 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU31-CP23 | La comprobación de nombre repetido no distingue mayúsculas, compara el nombre completo como texto literal y solo cuenta los productos del mismo vendedor | Integración MongoDB | 2 | ✅ Pasa |
 | HU31-CP24 | La base de datos rechaza un nombre repetido del mismo vendedor aunque se salte la comprobación previa (condición de carrera) | Integración MongoDB | 1 | ✅ Pasa |
 | HU31-CP25 | El nombre se guarda sin espacios en los extremos, así que con espacios cuenta como repetido también para el índice único | Unitario + integración MongoDB | 3 | ✅ Pasa |
-| HU31-CP26 | La categoría se elige en un desplegable con búsqueda con las categorías actuales: se puede escribir para filtrar sin distinguir mayúsculas ni tildes, y en los filtros la primera opción es «Todas las categorías» | Frontend (componente y página) | 11 | 🔍 En revisión (11, AB#256, PR sin abrir) |
-| HU31-CP27 | Un nombre que el vendedor ya usa (409 `PRODUCT_NAME_ALREADY_EXISTS`) se marca en el campo Nombre con un mensaje propio, en alta y en edición, y el aviso desaparece al cambiar el nombre | Frontend (página) | 3 | 🔍 En revisión (3, AB#257, PR sin abrir) |
+| HU31-CP26 | La categoría se elige en un desplegable con búsqueda con las categorías actuales: se puede escribir para filtrar sin distinguir mayúsculas ni tildes, y en los filtros la primera opción es «Todas las categorías» | Frontend (componente y página) | 11 | 🔍 En revisión (11, AB#256, PR #123) |
+| HU31-CP27 | Un nombre que el vendedor ya usa (409 `PRODUCT_NAME_ALREADY_EXISTS`) se marca en el campo Nombre con un mensaje propio al dar de alta, y el aviso desaparece al cambiar el nombre | Frontend (página) | 2 | 🔍 En revisión (2, AB#257, PR #123) |
 
 Notas:
 - **HU31-CP01 a CP10:** casos propuestos en la T201 (AB#201) a partir del contrato del formulario de producto del frontend (`frontend/docs/hu31-formulario-producto.md`). Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards.
@@ -1131,7 +1131,7 @@ Notas:
 - **Sin comprobar:** que la categoría exista (aún no hay módulo de categorías). La condición de carrera de CP24 se prueba creando el segundo producto directamente en el adaptador, sin hilos concurrentes.
 - **Estado:** los tests de AB#179, AB#180, AB#204 y AB#205 están en `develop` (PR #99).
 - **Frontend:** los tests de la HU31 (AB#182) no tienen todavía filas en la matriz.
-- **HU31-CP26 y CP27 (revisión del Sprint 1, R5 y R6):** casos propuestos en las T256 (AB#256) y T257 (AB#257). Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards. El desplegable es el componente compartido `CategoryCombobox` y, por decisión del equipo, se usa en todas las vistas que eligen una categoría: formulario de producto, registro de vendedor, edición de un vendedor por el administrador y filtros de los listados. Los tests de esas otras pantallas (`Register.test.jsx`, `ProfileEditor.test.jsx`, `EditableProfile.test.jsx`, `UserEditDialog.test.jsx`, `SellerProductsPage.test.jsx` y `AdminSellersPage.test.jsx`) solo se adaptan para elegir la categoría en el desplegable; no llevan ID de caso y no tienen filas en la Tabla B. `ProfileEditor.test.jsx` añade además `profileEditor_deUnVendedor_laCategoriaPrincipalSeEligeEnUnDesplegableConLasCategorias`, que por decisión del equipo tampoco lleva ID de caso. El 409 ya lo devolvía el backend (CP22); el mock del frontend lo devuelve ahora igual.
+- **HU31-CP26 y CP27 (revisión del Sprint 1, R5 y R6):** casos propuestos en las T256 (AB#256) y T257 (AB#257). Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards. El desplegable es el componente compartido `CategoryCombobox` y, por decisión del equipo, se usa en todas las vistas que eligen una categoría: formulario de producto, registro de vendedor, edición de un vendedor por el administrador y filtros de los listados. Los tests de esas otras pantallas (`Register.test.jsx`, `ProfileEditor.test.jsx`, `EditableProfile.test.jsx`, `UserEditDialog.test.jsx`, `SellerProductsPage.test.jsx` y `AdminSellersPage.test.jsx`) solo se adaptan para elegir la categoría en el desplegable; no llevan ID de caso y no tienen filas en la Tabla B. `ProfileEditor.test.jsx` añade además `profileEditor_deUnVendedor_laCategoriaPrincipalSeEligeEnUnDesplegableConLasCategorias`, que por decisión del equipo tampoco lleva ID de caso. El 409 ya lo devolvía el backend (CP22); el mock del frontend lo devuelve ahora igual. Al editar, el mismo mensaje en el campo Nombre lo comprueba HU34-CP18 (decisión del equipo al resolver el conflicto con el PR #122: un único mensaje, junto al campo, en alta y en edición).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1180,20 +1180,19 @@ Notas:
 | HU31-CP25 | `ProductoTest` | `quitaLosEspaciosDeLosExtremosDelNombre` | Dominio | AB#258 | PR #113 | ✅ |
 | HU31-CP25 | `ProductoTest` | `elLimiteDelNombreSeCuentaSinLosEspacios` | Dominio | AB#258 | PR #113 | ✅ |
 | HU31-CP25 | `ProductoMongoAdapterTest` | `guardarRechazaUnNombreRepetidoConEspacios` | Infraestructura | AB#258 | PR #113 | ✅ |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: al abrirlo muestra todas las categorías en el orden en que llegan` | Frontend · componente | AB#256 | Rama `feature/US31-T256-T257-desplegable-categorias-producto-duplicado` (PR sin abrir) | 🔍 |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: al escribir filtra las categorías sin distinguir mayúsculas ni tildes` | Frontend · componente | AB#256 | Rama `feature/US31-T256-T257-desplegable-categorias-producto-duplicado` (PR sin abrir) | 🔍 |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: si ninguna categoría coincide lo indica` | Frontend · componente | AB#256 | Rama `feature/US31-T256-T257-desplegable-categorias-producto-duplicado` (PR sin abrir) | 🔍 |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: al elegir una categoría avisa con su identificador` | Frontend · componente | AB#256 | Rama `feature/US31-T256-T257-desplegable-categorias-producto-duplicado` (PR sin abrir) | 🔍 |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: muestra el nombre de la categoría elegida` | Frontend · componente | AB#256 | Rama `feature/US31-T256-T257-desplegable-categorias-producto-duplicado` (PR sin abrir) | 🔍 |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: con una categoría elegida, al abrirlo sigue ofreciendo todas` | Frontend · componente | AB#256 | Rama `feature/US31-T256-T257-desplegable-categorias-producto-duplicado` (PR sin abrir) | 🔍 |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: si se escribe y se sale sin elegir, vuelve a mostrar la categoría elegida` | Frontend · componente | AB#256 | Rama `feature/US31-T256-T257-desplegable-categorias-producto-duplicado` (PR sin abrir) | 🔍 |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: con una opción para todas, la ofrece la primera y elegirla avisa con un valor vacío` | Frontend · componente | AB#256 | Rama `feature/US31-T256-T257-desplegable-categorias-producto-duplicado` (PR sin abrir) | 🔍 |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: con una opción para todas y sin categoría elegida, muestra esa opción` | Frontend · componente | AB#256 | Rama `feature/US31-T256-T257-desplegable-categorias-producto-duplicado` (PR sin abrir) | 🔍 |
-| HU31-CP26 | `SellerProductFormPage.test.jsx` | `HU31-CP26: la categoría se elige en un desplegable con las categorías actuales` | Frontend · página | AB#256 | Rama `feature/US31-T256-T257-desplegable-categorias-producto-duplicado` (PR sin abrir) | 🔍 |
-| HU31-CP26 | `SellerProductFormPage.test.jsx` | `HU31-CP26: se puede escribir para buscar la categoría y se envía su identificador` | Frontend · página | AB#256 | Rama `feature/US31-T256-T257-desplegable-categorias-producto-duplicado` (PR sin abrir) | 🔍 |
-| HU31-CP27 | `SellerProductFormPage.test.jsx` | `HU31-CP27: un nombre que el vendedor ya usa se marca en el campo Nombre con un mensaje propio` | Frontend · página | AB#257 | Rama `feature/US31-T256-T257-desplegable-categorias-producto-duplicado` (PR sin abrir) | 🔍 |
-| HU31-CP27 | `SellerProductFormPage.test.jsx` | `HU31-CP27: al cambiar el nombre desaparece el aviso de nombre repetido` | Frontend · página | AB#257 | Rama `feature/US31-T256-T257-desplegable-categorias-producto-duplicado` (PR sin abrir) | 🔍 |
-| HU31-CP27 | `SellerProductFormPage.test.jsx` | `HU31-CP27: al editar, un nombre repetido también se marca en el campo Nombre` | Frontend · página | AB#257 | Rama `feature/US31-T256-T257-desplegable-categorias-producto-duplicado` (PR sin abrir) | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: al abrirlo muestra todas las categorías en el orden en que llegan` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: al escribir filtra las categorías sin distinguir mayúsculas ni tildes` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: si ninguna categoría coincide lo indica` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: al elegir una categoría avisa con su identificador` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: muestra el nombre de la categoría elegida` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: con una categoría elegida, al abrirlo sigue ofreciendo todas` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: si se escribe y se sale sin elegir, vuelve a mostrar la categoría elegida` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: con una opción para todas, la ofrece la primera y elegirla avisa con un valor vacío` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: con una opción para todas y sin categoría elegida, muestra esa opción` | Frontend · componente | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `SellerProductFormPage.test.jsx` | `HU31-CP26: la categoría se elige en un desplegable con las categorías actuales` | Frontend · página | AB#256 | PR #123 | 🔍 |
+| HU31-CP26 | `SellerProductFormPage.test.jsx` | `HU31-CP26: se puede escribir para buscar la categoría y se envía su identificador` | Frontend · página | AB#256 | PR #123 | 🔍 |
+| HU31-CP27 | `SellerProductFormPage.test.jsx` | `HU31-CP27: un nombre que el vendedor ya usa se marca en el campo Nombre con un mensaje propio` | Frontend · página | AB#257 | PR #123 | 🔍 |
+| HU31-CP27 | `SellerProductFormPage.test.jsx` | `HU31-CP27: al cambiar el nombre desaparece el aviso de nombre repetido` | Frontend · página | AB#257 | PR #123 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `ProductoTest` y `DescuentoTest`: `productos/domain/model/` (JUnit, sin Spring)
@@ -1246,6 +1245,130 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `ListadoProductosServiceTest`: `productos/application/service/` (Mockito, sin Spring)
 - `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/` (con Testcontainers)
 - `ProductoControllerTest`: `productos/infrastructure/adapter/in/web/` (con `@WebMvcTest`)
+
+---
+
+## HU33 · Consultar el detalle de un producto propio
+
+### Tabla A · HU33 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU33-CP01 | El vendedor consulta el detalle de un producto suyo (el vendedor sale de la sesión) | Unitario | 1 | ✅ Pasa |
+| HU33-CP02 | Un producto que no existe no se encuentra (`ProductoNoEncontradoException`) | Unitario | 1 | ✅ Pasa |
+| HU33-CP03 | Un producto de otro vendedor no se encuentra, con el mismo error que si no existiera, para no revelar que existe | Unitario | 1 | ✅ Pasa |
+| HU33-CP04 | `GET /api/seller/products/{id}` devuelve 200 con el producto en el formato del contrato y sin el id del vendedor | Integración (capa web) | 1 | ✅ Pasa |
+| HU33-CP05 | Un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | ✅ Pasa |
+| HU33-CP06 | Sin sesión (401) o sin ser vendedor (403) no se consulta un producto | Integración (capa web) | 2 | ✅ Pasa |
+| HU33-CP07 | Desde el listado, Ver abre la ficha del producto con todos sus datos en solo lectura y la categoría con su nombre | Frontend (componente y página) | 4 | ✅ Pasa |
+| HU33-CP08 | La ficha muestra las acciones Editar, que lleva al formulario de edición (HU34), y Eliminar, deshabilitada | Frontend (componente) | 1 | 🔍 En revisión |
+| HU33-CP09 | Un producto no encontrado (403 o 404, p. ej. de otro vendedor) lo indica y no ofrece acciones | Frontend (componente) | 2 | ✅ Pasa |
+| HU33-CP10 | Si la carga falla por otro motivo, la ficha muestra un error genérico y permite reintentar | Frontend (componente) | 1 | ✅ Pasa |
+
+Notas:
+- **HU33-CP01 a CP06:** casos propuestos en la T349 (AB#349) y la T348 (AB#348) y acordados con el equipo durante el desarrollo. Pendientes de añadir a la HU33 en Azure Boards.
+- **HU33-CP07 a CP10:** casos propuestos en la T347 (AB#347) a partir de los criterios de aceptación de la HU33 y acordados con el equipo. Pendientes de añadir a la HU33 en Azure Boards.
+- **Backend (T349, AB#349, PR #117):** `consultarMiProducto` en `GestionProductosUseCase`. Un producto ajeno se trata como inexistente.
+- **Backend (T348, AB#348, PR #118):** `GET /api/seller/products/{id}`, con el contrato de `frontend/docs/hu31-formulario-producto.md`. El producto inexistente y el ajeno dan 404, no 403.
+- **HU33-CP06:** sin rojo real, porque `SecurityConfig` ya limita `/api/seller/**` al rol VENDEDOR.
+- **Frontend (T347, AB#347, PR #119):** `ProductDetailDialog`, que se abre con el botón Ver de cada fila del listado (`ProductRowActions`). Usa `GET /api/seller/products/:id`.
+- **Editar y Eliminar** se ven en la ficha. Eliminar está deshabilitado por decisión del equipo hasta la HU35; Editar se activa en la HU34 (T341, PR #122), que cambia el HU33-CP08.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU33-CP01 | `GestionProductosServiceTest` | `devuelveElProductoSiEsDelVendedorDeLaSesion` | Aplicación | AB#349 | PR #117 | ✅ |
+| HU33-CP02 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoSeEncuentra` | Aplicación | AB#349 | PR #117 | ✅ |
+| HU33-CP03 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoSeEncuentra` | Aplicación | AB#349 | PR #117 | ✅ |
+| HU33-CP04 | `ProductoControllerTest` | `vendedorConsultaSuProducto` | Infraestructura | AB#348 | PR #118 | ✅ |
+| HU33-CP05 | `ProductoControllerTest` | `productoNoEncontradoDevuelve404` | Infraestructura | AB#348 | PR #118 | ✅ |
+| HU33-CP06 | `ProductoControllerTest` | `sinSesionNoSeConsultaUnProducto` | Infraestructura | AB#348 | PR #118 | ✅ |
+| HU33-CP06 | `ProductoControllerTest` | `noVendedorNoConsultaUnProducto` (cliente y administrador) | Infraestructura | AB#348 | PR #118 | ✅ |
+| HU33-CP07 | `ProductDetailDialog.test.jsx` | `HU33-CP07: muestra todos los datos del producto, con el nombre de su categoría` | Frontend · componente | AB#347 | PR #119 | ✅ |
+| HU33-CP07 | `ProductDetailDialog.test.jsx` | `HU33-CP07: todos los campos son de solo lectura` | Frontend · componente | AB#347 | PR #119 | ✅ |
+| HU33-CP07 | `SellerProductsPage.test.jsx` | `HU33-CP07: cada fila tiene un botón para ver la ficha del producto` | Frontend · página | AB#347 | PR #119 | ✅ |
+| HU33-CP07 | `SellerProductsPage.test.jsx` | `HU33-CP07: al pulsar Ver se abre la ficha de ese producto` | Frontend · página | AB#347 | PR #119 | ✅ |
+| HU33-CP08 | `ProductDetailDialog.test.jsx` | `HU33-CP08: muestra las acciones Editar, que lleva al formulario de edición, y Eliminar, deshabilitada` | Frontend · componente | AB#347 · AB#341 | PR #119 · PR #122 | 🔍 |
+| HU33-CP09 | `ProductDetailDialog.test.jsx` | `HU33-CP09: un producto de otro vendedor muestra que no se ha encontrado y no ofrece acciones` | Frontend · componente | AB#347 | PR #119 | ✅ |
+| HU33-CP09 | `ProductDetailDialog.test.jsx` | `HU33-CP09: una respuesta %i muestra que no se ha encontrado el producto` (403 y 404) | Frontend · componente | AB#347 | PR #119 | ✅ |
+| HU33-CP10 | `ProductDetailDialog.test.jsx` | `HU33-CP10: si la carga falla por otro motivo, muestra un error genérico y permite reintentar` | Frontend · componente | AB#347 | PR #119 | ✅ |
+
+Rutas de las clases de test:
+- `GestionProductosServiceTest`: `backend/src/test/java/es/uclm/esibuy/backend/productos/application/service/` (Mockito, sin Spring)
+- `ProductoControllerTest`: `backend/src/test/java/es/uclm/esibuy/backend/productos/infrastructure/adapter/in/web/` (con `@WebMvcTest`)
+- `ProductDetailDialog.test.jsx`: `frontend/src/features/seller/` (Vitest, RTL y MSW)
+- `SellerProductsPage.test.jsx`: `frontend/src/pages/` (Vitest, RTL y MSW)
+
+---
+
+## HU34 · Modificar un producto propio
+
+### Tabla A · HU34 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU34-CP01 | El vendedor guarda los cambios de un producto suyo, con el mismo id y el mismo vendedor | Unitario | 1 | ✅ Pasa |
+| HU34-CP02 | Se aplican las mismas validaciones que en el alta y unos datos inválidos no se guardan | Unitario | 1 | ✅ Pasa |
+| HU34-CP03 | No se puede cambiar el nombre por el de otro producto del vendedor (`ProductoDuplicadoException`) | Unitario | 1 | ✅ Pasa |
+| HU34-CP04 | Conservar el nombre del producto, aunque cambien las mayúsculas, no es un nombre repetido | Unitario | 1 | ✅ Pasa |
+| HU34-CP05 | Un vendedor no puede modificar un producto de otro vendedor ni uno inexistente (`ProductoNoEncontradoException`) | Unitario | 2 | ✅ Pasa |
+| HU34-CP06 | `PUT /api/seller/products/{id}` devuelve 200 con el producto actualizado; el vendedor sale de la sesión, no del cuerpo | Integración (capa web) | 1 | ✅ Pasa |
+| HU34-CP07 | Una modificación con datos no válidos devuelve 400 y no llega al caso de uso; una regla del dominio incumplida, 400 genérico | Integración (capa web) | 2 | ✅ Pasa |
+| HU34-CP08 | Cambiar el nombre por uno repetido del mismo vendedor devuelve 409 con el código `PRODUCT_NAME_ALREADY_EXISTS` | Integración (capa web) | 1 | ✅ Pasa |
+| HU34-CP09 | Modificar un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | ✅ Pasa |
+| HU34-CP10 | Sin sesión (401), sin ser vendedor (403) o sin token CSRF (403) no se modifica un producto | Integración (capa web) | 3 | ✅ Pasa |
+| HU34-CP11 | Los cambios se reflejan inmediatamente en el catálogo que ven los clientes | — | 0 | ⏳ Pendiente (sin verificar hasta que exista el catálogo de clientes) |
+| HU34-CP12 | La vista de edición se abre con los datos actuales del producto ya cargados (también los descuentos) | Frontend (página) | 2 | 🔍 En revisión |
+| HU34-CP13 | Al guardar, se envían los cambios al producto indicado y se vuelve al listado con un aviso | Frontend (página) | 1 | 🔍 En revisión |
+| HU34-CP14 | La edición aplica las mismas validaciones que el alta | Frontend (página) | 1 | 🔍 En revisión |
+| HU34-CP15 | Un producto de otro vendedor o inexistente no muestra el formulario | Frontend (página) | 2 | 🔍 En revisión |
+| HU34-CP16 | Si el producto no carga, la vista muestra un error y permite reintentar | Frontend (página) | 1 | 🔍 En revisión |
+| HU34-CP17 | Desde la ficha del producto, Editar abre el formulario de edición con sus datos | Frontend (página) | 1 | 🔍 En revisión |
+| HU34-CP18 | Si el nombre ya lo tiene otro producto del vendedor (409), la edición lo indica en el campo Nombre con el mismo mensaje que el alta (HU31-CP27) y no sale del formulario | Frontend (página) | 1 | 🔍 En revisión |
+
+Notas:
+- **HU34-CP01 a CP05:** casos propuestos en la T343 (AB#343) a partir de los criterios de aceptación de la HU34. Pendientes de añadir a la HU34 en Azure Boards.
+- **Campos editables (decisión del equipo):** el id y el vendedor no se modifican; el nombre sí, controlando duplicados, y `disponible` también.
+- **HU34-CP06 a CP10:** casos propuestos en la T342 (AB#342, PR #121). `PUT /api/seller/products/{id}` sigue el contrato de `frontend/docs/hu31-formulario-producto.md`.
+- **HU34-CP02 y CP07 a CP10:** sin rojo real. El CP02, porque el constructor de `Producto` ya aplica las validaciones del alta; los CP07 a CP10, porque la validación de `ProductoRequest`, `ManejadorGlobalErrores` y `SecurityConfig` ya los cubrían.
+- **HU34-CP11 · PENDIENTE DE VERIFICAR (decisión del equipo):** el criterio «los cambios se reflejan inmediatamente en el catálogo que ven los clientes» **no se verifica todavía**, porque en el backend aún no existe el catálogo de clientes. La modificación actualiza el mismo documento de la colección `productos` (lo prueba el test técnico «Persistencia: guardar un producto leído lo actualiza sin duplicarlo y conserva createdAt» de `ProductoMongoAdapterTest`), que es la que leerá el catálogo. **Cuando se desarrolle el catálogo de clientes, hay que añadir el test de este caso y pasarlo a ✅.**
+- **HU34-CP12 a CP16:** la vista de edición se hizo en la HU31 (formulario compartido con el alta). Por decisión del equipo, sus 7 tests se renombran en la T341 (AB#341, PR #122) con el ID de su caso de la HU34 y se trazan aquí; no tienen ciclo rojo porque no hay código nuevo detrás.
+- **HU34-CP17 y CP18:** casos nuevos de la T341. El mensaje del nombre repetido es solo de la edición (decisión del equipo); el alta mantiene el genérico.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU34-CP01 | `GestionProductosServiceTest` | `guardaLosCambiosConElMismoIdYVendedor` | Aplicación | AB#343 | PR #120 | ✅ |
+| HU34-CP02 | `GestionProductosServiceTest` | `rechazaUnaModificacionConDatosInvalidos` | Aplicación | AB#343 | PR #120 | ✅ |
+| HU34-CP03 | `GestionProductosServiceTest` | `rechazaCambiarElNombrePorUnoRepetido` | Aplicación | AB#343 | PR #120 | ✅ |
+| HU34-CP04 | `GestionProductosServiceTest` | `conservarElNombreNoEsUnNombreRepetido` (mismo nombre y en mayúsculas) | Aplicación | AB#343 | PR #120 | ✅ |
+| HU34-CP05 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoSeModifica` | Aplicación | AB#343 | PR #120 | ✅ |
+| HU34-CP05 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoSeModifica` | Aplicación | AB#343 | PR #120 | ✅ |
+| HU34-CP06 | `ProductoControllerTest` | `vendedorModificaSuProducto` | Infraestructura | AB#342 | PR #121 | ✅ |
+| HU34-CP07 | `ProductoControllerTest` | `cuerpoInvalidoNoModificaElProducto` (los mismos cuerpos no válidos que el alta) | Infraestructura | AB#342 | PR #121 | ✅ |
+| HU34-CP07 | `ProductoControllerTest` | `reglaDeDominioIncumplidaAlModificarDevuelve400Generico` | Infraestructura | AB#342 | PR #121 | ✅ |
+| HU34-CP08 | `ProductoControllerTest` | `nombreRepetidoAlModificarDevuelve409` | Infraestructura | AB#342 | PR #121 | ✅ |
+| HU34-CP09 | `ProductoControllerTest` | `modificarUnProductoNoEncontradoDevuelve404` | Infraestructura | AB#342 | PR #121 | ✅ |
+| HU34-CP10 | `ProductoControllerTest` | `sinSesionNoSeModificaUnProducto` | Infraestructura | AB#342 | PR #121 | ✅ |
+| HU34-CP10 | `ProductoControllerTest` | `noVendedorNoModificaUnProducto` (cliente y administrador) | Infraestructura | AB#342 | PR #121 | ✅ |
+| HU34-CP10 | `ProductoControllerTest` | `sinTokenCsrfNoSeModificaUnProducto` | Infraestructura | AB#342 | PR #121 | ✅ |
+| HU34-CP11 | — | — (pendiente: sin catálogo de clientes) | — | — | — | ⏳ |
+| HU34-CP12 | `SellerProductFormPage.test.jsx` | `HU34-CP12: la vista de edición se abre con los datos actuales del producto` | Frontend · página | AB#341 | PR #122 | 🔍 |
+| HU34-CP12 | `SellerProductFormPage.test.jsx` | `HU34-CP12: la vista de edición muestra los descuentos activos del producto` | Frontend · página | AB#341 | PR #122 | 🔍 |
+| HU34-CP13 | `SellerProductFormPage.test.jsx` | `HU34-CP13: al guardar, envía los cambios al producto indicado y vuelve al listado con un aviso` | Frontend · página | AB#341 | PR #122 | 🔍 |
+| HU34-CP14 | `SellerProductFormPage.test.jsx` | `HU34-CP14: la edición aplica las mismas validaciones que el alta` | Frontend · página | AB#341 | PR #122 | 🔍 |
+| HU34-CP15 | `SellerProductFormPage.test.jsx` | `HU34-CP15: un producto de otro vendedor no muestra el formulario` | Frontend · página | AB#341 | PR #122 | 🔍 |
+| HU34-CP15 | `SellerProductFormPage.test.jsx` | `HU34-CP15: un producto inexistente no muestra el formulario` | Frontend · página | AB#341 | PR #122 | 🔍 |
+| HU34-CP16 | `SellerProductFormPage.test.jsx` | `HU34-CP16: si el producto no carga, muestra un error y permite reintentar` | Frontend · página | AB#341 | PR #122 | 🔍 |
+| HU34-CP17 | `SellerProductsPage.test.jsx` | `HU34-CP17: desde la ficha, Editar abre el formulario de edición con los datos del producto` | Frontend · página | AB#341 | PR #122 | 🔍 |
+| HU34-CP18 | `SellerProductFormPage.test.jsx` | `HU34-CP18: si el nombre ya lo tiene otro producto del vendedor, lo indica y no sale del formulario` | Frontend · página | AB#341 | PR #122 | 🔍 |
+
+Rutas de las clases de test:
+- `GestionProductosServiceTest`: `backend/src/test/java/es/uclm/esibuy/backend/productos/application/service/` (Mockito, sin Spring)
+- `ProductoControllerTest`: `backend/src/test/java/es/uclm/esibuy/backend/productos/infrastructure/adapter/in/web/` (con `@WebMvcTest`)
+- `SellerProductFormPage.test.jsx` y `SellerProductsPage.test.jsx`: `frontend/src/pages/` (Vitest, RTL y MSW)
 
 ---
 

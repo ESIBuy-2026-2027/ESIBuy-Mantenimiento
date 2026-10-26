@@ -454,3 +454,41 @@ describe('SellerProductsPage (HU31): editar y eliminar desde el listado', () => 
     expect(within(dialogo).queryByRole('button', { name: /^eliminar /i })).not.toBeInTheDocument()
   })
 })
+
+describe('SellerProductsPage (HU33): ver la ficha desde el listado', () => {
+  it('HU33-CP07: cada fila tiene un botón para ver la ficha del producto', async () => {
+    await abrirListado()
+    await esperarFilas(10)
+
+    expect(screen.getAllByRole('button', { name: /^ver /i })).toHaveLength(10)
+  })
+
+  it('HU33-CP07: al pulsar Ver se abre la ficha de ese producto', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await esperarFilas(10)
+
+    await user.click(screen.getByRole('button', { name: 'Ver Teclado mecánico' }))
+
+    const dialogo = await screen.findByRole('dialog', { name: /información del producto/i })
+    expect(await within(dialogo).findByLabelText('Nombre')).toHaveValue('Teclado mecánico')
+  })
+})
+
+describe('SellerProductsPage (HU34): editar desde la ficha', () => {
+  it('HU34-CP17: desde la ficha, Editar abre el formulario de edición con los datos del producto', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await esperarFilas(10)
+
+    await user.click(screen.getByRole('button', { name: 'Ver Teclado mecánico' }))
+    const dialogo = await screen.findByRole('dialog', { name: /información del producto/i })
+    await within(dialogo).findByLabelText('Nombre')
+    await user.click(within(dialogo).getByRole('link', { name: 'Editar' }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: /editar producto/i })).toBeInTheDocument()
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/seller\/products\/p-2\/edit$/)
+    await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Teclado mecánico'))
+    expect(screen.queryByRole('dialog', { name: /información del producto/i })).not.toBeInTheDocument()
+  })
+})

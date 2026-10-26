@@ -6,7 +6,9 @@ import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -46,10 +48,24 @@ public class ProductoController {
                 autenticado.getName(), new ListarProductosQuery(search, category, page - 1, size)));
     }
 
+    // Detalle de un producto propio (HU33): el vendedor sale de la sesión; uno ajeno o inexistente da 404.
+    @GetMapping("/seller/products/{id}")
+    public ProductoResponse consultarMiProducto(@PathVariable String id, Authentication autenticado) {
+        return ProductoResponse.desde(gestionProductos.consultarMiProducto(autenticado.getName(), id));
+    }
+
     // Alta de producto (HU31): el vendedor sale de la sesión; un vendedorId en el cuerpo se ignora.
     @PostMapping("/seller/products")
     @ResponseStatus(HttpStatus.CREATED)
     public ProductoResponse crearProducto(@Valid @RequestBody ProductoRequest request, Authentication autenticado) {
         return ProductoResponse.desde(gestionProductos.crear(request.aComando(autenticado.getName())));
+    }
+
+    // Modificación de un producto propio (HU34): el vendedor sale de la sesión; uno ajeno o inexistente da 404.
+    @PutMapping("/seller/products/{id}")
+    public ProductoResponse modificarMiProducto(@PathVariable String id, @Valid @RequestBody ProductoRequest request,
+            Authentication autenticado) {
+        return ProductoResponse.desde(
+                gestionProductos.modificarMiProducto(request.aComandoModificacion(autenticado.getName(), id)));
     }
 }

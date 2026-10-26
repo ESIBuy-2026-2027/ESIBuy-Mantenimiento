@@ -2,9 +2,11 @@ package es.uclm.esibuy.backend.productos.application.service;
 
 import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
+import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 
 public class GestionProductosService implements GestionProductosUseCase {
@@ -41,5 +43,41 @@ public class GestionProductosService implements GestionProductosUseCase {
             throw new ProductoDuplicadoException();
         }
         return productoRepository.guardar(producto);
+    }
+
+    @Override
+    public Producto consultarMiProducto(String emailVendedor, String productoId) {
+        String vendedorId = usuarioEnSesion.idPorCorreo(emailVendedor);
+        // Un producto de otro vendedor se trata igual que uno inexistente, para no revelar que existe.
+        return productoRepository.buscarPorId(productoId)
+                .filter(producto -> producto.getVendedorId().equals(vendedorId))
+                .orElseThrow(ProductoNoEncontradoException::new);
+    }
+
+    @Override
+    public Producto modificarMiProducto(ModificarProductoCommand comando) {
+        Producto actual = consultarMiProducto(comando.emailVendedor(), comando.productoId());
+        // El id y el vendedor se conservan: así se actualiza el mismo documento y sigue siendo del mismo vendedor.
+        Producto modificado = new Producto(
+                actual.getId(),
+                actual.getVendedorId(),
+                comando.nombre(),
+                comando.descripcion(),
+                comando.precio(),
+                comando.stock(),
+                comando.categoriaId(),
+                comando.imagen(),
+                comando.disponible(),
+                comando.descuento(),
+                comando.descuentoPremium()
+        );
+        // Solo se comprueba si cambia el nombre: si no, el repositorio encontraría el propio producto. Como el índice
+        // único, no se distinguen mayúsculas; la carrera con otra modificación la sigue cubriendo ese índice.
+        boolean cambiaElNombre = !modificado.getNombre().equalsIgnoreCase(actual.getNombre());
+        if (cambiaElNombre
+                && productoRepository.existePorVendedorYNombre(modificado.getVendedorId(), modificado.getNombre())) {
+            throw new ProductoDuplicadoException();
+        }
+        return productoRepository.guardar(modificado);
     }
 }

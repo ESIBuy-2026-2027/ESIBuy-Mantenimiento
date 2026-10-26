@@ -277,6 +277,7 @@ Vienen de la revisión del Sprint 1 (comentarios R5 y R6) y vuelven a abrir la H
 
 - Si al guardar (alta o edición) el backend responde 409 con `code: PRODUCT_NAME_ALREADY_EXISTS`, el campo **Nombre** se marca con "Este nombre ya está en uso en tus productos. Usa uno distinto." en lugar del aviso genérico, y se sigue en el formulario.
 - El aviso desaparece en cuanto se cambia el nombre. Como en el backend, no distingue mayúsculas ni cuenta los espacios de los extremos.
+- Al editar (HU34, PR #122) el mismo 409 se mostraba en una barra encima del formulario con otro texto. Al integrar los dos cambios el equipo decidió un único mensaje, en el campo Nombre, para el alta y la edición; lo comprueba HU34-CP18.
 - **Mock:** `POST` y `PUT /api/seller/products` responden ese 409 cuando el vendedor ya tiene un producto con el mismo nombre (al editar, el propio producto no cuenta). Para probarlo en el navegador, dar de alta un producto llamado "teclado mecánico".
 
 ### Tests
@@ -284,5 +285,5 @@ Vienen de la revisión del Sprint 1 (comentarios R5 y R6) y vuelven a abrir la H
 | Archivo | Qué cubre |
 |---|---|
 | `components/CategoryCombobox.test.jsx` (nuevo) | HU31-CP26: lista y orden de las categorías, filtro sin mayúsculas ni tildes, sin coincidencias, elegir, nombre de la elegida, salir sin elegir y la opción «Todas las categorías». |
-| `pages/SellerProductFormPage.test.jsx` | HU31-CP26 (desplegable con las categorías y búsqueda al escribir) y HU31-CP27 (nombre repetido en alta y edición, y que el aviso desaparece al cambiarlo). Los tests anteriores eligen ahora la categoría en el desplegable. |
+| `pages/SellerProductFormPage.test.jsx` | HU31-CP26 (desplegable con las categorías y búsqueda al escribir) y HU31-CP27 (nombre repetido al dar de alta y que el aviso desaparece al cambiarlo; la edición la cubre HU34-CP18). Los tests anteriores eligen ahora la categoría en el desplegable. |
 | `Register.test.jsx`, `ProfileEditor.test.jsx`, `EditableProfile.test.jsx`, `UserEditDialog.test.jsx`, `SellerProductsPage.test.jsx`, `AdminSellersPage.test.jsx` | Adaptados al desplegable; el helper `elegirCategoria` de `test/utils.jsx` abre el desplegable y elige la opción. |

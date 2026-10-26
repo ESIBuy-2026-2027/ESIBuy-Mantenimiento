@@ -4,8 +4,10 @@ import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand
 import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
+import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
@@ -39,11 +41,14 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // Listado de los productos propios del vendedor (HU32, T184): GET /api/seller/products, y alta de un producto
-// (HU31, T205 y T179): POST /api/seller/products. Los casos de uso son dobles de prueba; la seguridad es la real
+// (HU31, T205 y T179): POST /api/seller/products, y consulta de un producto propio (HU33, T348):
+// GET /api/seller/products/{id}, y modificación de un producto propio (HU34, T342): PUT /api/seller/products/{id}.
+// Los casos de uso son dobles de prueba; la seguridad es la real
 // (SecurityConfig: /api/seller/** solo para VENDEDOR, con CSRF).
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU32-CP01 a CP05 y HU31-CP17 a CP22, propuestos.
 @WebMvcTest(ProductoController.class)
@@ -268,6 +273,171 @@ class ProductoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("PRODUCT_NAME_ALREADY_EXISTS"));
+    }
+
+    // ---- Consulta de un producto propio (HU33) ----
+
+    @Test
+    @DisplayName("HU33-CP04: el vendedor recibe 200 con su producto en el formato del contrato y sin el id del vendedor")
+    void vendedorConsultaSuProducto() throws Exception {
+        Producto propio = new Producto("p-9", "v-1", "Lámpara de pie", "Con regulador", new BigDecimal("45.50"), 7,
+                "cat-2", "https://esibuy.test/lampara.png", true, new Descuento(true, new BigDecimal("10")),
+                Descuento.sinDescuento());
+        when(gestionProductos.consultarMiProducto(VENDEDOR, "p-9")).thenReturn(propio);
+
+        mockMvc.perform(get(URL + "/p-9").with(user(VENDEDOR).roles("VENDEDOR")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("p-9"))
+                .andExpect(jsonPath("$.nombre").value("Lámpara de pie"))
+                .andExpect(jsonPath("$.descripcion").value("Con regulador"))
+                .andExpect(jsonPath("$.precio").value(45.5))
+                .andExpect(jsonPath("$.stock").value(7))
+                .andExpect(jsonPath("$.categoriaId").value("cat-2"))
+                .andExpect(jsonPath("$.imagen").value("https://esibuy.test/lampara.png"))
+                .andExpect(jsonPath("$.disponible").value(true))
+                .andExpect(jsonPath("$.descuento.activo").value(true))
+                .andExpect(jsonPath("$.descuento.porcentaje").value(10))
+                .andExpect(jsonPath("$.descuentoPremium.activo").value(false))
+                .andExpect(jsonPath("$.vendedorId").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("HU33-CP05: un producto inexistente o de otro vendedor devuelve 404 con el código PRODUCT_NOT_FOUND")
+    void productoNoEncontradoDevuelve404() throws Exception {
+        when(gestionProductos.consultarMiProducto(VENDEDOR, "p-404")).thenThrow(new ProductoNoEncontradoException());
+
+        mockMvc.perform(get(URL + "/p-404").with(user(VENDEDOR).roles("VENDEDOR")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("HU33-CP06: sin sesión no se consulta un producto")
+    void sinSesionNoSeConsultaUnProducto() throws Exception {
+        mockMvc.perform(get(URL + "/p-9"))
+                .andExpect(status().isUnauthorized());
+
+        verify(gestionProductos, never()).consultarMiProducto(any(), any());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "ADMINISTRADOR"})
+    @DisplayName("HU33-CP06: un usuario que no es vendedor no consulta un producto")
+    void noVendedorNoConsultaUnProducto(String rol) throws Exception {
+        mockMvc.perform(get(URL + "/p-9").with(user("usuario@esibuy.test").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(gestionProductos, never()).consultarMiProducto(any(), any());
+    }
+
+    // ---- Modificación de un producto propio (HU34) ----
+
+    @Test
+    @DisplayName("HU34-CP06: el vendedor modifica su producto y recibe 200 con el producto actualizado; el vendedor sale de la sesión")
+    void vendedorModificaSuProducto() throws Exception {
+        Producto modificado = new Producto("p-9", "v-1", "Lámpara de pie LED", "Con regulador", new BigDecimal("39.90"),
+                3, "cat-2", "https://esibuy.test/lampara.png", false, Descuento.sinDescuento(),
+                new Descuento(true, new BigDecimal("15")));
+        when(gestionProductos.modificarMiProducto(any())).thenReturn(modificado);
+        String conVendedor = cuerpo("\"Lámpara de pie LED\"", "39.9", "3", "\"cat-2\"", "\"\"", SIN_DESCUENTO)
+                .replace("{\"nombre\"", "{\"vendedorId\": \"v-otro\", \"nombre\"");
+
+        mockMvc.perform(put(URL + "/p-9").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(conVendedor))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("p-9"))
+                .andExpect(jsonPath("$.nombre").value("Lámpara de pie LED"))
+                .andExpect(jsonPath("$.precio").value(39.9))
+                .andExpect(jsonPath("$.stock").value(3))
+                .andExpect(jsonPath("$.disponible").value(false))
+                .andExpect(jsonPath("$.descuentoPremium.porcentaje").value(15))
+                .andExpect(jsonPath("$.vendedorId").doesNotExist());
+
+        ArgumentCaptor<ModificarProductoCommand> captor = ArgumentCaptor.forClass(ModificarProductoCommand.class);
+        verify(gestionProductos).modificarMiProducto(captor.capture());
+        ModificarProductoCommand comando = captor.getValue();
+        assertEquals(VENDEDOR, comando.emailVendedor());
+        assertEquals("p-9", comando.productoId());
+        assertEquals("Lámpara de pie LED", comando.nombre());
+        assertEquals(0, new BigDecimal("39.9").compareTo(comando.precio()));
+        assertEquals(3, comando.stock());
+        assertEquals("cat-2", comando.categoriaId());
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("cuerposInvalidos")
+    @DisplayName("HU34-CP07: un cuerpo con datos no válidos devuelve 400 y no llega al caso de uso")
+    void cuerpoInvalidoNoModificaElProducto(String descripcion, String cuerpo) throws Exception {
+        mockMvc.perform(put(URL + "/p-9").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpo))
+                .andExpect(status().isBadRequest());
+
+        verify(gestionProductos, never()).modificarMiProducto(any());
+    }
+
+    @Test
+    @DisplayName("HU34-CP07: una regla del dominio incumplida al modificar devuelve 400 con un mensaje genérico")
+    void reglaDeDominioIncumplidaAlModificarDevuelve400Generico() throws Exception {
+        when(gestionProductos.modificarMiProducto(any()))
+                .thenThrow(new ProductoInvalidoException("detalle interno que no debe salir"));
+
+        mockMvc.perform(put(URL + "/p-9").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.mensaje").value(not(containsString("detalle interno"))));
+    }
+
+    @Test
+    @DisplayName("HU34-CP08: cambiar el nombre por uno repetido del mismo vendedor devuelve 409 con el código PRODUCT_NAME_ALREADY_EXISTS")
+    void nombreRepetidoAlModificarDevuelve409() throws Exception {
+        when(gestionProductos.modificarMiProducto(any())).thenThrow(new ProductoDuplicadoException());
+
+        mockMvc.perform(put(URL + "/p-9").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("PRODUCT_NAME_ALREADY_EXISTS"));
+    }
+
+    @Test
+    @DisplayName("HU34-CP09: modificar un producto inexistente o de otro vendedor devuelve 404 con el código PRODUCT_NOT_FOUND")
+    void modificarUnProductoNoEncontradoDevuelve404() throws Exception {
+        when(gestionProductos.modificarMiProducto(any())).thenThrow(new ProductoNoEncontradoException());
+
+        mockMvc.perform(put(URL + "/p-404").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("HU34-CP10: sin sesión no se puede modificar un producto")
+    void sinSesionNoSeModificaUnProducto() throws Exception {
+        mockMvc.perform(put(URL + "/p-9").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isUnauthorized());
+
+        verify(gestionProductos, never()).modificarMiProducto(any());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "ADMINISTRADOR"})
+    @DisplayName("HU34-CP10: un usuario que no es vendedor no puede modificar un producto")
+    void noVendedorNoModificaUnProducto(String rol) throws Exception {
+        mockMvc.perform(put(URL + "/p-9").with(csrf()).with(user("usuario@esibuy.test").roles(rol))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isForbidden());
+
+        verify(gestionProductos, never()).modificarMiProducto(any());
+    }
+
+    @Test
+    @DisplayName("HU34-CP10: una modificación sin token CSRF se rechaza")
+    void sinTokenCsrfNoSeModificaUnProducto() throws Exception {
+        mockMvc.perform(put(URL + "/p-9").with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isForbidden());
+
+        verify(gestionProductos, never()).modificarMiProducto(any());
     }
 
     private static Stream<Arguments> cuerposInvalidos() {

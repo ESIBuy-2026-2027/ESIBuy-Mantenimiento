@@ -20,7 +20,8 @@ import { useCategories } from '../hooks/useCategories'
 import { PATHS } from '../routes/paths'
 
 const NOT_FOUND = 404
-const NOMBRE_EN_USO = 'PRODUCT_NAME_ALREADY_EXISTS'
+const DUPLICATE_NAME = 'PRODUCT_NAME_ALREADY_EXISTS'
+const GENERIC_SAVE_ERROR = 'No se ha podido guardar el producto. Inténtalo de nuevo.'
 
 const useStyles = makeStyles({
   // Columna más estrecha que la de los listados; sigue centrada en la pantalla (margin auto).
@@ -37,7 +38,7 @@ export default function SellerProductFormPage() {
   const navigate = useNavigate()
   const isEdit = Boolean(id)
   const [saving, setSaving] = useState(false)
-  const [saveFailed, setSaveFailed] = useState(false)
+  const [saveError, setSaveError] = useState(null)
   const [takenName, setTakenName] = useState(null)
   const { categories, loaded: categoriesLoaded, failed: categoriesFailed, retry: retryCategories } = useCategories()
   const loadProduct = useCallback(() => (id ? getSellerProduct(id) : Promise.resolve(null)), [id])
@@ -45,7 +46,7 @@ export default function SellerProductFormPage() {
 
   const handleSubmit = async (payload) => {
     setSaving(true)
-    setSaveFailed(false)
+    setSaveError(null)
     setTakenName(null)
     try {
       await (isEdit ? updateSellerProduct(id, payload) : createSellerProduct(payload))
@@ -53,9 +54,10 @@ export default function SellerProductFormPage() {
         state: { notice: isEdit ? 'Cambios guardados.' : 'Producto guardado correctamente.' },
       })
     } catch (error) {
-      // Un nombre repetido se marca en su campo (HU31); cualquier otro fallo, con el mensaje genérico.
-      if (error?.code === NOMBRE_EN_USO) setTakenName(payload.nombre)
-      else setSaveFailed(true)
+      // Un nombre repetido se marca en su campo, al dar de alta (HU31) y al editar (HU34); el resto de fallos,
+      // con el mensaje genérico.
+      if (error?.code === DUPLICATE_NAME) setTakenName(payload.nombre)
+      else setSaveError(GENERIC_SAVE_ERROR)
       setSaving(false)
     }
   }
@@ -107,7 +109,7 @@ export default function SellerProductFormPage() {
           initialValues={product ? valuesFromProduct(product) : emptyProductValues()}
           categories={categories}
           saving={saving}
-          saveFailed={saveFailed}
+          saveError={saveError}
           takenName={takenName}
           onSubmit={handleSubmit}
         />

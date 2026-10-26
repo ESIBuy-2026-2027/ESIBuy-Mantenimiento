@@ -368,28 +368,12 @@ describe('SellerProductFormPage (HU31): nombre repetido', () => {
 
     expect(screen.queryByText(NOMBRE_EN_USO)).not.toBeInTheDocument()
   })
-
-  it('HU31-CP27: al editar, un nombre repetido también se marca en el campo Nombre', async () => {
-    server.use(
-      http.put('/api/seller/products/:id', () =>
-        HttpResponse.json({ code: 'PRODUCT_NAME_ALREADY_EXISTS' }, { status: 409 }),
-      ),
-    )
-    const user = userEvent.setup()
-    await abrirFormulario('/seller/products/p-1/edit', /editar producto/i)
-    await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Auriculares inalámbricos'))
-
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-
-    expect(await screen.findByText(NOMBRE_EN_USO)).toBeInTheDocument()
-    expect(screen.queryByText(/no se ha podido guardar el producto/i)).not.toBeInTheDocument()
-  })
 })
 
-describe('SellerProductFormPage (HU31): edición', () => {
+describe('SellerProductFormPage (HU34): edición', () => {
   const RUTA_EDITAR = '/seller/products/p-1/edit'
 
-  it('sellerProductFormPage_enEdicion_cargaLosDatosDelProducto', async () => {
+  it('HU34-CP12: la vista de edición se abre con los datos actuales del producto', async () => {
     await abrirFormulario(RUTA_EDITAR, /editar producto/i)
 
     await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Auriculares inalámbricos'))
@@ -399,7 +383,7 @@ describe('SellerProductFormPage (HU31): edición', () => {
     expect(screen.getByLabelText(/^descripción/i)).toHaveValue('Descripción de Auriculares inalámbricos.')
   })
 
-  it('sellerProductFormPage_enEdicion_muestraLosDescuentosActivosDelProducto', async () => {
+  it('HU34-CP12: la vista de edición muestra los descuentos activos del producto', async () => {
     await abrirFormulario(RUTA_EDITAR, /editar producto/i)
 
     await waitFor(() => expect(screen.getByRole('switch', { name: 'Activar descuento' })).toBeChecked())
@@ -407,7 +391,7 @@ describe('SellerProductFormPage (HU31): edición', () => {
     expect(screen.getByLabelText(/^descuento premium \(%\)/i)).toHaveValue(15)
   })
 
-  it('sellerProductFormPage_enEdicion_alGuardar_enviaLosCambiosAlProductoIndicado', async () => {
+  it('HU34-CP13: al guardar, envía los cambios al producto indicado y vuelve al listado con un aviso', async () => {
     const user = userEvent.setup()
     const envio = capturarEnvio('put', '/api/seller/products/:id', () => HttpResponse.json({ id: 'p-1' }))
     await abrirFormulario(RUTA_EDITAR, /editar producto/i)
@@ -422,7 +406,7 @@ describe('SellerProductFormPage (HU31): edición', () => {
     expect(await screen.findByText(/cambios guardados/i)).toBeInTheDocument()
   })
 
-  it('sellerProductFormPage_enEdicion_tambienValidaLosCampos', async () => {
+  it('HU34-CP14: la edición aplica las mismas validaciones que el alta', async () => {
     const user = userEvent.setup()
     await abrirFormulario(RUTA_EDITAR, /editar producto/i)
     await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Auriculares inalámbricos'))
@@ -434,7 +418,25 @@ describe('SellerProductFormPage (HU31): edición', () => {
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp(`^${RUTA_EDITAR}$`))
   })
 
-  it('sellerProductFormPage_enEdicion_conProductoDeOtroVendedor_noMuestraElFormulario', async () => {
+  it('HU34-CP18: si el nombre ya lo tiene otro producto del vendedor, lo indica y no sale del formulario', async () => {
+    const user = userEvent.setup()
+    capturarEnvio('put', '/api/seller/products/:id', () =>
+      HttpResponse.json({ code: 'PRODUCT_NAME_ALREADY_EXISTS' }, { status: 409 }),
+    )
+    await abrirFormulario(RUTA_EDITAR, /editar producto/i)
+    await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Auriculares inalámbricos'))
+
+    await user.clear(screen.getByLabelText(/^nombre/i))
+    await user.type(screen.getByLabelText(/^nombre/i), 'Teclado mecánico')
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+
+    expect(await screen.findByText(NOMBRE_EN_USO)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^nombre/i)).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.queryByText(/no se ha podido guardar el producto/i)).not.toBeInTheDocument()
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp(`^${RUTA_EDITAR}$`))
+  })
+
+  it('HU34-CP15: un producto de otro vendedor no muestra el formulario', async () => {
     await abrirSesionPorApi(VENDEDOR)
     renderApp('/seller/products/p-24/edit')
 
@@ -442,14 +444,14 @@ describe('SellerProductFormPage (HU31): edición', () => {
     expect(screen.queryByRole('button', { name: /^guardar$/i })).not.toBeInTheDocument()
   })
 
-  it('sellerProductFormPage_enEdicion_conProductoInexistente_noMuestraElFormulario', async () => {
+  it('HU34-CP15: un producto inexistente no muestra el formulario', async () => {
     await abrirSesionPorApi(VENDEDOR)
     renderApp('/seller/products/no-existe/edit')
 
     expect(await screen.findByText(/no se ha encontrado el producto/i)).toBeInTheDocument()
   })
 
-  it('sellerProductFormPage_enEdicion_conErrorDeServidor_permiteReintentar', async () => {
+  it('HU34-CP16: si el producto no carga, muestra un error y permite reintentar', async () => {
     server.use(http.get('/api/seller/products/:id', () => new HttpResponse(null, { status: 500 }), { once: true }))
     const user = userEvent.setup()
     await abrirSesionPorApi(VENDEDOR)
