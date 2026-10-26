@@ -388,11 +388,10 @@ describe('Rutas protegidas y sesión', () => {
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/seller/products$')))
   })
 
-  it('productos_sinSesion_esUnaRutaPublica', async () => {
+  it('productos_sinSesion_llevaAIniciarSesion', async () => {
     renderApp('/products')
 
-    expect(await screen.findByRole('link', { name: /iniciar sesión/i })).toBeInTheDocument()
-    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/)
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/login$')))
   })
 
   // Fallos de la demo del Sprint 1: en el login no se podía ver la contraseña escrita
