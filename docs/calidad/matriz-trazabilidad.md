@@ -1243,10 +1243,10 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU33-CP04 | `GET /api/seller/products/{id}` devuelve 200 con el producto en el formato del contrato y sin el id del vendedor | Integración (capa web) | 1 | ✅ Pasa |
 | HU33-CP05 | Un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | ✅ Pasa |
 | HU33-CP06 | Sin sesión (401) o sin ser vendedor (403) no se consulta un producto | Integración (capa web) | 2 | ✅ Pasa |
-| HU33-CP07 | Desde el listado, Ver abre la ficha del producto con todos sus datos en solo lectura y la categoría con su nombre | Frontend (componente y página) | 4 | 🔍 En revisión |
-| HU33-CP08 | La ficha muestra los botones Editar y Eliminar, deshabilitados | Frontend (componente) | 1 | 🔍 En revisión |
-| HU33-CP09 | Un producto no encontrado (403 o 404, p. ej. de otro vendedor) lo indica y no ofrece acciones | Frontend (componente) | 2 | 🔍 En revisión |
-| HU33-CP10 | Si la carga falla por otro motivo, la ficha muestra un error genérico y permite reintentar | Frontend (componente) | 1 | 🔍 En revisión |
+| HU33-CP07 | Desde el listado, Ver abre la ficha del producto con todos sus datos en solo lectura y la categoría con su nombre | Frontend (componente y página) | 4 | ✅ Pasa |
+| HU33-CP08 | La ficha muestra los botones Editar y Eliminar, deshabilitados | Frontend (componente) | 1 | ✅ Pasa |
+| HU33-CP09 | Un producto no encontrado (403 o 404, p. ej. de otro vendedor) lo indica y no ofrece acciones | Frontend (componente) | 2 | ✅ Pasa |
+| HU33-CP10 | Si la carga falla por otro motivo, la ficha muestra un error genérico y permite reintentar | Frontend (componente) | 1 | ✅ Pasa |
 
 Notas:
 - **HU33-CP01 a CP06:** casos propuestos en la T349 (AB#349) y la T348 (AB#348) y acordados con el equipo durante el desarrollo. Pendientes de añadir a la HU33 en Azure Boards.
@@ -1268,20 +1268,54 @@ Notas:
 | HU33-CP05 | `ProductoControllerTest` | `productoNoEncontradoDevuelve404` | Infraestructura | AB#348 | PR #118 | ✅ |
 | HU33-CP06 | `ProductoControllerTest` | `sinSesionNoSeConsultaUnProducto` | Infraestructura | AB#348 | PR #118 | ✅ |
 | HU33-CP06 | `ProductoControllerTest` | `noVendedorNoConsultaUnProducto` (cliente y administrador) | Infraestructura | AB#348 | PR #118 | ✅ |
-| HU33-CP07 | `ProductDetailDialog.test.jsx` | `HU33-CP07: muestra todos los datos del producto, con el nombre de su categoría` | Frontend · componente | AB#347 | PR #119 | 🔍 |
-| HU33-CP07 | `ProductDetailDialog.test.jsx` | `HU33-CP07: todos los campos son de solo lectura` | Frontend · componente | AB#347 | PR #119 | 🔍 |
-| HU33-CP07 | `SellerProductsPage.test.jsx` | `HU33-CP07: cada fila tiene un botón para ver la ficha del producto` | Frontend · página | AB#347 | PR #119 | 🔍 |
-| HU33-CP07 | `SellerProductsPage.test.jsx` | `HU33-CP07: al pulsar Ver se abre la ficha de ese producto` | Frontend · página | AB#347 | PR #119 | 🔍 |
-| HU33-CP08 | `ProductDetailDialog.test.jsx` | `HU33-CP08: muestra los botones Editar y Eliminar, deshabilitados` | Frontend · componente | AB#347 | PR #119 | 🔍 |
-| HU33-CP09 | `ProductDetailDialog.test.jsx` | `HU33-CP09: un producto de otro vendedor muestra que no se ha encontrado y no ofrece acciones` | Frontend · componente | AB#347 | PR #119 | 🔍 |
-| HU33-CP09 | `ProductDetailDialog.test.jsx` | `HU33-CP09: una respuesta %i muestra que no se ha encontrado el producto` (403 y 404) | Frontend · componente | AB#347 | PR #119 | 🔍 |
-| HU33-CP10 | `ProductDetailDialog.test.jsx` | `HU33-CP10: si la carga falla por otro motivo, muestra un error genérico y permite reintentar` | Frontend · componente | AB#347 | PR #119 | 🔍 |
+| HU33-CP07 | `ProductDetailDialog.test.jsx` | `HU33-CP07: muestra todos los datos del producto, con el nombre de su categoría` | Frontend · componente | AB#347 | PR #119 | ✅ |
+| HU33-CP07 | `ProductDetailDialog.test.jsx` | `HU33-CP07: todos los campos son de solo lectura` | Frontend · componente | AB#347 | PR #119 | ✅ |
+| HU33-CP07 | `SellerProductsPage.test.jsx` | `HU33-CP07: cada fila tiene un botón para ver la ficha del producto` | Frontend · página | AB#347 | PR #119 | ✅ |
+| HU33-CP07 | `SellerProductsPage.test.jsx` | `HU33-CP07: al pulsar Ver se abre la ficha de ese producto` | Frontend · página | AB#347 | PR #119 | ✅ |
+| HU33-CP08 | `ProductDetailDialog.test.jsx` | `HU33-CP08: muestra los botones Editar y Eliminar, deshabilitados` | Frontend · componente | AB#347 | PR #119 | ✅ |
+| HU33-CP09 | `ProductDetailDialog.test.jsx` | `HU33-CP09: un producto de otro vendedor muestra que no se ha encontrado y no ofrece acciones` | Frontend · componente | AB#347 | PR #119 | ✅ |
+| HU33-CP09 | `ProductDetailDialog.test.jsx` | `HU33-CP09: una respuesta %i muestra que no se ha encontrado el producto` (403 y 404) | Frontend · componente | AB#347 | PR #119 | ✅ |
+| HU33-CP10 | `ProductDetailDialog.test.jsx` | `HU33-CP10: si la carga falla por otro motivo, muestra un error genérico y permite reintentar` | Frontend · componente | AB#347 | PR #119 | ✅ |
 
 Rutas de las clases de test:
 - `GestionProductosServiceTest`: `backend/src/test/java/es/uclm/esibuy/backend/productos/application/service/` (Mockito, sin Spring)
 - `ProductoControllerTest`: `backend/src/test/java/es/uclm/esibuy/backend/productos/infrastructure/adapter/in/web/` (con `@WebMvcTest`)
 - `ProductDetailDialog.test.jsx`: `frontend/src/features/seller/` (Vitest, RTL y MSW)
 - `SellerProductsPage.test.jsx`: `frontend/src/pages/` (Vitest, RTL y MSW)
+
+---
+
+## HU34 · Modificar un producto propio
+
+### Tabla A · HU34 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU34-CP01 | El vendedor guarda los cambios de un producto suyo, con el mismo id y el mismo vendedor | Unitario | 1 | 🔍 En revisión |
+| HU34-CP02 | Se aplican las mismas validaciones que en el alta y unos datos inválidos no se guardan | Unitario | 1 | 🔍 En revisión |
+| HU34-CP03 | No se puede cambiar el nombre por el de otro producto del vendedor (`ProductoDuplicadoException`) | Unitario | 1 | 🔍 En revisión |
+| HU34-CP04 | Conservar el nombre del producto, aunque cambien las mayúsculas, no es un nombre repetido | Unitario | 1 | 🔍 En revisión |
+| HU34-CP05 | Un vendedor no puede modificar un producto de otro vendedor ni uno inexistente (`ProductoNoEncontradoException`) | Unitario | 2 | 🔍 En revisión |
+
+Notas:
+- **HU34-CP01 a CP05:** casos propuestos en la T343 (AB#343) a partir de los criterios de aceptación de la HU34. Pendientes de añadir a la HU34 en Azure Boards.
+- **Campos editables (decisión del equipo):** el id y el vendedor no se modifican; el nombre sí, controlando duplicados, y `disponible` también.
+- **HU34-CP02:** sin rojo real, porque el constructor de `Producto` ya aplica las validaciones del alta.
+- **Pendiente:** el endpoint (T342), donde se comprobará que los cambios llegan al catálogo, y la vista de edición (T341).
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU34-CP01 | `GestionProductosServiceTest` | `guardaLosCambiosConElMismoIdYVendedor` | Aplicación | AB#343 | PR #120 | 🔍 |
+| HU34-CP02 | `GestionProductosServiceTest` | `rechazaUnaModificacionConDatosInvalidos` | Aplicación | AB#343 | PR #120 | 🔍 |
+| HU34-CP03 | `GestionProductosServiceTest` | `rechazaCambiarElNombrePorUnoRepetido` | Aplicación | AB#343 | PR #120 | 🔍 |
+| HU34-CP04 | `GestionProductosServiceTest` | `conservarElNombreNoEsUnNombreRepetido` (mismo nombre y en mayúsculas) | Aplicación | AB#343 | PR #120 | 🔍 |
+| HU34-CP05 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoSeModifica` | Aplicación | AB#343 | PR #120 | 🔍 |
+| HU34-CP05 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoSeModifica` | Aplicación | AB#343 | PR #120 | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `GestionProductosServiceTest`: `productos/application/service/` (Mockito, sin Spring)
 
 ---
 
