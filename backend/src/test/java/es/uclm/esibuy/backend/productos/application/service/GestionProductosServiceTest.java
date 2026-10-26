@@ -243,8 +243,8 @@ class GestionProductosServiceTest {
     @Test
     @DisplayName("HU35-CP01: el vendedor elimina un producto suyo")
     void elVendedorEliminaSuProducto() {
-        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
-        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-1")));
+        lenient().when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        lenient().when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-1")));
 
         servicio.eliminarMiProducto(CORREO, "p-9");
 
