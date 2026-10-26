@@ -43,6 +43,7 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | HU1-CP24 | Tras registrarse se ofrece ir a iniciar sesión | Frontend (página) | 1 | ✅ Pasa (1, AB#234, PR #105) |
 | HU1-CP25 | Con la sesión iniciada no se ofrece crear una cuenta y /register lleva a la página del rol | Frontend (página y rutas) | 3 | ✅ Pasa (3, AB#17 · AB#18, PR #105) |
 | HU1-CP26 | Un registro correcto no se trata como un error aunque el backend responda 201 sin cuerpo | Frontend (API) | 1 | ✅ Pasa (1, AB#17 · AB#18, PR #105) |
+| HU1-CP27 | En el registro, el password y su repetición solo se pueden escribir a mano: no admiten copiar, cortar, pegar ni soltar texto, y el login sigue admitiendo pegar | Frontend (componente y página) | 7 | 🔍 En revisión (7, AB#242, PR sin abrir) |
 
 Notas:
 - **HU1-CP11:** en el PR #36, el bloqueo manual de la T214 se renombra a desactivar/activar (`desactivar()`, `activar()`, `estaDesactivado()`) para no confundirlo con el bloqueo temporal por intentos del login (HU2-CP03). En la T225 (AB#225) la consulta pasa a nombrarse en positivo: `estaActivo()`.
@@ -229,6 +230,13 @@ Notas:
 | HU1-CP25 | `GuestOnlyRoute.test.jsx` | `HU1-CP25: con la sesión iniciada /register lleva a la página de inicio del rol` | Frontend · rutas | AB#17 · AB#18 | PR #105 | ✅ |
 | HU1-CP25 | `GuestOnlyRoute.test.jsx` | `HU1-CP25: sin sesión /register muestra el formulario de registro` | Frontend · rutas | AB#17 · AB#18 | PR #105 | ✅ |
 | HU1-CP26 | `client.test.js` | `HU1-CP26: una respuesta 201 sin cuerpo devuelve null` | Frontend · API | AB#17 · AB#18 | PR #105 | ✅ |
+| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con bloquearPegado no deja pegar texto en el campo` | Frontend · componente | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
+| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con bloquearPegado tampoco deja copiar, cortar ni soltar texto arrastrado en el campo` | Frontend · componente | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
+| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con el password visible sigue sin dejar copiarlo` | Frontend · componente | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
+| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: sin bloquearPegado (como en el login) se puede pegar` | Frontend · componente | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
+| HU1-CP27 | `Register.test.jsx` | `HU1-CP27: en el registro de cliente no se puede pegar el password ni su repetición` | Frontend · página | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
+| HU1-CP27 | `Register.test.jsx` | `HU1-CP27: en el registro de vendedor no se puede pegar el password ni su repetición` | Frontend · página | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
+| HU1-CP27 | `Register.test.jsx` | `HU1-CP27: el password escrito a mano en los dos campos sigue permitiendo registrarse` | Frontend · página | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
 
 ---
 
