@@ -256,6 +256,7 @@ export default function Register() {
       onChange={cambiar(nombre)}
       error={errores[nombre]}
       maxLength={LONGITUD_MAXIMA[nombre]}
+      bloquearPegado
     />
   )
 
