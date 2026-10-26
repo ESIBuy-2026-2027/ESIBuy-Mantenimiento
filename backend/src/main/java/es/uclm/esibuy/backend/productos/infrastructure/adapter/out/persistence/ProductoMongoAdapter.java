@@ -89,6 +89,6 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
 
     @Override
     public void eliminar(String id) {
-        throw new UnsupportedOperationException("Pendiente de implementar (HU35)");
+        repository.deleteById(id);
     }
 }
