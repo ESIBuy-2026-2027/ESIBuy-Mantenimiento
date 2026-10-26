@@ -1342,7 +1342,7 @@ Notas:
 - **HU34-CP02 y CP07 a CP10:** sin rojo real. El CP02, porque el constructor de `Producto` ya aplica las validaciones del alta; los CP07 a CP10, porque la validación de `ProductoRequest`, `ManejadorGlobalErrores` y `SecurityConfig` ya los cubrían.
 - **HU34-CP11 · PENDIENTE DE VERIFICAR (decisión del equipo):** el criterio «los cambios se reflejan inmediatamente en el catálogo que ven los clientes» **no se verifica todavía**, porque en el backend aún no existe el catálogo de clientes. La modificación actualiza el mismo documento de la colección `productos` (lo prueba el test técnico «Persistencia: guardar un producto leído lo actualiza sin duplicarlo y conserva createdAt» de `ProductoMongoAdapterTest`), que es la que leerá el catálogo. **Cuando se desarrolle el catálogo de clientes, hay que añadir el test de este caso y pasarlo a ✅.**
 - **HU34-CP12 a CP16:** la vista de edición se hizo en la HU31 (formulario compartido con el alta). Por decisión del equipo, sus 7 tests se renombran en la T341 (AB#341, PR #122) con el ID de su caso de la HU34 y se trazan aquí; no tienen ciclo rojo porque no hay código nuevo detrás.
-- **HU34-CP17 y CP18:** casos nuevos de la T341. El mensaje del nombre repetido es solo de la edición (decisión del equipo); el alta mantiene el genérico.
+- **HU34-CP17 y CP18:** casos nuevos de la T341. El nombre repetido se indica en el campo Nombre con el mismo mensaje en el alta y en la edición (decisión del equipo al resolver el conflicto del #123 con el #122; ver HU31-CP27).
 
 ### Tabla B · casos de prueba ↔ tests
 
