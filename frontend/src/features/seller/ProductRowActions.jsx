@@ -1,14 +1,21 @@
 import PropTypes from 'prop-types'
 import { Button } from '@fluentui/react-components'
-import { Delete20Regular, Edit20Regular } from '@fluentui/react-icons'
+import { Delete20Regular, Edit20Regular, Eye20Regular } from '@fluentui/react-icons'
 import LinkButton from '../../components/LinkButton'
 import { getSellerProductEditPath } from '../../routes/paths'
 import { productPropType } from '../../utils/propTypes'
 
-// Acciones de una fila del listado de productos del vendedor: editar (abre el formulario) y eliminar.
-export default function ProductRowActions({ product, onDelete }) {
+// Acciones de una fila del listado de productos del vendedor: ver su ficha (HU33), editar (abre el formulario)
+// y eliminar.
+export default function ProductRowActions({ product, onView, onDelete }) {
   return (
     <>
+      <Button
+        appearance="subtle"
+        icon={<Eye20Regular />}
+        aria-label={`Ver ${product.nombre}`}
+        onClick={() => onView(product)}
+      />
       <LinkButton
         to={getSellerProductEditPath(product.id)}
         appearance="subtle"
@@ -27,5 +34,6 @@ export default function ProductRowActions({ product, onDelete }) {
 
 ProductRowActions.propTypes = {
   product: productPropType.isRequired,
+  onView: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
 }
