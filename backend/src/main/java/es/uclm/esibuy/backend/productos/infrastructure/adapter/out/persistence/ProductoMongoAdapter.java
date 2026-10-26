@@ -86,4 +86,9 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         }
         return new Criteria().andOperator(criterios);
     }
+
+    @Override
+    public void eliminar(String id) {
+        throw new UnsupportedOperationException("Pendiente de implementar (HU35)");
+    }
 }

@@ -80,4 +80,9 @@ public class GestionProductosService implements GestionProductosUseCase {
         }
         return productoRepository.guardar(modificado);
     }
+
+    @Override
+    public void eliminarMiProducto(String emailVendedor, String productoId) {
+        throw new UnsupportedOperationException("Pendiente de implementar (HU35)");
+    }
 }

@@ -34,7 +34,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-// Alta (HU31, T204), consulta (HU33, T349) y modificación (HU34, T343) de los productos propios del vendedor. El repositorio y el puerto hacia usuarios son dobles de
+// Alta (HU31, T204), consulta (HU33, T349), modificación (HU34, T343) y eliminación (HU35, T346) de los productos propios del vendedor. El repositorio y el puerto hacia usuarios son dobles de
 // prueba (Mockito): se prueba el caso de uso sin MongoDB ni Spring.
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP13 a CP16, propuestos a partir del contrato del frontend.
 @ExtendWith(MockitoExtension.class)
@@ -238,6 +238,17 @@ class GestionProductosServiceTest {
                 () -> servicio.modificarMiProducto(modificacion("p-9", "Teclado mecánico RGB", new BigDecimal("99.90"))));
 
         verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU35-CP01: el vendedor elimina un producto suyo")
+    void elVendedorEliminaSuProducto() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-1")));
+
+        servicio.eliminarMiProducto(CORREO, "p-9");
+
+        verify(productoRepository).eliminar("p-9");
     }
 
     private static Producto producto(String id, String vendedorId) {
