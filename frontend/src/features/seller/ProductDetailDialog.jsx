@@ -19,6 +19,8 @@ import { Delete20Regular, Dismiss24Regular, Edit20Regular } from '@fluentui/reac
 import { getSellerProduct } from '../../api/products'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { useCategories } from '../../hooks/useCategories'
+import LinkButton from '../../components/LinkButton'
+import { getSellerProductEditPath } from '../../routes/paths'
 import { formatPrice } from '../../utils/format'
 import ReadOnlyFields from '../admin/ReadOnlyFields'
 
@@ -56,7 +58,7 @@ function productFields(product, categoryName) {
 
 // Ficha de un producto propio del vendedor (HU33), en solo lectura. El producto se pide al backend, que solo
 // devuelve los del vendedor en sesión; la categoría llega como identificador y se muestra con su nombre.
-// Editar y Eliminar se ven pero están deshabilitados: su funcionamiento es de la HU34 y la HU35.
+// Editar lleva al formulario de edición (HU34); Eliminar se ve pero está deshabilitado hasta la HU35.
 export default function ProductDetailDialog({ productId, onClose }) {
   const styles = useStyles()
   const fetcher = useCallback(() => getSellerProduct(productId), [productId])
@@ -98,9 +100,9 @@ export default function ProductDetailDialog({ productId, onClose }) {
           </DialogContent>
           {product && (
             <DialogActions>
-              <Button icon={<Edit20Regular />} disabled>
+              <LinkButton to={getSellerProductEditPath(product.id)} icon={<Edit20Regular />}>
                 Editar
-              </Button>
+              </LinkButton>
               <Button icon={<Delete20Regular />} disabled>
                 Eliminar
               </Button>
