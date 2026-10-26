@@ -658,4 +658,33 @@ describe('Register', () => {
     const enlace = await screen.findByRole('link', { name: /ir a iniciar sesión/i })
     expect(enlace).toHaveAttribute('href', '/login')
   })
+
+  it('HU1-CP27: en el registro de cliente no se puede pegar el password ni su repetición', async () => {
+    await renderYElegirCliente()
+
+    for (const campo of [screen.getByLabelText(/^password/i), screen.getByLabelText(/^repetir password/i)]) {
+      await userEvent.click(campo)
+      await userEvent.paste('Password123!')
+      expect(campo).toHaveValue('')
+    }
+  })
+
+  it('HU1-CP27: en el registro de vendedor no se puede pegar el password ni su repetición', async () => {
+    await renderYElegirVendedor()
+
+    for (const campo of [screen.getByLabelText(/^password/i), screen.getByLabelText(/^repetir password/i)]) {
+      await userEvent.click(campo)
+      await userEvent.paste('Password123!')
+      expect(campo).toHaveValue('')
+    }
+  })
+
+  it('HU1-CP27: el password escrito a mano en los dos campos sigue permitiendo registrarse', async () => {
+    registrarCliente.mockResolvedValue({})
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(registrarCliente).toHaveBeenCalledTimes(1)
+  })
 })

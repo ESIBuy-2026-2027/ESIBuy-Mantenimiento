@@ -4,8 +4,8 @@ Documento para entender la pantalla de registro: qué pide a cada tipo de usuari
 
 - **Fecha:** 8 de octubre de 2026
 - **HU:** HU1 · Registro de usuario
-- **Tasks:** AB#17 y AB#18; después, AB#234 (cuenta pendiente tras el registro)
-- **Rama:** `feature/front/registro`; la task AB#234, en `feature/US1-T234-cuenta-pendiente`
+- **Tasks:** AB#17 y AB#18; después, AB#234 (cuenta pendiente tras el registro) y AB#242 (password solo escrito a mano)
+- **Rama:** `feature/front/registro`; la task AB#234, en `feature/US1-T234-cuenta-pendiente`; la task AB#242, en `feature/US1-T242-bloquear-pegar-contrasena-registro`
 - **Metodología:** TDD. Cada ciclo tiene su commit de rojo (`test(HU1)`) y su commit de verde (`feat(HU1)`), y los refactors van en commits `refactor(HU1)` aparte.
 - **Depende de:** `docs/Contexto_frontend.md` (sección 6.3, requisitos del registro) y `docs/mocks-msw.md` (mocks)
 - **Ampliado por la task AB#234:** la cuenta creada queda **pendiente** hasta que un administrador la verifica. Ver la sección 1.1.
@@ -65,6 +65,14 @@ En la demo del Sprint 1 se vieron tres fallos del registro, corregidos con TDD e
 
 `registroErrors.js` lo comparten el registro, el alta de administrador (HU21) y la edición de usuarios (HU22), para que los tres formularios traduzcan los errores igual.
 
+### 1.3 Password solo escrito a mano (task AB#242)
+
+En el formulario de registro, tanto de cliente como de vendedor, **Password** y **Repetir password** no admiten copiar, cortar, pegar ni soltar texto arrastrado. Así el usuario tiene que escribir la contraseña **a mano dos veces** y no puede dar por buena una errata pegándola en los dos campos. Tampoco se puede copiar con el ojo activado (password visible).
+
+- **Cómo:** `PasswordField` tiene una propiedad nueva `bloquearPegado` (desactivada por defecto) que cancela los eventos `copy`, `cut`, `paste` y `drop` del campo. `Register.jsx` la activa en los dos campos de password.
+- **Solo en el registro:** el login (`CredentialsStep`) y el alta de administradores (`AdminNewAdminPage`) usan el mismo componente, pero no la activan. En el login hay que poder pegar la contraseña de un gestor de contraseñas.
+- **No es una barrera de seguridad:** es una ayuda de usabilidad. Se puede saltar, por ejemplo con las herramientas del navegador. La política de password y su validación en el backend no cambian.
+
 ---
 
 ## 2. Flujo
@@ -88,7 +96,7 @@ flowchart TD
     I --> L[Botón Ir a iniciar sesión]
 ```
 
-Mientras se escribe el password, la lista de requisitos marca con un tick verde cada uno que se cumple. Cada campo de password tiene un botón con un ojo para mostrarlo u ocultarlo.
+Mientras se escribe el password, la lista de requisitos marca con un tick verde cada uno que se cumple. Cada campo de password tiene un botón con un ojo para mostrarlo u ocultarlo, y ninguno admite pegar ni copiar (sección 1.3).
 
 ---
 
@@ -134,6 +142,7 @@ Todas las rutas son relativas a `frontend/src/`.
 ## 4. Seguridad
 
 - **Política de password** visible desde el principio, con un tick por requisito cumplido. Al enviar se rechaza cualquier password que no cumpla las cinco reglas.
+- **El password solo se escribe a mano** en el registro, también al repetirlo: los campos bloquean copiar, cortar, pegar y soltar texto (sección 1.3).
 - **El password nunca se guarda en el navegador** (ni en `localStorage` ni en `sessionStorage`). El mock tampoco lo guarda: solo recuerda emails y nombres comerciales para detectar duplicados.
 - **Límite de longitud** en los campos de texto, para no enviar entradas desproporcionadas.
 - **Consentimiento RGPD** obligatorio para registrarse.
@@ -205,6 +214,7 @@ Pruebas manuales sugeridas:
 1. Pulsar **Registrarse** con el formulario vacío y comprobar que aparecen todos los errores a la vez.
 2. Escribir un password poco a poco y ver cómo se marcan los requisitos.
 3. Pulsar el ojo de cada password para mostrarlo y ocultarlo.
+   Intentar pegar (Ctrl+V) un texto en **Password** y en **Repetir password**: no aparece nada. Con el password visible, intentar copiarlo (Ctrl+C): no se copia.
 4. Como vendedor, elegir una categoría: al elegir otra, la anterior se desmarca.
 5. Intentar escribir más de 30 caracteres en el nombre.
 
@@ -231,6 +241,13 @@ Los tests sustituyen `api/auth` y `api/products` con `vi.mock`, así que no depe
 | `pages/Home.test.jsx` | 1 nuevo | Con la sesión iniciada no se ofrece **Crear mi cuenta** |
 | `auth/GuestOnlyRoute.test.jsx` (nuevo) | 2 | Con sesión, `/register` lleva a la página del rol; sin sesión, muestra el formulario |
 | `api/client.test.js` | 1 nuevo | Una respuesta 201 sin cuerpo devuelve `null` en lugar de un error |
+
+**Task AB#242** (con TDD; caso HU1-CP27 de la matriz):
+
+| Archivo | Tests | Qué cubre |
+|---|---|---|
+| `features/account/PasswordField.test.jsx` | 4 nuevos | Con `bloquearPegado` no se puede pegar, copiar, cortar ni soltar texto (tampoco con el password visible); sin él, como en el login, sí se puede pegar |
+| `pages/Register.test.jsx` | 3 nuevos | En cliente y en vendedor no se puede pegar ni el password ni su repetición; escrito a mano en los dos campos, el registro sigue funcionando |
 
 **Task AB#234** (con TDD: primero los tests en rojo y después el código):
 
