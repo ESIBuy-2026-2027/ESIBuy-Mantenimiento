@@ -34,6 +34,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -453,6 +454,16 @@ class ProductoControllerTest {
                 .andExpect(content().string(""));
 
         verify(gestionProductos).eliminarMiProducto(VENDEDOR, "p-9");
+    }
+
+    @Test
+    @DisplayName("HU35-CP06: eliminar un producto inexistente o de otro vendedor devuelve 404 con el código PRODUCT_NOT_FOUND")
+    void eliminarUnProductoNoEncontradoDevuelve404() throws Exception {
+        doThrow(new ProductoNoEncontradoException()).when(gestionProductos).eliminarMiProducto(VENDEDOR, "p-404");
+
+        mockMvc.perform(delete(URL + "/p-404").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
     }
 
     private static Stream<Arguments> cuerposInvalidos() {
