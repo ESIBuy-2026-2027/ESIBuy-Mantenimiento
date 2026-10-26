@@ -1356,7 +1356,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU33-CP05 | Un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | ✅ Pasa |
 | HU33-CP06 | Sin sesión (401) o sin ser vendedor (403) no se consulta un producto | Integración (capa web) | 2 | ✅ Pasa |
 | HU33-CP07 | Desde el listado, Ver abre la ficha del producto con todos sus datos en solo lectura y la categoría con su nombre | Frontend (componente y página) | 4 | ✅ Pasa |
-| HU33-CP08 | La ficha muestra las acciones Editar, que lleva al formulario de edición (HU34), y Eliminar, deshabilitada | Frontend (componente) | 1 | ✅ Pasa |
+| HU33-CP08 | La ficha muestra las acciones Editar, que lleva al formulario de edición (HU34), y Eliminar, que pide la confirmación del listado (HU35) | Frontend (componente) | 1 | 🔍 En revisión |
 | HU33-CP09 | Un producto no encontrado (403 o 404, p. ej. de otro vendedor) lo indica y no ofrece acciones | Frontend (componente) | 2 | ✅ Pasa |
 | HU33-CP10 | Si la carga falla por otro motivo, la ficha muestra un error genérico y permite reintentar | Frontend (componente) | 1 | ✅ Pasa |
 
@@ -1367,7 +1367,7 @@ Notas:
 - **Backend (T348, AB#348, PR #118):** `GET /api/seller/products/{id}`, con el contrato de `frontend/docs/hu31-formulario-producto.md`. El producto inexistente y el ajeno dan 404, no 403.
 - **HU33-CP06:** sin rojo real, porque `SecurityConfig` ya limita `/api/seller/**` al rol VENDEDOR.
 - **Frontend (T347, AB#347, PR #119):** `ProductDetailDialog`, que se abre con el botón Ver de cada fila del listado (`ProductRowActions`). Usa `GET /api/seller/products/:id`.
-- **Editar y Eliminar** se ven en la ficha. Eliminar está deshabilitado por decisión del equipo hasta la HU35; Editar se activa en la HU34 (T341, PR #122), que cambia el HU33-CP08.
+- **Editar y Eliminar** se ven en la ficha. Editar se activa en la HU34 (T341, PR #122) y Eliminar en la HU35 (T344, PR #132); cada una cambia el HU33-CP08.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1384,7 +1384,7 @@ Notas:
 | HU33-CP07 | `ProductDetailDialog.test.jsx` | `HU33-CP07: todos los campos son de solo lectura` | Frontend · componente | AB#347 | PR #119 | ✅ |
 | HU33-CP07 | `SellerProductsPage.test.jsx` | `HU33-CP07: cada fila tiene un botón para ver la ficha del producto` | Frontend · página | AB#347 | PR #119 | ✅ |
 | HU33-CP07 | `SellerProductsPage.test.jsx` | `HU33-CP07: al pulsar Ver se abre la ficha de ese producto` | Frontend · página | AB#347 | PR #119 | ✅ |
-| HU33-CP08 | `ProductDetailDialog.test.jsx` | `HU33-CP08: muestra las acciones Editar, que lleva al formulario de edición, y Eliminar, deshabilitada` | Frontend · componente | AB#347 · AB#341 | PR #119 · PR #122 | ✅ |
+| HU33-CP08 | `ProductDetailDialog.test.jsx` | `HU33-CP08: muestra las acciones Editar, que lleva al formulario de edición, y Eliminar, que avisa con el producto` | Frontend · componente | AB#347 · AB#341 · AB#344 | PR #119 · PR #122 · PR #132 | 🔍 |
 | HU33-CP09 | `ProductDetailDialog.test.jsx` | `HU33-CP09: un producto de otro vendedor muestra que no se ha encontrado y no ofrece acciones` | Frontend · componente | AB#347 | PR #119 | ✅ |
 | HU33-CP09 | `ProductDetailDialog.test.jsx` | `HU33-CP09: una respuesta %i muestra que no se ha encontrado el producto` (403 y 404) | Frontend · componente | AB#347 | PR #119 | ✅ |
 | HU33-CP10 | `ProductDetailDialog.test.jsx` | `HU33-CP10: si la carga falla por otro motivo, muestra un error genérico y permite reintentar` | Frontend · componente | AB#347 | PR #119 | ✅ |
@@ -1480,13 +1480,21 @@ Rutas de las clases de test:
 | HU35-CP05 | `DELETE /api/seller/products/{id}` devuelve 204 sin cuerpo; el vendedor sale de la sesión | Integración (capa web) | 1 | 🔍 En revisión |
 | HU35-CP06 | Eliminar un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | 🔍 En revisión |
 | HU35-CP07 | Sin sesión (401), sin ser vendedor (403) o sin token CSRF (403) no se elimina un producto | Integración (capa web) | 3 | 🔍 En revisión |
+| HU35-CP08 | Cada fila del listado tiene un botón para eliminar el producto | Frontend (página) | 1 | 🔍 En revisión |
+| HU35-CP09 | Al pulsar Eliminar se pide confirmación sin borrar nada | Frontend (página) | 1 | 🔍 En revisión |
+| HU35-CP10 | Cancelar o pulsar Escape cierra la confirmación sin borrar | Frontend (página) | 2 | 🔍 En revisión |
+| HU35-CP11 | Al confirmar, se borra el producto indicado y se avisa de que se ha eliminado | Frontend (página) | 1 | 🔍 En revisión |
+| HU35-CP12 | Tras eliminar, el listado se vuelve a cargar | Frontend (página) | 1 | 🔍 En revisión |
+| HU35-CP13 | Si falla la eliminación, se avisa sin detalles internos y se mantiene la confirmación | Frontend (página) | 1 | 🔍 En revisión |
+| HU35-CP14 | Desde la ficha del producto, Eliminar pide la misma confirmación y al confirmar se borra y se avisa | Frontend (página) | 1 | 🔍 En revisión |
 
 Notas:
 - **HU35-CP01 a CP03:** casos propuestos en la T346 (AB#346, PR #126). Pendientes de contrastar con los criterios de aceptación de la HU35 y de añadir a la HU35 en Azure Boards.
 - **Borrado físico (decisión del equipo):** el documento desaparece de la colección. Los `pedidos` guardan `nombreProducto` y `precioUnitario` en cada línea, así que el historial no depende del producto. `carritos`, `listas_deseos` y `valoraciones` aún no tienen código: sus HU tendrán que tratar las referencias a productos borrados.
 - **HU35-CP04 · PENDIENTE DE IMPLEMENTAR (regla acordada en la reunión del Sprint 2):** un producto que está o ha estado en algún pedido no se puede eliminar. **No se comprueba todavía**, porque en el backend aún no existe el módulo de pedidos. **Cuando se desarrolle, hay que añadir la comprobación a `eliminarMiProducto` (a través de un puerto de salida hacia pedidos), su respuesta en el endpoint, el test de este caso y pasarlo a ✅.**
 - **HU35-CP05 a CP07:** casos propuestos en la T345 (AB#345, PR #129). `DELETE /api/seller/products/{id}` sigue el contrato de `frontend/docs/hu31-formulario-producto.md`. CP06 y CP07 sin rojo real, porque `ManejadorGlobalErrores` y `SecurityConfig` ya los cubrían.
-- **Pendiente:** la vista (T344).
+- **HU35-CP08 a CP13:** la eliminación desde el listado se hizo en la HU31. Por decisión del equipo, sus 7 tests se renombran en la T344 (AB#344, PR #132) con el ID de su caso de la HU35 y se trazan aquí; no tienen ciclo rojo porque no hay código nuevo detrás.
+- **HU35-CP14:** caso nuevo de la T344. Eliminar en la ficha cierra la ficha y abre la confirmación del listado (decisión del equipo). La confirmación se busca por texto: en jsdom, Fluent la marca con `aria-hidden` a los ~300 ms de abrirse, y la búsqueda por rol fallaba en la batería completa.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1502,11 +1510,20 @@ Notas:
 | HU35-CP07 | `ProductoControllerTest` | `sinSesionNoSeEliminaUnProducto` | Infraestructura | AB#345 | PR #129 | 🔍 |
 | HU35-CP07 | `ProductoControllerTest` | `noVendedorNoEliminaUnProducto` (cliente y administrador) | Infraestructura | AB#345 | PR #129 | 🔍 |
 | HU35-CP07 | `ProductoControllerTest` | `sinTokenCsrfNoSeEliminaUnProducto` | Infraestructura | AB#345 | PR #129 | 🔍 |
+| HU35-CP08 | `SellerProductsPage.test.jsx` | `HU35-CP08: cada fila tiene un botón para eliminar el producto` | Frontend · página | AB#344 | PR #132 | 🔍 |
+| HU35-CP09 | `SellerProductsPage.test.jsx` | `HU35-CP09: al pulsar Eliminar pide confirmación sin borrar nada` | Frontend · página | AB#344 | PR #132 | 🔍 |
+| HU35-CP10 | `SellerProductsPage.test.jsx` | `HU35-CP10: al cancelar la eliminación, cierra la alerta sin borrar` | Frontend · página | AB#344 | PR #132 | 🔍 |
+| HU35-CP10 | `SellerProductsPage.test.jsx` | `HU35-CP10: al pulsar Escape en la alerta, la cierra sin borrar` | Frontend · página | AB#344 | PR #132 | 🔍 |
+| HU35-CP11 | `SellerProductsPage.test.jsx` | `HU35-CP11: al confirmar, pide borrar el producto indicado y avisa de que se ha eliminado` | Frontend · página | AB#344 | PR #132 | 🔍 |
+| HU35-CP12 | `SellerProductsPage.test.jsx` | `HU35-CP12: tras eliminar, vuelve a cargar el listado` | Frontend · página | AB#344 | PR #132 | 🔍 |
+| HU35-CP13 | `SellerProductsPage.test.jsx` | `HU35-CP13: si falla la eliminación, avisa sin detalles internos y mantiene la alerta` | Frontend · página | AB#344 | PR #132 | 🔍 |
+| HU35-CP14 | `SellerProductsPage.test.jsx` | `HU35-CP14: desde la ficha, Eliminar pide confirmación y al confirmar borra el producto y avisa` | Frontend · página | AB#344 | PR #132 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `GestionProductosServiceTest`: `productos/application/service/` (Mockito, sin Spring)
 - `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/` (Testcontainers)
 - `ProductoControllerTest`: `productos/infrastructure/adapter/in/web/` (con `@WebMvcTest`)
+- `SellerProductsPage.test.jsx`: `frontend/src/pages/` (Vitest, RTL y MSW)
 
 ---
 

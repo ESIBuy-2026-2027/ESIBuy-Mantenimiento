@@ -307,7 +307,7 @@ describe('SellerProductsPage (HU32): paginación', () => {
   })
 })
 
-describe('SellerProductsPage (HU31): editar y eliminar desde el listado', () => {
+describe('SellerProductsPage (HU31 y HU35): editar y eliminar desde el listado', () => {
   async function abrirListadoConFilas() {
     await abrirListado()
     await esperarFilas(10)
@@ -335,7 +335,7 @@ describe('SellerProductsPage (HU31): editar y eliminar desde el listado', () => 
     )
   })
 
-  it('sellerProductsPage_cadaFilaTieneUnBotonParaEliminarElProducto', async () => {
+  it('HU35-CP08: cada fila tiene un botón para eliminar el producto', async () => {
     await abrirListadoConFilas()
 
     expect(screen.getAllByRole('button', { name: /^eliminar /i })).toHaveLength(10)
@@ -352,7 +352,7 @@ describe('SellerProductsPage (HU31): editar y eliminar desde el listado', () => 
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/seller\/products\/p-2\/edit$/)
   })
 
-  it('sellerProductsPage_alPulsarEliminar_pideConfirmacionSinBorrarNada', async () => {
+  it('HU35-CP09: al pulsar Eliminar pide confirmación sin borrar nada', async () => {
     const user = userEvent.setup()
     const borrado = capturarBorrado()
     await abrirListadoConFilas()
@@ -365,7 +365,7 @@ describe('SellerProductsPage (HU31): editar y eliminar desde el listado', () => 
     expect(borrado.llamadas).toBe(0)
   })
 
-  it('sellerProductsPage_alCancelarLaEliminacion_cierraLaAlertaSinBorrar', async () => {
+  it('HU35-CP10: al cancelar la eliminación, cierra la alerta sin borrar', async () => {
     const user = userEvent.setup()
     const borrado = capturarBorrado()
     await abrirListadoConFilas()
@@ -379,7 +379,7 @@ describe('SellerProductsPage (HU31): editar y eliminar desde el listado', () => 
     expect(screen.queryByText(/producto eliminado/i)).not.toBeInTheDocument()
   })
 
-  it('sellerProductsPage_alConfirmarLaEliminacion_pideBorrarElProductoIndicado', async () => {
+  it('HU35-CP11: al confirmar, pide borrar el producto indicado y avisa de que se ha eliminado', async () => {
     const user = userEvent.setup()
     const borrado = capturarBorrado()
     await abrirListadoConFilas()
@@ -393,7 +393,7 @@ describe('SellerProductsPage (HU31): editar y eliminar desde el listado', () => 
     expect(await screen.findByText(/producto eliminado/i)).toBeInTheDocument()
   })
 
-  it('sellerProductsPage_tras_eliminar_vuelveACargarElListado', async () => {
+  it('HU35-CP12: tras eliminar, vuelve a cargar el listado', async () => {
     const user = userEvent.setup()
     let peticionesDelListado = 0
     server.events.on('request:start', ({ request }) => {
@@ -414,7 +414,7 @@ describe('SellerProductsPage (HU31): editar y eliminar desde el listado', () => 
     }
   })
 
-  it('sellerProductsPage_siFallaLaEliminacion_avisaSinDetallesInternosYMantieneLaAlerta', async () => {
+  it('HU35-CP13: si falla la eliminación, avisa sin detalles internos y mantiene la alerta', async () => {
     const user = userEvent.setup()
     capturarBorrado(() => HttpResponse.json({ message: 'MongoTimeoutException' }, { status: 500 }))
     await abrirListadoConFilas()
@@ -428,7 +428,7 @@ describe('SellerProductsPage (HU31): editar y eliminar desde el listado', () => 
     expect(screen.queryByText(/producto eliminado/i)).not.toBeInTheDocument()
   })
 
-  it('sellerProductsPage_alPulsarEscapeEnLaAlerta_laCierraSinBorrar', async () => {
+  it('HU35-CP10: al pulsar Escape en la alerta, la cierra sin borrar', async () => {
     const user = userEvent.setup()
     const borrado = capturarBorrado()
     await abrirListadoConFilas()
@@ -490,5 +490,38 @@ describe('SellerProductsPage (HU34): editar desde la ficha', () => {
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/seller\/products\/p-2\/edit$/)
     await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Teclado mecánico'))
     expect(screen.queryByRole('dialog', { name: /información del producto/i })).not.toBeInTheDocument()
+  })
+})
+
+describe('SellerProductsPage (HU35): eliminar desde la ficha', () => {
+  it('HU35-CP14: desde la ficha, Eliminar pide confirmación y al confirmar borra el producto y avisa', async () => {
+    const user = userEvent.setup()
+    const borrado = { id: null, llamadas: 0 }
+    server.use(
+      http.delete('/api/seller/products/:id', ({ params }) => {
+        borrado.llamadas += 1
+        borrado.id = params.id
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+    await abrirListado()
+    await esperarFilas(10)
+
+    await user.click(screen.getByRole('button', { name: 'Ver Teclado mecánico' }))
+    const ficha = await screen.findByRole('dialog', { name: /información del producto/i })
+    await within(ficha).findByLabelText('Nombre')
+    await user.click(within(ficha).getByRole('button', { name: 'Eliminar' }))
+
+    // Como en UserRowActions.test.jsx, la confirmación se busca por texto: mientras un diálogo se cierra y otro
+    // se abre, Fluent marca partes de la página con aria-hidden y las búsquedas por rol fallan por tiempos.
+    const alerta = (await screen.findByText(/seguro que quieres eliminar/i)).closest('[role="alertdialog"]')
+    expect(alerta).toHaveTextContent(/teclado mecánico/i)
+    expect(screen.queryByText('Información del producto')).not.toBeInTheDocument()
+    expect(borrado.llamadas).toBe(0)
+
+    await user.click(within(alerta).getByText('Eliminar', { selector: 'button' }))
+
+    await waitFor(() => expect(borrado).toMatchObject({ llamadas: 1, id: 'p-2' }))
+    expect(await screen.findByText(/producto eliminado/i)).toBeInTheDocument()
   })
 })

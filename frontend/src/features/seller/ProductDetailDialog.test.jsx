@@ -16,15 +16,16 @@ const PRODUCTO_DE_OTRO_VENDEDOR = 'p-24'
 async function abrirFicha(productId = PRODUCTO_CON_DESCUENTOS) {
   await abrirSesionPorApi('vendedor@esibuy.test')
   const onClose = vi.fn()
+  const onDelete = vi.fn()
   render(
     <MemoryRouter>
       <FluentProvider theme={webLightTheme}>
-        <ProductDetailDialog productId={productId} onClose={onClose} />
+        <ProductDetailDialog productId={productId} onClose={onClose} onDelete={onDelete} />
       </FluentProvider>
     </MemoryRouter>,
   )
   const dialogo = await screen.findByRole('dialog', { name: /información del producto/i })
-  return { dialogo, onClose }
+  return { dialogo, onClose, onDelete }
 }
 
 describe('ProductDetailDialog (HU33): datos', () => {
@@ -54,13 +55,15 @@ describe('ProductDetailDialog (HU33): datos', () => {
 })
 
 describe('ProductDetailDialog (HU33): acciones', () => {
-  // Editar funciona desde la HU34; eliminar es de la HU35: se ve, pero todavía no se puede usar.
-  it('HU33-CP08: muestra las acciones Editar, que lleva al formulario de edición, y Eliminar, deshabilitada', async () => {
-    const { dialogo } = await abrirFicha()
+  // Editar lleva al formulario de edición (HU34) y Eliminar pide la confirmación del listado (HU35).
+  it('HU33-CP08: muestra las acciones Editar, que lleva al formulario de edición, y Eliminar, que avisa con el producto', async () => {
+    const user = userEvent.setup()
+    const { dialogo, onDelete } = await abrirFicha()
     await within(dialogo).findByLabelText('Nombre')
 
     expect(within(dialogo).getByRole('link', { name: 'Editar' })).toHaveAttribute('href', '/seller/products/p-1/edit')
-    expect(within(dialogo).getByRole('button', { name: 'Eliminar' })).toBeDisabled()
+    await user.click(within(dialogo).getByRole('button', { name: 'Eliminar' }))
+    expect(onDelete).toHaveBeenCalledWith(expect.objectContaining({ id: 'p-1', nombre: 'Auriculares inalámbricos' }))
   })
 })
 
