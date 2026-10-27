@@ -129,16 +129,9 @@ describe('CartWidget (HU9): panel del carrito', () => {
     const panel = await abrirPanel()
 
     expect(within(panel).getByText(/tu carrito está vacío/i)).toBeInTheDocument()
-    expect(within(panel).queryByRole('link', { name: /proceder al pago/i })).not.toBeInTheDocument()
     expect(within(panel).queryByRole('button', { name: /vaciar carrito/i })).not.toBeInTheDocument()
   })
 
-  it('HU9-CP08: «Proceder al pago» lleva a la pasarela de pago', async () => {
-    pintar()
-    const panel = await abrirPanel()
-
-    expect(within(panel).getByRole('link', { name: /proceder al pago/i })).toHaveAttribute('href', '/checkout')
-  })
 })
 
 describe('CartWidget (HU9): modificar el carrito', () => {

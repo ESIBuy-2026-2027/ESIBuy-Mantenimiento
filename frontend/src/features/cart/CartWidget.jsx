@@ -19,8 +19,7 @@ import {
   Delete20Regular,
   Dismiss20Regular,
 } from '@fluentui/react-icons'
-import LinkButton from '../../components/LinkButton'
-import { PATHS, getProductDetailPath } from '../../routes/paths'
+import { getProductDetailPath } from '../../routes/paths'
 import { formatPrice } from '../../utils/format'
 import QuantityStepper from './QuantityStepper'
 import { useCart } from './useCart'
@@ -361,9 +360,6 @@ export default function CartWidget() {
               <Button appearance="subtle" disabled={busy} onClick={() => run(clear)}>
                 Vaciar carrito
               </Button>
-              <LinkButton to={PATHS.CHECKOUT} appearance="primary">
-                Proceder al pago
-              </LinkButton>
             </div>
           )}
         </section>
