@@ -1,7 +1,9 @@
 import PropTypes from 'prop-types'
+import { Link, useNavigate } from 'react-router-dom'
 import { Subtitle1, Text, makeStyles, mergeClasses, tokens } from '@fluentui/react-components'
 import { Star16Filled, Trophy20Filled } from '@fluentui/react-icons'
 import TiltedGridHero from '../../components/TiltedGridHero'
+import { getProductDetailPath } from '../../routes/paths'
 import { catalogProductPropType } from '../../utils/propTypes'
 import { formatRating } from '../../utils/format'
 
@@ -74,6 +76,7 @@ const useStyles = makeStyles({
     },
   },
   button: {
+    textDecoration: 'none',
     display: 'flex',
     alignItems: 'center',
     gap: tokens.spacingHorizontalS,
@@ -175,10 +178,11 @@ function CardCaption({ rank, product, styles }) {
 }
 
 // Los productos mejor valorados: una banda curva de tarjetas (a todo el ancho de la página) que se pueden pulsar
-// con el ratón y, para el teclado y los lectores de pantalla, la lista numerada de los mismos productos.
-// `products` llega ya ordenado de mejor a peor.
-export default function FeaturedShowcase({ products, onSelect }) {
+// con el ratón y, para el teclado y los lectores de pantalla, la lista numerada de los mismos productos. Todas llevan
+// al detalle del producto (HU8). `products` llega ya ordenado de mejor a peor.
+export default function FeaturedShowcase({ products }) {
   const styles = useStyles()
+  const navigate = useNavigate()
   // Solo entran en la banda los que tienen imagen; el puesto es el de la clasificación completa.
   const cards = products
     .map((product, index) => ({ product, rank: index + 1 }))
@@ -207,7 +211,7 @@ export default function FeaturedShowcase({ products, onSelect }) {
             aria-label="Los mejor valorados en movimiento"
             className={styles.band}
             images={cards}
-            onSelect={(card) => onSelect(card.product)}
+            onSelect={(card) => navigate(getProductDetailPath(card.product.id))}
             tileHeight={56}
             aspectRatio={4 / 3}
             gap={5}
@@ -220,7 +224,7 @@ export default function FeaturedShowcase({ products, onSelect }) {
         <ul className={styles.list} aria-label="Selección destacada">
           {products.map((product, index) => (
             <li key={product.id}>
-              <button type="button" className={styles.button} onClick={() => onSelect(product)}>
+              <Link to={getProductDetailPath(product.id)} className={styles.button}>
                 <span className={styles.rank}>{index + 1}</span>
                 <Text weight="semibold" size={300}>
                   {product.nombre}
@@ -231,7 +235,7 @@ export default function FeaturedShowcase({ products, onSelect }) {
                     {formatRating(product.valoracion)}
                   </Text>
                 </span>
-              </button>
+              </Link>
             </li>
           ))}
         </ul>
@@ -248,5 +252,4 @@ CardCaption.propTypes = {
 
 FeaturedShowcase.propTypes = {
   products: PropTypes.arrayOf(catalogProductPropType).isRequired,
-  onSelect: PropTypes.func.isRequired,
 }
