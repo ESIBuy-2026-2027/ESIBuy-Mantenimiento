@@ -42,7 +42,19 @@ class CategoriaMongoAdapterTest {
         CategoriaDocument tecnologia = guardar("Tecnología");
         CategoriaDocument hogar = guardar("Hogar");
 
-        assertEquals(List.of(new Categoria(hogar.getId(), "Hogar", "", EstadoCategoria.ACTIVA), new Categoria(tecnologia.getId(), "Tecnología", "", EstadoCategoria.ACTIVA)),
+        assertEquals(List.of(new Categoria(hogar.getId(), "Hogar", "", EstadoCategoria.ACTIVA),
+                        new Categoria(tecnologia.getId(), "Tecnología", "", EstadoCategoria.ACTIVA)),
+                adapter.listar());
+    }
+
+    @Test
+    @DisplayName("HU40-CP04: la descripción y el estado se guardan en MongoDB y se leen igual")
+    void guardaYLeeLaDescripcionYElEstado() {
+        CategoriaDocument documento = new CategoriaDocumentMapper().aDocumento(
+                new Categoria(null, "Hogar", "Muebles y decoración", EstadoCategoria.INACTIVA));
+        String id = categoriaMongoRepository.save(documento).getId();
+
+        assertEquals(List.of(new Categoria(id, "Hogar", "Muebles y decoración", EstadoCategoria.INACTIVA)),
                 adapter.listar());
     }
 
