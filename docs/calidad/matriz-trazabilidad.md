@@ -917,6 +917,44 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU16 · Activar y desactivar productos
+
+### Tabla A · HU16 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU16-CP01 | Cada fila de «Mis productos» ofrece Desactivar si el producto está disponible y Activar si no lo está | Frontend (página) | 1 | 🔍 En revisión (1, AB#281, PR sin abrir) |
+| HU16-CP02 | Al pulsar Desactivar, sin confirmación, el producto pasa a «No disponible» y se avisa «Producto desactivado.» | Frontend (página) | 1 | 🔍 En revisión (1, AB#281, PR sin abrir) |
+| HU16-CP03 | Al pulsar Activar, el producto pasa a «Disponible» y se avisa «Producto activado.» | Frontend (página) | 1 | 🔍 En revisión (1, AB#281, PR sin abrir) |
+| HU16-CP04 | Si falla el cambio, se avisa sin detalles internos y el producto no cambia | Frontend (página) | 1 | 🔍 En revisión (1, AB#281, PR sin abrir) |
+| HU16-CP05 | La ficha del producto ofrece Activar o Desactivar según su estado y avisa a la página con el producto | Frontend (componente) | 2 | 🔍 En revisión (2, AB#281, PR sin abrir) |
+| HU16-CP06 | Desde la ficha, Desactivar cierra la ficha, cambia el producto y avisa | Frontend (página) | 1 | 🔍 En revisión (1, AB#281, PR sin abrir) |
+
+Notas:
+- **HU16-CP01 a CP06 (Sprint 2, frontend):** casos propuestos en la task AB#281 (botón activar/desactivar productos) a partir de lo pedido en ella y de las decisiones del equipo (`frontend/docs/hu16-activar-desactivar-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU16 en Azure Boards. Si el backend define casos de la HU16, hay que coordinar la numeración.
+- **Versión inicial (decisión del equipo):** sin confirmación al activar o desactivar; puede cambiar por decisión del PO o del equipo.
+- **Backend:** no existe todavía un endpoint para cambiar solo la disponibilidad; los tests usan el contrato propuesto por el frontend (`PATCH /api/seller/products/{id}/availability`) y los mocks (MSW). No hay task de tests equivalente en el backend por ahora (decisión del equipo).
+- **Sin archivos de tests nuevos:** los casos van en `SellerProductsPage.test.jsx` y `ProductDetailDialog.test.jsx`, que ya existían.
+- **Infraestructura de tests:** `test/setup.js` reinicia tras cada test la disponibilidad cambiada en el mock de productos (`resetProductsMock`).
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU16-CP01 | `SellerProductsPage.test.jsx` | `HU16-CP01: un producto disponible se puede desactivar y uno no disponible, activar` | Frontend · página | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
+| HU16-CP02 | `SellerProductsPage.test.jsx` | `HU16-CP02: al pulsar Desactivar, sin pedir confirmación, el producto pasa a no disponible y se avisa` | Frontend · página | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
+| HU16-CP03 | `SellerProductsPage.test.jsx` | `HU16-CP03: al pulsar Activar, el producto pasa a disponible y se avisa` | Frontend · página | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
+| HU16-CP04 | `SellerProductsPage.test.jsx` | `HU16-CP04: si falla el cambio, avisa sin detalles internos y el producto no cambia` | Frontend · página | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
+| HU16-CP05 | `ProductDetailDialog.test.jsx` | `HU16-CP05: un producto disponible ofrece Desactivar, que avisa con el producto` | Frontend · componente | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
+| HU16-CP05 | `ProductDetailDialog.test.jsx` | `HU16-CP05: un producto no disponible ofrece Activar, que avisa con el producto` | Frontend · componente | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
+| HU16-CP06 | `SellerProductsPage.test.jsx` | `HU16-CP06: desde la ficha, Desactivar cierra la ficha, cambia el producto y avisa` | Frontend · página | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
+
+Rutas de las clases de test:
+- `SellerProductsPage.test.jsx`: `frontend/src/pages/` (Vitest, RTL y MSW)
+- `ProductDetailDialog.test.jsx`: `frontend/src/features/seller/` (Vitest, RTL y MSW)
+
+---
+
 ## HU18 · Acceso restringido al panel de administración
 
 ### Tabla A · HU18 ↔ casos de prueba
