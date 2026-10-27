@@ -1527,6 +1527,41 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU39 · Consultar categorías
+
+### Tabla A · HU39 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU39-CP01 | El administrador obtiene cada categoría con su nombre, descripción, estado y número de productos | Unitario | 1 | 🔍 En revisión |
+| HU39-CP02 | El número de productos se cuenta por categoría en el módulo de productos (una sola agregación); una categoría sin productos tiene 0 | Unitario + integración MongoDB | 5 | 🔍 En revisión |
+| HU39-CP03 | El administrador también ve las categorías `INACTIVA` | Unitario | 1 | 🔍 En revisión |
+
+Notas:
+- **HU39-CP01 a CP03:** casos propuestos en la T332 (AB#332), a partir del criterio de aceptación «listado con nombre, descripción, estado y número de productos asociados». Pendientes de confirmar con el equipo y de añadir a la HU39 en Azure Boards.
+- **Backend (T332):** `AdministracionCategoriasUseCase.listarConProductos()` devuelve `CategoriaConProductos`. Categorías pide el recuento a productos con `ProductosPorCategoriaPort` → `ProductosPorCategoriaAdapter` → `ConteoProductosUseCase` (puerto de entrada de productos). El recuento incluye todos los productos de la categoría, también los no disponibles. `GET /api/categorias` no cambia.
+- **Pendiente:** el endpoint del administrador y el 403 para los demás roles (T331); el nombre único sin distinguir mayúsculas (T323).
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU39-CP01 | `AdministracionCategoriasServiceTest` | `listarConProductosDevuelveCadaCategoriaConSuNumero` | Aplicación | AB#332 | — | 🔍 |
+| HU39-CP02 | `AdministracionCategoriasServiceTest` | `unaCategoriaSinProductosTieneCero` | Aplicación | AB#332 | — | 🔍 |
+| HU39-CP02 | `ConteoProductosServiceTest` | `contarPorCategoriaDelegaEnElRepositorio` | Aplicación | AB#332 | — | 🔍 |
+| HU39-CP02 | `ProductosPorCategoriaAdapterTest` | `contarPorCategoriaPreguntaAlModuloDeProductos` | Infraestructura | AB#332 | — | 🔍 |
+| HU39-CP02 | `ProductoMongoAdapterTest` | `contarPorCategoriaAgrupaLosProductos` | Infraestructura | AB#332 | — | 🔍 |
+| HU39-CP02 | `ProductoMongoAdapterTest` | `contarPorCategoriaSinProductosDevuelveVacio` | Infraestructura | AB#332 | — | 🔍 |
+| HU39-CP03 | `AdministracionCategoriasServiceTest` | `incluyeLasCategoriasInactivas` | Aplicación | AB#332 | — | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AdministracionCategoriasServiceTest`: `categorias/application/service/` (JUnit y Mockito, sin Spring)
+- `ProductosPorCategoriaAdapterTest`: `categorias/infrastructure/adapter/out/productos/` (JUnit y Mockito, sin Spring)
+- `ConteoProductosServiceTest`: `productos/application/service/` (JUnit y Mockito, sin Spring)
+- `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/` (con Testcontainers)
+
+---
+
 ## HU40 · Crear categorías
 
 ### Tabla A · HU40 ↔ casos de prueba
@@ -1541,7 +1576,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 Notas:
 - **HU40-CP01 a CP04:** casos propuestos en la T321 (AB#321), sin contrato del frontend todavía. Pendientes de confirmar con el equipo y de añadir a la HU40 en Azure Boards.
 - **Backend (T321):** entidad `Categoria` (`id`, `nombre`, `descripcion`, `estado`), `EstadoCategoria` (`ACTIVA`, `INACTIVA`), `CategoriaInvalidaException` y `CategoriaDocumentMapper`. El validador de la colección `categorias` aplica los mismos límites. `GET /api/categorias` no cambia (sigue devolviendo `id` y `nombre`).
-- **Pendiente:** la consulta con la descripción (T331 y T332) y la creación (T322 y T323). Si una categoría `INACTIVA` debe dejar de salir en la consulta lo decidirá la HU39 o la HU42.
+- **Pendiente:** la consulta con la descripción (T331; la lógica de la T332 está en la HU39) y la creación (T322 y T323). Si una categoría `INACTIVA` debe dejar de salir en la consulta lo decidirá la HU39 o la HU42.
 
 ### Tabla B · casos de prueba ↔ tests
 

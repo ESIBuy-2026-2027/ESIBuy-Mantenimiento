@@ -26,6 +26,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,8 +39,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 // Test de integración del adaptador de MongoDB de productos (HU31, T202). Usa un MongoDB real en Docker
 // (Testcontainers): Docker Desktop debe estar abierto. InicializadorColecciones crea la colección productos
 // con su validación, como en la aplicación real, así que un documento que no la cumpla hace fallar el test.
-// También prueba el listado de los productos propios del vendedor (HU32, T184) y el borrado físico (HU35, T346).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP11, CP12 y CP23, y HU32-CP01 a CP03, propuestos.
+// También prueba el listado de los productos propios del vendedor (HU32, T184), el borrado físico (HU35, T346)
+// y el recuento de productos por categoría (HU39, T332).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP11, CP12 y CP23, HU32-CP01 a CP03 y HU39-CP02, propuestos.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class ProductoMongoAdapterTest {
@@ -261,6 +263,24 @@ class ProductoMongoAdapterTest {
         assertTrue(adapter.buscarPorId(id).isEmpty());
         assertTrue(adapter.buscarPorId(otro).isPresent());
         assertEquals(1, mongoTemplate.getCollection(COLECCION).countDocuments());
+    }
+
+    // Recuento de productos por categoría (HU39, T332).
+
+    @Test
+    @DisplayName("HU39-CP02: el recuento agrupa los productos de todos los vendedores por su categoría")
+    void contarPorCategoriaAgrupaLosProductos() {
+        guardarProducto("v-1", "Teclado", "cat-1", "2026-10-01T10:00:00Z");
+        guardarProducto("v-2", "Ratón", "cat-1", "2026-10-02T10:00:00Z");
+        guardarProducto("v-1", "Lámpara", "cat-2", "2026-10-03T10:00:00Z");
+
+        assertEquals(Map.of("cat-1", 2L, "cat-2", 1L), adapter.contarPorCategoria());
+    }
+
+    @Test
+    @DisplayName("HU39-CP02: sin productos el recuento está vacío")
+    void contarPorCategoriaSinProductosDevuelveVacio() {
+        assertTrue(adapter.contarPorCategoria().isEmpty());
     }
 
     private static Producto productoNuevo(String vendedorId, String nombre) {
