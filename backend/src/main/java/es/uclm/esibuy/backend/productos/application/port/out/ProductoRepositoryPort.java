@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.productos.application.port.out;
 
+import java.util.Map;
 import java.util.Optional;
 
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
@@ -22,4 +23,10 @@ public interface ProductoRepositoryPort {
 
     // ¿Tiene ya el vendedor un producto con ese nombre? No distingue mayúsculas (HU31).
     boolean existePorVendedorYNombre(String vendedorId, String nombre);
+
+    // Borrado físico del producto (HU35): el documento desaparece de la colección.
+    void eliminar(String id);
+
+    // Número de productos de cada categoría, por su id (HU39). Las categorías sin productos no aparecen.
+    Map<String, Long> contarPorCategoria();
 }

@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import es.uclm.esibuy.backend.categorias.application.port.in.ConsultaCategoriasUseCase;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
+import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 
 // Consulta de las categorías (AB#43): GET /api/categorias, con el formato que ya usan los formularios del
@@ -37,7 +38,7 @@ class CategoriaControllerTest {
     @Test
     @DisplayName("HU22-CP15: sin sesión se reciben las categorías con su id y su nombre")
     void sinSesionSeRecibenLasCategorias() throws Exception {
-        when(consultaCategorias.listar()).thenReturn(List.of(new Categoria("c-1", "Hogar")));
+        when(consultaCategorias.listar()).thenReturn(List.of(new Categoria("c-1", "Hogar", "", EstadoCategoria.ACTIVA)));
 
         mockMvc.perform(get("/api/categorias"))
                 .andExpect(status().isOk())
@@ -49,7 +50,7 @@ class CategoriaControllerTest {
     @Test
     @DisplayName("HU22-CP15: un administrador recibe las categorías para editar a un vendedor")
     void unAdministradorRecibeLasCategorias() throws Exception {
-        when(consultaCategorias.listar()).thenReturn(List.of(new Categoria("c-1", "Hogar")));
+        when(consultaCategorias.listar()).thenReturn(List.of(new Categoria("c-1", "Hogar", "", EstadoCategoria.ACTIVA)));
 
         mockMvc.perform(get("/api/categorias").with(user("admin").roles("ADMINISTRADOR")))
                 .andExpect(status().isOk())

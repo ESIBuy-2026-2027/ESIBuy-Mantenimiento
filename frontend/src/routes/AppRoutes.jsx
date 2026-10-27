@@ -11,6 +11,7 @@ import AdminSellersPage from '../pages/AdminSellersPage'
 import AdminUsersPage from '../pages/AdminUsersPage'
 import Home from '../pages/Home'
 import LoginPage from '../pages/LoginPage'
+import ProductDetailPage from '../pages/ProductDetailPage'
 import ProductsPage from '../pages/ProductsPage'
 import Register from '../pages/Register'
 import SellerProductFormPage from '../pages/SellerProductFormPage'
@@ -27,7 +28,11 @@ export default function AppRoutes() {
         <Route element={<GuestOnlyRoute />}>
           <Route path={PATHS.REGISTER} element={<Register />} />
         </Route>
-        <Route path={PATHS.PRODUCTS} element={<ProductsPage />} />
+
+        <Route element={<ProtectedRoute allowedRoles={[ROLES.CLIENTE]} />}>
+          <Route path={PATHS.PRODUCTS} element={<ProductsPage />} />
+          <Route path={PATHS.PRODUCT_DETAIL} element={<ProductDetailPage />} />
+        </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
           <Route path={PATHS.ADMIN} element={<AdminPage />} />

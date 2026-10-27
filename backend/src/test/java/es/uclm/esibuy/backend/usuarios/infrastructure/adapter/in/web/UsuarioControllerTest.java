@@ -8,6 +8,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuario
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.categorias.application.port.in.ConsultaCategoriasUseCase;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
+import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
 import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorCommand;
@@ -624,7 +625,7 @@ class UsuarioControllerTest {
     @WithMockUser(roles = "ADMINISTRADOR")
     void administradorRecibeElListadoDeVendedores() throws Exception {
         when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(java.util.List.of(vendedor()), 1, 10, 11));
-        when(consultaCategorias.listar()).thenReturn(java.util.List.of(new Categoria("cat-1", "Tecnología")));
+        when(consultaCategorias.listar()).thenReturn(java.util.List.of(new Categoria("cat-1", "Tecnología", "", EstadoCategoria.ACTIVA)));
 
         mockMvc.perform(get("/api/admin/sellers")
                         .param("page", "2")
@@ -682,7 +683,7 @@ class UsuarioControllerTest {
     @WithMockUser(roles = "ADMINISTRADOR")
     void fichaDeUnVendedor() throws Exception {
         when(administracionUsuarios.consultarVendedor("v-1")).thenReturn(vendedor());
-        when(consultaCategorias.listar()).thenReturn(java.util.List.of(new Categoria("cat-1", "Tecnología")));
+        when(consultaCategorias.listar()).thenReturn(java.util.List.of(new Categoria("cat-1", "Tecnología", "", EstadoCategoria.ACTIVA)));
 
         mockMvc.perform(get("/api/admin/sellers/{id}", "v-1"))
                 .andExpect(status().isOk())
@@ -749,7 +750,7 @@ class UsuarioControllerTest {
         Usuario activado = vendedor();
         activado.activar();
         when(administracionUsuarios.activarVendedor("v-1")).thenReturn(activado);
-        when(consultaCategorias.listar()).thenReturn(java.util.List.of(new Categoria("cat-1", "Tecnología")));
+        when(consultaCategorias.listar()).thenReturn(java.util.List.of(new Categoria("cat-1", "Tecnología", "", EstadoCategoria.ACTIVA)));
 
         mockMvc.perform(cambiarEstadoVendedor("v-1", "ACTIVO"))
                 .andExpect(status().isOk())

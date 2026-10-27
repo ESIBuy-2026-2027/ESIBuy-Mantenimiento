@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 /**
  * Configuración mínima de Spring Security.
@@ -51,6 +52,9 @@ public class SecurityConfig {
     private static final String ROL_ADMINISTRADOR = "ADMINISTRADOR";
     private static final String RUTAS_VENDEDOR = "/api/seller/**";
     private static final String ROL_VENDEDOR = "VENDEDOR";
+    // El perfil propio (HU4) es del cliente y del vendedor; el administrador no tiene perfil que consultar aquí.
+    private static final String RUTAS_PERFIL = "/api/perfil/**";
+    private static final String ROL_CLIENTE = "CLIENTE";
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -62,6 +66,7 @@ public class SecurityConfig {
                         .requestMatchers(RUTA_ERROR).permitAll()
                         .requestMatchers(RUTAS_ADMINISTRACION).hasRole(ROL_ADMINISTRADOR)
                         .requestMatchers(RUTAS_VENDEDOR).hasRole(ROL_VENDEDOR)
+                        .requestMatchers(RUTAS_PERFIL).hasAnyRole(ROL_CLIENTE, ROL_VENDEDOR)
                         .anyRequest().authenticated())
                 .exceptionHandling(excepciones -> excepciones
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
@@ -70,11 +75,19 @@ public class SecurityConfig {
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
                         .deleteCookies("JSESSIONID"))
                 // spa(): el token CSRF va en la cookie XSRF-TOKEN (legible por el frontend, sin HttpOnly) y
-                // el frontend lo devuelve en la cabecera X-XSRF-TOKEN (T230, D4)
+                // el frontend lo devuelve en la cabecera X-XSRF-TOKEN (T230, D4). La cookie es además Secure y
+                // SameSite=Strict, como la de sesión (HU43, T319).
                 .csrf(csrf -> csrf
                         .spa()
+                        .csrfTokenRepository(repositorioTokenCsrf())
                         .ignoringRequestMatchers(RUTA_REGISTRO, RUTA_REGISTRO_VENDEDOR));
         return http.build();
+    }
+
+    private static CookieCsrfTokenRepository repositorioTokenCsrf() {
+        CookieCsrfTokenRepository repositorio = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        repositorio.setCookieCustomizer(cookie -> cookie.secure(true).sameSite("Strict"));
+        return repositorio;
     }
 
     

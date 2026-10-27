@@ -7,6 +7,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoExcept
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
+import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 import es.uclm.esibuy.backend.usuarios.domain.model.ConsentimientoPrivacidad;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
@@ -65,8 +66,8 @@ class UsuarioMongoAdapterTest {
                 usuarioMongoRepository,
                 new UsuarioDocumentMapper(),
                 mongoTemplate,
-                () -> List.of(new Categoria("cat-1", "Tecnología"), new Categoria("cat-2", "Hogar"),
-                        new Categoria("cat-3", "Alimentación"))
+                () -> List.of(new Categoria("cat-1", "Tecnología", "", EstadoCategoria.ACTIVA), new Categoria("cat-2", "Hogar", "", EstadoCategoria.ACTIVA),
+                        new Categoria("cat-3", "Alimentación", "", EstadoCategoria.ACTIVA))
         );
     }
 

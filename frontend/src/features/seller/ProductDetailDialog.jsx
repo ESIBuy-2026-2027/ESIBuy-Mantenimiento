@@ -58,8 +58,8 @@ function productFields(product, categoryName) {
 
 // Ficha de un producto propio del vendedor (HU33), en solo lectura. El producto se pide al backend, que solo
 // devuelve los del vendedor en sesión; la categoría llega como identificador y se muestra con su nombre.
-// Editar lleva al formulario de edición (HU34); Eliminar se ve pero está deshabilitado hasta la HU35.
-export default function ProductDetailDialog({ productId, onClose }) {
+// Editar lleva al formulario de edición (HU34) y Eliminar avisa a la página con el producto (HU35), que pide confirmación.
+export default function ProductDetailDialog({ productId, onClose, onDelete }) {
   const styles = useStyles()
   const fetcher = useCallback(() => getSellerProduct(productId), [productId])
   const { data: product, error, failed, retry } = useApiQuery(fetcher)
@@ -103,7 +103,7 @@ export default function ProductDetailDialog({ productId, onClose }) {
               <LinkButton to={getSellerProductEditPath(product.id)} icon={<Edit20Regular />}>
                 Editar
               </LinkButton>
-              <Button icon={<Delete20Regular />} disabled>
+              <Button icon={<Delete20Regular />} onClick={() => onDelete(product)}>
                 Eliminar
               </Button>
             </DialogActions>
@@ -117,4 +117,5 @@ export default function ProductDetailDialog({ productId, onClose }) {
 ProductDetailDialog.propTypes = {
   productId: PropTypes.string.isRequired,
   onClose: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
 }

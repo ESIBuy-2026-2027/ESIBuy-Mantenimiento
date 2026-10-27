@@ -7,7 +7,7 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 
 **Mantenimiento:** todo PR que añada, modifique o elimine tests actualiza esta matriz en el mismo PR (ver el CLAUDE.md). Cada test lleva un `@DisplayName` que empieza por el ID de su caso (`HU<n>-CP<nn>: ...`), que es el vínculo entre el código y la matriz.
 
-**Estados:** ✅ Pasa · 🔍 En revisión (PR abierto) · ⏳ Pendiente · ⏸ Fuera de alcance
+**Estados:** ✅ Pasa · 🔍 En revisión (PR abierto) · ⏳ Pendiente · ⏸ Fuera de alcance · ❌ Falla
 
 ---
 
@@ -43,7 +43,7 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | HU1-CP24 | Tras registrarse se ofrece ir a iniciar sesión | Frontend (página) | 1 | ✅ Pasa (1, AB#234, PR #105) |
 | HU1-CP25 | Con la sesión iniciada no se ofrece crear una cuenta y /register lleva a la página del rol | Frontend (página y rutas) | 3 | ✅ Pasa (3, AB#17 · AB#18, PR #105) |
 | HU1-CP26 | Un registro correcto no se trata como un error aunque el backend responda 201 sin cuerpo | Frontend (API) | 1 | ✅ Pasa (1, AB#17 · AB#18, PR #105) |
-| HU1-CP27 | En el registro, el password y su repetición solo se pueden escribir a mano: no admiten copiar, cortar, pegar ni soltar texto, y el login sigue admitiendo pegar | Frontend (componente y página) | 7 | 🔍 En revisión (7, AB#242, PR sin abrir) |
+| HU1-CP27 | En el registro, el password y su repetición solo se pueden escribir a mano: no admiten copiar, cortar, pegar ni soltar texto, y el login sigue admitiendo pegar | Frontend (componente y página) | 7 | ✅ Pasa (7, AB#242, PR #125) |
 
 Notas:
 - **HU1-CP11:** en el PR #36, el bloqueo manual de la T214 se renombra a desactivar/activar (`desactivar()`, `activar()`, `estaDesactivado()`) para no confundirlo con el bloqueo temporal por intentos del login (HU2-CP03). En la T225 (AB#225) la consulta pasa a nombrarse en positivo: `estaActivo()`.
@@ -230,13 +230,13 @@ Notas:
 | HU1-CP25 | `GuestOnlyRoute.test.jsx` | `HU1-CP25: con la sesión iniciada /register lleva a la página de inicio del rol` | Frontend · rutas | AB#17 · AB#18 | PR #105 | ✅ |
 | HU1-CP25 | `GuestOnlyRoute.test.jsx` | `HU1-CP25: sin sesión /register muestra el formulario de registro` | Frontend · rutas | AB#17 · AB#18 | PR #105 | ✅ |
 | HU1-CP26 | `client.test.js` | `HU1-CP26: una respuesta 201 sin cuerpo devuelve null` | Frontend · API | AB#17 · AB#18 | PR #105 | ✅ |
-| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con bloquearPegado no deja pegar texto en el campo` | Frontend · componente | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
-| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con bloquearPegado tampoco deja copiar, cortar ni soltar texto arrastrado en el campo` | Frontend · componente | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
-| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con el password visible sigue sin dejar copiarlo` | Frontend · componente | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
-| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: sin bloquearPegado (como en el login) se puede pegar` | Frontend · componente | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
-| HU1-CP27 | `Register.test.jsx` | `HU1-CP27: en el registro de cliente no se puede pegar el password ni su repetición` | Frontend · página | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
-| HU1-CP27 | `Register.test.jsx` | `HU1-CP27: en el registro de vendedor no se puede pegar el password ni su repetición` | Frontend · página | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
-| HU1-CP27 | `Register.test.jsx` | `HU1-CP27: el password escrito a mano en los dos campos sigue permitiendo registrarse` | Frontend · página | AB#242 | Rama `feature/US1-T242-bloquear-pegar-contrasena-registro` (PR sin abrir) | 🔍 |
+| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con bloquearPegado no deja pegar texto en el campo` | Frontend · componente | AB#242 | PR #125 | ✅ |
+| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con bloquearPegado tampoco deja copiar, cortar ni soltar texto arrastrado en el campo` | Frontend · componente | AB#242 | PR #125 | ✅ |
+| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con el password visible sigue sin dejar copiarlo` | Frontend · componente | AB#242 | PR #125 | ✅ |
+| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: sin bloquearPegado (como en el login) se puede pegar` | Frontend · componente | AB#242 | PR #125 | ✅ |
+| HU1-CP27 | `Register.test.jsx` | `HU1-CP27: en el registro de cliente no se puede pegar el password ni su repetición` | Frontend · página | AB#242 | PR #125 | ✅ |
+| HU1-CP27 | `Register.test.jsx` | `HU1-CP27: en el registro de vendedor no se puede pegar el password ni su repetición` | Frontend · página | AB#242 | PR #125 | ✅ |
+| HU1-CP27 | `Register.test.jsx` | `HU1-CP27: el password escrito a mano en los dos campos sigue permitiendo registrarse` | Frontend · página | AB#242 | PR #125 | ✅ |
 
 ---
 
@@ -258,13 +258,13 @@ Notas:
 | HU19-CP10 | El adaptador filtra usuarios BLOQUEADO mediante lockedUntil | Integración MongoDB | 1 | ✅ Pasa |
 | HU19-CP11 | El listado se ordena por nombre o por estado, en los dos sentidos | Integración (capa web y MongoDB) | 2 | ✅ Pasa |
 | HU19-CP12 | El orden por nombre no distingue mayúsculas ni tildes | Integración MongoDB | 1 | ✅ Pasa |
-| HU19-CP13 | El filtro de estado ofrece Pendiente, Activo y Bloqueado, sin Desactivado (los administradores no tienen Pendiente) | Frontend (componente y página) | 9 | 🔍 En revisión (9, AB#247, PR sin abrir) |
-| HU19-CP14 | Cada fila de la tabla permite bloquear o desbloquear la cuenta con confirmación (una pendiente se acepta desbloqueándola) y la ficha ya no cambia el estado | Frontend (componente y página) | 32 | 🔍 En revisión (32, AB#248, PR sin abrir) |
-| HU19-CP15 | Cada fila de la tabla permite editar y eliminar la cuenta (con confirmación), y la ficha es de solo lectura | Frontend (componente y página) | 44 | 🔍 En revisión (44, AB#249, PR sin abrir) |
-| HU19-CP16 | El administrador en sesión y el último administrador activo no se pueden bloquear ni eliminar: los botones quedan deshabilitados y explican el motivo | Frontend (componente y página) | 20 | 🔍 En revisión (20, AB#250, PR sin abrir) |
-| HU19-CP17 | En la tabla de vendedores, el filtro, la etiqueta y la ordenación del estado usan Bloqueado en lugar de Desactivado | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#247, PR sin abrir) |
-| HU19-CP18 | Cada fila de la tabla de vendedores permite bloquear o desbloquear la cuenta con confirmación (nombre comercial en los botones y avisos), con los mismos endpoints que el resto de usuarios | Frontend (componente y página) | 8 | 🔍 En revisión (8, AB#248, PR sin abrir) |
-| HU19-CP19 | Cada fila de la tabla de vendedores permite editar y eliminar la cuenta, y su ficha (datos, productos y pedidos) es de solo lectura | Frontend (componente y página) | 25 | 🔍 En revisión (25, AB#249, PR sin abrir) |
+| HU19-CP13 | El filtro de estado ofrece Pendiente, Activo y Bloqueado, sin Desactivado (los administradores no tienen Pendiente) | Frontend (componente y página) | 9 | ✅ Pasa (9, AB#247, PR #116) |
+| HU19-CP14 | Cada fila de la tabla permite bloquear o desbloquear la cuenta con confirmación (una pendiente se acepta desbloqueándola) y la ficha ya no cambia el estado | Frontend (componente y página) | 32 | ✅ Pasa (32, AB#248, PR #116) |
+| HU19-CP15 | Cada fila de la tabla permite editar y eliminar la cuenta (con confirmación), y la ficha es de solo lectura | Frontend (componente y página) | 44 | ✅ Pasa (44, AB#249, PR #116) |
+| HU19-CP16 | El administrador en sesión y el último administrador activo no se pueden bloquear ni eliminar: los botones quedan deshabilitados y explican el motivo | Frontend (componente y página) | 20 | ✅ Pasa (20, AB#250, PR #116) |
+| HU19-CP17 | En la tabla de vendedores, el filtro, la etiqueta y la ordenación del estado usan Bloqueado en lugar de Desactivado | Frontend (componente y página) | 4 | ✅ Pasa (4, AB#247, PR #116) |
+| HU19-CP18 | Cada fila de la tabla de vendedores permite bloquear o desbloquear la cuenta con confirmación (nombre comercial en los botones y avisos), con los mismos endpoints que el resto de usuarios | Frontend (componente y página) | 8 | ✅ Pasa (8, AB#248, PR #116) |
+| HU19-CP19 | Cada fila de la tabla de vendedores permite editar y eliminar la cuenta, y su ficha (datos, productos y pedidos) es de solo lectura | Frontend (componente y página) | 25 | ✅ Pasa (25, AB#249, PR #116) |
 
 Notas:
 - **HU19-CP13 a CP19 (Sprint 2, frontend):** CP17 a CP19 son los mismos comportamientos en la tabla de vendedores (HU26). Las cuentas ya no se desactivan, se bloquean (decisión del equipo), y sus acciones salen de la ficha a la fila de la tabla (ver, editar, bloquear o desbloquear y eliminar). El frontend espera el estado `BLOQUEADO` (ya no `DESACTIVADO`), `DELETE /api/admin/usuarios/{id}` y los `409` `CANNOT_BLOCK_SELF`, `CANNOT_DELETE_SELF` y `LAST_ACTIVE_ADMIN`: es un **contrato propuesto por el frontend, pendiente de implementar y validar en el backend**. Los tests de `frontend/src` de estas tareas no llevan el ID del caso en el nombre (estilo de esos archivos); se trazan aquí por su nombre.
@@ -287,148 +287,148 @@ Notas:
 | HU19-CP11 | `UsuarioControllerTest` | `elListadoDeUsuariosAceptaOrdenYSentido` | Infraestructura | AB#61 | PR #104 | ✅ |
 | HU19-CP11 | `UsuarioMongoAdapterTest` | `ordenaClientesPorEstadoDescendente` | Infraestructura | AB#61 | PR #104 | ✅ |
 | HU19-CP12 | `UsuarioMongoAdapterTest` | `ordenaPorNombreSinDistinguirMayusculasNiTildes` | Infraestructura | AB#29 | PR #104 | ✅ |
-| HU19-CP13 | `usersConfig.test.js` | `statusLabelsForRole_deAdministrador_noIncluyePendiente` | Frontend | AB#247 | PR sin abrir | 🔍 |
-| HU19-CP13 | `usersConfig.test.js` | `statusLabelsForRole_ningunRol_ofreceDesactivado` | Frontend | AB#247 | PR sin abrir | 🔍 |
-| HU19-CP13 | `usersConfig.test.js` | `statusLabelsForRole_deCliente_ofrecePendienteActivoYBloqueado` | Frontend | AB#247 | PR sin abrir | 🔍 |
-| HU19-CP13 | `UsersFilters.test.jsx` | `HU19-CP04: avisa del estado elegido en el filtro de estado` | Frontend | AB#247 | PR sin abrir | 🔍 |
-| HU19-CP13 | `UsersFilters.test.jsx` | `usersFilters_conStatusLabels_soloOfreceEsosEstados` | Frontend | AB#247 | PR sin abrir | 🔍 |
-| HU19-CP13 | `RoleUsersList.test.jsx` | `roleUsersList_elFiltroDeEstadoOfrecePendienteYNoHayFiltroDeRol` | Frontend | AB#247 | PR sin abrir | 🔍 |
-| HU19-CP13 | `RoleUsersList.test.jsx` | `roleUsersList_alFiltrarPorBloqueado_muestraSoloEsasCuentas` | Frontend | AB#247 | PR sin abrir | 🔍 |
-| HU19-CP13 | `RoleUsersList.test.jsx` | `roleUsersList_deAdministradores_elFiltroDeEstadoNoOfrecePendiente` | Frontend | AB#247 | PR sin abrir | 🔍 |
-| HU19-CP13 | `AdminUsersPage.test.jsx` | `adminUsersPage_alFiltrarPorAdministrador_elFiltroDeEstadoNoOfrecePendiente` | Frontend | AB#247 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_desbloquear_muestraUnBotonConElNombreDelUsuario` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_desbloquear_pideConfirmacionSinDesbloquearTodavia` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_desbloquear_alCancelar_noCambiaNada` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_desbloquear_alConfirmar_enviaActivoYAvisaConElNombre` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_desbloquear_siFalla_avisaDelError` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_bloquear_muestraUnBotonConElNombreDelUsuario` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_bloquear_pideConfirmacionAvisandoDeQueNoPodraIniciarSesion` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_bloquear_alConfirmar_enviaBloqueadoYAvisaConElNombre` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_bloquear_conConflicto_pasaElErrorConSuCodigo` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_deUnaCuentaActiva_ofreceVerYBloquear` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_deUnaCuentaBloqueada_ofreceDesbloquearYNoBloquear` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_deUnaCuentaPendiente_ofreceDesbloquearParaAceptarla` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_nuncaOfreceDesactivarNiActivar` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_alBloquear_avisaConElMensajeYActualizaElListado` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_alDesbloquear_avisaConElMensajeYActualizaElListado` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_alDesbloquearUnaCuentaPendiente_laAcepta` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_siEsElUltimoAdministradorActivo_muestraElMotivoYNoActualiza` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_siElBackendDiceQueEsLaPropiaCuenta_muestraElMotivo` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_siFallaElCambio_muestraUnErrorGenericoYNoActualiza` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserDetailDialog.test.jsx` | `userDetailDialog_deUnaCuentaActiva_noOfreceBloquear` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserDetailDialog.test.jsx` | `userDetailDialog_deUnaCuentaBloqueada_noOfreceDesbloquearNiActivar` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UserDetailDialog.test.jsx` | `userDetailDialog_deUnaCuentaPendiente_noOfreceActivar` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `UsersTable.test.jsx` | `usersTable_conRenderActions_anadeLaColumnaAcciones` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `users.test.js` | `updateUserStatus_paraBloquear_enviaBloqueado` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `RoleUsersList.test.jsx` | `roleUsersList_cadaFilaTieneLupaYBotonDeBloqueo` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `RoleUsersList.test.jsx` | `roleUsersList_alDesbloquearDesdeLaFila_actualizaElListadoYAvisa` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `RoleUsersList.test.jsx` | `roleUsersList_alBloquearDesdeLaFila_actualizaElListadoYAvisa` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `RoleUsersList.test.jsx` | `roleUsersList_siFallaElBloqueo_muestraElErrorYNoCambiaLaFila` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `AdminUsersPage.test.jsx` | `adminUsersPage_laTablaTieneUnaColumnaAcciones_conLupaYBloqueoEnCadaFila` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `AdminUsersPage.test.jsx` | `adminUsersPage_alBloquearDesdeLaTabla_laFilaPasaABloqueadoYAvisa` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `AdminUsersPage.test.jsx` | `adminUsersPage_alDesbloquearUnaCuentaPendiente_laAcepta` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP14 | `AdminAdminsPage.test.jsx` | `adminAdminsPage_alDesbloquearUnAdministradorDesdeLaTabla_elListadoLoMuestraActivo` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alAbrirse_muestraElModoEdicionConGuardarYCancelar` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_deUnCliente_soloDejaModificarLoQueSePuede` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_deUnAdministrador_noDejaModificarEmailNiFechaDeIncorporacion` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_nuncaMuestraLaContrasena` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alPulsarCerrar_avisaDelCierre` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_conErrorAlCargar_muestraMensajeYPermiteReintentar` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alGuardarUnCliente_enviaSusDatosSinElEmailNiElEstado` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_tras_guardar_avisaUnaSolaVez` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alCambiarElTipoDeCliente_loEnvia` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alCambiarLaFechaDeNacimientoAOtraDeUnMayor_laGuarda` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_conUnaFechaDeNacimientoDeUnMenor_muestraElErrorYNoGuarda` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_conCamposObligatoriosVacios_losMuestraTodosALaVezYNoGuarda` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alPulsarCancelar_cierraSinGuardarNada` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_conErrorDelServidor_muestraElMensajeYSigueEnEdicion` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alEditarLaSedeDeUnAdministrador_laEnvia` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_laSedeDeUnAdministradorPuedeQuedarVacia` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_unAdministradorPuedeEditarSusPropiosDatos` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_elRolEsDeSoloLectura_enLaEdicionDe %s` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alGuardar_noEnviaElRolNiElEmail` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alPulsarLaLupa_abreLaFichaDeEseUsuario` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alCerrarLaFicha_vuelveALaFila` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_ofreceEditarYEliminarAunqueLaCuentaEsteBloqueada` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alPulsarEditar_abreElFormularioDeEdicionConSusDatos` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alGuardarLaEdicion_avisaActualizaElListadoYCierraElFormulario` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alCancelarLaEdicion_cierraElFormularioSinAvisar` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alPulsarEliminar_pideConfirmacionAvisandoDeQueNoSePuedeDeshacer` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alCancelarLaEliminacion_noBorraNada` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alConfirmarLaEliminacion_borraAvisaYActualizaElListado` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_siEsElUltimoAdministradorActivo_muestraElMotivoDeLaEliminacion` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_siElBackendDiceQueEsLaPropiaCuenta_muestraElMotivoDeLaEliminacion` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_siFallaLaEliminacion_muestraUnErrorGenericoYNoActualiza` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserDetailDialog.test.jsx` | `userDetailDialog_noOfreceEditar_laEdicionSeHaceDesdeLaTabla` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserDetailDialog.test.jsx` | `userDetailDialog_soloOfreceCerrar` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserDetailDialog.test.jsx` | `userDetailDialog_muestraElRolDeLaCuenta` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `UserDetailDialog.test.jsx` | `userDetailDialog_deUnAdministrador_muestraSuSedeYSuRol` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `users.test.js` | `deleteUser_envia_DELETE_ALaRutaDelUsuario_yDevuelveNullSinCuerpo` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `users.test.js` | `deleteUser_codificaElIdEnLaRuta` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `users.test.js` | `deleteUser_conConflicto_lanzaApiErrorConSuCodigo` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `RoleUsersList.test.jsx` | `roleUsersList_alEliminarDesdeLaFila_laFilaDesapareceYAvisa` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `AdminUsersPage.test.jsx` | `adminUsersPage_alEditarDesdeLaTabla_laFilaMuestraElNombreNuevo` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `AdminUsersPage.test.jsx` | `adminUsersPage_alEliminarDesdeLaTabla_laFilaDesapareceYAvisa` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `AdminUsersPage.test.jsx` | `adminUsersPage_alPulsarLaLupa_abreLaFichaSinAccionesDeEstado` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `AdminClientsPage.test.jsx` | `adminClientsPage_alEditarUnClienteDesdeLaTabla_elListadoMuestraElNombreNuevo` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP15 | `AdminClientsPage.test.jsx` | `adminClientsPage_laFichaNoTieneEditar` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP16 | `UserStatusButton.test.jsx` | `userStatusButton_bloquear_deshabilitado_noSePuedePulsarYExplicaElMotivo` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_deLaPropiaCuenta_dejaElBloqueoDeshabilitadoYExplicaElMotivo` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_deLaPropiaCuenta_dejaEliminarDeshabilitadoYExplicaElMotivo` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_deLaPropiaCuenta_dejaVerYEditarDisponibles` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_delUltimoAdministradorActivo_dejaBloquearYEliminarDeshabilitadosConSuMotivo` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_delUltimoAdministradorActivo_dejaVerYEditarDisponibles` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_siElUltimoAdministradorEsOtro_dejaBloquearYEliminarDisponibles` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_sinDatosDelUltimoAdministrador_dejaBloquearYEliminarDisponibles` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_deUnaCuentaDeshabilitada_noAbreLaConfirmacionAlPulsar` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `useLastActiveAdmin.test.jsx` | `useLastActiveAdmin_pideSoloLosAdministradoresActivos` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `useLastActiveAdmin.test.jsx` | `useLastActiveAdmin_conVariosAdministradoresActivos_noHayUltimo` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `useLastActiveAdmin.test.jsx` | `useLastActiveAdmin_conUnSoloAdministradorActivo_devuelveSuId` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `useLastActiveAdmin.test.jsx` | `useLastActiveAdmin_deshabilitado_noPideNadaYNoHayUltimo` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `useLastActiveAdmin.test.jsx` | `useLastActiveAdmin_alRefrescar_vuelveAPedirlo` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `RoleUsersList.test.jsx` | `roleUsersList_conElUsuarioEnSesion_suFilaNoPermiteBloquearse` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `RoleUsersList.test.jsx` | `roleUsersList_deClientes_noPideCuantosAdministradoresActivosQuedan` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `AdminAdminsPage.test.jsx` | `adminAdminsPage_laFilaDelAdministradorEnSesion_noPermiteBloquearse` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `AdminAdminsPage.test.jsx` | `adminAdminsPage_siSoloQuedaUnAdministradorActivo_noSePuedeBloquearNiEliminar` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `AdminUsersPage.test.jsx` | `adminUsersPage_laFilaDelAdministradorEnSesion_noPermiteBloquearse` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP16 | `AdminUsersPage.test.jsx` | `adminUsersPage_siSoloQuedaUnAdministradorActivo_nadieMasPuedeBloquearloNiEliminarlo` | Frontend | AB#250 | PR sin abrir | 🔍 |
-| HU19-CP17 | `AdminSellersPage.test.jsx` | `adminSellersPage_distingueLosEstadosPendienteYBloqueado` | Frontend | AB#247 | PR sin abrir | 🔍 |
-| HU19-CP17 | `AdminSellersPage.test.jsx` | `adminSellersPage_elFiltroDeEstado_ofreceTodosLosEstados` | Frontend | AB#247 | PR sin abrir | 🔍 |
-| HU19-CP17 | `AdminSellersPage.test.jsx` | `adminSellersPage_alInvertirElOrdenDeEstado_losPendientesPasanAlFinal` | Frontend | AB#247 | PR sin abrir | 🔍 |
-| HU19-CP17 | `AdminSellersPage.test.jsx` | `adminSellersPage_sinCoincidencias_ofreceLimpiarLosFiltros` | Frontend | AB#247 | PR sin abrir | 🔍 |
-| HU19-CP18 | `AdminSellersPage.test.jsx` | `adminSellersPage_laTablaTieneUnaColumnaAcciones` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP18 | `AdminSellersPage.test.jsx` | `adminSellersPage_cadaFilaTieneVerEditarBloquearOEliminar` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP18 | `AdminSellersPage.test.jsx` | `adminSellersPage_alBloquearUnVendedor_laFilaPasaABloqueadoYAvisa` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP18 | `AdminSellersPage.test.jsx` | `adminSellersPage_alDesbloquearUnVendedorPendiente_loAcepta` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP18 | `AdminSellersPage.test.jsx` | `adminSellersPage_siFallaElBloqueo_muestraElErrorYNoCambiaLaFila` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP18 | `UserRowActions.test.jsx` | `userRowActions_conUnNombreIndicado_losBotonesYLosAvisosLoUsan` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP18 | `UserRowActions.test.jsx` | `userRowActions_alBloquearUnVendedor_usaElMismoEndpointDeEstadoQueElRestoDeUsuarios` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP18 | `UserRowActions.test.jsx` | `userRowActions_alDesbloquearUnVendedorPendiente_loAcepta` | Frontend | AB#248 | PR sin abrir | 🔍 |
-| HU19-CP19 | `AdminSellersPage.test.jsx` | `adminSellersPage_alEliminarUnVendedor_laFilaDesapareceYAvisa` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `AdminSellersPage.test.jsx` | `adminSellersPage_alEditarUnVendedorDesdeLaTabla_elListadoMuestraSuNombreComercialNuevo` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `AdminSellersPage.test.jsx` | `adminSellersPage_laFichaDelVendedorNoTieneEditarNiBloquear` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `UserRowActions.test.jsx` | `userRowActions_conRenderDetail_laLupaAbreEseDialogoYSePuedeCerrar` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `UserRowActions.test.jsx` | `userRowActions_alEliminarUnVendedor_usaElMismoEndpointQueElRestoDeUsuarios` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `UserRowActions.test.jsx` | `userRowActions_alEditarUnVendedor_abreElFormularioConSusDatos` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_muestraSusDatosParaEditar` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_dejaModificarTodoMenosElEmailYElEstado` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_alGuardarEnviaSoloLosDatosDelVendedor` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_tras_guardar_avisaUnaSolaVez` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_alCambiarLaCategoriaPrincipal_laEnvia` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_conElNombreComercialDeOtroVendedor_muestraElErrorEnElCampoYSigueEnEdicion` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_alGuardarSinCambiarElNombreComercial_noLoTomaPorRepetido` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_conCamposVaciosOIncorrectos_losMuestraTodosALaVezYNoGuarda` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_alPulsarCancelar_cierraSinGuardarNada` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_conErrorDelServidor_muestraElMensajeYSigueEnEdicion` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_siNoCarganLasCategorias_avisaYPermiteReintentar` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedorPendiente_tambienSePuedeEditar` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_elRolEsDeSoloLecturaYNoSeEnvia` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_enLaPestanaDatos_noOfreceEditarNiCambiarElEstado` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_conVendedorBloqueado_tampocoOfreceDesbloquear` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_conVendedorPendiente_tampocoOfreceActivar` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_elAvisoRemiteALosBotonesDeLaTabla` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_enLasPestanasDeProductosYPedidos_noOfreceEditar` | Frontend | AB#249 | PR sin abrir | 🔍 |
-| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_muestraElRolVendedor` | Frontend | AB#249 | PR sin abrir | 🔍 |
+| HU19-CP13 | `usersConfig.test.js` | `statusLabelsForRole_deAdministrador_noIncluyePendiente` | Frontend | AB#247 | PR #116 | ✅ |
+| HU19-CP13 | `usersConfig.test.js` | `statusLabelsForRole_ningunRol_ofreceDesactivado` | Frontend | AB#247 | PR #116 | ✅ |
+| HU19-CP13 | `usersConfig.test.js` | `statusLabelsForRole_deCliente_ofrecePendienteActivoYBloqueado` | Frontend | AB#247 | PR #116 | ✅ |
+| HU19-CP13 | `UsersFilters.test.jsx` | `HU19-CP04: avisa del estado elegido en el filtro de estado` | Frontend | AB#247 | PR #116 | ✅ |
+| HU19-CP13 | `UsersFilters.test.jsx` | `usersFilters_conStatusLabels_soloOfreceEsosEstados` | Frontend | AB#247 | PR #116 | ✅ |
+| HU19-CP13 | `RoleUsersList.test.jsx` | `roleUsersList_elFiltroDeEstadoOfrecePendienteYNoHayFiltroDeRol` | Frontend | AB#247 | PR #116 | ✅ |
+| HU19-CP13 | `RoleUsersList.test.jsx` | `roleUsersList_alFiltrarPorBloqueado_muestraSoloEsasCuentas` | Frontend | AB#247 | PR #116 | ✅ |
+| HU19-CP13 | `RoleUsersList.test.jsx` | `roleUsersList_deAdministradores_elFiltroDeEstadoNoOfrecePendiente` | Frontend | AB#247 | PR #116 | ✅ |
+| HU19-CP13 | `AdminUsersPage.test.jsx` | `adminUsersPage_alFiltrarPorAdministrador_elFiltroDeEstadoNoOfrecePendiente` | Frontend | AB#247 | PR #116 | ✅ |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_desbloquear_muestraUnBotonConElNombreDelUsuario` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_desbloquear_pideConfirmacionSinDesbloquearTodavia` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_desbloquear_alCancelar_noCambiaNada` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_desbloquear_alConfirmar_enviaActivoYAvisaConElNombre` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_desbloquear_siFalla_avisaDelError` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_bloquear_muestraUnBotonConElNombreDelUsuario` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_bloquear_pideConfirmacionAvisandoDeQueNoPodraIniciarSesion` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_bloquear_alConfirmar_enviaBloqueadoYAvisaConElNombre` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserStatusButton.test.jsx` | `userStatusButton_bloquear_conConflicto_pasaElErrorConSuCodigo` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_deUnaCuentaActiva_ofreceVerYBloquear` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_deUnaCuentaBloqueada_ofreceDesbloquearYNoBloquear` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_deUnaCuentaPendiente_ofreceDesbloquearParaAceptarla` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_nuncaOfreceDesactivarNiActivar` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_alBloquear_avisaConElMensajeYActualizaElListado` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_alDesbloquear_avisaConElMensajeYActualizaElListado` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_alDesbloquearUnaCuentaPendiente_laAcepta` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_siEsElUltimoAdministradorActivo_muestraElMotivoYNoActualiza` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_siElBackendDiceQueEsLaPropiaCuenta_muestraElMotivo` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserRowActions.test.jsx` | `userRowActions_siFallaElCambio_muestraUnErrorGenericoYNoActualiza` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserDetailDialog.test.jsx` | `userDetailDialog_deUnaCuentaActiva_noOfreceBloquear` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserDetailDialog.test.jsx` | `userDetailDialog_deUnaCuentaBloqueada_noOfreceDesbloquearNiActivar` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UserDetailDialog.test.jsx` | `userDetailDialog_deUnaCuentaPendiente_noOfreceActivar` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `UsersTable.test.jsx` | `usersTable_conRenderActions_anadeLaColumnaAcciones` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `users.test.js` | `updateUserStatus_paraBloquear_enviaBloqueado` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `RoleUsersList.test.jsx` | `roleUsersList_cadaFilaTieneLupaYBotonDeBloqueo` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `RoleUsersList.test.jsx` | `roleUsersList_alDesbloquearDesdeLaFila_actualizaElListadoYAvisa` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `RoleUsersList.test.jsx` | `roleUsersList_alBloquearDesdeLaFila_actualizaElListadoYAvisa` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `RoleUsersList.test.jsx` | `roleUsersList_siFallaElBloqueo_muestraElErrorYNoCambiaLaFila` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `AdminUsersPage.test.jsx` | `adminUsersPage_laTablaTieneUnaColumnaAcciones_conLupaYBloqueoEnCadaFila` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `AdminUsersPage.test.jsx` | `adminUsersPage_alBloquearDesdeLaTabla_laFilaPasaABloqueadoYAvisa` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `AdminUsersPage.test.jsx` | `adminUsersPage_alDesbloquearUnaCuentaPendiente_laAcepta` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP14 | `AdminAdminsPage.test.jsx` | `adminAdminsPage_alDesbloquearUnAdministradorDesdeLaTabla_elListadoLoMuestraActivo` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alAbrirse_muestraElModoEdicionConGuardarYCancelar` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_deUnCliente_soloDejaModificarLoQueSePuede` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_deUnAdministrador_noDejaModificarEmailNiFechaDeIncorporacion` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_nuncaMuestraLaContrasena` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alPulsarCerrar_avisaDelCierre` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_conErrorAlCargar_muestraMensajeYPermiteReintentar` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alGuardarUnCliente_enviaSusDatosSinElEmailNiElEstado` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_tras_guardar_avisaUnaSolaVez` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alCambiarElTipoDeCliente_loEnvia` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alCambiarLaFechaDeNacimientoAOtraDeUnMayor_laGuarda` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_conUnaFechaDeNacimientoDeUnMenor_muestraElErrorYNoGuarda` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_conCamposObligatoriosVacios_losMuestraTodosALaVezYNoGuarda` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alPulsarCancelar_cierraSinGuardarNada` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_conErrorDelServidor_muestraElMensajeYSigueEnEdicion` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alEditarLaSedeDeUnAdministrador_laEnvia` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_laSedeDeUnAdministradorPuedeQuedarVacia` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_unAdministradorPuedeEditarSusPropiosDatos` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_elRolEsDeSoloLectura_enLaEdicionDe %s` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserEditDialog.test.jsx` | `userEditDialog_alGuardar_noEnviaElRolNiElEmail` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alPulsarLaLupa_abreLaFichaDeEseUsuario` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alCerrarLaFicha_vuelveALaFila` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_ofreceEditarYEliminarAunqueLaCuentaEsteBloqueada` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alPulsarEditar_abreElFormularioDeEdicionConSusDatos` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alGuardarLaEdicion_avisaActualizaElListadoYCierraElFormulario` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alCancelarLaEdicion_cierraElFormularioSinAvisar` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alPulsarEliminar_pideConfirmacionAvisandoDeQueNoSePuedeDeshacer` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alCancelarLaEliminacion_noBorraNada` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_alConfirmarLaEliminacion_borraAvisaYActualizaElListado` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_siEsElUltimoAdministradorActivo_muestraElMotivoDeLaEliminacion` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_siElBackendDiceQueEsLaPropiaCuenta_muestraElMotivoDeLaEliminacion` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserRowActions.test.jsx` | `userRowActions_siFallaLaEliminacion_muestraUnErrorGenericoYNoActualiza` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserDetailDialog.test.jsx` | `userDetailDialog_noOfreceEditar_laEdicionSeHaceDesdeLaTabla` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserDetailDialog.test.jsx` | `userDetailDialog_soloOfreceCerrar` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserDetailDialog.test.jsx` | `userDetailDialog_muestraElRolDeLaCuenta` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `UserDetailDialog.test.jsx` | `userDetailDialog_deUnAdministrador_muestraSuSedeYSuRol` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `users.test.js` | `deleteUser_envia_DELETE_ALaRutaDelUsuario_yDevuelveNullSinCuerpo` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `users.test.js` | `deleteUser_codificaElIdEnLaRuta` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `users.test.js` | `deleteUser_conConflicto_lanzaApiErrorConSuCodigo` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `RoleUsersList.test.jsx` | `roleUsersList_alEliminarDesdeLaFila_laFilaDesapareceYAvisa` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `AdminUsersPage.test.jsx` | `adminUsersPage_alEditarDesdeLaTabla_laFilaMuestraElNombreNuevo` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `AdminUsersPage.test.jsx` | `adminUsersPage_alEliminarDesdeLaTabla_laFilaDesapareceYAvisa` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `AdminUsersPage.test.jsx` | `adminUsersPage_alPulsarLaLupa_abreLaFichaSinAccionesDeEstado` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `AdminClientsPage.test.jsx` | `adminClientsPage_alEditarUnClienteDesdeLaTabla_elListadoMuestraElNombreNuevo` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP15 | `AdminClientsPage.test.jsx` | `adminClientsPage_laFichaNoTieneEditar` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP16 | `UserStatusButton.test.jsx` | `userStatusButton_bloquear_deshabilitado_noSePuedePulsarYExplicaElMotivo` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_deLaPropiaCuenta_dejaElBloqueoDeshabilitadoYExplicaElMotivo` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_deLaPropiaCuenta_dejaEliminarDeshabilitadoYExplicaElMotivo` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_deLaPropiaCuenta_dejaVerYEditarDisponibles` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_delUltimoAdministradorActivo_dejaBloquearYEliminarDeshabilitadosConSuMotivo` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_delUltimoAdministradorActivo_dejaVerYEditarDisponibles` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_siElUltimoAdministradorEsOtro_dejaBloquearYEliminarDisponibles` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_sinDatosDelUltimoAdministrador_dejaBloquearYEliminarDisponibles` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `UserRowActions.test.jsx` | `userRowActions_deUnaCuentaDeshabilitada_noAbreLaConfirmacionAlPulsar` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `useLastActiveAdmin.test.jsx` | `useLastActiveAdmin_pideSoloLosAdministradoresActivos` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `useLastActiveAdmin.test.jsx` | `useLastActiveAdmin_conVariosAdministradoresActivos_noHayUltimo` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `useLastActiveAdmin.test.jsx` | `useLastActiveAdmin_conUnSoloAdministradorActivo_devuelveSuId` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `useLastActiveAdmin.test.jsx` | `useLastActiveAdmin_deshabilitado_noPideNadaYNoHayUltimo` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `useLastActiveAdmin.test.jsx` | `useLastActiveAdmin_alRefrescar_vuelveAPedirlo` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `RoleUsersList.test.jsx` | `roleUsersList_conElUsuarioEnSesion_suFilaNoPermiteBloquearse` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `RoleUsersList.test.jsx` | `roleUsersList_deClientes_noPideCuantosAdministradoresActivosQuedan` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `AdminAdminsPage.test.jsx` | `adminAdminsPage_laFilaDelAdministradorEnSesion_noPermiteBloquearse` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `AdminAdminsPage.test.jsx` | `adminAdminsPage_siSoloQuedaUnAdministradorActivo_noSePuedeBloquearNiEliminar` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `AdminUsersPage.test.jsx` | `adminUsersPage_laFilaDelAdministradorEnSesion_noPermiteBloquearse` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP16 | `AdminUsersPage.test.jsx` | `adminUsersPage_siSoloQuedaUnAdministradorActivo_nadieMasPuedeBloquearloNiEliminarlo` | Frontend | AB#250 | PR #116 | ✅ |
+| HU19-CP17 | `AdminSellersPage.test.jsx` | `adminSellersPage_distingueLosEstadosPendienteYBloqueado` | Frontend | AB#247 | PR #116 | ✅ |
+| HU19-CP17 | `AdminSellersPage.test.jsx` | `adminSellersPage_elFiltroDeEstado_ofreceTodosLosEstados` | Frontend | AB#247 | PR #116 | ✅ |
+| HU19-CP17 | `AdminSellersPage.test.jsx` | `adminSellersPage_alInvertirElOrdenDeEstado_losPendientesPasanAlFinal` | Frontend | AB#247 | PR #116 | ✅ |
+| HU19-CP17 | `AdminSellersPage.test.jsx` | `adminSellersPage_sinCoincidencias_ofreceLimpiarLosFiltros` | Frontend | AB#247 | PR #116 | ✅ |
+| HU19-CP18 | `AdminSellersPage.test.jsx` | `adminSellersPage_laTablaTieneUnaColumnaAcciones` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP18 | `AdminSellersPage.test.jsx` | `adminSellersPage_cadaFilaTieneVerEditarBloquearOEliminar` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP18 | `AdminSellersPage.test.jsx` | `adminSellersPage_alBloquearUnVendedor_laFilaPasaABloqueadoYAvisa` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP18 | `AdminSellersPage.test.jsx` | `adminSellersPage_alDesbloquearUnVendedorPendiente_loAcepta` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP18 | `AdminSellersPage.test.jsx` | `adminSellersPage_siFallaElBloqueo_muestraElErrorYNoCambiaLaFila` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP18 | `UserRowActions.test.jsx` | `userRowActions_conUnNombreIndicado_losBotonesYLosAvisosLoUsan` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP18 | `UserRowActions.test.jsx` | `userRowActions_alBloquearUnVendedor_usaElMismoEndpointDeEstadoQueElRestoDeUsuarios` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP18 | `UserRowActions.test.jsx` | `userRowActions_alDesbloquearUnVendedorPendiente_loAcepta` | Frontend | AB#248 | PR #116 | ✅ |
+| HU19-CP19 | `AdminSellersPage.test.jsx` | `adminSellersPage_alEliminarUnVendedor_laFilaDesapareceYAvisa` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `AdminSellersPage.test.jsx` | `adminSellersPage_alEditarUnVendedorDesdeLaTabla_elListadoMuestraSuNombreComercialNuevo` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `AdminSellersPage.test.jsx` | `adminSellersPage_laFichaDelVendedorNoTieneEditarNiBloquear` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `UserRowActions.test.jsx` | `userRowActions_conRenderDetail_laLupaAbreEseDialogoYSePuedeCerrar` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `UserRowActions.test.jsx` | `userRowActions_alEliminarUnVendedor_usaElMismoEndpointQueElRestoDeUsuarios` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `UserRowActions.test.jsx` | `userRowActions_alEditarUnVendedor_abreElFormularioConSusDatos` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_muestraSusDatosParaEditar` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_dejaModificarTodoMenosElEmailYElEstado` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_alGuardarEnviaSoloLosDatosDelVendedor` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_tras_guardar_avisaUnaSolaVez` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_alCambiarLaCategoriaPrincipal_laEnvia` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_conElNombreComercialDeOtroVendedor_muestraElErrorEnElCampoYSigueEnEdicion` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_alGuardarSinCambiarElNombreComercial_noLoTomaPorRepetido` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_conCamposVaciosOIncorrectos_losMuestraTodosALaVezYNoGuarda` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_alPulsarCancelar_cierraSinGuardarNada` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_conErrorDelServidor_muestraElMensajeYSigueEnEdicion` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_siNoCarganLasCategorias_avisaYPermiteReintentar` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedorPendiente_tambienSePuedeEditar` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `UserEditDialog.test.jsx` | `userEditDialog_deUnVendedor_elRolEsDeSoloLecturaYNoSeEnvia` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_enLaPestanaDatos_noOfreceEditarNiCambiarElEstado` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_conVendedorBloqueado_tampocoOfreceDesbloquear` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_conVendedorPendiente_tampocoOfreceActivar` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_elAvisoRemiteALosBotonesDeLaTabla` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_enLasPestanasDeProductosYPedidos_noOfreceEditar` | Frontend | AB#249 | PR #116 | ✅ |
+| HU19-CP19 | `SellerDetailDialog.test.jsx` | `sellerDetailDialog_muestraElRolVendedor` | Frontend | AB#249 | PR #116 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `RegistroUsuarioServiceTest`: `usuarios/application/service/`
@@ -477,7 +477,7 @@ Los tests de integración de MongoDB (`UsuarioMongoAdapterTest`, `UsuariosConfig
 | HU2-CP25 | El login no distingue mayúsculas ni espacios en el email, y un email mal formado responde como unas credenciales inválidas | Unitario | 2 | ✅ Pasa |
 | HU2-CP26 | El contador de intentos fallidos se reinicia al completar el login y al caducar el bloqueo, no al acertar solo la contraseña | Unitario | 4 | ✅ Pasa |
 | HU2-CP27 | El campo de la contraseña del login tiene un botón para mostrarla y ocultarla | Frontend (página) | 1 | ✅ Pasa (1, AB#19, PR #105) |
-| HU2-CP28 | Una cuenta bloqueada por un administrador muestra su mensaje en el paso 1, antes del código del correo, y no avanza al 2FA | Frontend (página) + unitario + integración | 4 | 🔍 En revisión (2, AB#246, PR por abrir) |
+| HU2-CP28 | Una cuenta bloqueada por un administrador muestra su mensaje en el paso 1, antes del código del correo, y no avanza al 2FA | Frontend (página) + unitario + integración | 4 | ✅ Pasa (2, AB#246, PR #114) |
 
 Notas:
 - **HU2-CP25 y CP26 (fallos de la demo del Sprint 1):** el paso 1 busca el email normalizado (`Email`, T240) y responde «Credenciales inválidas» si está mal formado. El contador de intentos se reinicia al caducar el bloqueo (`Usuario.registrarIntentoFallido`) y al completar el tercer paso (`AuthenticatorService.verificarCodigo`), no al acertar la contraseña: así quien solo tenga la contraseña no puede probar códigos sin límite.
@@ -552,7 +552,7 @@ Notas:
 | HU2-CP01 | `AutenticacionControllerTest` | `loginCorrectoPasaAlCodigoDelCorreo` | Infraestructura | AB#230 | PR #67 | ✅ |
 | HU2-CP02 | `AutenticacionControllerTest` | `loginConCredencialesIncorrectasDevuelve401` | Infraestructura | AB#230 | PR #67 | ✅ |
 | HU2-CP03 | `AutenticacionControllerTest` | `cuentaBloqueadaDevuelve429` | Infraestructura | AB#230 | PR #67 | ✅ |
-| HU2-CP28 | `AutenticacionControllerTest` | `cuentaBloqueadaPorAdministradorDevuelve403ConCodigo` | Infraestructura | AB#230 · AB#246 | PR #67 (cambiado en PR por abrir) | 🔍 |
+| HU2-CP28 | `AutenticacionControllerTest` | `cuentaBloqueadaPorAdministradorDevuelve403ConCodigo` | Infraestructura | AB#230 · AB#246 | PR #67 (cambiado en PR #114) | ✅ |
 | HU2-CP05 | `AutenticacionControllerTest` | `falloDelCorreoDevuelve503` | Infraestructura | AB#230 | PR #67 | ✅ |
 | HU2-CP06 | `AutenticacionControllerTest` | `codigoCorrectoPasaAlAuthenticator` | Infraestructura | AB#230 | PR #67 | ✅ |
 | HU2-CP07 | `AutenticacionControllerTest` | `codigoSinLoginPrevioDevuelve401` | Infraestructura | AB#230 | PR #67 | ✅ |
@@ -616,7 +616,7 @@ Notas:
 | HU2-CP27 | `LoginFlow.test.jsx` | `HU2-CP27: el campo de la contraseña tiene un botón para mostrarla y ocultarla` | Frontend · página | AB#19 | PR #105 | ✅ |
 | HU2-CP28 | `LoginFlow.test.jsx` | `HU2-CP28: una cuenta bloqueada muestra su mensaje antes del código del correo y no avanza al 2FA` | Frontend · página | AB#245 | PR #108 | ✅ |
 | HU2-CP28 | `LoginFlow.test.jsx` | `HU2-CP28: el mensaje de cuenta bloqueada no es el de demasiados intentos ni el genérico` | Frontend · página | AB#245 | PR #108 | ✅ |
-| HU2-CP28 | `AutenticacionServiceTest` | `cuentaBloqueadaPorAdministradorNoRecibeCodigo` | Aplicación | AB#246 | PR por abrir | 🔍 |
+| HU2-CP28 | `AutenticacionServiceTest` | `cuentaBloqueadaPorAdministradorNoRecibeCodigo` | Aplicación | AB#246 | PR #114 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AutenticacionServiceTest`: `usuarios/application/service/` (Mockito, con `Clock` fijo)
@@ -626,6 +626,185 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `BCryptHashContrasenaAdapterTest` y `SecureRandomGeneradorCodigoAdapterTest`: `usuarios/infrastructure/adapter/out/seguridad/`
 - `SmtpEnvioEmailAdapterTest`: `usuarios/infrastructure/adapter/out/email/` (Mockito, con un mock de `JavaMailSender`; no envía correos reales)
 - `UsuarioDocumentMapperTest`, `UsuarioMongoAdapterTest`, `CodigoVerificacionDocumentMapperTest` y `CodigoVerificacionMongoAdapterTest`: `usuarios/infrastructure/adapter/out/persistence/` (los adaptadores, con Testcontainers)
+
+---
+
+## HU4 · Visión de perfil
+
+### Tabla A · HU4 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU4-CP01 | Un cliente consulta su perfil (`GET /api/perfil`) y recibe sus datos personales y los de cliente, sin los de vendedor | Unitario + controlador | 2 | ✅ Pasa |
+| HU4-CP02 | Un vendedor consulta su perfil y recibe sus datos personales y los de vendedor, sin los de cliente | Controlador | 1 | ✅ Pasa |
+| HU4-CP03 | El perfil no expone la contraseña ni datos internos de la cuenta (estado, intentos, bloqueo) | Controlador | 1 | ✅ Pasa |
+| HU4-CP04 | Solo el cliente y el vendedor consultan su perfil: administrador 403, sin sesión 401, y una sesión de un usuario que ya no existe no es válida | Unitario + controlador | 3 | ✅ Pasa |
+
+Notas:
+- **HU4-CP01 a CP04:** casos propuestos en la T297 (AB#297), a partir del criterio de aceptación «cuando el usuario accede a su panel de perfil puede visualizar sus datos personales». Pendientes de confirmar con el equipo y de añadir a la HU4 en Azure Boards.
+- **Endpoint (T297):** `GET /api/perfil` → `{id, nombre, apellidos, email, rol, fechaAlta, dni, telefono, avatar}` y, según el rol, `fechaNacimiento` y `tipoCliente` (cliente) o `nombreComercial` y `categoriaPrincipalId` (vendedor). Los campos vacíos no aparecen. El usuario sale de la sesión (su email), nunca de la petición. Solo para `CLIENTE` y `VENDEDOR` (`SecurityConfig`). Es el contrato de la vista del frontend (T296).
+- **Pendiente:** el criterio «el usuario debe dar al botón de guardar para modificar sus datos personales» es de la HU45 (edición de perfil). Aclarar con el equipo qué incluyen sus tasks 101 (endpoint consultar/editar perfil) y 298 (lógica para la obtención segura de datos), que se solapan con la T297.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU4-CP01 | `GestionPerfilServiceTest` | `consultarPerfilDevuelveElUsuarioDelCorreo` | Aplicación | AB#297 | PR #140 | ✅ |
+| HU4-CP01 | `PerfilControllerTest` | `unClienteRecibeSusDatos` | Infraestructura | AB#297 | PR #140 | ✅ |
+| HU4-CP02 | `PerfilControllerTest` | `unVendedorRecibeSusDatos` | Infraestructura | AB#297 | PR #140 | ✅ |
+| HU4-CP03 | `PerfilControllerTest` | `elPerfilNoExponeDatosSensibles` | Infraestructura | AB#297 | PR #140 | ✅ |
+| HU4-CP04 | `GestionPerfilServiceTest` | `consultarPerfilDeUnCorreoQueNoExisteLanzaExcepcion` | Aplicación | AB#297 | PR #140 | ✅ |
+| HU4-CP04 | `PerfilControllerTest` | `unAdministradorRecibe403` | Infraestructura | AB#297 | PR #140 | ✅ |
+| HU4-CP04 | `PerfilControllerTest` | `sinSesionRecibe401` | Infraestructura | AB#297 | PR #140 | ✅ |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `GestionPerfilServiceTest`: `usuarios/application/service/` (JUnit y Mockito, sin Spring)
+- `PerfilControllerTest`: `usuarios/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
+
+---
+
+## HU7 · Búsqueda y filtrado de productos
+
+### Tabla A · HU7 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU7-CP01 | La vista de productos es lo primero que ve el cliente al iniciar sesión, y solo la ve un cliente (sin sesión lleva al login; otro rol, a su página) | Frontend (página) | 3 | ✅ Pasa (3, AB#350, PR #131) |
+| HU7-CP02 | Cada producto se muestra en una tarjeta con su nombre, imagen, categoría y valoración (estrellas y número de valoraciones; con avisos si no tiene imagen o valoraciones) | Frontend (componente y página) | 6 | ✅ Pasa (6, AB#350, PR #131) |
+| HU7-CP03 | Las tarjetas se colocan de dos en dos y de diez en diez: al llegar al final de la página (o con «Ver más productos») se cargan otras diez, hasta avisar de que no hay más; con estados de carga, error con reintento y catálogo vacío | Frontend (página) | 8 | ✅ Pasa (8, AB#350, PR #131) |
+| HU7-CP04 | Se puede buscar por nombre (sin distinguir mayúsculas ni tildes) y filtrar por categoría; cualquier cambio empieza de nuevo desde la primera página, y si nada coincide se ofrece limpiar los filtros | Frontend (página) | 5 | 🔍 Pasan 3 de 5 en `develop`; los 2 que fallaban se arreglan en la rama `fix/tests-productspage-hu7` (AB#351, PR #131, ver nota) |
+| HU7-CP05 | Se puede filtrar por valoración mínima (4, 3 o 2 estrellas o más) y volver a «Cualquiera» | Frontend (página) | 3 | ✅ Pasa (3, AB#351, PR #131) |
+| HU7-CP06 | Se puede ordenar por nombre y por valoración (no por categoría), ascendente y descendente; por defecto, nombre de la A a la Z | Frontend (página) | 5 | ✅ Pasa (5, AB#351, PR #131) |
+| HU7-CP07 | Arriba se muestran los diez productos mejor valorados como tarjetas (puesto, nombre y valoración) dentro de una banda curva sin marco; se ocultan con filtros activos, con pocos productos valorados o si falla | Frontend (componente y página) | 9 | ✅ Pasa (9, AB#350, PR #131) |
+| HU7-CP08 | Las tarjetas de la banda animada de los mejores se pueden pulsar con el ratón y avisan con su producto; sin esa función no son botones (el detalle al que llevan es la HU8-CP06) | Frontend (componente) | 2 | ✅ Pasa (2, AB#350, PR #131) |
+| HU7-CP09 | Al cambiar el tamaño de la página la banda de los mejores se reinicia (una sola vez, cuando termina el cambio) para que las tarjetas no se solapen; si el tamaño no cambia, no se reinicia | Frontend (componente) | 3 | ✅ Pasa (3, AB#350, PR #131) |
+
+Notas:
+- **HU7-CP01 a CP09 (Sprint 2, frontend):** casos propuestos en las tasks AB#350 (vista de productos) y AB#351 (vista de filtrado y búsqueda), a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu7-busqueda-y-filtrado-de-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU7 (AB#69) en Azure Boards.
+- **Backend:** las tasks AB#352 (lógica de filtrado) y AB#353 (endpoint para obtener productos) están sin hacer; los tests de esta HU usan el contrato propuesto por el frontend y los mocks (MSW).
+- **Decisión del equipo:** no se ordena por categoría (no tiene sentido); el listado es un scroll infinito de diez en diez y no una paginación numérica; la selección son los diez mejor valorados, como tarjetas dentro de la animación y a todo el ancho de la página.
+- **HU7-CP08 (cambio en la HU8):** en la primera versión las tarjetas abrían una ventana de ficha (HU7-CP08, 8 tests). La HU8 la sustituye por la página de detalle: los tests del clic en el listado, la animación y la lista pasan a ser HU8-CP06 y la ventana (`ProductDialog`) se elimina. Quedan en HU7-CP08 los de la banda animada.
+- **HU7-CP09:** el reinicio al cambiar el tamaño se prueba con un `ResizeObserver` que dispara el test y con temporizadores simulados.
+- **Cambio de comportamiento:** `/products` ya no es una ruta pública: sin sesión lleva a `/login`. Se ha cambiado en consecuencia el test técnico `productos_sinSesion_llevaAIniciarSesion` de `LoginFlow.test.jsx` (antes `productos_sinSesion_esUnaRutaPublica`).
+- **Infraestructura de tests:** `test/setup.js` añade un `IntersectionObserver` que no avisa nunca (jsdom no lo trae); los tests del scroll infinito lo sustituyen por uno que dispara a mano.
+- **Fallo conocido (no es de esta HU):** `HU7-CP04: al elegir una categoría pide solo los productos de esa categoría` y `HU7-CP04: al filtrar vuelve a empezar desde la primera página, sin conservar lo cargado` fallan en `develop` desde que el desplegable de categorías de la HU31 sustituyó al selector nativo que usan. En la rama `fix/tests-productspage-hu7` se adaptan al desplegable con el helper `elegirCategoria` (abre el desplegable y pulsa la opción).
+- **Test inestable (HU7-CP03):** `HU7-CP03: al llegar otra vez al final carga las últimas y avisa de que no hay más` fallaba a veces con la máquina cargada: el test simulaba la llegada al final antes de que la página conectara el `IntersectionObserver` (lo hace en un `useEffect`, justo después de pintar las tarjetas). En la misma rama, `llegarAlFinal` espera a que haya un observador conectado antes de avisar.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU7-CP01 | `ProductsPage.test.jsx` | `HU7-CP01: tras iniciar sesión, el cliente aterriza en la vista de productos` | Frontend · página | AB#350 | PR #131 | ✅ |
+| HU7-CP01 | `ProductsPage.test.jsx` | `HU7-CP01: sin sesión, la vista de productos lleva a iniciar sesión` | Frontend · página | AB#350 | PR #131 | ✅ |
+| HU7-CP01 | `ProductsPage.test.jsx` | `HU7-CP01: un vendedor no ve la vista de productos del cliente: va a la suya` | Frontend · página | AB#350 | PR #131 | ✅ |
+| HU7-CP02 | `ProductCard.test.jsx` | `HU7-CP02: muestra el nombre, la imagen y la categoría del producto` | Frontend · componente | AB#350 | PR #131 | ✅ |
+| HU7-CP02 | `ProductCard.test.jsx` | `HU7-CP02: muestra la valoración en estrellas y cuántas valoraciones tiene` | Frontend · componente | AB#350 | PR #131 | ✅ |
+| HU7-CP02 | `ProductCard.test.jsx` | `HU7-CP02: un producto sin valoraciones lo indica en lugar de mostrar estrellas` | Frontend · componente | AB#350 | PR #131 | ✅ |
+| HU7-CP02 | `ProductCard.test.jsx` | `HU7-CP02: un producto sin imagen muestra un marcador en su lugar` | Frontend · componente | AB#350 | PR #131 | ✅ |
+| HU7-CP02 | `ProductCard.test.jsx` | `HU7-CP02: si no se conoce la categoría muestra un guion` | Frontend · componente | AB#350 | PR #131 | ✅ |
+| HU7-CP02 | `ProductsPage.test.jsx` | `HU7-CP02: cada tarjeta muestra el nombre, la categoría y la valoración del producto` | Frontend · página | AB#350 | PR #131 | ✅ |
+| HU7-CP03 | `ProductsPage.test.jsx` | `HU7-CP03: muestra las diez primeras tarjetas y solo los productos disponibles` | Frontend · página | AB#350 | PR #131 | ✅ |
+| HU7-CP03 | `ProductsPage.test.jsx` | `HU7-CP03: las tarjetas se colocan de dos en dos` | Frontend · página | AB#350 | PR #131 | ✅ |
+| HU7-CP03 | `ProductsPage.test.jsx` | `HU7-CP03: al llegar al final de la página carga otras diez debajo de las anteriores` | Frontend · página | AB#350 | PR #131 | ✅ |
+| HU7-CP03 | `ProductsPage.test.jsx` | `HU7-CP03: al llegar otra vez al final carga las últimas y avisa de que no hay más` | Frontend · página | AB#350 | PR #131 | ✅ |
+| HU7-CP03 | `ProductsPage.test.jsx` | `HU7-CP03: el botón «Ver más productos» también carga más, para quien no use el scroll` | Frontend · página | AB#350 | PR #131 | ✅ |
+| HU7-CP03 | `ProductsPage.test.jsx` | `HU7-CP03: si falla al cargar más, avisa sin perder las tarjetas y permite reintentar` | Frontend · página | AB#350 | PR #131 | ✅ |
+| HU7-CP03 | `ProductsPage.test.jsx` | `HU7-CP03: si falla la carga avisa y permite reintentar` | Frontend · página | AB#350 | PR #131 | ✅ |
+| HU7-CP03 | `ProductsPage.test.jsx` | `HU7-CP03: si todavía no hay productos lo indica` | Frontend · página | AB#350 | PR #131 | ✅ |
+| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al escribir en el buscador pide los productos con ese nombre` | Frontend · página | AB#351 | PR #131 | ✅ |
+| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: la búsqueda no distingue mayúsculas ni tildes` | Frontend · página | AB#351 | PR #131 | ✅ |
+| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al elegir una categoría pide solo los productos de esa categoría` | Frontend · página | AB#351 | PR #131 | 🔍 |
+| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al filtrar vuelve a empezar desde la primera página, sin conservar lo cargado` | Frontend · página | AB#351 | PR #131 | 🔍 |
+| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: si ningún producto coincide lo indica y permite limpiar los filtros` | Frontend · página | AB#351 | PR #131 | ✅ |
+| HU7-CP05 | `ProductsPage.test.jsx` | `HU7-CP05: al elegir una valoración mínima pide solo los productos con esa valoración o más` | Frontend · página | AB#351 | PR #131 | ✅ |
+| HU7-CP05 | `ProductsPage.test.jsx` | `HU7-CP05: con la valoración mínima, todos los productos mostrados la alcanzan` | Frontend · página | AB#351 | PR #131 | ✅ |
+| HU7-CP05 | `ProductsPage.test.jsx` | `HU7-CP05: al volver a «Cualquiera» deja de filtrar por valoración` | Frontend · página | AB#351 | PR #131 | ✅ |
+| HU7-CP06 | `ProductsPage.test.jsx` | `HU7-CP06: por defecto pide diez productos ordenados por nombre de la A a la Z y sin filtros` | Frontend · página | AB#351 | PR #131 | ✅ |
+| HU7-CP06 | `ProductsPage.test.jsx` | `HU7-CP06: permite ordenar por nombre y por valoración, y no por categoría` | Frontend · página | AB#351 | PR #131 | ✅ |
+| HU7-CP06 | `ProductsPage.test.jsx` | `HU7-CP06: el botón de sentido alterna entre ascendente y descendente` | Frontend · página | AB#351 | PR #131 | ✅ |
+| HU7-CP06 | `ProductsPage.test.jsx` | `HU7-CP06: ordenados por nombre, los productos salen de la A a la Z` | Frontend · página | AB#351 | PR #131 | ✅ |
+| HU7-CP06 | `ProductsPage.test.jsx` | `HU7-CP06: ordenados por valoración descendente, el mejor valorado sale primero` | Frontend · página | AB#351 | PR #131 | ✅ |
+| HU7-CP07 | `TiltedGridHero.test.jsx` | `HU7-CP07: muestra su contenido por encima de la banda de imágenes` | Frontend · componente | AB#350 | PR #131 | ✅ |
+| HU7-CP07 | `TiltedGridHero.test.jsx` | `HU7-CP07: la banda de imágenes es decorativa y reparte las imágenes recibidas` | Frontend · componente | AB#350 | PR #131 | ✅ |
+| HU7-CP07 | `TiltedGridHero.test.jsx` | `HU7-CP07: sin imágenes no falla y sigue mostrando su contenido` | Frontend · componente | AB#350 | PR #131 | ✅ |
+| HU7-CP07 | `TiltedGridHero.test.jsx` | `HU7-CP07: cada imagen puede llevar un pie (nombre, valoración…) que se dibuja sobre ella` | Frontend · componente | AB#350 | PR #131 | ✅ |
+| HU7-CP07 | `ProductsPage.test.jsx` | `HU7-CP07: arriba muestra los diez productos mejor valorados, numerados y con su valoración` | Frontend · página | AB#350 | PR #131 | ✅ |
+| HU7-CP07 | `ProductsPage.test.jsx` | `HU7-CP07: la selección pide los diez mejor valorados: valoración descendente y sin mínimo de estrellas` | Frontend · página | AB#350 | PR #131 | ✅ |
+| HU7-CP07 | `ProductsPage.test.jsx` | `HU7-CP07: con algún filtro activo la selección se oculta para centrarse en los resultados` | Frontend · página | AB#350 | PR #131 | ✅ |
+| HU7-CP07 | `ProductsPage.test.jsx` | `HU7-CP07: si hay menos de tres productos valorados no se muestra la selección` | Frontend · página | AB#350 | PR #131 | ✅ |
+| HU7-CP07 | `ProductsPage.test.jsx` | `HU7-CP07: si la selección no carga, el listado sigue funcionando sin ella` | Frontend · página | AB#350 | PR #131 | ✅ |
+| HU7-CP08 | `TiltedGridHero.test.jsx` | `HU7-CP08: al pulsar una imagen de la banda avisa con esa imagen` | Frontend · componente | AB#350 | PR #131 | ✅ |
+| HU7-CP08 | `TiltedGridHero.test.jsx` | `HU7-CP08: sin onSelect las imágenes de la banda no son botones` | Frontend · componente | AB#350 | PR #131 | ✅ |
+| HU7-CP09 | `TiltedGridHero.test.jsx` | `HU7-CP09: al cambiar el tamaño de la página la banda se reinicia, para que las imágenes no se solapen` | Frontend · componente | AB#350 | PR #131 | ✅ |
+| HU7-CP09 | `TiltedGridHero.test.jsx` | `HU7-CP09: espera a que termine de cambiar el tamaño: varios cambios seguidos reinician una sola vez` | Frontend · componente | AB#350 | PR #131 | ✅ |
+| HU7-CP09 | `TiltedGridHero.test.jsx` | `HU7-CP09: si el tamaño no cambia, la banda sigue su curso sin reiniciarse` | Frontend · componente | AB#350 | PR #131 | ✅ |
+
+Rutas de las clases de test (bajo `frontend/src/`):
+- `ProductCard.test.jsx`: `features/catalog/` (Vitest y React Testing Library)
+- `TiltedGridHero.test.jsx`: `components/` (Vitest y React Testing Library)
+- `ProductsPage.test.jsx`: `pages/` (Vitest, React Testing Library y MSW)
+
+---
+
+## HU8 · Consulta de detalle de producto
+
+### Tabla A · HU8 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU8-CP01 | El detalle de un producto solo lo ve un cliente (sin sesión lleva al login; otro rol, a su página) | Frontend (página) | 3 | 🔍 En revisión (3, AB#354, PR sin abrir) |
+| HU8-CP02 | El detalle muestra la imagen, el nombre, la categoría, el proveedor (nombre comercial), la descripción, la valoración (estrellas, nota y número de valoraciones) y una ficha con la información del producto | Frontend (página) | 5 | 🔍 En revisión (5, AB#354, PR sin abrir) |
+| HU8-CP03 | El precio es el que calcula el servidor para ese cliente: sin descuento, solo el precio; con descuento, el final, el original tachado, el porcentaje y lo que se ahorra | Frontend (página) | 3 | 🔍 En revisión (3, AB#354, PR sin abrir) |
+| HU8-CP04 | La disponibilidad se indica según las existencias: en stock, pocas unidades (con cuántas quedan, en singular o plural), agotado o no disponible | Frontend (página) | 5 | 🔍 En revisión (5, AB#354, PR sin abrir) |
+| HU8-CP05 | La página tiene estado de carga, de producto no encontrado (404, también para un producto no disponible) con enlace para volver, y de error con reintento | Frontend (página) | 4 | 🔍 En revisión (4, AB#354, PR sin abrir) |
+| HU8-CP06 | Las tarjetas del listado, de la animación y de la lista de los mejores llevan al detalle del producto (con el teclado también); desde el detalle se vuelve a los productos; la tarjeta es un enlace con el identificador codificado | Frontend (componente y página) | 7 | 🔍 En revisión (7, AB#354, PR sin abrir) |
+| HU8-CP07 | Un producto sin valoraciones, sin imagen o sin descripción se muestra con un aviso en lugar de un hueco | Frontend (página) | 3 | 🔍 En revisión (3, AB#354, PR sin abrir) |
+
+Notas:
+- **HU8-CP01 a CP07 (Sprint 2, frontend):** casos propuestos en la task AB#354 (vista de detalle de producto) a partir de lo pedido en ella y de las decisiones del equipo (`frontend/docs/hu8-detalle-producto.md`). Pendientes de confirmar con el equipo y de añadir a la HU8 (AB#70) en Azure Boards.
+- **Backend:** el endpoint `GET /api/products/{id}` no existe todavía; los tests usan el contrato propuesto por el frontend y los mocks (MSW).
+- **Decisión del equipo:** el servidor calcula el precio para el cliente (Estándar o Premium) y no hay botón de compra hasta que exista el carrito.
+- **HU8-CP06:** los tests del clic en el listado, la animación y la lista de los mejores eran HU7-CP08 cuando abrían una ventana de ficha; ahora navegan a la página de detalle.
+- **Test inestable conocido (no es de esta HU):** `HU7-CP03: al llegar otra vez al final carga las últimas y avisa de que no hay más` falla a veces al ejecutar toda la batería y pasa solo.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU8-CP01 | `ProductDetailPage.test.jsx` | `HU8-CP01: sin sesión, el detalle de un producto lleva a iniciar sesión` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP01 | `ProductDetailPage.test.jsx` | `HU8-CP01: un vendedor no ve el detalle del cliente: va a su página` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP01 | `ProductDetailPage.test.jsx` | `HU8-CP01: un cliente ve el detalle del producto con su nombre como título` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: muestra la imagen, la categoría, el proveedor y la descripción` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: muestra la valoración en estrellas, su nota y cuántas valoraciones tiene` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: con una sola valoración lo dice en singular` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: la ficha recoge la categoría, el proveedor, la disponibilidad y la referencia` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: con los datos de ejemplo muestra un producto completo` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP03 | `ProductDetailPage.test.jsx` | `HU8-CP03: sin descuento muestra solo el precio` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP03 | `ProductDetailPage.test.jsx` | `HU8-CP03: con descuento muestra el precio final, el original tachado, el porcentaje y lo que se ahorra` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP03 | `ProductDetailPage.test.jsx` | `HU8-CP03: el precio lo calcula el servidor: se muestra el que llega, no uno recalculado` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: con existencias muestra que está en stock` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: con pocas unidades avisa de cuántas quedan` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: con una sola unidad lo dice en singular` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: sin existencias muestra que está agotado` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: un producto no disponible lo indica aunque tenga existencias` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP05 | `ProductDetailPage.test.jsx` | `HU8-CP05: mientras carga muestra un indicador de carga` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP05 | `ProductDetailPage.test.jsx` | `HU8-CP05: si el producto no existe lo indica y ofrece volver a los productos` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP05 | `ProductDetailPage.test.jsx` | `HU8-CP05: si falla la carga avisa y permite reintentar` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP05 | `ProductDetailPage.test.jsx` | `HU8-CP05: un producto que el catálogo no ofrece (no disponible) se trata como no encontrado` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP06 | `ProductCard.test.jsx` | `HU8-CP06: la tarjeta es un enlace al detalle del producto` | Frontend · componente | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP06 | `ProductCard.test.jsx` | `HU8-CP06: el identificador del producto se codifica en la dirección` | Frontend · componente | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP06 | `ProductsPage.test.jsx` | `HU8-CP06: al pulsar una tarjeta del listado se abre el detalle de ese producto` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP06 | `ProductsPage.test.jsx` | `HU8-CP06: al pulsar una tarjeta de la animación de los mejores se abre el detalle de su producto` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP06 | `ProductsPage.test.jsx` | `HU8-CP06: con el teclado se llega al detalle desde la lista de los mejores` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP06 | `ProductsPage.test.jsx` | `HU8-CP06: desde el detalle, «Volver a los productos» lleva otra vez al listado` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP06 | `ProductDetailPage.test.jsx` | `HU8-CP06: desde el detalle se puede volver a los productos` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin valoraciones lo indica en lugar de mostrar estrellas` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin imagen muestra un marcador en su lugar` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin descripción lo indica` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+
+Rutas de las clases de test (bajo `frontend/src/`):
+- `ProductDetailPage.test.jsx` y `ProductsPage.test.jsx`: `pages/` (Vitest, React Testing Library y MSW)
+- `ProductCard.test.jsx`: `features/catalog/` (Vitest y React Testing Library)
 
 ---
 
@@ -1119,8 +1298,8 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU31-CP23 | La comprobación de nombre repetido no distingue mayúsculas, compara el nombre completo como texto literal y solo cuenta los productos del mismo vendedor | Integración MongoDB | 2 | ✅ Pasa |
 | HU31-CP24 | La base de datos rechaza un nombre repetido del mismo vendedor aunque se salte la comprobación previa (condición de carrera) | Integración MongoDB | 1 | ✅ Pasa |
 | HU31-CP25 | El nombre se guarda sin espacios en los extremos, así que con espacios cuenta como repetido también para el índice único | Unitario + integración MongoDB | 3 | ✅ Pasa |
-| HU31-CP26 | La categoría se elige en un desplegable con búsqueda con las categorías actuales: se puede escribir para filtrar sin distinguir mayúsculas ni tildes, y en los filtros la primera opción es «Todas las categorías» | Frontend (componente y página) | 11 | 🔍 En revisión (11, AB#256, PR #123) |
-| HU31-CP27 | Un nombre que el vendedor ya usa (409 `PRODUCT_NAME_ALREADY_EXISTS`) se marca en el campo Nombre con un mensaje propio al dar de alta, y el aviso desaparece al cambiar el nombre | Frontend (página) | 2 | 🔍 En revisión (2, AB#257, PR #123) |
+| HU31-CP26 | La categoría se elige en un desplegable con búsqueda con las categorías actuales: se puede escribir para filtrar sin distinguir mayúsculas ni tildes, y en los filtros la primera opción es «Todas las categorías» | Frontend (componente y página) | 11 | ✅ Pasa (11, AB#256, PR #123) |
+| HU31-CP27 | Un nombre que el vendedor ya usa (409 `PRODUCT_NAME_ALREADY_EXISTS`) se marca en el campo Nombre con un mensaje propio al dar de alta, y el aviso desaparece al cambiar el nombre | Frontend (página) | 2 | ✅ Pasa (2, AB#257, PR #123) |
 
 Notas:
 - **HU31-CP01 a CP10:** casos propuestos en la T201 (AB#201) a partir del contrato del formulario de producto del frontend (`frontend/docs/hu31-formulario-producto.md`). Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards.
@@ -1188,19 +1367,19 @@ Notas:
 | HU31-CP25 | `ProductoTest` | `quitaLosEspaciosDeLosExtremosDelNombre` | Dominio | AB#258 | PR #113 | ✅ |
 | HU31-CP25 | `ProductoTest` | `elLimiteDelNombreSeCuentaSinLosEspacios` | Dominio | AB#258 | PR #113 | ✅ |
 | HU31-CP25 | `ProductoMongoAdapterTest` | `guardarRechazaUnNombreRepetidoConEspacios` | Infraestructura | AB#258 | PR #113 | ✅ |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: al abrirlo muestra todas las categorías en el orden en que llegan` | Frontend · componente | AB#256 | PR #123 | 🔍 |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: al escribir filtra las categorías sin distinguir mayúsculas ni tildes` | Frontend · componente | AB#256 | PR #123 | 🔍 |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: si ninguna categoría coincide lo indica` | Frontend · componente | AB#256 | PR #123 | 🔍 |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: al elegir una categoría avisa con su identificador` | Frontend · componente | AB#256 | PR #123 | 🔍 |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: muestra el nombre de la categoría elegida` | Frontend · componente | AB#256 | PR #123 | 🔍 |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: con una categoría elegida, al abrirlo sigue ofreciendo todas` | Frontend · componente | AB#256 | PR #123 | 🔍 |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: si se escribe y se sale sin elegir, vuelve a mostrar la categoría elegida` | Frontend · componente | AB#256 | PR #123 | 🔍 |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: con una opción para todas, la ofrece la primera y elegirla avisa con un valor vacío` | Frontend · componente | AB#256 | PR #123 | 🔍 |
-| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: con una opción para todas y sin categoría elegida, muestra esa opción` | Frontend · componente | AB#256 | PR #123 | 🔍 |
-| HU31-CP26 | `SellerProductFormPage.test.jsx` | `HU31-CP26: la categoría se elige en un desplegable con las categorías actuales` | Frontend · página | AB#256 | PR #123 | 🔍 |
-| HU31-CP26 | `SellerProductFormPage.test.jsx` | `HU31-CP26: se puede escribir para buscar la categoría y se envía su identificador` | Frontend · página | AB#256 | PR #123 | 🔍 |
-| HU31-CP27 | `SellerProductFormPage.test.jsx` | `HU31-CP27: un nombre que el vendedor ya usa se marca en el campo Nombre con un mensaje propio` | Frontend · página | AB#257 | PR #123 | 🔍 |
-| HU31-CP27 | `SellerProductFormPage.test.jsx` | `HU31-CP27: al cambiar el nombre desaparece el aviso de nombre repetido` | Frontend · página | AB#257 | PR #123 | 🔍 |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: al abrirlo muestra todas las categorías en el orden en que llegan` | Frontend · componente | AB#256 | PR #123 | ✅ |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: al escribir filtra las categorías sin distinguir mayúsculas ni tildes` | Frontend · componente | AB#256 | PR #123 | ✅ |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: si ninguna categoría coincide lo indica` | Frontend · componente | AB#256 | PR #123 | ✅ |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: al elegir una categoría avisa con su identificador` | Frontend · componente | AB#256 | PR #123 | ✅ |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: muestra el nombre de la categoría elegida` | Frontend · componente | AB#256 | PR #123 | ✅ |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: con una categoría elegida, al abrirlo sigue ofreciendo todas` | Frontend · componente | AB#256 | PR #123 | ✅ |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: si se escribe y se sale sin elegir, vuelve a mostrar la categoría elegida` | Frontend · componente | AB#256 | PR #123 | ✅ |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: con una opción para todas, la ofrece la primera y elegirla avisa con un valor vacío` | Frontend · componente | AB#256 | PR #123 | ✅ |
+| HU31-CP26 | `CategoryCombobox.test.jsx` | `HU31-CP26: con una opción para todas y sin categoría elegida, muestra esa opción` | Frontend · componente | AB#256 | PR #123 | ✅ |
+| HU31-CP26 | `SellerProductFormPage.test.jsx` | `HU31-CP26: la categoría se elige en un desplegable con las categorías actuales` | Frontend · página | AB#256 | PR #123 | ✅ |
+| HU31-CP26 | `SellerProductFormPage.test.jsx` | `HU31-CP26: se puede escribir para buscar la categoría y se envía su identificador` | Frontend · página | AB#256 | PR #123 | ✅ |
+| HU31-CP27 | `SellerProductFormPage.test.jsx` | `HU31-CP27: un nombre que el vendedor ya usa se marca en el campo Nombre con un mensaje propio` | Frontend · página | AB#257 | PR #123 | ✅ |
+| HU31-CP27 | `SellerProductFormPage.test.jsx` | `HU31-CP27: al cambiar el nombre desaparece el aviso de nombre repetido` | Frontend · página | AB#257 | PR #123 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `ProductoTest` y `DescuentoTest`: `productos/domain/model/` (JUnit, sin Spring)
@@ -1269,7 +1448,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU33-CP05 | Un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | ✅ Pasa |
 | HU33-CP06 | Sin sesión (401) o sin ser vendedor (403) no se consulta un producto | Integración (capa web) | 2 | ✅ Pasa |
 | HU33-CP07 | Desde el listado, Ver abre la ficha del producto con todos sus datos en solo lectura y la categoría con su nombre | Frontend (componente y página) | 4 | ✅ Pasa |
-| HU33-CP08 | La ficha muestra las acciones Editar, que lleva al formulario de edición (HU34), y Eliminar, deshabilitada | Frontend (componente) | 1 | 🔍 En revisión |
+| HU33-CP08 | La ficha muestra las acciones Editar, que lleva al formulario de edición (HU34), y Eliminar, que pide la confirmación del listado (HU35) | Frontend (componente) | 1 | ✅ Pasa |
 | HU33-CP09 | Un producto no encontrado (403 o 404, p. ej. de otro vendedor) lo indica y no ofrece acciones | Frontend (componente) | 2 | ✅ Pasa |
 | HU33-CP10 | Si la carga falla por otro motivo, la ficha muestra un error genérico y permite reintentar | Frontend (componente) | 1 | ✅ Pasa |
 
@@ -1280,7 +1459,7 @@ Notas:
 - **Backend (T348, AB#348, PR #118):** `GET /api/seller/products/{id}`, con el contrato de `frontend/docs/hu31-formulario-producto.md`. El producto inexistente y el ajeno dan 404, no 403.
 - **HU33-CP06:** sin rojo real, porque `SecurityConfig` ya limita `/api/seller/**` al rol VENDEDOR.
 - **Frontend (T347, AB#347, PR #119):** `ProductDetailDialog`, que se abre con el botón Ver de cada fila del listado (`ProductRowActions`). Usa `GET /api/seller/products/:id`.
-- **Editar y Eliminar** se ven en la ficha. Eliminar está deshabilitado por decisión del equipo hasta la HU35; Editar se activa en la HU34 (T341, PR #122), que cambia el HU33-CP08.
+- **Editar y Eliminar** se ven en la ficha. Editar se activa en la HU34 (T341, PR #122) y Eliminar en la HU35 (T344, PR #132); cada una cambia el HU33-CP08.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1297,7 +1476,7 @@ Notas:
 | HU33-CP07 | `ProductDetailDialog.test.jsx` | `HU33-CP07: todos los campos son de solo lectura` | Frontend · componente | AB#347 | PR #119 | ✅ |
 | HU33-CP07 | `SellerProductsPage.test.jsx` | `HU33-CP07: cada fila tiene un botón para ver la ficha del producto` | Frontend · página | AB#347 | PR #119 | ✅ |
 | HU33-CP07 | `SellerProductsPage.test.jsx` | `HU33-CP07: al pulsar Ver se abre la ficha de ese producto` | Frontend · página | AB#347 | PR #119 | ✅ |
-| HU33-CP08 | `ProductDetailDialog.test.jsx` | `HU33-CP08: muestra las acciones Editar, que lleva al formulario de edición, y Eliminar, deshabilitada` | Frontend · componente | AB#347 · AB#341 | PR #119 · PR #122 | 🔍 |
+| HU33-CP08 | `ProductDetailDialog.test.jsx` | `HU33-CP08: muestra las acciones Editar, que lleva al formulario de edición, y Eliminar, que avisa con el producto` | Frontend · componente | AB#347 · AB#341 · AB#344 | PR #119 · PR #122 · PR #132 | ✅ |
 | HU33-CP09 | `ProductDetailDialog.test.jsx` | `HU33-CP09: un producto de otro vendedor muestra que no se ha encontrado y no ofrece acciones` | Frontend · componente | AB#347 | PR #119 | ✅ |
 | HU33-CP09 | `ProductDetailDialog.test.jsx` | `HU33-CP09: una respuesta %i muestra que no se ha encontrado el producto` (403 y 404) | Frontend · componente | AB#347 | PR #119 | ✅ |
 | HU33-CP10 | `ProductDetailDialog.test.jsx` | `HU33-CP10: si la carga falla por otro motivo, muestra un error genérico y permite reintentar` | Frontend · componente | AB#347 | PR #119 | ✅ |
@@ -1327,13 +1506,13 @@ Rutas de las clases de test:
 | HU34-CP09 | Modificar un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | ✅ Pasa |
 | HU34-CP10 | Sin sesión (401), sin ser vendedor (403) o sin token CSRF (403) no se modifica un producto | Integración (capa web) | 3 | ✅ Pasa |
 | HU34-CP11 | Los cambios se reflejan inmediatamente en el catálogo que ven los clientes | — | 0 | ⏳ Pendiente (sin verificar hasta que exista el catálogo de clientes) |
-| HU34-CP12 | La vista de edición se abre con los datos actuales del producto ya cargados (también los descuentos) | Frontend (página) | 2 | 🔍 En revisión |
-| HU34-CP13 | Al guardar, se envían los cambios al producto indicado y se vuelve al listado con un aviso | Frontend (página) | 1 | 🔍 En revisión |
-| HU34-CP14 | La edición aplica las mismas validaciones que el alta | Frontend (página) | 1 | 🔍 En revisión |
-| HU34-CP15 | Un producto de otro vendedor o inexistente no muestra el formulario | Frontend (página) | 2 | 🔍 En revisión |
-| HU34-CP16 | Si el producto no carga, la vista muestra un error y permite reintentar | Frontend (página) | 1 | 🔍 En revisión |
-| HU34-CP17 | Desde la ficha del producto, Editar abre el formulario de edición con sus datos | Frontend (página) | 1 | 🔍 En revisión |
-| HU34-CP18 | Si el nombre ya lo tiene otro producto del vendedor (409), la edición lo indica en el campo Nombre con el mismo mensaje que el alta (HU31-CP27) y no sale del formulario | Frontend (página) | 1 | 🔍 En revisión |
+| HU34-CP12 | La vista de edición se abre con los datos actuales del producto ya cargados (también los descuentos) | Frontend (página) | 2 | ✅ Pasa |
+| HU34-CP13 | Al guardar, se envían los cambios al producto indicado y se vuelve al listado con un aviso | Frontend (página) | 1 | ✅ Pasa |
+| HU34-CP14 | La edición aplica las mismas validaciones que el alta | Frontend (página) | 1 | ✅ Pasa |
+| HU34-CP15 | Un producto de otro vendedor o inexistente no muestra el formulario | Frontend (página) | 2 | ✅ Pasa |
+| HU34-CP16 | Si el producto no carga, la vista muestra un error y permite reintentar | Frontend (página) | 1 | ✅ Pasa |
+| HU34-CP17 | Desde la ficha del producto, Editar abre el formulario de edición con sus datos | Frontend (página) | 1 | ✅ Pasa |
+| HU34-CP18 | Si el nombre ya lo tiene otro producto del vendedor (409), la edición lo indica en el campo Nombre con el mismo mensaje que el alta (HU31-CP27) y no sale del formulario | Frontend (página) | 1 | ✅ Pasa |
 
 Notas:
 - **HU34-CP01 a CP05:** casos propuestos en la T343 (AB#343) a partir de los criterios de aceptación de la HU34. Pendientes de añadir a la HU34 en Azure Boards.
@@ -1342,7 +1521,7 @@ Notas:
 - **HU34-CP02 y CP07 a CP10:** sin rojo real. El CP02, porque el constructor de `Producto` ya aplica las validaciones del alta; los CP07 a CP10, porque la validación de `ProductoRequest`, `ManejadorGlobalErrores` y `SecurityConfig` ya los cubrían.
 - **HU34-CP11 · PENDIENTE DE VERIFICAR (decisión del equipo):** el criterio «los cambios se reflejan inmediatamente en el catálogo que ven los clientes» **no se verifica todavía**, porque en el backend aún no existe el catálogo de clientes. La modificación actualiza el mismo documento de la colección `productos` (lo prueba el test técnico «Persistencia: guardar un producto leído lo actualiza sin duplicarlo y conserva createdAt» de `ProductoMongoAdapterTest`), que es la que leerá el catálogo. **Cuando se desarrolle el catálogo de clientes, hay que añadir el test de este caso y pasarlo a ✅.**
 - **HU34-CP12 a CP16:** la vista de edición se hizo en la HU31 (formulario compartido con el alta). Por decisión del equipo, sus 7 tests se renombran en la T341 (AB#341, PR #122) con el ID de su caso de la HU34 y se trazan aquí; no tienen ciclo rojo porque no hay código nuevo detrás.
-- **HU34-CP17 y CP18:** casos nuevos de la T341. El mensaje del nombre repetido es solo de la edición (decisión del equipo); el alta mantiene el genérico.
+- **HU34-CP17 y CP18:** casos nuevos de la T341. El nombre repetido se indica en el campo Nombre con el mismo mensaje en el alta y en la edición (decisión del equipo al resolver el conflicto del #123 con el #122; ver HU31-CP27).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1363,20 +1542,247 @@ Notas:
 | HU34-CP10 | `ProductoControllerTest` | `noVendedorNoModificaUnProducto` (cliente y administrador) | Infraestructura | AB#342 | PR #121 | ✅ |
 | HU34-CP10 | `ProductoControllerTest` | `sinTokenCsrfNoSeModificaUnProducto` | Infraestructura | AB#342 | PR #121 | ✅ |
 | HU34-CP11 | — | — (pendiente: sin catálogo de clientes) | — | — | — | ⏳ |
-| HU34-CP12 | `SellerProductFormPage.test.jsx` | `HU34-CP12: la vista de edición se abre con los datos actuales del producto` | Frontend · página | AB#341 | PR #122 | 🔍 |
-| HU34-CP12 | `SellerProductFormPage.test.jsx` | `HU34-CP12: la vista de edición muestra los descuentos activos del producto` | Frontend · página | AB#341 | PR #122 | 🔍 |
-| HU34-CP13 | `SellerProductFormPage.test.jsx` | `HU34-CP13: al guardar, envía los cambios al producto indicado y vuelve al listado con un aviso` | Frontend · página | AB#341 | PR #122 | 🔍 |
-| HU34-CP14 | `SellerProductFormPage.test.jsx` | `HU34-CP14: la edición aplica las mismas validaciones que el alta` | Frontend · página | AB#341 | PR #122 | 🔍 |
-| HU34-CP15 | `SellerProductFormPage.test.jsx` | `HU34-CP15: un producto de otro vendedor no muestra el formulario` | Frontend · página | AB#341 | PR #122 | 🔍 |
-| HU34-CP15 | `SellerProductFormPage.test.jsx` | `HU34-CP15: un producto inexistente no muestra el formulario` | Frontend · página | AB#341 | PR #122 | 🔍 |
-| HU34-CP16 | `SellerProductFormPage.test.jsx` | `HU34-CP16: si el producto no carga, muestra un error y permite reintentar` | Frontend · página | AB#341 | PR #122 | 🔍 |
-| HU34-CP17 | `SellerProductsPage.test.jsx` | `HU34-CP17: desde la ficha, Editar abre el formulario de edición con los datos del producto` | Frontend · página | AB#341 | PR #122 | 🔍 |
-| HU34-CP18 | `SellerProductFormPage.test.jsx` | `HU34-CP18: si el nombre ya lo tiene otro producto del vendedor, lo indica y no sale del formulario` | Frontend · página | AB#341 | PR #122 | 🔍 |
+| HU34-CP12 | `SellerProductFormPage.test.jsx` | `HU34-CP12: la vista de edición se abre con los datos actuales del producto` | Frontend · página | AB#341 | PR #122 | ✅ |
+| HU34-CP12 | `SellerProductFormPage.test.jsx` | `HU34-CP12: la vista de edición muestra los descuentos activos del producto` | Frontend · página | AB#341 | PR #122 | ✅ |
+| HU34-CP13 | `SellerProductFormPage.test.jsx` | `HU34-CP13: al guardar, envía los cambios al producto indicado y vuelve al listado con un aviso` | Frontend · página | AB#341 | PR #122 | ✅ |
+| HU34-CP14 | `SellerProductFormPage.test.jsx` | `HU34-CP14: la edición aplica las mismas validaciones que el alta` | Frontend · página | AB#341 | PR #122 | ✅ |
+| HU34-CP15 | `SellerProductFormPage.test.jsx` | `HU34-CP15: un producto de otro vendedor no muestra el formulario` | Frontend · página | AB#341 | PR #122 | ✅ |
+| HU34-CP15 | `SellerProductFormPage.test.jsx` | `HU34-CP15: un producto inexistente no muestra el formulario` | Frontend · página | AB#341 | PR #122 | ✅ |
+| HU34-CP16 | `SellerProductFormPage.test.jsx` | `HU34-CP16: si el producto no carga, muestra un error y permite reintentar` | Frontend · página | AB#341 | PR #122 | ✅ |
+| HU34-CP17 | `SellerProductsPage.test.jsx` | `HU34-CP17: desde la ficha, Editar abre el formulario de edición con los datos del producto` | Frontend · página | AB#341 | PR #122 | ✅ |
+| HU34-CP18 | `SellerProductFormPage.test.jsx` | `HU34-CP18: si el nombre ya lo tiene otro producto del vendedor, lo indica y no sale del formulario` | Frontend · página | AB#341 | PR #122 | ✅ |
 
 Rutas de las clases de test:
 - `GestionProductosServiceTest`: `backend/src/test/java/es/uclm/esibuy/backend/productos/application/service/` (Mockito, sin Spring)
 - `ProductoControllerTest`: `backend/src/test/java/es/uclm/esibuy/backend/productos/infrastructure/adapter/in/web/` (con `@WebMvcTest`)
 - `SellerProductFormPage.test.jsx` y `SellerProductsPage.test.jsx`: `frontend/src/pages/` (Vitest, RTL y MSW)
+
+---
+
+## HU35 · Eliminar un producto propio
+
+### Tabla A · HU35 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU35-CP01 | El vendedor elimina un producto suyo (el vendedor sale de la sesión) | Unitario | 1 | ✅ Pasa |
+| HU35-CP02 | Un vendedor no puede eliminar un producto de otro vendedor ni uno inexistente (`ProductoNoEncontradoException`) y no se borra nada | Unitario | 2 | ✅ Pasa |
+| HU35-CP03 | Eliminar un producto lo borra de la colección `productos` (borrado físico) y deja los demás | Integración | 1 | ✅ Pasa |
+| HU35-CP04 | No se puede eliminar un producto que está o ha estado en algún pedido | — | 0 | ⏳ Pendiente (sin verificar hasta que exista el módulo de pedidos) |
+| HU35-CP05 | `DELETE /api/seller/products/{id}` devuelve 204 sin cuerpo; el vendedor sale de la sesión | Integración (capa web) | 1 | 🔍 En revisión |
+| HU35-CP06 | Eliminar un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | ✅ Pasa |
+| HU35-CP07 | Sin sesión (401), sin ser vendedor (403) o sin token CSRF (403) no se elimina un producto | Integración (capa web) | 3 | ✅ Pasa |
+| HU35-CP08 | Cada fila del listado tiene un botón para eliminar el producto | Frontend (página) | 1 | ✅ Pasa |
+| HU35-CP09 | Al pulsar Eliminar se pide confirmación sin borrar nada | Frontend (página) | 1 | ✅ Pasa |
+| HU35-CP10 | Cancelar o pulsar Escape cierra la confirmación sin borrar | Frontend (página) | 2 | ✅ Pasa |
+| HU35-CP11 | Al confirmar, se borra el producto indicado y se avisa de que se ha eliminado | Frontend (página) | 1 | ✅ Pasa |
+| HU35-CP12 | Tras eliminar, el listado se vuelve a cargar | Frontend (página) | 1 | ✅ Pasa |
+| HU35-CP13 | Si falla la eliminación, se avisa sin detalles internos y se mantiene la confirmación | Frontend (página) | 1 | ✅ Pasa |
+| HU35-CP14 | Desde la ficha del producto, Eliminar pide la misma confirmación y al confirmar se borra y se avisa | Frontend (página) | 1 | ✅ Pasa |
+
+Notas:
+- **HU35-CP01 a CP03:** casos propuestos en la T346 (AB#346, PR #126). Pendientes de contrastar con los criterios de aceptación de la HU35 y de añadir a la HU35 en Azure Boards.
+- **Borrado físico (decisión del equipo):** el documento desaparece de la colección. Los `pedidos` guardan `nombreProducto` y `precioUnitario` en cada línea, así que el historial no depende del producto. `carritos`, `listas_deseos` y `valoraciones` aún no tienen código: sus HU tendrán que tratar las referencias a productos borrados.
+- **HU35-CP04 · PENDIENTE DE IMPLEMENTAR (regla acordada en la reunión del Sprint 2):** un producto que está o ha estado en algún pedido no se puede eliminar. **No se comprueba todavía**, porque en el backend aún no existe el módulo de pedidos. **Cuando se desarrolle, hay que añadir la comprobación a `eliminarMiProducto` (a través de un puerto de salida hacia pedidos), su respuesta en el endpoint, el test de este caso y pasarlo a ✅.**
+- **HU35-CP05 a CP07:** casos propuestos en la T345 (AB#345, PR #129). `DELETE /api/seller/products/{id}` sigue el contrato de `frontend/docs/hu31-formulario-producto.md`. CP06 y CP07 sin rojo real, porque `ManejadorGlobalErrores` y `SecurityConfig` ya los cubrían.
+- **HU35-CP08 a CP13:** la eliminación desde el listado se hizo en la HU31. Por decisión del equipo, sus 7 tests se renombran en la T344 (AB#344, PR #132) con el ID de su caso de la HU35 y se trazan aquí; no tienen ciclo rojo porque no hay código nuevo detrás.
+- **HU35-CP14:** caso nuevo de la T344. Eliminar en la ficha cierra la ficha y abre la confirmación del listado (decisión del equipo). La confirmación se busca por texto: en jsdom, Fluent la marca con `aria-hidden` a los ~300 ms de abrirse, y la búsqueda por rol fallaba en la batería completa.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU35-CP01 | `GestionProductosServiceTest` | `elVendedorEliminaSuProducto` | Aplicación | AB#346 | PR #126 | ✅ |
+| HU35-CP02 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoSeElimina` | Aplicación | AB#346 | PR #126 | ✅ |
+| HU35-CP02 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoSeElimina` | Aplicación | AB#346 | PR #126 | ✅ |
+| HU35-CP03 | `ProductoMongoAdapterTest` | `eliminarBorraElDocumentoYDejaLosDemas` | Infraestructura | AB#346 | PR #126 | ✅ |
+| HU35-CP04 | — | — (pendiente: sin módulo de pedidos) | — | — | — | ⏳ |
+| HU35-CP05 | `ProductoControllerTest` | `vendedorEliminaSuProducto` | Infraestructura | AB#345 | PR #129 | ✅ |
+| HU35-CP06 | `ProductoControllerTest` | `eliminarUnProductoNoEncontradoDevuelve404` | Infraestructura | AB#345 | PR #129 | ✅ |
+| HU35-CP07 | `ProductoControllerTest` | `sinSesionNoSeEliminaUnProducto` | Infraestructura | AB#345 | PR #129 | ✅ |
+| HU35-CP07 | `ProductoControllerTest` | `noVendedorNoEliminaUnProducto` (cliente y administrador) | Infraestructura | AB#345 | PR #129 | ✅ |
+| HU35-CP07 | `ProductoControllerTest` | `sinTokenCsrfNoSeEliminaUnProducto` | Infraestructura | AB#345 | PR #129 | ✅ |
+| HU35-CP08 | `SellerProductsPage.test.jsx` | `HU35-CP08: cada fila tiene un botón para eliminar el producto` | Frontend · página | AB#344 | PR #132 | ✅ |
+| HU35-CP09 | `SellerProductsPage.test.jsx` | `HU35-CP09: al pulsar Eliminar pide confirmación sin borrar nada` | Frontend · página | AB#344 | PR #132 | ✅ |
+| HU35-CP10 | `SellerProductsPage.test.jsx` | `HU35-CP10: al cancelar la eliminación, cierra la alerta sin borrar` | Frontend · página | AB#344 | PR #132 | ✅ |
+| HU35-CP10 | `SellerProductsPage.test.jsx` | `HU35-CP10: al pulsar Escape en la alerta, la cierra sin borrar` | Frontend · página | AB#344 | PR #132 | ✅ |
+| HU35-CP11 | `SellerProductsPage.test.jsx` | `HU35-CP11: al confirmar, pide borrar el producto indicado y avisa de que se ha eliminado` | Frontend · página | AB#344 | PR #132 | ✅ |
+| HU35-CP12 | `SellerProductsPage.test.jsx` | `HU35-CP12: tras eliminar, vuelve a cargar el listado` | Frontend · página | AB#344 | PR #132 | ✅ |
+| HU35-CP13 | `SellerProductsPage.test.jsx` | `HU35-CP13: si falla la eliminación, avisa sin detalles internos y mantiene la alerta` | Frontend · página | AB#344 | PR #132 | ✅ |
+| HU35-CP14 | `SellerProductsPage.test.jsx` | `HU35-CP14: desde la ficha, Eliminar pide confirmación y al confirmar borra el producto y avisa` | Frontend · página | AB#344 | PR #132 | ✅ |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `GestionProductosServiceTest`: `productos/application/service/` (Mockito, sin Spring)
+- `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/` (Testcontainers)
+- `ProductoControllerTest`: `productos/infrastructure/adapter/in/web/` (con `@WebMvcTest`)
+- `SellerProductsPage.test.jsx`: `frontend/src/pages/` (Vitest, RTL y MSW)
+
+---
+
+## HU39 · Consultar categorías
+
+### Tabla A · HU39 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU39-CP01 | El administrador obtiene cada categoría con su nombre, descripción, estado y número de productos (`GET /api/admin/categorias`) | Unitario + controlador | 2 | ✅ Pasa |
+| HU39-CP02 | El número de productos se cuenta por categoría en el módulo de productos (una sola agregación); una categoría sin productos tiene 0 | Unitario + integración MongoDB | 5 | ✅ Pasa |
+| HU39-CP03 | El administrador también ve las categorías `INACTIVA` | Unitario | 1 | ✅ Pasa |
+| HU39-CP04 | Sin rol de administrador el listado devuelve 403 (cliente y vendedor), y 401 sin sesión | Controlador | 2 | ✅ Pasa |
+
+Notas:
+- **HU39-CP01 a CP03:** casos propuestos en la T332 (AB#332), a partir del criterio de aceptación «listado con nombre, descripción, estado y número de productos asociados». **HU39-CP04:** propuesto en la T331 (AB#331), a partir del criterio «cualquier llamada a la API sin rol de administrador devuelve 403». Pendientes de confirmar con el equipo y de añadir a la HU39 en Azure Boards.
+- **Endpoint (T331):** `GET /api/admin/categorias` → `[{id, nombre, descripcion, estado, numeroProductos}]`, sin paginar y ordenado por nombre, con `estado` como texto (`ACTIVA` / `INACTIVA`). Lo atiende `AdministracionCategoriasController`; el 401 y el 403 los da la regla `/api/admin/**` de `SecurityConfig`. Es el contrato de la vista del frontend (T330).
+- **Backend (T332):** `AdministracionCategoriasUseCase.listarConProductos()` devuelve `CategoriaConProductos`. Categorías pide el recuento a productos con `ProductosPorCategoriaPort` → `ProductosPorCategoriaAdapter` → `ConteoProductosUseCase` (puerto de entrada de productos). El recuento incluye todos los productos de la categoría, también los no disponibles. `GET /api/categorias` no cambia.
+- **Pendiente:** la vista del frontend (T330); el nombre único sin distinguir mayúsculas (T323).
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU39-CP01 | `AdministracionCategoriasServiceTest` | `listarConProductosDevuelveCadaCategoriaConSuNumero` | Aplicación | AB#332 | PR #134 | ✅ |
+| HU39-CP01 | `AdministracionCategoriasControllerTest` | `unAdministradorRecibeLasCategoriasConSuNumeroDeProductos` | Infraestructura | AB#331 | PR #135 | ✅ |
+| HU39-CP02 | `AdministracionCategoriasServiceTest` | `unaCategoriaSinProductosTieneCero` | Aplicación | AB#332 | PR #134 | ✅ |
+| HU39-CP02 | `ConteoProductosServiceTest` | `contarPorCategoriaDelegaEnElRepositorio` | Aplicación | AB#332 | PR #134 | ✅ |
+| HU39-CP02 | `ProductosPorCategoriaAdapterTest` | `contarPorCategoriaPreguntaAlModuloDeProductos` | Infraestructura | AB#332 | PR #134 | ✅ |
+| HU39-CP02 | `ProductoMongoAdapterTest` | `contarPorCategoriaAgrupaLosProductos` | Infraestructura | AB#332 | PR #134 | ✅ |
+| HU39-CP02 | `ProductoMongoAdapterTest` | `contarPorCategoriaSinProductosDevuelveVacio` | Infraestructura | AB#332 | PR #134 | ✅ |
+| HU39-CP03 | `AdministracionCategoriasServiceTest` | `incluyeLasCategoriasInactivas` | Aplicación | AB#332 | PR #134 | ✅ |
+| HU39-CP04 | `AdministracionCategoriasControllerTest` | `otroRolRecibe403` (cliente y vendedor) | Infraestructura | AB#331 | PR #135 | ✅ |
+| HU39-CP04 | `AdministracionCategoriasControllerTest` | `sinSesionRecibe401` | Infraestructura | AB#331 | PR #135 | ✅ |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AdministracionCategoriasControllerTest`: `categorias/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
+- `AdministracionCategoriasServiceTest`: `categorias/application/service/` (JUnit y Mockito, sin Spring)
+- `ProductosPorCategoriaAdapterTest`: `categorias/infrastructure/adapter/out/productos/` (JUnit y Mockito, sin Spring)
+- `ConteoProductosServiceTest`: `productos/application/service/` (JUnit y Mockito, sin Spring)
+- `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/` (con Testcontainers)
+
+---
+
+## HU37 · Eliminar administrador
+
+### Tabla A · HU37 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU37-CP01 | Eliminar un administrador activo lo borra físicamente si queda otro administrador activo | Unitario | 1 | ✅ Pasa |
+| HU37-CP02 | Eliminar un usuario que no existe falla (`UsuarioNoEncontradoException`) y no borra nada | Unitario | 1 | ✅ Pasa |
+| HU37-CP03 | Eliminar a un usuario que no es administrador falla como si no existiera y no borra nada | Unitario | 1 | ✅ Pasa |
+| HU37-CP04 | Un administrador no puede eliminar su propia cuenta y no se borra nada | Unitario | 1 | ✅ Pasa |
+| HU37-CP05 | No se puede eliminar al último administrador activo y no se borra nada | Unitario | 1 | ✅ Pasa |
+| HU37-CP06 | Eliminar un administrador desactivado no comprueba el conteo de activos y lo borra | Unitario | 1 | ✅ Pasa |
+
+Notas:
+- **HU37-CP01 a CP06 (T340, AB#340):** casos propuestos para la lógica de negocio del borrado físico de administradores en `AdministracionUsuariosService.eliminarAdministrador`. Pendientes de confirmar con el equipo y de añadir a Azure Boards.
+- **Sesión del administrador eliminado:** la invalidación de la sesión al borrar físicamente la cuenta ya la cubre `CuentaActivaFilter` (ver **HU23-CP10**, `usuarioInexistenteInvalidaLaSesionYDevuelve401`, PR #85): en cuanto el documento desaparece de la colección `usuarios`, cualquier petición con su sesión recibe un 401 y la sesión queda invalidada.
+- **Pendiente (otra task):** el endpoint `DELETE`, la traducción del 409 de autoeliminación (`CANNOT_DELETE_SELF`) en `ManejadorGlobalErrores` y los tests de integración web y de persistencia en `UsuarioMongoAdapterTest`.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU37-CP01 | `AdministracionUsuariosServiceTest` | `eliminaAUnAdministradorSiQuedaOtroActivo` | Aplicación | AB#340 | PR actual | ✅ |
+| HU37-CP02 | `AdministracionUsuariosServiceTest` | `rechazaEliminarUnUsuarioQueNoExiste` | Aplicación | AB#340 | PR actual | ✅ |
+| HU37-CP03 | `AdministracionUsuariosServiceTest` | `rechazaEliminarAUsuarioQueNoEsAdministrador` | Aplicación | AB#340 | PR actual | ✅ |
+| HU37-CP04 | `AdministracionUsuariosServiceTest` | `rechazaQueUnAdministradorSeElimineASiMismo` | Aplicación | AB#340 | PR actual | ✅ |
+| HU37-CP05 | `AdministracionUsuariosServiceTest` | `rechazaEliminarAlUltimoAdministradorActivo` | Aplicación | AB#340 | PR actual | ✅ |
+| HU37-CP06 | `AdministracionUsuariosServiceTest` | `eliminaAUnAdministradorDesactivadoSinComprobarActivos` | Aplicación | AB#340 | PR actual | ✅ |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
+
+---
+
+## HU40 · Crear categorías
+
+### Tabla A · HU40 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU40-CP01 | Una categoría se crea con nombre, descripción y estado; una nueva nace ACTIVA y sin id | Unitario (dominio) | 2 | ✅ Pasa |
+| HU40-CP02 | El nombre es obligatorio, se guarda sin espacios en los extremos y admite hasta 50 caracteres | Unitario (dominio) | 2 | ✅ Pasa |
+| HU40-CP03 | La descripción es opcional y admite hasta 200 caracteres | Unitario (dominio) | 1 | ✅ Pasa |
+| HU40-CP04 | El estado es obligatorio; la descripción y el estado se guardan en MongoDB, y una categoría guardada sin ellos se lee ACTIVA y sin descripción | Unitario + integración MongoDB | 5 | ✅ Pasa |
+| HU40-CP05 | El administrador crea una categoría con el estado que elige (ACTIVA o INACTIVA); se guarda con un id nuevo y `POST /api/admin/categorias` responde 201 con 0 productos | Unitario + integración MongoDB + controlador | 3 | ✅ Pasa |
+| HU40-CP06 | No se puede crear una categoría con un nombre que ya existe, sin distinguir mayúsculas ni tildes; el nombre se compara completo y literal, y la base de datos lo impide aunque se salte la comprobación previa (409) | Unitario + integración MongoDB + controlador | 5 | ✅ Pasa |
+| HU40-CP07 | Crear sin nombre, sin estado, con un estado desconocido o incumpliendo una regla del dominio devuelve 400 | Controlador | 2 | ✅ Pasa |
+| HU40-CP08 | Sin rol de administrador no se pueden crear categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | ✅ Pasa |
+
+Notas:
+- **HU40-CP01 a CP04:** casos propuestos en la T321 (AB#321), sin contrato del frontend todavía. **HU40-CP05 y CP06:** propuestos en la T323 (AB#323), a partir de los criterios «la categoría no puede estar repetida» y «se debe poder elegir si activar o desactivar la categoría en la creación». **HU40-CP07 y CP08:** propuestos en la T322 (AB#322). Pendientes de confirmar con el equipo y de añadir a la HU40 en Azure Boards.
+- **Endpoint (T322):** `POST /api/admin/categorias` con `{nombre, descripcion, estado: "ACTIVA"|"INACTIVA"}` → 201 `{id, nombre, descripcion, estado, numeroProductos: 0}`, el mismo formato que una fila de `GET /api/admin/categorias`. Errores: 400 `INVALID_FIELD` (falta el nombre o el estado, o el estado es desconocido), 400 `VALIDATION_ERROR` (regla del dominio, p. ej. más de 50 caracteres), 409 `CATEGORY_NAME_ALREADY_EXISTS`, 401 sin sesión y 403 con otro rol. Necesita la cabecera CSRF `X-XSRF-TOKEN`. Es el contrato de la vista del frontend (T320).
+- **Backend (T323):** `AdministracionCategoriasUseCase.crear(CrearCategoriaCommand)`. El nombre único no distingue mayúsculas ni tildes (decisión del equipo, 27/10/2026): comprobación previa (`existePorNombre`) y un índice único nuevo, `nombre_sin_mayusculas` (collation `es` de nivel 1), que se crea junto al anterior para no chocar con él en Atlas. Errores: `CategoriaInvalidaException` → 400 `VALIDATION_ERROR`; `CategoriaDuplicadaException` → 409 `CATEGORY_NAME_ALREADY_EXISTS`.
+- **Backend (T321):** entidad `Categoria` (`id`, `nombre`, `descripcion`, `estado`), `EstadoCategoria` (`ACTIVA`, `INACTIVA`), `CategoriaInvalidaException` y `CategoriaDocumentMapper`. El validador de la colección `categorias` aplica los mismos límites. `GET /api/categorias` no cambia (sigue devolviendo `id` y `nombre`).
+- **Pendiente:** la vista (T320). Si una categoría `INACTIVA` debe dejar de verse para clientes y vendedores en `GET /api/categorias` (criterio «si la categoría se crea activada, debe ser visible para clientes y vendedores») queda pendiente de revisar con el equipo.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU40-CP01 | `CategoriaTest` | `creaUnaCategoriaConDatosCorrectos` | Dominio | AB#321 | PR #133 | ✅ |
+| HU40-CP01 | `CategoriaTest` | `unaCategoriaNuevaNaceActivaYSinId` | Dominio | AB#321 | PR #133 | ✅ |
+| HU40-CP02 | `CategoriaTest` | `rechazaUnaCategoriaSinNombre` (nulo, vacío y en blanco) | Dominio | AB#321 | PR #133 | ✅ |
+| HU40-CP02 | `CategoriaTest` | `elNombreSeRecortaYAdmiteHasta50Caracteres` | Dominio | AB#321 | PR #133 | ✅ |
+| HU40-CP03 | `CategoriaTest` | `laDescripcionEsOpcionalYAdmiteHasta200Caracteres` | Dominio | AB#321 | PR #133 | ✅ |
+| HU40-CP04 | `CategoriaTest` | `rechazaUnaCategoriaSinEstado` | Dominio | AB#321 | PR #133 | ✅ |
+| HU40-CP04 | `CategoriaDocumentMapperTest` | `convierteCategoriaEnDocumento` | Infraestructura | AB#321 | PR #133 | ✅ |
+| HU40-CP04 | `CategoriaDocumentMapperTest` | `convierteDocumentoEnCategoria` | Infraestructura | AB#321 | PR #133 | ✅ |
+| HU40-CP04 | `CategoriaDocumentMapperTest` | `unDocumentoSinEstadoNiDescripcionSeLeeActivo` | Infraestructura | AB#321 | PR #133 | ✅ |
+| HU40-CP04 | `CategoriaMongoAdapterTest` | `guardaYLeeLaDescripcionYElEstado` | Infraestructura | AB#321 | PR #133 | ✅ |
+| HU40-CP05 | `AdministracionCategoriasServiceTest` | `crearGuardaLaCategoriaConElEstadoElegido` (ACTIVA e INACTIVA) | Aplicación | AB#323 | PR #137 | ✅ |
+| HU40-CP05 | `CategoriaMongoAdapterTest` | `guardarAsignaIdYLaGuardaConSuEstado` | Infraestructura | AB#323 | PR #137 | ✅ |
+| HU40-CP06 | `AdministracionCategoriasServiceTest` | `crearRechazaUnNombreRepetido` | Aplicación | AB#323 | PR #137 | ✅ |
+| HU40-CP06 | `CategoriaMongoAdapterTest` | `existePorNombreNoDistingueMayusculasNiTildes` (4 variantes) | Infraestructura | AB#323 | PR #137 | ✅ |
+| HU40-CP06 | `CategoriaMongoAdapterTest` | `existePorNombreComparaElNombreCompletoYLiteral` (3 variantes) | Infraestructura | AB#323 | PR #137 | ✅ |
+| HU40-CP06 | `CategoriaMongoAdapterTest` | `guardarRechazaUnNombreRepetidoConOtrasMayusculasOTildes` (mayúsculas y tildes) | Infraestructura | AB#323 | PR #137 | ✅ |
+| HU40-CP05 | `AdministracionCategoriasControllerTest` | `unAdministradorCreaUnaCategoria` | Infraestructura | AB#322 | PR #138 | ✅ |
+| HU40-CP06 | `AdministracionCategoriasControllerTest` | `crearUnNombreRepetidoDevuelve409` | Infraestructura | AB#322 | PR #138 | ✅ |
+| HU40-CP07 | `AdministracionCategoriasControllerTest` | `crearConDatosInvalidosDevuelve400` (sin nombre, sin estado y estado desconocido) | Infraestructura | AB#322 | PR #138 | ✅ |
+| HU40-CP07 | `AdministracionCategoriasControllerTest` | `crearConUnaReglaDelDominioIncumplidaDevuelve400` | Infraestructura | AB#322 | PR #138 | ✅ |
+| HU40-CP08 | `AdministracionCategoriasControllerTest` | `crearConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#322 | PR #138 | ✅ |
+| HU40-CP08 | `AdministracionCategoriasControllerTest` | `crearSinSesionDevuelve401` | Infraestructura | AB#322 | PR #138 | ✅ |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AdministracionCategoriasControllerTest`: `categorias/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
+- `AdministracionCategoriasServiceTest`: `categorias/application/service/` (JUnit y Mockito, sin Spring)
+- `CategoriaTest`: `categorias/domain/model/` (JUnit, sin Spring)
+- `CategoriaDocumentMapperTest`: `categorias/infrastructure/adapter/out/persistence/` (JUnit, sin Spring)
+- `CategoriaMongoAdapterTest`: `categorias/infrastructure/adapter/out/persistence/` (con Testcontainers)
+
+---
+
+## HU43 · Cerrar sesión
+
+### Tabla A · HU43 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU43-CP01 | Al cerrar sesión (`POST /api/auth/logout`) la sesión se invalida en el servidor y la cookie de sesión se borra del navegador | Controlador | 2 | ✅ Pasa |
+| HU43-CP02 | La sesión caduca tras 15 minutos sin actividad si no se configura otro tiempo (`ESIBUY_SESION_INACTIVIDAD`) | Integración (servidor real) | 1 | 🔍 En revisión |
+| HU43-CP03 | Las cookies de sesión (`JSESSIONID`: Secure, HttpOnly y SameSite=Strict) y de CSRF (`XSRF-TOKEN`: Secure y SameSite=Strict, legible por el frontend) llevan sus atributos de seguridad | Controlador + integración (servidor real) | 2 | 🔍 En revisión |
+
+Notas:
+- **HU43-CP01:** caso propuesto en la T318 (AB#318), a partir del criterio de aceptación «al cerrar sesión, el token/sesión se invalida en el servidor». **HU43-CP02 y CP03:** propuestos en la T319 (AB#319), a partir de «la sesión caduca tras un tiempo de inactividad configurable» y «cookies de sesión con atributos Secure, HttpOnly y SameSite». Pendientes de confirmar con el equipo y de añadir a la HU43 en Azure Boards.
+- **Backend (T319):** en `application.properties`, `server.servlet.session.timeout=${ESIBUY_SESION_INACTIVIDAD:15m}` y los atributos de la cookie de sesión; en `SecurityConfig`, un `CookieCsrfTokenRepository` con Secure y SameSite=Strict. Al caducar, la siguiente petición recibe 401 y el frontend debe redirigir al login.
+- **Backend (T318):** el endpoint ya existía (Spring Security, `SecurityConfig`, T230): invalida la sesión, borra `JSESSIONID` y responde 204. `logoutCierraLaSesion` es el test de la HU2 (HU2-CP15, PR #67) que comprueba la invalidación; se traza también aquí sin cambiar su `@DisplayName`.
+- **La cookie de sesión la borra el servidor:** es HttpOnly, así que el frontend (T317, «lógica de borrado de cookies de sesión») no puede borrarla; le basta con llamar a `logout()` y limpiar su estado.
+- **Pendiente:** el botón «Cerrar sesión» en todas las zonas y la redirección al login tras la caducidad (T314 a T316, frontend). En despliegue, con Secure la aplicación tiene que servirse por HTTPS.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU43-CP01 | `AutenticacionControllerTest` | `logoutCierraLaSesion` (`@DisplayName` HU2-CP15) | Infraestructura | AB#230 | PR #67 | ✅ |
+| HU43-CP01 | `AutenticacionControllerTest` | `logoutBorraLaCookieDeSesion` | Infraestructura | AB#318 | PR #141 | ✅ |
+| HU43-CP02 | `ConfiguracionSesionTest` | `laSesionCaducaA15MinutosDeInactividadPorDefecto` | Infraestructura | AB#319 | PR #142 | 🔍 |
+| HU43-CP03 | `ConfiguracionSesionTest` | `laCookieDeSesionEsSecureHttpOnlyYSameSiteStrict` | Infraestructura | AB#319 | PR #142 | 🔍 |
+| HU43-CP03 | `SecurityConfigTest` | `laCookieCsrfEsSecureYSameSiteStrict` | Infraestructura | AB#319 | PR #142 | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AutenticacionControllerTest`: `usuarios/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
+- `ConfiguracionSesionTest`: `shared/config/` (`@SpringBootTest` con el servidor real en un puerto aleatorio y Testcontainers)
+- `SecurityConfigTest`: `shared/config/` (con `@WebMvcTest`)
 
 ---
 

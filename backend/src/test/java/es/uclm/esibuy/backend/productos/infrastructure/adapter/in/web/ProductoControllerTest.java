@@ -34,20 +34,24 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // Listado de los productos propios del vendedor (HU32, T184): GET /api/seller/products, y alta de un producto
 // (HU31, T205 y T179): POST /api/seller/products, y consulta de un producto propio (HU33, T348):
-// GET /api/seller/products/{id}, y modificación de un producto propio (HU34, T342): PUT /api/seller/products/{id}.
+// GET /api/seller/products/{id}, modificación de un producto propio (HU34, T342): PUT /api/seller/products/{id},
+// y eliminación de un producto propio (HU35, T345): DELETE /api/seller/products/{id}.
 // Los casos de uso son dobles de prueba; la seguridad es la real
 // (SecurityConfig: /api/seller/** solo para VENDEDOR, con CSRF).
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU32-CP01 a CP05 y HU31-CP17 a CP22, propuestos.
@@ -438,6 +442,56 @@ class ProductoControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(gestionProductos, never()).modificarMiProducto(any());
+    }
+
+    // ---- Eliminación de un producto propio (HU35) ----
+
+    @Test
+    @DisplayName("HU35-CP05: el vendedor elimina su producto y recibe 204 sin cuerpo; el vendedor sale de la sesión")
+    void vendedorEliminaSuProducto() throws Exception {
+        mockMvc.perform(delete(URL + "/p-9").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR")))
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(""));
+
+        verify(gestionProductos).eliminarMiProducto(VENDEDOR, "p-9");
+    }
+
+    @Test
+    @DisplayName("HU35-CP06: eliminar un producto inexistente o de otro vendedor devuelve 404 con el código PRODUCT_NOT_FOUND")
+    void eliminarUnProductoNoEncontradoDevuelve404() throws Exception {
+        doThrow(new ProductoNoEncontradoException()).when(gestionProductos).eliminarMiProducto(VENDEDOR, "p-404");
+
+        mockMvc.perform(delete(URL + "/p-404").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("HU35-CP07: sin sesión no se puede eliminar un producto")
+    void sinSesionNoSeEliminaUnProducto() throws Exception {
+        mockMvc.perform(delete(URL + "/p-9").with(csrf()))
+                .andExpect(status().isUnauthorized());
+
+        verify(gestionProductos, never()).eliminarMiProducto(any(), any());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "ADMINISTRADOR"})
+    @DisplayName("HU35-CP07: un usuario que no es vendedor no puede eliminar un producto")
+    void noVendedorNoEliminaUnProducto(String rol) throws Exception {
+        mockMvc.perform(delete(URL + "/p-9").with(csrf()).with(user("usuario@esibuy.test").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(gestionProductos, never()).eliminarMiProducto(any(), any());
+    }
+
+    @Test
+    @DisplayName("HU35-CP07: una eliminación sin token CSRF se rechaza")
+    void sinTokenCsrfNoSeEliminaUnProducto() throws Exception {
+        mockMvc.perform(delete(URL + "/p-9").with(user(VENDEDOR).roles("VENDEDOR")))
+                .andExpect(status().isForbidden());
+
+        verify(gestionProductos, never()).eliminarMiProducto(any(), any());
     }
 
     private static Stream<Arguments> cuerposInvalidos() {

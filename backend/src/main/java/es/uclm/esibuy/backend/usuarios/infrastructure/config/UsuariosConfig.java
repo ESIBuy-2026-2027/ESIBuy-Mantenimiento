@@ -5,6 +5,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCas
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AuthenticatorUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.GestionPerfilUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CifradoSecretoPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
@@ -17,6 +18,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPor
 import es.uclm.esibuy.backend.usuarios.application.service.AdministracionUsuariosService;
 import es.uclm.esibuy.backend.usuarios.application.service.AutenticacionService;
 import es.uclm.esibuy.backend.usuarios.application.service.AuthenticatorService;
+import es.uclm.esibuy.backend.usuarios.application.service.GestionPerfilService;
 import es.uclm.esibuy.backend.usuarios.application.service.ListadoUsuariosService;
 import es.uclm.esibuy.backend.usuarios.application.service.RegistroUsuarioService;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web.CuentaActivaFilter;
@@ -152,5 +154,10 @@ public class UsuariosConfig {
                                               TotpPort totpPort, CifradoSecretoPort cifradoSecretoPort, Clock reloj) {
         return new AuthenticatorService(usuarioRepositoryPort, factorAutenticacionRepositoryPort, totpPort,
                 cifradoSecretoPort, reloj);
+    }
+
+    @Bean
+    GestionPerfilUseCase gestionPerfilUseCase(UsuarioRepositoryPort usuarioRepositoryPort) {
+        return new GestionPerfilService(usuarioRepositoryPort);
     }
 }

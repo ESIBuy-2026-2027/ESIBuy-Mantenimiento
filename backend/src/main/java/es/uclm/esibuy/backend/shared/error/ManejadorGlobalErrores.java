@@ -1,5 +1,7 @@
 package es.uclm.esibuy.backend.shared.error;
 
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaDuplicadaException;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaInvalidaException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
@@ -197,5 +199,20 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public RespuestaError productoNoEncontrado() {
         return new RespuestaError("El producto no existe", "PRODUCT_NOT_FOUND");
+    }
+
+    // 400 + code al crear una categoría (HU40, T323): el mensaje es genérico, nunca el detalle de la regla.
+    @ExceptionHandler(CategoriaInvalidaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError categoriaInvalida() {
+        return new RespuestaError("La categoría es inválida", "VALIDATION_ERROR");
+    }
+
+    // 409 + code cuando ya hay una categoría con ese nombre, sin distinguir mayúsculas ni tildes (HU40, T323).
+    // PENDIENTE: confirmar el code con quien haga la vista de creación (T320).
+    @ExceptionHandler(CategoriaDuplicadaException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError categoriaDuplicada() {
+        return new RespuestaError("La categoría ya existe con el mismo nombre", "CATEGORY_NAME_ALREADY_EXISTS");
     }
 }

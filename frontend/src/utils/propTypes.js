@@ -14,6 +14,37 @@ export const productPropType = PropTypes.shape({
   categoriaId: PropTypes.string.isRequired,
 })
 
+// Producto tal y como lo ve el cliente en el catálogo; `valoracion` es la media de 0 a 5, o null si nadie lo ha valorado.
+export const catalogProductPropType = PropTypes.shape({
+  id: PropTypes.string.isRequired,
+  nombre: PropTypes.string.isRequired,
+  imagen: PropTypes.string,
+  categoriaId: PropTypes.string.isRequired,
+  valoracion: PropTypes.number,
+  numValoraciones: PropTypes.number.isRequired,
+})
+
+// Producto tal y como lo ve el cliente en su página de detalle (HU8). `precioFinal` y `descuento` son los que le
+// corresponden a quien consulta; `valoracion` es la media de 0 a 5, o null si nadie lo ha valorado.
+export const productDetailPropType = PropTypes.shape({
+  id: PropTypes.string.isRequired,
+  nombre: PropTypes.string.isRequired,
+  descripcion: PropTypes.string,
+  imagen: PropTypes.string,
+  categoriaId: PropTypes.string.isRequired,
+  vendedor: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    nombreComercial: PropTypes.string.isRequired,
+  }).isRequired,
+  precio: PropTypes.number.isRequired,
+  descuento: PropTypes.shape({ porcentaje: PropTypes.number.isRequired }),
+  precioFinal: PropTypes.number.isRequired,
+  stock: PropTypes.number.isRequired,
+  disponible: PropTypes.bool.isRequired,
+  valoracion: PropTypes.number,
+  numValoraciones: PropTypes.number.isRequired,
+})
+
 export const productValuesPropType = PropTypes.shape({
   nombre: PropTypes.string.isRequired,
   descripcion: PropTypes.string.isRequired,

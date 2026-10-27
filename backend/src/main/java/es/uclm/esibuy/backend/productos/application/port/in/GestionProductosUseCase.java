@@ -2,7 +2,7 @@ package es.uclm.esibuy.backend.productos.application.port.in;
 
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 
-/** Gestión de los productos propios por parte del vendedor (HU31 alta, HU33 consulta, HU34 modificación; HU35 añadirá más). */
+/** Gestión de los productos propios por parte del vendedor (HU31 alta, HU33 consulta, HU34 modificación y HU35 eliminación). */
 public interface GestionProductosUseCase {
 
     Producto crear(CrearProductoCommand comando);
@@ -23,4 +23,12 @@ public interface GestionProductosUseCase {
      * @return el producto guardado
      */
     Producto modificarMiProducto(ModificarProductoCommand comando);
+
+    /**
+     * Elimina un producto del vendedor en sesión (HU35). El borrado es físico.
+     *
+     * @param emailVendedor correo del vendedor en sesión: solo puede eliminar sus productos
+     * @param productoId id del producto
+     */
+    void eliminarMiProducto(String emailVendedor, String productoId);
 }

@@ -95,13 +95,15 @@ Son dos causas distintas con dos mensajes distintos: el bloqueo por un administr
 | `VENDEDOR` | `/seller/products` | `SellerProductsPage` |
 | Rol desconocido | `/` | Home |
 
-Las tres páginas existen pero **no pintan nada**: son un componente que devuelve `null`, preparadas para que se implementen en sus historias (HU15, HU18 y el catálogo). Un archivo `.jsx` totalmente vacío no se puede importar como componente, por eso tienen esa única función.
+Las páginas del vendedor y del administrador existen pero **no pintan nada**: son un componente que devuelve `null`, preparadas para que se implementen en sus historias (HU15 y HU18). La del cliente (`/products`) ya es la vista de productos de la HU7 (`docs/hu7-busqueda-y-filtrado-de-productos.md`). Un archivo `.jsx` totalmente vacío no se puede importar como componente, por eso tienen esa única función.
 
 ### Reglas de acceso
 
 | Ruta | Quién entra | Si no cumple |
 |---|---|---|
-| `/`, `/products` | Cualquiera | |
+| `/` | Cualquiera | |
+| `/products` | Cliente | Sin sesión → `/login`; otro rol → destino de su rol (antes era una ruta pública y vacía, cambio de la HU7) |
+| `/products/:id` | Cliente | Igual que `/products`: detalle de un producto (HU8) |
 | `/login` | Solo sin sesión | Con sesión, redirige al destino de su rol |
 | `/admin` | Administrador | Sin sesión → `/login`; otro rol → destino de su rol |
 | `/seller/products` | Vendedor | Sin sesión → `/login`; otro rol → destino de su rol |
@@ -151,7 +153,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | `components/AppLayout.jsx` | Marco común: cabecera y contenido de la ruta. **La página de login queda fuera**, por lo que no lleva cabecera. |
 | `components/AppHeader.test.jsx` | Tests de la cabecera. |
 | `pages/LoginPage.jsx` | Página de login; redirige si ya hay sesión. |
-| `pages/AdminPage.jsx`, `ProductsPage.jsx`, `SellerProductsPage.jsx` | Páginas de destino, vacías a propósito. |
+| `pages/AdminPage.jsx`, `SellerProductsPage.jsx` | Páginas de destino, vacías a propósito. `ProductsPage.jsx` ya no lo está (HU7). |
 | `pages/Home.jsx` | Se le ha quitado la cabecera (ahora la pone el layout). |
 | `routes/paths.js` | Todas las rutas en un solo sitio, para no repetir cadenas. |
 | `routes/AppRoutes.jsx` | Definición de rutas y protecciones. |
