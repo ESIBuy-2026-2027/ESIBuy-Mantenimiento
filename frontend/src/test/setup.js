@@ -5,6 +5,7 @@ import { resetAdminSellersMock } from '../mocks/adminSellersHandlers'
 import { resetAdminsMock } from '../mocks/adminsHandlers'
 import { resetAuthMock } from '../mocks/authHandlers'
 import { resetCartMock } from '../mocks/cartHandlers'
+import { resetProductsMock } from '../mocks/productsHandlers'
 import { resetUsersMock } from '../mocks/usersHandlers'
 import { server } from '../mocks/server'
 
@@ -35,6 +36,7 @@ afterEach(() => {
   resetCartMock()
   resetAdminSellersMock()
   resetAdminsMock()
+  resetProductsMock()
   resetUsersMock()
 })
 
