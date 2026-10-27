@@ -33,7 +33,7 @@ class CategoriaMongoAdapterTest {
     @BeforeEach
     void preparar() {
         categoriaMongoRepository.deleteAll();
-        adapter = new CategoriaMongoAdapter(categoriaMongoRepository);
+        adapter = new CategoriaMongoAdapter(categoriaMongoRepository, new CategoriaDocumentMapper());
     }
 
     @Test
