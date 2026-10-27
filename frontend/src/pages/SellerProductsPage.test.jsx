@@ -525,3 +525,96 @@ describe('SellerProductsPage (HU35): eliminar desde la ficha', () => {
     expect(await screen.findByText(/producto eliminado/i)).toBeInTheDocument()
   })
 })
+
+describe('SellerProductsPage (HU16): activar y desactivar productos', () => {
+  // Guarda lo que se envía al cambiar la disponibilidad y deja que responda el mock, que mantiene el cambio.
+  function capturarCambioDeDisponibilidad() {
+    const cambios = []
+    server.use(
+      http.patch('/api/seller/products/:id/availability', async ({ params, request }) => {
+        cambios.push({ id: params.id, ...(await request.clone().json()) })
+      }),
+    )
+    return cambios
+  }
+
+  const filaDe = async (nombre) => (await screen.findByText(nombre)).closest('tr')
+
+  it('HU16-CP01: un producto disponible se puede desactivar y uno no disponible, activar', async () => {
+    await abrirListado()
+    await esperarFilas(10)
+
+    expect(screen.getByRole('button', { name: 'Desactivar Teclado mecánico' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Activar Webcam Full HD' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Activar Teclado mecánico' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Desactivar Webcam Full HD' })).not.toBeInTheDocument()
+  })
+
+  it('HU16-CP02: al pulsar Desactivar, sin pedir confirmación, el producto pasa a no disponible y se avisa', async () => {
+    const user = userEvent.setup()
+    const cambios = capturarCambioDeDisponibilidad()
+    await abrirListado()
+    await esperarFilas(10)
+
+    await user.click(screen.getByRole('button', { name: 'Desactivar Teclado mecánico' }))
+
+    expect(await screen.findByText('Producto desactivado.')).toBeInTheDocument()
+    expect(cambios).toEqual([{ id: 'p-2', disponible: false }])
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    const fila = await filaDe('Teclado mecánico')
+    await waitFor(() => expect(within(fila).getByText('No disponible')).toBeInTheDocument())
+    expect(within(fila).getByRole('button', { name: 'Activar Teclado mecánico' })).toBeInTheDocument()
+  })
+
+  it('HU16-CP03: al pulsar Activar, el producto pasa a disponible y se avisa', async () => {
+    const user = userEvent.setup()
+    const cambios = capturarCambioDeDisponibilidad()
+    await abrirListado()
+    await esperarFilas(10)
+
+    await user.click(screen.getByRole('button', { name: 'Activar Webcam Full HD' }))
+
+    expect(await screen.findByText('Producto activado.')).toBeInTheDocument()
+    expect(cambios).toEqual([{ id: 'p-6', disponible: true }])
+    const fila = await filaDe('Webcam Full HD')
+    await waitFor(() => expect(within(fila).getByText('Disponible')).toBeInTheDocument())
+    expect(within(fila).getByRole('button', { name: 'Desactivar Webcam Full HD' })).toBeInTheDocument()
+  })
+
+  it('HU16-CP04: si falla el cambio, avisa sin detalles internos y el producto no cambia', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.patch('/api/seller/products/:id/availability', () =>
+        HttpResponse.json({ message: 'MongoTimeoutException' }, { status: 500 }),
+      ),
+    )
+    await abrirListado()
+    await esperarFilas(10)
+
+    await user.click(screen.getByRole('button', { name: 'Desactivar Teclado mecánico' }))
+
+    expect(await screen.findByText(/no se ha podido cambiar la disponibilidad del producto/i)).toBeInTheDocument()
+    expect(screen.queryByText(/mongotimeout/i)).not.toBeInTheDocument()
+    expect(screen.queryByText('Producto desactivado.')).not.toBeInTheDocument()
+    const fila = await filaDe('Teclado mecánico')
+    expect(within(fila).getByText('Disponible')).toBeInTheDocument()
+  })
+
+  it('HU16-CP06: desde la ficha, Desactivar cierra la ficha, cambia el producto y avisa', async () => {
+    const user = userEvent.setup()
+    const cambios = capturarCambioDeDisponibilidad()
+    await abrirListado()
+    await esperarFilas(10)
+
+    await user.click(screen.getByRole('button', { name: 'Ver Teclado mecánico' }))
+    const ficha = await screen.findByRole('dialog', { name: /información del producto/i })
+    await within(ficha).findByLabelText('Nombre')
+    await user.click(within(ficha).getByRole('button', { name: 'Desactivar' }))
+
+    expect(await screen.findByText('Producto desactivado.')).toBeInTheDocument()
+    expect(cambios).toEqual([{ id: 'p-2', disponible: false }])
+    await waitFor(() => expect(screen.queryByText('Información del producto')).not.toBeInTheDocument())
+    const fila = await filaDe('Teclado mecánico')
+    await waitFor(() => expect(within(fila).getByText('No disponible')).toBeInTheDocument())
+  })
+})

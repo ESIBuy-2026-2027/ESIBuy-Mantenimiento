@@ -12,20 +12,28 @@ import ProductDetailDialog from './ProductDetailDialog'
 const PRODUCTO_CON_DESCUENTOS = 'p-1'
 // p-24 (Smartwatch deportivo) es de otro vendedor: el mock responde 404, como el backend.
 const PRODUCTO_DE_OTRO_VENDEDOR = 'p-24'
+// p-6 (Webcam Full HD) es del vendedor y no está disponible.
+const PRODUCTO_NO_DISPONIBLE = 'p-6'
 
 async function abrirFicha(productId = PRODUCTO_CON_DESCUENTOS) {
   await abrirSesionPorApi('vendedor@esibuy.test')
   const onClose = vi.fn()
+  const onToggleAvailability = vi.fn()
   const onDelete = vi.fn()
   render(
     <MemoryRouter>
       <FluentProvider theme={webLightTheme}>
-        <ProductDetailDialog productId={productId} onClose={onClose} onDelete={onDelete} />
+        <ProductDetailDialog
+          productId={productId}
+          onClose={onClose}
+          onToggleAvailability={onToggleAvailability}
+          onDelete={onDelete}
+        />
       </FluentProvider>
     </MemoryRouter>,
   )
   const dialogo = await screen.findByRole('dialog', { name: /información del producto/i })
-  return { dialogo, onClose, onDelete }
+  return { dialogo, onClose, onToggleAvailability, onDelete }
 }
 
 describe('ProductDetailDialog (HU33): datos', () => {
@@ -64,6 +72,28 @@ describe('ProductDetailDialog (HU33): acciones', () => {
     expect(within(dialogo).getByRole('link', { name: 'Editar' })).toHaveAttribute('href', '/seller/products/p-1/edit')
     await user.click(within(dialogo).getByRole('button', { name: 'Eliminar' }))
     expect(onDelete).toHaveBeenCalledWith(expect.objectContaining({ id: 'p-1', nombre: 'Auriculares inalámbricos' }))
+  })
+})
+
+describe('ProductDetailDialog (HU16): activar y desactivar', () => {
+  it('HU16-CP05: un producto disponible ofrece Desactivar, que avisa con el producto', async () => {
+    const user = userEvent.setup()
+    const { dialogo, onToggleAvailability } = await abrirFicha()
+    await within(dialogo).findByLabelText('Nombre')
+
+    expect(within(dialogo).queryByRole('button', { name: 'Activar' })).not.toBeInTheDocument()
+    await user.click(within(dialogo).getByRole('button', { name: 'Desactivar' }))
+    expect(onToggleAvailability).toHaveBeenCalledWith(expect.objectContaining({ id: 'p-1', disponible: true }))
+  })
+
+  it('HU16-CP05: un producto no disponible ofrece Activar, que avisa con el producto', async () => {
+    const user = userEvent.setup()
+    const { dialogo, onToggleAvailability } = await abrirFicha(PRODUCTO_NO_DISPONIBLE)
+    await within(dialogo).findByLabelText('Nombre')
+
+    expect(within(dialogo).queryByRole('button', { name: 'Desactivar' })).not.toBeInTheDocument()
+    await user.click(within(dialogo).getByRole('button', { name: 'Activar' }))
+    expect(onToggleAvailability).toHaveBeenCalledWith(expect.objectContaining({ id: 'p-6', disponible: false }))
   })
 })
 
