@@ -1740,9 +1740,9 @@ Notas:
 |---|---|---|---|---|---|---|
 | HU43-CP01 | `AutenticacionControllerTest` | `logoutCierraLaSesion` (`@DisplayName` HU2-CP15) | Infraestructura | AB#230 | PR #67 | ✅ |
 | HU43-CP01 | `AutenticacionControllerTest` | `logoutBorraLaCookieDeSesion` | Infraestructura | AB#318 | PR #141 | ✅ |
-| HU43-CP02 | `ConfiguracionSesionTest` | `laSesionCaducaA15MinutosDeInactividadPorDefecto` | Infraestructura | AB#319 | — | 🔍 |
-| HU43-CP03 | `ConfiguracionSesionTest` | `laCookieDeSesionEsSecureHttpOnlyYSameSiteStrict` | Infraestructura | AB#319 | — | 🔍 |
-| HU43-CP03 | `SecurityConfigTest` | `laCookieCsrfEsSecureYSameSiteStrict` | Infraestructura | AB#319 | — | 🔍 |
+| HU43-CP02 | `ConfiguracionSesionTest` | `laSesionCaducaA15MinutosDeInactividadPorDefecto` | Infraestructura | AB#319 | PR #142 | 🔍 |
+| HU43-CP03 | `ConfiguracionSesionTest` | `laCookieDeSesionEsSecureHttpOnlyYSameSiteStrict` | Infraestructura | AB#319 | PR #142 | 🔍 |
+| HU43-CP03 | `SecurityConfigTest` | `laCookieCsrfEsSecureYSameSiteStrict` | Infraestructura | AB#319 | PR #142 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AutenticacionControllerTest`: `usuarios/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
