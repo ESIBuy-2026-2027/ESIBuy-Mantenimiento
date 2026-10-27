@@ -11,15 +11,17 @@ import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 public class CategoriaMongoAdapter implements CategoriaRepositoryPort {
 
     private final CategoriaMongoRepository repository;
+    private final CategoriaDocumentMapper mapper;
 
-    public CategoriaMongoAdapter(CategoriaMongoRepository repository) {
+    public CategoriaMongoAdapter(CategoriaMongoRepository repository, CategoriaDocumentMapper mapper) {
         this.repository = repository;
+        this.mapper = mapper;
     }
 
     @Override
     public List<Categoria> listar() {
         return repository.findAll(Sort.by("nombre")).stream()
-                .map(documento -> new Categoria(documento.getId(), documento.getNombre()))
+                .map(mapper::aDominio)
                 .toList();
     }
 }

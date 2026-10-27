@@ -2,13 +2,18 @@ package es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.bson.Document;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -90,5 +95,15 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     @Override
     public void eliminar(String id) {
         repository.deleteById(id);
+    }
+
+    // Una sola agregación para todas las categorías: agrupa los productos por categoriaId y los cuenta.
+    @Override
+    public Map<String, Long> contarPorCategoria() {
+        Aggregation agrupar = Aggregation.newAggregation(
+                Aggregation.group("categoriaId").count().as("total"));
+        return mongoTemplate.aggregate(agrupar, ProductoDocument.class, Document.class).getMappedResults().stream()
+                .collect(Collectors.toMap(grupo -> grupo.getString("_id"),
+                        grupo -> grupo.get("total", Number.class).longValue()));
     }
 }

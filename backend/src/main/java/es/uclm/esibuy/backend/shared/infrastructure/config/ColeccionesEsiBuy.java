@@ -227,12 +227,14 @@ final class ColeccionesEsiBuy {
                 List.of(indice(USUARIO_ID).on(PRODUCTO_ID, Sort.Direction.ASC).unique()));
     }
 
-    // 9. categorias: clasificación de productos.
+    // 9. categorias: clasificación de productos. Mismas reglas que la entidad Categoria (HU40, T321): nombre
+    // de hasta 50 caracteres, descripción de hasta 200 y estado ACTIVA o INACTIVA. Las categorías guardadas
+    // antes no tienen estado: por eso no es obligatorio aquí, y el mapper las lee como ACTIVAS.
     private static Coleccion categorias() {
         return new Coleccion("categorias", esquema(List.of(NOMBRE),
-                textoNoVacio(NOMBRE),
-                string("descripcion"),
-                string(ESTADO)),
+                string(NOMBRE).minLength(1).maxLength(50),
+                string("descripcion").maxLength(200),
+                string(ESTADO).possibleValues("ACTIVA", "INACTIVA")),
                 List.of(indice(NOMBRE).unique()));
     }
 
