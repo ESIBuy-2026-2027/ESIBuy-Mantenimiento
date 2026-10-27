@@ -27,6 +27,10 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground3,
     fontSize: tokens.fontSizeBase400,
   },
+  finalCompact: {
+    fontSize: tokens.fontSizeBase500,
+    lineHeight: tokens.lineHeightBase500,
+  },
   savings: {
     color: tokens.colorPaletteGreenForeground1,
     fontWeight: tokens.fontWeightSemibold,
@@ -34,15 +38,16 @@ const useStyles = makeStyles({
 })
 
 // Precio de un producto: el final, destacado, y, si hay descuento, el original tachado, el porcentaje y lo que se
-// ahorra. Todo llega calculado por el servidor para quien consulta (cliente Estándar o Premium).
-export default function PriceBlock({ precio, descuento, precioFinal }) {
+// ahorra. Todo llega calculado por el servidor para quien consulta (cliente Estándar o Premium). La versión `compact`
+// (para las tarjetas) usa letra más pequeña y no dice cuánto se ahorra.
+export default function PriceBlock({ precio, descuento, precioFinal, compact = false }) {
   const styles = useStyles()
   const saving = precio - precioFinal
 
   return (
     <div className={styles.block}>
       <div className={styles.line}>
-        <span className={mergeClasses(styles.final, descuento && styles.discounted)}>
+        <span className={mergeClasses(styles.final, compact && styles.finalCompact, descuento && styles.discounted)}>
           {formatPrice(precioFinal)}
         </span>
         {descuento && (
@@ -50,13 +55,13 @@ export default function PriceBlock({ precio, descuento, precioFinal }) {
             <Text className={styles.original}>
               <s>{formatPrice(precio)}</s>
             </Text>
-            <Badge appearance="filled" color="danger" size="large">
+            <Badge appearance="filled" color="danger" size={compact ? 'medium' : 'large'}>
               {`-${descuento.porcentaje} %`}
             </Badge>
           </>
         )}
       </div>
-      {descuento && saving > 0 && <Text className={styles.savings}>Ahorras {formatPrice(saving)}</Text>}
+      {!compact && descuento && saving > 0 && <Text className={styles.savings}>Ahorras {formatPrice(saving)}</Text>}
     </div>
   )
 }
@@ -65,4 +70,5 @@ PriceBlock.propTypes = {
   precio: PropTypes.number.isRequired,
   descuento: PropTypes.shape({ porcentaje: PropTypes.number.isRequired }),
   precioFinal: PropTypes.number.isRequired,
+  compact: PropTypes.bool,
 }

@@ -252,3 +252,72 @@ describe('ProductDetailPage (HU8): estados de la pantalla', () => {
     expect(await screen.findByText(/no se ha encontrado el producto/i)).toBeInTheDocument()
   })
 })
+
+describe('ProductDetailPage (HU9): añadir al carrito', () => {
+  const CARRITO = { grupos: [], totalProductos: 1, total: 89.5 }
+
+  // Guarda el cuerpo de lo que se envía al carrito.
+  function capturarAlta() {
+    const enviado = { cuerpo: null }
+    server.use(
+      http.post('/api/cart/items', async ({ request }) => {
+        enviado.cuerpo = await request.json()
+        return HttpResponse.json(CARRITO)
+      }),
+    )
+    return enviado
+  }
+
+  it('HU9-CP03: el detalle tiene un botón para añadir el producto al carrito', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    const enviado = capturarAlta()
+    await abrirDetalle()
+
+    await user.click(screen.getByRole('button', { name: /añadir al carrito/i }))
+
+    await waitFor(() => expect(enviado.cuerpo).toEqual({ productoId: 'p-2', cantidad: 1 }))
+    expect(await screen.findByText(/añadido/i)).toBeInTheDocument()
+  })
+
+  it('HU9-CP03: se puede elegir la cantidad antes de añadir', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    const enviado = capturarAlta()
+    await abrirDetalle()
+
+    await user.click(screen.getByRole('button', { name: /aumentar cantidad/i }))
+    await user.click(screen.getByRole('button', { name: /aumentar cantidad/i }))
+    expect(screen.getByLabelText('Cantidad')).toHaveTextContent('3')
+    await user.click(screen.getByRole('button', { name: /añadir al carrito/i }))
+
+    await waitFor(() => expect(enviado.cuerpo).toEqual({ productoId: 'p-2', cantidad: 3 }))
+  })
+
+  it('HU9-CP03: la cantidad no baja de una unidad', async () => {
+    responderCon()
+    await abrirDetalle()
+
+    expect(screen.getByLabelText('Cantidad')).toHaveTextContent('1')
+    expect(screen.getByRole('button', { name: /disminuir cantidad/i })).toBeDisabled()
+  })
+
+  it('HU9-CP03: la cantidad no puede superar las existencias', async () => {
+    const user = userEvent.setup()
+    responderCon({ stock: 2 })
+    await abrirDetalle()
+
+    await user.click(screen.getByRole('button', { name: /aumentar cantidad/i }))
+
+    expect(screen.getByLabelText('Cantidad')).toHaveTextContent('2')
+    expect(screen.getByRole('button', { name: /aumentar cantidad/i })).toBeDisabled()
+  })
+
+  it('HU9-CP03: un producto agotado no se puede añadir ni se elige cantidad', async () => {
+    responderCon({ stock: 0 })
+    await abrirDetalle()
+
+    expect(screen.getByRole('button', { name: /agotado/i })).toBeDisabled()
+    expect(screen.queryByLabelText('Cantidad')).not.toBeInTheDocument()
+  })
+})

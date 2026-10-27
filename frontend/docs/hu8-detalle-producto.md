@@ -168,7 +168,7 @@ npm run build
 
 - **Contrato propuesto por el frontend**; el backend aún no tiene el endpoint de detalle ni las valoraciones.
 - **El servidor calcula el precio** (decisión del equipo): el cliente puede ser Estándar o Premium y el navegador no decide cuánto se paga.
-- **Sin botón de compra** (decisión del equipo): el carrito todavía no existe y no se ha dejado un botón que no hace nada. Llegará con su historia.
+- **Comprar desde el detalle (HU9):** el detalle tiene un selector de cantidad (entre 1 y las existencias) y el botón «Añadir al carrito» (`AddToCartButton`). Un producto agotado o no disponible no se puede añadir. Ver `docs/hu9-carrito-de-compra.md`.
 - **Una página, no una ventana:** el detalle tiene dirección propia (`/products/:id`), así que se puede compartir, abrir en otra pestaña y volver con el botón del navegador. Sustituye a la ventana de ficha de la HU7.
 - **Tarjetas como enlaces:** las tarjetas del catálogo son enlaces reales (`Link`), no botones con un manejador.
 - **No se ha inventado información:** no hay envío, devoluciones, garantía, opiniones ni productos relacionados porque no hay datos ni historias para ellos.
@@ -179,7 +179,7 @@ npm run build
 ## 8. Limitaciones y trabajo pendiente
 
 - **Backend:** falta `GET /api/products/{id}`, el nombre comercial del vendedor en el módulo de productos, el cálculo del descuento por tipo de cliente y guardar valoraciones.
-- **Comprar:** sin botón de «Añadir al carrito» hasta que exista el carrito.
+- **Pagar:** el carrito existe desde la HU9 (`docs/hu9-carrito-de-compra.md`); desde el detalle solo se añade al carrito. La pasarela de pago es la HU10.
 - **Opiniones:** solo se muestra la nota media y el número de valoraciones; la lista de opiniones y su reparto por estrellas llegarán con la historia de valoraciones.
 - **Una sola imagen:** el producto tiene una imagen; no hay galería.
 - **Volver al listado:** **Volver a los productos** (y el botón Atrás del navegador) vuelve a cargar el listado desde la primera página, así que se pierde la posición del scroll infinito.

@@ -3,6 +3,8 @@ import { useState } from 'react'
 import { Text, Title1, makeStyles, mergeClasses, tokens } from '@fluentui/react-components'
 import { BuildingShop20Regular, ImageOff24Regular } from '@fluentui/react-icons'
 import { formatRating } from '../../utils/format'
+import AddToCartButton from '../cart/AddToCartButton'
+import QuantityStepper from '../cart/QuantityStepper'
 import { productDetailPropType } from '../../utils/propTypes'
 import PriceBlock from './PriceBlock'
 import RatingStars from './RatingStars'
@@ -120,6 +122,12 @@ const useStyles = makeStyles({
     borderRadius: tokens.borderRadiusXLarge,
     boxShadow: tokens.shadow4,
   },
+  buy: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
+    gap: tokens.spacingHorizontalM,
+  },
   stock: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -204,6 +212,8 @@ export default function ProductDetail({ product, categoryName }) {
   const hasImage = Boolean(product.imagen) && !imageFailed
   const rated = product.valoracion !== null && product.numValoraciones > 0
   const status = stockStatus(product)
+  const [quantity, setQuantity] = useState(1)
+  const canBuy = status.key === 'in' || status.key === 'low'
   const category = categoryName ?? SIN_CATEGORIA
 
   return (
@@ -251,6 +261,14 @@ export default function ProductDetail({ product, categoryName }) {
             <span className={mergeClasses(styles.dot, styles[status.tone])} aria-hidden="true" />
             {status.label}
           </span>
+          {canBuy ? (
+            <div className={styles.buy}>
+              <QuantityStepper value={quantity} max={product.stock} onChange={setQuantity} />
+              <AddToCartButton product={product} quantity={quantity} />
+            </div>
+          ) : (
+            <AddToCartButton product={product} />
+          )}
         </div>
 
         <section className={styles.section} aria-labelledby="descripcion-producto">
