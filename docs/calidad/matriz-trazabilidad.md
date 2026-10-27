@@ -1659,6 +1659,40 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU37 · Eliminar administrador
+
+### Tabla A · HU37 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU37-CP01 | Eliminar un administrador activo lo borra físicamente si queda otro administrador activo | Unitario | 1 | ✅ Pasa |
+| HU37-CP02 | Eliminar un usuario que no existe falla (`UsuarioNoEncontradoException`) y no borra nada | Unitario | 1 | ✅ Pasa |
+| HU37-CP03 | Eliminar a un usuario que no es administrador falla como si no existiera y no borra nada | Unitario | 1 | ✅ Pasa |
+| HU37-CP04 | Un administrador no puede eliminar su propia cuenta y no se borra nada | Unitario | 1 | ✅ Pasa |
+| HU37-CP05 | No se puede eliminar al último administrador activo y no se borra nada | Unitario | 1 | ✅ Pasa |
+| HU37-CP06 | Eliminar un administrador desactivado no comprueba el conteo de activos y lo borra | Unitario | 1 | ✅ Pasa |
+
+Notas:
+- **HU37-CP01 a CP06 (T340, AB#340):** casos propuestos para la lógica de negocio del borrado físico de administradores en `AdministracionUsuariosService.eliminarAdministrador`. Pendientes de confirmar con el equipo y de añadir a Azure Boards.
+- **Sesión del administrador eliminado:** la invalidación de la sesión al borrar físicamente la cuenta ya la cubre `CuentaActivaFilter` (ver **HU23-CP10**, `usuarioInexistenteInvalidaLaSesionYDevuelve401`, PR #85): en cuanto el documento desaparece de la colección `usuarios`, cualquier petición con su sesión recibe un 401 y la sesión queda invalidada.
+- **Pendiente (otra task):** el endpoint `DELETE`, la traducción del 409 de autoeliminación (`CANNOT_DELETE_SELF`) en `ManejadorGlobalErrores` y los tests de integración web y de persistencia en `UsuarioMongoAdapterTest`.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU37-CP01 | `AdministracionUsuariosServiceTest` | `eliminaAUnAdministradorSiQuedaOtroActivo` | Aplicación | AB#340 | PR actual | ✅ |
+| HU37-CP02 | `AdministracionUsuariosServiceTest` | `rechazaEliminarUnUsuarioQueNoExiste` | Aplicación | AB#340 | PR actual | ✅ |
+| HU37-CP03 | `AdministracionUsuariosServiceTest` | `rechazaEliminarAUsuarioQueNoEsAdministrador` | Aplicación | AB#340 | PR actual | ✅ |
+| HU37-CP04 | `AdministracionUsuariosServiceTest` | `rechazaQueUnAdministradorSeElimineASiMismo` | Aplicación | AB#340 | PR actual | ✅ |
+| HU37-CP05 | `AdministracionUsuariosServiceTest` | `rechazaEliminarAlUltimoAdministradorActivo` | Aplicación | AB#340 | PR actual | ✅ |
+| HU37-CP06 | `AdministracionUsuariosServiceTest` | `eliminaAUnAdministradorDesactivadoSinComprobarActivos` | Aplicación | AB#340 | PR actual | ✅ |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
+
+---
+
 ## HU40 · Crear categorías
 
 ### Tabla A · HU40 ↔ casos de prueba

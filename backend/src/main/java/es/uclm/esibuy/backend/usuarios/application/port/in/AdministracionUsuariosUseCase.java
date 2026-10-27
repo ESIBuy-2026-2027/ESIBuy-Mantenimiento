@@ -65,4 +65,18 @@ public interface AdministracionUsuariosUseCase {
      *         o no es un vendedor
      */
     Usuario desactivarVendedor(String usuarioId);
+
+    /**
+     * Elimina físicamente la cuenta de un administrador (HU37).
+     *
+     * @param usuarioId          id del administrador que se quiere eliminar
+     * @param emailAdministrador email del administrador que hace la petición
+     * @throws es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException si no existe
+     *         o no es un administrador
+     * @throws es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException si intenta eliminarse a sí mismo
+     * @throws es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException si es el último administrador activo
+     */
+    void eliminarAdministrador(String usuarioId, String emailAdministrador);
+
+    
 }
