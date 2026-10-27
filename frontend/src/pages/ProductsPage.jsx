@@ -11,13 +11,11 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { ArrowDown20Regular, Box24Regular, CheckmarkCircle20Regular, SearchInfo24Regular } from '@fluentui/react-icons'
-import { useState } from 'react'
 import EmptyState from '../components/EmptyState'
 import { usePageStyles } from '../components/pageStyles'
 import CatalogFilters from '../features/catalog/CatalogFilters'
 import FeaturedProducts from '../features/catalog/FeaturedProducts'
 import ProductCard from '../features/catalog/ProductCard'
-import ProductDialog from '../features/catalog/ProductDialog'
 import { useCatalogFeed } from '../features/catalog/useCatalogFeed'
 import { useCatalogFilters } from '../features/catalog/useCatalogFilters'
 import { useCategories } from '../hooks/useCategories'
@@ -97,7 +95,6 @@ const useStyles = makeStyles({
 export default function ProductsPage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
-  const [selected, setSelected] = useState(null)
   const { categories } = useCategories()
   const filters = useCatalogFilters()
   const { search, category, minRating, sort, order, debouncedSearch, filtersActive } = filters
@@ -126,7 +123,7 @@ export default function ProductsPage() {
         <Text className={pageStyles.subtitle}>Descubre lo que ofrecen los vendedores de ESIBuy.</Text>
       </div>
 
-      {!filtersActive && <FeaturedProducts onSelect={setSelected} />}
+      {!filtersActive && <FeaturedProducts />}
 
       <div className={styles.column}>
         {showFilters && (
@@ -187,7 +184,7 @@ export default function ProductsPage() {
                   className={styles.entry}
                   style={{ animationDelay: `${(index % PAGE_SIZE) * ENTRADA_ESCALONADA_MS}ms` }}
                 >
-                  <ProductCard product={product} categoryName={categoryNames.get(product.categoriaId)} onSelect={setSelected} />
+                  <ProductCard product={product} categoryName={categoryNames.get(product.categoriaId)} />
                 </li>
               ))}
             </ul>
@@ -221,13 +218,6 @@ export default function ProductsPage() {
               <div ref={endRef} aria-hidden="true" />
             </div>
           </>
-        )}
-        {selected && (
-          <ProductDialog
-            product={selected}
-            categoryName={categoryNames.get(selected.categoriaId)}
-            onClose={() => setSelected(null)}
-          />
         )}
       </div>
     </main>

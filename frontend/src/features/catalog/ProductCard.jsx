@@ -1,7 +1,9 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Text, makeStyles, tokens } from '@fluentui/react-components'
 import { ImageOff24Regular } from '@fluentui/react-icons'
+import { getProductDetailPath } from '../../routes/paths'
 import { catalogProductPropType } from '../../utils/propTypes'
 import { formatRating } from '../../utils/format'
 import RatingStars from './RatingStars'
@@ -9,8 +11,9 @@ import RatingStars from './RatingStars'
 const SIN_CATEGORIA = '—'
 
 const useStyles = makeStyles({
-  // Toda la tarjeta es un botón: se puede pulsar, o activar con el teclado, para abrir la ficha del producto.
+  // Toda la tarjeta es un enlace al detalle del producto: se puede pulsar, activar con el teclado o abrir en otra pestaña.
   card: {
+    textDecoration: 'none',
     display: 'flex',
     flexDirection: 'column',
     width: '100%',
@@ -105,9 +108,8 @@ const useStyles = makeStyles({
 })
 
 // Tarjeta de un producto del catálogo: solo lo que se ve desde fuera (imagen, nombre, categoría y valoración).
-// `categoryName` lo traduce la página a partir del identificador de categoría del producto; `onSelect` recibe el
-// producto al pulsarla.
-export default function ProductCard({ product, categoryName, onSelect }) {
+// `categoryName` lo traduce la página a partir del identificador de categoría del producto. Lleva al detalle (HU8).
+export default function ProductCard({ product, categoryName }) {
   const styles = useStyles()
   // Si la imagen no carga (dirección rota), se enseña el mismo marcador que cuando no hay imagen.
   const [imageFailed, setImageFailed] = useState(false)
@@ -115,7 +117,7 @@ export default function ProductCard({ product, categoryName, onSelect }) {
   const rated = product.valoracion !== null && product.numValoraciones > 0
 
   return (
-    <button type="button" className={styles.card} onClick={() => onSelect?.(product)}>
+    <Link to={getProductDetailPath(product.id)} className={styles.card}>
       <span className={styles.media}>
         {hasImage ? (
           <img
@@ -150,12 +152,11 @@ export default function ProductCard({ product, categoryName, onSelect }) {
           )}
         </span>
       </span>
-    </button>
+    </Link>
   )
 }
 
 ProductCard.propTypes = {
   product: catalogProductPropType.isRequired,
   categoryName: PropTypes.string,
-  onSelect: PropTypes.func,
 }

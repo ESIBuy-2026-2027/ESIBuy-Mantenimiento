@@ -93,6 +93,41 @@ const aCatalogo = ({ id, nombre, categoria }) => {
   }
 }
 
+// Nombre comercial de cada vendedor de los productos de ejemplo (el mismo que en el listado de vendedores del
+// administrador; no se importa de allí porque ese archivo ya importa este).
+const NOMBRES_COMERCIALES = {
+  [VENDEDOR_CON_PRODUCTOS]: 'TecnoVera',
+  [OTRO_VENDEDOR]: 'Otero Hogar y Tecnología',
+}
+
+// El descuento que le corresponde al cliente: el premium si es Premium y lo tiene; si no, el normal. El servidor es
+// quien lo calcula, el frontend solo lo pinta. Los clientes de ejemplo son Estándar.
+function descuentoDelCliente(producto, tipoCliente = 'ESTANDAR') {
+  if (tipoCliente === 'PREMIUM' && producto.descuentoPremium.activo) return producto.descuentoPremium.porcentaje
+  return producto.descuento.activo ? producto.descuento.porcentaje : null
+}
+
+// Detalle de un producto del catálogo para el cliente (HU8).
+function aDetalleDeCatalogo(producto) {
+  const { imagen, categoriaId, valoracion, numValoraciones } = aCatalogo(producto)
+  const porcentaje = descuentoDelCliente(producto)
+  return {
+    id: producto.id,
+    nombre: producto.nombre,
+    descripcion: producto.descripcion,
+    imagen,
+    categoriaId,
+    vendedor: { id: producto.vendedorId, nombreComercial: NOMBRES_COMERCIALES[producto.vendedorId] ?? 'Vendedor' },
+    precio: producto.precio,
+    descuento: porcentaje === null ? null : { porcentaje },
+    precioFinal: porcentaje === null ? producto.precio : Math.round(producto.precio * (100 - porcentaje)) / 100,
+    stock: producto.stock,
+    disponible: producto.disponible,
+    valoracion,
+    numValoraciones,
+  }
+}
+
 const comparar = (a, b) => a.localeCompare(b, 'es')
 
 // Como el backend: por nombre (por defecto) o por valoración (sin valoraciones cuentan como 0). Los empates se
@@ -229,6 +264,16 @@ export const productsHandlers = [
       )
       .sort(ordenDelCatalogo(params.get('sort'), params.get('order')))
     return HttpResponse.json(paginar(coincidentes, leerPagina(params, TAMANO_CATALOGO)))
+  }),
+
+  // Detalle de un producto del catálogo (HU8): solo los disponibles; el resto, como si no existieran.
+  http.get('/api/products/:id', ({ params }) => {
+    const usuario = getUsuarioEnSesion()
+    if (!usuario) return new HttpResponse(null, { status: 401 })
+    if (usuario.rol !== 'CLIENTE') return new HttpResponse(null, { status: 403 })
+
+    const producto = PRODUCTOS.find((candidato) => candidato.id === params.id && candidato.disponible)
+    return producto ? HttpResponse.json(aDetalleDeCatalogo(producto)) : new HttpResponse(null, { status: 404 })
   }),
 
   http.get('/api/seller/products', ({ request }) => {

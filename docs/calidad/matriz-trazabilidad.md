@@ -7,7 +7,7 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 
 **Mantenimiento:** todo PR que añada, modifique o elimine tests actualiza esta matriz en el mismo PR (ver el CLAUDE.md). Cada test lleva un `@DisplayName` que empieza por el ID de su caso (`HU<n>-CP<nn>: ...`), que es el vínculo entre el código y la matriz.
 
-**Estados:** ✅ Pasa · 🔍 En revisión (PR abierto) · ⏳ Pendiente · ⏸ Fuera de alcance
+**Estados:** ✅ Pasa · 🔍 En revisión (PR abierto) · ⏳ Pendiente · ⏸ Fuera de alcance · ❌ Falla
 
 ---
 
@@ -638,21 +638,22 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU7-CP01 | La vista de productos es lo primero que ve el cliente al iniciar sesión, y solo la ve un cliente (sin sesión lleva al login; otro rol, a su página) | Frontend (página) | 3 | ✅ Pasa (3, AB#350, PR #131) |
 | HU7-CP02 | Cada producto se muestra en una tarjeta con su nombre, imagen, categoría y valoración (estrellas y número de valoraciones; con avisos si no tiene imagen o valoraciones) | Frontend (componente y página) | 6 | ✅ Pasa (6, AB#350, PR #131) |
 | HU7-CP03 | Las tarjetas se colocan de dos en dos y de diez en diez: al llegar al final de la página (o con «Ver más productos») se cargan otras diez, hasta avisar de que no hay más; con estados de carga, error con reintento y catálogo vacío | Frontend (página) | 8 | ✅ Pasa (8, AB#350, PR #131) |
-| HU7-CP04 | Se puede buscar por nombre (sin distinguir mayúsculas ni tildes) y filtrar por categoría; cualquier cambio empieza de nuevo desde la primera página, y si nada coincide se ofrece limpiar los filtros | Frontend (página) | 5 | ✅ Pasa (5, AB#351, PR #131) |
+| HU7-CP04 | Se puede buscar por nombre (sin distinguir mayúsculas ni tildes) y filtrar por categoría; cualquier cambio empieza de nuevo desde la primera página, y si nada coincide se ofrece limpiar los filtros | Frontend (página) | 5 | ❌ Fallan 2 de 5 en `develop` (AB#351, PR #131, ver nota) |
 | HU7-CP05 | Se puede filtrar por valoración mínima (4, 3 o 2 estrellas o más) y volver a «Cualquiera» | Frontend (página) | 3 | ✅ Pasa (3, AB#351, PR #131) |
 | HU7-CP06 | Se puede ordenar por nombre y por valoración (no por categoría), ascendente y descendente; por defecto, nombre de la A a la Z | Frontend (página) | 5 | ✅ Pasa (5, AB#351, PR #131) |
 | HU7-CP07 | Arriba se muestran los diez productos mejor valorados como tarjetas (puesto, nombre y valoración) dentro de una banda curva sin marco; se ocultan con filtros activos, con pocos productos valorados o si falla | Frontend (componente y página) | 9 | ✅ Pasa (9, AB#350, PR #131) |
-| HU7-CP08 | Los productos son clicables: al pulsar una tarjeta del listado o de la banda animada se abre su ficha (imagen, nombre, categoría y valoración) y se cierra con Cerrar; con el teclado, desde la lista numerada de los mejores | Frontend (componente y página) | 8 | ✅ Pasa (8, AB#350, PR #131) |
+| HU7-CP08 | Las tarjetas de la banda animada de los mejores se pueden pulsar con el ratón y avisan con su producto; sin esa función no son botones (el detalle al que llevan es la HU8-CP06) | Frontend (componente) | 2 | ✅ Pasa (2, AB#350, PR #131) |
 | HU7-CP09 | Al cambiar el tamaño de la página la banda de los mejores se reinicia (una sola vez, cuando termina el cambio) para que las tarjetas no se solapen; si el tamaño no cambia, no se reinicia | Frontend (componente) | 3 | ✅ Pasa (3, AB#350, PR #131) |
 
 Notas:
 - **HU7-CP01 a CP09 (Sprint 2, frontend):** casos propuestos en las tasks AB#350 (vista de productos) y AB#351 (vista de filtrado y búsqueda), a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu7-busqueda-y-filtrado-de-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU7 (AB#69) en Azure Boards.
 - **Backend:** las tasks AB#352 (lógica de filtrado) y AB#353 (endpoint para obtener productos) están sin hacer; los tests de esta HU usan el contrato propuesto por el frontend y los mocks (MSW).
 - **Decisión del equipo:** no se ordena por categoría (no tiene sentido); el listado es un scroll infinito de diez en diez y no una paginación numérica; la selección son los diez mejor valorados, como tarjetas dentro de la animación y a todo el ancho de la página.
-- **HU7-CP08:** la ficha del producto es una ventana con lo que ya llega en el catálogo; no hay página ni endpoint de detalle para clientes. Las tarjetas de la banda solo se pulsan con el ratón; el teclado usa la lista numerada.
+- **HU7-CP08 (cambio en la HU8):** en la primera versión las tarjetas abrían una ventana de ficha (HU7-CP08, 8 tests). La HU8 la sustituye por la página de detalle: los tests del clic en el listado, la animación y la lista pasan a ser HU8-CP06 y la ventana (`ProductDialog`) se elimina. Quedan en HU7-CP08 los de la banda animada.
 - **HU7-CP09:** el reinicio al cambiar el tamaño se prueba con un `ResizeObserver` que dispara el test y con temporizadores simulados.
 - **Cambio de comportamiento:** `/products` ya no es una ruta pública: sin sesión lleva a `/login`. Se ha cambiado en consecuencia el test técnico `productos_sinSesion_llevaAIniciarSesion` de `LoginFlow.test.jsx` (antes `productos_sinSesion_esUnaRutaPublica`).
 - **Infraestructura de tests:** `test/setup.js` añade un `IntersectionObserver` que no avisa nunca (jsdom no lo trae); los tests del scroll infinito lo sustituyen por uno que dispara a mano.
+- **Fallo conocido (no es de esta HU):** `HU7-CP04: al elegir una categoría pide solo los productos de esa categoría` y `HU7-CP04: al filtrar vuelve a empezar desde la primera página, sin conservar lo cargado` fallan en `develop` desde que el desplegable de categorías de la HU31 sustituyó al selector nativo que usan; hay que adaptarlos al desplegable (helper `elegirCategoria`).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -677,8 +678,8 @@ Notas:
 | HU7-CP03 | `ProductsPage.test.jsx` | `HU7-CP03: si todavía no hay productos lo indica` | Frontend · página | AB#350 | PR #131 | ✅ |
 | HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al escribir en el buscador pide los productos con ese nombre` | Frontend · página | AB#351 | PR #131 | ✅ |
 | HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: la búsqueda no distingue mayúsculas ni tildes` | Frontend · página | AB#351 | PR #131 | ✅ |
-| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al elegir una categoría pide solo los productos de esa categoría` | Frontend · página | AB#351 | PR #131 | ✅ |
-| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al filtrar vuelve a empezar desde la primera página, sin conservar lo cargado` | Frontend · página | AB#351 | PR #131 | ✅ |
+| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al elegir una categoría pide solo los productos de esa categoría` | Frontend · página | AB#351 | PR #131 | ❌ |
+| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al filtrar vuelve a empezar desde la primera página, sin conservar lo cargado` | Frontend · página | AB#351 | PR #131 | ❌ |
 | HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: si ningún producto coincide lo indica y permite limpiar los filtros` | Frontend · página | AB#351 | PR #131 | ✅ |
 | HU7-CP05 | `ProductsPage.test.jsx` | `HU7-CP05: al elegir una valoración mínima pide solo los productos con esa valoración o más` | Frontend · página | AB#351 | PR #131 | ✅ |
 | HU7-CP05 | `ProductsPage.test.jsx` | `HU7-CP05: con la valoración mínima, todos los productos mostrados la alcanzan` | Frontend · página | AB#351 | PR #131 | ✅ |
@@ -697,14 +698,8 @@ Notas:
 | HU7-CP07 | `ProductsPage.test.jsx` | `HU7-CP07: con algún filtro activo la selección se oculta para centrarse en los resultados` | Frontend · página | AB#350 | PR #131 | ✅ |
 | HU7-CP07 | `ProductsPage.test.jsx` | `HU7-CP07: si hay menos de tres productos valorados no se muestra la selección` | Frontend · página | AB#350 | PR #131 | ✅ |
 | HU7-CP07 | `ProductsPage.test.jsx` | `HU7-CP07: si la selección no carga, el listado sigue funcionando sin ella` | Frontend · página | AB#350 | PR #131 | ✅ |
-| HU7-CP08 | `ProductCard.test.jsx` | `HU7-CP08: al pulsarla avisa con el producto, para abrir su ficha` | Frontend · componente | AB#350 | PR #131 | ✅ |
-| HU7-CP08 | `ProductCard.test.jsx` | `HU7-CP08: con el teclado se puede abrir igual que con el ratón` | Frontend · componente | AB#350 | PR #131 | ✅ |
 | HU7-CP08 | `TiltedGridHero.test.jsx` | `HU7-CP08: al pulsar una imagen de la banda avisa con esa imagen` | Frontend · componente | AB#350 | PR #131 | ✅ |
 | HU7-CP08 | `TiltedGridHero.test.jsx` | `HU7-CP08: sin onSelect las imágenes de la banda no son botones` | Frontend · componente | AB#350 | PR #131 | ✅ |
-| HU7-CP08 | `ProductsPage.test.jsx` | `HU7-CP08: al pulsar una tarjeta se abre su ficha con su imagen, nombre, categoría y valoración` | Frontend · página | AB#350 | PR #131 | ✅ |
-| HU7-CP08 | `ProductsPage.test.jsx` | `HU7-CP08: la ficha se cierra con el botón Cerrar y se vuelve al listado` | Frontend · página | AB#350 | PR #131 | ✅ |
-| HU7-CP08 | `ProductsPage.test.jsx` | `HU7-CP08: las tarjetas de la animación de los mejores también abren la ficha de su producto` | Frontend · página | AB#350 | PR #131 | ✅ |
-| HU7-CP08 | `ProductsPage.test.jsx` | `HU7-CP08: con el teclado se abren los productos de la selección de los mejores desde su lista` | Frontend · página | AB#350 | PR #131 | ✅ |
 | HU7-CP09 | `TiltedGridHero.test.jsx` | `HU7-CP09: al cambiar el tamaño de la página la banda se reinicia, para que las imágenes no se solapen` | Frontend · componente | AB#350 | PR #131 | ✅ |
 | HU7-CP09 | `TiltedGridHero.test.jsx` | `HU7-CP09: espera a que termine de cambiar el tamaño: varios cambios seguidos reinician una sola vez` | Frontend · componente | AB#350 | PR #131 | ✅ |
 | HU7-CP09 | `TiltedGridHero.test.jsx` | `HU7-CP09: si el tamaño no cambia, la banda sigue su curso sin reiniciarse` | Frontend · componente | AB#350 | PR #131 | ✅ |
@@ -713,6 +708,68 @@ Rutas de las clases de test (bajo `frontend/src/`):
 - `ProductCard.test.jsx`: `features/catalog/` (Vitest y React Testing Library)
 - `TiltedGridHero.test.jsx`: `components/` (Vitest y React Testing Library)
 - `ProductsPage.test.jsx`: `pages/` (Vitest, React Testing Library y MSW)
+
+---
+
+## HU8 · Consulta de detalle de producto
+
+### Tabla A · HU8 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU8-CP01 | El detalle de un producto solo lo ve un cliente (sin sesión lleva al login; otro rol, a su página) | Frontend (página) | 3 | 🔍 En revisión (3, AB#354, PR sin abrir) |
+| HU8-CP02 | El detalle muestra la imagen, el nombre, la categoría, el proveedor (nombre comercial), la descripción, la valoración (estrellas, nota y número de valoraciones) y una ficha con la información del producto | Frontend (página) | 5 | 🔍 En revisión (5, AB#354, PR sin abrir) |
+| HU8-CP03 | El precio es el que calcula el servidor para ese cliente: sin descuento, solo el precio; con descuento, el final, el original tachado, el porcentaje y lo que se ahorra | Frontend (página) | 3 | 🔍 En revisión (3, AB#354, PR sin abrir) |
+| HU8-CP04 | La disponibilidad se indica según las existencias: en stock, pocas unidades (con cuántas quedan, en singular o plural), agotado o no disponible | Frontend (página) | 5 | 🔍 En revisión (5, AB#354, PR sin abrir) |
+| HU8-CP05 | La página tiene estado de carga, de producto no encontrado (404, también para un producto no disponible) con enlace para volver, y de error con reintento | Frontend (página) | 4 | 🔍 En revisión (4, AB#354, PR sin abrir) |
+| HU8-CP06 | Las tarjetas del listado, de la animación y de la lista de los mejores llevan al detalle del producto (con el teclado también); desde el detalle se vuelve a los productos; la tarjeta es un enlace con el identificador codificado | Frontend (componente y página) | 7 | 🔍 En revisión (7, AB#354, PR sin abrir) |
+| HU8-CP07 | Un producto sin valoraciones, sin imagen o sin descripción se muestra con un aviso en lugar de un hueco | Frontend (página) | 3 | 🔍 En revisión (3, AB#354, PR sin abrir) |
+
+Notas:
+- **HU8-CP01 a CP07 (Sprint 2, frontend):** casos propuestos en la task AB#354 (vista de detalle de producto) a partir de lo pedido en ella y de las decisiones del equipo (`frontend/docs/hu8-detalle-producto.md`). Pendientes de confirmar con el equipo y de añadir a la HU8 (AB#70) en Azure Boards.
+- **Backend:** el endpoint `GET /api/products/{id}` no existe todavía; los tests usan el contrato propuesto por el frontend y los mocks (MSW).
+- **Decisión del equipo:** el servidor calcula el precio para el cliente (Estándar o Premium) y no hay botón de compra hasta que exista el carrito.
+- **HU8-CP06:** los tests del clic en el listado, la animación y la lista de los mejores eran HU7-CP08 cuando abrían una ventana de ficha; ahora navegan a la página de detalle.
+- **Test inestable conocido (no es de esta HU):** `HU7-CP03: al llegar otra vez al final carga las últimas y avisa de que no hay más` falla a veces al ejecutar toda la batería y pasa solo.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU8-CP01 | `ProductDetailPage.test.jsx` | `HU8-CP01: sin sesión, el detalle de un producto lleva a iniciar sesión` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP01 | `ProductDetailPage.test.jsx` | `HU8-CP01: un vendedor no ve el detalle del cliente: va a su página` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP01 | `ProductDetailPage.test.jsx` | `HU8-CP01: un cliente ve el detalle del producto con su nombre como título` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: muestra la imagen, la categoría, el proveedor y la descripción` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: muestra la valoración en estrellas, su nota y cuántas valoraciones tiene` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: con una sola valoración lo dice en singular` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: la ficha recoge la categoría, el proveedor, la disponibilidad y la referencia` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: con los datos de ejemplo muestra un producto completo` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP03 | `ProductDetailPage.test.jsx` | `HU8-CP03: sin descuento muestra solo el precio` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP03 | `ProductDetailPage.test.jsx` | `HU8-CP03: con descuento muestra el precio final, el original tachado, el porcentaje y lo que se ahorra` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP03 | `ProductDetailPage.test.jsx` | `HU8-CP03: el precio lo calcula el servidor: se muestra el que llega, no uno recalculado` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: con existencias muestra que está en stock` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: con pocas unidades avisa de cuántas quedan` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: con una sola unidad lo dice en singular` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: sin existencias muestra que está agotado` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: un producto no disponible lo indica aunque tenga existencias` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP05 | `ProductDetailPage.test.jsx` | `HU8-CP05: mientras carga muestra un indicador de carga` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP05 | `ProductDetailPage.test.jsx` | `HU8-CP05: si el producto no existe lo indica y ofrece volver a los productos` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP05 | `ProductDetailPage.test.jsx` | `HU8-CP05: si falla la carga avisa y permite reintentar` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP05 | `ProductDetailPage.test.jsx` | `HU8-CP05: un producto que el catálogo no ofrece (no disponible) se trata como no encontrado` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP06 | `ProductCard.test.jsx` | `HU8-CP06: la tarjeta es un enlace al detalle del producto` | Frontend · componente | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP06 | `ProductCard.test.jsx` | `HU8-CP06: el identificador del producto se codifica en la dirección` | Frontend · componente | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP06 | `ProductsPage.test.jsx` | `HU8-CP06: al pulsar una tarjeta del listado se abre el detalle de ese producto` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP06 | `ProductsPage.test.jsx` | `HU8-CP06: al pulsar una tarjeta de la animación de los mejores se abre el detalle de su producto` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP06 | `ProductsPage.test.jsx` | `HU8-CP06: con el teclado se llega al detalle desde la lista de los mejores` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP06 | `ProductsPage.test.jsx` | `HU8-CP06: desde el detalle, «Volver a los productos» lleva otra vez al listado` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP06 | `ProductDetailPage.test.jsx` | `HU8-CP06: desde el detalle se puede volver a los productos` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin valoraciones lo indica en lugar de mostrar estrellas` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin imagen muestra un marcador en su lugar` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin descripción lo indica` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+
+Rutas de las clases de test (bajo `frontend/src/`):
+- `ProductDetailPage.test.jsx` y `ProductsPage.test.jsx`: `pages/` (Vitest, React Testing Library y MSW)
+- `ProductCard.test.jsx`: `features/catalog/` (Vitest y React Testing Library)
 
 ---
 

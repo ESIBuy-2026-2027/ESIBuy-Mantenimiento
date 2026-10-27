@@ -24,14 +24,14 @@ function estrellaDe(posicion, valoracion) {
 }
 
 // Valoración media (de 0 a 5) como cinco estrellas. Para los lectores de pantalla es una sola imagen con su valor.
-export default function RatingStars({ value }) {
+export default function RatingStars({ value, size = 20 }) {
   const styles = useStyles()
 
   return (
     <span className={styles.stars} role="img" aria-label={`Valoración: ${formatRating(value)} de ${TOTAL_ESTRELLAS}`}>
       {Array.from({ length: TOTAL_ESTRELLAS }, (_, indice) => {
         const Estrella = estrellaDe(indice + 1, value)
-        return <Estrella key={indice} className={Estrella === Star20Regular ? styles.empty : undefined} />
+        return <Estrella key={indice} fontSize={size} className={Estrella === Star20Regular ? styles.empty : undefined} />
       })}
     </span>
   )
@@ -39,4 +39,6 @@ export default function RatingStars({ value }) {
 
 RatingStars.propTypes = {
   value: PropTypes.number.isRequired,
+  // Tamaño de las estrellas, en píxeles.
+  size: PropTypes.number,
 }
