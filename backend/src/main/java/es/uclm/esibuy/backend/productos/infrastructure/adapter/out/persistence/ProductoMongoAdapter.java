@@ -1,7 +1,9 @@
 package es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -69,14 +71,18 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
 
     @Override
     public ProductoPage buscarEnCatalogo(BuscarCatalogoQuery query) {
-        Criteria criterios = Criteria.where("disponible").is(true);
+        List<Criteria> filtros = new ArrayList<>();
+        filtros.add(Criteria.where("disponible").is(true));
+        if (query.busqueda() != null && !query.busqueda().isBlank()) {
+            filtros.add(Criteria.where("nombre").regex(patronSinTildes(query.busqueda()), "i"));
+        }
+        Criteria criterios = new Criteria().andOperator(filtros);
         long total = mongoTemplate.count(new Query(criterios), ProductoDocument.class);
-       List<Producto> productos = mongoTemplate.find(new Query(criterios).with(PageRequest.of(
+        List<Producto> productos = mongoTemplate.find(new Query(criterios).with(PageRequest.of(
                         query.pagina(), query.tamano())),
                         ProductoDocument.class).stream()
                 .map(mapper::aDominio)
                 .toList();
-
         return new ProductoPage(productos, query.pagina(), query.tamano(), total);
     }
 
@@ -100,6 +106,22 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
             criterios.add(Criteria.where("categoriaId").is(query.categoriaId()));
         }
         return new Criteria().andOperator(criterios);
+    }
+
+    private static String patronSinTildes(String texto) {
+        StringBuilder patron = new StringBuilder();
+        for (char caracter : texto.trim().toLowerCase(Locale.ROOT).toCharArray()) {
+            String base = Normalizer.normalize(String.valueOf(caracter), Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+            patron.append(switch (base) {
+                case "a" -> "[aáàäâ]";
+                case "e" -> "[eéèëê]";
+                case "i" -> "[iíìïî]";
+                case "o" -> "[oóòöô]";
+                case "u" -> "[uúùüû]";
+                default -> Pattern.quote(String.valueOf(caracter));
+            });
+        }
+        return patron.toString();
     }
 
     @Override
