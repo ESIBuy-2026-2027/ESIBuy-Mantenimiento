@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.categorias.infrastructure.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 import es.uclm.esibuy.backend.categorias.application.port.in.AdministracionCategoriasUseCase;
 import es.uclm.esibuy.backend.categorias.application.port.in.ConsultaCategoriasUseCase;
@@ -23,8 +24,9 @@ import es.uclm.esibuy.backend.productos.application.port.in.ConteoProductosUseCa
 public class CategoriasConfig {
 
     @Bean
-    CategoriaRepositoryPort categoriaRepositoryPort(CategoriaMongoRepository categoriaMongoRepository) {
-        return new CategoriaMongoAdapter(categoriaMongoRepository, new CategoriaDocumentMapper());
+    CategoriaRepositoryPort categoriaRepositoryPort(CategoriaMongoRepository categoriaMongoRepository,
+            MongoTemplate mongoTemplate) {
+        return new CategoriaMongoAdapter(categoriaMongoRepository, new CategoriaDocumentMapper(), mongoTemplate);
     }
 
     @Bean
