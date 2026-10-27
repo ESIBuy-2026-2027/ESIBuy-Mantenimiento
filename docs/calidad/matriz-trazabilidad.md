@@ -1527,6 +1527,44 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU40 · Crear categorías
+
+### Tabla A · HU40 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU40-CP01 | Una categoría se crea con nombre, descripción y estado; una nueva nace ACTIVA y sin id | Unitario (dominio) | 2 | 🔍 En revisión |
+| HU40-CP02 | El nombre es obligatorio, se guarda sin espacios en los extremos y admite hasta 50 caracteres | Unitario (dominio) | 2 | 🔍 En revisión |
+| HU40-CP03 | La descripción es opcional y admite hasta 200 caracteres | Unitario (dominio) | 1 | 🔍 En revisión |
+| HU40-CP04 | El estado es obligatorio; la descripción y el estado se guardan en MongoDB, y una categoría guardada sin ellos se lee ACTIVA y sin descripción | Unitario + integración MongoDB | 5 | 🔍 En revisión |
+
+Notas:
+- **HU40-CP01 a CP04:** casos propuestos en la T321 (AB#321), sin contrato del frontend todavía. Pendientes de confirmar con el equipo y de añadir a la HU40 en Azure Boards.
+- **Backend (T321):** entidad `Categoria` (`id`, `nombre`, `descripcion`, `estado`), `EstadoCategoria` (`ACTIVA`, `INACTIVA`), `CategoriaInvalidaException` y `CategoriaDocumentMapper`. El validador de la colección `categorias` aplica los mismos límites. `GET /api/categorias` no cambia (sigue devolviendo `id` y `nombre`).
+- **Pendiente:** la consulta con la descripción (T331 y T332) y la creación (T322 y T323). Si una categoría `INACTIVA` debe dejar de salir en la consulta lo decidirá la HU39 o la HU42.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU40-CP01 | `CategoriaTest` | `creaUnaCategoriaConDatosCorrectos` | Dominio | AB#321 | PR por abrir | 🔍 |
+| HU40-CP01 | `CategoriaTest` | `unaCategoriaNuevaNaceActivaYSinId` | Dominio | AB#321 | PR por abrir | 🔍 |
+| HU40-CP02 | `CategoriaTest` | `rechazaUnaCategoriaSinNombre` (nulo, vacío y en blanco) | Dominio | AB#321 | PR por abrir | 🔍 |
+| HU40-CP02 | `CategoriaTest` | `elNombreSeRecortaYAdmiteHasta50Caracteres` | Dominio | AB#321 | PR por abrir | 🔍 |
+| HU40-CP03 | `CategoriaTest` | `laDescripcionEsOpcionalYAdmiteHasta200Caracteres` | Dominio | AB#321 | PR por abrir | 🔍 |
+| HU40-CP04 | `CategoriaTest` | `rechazaUnaCategoriaSinEstado` | Dominio | AB#321 | PR por abrir | 🔍 |
+| HU40-CP04 | `CategoriaDocumentMapperTest` | `convierteCategoriaEnDocumento` | Infraestructura | AB#321 | PR por abrir | 🔍 |
+| HU40-CP04 | `CategoriaDocumentMapperTest` | `convierteDocumentoEnCategoria` | Infraestructura | AB#321 | PR por abrir | 🔍 |
+| HU40-CP04 | `CategoriaDocumentMapperTest` | `unDocumentoSinEstadoNiDescripcionSeLeeActivo` | Infraestructura | AB#321 | PR por abrir | 🔍 |
+| HU40-CP04 | `CategoriaMongoAdapterTest` | `guardaYLeeLaDescripcionYElEstado` | Infraestructura | AB#321 | PR por abrir | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `CategoriaTest`: `categorias/domain/model/` (JUnit, sin Spring)
+- `CategoriaDocumentMapperTest`: `categorias/infrastructure/adapter/out/persistence/` (JUnit, sin Spring)
+- `CategoriaMongoAdapterTest`: `categorias/infrastructure/adapter/out/persistence/` (con Testcontainers)
+
+---
+
 ## Tests técnicos sin caso de prueba
 
 Tests que no validan una HU concreta.
