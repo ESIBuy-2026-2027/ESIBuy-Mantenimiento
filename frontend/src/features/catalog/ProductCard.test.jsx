@@ -67,7 +67,7 @@ describe('ProductCard', () => {
   })
 
   it('HU7-CP02: si no se conoce la categoría muestra un guion', () => {
-    pintar(PRODUCTO, {}, undefined)
+    pintar(PRODUCTO, {}, null)
 
     expect(screen.getByText('—')).toBeInTheDocument()
   })

@@ -1,5 +1,6 @@
 import { makeStyles, tokens } from '@fluentui/react-components'
 import { Outlet } from 'react-router-dom'
+import CartProvider from '../features/cart/CartProvider'
 import AppHeader from './AppHeader'
 
 const useStyles = makeStyles({
@@ -15,9 +16,11 @@ export default function AppLayout() {
   const styles = useStyles()
 
   return (
-    <div className={styles.page}>
-      <AppHeader />
-      <Outlet />
-    </div>
+    <CartProvider>
+      <div className={styles.page}>
+        <AppHeader />
+        <Outlet />
+      </div>
+    </CartProvider>
   )
 }
