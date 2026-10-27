@@ -21,7 +21,9 @@ async function abrirPasarela(productos = CARRITO_DE_DOS_PROVEEDORES) {
   await abrirSesionPorApi(CLIENTE)
   for (const [id, cantidad] of productos) await addCartItem(id, cantidad)
   renderApp('/checkout')
-  return screen.findByRole('heading', { level: 1, name: /pasarela de pago/i })
+  await screen.findByRole('heading', { level: 1, name: /pasarela de pago/i })
+  // El carrito llega después del título.
+  return screen.findByRole('region', { name: /resumen del pago/i })
 }
 
 const botonDePago = () => screen.getByRole('button', { name: /simular pago/i })
@@ -107,6 +109,8 @@ describe('CheckoutPage (HU10): simular el pago', () => {
     await user.click(botonDePago())
 
     expect(screen.getByRole('button', { name: /procesando pago/i })).toBeDisabled()
+    // Se espera a que termine para que el pago no siga en marcha durante el test siguiente.
+    await screen.findByRole('heading', { level: 1, name: /pago realizado/i }, PAGO)
   })
 
   it('HU10-CP04: tras pagar se confirma un pedido por cada proveedor', async () => {
@@ -201,8 +205,8 @@ describe('CheckoutPage (HU10): si falla algún pedido', () => {
 
     await user.click(await screen.findByRole('button', { name: /reintentar el pago/i }))
 
-    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument(), PAGO)
-    expect(screen.getAllByRole('listitem', { name: /pedido/i })).toHaveLength(2)
+    await waitFor(() => expect(screen.getAllByRole('listitem', { name: /pedido/i })).toHaveLength(2), PAGO)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(await screen.findByRole('button', { name: 'Carrito, vacío' })).toBeInTheDocument()
   })
 })
