@@ -81,8 +81,9 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         }
         Criteria criterios = new Criteria().andOperator(filtros);
         long total = mongoTemplate.count(new Query(criterios), ProductoDocument.class);
+        Sort.Direction direccion = query.descendente() ? Sort.Direction.DESC : Sort.Direction.ASC;
         List<Producto> productos = mongoTemplate.find(new Query(criterios).with(PageRequest.of(
-                        query.pagina(), query.tamano())),
+                        query.pagina(), query.tamano(), Sort.by(direccion, "nombre"))),
                         ProductoDocument.class).stream()
                 .map(mapper::aDominio)
                 .toList();
