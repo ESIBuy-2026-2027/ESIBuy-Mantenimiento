@@ -87,6 +87,16 @@ class SecurityConfigTest {
     }
 
     @Test
+    @DisplayName("HU43-CP03: la cookie del token CSRF solo viaja por HTTPS y no se envía desde otros sitios")
+    void laCookieCsrfEsSecureYSameSiteStrict() throws Exception {
+        // Sigue legible por el frontend (sin HttpOnly), pero Secure y SameSite=Strict como la de sesión (T319)
+        mockMvc.perform(get(RUTA_ADMINISTRACION))
+                .andExpect(cookie().secure(COOKIE_CSRF, true))
+                .andExpect(cookie().sameSite(COOKIE_CSRF, "Strict"))
+                .andExpect(cookie().httpOnly(COOKIE_CSRF, false));
+    }
+
+    @Test
     @DisplayName("Seguridad: un POST sin token CSRF se rechaza con 403")
     void unPostSinTokenCsrfSeRechaza() throws Exception {
         mockMvc.perform(post(RUTA_LOGIN)).andExpect(status().isForbidden());
