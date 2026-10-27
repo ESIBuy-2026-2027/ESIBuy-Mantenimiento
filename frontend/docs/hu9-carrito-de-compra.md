@@ -5,7 +5,7 @@ Documento para entender cómo se añade un producto al carrito y cómo se ve el 
 - **Fecha:** 27 de octubre de 2026
 - **HU:** HU9 · Gestión del carrito de compra (AB#71)
 - **Tasks:** AB#383 (frontend: vista añadir al carrito) y AB#384 (frontend: vista de carrito)
-- **Rama:** `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (incluye también la pasarela de pago de la HU10, AB#401; ver `docs/hu10-pasarela-de-pago.md`)
+- **Rama:** `feature/US9-T383-T384-carrito-de-compra` (el botón «Proceder al pago» y la pasarela de pago van en la rama de la HU10, `feature/US10-T401-pasarela-de-pago`; ver `docs/hu10-pasarela-de-pago.md`)
 - **Metodología:** TDD. Cada ciclo tiene su commit de rojo (`test(front)`) y su commit de verde (`feat(front)`)
 - **Depende de:** `docs/hu7-busqueda-y-filtrado-de-productos.md` (las tarjetas), `docs/hu8-detalle-producto.md` (el detalle) y `docs/mocks-msw.md` (mocks)
 - **Backend:** las tasks AB#385 a AB#390 (entidad del carrito, endpoints de añadir y eliminar, lógica de añadir y eliminar productos y limpieza de carritos) están sin hacer. El contrato de la sección 5 lo **propone el frontend**.

@@ -5,7 +5,7 @@ Documento para entender la pasarela de pago: qué muestra, cómo se crean los pe
 - **Fecha:** 27 de octubre de 2026
 - **HU:** HU10 · Realización de pedido (AB#72)
 - **Task:** AB#401 (frontend: vista pasarela de pago)
-- **Rama:** `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (comparte rama con el carrito de la HU9, AB#383 y AB#384; ver `docs/hu9-carrito-de-compra.md`)
+- **Rama:** `feature/US10-T401-pasarela-de-pago` (parte de la rama del carrito de la HU9, `feature/US9-T383-T384-carrito-de-compra`; ver `docs/hu9-carrito-de-compra.md`)
 - **Metodología:** TDD (commit de rojo `test(front)` y de verde `feat(front)`)
 - **Depende de:** `docs/hu9-carrito-de-compra.md` (el carrito del que sale la compra)
 - **Backend:** las tasks AB#380 a AB#382 (entidad pedido, endpoint de crear pedido y lógica de creación) están sin hacer. El contrato de la sección 5 lo **propone el frontend**.

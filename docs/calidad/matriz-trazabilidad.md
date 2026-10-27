@@ -800,49 +800,49 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU9-CP01 | `ProductCard.test.jsx` | `HU9-CP01: la tarjeta muestra el precio del producto` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP01 | `ProductCard.test.jsx` | `HU9-CP01: con descuento muestra el precio final, el original tachado y el porcentaje` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP01 | `ProductsPage.test.jsx` | `HU9-CP01: las tarjetas del catálogo muestran el precio de cada producto, con su descuento` | Frontend · página | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP02 | `AddToCartButton.test.jsx` | `HU9-CP02: al pulsarlo añade una unidad del producto y confirma con «Añadido»` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP02 | `AddToCartButton.test.jsx` | `HU9-CP02: añade la cantidad que se le indica` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP02 | `AddToCartButton.test.jsx` | `HU9-CP02: mientras se añade queda desactivado, para no enviar el mismo producto dos veces` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP02 | `AddToCartButton.test.jsx` | `HU9-CP02: si no hay existencias suficientes lo avisa y se puede volver a intentar` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP02 | `AddToCartButton.test.jsx` | `HU9-CP02: si falla por otro motivo avisa de que no se ha podido añadir` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP02 | `AddToCartButton.test.jsx` | `HU9-CP02: el aviso desaparece al volver a intentarlo` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP02 | `AddToCartButton.test.jsx` | `HU9-CP02: un producto agotado no se puede añadir` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP02 | `AddToCartButton.test.jsx` | `HU9-CP02: un producto no disponible no se puede añadir` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP02 | `ProductCard.test.jsx` | `HU9-CP02: la tarjeta tiene un botón para añadir una unidad al carrito` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP02 | `ProductCard.test.jsx` | `HU9-CP02: el botón no forma parte del enlace, así que añadir no abre el detalle` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP02 | `ProductsPage.test.jsx` | `HU9-CP02: al pulsar «Añadir al carrito» en una tarjeta se envía ese producto al carrito` | Frontend · página | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP02 | `ProductsPage.test.jsx` | `HU9-CP02: si el servidor dice que no hay existencias, la tarjeta lo avisa` | Frontend · página | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP03 | `ProductDetailPage.test.jsx` | `HU9-CP03: el detalle tiene un botón para añadir el producto al carrito` | Frontend · página | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP03 | `ProductDetailPage.test.jsx` | `HU9-CP03: se puede elegir la cantidad antes de añadir` | Frontend · página | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP03 | `ProductDetailPage.test.jsx` | `HU9-CP03: la cantidad no baja de una unidad` | Frontend · página | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP03 | `ProductDetailPage.test.jsx` | `HU9-CP03: la cantidad no puede superar las existencias` | Frontend · página | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP03 | `ProductDetailPage.test.jsx` | `HU9-CP03: un producto agotado no se puede añadir ni se elige cantidad` | Frontend · página | AB#383 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP04 | `CartWidget.test.jsx` | `HU9-CP04: quien no tiene carrito (no es cliente) no ve el botón` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP04 | `CartWidget.test.jsx` | `HU9-CP04: un cliente ve el carrito y un vendedor no` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: indica cuántos productos hay en el carrito` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: con un solo producto lo dice en singular` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: con el carrito vacío lo indica` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: el panel está cerrado hasta que se pulsa el botón` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: separa los productos por proveedor, con una cabecera «Proveedor: total» por cada uno` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: cada proveedor agrupa sus propios productos` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: cada producto muestra su cantidad y lo que cuesta ese producto` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: cada producto es un enlace a su detalle` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: el panel se cierra con el botón Cerrar y con Escape` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: con el carrito vacío lo indica y no ofrece pagar` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: un producto añadido desde el listado aparece en el carrito, bajo su proveedor` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP06 | `CartWidget.test.jsx` | `HU9-CP06: se puede subir y bajar la cantidad de un producto` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP06 | `CartWidget.test.jsx` | `HU9-CP06: no se puede pedir más de lo que hay en existencias` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP06 | `CartWidget.test.jsx` | `HU9-CP06: se puede quitar un producto del carrito` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP06 | `CartWidget.test.jsx` | `HU9-CP06: se puede vaciar el carrito entero` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP06 | `CartWidget.test.jsx` | `HU9-CP06: si el servidor rechaza la cantidad por existencias, lo avisa` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP06 | `CartWidget.test.jsx` | `HU9-CP06: si falla al quitar un producto, avisa de que no se ha podido` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP07 | `CartWidget.test.jsx` | `HU9-CP07: mientras carga el carrito lo indica` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP07 | `CartWidget.test.jsx` | `HU9-CP07: si no carga, avisa y permite reintentar` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP07 | `CartWidget.test.jsx` | `HU9-CP07: el carrito vive en el servidor: al recargar la página sigue ahí` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU9-CP08 | `CartWidget.test.jsx` | `HU9-CP08: «Proceder al pago» lleva a la pasarela de pago` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU9-CP01 | `ProductCard.test.jsx` | `HU9-CP01: la tarjeta muestra el precio del producto` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP01 | `ProductCard.test.jsx` | `HU9-CP01: con descuento muestra el precio final, el original tachado y el porcentaje` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP01 | `ProductsPage.test.jsx` | `HU9-CP01: las tarjetas del catálogo muestran el precio de cada producto, con su descuento` | Frontend · página | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP02 | `AddToCartButton.test.jsx` | `HU9-CP02: al pulsarlo añade una unidad del producto y confirma con «Añadido»` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP02 | `AddToCartButton.test.jsx` | `HU9-CP02: añade la cantidad que se le indica` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP02 | `AddToCartButton.test.jsx` | `HU9-CP02: mientras se añade queda desactivado, para no enviar el mismo producto dos veces` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP02 | `AddToCartButton.test.jsx` | `HU9-CP02: si no hay existencias suficientes lo avisa y se puede volver a intentar` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP02 | `AddToCartButton.test.jsx` | `HU9-CP02: si falla por otro motivo avisa de que no se ha podido añadir` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP02 | `AddToCartButton.test.jsx` | `HU9-CP02: el aviso desaparece al volver a intentarlo` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP02 | `AddToCartButton.test.jsx` | `HU9-CP02: un producto agotado no se puede añadir` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP02 | `AddToCartButton.test.jsx` | `HU9-CP02: un producto no disponible no se puede añadir` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP02 | `ProductCard.test.jsx` | `HU9-CP02: la tarjeta tiene un botón para añadir una unidad al carrito` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP02 | `ProductCard.test.jsx` | `HU9-CP02: el botón no forma parte del enlace, así que añadir no abre el detalle` | Frontend · componente | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP02 | `ProductsPage.test.jsx` | `HU9-CP02: al pulsar «Añadir al carrito» en una tarjeta se envía ese producto al carrito` | Frontend · página | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP02 | `ProductsPage.test.jsx` | `HU9-CP02: si el servidor dice que no hay existencias, la tarjeta lo avisa` | Frontend · página | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP03 | `ProductDetailPage.test.jsx` | `HU9-CP03: el detalle tiene un botón para añadir el producto al carrito` | Frontend · página | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP03 | `ProductDetailPage.test.jsx` | `HU9-CP03: se puede elegir la cantidad antes de añadir` | Frontend · página | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP03 | `ProductDetailPage.test.jsx` | `HU9-CP03: la cantidad no baja de una unidad` | Frontend · página | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP03 | `ProductDetailPage.test.jsx` | `HU9-CP03: la cantidad no puede superar las existencias` | Frontend · página | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP03 | `ProductDetailPage.test.jsx` | `HU9-CP03: un producto agotado no se puede añadir ni se elige cantidad` | Frontend · página | AB#383 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP04 | `CartWidget.test.jsx` | `HU9-CP04: quien no tiene carrito (no es cliente) no ve el botón` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP04 | `CartWidget.test.jsx` | `HU9-CP04: un cliente ve el carrito y un vendedor no` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: indica cuántos productos hay en el carrito` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: con un solo producto lo dice en singular` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: con el carrito vacío lo indica` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: el panel está cerrado hasta que se pulsa el botón` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: separa los productos por proveedor, con una cabecera «Proveedor: total» por cada uno` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: cada proveedor agrupa sus propios productos` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: cada producto muestra su cantidad y lo que cuesta ese producto` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: cada producto es un enlace a su detalle` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: el panel se cierra con el botón Cerrar y con Escape` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: con el carrito vacío lo indica y no ofrece pagar` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP05 | `CartWidget.test.jsx` | `HU9-CP05: un producto añadido desde el listado aparece en el carrito, bajo su proveedor` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP06 | `CartWidget.test.jsx` | `HU9-CP06: se puede subir y bajar la cantidad de un producto` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP06 | `CartWidget.test.jsx` | `HU9-CP06: no se puede pedir más de lo que hay en existencias` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP06 | `CartWidget.test.jsx` | `HU9-CP06: se puede quitar un producto del carrito` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP06 | `CartWidget.test.jsx` | `HU9-CP06: se puede vaciar el carrito entero` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP06 | `CartWidget.test.jsx` | `HU9-CP06: si el servidor rechaza la cantidad por existencias, lo avisa` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP06 | `CartWidget.test.jsx` | `HU9-CP06: si falla al quitar un producto, avisa de que no se ha podido` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP07 | `CartWidget.test.jsx` | `HU9-CP07: mientras carga el carrito lo indica` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP07 | `CartWidget.test.jsx` | `HU9-CP07: si no carga, avisa y permite reintentar` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP07 | `CartWidget.test.jsx` | `HU9-CP07: el carrito vive en el servidor: al recargar la página sigue ahí` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP08 | `CartWidget.test.jsx` | `HU9-CP08: «Proceder al pago» lleva a la pasarela de pago` | Frontend · componente | AB#384 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `AddToCartButton.test.jsx` y `CartWidget.test.jsx`: `features/cart/` (Vitest, React Testing Library y MSW)
@@ -874,21 +874,21 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU10-CP01 | `CheckoutPage.test.jsx` | `HU10-CP01: sin sesión, la pasarela de pago lleva a iniciar sesión` | Frontend · página | AB#401 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU10-CP01 | `CheckoutPage.test.jsx` | `HU10-CP01: un vendedor no ve la pasarela del cliente: va a su página` | Frontend · página | AB#401 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU10-CP01 | `CheckoutPage.test.jsx` | `HU10-CP01: desde el carrito, «Proceder al pago» lleva a la pasarela` | Frontend · página | AB#401 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU10-CP02 | `CheckoutPage.test.jsx` | `HU10-CP02: muestra un pedido por proveedor, con la cabecera «Proveedor: total»` | Frontend · página | AB#401 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU10-CP02 | `CheckoutPage.test.jsx` | `HU10-CP02: cada pedido lista solo los productos de su proveedor, con cantidad y precio` | Frontend · página | AB#401 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU10-CP02 | `CheckoutPage.test.jsx` | `HU10-CP02: avisa de que se hace un pedido independiente por cada proveedor` | Frontend · página | AB#401 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU10-CP02 | `CheckoutPage.test.jsx` | `HU10-CP02: muestra el importe total a pagar` | Frontend · página | AB#401 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU10-CP03 | `CheckoutPage.test.jsx` | `HU10-CP03: con el carrito vacío lo indica, no ofrece pagar y permite volver a los productos` | Frontend · página | AB#401 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU10-CP04 | `CheckoutPage.test.jsx` | `HU10-CP04: mientras se procesa el pago lo indica y no deja pulsar otra vez` | Frontend · página | AB#401 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU10-CP04 | `CheckoutPage.test.jsx` | `HU10-CP04: tras pagar se confirma un pedido por cada proveedor` | Frontend · página | AB#401 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU10-CP04 | `CheckoutPage.test.jsx` | `HU10-CP04: tras pagar el carrito queda vacío` | Frontend · página | AB#401 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: confirma los pedidos que sí se han creado e indica cuál ha fallado` | Frontend · página | AB#401 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: la compra del pedido que ha fallado se conserva en el carrito` | Frontend · página | AB#401 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: se puede reintentar el pago de lo que falló, sin repetir lo ya pagado` | Frontend · página | AB#401 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
-| HU10-CP06 | `CheckoutPage.test.jsx` | `HU10-CP06: cada pedido se pide con un solo proveedor, uno detrás de otro` | Frontend · página | AB#401 | Rama `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP01 | `CheckoutPage.test.jsx` | `HU10-CP01: sin sesión, la pasarela de pago lleva a iniciar sesión` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP01 | `CheckoutPage.test.jsx` | `HU10-CP01: un vendedor no ve la pasarela del cliente: va a su página` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP01 | `CheckoutPage.test.jsx` | `HU10-CP01: desde el carrito, «Proceder al pago» lleva a la pasarela` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP02 | `CheckoutPage.test.jsx` | `HU10-CP02: muestra un pedido por proveedor, con la cabecera «Proveedor: total»` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP02 | `CheckoutPage.test.jsx` | `HU10-CP02: cada pedido lista solo los productos de su proveedor, con cantidad y precio` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP02 | `CheckoutPage.test.jsx` | `HU10-CP02: avisa de que se hace un pedido independiente por cada proveedor` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP02 | `CheckoutPage.test.jsx` | `HU10-CP02: muestra el importe total a pagar` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP03 | `CheckoutPage.test.jsx` | `HU10-CP03: con el carrito vacío lo indica, no ofrece pagar y permite volver a los productos` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP04 | `CheckoutPage.test.jsx` | `HU10-CP04: mientras se procesa el pago lo indica y no deja pulsar otra vez` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP04 | `CheckoutPage.test.jsx` | `HU10-CP04: tras pagar se confirma un pedido por cada proveedor` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP04 | `CheckoutPage.test.jsx` | `HU10-CP04: tras pagar el carrito queda vacío` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: confirma los pedidos que sí se han creado e indica cuál ha fallado` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: la compra del pedido que ha fallado se conserva en el carrito` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: se puede reintentar el pago de lo que falló, sin repetir lo ya pagado` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP06 | `CheckoutPage.test.jsx` | `HU10-CP06: cada pedido se pide con un solo proveedor, uno detrás de otro` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
 
 Ruta de la clase de test (bajo `frontend/src/`):
 - `CheckoutPage.test.jsx`: `pages/` (Vitest, React Testing Library y MSW)
