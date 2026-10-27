@@ -31,7 +31,8 @@ class IntersectionObserverFalso {
   }
 }
 
-function llegarAlFinal() {
+async function llegarAlFinal() {
+  await waitFor(() => expect(observadores.some((observador) => observador.elementos.size > 0)).toBe(true))
   act(() => {
     for (const observador of [...observadores]) {
       if (observador.elementos.size > 0) observador.callback([{ isIntersecting: true }])
@@ -123,7 +124,7 @@ describe('ProductsPage (HU7): vista de productos del cliente', () => {
     await esperarTarjetas(10)
     const primera = tarjetas()[0]
 
-    llegarAlFinal()
+    await llegarAlFinal()
 
     await esperarTarjetas(20)
     expect(tarjetas()[0]).toBe(primera)
@@ -132,10 +133,10 @@ describe('ProductsPage (HU7): vista de productos del cliente', () => {
   it('HU7-CP03: al llegar otra vez al final carga las últimas y avisa de que no hay más', async () => {
     await abrirCatalogo()
     await esperarTarjetas(10)
-    llegarAlFinal()
+    await llegarAlFinal()
     await esperarTarjetas(20)
 
-    llegarAlFinal()
+    await llegarAlFinal()
 
     await esperarTarjetas(23)
     expect(screen.getByText(/has visto todos los productos/i)).toBeInTheDocument()
@@ -167,7 +168,7 @@ describe('ProductsPage (HU7): vista de productos del cliente', () => {
     await abrirCatalogo()
     await esperarTarjetas(10)
 
-    llegarAlFinal()
+    await llegarAlFinal()
 
     expect(await screen.findByText(/no se han podido cargar más productos/i)).toBeInTheDocument()
     expect(tarjetas()).toHaveLength(10)
@@ -231,6 +232,11 @@ const valoracionesDeLasTarjetas = () =>
     return estrellas ? Number(estrellas.getAttribute('aria-label').match(/(\d),(\d)/).slice(1).join('.')) : 0
   })
 
+async function elegirCategoria(user, nombre) {
+  await user.click(await screen.findByRole('combobox', { name: /categoría/i }))
+  await user.click(await screen.findByRole('option', { name: nombre }))
+}
+
 describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
   it('HU7-CP06: por defecto pide diez productos ordenados por nombre de la A a la Z y sin filtros', async () => {
     const peticiones = capturarPeticiones()
@@ -271,9 +277,8 @@ describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
     const user = userEvent.setup()
     const peticiones = capturarPeticiones()
     await abrirCatalogo()
-    await screen.findByRole('option', { name: 'Hogar' })
 
-    await user.selectOptions(screen.getByRole('combobox', { name: /categoría/i }), 'Hogar')
+    await elegirCategoria(user, 'Hogar')
 
     await waitFor(() => expect(ultima(peticiones).get('category')).toBe('cat-2'))
   })
@@ -282,10 +287,10 @@ describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
     const user = userEvent.setup()
     await abrirCatalogo()
     await esperarTarjetas(10)
-    llegarAlFinal()
+    await llegarAlFinal()
     await esperarTarjetas(20)
 
-    await user.selectOptions(screen.getByRole('combobox', { name: /categoría/i }), 'Hogar')
+    await elegirCategoria(user, 'Hogar')
 
     await esperarTarjetas(9)
   })

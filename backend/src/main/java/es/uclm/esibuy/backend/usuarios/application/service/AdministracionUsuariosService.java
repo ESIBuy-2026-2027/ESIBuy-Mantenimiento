@@ -104,6 +104,21 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         return vendedor;
     }
 
+    @Override
+    public void eliminarAdministrador(String usuarioId, String emailAdministrador) {
+        Usuario administrador = buscar(usuarioId);
+        if (administrador.getRol() != Rol.ADMINISTRADOR) {
+            throw new UsuarioNoEncontradoException("El administrador no existe");
+        }
+        if (administrador.getEmail().valor().equalsIgnoreCase(emailAdministrador)) {
+            throw new AutodesactivacionNoPermitidaException("Un administrador no puede eliminar su propia cuenta");
+        }
+        if (administrador.estaActivo() && usuarioRepository.contarAdministradoresActivos() <= 1) {
+            throw new UltimoAdministradorActivoException("No se puede eliminar al último administrador activo");
+        }
+        usuarioRepository.eliminarPorId(usuarioId);
+    }
+
     // Solo se comprueba lo que cambia: si no, la cuenta chocaría consigo misma. El DNI es único por rol
     // (índice rol_dni) y el nombre comercial, entre todos los vendedores.
     private void exigirDatosUnicosLibres(Usuario usuario, PerfilUsuario nuevoPerfil) {

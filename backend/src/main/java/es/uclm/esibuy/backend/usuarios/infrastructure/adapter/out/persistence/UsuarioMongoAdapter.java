@@ -229,4 +229,9 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
         }
         return criterios.isEmpty() ? new Criteria() : new Criteria().andOperator(criterios);
     }
+
+    @Override
+    public void eliminarPorId(String id) {
+        repository.deleteById(id);
+    }
 }

@@ -629,6 +629,40 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU4 · Visión de perfil
+
+### Tabla A · HU4 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU4-CP01 | Un cliente consulta su perfil (`GET /api/perfil`) y recibe sus datos personales y los de cliente, sin los de vendedor | Unitario + controlador | 2 | ✅ Pasa |
+| HU4-CP02 | Un vendedor consulta su perfil y recibe sus datos personales y los de vendedor, sin los de cliente | Controlador | 1 | ✅ Pasa |
+| HU4-CP03 | El perfil no expone la contraseña ni datos internos de la cuenta (estado, intentos, bloqueo) | Controlador | 1 | ✅ Pasa |
+| HU4-CP04 | Solo el cliente y el vendedor consultan su perfil: administrador 403, sin sesión 401, y una sesión de un usuario que ya no existe no es válida | Unitario + controlador | 3 | ✅ Pasa |
+
+Notas:
+- **HU4-CP01 a CP04:** casos propuestos en la T297 (AB#297), a partir del criterio de aceptación «cuando el usuario accede a su panel de perfil puede visualizar sus datos personales». Pendientes de confirmar con el equipo y de añadir a la HU4 en Azure Boards.
+- **Endpoint (T297):** `GET /api/perfil` → `{id, nombre, apellidos, email, rol, fechaAlta, dni, telefono, avatar}` y, según el rol, `fechaNacimiento` y `tipoCliente` (cliente) o `nombreComercial` y `categoriaPrincipalId` (vendedor). Los campos vacíos no aparecen. El usuario sale de la sesión (su email), nunca de la petición. Solo para `CLIENTE` y `VENDEDOR` (`SecurityConfig`). Es el contrato de la vista del frontend (T296).
+- **Pendiente:** el criterio «el usuario debe dar al botón de guardar para modificar sus datos personales» es de la HU45 (edición de perfil). Aclarar con el equipo qué incluyen sus tasks 101 (endpoint consultar/editar perfil) y 298 (lógica para la obtención segura de datos), que se solapan con la T297.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU4-CP01 | `GestionPerfilServiceTest` | `consultarPerfilDevuelveElUsuarioDelCorreo` | Aplicación | AB#297 | PR #140 | ✅ |
+| HU4-CP01 | `PerfilControllerTest` | `unClienteRecibeSusDatos` | Infraestructura | AB#297 | PR #140 | ✅ |
+| HU4-CP02 | `PerfilControllerTest` | `unVendedorRecibeSusDatos` | Infraestructura | AB#297 | PR #140 | ✅ |
+| HU4-CP03 | `PerfilControllerTest` | `elPerfilNoExponeDatosSensibles` | Infraestructura | AB#297 | PR #140 | ✅ |
+| HU4-CP04 | `GestionPerfilServiceTest` | `consultarPerfilDeUnCorreoQueNoExisteLanzaExcepcion` | Aplicación | AB#297 | PR #140 | ✅ |
+| HU4-CP04 | `PerfilControllerTest` | `unAdministradorRecibe403` | Infraestructura | AB#297 | PR #140 | ✅ |
+| HU4-CP04 | `PerfilControllerTest` | `sinSesionRecibe401` | Infraestructura | AB#297 | PR #140 | ✅ |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `GestionPerfilServiceTest`: `usuarios/application/service/` (JUnit y Mockito, sin Spring)
+- `PerfilControllerTest`: `usuarios/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
+
+---
+
 ## HU7 · Búsqueda y filtrado de productos
 
 ### Tabla A · HU7 ↔ casos de prueba
@@ -638,7 +672,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU7-CP01 | La vista de productos es lo primero que ve el cliente al iniciar sesión, y solo la ve un cliente (sin sesión lleva al login; otro rol, a su página) | Frontend (página) | 3 | ✅ Pasa (3, AB#350, PR #131) |
 | HU7-CP02 | Cada producto se muestra en una tarjeta con su nombre, imagen, categoría y valoración (estrellas y número de valoraciones; con avisos si no tiene imagen o valoraciones) | Frontend (componente y página) | 6 | ✅ Pasa (6, AB#350, PR #131) |
 | HU7-CP03 | Las tarjetas se colocan de dos en dos y de diez en diez: al llegar al final de la página (o con «Ver más productos») se cargan otras diez, hasta avisar de que no hay más; con estados de carga, error con reintento y catálogo vacío | Frontend (página) | 8 | ✅ Pasa (8, AB#350, PR #131) |
-| HU7-CP04 | Se puede buscar por nombre (sin distinguir mayúsculas ni tildes) y filtrar por categoría; cualquier cambio empieza de nuevo desde la primera página, y si nada coincide se ofrece limpiar los filtros | Frontend (página) | 5 | ❌ Fallan 2 de 5 en `develop` (AB#351, PR #131, ver nota) |
+| HU7-CP04 | Se puede buscar por nombre (sin distinguir mayúsculas ni tildes) y filtrar por categoría; cualquier cambio empieza de nuevo desde la primera página, y si nada coincide se ofrece limpiar los filtros | Frontend (página) | 5 | 🔍 Pasan 3 de 5 en `develop`; los 2 que fallaban se arreglan en la rama `fix/tests-productspage-hu7` (AB#351, PR #131, ver nota) |
 | HU7-CP05 | Se puede filtrar por valoración mínima (4, 3 o 2 estrellas o más) y volver a «Cualquiera» | Frontend (página) | 3 | ✅ Pasa (3, AB#351, PR #131) |
 | HU7-CP06 | Se puede ordenar por nombre y por valoración (no por categoría), ascendente y descendente; por defecto, nombre de la A a la Z | Frontend (página) | 5 | ✅ Pasa (5, AB#351, PR #131) |
 | HU7-CP07 | Arriba se muestran los diez productos mejor valorados como tarjetas (puesto, nombre y valoración) dentro de una banda curva sin marco; se ocultan con filtros activos, con pocos productos valorados o si falla | Frontend (componente y página) | 9 | ✅ Pasa (9, AB#350, PR #131) |
@@ -653,7 +687,8 @@ Notas:
 - **HU7-CP09:** el reinicio al cambiar el tamaño se prueba con un `ResizeObserver` que dispara el test y con temporizadores simulados.
 - **Cambio de comportamiento:** `/products` ya no es una ruta pública: sin sesión lleva a `/login`. Se ha cambiado en consecuencia el test técnico `productos_sinSesion_llevaAIniciarSesion` de `LoginFlow.test.jsx` (antes `productos_sinSesion_esUnaRutaPublica`).
 - **Infraestructura de tests:** `test/setup.js` añade un `IntersectionObserver` que no avisa nunca (jsdom no lo trae); los tests del scroll infinito lo sustituyen por uno que dispara a mano.
-- **Fallo conocido (no es de esta HU):** `HU7-CP04: al elegir una categoría pide solo los productos de esa categoría` y `HU7-CP04: al filtrar vuelve a empezar desde la primera página, sin conservar lo cargado` fallan en `develop` desde que el desplegable de categorías de la HU31 sustituyó al selector nativo que usan; hay que adaptarlos al desplegable (helper `elegirCategoria`).
+- **Fallo conocido (no es de esta HU):** `HU7-CP04: al elegir una categoría pide solo los productos de esa categoría` y `HU7-CP04: al filtrar vuelve a empezar desde la primera página, sin conservar lo cargado` fallan en `develop` desde que el desplegable de categorías de la HU31 sustituyó al selector nativo que usan. En la rama `fix/tests-productspage-hu7` se adaptan al desplegable con el helper `elegirCategoria` (abre el desplegable y pulsa la opción).
+- **Test inestable (HU7-CP03):** `HU7-CP03: al llegar otra vez al final carga las últimas y avisa de que no hay más` fallaba a veces con la máquina cargada: el test simulaba la llegada al final antes de que la página conectara el `IntersectionObserver` (lo hace en un `useEffect`, justo después de pintar las tarjetas). En la misma rama, `llegarAlFinal` espera a que haya un observador conectado antes de avisar.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -678,8 +713,8 @@ Notas:
 | HU7-CP03 | `ProductsPage.test.jsx` | `HU7-CP03: si todavía no hay productos lo indica` | Frontend · página | AB#350 | PR #131 | ✅ |
 | HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al escribir en el buscador pide los productos con ese nombre` | Frontend · página | AB#351 | PR #131 | ✅ |
 | HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: la búsqueda no distingue mayúsculas ni tildes` | Frontend · página | AB#351 | PR #131 | ✅ |
-| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al elegir una categoría pide solo los productos de esa categoría` | Frontend · página | AB#351 | PR #131 | ❌ |
-| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al filtrar vuelve a empezar desde la primera página, sin conservar lo cargado` | Frontend · página | AB#351 | PR #131 | ❌ |
+| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al elegir una categoría pide solo los productos de esa categoría` | Frontend · página | AB#351 | PR #131 | 🔍 |
+| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al filtrar vuelve a empezar desde la primera página, sin conservar lo cargado` | Frontend · página | AB#351 | PR #131 | 🔍 |
 | HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: si ningún producto coincide lo indica y permite limpiar los filtros` | Frontend · página | AB#351 | PR #131 | ✅ |
 | HU7-CP05 | `ProductsPage.test.jsx` | `HU7-CP05: al elegir una valoración mínima pide solo los productos con esa valoración o más` | Frontend · página | AB#351 | PR #131 | ✅ |
 | HU7-CP05 | `ProductsPage.test.jsx` | `HU7-CP05: con la valoración mínima, todos los productos mostrados la alcanzan` | Frontend · página | AB#351 | PR #131 | ✅ |
@@ -1712,10 +1747,10 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU39-CP01 | El administrador obtiene cada categoría con su nombre, descripción, estado y número de productos (`GET /api/admin/categorias`) | Unitario + controlador | 2 | 🔍 En revisión |
+| HU39-CP01 | El administrador obtiene cada categoría con su nombre, descripción, estado y número de productos (`GET /api/admin/categorias`) | Unitario + controlador | 2 | ✅ Pasa |
 | HU39-CP02 | El número de productos se cuenta por categoría en el módulo de productos (una sola agregación); una categoría sin productos tiene 0 | Unitario + integración MongoDB | 5 | ✅ Pasa |
 | HU39-CP03 | El administrador también ve las categorías `INACTIVA` | Unitario | 1 | ✅ Pasa |
-| HU39-CP04 | Sin rol de administrador el listado devuelve 403 (cliente y vendedor), y 401 sin sesión | Controlador | 2 | 🔍 En revisión |
+| HU39-CP04 | Sin rol de administrador el listado devuelve 403 (cliente y vendedor), y 401 sin sesión | Controlador | 2 | ✅ Pasa |
 
 Notas:
 - **HU39-CP01 a CP03:** casos propuestos en la T332 (AB#332), a partir del criterio de aceptación «listado con nombre, descripción, estado y número de productos asociados». **HU39-CP04:** propuesto en la T331 (AB#331), a partir del criterio «cualquier llamada a la API sin rol de administrador devuelve 403». Pendientes de confirmar con el equipo y de añadir a la HU39 en Azure Boards.
@@ -1728,15 +1763,15 @@ Notas:
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
 | HU39-CP01 | `AdministracionCategoriasServiceTest` | `listarConProductosDevuelveCadaCategoriaConSuNumero` | Aplicación | AB#332 | PR #134 | ✅ |
-| HU39-CP01 | `AdministracionCategoriasControllerTest` | `unAdministradorRecibeLasCategoriasConSuNumeroDeProductos` | Infraestructura | AB#331 | — | 🔍 |
+| HU39-CP01 | `AdministracionCategoriasControllerTest` | `unAdministradorRecibeLasCategoriasConSuNumeroDeProductos` | Infraestructura | AB#331 | PR #135 | ✅ |
 | HU39-CP02 | `AdministracionCategoriasServiceTest` | `unaCategoriaSinProductosTieneCero` | Aplicación | AB#332 | PR #134 | ✅ |
 | HU39-CP02 | `ConteoProductosServiceTest` | `contarPorCategoriaDelegaEnElRepositorio` | Aplicación | AB#332 | PR #134 | ✅ |
 | HU39-CP02 | `ProductosPorCategoriaAdapterTest` | `contarPorCategoriaPreguntaAlModuloDeProductos` | Infraestructura | AB#332 | PR #134 | ✅ |
 | HU39-CP02 | `ProductoMongoAdapterTest` | `contarPorCategoriaAgrupaLosProductos` | Infraestructura | AB#332 | PR #134 | ✅ |
 | HU39-CP02 | `ProductoMongoAdapterTest` | `contarPorCategoriaSinProductosDevuelveVacio` | Infraestructura | AB#332 | PR #134 | ✅ |
 | HU39-CP03 | `AdministracionCategoriasServiceTest` | `incluyeLasCategoriasInactivas` | Aplicación | AB#332 | PR #134 | ✅ |
-| HU39-CP04 | `AdministracionCategoriasControllerTest` | `otroRolRecibe403` (cliente y vendedor) | Infraestructura | AB#331 | — | 🔍 |
-| HU39-CP04 | `AdministracionCategoriasControllerTest` | `sinSesionRecibe401` | Infraestructura | AB#331 | — | 🔍 |
+| HU39-CP04 | `AdministracionCategoriasControllerTest` | `otroRolRecibe403` (cliente y vendedor) | Infraestructura | AB#331 | PR #135 | ✅ |
+| HU39-CP04 | `AdministracionCategoriasControllerTest` | `sinSesionRecibe401` | Infraestructura | AB#331 | PR #135 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionCategoriasControllerTest`: `categorias/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
@@ -1744,6 +1779,40 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `ProductosPorCategoriaAdapterTest`: `categorias/infrastructure/adapter/out/productos/` (JUnit y Mockito, sin Spring)
 - `ConteoProductosServiceTest`: `productos/application/service/` (JUnit y Mockito, sin Spring)
 - `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/` (con Testcontainers)
+
+---
+
+## HU37 · Eliminar administrador
+
+### Tabla A · HU37 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU37-CP01 | Eliminar un administrador activo lo borra físicamente si queda otro administrador activo | Unitario | 1 | ✅ Pasa |
+| HU37-CP02 | Eliminar un usuario que no existe falla (`UsuarioNoEncontradoException`) y no borra nada | Unitario | 1 | ✅ Pasa |
+| HU37-CP03 | Eliminar a un usuario que no es administrador falla como si no existiera y no borra nada | Unitario | 1 | ✅ Pasa |
+| HU37-CP04 | Un administrador no puede eliminar su propia cuenta y no se borra nada | Unitario | 1 | ✅ Pasa |
+| HU37-CP05 | No se puede eliminar al último administrador activo y no se borra nada | Unitario | 1 | ✅ Pasa |
+| HU37-CP06 | Eliminar un administrador desactivado no comprueba el conteo de activos y lo borra | Unitario | 1 | ✅ Pasa |
+
+Notas:
+- **HU37-CP01 a CP06 (T340, AB#340):** casos propuestos para la lógica de negocio del borrado físico de administradores en `AdministracionUsuariosService.eliminarAdministrador`. Pendientes de confirmar con el equipo y de añadir a Azure Boards.
+- **Sesión del administrador eliminado:** la invalidación de la sesión al borrar físicamente la cuenta ya la cubre `CuentaActivaFilter` (ver **HU23-CP10**, `usuarioInexistenteInvalidaLaSesionYDevuelve401`, PR #85): en cuanto el documento desaparece de la colección `usuarios`, cualquier petición con su sesión recibe un 401 y la sesión queda invalidada.
+- **Pendiente (otra task):** el endpoint `DELETE`, la traducción del 409 de autoeliminación (`CANNOT_DELETE_SELF`) en `ManejadorGlobalErrores` y los tests de integración web y de persistencia en `UsuarioMongoAdapterTest`.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU37-CP01 | `AdministracionUsuariosServiceTest` | `eliminaAUnAdministradorSiQuedaOtroActivo` | Aplicación | AB#340 | PR actual | ✅ |
+| HU37-CP02 | `AdministracionUsuariosServiceTest` | `rechazaEliminarUnUsuarioQueNoExiste` | Aplicación | AB#340 | PR actual | ✅ |
+| HU37-CP03 | `AdministracionUsuariosServiceTest` | `rechazaEliminarAUsuarioQueNoEsAdministrador` | Aplicación | AB#340 | PR actual | ✅ |
+| HU37-CP04 | `AdministracionUsuariosServiceTest` | `rechazaQueUnAdministradorSeElimineASiMismo` | Aplicación | AB#340 | PR actual | ✅ |
+| HU37-CP05 | `AdministracionUsuariosServiceTest` | `rechazaEliminarAlUltimoAdministradorActivo` | Aplicación | AB#340 | PR actual | ✅ |
+| HU37-CP06 | `AdministracionUsuariosServiceTest` | `eliminaAUnAdministradorDesactivadoSinComprobarActivos` | Aplicación | AB#340 | PR actual | ✅ |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
 
 ---
 
@@ -1757,11 +1826,17 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU40-CP02 | El nombre es obligatorio, se guarda sin espacios en los extremos y admite hasta 50 caracteres | Unitario (dominio) | 2 | ✅ Pasa |
 | HU40-CP03 | La descripción es opcional y admite hasta 200 caracteres | Unitario (dominio) | 1 | ✅ Pasa |
 | HU40-CP04 | El estado es obligatorio; la descripción y el estado se guardan en MongoDB, y una categoría guardada sin ellos se lee ACTIVA y sin descripción | Unitario + integración MongoDB | 5 | ✅ Pasa |
+| HU40-CP05 | El administrador crea una categoría con el estado que elige (ACTIVA o INACTIVA); se guarda con un id nuevo y `POST /api/admin/categorias` responde 201 con 0 productos | Unitario + integración MongoDB + controlador | 3 | ✅ Pasa |
+| HU40-CP06 | No se puede crear una categoría con un nombre que ya existe, sin distinguir mayúsculas ni tildes; el nombre se compara completo y literal, y la base de datos lo impide aunque se salte la comprobación previa (409) | Unitario + integración MongoDB + controlador | 5 | ✅ Pasa |
+| HU40-CP07 | Crear sin nombre, sin estado, con un estado desconocido o incumpliendo una regla del dominio devuelve 400 | Controlador | 2 | ✅ Pasa |
+| HU40-CP08 | Sin rol de administrador no se pueden crear categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | ✅ Pasa |
 
 Notas:
-- **HU40-CP01 a CP04:** casos propuestos en la T321 (AB#321), sin contrato del frontend todavía. Pendientes de confirmar con el equipo y de añadir a la HU40 en Azure Boards.
+- **HU40-CP01 a CP04:** casos propuestos en la T321 (AB#321), sin contrato del frontend todavía. **HU40-CP05 y CP06:** propuestos en la T323 (AB#323), a partir de los criterios «la categoría no puede estar repetida» y «se debe poder elegir si activar o desactivar la categoría en la creación». **HU40-CP07 y CP08:** propuestos en la T322 (AB#322). Pendientes de confirmar con el equipo y de añadir a la HU40 en Azure Boards.
+- **Endpoint (T322):** `POST /api/admin/categorias` con `{nombre, descripcion, estado: "ACTIVA"|"INACTIVA"}` → 201 `{id, nombre, descripcion, estado, numeroProductos: 0}`, el mismo formato que una fila de `GET /api/admin/categorias`. Errores: 400 `INVALID_FIELD` (falta el nombre o el estado, o el estado es desconocido), 400 `VALIDATION_ERROR` (regla del dominio, p. ej. más de 50 caracteres), 409 `CATEGORY_NAME_ALREADY_EXISTS`, 401 sin sesión y 403 con otro rol. Necesita la cabecera CSRF `X-XSRF-TOKEN`. Es el contrato de la vista del frontend (T320).
+- **Backend (T323):** `AdministracionCategoriasUseCase.crear(CrearCategoriaCommand)`. El nombre único no distingue mayúsculas ni tildes (decisión del equipo, 27/10/2026): comprobación previa (`existePorNombre`) y un índice único nuevo, `nombre_sin_mayusculas` (collation `es` de nivel 1), que se crea junto al anterior para no chocar con él en Atlas. Errores: `CategoriaInvalidaException` → 400 `VALIDATION_ERROR`; `CategoriaDuplicadaException` → 409 `CATEGORY_NAME_ALREADY_EXISTS`.
 - **Backend (T321):** entidad `Categoria` (`id`, `nombre`, `descripcion`, `estado`), `EstadoCategoria` (`ACTIVA`, `INACTIVA`), `CategoriaInvalidaException` y `CategoriaDocumentMapper`. El validador de la colección `categorias` aplica los mismos límites. `GET /api/categorias` no cambia (sigue devolviendo `id` y `nombre`).
-- **Pendiente:** la consulta con la descripción (T331; la lógica de la T332 está en la HU39) y la creación (T322 y T323). Si una categoría `INACTIVA` debe dejar de salir en la consulta lo decidirá la HU39 o la HU42.
+- **Pendiente:** la vista (T320). Si una categoría `INACTIVA` debe dejar de verse para clientes y vendedores en `GET /api/categorias` (criterio «si la categoría se crea activada, debe ser visible para clientes y vendedores») queda pendiente de revisar con el equipo.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1777,11 +1852,59 @@ Notas:
 | HU40-CP04 | `CategoriaDocumentMapperTest` | `convierteDocumentoEnCategoria` | Infraestructura | AB#321 | PR #133 | ✅ |
 | HU40-CP04 | `CategoriaDocumentMapperTest` | `unDocumentoSinEstadoNiDescripcionSeLeeActivo` | Infraestructura | AB#321 | PR #133 | ✅ |
 | HU40-CP04 | `CategoriaMongoAdapterTest` | `guardaYLeeLaDescripcionYElEstado` | Infraestructura | AB#321 | PR #133 | ✅ |
+| HU40-CP05 | `AdministracionCategoriasServiceTest` | `crearGuardaLaCategoriaConElEstadoElegido` (ACTIVA e INACTIVA) | Aplicación | AB#323 | PR #137 | ✅ |
+| HU40-CP05 | `CategoriaMongoAdapterTest` | `guardarAsignaIdYLaGuardaConSuEstado` | Infraestructura | AB#323 | PR #137 | ✅ |
+| HU40-CP06 | `AdministracionCategoriasServiceTest` | `crearRechazaUnNombreRepetido` | Aplicación | AB#323 | PR #137 | ✅ |
+| HU40-CP06 | `CategoriaMongoAdapterTest` | `existePorNombreNoDistingueMayusculasNiTildes` (4 variantes) | Infraestructura | AB#323 | PR #137 | ✅ |
+| HU40-CP06 | `CategoriaMongoAdapterTest` | `existePorNombreComparaElNombreCompletoYLiteral` (3 variantes) | Infraestructura | AB#323 | PR #137 | ✅ |
+| HU40-CP06 | `CategoriaMongoAdapterTest` | `guardarRechazaUnNombreRepetidoConOtrasMayusculasOTildes` (mayúsculas y tildes) | Infraestructura | AB#323 | PR #137 | ✅ |
+| HU40-CP05 | `AdministracionCategoriasControllerTest` | `unAdministradorCreaUnaCategoria` | Infraestructura | AB#322 | PR #138 | ✅ |
+| HU40-CP06 | `AdministracionCategoriasControllerTest` | `crearUnNombreRepetidoDevuelve409` | Infraestructura | AB#322 | PR #138 | ✅ |
+| HU40-CP07 | `AdministracionCategoriasControllerTest` | `crearConDatosInvalidosDevuelve400` (sin nombre, sin estado y estado desconocido) | Infraestructura | AB#322 | PR #138 | ✅ |
+| HU40-CP07 | `AdministracionCategoriasControllerTest` | `crearConUnaReglaDelDominioIncumplidaDevuelve400` | Infraestructura | AB#322 | PR #138 | ✅ |
+| HU40-CP08 | `AdministracionCategoriasControllerTest` | `crearConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#322 | PR #138 | ✅ |
+| HU40-CP08 | `AdministracionCategoriasControllerTest` | `crearSinSesionDevuelve401` | Infraestructura | AB#322 | PR #138 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AdministracionCategoriasControllerTest`: `categorias/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
+- `AdministracionCategoriasServiceTest`: `categorias/application/service/` (JUnit y Mockito, sin Spring)
 - `CategoriaTest`: `categorias/domain/model/` (JUnit, sin Spring)
 - `CategoriaDocumentMapperTest`: `categorias/infrastructure/adapter/out/persistence/` (JUnit, sin Spring)
 - `CategoriaMongoAdapterTest`: `categorias/infrastructure/adapter/out/persistence/` (con Testcontainers)
+
+---
+
+## HU43 · Cerrar sesión
+
+### Tabla A · HU43 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU43-CP01 | Al cerrar sesión (`POST /api/auth/logout`) la sesión se invalida en el servidor y la cookie de sesión se borra del navegador | Controlador | 2 | ✅ Pasa |
+| HU43-CP02 | La sesión caduca tras 15 minutos sin actividad si no se configura otro tiempo (`ESIBUY_SESION_INACTIVIDAD`) | Integración (servidor real) | 1 | 🔍 En revisión |
+| HU43-CP03 | Las cookies de sesión (`JSESSIONID`: Secure, HttpOnly y SameSite=Strict) y de CSRF (`XSRF-TOKEN`: Secure y SameSite=Strict, legible por el frontend) llevan sus atributos de seguridad | Controlador + integración (servidor real) | 2 | 🔍 En revisión |
+
+Notas:
+- **HU43-CP01:** caso propuesto en la T318 (AB#318), a partir del criterio de aceptación «al cerrar sesión, el token/sesión se invalida en el servidor». **HU43-CP02 y CP03:** propuestos en la T319 (AB#319), a partir de «la sesión caduca tras un tiempo de inactividad configurable» y «cookies de sesión con atributos Secure, HttpOnly y SameSite». Pendientes de confirmar con el equipo y de añadir a la HU43 en Azure Boards.
+- **Backend (T319):** en `application.properties`, `server.servlet.session.timeout=${ESIBUY_SESION_INACTIVIDAD:15m}` y los atributos de la cookie de sesión; en `SecurityConfig`, un `CookieCsrfTokenRepository` con Secure y SameSite=Strict. Al caducar, la siguiente petición recibe 401 y el frontend debe redirigir al login.
+- **Backend (T318):** el endpoint ya existía (Spring Security, `SecurityConfig`, T230): invalida la sesión, borra `JSESSIONID` y responde 204. `logoutCierraLaSesion` es el test de la HU2 (HU2-CP15, PR #67) que comprueba la invalidación; se traza también aquí sin cambiar su `@DisplayName`.
+- **La cookie de sesión la borra el servidor:** es HttpOnly, así que el frontend (T317, «lógica de borrado de cookies de sesión») no puede borrarla; le basta con llamar a `logout()` y limpiar su estado.
+- **Pendiente:** el botón «Cerrar sesión» en todas las zonas y la redirección al login tras la caducidad (T314 a T316, frontend). En despliegue, con Secure la aplicación tiene que servirse por HTTPS.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU43-CP01 | `AutenticacionControllerTest` | `logoutCierraLaSesion` (`@DisplayName` HU2-CP15) | Infraestructura | AB#230 | PR #67 | ✅ |
+| HU43-CP01 | `AutenticacionControllerTest` | `logoutBorraLaCookieDeSesion` | Infraestructura | AB#318 | PR #141 | ✅ |
+| HU43-CP02 | `ConfiguracionSesionTest` | `laSesionCaducaA15MinutosDeInactividadPorDefecto` | Infraestructura | AB#319 | PR #142 | 🔍 |
+| HU43-CP03 | `ConfiguracionSesionTest` | `laCookieDeSesionEsSecureHttpOnlyYSameSiteStrict` | Infraestructura | AB#319 | PR #142 | 🔍 |
+| HU43-CP03 | `SecurityConfigTest` | `laCookieCsrfEsSecureYSameSiteStrict` | Infraestructura | AB#319 | PR #142 | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AutenticacionControllerTest`: `usuarios/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
+- `ConfiguracionSesionTest`: `shared/config/` (`@SpringBootTest` con el servidor real en un puerto aleatorio y Testcontainers)
+- `SecurityConfigTest`: `shared/config/` (con `@WebMvcTest`)
 
 ---
 

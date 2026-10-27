@@ -451,6 +451,67 @@ class AdministracionUsuariosServiceTest {
         verify(usuarioRepository, never()).guardar(any());
     }
 
+    // Eliminar una cuenta de administrador (HU37, T340): borrado físico de otro administrador,
+    // sin permitir eliminarse a sí mismo ni dejar el sistema sin administradores activos.
+
+    @Test
+    @DisplayName("HU37-CP01: eliminar un administrador activo lo borra si queda otro administrador activo")
+    void eliminaAUnAdministradorSiQuedaOtroActivo() {
+        Usuario otroAdministrador = administrador("u-3", "ana@esibuy.test");
+        otroAdministrador.activar();
+        when(usuarioRepository.buscarPorId("u-3")).thenReturn(Optional.of(otroAdministrador));
+        when(usuarioRepository.contarAdministradoresActivos()).thenReturn(2L);
+
+        servicio.eliminarAdministrador("u-3", EMAIL_ADMINISTRADOR);
+
+        verify(usuarioRepository).eliminarPorId("u-3");
+    }
+
+    @Test
+    @DisplayName("HU37-CP02: eliminar un usuario que no existe falla y no borra nada")
+    void rechazaEliminarUnUsuarioQueNoExiste() {
+        when(usuarioRepository.buscarPorId("no-existe")).thenReturn(Optional.empty());
+
+        assertThrows(UsuarioNoEncontradoException.class,
+                () -> servicio.eliminarAdministrador("no-existe", EMAIL_ADMINISTRADOR));
+        verify(usuarioRepository, never()).eliminarPorId(any());
+    }
+
+    @Test
+    @DisplayName("HU37-CP03: eliminar a un usuario que no es administrador falla como si no existiera y no borra nada")
+    void rechazaEliminarAUsuarioQueNoEsAdministrador() {
+        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(cliente("u-1", "carlos@uclm.es")));
+
+        assertThrows(UsuarioNoEncontradoException.class,
+                () -> servicio.eliminarAdministrador("u-1", EMAIL_ADMINISTRADOR));
+        verify(usuarioRepository, never()).eliminarPorId(any());
+    }
+
+    @Test
+    @DisplayName("HU37-CP04: un administrador no puede eliminar su propia cuenta y no se borra nada")
+    void rechazaQueUnAdministradorSeElimineASiMismo() {
+        Usuario administrador = administrador("u-1", EMAIL_ADMINISTRADOR);
+        administrador.activar();
+        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(administrador));
+
+        assertThrows(AutodesactivacionNoPermitidaException.class,
+                () -> servicio.eliminarAdministrador("u-1", EMAIL_ADMINISTRADOR));
+        verify(usuarioRepository, never()).eliminarPorId(any());
+    }
+
+    @Test
+    @DisplayName("HU37-CP05: no se puede eliminar al último administrador activo y no se borra nada")
+    void rechazaEliminarAlUltimoAdministradorActivo() {
+        Usuario ultimoAdministrador = administrador("u-3", "ana@esibuy.test");
+        ultimoAdministrador.activar();
+        when(usuarioRepository.buscarPorId("u-3")).thenReturn(Optional.of(ultimoAdministrador));
+        when(usuarioRepository.contarAdministradoresActivos()).thenReturn(1L);
+
+        assertThrows(UltimoAdministradorActivoException.class,
+                () -> servicio.eliminarAdministrador("u-3", EMAIL_ADMINISTRADOR));
+        verify(usuarioRepository, never()).eliminarPorId(any());
+    }
+
     private static Usuario cliente(String id, String email) {
         return new Usuario(id, new DatosPersonales("Carlos", "Moreno Gil", null), new Email(email), "hash-simulado",
                 Rol.CLIENTE,

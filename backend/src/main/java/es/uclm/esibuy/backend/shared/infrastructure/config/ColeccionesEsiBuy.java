@@ -235,7 +235,12 @@ final class ColeccionesEsiBuy {
                 string(NOMBRE).minLength(1).maxLength(50),
                 string("descripcion").maxLength(200),
                 string(ESTADO).possibleValues("ACTIVA", "INACTIVA")),
-                List.of(indice(NOMBRE).unique()));
+                List.of(indice(NOMBRE).unique(),
+                        // No se repite el nombre sin distinguir mayúsculas ni tildes (HU40, T323): collation de
+                        // nivel 1. Lleva nombre propio para no chocar con el índice anterior, que se deja como
+                        // estaba, al arrancar contra una base que ya lo tiene.
+                        indice(NOMBRE).unique().named("nombre_sin_mayusculas")
+                                .collation(Collation.of("es").strength(Collation.ComparisonLevel.primary()))));
     }
 
     // 10. listas_deseos: una lista principal por cliente (decisión del equipo).
