@@ -1533,28 +1533,34 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU39-CP01 | El administrador obtiene cada categoría con su nombre, descripción, estado y número de productos | Unitario | 1 | 🔍 En revisión |
-| HU39-CP02 | El número de productos se cuenta por categoría en el módulo de productos (una sola agregación); una categoría sin productos tiene 0 | Unitario + integración MongoDB | 5 | 🔍 En revisión |
-| HU39-CP03 | El administrador también ve las categorías `INACTIVA` | Unitario | 1 | 🔍 En revisión |
+| HU39-CP01 | El administrador obtiene cada categoría con su nombre, descripción, estado y número de productos (`GET /api/admin/categorias`) | Unitario + controlador | 2 | 🔍 En revisión |
+| HU39-CP02 | El número de productos se cuenta por categoría en el módulo de productos (una sola agregación); una categoría sin productos tiene 0 | Unitario + integración MongoDB | 5 | ✅ Pasa |
+| HU39-CP03 | El administrador también ve las categorías `INACTIVA` | Unitario | 1 | ✅ Pasa |
+| HU39-CP04 | Sin rol de administrador el listado devuelve 403 (cliente y vendedor), y 401 sin sesión | Controlador | 2 | 🔍 En revisión |
 
 Notas:
-- **HU39-CP01 a CP03:** casos propuestos en la T332 (AB#332), a partir del criterio de aceptación «listado con nombre, descripción, estado y número de productos asociados». Pendientes de confirmar con el equipo y de añadir a la HU39 en Azure Boards.
+- **HU39-CP01 a CP03:** casos propuestos en la T332 (AB#332), a partir del criterio de aceptación «listado con nombre, descripción, estado y número de productos asociados». **HU39-CP04:** propuesto en la T331 (AB#331), a partir del criterio «cualquier llamada a la API sin rol de administrador devuelve 403». Pendientes de confirmar con el equipo y de añadir a la HU39 en Azure Boards.
+- **Endpoint (T331):** `GET /api/admin/categorias` → `[{id, nombre, descripcion, estado, numeroProductos}]`, sin paginar y ordenado por nombre, con `estado` como texto (`ACTIVA` / `INACTIVA`). Lo atiende `AdministracionCategoriasController`; el 401 y el 403 los da la regla `/api/admin/**` de `SecurityConfig`. Es el contrato de la vista del frontend (T330).
 - **Backend (T332):** `AdministracionCategoriasUseCase.listarConProductos()` devuelve `CategoriaConProductos`. Categorías pide el recuento a productos con `ProductosPorCategoriaPort` → `ProductosPorCategoriaAdapter` → `ConteoProductosUseCase` (puerto de entrada de productos). El recuento incluye todos los productos de la categoría, también los no disponibles. `GET /api/categorias` no cambia.
-- **Pendiente:** el endpoint del administrador y el 403 para los demás roles (T331); el nombre único sin distinguir mayúsculas (T323).
+- **Pendiente:** la vista del frontend (T330); el nombre único sin distinguir mayúsculas (T323).
 
 ### Tabla B · casos de prueba ↔ tests
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU39-CP01 | `AdministracionCategoriasServiceTest` | `listarConProductosDevuelveCadaCategoriaConSuNumero` | Aplicación | AB#332 | — | 🔍 |
-| HU39-CP02 | `AdministracionCategoriasServiceTest` | `unaCategoriaSinProductosTieneCero` | Aplicación | AB#332 | — | 🔍 |
-| HU39-CP02 | `ConteoProductosServiceTest` | `contarPorCategoriaDelegaEnElRepositorio` | Aplicación | AB#332 | — | 🔍 |
-| HU39-CP02 | `ProductosPorCategoriaAdapterTest` | `contarPorCategoriaPreguntaAlModuloDeProductos` | Infraestructura | AB#332 | — | 🔍 |
-| HU39-CP02 | `ProductoMongoAdapterTest` | `contarPorCategoriaAgrupaLosProductos` | Infraestructura | AB#332 | — | 🔍 |
-| HU39-CP02 | `ProductoMongoAdapterTest` | `contarPorCategoriaSinProductosDevuelveVacio` | Infraestructura | AB#332 | — | 🔍 |
-| HU39-CP03 | `AdministracionCategoriasServiceTest` | `incluyeLasCategoriasInactivas` | Aplicación | AB#332 | — | 🔍 |
+| HU39-CP01 | `AdministracionCategoriasServiceTest` | `listarConProductosDevuelveCadaCategoriaConSuNumero` | Aplicación | AB#332 | PR #134 | ✅ |
+| HU39-CP01 | `AdministracionCategoriasControllerTest` | `unAdministradorRecibeLasCategoriasConSuNumeroDeProductos` | Infraestructura | AB#331 | — | 🔍 |
+| HU39-CP02 | `AdministracionCategoriasServiceTest` | `unaCategoriaSinProductosTieneCero` | Aplicación | AB#332 | PR #134 | ✅ |
+| HU39-CP02 | `ConteoProductosServiceTest` | `contarPorCategoriaDelegaEnElRepositorio` | Aplicación | AB#332 | PR #134 | ✅ |
+| HU39-CP02 | `ProductosPorCategoriaAdapterTest` | `contarPorCategoriaPreguntaAlModuloDeProductos` | Infraestructura | AB#332 | PR #134 | ✅ |
+| HU39-CP02 | `ProductoMongoAdapterTest` | `contarPorCategoriaAgrupaLosProductos` | Infraestructura | AB#332 | PR #134 | ✅ |
+| HU39-CP02 | `ProductoMongoAdapterTest` | `contarPorCategoriaSinProductosDevuelveVacio` | Infraestructura | AB#332 | PR #134 | ✅ |
+| HU39-CP03 | `AdministracionCategoriasServiceTest` | `incluyeLasCategoriasInactivas` | Aplicación | AB#332 | PR #134 | ✅ |
+| HU39-CP04 | `AdministracionCategoriasControllerTest` | `otroRolRecibe403` (cliente y vendedor) | Infraestructura | AB#331 | — | 🔍 |
+| HU39-CP04 | `AdministracionCategoriasControllerTest` | `sinSesionRecibe401` | Infraestructura | AB#331 | — | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AdministracionCategoriasControllerTest`: `categorias/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
 - `AdministracionCategoriasServiceTest`: `categorias/application/service/` (JUnit y Mockito, sin Spring)
 - `ProductosPorCategoriaAdapterTest`: `categorias/infrastructure/adapter/out/productos/` (JUnit y Mockito, sin Spring)
 - `ConteoProductosServiceTest`: `productos/application/service/` (JUnit y Mockito, sin Spring)
@@ -1568,10 +1574,10 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU40-CP01 | Una categoría se crea con nombre, descripción y estado; una nueva nace ACTIVA y sin id | Unitario (dominio) | 2 | 🔍 En revisión |
-| HU40-CP02 | El nombre es obligatorio, se guarda sin espacios en los extremos y admite hasta 50 caracteres | Unitario (dominio) | 2 | 🔍 En revisión |
-| HU40-CP03 | La descripción es opcional y admite hasta 200 caracteres | Unitario (dominio) | 1 | 🔍 En revisión |
-| HU40-CP04 | El estado es obligatorio; la descripción y el estado se guardan en MongoDB, y una categoría guardada sin ellos se lee ACTIVA y sin descripción | Unitario + integración MongoDB | 5 | 🔍 En revisión |
+| HU40-CP01 | Una categoría se crea con nombre, descripción y estado; una nueva nace ACTIVA y sin id | Unitario (dominio) | 2 | ✅ Pasa |
+| HU40-CP02 | El nombre es obligatorio, se guarda sin espacios en los extremos y admite hasta 50 caracteres | Unitario (dominio) | 2 | ✅ Pasa |
+| HU40-CP03 | La descripción es opcional y admite hasta 200 caracteres | Unitario (dominio) | 1 | ✅ Pasa |
+| HU40-CP04 | El estado es obligatorio; la descripción y el estado se guardan en MongoDB, y una categoría guardada sin ellos se lee ACTIVA y sin descripción | Unitario + integración MongoDB | 5 | ✅ Pasa |
 
 Notas:
 - **HU40-CP01 a CP04:** casos propuestos en la T321 (AB#321), sin contrato del frontend todavía. Pendientes de confirmar con el equipo y de añadir a la HU40 en Azure Boards.
@@ -1582,16 +1588,16 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU40-CP01 | `CategoriaTest` | `creaUnaCategoriaConDatosCorrectos` | Dominio | AB#321 | PR #133 | 🔍 |
-| HU40-CP01 | `CategoriaTest` | `unaCategoriaNuevaNaceActivaYSinId` | Dominio | AB#321 | PR #133 | 🔍 |
-| HU40-CP02 | `CategoriaTest` | `rechazaUnaCategoriaSinNombre` (nulo, vacío y en blanco) | Dominio | AB#321 | PR #133 | 🔍 |
-| HU40-CP02 | `CategoriaTest` | `elNombreSeRecortaYAdmiteHasta50Caracteres` | Dominio | AB#321 | PR #133 | 🔍 |
-| HU40-CP03 | `CategoriaTest` | `laDescripcionEsOpcionalYAdmiteHasta200Caracteres` | Dominio | AB#321 | PR #133 | 🔍 |
-| HU40-CP04 | `CategoriaTest` | `rechazaUnaCategoriaSinEstado` | Dominio | AB#321 | PR #133 | 🔍 |
-| HU40-CP04 | `CategoriaDocumentMapperTest` | `convierteCategoriaEnDocumento` | Infraestructura | AB#321 | PR #133 | 🔍 |
-| HU40-CP04 | `CategoriaDocumentMapperTest` | `convierteDocumentoEnCategoria` | Infraestructura | AB#321 | PR #133 | 🔍 |
-| HU40-CP04 | `CategoriaDocumentMapperTest` | `unDocumentoSinEstadoNiDescripcionSeLeeActivo` | Infraestructura | AB#321 | PR #133 | 🔍 |
-| HU40-CP04 | `CategoriaMongoAdapterTest` | `guardaYLeeLaDescripcionYElEstado` | Infraestructura | AB#321 | PR #133 | 🔍 |
+| HU40-CP01 | `CategoriaTest` | `creaUnaCategoriaConDatosCorrectos` | Dominio | AB#321 | PR #133 | ✅ |
+| HU40-CP01 | `CategoriaTest` | `unaCategoriaNuevaNaceActivaYSinId` | Dominio | AB#321 | PR #133 | ✅ |
+| HU40-CP02 | `CategoriaTest` | `rechazaUnaCategoriaSinNombre` (nulo, vacío y en blanco) | Dominio | AB#321 | PR #133 | ✅ |
+| HU40-CP02 | `CategoriaTest` | `elNombreSeRecortaYAdmiteHasta50Caracteres` | Dominio | AB#321 | PR #133 | ✅ |
+| HU40-CP03 | `CategoriaTest` | `laDescripcionEsOpcionalYAdmiteHasta200Caracteres` | Dominio | AB#321 | PR #133 | ✅ |
+| HU40-CP04 | `CategoriaTest` | `rechazaUnaCategoriaSinEstado` | Dominio | AB#321 | PR #133 | ✅ |
+| HU40-CP04 | `CategoriaDocumentMapperTest` | `convierteCategoriaEnDocumento` | Infraestructura | AB#321 | PR #133 | ✅ |
+| HU40-CP04 | `CategoriaDocumentMapperTest` | `convierteDocumentoEnCategoria` | Infraestructura | AB#321 | PR #133 | ✅ |
+| HU40-CP04 | `CategoriaDocumentMapperTest` | `unDocumentoSinEstadoNiDescripcionSeLeeActivo` | Infraestructura | AB#321 | PR #133 | ✅ |
+| HU40-CP04 | `CategoriaMongoAdapterTest` | `guardaYLeeLaDescripcionYElEstado` | Infraestructura | AB#321 | PR #133 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `CategoriaTest`: `categorias/domain/model/` (JUnit, sin Spring)
