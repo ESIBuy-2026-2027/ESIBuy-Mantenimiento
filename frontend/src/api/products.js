@@ -21,6 +21,13 @@ export function deleteSellerProduct(productId) {
   return request(`/api/seller/products/${encodeURIComponent(productId)}`, { method: 'DELETE' })
 }
 
+// Detalle de un producto del catálogo para el cliente (HU8). Contrato propuesto por el frontend: el backend aún no lo
+// tiene. Responde 404 si el producto no existe o no está disponible. El precio con el descuento que le corresponde a
+// quien consulta (cliente Estándar o Premium) lo calcula el servidor: `precioFinal` y `descuento` ({ porcentaje } o null).
+export function getCatalogProduct(productId) {
+  return request(`/api/products/${encodeURIComponent(productId)}`)
+}
+
 // Catálogo del cliente (HU7). Contrato propuesto por el frontend: el backend (T352 y T353) aún no lo tiene.
 // sort: nombre o valoracion. order: asc o desc. minRating: valoración media mínima (de 1 a 5).
 export function getCatalogProducts({
