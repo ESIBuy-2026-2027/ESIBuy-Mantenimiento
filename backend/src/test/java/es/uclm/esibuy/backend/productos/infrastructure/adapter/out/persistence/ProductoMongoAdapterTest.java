@@ -297,8 +297,12 @@ class ProductoMongoAdapterTest {
     @Test
     @DisplayName("HU7-CP12: la búsqueda trata el texto como literal, no como expresión regular")
     void buscarEnCatalogoTrataLaBusquedaComoTextoLiteral() {
-        // TODO: guardar «Cable (USB-C)» y «Cable USB»; buscar «(usb» devuelve solo el primero, y «.*» no devuelve nada.
-        fail("Funcionalidad no implementada");
+        adapter.guardar(productoNuevo("v-1", "Cable (USB-C)"));
+        adapter.guardar(productoNuevo("v-1", "Cable USB"));
+
+        // «(» y «.*» se buscan como caracteres: como regex, «(usb» no compilaría y «.*» lo encontraría todo.
+        assertEquals(List.of("Cable (USB-C)"), nombres(adapter.buscarEnCatalogo(buscando("(usb"))));
+        assertEquals(List.of(), nombres(adapter.buscarEnCatalogo(buscando(".*"))));
     }
 
     @Test
