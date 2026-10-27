@@ -324,9 +324,19 @@ class ProductoMongoAdapterTest {
     @Test
     @DisplayName("HU7-CP14: el catálogo se ordena por nombre en los dos sentidos, paginado y con el total completo")
     void buscarEnCatalogoOrdenaPorNombreYPagina() {
-        // TODO: guardar «Cesta», «Atril», «Banco» (sin tilde inicial). NOMBRE ascendente, página 0 de tamaño 2:
-        // Atril y Banco, total 3. Descendente, página 0: Cesta y Banco.
-        fail("Funcionalidad no implementada");
+        // Guardados fuera de orden y sin tilde inicial, para no depender del orden alfabético en español.
+        adapter.guardar(productoNuevo("v-1", "Cesta"));
+        adapter.guardar(productoNuevo("v-1", "Atril"));
+        adapter.guardar(productoNuevo("v-2", "Banco"));
+
+        ProductoPage ascendente = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 2));
+        ProductoPage descendente = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.NOMBRE, true, 0, 2));
+
+        assertEquals(List.of("Atril", "Banco"), nombres(ascendente));
+        assertEquals(3, ascendente.totalElementos());
+        assertEquals(List.of("Cesta", "Banco"), nombres(descendente));
     }
 
     @Test
