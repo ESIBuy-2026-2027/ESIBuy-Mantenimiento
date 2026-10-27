@@ -179,7 +179,7 @@ npm run build
 ## 8. Limitaciones y trabajo pendiente
 
 - **Backend:** falta `GET /api/products/{id}`, el nombre comercial del vendedor en el módulo de productos, el cálculo del descuento por tipo de cliente y guardar valoraciones.
-- **Pagar:** el carrito existe desde la HU9 (`docs/hu9-carrito-de-compra.md`); desde el detalle solo se añade al carrito. La pasarela de pago es la HU10.
+- **Pagar:** el carrito y la pasarela de pago existen desde las HU9 y HU10 (`docs/hu9-carrito-de-compra.md` y `docs/hu10-pasarela-de-pago.md`); desde el detalle solo se añade al carrito.
 - **Opiniones:** solo se muestra la nota media y el número de valoraciones; la lista de opiniones y su reparto por estrellas llegarán con la historia de valoraciones.
 - **Una sola imagen:** el producto tiene una imagen; no hay galería.
 - **Volver al listado:** **Volver a los productos** (y el botón Atrás del navegador) vuelve a cargar el listado desde la primera página, así que se pierde la posición del scroll infinito.

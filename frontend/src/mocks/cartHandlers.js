@@ -41,8 +41,18 @@ function aCarrito(lineasPorProducto) {
   return { grupos: lista, totalProductos, total: redondear(lista.reduce((suma, grupo) => suma + grupo.total, 0)) }
 }
 
+// Quita del carrito los productos de un proveedor y devuelve ese grupo tal y como estaba (o null si no había nada).
+// Lo usa la creación de pedidos (HU10), que se lleva del carrito lo que compra.
+export function retirarGrupoDelCarrito(usuarioId, vendedorId) {
+  const carrito = carritos.get(usuarioId)
+  const grupo = carrito && aCarrito(carrito).grupos.find((candidato) => candidato.vendedor.id === vendedorId)
+  if (!grupo) return null
+  for (const linea of grupo.lineas) carrito.delete(linea.productoId)
+  return grupo
+}
+
 // Devuelve la respuesta de error si quien pregunta no es un cliente, o null si puede continuar.
-function rechazarSiNoEsCliente() {
+export function rechazarSiNoEsCliente() {
   const usuario = getUsuarioEnSesion()
   if (!usuario) return new HttpResponse(null, { status: 401 })
   if (usuario.rol !== 'CLIENTE') return new HttpResponse(null, { status: 403 })

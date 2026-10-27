@@ -821,14 +821,15 @@ Rutas de las clases de test (bajo `frontend/src/`):
 | HU9-CP05 | El carrito está siempre a la vista abajo a la izquierda, con el número de productos, y su panel separa los productos por proveedor con la cabecera «Proveedor: total», la cantidad y el subtotal de cada producto | Frontend (componente y página) | 11 | 🔍 En revisión (11, AB#384, PR sin abrir) |
 | HU9-CP06 | Desde el panel se puede cambiar la cantidad de un producto (sin pasar de las existencias), quitarlo y vaciar el carrito, con aviso si el servidor lo rechaza | Frontend (componente) | 6 | 🔍 En revisión (6, AB#384, PR sin abrir) |
 | HU9-CP07 | El carrito tiene estado de carga y de error con reintento, y vive en el servidor: al recargar la página sigue ahí | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#384, PR sin abrir) |
+| HU9-CP08 | «Proceder al pago» lleva a la pasarela de pago | Frontend (componente) | 1 | 🔍 En revisión (1, AB#384, PR sin abrir) |
 
 Notas:
-- **HU9-CP01 a CP07 (Sprint 2, frontend):** casos propuestos en las tasks AB#383 (vista añadir al carrito) y AB#384 (vista de carrito) a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu9-carrito-de-compra.md`). Pendientes de confirmar con el equipo y de añadir a la HU9 (AB#71) en Azure Boards.
+- **HU9-CP01 a CP08 (Sprint 2, frontend):** casos propuestos en las tasks AB#383 (vista añadir al carrito) y AB#384 (vista de carrito) a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu9-carrito-de-compra.md`). Pendientes de confirmar con el equipo y de añadir a la HU9 (AB#71) en Azure Boards.
 - **Backend:** el carrito (AB#385 a AB#390) no existe todavía; los tests usan el contrato propuesto por el frontend y los mocks (MSW). El carrito vive en el servidor (decisión del equipo).
 - **Decisión del equipo:** los productos del carrito se separan por proveedor, con una cabecera «Proveedor: total» y los totales calculados por el servidor; no hay un total único del carrito.
 - **Cambiar la cantidad** (`PUT /api/cart/items/{productoId}`) no está en las tasks del backend: se propone y hay que confirmarlo.
 - **Archivos de tests nuevos** creados sin consulta previa: `AddToCartButton.test.jsx` y `CartWidget.test.jsx`. `ProductCard.test.jsx`, `ProductsPage.test.jsx` y `ProductDetailPage.test.jsx` ganan casos HU9.
-- **Infraestructura de tests:** `test/cart.jsx` (`conCarrito`) pone un carrito de mentira alrededor de un componente y `test/setup.js` reinicia el carrito simulado tras cada test.
+- **Infraestructura de tests:** `test/cart.jsx` (`conCarrito`) pone un carrito de mentira alrededor de un componente y `test/setup.js` reinicia el carrito y los pedidos simulados tras cada test.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -876,11 +877,56 @@ Notas:
 | HU9-CP07 | `CartWidget.test.jsx` | `HU9-CP07: mientras carga el carrito lo indica` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
 | HU9-CP07 | `CartWidget.test.jsx` | `HU9-CP07: si no carga, avisa y permite reintentar` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
 | HU9-CP07 | `CartWidget.test.jsx` | `HU9-CP07: el carrito vive en el servidor: al recargar la página sigue ahí` | Frontend · componente | AB#384 | Rama `feature/US9-T383-T384-carrito-de-compra` (PR sin abrir) | 🔍 |
+| HU9-CP08 | `CartWidget.test.jsx` | `HU9-CP08: «Proceder al pago» lleva a la pasarela de pago` | Frontend · componente | AB#384 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `AddToCartButton.test.jsx` y `CartWidget.test.jsx`: `features/cart/` (Vitest, React Testing Library y MSW)
 - `ProductCard.test.jsx`: `features/catalog/`
 - `ProductsPage.test.jsx` y `ProductDetailPage.test.jsx`: `pages/`
+
+---
+
+## HU10 · Realización de pedido
+
+### Tabla A · HU10 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU10-CP01 | La pasarela de pago solo la ve un cliente (sin sesión lleva al login; otro rol, a su página) y se llega a ella desde «Proceder al pago» | Frontend (página) | 3 | 🔍 En revisión (3, AB#401, PR sin abrir) |
+| HU10-CP02 | La pasarela resume la compra con un pedido por proveedor («Proveedor: total»), con sus productos, el aviso de un pedido por proveedor y el importe total a pagar | Frontend (página) | 4 | 🔍 En revisión (4, AB#401, PR sin abrir) |
+| HU10-CP03 | Con el carrito vacío la pasarela lo indica, no ofrece pagar y permite volver a los productos | Frontend (página) | 1 | 🔍 En revisión (1, AB#401, PR sin abrir) |
+| HU10-CP04 | Al pulsar «Simular pago» se indica que se procesa, se crea un pedido por cada proveedor, se confirma cada uno y el carrito queda vacío | Frontend (página) | 3 | 🔍 En revisión (3, AB#401, PR sin abrir) |
+| HU10-CP05 | Si falla el pedido de un proveedor se confirman los demás, se avisa de cuál ha fallado, su compra se conserva en el carrito y se puede reintentar sin repetir lo ya pagado | Frontend (página) | 3 | 🔍 En revisión (3, AB#401, PR sin abrir) |
+| HU10-CP06 | Cada pedido se pide con un solo proveedor, uno detrás de otro | Frontend (página) | 1 | 🔍 En revisión (1, AB#401, PR sin abrir) |
+
+Notas:
+- **HU10-CP01 a CP06 (Sprint 2, frontend):** casos propuestos en la task AB#401 (vista de la pasarela de pago) a partir de lo pedido (`frontend/docs/hu10-pasarela-de-pago.md`). Pendientes de confirmar con el equipo y de añadir a la HU10 (AB#72) en Azure Boards. La task AB#379 (vista de carrito) es la misma pantalla que la AB#384 (HU9).
+- **Backend:** la entidad pedido y su endpoint (AB#380 a AB#382) no existen todavía; los tests usan el contrato propuesto por el frontend y los mocks (MSW).
+- **Decisión del equipo:** cada pedido tiene un solo proveedor, la pasarela da la orden de realización del pedido por proveedor y hay un botón para simular el pago (no se cobra nada).
+- **Archivo de tests nuevo** creado sin consulta previa: `CheckoutPage.test.jsx`.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU10-CP01 | `CheckoutPage.test.jsx` | `HU10-CP01: sin sesión, la pasarela de pago lleva a iniciar sesión` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP01 | `CheckoutPage.test.jsx` | `HU10-CP01: un vendedor no ve la pasarela del cliente: va a su página` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP01 | `CheckoutPage.test.jsx` | `HU10-CP01: desde el carrito, «Proceder al pago» lleva a la pasarela` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP02 | `CheckoutPage.test.jsx` | `HU10-CP02: muestra un pedido por proveedor, con la cabecera «Proveedor: total»` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP02 | `CheckoutPage.test.jsx` | `HU10-CP02: cada pedido lista solo los productos de su proveedor, con cantidad y precio` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP02 | `CheckoutPage.test.jsx` | `HU10-CP02: avisa de que se hace un pedido independiente por cada proveedor` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP02 | `CheckoutPage.test.jsx` | `HU10-CP02: muestra el importe total a pagar` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP03 | `CheckoutPage.test.jsx` | `HU10-CP03: con el carrito vacío lo indica, no ofrece pagar y permite volver a los productos` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP04 | `CheckoutPage.test.jsx` | `HU10-CP04: mientras se procesa el pago lo indica y no deja pulsar otra vez` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP04 | `CheckoutPage.test.jsx` | `HU10-CP04: tras pagar se confirma un pedido por cada proveedor` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP04 | `CheckoutPage.test.jsx` | `HU10-CP04: tras pagar el carrito queda vacío` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: confirma los pedidos que sí se han creado e indica cuál ha fallado` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: la compra del pedido que ha fallado se conserva en el carrito` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: se puede reintentar el pago de lo que falló, sin repetir lo ya pagado` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+| HU10-CP06 | `CheckoutPage.test.jsx` | `HU10-CP06: cada pedido se pide con un solo proveedor, uno detrás de otro` | Frontend · página | AB#401 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
+
+Ruta de la clase de test (bajo `frontend/src/`):
+- `CheckoutPage.test.jsx`: `pages/` (Vitest, React Testing Library y MSW)
 
 ---
 
