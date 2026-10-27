@@ -639,10 +639,19 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU4-CP02 | Un vendedor consulta su perfil y recibe sus datos personales y los de vendedor, sin los de cliente | Controlador | 1 | ✅ Pasa |
 | HU4-CP03 | El perfil no expone la contraseña ni datos internos de la cuenta (estado, intentos, bloqueo) | Controlador | 1 | ✅ Pasa |
 | HU4-CP04 | Solo el cliente y el vendedor consultan su perfil: administrador 403, sin sesión 401, y una sesión de un usuario que ya no existe no es válida | Unitario + controlador | 3 | ✅ Pasa |
+| HU4-CP05 | En «Mi perfil» el cliente ve sus datos personales y los de cliente, en solo lectura | Frontend (página) | 2 | 🔍 En revisión (2, AB#296, PR sin abrir) |
+| HU4-CP06 | El vendedor ve sus datos y los de vendedor, con el nombre de su categoría; un dato opcional que falta se ve con un guion | Frontend (página) | 2 | 🔍 En revisión (2, AB#296, PR sin abrir) |
+| HU4-CP07 | La imagen de perfil se ve como el avatar elegido; sin avatar, se ven las iniciales | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#296, PR sin abrir) |
+| HU4-CP08 | La vista no muestra la contraseña ni el estado de la cuenta | Frontend (página) | 1 | 🔍 En revisión (1, AB#296, PR sin abrir) |
+| HU4-CP09 | Si el perfil no carga, se avisa sin detalles internos y se puede reintentar | Frontend (página) | 1 | 🔍 En revisión (1, AB#296, PR sin abrir) |
+| HU4-CP10 | Sin sesión, `/profile` lleva al login; el administrador no entra en el perfil | Frontend (página) | 2 | 🔍 En revisión (2, AB#296, PR sin abrir) |
+| HU4-CP11 | El cliente y el vendedor tienen el enlace «Mi perfil» en la cabecera, que abre su perfil; el administrador no lo tiene | Frontend (página) | 3 | 🔍 En revisión (3, AB#296, PR sin abrir) |
 
 Notas:
 - **HU4-CP01 a CP04:** casos propuestos en la T297 (AB#297), a partir del criterio de aceptación «cuando el usuario accede a su panel de perfil puede visualizar sus datos personales». Pendientes de confirmar con el equipo y de añadir a la HU4 en Azure Boards.
 - **Endpoint (T297):** `GET /api/perfil` → `{id, nombre, apellidos, email, rol, fechaAlta, dni, telefono, avatar}` y, según el rol, `fechaNacimiento` y `tipoCliente` (cliente) o `nombreComercial` y `categoriaPrincipalId` (vendedor). Los campos vacíos no aparecen. El usuario sale de la sesión (su email), nunca de la petición. Solo para `CLIENTE` y `VENDEDOR` (`SecurityConfig`). Es el contrato de la vista del frontend (T296).
+- **HU4-CP05 a CP11 (Sprint 2, frontend):** casos propuestos en la task AB#296 (vista de perfil) a partir del mismo criterio de aceptación y del contrato de la T297 (`frontend/docs/hu4-vista-perfil.md`). Siguen la numeración del backend. Pendientes de confirmar con el equipo y de añadir a la HU4 en Azure Boards.
+- **Archivo de tests nuevo** (con el OK del equipo): `ProfilePage.test.jsx`. `AppHeader.test.jsx` y `AvatarSelector.test.jsx` ganan casos HU4.
 - **Pendiente:** el criterio «el usuario debe dar al botón de guardar para modificar sus datos personales» es de la HU45 (edición de perfil). Aclarar con el equipo qué incluyen sus tasks 101 (endpoint consultar/editar perfil) y 298 (lógica para la obtención segura de datos), que se solapan con la T297.
 
 ### Tabla B · casos de prueba ↔ tests
@@ -656,10 +665,28 @@ Notas:
 | HU4-CP04 | `GestionPerfilServiceTest` | `consultarPerfilDeUnCorreoQueNoExisteLanzaExcepcion` | Aplicación | AB#297 | PR #140 | ✅ |
 | HU4-CP04 | `PerfilControllerTest` | `unAdministradorRecibe403` | Infraestructura | AB#297 | PR #140 | ✅ |
 | HU4-CP04 | `PerfilControllerTest` | `sinSesionRecibe401` | Infraestructura | AB#297 | PR #140 | ✅ |
+| HU4-CP05 | `ProfilePage.test.jsx` | `HU4-CP05: el cliente ve sus datos personales y los de cliente` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP05 | `ProfilePage.test.jsx` | `HU4-CP05: los datos del perfil son de solo lectura` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP06 | `ProfilePage.test.jsx` | `HU4-CP06: el vendedor ve sus datos y los de vendedor, con el nombre de su categoría` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP06 | `ProfilePage.test.jsx` | `HU4-CP06: los datos opcionales que no tiene se muestran con un guion` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP07 | `ProfilePage.test.jsx` | `HU4-CP07: muestra como imagen el avatar que eligió el usuario` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP07 | `ProfilePage.test.jsx` | `HU4-CP07: sin avatar elegido muestra sus iniciales` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP07 | `AvatarSelector.test.jsx` | `HU4-CP07: muestra el avatar elegido con su nombre accesible` | Frontend · componente | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP07 | `AvatarSelector.test.jsx` | `HU4-CP07: sin avatar, o con uno que no existe, muestra las iniciales` | Frontend · componente | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP08 | `ProfilePage.test.jsx` | `HU4-CP08: no muestra la contraseña ni el estado de la cuenta` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP09 | `ProfilePage.test.jsx` | `HU4-CP09: si el perfil no carga, avisa sin detalles internos y permite reintentar` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP10 | `ProfilePage.test.jsx` | `HU4-CP10: sin sesión, redirige al login` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP10 | `ProfilePage.test.jsx` | `HU4-CP10: el administrador no tiene perfil que consultar` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP11 | `AppHeader.test.jsx` | `HU4-CP11: el cliente y el vendedor tienen el enlace a su perfil` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP11 | `AppHeader.test.jsx` | `HU4-CP11: el administrador no tiene el enlace al perfil` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP11 | `AppHeader.test.jsx` | `HU4-CP11: al pulsar Mi perfil se abre el perfil del usuario` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `GestionPerfilServiceTest`: `usuarios/application/service/` (JUnit y Mockito, sin Spring)
 - `PerfilControllerTest`: `usuarios/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
+- `ProfilePage.test.jsx`: `frontend/src/pages/` (Vitest, RTL y MSW)
+- `AppHeader.test.jsx`: `frontend/src/components/` (Vitest, RTL y MSW)
+- `AvatarSelector.test.jsx`: `frontend/src/features/account/` (Vitest y RTL)
 
 ---
 
@@ -1119,12 +1146,12 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU16-CP01 | Cada fila de «Mis productos» ofrece Desactivar si el producto está disponible y Activar si no lo está | Frontend (página) | 1 | 🔍 En revisión (1, AB#281, PR sin abrir) |
-| HU16-CP02 | Al pulsar Desactivar, sin confirmación, el producto pasa a «No disponible» y se avisa «Producto desactivado.» | Frontend (página) | 1 | 🔍 En revisión (1, AB#281, PR sin abrir) |
-| HU16-CP03 | Al pulsar Activar, el producto pasa a «Disponible» y se avisa «Producto activado.» | Frontend (página) | 1 | 🔍 En revisión (1, AB#281, PR sin abrir) |
-| HU16-CP04 | Si falla el cambio, se avisa sin detalles internos y el producto no cambia | Frontend (página) | 1 | 🔍 En revisión (1, AB#281, PR sin abrir) |
-| HU16-CP05 | La ficha del producto ofrece Activar o Desactivar según su estado y avisa a la página con el producto | Frontend (componente) | 2 | 🔍 En revisión (2, AB#281, PR sin abrir) |
-| HU16-CP06 | Desde la ficha, Desactivar cierra la ficha, cambia el producto y avisa | Frontend (página) | 1 | 🔍 En revisión (1, AB#281, PR sin abrir) |
+| HU16-CP01 | Cada fila de «Mis productos» ofrece Desactivar si el producto está disponible y Activar si no lo está | Frontend (página) | 1 | ✅ Pasa |
+| HU16-CP02 | Al pulsar Desactivar, sin confirmación, el producto pasa a «No disponible» y se avisa «Producto desactivado.» | Frontend (página) | 1 | ✅ Pasa |
+| HU16-CP03 | Al pulsar Activar, el producto pasa a «Disponible» y se avisa «Producto activado.» | Frontend (página) | 1 | ✅ Pasa |
+| HU16-CP04 | Si falla el cambio, se avisa sin detalles internos y el producto no cambia | Frontend (página) | 1 | ✅ Pasa |
+| HU16-CP05 | La ficha del producto ofrece Activar o Desactivar según su estado y avisa a la página con el producto | Frontend (componente) | 2 | ✅ Pasa |
+| HU16-CP06 | Desde la ficha, Desactivar cierra la ficha, cambia el producto y avisa | Frontend (página) | 1 | ✅ Pasa |
 
 Notas:
 - **HU16-CP01 a CP06 (Sprint 2, frontend):** casos propuestos en la task AB#281 (botón activar/desactivar productos) a partir de lo pedido en ella y de las decisiones del equipo (`frontend/docs/hu16-activar-desactivar-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU16 en Azure Boards. Si el backend define casos de la HU16, hay que coordinar la numeración.
@@ -1137,13 +1164,13 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU16-CP01 | `SellerProductsPage.test.jsx` | `HU16-CP01: un producto disponible se puede desactivar y uno no disponible, activar` | Frontend · página | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
-| HU16-CP02 | `SellerProductsPage.test.jsx` | `HU16-CP02: al pulsar Desactivar, sin pedir confirmación, el producto pasa a no disponible y se avisa` | Frontend · página | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
-| HU16-CP03 | `SellerProductsPage.test.jsx` | `HU16-CP03: al pulsar Activar, el producto pasa a disponible y se avisa` | Frontend · página | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
-| HU16-CP04 | `SellerProductsPage.test.jsx` | `HU16-CP04: si falla el cambio, avisa sin detalles internos y el producto no cambia` | Frontend · página | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
-| HU16-CP05 | `ProductDetailDialog.test.jsx` | `HU16-CP05: un producto disponible ofrece Desactivar, que avisa con el producto` | Frontend · componente | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
-| HU16-CP05 | `ProductDetailDialog.test.jsx` | `HU16-CP05: un producto no disponible ofrece Activar, que avisa con el producto` | Frontend · componente | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
-| HU16-CP06 | `SellerProductsPage.test.jsx` | `HU16-CP06: desde la ficha, Desactivar cierra la ficha, cambia el producto y avisa` | Frontend · página | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
+| HU16-CP01 | `SellerProductsPage.test.jsx` | `HU16-CP01: un producto disponible se puede desactivar y uno no disponible, activar` | Frontend · página | AB#281 | PR #147 | ✅ |
+| HU16-CP02 | `SellerProductsPage.test.jsx` | `HU16-CP02: al pulsar Desactivar, sin pedir confirmación, el producto pasa a no disponible y se avisa` | Frontend · página | AB#281 | PR #147 | ✅ |
+| HU16-CP03 | `SellerProductsPage.test.jsx` | `HU16-CP03: al pulsar Activar, el producto pasa a disponible y se avisa` | Frontend · página | AB#281 | PR #147 | ✅ |
+| HU16-CP04 | `SellerProductsPage.test.jsx` | `HU16-CP04: si falla el cambio, avisa sin detalles internos y el producto no cambia` | Frontend · página | AB#281 | PR #147 | ✅ |
+| HU16-CP05 | `ProductDetailDialog.test.jsx` | `HU16-CP05: un producto disponible ofrece Desactivar, que avisa con el producto` | Frontend · componente | AB#281 | PR #147 | ✅ |
+| HU16-CP05 | `ProductDetailDialog.test.jsx` | `HU16-CP05: un producto no disponible ofrece Activar, que avisa con el producto` | Frontend · componente | AB#281 | PR #147 | ✅ |
+| HU16-CP06 | `SellerProductsPage.test.jsx` | `HU16-CP06: desde la ficha, Desactivar cierra la ficha, cambia el producto y avisa` | Frontend · página | AB#281 | PR #147 | ✅ |
 
 Rutas de las clases de test:
 - `SellerProductsPage.test.jsx`: `frontend/src/pages/` (Vitest, RTL y MSW)
