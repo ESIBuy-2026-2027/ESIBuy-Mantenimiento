@@ -4,6 +4,7 @@ export const PATHS = {
   REGISTER: '/register',
   PRODUCTS: '/products',
   PRODUCT_DETAIL: '/products/:id',
+  CHECKOUT: '/checkout',
   ADMIN: '/admin',
   ADMIN_USERS: '/admin/users',
   ADMIN_CLIENTS: '/admin/clients',
