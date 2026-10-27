@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
+import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 
 // Consulta de las categorías (AB#43): la edición del vendedor (HU22) elige su categoría principal entre ellas.
 // El repositorio es un doble de prueba: se prueba el caso de uso sin MongoDB ni Spring.
@@ -30,7 +31,7 @@ class ConsultaCategoriasServiceTest {
     @Test
     @DisplayName("HU22-CP15: listar devuelve las categorías del repositorio")
     void listarDevuelveLasCategoriasDelRepositorio() {
-        List<Categoria> categorias = List.of(new Categoria("c-2", "Hogar"), new Categoria("c-1", "Tecnología"));
+        List<Categoria> categorias = List.of(new Categoria("c-2", "Hogar", "", EstadoCategoria.ACTIVA), new Categoria("c-1", "Tecnología", "", EstadoCategoria.ACTIVA));
         when(categoriaRepository.listar()).thenReturn(categorias);
 
         assertEquals(categorias, servicio.listar());

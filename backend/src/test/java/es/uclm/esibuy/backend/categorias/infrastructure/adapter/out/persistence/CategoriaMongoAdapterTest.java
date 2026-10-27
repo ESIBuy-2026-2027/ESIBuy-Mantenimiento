@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Import;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
+import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 import es.uclm.esibuy.backend.shared.config.MongoConfig;
 import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColecciones;
 
@@ -41,7 +42,7 @@ class CategoriaMongoAdapterTest {
         CategoriaDocument tecnologia = guardar("Tecnología");
         CategoriaDocument hogar = guardar("Hogar");
 
-        assertEquals(List.of(new Categoria(hogar.getId(), "Hogar"), new Categoria(tecnologia.getId(), "Tecnología")),
+        assertEquals(List.of(new Categoria(hogar.getId(), "Hogar", "", EstadoCategoria.ACTIVA), new Categoria(tecnologia.getId(), "Tecnología", "", EstadoCategoria.ACTIVA)),
                 adapter.listar());
     }
 

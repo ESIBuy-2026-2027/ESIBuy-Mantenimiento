@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort;
 
 import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
+import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 
 /** Adaptador de salida que implementa el repositorio de categorías con Spring Data MongoDB. */
 public class CategoriaMongoAdapter implements CategoriaRepositoryPort {
@@ -19,7 +20,7 @@ public class CategoriaMongoAdapter implements CategoriaRepositoryPort {
     @Override
     public List<Categoria> listar() {
         return repository.findAll(Sort.by("nombre")).stream()
-                .map(documento -> new Categoria(documento.getId(), documento.getNombre()))
+                .map(documento -> new Categoria(documento.getId(), documento.getNombre(), null, EstadoCategoria.ACTIVA))
                 .toList();
     }
 }
