@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import { getUsuarioEnSesion } from './authHandlers'
-import { PRODUCTOS, datosComerciales } from './productsHandlers'
+import { PRODUCTOS, datosComerciales, estaDisponible } from './productsHandlers'
 
 // Carrito de cada cliente de ejemplo: identificador del cliente → (identificador del producto → cantidad). Como el
 // backend real, vive en el servidor: no se pierde al recargar la página, pero sí al reiniciar los mocks.
@@ -64,7 +64,7 @@ const carritoDe = (usuario) => {
   return carritos.get(usuario.id)
 }
 
-const productoDisponible = (id) => PRODUCTOS.find((candidato) => candidato.id === id && candidato.disponible)
+const productoDisponible = (id) => PRODUCTOS.find((candidato) => candidato.id === id && estaDisponible(candidato))
 
 const esCantidadValida = (cantidad) => Number.isInteger(cantidad) && cantidad >= 1
 

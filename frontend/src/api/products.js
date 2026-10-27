@@ -28,6 +28,15 @@ export function getCatalogProduct(productId) {
   return request(`/api/products/${encodeURIComponent(productId)}`)
 }
 
+// Activa o desactiva un producto propio (HU16). Contrato propuesto por el frontend: el backend aún no lo tiene.
+// Responde con el producto actualizado.
+export function updateSellerProductAvailability(productId, disponible) {
+  return request(`/api/seller/products/${encodeURIComponent(productId)}/availability`, {
+    method: 'PATCH',
+    body: { disponible },
+  })
+}
+
 // Catálogo del cliente (HU7). Contrato propuesto por el frontend: el backend (T352 y T353) aún no lo tiene.
 // sort: nombre o valoracion. order: asc o desc. minRating: valoración media mínima (de 1 a 5).
 export function getCatalogProducts({

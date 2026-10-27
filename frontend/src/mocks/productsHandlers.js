@@ -54,6 +54,20 @@ export const PRODUCTOS = [
   descuentoPremium: { activo: indice % 7 === 0, porcentaje: indice % 7 === 0 ? 15 : null },
 }))
 
+// Disponibilidad que el vendedor ha cambiado durante la sesión (HU16), por id de producto.
+let disponibilidadModificada = new Map()
+
+export function resetProductsMock() {
+  disponibilidadModificada = new Map()
+}
+
+// Si el producto está disponible ahora, contando los cambios de la sesión. El catálogo, su detalle y el carrito
+// solo trabajan con productos disponibles.
+export const estaDisponible = (producto) => disponibilidadModificada.get(producto.id) ?? producto.disponible
+
+// El producto con la disponibilidad que tiene ahora.
+const conDisponibilidadActual = (producto) => ({ ...producto, disponible: estaDisponible(producto) })
+
 export const aRespuesta = ({ id, nombre, precio, stock, disponible, categoria }) => ({
   id,
   nombre,
@@ -227,10 +241,12 @@ function responderAlGuardar(producto, respuestaCorrecta, idEditado) {
 }
 
 // Las escrituras (POST, PUT y DELETE) validan y responden como el backend real, pero NO modifican
-// los datos de ejemplo: a efectos prácticos, el frontend no añade ni elimina productos.
+// los datos de ejemplo: a efectos prácticos, el frontend no añade ni elimina productos. La excepción es
+// activar o desactivar (HU16), que se mantiene durante la sesión para que el listado, el catálogo y el carrito
+// lo reflejen.
 export const productsHandlers = [
   http.get('/api/seller/products/:id', ({ params }) =>
-    conProductoPropio(params, (producto) => HttpResponse.json(aDetalle(producto))),
+    conProductoPropio(params, (producto) => HttpResponse.json(aDetalle(conDisponibilidadActual(producto)))),
   ),
 
   http.post('/api/seller/products', async ({ request }) => {
@@ -252,6 +268,17 @@ export const productsHandlers = [
     conProductoPropio(params, () => new HttpResponse(null, { status: 204 })),
   ),
 
+  // Activar o desactivar un producto propio (HU16). Contrato propuesto por el frontend.
+  http.patch('/api/seller/products/:id/availability', ({ params, request }) =>
+    conProductoPropio(params, async (producto) => {
+      const { disponible } = await request.json()
+      if (typeof disponible !== 'boolean') return errorDeValidacion()
+
+      disponibilidadModificada.set(producto.id, disponible)
+      return HttpResponse.json(aDetalle(conDisponibilidadActual(producto)))
+    }),
+  ),
+
   // Catálogo del cliente (HU7): los productos disponibles de todos los vendedores.
   http.get('/api/products', ({ request }) => {
     const usuario = getUsuarioEnSesion()
@@ -262,7 +289,7 @@ export const productsHandlers = [
     const busqueda = normalizar(params.get('search') ?? '')
     const categoria = params.get('category')
     const minima = Number(params.get('minRating')) || 0
-    const coincidentes = PRODUCTOS.filter((producto) => producto.disponible)
+    const coincidentes = PRODUCTOS.filter(estaDisponible)
       .map((producto) => ({ ...aCatalogo(producto), ...datosComerciales(producto) }))
       .filter(
         (producto) =>
@@ -280,7 +307,7 @@ export const productsHandlers = [
     if (!usuario) return new HttpResponse(null, { status: 401 })
     if (usuario.rol !== 'CLIENTE') return new HttpResponse(null, { status: 403 })
 
-    const producto = PRODUCTOS.find((candidato) => candidato.id === params.id && candidato.disponible)
+    const producto = PRODUCTOS.find((candidato) => candidato.id === params.id && estaDisponible(candidato))
     return producto ? HttpResponse.json(aDetalleDeCatalogo(producto)) : new HttpResponse(null, { status: 404 })
   }),
 
@@ -292,7 +319,7 @@ export const productsHandlers = [
     const params = new URL(request.url).searchParams
     const busqueda = normalizar(params.get('search') ?? '')
     const categoria = params.get('category')
-    const coincidentes = PRODUCTOS.filter(
+    const coincidentes = PRODUCTOS.map(conDisponibilidadActual).filter(
       (producto) =>
         producto.vendedorId === usuario.id &&
         normalizar(producto.nombre).includes(busqueda) &&
