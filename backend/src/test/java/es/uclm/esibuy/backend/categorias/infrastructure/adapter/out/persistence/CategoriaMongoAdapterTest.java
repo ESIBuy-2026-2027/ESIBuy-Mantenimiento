@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Import;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
+import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 import es.uclm.esibuy.backend.shared.config.MongoConfig;
 import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColecciones;
 
@@ -32,7 +33,7 @@ class CategoriaMongoAdapterTest {
     @BeforeEach
     void preparar() {
         categoriaMongoRepository.deleteAll();
-        adapter = new CategoriaMongoAdapter(categoriaMongoRepository);
+        adapter = new CategoriaMongoAdapter(categoriaMongoRepository, new CategoriaDocumentMapper());
     }
 
     @Test
@@ -41,7 +42,19 @@ class CategoriaMongoAdapterTest {
         CategoriaDocument tecnologia = guardar("Tecnología");
         CategoriaDocument hogar = guardar("Hogar");
 
-        assertEquals(List.of(new Categoria(hogar.getId(), "Hogar"), new Categoria(tecnologia.getId(), "Tecnología")),
+        assertEquals(List.of(new Categoria(hogar.getId(), "Hogar", "", EstadoCategoria.ACTIVA),
+                        new Categoria(tecnologia.getId(), "Tecnología", "", EstadoCategoria.ACTIVA)),
+                adapter.listar());
+    }
+
+    @Test
+    @DisplayName("HU40-CP04: la descripción y el estado se guardan en MongoDB y se leen igual")
+    void guardaYLeeLaDescripcionYElEstado() {
+        CategoriaDocument documento = new CategoriaDocumentMapper().aDocumento(
+                new Categoria(null, "Hogar", "Muebles y decoración", EstadoCategoria.INACTIVA));
+        String id = categoriaMongoRepository.save(documento).getId();
+
+        assertEquals(List.of(new Categoria(id, "Hogar", "Muebles y decoración", EstadoCategoria.INACTIVA)),
                 adapter.listar());
     }
 

@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import es.uclm.esibuy.backend.categorias.application.port.in.ConsultaCategoriasUseCase;
 import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
 import es.uclm.esibuy.backend.categorias.application.service.ConsultaCategoriasService;
+import es.uclm.esibuy.backend.categorias.infrastructure.adapter.out.persistence.CategoriaDocumentMapper;
 import es.uclm.esibuy.backend.categorias.infrastructure.adapter.out.persistence.CategoriaMongoAdapter;
 import es.uclm.esibuy.backend.categorias.infrastructure.adapter.out.persistence.CategoriaMongoRepository;
 
@@ -18,7 +19,7 @@ public class CategoriasConfig {
 
     @Bean
     CategoriaRepositoryPort categoriaRepositoryPort(CategoriaMongoRepository categoriaMongoRepository) {
-        return new CategoriaMongoAdapter(categoriaMongoRepository);
+        return new CategoriaMongoAdapter(categoriaMongoRepository, new CategoriaDocumentMapper());
     }
 
     @Bean
