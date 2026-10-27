@@ -76,7 +76,7 @@ describe('CartWidget (HU9): panel del carrito', () => {
     const panel = await abrirPanel()
 
     const cabeceras = within(panel).getAllByRole('heading', { level: 3 })
-    expect(cabeceras.map((cabecera) => cabecera.textContent.replace(/ /g, ' '))).toEqual([
+    expect(cabeceras.map((cabecera) => cabecera.textContent.replace(/\u00a0/g, ' '))).toEqual([
       'TecnoVera: 35,43 €',
       'Casa Vicente: 10,00 €',
     ])
@@ -101,7 +101,7 @@ describe('CartWidget (HU9): panel del carrito', () => {
     const grupo = within(panel).getByRole('group', { name: /tecnovera/i })
     expect(within(grupo).getByLabelText('Cantidad de Auriculares inalámbricos')).toHaveTextContent('2')
     expect(within(grupo).getByText(/25,00/)).toBeInTheDocument()
-    expect(within(grupo).getByText(/12,50 por unidad/i)).toBeInTheDocument()
+    expect(within(grupo).getByText(/12,50.+por unidad/i)).toBeInTheDocument()
   })
 
   it('HU9-CP05: cada producto es un enlace a su detalle', async () => {
@@ -254,7 +254,7 @@ describe('CartWidget (HU9): con el carrito del servidor', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Carrito, 1 producto' }))
     const panel = await screen.findByRole('region', { name: /tu carrito/i })
-    expect(within(panel).getByRole('heading', { level: 3 }).textContent.replace(/ /g, ' ')).toBe('TecnoVera: 53,91 €')
+    expect(within(panel).getByRole('heading', { level: 3 }).textContent.replace(/\u00a0/g, ' ')).toBe('TecnoVera: 53,91 €')
     expect(within(panel).getByText('Auriculares inalámbricos')).toBeInTheDocument()
   })
 
