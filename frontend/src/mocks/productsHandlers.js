@@ -107,22 +107,30 @@ function descuentoDelCliente(producto, tipoCliente = 'ESTANDAR') {
   return producto.descuento.activo ? producto.descuento.porcentaje : null
 }
 
-// Detalle de un producto del catálogo para el cliente (HU8).
-function aDetalleDeCatalogo(producto) {
-  const { imagen, categoriaId, valoracion, numValoraciones } = aCatalogo(producto)
+// Lo comercial de un producto para el cliente (HU8 y HU9): proveedor, precio con el descuento que le corresponde y
+// existencias. Lo comparten el listado, el detalle y el carrito.
+export function datosComerciales(producto) {
   const porcentaje = descuentoDelCliente(producto)
   return {
-    id: producto.id,
-    nombre: producto.nombre,
-    descripcion: producto.descripcion,
-    imagen,
-    categoriaId,
     vendedor: { id: producto.vendedorId, nombreComercial: NOMBRES_COMERCIALES[producto.vendedorId] ?? 'Vendedor' },
     precio: producto.precio,
     descuento: porcentaje === null ? null : { porcentaje },
     precioFinal: porcentaje === null ? producto.precio : Math.round(producto.precio * (100 - porcentaje)) / 100,
     stock: producto.stock,
     disponible: producto.disponible,
+  }
+}
+
+// Detalle de un producto del catálogo para el cliente (HU8).
+function aDetalleDeCatalogo(producto) {
+  const { imagen, categoriaId, valoracion, numValoraciones } = aCatalogo(producto)
+  return {
+    id: producto.id,
+    nombre: producto.nombre,
+    descripcion: producto.descripcion,
+    imagen,
+    categoriaId,
+    ...datosComerciales(producto),
     valoracion,
     numValoraciones,
   }
@@ -255,7 +263,7 @@ export const productsHandlers = [
     const categoria = params.get('category')
     const minima = Number(params.get('minRating')) || 0
     const coincidentes = PRODUCTOS.filter((producto) => producto.disponible)
-      .map((producto) => aCatalogo(producto))
+      .map((producto) => ({ ...aCatalogo(producto), ...datosComerciales(producto) }))
       .filter(
         (producto) =>
           normalizar(producto.nombre).includes(busqueda) &&

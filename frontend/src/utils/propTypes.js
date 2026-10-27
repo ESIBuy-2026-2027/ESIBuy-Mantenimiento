@@ -20,6 +20,16 @@ export const catalogProductPropType = PropTypes.shape({
   nombre: PropTypes.string.isRequired,
   imagen: PropTypes.string,
   categoriaId: PropTypes.string.isRequired,
+  // Lo que hace falta para el precio y para añadirlo al carrito (HU9). El precio lo calcula el servidor para el cliente.
+  vendedor: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    nombreComercial: PropTypes.string.isRequired,
+  }).isRequired,
+  precio: PropTypes.number.isRequired,
+  descuento: PropTypes.shape({ porcentaje: PropTypes.number.isRequired }),
+  precioFinal: PropTypes.number.isRequired,
+  stock: PropTypes.number.isRequired,
+  disponible: PropTypes.bool.isRequired,
   valoracion: PropTypes.number,
   numValoraciones: PropTypes.number.isRequired,
 })

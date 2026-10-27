@@ -174,6 +174,7 @@ Respuesta 200:
 - `imagen` puede llegar vacía: el producto la tiene como opcional (HU31). La selección de los mejores solo usa los que tienen imagen.
 - Al ordenar por valoración, el frontend espera que los productos **sin valoraciones cuenten como 0** y que los empates se desempaten por nombre de la A a la Z.
 - La categoría llega como **identificador**, igual que en el listado del vendedor (HU32); el frontend la traduce al nombre con `GET /api/categorias`.
+- **Ampliación de la HU9:** cada producto del listado lleva también `vendedor` (`{ id, nombreComercial }`), `precio`, `descuento`, `precioFinal`, `stock` y `disponible`, para mostrar el precio y poder añadirlo al carrito (ver `docs/hu9-carrito-de-compra.md`).
 - Con scroll infinito, si entre dos peticiones se añade o se quita algún producto, puede repetirse o saltarse uno entre páginas. El frontend no lo trata; una paginación por cursor lo evitaría.
 
 ---
