@@ -449,38 +449,22 @@ describe('ProductsPage (HU7): selección de los mejores productos', () => {
   })
 })
 
-describe('ProductsPage (HU7): ficha de un producto', () => {
+describe('ProductsPage (HU8): detalle de un producto', () => {
   const abrirAuriculares = (user) =>
-    user.click(within(screen.getByRole('list', { name: /productos/i })).getByRole('button', { name: /auriculares/i }))
+    user.click(within(screen.getByRole('list', { name: /productos/i })).getByRole('link', { name: /auriculares/i }))
 
-  it('HU7-CP08: al pulsar una tarjeta se abre su ficha con su imagen, nombre, categoría y valoración', async () => {
+  it('HU8-CP06: al pulsar una tarjeta del listado se abre el detalle de ese producto', async () => {
     const user = userEvent.setup()
     await abrirCatalogo()
     await esperarTarjetas(10)
 
     await abrirAuriculares(user)
 
-    const ficha = await screen.findByRole('dialog')
-    expect(within(ficha).getByRole('heading', { name: 'Auriculares inalámbricos' })).toBeInTheDocument()
-    expect(within(ficha).getByText('Tecnología')).toBeInTheDocument()
-    expect(within(ficha).getByRole('img', { name: 'Auriculares inalámbricos' })).toBeInTheDocument()
-    expect(within(ficha).getByRole('img', { name: /valoración: \d,\d de 5/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Auriculares inalámbricos' })).toBeInTheDocument()
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products\/p-1$/)
   })
 
-  it('HU7-CP08: la ficha se cierra con el botón Cerrar y se vuelve al listado', async () => {
-    const user = userEvent.setup()
-    await abrirCatalogo()
-    await esperarTarjetas(10)
-    await abrirAuriculares(user)
-    const ficha = await screen.findByRole('dialog')
-
-    await user.click(within(ficha).getByRole('button', { name: /cerrar/i }))
-
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    expect(tarjetas()).toHaveLength(10)
-  })
-
-  it('HU7-CP08: las tarjetas de la animación de los mejores también abren la ficha de su producto', async () => {
+  it('HU8-CP06: al pulsar una tarjeta de la animación de los mejores se abre el detalle de su producto', async () => {
     const user = userEvent.setup()
     await abrirCatalogo()
     const animacion = await screen.findByRole('group', { name: /en movimiento/i })
@@ -492,19 +476,32 @@ describe('ProductsPage (HU7): ficha de un producto', () => {
 
     await user.click(tarjetasDeLaAnimacion[0])
 
-    const ficha = await screen.findByRole('dialog')
-    expect(within(ficha).getByRole('heading', { name: nombre })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: nombre })).toBeInTheDocument()
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products\/p-\d+$/)
   })
 
-  it('HU7-CP08: con el teclado se abren los productos de la selección de los mejores desde su lista', async () => {
+  it('HU8-CP06: con el teclado se llega al detalle desde la lista de los mejores', async () => {
     const user = userEvent.setup()
     await abrirCatalogo()
     const seleccion = await screen.findByRole('list', { name: /selección destacada/i })
 
-    within(seleccion).getByRole('button', { name: /teclado mecánico/i }).focus()
+    within(seleccion).getByRole('link', { name: /teclado mecánico/i }).focus()
     await user.keyboard('{Enter}')
 
-    const ficha = await screen.findByRole('dialog')
-    expect(within(ficha).getByRole('heading', { name: 'Teclado mecánico' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Teclado mecánico' })).toBeInTheDocument()
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products\/p-2$/)
+  })
+
+  it('HU8-CP06: desde el detalle, «Volver a los productos» lleva otra vez al listado', async () => {
+    const user = userEvent.setup()
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+    await abrirAuriculares(user)
+    await screen.findByRole('heading', { level: 1, name: 'Auriculares inalámbricos' })
+
+    await user.click(screen.getByRole('link', { name: /volver a los productos/i }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: /productos/i })).toBeInTheDocument()
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/)
   })
 })
