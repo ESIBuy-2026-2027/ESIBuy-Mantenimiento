@@ -16,7 +16,9 @@ pr:
   autoCancel: true
 
 pool:
-  vmImage: ubuntu-latest
+  # Fijada a Ubuntu 24.04: desde el 19/10/2026 ubuntu-latest es Ubuntu 26 y en esa imagen fallan los tests
+  # que levantan MongoDB con Testcontainers. Volver a ubuntu-latest cuando funcionen en Ubuntu 26.
+  vmImage: ubuntu-24.04
 
 variables:
   MAVEN_CACHE_FOLDER: $(Pipeline.Workspace)/.m2/repository
