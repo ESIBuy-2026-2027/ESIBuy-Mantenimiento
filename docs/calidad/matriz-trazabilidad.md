@@ -635,10 +635,10 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU4-CP01 | Un cliente consulta su perfil (`GET /api/perfil`) y recibe sus datos personales y los de cliente, sin los de vendedor | Unitario + controlador | 2 | 🔍 En revisión |
-| HU4-CP02 | Un vendedor consulta su perfil y recibe sus datos personales y los de vendedor, sin los de cliente | Controlador | 1 | 🔍 En revisión |
-| HU4-CP03 | El perfil no expone la contraseña ni datos internos de la cuenta (estado, intentos, bloqueo) | Controlador | 1 | 🔍 En revisión |
-| HU4-CP04 | Solo el cliente y el vendedor consultan su perfil: administrador 403, sin sesión 401, y una sesión de un usuario que ya no existe no es válida | Unitario + controlador | 3 | 🔍 En revisión |
+| HU4-CP01 | Un cliente consulta su perfil (`GET /api/perfil`) y recibe sus datos personales y los de cliente, sin los de vendedor | Unitario + controlador | 2 | ✅ Pasa |
+| HU4-CP02 | Un vendedor consulta su perfil y recibe sus datos personales y los de vendedor, sin los de cliente | Controlador | 1 | ✅ Pasa |
+| HU4-CP03 | El perfil no expone la contraseña ni datos internos de la cuenta (estado, intentos, bloqueo) | Controlador | 1 | ✅ Pasa |
+| HU4-CP04 | Solo el cliente y el vendedor consultan su perfil: administrador 403, sin sesión 401, y una sesión de un usuario que ya no existe no es válida | Unitario + controlador | 3 | ✅ Pasa |
 
 Notas:
 - **HU4-CP01 a CP04:** casos propuestos en la T297 (AB#297), a partir del criterio de aceptación «cuando el usuario accede a su panel de perfil puede visualizar sus datos personales». Pendientes de confirmar con el equipo y de añadir a la HU4 en Azure Boards.
@@ -649,13 +649,13 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU4-CP01 | `GestionPerfilServiceTest` | `consultarPerfilDevuelveElUsuarioDelCorreo` | Aplicación | AB#297 | — | 🔍 |
-| HU4-CP01 | `PerfilControllerTest` | `unClienteRecibeSusDatos` | Infraestructura | AB#297 | — | 🔍 |
-| HU4-CP02 | `PerfilControllerTest` | `unVendedorRecibeSusDatos` | Infraestructura | AB#297 | — | 🔍 |
-| HU4-CP03 | `PerfilControllerTest` | `elPerfilNoExponeDatosSensibles` | Infraestructura | AB#297 | — | 🔍 |
-| HU4-CP04 | `GestionPerfilServiceTest` | `consultarPerfilDeUnCorreoQueNoExisteLanzaExcepcion` | Aplicación | AB#297 | — | 🔍 |
-| HU4-CP04 | `PerfilControllerTest` | `unAdministradorRecibe403` | Infraestructura | AB#297 | — | 🔍 |
-| HU4-CP04 | `PerfilControllerTest` | `sinSesionRecibe401` | Infraestructura | AB#297 | — | 🔍 |
+| HU4-CP01 | `GestionPerfilServiceTest` | `consultarPerfilDevuelveElUsuarioDelCorreo` | Aplicación | AB#297 | PR #140 | ✅ |
+| HU4-CP01 | `PerfilControllerTest` | `unClienteRecibeSusDatos` | Infraestructura | AB#297 | PR #140 | ✅ |
+| HU4-CP02 | `PerfilControllerTest` | `unVendedorRecibeSusDatos` | Infraestructura | AB#297 | PR #140 | ✅ |
+| HU4-CP03 | `PerfilControllerTest` | `elPerfilNoExponeDatosSensibles` | Infraestructura | AB#297 | PR #140 | ✅ |
+| HU4-CP04 | `GestionPerfilServiceTest` | `consultarPerfilDeUnCorreoQueNoExisteLanzaExcepcion` | Aplicación | AB#297 | PR #140 | ✅ |
+| HU4-CP04 | `PerfilControllerTest` | `unAdministradorRecibe403` | Infraestructura | AB#297 | PR #140 | ✅ |
+| HU4-CP04 | `PerfilControllerTest` | `sinSesionRecibe401` | Infraestructura | AB#297 | PR #140 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `GestionPerfilServiceTest`: `usuarios/application/service/` (JUnit y Mockito, sin Spring)
@@ -1714,6 +1714,32 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `CategoriaTest`: `categorias/domain/model/` (JUnit, sin Spring)
 - `CategoriaDocumentMapperTest`: `categorias/infrastructure/adapter/out/persistence/` (JUnit, sin Spring)
 - `CategoriaMongoAdapterTest`: `categorias/infrastructure/adapter/out/persistence/` (con Testcontainers)
+
+---
+
+## HU43 · Cerrar sesión
+
+### Tabla A · HU43 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU43-CP01 | Al cerrar sesión (`POST /api/auth/logout`) la sesión se invalida en el servidor y la cookie de sesión se borra del navegador | Controlador | 2 | 🔍 En revisión |
+
+Notas:
+- **HU43-CP01:** caso propuesto en la T318 (AB#318), a partir del criterio de aceptación «al cerrar sesión, el token/sesión se invalida en el servidor». Pendiente de confirmar con el equipo y de añadir a la HU43 en Azure Boards.
+- **Backend (T318):** el endpoint ya existía (Spring Security, `SecurityConfig`, T230): invalida la sesión, borra `JSESSIONID` y responde 204. `logoutCierraLaSesion` es el test de la HU2 (HU2-CP15, PR #67) que comprueba la invalidación; se traza también aquí sin cambiar su `@DisplayName`.
+- **La cookie de sesión la borra el servidor:** es HttpOnly, así que el frontend (T317, «lógica de borrado de cookies de sesión») no puede borrarla; le basta con llamar a `logout()` y limpiar su estado.
+- **Pendiente:** la caducidad por inactividad y los atributos Secure, HttpOnly y SameSite de las cookies (T319); el botón «Cerrar sesión» en todas las zonas y la redirección al login tras la caducidad (T314 a T316, frontend).
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU43-CP01 | `AutenticacionControllerTest` | `logoutCierraLaSesion` (`@DisplayName` HU2-CP15) | Infraestructura | AB#230 | PR #67 | ✅ |
+| HU43-CP01 | `AutenticacionControllerTest` | `logoutBorraLaCookieDeSesion` | Infraestructura | AB#318 | PR #141 | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AutenticacionControllerTest`: `usuarios/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
 
 ---
 
