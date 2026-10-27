@@ -505,3 +505,66 @@ describe('ProductsPage (HU8): detalle de un producto', () => {
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/)
   })
 })
+
+describe('ProductsPage (HU9): precio y carrito', () => {
+  const CARRITO = {
+    grupos: [
+      {
+        vendedor: { id: 'u-2', nombreComercial: 'TecnoVera' },
+        total: 53.91,
+        lineas: [
+          { productoId: 'p-1', nombre: 'Auriculares inalámbricos', imagen: '', cantidad: 1, precioUnitario: 53.91, subtotal: 53.91, stock: 34 },
+        ],
+      },
+    ],
+    totalProductos: 1,
+    total: 53.91,
+  }
+
+  const tarjetaDeAuriculares = () =>
+    within(screen.getByRole('list', { name: /productos/i })).getByRole('link', { name: /auriculares/i }).closest('li')
+
+  it('HU9-CP01: las tarjetas del catálogo muestran el precio de cada producto, con su descuento', async () => {
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    const tarjeta = tarjetaDeAuriculares()
+    expect(within(tarjeta).getByText(/53,91/)).toBeInTheDocument()
+    expect(within(tarjeta).getByText(/59,90/).closest('s')).not.toBeNull()
+    expect(within(tarjeta).getByText('-10 %')).toBeInTheDocument()
+  })
+
+  it('HU9-CP02: al pulsar «Añadir al carrito» en una tarjeta se envía ese producto al carrito', async () => {
+    const user = userEvent.setup()
+    let cuerpo = null
+    server.use(
+      http.post('/api/cart/items', async ({ request }) => {
+        cuerpo = await request.json()
+        return HttpResponse.json(CARRITO)
+      }),
+    )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    await user.click(within(tarjetaDeAuriculares()).getByRole('button', { name: /añadir al carrito/i }))
+
+    await waitFor(() => expect(cuerpo).toEqual({ productoId: 'p-1', cantidad: 1 }))
+    expect(await within(tarjetaDeAuriculares()).findByText(/añadido/i)).toBeInTheDocument()
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/)
+  })
+
+  it('HU9-CP02: si el servidor dice que no hay existencias, la tarjeta lo avisa', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/cart/items', () =>
+        HttpResponse.json({ code: 'INSUFFICIENT_STOCK' }, { status: 409 }),
+      ),
+    )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    await user.click(within(tarjetaDeAuriculares()).getByRole('button', { name: /añadir al carrito/i }))
+
+    expect(await within(tarjetaDeAuriculares()).findByRole('alert')).toHaveTextContent(/no hay existencias suficientes/i)
+  })
+})
