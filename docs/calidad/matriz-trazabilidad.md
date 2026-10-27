@@ -663,6 +663,156 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU6 · Gestión de métodos de pago
+
+### Tabla A · HU6 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU6-CP01 | El número de tarjeta solo admite dígitos, de 13 a 19, y tiene que superar el algoritmo de Luhn; rechaza uno nulo o vacío | Unitario | 6 | 🔍 En revisión |
+| HU6-CP02 | La caducidad tiene formato `MM/AA` con el mes entre 01 y 12, y la tarjeta es válida durante todo su mes de caducidad | Unitario | 6 | 🔍 En revisión |
+| HU6-CP03 | El titular es obligatorio, tiene como máximo 26 caracteres y solo admite letras, espacios, guion y apóstrofo | Unitario | 4 | 🔍 En revisión |
+| HU6-CP04 | La URL de PayPal tiene que ser una URL con esquema y servidor | Unitario | 3 | 🔍 En revisión |
+| HU6-CP05 | El teléfono de Bizum tiene 9 dígitos, sin prefijo | Unitario | 4 | 🔍 En revisión |
+| HU6-CP06 | Cada método se muestra solo con su máscara: últimos 4 dígitos de la tarjeta, dominio de la URL de PayPal y últimos 3 dígitos del teléfono de Bizum | Unitario | 3 | 🔍 En revisión |
+| HU6-CP07 | Un método de pago exige cliente, tipo, máscara y bloque cifrado, y se reconstruye conservando si es predeterminado | Unitario | 3 | 🔍 En revisión |
+| HU6-CP08 | Un cliente tiene como máximo 5 métodos de pago; el sexto se rechaza y no se guarda | Unitario | 3 | 🔍 En revisión |
+| HU6-CP09 | Solo hay un método predeterminado: el primero lo es, marcar otro desmarca el anterior y no se puede marcar uno de otro cliente | Unitario | 10 | 🔍 En revisión |
+| HU6-CP10 | Al eliminar el predeterminado el cliente elige el sustituto (no el mismo); el único método se elimina sin elegir; no se elimina uno de otro cliente | Unitario | 10 | 🔍 En revisión |
+| HU6-CP11 | Al añadir una tarjeta se guarda su máscara y un solo bloque cifrado con número, titular y caducidad; nada queda en claro | Unitario | 3 | 🔍 En revisión |
+| HU6-CP12 | Se rechaza una tarjeta caducada respecto al mes actual; la que caduca este mes se acepta | Unitario | 2 | 🔍 En revisión |
+| HU6-CP13 | Se añaden métodos PayPal y Bizum con su máscara y su dato cifrado | Unitario | 2 | 🔍 En revisión |
+| HU6-CP14 | Se rechaza el alta si falta un dato del tipo elegido o falta el tipo | Unitario | 4 | 🔍 En revisión |
+| HU6-CP15 | El listado devuelve solo los métodos del cliente en sesión | Unitario | 1 | 🔍 En revisión |
+| HU6-CP16 | Los datos de pago se cifran con AES-256-GCM: IV aleatorio, solo la misma clave los descifra, se rechaza un cifrado manipulado y una clave nula, que no esté en Base64 o que no mida 32 bytes | Unitario | 9 | 🔍 En revisión |
+| HU6-CP17 | El método de pago se convierte a su documento de MongoDB y vuelve sin perder datos; un documento inválido se rechaza | Unitario | 2 | 🔍 En revisión |
+| HU6-CP18 | Persistencia en MongoDB: guardar, buscar por cliente, actualizar conservando `createdAt` y eliminar; no queda ningún dato de la tarjeta en claro y la colección rechaza un documento sin bloque cifrado | Integración | 6 | 🔍 En revisión |
+| HU6-CP19 | El id del cliente se pide al módulo de usuarios por su puerto de entrada | Unitario | 1 | 🔍 En revisión |
+| HU6-CP20 | `GET /api/customer/payment-methods` devuelve los métodos del cliente en sesión sin datos cifrados | Controlador | 1 | 🔍 En revisión |
+| HU6-CP21 | `POST`: 201 con el método creado; el CVV es obligatorio en tarjeta (3 o 4 dígitos) y no llega al caso de uso; dato inválido o tarjeta caducada 400 `VALIDATION_ERROR`; límite 409 `PAYMENT_METHOD_LIMIT_REACHED` | Controlador | 6 | 🔍 En revisión |
+| HU6-CP22 | `PUT /{id}/default` marca el predeterminado (204); uno ajeno o inexistente da 404 `PAYMENT_METHOD_NOT_FOUND` | Controlador | 2 | 🔍 En revisión |
+| HU6-CP23 | `DELETE /{id}` elimina (204) con el sustituto elegido; sin él, 409 `DEFAULT_PAYMENT_METHOD_REQUIRED`; uno ajeno o inexistente da 404 | Controlador | 3 | 🔍 En revisión |
+| HU6-CP24 | Solo un cliente con sesión accede, y las peticiones que modifican datos exigen CSRF | Controlador | 3 | 🔍 En revisión |
+
+Notas:
+- **HU6-CP01 a CP24:** casos propuestos y aprobados por el equipo durante el desarrollo de la HU6 (tasks 271, 110 y 270). Los casos de prueba no se registran en Azure Boards: viven en esta matriz y en el `@DisplayName` de cada test.
+- **Decisiones del Product Owner y del equipo:** los datos de pago **sí se persisten**, cifrados con AES-256-GCM (sustituye al «solo tipo y máscara» de `docs/requisitos/sprint2-decisiones.md`); el **CVV nunca se guarda**, solo se valida en la petición; máximo 5 métodos por cliente; al eliminar el predeterminado, el cliente elige otro.
+- **Endpoints (T110):** `GET`, `POST`, `PUT /{id}/default` y `DELETE /{id}?nuevoPredeterminado=` sobre `/api/customer/payment-methods`, solo para `CLIENTE` (`SecurityConfig`). El cliente sale de la sesión. La respuesta es `{id, tipo, mascara, predeterminado}`, nunca el bloque cifrado.
+- **Pendiente:** confirmar los códigos de error con quien haga la vista (T113, T269). La clave de cifrado va en la variable de entorno `ESIBUY_PAGOS_CLAVE_CIFRADO`.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU6-CP01 | `NumeroTarjetaTest` | `creaNumeroDeTarjetaValido` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP01 | `NumeroTarjetaTest` | `rechazaNumeroConLuhnIncorrecto` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP01 | `NumeroTarjetaTest` | `rechazaNumeroConCaracteresNoNumericos` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP01 | `NumeroTarjetaTest` | `rechazaNumeroDeDoceDigitos` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP01 | `NumeroTarjetaTest` | `rechazaNumeroDeVeinteDigitos` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP01 | `NumeroTarjetaTest` | `rechazaNumeroNuloOVacio` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP02 | `CaducidadTarjetaTest` | `caducidadFuturaEstaVigente` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP02 | `CaducidadTarjetaTest` | `caducidadDelMesActualEstaVigente` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP02 | `CaducidadTarjetaTest` | `caducidadDelMesAnteriorNoEstaVigente` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP02 | `CaducidadTarjetaTest` | `rechazaMesFueraDeRango` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP02 | `CaducidadTarjetaTest` | `rechazaFormatoIncorrecto` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP02 | `CaducidadTarjetaTest` | `rechazaCaducidadNulaOVacia` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP03 | `TitularTarjetaTest` | `creaTitularValido` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP03 | `TitularTarjetaTest` | `rechazaTitularVacioONulo` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP03 | `TitularTarjetaTest` | `rechazaTitularDemasiadoLargo` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP03 | `TitularTarjetaTest` | `rechazaTitularConDigitosOSimbolos` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP04 | `UrlPayPalTest` | `creaUrlValida` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP04 | `UrlPayPalTest` | `rechazaTextoQueNoEsUnaUrl` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP04 | `UrlPayPalTest` | `rechazaUrlNulaOVacia` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP05 | `TelefonoBizumTest` | `creaTelefonoDeNueveDigitos` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP05 | `TelefonoBizumTest` | `rechazaTelefonoConLetras` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP05 | `TelefonoBizumTest` | `rechazaTelefonoDeOchoDigitos` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP05 | `TelefonoBizumTest` | `rechazaTelefonoNuloOVacio` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP06 | `NumeroTarjetaTest` | `enmascaraTodoMenosLosUltimosCuatroDigitos` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP06 | `TelefonoBizumTest` | `enmascaraTodoMenosLosUltimosTresDigitos` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP06 | `UrlPayPalTest` | `enmascaraMostrandoSoloElDominio` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP07 | `MetodoPagoTest` | `creaMetodoAsociadoAUnCliente` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP07 | `MetodoPagoTest` | `reconstruyeMetodoGuardadoConservandoElPredeterminado` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP07 | `MetodoPagoTest` | `rechazaMetodoConDatosObligatoriosAusentes` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP08 | `GestionMetodosPagoServiceTest` | `rechazaSextoMetodoYNoLoGuarda` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP08 | `MetodosPagoClienteTest` | `anadeMetodosHastaElLimite` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP08 | `MetodosPagoClienteTest` | `rechazaSextoMetodo` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP09 | `GestionMetodosPagoServiceTest` | `primerMetodoAnadidoSeGuardaPredeterminado` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP09 | `GestionMetodosPagoServiceTest` | `marcarPredeterminadoGuardaElCambio` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP09 | `GestionMetodosPagoServiceTest` | `rechazaMarcarMetodoDeOtroCliente` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP09 | `MetodoPagoTest` | `nuevoMetodoNoEsPredeterminado` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP09 | `MetodoPagoTest` | `marcaMetodoComoPredeterminado` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP09 | `MetodoPagoTest` | `desmarcaMetodoPredeterminado` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP09 | `MetodosPagoClienteTest` | `primerMetodoQuedaPredeterminado` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP09 | `MetodosPagoClienteTest` | `metodoPosteriorNoCambiaElPredeterminado` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP09 | `MetodosPagoClienteTest` | `marcarOtroLeDejaSoloUnPredeterminado` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP09 | `MetodosPagoClienteTest` | `rechazaMarcarMetodoInexistente` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP10 | `GestionMetodosPagoServiceTest` | `eliminarMetodoLoBorraDelRepositorio` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP10 | `GestionMetodosPagoServiceTest` | `eliminarPredeterminadoGuardaElNuevoPredeterminado` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP10 | `GestionMetodosPagoServiceTest` | `eliminarPredeterminadoSinElegirNoBorraNada` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP10 | `GestionMetodosPagoServiceTest` | `rechazaEliminarMetodoDeOtroCliente` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP10 | `MetodosPagoClienteTest` | `eliminaMetodoNoPredeterminado` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP10 | `MetodosPagoClienteTest` | `eliminarPredeterminadoExigeElegirOtro` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP10 | `MetodosPagoClienteTest` | `eliminarPredeterminadoYElegirOtro` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP10 | `MetodosPagoClienteTest` | `rechazaElegirComoSustitutoElMetodoEliminado` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP10 | `MetodosPagoClienteTest` | `eliminarElUnicoMetodoDejaListaVacia` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP10 | `MetodosPagoClienteTest` | `rechazaEliminarMetodoInexistente` | Dominio | AB#271 | PR por abrir | 🔍 |
+| HU6-CP11 | `GestionMetodosPagoServiceTest` | `anadirTarjetaGuardaMascaraYDatosCifrados` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP11 | `GestionMetodosPagoServiceTest` | `anadirTarjetaCifraNumeroTitularYCaducidadEnUnBloque` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP11 | `GestionMetodosPagoServiceTest` | `anadirTarjetaNoGuardaNumeroNiTitularEnClaro` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP12 | `GestionMetodosPagoServiceTest` | `rechazaTarjetaCaducada` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP12 | `GestionMetodosPagoServiceTest` | `aceptaTarjetaQueCaducaEsteMes` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP13 | `GestionMetodosPagoServiceTest` | `anadePayPalConSuMascara` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP13 | `GestionMetodosPagoServiceTest` | `anadeBizumConSuMascara` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP14 | `GestionMetodosPagoServiceTest` | `rechazaTarjetaConDatosIncompletos` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP14 | `GestionMetodosPagoServiceTest` | `rechazaPayPalSinUrl` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP14 | `GestionMetodosPagoServiceTest` | `rechazaBizumSinTelefono` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP14 | `GestionMetodosPagoServiceTest` | `rechazaMetodoSinTipo` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP15 | `GestionMetodosPagoServiceTest` | `listaSoloLosMetodosDelClienteEnSesion` | Aplicación | AB#271 | PR por abrir | 🔍 |
+| HU6-CP16 | `AesGcmCifradoDatosPagoAdapterTest` | `cifraConLaClaveConfigurada` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP16 | `AesGcmCifradoDatosPagoAdapterTest` | `rechazaClaveNulaOVacia` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP16 | `AesGcmCifradoDatosPagoAdapterTest` | `rechazaClaveQueNoEsBase64` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP16 | `AesGcmCifradoDatosPagoAdapterTest` | `rechazaClaveQueNoMide32Bytes` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP16 | `CifradorAesGcmTest` | `conLaMismaClaveSeRecuperanLosDatos` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP16 | `CifradorAesGcmTest` | `elCifradoNoContieneLosDatos` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP16 | `CifradorAesGcmTest` | `cadaCifradoEsDistinto` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP16 | `CifradorAesGcmTest` | `conOtraClaveNoSeDescifran` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP16 | `CifradorAesGcmTest` | `unCifradoManipuladoSeRechaza` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP17 | `MetodoPagoDocumentMapperTest` | `convierteAdocumentoYVueltaSinPerderDatos` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP17 | `MetodoPagoDocumentMapperTest` | `rechazaDocumentoQueNoCumpleElDominio` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP18 | `MetodoPagoMongoAdapterTest` | `guardarMetodoNuevoLeAsignaId` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP18 | `MetodoPagoMongoAdapterTest` | `buscarPorClienteDevuelveSoloLosSuyos` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP18 | `MetodoPagoMongoAdapterTest` | `actualizarConservaLaFechaDeCreacion` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP18 | `MetodoPagoMongoAdapterTest` | `eliminarBorraElMetodo` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP18 | `MetodoPagoMongoAdapterTest` | `enMongoNoQuedaNingunDatoEnClaro` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP18 | `MetodoPagoMongoAdapterTest` | `laColeccionRechazaDocumentoSinDatosCifrados` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP19 | `ClienteEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#271 | PR por abrir | 🔍 |
+| HU6-CP20 | `MetodoPagoControllerTest` | `listarDevuelveLosMetodosSinDatosCifrados` | Infraestructura | AB#110 | PR por abrir | 🔍 |
+| HU6-CP21 | `MetodoPagoControllerTest` | `anadirTarjetaDevuelve201` | Infraestructura | AB#110 | PR por abrir | 🔍 |
+| HU6-CP21 | `MetodoPagoControllerTest` | `elCvvNoLlegaAlCasoDeUso` | Infraestructura | AB#110 | PR por abrir | 🔍 |
+| HU6-CP21 | `MetodoPagoControllerTest` | `tarjetaConCvvAusenteOInvalidoDevuelve400` | Infraestructura | AB#110 | PR por abrir | 🔍 |
+| HU6-CP21 | `MetodoPagoControllerTest` | `metodoSinTipoDevuelve400` | Infraestructura | AB#110 | PR por abrir | 🔍 |
+| HU6-CP21 | `MetodoPagoControllerTest` | `datoInvalidoDevuelve400SinRepetirLosDatos` | Infraestructura | AB#110 | PR por abrir | 🔍 |
+| HU6-CP21 | `MetodoPagoControllerTest` | `superarElLimiteDevuelve409` | Infraestructura | AB#110 | PR por abrir | 🔍 |
+| HU6-CP22 | `MetodoPagoControllerTest` | `marcarPredeterminadoDevuelve204` | Infraestructura | AB#110 | PR por abrir | 🔍 |
+| HU6-CP22 | `MetodoPagoControllerTest` | `marcarMetodoAjenoDevuelve404` | Infraestructura | AB#110 | PR por abrir | 🔍 |
+| HU6-CP23 | `MetodoPagoControllerTest` | `eliminarDevuelve204ConElSustituto` | Infraestructura | AB#110 | PR por abrir | 🔍 |
+| HU6-CP23 | `MetodoPagoControllerTest` | `eliminarPredeterminadoSinSustitutoDevuelve409` | Infraestructura | AB#110 | PR por abrir | 🔍 |
+| HU6-CP23 | `MetodoPagoControllerTest` | `eliminarMetodoAjenoDevuelve404` | Infraestructura | AB#110 | PR por abrir | 🔍 |
+| HU6-CP24 | `MetodoPagoControllerTest` | `sinSesionNoSeAccede` | Infraestructura | AB#110 | PR por abrir | 🔍 |
+| HU6-CP24 | `MetodoPagoControllerTest` | `unUsuarioQueNoEsClienteNoAccede` | Infraestructura | AB#110 | PR por abrir | 🔍 |
+| HU6-CP24 | `MetodoPagoControllerTest` | `sinTokenCsrfSeRechaza` | Infraestructura | AB#110 | PR por abrir | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `NumeroTarjetaTest`, `CaducidadTarjetaTest`, `TitularTarjetaTest`, `UrlPayPalTest`, `TelefonoBizumTest`, `MetodoPagoTest` y `MetodosPagoClienteTest`: `metodospago/domain/model/` (solo JUnit)
+- `GestionMetodosPagoServiceTest`: `metodospago/application/service/` (dobles de prueba escritos a mano, sin Spring)
+- `CifradorAesGcmTest`: `shared/infrastructure/seguridad/` (lo usan también el secreto TOTP de la HU2)
+- `AesGcmCifradoDatosPagoAdapterTest`: `metodospago/infrastructure/adapter/out/seguridad/`
+- `MetodoPagoDocumentMapperTest` y `MetodoPagoMongoAdapterTest`: `metodospago/infrastructure/adapter/out/persistence/` (el adaptador, con Testcontainers)
+- `ClienteEnSesionAdapterTest`: `metodospago/infrastructure/adapter/out/usuarios/` (Mockito)
+- `MetodoPagoControllerTest`: `metodospago/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
+
+---
+
 ## HU7 · Búsqueda y filtrado de productos
 
 ### Tabla A · HU7 ↔ casos de prueba
@@ -1957,6 +2107,8 @@ Tests que no validan una HU concreta.
 | `UsuariosConfigTest` | `elContextoConectaLasPiezasDelLogin` | Que Spring conecta el login con sus adaptadores de códigos (MongoDB), generador (`SecureRandom`) y correo (SMTP) (AB#230, PR #67) |
 | `UsuariosConfigTest` | `elContextoConectaLasPiezasDelAuthenticator` | Que Spring conecta el paso 3 (`AuthenticatorService`) con la librería TOTP, el cifrado AES-GCM y el adaptador de `factores_autenticacion` (AB#20, PR #75) |
 | `UsuariosConfigTest` | `elContextoRegistraElFiltroDeCuentaActiva` | Que Spring registra `CuentaActivaFilter`, el filtro que invalida la sesión de las cuentas desactivadas (HU23; AB#39, AB#206, PR #85) |
+| `MetodosPagoConfigTest` | `elContextoConectaLasPiezasDeLosMetodosDePago` | Que Spring conecta el servicio de métodos de pago con su adaptador de MongoDB, su cifrado AES-GCM y el cliente en sesión (HU6; AB#271, PR por abrir) |
+| `MetodosPagoConfigTest` | `losDatosDePagoSeCifranConLaClaveConfigurada` | Que los datos de pago se cifran con la clave de `esibuy.pagos.clave-cifrado`, que en los tests pone `MongoTestcontainersConfig` (HU6; AB#271, PR por abrir) |
 | `SecurityConfigTest` | `unaPeticionRecibeElTokenCsrfEnUnaCookie` | Que cualquier respuesta, aunque sea un 401, entrega el token CSRF en la cookie `XSRF-TOKEN` sin `HttpOnly` (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostSinTokenCsrfSeRechaza` | Que un `POST` sin token CSRF se rechaza con 403 (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostConElTokenDeLaCookieEnLaCabeceraSeAcepta` | Que un `POST` con el token de la cookie en la cabecera `X-XSRF-TOKEN` pasa el filtro CSRF (AB#230, PR #67) |
@@ -1970,7 +2122,7 @@ Tests que no validan una HU concreta.
 | `UsuarioMongoAdapterTest` | `guardaFechasDeCreacionYModificacion` | Que se guardan `createdAt` y `updatedAt` (auditoría de Spring Data) y que `createdAt` no cambia al actualizar (AB#210, PR #43) |
 | `ProductoMongoAdapterTest` | `guardarUnProductoLeidoLoActualiza` | Que guardar un producto leído lo actualiza sin duplicarlo y conserva `createdAt` (AB#202, PR #86) |
 | `ProductoMongoAdapterTest` | `elPrecioSeGuardaComoNumero` | Que el precio y los porcentajes de descuento se guardan como `Decimal128`, no como texto (AB#202, PR #86) |
-| `InicializadorColeccionesTest` | `creaLasDiezColecciones` | Que al arrancar se crean las 10 colecciones del modelo de BBDD (AB#210, PR #43) |
+| `InicializadorColeccionesTest` | `creaLasOnceColecciones` | Que al arrancar se crean las 11 colecciones: las 10 del modelo de BBDD y `metodos_pago` (AB#210, PR #43; ampliado en AB#271, PR por abrir) |
 | `InicializadorColeccionesTest` | `sePuedeEjecutarOtraVez` | Que el inicializador se puede ejecutar en cada arranque sin fallar ni duplicar índices (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `actualizaLaValidacionDeUnaColeccionExistente` | Que aplica la validación a una colección que ya existía sin ella (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `sinPermisoParaCambiarLaValidacionNoFalla` | Que sin permiso `collMod` (usuario de la aplicación en Atlas) avisa y la aplicación arranca igual (AB#210, PR #43) |
