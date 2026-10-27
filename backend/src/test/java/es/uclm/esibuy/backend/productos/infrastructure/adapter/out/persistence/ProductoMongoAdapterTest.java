@@ -342,8 +342,15 @@ class ProductoMongoAdapterTest {
     @Test
     @DisplayName("HU7-CP15: con una valoración mínima no sale ningún producto mientras no haya valoraciones")
     void buscarEnCatalogoConValoracionMinimaNoDevuelveNada() {
-        // TODO: guardar dos disponibles; valoracionMinima = 2 devuelve lista vacía y total 0.
-        fail("Funcionalidad no implementada");
+        // Hasta HU13 ningún producto tiene valoraciones, así que ninguno llega al mínimo (decisión 3 del plan).
+        adapter.guardar(productoNuevo("v-1", "Teclado"));
+        adapter.guardar(productoNuevo("v-2", "Ratón"));
+
+        ProductoPage pagina = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, 2, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+
+        assertEquals(List.of(), nombres(pagina));
+        assertEquals(0, pagina.totalElementos());
     }
 
     @Test
