@@ -32,6 +32,9 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
  * <p>La zona de vendedor ({@code /api/seller/**}) solo la usa el rol VENDEDOR (HU15, T57). El
  * administrador ve la información de los vendedores en solo lectura por su propia zona
  * ({@code /api/admin/sellers/...}, HU26). Que el vendedor esté activo lo comprueba el login.
+ *
+ * <p>La zona de cliente ({@code /api/customer/**}) solo la usa el rol CLIENTE: de momento, sus métodos de
+ * pago (HU6).
  */
 @Configuration
 public class SecurityConfig {
@@ -55,6 +58,7 @@ public class SecurityConfig {
     // El perfil propio (HU4) es del cliente y del vendedor; el administrador no tiene perfil que consultar aquí.
     private static final String RUTAS_PERFIL = "/api/perfil/**";
     private static final String ROL_CLIENTE = "CLIENTE";
+    private static final String RUTAS_CLIENTE = "/api/customer/**";
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -66,6 +70,7 @@ public class SecurityConfig {
                         .requestMatchers(RUTA_ERROR).permitAll()
                         .requestMatchers(RUTAS_ADMINISTRACION).hasRole(ROL_ADMINISTRADOR)
                         .requestMatchers(RUTAS_VENDEDOR).hasRole(ROL_VENDEDOR)
+                        .requestMatchers(RUTAS_CLIENTE).hasRole(ROL_CLIENTE)
                         .requestMatchers(RUTAS_PERFIL).hasAnyRole(ROL_CLIENTE, ROL_VENDEDOR)
                         .anyRequest().authenticated())
                 .exceptionHandling(excepciones -> excepciones

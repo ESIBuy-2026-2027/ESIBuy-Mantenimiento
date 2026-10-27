@@ -61,7 +61,7 @@ final class ColeccionesEsiBuy {
 
     static List<Coleccion> todas() {
         return List.of(usuarios(), sesiones(), factoresAutenticacion(), tokensSeguridad(), productos(),
-                pedidos(), carritos(), valoraciones(), categorias(), listasDeseos());
+                pedidos(), carritos(), valoraciones(), categorias(), listasDeseos(), metodosPago());
     }
 
     // 1. usuarios: identidad, rol, estado y perfil, con los campos del modelo en la raíz del documento,
@@ -252,6 +252,19 @@ final class ColeccionesEsiBuy {
                         .required(PRODUCTO_ID)
                         .properties(textoNoVacio(PRODUCTO_ID), date("addedAt")))),
                 List.of(indice(USUARIO_ID).unique()));
+    }
+
+    // 11. metodos_pago: métodos de pago de cada cliente (HU6), fuera del modelo inicial. Solo la máscara y
+    // el bloque cifrado: los datos de pago nunca en claro. El índice de clienteId lo declara MetodoPagoDocument.
+    private static Coleccion metodosPago() {
+        return new Coleccion("metodos_pago",
+                esquema(List.of(CLIENTE_ID, "tipo", "mascara", "datosCifrados", "predeterminado"),
+                        textoNoVacio(CLIENTE_ID),
+                        string("tipo").possibleValues("TARJETA", "PAYPAL", "BIZUM"),
+                        textoNoVacio("mascara"),
+                        textoNoVacio("datosCifrados"),
+                        bool("predeterminado")),
+                List.of());
     }
 
     // Todas las colecciones llevan createdAt y updatedAt («Convenciones comunes» del modelo).
