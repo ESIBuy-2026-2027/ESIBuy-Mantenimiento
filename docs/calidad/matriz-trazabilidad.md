@@ -1757,23 +1757,31 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU43-CP01 | Al cerrar sesión (`POST /api/auth/logout`) la sesión se invalida en el servidor y la cookie de sesión se borra del navegador | Controlador | 2 | 🔍 En revisión |
+| HU43-CP01 | Al cerrar sesión (`POST /api/auth/logout`) la sesión se invalida en el servidor y la cookie de sesión se borra del navegador | Controlador | 2 | ✅ Pasa |
+| HU43-CP02 | La sesión caduca tras 15 minutos sin actividad si no se configura otro tiempo (`ESIBUY_SESION_INACTIVIDAD`) | Integración (servidor real) | 1 | 🔍 En revisión |
+| HU43-CP03 | Las cookies de sesión (`JSESSIONID`: Secure, HttpOnly y SameSite=Strict) y de CSRF (`XSRF-TOKEN`: Secure y SameSite=Strict, legible por el frontend) llevan sus atributos de seguridad | Controlador + integración (servidor real) | 2 | 🔍 En revisión |
 
 Notas:
-- **HU43-CP01:** caso propuesto en la T318 (AB#318), a partir del criterio de aceptación «al cerrar sesión, el token/sesión se invalida en el servidor». Pendiente de confirmar con el equipo y de añadir a la HU43 en Azure Boards.
+- **HU43-CP01:** caso propuesto en la T318 (AB#318), a partir del criterio de aceptación «al cerrar sesión, el token/sesión se invalida en el servidor». **HU43-CP02 y CP03:** propuestos en la T319 (AB#319), a partir de «la sesión caduca tras un tiempo de inactividad configurable» y «cookies de sesión con atributos Secure, HttpOnly y SameSite». Pendientes de confirmar con el equipo y de añadir a la HU43 en Azure Boards.
+- **Backend (T319):** en `application.properties`, `server.servlet.session.timeout=${ESIBUY_SESION_INACTIVIDAD:15m}` y los atributos de la cookie de sesión; en `SecurityConfig`, un `CookieCsrfTokenRepository` con Secure y SameSite=Strict. Al caducar, la siguiente petición recibe 401 y el frontend debe redirigir al login.
 - **Backend (T318):** el endpoint ya existía (Spring Security, `SecurityConfig`, T230): invalida la sesión, borra `JSESSIONID` y responde 204. `logoutCierraLaSesion` es el test de la HU2 (HU2-CP15, PR #67) que comprueba la invalidación; se traza también aquí sin cambiar su `@DisplayName`.
 - **La cookie de sesión la borra el servidor:** es HttpOnly, así que el frontend (T317, «lógica de borrado de cookies de sesión») no puede borrarla; le basta con llamar a `logout()` y limpiar su estado.
-- **Pendiente:** la caducidad por inactividad y los atributos Secure, HttpOnly y SameSite de las cookies (T319); el botón «Cerrar sesión» en todas las zonas y la redirección al login tras la caducidad (T314 a T316, frontend).
+- **Pendiente:** el botón «Cerrar sesión» en todas las zonas y la redirección al login tras la caducidad (T314 a T316, frontend). En despliegue, con Secure la aplicación tiene que servirse por HTTPS.
 
 ### Tabla B · casos de prueba ↔ tests
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
 | HU43-CP01 | `AutenticacionControllerTest` | `logoutCierraLaSesion` (`@DisplayName` HU2-CP15) | Infraestructura | AB#230 | PR #67 | ✅ |
-| HU43-CP01 | `AutenticacionControllerTest` | `logoutBorraLaCookieDeSesion` | Infraestructura | AB#318 | PR #141 | 🔍 |
+| HU43-CP01 | `AutenticacionControllerTest` | `logoutBorraLaCookieDeSesion` | Infraestructura | AB#318 | PR #141 | ✅ |
+| HU43-CP02 | `ConfiguracionSesionTest` | `laSesionCaducaA15MinutosDeInactividadPorDefecto` | Infraestructura | AB#319 | PR #142 | 🔍 |
+| HU43-CP03 | `ConfiguracionSesionTest` | `laCookieDeSesionEsSecureHttpOnlyYSameSiteStrict` | Infraestructura | AB#319 | PR #142 | 🔍 |
+| HU43-CP03 | `SecurityConfigTest` | `laCookieCsrfEsSecureYSameSiteStrict` | Infraestructura | AB#319 | PR #142 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AutenticacionControllerTest`: `usuarios/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
+- `ConfiguracionSesionTest`: `shared/config/` (`@SpringBootTest` con el servidor real en un puerto aleatorio y Testcontainers)
+- `SecurityConfigTest`: `shared/config/` (con `@WebMvcTest`)
 
 ---
 

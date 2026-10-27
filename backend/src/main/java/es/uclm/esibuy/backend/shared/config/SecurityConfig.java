@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 /**
  * Configuración mínima de Spring Security.
@@ -74,11 +75,19 @@ public class SecurityConfig {
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
                         .deleteCookies("JSESSIONID"))
                 // spa(): el token CSRF va en la cookie XSRF-TOKEN (legible por el frontend, sin HttpOnly) y
-                // el frontend lo devuelve en la cabecera X-XSRF-TOKEN (T230, D4)
+                // el frontend lo devuelve en la cabecera X-XSRF-TOKEN (T230, D4). La cookie es además Secure y
+                // SameSite=Strict, como la de sesión (HU43, T319).
                 .csrf(csrf -> csrf
                         .spa()
+                        .csrfTokenRepository(repositorioTokenCsrf())
                         .ignoringRequestMatchers(RUTA_REGISTRO, RUTA_REGISTRO_VENDEDOR));
         return http.build();
+    }
+
+    private static CookieCsrfTokenRepository repositorioTokenCsrf() {
+        CookieCsrfTokenRepository repositorio = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        repositorio.setCookieCustomizer(cookie -> cookie.secure(true).sameSite("Strict"));
+        return repositorio;
     }
 
     
