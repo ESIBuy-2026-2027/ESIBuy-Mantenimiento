@@ -308,8 +308,17 @@ class ProductoMongoAdapterTest {
     @Test
     @DisplayName("HU7-CP13: el filtro por categoría se puede combinar con la búsqueda")
     void buscarEnCatalogoFiltraPorCategoriaYBusqueda() {
-        // TODO: «Teclado» en cat-1 y en cat-2 y «Ratón» en cat-2; buscar «teclado» en cat-2 devuelve solo uno.
-        fail("Funcionalidad no implementada");
+        // Dos «Teclado» de vendedores distintos (un vendedor no repite nombre): uno en cat-1 y otro en cat-2.
+        guardarProducto("v-1", "Teclado", "cat-1", "2026-10-01T10:00:00Z");
+        guardarProducto("v-2", "Teclado", "cat-2", "2026-10-02T10:00:00Z");
+        guardarProducto("v-2", "Ratón", "cat-2", "2026-10-03T10:00:00Z");
+
+        ProductoPage pagina = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery("teclado", "cat-2", null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+
+        assertEquals(1, pagina.totalElementos());
+        assertEquals("Teclado", pagina.productos().getFirst().getNombre());
+        assertEquals("cat-2", pagina.productos().getFirst().getCategoriaId());
     }
 
     @Test
