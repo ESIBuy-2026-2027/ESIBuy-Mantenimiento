@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
@@ -28,12 +29,15 @@ class CategoriaMongoAdapterTest {
     @Autowired
     private CategoriaMongoRepository categoriaMongoRepository;
 
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
     private CategoriaMongoAdapter adapter;
 
     @BeforeEach
     void preparar() {
         categoriaMongoRepository.deleteAll();
-        adapter = new CategoriaMongoAdapter(categoriaMongoRepository, new CategoriaDocumentMapper());
+        adapter = new CategoriaMongoAdapter(categoriaMongoRepository, new CategoriaDocumentMapper(), mongoTemplate);
     }
 
     @Test
