@@ -5,7 +5,7 @@ Documento para entender cómo se añade un producto al carrito y cómo se ve el 
 - **Fecha:** 27 de octubre de 2026
 - **HU:** HU9 · Gestión del carrito de compra (AB#71)
 - **Tasks:** AB#383 (frontend: vista añadir al carrito) y AB#384 (frontend: vista de carrito)
-- **Rama:** `feature/US9-T383-T384-carrito-de-compra`
+- **Rama:** `feature/US9-T383-T384-T401-carrito-y-pasarela-de-pago` (incluye también la pasarela de pago de la HU10, AB#401; ver `docs/hu10-pasarela-de-pago.md`)
 - **Metodología:** TDD. Cada ciclo tiene su commit de rojo (`test(front)`) y su commit de verde (`feat(front)`)
 - **Depende de:** `docs/hu7-busqueda-y-filtrado-de-productos.md` (las tarjetas), `docs/hu8-detalle-producto.md` (el detalle) y `docs/mocks-msw.md` (mocks)
 - **Backend:** las tasks AB#385 a AB#390 (entidad del carrito, endpoints de añadir y eliminar, lógica de añadir y eliminar productos y limpieza de carritos) están sin hacer. El contrato de la sección 5 lo **propone el frontend**.
@@ -24,7 +24,7 @@ El cliente ve el **precio** de cada producto en el listado, puede **añadirlo al
 | Productos separados por proveedor | El panel agrupa por proveedor (`role="group"`), cada grupo con su cabecera |
 | Cabecera por proveedor: «ProveedorX: 35,43 €» | `TecnoVera: 35,43 €`. El total de cada grupo lo calcula el servidor |
 | Cálculos del precio por proveedor | Cada proveedor tiene su total; no hay un total único del carrito |
-| Botón «Proceder al pago» | No está en esta HU: lo añade la HU10 junto con la pasarela de pago |
+| Botón «Proceder al pago» | En el pie del panel, un enlace a la pasarela de pago (`/checkout`, HU10) |
 | El carrito vive en el backend | Se pide con `GET /api/cart` al entrar y cada operación responde con el carrito completo. Al recargar la página, sigue ahí |
 
 > Solo los clientes tienen carrito: el botón y el panel no aparecen para vendedores ni administradores. El backend debe responder 401 o 403 si quien consulta no es un cliente.
@@ -46,6 +46,7 @@ flowchart TD
     J -- Cambia la cantidad --> K[PUT /api/cart/items/id]
     J -- Quita un producto --> L[DELETE /api/cart/items/id]
     J -- Vacía el carrito --> M[DELETE /api/cart]
+    J -- Proceder al pago --> N[/checkout]
 ```
 
 ---
@@ -60,7 +61,7 @@ flowchart TD
 | `useCart.js` | El hook para usarlo; falla si no hay `CartProvider` |
 | `AddToCartButton.jsx` | El botón de añadir. Estados: «Añadir al carrito», «Añadiendo…» (desactivado), «Añadido» (2 s) y error (`role="alert"`). Un producto agotado o no disponible no se puede añadir |
 | `QuantityStepper.jsx` | Selector de cantidad con menos y más, entre 1 y las existencias. Lo usan el detalle y el panel |
-| `CartWidget.jsx` | El botón flotante y el panel: lista por proveedor, cantidades, quitar, vaciar, y estados de carga y error. El panel se cierra con Cerrar, con Escape y al cambiar de página. Al abrirlo, el foco pasa a él |
+| `CartWidget.jsx` | El botón flotante y el panel: lista por proveedor, cantidades, quitar, vaciar, estados de carga y error y «Proceder al pago». El panel se cierra con Cerrar, con Escape y al cambiar de página. Al abrirlo, el foco pasa a él |
 
 ### Cambios en el catálogo
 
@@ -90,7 +91,7 @@ flowchart TD
 | Sin carrito | El usuario no es cliente | No hay botón |
 | Cargando | Mientras llega el carrito | «Cargando carrito…» en el panel |
 | Error | Falla `GET /api/cart` | «No se ha podido cargar el carrito» con **Reintentar** |
-| Vacío | Sin productos | «Tu carrito está vacío»; sin «Vaciar» |
+| Vacío | Sin productos | «Tu carrito está vacío»; sin «Vaciar» ni «Proceder al pago» |
 | Con productos | Al menos uno | Un grupo por proveedor, con su total |
 | Operación en curso | Cambiar cantidad, quitar o vaciar | Los controles se desactivan hasta que responde el servidor |
 | Error al modificar | El servidor rechaza la operación | Aviso en el panel (sin existencias suficientes, u otro) |
@@ -163,7 +164,7 @@ npm run build
 | Archivo | Tests | Qué cubre |
 |---|---|---|
 | `features/cart/AddToCartButton.test.jsx` (nuevo) | 8 | Añade una unidad o la cantidad indicada; «Añadiendo…» y «Añadido»; sin existencias; otro fallo; el aviso se quita al reintentar; agotado y no disponible |
-| `features/cart/CartWidget.test.jsx` (nuevo) | 22 | Botón con el número de productos (singular, vacío); solo clientes; panel agrupado por proveedor con «Proveedor: total»; cantidades, subtotales y enlaces; cerrar con Cerrar y Escape; carrito vacío; cantidad, existencias, quitar y vaciar; errores; carga y reintento; con el carrito del servidor (añadir desde el listado y recargar la página) |
+| `features/cart/CartWidget.test.jsx` (nuevo) | 23 | Botón con el número de productos (singular, vacío); solo clientes; panel agrupado por proveedor con «Proveedor: total»; cantidades, subtotales y enlaces; cerrar con Cerrar y Escape; carrito vacío; «Proceder al pago»; cantidad, existencias, quitar y vaciar; errores; carga y reintento; con el carrito del servidor (añadir desde el listado y recargar la página) |
 | `features/catalog/ProductCard.test.jsx` | 4 nuevos | Precio, descuento, botón de añadir y que el botón no está dentro del enlace |
 | `pages/ProductsPage.test.jsx` | 3 nuevos | Precio con descuento en las tarjetas, añadir desde una tarjeta y aviso de existencias |
 | `pages/ProductDetailPage.test.jsx` | 5 nuevos | Añadir desde el detalle, elegir la cantidad, mínimo y máximo, y agotado |
@@ -173,7 +174,7 @@ npm run build
 ## 7. Decisiones y librerías
 
 - **El carrito vive en el backend** (decisión del equipo), no en el navegador. El frontend solo guarda la última copia que envía el servidor.
-- **Totales por proveedor, sin total único** (decisión del equipo): cada proveedor es un pedido distinto. El importe total a pagar lo mostrará la pasarela de pago (HU10).
+- **Totales por proveedor, sin total único** (decisión del equipo): cada proveedor es un pedido distinto. Solo la pasarela muestra el importe total a pagar.
 - **El servidor calcula los precios.** El frontend no multiplica ni aplica descuentos.
 - **Un botón dentro de un enlace no es válido**, así que la tarjeta se divide en el enlace al detalle y, aparte, el precio y el botón.
 - **Cambiar la cantidad exige `PUT`**, que no está en las tasks del backend; se propone y se marca para confirmar.
@@ -186,8 +187,7 @@ npm run build
 - **Backend:** falta todo el carrito (AB#385 a AB#390) y el cálculo de precios por tipo de cliente.
 - **`PUT` para fijar la cantidad:** no está en las tasks; hay que confirmarlo.
 - **Avisos de cambios de precio o de existencias:** si el precio o el stock cambian entre que se añade un producto y se paga, el frontend no avisa; el servidor lo comprueba al crear el pedido.
-- **Verificación visual parcial:** el panel del carrito, y las tarjetas con precio se vieron en el navegador con datos fijos, pero no la aplicación completa con los mocks (MSW no se registra en el navegador integrado de Claude Code). Conviene que el equipo compruebe el conjunto.
-- **Pagar:** el botón «Proceder al pago» y la pasarela de pago son de la HU10 (AB#401) y van en otra rama.
+- **Verificación visual parcial:** el panel del carrito, las tarjetas con precio y la pasarela se vieron en el navegador con datos fijos, pero no la aplicación completa con los mocks (MSW no se registra en el navegador integrado de Claude Code). Conviene que el equipo compruebe el conjunto.
 - **Móvil:** el botón y el panel se adaptan al ancho, pero no se han probado en un teléfono real.
 
 ---
