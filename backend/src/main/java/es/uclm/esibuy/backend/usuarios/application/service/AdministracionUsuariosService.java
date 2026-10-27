@@ -11,6 +11,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.AutoeliminacionNoPermitidaException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
@@ -111,7 +112,7 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
             throw new UsuarioNoEncontradoException("El administrador no existe");
         }
         if (administrador.getEmail().valor().equalsIgnoreCase(emailAdministrador)) {
-            throw new AutodesactivacionNoPermitidaException("Un administrador no puede eliminar su propia cuenta");
+            throw new AutoeliminacionNoPermitidaException("Un administrador no puede eliminar su propia cuenta");
         }
         if (administrador.estaActivo() && usuarioRepository.contarAdministradoresActivos() <= 1) {
             throw new UltimoAdministradorActivoException("No se puede eliminar al último administrador activo");

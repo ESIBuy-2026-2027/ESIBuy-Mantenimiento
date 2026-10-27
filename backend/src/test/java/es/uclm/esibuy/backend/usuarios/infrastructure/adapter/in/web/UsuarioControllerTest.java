@@ -50,7 +50,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.security.test.context.support.WithMockUser;
-
+import es.uclm.esibuy.backend.usuarios.domain.exception.AutoeliminacionNoPermitidaException;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -1028,6 +1029,11 @@ class UsuarioControllerTest {
                 .content("{\"estado\":\"" + estado + "\"}");
     }
 
+    // DELETE con sesión: lleva el token CSRF, como el PATCH de la HU24.
+    private static MockHttpServletRequestBuilder eliminarUsuario(String id) {
+        return delete("/api/admin/usuarios/{id}", id).with(csrf());
+    }
+
     // Registro del vendedor (T241).
 
     @Test
@@ -1289,4 +1295,76 @@ class UsuarioControllerTest {
         verify(listadoUsuarios).listar(new ListarUsuariosQuery(
                 null, Rol.VENDEDOR, null, "cat-1", 0, 10, null));
     }
+
+    // Eliminar un administrador (HU37): DELETE /api/admin/usuarios/{id}.
+    // Contrato del frontend: 204 sin cuerpo, 404 si no existe y 409 CANNOT_DELETE_SELF o LAST_ACTIVE_ADMIN.
+
+    @Test
+    @DisplayName("HU37-CP07: un administrador elimina a otro administrador y recibe 204")
+    @WithMockUser(username = EMAIL_ADMINISTRADOR, roles = "ADMINISTRADOR")
+    void administradorEliminaAOtroAdministrador() throws Exception {
+        mockMvc.perform(eliminarUsuario("u-3"))
+                .andExpect(status().isNoContent());
+
+        verify(administracionUsuarios).eliminarAdministrador("u-3", EMAIL_ADMINISTRADOR);
+    }
+
+    @Test
+    @DisplayName("HU37-CP08: eliminar un administrador que no existe devuelve 404")
+    @WithMockUser(username = EMAIL_ADMINISTRADOR, roles = "ADMINISTRADOR")
+    void eliminarAdministradorInexistenteDevuelve404() throws Exception {
+        doThrow(new UsuarioNoEncontradoException("El usuario no existe"))
+                .when(administracionUsuarios).eliminarAdministrador("no-existe", EMAIL_ADMINISTRADOR);
+
+        mockMvc.perform(eliminarUsuario("no-existe"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @Test
+    @DisplayName("HU37-CP09: si el administrador intenta eliminarse a sí mismo devuelve 409 CANNOT_DELETE_SELF")
+    @WithMockUser(username = EMAIL_ADMINISTRADOR, roles = "ADMINISTRADOR")
+    void eliminarseASiMismoDevuelve409() throws Exception {
+        doThrow(new AutoeliminacionNoPermitidaException("Un administrador no puede eliminar su propia cuenta"))
+                .when(administracionUsuarios).eliminarAdministrador("u-1", EMAIL_ADMINISTRADOR);
+
+        mockMvc.perform(eliminarUsuario("u-1"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CANNOT_DELETE_SELF"))
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @Test
+    @DisplayName("HU37-CP10: eliminar al último administrador activo devuelve 409 LAST_ACTIVE_ADMIN")
+    @WithMockUser(username = EMAIL_ADMINISTRADOR, roles = "ADMINISTRADOR")
+    void eliminarAlUltimoAdministradorActivoDevuelve409() throws Exception {
+        doThrow(new UltimoAdministradorActivoException("No se puede eliminar al último administrador activo"))
+                .when(administracionUsuarios).eliminarAdministrador("u-3", EMAIL_ADMINISTRADOR);
+
+        mockMvc.perform(eliminarUsuario("u-3"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("LAST_ACTIVE_ADMIN"))
+                .andExpect(jsonPath("$.mensaje").exists());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "VENDEDOR"})
+    @DisplayName("HU37-CP11: un usuario que no es administrador no puede eliminar cuentas (403)")
+    void unNoAdministradorNoPuedeEliminarCuentas(String rol) throws Exception {
+        mockMvc.perform(eliminarUsuario("u-3").with(user("usuario").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(administracionUsuarios, never()).eliminarAdministrador(any(), any());
+    }
+
+    @Test
+    @DisplayName("HU37-CP12: sin sesión no se puede eliminar una cuenta (401)")
+    void eliminarSinSesionEstaProtegido() throws Exception {
+        mockMvc.perform(eliminarUsuario("u-3"))
+                .andExpect(status().isUnauthorized());
+
+        verify(administracionUsuarios, never()).eliminarAdministrador(any(), any());
+    }
+
+    
 }

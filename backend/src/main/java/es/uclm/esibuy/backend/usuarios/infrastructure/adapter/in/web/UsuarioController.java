@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 /**
  * Adaptador de entrada web del módulo de usuarios.
@@ -121,6 +122,14 @@ public class UsuarioController {
     public void crearAdministrador(@Valid @RequestBody CrearAdministradorRequest request) {
         crearAdministrador.crear(new CrearAdministradorCommand(
                 request.nombre(), request.apellidos(), request.email(), request.avatar(), request.password()));
+    }
+
+    // Eliminar un administrador (HU37). 204 sin cuerpo; 404 si no existe y 409 si es la propia cuenta
+    // o el último administrador activo (ManejadorGlobalErrores).
+    @DeleteMapping("/admin/usuarios/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminar(@PathVariable String id, Authentication autenticado) {
+        administracionUsuarios.eliminarAdministrador(id, autenticado.getName());
     }
 
     // Supervisión de vendedores, solo lectura (HU26): el listado de la HU19 con el rol VENDEDOR fijo.
