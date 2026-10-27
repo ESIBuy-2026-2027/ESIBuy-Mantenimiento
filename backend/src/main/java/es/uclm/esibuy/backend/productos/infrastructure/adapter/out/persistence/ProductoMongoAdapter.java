@@ -76,6 +76,9 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         if (query.busqueda() != null && !query.busqueda().isBlank()) {
             filtros.add(Criteria.where("nombre").regex(patronSinTildes(query.busqueda()), "i"));
         }
+        if (query.categoriaId() != null && !query.categoriaId().isBlank()) {
+            filtros.add(Criteria.where("categoriaId").is(query.categoriaId()));
+        }
         Criteria criterios = new Criteria().andOperator(filtros);
         long total = mongoTemplate.count(new Query(criterios), ProductoDocument.class);
         List<Producto> productos = mongoTemplate.find(new Query(criterios).with(PageRequest.of(
