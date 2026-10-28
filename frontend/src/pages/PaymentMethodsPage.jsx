@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import {
   Badge,
   Button,
@@ -60,9 +60,17 @@ export default function PaymentMethodsPage() {
   const fetcher = useCallback(() => getPaymentMethods(), [])
   const { data: metodos, failed, retry } = useApiQuery(fetcher)
 
-  // Tras el cambio se vuelve a pedir la lista: el backend desmarca el anterior
+  const [aviso, setAviso] = useState(null)
+
+  // Tras el cambio se vuelve a pedir la lista: el backend desmarca el anterior. Si el método ya no existe (p. ej.
+  // se eliminó desde otra pestaña), se avisa y la lista recargada ya no lo muestra.
   const marcarPredeterminado = async (id) => {
-    await setDefaultPaymentMethod(id)
+    setAviso(null)
+    try {
+      await setDefaultPaymentMethod(id)
+    } catch {
+      setAviso('Ese método de pago ya no existe. Hemos actualizado la lista.')
+    }
     retry()
   }
 
@@ -80,6 +88,11 @@ export default function PaymentMethodsPage() {
           <MessageBarActions>
             <Button onClick={retry}>Reintentar</Button>
           </MessageBarActions>
+        </MessageBar>
+      )}
+      {aviso && (
+        <MessageBar intent="warning">
+          <MessageBarBody>{aviso}</MessageBarBody>
         </MessageBar>
       )}
       {metodos?.length === 0 && (
