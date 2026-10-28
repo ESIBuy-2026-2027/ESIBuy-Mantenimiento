@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.productos.infrastructure.adapter.in.web;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
@@ -23,8 +24,18 @@ public class CatalogoController {
     }
 
     @GetMapping("/products")
-    public ProductoCatalogoPageResponse buscarProductos() {
-        return ProductoCatalogoPageResponse.desde(catalogoProductos.buscarProductos(
-                new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10)));
+    public ProductoCatalogoPageResponse buscarProductos(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Integer minRating,
+            @RequestParam(defaultValue = "nombre") String sort,
+            @RequestParam(defaultValue = "asc") String order) {
+        CriterioOrdenCatalogo criterio = "valoracion".equals(sort)
+                ? CriterioOrdenCatalogo.VALORACION
+                : CriterioOrdenCatalogo.NOMBRE;
+        return ProductoCatalogoPageResponse.desde(catalogoProductos.buscarProductos(new BuscarCatalogoQuery(
+                search, category, minRating, criterio, "desc".equals(order), page - 1, size)));
     }
 }
