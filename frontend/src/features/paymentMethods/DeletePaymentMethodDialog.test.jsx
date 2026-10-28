@@ -78,8 +78,16 @@ describe('DeletePaymentMethodDialog (HU6): sustituto', () => {
     expect(eliminaciones).toEqual([{ id: 'm-1', sustituto: 'm-3' }])
   })
 
-  it('HU6-CP35: el único método se elimina sin elegir sustituto', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP35: el único método se elimina sin elegir sustituto', async () => {
+    const eliminaciones = registrarEliminaciones()
+    const usuario = userEvent.setup()
+    const { onDeleted } = abrirDialogo(TARJETA, [TARJETA])
+
+    expect(screen.queryByRole('combobox', { name: /nuevo método predeterminado/i })).not.toBeInTheDocument()
+    await usuario.click(screen.getByRole('button', { name: /^eliminar$/i }))
+
+    await waitFor(() => expect(onDeleted).toHaveBeenCalled())
+    expect(eliminaciones).toEqual([{ id: 'm-1', sustituto: null }])
   })
 })
 
