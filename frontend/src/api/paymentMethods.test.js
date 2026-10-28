@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
-import { addPaymentMethod, getPaymentMethods, setDefaultPaymentMethod } from './paymentMethods'
+import {
+  addPaymentMethod,
+  deletePaymentMethod,
+  getPaymentMethods,
+  setDefaultPaymentMethod,
+} from './paymentMethods'
 
 // Cliente de la API de métodos de pago del cliente (HU6): GET, POST, PUT /{id}/default y DELETE /{id} sobre
 // /api/customer/payment-methods. Los mocks de MSW sustituyen al backend.
@@ -61,8 +66,24 @@ describe('api de métodos de pago', () => {
     expect(respuesta).toBeNull()
   })
 
-  it('HU6-CP25: deletePaymentMethod elimina el método y envía el sustituto solo si se indica', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP25: deletePaymentMethod elimina el método y envía el sustituto solo si se indica', async () => {
+    const peticiones = []
+    server.use(
+      http.delete(`${URL_METODOS}/:id`, ({ request, params }) => {
+        peticiones.push({ id: params.id, url: new URL(request.url) })
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+
+    // Al eliminar el predeterminado, el cliente elige cuál lo sustituye
+    await deletePaymentMethod('m1', 'm2')
+    // Un método que no es el predeterminado se elimina sin sustituto
+    await deletePaymentMethod('m3')
+
+    expect(peticiones[0].id).toBe('m1')
+    expect(peticiones[0].url.searchParams.get('nuevoPredeterminado')).toBe('m2')
+    expect(peticiones[1].id).toBe('m3')
+    expect(peticiones[1].url.searchParams.has('nuevoPredeterminado')).toBe(false)
   })
 
   it('HU6-CP25: un error del backend llega como ApiError con su código', () => {
