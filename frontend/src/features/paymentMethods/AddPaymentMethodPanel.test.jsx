@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { renderWithProviders } from '../../test/utils'
 import AddPaymentMethodPanel from './AddPaymentMethodPanel'
 
@@ -28,8 +29,19 @@ describe('AddPaymentMethodPanel (HU6): tipo de método', () => {
     expect(screen.queryByLabelText(/teléfono/i)).not.toBeInTheDocument()
   })
 
-  it('HU6-CP30: al elegir PayPal o Bizum muestra solo su campo', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP30: al elegir PayPal o Bizum muestra solo su campo', async () => {
+    const usuario = userEvent.setup()
+    abrirPanel()
+
+    await usuario.click(screen.getByRole('button', { name: 'PayPal' }))
+    expect(screen.getByRole('button', { name: 'PayPal', pressed: true })).toBeInTheDocument()
+    expect(screen.getByLabelText(/url de paypal/i)).toBeInTheDocument()
+    expect(screen.queryByLabelText(/número de tarjeta/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/teléfono/i)).not.toBeInTheDocument()
+
+    await usuario.click(screen.getByRole('button', { name: 'Bizum' }))
+    expect(screen.getByLabelText(/teléfono/i)).toBeInTheDocument()
+    expect(screen.queryByLabelText(/url de paypal/i)).not.toBeInTheDocument()
   })
 })
 
