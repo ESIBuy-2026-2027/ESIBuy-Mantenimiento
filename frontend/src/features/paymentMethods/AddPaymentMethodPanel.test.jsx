@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../../mocks/server'
@@ -102,8 +102,36 @@ describe('AddPaymentMethodPanel (HU6): validación', () => {
 })
 
 describe('AddPaymentMethodPanel (HU6): guardar', () => {
-  it('HU6-CP32: guarda solo los datos del tipo elegido y avisa de que se ha añadido', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP32: guarda solo los datos del tipo elegido y avisa de que se ha añadido', async () => {
+    const peticion = {}
+    const creado = { id: 'm-9', tipo: 'TARJETA', mascara: '•••• 1111', predeterminado: false }
+    server.use(
+      http.post(URL_METODOS, async ({ request }) => {
+        peticion.cuerpo = await request.json()
+        return HttpResponse.json(creado, { status: 201 })
+      }),
+    )
+    const usuario = userEvent.setup()
+    const { onSaved } = abrirPanel()
+
+    // Se escribe algo en PayPal y luego se cambia a Tarjeta: lo de PayPal no se envía
+    await usuario.click(screen.getByRole('button', { name: 'PayPal' }))
+    await usuario.type(screen.getByLabelText(/url de paypal/i), 'https://paypal.me/juan')
+    await usuario.click(screen.getByRole('button', { name: 'Tarjeta' }))
+    await usuario.type(screen.getByLabelText(/número de tarjeta/i), '4111 1111 1111 1111')
+    await usuario.type(screen.getByLabelText(/caducidad/i), '12/27')
+    await usuario.type(screen.getByLabelText(/cvv/i), '123')
+    await usuario.type(screen.getByLabelText(/titular/i), 'Juan Pérez')
+    await usuario.click(screen.getByRole('button', { name: /guardar método de pago/i }))
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(creado))
+    expect(peticion.cuerpo).toEqual({
+      tipo: 'TARJETA',
+      numeroTarjeta: '4111111111111111',
+      titular: 'Juan Pérez',
+      caducidad: '12/27',
+      cvv: '123',
+    })
   })
 
   it('HU6-CP32: al cancelar o cerrar el panel se borran los datos escritos', () => {
