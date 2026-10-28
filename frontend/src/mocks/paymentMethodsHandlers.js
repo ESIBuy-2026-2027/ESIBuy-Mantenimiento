@@ -20,6 +20,17 @@ resetPaymentMethodsMock()
 
 const URL_METODOS = '/api/customer/payment-methods'
 
+const MAXIMO_METODOS = 5
+const LIMITE_ALCANZADO = { mensaje: 'Se ha alcanzado el máximo de métodos de pago', code: 'PAYMENT_METHOD_LIMIT_REACHED' }
+let siguienteId = 100
+
+// La misma máscara que calcula el backend para cada tipo
+function mascaraDe(metodo) {
+  if (metodo.tipo === 'TARJETA') return `•••• ${metodo.numeroTarjeta.slice(-4)}`
+  if (metodo.tipo === 'PAYPAL') return new URL(metodo.urlPayPal).hostname
+  return `•••• ${metodo.telefonoBizum.slice(-3)}`
+}
+
 const NO_ENCONTRADO = { mensaje: 'El método de pago no existe', code: 'PAYMENT_METHOD_NOT_FOUND' }
 
 // El cliente en sesión, o la respuesta de error si no hay sesión (401) o no es cliente (403)
@@ -36,6 +47,18 @@ export const paymentMethodsHandlers = [
   http.get(URL_METODOS, () => {
     const { error, metodos } = clienteEnSesion()
     return error ?? HttpResponse.json(metodos)
+  }),
+
+  // Como el backend: máximo 5, el primero queda predeterminado y solo se devuelve la máscara (nunca se guarda el CVV)
+  http.post(URL_METODOS, async ({ request }) => {
+    const { error, metodos } = clienteEnSesion()
+    if (error) return error
+    if (metodos.length >= MAXIMO_METODOS) return HttpResponse.json(LIMITE_ALCANZADO, { status: 409 })
+    const datos = await request.json()
+    siguienteId += 1
+    const metodo = { id: `m-${siguienteId}`, tipo: datos.tipo, mascara: mascaraDe(datos), predeterminado: metodos.length === 0 }
+    metodos.push(metodo)
+    return HttpResponse.json(metodo, { status: 201 })
   }),
 
   // Solo uno predeterminado; uno de otro cliente se responde igual que uno inexistente (404)

@@ -15,6 +15,7 @@ import { Add20Regular, Payment24Regular, Phone24Regular, Wallet24Regular } from 
 import { getPaymentMethods, setDefaultPaymentMethod } from '../api/paymentMethods'
 import EmptyState from '../components/EmptyState'
 import { usePageStyles } from '../components/pageStyles'
+import AddPaymentMethodPanel from '../features/paymentMethods/AddPaymentMethodPanel'
 import { useApiQuery } from '../hooks/useApiQuery'
 
 // Como el backend: un cliente tiene como máximo 5 métodos de pago (HU6)
@@ -73,7 +74,19 @@ export default function PaymentMethodsPage() {
   const { data: metodos, failed, retry } = useApiQuery(fetcher)
 
   const [aviso, setAviso] = useState(null)
+  const [anadiendo, setAnadiendo] = useState(false)
   const limiteAlcanzado = (metodos?.length ?? 0) >= MAXIMO_METODOS
+
+  const abrirPanel = () => {
+    setAviso(null)
+    setAnadiendo(true)
+  }
+
+  const alGuardar = () => {
+    setAnadiendo(false)
+    setAviso({ intent: 'success', texto: 'Método de pago añadido.' })
+    retry()
+  }
 
   // Tras el cambio se vuelve a pedir la lista: el backend desmarca el anterior. Si el método ya no existe (p. ej.
   // se eliminó desde otra pestaña), se avisa y la lista recargada ya no lo muestra.
@@ -82,7 +95,7 @@ export default function PaymentMethodsPage() {
     try {
       await setDefaultPaymentMethod(id)
     } catch {
-      setAviso('Ese método de pago ya no existe. Hemos actualizado la lista.')
+      setAviso({ intent: 'warning', texto: 'Ese método de pago ya no existe. Hemos actualizado la lista.' })
     }
     retry()
   }
@@ -98,7 +111,7 @@ export default function PaymentMethodsPage() {
         </div>
         {metodos?.length > 0 && (
           <div className={styles.action}>
-            <Button appearance="primary" icon={<Add20Regular />} disabled={limiteAlcanzado}>
+            <Button appearance="primary" icon={<Add20Regular />} disabled={limiteAlcanzado} onClick={abrirPanel}>
               Añadir método de pago
             </Button>
             {limiteAlcanzado && (
@@ -118,17 +131,18 @@ export default function PaymentMethodsPage() {
         </MessageBar>
       )}
       {aviso && (
-        <MessageBar intent="warning">
-          <MessageBarBody>{aviso}</MessageBarBody>
+        <MessageBar intent={aviso.intent}>
+          <MessageBarBody>{aviso.texto}</MessageBarBody>
         </MessageBar>
       )}
+      {anadiendo && <AddPaymentMethodPanel onSaved={alGuardar} onCancel={() => setAnadiendo(false)} />}
       {metodos?.length === 0 && (
         <EmptyState
           icon={<Payment24Regular />}
           title="Aún no tienes métodos de pago"
           description="Añade una tarjeta, una cuenta de PayPal o tu teléfono de Bizum para pagar tus compras."
         >
-          <Button appearance="primary" icon={<Add20Regular />}>
+          <Button appearance="primary" icon={<Add20Regular />} onClick={abrirPanel}>
             Añadir método de pago
           </Button>
         </EmptyState>
