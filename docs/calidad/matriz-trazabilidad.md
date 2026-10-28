@@ -841,38 +841,38 @@ Notas:
 | HU6-CP24 | `MetodoPagoControllerTest` | `sinSesionNoSeAccede` | Infraestructura | AB#110 | PR #148 | ✅ |
 | HU6-CP24 | `MetodoPagoControllerTest` | `unUsuarioQueNoEsClienteNoAccede` | Infraestructura | AB#110 | PR #148 | ✅ |
 | HU6-CP24 | `MetodoPagoControllerTest` | `sinTokenCsrfSeRechaza` | Infraestructura | AB#110 | PR #148 | ✅ |
-| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: getPaymentMethods pide la lista de métodos del cliente en sesión` | Frontend · API | AB#269 | PR por abrir | 🔍 |
-| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: addPaymentMethod envía los datos del método con un POST` | Frontend · API | AB#269 | PR por abrir | 🔍 |
-| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: setDefaultPaymentMethod marca el método con un PUT a /{id}/default` | Frontend · API | AB#269 | PR por abrir | 🔍 |
-| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: deletePaymentMethod elimina el método y envía el sustituto solo si se indica` | Frontend · API | AB#269 | PR por abrir | 🔍 |
-| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: un error del backend llega como ApiError con su código` | Frontend · API | AB#269 | PR por abrir | 🔍 |
-| HU6-CP26 | `PaymentMethodsPage.test.jsx` | `HU6-CP26: muestra cada método con su tipo y su máscara, sin otros datos de pago` | Frontend · página | AB#269 | PR por abrir | 🔍 |
-| HU6-CP26 | `PaymentMethodsPage.test.jsx` | `HU6-CP26: indica cuál es el método predeterminado` | Frontend · página | AB#269 | PR por abrir | 🔍 |
-| HU6-CP26 | `PaymentMethodsPage.test.jsx` | `HU6-CP26: sin métodos muestra un estado vacío con el botón para añadir el primero` | Frontend · página | AB#269 | PR por abrir | 🔍 |
-| HU6-CP26 | `PaymentMethodsPage.test.jsx` | `HU6-CP26: si falla la carga avisa y deja reintentar` | Frontend · página | AB#269 | PR por abrir | 🔍 |
-| HU6-CP27 | `PaymentMethodsPage.test.jsx` | `HU6-CP27: el cliente tiene el enlace «Métodos de pago» en la cabecera y llega a la vista` | Frontend · página | AB#269 | PR por abrir | 🔍 |
-| HU6-CP27 | `PaymentMethodsPage.test.jsx` | `HU6-CP27: un vendedor o un administrador no acceden a la vista (vendedor@esibuy.test)` | Frontend · página | AB#269 | PR por abrir | 🔍 |
-| HU6-CP27 | `PaymentMethodsPage.test.jsx` | `HU6-CP27: un vendedor o un administrador no acceden a la vista (admin@esibuy.test)` | Frontend · página | AB#269 | PR por abrir | 🔍 |
-| HU6-CP28 | `PaymentMethodsPage.test.jsx` | `HU6-CP28: marcar otro método como predeterminado lo cambia en la lista` | Frontend · página | AB#269 | PR por abrir | 🔍 |
-| HU6-CP28 | `PaymentMethodsPage.test.jsx` | `HU6-CP28: si el método ya no existe avisa y recarga la lista` | Frontend · página | AB#269 | PR por abrir | 🔍 |
-| HU6-CP29 | `PaymentMethodsPage.test.jsx` | `HU6-CP29: con 5 métodos no deja añadir otro y explica por qué` | Frontend · página | AB#269 | PR por abrir | 🔍 |
-| HU6-CP29 | `PaymentMethodsPage.test.jsx` | `HU6-CP29: con menos de 5 métodos se puede añadir otro` | Frontend · página | AB#269 | PR por abrir | 🔍 |
-| HU6-CP30 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP30: empieza con Tarjeta elegida y sus campos: número, caducidad, CVV y titular` | Frontend · componente | AB#269 | PR por abrir | 🔍 |
-| HU6-CP30 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP30: al elegir PayPal o Bizum muestra solo su campo` | Frontend · componente | AB#269 | PR por abrir | 🔍 |
-| HU6-CP31 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP31: no envía una tarjeta con el número, la caducidad, el CVV o el titular con formato incorrecto` | Frontend · componente | AB#269 | PR por abrir | 🔍 |
-| HU6-CP31 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP31: no envía una URL de PayPal o un teléfono de Bizum con formato incorrecto` | Frontend · componente | AB#269 | PR por abrir | 🔍 |
-| HU6-CP32 | `PaymentMethodsPage.test.jsx` | `HU6-CP32: al guardar un método se cierra el panel, se avisa y aparece en la lista` | Frontend · página | AB#269 | PR por abrir | 🔍 |
-| HU6-CP32 | `PaymentMethodsPage.test.jsx` | `HU6-CP32: al cancelar se cierra el panel sin añadir nada` | Frontend · página | AB#269 | PR por abrir | 🔍 |
-| HU6-CP32 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP32: guarda solo los datos del tipo elegido y avisa de que se ha añadido` | Frontend · componente | AB#269 | PR por abrir | 🔍 |
-| HU6-CP32 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP32: al cancelar o cerrar el panel se borran los datos escritos` | Frontend · componente | AB#269 | PR por abrir | 🔍 |
-| HU6-CP33 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP33: un método rechazado por el backend muestra un aviso sin repetir los datos enviados` | Frontend · componente | AB#269 | PR por abrir | 🔍 |
-| HU6-CP33 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP33: al superar el límite de métodos avisa de que ya hay 5` | Frontend · componente | AB#269 | PR por abrir | 🔍 |
-| HU6-CP34 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP34: elimina un método que no es el predeterminado tras confirmarlo` | Frontend · componente | AB#269 | PR por abrir | 🔍 |
-| HU6-CP34 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP34: al cancelar no elimina nada` | Frontend · componente | AB#269 | PR por abrir | 🔍 |
-| HU6-CP35 | `PaymentMethodsPage.test.jsx` | `HU6-CP35: al eliminar el predeterminado eligiendo otro, desaparece de la lista y el elegido pasa a serlo` | Frontend · página | AB#269 | PR por abrir | 🔍 |
-| HU6-CP35 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP35: para eliminar el predeterminado hay que elegir otro método como predeterminado` | Frontend · componente | AB#269 | PR por abrir | 🔍 |
-| HU6-CP35 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP35: el único método se elimina sin elegir sustituto` | Frontend · componente | AB#269 | PR por abrir | 🔍 |
-| HU6-CP36 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP36: si la eliminación falla avisa y no cierra el diálogo` | Frontend · componente | AB#269 | PR por abrir | 🔍 |
+| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: getPaymentMethods pide la lista de métodos del cliente en sesión` | Frontend · API | AB#269 | PR #151 | 🔍 |
+| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: addPaymentMethod envía los datos del método con un POST` | Frontend · API | AB#269 | PR #151 | 🔍 |
+| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: setDefaultPaymentMethod marca el método con un PUT a /{id}/default` | Frontend · API | AB#269 | PR #151 | 🔍 |
+| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: deletePaymentMethod elimina el método y envía el sustituto solo si se indica` | Frontend · API | AB#269 | PR #151 | 🔍 |
+| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: un error del backend llega como ApiError con su código` | Frontend · API | AB#269 | PR #151 | 🔍 |
+| HU6-CP26 | `PaymentMethodsPage.test.jsx` | `HU6-CP26: muestra cada método con su tipo y su máscara, sin otros datos de pago` | Frontend · página | AB#269 | PR #151 | 🔍 |
+| HU6-CP26 | `PaymentMethodsPage.test.jsx` | `HU6-CP26: indica cuál es el método predeterminado` | Frontend · página | AB#269 | PR #151 | 🔍 |
+| HU6-CP26 | `PaymentMethodsPage.test.jsx` | `HU6-CP26: sin métodos muestra un estado vacío con el botón para añadir el primero` | Frontend · página | AB#269 | PR #151 | 🔍 |
+| HU6-CP26 | `PaymentMethodsPage.test.jsx` | `HU6-CP26: si falla la carga avisa y deja reintentar` | Frontend · página | AB#269 | PR #151 | 🔍 |
+| HU6-CP27 | `PaymentMethodsPage.test.jsx` | `HU6-CP27: el cliente tiene el enlace «Métodos de pago» en la cabecera y llega a la vista` | Frontend · página | AB#269 | PR #151 | 🔍 |
+| HU6-CP27 | `PaymentMethodsPage.test.jsx` | `HU6-CP27: un vendedor o un administrador no acceden a la vista (vendedor@esibuy.test)` | Frontend · página | AB#269 | PR #151 | 🔍 |
+| HU6-CP27 | `PaymentMethodsPage.test.jsx` | `HU6-CP27: un vendedor o un administrador no acceden a la vista (admin@esibuy.test)` | Frontend · página | AB#269 | PR #151 | 🔍 |
+| HU6-CP28 | `PaymentMethodsPage.test.jsx` | `HU6-CP28: marcar otro método como predeterminado lo cambia en la lista` | Frontend · página | AB#269 | PR #151 | 🔍 |
+| HU6-CP28 | `PaymentMethodsPage.test.jsx` | `HU6-CP28: si el método ya no existe avisa y recarga la lista` | Frontend · página | AB#269 | PR #151 | 🔍 |
+| HU6-CP29 | `PaymentMethodsPage.test.jsx` | `HU6-CP29: con 5 métodos no deja añadir otro y explica por qué` | Frontend · página | AB#269 | PR #151 | 🔍 |
+| HU6-CP29 | `PaymentMethodsPage.test.jsx` | `HU6-CP29: con menos de 5 métodos se puede añadir otro` | Frontend · página | AB#269 | PR #151 | 🔍 |
+| HU6-CP30 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP30: empieza con Tarjeta elegida y sus campos: número, caducidad, CVV y titular` | Frontend · componente | AB#269 | PR #151 | 🔍 |
+| HU6-CP30 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP30: al elegir PayPal o Bizum muestra solo su campo` | Frontend · componente | AB#269 | PR #151 | 🔍 |
+| HU6-CP31 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP31: no envía una tarjeta con el número, la caducidad, el CVV o el titular con formato incorrecto` | Frontend · componente | AB#269 | PR #151 | 🔍 |
+| HU6-CP31 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP31: no envía una URL de PayPal o un teléfono de Bizum con formato incorrecto` | Frontend · componente | AB#269 | PR #151 | 🔍 |
+| HU6-CP32 | `PaymentMethodsPage.test.jsx` | `HU6-CP32: al guardar un método se cierra el panel, se avisa y aparece en la lista` | Frontend · página | AB#269 | PR #151 | 🔍 |
+| HU6-CP32 | `PaymentMethodsPage.test.jsx` | `HU6-CP32: al cancelar se cierra el panel sin añadir nada` | Frontend · página | AB#269 | PR #151 | 🔍 |
+| HU6-CP32 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP32: guarda solo los datos del tipo elegido y avisa de que se ha añadido` | Frontend · componente | AB#269 | PR #151 | 🔍 |
+| HU6-CP32 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP32: al cancelar o cerrar el panel se borran los datos escritos` | Frontend · componente | AB#269 | PR #151 | 🔍 |
+| HU6-CP33 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP33: un método rechazado por el backend muestra un aviso sin repetir los datos enviados` | Frontend · componente | AB#269 | PR #151 | 🔍 |
+| HU6-CP33 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP33: al superar el límite de métodos avisa de que ya hay 5` | Frontend · componente | AB#269 | PR #151 | 🔍 |
+| HU6-CP34 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP34: elimina un método que no es el predeterminado tras confirmarlo` | Frontend · componente | AB#269 | PR #151 | 🔍 |
+| HU6-CP34 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP34: al cancelar no elimina nada` | Frontend · componente | AB#269 | PR #151 | 🔍 |
+| HU6-CP35 | `PaymentMethodsPage.test.jsx` | `HU6-CP35: al eliminar el predeterminado eligiendo otro, desaparece de la lista y el elegido pasa a serlo` | Frontend · página | AB#269 | PR #151 | 🔍 |
+| HU6-CP35 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP35: para eliminar el predeterminado hay que elegir otro método como predeterminado` | Frontend · componente | AB#269 | PR #151 | 🔍 |
+| HU6-CP35 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP35: el único método se elimina sin elegir sustituto` | Frontend · componente | AB#269 | PR #151 | 🔍 |
+| HU6-CP36 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP36: si la eliminación falla avisa y no cierra el diálogo` | Frontend · componente | AB#269 | PR #151 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `NumeroTarjetaTest`, `CaducidadTarjetaTest`, `TitularTarjetaTest`, `UrlPayPalTest`, `TelefonoBizumTest`, `MetodoPagoTest` y `MetodosPagoClienteTest`: `metodospago/domain/model/` (solo JUnit)
