@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { Card, Text, Title1, makeStyles, tokens } from '@fluentui/react-components'
+import { Badge, Card, Text, Title1, makeStyles, tokens } from '@fluentui/react-components'
 import { Payment24Regular, Phone24Regular, Wallet24Regular } from '@fluentui/react-icons'
 import { getPaymentMethods } from '../api/paymentMethods'
 import { usePageStyles } from '../components/pageStyles'
@@ -67,6 +67,11 @@ export default function PaymentMethodsPage() {
                     <Text weight="semibold">{etiqueta}</Text>
                     <Text className={styles.mask}>{metodo.mascara}</Text>
                   </div>
+                  {metodo.predeterminado && (
+                    <Badge appearance="tint" color="brand">
+                      Predeterminado
+                    </Badge>
+                  )}
                 </Card>
               </li>
             )
