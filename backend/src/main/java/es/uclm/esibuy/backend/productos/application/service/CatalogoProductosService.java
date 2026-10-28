@@ -5,6 +5,9 @@ import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUse
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
 
+/**
+ * Catálogo de productos del cliente (HU7): delega la búsqueda en el repositorio.
+ */
 public class CatalogoProductosService implements CatalogoProductosUseCase {
 
     private final ProductoRepositoryPort productoRepository;
@@ -13,9 +16,8 @@ public class CatalogoProductosService implements CatalogoProductosUseCase {
         this.productoRepository = productoRepository;
     }
 
-    @Override 
+    @Override
     public ProductoPage buscarProductos(BuscarCatalogoQuery query) {
         return productoRepository.buscarEnCatalogo(query);
     }
-    
 }

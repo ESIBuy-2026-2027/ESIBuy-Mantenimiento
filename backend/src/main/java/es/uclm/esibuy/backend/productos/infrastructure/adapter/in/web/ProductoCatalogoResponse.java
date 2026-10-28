@@ -8,24 +8,23 @@ import es.uclm.esibuy.backend.productos.domain.model.Producto;
  * <p>PENDIENTE DE DECIDIR (equipo): {@code valoracion} y {@code numValoraciones} se conectarán con las
  * valoraciones de HU13; hasta entonces valen {@code null} y 0.
  */
-
 public record ProductoCatalogoResponse(
-    String id,
-    String nombre,
-    String imagen,
-    String categoriaId,
-    Double valoracion,
-    int numValoraciones
+        String id,
+        String nombre,
+        String imagen,
+        String categoriaId,
+        Double valoracion,
+        int numValoraciones
 ) {
 
     static ProductoCatalogoResponse desde(Producto producto) {
         return new ProductoCatalogoResponse(
-            producto.getId(),
-            producto.getNombre(),
-            producto.getImagen(),
-            producto.getCategoriaId(),
-            null,
-            0);
+                producto.getId(),
+                producto.getNombre(),
+                producto.getImagen(),
+                producto.getCategoriaId(),
+                null,
+                0
+        );
     }
-
 }

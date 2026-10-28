@@ -68,15 +68,15 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
                 .toList();
         return new ProductoPage(productos, query.pagina(), query.tamano(), total);
     }
-    
 
+    // Catálogo del cliente (HU7): solo productos disponibles, de todos los vendedores; la búsqueda por nombre
+    // no distingue mayúsculas ni tildes y trata el texto como literal.
     @Override
     public ProductoPage buscarEnCatalogo(BuscarCatalogoQuery query) {
-
-        if (query.valoracionMinima() != null) { //PENDIENTE DE DECIDIR (equipo): conectar con las valoraciones de HU13
+        // PENDIENTE DE DECIDIR (equipo): conectar con las valoraciones de HU13
+        if (query.valoracionMinima() != null) {
             return new ProductoPage(List.of(), query.pagina(), query.tamano(), 0);
         }
-
         List<Criteria> filtros = new ArrayList<>();
         filtros.add(Criteria.where("disponible").is(true));
         if (query.busqueda() != null && !query.busqueda().isBlank()) {
@@ -121,6 +121,8 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         return new Criteria().andOperator(criterios);
     }
 
+    // Regex que encuentra el texto con o sin tildes en las vocales; el resto de caracteres (la ñ incluida) se
+    // busca literal con Pattern.quote.
     private static String patronSinTildes(String texto) {
         StringBuilder patron = new StringBuilder();
         for (char caracter : texto.trim().toLowerCase(Locale.ROOT).toCharArray()) {

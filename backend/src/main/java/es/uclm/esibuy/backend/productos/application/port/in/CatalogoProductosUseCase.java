@@ -2,6 +2,9 @@ package es.uclm.esibuy.backend.productos.application.port.in;
 
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
 
+/**
+ * Puerto de entrada del catálogo de productos del cliente (HU7).
+ */
 public interface CatalogoProductosUseCase {
 
     /**
@@ -10,7 +13,5 @@ public interface CatalogoProductosUseCase {
      * @param query criterios de búsqueda, filtro, orden y paginación
      * @return resultado paginado de productos
      */
-
     ProductoPage buscarProductos(BuscarCatalogoQuery query);
-
 }
