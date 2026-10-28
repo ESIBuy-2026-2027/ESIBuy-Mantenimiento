@@ -102,8 +102,28 @@ describe('PaymentMethodsPage (HU6): predeterminado', () => {
     expect(within(tarjetasDeMetodo()[0]).queryByText('Predeterminado')).not.toBeInTheDocument()
   })
 
-  it('HU6-CP28: si el método ya no existe avisa y recarga la lista', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP28: si el método ya no existe avisa y recarga la lista', async () => {
+    // El Bizum se ha eliminado desde otra pestaña: el PUT da 404 y la lista que se vuelve a pedir ya no lo trae
+    const tarjeta = { id: 'm-1', tipo: 'TARJETA', mascara: '•••• 1111', predeterminado: true }
+    const bizum = { id: 'm-2', tipo: 'BIZUM', mascara: '•••• 678', predeterminado: false }
+    let peticionesDeLista = 0
+    server.use(
+      http.get(URL_METODOS, () => {
+        peticionesDeLista += 1
+        return HttpResponse.json(peticionesDeLista === 1 ? [tarjeta, bizum] : [tarjeta])
+      }),
+      http.put(`${URL_METODOS}/:id/default`, () =>
+        HttpResponse.json({ code: 'PAYMENT_METHOD_NOT_FOUND' }, { status: 404 }),
+      ),
+    )
+    const usuario = userEvent.setup()
+    await abrirMetodosDePago()
+    const [, metodoEliminado] = await screen.findAllByRole('listitem')
+
+    await usuario.click(within(metodoEliminado).getByRole('button', { name: /marcar como predeterminado/i }))
+
+    expect(await screen.findByText(/ese método de pago ya no existe/i)).toBeInTheDocument()
+    await waitFor(() => expect(tarjetasDeMetodo()).toHaveLength(1))
   })
 })
 
