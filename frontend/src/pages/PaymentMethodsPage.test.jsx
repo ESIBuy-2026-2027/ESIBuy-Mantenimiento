@@ -127,6 +127,37 @@ describe('PaymentMethodsPage (HU6): predeterminado', () => {
   })
 })
 
+describe('PaymentMethodsPage (HU6): añadir', () => {
+  it('HU6-CP32: al guardar un método se cierra el panel, se avisa y aparece en la lista', async () => {
+    const usuario = userEvent.setup()
+    await abrirMetodosDePago()
+    await screen.findAllByRole('listitem')
+
+    await usuario.click(screen.getByRole('button', { name: /añadir método de pago/i }))
+    const panel = screen.getByRole('region', { name: /datos del método de pago/i })
+    await usuario.click(within(panel).getByRole('button', { name: 'Bizum' }))
+    await usuario.type(within(panel).getByLabelText(/teléfono/i), '699111222')
+    await usuario.click(within(panel).getByRole('button', { name: /guardar método de pago/i }))
+
+    expect(await screen.findByText('Método de pago añadido.')).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: /datos del método de pago/i })).not.toBeInTheDocument()
+    await waitFor(() => expect(tarjetasDeMetodo()).toHaveLength(3))
+    expect(tarjetasDeMetodo()[2]).toHaveTextContent('•••• 222')
+  })
+
+  it('HU6-CP32: al cancelar se cierra el panel sin añadir nada', async () => {
+    const usuario = userEvent.setup()
+    await abrirMetodosDePago()
+    await screen.findAllByRole('listitem')
+
+    await usuario.click(screen.getByRole('button', { name: /añadir método de pago/i }))
+    await usuario.click(screen.getByRole('button', { name: /cancelar/i }))
+
+    expect(screen.queryByRole('region', { name: /datos del método de pago/i })).not.toBeInTheDocument()
+    expect(tarjetasDeMetodo()).toHaveLength(2)
+  })
+})
+
 describe('PaymentMethodsPage (HU6): límite', () => {
   it('HU6-CP29: con 5 métodos no deja añadir otro y explica por qué', async () => {
     const cinco = Array.from({ length: 5 }, (_, i) => ({
