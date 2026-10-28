@@ -5,6 +5,8 @@ import {
   Card,
   Field,
   Input,
+  MessageBar,
+  MessageBarBody,
   Subtitle1,
   Text,
   ToggleButton,
@@ -168,6 +170,7 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
   const [tipo, setTipo] = useState('TARJETA')
   const [campos, setCampos] = useState(CAMPOS_VACIOS)
   const [errores, setErrores] = useState({})
+  const [fallo, setFallo] = useState(null)
 
   // Props comunes de cada campo: su valor, su cambio y su mensaje de error
   const campo = (nombre) => ({
@@ -181,13 +184,20 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
     const encontrados = erroresDe(tipo, campos)
     setErrores(encontrados)
     if (Object.keys(encontrados).length > 0) return
-    onSaved(await addPaymentMethod(cuerpoDe(tipo, campos)))
+    setFallo(null)
+    try {
+      onSaved(await addPaymentMethod(cuerpoDe(tipo, campos)))
+    } catch {
+      // Mensaje propio: nunca el del backend ni los datos enviados
+      setFallo('No se ha podido guardar el método de pago. Revisa los datos: puede que la tarjeta esté caducada.')
+    }
   }
 
   // Los datos de pago no se quedan en memoria: se vacían antes de cerrar el panel
   const cancelar = () => {
     setCampos(CAMPOS_VACIOS)
     setErrores({})
+    setFallo(null)
     onCancel()
   }
 
@@ -199,6 +209,12 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
         </Subtitle1>
         <Text className={styles.muted}>Se guardan cifrados.</Text>
       </div>
+
+      {fallo && (
+        <MessageBar intent="error">
+          <MessageBarBody>{fallo}</MessageBarBody>
+        </MessageBar>
+      )}
 
       <div className={styles.types} role="group" aria-label="Tipo de método de pago">
         {TIPOS.map(({ valor, etiqueta, Icono }) => (
