@@ -43,6 +43,7 @@ const FORMATO_NUMERO = /^\d{13,19}$/
 const FORMATO_CADUCIDAD = /^(0[1-9]|1[0-2])\/\d{2}$/
 const FORMATO_CVV = /^\d{3,4}$/
 const FORMATO_TITULAR = /^[\p{L} '-]{1,26}$/u
+const FORMATO_TELEFONO = /^\d{9}$/
 
 // El número se puede escribir con espacios, como en la tarjeta; se envía sin ellos
 const sinEspacios = (texto) => texto.replaceAll(/\s/g, '')
@@ -58,6 +59,27 @@ function erroresDeTarjeta({ numeroTarjeta, caducidad, cvv, titular }) {
     errores.titular = 'El titular solo puede tener letras, espacios, guiones y apóstrofos (hasta 26).'
   }
   return errores
+}
+
+// Como el backend: una URL con esquema y servidor
+function esUrlCompleta(texto) {
+  try {
+    return new URL(texto.trim()).hostname !== ''
+  } catch {
+    return false
+  }
+}
+
+// Errores de formato del método, según su tipo
+function erroresDe(tipo, campos) {
+  if (tipo === 'TARJETA') return erroresDeTarjeta(campos)
+  if (tipo === 'PAYPAL' && !esUrlCompleta(campos.urlPayPal)) {
+    return { urlPayPal: 'Escribe una URL completa, como https://paypal.me/tu-cuenta.' }
+  }
+  if (tipo === 'BIZUM' && !FORMATO_TELEFONO.test(campos.telefonoBizum.trim())) {
+    return { telefonoBizum: 'El teléfono tiene 9 dígitos.' }
+  }
+  return {}
 }
 
 // Composición inspirada en la tarjeta «Payment Details», adaptada a DESIGN.md: superficie blanca con la sombra del
@@ -140,7 +162,7 @@ export default function AddPaymentMethodPanel({ onCancel }) {
     errores[nombre] ? { validationState: 'error', validationMessage: errores[nombre] } : {}
 
   const guardar = () => {
-    setErrores(tipo === 'TARJETA' ? erroresDeTarjeta(campos) : {})
+    setErrores(erroresDe(tipo, campos))
   }
 
   return (
@@ -199,14 +221,14 @@ export default function AddPaymentMethodPanel({ onCancel }) {
       )}
 
       {tipo === 'PAYPAL' && (
-        <Field label="URL de PayPal">
-          <Input contentBefore={<Globe20Regular />} type="url" placeholder="https://paypal.me/tu-cuenta" />
+        <Field label="URL de PayPal" {...error('urlPayPal')}>
+          <Input {...campo('urlPayPal')} contentBefore={<Globe20Regular />} type="url" placeholder="https://paypal.me/tu-cuenta" />
         </Field>
       )}
 
       {tipo === 'BIZUM' && (
-        <Field label="Teléfono de Bizum">
-          <Input contentBefore={<Phone20Regular />} type="tel" placeholder="600000000" autoComplete="tel-national" />
+        <Field label="Teléfono de Bizum" {...error('telefonoBizum')}>
+          <Input {...campo('telefonoBizum')} contentBefore={<Phone20Regular />} type="tel" placeholder="600000000" autoComplete="tel-national" />
         </Field>
       )}
 
