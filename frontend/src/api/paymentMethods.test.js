@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
+import { ApiError } from './client'
 import {
   addPaymentMethod,
   deletePaymentMethod,
@@ -86,7 +87,21 @@ describe('api de métodos de pago', () => {
     expect(peticiones[1].url.searchParams.has('nuevoPredeterminado')).toBe(false)
   })
 
-  it('HU6-CP25: un error del backend llega como ApiError con su código', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP25: un error del backend llega como ApiError con su código', async () => {
+    server.use(
+      http.post(URL_METODOS, () =>
+        HttpResponse.json(
+          { mensaje: 'Se ha alcanzado el máximo de métodos de pago', code: 'PAYMENT_METHOD_LIMIT_REACHED' },
+          { status: 409 },
+        ),
+      ),
+    )
+
+    const error = await addPaymentMethod({ tipo: 'BIZUM', telefonoBizum: '612345678' }).catch((e) => e)
+
+    // La vista decide el mensaje a partir del código, no del texto del backend
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error.status).toBe(409)
+    expect(error.code).toBe('PAYMENT_METHOD_LIMIT_REACHED')
   })
 })
