@@ -15,6 +15,7 @@ import {
   SearchInfo24Regular,
 } from '@fluentui/react-icons'
 import { useLocation } from 'react-router-dom'
+import { updateSellerProductAvailability } from '../api/products'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
 import ListFilters from '../components/ListFilters'
@@ -35,7 +36,9 @@ export default function SellerProductsPage() {
   const styles = usePageStyles()
   const location = useLocation()
   // Aviso que deja el formulario de producto al guardar (llega en el estado de la navegación).
-  const [notice, setNotice] = useState(location.state?.notice ?? '')
+  const [notice, setNotice] = useState(
+    location.state?.notice ? { intent: 'success', text: location.state.notice } : null,
+  )
   const [productToView, setProductToView] = useState(null)
   const [productToDelete, setProductToDelete] = useState(null)
   const { categories } = useCategories()
@@ -47,6 +50,19 @@ export default function SellerProductsPage() {
     page,
     size: PAGE_SIZE,
   })
+
+  // Activa un producto no disponible o desactiva uno disponible (HU16), sin confirmación: se deshace con otro clic.
+  // Desde la ficha, la ficha se cierra y el resultado se ve en el listado.
+  const toggleAvailability = async (product) => {
+    setProductToView(null)
+    try {
+      await updateSellerProductAvailability(product.id, !product.disponible)
+      setNotice({ intent: 'success', text: product.disponible ? 'Producto desactivado.' : 'Producto activado.' })
+      retry()
+    } catch {
+      setNotice({ intent: 'error', text: 'No se ha podido cambiar la disponibilidad del producto. Inténtalo de nuevo.' })
+    }
+  }
 
   const hasNoProducts = data?.totalItems === 0 && !debouncedSearch && !category
   const showFilters = filtersActive || (data?.totalItems ?? 0) > 0
@@ -66,15 +82,15 @@ export default function SellerProductsPage() {
       </div>
 
       {notice && (
-        <MessageBar intent="success">
-          <MessageBarBody>{notice}</MessageBarBody>
+        <MessageBar intent={notice.intent}>
+          <MessageBarBody>{notice.text}</MessageBarBody>
           <MessageBarActions
             containerAction={
               <Button
                 appearance="transparent"
                 aria-label="Cerrar aviso"
                 icon={<Dismiss20Regular />}
-                onClick={() => setNotice('')}
+                onClick={() => setNotice(null)}
               />
             }
           />
@@ -132,7 +148,12 @@ export default function SellerProductsPage() {
             categories={categories}
             refreshing={refreshing}
             renderActions={(product) => (
-              <ProductRowActions product={product} onView={setProductToView} onDelete={setProductToDelete} />
+              <ProductRowActions
+                product={product}
+                onView={setProductToView}
+                onToggleAvailability={toggleAvailability}
+                onDelete={setProductToDelete}
+              />
             )}
           />
           <Pagination
@@ -146,7 +167,18 @@ export default function SellerProductsPage() {
         </>
       )}
 
-      {productToView && <ProductDetailDialog productId={productToView.id} onClose={() => setProductToView(null)} />}
+      {productToView && (
+        <ProductDetailDialog
+          productId={productToView.id}
+          onClose={() => setProductToView(null)}
+          onToggleAvailability={toggleAvailability}
+          onDelete={(product) => {
+            // Se cierra la ficha y se pide la misma confirmación que desde la fila del listado.
+            setProductToView(null)
+            setProductToDelete(product)
+          }}
+        />
+      )}
 
       {productToDelete && (
         <DeleteProductDialog
@@ -154,7 +186,7 @@ export default function SellerProductsPage() {
           onClose={() => setProductToDelete(null)}
           onDeleted={() => {
             setProductToDelete(null)
-            setNotice('Producto eliminado.')
+            setNotice({ intent: 'success', text: 'Producto eliminado.' })
             retry()
           }}
         />

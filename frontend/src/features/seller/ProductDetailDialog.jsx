@@ -15,7 +15,13 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { Delete20Regular, Dismiss24Regular, Edit20Regular } from '@fluentui/react-icons'
+import {
+  CheckmarkCircle20Regular,
+  Delete20Regular,
+  Dismiss24Regular,
+  Edit20Regular,
+  Prohibited20Regular,
+} from '@fluentui/react-icons'
 import { getSellerProduct } from '../../api/products'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { useCategories } from '../../hooks/useCategories'
@@ -58,8 +64,9 @@ function productFields(product, categoryName) {
 
 // Ficha de un producto propio del vendedor (HU33), en solo lectura. El producto se pide al backend, que solo
 // devuelve los del vendedor en sesión; la categoría llega como identificador y se muestra con su nombre.
-// Editar lleva al formulario de edición (HU34); Eliminar se ve pero está deshabilitado hasta la HU35.
-export default function ProductDetailDialog({ productId, onClose }) {
+// Editar lleva al formulario de edición (HU34); Activar o Desactivar (HU16) y Eliminar avisan a la página con el
+// producto, que hace el cambio o, al eliminar, pide confirmación (HU35).
+export default function ProductDetailDialog({ productId, onClose, onToggleAvailability, onDelete }) {
   const styles = useStyles()
   const fetcher = useCallback(() => getSellerProduct(productId), [productId])
   const { data: product, error, failed, retry } = useApiQuery(fetcher)
@@ -103,7 +110,13 @@ export default function ProductDetailDialog({ productId, onClose }) {
               <LinkButton to={getSellerProductEditPath(product.id)} icon={<Edit20Regular />}>
                 Editar
               </LinkButton>
-              <Button icon={<Delete20Regular />} disabled>
+              <Button
+                icon={product.disponible ? <Prohibited20Regular /> : <CheckmarkCircle20Regular />}
+                onClick={() => onToggleAvailability(product)}
+              >
+                {product.disponible ? 'Desactivar' : 'Activar'}
+              </Button>
+              <Button icon={<Delete20Regular />} onClick={() => onDelete(product)}>
                 Eliminar
               </Button>
             </DialogActions>
@@ -117,4 +130,6 @@ export default function ProductDetailDialog({ productId, onClose }) {
 ProductDetailDialog.propTypes = {
   productId: PropTypes.string.isRequired,
   onClose: PropTypes.func.isRequired,
+  onToggleAvailability: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
 }

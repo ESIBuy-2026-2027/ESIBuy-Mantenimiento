@@ -52,6 +52,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -307,6 +308,19 @@ class AutenticacionControllerTest {
         // El frontend no puede borrar la cookie HttpOnly: es el servidor quien invalida la sesión,
         // y la cookie deja de valer aunque alguien la tenga
         assertTrue(sesion.isInvalid(), "La sesión debe quedar invalidada");
+    }
+
+    @Test
+    @WithMockUser(username = "juan@uclm.es")
+    @DisplayName("HU43-CP01: cerrar sesión borra la cookie de sesión del navegador")
+    void logoutBorraLaCookieDeSesion() throws Exception {
+        // El frontend no puede borrarla (es HttpOnly): el servidor la devuelve caducada (Max-Age=0) y el
+        // navegador la elimina (HU43, T318)
+        mockMvc.perform(post(URL_LOGOUT)
+                        .session(new MockHttpSession())
+                        .with(csrf()))
+                .andExpect(status().isNoContent())
+                .andExpect(cookie().maxAge("JSESSIONID", 0));
     }
 
     // --- Paso 3: Microsoft Authenticator (T20) ---

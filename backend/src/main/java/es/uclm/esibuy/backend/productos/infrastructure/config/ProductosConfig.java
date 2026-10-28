@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUseCase;
+import es.uclm.esibuy.backend.productos.application.port.in.ConteoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.SupervisionProductosUseCase;
@@ -12,6 +13,7 @@ import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryP
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.application.port.out.VendedorPort;
 import es.uclm.esibuy.backend.productos.application.service.CatalogoProductosService;
+import es.uclm.esibuy.backend.productos.application.service.ConteoProductosService;
 import es.uclm.esibuy.backend.productos.application.service.GestionProductosService;
 import es.uclm.esibuy.backend.productos.application.service.ListadoProductosService;
 import es.uclm.esibuy.backend.productos.application.service.SupervisionProductosService;
@@ -67,5 +69,10 @@ public class ProductosConfig {
     @Bean
     CatalogoProductosUseCase catalogoProductosUseCase(ProductoRepositoryPort productoRepositoryPort) {
         return new CatalogoProductosService(productoRepositoryPort);
+    }
+
+    @Bean
+    ConteoProductosUseCase conteoProductosUseCase(ProductoRepositoryPort productoRepositoryPort) {
+        return new ConteoProductosService(productoRepositoryPort);
     }
 }

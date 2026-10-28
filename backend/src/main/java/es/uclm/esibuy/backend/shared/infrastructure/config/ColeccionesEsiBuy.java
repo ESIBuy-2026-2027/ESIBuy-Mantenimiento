@@ -61,7 +61,7 @@ final class ColeccionesEsiBuy {
 
     static List<Coleccion> todas() {
         return List.of(usuarios(), sesiones(), factoresAutenticacion(), tokensSeguridad(), productos(),
-                pedidos(), carritos(), valoraciones(), categorias(), listasDeseos());
+                pedidos(), carritos(), valoraciones(), categorias(), listasDeseos(), metodosPago());
     }
 
     // 1. usuarios: identidad, rol, estado y perfil, con los campos del modelo en la raíz del documento,
@@ -227,13 +227,20 @@ final class ColeccionesEsiBuy {
                 List.of(indice(USUARIO_ID).on(PRODUCTO_ID, Sort.Direction.ASC).unique()));
     }
 
-    // 9. categorias: clasificación de productos.
+    // 9. categorias: clasificación de productos. Mismas reglas que la entidad Categoria (HU40, T321): nombre
+    // de hasta 50 caracteres, descripción de hasta 200 y estado ACTIVA o INACTIVA. Las categorías guardadas
+    // antes no tienen estado: por eso no es obligatorio aquí, y el mapper las lee como ACTIVAS.
     private static Coleccion categorias() {
         return new Coleccion("categorias", esquema(List.of(NOMBRE),
-                textoNoVacio(NOMBRE),
-                string("descripcion"),
-                string(ESTADO)),
-                List.of(indice(NOMBRE).unique()));
+                string(NOMBRE).minLength(1).maxLength(50),
+                string("descripcion").maxLength(200),
+                string(ESTADO).possibleValues("ACTIVA", "INACTIVA")),
+                List.of(indice(NOMBRE).unique(),
+                        // No se repite el nombre sin distinguir mayúsculas ni tildes (HU40, T323): collation de
+                        // nivel 1. Lleva nombre propio para no chocar con el índice anterior, que se deja como
+                        // estaba, al arrancar contra una base que ya lo tiene.
+                        indice(NOMBRE).unique().named("nombre_sin_mayusculas")
+                                .collation(Collation.of("es").strength(Collation.ComparisonLevel.primary()))));
     }
 
     // 10. listas_deseos: una lista principal por cliente (decisión del equipo).
@@ -245,6 +252,19 @@ final class ColeccionesEsiBuy {
                         .required(PRODUCTO_ID)
                         .properties(textoNoVacio(PRODUCTO_ID), date("addedAt")))),
                 List.of(indice(USUARIO_ID).unique()));
+    }
+
+    // 11. metodos_pago: métodos de pago de cada cliente (HU6), fuera del modelo inicial. Solo la máscara y
+    // el bloque cifrado: los datos de pago nunca en claro. El índice de clienteId lo declara MetodoPagoDocument.
+    private static Coleccion metodosPago() {
+        return new Coleccion("metodos_pago",
+                esquema(List.of(CLIENTE_ID, "tipo", "mascara", "datosCifrados", "predeterminado"),
+                        textoNoVacio(CLIENTE_ID),
+                        string("tipo").possibleValues("TARJETA", "PAYPAL", "BIZUM"),
+                        textoNoVacio("mascara"),
+                        textoNoVacio("datosCifrados"),
+                        bool("predeterminado")),
+                List.of());
     }
 
     // Todas las colecciones llevan createdAt y updatedAt («Convenciones comunes» del modelo).

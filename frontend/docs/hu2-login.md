@@ -103,6 +103,8 @@ Las páginas del vendedor y del administrador existen pero **no pintan nada**: s
 |---|---|---|
 | `/` | Cualquiera | |
 | `/products` | Cliente | Sin sesión → `/login`; otro rol → destino de su rol (antes era una ruta pública y vacía, cambio de la HU7) |
+| `/products/:id` | Cliente | Igual que `/products`: detalle de un producto (HU8) |
+| `/checkout` | Cliente | Igual que `/products`: pasarela de pago (HU10) |
 | `/login` | Solo sin sesión | Con sesión, redirige al destino de su rol |
 | `/admin` | Administrador | Sin sesión → `/login`; otro rol → destino de su rol |
 | `/seller/products` | Vendedor | Sin sesión → `/login`; otro rol → destino de su rol |

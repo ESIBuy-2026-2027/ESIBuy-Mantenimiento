@@ -1,5 +1,11 @@
 package es.uclm.esibuy.backend.shared.error;
 
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaDuplicadaException;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaInvalidaException;
+import es.uclm.esibuy.backend.metodospago.domain.exception.LimiteMetodosPagoException;
+import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoInvalidoException;
+import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoNoEncontradoException;
+import es.uclm.esibuy.backend.metodospago.domain.exception.NuevoPredeterminadoObligatorioException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
@@ -197,5 +203,52 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public RespuestaError productoNoEncontrado() {
         return new RespuestaError("El producto no existe", "PRODUCT_NOT_FOUND");
+    }
+
+    // 400 + code al crear una categoría (HU40, T323): el mensaje es genérico, nunca el detalle de la regla.
+    @ExceptionHandler(CategoriaInvalidaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError categoriaInvalida() {
+        return new RespuestaError("La categoría es inválida", "VALIDATION_ERROR");
+    }
+
+    // 409 + code cuando ya hay una categoría con ese nombre, sin distinguir mayúsculas ni tildes (HU40, T323).
+    // PENDIENTE: confirmar el code con quien haga la vista de creación (T320).
+    @ExceptionHandler(CategoriaDuplicadaException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError categoriaDuplicada() {
+        return new RespuestaError("La categoría ya existe con el mismo nombre", "CATEGORY_NAME_ALREADY_EXISTS");
+    }
+
+    // 400 + code al dar de alta un método de pago (HU6), también si la tarjeta está caducada. El mensaje es
+    // genérico: nunca el detalle de la regla ni los datos de pago enviados.
+    // PENDIENTE: confirmar los codes de métodos de pago con quien haga la vista (T113, T269).
+    @ExceptionHandler(MetodoPagoInvalidoException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError metodoPagoInvalido() {
+        return new RespuestaError("El método de pago es inválido", "VALIDATION_ERROR");
+    }
+
+    // 409 + code cuando el cliente ya tiene el máximo de métodos de pago (HU6: 5)
+    @ExceptionHandler(LimiteMetodosPagoException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError limiteMetodosPago() {
+        return new RespuestaError("Se ha alcanzado el máximo de métodos de pago", "PAYMENT_METHOD_LIMIT_REACHED");
+    }
+
+    // 404 + code al marcar o eliminar un método de pago (HU6): uno ajeno se responde igual que uno
+    // inexistente, para no revelar que existe
+    @ExceptionHandler(MetodoPagoNoEncontradoException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public RespuestaError metodoPagoNoEncontrado() {
+        return new RespuestaError("El método de pago no existe", "PAYMENT_METHOD_NOT_FOUND");
+    }
+
+    // 409 + code al eliminar el método predeterminado sin elegir cuál lo sustituye (HU6)
+    @ExceptionHandler(NuevoPredeterminadoObligatorioException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError nuevoPredeterminadoObligatorio() {
+        return new RespuestaError("Hay que elegir el nuevo método de pago predeterminado",
+                "DEFAULT_PAYMENT_METHOD_REQUIRED");
     }
 }

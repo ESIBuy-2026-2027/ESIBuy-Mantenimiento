@@ -54,6 +54,20 @@ export const PRODUCTOS = [
   descuentoPremium: { activo: indice % 7 === 0, porcentaje: indice % 7 === 0 ? 15 : null },
 }))
 
+// Disponibilidad que el vendedor ha cambiado durante la sesión (HU16), por id de producto.
+let disponibilidadModificada = new Map()
+
+export function resetProductsMock() {
+  disponibilidadModificada = new Map()
+}
+
+// Si el producto está disponible ahora, contando los cambios de la sesión. El catálogo, su detalle y el carrito
+// solo trabajan con productos disponibles.
+export const estaDisponible = (producto) => disponibilidadModificada.get(producto.id) ?? producto.disponible
+
+// El producto con la disponibilidad que tiene ahora.
+const conDisponibilidadActual = (producto) => ({ ...producto, disponible: estaDisponible(producto) })
+
 export const aRespuesta = ({ id, nombre, precio, stock, disponible, categoria }) => ({
   id,
   nombre,
@@ -90,6 +104,49 @@ const aCatalogo = ({ id, nombre, categoria }) => {
     categoriaId: categoria,
     valoracion: sinValorar ? null : Math.round(25 + ((numero * 37) % 26)) / 10,
     numValoraciones: sinValorar ? 0 : 3 + ((numero * 13) % 90),
+  }
+}
+
+// Nombre comercial de cada vendedor de los productos de ejemplo (el mismo que en el listado de vendedores del
+// administrador; no se importa de allí porque ese archivo ya importa este).
+const NOMBRES_COMERCIALES = {
+  [VENDEDOR_CON_PRODUCTOS]: 'TecnoVera',
+  [OTRO_VENDEDOR]: 'Otero Hogar y Tecnología',
+}
+
+// El descuento que le corresponde al cliente: el premium si es Premium y lo tiene; si no, el normal. El servidor es
+// quien lo calcula, el frontend solo lo pinta. Los clientes de ejemplo son Estándar.
+function descuentoDelCliente(producto, tipoCliente = 'ESTANDAR') {
+  if (tipoCliente === 'PREMIUM' && producto.descuentoPremium.activo) return producto.descuentoPremium.porcentaje
+  return producto.descuento.activo ? producto.descuento.porcentaje : null
+}
+
+// Lo comercial de un producto para el cliente (HU8 y HU9): proveedor, precio con el descuento que le corresponde y
+// existencias. Lo comparten el listado, el detalle y el carrito.
+export function datosComerciales(producto) {
+  const porcentaje = descuentoDelCliente(producto)
+  return {
+    vendedor: { id: producto.vendedorId, nombreComercial: NOMBRES_COMERCIALES[producto.vendedorId] ?? 'Vendedor' },
+    precio: producto.precio,
+    descuento: porcentaje === null ? null : { porcentaje },
+    precioFinal: porcentaje === null ? producto.precio : Math.round(producto.precio * (100 - porcentaje)) / 100,
+    stock: producto.stock,
+    disponible: producto.disponible,
+  }
+}
+
+// Detalle de un producto del catálogo para el cliente (HU8).
+function aDetalleDeCatalogo(producto) {
+  const { imagen, categoriaId, valoracion, numValoraciones } = aCatalogo(producto)
+  return {
+    id: producto.id,
+    nombre: producto.nombre,
+    descripcion: producto.descripcion,
+    imagen,
+    categoriaId,
+    ...datosComerciales(producto),
+    valoracion,
+    numValoraciones,
   }
 }
 
@@ -184,10 +241,12 @@ function responderAlGuardar(producto, respuestaCorrecta, idEditado) {
 }
 
 // Las escrituras (POST, PUT y DELETE) validan y responden como el backend real, pero NO modifican
-// los datos de ejemplo: a efectos prácticos, el frontend no añade ni elimina productos.
+// los datos de ejemplo: a efectos prácticos, el frontend no añade ni elimina productos. La excepción es
+// activar o desactivar (HU16), que se mantiene durante la sesión para que el listado, el catálogo y el carrito
+// lo reflejen.
 export const productsHandlers = [
   http.get('/api/seller/products/:id', ({ params }) =>
-    conProductoPropio(params, (producto) => HttpResponse.json(aDetalle(producto))),
+    conProductoPropio(params, (producto) => HttpResponse.json(aDetalle(conDisponibilidadActual(producto)))),
   ),
 
   http.post('/api/seller/products', async ({ request }) => {
@@ -209,6 +268,17 @@ export const productsHandlers = [
     conProductoPropio(params, () => new HttpResponse(null, { status: 204 })),
   ),
 
+  // Activar o desactivar un producto propio (HU16). Contrato propuesto por el frontend.
+  http.patch('/api/seller/products/:id/availability', ({ params, request }) =>
+    conProductoPropio(params, async (producto) => {
+      const { disponible } = await request.json()
+      if (typeof disponible !== 'boolean') return errorDeValidacion()
+
+      disponibilidadModificada.set(producto.id, disponible)
+      return HttpResponse.json(aDetalle(conDisponibilidadActual(producto)))
+    }),
+  ),
+
   // Catálogo del cliente (HU7): los productos disponibles de todos los vendedores.
   http.get('/api/products', ({ request }) => {
     const usuario = getUsuarioEnSesion()
@@ -219,8 +289,8 @@ export const productsHandlers = [
     const busqueda = normalizar(params.get('search') ?? '')
     const categoria = params.get('category')
     const minima = Number(params.get('minRating')) || 0
-    const coincidentes = PRODUCTOS.filter((producto) => producto.disponible)
-      .map((producto) => aCatalogo(producto))
+    const coincidentes = PRODUCTOS.filter(estaDisponible)
+      .map((producto) => ({ ...aCatalogo(producto), ...datosComerciales(producto) }))
       .filter(
         (producto) =>
           normalizar(producto.nombre).includes(busqueda) &&
@@ -231,6 +301,16 @@ export const productsHandlers = [
     return HttpResponse.json(paginar(coincidentes, leerPagina(params, TAMANO_CATALOGO)))
   }),
 
+  // Detalle de un producto del catálogo (HU8): solo los disponibles; el resto, como si no existieran.
+  http.get('/api/products/:id', ({ params }) => {
+    const usuario = getUsuarioEnSesion()
+    if (!usuario) return new HttpResponse(null, { status: 401 })
+    if (usuario.rol !== 'CLIENTE') return new HttpResponse(null, { status: 403 })
+
+    const producto = PRODUCTOS.find((candidato) => candidato.id === params.id && estaDisponible(candidato))
+    return producto ? HttpResponse.json(aDetalleDeCatalogo(producto)) : new HttpResponse(null, { status: 404 })
+  }),
+
   http.get('/api/seller/products', ({ request }) => {
     const rechazo = rechazarSiNoEsVendedor()
     if (rechazo) return rechazo
@@ -239,7 +319,7 @@ export const productsHandlers = [
     const params = new URL(request.url).searchParams
     const busqueda = normalizar(params.get('search') ?? '')
     const categoria = params.get('category')
-    const coincidentes = PRODUCTOS.filter(
+    const coincidentes = PRODUCTOS.map(conDisponibilidadActual).filter(
       (producto) =>
         producto.vendedorId === usuario.id &&
         normalizar(producto.nombre).includes(busqueda) &&

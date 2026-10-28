@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.productos.application.port.out;
 
+import java.util.Map;
 import java.util.Optional;
 
 import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
@@ -28,4 +29,7 @@ public interface ProductoRepositoryPort {
     void eliminar(String id);
 
     ProductoPage buscarEnCatalogo(BuscarCatalogoQuery query);
+
+    // Número de productos de cada categoría, por su id (HU39). Las categorías sin productos no aparecen.
+    Map<String, Long> contarPorCategoria();
 }

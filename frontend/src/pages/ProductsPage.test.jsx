@@ -31,7 +31,8 @@ class IntersectionObserverFalso {
   }
 }
 
-function llegarAlFinal() {
+async function llegarAlFinal() {
+  await waitFor(() => expect(observadores.some((observador) => observador.elementos.size > 0)).toBe(true))
   act(() => {
     for (const observador of [...observadores]) {
       if (observador.elementos.size > 0) observador.callback([{ isIntersecting: true }])
@@ -123,7 +124,7 @@ describe('ProductsPage (HU7): vista de productos del cliente', () => {
     await esperarTarjetas(10)
     const primera = tarjetas()[0]
 
-    llegarAlFinal()
+    await llegarAlFinal()
 
     await esperarTarjetas(20)
     expect(tarjetas()[0]).toBe(primera)
@@ -132,10 +133,10 @@ describe('ProductsPage (HU7): vista de productos del cliente', () => {
   it('HU7-CP03: al llegar otra vez al final carga las últimas y avisa de que no hay más', async () => {
     await abrirCatalogo()
     await esperarTarjetas(10)
-    llegarAlFinal()
+    await llegarAlFinal()
     await esperarTarjetas(20)
 
-    llegarAlFinal()
+    await llegarAlFinal()
 
     await esperarTarjetas(23)
     expect(screen.getByText(/has visto todos los productos/i)).toBeInTheDocument()
@@ -167,7 +168,7 @@ describe('ProductsPage (HU7): vista de productos del cliente', () => {
     await abrirCatalogo()
     await esperarTarjetas(10)
 
-    llegarAlFinal()
+    await llegarAlFinal()
 
     expect(await screen.findByText(/no se han podido cargar más productos/i)).toBeInTheDocument()
     expect(tarjetas()).toHaveLength(10)
@@ -231,6 +232,11 @@ const valoracionesDeLasTarjetas = () =>
     return estrellas ? Number(estrellas.getAttribute('aria-label').match(/(\d),(\d)/).slice(1).join('.')) : 0
   })
 
+async function elegirCategoria(user, nombre) {
+  await user.click(await screen.findByRole('combobox', { name: /categoría/i }))
+  await user.click(await screen.findByRole('option', { name: nombre }))
+}
+
 describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
   it('HU7-CP06: por defecto pide diez productos ordenados por nombre de la A a la Z y sin filtros', async () => {
     const peticiones = capturarPeticiones()
@@ -271,9 +277,8 @@ describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
     const user = userEvent.setup()
     const peticiones = capturarPeticiones()
     await abrirCatalogo()
-    await screen.findByRole('option', { name: 'Hogar' })
 
-    await user.selectOptions(screen.getByRole('combobox', { name: /categoría/i }), 'Hogar')
+    await elegirCategoria(user, 'Hogar')
 
     await waitFor(() => expect(ultima(peticiones).get('category')).toBe('cat-2'))
   })
@@ -282,10 +287,10 @@ describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
     const user = userEvent.setup()
     await abrirCatalogo()
     await esperarTarjetas(10)
-    llegarAlFinal()
+    await llegarAlFinal()
     await esperarTarjetas(20)
 
-    await user.selectOptions(screen.getByRole('combobox', { name: /categoría/i }), 'Hogar')
+    await elegirCategoria(user, 'Hogar')
 
     await esperarTarjetas(9)
   })
@@ -449,38 +454,22 @@ describe('ProductsPage (HU7): selección de los mejores productos', () => {
   })
 })
 
-describe('ProductsPage (HU7): ficha de un producto', () => {
+describe('ProductsPage (HU8): detalle de un producto', () => {
   const abrirAuriculares = (user) =>
-    user.click(within(screen.getByRole('list', { name: /productos/i })).getByRole('button', { name: /auriculares/i }))
+    user.click(within(screen.getByRole('list', { name: /productos/i })).getByRole('link', { name: /auriculares/i }))
 
-  it('HU7-CP08: al pulsar una tarjeta se abre su ficha con su imagen, nombre, categoría y valoración', async () => {
+  it('HU8-CP06: al pulsar una tarjeta del listado se abre el detalle de ese producto', async () => {
     const user = userEvent.setup()
     await abrirCatalogo()
     await esperarTarjetas(10)
 
     await abrirAuriculares(user)
 
-    const ficha = await screen.findByRole('dialog')
-    expect(within(ficha).getByRole('heading', { name: 'Auriculares inalámbricos' })).toBeInTheDocument()
-    expect(within(ficha).getByText('Tecnología')).toBeInTheDocument()
-    expect(within(ficha).getByRole('img', { name: 'Auriculares inalámbricos' })).toBeInTheDocument()
-    expect(within(ficha).getByRole('img', { name: /valoración: \d,\d de 5/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Auriculares inalámbricos' })).toBeInTheDocument()
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products\/p-1$/)
   })
 
-  it('HU7-CP08: la ficha se cierra con el botón Cerrar y se vuelve al listado', async () => {
-    const user = userEvent.setup()
-    await abrirCatalogo()
-    await esperarTarjetas(10)
-    await abrirAuriculares(user)
-    const ficha = await screen.findByRole('dialog')
-
-    await user.click(within(ficha).getByRole('button', { name: /cerrar/i }))
-
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    expect(tarjetas()).toHaveLength(10)
-  })
-
-  it('HU7-CP08: las tarjetas de la animación de los mejores también abren la ficha de su producto', async () => {
+  it('HU8-CP06: al pulsar una tarjeta de la animación de los mejores se abre el detalle de su producto', async () => {
     const user = userEvent.setup()
     await abrirCatalogo()
     const animacion = await screen.findByRole('group', { name: /en movimiento/i })
@@ -492,19 +481,95 @@ describe('ProductsPage (HU7): ficha de un producto', () => {
 
     await user.click(tarjetasDeLaAnimacion[0])
 
-    const ficha = await screen.findByRole('dialog')
-    expect(within(ficha).getByRole('heading', { name: nombre })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: nombre })).toBeInTheDocument()
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products\/p-\d+$/)
   })
 
-  it('HU7-CP08: con el teclado se abren los productos de la selección de los mejores desde su lista', async () => {
+  it('HU8-CP06: con el teclado se llega al detalle desde la lista de los mejores', async () => {
     const user = userEvent.setup()
     await abrirCatalogo()
     const seleccion = await screen.findByRole('list', { name: /selección destacada/i })
 
-    within(seleccion).getByRole('button', { name: /teclado mecánico/i }).focus()
+    within(seleccion).getByRole('link', { name: /teclado mecánico/i }).focus()
     await user.keyboard('{Enter}')
 
-    const ficha = await screen.findByRole('dialog')
-    expect(within(ficha).getByRole('heading', { name: 'Teclado mecánico' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Teclado mecánico' })).toBeInTheDocument()
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products\/p-2$/)
+  })
+
+  it('HU8-CP06: desde el detalle, «Volver a los productos» lleva otra vez al listado', async () => {
+    const user = userEvent.setup()
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+    await abrirAuriculares(user)
+    await screen.findByRole('heading', { level: 1, name: 'Auriculares inalámbricos' })
+
+    await user.click(screen.getByRole('link', { name: /volver a los productos/i }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: /productos/i })).toBeInTheDocument()
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/)
+  })
+})
+
+describe('ProductsPage (HU9): precio y carrito', () => {
+  const CARRITO = {
+    grupos: [
+      {
+        vendedor: { id: 'u-2', nombreComercial: 'TecnoVera' },
+        total: 53.91,
+        lineas: [
+          { productoId: 'p-1', nombre: 'Auriculares inalámbricos', imagen: '', cantidad: 1, precioUnitario: 53.91, subtotal: 53.91, stock: 34 },
+        ],
+      },
+    ],
+    totalProductos: 1,
+    total: 53.91,
+  }
+
+  const tarjetaDeAuriculares = () =>
+    within(screen.getByRole('list', { name: /productos/i })).getByRole('link', { name: /auriculares/i }).closest('li')
+
+  it('HU9-CP01: las tarjetas del catálogo muestran el precio de cada producto, con su descuento', async () => {
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    const tarjeta = tarjetaDeAuriculares()
+    expect(within(tarjeta).getByText(/53,91/)).toBeInTheDocument()
+    expect(within(tarjeta).getByText(/59,90/).closest('s')).not.toBeNull()
+    expect(within(tarjeta).getByText('-10 %')).toBeInTheDocument()
+  })
+
+  it('HU9-CP02: al pulsar «Añadir al carrito» en una tarjeta se envía ese producto al carrito', async () => {
+    const user = userEvent.setup()
+    let cuerpo = null
+    server.use(
+      http.post('/api/cart/items', async ({ request }) => {
+        cuerpo = await request.json()
+        return HttpResponse.json(CARRITO)
+      }),
+    )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    await user.click(within(tarjetaDeAuriculares()).getByRole('button', { name: /añadir al carrito/i }))
+
+    await waitFor(() => expect(cuerpo).toEqual({ productoId: 'p-1', cantidad: 1 }))
+    expect(await within(tarjetaDeAuriculares()).findByText(/añadido/i)).toBeInTheDocument()
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/)
+  })
+
+  it('HU9-CP02: si el servidor dice que no hay existencias, la tarjeta lo avisa', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/cart/items', () =>
+        HttpResponse.json({ code: 'INSUFFICIENT_STOCK' }, { status: 409 }),
+      ),
+    )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    await user.click(within(tarjetaDeAuriculares()).getByRole('button', { name: /añadir al carrito/i }))
+
+    expect(await within(tarjetaDeAuriculares()).findByRole('alert')).toHaveTextContent(/no hay existencias suficientes/i)
   })
 })

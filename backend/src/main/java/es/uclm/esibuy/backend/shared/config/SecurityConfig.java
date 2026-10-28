@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 /**
  * Configuración mínima de Spring Security.
@@ -31,6 +32,9 @@ import org.springframework.security.web.authentication.logout.HttpStatusReturnin
  * <p>La zona de vendedor ({@code /api/seller/**}) solo la usa el rol VENDEDOR (HU15, T57). El
  * administrador ve la información de los vendedores en solo lectura por su propia zona
  * ({@code /api/admin/sellers/...}, HU26). Que el vendedor esté activo lo comprueba el login.
+ *
+ * <p>La zona de cliente ({@code /api/customer/**}) solo la usa el rol CLIENTE: de momento, sus métodos de
+ * pago (HU6).
  */
 @Configuration
 public class SecurityConfig {
@@ -51,9 +55,12 @@ public class SecurityConfig {
     private static final String ROL_ADMINISTRADOR = "ADMINISTRADOR";
     private static final String RUTAS_VENDEDOR = "/api/seller/**";
     private static final String ROL_VENDEDOR = "VENDEDOR";
+    // El perfil propio (HU4) es del cliente y del vendedor; el administrador no tiene perfil que consultar aquí.
+    private static final String RUTAS_PERFIL = "/api/perfil/**";
+    private static final String ROL_CLIENTE = "CLIENTE";
+    private static final String RUTAS_CLIENTE = "/api/customer/**";
     // Catálogo de productos (HU7): solo lo ve un CLIENTE.
     private static final String RUTA_CATALOGO = "/api/products";
-    private static final String ROL_CLIENTE = "CLIENTE";
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -65,6 +72,8 @@ public class SecurityConfig {
                         .requestMatchers(RUTA_ERROR).permitAll()
                         .requestMatchers(RUTAS_ADMINISTRACION).hasRole(ROL_ADMINISTRADOR)
                         .requestMatchers(RUTAS_VENDEDOR).hasRole(ROL_VENDEDOR)
+                        .requestMatchers(RUTAS_CLIENTE).hasRole(ROL_CLIENTE)
+                        .requestMatchers(RUTAS_PERFIL).hasAnyRole(ROL_CLIENTE, ROL_VENDEDOR)
                         .requestMatchers(HttpMethod.GET, RUTA_CATALOGO).hasRole(ROL_CLIENTE)
                         .anyRequest().authenticated())
                 .exceptionHandling(excepciones -> excepciones
@@ -74,11 +83,19 @@ public class SecurityConfig {
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
                         .deleteCookies("JSESSIONID"))
                 // spa(): el token CSRF va en la cookie XSRF-TOKEN (legible por el frontend, sin HttpOnly) y
-                // el frontend lo devuelve en la cabecera X-XSRF-TOKEN (T230, D4)
+                // el frontend lo devuelve en la cabecera X-XSRF-TOKEN (T230, D4). La cookie es además Secure y
+                // SameSite=Strict, como la de sesión (HU43, T319).
                 .csrf(csrf -> csrf
                         .spa()
+                        .csrfTokenRepository(repositorioTokenCsrf())
                         .ignoringRequestMatchers(RUTA_REGISTRO, RUTA_REGISTRO_VENDEDOR));
         return http.build();
+    }
+
+    private static CookieCsrfTokenRepository repositorioTokenCsrf() {
+        CookieCsrfTokenRepository repositorio = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        repositorio.setCookieCustomizer(cookie -> cookie.secure(true).sameSite("Strict"));
+        return repositorio;
     }
 
     

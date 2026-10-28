@@ -61,10 +61,11 @@ class InicializadorColeccionesTest {
     }
 
     @Test
-    @DisplayName("Inicialización: crea las 10 colecciones del modelo de BBDD")
-    void creaLasDiezColecciones() {
+    @DisplayName("Inicialización: crea las 11 colecciones del modelo de BBDD")
+    void creaLasOnceColecciones() {
+        // Las 10 del modelo inicial y metodos_pago (HU6)
         List<String> esperadas = List.of("usuarios", "sesiones", "factores_autenticacion", "tokens_seguridad",
-                "productos", "pedidos", "carritos", "valoraciones", "categorias", "listas_deseos");
+                "productos", "pedidos", "carritos", "valoraciones", "categorias", "listas_deseos", "metodos_pago");
 
         assertTrue(mongoTemplate.getCollectionNames().containsAll(esperadas));
     }
