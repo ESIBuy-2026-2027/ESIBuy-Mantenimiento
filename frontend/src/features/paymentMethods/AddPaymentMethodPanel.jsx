@@ -13,6 +13,7 @@ import {
 } from '@fluentui/react-components'
 import {
   Calendar20Regular,
+  Globe20Regular,
   LockClosed16Regular,
   LockClosed20Regular,
   Payment20Regular,
@@ -147,6 +148,18 @@ export default function AddPaymentMethodPanel({ onCancel }) {
             <Input placeholder="Nombre y apellidos" autoComplete="cc-name" />
           </Field>
         </div>
+      )}
+
+      {tipo === 'PAYPAL' && (
+        <Field label="URL de PayPal">
+          <Input contentBefore={<Globe20Regular />} type="url" placeholder="https://paypal.me/tu-cuenta" />
+        </Field>
+      )}
+
+      {tipo === 'BIZUM' && (
+        <Field label="Teléfono de Bizum">
+          <Input contentBefore={<Phone20Regular />} type="tel" placeholder="600000000" autoComplete="tel-national" />
+        </Field>
       )}
 
       <div className={styles.actions}>
