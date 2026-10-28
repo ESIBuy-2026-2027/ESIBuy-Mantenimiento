@@ -11,6 +11,7 @@ import DeletePaymentMethodDialog from './DeletePaymentMethodDialog'
 const URL_METODOS = '/api/customer/payment-methods'
 const TARJETA = { id: 'm-1', tipo: 'TARJETA', mascara: '•••• 1111', predeterminado: true }
 const BIZUM = { id: 'm-2', tipo: 'BIZUM', mascara: '•••• 678', predeterminado: false }
+const PAYPAL = { id: 'm-3', tipo: 'PAYPAL', mascara: 'paypal.me', predeterminado: false }
 
 // Guarda las eliminaciones que llegan al backend: el id y el sustituto, si lo hay
 function registrarEliminaciones() {
@@ -60,8 +61,21 @@ describe('DeletePaymentMethodDialog (HU6): eliminar', () => {
 })
 
 describe('DeletePaymentMethodDialog (HU6): sustituto', () => {
-  it('HU6-CP35: para eliminar el predeterminado hay que elegir otro método como predeterminado', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP35: para eliminar el predeterminado hay que elegir otro método como predeterminado', async () => {
+    const eliminaciones = registrarEliminaciones()
+    const usuario = userEvent.setup()
+    const { onDeleted } = abrirDialogo(TARJETA, [TARJETA, BIZUM, PAYPAL])
+
+    // Hasta elegir el sustituto no se puede eliminar; el que se elimina no está entre las opciones
+    expect(screen.getByRole('button', { name: /^eliminar$/i })).toBeDisabled()
+    const sustituto = screen.getByRole('combobox', { name: /nuevo método predeterminado/i })
+    expect(screen.queryByRole('option', { name: /tarjeta/i })).not.toBeInTheDocument()
+
+    await usuario.selectOptions(sustituto, screen.getByRole('option', { name: 'PayPal paypal.me' }))
+    await usuario.click(screen.getByRole('button', { name: /^eliminar$/i }))
+
+    await waitFor(() => expect(onDeleted).toHaveBeenCalled())
+    expect(eliminaciones).toEqual([{ id: 'm-1', sustituto: 'm-3' }])
   })
 
   it('HU6-CP35: el único método se elimina sin elegir sustituto', () => {
