@@ -37,7 +37,6 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 // Test de integración del adaptador de MongoDB de productos (HU31, T202). Usa un MongoDB real en Docker
 // (Testcontainers): Docker Desktop debe estar abierto. InicializadorColecciones crea la colección productos
@@ -356,8 +355,15 @@ class ProductoMongoAdapterTest {
     @Test
     @DisplayName("HU7-CP15: ordenar por valoración desempata por nombre de la A a la Z mientras no haya valoraciones")
     void buscarEnCatalogoPorValoracionDesempataPorNombre() {
-        // TODO: «Cesta», «Atril», «Banco»; VALORACION descendente devuelve Atril, Banco, Cesta (el empate siempre es A→Z).
-        fail("Funcionalidad no implementada");
+        // Sin valoraciones todos cuentan como 0 y empatan; el empate se resuelve de la A a la Z aunque se pida descendente.
+        adapter.guardar(productoNuevo("v-1", "Cesta"));
+        adapter.guardar(productoNuevo("v-1", "Atril"));
+        adapter.guardar(productoNuevo("v-2", "Banco"));
+
+        ProductoPage pagina = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.VALORACION, true, 0, 10));
+
+        assertEquals(List.of("Atril", "Banco", "Cesta"), nombres(pagina));
     }
 
     // Catálogo sin búsqueda, categoría ni valoración mínima, por nombre de la A a la Z, primera página de 10.
