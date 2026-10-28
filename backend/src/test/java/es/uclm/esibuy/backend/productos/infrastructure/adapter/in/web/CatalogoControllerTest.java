@@ -11,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -21,7 +22,6 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -110,10 +110,16 @@ class CatalogoControllerTest {
         verify(catalogoProductos, never()).buscarProductos(any());
     }
 
-    @Test
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"VENDEDOR", "ADMINISTRADOR"})
     @DisplayName("HU7-CP19: un usuario que no es cliente no ve el catálogo")
-    void otroRolDevuelve403() {
-        // TODO: parametrizado con VENDEDOR y ADMINISTRADOR → 403.
-        fail("Funcionalidad no implementada");
+    void otroRolDevuelve403(String rol) throws Exception {
+        // Con el caso de uso respondiendo, un 200 indicaría que el rol tiene acceso
+        when(catalogoProductos.buscarProductos(any())).thenReturn(new ProductoPage(List.of(), 0, 10, 0));
+
+        mockMvc.perform(get(URL).with(user("usuario@esibuy.test").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(catalogoProductos, never()).buscarProductos(any());
     }
 }
