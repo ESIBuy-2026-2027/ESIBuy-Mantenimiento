@@ -186,6 +186,25 @@ describe('CartWidget (HU9): carrito con muchos productos', () => {
     expect(within(panel).getByRole('link', { name: 'Producto t 11' })).toBeInTheDocument()
     expect(within(panel).getByRole('link', { name: 'Producto c 7' })).toBeInTheDocument()
   })
+
+  it('HU9-CP09: con tres proveedores ninguno se comprime, tampoco el que tiene un solo producto', async () => {
+    const carrito = {
+      grupos: [
+        ...CARRITO_LLENO.grupos,
+        { vendedor: { id: 'u-7', nombreComercial: 'Otero Hogar' }, total: 10, lineas: lineas('o', 1) },
+      ],
+      totalProductos: 21,
+      total: 210,
+    }
+    pintar({ cart: carrito })
+    const panel = await abrirPanel()
+
+    const grupos = within(panel).getAllByRole('group')
+    expect(grupos).toHaveLength(3)
+    grupos.forEach((grupo) => expect(getComputedStyle(grupo).flexShrink).toBe('0'))
+    expect(within(grupos[2]).getByRole('heading', { name: /otero hogar: 10,00/i })).toBeInTheDocument()
+    expect(within(grupos[2]).getByRole('link', { name: 'Producto o 0' })).toBeInTheDocument()
+  })
 })
 
 describe('CartWidget (HU9): modificar el carrito', () => {
