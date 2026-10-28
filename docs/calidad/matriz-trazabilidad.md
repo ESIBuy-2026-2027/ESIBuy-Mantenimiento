@@ -999,7 +999,7 @@ Rutas de las clases de test (bajo `frontend/src/`):
 | HU9-CP06 | Desde el panel se puede cambiar la cantidad de un producto (sin pasar de las existencias), quitarlo y vaciar el carrito, con aviso si el servidor lo rechaza | Frontend (componente) | 6 | 🔍 En revisión (6, AB#384, PR sin abrir) |
 | HU9-CP07 | El carrito tiene estado de carga y de error con reintento, y vive en el servidor: al recargar la página sigue ahí | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#384, PR sin abrir) |
 | HU9-CP08 | «Proceder al pago» lleva a la pasarela de pago | Frontend (componente) | 1 | 🔍 En revisión (1, AB#384, PR sin abrir) |
-| HU9-CP09 | Con muchos productos el carrito se puede recorrer entero: el panel tiene un scroll global y la lista de cada proveedor su propio scroll, sin que ningún proveedor se comprima | Frontend (componente) | 2 | 🔍 En revisión (2, AB#384, PR sin abrir) |
+| HU9-CP09 | Con muchos productos el carrito se puede recorrer entero: el panel tiene un scroll global y la lista de cada proveedor su propio scroll, sin que ningún proveedor se comprima | Frontend (componente) | 3 | 🔍 En revisión (3, AB#384, PR sin abrir) |
 
 Notas:
 - **HU9-CP01 a CP09 (Sprint 2, frontend):** casos propuestos en las tasks AB#383 (vista añadir al carrito) y AB#384 (vista de carrito) a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu9-carrito-de-compra.md`). Pendientes de confirmar con el equipo y de añadir a la HU9 (AB#71) en Azure Boards.
@@ -1058,6 +1058,7 @@ Notas:
 | HU9-CP08 | `CartWidget.test.jsx` | `HU9-CP08: «Proceder al pago» lleva a la pasarela de pago` | Frontend · componente | AB#384 | Rama `feature/US10-T401-pasarela-de-pago` (PR sin abrir) | 🔍 |
 | HU9-CP09 | `CartWidget.test.jsx` | `HU9-CP09: el panel tiene un scroll global y cada proveedor su propio scroll, sin comprimir a ninguno` | Frontend · componente | AB#384 | Rama `fix/US9-carrito-scroll-global-y-por-proveedor` (PR sin abrir) | 🔍 |
 | HU9-CP09 | `CartWidget.test.jsx` | `HU9-CP09: con muchos productos siguen estando todos en el carrito, también los últimos de cada proveedor` | Frontend · componente | AB#384 | Rama `fix/US9-carrito-scroll-global-y-por-proveedor` (PR sin abrir) | 🔍 |
+| HU9-CP09 | `CartWidget.test.jsx` | `HU9-CP09: con tres proveedores ninguno se comprime, tampoco el que tiene un solo producto` | Frontend · componente | AB#384 | Rama `fix/US9-carrito-scroll-global-y-por-proveedor` (PR sin abrir) | 🔍 |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `AddToCartButton.test.jsx` y `CartWidget.test.jsx`: `features/cart/` (Vitest, React Testing Library y MSW)

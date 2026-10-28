@@ -165,7 +165,7 @@ npm run build
 | Archivo | Tests | Qué cubre |
 |---|---|---|
 | `features/cart/AddToCartButton.test.jsx` (nuevo) | 8 | Añade una unidad o la cantidad indicada; «Añadiendo…» y «Añadido»; sin existencias; otro fallo; el aviso se quita al reintentar; agotado y no disponible |
-| `features/cart/CartWidget.test.jsx` (nuevo) | 25 | Botón con el número de productos (singular, vacío); solo clientes; panel agrupado por proveedor con «Proveedor: total»; cantidades, subtotales y enlaces; cerrar con Cerrar y Escape; carrito vacío; «Proceder al pago»; cantidad, existencias, quitar y vaciar; carrito con muchos productos (scroll global y por proveedor); errores; carga y reintento; con el carrito del servidor (añadir desde el listado y recargar la página) |
+| `features/cart/CartWidget.test.jsx` (nuevo) | 26 | Botón con el número de productos (singular, vacío); solo clientes; panel agrupado por proveedor con «Proveedor: total»; cantidades, subtotales y enlaces; cerrar con Cerrar y Escape; carrito vacío; «Proceder al pago»; cantidad, existencias, quitar y vaciar; carrito con muchos productos (scroll global y por proveedor, con dos y con tres proveedores); errores; carga y reintento; con el carrito del servidor (añadir desde el listado y recargar la página) |
 | `features/catalog/ProductCard.test.jsx` | 4 nuevos | Precio, descuento, botón de añadir y que el botón no está dentro del enlace |
 | `pages/ProductsPage.test.jsx` | 3 nuevos | Precio con descuento en las tarjetas, añadir desde una tarjeta y aviso de existencias |
 | `pages/ProductDetailPage.test.jsx` | 5 nuevos | Añadir desde el detalle, elegir la cantidad, mínimo y máximo, y agotado |
