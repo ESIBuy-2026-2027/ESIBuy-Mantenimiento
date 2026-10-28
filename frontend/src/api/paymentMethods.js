@@ -14,3 +14,8 @@ export function getPaymentMethods() {
 export function addPaymentMethod(metodo) {
   return request(URL_METODOS, { method: 'POST', body: metodo })
 }
+
+// Solo puede haber uno predeterminado: el backend desmarca el anterior. Responde 204 sin cuerpo.
+export function setDefaultPaymentMethod(id) {
+  return request(`${URL_METODOS}/${encodeURIComponent(id)}/default`, { method: 'PUT' })
+}
