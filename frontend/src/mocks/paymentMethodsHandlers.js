@@ -31,6 +31,11 @@ function mascaraDe(metodo) {
   return `•••• ${metodo.telefonoBizum.slice(-3)}`
 }
 
+const SUSTITUTO_OBLIGATORIO = {
+  mensaje: 'Hay que elegir el nuevo método de pago predeterminado',
+  code: 'DEFAULT_PAYMENT_METHOD_REQUIRED',
+}
+
 const NO_ENCONTRADO = { mensaje: 'El método de pago no existe', code: 'PAYMENT_METHOD_NOT_FOUND' }
 
 // El cliente en sesión, o la respuesta de error si no hay sesión (401) o no es cliente (403)
@@ -69,6 +74,22 @@ export const paymentMethodsHandlers = [
     metodos.forEach((metodo) => {
       metodo.predeterminado = metodo.id === params.id
     })
+    return new HttpResponse(null, { status: 204 })
+  }),
+
+  // Como el backend: al eliminar el predeterminado, si quedan otros, hay que elegir el sustituto (no el mismo)
+  http.delete(`${URL_METODOS}/:id`, ({ request, params }) => {
+    const { error, metodos } = clienteEnSesion()
+    if (error) return error
+    const eliminado = metodos.find(({ id }) => id === params.id)
+    if (!eliminado) return HttpResponse.json(NO_ENCONTRADO, { status: 404 })
+    const restantes = metodos.filter(({ id }) => id !== params.id)
+    if (eliminado.predeterminado && restantes.length > 0) {
+      const sustituto = restantes.find(({ id }) => id === new URL(request.url).searchParams.get('nuevoPredeterminado'))
+      if (!sustituto) return HttpResponse.json(SUSTITUTO_OBLIGATORIO, { status: 409 })
+      sustituto.predeterminado = true
+    }
+    metodos.splice(metodos.indexOf(eliminado), 1)
     return new HttpResponse(null, { status: 204 })
   }),
 ]

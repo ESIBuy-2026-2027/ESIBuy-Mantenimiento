@@ -11,11 +11,12 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { Add20Regular, Payment24Regular } from '@fluentui/react-icons'
+import { Add20Regular, Delete20Regular, Payment24Regular } from '@fluentui/react-icons'
 import { getPaymentMethods, setDefaultPaymentMethod } from '../api/paymentMethods'
 import EmptyState from '../components/EmptyState'
 import { usePageStyles } from '../components/pageStyles'
 import AddPaymentMethodPanel from '../features/paymentMethods/AddPaymentMethodPanel'
+import DeletePaymentMethodDialog from '../features/paymentMethods/DeletePaymentMethodDialog'
 import { TIPOS_DE_METODO } from '../features/paymentMethods/tiposDeMetodo'
 import { useApiQuery } from '../hooks/useApiQuery'
 
@@ -69,6 +70,7 @@ export default function PaymentMethodsPage() {
 
   const [aviso, setAviso] = useState(null)
   const [anadiendo, setAnadiendo] = useState(false)
+  const [aEliminar, setAEliminar] = useState(null)
   const limiteAlcanzado = (metodos?.length ?? 0) >= MAXIMO_METODOS
 
   const abrirPanel = () => {
@@ -79,6 +81,12 @@ export default function PaymentMethodsPage() {
   const alGuardar = () => {
     setAnadiendo(false)
     setAviso({ intent: 'success', texto: 'Método de pago añadido.' })
+    retry()
+  }
+
+  const alEliminar = () => {
+    setAEliminar(null)
+    setAviso({ intent: 'success', texto: 'Método de pago eliminado.' })
     retry()
   }
 
@@ -162,11 +170,22 @@ export default function PaymentMethodsPage() {
                       Marcar como predeterminado
                     </Button>
                   )}
+                  <Button appearance="subtle" icon={<Delete20Regular />} onClick={() => setAEliminar(metodo)}>
+                    Eliminar
+                  </Button>
                 </Card>
               </li>
             )
           })}
         </ul>
+      )}
+      {aEliminar && (
+        <DeletePaymentMethodDialog
+          metodo={aEliminar}
+          metodos={metodos ?? []}
+          onClose={() => setAEliminar(null)}
+          onDeleted={alEliminar}
+        />
       )}
     </main>
   )
