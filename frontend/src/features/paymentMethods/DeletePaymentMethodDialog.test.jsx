@@ -92,7 +92,16 @@ describe('DeletePaymentMethodDialog (HU6): sustituto', () => {
 })
 
 describe('DeletePaymentMethodDialog (HU6): errores', () => {
-  it('HU6-CP36: si la eliminación falla avisa y no cierra el diálogo', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP36: si la eliminación falla avisa y no cierra el diálogo', async () => {
+    server.use(http.delete(`${URL_METODOS}/:id`, () => new HttpResponse(null, { status: 500 })))
+    const usuario = userEvent.setup()
+    const { onDeleted } = abrirDialogo(BIZUM, [TARJETA, BIZUM])
+
+    await usuario.click(screen.getByRole('button', { name: /^eliminar$/i }))
+
+    expect(await screen.findByText('No se ha podido eliminar el método de pago. Inténtalo de nuevo.')).toBeInTheDocument()
+    expect(onDeleted).not.toHaveBeenCalled()
+    // Se puede volver a intentar
+    expect(screen.getByRole('button', { name: /^eliminar$/i })).toBeEnabled()
   })
 })
