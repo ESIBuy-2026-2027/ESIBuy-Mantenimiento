@@ -17,6 +17,9 @@ import EmptyState from '../components/EmptyState'
 import { usePageStyles } from '../components/pageStyles'
 import { useApiQuery } from '../hooks/useApiQuery'
 
+// Como el backend: un cliente tiene como máximo 5 métodos de pago (HU6)
+const MAXIMO_METODOS = 5
+
 // Cómo se presenta cada tipo de método que devuelve el backend
 const TIPOS = {
   TARJETA: { etiqueta: 'Tarjeta', Icono: Payment24Regular },
@@ -47,6 +50,15 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     flexGrow: 1,
   },
+  action: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: tokens.spacingVerticalXS,
+  },
+  limit: {
+    color: tokens.colorNeutralForeground3,
+  },
   mask: {
     fontFamily: tokens.fontFamilyMonospace,
     color: tokens.colorNeutralForeground3,
@@ -61,6 +73,7 @@ export default function PaymentMethodsPage() {
   const { data: metodos, failed, retry } = useApiQuery(fetcher)
 
   const [aviso, setAviso] = useState(null)
+  const limiteAlcanzado = (metodos?.length ?? 0) >= MAXIMO_METODOS
 
   // Tras el cambio se vuelve a pedir la lista: el backend desmarca el anterior. Si el método ya no existe (p. ej.
   // se eliminó desde otra pestaña), se avisa y la lista recargada ya no lo muestra.
@@ -76,11 +89,25 @@ export default function PaymentMethodsPage() {
 
   return (
     <main className={pageStyles.page}>
-      <div className={pageStyles.titleBlock}>
-        <Title1 as="h1" className={pageStyles.title}>
-          Métodos de pago
-        </Title1>
-        <Text className={pageStyles.subtitle}>Gestiona las tarjetas y cuentas con las que pagas tus compras.</Text>
+      <div className={pageStyles.heading}>
+        <div className={pageStyles.titleBlock}>
+          <Title1 as="h1" className={pageStyles.title}>
+            Métodos de pago
+          </Title1>
+          <Text className={pageStyles.subtitle}>Gestiona las tarjetas y cuentas con las que pagas tus compras.</Text>
+        </div>
+        {metodos?.length > 0 && (
+          <div className={styles.action}>
+            <Button appearance="primary" icon={<Add20Regular />} disabled={limiteAlcanzado}>
+              Añadir método de pago
+            </Button>
+            {limiteAlcanzado && (
+              <Text size={200} className={styles.limit}>
+                Has alcanzado el máximo de {MAXIMO_METODOS} métodos de pago.
+              </Text>
+            )}
+          </div>
+        )}
       </div>
       {failed && (
         <MessageBar intent="error">
