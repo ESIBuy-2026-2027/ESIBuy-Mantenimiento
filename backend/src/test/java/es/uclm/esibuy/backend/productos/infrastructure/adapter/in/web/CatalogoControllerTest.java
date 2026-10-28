@@ -103,9 +103,11 @@ class CatalogoControllerTest {
 
     @Test
     @DisplayName("HU7-CP19: sin sesión no se ve el catálogo")
-    void sinSesionDevuelve401() {
-        // TODO: GET sin usuario → 401.
-        fail("Funcionalidad no implementada");
+    void sinSesionDevuelve401() throws Exception {
+        mockMvc.perform(get(URL))
+                .andExpect(status().isUnauthorized());
+
+        verify(catalogoProductos, never()).buscarProductos(any());
     }
 
     @Test
