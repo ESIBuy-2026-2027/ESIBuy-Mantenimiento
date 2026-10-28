@@ -523,4 +523,21 @@ class AdministracionUsuariosServiceTest {
         return new Usuario(id, new DatosPersonales("Ada", "Admin", null), new Email(email), "hash-simulado",
                 Rol.ADMINISTRADOR, null, null);
     }
+
+    // Para el carrito (HU9): el nombre comercial del proveedor, sin que otros módulos vean el dominio de usuarios
+    @Test
+    @DisplayName("HU9-CP15: consultarNombreComercial devuelve el nombre comercial del vendedor")
+    void consultarNombreComercialDevuelveElDelVendedor() {
+        when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(vendedorVera()));
+
+        assertEquals("Tienda Vera", servicio.consultarNombreComercial("u-4"));
+    }
+
+    @Test
+    @DisplayName("HU9-CP15: consultarNombreComercial de un usuario que no es vendedor falla como si no existiera")
+    void consultarNombreComercialDeOtroRolFalla() {
+        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
+
+        assertThrows(UsuarioNoEncontradoException.class, () -> servicio.consultarNombreComercial("u-1"));
+    }
 }
