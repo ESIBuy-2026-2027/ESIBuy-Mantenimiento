@@ -134,8 +134,20 @@ describe('AddPaymentMethodPanel (HU6): guardar', () => {
     })
   })
 
-  it('HU6-CP32: al cancelar o cerrar el panel se borran los datos escritos', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP32: al cancelar o cerrar el panel se borran los datos escritos', async () => {
+    const altas = contarAltas()
+    const usuario = userEvent.setup()
+    const { onCancel } = abrirPanel()
+    await usuario.type(screen.getByLabelText(/número de tarjeta/i), '4111111111111111')
+    await usuario.type(screen.getByLabelText(/cvv/i), '123')
+
+    await usuario.click(screen.getByRole('button', { name: /cancelar/i }))
+
+    // Los datos de pago no se quedan en el panel aunque la página siga mostrándolo
+    expect(onCancel).toHaveBeenCalled()
+    expect(screen.getByLabelText(/número de tarjeta/i)).toHaveValue('')
+    expect(screen.getByLabelText(/cvv/i)).toHaveValue('')
+    expect(altas()).toBe(0)
   })
 })
 
