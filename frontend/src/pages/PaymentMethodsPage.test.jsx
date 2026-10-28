@@ -1,10 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import { screen, within } from '@testing-library/react'
+import { http, HttpResponse } from 'msw'
+import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
 // Vista «Métodos de pago» del cliente (HU6, AB#269 y AB#113), con los mocks de MSW del backend.
 // Del mock de métodos de pago: Carlos (cliente@esibuy.test) tiene una tarjeta predeterminada (•••• 1111) y un Bizum
 // (•••• 678).
+
+const URL_METODOS = '/api/customer/payment-methods'
 
 async function abrirMetodosDePago(email = 'cliente@esibuy.test') {
   await abrirSesionPorApi(email)
@@ -34,8 +38,14 @@ describe('PaymentMethodsPage (HU6): listado', () => {
     expect(within(bizum).queryByText('Predeterminado')).not.toBeInTheDocument()
   })
 
-  it('HU6-CP26: sin métodos muestra un estado vacío con el botón para añadir el primero', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP26: sin métodos muestra un estado vacío con el botón para añadir el primero', async () => {
+    server.use(http.get(URL_METODOS, () => HttpResponse.json([])))
+
+    await abrirMetodosDePago()
+
+    expect(await screen.findByRole('heading', { level: 2, name: /aún no tienes métodos de pago/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /añadir método de pago/i })).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: /tus métodos de pago/i })).not.toBeInTheDocument()
   })
 
   it('HU6-CP26: si falla la carga avisa y deja reintentar', () => {
