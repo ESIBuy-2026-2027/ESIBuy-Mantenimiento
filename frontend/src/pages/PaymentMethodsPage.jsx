@@ -12,7 +12,7 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { Add20Regular, Payment24Regular, Phone24Regular, Wallet24Regular } from '@fluentui/react-icons'
-import { getPaymentMethods } from '../api/paymentMethods'
+import { getPaymentMethods, setDefaultPaymentMethod } from '../api/paymentMethods'
 import EmptyState from '../components/EmptyState'
 import { usePageStyles } from '../components/pageStyles'
 import { useApiQuery } from '../hooks/useApiQuery'
@@ -45,6 +45,7 @@ const useStyles = makeStyles({
   methodText: {
     display: 'flex',
     flexDirection: 'column',
+    flexGrow: 1,
   },
   mask: {
     fontFamily: tokens.fontFamilyMonospace,
@@ -58,6 +59,12 @@ export default function PaymentMethodsPage() {
   const styles = useStyles()
   const fetcher = useCallback(() => getPaymentMethods(), [])
   const { data: metodos, failed, retry } = useApiQuery(fetcher)
+
+  // Tras el cambio se vuelve a pedir la lista: el backend desmarca el anterior
+  const marcarPredeterminado = async (id) => {
+    await setDefaultPaymentMethod(id)
+    retry()
+  }
 
   return (
     <main className={pageStyles.page}>
@@ -98,10 +105,14 @@ export default function PaymentMethodsPage() {
                     <Text weight="semibold">{etiqueta}</Text>
                     <Text className={styles.mask}>{metodo.mascara}</Text>
                   </div>
-                  {metodo.predeterminado && (
+                  {metodo.predeterminado ? (
                     <Badge appearance="tint" color="brand">
                       Predeterminado
                     </Badge>
+                  ) : (
+                    <Button appearance="subtle" onClick={() => marcarPredeterminado(metodo.id)}>
+                      Marcar como predeterminado
+                    </Button>
                   )}
                 </Card>
               </li>
