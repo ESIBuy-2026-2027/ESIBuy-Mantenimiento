@@ -20,7 +20,9 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
+import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
 
@@ -117,6 +119,12 @@ public class AutenticacionService implements AutenticacionUseCase {
     @Override
     public String consultarIdUsuarioEnSesion(String email) {
         return consultarUsuarioEnSesion(email).getId();
+    }
+
+    @Override
+    public boolean esClientePremium(String email) {
+        DatosCliente datos = consultarUsuarioEnSesion(email).getDatosCliente();
+        return datos != null && datos.tipoCliente() == TipoCliente.PREMIUM;
     }
 
     private boolean tieneAuthenticatorConfirmado(Usuario usuario) {

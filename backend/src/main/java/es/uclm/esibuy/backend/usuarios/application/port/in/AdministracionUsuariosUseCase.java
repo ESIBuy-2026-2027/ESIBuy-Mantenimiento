@@ -34,6 +34,15 @@ public interface AdministracionUsuariosUseCase {
     Usuario consultarVendedor(String usuarioId);
 
     /**
+     * Solo el nombre comercial del vendedor, para otros módulos (p. ej. el carrito, HU9): así no ven el dominio
+     * de usuarios.
+     *
+     * @throws es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException si no existe
+     *         o no es un vendedor
+     */
+    String consultarNombreComercial(String vendedorId);
+
+    /**
      * Modifica los datos del usuario y lo devuelve ya modificado (HU22).
      *
      * @throws es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException si no existe

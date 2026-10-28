@@ -45,7 +45,7 @@ class CatalogoProductosServiceTest {
     }
 
     private static Producto producto(boolean disponible) {
-        return new Producto("p-1", "u-2", "Teclado", "Con cable", new BigDecimal("50.00"), 7, "cat-1", "teclado.png",
+        return new Producto("p-1", "u-2", "Teclado", "Con cable", new BigDecimal("50.00"), 7, "cat-1", "https://esibuy.test/teclado.png",
                 disponible, new Descuento(true, new BigDecimal("10")), new Descuento(true, new BigDecimal("20")));
     }
 
@@ -57,7 +57,7 @@ class CatalogoProductosServiceTest {
 
         ProductoComercial comercial = servicio.consultarComprable("p-1", true).orElseThrow();
 
-        assertEquals(new ProductoComercial("p-1", "u-2", "Teclado", "teclado.png", new BigDecimal("40.00"), 7),
+        assertEquals(new ProductoComercial("p-1", "u-2", "Teclado", "https://esibuy.test/teclado.png", new BigDecimal("40.00"), 7),
                 comercial);
         assertEquals(new BigDecimal("45.00"), servicio.consultarComprable("p-1", false).orElseThrow().precioFinal());
     }
