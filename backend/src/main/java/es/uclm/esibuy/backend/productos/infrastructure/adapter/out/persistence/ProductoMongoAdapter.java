@@ -15,6 +15,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
 import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
+import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalogo;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
@@ -86,7 +87,10 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         }
         Criteria criterios = new Criteria().andOperator(filtros);
         long total = mongoTemplate.count(new Query(criterios), ProductoDocument.class);
-        Sort.Direction direccion = query.descendente() ? Sort.Direction.DESC : Sort.Direction.ASC;
+        // PENDIENTE DE DECIDIR (equipo): ordenar por la valoración real de HU13. Mientras tanto todos empatan
+        // a 0 y el empate se resuelve por nombre de la A a la Z, también si se pide descendente.
+        boolean descendente = query.criterio() == CriterioOrdenCatalogo.NOMBRE && query.descendente();
+        Sort.Direction direccion = descendente ? Sort.Direction.DESC : Sort.Direction.ASC;
         List<Producto> productos = mongoTemplate.find(new Query(criterios).with(PageRequest.of(
                         query.pagina(), query.tamano(), Sort.by(direccion, "nombre"))),
                         ProductoDocument.class).stream()
