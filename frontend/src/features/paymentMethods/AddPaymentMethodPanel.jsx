@@ -20,6 +20,7 @@ import {
   Phone20Regular,
   Wallet20Regular,
 } from '@fluentui/react-icons'
+import { addPaymentMethod } from '../../api/paymentMethods'
 
 // Los tres tipos que admite el backend, en el orden de los botones del selector
 const TIPOS = [
@@ -80,6 +81,21 @@ function erroresDe(tipo, campos) {
     return { telefonoBizum: 'El teléfono tiene 9 dígitos.' }
   }
   return {}
+}
+
+// Lo que se envía: solo los campos del tipo elegido, aunque se haya escrito en otros
+function cuerpoDe(tipo, campos) {
+  if (tipo === 'TARJETA') {
+    return {
+      tipo,
+      numeroTarjeta: sinEspacios(campos.numeroTarjeta),
+      titular: campos.titular.trim(),
+      caducidad: campos.caducidad.trim(),
+      cvv: campos.cvv,
+    }
+  }
+  if (tipo === 'PAYPAL') return { tipo, urlPayPal: campos.urlPayPal.trim() }
+  return { tipo, telefonoBizum: campos.telefonoBizum.trim() }
 }
 
 // Composición inspirada en la tarjeta «Payment Details», adaptada a DESIGN.md: superficie blanca con la sombra del
@@ -147,7 +163,7 @@ const useStyles = makeStyles({
 })
 
 // Alta de un método de pago (HU6). Los datos solo viven en este panel mientras se rellena.
-export default function AddPaymentMethodPanel({ onCancel }) {
+export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
   const styles = useStyles()
   const [tipo, setTipo] = useState('TARJETA')
   const [campos, setCampos] = useState(CAMPOS_VACIOS)
@@ -161,8 +177,11 @@ export default function AddPaymentMethodPanel({ onCancel }) {
   const error = (nombre) =>
     errores[nombre] ? { validationState: 'error', validationMessage: errores[nombre] } : {}
 
-  const guardar = () => {
-    setErrores(erroresDe(tipo, campos))
+  const guardar = async () => {
+    const encontrados = erroresDe(tipo, campos)
+    setErrores(encontrados)
+    if (Object.keys(encontrados).length > 0) return
+    onSaved(await addPaymentMethod(cuerpoDe(tipo, campos)))
   }
 
   return (
@@ -250,5 +269,6 @@ export default function AddPaymentMethodPanel({ onCancel }) {
 }
 
 AddPaymentMethodPanel.propTypes = {
+  onSaved: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
 }
