@@ -71,6 +71,11 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
 
     @Override
     public ProductoPage buscarEnCatalogo(BuscarCatalogoQuery query) {
+
+        if (query.valoracionMinima() != null) { //PENDIENTE DE DECIDIR (equipo): conectar con las valoraciones de HU13
+            return new ProductoPage(List.of(), query.pagina(), query.tamano(), 0);
+        }
+
         List<Criteria> filtros = new ArrayList<>();
         filtros.add(Criteria.where("disponible").is(true));
         if (query.busqueda() != null && !query.busqueda().isBlank()) {
