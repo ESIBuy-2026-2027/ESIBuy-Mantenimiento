@@ -89,8 +89,17 @@ describe('PaymentMethodsPage (HU6): acceso', () => {
 })
 
 describe('PaymentMethodsPage (HU6): predeterminado', () => {
-  it('HU6-CP28: marcar otro método como predeterminado lo cambia en la lista', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP28: marcar otro método como predeterminado lo cambia en la lista', async () => {
+    const usuario = userEvent.setup()
+    await abrirMetodosDePago()
+    const [, bizum] = await screen.findAllByRole('listitem')
+    // El predeterminado no ofrece marcarse otra vez
+    expect(within(tarjetasDeMetodo()[0]).queryByRole('button', { name: /marcar como predeterminado/i })).toBeNull()
+
+    await usuario.click(within(bizum).getByRole('button', { name: /marcar como predeterminado/i }))
+
+    await waitFor(() => expect(within(tarjetasDeMetodo()[1]).getByText('Predeterminado')).toBeInTheDocument())
+    expect(within(tarjetasDeMetodo()[0]).queryByText('Predeterminado')).not.toBeInTheDocument()
   })
 
   it('HU6-CP28: si el método ya no existe avisa y recarga la lista', () => {
