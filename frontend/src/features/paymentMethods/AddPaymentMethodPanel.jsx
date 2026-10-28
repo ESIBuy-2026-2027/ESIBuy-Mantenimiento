@@ -85,6 +85,11 @@ function erroresDe(tipo, campos) {
   return {}
 }
 
+// Mensajes propios según el código del backend: nunca su texto ni los datos enviados
+const MENSAJE_LIMITE = 'Ya tienes 5 métodos de pago. Elimina uno para añadir otro.'
+const MENSAJE_RECHAZO = 'No se ha podido guardar el método de pago. Revisa los datos: puede que la tarjeta esté caducada.'
+const mensajeDeFallo = (error) => (error?.code === 'PAYMENT_METHOD_LIMIT_REACHED' ? MENSAJE_LIMITE : MENSAJE_RECHAZO)
+
 // Lo que se envía: solo los campos del tipo elegido, aunque se haya escrito en otros
 function cuerpoDe(tipo, campos) {
   if (tipo === 'TARJETA') {
@@ -187,9 +192,8 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
     setFallo(null)
     try {
       onSaved(await addPaymentMethod(cuerpoDe(tipo, campos)))
-    } catch {
-      // Mensaje propio: nunca el del backend ni los datos enviados
-      setFallo('No se ha podido guardar el método de pago. Revisa los datos: puede que la tarjeta esté caducada.')
+    } catch (error) {
+      setFallo(mensajeDeFallo(error))
     }
   }
 
