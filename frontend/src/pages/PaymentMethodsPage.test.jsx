@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
@@ -74,9 +74,18 @@ describe('PaymentMethodsPage (HU6): acceso', () => {
     expect(await screen.findByRole('heading', { level: 1, name: /métodos de pago/i })).toBeInTheDocument()
   })
 
-  it('HU6-CP27: un vendedor o un administrador no acceden a la vista', () => {
-    expect.fail('Funcionalidad no implementada')
-  })
+  it.each(['vendedor@esibuy.test', 'admin@esibuy.test'])(
+    'HU6-CP27: un vendedor o un administrador no acceden a la vista (%s)',
+    async (email) => {
+      await abrirSesionPorApi(email)
+      renderApp('/payment-methods')
+
+      // Se le lleva a la página de inicio de su rol, y en su cabecera no hay enlace a los métodos de pago
+      await waitFor(() => expect(screen.getByTestId('ruta-actual')).not.toHaveTextContent('/payment-methods'))
+      expect(screen.queryByRole('heading', { level: 1, name: /métodos de pago/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('link', { name: /métodos de pago/i })).not.toBeInTheDocument()
+    },
+  )
 })
 
 describe('PaymentMethodsPage (HU6): predeterminado', () => {
