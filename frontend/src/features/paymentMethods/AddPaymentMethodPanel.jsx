@@ -139,7 +139,7 @@ const useStyles = makeStyles({
   },
   types: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
     gap: tokens.spacingHorizontalS,
   },
   type: {
@@ -150,10 +150,16 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     gap: tokens.spacingVerticalM,
   },
+  // minmax(0, 1fr) y minWidth 0 en el input: sin ellos, el ancho propio de cada input impide que la columna se
+  // estreche y el CVV se sale del panel
   twoColumns: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(2, 1fr)',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    alignItems: 'start',
     gap: tokens.spacingHorizontalM,
+  },
+  shrinkable: {
+    minWidth: 0,
   },
   actions: {
     display: 'flex',
@@ -247,11 +253,18 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
           </Field>
           <div className={styles.twoColumns}>
             <Field label="Caducidad" {...error('caducidad')}>
-              <Input {...campo('caducidad')} contentBefore={<Calendar20Regular />} placeholder="MM/AA" autoComplete="cc-exp" />
+              <Input
+                {...campo('caducidad')}
+                className={styles.shrinkable}
+                contentBefore={<Calendar20Regular />}
+                placeholder="MM/AA"
+                autoComplete="cc-exp"
+              />
             </Field>
             <Field label="CVV" {...error('cvv')}>
               <Input
                 {...campo('cvv')}
+                className={styles.shrinkable}
                 contentBefore={<LockClosed20Regular />}
                 type="password"
                 placeholder="123"

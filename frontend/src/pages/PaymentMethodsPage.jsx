@@ -32,19 +32,28 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     gap: tokens.spacingVerticalM,
   },
+  // En pantallas estrechas los botones bajan a una segunda línea en lugar de apretar el tipo y la máscara
   method: {
     display: 'flex',
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: tokens.spacingHorizontalL,
   },
   icon: {
+    flexShrink: 0,
     color: tokens.colorBrandForeground1,
   },
   methodText: {
     display: 'flex',
     flexDirection: 'column',
     flexGrow: 1,
+  },
+  methodActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalS,
+    marginLeft: 'auto',
   },
   action: {
     display: 'flex',
@@ -56,6 +65,7 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground3,
   },
   mask: {
+    whiteSpace: 'nowrap',
     fontFamily: tokens.fontFamilyMonospace,
     color: tokens.colorNeutralForeground3,
   },
@@ -161,18 +171,20 @@ export default function PaymentMethodsPage() {
                     <Text weight="semibold">{etiqueta}</Text>
                     <Text className={styles.mask}>{metodo.mascara}</Text>
                   </div>
-                  {metodo.predeterminado ? (
-                    <Badge appearance="tint" color="brand">
-                      Predeterminado
-                    </Badge>
-                  ) : (
-                    <Button appearance="subtle" onClick={() => marcarPredeterminado(metodo.id)}>
-                      Marcar como predeterminado
+                  <div className={styles.methodActions}>
+                    {metodo.predeterminado ? (
+                      <Badge appearance="tint" color="brand">
+                        Predeterminado
+                      </Badge>
+                    ) : (
+                      <Button appearance="subtle" onClick={() => marcarPredeterminado(metodo.id)}>
+                        Marcar como predeterminado
+                      </Button>
+                    )}
+                    <Button appearance="subtle" icon={<Delete20Regular />} onClick={() => setAEliminar(metodo)}>
+                      Eliminar
                     </Button>
-                  )}
-                  <Button appearance="subtle" icon={<Delete20Regular />} onClick={() => setAEliminar(metodo)}>
-                    Eliminar
-                  </Button>
+                  </div>
                 </Card>
               </li>
             )
