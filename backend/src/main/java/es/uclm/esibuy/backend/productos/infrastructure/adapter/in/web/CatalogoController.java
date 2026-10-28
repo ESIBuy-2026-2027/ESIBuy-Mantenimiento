@@ -1,5 +1,9 @@
 package es.uclm.esibuy.backend.productos.infrastructure.adapter.in.web;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,15 +27,17 @@ public class CatalogoController {
         this.catalogoProductos = catalogoProductos;
     }
 
+    // Catálogo del cliente (HU7): la página llega empezando en 1 y el caso de uso la recibe empezando en 0.
+    // Un parámetro fuera de rango o un orden desconocido los rechaza Spring con 400 (validación de las anotaciones).
     @GetMapping("/products")
     public ProductoCatalogoPageResponse buscarProductos(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "10") @Min(1) int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) Integer minRating,
-            @RequestParam(defaultValue = "nombre") String sort,
-            @RequestParam(defaultValue = "asc") String order) {
+            @RequestParam(required = false) @Min(1) @Max(5) Integer minRating,
+            @RequestParam(defaultValue = "nombre") @Pattern(regexp = "nombre|valoracion") String sort,
+            @RequestParam(defaultValue = "asc") @Pattern(regexp = "asc|desc") String order) {
         CriterioOrdenCatalogo criterio = "valoracion".equals(sort)
                 ? CriterioOrdenCatalogo.VALORACION
                 : CriterioOrdenCatalogo.NOMBRE;
