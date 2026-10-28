@@ -20,10 +20,14 @@ import org.testcontainers.utility.DockerImageName;
 @TestConfiguration(proxyBeanMethods = false)
 public class MongoTestcontainersConfig {
 
+    // Provisional: MongoDB 7.0 y no 8.0. Desde la imagen ubuntu-24.04 del 25/10/2026, los runners de GitHub y
+    // Azure traen un kernel Linux 6.19 o superior, y MongoDB 8.x se cierra al arrancar en los kernels 6.19 a
+    // 7.0.13 (SERVER-121912 y SERVER-125742); la 7.0 sí funciona. Volver a "mongo:8.0" cuando los runners
+    // tengan un kernel 7.0.14 o superior. El backend no usa nada exclusivo de MongoDB 8.
     @Bean
     @ServiceConnection
     MongoDBContainer mongoDbContainer() {
-        return new MongoDBContainer(DockerImageName.parse("mongo:8.0"));
+        return new MongoDBContainer(DockerImageName.parse("mongo:7.0"));
     }
 
     // Clave de cifrado de los datos de pago (HU6), aleatoria y solo para los tests: así ni el CI ni cada
