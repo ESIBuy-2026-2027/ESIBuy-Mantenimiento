@@ -177,7 +177,21 @@ describe('AddPaymentMethodPanel (HU6): errores del backend', () => {
     expect(document.body.textContent).not.toContain('987')
   })
 
-  it('HU6-CP33: al superar el límite de métodos avisa de que ya hay 5', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP33: al superar el límite de métodos avisa de que ya hay 5', async () => {
+    // P. ej., se ha añadido otro desde otra pestaña mientras el panel estaba abierto
+    server.use(
+      http.post(URL_METODOS, () =>
+        HttpResponse.json({ code: 'PAYMENT_METHOD_LIMIT_REACHED' }, { status: 409 }),
+      ),
+    )
+    const usuario = userEvent.setup()
+    const { onSaved } = abrirPanel()
+    await usuario.click(screen.getByRole('button', { name: 'Bizum' }))
+    await usuario.type(screen.getByLabelText(/teléfono/i), '612345678')
+
+    await usuario.click(screen.getByRole('button', { name: /guardar método de pago/i }))
+
+    expect(await screen.findByText('Ya tienes 5 métodos de pago. Elimina uno para añadir otro.')).toBeInTheDocument()
+    expect(onSaved).not.toHaveBeenCalled()
   })
 })
