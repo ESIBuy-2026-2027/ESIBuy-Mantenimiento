@@ -1,6 +1,8 @@
 package es.uclm.esibuy.backend.productos.infrastructure.adapter.in.web;
 
+import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
 import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUseCase;
+import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalogo;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
@@ -19,6 +21,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -68,11 +71,17 @@ class CatalogoControllerTest {
 
     @Test
     @DisplayName("HU7-CP17: los parámetros llegan al caso de uso traducidos: página desde 0, criterio y sentido")
-    void traduceLosParametrosALaConsulta() {
-        // TODO: GET ?page=2&size=10&search=teclado&category=cat-2&minRating=4&sort=valoracion&order=desc;
-        // con ArgumentCaptor: pagina = 1, tamano = 10, busqueda, categoriaId, valoracionMinima = 4,
-        // criterio = VALORACION, descendente = true.
-        fail("Funcionalidad no implementada");
+    void traduceLosParametrosALaConsulta() throws Exception {
+        when(catalogoProductos.buscarProductos(any())).thenReturn(new ProductoPage(List.of(), 1, 10, 0));
+
+        mockMvc.perform(get(URL).param("page", "2").param("size", "10").param("search", "teclado")
+                        .param("category", "cat-2").param("minRating", "4").param("sort", "valoracion")
+                        .param("order", "desc").with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isOk());
+
+        // La página llega al caso de uso empezando en 0; sort y order se traducen al enum y al boolean
+        verify(catalogoProductos).buscarProductos(new BuscarCatalogoQuery("teclado", "cat-2", 4,
+                CriterioOrdenCatalogo.VALORACION, true, 1, 10));
     }
 
     @Test
