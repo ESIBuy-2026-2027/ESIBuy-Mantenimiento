@@ -17,13 +17,16 @@ const CARRITO_DE_DOS_PROVEEDORES = [
   ['p-24', 1],
 ]
 
-async function abrirPasarela(productos = CARRITO_DE_DOS_PROVEEDORES) {
+// Por defecto espera también a los métodos de pago del cliente, sin los que no se puede pagar.
+async function abrirPasarela({ productos = CARRITO_DE_DOS_PROVEEDORES, esperarMetodos = true } = {}) {
   await abrirSesionPorApi(CLIENTE)
   for (const [id, cantidad] of productos) await addCartItem(id, cantidad)
   renderApp('/checkout')
   await screen.findByRole('heading', { level: 1, name: /pasarela de pago/i })
   // El carrito llega después del título.
-  return screen.findByRole('region', { name: /resumen del pago/i })
+  const resumen = await screen.findByRole('region', { name: /resumen del pago/i })
+  if (esperarMetodos) await screen.findByRole('radiogroup', { name: /método de pago/i })
+  return resumen
 }
 
 const botonDePago = () => screen.getByRole('button', { name: /simular pago/i })
@@ -154,7 +157,106 @@ describe('CheckoutPage (HU10): simular el pago', () => {
     await user.click(botonDePago())
 
     await screen.findByRole('heading', { level: 1, name: /pago realizado/i }, PAGO)
-    expect(cuerpos).toEqual([{ vendedorId: 'u-2' }, { vendedorId: 'u-99' }])
+    expect(cuerpos.map(({ vendedorId }) => vendedorId)).toEqual(['u-2', 'u-99'])
+  })
+})
+
+describe('CheckoutPage (HU10): elegir el método de pago', () => {
+  it('HU10-CP07: lista los métodos de pago guardados del cliente y marca el predeterminado', async () => {
+    await abrirPasarela()
+
+    const metodos = await screen.findByRole('radiogroup', { name: /método de pago/i })
+    expect(within(metodos).getAllByRole('radio')).toHaveLength(2)
+    expect(within(metodos).getByRole('radio', { name: /tarjeta.*4242/i })).toBeChecked()
+    expect(within(metodos).getByRole('radio', { name: /bizum.*678/i })).not.toBeChecked()
+  })
+
+  it('HU10-CP07: se puede elegir otro método de pago antes de pagar', async () => {
+    const user = userEvent.setup()
+    await abrirPasarela()
+
+    await user.click(screen.getByRole('radio', { name: /bizum.*678/i }))
+
+    expect(screen.getByRole('radio', { name: /bizum.*678/i })).toBeChecked()
+    expect(screen.getByRole('radio', { name: /tarjeta.*4242/i })).not.toBeChecked()
+  })
+
+  it('HU10-CP08: sin métodos de pago guardados no deja pagar y lleva al perfil para añadir uno', async () => {
+    server.use(http.get('/api/customer/payment-methods', () => HttpResponse.json([])))
+    await abrirPasarela({ esperarMetodos: false })
+
+    expect(await screen.findByText(/no tienes ningún método de pago/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /añadir un método de pago/i })).toHaveAttribute('href', '/profile')
+    expect(botonDePago()).toBeDisabled()
+  })
+
+  it('HU10-CP08: si no se pueden cargar los métodos de pago lo indica y deja reintentar', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.get('/api/customer/payment-methods', () => new HttpResponse(null, { status: 500 }), { once: true }),
+    )
+    await abrirPasarela({ esperarMetodos: false })
+
+    expect(await screen.findByText(/no se han podido cargar los métodos de pago/i)).toBeInTheDocument()
+    expect(botonDePago()).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: /reintentar/i }))
+
+    expect(await screen.findByRole('radio', { name: /tarjeta.*4242/i })).toBeChecked()
+    expect(botonDePago()).toBeEnabled()
+  })
+
+  it('HU10-CP09: cada pedido se crea con el método de pago elegido', async () => {
+    const user = userEvent.setup()
+    const cuerpos = []
+    server.use(
+      http.post('/api/orders', async ({ request }) => {
+        cuerpos.push(await request.clone().json())
+        return undefined
+      }),
+    )
+    await abrirPasarela()
+
+    await user.click(screen.getByRole('radio', { name: /bizum.*678/i }))
+    await user.click(botonDePago())
+
+    await screen.findByRole('heading', { level: 1, name: /pago realizado/i }, PAGO)
+    expect(cuerpos).toEqual([
+      { vendedorId: 'u-2', paymentMethodId: 'mp-2' },
+      { vendedorId: 'u-99', paymentMethodId: 'mp-2' },
+    ])
+  })
+})
+
+describe('CheckoutPage (HU10): recibo del pago', () => {
+  it('HU10-CP10: tras pagar muestra un recibo con el total pagado, cada pedido y el método de pago usado', async () => {
+    const user = userEvent.setup()
+    await abrirPasarela()
+
+    await user.click(botonDePago())
+
+    const recibo = await screen.findByRole('region', { name: /recibo del pago/i }, PAGO)
+    expect(within(recibo).getByText(/326,32/)).toBeInTheDocument()
+    expect(within(recibo).getByRole('listitem', { name: /pedido o-1/i })).toHaveTextContent(/tecnovera/i)
+    expect(within(recibo).getByRole('listitem', { name: /pedido o-2/i })).toHaveTextContent(/otero/i)
+    expect(within(recibo).getByText(/4242/)).toBeInTheDocument()
+  })
+
+  it('HU10-CP10: si falla un pedido, el recibo solo cobra los pedidos creados', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/orders', async ({ request }) => {
+        const cuerpo = await request.clone().json()
+        return cuerpo.vendedorId === 'u-99' ? new HttpResponse(null, { status: 500 }) : undefined
+      }),
+    )
+    await abrirPasarela()
+
+    await user.click(botonDePago())
+
+    const recibo = await screen.findByRole('region', { name: /recibo del pago/i }, PAGO)
+    expect(within(recibo).getAllByText(/197,32/).length).toBeGreaterThan(0)
+    expect(within(recibo).queryByText(/326,32/)).not.toBeInTheDocument()
   })
 })
 
