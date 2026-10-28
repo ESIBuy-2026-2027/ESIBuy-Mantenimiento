@@ -1,7 +1,8 @@
 import { useCallback } from 'react'
-import { Badge, Card, Text, Title1, makeStyles, tokens } from '@fluentui/react-components'
-import { Payment24Regular, Phone24Regular, Wallet24Regular } from '@fluentui/react-icons'
+import { Badge, Button, Card, Text, Title1, makeStyles, tokens } from '@fluentui/react-components'
+import { Add20Regular, Payment24Regular, Phone24Regular, Wallet24Regular } from '@fluentui/react-icons'
 import { getPaymentMethods } from '../api/paymentMethods'
+import EmptyState from '../components/EmptyState'
 import { usePageStyles } from '../components/pageStyles'
 import { useApiQuery } from '../hooks/useApiQuery'
 
@@ -55,7 +56,18 @@ export default function PaymentMethodsPage() {
         </Title1>
         <Text className={pageStyles.subtitle}>Gestiona las tarjetas y cuentas con las que pagas tus compras.</Text>
       </div>
-      {metodos && (
+      {metodos?.length === 0 && (
+        <EmptyState
+          icon={<Payment24Regular />}
+          title="Aún no tienes métodos de pago"
+          description="Añade una tarjeta, una cuenta de PayPal o tu teléfono de Bizum para pagar tus compras."
+        >
+          <Button appearance="primary" icon={<Add20Regular />}>
+            Añadir método de pago
+          </Button>
+        </EmptyState>
+      )}
+      {metodos?.length > 0 && (
         <ul aria-label="Tus métodos de pago" className={styles.list}>
           {metodos.map((metodo) => {
             const { etiqueta, Icono } = TIPOS[metodo.tipo]
