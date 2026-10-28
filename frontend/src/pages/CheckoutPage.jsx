@@ -218,7 +218,7 @@ function VendorOrder({ group, styles }) {
 }
 
 // Los métodos de pago guardados del cliente (HU6) para elegir con cuál pagar. Sin ninguno no se puede pagar: se
-// lleva al perfil para añadir uno.
+// lleva a su vista de métodos de pago para añadir uno.
 function PaymentMethodPicker({ query, selectedId, onSelect, styles }) {
   if (query.failed) {
     return (
@@ -238,7 +238,7 @@ function PaymentMethodPicker({ query, selectedId, onSelect, styles }) {
       <MessageBar intent="warning">
         <MessageBarBody>No tienes ningún método de pago guardado.</MessageBarBody>
         <MessageBarActions>
-          <LinkButton to={PATHS.PROFILE}>Añadir un método de pago</LinkButton>
+          <LinkButton to={PATHS.PAYMENT_METHODS}>Añadir un método de pago</LinkButton>
         </MessageBarActions>
       </MessageBar>
     )
