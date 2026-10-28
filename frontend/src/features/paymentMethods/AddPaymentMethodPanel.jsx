@@ -112,6 +112,8 @@ const useStyles = makeStyles({
   panel: {
     width: '100%',
     maxWidth: '440px',
+    // Centrado en la página, como la tarjeta de referencia
+    alignSelf: 'center',
     boxSizing: 'border-box',
     padding: tokens.spacingVerticalXL,
     gap: tokens.spacingVerticalL,
