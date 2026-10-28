@@ -158,6 +158,27 @@ describe('PaymentMethodsPage (HU6): añadir', () => {
   })
 })
 
+describe('PaymentMethodsPage (HU6): eliminar', () => {
+  it('HU6-CP35: al eliminar el predeterminado eligiendo otro, desaparece de la lista y el elegido pasa a serlo', async () => {
+    const usuario = userEvent.setup()
+    await abrirMetodosDePago()
+    const [tarjeta] = await screen.findAllByRole('listitem')
+
+    await usuario.click(within(tarjeta).getByRole('button', { name: /eliminar/i }))
+    const dialogo = screen.getByRole('alertdialog', { name: /eliminar método de pago/i })
+    await usuario.selectOptions(
+      within(dialogo).getByRole('combobox', { name: /nuevo método predeterminado/i }),
+      within(dialogo).getByRole('option', { name: 'Bizum •••• 678' }),
+    )
+    await usuario.click(within(dialogo).getByRole('button', { name: /^eliminar$/i }))
+
+    expect(await screen.findByText('Método de pago eliminado.')).toBeInTheDocument()
+    await waitFor(() => expect(tarjetasDeMetodo()).toHaveLength(1))
+    expect(tarjetasDeMetodo()[0]).toHaveTextContent('•••• 678')
+    expect(within(tarjetasDeMetodo()[0]).getByText('Predeterminado')).toBeInTheDocument()
+  })
+})
+
 describe('PaymentMethodsPage (HU6): límite', () => {
   it('HU6-CP29: con 5 métodos no deja añadir otro y explica por qué', async () => {
     const cinco = Array.from({ length: 5 }, (_, i) => ({
