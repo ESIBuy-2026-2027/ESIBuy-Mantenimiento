@@ -8,3 +8,9 @@ const URL_METODOS = '/api/customer/payment-methods'
 export function getPaymentMethods() {
   return request(URL_METODOS)
 }
+
+// Alta de un método: `{ tipo, ... }` con solo los campos de su tipo (tarjeta: numeroTarjeta, titular, caducidad y
+// cvv; PayPal: urlPayPal; Bizum: telefonoBizum). El CVV solo lo valida el backend: no se guarda en ningún sitio.
+export function addPaymentMethod(metodo) {
+  return request(URL_METODOS, { method: 'POST', body: metodo })
+}
