@@ -23,8 +23,8 @@ public class MongoTestcontainersConfig {
     @Bean
     @ServiceConnection
     MongoDBContainer mongoDbContainer() {
-        return new MongoDBContainer(DockerImageName.parse("mongo:8.0"));
-    }
+        return new MongoDBContainer(DockerImageName.parse("mongo:7.0"));
+        }
 
     // Clave de cifrado de los datos de pago (HU6), aleatoria y solo para los tests: así ni el CI ni cada
     // desarrollador necesitan la variable ESIBUY_PAGOS_CLAVE_CIFRADO para pasar la suite
