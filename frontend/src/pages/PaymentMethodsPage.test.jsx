@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
@@ -48,8 +49,16 @@ describe('PaymentMethodsPage (HU6): listado', () => {
     expect(screen.queryByRole('list', { name: /tus métodos de pago/i })).not.toBeInTheDocument()
   })
 
-  it('HU6-CP26: si falla la carga avisa y deja reintentar', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP26: si falla la carga avisa y deja reintentar', async () => {
+    // Solo la primera petición falla: al reintentar responde el mock normal
+    server.use(http.get(URL_METODOS, () => new HttpResponse(null, { status: 500 }), { once: true }))
+    const usuario = userEvent.setup()
+
+    await abrirMetodosDePago()
+
+    expect(await screen.findByText(/no se han podido cargar tus métodos de pago/i)).toBeInTheDocument()
+    await usuario.click(screen.getByRole('button', { name: /reintentar/i }))
+    expect(await screen.findAllByRole('listitem')).toHaveLength(2)
   })
 })
 
