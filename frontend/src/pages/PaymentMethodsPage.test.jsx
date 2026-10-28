@@ -128,7 +128,27 @@ describe('PaymentMethodsPage (HU6): predeterminado', () => {
 })
 
 describe('PaymentMethodsPage (HU6): límite', () => {
-  it('HU6-CP29: con 5 métodos no deja añadir otro y explica por qué', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP29: con 5 métodos no deja añadir otro y explica por qué', async () => {
+    const cinco = Array.from({ length: 5 }, (_, i) => ({
+      id: `m-${i + 1}`,
+      tipo: 'BIZUM',
+      mascara: `•••• 67${i}`,
+      predeterminado: i === 0,
+    }))
+    server.use(http.get(URL_METODOS, () => HttpResponse.json(cinco)))
+
+    await abrirMetodosDePago()
+    await screen.findAllByRole('listitem')
+
+    expect(screen.getByRole('button', { name: /añadir método de pago/i })).toBeDisabled()
+    expect(screen.getByText(/has alcanzado el máximo de 5 métodos de pago/i)).toBeInTheDocument()
+  })
+
+  it('HU6-CP29: con menos de 5 métodos se puede añadir otro', async () => {
+    await abrirMetodosDePago()
+    await screen.findAllByRole('listitem')
+
+    expect(screen.getByRole('button', { name: /añadir método de pago/i })).toBeEnabled()
+    expect(screen.queryByText(/has alcanzado el máximo/i)).not.toBeInTheDocument()
   })
 })
