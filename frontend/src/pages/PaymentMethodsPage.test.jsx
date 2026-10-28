@@ -63,8 +63,15 @@ describe('PaymentMethodsPage (HU6): listado', () => {
 })
 
 describe('PaymentMethodsPage (HU6): acceso', () => {
-  it('HU6-CP27: el cliente tiene el enlace «Métodos de pago» en la cabecera y llega a la vista', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP27: el cliente tiene el enlace «Métodos de pago» en la cabecera y llega a la vista', async () => {
+    const usuario = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/')
+
+    const cuenta = await screen.findByRole('navigation', { name: 'Cuenta' })
+    await usuario.click(within(cuenta).getByRole('link', { name: /métodos de pago/i }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: /métodos de pago/i })).toBeInTheDocument()
   })
 
   it('HU6-CP27: un vendedor o un administrador no acceden a la vista', () => {
