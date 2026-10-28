@@ -46,8 +46,16 @@ describe('DeletePaymentMethodDialog (HU6): eliminar', () => {
     expect(eliminaciones).toEqual([{ id: 'm-2', sustituto: null }])
   })
 
-  it('HU6-CP34: al cancelar no elimina nada', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP34: al cancelar no elimina nada', async () => {
+    const eliminaciones = registrarEliminaciones()
+    const usuario = userEvent.setup()
+    const { onClose, onDeleted } = abrirDialogo(BIZUM, [TARJETA, BIZUM])
+
+    await usuario.click(screen.getByRole('button', { name: /cancelar/i }))
+
+    expect(onClose).toHaveBeenCalled()
+    expect(onDeleted).not.toHaveBeenCalled()
+    expect(eliminaciones).toEqual([])
   })
 })
 
