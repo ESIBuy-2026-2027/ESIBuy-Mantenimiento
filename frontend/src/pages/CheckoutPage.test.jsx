@@ -181,12 +181,12 @@ describe('CheckoutPage (HU10): elegir el método de pago', () => {
     expect(screen.getByRole('radio', { name: /tarjeta.*1111/i })).not.toBeChecked()
   })
 
-  it('HU10-CP08: sin métodos de pago guardados no deja pagar y lleva al perfil para añadir uno', async () => {
+  it('HU10-CP08: sin métodos de pago guardados no deja pagar y lleva a sus métodos de pago para añadir uno', async () => {
     server.use(http.get('/api/customer/payment-methods', () => HttpResponse.json([])))
     await abrirPasarela({ esperarMetodos: false })
 
     expect(await screen.findByText(/no tienes ningún método de pago/i)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /añadir un método de pago/i })).toHaveAttribute('href', '/profile')
+    expect(screen.getByRole('link', { name: /añadir un método de pago/i })).toHaveAttribute('href', '/payment-methods')
     expect(botonDePago()).toBeDisabled()
   })
 
