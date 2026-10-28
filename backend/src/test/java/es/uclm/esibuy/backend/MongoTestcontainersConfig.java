@@ -25,14 +25,4 @@ public class MongoTestcontainersConfig {
     MongoDBContainer mongoDbContainer() {
         return new MongoDBContainer(DockerImageName.parse("mongo:7.0"));
         }
-
-    // Clave de cifrado de los datos de pago (HU6), aleatoria y solo para los tests: así ni el CI ni cada
-    // desarrollador necesitan la variable ESIBUY_PAGOS_CLAVE_CIFRADO para pasar la suite
-    @Bean
-    DynamicPropertyRegistrar claveCifradoPagosDeTest() {
-        byte[] clave = new byte[32];
-        new SecureRandom().nextBytes(clave);
-        String claveBase64 = Base64.getEncoder().encodeToString(clave);
-        return registro -> registro.add("esibuy.pagos.clave-cifrado", () -> claveBase64);
-    }
 }

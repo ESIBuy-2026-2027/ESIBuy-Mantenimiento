@@ -14,6 +14,7 @@ import Home from '../pages/Home'
 import LoginPage from '../pages/LoginPage'
 import ProductDetailPage from '../pages/ProductDetailPage'
 import ProductsPage from '../pages/ProductsPage'
+import ProfilePage from '../pages/ProfilePage'
 import Register from '../pages/Register'
 import SellerProductFormPage from '../pages/SellerProductFormPage'
 import SellerProductsPage from '../pages/SellerProductsPage'
@@ -34,6 +35,11 @@ export default function AppRoutes() {
           <Route path={PATHS.PRODUCTS} element={<ProductsPage />} />
           <Route path={PATHS.PRODUCT_DETAIL} element={<ProductDetailPage />} />
           <Route path={PATHS.CHECKOUT} element={<CheckoutPage />} />
+        </Route>
+
+        {/* El perfil propio (HU4) es del cliente y del vendedor: el backend responde 403 al administrador. */}
+        <Route element={<ProtectedRoute allowedRoles={[ROLES.CLIENTE, ROLES.VENDEDOR]} />}>
+          <Route path={PATHS.PROFILE} element={<ProfilePage />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>

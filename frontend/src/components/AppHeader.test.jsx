@@ -144,4 +144,34 @@ describe('AppHeader', () => {
     await screen.findByRole('button', { name: /cerrar sesión/i })
     expect(screen.queryByRole('link', { name: /mis productos/i })).not.toBeInTheDocument()
   })
+
+  it('HU4-CP11: el cliente y el vendedor tienen el enlace a su perfil', async () => {
+    await abrirSesionPorApi('cliente@esibuy.test')
+    const { unmount } = renderApp('/')
+    expect(await screen.findByRole('link', { name: /mi perfil/i })).toHaveAttribute('href', '/profile')
+    unmount()
+
+    await abrirSesionPorApi('vendedor@esibuy.test')
+    renderApp('/')
+    expect(await screen.findByRole('link', { name: /mi perfil/i })).toHaveAttribute('href', '/profile')
+  })
+
+  it('HU4-CP11: el administrador no tiene el enlace al perfil', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/')
+
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(screen.queryByRole('link', { name: /mi perfil/i })).not.toBeInTheDocument()
+  })
+
+  it('HU4-CP11: al pulsar Mi perfil se abre el perfil del usuario', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/')
+
+    await user.click(await screen.findByRole('link', { name: /mi perfil/i }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: /mi perfil/i })).toBeInTheDocument()
+    expect(await screen.findByLabelText('Nombre')).toHaveValue('Carlos')
+  })
 })

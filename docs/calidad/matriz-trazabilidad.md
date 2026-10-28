@@ -639,10 +639,19 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU4-CP02 | Un vendedor consulta su perfil y recibe sus datos personales y los de vendedor, sin los de cliente | Controlador | 1 | ✅ Pasa |
 | HU4-CP03 | El perfil no expone la contraseña ni datos internos de la cuenta (estado, intentos, bloqueo) | Controlador | 1 | ✅ Pasa |
 | HU4-CP04 | Solo el cliente y el vendedor consultan su perfil: administrador 403, sin sesión 401, y una sesión de un usuario que ya no existe no es válida | Unitario + controlador | 3 | ✅ Pasa |
+| HU4-CP05 | En «Mi perfil» el cliente ve sus datos personales y los de cliente, en solo lectura | Frontend (página) | 2 | 🔍 En revisión (2, AB#296, PR sin abrir) |
+| HU4-CP06 | El vendedor ve sus datos y los de vendedor, con el nombre de su categoría; un dato opcional que falta se ve con un guion | Frontend (página) | 2 | 🔍 En revisión (2, AB#296, PR sin abrir) |
+| HU4-CP07 | La imagen de perfil se ve como el avatar elegido; sin avatar, se ven las iniciales | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#296, PR sin abrir) |
+| HU4-CP08 | La vista no muestra la contraseña ni el estado de la cuenta | Frontend (página) | 1 | 🔍 En revisión (1, AB#296, PR sin abrir) |
+| HU4-CP09 | Si el perfil no carga, se avisa sin detalles internos y se puede reintentar | Frontend (página) | 1 | 🔍 En revisión (1, AB#296, PR sin abrir) |
+| HU4-CP10 | Sin sesión, `/profile` lleva al login; el administrador no entra en el perfil | Frontend (página) | 2 | 🔍 En revisión (2, AB#296, PR sin abrir) |
+| HU4-CP11 | El cliente y el vendedor tienen el enlace «Mi perfil» en la cabecera, que abre su perfil; el administrador no lo tiene | Frontend (página) | 3 | 🔍 En revisión (3, AB#296, PR sin abrir) |
 
 Notas:
 - **HU4-CP01 a CP04:** casos propuestos en la T297 (AB#297), a partir del criterio de aceptación «cuando el usuario accede a su panel de perfil puede visualizar sus datos personales». Pendientes de confirmar con el equipo y de añadir a la HU4 en Azure Boards.
 - **Endpoint (T297):** `GET /api/perfil` → `{id, nombre, apellidos, email, rol, fechaAlta, dni, telefono, avatar}` y, según el rol, `fechaNacimiento` y `tipoCliente` (cliente) o `nombreComercial` y `categoriaPrincipalId` (vendedor). Los campos vacíos no aparecen. El usuario sale de la sesión (su email), nunca de la petición. Solo para `CLIENTE` y `VENDEDOR` (`SecurityConfig`). Es el contrato de la vista del frontend (T296).
+- **HU4-CP05 a CP11 (Sprint 2, frontend):** casos propuestos en la task AB#296 (vista de perfil) a partir del mismo criterio de aceptación y del contrato de la T297 (`frontend/docs/hu4-vista-perfil.md`). Siguen la numeración del backend. Pendientes de confirmar con el equipo y de añadir a la HU4 en Azure Boards.
+- **Archivo de tests nuevo** (con el OK del equipo): `ProfilePage.test.jsx`. `AppHeader.test.jsx` y `AvatarSelector.test.jsx` ganan casos HU4.
 - **Pendiente:** el criterio «el usuario debe dar al botón de guardar para modificar sus datos personales» es de la HU45 (edición de perfil). Aclarar con el equipo qué incluyen sus tasks 101 (endpoint consultar/editar perfil) y 298 (lógica para la obtención segura de datos), que se solapan con la T297.
 
 ### Tabla B · casos de prueba ↔ tests
@@ -656,10 +665,178 @@ Notas:
 | HU4-CP04 | `GestionPerfilServiceTest` | `consultarPerfilDeUnCorreoQueNoExisteLanzaExcepcion` | Aplicación | AB#297 | PR #140 | ✅ |
 | HU4-CP04 | `PerfilControllerTest` | `unAdministradorRecibe403` | Infraestructura | AB#297 | PR #140 | ✅ |
 | HU4-CP04 | `PerfilControllerTest` | `sinSesionRecibe401` | Infraestructura | AB#297 | PR #140 | ✅ |
+| HU4-CP05 | `ProfilePage.test.jsx` | `HU4-CP05: el cliente ve sus datos personales y los de cliente` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP05 | `ProfilePage.test.jsx` | `HU4-CP05: los datos del perfil son de solo lectura` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP06 | `ProfilePage.test.jsx` | `HU4-CP06: el vendedor ve sus datos y los de vendedor, con el nombre de su categoría` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP06 | `ProfilePage.test.jsx` | `HU4-CP06: los datos opcionales que no tiene se muestran con un guion` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP07 | `ProfilePage.test.jsx` | `HU4-CP07: muestra como imagen el avatar que eligió el usuario` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP07 | `ProfilePage.test.jsx` | `HU4-CP07: sin avatar elegido muestra sus iniciales` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP07 | `AvatarSelector.test.jsx` | `HU4-CP07: muestra el avatar elegido con su nombre accesible` | Frontend · componente | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP07 | `AvatarSelector.test.jsx` | `HU4-CP07: sin avatar, o con uno que no existe, muestra las iniciales` | Frontend · componente | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP08 | `ProfilePage.test.jsx` | `HU4-CP08: no muestra la contraseña ni el estado de la cuenta` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP09 | `ProfilePage.test.jsx` | `HU4-CP09: si el perfil no carga, avisa sin detalles internos y permite reintentar` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP10 | `ProfilePage.test.jsx` | `HU4-CP10: sin sesión, redirige al login` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP10 | `ProfilePage.test.jsx` | `HU4-CP10: el administrador no tiene perfil que consultar` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP11 | `AppHeader.test.jsx` | `HU4-CP11: el cliente y el vendedor tienen el enlace a su perfil` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP11 | `AppHeader.test.jsx` | `HU4-CP11: el administrador no tiene el enlace al perfil` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP11 | `AppHeader.test.jsx` | `HU4-CP11: al pulsar Mi perfil se abre el perfil del usuario` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `GestionPerfilServiceTest`: `usuarios/application/service/` (JUnit y Mockito, sin Spring)
 - `PerfilControllerTest`: `usuarios/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
+- `ProfilePage.test.jsx`: `frontend/src/pages/` (Vitest, RTL y MSW)
+- `AppHeader.test.jsx`: `frontend/src/components/` (Vitest, RTL y MSW)
+- `AvatarSelector.test.jsx`: `frontend/src/features/account/` (Vitest y RTL)
+
+---
+
+## HU6 · Gestión de métodos de pago
+
+### Tabla A · HU6 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU6-CP01 | El número de tarjeta solo admite dígitos, de 13 a 19, y tiene que superar el algoritmo de Luhn; rechaza uno nulo o vacío | Unitario | 6 | 🔍 En revisión |
+| HU6-CP02 | La caducidad tiene formato `MM/AA` con el mes entre 01 y 12, y la tarjeta es válida durante todo su mes de caducidad | Unitario | 6 | 🔍 En revisión |
+| HU6-CP03 | El titular es obligatorio, tiene como máximo 26 caracteres y solo admite letras, espacios, guion y apóstrofo | Unitario | 4 | 🔍 En revisión |
+| HU6-CP04 | La URL de PayPal tiene que ser una URL con esquema y servidor | Unitario | 3 | 🔍 En revisión |
+| HU6-CP05 | El teléfono de Bizum tiene 9 dígitos, sin prefijo | Unitario | 4 | 🔍 En revisión |
+| HU6-CP06 | Cada método se muestra solo con su máscara: últimos 4 dígitos de la tarjeta, dominio de la URL de PayPal y últimos 3 dígitos del teléfono de Bizum | Unitario | 3 | 🔍 En revisión |
+| HU6-CP07 | Un método de pago exige cliente, tipo, máscara y bloque cifrado, y se reconstruye conservando si es predeterminado | Unitario | 3 | 🔍 En revisión |
+| HU6-CP08 | Un cliente tiene como máximo 5 métodos de pago; el sexto se rechaza y no se guarda | Unitario | 3 | 🔍 En revisión |
+| HU6-CP09 | Solo hay un método predeterminado: el primero lo es, marcar otro desmarca el anterior y no se puede marcar uno de otro cliente | Unitario | 10 | 🔍 En revisión |
+| HU6-CP10 | Al eliminar el predeterminado el cliente elige el sustituto (no el mismo); el único método se elimina sin elegir; no se elimina uno de otro cliente | Unitario | 10 | 🔍 En revisión |
+| HU6-CP11 | Al añadir una tarjeta se guarda su máscara y un solo bloque cifrado con número, titular y caducidad; nada queda en claro | Unitario | 3 | 🔍 En revisión |
+| HU6-CP12 | Se rechaza una tarjeta caducada respecto al mes actual; la que caduca este mes se acepta | Unitario | 2 | 🔍 En revisión |
+| HU6-CP13 | Se añaden métodos PayPal y Bizum con su máscara y su dato cifrado | Unitario | 2 | 🔍 En revisión |
+| HU6-CP14 | Se rechaza el alta si falta un dato del tipo elegido o falta el tipo | Unitario | 4 | 🔍 En revisión |
+| HU6-CP15 | El listado devuelve solo los métodos del cliente en sesión | Unitario | 1 | 🔍 En revisión |
+| HU6-CP16 | Los datos de pago se cifran con AES-256-GCM: IV aleatorio, solo la misma clave los descifra, se rechaza un cifrado manipulado y una clave nula, que no esté en Base64 o que no mida 32 bytes | Unitario | 9 | 🔍 En revisión |
+| HU6-CP17 | El método de pago se convierte a su documento de MongoDB y vuelve sin perder datos; un documento inválido se rechaza | Unitario | 2 | 🔍 En revisión |
+| HU6-CP18 | Persistencia en MongoDB: guardar, buscar por cliente, actualizar conservando `createdAt` y eliminar; no queda ningún dato de la tarjeta en claro y la colección rechaza un documento sin bloque cifrado | Integración | 6 | 🔍 En revisión |
+| HU6-CP19 | El id del cliente se pide al módulo de usuarios por su puerto de entrada | Unitario | 1 | 🔍 En revisión |
+| HU6-CP20 | `GET /api/customer/payment-methods` devuelve los métodos del cliente en sesión sin datos cifrados | Controlador | 1 | 🔍 En revisión |
+| HU6-CP21 | `POST`: 201 con el método creado; el CVV es obligatorio en tarjeta (3 o 4 dígitos) y no llega al caso de uso; dato inválido o tarjeta caducada 400 `VALIDATION_ERROR`; límite 409 `PAYMENT_METHOD_LIMIT_REACHED` | Controlador | 6 | 🔍 En revisión |
+| HU6-CP22 | `PUT /{id}/default` marca el predeterminado (204); uno ajeno o inexistente da 404 `PAYMENT_METHOD_NOT_FOUND` | Controlador | 2 | 🔍 En revisión |
+| HU6-CP23 | `DELETE /{id}` elimina (204) con el sustituto elegido; sin él, 409 `DEFAULT_PAYMENT_METHOD_REQUIRED`; uno ajeno o inexistente da 404 | Controlador | 3 | 🔍 En revisión |
+| HU6-CP24 | Solo un cliente con sesión accede, y las peticiones que modifican datos exigen CSRF | Controlador | 3 | 🔍 En revisión |
+
+Notas:
+- **HU6-CP01 a CP24:** casos propuestos y aprobados por el equipo durante el desarrollo de la HU6 (tasks 271, 110 y 270). Los casos de prueba no se registran en Azure Boards: viven en esta matriz y en el `@DisplayName` de cada test.
+- **Decisiones del Product Owner y del equipo:** los datos de pago **sí se persisten**, cifrados con AES-256-GCM (sustituye al «solo tipo y máscara» de `docs/requisitos/sprint2-decisiones.md`); el **CVV nunca se guarda**, solo se valida en la petición; máximo 5 métodos por cliente; al eliminar el predeterminado, el cliente elige otro.
+- **Endpoints (T110):** `GET`, `POST`, `PUT /{id}/default` y `DELETE /{id}?nuevoPredeterminado=` sobre `/api/customer/payment-methods`, solo para `CLIENTE` (`SecurityConfig`). El cliente sale de la sesión. La respuesta es `{id, tipo, mascara, predeterminado}`, nunca el bloque cifrado.
+- **Pendiente:** confirmar los códigos de error con quien haga la vista (T113, T269). La clave de cifrado va en la variable de entorno `ESIBUY_PAGOS_CLAVE_CIFRADO`.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU6-CP01 | `NumeroTarjetaTest` | `creaNumeroDeTarjetaValido` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP01 | `NumeroTarjetaTest` | `rechazaNumeroConLuhnIncorrecto` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP01 | `NumeroTarjetaTest` | `rechazaNumeroConCaracteresNoNumericos` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP01 | `NumeroTarjetaTest` | `rechazaNumeroDeDoceDigitos` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP01 | `NumeroTarjetaTest` | `rechazaNumeroDeVeinteDigitos` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP01 | `NumeroTarjetaTest` | `rechazaNumeroNuloOVacio` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP02 | `CaducidadTarjetaTest` | `caducidadFuturaEstaVigente` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP02 | `CaducidadTarjetaTest` | `caducidadDelMesActualEstaVigente` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP02 | `CaducidadTarjetaTest` | `caducidadDelMesAnteriorNoEstaVigente` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP02 | `CaducidadTarjetaTest` | `rechazaMesFueraDeRango` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP02 | `CaducidadTarjetaTest` | `rechazaFormatoIncorrecto` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP02 | `CaducidadTarjetaTest` | `rechazaCaducidadNulaOVacia` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP03 | `TitularTarjetaTest` | `creaTitularValido` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP03 | `TitularTarjetaTest` | `rechazaTitularVacioONulo` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP03 | `TitularTarjetaTest` | `rechazaTitularDemasiadoLargo` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP03 | `TitularTarjetaTest` | `rechazaTitularConDigitosOSimbolos` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP04 | `UrlPayPalTest` | `creaUrlValida` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP04 | `UrlPayPalTest` | `rechazaTextoQueNoEsUnaUrl` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP04 | `UrlPayPalTest` | `rechazaUrlNulaOVacia` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP05 | `TelefonoBizumTest` | `creaTelefonoDeNueveDigitos` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP05 | `TelefonoBizumTest` | `rechazaTelefonoConLetras` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP05 | `TelefonoBizumTest` | `rechazaTelefonoDeOchoDigitos` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP05 | `TelefonoBizumTest` | `rechazaTelefonoNuloOVacio` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP06 | `NumeroTarjetaTest` | `enmascaraTodoMenosLosUltimosCuatroDigitos` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP06 | `TelefonoBizumTest` | `enmascaraTodoMenosLosUltimosTresDigitos` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP06 | `UrlPayPalTest` | `enmascaraMostrandoSoloElDominio` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP07 | `MetodoPagoTest` | `creaMetodoAsociadoAUnCliente` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP07 | `MetodoPagoTest` | `reconstruyeMetodoGuardadoConservandoElPredeterminado` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP07 | `MetodoPagoTest` | `rechazaMetodoConDatosObligatoriosAusentes` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP08 | `GestionMetodosPagoServiceTest` | `rechazaSextoMetodoYNoLoGuarda` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP08 | `MetodosPagoClienteTest` | `anadeMetodosHastaElLimite` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP08 | `MetodosPagoClienteTest` | `rechazaSextoMetodo` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP09 | `GestionMetodosPagoServiceTest` | `primerMetodoAnadidoSeGuardaPredeterminado` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP09 | `GestionMetodosPagoServiceTest` | `marcarPredeterminadoGuardaElCambio` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP09 | `GestionMetodosPagoServiceTest` | `rechazaMarcarMetodoDeOtroCliente` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP09 | `MetodoPagoTest` | `nuevoMetodoNoEsPredeterminado` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP09 | `MetodoPagoTest` | `marcaMetodoComoPredeterminado` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP09 | `MetodoPagoTest` | `desmarcaMetodoPredeterminado` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP09 | `MetodosPagoClienteTest` | `primerMetodoQuedaPredeterminado` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP09 | `MetodosPagoClienteTest` | `metodoPosteriorNoCambiaElPredeterminado` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP09 | `MetodosPagoClienteTest` | `marcarOtroLeDejaSoloUnPredeterminado` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP09 | `MetodosPagoClienteTest` | `rechazaMarcarMetodoInexistente` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP10 | `GestionMetodosPagoServiceTest` | `eliminarMetodoLoBorraDelRepositorio` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP10 | `GestionMetodosPagoServiceTest` | `eliminarPredeterminadoGuardaElNuevoPredeterminado` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP10 | `GestionMetodosPagoServiceTest` | `eliminarPredeterminadoSinElegirNoBorraNada` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP10 | `GestionMetodosPagoServiceTest` | `rechazaEliminarMetodoDeOtroCliente` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP10 | `MetodosPagoClienteTest` | `eliminaMetodoNoPredeterminado` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP10 | `MetodosPagoClienteTest` | `eliminarPredeterminadoExigeElegirOtro` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP10 | `MetodosPagoClienteTest` | `eliminarPredeterminadoYElegirOtro` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP10 | `MetodosPagoClienteTest` | `rechazaElegirComoSustitutoElMetodoEliminado` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP10 | `MetodosPagoClienteTest` | `eliminarElUnicoMetodoDejaListaVacia` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP10 | `MetodosPagoClienteTest` | `rechazaEliminarMetodoInexistente` | Dominio | AB#271 | PR #148 | 🔍 |
+| HU6-CP11 | `GestionMetodosPagoServiceTest` | `anadirTarjetaGuardaMascaraYDatosCifrados` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP11 | `GestionMetodosPagoServiceTest` | `anadirTarjetaCifraNumeroTitularYCaducidadEnUnBloque` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP11 | `GestionMetodosPagoServiceTest` | `anadirTarjetaNoGuardaNumeroNiTitularEnClaro` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP12 | `GestionMetodosPagoServiceTest` | `rechazaTarjetaCaducada` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP12 | `GestionMetodosPagoServiceTest` | `aceptaTarjetaQueCaducaEsteMes` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP13 | `GestionMetodosPagoServiceTest` | `anadePayPalConSuMascara` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP13 | `GestionMetodosPagoServiceTest` | `anadeBizumConSuMascara` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP14 | `GestionMetodosPagoServiceTest` | `rechazaTarjetaConDatosIncompletos` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP14 | `GestionMetodosPagoServiceTest` | `rechazaPayPalSinUrl` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP14 | `GestionMetodosPagoServiceTest` | `rechazaBizumSinTelefono` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP14 | `GestionMetodosPagoServiceTest` | `rechazaMetodoSinTipo` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP15 | `GestionMetodosPagoServiceTest` | `listaSoloLosMetodosDelClienteEnSesion` | Aplicación | AB#271 | PR #148 | 🔍 |
+| HU6-CP16 | `AesGcmCifradoDatosPagoAdapterTest` | `cifraConLaClaveConfigurada` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP16 | `AesGcmCifradoDatosPagoAdapterTest` | `rechazaClaveNulaOVacia` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP16 | `AesGcmCifradoDatosPagoAdapterTest` | `rechazaClaveQueNoEsBase64` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP16 | `AesGcmCifradoDatosPagoAdapterTest` | `rechazaClaveQueNoMide32Bytes` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP16 | `CifradorAesGcmTest` | `conLaMismaClaveSeRecuperanLosDatos` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP16 | `CifradorAesGcmTest` | `elCifradoNoContieneLosDatos` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP16 | `CifradorAesGcmTest` | `cadaCifradoEsDistinto` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP16 | `CifradorAesGcmTest` | `conOtraClaveNoSeDescifran` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP16 | `CifradorAesGcmTest` | `unCifradoManipuladoSeRechaza` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP17 | `MetodoPagoDocumentMapperTest` | `convierteAdocumentoYVueltaSinPerderDatos` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP17 | `MetodoPagoDocumentMapperTest` | `rechazaDocumentoQueNoCumpleElDominio` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP18 | `MetodoPagoMongoAdapterTest` | `guardarMetodoNuevoLeAsignaId` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP18 | `MetodoPagoMongoAdapterTest` | `buscarPorClienteDevuelveSoloLosSuyos` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP18 | `MetodoPagoMongoAdapterTest` | `actualizarConservaLaFechaDeCreacion` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP18 | `MetodoPagoMongoAdapterTest` | `eliminarBorraElMetodo` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP18 | `MetodoPagoMongoAdapterTest` | `enMongoNoQuedaNingunDatoEnClaro` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP18 | `MetodoPagoMongoAdapterTest` | `laColeccionRechazaDocumentoSinDatosCifrados` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP19 | `ClienteEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#271 | PR #148 | 🔍 |
+| HU6-CP20 | `MetodoPagoControllerTest` | `listarDevuelveLosMetodosSinDatosCifrados` | Infraestructura | AB#110 | PR #148 | 🔍 |
+| HU6-CP21 | `MetodoPagoControllerTest` | `anadirTarjetaDevuelve201` | Infraestructura | AB#110 | PR #148 | 🔍 |
+| HU6-CP21 | `MetodoPagoControllerTest` | `elCvvNoLlegaAlCasoDeUso` | Infraestructura | AB#110 | PR #148 | 🔍 |
+| HU6-CP21 | `MetodoPagoControllerTest` | `tarjetaConCvvAusenteOInvalidoDevuelve400` | Infraestructura | AB#110 | PR #148 | 🔍 |
+| HU6-CP21 | `MetodoPagoControllerTest` | `metodoSinTipoDevuelve400` | Infraestructura | AB#110 | PR #148 | 🔍 |
+| HU6-CP21 | `MetodoPagoControllerTest` | `datoInvalidoDevuelve400SinRepetirLosDatos` | Infraestructura | AB#110 | PR #148 | 🔍 |
+| HU6-CP21 | `MetodoPagoControllerTest` | `superarElLimiteDevuelve409` | Infraestructura | AB#110 | PR #148 | 🔍 |
+| HU6-CP22 | `MetodoPagoControllerTest` | `marcarPredeterminadoDevuelve204` | Infraestructura | AB#110 | PR #148 | 🔍 |
+| HU6-CP22 | `MetodoPagoControllerTest` | `marcarMetodoAjenoDevuelve404` | Infraestructura | AB#110 | PR #148 | 🔍 |
+| HU6-CP23 | `MetodoPagoControllerTest` | `eliminarDevuelve204ConElSustituto` | Infraestructura | AB#110 | PR #148 | 🔍 |
+| HU6-CP23 | `MetodoPagoControllerTest` | `eliminarPredeterminadoSinSustitutoDevuelve409` | Infraestructura | AB#110 | PR #148 | 🔍 |
+| HU6-CP23 | `MetodoPagoControllerTest` | `eliminarMetodoAjenoDevuelve404` | Infraestructura | AB#110 | PR #148 | 🔍 |
+| HU6-CP24 | `MetodoPagoControllerTest` | `sinSesionNoSeAccede` | Infraestructura | AB#110 | PR #148 | 🔍 |
+| HU6-CP24 | `MetodoPagoControllerTest` | `unUsuarioQueNoEsClienteNoAccede` | Infraestructura | AB#110 | PR #148 | 🔍 |
+| HU6-CP24 | `MetodoPagoControllerTest` | `sinTokenCsrfSeRechaza` | Infraestructura | AB#110 | PR #148 | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `NumeroTarjetaTest`, `CaducidadTarjetaTest`, `TitularTarjetaTest`, `UrlPayPalTest`, `TelefonoBizumTest`, `MetodoPagoTest` y `MetodosPagoClienteTest`: `metodospago/domain/model/` (solo JUnit)
+- `GestionMetodosPagoServiceTest`: `metodospago/application/service/` (dobles de prueba escritos a mano, sin Spring)
+- `CifradorAesGcmTest`: `shared/infrastructure/seguridad/` (lo usan también el secreto TOTP de la HU2)
+- `AesGcmCifradoDatosPagoAdapterTest`: `metodospago/infrastructure/adapter/out/seguridad/`
+- `MetodoPagoDocumentMapperTest` y `MetodoPagoMongoAdapterTest`: `metodospago/infrastructure/adapter/out/persistence/` (el adaptador, con Testcontainers)
+- `ClienteEnSesionAdapterTest`: `metodospago/infrastructure/adapter/out/usuarios/` (Mockito)
+- `MetodoPagoControllerTest`: `metodospago/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
 
 ---
 
@@ -969,12 +1146,12 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU16-CP01 | Cada fila de «Mis productos» ofrece Desactivar si el producto está disponible y Activar si no lo está | Frontend (página) | 1 | 🔍 En revisión (1, AB#281, PR sin abrir) |
-| HU16-CP02 | Al pulsar Desactivar, sin confirmación, el producto pasa a «No disponible» y se avisa «Producto desactivado.» | Frontend (página) | 1 | 🔍 En revisión (1, AB#281, PR sin abrir) |
-| HU16-CP03 | Al pulsar Activar, el producto pasa a «Disponible» y se avisa «Producto activado.» | Frontend (página) | 1 | 🔍 En revisión (1, AB#281, PR sin abrir) |
-| HU16-CP04 | Si falla el cambio, se avisa sin detalles internos y el producto no cambia | Frontend (página) | 1 | 🔍 En revisión (1, AB#281, PR sin abrir) |
-| HU16-CP05 | La ficha del producto ofrece Activar o Desactivar según su estado y avisa a la página con el producto | Frontend (componente) | 2 | 🔍 En revisión (2, AB#281, PR sin abrir) |
-| HU16-CP06 | Desde la ficha, Desactivar cierra la ficha, cambia el producto y avisa | Frontend (página) | 1 | 🔍 En revisión (1, AB#281, PR sin abrir) |
+| HU16-CP01 | Cada fila de «Mis productos» ofrece Desactivar si el producto está disponible y Activar si no lo está | Frontend (página) | 1 | ✅ Pasa |
+| HU16-CP02 | Al pulsar Desactivar, sin confirmación, el producto pasa a «No disponible» y se avisa «Producto desactivado.» | Frontend (página) | 1 | ✅ Pasa |
+| HU16-CP03 | Al pulsar Activar, el producto pasa a «Disponible» y se avisa «Producto activado.» | Frontend (página) | 1 | ✅ Pasa |
+| HU16-CP04 | Si falla el cambio, se avisa sin detalles internos y el producto no cambia | Frontend (página) | 1 | ✅ Pasa |
+| HU16-CP05 | La ficha del producto ofrece Activar o Desactivar según su estado y avisa a la página con el producto | Frontend (componente) | 2 | ✅ Pasa |
+| HU16-CP06 | Desde la ficha, Desactivar cierra la ficha, cambia el producto y avisa | Frontend (página) | 1 | ✅ Pasa |
 
 Notas:
 - **HU16-CP01 a CP06 (Sprint 2, frontend):** casos propuestos en la task AB#281 (botón activar/desactivar productos) a partir de lo pedido en ella y de las decisiones del equipo (`frontend/docs/hu16-activar-desactivar-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU16 en Azure Boards. Si el backend define casos de la HU16, hay que coordinar la numeración.
@@ -987,13 +1164,13 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU16-CP01 | `SellerProductsPage.test.jsx` | `HU16-CP01: un producto disponible se puede desactivar y uno no disponible, activar` | Frontend · página | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
-| HU16-CP02 | `SellerProductsPage.test.jsx` | `HU16-CP02: al pulsar Desactivar, sin pedir confirmación, el producto pasa a no disponible y se avisa` | Frontend · página | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
-| HU16-CP03 | `SellerProductsPage.test.jsx` | `HU16-CP03: al pulsar Activar, el producto pasa a disponible y se avisa` | Frontend · página | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
-| HU16-CP04 | `SellerProductsPage.test.jsx` | `HU16-CP04: si falla el cambio, avisa sin detalles internos y el producto no cambia` | Frontend · página | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
-| HU16-CP05 | `ProductDetailDialog.test.jsx` | `HU16-CP05: un producto disponible ofrece Desactivar, que avisa con el producto` | Frontend · componente | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
-| HU16-CP05 | `ProductDetailDialog.test.jsx` | `HU16-CP05: un producto no disponible ofrece Activar, que avisa con el producto` | Frontend · componente | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
-| HU16-CP06 | `SellerProductsPage.test.jsx` | `HU16-CP06: desde la ficha, Desactivar cierra la ficha, cambia el producto y avisa` | Frontend · página | AB#281 | Rama `feature/US16-T281-activar-desactivar-productos` (PR sin abrir) | 🔍 |
+| HU16-CP01 | `SellerProductsPage.test.jsx` | `HU16-CP01: un producto disponible se puede desactivar y uno no disponible, activar` | Frontend · página | AB#281 | PR #147 | ✅ |
+| HU16-CP02 | `SellerProductsPage.test.jsx` | `HU16-CP02: al pulsar Desactivar, sin pedir confirmación, el producto pasa a no disponible y se avisa` | Frontend · página | AB#281 | PR #147 | ✅ |
+| HU16-CP03 | `SellerProductsPage.test.jsx` | `HU16-CP03: al pulsar Activar, el producto pasa a disponible y se avisa` | Frontend · página | AB#281 | PR #147 | ✅ |
+| HU16-CP04 | `SellerProductsPage.test.jsx` | `HU16-CP04: si falla el cambio, avisa sin detalles internos y el producto no cambia` | Frontend · página | AB#281 | PR #147 | ✅ |
+| HU16-CP05 | `ProductDetailDialog.test.jsx` | `HU16-CP05: un producto disponible ofrece Desactivar, que avisa con el producto` | Frontend · componente | AB#281 | PR #147 | ✅ |
+| HU16-CP05 | `ProductDetailDialog.test.jsx` | `HU16-CP05: un producto no disponible ofrece Activar, que avisa con el producto` | Frontend · componente | AB#281 | PR #147 | ✅ |
+| HU16-CP06 | `SellerProductsPage.test.jsx` | `HU16-CP06: desde la ficha, Desactivar cierra la ficha, cambia el producto y avisa` | Frontend · página | AB#281 | PR #147 | ✅ |
 
 Rutas de las clases de test:
 - `SellerProductsPage.test.jsx`: `frontend/src/pages/` (Vitest, RTL y MSW)
@@ -1970,6 +2147,8 @@ Tests que no validan una HU concreta.
 | `UsuariosConfigTest` | `elContextoConectaLasPiezasDelLogin` | Que Spring conecta el login con sus adaptadores de códigos (MongoDB), generador (`SecureRandom`) y correo (SMTP) (AB#230, PR #67) |
 | `UsuariosConfigTest` | `elContextoConectaLasPiezasDelAuthenticator` | Que Spring conecta el paso 3 (`AuthenticatorService`) con la librería TOTP, el cifrado AES-GCM y el adaptador de `factores_autenticacion` (AB#20, PR #75) |
 | `UsuariosConfigTest` | `elContextoRegistraElFiltroDeCuentaActiva` | Que Spring registra `CuentaActivaFilter`, el filtro que invalida la sesión de las cuentas desactivadas (HU23; AB#39, AB#206, PR #85) |
+| `MetodosPagoConfigTest` | `elContextoConectaLasPiezasDeLosMetodosDePago` | Que Spring conecta el servicio de métodos de pago con su adaptador de MongoDB, su cifrado AES-GCM y el cliente en sesión (HU6; AB#271, PR #148) |
+| `MetodosPagoConfigTest` | `losDatosDePagoSeCifranConLaClaveConfigurada` | Que los datos de pago se cifran con la clave de `esibuy.pagos.clave-cifrado`, que en los tests pone `MongoTestcontainersConfig` (HU6; AB#271, PR #148) |
 | `SecurityConfigTest` | `unaPeticionRecibeElTokenCsrfEnUnaCookie` | Que cualquier respuesta, aunque sea un 401, entrega el token CSRF en la cookie `XSRF-TOKEN` sin `HttpOnly` (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostSinTokenCsrfSeRechaza` | Que un `POST` sin token CSRF se rechaza con 403 (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostConElTokenDeLaCookieEnLaCabeceraSeAcepta` | Que un `POST` con el token de la cookie en la cabecera `X-XSRF-TOKEN` pasa el filtro CSRF (AB#230, PR #67) |
@@ -1983,7 +2162,7 @@ Tests que no validan una HU concreta.
 | `UsuarioMongoAdapterTest` | `guardaFechasDeCreacionYModificacion` | Que se guardan `createdAt` y `updatedAt` (auditoría de Spring Data) y que `createdAt` no cambia al actualizar (AB#210, PR #43) |
 | `ProductoMongoAdapterTest` | `guardarUnProductoLeidoLoActualiza` | Que guardar un producto leído lo actualiza sin duplicarlo y conserva `createdAt` (AB#202, PR #86) |
 | `ProductoMongoAdapterTest` | `elPrecioSeGuardaComoNumero` | Que el precio y los porcentajes de descuento se guardan como `Decimal128`, no como texto (AB#202, PR #86) |
-| `InicializadorColeccionesTest` | `creaLasDiezColecciones` | Que al arrancar se crean las 10 colecciones del modelo de BBDD (AB#210, PR #43) |
+| `InicializadorColeccionesTest` | `creaLasOnceColecciones` | Que al arrancar se crean las 11 colecciones: las 10 del modelo de BBDD y `metodos_pago` (AB#210, PR #43; ampliado en AB#271, PR #148) |
 | `InicializadorColeccionesTest` | `sePuedeEjecutarOtraVez` | Que el inicializador se puede ejecutar en cada arranque sin fallar ni duplicar índices (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `actualizaLaValidacionDeUnaColeccionExistente` | Que aplica la validación a una colección que ya existía sin ella (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `sinPermisoParaCambiarLaValidacionNoFalla` | Que sin permiso `collMod` (usuario de la aplicación en Atlas) avisa y la aplicación arranca igual (AB#210, PR #43) |

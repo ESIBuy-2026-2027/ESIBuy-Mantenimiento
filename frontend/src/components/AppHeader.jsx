@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Button, makeStyles, tokens } from '@fluentui/react-components'
-import { ArrowExit20Regular, PersonAdd20Regular } from '@fluentui/react-icons'
+import { ArrowExit20Regular, Person20Regular, PersonAdd20Regular } from '@fluentui/react-icons'
 import { Link, useNavigate } from 'react-router-dom'
 import { ROLES } from '../auth/roles'
 import { useAuth } from '../auth/useAuth'
@@ -62,6 +62,12 @@ function UserActions({ rol, onSignOut, disabled }) {
       {rol === ROLES.VENDEDOR && (
         <LinkButton to={PATHS.SELLER_PRODUCTS} appearance="subtle">
           Mis productos
+        </LinkButton>
+      )}
+      {/* El perfil propio (HU4) es del cliente y del vendedor */}
+      {(rol === ROLES.CLIENTE || rol === ROLES.VENDEDOR) && (
+        <LinkButton to={PATHS.PROFILE} appearance="subtle" icon={<Person20Regular />}>
+          Mi perfil
         </LinkButton>
       )}
       <Button appearance="primary" icon={<ArrowExit20Regular />} onClick={onSignOut} disabled={disabled}>
