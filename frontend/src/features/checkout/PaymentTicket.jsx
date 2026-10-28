@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { Text, makeStyles, tokens } from '@fluentui/react-components'
 import { Checkmark28Filled } from '@fluentui/react-icons'
 import { formatPrice } from '../../utils/format'
-import { paymentMethodType } from './paymentMethodTypes'
+import { TIPOS_DE_METODO } from '../paymentMethods/tiposDeMetodo'
 
 const PIEZAS_DE_CONFETI = 14
 const NOTCH = '24px'
@@ -218,7 +218,7 @@ export default function PaymentTicket({ orders, paymentMethod, paidAt }) {
   const styles = useStyles()
   const [conConfeti] = useState(() => !prefiereMenosMovimiento())
   const total = redondear(orders.reduce((suma, order) => suma + order.total, 0))
-  const { label, Icon } = paymentMethodType(paymentMethod.tipo)
+  const { etiqueta, Icono } = TIPOS_DE_METODO[paymentMethod.tipo]
 
   return (
     <section aria-label="Recibo del pago" className={styles.ticket}>
@@ -264,11 +264,11 @@ export default function PaymentTicket({ orders, paymentMethod, paidAt }) {
 
         <div role="group" aria-label="Pagado con" className={styles.method}>
           <span className={styles.methodIcon} aria-hidden="true">
-            <Icon />
+            <Icono />
           </span>
           <div className={styles.methodText}>
             <Text size={200} className={styles.muted}>
-              Pagado con {label}
+              Pagado con {etiqueta}
             </Text>
             <Text weight="semibold" className={styles.mask}>
               {paymentMethod.mascara}

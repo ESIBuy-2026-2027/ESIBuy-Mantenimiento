@@ -17,12 +17,12 @@ import {
 import { BuildingShop20Regular, Cart24Regular, LockClosed20Regular } from '@fluentui/react-icons'
 import { getCart } from '../api/cart'
 import { createOrder } from '../api/orders'
-import { listPaymentMethods } from '../api/paymentMethods'
+import { getPaymentMethods } from '../api/paymentMethods'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
 import { useCart } from '../features/cart/useCart'
 import PaymentTicket from '../features/checkout/PaymentTicket'
-import { paymentMethodType } from '../features/checkout/paymentMethodTypes'
+import { TIPOS_DE_METODO } from '../features/paymentMethods/tiposDeMetodo'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { PATHS } from '../routes/paths'
 import { formatPrice } from '../utils/format'
@@ -248,7 +248,7 @@ function PaymentMethodPicker({ query, selectedId, onSelect, styles }) {
     <Field label="Método de pago">
       <RadioGroup value={selectedId} onChange={(_, data) => onSelect(data.value)}>
         {query.data.map((method) => {
-          const { label, Icon } = paymentMethodType(method.tipo)
+          const { etiqueta, Icono } = TIPOS_DE_METODO[method.tipo]
           return (
             <Radio
               key={method.id}
@@ -256,9 +256,9 @@ function PaymentMethodPicker({ query, selectedId, onSelect, styles }) {
               label={
                 <span className={styles.methodLabel}>
                   <span className={styles.methodIcon} aria-hidden="true">
-                    <Icon />
+                    <Icono />
                   </span>
-                  <span>{label}</span>
+                  <span>{etiqueta}</span>
                   <span className={styles.mask}>{method.mascara}</span>
                   {method.predeterminado && (
                     <Badge appearance="tint" color="brand" size="small">
@@ -281,7 +281,7 @@ function PaymentMethodPicker({ query, selectedId, onSelect, styles }) {
 export default function CheckoutPage() {
   const styles = useStyles()
   const { cart, status, reload } = useCart()
-  const paymentMethods = useApiQuery(listPaymentMethods)
+  const paymentMethods = useApiQuery(getPaymentMethods)
   const [selectedId, setSelectedId] = useState(null)
   const [phase, setPhase] = useState('review')
   const [orders, setOrders] = useState([])

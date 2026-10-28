@@ -22,6 +22,7 @@ El cliente ve el **precio** de cada producto en el listado, puede **añadirlo al
 | Botón para añadir al carrito, desde la lista y desde dentro | `AddToCartButton` en cada tarjeta (añade una unidad) y en el detalle (con selector de cantidad). Muestra «Añadiendo…», «Añadido» y avisa si no hay existencias |
 | El carrito, abajo a la izquierda | `CartWidget`: un botón redondo flotante con el número de productos, que abre un panel |
 | Productos separados por proveedor | El panel agrupa por proveedor (`role="group"`), cada grupo con su cabecera |
+| Carrito con muchos productos | El panel tiene un scroll global y la lista de cada proveedor, su propio scroll (alto máximo de 236 px). Los proveedores no se comprimen, así que ningún producto queda oculto: con el cursor sobre una lista se mueve esa lista y, fuera de ellas, todo el panel |
 | Cabecera por proveedor: «ProveedorX: 35,43 €» | `TecnoVera: 35,43 €`. El total de cada grupo lo calcula el servidor |
 | Cálculos del precio por proveedor | Cada proveedor tiene su total; no hay un total único del carrito |
 | Botón «Proceder al pago» | En el pie del panel, un enlace a la pasarela de pago (`/checkout`, HU10) |
@@ -164,7 +165,7 @@ npm run build
 | Archivo | Tests | Qué cubre |
 |---|---|---|
 | `features/cart/AddToCartButton.test.jsx` (nuevo) | 8 | Añade una unidad o la cantidad indicada; «Añadiendo…» y «Añadido»; sin existencias; otro fallo; el aviso se quita al reintentar; agotado y no disponible |
-| `features/cart/CartWidget.test.jsx` (nuevo) | 23 | Botón con el número de productos (singular, vacío); solo clientes; panel agrupado por proveedor con «Proveedor: total»; cantidades, subtotales y enlaces; cerrar con Cerrar y Escape; carrito vacío; «Proceder al pago»; cantidad, existencias, quitar y vaciar; errores; carga y reintento; con el carrito del servidor (añadir desde el listado y recargar la página) |
+| `features/cart/CartWidget.test.jsx` (nuevo) | 26 | Botón con el número de productos (singular, vacío); solo clientes; panel agrupado por proveedor con «Proveedor: total»; cantidades, subtotales y enlaces; cerrar con Cerrar y Escape; carrito vacío; «Proceder al pago»; cantidad, existencias, quitar y vaciar; carrito con muchos productos (scroll global y por proveedor, con dos y con tres proveedores); errores; carga y reintento; con el carrito del servidor (añadir desde el listado y recargar la página) |
 | `features/catalog/ProductCard.test.jsx` | 4 nuevos | Precio, descuento, botón de añadir y que el botón no está dentro del enlace |
 | `pages/ProductsPage.test.jsx` | 3 nuevos | Precio con descuento en las tarjetas, añadir desde una tarjeta y aviso de existencias |
 | `pages/ProductDetailPage.test.jsx` | 5 nuevos | Añadir desde el detalle, elegir la cantidad, mínimo y máximo, y agotado |

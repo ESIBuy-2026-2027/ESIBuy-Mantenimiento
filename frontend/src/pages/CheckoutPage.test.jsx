@@ -167,7 +167,7 @@ describe('CheckoutPage (HU10): elegir el método de pago', () => {
 
     const metodos = await screen.findByRole('radiogroup', { name: /método de pago/i })
     expect(within(metodos).getAllByRole('radio')).toHaveLength(2)
-    expect(within(metodos).getByRole('radio', { name: /tarjeta.*4242/i })).toBeChecked()
+    expect(within(metodos).getByRole('radio', { name: /tarjeta.*1111/i })).toBeChecked()
     expect(within(metodos).getByRole('radio', { name: /bizum.*678/i })).not.toBeChecked()
   })
 
@@ -178,7 +178,7 @@ describe('CheckoutPage (HU10): elegir el método de pago', () => {
     await user.click(screen.getByRole('radio', { name: /bizum.*678/i }))
 
     expect(screen.getByRole('radio', { name: /bizum.*678/i })).toBeChecked()
-    expect(screen.getByRole('radio', { name: /tarjeta.*4242/i })).not.toBeChecked()
+    expect(screen.getByRole('radio', { name: /tarjeta.*1111/i })).not.toBeChecked()
   })
 
   it('HU10-CP08: sin métodos de pago guardados no deja pagar y lleva al perfil para añadir uno', async () => {
@@ -202,7 +202,7 @@ describe('CheckoutPage (HU10): elegir el método de pago', () => {
 
     await user.click(screen.getByRole('button', { name: /reintentar/i }))
 
-    expect(await screen.findByRole('radio', { name: /tarjeta.*4242/i })).toBeChecked()
+    expect(await screen.findByRole('radio', { name: /tarjeta.*1111/i })).toBeChecked()
     expect(botonDePago()).toBeEnabled()
   })
 
@@ -222,8 +222,8 @@ describe('CheckoutPage (HU10): elegir el método de pago', () => {
 
     await screen.findByRole('heading', { level: 1, name: /pago realizado/i }, PAGO)
     expect(cuerpos).toEqual([
-      { vendedorId: 'u-2', paymentMethodId: 'mp-2' },
-      { vendedorId: 'u-99', paymentMethodId: 'mp-2' },
+      { vendedorId: 'u-2', paymentMethodId: 'm-2' },
+      { vendedorId: 'u-99', paymentMethodId: 'm-2' },
     ])
   })
 })
@@ -239,7 +239,7 @@ describe('CheckoutPage (HU10): recibo del pago', () => {
     expect(within(recibo).getByText(/326,32/)).toBeInTheDocument()
     expect(within(recibo).getByRole('listitem', { name: /pedido o-1/i })).toHaveTextContent(/tecnovera/i)
     expect(within(recibo).getByRole('listitem', { name: /pedido o-2/i })).toHaveTextContent(/otero/i)
-    expect(within(recibo).getByText(/4242/)).toBeInTheDocument()
+    expect(within(recibo).getByText(/1111/)).toBeInTheDocument()
   })
 
   it('HU10-CP10: si falla un pedido, el recibo solo cobra los pedidos creados', async () => {

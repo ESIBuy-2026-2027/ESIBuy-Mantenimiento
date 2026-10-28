@@ -60,9 +60,8 @@ flowchart TD
 |---|---|
 | `pages/CheckoutPage.jsx` | La pasarela. Fase de revisión (un pedido por proveedor y resumen), pago en curso y resultado. Pide el carrito al servidor al empezar a pagar, para no depender de una copia vieja |
 | `features/checkout/PaymentTicket.jsx` | El recibo con forma de ticket (AB#133) |
-| `features/checkout/paymentMethodTypes.js` | Nombre e icono de cada tipo de método de pago (tarjeta, PayPal, Bizum) |
-| `api/paymentMethods.js` | `listPaymentMethods()`: `GET /api/customer/payment-methods` (backend de la HU6, PR #148) |
-| `mocks/paymentMethodsHandlers.js` | Métodos de pago simulados: Carlos tiene una tarjeta predeterminada y un Bizum; el resto de clientes, ninguno |
+| `api/paymentMethods.js` y `features/paymentMethods/tiposDeMetodo.js` | De la vista de métodos de pago de la HU6 (PR #151): `getPaymentMethods()` y el nombre e icono de cada tipo |
+| `mocks/paymentMethodsHandlers.js` | De la HU6. La pasarela añade `metodosDePagoDe`, con el que el mock de pedidos comprueba que el método es del cliente |
 | `api/orders.js` | `createOrder(vendorId, paymentMethodId)` |
 | `mocks/ordersHandlers.js` | `POST /api/orders` simulado: toma del carrito del cliente lo de ese proveedor, lo quita del carrito y responde con el pedido (201). 409 `CART_EMPTY` si no hay nada de ese proveedor |
 | `mocks/cartHandlers.js` | `retirarGrupoDelCarrito`: lo que usa el mock de pedidos |
@@ -90,7 +89,7 @@ flowchart TD
 
 Hay que acordarlo con quien desarrolle el backend (AB#380 a AB#382).
 
-`POST /api/orders` con `{ "vendedorId": "u-2", "paymentMethodId": "mp-1" }`
+`POST /api/orders` con `{ "vendedorId": "u-2", "paymentMethodId": "m-1" }`
 
 `paymentMethodId` es uno de los métodos de pago del cliente (HU6) y se guarda en el campo `paymentMethodId` de la colección `pedidos`. Este campo lo añade AB#133 y está **pendiente de acordar** con el backend de pedidos.
 
@@ -102,7 +101,7 @@ Crea **el pedido de ese proveedor** con los productos suyos que hay en el carrit
   "vendedor": { "id": "u-2", "nombreComercial": "TecnoVera" },
   "total": 197.32,
   "estado": "PAGADO",
-  "paymentMethodId": "mp-1",
+  "paymentMethodId": "m-1",
   "lineas": [
     { "productoId": "p-1", "nombre": "Auriculares inalámbricos", "cantidad": 2, "precioUnitario": 53.91, "subtotal": 107.82 }
   ]
@@ -161,8 +160,7 @@ Con `VITE_USE_MOCKS=true` y `cliente@esibuy.test`:
 - **Backend:** falta la entidad pedido, `POST /api/orders` y su lógica (AB#380 a AB#382).
 - **Pasarela real:** no hay cobro; el pedido solo guarda qué método de pago se eligió.
 - **`paymentMethodId` en el pedido:** contrato propuesto por el frontend (AB#133), pendiente de acordar con el backend (AB#380 a AB#382).
-- **Cliente de la API de métodos de pago:** `api/paymentMethods.js` solo tiene el GET; la vista de métodos de pago de la HU6 lo ampliará.
-- **Enlace «Añadir un método de pago»:** lleva a `/profile` hasta que exista la vista de métodos de pago de la HU6.
+- **Enlace «Añadir un método de pago»:** lleva a `/profile`, como se acordó. La vista de la HU6 (`/payment-methods`) ya existe: queda pendiente de decidir si el enlace pasa a ella.
 - **Sin historial de pedidos:** tras pagar solo se ve la confirmación; ver los pedidos es otra historia.
 - **Pedidos no atómicos:** si el navegador se cierra a mitad de los pedidos, algunos pueden haberse creado y otros no; el carrito conserva lo que falta.
 - **Verificación visual parcial:** con los mocks se han visto en el navegador la revisión con el selector de método y el recibo tras pagar; no el fallo parcial.

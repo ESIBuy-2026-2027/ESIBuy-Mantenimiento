@@ -101,11 +101,13 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     gap: tokens.spacingVerticalM,
     padding: tokens.spacingHorizontalL,
+    minHeight: 0,
     overflowY: 'auto',
   },
   group: {
     display: 'flex',
     flexDirection: 'column',
+    flexShrink: 0,
     overflow: 'hidden',
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     borderRadius: tokens.borderRadiusLarge,
@@ -127,6 +129,8 @@ const useStyles = makeStyles({
     margin: 0,
     padding: 0,
     listStyleType: 'none',
+    maxHeight: '236px',
+    overflowY: 'auto',
   },
   line: {
     display: 'grid',
