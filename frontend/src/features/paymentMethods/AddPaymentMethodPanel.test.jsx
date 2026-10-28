@@ -1,10 +1,26 @@
 import { describe, it, expect, vi } from 'vitest'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
+import { server } from '../../mocks/server'
 import { renderWithProviders } from '../../test/utils'
 import AddPaymentMethodPanel from './AddPaymentMethodPanel'
 
 // Panel de alta de un método de pago (HU6), inspirado en la tarjeta «Payment Details» y adaptado a Fluent UI.
+
+const URL_METODOS = '/api/customer/payment-methods'
+
+// Cuenta las peticiones de alta que llegan al backend
+function contarAltas() {
+  let altas = 0
+  server.use(
+    http.post(URL_METODOS, () => {
+      altas += 1
+      return HttpResponse.json({ id: 'm-9', tipo: 'TARJETA', mascara: '•••• 1111', predeterminado: false }, { status: 201 })
+    }),
+  )
+  return () => altas
+}
 
 function abrirPanel() {
   const onSaved = vi.fn()
@@ -46,8 +62,23 @@ describe('AddPaymentMethodPanel (HU6): tipo de método', () => {
 })
 
 describe('AddPaymentMethodPanel (HU6): validación', () => {
-  it('HU6-CP31: no envía una tarjeta con el número, la caducidad, el CVV o el titular con formato incorrecto', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP31: no envía una tarjeta con el número, la caducidad, el CVV o el titular con formato incorrecto', async () => {
+    const altas = contarAltas()
+    const usuario = userEvent.setup()
+    abrirPanel()
+
+    // 12 dígitos, mes 13, CVV de 2 dígitos y titular con números
+    await usuario.type(screen.getByLabelText(/número de tarjeta/i), '4111 1111 1111')
+    await usuario.type(screen.getByLabelText(/caducidad/i), '13/27')
+    await usuario.type(screen.getByLabelText(/cvv/i), '12')
+    await usuario.type(screen.getByLabelText(/titular/i), 'Juan 2')
+    await usuario.click(screen.getByRole('button', { name: /guardar método de pago/i }))
+
+    expect(screen.getByText('El número de tarjeta tiene entre 13 y 19 dígitos.')).toBeInTheDocument()
+    expect(screen.getByText('Escribe la caducidad como MM/AA.')).toBeInTheDocument()
+    expect(screen.getByText('El CVV tiene 3 o 4 dígitos.')).toBeInTheDocument()
+    expect(screen.getByText(/el titular solo puede tener letras/i)).toBeInTheDocument()
+    expect(altas()).toBe(0)
   })
 
   it('HU6-CP31: no envía una URL de PayPal o un teléfono de Bizum con formato incorrecto', () => {
