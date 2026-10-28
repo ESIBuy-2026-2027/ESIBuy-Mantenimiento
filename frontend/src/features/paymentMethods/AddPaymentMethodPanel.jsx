@@ -184,6 +184,13 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
     onSaved(await addPaymentMethod(cuerpoDe(tipo, campos)))
   }
 
+  // Los datos de pago no se quedan en memoria: se vacían antes de cerrar el panel
+  const cancelar = () => {
+    setCampos(CAMPOS_VACIOS)
+    setErrores({})
+    onCancel()
+  }
+
   return (
     <Card className={styles.panel} aria-labelledby="titulo-nuevo-metodo" role="region">
       <div className={styles.header}>
@@ -255,7 +262,7 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
         <Button appearance="primary" onClick={guardar}>
           Guardar método de pago
         </Button>
-        <Button appearance="subtle" onClick={onCancel}>
+        <Button appearance="subtle" onClick={cancelar}>
           Cancelar
         </Button>
       </div>
