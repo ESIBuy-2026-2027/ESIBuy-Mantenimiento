@@ -26,8 +26,12 @@ describe('PaymentMethodsPage (HU6): listado', () => {
     expect(tarjetasDeMetodo()[1]).toHaveTextContent('•••• 678')
   })
 
-  it('HU6-CP26: indica cuál es el método predeterminado', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP26: indica cuál es el método predeterminado', async () => {
+    await abrirMetodosDePago()
+
+    const [tarjeta, bizum] = await screen.findAllByRole('listitem')
+    expect(within(tarjeta).getByText('Predeterminado')).toBeInTheDocument()
+    expect(within(bizum).queryByText('Predeterminado')).not.toBeInTheDocument()
   })
 
   it('HU6-CP26: sin métodos muestra un estado vacío con el botón para añadir el primero', () => {
