@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
-import { getPaymentMethods } from './paymentMethods'
+import { addPaymentMethod, getPaymentMethods } from './paymentMethods'
 
 // Cliente de la API de métodos de pago del cliente (HU6): GET, POST, PUT /{id}/default y DELETE /{id} sobre
 // /api/customer/payment-methods. Los mocks de MSW sustituyen al backend.
@@ -23,8 +23,27 @@ describe('api de métodos de pago', () => {
     expect(metodos).toEqual(METODOS)
   })
 
-  it('HU6-CP25: addPaymentMethod envía los datos del método con un POST', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP25: addPaymentMethod envía los datos del método con un POST', async () => {
+    const peticion = {}
+    server.use(
+      http.post(URL_METODOS, async ({ request }) => {
+        peticion.cuerpo = await request.json()
+        return HttpResponse.json(METODOS[0], { status: 201 })
+      }),
+    )
+    // El CVV viaja en la petición para que el backend lo valide, pero no se guarda (HU6)
+    const tarjeta = {
+      tipo: 'TARJETA',
+      numeroTarjeta: '4111111111111111',
+      titular: 'Juan Pérez',
+      caducidad: '12/27',
+      cvv: '123',
+    }
+
+    const creado = await addPaymentMethod(tarjeta)
+
+    expect(peticion.cuerpo).toEqual(tarjeta)
+    expect(creado).toEqual(METODOS[0])
   })
 
   it('HU6-CP25: setDefaultPaymentMethod marca el método con un PUT a /{id}/default', () => {
