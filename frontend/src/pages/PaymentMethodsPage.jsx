@@ -1,5 +1,16 @@
 import { useCallback } from 'react'
-import { Badge, Button, Card, Text, Title1, makeStyles, tokens } from '@fluentui/react-components'
+import {
+  Badge,
+  Button,
+  Card,
+  MessageBar,
+  MessageBarActions,
+  MessageBarBody,
+  Text,
+  Title1,
+  makeStyles,
+  tokens,
+} from '@fluentui/react-components'
 import { Add20Regular, Payment24Regular, Phone24Regular, Wallet24Regular } from '@fluentui/react-icons'
 import { getPaymentMethods } from '../api/paymentMethods'
 import EmptyState from '../components/EmptyState'
@@ -46,7 +57,7 @@ export default function PaymentMethodsPage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
   const fetcher = useCallback(() => getPaymentMethods(), [])
-  const { data: metodos } = useApiQuery(fetcher)
+  const { data: metodos, failed, retry } = useApiQuery(fetcher)
 
   return (
     <main className={pageStyles.page}>
@@ -56,6 +67,14 @@ export default function PaymentMethodsPage() {
         </Title1>
         <Text className={pageStyles.subtitle}>Gestiona las tarjetas y cuentas con las que pagas tus compras.</Text>
       </div>
+      {failed && (
+        <MessageBar intent="error">
+          <MessageBarBody>No se han podido cargar tus métodos de pago. Inténtalo de nuevo.</MessageBarBody>
+          <MessageBarActions>
+            <Button onClick={retry}>Reintentar</Button>
+          </MessageBarActions>
+        </MessageBar>
+      )}
       {metodos?.length === 0 && (
         <EmptyState
           icon={<Payment24Regular />}
