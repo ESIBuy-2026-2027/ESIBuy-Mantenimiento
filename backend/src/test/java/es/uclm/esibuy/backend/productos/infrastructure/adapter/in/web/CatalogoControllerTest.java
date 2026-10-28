@@ -9,6 +9,8 @@ import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -21,6 +23,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -84,11 +87,18 @@ class CatalogoControllerTest {
                 CriterioOrdenCatalogo.VALORACION, true, 1, 10));
     }
 
-    @Test
+    // Que minRating=6 no sea válido es una propuesta: la valoración va de 1 a 5.
+    @ParameterizedTest(name = "{0}={1}")
+    @CsvSource({"page, 0", "size, 0", "sort, precio", "order, arriba", "minRating, 6"})
     @DisplayName("HU7-CP18: un parámetro no válido devuelve 400 y no llega al caso de uso")
-    void parametroNoValidoDevuelve400() {
-        // TODO: parametrizado con page=0, size=0, sort=precio, order=arriba y minRating=6 → 400 y verify(never()).
-        fail("Funcionalidad no implementada");
+    void parametroNoValidoDevuelve400(String parametro, String valor) throws Exception {
+        // Con el caso de uso respondiendo, un 200 indicaría que el parámetro se ha aceptado
+        when(catalogoProductos.buscarProductos(any())).thenReturn(new ProductoPage(List.of(), 0, 10, 0));
+
+        mockMvc.perform(get(URL).param(parametro, valor).with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isBadRequest());
+
+        verify(catalogoProductos, never()).buscarProductos(any());
     }
 
     @Test
