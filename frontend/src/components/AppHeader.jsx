@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Button, makeStyles, tokens } from '@fluentui/react-components'
-import { ArrowExit20Regular, Person20Regular, PersonAdd20Regular } from '@fluentui/react-icons'
+import { ArrowExit20Regular, Payment20Regular, Person20Regular, PersonAdd20Regular } from '@fluentui/react-icons'
 import { Link, useNavigate } from 'react-router-dom'
 import { ROLES } from '../auth/roles'
 import { useAuth } from '../auth/useAuth'
@@ -62,6 +62,12 @@ function UserActions({ rol, onSignOut, disabled }) {
       {rol === ROLES.VENDEDOR && (
         <LinkButton to={PATHS.SELLER_PRODUCTS} appearance="subtle">
           Mis productos
+        </LinkButton>
+      )}
+      {/* Los métodos de pago (HU6) son solo del cliente */}
+      {rol === ROLES.CLIENTE && (
+        <LinkButton to={PATHS.PAYMENT_METHODS} appearance="subtle" icon={<Payment20Regular />}>
+          Métodos de pago
         </LinkButton>
       )}
       {/* El perfil propio (HU4) es del cliente y del vendedor */}
