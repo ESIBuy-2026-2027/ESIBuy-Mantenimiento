@@ -141,6 +141,53 @@ describe('CartWidget (HU9): panel del carrito', () => {
   })
 })
 
+describe('CartWidget (HU9): carrito con muchos productos', () => {
+  const lineas = (prefijo, cantidad) =>
+    Array.from({ length: cantidad }, (_, i) => ({
+      productoId: `${prefijo}-${i}`,
+      nombre: `Producto ${prefijo} ${i}`,
+      imagen: '',
+      cantidad: 1,
+      precioUnitario: 10,
+      subtotal: 10,
+      stock: 5,
+    }))
+
+  const CARRITO_LLENO = {
+    grupos: [
+      { vendedor: { id: 'u-2', nombreComercial: 'TecnoVera' }, total: 120, lineas: lineas('t', 12) },
+      { vendedor: { id: 'u-5', nombreComercial: 'Casa Vicente' }, total: 80, lineas: lineas('c', 8) },
+    ],
+    totalProductos: 20,
+    total: 200,
+  }
+
+  it('HU9-CP09: el panel tiene un scroll global y cada proveedor su propio scroll, sin comprimir a ninguno', async () => {
+    pintar({ cart: CARRITO_LLENO })
+    const panel = await abrirPanel()
+
+    const grupos = within(panel).getAllByRole('group')
+    expect(grupos).toHaveLength(2)
+    expect(getComputedStyle(grupos[0].parentElement).overflowY).toBe('auto')
+    grupos.forEach((grupo) => {
+      expect(getComputedStyle(grupo).flexShrink).toBe('0')
+      const productos = within(grupo).getByRole('list')
+      expect(getComputedStyle(productos).overflowY).toBe('auto')
+      expect(getComputedStyle(productos).maxHeight).not.toBe('')
+      expect(getComputedStyle(productos).maxHeight).not.toBe('none')
+    })
+  })
+
+  it('HU9-CP09: con muchos productos siguen estando todos en el carrito, también los últimos de cada proveedor', async () => {
+    pintar({ cart: CARRITO_LLENO })
+    const panel = await abrirPanel()
+
+    expect(within(panel).getAllByRole('listitem')).toHaveLength(20)
+    expect(within(panel).getByRole('link', { name: 'Producto t 11' })).toBeInTheDocument()
+    expect(within(panel).getByRole('link', { name: 'Producto c 7' })).toBeInTheDocument()
+  })
+})
+
 describe('CartWidget (HU9): modificar el carrito', () => {
   it('HU9-CP06: se puede subir y bajar la cantidad de un producto', async () => {
     const user = userEvent.setup()
