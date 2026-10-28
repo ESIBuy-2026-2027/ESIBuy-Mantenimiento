@@ -11,22 +11,16 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { Add20Regular, Payment24Regular, Phone24Regular, Wallet24Regular } from '@fluentui/react-icons'
+import { Add20Regular, Payment24Regular } from '@fluentui/react-icons'
 import { getPaymentMethods, setDefaultPaymentMethod } from '../api/paymentMethods'
 import EmptyState from '../components/EmptyState'
 import { usePageStyles } from '../components/pageStyles'
 import AddPaymentMethodPanel from '../features/paymentMethods/AddPaymentMethodPanel'
+import { TIPOS_DE_METODO } from '../features/paymentMethods/tiposDeMetodo'
 import { useApiQuery } from '../hooks/useApiQuery'
 
 // Como el backend: un cliente tiene como máximo 5 métodos de pago (HU6)
 const MAXIMO_METODOS = 5
-
-// Cómo se presenta cada tipo de método que devuelve el backend
-const TIPOS = {
-  TARJETA: { etiqueta: 'Tarjeta', Icono: Payment24Regular },
-  PAYPAL: { etiqueta: 'PayPal', Icono: Wallet24Regular },
-  BIZUM: { etiqueta: 'Bizum', Icono: Phone24Regular },
-}
 
 const useStyles = makeStyles({
   list: {
@@ -150,7 +144,7 @@ export default function PaymentMethodsPage() {
       {metodos?.length > 0 && (
         <ul aria-label="Tus métodos de pago" className={styles.list}>
           {metodos.map((metodo) => {
-            const { etiqueta, Icono } = TIPOS[metodo.tipo]
+            const { etiqueta, Icono } = TIPOS_DE_METODO[metodo.tipo]
             return (
               <li key={metodo.id}>
                 <Card className={styles.method}>

@@ -11,7 +11,6 @@ import DeletePaymentMethodDialog from './DeletePaymentMethodDialog'
 const URL_METODOS = '/api/customer/payment-methods'
 const TARJETA = { id: 'm-1', tipo: 'TARJETA', mascara: '•••• 1111', predeterminado: true }
 const BIZUM = { id: 'm-2', tipo: 'BIZUM', mascara: '•••• 678', predeterminado: false }
-const PAYPAL = { id: 'm-3', tipo: 'PAYPAL', mascara: 'paypal.me', predeterminado: false }
 
 // Guarda las eliminaciones que llegan al backend: el id y el sustituto, si lo hay
 function registrarEliminaciones() {
