@@ -45,14 +45,14 @@ class CatalogoControllerTest {
     @DisplayName("HU7-CP16: el cliente recibe el catálogo con el formato del contrato y sin valoraciones todavía")
     void clienteRecibeElCatalogoConElFormatoDelContrato() throws Exception {
         Producto producto = new Producto("p-1", "v-1", "Teclado mecánico", "", new BigDecimal("89.50"), 12, "cat-2",
-                "teclado.png", true, Descuento.sinDescuento(), Descuento.sinDescuento());
+                "https://esibuy.test/teclado.png", true, Descuento.sinDescuento(), Descuento.sinDescuento());
         when(catalogoProductos.buscarProductos(any())).thenReturn(new ProductoPage(List.of(producto), 0, 10, 11));
 
         mockMvc.perform(get(URL).with(user(CLIENTE).roles("CLIENTE")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].id").value("p-1"))
                 .andExpect(jsonPath("$.items[0].nombre").value("Teclado mecánico"))
-                .andExpect(jsonPath("$.items[0].imagen").value("teclado.png"))
+                .andExpect(jsonPath("$.items[0].imagen").value("https://esibuy.test/teclado.png"))
                 .andExpect(jsonPath("$.items[0].categoriaId").value("cat-2"))
                 // Hasta HU13 no hay valoraciones: el campo existe, pero vale null, y el número es 0
                 .andExpect(jsonPath("$.items[0].valoracion").value(nullValue()))
