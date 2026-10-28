@@ -81,8 +81,23 @@ describe('AddPaymentMethodPanel (HU6): validación', () => {
     expect(altas()).toBe(0)
   })
 
-  it('HU6-CP31: no envía una URL de PayPal o un teléfono de Bizum con formato incorrecto', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP31: no envía una URL de PayPal o un teléfono de Bizum con formato incorrecto', async () => {
+    const altas = contarAltas()
+    const usuario = userEvent.setup()
+    abrirPanel()
+
+    await usuario.click(screen.getByRole('button', { name: 'PayPal' }))
+    await usuario.type(screen.getByLabelText(/url de paypal/i), 'paypal.me sin esquema')
+    await usuario.click(screen.getByRole('button', { name: /guardar método de pago/i }))
+    expect(screen.getByText('Escribe una URL completa, como https://paypal.me/tu-cuenta.')).toBeInTheDocument()
+
+    await usuario.click(screen.getByRole('button', { name: 'Bizum' }))
+    // Frontera: 8 dígitos no valen; el teléfono tiene 9
+    await usuario.type(screen.getByLabelText(/teléfono/i), '61234567')
+    await usuario.click(screen.getByRole('button', { name: /guardar método de pago/i }))
+    expect(screen.getByText('El teléfono tiene 9 dígitos.')).toBeInTheDocument()
+
+    expect(altas()).toBe(0)
   })
 })
 
