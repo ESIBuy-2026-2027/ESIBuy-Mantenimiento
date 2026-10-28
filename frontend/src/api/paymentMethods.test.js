@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
-import { addPaymentMethod, getPaymentMethods } from './paymentMethods'
+import { addPaymentMethod, getPaymentMethods, setDefaultPaymentMethod } from './paymentMethods'
 
 // Cliente de la API de métodos de pago del cliente (HU6): GET, POST, PUT /{id}/default y DELETE /{id} sobre
 // /api/customer/payment-methods. Los mocks de MSW sustituyen al backend.
@@ -46,8 +46,19 @@ describe('api de métodos de pago', () => {
     expect(creado).toEqual(METODOS[0])
   })
 
-  it('HU6-CP25: setDefaultPaymentMethod marca el método con un PUT a /{id}/default', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP25: setDefaultPaymentMethod marca el método con un PUT a /{id}/default', async () => {
+    const peticion = {}
+    server.use(
+      http.put(`${URL_METODOS}/:id/default`, ({ params }) => {
+        peticion.id = params.id
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+
+    const respuesta = await setDefaultPaymentMethod('m2')
+
+    expect(peticion.id).toBe('m2')
+    expect(respuesta).toBeNull()
   })
 
   it('HU6-CP25: deletePaymentMethod elimina el método y envía el sustituto solo si se indica', () => {
