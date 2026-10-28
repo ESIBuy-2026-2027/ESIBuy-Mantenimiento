@@ -152,8 +152,29 @@ describe('AddPaymentMethodPanel (HU6): guardar', () => {
 })
 
 describe('AddPaymentMethodPanel (HU6): errores del backend', () => {
-  it('HU6-CP33: un método rechazado por el backend muestra un aviso sin repetir los datos enviados', () => {
-    expect.fail('Funcionalidad no implementada')
+  it('HU6-CP33: un método rechazado por el backend muestra un aviso sin repetir los datos enviados', async () => {
+    // Formato correcto, pero el backend lo rechaza (no pasa Luhn o la tarjeta está caducada)
+    server.use(
+      http.post(URL_METODOS, () =>
+        HttpResponse.json({ mensaje: 'El método de pago es inválido', code: 'VALIDATION_ERROR' }, { status: 400 }),
+      ),
+    )
+    const usuario = userEvent.setup()
+    const { onSaved } = abrirPanel()
+    await usuario.type(screen.getByLabelText(/número de tarjeta/i), '4111111111111112')
+    await usuario.type(screen.getByLabelText(/caducidad/i), '01/20')
+    await usuario.type(screen.getByLabelText(/cvv/i), '987')
+    await usuario.type(screen.getByLabelText(/titular/i), 'Juan Pérez')
+
+    await usuario.click(screen.getByRole('button', { name: /guardar método de pago/i }))
+
+    expect(
+      await screen.findByText('No se ha podido guardar el método de pago. Revisa los datos: puede que la tarjeta esté caducada.'),
+    ).toBeInTheDocument()
+    expect(onSaved).not.toHaveBeenCalled()
+    // Ningún texto de la página repite el número ni el CVV (los campos los conservan para corregirlos)
+    expect(document.body.textContent).not.toContain('4111111111111112')
+    expect(document.body.textContent).not.toContain('987')
   })
 
   it('HU6-CP33: al superar el límite de métodos avisa de que ya hay 5', () => {
