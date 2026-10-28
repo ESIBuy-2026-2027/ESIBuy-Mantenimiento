@@ -96,6 +96,8 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         // a 0 y el empate se resuelve por nombre de la A a la Z, también si se pide descendente.
         boolean descendente = query.criterio() == CriterioOrdenCatalogo.NOMBRE && query.descendente();
         Sort.Direction direccion = descendente ? Sort.Direction.DESC : Sort.Direction.ASC;
+        // PENDIENTE DE DECIDIR (equipo): ordenar como en español con ORDEN_ALFABETICO_ES (UsuarioMongoAdapter).
+        // Sin collation, MongoDB ordena por código Unicode: las mayúsculas antes y las vocales con tilde tras la Z.
         List<Producto> productos = mongoTemplate.find(new Query(criterios).with(PageRequest.of(
                         query.pagina(), query.tamano(), Sort.by(direccion, "nombre"))),
                         ProductoDocument.class).stream()
