@@ -26,7 +26,7 @@ Al pulsar «Proceder al pago» en el carrito, el cliente llega a `/checkout`: la
 | Cada pedido solo puede tener un proveedor | El cuerpo de cada petición lleva únicamente `{ vendedorId }`; el servidor toma de su carrito solo lo de ese proveedor |
 | Botón para simular el pago | **Simular pago**: muestra «Procesando pago…» un instante (700 ms) y luego crea los pedidos. No hay ningún cobro real |
 | Cabecera por proveedor | `TecnoVera: 197,32 €`, igual que en el carrito |
-| Elegir el método de pago (AB#133) | «Método de pago» en el resumen: los métodos guardados del cliente (HU6) con su máscara; sale marcado el predeterminado. Sin ninguno no se puede pagar y se lleva a `/profile` |
+| Elegir el método de pago (AB#133) | «Método de pago» en el resumen: los métodos guardados del cliente (HU6) con su máscara; sale marcado el predeterminado. Sin ninguno no se puede pagar y se lleva a `/payment-methods` (HU6) |
 | Recibo con forma de ticket (AB#133) | `PaymentTicket`: total pagado, fecha, una línea por pedido, el método usado con su máscara, código de barras decorativo y confeti breve |
 
 ---
@@ -76,7 +76,7 @@ flowchart TD
 | Cargando / error | Mientras llega el carrito o si falla | Indicador o error con **Reintentar** |
 | Carrito vacío | Sin productos | «Tu carrito está vacío» y **Ver los productos**; no hay botón de pago |
 | Revisión | Hay productos | Un pedido por proveedor y el resumen del pago con el total y el **método de pago** |
-| Sin métodos de pago | El cliente no tiene ninguno guardado | Aviso con **Añadir un método de pago** (lleva a `/profile`); **Simular pago** desactivado |
+| Sin métodos de pago | El cliente no tiene ninguno guardado | Aviso con **Añadir un método de pago** (lleva a `/payment-methods`); **Simular pago** desactivado |
 | Error de métodos de pago | Falla `GET /api/customer/payment-methods` | Error con **Reintentar**; **Simular pago** desactivado |
 | Procesando | Tras pulsar **Simular pago** | El botón pasa a «Procesando pago…» y se desactiva |
 | Pago realizado | Se ha creado algún pedido | El recibo con forma de ticket (total de los pedidos creados, fecha, pedidos y método de pago) y **Seguir comprando** |
@@ -160,7 +160,6 @@ Con `VITE_USE_MOCKS=true` y `cliente@esibuy.test`:
 - **Backend:** falta la entidad pedido, `POST /api/orders` y su lógica (AB#380 a AB#382).
 - **Pasarela real:** no hay cobro; el pedido solo guarda qué método de pago se eligió.
 - **`paymentMethodId` en el pedido:** contrato propuesto por el frontend (AB#133), pendiente de acordar con el backend (AB#380 a AB#382).
-- **Enlace «Añadir un método de pago»:** lleva a `/profile`, como se acordó. La vista de la HU6 (`/payment-methods`) ya existe: queda pendiente de decidir si el enlace pasa a ella.
 - **Sin historial de pedidos:** tras pagar solo se ve la confirmación; ver los pedidos es otra historia.
 - **Pedidos no atómicos:** si el navegador se cierra a mitad de los pedidos, algunos pueden haberse creado y otros no; el carrito conserva lo que falta.
 - **Verificación visual parcial:** con los mocks se han visto en el navegador la revisión con el selector de método y el recibo tras pagar; no el fallo parcial.
@@ -171,5 +170,5 @@ Con `VITE_USE_MOCKS=true` y `cliente@esibuy.test`:
 
 - **Herramienta:** Claude Code (Sonnet 5.5).
 - **Qué hizo la IA:** escribió con TDD el ciclo, la pasarela, el contrato propuesto, los mocks, la documentación y la matriz.
-- **AB#133 (Claude Code, Opus 5.5):** propuso el diseño y el mapa de tests (HU10-CP07 a CP11), que el equipo aprobó, y escribió con TDD el selector de método, el ticket, el contrato propuesto, los mocks, la documentación y la matriz. El equipo eligió la task, el enlace al perfil y un recibo por pago, y dio el componente de referencia del ticket.
+- **AB#133 (Claude Code, Opus 5.5):** propuso el diseño y el mapa de tests (HU10-CP07 a CP11), que el equipo aprobó, y escribió con TDD el selector de método, el ticket, el contrato propuesto, los mocks, la documentación y la matriz. El equipo eligió la task, el enlace a la vista de métodos de pago (al principio al perfil, mientras no existía) y un recibo por pago, y dio el componente de referencia del ticket.
 - **Qué hizo el equipo:** definió que «Proceder al pago» lleve a una pasarela que da la orden de realización del pedido por proveedor, que cada pedido tenga un solo proveedor y que haya un botón para simular el pago. El código se revisa, ejecuta y valida por el equipo antes de integrarlo.
