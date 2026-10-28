@@ -1,0 +1,66 @@
+import { describe, it, expect } from 'vitest'
+import { screen, within } from '@testing-library/react'
+import { abrirSesionPorApi, renderApp } from '../test/renderApp'
+
+// Vista «Métodos de pago» del cliente (HU6, AB#269 y AB#113), con los mocks de MSW del backend.
+// Del mock de métodos de pago: Carlos (cliente@esibuy.test) tiene una tarjeta predeterminada (•••• 1111) y un Bizum
+// (•••• 678).
+
+async function abrirMetodosDePago(email = 'cliente@esibuy.test') {
+  await abrirSesionPorApi(email)
+  renderApp('/payment-methods')
+  await screen.findByRole('heading', { level: 1, name: /métodos de pago/i })
+}
+
+const tarjetasDeMetodo = () => within(screen.getByRole('list', { name: /tus métodos de pago/i })).getAllByRole('listitem')
+
+describe('PaymentMethodsPage (HU6): listado', () => {
+  it('HU6-CP26: muestra cada método con su tipo y su máscara, sin otros datos de pago', async () => {
+    await abrirMetodosDePago()
+
+    const metodos = await screen.findAllByRole('listitem')
+    expect(metodos).toHaveLength(2)
+    expect(tarjetasDeMetodo()[0]).toHaveTextContent('Tarjeta')
+    expect(tarjetasDeMetodo()[0]).toHaveTextContent('•••• 1111')
+    expect(tarjetasDeMetodo()[1]).toHaveTextContent('Bizum')
+    expect(tarjetasDeMetodo()[1]).toHaveTextContent('•••• 678')
+  })
+
+  it('HU6-CP26: indica cuál es el método predeterminado', () => {
+    expect.fail('Funcionalidad no implementada')
+  })
+
+  it('HU6-CP26: sin métodos muestra un estado vacío con el botón para añadir el primero', () => {
+    expect.fail('Funcionalidad no implementada')
+  })
+
+  it('HU6-CP26: si falla la carga avisa y deja reintentar', () => {
+    expect.fail('Funcionalidad no implementada')
+  })
+})
+
+describe('PaymentMethodsPage (HU6): acceso', () => {
+  it('HU6-CP27: el cliente tiene el enlace «Métodos de pago» en la cabecera y llega a la vista', () => {
+    expect.fail('Funcionalidad no implementada')
+  })
+
+  it('HU6-CP27: un vendedor o un administrador no acceden a la vista', () => {
+    expect.fail('Funcionalidad no implementada')
+  })
+})
+
+describe('PaymentMethodsPage (HU6): predeterminado', () => {
+  it('HU6-CP28: marcar otro método como predeterminado lo cambia en la lista', () => {
+    expect.fail('Funcionalidad no implementada')
+  })
+
+  it('HU6-CP28: si el método ya no existe avisa y recarga la lista', () => {
+    expect.fail('Funcionalidad no implementada')
+  })
+})
+
+describe('PaymentMethodsPage (HU6): límite', () => {
+  it('HU6-CP29: con 5 métodos no deja añadir otro y explica por qué', () => {
+    expect.fail('Funcionalidad no implementada')
+  })
+})
