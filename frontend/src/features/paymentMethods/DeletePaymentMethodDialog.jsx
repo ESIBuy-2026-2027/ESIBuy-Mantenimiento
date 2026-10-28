@@ -9,6 +9,8 @@ import {
   DialogSurface,
   DialogTitle,
   Field,
+  MessageBar,
+  MessageBarBody,
   Select,
   makeStyles,
   tokens,
@@ -30,13 +32,20 @@ export default function DeletePaymentMethodDialog({ metodo, metodos, onClose, on
   const styles = useStyles()
   const [eliminando, setEliminando] = useState(false)
   const [sustituto, setSustituto] = useState('')
+  const [fallo, setFallo] = useState(false)
   const otros = metodos.filter(({ id }) => id !== metodo.id)
   const eligeSustituto = metodo.predeterminado && otros.length > 0
 
   const confirmar = async () => {
     setEliminando(true)
-    await deletePaymentMethod(metodo.id, eligeSustituto ? sustituto : undefined)
-    onDeleted()
+    setFallo(false)
+    try {
+      await deletePaymentMethod(metodo.id, eligeSustituto ? sustituto : undefined)
+      onDeleted()
+    } catch {
+      setFallo(true)
+      setEliminando(false)
+    }
   }
 
   return (
@@ -45,6 +54,11 @@ export default function DeletePaymentMethodDialog({ metodo, metodos, onClose, on
         <DialogBody>
           <DialogTitle>Eliminar método de pago</DialogTitle>
           <DialogContent className={styles.content}>
+            {fallo && (
+              <MessageBar intent="error">
+                <MessageBarBody>No se ha podido eliminar el método de pago. Inténtalo de nuevo.</MessageBarBody>
+              </MessageBar>
+            )}
             <span>¿Seguro que quieres eliminar «{nombreDeMetodo(metodo)}»?</span>
             {eligeSustituto && (
               <Field label="Nuevo método predeterminado" hint="Es el método predeterminado: elige cuál lo sustituye.">
