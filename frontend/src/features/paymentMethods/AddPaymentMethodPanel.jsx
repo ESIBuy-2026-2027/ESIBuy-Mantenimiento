@@ -28,6 +28,38 @@ const TIPOS = [
   { valor: 'BIZUM', etiqueta: 'Bizum', Icono: Phone20Regular },
 ]
 
+const CAMPOS_VACIOS = {
+  numeroTarjeta: '',
+  caducidad: '',
+  cvv: '',
+  titular: '',
+  urlPayPal: '',
+  telefonoBizum: '',
+}
+
+// Solo formatos básicos, con los mismos límites que el backend, para avisar antes de enviar. Lo demás (Luhn, que la
+// tarjeta no esté caducada) lo comprueba el backend.
+const FORMATO_NUMERO = /^\d{13,19}$/
+const FORMATO_CADUCIDAD = /^(0[1-9]|1[0-2])\/\d{2}$/
+const FORMATO_CVV = /^\d{3,4}$/
+const FORMATO_TITULAR = /^[\p{L} '-]{1,26}$/u
+
+// El número se puede escribir con espacios, como en la tarjeta; se envía sin ellos
+const sinEspacios = (texto) => texto.replaceAll(/\s/g, '')
+
+function erroresDeTarjeta({ numeroTarjeta, caducidad, cvv, titular }) {
+  const errores = {}
+  if (!FORMATO_NUMERO.test(sinEspacios(numeroTarjeta))) {
+    errores.numeroTarjeta = 'El número de tarjeta tiene entre 13 y 19 dígitos.'
+  }
+  if (!FORMATO_CADUCIDAD.test(caducidad.trim())) errores.caducidad = 'Escribe la caducidad como MM/AA.'
+  if (!FORMATO_CVV.test(cvv)) errores.cvv = 'El CVV tiene 3 o 4 dígitos.'
+  if (!FORMATO_TITULAR.test(titular.trim())) {
+    errores.titular = 'El titular solo puede tener letras, espacios, guiones y apóstrofos (hasta 26).'
+  }
+  return errores
+}
+
 // Composición inspirada en la tarjeta «Payment Details», adaptada a DESIGN.md: superficie blanca con la sombra del
 // panel protagonista (sin efecto cristal), el naranja como único acento y una entrada corta que no se reproduce
 // con movimiento reducido.
@@ -96,6 +128,20 @@ const useStyles = makeStyles({
 export default function AddPaymentMethodPanel({ onCancel }) {
   const styles = useStyles()
   const [tipo, setTipo] = useState('TARJETA')
+  const [campos, setCampos] = useState(CAMPOS_VACIOS)
+  const [errores, setErrores] = useState({})
+
+  // Props comunes de cada campo: su valor, su cambio y su mensaje de error
+  const campo = (nombre) => ({
+    value: campos[nombre],
+    onChange: (_event, data) => setCampos((actuales) => ({ ...actuales, [nombre]: data.value })),
+  })
+  const error = (nombre) =>
+    errores[nombre] ? { validationState: 'error', validationMessage: errores[nombre] } : {}
+
+  const guardar = () => {
+    setErrores(tipo === 'TARJETA' ? erroresDeTarjeta(campos) : {})
+  }
 
   return (
     <Card className={styles.panel} aria-labelledby="titulo-nuevo-metodo" role="region">
@@ -122,8 +168,9 @@ export default function AddPaymentMethodPanel({ onCancel }) {
 
       {tipo === 'TARJETA' && (
         <div className={styles.fields}>
-          <Field label="Número de tarjeta">
+          <Field label="Número de tarjeta" {...error('numeroTarjeta')}>
             <Input
+              {...campo('numeroTarjeta')}
               contentBefore={<Payment20Regular />}
               placeholder="0000 0000 0000 0000"
               inputMode="numeric"
@@ -131,11 +178,12 @@ export default function AddPaymentMethodPanel({ onCancel }) {
             />
           </Field>
           <div className={styles.twoColumns}>
-            <Field label="Caducidad">
-              <Input contentBefore={<Calendar20Regular />} placeholder="MM/AA" autoComplete="cc-exp" />
+            <Field label="Caducidad" {...error('caducidad')}>
+              <Input {...campo('caducidad')} contentBefore={<Calendar20Regular />} placeholder="MM/AA" autoComplete="cc-exp" />
             </Field>
-            <Field label="CVV">
+            <Field label="CVV" {...error('cvv')}>
               <Input
+                {...campo('cvv')}
                 contentBefore={<LockClosed20Regular />}
                 type="password"
                 placeholder="123"
@@ -144,8 +192,8 @@ export default function AddPaymentMethodPanel({ onCancel }) {
               />
             </Field>
           </div>
-          <Field label="Titular">
-            <Input placeholder="Nombre y apellidos" autoComplete="cc-name" />
+          <Field label="Titular" {...error('titular')}>
+            <Input {...campo('titular')} placeholder="Nombre y apellidos" autoComplete="cc-name" />
           </Field>
         </div>
       )}
@@ -163,7 +211,9 @@ export default function AddPaymentMethodPanel({ onCancel }) {
       )}
 
       <div className={styles.actions}>
-        <Button appearance="primary">Guardar método de pago</Button>
+        <Button appearance="primary" onClick={guardar}>
+          Guardar método de pago
+        </Button>
         <Button appearance="subtle" onClick={onCancel}>
           Cancelar
         </Button>
