@@ -14,6 +14,9 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: './src/test/setup.js',
+    // 15 s por test en lugar de los 5 s por defecto: en el agente self-hosted de Sonar, con la batería
+    // completa y la cobertura, los tests de las páginas superan los 5 s y fallan sin estar rotos.
+    testTimeout: 15000,
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'lcov'],
