@@ -18,6 +18,9 @@ export function resetPaymentMethodsMock() {
 
 resetPaymentMethodsMock()
 
+// Los métodos del cliente, para que el mock de pedidos (HU10) compruebe que el método con el que se paga es suyo
+export const metodosDePagoDe = (usuarioId) => metodosPorCliente[usuarioId] ?? []
+
 const URL_METODOS = '/api/customer/payment-methods'
 
 const MAXIMO_METODOS = 5
