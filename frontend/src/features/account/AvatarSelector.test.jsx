@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { FluentProvider, webLightTheme } from '@fluentui/react-components'
-import AvatarSelector from './AvatarSelector'
+import AvatarSelector, { UserAvatar } from './AvatarSelector'
 
 function renderSelector(props) {
   return render(
@@ -44,5 +44,29 @@ describe('AvatarSelector', () => {
     await user.click(screen.getByRole('radio', { name: /avatar 2/i }))
 
     expect(onChange).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ value: 'avatar2' }))
+  })
+})
+
+describe('UserAvatar', () => {
+  const renderAvatar = (props) =>
+    render(
+      <FluentProvider theme={webLightTheme}>
+        <UserAvatar name="Vera Vendedora" {...props} />
+      </FluentProvider>,
+    )
+
+  it('HU4-CP07: muestra el avatar elegido con su nombre accesible', () => {
+    renderAvatar({ value: 'avatar3' })
+
+    expect(screen.getByRole('img', { name: 'Avatar 3' })).toBeInTheDocument()
+  })
+
+  it('HU4-CP07: sin avatar, o con uno que no existe, muestra las iniciales', () => {
+    const { unmount } = renderAvatar({ value: '' })
+    expect(screen.getByRole('img', { name: /sin imagen de perfil/i })).toHaveTextContent('VV')
+    unmount()
+
+    renderAvatar({ value: 'avatar9' })
+    expect(screen.getByRole('img', { name: /sin imagen de perfil/i })).toHaveTextContent('VV')
   })
 })
