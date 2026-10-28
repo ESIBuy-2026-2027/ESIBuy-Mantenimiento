@@ -899,23 +899,36 @@ Tests del frontend (bajo `frontend/src/`, con Vitest, React Testing Library y MS
 | HU7-CP01 | La vista de productos es lo primero que ve el cliente al iniciar sesión, y solo la ve un cliente (sin sesión lleva al login; otro rol, a su página) | Frontend (página) | 3 | ✅ Pasa (3, AB#350, PR #131) |
 | HU7-CP02 | Cada producto se muestra en una tarjeta con su nombre, imagen, categoría y valoración (estrellas y número de valoraciones; con avisos si no tiene imagen o valoraciones) | Frontend (componente y página) | 6 | ✅ Pasa (6, AB#350, PR #131) |
 | HU7-CP03 | Las tarjetas se colocan de dos en dos y de diez en diez: al llegar al final de la página (o con «Ver más productos») se cargan otras diez, hasta avisar de que no hay más; con estados de carga, error con reintento y catálogo vacío | Frontend (página) | 8 | ✅ Pasa (8, AB#350, PR #131) |
-| HU7-CP04 | Se puede buscar por nombre (sin distinguir mayúsculas ni tildes) y filtrar por categoría; cualquier cambio empieza de nuevo desde la primera página, y si nada coincide se ofrece limpiar los filtros | Frontend (página) | 5 | 🔍 Pasan 3 de 5 en `develop`; los 2 que fallaban se arreglan en la rama `fix/tests-productspage-hu7` (AB#351, PR #131, ver nota) |
+| HU7-CP04 | Se puede buscar por nombre (sin distinguir mayúsculas ni tildes) y filtrar por categoría; cualquier cambio empieza de nuevo desde la primera página, y si nada coincide se ofrece limpiar los filtros | Frontend (página) | 5 | ✅ Pasa (5, AB#351, PR #131; 2 adaptados en el PR #143, ver nota) |
 | HU7-CP05 | Se puede filtrar por valoración mínima (4, 3 o 2 estrellas o más) y volver a «Cualquiera» | Frontend (página) | 3 | ✅ Pasa (3, AB#351, PR #131) |
 | HU7-CP06 | Se puede ordenar por nombre y por valoración (no por categoría), ascendente y descendente; por defecto, nombre de la A a la Z | Frontend (página) | 5 | ✅ Pasa (5, AB#351, PR #131) |
 | HU7-CP07 | Arriba se muestran los diez productos mejor valorados como tarjetas (puesto, nombre y valoración) dentro de una banda curva sin marco; se ocultan con filtros activos, con pocos productos valorados o si falla | Frontend (componente y página) | 9 | ✅ Pasa (9, AB#350, PR #131) |
 | HU7-CP08 | Las tarjetas de la banda animada de los mejores se pueden pulsar con el ratón y avisan con su producto; sin esa función no son botones (el detalle al que llevan es la HU8-CP06) | Frontend (componente) | 2 | ✅ Pasa (2, AB#350, PR #131) |
 | HU7-CP09 | Al cambiar el tamaño de la página la banda de los mejores se reinicia (una sola vez, cuando termina el cambio) para que las tarjetas no se solapen; si el tamaño no cambia, no se reinicia | Frontend (componente) | 3 | ✅ Pasa (3, AB#350, PR #131) |
+| HU7-CP10 | El caso de uso busca en el catálogo con los criterios recibidos y devuelve la página del repositorio | Unitario | 1 | 🔍 En revisión (1, AB#352, PR #153) |
+| HU7-CP11 | El catálogo solo devuelve los productos disponibles, de todos los vendedores | Integración MongoDB | 1 | 🔍 En revisión (1, AB#352, PR #153) |
+| HU7-CP12 | La búsqueda por nombre no distingue mayúsculas ni tildes y trata el texto como literal, no como expresión regular | Integración MongoDB | 2 | 🔍 En revisión (2, AB#352, PR #153) |
+| HU7-CP13 | El filtro por categoría se puede combinar con la búsqueda | Integración MongoDB | 1 | 🔍 En revisión (1, AB#352, PR #153) |
+| HU7-CP14 | El catálogo se ordena por nombre en los dos sentidos, paginado y con el total completo | Integración MongoDB | 1 | 🔍 En revisión (1, AB#352, PR #153) |
+| HU7-CP15 | Mientras no haya valoraciones (HU13), una valoración mínima no devuelve ningún producto y ordenar por valoración desempata por nombre de la A a la Z | Integración MongoDB | 2 | 🔍 En revisión (2, AB#352, PR #153) |
+| HU7-CP16 | El cliente recibe el catálogo con el formato del contrato (sin precio, stock ni vendedor; `valoracion` null y `numValoraciones` 0) | Integración (capa web) | 1 | 🔍 En revisión (1, AB#353, PR #153) |
+| HU7-CP17 | Los parámetros llegan al caso de uso traducidos: página desde 0, criterio de orden y sentido | Integración (capa web) | 1 | 🔍 En revisión (1, AB#353, PR #153) |
+| HU7-CP18 | Un parámetro no válido (página o tamaño menor que 1, valoración fuera de 1 a 5, orden o sentido desconocidos) devuelve 400 y no llega al caso de uso | Integración (capa web) | 1 | 🔍 En revisión (1, AB#353, PR #153) |
+| HU7-CP19 | Sin sesión (401) o sin ser cliente (403) no se ve el catálogo | Integración (capa web) | 2 | 🔍 En revisión (2, AB#353, PR #153) |
 
 Notas:
 - **HU7-CP01 a CP09 (Sprint 2, frontend):** casos propuestos en las tasks AB#350 (vista de productos) y AB#351 (vista de filtrado y búsqueda), a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu7-busqueda-y-filtrado-de-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU7 (AB#69) en Azure Boards.
-- **Backend:** las tasks AB#352 (lógica de filtrado) y AB#353 (endpoint para obtener productos) están sin hacer; los tests de esta HU usan el contrato propuesto por el frontend y los mocks (MSW).
+- **HU7-CP10 a CP19 (Sprint 2, backend):** casos propuestos en las tasks AB#352 (lógica de filtrado de productos) y AB#353 (endpoint para obtener productos), con el contrato de `GET /api/products` que ya usaba el frontend. Desarrollados con TDD. Pendientes de confirmar con el equipo y de añadir a la HU7 (AB#69) en Azure Boards.
+- **Valoraciones (HU13, sin hacer):** hasta que existan, `valoracion` es `null`, `numValoraciones` es 0, una valoración mínima no devuelve nada y ordenar por valoración equivale a ordenar por nombre de la A a la Z. Está marcado en el código como `PENDIENTE DE DECIDIR (equipo)`; HU7-CP15 y CP16 protegen ese comportamiento provisional.
+- **Decisiones de HU7-CP18:** `sort` y `order` se validan con `@Pattern`, como `page`, `size` y `minRating` con `@Min` y `@Max`. Que `minRating=6` sea inválido es una propuesta (la valoración va de 1 a 5).
+- **Pendiente de decidir:** el orden por nombre no usa la collation en español (`ORDEN_ALFABETICO_ES` de `UsuarioMongoAdapter`): las mayúsculas salen antes y las vocales con tilde, tras la Z. HU7-CP14 usa nombres sin tilde y en mayúscula para no depender de ello.
 - **Decisión del equipo:** no se ordena por categoría (no tiene sentido); el listado es un scroll infinito de diez en diez y no una paginación numérica; la selección son los diez mejor valorados, como tarjetas dentro de la animación y a todo el ancho de la página.
 - **HU7-CP08 (cambio en la HU8):** en la primera versión las tarjetas abrían una ventana de ficha (HU7-CP08, 8 tests). La HU8 la sustituye por la página de detalle: los tests del clic en el listado, la animación y la lista pasan a ser HU8-CP06 y la ventana (`ProductDialog`) se elimina. Quedan en HU7-CP08 los de la banda animada.
 - **HU7-CP09:** el reinicio al cambiar el tamaño se prueba con un `ResizeObserver` que dispara el test y con temporizadores simulados.
 - **Cambio de comportamiento:** `/products` ya no es una ruta pública: sin sesión lleva a `/login`. Se ha cambiado en consecuencia el test técnico `productos_sinSesion_llevaAIniciarSesion` de `LoginFlow.test.jsx` (antes `productos_sinSesion_esUnaRutaPublica`).
 - **Infraestructura de tests:** `test/setup.js` añade un `IntersectionObserver` que no avisa nunca (jsdom no lo trae); los tests del scroll infinito lo sustituyen por uno que dispara a mano.
-- **Fallo conocido (no es de esta HU):** `HU7-CP04: al elegir una categoría pide solo los productos de esa categoría` y `HU7-CP04: al filtrar vuelve a empezar desde la primera página, sin conservar lo cargado` fallan en `develop` desde que el desplegable de categorías de la HU31 sustituyó al selector nativo que usan. En la rama `fix/tests-productspage-hu7` se adaptan al desplegable con el helper `elegirCategoria` (abre el desplegable y pulsa la opción).
-- **Test inestable (HU7-CP03):** `HU7-CP03: al llegar otra vez al final carga las últimas y avisa de que no hay más` fallaba a veces con la máquina cargada: el test simulaba la llegada al final antes de que la página conectara el `IntersectionObserver` (lo hace en un `useEffect`, justo después de pintar las tarjetas). En la misma rama, `llegarAlFinal` espera a que haya un observador conectado antes de avisar.
+- **Fallo resuelto (no era de esta HU):** `HU7-CP04: al elegir una categoría pide solo los productos de esa categoría` y `HU7-CP04: al filtrar vuelve a empezar desde la primera página, sin conservar lo cargado` fallaban en `develop` desde que el desplegable de categorías de la HU31 sustituyó al selector nativo que usaban. El PR #143 los adapta al desplegable con el helper `elegirCategoria` (abre el desplegable y pulsa la opción).
+- **Test inestable (HU7-CP03):** `HU7-CP03: al llegar otra vez al final carga las últimas y avisa de que no hay más` fallaba a veces con la máquina cargada: el test simulaba la llegada al final antes de que la página conectara el `IntersectionObserver` (lo hace en un `useEffect`, justo después de pintar las tarjetas). En el mismo PR #143, `llegarAlFinal` espera a que haya un observador conectado antes de avisar.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -940,8 +953,8 @@ Notas:
 | HU7-CP03 | `ProductsPage.test.jsx` | `HU7-CP03: si todavía no hay productos lo indica` | Frontend · página | AB#350 | PR #131 | ✅ |
 | HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al escribir en el buscador pide los productos con ese nombre` | Frontend · página | AB#351 | PR #131 | ✅ |
 | HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: la búsqueda no distingue mayúsculas ni tildes` | Frontend · página | AB#351 | PR #131 | ✅ |
-| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al elegir una categoría pide solo los productos de esa categoría` | Frontend · página | AB#351 | PR #131 | 🔍 |
-| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al filtrar vuelve a empezar desde la primera página, sin conservar lo cargado` | Frontend · página | AB#351 | PR #131 | 🔍 |
+| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al elegir una categoría pide solo los productos de esa categoría` | Frontend · página | AB#351 | PR #131 | ✅ |
+| HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: al filtrar vuelve a empezar desde la primera página, sin conservar lo cargado` | Frontend · página | AB#351 | PR #131 | ✅ |
 | HU7-CP04 | `ProductsPage.test.jsx` | `HU7-CP04: si ningún producto coincide lo indica y permite limpiar los filtros` | Frontend · página | AB#351 | PR #131 | ✅ |
 | HU7-CP05 | `ProductsPage.test.jsx` | `HU7-CP05: al elegir una valoración mínima pide solo los productos con esa valoración o más` | Frontend · página | AB#351 | PR #131 | ✅ |
 | HU7-CP05 | `ProductsPage.test.jsx` | `HU7-CP05: con la valoración mínima, todos los productos mostrados la alcanzan` | Frontend · página | AB#351 | PR #131 | ✅ |
@@ -965,11 +978,29 @@ Notas:
 | HU7-CP09 | `TiltedGridHero.test.jsx` | `HU7-CP09: al cambiar el tamaño de la página la banda se reinicia, para que las imágenes no se solapen` | Frontend · componente | AB#350 | PR #131 | ✅ |
 | HU7-CP09 | `TiltedGridHero.test.jsx` | `HU7-CP09: espera a que termine de cambiar el tamaño: varios cambios seguidos reinician una sola vez` | Frontend · componente | AB#350 | PR #131 | ✅ |
 | HU7-CP09 | `TiltedGridHero.test.jsx` | `HU7-CP09: si el tamaño no cambia, la banda sigue su curso sin reiniciarse` | Frontend · componente | AB#350 | PR #131 | ✅ |
+| HU7-CP10 | `CatalogoProductosServiceTest` | `buscaEnElCatalogoConLosCriteriosRecibidos` | Aplicación | AB#352 | PR #153 | 🔍 |
+| HU7-CP11 | `ProductoMongoAdapterTest` | `buscarEnCatalogoSoloDevuelveDisponiblesDeTodosLosVendedores` | Infraestructura | AB#352 | PR #153 | 🔍 |
+| HU7-CP12 | `ProductoMongoAdapterTest` | `buscarEnCatalogoBuscaSinDistinguirMayusculasNiTildes` | Infraestructura | AB#352 | PR #153 | 🔍 |
+| HU7-CP12 | `ProductoMongoAdapterTest` | `buscarEnCatalogoTrataLaBusquedaComoTextoLiteral` | Infraestructura | AB#352 | PR #153 | 🔍 |
+| HU7-CP13 | `ProductoMongoAdapterTest` | `buscarEnCatalogoFiltraPorCategoriaYBusqueda` | Infraestructura | AB#352 | PR #153 | 🔍 |
+| HU7-CP14 | `ProductoMongoAdapterTest` | `buscarEnCatalogoOrdenaPorNombreYPagina` | Infraestructura | AB#352 | PR #153 | 🔍 |
+| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoConValoracionMinimaNoDevuelveNada` | Infraestructura | AB#352 | PR #153 | 🔍 |
+| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoPorValoracionDesempataPorNombre` | Infraestructura | AB#352 | PR #153 | 🔍 |
+| HU7-CP16 | `CatalogoControllerTest` | `clienteRecibeElCatalogoConElFormatoDelContrato` | Infraestructura | AB#353 | PR #153 | 🔍 |
+| HU7-CP17 | `CatalogoControllerTest` | `traduceLosParametrosALaConsulta` | Infraestructura | AB#353 | PR #153 | 🔍 |
+| HU7-CP18 | `CatalogoControllerTest` | `parametroNoValidoDevuelve400` | Infraestructura | AB#353 | PR #153 | 🔍 |
+| HU7-CP19 | `CatalogoControllerTest` | `sinSesionDevuelve401` | Infraestructura | AB#353 | PR #153 | 🔍 |
+| HU7-CP19 | `CatalogoControllerTest` | `otroRolDevuelve403` | Infraestructura | AB#353 | PR #153 | 🔍 |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `ProductCard.test.jsx`: `features/catalog/` (Vitest y React Testing Library)
 - `TiltedGridHero.test.jsx`: `components/` (Vitest y React Testing Library)
 - `ProductsPage.test.jsx`: `pages/` (Vitest, React Testing Library y MSW)
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `CatalogoProductosServiceTest`: `productos/application/service/` (JUnit y Mockito, sin Spring)
+- `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/` (`@DataMongoTest` con Testcontainers)
+- `CatalogoControllerTest`: `productos/infrastructure/adapter/in/web/` (`@WebMvcTest` con la seguridad real)
 
 ---
 
