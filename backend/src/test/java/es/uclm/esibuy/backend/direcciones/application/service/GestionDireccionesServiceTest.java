@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import es.uclm.esibuy.backend.direcciones.application.port.in.DireccionCommand;
+import es.uclm.esibuy.backend.direcciones.application.port.in.DireccionParaPedido;
 import es.uclm.esibuy.backend.direcciones.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.direcciones.application.port.out.DireccionRepositoryPort;
 import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionInvalidaException;
@@ -19,6 +20,7 @@ import es.uclm.esibuy.backend.direcciones.domain.model.DireccionEnvio;
 import es.uclm.esibuy.backend.direcciones.domain.model.TelefonoContacto;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -272,5 +274,24 @@ class GestionDireccionesServiceTest {
         public String idPorCorreo(String email) {
             return EMAIL_CLIENTE.equals(email) ? ID_CLIENTE : "otro-cliente";
         }
+    }
+
+    // Para el pedido (HU10): los datos de una dirección del cliente, sin ver el dominio de direcciones
+    @Test
+    @DisplayName("HU10-CP16: consultarParaPedido devuelve los datos de una dirección del cliente en sesión")
+    void consultarParaPedidoDevuelveLosDatosDeUnaDireccionPropia() {
+        String propia = servicio.anadir(EMAIL_CLIENTE, direccion("Calle Mayor 1")).getId();
+
+        assertEquals(Optional.of(new DireccionParaPedido("Juan Pérez", "Calle Mayor 1", "2º B", "13071",
+                "Ciudad Real", "Ciudad Real", "612345678")), servicio.consultarParaPedido(EMAIL_CLIENTE, propia));
+    }
+
+    @Test
+    @DisplayName("HU10-CP16: consultarParaPedido no devuelve una dirección de otro cliente ni una que no existe")
+    void consultarParaPedidoNoDevuelveUnaDireccionAjena() {
+        String ajena = guardarDeOtroCliente().getId();
+
+        assertTrue(servicio.consultarParaPedido(EMAIL_CLIENTE, ajena).isEmpty());
+        assertTrue(servicio.consultarParaPedido(EMAIL_CLIENTE, "no-existe").isEmpty());
     }
 }

@@ -26,10 +26,15 @@ import org.springframework.data.mongodb.core.query.Update;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -399,5 +404,45 @@ class ProductoMongoAdapterTest {
     private static Producto productoNuevo(String vendedorId, String nombre) {
         return new Producto(null, vendedorId, nombre, "", new BigDecimal("10"), 1, "cat-1", "", true,
                 Descuento.sinDescuento(), Descuento.sinDescuento());
+    }
+
+    // Stock al realizar un pedido (HU10): se descuenta en una sola operación de MongoDB, condicionada al stock
+    @Test
+    @DisplayName("HU10-CP15: descontar stock lo resta si hay suficiente y no lo deja negativo")
+    void descontarStockLoRestaSiHaySuficiente() {
+        String id = adapter.guardar(producto(null, 5)).getId();
+
+        assertTrue(adapter.descontarStock(id, 3));
+        assertFalse(adapter.descontarStock(id, 3));
+        assertEquals(2, adapter.buscarPorId(id).orElseThrow().getStock());
+    }
+
+    @Test
+    @DisplayName("HU10-CP15: dos descuentos a la vez del último stock no lo dejan negativo")
+    void dosDescuentosALaVezNoDejanElStockNegativo() throws Exception {
+        String id = adapter.guardar(producto(null, 1)).getId();
+
+        List<Callable<Boolean>> compras = List.of(() -> adapter.descontarStock(id, 1),
+                () -> adapter.descontarStock(id, 1));
+        ExecutorService hilos = Executors.newFixedThreadPool(2);
+        List<Boolean> resultados = new ArrayList<>();
+        for (Future<Boolean> compra : hilos.invokeAll(compras)) {
+            resultados.add(compra.get());
+        }
+        hilos.shutdown();
+
+        assertEquals(1, resultados.stream().filter(Boolean::booleanValue).count());
+        assertEquals(0, adapter.buscarPorId(id).orElseThrow().getStock());
+    }
+
+    @Test
+    @DisplayName("HU10-CP15: reponer stock devuelve las unidades descontadas")
+    void reponerStockDevuelveLasUnidades() {
+        String id = adapter.guardar(producto(null, 5)).getId();
+        adapter.descontarStock(id, 4);
+
+        adapter.reponerStock(id, 4);
+
+        assertEquals(5, adapter.buscarPorId(id).orElseThrow().getStock());
     }
 }
