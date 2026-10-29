@@ -543,7 +543,7 @@ describe('ProductsPage (HU9): precio y carrito', () => {
     const user = userEvent.setup()
     let cuerpo = null
     server.use(
-      http.post('/api/cart/items', async ({ request }) => {
+      http.post('/api/customer/cart/items', async ({ request }) => {
         cuerpo = await request.json()
         return HttpResponse.json(CARRITO)
       }),
@@ -561,7 +561,7 @@ describe('ProductsPage (HU9): precio y carrito', () => {
   it('HU9-CP02: si el servidor dice que no hay existencias, la tarjeta lo avisa', async () => {
     const user = userEvent.setup()
     server.use(
-      http.post('/api/cart/items', () =>
+      http.post('/api/customer/cart/items', () =>
         HttpResponse.json({ code: 'INSUFFICIENT_STOCK' }, { status: 409 }),
       ),
     )

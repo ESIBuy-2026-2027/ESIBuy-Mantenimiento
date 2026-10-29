@@ -43,6 +43,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -501,5 +502,17 @@ class AutenticacionServiceTest {
         autenticacion.iniciarSesion(new IniciarSesionCommand("juan@uclm.es", "clave1234"));
 
         assertEquals(3, usuario.getIntentosFallidos());
+    }
+
+    @Test
+    @DisplayName("HU9-CP19: esClientePremium dice si el cliente en sesión es premium")
+    void esClientePremiumDiceSiElClienteEsPremium() {
+        Usuario premium = new Usuario("u-2", DATOS_PERSONALES, new Email("ana@uclm.es"), "hash-guardado", Rol.CLIENTE,
+                new DatosCliente(TipoCliente.PREMIUM, new Dni("12345678Z"), LocalDate.of(1996, 5, 20), null), null);
+        when(usuarioRepository.buscarPorCorreo("ana@uclm.es")).thenReturn(Optional.of(premium));
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(clienteConId()));
+
+        assertTrue(autenticacion.esClientePremium("ana@uclm.es"));
+        assertFalse(autenticacion.esClientePremium("juan@uclm.es"));
     }
 }

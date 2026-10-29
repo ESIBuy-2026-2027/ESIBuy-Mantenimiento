@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.productos.domain.model;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URI;
 import java.util.Locale;
 import java.util.Set;
@@ -16,6 +17,7 @@ public class Producto {
     private static final int NOMBRE_MAXIMO = 100;
     private static final int DESCRIPCION_MAXIMA = 1000;
     private static final Set<String> ESQUEMAS_IMAGEN = Set.of("http", "https");
+    private static final BigDecimal CIEN = new BigDecimal("100");
 
     private final String id;
     private final String vendedorId;
@@ -153,5 +155,18 @@ public class Producto {
 
     public Descuento getDescuentoPremium() {
         return descuentoPremium;
+    }
+
+    /**
+     * Precio que paga el cliente (HU9): con el descuento premium si el cliente es premium y lo tiene activo;
+     * si no, con el general. Se redondea a céntimos, la mitad hacia arriba.
+     */
+    public BigDecimal precioFinal(boolean clientePremium) {
+        Descuento aplicable = clientePremium && descuentoPremium.activo() ? descuentoPremium : descuento;
+        if (!aplicable.activo()) {
+            return precio;
+        }
+        BigDecimal pagado = CIEN.subtract(aplicable.porcentaje());
+        return precio.multiply(pagado).divide(CIEN, 2, RoundingMode.HALF_UP);
     }
 }

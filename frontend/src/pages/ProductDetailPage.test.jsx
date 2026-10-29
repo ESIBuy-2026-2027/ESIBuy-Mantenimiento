@@ -260,7 +260,7 @@ describe('ProductDetailPage (HU9): añadir al carrito', () => {
   function capturarAlta() {
     const enviado = { cuerpo: null }
     server.use(
-      http.post('/api/cart/items', async ({ request }) => {
+      http.post('/api/customer/cart/items', async ({ request }) => {
         enviado.cuerpo = await request.json()
         return HttpResponse.json(CARRITO)
       }),

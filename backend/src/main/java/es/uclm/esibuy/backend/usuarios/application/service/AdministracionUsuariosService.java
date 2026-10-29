@@ -44,6 +44,12 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
     }
 
     @Override
+    public String consultarNombreComercial(String vendedorId) {
+        DatosVendedor datos = consultarVendedor(vendedorId).getDatosVendedor();
+        return datos == null ? null : datos.nombreComercial();
+    }
+
+    @Override
     public Usuario consultar(String usuarioId) {
         return buscar(usuarioId);
     }

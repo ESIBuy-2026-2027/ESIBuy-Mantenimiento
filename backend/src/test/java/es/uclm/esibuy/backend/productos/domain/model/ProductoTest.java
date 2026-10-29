@@ -177,4 +177,46 @@ class ProductoTest {
         return new Producto(null, "u-2", "Teclado", descripcion, PRECIO, 5, "cat-1", "", true,
                 Descuento.sinDescuento(), Descuento.sinDescuento());
     }
+
+    // Precio que paga el cliente (HU9): el descuento premium si es premium y está activo; si no, el general.
+    private static Producto productoConDescuentos(Descuento general, Descuento premium) {
+        return new Producto("p-1", "u-2", "Teclado", "", PRECIO, 5, "cat-1", "", true, general, premium);
+    }
+
+    @Test
+    @DisplayName("HU9-CP19: sin descuentos, el precio final es el precio")
+    void sinDescuentosElPrecioFinalEsElPrecio() {
+        Producto producto = productoConDescuentos(Descuento.sinDescuento(), Descuento.sinDescuento());
+
+        assertEquals(new BigDecimal("89.50"), producto.precioFinal(false));
+        assertEquals(new BigDecimal("89.50"), producto.precioFinal(true));
+    }
+
+    @Test
+    @DisplayName("HU9-CP19: el cliente estándar paga el precio con el descuento general, redondeado a céntimos")
+    void elClienteEstandarPagaConElDescuentoGeneral() {
+        Producto producto = productoConDescuentos(new Descuento(true, new BigDecimal("10")),
+                new Descuento(true, new BigDecimal("15")));
+
+        assertEquals(new BigDecimal("80.55"), producto.precioFinal(false));
+    }
+
+    @Test
+    @DisplayName("HU9-CP19: el cliente premium paga con el descuento premium si está activo")
+    void elClientePremiumPagaConElDescuentoPremium() {
+        Producto producto = productoConDescuentos(new Descuento(true, new BigDecimal("10")),
+                new Descuento(true, new BigDecimal("15")));
+
+        // 89,50 × 0,85 = 76,075, que se redondea a 76,08
+        assertEquals(new BigDecimal("76.08"), producto.precioFinal(true));
+    }
+
+    @Test
+    @DisplayName("HU9-CP19: sin descuento premium activo, el cliente premium paga con el general")
+    void sinDescuentoPremiumElPremiumPagaConElGeneral() {
+        Producto producto = productoConDescuentos(new Descuento(true, new BigDecimal("10")),
+                Descuento.sinDescuento());
+
+        assertEquals(new BigDecimal("80.55"), producto.precioFinal(true));
+    }
 }

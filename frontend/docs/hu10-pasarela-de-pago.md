@@ -44,7 +44,7 @@ flowchart TD
     D -- Sí --> E[Tu carrito está vacío + Ver los productos]
     D -- No --> F[Un pedido por proveedor y resumen con el total]
     F -- Simular pago --> G[Procesando pago…]
-    G --> H[GET /api/cart: los proveedores que hay ahora]
+    G --> H[GET /api/customer/cart: los proveedores que hay ahora]
     H --> I[POST /api/orders por cada proveedor, uno detrás de otro]
     I --> J{¿Alguno ha fallado?}
     J -- No --> K[Pago realizado: recibo con un pedido por proveedor]

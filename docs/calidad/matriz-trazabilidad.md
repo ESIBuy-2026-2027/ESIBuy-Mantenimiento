@@ -1189,14 +1189,25 @@ Rutas de las clases de test (bajo `frontend/src/`):
 | HU9-CP07 | El carrito tiene estado de carga y de error con reintento, y vive en el servidor: al recargar la página sigue ahí | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#384, PR sin abrir) |
 | HU9-CP08 | «Proceder al pago» lleva a la pasarela de pago | Frontend (componente) | 1 | 🔍 En revisión (1, AB#384, PR sin abrir) |
 | HU9-CP09 | Con muchos productos el carrito se puede recorrer entero: el panel tiene un scroll global y la lista de cada proveedor su propio scroll, sin que ningún proveedor se comprima | Frontend (componente) | 3 | 🔍 En revisión (3, AB#384, PR sin abrir) |
+| HU9-CP10 | Añadir un producto crea su línea o suma unidades a las que ya hay, y el carrito del cliente se guarda | Unitario + controlador | 4 | 🔍 En revisión (4, AB#385 a AB#390, PR #162) |
+| HU9-CP11 | No se puede superar el stock al añadir ni al fijar la cantidad (409 `INSUFFICIENT_STOCK`) | Unitario + controlador | 4 | 🔍 En revisión (4, AB#385 a AB#390, PR #162) |
+| HU9-CP12 | Un producto que no existe o no está disponible no se añade ni cambia de cantidad (404 `PRODUCT_NOT_FOUND`) | Unitario + controlador | 4 | 🔍 En revisión (4, AB#385 a AB#390, PR #162) |
+| HU9-CP13 | Fijar la cantidad la sustituye; una cantidad menor que 1 o una petición incompleta responde 400, y un producto que no está en el carrito, 404 | Unitario + controlador | 7 | 🔍 En revisión (7, AB#385 a AB#390, PR #162) |
+| HU9-CP14 | Quitar un producto y vaciar el carrito se guardan y devuelven el carrito | Unitario + controlador | 4 | 🔍 En revisión (4, AB#385 a AB#390, PR #162) |
+| HU9-CP15 | El carrito sale agrupado por proveedor, con su nombre comercial, subtotales y totales calculados por el servidor; sin carrito, uno vacío | Unitario + controlador | 6 | 🔍 En revisión (6, AB#385 a AB#390, PR #162) |
+| HU9-CP16 | Solo el cliente usa su carrito: sale de la sesión, sin sesión responde 401, otros roles 403 y sin CSRF se rechaza | Unitario + controlador | 3 | 🔍 En revisión (3, AB#385 a AB#390, PR #162) |
+| HU9-CP17 | Persistencia en `carritos`: el mapper no pierde datos, se guarda y recupera por cliente conservando `createdAt`, un solo carrito por cliente y la colección rechaza una cantidad menor que 1 | Unitario + integración | 6 | 🔍 En revisión (6, AB#385 a AB#390, PR #162) |
+| HU9-CP18 | Limpieza del carrito (AB#390): al consultarlo se quitan los productos que ya no se pueden comprar o sin stock y se ajusta la cantidad al stock | Unitario | 4 | 🔍 En revisión (4, AB#385 a AB#390, PR #162) |
+| HU9-CP19 | El precio de cada línea lleva el descuento del cliente: el premium si es PREMIUM y está activo; si no, el general, redondeado a céntimos | Unitario | 9 | 🔍 En revisión (9, AB#385 a AB#390, PR #162) |
 
 Notas:
 - **HU9-CP01 a CP09 (Sprint 2, frontend):** casos propuestos en las tasks AB#383 (vista añadir al carrito) y AB#384 (vista de carrito) a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu9-carrito-de-compra.md`). Pendientes de confirmar con el equipo y de añadir a la HU9 (AB#71) en Azure Boards.
-- **Backend:** el carrito (AB#385 a AB#390) no existe todavía; los tests usan el contrato propuesto por el frontend y los mocks (MSW). El carrito vive en el servidor (decisión del equipo).
+- **Backend (HU9-CP10 a CP19):** módulo `carrito` (AB#385 a AB#390, AB#125 a AB#127), con el contrato que ya usaba el frontend bajo `/api/customer/cart`. Casos propuestos y aprobados por el equipo junto con el diseño; pendientes de añadir a la HU9 (AB#71) en Azure Boards. Decisiones del equipo: la ruta va bajo `/api/customer/**`, el precio lleva el descuento del cliente (premium si lo es) y la limpieza (AB#390) quita al consultar lo que ya no se puede comprar.
 - **Decisión del equipo:** los productos del carrito se separan por proveedor, con una cabecera «Proveedor: total» y los totales calculados por el servidor; no hay un total único del carrito.
-- **Cambiar la cantidad** (`PUT /api/cart/items/{productoId}`) no está en las tasks del backend: se propone y hay que confirmarlo.
+- **Cambiar la cantidad:** el backend la implementa como `PUT /api/customer/cart/items/{productoId}`.
 - **Archivos de tests nuevos** creados sin consulta previa: `AddToCartButton.test.jsx` y `CartWidget.test.jsx`. `ProductCard.test.jsx`, `ProductsPage.test.jsx` y `ProductDetailPage.test.jsx` ganan casos HU9.
 - **Infraestructura de tests:** `test/cart.jsx` (`conCarrito`) pone un carrito de mentira alrededor de un componente y `test/setup.js` reinicia el carrito y los pedidos simulados tras cada test.
+- **Tests en clases que ya existían** (un archivo de tests por clase): `ProductoTest` y `CatalogoProductosServiceTest` (productos), y `AutenticacionServiceTest` y `AdministracionUsuariosServiceTest` (usuarios) ganan casos HU9, por los métodos nuevos que usa el carrito.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1248,11 +1259,72 @@ Notas:
 | HU9-CP09 | `CartWidget.test.jsx` | `HU9-CP09: el panel tiene un scroll global y cada proveedor su propio scroll, sin comprimir a ninguno` | Frontend · componente | AB#384 | Rama `fix/US9-carrito-scroll-global-y-por-proveedor` (PR sin abrir) | 🔍 |
 | HU9-CP09 | `CartWidget.test.jsx` | `HU9-CP09: con muchos productos siguen estando todos en el carrito, también los últimos de cada proveedor` | Frontend · componente | AB#384 | Rama `fix/US9-carrito-scroll-global-y-por-proveedor` (PR sin abrir) | 🔍 |
 | HU9-CP09 | `CartWidget.test.jsx` | `HU9-CP09: con tres proveedores ninguno se comprime, tampoco el que tiene un solo producto` | Frontend · componente | AB#384 | Rama `fix/US9-carrito-scroll-global-y-por-proveedor` (PR sin abrir) | 🔍 |
+| HU9-CP10 | `GestionCarritoServiceTest` | `anadirGuardaElCarritoDelCliente` | Aplicación | AB#388 | PR #162 | 🔍 |
+| HU9-CP10 | `CarritoTest` | `anadirUnProductoNuevoCreaSuLinea` | Dominio | AB#385 | PR #162 | 🔍 |
+| HU9-CP10 | `CarritoTest` | `anadirUnProductoQueYaEstaSumaLasUnidades` | Dominio | AB#385 | PR #162 | 🔍 |
+| HU9-CP10 | `CarritoControllerTest` | `anadirRespondeConElCarrito` | Infraestructura | AB#386 | PR #162 | 🔍 |
+| HU9-CP11 | `GestionCarritoServiceTest` | `noSeAnadenMasUnidadesQueElStock` | Aplicación | AB#388 | PR #162 | 🔍 |
+| HU9-CP11 | `CarritoTest` | `noDejaAnadirMasDelStock` | Dominio | AB#385 | PR #162 | 🔍 |
+| HU9-CP11 | `CarritoTest` | `noDejaFijarMasDelStock` | Dominio | AB#385 | PR #162 | 🔍 |
+| HU9-CP11 | `CarritoControllerTest` | `superarElStockResponde409` | Infraestructura | AB#386 | PR #162 | 🔍 |
+| HU9-CP12 | `GestionCarritoServiceTest` | `unProductoQueNoSePuedeComprarNoSeAnade` | Aplicación | AB#388 | PR #162 | 🔍 |
+| HU9-CP12 | `CarritoControllerTest` | `unProductoQueNoSePuedeComprarResponde404` | Infraestructura | AB#386 | PR #162 | 🔍 |
+| HU9-CP12 | `ProductosAdapterTest` | `unProductoNoComprableSigueSinSerlo` | Infraestructura | AB#388 | PR #162 | 🔍 |
+| HU9-CP12 | `CatalogoProductosServiceTest` | `unProductoQueNoExisteONoEstaDisponibleNoSePuedeComprar` | Aplicación | AB#388 | PR #162 | 🔍 |
+| HU9-CP13 | `GestionCarritoServiceTest` | `fijarLaCantidadLaSustituye` | Aplicación | AB#388 | PR #162 | 🔍 |
+| HU9-CP13 | `CarritoTest` | `fijarLaCantidadLaSustituye` | Dominio | AB#385 | PR #162 | 🔍 |
+| HU9-CP13 | `CarritoTest` | `unaCantidadMenorQueUnoNoSeAcepta` | Dominio | AB#385 | PR #162 | 🔍 |
+| HU9-CP13 | `CarritoTest` | `noSePuedeFijarLaCantidadDeUnProductoQueNoEsta` | Dominio | AB#385 | PR #162 | 🔍 |
+| HU9-CP13 | `CarritoControllerTest` | `fijarLaCantidadRespondeConElCarrito` | Infraestructura | AB#386 | PR #162 | 🔍 |
+| HU9-CP13 | `CarritoControllerTest` | `fijarUnProductoQueNoEstaResponde404` | Infraestructura | AB#386 | PR #162 | 🔍 |
+| HU9-CP13 | `CarritoControllerTest` | `unaPeticionIncompletaResponde400` | Infraestructura | AB#386 | PR #162 | 🔍 |
+| HU9-CP14 | `GestionCarritoServiceTest` | `quitarYVaciarSeGuardan` | Aplicación | AB#388 | PR #162 | 🔍 |
+| HU9-CP14 | `CarritoTest` | `quitarUnProductoDejaLosDemas` | Dominio | AB#385 | PR #162 | 🔍 |
+| HU9-CP14 | `CarritoTest` | `vaciarQuitaTodasLasLineas` | Dominio | AB#385 | PR #162 | 🔍 |
+| HU9-CP14 | `CarritoControllerTest` | `quitarYVaciarRespondenConElCarrito` | Infraestructura | AB#386 | PR #162 | 🔍 |
+| HU9-CP15 | `GestionCarritoServiceTest` | `elCarritoSaleAgrupadoPorProveedor` | Aplicación | AB#388 | PR #162 | 🔍 |
+| HU9-CP15 | `GestionCarritoServiceTest` | `unClienteSinCarritoVeUnCarritoVacio` | Aplicación | AB#388 | PR #162 | 🔍 |
+| HU9-CP15 | `CarritoControllerTest` | `consultarDevuelveElCarritoAgrupadoPorProveedor` | Infraestructura | AB#386 | PR #162 | 🔍 |
+| HU9-CP15 | `VendedoresAdapterTest` | `nombreComercialPreguntaAlModuloDeUsuarios` | Infraestructura | AB#388 | PR #162 | 🔍 |
+| HU9-CP15 | `AdministracionUsuariosServiceTest` | `consultarNombreComercialDevuelveElDelVendedor` | Aplicación | AB#388 | PR #162 | 🔍 |
+| HU9-CP15 | `AdministracionUsuariosServiceTest` | `consultarNombreComercialDeOtroRolFalla` | Aplicación | AB#388 | PR #162 | 🔍 |
+| HU9-CP16 | `CarritoControllerTest` | `soloElClienteUsaElCarrito` | Infraestructura | AB#386 | PR #162 | 🔍 |
+| HU9-CP16 | `CarritoControllerTest` | `cambiarElCarritoSinCsrfSeRechaza` | Infraestructura | AB#386 | PR #162 | 🔍 |
+| HU9-CP16 | `ClienteEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#388 | PR #162 | 🔍 |
+| HU9-CP17 | `CarritoDocumentMapperTest` | `convierteADocumentoYVueltaSinPerderDatos` | Infraestructura | AB#385 | PR #162 | 🔍 |
+| HU9-CP17 | `CarritoDocumentMapperTest` | `rechazaUnDocumentoQueNoCumpleElDominio` | Infraestructura | AB#385 | PR #162 | 🔍 |
+| HU9-CP17 | `CarritoMongoAdapterTest` | `guardarUnCarritoNuevoYRecuperarloPorCliente` | Infraestructura | AB#385 | PR #162 | 🔍 |
+| HU9-CP17 | `CarritoMongoAdapterTest` | `guardarOtraVezActualizaElCarrito` | Infraestructura | AB#385 | PR #162 | 🔍 |
+| HU9-CP17 | `CarritoMongoAdapterTest` | `laColeccionSoloAdmiteUnCarritoPorCliente` | Infraestructura | AB#385 | PR #162 | 🔍 |
+| HU9-CP17 | `CarritoMongoAdapterTest` | `laColeccionRechazaUnaCantidadMenorQueUno` | Infraestructura | AB#385 | PR #162 | 🔍 |
+| HU9-CP18 | `GestionCarritoServiceTest` | `alConsultarSeLimpiaElCarrito` | Aplicación | AB#388 | PR #162 | 🔍 |
+| HU9-CP18 | `CarritoTest` | `laLimpiezaQuitaLosProductosQueNoSePuedenComprar` | Dominio | AB#385 | PR #162 | 🔍 |
+| HU9-CP18 | `CarritoTest` | `laLimpiezaAjustaLaCantidadAlStock` | Dominio | AB#385 | PR #162 | 🔍 |
+| HU9-CP18 | `CarritoTest` | `siTodoSePuedeComprarLaLimpiezaNoCambiaNada` | Dominio | AB#385 | PR #162 | 🔍 |
+| HU9-CP19 | `GestionCarritoServiceTest` | `elPrecioEsElDelCliente` | Aplicación | AB#388 | PR #162 | 🔍 |
+| HU9-CP19 | `ProductosAdapterTest` | `consultarComprablePreguntaAlModuloDeProductos` | Infraestructura | AB#388 | PR #162 | 🔍 |
+| HU9-CP19 | `ClienteEnSesionAdapterTest` | `esPremiumPreguntaAlModuloDeUsuarios` | Infraestructura | AB#388 | PR #162 | 🔍 |
+| HU9-CP19 | `CatalogoProductosServiceTest` | `consultarUnProductoComprableDevuelveSusDatosYSuPrecioFinal` | Aplicación | AB#388 | PR #162 | 🔍 |
+| HU9-CP19 | `ProductoTest` | `sinDescuentosElPrecioFinalEsElPrecio` | Dominio | AB#388 | PR #162 | 🔍 |
+| HU9-CP19 | `ProductoTest` | `elClienteEstandarPagaConElDescuentoGeneral` | Dominio | AB#388 | PR #162 | 🔍 |
+| HU9-CP19 | `ProductoTest` | `elClientePremiumPagaConElDescuentoPremium` | Dominio | AB#388 | PR #162 | 🔍 |
+| HU9-CP19 | `ProductoTest` | `sinDescuentoPremiumElPremiumPagaConElGeneral` | Dominio | AB#388 | PR #162 | 🔍 |
+| HU9-CP19 | `AutenticacionServiceTest` | `esClientePremiumDiceSiElClienteEsPremium` | Aplicación | AB#388 | PR #162 | 🔍 |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `AddToCartButton.test.jsx` y `CartWidget.test.jsx`: `features/cart/` (Vitest, React Testing Library y MSW)
 - `ProductCard.test.jsx`: `features/catalog/`
 - `ProductsPage.test.jsx` y `ProductDetailPage.test.jsx`: `pages/`
+
+Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `CarritoTest`: `carrito/domain/model/`
+- `GestionCarritoServiceTest`: `carrito/application/service/`
+- `CarritoDocumentMapperTest` y `CarritoMongoAdapterTest`: `carrito/infrastructure/adapter/out/persistence/` (el segundo, con Testcontainers)
+- `ClienteEnSesionAdapterTest` y `VendedoresAdapterTest`: `carrito/infrastructure/adapter/out/usuarios/`
+- `ProductosAdapterTest`: `carrito/infrastructure/adapter/out/productos/`
+- `CarritoControllerTest`: `carrito/infrastructure/adapter/in/web/`
+- `ProductoTest` y `CatalogoProductosServiceTest`: `productos/domain/model/` y `productos/application/service/`
+- `AutenticacionServiceTest` y `AdministracionUsuariosServiceTest`: `usuarios/application/service/`
 
 ---
 
@@ -2352,6 +2424,7 @@ Tests que no validan una HU concreta.
 | `UsuariosConfigTest` | `elContextoRegistraElFiltroDeCuentaActiva` | Que Spring registra `CuentaActivaFilter`, el filtro que invalida la sesión de las cuentas desactivadas (HU23; AB#39, AB#206, PR #85) |
 | `MetodosPagoConfigTest` | `elContextoConectaLasPiezasDeLosMetodosDePago` | Que Spring conecta el servicio de métodos de pago con su adaptador de MongoDB, su cifrado AES-GCM y el cliente en sesión (HU6; AB#271, PR #148) |
 | `MetodosPagoConfigTest` | `losDatosDePagoSeCifranConLaClaveConfigurada` | Que los datos de pago se cifran con la clave de `esibuy.pagos.clave-cifrado`, que en los tests pone `MongoTestcontainersConfig` (HU6; AB#271, PR #148) |
+| `CarritoConfigTest` | `elContextoConectaLasPiezasDelCarrito` | Que Spring conecta el servicio del carrito con su adaptador de MongoDB, los productos y los usuarios (HU9; AB#385, PR #162) |
 | `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |
 | `SecurityConfigTest` | `unaPeticionRecibeElTokenCsrfEnUnaCookie` | Que cualquier respuesta, aunque sea un 401, entrega el token CSRF en la cookie `XSRF-TOKEN` sin `HttpOnly` (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostSinTokenCsrfSeRechaza` | Que un `POST` sin token CSRF se rechaza con 403 (AB#230, PR #67) |
