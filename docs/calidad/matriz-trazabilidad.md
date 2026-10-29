@@ -712,12 +712,26 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU5-CP14 | `PUT /{id}`: 200 con la dirección editada; dato inválido 400; una ajena o inexistente 404 `ADDRESS_NOT_FOUND` | Controlador | 3 | 🔍 En revisión (3, PR #161) |
 | HU5-CP15 | `PUT /{id}/principal` (204) y `DELETE /{id}?nuevaPrincipal=` (204); sin sustituta, 409 `PRINCIPAL_ADDRESS_REQUIRED`; una ajena o inexistente da 404 | Controlador | 5 | 🔍 En revisión (5, PR #161) |
 | HU5-CP16 | Solo un cliente con sesión accede, y las peticiones que modifican datos exigen CSRF | Controlador | 3 | 🔍 En revisión (3, PR #161) |
+| HU5-CP17 | El cliente de la API de direcciones: listar, añadir, editar, marcar la principal, eliminar con sustituta opcional y errores como `ApiError` con su código | Frontend · API | 6 | 🔍 En revisión |
+| HU5-CP18 | La vista lista cada dirección con su destinatario, la dirección completa y el teléfono, marca la principal, muestra un estado vacío y, si falla la carga, deja reintentar | Frontend (página) | 4 | 🔍 En revisión |
+| HU5-CP19 | El cliente llega desde el enlace «Direcciones» de la cabecera; el vendedor y el administrador no acceden | Frontend (página) | 3 | 🔍 En revisión |
+| HU5-CP20 | Marcar otra dirección como principal la cambia en la lista; si la dirección ya no existe, se avisa y se recarga | Frontend (página) | 2 | 🔍 En revisión |
+| HU5-CP21 | Con 5 direcciones no se puede añadir otra y se explica por qué; con menos, sí | Frontend (página) | 2 | 🔍 En revisión |
+| HU5-CP22 | El formulario no envía una dirección sin los campos obligatorios ni con un código postal, un teléfono o una longitud incorrectos | Frontend (componente) | 2 | 🔍 En revisión |
+| HU5-CP23 | Alta: el panel empieza vacío y envía la dirección sin espacios sobrantes; al cancelar no envía nada; desde la página, guardar cierra el panel, avisa y añade la dirección a la lista | Frontend (componente y página) | 4 | 🔍 En revisión |
+| HU5-CP24 | Edición: el panel empieza con los datos de la dirección y guarda los cambios con un `PUT` sin tocar la principal; si ya no existe, se avisa; desde la página, la lista muestra los cambios | Frontend (componente y página) | 3 | 🔍 En revisión |
+| HU5-CP25 | Una dirección rechazada por el backend se avisa sin repetir los datos enviados; el límite tiene su propio mensaje | Frontend (componente) | 2 | 🔍 En revisión |
+| HU5-CP26 | Eliminar una dirección tras confirmarlo; cancelar no elimina nada | Frontend (componente) | 2 | 🔍 En revisión |
+| HU5-CP27 | Para eliminar la principal hay que elegir la sustituta, salvo si es la única; desde la página, la elegida pasa a ser la principal | Frontend (componente y página) | 3 | 🔍 En revisión |
+| HU5-CP28 | Si la eliminación falla, se avisa sin cerrar el diálogo | Frontend (componente) | 1 | 🔍 En revisión |
 
 Notas:
-- **HU5-CP01 a CP16 (backend):** casos propuestos y aprobados por el equipo junto con el diseño de la HU5 (tasks AB#105, AB#106 y AB#107). Los casos de prueba no se registran en Azure Boards: viven en esta matriz y en el `@DisplayName` de cada test. Los casos del frontend (AB#108 y AB#109) serán HU5-CP17 a CP28.
+- **HU5-CP01 a CP16 (backend):** casos propuestos y aprobados por el equipo junto con el diseño de la HU5 (tasks AB#105, AB#106 y AB#107). Los casos de prueba no se registran en Azure Boards: viven en esta matriz y en el `@DisplayName` de cada test. Los del frontend, HU5-CP17 a CP28, se aprobaron con el mismo diseño (tasks AB#108 y AB#109).
 - **Decisiones del equipo:** mismas reglas que los métodos de pago (HU6): máximo 5 direcciones por cliente, la primera queda como principal y al eliminar la principal el cliente elige otra. Solo España (código postal de 5 dígitos, teléfono de 9, sin país). La dirección no se cifra en esta HU: la protegen el RBAC y la validación de la colección (pendiente de valorar en el AGR).
 - **Endpoints (AB#105):** `GET`, `POST`, `PUT /{id}`, `PUT /{id}/principal` y `DELETE /{id}?nuevaPrincipal=` sobre `/api/customer/addresses`, solo para `CLIENTE` (`SecurityConfig`). El cliente sale de la sesión. La respuesta es `{id, destinatario, calle, detalles, codigoPostal, ciudad, provincia, telefono, principal}`; sin `id` ni `principal`, es el `direccionEnvio` que copiará el pedido (HU10).
 - **Colección nueva:** `direcciones_envio` (`ColeccionesEsiBuy`), acordada con el equipo.
+- **Vista del frontend (AB#108):** `/addresses`, solo para clientes. Detalle en `frontend/docs/hu5-direcciones-de-envio.md`.
+- **Archivos de tests nuevos**, acordados con el equipo: `addresses.test.js`, `AddressesPage.test.jsx`, `AddressFormPanel.test.jsx` y `DeleteAddressDialog.test.jsx`.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -795,6 +809,40 @@ Notas:
 | HU5-CP16 | `DireccionControllerTest` | `sinSesionNoSeAccede` | Infraestructura | AB#105 | PR #161 | 🔍 |
 | HU5-CP16 | `DireccionControllerTest` | `unUsuarioQueNoEsClienteNoAccede` | Infraestructura | AB#105 | PR #161 | 🔍 |
 | HU5-CP16 | `DireccionControllerTest` | `sinTokenCsrfSeRechaza` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP17 | `addresses.test.js` | `HU5-CP17: getAddresses pide las direcciones del cliente en sesión con la marca de la principal` | Frontend · API | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP17 | `addresses.test.js` | `HU5-CP17: addAddress envía los datos de la dirección con un POST` | Frontend · API | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP17 | `addresses.test.js` | `HU5-CP17: updateAddress envía los datos nuevos con un PUT a /{id}` | Frontend · API | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP17 | `addresses.test.js` | `HU5-CP17: setPrincipalAddress marca la dirección con un PUT a /{id}/principal` | Frontend · API | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP17 | `addresses.test.js` | `HU5-CP17: deleteAddress elimina la dirección y envía la sustituta solo si se indica` | Frontend · API | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP17 | `addresses.test.js` | `HU5-CP17: un error del backend llega como ApiError con su código` | Frontend · API | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP18 | `AddressesPage.test.jsx` | `HU5-CP18: muestra cada dirección con su destinatario, la dirección completa y el teléfono` | Frontend · página | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP18 | `AddressesPage.test.jsx` | `HU5-CP18: indica cuál es la dirección principal` | Frontend · página | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP18 | `AddressesPage.test.jsx` | `HU5-CP18: sin direcciones muestra un estado vacío con el botón para añadir la primera` | Frontend · página | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP18 | `AddressesPage.test.jsx` | `HU5-CP18: si falla la carga avisa y deja reintentar` | Frontend · página | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP19 | `AddressesPage.test.jsx` | `HU5-CP19: el cliente tiene el enlace «Direcciones» en la cabecera y llega a la vista` | Frontend · página | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP19 | `AddressesPage.test.jsx` | `HU5-CP19: un vendedor o un administrador no acceden a la vista (vendedor@esibuy.test)` | Frontend · página | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP19 | `AddressesPage.test.jsx` | `HU5-CP19: un vendedor o un administrador no acceden a la vista (admin@esibuy.test)` | Frontend · página | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP20 | `AddressesPage.test.jsx` | `HU5-CP20: marcar otra dirección como principal la cambia en la lista` | Frontend · página | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP20 | `AddressesPage.test.jsx` | `HU5-CP20: si la dirección ya no existe avisa y recarga la lista` | Frontend · página | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP21 | `AddressesPage.test.jsx` | `HU5-CP21: con 5 direcciones no deja añadir otra y explica por qué` | Frontend · página | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP21 | `AddressesPage.test.jsx` | `HU5-CP21: con menos de 5 direcciones se puede añadir otra` | Frontend · página | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP22 | `AddressFormPanel.test.jsx` | `HU5-CP22: no envía una dirección sin los campos obligatorios y marca cada uno` | Frontend · componente | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP22 | `AddressFormPanel.test.jsx` | `HU5-CP22: no envía un código postal, un teléfono o un texto con formato o longitud incorrectos` | Frontend · componente | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP23 | `AddressesPage.test.jsx` | `HU5-CP23: al guardar una dirección nueva se cierra el panel, se avisa y aparece en la lista` | Frontend · página | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP23 | `AddressesPage.test.jsx` | `HU5-CP23: al cancelar se cierra el panel sin añadir nada` | Frontend · página | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP23 | `AddressFormPanel.test.jsx` | `HU5-CP23: empieza vacío y guarda la dirección nueva con un POST, sin espacios sobrantes` | Frontend · componente | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP23 | `AddressFormPanel.test.jsx` | `HU5-CP23: al cancelar no se envía nada` | Frontend · componente | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP24 | `AddressesPage.test.jsx` | `HU5-CP24: al editar una dirección se guardan los cambios y la lista los muestra` | Frontend · página | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP24 | `AddressFormPanel.test.jsx` | `HU5-CP24: al editar empieza con los datos de la dirección y guarda los cambios con un PUT` | Frontend · componente | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP24 | `AddressFormPanel.test.jsx` | `HU5-CP24: si la dirección que se edita ya no existe, lo avisa` | Frontend · componente | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP25 | `AddressFormPanel.test.jsx` | `HU5-CP25: una dirección rechazada por el backend muestra un aviso sin repetir los datos enviados` | Frontend · componente | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP25 | `AddressFormPanel.test.jsx` | `HU5-CP25: al superar el límite de direcciones avisa de que ya hay 5` | Frontend · componente | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP26 | `DeleteAddressDialog.test.jsx` | `HU5-CP26: elimina una dirección que no es la principal tras confirmarlo` | Frontend · componente | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP26 | `DeleteAddressDialog.test.jsx` | `HU5-CP26: al cancelar no elimina nada` | Frontend · componente | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP27 | `AddressesPage.test.jsx` | `HU5-CP27: al eliminar la principal eligiendo otra, desaparece de la lista y la elegida pasa a serlo` | Frontend · página | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP27 | `DeleteAddressDialog.test.jsx` | `HU5-CP27: para eliminar la principal hay que elegir otra dirección como principal` | Frontend · componente | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP27 | `DeleteAddressDialog.test.jsx` | `HU5-CP27: la única dirección se elimina sin elegir sustituta` | Frontend · componente | AB#109 | PR_FRONT | 🔍 |
+| HU5-CP28 | `DeleteAddressDialog.test.jsx` | `HU5-CP28: si la eliminación falla avisa y no cierra el diálogo` | Frontend · componente | AB#109 | PR_FRONT | 🔍 |
 
 ---
 
