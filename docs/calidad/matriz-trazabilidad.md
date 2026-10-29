@@ -1393,14 +1393,14 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 | HU10-CP09 | Cada pedido se crea con el método de pago elegido (`paymentMethodId`) | Frontend (página) | 1 | 🔍 En revisión (1, AB#133, PR #157) |
 | HU10-CP10 | Tras pagar se muestra un recibo con forma de ticket: total pagado (solo de los pedidos creados), fecha, cada pedido con su número, proveedor e importe, y el método de pago usado con su máscara | Frontend (página + componente) | 6 | 🔍 En revisión (6, AB#133, PR #157) |
 | HU10-CP11 | La decoración del recibo no estorba: el código de barras y el confeti quedan ocultos a los lectores de pantalla y no hay confeti si el usuario prefiere reducir el movimiento | Frontend (componente) | 3 | 🔍 En revisión (3, AB#133, PR #157) |
-| HU10-CP12 | El pedido nace PAGADO, con un solo proveedor, al menos una línea, sin productos repetidos, cliente, dirección y método de pago, y su total es la suma de las líneas | Unitario | 5 | 🔍 En revisión (5, AB#380 a AB#382 y AB#131, PR sin abrir) |
-| HU10-CP13 | Número de pedido `ESB-AAAA-NNNNNN`: año y correlativo de seis cifras, un contador por año en `contadores`, atómico aunque haya pedidos a la vez | Unitario + integración | 8 | 🔍 En revisión (8, AB#380 a AB#382 y AB#131, PR sin abrir) |
-| HU10-CP14 | El pedido toma del carrito solo los productos de su proveedor, con los precios del servidor, los quita del carrito y responde 201 con el contrato del frontend | Unitario + controlador | 5 | 🔍 En revisión (5, AB#380 a AB#382 y AB#131, PR sin abrir) |
-| HU10-CP15 | Se descuenta el stock de forma atómica; si falta de algún producto o no se puede guardar, no se crea el pedido, se repone lo descontado y responde 409 `INSUFFICIENT_STOCK` | Unitario + integración + controlador | 11 | 🔍 En revisión (11, AB#380 a AB#382 y AB#131, PR sin abrir) |
-| HU10-CP16 | El método de pago y la dirección tienen que ser del cliente (si no, 400) y la dirección se copia en el pedido; una petición incompleta responde 400 | Unitario + controlador | 10 | 🔍 En revisión (10, AB#380 a AB#382 y AB#131, PR sin abrir) |
-| HU10-CP17 | Sin productos de ese proveedor en el carrito no se crea el pedido (409 `CART_EMPTY`) | Unitario + controlador | 3 | 🔍 En revisión (3, AB#380 a AB#382 y AB#131, PR sin abrir) |
-| HU10-CP18 | Solo el cliente en sesión realiza pedidos: sin sesión 401, otro rol 403 y sin CSRF se rechaza | Unitario + controlador | 2 | 🔍 En revisión (2, AB#380 a AB#382 y AB#131, PR sin abrir) |
-| HU10-CP19 | Persistencia en `pedidos`: el mapper no pierde datos, importes como Decimal128, número de pedido único y con formato validado por la colección | Unitario + integración | 5 | 🔍 En revisión (5, AB#380 a AB#382 y AB#131, PR sin abrir) |
+| HU10-CP12 | El pedido nace PAGADO, con un solo proveedor, al menos una línea, sin productos repetidos, cliente, dirección y método de pago, y su total es la suma de las líneas | Unitario | 5 | 🔍 En revisión (5, AB#380 a AB#382 y AB#131, PR #166) |
+| HU10-CP13 | Número de pedido `ESB-AAAA-NNNNNN`: año y correlativo de seis cifras, un contador por año en `contadores`, atómico aunque haya pedidos a la vez | Unitario + integración | 8 | 🔍 En revisión (8, AB#380 a AB#382 y AB#131, PR #166) |
+| HU10-CP14 | El pedido toma del carrito solo los productos de su proveedor, con los precios del servidor, los quita del carrito y responde 201 con el contrato del frontend | Unitario + controlador | 5 | 🔍 En revisión (5, AB#380 a AB#382 y AB#131, PR #166) |
+| HU10-CP15 | Se descuenta el stock de forma atómica; si falta de algún producto o no se puede guardar, no se crea el pedido, se repone lo descontado y responde 409 `INSUFFICIENT_STOCK` | Unitario + integración + controlador | 11 | 🔍 En revisión (11, AB#380 a AB#382 y AB#131, PR #166) |
+| HU10-CP16 | El método de pago y la dirección tienen que ser del cliente (si no, 400) y la dirección se copia en el pedido; una petición incompleta responde 400 | Unitario + controlador | 10 | 🔍 En revisión (10, AB#380 a AB#382 y AB#131, PR #166) |
+| HU10-CP17 | Sin productos de ese proveedor en el carrito no se crea el pedido (409 `CART_EMPTY`) | Unitario + controlador | 3 | 🔍 En revisión (3, AB#380 a AB#382 y AB#131, PR #166) |
+| HU10-CP18 | Solo el cliente en sesión realiza pedidos: sin sesión 401, otro rol 403 y sin CSRF se rechaza | Unitario + controlador | 2 | 🔍 En revisión (2, AB#380 a AB#382 y AB#131, PR #166) |
+| HU10-CP19 | Persistencia en `pedidos`: el mapper no pierde datos, importes como Decimal128, número de pedido único y con formato validado por la colección | Unitario + integración | 5 | 🔍 En revisión (5, AB#380 a AB#382 y AB#131, PR #166) |
 
 Notas:
 - **HU10-CP01 a CP06 (Sprint 2, frontend):** casos propuestos en la task AB#401 (vista de la pasarela de pago) a partir de lo pedido (`frontend/docs/hu10-pasarela-de-pago.md`). Pendientes de confirmar con el equipo y de añadir a la HU10 (AB#72) en Azure Boards. La task AB#379 (vista de carrito) es la misma pantalla que la AB#384 (HU9).
@@ -1447,55 +1447,55 @@ Notas:
 | HU10-CP11 | `PaymentTicket.test.jsx` | `HU10-CP11: el código de barras es decorativo y queda oculto a los lectores de pantalla` | Frontend · componente | AB#133 | PR #157 | 🔍 |
 | HU10-CP11 | `PaymentTicket.test.jsx` | `HU10-CP11: celebra el pago con confeti decorativo` | Frontend · componente | AB#133 | PR #157 | 🔍 |
 | HU10-CP11 | `PaymentTicket.test.jsx` | `HU10-CP11: sin confeti si el usuario prefiere reducir el movimiento` | Frontend · componente | AB#133 | PR #157 | 🔍 |
-| HU10-CP12 | `PedidoTest` | `unPedidoNuevoNacePagadoConSuTotal` | Dominio | AB#380 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP12 | `PedidoTest` | `unPedidoSinLineasNoEsValido` | Dominio | AB#380 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP12 | `PedidoTest` | `unPedidoSinDatosObligatoriosNoEsValido` | Dominio | AB#380 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP12 | `PedidoTest` | `unaLineaNecesitaCantidadYPrecioValidos` | Dominio | AB#380 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP12 | `PedidoTest` | `unProductoSoloApareceEnUnaLinea` | Dominio | AB#380 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP13 | `RealizacionPedidoServiceTest` | `cadaPedidoRecibeElSiguienteNumeroDelAno` | Aplicación | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP13 | `NumeroPedidoTest` | `elNumeroLlevaElAnoYElCorrelativo` | Dominio | AB#380 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP13 | `NumeroPedidoTest` | `elCorrelativoEstaEntreUnoYSeisCifras` | Dominio | AB#380 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP13 | `NumeroPedidoTest` | `unNumeroConOtroFormatoNoEsValido` | Dominio | AB#380 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP13 | `ContadorPedidosMongoAdapterTest` | `elContadorEmpiezaEnUnoYSube` | Infraestructura | AB#131 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP13 | `ContadorPedidosMongoAdapterTest` | `cadaAnoTieneSuPropioContador` | Infraestructura | AB#131 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP13 | `ContadorPedidosMongoAdapterTest` | `dosPedidosALaVezNoRecibenElMismoNumero` | Infraestructura | AB#131 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP13 | `InicializadorColeccionesTest` | `elContadorDePedidosEsUnNumeroDeAlMenosUno` | Infraestructura | AB#131 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP14 | `RealizacionPedidoServiceTest` | `elPedidoLlevaSoloLosProductosDeSuProveedor` | Aplicación | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP14 | `RealizacionPedidoServiceTest` | `trasCrearElPedidoSusProductosSalenDelCarrito` | Aplicación | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP14 | `PedidoControllerTest` | `realizarUnPedidoResponde201ConElPedido` | Infraestructura | AB#381 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP14 | `CarritoAdapterTest` | `laCompraDeUnProveedorSaleDeSuGrupo` | Infraestructura | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP14 | `CarritoAdapterTest` | `quitarLosProductosDelPedidoLosQuitaDelCarrito` | Infraestructura | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP15 | `RealizacionPedidoServiceTest` | `crearElPedidoDescuentaElStock` | Aplicación | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP15 | `RealizacionPedidoServiceTest` | `siFaltaStockNoSeCreaElPedidoYSeRepone` | Aplicación | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP15 | `RealizacionPedidoServiceTest` | `siNoSePuedeGuardarSeReponeElStock` | Aplicación | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP15 | `PedidoControllerTest` | `siFaltaStockResponde409` | Infraestructura | AB#381 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP15 | `ExistenciasAdapterTest` | `descontarYReponerSePidenAlModuloDeProductos` | Infraestructura | AB#131 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP15 | `ExistenciasProductosServiceTest` | `descontarDiceSiHabiaStockSuficiente` | Aplicación | AB#131 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP15 | `ExistenciasProductosServiceTest` | `reponerDevuelveLasUnidades` | Aplicación | AB#131 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP15 | `ExistenciasProductosServiceTest` | `noSeUsanCantidadesMenoresQueUno` | Aplicación | AB#131 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP15 | `ProductoMongoAdapterTest` | `descontarStockLoRestaSiHaySuficiente` | Infraestructura | AB#131 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP15 | `ProductoMongoAdapterTest` | `dosDescuentosALaVezNoDejanElStockNegativo` | Infraestructura | AB#131 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP15 | `ProductoMongoAdapterTest` | `reponerStockDevuelveLasUnidades` | Infraestructura | AB#131 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP16 | `GestionDireccionesServiceTest` | `consultarParaPedidoDevuelveLosDatosDeUnaDireccionPropia` | Aplicación | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP16 | `GestionDireccionesServiceTest` | `consultarParaPedidoNoDevuelveUnaDireccionAjena` | Aplicación | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP16 | `GestionMetodosPagoServiceTest` | `esDelClienteSoloAceptaUnMetodoPropio` | Aplicación | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP16 | `RealizacionPedidoServiceTest` | `elMetodoDePagoTieneQueSerDelCliente` | Aplicación | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP16 | `RealizacionPedidoServiceTest` | `laDireccionTieneQueSerDelClienteYSeCopia` | Aplicación | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP16 | `PedidoControllerTest` | `unMetodoODireccionAjenosResponden400` | Infraestructura | AB#381 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP16 | `PedidoControllerTest` | `unaPeticionIncompletaResponde400` | Infraestructura | AB#381 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP16 | `DireccionesAdapterTest` | `losDatosDeLaDireccionSeCopian` | Infraestructura | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP16 | `DireccionesAdapterTest` | `unaDireccionAjenaNoSeDevuelve` | Infraestructura | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP16 | `MetodosPagoAdapterTest` | `esDelClientePreguntaAlModuloDeMetodosDePago` | Infraestructura | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP17 | `RealizacionPedidoServiceTest` | `sinProductosDelProveedorNoSeCreaElPedido` | Aplicación | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP17 | `PedidoControllerTest` | `sinProductosDelProveedorResponde409` | Infraestructura | AB#381 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP17 | `CarritoAdapterTest` | `sinProductosDelProveedorNoHayCompra` | Infraestructura | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP18 | `PedidoControllerTest` | `soloElClienteRealizaPedidos` | Infraestructura | AB#381 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP18 | `ClienteEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#382 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP19 | `PedidoDocumentMapperTest` | `convierteADocumentoYVueltaSinPerderDatos` | Infraestructura | AB#380 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP19 | `PedidoDocumentMapperTest` | `rechazaUnDocumentoQueNoCumpleElDominio` | Infraestructura | AB#380 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP19 | `PedidoMongoAdapterTest` | `guardarUnPedidoLeAsignaUnId` | Infraestructura | AB#380 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP19 | `PedidoMongoAdapterTest` | `dosPedidosNoPuedenTenerElMismoNumero` | Infraestructura | AB#380 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
-| HU10-CP19 | `InicializadorColeccionesTest` | `elNumeroDePedidoTieneFormatoYNoSeRepite` | Infraestructura | AB#380 | Rama `feature/US10-T380-backend-pedido` (PR sin abrir) | 🔍 |
+| HU10-CP12 | `PedidoTest` | `unPedidoNuevoNacePagadoConSuTotal` | Dominio | AB#380 | PR #166 | 🔍 |
+| HU10-CP12 | `PedidoTest` | `unPedidoSinLineasNoEsValido` | Dominio | AB#380 | PR #166 | 🔍 |
+| HU10-CP12 | `PedidoTest` | `unPedidoSinDatosObligatoriosNoEsValido` | Dominio | AB#380 | PR #166 | 🔍 |
+| HU10-CP12 | `PedidoTest` | `unaLineaNecesitaCantidadYPrecioValidos` | Dominio | AB#380 | PR #166 | 🔍 |
+| HU10-CP12 | `PedidoTest` | `unProductoSoloApareceEnUnaLinea` | Dominio | AB#380 | PR #166 | 🔍 |
+| HU10-CP13 | `RealizacionPedidoServiceTest` | `cadaPedidoRecibeElSiguienteNumeroDelAno` | Aplicación | AB#382 | PR #166 | 🔍 |
+| HU10-CP13 | `NumeroPedidoTest` | `elNumeroLlevaElAnoYElCorrelativo` | Dominio | AB#380 | PR #166 | 🔍 |
+| HU10-CP13 | `NumeroPedidoTest` | `elCorrelativoEstaEntreUnoYSeisCifras` | Dominio | AB#380 | PR #166 | 🔍 |
+| HU10-CP13 | `NumeroPedidoTest` | `unNumeroConOtroFormatoNoEsValido` | Dominio | AB#380 | PR #166 | 🔍 |
+| HU10-CP13 | `ContadorPedidosMongoAdapterTest` | `elContadorEmpiezaEnUnoYSube` | Infraestructura | AB#131 | PR #166 | 🔍 |
+| HU10-CP13 | `ContadorPedidosMongoAdapterTest` | `cadaAnoTieneSuPropioContador` | Infraestructura | AB#131 | PR #166 | 🔍 |
+| HU10-CP13 | `ContadorPedidosMongoAdapterTest` | `dosPedidosALaVezNoRecibenElMismoNumero` | Infraestructura | AB#131 | PR #166 | 🔍 |
+| HU10-CP13 | `InicializadorColeccionesTest` | `elContadorDePedidosEsUnNumeroDeAlMenosUno` | Infraestructura | AB#131 | PR #166 | 🔍 |
+| HU10-CP14 | `RealizacionPedidoServiceTest` | `elPedidoLlevaSoloLosProductosDeSuProveedor` | Aplicación | AB#382 | PR #166 | 🔍 |
+| HU10-CP14 | `RealizacionPedidoServiceTest` | `trasCrearElPedidoSusProductosSalenDelCarrito` | Aplicación | AB#382 | PR #166 | 🔍 |
+| HU10-CP14 | `PedidoControllerTest` | `realizarUnPedidoResponde201ConElPedido` | Infraestructura | AB#381 | PR #166 | 🔍 |
+| HU10-CP14 | `CarritoAdapterTest` | `laCompraDeUnProveedorSaleDeSuGrupo` | Infraestructura | AB#382 | PR #166 | 🔍 |
+| HU10-CP14 | `CarritoAdapterTest` | `quitarLosProductosDelPedidoLosQuitaDelCarrito` | Infraestructura | AB#382 | PR #166 | 🔍 |
+| HU10-CP15 | `RealizacionPedidoServiceTest` | `crearElPedidoDescuentaElStock` | Aplicación | AB#382 | PR #166 | 🔍 |
+| HU10-CP15 | `RealizacionPedidoServiceTest` | `siFaltaStockNoSeCreaElPedidoYSeRepone` | Aplicación | AB#382 | PR #166 | 🔍 |
+| HU10-CP15 | `RealizacionPedidoServiceTest` | `siNoSePuedeGuardarSeReponeElStock` | Aplicación | AB#382 | PR #166 | 🔍 |
+| HU10-CP15 | `PedidoControllerTest` | `siFaltaStockResponde409` | Infraestructura | AB#381 | PR #166 | 🔍 |
+| HU10-CP15 | `ExistenciasAdapterTest` | `descontarYReponerSePidenAlModuloDeProductos` | Infraestructura | AB#131 | PR #166 | 🔍 |
+| HU10-CP15 | `ExistenciasProductosServiceTest` | `descontarDiceSiHabiaStockSuficiente` | Aplicación | AB#131 | PR #166 | 🔍 |
+| HU10-CP15 | `ExistenciasProductosServiceTest` | `reponerDevuelveLasUnidades` | Aplicación | AB#131 | PR #166 | 🔍 |
+| HU10-CP15 | `ExistenciasProductosServiceTest` | `noSeUsanCantidadesMenoresQueUno` | Aplicación | AB#131 | PR #166 | 🔍 |
+| HU10-CP15 | `ProductoMongoAdapterTest` | `descontarStockLoRestaSiHaySuficiente` | Infraestructura | AB#131 | PR #166 | 🔍 |
+| HU10-CP15 | `ProductoMongoAdapterTest` | `dosDescuentosALaVezNoDejanElStockNegativo` | Infraestructura | AB#131 | PR #166 | 🔍 |
+| HU10-CP15 | `ProductoMongoAdapterTest` | `reponerStockDevuelveLasUnidades` | Infraestructura | AB#131 | PR #166 | 🔍 |
+| HU10-CP16 | `GestionDireccionesServiceTest` | `consultarParaPedidoDevuelveLosDatosDeUnaDireccionPropia` | Aplicación | AB#382 | PR #166 | 🔍 |
+| HU10-CP16 | `GestionDireccionesServiceTest` | `consultarParaPedidoNoDevuelveUnaDireccionAjena` | Aplicación | AB#382 | PR #166 | 🔍 |
+| HU10-CP16 | `GestionMetodosPagoServiceTest` | `esDelClienteSoloAceptaUnMetodoPropio` | Aplicación | AB#382 | PR #166 | 🔍 |
+| HU10-CP16 | `RealizacionPedidoServiceTest` | `elMetodoDePagoTieneQueSerDelCliente` | Aplicación | AB#382 | PR #166 | 🔍 |
+| HU10-CP16 | `RealizacionPedidoServiceTest` | `laDireccionTieneQueSerDelClienteYSeCopia` | Aplicación | AB#382 | PR #166 | 🔍 |
+| HU10-CP16 | `PedidoControllerTest` | `unMetodoODireccionAjenosResponden400` | Infraestructura | AB#381 | PR #166 | 🔍 |
+| HU10-CP16 | `PedidoControllerTest` | `unaPeticionIncompletaResponde400` | Infraestructura | AB#381 | PR #166 | 🔍 |
+| HU10-CP16 | `DireccionesAdapterTest` | `losDatosDeLaDireccionSeCopian` | Infraestructura | AB#382 | PR #166 | 🔍 |
+| HU10-CP16 | `DireccionesAdapterTest` | `unaDireccionAjenaNoSeDevuelve` | Infraestructura | AB#382 | PR #166 | 🔍 |
+| HU10-CP16 | `MetodosPagoAdapterTest` | `esDelClientePreguntaAlModuloDeMetodosDePago` | Infraestructura | AB#382 | PR #166 | 🔍 |
+| HU10-CP17 | `RealizacionPedidoServiceTest` | `sinProductosDelProveedorNoSeCreaElPedido` | Aplicación | AB#382 | PR #166 | 🔍 |
+| HU10-CP17 | `PedidoControllerTest` | `sinProductosDelProveedorResponde409` | Infraestructura | AB#381 | PR #166 | 🔍 |
+| HU10-CP17 | `CarritoAdapterTest` | `sinProductosDelProveedorNoHayCompra` | Infraestructura | AB#382 | PR #166 | 🔍 |
+| HU10-CP18 | `PedidoControllerTest` | `soloElClienteRealizaPedidos` | Infraestructura | AB#381 | PR #166 | 🔍 |
+| HU10-CP18 | `ClienteEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#382 | PR #166 | 🔍 |
+| HU10-CP19 | `PedidoDocumentMapperTest` | `convierteADocumentoYVueltaSinPerderDatos` | Infraestructura | AB#380 | PR #166 | 🔍 |
+| HU10-CP19 | `PedidoDocumentMapperTest` | `rechazaUnDocumentoQueNoCumpleElDominio` | Infraestructura | AB#380 | PR #166 | 🔍 |
+| HU10-CP19 | `PedidoMongoAdapterTest` | `guardarUnPedidoLeAsignaUnId` | Infraestructura | AB#380 | PR #166 | 🔍 |
+| HU10-CP19 | `PedidoMongoAdapterTest` | `dosPedidosNoPuedenTenerElMismoNumero` | Infraestructura | AB#380 | PR #166 | 🔍 |
+| HU10-CP19 | `InicializadorColeccionesTest` | `elNumeroDePedidoTieneFormatoYNoSeRepite` | Infraestructura | AB#380 | PR #166 | 🔍 |
 
 Ruta de la clase de test (bajo `frontend/src/`):
 - `CheckoutPage.test.jsx`: `pages/` (Vitest, React Testing Library y MSW)
@@ -2556,7 +2556,7 @@ Tests que no validan una HU concreta.
 | `MetodosPagoConfigTest` | `elContextoConectaLasPiezasDeLosMetodosDePago` | Que Spring conecta el servicio de métodos de pago con su adaptador de MongoDB, su cifrado AES-GCM y el cliente en sesión (HU6; AB#271, PR #148) |
 | `MetodosPagoConfigTest` | `losDatosDePagoSeCifranConLaClaveConfigurada` | Que los datos de pago se cifran con la clave de `esibuy.pagos.clave-cifrado`, que en los tests pone `MongoTestcontainersConfig` (HU6; AB#271, PR #148) |
 | `CarritoConfigTest` | `elContextoConectaLasPiezasDelCarrito` | Que Spring conecta el servicio del carrito con su adaptador de MongoDB, los productos y los usuarios (HU9; AB#385, PR #162) |
-| `PedidosConfigTest` | `elContextoConectaLasPiezasDeLosPedidos` | Que Spring conecta la realización de pedidos con su repositorio, el contador y los adaptadores hacia usuarios, carrito, métodos de pago, direcciones y productos (HU10; AB#381, PR sin abrir) |
+| `PedidosConfigTest` | `elContextoConectaLasPiezasDeLosPedidos` | Que Spring conecta la realización de pedidos con su repositorio, el contador y los adaptadores hacia usuarios, carrito, métodos de pago, direcciones y productos (HU10; AB#381, PR #166) |
 | `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |
 | `SecurityConfigTest` | `unaPeticionRecibeElTokenCsrfEnUnaCookie` | Que cualquier respuesta, aunque sea un 401, entrega el token CSRF en la cookie `XSRF-TOKEN` sin `HttpOnly` (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostSinTokenCsrfSeRechaza` | Que un `POST` sin token CSRF se rechaza con 403 (AB#230, PR #67) |
@@ -2571,7 +2571,7 @@ Tests que no validan una HU concreta.
 | `UsuarioMongoAdapterTest` | `guardaFechasDeCreacionYModificacion` | Que se guardan `createdAt` y `updatedAt` (auditoría de Spring Data) y que `createdAt` no cambia al actualizar (AB#210, PR #43) |
 | `ProductoMongoAdapterTest` | `guardarUnProductoLeidoLoActualiza` | Que guardar un producto leído lo actualiza sin duplicarlo y conserva `createdAt` (AB#202, PR #86) |
 | `ProductoMongoAdapterTest` | `elPrecioSeGuardaComoNumero` | Que el precio y los porcentajes de descuento se guardan como `Decimal128`, no como texto (AB#202, PR #86) |
-| `InicializadorColeccionesTest` | `creaLasTreceColecciones` | Que al arrancar se crean las 13 colecciones: las 10 del modelo de BBDD, `metodos_pago`, `direcciones_envio` y `contadores` (AB#210, PR #43; ampliado en AB#271, PR #148, y en AB#105, PR #161; ampliado en AB#131, PR sin abrir) |
+| `InicializadorColeccionesTest` | `creaLasTreceColecciones` | Que al arrancar se crean las 13 colecciones: las 10 del modelo de BBDD, `metodos_pago`, `direcciones_envio` y `contadores` (AB#210, PR #43; ampliado en AB#271, PR #148, y en AB#105, PR #161; ampliado en AB#131, PR #166) |
 | `InicializadorColeccionesTest` | `sePuedeEjecutarOtraVez` | Que el inicializador se puede ejecutar en cada arranque sin fallar ni duplicar índices (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `actualizaLaValidacionDeUnaColeccionExistente` | Que aplica la validación a una colección que ya existía sin ella (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `sinPermisoParaCambiarLaValidacionNoFalla` | Que sin permiso `collMod` (usuario de la aplicación en Atlas) avisa y la aplicación arranca igual (AB#210, PR #43) |
