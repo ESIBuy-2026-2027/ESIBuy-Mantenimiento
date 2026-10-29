@@ -44,6 +44,17 @@ function construirCabeceras(method, body) {
   return Object.keys(headers).length > 0 ? headers : undefined
 }
 
+// Sesión caducada (HU43): el servidor cierra la sesión tras un tiempo sin actividad y responde 401 a la siguiente
+// petición. Quien escucha (AuthProvider) cierra entonces la sesión del navegador. Devuelve cómo dejar de escuchar.
+let avisoDe401 = null
+
+export function onUnauthorized(handler) {
+  avisoDe401 = handler
+  return () => {
+    if (avisoDe401 === handler) avisoDe401 = null
+  }
+}
+
 export async function request(path, { method = 'GET', body } = {}) {
   const url = new URL(`${BASE_URL}${path}`, window.location.origin)
   const response = await fetch(url, {
@@ -54,6 +65,7 @@ export async function request(path, { method = 'GET', body } = {}) {
   })
 
   if (!response.ok) {
+    if (response.status === 401) avisoDe401?.()
     throw new ApiError(
       response.status,
       `Error ${response.status} en ${method} ${path}`,
