@@ -1,0 +1,206 @@
+import { describe, it, expect } from 'vitest'
+import { screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
+import { server } from '../mocks/server'
+import { abrirSesionPorApi, renderApp } from '../test/renderApp'
+
+// Vista «Métodos de pago» del cliente (HU6, AB#269 y AB#113), con los mocks de MSW del backend.
+// Del mock de métodos de pago: Carlos (cliente@esibuy.test) tiene una tarjeta predeterminada (•••• 1111) y un Bizum
+// (•••• 678).
+
+const URL_METODOS = '/api/customer/payment-methods'
+
+async function abrirMetodosDePago(email = 'cliente@esibuy.test') {
+  await abrirSesionPorApi(email)
+  renderApp('/payment-methods')
+  await screen.findByRole('heading', { level: 1, name: /métodos de pago/i })
+}
+
+const tarjetasDeMetodo = () => within(screen.getByRole('list', { name: /tus métodos de pago/i })).getAllByRole('listitem')
+
+describe('PaymentMethodsPage (HU6): listado', () => {
+  it('HU6-CP26: muestra cada método con su tipo y su máscara, sin otros datos de pago', async () => {
+    await abrirMetodosDePago()
+
+    const metodos = await screen.findAllByRole('listitem')
+    expect(metodos).toHaveLength(2)
+    expect(tarjetasDeMetodo()[0]).toHaveTextContent('Tarjeta')
+    expect(tarjetasDeMetodo()[0]).toHaveTextContent('•••• 1111')
+    expect(tarjetasDeMetodo()[1]).toHaveTextContent('Bizum')
+    expect(tarjetasDeMetodo()[1]).toHaveTextContent('•••• 678')
+  })
+
+  it('HU6-CP26: indica cuál es el método predeterminado', async () => {
+    await abrirMetodosDePago()
+
+    const [tarjeta, bizum] = await screen.findAllByRole('listitem')
+    expect(within(tarjeta).getByText('Predeterminado')).toBeInTheDocument()
+    expect(within(bizum).queryByText('Predeterminado')).not.toBeInTheDocument()
+  })
+
+  it('HU6-CP26: sin métodos muestra un estado vacío con el botón para añadir el primero', async () => {
+    server.use(http.get(URL_METODOS, () => HttpResponse.json([])))
+
+    await abrirMetodosDePago()
+
+    expect(await screen.findByRole('heading', { level: 2, name: /aún no tienes métodos de pago/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /añadir método de pago/i })).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: /tus métodos de pago/i })).not.toBeInTheDocument()
+  })
+
+  it('HU6-CP26: si falla la carga avisa y deja reintentar', async () => {
+    // Solo la primera petición falla: al reintentar responde el mock normal
+    server.use(http.get(URL_METODOS, () => new HttpResponse(null, { status: 500 }), { once: true }))
+    const usuario = userEvent.setup()
+
+    await abrirMetodosDePago()
+
+    expect(await screen.findByText(/no se han podido cargar tus métodos de pago/i)).toBeInTheDocument()
+    await usuario.click(screen.getByRole('button', { name: /reintentar/i }))
+    expect(await screen.findAllByRole('listitem')).toHaveLength(2)
+  })
+})
+
+describe('PaymentMethodsPage (HU6): acceso', () => {
+  it('HU6-CP27: el cliente tiene el enlace «Métodos de pago» en la cabecera y llega a la vista', async () => {
+    const usuario = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/')
+
+    const cuenta = await screen.findByRole('navigation', { name: 'Cuenta' })
+    await usuario.click(within(cuenta).getByRole('link', { name: /métodos de pago/i }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: /métodos de pago/i })).toBeInTheDocument()
+  })
+
+  it.each(['vendedor@esibuy.test', 'admin@esibuy.test'])(
+    'HU6-CP27: un vendedor o un administrador no acceden a la vista (%s)',
+    async (email) => {
+      await abrirSesionPorApi(email)
+      renderApp('/payment-methods')
+
+      // Se le lleva a la página de inicio de su rol, y en su cabecera no hay enlace a los métodos de pago
+      await waitFor(() => expect(screen.getByTestId('ruta-actual')).not.toHaveTextContent('/payment-methods'))
+      expect(screen.queryByRole('heading', { level: 1, name: /métodos de pago/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('link', { name: /métodos de pago/i })).not.toBeInTheDocument()
+    },
+  )
+})
+
+describe('PaymentMethodsPage (HU6): predeterminado', () => {
+  it('HU6-CP28: marcar otro método como predeterminado lo cambia en la lista', async () => {
+    const usuario = userEvent.setup()
+    await abrirMetodosDePago()
+    const [, bizum] = await screen.findAllByRole('listitem')
+    // El predeterminado no ofrece marcarse otra vez
+    expect(within(tarjetasDeMetodo()[0]).queryByRole('button', { name: /marcar como predeterminado/i })).toBeNull()
+
+    await usuario.click(within(bizum).getByRole('button', { name: /marcar como predeterminado/i }))
+
+    await waitFor(() => expect(within(tarjetasDeMetodo()[1]).getByText('Predeterminado')).toBeInTheDocument())
+    expect(within(tarjetasDeMetodo()[0]).queryByText('Predeterminado')).not.toBeInTheDocument()
+  })
+
+  it('HU6-CP28: si el método ya no existe avisa y recarga la lista', async () => {
+    // El Bizum se ha eliminado desde otra pestaña: el PUT da 404 y la lista que se vuelve a pedir ya no lo trae
+    const tarjeta = { id: 'm-1', tipo: 'TARJETA', mascara: '•••• 1111', predeterminado: true }
+    const bizum = { id: 'm-2', tipo: 'BIZUM', mascara: '•••• 678', predeterminado: false }
+    let peticionesDeLista = 0
+    server.use(
+      http.get(URL_METODOS, () => {
+        peticionesDeLista += 1
+        return HttpResponse.json(peticionesDeLista === 1 ? [tarjeta, bizum] : [tarjeta])
+      }),
+      http.put(`${URL_METODOS}/:id/default`, () =>
+        HttpResponse.json({ code: 'PAYMENT_METHOD_NOT_FOUND' }, { status: 404 }),
+      ),
+    )
+    const usuario = userEvent.setup()
+    await abrirMetodosDePago()
+    const [, metodoEliminado] = await screen.findAllByRole('listitem')
+
+    await usuario.click(within(metodoEliminado).getByRole('button', { name: /marcar como predeterminado/i }))
+
+    expect(await screen.findByText(/ese método de pago ya no existe/i)).toBeInTheDocument()
+    await waitFor(() => expect(tarjetasDeMetodo()).toHaveLength(1))
+  })
+})
+
+describe('PaymentMethodsPage (HU6): añadir', () => {
+  it('HU6-CP32: al guardar un método se cierra el panel, se avisa y aparece en la lista', async () => {
+    const usuario = userEvent.setup()
+    await abrirMetodosDePago()
+    await screen.findAllByRole('listitem')
+
+    await usuario.click(screen.getByRole('button', { name: /añadir método de pago/i }))
+    const panel = screen.getByRole('region', { name: /datos del método de pago/i })
+    await usuario.click(within(panel).getByRole('button', { name: 'Bizum' }))
+    await usuario.type(within(panel).getByLabelText(/teléfono/i), '699111222')
+    await usuario.click(within(panel).getByRole('button', { name: /guardar método de pago/i }))
+
+    expect(await screen.findByText('Método de pago añadido.')).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: /datos del método de pago/i })).not.toBeInTheDocument()
+    await waitFor(() => expect(tarjetasDeMetodo()).toHaveLength(3))
+    expect(tarjetasDeMetodo()[2]).toHaveTextContent('•••• 222')
+  })
+
+  it('HU6-CP32: al cancelar se cierra el panel sin añadir nada', async () => {
+    const usuario = userEvent.setup()
+    await abrirMetodosDePago()
+    await screen.findAllByRole('listitem')
+
+    await usuario.click(screen.getByRole('button', { name: /añadir método de pago/i }))
+    await usuario.click(screen.getByRole('button', { name: /cancelar/i }))
+
+    expect(screen.queryByRole('region', { name: /datos del método de pago/i })).not.toBeInTheDocument()
+    expect(tarjetasDeMetodo()).toHaveLength(2)
+  })
+})
+
+describe('PaymentMethodsPage (HU6): eliminar', () => {
+  it('HU6-CP35: al eliminar el predeterminado eligiendo otro, desaparece de la lista y el elegido pasa a serlo', async () => {
+    const usuario = userEvent.setup()
+    await abrirMetodosDePago()
+    const [tarjeta] = await screen.findAllByRole('listitem')
+
+    await usuario.click(within(tarjeta).getByRole('button', { name: /eliminar/i }))
+    const dialogo = screen.getByRole('alertdialog', { name: /eliminar método de pago/i })
+    await usuario.selectOptions(
+      within(dialogo).getByRole('combobox', { name: /nuevo método predeterminado/i }),
+      within(dialogo).getByRole('option', { name: 'Bizum •••• 678' }),
+    )
+    await usuario.click(within(dialogo).getByRole('button', { name: /^eliminar$/i }))
+
+    expect(await screen.findByText('Método de pago eliminado.')).toBeInTheDocument()
+    await waitFor(() => expect(tarjetasDeMetodo()).toHaveLength(1))
+    expect(tarjetasDeMetodo()[0]).toHaveTextContent('•••• 678')
+    expect(within(tarjetasDeMetodo()[0]).getByText('Predeterminado')).toBeInTheDocument()
+  })
+})
+
+describe('PaymentMethodsPage (HU6): límite', () => {
+  it('HU6-CP29: con 5 métodos no deja añadir otro y explica por qué', async () => {
+    const cinco = Array.from({ length: 5 }, (_, i) => ({
+      id: `m-${i + 1}`,
+      tipo: 'BIZUM',
+      mascara: `•••• 67${i}`,
+      predeterminado: i === 0,
+    }))
+    server.use(http.get(URL_METODOS, () => HttpResponse.json(cinco)))
+
+    await abrirMetodosDePago()
+    await screen.findAllByRole('listitem')
+
+    expect(screen.getByRole('button', { name: /añadir método de pago/i })).toBeDisabled()
+    expect(screen.getByText(/has alcanzado el máximo de 5 métodos de pago/i)).toBeInTheDocument()
+  })
+
+  it('HU6-CP29: con menos de 5 métodos se puede añadir otro', async () => {
+    await abrirMetodosDePago()
+    await screen.findAllByRole('listitem')
+
+    expect(screen.getByRole('button', { name: /añadir método de pago/i })).toBeEnabled()
+    expect(screen.queryByText(/has alcanzado el máximo/i)).not.toBeInTheDocument()
+  })
+})

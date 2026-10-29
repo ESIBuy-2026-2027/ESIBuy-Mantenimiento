@@ -190,11 +190,14 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("No se puede desactivar al último administrador activo", "LAST_ACTIVE_ADMIN");
     }
 
+    // Código común de los 400 de producto, categoría y método de pago.
+    private static final String CODIGO_VALIDACION = "VALIDATION_ERROR";
+
     // 400 + code al dar de alta un producto (HU31, T179): el mensaje es genérico, nunca el detalle de la regla.
     @ExceptionHandler(ProductoInvalidoException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError productoInvalido() {
-        return new RespuestaError("El producto es inválido", "VALIDATION_ERROR");
+        return new RespuestaError("El producto es inválido", CODIGO_VALIDACION);
     }
 
     // 409 + code cuando el vendedor ya tiene un producto con ese nombre (HU31, T179).
@@ -217,7 +220,7 @@ public class ManejadorGlobalErrores {
     @ExceptionHandler(CategoriaInvalidaException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError categoriaInvalida() {
-        return new RespuestaError("La categoría es inválida", "VALIDATION_ERROR");
+        return new RespuestaError("La categoría es inválida", CODIGO_VALIDACION);
     }
 
     // 409 + code cuando ya hay una categoría con ese nombre, sin distinguir mayúsculas ni tildes (HU40, T323).
@@ -234,7 +237,7 @@ public class ManejadorGlobalErrores {
     @ExceptionHandler(MetodoPagoInvalidoException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError metodoPagoInvalido() {
-        return new RespuestaError("El método de pago es inválido", "VALIDATION_ERROR");
+        return new RespuestaError("El método de pago es inválido", CODIGO_VALIDACION);
     }
 
     // 409 + code cuando el cliente ya tiene el máximo de métodos de pago (HU6: 5)

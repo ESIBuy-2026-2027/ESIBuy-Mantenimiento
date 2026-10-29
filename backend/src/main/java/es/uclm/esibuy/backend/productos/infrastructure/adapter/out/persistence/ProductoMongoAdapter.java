@@ -1,7 +1,9 @@
 package es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -17,6 +19,8 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
+import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
+import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalogo;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
@@ -70,6 +74,38 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         return new ProductoPage(productos, query.pagina(), query.tamano(), total);
     }
 
+    // Catálogo del cliente (HU7): solo productos disponibles, de todos los vendedores; la búsqueda por nombre
+    // no distingue mayúsculas ni tildes y trata el texto como literal.
+    @Override
+    public ProductoPage buscarEnCatalogo(BuscarCatalogoQuery query) {
+        // PENDIENTE DE DECIDIR (equipo): conectar con las valoraciones de HU13
+        if (query.valoracionMinima() != null) {
+            return new ProductoPage(List.of(), query.pagina(), query.tamano(), 0);
+        }
+        List<Criteria> filtros = new ArrayList<>();
+        filtros.add(Criteria.where("disponible").is(true));
+        if (query.busqueda() != null && !query.busqueda().isBlank()) {
+            filtros.add(Criteria.where("nombre").regex(patronSinTildes(query.busqueda()), "i"));
+        }
+        if (query.categoriaId() != null && !query.categoriaId().isBlank()) {
+            filtros.add(Criteria.where("categoriaId").is(query.categoriaId()));
+        }
+        Criteria criterios = new Criteria().andOperator(filtros);
+        long total = mongoTemplate.count(new Query(criterios), ProductoDocument.class);
+        // PENDIENTE DE DECIDIR (equipo): ordenar por la valoración real de HU13. Mientras tanto todos empatan
+        // a 0 y el empate se resuelve por nombre de la A a la Z, también si se pide descendente.
+        boolean descendente = query.criterio() == CriterioOrdenCatalogo.NOMBRE && query.descendente();
+        Sort.Direction direccion = descendente ? Sort.Direction.DESC : Sort.Direction.ASC;
+        // PENDIENTE DE DECIDIR (equipo): ordenar como en español con ORDEN_ALFABETICO_ES (UsuarioMongoAdapter).
+        // Sin collation, MongoDB ordena por código Unicode: las mayúsculas antes y las vocales con tilde tras la Z.
+        List<Producto> productos = mongoTemplate.find(new Query(criterios).with(PageRequest.of(
+                        query.pagina(), query.tamano(), Sort.by(direccion, "nombre"))),
+                        ProductoDocument.class).stream()
+                .map(mapper::aDominio)
+                .toList();
+        return new ProductoPage(productos, query.pagina(), query.tamano(), total);
+    }
+
     // Mismo vendedor y mismo nombre completo, sin distinguir mayúsculas y como texto literal (Pattern.quote).
     @Override
     public boolean existePorVendedorYNombre(String vendedorId, String nombre) {
@@ -90,6 +126,24 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
             criterios.add(Criteria.where("categoriaId").is(query.categoriaId()));
         }
         return new Criteria().andOperator(criterios);
+    }
+
+    // Regex que encuentra el texto con o sin tildes en las vocales; el resto de caracteres (la ñ incluida) se
+    // busca literal con Pattern.quote.
+    private static String patronSinTildes(String texto) {
+        StringBuilder patron = new StringBuilder();
+        for (char caracter : texto.trim().toLowerCase(Locale.ROOT).toCharArray()) {
+            String base = Normalizer.normalize(String.valueOf(caracter), Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+            patron.append(switch (base) {
+                case "a" -> "[aáàäâ]";
+                case "e" -> "[eéèëê]";
+                case "i" -> "[iíìïî]";
+                case "o" -> "[oóòöô]";
+                case "u" -> "[uúùüû]";
+                default -> Pattern.quote(String.valueOf(caracter));
+            });
+        }
+        return patron.toString();
     }
 
     @Override

@@ -1,6 +1,8 @@
 package es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
+import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
+import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalogo;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
@@ -27,6 +29,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,9 +42,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 // Test de integración del adaptador de MongoDB de productos (HU31, T202). Usa un MongoDB real en Docker
 // (Testcontainers): Docker Desktop debe estar abierto. InicializadorColecciones crea la colección productos
 // con su validación, como en la aplicación real, así que un documento que no la cumpla hace fallar el test.
-// También prueba el listado de los productos propios del vendedor (HU32, T184), el borrado físico (HU35, T346)
-// y el recuento de productos por categoría (HU39, T332).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP11, CP12 y CP23, HU32-CP01 a CP03 y HU39-CP02, propuestos.
+// También prueba el listado de los productos propios del vendedor (HU32, T184), el borrado físico (HU35, T346),
+// el catálogo del cliente (HU7, T352) y el recuento de productos por categoría (HU39, T332).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP11, CP12 y CP23, HU32-CP01 a CP03, HU7-CP11 a CP15
+// y HU39-CP02, propuestos.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class ProductoMongoAdapterTest {
@@ -281,6 +285,115 @@ class ProductoMongoAdapterTest {
     @DisplayName("HU39-CP02: sin productos el recuento está vacío")
     void contarPorCategoriaSinProductosDevuelveVacio() {
         assertTrue(adapter.contarPorCategoria().isEmpty());
+    }
+
+    @Test
+    @DisplayName("HU7-CP11: el catálogo solo devuelve productos disponibles, de todos los vendedores")
+    void buscarEnCatalogoSoloDevuelveDisponiblesDeTodosLosVendedores() {
+        adapter.guardar(productoNuevo("v-1", "Teclado"));
+        adapter.guardar(productoNuevo("v-2", "Ratón"));
+        adapter.guardar(new Producto(null, "v-1", "Monitor retirado", "", new BigDecimal("10"), 1, "cat-1", "", false,
+                Descuento.sinDescuento(), Descuento.sinDescuento()));
+
+        ProductoPage pagina = adapter.buscarEnCatalogo(sinFiltros());
+
+        // Como un Set: el orden del catálogo no se fija hasta el ciclo 6.
+        assertEquals(Set.of("Teclado", "Ratón"), Set.copyOf(nombres(pagina)));
+        assertEquals(2, pagina.totalElementos());
+    }
+
+    @Test
+    @DisplayName("HU7-CP12: la búsqueda por nombre no distingue mayúsculas ni tildes")
+    void buscarEnCatalogoBuscaSinDistinguirMayusculasNiTildes() {
+        adapter.guardar(productoNuevo("v-1", "Lámpara de escritorio"));
+        adapter.guardar(productoNuevo("v-2", "Teclado"));
+
+        // Sin tilde y en mayúsculas, y con tilde en minúsculas: las dos encuentran «Lámpara».
+        assertEquals(List.of("Lámpara de escritorio"), nombres(adapter.buscarEnCatalogo(buscando("LAMPARA"))));
+        assertEquals(List.of("Lámpara de escritorio"), nombres(adapter.buscarEnCatalogo(buscando("lámpara"))));
+    }
+
+    @Test
+    @DisplayName("HU7-CP12: la búsqueda trata el texto como literal, no como expresión regular")
+    void buscarEnCatalogoTrataLaBusquedaComoTextoLiteral() {
+        adapter.guardar(productoNuevo("v-1", "Cable (USB-C)"));
+        adapter.guardar(productoNuevo("v-1", "Cable USB"));
+
+        // «(» y «.*» se buscan como caracteres: como regex, «(usb» no compilaría y «.*» lo encontraría todo.
+        assertEquals(List.of("Cable (USB-C)"), nombres(adapter.buscarEnCatalogo(buscando("(usb"))));
+        assertEquals(List.of(), nombres(adapter.buscarEnCatalogo(buscando(".*"))));
+    }
+
+    @Test
+    @DisplayName("HU7-CP13: el filtro por categoría se puede combinar con la búsqueda")
+    void buscarEnCatalogoFiltraPorCategoriaYBusqueda() {
+        // Dos «Teclado» de vendedores distintos (un vendedor no repite nombre): uno en cat-1 y otro en cat-2.
+        guardarProducto("v-1", "Teclado", "cat-1", "2026-10-01T10:00:00Z");
+        guardarProducto("v-2", "Teclado", "cat-2", "2026-10-02T10:00:00Z");
+        guardarProducto("v-2", "Ratón", "cat-2", "2026-10-03T10:00:00Z");
+
+        ProductoPage pagina = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery("teclado", "cat-2", null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+
+        assertEquals(1, pagina.totalElementos());
+        assertEquals("Teclado", pagina.productos().getFirst().getNombre());
+        assertEquals("cat-2", pagina.productos().getFirst().getCategoriaId());
+    }
+
+    @Test
+    @DisplayName("HU7-CP14: el catálogo se ordena por nombre en los dos sentidos, paginado y con el total completo")
+    void buscarEnCatalogoOrdenaPorNombreYPagina() {
+        // Guardados fuera de orden y sin tilde inicial, para no depender del orden alfabético en español.
+        adapter.guardar(productoNuevo("v-1", "Cesta"));
+        adapter.guardar(productoNuevo("v-1", "Atril"));
+        adapter.guardar(productoNuevo("v-2", "Banco"));
+
+        ProductoPage ascendente = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 2));
+        ProductoPage descendente = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.NOMBRE, true, 0, 2));
+
+        assertEquals(List.of("Atril", "Banco"), nombres(ascendente));
+        assertEquals(3, ascendente.totalElementos());
+        assertEquals(List.of("Cesta", "Banco"), nombres(descendente));
+    }
+
+    @Test
+    @DisplayName("HU7-CP15: con una valoración mínima no sale ningún producto mientras no haya valoraciones")
+    void buscarEnCatalogoConValoracionMinimaNoDevuelveNada() {
+        // Hasta HU13 ningún producto tiene valoraciones, así que ninguno llega al mínimo (decisión 3 del plan).
+        adapter.guardar(productoNuevo("v-1", "Teclado"));
+        adapter.guardar(productoNuevo("v-2", "Ratón"));
+
+        ProductoPage pagina = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, 2, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+
+        assertEquals(List.of(), nombres(pagina));
+        assertEquals(0, pagina.totalElementos());
+    }
+
+    @Test
+    @DisplayName("HU7-CP15: ordenar por valoración desempata por nombre de la A a la Z mientras no haya valoraciones")
+    void buscarEnCatalogoPorValoracionDesempataPorNombre() {
+        // Sin valoraciones todos cuentan como 0 y empatan; el empate se resuelve de la A a la Z aunque se pida descendente.
+        adapter.guardar(productoNuevo("v-1", "Cesta"));
+        adapter.guardar(productoNuevo("v-1", "Atril"));
+        adapter.guardar(productoNuevo("v-2", "Banco"));
+
+        ProductoPage pagina = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.VALORACION, true, 0, 10));
+
+        assertEquals(List.of("Atril", "Banco", "Cesta"), nombres(pagina));
+    }
+
+    // Catálogo sin búsqueda, categoría ni valoración mínima, por nombre de la A a la Z, primera página de 10.
+    private static BuscarCatalogoQuery sinFiltros() {
+        return new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
+    }
+
+    // Como sinFiltros, pero buscando ese texto en el nombre.
+    private static BuscarCatalogoQuery buscando(String texto) {
+        return new BuscarCatalogoQuery(texto, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
     }
 
     private static Producto productoNuevo(String vendedorId, String nombre) {

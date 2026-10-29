@@ -12,6 +12,7 @@ import AdminUsersPage from '../pages/AdminUsersPage'
 import CheckoutPage from '../pages/CheckoutPage'
 import Home from '../pages/Home'
 import LoginPage from '../pages/LoginPage'
+import PaymentMethodsPage from '../pages/PaymentMethodsPage'
 import ProductDetailPage from '../pages/ProductDetailPage'
 import ProductsPage from '../pages/ProductsPage'
 import ProfilePage from '../pages/ProfilePage'
@@ -35,6 +36,7 @@ export default function AppRoutes() {
           <Route path={PATHS.PRODUCTS} element={<ProductsPage />} />
           <Route path={PATHS.PRODUCT_DETAIL} element={<ProductDetailPage />} />
           <Route path={PATHS.CHECKOUT} element={<CheckoutPage />} />
+          <Route path={PATHS.PAYMENT_METHODS} element={<PaymentMethodsPage />} />
         </Route>
 
         {/* El perfil propio (HU4) es del cliente y del vendedor: el backend responde 403 al administrador. */}

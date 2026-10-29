@@ -1,26 +1,29 @@
 import { useState } from 'react'
 import {
+  Badge,
   Button,
+  Field,
   MessageBar,
   MessageBarActions,
   MessageBarBody,
+  Radio,
+  RadioGroup,
   Spinner,
   Text,
   Title1,
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import {
-  BuildingShop20Regular,
-  CheckmarkCircle20Filled,
-  Cart24Regular,
-  LockClosed20Regular,
-} from '@fluentui/react-icons'
+import { BuildingShop20Regular, Cart24Regular, LockClosed20Regular } from '@fluentui/react-icons'
 import { getCart } from '../api/cart'
 import { createOrder } from '../api/orders'
+import { getPaymentMethods } from '../api/paymentMethods'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
 import { useCart } from '../features/cart/useCart'
+import PaymentTicket from '../features/checkout/PaymentTicket'
+import { TIPOS_DE_METODO } from '../features/paymentMethods/tiposDeMetodo'
+import { useApiQuery } from '../hooks/useApiQuery'
 import { PATHS } from '../routes/paths'
 import { formatPrice } from '../utils/format'
 
@@ -29,7 +32,6 @@ const PAGO_SIMULADO_MS = 700
 
 const esperar = (ms) => new Promise((resolver) => setTimeout(resolver, ms))
 const pedidos = (n) => `${n} ${n === 1 ? 'pedido' : 'pedidos'}`
-const productos = (n) => `${n} ${n === 1 ? 'producto' : 'productos'}`
 
 const useStyles = makeStyles({
   page: {
@@ -158,32 +160,18 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     gap: tokens.spacingVerticalL,
   },
-  confirmed: {
-    display: 'flex',
-    flexDirection: 'column',
-    margin: 0,
-    padding: 0,
-    listStyleType: 'none',
-    gap: tokens.spacingVerticalS,
-  },
-  confirmedItem: {
-    display: 'flex',
+  methodLabel: {
+    display: 'inline-flex',
     alignItems: 'center',
-    gap: tokens.spacingHorizontalM,
-    padding: tokens.spacingHorizontalL,
-    backgroundColor: tokens.colorNeutralBackground1,
-    border: `1px solid ${tokens.colorNeutralStroke2}`,
-    borderRadius: tokens.borderRadiusXLarge,
+    flexWrap: 'wrap',
+    gap: tokens.spacingHorizontalS,
   },
-  check: {
-    color: tokens.colorPaletteGreenForeground1,
-    flexShrink: 0,
-  },
-  grow: {
-    flexGrow: 1,
+  methodIcon: {
     display: 'flex',
-    flexDirection: 'column',
-    minWidth: 0,
+    color: tokens.colorBrandForeground1,
+  },
+  mask: {
+    fontVariantNumeric: 'tabular-nums',
   },
   failure: {
     display: 'flex',
@@ -229,16 +217,87 @@ function VendorOrder({ group, styles }) {
   )
 }
 
+// Los métodos de pago guardados del cliente (HU6) para elegir con cuál pagar. Sin ninguno no se puede pagar: se
+// lleva a su vista de métodos de pago para añadir uno.
+function PaymentMethodPicker({ query, selectedId, onSelect, styles }) {
+  if (query.failed) {
+    return (
+      <MessageBar intent="error">
+        <MessageBarBody>No se han podido cargar los métodos de pago.</MessageBarBody>
+        <MessageBarActions>
+          <Button onClick={query.retry}>Reintentar</Button>
+        </MessageBarActions>
+      </MessageBar>
+    )
+  }
+
+  if (!query.data) return <Spinner size="small" label="Cargando métodos de pago…" />
+
+  if (query.data.length === 0) {
+    return (
+      <MessageBar intent="warning">
+        <MessageBarBody>No tienes ningún método de pago guardado.</MessageBarBody>
+        <MessageBarActions>
+          <LinkButton to={PATHS.PAYMENT_METHODS}>Añadir un método de pago</LinkButton>
+        </MessageBarActions>
+      </MessageBar>
+    )
+  }
+
+  return (
+    <Field label="Método de pago">
+      <RadioGroup value={selectedId} onChange={(_, data) => onSelect(data.value)}>
+        {query.data.map((method) => {
+          const { etiqueta, Icono } = TIPOS_DE_METODO[method.tipo]
+          return (
+            <Radio
+              key={method.id}
+              value={method.id}
+              label={
+                <span className={styles.methodLabel}>
+                  <span className={styles.methodIcon} aria-hidden="true">
+                    <Icono />
+                  </span>
+                  <span>{etiqueta}</span>
+                  <span className={styles.mask}>{method.mascara}</span>
+                  {method.predeterminado && (
+                    <Badge appearance="tint" color="brand" size="small">
+                      Predeterminado
+                    </Badge>
+                  )}
+                </span>
+              }
+            />
+          )
+        })}
+      </RadioGroup>
+    </Field>
+  )
+}
+
 // Pasarela de pago (HU10): resume el pedido de cada proveedor y, al simular el pago, crea un pedido por proveedor
-// (cada uno con un solo proveedor). Si alguno falla, se confirman los demás, se avisa de cuál y se puede reintentar.
+// (cada uno con un solo proveedor), todos con el método de pago elegido. Al terminar muestra el recibo con forma de
+// ticket. Si alguno falla, se confirman los demás, se avisa de cuál y se puede reintentar con el mismo método.
 export default function CheckoutPage() {
   const styles = useStyles()
   const { cart, status, reload } = useCart()
+  const paymentMethods = useApiQuery(getPaymentMethods)
+  const [selectedId, setSelectedId] = useState(null)
   const [phase, setPhase] = useState('review')
   const [orders, setOrders] = useState([])
   const [failures, setFailures] = useState([])
+  const [paidWith, setPaidWith] = useState(null)
+  const [paidAt, setPaidAt] = useState(null)
+
+  // Mientras el cliente no elige, se usa su método predeterminado.
+  const methods = paymentMethods.failed ? [] : (paymentMethods.data ?? [])
+  const selectedMethod =
+    methods.find(({ id }) => id === selectedId) ?? methods.find(({ predeterminado }) => predeterminado) ?? methods[0]
 
   const pay = async () => {
+    // Al reintentar se paga con el mismo método que la primera vez.
+    const method = paidWith ?? selectedMethod
+    setPaidWith(method)
     setPhase('paying')
     setFailures([])
     await esperar(PAGO_SIMULADO_MS)
@@ -257,13 +316,14 @@ export default function CheckoutPage() {
     const failed = []
     for (const group of groups) {
       try {
-        created.push(await createOrder(group.vendedor.id))
+        created.push(await createOrder(group.vendedor.id, method.id))
       } catch {
         failed.push(group.vendedor)
       }
     }
 
     reload()
+    if (created.length > 0) setPaidAt(new Date())
     setOrders((previous) => [...previous, ...created])
     setFailures(failed)
     setPhase(groups.length === 0 ? 'review' : 'done')
@@ -278,22 +338,7 @@ export default function CheckoutPage() {
           {paid ? 'Pago realizado' : 'No se ha podido completar el pago'}
         </Title1>
         <div className={styles.done}>
-          {paid && (
-            <ul aria-label="Pedidos realizados" className={styles.confirmed}>
-              {orders.map((order) => (
-                <li key={order.id} aria-label={`Pedido ${order.id}`} className={styles.confirmedItem}>
-                  <CheckmarkCircle20Filled className={styles.check} aria-hidden="true" />
-                  <div className={styles.grow}>
-                    <Text weight="semibold">{order.vendedor.nombreComercial}</Text>
-                    <Text size={200} className={styles.muted}>
-                      Pedido {order.id} · {productos(order.lineas.length)}
-                    </Text>
-                  </div>
-                  <span className={styles.amount}>{formatPrice(order.total)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+          {paid && <PaymentTicket orders={orders} paymentMethod={paidWith} paidAt={paidAt} />}
 
           {failures.length > 0 && (
             <div role="alert" className={styles.failure}>
@@ -370,11 +415,17 @@ export default function CheckoutPage() {
             <Text size={200} className={styles.muted}>
               Se creará un pedido por cada proveedor: {pedidos(cart.grupos.length)} en total.
             </Text>
+            <PaymentMethodPicker
+              query={paymentMethods}
+              selectedId={selectedMethod?.id ?? null}
+              onSelect={setSelectedId}
+              styles={styles}
+            />
             <Button
               appearance="primary"
               size="large"
               icon={phase === 'paying' ? <Spinner size="tiny" /> : <LockClosed20Regular />}
-              disabled={phase === 'paying'}
+              disabled={phase === 'paying' || !selectedMethod}
               onClick={pay}
             >
               {phase === 'paying' ? 'Procesando pago…' : 'Simular pago'}

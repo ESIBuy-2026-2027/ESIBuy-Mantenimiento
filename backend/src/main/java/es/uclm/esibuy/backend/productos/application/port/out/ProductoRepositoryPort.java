@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.productos.application.port.out;
 import java.util.Map;
 import java.util.Optional;
 
+import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
@@ -26,6 +27,8 @@ public interface ProductoRepositoryPort {
 
     // Borrado físico del producto (HU35): el documento desaparece de la colección.
     void eliminar(String id);
+
+    ProductoPage buscarEnCatalogo(BuscarCatalogoQuery query);
 
     // Número de productos de cada categoría, por su id (HU39). Las categorías sin productos no aparecen.
     Map<String, Long> contarPorCategoria();

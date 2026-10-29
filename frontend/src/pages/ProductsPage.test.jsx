@@ -150,7 +150,7 @@ describe('ProductsPage (HU7): vista de productos del cliente', () => {
 
     await user.click(screen.getByRole('button', { name: /ver más productos/i }))
 
-    await esperarTarjetas(20)
+    await waitFor(() => expect(tarjetas()).toHaveLength(20))
   })
 
   it('HU7-CP03: si falla al cargar más, avisa sin perder las tarjetas y permite reintentar', async () => {
@@ -292,7 +292,7 @@ describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
 
     await elegirCategoria(user, 'Hogar')
 
-    await esperarTarjetas(9)
+    await waitFor(() => expect(tarjetas()).toHaveLength(9))
   })
 
   it('HU7-CP04: si ningún producto coincide lo indica y permite limpiar los filtros', async () => {
