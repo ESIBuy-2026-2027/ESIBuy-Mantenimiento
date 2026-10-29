@@ -34,6 +34,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistr
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.AutoeliminacionNoPermitidaException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -182,6 +183,13 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError autodesactivacionNoPermitida() {
         return new RespuestaError("No puedes desactivar tu propia cuenta", "CANNOT_DEACTIVATE_SELF");
+    }
+
+    // 409 + code al eliminar (HU37): código esperado por el frontend (CANNOT_DELETE_SELF).
+    @ExceptionHandler(AutoeliminacionNoPermitidaException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError autoeliminacionNoPermitida() {
+        return new RespuestaError("No puedes eliminar tu propia cuenta", "CANNOT_DELETE_SELF");
     }
 
     @ExceptionHandler(UltimoAdministradorActivoException.class)

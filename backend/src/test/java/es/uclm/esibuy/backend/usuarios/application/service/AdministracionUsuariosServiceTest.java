@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.AutoeliminacionNoPermitidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
@@ -494,7 +495,7 @@ class AdministracionUsuariosServiceTest {
         administrador.activar();
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(administrador));
 
-        assertThrows(AutodesactivacionNoPermitidaException.class,
+        assertThrows(AutoeliminacionNoPermitidaException.class,
                 () -> servicio.eliminarAdministrador("u-1", EMAIL_ADMINISTRADOR));
         verify(usuarioRepository, never()).eliminarPorId(any());
     }

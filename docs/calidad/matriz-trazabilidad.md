@@ -2292,6 +2292,53 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU37 · Eliminar administrador
+
+### Tabla A · HU37 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU37-CP01 | Eliminar un administrador activo lo borra físicamente si queda otro administrador activo | Unitario | 1 | ✅ Pasa |
+| HU37-CP02 | Eliminar un usuario que no existe falla (`UsuarioNoEncontradoException`) y no borra nada | Unitario | 1 | ✅ Pasa |
+| HU37-CP03 | Eliminar a un usuario que no es administrador falla como si no existiera y no borra nada | Unitario | 1 | ✅ Pasa |
+| HU37-CP04 | Un administrador no puede eliminar su propia cuenta (`AutoeliminacionNoPermitidaException`) y no se borra nada | Unitario | 1 | ✅ Pasa |
+| HU37-CP05 | No se puede eliminar al último administrador activo (`UltimoAdministradorActivoException`) y no se borra nada | Unitario | 1 | ✅ Pasa |
+| HU37-CP06 | Eliminar un administrador desactivado no comprueba el conteo de activos y lo borra | Unitario | 1 | ✅ Pasa |
+| HU37-CP07 | `DELETE /api/admin/usuarios/{id}` elimina a otro administrador y responde 204 sin cuerpo | Integración (capa web) | 1 | ✅ Pasa |
+| HU37-CP08 | Eliminar un administrador que no existe devuelve 404 | Integración (capa web) | 1 | ✅ Pasa |
+| HU37-CP09 | Intentar eliminarse a sí mismo devuelve 409 con el código `CANNOT_DELETE_SELF` | Integración (capa web) | 1 | ✅ Pasa |
+| HU37-CP10 | Intentar eliminar al último administrador activo devuelve 409 con el código `LAST_ACTIVE_ADMIN` | Integración (capa web) | 1 | ✅ Pasa |
+| HU37-CP11 | Sin sesión (401), sin ser administrador (403) o sin token CSRF (403) no se puede eliminar una cuenta | Integración (capa web) | 3 | ✅ Pasa |
+
+Notas:
+- **HU37-CP01 a CP06 (AB#340):** casos propuestos para la lógica de negocio del borrado físico de administradores en `AdministracionUsuariosService.eliminarAdministrador` (PR #139). Pendientes de confirmar con el equipo y de añadir a la HU37 en Azure Boards.
+- **HU37-CP07 a CP11:** casos propuestos para el endpoint `DELETE /api/admin/usuarios/{id}` en `UsuarioController` y la traducción de `AutoeliminacionNoPermitidaException` a 409 `CANNOT_DELETE_SELF` en `ManejadorGlobalErrores`, siguiendo el contrato esperado por el frontend (ver notas de `HU19-CP13 a CP19`).
+- **Sesión del administrador eliminado:** la invalidación de la sesión al borrar físicamente la cuenta ya la cubre `CuentaActivaFilter` (ver **HU23-CP10**, `usuarioInexistenteInvalidaLaSesionYDevuelve401`, PR #85): en cuanto el documento desaparece de la colección `usuarios`, cualquier petición con su sesión recibe un 401 y la sesión queda invalidada.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU37-CP01 | `AdministracionUsuariosServiceTest` | `eliminaAUnAdministradorSiQuedaOtroActivo` | Aplicación | AB#340 | PR #139 | ✅ |
+| HU37-CP02 | `AdministracionUsuariosServiceTest` | `rechazaEliminarUnUsuarioQueNoExiste` | Aplicación | AB#340 | PR #139 | ✅ |
+| HU37-CP03 | `AdministracionUsuariosServiceTest` | `rechazaEliminarAUsuarioQueNoEsAdministrador` | Aplicación | AB#340 | PR #139 | ✅ |
+| HU37-CP04 | `AdministracionUsuariosServiceTest` | `rechazaQueUnAdministradorSeElimineASiMismo` | Aplicación | AB#340 | PR #139 | ✅ |
+| HU37-CP05 | `AdministracionUsuariosServiceTest` | `rechazaEliminarAlUltimoAdministradorActivo` | Aplicación | AB#340 | PR #139 | ✅ |
+| HU37-CP06 | `AdministracionUsuariosServiceTest` | `eliminaAUnAdministradorDesactivadoSinComprobarActivos` | Aplicación | AB#340 | PR #139 | ✅ |
+| HU37-CP07 | `UsuarioControllerTest` | `administradorEliminaAOtroAdministrador` | Infraestructura | AB#340 | PR actual | ✅ |
+| HU37-CP08 | `UsuarioControllerTest` | `eliminarAdministradorInexistenteDevuelve404` | Infraestructura | AB#340 | PR actual | ✅ |
+| HU37-CP09 | `UsuarioControllerTest` | `eliminarseASiMismoDevuelve409` | Infraestructura | AB#340 | PR actual | ✅ |
+| HU37-CP10 | `UsuarioControllerTest` | `eliminarAlUltimoAdministradorActivoDevuelve409` | Infraestructura | AB#340 | PR actual | ✅ |
+| HU37-CP11 | `UsuarioControllerTest` | `unNoAdministradorNoPuedeEliminarCuentas` (cliente y vendedor) | Infraestructura | AB#340 | PR actual | ✅ |
+| HU37-CP11 | `UsuarioControllerTest` | `eliminarSinSesionEstaProtegido` | Infraestructura | AB#340 | PR actual | ✅ |
+| HU37-CP11 | `UsuarioControllerTest` | `eliminarSinTokenCsrfSeRechaza` | Infraestructura | AB#340 | PR actual | ✅ |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
+- `UsuarioControllerTest`: `usuarios/infrastructure/adapter/in/web/` (con `@WebMvcTest` y `@WithMockUser`)
+
+---
+
 ## HU39 · Consultar categorías
 
 ### Tabla A · HU39 ↔ casos de prueba
@@ -2330,40 +2377,6 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `ProductosPorCategoriaAdapterTest`: `categorias/infrastructure/adapter/out/productos/` (JUnit y Mockito, sin Spring)
 - `ConteoProductosServiceTest`: `productos/application/service/` (JUnit y Mockito, sin Spring)
 - `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/` (con Testcontainers)
-
----
-
-## HU37 · Eliminar administrador
-
-### Tabla A · HU37 ↔ casos de prueba
-
-| Caso | Descripción | Tipo | Tests | Estado |
-|---|---|---|---|---|
-| HU37-CP01 | Eliminar un administrador activo lo borra físicamente si queda otro administrador activo | Unitario | 1 | ✅ Pasa |
-| HU37-CP02 | Eliminar un usuario que no existe falla (`UsuarioNoEncontradoException`) y no borra nada | Unitario | 1 | ✅ Pasa |
-| HU37-CP03 | Eliminar a un usuario que no es administrador falla como si no existiera y no borra nada | Unitario | 1 | ✅ Pasa |
-| HU37-CP04 | Un administrador no puede eliminar su propia cuenta y no se borra nada | Unitario | 1 | ✅ Pasa |
-| HU37-CP05 | No se puede eliminar al último administrador activo y no se borra nada | Unitario | 1 | ✅ Pasa |
-| HU37-CP06 | Eliminar un administrador desactivado no comprueba el conteo de activos y lo borra | Unitario | 1 | ✅ Pasa |
-
-Notas:
-- **HU37-CP01 a CP06 (T340, AB#340):** casos propuestos para la lógica de negocio del borrado físico de administradores en `AdministracionUsuariosService.eliminarAdministrador`. Pendientes de confirmar con el equipo y de añadir a Azure Boards.
-- **Sesión del administrador eliminado:** la invalidación de la sesión al borrar físicamente la cuenta ya la cubre `CuentaActivaFilter` (ver **HU23-CP10**, `usuarioInexistenteInvalidaLaSesionYDevuelve401`, PR #85): en cuanto el documento desaparece de la colección `usuarios`, cualquier petición con su sesión recibe un 401 y la sesión queda invalidada.
-- **Pendiente (otra task):** el endpoint `DELETE`, la traducción del 409 de autoeliminación (`CANNOT_DELETE_SELF`) en `ManejadorGlobalErrores` y los tests de integración web y de persistencia en `UsuarioMongoAdapterTest`.
-
-### Tabla B · casos de prueba ↔ tests
-
-| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
-|---|---|---|---|---|---|---|
-| HU37-CP01 | `AdministracionUsuariosServiceTest` | `eliminaAUnAdministradorSiQuedaOtroActivo` | Aplicación | AB#340 | PR actual | ✅ |
-| HU37-CP02 | `AdministracionUsuariosServiceTest` | `rechazaEliminarUnUsuarioQueNoExiste` | Aplicación | AB#340 | PR actual | ✅ |
-| HU37-CP03 | `AdministracionUsuariosServiceTest` | `rechazaEliminarAUsuarioQueNoEsAdministrador` | Aplicación | AB#340 | PR actual | ✅ |
-| HU37-CP04 | `AdministracionUsuariosServiceTest` | `rechazaQueUnAdministradorSeElimineASiMismo` | Aplicación | AB#340 | PR actual | ✅ |
-| HU37-CP05 | `AdministracionUsuariosServiceTest` | `rechazaEliminarAlUltimoAdministradorActivo` | Aplicación | AB#340 | PR actual | ✅ |
-| HU37-CP06 | `AdministracionUsuariosServiceTest` | `eliminaAUnAdministradorDesactivadoSinComprobarActivos` | Aplicación | AB#340 | PR actual | ✅ |
-
-Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
-- `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
 
 ---
 
