@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
+import { resetAddressesMock } from '../mocks/addressesHandlers'
 import { resetAdminSellersMock } from '../mocks/adminSellersHandlers'
 import { resetAdminsMock } from '../mocks/adminsHandlers'
 import { resetAuthMock } from '../mocks/authHandlers'
@@ -38,6 +39,7 @@ afterEach(() => {
   resetCartMock()
   resetOrdersMock()
   resetPaymentMethodsMock()
+  resetAddressesMock()
   resetAdminSellersMock()
   resetAdminsMock()
   resetProductsMock()
