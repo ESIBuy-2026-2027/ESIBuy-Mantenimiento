@@ -61,7 +61,7 @@ final class ColeccionesEsiBuy {
 
     static List<Coleccion> todas() {
         return List.of(usuarios(), sesiones(), factoresAutenticacion(), tokensSeguridad(), productos(),
-                pedidos(), carritos(), valoraciones(), categorias(), listasDeseos(), metodosPago());
+                pedidos(), carritos(), valoraciones(), categorias(), listasDeseos(), metodosPago(), direccionesEnvio());
     }
 
     // 1. usuarios: identidad, rol, estado y perfil, con los campos del modelo en la raíz del documento,
@@ -264,6 +264,25 @@ final class ColeccionesEsiBuy {
                         textoNoVacio("mascara"),
                         textoNoVacio("datosCifrados"),
                         bool("predeterminado")),
+                List.of());
+    }
+
+    // 12. direcciones_envio: direcciones de envío de cada cliente (HU5), fuera del modelo inicial. Mismas reglas
+    // que DatosDireccion: el pedido (HU10) copia estos campos en su direccionEnvio. Los detalles son opcionales.
+    // El índice de clienteId lo declara DireccionDocument.
+    private static Coleccion direccionesEnvio() {
+        return new Coleccion("direcciones_envio",
+                esquema(List.of(CLIENTE_ID, "destinatario", "calle", "codigoPostal", "ciudad", "provincia",
+                                "telefono", "principal"),
+                        textoNoVacio(CLIENTE_ID),
+                        string("destinatario").minLength(1).maxLength(100),
+                        string("calle").minLength(1).maxLength(150),
+                        string("detalles").maxLength(100),
+                        string("codigoPostal").matching("^[0-9]{5}$"),
+                        string("ciudad").minLength(1).maxLength(100),
+                        string("provincia").minLength(1).maxLength(100),
+                        string("telefono").matching("^[0-9]{9}$"),
+                        bool("principal")),
                 List.of());
     }
 

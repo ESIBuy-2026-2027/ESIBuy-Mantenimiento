@@ -639,13 +639,13 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU4-CP02 | Un vendedor consulta su perfil y recibe sus datos personales y los de vendedor, sin los de cliente | Controlador | 1 | ✅ Pasa |
 | HU4-CP03 | El perfil no expone la contraseña ni datos internos de la cuenta (estado, intentos, bloqueo) | Controlador | 1 | ✅ Pasa |
 | HU4-CP04 | Solo el cliente y el vendedor consultan su perfil: administrador 403, sin sesión 401, y una sesión de un usuario que ya no existe no es válida | Unitario + controlador | 3 | ✅ Pasa |
-| HU4-CP05 | En «Mi perfil» el cliente ve sus datos personales y los de cliente, en solo lectura | Frontend (página) | 2 | 🔍 En revisión (2, AB#296, PR sin abrir) |
-| HU4-CP06 | El vendedor ve sus datos y los de vendedor, con el nombre de su categoría; un dato opcional que falta se ve con un guion | Frontend (página) | 2 | 🔍 En revisión (2, AB#296, PR sin abrir) |
-| HU4-CP07 | La imagen de perfil se ve como el avatar elegido; sin avatar, se ven las iniciales | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#296, PR sin abrir) |
-| HU4-CP08 | La vista no muestra la contraseña ni el estado de la cuenta | Frontend (página) | 1 | 🔍 En revisión (1, AB#296, PR sin abrir) |
-| HU4-CP09 | Si el perfil no carga, se avisa sin detalles internos y se puede reintentar | Frontend (página) | 1 | 🔍 En revisión (1, AB#296, PR sin abrir) |
-| HU4-CP10 | Sin sesión, `/profile` lleva al login; el administrador no entra en el perfil | Frontend (página) | 2 | 🔍 En revisión (2, AB#296, PR sin abrir) |
-| HU4-CP11 | El cliente y el vendedor tienen el enlace «Mi perfil» en la cabecera, que abre su perfil; el administrador no lo tiene | Frontend (página) | 3 | 🔍 En revisión (3, AB#296, PR sin abrir) |
+| HU4-CP05 | En «Mi perfil» el cliente ve sus datos personales y los de cliente, en solo lectura | Frontend (página) | 2 | ✅ Pasa |
+| HU4-CP06 | El vendedor ve sus datos y los de vendedor, con el nombre de su categoría; un dato opcional que falta se ve con un guion | Frontend (página) | 2 | ✅ Pasa |
+| HU4-CP07 | La imagen de perfil se ve como el avatar elegido; sin avatar, se ven las iniciales | Frontend (componente y página) | 4 | ✅ Pasa |
+| HU4-CP08 | La vista no muestra la contraseña ni el estado de la cuenta | Frontend (página) | 1 | ✅ Pasa |
+| HU4-CP09 | Si el perfil no carga, se avisa sin detalles internos y se puede reintentar | Frontend (página) | 1 | ✅ Pasa |
+| HU4-CP10 | Sin sesión, `/profile` lleva al login; el administrador no entra en el perfil | Frontend (página) | 2 | ✅ Pasa |
+| HU4-CP11 | El cliente y el vendedor tienen el enlace «Mi perfil» en la cabecera, que abre su perfil; el administrador no lo tiene | Frontend (página) | 3 | ✅ Pasa |
 
 Notas:
 - **HU4-CP01 a CP04:** casos propuestos en la T297 (AB#297), a partir del criterio de aceptación «cuando el usuario accede a su panel de perfil puede visualizar sus datos personales». Pendientes de confirmar con el equipo y de añadir a la HU4 en Azure Boards.
@@ -665,21 +665,21 @@ Notas:
 | HU4-CP04 | `GestionPerfilServiceTest` | `consultarPerfilDeUnCorreoQueNoExisteLanzaExcepcion` | Aplicación | AB#297 | PR #140 | ✅ |
 | HU4-CP04 | `PerfilControllerTest` | `unAdministradorRecibe403` | Infraestructura | AB#297 | PR #140 | ✅ |
 | HU4-CP04 | `PerfilControllerTest` | `sinSesionRecibe401` | Infraestructura | AB#297 | PR #140 | ✅ |
-| HU4-CP05 | `ProfilePage.test.jsx` | `HU4-CP05: el cliente ve sus datos personales y los de cliente` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
-| HU4-CP05 | `ProfilePage.test.jsx` | `HU4-CP05: los datos del perfil son de solo lectura` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
-| HU4-CP06 | `ProfilePage.test.jsx` | `HU4-CP06: el vendedor ve sus datos y los de vendedor, con el nombre de su categoría` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
-| HU4-CP06 | `ProfilePage.test.jsx` | `HU4-CP06: los datos opcionales que no tiene se muestran con un guion` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
-| HU4-CP07 | `ProfilePage.test.jsx` | `HU4-CP07: muestra como imagen el avatar que eligió el usuario` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
-| HU4-CP07 | `ProfilePage.test.jsx` | `HU4-CP07: sin avatar elegido muestra sus iniciales` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
-| HU4-CP07 | `AvatarSelector.test.jsx` | `HU4-CP07: muestra el avatar elegido con su nombre accesible` | Frontend · componente | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
-| HU4-CP07 | `AvatarSelector.test.jsx` | `HU4-CP07: sin avatar, o con uno que no existe, muestra las iniciales` | Frontend · componente | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
-| HU4-CP08 | `ProfilePage.test.jsx` | `HU4-CP08: no muestra la contraseña ni el estado de la cuenta` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
-| HU4-CP09 | `ProfilePage.test.jsx` | `HU4-CP09: si el perfil no carga, avisa sin detalles internos y permite reintentar` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
-| HU4-CP10 | `ProfilePage.test.jsx` | `HU4-CP10: sin sesión, redirige al login` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
-| HU4-CP10 | `ProfilePage.test.jsx` | `HU4-CP10: el administrador no tiene perfil que consultar` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
-| HU4-CP11 | `AppHeader.test.jsx` | `HU4-CP11: el cliente y el vendedor tienen el enlace a su perfil` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
-| HU4-CP11 | `AppHeader.test.jsx` | `HU4-CP11: el administrador no tiene el enlace al perfil` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
-| HU4-CP11 | `AppHeader.test.jsx` | `HU4-CP11: al pulsar Mi perfil se abre el perfil del usuario` | Frontend · página | AB#296 | Rama `feature/US4-T296-vista-perfil` (PR sin abrir) | 🔍 |
+| HU4-CP05 | `ProfilePage.test.jsx` | `HU4-CP05: el cliente ve sus datos personales y los de cliente` | Frontend · página | AB#296 | PR #150 | ✅ |
+| HU4-CP05 | `ProfilePage.test.jsx` | `HU4-CP05: los datos del perfil son de solo lectura` | Frontend · página | AB#296 | PR #150 | ✅ |
+| HU4-CP06 | `ProfilePage.test.jsx` | `HU4-CP06: el vendedor ve sus datos y los de vendedor, con el nombre de su categoría` | Frontend · página | AB#296 | PR #150 | ✅ |
+| HU4-CP06 | `ProfilePage.test.jsx` | `HU4-CP06: los datos opcionales que no tiene se muestran con un guion` | Frontend · página | AB#296 | PR #150 | ✅ |
+| HU4-CP07 | `ProfilePage.test.jsx` | `HU4-CP07: muestra como imagen el avatar que eligió el usuario` | Frontend · página | AB#296 | PR #150 | ✅ |
+| HU4-CP07 | `ProfilePage.test.jsx` | `HU4-CP07: sin avatar elegido muestra sus iniciales` | Frontend · página | AB#296 | PR #150 | ✅ |
+| HU4-CP07 | `AvatarSelector.test.jsx` | `HU4-CP07: muestra el avatar elegido con su nombre accesible` | Frontend · componente | AB#296 | PR #150 | ✅ |
+| HU4-CP07 | `AvatarSelector.test.jsx` | `HU4-CP07: sin avatar, o con uno que no existe, muestra las iniciales` | Frontend · componente | AB#296 | PR #150 | ✅ |
+| HU4-CP08 | `ProfilePage.test.jsx` | `HU4-CP08: no muestra la contraseña ni el estado de la cuenta` | Frontend · página | AB#296 | PR #150 | ✅ |
+| HU4-CP09 | `ProfilePage.test.jsx` | `HU4-CP09: si el perfil no carga, avisa sin detalles internos y permite reintentar` | Frontend · página | AB#296 | PR #150 | ✅ |
+| HU4-CP10 | `ProfilePage.test.jsx` | `HU4-CP10: sin sesión, redirige al login` | Frontend · página | AB#296 | PR #150 | ✅ |
+| HU4-CP10 | `ProfilePage.test.jsx` | `HU4-CP10: el administrador no tiene perfil que consultar` | Frontend · página | AB#296 | PR #150 | ✅ |
+| HU4-CP11 | `AppHeader.test.jsx` | `HU4-CP11: el cliente y el vendedor tienen el enlace a su perfil` | Frontend · página | AB#296 | PR #150 | ✅ |
+| HU4-CP11 | `AppHeader.test.jsx` | `HU4-CP11: el administrador no tiene el enlace al perfil` | Frontend · página | AB#296 | PR #150 | ✅ |
+| HU4-CP11 | `AppHeader.test.jsx` | `HU4-CP11: al pulsar Mi perfil se abre el perfil del usuario` | Frontend · página | AB#296 | PR #150 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `GestionPerfilServiceTest`: `usuarios/application/service/` (JUnit y Mockito, sin Spring)
@@ -687,6 +687,114 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `ProfilePage.test.jsx`: `frontend/src/pages/` (Vitest, RTL y MSW)
 - `AppHeader.test.jsx`: `frontend/src/components/` (Vitest, RTL y MSW)
 - `AvatarSelector.test.jsx`: `frontend/src/features/account/` (Vitest y RTL)
+
+---
+
+## HU5 · Gestión de direcciones de envío
+
+### Tabla A · HU5 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU5-CP01 | El código postal tiene 5 dígitos; rechaza uno de 4 o 6, con letras o espacios, nulo o vacío | Unitario | 4 | 🔍 En revisión (4, PR #161) |
+| HU5-CP02 | El teléfono de contacto tiene 9 dígitos, sin prefijo; rechaza uno de 8 o 10, con letras, nulo o vacío | Unitario | 4 | 🔍 En revisión (4, PR #161) |
+| HU5-CP03 | Una dirección exige cliente, destinatario, calle, código postal, ciudad, provincia y teléfono, con su longitud máxima (100; la calle, 150); los detalles son opcionales; se reconstruye conservando si es la principal | Unitario | 8 | 🔍 En revisión (8, PR #161) |
+| HU5-CP04 | Un cliente tiene como máximo 5 direcciones; la sexta se rechaza y no se guarda | Unitario | 3 | 🔍 En revisión (3, PR #161) |
+| HU5-CP05 | Solo hay una dirección principal: la primera lo es, marcar otra desmarca la anterior y no se puede marcar una de otro cliente | Unitario | 8 | 🔍 En revisión (8, PR #161) |
+| HU5-CP06 | Al eliminar la principal el cliente elige la sustituta (no la misma ni una ajena); la única se elimina sin elegir; no se elimina una de otro cliente | Unitario | 11 | 🔍 En revisión (11, PR #161) |
+| HU5-CP07 | Editar cambia los datos y conserva el id y la principal; no se edita una dirección de otro cliente ni se guardan datos inválidos | Unitario | 7 | 🔍 En revisión (7, PR #161) |
+| HU5-CP08 | El alta guarda la dirección con el cliente en sesión y rechaza datos inválidos; el listado devuelve solo las del cliente en sesión | Unitario | 3 | 🔍 En revisión (3, PR #161) |
+| HU5-CP09 | La dirección se convierte a su documento de MongoDB y vuelve sin perder datos; un documento inválido se rechaza | Unitario | 2 | 🔍 En revisión (2, PR #161) |
+| HU5-CP10 | Persistencia en MongoDB: guardar, buscar por cliente, actualizar conservando `createdAt` y eliminar; la colección rechaza un documento sin un campo obligatorio o con un código postal o un teléfono inválidos | Integración | 6 | 🔍 En revisión (6, PR #161) |
+| HU5-CP11 | El id del cliente se pide al módulo de usuarios por su puerto de entrada | Unitario | 1 | 🔍 En revisión (1, PR #161) |
+| HU5-CP12 | `GET /api/customer/addresses` devuelve las direcciones del cliente en sesión con la marca `principal` | Controlador | 1 | 🔍 En revisión (1, PR #161) |
+| HU5-CP13 | `POST`: 201 con la dirección creada y el cliente de la sesión; dato inválido 400 `VALIDATION_ERROR`; límite 409 `ADDRESS_LIMIT_REACHED` | Controlador | 3 | 🔍 En revisión (3, PR #161) |
+| HU5-CP14 | `PUT /{id}`: 200 con la dirección editada; dato inválido 400; una ajena o inexistente 404 `ADDRESS_NOT_FOUND` | Controlador | 3 | 🔍 En revisión (3, PR #161) |
+| HU5-CP15 | `PUT /{id}/principal` (204) y `DELETE /{id}?nuevaPrincipal=` (204); sin sustituta, 409 `PRINCIPAL_ADDRESS_REQUIRED`; una ajena o inexistente da 404 | Controlador | 5 | 🔍 En revisión (5, PR #161) |
+| HU5-CP16 | Solo un cliente con sesión accede, y las peticiones que modifican datos exigen CSRF | Controlador | 3 | 🔍 En revisión (3, PR #161) |
+
+Notas:
+- **HU5-CP01 a CP16 (backend):** casos propuestos y aprobados por el equipo junto con el diseño de la HU5 (tasks AB#105, AB#106 y AB#107). Los casos de prueba no se registran en Azure Boards: viven en esta matriz y en el `@DisplayName` de cada test. Los casos del frontend (AB#108 y AB#109) serán HU5-CP17 a CP28.
+- **Decisiones del equipo:** mismas reglas que los métodos de pago (HU6): máximo 5 direcciones por cliente, la primera queda como principal y al eliminar la principal el cliente elige otra. Solo España (código postal de 5 dígitos, teléfono de 9, sin país). La dirección no se cifra en esta HU: la protegen el RBAC y la validación de la colección (pendiente de valorar en el AGR).
+- **Endpoints (AB#105):** `GET`, `POST`, `PUT /{id}`, `PUT /{id}/principal` y `DELETE /{id}?nuevaPrincipal=` sobre `/api/customer/addresses`, solo para `CLIENTE` (`SecurityConfig`). El cliente sale de la sesión. La respuesta es `{id, destinatario, calle, detalles, codigoPostal, ciudad, provincia, telefono, principal}`; sin `id` ni `principal`, es el `direccionEnvio` que copiará el pedido (HU10).
+- **Colección nueva:** `direcciones_envio` (`ColeccionesEsiBuy`), acordada con el equipo.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU5-CP01 | `CodigoPostalTest` | `creaCodigoPostalDeCincoDigitos` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP01 | `CodigoPostalTest` | `rechazaCodigoPostalDeCuatroOSeisDigitos` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP01 | `CodigoPostalTest` | `rechazaCodigoPostalConLetrasOEspacios` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP01 | `CodigoPostalTest` | `rechazaCodigoPostalNuloOVacio` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP02 | `TelefonoContactoTest` | `creaTelefonoDeNueveDigitos` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP02 | `TelefonoContactoTest` | `rechazaTelefonoDeOchoODiezDigitos` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP02 | `TelefonoContactoTest` | `rechazaTelefonoConLetrasOPrefijo` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP02 | `TelefonoContactoTest` | `rechazaTelefonoNuloOVacio` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP03 | `DatosDireccionTest` | `creaDireccionCompleta` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP03 | `DatosDireccionTest` | `losDetallesSonOpcionales` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP03 | `DatosDireccionTest` | `rechazaDireccionSinCamposObligatorios` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP03 | `DatosDireccionTest` | `rechazaDireccionSinCodigoPostalOTelefono` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP03 | `DatosDireccionTest` | `respetaLaLongitudMaximaDeCadaCampo` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP03 | `DireccionEnvioTest` | `creaDireccionAsociadaAUnCliente` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP03 | `DireccionEnvioTest` | `reconstruyeDireccionGuardadaConservandoLaPrincipal` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP03 | `DireccionEnvioTest` | `rechazaDireccionSinClienteOSinDatos` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP04 | `DireccionesClienteTest` | `anadeDireccionesHastaElLimite` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP04 | `DireccionesClienteTest` | `rechazaSextaDireccion` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP04 | `GestionDireccionesServiceTest` | `rechazaSextaDireccionYNoLaGuarda` | Aplicación | AB#105 | PR #161 | 🔍 |
+| HU5-CP05 | `DireccionEnvioTest` | `marcaYDesmarcaLaPrincipal` | Dominio | AB#106 | PR #161 | 🔍 |
+| HU5-CP05 | `DireccionesClienteTest` | `primeraDireccionQuedaPrincipal` | Dominio | AB#106 | PR #161 | 🔍 |
+| HU5-CP05 | `DireccionesClienteTest` | `direccionPosteriorNoCambiaLaPrincipal` | Dominio | AB#106 | PR #161 | 🔍 |
+| HU5-CP05 | `DireccionesClienteTest` | `marcarOtraDejaSoloUnaPrincipal` | Dominio | AB#106 | PR #161 | 🔍 |
+| HU5-CP05 | `DireccionesClienteTest` | `rechazaMarcarDireccionInexistente` | Dominio | AB#106 | PR #161 | 🔍 |
+| HU5-CP05 | `GestionDireccionesServiceTest` | `primeraDireccionAnadidaSeGuardaPrincipal` | Aplicación | AB#106 | PR #161 | 🔍 |
+| HU5-CP05 | `GestionDireccionesServiceTest` | `marcarPrincipalGuardaElCambio` | Aplicación | AB#106 | PR #161 | 🔍 |
+| HU5-CP05 | `GestionDireccionesServiceTest` | `rechazaMarcarDireccionDeOtroCliente` | Aplicación | AB#106 | PR #161 | 🔍 |
+| HU5-CP06 | `DireccionesClienteTest` | `eliminaDireccionNoPrincipal` | Dominio | AB#106 | PR #161 | 🔍 |
+| HU5-CP06 | `DireccionesClienteTest` | `eliminarPrincipalExigeElegirOtra` | Dominio | AB#106 | PR #161 | 🔍 |
+| HU5-CP06 | `DireccionesClienteTest` | `eliminarPrincipalYElegirOtra` | Dominio | AB#106 | PR #161 | 🔍 |
+| HU5-CP06 | `DireccionesClienteTest` | `rechazaElegirComoSustitutaLaDireccionEliminada` | Dominio | AB#106 | PR #161 | 🔍 |
+| HU5-CP06 | `DireccionesClienteTest` | `rechazaSustitutaDeOtroCliente` | Dominio | AB#106 | PR #161 | 🔍 |
+| HU5-CP06 | `DireccionesClienteTest` | `eliminarLaUnicaDireccionDejaListaVacia` | Dominio | AB#106 | PR #161 | 🔍 |
+| HU5-CP06 | `DireccionesClienteTest` | `rechazaEliminarDireccionInexistente` | Dominio | AB#106 | PR #161 | 🔍 |
+| HU5-CP06 | `GestionDireccionesServiceTest` | `eliminarDireccionLaBorraDelRepositorio` | Aplicación | AB#106 | PR #161 | 🔍 |
+| HU5-CP06 | `GestionDireccionesServiceTest` | `eliminarPrincipalGuardaLaNuevaPrincipal` | Aplicación | AB#106 | PR #161 | 🔍 |
+| HU5-CP06 | `GestionDireccionesServiceTest` | `eliminarPrincipalSinElegirNoBorraNada` | Aplicación | AB#106 | PR #161 | 🔍 |
+| HU5-CP06 | `GestionDireccionesServiceTest` | `rechazaEliminarDireccionDeOtroCliente` | Aplicación | AB#106 | PR #161 | 🔍 |
+| HU5-CP07 | `DireccionEnvioTest` | `editarCambiaLosDatosYConservaLoDemas` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP07 | `DireccionEnvioTest` | `rechazaEditarSinDatos` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP07 | `DireccionesClienteTest` | `editarDireccionDelCliente` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP07 | `DireccionesClienteTest` | `rechazaEditarDireccionInexistente` | Dominio | AB#105 | PR #161 | 🔍 |
+| HU5-CP07 | `GestionDireccionesServiceTest` | `editarGuardaLosDatosNuevos` | Aplicación | AB#105 | PR #161 | 🔍 |
+| HU5-CP07 | `GestionDireccionesServiceTest` | `rechazaEditarConDatosInvalidos` | Aplicación | AB#105 | PR #161 | 🔍 |
+| HU5-CP07 | `GestionDireccionesServiceTest` | `rechazaEditarDireccionDeOtroCliente` | Aplicación | AB#105 | PR #161 | 🔍 |
+| HU5-CP08 | `GestionDireccionesServiceTest` | `anadirGuardaLaDireccionDelClienteEnSesion` | Aplicación | AB#105 | PR #161 | 🔍 |
+| HU5-CP08 | `GestionDireccionesServiceTest` | `rechazaAnadirDireccionInvalida` | Aplicación | AB#105 | PR #161 | 🔍 |
+| HU5-CP08 | `GestionDireccionesServiceTest` | `listaSoloLasDireccionesDelClienteEnSesion` | Aplicación | AB#105 | PR #161 | 🔍 |
+| HU5-CP09 | `DireccionDocumentMapperTest` | `convierteADocumentoYVueltaSinPerderDatos` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP09 | `DireccionDocumentMapperTest` | `rechazaDocumentoQueNoCumpleElDominio` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `guardarDireccionNuevaLeAsignaId` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `buscarPorClienteDevuelveSoloLasSuyas` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `actualizarConservaLaFechaDeCreacion` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `eliminarBorraLaDireccion` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `laColeccionRechazaDocumentoIncompleto` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `laColeccionRechazaFormatosInvalidos` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP11 | `ClienteEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP12 | `DireccionControllerTest` | `listarDevuelveLasDireccionesConLaPrincipal` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP13 | `DireccionControllerTest` | `anadirDevuelve201` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP13 | `DireccionControllerTest` | `direccionInvalidaDevuelve400SinRepetirLosDatos` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP13 | `DireccionControllerTest` | `superarElLimiteDevuelve409` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP14 | `DireccionControllerTest` | `editarDevuelve200` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP14 | `DireccionControllerTest` | `editarConDatosInvalidosDevuelve400` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP14 | `DireccionControllerTest` | `editarDireccionAjenaDevuelve404` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP15 | `DireccionControllerTest` | `marcarPrincipalDevuelve204` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP15 | `DireccionControllerTest` | `marcarDireccionAjenaDevuelve404` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP15 | `DireccionControllerTest` | `eliminarDevuelve204ConLaSustituta` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP15 | `DireccionControllerTest` | `eliminarPrincipalSinSustitutaDevuelve409` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP15 | `DireccionControllerTest` | `eliminarDireccionAjenaDevuelve404` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP16 | `DireccionControllerTest` | `sinSesionNoSeAccede` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP16 | `DireccionControllerTest` | `unUsuarioQueNoEsClienteNoAccede` | Infraestructura | AB#105 | PR #161 | 🔍 |
+| HU5-CP16 | `DireccionControllerTest` | `sinTokenCsrfSeRechaza` | Infraestructura | AB#105 | PR #161 | 🔍 |
 
 ---
 
@@ -720,18 +828,18 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU6-CP22 | `PUT /{id}/default` marca el predeterminado (204); uno ajeno o inexistente da 404 `PAYMENT_METHOD_NOT_FOUND` | Controlador | 2 | ✅ Pasa |
 | HU6-CP23 | `DELETE /{id}` elimina (204) con el sustituto elegido; sin él, 409 `DEFAULT_PAYMENT_METHOD_REQUIRED`; uno ajeno o inexistente da 404 | Controlador | 3 | ✅ Pasa |
 | HU6-CP24 | Solo un cliente con sesión accede, y las peticiones que modifican datos exigen CSRF | Controlador | 3 | ✅ Pasa |
-| HU6-CP25 | El cliente de la API de métodos de pago: listar, añadir, marcar el predeterminado, eliminar con sustituto opcional y errores como `ApiError` con su código | Frontend · API | 5 | 🔍 En revisión |
-| HU6-CP26 | La vista lista cada método con su tipo y su máscara, marca el predeterminado, muestra un estado vacío y, si falla la carga, deja reintentar | Frontend (página) | 4 | 🔍 En revisión |
-| HU6-CP27 | El cliente llega desde el enlace «Métodos de pago» de la cabecera; el vendedor y el administrador no acceden | Frontend (página) | 3 | 🔍 En revisión |
-| HU6-CP28 | Marcar otro método como predeterminado lo cambia en la lista; si el método ya no existe, se avisa y se recarga | Frontend (página) | 2 | 🔍 En revisión |
-| HU6-CP29 | Con 5 métodos no se puede añadir otro y se explica por qué; con menos, sí | Frontend (página) | 2 | 🔍 En revisión |
-| HU6-CP30 | El panel de alta empieza con Tarjeta y sus campos; PayPal y Bizum muestran solo el suyo | Frontend (componente) | 2 | 🔍 En revisión |
-| HU6-CP31 | El panel no envía datos con formato incorrecto (número, caducidad, CVV, titular, URL de PayPal y teléfono de Bizum) | Frontend (componente) | 2 | 🔍 En revisión |
-| HU6-CP32 | Se envían solo los datos del tipo elegido; al cancelar se borran; desde la página, guardar cierra el panel, avisa y añade el método a la lista | Frontend (componente y página) | 4 | 🔍 En revisión |
-| HU6-CP33 | Un método rechazado por el backend se avisa sin repetir los datos enviados; el límite tiene su propio mensaje | Frontend (componente) | 2 | 🔍 En revisión |
-| HU6-CP34 | Eliminar un método tras confirmarlo; cancelar no elimina nada | Frontend (componente) | 2 | 🔍 En revisión |
-| HU6-CP35 | Para eliminar el predeterminado hay que elegir el sustituto, salvo si es el único; desde la página, el elegido pasa a ser el predeterminado | Frontend (componente y página) | 3 | 🔍 En revisión |
-| HU6-CP36 | Si la eliminación falla, se avisa sin cerrar el diálogo | Frontend (componente) | 1 | 🔍 En revisión |
+| HU6-CP25 | El cliente de la API de métodos de pago: listar, añadir, marcar el predeterminado, eliminar con sustituto opcional y errores como `ApiError` con su código | Frontend · API | 5 | ✅ Pasa |
+| HU6-CP26 | La vista lista cada método con su tipo y su máscara, marca el predeterminado, muestra un estado vacío y, si falla la carga, deja reintentar | Frontend (página) | 4 | ✅ Pasa |
+| HU6-CP27 | El cliente llega desde el enlace «Métodos de pago» de la cabecera; el vendedor y el administrador no acceden | Frontend (página) | 3 | ✅ Pasa |
+| HU6-CP28 | Marcar otro método como predeterminado lo cambia en la lista; si el método ya no existe, se avisa y se recarga | Frontend (página) | 2 | ✅ Pasa |
+| HU6-CP29 | Con 5 métodos no se puede añadir otro y se explica por qué; con menos, sí | Frontend (página) | 2 | ✅ Pasa |
+| HU6-CP30 | El panel de alta empieza con Tarjeta y sus campos; PayPal y Bizum muestran solo el suyo | Frontend (componente) | 2 | ✅ Pasa |
+| HU6-CP31 | El panel no envía datos con formato incorrecto (número, caducidad, CVV, titular, URL de PayPal y teléfono de Bizum) | Frontend (componente) | 2 | ✅ Pasa |
+| HU6-CP32 | Se envían solo los datos del tipo elegido; al cancelar se borran; desde la página, guardar cierra el panel, avisa y añade el método a la lista | Frontend (componente y página) | 4 | ✅ Pasa |
+| HU6-CP33 | Un método rechazado por el backend se avisa sin repetir los datos enviados; el límite tiene su propio mensaje | Frontend (componente) | 2 | ✅ Pasa |
+| HU6-CP34 | Eliminar un método tras confirmarlo; cancelar no elimina nada | Frontend (componente) | 2 | ✅ Pasa |
+| HU6-CP35 | Para eliminar el predeterminado hay que elegir el sustituto, salvo si es el único; desde la página, el elegido pasa a ser el predeterminado | Frontend (componente y página) | 3 | ✅ Pasa |
+| HU6-CP36 | Si la eliminación falla, se avisa sin cerrar el diálogo | Frontend (componente) | 1 | ✅ Pasa |
 
 Notas:
 - **HU6-CP01 a CP36:** casos propuestos y aprobados por el equipo durante el desarrollo de la HU6: el backend (CP01 a CP24, tasks 271, 110, 270 y 112) y la vista del frontend (CP25 a CP36, tasks 269, 113 y 114). Los casos de prueba no se registran en Azure Boards: viven en esta matriz y en el `@DisplayName` de cada test.
@@ -841,38 +949,38 @@ Notas:
 | HU6-CP24 | `MetodoPagoControllerTest` | `sinSesionNoSeAccede` | Infraestructura | AB#110 | PR #148 | ✅ |
 | HU6-CP24 | `MetodoPagoControllerTest` | `unUsuarioQueNoEsClienteNoAccede` | Infraestructura | AB#110 | PR #148 | ✅ |
 | HU6-CP24 | `MetodoPagoControllerTest` | `sinTokenCsrfSeRechaza` | Infraestructura | AB#110 | PR #148 | ✅ |
-| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: getPaymentMethods pide la lista de métodos del cliente en sesión` | Frontend · API | AB#269 | PR #151 | 🔍 |
-| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: addPaymentMethod envía los datos del método con un POST` | Frontend · API | AB#269 | PR #151 | 🔍 |
-| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: setDefaultPaymentMethod marca el método con un PUT a /{id}/default` | Frontend · API | AB#269 | PR #151 | 🔍 |
-| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: deletePaymentMethod elimina el método y envía el sustituto solo si se indica` | Frontend · API | AB#269 | PR #151 | 🔍 |
-| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: un error del backend llega como ApiError con su código` | Frontend · API | AB#269 | PR #151 | 🔍 |
-| HU6-CP26 | `PaymentMethodsPage.test.jsx` | `HU6-CP26: muestra cada método con su tipo y su máscara, sin otros datos de pago` | Frontend · página | AB#269 | PR #151 | 🔍 |
-| HU6-CP26 | `PaymentMethodsPage.test.jsx` | `HU6-CP26: indica cuál es el método predeterminado` | Frontend · página | AB#269 | PR #151 | 🔍 |
-| HU6-CP26 | `PaymentMethodsPage.test.jsx` | `HU6-CP26: sin métodos muestra un estado vacío con el botón para añadir el primero` | Frontend · página | AB#269 | PR #151 | 🔍 |
-| HU6-CP26 | `PaymentMethodsPage.test.jsx` | `HU6-CP26: si falla la carga avisa y deja reintentar` | Frontend · página | AB#269 | PR #151 | 🔍 |
-| HU6-CP27 | `PaymentMethodsPage.test.jsx` | `HU6-CP27: el cliente tiene el enlace «Métodos de pago» en la cabecera y llega a la vista` | Frontend · página | AB#269 | PR #151 | 🔍 |
-| HU6-CP27 | `PaymentMethodsPage.test.jsx` | `HU6-CP27: un vendedor o un administrador no acceden a la vista (vendedor@esibuy.test)` | Frontend · página | AB#269 | PR #151 | 🔍 |
-| HU6-CP27 | `PaymentMethodsPage.test.jsx` | `HU6-CP27: un vendedor o un administrador no acceden a la vista (admin@esibuy.test)` | Frontend · página | AB#269 | PR #151 | 🔍 |
-| HU6-CP28 | `PaymentMethodsPage.test.jsx` | `HU6-CP28: marcar otro método como predeterminado lo cambia en la lista` | Frontend · página | AB#269 | PR #151 | 🔍 |
-| HU6-CP28 | `PaymentMethodsPage.test.jsx` | `HU6-CP28: si el método ya no existe avisa y recarga la lista` | Frontend · página | AB#269 | PR #151 | 🔍 |
-| HU6-CP29 | `PaymentMethodsPage.test.jsx` | `HU6-CP29: con 5 métodos no deja añadir otro y explica por qué` | Frontend · página | AB#269 | PR #151 | 🔍 |
-| HU6-CP29 | `PaymentMethodsPage.test.jsx` | `HU6-CP29: con menos de 5 métodos se puede añadir otro` | Frontend · página | AB#269 | PR #151 | 🔍 |
-| HU6-CP30 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP30: empieza con Tarjeta elegida y sus campos: número, caducidad, CVV y titular` | Frontend · componente | AB#269 | PR #151 | 🔍 |
-| HU6-CP30 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP30: al elegir PayPal o Bizum muestra solo su campo` | Frontend · componente | AB#269 | PR #151 | 🔍 |
-| HU6-CP31 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP31: no envía una tarjeta con el número, la caducidad, el CVV o el titular con formato incorrecto` | Frontend · componente | AB#269 | PR #151 | 🔍 |
-| HU6-CP31 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP31: no envía una URL de PayPal o un teléfono de Bizum con formato incorrecto` | Frontend · componente | AB#269 | PR #151 | 🔍 |
-| HU6-CP32 | `PaymentMethodsPage.test.jsx` | `HU6-CP32: al guardar un método se cierra el panel, se avisa y aparece en la lista` | Frontend · página | AB#269 | PR #151 | 🔍 |
-| HU6-CP32 | `PaymentMethodsPage.test.jsx` | `HU6-CP32: al cancelar se cierra el panel sin añadir nada` | Frontend · página | AB#269 | PR #151 | 🔍 |
-| HU6-CP32 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP32: guarda solo los datos del tipo elegido y avisa de que se ha añadido` | Frontend · componente | AB#269 | PR #151 | 🔍 |
-| HU6-CP32 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP32: al cancelar o cerrar el panel se borran los datos escritos` | Frontend · componente | AB#269 | PR #151 | 🔍 |
-| HU6-CP33 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP33: un método rechazado por el backend muestra un aviso sin repetir los datos enviados` | Frontend · componente | AB#269 | PR #151 | 🔍 |
-| HU6-CP33 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP33: al superar el límite de métodos avisa de que ya hay 5` | Frontend · componente | AB#269 | PR #151 | 🔍 |
-| HU6-CP34 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP34: elimina un método que no es el predeterminado tras confirmarlo` | Frontend · componente | AB#269 | PR #151 | 🔍 |
-| HU6-CP34 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP34: al cancelar no elimina nada` | Frontend · componente | AB#269 | PR #151 | 🔍 |
-| HU6-CP35 | `PaymentMethodsPage.test.jsx` | `HU6-CP35: al eliminar el predeterminado eligiendo otro, desaparece de la lista y el elegido pasa a serlo` | Frontend · página | AB#269 | PR #151 | 🔍 |
-| HU6-CP35 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP35: para eliminar el predeterminado hay que elegir otro método como predeterminado` | Frontend · componente | AB#269 | PR #151 | 🔍 |
-| HU6-CP35 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP35: el único método se elimina sin elegir sustituto` | Frontend · componente | AB#269 | PR #151 | 🔍 |
-| HU6-CP36 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP36: si la eliminación falla avisa y no cierra el diálogo` | Frontend · componente | AB#269 | PR #151 | 🔍 |
+| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: getPaymentMethods pide la lista de métodos del cliente en sesión` | Frontend · API | AB#269 | PR #151 | ✅ |
+| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: addPaymentMethod envía los datos del método con un POST` | Frontend · API | AB#269 | PR #151 | ✅ |
+| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: setDefaultPaymentMethod marca el método con un PUT a /{id}/default` | Frontend · API | AB#269 | PR #151 | ✅ |
+| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: deletePaymentMethod elimina el método y envía el sustituto solo si se indica` | Frontend · API | AB#269 | PR #151 | ✅ |
+| HU6-CP25 | `paymentMethods.test.js` | `HU6-CP25: un error del backend llega como ApiError con su código` | Frontend · API | AB#269 | PR #151 | ✅ |
+| HU6-CP26 | `PaymentMethodsPage.test.jsx` | `HU6-CP26: muestra cada método con su tipo y su máscara, sin otros datos de pago` | Frontend · página | AB#269 | PR #151 | ✅ |
+| HU6-CP26 | `PaymentMethodsPage.test.jsx` | `HU6-CP26: indica cuál es el método predeterminado` | Frontend · página | AB#269 | PR #151 | ✅ |
+| HU6-CP26 | `PaymentMethodsPage.test.jsx` | `HU6-CP26: sin métodos muestra un estado vacío con el botón para añadir el primero` | Frontend · página | AB#269 | PR #151 | ✅ |
+| HU6-CP26 | `PaymentMethodsPage.test.jsx` | `HU6-CP26: si falla la carga avisa y deja reintentar` | Frontend · página | AB#269 | PR #151 | ✅ |
+| HU6-CP27 | `PaymentMethodsPage.test.jsx` | `HU6-CP27: el cliente tiene el enlace «Métodos de pago» en la cabecera y llega a la vista` | Frontend · página | AB#269 | PR #151 | ✅ |
+| HU6-CP27 | `PaymentMethodsPage.test.jsx` | `HU6-CP27: un vendedor o un administrador no acceden a la vista (vendedor@esibuy.test)` | Frontend · página | AB#269 | PR #151 | ✅ |
+| HU6-CP27 | `PaymentMethodsPage.test.jsx` | `HU6-CP27: un vendedor o un administrador no acceden a la vista (admin@esibuy.test)` | Frontend · página | AB#269 | PR #151 | ✅ |
+| HU6-CP28 | `PaymentMethodsPage.test.jsx` | `HU6-CP28: marcar otro método como predeterminado lo cambia en la lista` | Frontend · página | AB#269 | PR #151 | ✅ |
+| HU6-CP28 | `PaymentMethodsPage.test.jsx` | `HU6-CP28: si el método ya no existe avisa y recarga la lista` | Frontend · página | AB#269 | PR #151 | ✅ |
+| HU6-CP29 | `PaymentMethodsPage.test.jsx` | `HU6-CP29: con 5 métodos no deja añadir otro y explica por qué` | Frontend · página | AB#269 | PR #151 | ✅ |
+| HU6-CP29 | `PaymentMethodsPage.test.jsx` | `HU6-CP29: con menos de 5 métodos se puede añadir otro` | Frontend · página | AB#269 | PR #151 | ✅ |
+| HU6-CP30 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP30: empieza con Tarjeta elegida y sus campos: número, caducidad, CVV y titular` | Frontend · componente | AB#269 | PR #151 | ✅ |
+| HU6-CP30 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP30: al elegir PayPal o Bizum muestra solo su campo` | Frontend · componente | AB#269 | PR #151 | ✅ |
+| HU6-CP31 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP31: no envía una tarjeta con el número, la caducidad, el CVV o el titular con formato incorrecto` | Frontend · componente | AB#269 | PR #151 | ✅ |
+| HU6-CP31 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP31: no envía una URL de PayPal o un teléfono de Bizum con formato incorrecto` | Frontend · componente | AB#269 | PR #151 | ✅ |
+| HU6-CP32 | `PaymentMethodsPage.test.jsx` | `HU6-CP32: al guardar un método se cierra el panel, se avisa y aparece en la lista` | Frontend · página | AB#269 | PR #151 | ✅ |
+| HU6-CP32 | `PaymentMethodsPage.test.jsx` | `HU6-CP32: al cancelar se cierra el panel sin añadir nada` | Frontend · página | AB#269 | PR #151 | ✅ |
+| HU6-CP32 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP32: guarda solo los datos del tipo elegido y avisa de que se ha añadido` | Frontend · componente | AB#269 | PR #151 | ✅ |
+| HU6-CP32 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP32: al cancelar o cerrar el panel se borran los datos escritos` | Frontend · componente | AB#269 | PR #151 | ✅ |
+| HU6-CP33 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP33: un método rechazado por el backend muestra un aviso sin repetir los datos enviados` | Frontend · componente | AB#269 | PR #151 | ✅ |
+| HU6-CP33 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP33: al superar el límite de métodos avisa de que ya hay 5` | Frontend · componente | AB#269 | PR #151 | ✅ |
+| HU6-CP34 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP34: elimina un método que no es el predeterminado tras confirmarlo` | Frontend · componente | AB#269 | PR #151 | ✅ |
+| HU6-CP34 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP34: al cancelar no elimina nada` | Frontend · componente | AB#269 | PR #151 | ✅ |
+| HU6-CP35 | `PaymentMethodsPage.test.jsx` | `HU6-CP35: al eliminar el predeterminado eligiendo otro, desaparece de la lista y el elegido pasa a serlo` | Frontend · página | AB#269 | PR #151 | ✅ |
+| HU6-CP35 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP35: para eliminar el predeterminado hay que elegir otro método como predeterminado` | Frontend · componente | AB#269 | PR #151 | ✅ |
+| HU6-CP35 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP35: el único método se elimina sin elegir sustituto` | Frontend · componente | AB#269 | PR #151 | ✅ |
+| HU6-CP36 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP36: si la eliminación falla avisa y no cierra el diálogo` | Frontend · componente | AB#269 | PR #151 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `NumeroTarjetaTest`, `CaducidadTarjetaTest`, `TitularTarjetaTest`, `UrlPayPalTest`, `TelefonoBizumTest`, `MetodoPagoTest` y `MetodosPagoClienteTest`: `metodospago/domain/model/` (solo JUnit)
@@ -2317,6 +2425,7 @@ Tests que no validan una HU concreta.
 | `MetodosPagoConfigTest` | `elContextoConectaLasPiezasDeLosMetodosDePago` | Que Spring conecta el servicio de métodos de pago con su adaptador de MongoDB, su cifrado AES-GCM y el cliente en sesión (HU6; AB#271, PR #148) |
 | `MetodosPagoConfigTest` | `losDatosDePagoSeCifranConLaClaveConfigurada` | Que los datos de pago se cifran con la clave de `esibuy.pagos.clave-cifrado`, que en los tests pone `MongoTestcontainersConfig` (HU6; AB#271, PR #148) |
 | `CarritoConfigTest` | `elContextoConectaLasPiezasDelCarrito` | Que Spring conecta el servicio del carrito con su adaptador de MongoDB, los productos y los usuarios (HU9; AB#385, PR #162) |
+| `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |
 | `SecurityConfigTest` | `unaPeticionRecibeElTokenCsrfEnUnaCookie` | Que cualquier respuesta, aunque sea un 401, entrega el token CSRF en la cookie `XSRF-TOKEN` sin `HttpOnly` (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostSinTokenCsrfSeRechaza` | Que un `POST` sin token CSRF se rechaza con 403 (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostConElTokenDeLaCookieEnLaCabeceraSeAcepta` | Que un `POST` con el token de la cookie en la cabecera `X-XSRF-TOKEN` pasa el filtro CSRF (AB#230, PR #67) |
@@ -2330,7 +2439,7 @@ Tests que no validan una HU concreta.
 | `UsuarioMongoAdapterTest` | `guardaFechasDeCreacionYModificacion` | Que se guardan `createdAt` y `updatedAt` (auditoría de Spring Data) y que `createdAt` no cambia al actualizar (AB#210, PR #43) |
 | `ProductoMongoAdapterTest` | `guardarUnProductoLeidoLoActualiza` | Que guardar un producto leído lo actualiza sin duplicarlo y conserva `createdAt` (AB#202, PR #86) |
 | `ProductoMongoAdapterTest` | `elPrecioSeGuardaComoNumero` | Que el precio y los porcentajes de descuento se guardan como `Decimal128`, no como texto (AB#202, PR #86) |
-| `InicializadorColeccionesTest` | `creaLasOnceColecciones` | Que al arrancar se crean las 11 colecciones: las 10 del modelo de BBDD y `metodos_pago` (AB#210, PR #43; ampliado en AB#271, PR #148) |
+| `InicializadorColeccionesTest` | `creaLasDoceColecciones` | Que al arrancar se crean las 12 colecciones: las 10 del modelo de BBDD, `metodos_pago` y `direcciones_envio` (AB#210, PR #43; ampliado en AB#271, PR #148, y en AB#105, PR #161) |
 | `InicializadorColeccionesTest` | `sePuedeEjecutarOtraVez` | Que el inicializador se puede ejecutar en cada arranque sin fallar ni duplicar índices (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `actualizaLaValidacionDeUnaColeccionExistente` | Que aplica la validación a una colección que ya existía sin ella (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `sinPermisoParaCambiarLaValidacionNoFalla` | Que sin permiso `collMod` (usuario de la aplicación en Atlas) avisa y la aplicación arranca igual (AB#210, PR #43) |

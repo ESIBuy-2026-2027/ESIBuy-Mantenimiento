@@ -6,6 +6,10 @@ import es.uclm.esibuy.backend.carrito.domain.exception.CantidadInvalidaException
 import es.uclm.esibuy.backend.carrito.domain.exception.LineaCarritoNoEncontradaException;
 import es.uclm.esibuy.backend.carrito.domain.exception.ProductoNoComprableException;
 import es.uclm.esibuy.backend.carrito.domain.exception.StockInsuficienteException;
+import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionInvalidaException;
+import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionNoEncontradaException;
+import es.uclm.esibuy.backend.direcciones.domain.exception.LimiteDireccionesException;
+import es.uclm.esibuy.backend.direcciones.domain.exception.NuevaPrincipalObligatoriaException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.LimiteMetodosPagoException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoInvalidoException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoNoEncontradoException;
@@ -283,5 +287,36 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public RespuestaError lineaCarritoNoEncontrada() {
         return new RespuestaError("El producto no está en el carrito", "CART_ITEM_NOT_FOUND");
+    }
+
+    // 400 + code al añadir o editar una dirección de envío (HU5). El mensaje es genérico: nunca el detalle de
+    // la regla ni los datos enviados.
+    @ExceptionHandler(DireccionInvalidaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError direccionInvalida() {
+        return new RespuestaError("La dirección de envío es inválida", CODIGO_VALIDACION);
+    }
+
+    // 409 + code cuando el cliente ya tiene el máximo de direcciones de envío (HU5: 5)
+    @ExceptionHandler(LimiteDireccionesException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError limiteDirecciones() {
+        return new RespuestaError("Se ha alcanzado el máximo de direcciones de envío", "ADDRESS_LIMIT_REACHED");
+    }
+
+    // 404 + code al editar, marcar o eliminar una dirección (HU5): una ajena se responde igual que una
+    // inexistente, para no revelar que existe
+    @ExceptionHandler(DireccionNoEncontradaException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public RespuestaError direccionNoEncontrada() {
+        return new RespuestaError("La dirección de envío no existe", "ADDRESS_NOT_FOUND");
+    }
+
+    // 409 + code al eliminar la dirección principal sin elegir cuál la sustituye (HU5)
+    @ExceptionHandler(NuevaPrincipalObligatoriaException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError nuevaPrincipalObligatoria() {
+        return new RespuestaError("Hay que elegir la nueva dirección de envío principal",
+                "PRINCIPAL_ADDRESS_REQUIRED");
     }
 }
