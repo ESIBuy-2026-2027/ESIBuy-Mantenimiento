@@ -2,6 +2,10 @@ package es.uclm.esibuy.backend.shared.error;
 
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaDuplicadaException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaInvalidaException;
+import es.uclm.esibuy.backend.carrito.domain.exception.CantidadInvalidaException;
+import es.uclm.esibuy.backend.carrito.domain.exception.LineaCarritoNoEncontradaException;
+import es.uclm.esibuy.backend.carrito.domain.exception.ProductoNoComprableException;
+import es.uclm.esibuy.backend.carrito.domain.exception.StockInsuficienteException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.LimiteMetodosPagoException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoInvalidoException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoNoEncontradoException;
@@ -253,5 +257,31 @@ public class ManejadorGlobalErrores {
     public RespuestaError nuevoPredeterminadoObligatorio() {
         return new RespuestaError("Hay que elegir el nuevo método de pago predeterminado",
                 "DEFAULT_PAYMENT_METHOD_REQUIRED");
+    }
+
+    // Carrito (HU9): los codes que ya espera el frontend (frontend/src/api/cart.js)
+    @ExceptionHandler(CantidadInvalidaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError cantidadInvalida() {
+        return new RespuestaError("La cantidad no es válida", CODIGO_VALIDACION);
+    }
+
+    @ExceptionHandler(StockInsuficienteException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError stockInsuficiente() {
+        return new RespuestaError("No hay stock suficiente", "INSUFFICIENT_STOCK");
+    }
+
+    // Un producto que no existe o no está disponible se responde igual que uno inexistente
+    @ExceptionHandler(ProductoNoComprableException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public RespuestaError productoNoComprable() {
+        return new RespuestaError("El producto no existe", "PRODUCT_NOT_FOUND");
+    }
+
+    @ExceptionHandler(LineaCarritoNoEncontradaException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public RespuestaError lineaCarritoNoEncontrada() {
+        return new RespuestaError("El producto no está en el carrito", "CART_ITEM_NOT_FOUND");
     }
 }
