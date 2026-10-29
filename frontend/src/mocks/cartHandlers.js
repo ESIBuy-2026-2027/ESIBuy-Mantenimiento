@@ -72,14 +72,14 @@ const sinExistencias = () => HttpResponse.json({ code: 'INSUFFICIENT_STOCK' }, {
 const peticionIncorrecta = () => HttpResponse.json({ code: 'VALIDATION_ERROR' }, { status: 400 })
 
 export const cartHandlers = [
-  http.get('/api/cart', () => {
+  http.get('/api/customer/cart', () => {
     const rechazo = rechazarSiNoEsCliente()
     if (rechazo) return rechazo
     return HttpResponse.json(aCarrito(carritoDe(getUsuarioEnSesion())))
   }),
 
   // Añade unidades a las que ya hubiera (HU9).
-  http.post('/api/cart/items', async ({ request }) => {
+  http.post('/api/customer/cart/items', async ({ request }) => {
     const rechazo = rechazarSiNoEsCliente()
     if (rechazo) return rechazo
 
@@ -97,7 +97,7 @@ export const cartHandlers = [
   }),
 
   // Fija la cantidad de un producto que ya está en el carrito.
-  http.put('/api/cart/items/:id', async ({ params, request }) => {
+  http.put('/api/customer/cart/items/:id', async ({ params, request }) => {
     const rechazo = rechazarSiNoEsCliente()
     if (rechazo) return rechazo
 
@@ -112,7 +112,7 @@ export const cartHandlers = [
     return HttpResponse.json(aCarrito(carrito))
   }),
 
-  http.delete('/api/cart/items/:id', ({ params }) => {
+  http.delete('/api/customer/cart/items/:id', ({ params }) => {
     const rechazo = rechazarSiNoEsCliente()
     if (rechazo) return rechazo
 
@@ -121,7 +121,7 @@ export const cartHandlers = [
     return HttpResponse.json(aCarrito(carrito))
   }),
 
-  http.delete('/api/cart', () => {
+  http.delete('/api/customer/cart', () => {
     const rechazo = rechazarSiNoEsCliente()
     if (rechazo) return rechazo
 
