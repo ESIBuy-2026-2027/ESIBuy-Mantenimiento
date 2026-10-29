@@ -16,7 +16,7 @@ public interface RealizacionPedidoUseCase {
      * @throws es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaException si la dirección no es suya
      * @throws es.uclm.esibuy.backend.pedidos.domain.exception.CarritoSinProductosDelProveedorException si no tiene
      *         productos de ese proveedor en el carrito
-     * @throws es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficienteException si falta stock
+     * @throws es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException si falta stock
      */
     Pedido realizar(RealizarPedidoCommand comando);
 }

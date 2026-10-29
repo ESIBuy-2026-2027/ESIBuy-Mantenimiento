@@ -5,7 +5,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.in.RealizarPedidoCommand;
 import es.uclm.esibuy.backend.pedidos.domain.exception.CarritoSinProductosDelProveedorException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
-import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficienteException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.LineaPedido;
@@ -93,10 +93,10 @@ class PedidoControllerTest {
     @Test
     @DisplayName("HU10-CP16: un método de pago o una dirección que no son del cliente responden 400")
     void unMetodoODireccionAjenosResponden400() throws Exception {
-        when(realizacionPedido.realizar(COMANDO)).thenThrow(new MetodoPagoNoValidoException("no"));
-        realizar(CUERPO).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        when(realizacionPedido.realizar(COMANDO))
+                .thenThrow(new MetodoPagoNoValidoException("no"), new DireccionNoValidaException("no"));
 
-        when(realizacionPedido.realizar(COMANDO)).thenThrow(new DireccionNoValidaException("no"));
+        realizar(CUERPO).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
         realizar(CUERPO).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
     }
 
@@ -113,7 +113,7 @@ class PedidoControllerTest {
     @Test
     @DisplayName("HU10-CP15: si falta stock responde 409 con el code INSUFFICIENT_STOCK")
     void siFaltaStockResponde409() throws Exception {
-        when(realizacionPedido.realizar(COMANDO)).thenThrow(new StockInsuficienteException("no"));
+        when(realizacionPedido.realizar(COMANDO)).thenThrow(new StockInsuficientePedidoException("no"));
 
         realizar(CUERPO).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("INSUFFICIENT_STOCK"));
     }

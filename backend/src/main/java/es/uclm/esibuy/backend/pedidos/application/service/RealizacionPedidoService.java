@@ -19,7 +19,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
 import es.uclm.esibuy.backend.pedidos.domain.exception.CarritoSinProductosDelProveedorException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
-import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficienteException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.LineaPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.NumeroPedido;
@@ -90,7 +90,7 @@ public class RealizacionPedidoService implements RealizacionPedidoUseCase {
         for (LineaPedido linea : lineas) {
             if (!existencias.descontar(linea.productoId(), linea.cantidad())) {
                 reponer(descontadas);
-                throw new StockInsuficienteException("No hay stock suficiente de un producto del pedido");
+                throw new StockInsuficientePedidoException("No hay stock suficiente de un producto del pedido");
             }
             descontadas.add(linea);
         }

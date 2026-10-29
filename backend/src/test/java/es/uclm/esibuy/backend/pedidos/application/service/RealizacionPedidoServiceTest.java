@@ -14,7 +14,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
 import es.uclm.esibuy.backend.pedidos.domain.exception.CarritoSinProductosDelProveedorException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
-import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficienteException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.LineaPedido;
@@ -112,7 +112,7 @@ class RealizacionPedidoServiceTest {
     void siFaltaStockNoSeCreaElPedidoYSeRepone() {
         stock.unidades.put("p-2", 0);
 
-        assertThrows(StockInsuficienteException.class, () -> realizar("u-2"));
+        assertThrows(StockInsuficientePedidoException.class, () -> realizar("u-2"));
 
         assertEquals(10, stock.unidades.get("p-1"));
         assertTrue(pedidos.guardados.isEmpty());
