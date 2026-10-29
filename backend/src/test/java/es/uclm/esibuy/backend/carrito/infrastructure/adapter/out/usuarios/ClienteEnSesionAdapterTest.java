@@ -1,0 +1,37 @@
+package es.uclm.esibuy.backend.carrito.infrastructure.adapter.out.usuarios;
+
+import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
+
+// Adaptador del carrito hacia el módulo de usuarios (HU9). El puerto de entrada de usuarios es un doble de prueba
+// (Mockito), como en el ClienteEnSesionAdapterTest de metodospago: se prueba sin Spring ni MongoDB.
+@ExtendWith(MockitoExtension.class)
+class ClienteEnSesionAdapterTest {
+
+    @Mock
+    private AutenticacionUseCase autenticacion;
+
+    @Test
+    @DisplayName("HU9-CP16: el id del cliente se pide al módulo de usuarios por su puerto de entrada")
+    void idPorCorreoPreguntaAlModuloDeUsuarios() {
+        when(autenticacion.consultarIdUsuarioEnSesion("cliente@esibuy.test")).thenReturn("c-1");
+
+        assertEquals("c-1", new ClienteEnSesionAdapter(autenticacion).idPorCorreo("cliente@esibuy.test"));
+    }
+
+    @Test
+    @DisplayName("HU9-CP19: si el cliente es premium se pregunta al módulo de usuarios")
+    void esPremiumPreguntaAlModuloDeUsuarios() {
+        when(autenticacion.esClientePremium("cliente@esibuy.test")).thenReturn(true);
+
+        assertTrue(new ClienteEnSesionAdapter(autenticacion).esPremium("cliente@esibuy.test"));
+    }
+}
