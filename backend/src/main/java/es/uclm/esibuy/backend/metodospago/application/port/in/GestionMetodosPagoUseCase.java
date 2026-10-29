@@ -36,4 +36,7 @@ public interface GestionMetodosPagoUseCase {
      *         falta elegir el sustituto
      */
     void eliminar(String emailCliente, String metodoId, String nuevoPredeterminadoId);
+
+    /** Si el método de pago es del cliente en sesión, para el pedido (HU10): así no ve el dominio de metodospago. */
+    boolean esDelCliente(String emailCliente, String metodoId);
 }

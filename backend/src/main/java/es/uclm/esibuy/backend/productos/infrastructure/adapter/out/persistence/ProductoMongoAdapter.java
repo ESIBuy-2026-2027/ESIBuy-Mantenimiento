@@ -18,6 +18,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
 import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalogo;
@@ -29,6 +30,8 @@ import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
 
 /** Adaptador de salida que implementa el repositorio de productos con Spring Data MongoDB. */
 public class ProductoMongoAdapter implements ProductoRepositoryPort {
+
+    private static final String CAMPO_STOCK = "stock";
 
     private final ProductoMongoRepository repository;
     private final ProductoDocumentMapper mapper;
@@ -60,6 +63,21 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     @Override
     public Optional<Producto> buscarPorId(String id) {
         return repository.findById(id).map(mapper::aDominio);
+    }
+
+    // La condición (stock >= cantidad) y la resta van en la misma operación de MongoDB: dos compras a la vez del
+    // último stock no pueden pasar las dos
+    @Override
+    public boolean descontarStock(String id, int cantidad) {
+        Query conStockSuficiente = new Query(Criteria.where("_id").is(id).and(CAMPO_STOCK).gte(cantidad));
+        return mongoTemplate.updateFirst(conStockSuficiente, new Update().inc(CAMPO_STOCK, -cantidad),
+                ProductoDocument.class).getModifiedCount() == 1;
+    }
+
+    @Override
+    public void reponerStock(String id, int cantidad) {
+        mongoTemplate.updateFirst(new Query(Criteria.where("_id").is(id)), new Update().inc(CAMPO_STOCK, cantidad),
+                ProductoDocument.class);
     }
 
     @Override

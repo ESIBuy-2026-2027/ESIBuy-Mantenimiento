@@ -32,4 +32,9 @@ public interface ProductoRepositoryPort {
 
     // Número de productos de cada categoría, por su id (HU39). Las categorías sin productos no aparecen.
     Map<String, Long> contarPorCategoria();
+
+    // Stock al comprar (HU10): resta en una sola operación y solo si hay bastante; devuelve si lo ha restado
+    boolean descontarStock(String id, int cantidad);
+
+    void reponerStock(String id, int cantidad);
 }
