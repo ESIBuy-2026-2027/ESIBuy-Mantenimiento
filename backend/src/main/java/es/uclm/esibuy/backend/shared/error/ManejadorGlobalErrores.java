@@ -14,6 +14,11 @@ import es.uclm.esibuy.backend.metodospago.domain.exception.LimiteMetodosPagoExce
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoInvalidoException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoNoEncontradoException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.NuevoPredeterminadoObligatorioException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.CarritoSinProductosDelProveedorException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
@@ -326,5 +331,26 @@ public class ManejadorGlobalErrores {
     public RespuestaError nuevaPrincipalObligatoria() {
         return new RespuestaError("Hay que elegir la nueva dirección de envío principal",
                 "PRINCIPAL_ADDRESS_REQUIRED");
+    }
+
+    // Pedidos (HU10): un método de pago o una dirección que no son del cliente se responden igual que unos datos
+    // inválidos, para no revelar que existen
+    @ExceptionHandler({MetodoPagoNoValidoException.class, DireccionNoValidaException.class,
+            PedidoInvalidoException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError pedidoInvalido() {
+        return new RespuestaError("El pedido es inválido", CODIGO_VALIDACION);
+    }
+
+    @ExceptionHandler(CarritoSinProductosDelProveedorException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError carritoSinProductosDelProveedor() {
+        return new RespuestaError("No hay productos de ese proveedor en el carrito", "CART_EMPTY");
+    }
+
+    @ExceptionHandler(StockInsuficientePedidoException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError stockInsuficienteEnElPedido() {
+        return new RespuestaError("No hay stock suficiente", "INSUFFICIENT_STOCK");
     }
 }

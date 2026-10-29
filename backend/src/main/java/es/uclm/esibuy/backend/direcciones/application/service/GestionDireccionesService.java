@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.direcciones.application.service;
 
 import es.uclm.esibuy.backend.direcciones.application.port.in.DireccionCommand;
+import es.uclm.esibuy.backend.direcciones.application.port.in.DireccionParaPedido;
 import es.uclm.esibuy.backend.direcciones.application.port.in.GestionDireccionesUseCase;
 import es.uclm.esibuy.backend.direcciones.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.direcciones.application.port.out.DireccionRepositoryPort;
@@ -11,6 +12,7 @@ import es.uclm.esibuy.backend.direcciones.domain.model.DireccionEnvio;
 import es.uclm.esibuy.backend.direcciones.domain.model.DireccionesCliente;
 import es.uclm.esibuy.backend.direcciones.domain.model.TelefonoContacto;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Implementa la gestión de direcciones de envío del cliente. Solo habla con el exterior a través de los
@@ -30,6 +32,19 @@ public class GestionDireccionesService implements GestionDireccionesUseCase {
     @Override
     public List<DireccionEnvio> listar(String emailCliente) {
         return direccionRepository.buscarPorCliente(clienteEnSesion.idPorCorreo(emailCliente));
+    }
+
+    @Override
+    public Optional<DireccionParaPedido> consultarParaPedido(String emailCliente, String direccionId) {
+        return listar(emailCliente).stream()
+                .filter(direccion -> direccion.getId().equals(direccionId))
+                .findFirst()
+                .map(direccion -> {
+                    DatosDireccion datos = direccion.getDatos();
+                    return new DireccionParaPedido(datos.destinatario(), datos.calle(), datos.detalles(),
+                            datos.codigoPostal().valor(), datos.ciudad(), datos.provincia(),
+                            datos.telefono().valor());
+                });
     }
 
     @Override

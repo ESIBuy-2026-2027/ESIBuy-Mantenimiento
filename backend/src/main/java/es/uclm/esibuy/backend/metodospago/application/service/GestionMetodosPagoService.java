@@ -82,6 +82,11 @@ public class GestionMetodosPagoService implements GestionMetodosPagoUseCase {
         metodos.getMetodos().forEach(metodoPagoRepository::guardar);
     }
 
+    @Override
+    public boolean esDelCliente(String emailCliente, String metodoId) {
+        return listar(emailCliente).stream().anyMatch(metodo -> metodo.getId().equals(metodoId));
+    }
+
     // Solo los del cliente en sesión: un id de otro cliente no se encuentra
     private MetodosPagoCliente metodosDelCliente(String emailCliente) {
         return new MetodosPagoCliente(

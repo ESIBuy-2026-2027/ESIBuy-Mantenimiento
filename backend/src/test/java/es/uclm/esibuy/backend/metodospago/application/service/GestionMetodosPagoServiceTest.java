@@ -350,4 +350,17 @@ class GestionMetodosPagoServiceTest {
             return EMAIL_CLIENTE.equals(email) ? ID_CLIENTE : "otro-cliente";
         }
     }
+
+    // Para el pedido (HU10): saber si el método con el que se paga es del cliente, sin ver el dominio de metodospago
+    @Test
+    @DisplayName("HU10-CP16: esDelCliente solo acepta un método de pago del cliente en sesión")
+    void esDelClienteSoloAceptaUnMetodoPropio() {
+        String propio = servicio.anadir(tarjeta("4111111111111111", "Juan Pérez", "12/27")).getId();
+        String ajeno = repositorio.guardar(MetodoPago.nuevo("otro-cliente", TipoMetodoPago.BIZUM, "•••• 678",
+                "bloque-cifrado")).getId();
+
+        assertTrue(servicio.esDelCliente(EMAIL_CLIENTE, propio));
+        assertFalse(servicio.esDelCliente(EMAIL_CLIENTE, ajeno));
+        assertFalse(servicio.esDelCliente(EMAIL_CLIENTE, "no-existe"));
+    }
 }

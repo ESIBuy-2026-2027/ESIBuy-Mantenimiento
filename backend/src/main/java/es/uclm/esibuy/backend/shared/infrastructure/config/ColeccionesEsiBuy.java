@@ -61,7 +61,8 @@ final class ColeccionesEsiBuy {
 
     static List<Coleccion> todas() {
         return List.of(usuarios(), sesiones(), factoresAutenticacion(), tokensSeguridad(), productos(),
-                pedidos(), carritos(), valoraciones(), categorias(), listasDeseos(), metodosPago(), direccionesEnvio());
+                pedidos(), carritos(), valoraciones(), categorias(), listasDeseos(), metodosPago(), direccionesEnvio(),
+                contadores());
     }
 
     // 1. usuarios: identidad, rol, estado y perfil, con los campos del modelo en la raíz del documento,
@@ -181,6 +182,8 @@ final class ColeccionesEsiBuy {
     }
 
     // 6. pedidos: compras y precios históricos. Los estados posibles están pendientes de acordar: solo se exige texto.
+    // HU10: un pedido por proveedor (vendedorId y nombreComercial en la raíz) y su número ESB-AAAA-NNNNNN, único.
+    // El índice del número es sparse: los pedidos sin número (anteriores a la HU10) no cuentan.
     private static Coleccion pedidos() {
         return new Coleccion("pedidos", esquema(List.of(CLIENTE_ID, ESTADO, "lineas"),
                 textoNoVacio(CLIENTE_ID),
@@ -200,9 +203,12 @@ final class ColeccionesEsiBuy {
                 importe("descuentoTotal"),
                 importe("total"),
                 object("direccionEnvio"),
-                string("paymentMethodId")),
+                string("paymentMethodId"),
+                string("numeroPedido").matching("^ESB-[0-9]{4}-[0-9]{6}$"),
+                textoNoVacio(VENDEDOR_ID),
+                string("nombreComercial")),
                 List.of(indice(CLIENTE_ID), indice(ESTADO), indice("createdAt"), indice("lineas.productoId"),
-                        indice("lineas.vendedorId")));
+                        indice("lineas.vendedorId"), indice("numeroPedido").unique().sparse()));
     }
 
     // 7. carritos: un carrito activo por cliente.
@@ -284,6 +290,12 @@ final class ColeccionesEsiBuy {
                         string("telefono").matching("^[0-9]{9}$"),
                         bool("principal")),
                 List.of());
+    }
+
+    // 13. contadores: correlativos atómicos, fuera del modelo inicial. HU10: uno por año para los números de pedido
+    // (_id = "pedidos-2026"), que vuelven a empezar cada año (decisión del equipo).
+    private static Coleccion contadores() {
+        return new Coleccion("contadores", esquema(List.of("valor"), number("valor").gte(1)), List.of());
     }
 
     // Todas las colecciones llevan createdAt y updatedAt («Convenciones comunes» del modelo).

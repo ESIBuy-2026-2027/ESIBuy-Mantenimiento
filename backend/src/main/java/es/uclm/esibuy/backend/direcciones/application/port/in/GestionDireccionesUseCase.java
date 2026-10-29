@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.direcciones.application.port.in;
 
 import es.uclm.esibuy.backend.direcciones.domain.model.DireccionEnvio;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Gestión de sus propias direcciones de envío por parte del cliente (HU5). Recibe el correo del cliente en
@@ -45,4 +46,11 @@ public interface GestionDireccionesUseCase {
      *         elegir la sustituta
      */
     void eliminar(String emailCliente, String direccionId, String nuevaPrincipalId);
+
+    /**
+     * Los datos de una dirección del cliente en sesión para el pedido (HU10).
+     *
+     * @return vacío si la dirección no existe o es de otro cliente
+     */
+    Optional<DireccionParaPedido> consultarParaPedido(String emailCliente, String direccionId);
 }

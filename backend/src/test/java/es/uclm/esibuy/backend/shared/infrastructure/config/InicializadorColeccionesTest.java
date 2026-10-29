@@ -61,12 +61,12 @@ class InicializadorColeccionesTest {
     }
 
     @Test
-    @DisplayName("Inicialización: crea las 12 colecciones del modelo de BBDD")
-    void creaLasDoceColecciones() {
-        // Las 10 del modelo inicial, metodos_pago (HU6) y direcciones_envio (HU5)
+    @DisplayName("Inicialización: crea las 13 colecciones del modelo de BBDD")
+    void creaLasTreceColecciones() {
+        // Las 10 del modelo inicial, metodos_pago (HU6), direcciones_envio (HU5) y contadores (HU10)
         List<String> esperadas = List.of("usuarios", "sesiones", "factores_autenticacion", "tokens_seguridad",
                 "productos", "pedidos", "carritos", "valoraciones", "categorias", "listas_deseos", "metodos_pago",
-                "direcciones_envio");
+                "direcciones_envio", "contadores");
 
         assertTrue(mongoTemplate.getCollectionNames().containsAll(esperadas));
     }
@@ -222,6 +222,22 @@ class InicializadorColeccionesTest {
         rechaza(DUPLICADO, "listas_deseos", new Document("usuarioId", "u1"));
         acepta("factores_autenticacion", new Document("usuarioId", "u1"));
         rechaza(DUPLICADO, "factores_autenticacion", new Document("usuarioId", "u1"));
+    }
+
+    @Test
+    @DisplayName("HU10-CP19: el número de pedido tiene el formato ESB-AAAA-NNNNNN y no se repite")
+    void elNumeroDePedidoTieneFormatoYNoSeRepite() {
+        acepta("pedidos", pedido("c1", 1).append("numeroPedido", "ESB-2026-000001"));
+        rechaza(DUPLICADO, "pedidos", pedido("c2", 1).append("numeroPedido", "ESB-2026-000001"));
+        rechaza(VALIDACION, "pedidos", pedido("c1", 1).append("numeroPedido", "2026-1"));
+    }
+
+    @Test
+    @DisplayName("HU10-CP13: el contador de pedidos de cada año es un número de al menos 1")
+    void elContadorDePedidosEsUnNumeroDeAlMenosUno() {
+        acepta("contadores", new Document("_id", "pedidos-2026").append("valor", 1L));
+        rechaza(VALIDACION, "contadores", new Document("_id", "pedidos-2027").append("valor", 0L));
+        rechaza(VALIDACION, "contadores", new Document("_id", "pedidos-2028"));
     }
 
     @Test
