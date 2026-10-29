@@ -34,7 +34,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
  * ({@code /api/admin/sellers/...}, HU26). Que el vendedor esté activo lo comprueba el login.
  *
  * <p>La zona de cliente ({@code /api/customer/**}) solo la usa el rol CLIENTE: de momento, sus métodos de
- * pago (HU6).
+ * pago (HU6) y sus direcciones de envío (HU5).
  */
 @Configuration
 public class SecurityConfig {
