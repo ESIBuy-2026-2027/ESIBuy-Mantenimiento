@@ -690,6 +690,114 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU5 · Gestión de direcciones de envío
+
+### Tabla A · HU5 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU5-CP01 | El código postal tiene 5 dígitos; rechaza uno de 4 o 6, con letras o espacios, nulo o vacío | Unitario | 4 | 🔍 En revisión |
+| HU5-CP02 | El teléfono de contacto tiene 9 dígitos, sin prefijo; rechaza uno de 8 o 10, con letras, nulo o vacío | Unitario | 4 | 🔍 En revisión |
+| HU5-CP03 | Una dirección exige cliente, destinatario, calle, código postal, ciudad, provincia y teléfono, con su longitud máxima (100; la calle, 150); los detalles son opcionales; se reconstruye conservando si es la principal | Unitario | 8 | 🔍 En revisión |
+| HU5-CP04 | Un cliente tiene como máximo 5 direcciones; la sexta se rechaza y no se guarda | Unitario | 3 | 🔍 En revisión |
+| HU5-CP05 | Solo hay una dirección principal: la primera lo es, marcar otra desmarca la anterior y no se puede marcar una de otro cliente | Unitario | 8 | 🔍 En revisión |
+| HU5-CP06 | Al eliminar la principal el cliente elige la sustituta (no la misma ni una ajena); la única se elimina sin elegir; no se elimina una de otro cliente | Unitario | 11 | 🔍 En revisión |
+| HU5-CP07 | Editar cambia los datos y conserva el id y la principal; no se edita una dirección de otro cliente ni se guardan datos inválidos | Unitario | 7 | 🔍 En revisión |
+| HU5-CP08 | El alta guarda la dirección con el cliente en sesión y rechaza datos inválidos; el listado devuelve solo las del cliente en sesión | Unitario | 3 | 🔍 En revisión |
+| HU5-CP09 | La dirección se convierte a su documento de MongoDB y vuelve sin perder datos; un documento inválido se rechaza | Unitario | 2 | 🔍 En revisión |
+| HU5-CP10 | Persistencia en MongoDB: guardar, buscar por cliente, actualizar conservando `createdAt` y eliminar; la colección rechaza un documento sin un campo obligatorio o con un código postal o un teléfono inválidos | Integración | 6 | 🔍 En revisión |
+| HU5-CP11 | El id del cliente se pide al módulo de usuarios por su puerto de entrada | Unitario | 1 | 🔍 En revisión |
+| HU5-CP12 | `GET /api/customer/addresses` devuelve las direcciones del cliente en sesión con la marca `principal` | Controlador | 1 | 🔍 En revisión |
+| HU5-CP13 | `POST`: 201 con la dirección creada y el cliente de la sesión; dato inválido 400 `VALIDATION_ERROR`; límite 409 `ADDRESS_LIMIT_REACHED` | Controlador | 3 | 🔍 En revisión |
+| HU5-CP14 | `PUT /{id}`: 200 con la dirección editada; dato inválido 400; una ajena o inexistente 404 `ADDRESS_NOT_FOUND` | Controlador | 3 | 🔍 En revisión |
+| HU5-CP15 | `PUT /{id}/principal` (204) y `DELETE /{id}?nuevaPrincipal=` (204); sin sustituta, 409 `PRINCIPAL_ADDRESS_REQUIRED`; una ajena o inexistente da 404 | Controlador | 5 | 🔍 En revisión |
+| HU5-CP16 | Solo un cliente con sesión accede, y las peticiones que modifican datos exigen CSRF | Controlador | 3 | 🔍 En revisión |
+
+Notas:
+- **HU5-CP01 a CP16 (backend):** casos propuestos y aprobados por el equipo junto con el diseño de la HU5 (tasks AB#105, AB#106 y AB#107). Los casos de prueba no se registran en Azure Boards: viven en esta matriz y en el `@DisplayName` de cada test. Los casos del frontend (AB#108 y AB#109) serán HU5-CP17 a CP28.
+- **Decisiones del equipo:** mismas reglas que los métodos de pago (HU6): máximo 5 direcciones por cliente, la primera queda como principal y al eliminar la principal el cliente elige otra. Solo España (código postal de 5 dígitos, teléfono de 9, sin país). La dirección no se cifra en esta HU: la protegen el RBAC y la validación de la colección (pendiente de valorar en el AGR).
+- **Endpoints (AB#105):** `GET`, `POST`, `PUT /{id}`, `PUT /{id}/principal` y `DELETE /{id}?nuevaPrincipal=` sobre `/api/customer/addresses`, solo para `CLIENTE` (`SecurityConfig`). El cliente sale de la sesión. La respuesta es `{id, destinatario, calle, detalles, codigoPostal, ciudad, provincia, telefono, principal}`; sin `id` ni `principal`, es el `direccionEnvio` que copiará el pedido (HU10).
+- **Colección nueva:** `direcciones_envio` (`ColeccionesEsiBuy`), acordada con el equipo.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU5-CP01 | `CodigoPostalTest` | `creaCodigoPostalDeCincoDigitos` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP01 | `CodigoPostalTest` | `rechazaCodigoPostalDeCuatroOSeisDigitos` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP01 | `CodigoPostalTest` | `rechazaCodigoPostalConLetrasOEspacios` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP01 | `CodigoPostalTest` | `rechazaCodigoPostalNuloOVacio` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP02 | `TelefonoContactoTest` | `creaTelefonoDeNueveDigitos` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP02 | `TelefonoContactoTest` | `rechazaTelefonoDeOchoODiezDigitos` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP02 | `TelefonoContactoTest` | `rechazaTelefonoConLetrasOPrefijo` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP02 | `TelefonoContactoTest` | `rechazaTelefonoNuloOVacio` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP03 | `DatosDireccionTest` | `creaDireccionCompleta` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP03 | `DatosDireccionTest` | `losDetallesSonOpcionales` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP03 | `DatosDireccionTest` | `rechazaDireccionSinCamposObligatorios` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP03 | `DatosDireccionTest` | `rechazaDireccionSinCodigoPostalOTelefono` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP03 | `DatosDireccionTest` | `respetaLaLongitudMaximaDeCadaCampo` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP03 | `DireccionEnvioTest` | `creaDireccionAsociadaAUnCliente` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP03 | `DireccionEnvioTest` | `reconstruyeDireccionGuardadaConservandoLaPrincipal` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP03 | `DireccionEnvioTest` | `rechazaDireccionSinClienteOSinDatos` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP04 | `DireccionesClienteTest` | `anadeDireccionesHastaElLimite` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP04 | `DireccionesClienteTest` | `rechazaSextaDireccion` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP04 | `GestionDireccionesServiceTest` | `rechazaSextaDireccionYNoLaGuarda` | Aplicación | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP05 | `DireccionEnvioTest` | `marcaYDesmarcaLaPrincipal` | Dominio | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP05 | `DireccionesClienteTest` | `primeraDireccionQuedaPrincipal` | Dominio | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP05 | `DireccionesClienteTest` | `direccionPosteriorNoCambiaLaPrincipal` | Dominio | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP05 | `DireccionesClienteTest` | `marcarOtraDejaSoloUnaPrincipal` | Dominio | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP05 | `DireccionesClienteTest` | `rechazaMarcarDireccionInexistente` | Dominio | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP05 | `GestionDireccionesServiceTest` | `primeraDireccionAnadidaSeGuardaPrincipal` | Aplicación | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP05 | `GestionDireccionesServiceTest` | `marcarPrincipalGuardaElCambio` | Aplicación | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP05 | `GestionDireccionesServiceTest` | `rechazaMarcarDireccionDeOtroCliente` | Aplicación | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP06 | `DireccionesClienteTest` | `eliminaDireccionNoPrincipal` | Dominio | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP06 | `DireccionesClienteTest` | `eliminarPrincipalExigeElegirOtra` | Dominio | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP06 | `DireccionesClienteTest` | `eliminarPrincipalYElegirOtra` | Dominio | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP06 | `DireccionesClienteTest` | `rechazaElegirComoSustitutaLaDireccionEliminada` | Dominio | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP06 | `DireccionesClienteTest` | `rechazaSustitutaDeOtroCliente` | Dominio | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP06 | `DireccionesClienteTest` | `eliminarLaUnicaDireccionDejaListaVacia` | Dominio | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP06 | `DireccionesClienteTest` | `rechazaEliminarDireccionInexistente` | Dominio | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP06 | `GestionDireccionesServiceTest` | `eliminarDireccionLaBorraDelRepositorio` | Aplicación | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP06 | `GestionDireccionesServiceTest` | `eliminarPrincipalGuardaLaNuevaPrincipal` | Aplicación | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP06 | `GestionDireccionesServiceTest` | `eliminarPrincipalSinElegirNoBorraNada` | Aplicación | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP06 | `GestionDireccionesServiceTest` | `rechazaEliminarDireccionDeOtroCliente` | Aplicación | AB#106 | PR_HU5 | 🔍 |
+| HU5-CP07 | `DireccionEnvioTest` | `editarCambiaLosDatosYConservaLoDemas` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP07 | `DireccionEnvioTest` | `rechazaEditarSinDatos` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP07 | `DireccionesClienteTest` | `editarDireccionDelCliente` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP07 | `DireccionesClienteTest` | `rechazaEditarDireccionInexistente` | Dominio | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP07 | `GestionDireccionesServiceTest` | `editarGuardaLosDatosNuevos` | Aplicación | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP07 | `GestionDireccionesServiceTest` | `rechazaEditarConDatosInvalidos` | Aplicación | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP07 | `GestionDireccionesServiceTest` | `rechazaEditarDireccionDeOtroCliente` | Aplicación | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP08 | `GestionDireccionesServiceTest` | `anadirGuardaLaDireccionDelClienteEnSesion` | Aplicación | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP08 | `GestionDireccionesServiceTest` | `rechazaAnadirDireccionInvalida` | Aplicación | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP08 | `GestionDireccionesServiceTest` | `listaSoloLasDireccionesDelClienteEnSesion` | Aplicación | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP09 | `DireccionDocumentMapperTest` | `convierteADocumentoYVueltaSinPerderDatos` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP09 | `DireccionDocumentMapperTest` | `rechazaDocumentoQueNoCumpleElDominio` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `guardarDireccionNuevaLeAsignaId` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `buscarPorClienteDevuelveSoloLasSuyas` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `actualizarConservaLaFechaDeCreacion` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `eliminarBorraLaDireccion` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `laColeccionRechazaDocumentoIncompleto` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `laColeccionRechazaFormatosInvalidos` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP11 | `ClienteEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP12 | `DireccionControllerTest` | `listarDevuelveLasDireccionesConLaPrincipal` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP13 | `DireccionControllerTest` | `anadirDevuelve201` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP13 | `DireccionControllerTest` | `direccionInvalidaDevuelve400SinRepetirLosDatos` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP13 | `DireccionControllerTest` | `superarElLimiteDevuelve409` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP14 | `DireccionControllerTest` | `editarDevuelve200` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP14 | `DireccionControllerTest` | `editarConDatosInvalidosDevuelve400` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP14 | `DireccionControllerTest` | `editarDireccionAjenaDevuelve404` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP15 | `DireccionControllerTest` | `marcarPrincipalDevuelve204` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP15 | `DireccionControllerTest` | `marcarDireccionAjenaDevuelve404` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP15 | `DireccionControllerTest` | `eliminarDevuelve204ConLaSustituta` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP15 | `DireccionControllerTest` | `eliminarPrincipalSinSustitutaDevuelve409` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP15 | `DireccionControllerTest` | `eliminarDireccionAjenaDevuelve404` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP16 | `DireccionControllerTest` | `sinSesionNoSeAccede` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP16 | `DireccionControllerTest` | `unUsuarioQueNoEsClienteNoAccede` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+| HU5-CP16 | `DireccionControllerTest` | `sinTokenCsrfSeRechaza` | Infraestructura | AB#105 | PR_HU5 | 🔍 |
+
+---
+
 ## HU6 · Gestión de métodos de pago
 
 ### Tabla A · HU6 ↔ casos de prueba
@@ -2244,6 +2352,7 @@ Tests que no validan una HU concreta.
 | `UsuariosConfigTest` | `elContextoRegistraElFiltroDeCuentaActiva` | Que Spring registra `CuentaActivaFilter`, el filtro que invalida la sesión de las cuentas desactivadas (HU23; AB#39, AB#206, PR #85) |
 | `MetodosPagoConfigTest` | `elContextoConectaLasPiezasDeLosMetodosDePago` | Que Spring conecta el servicio de métodos de pago con su adaptador de MongoDB, su cifrado AES-GCM y el cliente en sesión (HU6; AB#271, PR #148) |
 | `MetodosPagoConfigTest` | `losDatosDePagoSeCifranConLaClaveConfigurada` | Que los datos de pago se cifran con la clave de `esibuy.pagos.clave-cifrado`, que en los tests pone `MongoTestcontainersConfig` (HU6; AB#271, PR #148) |
+| `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR_HU5) |
 | `SecurityConfigTest` | `unaPeticionRecibeElTokenCsrfEnUnaCookie` | Que cualquier respuesta, aunque sea un 401, entrega el token CSRF en la cookie `XSRF-TOKEN` sin `HttpOnly` (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostSinTokenCsrfSeRechaza` | Que un `POST` sin token CSRF se rechaza con 403 (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostConElTokenDeLaCookieEnLaCabeceraSeAcepta` | Que un `POST` con el token de la cookie en la cabecera `X-XSRF-TOKEN` pasa el filtro CSRF (AB#230, PR #67) |
@@ -2257,7 +2366,7 @@ Tests que no validan una HU concreta.
 | `UsuarioMongoAdapterTest` | `guardaFechasDeCreacionYModificacion` | Que se guardan `createdAt` y `updatedAt` (auditoría de Spring Data) y que `createdAt` no cambia al actualizar (AB#210, PR #43) |
 | `ProductoMongoAdapterTest` | `guardarUnProductoLeidoLoActualiza` | Que guardar un producto leído lo actualiza sin duplicarlo y conserva `createdAt` (AB#202, PR #86) |
 | `ProductoMongoAdapterTest` | `elPrecioSeGuardaComoNumero` | Que el precio y los porcentajes de descuento se guardan como `Decimal128`, no como texto (AB#202, PR #86) |
-| `InicializadorColeccionesTest` | `creaLasOnceColecciones` | Que al arrancar se crean las 11 colecciones: las 10 del modelo de BBDD y `metodos_pago` (AB#210, PR #43; ampliado en AB#271, PR #148) |
+| `InicializadorColeccionesTest` | `creaLasDoceColecciones` | Que al arrancar se crean las 12 colecciones: las 10 del modelo de BBDD, `metodos_pago` y `direcciones_envio` (AB#210, PR #43; ampliado en AB#271, PR #148, y en AB#105, PR_HU5) |
 | `InicializadorColeccionesTest` | `sePuedeEjecutarOtraVez` | Que el inicializador se puede ejecutar en cada arranque sin fallar ni duplicar índices (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `actualizaLaValidacionDeUnaColeccionExistente` | Que aplica la validación a una colección que ya existía sin ella (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `sinPermisoParaCambiarLaValidacionNoFalla` | Que sin permiso `collMod` (usuario de la aplicación en Atlas) avisa y la aplicación arranca igual (AB#210, PR #43) |
