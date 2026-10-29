@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
@@ -98,6 +99,18 @@ describe('AppHeader', () => {
 
   it('HU43-CP06: el administrador cierra sesión desde su panel, vuelve al login con un aviso y ya no puede entrar', async () => {
     await cerrarSesionDesdeSuZona('admin@esibuy.test', '/admin')
+  })
+
+  it('HU43-CP08: si el servidor falla al cerrar sesión, la sesión del navegador se cierra igualmente', async () => {
+    const user = userEvent.setup()
+    server.use(http.post('/api/auth/logout', () => new HttpResponse(null, { status: 500 })))
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/products')
+
+    await user.click(await screen.findByRole('button', { name: /cerrar sesión/i }))
+
+    await esperarRuta('/login')
+    expect(await screen.findByText('Has cerrado sesión.')).toBeInTheDocument()
   })
 
   it('appHeader_conSesionDeAdmin_muestraLaOpcionPanelDeControl', async () => {
