@@ -8,7 +8,7 @@ Documento para entender cómo se añade un producto al carrito y cómo se ve el 
 - **Rama:** `feature/US9-T383-T384-carrito-de-compra` (el botón «Proceder al pago» y la pasarela de pago van en la rama de la HU10, `feature/US10-T401-pasarela-de-pago`; ver `docs/hu10-pasarela-de-pago.md`)
 - **Metodología:** TDD. Cada ciclo tiene su commit de rojo (`test(front)`) y su commit de verde (`feat(front)`)
 - **Depende de:** `docs/hu7-busqueda-y-filtrado-de-productos.md` (las tarjetas), `docs/hu8-detalle-producto.md` (el detalle) y `docs/mocks-msw.md` (mocks)
-- **Backend:** las tasks AB#385 a AB#390 (entidad del carrito, endpoints de añadir y eliminar, lógica de añadir y eliminar productos y limpieza de carritos) están sin hacer. El contrato de la sección 5 lo **propone el frontend**.
+- **Backend:** módulo `carrito` (AB#385 a AB#390, AB#125 a AB#127), con el contrato de la sección 5 bajo `/api/customer/cart`. El precio de cada línea lo calcula el servidor con el descuento del cliente (el premium si es PREMIUM y está activo).
 
 ---
 
@@ -26,7 +26,7 @@ El cliente ve el **precio** de cada producto en el listado, puede **añadirlo al
 | Cabecera por proveedor: «ProveedorX: 35,43 €» | `TecnoVera: 35,43 €`. El total de cada grupo lo calcula el servidor |
 | Cálculos del precio por proveedor | Cada proveedor tiene su total; no hay un total único del carrito |
 | Botón «Proceder al pago» | En el pie del panel, un enlace a la pasarela de pago (`/checkout`, HU10) |
-| El carrito vive en el backend | Se pide con `GET /api/cart` al entrar y cada operación responde con el carrito completo. Al recargar la página, sigue ahí |
+| El carrito vive en el backend | Se pide con `GET /api/customer/cart` al entrar y cada operación responde con el carrito completo. Al recargar la página, sigue ahí |
 
 > Solo los clientes tienen carrito: el botón y el panel no aparecen para vendedores ni administradores. El backend debe responder 401 o 403 si quien consulta no es un cliente.
 
@@ -36,17 +36,17 @@ El cliente ve el **precio** de cada producto en el listado, puede **añadirlo al
 
 ```mermaid
 flowchart TD
-    A[Cliente inicia sesión] --> B[CartProvider pide GET /api/cart]
+    A[Cliente inicia sesión] --> B[CartProvider pide GET /api/customer/cart]
     B --> C[Botón flotante con el número de productos]
-    D[Pulsa Añadir al carrito en una tarjeta o en el detalle] --> E[POST /api/cart/items]
+    D[Pulsa Añadir al carrito en una tarjeta o en el detalle] --> E[POST /api/customer/cart/items]
     E -- 200 --> F[Carrito actualizado y botón: Añadido]
     E -- 409 INSUFFICIENT_STOCK --> G[No hay existencias suficientes]
     E -- Otro error --> H[No se ha podido añadir al carrito]
     C --> I[Abre el panel]
     I --> J[Productos agrupados por proveedor con su total]
-    J -- Cambia la cantidad --> K[PUT /api/cart/items/id]
-    J -- Quita un producto --> L[DELETE /api/cart/items/id]
-    J -- Vacía el carrito --> M[DELETE /api/cart]
+    J -- Cambia la cantidad --> K[PUT /api/customer/cart/items/id]
+    J -- Quita un producto --> L[DELETE /api/customer/cart/items/id]
+    J -- Vacía el carrito --> M[DELETE /api/customer/cart]
     J -- Proceder al pago --> N[/checkout]
 ```
 
@@ -91,7 +91,7 @@ flowchart TD
 |---|---|---|
 | Sin carrito | El usuario no es cliente | No hay botón |
 | Cargando | Mientras llega el carrito | «Cargando carrito…» en el panel |
-| Error | Falla `GET /api/cart` | «No se ha podido cargar el carrito» con **Reintentar** |
+| Error | Falla `GET /api/customer/cart` | «No se ha podido cargar el carrito» con **Reintentar** |
 | Vacío | Sin productos | «Tu carrito está vacío»; sin «Vaciar» ni «Proceder al pago» |
 | Con productos | Al menos uno | Un grupo por proveedor, con su total |
 | Operación en curso | Cambiar cantidad, quitar o vaciar | Los controles se desactivan hasta que responde el servidor |
@@ -101,7 +101,7 @@ flowchart TD
 
 ## 5. Contrato esperado del backend
 
-La ruta y el formato de respuesta los ha definido el frontend; **hay que acordarlos con quien desarrolle el backend** (AB#385 a AB#390).
+La ruta y el formato de respuesta los propuso el frontend y el backend del carrito (AB#385 a AB#390) los implementa tal cual, bajo `/api/customer/cart` para entrar en la regla RBAC del cliente.
 
 ### Catálogo (ampliación del contrato de la HU7)
 
@@ -129,11 +129,11 @@ El carrito es del cliente en sesión. **Todas las operaciones responden con el c
 
 | Operación | Ruta | Cuerpo | Notas |
 |---|---|---|---|
-| Ver | `GET /api/cart` | | Carrito vacío (`grupos: []`) si no hay o se ha limpiado |
-| Añadir | `POST /api/cart/items` | `{ "productoId", "cantidad" }` | **Suma** `cantidad` a lo que hubiera. 404 si el producto no existe o no está disponible; 409 con `code: INSUFFICIENT_STOCK` si no hay existencias; 400 si la cantidad no es un entero de 1 o más |
-| Cambiar la cantidad | `PUT /api/cart/items/{productoId}` | `{ "cantidad" }` | **Fija** la cantidad. Mismos errores. **No está en las tasks del backend**: sin ella no se puede bajar la cantidad; confirmar si se añade |
-| Quitar un producto | `DELETE /api/cart/items/{productoId}` | | |
-| Vaciar | `DELETE /api/cart` | | |
+| Ver | `GET /api/customer/cart` | | Carrito vacío (`grupos: []`) si no hay o se ha limpiado |
+| Añadir | `POST /api/customer/cart/items` | `{ "productoId", "cantidad" }` | **Suma** `cantidad` a lo que hubiera. 404 si el producto no existe o no está disponible; 409 con `code: INSUFFICIENT_STOCK` si no hay existencias; 400 si la cantidad no es un entero de 1 o más |
+| Cambiar la cantidad | `PUT /api/customer/cart/items/{productoId}` | `{ "cantidad" }` | **Fija** la cantidad. Mismos errores. **No está en las tasks del backend**: sin ella no se puede bajar la cantidad; confirmar si se añade |
+| Quitar un producto | `DELETE /api/customer/cart/items/{productoId}` | | |
+| Vaciar | `DELETE /api/customer/cart` | | |
 
 - Los precios (`precioUnitario`, `subtotal`, `total`) los calcula el servidor con el descuento del cliente (Estándar o Premium); el frontend solo suma lo que llega.
 - El servidor **vuelve a comprobar** precios y existencias cuando se crea el pedido (HU10), así que un precio antiguo en el carrito no se cobra.
@@ -178,14 +178,14 @@ npm run build
 - **Totales por proveedor, sin total único** (decisión del equipo): cada proveedor es un pedido distinto. Solo la pasarela muestra el importe total a pagar.
 - **El servidor calcula los precios.** El frontend no multiplica ni aplica descuentos.
 - **Un botón dentro de un enlace no es válido**, así que la tarjeta se divide en el enlace al detalle y, aparte, el precio y el botón.
-- **Cambiar la cantidad exige `PUT`**, que no está en las tasks del backend; se propone y se marca para confirmar.
+- **Cambiar la cantidad exige `PUT`**: el backend lo implementa como `PUT /api/customer/cart/items/{productoId}`.
 - **Sin librerías nuevas:** todo es Fluent UI y los iconos que ya usa el proyecto.
 
 ---
 
 ## 8. Limitaciones y trabajo pendiente
 
-- **Backend:** falta todo el carrito (AB#385 a AB#390) y el cálculo de precios por tipo de cliente.
+- **Mocks:** el mock del carrito calcula siempre el precio de un cliente estándar; el backend aplica el descuento premium a los clientes PREMIUM.
 - **`PUT` para fijar la cantidad:** no está en las tasks; hay que confirmarlo.
 - **Avisos de cambios de precio o de existencias:** si el precio o el stock cambian entre que se añade un producto y se paga, el frontend no avisa; el servidor lo comprueba al crear el pedido.
 - **Verificación visual parcial:** el panel del carrito, las tarjetas con precio y la pasarela se vieron en el navegador con datos fijos, pero no la aplicación completa con los mocks (MSW no se registra en el navegador integrado de Claude Code). Conviene que el equipo compruebe el conjunto.
