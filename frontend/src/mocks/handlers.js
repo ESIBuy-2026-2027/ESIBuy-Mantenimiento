@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw'
+import { addressesHandlers } from './addressesHandlers'
 import { adminSellersHandlers } from './adminSellersHandlers'
 import { adminsHandlers } from './adminsHandlers'
 import { authHandlers } from './authHandlers'
@@ -16,6 +17,7 @@ export const handlers = [
   ...cartHandlers,
   ...ordersHandlers,
   ...paymentMethodsHandlers,
+  ...addressesHandlers,
   ...usersHandlers,
   ...profileHandlers,
   ...adminSellersHandlers,
