@@ -3,6 +3,7 @@ import GuestOnlyRoute from '../auth/GuestOnlyRoute'
 import ProtectedRoute from '../auth/ProtectedRoute'
 import { ROLES } from '../auth/roles'
 import AppLayout from '../components/AppLayout'
+import AddressesPage from '../pages/AddressesPage'
 import AdminAdminsPage from '../pages/AdminAdminsPage'
 import AdminClientsPage from '../pages/AdminClientsPage'
 import AdminNewAdminPage from '../pages/AdminNewAdminPage'
@@ -37,6 +38,7 @@ export default function AppRoutes() {
           <Route path={PATHS.PRODUCT_DETAIL} element={<ProductDetailPage />} />
           <Route path={PATHS.CHECKOUT} element={<CheckoutPage />} />
           <Route path={PATHS.PAYMENT_METHODS} element={<PaymentMethodsPage />} />
+          <Route path={PATHS.ADDRESSES} element={<AddressesPage />} />
         </Route>
 
         {/* El perfil propio (HU4) es del cliente y del vendedor: el backend responde 403 al administrador. */}

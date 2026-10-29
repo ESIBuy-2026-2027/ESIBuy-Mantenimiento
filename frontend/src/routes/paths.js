@@ -7,6 +7,7 @@ export const PATHS = {
   CHECKOUT: '/checkout',
   PROFILE: '/profile',
   PAYMENT_METHODS: '/payment-methods',
+  ADDRESSES: '/addresses',
   ADMIN: '/admin',
   ADMIN_USERS: '/admin/users',
   ADMIN_CLIENTS: '/admin/clients',
