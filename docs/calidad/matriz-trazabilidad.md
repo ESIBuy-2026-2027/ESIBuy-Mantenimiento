@@ -696,34 +696,34 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU5-CP01 | El código postal tiene 5 dígitos; rechaza uno de 4 o 6, con letras o espacios, nulo o vacío | Unitario | 4 | 🔍 En revisión (4, PR #161) |
-| HU5-CP02 | El teléfono de contacto tiene 9 dígitos, sin prefijo; rechaza uno de 8 o 10, con letras, nulo o vacío | Unitario | 4 | 🔍 En revisión (4, PR #161) |
-| HU5-CP03 | Una dirección exige cliente, destinatario, calle, código postal, ciudad, provincia y teléfono, con su longitud máxima (100; la calle, 150); los detalles son opcionales; se reconstruye conservando si es la principal | Unitario | 8 | 🔍 En revisión (8, PR #161) |
-| HU5-CP04 | Un cliente tiene como máximo 5 direcciones; la sexta se rechaza y no se guarda | Unitario | 3 | 🔍 En revisión (3, PR #161) |
-| HU5-CP05 | Solo hay una dirección principal: la primera lo es, marcar otra desmarca la anterior y no se puede marcar una de otro cliente | Unitario | 8 | 🔍 En revisión (8, PR #161) |
-| HU5-CP06 | Al eliminar la principal el cliente elige la sustituta (no la misma ni una ajena); la única se elimina sin elegir; no se elimina una de otro cliente | Unitario | 11 | 🔍 En revisión (11, PR #161) |
-| HU5-CP07 | Editar cambia los datos y conserva el id y la principal; no se edita una dirección de otro cliente ni se guardan datos inválidos | Unitario | 7 | 🔍 En revisión (7, PR #161) |
-| HU5-CP08 | El alta guarda la dirección con el cliente en sesión y rechaza datos inválidos; el listado devuelve solo las del cliente en sesión | Unitario | 3 | 🔍 En revisión (3, PR #161) |
-| HU5-CP09 | La dirección se convierte a su documento de MongoDB y vuelve sin perder datos; un documento inválido se rechaza | Unitario | 2 | 🔍 En revisión (2, PR #161) |
-| HU5-CP10 | Persistencia en MongoDB: guardar, buscar por cliente, actualizar conservando `createdAt` y eliminar; la colección rechaza un documento sin un campo obligatorio o con un código postal o un teléfono inválidos | Integración | 6 | 🔍 En revisión (6, PR #161) |
-| HU5-CP11 | El id del cliente se pide al módulo de usuarios por su puerto de entrada | Unitario | 1 | 🔍 En revisión (1, PR #161) |
-| HU5-CP12 | `GET /api/customer/addresses` devuelve las direcciones del cliente en sesión con la marca `principal` | Controlador | 1 | 🔍 En revisión (1, PR #161) |
-| HU5-CP13 | `POST`: 201 con la dirección creada y el cliente de la sesión; dato inválido 400 `VALIDATION_ERROR`; límite 409 `ADDRESS_LIMIT_REACHED` | Controlador | 3 | 🔍 En revisión (3, PR #161) |
-| HU5-CP14 | `PUT /{id}`: 200 con la dirección editada; dato inválido 400; una ajena o inexistente 404 `ADDRESS_NOT_FOUND` | Controlador | 3 | 🔍 En revisión (3, PR #161) |
-| HU5-CP15 | `PUT /{id}/principal` (204) y `DELETE /{id}?nuevaPrincipal=` (204); sin sustituta, 409 `PRINCIPAL_ADDRESS_REQUIRED`; una ajena o inexistente da 404 | Controlador | 5 | 🔍 En revisión (5, PR #161) |
-| HU5-CP16 | Solo un cliente con sesión accede, y las peticiones que modifican datos exigen CSRF | Controlador | 3 | 🔍 En revisión (3, PR #161) |
-| HU5-CP17 | El cliente de la API de direcciones: listar, añadir, editar, marcar la principal, eliminar con sustituta opcional y errores como `ApiError` con su código | Frontend · API | 6 | 🔍 En revisión (6, PR #163) |
-| HU5-CP18 | La vista lista cada dirección con su destinatario, la dirección completa y el teléfono, marca la principal, muestra un estado vacío y, si falla la carga, deja reintentar | Frontend (página) | 4 | 🔍 En revisión (4, PR #163) |
-| HU5-CP19 | El cliente llega desde el enlace «Direcciones» de la cabecera; el vendedor y el administrador no acceden | Frontend (página) | 3 | 🔍 En revisión (3, PR #163) |
-| HU5-CP20 | Marcar otra dirección como principal la cambia en la lista; si la dirección ya no existe, se avisa y se recarga | Frontend (página) | 2 | 🔍 En revisión (2, PR #163) |
-| HU5-CP21 | Con 5 direcciones no se puede añadir otra y se explica por qué; con menos, sí | Frontend (página) | 2 | 🔍 En revisión (2, PR #163) |
-| HU5-CP22 | El formulario no envía una dirección sin los campos obligatorios ni con un código postal, un teléfono o una longitud incorrectos | Frontend (componente) | 2 | 🔍 En revisión (2, PR #163) |
-| HU5-CP23 | Alta: el panel empieza vacío y envía la dirección sin espacios sobrantes; al cancelar no envía nada; desde la página, guardar cierra el panel, avisa y añade la dirección a la lista | Frontend (componente y página) | 4 | 🔍 En revisión (4, PR #163) |
-| HU5-CP24 | Edición: el panel empieza con los datos de la dirección y guarda los cambios con un `PUT` sin tocar la principal; si ya no existe, se avisa; desde la página, la lista muestra los cambios | Frontend (componente y página) | 3 | 🔍 En revisión (3, PR #163) |
-| HU5-CP25 | Una dirección rechazada por el backend se avisa sin repetir los datos enviados; el límite tiene su propio mensaje | Frontend (componente) | 2 | 🔍 En revisión (2, PR #163) |
-| HU5-CP26 | Eliminar una dirección tras confirmarlo; cancelar no elimina nada | Frontend (componente) | 2 | 🔍 En revisión (2, PR #163) |
-| HU5-CP27 | Para eliminar la principal hay que elegir la sustituta, salvo si es la única; desde la página, la elegida pasa a ser la principal | Frontend (componente y página) | 3 | 🔍 En revisión (3, PR #163) |
-| HU5-CP28 | Si la eliminación falla, se avisa sin cerrar el diálogo | Frontend (componente) | 1 | 🔍 En revisión (1, PR #163) |
+| HU5-CP01 | El código postal tiene 5 dígitos; rechaza uno de 4 o 6, con letras o espacios, nulo o vacío | Unitario | 4 | ✅ Pasa |
+| HU5-CP02 | El teléfono de contacto tiene 9 dígitos, sin prefijo; rechaza uno de 8 o 10, con letras, nulo o vacío | Unitario | 4 | ✅ Pasa |
+| HU5-CP03 | Una dirección exige cliente, destinatario, calle, código postal, ciudad, provincia y teléfono, con su longitud máxima (100; la calle, 150); los detalles son opcionales; se reconstruye conservando si es la principal | Unitario | 8 | ✅ Pasa |
+| HU5-CP04 | Un cliente tiene como máximo 5 direcciones; la sexta se rechaza y no se guarda | Unitario | 3 | ✅ Pasa |
+| HU5-CP05 | Solo hay una dirección principal: la primera lo es, marcar otra desmarca la anterior y no se puede marcar una de otro cliente | Unitario | 8 | ✅ Pasa |
+| HU5-CP06 | Al eliminar la principal el cliente elige la sustituta (no la misma ni una ajena); la única se elimina sin elegir; no se elimina una de otro cliente | Unitario | 11 | ✅ Pasa |
+| HU5-CP07 | Editar cambia los datos y conserva el id y la principal; no se edita una dirección de otro cliente ni se guardan datos inválidos | Unitario | 7 | ✅ Pasa |
+| HU5-CP08 | El alta guarda la dirección con el cliente en sesión y rechaza datos inválidos; el listado devuelve solo las del cliente en sesión | Unitario | 3 | ✅ Pasa |
+| HU5-CP09 | La dirección se convierte a su documento de MongoDB y vuelve sin perder datos; un documento inválido se rechaza | Unitario | 2 | ✅ Pasa |
+| HU5-CP10 | Persistencia en MongoDB: guardar, buscar por cliente, actualizar conservando `createdAt` y eliminar; la colección rechaza un documento sin un campo obligatorio o con un código postal o un teléfono inválidos | Integración | 6 | ✅ Pasa |
+| HU5-CP11 | El id del cliente se pide al módulo de usuarios por su puerto de entrada | Unitario | 1 | ✅ Pasa |
+| HU5-CP12 | `GET /api/customer/addresses` devuelve las direcciones del cliente en sesión con la marca `principal` | Controlador | 1 | ✅ Pasa |
+| HU5-CP13 | `POST`: 201 con la dirección creada y el cliente de la sesión; dato inválido 400 `VALIDATION_ERROR`; límite 409 `ADDRESS_LIMIT_REACHED` | Controlador | 3 | ✅ Pasa |
+| HU5-CP14 | `PUT /{id}`: 200 con la dirección editada; dato inválido 400; una ajena o inexistente 404 `ADDRESS_NOT_FOUND` | Controlador | 3 | ✅ Pasa |
+| HU5-CP15 | `PUT /{id}/principal` (204) y `DELETE /{id}?nuevaPrincipal=` (204); sin sustituta, 409 `PRINCIPAL_ADDRESS_REQUIRED`; una ajena o inexistente da 404 | Controlador | 5 | ✅ Pasa |
+| HU5-CP16 | Solo un cliente con sesión accede, y las peticiones que modifican datos exigen CSRF | Controlador | 3 | ✅ Pasa |
+| HU5-CP17 | El cliente de la API de direcciones: listar, añadir, editar, marcar la principal, eliminar con sustituta opcional y errores como `ApiError` con su código | Frontend · API | 6 | ✅ Pasa |
+| HU5-CP18 | La vista lista cada dirección con su destinatario, la dirección completa y el teléfono, marca la principal, muestra un estado vacío y, si falla la carga, deja reintentar | Frontend (página) | 4 | ✅ Pasa |
+| HU5-CP19 | El cliente llega desde el enlace «Direcciones» de la cabecera; el vendedor y el administrador no acceden | Frontend (página) | 3 | ✅ Pasa |
+| HU5-CP20 | Marcar otra dirección como principal la cambia en la lista; si la dirección ya no existe, se avisa y se recarga | Frontend (página) | 2 | ✅ Pasa |
+| HU5-CP21 | Con 5 direcciones no se puede añadir otra y se explica por qué; con menos, sí | Frontend (página) | 2 | ✅ Pasa |
+| HU5-CP22 | El formulario no envía una dirección sin los campos obligatorios ni con un código postal, un teléfono o una longitud incorrectos | Frontend (componente) | 2 | ✅ Pasa |
+| HU5-CP23 | Alta: el panel empieza vacío y envía la dirección sin espacios sobrantes; al cancelar no envía nada; desde la página, guardar cierra el panel, avisa y añade la dirección a la lista | Frontend (componente y página) | 4 | ✅ Pasa |
+| HU5-CP24 | Edición: el panel empieza con los datos de la dirección y guarda los cambios con un `PUT` sin tocar la principal; si ya no existe, se avisa; desde la página, la lista muestra los cambios | Frontend (componente y página) | 3 | ✅ Pasa |
+| HU5-CP25 | Una dirección rechazada por el backend se avisa sin repetir los datos enviados; el límite tiene su propio mensaje | Frontend (componente) | 2 | ✅ Pasa |
+| HU5-CP26 | Eliminar una dirección tras confirmarlo; cancelar no elimina nada | Frontend (componente) | 2 | ✅ Pasa |
+| HU5-CP27 | Para eliminar la principal hay que elegir la sustituta, salvo si es la única; desde la página, la elegida pasa a ser la principal | Frontend (componente y página) | 3 | ✅ Pasa |
+| HU5-CP28 | Si la eliminación falla, se avisa sin cerrar el diálogo | Frontend (componente) | 1 | ✅ Pasa |
 
 Notas:
 - **HU5-CP01 a CP16 (backend):** casos propuestos y aprobados por el equipo junto con el diseño de la HU5 (tasks AB#105, AB#106 y AB#107). Los casos de prueba no se registran en Azure Boards: viven en esta matriz y en el `@DisplayName` de cada test. Los del frontend, HU5-CP17 a CP28, se aprobaron con el mismo diseño (tasks AB#108 y AB#109).
@@ -737,112 +737,112 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU5-CP01 | `CodigoPostalTest` | `creaCodigoPostalDeCincoDigitos` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP01 | `CodigoPostalTest` | `rechazaCodigoPostalDeCuatroOSeisDigitos` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP01 | `CodigoPostalTest` | `rechazaCodigoPostalConLetrasOEspacios` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP01 | `CodigoPostalTest` | `rechazaCodigoPostalNuloOVacio` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP02 | `TelefonoContactoTest` | `creaTelefonoDeNueveDigitos` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP02 | `TelefonoContactoTest` | `rechazaTelefonoDeOchoODiezDigitos` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP02 | `TelefonoContactoTest` | `rechazaTelefonoConLetrasOPrefijo` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP02 | `TelefonoContactoTest` | `rechazaTelefonoNuloOVacio` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP03 | `DatosDireccionTest` | `creaDireccionCompleta` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP03 | `DatosDireccionTest` | `losDetallesSonOpcionales` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP03 | `DatosDireccionTest` | `rechazaDireccionSinCamposObligatorios` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP03 | `DatosDireccionTest` | `rechazaDireccionSinCodigoPostalOTelefono` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP03 | `DatosDireccionTest` | `respetaLaLongitudMaximaDeCadaCampo` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP03 | `DireccionEnvioTest` | `creaDireccionAsociadaAUnCliente` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP03 | `DireccionEnvioTest` | `reconstruyeDireccionGuardadaConservandoLaPrincipal` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP03 | `DireccionEnvioTest` | `rechazaDireccionSinClienteOSinDatos` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP04 | `DireccionesClienteTest` | `anadeDireccionesHastaElLimite` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP04 | `DireccionesClienteTest` | `rechazaSextaDireccion` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP04 | `GestionDireccionesServiceTest` | `rechazaSextaDireccionYNoLaGuarda` | Aplicación | AB#105 | PR #161 | 🔍 |
-| HU5-CP05 | `DireccionEnvioTest` | `marcaYDesmarcaLaPrincipal` | Dominio | AB#106 | PR #161 | 🔍 |
-| HU5-CP05 | `DireccionesClienteTest` | `primeraDireccionQuedaPrincipal` | Dominio | AB#106 | PR #161 | 🔍 |
-| HU5-CP05 | `DireccionesClienteTest` | `direccionPosteriorNoCambiaLaPrincipal` | Dominio | AB#106 | PR #161 | 🔍 |
-| HU5-CP05 | `DireccionesClienteTest` | `marcarOtraDejaSoloUnaPrincipal` | Dominio | AB#106 | PR #161 | 🔍 |
-| HU5-CP05 | `DireccionesClienteTest` | `rechazaMarcarDireccionInexistente` | Dominio | AB#106 | PR #161 | 🔍 |
-| HU5-CP05 | `GestionDireccionesServiceTest` | `primeraDireccionAnadidaSeGuardaPrincipal` | Aplicación | AB#106 | PR #161 | 🔍 |
-| HU5-CP05 | `GestionDireccionesServiceTest` | `marcarPrincipalGuardaElCambio` | Aplicación | AB#106 | PR #161 | 🔍 |
-| HU5-CP05 | `GestionDireccionesServiceTest` | `rechazaMarcarDireccionDeOtroCliente` | Aplicación | AB#106 | PR #161 | 🔍 |
-| HU5-CP06 | `DireccionesClienteTest` | `eliminaDireccionNoPrincipal` | Dominio | AB#106 | PR #161 | 🔍 |
-| HU5-CP06 | `DireccionesClienteTest` | `eliminarPrincipalExigeElegirOtra` | Dominio | AB#106 | PR #161 | 🔍 |
-| HU5-CP06 | `DireccionesClienteTest` | `eliminarPrincipalYElegirOtra` | Dominio | AB#106 | PR #161 | 🔍 |
-| HU5-CP06 | `DireccionesClienteTest` | `rechazaElegirComoSustitutaLaDireccionEliminada` | Dominio | AB#106 | PR #161 | 🔍 |
-| HU5-CP06 | `DireccionesClienteTest` | `rechazaSustitutaDeOtroCliente` | Dominio | AB#106 | PR #161 | 🔍 |
-| HU5-CP06 | `DireccionesClienteTest` | `eliminarLaUnicaDireccionDejaListaVacia` | Dominio | AB#106 | PR #161 | 🔍 |
-| HU5-CP06 | `DireccionesClienteTest` | `rechazaEliminarDireccionInexistente` | Dominio | AB#106 | PR #161 | 🔍 |
-| HU5-CP06 | `GestionDireccionesServiceTest` | `eliminarDireccionLaBorraDelRepositorio` | Aplicación | AB#106 | PR #161 | 🔍 |
-| HU5-CP06 | `GestionDireccionesServiceTest` | `eliminarPrincipalGuardaLaNuevaPrincipal` | Aplicación | AB#106 | PR #161 | 🔍 |
-| HU5-CP06 | `GestionDireccionesServiceTest` | `eliminarPrincipalSinElegirNoBorraNada` | Aplicación | AB#106 | PR #161 | 🔍 |
-| HU5-CP06 | `GestionDireccionesServiceTest` | `rechazaEliminarDireccionDeOtroCliente` | Aplicación | AB#106 | PR #161 | 🔍 |
-| HU5-CP07 | `DireccionEnvioTest` | `editarCambiaLosDatosYConservaLoDemas` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP07 | `DireccionEnvioTest` | `rechazaEditarSinDatos` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP07 | `DireccionesClienteTest` | `editarDireccionDelCliente` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP07 | `DireccionesClienteTest` | `rechazaEditarDireccionInexistente` | Dominio | AB#105 | PR #161 | 🔍 |
-| HU5-CP07 | `GestionDireccionesServiceTest` | `editarGuardaLosDatosNuevos` | Aplicación | AB#105 | PR #161 | 🔍 |
-| HU5-CP07 | `GestionDireccionesServiceTest` | `rechazaEditarConDatosInvalidos` | Aplicación | AB#105 | PR #161 | 🔍 |
-| HU5-CP07 | `GestionDireccionesServiceTest` | `rechazaEditarDireccionDeOtroCliente` | Aplicación | AB#105 | PR #161 | 🔍 |
-| HU5-CP08 | `GestionDireccionesServiceTest` | `anadirGuardaLaDireccionDelClienteEnSesion` | Aplicación | AB#105 | PR #161 | 🔍 |
-| HU5-CP08 | `GestionDireccionesServiceTest` | `rechazaAnadirDireccionInvalida` | Aplicación | AB#105 | PR #161 | 🔍 |
-| HU5-CP08 | `GestionDireccionesServiceTest` | `listaSoloLasDireccionesDelClienteEnSesion` | Aplicación | AB#105 | PR #161 | 🔍 |
-| HU5-CP09 | `DireccionDocumentMapperTest` | `convierteADocumentoYVueltaSinPerderDatos` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP09 | `DireccionDocumentMapperTest` | `rechazaDocumentoQueNoCumpleElDominio` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP10 | `DireccionMongoAdapterTest` | `guardarDireccionNuevaLeAsignaId` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP10 | `DireccionMongoAdapterTest` | `buscarPorClienteDevuelveSoloLasSuyas` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP10 | `DireccionMongoAdapterTest` | `actualizarConservaLaFechaDeCreacion` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP10 | `DireccionMongoAdapterTest` | `eliminarBorraLaDireccion` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP10 | `DireccionMongoAdapterTest` | `laColeccionRechazaDocumentoIncompleto` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP10 | `DireccionMongoAdapterTest` | `laColeccionRechazaFormatosInvalidos` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP11 | `ClienteEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP12 | `DireccionControllerTest` | `listarDevuelveLasDireccionesConLaPrincipal` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP13 | `DireccionControllerTest` | `anadirDevuelve201` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP13 | `DireccionControllerTest` | `direccionInvalidaDevuelve400SinRepetirLosDatos` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP13 | `DireccionControllerTest` | `superarElLimiteDevuelve409` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP14 | `DireccionControllerTest` | `editarDevuelve200` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP14 | `DireccionControllerTest` | `editarConDatosInvalidosDevuelve400` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP14 | `DireccionControllerTest` | `editarDireccionAjenaDevuelve404` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP15 | `DireccionControllerTest` | `marcarPrincipalDevuelve204` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP15 | `DireccionControllerTest` | `marcarDireccionAjenaDevuelve404` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP15 | `DireccionControllerTest` | `eliminarDevuelve204ConLaSustituta` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP15 | `DireccionControllerTest` | `eliminarPrincipalSinSustitutaDevuelve409` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP15 | `DireccionControllerTest` | `eliminarDireccionAjenaDevuelve404` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP16 | `DireccionControllerTest` | `sinSesionNoSeAccede` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP16 | `DireccionControllerTest` | `unUsuarioQueNoEsClienteNoAccede` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP16 | `DireccionControllerTest` | `sinTokenCsrfSeRechaza` | Infraestructura | AB#105 | PR #161 | 🔍 |
-| HU5-CP17 | `addresses.test.js` | `HU5-CP17: getAddresses pide las direcciones del cliente en sesión con la marca de la principal` | Frontend · API | AB#109 | PR #163 | 🔍 |
-| HU5-CP17 | `addresses.test.js` | `HU5-CP17: addAddress envía los datos de la dirección con un POST` | Frontend · API | AB#109 | PR #163 | 🔍 |
-| HU5-CP17 | `addresses.test.js` | `HU5-CP17: updateAddress envía los datos nuevos con un PUT a /{id}` | Frontend · API | AB#109 | PR #163 | 🔍 |
-| HU5-CP17 | `addresses.test.js` | `HU5-CP17: setPrincipalAddress marca la dirección con un PUT a /{id}/principal` | Frontend · API | AB#109 | PR #163 | 🔍 |
-| HU5-CP17 | `addresses.test.js` | `HU5-CP17: deleteAddress elimina la dirección y envía la sustituta solo si se indica` | Frontend · API | AB#109 | PR #163 | 🔍 |
-| HU5-CP17 | `addresses.test.js` | `HU5-CP17: un error del backend llega como ApiError con su código` | Frontend · API | AB#109 | PR #163 | 🔍 |
-| HU5-CP18 | `AddressesPage.test.jsx` | `HU5-CP18: muestra cada dirección con su destinatario, la dirección completa y el teléfono` | Frontend · página | AB#109 | PR #163 | 🔍 |
-| HU5-CP18 | `AddressesPage.test.jsx` | `HU5-CP18: indica cuál es la dirección principal` | Frontend · página | AB#109 | PR #163 | 🔍 |
-| HU5-CP18 | `AddressesPage.test.jsx` | `HU5-CP18: sin direcciones muestra un estado vacío con el botón para añadir la primera` | Frontend · página | AB#109 | PR #163 | 🔍 |
-| HU5-CP18 | `AddressesPage.test.jsx` | `HU5-CP18: si falla la carga avisa y deja reintentar` | Frontend · página | AB#109 | PR #163 | 🔍 |
-| HU5-CP19 | `AddressesPage.test.jsx` | `HU5-CP19: el cliente tiene el enlace «Direcciones» en la cabecera y llega a la vista` | Frontend · página | AB#109 | PR #163 | 🔍 |
-| HU5-CP19 | `AddressesPage.test.jsx` | `HU5-CP19: un vendedor o un administrador no acceden a la vista (vendedor@esibuy.test)` | Frontend · página | AB#109 | PR #163 | 🔍 |
-| HU5-CP19 | `AddressesPage.test.jsx` | `HU5-CP19: un vendedor o un administrador no acceden a la vista (admin@esibuy.test)` | Frontend · página | AB#109 | PR #163 | 🔍 |
-| HU5-CP20 | `AddressesPage.test.jsx` | `HU5-CP20: marcar otra dirección como principal la cambia en la lista` | Frontend · página | AB#109 | PR #163 | 🔍 |
-| HU5-CP20 | `AddressesPage.test.jsx` | `HU5-CP20: si la dirección ya no existe avisa y recarga la lista` | Frontend · página | AB#109 | PR #163 | 🔍 |
-| HU5-CP21 | `AddressesPage.test.jsx` | `HU5-CP21: con 5 direcciones no deja añadir otra y explica por qué` | Frontend · página | AB#109 | PR #163 | 🔍 |
-| HU5-CP21 | `AddressesPage.test.jsx` | `HU5-CP21: con menos de 5 direcciones se puede añadir otra` | Frontend · página | AB#109 | PR #163 | 🔍 |
-| HU5-CP22 | `AddressFormPanel.test.jsx` | `HU5-CP22: no envía una dirección sin los campos obligatorios y marca cada uno` | Frontend · componente | AB#109 | PR #163 | 🔍 |
-| HU5-CP22 | `AddressFormPanel.test.jsx` | `HU5-CP22: no envía un código postal, un teléfono o un texto con formato o longitud incorrectos` | Frontend · componente | AB#109 | PR #163 | 🔍 |
-| HU5-CP23 | `AddressesPage.test.jsx` | `HU5-CP23: al guardar una dirección nueva se cierra el panel, se avisa y aparece en la lista` | Frontend · página | AB#109 | PR #163 | 🔍 |
-| HU5-CP23 | `AddressesPage.test.jsx` | `HU5-CP23: al cancelar se cierra el panel sin añadir nada` | Frontend · página | AB#109 | PR #163 | 🔍 |
-| HU5-CP23 | `AddressFormPanel.test.jsx` | `HU5-CP23: empieza vacío y guarda la dirección nueva con un POST, sin espacios sobrantes` | Frontend · componente | AB#109 | PR #163 | 🔍 |
-| HU5-CP23 | `AddressFormPanel.test.jsx` | `HU5-CP23: al cancelar no se envía nada` | Frontend · componente | AB#109 | PR #163 | 🔍 |
-| HU5-CP24 | `AddressesPage.test.jsx` | `HU5-CP24: al editar una dirección se guardan los cambios y la lista los muestra` | Frontend · página | AB#109 | PR #163 | 🔍 |
-| HU5-CP24 | `AddressFormPanel.test.jsx` | `HU5-CP24: al editar empieza con los datos de la dirección y guarda los cambios con un PUT` | Frontend · componente | AB#109 | PR #163 | 🔍 |
-| HU5-CP24 | `AddressFormPanel.test.jsx` | `HU5-CP24: si la dirección que se edita ya no existe, lo avisa` | Frontend · componente | AB#109 | PR #163 | 🔍 |
-| HU5-CP25 | `AddressFormPanel.test.jsx` | `HU5-CP25: una dirección rechazada por el backend muestra un aviso sin repetir los datos enviados` | Frontend · componente | AB#109 | PR #163 | 🔍 |
-| HU5-CP25 | `AddressFormPanel.test.jsx` | `HU5-CP25: al superar el límite de direcciones avisa de que ya hay 5` | Frontend · componente | AB#109 | PR #163 | 🔍 |
-| HU5-CP26 | `DeleteAddressDialog.test.jsx` | `HU5-CP26: elimina una dirección que no es la principal tras confirmarlo` | Frontend · componente | AB#109 | PR #163 | 🔍 |
-| HU5-CP26 | `DeleteAddressDialog.test.jsx` | `HU5-CP26: al cancelar no elimina nada` | Frontend · componente | AB#109 | PR #163 | 🔍 |
-| HU5-CP27 | `AddressesPage.test.jsx` | `HU5-CP27: al eliminar la principal eligiendo otra, desaparece de la lista y la elegida pasa a serlo` | Frontend · página | AB#109 | PR #163 | 🔍 |
-| HU5-CP27 | `DeleteAddressDialog.test.jsx` | `HU5-CP27: para eliminar la principal hay que elegir otra dirección como principal` | Frontend · componente | AB#109 | PR #163 | 🔍 |
-| HU5-CP27 | `DeleteAddressDialog.test.jsx` | `HU5-CP27: la única dirección se elimina sin elegir sustituta` | Frontend · componente | AB#109 | PR #163 | 🔍 |
-| HU5-CP28 | `DeleteAddressDialog.test.jsx` | `HU5-CP28: si la eliminación falla avisa y no cierra el diálogo` | Frontend · componente | AB#109 | PR #163 | 🔍 |
+| HU5-CP01 | `CodigoPostalTest` | `creaCodigoPostalDeCincoDigitos` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP01 | `CodigoPostalTest` | `rechazaCodigoPostalDeCuatroOSeisDigitos` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP01 | `CodigoPostalTest` | `rechazaCodigoPostalConLetrasOEspacios` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP01 | `CodigoPostalTest` | `rechazaCodigoPostalNuloOVacio` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP02 | `TelefonoContactoTest` | `creaTelefonoDeNueveDigitos` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP02 | `TelefonoContactoTest` | `rechazaTelefonoDeOchoODiezDigitos` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP02 | `TelefonoContactoTest` | `rechazaTelefonoConLetrasOPrefijo` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP02 | `TelefonoContactoTest` | `rechazaTelefonoNuloOVacio` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP03 | `DatosDireccionTest` | `creaDireccionCompleta` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP03 | `DatosDireccionTest` | `losDetallesSonOpcionales` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP03 | `DatosDireccionTest` | `rechazaDireccionSinCamposObligatorios` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP03 | `DatosDireccionTest` | `rechazaDireccionSinCodigoPostalOTelefono` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP03 | `DatosDireccionTest` | `respetaLaLongitudMaximaDeCadaCampo` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP03 | `DireccionEnvioTest` | `creaDireccionAsociadaAUnCliente` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP03 | `DireccionEnvioTest` | `reconstruyeDireccionGuardadaConservandoLaPrincipal` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP03 | `DireccionEnvioTest` | `rechazaDireccionSinClienteOSinDatos` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP04 | `DireccionesClienteTest` | `anadeDireccionesHastaElLimite` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP04 | `DireccionesClienteTest` | `rechazaSextaDireccion` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP04 | `GestionDireccionesServiceTest` | `rechazaSextaDireccionYNoLaGuarda` | Aplicación | AB#105 | PR #161 | ✅ |
+| HU5-CP05 | `DireccionEnvioTest` | `marcaYDesmarcaLaPrincipal` | Dominio | AB#106 | PR #161 | ✅ |
+| HU5-CP05 | `DireccionesClienteTest` | `primeraDireccionQuedaPrincipal` | Dominio | AB#106 | PR #161 | ✅ |
+| HU5-CP05 | `DireccionesClienteTest` | `direccionPosteriorNoCambiaLaPrincipal` | Dominio | AB#106 | PR #161 | ✅ |
+| HU5-CP05 | `DireccionesClienteTest` | `marcarOtraDejaSoloUnaPrincipal` | Dominio | AB#106 | PR #161 | ✅ |
+| HU5-CP05 | `DireccionesClienteTest` | `rechazaMarcarDireccionInexistente` | Dominio | AB#106 | PR #161 | ✅ |
+| HU5-CP05 | `GestionDireccionesServiceTest` | `primeraDireccionAnadidaSeGuardaPrincipal` | Aplicación | AB#106 | PR #161 | ✅ |
+| HU5-CP05 | `GestionDireccionesServiceTest` | `marcarPrincipalGuardaElCambio` | Aplicación | AB#106 | PR #161 | ✅ |
+| HU5-CP05 | `GestionDireccionesServiceTest` | `rechazaMarcarDireccionDeOtroCliente` | Aplicación | AB#106 | PR #161 | ✅ |
+| HU5-CP06 | `DireccionesClienteTest` | `eliminaDireccionNoPrincipal` | Dominio | AB#106 | PR #161 | ✅ |
+| HU5-CP06 | `DireccionesClienteTest` | `eliminarPrincipalExigeElegirOtra` | Dominio | AB#106 | PR #161 | ✅ |
+| HU5-CP06 | `DireccionesClienteTest` | `eliminarPrincipalYElegirOtra` | Dominio | AB#106 | PR #161 | ✅ |
+| HU5-CP06 | `DireccionesClienteTest` | `rechazaElegirComoSustitutaLaDireccionEliminada` | Dominio | AB#106 | PR #161 | ✅ |
+| HU5-CP06 | `DireccionesClienteTest` | `rechazaSustitutaDeOtroCliente` | Dominio | AB#106 | PR #161 | ✅ |
+| HU5-CP06 | `DireccionesClienteTest` | `eliminarLaUnicaDireccionDejaListaVacia` | Dominio | AB#106 | PR #161 | ✅ |
+| HU5-CP06 | `DireccionesClienteTest` | `rechazaEliminarDireccionInexistente` | Dominio | AB#106 | PR #161 | ✅ |
+| HU5-CP06 | `GestionDireccionesServiceTest` | `eliminarDireccionLaBorraDelRepositorio` | Aplicación | AB#106 | PR #161 | ✅ |
+| HU5-CP06 | `GestionDireccionesServiceTest` | `eliminarPrincipalGuardaLaNuevaPrincipal` | Aplicación | AB#106 | PR #161 | ✅ |
+| HU5-CP06 | `GestionDireccionesServiceTest` | `eliminarPrincipalSinElegirNoBorraNada` | Aplicación | AB#106 | PR #161 | ✅ |
+| HU5-CP06 | `GestionDireccionesServiceTest` | `rechazaEliminarDireccionDeOtroCliente` | Aplicación | AB#106 | PR #161 | ✅ |
+| HU5-CP07 | `DireccionEnvioTest` | `editarCambiaLosDatosYConservaLoDemas` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP07 | `DireccionEnvioTest` | `rechazaEditarSinDatos` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP07 | `DireccionesClienteTest` | `editarDireccionDelCliente` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP07 | `DireccionesClienteTest` | `rechazaEditarDireccionInexistente` | Dominio | AB#105 | PR #161 | ✅ |
+| HU5-CP07 | `GestionDireccionesServiceTest` | `editarGuardaLosDatosNuevos` | Aplicación | AB#105 | PR #161 | ✅ |
+| HU5-CP07 | `GestionDireccionesServiceTest` | `rechazaEditarConDatosInvalidos` | Aplicación | AB#105 | PR #161 | ✅ |
+| HU5-CP07 | `GestionDireccionesServiceTest` | `rechazaEditarDireccionDeOtroCliente` | Aplicación | AB#105 | PR #161 | ✅ |
+| HU5-CP08 | `GestionDireccionesServiceTest` | `anadirGuardaLaDireccionDelClienteEnSesion` | Aplicación | AB#105 | PR #161 | ✅ |
+| HU5-CP08 | `GestionDireccionesServiceTest` | `rechazaAnadirDireccionInvalida` | Aplicación | AB#105 | PR #161 | ✅ |
+| HU5-CP08 | `GestionDireccionesServiceTest` | `listaSoloLasDireccionesDelClienteEnSesion` | Aplicación | AB#105 | PR #161 | ✅ |
+| HU5-CP09 | `DireccionDocumentMapperTest` | `convierteADocumentoYVueltaSinPerderDatos` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP09 | `DireccionDocumentMapperTest` | `rechazaDocumentoQueNoCumpleElDominio` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `guardarDireccionNuevaLeAsignaId` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `buscarPorClienteDevuelveSoloLasSuyas` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `actualizarConservaLaFechaDeCreacion` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `eliminarBorraLaDireccion` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `laColeccionRechazaDocumentoIncompleto` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP10 | `DireccionMongoAdapterTest` | `laColeccionRechazaFormatosInvalidos` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP11 | `ClienteEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP12 | `DireccionControllerTest` | `listarDevuelveLasDireccionesConLaPrincipal` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP13 | `DireccionControllerTest` | `anadirDevuelve201` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP13 | `DireccionControllerTest` | `direccionInvalidaDevuelve400SinRepetirLosDatos` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP13 | `DireccionControllerTest` | `superarElLimiteDevuelve409` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP14 | `DireccionControllerTest` | `editarDevuelve200` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP14 | `DireccionControllerTest` | `editarConDatosInvalidosDevuelve400` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP14 | `DireccionControllerTest` | `editarDireccionAjenaDevuelve404` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP15 | `DireccionControllerTest` | `marcarPrincipalDevuelve204` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP15 | `DireccionControllerTest` | `marcarDireccionAjenaDevuelve404` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP15 | `DireccionControllerTest` | `eliminarDevuelve204ConLaSustituta` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP15 | `DireccionControllerTest` | `eliminarPrincipalSinSustitutaDevuelve409` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP15 | `DireccionControllerTest` | `eliminarDireccionAjenaDevuelve404` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP16 | `DireccionControllerTest` | `sinSesionNoSeAccede` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP16 | `DireccionControllerTest` | `unUsuarioQueNoEsClienteNoAccede` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP16 | `DireccionControllerTest` | `sinTokenCsrfSeRechaza` | Infraestructura | AB#105 | PR #161 | ✅ |
+| HU5-CP17 | `addresses.test.js` | `HU5-CP17: getAddresses pide las direcciones del cliente en sesión con la marca de la principal` | Frontend · API | AB#109 | PR #163 | ✅ |
+| HU5-CP17 | `addresses.test.js` | `HU5-CP17: addAddress envía los datos de la dirección con un POST` | Frontend · API | AB#109 | PR #163 | ✅ |
+| HU5-CP17 | `addresses.test.js` | `HU5-CP17: updateAddress envía los datos nuevos con un PUT a /{id}` | Frontend · API | AB#109 | PR #163 | ✅ |
+| HU5-CP17 | `addresses.test.js` | `HU5-CP17: setPrincipalAddress marca la dirección con un PUT a /{id}/principal` | Frontend · API | AB#109 | PR #163 | ✅ |
+| HU5-CP17 | `addresses.test.js` | `HU5-CP17: deleteAddress elimina la dirección y envía la sustituta solo si se indica` | Frontend · API | AB#109 | PR #163 | ✅ |
+| HU5-CP17 | `addresses.test.js` | `HU5-CP17: un error del backend llega como ApiError con su código` | Frontend · API | AB#109 | PR #163 | ✅ |
+| HU5-CP18 | `AddressesPage.test.jsx` | `HU5-CP18: muestra cada dirección con su destinatario, la dirección completa y el teléfono` | Frontend · página | AB#109 | PR #163 | ✅ |
+| HU5-CP18 | `AddressesPage.test.jsx` | `HU5-CP18: indica cuál es la dirección principal` | Frontend · página | AB#109 | PR #163 | ✅ |
+| HU5-CP18 | `AddressesPage.test.jsx` | `HU5-CP18: sin direcciones muestra un estado vacío con el botón para añadir la primera` | Frontend · página | AB#109 | PR #163 | ✅ |
+| HU5-CP18 | `AddressesPage.test.jsx` | `HU5-CP18: si falla la carga avisa y deja reintentar` | Frontend · página | AB#109 | PR #163 | ✅ |
+| HU5-CP19 | `AddressesPage.test.jsx` | `HU5-CP19: el cliente tiene el enlace «Direcciones» en la cabecera y llega a la vista` | Frontend · página | AB#109 | PR #163 | ✅ |
+| HU5-CP19 | `AddressesPage.test.jsx` | `HU5-CP19: un vendedor o un administrador no acceden a la vista (vendedor@esibuy.test)` | Frontend · página | AB#109 | PR #163 | ✅ |
+| HU5-CP19 | `AddressesPage.test.jsx` | `HU5-CP19: un vendedor o un administrador no acceden a la vista (admin@esibuy.test)` | Frontend · página | AB#109 | PR #163 | ✅ |
+| HU5-CP20 | `AddressesPage.test.jsx` | `HU5-CP20: marcar otra dirección como principal la cambia en la lista` | Frontend · página | AB#109 | PR #163 | ✅ |
+| HU5-CP20 | `AddressesPage.test.jsx` | `HU5-CP20: si la dirección ya no existe avisa y recarga la lista` | Frontend · página | AB#109 | PR #163 | ✅ |
+| HU5-CP21 | `AddressesPage.test.jsx` | `HU5-CP21: con 5 direcciones no deja añadir otra y explica por qué` | Frontend · página | AB#109 | PR #163 | ✅ |
+| HU5-CP21 | `AddressesPage.test.jsx` | `HU5-CP21: con menos de 5 direcciones se puede añadir otra` | Frontend · página | AB#109 | PR #163 | ✅ |
+| HU5-CP22 | `AddressFormPanel.test.jsx` | `HU5-CP22: no envía una dirección sin los campos obligatorios y marca cada uno` | Frontend · componente | AB#109 | PR #163 | ✅ |
+| HU5-CP22 | `AddressFormPanel.test.jsx` | `HU5-CP22: no envía un código postal, un teléfono o un texto con formato o longitud incorrectos` | Frontend · componente | AB#109 | PR #163 | ✅ |
+| HU5-CP23 | `AddressesPage.test.jsx` | `HU5-CP23: al guardar una dirección nueva se cierra el panel, se avisa y aparece en la lista` | Frontend · página | AB#109 | PR #163 | ✅ |
+| HU5-CP23 | `AddressesPage.test.jsx` | `HU5-CP23: al cancelar se cierra el panel sin añadir nada` | Frontend · página | AB#109 | PR #163 | ✅ |
+| HU5-CP23 | `AddressFormPanel.test.jsx` | `HU5-CP23: empieza vacío y guarda la dirección nueva con un POST, sin espacios sobrantes` | Frontend · componente | AB#109 | PR #163 | ✅ |
+| HU5-CP23 | `AddressFormPanel.test.jsx` | `HU5-CP23: al cancelar no se envía nada` | Frontend · componente | AB#109 | PR #163 | ✅ |
+| HU5-CP24 | `AddressesPage.test.jsx` | `HU5-CP24: al editar una dirección se guardan los cambios y la lista los muestra` | Frontend · página | AB#109 | PR #163 | ✅ |
+| HU5-CP24 | `AddressFormPanel.test.jsx` | `HU5-CP24: al editar empieza con los datos de la dirección y guarda los cambios con un PUT` | Frontend · componente | AB#109 | PR #163 | ✅ |
+| HU5-CP24 | `AddressFormPanel.test.jsx` | `HU5-CP24: si la dirección que se edita ya no existe, lo avisa` | Frontend · componente | AB#109 | PR #163 | ✅ |
+| HU5-CP25 | `AddressFormPanel.test.jsx` | `HU5-CP25: una dirección rechazada por el backend muestra un aviso sin repetir los datos enviados` | Frontend · componente | AB#109 | PR #163 | ✅ |
+| HU5-CP25 | `AddressFormPanel.test.jsx` | `HU5-CP25: al superar el límite de direcciones avisa de que ya hay 5` | Frontend · componente | AB#109 | PR #163 | ✅ |
+| HU5-CP26 | `DeleteAddressDialog.test.jsx` | `HU5-CP26: elimina una dirección que no es la principal tras confirmarlo` | Frontend · componente | AB#109 | PR #163 | ✅ |
+| HU5-CP26 | `DeleteAddressDialog.test.jsx` | `HU5-CP26: al cancelar no elimina nada` | Frontend · componente | AB#109 | PR #163 | ✅ |
+| HU5-CP27 | `AddressesPage.test.jsx` | `HU5-CP27: al eliminar la principal eligiendo otra, desaparece de la lista y la elegida pasa a serlo` | Frontend · página | AB#109 | PR #163 | ✅ |
+| HU5-CP27 | `DeleteAddressDialog.test.jsx` | `HU5-CP27: para eliminar la principal hay que elegir otra dirección como principal` | Frontend · componente | AB#109 | PR #163 | ✅ |
+| HU5-CP27 | `DeleteAddressDialog.test.jsx` | `HU5-CP27: la única dirección se elimina sin elegir sustituta` | Frontend · componente | AB#109 | PR #163 | ✅ |
+| HU5-CP28 | `DeleteAddressDialog.test.jsx` | `HU5-CP28: si la eliminación falla avisa y no cierra el diálogo` | Frontend · componente | AB#109 | PR #163 | ✅ |
 
 ---
 
