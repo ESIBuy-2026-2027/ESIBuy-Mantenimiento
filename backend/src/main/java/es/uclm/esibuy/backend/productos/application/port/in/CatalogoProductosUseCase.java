@@ -25,4 +25,13 @@ public interface CatalogoProductosUseCase {
      * @return vacío si el producto no existe o no está disponible
      */
     Optional<ProductoComercial> consultarComprable(String productoId, boolean clientePremium);
+
+    /**
+     * Devuelve el detalle de un producto del catálogo (HU8), con el nombre comercial de su vendedor y el precio
+     * con el descuento que le corresponde al cliente.
+     * 
+     * @param emailCliente email del cliente, para saber si es premium y aplicarle su descuento
+     * @return detalle del producto, o vacío si no existe o no está disponible
+     */
+    DetalleProductoCatalogo consultarDetalle(String productoId, String emailCliente);
 }

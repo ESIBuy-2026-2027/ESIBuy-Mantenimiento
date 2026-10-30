@@ -8,4 +8,7 @@ public interface VendedorPort {
 
     // Falla si el id no existe o no es de un vendedor (el módulo de usuarios responde con 404).
     void comprobarQueEsVendedor(String vendedorId);
+
+    // Nombre comercial del vendedor (HU8), para mostrarlo en el detalle de sus productos.
+    String nombreComercial(String vendedorId);
 }

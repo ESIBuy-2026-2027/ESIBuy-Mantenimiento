@@ -74,8 +74,8 @@ public class ProductosConfig {
     }
 
     @Bean
-    CatalogoProductosUseCase catalogoProductosUseCase(ProductoRepositoryPort productoRepositoryPort) {
-        return new CatalogoProductosService(productoRepositoryPort);
+    CatalogoProductosUseCase catalogoProductosUseCase(ProductoRepositoryPort productoRepositoryPort, VendedorPort vendedorPort) {
+        return new CatalogoProductosService(productoRepositoryPort, vendedorPort);
     }
 
     @Bean
