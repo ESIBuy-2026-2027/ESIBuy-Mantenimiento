@@ -26,7 +26,8 @@ public interface AdministracionUsuariosUseCase {
     Usuario consultar(String usuarioId);
 
     /**
-     * Devuelve la ficha de un vendedor para supervisarlo en solo lectura (HU26).
+     * Devuelve la ficha de un vendedor para supervisarlo (HU26). La ficha se consulta; los datos de su cuenta se
+     * modifican con el resto de operaciones de este puerto (HU22, HU23 y HU24).
      *
      * @throws es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException si no existe
      *         o no es un vendedor

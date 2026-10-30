@@ -132,7 +132,8 @@ public class UsuarioController {
         administracionUsuarios.eliminarAdministrador(id, autenticado.getName());
     }
 
-    // Supervisión de vendedores, solo lectura (HU26): el listado de la HU19 con el rol VENDEDOR fijo.
+    // Supervisión de vendedores (HU26): el listado de la HU19 con el rol VENDEDOR fijo. Sus productos y pedidos son de
+    // solo lectura para el administrador; los datos de su cuenta sí los puede editar y cambiar de estado.
     @GetMapping("/admin/sellers")
     public VendedorPageResponse listarVendedores(
             @RequestParam(defaultValue = "1") int page,

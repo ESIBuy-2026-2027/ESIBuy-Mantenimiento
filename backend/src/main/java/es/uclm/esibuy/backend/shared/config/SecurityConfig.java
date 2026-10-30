@@ -33,8 +33,9 @@ import es.uclm.esibuy.backend.shared.error.ManejadorAccesoDenegado;
  * su rol.
  *
  * <p>La zona de vendedor ({@code /api/seller/**}) solo la usa el rol VENDEDOR (HU15, T57). El
- * administrador ve la información de los vendedores en solo lectura por su propia zona
- * ({@code /api/admin/sellers/...}, HU26). Que el vendedor esté activo lo comprueba el login.
+ * administrador supervisa los productos y pedidos de los vendedores en solo lectura por su propia zona
+ * ({@code /api/admin/sellers/...}, HU26); los datos de la cuenta del vendedor sí los gestiona él (HU22, HU23 y
+ * HU24). Que el vendedor esté activo lo comprueba el login.
  *
  * <p>La zona de cliente ({@code /api/customer/**}) solo la usa el rol CLIENTE: de momento, sus métodos de
  * pago (HU6) y sus direcciones de envío (HU5).
