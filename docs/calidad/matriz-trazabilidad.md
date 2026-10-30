@@ -2043,6 +2043,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU31-CP25 | El nombre se guarda sin espacios en los extremos, así que con espacios cuenta como repetido también para el índice único | Unitario + integración MongoDB | 3 | ✅ Pasa |
 | HU31-CP26 | La categoría se elige en un desplegable con búsqueda con las categorías actuales: se puede escribir para filtrar sin distinguir mayúsculas ni tildes, y en los filtros la primera opción es «Todas las categorías» | Frontend (componente y página) | 11 | ✅ Pasa (11, AB#256, PR #123) |
 | HU31-CP27 | Un nombre que el vendedor ya usa (409 `PRODUCT_NAME_ALREADY_EXISTS`) se marca en el campo Nombre con un mensaje propio al dar de alta, y el aviso desaparece al cambiar el nombre | Frontend (página) | 2 | ✅ Pasa (2, AB#257, PR #123) |
+| HU31-CP28 | Los casos de uso de productos exigen su rol (vendedor, administrador o cliente según el caso de uso) y, los del vendedor, que el correo recibido sea el de la sesión; sin sesión se rechazan. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 9 | 🔍 En revisión (9, rama `fix/seguridad-capa-negocio`) |
 
 Notas:
 - **HU31-CP01 a CP10:** casos propuestos en la T201 (AB#201) a partir del contrato del formulario de producto del frontend (`frontend/docs/hu31-formulario-producto.md`). Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards.
@@ -2062,6 +2063,7 @@ Notas:
 - **Estado:** los tests de AB#179, AB#180, AB#204 y AB#205 están en `develop` (PR #99).
 - **Frontend:** los tests de la HU31 (AB#182) no tienen todavía filas en la matriz.
 - **HU31-CP26 y CP27 (revisión del Sprint 1, R5 y R6):** casos propuestos en las T256 (AB#256) y T257 (AB#257). Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards. El desplegable es el componente compartido `CategoryCombobox` y, por decisión del equipo, se usa en todas las vistas que eligen una categoría: formulario de producto, registro de vendedor, edición de un vendedor por el administrador y filtros de los listados. Los tests de esas otras pantallas (`Register.test.jsx`, `ProfileEditor.test.jsx`, `EditableProfile.test.jsx`, `UserEditDialog.test.jsx`, `SellerProductsPage.test.jsx` y `AdminSellersPage.test.jsx`) solo se adaptan para elegir la categoría en el desplegable; no llevan ID de caso y no tienen filas en la Tabla B. `ProfileEditor.test.jsx` añade además `profileEditor_deUnVendedor_laCategoriaPrincipalSeEligeEnUnDesplegableConLasCategorias`, que por decisión del equipo tampoco lleva ID de caso. El 409 ya lo devolvía el backend (CP22); el mock del frontend lo devuelve ahora igual. Al editar, el mismo mensaje en el campo Nombre lo comprueba HU34-CP18 (decisión del equipo al resolver el conflicto con el PR #122: un único mensaje, junto al campo, en alta y en edición).
+- **HU31-CP28 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Comprueba con `@PreAuthorize` que cada caso de uso de productos exige su rol (gestión y listado: vendedor con su propio correo; supervisión y conteo por categoría: administrador; catálogo y existencias: cliente). Clase de test nueva `productos/application/service/SeguridadProductosServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -2123,6 +2125,15 @@ Notas:
 | HU31-CP26 | `SellerProductFormPage.test.jsx` | `HU31-CP26: se puede escribir para buscar la categoría y se envía su identificador` | Frontend · página | AB#256 | PR #123 | ✅ |
 | HU31-CP27 | `SellerProductFormPage.test.jsx` | `HU31-CP27: un nombre que el vendedor ya usa se marca en el campo Nombre con un mensaje propio` | Frontend · página | AB#257 | PR #123 | ✅ |
 | HU31-CP27 | `SellerProductFormPage.test.jsx` | `HU31-CP27: al cambiar el nombre desaparece el aviso de nombre repetido` | Frontend · página | AB#257 | PR #123 | ✅ |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `unClienteNoUsaLosCasosDeUsoDelVendedor` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `unAdministradorNoUsaLosCasosDeUsoDelVendedor` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `unVendedorNoOperaConElCorreoDeOtro` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `unVendedorOperaConSuPropioCorreo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `soloElAdministradorSupervisa` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `elAdministradorCuentaLosProductos` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `unVendedorNoUsaElCatalogoNiLasExistencias` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `unClienteUsaElCatalogo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `ProductoTest` y `DescuentoTest`: `productos/domain/model/` (JUnit, sin Spring)
