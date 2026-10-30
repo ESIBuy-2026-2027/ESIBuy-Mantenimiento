@@ -888,6 +888,7 @@ Notas:
 | HU6-CP34 | Eliminar un método tras confirmarlo; cancelar no elimina nada | Frontend (componente) | 2 | ✅ Pasa |
 | HU6-CP35 | Para eliminar el predeterminado hay que elegir el sustituto, salvo si es el único; desde la página, el elegido pasa a ser el predeterminado | Frontend (componente y página) | 3 | ✅ Pasa |
 | HU6-CP36 | Si la eliminación falla, se avisa sin cerrar el diálogo | Frontend (componente) | 1 | ✅ Pasa |
+| HU6-CP37 | La gestión de métodos de pago exige el rol cliente y que el correo recibido sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, rama `fix/seguridad-capa-negocio`) |
 
 Notas:
 - **HU6-CP01 a CP36:** casos propuestos y aprobados por el equipo durante el desarrollo de la HU6: el backend (CP01 a CP24, tasks 271, 110, 270 y 112) y la vista del frontend (CP25 a CP36, tasks 269, 113 y 114). Los casos de prueba no se registran en Azure Boards: viven en esta matriz y en el `@DisplayName` de cada test.
@@ -895,6 +896,7 @@ Notas:
 - **Endpoints (T110):** `GET`, `POST`, `PUT /{id}/default` y `DELETE /{id}?nuevoPredeterminado=` sobre `/api/customer/payment-methods`, solo para `CLIENTE` (`SecurityConfig`). El cliente sale de la sesión. La respuesta es `{id, tipo, mascara, predeterminado}`, nunca el bloque cifrado.
 - **Vista del frontend (T269 y T113):** `/payment-methods`, solo para clientes. Detalle en `frontend/docs/hu6-metodos-de-pago.md`.
 - **Pendiente:** confirmar con el equipo los códigos de error y sus mensajes en la vista. La clave de cifrado va en la variable de entorno `ESIBUY_PAGOS_CLAVE_CIFRADO`.
+- **HU6-CP37 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Comprueba con `@PreAuthorize` que `GestionMetodosPagoUseCase` exige el rol cliente y que el correo recibido es el de la sesión. Clase de test nueva `metodospago/application/service/SeguridadMetodosPagoServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1029,6 +1031,11 @@ Notas:
 | HU6-CP35 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP35: para eliminar el predeterminado hay que elegir otro método como predeterminado` | Frontend · componente | AB#269 | PR #151 | ✅ |
 | HU6-CP35 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP35: el único método se elimina sin elegir sustituto` | Frontend · componente | AB#269 | PR #151 | ✅ |
 | HU6-CP36 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP36: si la eliminación falla avisa y no cierra el diálogo` | Frontend · componente | AB#269 | PR #151 | ✅ |
+| HU6-CP37 | `SeguridadMetodosPagoServiceTest` | `unVendedorNoUsaLosMetodosDePago` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU6-CP37 | `SeguridadMetodosPagoServiceTest` | `unAdministradorNoUsaLosMetodosDePago` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU6-CP37 | `SeguridadMetodosPagoServiceTest` | `unClienteNoOperaConElCorreoDeOtro` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU6-CP37 | `SeguridadMetodosPagoServiceTest` | `unClienteOperaConSuPropioCorreo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU6-CP37 | `SeguridadMetodosPagoServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `NumeroTarjetaTest`, `CaducidadTarjetaTest`, `TitularTarjetaTest`, `UrlPayPalTest`, `TelefonoBizumTest`, `MetodoPagoTest` y `MetodosPagoClienteTest`: `metodospago/domain/model/` (solo JUnit)
