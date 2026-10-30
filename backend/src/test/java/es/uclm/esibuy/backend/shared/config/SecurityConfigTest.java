@@ -69,6 +69,15 @@ class SecurityConfigTest {
     }
 
     @Test
+    @WithMockUser(roles = "VENDEDOR")
+    @DisplayName("Seguridad: Un rol sin permiso en la ruta recibe el mismo 403 con ACCESS_DENIED que en la capa de negocio")
+    void rutaProhibidaDa403ConAccessDenied() throws Exception {
+        mockMvc.perform(get(RUTA_ADMINISTRACION))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+    }
+
+    @Test
     @WithMockUser(roles = "ADMINISTRADOR")
     @DisplayName("HU18-CP03: un administrador accede a la zona de administración")
     void administradorAccedeAAdministracion() throws Exception {
