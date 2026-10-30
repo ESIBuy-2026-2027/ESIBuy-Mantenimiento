@@ -7,6 +7,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.ProductoComercial;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.application.port.out.VendedorPort;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
@@ -22,12 +23,13 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 // Catálogo de productos del cliente (HU7, T352). El repositorio es un doble de prueba (Mockito): se prueba
 // el caso de uso sin MongoDB ni Spring.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU7-CP10, HU8-CP09 y HU8-CP10, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU7-CP10 y HU8-CP09 a CP11, propuestos.
 @ExtendWith(MockitoExtension.class)
 class CatalogoProductosServiceTest {
 
@@ -112,5 +114,20 @@ class CatalogoProductosServiceTest {
         assertEquals(new BigDecimal("50.00"), detalle.precio());
         assertEquals(new BigDecimal("20"), detalle.porcentajeDescuento());
         assertEquals(new BigDecimal("40.00"), detalle.precioFinal());
+    }
+
+    // El cliente no distingue un producto que no existe de uno que el vendedor ha desactivado: los dos son un 404.
+    @Test
+    @DisplayName("HU8-CP11: el detalle de un producto que no existe o no está disponible no se encuentra")
+    void elDetalleDeUnProductoQueNoExisteONoEstaDisponibleNoSeEncuentra() {
+        when(productoRepository.buscarPorId("p-1")).thenReturn(Optional.of(producto(false)));
+        when(productoRepository.buscarPorId("no-existe")).thenReturn(Optional.empty());
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort,
+                usuarioEnSesion);
+
+        assertThrows(ProductoNoEncontradoException.class,
+                () -> servicio.consultarDetalle("p-1", "cliente@esibuy.test"));
+        assertThrows(ProductoNoEncontradoException.class,
+                () -> servicio.consultarDetalle("no-existe", "cliente@esibuy.test"));
     }
 }
