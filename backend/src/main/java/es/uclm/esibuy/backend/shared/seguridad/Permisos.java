@@ -11,7 +11,11 @@ public final class Permisos {
     public static final String SOLO_VENDEDOR_PROPIO = SOLO_VENDEDOR + " and #emailVendedor == authentication.name";
     public static final String SOLO_VENDEDOR_PROPIO_EN_COMANDO =
             SOLO_VENDEDOR + " and #comando.emailVendedor() == authentication.name";
+    public static final String SOLO_CLIENTE_PROPIO = SOLO_CLIENTE + " and #emailCliente == authentication.name";
+    public static final String SOLO_CLIENTE_PROPIO_EN_COMANDO =
+            SOLO_CLIENTE + " and #comando.emailCliente() == authentication.name";
 
     private Permisos() {
     }
+    
 }

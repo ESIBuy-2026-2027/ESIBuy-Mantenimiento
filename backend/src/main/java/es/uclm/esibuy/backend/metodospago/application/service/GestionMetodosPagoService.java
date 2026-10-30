@@ -17,6 +17,9 @@ import java.time.Clock;
 import java.time.YearMonth;
 import java.util.List;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+import es.uclm.esibuy.backend.shared.seguridad.Permisos;
+
 /**
  * Implementa la gestión de métodos de pago del cliente. Solo habla con el exterior a través de los puertos
  * de salida. El reloj se inyecta para fijar en los tests el mes con el que se comprueba la vigencia.
@@ -40,11 +43,13 @@ public class GestionMetodosPagoService implements GestionMetodosPagoUseCase {
         this.reloj = reloj;
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public List<MetodoPago> listar(String emailCliente) {
         return metodoPagoRepository.buscarPorCliente(clienteEnSesion.idPorCorreo(emailCliente));
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO_EN_COMANDO)
     @Override
     public MetodoPago anadir(AnadirMetodoPagoCommand comando) {
         // Sin tipo no se sabe qué datos validar; el switch sobre null fallaría con NullPointerException
@@ -64,6 +69,7 @@ public class GestionMetodosPagoService implements GestionMetodosPagoUseCase {
         return metodoPagoRepository.guardar(metodo);
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public void marcarPredeterminado(String emailCliente, String metodoId) {
         MetodosPagoCliente metodos = metodosDelCliente(emailCliente);
@@ -72,6 +78,7 @@ public class GestionMetodosPagoService implements GestionMetodosPagoUseCase {
         metodos.getMetodos().forEach(metodoPagoRepository::guardar);
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public void eliminar(String emailCliente, String metodoId, String nuevoPredeterminadoId) {
         MetodosPagoCliente metodos = metodosDelCliente(emailCliente);
@@ -82,6 +89,7 @@ public class GestionMetodosPagoService implements GestionMetodosPagoUseCase {
         metodos.getMetodos().forEach(metodoPagoRepository::guardar);
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public boolean esDelCliente(String emailCliente, String metodoId) {
         return listar(emailCliente).stream().anyMatch(metodo -> metodo.getId().equals(metodoId));
