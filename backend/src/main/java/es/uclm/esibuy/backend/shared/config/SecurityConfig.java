@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
@@ -36,6 +37,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
  * <p>La zona de cliente ({@code /api/customer/**}) solo la usa el rol CLIENTE: de momento, sus métodos de
  * pago (HU6) y sus direcciones de envío (HU5).
  */
+@EnableMethodSecurity 
 @Configuration
 public class SecurityConfig {
 
