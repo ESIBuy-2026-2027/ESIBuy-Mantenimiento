@@ -30,9 +30,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // que solo existe en este test.
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU18-CP01 a CP03, propuestos a partir de los criterios
 // de aceptación de la HU18.
-@WebMvcTest({SecurityConfigTest.AdministracionDePruebaController.class, SecurityConfigTest.VendedorDePruebaController.class, SecurityConfigTest.MetodoDePruebaController.class})
+@WebMvcTest({SecurityConfigTest.AdministracionDePruebaController.class, SecurityConfigTest.VendedorDePruebaController.class,
+        SecurityConfigTest.MetodoDePruebaController.class})
 @Import({SecurityConfig.class, SecurityConfigTest.AdministracionDePruebaController.class,
-        SecurityConfigTest.VendedorDePruebaController.class, SecurityConfigTest.ServicioDePrueba.class})
+        SecurityConfigTest.VendedorDePruebaController.class, SecurityConfigTest.MetodoDePruebaController.class,
+        SecurityConfigTest.ServicioDePrueba.class})
 class SecurityConfigTest {
 
     private static final String RUTA_ADMINISTRACION = "/api/admin/prueba";
