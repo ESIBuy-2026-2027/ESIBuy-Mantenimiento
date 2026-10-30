@@ -3,6 +3,8 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 import java.time.Clock;
 import java.time.LocalDate;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarClienteCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarVendedorCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
@@ -25,6 +27,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.PoliticaContrasenas;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
+import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 
 /**
  * Caso de uso de registro de un cliente (HU1).
@@ -50,6 +53,7 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
         this.reloj = reloj;
     }
 
+    @PreAuthorize(Permisos.PUBLICO)
     @Override
     public void registrarCliente(RegistrarClienteCommand comando) {
         // Todo lo que se puede comprobar sin salir del núcleo va antes de consultar la base de datos.
@@ -74,6 +78,7 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
     }
 
     // Registro del vendedor (T241): las mismas reglas que el cliente, sin mayoría de edad y con nombre comercial.
+    @PreAuthorize(Permisos.PUBLICO)
     @Override
     public void registrarVendedor(RegistrarVendedorCommand comando) {
         DatosPersonales datosPersonales = new DatosPersonales(comando.nombre(), comando.apellidos(), comando.imagenPerfil());
