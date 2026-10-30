@@ -5,6 +5,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalog
 import es.uclm.esibuy.backend.productos.application.port.in.DetalleProductoCatalogo;
 import es.uclm.esibuy.backend.productos.application.port.in.ProductoComercial;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
+import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.application.port.out.VendedorPort;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
@@ -26,7 +27,7 @@ import static org.mockito.Mockito.when;
 
 // Catálogo de productos del cliente (HU7, T352). El repositorio es un doble de prueba (Mockito): se prueba
 // el caso de uso sin MongoDB ni Spring.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU7-CP10 y HU8-CP09, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU7-CP10, HU8-CP09 y HU8-CP10, propuestos.
 @ExtendWith(MockitoExtension.class)
 class CatalogoProductosServiceTest {
 
@@ -36,6 +37,9 @@ class CatalogoProductosServiceTest {
     @Mock
     private VendedorPort vendedorPort;
 
+    @Mock
+    private UsuarioEnSesionPort usuarioEnSesion;
+
     @Test
     @DisplayName("HU7-CP10: busca en el catálogo con los criterios recibidos y devuelve la página del repositorio")
     void buscaEnElCatalogoConLosCriteriosRecibidos() {
@@ -44,7 +48,7 @@ class CatalogoProductosServiceTest {
         ProductoPage pagina = new ProductoPage(List.of(), 0, 10, 0);
         when(productoRepository.buscarEnCatalogo(query)).thenReturn(pagina);
 
-        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort);
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort, usuarioEnSesion);
 
         assertSame(pagina, servicio.buscarProductos(query));
     }
@@ -58,7 +62,7 @@ class CatalogoProductosServiceTest {
     @DisplayName("HU9-CP19: consultar un producto que se puede comprar devuelve sus datos y su precio final para el cliente")
     void consultarUnProductoComprableDevuelveSusDatosYSuPrecioFinal() {
         when(productoRepository.buscarPorId("p-1")).thenReturn(Optional.of(producto(true)));
-        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort);
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort, usuarioEnSesion);
 
         ProductoComercial comercial = servicio.consultarComprable("p-1", true).orElseThrow();
 
@@ -72,7 +76,7 @@ class CatalogoProductosServiceTest {
     void unProductoQueNoExisteONoEstaDisponibleNoSePuedeComprar() {
         when(productoRepository.buscarPorId("p-1")).thenReturn(Optional.of(producto(false)));
         when(productoRepository.buscarPorId("no-existe")).thenReturn(Optional.empty());
-        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort);
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort, usuarioEnSesion);
 
         assertTrue(servicio.consultarComprable("p-1", false).isEmpty());
         assertTrue(servicio.consultarComprable("no-existe", false).isEmpty());
@@ -85,12 +89,28 @@ class CatalogoProductosServiceTest {
     void elDetalleLlevaSusDatosYElNombreComercialDelVendedor() {
         when(productoRepository.buscarPorId("p-1")).thenReturn(Optional.of(producto(true)));
         when(vendedorPort.nombreComercial("u-2")).thenReturn("TecnoVera");
-        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort);
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort, usuarioEnSesion);
 
         DetalleProductoCatalogo detalle = servicio.consultarDetalle("p-1", "cliente@esibuy.test");
 
         assertEquals(new DetalleProductoCatalogo("p-1", "Teclado", "Con cable", "https://esibuy.test/teclado.png",
                 "cat-1", "u-2", "TecnoVera", new BigDecimal("50.00"), new BigDecimal("10"), new BigDecimal("45.00"), 7,
                 true), detalle);
+    }
+
+    @Test
+    @DisplayName("HU8-CP10: al cliente premium se le muestra el precio con su descuento premium")
+    void alClientePremiumSeLeMuestraElPrecioConSuDescuento() {
+        when(productoRepository.buscarPorId("p-1")).thenReturn(Optional.of(producto(true)));
+        when(vendedorPort.nombreComercial("u-2")).thenReturn("TecnoVera");
+        when(usuarioEnSesion.esClientePremium("premium@esibuy.test")).thenReturn(true);
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort,
+                usuarioEnSesion);
+
+        DetalleProductoCatalogo detalle = servicio.consultarDetalle("p-1", "premium@esibuy.test");
+
+        assertEquals(new BigDecimal("50.00"), detalle.precio());
+        assertEquals(new BigDecimal("20"), detalle.porcentajeDescuento());
+        assertEquals(new BigDecimal("40.00"), detalle.precioFinal());
     }
 }
