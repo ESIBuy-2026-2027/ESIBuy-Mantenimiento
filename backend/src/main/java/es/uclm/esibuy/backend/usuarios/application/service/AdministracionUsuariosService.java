@@ -3,6 +3,8 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 import java.time.Clock;
 import java.time.LocalDate;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
@@ -20,7 +22,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.PerfilUsuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
-
+import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 /**
  * Implementa la gestión de cuentas por el administrador. Solo habla con el exterior a través del
  * puerto de salida del repositorio; la regla de qué significa activar o desactivar vive en {@link Usuario}.
@@ -36,6 +38,7 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         this.reloj = reloj;
     }
 
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
     @Override
     public Usuario activar(String usuarioId) {
         Usuario usuario = buscar(usuarioId);
@@ -44,17 +47,20 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         return usuario;
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE)
     @Override
     public String consultarNombreComercial(String vendedorId) {
         DatosVendedor datos = consultarVendedor(vendedorId).getDatosVendedor();
         return datos == null ? null : datos.nombreComercial();
     }
 
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
     @Override
     public Usuario consultar(String usuarioId) {
         return buscar(usuarioId);
     }
 
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
     @Override
     public Usuario consultarVendedor(String usuarioId) {
         Usuario usuario = buscar(usuarioId);
@@ -65,6 +71,7 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         return usuario;
     }
 
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
     @Override
     public Usuario editar(String usuarioId, EditarUsuarioCommand comando) {
         Usuario usuario = buscar(usuarioId);
@@ -79,6 +86,7 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         return usuario;
     }
 
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR_PROPIO)
     @Override
     public Usuario desactivar(String usuarioId, String emailAdministrador) {
         Usuario usuario = buscar(usuarioId);
@@ -94,6 +102,7 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         return usuario;
     }
 
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
     @Override
     public Usuario activarVendedor(String usuarioId) {
         Usuario vendedor = consultarVendedor(usuarioId);
@@ -103,6 +112,7 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
     }
 
     // Un vendedor nunca es el administrador en sesión ni otro administrador: no aplican las reglas de desactivar.
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
     @Override
     public Usuario desactivarVendedor(String usuarioId) {
         Usuario vendedor = consultarVendedor(usuarioId);
@@ -111,6 +121,7 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         return vendedor;
     }
 
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR_PROPIO)
     @Override
     public void eliminarAdministrador(String usuarioId, String emailAdministrador) {
         Usuario administrador = buscar(usuarioId);

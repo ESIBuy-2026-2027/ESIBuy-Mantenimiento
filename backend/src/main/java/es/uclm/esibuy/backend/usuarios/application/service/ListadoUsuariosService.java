@@ -1,9 +1,12 @@
 package es.uclm.esibuy.backend.usuarios.application.service;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListarUsuariosQuery;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
+import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 
 /**
  * Implementa el caso de uso de listado sin acoplarlo a la tecnología de persistencia.
@@ -16,6 +19,7 @@ public class ListadoUsuariosService implements ListadoUsuariosUseCase {
         this.usuarioRepository = usuarioRepository;
     }
 
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
     @Override
     public UsuarioPage listar(ListarUsuariosQuery query) {
         if (query == null) {
