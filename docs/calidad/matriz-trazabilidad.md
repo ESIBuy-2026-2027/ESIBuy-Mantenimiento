@@ -1782,6 +1782,7 @@ Notas:
 | HU20-CP04 | Sin sesión (401) o sin ser administrador (403) no se ve la ficha | Integración (capa web) | 2 | ✅ Pasa |
 | HU20-CP05 | La ficha de un administrador trae su fecha de incorporación, que es su fecha de alta; la de un cliente no la trae | Integración (capa web) | 2 | ✅ Pasa |
 | HU20-CP06 | La ficha de un vendedor trae sus datos de vendedor (nombre comercial, categoría principal, DNI y teléfono) y no los de cliente | Integración (capa web) | 1 | ✅ Pasa |
+| HU20-CP07 | La administración de usuarios (consultar, editar, activar, desactivar, eliminar administradores, listar y crear administradores) exige el rol administrador y, al desactivar o eliminar, que el correo del administrador sea el de la sesión; el nombre comercial de un vendedor es del cliente (lo usa el carrito); sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 7 | 🔍 En revisión (7, rama `fix/seguridad-capa-negocio`) |
 
 Notas:
 - **HU20-CP01 a CP04:** casos propuestos en la T54 (AB#54) a partir del contrato del frontend (`frontend/docs/hu20-ficha-usuario.md`). Pendientes de confirmar con el equipo y de añadir a la HU20 en Azure Boards.
@@ -1789,6 +1790,7 @@ Notas:
 - **HU20-CP05 (AB#43):** caso propuesto en la T43. El contrato del frontend dice que la fecha de incorporación del administrador es su fecha de alta, automática y no editable (`Contexto_frontend.md`). La HU21 (PR #94) no añadió ningún campo nuevo, así que la ficha devuelve `fechaIncorporacion` con el mismo instante que `fechaAlta` (`createdAt` en MongoDB). Como el rol de una cuenta no cambia nunca (decisión del equipo, 11/10/2026), la fecha de alta de un administrador es siempre la de su incorporación. Pendiente de confirmar con el equipo y de añadir a Azure Boards. La `sede` del administrador sigue sin existir en el modelo: el equipo decide dejarla pendiente en este sprint.
 - **HU20-CP06 (AB#43):** caso propuesto en la edición del vendedor. Con el registro de vendedores (T241) el vendedor tiene `DatosVendedor`, y la ficha los devuelve (el DNI y el teléfono salen del perfil del cliente o del vendedor). Pendiente de confirmar con el equipo y de añadir a Azure Boards.
 - **Frontend:** los tests de la HU20 (AB#211) no tienen todavía filas en la matriz.
+- **HU20-CP07 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Cubre con `@PreAuthorize` los servicios `AdministracionUsuariosService`, `ListadoUsuariosService` y `CrearAdministradorService`, que sirven también a las HU19, HU21, HU22, HU23, HU24, HU26 y HU37; se traza aquí por ser la ficha de usuario (HU20) la operación base del puerto. Clase de test nueva `usuarios/application/service/SeguridadAdministracionUsuarioServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1804,6 +1806,13 @@ Notas:
 | HU20-CP05 | `UsuarioControllerTest` | `fichaDeUnAdministradorConSuFechaDeIncorporacion` | Infraestructura | AB#43 | PR #96 | ✅ |
 | HU20-CP05 | `UsuarioControllerTest` | `fichaDeUnClienteSinFechaDeIncorporacion` | Infraestructura | AB#43 | PR #96 | ✅ |
 | HU20-CP06 | `UsuarioControllerTest` | `fichaDeUnVendedorConSusDatosDeVendedor` | Infraestructura | AB#43 | PR #100 | ✅ |
+| HU20-CP07 | `SeguridadAdministracionUsuarioServiceTest` | `unClienteNoAdministraUsuarios` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU20-CP07 | `SeguridadAdministracionUsuarioServiceTest` | `unVendedorNoAdministraUsuarios` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU20-CP07 | `SeguridadAdministracionUsuarioServiceTest` | `unAdministradorNoOperaConElCorreoDeOtro` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU20-CP07 | `SeguridadAdministracionUsuarioServiceTest` | `unAdministradorUsaLasOperaciones` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU20-CP07 | `SeguridadAdministracionUsuarioServiceTest` | `unClienteConsultaElNombreComercial` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU20-CP07 | `SeguridadAdministracionUsuarioServiceTest` | `unAdministradorNoConsultaElNombreComercial` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU20-CP07 | `SeguridadAdministracionUsuarioServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
