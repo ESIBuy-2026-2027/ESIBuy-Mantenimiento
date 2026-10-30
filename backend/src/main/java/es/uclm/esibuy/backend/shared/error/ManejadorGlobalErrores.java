@@ -182,7 +182,7 @@ public class ManejadorGlobalErrores {
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public RespuestaError accesoDenegado() {
-        return new RespuestaError("Acceso denegado", "ACCESS_DENIED");
+        return new RespuestaError(ManejadorAccesoDenegado.MENSAJE, ManejadorAccesoDenegado.CODIGO);
     }
 
     // Quien ya tiene Authenticator no puede volver a darse de alta: impediría saltarse el tercer factor (T20)

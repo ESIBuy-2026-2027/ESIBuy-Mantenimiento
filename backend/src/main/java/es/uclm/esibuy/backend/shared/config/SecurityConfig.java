@@ -11,6 +11,8 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
+import es.uclm.esibuy.backend.shared.error.ManejadorAccesoDenegado;
+
 /**
  * Configuración mínima de Spring Security.
  *
@@ -79,7 +81,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, RUTA_CATALOGO).hasRole(ROL_CLIENTE)
                         .anyRequest().authenticated())
                 .exceptionHandling(excepciones -> excepciones
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                        .accessDeniedHandler(new ManejadorAccesoDenegado()))
                 .logout(logout -> logout
                         .logoutUrl(RUTA_LOGOUT)
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
