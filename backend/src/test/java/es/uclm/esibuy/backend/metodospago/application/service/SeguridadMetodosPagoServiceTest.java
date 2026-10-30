@@ -82,9 +82,10 @@ class SeguridadMetodosPagoServiceTest {
     }
 
     private void comprobarQueRechaza(String email) {
+        AnadirMetodoPagoCommand alta = altaDe(email);
         assertAll(
                 () -> assertThrows(AccessDeniedException.class, () -> gestionMetodosPago.listar(email)),
-                () -> assertThrows(AccessDeniedException.class, () -> gestionMetodosPago.anadir(altaDe(email))),
+                () -> assertThrows(AccessDeniedException.class, () -> gestionMetodosPago.anadir(alta)),
                 () -> assertThrows(AccessDeniedException.class,
                         () -> gestionMetodosPago.marcarPredeterminado(email, "m-1")),
                 () -> assertThrows(AccessDeniedException.class, () -> gestionMetodosPago.eliminar(email, "m-1", null)),
@@ -125,11 +126,12 @@ class SeguridadMetodosPagoServiceTest {
     @Test
     @DisplayName("HU6-CP37: sin sesión se rechaza cualquier operación de métodos de pago")
     void sinSesionSeRechazaTodo() {
+        AnadirMetodoPagoCommand alta = altaDe(CLIENTE);
         assertAll(
                 () -> assertThrows(AuthenticationCredentialsNotFoundException.class,
                         () -> gestionMetodosPago.listar(CLIENTE)),
                 () -> assertThrows(AuthenticationCredentialsNotFoundException.class,
-                        () -> gestionMetodosPago.anadir(altaDe(CLIENTE))));
+                        () -> gestionMetodosPago.anadir(alta)));
         verifyNoInteractions(metodoPagoRepository, cifradoDatosPago, clienteEnSesion);
     }
 }
