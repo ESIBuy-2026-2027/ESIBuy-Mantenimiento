@@ -22,15 +22,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.security.access.prepost.PreAuthorize;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 // Acceso a la zona de administración por rol (HU18, T58). Todavía no hay login ni endpoints de
 // administración: los usuarios se simulan con @WithMockUser y la ruta la da un controlador de prueba,
 // que solo existe en este test.
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU18-CP01 a CP03, propuestos a partir de los criterios
 // de aceptación de la HU18.
-@WebMvcTest({SecurityConfigTest.AdministracionDePruebaController.class, SecurityConfigTest.VendedorDePruebaController.class})
+@WebMvcTest({SecurityConfigTest.AdministracionDePruebaController.class, SecurityConfigTest.VendedorDePruebaController.class, SecurityConfigTest.MetodoDePruebaController.class})
 @Import({SecurityConfig.class, SecurityConfigTest.AdministracionDePruebaController.class,
-        SecurityConfigTest.VendedorDePruebaController.class})
+        SecurityConfigTest.VendedorDePruebaController.class, SecurityConfigTest.ServicioDePrueba.class})
 class SecurityConfigTest {
 
     private static final String RUTA_ADMINISTRACION = "/api/admin/prueba";
@@ -38,6 +40,7 @@ class SecurityConfigTest {
     private static final String RUTA_LOGIN = "/api/auth/login";
     private static final String COOKIE_CSRF = "XSRF-TOKEN";
     private static final String CABECERA_CSRF = "X-XSRF-TOKEN";
+    private static final String RUTA_METODO = "/api/prueba-metodo";
 
     @Autowired
     private MockMvc mockMvc;
@@ -68,6 +71,13 @@ class SecurityConfigTest {
     @DisplayName("HU18-CP03: un administrador accede a la zona de administración")
     void administradorAccedeAAdministracion() throws Exception {
         mockMvc.perform(get(RUTA_ADMINISTRACION)).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMINISTRADOR")
+    @DisplayName("Seguridad: Un método con @PreAuthorize deja pasar al rol que exige")
+    void metodoProtegidoDejaPasarAlRolCorrecto() throws Exception {
+        mockMvc.perform(get(RUTA_METODO)).andExpect(status().isOk());
     }
 
     // Protección CSRF para el frontend (T230, D4): el backend da el token en una cookie que el
@@ -128,6 +138,12 @@ class SecurityConfigTest {
                 .andExpect(status().isForbidden());
     }
 
+
+    @Test
+    @DisplayName("Seguridad: Sin sesión, un método con @PreAuthorize sigue respondiendo 401")
+    void metodoProtegidoSinSesionDa401() throws Exception {
+        mockMvc.perform(get(RUTA_METODO)).andExpect(status().isUnauthorized());
+    }
     // Zona de vendedor (HU15, T57): misma idea que la de administración, con su propio endpoint de prueba.
     // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU15-CP01 a CP03, propuestos a partir de los criterios
     // de la HU15.
@@ -152,6 +168,15 @@ class SecurityConfigTest {
         mockMvc.perform(get(RUTA_VENDEDOR)).andExpect(status().isOk());
     }
 
+    @Test
+    @WithMockUser(roles = "VENDEDOR")
+    @DisplayName("Seguridad: Un método con @PreAuthorize rechaza con 403 y ACCESS_DENIED al rol que no es el suyo, aunque la ruta lo deje pasar")
+    void metodoProtegidoRechazaUnRolQueNoEsElSuyo() throws Exception {
+        mockMvc.perform(get(RUTA_METODO))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+    }
+
     // Endpoint de administración de prueba: así el test comprueba un 200 real sin depender de los
     // endpoints de otras tasks (HU19 a HU24).
     @RestController
@@ -172,5 +197,20 @@ class SecurityConfigTest {
         String responder() {
             return "ok";
         }
+    }
+
+    @RestController
+    static class MetodoDePruebaController {
+        private final ServicioDePrueba servicio;
+
+        MetodoDePruebaController(ServicioDePrueba servicio) { this.servicio = servicio; }
+
+        @GetMapping(RUTA_METODO)
+        String ejecutar() { return servicio.soloAdministrador(); }
+    }
+
+    static class ServicioDePrueba {
+        @PreAuthorize("hasRole('ADMINISTRADOR')")
+        public String soloAdministrador() { return "ok"; }
     }
 }
