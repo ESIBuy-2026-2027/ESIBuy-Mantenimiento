@@ -5,6 +5,8 @@ import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
+import org.springframework.security.access.prepost.PreAuthorize;
+import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 
 /**
  * Listado de los productos propios del vendedor (HU32). El vendedor sale siempre de la sesión,
@@ -20,6 +22,7 @@ public class ListadoProductosService implements ListadoProductosUseCase {
         this.usuarioEnSesion = usuarioEnSesion;
     }
 
+    @PreAuthorize (Permisos.SOLO_VENDEDOR_PROPIO)
     @Override
     public ProductoPage listarMisProductos(String emailVendedor, ListarProductosQuery query) {
         return productoRepository.listarPorVendedor(usuarioEnSesion.idPorCorreo(emailVendedor), query);

@@ -8,6 +8,9 @@ public final class Permisos {
     public static final String SOLO_VENDEDOR = "hasRole('VENDEDOR')";
     public static final String SOLO_CLIENTE = "hasRole('CLIENTE')";
     public static final String CLIENTE_O_VENDEDOR = "hasAnyRole('CLIENTE', 'VENDEDOR')";
+    public static final String SOLO_VENDEDOR_PROPIO = SOLO_VENDEDOR + " and #emailVendedor == authentication.name";
+    public static final String SOLO_VENDEDOR_PROPIO_EN_COMANDO =
+            SOLO_VENDEDOR + " and #comando.emailVendedor() == authentication.name";
 
     private Permisos() {
     }

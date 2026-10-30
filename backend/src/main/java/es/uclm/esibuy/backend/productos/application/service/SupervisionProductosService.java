@@ -5,6 +5,8 @@ import es.uclm.esibuy.backend.productos.application.port.in.SupervisionProductos
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.VendedorPort;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
+import org.springframework.security.access.prepost.PreAuthorize;
+import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 
 /**
  * Productos de un vendedor vistos por el administrador (HU26). Antes de listar comprueba que el id es de un
@@ -20,6 +22,7 @@ public class SupervisionProductosService implements SupervisionProductosUseCase 
         this.vendedores = vendedores;
     }
 
+    @PreAuthorize (Permisos.SOLO_ADMINISTRADOR)
     @Override
     public ProductoPage listarProductosDeVendedor(String vendedorId, int pagina, int tamano) {
         vendedores.comprobarQueEsVendedor(vendedorId);
