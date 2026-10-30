@@ -1061,16 +1061,16 @@ Tests del frontend (bajo `frontend/src/`, con Vitest, React Testing Library y MS
 | HU7-CP07 | Arriba se muestran los diez productos mejor valorados como tarjetas (puesto, nombre y valoración) dentro de una banda curva sin marco; se ocultan con filtros activos, con pocos productos valorados o si falla | Frontend (componente y página) | 9 | ✅ Pasa (9, AB#350, PR #131) |
 | HU7-CP08 | Las tarjetas de la banda animada de los mejores se pueden pulsar con el ratón y avisan con su producto; sin esa función no son botones (el detalle al que llevan es la HU8-CP06) | Frontend (componente) | 2 | ✅ Pasa (2, AB#350, PR #131) |
 | HU7-CP09 | Al cambiar el tamaño de la página la banda de los mejores se reinicia (una sola vez, cuando termina el cambio) para que las tarjetas no se solapen; si el tamaño no cambia, no se reinicia | Frontend (componente) | 3 | ✅ Pasa (3, AB#350, PR #131) |
-| HU7-CP10 | El caso de uso busca en el catálogo con los criterios recibidos y devuelve la página del repositorio | Unitario | 1 | 🔍 En revisión (1, AB#352, PR #153) |
-| HU7-CP11 | El catálogo solo devuelve los productos disponibles, de todos los vendedores | Integración MongoDB | 1 | 🔍 En revisión (1, AB#352, PR #153) |
-| HU7-CP12 | La búsqueda por nombre no distingue mayúsculas ni tildes y trata el texto como literal, no como expresión regular | Integración MongoDB | 2 | 🔍 En revisión (2, AB#352, PR #153) |
-| HU7-CP13 | El filtro por categoría se puede combinar con la búsqueda | Integración MongoDB | 1 | 🔍 En revisión (1, AB#352, PR #153) |
-| HU7-CP14 | El catálogo se ordena por nombre en los dos sentidos, paginado y con el total completo | Integración MongoDB | 1 | 🔍 En revisión (1, AB#352, PR #153) |
-| HU7-CP15 | Mientras no haya valoraciones (HU13), una valoración mínima no devuelve ningún producto y ordenar por valoración desempata por nombre de la A a la Z | Integración MongoDB | 2 | 🔍 En revisión (2, AB#352, PR #153) |
-| HU7-CP16 | El cliente recibe el catálogo con el formato del contrato (sin precio, stock ni vendedor; `valoracion` null y `numValoraciones` 0) | Integración (capa web) | 1 | 🔍 En revisión (1, AB#353, PR #153) |
-| HU7-CP17 | Los parámetros llegan al caso de uso traducidos: página desde 0, criterio de orden y sentido | Integración (capa web) | 1 | 🔍 En revisión (1, AB#353, PR #153) |
-| HU7-CP18 | Un parámetro no válido (página o tamaño menor que 1, valoración fuera de 1 a 5, orden o sentido desconocidos) devuelve 400 y no llega al caso de uso | Integración (capa web) | 1 | 🔍 En revisión (1, AB#353, PR #153) |
-| HU7-CP19 | Sin sesión (401) o sin ser cliente (403) no se ve el catálogo | Integración (capa web) | 2 | 🔍 En revisión (2, AB#353, PR #153) |
+| HU7-CP10 | El caso de uso busca en el catálogo con los criterios recibidos y devuelve la página del repositorio | Unitario | 1 | ✅ Pasa (1, AB#352, PR #153) |
+| HU7-CP11 | El catálogo solo devuelve los productos disponibles, de todos los vendedores | Integración MongoDB | 1 | ✅ Pasa (1, AB#352, PR #153) |
+| HU7-CP12 | La búsqueda por nombre no distingue mayúsculas ni tildes y trata el texto como literal, no como expresión regular | Integración MongoDB | 2 | ✅ Pasa (2, AB#352, PR #153) |
+| HU7-CP13 | El filtro por categoría se puede combinar con la búsqueda | Integración MongoDB | 1 | ✅ Pasa (1, AB#352, PR #153) |
+| HU7-CP14 | El catálogo se ordena por nombre en los dos sentidos, paginado y con el total completo | Integración MongoDB | 1 | ✅ Pasa (1, AB#352, PR #153) |
+| HU7-CP15 | Mientras no haya valoraciones (HU13), una valoración mínima no devuelve ningún producto y ordenar por valoración desempata por nombre de la A a la Z | Integración MongoDB | 2 | ✅ Pasa (2, AB#352, PR #153) |
+| HU7-CP16 | El cliente recibe el catálogo con el formato del contrato (sin precio, stock ni vendedor; `valoracion` null y `numValoraciones` 0) | Integración (capa web) | 1 | ✅ Pasa (1, AB#353, PR #153) |
+| HU7-CP17 | Los parámetros llegan al caso de uso traducidos: página desde 0, criterio de orden y sentido | Integración (capa web) | 1 | ✅ Pasa (1, AB#353, PR #153) |
+| HU7-CP18 | Un parámetro no válido (página o tamaño menor que 1, valoración fuera de 1 a 5, orden o sentido desconocidos) devuelve 400 y no llega al caso de uso | Integración (capa web) | 1 | ✅ Pasa (1, AB#353, PR #153) |
+| HU7-CP19 | Sin sesión (401) o sin ser cliente (403) no se ve el catálogo | Integración (capa web) | 2 | ✅ Pasa (2, AB#353, PR #153) |
 
 Notas:
 - **HU7-CP01 a CP09 (Sprint 2, frontend):** casos propuestos en las tasks AB#350 (vista de productos) y AB#351 (vista de filtrado y búsqueda), a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu7-busqueda-y-filtrado-de-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU7 (AB#69) en Azure Boards.
@@ -1134,19 +1134,19 @@ Notas:
 | HU7-CP09 | `TiltedGridHero.test.jsx` | `HU7-CP09: al cambiar el tamaño de la página la banda se reinicia, para que las imágenes no se solapen` | Frontend · componente | AB#350 | PR #131 | ✅ |
 | HU7-CP09 | `TiltedGridHero.test.jsx` | `HU7-CP09: espera a que termine de cambiar el tamaño: varios cambios seguidos reinician una sola vez` | Frontend · componente | AB#350 | PR #131 | ✅ |
 | HU7-CP09 | `TiltedGridHero.test.jsx` | `HU7-CP09: si el tamaño no cambia, la banda sigue su curso sin reiniciarse` | Frontend · componente | AB#350 | PR #131 | ✅ |
-| HU7-CP10 | `CatalogoProductosServiceTest` | `buscaEnElCatalogoConLosCriteriosRecibidos` | Aplicación | AB#352 | PR #153 | 🔍 |
-| HU7-CP11 | `ProductoMongoAdapterTest` | `buscarEnCatalogoSoloDevuelveDisponiblesDeTodosLosVendedores` | Infraestructura | AB#352 | PR #153 | 🔍 |
-| HU7-CP12 | `ProductoMongoAdapterTest` | `buscarEnCatalogoBuscaSinDistinguirMayusculasNiTildes` | Infraestructura | AB#352 | PR #153 | 🔍 |
-| HU7-CP12 | `ProductoMongoAdapterTest` | `buscarEnCatalogoTrataLaBusquedaComoTextoLiteral` | Infraestructura | AB#352 | PR #153 | 🔍 |
-| HU7-CP13 | `ProductoMongoAdapterTest` | `buscarEnCatalogoFiltraPorCategoriaYBusqueda` | Infraestructura | AB#352 | PR #153 | 🔍 |
-| HU7-CP14 | `ProductoMongoAdapterTest` | `buscarEnCatalogoOrdenaPorNombreYPagina` | Infraestructura | AB#352 | PR #153 | 🔍 |
-| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoConValoracionMinimaNoDevuelveNada` | Infraestructura | AB#352 | PR #153 | 🔍 |
-| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoPorValoracionDesempataPorNombre` | Infraestructura | AB#352 | PR #153 | 🔍 |
-| HU7-CP16 | `CatalogoControllerTest` | `clienteRecibeElCatalogoConElFormatoDelContrato` | Infraestructura | AB#353 | PR #153 | 🔍 |
-| HU7-CP17 | `CatalogoControllerTest` | `traduceLosParametrosALaConsulta` | Infraestructura | AB#353 | PR #153 | 🔍 |
-| HU7-CP18 | `CatalogoControllerTest` | `parametroNoValidoDevuelve400` | Infraestructura | AB#353 | PR #153 | 🔍 |
-| HU7-CP19 | `CatalogoControllerTest` | `sinSesionDevuelve401` | Infraestructura | AB#353 | PR #153 | 🔍 |
-| HU7-CP19 | `CatalogoControllerTest` | `otroRolDevuelve403` | Infraestructura | AB#353 | PR #153 | 🔍 |
+| HU7-CP10 | `CatalogoProductosServiceTest` | `buscaEnElCatalogoConLosCriteriosRecibidos` | Aplicación | AB#352 | PR #153 | ✅ |
+| HU7-CP11 | `ProductoMongoAdapterTest` | `buscarEnCatalogoSoloDevuelveDisponiblesDeTodosLosVendedores` | Infraestructura | AB#352 | PR #153 | ✅ |
+| HU7-CP12 | `ProductoMongoAdapterTest` | `buscarEnCatalogoBuscaSinDistinguirMayusculasNiTildes` | Infraestructura | AB#352 | PR #153 | ✅ |
+| HU7-CP12 | `ProductoMongoAdapterTest` | `buscarEnCatalogoTrataLaBusquedaComoTextoLiteral` | Infraestructura | AB#352 | PR #153 | ✅ |
+| HU7-CP13 | `ProductoMongoAdapterTest` | `buscarEnCatalogoFiltraPorCategoriaYBusqueda` | Infraestructura | AB#352 | PR #153 | ✅ |
+| HU7-CP14 | `ProductoMongoAdapterTest` | `buscarEnCatalogoOrdenaPorNombreYPagina` | Infraestructura | AB#352 | PR #153 | ✅ |
+| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoConValoracionMinimaNoDevuelveNada` | Infraestructura | AB#352 | PR #153 | ✅ |
+| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoPorValoracionDesempataPorNombre` | Infraestructura | AB#352 | PR #153 | ✅ |
+| HU7-CP16 | `CatalogoControllerTest` | `clienteRecibeElCatalogoConElFormatoDelContrato` | Infraestructura | AB#353 | PR #153 | ✅ |
+| HU7-CP17 | `CatalogoControllerTest` | `traduceLosParametrosALaConsulta` | Infraestructura | AB#353 | PR #153 | ✅ |
+| HU7-CP18 | `CatalogoControllerTest` | `parametroNoValidoDevuelve400` | Infraestructura | AB#353 | PR #153 | ✅ |
+| HU7-CP19 | `CatalogoControllerTest` | `sinSesionDevuelve401` | Infraestructura | AB#353 | PR #153 | ✅ |
+| HU7-CP19 | `CatalogoControllerTest` | `otroRolDevuelve403` | Infraestructura | AB#353 | PR #153 | ✅ |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `ProductCard.test.jsx`: `features/catalog/` (Vitest y React Testing Library)
