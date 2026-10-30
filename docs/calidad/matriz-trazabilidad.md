@@ -1261,6 +1261,7 @@ Rutas de las clases de test (bajo `frontend/src/`):
 | HU9-CP17 | Persistencia en `carritos`: el mapper no pierde datos, se guarda y recupera por cliente conservando `createdAt`, un solo carrito por cliente y la colección rechaza una cantidad menor que 1 | Unitario + integración | 6 | 🔍 En revisión (6, AB#385 a AB#390, PR #162) |
 | HU9-CP18 | Limpieza del carrito (AB#390): al consultarlo se quitan los productos que ya no se pueden comprar o sin stock y se ajusta la cantidad al stock | Unitario | 4 | 🔍 En revisión (4, AB#385 a AB#390, PR #162) |
 | HU9-CP19 | El precio de cada línea lleva el descuento del cliente: el premium si es PREMIUM y está activo; si no, el general, redondeado a céntimos | Unitario | 9 | 🔍 En revisión (9, AB#385 a AB#390, PR #162) |
+| HU9-CP20 | El carrito exige el rol cliente y que el correo recibido sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, rama `fix/seguridad-capa-negocio`) |
 
 Notas:
 - **HU9-CP01 a CP09 (Sprint 2, frontend):** casos propuestos en las tasks AB#383 (vista añadir al carrito) y AB#384 (vista de carrito) a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu9-carrito-de-compra.md`). Pendientes de confirmar con el equipo y de añadir a la HU9 (AB#71) en Azure Boards.
@@ -1270,6 +1271,7 @@ Notas:
 - **Archivos de tests nuevos** creados sin consulta previa: `AddToCartButton.test.jsx` y `CartWidget.test.jsx`. `ProductCard.test.jsx`, `ProductsPage.test.jsx` y `ProductDetailPage.test.jsx` ganan casos HU9.
 - **Infraestructura de tests:** `test/cart.jsx` (`conCarrito`) pone un carrito de mentira alrededor de un componente y `test/setup.js` reinicia el carrito y los pedidos simulados tras cada test.
 - **Tests en clases que ya existían** (un archivo de tests por clase): `ProductoTest` y `CatalogoProductosServiceTest` (productos), y `AutenticacionServiceTest` y `AdministracionUsuariosServiceTest` (usuarios) ganan casos HU9, por los métodos nuevos que usa el carrito.
+- **HU9-CP20 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Comprueba con `@PreAuthorize` que `GestionCarritoUseCase` exige el rol cliente y que el correo recibido es el de la sesión. Clase de test nueva `carrito/application/service/SeguridadCarritoServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1372,6 +1374,11 @@ Notas:
 | HU9-CP19 | `ProductoTest` | `elClientePremiumPagaConElDescuentoPremium` | Dominio | AB#388 | PR #162 | 🔍 |
 | HU9-CP19 | `ProductoTest` | `sinDescuentoPremiumElPremiumPagaConElGeneral` | Dominio | AB#388 | PR #162 | 🔍 |
 | HU9-CP19 | `AutenticacionServiceTest` | `esClientePremiumDiceSiElClienteEsPremium` | Aplicación | AB#388 | PR #162 | 🔍 |
+| HU9-CP20 | `SeguridadCarritoServiceTest` | `unVendedorNoUsaElCarrito` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU9-CP20 | `SeguridadCarritoServiceTest` | `unAdministradorNoUsaElCarrito` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU9-CP20 | `SeguridadCarritoServiceTest` | `unClienteNoOperaConElCorreoDeOtro` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU9-CP20 | `SeguridadCarritoServiceTest` | `unClienteConsultaSuPropioCarrito` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU9-CP20 | `SeguridadCarritoServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `AddToCartButton.test.jsx` y `CartWidget.test.jsx`: `features/cart/` (Vitest, React Testing Library y MSW)
