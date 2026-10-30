@@ -5,6 +5,7 @@ import java.util.List;
 import es.uclm.esibuy.backend.categorias.application.port.in.ConsultaCategoriasUseCase;
 import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
+import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 
 /** Implementa la consulta de categorías. Solo habla con el exterior a través del puerto del repositorio. */
 public class ConsultaCategoriasService implements ConsultaCategoriasUseCase {
@@ -17,6 +18,8 @@ public class ConsultaCategoriasService implements ConsultaCategoriasUseCase {
 
     @Override
     public List<Categoria> listar() {
-        return categoriaRepository.listar();
+        return categoriaRepository.listar().stream()
+        .filter(categoria -> categoria.estado() == EstadoCategoria.ACTIVA)
+        .toList();
     }
 }
