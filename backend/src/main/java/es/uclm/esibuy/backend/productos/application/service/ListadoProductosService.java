@@ -22,7 +22,7 @@ public class ListadoProductosService implements ListadoProductosUseCase {
         this.usuarioEnSesion = usuarioEnSesion;
     }
 
-    @PreAuthorize (Permisos.SOLO_VENDEDOR_PROPIO)
+    @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO)
     @Override
     public ProductoPage listarMisProductos(String emailVendedor, ListarProductosQuery query) {
         return productoRepository.listarPorVendedor(usuarioEnSesion.idPorCorreo(emailVendedor), query);

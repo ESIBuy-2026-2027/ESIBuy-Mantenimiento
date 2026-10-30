@@ -25,7 +25,7 @@ public class ExistenciasProductosService implements ExistenciasProductosUseCase 
         return productoRepository.descontarStock(productoId, cantidad);
     }
 
-    @PreAuthorize (Permisos.SOLO_CLIENTE)
+    @PreAuthorize(Permisos.SOLO_CLIENTE)
     @Override
     public void reponer(String productoId, int cantidad) {
         exigirCantidad(cantidad);

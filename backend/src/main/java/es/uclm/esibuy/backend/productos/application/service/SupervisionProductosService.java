@@ -22,7 +22,7 @@ public class SupervisionProductosService implements SupervisionProductosUseCase 
         this.vendedores = vendedores;
     }
 
-    @PreAuthorize (Permisos.SOLO_ADMINISTRADOR)
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
     @Override
     public ProductoPage listarProductosDeVendedor(String vendedorId, int pagina, int tamano) {
         vendedores.comprobarQueEsVendedor(vendedorId);
