@@ -158,11 +158,19 @@ public class Producto {
     }
 
     /**
+     * Descuento que se aplica al cliente (HU8): el premium si el cliente es premium y lo tiene activo; si no, el
+     * general. Puede ser un descuento inactivo (sin descuento).
+     */
+    public Descuento descuentoAplicado(boolean clientePremium) {
+        return clientePremium && descuentoPremium.activo() ? descuentoPremium : descuento;
+    }
+
+    /**
      * Precio que paga el cliente (HU9): con el descuento premium si el cliente es premium y lo tiene activo;
      * si no, con el general. Se redondea a céntimos, la mitad hacia arriba.
      */
     public BigDecimal precioFinal(boolean clientePremium) {
-        Descuento aplicable = clientePremium && descuentoPremium.activo() ? descuentoPremium : descuento;
+        Descuento aplicable = descuentoAplicado(clientePremium);
         if (!aplicable.activo()) {
             return precio;
         }
