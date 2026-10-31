@@ -74,4 +74,34 @@ class SmtpEnvioEmailAdapterTest {
         // Se conserva el error original como causa para poder depurar por qué falló
         assertSame(errorSmtp, excepcion.getCause());
     }
+
+    // Recuperación de contraseña (HU3): un correo propio, para que el usuario sepa para qué es el código.
+    @Test
+    @DisplayName("HU3-CP09: envía el código de recuperación de contraseña al correo del usuario")
+    void enviaElCodigoDeRecuperacionAlCorreoDelUsuario() {
+        adapter.enviarCodigoRecuperacion("juan@uclm.es", "042137");
+
+        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(captor.capture());
+        SimpleMailMessage mensaje = captor.getValue();
+
+        assertArrayEquals(new String[] {"juan@uclm.es"}, mensaje.getTo());
+        assertEquals(REMITENTE, mensaje.getFrom());
+        assertEquals("Recuperación de contraseña de ESIBuy", mensaje.getSubject());
+        assertTrue(mensaje.getText().contains("042137"), "El cuerpo debe llevar el código");
+        assertTrue(mensaje.getText().contains("10 minutos"), "El cuerpo debe indicar la validez");
+    }
+
+    @Test
+    @DisplayName("HU3-CP09: si falla el envío del código de recuperación, lanza una excepción propia sin revelar el código")
+    void fallaElEnvioDeRecuperacionSinRevelarElCodigo() {
+        MailSendException errorSmtp = new MailSendException("535 Authentication failed");
+        doThrow(errorSmtp).when(mailSender).send(any(SimpleMailMessage.class));
+
+        EnvioEmailException excepcion = assertThrows(EnvioEmailException.class,
+                () -> adapter.enviarCodigoRecuperacion("juan@uclm.es", "042137"));
+
+        assertFalse(excepcion.getMessage().contains("042137"), "El mensaje no debe revelar el código");
+        assertSame(errorSmtp, excepcion.getCause());
+    }
 }

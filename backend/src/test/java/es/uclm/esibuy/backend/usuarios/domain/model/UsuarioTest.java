@@ -425,4 +425,40 @@ class UsuarioTest {
         assertEquals(0, usuario.getIntentosFallidos());
         assertFalse(usuario.tieneBloqueoPorIntentos(ahora));
     }
+
+    // Recuperación de contraseña (HU3): el servicio guarda el hash de la contraseña nueva en el usuario.
+    @Test
+    @DisplayName("HU3-CP01: cambiar la contraseña sustituye el hash por el de la nueva")
+    void cambiarContrasenaSustituyeElHash() {
+        Usuario usuario = cliente();
+
+        usuario.cambiarContrasena("hash-nuevo");
+
+        assertEquals("hash-nuevo", usuario.getPasswordHash());
+    }
+
+    @Test
+    @DisplayName("HU3-CP01: no se puede cambiar la contraseña por una vacía y se conserva la anterior")
+    void cambiarContrasenaRechazaUnHashVacio() {
+        Usuario usuario = cliente();
+
+        assertThrows(UsuarioInvalidoException.class, () -> usuario.cambiarContrasena(null));
+        assertThrows(UsuarioInvalidoException.class, () -> usuario.cambiarContrasena("  "));
+        assertEquals(HASH, usuario.getPasswordHash());
+    }
+
+    @Test
+    @DisplayName("HU3-CP01: cambiar la contraseña quita el bloqueo por intentos fallidos de login")
+    void cambiarContrasenaQuitaElBloqueoPorIntentos() {
+        Usuario usuario = cliente();
+        Instant ahora = Instant.parse("2026-10-12T10:00:00Z");
+        for (int i = 0; i < 5; i++) {
+            usuario.registrarIntentoFallido(ahora);
+        }
+
+        usuario.cambiarContrasena("hash-nuevo");
+
+        assertEquals(0, usuario.getIntentosFallidos());
+        assertFalse(usuario.tieneBloqueoPorIntentos(ahora));
+    }
 }
