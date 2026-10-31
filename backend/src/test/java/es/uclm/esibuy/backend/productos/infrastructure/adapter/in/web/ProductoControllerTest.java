@@ -42,6 +42,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -51,7 +52,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // Listado de los productos propios del vendedor (HU32, T184): GET /api/seller/products, y alta de un producto
 // (HU31, T205 y T179): POST /api/seller/products, y consulta de un producto propio (HU33, T348):
 // GET /api/seller/products/{id}, modificación de un producto propio (HU34, T342): PUT /api/seller/products/{id},
-// y eliminación de un producto propio (HU35, T345): DELETE /api/seller/products/{id}.
+// eliminación de un producto propio (HU35, T345): DELETE /api/seller/products/{id}, y activación y desactivación
+// de un producto propio (HU16, T282 y T283): PATCH /api/seller/products/{id}/availability.
 // Los casos de uso son dobles de prueba; la seguridad es la real
 // (SecurityConfig: /api/seller/** solo para VENDEDOR, con CSRF).
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU32-CP01 a CP05 y HU31-CP17 a CP22, propuestos.
@@ -492,6 +494,24 @@ class ProductoControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(gestionProductos, never()).eliminarMiProducto(any(), any());
+    }
+
+    @Test
+    @DisplayName("HU16-CP11: el vendedor desactiva su producto y recibe 200 con el producto actualizado; el vendedor sale de la sesión")
+    void vendedorCambiaLaDisponibilidadDeSuProducto() throws Exception {
+        Producto desactivado = new Producto("p-9", "v-1", "Teclado mecánico", "Con cable", new BigDecimal("89.50"),
+                12, "cat-1", "", false, Descuento.sinDescuento(), Descuento.sinDescuento());
+        when(gestionProductos.cambiarDisponibilidadMiProducto(VENDEDOR, "p-9", false)).thenReturn(desactivado);
+
+        mockMvc.perform(patch(URL + "/p-9/availability").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"disponible\": false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("p-9"))
+                .andExpect(jsonPath("$.nombre").value("Teclado mecánico"))
+                .andExpect(jsonPath("$.disponible").value(false))
+                .andExpect(jsonPath("$.vendedorId").doesNotExist());
+
+        verify(gestionProductos).cambiarDisponibilidadMiProducto(VENDEDOR, "p-9", false);
     }
 
     private static Stream<Arguments> cuerposInvalidos() {
