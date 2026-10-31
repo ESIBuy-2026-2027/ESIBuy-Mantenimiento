@@ -46,6 +46,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
+import org.springframework.security.access.AccessDeniedException;
 
 /**
  * Traduce las excepciones que salen de los controladores a respuestas HTTP con un mensaje
@@ -174,6 +175,14 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public RespuestaError cuentaPendiente() {
         return new RespuestaError("La cuenta está pendiente de verificación", "ACCOUNT_PENDING");
+    }
+
+    // Seguridad en la capa de negocio (R8): sin permiso, siempre el mismo 403 genérico. También recoge
+    // AuthorizationDeniedException, que es una AccessDeniedException.
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public RespuestaError accesoDenegado() {
+        return new RespuestaError(ManejadorAccesoDenegado.MENSAJE, ManejadorAccesoDenegado.CODIGO);
     }
 
     // Quien ya tiene Authenticator no puede volver a darse de alta: impediría saltarse el tercer factor (T20)

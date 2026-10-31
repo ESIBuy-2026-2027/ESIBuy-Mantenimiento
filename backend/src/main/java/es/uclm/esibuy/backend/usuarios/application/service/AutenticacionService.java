@@ -3,6 +3,8 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 import java.time.Clock;
 import java.time.Instant;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.IniciarSesionCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.PasoLogin;
@@ -25,6 +27,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
+import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 
 public class AutenticacionService implements AutenticacionUseCase {
 
@@ -51,6 +54,7 @@ public class AutenticacionService implements AutenticacionUseCase {
         this.reloj = reloj;
     }
 
+    @PreAuthorize(Permisos.PUBLICO)
     @Override
     public ResultadoInicioSesion iniciarSesion(IniciarSesionCommand comando) {
         
@@ -85,6 +89,7 @@ public class AutenticacionService implements AutenticacionUseCase {
         return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.CODIGO_EMAIL);
     }
 
+    @PreAuthorize(Permisos.PUBLICO)
     @Override
     public ResultadoInicioSesion verificarCodigoEmail(VerificarCodigoEmailCommand comando) {
         Usuario usuario = usuarioRepository.buscarPorCorreo(comando.email())
@@ -111,16 +116,19 @@ public class AutenticacionService implements AutenticacionUseCase {
         return new ResultadoInicioSesion(usuario.getEmail().valor(), siguientePaso);
     }
 
+    @PreAuthorize(Permisos.AUTENTICADO_PROPIO)
     @Override
     public Usuario consultarUsuarioEnSesion(String email) {
         return usuarioRepository.buscarPorCorreo(email).orElseThrow(() -> new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS));
     }
 
+    @PreAuthorize(Permisos.CLIENTE_O_VENDEDOR_PROPIO)
     @Override
     public String consultarIdUsuarioEnSesion(String email) {
         return consultarUsuarioEnSesion(email).getId();
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO_POR_EMAIL)
     @Override
     public boolean esClientePremium(String email) {
         DatosCliente datos = consultarUsuarioEnSesion(email).getDatosCliente();

@@ -11,8 +11,12 @@ import es.uclm.esibuy.backend.direcciones.domain.model.DatosDireccion;
 import es.uclm.esibuy.backend.direcciones.domain.model.DireccionEnvio;
 import es.uclm.esibuy.backend.direcciones.domain.model.DireccionesCliente;
 import es.uclm.esibuy.backend.direcciones.domain.model.TelefonoContacto;
+import es.uclm.esibuy.backend.shared.seguridad.Permisos;
+
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  * Implementa la gestión de direcciones de envío del cliente. Solo habla con el exterior a través de los
@@ -29,11 +33,13 @@ public class GestionDireccionesService implements GestionDireccionesUseCase {
         this.clienteEnSesion = clienteEnSesion;
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public List<DireccionEnvio> listar(String emailCliente) {
         return direccionRepository.buscarPorCliente(clienteEnSesion.idPorCorreo(emailCliente));
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public Optional<DireccionParaPedido> consultarParaPedido(String emailCliente, String direccionId) {
         return listar(emailCliente).stream()
@@ -47,6 +53,7 @@ public class GestionDireccionesService implements GestionDireccionesUseCase {
                 });
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public DireccionEnvio anadir(String emailCliente, DireccionCommand direccion) {
         DatosDireccion datos = aDatos(direccion);
@@ -57,6 +64,7 @@ public class GestionDireccionesService implements GestionDireccionesUseCase {
         return direccionRepository.guardar(nueva);
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public DireccionEnvio editar(String emailCliente, String direccionId, DireccionCommand direccion) {
         DatosDireccion datos = aDatos(direccion);
@@ -64,6 +72,7 @@ public class GestionDireccionesService implements GestionDireccionesUseCase {
         return direccionRepository.guardar(editada);
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public void marcarPrincipal(String emailCliente, String direccionId) {
         DireccionesCliente direcciones = direccionesDelCliente(emailCliente);
@@ -72,6 +81,7 @@ public class GestionDireccionesService implements GestionDireccionesUseCase {
         direcciones.getDirecciones().forEach(direccionRepository::guardar);
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public void eliminar(String emailCliente, String direccionId, String nuevaPrincipalId) {
         DireccionesCliente direcciones = direccionesDelCliente(emailCliente);

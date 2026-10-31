@@ -1,6 +1,16 @@
-import { Card, Spinner, Text, Title2, makeStyles, tokens } from '@fluentui/react-components'
+import {
+  Card,
+  MessageBar,
+  MessageBarBody,
+  Spinner,
+  Text,
+  Title2,
+  makeStyles,
+  tokens,
+} from '@fluentui/react-components'
 import { Navigate } from 'react-router-dom'
 import LinkButton from '../components/LinkButton'
+import { SESSION_END } from '../auth/AuthContext'
 import { getHomePath } from '../auth/roles'
 import { useAuth } from '../auth/useAuth'
 import LoginForm from '../features/auth/LoginForm'
@@ -36,9 +46,16 @@ const useStyles = makeStyles({
   },
 })
 
+// Aviso de cómo terminó la sesión anterior (HU43).
+const SESSION_END_NOTICES = {
+  [SESSION_END.SIGNED_OUT]: { intent: 'success', text: 'Has cerrado sesión.' },
+  [SESSION_END.EXPIRED]: { intent: 'warning', text: 'Tu sesión ha caducado. Vuelve a iniciar sesión.' },
+}
+
 export default function LoginPage() {
   const styles = useStyles()
-  const { user, loading } = useAuth()
+  const { user, loading, sessionEnd } = useAuth()
+  const notice = SESSION_END_NOTICES[sessionEnd]
 
   if (loading) {
     return <Spinner label="Comprobando sesión..." />
@@ -54,6 +71,11 @@ export default function LoginPage() {
         <Title2 as="h1" className={styles.title}>
           Iniciar sesión
         </Title2>
+        {notice && (
+          <MessageBar intent={notice.intent}>
+            <MessageBarBody>{notice.text}</MessageBarBody>
+          </MessageBar>
+        )}
         <LoginForm />
         <div className={styles.footer}>
           <Text>¿Aún no tienes cuenta?</Text>

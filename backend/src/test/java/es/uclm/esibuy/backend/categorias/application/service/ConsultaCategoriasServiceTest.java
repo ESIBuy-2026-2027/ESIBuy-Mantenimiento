@@ -36,4 +36,14 @@ class ConsultaCategoriasServiceTest {
 
         assertEquals(categorias, servicio.listar());
     }
+
+    @Test
+    @DisplayName("HU39-CP05: el listado público de categorías solo devuelve las activas")
+    void listarSoloDevuelveLasActivas() {
+        Categoria activa = new Categoria("c-1", "Tecnología", "", EstadoCategoria.ACTIVA);
+        Categoria inactiva = new Categoria("c-2", "Hogar", "", EstadoCategoria.INACTIVA);
+        when(categoriaRepository.listar()).thenReturn(List.of(activa, inactiva));
+
+        assertEquals(List.of(activa), servicio.listar());
+    }
 }

@@ -3,7 +3,7 @@
 Documento para entender qué cubre la HU21 en el frontend, qué hace cada parte del código, qué contrato espera del backend y cómo probarlo.
 
 - **Fecha:** 8 de octubre de 2026
-- **HU:** HU21 · Crear usuario (incluido administrador)
+- **HU:** HU21 · Crear administrador
 - **Tasks:** AB#50 (formulario de creación) y AB#51 (tests del formulario)
 - **Rama:** `feature/US21-T50-T51-alta-admin-y-vendedores`
 - **Metodología:** sin TDD por decisión del equipo. Primero el código (commits `feat`, `refactor` y `fix` con AB#50) y después los tests (commits `test` con AB#51).

@@ -101,11 +101,12 @@ export default function AppHeader() {
   const { user, loading, signOut } = useAuth()
   const [signingOut, setSigningOut] = useState(false)
 
+  // Tras cerrar sesión se vuelve al login, que avisa de que se ha cerrado (HU43).
   const handleSignOut = async () => {
     setSigningOut(true)
-    navigate(PATHS.HOME)
     await signOut()
     setSigningOut(false)
+    navigate(PATHS.LOGIN)
   }
 
   return (
