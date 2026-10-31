@@ -36,13 +36,14 @@ import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoExc
 // Seguridad en la capa de negocio (R8): cada caso de uso de productos exige su rol y, si recibe el correo del
 // vendedor, que sea el de la sesión. Las anotaciones solo se evalúan con Spring, así que se usa un contexto mínimo
 // (sin MongoDB) con los servicios reales y dobles de prueba de los puertos de salida.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU31-CP28, propuesto. El caso HU16-CP10 (activar y desactivar) tiene
-// sus propios tests, al final.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP28 y HU8-CP15, propuestos. Los casos HU16-CP10 (activar y
+// desactivar) y HU8-CP15 (detalle de un producto del catálogo) tienen sus propios tests, al final.
 @SpringJUnitConfig(SeguridadProductosServiceTest.Configuracion.class)
 class SeguridadProductosServiceTest {
 
     private static final String VENDEDOR = "vendedor@esibuy.test";
     private static final String OTRO_VENDEDOR = "otro@esibuy.test";
+    private static final String CLIENTE = "cliente@esibuy.test";
 
     @Configuration
     @EnableMethodSecurity
@@ -247,5 +248,44 @@ class SeguridadProductosServiceTest {
     void sinSesionNoSeCambiaLaDisponibilidad() {
         assertThrows(AuthenticationCredentialsNotFoundException.class,
                 () -> gestion.cambiarDisponibilidadMiProducto(VENDEDOR, "p-1", false));
+    }
+
+    @Test
+    @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
+    @DisplayName("HU8-CP15: un vendedor no consulta el detalle de un producto del catálogo")
+    void unVendedorNoConsultaElDetalle() {
+        assertThrows(AccessDeniedException.class, () -> catalogo.consultarDetalle("p-1", VENDEDOR));
+        verifyNoInteractions(productoRepository);
+    }
+
+    @Test
+    @WithMockUser(username = "admin@esibuy.test", roles = "ADMINISTRADOR")
+    @DisplayName("HU8-CP15: un administrador no consulta el detalle de un producto del catálogo")
+    void unAdministradorNoConsultaElDetalle() {
+        assertThrows(AccessDeniedException.class, () -> catalogo.consultarDetalle("p-1", "admin@esibuy.test"));
+        verifyNoInteractions(productoRepository);
+    }
+
+    // Si no, un cliente estándar vería el precio con el descuento de un cliente premium pasando su correo
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU8-CP15: un cliente no consulta el detalle con el correo de otro cliente y no se toca nada")
+    void unClienteNoConsultaElDetalleConElCorreoDeOtro() {
+        assertThrows(AccessDeniedException.class, () -> catalogo.consultarDetalle("p-1", "premium@esibuy.test"));
+        verifyNoInteractions(productoRepository);
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU8-CP15: un cliente sí consulta el detalle con su propio correo (un producto que no existe sigue siendo 404)")
+    void unClienteConsultaElDetalleConSuPropioCorreo() {
+        assertThrows(ProductoNoEncontradoException.class, () -> catalogo.consultarDetalle("p-1", CLIENTE));
+    }
+
+    @Test
+    @DisplayName("HU8-CP15: sin sesión no se consulta el detalle de un producto")
+    void sinSesionNoSeConsultaElDetalle() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> catalogo.consultarDetalle("p-1", CLIENTE));
     }
 }

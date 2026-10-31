@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 // Catálogo de productos del cliente (HU7, T353): GET /api/products. Detalle de un producto (HU8, T355):
 // GET /api/products/{id}. El caso de uso es un doble de prueba; la seguridad es la real (SecurityConfig).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU7-CP16 a CP19 y HU8-CP13 y CP14, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU7-CP16 a CP19 y HU8-CP13 a CP15, propuestos.
 @WebMvcTest(CatalogoController.class)
 @Import(SecurityConfig.class)
 class CatalogoControllerTest {
@@ -178,5 +178,28 @@ class CatalogoControllerTest {
         mockMvc.perform(get(URL + "/p-404").with(user(CLIENTE).roles("CLIENTE")))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("HU8-CP15: sin sesión no se ve el detalle de un producto")
+    void sinSesionElDetalleDevuelve401() throws Exception {
+        mockMvc.perform(get(URL + "/p-1"))
+                .andExpect(status().isUnauthorized());
+
+        verify(catalogoProductos, never()).consultarDetalle(any(), any());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"VENDEDOR", "ADMINISTRADOR"})
+    @DisplayName("HU8-CP15: un usuario que no es cliente no ve el detalle de un producto")
+    void otroRolElDetalleDevuelve403(String rol) throws Exception {
+        // Con el caso de uso respondiendo, un 200 indicaría que el rol tiene acceso
+        when(catalogoProductos.consultarDetalle(any(), any()))
+                .thenReturn(detalle(new BigDecimal("10"), new BigDecimal("45.00")));
+
+        mockMvc.perform(get(URL + "/p-1").with(user("usuario@esibuy.test").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(catalogoProductos, never()).consultarDetalle(any(), any());
     }
 }
