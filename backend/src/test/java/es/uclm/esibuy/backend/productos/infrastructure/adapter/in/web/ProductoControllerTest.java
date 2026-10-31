@@ -539,6 +539,37 @@ class ProductoControllerTest {
                 .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
     }
 
+    @Test
+    @DisplayName("HU16-CP14: sin sesión no se puede cambiar la disponibilidad de un producto")
+    void sinSesionNoSeCambiaLaDisponibilidad() throws Exception {
+        mockMvc.perform(patch(URL + "/p-9/availability").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"disponible\": false}"))
+                .andExpect(status().isUnauthorized());
+
+        verify(gestionProductos, never()).cambiarDisponibilidadMiProducto(any(), any(), anyBoolean());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "ADMINISTRADOR"})
+    @DisplayName("HU16-CP14: un usuario que no es vendedor no puede cambiar la disponibilidad de un producto")
+    void noVendedorNoCambiaLaDisponibilidad(String rol) throws Exception {
+        mockMvc.perform(patch(URL + "/p-9/availability").with(csrf()).with(user("usuario@esibuy.test").roles(rol))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"disponible\": false}"))
+                .andExpect(status().isForbidden());
+
+        verify(gestionProductos, never()).cambiarDisponibilidadMiProducto(any(), any(), anyBoolean());
+    }
+
+    @Test
+    @DisplayName("HU16-CP14: un cambio de disponibilidad sin token CSRF se rechaza")
+    void sinTokenCsrfNoSeCambiaLaDisponibilidad() throws Exception {
+        mockMvc.perform(patch(URL + "/p-9/availability").with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"disponible\": false}"))
+                .andExpect(status().isForbidden());
+
+        verify(gestionProductos, never()).cambiarDisponibilidadMiProducto(any(), any(), anyBoolean());
+    }
+
     private static Stream<Arguments> cuerposDeDisponibilidadInvalidos() {
         return Stream.of(
                 Arguments.of("sin disponible", "{}"),
