@@ -1595,12 +1595,17 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU16-CP04 | Si falla el cambio, se avisa sin detalles internos y el producto no cambia | Frontend (página) | 1 | ✅ Pasa |
 | HU16-CP05 | La ficha del producto ofrece Activar o Desactivar según su estado y avisa a la página con el producto | Frontend (componente) | 2 | ✅ Pasa |
 | HU16-CP06 | Desde la ficha, Desactivar cierra la ficha, cambia el producto y avisa | Frontend (página) | 1 | ✅ Pasa |
+| HU16-CP07 | El vendedor desactiva un producto suyo y el resto de sus datos no cambia | Unitario | 1 | 🔍 En revisión |
+| HU16-CP08 | El vendedor activa un producto suyo que no estaba disponible | Unitario | 1 | 🔍 En revisión |
+| HU16-CP09 | Un producto ajeno o inexistente no se puede activar ni desactivar (`ProductoNoEncontradoException`) y no se guarda nada | Unitario | 2 | 🔍 En revisión |
+| HU16-CP10 | Solo el vendedor dueño, con su correo, activa o desactiva su producto: cliente, administrador u otro vendedor reciben 403 y sin sesión se rechaza | Unitario (seguridad, contexto mínimo de Spring) | 5 | 🔍 En revisión |
 
 Notas:
-- **HU16-CP01 a CP06 (Sprint 2, frontend):** casos propuestos en la task AB#281 (botón activar/desactivar productos) a partir de lo pedido en ella y de las decisiones del equipo (`frontend/docs/hu16-activar-desactivar-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU16 en Azure Boards. Si el backend define casos de la HU16, hay que coordinar la numeración.
+- **HU16-CP01 a CP06 (Sprint 2, frontend):** casos propuestos en la task AB#281 (botón activar/desactivar productos) a partir de lo pedido en ella y de las decisiones del equipo (`frontend/docs/hu16-activar-desactivar-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU16 en Azure Boards. Los casos del backend siguen la numeración desde el CP07.
+- **HU16-CP07 a CP10 (Sprint 2, backend):** casos propuestos en las tasks AB#284 y AB#285 (lógica de activación y desactivación, PR #171), que se hacen juntas en un único caso de uso, `cambiarDisponibilidadMiProducto`, porque el frontend usa un único endpoint con un booleano. Pendientes de añadir a la HU16 en Azure Boards. Pedir el estado que ya tiene no es un error: el producto se guarda igual (decisión del desarrollador). Solo CP07 tiene ciclo rojo: CP08 a CP10 ya los cubría el código del ciclo 1 (el booleano se pasa tal cual, `consultarMiProducto` filtra por vendedor y el `@PreAuthorize` se puso desde el primer test). Se comprobó que los tests de CP10 fallan si se quita el `@PreAuthorize`.
 - **Versión inicial (decisión del equipo):** sin confirmación al activar o desactivar; puede cambiar por decisión del PO o del equipo.
-- **Backend:** no existe todavía un endpoint para cambiar solo la disponibilidad; los tests usan el contrato propuesto por el frontend (`PATCH /api/seller/products/{id}/availability`) y los mocks (MSW). No hay task de tests equivalente en el backend por ahora (decisión del equipo).
-- **Sin archivos de tests nuevos:** los casos van en `SellerProductsPage.test.jsx` y `ProductDetailDialog.test.jsx`, que ya existían.
+- **Backend:** la lógica ya existe (CP07 a CP10, PR #171), pero el endpoint para cambiar solo la disponibilidad (T282 y T283) todavía no. Los tests del frontend usan el contrato propuesto por el frontend (`PATCH /api/seller/products/{id}/availability`) y los mocks (MSW).
+- **Sin archivos de tests nuevos:** los casos van en `SellerProductsPage.test.jsx`, `ProductDetailDialog.test.jsx`, `GestionProductosServiceTest` y `SeguridadProductosServiceTest`, que ya existían.
 - **Infraestructura de tests:** `test/setup.js` reinicia tras cada test la disponibilidad cambiada en el mock de productos (`resetProductsMock`).
 
 ### Tabla B · casos de prueba ↔ tests
@@ -1614,10 +1619,20 @@ Notas:
 | HU16-CP05 | `ProductDetailDialog.test.jsx` | `HU16-CP05: un producto disponible ofrece Desactivar, que avisa con el producto` | Frontend · componente | AB#281 | PR #147 | ✅ |
 | HU16-CP05 | `ProductDetailDialog.test.jsx` | `HU16-CP05: un producto no disponible ofrece Activar, que avisa con el producto` | Frontend · componente | AB#281 | PR #147 | ✅ |
 | HU16-CP06 | `SellerProductsPage.test.jsx` | `HU16-CP06: desde la ficha, Desactivar cierra la ficha, cambia el producto y avisa` | Frontend · página | AB#281 | PR #147 | ✅ |
+| HU16-CP07 | `GestionProductosServiceTest` | `elVendedorDesactivaSuProducto` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
+| HU16-CP08 | `GestionProductosServiceTest` | `elVendedorActivaSuProducto` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
+| HU16-CP09 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoCambiaDeDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
+| HU16-CP09 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoCambiaDeDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
+| HU16-CP10 | `SeguridadProductosServiceTest` | `unClienteNoCambiaLaDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
+| HU16-CP10 | `SeguridadProductosServiceTest` | `unAdministradorNoCambiaLaDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
+| HU16-CP10 | `SeguridadProductosServiceTest` | `unVendedorNoCambiaLaDisponibilidadConElCorreoDeOtro` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
+| HU16-CP10 | `SeguridadProductosServiceTest` | `unVendedorCambiaLaDisponibilidadConSuPropioCorreo` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
+| HU16-CP10 | `SeguridadProductosServiceTest` | `sinSesionNoSeCambiaLaDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
 
 Rutas de las clases de test:
 - `SellerProductsPage.test.jsx`: `frontend/src/pages/` (Vitest, RTL y MSW)
 - `ProductDetailDialog.test.jsx`: `frontend/src/features/seller/` (Vitest, RTL y MSW)
+- `GestionProductosServiceTest` y `SeguridadProductosServiceTest`: `backend/src/test/java/es/uclm/esibuy/backend/productos/application/service/`
 
 ---
 

@@ -34,7 +34,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-// Alta (HU31, T204), consulta (HU33, T349), modificación (HU34, T343) y eliminación (HU35, T346) de los productos propios del vendedor. El repositorio y el puerto hacia usuarios son dobles de
+// Alta (HU31, T204), consulta (HU33, T349), modificación (HU34, T343) eliminación (HU35, T346) y activación y desactivación (HU16, T284 y T285) de los productos propios del vendedor. El repositorio y el puerto hacia usuarios son dobles de
 // prueba (Mockito): se prueba el caso de uso sin MongoDB ni Spring.
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP13 a CP16, propuestos a partir del contrato del frontend.
 @ExtendWith(MockitoExtension.class)
@@ -271,6 +271,74 @@ class GestionProductosServiceTest {
         assertThrows(ProductoNoEncontradoException.class, () -> servicio.eliminarMiProducto(CORREO, "p-9"));
 
         verify(productoRepository, never()).eliminar(any());
+    }
+
+    @Test
+    @DisplayName("HU16-CP07: el vendedor desactiva un producto suyo y el resto de sus datos no cambia")
+    void elVendedorDesactivaSuProducto() {
+        Producto actual = producto("p-9", "v-1");
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(actual));
+        when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        Producto devuelto = servicio.cambiarDisponibilidadMiProducto(CORREO, "p-9", false);
+
+        ArgumentCaptor<Producto> captor = ArgumentCaptor.forClass(Producto.class);
+        verify(productoRepository).guardar(captor.capture());
+        Producto guardado = captor.getValue();
+        assertFalse(guardado.isDisponible());
+        assertEquals("p-9", guardado.getId());
+        assertEquals("v-1", guardado.getVendedorId());
+        assertEquals(actual.getNombre(), guardado.getNombre());
+        assertEquals(actual.getDescripcion(), guardado.getDescripcion());
+        assertEquals(actual.getPrecio(), guardado.getPrecio());
+        assertEquals(actual.getStock(), guardado.getStock());
+        assertEquals(actual.getCategoriaId(), guardado.getCategoriaId());
+        assertEquals(actual.getImagen(), guardado.getImagen());
+        assertEquals(actual.getDescuento(), guardado.getDescuento());
+        assertEquals(actual.getDescuentoPremium(), guardado.getDescuentoPremium());
+        assertSame(guardado, devuelto);
+    }
+
+    @Test
+    @DisplayName("HU16-CP08: el vendedor activa un producto suyo que no estaba disponible")
+    void elVendedorActivaSuProducto() {
+        Producto noDisponible = producto("p-9", "v-1").conDisponibilidad(false);
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(noDisponible));
+        when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        Producto devuelto = servicio.cambiarDisponibilidadMiProducto(CORREO, "p-9", true);
+
+        ArgumentCaptor<Producto> captor = ArgumentCaptor.forClass(Producto.class);
+        verify(productoRepository).guardar(captor.capture());
+        assertTrue(captor.getValue().isDisponible());
+        assertEquals("p-9", captor.getValue().getId());
+        assertSame(captor.getValue(), devuelto);
+    }
+
+    @Test
+    @DisplayName("HU16-CP09: un producto que no existe no se puede activar ni desactivar y no se guarda nada")
+    void unProductoQueNoExisteNoCambiaDeDisponibilidad() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-404")).thenReturn(Optional.empty());
+
+        assertThrows(ProductoNoEncontradoException.class,
+                () -> servicio.cambiarDisponibilidadMiProducto(CORREO, "p-404", false));
+
+        verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU16-CP09: un vendedor no puede activar ni desactivar un producto de otro vendedor y no se guarda nada")
+    void unProductoDeOtroVendedorNoCambiaDeDisponibilidad() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-2")));
+
+        assertThrows(ProductoNoEncontradoException.class,
+                () -> servicio.cambiarDisponibilidadMiProducto(CORREO, "p-9", false));
+
+        verify(productoRepository, never()).guardar(any());
     }
 
     private static Producto producto(String id, String vendedorId) {

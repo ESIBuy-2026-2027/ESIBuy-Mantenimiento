@@ -93,4 +93,11 @@ public class GestionProductosService implements GestionProductosUseCase {
         Producto propio = consultarMiProducto(emailVendedor, productoId);
         productoRepository.eliminar(propio.getId());
     }
+
+    @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO)
+    @Override
+    public Producto cambiarDisponibilidadMiProducto(String emailVendedor, String productoId, boolean disponible) {
+        Producto propio = consultarMiProducto(emailVendedor, productoId);
+        return productoRepository.guardar(propio.conDisponibilidad(disponible));
+    }
 }

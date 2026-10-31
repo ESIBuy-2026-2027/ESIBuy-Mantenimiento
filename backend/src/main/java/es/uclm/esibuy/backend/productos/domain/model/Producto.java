@@ -158,6 +158,15 @@ public class Producto {
     }
 
     /**
+     * Copia del producto con la disponibilidad indicada (HU16) y el resto de datos iguales. El producto es
+     * inmutable: activarlo o desactivarlo no lo cambia, sino que devuelve otro con el mismo id.
+     */
+    public Producto conDisponibilidad(boolean nuevaDisponibilidad) {
+        return new Producto(id, vendedorId, nombre, descripcion, precio, stock, categoriaId, imagen,
+                nuevaDisponibilidad, descuento, descuentoPremium);
+    }
+
+    /**
      * Precio que paga el cliente (HU9): con el descuento premium si el cliente es premium y lo tiene activo;
      * si no, con el general. Se redondea a céntimos, la mitad hacia arriba.
      */
