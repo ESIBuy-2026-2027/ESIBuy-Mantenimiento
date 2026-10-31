@@ -19,4 +19,12 @@ public interface AdministracionCategoriasUseCase {
      * ({@code CategoriaInvalidaException}).
      */
     Categoria crear(CrearCategoriaCommand comando);
+
+    /**
+     * Cambia el nombre y la descripción de una categoría y la devuelve con su número de productos; el estado
+     * no se toca. La categoría debe existir ({@code CategoriaNoEncontradaException}), el nombre no puede ser el de
+     * otra categoría sin distinguir mayúsculas ni tildes ({@code CategoriaDuplicadaException}) y los datos se
+     * validan en el dominio ({@code CategoriaInvalidaException}).
+     */
+    CategoriaConProductos editar(EditarCategoriaCommand comando);
 }

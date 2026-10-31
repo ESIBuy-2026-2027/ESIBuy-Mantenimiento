@@ -2686,6 +2686,68 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU41 · Editar categorías
+
+### Tabla A · HU41 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU41-CP01 | El administrador cambia el nombre y la descripción de una categoría; se conservan su id y su estado y se devuelve con su número de productos | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP02 | El nombre de la propia categoría no cuenta como repetido: se pueden cambiar solo las mayúsculas o las tildes | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP03 | No se puede poner a una categoría el nombre de otra, sin distinguir mayúsculas ni tildes (409) | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP04 | Editar una categoría que no existe falla sin guardar nada (404) | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP05 | Editar con datos que incumplen el dominio falla sin guardar nada (400) | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP06 | Editar categorías exige el rol administrador; cliente, vendedor y sin sesión se rechazan. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP07 | Buscar una categoría por id la devuelve con su descripción y su estado; si no existe, o el id no tiene formato de id, devuelve vacío | Integración MongoDB | 2 | 🔍 En revisión (2, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP08 | Comprobar si otra categoría tiene un nombre: no distingue mayúsculas ni tildes, excluye la propia categoría y compara el nombre completo y literal | Integración MongoDB | 3 | 🔍 En revisión (3, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP09 | Guardar una categoría con id la actualiza sin crear otra, y la base de datos rechaza cambiar su nombre al de otra aunque se salte la comprobación previa | Integración MongoDB | 2 | 🔍 En revisión (2, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP10 | `PUT /api/admin/categorias/{id}` responde 200 con la fila actualizada y su número de productos | Controlador | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP11 | Editar con el nombre de otra categoría devuelve 409 `CATEGORY_NAME_ALREADY_EXISTS` | Controlador | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP12 | Editar sin nombre o incumpliendo una regla del dominio devuelve 400 | Controlador | 2 | 🔍 En revisión (2, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP13 | Editar una categoría que no existe devuelve 404 `CATEGORY_NOT_FOUND` | Controlador | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP14 | Sin rol de administrador no se pueden editar categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | 🔍 En revisión (2, Rama `feature/US41-T329-T328-edicion-categorias`) |
+
+Notas:
+- **HU41-CP01 a CP14:** casos propuestos en las T329 (AB#329) y T328 (AB#328), a partir de los criterios de la HU41. Pendientes de confirmar con el equipo y de añadir a la HU41 en Azure Boards.
+- **Endpoint (T328):** `PUT /api/admin/categorias/{id}` con `{nombre, descripcion}` → 200 `{id, nombre, descripcion, estado, numeroProductos}`, el mismo formato que una fila de `GET /api/admin/categorias`, para que la vista (T327) sustituya la fila sin recargar. El estado no se edita. Errores: 400 `INVALID_FIELD` (falta el nombre), 400 `VALIDATION_ERROR` (regla del dominio), 404 `CATEGORY_NOT_FOUND`, 409 `CATEGORY_NAME_ALREADY_EXISTS`, 401 sin sesión y 403 con otro rol. Necesita la cabecera CSRF `X-XSRF-TOKEN`.
+- **Backend (T329):** `AdministracionCategoriasUseCase.editar(EditarCategoriaCommand)`, que devuelve `CategoriaConProductos`. Puerto de salida con `buscarPorId` y `existeOtraConNombre`. El listado público lee del mismo repositorio, así que una edición se ve a la vez para clientes y vendedores.
+- **Pendiente:** la edición reemplaza el documento y no copia `createdAt` (el mapper no lo lleva), así que la fecha de creación puede perderse al editar. Es una hipótesis sin comprobar; queda para una task aparte. La vista (T327) también.
+- **HU41-CP06 (R8, seguridad en la capa de negocio):** nace en verde, sin rojo real, porque `editar` lleva el `@PreAuthorize` desde el primer ciclo. Cubre el servicio `AdministracionCategoriasService` con la clase de test existente `SeguridadCategoriasServiceTest`.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU41-CP01 | `AdministracionCategoriasServiceTest` | `editarCambiaElNombreYLaDescripcion` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP02 | `AdministracionCategoriasServiceTest` | `editarPermiteCambiarLasMayusculasDelPropioNombre` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP03 | `AdministracionCategoriasServiceTest` | `editarRechazaElNombreDeOtraCategoria` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP04 | `AdministracionCategoriasServiceTest` | `editarUnaCategoriaInexistenteFalla` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP05 | `AdministracionCategoriasServiceTest` | `editarConDatosInvalidosFalla` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP06 | `SeguridadCategoriasServiceTest` | `unClienteNoEditaCategorias` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP06 | `SeguridadCategoriasServiceTest` | `unVendedorNoEditaCategorias` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP06 | `SeguridadCategoriasServiceTest` | `unAnonimoNoEditaCategorias` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP06 | `SeguridadCategoriasServiceTest` | `unAdministradorEditaCategorias` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP06 | `SeguridadCategoriasServiceTest` | `sinSesionSeRechazaLaEdicion` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP07 | `CategoriaMongoAdapterTest` | `buscarPorIdDevuelveLaCategoria` | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP07 | `CategoriaMongoAdapterTest` | `buscarPorIdDevuelveVacioSiNoExiste` (2 variantes) | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP08 | `CategoriaMongoAdapterTest` | `existeOtraConNombreNoDistingueMayusculasNiTildes` (4 variantes) | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP08 | `CategoriaMongoAdapterTest` | `existeOtraConNombreIgnoraLaPropiaCategoria` (3 variantes) | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP08 | `CategoriaMongoAdapterTest` | `existeOtraConNombreComparaElNombreCompletoYLiteral` (3 variantes) | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP09 | `CategoriaMongoAdapterTest` | `guardarConIdActualizaLaCategoria` | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP09 | `CategoriaMongoAdapterTest` | `guardarRechazaCambiarElNombreAlDeOtraCategoria` | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP10 | `AdministracionCategoriasControllerTest` | `unAdministradorEditaUnaCategoria` | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP11 | `AdministracionCategoriasControllerTest` | `editarUnNombreRepetidoDevuelve409` | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP12 | `AdministracionCategoriasControllerTest` | `editarConDatosInvalidosDevuelve400` (2 variantes) | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP12 | `AdministracionCategoriasControllerTest` | `editarConUnaReglaDelDominioIncumplidaDevuelve400` | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP13 | `AdministracionCategoriasControllerTest` | `editarUnaCategoriaInexistenteDevuelve404` | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP14 | `AdministracionCategoriasControllerTest` | `editarConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP14 | `AdministracionCategoriasControllerTest` | `editarSinSesionDevuelve401` | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+
+Ruta de la clase de test de seguridad (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `SeguridadCategoriasServiceTest`: `categorias/application/service/` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB)
+
+---
+
 ## HU43 · Cerrar sesión
 
 ### Tabla A · HU43 ↔ casos de prueba

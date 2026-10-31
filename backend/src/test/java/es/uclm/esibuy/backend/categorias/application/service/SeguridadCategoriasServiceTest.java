@@ -25,18 +25,24 @@ import es.uclm.esibuy.backend.categorias.application.port.in.ConsultaCategoriasU
 import es.uclm.esibuy.backend.categorias.application.port.in.CrearCategoriaCommand;
 import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
 import es.uclm.esibuy.backend.categorias.application.port.out.ProductosPorCategoriaPort;
+import es.uclm.esibuy.backend.categorias.application.port.in.EditarCategoriaCommand;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaInvalidaException;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 
 // Seguridad en la capa de negocio (R8): consultar las categorías es público (lo usan el registro del vendedor y
 // el desplegable de producto, sin sesión); administrarlas exige el rol ADMINISTRADOR. Las anotaciones solo se
 // evalúan con Spring, así que se usa un contexto mínimo (sin MongoDB) con los servicios reales y dobles de
 // prueba de los puertos de salida.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU40-CP09, propuesto.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU40-CP09 y HU41-CP06, propuestos.
 @SpringJUnitConfig(SeguridadCategoriasServiceTest.Configuracion.class)
 class SeguridadCategoriasServiceTest {
 
     // Sin datos: el dominio la rechaza por inválida, lo que demuestra que la seguridad ha dejado pasar la llamada
     private static final CrearCategoriaCommand CREACION = new CrearCategoriaCommand(null, null, null);
+
+    // Una categoría que no existe: el dominio responde «no encontrada», lo que demuestra que la seguridad ha
+    // dejado pasar la llamada (el doble del repositorio devuelve vacío)
+    private static final EditarCategoriaCommand EDICION = new EditarCategoriaCommand("c-1", "Hogar", "");
 
     @Configuration
     @EnableMethodSecurity
@@ -81,6 +87,11 @@ class SeguridadCategoriasServiceTest {
         assertAll(
                 () -> assertThrows(AccessDeniedException.class, () -> administracionCategorias.listarConProductos()),
                 () -> assertThrows(AccessDeniedException.class, () -> administracionCategorias.crear(CREACION)));
+        verifyNoInteractions(categoriaRepository, productosPorCategoria);
+    }
+
+    private void comprobarQueRechazaLaEdicion() {
+        assertThrows(AccessDeniedException.class, () -> administracionCategorias.editar(EDICION));
         verifyNoInteractions(categoriaRepository, productosPorCategoria);
     }
 
@@ -129,6 +140,42 @@ class SeguridadCategoriasServiceTest {
                         () -> administracionCategorias.listarConProductos()),
                 () -> assertThrows(AuthenticationCredentialsNotFoundException.class,
                         () -> administracionCategorias.crear(CREACION)));
+        verifyNoInteractions(categoriaRepository, productosPorCategoria);
+    }
+
+        @Test
+    @WithMockUser(username = "cliente@esibuy.test", roles = "CLIENTE")
+    @DisplayName("HU41-CP06: un cliente no puede editar categorías")
+    void unClienteNoEditaCategorias() {
+        comprobarQueRechazaLaEdicion();
+    }
+
+    @Test
+    @WithMockUser(username = "vendedor@esibuy.test", roles = "VENDEDOR")
+    @DisplayName("HU41-CP06: un vendedor no puede editar categorías")
+    void unVendedorNoEditaCategorias() {
+        comprobarQueRechazaLaEdicion();
+    }
+
+    @Test
+    @WithAnonymousUser
+    @DisplayName("HU41-CP06: un usuario anónimo no puede editar categorías")
+    void unAnonimoNoEditaCategorias() {
+        comprobarQueRechazaLaEdicion();
+    }
+
+    @Test
+    @WithMockUser(username = "admin@esibuy.test", roles = "ADMINISTRADOR")
+    @DisplayName("HU41-CP06: un administrador sí edita categorías (una que no existe la rechaza el dominio)")
+    void unAdministradorEditaCategorias() {
+        assertThrows(CategoriaNoEncontradaException.class, () -> administracionCategorias.editar(EDICION));
+    }
+
+    @Test
+    @DisplayName("HU41-CP06: sin sesión se rechaza la edición de categorías")
+    void sinSesionSeRechazaLaEdicion() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> administracionCategorias.editar(EDICION));
         verifyNoInteractions(categoriaRepository, productosPorCategoria);
     }
 }
