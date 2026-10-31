@@ -1916,7 +1916,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
-## HU23 · Desactivar usuario
+## HU23 · Bloquear usuario
 
 ### Tabla A · HU23 ↔ casos de prueba
 
