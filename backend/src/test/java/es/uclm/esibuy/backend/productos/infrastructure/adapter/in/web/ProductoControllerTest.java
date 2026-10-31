@@ -527,6 +527,18 @@ class ProductoControllerTest {
         verify(gestionProductos, never()).cambiarDisponibilidadMiProducto(any(), any(), anyBoolean());
     }
 
+    @Test
+    @DisplayName("HU16-CP13: cambiar la disponibilidad de un producto inexistente o de otro vendedor devuelve 404 con el código PRODUCT_NOT_FOUND")
+    void cambiarLaDisponibilidadDeUnProductoNoEncontradoDevuelve404() throws Exception {
+        when(gestionProductos.cambiarDisponibilidadMiProducto(VENDEDOR, "p-404", true))
+                .thenThrow(new ProductoNoEncontradoException());
+
+        mockMvc.perform(patch(URL + "/p-404/availability").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"disponible\": true}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
+    }
+
     private static Stream<Arguments> cuerposDeDisponibilidadInvalidos() {
         return Stream.of(
                 Arguments.of("sin disponible", "{}"),
