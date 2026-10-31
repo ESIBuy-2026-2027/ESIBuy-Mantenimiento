@@ -7,7 +7,9 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AuthenticatorUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.GestionPerfilUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ListadoUsuariosUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.RecuperacionContrasenaUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CifradoSecretoPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoRecuperacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.EnvioEmailPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.FactorAutenticacionRepositoryPort;
@@ -20,9 +22,11 @@ import es.uclm.esibuy.backend.usuarios.application.service.AutenticacionService;
 import es.uclm.esibuy.backend.usuarios.application.service.AuthenticatorService;
 import es.uclm.esibuy.backend.usuarios.application.service.GestionPerfilService;
 import es.uclm.esibuy.backend.usuarios.application.service.ListadoUsuariosService;
+import es.uclm.esibuy.backend.usuarios.application.service.RecuperacionContrasenaService;
 import es.uclm.esibuy.backend.usuarios.application.service.RegistroUsuarioService;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web.CuentaActivaFilter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.email.SmtpEnvioEmailAdapter;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.CodigoRecuperacionMongoAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.CodigoVerificacionDocumentMapper;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.CodigoVerificacionMongoAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.CodigoVerificacionMongoRepository;
@@ -92,6 +96,12 @@ public class UsuariosConfig {
         return new CodigoVerificacionMongoAdapter(repository, new CodigoVerificacionDocumentMapper());
     }
 
+    // HU3: misma colección y repositorio que los códigos del login, pero con su propio propósito
+    @Bean
+    CodigoRecuperacionRepositoryPort codigoRecuperacionRepositoryPort(CodigoVerificacionMongoRepository repository) {
+        return new CodigoRecuperacionMongoAdapter(repository, new CodigoVerificacionDocumentMapper());
+    }
+
     @Bean
     GeneradorCodigoPort generadorCodigoPort() {
         return new SecureRandomGeneradorCodigoAdapter(new SecureRandom()); // SecureRandom, nunca Random (T231, D5)
@@ -118,6 +128,17 @@ public class UsuariosConfig {
                                             Clock reloj) {
         return new AutenticacionService(usuarioRepositoryPort, hashContrasenaPort,
                 codigoVerificacionRepositoryPort, generadorCodigoPort, envioEmailPort, factorAutenticacionRepositoryPort, reloj);
+    }
+
+    @Bean
+    RecuperacionContrasenaUseCase recuperacionContrasenaUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
+                                                                HashContrasenaPort hashContrasenaPort,
+                                                                CodigoRecuperacionRepositoryPort codigoRecuperacionRepositoryPort,
+                                                                GeneradorCodigoPort generadorCodigoPort,
+                                                                EnvioEmailPort envioEmailPort,
+                                                                Clock reloj) {
+        return new RecuperacionContrasenaService(usuarioRepositoryPort, hashContrasenaPort,
+                codigoRecuperacionRepositoryPort, generadorCodigoPort, envioEmailPort, reloj);
     }
 
     // HU23 (T206): Spring Boot añade este filtro a cada petición e invalida la sesión de las cuentas desactivadas
