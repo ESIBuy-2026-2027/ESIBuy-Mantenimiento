@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -75,5 +76,14 @@ public class ProductoController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminarMiProducto(@PathVariable String id, Authentication autenticado) {
         gestionProductos.eliminarMiProducto(autenticado.getName(), id);
+    }
+
+    // Activación y desactivación de un producto propio (HU16): el vendedor sale de la sesión; uno ajeno o
+    // inexistente da 404. Contrato de frontend/docs/hu16-activar-desactivar-productos.md.
+    @PatchMapping("/seller/products/{id}/availability")
+    public ProductoResponse cambiarDisponibilidadMiProducto(@PathVariable String id,
+            @Valid @RequestBody DisponibilidadRequest request, Authentication autenticado) {
+        return ProductoResponse.desde(gestionProductos.cambiarDisponibilidadMiProducto(
+                autenticado.getName(), id, request.disponible()));
     }
 }
