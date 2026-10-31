@@ -48,6 +48,7 @@ public class CatalogoProductosService implements CatalogoProductosUseCase {
                         producto.getStock()));
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public DetalleProductoCatalogo consultarDetalle(String productoId, String emailCliente) {
         boolean premium = usuarioEnSesion.esClientePremium(emailCliente);
