@@ -97,6 +97,7 @@ public class GestionProductosService implements GestionProductosUseCase {
     @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO)
     @Override
     public Producto cambiarDisponibilidadMiProducto(String emailVendedor, String productoId, boolean disponible) {
-        throw new UnsupportedOperationException("Pendiente de implementar (HU16)");
+        Producto propio = consultarMiProducto(emailVendedor, productoId);
+        return productoRepository.guardar(propio.conDisponibilidad(disponible));
     }
 }
