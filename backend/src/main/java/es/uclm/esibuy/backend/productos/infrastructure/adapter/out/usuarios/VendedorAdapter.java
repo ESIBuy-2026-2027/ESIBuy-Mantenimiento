@@ -20,4 +20,9 @@ public class VendedorAdapter implements VendedorPort {
     public void comprobarQueEsVendedor(String vendedorId) {
         administracionUsuarios.consultarVendedor(vendedorId);
     }
+
+    @Override
+    public String nombreComercial(String vendedorId) {
+        return administracionUsuarios.consultarNombreComercial(vendedorId);
+    }
 }

@@ -219,4 +219,33 @@ class ProductoTest {
 
         assertEquals(new BigDecimal("80.55"), producto.precioFinal(true));
     }
+
+    // Descuento que se aplica al cliente (HU8): el mismo criterio que precioFinal, para mostrar su porcentaje.
+    @Test
+    @DisplayName("HU8-CP08: sin descuentos activos no se aplica ninguno")
+    void sinDescuentosNoSeAplicaNinguno() {
+        Producto producto = productoConDescuentos(Descuento.sinDescuento(), Descuento.sinDescuento());
+
+        assertEquals(Descuento.sinDescuento(), producto.descuentoAplicado(false));
+        assertEquals(Descuento.sinDescuento(), producto.descuentoAplicado(true));
+    }
+
+    @Test
+    @DisplayName("HU8-CP08: al cliente estándar se le aplica el descuento general, aunque haya premium")
+    void alClienteEstandarSeLeAplicaElGeneral() {
+        Descuento general = new Descuento(true, new BigDecimal("10"));
+        Producto producto = productoConDescuentos(general, new Descuento(true, new BigDecimal("15")));
+
+        assertEquals(general, producto.descuentoAplicado(false));
+    }
+
+    @Test
+    @DisplayName("HU8-CP08: al cliente premium se le aplica el premium si está activo; si no, el general")
+    void alClientePremiumSeLeAplicaElPremiumOElGeneral() {
+        Descuento general = new Descuento(true, new BigDecimal("10"));
+        Descuento premium = new Descuento(true, new BigDecimal("15"));
+
+        assertEquals(premium, productoConDescuentos(general, premium).descuentoAplicado(true));
+        assertEquals(general, productoConDescuentos(general, Descuento.sinDescuento()).descuentoAplicado(true));
+    }
 }

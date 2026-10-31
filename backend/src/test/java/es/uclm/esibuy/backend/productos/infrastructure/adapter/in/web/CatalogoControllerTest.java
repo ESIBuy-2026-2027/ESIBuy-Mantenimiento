@@ -3,6 +3,8 @@ package es.uclm.esibuy.backend.productos.infrastructure.adapter.in.web;
 import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
 import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalogo;
+import es.uclm.esibuy.backend.productos.application.port.in.DetalleProductoCatalogo;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
@@ -31,9 +33,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// Catálogo de productos del cliente (HU7, T353): GET /api/products. El caso de uso es un doble de prueba;
-// la seguridad es la real (SecurityConfig: /api/products solo para CLIENTE).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU7-CP16 a CP19, propuestos.
+// Catálogo de productos del cliente (HU7, T353): GET /api/products. Detalle de un producto (HU8, T355):
+// GET /api/products/{id}. El caso de uso es un doble de prueba; la seguridad es la real (SecurityConfig).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU7-CP16 a CP19 y HU8-CP13 a CP15, propuestos.
 @WebMvcTest(CatalogoController.class)
 @Import(SecurityConfig.class)
 class CatalogoControllerTest {
@@ -121,5 +123,83 @@ class CatalogoControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(catalogoProductos, never()).buscarProductos(any());
+    }
+
+    private static DetalleProductoCatalogo detalle(BigDecimal porcentajeDescuento, BigDecimal precioFinal) {
+        return new DetalleProductoCatalogo("p-1", "Teclado mecánico", "Con cable", "https://esibuy.test/teclado.png",
+                "cat-2", "u-2", "TecnoVera", new BigDecimal("50.00"), porcentajeDescuento, precioFinal, 7, true);
+    }
+
+    @Test
+    @DisplayName("HU8-CP13: el cliente recibe el detalle con el formato del contrato y sin valoraciones todavía")
+    void clienteRecibeElDetalleConElFormatoDelContrato() throws Exception {
+        // El correo de la sesión llega al caso de uso, que decide con él el descuento del cliente
+        when(catalogoProductos.consultarDetalle("p-1", CLIENTE))
+                .thenReturn(detalle(new BigDecimal("10"), new BigDecimal("45.00")));
+
+        mockMvc.perform(get(URL + "/p-1").with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("p-1"))
+                .andExpect(jsonPath("$.nombre").value("Teclado mecánico"))
+                .andExpect(jsonPath("$.descripcion").value("Con cable"))
+                .andExpect(jsonPath("$.imagen").value("https://esibuy.test/teclado.png"))
+                .andExpect(jsonPath("$.categoriaId").value("cat-2"))
+                .andExpect(jsonPath("$.vendedor.id").value("u-2"))
+                .andExpect(jsonPath("$.vendedor.nombreComercial").value("TecnoVera"))
+                .andExpect(jsonPath("$.precio").value(50.0))
+                .andExpect(jsonPath("$.descuento.porcentaje").value(10))
+                .andExpect(jsonPath("$.precioFinal").value(45.0))
+                .andExpect(jsonPath("$.stock").value(7))
+                .andExpect(jsonPath("$.disponible").value(true))
+                // Hasta HU13 no hay valoraciones: el campo existe, pero vale null, y el número es 0
+                .andExpect(jsonPath("$.valoracion").value(nullValue()))
+                .andExpect(jsonPath("$.numValoraciones").value(0))
+                .andExpect(jsonPath("$.vendedorId").doesNotExist())
+                .andExpect(jsonPath("$.nombreComercial").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("HU8-CP13: sin descuento para el cliente, el descuento del detalle es null y paga el precio")
+    void sinDescuentoElDescuentoDelDetalleEsNull() throws Exception {
+        when(catalogoProductos.consultarDetalle("p-1", CLIENTE)).thenReturn(detalle(null, new BigDecimal("50.00")));
+
+        mockMvc.perform(get(URL + "/p-1").with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.descuento").value(nullValue()))
+                .andExpect(jsonPath("$.precioFinal").value(50.0));
+    }
+
+    @Test
+    @DisplayName("HU8-CP14: un producto que no existe o no está disponible devuelve 404 con el código PRODUCT_NOT_FOUND")
+    void productoNoEncontradoDevuelve404() throws Exception {
+        // El servicio trata igual un producto inexistente que uno no disponible: lanza la misma excepción
+        when(catalogoProductos.consultarDetalle("p-404", CLIENTE)).thenThrow(new ProductoNoEncontradoException());
+
+        mockMvc.perform(get(URL + "/p-404").with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("HU8-CP15: sin sesión no se ve el detalle de un producto")
+    void sinSesionElDetalleDevuelve401() throws Exception {
+        mockMvc.perform(get(URL + "/p-1"))
+                .andExpect(status().isUnauthorized());
+
+        verify(catalogoProductos, never()).consultarDetalle(any(), any());
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"VENDEDOR", "ADMINISTRADOR"})
+    @DisplayName("HU8-CP15: un usuario que no es cliente no ve el detalle de un producto")
+    void otroRolElDetalleDevuelve403(String rol) throws Exception {
+        // Con el caso de uso respondiendo, un 200 indicaría que el rol tiene acceso
+        when(catalogoProductos.consultarDetalle(any(), any()))
+                .thenReturn(detalle(new BigDecimal("10"), new BigDecimal("45.00")));
+
+        mockMvc.perform(get(URL + "/p-1").with(user("usuario@esibuy.test").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(catalogoProductos, never()).consultarDetalle(any(), any());
     }
 }

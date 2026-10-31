@@ -5,7 +5,7 @@ import java.util.Optional;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
 
 /**
- * Puerto de entrada del catálogo de productos del cliente (HU7).
+ * Puerto de entrada del catálogo de productos del cliente (HU7, HU8 y HU9).
  */
 public interface CatalogoProductosUseCase {
 
@@ -25,4 +25,15 @@ public interface CatalogoProductosUseCase {
      * @return vacío si el producto no existe o no está disponible
      */
     Optional<ProductoComercial> consultarComprable(String productoId, boolean clientePremium);
+
+    /**
+     * Devuelve el detalle de un producto del catálogo (HU8), con el nombre comercial de su vendedor y el precio
+     * con el descuento que le corresponde al cliente.
+     *
+     * @param emailCliente email del cliente en sesión, para saber si es premium y aplicarle su descuento
+     * @return el detalle del producto
+     * @throws es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException si no existe o no
+     *         está disponible
+     */
+    DetalleProductoCatalogo consultarDetalle(String productoId, String emailCliente);
 }
