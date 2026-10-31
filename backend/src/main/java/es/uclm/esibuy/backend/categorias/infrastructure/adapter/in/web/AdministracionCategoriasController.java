@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -17,8 +19,8 @@ import es.uclm.esibuy.backend.categorias.application.port.in.CategoriaConProduct
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 
 /**
- * Adaptador de entrada web del administrador para las categorías: {@code GET /api/admin/categorias} (HU39)
- * y {@code POST /api/admin/categorias} (HU40).
+ * Adaptador de entrada web del administrador para las categorías: {@code GET /api/admin/categorias} (HU39),
+ * {@code POST /api/admin/categorias} (HU40) y {@code PUT /api/admin/categorias/{id}} (HU41).
  * /api/admin/** solo lo usa un ADMINISTRADOR (SecurityConfig, T58): sin sesión 401, con otro rol 403.
  */
 @RestController
@@ -46,5 +48,13 @@ public class AdministracionCategoriasController {
     public CategoriaAdministracionResponse crear(@Valid @RequestBody CrearCategoriaRequest request) {
         Categoria creada = administracionCategorias.crear(request.aComando());
         return CategoriaAdministracionResponse.desde(new CategoriaConProductos(creada, 0));
+    }
+
+    // Cambia el nombre y la descripción de una categoría (HU41, T328) y devuelve la fila actualizada, con su
+    // número de productos. 400 si los datos no son válidos; 404 si no existe; 409 si el nombre es el de otra.
+    @PutMapping("/{id}")
+    public CategoriaAdministracionResponse editar(@PathVariable String id,
+            @Valid @RequestBody EditarCategoriaRequest request) {
+        return CategoriaAdministracionResponse.desde(administracionCategorias.editar(request.aComando(id)));
     }
 }

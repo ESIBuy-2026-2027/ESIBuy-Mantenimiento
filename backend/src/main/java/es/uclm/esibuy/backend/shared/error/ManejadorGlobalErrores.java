@@ -25,6 +25,7 @@ import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoExc
 import es.uclm.esibuy.backend.usuarios.application.port.out.exception.EnvioEmailException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AuthenticatorYaDadoDeAltaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
@@ -251,6 +252,13 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError categoriaDuplicada() {
         return new RespuestaError("La categoría ya existe con el mismo nombre", "CATEGORY_NAME_ALREADY_EXISTS");
+    }
+
+    // 404 + code cuando la categoría que se edita no existe (HU41, T328).
+    @ExceptionHandler(CategoriaNoEncontradaException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public RespuestaError categoriaNoEncontrada() {
+        return new RespuestaError("La categoría no existe", "CATEGORY_NOT_FOUND");
     }
 
     // 400 + code al dar de alta un método de pago (HU6), también si la tarjeta está caducada. El mensaje es
