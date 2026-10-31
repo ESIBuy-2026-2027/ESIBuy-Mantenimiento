@@ -13,6 +13,8 @@ import es.uclm.esibuy.backend.categorias.application.port.out.ProductosPorCatego
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaDuplicadaException;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
+import es.uclm.esibuy.backend.categorias.application.port.in.EditarCategoriaCommand;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 
 /**
  * Implementa la gestión de categorías del administrador. Solo habla con el exterior a través del
@@ -50,5 +52,22 @@ public class AdministracionCategoriasService implements AdministracionCategorias
             throw new CategoriaDuplicadaException();
         }
         return categoriaRepository.guardar(categoria);
+    }
+    
+    // Primero se comprueba que existe; después el dominio valida los datos y, con el nombre ya sin espacios en
+    // los extremos, se comprueba que no es el de otra categoría (el suyo propio sí vale). El estado se conserva.
+    // El índice único cubre dos cambios simultáneos al mismo nombre.
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
+    @Override
+    public CategoriaConProductos editar(EditarCategoriaCommand comando) {
+        Categoria actual = categoriaRepository.buscarPorId(comando.id())
+                .orElseThrow(CategoriaNoEncontradaException::new);
+        Categoria editada = new Categoria(actual.id(), comando.nombre(), comando.descripcion(), actual.estado());
+        if (categoriaRepository.existeOtraConNombre(editada.nombre(), actual.id())) {
+            throw new CategoriaDuplicadaException();
+        }
+        Categoria guardada = categoriaRepository.guardar(editada);
+        return new CategoriaConProductos(guardada,
+                productosPorCategoria.contarPorCategoria().getOrDefault(guardada.id(), 0L));
     }
 }

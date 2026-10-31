@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.categorias.infrastructure.adapter.out.persistence;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Sort;
@@ -54,5 +55,17 @@ public class CategoriaMongoAdapter implements CategoriaRepositoryPort {
             // El índice único nombre_sin_mayusculas lo ha rechazado: dos altas simultáneas con el mismo nombre.
             throw new CategoriaDuplicadaException(duplicateKeyException);
         }
+    }
+
+    // Provisional hasta el paso del adaptador (HU41, T329).
+    @Override
+    public Optional<Categoria> buscarPorId(String id) {
+        throw new UnsupportedOperationException();
+    }
+
+    // Provisional hasta el paso del adaptador (HU41, T329).
+    @Override
+    public boolean existeOtraConNombre(String nombre, String idExcluido) {
+        throw new UnsupportedOperationException();
     }
 }
