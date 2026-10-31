@@ -300,6 +300,23 @@ class GestionProductosServiceTest {
         assertSame(guardado, devuelto);
     }
 
+    @Test
+    @DisplayName("HU16-CP08: el vendedor activa un producto suyo que no estaba disponible")
+    void elVendedorActivaSuProducto() {
+        Producto noDisponible = producto("p-9", "v-1").conDisponibilidad(false);
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(noDisponible));
+        when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        Producto devuelto = servicio.cambiarDisponibilidadMiProducto(CORREO, "p-9", true);
+
+        ArgumentCaptor<Producto> captor = ArgumentCaptor.forClass(Producto.class);
+        verify(productoRepository).guardar(captor.capture());
+        assertTrue(captor.getValue().isDisponible());
+        assertEquals("p-9", captor.getValue().getId());
+        assertSame(captor.getValue(), devuelto);
+    }
+
     private static Producto producto(String id, String vendedorId) {
         return new Producto(id, vendedorId, "Teclado mecánico", "Con cable", new BigDecimal("89.50"), 12,
                 "cat-1", "", true, Descuento.sinDescuento(), Descuento.sinDescuento());
