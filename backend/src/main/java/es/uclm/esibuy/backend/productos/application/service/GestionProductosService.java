@@ -93,4 +93,10 @@ public class GestionProductosService implements GestionProductosUseCase {
         Producto propio = consultarMiProducto(emailVendedor, productoId);
         productoRepository.eliminar(propio.getId());
     }
+
+    @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO)
+    @Override
+    public Producto cambiarDisponibilidadMiProducto(String emailVendedor, String productoId, boolean disponible) {
+        throw new UnsupportedOperationException("Pendiente de implementar (HU16)");
+    }
 }
