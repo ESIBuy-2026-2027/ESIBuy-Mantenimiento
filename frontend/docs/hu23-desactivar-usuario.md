@@ -1,9 +1,9 @@
-# HU23 · Desactivar usuario (Frontend)
+# HU23 · Bloquear usuario (Frontend)
 
 Documento para entender cómo el administrador desactiva cuentas, qué reglas se aplican, qué hace cada parte del código, qué contrato espera del backend y cómo probarlo.
 
 - **Fecha:** 8 de octubre de 2026
-- **HU:** HU23 · Desactivar usuario
+- **HU:** HU23 · Bloquear usuario (administrador)
 - **Tasks:** AB#40 (acción Desactivar con confirmación) y AB#41 (tests de la acción Desactivar)
 - **Rama:** `feature/US23-T40-T41-desactivar-usuario`
 - **Metodología:** sin TDD por decisión del equipo. Primero el código (commit `feat` con AB#40) y después los tests (commit `test` con AB#41).

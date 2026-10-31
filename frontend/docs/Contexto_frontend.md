@@ -26,7 +26,7 @@ Marketplace (tienda online) desarrollado como Práctica Integrada de la asignatu
 
 ## 3. Requisitos no funcionales (afectan al frontend)
 
-- **Seguridad**: login con 2FA (TOTP) + 3FA (código por email). RBAC: cada rol solo accede a lo suyo. **La barrera real es el backend**; el frontend solo oculta UI por experiencia de usuario.
+- **Seguridad**: login con 2FA (código por email) + 3FA (TOTP de Microsoft Authenticator). RBAC: cada rol solo accede a lo suyo. **La barrera real es el backend**; el frontend solo oculta UI por experiencia de usuario.
 - **Responsive**: adaptable a móvil y tablet (HU29), sin desbordamientos.
 - **RGPD**: casilla de aceptación de la política de privacidad en el registro.
 - **Datos de pago**: nunca se muestra, pide ni envía el número completo de tarjeta; solo tokens y últimos 4 dígitos.
@@ -54,9 +54,9 @@ Marketplace (tienda online) desarrollado como Práctica Integrada de la asignatu
 | HU18 | Acceso restringido al panel de administración | Administrador | 1 |
 | HU19 | Listar y buscar usuarios | Administrador | 2 |
 | HU20 | Consultar el detalle de un usuario | Administrador | 1 |
-| HU21 | Crear usuario (incluido administrador) | Administrador | 2 |
-| HU22 | Modificar datos y rol de un usuario | Administrador | 2 |
-| HU23 | Desactivar usuario | Administrador | 2 |
+| HU21 | Crear administrador | Administrador | 2 |
+| HU22 | Modificar datos de un usuario (administrador) | Administrador | 2 |
+| HU23 | Bloquear usuario (administrador) | Administrador | 2 |
 | HU24 | Activar usuario | Administrador | 2 |
 | HU26 | Supervisión de vendedores (solo lectura) | Administrador | 3 |
 | HU30 | Desarrollo de una home | Todos | 1 |
@@ -72,17 +72,17 @@ Marketplace (tienda online) desarrollado como Práctica Integrada de la asignatu
 
 ### Criterios de aceptación
 
-- **HU1**: acceso denegado si falla cualquier factor de seguridad; permisos por rol (RBAC); bloqueo tras intentos fallidos. La cuenta queda **pendiente** hasta que un admin la active (HU24).
-- **HU2**: login multipaso (credenciales → TOTP → código por email).
+- **HU1**: el visitante elige registrarse como cliente o vendedor; se validan obligatorios, formato de email, DNI y teléfono, longitudes y mayoría de edad del cliente; email único (y nombre comercial único en el vendedor); contraseña conforme a la política (8 a 64 caracteres con mayúscula, minúscula, número y símbolo; ni común ni con datos personales), repetida igual y guardada con hash; aceptación obligatoria de la política de privacidad (RGPD). Toda cuenta queda **pendiente** hasta que un admin la active (HU24).
+- **HU2**: login multipaso (credenciales → código por email → TOTP); acceso denegado si falla cualquiera de los tres factores; permisos por rol (RBAC); bloqueo tras varios intentos fallidos.
 - **HU15**: solo un Vendedor activo ve la opción en el menú; `/vendedor/productos` sin rol → 403; sin sesión → 401 y redirección a login.
 - **HU18**: solo el Administrador ve la opción en el menú; sin sesión → redirección a login.
 - **HU19**: listado con nombre, email, rol, estado, fecha de alta; búsqueda por nombre/email; filtro por rol y estado; paginado.
-- **HU20**: ficha completa sin contraseña; accesos a editar, bloquear/desbloquear, eliminar.
+- **HU20**: ficha completa sin contraseña; accesos a editar, bloquear/activar, eliminar.
 - **HU21**: validación de campos y email único; asignación de rol; cuenta creada ya activa; contraseña cifrada o temporal con cambio en primer acceso.
 - **HU22**: mismas validaciones que HU21; un admin no puede quitarse su rol ni degradar al último administrador. Implementada en el frontend: el administrador edita los datos de clientes, administradores y vendedores y **cambia su rol** (no el propio, ni degradando al último administrador); los administradores nunca están pendientes. Ver `docs/hu22-editar-usuario.md`.
-- **HU23**: el usuario desactivado no puede iniciar sesión (mensaje específico); su sesión se invalida; requiere confirmación; un admin no puede desactivarse a sí mismo ni al último admin activo.
-- **HU24**: activa cuentas pendientes o desactivadas; el listado (HU19) filtra por "pendiente".
-- **HU26**: el admin ve productos/precios/pedidos de un vendedor con **todas las acciones de edición/borrado deshabilitadas**.
+- **HU23**: el usuario bloqueado no puede iniciar sesión (mensaje específico de cuenta bloqueada); su sesión se invalida; requiere confirmación; un admin no puede bloquearse a sí mismo ni al último admin activo.
+- **HU24**: activa cuentas pendientes o bloqueadas; los usuarios registrados mediante la HU1 quedan pendientes hasta activarse; el listado (HU19) filtra por "pendiente".
+- **HU26**: el admin ve los productos, precios y pedidos de un vendedor con **todas las acciones de edición/borrado deshabilitadas**; los datos de la cuenta del vendedor sí los puede editar, activar, bloquear y eliminar (HU22, HU23, HU24 y HU38).
 - **HU30**: la home es la primera pantalla y da una visión general de la app.
 - **HU31**: vista dedicada con los campos del producto; se validan campos obligatorios, **precio > 0** y **stock ≥ 0**; el producto queda asociado automáticamente al vendedor autenticado; tras guardar aparece en el catálogo visible para clientes.
 - **HU32**: solo productos del vendedor autenticado; búsqueda por nombre y filtro por categoría; paginado; si no hay productos, **estado vacío** con acceso directo a "Añadir producto".

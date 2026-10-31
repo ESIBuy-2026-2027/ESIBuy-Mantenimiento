@@ -3,7 +3,7 @@
 Documento para entender cómo el administrador edita los datos de clientes, administradores y vendedores desde su ficha: qué se puede cambiar en cada caso, qué reglas aplican, qué hace cada parte del código, qué contrato espera del backend y cómo probarlo.
 
 - **Fecha:** 10 de octubre de 2026
-- **HU:** HU22 · Modificar datos y rol de un usuario (2 puntos)
+- **HU:** HU22 · Modificar datos de un usuario (administrador) (2 puntos)
 - **Tasks:** AB#45 (formulario de edición), AB#46 (tests del formulario de edición) y AB#43 (el rol no se puede cambiar)
 - **Ramas:** `feature/US22-T45-T46-edicion-usuario` (primera entrega: datos), `feature/US22-T45-T46-cambio-de-rol-y-endpoint-unico` (segunda: cambio de rol, endpoint único y administradores sin estado pendiente) `fix/US22-T43-rol-no-editable` (tercera, 11/10/2026: se quita el cambio de rol) y `fix/US22-T43-editar-vendedor` (cuarta, 11/10/2026: la edición del vendedor usa los datos del registro de vendedores)
 - **Metodología:** sin TDD por decisión del equipo. Primero el código (commits `refactor`, `chore`, `feat` y `fix` con AB#45) y después los tests (commits `test` con AB#46).

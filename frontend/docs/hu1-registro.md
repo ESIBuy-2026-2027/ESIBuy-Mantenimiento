@@ -3,7 +3,7 @@
 Documento para entender la pantalla de registro: qué pide a cada tipo de usuario, cómo valida los datos, qué hace cada parte del código, qué contrato espera del backend y cómo probarlo.
 
 - **Fecha:** 8 de octubre de 2026
-- **HU:** HU1 · Registro de usuario
+- **HU:** HU1 · Registrar usuario
 - **Tasks:** AB#17 y AB#18; después, AB#234 (cuenta pendiente tras el registro) y AB#242 (password solo escrito a mano)
 - **Rama:** `feature/front/registro`; la task AB#234, en `feature/US1-T234-cuenta-pendiente`; la task AB#242, en `feature/US1-T242-bloquear-pegar-contrasena-registro`
 - **Metodología:** TDD. Cada ciclo tiene su commit de rojo (`test(HU1)`) y su commit de verde (`feat(HU1)`), y los refactors van en commits `refactor(HU1)` aparte.
