@@ -4,7 +4,9 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,8 +16,8 @@ import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUse
 import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalogo;
 
 /**
- * Adaptador de entrada web del catálogo de productos del cliente (HU7). Recibe la petición, la traduce a una
- * consulta y delega en el puerto de entrada.
+ * Adaptador de entrada web del catálogo de productos del cliente (HU7) y del detalle de cada producto (HU8). Recibe
+ * la petición, la traduce a una consulta y delega en el puerto de entrada.
  */
 @RestController
 @RequestMapping("/api")
@@ -43,5 +45,12 @@ public class CatalogoController {
                 : CriterioOrdenCatalogo.NOMBRE;
         return ProductoCatalogoPageResponse.desde(catalogoProductos.buscarProductos(new BuscarCatalogoQuery(
                 search, category, minRating, criterio, "desc".equals(order), page - 1, size)));
+    }
+
+    // Detalle de un producto del catálogo (HU8): el cliente sale de la sesión para aplicarle su descuento. Uno que
+    // no existe o no está disponible da 404 (ProductoNoEncontradoException, en el manejador global).
+    @GetMapping("/products/{id}")
+    public DetalleProductoCatalogoResponse consultarDetalle(@PathVariable String id, Authentication autenticado) {
+        return DetalleProductoCatalogoResponse.desde(catalogoProductos.consultarDetalle(id, autenticado.getName()));
     }
 }

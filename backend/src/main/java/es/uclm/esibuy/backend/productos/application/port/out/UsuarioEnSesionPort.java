@@ -7,4 +7,7 @@ package es.uclm.esibuy.backend.productos.application.port.out;
 public interface UsuarioEnSesionPort {
 
     String idPorCorreo(String email);
+
+    // Si el cliente en sesión es premium (HU8), para aplicarle su descuento en el detalle de un producto.
+    boolean esClientePremium(String email);
 }

@@ -3,8 +3,10 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.config;
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AuthenticatorUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.RecuperacionContrasenaUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CifradoSecretoPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoRecuperacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.EnvioEmailPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.FactorAutenticacionRepositoryPort;
@@ -14,9 +16,11 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.TotpPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.service.AutenticacionService;
 import es.uclm.esibuy.backend.usuarios.application.service.AuthenticatorService;
+import es.uclm.esibuy.backend.usuarios.application.service.RecuperacionContrasenaService;
 import es.uclm.esibuy.backend.usuarios.application.service.RegistroUsuarioService;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web.CuentaActivaFilter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.email.SmtpEnvioEmailAdapter;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.CodigoRecuperacionMongoAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.CodigoVerificacionMongoAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.FactorAutenticacionMongoAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.UsuarioMongoAdapter;
@@ -76,5 +80,13 @@ class UsuariosConfigTest {
     void elContextoRegistraElFiltroDeCuentaActiva() {
         // HU23, T206: como bean de Spring, Spring Boot lo añade a los filtros de cada petición
         assertNotNull(contexto.getBean(CuentaActivaFilter.class));
+    }
+
+    @Test
+    @DisplayName("Configuración: el contexto conecta la recuperación de contraseña con su adaptador de códigos")
+    void elContextoConectaLasPiezasDeLaRecuperacionDeContrasena() {
+        // HU3, T400: usa el generador, el hash y el correo del login, y guarda sus códigos con su propio adaptador
+        assertInstanceOf(RecuperacionContrasenaService.class, contexto.getBean(RecuperacionContrasenaUseCase.class));
+        assertInstanceOf(CodigoRecuperacionMongoAdapter.class, contexto.getBean(CodigoRecuperacionRepositoryPort.class));
     }
 }

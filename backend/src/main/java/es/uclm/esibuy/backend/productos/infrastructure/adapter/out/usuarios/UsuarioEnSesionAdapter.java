@@ -19,4 +19,9 @@ public class UsuarioEnSesionAdapter implements UsuarioEnSesionPort {
     public String idPorCorreo(String email) {
         return autenticacion.consultarIdUsuarioEnSesion(email);
     }
+
+    @Override
+    public boolean esClientePremium(String email) {
+        return autenticacion.esClientePremium(email);
+    }
 }
