@@ -36,7 +36,8 @@ import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoExc
 // Seguridad en la capa de negocio (R8): cada caso de uso de productos exige su rol y, si recibe el correo del
 // vendedor, que sea el de la sesión. Las anotaciones solo se evalúan con Spring, así que se usa un contexto mínimo
 // (sin MongoDB) con los servicios reales y dobles de prueba de los puertos de salida.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU31-CP28, propuesto.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU31-CP28, propuesto. El caso HU16-CP10 (activar y desactivar) tiene
+// sus propios tests, al final.
 @SpringJUnitConfig(SeguridadProductosServiceTest.Configuracion.class)
 class SeguridadProductosServiceTest {
 
@@ -203,5 +204,47 @@ class SeguridadProductosServiceTest {
                 () -> assertThrows(AuthenticationCredentialsNotFoundException.class,
                         () -> catalogo.consultarComprable("p-1", false)),
                 () -> assertThrows(AuthenticationCredentialsNotFoundException.class, () -> conteo.contarPorCategoria()));
+    }
+
+    @Test
+    @WithMockUser(username = "cliente@esibuy.test", roles = "CLIENTE")
+    @DisplayName("HU16-CP10: un cliente no puede activar ni desactivar productos")
+    void unClienteNoCambiaLaDisponibilidad() {
+        assertThrows(AccessDeniedException.class,
+                () -> gestion.cambiarDisponibilidadMiProducto(VENDEDOR, "p-1", false));
+        verifyNoInteractions(productoRepository);
+    }
+
+    @Test
+    @WithMockUser(username = "admin@esibuy.test", roles = "ADMINISTRADOR")
+    @DisplayName("HU16-CP10: un administrador no puede activar ni desactivar los productos de un vendedor")
+    void unAdministradorNoCambiaLaDisponibilidad() {
+        assertThrows(AccessDeniedException.class,
+                () -> gestion.cambiarDisponibilidadMiProducto(VENDEDOR, "p-1", false));
+        verifyNoInteractions(productoRepository);
+    }
+
+    @Test
+    @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
+    @DisplayName("HU16-CP10: un vendedor no cambia la disponibilidad con el correo de otro vendedor y no se toca nada")
+    void unVendedorNoCambiaLaDisponibilidadConElCorreoDeOtro() {
+        assertThrows(AccessDeniedException.class,
+                () -> gestion.cambiarDisponibilidadMiProducto(OTRO_VENDEDOR, "p-1", false));
+        verifyNoInteractions(productoRepository);
+    }
+
+    @Test
+    @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
+    @DisplayName("HU16-CP10: un vendedor sí cambia la disponibilidad con su propio correo (un producto que no es suyo sigue siendo 404)")
+    void unVendedorCambiaLaDisponibilidadConSuPropioCorreo() {
+        assertThrows(ProductoNoEncontradoException.class,
+                () -> gestion.cambiarDisponibilidadMiProducto(VENDEDOR, "p-1", false));
+    }
+
+    @Test
+    @DisplayName("HU16-CP10: sin sesión no se puede activar ni desactivar un producto")
+    void sinSesionNoSeCambiaLaDisponibilidad() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> gestion.cambiarDisponibilidadMiProducto(VENDEDOR, "p-1", false));
     }
 }
