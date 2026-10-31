@@ -2,13 +2,18 @@ package es.uclm.esibuy.backend.valoraciones.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionInvalidaException;
 
 // Entidad Valoracion (HU13, T369): la puntuación de 1 a 5 que un cliente da a un producto, con un comentario
 // opcional de hasta 500 caracteres. Java puro, sin Spring ni base de datos.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU13-CP01, propuesto.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP01 y CP02, propuestos.
 class ValoracionTest {
 
     @Test
@@ -40,5 +45,19 @@ class ValoracionTest {
     void elComentarioEsOpcionalYSeRecorta() {
         assertEquals("", Valoracion.nueva("p-1", "u-1", 3, null).comentario());
         assertEquals("Llegó a tiempo", Valoracion.nueva("p-1", "u-1", 3, "  Llegó a tiempo  ").comentario());
+    }
+
+    @ParameterizedTest(name = "puntuación {0}")
+    @ValueSource(ints = {1, 5})
+    @DisplayName("HU13-CP02: admite las puntuaciones de los extremos, 1 y 5")
+    void admiteLasPuntuacionesDeLosExtremos(int puntuacion) {
+        assertEquals(puntuacion, Valoracion.nueva("p-1", "u-1", puntuacion, "").puntuacion());
+    }
+
+    @ParameterizedTest(name = "puntuación {0}")
+    @ValueSource(ints = {0, 6, -1})
+    @DisplayName("HU13-CP02: rechaza una puntuación fuera de 1 a 5")
+    void rechazaUnaPuntuacionFueraDeRango(int puntuacion) {
+        assertThrows(ValoracionInvalidaException.class, () -> Valoracion.nueva("p-1", "u-1", puntuacion, ""));
     }
 }
