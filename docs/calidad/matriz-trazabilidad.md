@@ -1196,14 +1196,14 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU8-CP05 | La página tiene estado de carga, de producto no encontrado (404, también para un producto no disponible) con enlace para volver, y de error con reintento | Frontend (página) | 4 | ✅ Pasa (4, AB#354, PR #136) |
 | HU8-CP06 | Las tarjetas del listado, de la animación y de la lista de los mejores llevan al detalle del producto (con el teclado también); desde el detalle se vuelve a los productos; la tarjeta es un enlace con el identificador codificado | Frontend (componente y página) | 7 | ✅ Pasa (7, AB#354, PR #136) |
 | HU8-CP07 | Un producto sin valoraciones, sin imagen o sin descripción se muestra con un aviso en lugar de un hueco | Frontend (página) | 3 | ✅ Pasa (3, AB#354, PR #136) |
-| HU8-CP08 | El descuento que se aplica al cliente: ninguno si no hay descuentos activos; al Estándar, el general; al Premium, el premium si está activo y, si no, el general | Unitario (dominio) | 3 | 🔍 En revisión (3, AB#356, PR sin abrir) |
-| HU8-CP09 | El detalle de un producto disponible lleva sus datos, el nombre comercial de su vendedor y, para un cliente Estándar, el precio con el descuento general | Unitario | 1 | 🔍 En revisión (1, AB#356, PR sin abrir) |
-| HU8-CP10 | Al cliente Premium se le muestra el precio con su descuento premium | Unitario | 1 | 🔍 En revisión (1, AB#356, PR sin abrir) |
-| HU8-CP11 | El detalle de un producto que no existe o no está disponible no se encuentra (ProductoNoEncontradoException) | Unitario | 1 | 🔍 En revisión (1, AB#356, PR sin abrir) |
-| HU8-CP12 | Si el cliente es Premium y el nombre comercial del vendedor se piden al módulo de usuarios por su puerto de entrada | Unitario | 2 | 🔍 En revisión (2, AB#356, PR sin abrir) |
-| HU8-CP13 | El cliente recibe el detalle con el formato del contrato (`vendedor` con id y nombre comercial; `descuento` con su porcentaje, o null sin descuento; `valoracion` null y `numValoraciones` 0) | Integración (capa web) | 2 | 🔍 En revisión (2, AB#355, PR sin abrir) |
-| HU8-CP14 | Un producto que no existe o no está disponible devuelve 404 con el código PRODUCT_NOT_FOUND | Integración (capa web) | 1 | 🔍 En revisión (1, AB#355, PR sin abrir) |
-| HU8-CP15 | Solo el cliente en sesión consulta el detalle: sin sesión, 401; otro rol, 403; y el caso de uso rechaza otro rol, el correo de otro cliente y la falta de sesión | Integración (capa web) + unitario con Spring Security (sin MongoDB) | 7 | 🔍 En revisión (7, AB#355, PR sin abrir) |
+| HU8-CP08 | El descuento que se aplica al cliente: ninguno si no hay descuentos activos; al Estándar, el general; al Premium, el premium si está activo y, si no, el general | Unitario (dominio) | 3 | 🔍 En revisión (3, AB#356, PR #173) |
+| HU8-CP09 | El detalle de un producto disponible lleva sus datos, el nombre comercial de su vendedor y, para un cliente Estándar, el precio con el descuento general | Unitario | 1 | 🔍 En revisión (1, AB#356, PR #173) |
+| HU8-CP10 | Al cliente Premium se le muestra el precio con su descuento premium | Unitario | 1 | 🔍 En revisión (1, AB#356, PR #173) |
+| HU8-CP11 | El detalle de un producto que no existe o no está disponible no se encuentra (ProductoNoEncontradoException) | Unitario | 1 | 🔍 En revisión (1, AB#356, PR #173) |
+| HU8-CP12 | Si el cliente es Premium y el nombre comercial del vendedor se piden al módulo de usuarios por su puerto de entrada | Unitario | 2 | 🔍 En revisión (2, AB#356, PR #173) |
+| HU8-CP13 | El cliente recibe el detalle con el formato del contrato (`vendedor` con id y nombre comercial; `descuento` con su porcentaje, o null sin descuento; `valoracion` null y `numValoraciones` 0) | Integración (capa web) | 2 | 🔍 En revisión (2, AB#355, PR #173) |
+| HU8-CP14 | Un producto que no existe o no está disponible devuelve 404 con el código PRODUCT_NOT_FOUND | Integración (capa web) | 1 | 🔍 En revisión (1, AB#355, PR #173) |
+| HU8-CP15 | Solo el cliente en sesión consulta el detalle: sin sesión, 401; otro rol, 403; y el caso de uso rechaza otro rol, el correo de otro cliente y la falta de sesión | Integración (capa web) + unitario con Spring Security (sin MongoDB) | 7 | 🔍 En revisión (7, AB#355, PR #173) |
 
 Notas:
 - **HU8-CP01 a CP07 (Sprint 2, frontend):** casos propuestos en la task AB#354 (vista de detalle de producto) a partir de lo pedido en ella y de las decisiones del equipo (`frontend/docs/hu8-detalle-producto.md`). Pendientes de confirmar con el equipo y de añadir a la HU8 (AB#70) en Azure Boards.
@@ -1249,24 +1249,24 @@ Notas:
 | HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin valoraciones lo indica en lugar de mostrar estrellas` | Frontend · página | AB#354 | PR #136 | ✅ |
 | HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin imagen muestra un marcador en su lugar` | Frontend · página | AB#354 | PR #136 | ✅ |
 | HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin descripción lo indica` | Frontend · página | AB#354 | PR #136 | ✅ |
-| HU8-CP08 | `ProductoTest` | `sinDescuentosNoSeAplicaNinguno` | Dominio | AB#356 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP08 | `ProductoTest` | `alClienteEstandarSeLeAplicaElGeneral` | Dominio | AB#356 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP08 | `ProductoTest` | `alClientePremiumSeLeAplicaElPremiumOElGeneral` | Dominio | AB#356 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP09 | `CatalogoProductosServiceTest` | `elDetalleLlevaSusDatosYElNombreComercialDelVendedor` | Aplicación | AB#356 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP10 | `CatalogoProductosServiceTest` | `alClientePremiumSeLeMuestraElPrecioConSuDescuento` | Aplicación | AB#356 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP11 | `CatalogoProductosServiceTest` | `elDetalleDeUnProductoQueNoExisteONoEstaDisponibleNoSeEncuentra` | Aplicación | AB#356 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP12 | `UsuarioEnSesionAdapterTest` | `esClientePremiumPreguntaAlModuloDeUsuarios` | Infraestructura | AB#356 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP12 | `VendedorAdapterTest` | `nombreComercialPreguntaAlModuloDeUsuarios` | Infraestructura | AB#356 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP13 | `CatalogoControllerTest` | `clienteRecibeElDetalleConElFormatoDelContrato` | Infraestructura | AB#355 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP13 | `CatalogoControllerTest` | `sinDescuentoElDescuentoDelDetalleEsNull` | Infraestructura | AB#355 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP14 | `CatalogoControllerTest` | `productoNoEncontradoDevuelve404` | Infraestructura | AB#355 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP15 | `CatalogoControllerTest` | `sinSesionElDetalleDevuelve401` | Infraestructura | AB#355 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP15 | `CatalogoControllerTest` | `otroRolElDetalleDevuelve403` | Infraestructura | AB#355 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP15 | `SeguridadProductosServiceTest` | `unVendedorNoConsultaElDetalle` | Aplicación | AB#355 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP15 | `SeguridadProductosServiceTest` | `unAdministradorNoConsultaElDetalle` | Aplicación | AB#355 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP15 | `SeguridadProductosServiceTest` | `unClienteNoConsultaElDetalleConElCorreoDeOtro` | Aplicación | AB#355 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP15 | `SeguridadProductosServiceTest` | `unClienteConsultaElDetalleConSuPropioCorreo` | Aplicación | AB#355 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP15 | `SeguridadProductosServiceTest` | `sinSesionNoSeConsultaElDetalle` | Aplicación | AB#355 | Rama `feature/US8-T355-T356-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP08 | `ProductoTest` | `sinDescuentosNoSeAplicaNinguno` | Dominio | AB#356 | PR #173 | 🔍 |
+| HU8-CP08 | `ProductoTest` | `alClienteEstandarSeLeAplicaElGeneral` | Dominio | AB#356 | PR #173 | 🔍 |
+| HU8-CP08 | `ProductoTest` | `alClientePremiumSeLeAplicaElPremiumOElGeneral` | Dominio | AB#356 | PR #173 | 🔍 |
+| HU8-CP09 | `CatalogoProductosServiceTest` | `elDetalleLlevaSusDatosYElNombreComercialDelVendedor` | Aplicación | AB#356 | PR #173 | 🔍 |
+| HU8-CP10 | `CatalogoProductosServiceTest` | `alClientePremiumSeLeMuestraElPrecioConSuDescuento` | Aplicación | AB#356 | PR #173 | 🔍 |
+| HU8-CP11 | `CatalogoProductosServiceTest` | `elDetalleDeUnProductoQueNoExisteONoEstaDisponibleNoSeEncuentra` | Aplicación | AB#356 | PR #173 | 🔍 |
+| HU8-CP12 | `UsuarioEnSesionAdapterTest` | `esClientePremiumPreguntaAlModuloDeUsuarios` | Infraestructura | AB#356 | PR #173 | 🔍 |
+| HU8-CP12 | `VendedorAdapterTest` | `nombreComercialPreguntaAlModuloDeUsuarios` | Infraestructura | AB#356 | PR #173 | 🔍 |
+| HU8-CP13 | `CatalogoControllerTest` | `clienteRecibeElDetalleConElFormatoDelContrato` | Infraestructura | AB#355 | PR #173 | 🔍 |
+| HU8-CP13 | `CatalogoControllerTest` | `sinDescuentoElDescuentoDelDetalleEsNull` | Infraestructura | AB#355 | PR #173 | 🔍 |
+| HU8-CP14 | `CatalogoControllerTest` | `productoNoEncontradoDevuelve404` | Infraestructura | AB#355 | PR #173 | 🔍 |
+| HU8-CP15 | `CatalogoControllerTest` | `sinSesionElDetalleDevuelve401` | Infraestructura | AB#355 | PR #173 | 🔍 |
+| HU8-CP15 | `CatalogoControllerTest` | `otroRolElDetalleDevuelve403` | Infraestructura | AB#355 | PR #173 | 🔍 |
+| HU8-CP15 | `SeguridadProductosServiceTest` | `unVendedorNoConsultaElDetalle` | Aplicación | AB#355 | PR #173 | 🔍 |
+| HU8-CP15 | `SeguridadProductosServiceTest` | `unAdministradorNoConsultaElDetalle` | Aplicación | AB#355 | PR #173 | 🔍 |
+| HU8-CP15 | `SeguridadProductosServiceTest` | `unClienteNoConsultaElDetalleConElCorreoDeOtro` | Aplicación | AB#355 | PR #173 | 🔍 |
+| HU8-CP15 | `SeguridadProductosServiceTest` | `unClienteConsultaElDetalleConSuPropioCorreo` | Aplicación | AB#355 | PR #173 | 🔍 |
+| HU8-CP15 | `SeguridadProductosServiceTest` | `sinSesionNoSeConsultaElDetalle` | Aplicación | AB#355 | PR #173 | 🔍 |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `ProductDetailPage.test.jsx` y `ProductsPage.test.jsx`: `pages/` (Vitest, React Testing Library y MSW)
