@@ -4,6 +4,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
 import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalogo;
 import es.uclm.esibuy.backend.productos.application.port.in.DetalleProductoCatalogo;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
@@ -34,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 // Catálogo de productos del cliente (HU7, T353): GET /api/products. Detalle de un producto (HU8, T355):
 // GET /api/products/{id}. El caso de uso es un doble de prueba; la seguridad es la real (SecurityConfig).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU7-CP16 a CP19 y HU8-CP13, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU7-CP16 a CP19 y HU8-CP13 y CP14, propuestos.
 @WebMvcTest(CatalogoController.class)
 @Import(SecurityConfig.class)
 class CatalogoControllerTest {
@@ -166,5 +167,16 @@ class CatalogoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.descuento").value(nullValue()))
                 .andExpect(jsonPath("$.precioFinal").value(50.0));
+    }
+
+    @Test
+    @DisplayName("HU8-CP14: un producto que no existe o no está disponible devuelve 404 con el código PRODUCT_NOT_FOUND")
+    void productoNoEncontradoDevuelve404() throws Exception {
+        // El servicio trata igual un producto inexistente que uno no disponible: lanza la misma excepción
+        when(catalogoProductos.consultarDetalle("p-404", CLIENTE)).thenThrow(new ProductoNoEncontradoException());
+
+        mockMvc.perform(get(URL + "/p-404").with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"));
     }
 }
