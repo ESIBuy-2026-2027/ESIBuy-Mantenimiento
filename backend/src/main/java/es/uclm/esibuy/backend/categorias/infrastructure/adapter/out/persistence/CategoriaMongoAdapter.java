@@ -57,15 +57,17 @@ public class CategoriaMongoAdapter implements CategoriaRepositoryPort {
         }
     }
 
-    // Provisional hasta el paso del adaptador (HU41, T329).
+    // Busca una categoría por su ID.
     @Override
     public Optional<Categoria> buscarPorId(String id) {
-        throw new UnsupportedOperationException();
+        return repository.findById(id).map(mapper::aDominio);
     }
 
-    // Provisional hasta el paso del adaptador (HU41, T329).
+    // Igual que existePorNombre, pero sin contar la categoría con ese id.
     @Override
     public boolean existeOtraConNombre(String nombre, String idExcluido) {
-        throw new UnsupportedOperationException();
+        Query consulta = new Query(Criteria.where("nombre").is(nombre.strip()).and("id").ne(idExcluido))
+                .collation(SIN_MAYUSCULAS_NI_TILDES);
+        return mongoTemplate.exists(consulta, CategoriaDocument.class);
     }
 }
