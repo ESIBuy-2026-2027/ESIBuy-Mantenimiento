@@ -13,6 +13,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.EnvioEmailPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.GeneradorCodigoPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.exception.EnvioEmailException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
@@ -59,7 +60,13 @@ public class RecuperacionContrasenaService implements RecuperacionContrasenaUseC
         String codigo = generadorCodigo.generar();
         String hash = hashContrasena.hashear(codigo);
         codigoRepository.guardar(CodigoVerificacion.nuevo(usuario.getId(), hash, reloj.instant()));
-        envioEmail.enviarCodigoRecuperacion(normalizado.get(), codigo);
+        try {
+            envioEmail.enviarCodigoRecuperacion(normalizado.get(), codigo);
+        } catch (EnvioEmailException e) {
+            // HU3-CP11: se ignora a propósito. Con un email desconocido no se intenta enviar nada y la respuesta
+            // es correcta; si el fallo del envío llegara al cliente, solo pasaría con cuentas que existen y lo
+            // revelaría. El usuario puede volver a pedir el código.
+        }
     }
 
     // HU3-CP04 a CP07. El orden importa: la política se comprueba después del código y antes de guardar nada.
