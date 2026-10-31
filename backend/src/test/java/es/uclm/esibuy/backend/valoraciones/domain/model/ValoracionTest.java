@@ -13,7 +13,7 @@ import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionInvalidaEx
 
 // Entidad Valoracion (HU13, T369): la puntuación de 1 a 5 que un cliente da a un producto, con un comentario
 // opcional de hasta 500 caracteres. Java puro, sin Spring ni base de datos.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP01 y CP02, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP01 a CP03, propuestos.
 class ValoracionTest {
 
     @Test
@@ -59,5 +59,22 @@ class ValoracionTest {
     @DisplayName("HU13-CP02: rechaza una puntuación fuera de 1 a 5")
     void rechazaUnaPuntuacionFueraDeRango(int puntuacion) {
         assertThrows(ValoracionInvalidaException.class, () -> Valoracion.nueva("p-1", "u-1", puntuacion, ""));
+    }
+
+    @Test
+    @DisplayName("HU13-CP03: el comentario admite hasta 500 caracteres, sin contar los espacios de los extremos")
+    void elComentarioAdmiteHasta500Caracteres() {
+        String quinientos = "a".repeat(500);
+
+        assertEquals(quinientos, Valoracion.nueva("p-1", "u-1", 4, quinientos).comentario());
+        assertEquals(quinientos, Valoracion.nueva("p-1", "u-1", 4, "  " + quinientos + "  ").comentario());
+    }
+
+    @Test
+    @DisplayName("HU13-CP03: rechaza un comentario de más de 500 caracteres")
+    void rechazaUnComentarioDeMasDe500Caracteres() {
+        String quinientosUno = "a".repeat(501);
+
+        assertThrows(ValoracionInvalidaException.class, () -> Valoracion.nueva("p-1", "u-1", 4, quinientosUno));
     }
 }
