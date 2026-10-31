@@ -644,16 +644,16 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU3-CP01 | Cambiar la contraseña de un usuario guarda el hash de la nueva, rechaza uno vacío y quita el bloqueo por intentos fallidos de login | Unitario (dominio) | 3 | 🔍 En revisión (3, AB#400, PR sin abrir) |
-| HU3-CP02 | Solicitar la recuperación de una cuenta activa envía un código de 6 dígitos por correo y guarda solo su hash, válido 10 minutos; el email se busca normalizado | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#400, PR sin abrir) |
-| HU3-CP03 | Con un email no registrado o mal formado, o una cuenta pendiente o desactivada, no se envía nada y la respuesta es la misma (no se revela qué emails existen) | Unitario (aplicación) | 3 | 🔍 En revisión (3, AB#400, PR sin abrir) |
-| HU3-CP04 | Con el código correcto se guarda el hash de la contraseña nueva y el código queda usado (un solo uso) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#400, PR sin abrir) |
-| HU3-CP05 | Con un código incorrecto se registra el fallo y la contraseña no cambia | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#400, PR sin abrir) |
-| HU3-CP06 | Un código caducado, ya usado o con 5 fallos no sirve; sin código o con un email desconocido se responde como con un código incorrecto | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#400, PR sin abrir) |
-| HU3-CP07 | Si la contraseña nueva no cumple la política de seguridad no cambia nada y el código sigue sirviendo | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#400, PR sin abrir) |
-| HU3-CP08 | El comando de restablecer no muestra la contraseña ni el código en su `toString` (logs) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#400, PR sin abrir) |
-| HU3-CP09 | El correo de recuperación lleva el código y su validez; si falla el envío, la excepción no revela el código | Unitario (infraestructura) | 2 | 🔍 En revisión (2, AB#400, PR sin abrir) |
-| HU3-CP10 | Los códigos de recuperación se guardan en `tokens_seguridad` con `purpose` PASSWORD_RECOVERY, solo con su hash; uno nuevo sustituye al anterior y no se pisan con el código del login | Unitario + integración (Testcontainers) | 6 | 🔍 En revisión (6, AB#400, PR sin abrir) |
+| HU3-CP01 | Cambiar la contraseña de un usuario guarda el hash de la nueva, rechaza uno vacío y quita el bloqueo por intentos fallidos de login | Unitario (dominio) | 3 | ✅ Pasa |
+| HU3-CP02 | Solicitar la recuperación de una cuenta activa envía un código de 6 dígitos por correo y guarda solo su hash, válido 10 minutos; el email se busca normalizado | Unitario (aplicación) | 2 | ✅ Pasa |
+| HU3-CP03 | Con un email no registrado o mal formado, o una cuenta pendiente o desactivada, no se envía nada y la respuesta es la misma (no se revela qué emails existen) | Unitario (aplicación) | 3 | ✅ Pasa |
+| HU3-CP04 | Con el código correcto se guarda el hash de la contraseña nueva y el código queda usado (un solo uso) | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU3-CP05 | Con un código incorrecto se registra el fallo y la contraseña no cambia | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU3-CP06 | Un código caducado, ya usado o con 5 fallos no sirve; sin código o con un email desconocido se responde como con un código incorrecto | Unitario (aplicación) | 2 | ✅ Pasa |
+| HU3-CP07 | Si la contraseña nueva no cumple la política de seguridad no cambia nada y el código sigue sirviendo | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU3-CP08 | El comando de restablecer no muestra la contraseña ni el código en su `toString` (logs) | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU3-CP09 | El correo de recuperación lleva el código y su validez; si falla el envío, la excepción no revela el código | Unitario (infraestructura) | 2 | ✅ Pasa |
+| HU3-CP10 | Los códigos de recuperación se guardan en `tokens_seguridad` con `purpose` PASSWORD_RECOVERY, solo con su hash; uno nuevo sustituye al anterior y no se pisan con el código del login | Unitario + integración (Testcontainers) | 6 | ✅ Pasa |
 
 Notas:
 - **HU3-CP01 a CP10 (Sprint 2, backend, TDD):** casos propuestos en la T400 (AB#400, lógica de recuperación de contraseña) a partir de los criterios de aceptación de la HU3 (AB#65): «envío de enlace/código temporal y de un solo uso», «expiración del enlace tras un tiempo determinado» y «la contraseña nueva debe cumplir la política de seguridad». Pendientes de confirmar con el equipo y de añadir a la HU3 en Azure Boards.
@@ -664,28 +664,28 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU3-CP01 | `UsuarioTest` | `cambiarContrasenaSustituyeElHash` | Dominio | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP01 | `UsuarioTest` | `cambiarContrasenaRechazaUnHashVacio` | Dominio | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP01 | `UsuarioTest` | `cambiarContrasenaQuitaElBloqueoPorIntentos` | Dominio | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP02 | `RecuperacionContrasenaServiceTest` | `solicitarConCuentaActivaEnviaElCodigoYGuardaSoloSuHash` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP02 | `RecuperacionContrasenaServiceTest` | `solicitarBuscaLaCuentaConElEmailNormalizado` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP03 | `RecuperacionContrasenaServiceTest` | `solicitarConEmailDesconocidoNoEnviaNadaNiLoRevela` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP03 | `RecuperacionContrasenaServiceTest` | `solicitarConEmailMalFormadoNoEnviaNadaNiLoRevela` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP03 | `RecuperacionContrasenaServiceTest` | `solicitarConCuentaNoActivaNoEnviaNada` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP04 | `RecuperacionContrasenaServiceTest` | `restablecerConCodigoCorrectoCambiaLaContrasenaYGastaElCodigo` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP05 | `RecuperacionContrasenaServiceTest` | `restablecerConCodigoIncorrectoRegistraElFalloYNoCambiaNada` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP06 | `RecuperacionContrasenaServiceTest` | `restablecerConCodigoQueYaNoSirveNoCambiaNada` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP06 | `RecuperacionContrasenaServiceTest` | `restablecerSinCodigoOConEmailDesconocidoRespondeComoCodigoIncorrecto` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP07 | `RecuperacionContrasenaServiceTest` | `restablecerConContrasenaQueNoCumpleLaPoliticaNoGastaElCodigo` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP08 | `RestablecerContrasenaCommandTest` | `toStringNoMuestraLaContrasenaNiElCodigo` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP09 | `SmtpEnvioEmailAdapterTest` | `enviaElCodigoDeRecuperacionAlCorreoDelUsuario` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP09 | `SmtpEnvioEmailAdapterTest` | `fallaElEnvioDeRecuperacionSinRevelarElCodigo` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP10 | `CodigoVerificacionDocumentMapperTest` | `convierteCodigoDeRecuperacionEnDocumento` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `guardaElCodigoComoDeRecuperacion` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `buscarPorUsuarioDevuelveElCodigoGuardado` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `unCodigoNuevoSustituyeAlAnterior` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `guardarUnCodigoLeidoLoActualiza` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `elCodigoDeRecuperacionYElDelLoginNoSePisan` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP01 | `UsuarioTest` | `cambiarContrasenaSustituyeElHash` | Dominio | AB#400 | PR #172 | ✅ |
+| HU3-CP01 | `UsuarioTest` | `cambiarContrasenaRechazaUnHashVacio` | Dominio | AB#400 | PR #172 | ✅ |
+| HU3-CP01 | `UsuarioTest` | `cambiarContrasenaQuitaElBloqueoPorIntentos` | Dominio | AB#400 | PR #172 | ✅ |
+| HU3-CP02 | `RecuperacionContrasenaServiceTest` | `solicitarConCuentaActivaEnviaElCodigoYGuardaSoloSuHash` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP02 | `RecuperacionContrasenaServiceTest` | `solicitarBuscaLaCuentaConElEmailNormalizado` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP03 | `RecuperacionContrasenaServiceTest` | `solicitarConEmailDesconocidoNoEnviaNadaNiLoRevela` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP03 | `RecuperacionContrasenaServiceTest` | `solicitarConEmailMalFormadoNoEnviaNadaNiLoRevela` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP03 | `RecuperacionContrasenaServiceTest` | `solicitarConCuentaNoActivaNoEnviaNada` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP04 | `RecuperacionContrasenaServiceTest` | `restablecerConCodigoCorrectoCambiaLaContrasenaYGastaElCodigo` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP05 | `RecuperacionContrasenaServiceTest` | `restablecerConCodigoIncorrectoRegistraElFalloYNoCambiaNada` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP06 | `RecuperacionContrasenaServiceTest` | `restablecerConCodigoQueYaNoSirveNoCambiaNada` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP06 | `RecuperacionContrasenaServiceTest` | `restablecerSinCodigoOConEmailDesconocidoRespondeComoCodigoIncorrecto` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP07 | `RecuperacionContrasenaServiceTest` | `restablecerConContrasenaQueNoCumpleLaPoliticaNoGastaElCodigo` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP08 | `RestablecerContrasenaCommandTest` | `toStringNoMuestraLaContrasenaNiElCodigo` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP09 | `SmtpEnvioEmailAdapterTest` | `enviaElCodigoDeRecuperacionAlCorreoDelUsuario` | Infraestructura | AB#400 | PR #172 | ✅ |
+| HU3-CP09 | `SmtpEnvioEmailAdapterTest` | `fallaElEnvioDeRecuperacionSinRevelarElCodigo` | Infraestructura | AB#400 | PR #172 | ✅ |
+| HU3-CP10 | `CodigoVerificacionDocumentMapperTest` | `convierteCodigoDeRecuperacionEnDocumento` | Infraestructura | AB#400 | PR #172 | ✅ |
+| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `guardaElCodigoComoDeRecuperacion` | Infraestructura | AB#400 | PR #172 | ✅ |
+| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `buscarPorUsuarioDevuelveElCodigoGuardado` | Infraestructura | AB#400 | PR #172 | ✅ |
+| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `unCodigoNuevoSustituyeAlAnterior` | Infraestructura | AB#400 | PR #172 | ✅ |
+| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `guardarUnCodigoLeidoLoActualiza` | Infraestructura | AB#400 | PR #172 | ✅ |
+| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `elCodigoDeRecuperacionYElDelLoginNoSePisan` | Infraestructura | AB#400 | PR #172 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `UsuarioTest`: `usuarios/domain/model/` (JUnit, sin Spring)
@@ -2751,7 +2751,7 @@ Tests que no validan una HU concreta.
 | `UsuariosConfigTest` | `elContextoConectaLasPiezasDelLogin` | Que Spring conecta el login con sus adaptadores de códigos (MongoDB), generador (`SecureRandom`) y correo (SMTP) (AB#230, PR #67) |
 | `UsuariosConfigTest` | `elContextoConectaLasPiezasDelAuthenticator` | Que Spring conecta el paso 3 (`AuthenticatorService`) con la librería TOTP, el cifrado AES-GCM y el adaptador de `factores_autenticacion` (AB#20, PR #75) |
 | `UsuariosConfigTest` | `elContextoRegistraElFiltroDeCuentaActiva` | Que Spring registra `CuentaActivaFilter`, el filtro que invalida la sesión de las cuentas desactivadas (HU23; AB#39, AB#206, PR #85) |
-| `UsuariosConfigTest` | `elContextoConectaLasPiezasDeLaRecuperacionDeContrasena` | Que Spring conecta la recuperación de contraseña (`RecuperacionContrasenaService`) con su adaptador de códigos en MongoDB (HU3; AB#400, PR sin abrir) |
+| `UsuariosConfigTest` | `elContextoConectaLasPiezasDeLaRecuperacionDeContrasena` | Que Spring conecta la recuperación de contraseña (`RecuperacionContrasenaService`) con su adaptador de códigos en MongoDB (HU3; AB#400, PR #172) |
 | `MetodosPagoConfigTest` | `elContextoConectaLasPiezasDeLosMetodosDePago` | Que Spring conecta el servicio de métodos de pago con su adaptador de MongoDB, su cifrado AES-GCM y el cliente en sesión (HU6; AB#271, PR #148) |
 | `MetodosPagoConfigTest` | `losDatosDePagoSeCifranConLaClaveConfigurada` | Que los datos de pago se cifran con la clave de `esibuy.pagos.clave-cifrado`, que en los tests pone `MongoTestcontainersConfig` (HU6; AB#271, PR #148) |
 | `CarritoConfigTest` | `elContextoConectaLasPiezasDelCarrito` | Que Spring conecta el servicio del carrito con su adaptador de MongoDB, los productos y los usuarios (HU9; AB#385, PR #162) |
