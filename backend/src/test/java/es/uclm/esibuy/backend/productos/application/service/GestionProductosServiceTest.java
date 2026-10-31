@@ -317,6 +317,30 @@ class GestionProductosServiceTest {
         assertSame(captor.getValue(), devuelto);
     }
 
+    @Test
+    @DisplayName("HU16-CP09: un producto que no existe no se puede activar ni desactivar y no se guarda nada")
+    void unProductoQueNoExisteNoCambiaDeDisponibilidad() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-404")).thenReturn(Optional.empty());
+
+        assertThrows(ProductoNoEncontradoException.class,
+                () -> servicio.cambiarDisponibilidadMiProducto(CORREO, "p-404", false));
+
+        verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU16-CP09: un vendedor no puede activar ni desactivar un producto de otro vendedor y no se guarda nada")
+    void unProductoDeOtroVendedorNoCambiaDeDisponibilidad() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-2")));
+
+        assertThrows(ProductoNoEncontradoException.class,
+                () -> servicio.cambiarDisponibilidadMiProducto(CORREO, "p-9", false));
+
+        verify(productoRepository, never()).guardar(any());
+    }
+
     private static Producto producto(String id, String vendedorId) {
         return new Producto(id, vendedorId, "Teclado mecánico", "Con cable", new BigDecimal("89.50"), 12,
                 "cat-1", "", true, Descuento.sinDescuento(), Descuento.sinDescuento());
