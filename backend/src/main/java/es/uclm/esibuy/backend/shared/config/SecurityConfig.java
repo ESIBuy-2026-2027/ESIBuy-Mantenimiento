@@ -64,7 +64,7 @@ public class SecurityConfig {
     private static final String RUTAS_PERFIL = "/api/perfil/**";
     private static final String ROL_CLIENTE = "CLIENTE";
     private static final String RUTAS_CLIENTE = "/api/customer/**";
-    // Catálogo de productos (HU7): solo lo ve un CLIENTE.
+    // Catálogo de productos del cliente (HU7) y detalle de cada producto (HU8): solo los ve un CLIENTE.
     private static final String RUTAS_CATALOGO = "/api/products/**";
 
     @Bean

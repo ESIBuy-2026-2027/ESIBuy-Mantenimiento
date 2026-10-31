@@ -4,20 +4,20 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.core.Authentication;
 
 import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
 import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalogo;
 
 /**
- * Adaptador de entrada web del catálogo de productos del cliente (HU7). Recibe la petición, la traduce a una
- * consulta y delega en el puerto de entrada.
+ * Adaptador de entrada web del catálogo de productos del cliente (HU7) y del detalle de cada producto (HU8). Recibe
+ * la petición, la traduce a una consulta y delega en el puerto de entrada.
  */
 @RestController
 @RequestMapping("/api")
