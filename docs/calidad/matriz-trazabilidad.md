@@ -2517,13 +2517,22 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU43-CP01 | Al cerrar sesión (`POST /api/auth/logout`) la sesión se invalida en el servidor y la cookie de sesión se borra del navegador | Controlador | 2 | ✅ Pasa |
 | HU43-CP02 | La sesión caduca tras 15 minutos sin actividad si no se configura otro tiempo (`ESIBUY_SESION_INACTIVIDAD`) | Integración (servidor real) | 1 | 🔍 En revisión |
 | HU43-CP03 | Las cookies de sesión (`JSESSIONID`: Secure, HttpOnly y SameSite=Strict) y de CSRF (`XSRF-TOKEN`: Secure y SameSite=Strict, legible por el frontend) llevan sus atributos de seguridad | Controlador + integración (servidor real) | 2 | 🔍 En revisión |
+| HU43-CP04 | El cliente cierra sesión desde su zona: se avisa al servidor, vuelve al login con «Has cerrado sesión.» y su zona deja de ser accesible | Frontend (página) | 1 | 🔍 En revisión (1, AB#314, PR sin abrir) |
+| HU43-CP05 | El vendedor cierra sesión desde su zona, con el mismo resultado | Frontend (página) | 1 | 🔍 En revisión (1, AB#315, PR sin abrir) |
+| HU43-CP06 | El administrador cierra sesión desde su panel, con el mismo resultado | Frontend (página) | 1 | 🔍 En revisión (1, AB#316, PR sin abrir) |
+| HU43-CP07 | Si la sesión caduca (401 con la sesión abierta), el frontend la cierra y vuelve al login con «Tu sesión ha caducado»; una contraseña incorrecta no se toma por caducidad | Frontend (cliente HTTP y página) | 4 | 🔍 En revisión (4, AB#317, PR sin abrir) |
+| HU43-CP08 | Si el servidor falla al cerrar sesión, la sesión del navegador se cierra igualmente | Frontend (página) | 1 | 🔍 En revisión (1, AB#317, PR sin abrir) |
 
 Notas:
 - **HU43-CP01:** caso propuesto en la T318 (AB#318), a partir del criterio de aceptación «al cerrar sesión, el token/sesión se invalida en el servidor». **HU43-CP02 y CP03:** propuestos en la T319 (AB#319), a partir de «la sesión caduca tras un tiempo de inactividad configurable» y «cookies de sesión con atributos Secure, HttpOnly y SameSite». Pendientes de confirmar con el equipo y de añadir a la HU43 en Azure Boards.
 - **Backend (T319):** en `application.properties`, `server.servlet.session.timeout=${ESIBUY_SESION_INACTIVIDAD:15m}` y los atributos de la cookie de sesión; en `SecurityConfig`, un `CookieCsrfTokenRepository` con Secure y SameSite=Strict. Al caducar, la siguiente petición recibe 401 y el frontend debe redirigir al login.
 - **Backend (T318):** el endpoint ya existía (Spring Security, `SecurityConfig`, T230): invalida la sesión, borra `JSESSIONID` y responde 204. `logoutCierraLaSesion` es el test de la HU2 (HU2-CP15, PR #67) que comprueba la invalidación; se traza también aquí sin cambiar su `@DisplayName`.
 - **La cookie de sesión la borra el servidor:** es HttpOnly, así que el frontend (T317, «lógica de borrado de cookies de sesión») no puede borrarla; le basta con llamar a `logout()` y limpiar su estado.
-- **Pendiente:** el botón «Cerrar sesión» en todas las zonas y la redirección al login tras la caducidad (T314 a T316, frontend). En despliegue, con Secure la aplicación tiene que servirse por HTTPS.
+- **HU43-CP04 a CP08 (Sprint 2, frontend, TDD):** casos propuestos en las tasks AB#314 a AB#317 a partir de los criterios de la HU43 y de las notas del backend (`frontend/docs/hu43-cerrar-sesion.md`). Pendientes de confirmar con el equipo y de añadir a la HU43 en Azure Boards.
+- **Decisiones del equipo:** cerrar sesión lleva al login con el aviso «Has cerrado sesión.» (el backend responde 204 sin redirección) y no pide confirmación.
+- **Sin rojo real:** HU43-CP08 y el test «una contraseña incorrecta (401) no se toma por una sesión caducada» (CP07) protegen comportamientos que ya existían; en el ciclo rojo CP08 fallaba solo por el destino y el aviso.
+- **Tests de la HU2 eliminados:** `appHeader_alCerrarSesion_vuelveALaHomeYMuestraBotonesDeInvitado` y `appHeader_tras_cerrarSesion_laRutaProtegidaYaNoEsAccesible` (sin caso en la matriz) esperaban volver a la página de inicio; los sustituyen CP04 a CP06.
+- **Pendiente:** en despliegue, con Secure la aplicación tiene que servirse por HTTPS.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -2534,11 +2543,22 @@ Notas:
 | HU43-CP02 | `ConfiguracionSesionTest` | `laSesionCaducaA15MinutosDeInactividadPorDefecto` | Infraestructura | AB#319 | PR #142 | 🔍 |
 | HU43-CP03 | `ConfiguracionSesionTest` | `laCookieDeSesionEsSecureHttpOnlyYSameSiteStrict` | Infraestructura | AB#319 | PR #142 | 🔍 |
 | HU43-CP03 | `SecurityConfigTest` | `laCookieCsrfEsSecureYSameSiteStrict` | Infraestructura | AB#319 | PR #142 | 🔍 |
+| HU43-CP04 | `AppHeader.test.jsx` | `HU43-CP04: el cliente cierra sesión desde su zona, vuelve al login con un aviso y ya no puede entrar` | Frontend · página | AB#314 | Rama `feature/US43-T314-T317-cerrar-sesion` (PR sin abrir) | 🔍 |
+| HU43-CP05 | `AppHeader.test.jsx` | `HU43-CP05: el vendedor cierra sesión desde su zona, vuelve al login con un aviso y ya no puede entrar` | Frontend · página | AB#315 | Rama `feature/US43-T314-T317-cerrar-sesion` (PR sin abrir) | 🔍 |
+| HU43-CP06 | `AppHeader.test.jsx` | `HU43-CP06: el administrador cierra sesión desde su panel, vuelve al login con un aviso y ya no puede entrar` | Frontend · página | AB#316 | Rama `feature/US43-T314-T317-cerrar-sesion` (PR sin abrir) | 🔍 |
+| HU43-CP07 | `client.test.js` | `HU43-CP07: avisa a quien escucha cuando una petición recibe 401` | Frontend · cliente HTTP | AB#317 | Rama `feature/US43-T314-T317-cerrar-sesion` (PR sin abrir) | 🔍 |
+| HU43-CP07 | `client.test.js` | `HU43-CP07: no avisa con otros errores ni después de dejar de escuchar` | Frontend · cliente HTTP | AB#317 | Rama `feature/US43-T314-T317-cerrar-sesion` (PR sin abrir) | 🔍 |
+| HU43-CP07 | `LoginFlow.test.jsx` | `HU43-CP07: si la sesión caduca, vuelve al login avisando de que ha caducado` | Frontend · página | AB#317 | Rama `feature/US43-T314-T317-cerrar-sesion` (PR sin abrir) | 🔍 |
+| HU43-CP07 | `LoginFlow.test.jsx` | `HU43-CP07: una contraseña incorrecta (401) no se toma por una sesión caducada` | Frontend · página | AB#317 | Rama `feature/US43-T314-T317-cerrar-sesion` (PR sin abrir) | 🔍 |
+| HU43-CP08 | `AppHeader.test.jsx` | `HU43-CP08: si el servidor falla al cerrar sesión, la sesión del navegador se cierra igualmente` | Frontend · página | AB#317 | Rama `feature/US43-T314-T317-cerrar-sesion` (PR sin abrir) | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AutenticacionControllerTest`: `usuarios/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
 - `ConfiguracionSesionTest`: `shared/config/` (`@SpringBootTest` con el servidor real en un puerto aleatorio y Testcontainers)
 - `SecurityConfigTest`: `shared/config/` (con `@WebMvcTest`)
+- `AppHeader.test.jsx`: `frontend/src/components/` (Vitest, RTL y MSW)
+- `client.test.js`: `frontend/src/api/` (Vitest y MSW)
+- `LoginFlow.test.jsx`: `frontend/src/features/auth/` (Vitest, RTL y MSW)
 
 ---
 

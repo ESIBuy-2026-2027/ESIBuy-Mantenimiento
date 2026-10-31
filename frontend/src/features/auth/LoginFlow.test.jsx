@@ -394,6 +394,27 @@ describe('Rutas protegidas y sesión', () => {
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/login$')))
   })
 
+  it('HU43-CP07: si la sesión caduca, vuelve al login avisando de que ha caducado', async () => {
+    await abrirSesionPorApi('cliente@esibuy.test')
+    // El servidor ha cerrado la sesión por inactividad: la siguiente petición recibe 401.
+    server.use(http.get('/api/perfil', () => new HttpResponse(null, { status: 401 })))
+    renderApp('/profile')
+
+    await esperarRuta('/login')
+    expect(await screen.findByText(/tu sesión ha caducado/i)).toBeInTheDocument()
+    expect(screen.queryByText('Has cerrado sesión.')).not.toBeInTheDocument()
+  })
+
+  it('HU43-CP07: una contraseña incorrecta (401) no se toma por una sesión caducada', async () => {
+    const user = userEvent.setup()
+    renderApp('/login')
+
+    await escribirCredenciales(user, 'cliente@esibuy.test', 'Otra-Clave-1!')
+
+    expect(await screen.findByText(/no se ha podido iniciar sesión/i)).toBeInTheDocument()
+    expect(screen.queryByText(/tu sesión ha caducado/i)).not.toBeInTheDocument()
+  })
+
   // Fallos de la demo del Sprint 1: en el login no se podía ver la contraseña escrita
   it('HU2-CP27: el campo de la contraseña tiene un botón para mostrarla y ocultarla', async () => {
     const user = userEvent.setup()

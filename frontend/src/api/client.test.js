@@ -1,7 +1,7 @@
-import { afterEach, describe, it, expect } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
-import { ApiError, request } from './client'
+import { ApiError, onUnauthorized, request } from './client'
 
 describe('request', () => {
   it('request_conRespuestaCorrecta_devuelveElJson', async () => {
@@ -49,6 +49,31 @@ describe('request', () => {
     expect(recibido.contentType).toBe('application/json')
     expect(recibido.body).toEqual({ email: 'a@b.es' })
     expect(recibido.credentials).toBe('include')
+  })
+
+  // Sesión caducada (HU43): el servidor responde 401 y quien escucha (AuthProvider) cierra la sesión del navegador.
+  describe('aviso de 401', () => {
+    it('HU43-CP07: avisa a quien escucha cuando una petición recibe 401', async () => {
+      const aviso = vi.fn()
+      const dejarDeEscuchar = onUnauthorized(aviso)
+
+      await expect(request('/api/auth/me')).rejects.toMatchObject({ status: 401 })
+
+      expect(aviso).toHaveBeenCalledTimes(1)
+      dejarDeEscuchar()
+    })
+
+    it('HU43-CP07: no avisa con otros errores ni después de dejar de escuchar', async () => {
+      const aviso = vi.fn()
+      const dejarDeEscuchar = onUnauthorized(aviso)
+      server.use(http.get('/api/categorias', () => new HttpResponse(null, { status: 500 })))
+
+      await expect(request('/api/categorias')).rejects.toMatchObject({ status: 500 })
+      dejarDeEscuchar()
+      await expect(request('/api/auth/me')).rejects.toMatchObject({ status: 401 })
+
+      expect(aviso).not.toHaveBeenCalled()
+    })
   })
 
   // Protección CSRF (T230, D4): el backend deja el token en la cookie XSRF-TOKEN y el cliente lo
