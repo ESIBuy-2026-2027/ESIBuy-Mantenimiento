@@ -55,4 +55,17 @@ class CodigoVerificacionDocumentMapperTest {
         assertEquals(2, codigo.getIntentosFallidos());
         assertFalse(codigo.puedeUsarse(AHORA));
     }
+
+    @Test
+    @DisplayName("HU3-CP10: un código de recuperación de contraseña se guarda con su propio propósito")
+    void convierteCodigoDeRecuperacionEnDocumento() {
+        CodigoVerificacion codigo = CodigoVerificacion.nuevo("u-1", "hash-del-codigo", AHORA);
+
+        CodigoVerificacionDocument documento = mapper.aDocumento(codigo,
+                CodigoVerificacionDocumentMapper.PROPOSITO_RECUPERACION);
+
+        assertEquals("PASSWORD_RECOVERY", documento.getPurpose());
+        assertEquals("hash-del-codigo", documento.getTokenHash());
+        assertEquals(AHORA.plus(Duration.ofMinutes(10)), documento.getExpiresAt());
+    }
 }

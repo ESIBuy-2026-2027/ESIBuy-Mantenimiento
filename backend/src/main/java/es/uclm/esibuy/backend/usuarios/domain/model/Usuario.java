@@ -19,7 +19,7 @@ public class Usuario {
     private PerfilUsuario perfil;        // datos propios del rol: DatosCliente, DatosVendedor o null
     private final ConsentimientoPrivacidad consentimiento;
     private final Email email;
-    private final String passwordHash;
+    private String passwordHash;
     private final Rol rol;
     private Instant fechaAlta;
     private String estado;
@@ -186,6 +186,13 @@ public class Usuario {
     public void reiniciarIntentos() {
         intentosFallidos = 0;
         bloqueadoHasta = null;
+    }
+
+    // Cambio de contraseña (HU3). Recibe el hash ya calculado: hashear y validar la política es cosa del servicio.
+    // Se valida antes de asignar: si el hash no es válido, el usuario se queda como estaba.
+    public void cambiarContrasena(String nuevoHash) {
+        passwordHash = exigirTexto(nuevoHash, "La contraseña es obligatoria");
+        reiniciarIntentos();
     }
 
     public boolean tieneBloqueoPorIntentos(Instant ahora) {

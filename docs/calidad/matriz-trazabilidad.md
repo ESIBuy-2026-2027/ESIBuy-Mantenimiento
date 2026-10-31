@@ -638,6 +638,65 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU3 · Recuperación de contraseña
+
+### Tabla A · HU3 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU3-CP01 | Cambiar la contraseña de un usuario guarda el hash de la nueva, rechaza uno vacío y quita el bloqueo por intentos fallidos de login | Unitario (dominio) | 3 | 🔍 En revisión (3, AB#400, PR sin abrir) |
+| HU3-CP02 | Solicitar la recuperación de una cuenta activa envía un código de 6 dígitos por correo y guarda solo su hash, válido 10 minutos; el email se busca normalizado | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#400, PR sin abrir) |
+| HU3-CP03 | Con un email no registrado o mal formado, o una cuenta pendiente o desactivada, no se envía nada y la respuesta es la misma (no se revela qué emails existen) | Unitario (aplicación) | 3 | 🔍 En revisión (3, AB#400, PR sin abrir) |
+| HU3-CP04 | Con el código correcto se guarda el hash de la contraseña nueva y el código queda usado (un solo uso) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#400, PR sin abrir) |
+| HU3-CP05 | Con un código incorrecto se registra el fallo y la contraseña no cambia | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#400, PR sin abrir) |
+| HU3-CP06 | Un código caducado, ya usado o con 5 fallos no sirve; sin código o con un email desconocido se responde como con un código incorrecto | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#400, PR sin abrir) |
+| HU3-CP07 | Si la contraseña nueva no cumple la política de seguridad no cambia nada y el código sigue sirviendo | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#400, PR sin abrir) |
+| HU3-CP08 | El comando de restablecer no muestra la contraseña ni el código en su `toString` (logs) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#400, PR sin abrir) |
+| HU3-CP09 | El correo de recuperación lleva el código y su validez; si falla el envío, la excepción no revela el código | Unitario (infraestructura) | 2 | 🔍 En revisión (2, AB#400, PR sin abrir) |
+| HU3-CP10 | Los códigos de recuperación se guardan en `tokens_seguridad` con `purpose` PASSWORD_RECOVERY, solo con su hash; uno nuevo sustituye al anterior y no se pisan con el código del login | Unitario + integración (Testcontainers) | 6 | 🔍 En revisión (6, AB#400, PR sin abrir) |
+
+Notas:
+- **HU3-CP01 a CP10 (Sprint 2, backend, TDD):** casos propuestos en la T400 (AB#400, lógica de recuperación de contraseña) a partir de los criterios de aceptación de la HU3 (AB#65): «envío de enlace/código temporal y de un solo uso», «expiración del enlace tras un tiempo determinado» y «la contraseña nueva debe cumplir la política de seguridad». Pendientes de confirmar con el equipo y de añadir a la HU3 en Azure Boards.
+- **Decisiones del equipo:** código de 6 dígitos por correo (no enlace), que reutiliza las reglas del código del login (`CodigoVerificacion`: 10 minutos, un solo uso, se anula tras 5 fallos, solo se guarda su hash). Solo se envía a cuentas activas. Solicitar la recuperación responde siempre igual; al restablecer, un email desconocido responde como un código incorrecto.
+- **Pendiente:** el endpoint (T399, AB#399) y el formulario del frontend (T398, AB#398). El envío real por Brevo se comprobará con el endpoint. **No hay límite de solicitudes de código** por email o por IP (no lo pide la HU3); si hace falta, irá en una task aparte.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU3-CP01 | `UsuarioTest` | `cambiarContrasenaSustituyeElHash` | Dominio | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP01 | `UsuarioTest` | `cambiarContrasenaRechazaUnHashVacio` | Dominio | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP01 | `UsuarioTest` | `cambiarContrasenaQuitaElBloqueoPorIntentos` | Dominio | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP02 | `RecuperacionContrasenaServiceTest` | `solicitarConCuentaActivaEnviaElCodigoYGuardaSoloSuHash` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP02 | `RecuperacionContrasenaServiceTest` | `solicitarBuscaLaCuentaConElEmailNormalizado` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP03 | `RecuperacionContrasenaServiceTest` | `solicitarConEmailDesconocidoNoEnviaNadaNiLoRevela` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP03 | `RecuperacionContrasenaServiceTest` | `solicitarConEmailMalFormadoNoEnviaNadaNiLoRevela` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP03 | `RecuperacionContrasenaServiceTest` | `solicitarConCuentaNoActivaNoEnviaNada` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP04 | `RecuperacionContrasenaServiceTest` | `restablecerConCodigoCorrectoCambiaLaContrasenaYGastaElCodigo` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP05 | `RecuperacionContrasenaServiceTest` | `restablecerConCodigoIncorrectoRegistraElFalloYNoCambiaNada` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP06 | `RecuperacionContrasenaServiceTest` | `restablecerConCodigoQueYaNoSirveNoCambiaNada` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP06 | `RecuperacionContrasenaServiceTest` | `restablecerSinCodigoOConEmailDesconocidoRespondeComoCodigoIncorrecto` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP07 | `RecuperacionContrasenaServiceTest` | `restablecerConContrasenaQueNoCumpleLaPoliticaNoGastaElCodigo` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP08 | `RestablecerContrasenaCommandTest` | `toStringNoMuestraLaContrasenaNiElCodigo` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP09 | `SmtpEnvioEmailAdapterTest` | `enviaElCodigoDeRecuperacionAlCorreoDelUsuario` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP09 | `SmtpEnvioEmailAdapterTest` | `fallaElEnvioDeRecuperacionSinRevelarElCodigo` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP10 | `CodigoVerificacionDocumentMapperTest` | `convierteCodigoDeRecuperacionEnDocumento` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `guardaElCodigoComoDeRecuperacion` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `buscarPorUsuarioDevuelveElCodigoGuardado` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `unCodigoNuevoSustituyeAlAnterior` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `guardarUnCodigoLeidoLoActualiza` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `elCodigoDeRecuperacionYElDelLoginNoSePisan` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `UsuarioTest`: `usuarios/domain/model/` (JUnit, sin Spring)
+- `RecuperacionContrasenaServiceTest`: `usuarios/application/service/` (JUnit y Mockito, sin Spring)
+- `RestablecerContrasenaCommandTest`: `usuarios/application/port/in/` (JUnit)
+- `SmtpEnvioEmailAdapterTest`: `usuarios/infrastructure/adapter/out/email/` (Mockito, sin conectarse a Brevo)
+- `CodigoVerificacionDocumentMapperTest`: `usuarios/infrastructure/adapter/out/persistence/` (JUnit)
+- `CodigoRecuperacionMongoAdapterTest`: `usuarios/infrastructure/adapter/out/persistence/` (`@DataMongoTest` y Testcontainers)
+
+---
+
 ## HU4 · Visión de perfil
 
 ### Tabla A · HU4 ↔ casos de prueba
@@ -1084,16 +1143,16 @@ Tests del frontend (bajo `frontend/src/`, con Vitest, React Testing Library y MS
 | HU7-CP07 | Arriba se muestran los diez productos mejor valorados como tarjetas (puesto, nombre y valoración) dentro de una banda curva sin marco; se ocultan con filtros activos, con pocos productos valorados o si falla | Frontend (componente y página) | 9 | ✅ Pasa (9, AB#350, PR #131) |
 | HU7-CP08 | Las tarjetas de la banda animada de los mejores se pueden pulsar con el ratón y avisan con su producto; sin esa función no son botones (el detalle al que llevan es la HU8-CP06) | Frontend (componente) | 2 | ✅ Pasa (2, AB#350, PR #131) |
 | HU7-CP09 | Al cambiar el tamaño de la página la banda de los mejores se reinicia (una sola vez, cuando termina el cambio) para que las tarjetas no se solapen; si el tamaño no cambia, no se reinicia | Frontend (componente) | 3 | ✅ Pasa (3, AB#350, PR #131) |
-| HU7-CP10 | El caso de uso busca en el catálogo con los criterios recibidos y devuelve la página del repositorio | Unitario | 1 | 🔍 En revisión (1, AB#352, PR #153) |
-| HU7-CP11 | El catálogo solo devuelve los productos disponibles, de todos los vendedores | Integración MongoDB | 1 | 🔍 En revisión (1, AB#352, PR #153) |
-| HU7-CP12 | La búsqueda por nombre no distingue mayúsculas ni tildes y trata el texto como literal, no como expresión regular | Integración MongoDB | 2 | 🔍 En revisión (2, AB#352, PR #153) |
-| HU7-CP13 | El filtro por categoría se puede combinar con la búsqueda | Integración MongoDB | 1 | 🔍 En revisión (1, AB#352, PR #153) |
-| HU7-CP14 | El catálogo se ordena por nombre en los dos sentidos, paginado y con el total completo | Integración MongoDB | 1 | 🔍 En revisión (1, AB#352, PR #153) |
-| HU7-CP15 | Mientras no haya valoraciones (HU13), una valoración mínima no devuelve ningún producto y ordenar por valoración desempata por nombre de la A a la Z | Integración MongoDB | 2 | 🔍 En revisión (2, AB#352, PR #153) |
-| HU7-CP16 | El cliente recibe el catálogo con el formato del contrato (sin precio, stock ni vendedor; `valoracion` null y `numValoraciones` 0) | Integración (capa web) | 1 | 🔍 En revisión (1, AB#353, PR #153) |
-| HU7-CP17 | Los parámetros llegan al caso de uso traducidos: página desde 0, criterio de orden y sentido | Integración (capa web) | 1 | 🔍 En revisión (1, AB#353, PR #153) |
-| HU7-CP18 | Un parámetro no válido (página o tamaño menor que 1, valoración fuera de 1 a 5, orden o sentido desconocidos) devuelve 400 y no llega al caso de uso | Integración (capa web) | 1 | 🔍 En revisión (1, AB#353, PR #153) |
-| HU7-CP19 | Sin sesión (401) o sin ser cliente (403) no se ve el catálogo | Integración (capa web) | 2 | 🔍 En revisión (2, AB#353, PR #153) |
+| HU7-CP10 | El caso de uso busca en el catálogo con los criterios recibidos y devuelve la página del repositorio | Unitario | 1 | ✅ Pasa (1, AB#352, PR #153) |
+| HU7-CP11 | El catálogo solo devuelve los productos disponibles, de todos los vendedores | Integración MongoDB | 1 | ✅ Pasa (1, AB#352, PR #153) |
+| HU7-CP12 | La búsqueda por nombre no distingue mayúsculas ni tildes y trata el texto como literal, no como expresión regular | Integración MongoDB | 2 | ✅ Pasa (2, AB#352, PR #153) |
+| HU7-CP13 | El filtro por categoría se puede combinar con la búsqueda | Integración MongoDB | 1 | ✅ Pasa (1, AB#352, PR #153) |
+| HU7-CP14 | El catálogo se ordena por nombre en los dos sentidos, paginado y con el total completo | Integración MongoDB | 1 | ✅ Pasa (1, AB#352, PR #153) |
+| HU7-CP15 | Mientras no haya valoraciones (HU13), una valoración mínima no devuelve ningún producto y ordenar por valoración desempata por nombre de la A a la Z | Integración MongoDB | 2 | ✅ Pasa (2, AB#352, PR #153) |
+| HU7-CP16 | El cliente recibe el catálogo con el formato del contrato (sin precio, stock ni vendedor; `valoracion` null y `numValoraciones` 0) | Integración (capa web) | 1 | ✅ Pasa (1, AB#353, PR #153) |
+| HU7-CP17 | Los parámetros llegan al caso de uso traducidos: página desde 0, criterio de orden y sentido | Integración (capa web) | 1 | ✅ Pasa (1, AB#353, PR #153) |
+| HU7-CP18 | Un parámetro no válido (página o tamaño menor que 1, valoración fuera de 1 a 5, orden o sentido desconocidos) devuelve 400 y no llega al caso de uso | Integración (capa web) | 1 | ✅ Pasa (1, AB#353, PR #153) |
+| HU7-CP19 | Sin sesión (401) o sin ser cliente (403) no se ve el catálogo | Integración (capa web) | 2 | ✅ Pasa (2, AB#353, PR #153) |
 
 Notas:
 - **HU7-CP01 a CP09 (Sprint 2, frontend):** casos propuestos en las tasks AB#350 (vista de productos) y AB#351 (vista de filtrado y búsqueda), a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu7-busqueda-y-filtrado-de-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU7 (AB#69) en Azure Boards.
@@ -1157,19 +1216,19 @@ Notas:
 | HU7-CP09 | `TiltedGridHero.test.jsx` | `HU7-CP09: al cambiar el tamaño de la página la banda se reinicia, para que las imágenes no se solapen` | Frontend · componente | AB#350 | PR #131 | ✅ |
 | HU7-CP09 | `TiltedGridHero.test.jsx` | `HU7-CP09: espera a que termine de cambiar el tamaño: varios cambios seguidos reinician una sola vez` | Frontend · componente | AB#350 | PR #131 | ✅ |
 | HU7-CP09 | `TiltedGridHero.test.jsx` | `HU7-CP09: si el tamaño no cambia, la banda sigue su curso sin reiniciarse` | Frontend · componente | AB#350 | PR #131 | ✅ |
-| HU7-CP10 | `CatalogoProductosServiceTest` | `buscaEnElCatalogoConLosCriteriosRecibidos` | Aplicación | AB#352 | PR #153 | 🔍 |
-| HU7-CP11 | `ProductoMongoAdapterTest` | `buscarEnCatalogoSoloDevuelveDisponiblesDeTodosLosVendedores` | Infraestructura | AB#352 | PR #153 | 🔍 |
-| HU7-CP12 | `ProductoMongoAdapterTest` | `buscarEnCatalogoBuscaSinDistinguirMayusculasNiTildes` | Infraestructura | AB#352 | PR #153 | 🔍 |
-| HU7-CP12 | `ProductoMongoAdapterTest` | `buscarEnCatalogoTrataLaBusquedaComoTextoLiteral` | Infraestructura | AB#352 | PR #153 | 🔍 |
-| HU7-CP13 | `ProductoMongoAdapterTest` | `buscarEnCatalogoFiltraPorCategoriaYBusqueda` | Infraestructura | AB#352 | PR #153 | 🔍 |
-| HU7-CP14 | `ProductoMongoAdapterTest` | `buscarEnCatalogoOrdenaPorNombreYPagina` | Infraestructura | AB#352 | PR #153 | 🔍 |
-| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoConValoracionMinimaNoDevuelveNada` | Infraestructura | AB#352 | PR #153 | 🔍 |
-| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoPorValoracionDesempataPorNombre` | Infraestructura | AB#352 | PR #153 | 🔍 |
-| HU7-CP16 | `CatalogoControllerTest` | `clienteRecibeElCatalogoConElFormatoDelContrato` | Infraestructura | AB#353 | PR #153 | 🔍 |
-| HU7-CP17 | `CatalogoControllerTest` | `traduceLosParametrosALaConsulta` | Infraestructura | AB#353 | PR #153 | 🔍 |
-| HU7-CP18 | `CatalogoControllerTest` | `parametroNoValidoDevuelve400` | Infraestructura | AB#353 | PR #153 | 🔍 |
-| HU7-CP19 | `CatalogoControllerTest` | `sinSesionDevuelve401` | Infraestructura | AB#353 | PR #153 | 🔍 |
-| HU7-CP19 | `CatalogoControllerTest` | `otroRolDevuelve403` | Infraestructura | AB#353 | PR #153 | 🔍 |
+| HU7-CP10 | `CatalogoProductosServiceTest` | `buscaEnElCatalogoConLosCriteriosRecibidos` | Aplicación | AB#352 | PR #153 | ✅ |
+| HU7-CP11 | `ProductoMongoAdapterTest` | `buscarEnCatalogoSoloDevuelveDisponiblesDeTodosLosVendedores` | Infraestructura | AB#352 | PR #153 | ✅ |
+| HU7-CP12 | `ProductoMongoAdapterTest` | `buscarEnCatalogoBuscaSinDistinguirMayusculasNiTildes` | Infraestructura | AB#352 | PR #153 | ✅ |
+| HU7-CP12 | `ProductoMongoAdapterTest` | `buscarEnCatalogoTrataLaBusquedaComoTextoLiteral` | Infraestructura | AB#352 | PR #153 | ✅ |
+| HU7-CP13 | `ProductoMongoAdapterTest` | `buscarEnCatalogoFiltraPorCategoriaYBusqueda` | Infraestructura | AB#352 | PR #153 | ✅ |
+| HU7-CP14 | `ProductoMongoAdapterTest` | `buscarEnCatalogoOrdenaPorNombreYPagina` | Infraestructura | AB#352 | PR #153 | ✅ |
+| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoConValoracionMinimaNoDevuelveNada` | Infraestructura | AB#352 | PR #153 | ✅ |
+| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoPorValoracionDesempataPorNombre` | Infraestructura | AB#352 | PR #153 | ✅ |
+| HU7-CP16 | `CatalogoControllerTest` | `clienteRecibeElCatalogoConElFormatoDelContrato` | Infraestructura | AB#353 | PR #153 | ✅ |
+| HU7-CP17 | `CatalogoControllerTest` | `traduceLosParametrosALaConsulta` | Infraestructura | AB#353 | PR #153 | ✅ |
+| HU7-CP18 | `CatalogoControllerTest` | `parametroNoValidoDevuelve400` | Infraestructura | AB#353 | PR #153 | ✅ |
+| HU7-CP19 | `CatalogoControllerTest` | `sinSesionDevuelve401` | Infraestructura | AB#353 | PR #153 | ✅ |
+| HU7-CP19 | `CatalogoControllerTest` | `otroRolDevuelve403` | Infraestructura | AB#353 | PR #153 | ✅ |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `ProductCard.test.jsx`: `features/catalog/` (Vitest y React Testing Library)
@@ -1189,17 +1248,28 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU8-CP01 | El detalle de un producto solo lo ve un cliente (sin sesión lleva al login; otro rol, a su página) | Frontend (página) | 3 | 🔍 En revisión (3, AB#354, PR sin abrir) |
-| HU8-CP02 | El detalle muestra la imagen, el nombre, la categoría, el proveedor (nombre comercial), la descripción, la valoración (estrellas, nota y número de valoraciones) y una ficha con la información del producto | Frontend (página) | 5 | 🔍 En revisión (5, AB#354, PR sin abrir) |
-| HU8-CP03 | El precio es el que calcula el servidor para ese cliente: sin descuento, solo el precio; con descuento, el final, el original tachado, el porcentaje y lo que se ahorra | Frontend (página) | 3 | 🔍 En revisión (3, AB#354, PR sin abrir) |
-| HU8-CP04 | La disponibilidad se indica según las existencias: en stock, pocas unidades (con cuántas quedan, en singular o plural), agotado o no disponible | Frontend (página) | 5 | 🔍 En revisión (5, AB#354, PR sin abrir) |
-| HU8-CP05 | La página tiene estado de carga, de producto no encontrado (404, también para un producto no disponible) con enlace para volver, y de error con reintento | Frontend (página) | 4 | 🔍 En revisión (4, AB#354, PR sin abrir) |
-| HU8-CP06 | Las tarjetas del listado, de la animación y de la lista de los mejores llevan al detalle del producto (con el teclado también); desde el detalle se vuelve a los productos; la tarjeta es un enlace con el identificador codificado | Frontend (componente y página) | 7 | 🔍 En revisión (7, AB#354, PR sin abrir) |
-| HU8-CP07 | Un producto sin valoraciones, sin imagen o sin descripción se muestra con un aviso en lugar de un hueco | Frontend (página) | 3 | 🔍 En revisión (3, AB#354, PR sin abrir) |
+| HU8-CP01 | El detalle de un producto solo lo ve un cliente (sin sesión lleva al login; otro rol, a su página) | Frontend (página) | 3 | ✅ Pasa (3, AB#354, PR #136) |
+| HU8-CP02 | El detalle muestra la imagen, el nombre, la categoría, el proveedor (nombre comercial), la descripción, la valoración (estrellas, nota y número de valoraciones) y una ficha con la información del producto | Frontend (página) | 5 | ✅ Pasa (5, AB#354, PR #136) |
+| HU8-CP03 | El precio es el que calcula el servidor para ese cliente: sin descuento, solo el precio; con descuento, el final, el original tachado, el porcentaje y lo que se ahorra | Frontend (página) | 3 | ✅ Pasa (3, AB#354, PR #136) |
+| HU8-CP04 | La disponibilidad se indica según las existencias: en stock, pocas unidades (con cuántas quedan, en singular o plural), agotado o no disponible | Frontend (página) | 5 | ✅ Pasa (5, AB#354, PR #136) |
+| HU8-CP05 | La página tiene estado de carga, de producto no encontrado (404, también para un producto no disponible) con enlace para volver, y de error con reintento | Frontend (página) | 4 | ✅ Pasa (4, AB#354, PR #136) |
+| HU8-CP06 | Las tarjetas del listado, de la animación y de la lista de los mejores llevan al detalle del producto (con el teclado también); desde el detalle se vuelve a los productos; la tarjeta es un enlace con el identificador codificado | Frontend (componente y página) | 7 | ✅ Pasa (7, AB#354, PR #136) |
+| HU8-CP07 | Un producto sin valoraciones, sin imagen o sin descripción se muestra con un aviso en lugar de un hueco | Frontend (página) | 3 | ✅ Pasa (3, AB#354, PR #136) |
+| HU8-CP08 | El descuento que se aplica al cliente: ninguno si no hay descuentos activos; al Estándar, el general; al Premium, el premium si está activo y, si no, el general | Unitario (dominio) | 3 | 🔍 En revisión (3, AB#356, PR #173) |
+| HU8-CP09 | El detalle de un producto disponible lleva sus datos, el nombre comercial de su vendedor y, para un cliente Estándar, el precio con el descuento general | Unitario | 1 | 🔍 En revisión (1, AB#356, PR #173) |
+| HU8-CP10 | Al cliente Premium se le muestra el precio con su descuento premium | Unitario | 1 | 🔍 En revisión (1, AB#356, PR #173) |
+| HU8-CP11 | El detalle de un producto que no existe o no está disponible no se encuentra (ProductoNoEncontradoException) | Unitario | 1 | 🔍 En revisión (1, AB#356, PR #173) |
+| HU8-CP12 | Si el cliente es Premium y el nombre comercial del vendedor se piden al módulo de usuarios por su puerto de entrada | Unitario | 2 | 🔍 En revisión (2, AB#356, PR #173) |
+| HU8-CP13 | El cliente recibe el detalle con el formato del contrato (`vendedor` con id y nombre comercial; `descuento` con su porcentaje, o null sin descuento; `valoracion` null y `numValoraciones` 0) | Integración (capa web) | 2 | 🔍 En revisión (2, AB#355, PR #173) |
+| HU8-CP14 | Un producto que no existe o no está disponible devuelve 404 con el código PRODUCT_NOT_FOUND | Integración (capa web) | 1 | 🔍 En revisión (1, AB#355, PR #173) |
+| HU8-CP15 | Solo el cliente en sesión consulta el detalle: sin sesión, 401; otro rol, 403; y el caso de uso rechaza otro rol, el correo de otro cliente y la falta de sesión | Integración (capa web) + unitario con Spring Security (sin MongoDB) | 7 | 🔍 En revisión (7, AB#355, PR #173) |
 
 Notas:
 - **HU8-CP01 a CP07 (Sprint 2, frontend):** casos propuestos en la task AB#354 (vista de detalle de producto) a partir de lo pedido en ella y de las decisiones del equipo (`frontend/docs/hu8-detalle-producto.md`). Pendientes de confirmar con el equipo y de añadir a la HU8 (AB#70) en Azure Boards.
-- **Backend:** el endpoint `GET /api/products/{id}` no existe todavía; los tests usan el contrato propuesto por el frontend y los mocks (MSW).
+- **HU8-CP08 a CP15 (Sprint 2, backend):** casos propuestos en las tasks AB#356 (lógica del detalle de producto) y AB#355 (endpoint `GET /api/products/{id}`), con el contrato que ya usaba el frontend en sus mocks (MSW). Desarrollados con TDD. Pendientes de confirmar con el equipo y de añadir a la HU8 (AB#70) en Azure Boards.
+- **Producto no disponible:** el detalle lo trata como si no existiera (404 `PRODUCT_NOT_FOUND`), igual que el frontend (HU8-CP05).
+- **Seguridad (HU8-CP15):** la regla de `SecurityConfig` pasa a `GET /api/products/**`, solo para CLIENTE, y cubre el catálogo (HU7) y el detalle. `consultarDetalle` lleva `@PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)`: además del rol, el correo tiene que ser el de la sesión, para que un cliente Estándar no vea el precio de un Premium.
+- **Valoraciones (HU13, sin hacer):** como en el catálogo, `valoracion` es `null` y `numValoraciones` es 0 (`PENDIENTE DE DECIDIR (equipo)` en el código).
 - **Decisión del equipo:** el servidor calcula el precio para el cliente (Estándar o Premium) y no hay botón de compra hasta que exista el carrito.
 - **HU8-CP06:** los tests del clic en el listado, la animación y la lista de los mejores eran HU7-CP08 cuando abrían una ventana de ficha; ahora navegan a la página de detalle.
 - **Test inestable conocido (no es de esta HU):** `HU7-CP03: al llegar otra vez al final carga las últimas y avisa de que no hay más` falla a veces al ejecutar toda la batería y pasa solo.
@@ -1208,40 +1278,65 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU8-CP01 | `ProductDetailPage.test.jsx` | `HU8-CP01: sin sesión, el detalle de un producto lleva a iniciar sesión` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP01 | `ProductDetailPage.test.jsx` | `HU8-CP01: un vendedor no ve el detalle del cliente: va a su página` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP01 | `ProductDetailPage.test.jsx` | `HU8-CP01: un cliente ve el detalle del producto con su nombre como título` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: muestra la imagen, la categoría, el proveedor y la descripción` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: muestra la valoración en estrellas, su nota y cuántas valoraciones tiene` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: con una sola valoración lo dice en singular` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: la ficha recoge la categoría, el proveedor, la disponibilidad y la referencia` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: con los datos de ejemplo muestra un producto completo` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP03 | `ProductDetailPage.test.jsx` | `HU8-CP03: sin descuento muestra solo el precio` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP03 | `ProductDetailPage.test.jsx` | `HU8-CP03: con descuento muestra el precio final, el original tachado, el porcentaje y lo que se ahorra` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP03 | `ProductDetailPage.test.jsx` | `HU8-CP03: el precio lo calcula el servidor: se muestra el que llega, no uno recalculado` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: con existencias muestra que está en stock` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: con pocas unidades avisa de cuántas quedan` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: con una sola unidad lo dice en singular` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: sin existencias muestra que está agotado` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: un producto no disponible lo indica aunque tenga existencias` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP05 | `ProductDetailPage.test.jsx` | `HU8-CP05: mientras carga muestra un indicador de carga` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP05 | `ProductDetailPage.test.jsx` | `HU8-CP05: si el producto no existe lo indica y ofrece volver a los productos` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP05 | `ProductDetailPage.test.jsx` | `HU8-CP05: si falla la carga avisa y permite reintentar` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP05 | `ProductDetailPage.test.jsx` | `HU8-CP05: un producto que el catálogo no ofrece (no disponible) se trata como no encontrado` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP06 | `ProductCard.test.jsx` | `HU8-CP06: la tarjeta es un enlace al detalle del producto` | Frontend · componente | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP06 | `ProductCard.test.jsx` | `HU8-CP06: el identificador del producto se codifica en la dirección` | Frontend · componente | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP06 | `ProductsPage.test.jsx` | `HU8-CP06: al pulsar una tarjeta del listado se abre el detalle de ese producto` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP06 | `ProductsPage.test.jsx` | `HU8-CP06: al pulsar una tarjeta de la animación de los mejores se abre el detalle de su producto` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP06 | `ProductsPage.test.jsx` | `HU8-CP06: con el teclado se llega al detalle desde la lista de los mejores` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP06 | `ProductsPage.test.jsx` | `HU8-CP06: desde el detalle, «Volver a los productos» lleva otra vez al listado` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP06 | `ProductDetailPage.test.jsx` | `HU8-CP06: desde el detalle se puede volver a los productos` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin valoraciones lo indica en lugar de mostrar estrellas` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin imagen muestra un marcador en su lugar` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
-| HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin descripción lo indica` | Frontend · página | AB#354 | Rama `feature/US8-T354-vista-detalle-producto` (PR sin abrir) | 🔍 |
+| HU8-CP01 | `ProductDetailPage.test.jsx` | `HU8-CP01: sin sesión, el detalle de un producto lleva a iniciar sesión` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP01 | `ProductDetailPage.test.jsx` | `HU8-CP01: un vendedor no ve el detalle del cliente: va a su página` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP01 | `ProductDetailPage.test.jsx` | `HU8-CP01: un cliente ve el detalle del producto con su nombre como título` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: muestra la imagen, la categoría, el proveedor y la descripción` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: muestra la valoración en estrellas, su nota y cuántas valoraciones tiene` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: con una sola valoración lo dice en singular` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: la ficha recoge la categoría, el proveedor, la disponibilidad y la referencia` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP02 | `ProductDetailPage.test.jsx` | `HU8-CP02: con los datos de ejemplo muestra un producto completo` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP03 | `ProductDetailPage.test.jsx` | `HU8-CP03: sin descuento muestra solo el precio` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP03 | `ProductDetailPage.test.jsx` | `HU8-CP03: con descuento muestra el precio final, el original tachado, el porcentaje y lo que se ahorra` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP03 | `ProductDetailPage.test.jsx` | `HU8-CP03: el precio lo calcula el servidor: se muestra el que llega, no uno recalculado` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: con existencias muestra que está en stock` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: con pocas unidades avisa de cuántas quedan` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: con una sola unidad lo dice en singular` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: sin existencias muestra que está agotado` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP04 | `ProductDetailPage.test.jsx` | `HU8-CP04: un producto no disponible lo indica aunque tenga existencias` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP05 | `ProductDetailPage.test.jsx` | `HU8-CP05: mientras carga muestra un indicador de carga` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP05 | `ProductDetailPage.test.jsx` | `HU8-CP05: si el producto no existe lo indica y ofrece volver a los productos` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP05 | `ProductDetailPage.test.jsx` | `HU8-CP05: si falla la carga avisa y permite reintentar` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP05 | `ProductDetailPage.test.jsx` | `HU8-CP05: un producto que el catálogo no ofrece (no disponible) se trata como no encontrado` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP06 | `ProductCard.test.jsx` | `HU8-CP06: la tarjeta es un enlace al detalle del producto` | Frontend · componente | AB#354 | PR #136 | ✅ |
+| HU8-CP06 | `ProductCard.test.jsx` | `HU8-CP06: el identificador del producto se codifica en la dirección` | Frontend · componente | AB#354 | PR #136 | ✅ |
+| HU8-CP06 | `ProductsPage.test.jsx` | `HU8-CP06: al pulsar una tarjeta del listado se abre el detalle de ese producto` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP06 | `ProductsPage.test.jsx` | `HU8-CP06: al pulsar una tarjeta de la animación de los mejores se abre el detalle de su producto` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP06 | `ProductsPage.test.jsx` | `HU8-CP06: con el teclado se llega al detalle desde la lista de los mejores` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP06 | `ProductsPage.test.jsx` | `HU8-CP06: desde el detalle, «Volver a los productos» lleva otra vez al listado` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP06 | `ProductDetailPage.test.jsx` | `HU8-CP06: desde el detalle se puede volver a los productos` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin valoraciones lo indica en lugar de mostrar estrellas` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin imagen muestra un marcador en su lugar` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin descripción lo indica` | Frontend · página | AB#354 | PR #136 | ✅ |
+| HU8-CP08 | `ProductoTest` | `sinDescuentosNoSeAplicaNinguno` | Dominio | AB#356 | PR #173 | 🔍 |
+| HU8-CP08 | `ProductoTest` | `alClienteEstandarSeLeAplicaElGeneral` | Dominio | AB#356 | PR #173 | 🔍 |
+| HU8-CP08 | `ProductoTest` | `alClientePremiumSeLeAplicaElPremiumOElGeneral` | Dominio | AB#356 | PR #173 | 🔍 |
+| HU8-CP09 | `CatalogoProductosServiceTest` | `elDetalleLlevaSusDatosYElNombreComercialDelVendedor` | Aplicación | AB#356 | PR #173 | 🔍 |
+| HU8-CP10 | `CatalogoProductosServiceTest` | `alClientePremiumSeLeMuestraElPrecioConSuDescuento` | Aplicación | AB#356 | PR #173 | 🔍 |
+| HU8-CP11 | `CatalogoProductosServiceTest` | `elDetalleDeUnProductoQueNoExisteONoEstaDisponibleNoSeEncuentra` | Aplicación | AB#356 | PR #173 | 🔍 |
+| HU8-CP12 | `UsuarioEnSesionAdapterTest` | `esClientePremiumPreguntaAlModuloDeUsuarios` | Infraestructura | AB#356 | PR #173 | 🔍 |
+| HU8-CP12 | `VendedorAdapterTest` | `nombreComercialPreguntaAlModuloDeUsuarios` | Infraestructura | AB#356 | PR #173 | 🔍 |
+| HU8-CP13 | `CatalogoControllerTest` | `clienteRecibeElDetalleConElFormatoDelContrato` | Infraestructura | AB#355 | PR #173 | 🔍 |
+| HU8-CP13 | `CatalogoControllerTest` | `sinDescuentoElDescuentoDelDetalleEsNull` | Infraestructura | AB#355 | PR #173 | 🔍 |
+| HU8-CP14 | `CatalogoControllerTest` | `productoNoEncontradoDevuelve404` | Infraestructura | AB#355 | PR #173 | 🔍 |
+| HU8-CP15 | `CatalogoControllerTest` | `sinSesionElDetalleDevuelve401` | Infraestructura | AB#355 | PR #173 | 🔍 |
+| HU8-CP15 | `CatalogoControllerTest` | `otroRolElDetalleDevuelve403` | Infraestructura | AB#355 | PR #173 | 🔍 |
+| HU8-CP15 | `SeguridadProductosServiceTest` | `unVendedorNoConsultaElDetalle` | Aplicación | AB#355 | PR #173 | 🔍 |
+| HU8-CP15 | `SeguridadProductosServiceTest` | `unAdministradorNoConsultaElDetalle` | Aplicación | AB#355 | PR #173 | 🔍 |
+| HU8-CP15 | `SeguridadProductosServiceTest` | `unClienteNoConsultaElDetalleConElCorreoDeOtro` | Aplicación | AB#355 | PR #173 | 🔍 |
+| HU8-CP15 | `SeguridadProductosServiceTest` | `unClienteConsultaElDetalleConSuPropioCorreo` | Aplicación | AB#355 | PR #173 | 🔍 |
+| HU8-CP15 | `SeguridadProductosServiceTest` | `sinSesionNoSeConsultaElDetalle` | Aplicación | AB#355 | PR #173 | 🔍 |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `ProductDetailPage.test.jsx` y `ProductsPage.test.jsx`: `pages/` (Vitest, React Testing Library y MSW)
 - `ProductCard.test.jsx`: `features/catalog/` (Vitest y React Testing Library)
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `ProductoTest`: `productos/domain/model/` (JUnit, sin Spring)
+- `CatalogoProductosServiceTest`: `productos/application/service/` (JUnit y Mockito, sin Spring)
+- `SeguridadProductosServiceTest`: `productos/application/service/` (contexto mínimo de Spring con la seguridad de métodos, sin MongoDB)
+- `UsuarioEnSesionAdapterTest` y `VendedorAdapterTest`: `productos/infrastructure/adapter/out/usuarios/` (JUnit y Mockito, sin Spring)
+- `CatalogoControllerTest`: `productos/infrastructure/adapter/in/web/` (`@WebMvcTest` con la seguridad real)
 
 ---
 
@@ -1595,12 +1690,17 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU16-CP04 | Si falla el cambio, se avisa sin detalles internos y el producto no cambia | Frontend (página) | 1 | ✅ Pasa |
 | HU16-CP05 | La ficha del producto ofrece Activar o Desactivar según su estado y avisa a la página con el producto | Frontend (componente) | 2 | ✅ Pasa |
 | HU16-CP06 | Desde la ficha, Desactivar cierra la ficha, cambia el producto y avisa | Frontend (página) | 1 | ✅ Pasa |
+| HU16-CP07 | El vendedor desactiva un producto suyo y el resto de sus datos no cambia | Unitario | 1 | 🔍 En revisión |
+| HU16-CP08 | El vendedor activa un producto suyo que no estaba disponible | Unitario | 1 | 🔍 En revisión |
+| HU16-CP09 | Un producto ajeno o inexistente no se puede activar ni desactivar (`ProductoNoEncontradoException`) y no se guarda nada | Unitario | 2 | 🔍 En revisión |
+| HU16-CP10 | Solo el vendedor dueño, con su correo, activa o desactiva su producto: cliente, administrador u otro vendedor reciben 403 y sin sesión se rechaza | Unitario (seguridad, contexto mínimo de Spring) | 5 | 🔍 En revisión |
 
 Notas:
-- **HU16-CP01 a CP06 (Sprint 2, frontend):** casos propuestos en la task AB#281 (botón activar/desactivar productos) a partir de lo pedido en ella y de las decisiones del equipo (`frontend/docs/hu16-activar-desactivar-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU16 en Azure Boards. Si el backend define casos de la HU16, hay que coordinar la numeración.
+- **HU16-CP01 a CP06 (Sprint 2, frontend):** casos propuestos en la task AB#281 (botón activar/desactivar productos) a partir de lo pedido en ella y de las decisiones del equipo (`frontend/docs/hu16-activar-desactivar-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU16 en Azure Boards. Los casos del backend siguen la numeración desde el CP07.
+- **HU16-CP07 a CP10 (Sprint 2, backend):** casos propuestos en las tasks AB#284 y AB#285 (lógica de activación y desactivación, PR #171), que se hacen juntas en un único caso de uso, `cambiarDisponibilidadMiProducto`, porque el frontend usa un único endpoint con un booleano. Pendientes de añadir a la HU16 en Azure Boards. Pedir el estado que ya tiene no es un error: el producto se guarda igual (decisión del desarrollador). Solo CP07 tiene ciclo rojo: CP08 a CP10 ya los cubría el código del ciclo 1 (el booleano se pasa tal cual, `consultarMiProducto` filtra por vendedor y el `@PreAuthorize` se puso desde el primer test). Se comprobó que los tests de CP10 fallan si se quita el `@PreAuthorize`.
 - **Versión inicial (decisión del equipo):** sin confirmación al activar o desactivar; puede cambiar por decisión del PO o del equipo.
-- **Backend:** no existe todavía un endpoint para cambiar solo la disponibilidad; los tests usan el contrato propuesto por el frontend (`PATCH /api/seller/products/{id}/availability`) y los mocks (MSW). No hay task de tests equivalente en el backend por ahora (decisión del equipo).
-- **Sin archivos de tests nuevos:** los casos van en `SellerProductsPage.test.jsx` y `ProductDetailDialog.test.jsx`, que ya existían.
+- **Backend:** la lógica ya existe (CP07 a CP10, PR #171), pero el endpoint para cambiar solo la disponibilidad (T282 y T283) todavía no. Los tests del frontend usan el contrato propuesto por el frontend (`PATCH /api/seller/products/{id}/availability`) y los mocks (MSW).
+- **Sin archivos de tests nuevos:** los casos van en `SellerProductsPage.test.jsx`, `ProductDetailDialog.test.jsx`, `GestionProductosServiceTest` y `SeguridadProductosServiceTest`, que ya existían.
 - **Infraestructura de tests:** `test/setup.js` reinicia tras cada test la disponibilidad cambiada en el mock de productos (`resetProductsMock`).
 
 ### Tabla B · casos de prueba ↔ tests
@@ -1614,10 +1714,20 @@ Notas:
 | HU16-CP05 | `ProductDetailDialog.test.jsx` | `HU16-CP05: un producto disponible ofrece Desactivar, que avisa con el producto` | Frontend · componente | AB#281 | PR #147 | ✅ |
 | HU16-CP05 | `ProductDetailDialog.test.jsx` | `HU16-CP05: un producto no disponible ofrece Activar, que avisa con el producto` | Frontend · componente | AB#281 | PR #147 | ✅ |
 | HU16-CP06 | `SellerProductsPage.test.jsx` | `HU16-CP06: desde la ficha, Desactivar cierra la ficha, cambia el producto y avisa` | Frontend · página | AB#281 | PR #147 | ✅ |
+| HU16-CP07 | `GestionProductosServiceTest` | `elVendedorDesactivaSuProducto` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
+| HU16-CP08 | `GestionProductosServiceTest` | `elVendedorActivaSuProducto` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
+| HU16-CP09 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoCambiaDeDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
+| HU16-CP09 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoCambiaDeDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
+| HU16-CP10 | `SeguridadProductosServiceTest` | `unClienteNoCambiaLaDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
+| HU16-CP10 | `SeguridadProductosServiceTest` | `unAdministradorNoCambiaLaDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
+| HU16-CP10 | `SeguridadProductosServiceTest` | `unVendedorNoCambiaLaDisponibilidadConElCorreoDeOtro` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
+| HU16-CP10 | `SeguridadProductosServiceTest` | `unVendedorCambiaLaDisponibilidadConSuPropioCorreo` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
+| HU16-CP10 | `SeguridadProductosServiceTest` | `sinSesionNoSeCambiaLaDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
 
 Rutas de las clases de test:
 - `SellerProductsPage.test.jsx`: `frontend/src/pages/` (Vitest, RTL y MSW)
 - `ProductDetailDialog.test.jsx`: `frontend/src/features/seller/` (Vitest, RTL y MSW)
+- `GestionProductosServiceTest` y `SeguridadProductosServiceTest`: `backend/src/test/java/es/uclm/esibuy/backend/productos/application/service/`
 
 ---
 
@@ -2641,6 +2751,7 @@ Tests que no validan una HU concreta.
 | `UsuariosConfigTest` | `elContextoConectaLasPiezasDelLogin` | Que Spring conecta el login con sus adaptadores de códigos (MongoDB), generador (`SecureRandom`) y correo (SMTP) (AB#230, PR #67) |
 | `UsuariosConfigTest` | `elContextoConectaLasPiezasDelAuthenticator` | Que Spring conecta el paso 3 (`AuthenticatorService`) con la librería TOTP, el cifrado AES-GCM y el adaptador de `factores_autenticacion` (AB#20, PR #75) |
 | `UsuariosConfigTest` | `elContextoRegistraElFiltroDeCuentaActiva` | Que Spring registra `CuentaActivaFilter`, el filtro que invalida la sesión de las cuentas desactivadas (HU23; AB#39, AB#206, PR #85) |
+| `UsuariosConfigTest` | `elContextoConectaLasPiezasDeLaRecuperacionDeContrasena` | Que Spring conecta la recuperación de contraseña (`RecuperacionContrasenaService`) con su adaptador de códigos en MongoDB (HU3; AB#400, PR sin abrir) |
 | `MetodosPagoConfigTest` | `elContextoConectaLasPiezasDeLosMetodosDePago` | Que Spring conecta el servicio de métodos de pago con su adaptador de MongoDB, su cifrado AES-GCM y el cliente en sesión (HU6; AB#271, PR #148) |
 | `MetodosPagoConfigTest` | `losDatosDePagoSeCifranConLaClaveConfigurada` | Que los datos de pago se cifran con la clave de `esibuy.pagos.clave-cifrado`, que en los tests pone `MongoTestcontainersConfig` (HU6; AB#271, PR #148) |
 | `CarritoConfigTest` | `elContextoConectaLasPiezasDelCarrito` | Que Spring conecta el servicio del carrito con su adaptador de MongoDB, los productos y los usuarios (HU9; AB#385, PR #162) |
