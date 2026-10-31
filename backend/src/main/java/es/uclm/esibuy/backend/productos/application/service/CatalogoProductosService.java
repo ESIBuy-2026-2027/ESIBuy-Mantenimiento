@@ -7,6 +7,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.ProductoComercial;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.application.port.out.VendedorPort;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
@@ -50,7 +51,9 @@ public class CatalogoProductosService implements CatalogoProductosUseCase {
     @Override
     public DetalleProductoCatalogo consultarDetalle(String productoId, String emailCliente) {
         boolean premium = usuarioEnSesion.esClientePremium(emailCliente);
-        Producto producto = productoRepository.buscarPorId(productoId).orElseThrow();
+        Producto producto = productoRepository.buscarPorId(productoId)
+        .filter(Producto::isDisponible)
+        .orElseThrow(ProductoNoEncontradoException::new);
         Descuento descuento = producto.descuentoAplicado(premium);
         return new DetalleProductoCatalogo(producto.getId(), producto.getNombre(), producto.getDescripcion(),
                 producto.getImagen(), producto.getCategoriaId(), producto.getVendedorId(),
