@@ -8,6 +8,8 @@ import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
+import org.springframework.security.access.prepost.PreAuthorize;
+import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 
 public class GestionProductosService implements GestionProductosUseCase {
 
@@ -19,6 +21,7 @@ public class GestionProductosService implements GestionProductosUseCase {
         this.usuarioEnSesion = usuarioEnSesion;
     }
 
+    @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO_EN_COMANDO)
     @Override
     public Producto crear(CrearProductoCommand comando) {
         String vendedorId = usuarioEnSesion.idPorCorreo(comando.emailVendedor());
@@ -45,6 +48,7 @@ public class GestionProductosService implements GestionProductosUseCase {
         return productoRepository.guardar(producto);
     }
 
+    @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO)
     @Override
     public Producto consultarMiProducto(String emailVendedor, String productoId) {
         String vendedorId = usuarioEnSesion.idPorCorreo(emailVendedor);
@@ -54,6 +58,7 @@ public class GestionProductosService implements GestionProductosUseCase {
                 .orElseThrow(ProductoNoEncontradoException::new);
     }
 
+    @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO_EN_COMANDO)
     @Override
     public Producto modificarMiProducto(ModificarProductoCommand comando) {
         Producto actual = consultarMiProducto(comando.emailVendedor(), comando.productoId());
@@ -81,6 +86,7 @@ public class GestionProductosService implements GestionProductosUseCase {
         return productoRepository.guardar(modificado);
     }
 
+    @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO)
     @Override
     public void eliminarMiProducto(String emailVendedor, String productoId) {
         // Si el producto no existe o es de otro vendedor, consultarMiProducto lanza la excepción y no se borra nada.

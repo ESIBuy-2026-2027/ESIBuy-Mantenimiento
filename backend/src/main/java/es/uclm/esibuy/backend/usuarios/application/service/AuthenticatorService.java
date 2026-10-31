@@ -4,6 +4,8 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.OptionalLong;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import es.uclm.esibuy.backend.usuarios.application.port.in.AltaAuthenticator;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AuthenticatorUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.VerificarCodigoAuthenticatorCommand;
@@ -17,6 +19,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasExc
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
 import es.uclm.esibuy.backend.usuarios.domain.model.FactorAutenticacion;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
+import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 
 /**
  * Paso 3 del login con Microsoft Authenticator (HU2, T20): alta del secreto con QR y verificación del código.
@@ -52,6 +55,7 @@ public class AuthenticatorService implements AuthenticatorUseCase {
         this.reloj = reloj;
     }
 
+    @PreAuthorize(Permisos.PUBLICO)
     @Override
     public AltaAuthenticator prepararAlta(String email) {
         Usuario usuario = usuarioRepository.buscarPorCorreo(email)
@@ -72,6 +76,7 @@ public class AuthenticatorService implements AuthenticatorUseCase {
         return new AltaAuthenticator(totp.generarQr(email, secreto));
     }
 
+    @PreAuthorize(Permisos.PUBLICO)
     @Override
     public Usuario verificarCodigo(VerificarCodigoAuthenticatorCommand comando) {
         Usuario usuario = usuarioRepository.buscarPorCorreo(comando.email())

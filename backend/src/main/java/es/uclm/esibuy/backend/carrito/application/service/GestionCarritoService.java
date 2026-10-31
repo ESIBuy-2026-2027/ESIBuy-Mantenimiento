@@ -9,6 +9,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import es.uclm.esibuy.backend.carrito.application.port.in.CarritoDetallado;
 import es.uclm.esibuy.backend.carrito.application.port.in.GestionCarritoUseCase;
 import es.uclm.esibuy.backend.carrito.application.port.in.GrupoCarrito;
@@ -21,6 +23,7 @@ import es.uclm.esibuy.backend.carrito.application.port.out.VendedoresPort;
 import es.uclm.esibuy.backend.carrito.domain.exception.ProductoNoComprableException;
 import es.uclm.esibuy.backend.carrito.domain.model.Carrito;
 import es.uclm.esibuy.backend.carrito.domain.model.LineaCarrito;
+import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 
 /**
  * Implementa la gestión del carrito del cliente (HU9). Solo habla con el exterior a través de los puertos de
@@ -44,11 +47,13 @@ public class GestionCarritoService implements GestionCarritoUseCase {
         this.reloj = reloj;
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public CarritoDetallado consultar(String emailCliente) {
         return detallar(carritoDe(emailCliente), clienteEnSesion.esPremium(emailCliente));
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public CarritoDetallado anadir(String emailCliente, String productoId, int cantidad) {
         boolean premium = clienteEnSesion.esPremium(emailCliente);
@@ -58,6 +63,7 @@ public class GestionCarritoService implements GestionCarritoUseCase {
         return detallar(carritoRepository.guardar(carrito), premium);
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public CarritoDetallado fijarCantidad(String emailCliente, String productoId, int cantidad) {
         boolean premium = clienteEnSesion.esPremium(emailCliente);
@@ -67,6 +73,7 @@ public class GestionCarritoService implements GestionCarritoUseCase {
         return detallar(carritoRepository.guardar(carrito), premium);
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public CarritoDetallado quitar(String emailCliente, String productoId) {
         Carrito carrito = carritoDe(emailCliente);
@@ -74,6 +81,7 @@ public class GestionCarritoService implements GestionCarritoUseCase {
         return detallar(carritoRepository.guardar(carrito), clienteEnSesion.esPremium(emailCliente));
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public CarritoDetallado vaciar(String emailCliente) {
         Carrito carrito = carritoDe(emailCliente);

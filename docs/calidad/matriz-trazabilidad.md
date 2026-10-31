@@ -478,6 +478,7 @@ Los tests de integración de MongoDB (`UsuarioMongoAdapterTest`, `UsuariosConfig
 | HU2-CP26 | El contador de intentos fallidos se reinicia al completar el login y al caducar el bloqueo, no al acertar solo la contraseña | Unitario | 4 | ✅ Pasa |
 | HU2-CP27 | El campo de la contraseña del login tiene un botón para mostrarla y ocultarla | Frontend (página) | 1 | ✅ Pasa (1, AB#19, PR #105) |
 | HU2-CP28 | Una cuenta bloqueada por un administrador muestra su mensaje en el paso 1, antes del código del correo, y no avanza al 2FA | Frontend (página) + unitario + integración | 4 | ✅ Pasa (2, AB#246, PR #114) |
+| HU2-CP29 | El registro y los pasos del login se pueden usar sin sesión; consultar el usuario en sesión exige estar autenticado y que el correo sea el de la sesión; el id del usuario y el perfil son del cliente y del vendedor, y saber si es premium, solo del cliente; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 7 | 🔍 En revisión (7, rama `fix/seguridad-capa-negocio`) |
 
 Notas:
 - **HU2-CP25 y CP26 (fallos de la demo del Sprint 1):** el paso 1 busca el email normalizado (`Email`, T240) y responde «Credenciales inválidas» si está mal formado. El contador de intentos se reinicia al caducar el bloqueo (`Usuario.registrarIntentoFallido`) y al completar el tercer paso (`AuthenticatorService.verificarCodigo`), no al acertar la contraseña: así quien solo tenga la contraseña no puede probar códigos sin límite.
@@ -498,6 +499,7 @@ Notas:
 - **HU2-CP17 a CP24:** casos nuevos de la T20 (plan `docs/planes/task-20.md`). Pendientes de añadir a la descripción de la T20 en Azure Boards.
 - **HU2-CP28 (AB#245, Sprint 2):** las cuentas ya no se desactivan, se bloquean (decisión del equipo). El frontend deja de esperar `ACCOUNT_DISABLED` y espera `403` con `ACCOUNT_BLOCKED` (estado `BLOQUEADO`); solo cambia el login. El backend lo completa en la T246 (AB#246): el `403` de `CuentaDesactivadaException` responde `ACCOUNT_BLOCKED` y un test fija que la cuenta se rechaza sin generar ni enviar el código del correo. El test del controlador que esperaba `ACCOUNT_DISABLED` (antes en CP04) pasa a CP28. El estado `DESACTIVADO` y la excepción no se renombran todavía, así que CP04 sigue cubriendo el rechazo y la persistencia de ese estado.
 - **Frontend (T20):** los tests de `LoginFlow.test.jsx` no llevan el ID del caso en el nombre (estilo del archivo, anterior a la convención de la HU19); se trazan aquí por su nombre.
+- **HU2-CP29 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Cubre con `@PreAuthorize` los servicios `AutenticacionService`, `AuthenticatorService`, `RegistroUsuarioService` y `GestionPerfilService`, que sirven también a las HU1 y HU4; se traza aquí por ser `AutenticacionService` el centro del ciclo. Los pasos del login y el registro son `permitAll()` explícito: el correo del login a medias vive en la sesión HTTP y no en `authentication.name`, así que la propiedad no se puede comprobar con `@PreAuthorize` sin rediseñar el login. Clase de test nueva `usuarios/application/service/SeguridadSesionUsuarioServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -617,6 +619,13 @@ Notas:
 | HU2-CP28 | `LoginFlow.test.jsx` | `HU2-CP28: una cuenta bloqueada muestra su mensaje antes del código del correo y no avanza al 2FA` | Frontend · página | AB#245 | PR #108 | ✅ |
 | HU2-CP28 | `LoginFlow.test.jsx` | `HU2-CP28: el mensaje de cuenta bloqueada no es el de demasiados intentos ni el genérico` | Frontend · página | AB#245 | PR #108 | ✅ |
 | HU2-CP28 | `AutenticacionServiceTest` | `cuentaBloqueadaPorAdministradorNoRecibeCodigo` | Aplicación | AB#246 | PR #114 | ✅ |
+| HU2-CP29 | `SeguridadSesionUsuarioServiceTest` | `elRegistroYElLoginSonPublicos` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU2-CP29 | `SeguridadSesionUsuarioServiceTest` | `nadieConsultaConElCorreoDeOtro` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU2-CP29 | `SeguridadSesionUsuarioServiceTest` | `unAdministradorSoloConsultaSuUsuarioEnSesion` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU2-CP29 | `SeguridadSesionUsuarioServiceTest` | `unVendedorNoConsultaSiEsPremium` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU2-CP29 | `SeguridadSesionUsuarioServiceTest` | `unClienteConsultaLoSuyo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU2-CP29 | `SeguridadSesionUsuarioServiceTest` | `unAnonimoNoConsultaNada` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU2-CP29 | `SeguridadSesionUsuarioServiceTest` | `sinSesionSeRechazanLasConsultas` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AutenticacionServiceTest`: `usuarios/application/service/` (Mockito, con `Clock` fijo)
@@ -724,6 +733,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU5-CP26 | Eliminar una dirección tras confirmarlo; cancelar no elimina nada | Frontend (componente) | 2 | ✅ Pasa |
 | HU5-CP27 | Para eliminar la principal hay que elegir la sustituta, salvo si es la única; desde la página, la elegida pasa a ser la principal | Frontend (componente y página) | 3 | ✅ Pasa |
 | HU5-CP28 | Si la eliminación falla, se avisa sin cerrar el diálogo | Frontend (componente) | 1 | ✅ Pasa |
+| HU5-CP29 | La gestión de direcciones exige el rol cliente y que el correo recibido sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, rama `fix/seguridad-capa-negocio`) |
 
 Notas:
 - **HU5-CP01 a CP16 (backend):** casos propuestos y aprobados por el equipo junto con el diseño de la HU5 (tasks AB#105, AB#106 y AB#107). Los casos de prueba no se registran en Azure Boards: viven en esta matriz y en el `@DisplayName` de cada test. Los del frontend, HU5-CP17 a CP28, se aprobaron con el mismo diseño (tasks AB#108 y AB#109).
@@ -732,6 +742,7 @@ Notas:
 - **Colección nueva:** `direcciones_envio` (`ColeccionesEsiBuy`), acordada con el equipo.
 - **Vista del frontend (AB#108):** `/addresses`, solo para clientes. Detalle en `frontend/docs/hu5-direcciones-de-envio.md`.
 - **Archivos de tests nuevos**, acordados con el equipo: `addresses.test.js`, `AddressesPage.test.jsx`, `AddressFormPanel.test.jsx` y `DeleteAddressDialog.test.jsx`.
+- **HU5-CP29 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Comprueba con `@PreAuthorize` que `GestionDireccionesUseCase` exige el rol cliente y que el correo recibido es el de la sesión. Clase de test nueva `direcciones/application/service/SeguridadDireccionesServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -843,6 +854,11 @@ Notas:
 | HU5-CP27 | `DeleteAddressDialog.test.jsx` | `HU5-CP27: para eliminar la principal hay que elegir otra dirección como principal` | Frontend · componente | AB#109 | PR #163 | ✅ |
 | HU5-CP27 | `DeleteAddressDialog.test.jsx` | `HU5-CP27: la única dirección se elimina sin elegir sustituta` | Frontend · componente | AB#109 | PR #163 | ✅ |
 | HU5-CP28 | `DeleteAddressDialog.test.jsx` | `HU5-CP28: si la eliminación falla avisa y no cierra el diálogo` | Frontend · componente | AB#109 | PR #163 | ✅ |
+| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unVendedorNoUsaLasDirecciones` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unAdministradorNoUsaLasDirecciones` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unClienteNoOperaConElCorreoDeOtro` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unClienteOperaConSuPropioCorreo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU5-CP29 | `SeguridadDireccionesServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 
 ---
 
@@ -888,6 +904,7 @@ Notas:
 | HU6-CP34 | Eliminar un método tras confirmarlo; cancelar no elimina nada | Frontend (componente) | 2 | ✅ Pasa |
 | HU6-CP35 | Para eliminar el predeterminado hay que elegir el sustituto, salvo si es el único; desde la página, el elegido pasa a ser el predeterminado | Frontend (componente y página) | 3 | ✅ Pasa |
 | HU6-CP36 | Si la eliminación falla, se avisa sin cerrar el diálogo | Frontend (componente) | 1 | ✅ Pasa |
+| HU6-CP37 | La gestión de métodos de pago exige el rol cliente y que el correo recibido sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, rama `fix/seguridad-capa-negocio`) |
 
 Notas:
 - **HU6-CP01 a CP36:** casos propuestos y aprobados por el equipo durante el desarrollo de la HU6: el backend (CP01 a CP24, tasks 271, 110, 270 y 112) y la vista del frontend (CP25 a CP36, tasks 269, 113 y 114). Los casos de prueba no se registran en Azure Boards: viven en esta matriz y en el `@DisplayName` de cada test.
@@ -895,6 +912,7 @@ Notas:
 - **Endpoints (T110):** `GET`, `POST`, `PUT /{id}/default` y `DELETE /{id}?nuevoPredeterminado=` sobre `/api/customer/payment-methods`, solo para `CLIENTE` (`SecurityConfig`). El cliente sale de la sesión. La respuesta es `{id, tipo, mascara, predeterminado}`, nunca el bloque cifrado.
 - **Vista del frontend (T269 y T113):** `/payment-methods`, solo para clientes. Detalle en `frontend/docs/hu6-metodos-de-pago.md`.
 - **Pendiente:** confirmar con el equipo los códigos de error y sus mensajes en la vista. La clave de cifrado va en la variable de entorno `ESIBUY_PAGOS_CLAVE_CIFRADO`.
+- **HU6-CP37 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Comprueba con `@PreAuthorize` que `GestionMetodosPagoUseCase` exige el rol cliente y que el correo recibido es el de la sesión. Clase de test nueva `metodospago/application/service/SeguridadMetodosPagoServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1029,6 +1047,11 @@ Notas:
 | HU6-CP35 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP35: para eliminar el predeterminado hay que elegir otro método como predeterminado` | Frontend · componente | AB#269 | PR #151 | ✅ |
 | HU6-CP35 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP35: el único método se elimina sin elegir sustituto` | Frontend · componente | AB#269 | PR #151 | ✅ |
 | HU6-CP36 | `DeletePaymentMethodDialog.test.jsx` | `HU6-CP36: si la eliminación falla avisa y no cierra el diálogo` | Frontend · componente | AB#269 | PR #151 | ✅ |
+| HU6-CP37 | `SeguridadMetodosPagoServiceTest` | `unVendedorNoUsaLosMetodosDePago` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU6-CP37 | `SeguridadMetodosPagoServiceTest` | `unAdministradorNoUsaLosMetodosDePago` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU6-CP37 | `SeguridadMetodosPagoServiceTest` | `unClienteNoOperaConElCorreoDeOtro` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU6-CP37 | `SeguridadMetodosPagoServiceTest` | `unClienteOperaConSuPropioCorreo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU6-CP37 | `SeguridadMetodosPagoServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `NumeroTarjetaTest`, `CaducidadTarjetaTest`, `TitularTarjetaTest`, `UrlPayPalTest`, `TelefonoBizumTest`, `MetodoPagoTest` y `MetodosPagoClienteTest`: `metodospago/domain/model/` (solo JUnit)
@@ -1247,6 +1270,7 @@ Rutas de las clases de test (bajo `frontend/src/`):
 | HU9-CP17 | Persistencia en `carritos`: el mapper no pierde datos, se guarda y recupera por cliente conservando `createdAt`, un solo carrito por cliente y la colección rechaza una cantidad menor que 1 | Unitario + integración | 6 | 🔍 En revisión (6, AB#385 a AB#390, PR #162) |
 | HU9-CP18 | Limpieza del carrito (AB#390): al consultarlo se quitan los productos que ya no se pueden comprar o sin stock y se ajusta la cantidad al stock | Unitario | 4 | 🔍 En revisión (4, AB#385 a AB#390, PR #162) |
 | HU9-CP19 | El precio de cada línea lleva el descuento del cliente: el premium si es PREMIUM y está activo; si no, el general, redondeado a céntimos | Unitario | 9 | 🔍 En revisión (9, AB#385 a AB#390, PR #162) |
+| HU9-CP20 | El carrito exige el rol cliente y que el correo recibido sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, rama `fix/seguridad-capa-negocio`) |
 
 Notas:
 - **HU9-CP01 a CP09 (Sprint 2, frontend):** casos propuestos en las tasks AB#383 (vista añadir al carrito) y AB#384 (vista de carrito) a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu9-carrito-de-compra.md`). Pendientes de confirmar con el equipo y de añadir a la HU9 (AB#71) en Azure Boards.
@@ -1256,6 +1280,7 @@ Notas:
 - **Archivos de tests nuevos** creados sin consulta previa: `AddToCartButton.test.jsx` y `CartWidget.test.jsx`. `ProductCard.test.jsx`, `ProductsPage.test.jsx` y `ProductDetailPage.test.jsx` ganan casos HU9.
 - **Infraestructura de tests:** `test/cart.jsx` (`conCarrito`) pone un carrito de mentira alrededor de un componente y `test/setup.js` reinicia el carrito y los pedidos simulados tras cada test.
 - **Tests en clases que ya existían** (un archivo de tests por clase): `ProductoTest` y `CatalogoProductosServiceTest` (productos), y `AutenticacionServiceTest` y `AdministracionUsuariosServiceTest` (usuarios) ganan casos HU9, por los métodos nuevos que usa el carrito.
+- **HU9-CP20 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Comprueba con `@PreAuthorize` que `GestionCarritoUseCase` exige el rol cliente y que el correo recibido es el de la sesión. Clase de test nueva `carrito/application/service/SeguridadCarritoServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1358,6 +1383,11 @@ Notas:
 | HU9-CP19 | `ProductoTest` | `elClientePremiumPagaConElDescuentoPremium` | Dominio | AB#388 | PR #162 | 🔍 |
 | HU9-CP19 | `ProductoTest` | `sinDescuentoPremiumElPremiumPagaConElGeneral` | Dominio | AB#388 | PR #162 | 🔍 |
 | HU9-CP19 | `AutenticacionServiceTest` | `esClientePremiumDiceSiElClienteEsPremium` | Aplicación | AB#388 | PR #162 | 🔍 |
+| HU9-CP20 | `SeguridadCarritoServiceTest` | `unVendedorNoUsaElCarrito` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU9-CP20 | `SeguridadCarritoServiceTest` | `unAdministradorNoUsaElCarrito` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU9-CP20 | `SeguridadCarritoServiceTest` | `unClienteNoOperaConElCorreoDeOtro` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU9-CP20 | `SeguridadCarritoServiceTest` | `unClienteConsultaSuPropioCarrito` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU9-CP20 | `SeguridadCarritoServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `AddToCartButton.test.jsx` y `CartWidget.test.jsx`: `features/cart/` (Vitest, React Testing Library y MSW)
@@ -1401,6 +1431,7 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 | HU10-CP17 | Sin productos de ese proveedor en el carrito no se crea el pedido (409 `CART_EMPTY`) | Unitario + controlador | 3 | 🔍 En revisión (3, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP18 | Solo el cliente en sesión realiza pedidos: sin sesión 401, otro rol 403 y sin CSRF se rechaza | Unitario + controlador | 2 | 🔍 En revisión (2, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP19 | Persistencia en `pedidos`: el mapper no pierde datos, importes como Decimal128, número de pedido único y con formato validado por la colección | Unitario + integración | 5 | 🔍 En revisión (5, AB#380 a AB#382 y AB#131, PR #166) |
+| HU10-CP20 | Realizar un pedido exige el rol cliente y que el correo del comando sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, rama `fix/seguridad-capa-negocio`) |
 
 Notas:
 - **HU10-CP01 a CP06 (Sprint 2, frontend):** casos propuestos en la task AB#401 (vista de la pasarela de pago) a partir de lo pedido (`frontend/docs/hu10-pasarela-de-pago.md`). Pendientes de confirmar con el equipo y de añadir a la HU10 (AB#72) en Azure Boards. La task AB#379 (vista de carrito) es la misma pantalla que la AB#384 (HU9).
@@ -1413,6 +1444,7 @@ Notas:
 
 - **Backend (HU10-CP12 a CP19):** módulo `pedidos` (AB#380 entidad, AB#382 lógica, AB#381 y AB#130 endpoint, AB#131 número y stock, AB#132 tests), con `POST /api/customer/orders` y `{ vendedorId, direccionId, paymentMethodId }`. Casos propuestos y aprobados por el equipo junto con el diseño; pendientes de añadir a la HU10 (AB#72) en Azure Boards. Decisiones del equipo: la ruta va bajo `/api/customer/**`, el número `ESB-AAAA-NNNNNN` vuelve a empezar cada año, el pedido nace PAGADO y, sin transacciones, lo que falla a mitad se compensa reponiendo el stock.
 - **Tests en clases que ya existían** (un archivo de tests por clase): `ProductoMongoAdapterTest` (productos), `GestionMetodosPagoServiceTest` (métodos de pago), `GestionDireccionesServiceTest` (direcciones) e `InicializadorColeccionesTest` (colecciones) ganan casos HU10, por los métodos y la colección nuevos que usa el pedido.
+- **HU10-CP20 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Comprueba con `@PreAuthorize` que `RealizacionPedidoUseCase` exige el rol cliente y que el correo del comando es el de la sesión. Clase de test nueva `pedidos/application/service/SeguridadPedidosServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1496,6 +1528,11 @@ Notas:
 | HU10-CP19 | `PedidoMongoAdapterTest` | `guardarUnPedidoLeAsignaUnId` | Infraestructura | AB#380 | PR #166 | 🔍 |
 | HU10-CP19 | `PedidoMongoAdapterTest` | `dosPedidosNoPuedenTenerElMismoNumero` | Infraestructura | AB#380 | PR #166 | 🔍 |
 | HU10-CP19 | `InicializadorColeccionesTest` | `elNumeroDePedidoTieneFormatoYNoSeRepite` | Infraestructura | AB#380 | PR #166 | 🔍 |
+| HU10-CP20 | `SeguridadPedidosServiceTest` | `unVendedorNoRealizaPedidos` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU10-CP20 | `SeguridadPedidosServiceTest` | `unAdministradorNoRealizaPedidos` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU10-CP20 | `SeguridadPedidosServiceTest` | `unClienteNoPideConElCorreoDeOtro` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU10-CP20 | `SeguridadPedidosServiceTest` | `unClientePideConSuPropioCorreo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU10-CP20 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaElPedido` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 
 Ruta de la clase de test (bajo `frontend/src/`):
 - `CheckoutPage.test.jsx`: `pages/` (Vitest, React Testing Library y MSW)
@@ -1754,6 +1791,7 @@ Notas:
 | HU20-CP04 | Sin sesión (401) o sin ser administrador (403) no se ve la ficha | Integración (capa web) | 2 | ✅ Pasa |
 | HU20-CP05 | La ficha de un administrador trae su fecha de incorporación, que es su fecha de alta; la de un cliente no la trae | Integración (capa web) | 2 | ✅ Pasa |
 | HU20-CP06 | La ficha de un vendedor trae sus datos de vendedor (nombre comercial, categoría principal, DNI y teléfono) y no los de cliente | Integración (capa web) | 1 | ✅ Pasa |
+| HU20-CP07 | La administración de usuarios (consultar, editar, activar, desactivar, eliminar administradores, listar y crear administradores) exige el rol administrador y, al desactivar o eliminar, que el correo del administrador sea el de la sesión; el nombre comercial de un vendedor es del cliente (lo usa el carrito); sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 7 | 🔍 En revisión (7, rama `fix/seguridad-capa-negocio`) |
 
 Notas:
 - **HU20-CP01 a CP04:** casos propuestos en la T54 (AB#54) a partir del contrato del frontend (`frontend/docs/hu20-ficha-usuario.md`). Pendientes de confirmar con el equipo y de añadir a la HU20 en Azure Boards.
@@ -1761,6 +1799,7 @@ Notas:
 - **HU20-CP05 (AB#43):** caso propuesto en la T43. El contrato del frontend dice que la fecha de incorporación del administrador es su fecha de alta, automática y no editable (`Contexto_frontend.md`). La HU21 (PR #94) no añadió ningún campo nuevo, así que la ficha devuelve `fechaIncorporacion` con el mismo instante que `fechaAlta` (`createdAt` en MongoDB). Como el rol de una cuenta no cambia nunca (decisión del equipo, 11/10/2026), la fecha de alta de un administrador es siempre la de su incorporación. Pendiente de confirmar con el equipo y de añadir a Azure Boards. La `sede` del administrador sigue sin existir en el modelo: el equipo decide dejarla pendiente en este sprint.
 - **HU20-CP06 (AB#43):** caso propuesto en la edición del vendedor. Con el registro de vendedores (T241) el vendedor tiene `DatosVendedor`, y la ficha los devuelve (el DNI y el teléfono salen del perfil del cliente o del vendedor). Pendiente de confirmar con el equipo y de añadir a Azure Boards.
 - **Frontend:** los tests de la HU20 (AB#211) no tienen todavía filas en la matriz.
+- **HU20-CP07 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Cubre con `@PreAuthorize` los servicios `AdministracionUsuariosService`, `ListadoUsuariosService` y `CrearAdministradorService`, que sirven también a las HU19, HU21, HU22, HU23, HU24, HU26 y HU37; se traza aquí por ser la ficha de usuario (HU20) la operación base del puerto. Clase de test nueva `usuarios/application/service/SeguridadAdministracionUsuarioServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1776,6 +1815,13 @@ Notas:
 | HU20-CP05 | `UsuarioControllerTest` | `fichaDeUnAdministradorConSuFechaDeIncorporacion` | Infraestructura | AB#43 | PR #96 | ✅ |
 | HU20-CP05 | `UsuarioControllerTest` | `fichaDeUnClienteSinFechaDeIncorporacion` | Infraestructura | AB#43 | PR #96 | ✅ |
 | HU20-CP06 | `UsuarioControllerTest` | `fichaDeUnVendedorConSusDatosDeVendedor` | Infraestructura | AB#43 | PR #100 | ✅ |
+| HU20-CP07 | `SeguridadAdministracionUsuarioServiceTest` | `unClienteNoAdministraUsuarios` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU20-CP07 | `SeguridadAdministracionUsuarioServiceTest` | `unVendedorNoAdministraUsuarios` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU20-CP07 | `SeguridadAdministracionUsuarioServiceTest` | `unAdministradorNoOperaConElCorreoDeOtro` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU20-CP07 | `SeguridadAdministracionUsuarioServiceTest` | `unAdministradorUsaLasOperaciones` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU20-CP07 | `SeguridadAdministracionUsuarioServiceTest` | `unClienteConsultaElNombreComercial` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU20-CP07 | `SeguridadAdministracionUsuarioServiceTest` | `unAdministradorNoConsultaElNombreComercial` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU20-CP07 | `SeguridadAdministracionUsuarioServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
@@ -2043,6 +2089,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU31-CP25 | El nombre se guarda sin espacios en los extremos, así que con espacios cuenta como repetido también para el índice único | Unitario + integración MongoDB | 3 | ✅ Pasa |
 | HU31-CP26 | La categoría se elige en un desplegable con búsqueda con las categorías actuales: se puede escribir para filtrar sin distinguir mayúsculas ni tildes, y en los filtros la primera opción es «Todas las categorías» | Frontend (componente y página) | 11 | ✅ Pasa (11, AB#256, PR #123) |
 | HU31-CP27 | Un nombre que el vendedor ya usa (409 `PRODUCT_NAME_ALREADY_EXISTS`) se marca en el campo Nombre con un mensaje propio al dar de alta, y el aviso desaparece al cambiar el nombre | Frontend (página) | 2 | ✅ Pasa (2, AB#257, PR #123) |
+| HU31-CP28 | Los casos de uso de productos exigen su rol (vendedor, administrador o cliente según el caso de uso) y, los del vendedor, que el correo recibido sea el de la sesión; sin sesión se rechazan. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 9 | 🔍 En revisión (9, rama `fix/seguridad-capa-negocio`) |
 
 Notas:
 - **HU31-CP01 a CP10:** casos propuestos en la T201 (AB#201) a partir del contrato del formulario de producto del frontend (`frontend/docs/hu31-formulario-producto.md`). Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards.
@@ -2062,6 +2109,7 @@ Notas:
 - **Estado:** los tests de AB#179, AB#180, AB#204 y AB#205 están en `develop` (PR #99).
 - **Frontend:** los tests de la HU31 (AB#182) no tienen todavía filas en la matriz.
 - **HU31-CP26 y CP27 (revisión del Sprint 1, R5 y R6):** casos propuestos en las T256 (AB#256) y T257 (AB#257). Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards. El desplegable es el componente compartido `CategoryCombobox` y, por decisión del equipo, se usa en todas las vistas que eligen una categoría: formulario de producto, registro de vendedor, edición de un vendedor por el administrador y filtros de los listados. Los tests de esas otras pantallas (`Register.test.jsx`, `ProfileEditor.test.jsx`, `EditableProfile.test.jsx`, `UserEditDialog.test.jsx`, `SellerProductsPage.test.jsx` y `AdminSellersPage.test.jsx`) solo se adaptan para elegir la categoría en el desplegable; no llevan ID de caso y no tienen filas en la Tabla B. `ProfileEditor.test.jsx` añade además `profileEditor_deUnVendedor_laCategoriaPrincipalSeEligeEnUnDesplegableConLasCategorias`, que por decisión del equipo tampoco lleva ID de caso. El 409 ya lo devolvía el backend (CP22); el mock del frontend lo devuelve ahora igual. Al editar, el mismo mensaje en el campo Nombre lo comprueba HU34-CP18 (decisión del equipo al resolver el conflicto con el PR #122: un único mensaje, junto al campo, en alta y en edición).
+- **HU31-CP28 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Comprueba con `@PreAuthorize` que cada caso de uso de productos exige su rol (gestión y listado: vendedor con su propio correo; supervisión y conteo por categoría: administrador; catálogo y existencias: cliente). Clase de test nueva `productos/application/service/SeguridadProductosServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -2123,6 +2171,15 @@ Notas:
 | HU31-CP26 | `SellerProductFormPage.test.jsx` | `HU31-CP26: se puede escribir para buscar la categoría y se envía su identificador` | Frontend · página | AB#256 | PR #123 | ✅ |
 | HU31-CP27 | `SellerProductFormPage.test.jsx` | `HU31-CP27: un nombre que el vendedor ya usa se marca en el campo Nombre con un mensaje propio` | Frontend · página | AB#257 | PR #123 | ✅ |
 | HU31-CP27 | `SellerProductFormPage.test.jsx` | `HU31-CP27: al cambiar el nombre desaparece el aviso de nombre repetido` | Frontend · página | AB#257 | PR #123 | ✅ |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `unClienteNoUsaLosCasosDeUsoDelVendedor` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `unAdministradorNoUsaLosCasosDeUsoDelVendedor` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `unVendedorNoOperaConElCorreoDeOtro` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `unVendedorOperaConSuPropioCorreo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `soloElAdministradorSupervisa` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `elAdministradorCuentaLosProductos` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `unVendedorNoUsaElCatalogoNiLasExistencias` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `unClienteUsaElCatalogo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU31-CP28 | `SeguridadProductosServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `ProductoTest` y `DescuentoTest`: `productos/domain/model/` (JUnit, sin Spring)
@@ -2419,12 +2476,14 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU39-CP02 | El número de productos se cuenta por categoría en el módulo de productos (una sola agregación); una categoría sin productos tiene 0 | Unitario + integración MongoDB | 5 | ✅ Pasa |
 | HU39-CP03 | El administrador también ve las categorías `INACTIVA` | Unitario | 1 | ✅ Pasa |
 | HU39-CP04 | Sin rol de administrador el listado devuelve 403 (cliente y vendedor), y 401 sin sesión | Controlador | 2 | ✅ Pasa |
+| HU39-CP05 | El listado público de categorías (`GET /api/categorias`) solo devuelve las activas | Unitario | 1 | 🔍 En revisión (1, rama `fix/seguridad-capa-negocio`) |
 
 Notas:
 - **HU39-CP01 a CP03:** casos propuestos en la T332 (AB#332), a partir del criterio de aceptación «listado con nombre, descripción, estado y número de productos asociados». **HU39-CP04:** propuesto en la T331 (AB#331), a partir del criterio «cualquier llamada a la API sin rol de administrador devuelve 403». Pendientes de confirmar con el equipo y de añadir a la HU39 en Azure Boards.
 - **Endpoint (T331):** `GET /api/admin/categorias` → `[{id, nombre, descripcion, estado, numeroProductos}]`, sin paginar y ordenado por nombre, con `estado` como texto (`ACTIVA` / `INACTIVA`). Lo atiende `AdministracionCategoriasController`; el 401 y el 403 los da la regla `/api/admin/**` de `SecurityConfig`. Es el contrato de la vista del frontend (T330).
 - **Backend (T332):** `AdministracionCategoriasUseCase.listarConProductos()` devuelve `CategoriaConProductos`. Categorías pide el recuento a productos con `ProductosPorCategoriaPort` → `ProductosPorCategoriaAdapter` → `ConteoProductosUseCase` (puerto de entrada de productos). El recuento incluye todos los productos de la categoría, también los no disponibles. `GET /api/categorias` no cambia.
 - **Pendiente:** la vista del frontend (T330); el nombre único sin distinguir mayúsculas (T323).
+- **HU39-CP05 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Tapa un hueco de seguridad: el listado público de categorías devolvía también las inactivas, que solo debe ver el administrador (HU39-CP03). Se trazó al revisar la rama, porque el test ya estaba en el código.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -2440,6 +2499,7 @@ Notas:
 | HU39-CP03 | `AdministracionCategoriasServiceTest` | `incluyeLasCategoriasInactivas` | Aplicación | AB#332 | PR #134 | ✅ |
 | HU39-CP04 | `AdministracionCategoriasControllerTest` | `otroRolRecibe403` (cliente y vendedor) | Infraestructura | AB#331 | PR #135 | ✅ |
 | HU39-CP04 | `AdministracionCategoriasControllerTest` | `sinSesionRecibe401` | Infraestructura | AB#331 | PR #135 | ✅ |
+| HU39-CP05 | `ConsultaCategoriasServiceTest` | `listarSoloDevuelveLasActivas` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionCategoriasControllerTest`: `categorias/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
@@ -2464,6 +2524,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU40-CP06 | No se puede crear una categoría con un nombre que ya existe, sin distinguir mayúsculas ni tildes; el nombre se compara completo y literal, y la base de datos lo impide aunque se salte la comprobación previa (409) | Unitario + integración MongoDB + controlador | 5 | ✅ Pasa |
 | HU40-CP07 | Crear sin nombre, sin estado, con un estado desconocido o incumpliendo una regla del dominio devuelve 400 | Controlador | 2 | ✅ Pasa |
 | HU40-CP08 | Sin rol de administrador no se pueden crear categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | ✅ Pasa |
+| HU40-CP09 | El listado público de categorías se puede usar sin sesión; administrarlas (listar con su número de productos y crear) exige el rol administrador; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 6 | 🔍 En revisión (6, rama `fix/seguridad-capa-negocio`) |
 
 Notas:
 - **HU40-CP01 a CP04:** casos propuestos en la T321 (AB#321), sin contrato del frontend todavía. **HU40-CP05 y CP06:** propuestos en la T323 (AB#323), a partir de los criterios «la categoría no puede estar repetida» y «se debe poder elegir si activar o desactivar la categoría en la creación». **HU40-CP07 y CP08:** propuestos en la T322 (AB#322). Pendientes de confirmar con el equipo y de añadir a la HU40 en Azure Boards.
@@ -2471,6 +2532,7 @@ Notas:
 - **Backend (T323):** `AdministracionCategoriasUseCase.crear(CrearCategoriaCommand)`. El nombre único no distingue mayúsculas ni tildes (decisión del equipo, 27/10/2026): comprobación previa (`existePorNombre`) y un índice único nuevo, `nombre_sin_mayusculas` (collation `es` de nivel 1), que se crea junto al anterior para no chocar con él en Atlas. Errores: `CategoriaInvalidaException` → 400 `VALIDATION_ERROR`; `CategoriaDuplicadaException` → 409 `CATEGORY_NAME_ALREADY_EXISTS`.
 - **Backend (T321):** entidad `Categoria` (`id`, `nombre`, `descripcion`, `estado`), `EstadoCategoria` (`ACTIVA`, `INACTIVA`), `CategoriaInvalidaException` y `CategoriaDocumentMapper`. El validador de la colección `categorias` aplica los mismos límites. `GET /api/categorias` no cambia (sigue devolviendo `id` y `nombre`).
 - **Pendiente:** la vista (T320). Si una categoría `INACTIVA` debe dejar de verse para clientes y vendedores en `GET /api/categorias` (criterio «si la categoría se crea activada, debe ser visible para clientes y vendedores») queda pendiente de revisar con el equipo.
+- **HU40-CP09 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Cubre con `@PreAuthorize` los servicios `AdministracionCategoriasService` y `ConsultaCategoriasService`, que sirven también a las HU39 y HU40. Clase de test nueva `categorias/application/service/SeguridadCategoriasServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -2498,6 +2560,12 @@ Notas:
 | HU40-CP07 | `AdministracionCategoriasControllerTest` | `crearConUnaReglaDelDominioIncumplidaDevuelve400` | Infraestructura | AB#322 | PR #138 | ✅ |
 | HU40-CP08 | `AdministracionCategoriasControllerTest` | `crearConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#322 | PR #138 | ✅ |
 | HU40-CP08 | `AdministracionCategoriasControllerTest` | `crearSinSesionDevuelve401` | Infraestructura | AB#322 | PR #138 | ✅ |
+| HU40-CP09 | `SeguridadCategoriasServiceTest` | `elListadoPublicoNoNecesitaSesion` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU40-CP09 | `SeguridadCategoriasServiceTest` | `unClienteNoAdministraCategorias` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU40-CP09 | `SeguridadCategoriasServiceTest` | `unVendedorNoAdministraCategorias` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU40-CP09 | `SeguridadCategoriasServiceTest` | `unAnonimoNoAdministraCategorias` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU40-CP09 | `SeguridadCategoriasServiceTest` | `unAdministradorAdministraCategorias` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU40-CP09 | `SeguridadCategoriasServiceTest` | `sinSesionSeRechazaLaAdministracion` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionCategoriasControllerTest`: `categorias/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)

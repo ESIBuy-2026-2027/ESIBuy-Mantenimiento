@@ -1,0 +1,134 @@
+package es.uclm.esibuy.backend.categorias.application.service;
+
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verifyNoInteractions;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+
+import es.uclm.esibuy.backend.categorias.application.port.in.AdministracionCategoriasUseCase;
+import es.uclm.esibuy.backend.categorias.application.port.in.ConsultaCategoriasUseCase;
+import es.uclm.esibuy.backend.categorias.application.port.in.CrearCategoriaCommand;
+import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
+import es.uclm.esibuy.backend.categorias.application.port.out.ProductosPorCategoriaPort;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaInvalidaException;
+
+// Seguridad en la capa de negocio (R8): consultar las categorías es público (lo usan el registro del vendedor y
+// el desplegable de producto, sin sesión); administrarlas exige el rol ADMINISTRADOR. Las anotaciones solo se
+// evalúan con Spring, así que se usa un contexto mínimo (sin MongoDB) con los servicios reales y dobles de
+// prueba de los puertos de salida.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU40-CP09, propuesto.
+@SpringJUnitConfig(SeguridadCategoriasServiceTest.Configuracion.class)
+class SeguridadCategoriasServiceTest {
+
+    // Sin datos: el dominio la rechaza por inválida, lo que demuestra que la seguridad ha dejado pasar la llamada
+    private static final CrearCategoriaCommand CREACION = new CrearCategoriaCommand(null, null, null);
+
+    @Configuration
+    @EnableMethodSecurity
+    static class Configuracion {
+        @Bean
+        CategoriaRepositoryPort categoriaRepository() {
+            return mock(CategoriaRepositoryPort.class);
+        }
+
+        @Bean
+        ProductosPorCategoriaPort productosPorCategoria() {
+            return mock(ProductosPorCategoriaPort.class);
+        }
+
+        @Bean
+        ConsultaCategoriasUseCase consultaCategorias(CategoriaRepositoryPort repositorio) {
+            return new ConsultaCategoriasService(repositorio);
+        }
+
+        @Bean
+        AdministracionCategoriasUseCase administracionCategorias(CategoriaRepositoryPort repositorio,
+                ProductosPorCategoriaPort productos) {
+            return new AdministracionCategoriasService(repositorio, productos);
+        }
+    }
+
+    @Autowired
+    private CategoriaRepositoryPort categoriaRepository;
+    @Autowired
+    private ProductosPorCategoriaPort productosPorCategoria;
+    @Autowired
+    private ConsultaCategoriasUseCase consultaCategorias;
+    @Autowired
+    private AdministracionCategoriasUseCase administracionCategorias;
+
+    @BeforeEach
+    void limpiarDobles() {
+        reset(categoriaRepository, productosPorCategoria);
+    }
+
+    private void comprobarQueRechazaLaAdministracion() {
+        assertAll(
+                () -> assertThrows(AccessDeniedException.class, () -> administracionCategorias.listarConProductos()),
+                () -> assertThrows(AccessDeniedException.class, () -> administracionCategorias.crear(CREACION)));
+        verifyNoInteractions(categoriaRepository, productosPorCategoria);
+    }
+
+    @Test
+    @WithAnonymousUser
+    @DisplayName("HU40-CP09: el listado público de categorías se puede usar sin sesión")
+    void elListadoPublicoNoNecesitaSesion() {
+        assertDoesNotThrow(() -> consultaCategorias.listar());
+    }
+
+    @Test
+    @WithMockUser(username = "cliente@esibuy.test", roles = "CLIENTE")
+    @DisplayName("HU40-CP09: un cliente no puede administrar las categorías")
+    void unClienteNoAdministraCategorias() {
+        comprobarQueRechazaLaAdministracion();
+    }
+
+    @Test
+    @WithMockUser(username = "vendedor@esibuy.test", roles = "VENDEDOR")
+    @DisplayName("HU40-CP09: un vendedor no puede administrar las categorías")
+    void unVendedorNoAdministraCategorias() {
+        comprobarQueRechazaLaAdministracion();
+    }
+
+    @Test
+    @WithAnonymousUser
+    @DisplayName("HU40-CP09: un usuario anónimo no puede administrar las categorías")
+    void unAnonimoNoAdministraCategorias() {
+        comprobarQueRechazaLaAdministracion();
+    }
+
+    @Test
+    @WithMockUser(username = "admin@esibuy.test", roles = "ADMINISTRADOR")
+    @DisplayName("HU40-CP09: un administrador sí administra las categorías (los datos inválidos los rechaza el dominio)")
+    void unAdministradorAdministraCategorias() {
+        assertAll(
+                () -> assertDoesNotThrow(() -> administracionCategorias.listarConProductos()),
+                () -> assertThrows(CategoriaInvalidaException.class, () -> administracionCategorias.crear(CREACION)));
+    }
+
+    @Test
+    @DisplayName("HU40-CP09: sin sesión se rechaza la administración de categorías")
+    void sinSesionSeRechazaLaAdministracion() {
+        assertAll(
+                () -> assertThrows(AuthenticationCredentialsNotFoundException.class,
+                        () -> administracionCategorias.listarConProductos()),
+                () -> assertThrows(AuthenticationCredentialsNotFoundException.class,
+                        () -> administracionCategorias.crear(CREACION)));
+        verifyNoInteractions(categoriaRepository, productosPorCategoria);
+    }
+}

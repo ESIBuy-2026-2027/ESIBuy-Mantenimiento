@@ -88,11 +88,21 @@ Los módulos concretos que existan más allá de los ejemplos (`usuarios`, `cata
 Las dependencias apuntan **siempre hacia el interior del hexágono**:
 
 - `domain` no depende de ninguna otra capa ni de ningún framework: **Java puro**, sin anotaciones de Spring, Spring Data ni MongoDB.
-- `application` depende únicamente de `domain`. Define los puertos y orquesta los casos de uso. La **única anotación de Spring permitida es `@Service`**.
+- `application` depende únicamente de `domain`. Define los puertos y orquesta los casos de uso. Las **únicas anotaciones de Spring permitidas son `@Service` y la anotación de seguridad de método `@PreAuthorize`** (ver «Seguridad en la capa de negocio»); para esta última puede depender de `spring-security-core` y de las constantes de `shared.seguridad`, y de nada más de Spring.
 - `infrastructure` depende de `application` y de `domain`. Es la **única capa** que conoce Spring Web, Spring Security, MongoDB y cualquier servicio externo.
 - Ninguna clase de `domain` o `application` puede importar nada de `infrastructure`.
 - No exponer entidades de dominio ni documentos de MongoDB directamente en la API: usar DTOs en el borde y mapear en los adaptadores.
-- La seguridad (RBAC, 2FA/3FA, sesión) se aplica en el borde (configuración de Spring Security en `shared` / adaptadores de entrada); las reglas de negocio que dependan del rol (p. ej. valorar solo si se ha comprado) viven en el dominio/aplicación.
+- La seguridad se aplica en **dos niveles** (defensa en profundidad): en el borde (configuración de Spring Security en `shared`: rutas, sesión, CSRF, 2FA/3FA) y en la **capa de negocio** (`@PreAuthorize` en los servicios de aplicación, ver «Seguridad en la capa de negocio»). Las reglas de negocio que dependan del rol (p. ej. valorar solo si se ha comprado) viven en el dominio/aplicación.
+
+### Seguridad en la capa de negocio
+
+Decisión del equipo (revisión del Sprint 1, R8): las reglas de acceso se cumplen aunque se invoque directamente un caso de uso, sin depender de la interfaz ni solo de la configuración de rutas.
+
+- **Rol:** cada método público de un servicio de aplicación que implementa un puerto de entrada lleva `@PreAuthorize` con el rol mínimo que necesita (RBAC con mínimo privilegio, **denegar por defecto**: ningún caso de uso sin anotar). Lo que es público (registro, inicio de sesión, consulta pública) se marca de forma explícita con `permitAll()`.
+- **Constantes:** las expresiones se toman de las constantes de `shared.seguridad` (no se escribe `hasRole('...')` a mano en cada servicio) y no duplican lo de `SecurityConfig`.
+- **Propiedad:** un vendedor solo opera sobre sus productos y pedidos, y un cliente solo sobre su carrito, pedidos, direcciones, métodos de pago y perfil. Si el caso de uso recibe la identidad del actor (el correo de la sesión), la expresión comprueba además que coincide con la sesión (`#email == authentication.name`). Un recurso ajeno se trata como inexistente (404 con el código de «no encontrado» del recurso), salvo en los pedidos, que responden 400 para no revelar que existe. El administrador solo **lee** los productos y pedidos de los vendedores, pero sí gestiona los datos de su cuenta (editar, activar y desactivar, eliminar).
+- **Error:** una invocación sin permiso acaba en **403** con un mensaje genérico y el código `ACCESS_DENIED`, igual en todos los módulos y sin detalles internos. Sin sesión sigue siendo 401. `@EnableMethodSecurity` y el tratamiento de `AccessDeniedException` y `AuthorizationDeniedException` viven en `shared`.
+- **Defensa en profundidad:** las reglas por ruta de `SecurityConfig` se mantienen como primera barrera. Los controladores no llevan `@PreAuthorize`: el rol se declara en el servicio.
 
 ### Responsabilidad de cada capa
 
@@ -133,6 +143,7 @@ Las dependencias apuntan **siempre hacia el interior del hexágono**:
 ### Pruebas por capa
 
 - Dominio y servicios de aplicación se prueban con JUnit **sin levantar el contexto de Spring**, sustituyendo los puertos de salida por dobles de prueba.
+- Las anotaciones `@PreAuthorize` de los servicios solo se evalúan con Spring: se prueban con un contexto mínimo (sin MongoDB), con `@EnableMethodSecurity` y `@WithMockUser`, y los mismos dobles de los puertos de salida. Cada módulo lleva al menos un caso que comprueba que el rol correcto pasa, que los demás reciben 403 y que sin sesión se rechaza.
 - Los adaptadores se prueban con **tests de integración**.
 
 ### Reglas al generar o modificar código
@@ -143,6 +154,7 @@ Las dependencias apuntan **siempre hacia el interior del hexágono**:
 4. Antes de crear un puerto de entrada nuevo, comprobar si el caso de uso encaja en uno existente del mismo actor y propósito.
 5. Toda dependencia externa nueva (base de datos, correo, servicios de terceros) se introduce mediante un puerto de salida y su adaptador.
 6. El código existente organizado por capas tradicionales (`controller`, `service`, `repository`, `model`) debe **reubicarse** en esta estructura, no ampliarse.
+7. Todo caso de uso nuevo lleva su `@PreAuthorize` desde el primer test (ver «Seguridad en la capa de negocio»): un método de servicio sin anotar es un defecto.
 
 ## Comandos
 
@@ -177,7 +189,7 @@ Usar siempre el wrapper de Maven:
 
 Autenticación y autorización con el patrón **RBAC**. Roles:
 
-- **Administrador**: gestiona usuarios, vendedores, categorías, incidencias y configuración general. Acceso en modo "solo lectura" a la información gestionada por vendedores. Módulo de gestión de usuarios exclusivo suyo: crear otros administradores, modificar, consultar, desactivar/activar y eliminar usuarios.
+- **Administrador**: gestiona usuarios, vendedores, categorías, incidencias y configuración general. Acceso en modo "solo lectura" a los **productos y pedidos** de los vendedores (HU26); los datos de la cuenta del vendedor sí los puede editar, activar, desactivar y eliminar. Módulo de gestión de usuarios exclusivo suyo: crear otros administradores, modificar, consultar, desactivar/activar y eliminar usuarios.
 - **Vendedor**: crea, modifica, consulta, activa/desactiva y elimina productos; gestiona precios, stock, disponibilidad, ofertas y pedidos de sus productos; consulta estadísticas básicas de ventas, valoraciones y stock.
 - **Cliente** (tipos **Premium** y **Estándar**): busca y filtra productos (categoría, precio, valoración, disponibilidad), consulta detalles, gestiona carrito, realiza pedidos, consulta historial, cancela pedidos cuando sea posible, sigue el estado del envío, gestiona direcciones y métodos de pago, guarda favoritos / listas de deseos y **valora productos solo si los ha comprado**.
 
@@ -191,7 +203,7 @@ Comunes a todos los usuarios: registro, inicio de sesión, gestión de perfil, d
 
 ## Seguridad
 
-- RBAC en todos los endpoints; aplicar mínimo privilegio.
+- RBAC en todos los endpoints **y en todos los casos de uso** (`@PreAuthorize` en los servicios); aplicar mínimo privilegio. Acceso sin permiso: 403 con el código `ACCESS_DENIED`.
 - Política de contraseñas segura; registro de usuario seguro; recuperación de contraseñas.
 - Contraseñas con hash robusto; **nunca** en texto plano.
 - Control y seguridad de sesión.
@@ -232,7 +244,7 @@ Comunes a todos los usuarios: registro, inicio de sesión, gestión de perfil, d
   - **Obligatorio**: `tipo/descripcion` (`feature/`, `chore/`…; ej. `chore/configuracion-ia`), sin segmento de área.
   - **Recomendado (buena práctica, no obligatorio)**: tras el tipo, indicar la historia de usuario y la task de Azure Boards: `tipo/USx-Tx-descripcion`. Ej.: `feature/US12-T45-alta-producto-service`.
   - **Recomendado (pendiente de acordar, no obligatorio)**: cada rama debería corresponder a una **task**, no a una historia de usuario completa.
-- Mensajes de commit: `tipo(area): descripción AB#<id>`, donde `<id>` es el ID real del work item de Azure Boards. **Nunca** dejes el placeholder literal `AB#ID`; si no conoces el ID, pregúntalo antes de commitear.
+- Mensajes de commit: `tipo(area): descripción AB#<id>`, donde `<id>` es el ID real del work item de Azure Boards. **Nunca** dejes el placeholder literal `AB#ID`; si no conoces el ID, pregúntalo antes de commitear. **Excepción acordada:** los cambios transversales de seguridad que no pertenecen a ninguna HU ni task (rama `fix/seguridad-capa-negocio`) se commitean sin `AB#`: `tipo(area): descripción`.
 - Antes de cada commit: `./mvnw test` en verde. Antes de cada PR: revisión de calidad (Sonar/SonarLint) y `npm run lint` si se toca el frontend.
 - CI: GitHub Actions (`.github/workflows/ci.yml`). En cada push y PR a `develop` o `main` ejecuta `mvn -B verify` en el backend (tests y umbral de cobertura del 60 %) y el lint y el build del frontend.
 

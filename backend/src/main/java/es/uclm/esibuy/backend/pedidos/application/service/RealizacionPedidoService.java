@@ -6,6 +6,8 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizarPedidoCommand;
 import es.uclm.esibuy.backend.pedidos.application.port.out.CarritoPort;
@@ -24,7 +26,7 @@ import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.LineaPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.NumeroPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.Pedido;
-
+import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 /**
  * Realiza el pedido de un proveedor (HU10). Solo habla con el exterior a través de los puertos de salida. Sin
  * transacciones (decisión del equipo): si algo falla después de descontar el stock, se repone lo descontado
@@ -54,6 +56,7 @@ public class RealizacionPedidoService implements RealizacionPedidoUseCase {
         this.reloj = reloj;
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO_EN_COMANDO)
     @Override
     public Pedido realizar(RealizarPedidoCommand comando) {
         String email = comando.emailCliente();

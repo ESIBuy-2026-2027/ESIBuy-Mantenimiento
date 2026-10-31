@@ -4,11 +4,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+
+import es.uclm.esibuy.backend.shared.error.ManejadorAccesoDenegado;
 
 /**
  * Configuración mínima de Spring Security.
@@ -30,12 +33,14 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
  * su rol.
  *
  * <p>La zona de vendedor ({@code /api/seller/**}) solo la usa el rol VENDEDOR (HU15, T57). El
- * administrador ve la información de los vendedores en solo lectura por su propia zona
- * ({@code /api/admin/sellers/...}, HU26). Que el vendedor esté activo lo comprueba el login.
+ * administrador supervisa los productos y pedidos de los vendedores en solo lectura por su propia zona
+ * ({@code /api/admin/sellers/...}, HU26); los datos de la cuenta del vendedor sí los gestiona él (HU22, HU23 y
+ * HU24). Que el vendedor esté activo lo comprueba el login.
  *
  * <p>La zona de cliente ({@code /api/customer/**}) solo la usa el rol CLIENTE: de momento, sus métodos de
  * pago (HU6) y sus direcciones de envío (HU5).
  */
+@EnableMethodSecurity 
 @Configuration
 public class SecurityConfig {
 
@@ -77,7 +82,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, RUTA_CATALOGO).hasRole(ROL_CLIENTE)
                         .anyRequest().authenticated())
                 .exceptionHandling(excepciones -> excepciones
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                        .accessDeniedHandler(new ManejadorAccesoDenegado()))
                 .logout(logout -> logout
                         .logoutUrl(RUTA_LOGOUT)
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
