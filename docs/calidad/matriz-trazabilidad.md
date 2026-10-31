@@ -2369,7 +2369,7 @@ Rutas de las clases de test:
 | HU35-CP02 | Un vendedor no puede eliminar un producto de otro vendedor ni uno inexistente (`ProductoNoEncontradoException`) y no se borra nada | Unitario | 2 | ✅ Pasa |
 | HU35-CP03 | Eliminar un producto lo borra de la colección `productos` (borrado físico) y deja los demás | Integración | 1 | ✅ Pasa |
 | HU35-CP04 | No se puede eliminar un producto que está o ha estado en algún pedido | — | 0 | ⏳ Pendiente (sin verificar hasta que exista el módulo de pedidos) |
-| HU35-CP05 | `DELETE /api/seller/products/{id}` devuelve 204 sin cuerpo; el vendedor sale de la sesión | Integración (capa web) | 1 | 🔍 En revisión |
+| HU35-CP05 | `DELETE /api/seller/products/{id}` devuelve 204 sin cuerpo; el vendedor sale de la sesión | Integración (capa web) | 1 | ✅ Pasa |
 | HU35-CP06 | Eliminar un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | ✅ Pasa |
 | HU35-CP07 | Sin sesión (401), sin ser vendedor (403) o sin token CSRF (403) no se elimina un producto | Integración (capa web) | 3 | ✅ Pasa |
 | HU35-CP08 | Cada fila del listado tiene un botón para eliminar el producto | Frontend (página) | 1 | ✅ Pasa |
