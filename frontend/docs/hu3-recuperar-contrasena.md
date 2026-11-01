@@ -83,3 +83,18 @@ Los casos siguen la numeración del backend (HU3-CP01 a CP17).
 | HU3-CP23 | Código incorrecto o caducado: aviso, y se puede volver a intentar o pedir otro código (2 tests) | `ForgotPasswordPage.test.jsx` |
 | HU3-CP24 | Contraseña rechazada por la política: mensaje en el campo; otro error: aviso genérico (2 tests) | `ForgotPasswordPage.test.jsx` |
 | HU3-CP25 | Se puede volver al login; con la sesión abierta lleva a su inicio (2 tests) | `ForgotPasswordPage.test.jsx` |
+
+---
+
+## 5. Prueba con el backend real (envío por Brevo)
+
+Los tests usan mocks. Para comprobar que el correo llega de verdad:
+
+1. Arrancar el backend desde `backend/`, con `MONGODB_URI` y `ESIBUY_PAGOS_CLAVE_CIFRADO` definidas: `./mvnw spring-boot:run`.
+2. Arrancar el frontend sin mocks desde `frontend/`. En PowerShell: `$env:VITE_USE_MOCKS='false'; npm run dev`.
+3. En `http://localhost:5173/login`, pulsar «¿Has olvidado tu contraseña?».
+4. Pedir el código para una cuenta **activa** con un correo que se pueda leer (mirar también en spam).
+5. Escribir el código y la contraseña nueva, y comprobar que se entra con ella (los tres pasos del login).
+6. Comprobar también:
+   - con un código incorrecto sale el aviso;
+   - con un email que no existe sale el mismo aviso y no llega ningún correo.
