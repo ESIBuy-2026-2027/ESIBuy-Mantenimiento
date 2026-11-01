@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.persistence;
 
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
+import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.Pedido;
 
 /** Adaptador de salida que implementa el repositorio de pedidos con Spring Data MongoDB. */
@@ -19,8 +20,9 @@ public class PedidoMongoAdapter implements PedidoRepositoryPort {
         return mapper.aDominio(repository.save(mapper.aDocumento(pedido)));
     }
 
-     @Override
+    @Override
     public boolean existePagadoConProducto(String clienteId, String productoId) {
-        throw new UnsupportedOperationException("Pendiente: consulta en MongoDB (ciclo 7)");
+        return repository.existsByClienteIdAndEstadoAndLineasProductoId(clienteId, EstadoPedido.PAGADO.name(),
+                productoId);
     }
 }
