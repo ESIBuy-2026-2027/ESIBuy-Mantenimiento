@@ -1,11 +1,14 @@
 package es.uclm.esibuy.backend.valoraciones.application.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import es.uclm.esibuy.backend.valoraciones.application.port.in.ValorarProductoCommand;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ComprasPort;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ValoracionRepositoryPort;
+import es.uclm.esibuy.backend.valoraciones.domain.exception.ProductoNoCompradoException;
 import es.uclm.esibuy.backend.valoraciones.domain.model.Valoracion;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -16,7 +19,7 @@ import org.junit.jupiter.api.Test;
 
 // Valoración de un producto por el cliente (HU13, T370). Sin Spring: los puertos de salida se sustituyen por
 // dobles de prueba (clases internas de este test).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU13-CP09, propuesto.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP09 y CP10, propuestos.
 class ValoracionProductosServiceTest {
 
     private static final String EMAIL = "cliente@esibuy.test";
@@ -49,6 +52,13 @@ class ValoracionProductosServiceTest {
         Valoracion valoracion = valorar("p-1", 5, null);
 
         assertEquals(new Valoracion("v-1", "p-1", "c-1", 5, ""), valoracion);
+    }
+
+    @Test
+    @DisplayName("HU13-CP10: el cliente no puede valorar un producto que no ha comprado y no se guarda nada")
+    void noPuedeValorarUnProductoQueNoHaComprado() {
+        assertThrows(ProductoNoCompradoException.class, () -> valorar("p-2", 4, "Me lo prestaron"));
+        assertTrue(valoraciones.guardadas.isEmpty());
     }
 
     // El correo de la sesión corresponde al cliente c-1
