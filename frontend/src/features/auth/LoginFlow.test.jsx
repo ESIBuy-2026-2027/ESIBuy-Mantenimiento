@@ -429,3 +429,15 @@ describe('Rutas protegidas y sesión', () => {
     expect(contrasena).toHaveAttribute('type', 'password')
   })
 })
+
+describe('Recuperación de contraseña (HU3)', () => {
+  it('HU3-CP18: el inicio de sesión tiene un enlace a la recuperación de contraseña', async () => {
+    const user = userEvent.setup()
+    renderApp('/login')
+
+    await user.click(await screen.findByRole('link', { name: /¿has olvidado tu contraseña\?/i }))
+
+    await esperarRuta('/forgot-password')
+    expect(await screen.findByRole('heading', { name: /recuperar contraseña/i })).toBeInTheDocument()
+  })
+})
