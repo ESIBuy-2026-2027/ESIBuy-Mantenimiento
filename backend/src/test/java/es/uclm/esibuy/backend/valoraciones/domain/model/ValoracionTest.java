@@ -7,13 +7,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionInvalidaException;
 
 // Entidad Valoracion (HU13, T369): la puntuación de 1 a 5 que un cliente da a un producto, con un comentario
 // opcional de hasta 500 caracteres. Java puro, sin Spring ni base de datos.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP01 a CP03, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP01 a CP04, propuestos.
 class ValoracionTest {
 
     @Test
@@ -76,5 +77,21 @@ class ValoracionTest {
         String quinientosUno = "a".repeat(501);
 
         assertThrows(ValoracionInvalidaException.class, () -> Valoracion.nueva("p-1", "u-1", 4, quinientosUno));
+    }
+
+    @ParameterizedTest(name = "productoId [{0}]")
+    @NullAndEmptySource
+    @ValueSource(strings = {"   "})
+    @DisplayName("HU13-CP04: rechaza una valoración sin producto")
+    void rechazaUnaValoracionSinProducto(String productoId) {
+        assertThrows(ValoracionInvalidaException.class, () -> Valoracion.nueva(productoId, "u-1", 4, ""));
+    }
+
+    @ParameterizedTest(name = "clienteId [{0}]")
+    @NullAndEmptySource
+    @ValueSource(strings = {"   "})
+    @DisplayName("HU13-CP04: rechaza una valoración sin cliente")
+    void rechazaUnaValoracionSinCliente(String clienteId) {
+        assertThrows(ValoracionInvalidaException.class, () -> Valoracion.nueva("p-1", clienteId, 4, ""));
     }
 }
