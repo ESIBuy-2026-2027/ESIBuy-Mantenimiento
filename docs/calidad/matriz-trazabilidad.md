@@ -654,13 +654,13 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU3-CP08 | El comando de restablecer no muestra la contraseña ni el código en su `toString` (logs) | Unitario (aplicación) | 1 | ✅ Pasa |
 | HU3-CP09 | El correo de recuperación lleva el código y su validez; si falla el envío, la excepción no revela el código | Unitario (infraestructura) | 2 | ✅ Pasa |
 | HU3-CP10 | Los códigos de recuperación se guardan en `tokens_seguridad` con `purpose` PASSWORD_RECOVERY, solo con su hash; uno nuevo sustituye al anterior y no se pisan con el código del login | Unitario + integración (Testcontainers) | 6 | ✅ Pasa |
-| HU3-CP11 | Si falla el envío del correo de recuperación, la solicitud termina igual: el fallo no revela que la cuenta existe | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#399, PR sin abrir) |
-| HU3-CP12 | `POST /api/auth/password-recovery` responde 204 sin sesión y pasa el email al caso de uso | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#399, PR sin abrir) |
-| HU3-CP13 | `POST /api/auth/password-recovery/confirm` con el código correcto responde 204 y pasa email, código y contraseña al caso de uso | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#399, PR sin abrir) |
-| HU3-CP14 | Restablecer con un código que no sirve responde 401 «Código incorrecto» | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#399, PR sin abrir) |
-| HU3-CP15 | Restablecer con una contraseña que no cumple la política responde 400 con el código del motivo (p. ej. `PASSWORD_WEAK`) | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#399, PR sin abrir) |
-| HU3-CP16 | Los dos endpoints rechazan un cuerpo incompleto (400) y una petición sin token anti-CSRF (403) sin llamar al caso de uso | Integración web (`@WebMvcTest`) | 4 | 🔍 En revisión (4, AB#399, PR sin abrir) |
-| HU3-CP17 | La petición de restablecer no muestra la contraseña ni el código en su `toString` (logs) | Unitario (infraestructura) | 1 | 🔍 En revisión (1, AB#399, PR sin abrir) |
+| HU3-CP11 | Si falla el envío del correo de recuperación, la solicitud termina igual: el fallo no revela que la cuenta existe | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU3-CP12 | `POST /api/auth/password-recovery` responde 204 sin sesión y pasa el email al caso de uso | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU3-CP13 | `POST /api/auth/password-recovery/confirm` con el código correcto responde 204 y pasa email, código y contraseña al caso de uso | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU3-CP14 | Restablecer con un código que no sirve responde 401 «Código incorrecto» | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU3-CP15 | Restablecer con una contraseña que no cumple la política responde 400 con el código del motivo (p. ej. `PASSWORD_WEAK`) | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU3-CP16 | Los dos endpoints rechazan un cuerpo incompleto (400) y una petición sin token anti-CSRF (403) sin llamar al caso de uso | Integración web (`@WebMvcTest`) | 4 | ✅ Pasa |
+| HU3-CP17 | La petición de restablecer no muestra la contraseña ni el código en su `toString` (logs) | Unitario (infraestructura) | 1 | ✅ Pasa |
 
 Notas:
 - **HU3-CP01 a CP10 (Sprint 2, backend, TDD):** casos propuestos en la T400 (AB#400, lógica de recuperación de contraseña) a partir de los criterios de aceptación de la HU3 (AB#65): «envío de enlace/código temporal y de un solo uso», «expiración del enlace tras un tiempo determinado» y «la contraseña nueva debe cumplir la política de seguridad». Pendientes de confirmar con el equipo y de añadir a la HU3 en Azure Boards.
@@ -694,16 +694,16 @@ Notas:
 | HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `unCodigoNuevoSustituyeAlAnterior` | Infraestructura | AB#400 | PR #172 | ✅ |
 | HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `guardarUnCodigoLeidoLoActualiza` | Infraestructura | AB#400 | PR #172 | ✅ |
 | HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `elCodigoDeRecuperacionYElDelLoginNoSePisan` | Infraestructura | AB#400 | PR #172 | ✅ |
-| HU3-CP11 | `RecuperacionContrasenaServiceTest` | `solicitarConFalloDelCorreoNoLoRevela` | Aplicación | AB#399 | Rama `feature/US3-T399-endpoint-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP12 | `RecuperacionContrasenaControllerTest` | `solicitarRespondeSinContenidoYPasaElEmail` | Infraestructura (web) | AB#399 | Rama `feature/US3-T399-endpoint-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP13 | `RecuperacionContrasenaControllerTest` | `restablecerRespondeSinContenidoYPasaElComando` | Infraestructura (web) | AB#399 | Rama `feature/US3-T399-endpoint-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP14 | `RecuperacionContrasenaControllerTest` | `restablecerConCodigoInvalidoRespondeUnauthorized` | Infraestructura (web) | AB#399 | Rama `feature/US3-T399-endpoint-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP15 | `RecuperacionContrasenaControllerTest` | `restablecerConContrasenaDebilRespondeBadRequestConSuCodigo` | Infraestructura (web) | AB#399 | Rama `feature/US3-T399-endpoint-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `solicitarSinEmailRespondeBadRequest` | Infraestructura (web) | AB#399 | Rama `feature/US3-T399-endpoint-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `solicitarSinCsrfRespondeForbidden` | Infraestructura (web) | AB#399 | Rama `feature/US3-T399-endpoint-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `restablecerConCamposVaciosRespondeBadRequest` | Infraestructura (web) | AB#399 | Rama `feature/US3-T399-endpoint-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `restablecerSinCsrfRespondeForbidden` | Infraestructura (web) | AB#399 | Rama `feature/US3-T399-endpoint-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP17 | `RestablecerContrasenaRequestTest` | `toStringNoMuestraLaContrasenaNiElCodigo` | Infraestructura (web) | AB#399 | Rama `feature/US3-T399-endpoint-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP11 | `RecuperacionContrasenaServiceTest` | `solicitarConFalloDelCorreoNoLoRevela` | Aplicación | AB#399 | PR #176 | ✅ |
+| HU3-CP12 | `RecuperacionContrasenaControllerTest` | `solicitarRespondeSinContenidoYPasaElEmail` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP13 | `RecuperacionContrasenaControllerTest` | `restablecerRespondeSinContenidoYPasaElComando` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP14 | `RecuperacionContrasenaControllerTest` | `restablecerConCodigoInvalidoRespondeUnauthorized` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP15 | `RecuperacionContrasenaControllerTest` | `restablecerConContrasenaDebilRespondeBadRequestConSuCodigo` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `solicitarSinEmailRespondeBadRequest` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `solicitarSinCsrfRespondeForbidden` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `restablecerConCamposVaciosRespondeBadRequest` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `restablecerSinCsrfRespondeForbidden` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP17 | `RestablecerContrasenaRequestTest` | `toStringNoMuestraLaContrasenaNiElCodigo` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `UsuarioTest`: `usuarios/domain/model/` (JUnit, sin Spring)
