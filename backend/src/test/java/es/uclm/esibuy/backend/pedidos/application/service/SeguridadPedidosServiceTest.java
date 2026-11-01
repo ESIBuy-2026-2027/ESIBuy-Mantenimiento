@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.pedidos.application.service;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
@@ -19,6 +20,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
+import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizarPedidoCommand;
 import es.uclm.esibuy.backend.pedidos.application.port.out.CarritoPort;
@@ -30,10 +32,10 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.MetodosPagoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
 
-// Seguridad en la capa de negocio (R8): realizar un pedido exige el rol CLIENTE y que el correo del comando sea
-// el de la sesión. Las anotaciones solo se evalúan con Spring, así que se usa un contexto mínimo (sin MongoDB)
-// con el servicio real y dobles de prueba de los puertos de salida.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU10-CP20, propuesto.
+// Seguridad en la capa de negocio (R8): realizar un pedido y consultar si se ha comprado un producto exigen el rol
+// CLIENTE y que el correo sea el de la sesión. Las anotaciones solo se evalúan con Spring, así que se usa un
+// contexto mínimo (sin MongoDB) con los servicios reales y dobles de prueba de los puertos de salida.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU10-CP20 y HU13-CP07, propuestos.
 @SpringJUnitConfig(SeguridadPedidosServiceTest.Configuracion.class)
 class SeguridadPedidosServiceTest {
 
@@ -85,6 +87,12 @@ class SeguridadPedidosServiceTest {
             return new RealizacionPedidoService(pedidoRepository, clienteEnSesion, carrito, metodosPago,
                     direcciones, existencias, contador, Clock.systemUTC());
         }
+
+        @Bean
+        ConsultaComprasUseCase consultaCompras(PedidoRepositoryPort pedidoRepository,
+                ClienteEnSesionPort clienteEnSesion) {
+            return new ConsultaComprasService(pedidoRepository, clienteEnSesion);
+        }
     }
 
     @Autowired
@@ -103,6 +111,8 @@ class SeguridadPedidosServiceTest {
     private ContadorPedidosPort contador;
     @Autowired
     private RealizacionPedidoUseCase realizacionPedido;
+    @Autowired
+    private ConsultaComprasUseCase consultaCompras;
 
     @BeforeEach
     void limpiarDobles() {
@@ -159,6 +169,45 @@ class SeguridadPedidosServiceTest {
         RealizarPedidoCommand pedido = pedidoDe(CLIENTE);
         assertThrows(AuthenticationCredentialsNotFoundException.class,
                 () -> realizacionPedido.realizar(pedido));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @WithMockUser(username = "vendedor@esibuy.test", roles = "VENDEDOR")
+    @DisplayName("HU13-CP07: un vendedor no puede consultar si se ha comprado un producto")
+    void unVendedorNoConsultaCompras() {
+        assertThrows(AccessDeniedException.class, () -> consultaCompras.haComprado("vendedor@esibuy.test", "p-1"));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @WithMockUser(username = "admin@esibuy.test", roles = "ADMINISTRADOR")
+    @DisplayName("HU13-CP07: un administrador no puede consultar si se ha comprado un producto")
+    void unAdministradorNoConsultaCompras() {
+        assertThrows(AccessDeniedException.class, () -> consultaCompras.haComprado("admin@esibuy.test", "p-1"));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU13-CP07: un cliente no puede consultar las compras de otro cliente y no se toca nada")
+    void unClienteNoConsultaLasComprasDeOtro() {
+        assertThrows(AccessDeniedException.class, () -> consultaCompras.haComprado(OTRO_CLIENTE, "p-1"));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU13-CP07: un cliente sí consulta sus propias compras")
+    void unClienteConsultaSusPropiasCompras() {
+        assertFalse(consultaCompras.haComprado(CLIENTE, "p-1"));
+    }
+
+    @Test
+    @DisplayName("HU13-CP07: sin sesión se rechaza consultar si se ha comprado un producto")
+    void sinSesionSeRechazaConsultarCompras() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> consultaCompras.haComprado(CLIENTE, "p-1"));
         comprobarQueNoSeTocaNada();
     }
 }
