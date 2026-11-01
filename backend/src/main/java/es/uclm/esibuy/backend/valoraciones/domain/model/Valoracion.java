@@ -13,14 +13,20 @@ public record Valoracion(String id, String productoId, String clienteId, int pun
 
     private static final int PUNTUACION_MINIMA = 1;
     private static final int PUNTUACION_MAXIMA = 5;
+    private static final int COMENTARIO_MAXIMO = 500;
 
-    public Valoracion {
-        if (puntuacion < PUNTUACION_MINIMA || puntuacion > PUNTUACION_MAXIMA) {
-            throw new ValoracionInvalidaException(
-                    "La puntuación debe estar entre " + PUNTUACION_MINIMA + " y " + PUNTUACION_MAXIMA);
-        }
-        comentario = comentario == null ? "" : comentario.strip();
+
+   public Valoracion {
+    if (puntuacion < PUNTUACION_MINIMA || puntuacion > PUNTUACION_MAXIMA) {
+        throw new ValoracionInvalidaException(
+                "La puntuación debe estar entre " + PUNTUACION_MINIMA + " y " + PUNTUACION_MAXIMA);
     }
+    comentario = comentario == null ? "" : comentario.strip();
+    if (comentario.length() > COMENTARIO_MAXIMO) {
+        throw new ValoracionInvalidaException(
+                "El comentario no puede superar " + COMENTARIO_MAXIMO + " caracteres");
+    }
+}
 
     /** Una valoración nueva: todavía sin id. */
     public static Valoracion nueva(String productoId, String clienteId, int puntuacion, String comentario) {
