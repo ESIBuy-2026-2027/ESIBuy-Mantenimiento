@@ -3,6 +3,8 @@ import { http, HttpResponse } from 'msw'
 const CLAVE_VALIDA = 'Mock-Clave-1!'
 const CODIGO_EMAIL = '654321'
 const CODIGO_AUTENTICADOR = '123456'
+// Código de recuperación de contraseña (HU3) que el mock da por bueno para cualquier cuenta
+const CODIGO_RECUPERACION = '112233'
 const MAX_INTENTOS_FALLIDOS = 5
 // Imagen de 1x1 píxel: en los mocks basta con una imagen PNG cualquiera para el QR del alta (T20)
 const QR_DE_PRUEBA = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg=='
@@ -103,6 +105,15 @@ export const authHandlers = [
   http.get('/api/auth/me', () =>
     estado.usuarioEnSesion ? HttpResponse.json(estado.usuarioEnSesion) : sinAutorizacion(),
   ),
+
+  // Como el backend (T399): pedir el código responde siempre 204, exista o no la cuenta
+  http.post('/api/auth/password-recovery', () => new HttpResponse(null, { status: 204 })),
+
+  http.post('/api/auth/password-recovery/confirm', async ({ request }) => {
+    const { email, code } = await request.json()
+    const existe = USUARIOS.some((usuario) => usuario.email === email)
+    return existe && code === CODIGO_RECUPERACION ? new HttpResponse(null, { status: 204 }) : sinAutorizacion()
+  }),
 
   http.post('/api/auth/logout', () => {
     estado = nuevoEstado()
