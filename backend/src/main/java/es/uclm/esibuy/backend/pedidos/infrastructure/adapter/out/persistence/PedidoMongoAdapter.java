@@ -18,4 +18,9 @@ public class PedidoMongoAdapter implements PedidoRepositoryPort {
     public Pedido guardar(Pedido pedido) {
         return mapper.aDominio(repository.save(mapper.aDocumento(pedido)));
     }
+
+     @Override
+    public boolean existePagadoConProducto(String clienteId, String productoId) {
+        throw new UnsupportedOperationException("Pendiente: consulta en MongoDB (ciclo 7)");
+    }
 }

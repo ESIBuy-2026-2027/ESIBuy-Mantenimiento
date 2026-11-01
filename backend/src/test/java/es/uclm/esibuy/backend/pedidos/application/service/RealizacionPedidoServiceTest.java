@@ -223,5 +223,10 @@ class RealizacionPedidoServiceTest {
             guardados.add(pedido);
             return pedido;
         }
+
+        @Override
+        public boolean existePagadoConProducto(String clienteId, String productoId) {
+            throw new UnsupportedOperationException("Realizar un pedido no consulta compras");
+        }
     }
 }
