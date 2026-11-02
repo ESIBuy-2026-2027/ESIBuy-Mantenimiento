@@ -7,6 +7,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -32,11 +33,14 @@ import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaInvalidaExcep
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
+import es.uclm.esibuy.backend.categorias.application.port.in.EditarCategoriaCommand;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 
-// Gestión de las categorías del administrador: listado (HU39, T331, GET /api/admin/categorias) y creación
-// (HU40, T322, POST /api/admin/categorias). El caso de uso es un doble de prueba; la seguridad es la real
-// (SecurityConfig) y los errores los traduce ManejadorGlobalErrores.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU39-CP01 y CP04 y HU40-CP05 a CP08, propuestos.
+// Gestión de las categorías del administrador: listado (HU39, T331, GET /api/admin/categorias), creación
+// (HU40, T322, POST /api/admin/categorias) y edición (HU41, T328, PUT /api/admin/categorias/{id}). El caso de
+// uso es un doble de prueba; la seguridad es la real (SecurityConfig) y los errores los traduce
+// ManejadorGlobalErrores.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU39-CP01 y CP04, HU40-CP05 a CP08 y HU41-CP10 a CP14, propuestos.
 @WebMvcTest(AdministracionCategoriasController.class)
 @Import(SecurityConfig.class)
 class AdministracionCategoriasControllerTest {
@@ -45,7 +49,10 @@ class AdministracionCategoriasControllerTest {
     private static final String CATEGORIA_VALIDA = """
             {"nombre": "Hogar", "descripcion": "Muebles y decoración", "estado": "INACTIVA"}
             """;
-
+    private static final String CATEGORIA_EDITADA = """
+            {"nombre": "Hogar y Jardín", "descripcion": "Muebles y plantas"}
+            """;
+    
     @Autowired
     private MockMvc mockMvc;
 
@@ -162,6 +169,89 @@ class AdministracionCategoriasControllerTest {
     @DisplayName("HU40-CP08: sin sesión no se pueden crear categorías (401)")
     void crearSinSesionDevuelve401() throws Exception {
         mockMvc.perform(crear(CATEGORIA_VALIDA))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(administracionCategorias);
+    }
+
+    // Edición de categorías (HU41, T328).
+
+    private static MockHttpServletRequestBuilder editar(String id, String cuerpo) {
+        return put(RUTA + "/" + id).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(cuerpo);
+    }
+
+    @Test
+    @DisplayName("HU41-CP10: un administrador edita una categoría y recibe la fila actualizada con su número de productos")
+    void unAdministradorEditaUnaCategoria() throws Exception {
+        when(administracionCategorias.editar(new EditarCategoriaCommand("c-9", "Hogar y Jardín", "Muebles y plantas")))
+                .thenReturn(new CategoriaConProductos(
+                        new Categoria("c-9", "Hogar y Jardín", "Muebles y plantas", EstadoCategoria.INACTIVA), 4));
+
+        mockMvc.perform(editar("c-9", CATEGORIA_EDITADA).with(user("admin").roles("ADMINISTRADOR")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("c-9"))
+                .andExpect(jsonPath("$.nombre").value("Hogar y Jardín"))
+                .andExpect(jsonPath("$.descripcion").value("Muebles y plantas"))
+                .andExpect(jsonPath("$.estado").value("INACTIVA"))
+                .andExpect(jsonPath("$.numeroProductos").value(4));
+    }
+
+    @Test
+    @DisplayName("HU41-CP11: editar una categoría con el nombre de otra devuelve 409")
+    void editarUnNombreRepetidoDevuelve409() throws Exception {
+        when(administracionCategorias.editar(any())).thenThrow(new CategoriaDuplicadaException());
+
+        mockMvc.perform(editar("c-9", CATEGORIA_EDITADA).with(user("admin").roles("ADMINISTRADOR")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CATEGORY_NAME_ALREADY_EXISTS"));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"{\"nombre\": \" \"}", "{\"descripcion\": \"Muebles\"}"})
+    @DisplayName("HU41-CP12: editar sin nombre devuelve 400")
+    void editarConDatosInvalidosDevuelve400(String cuerpo) throws Exception {
+        mockMvc.perform(editar("c-9", cuerpo).with(user("admin").roles("ADMINISTRADOR")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_FIELD"));
+
+        verifyNoInteractions(administracionCategorias);
+    }
+
+    @Test
+    @DisplayName("HU41-CP12: editar una categoría incumpliendo una regla del dominio devuelve 400")
+    void editarConUnaReglaDelDominioIncumplidaDevuelve400() throws Exception {
+        when(administracionCategorias.editar(any()))
+                .thenThrow(new CategoriaInvalidaException("El nombre no puede superar los 50 caracteres"));
+
+        mockMvc.perform(editar("c-9", CATEGORIA_EDITADA).with(user("admin").roles("ADMINISTRADOR")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    @DisplayName("HU41-CP13: editar una categoría que no existe devuelve 404")
+    void editarUnaCategoriaInexistenteDevuelve404() throws Exception {
+        when(administracionCategorias.editar(any())).thenThrow(new CategoriaNoEncontradaException());
+
+        mockMvc.perform(editar("c-9", CATEGORIA_EDITADA).with(user("admin").roles("ADMINISTRADOR")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CATEGORY_NOT_FOUND"));
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "VENDEDOR"})
+    @DisplayName("HU41-CP14: un usuario sin rol de administrador no puede editar categorías (403)")
+    void editarConOtroRolDevuelve403(String rol) throws Exception {
+        mockMvc.perform(editar("c-9", CATEGORIA_EDITADA).with(user("usuario").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(administracionCategorias);
+    }
+
+    @Test
+    @DisplayName("HU41-CP14: sin sesión no se pueden editar categorías (401)")
+    void editarSinSesionDevuelve401() throws Exception {
+        mockMvc.perform(editar("c-9", CATEGORIA_EDITADA))
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(administracionCategorias);

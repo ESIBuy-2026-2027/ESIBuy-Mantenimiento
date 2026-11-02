@@ -17,7 +17,8 @@ import es.uclm.esibuy.backend.shared.error.ManejadorAccesoDenegado;
  * Configuración mínima de Spring Security.
  *
  * <p>Por defecto se deniega todo (mínimo privilegio) y solo se abren el registro, los dos primeros
- * pasos del login (HU2, T230) y la consulta de las categorías, porque quien los usa todavía no tiene sesión. Sin sesión se responde
+ * pasos del login (HU2, T230), la recuperación de contraseña (HU3) y la consulta de las categorías, porque
+ * quien los usa todavía no tiene sesión. Sin sesión se responde
  * 401 («no sé quién eres»); con sesión pero sin permiso, 403.
  *
  * <p>CSRF: el token va en la cookie {@code XSRF-TOKEN}, que el frontend puede leer, y el frontend lo
@@ -48,6 +49,9 @@ public class SecurityConfig {
     private static final String RUTA_REGISTRO_VENDEDOR = "/api/auth/register/vendedor";
     private static final String RUTA_LOGIN = "/api/auth/login";
     private static final String RUTA_LOGOUT = "/api/auth/logout";
+    // Recuperación de contraseña (HU3): sin sesión, pero con token CSRF (no van en ignoringRequestMatchers)
+    private static final String RUTA_SOLICITAR_RECUPERACION = "/api/auth/password-recovery";
+    private static final String RUTA_RESTABLECER_CONTRASENA = "/api/auth/password-recovery/confirm";
     // Página de error interna de Spring Boot: abierta para que un 403 o un 500 no se conviertan en 401
     private static final String RUTA_ERROR = "/error";
     private static final String RUTA_CODIGO_EMAIL = "/api/auth/verify-email-code";
@@ -72,7 +76,8 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, RUTA_REGISTRO, RUTA_REGISTRO_VENDEDOR, RUTA_LOGIN, RUTA_CODIGO_EMAIL,
-                                RUTA_ALTA_AUTHENTICATOR, RUTA_CODIGO_AUTHENTICATOR).permitAll()
+                                RUTA_ALTA_AUTHENTICATOR, RUTA_CODIGO_AUTHENTICATOR,
+                                RUTA_SOLICITAR_RECUPERACION, RUTA_RESTABLECER_CONTRASENA).permitAll()
                         .requestMatchers(HttpMethod.GET, RUTA_CATEGORIAS).permitAll()
                         .requestMatchers(RUTA_ERROR).permitAll()
                         .requestMatchers(RUTAS_ADMINISTRACION).hasRole(ROL_ADMINISTRADOR)

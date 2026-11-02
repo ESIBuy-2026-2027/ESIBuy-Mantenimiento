@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.categorias.infrastructure.adapter.out.persistence;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Sort;
@@ -54,5 +55,19 @@ public class CategoriaMongoAdapter implements CategoriaRepositoryPort {
             // El índice único nombre_sin_mayusculas lo ha rechazado: dos altas simultáneas con el mismo nombre.
             throw new CategoriaDuplicadaException(duplicateKeyException);
         }
+    }
+
+    // Busca una categoría por su ID.
+    @Override
+    public Optional<Categoria> buscarPorId(String id) {
+        return repository.findById(id).map(mapper::aDominio);
+    }
+
+    // Igual que existePorNombre, pero sin contar la categoría con ese id.
+    @Override
+    public boolean existeOtraConNombre(String nombre, String idExcluido) {
+        Query consulta = new Query(Criteria.where("nombre").is(nombre.strip()).and("id").ne(idExcluido))
+                .collation(SIN_MAYUSCULAS_NI_TILDES);
+        return mongoTemplate.exists(consulta, CategoriaDocument.class);
     }
 }

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,11 +27,14 @@ import es.uclm.esibuy.backend.categorias.application.port.out.ProductosPorCatego
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaDuplicadaException;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
+import es.uclm.esibuy.backend.categorias.application.port.in.EditarCategoriaCommand;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaInvalidaException;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 
 // Listado de las categorías del administrador con su número de productos (HU39, T332). El repositorio y el
 // puerto hacia productos son dobles de prueba: se prueba el caso de uso sin MongoDB ni Spring. También prueba la
-// creación de categorías (HU40, T323).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU39-CP01 a CP03 y HU40-CP05 y CP06, propuestos.
+// creación de categorías (HU40, T323) y la edición (HU41, T329).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU39-CP01 a CP03, HU40-CP05 y CP06 y HU41-CP01 a CP05, propuestos.
 @ExtendWith(MockitoExtension.class)
 class AdministracionCategoriasServiceTest {
 
@@ -99,6 +103,69 @@ class AdministracionCategoriasServiceTest {
         CrearCategoriaCommand comando = new CrearCategoriaCommand("Hogar", "", EstadoCategoria.ACTIVA);
 
         assertThrows(CategoriaDuplicadaException.class, () -> servicio.crear(comando));
+        verify(categoriaRepository, never()).guardar(any());
+    }
+
+        // Edición de categorías (HU41, T329).
+
+    @Test
+    @DisplayName("HU41-CP01: editar cambia el nombre y la descripción, conserva el id y el estado y devuelve el número de productos")
+    void editarCambiaElNombreYLaDescripcion() {
+        Categoria actual = new Categoria("c-1", "Hogar", "Muebles", EstadoCategoria.INACTIVA);
+        Categoria editada = new Categoria("c-1", "Hogar y Jardín", "Muebles y plantas", EstadoCategoria.INACTIVA);
+        when(categoriaRepository.buscarPorId("c-1")).thenReturn(Optional.of(actual));
+        when(categoriaRepository.existeOtraConNombre("Hogar y Jardín", "c-1")).thenReturn(false);
+        when(categoriaRepository.guardar(editada)).thenReturn(editada);
+        when(productosPorCategoria.contarPorCategoria()).thenReturn(Map.of("c-1", 4L));
+
+        assertEquals(new CategoriaConProductos(editada, 4),
+                servicio.editar(new EditarCategoriaCommand("c-1", " Hogar y Jardín ", "Muebles y plantas")));
+    }
+
+    @Test
+    @DisplayName("HU41-CP02: editar permite cambiar solo las mayúsculas o las tildes del propio nombre")
+    void editarPermiteCambiarLasMayusculasDelPropioNombre() {
+        Categoria actual = new Categoria("c-1", "Hogar", "", EstadoCategoria.ACTIVA);
+        Categoria editada = new Categoria("c-1", "hogar", "", EstadoCategoria.ACTIVA);
+        when(categoriaRepository.buscarPorId("c-1")).thenReturn(Optional.of(actual));
+        when(categoriaRepository.existeOtraConNombre("hogar", "c-1")).thenReturn(false);
+        when(categoriaRepository.guardar(editada)).thenReturn(editada);
+        when(productosPorCategoria.contarPorCategoria()).thenReturn(Map.of());
+
+        assertEquals(new CategoriaConProductos(editada, 0),
+                servicio.editar(new EditarCategoriaCommand("c-1", "hogar", "")));
+    }
+
+    @Test
+    @DisplayName("HU41-CP03: editar rechaza un nombre que ya tiene otra categoría y no guarda nada")
+    void editarRechazaElNombreDeOtraCategoria() {
+        when(categoriaRepository.buscarPorId("c-1")).thenReturn(Optional.of(HOGAR));
+        when(categoriaRepository.existeOtraConNombre("Tecnología", "c-1")).thenReturn(true);
+        EditarCategoriaCommand comando = new EditarCategoriaCommand("c-1", "Tecnología", "");
+
+        assertThrows(CategoriaDuplicadaException.class, () -> servicio.editar(comando));
+        verify(categoriaRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU41-CP04: editar una categoría que no existe lanza «no encontrada» y no guarda nada")
+    void editarUnaCategoriaInexistenteFalla() {
+        when(categoriaRepository.buscarPorId("c-9")).thenReturn(Optional.empty());
+        EditarCategoriaCommand comando = new EditarCategoriaCommand("c-9", "Hogar", "");
+
+        assertThrows(CategoriaNoEncontradaException.class, () -> servicio.editar(comando));
+        verify(categoriaRepository, never()).existeOtraConNombre(any(), any());
+        verify(categoriaRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU41-CP05: editar con datos que incumplen el dominio lanza «inválida» y no guarda nada")
+    void editarConDatosInvalidosFalla() {
+        when(categoriaRepository.buscarPorId("c-1")).thenReturn(Optional.of(HOGAR));
+        EditarCategoriaCommand comando = new EditarCategoriaCommand("c-1", "   ", "");
+
+        assertThrows(CategoriaInvalidaException.class, () -> servicio.editar(comando));
+        verify(categoriaRepository, never()).existeOtraConNombre(any(), any());
         verify(categoriaRepository, never()).guardar(any());
     }
 }

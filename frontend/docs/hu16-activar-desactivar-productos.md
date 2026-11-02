@@ -67,9 +67,9 @@ La fila y la ficha no llaman a la API: avisan a la página con el producto, como
 
 ---
 
-## 4. Contrato con el backend (propuesto por el frontend)
+## 4. Contrato con el backend
 
-El backend **aún no tiene** este endpoint. Hoy la disponibilidad solo se cambia editando el producto entero (`PUT /api/seller/products/{id}`).
+El contrato lo propuso el frontend y el backend lo implementa tal cual: la lógica en las tasks T284 y T285 (PR #171) y el endpoint en las T282 y T283. Activar y desactivar son el mismo endpoint con un booleano.
 
 ```
 PATCH /api/seller/products/{id}/availability
@@ -81,11 +81,12 @@ Content-Type: application/json
 | Respuesta | Cuándo |
 |---|---|
 | `200` con el producto actualizado (mismo formato que `GET /api/seller/products/{id}`) | Cambio correcto. |
-| `400` con `VALIDATION_ERROR` | `disponible` no es un booleano. |
-| `401` / `403` | Sin sesión o sin ser vendedor. |
-| `404` | El producto no existe o es de otro vendedor (como en el resto de endpoints del vendedor). |
+| `400` con `INVALID_FIELD` | Falta `disponible` (el código que da hoy el backend a cualquier cuerpo que no pasa `@Valid`). |
+| `400` | `disponible` no se puede leer como booleano (p. ej. `"abc"`). Por ahora sin código propio: es la respuesta por defecto de Spring. |
+| `401` / `403` | Sin sesión, sin ser vendedor o sin token CSRF. |
+| `404` con `PRODUCT_NOT_FOUND` | El producto no existe o es de otro vendedor (como en el resto de endpoints del vendedor). |
 
-Si el backend elige otro contrato, solo hay que cambiar `updateSellerProductAvailability` y el handler del mock.
+Pedir el estado que el producto ya tiene no es un error: responde `200` con el producto igual. El frontend no depende del código del `400`: ante cualquier error muestra el mismo aviso genérico.
 
 ---
 

@@ -28,8 +28,8 @@ export function getCatalogProduct(productId) {
   return request(`/api/products/${encodeURIComponent(productId)}`)
 }
 
-// Activa o desactiva un producto propio (HU16). Contrato propuesto por el frontend: el backend aún no lo tiene.
-// Responde con el producto actualizado.
+// Activa o desactiva un producto propio (HU16; backend en T282 y T283). Responde con el producto actualizado
+// y 404 si el producto no existe o es de otro vendedor.
 export function updateSellerProductAvailability(productId, disponible) {
   return request(`/api/seller/products/${encodeURIComponent(productId)}/availability`, {
     method: 'PATCH',

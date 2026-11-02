@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,8 +28,9 @@ import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColeccio
 
 // Test de integración del adaptador de MongoDB de categorías (AB#43). Usa un MongoDB real en Docker
 // (Testcontainers): Docker Desktop debe estar abierto. InicializadorColecciones crea la colección categorias
-// con su validación y sus índices, como en la aplicación real. También prueba la creación (HU40, T323).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU22-CP15, HU40-CP05 y HU40-CP06, propuestos.
+// con su validación y sus índices, como en la aplicación real. También prueba la creación (HU40, T323) y la
+// edición (HU41, T329).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU22-CP15, HU40-CP05, HU40-CP06 y HU41-CP07 a CP09, propuestos.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class CategoriaMongoAdapterTest {
@@ -114,6 +116,75 @@ class CategoriaMongoAdapterTest {
 
         assertThrows(CategoriaDuplicadaException.class, () -> adapter.guardar(repetida));
         assertEquals(1, adapter.listar().size());
+    }
+
+        // Edición de categorías (HU41, T329).
+
+    @Test
+    @DisplayName("HU41-CP07: buscarPorId devuelve la categoría con su descripción y su estado")
+    void buscarPorIdDevuelveLaCategoria() {
+        Categoria guardada = adapter.guardar(new Categoria(null, "Hogar", "Muebles", EstadoCategoria.INACTIVA));
+
+        assertEquals(Optional.of(guardada), adapter.buscarPorId(guardada.id()));
+    }
+
+    @ParameterizedTest(name = "«{0}»")
+    @ValueSource(strings = {"000000000000000000000000", "no-es-un-id"})
+    @DisplayName("HU41-CP07: buscarPorId devuelve vacío si no existe, también con un id que no tiene formato de id")
+    void buscarPorIdDevuelveVacioSiNoExiste(String id) {
+        guardar("Hogar");
+
+        assertEquals(Optional.empty(), adapter.buscarPorId(id));
+    }
+
+    @ParameterizedTest(name = "«{0}»")
+    @ValueSource(strings = {"Electrónica", "ELECTRÓNICA", "electronica", " Electronica "})
+    @DisplayName("HU41-CP08: otra categoría con ese nombre cuenta como repetido aunque cambien las mayúsculas o las tildes")
+    void existeOtraConNombreNoDistingueMayusculasNiTildes(String nombre) {
+        guardar("Electrónica");
+        String idHogar = guardar("Hogar").getId();
+
+        assertTrue(adapter.existeOtraConNombre(nombre, idHogar));
+    }
+
+    @ParameterizedTest(name = "«{0}»")
+    @ValueSource(strings = {"Electrónica", "ELECTRÓNICA", "electronica"})
+    @DisplayName("HU41-CP08: el nombre de la propia categoría no cuenta como repetido, aunque cambien las mayúsculas o las tildes")
+    void existeOtraConNombreIgnoraLaPropiaCategoria(String nombre) {
+        String id = guardar("Electrónica").getId();
+
+        assertFalse(adapter.existeOtraConNombre(nombre, id));
+    }
+
+    @ParameterizedTest(name = "«{0}»")
+    @ValueSource(strings = {"Electr.nica", "Electrón", "Electrónicas"})
+    @DisplayName("HU41-CP08: el nombre se compara completo y como texto literal, no como expresión regular")
+    void existeOtraConNombreComparaElNombreCompletoYLiteral(String nombre) {
+        guardar("Electrónica");
+        String idHogar = guardar("Hogar").getId();
+
+        assertFalse(adapter.existeOtraConNombre(nombre, idHogar));
+    }
+
+    @Test
+    @DisplayName("HU41-CP09: guardar una categoría que ya tiene id la actualiza sin crear otra")
+    void guardarConIdActualizaLaCategoria() {
+        Categoria original = adapter.guardar(new Categoria(null, "Hogar", "Muebles", EstadoCategoria.INACTIVA));
+        Categoria editada = new Categoria(original.id(), "Hogar y Jardín", "Muebles y plantas", EstadoCategoria.INACTIVA);
+
+        assertEquals(editada, adapter.guardar(editada));
+        assertEquals(List.of(editada), adapter.listar());
+    }
+
+    @Test
+    @DisplayName("HU41-CP09: la base de datos rechaza cambiar el nombre al de otra categoría aunque se salte la comprobación previa")
+    void guardarRechazaCambiarElNombreAlDeOtraCategoria() {
+        adapter.guardar(Categoria.nueva("Electrónica", ""));
+        Categoria hogar = adapter.guardar(Categoria.nueva("Hogar", ""));
+        Categoria renombrada = new Categoria(hogar.id(), "ELECTRÓNICA", "", EstadoCategoria.ACTIVA);
+
+        assertThrows(CategoriaDuplicadaException.class, () -> adapter.guardar(renombrada));
+        assertEquals("Hogar", adapter.buscarPorId(hogar.id()).orElseThrow().nombre());
     }
 
     private CategoriaDocument guardar(String nombre) {

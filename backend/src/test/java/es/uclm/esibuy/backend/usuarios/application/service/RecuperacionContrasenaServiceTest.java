@@ -7,6 +7,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.EnvioEmailPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.GeneradorCodigoPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.exception.EnvioEmailException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
@@ -39,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -178,6 +180,19 @@ class RecuperacionContrasenaServiceTest {
         }
 
         verifyNoInteractions(generadorCodigo, codigoRepository, envioEmail);
+    }
+
+    @Test
+    @DisplayName("HU3-CP11: si falla el envío del correo, la solicitud termina igual y no revela que la cuenta existe")
+    void solicitarConFalloDelCorreoNoLoRevela() {
+        when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.of(clienteActivo()));
+        when(generadorCodigo.generar()).thenReturn(CODIGO);
+        when(hashContrasena.hashear(CODIGO)).thenReturn(HASH_CODIGO);
+        doThrow(new EnvioEmailException("No se ha podido enviar el correo", new RuntimeException("SMTP caído")))
+                .when(envioEmail).enviarCodigoRecuperacion(EMAIL, CODIGO);
+
+        // Solo se intenta enviar a cuentas activas: si el fallo llegara al cliente, revelaría que el email existe.
+        assertDoesNotThrow(() -> recuperacion.solicitarRecuperacion(EMAIL));
     }
 
     // --- Paso 2: restablecer la contraseña ---------------------------------------------------------------------

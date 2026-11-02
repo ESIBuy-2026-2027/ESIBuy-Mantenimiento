@@ -644,48 +644,89 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU3-CP01 | Cambiar la contraseña de un usuario guarda el hash de la nueva, rechaza uno vacío y quita el bloqueo por intentos fallidos de login | Unitario (dominio) | 3 | 🔍 En revisión (3, AB#400, PR sin abrir) |
-| HU3-CP02 | Solicitar la recuperación de una cuenta activa envía un código de 6 dígitos por correo y guarda solo su hash, válido 10 minutos; el email se busca normalizado | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#400, PR sin abrir) |
-| HU3-CP03 | Con un email no registrado o mal formado, o una cuenta pendiente o desactivada, no se envía nada y la respuesta es la misma (no se revela qué emails existen) | Unitario (aplicación) | 3 | 🔍 En revisión (3, AB#400, PR sin abrir) |
-| HU3-CP04 | Con el código correcto se guarda el hash de la contraseña nueva y el código queda usado (un solo uso) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#400, PR sin abrir) |
-| HU3-CP05 | Con un código incorrecto se registra el fallo y la contraseña no cambia | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#400, PR sin abrir) |
-| HU3-CP06 | Un código caducado, ya usado o con 5 fallos no sirve; sin código o con un email desconocido se responde como con un código incorrecto | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#400, PR sin abrir) |
-| HU3-CP07 | Si la contraseña nueva no cumple la política de seguridad no cambia nada y el código sigue sirviendo | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#400, PR sin abrir) |
-| HU3-CP08 | El comando de restablecer no muestra la contraseña ni el código en su `toString` (logs) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#400, PR sin abrir) |
-| HU3-CP09 | El correo de recuperación lleva el código y su validez; si falla el envío, la excepción no revela el código | Unitario (infraestructura) | 2 | 🔍 En revisión (2, AB#400, PR sin abrir) |
-| HU3-CP10 | Los códigos de recuperación se guardan en `tokens_seguridad` con `purpose` PASSWORD_RECOVERY, solo con su hash; uno nuevo sustituye al anterior y no se pisan con el código del login | Unitario + integración (Testcontainers) | 6 | 🔍 En revisión (6, AB#400, PR sin abrir) |
+| HU3-CP01 | Cambiar la contraseña de un usuario guarda el hash de la nueva, rechaza uno vacío y quita el bloqueo por intentos fallidos de login | Unitario (dominio) | 3 | ✅ Pasa |
+| HU3-CP02 | Solicitar la recuperación de una cuenta activa envía un código de 6 dígitos por correo y guarda solo su hash, válido 10 minutos; el email se busca normalizado | Unitario (aplicación) | 2 | ✅ Pasa |
+| HU3-CP03 | Con un email no registrado o mal formado, o una cuenta pendiente o desactivada, no se envía nada y la respuesta es la misma (no se revela qué emails existen) | Unitario (aplicación) | 3 | ✅ Pasa |
+| HU3-CP04 | Con el código correcto se guarda el hash de la contraseña nueva y el código queda usado (un solo uso) | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU3-CP05 | Con un código incorrecto se registra el fallo y la contraseña no cambia | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU3-CP06 | Un código caducado, ya usado o con 5 fallos no sirve; sin código o con un email desconocido se responde como con un código incorrecto | Unitario (aplicación) | 2 | ✅ Pasa |
+| HU3-CP07 | Si la contraseña nueva no cumple la política de seguridad no cambia nada y el código sigue sirviendo | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU3-CP08 | El comando de restablecer no muestra la contraseña ni el código en su `toString` (logs) | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU3-CP09 | El correo de recuperación lleva el código y su validez; si falla el envío, la excepción no revela el código | Unitario (infraestructura) | 2 | ✅ Pasa |
+| HU3-CP10 | Los códigos de recuperación se guardan en `tokens_seguridad` con `purpose` PASSWORD_RECOVERY, solo con su hash; uno nuevo sustituye al anterior y no se pisan con el código del login | Unitario + integración (Testcontainers) | 6 | ✅ Pasa |
+| HU3-CP11 | Si falla el envío del correo de recuperación, la solicitud termina igual: el fallo no revela que la cuenta existe | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU3-CP12 | `POST /api/auth/password-recovery` responde 204 sin sesión y pasa el email al caso de uso | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU3-CP13 | `POST /api/auth/password-recovery/confirm` con el código correcto responde 204 y pasa email, código y contraseña al caso de uso | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU3-CP14 | Restablecer con un código que no sirve responde 401 «Código incorrecto» | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU3-CP15 | Restablecer con una contraseña que no cumple la política responde 400 con el código del motivo (p. ej. `PASSWORD_WEAK`) | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU3-CP16 | Los dos endpoints rechazan un cuerpo incompleto (400) y una petición sin token anti-CSRF (403) sin llamar al caso de uso | Integración web (`@WebMvcTest`) | 4 | ✅ Pasa |
+| HU3-CP17 | La petición de restablecer no muestra la contraseña ni el código en su `toString` (logs) | Unitario (infraestructura) | 1 | ✅ Pasa |
+| HU3-CP18 | El inicio de sesión tiene el enlace «¿Has olvidado tu contraseña?», que lleva a la recuperación | Frontend (página) | 1 | 🔍 En revisión (1, AB#398, PR sin abrir) |
+| HU3-CP19 | Sin email, o con uno mal formado, se avisa en el campo y no se pide ningún código | Frontend (página) | 1 | 🔍 En revisión (1, AB#398, PR sin abrir) |
+| HU3-CP20 | Se pide el código para el email escrito y se pasa al segundo paso con el mismo aviso exista o no la cuenta (caduca en 10 minutos); si el servidor falla, se avisa y no se avanza | Frontend (página) | 3 | 🔍 En revisión (3, AB#398, PR sin abrir) |
+| HU3-CP21 | Antes de enviar se comprueba que el código tiene 6 dígitos y que la contraseña nueva cumple los requisitos (que se muestran) y coincide con su repetición | Frontend (página) | 2 | 🔍 En revisión (2, AB#398, PR sin abrir) |
+| HU3-CP22 | Con el código correcto se envían email, código y contraseña, y se vuelve al login con «Contraseña cambiada. Ya puedes iniciar sesión.» | Frontend (página) | 1 | 🔍 En revisión (1, AB#398, PR sin abrir) |
+| HU3-CP23 | Con un código incorrecto o caducado se avisa y se puede volver a intentar o pedir otro código | Frontend (página) | 2 | 🔍 En revisión (2, AB#398, PR sin abrir) |
+| HU3-CP24 | Si el servidor rechaza la contraseña por la política, el motivo se muestra en el campo; con otro error, un aviso genérico | Frontend (página) | 2 | 🔍 En revisión (2, AB#398, PR sin abrir) |
+| HU3-CP25 | Desde la recuperación se vuelve al login; con la sesión abierta, la ruta lleva al inicio del usuario | Frontend (página) | 2 | 🔍 En revisión (2, AB#398, PR sin abrir) |
 
 Notas:
 - **HU3-CP01 a CP10 (Sprint 2, backend, TDD):** casos propuestos en la T400 (AB#400, lógica de recuperación de contraseña) a partir de los criterios de aceptación de la HU3 (AB#65): «envío de enlace/código temporal y de un solo uso», «expiración del enlace tras un tiempo determinado» y «la contraseña nueva debe cumplir la política de seguridad». Pendientes de confirmar con el equipo y de añadir a la HU3 en Azure Boards.
-- **Decisiones del equipo:** código de 6 dígitos por correo (no enlace), que reutiliza las reglas del código del login (`CodigoVerificacion`: 10 minutos, un solo uso, se anula tras 5 fallos, solo se guarda su hash). Solo se envía a cuentas activas. Solicitar la recuperación responde siempre igual; al restablecer, un email desconocido responde como un código incorrecto.
-- **Pendiente:** el endpoint (T399, AB#399) y el formulario del frontend (T398, AB#398). El envío real por Brevo se comprobará con el endpoint. **No hay límite de solicitudes de código** por email o por IP (no lo pide la HU3); si hace falta, irá en una task aparte.
+- **HU3-CP11 a CP17 (Sprint 2, backend, TDD):** casos propuestos en la T399 (AB#399, endpoint de recuperación de contraseña): `POST /api/auth/password-recovery` (`{email}`, siempre 204) y `POST /api/auth/password-recovery/confirm` (`{email, code, password}`: 204, 401 o 400). Son públicos, pero piden el token anti-CSRF como el login. Pendientes de confirmar con el equipo y de añadir a la HU3 en Azure Boards.
+- **HU3-CP18 a CP25 (Sprint 2, frontend, TDD):** casos propuestos en la T398 (AB#398, formulario de recuperación de contraseña): enlace en el login y página `/forgot-password` en dos pasos, con el contrato de la T399 (`frontend/docs/hu3-recuperar-contrasena.md`). Pendientes de confirmar con el equipo y de añadir a la HU3 en Azure Boards.
+- **Decisiones del equipo:** código de 6 dígitos por correo (no enlace), que reutiliza las reglas del código del login (`CodigoVerificacion`: 10 minutos, un solo uso, se anula tras 5 fallos, solo se guarda su hash). Solo se envía a cuentas activas. Solicitar la recuperación responde siempre igual; al restablecer, un email desconocido responde como un código incorrecto. Si falla el envío del correo, la solicitud también responde igual (HU3-CP11): el envío solo se intenta con cuentas activas, así que un error revelaría que el email existe.
+- **Pendiente:** comprobar el envío real por Brevo de punta a punta, con el formulario de la T398. **No hay límite de solicitudes de código** por email o por IP (no lo pide la HU3); si hace falta, irá en una task aparte.
 
 ### Tabla B · casos de prueba ↔ tests
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU3-CP01 | `UsuarioTest` | `cambiarContrasenaSustituyeElHash` | Dominio | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP01 | `UsuarioTest` | `cambiarContrasenaRechazaUnHashVacio` | Dominio | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP01 | `UsuarioTest` | `cambiarContrasenaQuitaElBloqueoPorIntentos` | Dominio | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP02 | `RecuperacionContrasenaServiceTest` | `solicitarConCuentaActivaEnviaElCodigoYGuardaSoloSuHash` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP02 | `RecuperacionContrasenaServiceTest` | `solicitarBuscaLaCuentaConElEmailNormalizado` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP03 | `RecuperacionContrasenaServiceTest` | `solicitarConEmailDesconocidoNoEnviaNadaNiLoRevela` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP03 | `RecuperacionContrasenaServiceTest` | `solicitarConEmailMalFormadoNoEnviaNadaNiLoRevela` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP03 | `RecuperacionContrasenaServiceTest` | `solicitarConCuentaNoActivaNoEnviaNada` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP04 | `RecuperacionContrasenaServiceTest` | `restablecerConCodigoCorrectoCambiaLaContrasenaYGastaElCodigo` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP05 | `RecuperacionContrasenaServiceTest` | `restablecerConCodigoIncorrectoRegistraElFalloYNoCambiaNada` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP06 | `RecuperacionContrasenaServiceTest` | `restablecerConCodigoQueYaNoSirveNoCambiaNada` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP06 | `RecuperacionContrasenaServiceTest` | `restablecerSinCodigoOConEmailDesconocidoRespondeComoCodigoIncorrecto` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP07 | `RecuperacionContrasenaServiceTest` | `restablecerConContrasenaQueNoCumpleLaPoliticaNoGastaElCodigo` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP08 | `RestablecerContrasenaCommandTest` | `toStringNoMuestraLaContrasenaNiElCodigo` | Aplicación | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP09 | `SmtpEnvioEmailAdapterTest` | `enviaElCodigoDeRecuperacionAlCorreoDelUsuario` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP09 | `SmtpEnvioEmailAdapterTest` | `fallaElEnvioDeRecuperacionSinRevelarElCodigo` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP10 | `CodigoVerificacionDocumentMapperTest` | `convierteCodigoDeRecuperacionEnDocumento` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `guardaElCodigoComoDeRecuperacion` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `buscarPorUsuarioDevuelveElCodigoGuardado` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `unCodigoNuevoSustituyeAlAnterior` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `guardarUnCodigoLeidoLoActualiza` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `elCodigoDeRecuperacionYElDelLoginNoSePisan` | Infraestructura | AB#400 | Rama `feature/US3-T400-logica-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP01 | `UsuarioTest` | `cambiarContrasenaSustituyeElHash` | Dominio | AB#400 | PR #172 | ✅ |
+| HU3-CP01 | `UsuarioTest` | `cambiarContrasenaRechazaUnHashVacio` | Dominio | AB#400 | PR #172 | ✅ |
+| HU3-CP01 | `UsuarioTest` | `cambiarContrasenaQuitaElBloqueoPorIntentos` | Dominio | AB#400 | PR #172 | ✅ |
+| HU3-CP02 | `RecuperacionContrasenaServiceTest` | `solicitarConCuentaActivaEnviaElCodigoYGuardaSoloSuHash` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP02 | `RecuperacionContrasenaServiceTest` | `solicitarBuscaLaCuentaConElEmailNormalizado` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP03 | `RecuperacionContrasenaServiceTest` | `solicitarConEmailDesconocidoNoEnviaNadaNiLoRevela` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP03 | `RecuperacionContrasenaServiceTest` | `solicitarConEmailMalFormadoNoEnviaNadaNiLoRevela` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP03 | `RecuperacionContrasenaServiceTest` | `solicitarConCuentaNoActivaNoEnviaNada` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP04 | `RecuperacionContrasenaServiceTest` | `restablecerConCodigoCorrectoCambiaLaContrasenaYGastaElCodigo` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP05 | `RecuperacionContrasenaServiceTest` | `restablecerConCodigoIncorrectoRegistraElFalloYNoCambiaNada` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP06 | `RecuperacionContrasenaServiceTest` | `restablecerConCodigoQueYaNoSirveNoCambiaNada` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP06 | `RecuperacionContrasenaServiceTest` | `restablecerSinCodigoOConEmailDesconocidoRespondeComoCodigoIncorrecto` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP07 | `RecuperacionContrasenaServiceTest` | `restablecerConContrasenaQueNoCumpleLaPoliticaNoGastaElCodigo` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP08 | `RestablecerContrasenaCommandTest` | `toStringNoMuestraLaContrasenaNiElCodigo` | Aplicación | AB#400 | PR #172 | ✅ |
+| HU3-CP09 | `SmtpEnvioEmailAdapterTest` | `enviaElCodigoDeRecuperacionAlCorreoDelUsuario` | Infraestructura | AB#400 | PR #172 | ✅ |
+| HU3-CP09 | `SmtpEnvioEmailAdapterTest` | `fallaElEnvioDeRecuperacionSinRevelarElCodigo` | Infraestructura | AB#400 | PR #172 | ✅ |
+| HU3-CP10 | `CodigoVerificacionDocumentMapperTest` | `convierteCodigoDeRecuperacionEnDocumento` | Infraestructura | AB#400 | PR #172 | ✅ |
+| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `guardaElCodigoComoDeRecuperacion` | Infraestructura | AB#400 | PR #172 | ✅ |
+| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `buscarPorUsuarioDevuelveElCodigoGuardado` | Infraestructura | AB#400 | PR #172 | ✅ |
+| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `unCodigoNuevoSustituyeAlAnterior` | Infraestructura | AB#400 | PR #172 | ✅ |
+| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `guardarUnCodigoLeidoLoActualiza` | Infraestructura | AB#400 | PR #172 | ✅ |
+| HU3-CP10 | `CodigoRecuperacionMongoAdapterTest` | `elCodigoDeRecuperacionYElDelLoginNoSePisan` | Infraestructura | AB#400 | PR #172 | ✅ |
+| HU3-CP11 | `RecuperacionContrasenaServiceTest` | `solicitarConFalloDelCorreoNoLoRevela` | Aplicación | AB#399 | PR #176 | ✅ |
+| HU3-CP12 | `RecuperacionContrasenaControllerTest` | `solicitarRespondeSinContenidoYPasaElEmail` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP13 | `RecuperacionContrasenaControllerTest` | `restablecerRespondeSinContenidoYPasaElComando` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP14 | `RecuperacionContrasenaControllerTest` | `restablecerConCodigoInvalidoRespondeUnauthorized` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP15 | `RecuperacionContrasenaControllerTest` | `restablecerConContrasenaDebilRespondeBadRequestConSuCodigo` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `solicitarSinEmailRespondeBadRequest` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `solicitarSinCsrfRespondeForbidden` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `restablecerConCamposVaciosRespondeBadRequest` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `restablecerSinCsrfRespondeForbidden` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP17 | `RestablecerContrasenaRequestTest` | `toStringNoMuestraLaContrasenaNiElCodigo` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP18 | `LoginFlow.test.jsx` | `HU3-CP18: el inicio de sesión tiene un enlace a la recuperación de contraseña` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP19 | `ForgotPasswordPage.test.jsx` | `HU3-CP19: sin email, o con uno mal formado, avisa en el campo y no pide ningún código` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP20 | `ForgotPasswordPage.test.jsx` | `HU3-CP20: pide el código para el email escrito y pasa al segundo paso con el aviso de que se ha enviado` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP20 | `ForgotPasswordPage.test.jsx` | `HU3-CP20: con un email que no está registrado muestra el mismo aviso (no revela qué emails existen)` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP20 | `ForgotPasswordPage.test.jsx` | `HU3-CP20: si el servidor falla al pedir el código, lo avisa y se queda en el primer paso` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP21 | `ForgotPasswordPage.test.jsx` | `HU3-CP21: comprueba el código y la contraseña nueva antes de enviarlos` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP21 | `ForgotPasswordPage.test.jsx` | `HU3-CP21: muestra los requisitos de la contraseña nueva y marca los que ya cumple` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP22 | `ForgotPasswordPage.test.jsx` | `HU3-CP22: con el código correcto cambia la contraseña y vuelve al login avisando del cambio` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP23 | `ForgotPasswordPage.test.jsx` | `HU3-CP23: con un código incorrecto o caducado lo avisa y se queda en el paso para volver a intentarlo` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP23 | `ForgotPasswordPage.test.jsx` | `HU3-CP23: se puede pedir otro código para el mismo email` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP24 | `ForgotPasswordPage.test.jsx` | `HU3-CP24: si el servidor rechaza la contraseña por la política, lo muestra en el campo` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP24 | `ForgotPasswordPage.test.jsx` | `HU3-CP24: si el servidor falla por otro motivo, muestra un aviso genérico sin detalles internos` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP25 | `ForgotPasswordPage.test.jsx` | `HU3-CP25: desde la recuperación se puede volver al inicio de sesión` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP25 | `ForgotPasswordPage.test.jsx` | `HU3-CP25: con la sesión abierta no se muestra la recuperación y lleva a su inicio` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `UsuarioTest`: `usuarios/domain/model/` (JUnit, sin Spring)
@@ -694,6 +735,12 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `SmtpEnvioEmailAdapterTest`: `usuarios/infrastructure/adapter/out/email/` (Mockito, sin conectarse a Brevo)
 - `CodigoVerificacionDocumentMapperTest`: `usuarios/infrastructure/adapter/out/persistence/` (JUnit)
 - `CodigoRecuperacionMongoAdapterTest`: `usuarios/infrastructure/adapter/out/persistence/` (`@DataMongoTest` y Testcontainers)
+- `RecuperacionContrasenaControllerTest`: `usuarios/infrastructure/adapter/in/web/` (`@WebMvcTest` con `SecurityConfig`, sin MongoDB)
+- `RestablecerContrasenaRequestTest`: `usuarios/infrastructure/adapter/in/web/` (JUnit)
+
+Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing Library y MSW):
+- `LoginFlow.test.jsx`: `features/auth/`
+- `ForgotPasswordPage.test.jsx`: `pages/`
 
 ---
 
@@ -1690,17 +1737,23 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU16-CP04 | Si falla el cambio, se avisa sin detalles internos y el producto no cambia | Frontend (página) | 1 | ✅ Pasa |
 | HU16-CP05 | La ficha del producto ofrece Activar o Desactivar según su estado y avisa a la página con el producto | Frontend (componente) | 2 | ✅ Pasa |
 | HU16-CP06 | Desde la ficha, Desactivar cierra la ficha, cambia el producto y avisa | Frontend (página) | 1 | ✅ Pasa |
-| HU16-CP07 | El vendedor desactiva un producto suyo y el resto de sus datos no cambia | Unitario | 1 | 🔍 En revisión |
-| HU16-CP08 | El vendedor activa un producto suyo que no estaba disponible | Unitario | 1 | 🔍 En revisión |
-| HU16-CP09 | Un producto ajeno o inexistente no se puede activar ni desactivar (`ProductoNoEncontradoException`) y no se guarda nada | Unitario | 2 | 🔍 En revisión |
-| HU16-CP10 | Solo el vendedor dueño, con su correo, activa o desactiva su producto: cliente, administrador u otro vendedor reciben 403 y sin sesión se rechaza | Unitario (seguridad, contexto mínimo de Spring) | 5 | 🔍 En revisión |
+| HU16-CP07 | El vendedor desactiva un producto suyo y el resto de sus datos no cambia | Unitario | 1 | ✅ Pasa |
+| HU16-CP08 | El vendedor activa un producto suyo que no estaba disponible | Unitario | 1 | ✅ Pasa |
+| HU16-CP09 | Un producto ajeno o inexistente no se puede activar ni desactivar (`ProductoNoEncontradoException`) y no se guarda nada | Unitario | 2 | ✅ Pasa |
+| HU16-CP10 | Solo el vendedor dueño, con su correo, activa o desactiva su producto: cliente, administrador u otro vendedor reciben 403 y sin sesión se rechaza | Unitario (seguridad, contexto mínimo de Spring) | 5 | ✅ Pasa |
+| HU16-CP11 | `PATCH /api/seller/products/{id}/availability` devuelve 200 con el producto actualizado; el vendedor sale de la sesión | Integración (capa web) | 1 | 🔍 En revisión |
+| HU16-CP12 | Un cuerpo sin `disponible` o con un valor que no es booleano devuelve 400 y no llega al caso de uso | Integración (capa web) | 1 | 🔍 En revisión |
+| HU16-CP13 | Cambiar la disponibilidad de un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | 🔍 En revisión |
+| HU16-CP14 | Sin sesión (401), sin ser vendedor (403) o sin token CSRF (403) no se cambia la disponibilidad | Integración (capa web) | 3 | 🔍 En revisión |
 
 Notas:
 - **HU16-CP01 a CP06 (Sprint 2, frontend):** casos propuestos en la task AB#281 (botón activar/desactivar productos) a partir de lo pedido en ella y de las decisiones del equipo (`frontend/docs/hu16-activar-desactivar-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU16 en Azure Boards. Los casos del backend siguen la numeración desde el CP07.
 - **HU16-CP07 a CP10 (Sprint 2, backend):** casos propuestos en las tasks AB#284 y AB#285 (lógica de activación y desactivación, PR #171), que se hacen juntas en un único caso de uso, `cambiarDisponibilidadMiProducto`, porque el frontend usa un único endpoint con un booleano. Pendientes de añadir a la HU16 en Azure Boards. Pedir el estado que ya tiene no es un error: el producto se guarda igual (decisión del desarrollador). Solo CP07 tiene ciclo rojo: CP08 a CP10 ya los cubría el código del ciclo 1 (el booleano se pasa tal cual, `consultarMiProducto` filtra por vendedor y el `@PreAuthorize` se puso desde el primer test). Se comprobó que los tests de CP10 fallan si se quita el `@PreAuthorize`.
+- **HU16-CP11 a CP14 (Sprint 2, backend):** casos propuestos en las tasks AB#282 y AB#283 (endpoint de activación y desactivación, PR #177), que van juntas porque son un único endpoint, con el contrato de `frontend/docs/hu16-activar-desactivar-productos.md`. Pendientes de añadir a la HU16 en Azure Boards. Solo CP11 tiene ciclo rojo: CP12 a CP14 ya los cubrían el `@NotNull` de `DisponibilidadRequest`, `ManejadorGlobalErrores` y `SecurityConfig`. Se comprobó que CP12 falla sin el `@NotNull` y que CP14 falla si `/api/seller/**` solo exige sesión.
+- **HU16-CP12 · solo se comprueba el 400 (decisión del desarrollador):** hoy un cuerpo sin `disponible` da `INVALID_FIELD` y uno ilegible, el 400 por defecto de Spring, sin `code`. Unificar los códigos de "datos no válidos" y tratar el JSON ilegible es un cambio transversal pendiente de decidir en equipo; si se hace, este caso puede comprobar también el `code`.
 - **Versión inicial (decisión del equipo):** sin confirmación al activar o desactivar; puede cambiar por decisión del PO o del equipo.
-- **Backend:** la lógica ya existe (CP07 a CP10, PR #171), pero el endpoint para cambiar solo la disponibilidad (T282 y T283) todavía no. Los tests del frontend usan el contrato propuesto por el frontend (`PATCH /api/seller/products/{id}/availability`) y los mocks (MSW).
-- **Sin archivos de tests nuevos:** los casos van en `SellerProductsPage.test.jsx`, `ProductDetailDialog.test.jsx`, `GestionProductosServiceTest` y `SeguridadProductosServiceTest`, que ya existían.
+- **Backend:** la lógica (CP07 a CP10, PR #171) y el endpoint `PATCH /api/seller/products/{id}/availability` (CP11 a CP14, PR #177) siguen el contrato que propuso el frontend. Los tests del frontend siguen usando los mocks (MSW).
+- **Sin archivos de tests nuevos:** los casos van en `SellerProductsPage.test.jsx`, `ProductDetailDialog.test.jsx`, `GestionProductosServiceTest`, `SeguridadProductosServiceTest` y `ProductoControllerTest`, que ya existían.
 - **Infraestructura de tests:** `test/setup.js` reinicia tras cada test la disponibilidad cambiada en el mock de productos (`resetProductsMock`).
 
 ### Tabla B · casos de prueba ↔ tests
@@ -1714,20 +1767,27 @@ Notas:
 | HU16-CP05 | `ProductDetailDialog.test.jsx` | `HU16-CP05: un producto disponible ofrece Desactivar, que avisa con el producto` | Frontend · componente | AB#281 | PR #147 | ✅ |
 | HU16-CP05 | `ProductDetailDialog.test.jsx` | `HU16-CP05: un producto no disponible ofrece Activar, que avisa con el producto` | Frontend · componente | AB#281 | PR #147 | ✅ |
 | HU16-CP06 | `SellerProductsPage.test.jsx` | `HU16-CP06: desde la ficha, Desactivar cierra la ficha, cambia el producto y avisa` | Frontend · página | AB#281 | PR #147 | ✅ |
-| HU16-CP07 | `GestionProductosServiceTest` | `elVendedorDesactivaSuProducto` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
-| HU16-CP08 | `GestionProductosServiceTest` | `elVendedorActivaSuProducto` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
-| HU16-CP09 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoCambiaDeDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
-| HU16-CP09 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoCambiaDeDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
-| HU16-CP10 | `SeguridadProductosServiceTest` | `unClienteNoCambiaLaDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
-| HU16-CP10 | `SeguridadProductosServiceTest` | `unAdministradorNoCambiaLaDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
-| HU16-CP10 | `SeguridadProductosServiceTest` | `unVendedorNoCambiaLaDisponibilidadConElCorreoDeOtro` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
-| HU16-CP10 | `SeguridadProductosServiceTest` | `unVendedorCambiaLaDisponibilidadConSuPropioCorreo` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
-| HU16-CP10 | `SeguridadProductosServiceTest` | `sinSesionNoSeCambiaLaDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | 🔍 |
+| HU16-CP07 | `GestionProductosServiceTest` | `elVendedorDesactivaSuProducto` | Aplicación | AB#284 · AB#285 | PR #171 | ✅ |
+| HU16-CP08 | `GestionProductosServiceTest` | `elVendedorActivaSuProducto` | Aplicación | AB#284 · AB#285 | PR #171 | ✅ |
+| HU16-CP09 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoCambiaDeDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | ✅ |
+| HU16-CP09 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoCambiaDeDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | ✅ |
+| HU16-CP10 | `SeguridadProductosServiceTest` | `unClienteNoCambiaLaDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | ✅ |
+| HU16-CP10 | `SeguridadProductosServiceTest` | `unAdministradorNoCambiaLaDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | ✅ |
+| HU16-CP10 | `SeguridadProductosServiceTest` | `unVendedorNoCambiaLaDisponibilidadConElCorreoDeOtro` | Aplicación | AB#284 · AB#285 | PR #171 | ✅ |
+| HU16-CP10 | `SeguridadProductosServiceTest` | `unVendedorCambiaLaDisponibilidadConSuPropioCorreo` | Aplicación | AB#284 · AB#285 | PR #171 | ✅ |
+| HU16-CP10 | `SeguridadProductosServiceTest` | `sinSesionNoSeCambiaLaDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | ✅ |
+| HU16-CP11 | `ProductoControllerTest` | `vendedorCambiaLaDisponibilidadDeSuProducto` | Infraestructura | AB#282 · AB#283 | PR #177 | 🔍 |
+| HU16-CP12 | `ProductoControllerTest` | `cuerpoDeDisponibilidadInvalidoNoCambiaElProducto` (sin `disponible`, nulo, no booleano y JSON mal formado) | Infraestructura | AB#282 · AB#283 | PR #177 | 🔍 |
+| HU16-CP13 | `ProductoControllerTest` | `cambiarLaDisponibilidadDeUnProductoNoEncontradoDevuelve404` | Infraestructura | AB#282 · AB#283 | PR #177 | 🔍 |
+| HU16-CP14 | `ProductoControllerTest` | `sinSesionNoSeCambiaLaDisponibilidad` | Infraestructura | AB#282 · AB#283 | PR #177 | 🔍 |
+| HU16-CP14 | `ProductoControllerTest` | `noVendedorNoCambiaLaDisponibilidad` (cliente y administrador) | Infraestructura | AB#282 · AB#283 | PR #177 | 🔍 |
+| HU16-CP14 | `ProductoControllerTest` | `sinTokenCsrfNoSeCambiaLaDisponibilidad` | Infraestructura | AB#282 · AB#283 | PR #177 | 🔍 |
 
 Rutas de las clases de test:
 - `SellerProductsPage.test.jsx`: `frontend/src/pages/` (Vitest, RTL y MSW)
 - `ProductDetailDialog.test.jsx`: `frontend/src/features/seller/` (Vitest, RTL y MSW)
 - `GestionProductosServiceTest` y `SeguridadProductosServiceTest`: `backend/src/test/java/es/uclm/esibuy/backend/productos/application/service/`
+- `ProductoControllerTest`: `backend/src/test/java/es/uclm/esibuy/backend/productos/infrastructure/adapter/in/web/`
 
 ---
 
@@ -2686,6 +2746,68 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU41 · Editar categorías
+
+### Tabla A · HU41 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU41-CP01 | El administrador cambia el nombre y la descripción de una categoría; se conservan su id y su estado y se devuelve con su número de productos | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP02 | El nombre de la propia categoría no cuenta como repetido: se pueden cambiar solo las mayúsculas o las tildes | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP03 | No se puede poner a una categoría el nombre de otra, sin distinguir mayúsculas ni tildes (409) | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP04 | Editar una categoría que no existe falla sin guardar nada (404) | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP05 | Editar con datos que incumplen el dominio falla sin guardar nada (400) | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP06 | Editar categorías exige el rol administrador; cliente, vendedor y sin sesión se rechazan. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP07 | Buscar una categoría por id la devuelve con su descripción y su estado; si no existe, o el id no tiene formato de id, devuelve vacío | Integración MongoDB | 2 | 🔍 En revisión (2, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP08 | Comprobar si otra categoría tiene un nombre: no distingue mayúsculas ni tildes, excluye la propia categoría y compara el nombre completo y literal | Integración MongoDB | 3 | 🔍 En revisión (3, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP09 | Guardar una categoría con id la actualiza sin crear otra, y la base de datos rechaza cambiar su nombre al de otra aunque se salte la comprobación previa | Integración MongoDB | 2 | 🔍 En revisión (2, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP10 | `PUT /api/admin/categorias/{id}` responde 200 con la fila actualizada y su número de productos | Controlador | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP11 | Editar con el nombre de otra categoría devuelve 409 `CATEGORY_NAME_ALREADY_EXISTS` | Controlador | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP12 | Editar sin nombre o incumpliendo una regla del dominio devuelve 400 | Controlador | 2 | 🔍 En revisión (2, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP13 | Editar una categoría que no existe devuelve 404 `CATEGORY_NOT_FOUND` | Controlador | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP14 | Sin rol de administrador no se pueden editar categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | 🔍 En revisión (2, Rama `feature/US41-T329-T328-edicion-categorias`) |
+
+Notas:
+- **HU41-CP01 a CP14:** casos propuestos en las T329 (AB#329) y T328 (AB#328), a partir de los criterios de la HU41. Pendientes de confirmar con el equipo y de añadir a la HU41 en Azure Boards.
+- **Endpoint (T328):** `PUT /api/admin/categorias/{id}` con `{nombre, descripcion}` → 200 `{id, nombre, descripcion, estado, numeroProductos}`, el mismo formato que una fila de `GET /api/admin/categorias`, para que la vista (T327) sustituya la fila sin recargar. El estado no se edita. Errores: 400 `INVALID_FIELD` (falta el nombre), 400 `VALIDATION_ERROR` (regla del dominio), 404 `CATEGORY_NOT_FOUND`, 409 `CATEGORY_NAME_ALREADY_EXISTS`, 401 sin sesión y 403 con otro rol. Necesita la cabecera CSRF `X-XSRF-TOKEN`.
+- **Backend (T329):** `AdministracionCategoriasUseCase.editar(EditarCategoriaCommand)`, que devuelve `CategoriaConProductos`. Puerto de salida con `buscarPorId` y `existeOtraConNombre`. El listado público lee del mismo repositorio, así que una edición se ve a la vez para clientes y vendedores.
+- **Pendiente:** la edición reemplaza el documento y no copia `createdAt` (el mapper no lo lleva), así que la fecha de creación puede perderse al editar. Es una hipótesis sin comprobar; queda para una task aparte. La vista (T327) también.
+- **HU41-CP06 (R8, seguridad en la capa de negocio):** nace en verde, sin rojo real, porque `editar` lleva el `@PreAuthorize` desde el primer ciclo. Cubre el servicio `AdministracionCategoriasService` con la clase de test existente `SeguridadCategoriasServiceTest`.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU41-CP01 | `AdministracionCategoriasServiceTest` | `editarCambiaElNombreYLaDescripcion` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP02 | `AdministracionCategoriasServiceTest` | `editarPermiteCambiarLasMayusculasDelPropioNombre` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP03 | `AdministracionCategoriasServiceTest` | `editarRechazaElNombreDeOtraCategoria` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP04 | `AdministracionCategoriasServiceTest` | `editarUnaCategoriaInexistenteFalla` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP05 | `AdministracionCategoriasServiceTest` | `editarConDatosInvalidosFalla` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP06 | `SeguridadCategoriasServiceTest` | `unClienteNoEditaCategorias` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP06 | `SeguridadCategoriasServiceTest` | `unVendedorNoEditaCategorias` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP06 | `SeguridadCategoriasServiceTest` | `unAnonimoNoEditaCategorias` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP06 | `SeguridadCategoriasServiceTest` | `unAdministradorEditaCategorias` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP06 | `SeguridadCategoriasServiceTest` | `sinSesionSeRechazaLaEdicion` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP07 | `CategoriaMongoAdapterTest` | `buscarPorIdDevuelveLaCategoria` | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP07 | `CategoriaMongoAdapterTest` | `buscarPorIdDevuelveVacioSiNoExiste` (2 variantes) | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP08 | `CategoriaMongoAdapterTest` | `existeOtraConNombreNoDistingueMayusculasNiTildes` (4 variantes) | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP08 | `CategoriaMongoAdapterTest` | `existeOtraConNombreIgnoraLaPropiaCategoria` (3 variantes) | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP08 | `CategoriaMongoAdapterTest` | `existeOtraConNombreComparaElNombreCompletoYLiteral` (3 variantes) | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP09 | `CategoriaMongoAdapterTest` | `guardarConIdActualizaLaCategoria` | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP09 | `CategoriaMongoAdapterTest` | `guardarRechazaCambiarElNombreAlDeOtraCategoria` | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP10 | `AdministracionCategoriasControllerTest` | `unAdministradorEditaUnaCategoria` | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP11 | `AdministracionCategoriasControllerTest` | `editarUnNombreRepetidoDevuelve409` | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP12 | `AdministracionCategoriasControllerTest` | `editarConDatosInvalidosDevuelve400` (2 variantes) | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP12 | `AdministracionCategoriasControllerTest` | `editarConUnaReglaDelDominioIncumplidaDevuelve400` | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP13 | `AdministracionCategoriasControllerTest` | `editarUnaCategoriaInexistenteDevuelve404` | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP14 | `AdministracionCategoriasControllerTest` | `editarConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP14 | `AdministracionCategoriasControllerTest` | `editarSinSesionDevuelve401` | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+
+Ruta de la clase de test de seguridad (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `SeguridadCategoriasServiceTest`: `categorias/application/service/` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB)
+
+---
+
 ## HU43 · Cerrar sesión
 
 ### Tabla A · HU43 ↔ casos de prueba
@@ -2751,7 +2873,7 @@ Tests que no validan una HU concreta.
 | `UsuariosConfigTest` | `elContextoConectaLasPiezasDelLogin` | Que Spring conecta el login con sus adaptadores de códigos (MongoDB), generador (`SecureRandom`) y correo (SMTP) (AB#230, PR #67) |
 | `UsuariosConfigTest` | `elContextoConectaLasPiezasDelAuthenticator` | Que Spring conecta el paso 3 (`AuthenticatorService`) con la librería TOTP, el cifrado AES-GCM y el adaptador de `factores_autenticacion` (AB#20, PR #75) |
 | `UsuariosConfigTest` | `elContextoRegistraElFiltroDeCuentaActiva` | Que Spring registra `CuentaActivaFilter`, el filtro que invalida la sesión de las cuentas desactivadas (HU23; AB#39, AB#206, PR #85) |
-| `UsuariosConfigTest` | `elContextoConectaLasPiezasDeLaRecuperacionDeContrasena` | Que Spring conecta la recuperación de contraseña (`RecuperacionContrasenaService`) con su adaptador de códigos en MongoDB (HU3; AB#400, PR sin abrir) |
+| `UsuariosConfigTest` | `elContextoConectaLasPiezasDeLaRecuperacionDeContrasena` | Que Spring conecta la recuperación de contraseña (`RecuperacionContrasenaService`) con su adaptador de códigos en MongoDB (HU3; AB#400, PR #172) |
 | `MetodosPagoConfigTest` | `elContextoConectaLasPiezasDeLosMetodosDePago` | Que Spring conecta el servicio de métodos de pago con su adaptador de MongoDB, su cifrado AES-GCM y el cliente en sesión (HU6; AB#271, PR #148) |
 | `MetodosPagoConfigTest` | `losDatosDePagoSeCifranConLaClaveConfigurada` | Que los datos de pago se cifran con la clave de `esibuy.pagos.clave-cifrado`, que en los tests pone `MongoTestcontainersConfig` (HU6; AB#271, PR #148) |
 | `CarritoConfigTest` | `elContextoConectaLasPiezasDelCarrito` | Que Spring conecta el servicio del carrito con su adaptador de MongoDB, los productos y los usuarios (HU9; AB#385, PR #162) |
