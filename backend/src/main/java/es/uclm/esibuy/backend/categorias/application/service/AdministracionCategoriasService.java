@@ -7,13 +7,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import es.uclm.esibuy.backend.categorias.application.port.in.AdministracionCategoriasUseCase;
 import es.uclm.esibuy.backend.categorias.application.port.in.CategoriaConProductos;
-import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
 import es.uclm.esibuy.backend.categorias.application.port.in.CrearCategoriaCommand;
+import es.uclm.esibuy.backend.categorias.application.port.in.EditarCategoriaCommand;
+import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
 import es.uclm.esibuy.backend.categorias.application.port.out.ProductosPorCategoriaPort;
+import es.uclm.esibuy.backend.categorias.application.port.out.VendedoresPorCategoriaPort;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaDuplicadaException;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
-import es.uclm.esibuy.backend.categorias.application.port.in.EditarCategoriaCommand;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 
 /**
@@ -24,11 +25,13 @@ public class AdministracionCategoriasService implements AdministracionCategorias
 
     private final CategoriaRepositoryPort categoriaRepository;
     private final ProductosPorCategoriaPort productosPorCategoria;
+    private final VendedoresPorCategoriaPort vendedoresPorCategoria;
 
     public AdministracionCategoriasService(CategoriaRepositoryPort categoriaRepository,
-            ProductosPorCategoriaPort productosPorCategoria) {
+            ProductosPorCategoriaPort productosPorCategoria, VendedoresPorCategoriaPort vendedoresPorCategoria) {
         this.categoriaRepository = categoriaRepository;
         this.productosPorCategoria = productosPorCategoria;
+        this.vendedoresPorCategoria = vendedoresPorCategoria;
     }
 
     // El repositorio ya las da ordenadas por nombre; las que no salen en el recuento no tienen productos.
@@ -69,5 +72,11 @@ public class AdministracionCategoriasService implements AdministracionCategorias
         Categoria guardada = categoriaRepository.guardar(editada);
         return new CategoriaConProductos(guardada,
                 productosPorCategoria.contarPorCategoria().getOrDefault(guardada.id(), 0L));
+    }
+
+    // Esqueleto del ciclo rojo (HU42, T326): se implementa en el verde.
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
+    @Override
+    public void eliminar(String id) {
     }
 }

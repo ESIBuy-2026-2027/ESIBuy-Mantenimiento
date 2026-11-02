@@ -27,4 +27,7 @@ public interface AdministracionCategoriasUseCase {
      * validan en el dominio ({@code CategoriaInvalidaException}).
      */
     CategoriaConProductos editar(EditarCategoriaCommand comando);
+
+    /** Elimina físicamente una categoría (HU42). */
+    void eliminar(String id);
 }

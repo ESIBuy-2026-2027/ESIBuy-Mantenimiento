@@ -23,9 +23,10 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import es.uclm.esibuy.backend.categorias.application.port.in.AdministracionCategoriasUseCase;
 import es.uclm.esibuy.backend.categorias.application.port.in.ConsultaCategoriasUseCase;
 import es.uclm.esibuy.backend.categorias.application.port.in.CrearCategoriaCommand;
+import es.uclm.esibuy.backend.categorias.application.port.in.EditarCategoriaCommand;
 import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
 import es.uclm.esibuy.backend.categorias.application.port.out.ProductosPorCategoriaPort;
-import es.uclm.esibuy.backend.categorias.application.port.in.EditarCategoriaCommand;
+import es.uclm.esibuy.backend.categorias.application.port.out.VendedoresPorCategoriaPort;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaInvalidaException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 
@@ -58,14 +59,19 @@ class SeguridadCategoriasServiceTest {
         }
 
         @Bean
+        VendedoresPorCategoriaPort vendedoresPorCategoria() {
+            return mock(VendedoresPorCategoriaPort.class);
+        }
+
+        @Bean
         ConsultaCategoriasUseCase consultaCategorias(CategoriaRepositoryPort repositorio) {
             return new ConsultaCategoriasService(repositorio);
         }
 
         @Bean
         AdministracionCategoriasUseCase administracionCategorias(CategoriaRepositoryPort repositorio,
-                ProductosPorCategoriaPort productos) {
-            return new AdministracionCategoriasService(repositorio, productos);
+                ProductosPorCategoriaPort productos, VendedoresPorCategoriaPort vendedores) {
+            return new AdministracionCategoriasService(repositorio, productos, vendedores);
         }
     }
 

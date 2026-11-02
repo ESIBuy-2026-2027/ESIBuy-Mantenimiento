@@ -70,4 +70,9 @@ public class CategoriaMongoAdapter implements CategoriaRepositoryPort {
                 .collation(SIN_MAYUSCULAS_NI_TILDES);
         return mongoTemplate.exists(consulta, CategoriaDocument.class);
     }
+
+    // Esqueleto del ciclo rojo (HU42, T326): se implementa en el ciclo del adaptador.
+    @Override
+    public void eliminar(String id) {
+    }
 }
