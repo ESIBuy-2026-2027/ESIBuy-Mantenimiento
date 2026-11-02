@@ -119,7 +119,7 @@ class SeguridadValoracionesServiceTest {
 
     @Test
     @WithMockUser(username = CLIENTE, roles = "CLIENTE")
-    @DisplayName("HU13-CP12: un cliente sí valora con su propio correo (el rechazo que llega es el del negocio, no el de seguridad)")
+    @DisplayName("HU13-CP12: un cliente sí valora con su correo (llega el rechazo de negocio, no el de seguridad)")
     void unClienteValoraConSuPropioCorreo() {
         ValorarProductoCommand valoracion = valoracionDe(CLIENTE);
         assertThrows(ProductoNoCompradoException.class, () -> valoracionProductos.valorar(valoracion));

@@ -92,7 +92,7 @@ class ValoracionMongoAdapterTest {
     }
 
     @Test
-    @DisplayName("HU13-CP05: la colección solo admite una valoración por cliente y producto, y el rechazo llega como valoración duplicada")
+    @DisplayName("HU13-CP05: una valoración por cliente y producto; la repetida llega como valoración duplicada")
     void laColeccionSoloAdmiteUnaValoracionPorClienteYProducto() {
         // Segunda barrera, a nivel de BBDD: cierra la carrera de dos valoraciones simultáneas del mismo cliente.
         // El adaptador traduce el error de clave duplicada de MongoDB a la excepción de dominio (409, no 500).

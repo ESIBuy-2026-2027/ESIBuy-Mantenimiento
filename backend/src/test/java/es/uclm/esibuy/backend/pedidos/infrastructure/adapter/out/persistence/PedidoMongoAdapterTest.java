@@ -98,7 +98,7 @@ class PedidoMongoAdapterTest {
     }
 
     @Test
-    @DisplayName("HU13-CP08: no cuenta como compra un producto que no está en sus pedidos ni el pedido de otro cliente")
+    @DisplayName("HU13-CP08: no es compra un producto que no está en sus pedidos ni el pedido de otro cliente")
     void noEsCompraSinElProductoNiConElPedidoDeOtroCliente() {
         adapter.guardar(pedidoPagado("ESB-2026-000001", "c-1", "p-1"));
         adapter.guardar(pedidoPagado("ESB-2026-000002", "c-2", "p-2"));

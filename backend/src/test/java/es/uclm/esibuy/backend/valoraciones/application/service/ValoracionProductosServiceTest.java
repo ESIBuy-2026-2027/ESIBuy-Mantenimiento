@@ -63,7 +63,7 @@ class ValoracionProductosServiceTest {
     }
 
     @Test
-    @DisplayName("HU13-CP11: el cliente no puede valorar dos veces el mismo producto y se conserva la primera valoración")
+    @DisplayName("HU13-CP11: no se puede valorar dos veces el mismo producto y se conserva la primera valoración")
     void noPuedeValorarDosVecesElMismoProducto() {
         valorar("p-1", 4, "Buena calidad");
 
