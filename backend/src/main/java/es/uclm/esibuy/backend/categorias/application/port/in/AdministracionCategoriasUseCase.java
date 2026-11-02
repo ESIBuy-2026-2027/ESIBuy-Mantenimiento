@@ -4,7 +4,7 @@ import java.util.List;
 
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 
-/** Puerto de entrada de la gestión de las categorías por el administrador (HU39 y HU40). */
+/** Puerto de entrada de la gestión de las categorías por el administrador (HU39 a HU42). */
 public interface AdministracionCategoriasUseCase {
 
     /**
@@ -28,6 +28,10 @@ public interface AdministracionCategoriasUseCase {
      */
     CategoriaConProductos editar(EditarCategoriaCommand comando);
 
-    /** Elimina físicamente una categoría (HU42). */
+    /**
+     * Elimina físicamente una categoría. La categoría debe existir ({@code CategoriaNoEncontradaException}), no
+     * puede tener productos ({@code CategoriaConProductosException}) ni ser la categoría principal de algún
+     * vendedor ({@code CategoriaConVendedoresException}).
+     */
     void eliminar(String id);
 }
