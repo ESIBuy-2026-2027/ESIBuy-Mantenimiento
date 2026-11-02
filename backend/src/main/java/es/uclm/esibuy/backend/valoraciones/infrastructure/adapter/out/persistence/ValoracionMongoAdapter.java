@@ -2,7 +2,10 @@ package es.uclm.esibuy.backend.valoraciones.infrastructure.adapter.out.persisten
 
 import java.util.List;
 
+import org.springframework.dao.DuplicateKeyException;
+
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ValoracionRepositoryPort;
+import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionDuplicadaException;
 import es.uclm.esibuy.backend.valoraciones.domain.model.Valoracion;
 
 /** Adaptador de salida que implementa el repositorio de valoraciones con Spring Data MongoDB. */
@@ -18,7 +21,12 @@ public class ValoracionMongoAdapter implements ValoracionRepositoryPort {
 
     @Override
     public Valoracion guardar(Valoracion valoracion) {
-        return mapper.aDominio(repository.save(mapper.aDocumento(valoracion)));
+        try {
+            return mapper.aDominio(repository.save(mapper.aDocumento(valoracion)));
+        } catch (DuplicateKeyException e) {
+            // Dos valoraciones simultáneas del mismo cliente: el índice único rechaza la segunda
+            throw new ValoracionDuplicadaException();
+        }
     }
 
     @Override
