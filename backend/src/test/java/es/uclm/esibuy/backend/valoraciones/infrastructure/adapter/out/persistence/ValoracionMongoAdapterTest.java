@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.shared.config.MongoConfig;
 import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColecciones;
+import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionDuplicadaException;
 import es.uclm.esibuy.backend.valoraciones.domain.model.Valoracion;
 import java.util.List;
 import java.util.Set;
@@ -20,7 +21,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 // Test de integración del adaptador de MongoDB de las valoraciones (HU13, T369). Usa un MongoDB real en Docker
@@ -92,12 +92,14 @@ class ValoracionMongoAdapterTest {
     }
 
     @Test
-    @DisplayName("HU13-CP05: la colección solo admite una valoración por cliente y producto")
+    @DisplayName("HU13-CP05: la colección solo admite una valoración por cliente y producto, y el rechazo llega como valoración duplicada")
     void laColeccionSoloAdmiteUnaValoracionPorClienteYProducto() {
-        // Segunda barrera, a nivel de BBDD: cierra la carrera de dos valoraciones simultáneas del mismo cliente
+        // Segunda barrera, a nivel de BBDD: cierra la carrera de dos valoraciones simultáneas del mismo cliente.
+        // El adaptador traduce el error de clave duplicada de MongoDB a la excepción de dominio (409, no 500).
         adapter.guardar(Valoracion.nueva("p-1", "u-1", 4, ""));
+        Valoracion repetida = Valoracion.nueva("p-1", "u-1", 2, "");
 
-        assertThrows(DuplicateKeyException.class, () -> adapter.guardar(Valoracion.nueva("p-1", "u-1", 2, "")));
+        assertThrows(ValoracionDuplicadaException.class, () -> adapter.guardar(repetida));
         assertEquals(1, valoracionMongoRepository.count());
     }
 }
