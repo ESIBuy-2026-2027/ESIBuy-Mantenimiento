@@ -177,4 +177,12 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         return usuarioRepository.buscarPorId(usuarioId)
                 .orElseThrow(() -> new UsuarioNoEncontradoException("El usuario no existe"));
     }
+
+    // Esqueleto del ciclo rojo (HU42, T326): se implementa en el verde.
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
+    @Override
+    public boolean existenVendedoresConCategoria(String categoriaId) {
+        usuarioRepository.existeVendedorConCategoriaPrincipal(categoriaId);
+        return false;
+    }
 }

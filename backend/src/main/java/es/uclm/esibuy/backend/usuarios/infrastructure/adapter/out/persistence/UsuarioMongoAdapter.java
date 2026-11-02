@@ -108,6 +108,12 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
         return repository.countByRolAndEstado("ADMINISTRADOR", ESTADO_ACTIVO);
     }
 
+    // Esqueleto del ciclo rojo (HU42, T326): se implementa en el ciclo del adaptador.
+    @Override
+    public boolean existeVendedorConCategoriaPrincipal(String categoriaId) {
+        return false;
+    }
+
     @Override
     public boolean existePorCorreo(String correo) {
         return repository.existsByEmail(correo);
