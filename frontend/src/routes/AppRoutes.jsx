@@ -11,6 +11,7 @@ import AdminPage from '../pages/AdminPage'
 import AdminSellersPage from '../pages/AdminSellersPage'
 import AdminUsersPage from '../pages/AdminUsersPage'
 import CheckoutPage from '../pages/CheckoutPage'
+import ForgotPasswordPage from '../pages/ForgotPasswordPage'
 import Home from '../pages/Home'
 import LoginPage from '../pages/LoginPage'
 import PaymentMethodsPage from '../pages/PaymentMethodsPage'
@@ -26,6 +27,7 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path={PATHS.LOGIN} element={<LoginPage />} />
+      <Route path={PATHS.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
 
       <Route element={<AppLayout />}>
         <Route path={PATHS.HOME} element={<Home />} />

@@ -25,6 +25,16 @@ export function logout() {
   return request('/api/auth/logout', { method: 'POST' })
 }
 
+// Recuperación de contraseña (HU3, backend en T399). Pedir el código responde siempre 204, exista o no la cuenta.
+export function requestPasswordRecovery(email) {
+  return request('/api/auth/password-recovery', { method: 'POST', body: { email } })
+}
+
+// 204 si se cambia; 401 si el código no sirve; 400 con el code del motivo si la contraseña no cumple la política
+export function resetPassword({ email, code, password }) {
+  return request('/api/auth/password-recovery/confirm', { method: 'POST', body: { email, code, password } })
+}
+
 export function registrarCliente(datos) {
   return request('/api/auth/register/cliente', { method: 'POST', body: datos })
 }
