@@ -1302,18 +1302,18 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU8-CP05 | La página tiene estado de carga, de producto no encontrado (404, también para un producto no disponible) con enlace para volver, y de error con reintento | Frontend (página) | 4 | ✅ Pasa (4, AB#354, PR #136) |
 | HU8-CP06 | Las tarjetas del listado, de la animación y de la lista de los mejores llevan al detalle del producto (con el teclado también); desde el detalle se vuelve a los productos; la tarjeta es un enlace con el identificador codificado | Frontend (componente y página) | 7 | ✅ Pasa (7, AB#354, PR #136) |
 | HU8-CP07 | Un producto sin valoraciones, sin imagen o sin descripción se muestra con un aviso en lugar de un hueco | Frontend (página) | 3 | ✅ Pasa (3, AB#354, PR #136) |
-| HU8-CP08 | El descuento que se aplica al cliente: ninguno si no hay descuentos activos; al Estándar, el general; al Premium, el premium si está activo y, si no, el general | Unitario (dominio) | 3 | 🔍 En revisión (3, AB#356, PR #173) |
-| HU8-CP09 | El detalle de un producto disponible lleva sus datos, el nombre comercial de su vendedor y, para un cliente Estándar, el precio con el descuento general | Unitario | 1 | 🔍 En revisión (1, AB#356, PR #173) |
-| HU8-CP10 | Al cliente Premium se le muestra el precio con su descuento premium | Unitario | 1 | 🔍 En revisión (1, AB#356, PR #173) |
-| HU8-CP11 | El detalle de un producto que no existe o no está disponible no se encuentra (ProductoNoEncontradoException) | Unitario | 1 | 🔍 En revisión (1, AB#356, PR #173) |
-| HU8-CP12 | Si el cliente es Premium y el nombre comercial del vendedor se piden al módulo de usuarios por su puerto de entrada | Unitario | 2 | 🔍 En revisión (2, AB#356, PR #173) |
-| HU8-CP13 | El cliente recibe el detalle con el formato del contrato (`vendedor` con id y nombre comercial; `descuento` con su porcentaje, o null sin descuento; `valoracion` null y `numValoraciones` 0) | Integración (capa web) | 2 | 🔍 En revisión (2, AB#355, PR #173) |
-| HU8-CP14 | Un producto que no existe o no está disponible devuelve 404 con el código PRODUCT_NOT_FOUND | Integración (capa web) | 1 | 🔍 En revisión (1, AB#355, PR #173) |
-| HU8-CP15 | Solo el cliente en sesión consulta el detalle: sin sesión, 401; otro rol, 403; y el caso de uso rechaza otro rol, el correo de otro cliente y la falta de sesión | Integración (capa web) + unitario con Spring Security (sin MongoDB) | 7 | 🔍 En revisión (7, AB#355, PR #173) |
+| HU8-CP08 | El descuento que se aplica al cliente: ninguno si no hay descuentos activos; al Estándar, el general; al Premium, el premium si está activo y, si no, el general | Unitario (dominio) | 3 | ✅ Pasa (3, AB#356, PR #173) |
+| HU8-CP09 | El detalle de un producto disponible lleva sus datos, el nombre comercial de su vendedor y, para un cliente Estándar, el precio con el descuento general | Unitario | 1 | ✅ Pasa (1, AB#356, PR #173) |
+| HU8-CP10 | Al cliente Premium se le muestra el precio con su descuento premium | Unitario | 1 | ✅ Pasa (1, AB#356, PR #173) |
+| HU8-CP11 | El detalle de un producto que no existe o no está disponible no se encuentra (ProductoNoEncontradoException) | Unitario | 1 | ✅ Pasa (1, AB#356, PR #173) |
+| HU8-CP12 | Si el cliente es Premium y el nombre comercial del vendedor se piden al módulo de usuarios por su puerto de entrada | Unitario | 2 | ✅ Pasa (2, AB#356, PR #173) |
+| HU8-CP13 | El cliente recibe el detalle con el formato del contrato (`vendedor` con id y nombre comercial; `descuento` con su porcentaje, o null sin descuento; `valoracion` null y `numValoraciones` 0) | Integración (capa web) | 2 | ✅ Pasa (2, AB#355, PR #173) |
+| HU8-CP14 | Un producto que no existe o no está disponible devuelve 404 con el código PRODUCT_NOT_FOUND | Integración (capa web) | 1 | ✅ Pasa (1, AB#355, PR #173) |
+| HU8-CP15 | Solo el cliente en sesión consulta el detalle: sin sesión, 401; otro rol, 403; y el caso de uso rechaza otro rol, el correo de otro cliente y la falta de sesión | Integración (capa web) + unitario con Spring Security (sin MongoDB) | 7 | ✅ Pasa (7, AB#355, PR #173) |
 
 Notas:
 - **HU8-CP01 a CP07 (Sprint 2, frontend):** casos propuestos en la task AB#354 (vista de detalle de producto) a partir de lo pedido en ella y de las decisiones del equipo (`frontend/docs/hu8-detalle-producto.md`). Pendientes de confirmar con el equipo y de añadir a la HU8 (AB#70) en Azure Boards.
-- **HU8-CP08 a CP15 (Sprint 2, backend):** casos propuestos en las tasks AB#356 (lógica del detalle de producto) y AB#355 (endpoint `GET /api/products/{id}`), con el contrato que ya usaba el frontend en sus mocks (MSW). Desarrollados con TDD. Pendientes de confirmar con el equipo y de añadir a la HU8 (AB#70) en Azure Boards.
+- **HU8-CP08 a CP15 (Sprint 2, backend):** casos propuestos en las tasks AB#356 (lógica del detalle de producto) y AB#355 (endpoint `GET /api/products/{id}`), con el contrato que ya usaba el frontend en sus mocks (MSW). Desarrollados con TDD y mergeados en `develop` (PR #173). Pendientes de confirmar con el equipo y de añadir a la HU8 (AB#70) en Azure Boards.
 - **Producto no disponible:** el detalle lo trata como si no existiera (404 `PRODUCT_NOT_FOUND`), igual que el frontend (HU8-CP05).
 - **Seguridad (HU8-CP15):** la regla de `SecurityConfig` pasa a `GET /api/products/**`, solo para CLIENTE, y cubre el catálogo (HU7) y el detalle. `consultarDetalle` lleva `@PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)`: además del rol, el correo tiene que ser el de la sesión, para que un cliente Estándar no vea el precio de un Premium.
 - **Valoraciones (HU13, sin hacer):** como en el catálogo, `valoracion` es `null` y `numValoraciones` es 0 (`PENDIENTE DE DECIDIR (equipo)` en el código).
@@ -1355,24 +1355,24 @@ Notas:
 | HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin valoraciones lo indica en lugar de mostrar estrellas` | Frontend · página | AB#354 | PR #136 | ✅ |
 | HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin imagen muestra un marcador en su lugar` | Frontend · página | AB#354 | PR #136 | ✅ |
 | HU8-CP07 | `ProductDetailPage.test.jsx` | `HU8-CP07: un producto sin descripción lo indica` | Frontend · página | AB#354 | PR #136 | ✅ |
-| HU8-CP08 | `ProductoTest` | `sinDescuentosNoSeAplicaNinguno` | Dominio | AB#356 | PR #173 | 🔍 |
-| HU8-CP08 | `ProductoTest` | `alClienteEstandarSeLeAplicaElGeneral` | Dominio | AB#356 | PR #173 | 🔍 |
-| HU8-CP08 | `ProductoTest` | `alClientePremiumSeLeAplicaElPremiumOElGeneral` | Dominio | AB#356 | PR #173 | 🔍 |
-| HU8-CP09 | `CatalogoProductosServiceTest` | `elDetalleLlevaSusDatosYElNombreComercialDelVendedor` | Aplicación | AB#356 | PR #173 | 🔍 |
-| HU8-CP10 | `CatalogoProductosServiceTest` | `alClientePremiumSeLeMuestraElPrecioConSuDescuento` | Aplicación | AB#356 | PR #173 | 🔍 |
-| HU8-CP11 | `CatalogoProductosServiceTest` | `elDetalleDeUnProductoQueNoExisteONoEstaDisponibleNoSeEncuentra` | Aplicación | AB#356 | PR #173 | 🔍 |
-| HU8-CP12 | `UsuarioEnSesionAdapterTest` | `esClientePremiumPreguntaAlModuloDeUsuarios` | Infraestructura | AB#356 | PR #173 | 🔍 |
-| HU8-CP12 | `VendedorAdapterTest` | `nombreComercialPreguntaAlModuloDeUsuarios` | Infraestructura | AB#356 | PR #173 | 🔍 |
-| HU8-CP13 | `CatalogoControllerTest` | `clienteRecibeElDetalleConElFormatoDelContrato` | Infraestructura | AB#355 | PR #173 | 🔍 |
-| HU8-CP13 | `CatalogoControllerTest` | `sinDescuentoElDescuentoDelDetalleEsNull` | Infraestructura | AB#355 | PR #173 | 🔍 |
-| HU8-CP14 | `CatalogoControllerTest` | `productoNoEncontradoDevuelve404` | Infraestructura | AB#355 | PR #173 | 🔍 |
-| HU8-CP15 | `CatalogoControllerTest` | `sinSesionElDetalleDevuelve401` | Infraestructura | AB#355 | PR #173 | 🔍 |
-| HU8-CP15 | `CatalogoControllerTest` | `otroRolElDetalleDevuelve403` | Infraestructura | AB#355 | PR #173 | 🔍 |
-| HU8-CP15 | `SeguridadProductosServiceTest` | `unVendedorNoConsultaElDetalle` | Aplicación | AB#355 | PR #173 | 🔍 |
-| HU8-CP15 | `SeguridadProductosServiceTest` | `unAdministradorNoConsultaElDetalle` | Aplicación | AB#355 | PR #173 | 🔍 |
-| HU8-CP15 | `SeguridadProductosServiceTest` | `unClienteNoConsultaElDetalleConElCorreoDeOtro` | Aplicación | AB#355 | PR #173 | 🔍 |
-| HU8-CP15 | `SeguridadProductosServiceTest` | `unClienteConsultaElDetalleConSuPropioCorreo` | Aplicación | AB#355 | PR #173 | 🔍 |
-| HU8-CP15 | `SeguridadProductosServiceTest` | `sinSesionNoSeConsultaElDetalle` | Aplicación | AB#355 | PR #173 | 🔍 |
+| HU8-CP08 | `ProductoTest` | `sinDescuentosNoSeAplicaNinguno` | Dominio | AB#356 | PR #173 | ✅ |
+| HU8-CP08 | `ProductoTest` | `alClienteEstandarSeLeAplicaElGeneral` | Dominio | AB#356 | PR #173 | ✅ |
+| HU8-CP08 | `ProductoTest` | `alClientePremiumSeLeAplicaElPremiumOElGeneral` | Dominio | AB#356 | PR #173 | ✅ |
+| HU8-CP09 | `CatalogoProductosServiceTest` | `elDetalleLlevaSusDatosYElNombreComercialDelVendedor` | Aplicación | AB#356 | PR #173 | ✅ |
+| HU8-CP10 | `CatalogoProductosServiceTest` | `alClientePremiumSeLeMuestraElPrecioConSuDescuento` | Aplicación | AB#356 | PR #173 | ✅ |
+| HU8-CP11 | `CatalogoProductosServiceTest` | `elDetalleDeUnProductoQueNoExisteONoEstaDisponibleNoSeEncuentra` | Aplicación | AB#356 | PR #173 | ✅ |
+| HU8-CP12 | `UsuarioEnSesionAdapterTest` | `esClientePremiumPreguntaAlModuloDeUsuarios` | Infraestructura | AB#356 | PR #173 | ✅ |
+| HU8-CP12 | `VendedorAdapterTest` | `nombreComercialPreguntaAlModuloDeUsuarios` | Infraestructura | AB#356 | PR #173 | ✅ |
+| HU8-CP13 | `CatalogoControllerTest` | `clienteRecibeElDetalleConElFormatoDelContrato` | Infraestructura | AB#355 | PR #173 | ✅ |
+| HU8-CP13 | `CatalogoControllerTest` | `sinDescuentoElDescuentoDelDetalleEsNull` | Infraestructura | AB#355 | PR #173 | ✅ |
+| HU8-CP14 | `CatalogoControllerTest` | `productoNoEncontradoDevuelve404` | Infraestructura | AB#355 | PR #173 | ✅ |
+| HU8-CP15 | `CatalogoControllerTest` | `sinSesionElDetalleDevuelve401` | Infraestructura | AB#355 | PR #173 | ✅ |
+| HU8-CP15 | `CatalogoControllerTest` | `otroRolElDetalleDevuelve403` | Infraestructura | AB#355 | PR #173 | ✅ |
+| HU8-CP15 | `SeguridadProductosServiceTest` | `unVendedorNoConsultaElDetalle` | Aplicación | AB#355 | PR #173 | ✅ |
+| HU8-CP15 | `SeguridadProductosServiceTest` | `unAdministradorNoConsultaElDetalle` | Aplicación | AB#355 | PR #173 | ✅ |
+| HU8-CP15 | `SeguridadProductosServiceTest` | `unClienteNoConsultaElDetalleConElCorreoDeOtro` | Aplicación | AB#355 | PR #173 | ✅ |
+| HU8-CP15 | `SeguridadProductosServiceTest` | `unClienteConsultaElDetalleConSuPropioCorreo` | Aplicación | AB#355 | PR #173 | ✅ |
+| HU8-CP15 | `SeguridadProductosServiceTest` | `sinSesionNoSeConsultaElDetalle` | Aplicación | AB#355 | PR #173 | ✅ |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `ProductDetailPage.test.jsx` y `ProductsPage.test.jsx`: `pages/` (Vitest, React Testing Library y MSW)
@@ -1689,6 +1689,106 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 - `ExistenciasProductosServiceTest` y `ProductoMongoAdapterTest`: `productos/application/service/` y `productos/infrastructure/adapter/out/persistence/`
 - `GestionMetodosPagoServiceTest` y `GestionDireccionesServiceTest`: `metodospago/application/service/` y `direcciones/application/service/`
 - `InicializadorColeccionesTest`: `shared/infrastructure/config/`
+
+---
+
+## HU13 · Valorar productos comprados
+
+### Tabla A · HU13 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU13-CP01 | Una valoración se crea con su producto, su cliente, su puntuación y un comentario; nace sin id, y el comentario es opcional (vacío si no hay) y se guarda sin espacios en los extremos | Unitario (dominio) | 3 | 🔍 En revisión (3, AB#369, PR pendiente) |
+| HU13-CP02 | La puntuación es un entero de 1 a 5: se admiten los extremos y se rechaza lo de fuera | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#369, PR pendiente) |
+| HU13-CP03 | El comentario admite hasta 500 caracteres, sin contar los espacios de los extremos | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#369, PR pendiente) |
+| HU13-CP04 | El producto y el cliente son obligatorios (ni nulos ni en blanco) | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#369, PR pendiente) |
+| HU13-CP05 | Persistencia en `valoraciones`: se asigna el id, el cliente se guarda como `usuarioId`, se busca por producto, se sabe si un cliente ya valoró un producto y el índice único (usuarioId, productoId) rechaza la repetida como valoración duplicada | Integración MongoDB | 5 | 🔍 En revisión (5, AB#369, PR pendiente) |
+| HU13-CP06 | Pedidos indica si un cliente ha comprado un producto: un pedido PAGADO suyo que lo contenga; la consulta se hace con el id del cliente, no con su correo | Unitario | 3 | 🔍 En revisión (3, AB#370, PR pendiente) |
+| HU13-CP07 | Consultar si se ha comprado un producto exige el rol cliente y que el correo sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, AB#370, PR pendiente) |
+| HU13-CP08 | La consulta de compras en MongoDB encuentra el producto en cualquier línea de un pedido PAGADO del cliente, no cuenta los pedidos de otro cliente y solo cuenta el estado PAGADO | Integración MongoDB | 3 | 🔍 En revisión (3, AB#370, PR pendiente) |
+| HU13-CP09 | El cliente que ha comprado un producto lo valora: la valoración se guarda con el id del cliente y se devuelve con su id | Unitario | 2 | 🔍 En revisión (2, AB#370, PR pendiente) |
+| HU13-CP10 | No se puede valorar un producto que no se ha comprado, y no se guarda nada | Unitario | 1 | 🔍 En revisión (1, AB#370, PR pendiente) |
+| HU13-CP11 | No se puede valorar dos veces el mismo producto, y se conserva la primera valoración | Unitario | 1 | 🔍 En revisión (1, AB#370, PR pendiente) |
+| HU13-CP12 | Valorar exige el rol cliente y que el correo del comando sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, AB#370, PR pendiente) |
+| HU13-CP13 | Los adaptadores preguntan por su puerto de entrada al módulo de usuarios (id del cliente) y al de pedidos (si ha comprado) | Unitario | 3 | 🔍 En revisión (3, AB#370, PR pendiente) |
+| HU13-CP14 | `POST /api/products/{id}/valoraciones`: 201 con la valoración y sin el cliente; 400 `VALIDATION_ERROR`; 403 `PRODUCT_NOT_PURCHASED`; 409 `REVIEW_ALREADY_EXISTS`; sin sesión 401, otro rol 403 y sin CSRF se rechaza | Integración (capa web) | 5 | 🔍 En revisión (5, AB#370, PR pendiente) |
+| HU13-CP15 | Consultar un producto devuelve todas sus valoraciones y solo las suyas; sin valoraciones, una lista vacía | Unitario | 2 | 🔍 En revisión (2, AB#371, PR pendiente) |
+| HU13-CP16 | Consultar las valoraciones de un producto exige el rol cliente; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 4 | 🔍 En revisión (4, AB#371, PR pendiente) |
+| HU13-CP17 | `GET /api/products/{id}/valoraciones`: 200 con la lista sin el cliente, o vacía; sin sesión 401 y otro rol 403 | Integración (capa web) | 3 | 🔍 En revisión (3, AB#371, PR pendiente) |
+
+Notas:
+- **HU13-CP01 a CP17 (Sprint 2, backend):** casos propuestos en las tasks AB#369 (entidad valoración), AB#370 (endpoint para crear una valoración) y AB#371 (endpoint para obtener las valoraciones), y desarrollados con TDD. PENDIENTE DE REVISAR CON EL EQUIPO: confirmarlos y añadirlos a la HU13 (AB#75) en Azure Boards.
+- **Decisiones del equipo:** módulo nuevo `valoraciones`; puntuación entera de 1 a 5 y comentario opcional de hasta 500 caracteres; una valoración por cliente y producto aunque lo compre varias veces; compra confirmada = pedido PAGADO (`ConsultaComprasUseCase`, puerto de entrada nuevo de `pedidos`); sin compra responde 403 `PRODUCT_NOT_PURCHASED`; el GET devuelve las valoraciones sin fecha ni orden garantizado.
+- **Fuera de alcance:** rellenar `valoracion` y `numValoraciones` del catálogo (HU7) y del detalle (HU8), que siguen `PENDIENTE DE DECIDIR (equipo)`; será una task aparte.
+- **Valoraciones simultáneas (HU13-CP05):** si dos peticiones del mismo cliente pasan a la vez la comprobación de duplicado, el índice único rechaza la segunda y el adaptador la traduce a `ValoracionDuplicadaException` (409, no 500).
+- **Seguridad:** `POST /api/products/*/valoraciones` tiene su propia regla en `SecurityConfig` (solo CLIENTE, con CSRF); el GET queda cubierto por `GET /api/products/**` (HU8). Los servicios llevan `@PreAuthorize`: `SOLO_CLIENTE_PROPIO_EN_COMANDO` para valorar, `SOLO_CLIENTE_PROPIO` para consultar compras y `SOLO_CLIENTE` para consultar valoraciones.
+- **Ciclos sin rojo real:** HU13-CP12 (el `@PreAuthorize` se puso con el servicio, regla 7 del CLAUDE.md) y la parte de seguridad de HU13-CP17 (la cubría ya la regla del catálogo).
+- **Clases de test nuevas**, acordadas con el equipo: `ValoracionTest`, `ValoracionMongoAdapterTest`, `ConsultaComprasServiceTest`, `ValoracionProductosServiceTest`, `SeguridadValoracionesServiceTest`, `ClienteEnSesionAdapterTest` (de valoraciones), `ComprasAdapterTest`, `ValoracionesConfigTest`, `ValoracionControllerTest` y `ConsultaValoracionesServiceTest`. **Tests en clases que ya existían** (módulo `pedidos`): `SeguridadPedidosServiceTest`, `PedidoMongoAdapterTest` y `PedidosConfigTest`.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU13-CP01 | `ValoracionTest` | `creaUnaValoracionConSusDatos` | Dominio | AB#369 | PR pendiente | 🔍 |
+| HU13-CP01 | `ValoracionTest` | `unaValoracionNuevaNaceSinId` | Dominio | AB#369 | PR pendiente | 🔍 |
+| HU13-CP01 | `ValoracionTest` | `elComentarioEsOpcionalYSeRecorta` | Dominio | AB#369 | PR pendiente | 🔍 |
+| HU13-CP02 | `ValoracionTest` | `admiteLasPuntuacionesDeLosExtremos` (1 y 5) | Dominio | AB#369 | PR pendiente | 🔍 |
+| HU13-CP02 | `ValoracionTest` | `rechazaUnaPuntuacionFueraDeRango` (0, 6 y -1) | Dominio | AB#369 | PR pendiente | 🔍 |
+| HU13-CP03 | `ValoracionTest` | `elComentarioAdmiteHasta500Caracteres` | Dominio | AB#369 | PR pendiente | 🔍 |
+| HU13-CP03 | `ValoracionTest` | `rechazaUnComentarioDeMasDe500Caracteres` | Dominio | AB#369 | PR pendiente | 🔍 |
+| HU13-CP04 | `ValoracionTest` | `rechazaUnaValoracionSinProducto` (null, vacío y en blanco) | Dominio | AB#369 | PR pendiente | 🔍 |
+| HU13-CP04 | `ValoracionTest` | `rechazaUnaValoracionSinCliente` (null, vacío y en blanco) | Dominio | AB#369 | PR pendiente | 🔍 |
+| HU13-CP05 | `ValoracionMongoAdapterTest` | `guardarUnaValoracionNuevaYRecuperarlaPorProducto` | Infraestructura | AB#369 | PR pendiente | 🔍 |
+| HU13-CP05 | `ValoracionMongoAdapterTest` | `elClienteSeGuardaComoUsuarioId` | Infraestructura | AB#369 | PR pendiente | 🔍 |
+| HU13-CP05 | `ValoracionMongoAdapterTest` | `buscarPorProductoDevuelveSoloLasDeEseProducto` | Infraestructura | AB#369 | PR pendiente | 🔍 |
+| HU13-CP05 | `ValoracionMongoAdapterTest` | `sabeSiUnClienteYaHaValoradoUnProducto` | Infraestructura | AB#369 | PR pendiente | 🔍 |
+| HU13-CP05 | `ValoracionMongoAdapterTest` | `laColeccionSoloAdmiteUnaValoracionPorClienteYProducto` | Infraestructura | AB#369 | PR pendiente | 🔍 |
+| HU13-CP06 | `ConsultaComprasServiceTest` | `haCompradoSiTieneUnPedidoPagadoConElProducto` | Aplicación | AB#370 | PR pendiente | 🔍 |
+| HU13-CP06 | `ConsultaComprasServiceTest` | `noHaCompradoSiNoTienePedidoPagadoConElProducto` | Aplicación | AB#370 | PR pendiente | 🔍 |
+| HU13-CP06 | `ConsultaComprasServiceTest` | `laConsultaSeHaceConElIdDelCliente` | Aplicación | AB#370 | PR pendiente | 🔍 |
+| HU13-CP07 | `SeguridadPedidosServiceTest` | `unVendedorNoConsultaCompras` | Aplicación | AB#370 | PR pendiente | 🔍 |
+| HU13-CP07 | `SeguridadPedidosServiceTest` | `unAdministradorNoConsultaCompras` | Aplicación | AB#370 | PR pendiente | 🔍 |
+| HU13-CP07 | `SeguridadPedidosServiceTest` | `unClienteNoConsultaLasComprasDeOtro` | Aplicación | AB#370 | PR pendiente | 🔍 |
+| HU13-CP07 | `SeguridadPedidosServiceTest` | `unClienteConsultaSusPropiasCompras` | Aplicación | AB#370 | PR pendiente | 🔍 |
+| HU13-CP07 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaConsultarCompras` | Aplicación | AB#370 | PR pendiente | 🔍 |
+| HU13-CP08 | `PedidoMongoAdapterTest` | `unPedidoPagadoConElProductoEsUnaCompra` | Infraestructura | AB#370 | PR pendiente | 🔍 |
+| HU13-CP08 | `PedidoMongoAdapterTest` | `noEsCompraSinElProductoNiConElPedidoDeOtroCliente` | Infraestructura | AB#370 | PR pendiente | 🔍 |
+| HU13-CP08 | `PedidoMongoAdapterTest` | `soloCuentaUnPedidoPagado` | Infraestructura | AB#370 | PR pendiente | 🔍 |
+| HU13-CP09 | `ValoracionProductosServiceTest` | `elClienteQueHaCompradoValoraElProducto` | Aplicación | AB#370 | PR pendiente | 🔍 |
+| HU13-CP09 | `ValoracionProductosServiceTest` | `valorarDevuelveLaValoracionGuardada` | Aplicación | AB#370 | PR pendiente | 🔍 |
+| HU13-CP10 | `ValoracionProductosServiceTest` | `noPuedeValorarUnProductoQueNoHaComprado` | Aplicación | AB#370 | PR pendiente | 🔍 |
+| HU13-CP11 | `ValoracionProductosServiceTest` | `noPuedeValorarDosVecesElMismoProducto` | Aplicación | AB#370 | PR pendiente | 🔍 |
+| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unVendedorNoValora` | Aplicación | AB#370 | PR pendiente | 🔍 |
+| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unAdministradorNoValora` | Aplicación | AB#370 | PR pendiente | 🔍 |
+| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unClienteNoValoraConElCorreoDeOtro` | Aplicación | AB#370 | PR pendiente | 🔍 |
+| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unClienteValoraConSuPropioCorreo` | Aplicación | AB#370 | PR pendiente | 🔍 |
+| HU13-CP12 | `SeguridadValoracionesServiceTest` | `sinSesionSeRechazaValorar` | Aplicación | AB#370 | PR pendiente | 🔍 |
+| HU13-CP13 | `ClienteEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#370 | PR pendiente | 🔍 |
+| HU13-CP13 | `ComprasAdapterTest` | `haCompradoPreguntaAlModuloDePedidos` | Infraestructura | AB#370 | PR pendiente | 🔍 |
+| HU13-CP13 | `ComprasAdapterTest` | `siPedidosRespondeQueNoElAdaptadorTambien` | Infraestructura | AB#370 | PR pendiente | 🔍 |
+| HU13-CP14 | `ValoracionControllerTest` | `valorarUnProductoResponde201` | Infraestructura | AB#370 | PR pendiente | 🔍 |
+| HU13-CP14 | `ValoracionControllerTest` | `unaValoracionInvalidaResponde400` | Infraestructura | AB#370 | PR pendiente | 🔍 |
+| HU13-CP14 | `ValoracionControllerTest` | `valorarSinHaberCompradoResponde403` | Infraestructura | AB#370 | PR pendiente | 🔍 |
+| HU13-CP14 | `ValoracionControllerTest` | `valorarDosVecesResponde409` | Infraestructura | AB#370 | PR pendiente | 🔍 |
+| HU13-CP14 | `ValoracionControllerTest` | `soloElClienteValora` | Infraestructura | AB#370 | PR pendiente | 🔍 |
+| HU13-CP15 | `ConsultaValoracionesServiceTest` | `devuelveLasValoracionesDelProducto` | Aplicación | AB#371 | PR pendiente | 🔍 |
+| HU13-CP15 | `ConsultaValoracionesServiceTest` | `unProductoSinValoracionesDevuelveUnaListaVacia` | Aplicación | AB#371 | PR pendiente | 🔍 |
+| HU13-CP16 | `SeguridadValoracionesServiceTest` | `unVendedorNoConsultaValoraciones` | Aplicación | AB#371 | PR pendiente | 🔍 |
+| HU13-CP16 | `SeguridadValoracionesServiceTest` | `unAdministradorNoConsultaValoraciones` | Aplicación | AB#371 | PR pendiente | 🔍 |
+| HU13-CP16 | `SeguridadValoracionesServiceTest` | `unClienteConsultaValoraciones` | Aplicación | AB#371 | PR pendiente | 🔍 |
+| HU13-CP16 | `SeguridadValoracionesServiceTest` | `sinSesionSeRechazaConsultarValoraciones` | Aplicación | AB#371 | PR pendiente | 🔍 |
+| HU13-CP17 | `ValoracionControllerTest` | `consultarLasValoracionesResponde200ConLaLista` | Infraestructura | AB#371 | PR pendiente | 🔍 |
+| HU13-CP17 | `ValoracionControllerTest` | `unProductoSinValoracionesResponde200ConUnaListaVacia` | Infraestructura | AB#371 | PR pendiente | 🔍 |
+| HU13-CP17 | `ValoracionControllerTest` | `soloElClienteConsultaLasValoraciones` | Infraestructura | AB#371 | PR pendiente | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `ValoracionTest`: `valoraciones/domain/model/` (JUnit, sin Spring)
+- `ValoracionProductosServiceTest` y `ConsultaValoracionesServiceTest`: `valoraciones/application/service/` (JUnit con dobles de prueba, sin Spring)
+- `SeguridadValoracionesServiceTest`: `valoraciones/application/service/` (contexto mínimo de Spring con la seguridad de métodos, sin MongoDB)
+- `ValoracionMongoAdapterTest`: `valoraciones/infrastructure/adapter/out/persistence/` (`@DataMongoTest` con Testcontainers)
+- `ClienteEnSesionAdapterTest`: `valoraciones/infrastructure/adapter/out/usuarios/`; `ComprasAdapterTest`: `valoraciones/infrastructure/adapter/out/pedidos/` (JUnit y Mockito, sin Spring)
+- `ValoracionControllerTest`: `valoraciones/infrastructure/adapter/in/web/` (`@WebMvcTest` con la seguridad real)
+- `ConsultaComprasServiceTest` y `SeguridadPedidosServiceTest`: `pedidos/application/service/`; `PedidoMongoAdapterTest`: `pedidos/infrastructure/adapter/out/persistence/` (Testcontainers)
 
 ---
 
@@ -2877,7 +2977,8 @@ Tests que no validan una HU concreta.
 | `MetodosPagoConfigTest` | `elContextoConectaLasPiezasDeLosMetodosDePago` | Que Spring conecta el servicio de métodos de pago con su adaptador de MongoDB, su cifrado AES-GCM y el cliente en sesión (HU6; AB#271, PR #148) |
 | `MetodosPagoConfigTest` | `losDatosDePagoSeCifranConLaClaveConfigurada` | Que los datos de pago se cifran con la clave de `esibuy.pagos.clave-cifrado`, que en los tests pone `MongoTestcontainersConfig` (HU6; AB#271, PR #148) |
 | `CarritoConfigTest` | `elContextoConectaLasPiezasDelCarrito` | Que Spring conecta el servicio del carrito con su adaptador de MongoDB, los productos y los usuarios (HU9; AB#385, PR #162) |
-| `PedidosConfigTest` | `elContextoConectaLasPiezasDeLosPedidos` | Que Spring conecta la realización de pedidos con su repositorio, el contador y los adaptadores hacia usuarios, carrito, métodos de pago, direcciones y productos (HU10; AB#381, PR #166) |
+| `PedidosConfigTest` | `elContextoConectaLasPiezasDeLosPedidos` | Que Spring conecta la realización de pedidos con su repositorio, el contador y los adaptadores hacia usuarios, carrito, métodos de pago, direcciones y productos (HU10; AB#381, PR #166); y la consulta de compras de HU13 (AB#370, PR pendiente) |
+| `ValoracionesConfigTest` | `elContextoConectaLasPiezasDeLasValoraciones` | Que Spring conecta la valoración y la consulta de valoraciones con su adaptador de MongoDB y los adaptadores hacia usuarios y pedidos (HU13; AB#370 y AB#371, PR pendiente) |
 | `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |
 | `SecurityConfigTest` | `unaPeticionRecibeElTokenCsrfEnUnaCookie` | Que cualquier respuesta, aunque sea un 401, entrega el token CSRF en la cookie `XSRF-TOKEN` sin `HttpOnly` (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostSinTokenCsrfSeRechaza` | Que un `POST` sin token CSRF se rechaza con 403 (AB#230, PR #67) |
