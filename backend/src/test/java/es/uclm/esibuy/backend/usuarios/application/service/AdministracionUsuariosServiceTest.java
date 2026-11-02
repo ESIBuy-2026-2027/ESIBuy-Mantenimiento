@@ -350,7 +350,7 @@ class AdministracionUsuariosServiceTest {
         Usuario desactivado = servicio.desactivar("u-2", EMAIL_ADMINISTRADOR);
 
         assertSame(activo, desactivado);
-        assertEquals("DESACTIVADO", desactivado.getEstado());
+        assertEquals("BLOQUEADO", desactivado.getEstado());
         verify(usuarioRepository).guardar(desactivado);
     }
 
@@ -398,7 +398,7 @@ class AdministracionUsuariosServiceTest {
 
         Usuario desactivado = servicio.desactivar("u-3", EMAIL_ADMINISTRADOR);
 
-        assertEquals("DESACTIVADO", desactivado.getEstado());
+        assertEquals("BLOQUEADO", desactivado.getEstado());
         verify(usuarioRepository).guardar(desactivado);
     }
 
@@ -429,7 +429,7 @@ class AdministracionUsuariosServiceTest {
         Usuario desactivado = servicio.desactivarVendedor("u-4");
 
         assertSame(activo, desactivado);
-        assertEquals("DESACTIVADO", desactivado.getEstado());
+        assertEquals("BLOQUEADO", desactivado.getEstado());
         verify(usuarioRepository).guardar(desactivado);
     }
 

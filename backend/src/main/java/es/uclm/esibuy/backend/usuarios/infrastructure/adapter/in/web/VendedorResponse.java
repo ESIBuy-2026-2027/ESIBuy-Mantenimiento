@@ -1,6 +1,5 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
-import java.time.Instant;
 import java.util.Map;
 
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
@@ -34,7 +33,7 @@ public record VendedorResponse(
                 usuario.getDatosPersonales().nombre(),
                 usuario.getDatosPersonales().apellidos(),
                 usuario.getEmail().valor(),
-                usuario.tieneBloqueoPorIntentos(Instant.now()) ? "BLOQUEADO" : usuario.getEstado(),
+                usuario.getEstado(),
                 datos == null ? null : datos.nombreComercial(),
                 datos == null ? null : datos.categoriaPrincipalId(),
                 datos == null ? null : nombresDeCategorias.get(datos.categoriaPrincipalId()),

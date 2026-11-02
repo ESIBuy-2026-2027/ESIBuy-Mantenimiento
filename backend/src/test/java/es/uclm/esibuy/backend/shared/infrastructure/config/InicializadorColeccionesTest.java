@@ -123,6 +123,7 @@ class InicializadorColeccionesTest {
                 .append("fechaIncorporacion", AHORA));
         acepta("usuarios", usuario("nulo@uclm.es", "CLIENTE").append("lockedUntil", null).append("lastLoginAt", null));
         acepta("usuarios", usuario("nuevo@uclm.es", "CLIENTE").append("campoNoPrevisto", "valor"));
+        acepta("usuarios", usuario("bloqueado@uclm.es", "CLIENTE").append("estado", "BLOQUEADO"));
     }
 
     @Test
@@ -130,6 +131,7 @@ class InicializadorColeccionesTest {
     void rechazaUsuariosInvalidos() {
         rechaza(VALIDACION, "usuarios", new Document("email", "x@uclm.es").append("rol", "CLIENTE"));
         rechaza(VALIDACION, "usuarios", usuario("y@uclm.es", "SUPERUSUARIO"));
+        rechaza(VALIDACION, "usuarios", usuario("d@uclm.es", "CLIENTE").append("estado", "DESACTIVADO"));
         rechaza(VALIDACION, "usuarios", usuario("z@uclm.es", "CLIENTE").append("tipoCliente", "VIP"));
         rechaza(VALIDACION, "usuarios", usuario("w@uclm.es", "CLIENTE").append("failedLoginAttempts", -1));
         rechaza(VALIDACION, "usuarios", usuario("v@uclm.es", "VENDEDOR").append("nombreComercial", ""));

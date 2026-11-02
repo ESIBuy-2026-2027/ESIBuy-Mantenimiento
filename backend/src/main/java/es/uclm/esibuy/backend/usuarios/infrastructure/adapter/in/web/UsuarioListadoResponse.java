@@ -24,8 +24,7 @@ public record UsuarioListadoResponse(
                 usuario.getDatosPersonales().apellidos(),
                 usuario.getEmail().valor(),
                 usuario.getRol().name(),
-                usuario.tieneBloqueoPorIntentos(java.time.Instant.now())
-                        ? "BLOQUEADO" : usuario.getEstado(),
+                usuario.getEstado(),
                 usuario.getFechaAlta()
         );
     }

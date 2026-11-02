@@ -3,7 +3,6 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
-import java.time.Instant;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -179,13 +178,13 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
         return Sort.by(Sort.Direction.DESC, "createdAt");
     }
 
-    // Por estado (HU26): el orden ascendente es pendientes, activos y desactivados, no el alfabético,
+    // Por estado (HU26): el orden ascendente es pendientes, activos y bloqueados, no el alfabético,
     // así que se calcula un rango con una agregación. A igualdad de estado, por nombre.
     private List<UsuarioDocument> buscarOrdenadosPorEstado(Criteria criterios, ListarUsuariosQuery query) {
         AggregationExpression rango = ConditionalOperators.switchCases(
                 CaseOperator.when(ComparisonOperators.valueOf(CAMPO_ESTADO).equalToValue("PENDIENTE")).then(0),
                 CaseOperator.when(ComparisonOperators.valueOf(CAMPO_ESTADO).equalToValue(ESTADO_ACTIVO)).then(1),
-                CaseOperator.when(ComparisonOperators.valueOf(CAMPO_ESTADO).equalToValue("DESACTIVADO")).then(2))
+                CaseOperator.when(ComparisonOperators.valueOf(CAMPO_ESTADO).equalToValue("BLOQUEADO")).then(2))
                 .defaultTo(3);
         Aggregation agregacion = Aggregation.newAggregation(
                 Aggregation.match(criterios),
@@ -219,12 +218,7 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
         if (query.categoriaId() != null && !query.categoriaId().isBlank()) {
             criterios.add(Criteria.where(CAMPO_CATEGORIA_PRINCIPAL_ID).is(query.categoriaId()));
         }
-        if ("BLOQUEADO".equals(query.estado())) {
-            criterios.add(new Criteria().andOperator(
-                    Criteria.where(CAMPO_ESTADO).is(ESTADO_ACTIVO),
-                    Criteria.where("lockedUntil").gt(Instant.now())
-            ));
-        } else if (query.estado() != null) {
+        if (query.estado() != null) {
             criterios.add(Criteria.where(CAMPO_ESTADO).is(query.estado()));
         }
         return criterios.isEmpty() ? new Criteria() : new Criteria().andOperator(criterios);
