@@ -35,7 +35,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoExcep
 // el correo del administrador, que sea el de la sesión. consultarNombreComercial es del cliente (lo usa el carrito).
 // Las anotaciones solo se evalúan con Spring, así que se usa un contexto mínimo (sin MongoDB) con los servicios
 // reales y dobles de prueba de los puertos de salida.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU20-CP07, propuesto.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU20-CP07 y HU42-CP08, propuestos.
 @SpringJUnitConfig(SeguridadAdministracionUsuariosServiceTest.Configuracion.class)
 class SeguridadAdministracionUsuariosServiceTest {
 
@@ -174,4 +174,5 @@ class SeguridadAdministracionUsuariosServiceTest {
                         () -> crearAdministrador.crear(ALTA)));
         verifyNoInteractions(usuarioRepository, hashContrasena);
     }
+
 }
