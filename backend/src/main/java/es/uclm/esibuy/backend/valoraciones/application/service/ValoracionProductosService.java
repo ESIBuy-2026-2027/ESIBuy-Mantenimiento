@@ -9,6 +9,7 @@ import es.uclm.esibuy.backend.valoraciones.application.port.out.ClienteEnSesionP
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ComprasPort;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ValoracionRepositoryPort;
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ProductoNoCompradoException;
+import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionDuplicadaException;
 import es.uclm.esibuy.backend.valoraciones.domain.model.Valoracion;
 
 /** Valora un producto en nombre del cliente (HU13). Solo habla con el exterior a través de los puertos de salida. */
@@ -32,6 +33,9 @@ public class ValoracionProductosService implements ValoracionProductosUseCase {
             throw new ProductoNoCompradoException();
         }
         String clienteId = clienteEnSesion.idPorCorreo(comando.emailCliente());
+        if (valoracionRepository.existePorClienteYProducto(clienteId, comando.productoId())) {
+            throw new ValoracionDuplicadaException();
+        }
         Valoracion valoracion = Valoracion.nueva(comando.productoId(), clienteId, comando.puntuacion(),
                 comando.comentario());
         return valoracionRepository.guardar(valoracion);
