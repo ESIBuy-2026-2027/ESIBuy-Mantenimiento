@@ -70,6 +70,8 @@ public class SecurityConfig {
     private static final String RUTAS_CLIENTE = "/api/customer/**";
     // Catálogo de productos del cliente (HU7) y detalle de cada producto (HU8): solo los ve un CLIENTE.
     private static final String RUTAS_CATALOGO = "/api/products/**";
+    // Valorar un producto (HU13): solo el CLIENTE, y solo esta ruta, no cualquier POST bajo /api/products
+    private static final String RUTA_VALORACIONES = "/api/products/*/valoraciones";
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -85,6 +87,7 @@ public class SecurityConfig {
                         .requestMatchers(RUTAS_CLIENTE).hasRole(ROL_CLIENTE)
                         .requestMatchers(RUTAS_PERFIL).hasAnyRole(ROL_CLIENTE, ROL_VENDEDOR)
                         .requestMatchers(HttpMethod.GET, RUTAS_CATALOGO).hasRole(ROL_CLIENTE)
+                        .requestMatchers(HttpMethod.POST, RUTA_VALORACIONES).hasRole(ROL_CLIENTE)
                         .anyRequest().authenticated())
                 .exceptionHandling(excepciones -> excepciones
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))

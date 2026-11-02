@@ -40,6 +40,9 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistr
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
+import es.uclm.esibuy.backend.valoraciones.domain.exception.ProductoNoCompradoException;
+import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionDuplicadaException;
+import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutoeliminacionNoPermitidaException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -369,5 +372,26 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError stockInsuficienteEnElPedido() {
         return new RespuestaError("No hay stock suficiente", "INSUFFICIENT_STOCK");
+    }
+
+    // Valoraciones (HU13): puntuación fuera de 1 a 5 o comentario de más de 500 caracteres
+    @ExceptionHandler(ValoracionInvalidaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError valoracionInvalida() {
+        return new RespuestaError("La valoración es inválida", CODIGO_VALIDACION);
+    }
+
+    // Solo se valora lo comprado: un pedido PAGADO con el producto
+    @ExceptionHandler(ProductoNoCompradoException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public RespuestaError productoNoComprado() {
+        return new RespuestaError("Solo puedes valorar productos que has comprado", "PRODUCT_NOT_PURCHASED");
+    }
+
+    // Una valoración por cliente y producto, también si llegan dos a la vez (índice único)
+    @ExceptionHandler(ValoracionDuplicadaException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError valoracionDuplicada() {
+        return new RespuestaError("Ya has valorado este producto", "REVIEW_ALREADY_EXISTS");
     }
 }
