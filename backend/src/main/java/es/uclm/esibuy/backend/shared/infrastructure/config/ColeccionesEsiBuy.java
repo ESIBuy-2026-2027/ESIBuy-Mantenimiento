@@ -76,7 +76,7 @@ final class ColeccionesEsiBuy {
                 string("rol").possibleValues("ADMINISTRADOR", "VENDEDOR", "CLIENTE"),
                 string("tipoCliente").possibleValues("PREMIUM", "ESTANDAR"),
                 // Toda cuenta nueva nace PENDIENTE hasta que un administrador la verifica (decisión del equipo del 09/10/2026).
-                string(ESTADO).possibleValues("ACTIVO", "DESACTIVADO", "PENDIENTE"),
+                string(ESTADO).possibleValues("ACTIVO", "BLOQUEADO", "PENDIENTE"),
                 textoNoVacio(NOMBRE),
                 textoNoVacio("apellidos"),
                 textoNoVacio("dni"),

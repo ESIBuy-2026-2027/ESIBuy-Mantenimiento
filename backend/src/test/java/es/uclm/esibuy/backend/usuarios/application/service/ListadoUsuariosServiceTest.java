@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -52,7 +53,7 @@ class ListadoUsuariosServiceTest {
     @DisplayName("HU19-CP01: el servicio delega la consulta intacta al repositorio")
     void listar_delegaLaConsultaIntactaAlRepositorio() {
         ListarUsuariosQuery query = new ListarUsuariosQuery(
-                "Ana", Rol.CLIENTE, "DESACTIVADO", 0, 10
+                "Ana", Rol.CLIENTE, "BLOQUEADO", 0, 10
         );
         UsuarioPage paginaEsperada = new UsuarioPage(List.of(), 0, 10, 0);
 
@@ -85,5 +86,12 @@ class ListadoUsuariosServiceTest {
 
         verify(usuarioRepository).listar(query);
         assertEquals(paginaEsperada, resultado);
+    }
+
+    @Test
+    @DisplayName("HU23-CP12: DESACTIVADO ya no es un estado válido para filtrar el listado")
+    void laConsultaRechazaElEstadoDesactivado() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new ListarUsuariosQuery(null, null, "DESACTIVADO", 0, 10));
     }
 }

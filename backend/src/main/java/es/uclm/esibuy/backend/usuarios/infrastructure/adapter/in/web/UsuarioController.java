@@ -106,11 +106,11 @@ public class UsuarioController {
     }
 
     // Activar (HU24) o desactivar (HU23) una cuenta. La validación de CambiarEstadoRequest ya garantiza
-    // que el estado pedido es ACTIVO o DESACTIVADO. Al desactivar se pasa el email del administrador en sesión.
+    // que el estado pedido es ACTIVO o BLOQUEADO. Al bloquear se pasa el email del administrador en sesión.
     @PatchMapping("/admin/usuarios/{id}/status")
     public UsuarioListadoResponse cambiarEstado(@PathVariable String id,
             @Valid @RequestBody CambiarEstadoRequest request, Authentication autenticado) {
-        if ("DESACTIVADO".equals(request.estado())) {
+        if ("BLOQUEADO".equals(request.estado())) {
             return UsuarioListadoResponse.desde(administracionUsuarios.desactivar(id, autenticado.getName()));
         }
         return UsuarioListadoResponse.desde(administracionUsuarios.activar(id));
@@ -169,7 +169,7 @@ public class UsuarioController {
     @PatchMapping("/admin/sellers/{id}/status")
     public VendedorResponse cambiarEstadoVendedor(@PathVariable String id,
             @Valid @RequestBody CambiarEstadoRequest request) {
-        Usuario vendedor = "DESACTIVADO".equals(request.estado())
+        Usuario vendedor = "BLOQUEADO".equals(request.estado())
                 ? administracionUsuarios.desactivarVendedor(id)
                 : administracionUsuarios.activarVendedor(id);
         return VendedorResponse.desde(vendedor, nombresDeCategorias());

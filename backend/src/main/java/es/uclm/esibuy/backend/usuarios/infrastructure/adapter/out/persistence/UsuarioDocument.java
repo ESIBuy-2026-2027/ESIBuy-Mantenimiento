@@ -17,7 +17,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * documento no dependa del enum del dominio.
  *
  * <p>Guarda todos los datos del {@code Usuario}: los de perfil y el estado de acceso
- * ({@code estado} ACTIVO/DESACTIVADO/PENDIENTE, {@code failedLoginAttempts} y {@code lockedUntil}),
+ * ({@code estado} ACTIVO/BLOQUEADO/PENDIENTE, {@code failedLoginAttempts} y {@code lockedUntil}),
  * los datos del cliente (DNI, fecha de nacimiento, teléfono, imagen) y el consentimiento de privacidad.
  * Un documento antiguo no tiene estos campos: el mapper les da los valores por defecto al leerlo.
  */

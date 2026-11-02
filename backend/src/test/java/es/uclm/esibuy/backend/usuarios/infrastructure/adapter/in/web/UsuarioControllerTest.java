@@ -34,6 +34,8 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistr
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Month;
 import org.junit.jupiter.api.DisplayName;
@@ -348,11 +350,11 @@ class UsuarioControllerTest {
     }
 
     @Test
-    @DisplayName("HU24-CP02: rechaza un estado que no es ACTIVO ni DESACTIVADO y no cambia nada")
+    @DisplayName("HU24-CP02: rechaza un estado que no es ACTIVO ni BLOQUEADO y no cambia nada")
     @WithMockUser(roles = "ADMINISTRADOR")
     void rechazaUnEstadoNoAdmitido() throws Exception {
-        // Desde la HU23 se admiten ACTIVO y DESACTIVADO; cualquier otro estado es un 400.
-        mockMvc.perform(cambiarEstado("usr-1", "BLOQUEADO"))
+        // Desde la HU23 se admiten ACTIVO y BLOQUEADO; cualquier otro estado es un 400.
+        mockMvc.perform(cambiarEstado("usr-1", "DESACTIVADO"))
                 .andExpect(status().isBadRequest());
 
         verify(administracionUsuarios, never()).activar(any());
@@ -381,13 +383,13 @@ class UsuarioControllerTest {
         verify(administracionUsuarios, never()).activar(any());
     }
 
-    // Desactivar una cuenta (HU23, T37/T38/T39): mismo endpoint que activar, con {"estado": "DESACTIVADO"}.
+    // Desactivar una cuenta (HU23, T37/T38/T39): mismo endpoint que activar, con {"estado": "BLOQUEADO"}.
     // El usuario en sesión se identifica por su email (como en /api/auth/me): con @WithMockUser es el username.
     // Los códigos de los 409 son los que espera el frontend (frontend/docs/hu23-desactivar-usuario.md).
     private static final String EMAIL_ADMINISTRADOR = "admin@esibuy.test";
 
     @Test
-    @DisplayName("HU23-CP01: un administrador desactiva una cuenta y recibe sus datos con estado DESACTIVADO")
+    @DisplayName("HU23-CP01: un administrador desactiva una cuenta y recibe sus datos con estado BLOQUEADO")
     @WithMockUser(username = EMAIL_ADMINISTRADOR, roles = "ADMINISTRADOR")
     void administradorDesactivaUnaCuentaYRecibeSusDatos() throws Exception {
         Usuario desactivado = new Usuario("usr-1", new DatosPersonales("Carlos", "Moreno Gil", null),
@@ -397,10 +399,10 @@ class UsuarioControllerTest {
         desactivado.desactivar();
         when(administracionUsuarios.desactivar("usr-1", EMAIL_ADMINISTRADOR)).thenReturn(desactivado);
 
-        mockMvc.perform(cambiarEstado("usr-1", "DESACTIVADO"))
+        mockMvc.perform(cambiarEstado("usr-1", "BLOQUEADO"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("usr-1"))
-                .andExpect(jsonPath("$.estado").value("DESACTIVADO"))
+                .andExpect(jsonPath("$.estado").value("BLOQUEADO"))
                 .andExpect(jsonPath("$.passwordHash").doesNotExist());
 
         verify(administracionUsuarios).desactivar("usr-1", EMAIL_ADMINISTRADOR);
@@ -414,7 +416,7 @@ class UsuarioControllerTest {
         when(administracionUsuarios.desactivar("no-existe", EMAIL_ADMINISTRADOR))
                 .thenThrow(new UsuarioNoEncontradoException("El usuario no existe"));
 
-        mockMvc.perform(cambiarEstado("no-existe", "DESACTIVADO"))
+        mockMvc.perform(cambiarEstado("no-existe", "BLOQUEADO"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.mensaje").exists());
     }
@@ -426,7 +428,7 @@ class UsuarioControllerTest {
         when(administracionUsuarios.desactivar("u-1", EMAIL_ADMINISTRADOR))
                 .thenThrow(new AutodesactivacionNoPermitidaException("Un administrador no puede desactivar su propia cuenta"));
 
-        mockMvc.perform(cambiarEstado("u-1", "DESACTIVADO"))
+        mockMvc.perform(cambiarEstado("u-1", "BLOQUEADO"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("CANNOT_DEACTIVATE_SELF"))
                 .andExpect(jsonPath("$.mensaje").exists());
@@ -439,7 +441,7 @@ class UsuarioControllerTest {
         when(administracionUsuarios.desactivar("u-3", EMAIL_ADMINISTRADOR))
                 .thenThrow(new UltimoAdministradorActivoException("No se puede desactivar al último administrador activo"));
 
-        mockMvc.perform(cambiarEstado("u-3", "DESACTIVADO"))
+        mockMvc.perform(cambiarEstado("u-3", "BLOQUEADO"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("LAST_ACTIVE_ADMIN"))
                 .andExpect(jsonPath("$.mensaje").exists());
@@ -449,7 +451,7 @@ class UsuarioControllerTest {
     @ValueSource(strings = {"CLIENTE", "VENDEDOR"})
     @DisplayName("HU23-CP06: un usuario que no es administrador no puede desactivar cuentas")
     void unNoAdministradorNoPuedeDesactivarCuentas(String rol) throws Exception {
-        mockMvc.perform(cambiarEstado("usr-1", "DESACTIVADO").with(user("usuario").roles(rol)))
+        mockMvc.perform(cambiarEstado("usr-1", "BLOQUEADO").with(user("usuario").roles(rol)))
                 .andExpect(status().isForbidden());
 
         verify(administracionUsuarios, never()).desactivar(any(), any());
@@ -458,7 +460,7 @@ class UsuarioControllerTest {
     @Test
     @DisplayName("HU23-CP06: sin sesión no se puede desactivar una cuenta")
     void desactivarSinSesionEstaProtegido() throws Exception {
-        mockMvc.perform(cambiarEstado("usr-1", "DESACTIVADO"))
+        mockMvc.perform(cambiarEstado("usr-1", "BLOQUEADO"))
                 .andExpect(status().isUnauthorized());
 
         verify(administracionUsuarios, never()).desactivar(any(), any());
@@ -765,18 +767,60 @@ class UsuarioControllerTest {
         verify(administracionUsuarios, never()).desactivarVendedor(any());
     }
 
+    // El bloqueo temporal por intentos no es el estado BLOQUEADO, que solo pone un administrador (HU23, T243):
+    // las respuestas devuelven el estado guardado y el timeout solo se ve en el login (429).
+    private static Usuario conBloqueoPorIntentos(Usuario usuario) {
+        usuario.activar();
+        usuario.restaurarBloqueoPorIntentos(5, Instant.now().plus(Duration.ofMinutes(10)));
+        return usuario;
+    }
+
     @Test
-    @DisplayName("HU21-CP14: un administrador desactiva un vendedor y recibe sus datos con estado DESACTIVADO")
+    @DisplayName("HU23-CP11: en el listado de usuarios, una cuenta con bloqueo temporal por intentos sale con su estado guardado")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void elListadoNoMuestraElBloqueoPorIntentosComoBloqueado() throws Exception {
+        when(listadoUsuarios.listar(any())).thenReturn(new UsuarioPage(
+                java.util.List.of(conBloqueoPorIntentos(clienteCarla())), 0, 10, 1));
+
+        mockMvc.perform(get("/api/admin/usuarios"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].estado").value("ACTIVO"));
+    }
+
+    @Test
+    @DisplayName("HU23-CP11: en la ficha de un usuario, una cuenta con bloqueo temporal por intentos sale con su estado guardado")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void laFichaNoMuestraElBloqueoPorIntentosComoBloqueado() throws Exception {
+        when(administracionUsuarios.consultar("usr-1")).thenReturn(conBloqueoPorIntentos(clienteCarla()));
+
+        mockMvc.perform(get("/api/admin/usuarios/usr-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("ACTIVO"));
+    }
+
+    @Test
+    @DisplayName("HU23-CP11: en la ficha de un vendedor, una cuenta con bloqueo temporal por intentos sale con su estado guardado")
+    @WithMockUser(roles = "ADMINISTRADOR")
+    void laFichaDeVendedorNoMuestraElBloqueoPorIntentosComoBloqueado() throws Exception {
+        when(administracionUsuarios.consultarVendedor("v-1")).thenReturn(conBloqueoPorIntentos(vendedor()));
+
+        mockMvc.perform(get("/api/admin/sellers/v-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("ACTIVO"));
+    }
+
+    @Test
+    @DisplayName("HU21-CP14: un administrador desactiva un vendedor y recibe sus datos con estado BLOQUEADO")
     @WithMockUser(roles = "ADMINISTRADOR")
     void administradorDesactivaUnVendedorYRecibeSusDatos() throws Exception {
         Usuario desactivado = vendedor();
         desactivado.desactivar();
         when(administracionUsuarios.desactivarVendedor("v-1")).thenReturn(desactivado);
 
-        mockMvc.perform(cambiarEstadoVendedor("v-1", "DESACTIVADO"))
+        mockMvc.perform(cambiarEstadoVendedor("v-1", "BLOQUEADO"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("v-1"))
-                .andExpect(jsonPath("$.estado").value("DESACTIVADO"))
+                .andExpect(jsonPath("$.estado").value("BLOQUEADO"))
                 .andExpect(jsonPath("$.passwordHash").doesNotExist());
 
         verify(administracionUsuarios).desactivarVendedor("v-1");
@@ -784,7 +828,7 @@ class UsuarioControllerTest {
     }
 
     @Test
-    @DisplayName("HU21-CP15: cambiar un vendedor a un estado que no es ACTIVO ni DESACTIVADO devuelve 400 y no cambia nada")
+    @DisplayName("HU21-CP15: cambiar un vendedor a un estado que no es ACTIVO ni BLOQUEADO devuelve 400 y no cambia nada")
     @WithMockUser(roles = "ADMINISTRADOR")
     void cambiarVendedorAUnEstadoNoAdmitidoDevuelve400() throws Exception {
         mockMvc.perform(cambiarEstadoVendedor("v-1", "PENDIENTE"))
@@ -897,7 +941,7 @@ class UsuarioControllerTest {
     void editarIgnoraEmailContrasenaYEstadoDelCuerpo() throws Exception {
         when(administracionUsuarios.editar(eq("usr-1"), any())).thenReturn(clienteCarla());
         String cuerpo = CUERPO_CLIENTE.replace("}",
-                ",\"email\":\"otro@esibuy.test\",\"password\":\"Nueva-Clave-1!\",\"estado\":\"DESACTIVADO\"}");
+                ",\"email\":\"otro@esibuy.test\",\"password\":\"Nueva-Clave-1!\",\"estado\":\"BLOQUEADO\"}");
 
         mockMvc.perform(editar("usr-1", cuerpo))
                 .andExpect(status().isOk())

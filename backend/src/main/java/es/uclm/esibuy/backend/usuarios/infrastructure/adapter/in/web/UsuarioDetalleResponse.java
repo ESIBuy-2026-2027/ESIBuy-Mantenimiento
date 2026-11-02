@@ -53,8 +53,7 @@ public record UsuarioDetalleResponse(
                 usuario.getDatosPersonales().apellidos(),
                 usuario.getEmail().valor(),
                 usuario.getRol().name(),
-                // Como en el listado (HU19): BLOQUEADO si tiene un bloqueo por intentos vigente
-                usuario.tieneBloqueoPorIntentos(Instant.now()) ? "BLOQUEADO" : usuario.getEstado(),
+                usuario.getEstado(),
                 usuario.getFechaAlta(),
                 perfil == null ? null : perfil.dni().valor(),
                 perfil == null || perfil.telefono() == null ? null : perfil.telefono().valor(),
