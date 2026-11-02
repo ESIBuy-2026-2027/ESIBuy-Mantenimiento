@@ -9,6 +9,7 @@ import es.uclm.esibuy.backend.valoraciones.application.port.out.ClienteEnSesionP
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ComprasPort;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ValoracionRepositoryPort;
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ProductoNoCompradoException;
+import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionDuplicadaException;
 import es.uclm.esibuy.backend.valoraciones.domain.model.Valoracion;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -19,7 +20,7 @@ import org.junit.jupiter.api.Test;
 
 // Valoración de un producto por el cliente (HU13, T370). Sin Spring: los puertos de salida se sustituyen por
 // dobles de prueba (clases internas de este test).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP09 y CP10, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP09 a CP11, propuestos.
 class ValoracionProductosServiceTest {
 
     private static final String EMAIL = "cliente@esibuy.test";
@@ -59,6 +60,15 @@ class ValoracionProductosServiceTest {
     void noPuedeValorarUnProductoQueNoHaComprado() {
         assertThrows(ProductoNoCompradoException.class, () -> valorar("p-2", 4, "Me lo prestaron"));
         assertTrue(valoraciones.guardadas.isEmpty());
+    }
+
+    @Test
+    @DisplayName("HU13-CP11: el cliente no puede valorar dos veces el mismo producto y se conserva la primera valoración")
+    void noPuedeValorarDosVecesElMismoProducto() {
+        valorar("p-1", 4, "Buena calidad");
+
+        assertThrows(ValoracionDuplicadaException.class, () -> valorar("p-1", 1, "He cambiado de opinión"));
+        assertEquals(List.of(new Valoracion("v-1", "p-1", "c-1", 4, "Buena calidad")), valoraciones.guardadas);
     }
 
     // El correo de la sesión corresponde al cliente c-1
