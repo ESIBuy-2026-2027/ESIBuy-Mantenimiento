@@ -1,10 +1,12 @@
 package es.uclm.esibuy.backend.valoraciones.infrastructure.config;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
+import es.uclm.esibuy.backend.valoraciones.application.port.in.ConsultaValoracionesUseCase;
 import es.uclm.esibuy.backend.valoraciones.application.port.in.ValoracionProductosUseCase;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ComprasPort;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ValoracionRepositoryPort;
+import es.uclm.esibuy.backend.valoraciones.application.service.ConsultaValoracionesService;
 import es.uclm.esibuy.backend.valoraciones.application.service.ValoracionProductosService;
 import es.uclm.esibuy.backend.valoraciones.infrastructure.adapter.out.pedidos.ComprasAdapter;
 import es.uclm.esibuy.backend.valoraciones.infrastructure.adapter.out.persistence.ValoracionMongoAdapter;
@@ -28,9 +30,10 @@ class ValoracionesConfigTest {
     private ApplicationContext contexto;
 
     @Test
-    @DisplayName("Configuración: el contexto conecta la valoración de productos con su repositorio y los otros módulos")
+    @DisplayName("Configuración: el contexto conecta la valoración y la consulta de valoraciones con sus piezas")
     void elContextoConectaLasPiezasDeLasValoraciones() {
         assertInstanceOf(ValoracionProductosService.class, contexto.getBean(ValoracionProductosUseCase.class));
+        assertInstanceOf(ConsultaValoracionesService.class, contexto.getBean(ConsultaValoracionesUseCase.class));
         assertInstanceOf(ValoracionMongoAdapter.class, contexto.getBean(ValoracionRepositoryPort.class));
         assertInstanceOf(ClienteEnSesionAdapter.class, contexto.getBean(ClienteEnSesionPort.class));
         assertInstanceOf(ComprasAdapter.class, contexto.getBean(ComprasPort.class));
