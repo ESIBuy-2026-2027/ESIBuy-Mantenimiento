@@ -71,8 +71,10 @@ public class CategoriaMongoAdapter implements CategoriaRepositoryPort {
         return mongoTemplate.exists(consulta, CategoriaDocument.class);
     }
 
-    // Esqueleto del ciclo rojo (HU42, T326): se implementa en el ciclo del adaptador.
+    // Borrado físico: el documento desaparece de la colección. Un id que no existe no hace nada; de comprobar que
+    // la categoría existe se encarga el servicio.
     @Override
     public void eliminar(String id) {
+        repository.deleteById(id);
     }
 }
