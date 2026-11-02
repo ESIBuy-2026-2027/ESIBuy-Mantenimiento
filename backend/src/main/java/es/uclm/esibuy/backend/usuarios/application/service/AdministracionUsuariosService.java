@@ -178,11 +178,11 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
                 .orElseThrow(() -> new UsuarioNoEncontradoException("El usuario no existe"));
     }
 
-    // Esqueleto del ciclo rojo (HU42, T326): se implementa en el verde.
+    // Lo pregunta el módulo de categorías antes de eliminar una (HU42). El administrador no recibe ningún dato de
+    // los vendedores, solo si existe alguno.
     @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
     @Override
     public boolean existenVendedoresConCategoria(String categoriaId) {
-        usuarioRepository.existeVendedorConCategoriaPrincipal(categoriaId);
-        return false;
+        return usuarioRepository.existeVendedorConCategoriaPrincipal(categoriaId);
     }
 }
