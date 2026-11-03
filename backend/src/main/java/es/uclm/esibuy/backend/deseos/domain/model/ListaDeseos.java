@@ -22,8 +22,12 @@ public class ListaDeseos {
         return new ListaDeseos(null, clienteId, List.of());
     }
 
+    // Añadir un producto que ya está no es un error: la lista ya queda como se quería y conserva su fecha
     public void anadir(String productoId, Instant ahora) {
-        // Se implementa en el ciclo verde
+        boolean yaEsta = items.stream().anyMatch(item -> item.productoId().equals(productoId));
+        if (!yaEsta) {
+            items.add(new ItemDeseo(productoId, ahora));
+        }
     }
 
     public String getId() {
