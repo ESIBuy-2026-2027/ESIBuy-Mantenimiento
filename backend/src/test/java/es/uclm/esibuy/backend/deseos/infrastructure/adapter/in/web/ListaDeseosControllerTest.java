@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.deseos.infrastructure.adapter.in.web;
 
 import es.uclm.esibuy.backend.deseos.application.port.in.GestionListaDeseosUseCase;
+import es.uclm.esibuy.backend.deseos.domain.exception.ProductoNoDisponibleException;
 import es.uclm.esibuy.backend.deseos.domain.model.ItemDeseo;
 import es.uclm.esibuy.backend.deseos.domain.model.ListaDeseos;
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
@@ -70,5 +71,18 @@ class ListaDeseosControllerTest {
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
         verify(gestionListaDeseos, never()).anadir(any(), any());
+    }
+
+    @Test
+    @DisplayName("HU14-CP09: un producto no disponible responde 404 con el código PRODUCT_NOT_FOUND")
+    void unProductoNoDisponibleResponde404() throws Exception {
+        when(gestionListaDeseos.anadir(CLIENTE, "p-9"))
+                .thenThrow(new ProductoNoDisponibleException("El producto no está disponible"));
+
+        mockMvc.perform(post(URL).with(user(CLIENTE).roles("CLIENTE")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"productoId\": \"p-9\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"))
+                .andExpect(jsonPath("$.mensaje").value("El producto no existe"));
     }
 }
