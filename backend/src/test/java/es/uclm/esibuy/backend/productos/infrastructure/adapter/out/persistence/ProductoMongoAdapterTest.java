@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 // También prueba el listado de los productos propios del vendedor (HU32, T184), el borrado físico (HU35, T346),
 // el catálogo del cliente (HU7, T352) y el recuento de productos por categoría (HU39, T332).
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP11, CP12 y CP23, HU32-CP01 a CP03, HU7-CP11 a CP15
-// y HU39-CP02, propuestos.
+// y HU39-CP02, propuestos. La media y el número de valoraciones (HU13, T415): caso HU13-CP24, propuesto.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class ProductoMongoAdapterTest {
@@ -407,6 +407,35 @@ class ProductoMongoAdapterTest {
     }
 
     // Stock al realizar un pedido (HU10): se descuenta en una sola operación de MongoDB, condicionada al stock
+    // Media y número de valoraciones del producto (HU13, T415): el módulo de valoraciones los calcula con todas las
+    // valoraciones del producto y el adaptador solo los guarda, para que el catálogo pueda ordenar y filtrar por ellos.
+    @Test
+    @DisplayName("HU13-CP24: guarda en el producto la media y el número de valoraciones que recibe")
+    void guardaLaMediaYElNumeroDeValoraciones() {
+        String id = adapter.guardar(producto(null, 5)).getId();
+
+        adapter.actualizarValoracion(id, 4.5, 2);
+
+        Document guardado = documentoEnBruto();
+        assertEquals(4.5, ((Number) guardado.get("valoracionMedia")).doubleValue());
+        assertEquals(2, guardado.getInteger("numeroValoraciones"));
+    }
+
+    @Test
+    @DisplayName("HU13-CP24: una actualización nueva sustituye la media y el número y no toca el resto del producto")
+    void unaActualizacionNuevaSustituyeLaMediaYElNumero() {
+        String id = adapter.guardar(producto(null, 5)).getId();
+
+        adapter.actualizarValoracion(id, 4.5, 2);
+        adapter.actualizarValoracion(id, 4.0, 3);
+
+        Document guardado = documentoEnBruto();
+        assertEquals(4.0, ((Number) guardado.get("valoracionMedia")).doubleValue());
+        assertEquals(3, guardado.getInteger("numeroValoraciones"));
+        assertEquals("Teclado mecánico", guardado.getString("nombre"));
+        assertEquals(5, guardado.getInteger("stock"));
+    }
+
     @Test
     @DisplayName("HU10-CP15: descontar stock lo resta si hay suficiente y no lo deja negativo")
     void descontarStockLoRestaSiHaySuficiente() {
