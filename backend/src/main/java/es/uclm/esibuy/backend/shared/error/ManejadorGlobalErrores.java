@@ -21,6 +21,7 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaExceptio
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
+import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
@@ -240,6 +241,13 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError productoDuplicado() {
         return new RespuestaError("El producto ya existe con el mismo nombre", "PRODUCT_NAME_ALREADY_EXISTS");
+    }
+
+    // 400 + code cuando la imagen del producto no supera el antivirus (HU31 y HU34, T397), al crear o al modificar.
+    @ExceptionHandler(ImagenNoSeguraException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError imagenNoSegura() {
+        return new RespuestaError("La imagen no ha superado el análisis antivirus", "IMAGE_NOT_SAFE");
     }
 
     // 404 + code al consultar un producto propio (HU33, T348): un producto ajeno se responde igual que uno
