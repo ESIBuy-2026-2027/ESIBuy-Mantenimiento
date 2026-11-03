@@ -108,6 +108,11 @@ class SeguridadAdministracionUsuariosServiceTest {
                 () -> assertThrows(AccessDeniedException.class, () -> crearAdministrador.crear(ALTA)));
         verifyNoInteractions(usuarioRepository, hashContrasena);
     }
+ 
+    private void comprobarQueRechazaLaPreguntaPorLosVendedores() {
+        assertThrows(AccessDeniedException.class, () -> administracionUsuarios.existenVendedoresConCategoria("c-1"));
+        verifyNoInteractions(usuarioRepository);
+    }
 
     @Test
     @WithMockUser(username = "cliente@esibuy.test", roles = "CLIENTE")
@@ -175,4 +180,32 @@ class SeguridadAdministracionUsuariosServiceTest {
         verifyNoInteractions(usuarioRepository, hashContrasena);
     }
 
+    @Test
+    @WithMockUser(username = "cliente@esibuy.test", roles = "CLIENTE")
+    @DisplayName("HU42-CP08: un cliente no puede preguntar si hay vendedores con una categoría como principal")
+    void unClienteNoPreguntaPorLosVendedoresDeUnaCategoria() {
+        comprobarQueRechazaLaPreguntaPorLosVendedores();
+    }
+
+    @Test
+    @WithMockUser(username = "vendedor@esibuy.test", roles = "VENDEDOR")
+    @DisplayName("HU42-CP08: un vendedor no puede preguntar si hay vendedores con una categoría como principal")
+    void unVendedorNoPreguntaPorLosVendedoresDeUnaCategoria() {
+        comprobarQueRechazaLaPreguntaPorLosVendedores();
+    }
+
+    @Test
+    @WithMockUser(username = ADMIN, roles = "ADMINISTRADOR")
+    @DisplayName("HU42-CP08: un administrador sí pregunta si hay vendedores con una categoría como principal")
+    void unAdministradorPreguntaPorLosVendedoresDeUnaCategoria() {
+        assertDoesNotThrow(() -> administracionUsuarios.existenVendedoresConCategoria("c-1"));
+    }
+
+    @Test
+    @DisplayName("HU42-CP08: sin sesión se rechaza la pregunta por los vendedores de una categoría")
+    void sinSesionSeRechazaLaPreguntaPorLosVendedores() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> administracionUsuarios.existenVendedoresConCategoria("c-1"));
+        verifyNoInteractions(usuarioRepository);
+    }
 }
