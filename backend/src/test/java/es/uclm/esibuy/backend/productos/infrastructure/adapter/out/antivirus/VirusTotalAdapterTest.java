@@ -4,12 +4,15 @@ import es.uclm.esibuy.backend.productos.application.port.out.ResultadoAnalisis;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
@@ -19,13 +22,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withException;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 // Análisis de la URL de la imagen de un producto con la API v3 de VirusTotal (HU31, T397). VirusTotal no se llama de
 // verdad: MockRestServiceServer hace de servidor y comprueba qué peticiones llegan. Sin esperas reales entre consultas
 // (Duration.ZERO). Una imagen es maliciosa si algún motor la marca como malicious (decisión del equipo).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP29 y CP30, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP29 a CP31, propuestos.
 class VirusTotalAdapterTest {
 
     private static final String BASE = "https://www.virustotal.com/api/v3";
@@ -98,6 +102,40 @@ class VirusTotalAdapterTest {
 
         assertEquals(ResultadoAnalisis.SIN_RESULTADO, adapter.analizar(IMAGEN));
         virusTotal.verify();   // solo 2 consultas (el máximo del adaptador): una tercera haría fallar el test
+    }
+
+    // 401 WrongCredentialsError (API key mal), 429 QuotaExceededError (4/min o 500/día), 500 y 503 (VirusTotal caído)
+    @ParameterizedTest
+    @ValueSource(ints = {401, 429, 500, 503})
+    @DisplayName("HU31-CP31: si VirusTotal responde con un error al buscar el informe no hay resultado")
+    void unErrorAlBuscarElInformeNoDaResultado(int estado) {
+        virusTotal.expect(requestTo(BASE + "/urls/" + ID_URL)).andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.valueOf(estado)).contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"error\": {\"code\": \"x\", \"message\": \"x\"}}"));
+
+        assertEquals(ResultadoAnalisis.SIN_RESULTADO, adapter.analizar(IMAGEN));
+        virusTotal.verify();
+    }
+
+    @Test
+    @DisplayName("HU31-CP31: si se acaba la cuota al enviar una URL nueva a analizar no hay resultado")
+    void sinCuotaAlEnviarAAnalizarNoHayResultado() {
+        esperarUrlDesconocida();
+        virusTotal.expect(requestTo(BASE + "/urls")).andExpect(method(HttpMethod.POST))
+                .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS));
+
+        assertEquals(ResultadoAnalisis.SIN_RESULTADO, adapter.analizar(IMAGEN));
+        virusTotal.verify();
+    }
+
+    @Test
+    @DisplayName("HU31-CP31: si no se puede conectar con VirusTotal (red caída o tiempo agotado) no hay resultado")
+    void sinConexionNoHayResultado() {
+        virusTotal.expect(requestTo(BASE + "/urls/" + ID_URL))
+                .andRespond(withException(new SocketTimeoutException("Read timed out")));
+
+        assertEquals(ResultadoAnalisis.SIN_RESULTADO, adapter.analizar(IMAGEN));
+        virusTotal.verify();
     }
 
     // GET /urls/{id} de una URL que nadie ha analizado: 404 NotFoundError
