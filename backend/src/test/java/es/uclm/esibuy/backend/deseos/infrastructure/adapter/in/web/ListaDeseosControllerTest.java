@@ -1,0 +1,56 @@
+package es.uclm.esibuy.backend.deseos.infrastructure.adapter.in.web;
+
+import es.uclm.esibuy.backend.deseos.application.port.in.GestionListaDeseosUseCase;
+import es.uclm.esibuy.backend.deseos.domain.model.ItemDeseo;
+import es.uclm.esibuy.backend.deseos.domain.model.ListaDeseos;
+import es.uclm.esibuy.backend.shared.config.SecurityConfig;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.Instant;
+import java.util.List;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+// Lista de deseos del cliente (HU14): POST /api/customer/wishlist/items. El caso de uso es un doble de prueba; la
+// seguridad es la real (SecurityConfig: /api/customer/** solo para CLIENTE, con CSRF).
+@WebMvcTest(ListaDeseosController.class)
+@Import(SecurityConfig.class)
+class ListaDeseosControllerTest {
+
+    private static final String URL = "/api/customer/wishlist/items";
+    private static final String CLIENTE = "cliente@esibuy.test";
+    private static final Instant AHORA = Instant.parse("2026-11-04T10:00:00Z");
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
+    private GestionListaDeseosUseCase gestionListaDeseos;
+
+    @Test
+    @DisplayName("HU14-CP07: añadir responde 200 con la lista; el cliente sale de la sesión y un clienteId en el cuerpo se ignora")
+    void anadirRespondeConLaListaDelClienteEnSesion() throws Exception {
+        when(gestionListaDeseos.anadir(CLIENTE, "p-1"))
+                .thenReturn(new ListaDeseos("l-1", "c-1", List.of(new ItemDeseo("p-1", AHORA))));
+
+        mockMvc.perform(post(URL).with(user(CLIENTE).roles("CLIENTE")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"productoId\": \"p-1\", \"clienteId\": \"otro\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].productoId").value("p-1"))
+                .andExpect(jsonPath("$.items[0].addedAt").value("2026-11-04T10:00:00Z"));
+    }
+}
