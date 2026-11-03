@@ -312,3 +312,15 @@ describe('CheckoutPage (HU10): si falla algún pedido', () => {
     expect(await screen.findByRole('button', { name: 'Carrito, vacío' })).toBeInTheDocument()
   })
 })
+
+describe('CheckoutPage: acceso a los pedidos (HU11)', () => {
+  it('HU11-CP19: tras pagar se puede ir a Mis pedidos', async () => {
+    const user = userEvent.setup()
+    await abrirPasarela()
+
+    await user.click(botonDePago())
+
+    await screen.findByRole('heading', { level: 1, name: /pago realizado/i }, PAGO)
+    expect(screen.getByRole('link', { name: /ver mis pedidos/i })).toHaveAttribute('href', '/orders')
+  })
+})
