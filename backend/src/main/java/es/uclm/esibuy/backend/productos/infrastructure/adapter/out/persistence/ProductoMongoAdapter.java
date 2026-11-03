@@ -48,9 +48,13 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     public Producto guardar(Producto producto) {
         ProductoDocument documento = mapper.aDocumento(producto);
         if (producto.getId() != null) {
-            // Actualización: se conserva la fecha de creación del documento guardado
-            repository.findById(producto.getId())
-                    .ifPresent(guardado -> documento.setCreatedAt(guardado.getCreatedAt()));
+            // Actualización: se conservan la fecha de creación y las valoraciones del documento guardado (HU13: las
+            // cambia solo actualizarValoracion, nunca el vendedor al editar el producto)
+            repository.findById(producto.getId()).ifPresent(guardado -> {
+                documento.setCreatedAt(guardado.getCreatedAt());
+                documento.setValoracionMedia(guardado.getValoracionMedia());
+                documento.setNumeroValoraciones(guardado.getNumeroValoraciones());
+            });
         }
         try {
             return mapper.aDominio(repository.save(documento));
