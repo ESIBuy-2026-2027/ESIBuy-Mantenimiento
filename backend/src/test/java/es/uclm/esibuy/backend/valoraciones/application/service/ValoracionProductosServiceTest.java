@@ -111,5 +111,10 @@ class ValoracionProductosServiceTest {
         public List<Valoracion> buscarPorProducto(String productoId) {
             return guardadas.stream().filter(v -> v.productoId().equals(productoId)).toList();
         }
+
+        @Override
+        public void eliminarPorProducto(String productoId) {
+            guardadas.removeIf(valoracion -> valoracion.productoId().equals(productoId));
+        }
     }
 }

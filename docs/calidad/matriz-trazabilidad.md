@@ -2787,6 +2787,50 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU47 · Eliminar mi cuenta de vendedor
+
+### Tabla A · HU47 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU47-CP01 | Con la contraseña actual incorrecta no se elimina la cuenta ni se modifica ningún dato | Unitario (aplicación) | 1 | 🔍 En revisión |
+| HU47-CP02 | Al eliminar la cuenta se conservan como no disponibles los productos con pedidos y se eliminan los demás junto con sus valoraciones | Unitario (aplicación) | 4 | 🔍 En revisión |
+| HU47-CP03 | Un producto no disponible no se puede comprar aunque tenga stock | Integración (persistencia) | 1 | 🔍 En revisión |
+| HU47-CP04 | Si una eliminación quedó a medias se puede repetir y completarse sin errores | Unitario (aplicación) | 1 | 🔍 En revisión |
+| HU47-CP05 | Al eliminar la cuenta se invalida la sesión y se limpia el contexto de seguridad | Integración (capa web) | 1 | 🔍 En revisión |
+| HU47-CP06 | Un cliente recibe 403 y no se modifica nada al intentar eliminar la cuenta | Integración (capa web) | 1 | 🔍 En revisión |
+| HU47-CP07 | Una petición sin autenticar recibe 401 y no se modifica nada al intentar eliminar la cuenta | Integración (capa web) | 1 | 🔍 En revisión |
+
+Notas:
+- `DELETE /api/perfil` se restringe a VENDEDOR en la regla de ruta; `GET /api/perfil` sigue disponible para CLIENTE y VENDEDOR. Las pruebas web usan la cadena real de `SecurityConfig`, con CSRF activo.
+- La consulta interna se denomina `buscarPorVendedor`, no `buscarPagadosPorVendedor`, y considera todos los pedidos del vendedor. Se conservan los productos incluidos en cualquier pedido para no romper el historial si el estado del pedido cambia.
+- El `false` de descuento de existencias puede deberse a stock insuficiente o a producto no disponible; la respuesta 409 mantiene el código `INSUFFICIENT_STOCK` por compatibilidad y usa un mensaje neutral: «No se puede comprar un producto del pedido».
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU47-CP01 | `GestionCuentaServiceTest` | `contraseñaIncorrectaNoModificaNada` | Aplicación | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP02 | `GestionCuentaServiceTest` | `conservaProductosConPedidosYEliminaElResto` | Aplicación | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP02 | `GestionProductosVendedorServiceTest` | `desactivaTodosLosProductosDelVendedor` | Aplicación | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP02 | `ProductosConPedidosServiceTest` | `devuelveLosProductosDePedidosDelVendedor` | Aplicación | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP02 | `LimpiezaValoracionesServiceTest` | `eliminaLasValoracionesDelProductoEliminado` | Aplicación | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP03 | `ProductoMongoAdapterTest` | `productoNoDisponibleNoSePuedeComprarAunqueTengaStock` | Infraestructura | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP04 | `GestionCuentaServiceTest` | `reintentaTrasUnBorradoParcial` | Aplicación | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP05 | `PerfilControllerTest` | `eliminarCuentaInvalidaSesionYLimpiaContexto` | Infraestructura | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP06 | `PerfilControllerTest` | `usuarioNoVendedorNoPuedeEliminarCuenta` | Infraestructura | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP07 | `PerfilControllerTest` | `sinAutenticarNoPuedeEliminarCuenta` | Infraestructura | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `GestionCuentaServiceTest`: `usuarios/application/service/`
+- `GestionProductosVendedorServiceTest`: `productos/application/service/`
+- `ProductosConPedidosServiceTest`: `pedidos/application/service/`
+- `LimpiezaValoracionesServiceTest`: `valoraciones/application/service/`
+- `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/`
+- `PerfilControllerTest`: `usuarios/infrastructure/adapter/in/web/`
+
+---
+
 ## HU39 · Consultar categorías
 
 ### Tabla A · HU39 ↔ casos de prueba

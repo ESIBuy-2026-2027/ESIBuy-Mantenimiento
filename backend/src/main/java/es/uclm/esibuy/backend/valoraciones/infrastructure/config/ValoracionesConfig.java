@@ -7,11 +7,13 @@ import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.valoraciones.application.port.in.ConsultaValoracionesUseCase;
 import es.uclm.esibuy.backend.valoraciones.application.port.in.ValoracionProductosUseCase;
+import es.uclm.esibuy.backend.valoraciones.application.port.in.LimpiezaValoracionesUseCase;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ComprasPort;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ValoracionRepositoryPort;
 import es.uclm.esibuy.backend.valoraciones.application.service.ConsultaValoracionesService;
 import es.uclm.esibuy.backend.valoraciones.application.service.ValoracionProductosService;
+import es.uclm.esibuy.backend.valoraciones.application.service.LimpiezaValoracionesService;
 import es.uclm.esibuy.backend.valoraciones.infrastructure.adapter.out.pedidos.ComprasAdapter;
 import es.uclm.esibuy.backend.valoraciones.infrastructure.adapter.out.persistence.ValoracionDocumentMapper;
 import es.uclm.esibuy.backend.valoraciones.infrastructure.adapter.out.persistence.ValoracionMongoAdapter;
@@ -50,5 +52,10 @@ public class ValoracionesConfig {
     @Bean
     ConsultaValoracionesUseCase consultaValoracionesUseCase(ValoracionRepositoryPort valoracionRepositoryPort) {
         return new ConsultaValoracionesService(valoracionRepositoryPort);
+    }
+
+    @Bean
+    LimpiezaValoracionesUseCase limpiezaValoracionesUseCase(ValoracionRepositoryPort valoracionRepositoryPort) {
+        return new LimpiezaValoracionesService(valoracionRepositoryPort);
     }
 }

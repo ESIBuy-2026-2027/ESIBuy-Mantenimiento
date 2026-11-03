@@ -418,6 +418,16 @@ class ProductoMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU47-CP03: un producto no disponible no se puede comprar aunque tenga stock")
+    void productoNoDisponibleNoSePuedeComprarAunqueTengaStock() {
+        Producto producto = producto(null, 5).conDisponibilidad(false);
+        String id = adapter.guardar(producto).getId();
+
+        assertFalse(adapter.descontarStock(id, 1));
+        assertEquals(5, adapter.buscarPorId(id).orElseThrow().getStock());
+    }
+
+    @Test
     @DisplayName("HU10-CP15: dos descuentos a la vez del último stock no lo dejan negativo")
     void dosDescuentosALaVezNoDejanElStockNegativo() throws Exception {
         String id = adapter.guardar(producto(null, 1)).getId();

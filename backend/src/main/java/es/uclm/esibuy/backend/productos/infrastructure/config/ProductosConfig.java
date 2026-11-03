@@ -8,6 +8,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUse
 import es.uclm.esibuy.backend.productos.application.port.in.ExistenciasProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ConteoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
+import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosVendedorUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.SupervisionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
@@ -17,6 +18,7 @@ import es.uclm.esibuy.backend.productos.application.service.CatalogoProductosSer
 import es.uclm.esibuy.backend.productos.application.service.ExistenciasProductosService;
 import es.uclm.esibuy.backend.productos.application.service.ConteoProductosService;
 import es.uclm.esibuy.backend.productos.application.service.GestionProductosService;
+import es.uclm.esibuy.backend.productos.application.service.GestionProductosVendedorService;
 import es.uclm.esibuy.backend.productos.application.service.ListadoProductosService;
 import es.uclm.esibuy.backend.productos.application.service.SupervisionProductosService;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence.ProductoDocumentMapper;
@@ -66,6 +68,11 @@ public class ProductosConfig {
     GestionProductosUseCase gestionProductosUseCase(ProductoRepositoryPort productoRepositoryPort,
             UsuarioEnSesionPort usuarioEnSesionPort) {
         return new GestionProductosService(productoRepositoryPort, usuarioEnSesionPort);
+    }
+
+    @Bean
+    GestionProductosVendedorUseCase gestionProductosVendedorUseCase(ProductoRepositoryPort productoRepositoryPort) {
+        return new GestionProductosVendedorService(productoRepositoryPort);
     }
 
     @Bean

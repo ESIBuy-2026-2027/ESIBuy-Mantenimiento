@@ -396,7 +396,7 @@ public class ManejadorGlobalErrores {
     @ExceptionHandler(StockInsuficientePedidoException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError stockInsuficienteEnElPedido() {
-        return new RespuestaError("No hay stock suficiente", "INSUFFICIENT_STOCK");
+        return new RespuestaError("No se puede comprar un producto del pedido", "INSUFFICIENT_STOCK");
     }
 
     // Valoraciones (HU13): puntuación fuera de 1 a 5 o comentario de más de 500 caracteres

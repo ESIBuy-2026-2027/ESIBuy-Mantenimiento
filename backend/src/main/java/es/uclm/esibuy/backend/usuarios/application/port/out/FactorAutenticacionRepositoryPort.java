@@ -8,4 +8,6 @@ public interface FactorAutenticacionRepositoryPort {
     void guardar(FactorAutenticacion factor);
 
     Optional<FactorAutenticacion> buscarPorUsuario(String usuarioId);
+
+    void eliminarPorUsuario(String usuarioId);
 }

@@ -1,8 +1,12 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -15,11 +19,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 import es.uclm.esibuy.backend.usuarios.application.port.in.GestionPerfilUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.GestionCuentaUseCase;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
@@ -46,6 +53,9 @@ class PerfilControllerTest {
 
     @MockitoBean
     private GestionPerfilUseCase gestionPerfil;
+
+    @MockitoBean
+    private GestionCuentaUseCase gestionCuenta;
 
     private static Usuario clienteLucia() {
         return new Usuario("u-1", new DatosPersonales("Lucía", "Torres Vega", "avatar2"), new Email(EMAIL_CLIENTE),
@@ -124,5 +134,48 @@ class PerfilControllerTest {
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(gestionPerfil);
+    }
+
+    @Test
+    @DisplayName("HU47-CP05: al eliminar la cuenta se invalida la sesión y se limpia el contexto de seguridad")
+    void eliminarCuentaInvalidaSesionYLimpiaContexto() throws Exception {
+        MockHttpSession sesion = new MockHttpSession();
+
+        mockMvc.perform(delete(RUTA).session(sesion).with(user(EMAIL_VENDEDOR).roles("VENDEDOR"))
+                        .with(csrf())
+                        .contentType("application/json")
+                        .content("{\"password\":\"Password1!\"}"))
+                .andExpect(status().isNoContent());
+
+        verify(gestionCuenta).eliminarCuentaVendedor(EMAIL_VENDEDOR, "Password1!");
+        assertTrue(sesion.isInvalid());
+        assertTrue(SecurityContextHolder.getContext().getAuthentication() == null);
+    }
+
+    @Test
+    @DisplayName("HU47-CP06: un usuario que no es vendedor recibe 403 y no se modifica nada")
+    void usuarioNoVendedorNoPuedeEliminarCuenta() throws Exception {
+        MockHttpSession sesion = new MockHttpSession();
+
+        mockMvc.perform(delete(RUTA).session(sesion).with(user(EMAIL_CLIENTE).roles("CLIENTE"))
+                        .with(csrf())
+                        .contentType("application/json")
+                        .content("{\"password\":\"Password1!\"}"))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(gestionCuenta);
+        assertTrue(!sesion.isInvalid());
+    }
+
+    @Test
+    @DisplayName("HU47-CP07: una petición sin autenticar recibe 401 y no se modifica nada")
+    void sinAutenticarNoPuedeEliminarCuenta() throws Exception {
+        mockMvc.perform(delete(RUTA)
+                        .with(csrf())
+                        .contentType("application/json")
+                        .content("{\"password\":\"Password1!\"}"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(gestionCuenta);
     }
 }

@@ -115,7 +115,9 @@ class PedidoControllerTest {
     void siFaltaStockResponde409() throws Exception {
         when(realizacionPedido.realizar(COMANDO)).thenThrow(new StockInsuficientePedidoException("no"));
 
-        realizar(CUERPO).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("INSUFFICIENT_STOCK"));
+        realizar(CUERPO).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INSUFFICIENT_STOCK"))
+                .andExpect(jsonPath("$.mensaje").value("No se puede comprar un producto del pedido"));
     }
 
     @Test

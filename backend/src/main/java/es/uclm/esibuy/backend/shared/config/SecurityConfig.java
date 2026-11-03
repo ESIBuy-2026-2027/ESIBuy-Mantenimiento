@@ -85,6 +85,7 @@ public class SecurityConfig {
                         .requestMatchers(RUTAS_ADMINISTRACION).hasRole(ROL_ADMINISTRADOR)
                         .requestMatchers(RUTAS_VENDEDOR).hasRole(ROL_VENDEDOR)
                         .requestMatchers(RUTAS_CLIENTE).hasRole(ROL_CLIENTE)
+                        .requestMatchers(HttpMethod.DELETE, RUTAS_PERFIL).hasRole(ROL_VENDEDOR)
                         .requestMatchers(RUTAS_PERFIL).hasAnyRole(ROL_CLIENTE, ROL_VENDEDOR)
                         .requestMatchers(HttpMethod.GET, RUTAS_CATALOGO).hasRole(ROL_CLIENTE)
                         .requestMatchers(HttpMethod.POST, RUTA_VALORACIONES).hasRole(ROL_CLIENTE)
