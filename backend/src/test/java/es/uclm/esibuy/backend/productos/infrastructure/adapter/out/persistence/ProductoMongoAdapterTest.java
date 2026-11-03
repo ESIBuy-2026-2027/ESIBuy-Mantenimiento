@@ -363,32 +363,46 @@ class ProductoMongoAdapterTest {
         assertEquals(List.of("Cesta", "Banco"), nombres(descendente));
     }
 
+    // Valoración mínima y orden por valoración (HU7) con la media de las valoraciones de HU13 (T415). Un producto
+    // sin valoraciones no llega a ningún mínimo y al ordenar cuenta como el que menos.
     @Test
-    @DisplayName("HU7-CP15: con una valoración mínima no sale ningún producto mientras no haya valoraciones")
-    void buscarEnCatalogoConValoracionMinimaNoDevuelveNada() {
-        // Hasta HU13 ningún producto tiene valoraciones, así que ninguno llega al mínimo (decisión 3 del plan).
-        adapter.guardar(productoNuevo("v-1", "Teclado"));
-        adapter.guardar(productoNuevo("v-2", "Ratón"));
+    @DisplayName("HU7-CP15: con una valoración mínima solo salen los productos con esa media o más")
+    void buscarEnCatalogoConValoracionMinimaFiltraPorLaMedia() {
+        guardarValorado("Atril", 4.5);
+        guardarValorado("Banco", 3.0);
+        adapter.guardar(productoNuevo("v-1", "Cesta"));
 
-        ProductoPage pagina = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, 2, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+        ProductoPage desdeCuatro = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, 4, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+        ProductoPage desdeTres = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, 3, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
 
-        assertEquals(List.of(), nombres(pagina));
-        assertEquals(0, pagina.totalElementos());
+        assertEquals(List.of("Atril"), nombres(desdeCuatro));
+        assertEquals(1, desdeCuatro.totalElementos());
+        assertEquals(List.of("Atril", "Banco"), nombres(desdeTres));
     }
 
     @Test
-    @DisplayName("HU7-CP15: ordenar por valoración desempata por nombre de la A a la Z mientras no haya valoraciones")
-    void buscarEnCatalogoPorValoracionDesempataPorNombre() {
-        // Sin valoraciones todos cuentan como 0 y empatan; el empate se resuelve de la A a la Z aunque se pida descendente.
-        adapter.guardar(productoNuevo("v-1", "Cesta"));
+    @DisplayName("HU7-CP15: por valoración ordena por la media, desempata por nombre y sin valoraciones es la menor")
+    void buscarEnCatalogoPorValoracionOrdenaPorLaMedia() {
         adapter.guardar(productoNuevo("v-1", "Atril"));
-        adapter.guardar(productoNuevo("v-2", "Banco"));
+        guardarValorado("Cesta", 4.0);
+        guardarValorado("Banco", 4.0);
+        guardarValorado("Dado", 2.0);
 
-        ProductoPage pagina = adapter.buscarEnCatalogo(
+        ProductoPage descendente = adapter.buscarEnCatalogo(
                 new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.VALORACION, true, 0, 10));
+        ProductoPage ascendente = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.VALORACION, false, 0, 10));
 
-        assertEquals(List.of("Atril", "Banco", "Cesta"), nombres(pagina));
+        // Banco y Cesta empatan a 4,0: el empate se resuelve de la A a la Z en los dos sentidos
+        assertEquals(List.of("Banco", "Cesta", "Dado", "Atril"), nombres(descendente));
+        assertEquals(List.of("Atril", "Dado", "Banco", "Cesta"), nombres(ascendente));
+    }
+
+    private void guardarValorado(String nombre, double media) {
+        String id = adapter.guardar(productoNuevo("v-1", nombre)).getId();
+        adapter.actualizarValoracion(id, media, 2);
     }
 
     // Catálogo sin búsqueda, categoría ni valoración mínima, por nombre de la A a la Z, primera página de 10.
