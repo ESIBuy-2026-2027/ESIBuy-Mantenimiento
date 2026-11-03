@@ -580,6 +580,8 @@ class ProductoControllerTest {
                 Arguments.of("sin disponible", "{}"),
                 Arguments.of("disponible nulo", "{\"disponible\": null}"),
                 Arguments.of("disponible que no es booleano", "{\"disponible\": \"abc\"}"),
+                Arguments.of("disponible como texto \"true\"", "{\"disponible\": \"true\"}"),
+                Arguments.of("disponible como número 1", "{\"disponible\": 1}"),
                 Arguments.of("JSON mal formado", "{\"disponible\": "));
     }
 
