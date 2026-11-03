@@ -177,4 +177,12 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         return usuarioRepository.buscarPorId(usuarioId)
                 .orElseThrow(() -> new UsuarioNoEncontradoException("El usuario no existe"));
     }
+
+    // Lo pregunta el módulo de categorías antes de eliminar una (HU42). El administrador no recibe ningún dato de
+    // los vendedores, solo si existe alguno.
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
+    @Override
+    public boolean existenVendedoresConCategoria(String categoriaId) {
+        return usuarioRepository.existeVendedorConCategoriaPrincipal(categoriaId);
+    }
 }

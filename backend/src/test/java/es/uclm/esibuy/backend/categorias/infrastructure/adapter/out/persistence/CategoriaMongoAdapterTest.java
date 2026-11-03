@@ -29,8 +29,9 @@ import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColeccio
 // Test de integración del adaptador de MongoDB de categorías (AB#43). Usa un MongoDB real en Docker
 // (Testcontainers): Docker Desktop debe estar abierto. InicializadorColecciones crea la colección categorias
 // con su validación y sus índices, como en la aplicación real. También prueba la creación (HU40, T323) y la
-// edición (HU41, T329).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU22-CP15, HU40-CP05, HU40-CP06 y HU41-CP07 a CP09, propuestos.
+// con su validación y sus índices, como en la aplicación real. También prueba la creación (HU40, T323), la
+// edición (HU41, T329) y la eliminación (HU42, T326).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU22-CP15, HU40-CP05, HU40-CP06, HU41-CP07 a CP09 y HU42-CP06, propuestos.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class CategoriaMongoAdapterTest {
@@ -118,7 +119,7 @@ class CategoriaMongoAdapterTest {
         assertEquals(1, adapter.listar().size());
     }
 
-        // Edición de categorías (HU41, T329).
+    // Edición de categorías (HU41, T329).
 
     @Test
     @DisplayName("HU41-CP07: buscarPorId devuelve la categoría con su descripción y su estado")
@@ -185,6 +186,32 @@ class CategoriaMongoAdapterTest {
 
         assertThrows(CategoriaDuplicadaException.class, () -> adapter.guardar(renombrada));
         assertEquals("Hogar", adapter.buscarPorId(hogar.id()).orElseThrow().nombre());
+    }
+
+    // Eliminación de categorías (HU42, T326).
+
+    @Test
+    @DisplayName("HU42-CP06: eliminar borra físicamente la categoría y deja las demás")
+    void eliminarBorraSoloLaCategoriaIndicada() {
+        Categoria hogar = adapter.guardar(Categoria.nueva("Hogar", ""));
+        Categoria tecnologia = adapter.guardar(Categoria.nueva("Tecnología", ""));
+
+        adapter.eliminar(hogar.id());
+
+        assertEquals(Optional.empty(), adapter.buscarPorId(hogar.id()));
+        assertEquals(List.of(tecnologia), adapter.listar());
+        assertEquals(1, categoriaMongoRepository.count());
+    }
+
+    @ParameterizedTest(name = "«{0}»")
+    @ValueSource(strings = {"000000000000000000000000", "no-es-un-id"})
+    @DisplayName("HU42-CP06: eliminar un id que no existe no falla ni borra nada")
+    void eliminarUnIdInexistenteNoBorraNada(String id) {
+        Categoria hogar = adapter.guardar(Categoria.nueva("Hogar", ""));
+
+        adapter.eliminar(id);
+
+        assertEquals(List.of(hogar), adapter.listar());
     }
 
     private CategoriaDocument guardar(String nombre) {

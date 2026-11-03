@@ -1,13 +1,17 @@
 package es.uclm.esibuy.backend.categorias.infrastructure.adapter.in.web;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -28,6 +32,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import es.uclm.esibuy.backend.categorias.application.port.in.AdministracionCategoriasUseCase;
 import es.uclm.esibuy.backend.categorias.application.port.in.CategoriaConProductos;
 import es.uclm.esibuy.backend.categorias.application.port.in.CrearCategoriaCommand;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaConProductosException;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaConVendedoresException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaDuplicadaException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaInvalidaException;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
@@ -37,10 +43,10 @@ import es.uclm.esibuy.backend.categorias.application.port.in.EditarCategoriaComm
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 
 // Gestión de las categorías del administrador: listado (HU39, T331, GET /api/admin/categorias), creación
-// (HU40, T322, POST /api/admin/categorias) y edición (HU41, T328, PUT /api/admin/categorias/{id}). El caso de
-// uso es un doble de prueba; la seguridad es la real (SecurityConfig) y los errores los traduce
-// ManejadorGlobalErrores.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU39-CP01 y CP04, HU40-CP05 a CP08 y HU41-CP10 a CP14, propuestos.
+// (HU40, T322, POST /api/admin/categorias), edición (HU41, T328, PUT /api/admin/categorias/{id}) y eliminación
+// (HU42, T325, DELETE /api/admin/categorias/{id}). El caso de uso es un doble de prueba; la seguridad es la
+// real (SecurityConfig) y los errores los traduce ManejadorGlobalErrores.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU39-CP01 y CP04, HU40-CP05 a CP08, HU41-CP10 a CP14 y y HU42-CP11 a CP15, propuestos.
 @WebMvcTest(AdministracionCategoriasController.class)
 @Import(SecurityConfig.class)
 class AdministracionCategoriasControllerTest {
@@ -252,6 +258,72 @@ class AdministracionCategoriasControllerTest {
     @DisplayName("HU41-CP14: sin sesión no se pueden editar categorías (401)")
     void editarSinSesionDevuelve401() throws Exception {
         mockMvc.perform(editar("c-9", CATEGORIA_EDITADA))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(administracionCategorias);
+    }
+
+    
+    // Eliminación de categorías (HU42, T325).
+
+    private static MockHttpServletRequestBuilder eliminar(String id) {
+        return delete(RUTA + "/" + id).with(csrf());
+    }
+
+    @Test
+    @DisplayName("HU42-CP11: un administrador elimina una categoría y recibe 204 sin cuerpo")
+    void unAdministradorEliminaUnaCategoria() throws Exception {
+        mockMvc.perform(eliminar("c-9").with(user("admin").roles("ADMINISTRADOR")))
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(""));
+
+        verify(administracionCategorias).eliminar("c-9");
+    }
+
+    @Test
+    @DisplayName("HU42-CP12: eliminar una categoría que tiene productos devuelve 409")
+    void eliminarUnaCategoriaConProductosDevuelve409() throws Exception {
+        doThrow(new CategoriaConProductosException()).when(administracionCategorias).eliminar("c-9");
+
+        mockMvc.perform(eliminar("c-9").with(user("admin").roles("ADMINISTRADOR")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CATEGORY_HAS_PRODUCTS"));
+    }
+
+    @Test
+    @DisplayName("HU42-CP13: eliminar una categoría que es la principal de algún vendedor devuelve 409")
+    void eliminarUnaCategoriaPrincipalDeUnVendedorDevuelve409() throws Exception {
+        doThrow(new CategoriaConVendedoresException()).when(administracionCategorias).eliminar("c-9");
+
+        mockMvc.perform(eliminar("c-9").with(user("admin").roles("ADMINISTRADOR")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CATEGORY_HAS_SELLERS"));
+    }
+
+    @Test
+    @DisplayName("HU42-CP14: eliminar una categoría que no existe devuelve 404")
+    void eliminarUnaCategoriaInexistenteDevuelve404() throws Exception {
+        doThrow(new CategoriaNoEncontradaException()).when(administracionCategorias).eliminar("c-9");
+
+        mockMvc.perform(eliminar("c-9").with(user("admin").roles("ADMINISTRADOR")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CATEGORY_NOT_FOUND"));
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "VENDEDOR"})
+    @DisplayName("HU42-CP15: un usuario sin rol de administrador no puede eliminar categorías (403)")
+    void eliminarConOtroRolDevuelve403(String rol) throws Exception {
+        mockMvc.perform(eliminar("c-9").with(user("usuario").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(administracionCategorias);
+    }
+
+    @Test
+    @DisplayName("HU42-CP15: sin sesión no se pueden eliminar categorías (401)")
+    void eliminarSinSesionDevuelve401() throws Exception {
+        mockMvc.perform(eliminar("c-9"))
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(administracionCategorias);

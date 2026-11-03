@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -21,20 +22,23 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import es.uclm.esibuy.backend.categorias.application.port.in.CategoriaConProductos;
-import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
 import es.uclm.esibuy.backend.categorias.application.port.in.CrearCategoriaCommand;
-import es.uclm.esibuy.backend.categorias.application.port.out.ProductosPorCategoriaPort;
-import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaDuplicadaException;
-import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
-import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 import es.uclm.esibuy.backend.categorias.application.port.in.EditarCategoriaCommand;
+import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
+import es.uclm.esibuy.backend.categorias.application.port.out.ProductosPorCategoriaPort;
+import es.uclm.esibuy.backend.categorias.application.port.out.VendedoresPorCategoriaPort;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaConProductosException;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaConVendedoresException;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaDuplicadaException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaInvalidaException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
+import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
+import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 
 // Listado de las categorías del administrador con su número de productos (HU39, T332). El repositorio y el
 // puerto hacia productos son dobles de prueba: se prueba el caso de uso sin MongoDB ni Spring. También prueba la
-// creación de categorías (HU40, T323) y la edición (HU41, T329).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU39-CP01 a CP03, HU40-CP05 y CP06 y HU41-CP01 a CP05, propuestos.
+// creación de categorías (HU40, T323), la edición (HU41, T329) y la eliminación (HU42, T326).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU39-CP01 a CP03, HU40-CP05 y CP06, HU41-CP01 a CP05 y HU42-CP01 a CP04, propuestos.
 @ExtendWith(MockitoExtension.class)
 class AdministracionCategoriasServiceTest {
 
@@ -47,6 +51,9 @@ class AdministracionCategoriasServiceTest {
 
     @Mock
     private ProductosPorCategoriaPort productosPorCategoria;
+
+    @Mock
+    private VendedoresPorCategoriaPort vendedoresPorCategoria;
 
     @InjectMocks
     private AdministracionCategoriasService servicio;
@@ -106,7 +113,7 @@ class AdministracionCategoriasServiceTest {
         verify(categoriaRepository, never()).guardar(any());
     }
 
-        // Edición de categorías (HU41, T329).
+    // Edición de categorías (HU41, T329).
 
     @Test
     @DisplayName("HU41-CP01: editar cambia el nombre y la descripción, conserva el id y el estado y devuelve el número de productos")
@@ -167,5 +174,51 @@ class AdministracionCategoriasServiceTest {
         assertThrows(CategoriaInvalidaException.class, () -> servicio.editar(comando));
         verify(categoriaRepository, never()).existeOtraConNombre(any(), any());
         verify(categoriaRepository, never()).guardar(any());
+    }
+
+    // Eliminación de categorías (HU42, T326).
+
+    @Test
+    @DisplayName("HU42-CP01: eliminar borra una categoría sin productos ni vendedores")
+    void eliminarBorraUnaCategoriaSinProductosNiVendedores() {
+        when(categoriaRepository.buscarPorId("c-1")).thenReturn(Optional.of(HOGAR));
+        when(productosPorCategoria.contarPorCategoria()).thenReturn(Map.of("c-2", 7L));
+        when(vendedoresPorCategoria.existenVendedores("c-1")).thenReturn(false);
+
+        servicio.eliminar("c-1");
+
+        verify(categoriaRepository).eliminar("c-1");
+    }
+
+    @Test
+    @DisplayName("HU42-CP02: eliminar rechaza una categoría con productos y no borra nada")
+    void eliminarRechazaUnaCategoriaConProductos() {
+        when(categoriaRepository.buscarPorId("c-1")).thenReturn(Optional.of(HOGAR));
+        when(productosPorCategoria.contarPorCategoria()).thenReturn(Map.of("c-1", 4L));
+
+        assertThrows(CategoriaConProductosException.class, () -> servicio.eliminar("c-1"));
+        verify(categoriaRepository, never()).eliminar(any());
+        verifyNoInteractions(vendedoresPorCategoria);
+    }
+
+    @Test
+    @DisplayName("HU42-CP03: eliminar rechaza una categoría que es la principal de un vendedor y no borra nada")
+    void eliminarRechazaUnaCategoriaConVendedores() {
+        when(categoriaRepository.buscarPorId("c-1")).thenReturn(Optional.of(HOGAR));
+        when(productosPorCategoria.contarPorCategoria()).thenReturn(Map.of());
+        when(vendedoresPorCategoria.existenVendedores("c-1")).thenReturn(true);
+
+        assertThrows(CategoriaConVendedoresException.class, () -> servicio.eliminar("c-1"));
+        verify(categoriaRepository, never()).eliminar(any());
+    }
+
+    @Test
+    @DisplayName("HU42-CP04: eliminar una categoría que no existe lanza «no encontrada» sin consultar ni borrar nada")
+    void eliminarUnaCategoriaInexistenteFalla() {
+        when(categoriaRepository.buscarPorId("c-9")).thenReturn(Optional.empty());
+
+        assertThrows(CategoriaNoEncontradaException.class, () -> servicio.eliminar("c-9"));
+        verifyNoInteractions(productosPorCategoria, vendedoresPorCategoria);
+        verify(categoriaRepository, never()).eliminar(any());
     }
 }
