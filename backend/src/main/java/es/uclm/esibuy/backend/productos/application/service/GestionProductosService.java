@@ -3,8 +3,11 @@ package es.uclm.esibuy.backend.productos.application.service;
 import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
+import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
+import es.uclm.esibuy.backend.productos.application.port.out.ResultadoAnalisis;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
+import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
@@ -15,10 +18,13 @@ public class GestionProductosService implements GestionProductosUseCase {
 
     private final ProductoRepositoryPort productoRepository;
     private final UsuarioEnSesionPort usuarioEnSesion;
+    private final AnalisisImagenPort analisisImagen;
 
-    public GestionProductosService(ProductoRepositoryPort productoRepository, UsuarioEnSesionPort usuarioEnSesion) {
+    public GestionProductosService(ProductoRepositoryPort productoRepository, UsuarioEnSesionPort usuarioEnSesion,
+            AnalisisImagenPort analisisImagen) {
         this.productoRepository = productoRepository;
         this.usuarioEnSesion = usuarioEnSesion;
+        this.analisisImagen = analisisImagen;
     }
 
     @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO_EN_COMANDO)
@@ -45,7 +51,16 @@ public class GestionProductosService implements GestionProductosUseCase {
         if (productoRepository.existePorVendedorYNombre(vendedorId, producto.getNombre())) {
             throw new ProductoDuplicadoException();
         }
+        comprobarImagen(producto.getImagen());
         return productoRepository.guardar(producto);
+    }
+
+    // Antivirus de la URL de la imagen (HU31, T397): una imagen maliciosa no se guarda. Sin imagen, Producto la deja
+    // vacía ("") y no se analiza nada.
+    private void comprobarImagen(String imagen) {
+        if (!imagen.isEmpty() && analisisImagen.analizar(imagen) == ResultadoAnalisis.MALICIOSA) {
+            throw new ImagenNoSeguraException();
+        }
     }
 
     @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO)

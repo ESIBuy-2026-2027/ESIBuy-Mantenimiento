@@ -78,8 +78,8 @@ public class ProductosConfig {
 
     @Bean
     GestionProductosUseCase gestionProductosUseCase(ProductoRepositoryPort productoRepositoryPort,
-            UsuarioEnSesionPort usuarioEnSesionPort) {
-        return new GestionProductosService(productoRepositoryPort, usuarioEnSesionPort);
+            UsuarioEnSesionPort usuarioEnSesionPort, AnalisisImagenPort analisisImagenPort) {
+        return new GestionProductosService(productoRepositoryPort, usuarioEnSesionPort, analisisImagenPort);
     }
 
     @Bean
