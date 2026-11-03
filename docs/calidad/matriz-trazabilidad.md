@@ -38,8 +38,8 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | HU1-CP19 | Registra un vendedor en estado PENDIENTE con su nombre comercial y su categoría principal | Unitario + integración | 9 | ✅ Pasa |
 | HU1-CP20 | Rechaza un nombre comercial ya registrado, también cuando se repite junto con el correo | Unitario + integración | 6 | ✅ Pasa |
 | HU1-CP21 | Rechaza datos de vendedor inválidos o un perfil que no corresponde al rol | Unitario + integración (capa web) | 8 | ✅ Pasa |
-| HU1-CP22 | Los errores 400 del registro indican el motivo con un `code` (contraseña, DNI, teléfono, edad, privacidad, email o campo) | Unitario + integración (capa web) | 14 | ✅ Pasa |
-| HU1-CP23 | El formulario marca en su campo el motivo que da el backend (o un mensaje general si no tiene campo), y un DNI repetido se marca en el DNI | Frontend (unitario y página) | 7 | ✅ Pasa (7, AB#17 · AB#18, PR #105) |
+| HU1-CP22 | Los errores 400 del registro indican el motivo con un `code` (contraseña, DNI, teléfono, edad, privacidad, email o campo) | Unitario + integración (capa web) | 14 | 🔍 En revisión |
+| HU1-CP23 | El formulario marca en su campo el motivo que da el backend (o un mensaje general si no tiene campo), y un DNI repetido se marca en el DNI | Frontend (unitario y página) | 7 | 🔍 En revisión |
 | HU1-CP24 | Tras registrarse se ofrece ir a iniciar sesión | Frontend (página) | 1 | ✅ Pasa (1, AB#234, PR #105) |
 | HU1-CP25 | Con la sesión iniciada no se ofrece crear una cuenta y /register lleva a la página del rol | Frontend (página y rutas) | 3 | ✅ Pasa (3, AB#17 · AB#18, PR #105) |
 | HU1-CP26 | Un registro correcto no se trata como un error aunque el backend responda 201 sin cuerpo | Frontend (API) | 1 | ✅ Pasa (1, AB#17 · AB#18, PR #105) |
@@ -58,7 +58,7 @@ Notas:
 - **AB#239 (HU1-CP17):** la contraseña exige al menos una mayúscula, una minúscula, un número y un símbolo, con las mismas clases Unicode que el frontend (`accountRules.js`): las tildes y la ñ cuentan como letras y el espacio como símbolo. Con esta regla, las entradas antiguas de la lista negra (`password`, `12345678`…) ya no podían llegar a compararse, así que la lista se sustituye por contraseñas comunes que sí cumplen la composición (`P@ssw0rd`, `Password1!`…) y los tres tests de CP09 cambian sus contraseñas para seguir probando la lista negra y no la composición. Las contraseñas de los tests que esperan un registro correcto pasan de `clave1234` a `Clave-1234`.
 - **AB#240 (HU1-CP18):** el value object `Email` normaliza en su constructor (`strip()` y minúsculas con `Locale.ROOT`) antes de validar el formato, y `RegistroUsuarioService` comprueba el duplicado con ese valor. Los puertos siguen recibiendo `String`; cambiarlos a `Email` queda como refactor posible. El paso 1 del login (`AutenticacionService.iniciarSesion`) sigue buscando con el email tal como llega: se propone a la HU2 como task propia (buscar con el email normalizado y responder credenciales inválidas ante un email mal formado). PENDIENTE DE REVISAR CON EL EQUIPO: las cuentas de Atlas con mayúsculas en el email dejarán de encontrarse; migrarlas a minúsculas o borrarlas.
 - **AB#241 (HU1-CP19 a CP21, registro del vendedor):** `POST /api/auth/register/vendedor` con el contrato del frontend (una única categoría en `categoriaPrincipalId`, PR #81). El perfil del usuario pasa a la interfaz sellada `PerfilUsuario` (`DatosCliente` o `DatosVendedor`) como sexto parámetro de `Usuario`, sin cambiar las llamadas existentes; la factoría `nuevoVendedor` exige `DatosVendedor`, pero el constructor admite un VENDEDOR sin perfil para no romper las cuentas anteriores de Atlas ni los tests de otras HU (endurecer cuando se limpie Atlas). Los identificadores de categoría se guardan sin comprobarlos contra el catálogo (decisión del equipo). Un nombre comercial repetido devuelve 409 `COMMERCIAL_NAME_ALREADY_REGISTERED`, y si además se repite el correo, `EMAIL_AND_COMMERCIAL_NAME_ALREADY_REGISTERED`; un DNI repetido devuelve `DNI_ALREADY_REGISTERED`, que el formulario del vendedor no trata (comunicado al frontend). `registrar` pasa a `registrarCliente` y `RegistrarUsuarioCommand` a `RegistrarClienteCommand`.
-- **Fallos de la demo del Sprint 1 (HU1-CP22, rama `fix/sprint1-demo-backend`):** el dominio indica el motivo del rechazo con el enum `MotivoRechazo` dentro de `ContrasenaInvalidaException` y `UsuarioInvalidoException`, y `ManejadorGlobalErrores` lo traduce a un `code` en inglés (`PASSWORD_TOO_SHORT`, `PASSWORD_TOO_LONG`, `PASSWORD_WEAK`, `PASSWORD_TOO_COMMON`, `PASSWORD_CONTAINS_PERSONAL_DATA`, `PASSWORDS_DO_NOT_MATCH`, `INVALID_EMAIL`, `INVALID_DNI`, `INVALID_PHONE`, `UNDERAGE`, `PRIVACY_NOT_ACCEPTED`, `INVALID_FIELD`). Los errores de `@Valid` de cualquier endpoint responden con el mismo formato e `INVALID_FIELD`. El registro recibe la imagen como `avatar`, igual que el resto de la API. Sin tasks nuevas en Azure: los commits llevan el `AB#` de la task original de cada parte.
+- **Fallos de la demo del Sprint 1 (HU1-CP22, rama `fix/sprint1-demo-backend`):** el dominio indica el motivo del rechazo con el enum `MotivoRechazo` dentro de `ContrasenaInvalidaException` y `UsuarioInvalidoException`, y `ManejadorGlobalErrores` lo traduce a un `code` en inglés (`PASSWORD_TOO_SHORT`, `PASSWORD_TOO_LONG`, `PASSWORD_WEAK`, `PASSWORD_TOO_COMMON`, `PASSWORD_CONTAINS_PERSONAL_DATA`, `PASSWORDS_DO_NOT_MATCH`, `INVALID_EMAIL`, `INVALID_DNI`, `INVALID_PHONE`, `UNDERAGE`, `PRIVACY_NOT_ACCEPTED`; el motivo genérico `DATO_INVALIDO`, `VALIDATION_ERROR`). Los errores de `@Valid` de cualquier endpoint responden con el mismo formato y `VALIDATION_ERROR` (antes `INVALID_FIELD`; cambiado en la rama `fix/errores-validacion-api`, ver la nota de HU16-CP12). El registro recibe la imagen como `avatar`, igual que el resto de la API. Sin tasks nuevas en Azure: los commits llevan el `AB#` de la task original de cada parte.
 - **HU1-CP23 a CP26 (fallos de la demo del Sprint 1, frontend):** `features/account/registroErrors.js` traduce cada `code` del backend a su campo y su mensaje; lo usan el registro, el alta de administrador (HU21-CP19) y la edición (HU22-CP16). Tras registrarse, un botón lleva al login, sin redirección automática. `GuestOnlyRoute` lleva a la página del rol a quien abre `/register` con sesión. El backend responde al registro con un 201 sin cuerpo, y `api/client.js` intentaba leerlo como JSON: el usuario se creaba pero la pantalla mostraba un error (CP26). El mock del registro responde ahora igual que el backend. Como en la HU19, el ID del caso va al principio del nombre del test (`it('HU1-CP23: …')`). Los tests anteriores de estas pantallas no tienen todavía filas en la matriz.
 - **HU1-CP16 (AB#43):** la comprobación del DNI repetido pasa de `existePorDni` a `existePorDniYRol`, en el registro del cliente y en el del vendedor, para que coincida con el índice `rol_dni` (una persona puede tener una cuenta de cliente y otra de vendedor con el mismo DNI). Antes, un vendedor con el DNI de un cliente recibía un 409 aunque MongoDB lo habría aceptado. Lo pidió el equipo en la edición del vendedor (HU22); cambia código de la T241.
 - **Frontend, fix del registro (sin task):** el formulario enviaba `tipoCliente` como `normal`/`premium` y el backend espera el enum `ESTANDAR`/`PREMIUM` (400 sin llegar al registro), y enviaba `telefono: ""` cuando se dejaba vacío, que el dominio rechaza como teléfono inválido. En `Register.test.jsx` se adapta `register_alElegirCliente_muestraTipoConNormalPreseleccionado` (ahora `register_alElegirCliente_muestraTipoEstandarPreseleccionadoConLosValoresDelBackend`) y se añaden `register_alEnviarDatosValidosDeCliente_enviaElTipoEstandarPorDefecto`, `register_alElegirPremium_enviaElTipoPremium`, `register_siElClienteNoIndicaTelefono_noEnviaElTelefono` y `register_siElVendedorNoIndicaTelefono_noEnviaElTelefono`. Los tests de `Register.test.jsx` no tienen todavía filas en la Tabla B ni un caso propio para el contrato del cuerpo de la petición: pendiente de decidir con el equipo a qué casos de la HU1 se asignan.
@@ -216,15 +216,15 @@ Notas:
 | HU1-CP22 | `UsuarioControllerTest` | `contrasenaConDatosPersonalesDevuelve400ConSuCodigo` | Infraestructura | AB#229 | PR #104 | ✅ |
 | HU1-CP22 | `UsuarioControllerTest` | `dniInvalidoDevuelve400ConSuCodigo` | Infraestructura | AB#229 | PR #104 | ✅ |
 | HU1-CP22 | `UsuarioControllerTest` | `emailInvalidoDevuelve400ConSuCodigo` | Infraestructura | AB#229 | PR #104 | ✅ |
-| HU1-CP22 | `UsuarioControllerTest` | `datoInvalidoGenericoDevuelve400ConInvalidField` | Infraestructura | AB#229 | PR #104 | ✅ |
-| HU1-CP22 | `UsuarioControllerTest` | `errorDeValidacionDelFormularioDevuelve400ConInvalidField` | Infraestructura | AB#229 | PR #104 | ✅ |
+| HU1-CP22 | `UsuarioControllerTest` | `datoInvalidoGenericoDevuelve400ConValidationError` | Infraestructura | AB#229 | PR #104 (renombrado y modificado en este PR) | 🔍 |
+| HU1-CP22 | `UsuarioControllerTest` | `errorDeValidacionDelFormularioDevuelve400ConValidationError` | Infraestructura | AB#229 | PR #104 (renombrado y modificado en este PR) | 🔍 |
 | HU1-CP23 | `registroErrors.test.js` | `HU1-CP23: traduce cada code a su campo y su mensaje` | Frontend · unitario | AB#17 · AB#18 | PR #105 | ✅ |
-| HU1-CP23 | `registroErrors.test.js` | `HU1-CP23: un code sin campo o desconocido da el mensaje general` | Frontend · unitario | AB#17 · AB#18 | PR #105 | ✅ |
+| HU1-CP23 | `registroErrors.test.js` | `HU1-CP23: un code sin campo o desconocido da el mensaje general` | Frontend · unitario | AB#17 · AB#18 | PR #105 (modificado en este PR) | 🔍 |
 | HU1-CP23 | `registroErrors.test.js` | `HU1-CP23: un error que no es de los datos da un mensaje de error del servidor` | Frontend · unitario | AB#17 · AB#18 | PR #105 | ✅ |
 | HU1-CP23 | `Register.test.jsx` | `HU1-CP23: una contraseña con datos personales se marca en el campo de la contraseña` | Frontend · página | AB#17 · AB#18 | PR #105 | ✅ |
 | HU1-CP23 | `Register.test.jsx` | `HU1-CP23: un DNI ya registrado se marca en el DNI y no en el email` | Frontend · página | AB#17 · AB#18 | PR #105 | ✅ |
 | HU1-CP23 | `Register.test.jsx` | `HU1-CP23: en el vendedor, un DNI ya registrado se marca en el DNI` | Frontend · página | AB#17 · AB#18 | PR #105 | ✅ |
-| HU1-CP23 | `Register.test.jsx` | `HU1-CP23: un error sin campo muestra un mensaje general` | Frontend · página | AB#17 · AB#18 | PR #105 | ✅ |
+| HU1-CP23 | `Register.test.jsx` | `HU1-CP23: un error sin campo muestra un mensaje general` | Frontend · página | AB#17 · AB#18 | PR #105 (modificado en este PR) | 🔍 |
 | HU1-CP24 | `Register.test.jsx` | `HU1-CP24: tras registrarse ofrece ir a iniciar sesión` | Frontend · página | AB#234 | PR #105 | ✅ |
 | HU1-CP25 | `Home.test.jsx` | `HU1-CP25: con la sesión iniciada no ofrece crear una cuenta` | Frontend · página | AB#17 · AB#18 | PR #105 | ✅ |
 | HU1-CP25 | `GuestOnlyRoute.test.jsx` | `HU1-CP25: con la sesión iniciada /register lleva a la página de inicio del rol` | Frontend · rutas | AB#17 · AB#18 | PR #105 | ✅ |
@@ -659,7 +659,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU3-CP13 | `POST /api/auth/password-recovery/confirm` con el código correcto responde 204 y pasa email, código y contraseña al caso de uso | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
 | HU3-CP14 | Restablecer con un código que no sirve responde 401 «Código incorrecto» | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
 | HU3-CP15 | Restablecer con una contraseña que no cumple la política responde 400 con el código del motivo (p. ej. `PASSWORD_WEAK`) | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
-| HU3-CP16 | Los dos endpoints rechazan un cuerpo incompleto (400) y una petición sin token anti-CSRF (403) sin llamar al caso de uso | Integración web (`@WebMvcTest`) | 4 | ✅ Pasa |
+| HU3-CP16 | Los dos endpoints rechazan un cuerpo incompleto (400) y una petición sin token anti-CSRF (403) sin llamar al caso de uso | Integración web (`@WebMvcTest`) | 4 | 🔍 En revisión |
 | HU3-CP17 | La petición de restablecer no muestra la contraseña ni el código en su `toString` (logs) | Unitario (infraestructura) | 1 | ✅ Pasa |
 | HU3-CP18 | El inicio de sesión tiene el enlace «¿Has olvidado tu contraseña?», que lleva a la recuperación | Frontend (página) | 1 | 🔍 En revisión (1, AB#398, PR sin abrir) |
 | HU3-CP19 | Sin email, o con uno mal formado, se avisa en el campo y no se pide ningún código | Frontend (página) | 1 | 🔍 En revisión (1, AB#398, PR sin abrir) |
@@ -708,9 +708,9 @@ Notas:
 | HU3-CP13 | `RecuperacionContrasenaControllerTest` | `restablecerRespondeSinContenidoYPasaElComando` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
 | HU3-CP14 | `RecuperacionContrasenaControllerTest` | `restablecerConCodigoInvalidoRespondeUnauthorized` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
 | HU3-CP15 | `RecuperacionContrasenaControllerTest` | `restablecerConContrasenaDebilRespondeBadRequestConSuCodigo` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
-| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `solicitarSinEmailRespondeBadRequest` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `solicitarSinEmailRespondeBadRequest` | Infraestructura (web) | AB#399 | PR #176 (modificado en este PR) | 🔍 |
 | HU3-CP16 | `RecuperacionContrasenaControllerTest` | `solicitarSinCsrfRespondeForbidden` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
-| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `restablecerConCamposVaciosRespondeBadRequest` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
+| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `restablecerConCamposVaciosRespondeBadRequest` | Infraestructura (web) | AB#399 | PR #176 (modificado en este PR) | 🔍 |
 | HU3-CP16 | `RecuperacionContrasenaControllerTest` | `restablecerSinCsrfRespondeForbidden` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
 | HU3-CP17 | `RestablecerContrasenaRequestTest` | `toStringNoMuestraLaContrasenaNiElCodigo` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
 | HU3-CP18 | `LoginFlow.test.jsx` | `HU3-CP18: el inicio de sesión tiene un enlace a la recuperación de contraseña` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
@@ -1841,16 +1841,16 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU16-CP08 | El vendedor activa un producto suyo que no estaba disponible | Unitario | 1 | ✅ Pasa |
 | HU16-CP09 | Un producto ajeno o inexistente no se puede activar ni desactivar (`ProductoNoEncontradoException`) y no se guarda nada | Unitario | 2 | ✅ Pasa |
 | HU16-CP10 | Solo el vendedor dueño, con su correo, activa o desactiva su producto: cliente, administrador u otro vendedor reciben 403 y sin sesión se rechaza | Unitario (seguridad, contexto mínimo de Spring) | 5 | ✅ Pasa |
-| HU16-CP11 | `PATCH /api/seller/products/{id}/availability` devuelve 200 con el producto actualizado; el vendedor sale de la sesión | Integración (capa web) | 1 | 🔍 En revisión |
+| HU16-CP11 | `PATCH /api/seller/products/{id}/availability` devuelve 200 con el producto actualizado; el vendedor sale de la sesión | Integración (capa web) | 1 | ✅ Pasa |
 | HU16-CP12 | Un cuerpo sin `disponible` o con un valor que no es booleano devuelve 400 y no llega al caso de uso | Integración (capa web) | 1 | 🔍 En revisión |
-| HU16-CP13 | Cambiar la disponibilidad de un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | 🔍 En revisión |
-| HU16-CP14 | Sin sesión (401), sin ser vendedor (403) o sin token CSRF (403) no se cambia la disponibilidad | Integración (capa web) | 3 | 🔍 En revisión |
+| HU16-CP13 | Cambiar la disponibilidad de un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | ✅ Pasa |
+| HU16-CP14 | Sin sesión (401), sin ser vendedor (403) o sin token CSRF (403) no se cambia la disponibilidad | Integración (capa web) | 3 | ✅ Pasa |
 
 Notas:
 - **HU16-CP01 a CP06 (Sprint 2, frontend):** casos propuestos en la task AB#281 (botón activar/desactivar productos) a partir de lo pedido en ella y de las decisiones del equipo (`frontend/docs/hu16-activar-desactivar-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU16 en Azure Boards. Los casos del backend siguen la numeración desde el CP07.
 - **HU16-CP07 a CP10 (Sprint 2, backend):** casos propuestos en las tasks AB#284 y AB#285 (lógica de activación y desactivación, PR #171), que se hacen juntas en un único caso de uso, `cambiarDisponibilidadMiProducto`, porque el frontend usa un único endpoint con un booleano. Pendientes de añadir a la HU16 en Azure Boards. Pedir el estado que ya tiene no es un error: el producto se guarda igual (decisión del desarrollador). Solo CP07 tiene ciclo rojo: CP08 a CP10 ya los cubría el código del ciclo 1 (el booleano se pasa tal cual, `consultarMiProducto` filtra por vendedor y el `@PreAuthorize` se puso desde el primer test). Se comprobó que los tests de CP10 fallan si se quita el `@PreAuthorize`.
 - **HU16-CP11 a CP14 (Sprint 2, backend):** casos propuestos en las tasks AB#282 y AB#283 (endpoint de activación y desactivación, PR #177), que van juntas porque son un único endpoint, con el contrato de `frontend/docs/hu16-activar-desactivar-productos.md`. Pendientes de añadir a la HU16 en Azure Boards. Solo CP11 tiene ciclo rojo: CP12 a CP14 ya los cubrían el `@NotNull` de `DisponibilidadRequest`, `ManejadorGlobalErrores` y `SecurityConfig`. Se comprobó que CP12 falla sin el `@NotNull` y que CP14 falla si `/api/seller/**` solo exige sesión.
-- **HU16-CP12 · solo se comprueba el 400 (decisión del desarrollador):** hoy un cuerpo sin `disponible` da `INVALID_FIELD` y uno ilegible, el 400 por defecto de Spring, sin `code`. Unificar los códigos de "datos no válidos" y tratar el JSON ilegible es un cambio transversal pendiente de decidir en equipo; si se hace, este caso puede comprobar también el `code`.
+- **HU16-CP12 y errores de validación de la API (rama `fix/errores-validacion-api`, sin task en Azure por ser transversal):** decisión del equipo en la daily del 03/11/2026. Un cuerpo que no pasa `@Valid` y uno que no se puede leer (`HttpMessageNotReadableException`: JSON mal formado o tipo incompatible) responden 400 + `VALIDATION_ERROR` + "Los datos enviados no son válidos" en todos los endpoints; antes daban `INVALID_FIELD` con el mensaje del registro y el 400 por defecto de Spring sin `code`. Jackson ya no convierte `"true"` ni `1` en booleano (`JacksonConfig`). Un `boolean` primitivo ausente o nulo ya daba 400 porque Jackson 3 activa por defecto `FAIL_ON_NULL_FOR_PRIMITIVES` (HU31-CP20 lo deja probado, sin rojo real). Los tests de HU1-CP22, HU1-CP23, HU3-CP16, HU31-CP20, HU34-CP07, HU40-CP07 y HU41-CP12 se adaptan al código común; el número de tests no cambia.
 - **Versión inicial (decisión del equipo):** sin confirmación al activar o desactivar; puede cambiar por decisión del PO o del equipo.
 - **Backend:** la lógica (CP07 a CP10, PR #171) y el endpoint `PATCH /api/seller/products/{id}/availability` (CP11 a CP14, PR #177) siguen el contrato que propuso el frontend. Los tests del frontend siguen usando los mocks (MSW).
 - **Sin archivos de tests nuevos:** los casos van en `SellerProductsPage.test.jsx`, `ProductDetailDialog.test.jsx`, `GestionProductosServiceTest`, `SeguridadProductosServiceTest` y `ProductoControllerTest`, que ya existían.
@@ -1876,12 +1876,12 @@ Notas:
 | HU16-CP10 | `SeguridadProductosServiceTest` | `unVendedorNoCambiaLaDisponibilidadConElCorreoDeOtro` | Aplicación | AB#284 · AB#285 | PR #171 | ✅ |
 | HU16-CP10 | `SeguridadProductosServiceTest` | `unVendedorCambiaLaDisponibilidadConSuPropioCorreo` | Aplicación | AB#284 · AB#285 | PR #171 | ✅ |
 | HU16-CP10 | `SeguridadProductosServiceTest` | `sinSesionNoSeCambiaLaDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | ✅ |
-| HU16-CP11 | `ProductoControllerTest` | `vendedorCambiaLaDisponibilidadDeSuProducto` | Infraestructura | AB#282 · AB#283 | PR #177 | 🔍 |
-| HU16-CP12 | `ProductoControllerTest` | `cuerpoDeDisponibilidadInvalidoNoCambiaElProducto` (sin `disponible`, nulo, no booleano y JSON mal formado) | Infraestructura | AB#282 · AB#283 | PR #177 | 🔍 |
-| HU16-CP13 | `ProductoControllerTest` | `cambiarLaDisponibilidadDeUnProductoNoEncontradoDevuelve404` | Infraestructura | AB#282 · AB#283 | PR #177 | 🔍 |
-| HU16-CP14 | `ProductoControllerTest` | `sinSesionNoSeCambiaLaDisponibilidad` | Infraestructura | AB#282 · AB#283 | PR #177 | 🔍 |
-| HU16-CP14 | `ProductoControllerTest` | `noVendedorNoCambiaLaDisponibilidad` (cliente y administrador) | Infraestructura | AB#282 · AB#283 | PR #177 | 🔍 |
-| HU16-CP14 | `ProductoControllerTest` | `sinTokenCsrfNoSeCambiaLaDisponibilidad` | Infraestructura | AB#282 · AB#283 | PR #177 | 🔍 |
+| HU16-CP11 | `ProductoControllerTest` | `vendedorCambiaLaDisponibilidadDeSuProducto` | Infraestructura | AB#282 · AB#283 | PR #177 | ✅ |
+| HU16-CP12 | `ProductoControllerTest` | `cuerpoDeDisponibilidadInvalidoNoCambiaElProducto` (sin `disponible`, nulo, no booleano, `"true"` como texto, `1` y JSON mal formado; comprueba el `code` `VALIDATION_ERROR`) | Infraestructura | AB#282 · AB#283 | PR #177 (modificado en este PR) | 🔍 |
+| HU16-CP13 | `ProductoControllerTest` | `cambiarLaDisponibilidadDeUnProductoNoEncontradoDevuelve404` | Infraestructura | AB#282 · AB#283 | PR #177 | ✅ |
+| HU16-CP14 | `ProductoControllerTest` | `sinSesionNoSeCambiaLaDisponibilidad` | Infraestructura | AB#282 · AB#283 | PR #177 | ✅ |
+| HU16-CP14 | `ProductoControllerTest` | `noVendedorNoCambiaLaDisponibilidad` (cliente y administrador) | Infraestructura | AB#282 · AB#283 | PR #177 | ✅ |
+| HU16-CP14 | `ProductoControllerTest` | `sinTokenCsrfNoSeCambiaLaDisponibilidad` | Infraestructura | AB#282 · AB#283 | PR #177 | ✅ |
 
 Rutas de las clases de test:
 - `SellerProductsPage.test.jsx`: `frontend/src/pages/` (Vitest, RTL y MSW)
@@ -2358,7 +2358,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU31-CP17 | `POST /api/seller/products` crea el producto y responde 201 con el producto creado, sin `vendedorId` | Integración (capa web) | 1 | ✅ Pasa |
 | HU31-CP18 | El vendedor sale de la sesión: un `vendedorId` en el cuerpo se ignora | Integración (capa web) | 1 | ✅ Pasa |
 | HU31-CP19 | Sin sesión (401), sin ser vendedor o sin token CSRF (403) no se crea el producto | Integración (capa web) | 3 | ✅ Pasa |
-| HU31-CP20 | Un cuerpo con datos no válidos o que no es JSON devuelve 400 y no llega al caso de uso | Integración (capa web) | 2 | ✅ Pasa |
+| HU31-CP20 | Un cuerpo con datos no válidos o que no es JSON devuelve 400 y no llega al caso de uso | Integración (capa web) | 2 | 🔍 En revisión |
 | HU31-CP21 | Una regla del dominio incumplida devuelve 400 con `code: VALIDATION_ERROR` y un mensaje genérico | Integración (capa web) | 1 | ✅ Pasa |
 | HU31-CP22 | Un nombre repetido del mismo vendedor devuelve 409 con `code: PRODUCT_NAME_ALREADY_EXISTS` | Integración (capa web) | 1 | ✅ Pasa |
 | HU31-CP23 | La comprobación de nombre repetido no distingue mayúsculas, compara el nombre completo como texto literal y solo cuenta los productos del mismo vendedor | Integración MongoDB | 2 | ✅ Pasa |
@@ -2425,8 +2425,8 @@ Notas:
 | HU31-CP19 | `ProductoControllerTest` | `sinSesionNoSeCreaUnProducto` | Infraestructura | AB#205 | PR #99 | ✅ |
 | HU31-CP19 | `ProductoControllerTest` | `noVendedorNoCreaUnProducto (cliente y administrador)` | Infraestructura | AB#205 | PR #99 | ✅ |
 | HU31-CP19 | `ProductoControllerTest` | `sinTokenCsrfNoSeCreaUnProducto` | Infraestructura | AB#205 | PR #99 | ✅ |
-| HU31-CP20 | `ProductoControllerTest` | `cuerpoInvalidoDevuelve400 (nombre vacío o de más de 100 caracteres, precio 0, negativo o ausente, stock negativo, categoría vacía, imagen `javascript:`, descuento activo sin porcentaje y porcentaje 101)` | Infraestructura | AB#179 | PR #99 | ✅ |
-| HU31-CP20 | `ProductoControllerTest` | `cuerpoQueNoEsJsonDevuelve400` | Infraestructura | AB#179 | PR #99 | ✅ |
+| HU31-CP20 | `ProductoControllerTest` | `cuerpoInvalidoDevuelve400 (nombre vacío o de más de 100 caracteres, precio 0, negativo o ausente, stock negativo, categoría vacía, imagen `javascript:`, `disponible` ausente o nulo, descuento activo sin porcentaje y porcentaje 101)` | Infraestructura | AB#179 | PR #99 (modificado en este PR) | 🔍 |
+| HU31-CP20 | `ProductoControllerTest` | `cuerpoQueNoEsJsonDevuelve400` | Infraestructura | AB#179 | PR #99 (modificado en este PR) | 🔍 |
 | HU31-CP21 | `ProductoControllerTest` | `reglaDeDominioIncumplidaDevuelve400Generico` | Infraestructura | AB#179 | PR #99 | ✅ |
 | HU31-CP22 | `ProductoControllerTest` | `nombreRepetidoDevuelve409` | Infraestructura | AB#179 | PR #99 | ✅ |
 | HU31-CP23 | `ProductoMongoAdapterTest` | `existePorVendedorYNombreNoDistingueMayusculas` | Infraestructura | AB#204 | PR #99 | ✅ |
@@ -2578,7 +2578,7 @@ Rutas de las clases de test:
 | HU34-CP04 | Conservar el nombre del producto, aunque cambien las mayúsculas, no es un nombre repetido | Unitario | 1 | ✅ Pasa |
 | HU34-CP05 | Un vendedor no puede modificar un producto de otro vendedor ni uno inexistente (`ProductoNoEncontradoException`) | Unitario | 2 | ✅ Pasa |
 | HU34-CP06 | `PUT /api/seller/products/{id}` devuelve 200 con el producto actualizado; el vendedor sale de la sesión, no del cuerpo | Integración (capa web) | 1 | ✅ Pasa |
-| HU34-CP07 | Una modificación con datos no válidos devuelve 400 y no llega al caso de uso; una regla del dominio incumplida, 400 genérico | Integración (capa web) | 2 | ✅ Pasa |
+| HU34-CP07 | Una modificación con datos no válidos devuelve 400 y no llega al caso de uso; una regla del dominio incumplida, 400 genérico | Integración (capa web) | 2 | 🔍 En revisión |
 | HU34-CP08 | Cambiar el nombre por uno repetido del mismo vendedor devuelve 409 con el código `PRODUCT_NAME_ALREADY_EXISTS` | Integración (capa web) | 1 | ✅ Pasa |
 | HU34-CP09 | Modificar un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | ✅ Pasa |
 | HU34-CP10 | Sin sesión (401), sin ser vendedor (403) o sin token CSRF (403) no se modifica un producto | Integración (capa web) | 3 | ✅ Pasa |
@@ -2611,7 +2611,7 @@ Notas:
 | HU34-CP05 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoSeModifica` | Aplicación | AB#343 | PR #120 | ✅ |
 | HU34-CP05 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoSeModifica` | Aplicación | AB#343 | PR #120 | ✅ |
 | HU34-CP06 | `ProductoControllerTest` | `vendedorModificaSuProducto` | Infraestructura | AB#342 | PR #121 | ✅ |
-| HU34-CP07 | `ProductoControllerTest` | `cuerpoInvalidoNoModificaElProducto` (los mismos cuerpos no válidos que el alta) | Infraestructura | AB#342 | PR #121 | ✅ |
+| HU34-CP07 | `ProductoControllerTest` | `cuerpoInvalidoNoModificaElProducto` (los mismos cuerpos no válidos que el alta) | Infraestructura | AB#342 | PR #121 (modificado en este PR) | 🔍 |
 | HU34-CP07 | `ProductoControllerTest` | `reglaDeDominioIncumplidaAlModificarDevuelve400Generico` | Infraestructura | AB#342 | PR #121 | ✅ |
 | HU34-CP08 | `ProductoControllerTest` | `nombreRepetidoAlModificarDevuelve409` | Infraestructura | AB#342 | PR #121 | ✅ |
 | HU34-CP09 | `ProductoControllerTest` | `modificarUnProductoNoEncontradoDevuelve404` | Infraestructura | AB#342 | PR #121 | ✅ |
@@ -2799,13 +2799,13 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU40-CP04 | El estado es obligatorio; la descripción y el estado se guardan en MongoDB, y una categoría guardada sin ellos se lee ACTIVA y sin descripción | Unitario + integración MongoDB | 5 | ✅ Pasa |
 | HU40-CP05 | El administrador crea una categoría con el estado que elige (ACTIVA o INACTIVA); se guarda con un id nuevo y `POST /api/admin/categorias` responde 201 con 0 productos | Unitario + integración MongoDB + controlador | 3 | ✅ Pasa |
 | HU40-CP06 | No se puede crear una categoría con un nombre que ya existe, sin distinguir mayúsculas ni tildes; el nombre se compara completo y literal, y la base de datos lo impide aunque se salte la comprobación previa (409) | Unitario + integración MongoDB + controlador | 5 | ✅ Pasa |
-| HU40-CP07 | Crear sin nombre, sin estado, con un estado desconocido o incumpliendo una regla del dominio devuelve 400 | Controlador | 2 | ✅ Pasa |
+| HU40-CP07 | Crear sin nombre, sin estado, con un estado desconocido o incumpliendo una regla del dominio devuelve 400 | Controlador | 2 | 🔍 En revisión |
 | HU40-CP08 | Sin rol de administrador no se pueden crear categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | ✅ Pasa |
 | HU40-CP09 | El listado público de categorías se puede usar sin sesión; administrarlas (listar con su número de productos y crear) exige el rol administrador; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 6 | 🔍 En revisión (6, rama `fix/seguridad-capa-negocio`) |
 
 Notas:
 - **HU40-CP01 a CP04:** casos propuestos en la T321 (AB#321), sin contrato del frontend todavía. **HU40-CP05 y CP06:** propuestos en la T323 (AB#323), a partir de los criterios «la categoría no puede estar repetida» y «se debe poder elegir si activar o desactivar la categoría en la creación». **HU40-CP07 y CP08:** propuestos en la T322 (AB#322). Pendientes de confirmar con el equipo y de añadir a la HU40 en Azure Boards.
-- **Endpoint (T322):** `POST /api/admin/categorias` con `{nombre, descripcion, estado: "ACTIVA"|"INACTIVA"}` → 201 `{id, nombre, descripcion, estado, numeroProductos: 0}`, el mismo formato que una fila de `GET /api/admin/categorias`. Errores: 400 `INVALID_FIELD` (falta el nombre o el estado, o el estado es desconocido), 400 `VALIDATION_ERROR` (regla del dominio, p. ej. más de 50 caracteres), 409 `CATEGORY_NAME_ALREADY_EXISTS`, 401 sin sesión y 403 con otro rol. Necesita la cabecera CSRF `X-XSRF-TOKEN`. Es el contrato de la vista del frontend (T320).
+- **Endpoint (T322):** `POST /api/admin/categorias` con `{nombre, descripcion, estado: "ACTIVA"|"INACTIVA"}` → 201 `{id, nombre, descripcion, estado, numeroProductos: 0}`, el mismo formato que una fila de `GET /api/admin/categorias`. Errores: 400 `VALIDATION_ERROR` (falta el nombre o el estado, el estado es desconocido o se incumple una regla del dominio, p. ej. más de 50 caracteres), 409 `CATEGORY_NAME_ALREADY_EXISTS`, 401 sin sesión y 403 con otro rol. Necesita la cabecera CSRF `X-XSRF-TOKEN`. Es el contrato de la vista del frontend (T320).
 - **Backend (T323):** `AdministracionCategoriasUseCase.crear(CrearCategoriaCommand)`. El nombre único no distingue mayúsculas ni tildes (decisión del equipo, 27/10/2026): comprobación previa (`existePorNombre`) y un índice único nuevo, `nombre_sin_mayusculas` (collation `es` de nivel 1), que se crea junto al anterior para no chocar con él en Atlas. Errores: `CategoriaInvalidaException` → 400 `VALIDATION_ERROR`; `CategoriaDuplicadaException` → 409 `CATEGORY_NAME_ALREADY_EXISTS`.
 - **Backend (T321):** entidad `Categoria` (`id`, `nombre`, `descripcion`, `estado`), `EstadoCategoria` (`ACTIVA`, `INACTIVA`), `CategoriaInvalidaException` y `CategoriaDocumentMapper`. El validador de la colección `categorias` aplica los mismos límites. `GET /api/categorias` no cambia (sigue devolviendo `id` y `nombre`).
 - **Pendiente:** la vista (T320). Si una categoría `INACTIVA` debe dejar de verse para clientes y vendedores en `GET /api/categorias` (criterio «si la categoría se crea activada, debe ser visible para clientes y vendedores») queda pendiente de revisar con el equipo.
@@ -2833,7 +2833,7 @@ Notas:
 | HU40-CP06 | `CategoriaMongoAdapterTest` | `guardarRechazaUnNombreRepetidoConOtrasMayusculasOTildes` (mayúsculas y tildes) | Infraestructura | AB#323 | PR #137 | ✅ |
 | HU40-CP05 | `AdministracionCategoriasControllerTest` | `unAdministradorCreaUnaCategoria` | Infraestructura | AB#322 | PR #138 | ✅ |
 | HU40-CP06 | `AdministracionCategoriasControllerTest` | `crearUnNombreRepetidoDevuelve409` | Infraestructura | AB#322 | PR #138 | ✅ |
-| HU40-CP07 | `AdministracionCategoriasControllerTest` | `crearConDatosInvalidosDevuelve400` (sin nombre, sin estado y estado desconocido) | Infraestructura | AB#322 | PR #138 | ✅ |
+| HU40-CP07 | `AdministracionCategoriasControllerTest` | `crearConDatosInvalidosDevuelve400` (sin nombre, sin estado y estado desconocido) | Infraestructura | AB#322 | PR #138 (modificado en este PR) | 🔍 |
 | HU40-CP07 | `AdministracionCategoriasControllerTest` | `crearConUnaReglaDelDominioIncumplidaDevuelve400` | Infraestructura | AB#322 | PR #138 | ✅ |
 | HU40-CP08 | `AdministracionCategoriasControllerTest` | `crearConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#322 | PR #138 | ✅ |
 | HU40-CP08 | `AdministracionCategoriasControllerTest` | `crearSinSesionDevuelve401` | Infraestructura | AB#322 | PR #138 | ✅ |
@@ -2859,24 +2859,24 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU41-CP01 | El administrador cambia el nombre y la descripción de una categoría; se conservan su id y su estado y se devuelve con su número de productos | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
-| HU41-CP02 | El nombre de la propia categoría no cuenta como repetido: se pueden cambiar solo las mayúsculas o las tildes | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
-| HU41-CP03 | No se puede poner a una categoría el nombre de otra, sin distinguir mayúsculas ni tildes (409) | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
-| HU41-CP04 | Editar una categoría que no existe falla sin guardar nada (404) | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
-| HU41-CP05 | Editar con datos que incumplen el dominio falla sin guardar nada (400) | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
-| HU41-CP06 | Editar categorías exige el rol administrador; cliente, vendedor y sin sesión se rechazan. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, Rama `feature/US41-T329-T328-edicion-categorias`) |
-| HU41-CP07 | Buscar una categoría por id la devuelve con su descripción y su estado; si no existe, o el id no tiene formato de id, devuelve vacío | Integración MongoDB | 2 | 🔍 En revisión (2, Rama `feature/US41-T329-T328-edicion-categorias`) |
-| HU41-CP08 | Comprobar si otra categoría tiene un nombre: no distingue mayúsculas ni tildes, excluye la propia categoría y compara el nombre completo y literal | Integración MongoDB | 3 | 🔍 En revisión (3, Rama `feature/US41-T329-T328-edicion-categorias`) |
-| HU41-CP09 | Guardar una categoría con id la actualiza sin crear otra, y la base de datos rechaza cambiar su nombre al de otra aunque se salte la comprobación previa | Integración MongoDB | 2 | 🔍 En revisión (2, Rama `feature/US41-T329-T328-edicion-categorias`) |
-| HU41-CP10 | `PUT /api/admin/categorias/{id}` responde 200 con la fila actualizada y su número de productos | Controlador | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
-| HU41-CP11 | Editar con el nombre de otra categoría devuelve 409 `CATEGORY_NAME_ALREADY_EXISTS` | Controlador | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
-| HU41-CP12 | Editar sin nombre o incumpliendo una regla del dominio devuelve 400 | Controlador | 2 | 🔍 En revisión (2, Rama `feature/US41-T329-T328-edicion-categorias`) |
-| HU41-CP13 | Editar una categoría que no existe devuelve 404 `CATEGORY_NOT_FOUND` | Controlador | 1 | 🔍 En revisión (1, Rama `feature/US41-T329-T328-edicion-categorias`) |
-| HU41-CP14 | Sin rol de administrador no se pueden editar categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | 🔍 En revisión (2, Rama `feature/US41-T329-T328-edicion-categorias`) |
+| HU41-CP01 | El administrador cambia el nombre y la descripción de una categoría; se conservan su id y su estado y se devuelve con su número de productos | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU41-CP02 | El nombre de la propia categoría no cuenta como repetido: se pueden cambiar solo las mayúsculas o las tildes | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU41-CP03 | No se puede poner a una categoría el nombre de otra, sin distinguir mayúsculas ni tildes (409) | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU41-CP04 | Editar una categoría que no existe falla sin guardar nada (404) | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU41-CP05 | Editar con datos que incumplen el dominio falla sin guardar nada (400) | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU41-CP06 | Editar categorías exige el rol administrador; cliente, vendedor y sin sesión se rechazan. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa |
+| HU41-CP07 | Buscar una categoría por id la devuelve con su descripción y su estado; si no existe, o el id no tiene formato de id, devuelve vacío | Integración MongoDB | 2 | ✅ Pasa |
+| HU41-CP08 | Comprobar si otra categoría tiene un nombre: no distingue mayúsculas ni tildes, excluye la propia categoría y compara el nombre completo y literal | Integración MongoDB | 3 | ✅ Pasa |
+| HU41-CP09 | Guardar una categoría con id la actualiza sin crear otra, y la base de datos rechaza cambiar su nombre al de otra aunque se salte la comprobación previa | Integración MongoDB | 2 | ✅ Pasa |
+| HU41-CP10 | `PUT /api/admin/categorias/{id}` responde 200 con la fila actualizada y su número de productos | Controlador | 1 | ✅ Pasa |
+| HU41-CP11 | Editar con el nombre de otra categoría devuelve 409 `CATEGORY_NAME_ALREADY_EXISTS` | Controlador | 1 | ✅ Pasa |
+| HU41-CP12 | Editar sin nombre o incumpliendo una regla del dominio devuelve 400 | Controlador | 2 | 🔍 En revisión |
+| HU41-CP13 | Editar una categoría que no existe devuelve 404 `CATEGORY_NOT_FOUND` | Controlador | 1 | ✅ Pasa |
+| HU41-CP14 | Sin rol de administrador no se pueden editar categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | ✅ Pasa |
 
 Notas:
 - **HU41-CP01 a CP14:** casos propuestos en las T329 (AB#329) y T328 (AB#328), a partir de los criterios de la HU41. Pendientes de confirmar con el equipo y de añadir a la HU41 en Azure Boards.
-- **Endpoint (T328):** `PUT /api/admin/categorias/{id}` con `{nombre, descripcion}` → 200 `{id, nombre, descripcion, estado, numeroProductos}`, el mismo formato que una fila de `GET /api/admin/categorias`, para que la vista (T327) sustituya la fila sin recargar. El estado no se edita. Errores: 400 `INVALID_FIELD` (falta el nombre), 400 `VALIDATION_ERROR` (regla del dominio), 404 `CATEGORY_NOT_FOUND`, 409 `CATEGORY_NAME_ALREADY_EXISTS`, 401 sin sesión y 403 con otro rol. Necesita la cabecera CSRF `X-XSRF-TOKEN`.
+- **Endpoint (T328):** `PUT /api/admin/categorias/{id}` con `{nombre, descripcion}` → 200 `{id, nombre, descripcion, estado, numeroProductos}`, el mismo formato que una fila de `GET /api/admin/categorias`, para que la vista (T327) sustituya la fila sin recargar. El estado no se edita. Errores: 400 `VALIDATION_ERROR` (falta el nombre o se incumple una regla del dominio), 404 `CATEGORY_NOT_FOUND`, 409 `CATEGORY_NAME_ALREADY_EXISTS`, 401 sin sesión y 403 con otro rol. Necesita la cabecera CSRF `X-XSRF-TOKEN`.
 - **Backend (T329):** `AdministracionCategoriasUseCase.editar(EditarCategoriaCommand)`, que devuelve `CategoriaConProductos`. Puerto de salida con `buscarPorId` y `existeOtraConNombre`. El listado público lee del mismo repositorio, así que una edición se ve a la vez para clientes y vendedores.
 - **Pendiente:** la edición reemplaza el documento y no copia `createdAt` (el mapper no lo lleva), así que la fecha de creación puede perderse al editar. Es una hipótesis sin comprobar; queda para una task aparte. La vista (T327) también.
 - **HU41-CP06 (R8, seguridad en la capa de negocio):** nace en verde, sin rojo real, porque `editar` lleva el `@PreAuthorize` desde el primer ciclo. Cubre el servicio `AdministracionCategoriasService` con la clase de test existente `SeguridadCategoriasServiceTest`.
@@ -2885,30 +2885,30 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU41-CP01 | `AdministracionCategoriasServiceTest` | `editarCambiaElNombreYLaDescripcion` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP02 | `AdministracionCategoriasServiceTest` | `editarPermiteCambiarLasMayusculasDelPropioNombre` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP03 | `AdministracionCategoriasServiceTest` | `editarRechazaElNombreDeOtraCategoria` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP04 | `AdministracionCategoriasServiceTest` | `editarUnaCategoriaInexistenteFalla` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP05 | `AdministracionCategoriasServiceTest` | `editarConDatosInvalidosFalla` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP06 | `SeguridadCategoriasServiceTest` | `unClienteNoEditaCategorias` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP06 | `SeguridadCategoriasServiceTest` | `unVendedorNoEditaCategorias` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP06 | `SeguridadCategoriasServiceTest` | `unAnonimoNoEditaCategorias` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP06 | `SeguridadCategoriasServiceTest` | `unAdministradorEditaCategorias` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP06 | `SeguridadCategoriasServiceTest` | `sinSesionSeRechazaLaEdicion` | Aplicación | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP07 | `CategoriaMongoAdapterTest` | `buscarPorIdDevuelveLaCategoria` | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP07 | `CategoriaMongoAdapterTest` | `buscarPorIdDevuelveVacioSiNoExiste` (2 variantes) | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP08 | `CategoriaMongoAdapterTest` | `existeOtraConNombreNoDistingueMayusculasNiTildes` (4 variantes) | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP08 | `CategoriaMongoAdapterTest` | `existeOtraConNombreIgnoraLaPropiaCategoria` (3 variantes) | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP08 | `CategoriaMongoAdapterTest` | `existeOtraConNombreComparaElNombreCompletoYLiteral` (3 variantes) | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP09 | `CategoriaMongoAdapterTest` | `guardarConIdActualizaLaCategoria` | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP09 | `CategoriaMongoAdapterTest` | `guardarRechazaCambiarElNombreAlDeOtraCategoria` | Infraestructura | AB#329 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP10 | `AdministracionCategoriasControllerTest` | `unAdministradorEditaUnaCategoria` | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP11 | `AdministracionCategoriasControllerTest` | `editarUnNombreRepetidoDevuelve409` | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP12 | `AdministracionCategoriasControllerTest` | `editarConDatosInvalidosDevuelve400` (2 variantes) | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP12 | `AdministracionCategoriasControllerTest` | `editarConUnaReglaDelDominioIncumplidaDevuelve400` | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP13 | `AdministracionCategoriasControllerTest` | `editarUnaCategoriaInexistenteDevuelve404` | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP14 | `AdministracionCategoriasControllerTest` | `editarConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
-| HU41-CP14 | `AdministracionCategoriasControllerTest` | `editarSinSesionDevuelve401` | Infraestructura | AB#328 | Rama `feature/US41-T329-T328-edicion-categorias` | 🔍 |
+| HU41-CP01 | `AdministracionCategoriasServiceTest` | `editarCambiaElNombreYLaDescripcion` | Aplicación | AB#329 | PR #175 | ✅ |
+| HU41-CP02 | `AdministracionCategoriasServiceTest` | `editarPermiteCambiarLasMayusculasDelPropioNombre` | Aplicación | AB#329 | PR #175 | ✅ |
+| HU41-CP03 | `AdministracionCategoriasServiceTest` | `editarRechazaElNombreDeOtraCategoria` | Aplicación | AB#329 | PR #175 | ✅ |
+| HU41-CP04 | `AdministracionCategoriasServiceTest` | `editarUnaCategoriaInexistenteFalla` | Aplicación | AB#329 | PR #175 | ✅ |
+| HU41-CP05 | `AdministracionCategoriasServiceTest` | `editarConDatosInvalidosFalla` | Aplicación | AB#329 | PR #175 | ✅ |
+| HU41-CP06 | `SeguridadCategoriasServiceTest` | `unClienteNoEditaCategorias` | Aplicación | AB#329 | PR #175 | ✅ |
+| HU41-CP06 | `SeguridadCategoriasServiceTest` | `unVendedorNoEditaCategorias` | Aplicación | AB#329 | PR #175 | ✅ |
+| HU41-CP06 | `SeguridadCategoriasServiceTest` | `unAnonimoNoEditaCategorias` | Aplicación | AB#329 | PR #175 | ✅ |
+| HU41-CP06 | `SeguridadCategoriasServiceTest` | `unAdministradorEditaCategorias` | Aplicación | AB#329 | PR #175 | ✅ |
+| HU41-CP06 | `SeguridadCategoriasServiceTest` | `sinSesionSeRechazaLaEdicion` | Aplicación | AB#329 | PR #175 | ✅ |
+| HU41-CP07 | `CategoriaMongoAdapterTest` | `buscarPorIdDevuelveLaCategoria` | Infraestructura | AB#329 | PR #175 | ✅ |
+| HU41-CP07 | `CategoriaMongoAdapterTest` | `buscarPorIdDevuelveVacioSiNoExiste` (2 variantes) | Infraestructura | AB#329 | PR #175 | ✅ |
+| HU41-CP08 | `CategoriaMongoAdapterTest` | `existeOtraConNombreNoDistingueMayusculasNiTildes` (4 variantes) | Infraestructura | AB#329 | PR #175 | ✅ |
+| HU41-CP08 | `CategoriaMongoAdapterTest` | `existeOtraConNombreIgnoraLaPropiaCategoria` (3 variantes) | Infraestructura | AB#329 | PR #175 | ✅ |
+| HU41-CP08 | `CategoriaMongoAdapterTest` | `existeOtraConNombreComparaElNombreCompletoYLiteral` (3 variantes) | Infraestructura | AB#329 | PR #175 | ✅ |
+| HU41-CP09 | `CategoriaMongoAdapterTest` | `guardarConIdActualizaLaCategoria` | Infraestructura | AB#329 | PR #175 | ✅ |
+| HU41-CP09 | `CategoriaMongoAdapterTest` | `guardarRechazaCambiarElNombreAlDeOtraCategoria` | Infraestructura | AB#329 | PR #175 | ✅ |
+| HU41-CP10 | `AdministracionCategoriasControllerTest` | `unAdministradorEditaUnaCategoria` | Infraestructura | AB#328 | PR #175 | ✅ |
+| HU41-CP11 | `AdministracionCategoriasControllerTest` | `editarUnNombreRepetidoDevuelve409` | Infraestructura | AB#328 | PR #175 | ✅ |
+| HU41-CP12 | `AdministracionCategoriasControllerTest` | `editarConDatosInvalidosDevuelve400` (2 variantes) | Infraestructura | AB#328 | PR #175 (modificado en este PR) | 🔍 |
+| HU41-CP12 | `AdministracionCategoriasControllerTest` | `editarConUnaReglaDelDominioIncumplidaDevuelve400` | Infraestructura | AB#328 | PR #175 | ✅ |
+| HU41-CP13 | `AdministracionCategoriasControllerTest` | `editarUnaCategoriaInexistenteDevuelve404` | Infraestructura | AB#328 | PR #175 | ✅ |
+| HU41-CP14 | `AdministracionCategoriasControllerTest` | `editarConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#328 | PR #175 | ✅ |
+| HU41-CP14 | `AdministracionCategoriasControllerTest` | `editarSinSesionDevuelve401` | Infraestructura | AB#328 | PR #175 | ✅ |
 
 Ruta de la clase de test de seguridad (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `SeguridadCategoriasServiceTest`: `categorias/application/service/` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB)

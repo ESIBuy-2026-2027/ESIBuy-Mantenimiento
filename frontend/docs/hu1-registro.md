@@ -186,7 +186,7 @@ Cuerpo (JSON): el objeto completo del formulario.
 | 400 + `{ "code": "PASSWORD_TOO_SHORT" }`, `PASSWORD_TOO_LONG`, `PASSWORD_WEAK`, `PASSWORD_TOO_COMMON` o `PASSWORD_CONTAINS_PERSONAL_DATA` | Mensaje con el motivo en el campo **Password** |
 | 400 + `{ "code": "PASSWORDS_DO_NOT_MATCH" }` | "Las contraseñas no coinciden" en **Repetir password** |
 | 400 + `{ "code": "INVALID_EMAIL" }`, `INVALID_DNI`, `INVALID_PHONE`, `UNDERAGE` o `PRIVACY_NOT_ACCEPTED` | Mensaje en el email, el DNI, el teléfono, la fecha de nacimiento o la casilla de privacidad |
-| 400 con otro `code` (por ejemplo, `INVALID_FIELD`) | "Revisa los datos del formulario", encima del botón |
+| 400 con otro `code` (por ejemplo, `VALIDATION_ERROR`) | "Revisa los datos del formulario", encima del botón |
 | Cualquier otro error (5xx, sin conexión...) | "No se ha podido completar la operación. Inténtalo de nuevo más tarde", encima del botón |
 
 - Los códigos los añadió el backend en el PR #104 (fallos de la demo del Sprint 1). La traducción está en `features/account/registroErrors.js`; el texto del error del backend nunca se muestra.

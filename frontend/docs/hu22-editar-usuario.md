@@ -175,7 +175,7 @@ El email y el rol no viajan nunca. El backend (AB#43) ignora el `rol` si llega e
 |---|---|
 | 200 + datos del usuario | Guardado. La ficha se recarga |
 | 400 con un `code` de campo (`INVALID_DNI`, `INVALID_PHONE`, `UNDERAGE`...) | El motivo, junto a su campo (los mismos códigos que el registro, `docs/hu1-registro.md`, sección 5) |
-| 400 con otro `code` (`VALIDATION_ERROR`, `INVALID_FIELD`...) | Mensaje genérico |
+| 400 con otro `code` (`VALIDATION_ERROR`...) | Mensaje genérico |
 | 409 + `{ "code": "COMMERCIAL_NAME_ALREADY_REGISTERED" }` | "Este nombre comercial ya está registrado" (junto al campo) |
 | 409 + `{ "code": "DNI_ALREADY_REGISTERED" }` | "Este DNI ya está registrado" (junto al campo; otra cuenta del mismo rol tiene ese DNI) |
 | 401 / 403 / 404 / 5xx | Mensaje genérico |
