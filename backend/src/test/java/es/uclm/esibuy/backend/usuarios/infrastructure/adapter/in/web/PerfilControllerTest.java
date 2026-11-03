@@ -1,9 +1,16 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -15,11 +22,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 import es.uclm.esibuy.backend.usuarios.application.port.in.GestionPerfilUseCase;
+import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaActualIncorrectaException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
@@ -30,9 +40,10 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
-// Consulta del perfil propio (HU4, T297): GET /api/perfil. El caso de uso es un doble de prueba; la seguridad
-// es la real (SecurityConfig). El usuario en sesión se identifica por su email (el username de user(...)).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU4-CP01 a CP04, propuestos.
+// Consulta del perfil propio (HU4, T297): GET /api/perfil; y eliminación de la cuenta propia (HU25, T274):
+// DELETE /api/perfil. El caso de uso es un doble de prueba; la seguridad es la real (SecurityConfig). El usuario
+// en sesión se identifica por su email (el username de user(...)).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU4-CP01 a CP04 y HU25-CP02 a CP05, propuestos.
 @WebMvcTest(PerfilController.class)
 @Import(SecurityConfig.class)
 class PerfilControllerTest {
@@ -40,6 +51,8 @@ class PerfilControllerTest {
     private static final String RUTA = "/api/perfil";
     private static final String EMAIL_CLIENTE = "lucia@esibuy.test";
     private static final String EMAIL_VENDEDOR = "vera@esibuy.test";
+    private static final String PASSWORD = "Clave-Segura-123";
+    private static final String CUERPO_ELIMINAR = "{\"password\":\"" + PASSWORD + "\"}";
 
     @Autowired
     private MockMvc mockMvc;
@@ -122,6 +135,68 @@ class PerfilControllerTest {
     void sinSesionRecibe401() throws Exception {
         mockMvc.perform(get(RUTA))
                 .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(gestionPerfil);
+    }
+
+    @Test
+    @DisplayName("HU25-CP03: al eliminar la cuenta se responde 204 y se cierra la sesión")
+    void eliminarLaCuentaCierraLaSesion() throws Exception {
+        // La sesión solo se invalida si la petición trae una: se envía la del test y se comprueba después
+        MockHttpSession sesion = new MockHttpSession();
+
+        mockMvc.perform(delete(RUTA).with(user(EMAIL_CLIENTE).roles("CLIENTE")).with(csrf()).session(sesion)
+                        .contentType(MediaType.APPLICATION_JSON).content(CUERPO_ELIMINAR))
+                .andExpect(status().isNoContent())
+                .andExpect(cookie().maxAge("JSESSIONID", 0));
+
+        verify(gestionPerfil).eliminarCuenta(EMAIL_CLIENTE, PASSWORD);
+        assertTrue(sesion.isInvalid());
+    }
+
+    @Test
+    @DisplayName("HU25-CP02: con una contraseña incorrecta se responde 400 WRONG_PASSWORD y la sesión sigue abierta")
+    void eliminarConContrasenaIncorrectaRecibe400() throws Exception {
+        MockHttpSession sesion = new MockHttpSession();
+        doThrow(new ContrasenaActualIncorrectaException("La contraseña actual no es correcta"))
+                .when(gestionPerfil).eliminarCuenta(EMAIL_CLIENTE, PASSWORD);
+
+        mockMvc.perform(delete(RUTA).with(user(EMAIL_CLIENTE).roles("CLIENTE")).with(csrf()).session(sesion)
+                        .contentType(MediaType.APPLICATION_JSON).content(CUERPO_ELIMINAR))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("WRONG_PASSWORD"));
+
+        assertFalse(sesion.isInvalid());
+    }
+
+    @Test
+    @DisplayName("HU25-CP04: sin sesión no se puede eliminar la cuenta (401)")
+    void eliminarSinSesionRecibe401() throws Exception {
+        mockMvc.perform(delete(RUTA).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(CUERPO_ELIMINAR))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(gestionPerfil);
+    }
+
+    @Test
+    @DisplayName("HU25-CP04: sin token CSRF no se puede eliminar la cuenta (403)")
+    void eliminarSinTokenCsrfRecibe403() throws Exception {
+        mockMvc.perform(delete(RUTA).with(user(EMAIL_CLIENTE).roles("CLIENTE"))
+                        .contentType(MediaType.APPLICATION_JSON).content(CUERPO_ELIMINAR))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(gestionPerfil);
+    }
+
+    @Test
+    @DisplayName("HU25-CP05: sin contraseña no se llama a la eliminación (400)")
+    void eliminarSinContrasenaRecibe400() throws Exception {
+        mockMvc.perform(delete(RUTA).with(user(EMAIL_CLIENTE).roles("CLIENTE")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"password\":\"\"}"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(delete(RUTA).with(user(EMAIL_CLIENTE).roles("CLIENTE")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest());
 
         verifyNoInteractions(gestionPerfil);
     }
