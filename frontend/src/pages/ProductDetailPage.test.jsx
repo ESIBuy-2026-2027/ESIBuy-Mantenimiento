@@ -416,3 +416,122 @@ describe('ProductDetailPage (HU13): valoraciones de los clientes', () => {
     expect(await screen.findByRole('list', { name: /valoraciones de los clientes/i })).toBeInTheDocument()
   })
 })
+
+// Valorar el producto (HU13, T367): POST /api/products/{id}/valoraciones con { puntuacion, comentario }. El backend
+// decide si se puede: 403 PRODUCT_NOT_PURCHASED si el cliente no lo ha comprado y 409 REVIEW_ALREADY_EXISTS si ya lo
+// valoró; el frontend no puede saberlo antes de enviar.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP21 a CP23, propuestos.
+function responderAlValorar(respuesta) {
+  const enviado = {}
+  server.use(
+    http.post('/api/products/:id/valoraciones', async ({ params, request }) => {
+      enviado.producto = params.id
+      enviado.cuerpo = await request.json()
+      return respuesta(enviado.cuerpo)
+    }),
+  )
+  return enviado
+}
+
+const rechazarCon = (status, code) => () => HttpResponse.json({ code }, { status })
+
+async function abrirFormulario() {
+  await abrirDetalle()
+  return screen.findByRole('form', { name: /valora este producto/i })
+}
+
+describe('ProductDetailPage (HU13): valorar el producto', () => {
+  it('HU13-CP21: el cliente valora con estrellas y un comentario, y su valoración aparece en la lista', async () => {
+    const user = userEvent.setup()
+    let valoraciones = []
+    responderCon()
+    server.use(http.get('/api/products/:id/valoraciones', () => HttpResponse.json(valoraciones)))
+    const enviado = responderAlValorar((cuerpo) => {
+      valoraciones = [{ id: 'v-9', productoId: 'p-2', ...cuerpo }]
+      return HttpResponse.json(valoraciones[0], { status: 201 })
+    })
+    const formulario = await abrirFormulario()
+
+    await user.click(within(formulario).getByRole('radio', { name: '4 estrellas' }))
+    await user.type(within(formulario).getByLabelText(/comentario/i), 'Muy cómodo para escribir.')
+    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+
+    expect(await screen.findByText(/gracias por tu valoración/i)).toBeInTheDocument()
+    expect(enviado).toEqual({ producto: 'p-2', cuerpo: { puntuacion: 4, comentario: 'Muy cómodo para escribir.' } })
+    const lista = await screen.findByRole('list', { name: /valoraciones de los clientes/i })
+    expect(within(lista).getByText('Muy cómodo para escribir.')).toBeInTheDocument()
+    expect(screen.queryByRole('form', { name: /valora este producto/i })).not.toBeInTheDocument()
+  })
+
+  it('HU13-CP21: el comentario es opcional: sin él se envía vacío', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    const enviado = responderAlValorar((cuerpo) => HttpResponse.json({ id: 'v-9', ...cuerpo }, { status: 201 }))
+    const formulario = await abrirFormulario()
+
+    await user.click(within(formulario).getByRole('radio', { name: '5 estrellas' }))
+    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+
+    expect(await screen.findByText(/gracias por tu valoración/i)).toBeInTheDocument()
+    expect(enviado.cuerpo).toEqual({ puntuacion: 5, comentario: '' })
+  })
+
+  it('HU13-CP22: sin puntuación no se envía y se pide elegir una', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    const enviado = responderAlValorar(() => HttpResponse.json({}, { status: 201 }))
+    const formulario = await abrirFormulario()
+
+    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+
+    expect(await within(formulario).findByText(/elige una puntuación de 1 a 5 estrellas/i)).toBeInTheDocument()
+    expect(enviado.cuerpo).toBeUndefined()
+  })
+
+  it('HU13-CP22: el comentario admite como mucho 500 caracteres', async () => {
+    responderCon()
+    const formulario = await abrirFormulario()
+
+    expect(within(formulario).getByLabelText(/comentario/i)).toHaveAttribute('maxLength', '500')
+  })
+
+  it('HU13-CP23: si no ha comprado el producto se le avisa y el formulario sigue ahí', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    responderAlValorar(rechazarCon(403, 'PRODUCT_NOT_PURCHASED'))
+    const formulario = await abrirFormulario()
+
+    await user.click(within(formulario).getByRole('radio', { name: '3 estrellas' }))
+    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+
+    expect(await within(formulario).findByText(/solo puedes valorar productos que has comprado/i)).toBeInTheDocument()
+    expect(screen.getByRole('form', { name: /valora este producto/i })).toBeInTheDocument()
+  })
+
+  it('HU13-CP23: si ya lo había valorado se le avisa', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    responderAlValorar(rechazarCon(409, 'REVIEW_ALREADY_EXISTS'))
+    const formulario = await abrirFormulario()
+
+    await user.click(within(formulario).getByRole('radio', { name: '2 estrellas' }))
+    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+
+    expect(await within(formulario).findByText(/ya has valorado este producto/i)).toBeInTheDocument()
+  })
+
+  it('HU13-CP23: si falla el envío avisa y conserva lo escrito para reintentar', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    responderAlValorar(() => new HttpResponse(null, { status: 500 }))
+    const formulario = await abrirFormulario()
+
+    await user.click(within(formulario).getByRole('radio', { name: '4 estrellas' }))
+    await user.type(within(formulario).getByLabelText(/comentario/i), 'Buen producto')
+    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+
+    expect(await within(formulario).findByText(/no se ha podido enviar tu valoración/i)).toBeInTheDocument()
+    expect(within(formulario).getByLabelText(/comentario/i)).toHaveValue('Buen producto')
+    expect(within(formulario).getByRole('radio', { name: '4 estrellas' })).toBeChecked()
+  })
+})
