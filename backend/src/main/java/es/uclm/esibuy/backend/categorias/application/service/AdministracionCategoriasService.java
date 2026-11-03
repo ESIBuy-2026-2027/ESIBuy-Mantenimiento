@@ -7,13 +7,16 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import es.uclm.esibuy.backend.categorias.application.port.in.AdministracionCategoriasUseCase;
 import es.uclm.esibuy.backend.categorias.application.port.in.CategoriaConProductos;
-import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
 import es.uclm.esibuy.backend.categorias.application.port.in.CrearCategoriaCommand;
+import es.uclm.esibuy.backend.categorias.application.port.in.EditarCategoriaCommand;
+import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
 import es.uclm.esibuy.backend.categorias.application.port.out.ProductosPorCategoriaPort;
+import es.uclm.esibuy.backend.categorias.application.port.out.VendedoresPorCategoriaPort;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaConProductosException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaDuplicadaException;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaConVendedoresException;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
-import es.uclm.esibuy.backend.categorias.application.port.in.EditarCategoriaCommand;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 
 /**
@@ -24,11 +27,13 @@ public class AdministracionCategoriasService implements AdministracionCategorias
 
     private final CategoriaRepositoryPort categoriaRepository;
     private final ProductosPorCategoriaPort productosPorCategoria;
+    private final VendedoresPorCategoriaPort vendedoresPorCategoria;
 
     public AdministracionCategoriasService(CategoriaRepositoryPort categoriaRepository,
-            ProductosPorCategoriaPort productosPorCategoria) {
+            ProductosPorCategoriaPort productosPorCategoria, VendedoresPorCategoriaPort vendedoresPorCategoria) {
         this.categoriaRepository = categoriaRepository;
         this.productosPorCategoria = productosPorCategoria;
+        this.vendedoresPorCategoria = vendedoresPorCategoria;
     }
 
     // El repositorio ya las da ordenadas por nombre; las que no salen en el recuento no tienen productos.
@@ -69,5 +74,22 @@ public class AdministracionCategoriasService implements AdministracionCategorias
         Categoria guardada = categoriaRepository.guardar(editada);
         return new CategoriaConProductos(guardada,
                 productosPorCategoria.contarPorCategoria().getOrDefault(guardada.id(), 0L));
+    }
+
+        // Primero se comprueba que existe (404); después que no tiene productos ni es la principal de un vendedor
+    // (409) y, por último, se borra. Riesgo conocido: si un vendedor se registra o se crea un producto con esta
+    // categoría entre las comprobaciones y el borrado, la categoría desaparece con una referencia colgando; no
+    // hay transacción entre colecciones que lo impida.
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
+    @Override
+    public void eliminar(String id) {
+        categoriaRepository.buscarPorId(id).orElseThrow(CategoriaNoEncontradaException::new);
+        if (productosPorCategoria.contarPorCategoria().getOrDefault(id, 0L) > 0) {
+            throw new CategoriaConProductosException();
+        }
+        if (vendedoresPorCategoria.existenVendedores(id)) {
+            throw new CategoriaConVendedoresException();
+        }
+        categoriaRepository.eliminar(id);
     }
 }

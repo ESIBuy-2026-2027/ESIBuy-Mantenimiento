@@ -23,9 +23,10 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import es.uclm.esibuy.backend.categorias.application.port.in.AdministracionCategoriasUseCase;
 import es.uclm.esibuy.backend.categorias.application.port.in.ConsultaCategoriasUseCase;
 import es.uclm.esibuy.backend.categorias.application.port.in.CrearCategoriaCommand;
+import es.uclm.esibuy.backend.categorias.application.port.in.EditarCategoriaCommand;
 import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
 import es.uclm.esibuy.backend.categorias.application.port.out.ProductosPorCategoriaPort;
-import es.uclm.esibuy.backend.categorias.application.port.in.EditarCategoriaCommand;
+import es.uclm.esibuy.backend.categorias.application.port.out.VendedoresPorCategoriaPort;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaInvalidaException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 
@@ -33,7 +34,7 @@ import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaE
 // el desplegable de producto, sin sesión); administrarlas exige el rol ADMINISTRADOR. Las anotaciones solo se
 // evalúan con Spring, así que se usa un contexto mínimo (sin MongoDB) con los servicios reales y dobles de
 // prueba de los puertos de salida.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU40-CP09 y HU41-CP06, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU40-CP09, HU41-CP06 y HU42-CP05, propuestos.
 @SpringJUnitConfig(SeguridadCategoriasServiceTest.Configuracion.class)
 class SeguridadCategoriasServiceTest {
 
@@ -58,29 +59,36 @@ class SeguridadCategoriasServiceTest {
         }
 
         @Bean
+        VendedoresPorCategoriaPort vendedoresPorCategoria() {
+            return mock(VendedoresPorCategoriaPort.class);
+        }
+
+        @Bean
         ConsultaCategoriasUseCase consultaCategorias(CategoriaRepositoryPort repositorio) {
             return new ConsultaCategoriasService(repositorio);
         }
 
         @Bean
         AdministracionCategoriasUseCase administracionCategorias(CategoriaRepositoryPort repositorio,
-                ProductosPorCategoriaPort productos) {
-            return new AdministracionCategoriasService(repositorio, productos);
+                ProductosPorCategoriaPort productos, VendedoresPorCategoriaPort vendedores) {
+            return new AdministracionCategoriasService(repositorio, productos, vendedores);
         }
     }
 
     @Autowired
-    private CategoriaRepositoryPort categoriaRepository;
+    private AdministracionCategoriasUseCase administracionCategorias;
     @Autowired
-    private ProductosPorCategoriaPort productosPorCategoria;
+    private CategoriaRepositoryPort categoriaRepository;
     @Autowired
     private ConsultaCategoriasUseCase consultaCategorias;
     @Autowired
-    private AdministracionCategoriasUseCase administracionCategorias;
+    private ProductosPorCategoriaPort productosPorCategoria;
+    @Autowired
+    private VendedoresPorCategoriaPort vendedoresPorCategoria;
 
     @BeforeEach
     void limpiarDobles() {
-        reset(categoriaRepository, productosPorCategoria);
+                reset(categoriaRepository, productosPorCategoria, vendedoresPorCategoria);
     }
 
     private void comprobarQueRechazaLaAdministracion() {
@@ -88,6 +96,11 @@ class SeguridadCategoriasServiceTest {
                 () -> assertThrows(AccessDeniedException.class, () -> administracionCategorias.listarConProductos()),
                 () -> assertThrows(AccessDeniedException.class, () -> administracionCategorias.crear(CREACION)));
         verifyNoInteractions(categoriaRepository, productosPorCategoria);
+    }
+
+    private void comprobarQueRechazaLaEliminacion() {
+        assertThrows(AccessDeniedException.class, () -> administracionCategorias.eliminar("c-1"));
+        verifyNoInteractions(categoriaRepository, productosPorCategoria, vendedoresPorCategoria);
     }
 
     private void comprobarQueRechazaLaEdicion() {
@@ -143,7 +156,7 @@ class SeguridadCategoriasServiceTest {
         verifyNoInteractions(categoriaRepository, productosPorCategoria);
     }
 
-        @Test
+    @Test
     @WithMockUser(username = "cliente@esibuy.test", roles = "CLIENTE")
     @DisplayName("HU41-CP06: un cliente no puede editar categorías")
     void unClienteNoEditaCategorias() {
@@ -177,5 +190,41 @@ class SeguridadCategoriasServiceTest {
         assertThrows(AuthenticationCredentialsNotFoundException.class,
                 () -> administracionCategorias.editar(EDICION));
         verifyNoInteractions(categoriaRepository, productosPorCategoria);
+    }
+
+        @Test
+    @WithMockUser(username = "cliente@esibuy.test", roles = "CLIENTE")
+    @DisplayName("HU42-CP05: un cliente no puede eliminar categorías")
+    void unClienteNoEliminaCategorias() {
+        comprobarQueRechazaLaEliminacion();
+    }
+
+    @Test
+    @WithMockUser(username = "vendedor@esibuy.test", roles = "VENDEDOR")
+    @DisplayName("HU42-CP05: un vendedor no puede eliminar categorías")
+    void unVendedorNoEliminaCategorias() {
+        comprobarQueRechazaLaEliminacion();
+    }
+
+    @Test
+    @WithAnonymousUser
+    @DisplayName("HU42-CP05: un usuario anónimo no puede eliminar categorías")
+    void unAnonimoNoEliminaCategorias() {
+        comprobarQueRechazaLaEliminacion();
+    }
+
+    @Test
+    @WithMockUser(username = "admin@esibuy.test", roles = "ADMINISTRADOR")
+    @DisplayName("HU42-CP05: un administrador sí elimina categorías (una que no existe la rechaza el dominio)")
+    void unAdministradorEliminaCategorias() {
+        assertThrows(CategoriaNoEncontradaException.class, () -> administracionCategorias.eliminar("c-1"));
+    }
+
+    @Test
+    @DisplayName("HU42-CP05: sin sesión se rechaza la eliminación de categorías")
+    void sinSesionSeRechazaLaEliminacion() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> administracionCategorias.eliminar("c-1"));
+        verifyNoInteractions(categoriaRepository, productosPorCategoria, vendedoresPorCategoria);
     }
 }

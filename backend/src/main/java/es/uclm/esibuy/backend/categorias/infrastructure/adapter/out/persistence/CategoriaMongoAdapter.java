@@ -70,4 +70,11 @@ public class CategoriaMongoAdapter implements CategoriaRepositoryPort {
                 .collation(SIN_MAYUSCULAS_NI_TILDES);
         return mongoTemplate.exists(consulta, CategoriaDocument.class);
     }
+
+    // Borrado físico: el documento desaparece de la colección. Un id que no existe no hace nada; de comprobar que
+    // la categoría existe se encarga el servicio.
+    @Override
+    public void eliminar(String id) {
+        repository.deleteById(id);
+    }
 }

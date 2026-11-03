@@ -21,4 +21,7 @@ public interface CategoriaRepositoryPort {
 
     // ¿Hay otra categoría, distinta de la del id indicado, con ese nombre? No distingue mayúsculas ni tildes.
     boolean existeOtraConNombre(String nombre, String idExcluido);
+
+    // Borra la categoría con ese id (borrado físico).
+    void eliminar(String id);
 }

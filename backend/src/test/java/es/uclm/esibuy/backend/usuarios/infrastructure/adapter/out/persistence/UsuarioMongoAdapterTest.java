@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // Test de integración del adaptador de MongoDB (HU1, AB#216; índice único, AB#210).
 // Usa un MongoDB real en Docker (Testcontainers): Docker Desktop debe estar abierto.
-// PENDIENTE DE REVISAR CON EL EQUIPO: IDs de caso propuestos.
+// PENDIENTE DE REVISAR CON EL EQUIPO: IDs de caso propuestos, y HU42-CP09 propuesto.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class UsuarioMongoAdapterTest {
@@ -632,5 +632,35 @@ class UsuarioMongoAdapterTest {
 
         assertEquals(List.of("cat-3", "cat-2", "cat-1"),
                 resultado.usuarios().stream().map(u -> u.getDatosVendedor().categoriaPrincipalId()).toList());
+    }
+
+    // Vendedores de una categoría (HU42, T326).
+
+    @Test
+    @DisplayName("HU42-CP09: existeVendedorConCategoriaPrincipal es verdadero si algún vendedor la tiene como principal")
+    void existeVendedorConLaCategoriaPrincipal() {
+        usuarioMongoRepository.saveAll(List.of(
+                vendedorDeCategoria("tecno@esibuy.test", "cat-1"),
+                vendedorDeCategoria("hogar@esibuy.test", "cat-2")));
+
+        assertTrue(adapter.existeVendedorConCategoriaPrincipal("cat-1"));
+    }
+
+    @Test
+    @DisplayName("HU42-CP09: existeVendedorConCategoriaPrincipal es falso si ningún vendedor la tiene como principal")
+    void noExisteVendedorConLaCategoriaPrincipal() {
+        usuarioMongoRepository.save(vendedorDeCategoria("hogar@esibuy.test", "cat-2"));
+
+        assertFalse(adapter.existeVendedorConCategoriaPrincipal("cat-1"));
+    }
+
+    @Test
+    @DisplayName("HU42-CP09: existeVendedorConCategoriaPrincipal no cuenta a quien no es vendedor")
+    void soloCuentanLosVendedores() {
+        UsuarioDocument cliente = documento("cliente@esibuy.test", "hash", "CLIENTE");
+        cliente.setCategoriaPrincipalId("cat-1");
+        usuarioMongoRepository.save(cliente);
+
+        assertFalse(adapter.existeVendedorConCategoriaPrincipal("cat-1"));
     }
 }

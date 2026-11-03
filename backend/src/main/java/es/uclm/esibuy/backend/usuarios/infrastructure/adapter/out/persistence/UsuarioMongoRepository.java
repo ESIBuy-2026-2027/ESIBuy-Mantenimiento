@@ -19,6 +19,8 @@ public interface UsuarioMongoRepository extends MongoRepository<UsuarioDocument,
 
     boolean existsByNombreComercial(String nombreComercial);
 
+    boolean existsByRolAndCategoriaPrincipalId(String rol, String categoriaPrincipalId);
+
     Optional<UsuarioDocument> findByEmail(String email);
 
     long countByRolAndEstado(String rol, String estado);
