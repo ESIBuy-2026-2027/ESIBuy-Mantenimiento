@@ -1,13 +1,16 @@
 package es.uclm.esibuy.backend.categorias.infrastructure.adapter.in.web;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -37,10 +40,10 @@ import es.uclm.esibuy.backend.categorias.application.port.in.EditarCategoriaComm
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 
 // Gestión de las categorías del administrador: listado (HU39, T331, GET /api/admin/categorias), creación
-// (HU40, T322, POST /api/admin/categorias) y edición (HU41, T328, PUT /api/admin/categorias/{id}). El caso de
-// uso es un doble de prueba; la seguridad es la real (SecurityConfig) y los errores los traduce
-// ManejadorGlobalErrores.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU39-CP01 y CP04, HU40-CP05 a CP08 y HU41-CP10 a CP14, propuestos.
+// (HU40, T322, POST /api/admin/categorias), edición (HU41, T328, PUT /api/admin/categorias/{id}) y eliminación
+// (HU42, T325, DELETE /api/admin/categorias/{id}). El caso de uso es un doble de prueba; la seguridad es la
+// real (SecurityConfig) y los errores los traduce ManejadorGlobalErrores.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU39-CP01 y CP04, HU40-CP05 a CP08, HU41-CP10 a CP14 y y HU42-CP11 a CP15, propuestos.
 @WebMvcTest(AdministracionCategoriasController.class)
 @Import(SecurityConfig.class)
 class AdministracionCategoriasControllerTest {
@@ -255,5 +258,22 @@ class AdministracionCategoriasControllerTest {
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(administracionCategorias);
+    }
+
+    
+    // Eliminación de categorías (HU42, T325).
+
+    private static MockHttpServletRequestBuilder eliminar(String id) {
+        return delete(RUTA + "/" + id).with(csrf());
+    }
+
+    @Test
+    @DisplayName("HU42-CP11: un administrador elimina una categoría y recibe 204 sin cuerpo")
+    void unAdministradorEliminaUnaCategoria() throws Exception {
+        mockMvc.perform(eliminar("c-9").with(user("admin").roles("ADMINISTRADOR")))
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(""));
+
+        verify(administracionCategorias).eliminar("c-9");
     }
 }
