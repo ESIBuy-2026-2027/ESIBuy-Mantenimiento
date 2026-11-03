@@ -11,7 +11,7 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { ArrowLeft20Regular, BoxSearch24Regular } from '@fluentui/react-icons'
-import { getCatalogProduct } from '../api/products'
+import { getCatalogProduct, getProductReviews } from '../api/products'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
 import ProductDetail from '../features/catalog/ProductDetail'
@@ -93,6 +93,9 @@ export default function ProductDetailPage() {
   const { id } = useParams()
   const fetcher = useCallback(() => getCatalogProduct(id), [id])
   const { data: product, error, failed, retry } = useApiQuery(fetcher)
+  // Las valoraciones (HU13) se piden aparte: si fallan, el producto se sigue viendo
+  const reviewsFetcher = useCallback(() => getProductReviews(id), [id])
+  const { data: reviews, failed: reviewsFailed, retry: retryReviews } = useApiQuery(reviewsFetcher)
   const { categories } = useCategories()
   const notFound = failed && error?.status === NOT_FOUND
   const categoryName = categories.find((category) => category.id === product?.categoriaId)?.nombre
@@ -128,7 +131,16 @@ export default function ProductDetailPage() {
 
       {!product && !failed && <DetailSkeleton styles={styles} />}
 
-      {product && <ProductDetail key={product.id} product={product} categoryName={categoryName} />}
+      {product && (
+        <ProductDetail
+          key={product.id}
+          product={product}
+          categoryName={categoryName}
+          reviews={reviews}
+          reviewsFailed={reviewsFailed}
+          onRetryReviews={retryReviews}
+        />
+      )}
     </main>
   )
 }

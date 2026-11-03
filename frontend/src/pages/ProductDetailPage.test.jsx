@@ -23,9 +23,13 @@ const DETALLE = {
   numValoraciones: 29,
 }
 
-// Responde el detalle con estos datos (sobre los de ejemplo) en lugar de los del mock.
+// Responde el detalle con estos datos (sobre los de ejemplo) en lugar de los del mock, sin valoraciones en la lista
+// (HU13): así la media y el número de valoraciones son los del detalle.
 const responderCon = (cambios = {}) =>
-  server.use(http.get('/api/products/:id', () => HttpResponse.json({ ...DETALLE, ...cambios })))
+  server.use(
+    http.get('/api/products/:id', () => HttpResponse.json({ ...DETALLE, ...cambios })),
+    http.get('/api/products/:id/valoraciones', () => HttpResponse.json([])),
+  )
 
 async function abrirDetalle(ruta = '/products/p-2') {
   await abrirSesionPorApi(CLIENTE)
@@ -319,5 +323,215 @@ describe('ProductDetailPage (HU9): añadir al carrito', () => {
 
     expect(screen.getByRole('button', { name: /agotado/i })).toBeDisabled()
     expect(screen.queryByLabelText('Cantidad')).not.toBeInTheDocument()
+  })
+})
+
+// Valoraciones de los clientes (HU13, T368): GET /api/products/{id}/valoraciones, sin el cliente ni la fecha. La media
+// y el número de valoraciones se calculan con esta lista; si no hay ninguna, se usan los del catálogo (decisión del
+// equipo: el backend aún no rellena valoracion ni numValoraciones).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP18 a CP20, propuestos.
+const VALORACIONES = [
+  { id: 'v-1', productoId: 'p-2', puntuacion: 5, comentario: 'Muy buen tacto, lo recomiendo.' },
+  { id: 'v-2', productoId: 'p-2', puntuacion: 4, comentario: '' },
+  { id: 'v-3', productoId: 'p-2', puntuacion: 3, comentario: 'Hace algo de ruido.' },
+]
+
+const responderValoraciones = (valoraciones) =>
+  server.use(http.get('/api/products/:id/valoraciones', () => HttpResponse.json(valoraciones)))
+
+describe('ProductDetailPage (HU13): valoraciones de los clientes', () => {
+  it('HU13-CP18: muestra cada valoración del producto con sus estrellas y su comentario', async () => {
+    responderCon()
+    responderValoraciones(VALORACIONES)
+    await abrirDetalle()
+
+    const lista = await screen.findByRole('list', { name: /valoraciones de los clientes/i })
+    const valoraciones = within(lista).getAllByRole('listitem')
+    expect(valoraciones).toHaveLength(3)
+    expect(within(valoraciones[0]).getByRole('img', { name: /valoración: 5,0 de 5/i })).toBeInTheDocument()
+    expect(within(valoraciones[0]).getByText('Muy buen tacto, lo recomiendo.')).toBeInTheDocument()
+    expect(within(valoraciones[2]).getByText('Hace algo de ruido.')).toBeInTheDocument()
+  })
+
+  it('HU13-CP18: una valoración sin comentario muestra solo sus estrellas', async () => {
+    responderCon()
+    responderValoraciones([VALORACIONES[1]])
+    await abrirDetalle()
+
+    const lista = await screen.findByRole('list', { name: /valoraciones de los clientes/i })
+    const [valoracion] = within(lista).getAllByRole('listitem')
+    expect(within(valoracion).getByRole('img', { name: /valoración: 4,0 de 5/i })).toBeInTheDocument()
+    expect(valoracion).toHaveTextContent(/^$/)
+  })
+
+  it('HU13-CP19: la media y el número de valoraciones salen de la lista aunque el catálogo no las tenga', async () => {
+    responderCon({ valoracion: null, numValoraciones: 0 })
+    responderValoraciones(VALORACIONES)
+    await abrirDetalle()
+
+    // (5 + 4 + 3) / 3 = 4
+    expect((await screen.findAllByRole('img', { name: /valoración: 4,0 de 5/i })).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/^3 valoraciones$/i).length).toBeGreaterThan(0)
+    expect(screen.queryByText(/^sin valoraciones$/i)).not.toBeInTheDocument()
+  })
+
+  it('HU13-CP19: si la lista está vacía se mantienen la media y el número del catálogo', async () => {
+    responderCon()
+    responderValoraciones([])
+    await abrirDetalle()
+
+    expect(await screen.findByText(/todavía no hay valoraciones de este producto/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/29 valoraciones/i).length).toBeGreaterThan(0)
+  })
+
+  it('HU13-CP20: un producto sin valoraciones lo indica en su sección', async () => {
+    responderCon({ valoracion: null, numValoraciones: 0 })
+    responderValoraciones([])
+    await abrirDetalle()
+
+    const seccion = await screen.findByRole('region', { name: /valoraciones de los clientes/i })
+    expect(within(seccion).getByText(/todavía no hay valoraciones de este producto/i)).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: /valoraciones de los clientes/i })).not.toBeInTheDocument()
+  })
+
+  it('HU13-CP20: si fallan las valoraciones avisa y permite reintentar, sin perder el producto', async () => {
+    const user = userEvent.setup()
+    let fallado = false
+    responderCon()
+    server.use(
+      http.get('/api/products/:id/valoraciones', () => {
+        if (!fallado) {
+          fallado = true
+          return new HttpResponse(null, { status: 500 })
+        }
+        return HttpResponse.json(VALORACIONES)
+      }),
+    )
+    await abrirDetalle()
+
+    expect(await screen.findByText(/no se han podido cargar las valoraciones/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Teclado mecánico' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /reintentar/i }))
+
+    expect(await screen.findByRole('list', { name: /valoraciones de los clientes/i })).toBeInTheDocument()
+  })
+})
+
+// Valorar el producto (HU13, T367): POST /api/products/{id}/valoraciones con { puntuacion, comentario }. El backend
+// decide si se puede: 403 PRODUCT_NOT_PURCHASED si el cliente no lo ha comprado y 409 REVIEW_ALREADY_EXISTS si ya lo
+// valoró; el frontend no puede saberlo antes de enviar.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP21 a CP23, propuestos.
+function responderAlValorar(respuesta) {
+  const enviado = {}
+  server.use(
+    http.post('/api/products/:id/valoraciones', async ({ params, request }) => {
+      enviado.producto = params.id
+      enviado.cuerpo = await request.json()
+      return respuesta(enviado.cuerpo)
+    }),
+  )
+  return enviado
+}
+
+const rechazarCon = (status, code) => () => HttpResponse.json({ code }, { status })
+
+async function abrirFormulario() {
+  await abrirDetalle()
+  return screen.findByRole('form', { name: /valora este producto/i })
+}
+
+describe('ProductDetailPage (HU13): valorar el producto', () => {
+  it('HU13-CP21: el cliente valora con estrellas y un comentario, y su valoración aparece en la lista', async () => {
+    const user = userEvent.setup()
+    let valoraciones = []
+    responderCon()
+    server.use(http.get('/api/products/:id/valoraciones', () => HttpResponse.json(valoraciones)))
+    const enviado = responderAlValorar((cuerpo) => {
+      valoraciones = [{ id: 'v-9', productoId: 'p-2', ...cuerpo }]
+      return HttpResponse.json(valoraciones[0], { status: 201 })
+    })
+    const formulario = await abrirFormulario()
+
+    await user.click(within(formulario).getByRole('radio', { name: '4 estrellas' }))
+    await user.type(within(formulario).getByLabelText(/comentario/i), 'Muy cómodo para escribir.')
+    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+
+    expect(await screen.findByText(/gracias por tu valoración/i)).toBeInTheDocument()
+    expect(enviado).toEqual({ producto: 'p-2', cuerpo: { puntuacion: 4, comentario: 'Muy cómodo para escribir.' } })
+    const lista = await screen.findByRole('list', { name: /valoraciones de los clientes/i })
+    expect(within(lista).getByText('Muy cómodo para escribir.')).toBeInTheDocument()
+    expect(screen.queryByRole('form', { name: /valora este producto/i })).not.toBeInTheDocument()
+  })
+
+  it('HU13-CP21: el comentario es opcional: sin él se envía vacío', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    const enviado = responderAlValorar((cuerpo) => HttpResponse.json({ id: 'v-9', ...cuerpo }, { status: 201 }))
+    const formulario = await abrirFormulario()
+
+    await user.click(within(formulario).getByRole('radio', { name: '5 estrellas' }))
+    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+
+    expect(await screen.findByText(/gracias por tu valoración/i)).toBeInTheDocument()
+    expect(enviado.cuerpo).toEqual({ puntuacion: 5, comentario: '' })
+  })
+
+  it('HU13-CP22: sin puntuación no se envía y se pide elegir una', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    const enviado = responderAlValorar(() => HttpResponse.json({}, { status: 201 }))
+    const formulario = await abrirFormulario()
+
+    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+
+    expect(await within(formulario).findByText(/elige una puntuación de 1 a 5 estrellas/i)).toBeInTheDocument()
+    expect(enviado.cuerpo).toBeUndefined()
+  })
+
+  it('HU13-CP22: el comentario admite como mucho 500 caracteres', async () => {
+    responderCon()
+    const formulario = await abrirFormulario()
+
+    expect(within(formulario).getByLabelText(/comentario/i)).toHaveAttribute('maxLength', '500')
+  })
+
+  it('HU13-CP23: si no ha comprado el producto se le avisa y el formulario sigue ahí', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    responderAlValorar(rechazarCon(403, 'PRODUCT_NOT_PURCHASED'))
+    const formulario = await abrirFormulario()
+
+    await user.click(within(formulario).getByRole('radio', { name: '3 estrellas' }))
+    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+
+    expect(await within(formulario).findByText(/solo puedes valorar productos que has comprado/i)).toBeInTheDocument()
+    expect(screen.getByRole('form', { name: /valora este producto/i })).toBeInTheDocument()
+  })
+
+  it('HU13-CP23: si ya lo había valorado se le avisa', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    responderAlValorar(rechazarCon(409, 'REVIEW_ALREADY_EXISTS'))
+    const formulario = await abrirFormulario()
+
+    await user.click(within(formulario).getByRole('radio', { name: '2 estrellas' }))
+    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+
+    expect(await within(formulario).findByText(/ya has valorado este producto/i)).toBeInTheDocument()
+  })
+
+  it('HU13-CP23: si falla el envío avisa y conserva lo escrito para reintentar', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    responderAlValorar(() => new HttpResponse(null, { status: 500 }))
+    const formulario = await abrirFormulario()
+
+    await user.click(within(formulario).getByRole('radio', { name: '4 estrellas' }))
+    await user.type(within(formulario).getByLabelText(/comentario/i), 'Buen producto')
+    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+
+    expect(await within(formulario).findByText(/no se ha podido enviar tu valoración/i)).toBeInTheDocument()
+    expect(within(formulario).getByLabelText(/comentario/i)).toHaveValue('Buen producto')
+    expect(within(formulario).getByRole('radio', { name: '4 estrellas' })).toBeChecked()
   })
 })
