@@ -661,14 +661,14 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU3-CP15 | Restablecer con una contraseña que no cumple la política responde 400 con el código del motivo (p. ej. `PASSWORD_WEAK`) | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
 | HU3-CP16 | Los dos endpoints rechazan un cuerpo incompleto (400) y una petición sin token anti-CSRF (403) sin llamar al caso de uso | Integración web (`@WebMvcTest`) | 4 | ✅ Pasa |
 | HU3-CP17 | La petición de restablecer no muestra la contraseña ni el código en su `toString` (logs) | Unitario (infraestructura) | 1 | ✅ Pasa |
-| HU3-CP18 | El inicio de sesión tiene el enlace «¿Has olvidado tu contraseña?», que lleva a la recuperación | Frontend (página) | 1 | 🔍 En revisión (1, AB#398, PR sin abrir) |
-| HU3-CP19 | Sin email, o con uno mal formado, se avisa en el campo y no se pide ningún código | Frontend (página) | 1 | 🔍 En revisión (1, AB#398, PR sin abrir) |
-| HU3-CP20 | Se pide el código para el email escrito y se pasa al segundo paso con el mismo aviso exista o no la cuenta (caduca en 10 minutos); si el servidor falla, se avisa y no se avanza | Frontend (página) | 3 | 🔍 En revisión (3, AB#398, PR sin abrir) |
-| HU3-CP21 | Antes de enviar se comprueba que el código tiene 6 dígitos y que la contraseña nueva cumple los requisitos (que se muestran) y coincide con su repetición | Frontend (página) | 2 | 🔍 En revisión (2, AB#398, PR sin abrir) |
-| HU3-CP22 | Con el código correcto se envían email, código y contraseña, y se vuelve al login con «Contraseña cambiada. Ya puedes iniciar sesión.» | Frontend (página) | 1 | 🔍 En revisión (1, AB#398, PR sin abrir) |
-| HU3-CP23 | Con un código incorrecto o caducado se avisa y se puede volver a intentar o pedir otro código | Frontend (página) | 2 | 🔍 En revisión (2, AB#398, PR sin abrir) |
-| HU3-CP24 | Si el servidor rechaza la contraseña por la política, el motivo se muestra en el campo; con otro error, un aviso genérico | Frontend (página) | 2 | 🔍 En revisión (2, AB#398, PR sin abrir) |
-| HU3-CP25 | Desde la recuperación se vuelve al login; con la sesión abierta, la ruta lleva al inicio del usuario | Frontend (página) | 2 | 🔍 En revisión (2, AB#398, PR sin abrir) |
+| HU3-CP18 | El inicio de sesión tiene el enlace «¿Has olvidado tu contraseña?», que lleva a la recuperación | Frontend (página) | 1 | ✅ Pasa |
+| HU3-CP19 | Sin email, o con uno mal formado, se avisa en el campo y no se pide ningún código | Frontend (página) | 1 | ✅ Pasa |
+| HU3-CP20 | Se pide el código para el email escrito y se pasa al segundo paso con el mismo aviso exista o no la cuenta (caduca en 10 minutos); si el servidor falla, se avisa y no se avanza | Frontend (página) | 3 | ✅ Pasa |
+| HU3-CP21 | Antes de enviar se comprueba que el código tiene 6 dígitos y que la contraseña nueva cumple los requisitos (que se muestran) y coincide con su repetición | Frontend (página) | 2 | ✅ Pasa |
+| HU3-CP22 | Con el código correcto se envían email, código y contraseña, y se vuelve al login con «Contraseña cambiada. Ya puedes iniciar sesión.» | Frontend (página) | 1 | ✅ Pasa |
+| HU3-CP23 | Con un código incorrecto o caducado se avisa y se puede volver a intentar o pedir otro código | Frontend (página) | 2 | ✅ Pasa |
+| HU3-CP24 | Si el servidor rechaza la contraseña por la política, el motivo se muestra en el campo; con otro error, un aviso genérico | Frontend (página) | 2 | ✅ Pasa |
+| HU3-CP25 | Desde la recuperación se vuelve al login; con la sesión abierta, la ruta lleva al inicio del usuario | Frontend (página) | 2 | ✅ Pasa |
 
 Notas:
 - **HU3-CP01 a CP10 (Sprint 2, backend, TDD):** casos propuestos en la T400 (AB#400, lógica de recuperación de contraseña) a partir de los criterios de aceptación de la HU3 (AB#65): «envío de enlace/código temporal y de un solo uso», «expiración del enlace tras un tiempo determinado» y «la contraseña nueva debe cumplir la política de seguridad». Pendientes de confirmar con el equipo y de añadir a la HU3 en Azure Boards.
@@ -713,20 +713,20 @@ Notas:
 | HU3-CP16 | `RecuperacionContrasenaControllerTest` | `restablecerConCamposVaciosRespondeBadRequest` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
 | HU3-CP16 | `RecuperacionContrasenaControllerTest` | `restablecerSinCsrfRespondeForbidden` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
 | HU3-CP17 | `RestablecerContrasenaRequestTest` | `toStringNoMuestraLaContrasenaNiElCodigo` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
-| HU3-CP18 | `LoginFlow.test.jsx` | `HU3-CP18: el inicio de sesión tiene un enlace a la recuperación de contraseña` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP19 | `ForgotPasswordPage.test.jsx` | `HU3-CP19: sin email, o con uno mal formado, avisa en el campo y no pide ningún código` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP20 | `ForgotPasswordPage.test.jsx` | `HU3-CP20: pide el código para el email escrito y pasa al segundo paso con el aviso de que se ha enviado` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP20 | `ForgotPasswordPage.test.jsx` | `HU3-CP20: con un email que no está registrado muestra el mismo aviso (no revela qué emails existen)` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP20 | `ForgotPasswordPage.test.jsx` | `HU3-CP20: si el servidor falla al pedir el código, lo avisa y se queda en el primer paso` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP21 | `ForgotPasswordPage.test.jsx` | `HU3-CP21: comprueba el código y la contraseña nueva antes de enviarlos` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP21 | `ForgotPasswordPage.test.jsx` | `HU3-CP21: muestra los requisitos de la contraseña nueva y marca los que ya cumple` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP22 | `ForgotPasswordPage.test.jsx` | `HU3-CP22: con el código correcto cambia la contraseña y vuelve al login avisando del cambio` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP23 | `ForgotPasswordPage.test.jsx` | `HU3-CP23: con un código incorrecto o caducado lo avisa y se queda en el paso para volver a intentarlo` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP23 | `ForgotPasswordPage.test.jsx` | `HU3-CP23: se puede pedir otro código para el mismo email` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP24 | `ForgotPasswordPage.test.jsx` | `HU3-CP24: si el servidor rechaza la contraseña por la política, lo muestra en el campo` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP24 | `ForgotPasswordPage.test.jsx` | `HU3-CP24: si el servidor falla por otro motivo, muestra un aviso genérico sin detalles internos` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP25 | `ForgotPasswordPage.test.jsx` | `HU3-CP25: desde la recuperación se puede volver al inicio de sesión` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP25 | `ForgotPasswordPage.test.jsx` | `HU3-CP25: con la sesión abierta no se muestra la recuperación y lleva a su inicio` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP18 | `LoginFlow.test.jsx` | `HU3-CP18: el inicio de sesión tiene un enlace a la recuperación de contraseña` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP19 | `ForgotPasswordPage.test.jsx` | `HU3-CP19: sin email, o con uno mal formado, avisa en el campo y no pide ningún código` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP20 | `ForgotPasswordPage.test.jsx` | `HU3-CP20: pide el código para el email escrito y pasa al segundo paso con el aviso de que se ha enviado` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP20 | `ForgotPasswordPage.test.jsx` | `HU3-CP20: con un email que no está registrado muestra el mismo aviso (no revela qué emails existen)` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP20 | `ForgotPasswordPage.test.jsx` | `HU3-CP20: si el servidor falla al pedir el código, lo avisa y se queda en el primer paso` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP21 | `ForgotPasswordPage.test.jsx` | `HU3-CP21: comprueba el código y la contraseña nueva antes de enviarlos` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP21 | `ForgotPasswordPage.test.jsx` | `HU3-CP21: muestra los requisitos de la contraseña nueva y marca los que ya cumple` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP22 | `ForgotPasswordPage.test.jsx` | `HU3-CP22: con el código correcto cambia la contraseña y vuelve al login avisando del cambio` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP23 | `ForgotPasswordPage.test.jsx` | `HU3-CP23: con un código incorrecto o caducado lo avisa y se queda en el paso para volver a intentarlo` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP23 | `ForgotPasswordPage.test.jsx` | `HU3-CP23: se puede pedir otro código para el mismo email` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP24 | `ForgotPasswordPage.test.jsx` | `HU3-CP24: si el servidor rechaza la contraseña por la política, lo muestra en el campo` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP24 | `ForgotPasswordPage.test.jsx` | `HU3-CP24: si el servidor falla por otro motivo, muestra un aviso genérico sin detalles internos` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP25 | `ForgotPasswordPage.test.jsx` | `HU3-CP25: desde la recuperación se puede volver al inicio de sesión` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP25 | `ForgotPasswordPage.test.jsx` | `HU3-CP25: con la sesión abierta no se muestra la recuperación y lleva a su inicio` | Frontend · página | AB#398 | PR #178 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `UsuarioTest`: `usuarios/domain/model/` (JUnit, sin Spring)
