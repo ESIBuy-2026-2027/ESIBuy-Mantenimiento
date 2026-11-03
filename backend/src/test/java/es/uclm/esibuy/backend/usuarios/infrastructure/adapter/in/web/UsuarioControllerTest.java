@@ -23,7 +23,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.model.UsuarioPage;
-import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.AutobloqueoNoPermitidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYNombreComercialYaRegistradosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
@@ -358,7 +358,7 @@ class UsuarioControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(administracionUsuarios, never()).activar(any());
-        verify(administracionUsuarios, never()).desactivar(any(), any());
+        verify(administracionUsuarios, never()).bloquear(any(), any());
     }
 
     @Test
@@ -383,21 +383,21 @@ class UsuarioControllerTest {
         verify(administracionUsuarios, never()).activar(any());
     }
 
-    // Desactivar una cuenta (HU23, T37/T38/T39): mismo endpoint que activar, con {"estado": "BLOQUEADO"}.
+    // Bloquear una cuenta (HU23, T37/T38/T39): mismo endpoint que activar, con {"estado": "BLOQUEADO"}.
     // El usuario en sesión se identifica por su email (como en /api/auth/me): con @WithMockUser es el username.
     // Los códigos de los 409 son los que espera el frontend (frontend/docs/hu23-desactivar-usuario.md).
     private static final String EMAIL_ADMINISTRADOR = "admin@esibuy.test";
 
     @Test
-    @DisplayName("HU23-CP01: un administrador desactiva una cuenta y recibe sus datos con estado BLOQUEADO")
+    @DisplayName("HU23-CP01: un administrador bloquea una cuenta y recibe sus datos con estado BLOQUEADO")
     @WithMockUser(username = EMAIL_ADMINISTRADOR, roles = "ADMINISTRADOR")
-    void administradorDesactivaUnaCuentaYRecibeSusDatos() throws Exception {
-        Usuario desactivado = new Usuario("usr-1", new DatosPersonales("Carlos", "Moreno Gil", null),
+    void administradorBloqueaUnaCuentaYRecibeSusDatos() throws Exception {
+        Usuario bloqueado = new Usuario("usr-1", new DatosPersonales("Carlos", "Moreno Gil", null),
                 new Email("carlos@esibuy.test"), "hash-no-debe-salir", Rol.CLIENTE,
                 new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1990, Month.MARCH, 14), null),
                 null);
-        desactivado.desactivar();
-        when(administracionUsuarios.desactivar("usr-1", EMAIL_ADMINISTRADOR)).thenReturn(desactivado);
+        bloqueado.bloquear();
+        when(administracionUsuarios.bloquear("usr-1", EMAIL_ADMINISTRADOR)).thenReturn(bloqueado);
 
         mockMvc.perform(cambiarEstado("usr-1", "BLOQUEADO"))
                 .andExpect(status().isOk())
@@ -405,15 +405,15 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.estado").value("BLOQUEADO"))
                 .andExpect(jsonPath("$.passwordHash").doesNotExist());
 
-        verify(administracionUsuarios).desactivar("usr-1", EMAIL_ADMINISTRADOR);
+        verify(administracionUsuarios).bloquear("usr-1", EMAIL_ADMINISTRADOR);
         verify(administracionUsuarios, never()).activar(any());
     }
 
     @Test
-    @DisplayName("HU23-CP02: desactivar un usuario que no existe devuelve 404")
+    @DisplayName("HU23-CP02: bloquear un usuario que no existe devuelve 404")
     @WithMockUser(username = EMAIL_ADMINISTRADOR, roles = "ADMINISTRADOR")
-    void desactivarUnUsuarioInexistenteDevuelve404() throws Exception {
-        when(administracionUsuarios.desactivar("no-existe", EMAIL_ADMINISTRADOR))
+    void bloquearUnUsuarioInexistenteDevuelve404() throws Exception {
+        when(administracionUsuarios.bloquear("no-existe", EMAIL_ADMINISTRADOR))
                 .thenThrow(new UsuarioNoEncontradoException("El usuario no existe"));
 
         mockMvc.perform(cambiarEstado("no-existe", "BLOQUEADO"))
@@ -422,24 +422,24 @@ class UsuarioControllerTest {
     }
 
     @Test
-    @DisplayName("HU23-CP03: si el administrador intenta desactivarse a sí mismo devuelve 409 CANNOT_DEACTIVATE_SELF")
+    @DisplayName("HU23-CP03: si el administrador intenta bloquearse a sí mismo devuelve 409 CANNOT_BLOCK_SELF")
     @WithMockUser(username = EMAIL_ADMINISTRADOR, roles = "ADMINISTRADOR")
-    void desactivarseASiMismoDevuelve409() throws Exception {
-        when(administracionUsuarios.desactivar("u-1", EMAIL_ADMINISTRADOR))
-                .thenThrow(new AutodesactivacionNoPermitidaException("Un administrador no puede desactivar su propia cuenta"));
+    void bloquearseASiMismoDevuelve409() throws Exception {
+        when(administracionUsuarios.bloquear("u-1", EMAIL_ADMINISTRADOR))
+                .thenThrow(new AutobloqueoNoPermitidoException("Un administrador no puede bloquear su propia cuenta"));
 
         mockMvc.perform(cambiarEstado("u-1", "BLOQUEADO"))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("CANNOT_DEACTIVATE_SELF"))
+                .andExpect(jsonPath("$.code").value("CANNOT_BLOCK_SELF"))
                 .andExpect(jsonPath("$.mensaje").exists());
     }
 
     @Test
-    @DisplayName("HU23-CP04: desactivar al último administrador activo devuelve 409 LAST_ACTIVE_ADMIN")
+    @DisplayName("HU23-CP04: bloquear al último administrador activo devuelve 409 LAST_ACTIVE_ADMIN")
     @WithMockUser(username = EMAIL_ADMINISTRADOR, roles = "ADMINISTRADOR")
-    void desactivarAlUltimoAdministradorActivoDevuelve409() throws Exception {
-        when(administracionUsuarios.desactivar("u-3", EMAIL_ADMINISTRADOR))
-                .thenThrow(new UltimoAdministradorActivoException("No se puede desactivar al último administrador activo"));
+    void bloquearAlUltimoAdministradorActivoDevuelve409() throws Exception {
+        when(administracionUsuarios.bloquear("u-3", EMAIL_ADMINISTRADOR))
+                .thenThrow(new UltimoAdministradorActivoException("No se puede bloquear al último administrador activo"));
 
         mockMvc.perform(cambiarEstado("u-3", "BLOQUEADO"))
                 .andExpect(status().isConflict())
@@ -449,21 +449,21 @@ class UsuarioControllerTest {
 
     @ParameterizedTest(name = "rol {0}")
     @ValueSource(strings = {"CLIENTE", "VENDEDOR"})
-    @DisplayName("HU23-CP06: un usuario que no es administrador no puede desactivar cuentas")
-    void unNoAdministradorNoPuedeDesactivarCuentas(String rol) throws Exception {
+    @DisplayName("HU23-CP06: un usuario que no es administrador no puede bloquear cuentas")
+    void unNoAdministradorNoPuedeBloquearCuentas(String rol) throws Exception {
         mockMvc.perform(cambiarEstado("usr-1", "BLOQUEADO").with(user("usuario").roles(rol)))
                 .andExpect(status().isForbidden());
 
-        verify(administracionUsuarios, never()).desactivar(any(), any());
+        verify(administracionUsuarios, never()).bloquear(any(), any());
     }
 
     @Test
-    @DisplayName("HU23-CP06: sin sesión no se puede desactivar una cuenta")
-    void desactivarSinSesionEstaProtegido() throws Exception {
+    @DisplayName("HU23-CP06: sin sesión no se puede bloquear una cuenta")
+    void bloquearSinSesionEstaProtegido() throws Exception {
         mockMvc.perform(cambiarEstado("usr-1", "BLOQUEADO"))
                 .andExpect(status().isUnauthorized());
 
-        verify(administracionUsuarios, never()).desactivar(any(), any());
+        verify(administracionUsuarios, never()).bloquear(any(), any());
     }
 
     // Acceso por rol a los endpoints reales de administración (HU18, T60). La regla la puso la T58
@@ -742,7 +742,7 @@ class UsuarioControllerTest {
         verify(administracionUsuarios, never()).consultarVendedor(any());
     }
 
-    // Activar y desactivar un vendedor desde su supervisión (HU21, T47): PATCH /api/admin/sellers/{id}/status,
+    // Activar y bloquear un vendedor desde su supervisión (HU21, T47): PATCH /api/admin/sellers/{id}/status,
     // contrato de frontend/docs/hu21-alta-admin-y-vendedores.md. Responde con los datos del vendedor.
     // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU21-CP13 a CP17, propuestos.
 
@@ -764,7 +764,7 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.passwordHash").doesNotExist());
 
         verify(administracionUsuarios).activarVendedor("v-1");
-        verify(administracionUsuarios, never()).desactivarVendedor(any());
+        verify(administracionUsuarios, never()).bloquearVendedor(any());
     }
 
     // El bloqueo temporal por intentos no es el estado BLOQUEADO, que solo pone un administrador (HU23, T243):
@@ -810,12 +810,12 @@ class UsuarioControllerTest {
     }
 
     @Test
-    @DisplayName("HU21-CP14: un administrador desactiva un vendedor y recibe sus datos con estado BLOQUEADO")
+    @DisplayName("HU21-CP14: un administrador bloquea un vendedor y recibe sus datos con estado BLOQUEADO")
     @WithMockUser(roles = "ADMINISTRADOR")
-    void administradorDesactivaUnVendedorYRecibeSusDatos() throws Exception {
-        Usuario desactivado = vendedor();
-        desactivado.desactivar();
-        when(administracionUsuarios.desactivarVendedor("v-1")).thenReturn(desactivado);
+    void administradorBloqueaUnVendedorYRecibeSusDatos() throws Exception {
+        Usuario bloqueado = vendedor();
+        bloqueado.bloquear();
+        when(administracionUsuarios.bloquearVendedor("v-1")).thenReturn(bloqueado);
 
         mockMvc.perform(cambiarEstadoVendedor("v-1", "BLOQUEADO"))
                 .andExpect(status().isOk())
@@ -823,7 +823,7 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.estado").value("BLOQUEADO"))
                 .andExpect(jsonPath("$.passwordHash").doesNotExist());
 
-        verify(administracionUsuarios).desactivarVendedor("v-1");
+        verify(administracionUsuarios).bloquearVendedor("v-1");
         verify(administracionUsuarios, never()).activarVendedor(any());
     }
 
@@ -835,7 +835,7 @@ class UsuarioControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(administracionUsuarios, never()).activarVendedor(any());
-        verify(administracionUsuarios, never()).desactivarVendedor(any());
+        verify(administracionUsuarios, never()).bloquearVendedor(any());
     }
 
     @Test

@@ -251,10 +251,10 @@ class UsuarioMongoAdapterTest {
     }
 
     @Test
-    @DisplayName("HU2-CP04: un usuario desactivado sigue desactivado al leerlo de la base de datos")
-    void conservaLaDesactivacion() {
+    @DisplayName("HU2-CP04: un usuario bloqueado sigue bloqueado al leerlo de la base de datos")
+    void conservaElBloqueo() {
         Usuario usuario = cliente("juan@uclm.es", "hash-simulado");
-        usuario.desactivar();
+        usuario.bloquear();
 
         adapter.guardar(usuario);
 
@@ -383,9 +383,9 @@ class UsuarioMongoAdapterTest {
     void listarFiltraPorEstadoActivo() {
         UsuarioDocument activo = documento("ana@esibuy.test", "hash-1", "CLIENTE");
         activo.setEstado("ACTIVO");
-        UsuarioDocument desactivado = documento("bruno@esibuy.test", "hash-2", "VENDEDOR");
-        desactivado.setEstado("BLOQUEADO");
-        usuarioMongoRepository.saveAll(List.of(activo, desactivado));
+        UsuarioDocument bloqueado = documento("bruno@esibuy.test", "hash-2", "VENDEDOR");
+        bloqueado.setEstado("BLOQUEADO");
+        usuarioMongoRepository.saveAll(List.of(activo, bloqueado));
 
         UsuarioPage resultado = adapter.listar(
                 new ListarUsuariosQuery(null, null, "ACTIVO", 0, 10)
@@ -490,11 +490,11 @@ class UsuarioMongoAdapterTest {
     private void guardarVendedoresConEstadosDesordenados() {
         UsuarioDocument activo = documento("activo@esibuy.test", "hash-1", "VENDEDOR");
         activo.setEstado("ACTIVO");
-        UsuarioDocument desactivado = documento("desactivado@esibuy.test", "hash-2", "VENDEDOR");
-        desactivado.setEstado("BLOQUEADO");
+        UsuarioDocument bloqueado = documento("bloqueado@esibuy.test", "hash-2", "VENDEDOR");
+        bloqueado.setEstado("BLOQUEADO");
         UsuarioDocument pendiente = documento("pendiente@esibuy.test", "hash-3", "VENDEDOR");
         pendiente.setEstado("PENDIENTE");
-        usuarioMongoRepository.saveAll(List.of(activo, desactivado, pendiente));
+        usuarioMongoRepository.saveAll(List.of(activo, bloqueado, pendiente));
     }
 
     private static UsuarioDocument vendedorLlamado(String email, String nombre) {
@@ -568,9 +568,9 @@ class UsuarioMongoAdapterTest {
         activo.setEstado("ACTIVO");
         UsuarioDocument pendiente = documento("pendiente@esibuy.test", "hash", "CLIENTE");
         pendiente.setEstado("PENDIENTE");
-        UsuarioDocument desactivado = documento("desactivado@esibuy.test", "hash", "CLIENTE");
-        desactivado.setEstado("BLOQUEADO");
-        usuarioMongoRepository.saveAll(List.of(activo, pendiente, desactivado));
+        UsuarioDocument bloqueado = documento("bloqueado@esibuy.test", "hash", "CLIENTE");
+        bloqueado.setEstado("BLOQUEADO");
+        usuarioMongoRepository.saveAll(List.of(activo, pendiente, bloqueado));
 
         UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(
                 null, Rol.CLIENTE, null, 0, 10, ListarUsuariosQuery.Orden.ESTADO, true));

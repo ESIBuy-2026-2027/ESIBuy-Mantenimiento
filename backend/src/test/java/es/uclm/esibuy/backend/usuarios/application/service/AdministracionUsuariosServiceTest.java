@@ -2,7 +2,7 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
-import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.AutobloqueoNoPermitidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutoeliminacionNoPermitidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
@@ -261,16 +261,16 @@ class AdministracionUsuariosServiceTest {
     }
 
     @Test
-    @DisplayName("HU24-CP01: activar una cuenta desactivada la deja activa y la guarda")
-    void activaUnaCuentaDesactivadaYLaGuarda() {
-        Usuario desactivado = new Usuario("u-1", new DatosPersonales("Lucía", "Torres Vega", null),
+    @DisplayName("HU24-CP01: activar una cuenta bloqueada la deja activa y la guarda")
+    void activaUnaCuentaBloqueadaYLaGuarda() {
+        Usuario bloqueado = new Usuario("u-1", new DatosPersonales("Lucía", "Torres Vega", null),
                 new Email("lucia@uclm.es"), "hash-simulado", Rol.CLIENTE, new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1996, 5, 20), null), null);
-        desactivado.desactivar();
-        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(desactivado));
+        bloqueado.bloquear();
+        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(bloqueado));
 
         Usuario activado = servicio.activar("u-1");
 
-        assertSame(desactivado, activado);
+        assertSame(bloqueado, activado);
         assertTrue(activado.estaActivo());
         assertEquals("ACTIVO", activado.getEstado());
         verify(usuarioRepository).guardar(activado);
@@ -335,75 +335,75 @@ class AdministracionUsuariosServiceTest {
         assertThrows(UsuarioNoEncontradoException.class, () -> servicio.consultarVendedor("no-existe"));
     }
 
-    // Desactivar una cuenta de usuario (HU23, T37/T38/T39). El segundo parámetro es el email del
+    // Bloquear una cuenta de usuario (HU23, T37/T38/T39). El segundo parámetro es el email del
     // administrador que hace la petición: el usuario en sesión se identifica por su email (/api/auth/me).
     // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU23-CPnn, propuestos a partir del contrato del frontend
     // (frontend/docs/hu23-desactivar-usuario.md).
     private static final String EMAIL_ADMINISTRADOR = "admin@esibuy.test";
 
     @Test
-    @DisplayName("HU23-CP01: desactivar una cuenta activa la deja desactivada y la guarda")
-    void desactivaUnaCuentaActivaYLaGuarda() {
+    @DisplayName("HU23-CP01: bloquear una cuenta activa la deja bloqueada y la guarda")
+    void bloqueaUnaCuentaActivaYLaGuarda() {
         Usuario activo = cliente("u-2", "carlos@uclm.es");
         activo.activar();
         when(usuarioRepository.buscarPorId("u-2")).thenReturn(Optional.of(activo));
 
-        Usuario desactivado = servicio.desactivar("u-2", EMAIL_ADMINISTRADOR);
+        Usuario bloqueado = servicio.bloquear("u-2", EMAIL_ADMINISTRADOR);
 
-        assertSame(activo, desactivado);
-        assertEquals("BLOQUEADO", desactivado.getEstado());
-        verify(usuarioRepository).guardar(desactivado);
+        assertSame(activo, bloqueado);
+        assertEquals("BLOQUEADO", bloqueado.getEstado());
+        verify(usuarioRepository).guardar(bloqueado);
     }
 
     @Test
-    @DisplayName("HU23-CP02: desactivar un usuario que no existe falla y no guarda nada")
-    void rechazaDesactivarUnUsuarioQueNoExiste() {
+    @DisplayName("HU23-CP02: bloquear un usuario que no existe falla y no guarda nada")
+    void rechazaBloquearUnUsuarioQueNoExiste() {
         when(usuarioRepository.buscarPorId("no-existe")).thenReturn(Optional.empty());
 
-        assertThrows(UsuarioNoEncontradoException.class, () -> servicio.desactivar("no-existe", EMAIL_ADMINISTRADOR));
+        assertThrows(UsuarioNoEncontradoException.class, () -> servicio.bloquear("no-existe", EMAIL_ADMINISTRADOR));
         verify(usuarioRepository, never()).guardar(any());
     }
 
     @Test
-    @DisplayName("HU23-CP03: un administrador no puede desactivar su propia cuenta y no se guarda nada")
-    void rechazaQueUnAdministradorSeDesactiveASiMismo() {
+    @DisplayName("HU23-CP03: un administrador no puede bloquear su propia cuenta y no se guarda nada")
+    void rechazaQueUnAdministradorSeBloqueeASiMismo() {
         Usuario administrador = administrador("u-1", EMAIL_ADMINISTRADOR);
         administrador.activar();
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(administrador));
 
-        assertThrows(AutodesactivacionNoPermitidaException.class, () -> servicio.desactivar("u-1", EMAIL_ADMINISTRADOR));
+        assertThrows(AutobloqueoNoPermitidoException.class, () -> servicio.bloquear("u-1", EMAIL_ADMINISTRADOR));
         assertEquals("ACTIVO", administrador.getEstado());
         verify(usuarioRepository, never()).guardar(any());
     }
 
     @Test
-    @DisplayName("HU23-CP04: no se puede desactivar al último administrador activo y no se guarda nada")
-    void rechazaDesactivarAlUltimoAdministradorActivo() {
+    @DisplayName("HU23-CP04: no se puede bloquear al último administrador activo y no se guarda nada")
+    void rechazaBloquearAlUltimoAdministradorActivo() {
         Usuario ultimoAdministrador = administrador("u-3", "ana@esibuy.test");
         ultimoAdministrador.activar();
         when(usuarioRepository.buscarPorId("u-3")).thenReturn(Optional.of(ultimoAdministrador));
         when(usuarioRepository.contarAdministradoresActivos()).thenReturn(1L);
 
-        assertThrows(UltimoAdministradorActivoException.class, () -> servicio.desactivar("u-3", EMAIL_ADMINISTRADOR));
+        assertThrows(UltimoAdministradorActivoException.class, () -> servicio.bloquear("u-3", EMAIL_ADMINISTRADOR));
         assertEquals("ACTIVO", ultimoAdministrador.getEstado());
         verify(usuarioRepository, never()).guardar(any());
     }
 
     @Test
-    @DisplayName("HU23-CP05: se puede desactivar a un administrador activo si queda otro administrador activo")
-    void desactivaAUnAdministradorSiQuedaOtroActivo() {
+    @DisplayName("HU23-CP05: se puede bloquear a un administrador activo si queda otro administrador activo")
+    void bloqueaAUnAdministradorSiQuedaOtroActivo() {
         Usuario otroAdministrador = administrador("u-3", "ana@esibuy.test");
         otroAdministrador.activar();
         when(usuarioRepository.buscarPorId("u-3")).thenReturn(Optional.of(otroAdministrador));
         when(usuarioRepository.contarAdministradoresActivos()).thenReturn(2L);
 
-        Usuario desactivado = servicio.desactivar("u-3", EMAIL_ADMINISTRADOR);
+        Usuario bloqueado = servicio.bloquear("u-3", EMAIL_ADMINISTRADOR);
 
-        assertEquals("BLOQUEADO", desactivado.getEstado());
-        verify(usuarioRepository).guardar(desactivado);
+        assertEquals("BLOQUEADO", bloqueado.getEstado());
+        verify(usuarioRepository).guardar(bloqueado);
     }
 
-    // Activar y desactivar vendedores desde la supervisión (HU21, T47): PATCH /api/admin/sellers/{id}/status.
+    // Activar y bloquear vendedores desde la supervisión (HU21, T47): PATCH /api/admin/sellers/{id}/status.
     // Por la zona de vendedores solo se cambia el estado de un vendedor, como en consultarVendedor (HU26).
     // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU21-CP10 a CP12, propuestos.
 
@@ -421,17 +421,17 @@ class AdministracionUsuariosServiceTest {
     }
 
     @Test
-    @DisplayName("HU21-CP11: desactivar un vendedor activo lo deja desactivado y lo guarda")
-    void desactivarVendedorActivoLoDejaDesactivadoYLoGuarda() {
+    @DisplayName("HU21-CP11: bloquear un vendedor activo lo deja bloqueado y lo guarda")
+    void bloquearVendedorActivoLoDejaBloqueadoYLoGuarda() {
         Usuario activo = vendedorVera();
         activo.activar();
         when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(activo));
 
-        Usuario desactivado = servicio.desactivarVendedor("u-4");
+        Usuario bloqueado = servicio.bloquearVendedor("u-4");
 
-        assertSame(activo, desactivado);
-        assertEquals("BLOQUEADO", desactivado.getEstado());
-        verify(usuarioRepository).guardar(desactivado);
+        assertSame(activo, bloqueado);
+        assertEquals("BLOQUEADO", bloqueado.getEstado());
+        verify(usuarioRepository).guardar(bloqueado);
     }
 
     @Test
@@ -444,12 +444,12 @@ class AdministracionUsuariosServiceTest {
     }
 
     @Test
-    @DisplayName("HU21-CP12: desactivar a un usuario que no es vendedor falla como si no existiera y no guarda nada")
-    void desactivarVendedorDeOtroRolFalla() {
+    @DisplayName("HU21-CP12: bloquear a un usuario que no es vendedor falla como si no existiera y no guarda nada")
+    void bloquearVendedorDeOtroRolFalla() {
         when(usuarioRepository.buscarPorId("u-3"))
                 .thenReturn(Optional.of(administrador("u-3", "otro@esibuy.test")));
 
-        assertThrows(UsuarioNoEncontradoException.class, () -> servicio.desactivarVendedor("u-3"));
+        assertThrows(UsuarioNoEncontradoException.class, () -> servicio.bloquearVendedor("u-3"));
         verify(usuarioRepository, never()).guardar(any());
     }
 

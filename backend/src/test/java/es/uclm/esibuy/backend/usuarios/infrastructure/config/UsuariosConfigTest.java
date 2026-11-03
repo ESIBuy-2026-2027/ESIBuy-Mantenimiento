@@ -76,7 +76,7 @@ class UsuariosConfigTest {
     }
 
     @Test
-    @DisplayName("Configuración: el contexto registra el filtro que invalida la sesión de las cuentas desactivadas")
+    @DisplayName("Configuración: el contexto registra el filtro que invalida la sesión de las cuentas bloqueadas")
     void elContextoRegistraElFiltroDeCuentaActiva() {
         // HU23, T206: como bean de Spring, Spring Boot lo añade a los filtros de cada petición
         assertNotNull(contexto.getBean(CuentaActivaFilter.class));

@@ -99,9 +99,9 @@ class SeguridadAdministracionUsuariosServiceTest {
                 () -> assertThrows(AccessDeniedException.class, () -> administracionUsuarios.consultar("u-1")),
                 () -> assertThrows(AccessDeniedException.class, () -> administracionUsuarios.consultarVendedor("u-1")),
                 () -> assertThrows(AccessDeniedException.class, () -> administracionUsuarios.editar("u-1", EDICION)),
-                () -> assertThrows(AccessDeniedException.class, () -> administracionUsuarios.desactivar("u-1", email)),
+                () -> assertThrows(AccessDeniedException.class, () -> administracionUsuarios.bloquear("u-1", email)),
                 () -> assertThrows(AccessDeniedException.class, () -> administracionUsuarios.activarVendedor("u-1")),
-                () -> assertThrows(AccessDeniedException.class, () -> administracionUsuarios.desactivarVendedor("u-1")),
+                () -> assertThrows(AccessDeniedException.class, () -> administracionUsuarios.bloquearVendedor("u-1")),
                 () -> assertThrows(AccessDeniedException.class,
                         () -> administracionUsuarios.eliminarAdministrador("u-1", email)),
                 () -> assertThrows(AccessDeniedException.class, () -> listadoUsuarios.listar(CONSULTA)),
@@ -130,11 +130,11 @@ class SeguridadAdministracionUsuariosServiceTest {
 
     @Test
     @WithMockUser(username = ADMIN, roles = "ADMINISTRADOR")
-    @DisplayName("HU20-CP07: un administrador no desactiva ni elimina con el correo de otro administrador")
+    @DisplayName("HU20-CP07: un administrador no bloquea ni elimina con el correo de otro administrador")
     void unAdministradorNoOperaConElCorreoDeOtro() {
         assertAll(
                 () -> assertThrows(AccessDeniedException.class,
-                        () -> administracionUsuarios.desactivar("u-1", OTRO_ADMIN)),
+                        () -> administracionUsuarios.bloquear("u-1", OTRO_ADMIN)),
                 () -> assertThrows(AccessDeniedException.class,
                         () -> administracionUsuarios.eliminarAdministrador("u-1", OTRO_ADMIN)));
         verifyNoInteractions(usuarioRepository);
@@ -147,7 +147,7 @@ class SeguridadAdministracionUsuariosServiceTest {
         assertAll(
                 () -> assertThrows(UsuarioNoEncontradoException.class, () -> administracionUsuarios.consultar("u-1")),
                 () -> assertThrows(UsuarioNoEncontradoException.class,
-                        () -> administracionUsuarios.desactivar("u-1", ADMIN)),
+                        () -> administracionUsuarios.bloquear("u-1", ADMIN)),
                 () -> assertThrows(UsuarioNoEncontradoException.class,
                         () -> administracionUsuarios.eliminarAdministrador("u-1", ADMIN)),
                 () -> assertDoesNotThrow(() -> listadoUsuarios.listar(CONSULTA)));

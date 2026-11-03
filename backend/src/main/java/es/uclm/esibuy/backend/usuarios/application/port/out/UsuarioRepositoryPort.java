@@ -32,7 +32,7 @@ public interface UsuarioRepositoryPort {
     // Busca un usuario por su id (p. ej. para activar su cuenta, HU24). Vacío si no existe.
     Optional<Usuario> buscarPorId(String id);
 
-    // Cuenta los administradores en estado ACTIVO (p. ej. para no desactivar al último, HU23).
+    // Cuenta los administradores en estado ACTIVO (p. ej. para no bloquear al último, HU23).
     long contarAdministradoresActivos();
 
     UsuarioPage listar(ListarUsuariosQuery query);

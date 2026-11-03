@@ -101,10 +101,10 @@ Todas las rutas son relativas a `frontend/src/`.
 
 | Respuesta | Significado para el frontend |
 |---|---|
-| 200 + datos del usuario | Cuenta desactivada |
-| 409 + `{ "code": "CANNOT_DEACTIVATE_SELF" }` | "No puedes desactivar tu propia cuenta." |
-| 409 + `{ "code": "LAST_ACTIVE_ADMIN" }` | "No se puede desactivar al último administrador activo." |
-| 400 | Estado no admitido (solo `ACTIVO` o `DESACTIVADO`) |
+| 200 + datos del usuario | Cuenta bloqueada |
+| 409 + `{ "code": "CANNOT_BLOCK_SELF" }` | "No puedes bloquear tu propia cuenta." (antes `CANNOT_DEACTIVATE_SELF`, AB#252) |
+| 409 + `{ "code": "LAST_ACTIVE_ADMIN" }` | "No se puede bloquear al último administrador activo." |
+| 400 | Estado no admitido (solo `ACTIVO` o `BLOQUEADO`) |
 | 401 / 403 / 404 / 5xx | Mensaje de error genérico; el estado no cambia |
 
 Los vendedores se desactivan con su propio endpoint, `PATCH /api/admin/sellers/{id}/status` (HU21).
