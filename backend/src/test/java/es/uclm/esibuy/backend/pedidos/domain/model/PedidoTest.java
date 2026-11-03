@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -75,5 +76,37 @@ class PedidoTest {
     void unProductoSoloApareceEnUnaLinea() {
         assertThrows(PedidoInvalidoException.class,
                 () -> pedidoCon(List.of(linea("p-1", 1, "10.00"), linea("p-1", 2, "10.00"))));
+    }
+
+    // --- Cancelación (HU12) ------------------------------------------------------------------------------------
+    // Criterio de aceptación: solo se cancela si el pedido aún no se ha enviado.
+    // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU12-CP01 y CP02, propuestos.
+
+    private static Pedido pedidoEn(EstadoPedido estado) {
+        return new Pedido("o-1", NUMERO, "c-1", "u-2", "TecnoVera", estado, List.of(linea("p-1", 1, "10.00")),
+                DIRECCION, "mp-1", AHORA);
+    }
+
+    @Test
+    @DisplayName("HU12-CP01: un pedido pagado o en preparación, que aún no se ha enviado, se puede cancelar")
+    void unPedidoNoEnviadoSeCancela() {
+        for (EstadoPedido estado : List.of(EstadoPedido.PAGADO, EstadoPedido.PREPARANDO)) {
+            Pedido pedido = pedidoEn(estado);
+
+            pedido.cancelar();
+
+            assertEquals(EstadoPedido.CANCELADO, pedido.getEstado());
+        }
+    }
+
+    @Test
+    @DisplayName("HU12-CP02: un pedido enviado, entregado o ya cancelado no se puede cancelar y no cambia")
+    void unPedidoEnviadoEntregadoOCanceladoNoSeCancela() {
+        for (EstadoPedido estado : List.of(EstadoPedido.ENVIADO, EstadoPedido.ENTREGADO, EstadoPedido.CANCELADO)) {
+            Pedido pedido = pedidoEn(estado);
+
+            assertThrows(PedidoNoCancelableException.class, pedido::cancelar);
+            assertEquals(estado, pedido.getEstado());
+        }
     }
 }
