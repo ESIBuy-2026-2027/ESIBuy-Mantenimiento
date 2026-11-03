@@ -7,6 +7,7 @@ import {
   Payment20Regular,
   Person20Regular,
   PersonAdd20Regular,
+  Receipt20Regular,
 } from '@fluentui/react-icons'
 import { Link, useNavigate } from 'react-router-dom'
 import { ROLES } from '../auth/roles'
@@ -68,6 +69,12 @@ function UserActions({ rol, onSignOut, disabled }) {
       {rol === ROLES.VENDEDOR && (
         <LinkButton to={PATHS.SELLER_PRODUCTS} appearance="subtle">
           Mis productos
+        </LinkButton>
+      )}
+      {/* El historial de pedidos (HU11) es solo del cliente */}
+      {rol === ROLES.CLIENTE && (
+        <LinkButton to={PATHS.ORDERS} appearance="subtle" icon={<Receipt20Regular />}>
+          Mis pedidos
         </LinkButton>
       )}
       {/* Los métodos de pago (HU6) son solo del cliente */}

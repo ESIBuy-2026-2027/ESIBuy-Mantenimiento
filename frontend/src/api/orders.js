@@ -11,3 +11,16 @@ import { request } from './client'
 export function createOrder(vendorId, paymentMethodId) {
   return request('/api/orders', { method: 'POST', body: { vendedorId: vendorId, paymentMethodId } })
 }
+
+// Historial y detalle de los pedidos del cliente en sesión (HU11; backend en T377, PR #186). El historial llega del
+// más reciente al más antiguo, cada pedido con el mismo formato que el detalle:
+//   { id, numeroPedido, vendedor: { id, nombreComercial }, total, estado, paymentMethodId, direccionEnvio,
+//     lineas: [{ productoId, nombre, cantidad, precioUnitario, subtotal }], createdAt }
+// El detalle responde 400 con `code: ORDER_NOT_FOUND` si el pedido no existe o es de otro cliente.
+export function getOrders() {
+  return request('/api/customer/orders')
+}
+
+export function getOrder(orderId) {
+  return request(`/api/customer/orders/${encodeURIComponent(orderId)}`)
+}

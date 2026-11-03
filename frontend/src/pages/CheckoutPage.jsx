@@ -358,6 +358,11 @@ export default function CheckoutPage() {
             <LinkButton to={PATHS.PRODUCTS} appearance={failures.length > 0 ? 'secondary' : 'primary'}>
               Seguir comprando
             </LinkButton>
+            {orders.length > 0 && (
+              <LinkButton to={PATHS.ORDERS} appearance="secondary">
+                Ver mis pedidos
+              </LinkButton>
+            )}
           </div>
         </div>
       </main>
