@@ -6,6 +6,7 @@ import { formatRating } from '../../utils/format'
 import AddToCartButton from '../cart/AddToCartButton'
 import QuantityStepper from '../cart/QuantityStepper'
 import { productDetailPropType, reviewPropType } from '../../utils/propTypes'
+import ReviewForm from '../reviews/ReviewForm'
 import ReviewList from '../reviews/ReviewList'
 import { reviewSummary } from '../reviews/reviewSummary'
 import PriceBlock from './PriceBlock'
@@ -311,6 +312,7 @@ export default function ProductDetail({ product, categoryName, reviews = null, r
               </div>
             </div>
           )}
+          <ReviewForm productId={product.id} onCreated={onRetryReviews} />
           <ReviewList reviews={reviews} failed={reviewsFailed} onRetry={onRetryReviews} />
         </section>
       </div>

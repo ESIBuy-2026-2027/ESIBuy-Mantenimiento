@@ -35,6 +35,13 @@ export function getProductReviews(productId) {
   return request(`/api/products/${encodeURIComponent(productId)}/valoraciones`)
 }
 
+// Valora un producto comprado (HU13; backend en T370, PR #179) con { puntuacion (1 a 5), comentario (hasta 500) }.
+// Responde 201 con la valoración; 400 VALIDATION_ERROR si los datos no son válidos, 403 PRODUCT_NOT_PURCHASED si el
+// cliente no lo ha comprado y 409 REVIEW_ALREADY_EXISTS si ya lo valoró.
+export function createProductReview(productId, review) {
+  return request(`/api/products/${encodeURIComponent(productId)}/valoraciones`, { method: 'POST', body: review })
+}
+
 // Activa o desactiva un producto propio (HU16; backend en T282 y T283). Responde con el producto actualizado
 // y 404 si el producto no existe o es de otro vendedor.
 export function updateSellerProductAvailability(productId, disponible) {
