@@ -97,7 +97,23 @@ class CatalogoProductosServiceTest {
 
         assertEquals(new DetalleProductoCatalogo("p-1", "Teclado", "Con cable", "https://esibuy.test/teclado.png",
                 "cat-1", "u-2", "TecnoVera", new BigDecimal("50.00"), new BigDecimal("10"), new BigDecimal("45.00"), 7,
-                true), detalle);
+                true, null, 0), detalle);
+    }
+
+    @Test
+    @DisplayName("HU13-CP26: el detalle de un producto lleva su media y su número de valoraciones")
+    void elDetalleLlevaSuMediaYSuNumeroDeValoraciones() {
+        Producto valorado = new Producto("p-1", "u-2", "Teclado", "Con cable", new BigDecimal("50.00"), 7, "cat-1",
+                "https://esibuy.test/teclado.png", true, Descuento.sinDescuento(), Descuento.sinDescuento(), 4.5, 2);
+        when(productoRepository.buscarPorId("p-1")).thenReturn(Optional.of(valorado));
+        when(vendedorPort.nombreComercial("u-2")).thenReturn("TecnoVera");
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort,
+                usuarioEnSesion);
+
+        DetalleProductoCatalogo detalle = servicio.consultarDetalle("p-1", "cliente@esibuy.test");
+
+        assertEquals(4.5, detalle.valoracion());
+        assertEquals(2, detalle.numValoraciones());
     }
 
     @Test

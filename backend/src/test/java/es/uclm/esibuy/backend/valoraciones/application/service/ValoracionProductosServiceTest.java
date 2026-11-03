@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import es.uclm.esibuy.backend.valoraciones.application.port.in.ValorarProductoCommand;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ComprasPort;
+import es.uclm.esibuy.backend.valoraciones.application.port.out.ProductosPort;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ValoracionRepositoryPort;
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ProductoNoCompradoException;
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionDuplicadaException;
@@ -20,15 +21,16 @@ import org.junit.jupiter.api.Test;
 
 // Valoración de un producto por el cliente (HU13, T370). Sin Spring: los puertos de salida se sustituyen por
 // dobles de prueba (clases internas de este test).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP09 a CP11, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP09 a CP11 y CP28, propuestos.
 class ValoracionProductosServiceTest {
 
     private static final String EMAIL = "cliente@esibuy.test";
 
     private final ValoracionesEnMemoria valoraciones = new ValoracionesEnMemoria();
     private final ComprasFijas compras = new ComprasFijas();
+    private final ProductosAnotados productos = new ProductosAnotados();
     private final ValoracionProductosService servicio = new ValoracionProductosService(valoraciones,
-            new ClienteFijo(), compras);
+            new ClienteFijo(), compras, productos);
 
     ValoracionProductosServiceTest() {
         // El cliente ha comprado p-1
@@ -72,6 +74,42 @@ class ValoracionProductosServiceTest {
     }
 
     // El correo de la sesión corresponde al cliente c-1
+    // Media y número de valoraciones del producto (HU13, T415): se calculan con todas sus valoraciones, la nueva
+    // incluida, y se le pasan al módulo de productos.
+    @Test
+    @DisplayName("HU13-CP28: al valorar, el producto recibe la media y el número de todas sus valoraciones")
+    void alValorarElProductoRecibeLaMediaYElNumero() {
+        valoraciones.guardadas.add(new Valoracion("v-a", "p-1", "c-2", 5, ""));
+        valoraciones.guardadas.add(new Valoracion("v-b", "p-1", "c-3", 4, ""));
+        valoraciones.guardadas.add(new Valoracion("v-c", "p-9", "c-2", 1, ""));   // de otro producto: no cuenta
+
+        valorar("p-1", 3, "Normal");
+
+        // (5 + 4 + 3) / 3 = 4,0 con 3 valoraciones
+        assertEquals(List.of(new Actualizacion("p-1", 4.0, 3)), productos.actualizaciones);
+    }
+
+    @Test
+    @DisplayName("HU13-CP28: si la valoración no se guarda, el producto no cambia")
+    void siLaValoracionNoSeGuardaElProductoNoCambia() {
+        assertThrows(ProductoNoCompradoException.class, () -> valorar("p-2", 4, null));
+
+        assertTrue(productos.actualizaciones.isEmpty());
+    }
+
+    private record Actualizacion(String productoId, double media, int numero) {
+    }
+
+    // Anota lo que se le pasa al módulo de productos
+    private static final class ProductosAnotados implements ProductosPort {
+        private final List<Actualizacion> actualizaciones = new ArrayList<>();
+
+        @Override
+        public void actualizarValoracion(String productoId, double media, int numero) {
+            actualizaciones.add(new Actualizacion(productoId, media, numero));
+        }
+    }
+
     private static final class ClienteFijo implements ClienteEnSesionPort {
         @Override
         public String idPorCorreo(String email) {

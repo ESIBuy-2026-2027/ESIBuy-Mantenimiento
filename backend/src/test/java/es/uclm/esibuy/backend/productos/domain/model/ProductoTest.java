@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 import org.junit.jupiter.api.DisplayName;
@@ -247,5 +248,27 @@ class ProductoTest {
 
         assertEquals(premium, productoConDescuentos(general, premium).descuentoAplicado(true));
         assertEquals(general, productoConDescuentos(general, Descuento.sinDescuento()).descuentoAplicado(true));
+    }
+
+    // Media y número de valoraciones (HU13, T415): los calcula el módulo de valoraciones; el producto solo los lleva.
+    @Test
+    @DisplayName("HU13-CP25: un producto sin valoraciones no tiene media y tiene 0 valoraciones")
+    void unProductoSinValoracionesNoTieneMedia() {
+        Producto producto = productoConImagen("");
+
+        assertNull(producto.getValoracionMedia());
+        assertEquals(0, producto.getNumeroValoraciones());
+    }
+
+    @Test
+    @DisplayName("HU13-CP25: activar, desactivar o quitar la imagen conserva la media y el número de valoraciones")
+    void lasCopiasConservanLaMediaYElNumero() {
+        Producto valorado = new Producto("p-1", "v-1", "Teclado", "", new BigDecimal("10"), 3, "cat-1",
+                "https://esibuy.test/t.png", true, Descuento.sinDescuento(), Descuento.sinDescuento(), 4.5, 2);
+
+        for (Producto copia : List.of(valorado.conDisponibilidad(false), valorado.sinImagen())) {
+            assertEquals(4.5, copia.getValoracionMedia());
+            assertEquals(2, copia.getNumeroValoraciones());
+        }
     }
 }

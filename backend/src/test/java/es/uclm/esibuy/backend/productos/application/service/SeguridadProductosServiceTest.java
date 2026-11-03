@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -24,6 +25,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUse
 import es.uclm.esibuy.backend.productos.application.port.in.ConteoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.in.ExistenciasProductosUseCase;
+import es.uclm.esibuy.backend.productos.application.port.in.ValoracionesProductoUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
@@ -100,6 +102,11 @@ class SeguridadProductosServiceTest {
         ExistenciasProductosUseCase existencias(ProductoRepositoryPort repositorio) {
             return new ExistenciasProductosService(repositorio);
         }
+
+        @Bean
+        ValoracionesProductoUseCase valoraciones(ProductoRepositoryPort repositorio) {
+            return new ValoracionesProductoService(repositorio);
+        }
     }
 
     @Autowired
@@ -116,6 +123,8 @@ class SeguridadProductosServiceTest {
     private CatalogoProductosUseCase catalogo;
     @Autowired
     private ExistenciasProductosUseCase existencias;
+    @Autowired
+    private ValoracionesProductoUseCase valoraciones;
 
     @BeforeEach
     void limpiarDobles() {
@@ -213,6 +222,40 @@ class SeguridadProductosServiceTest {
                 () -> assertThrows(AuthenticationCredentialsNotFoundException.class,
                         () -> catalogo.consultarComprable("p-1", false)),
                 () -> assertThrows(AuthenticationCredentialsNotFoundException.class, () -> conteo.contarPorCategoria()));
+    }
+
+    // La valoración del producto (HU13, T415) la actualiza el módulo de valoraciones mientras el cliente valora
+    @Test
+    @WithMockUser(username = "cliente@esibuy.test", roles = "CLIENTE")
+    @DisplayName("HU13-CP27: al valorar, el cliente actualiza la media y el número de valoraciones del producto")
+    void unClienteActualizaLaValoracionDelProducto() {
+        valoraciones.actualizarValoracion("p-1", 4.5, 2);
+
+        verify(productoRepository).actualizarValoracion("p-1", 4.5, 2);
+    }
+
+    @Test
+    @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
+    @DisplayName("HU13-CP27: un vendedor no puede cambiar la valoración de un producto")
+    void unVendedorNoCambiaLaValoracion() {
+        assertThrows(AccessDeniedException.class, () -> valoraciones.actualizarValoracion("p-1", 5.0, 1));
+        verifyNoInteractions(productoRepository);
+    }
+
+    @Test
+    @WithMockUser(username = "admin@esibuy.test", roles = "ADMINISTRADOR")
+    @DisplayName("HU13-CP27: un administrador no puede cambiar la valoración de un producto")
+    void unAdministradorNoCambiaLaValoracion() {
+        assertThrows(AccessDeniedException.class, () -> valoraciones.actualizarValoracion("p-1", 5.0, 1));
+        verifyNoInteractions(productoRepository);
+    }
+
+    @Test
+    @DisplayName("HU13-CP27: sin sesión no se puede cambiar la valoración de un producto")
+    void sinSesionNoSeCambiaLaValoracion() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> valoraciones.actualizarValoracion("p-1", 5.0, 1));
+        verifyNoInteractions(productoRepository);
     }
 
     @Test

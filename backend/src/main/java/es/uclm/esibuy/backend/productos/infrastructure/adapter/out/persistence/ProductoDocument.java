@@ -30,6 +30,9 @@ public class ProductoDocument {
     private boolean disponible;
     private DescuentoDocument descuento;
     private DescuentoDocument descuentoPremium;
+    // HU13: no existen hasta la primera valoración del producto
+    private Double valoracionMedia;
+    private Integer numeroValoraciones;
 
     @CreatedDate
     private Instant createdAt;
@@ -59,6 +62,10 @@ public class ProductoDocument {
     public void setDescuento(DescuentoDocument descuento) { this.descuento = descuento; }
     public DescuentoDocument getDescuentoPremium() { return descuentoPremium; }
     public void setDescuentoPremium(DescuentoDocument descuentoPremium) { this.descuentoPremium = descuentoPremium; }
+    public Double getValoracionMedia() { return valoracionMedia; }
+    public void setValoracionMedia(Double valoracionMedia) { this.valoracionMedia = valoracionMedia; }
+    public Integer getNumeroValoraciones() { return numeroValoraciones; }
+    public void setNumeroValoraciones(Integer numeroValoraciones) { this.numeroValoraciones = numeroValoraciones; }
     public Instant getCreatedAt() { return createdAt; }
     // Al actualizar se conserva la fecha de creación del documento guardado (como en FactorAutenticacion)
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
