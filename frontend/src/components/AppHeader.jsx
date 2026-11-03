@@ -10,7 +10,7 @@ import {
   Receipt20Regular,
 } from '@fluentui/react-icons'
 import { Link, useNavigate } from 'react-router-dom'
-import { ROLES } from '../auth/roles'
+import { ROLES, getHomePath } from '../auth/roles'
 import { useAuth } from '../auth/useAuth'
 import { PATHS } from '../routes/paths'
 import LinkButton from './LinkButton'
@@ -118,7 +118,8 @@ export default function AppHeader() {
 
   return (
     <header className={styles.header}>
-      <Link to={PATHS.HOME} className={styles.logo}>
+      {/* Con sesión, el logotipo lleva al inicio del rol (el mismo que tras el login); sin sesión, a la home (HU30) */}
+      <Link to={user ? getHomePath(user.rol) : PATHS.HOME} className={styles.logo}>
         ESI<span className={styles.logoAccent}>Buy</span>
       </Link>
       <nav className={styles.actions} aria-label="Cuenta">
