@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import es.uclm.esibuy.backend.deseos.application.port.in.GestionListaDeseosUseCase;
 
 /**
@@ -23,7 +25,7 @@ public class ListaDeseosController {
     }
 
     @PostMapping("/items")
-    public ListaDeseosResponse anadir(@RequestBody AnadirDeseoRequest request, Authentication autenticado) {
+    public ListaDeseosResponse anadir(@Valid @RequestBody AnadirDeseoRequest request, Authentication autenticado) {
         return ListaDeseosResponse.desde(gestionListaDeseos.anadir(autenticado.getName(), request.productoId()));
     }
 }
