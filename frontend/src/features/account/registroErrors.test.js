@@ -22,7 +22,7 @@ describe('erroresDelServidor', () => {
   })
 
   it('HU1-CP23: un code sin campo o desconocido da el mensaje general', () => {
-    expect(erroresDelServidor(new ApiError(400, 'Datos de registro no válidos', 'INVALID_FIELD')))
+    expect(erroresDelServidor(new ApiError(400, 'Datos de registro no válidos', 'VALIDATION_ERROR')))
       .toEqual({ general: 'Revisa los datos del formulario' })
     expect(erroresDelServidor(new ApiError(400, 'Datos de registro no válidos', 'OTRO_CODE')))
       .toEqual({ general: 'Revisa los datos del formulario' })
