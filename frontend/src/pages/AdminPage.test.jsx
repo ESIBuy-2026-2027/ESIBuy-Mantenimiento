@@ -49,6 +49,25 @@ describe('AdminPage (HU18)', () => {
 
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/admin\/admins$/))
   })
+
+  it('HU39-CP15: el panel tiene la tarjeta Categorías, con su descripción', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/admin')
+
+    const tarjeta = await screen.findByRole('button', { name: /categorías/i })
+    expect(tarjeta).toHaveTextContent('Consulta las categorías de productos y cuántos productos tiene cada una.')
+  })
+
+  it('HU39-CP15: la tarjeta Categorías lleva al listado de categorías', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/admin')
+
+    await user.click(await screen.findByRole('button', { name: /categorías/i }))
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/admin\/categories$/))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Categorías' })).toBeInTheDocument()
+  })
 
   it('adminPage_sinSesion_redirigeAlLogin', async () => {
     renderApp('/admin')

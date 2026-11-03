@@ -3,7 +3,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
-import { abrirSesionPorApi } from '../test/renderApp'
+import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 import { renderWithProviders } from '../test/utils'
 import AdminCategoriesPage from './AdminCategoriesPage'
 
@@ -209,5 +209,40 @@ describe('AdminCategoriesPage (HU39): búsqueda, estado y orden', () => {
     expect(await screen.findByRole('table')).toBeInTheDocument()
     expect(filasDeDatos()).toHaveLength(8)
     expect(screen.getByLabelText('Ordenar por')).toHaveValue('products')
+  })
+})
+
+describe('AdminCategoriesPage (HU39): acceso', () => {
+  it('HU39-CP15: Volver al panel regresa al panel de control', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/admin/categories')
+    await screen.findByRole('table')
+
+    await user.click(screen.getByRole('link', { name: /volver al panel/i }))
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/admin$/))
+  })
+
+  it('HU39-CP16: sin sesión redirige al login', async () => {
+    renderApp('/admin/categories')
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/))
+  })
+
+  it('HU39-CP16: un vendedor no ve el listado y va a su zona', async () => {
+    await abrirSesionPorApi('vendedor@esibuy.test')
+    renderApp('/admin/categories')
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/seller\/products$/))
+    expect(screen.queryByRole('heading', { name: 'Categorías' })).not.toBeInTheDocument()
+  })
+
+  it('HU39-CP16: un cliente no ve el listado y va a su zona', async () => {
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/admin/categories')
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/))
+    expect(screen.queryByRole('heading', { name: 'Categorías' })).not.toBeInTheDocument()
   })
 })
