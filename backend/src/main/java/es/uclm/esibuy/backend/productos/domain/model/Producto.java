@@ -175,6 +175,15 @@ public class Producto {
     }
 
     /**
+     * Copia del producto sin imagen y con el resto de datos iguales (HU31, T397): se usa cuando el antivirus no ha
+     * podido analizar la imagen.
+     */
+    public Producto sinImagen() {
+        return new Producto(id, vendedorId, nombre, descripcion, precio, stock, categoriaId, "", disponible,
+                descuento, descuentoPremium);
+    }
+
+    /**
      * Precio que paga el cliente (HU9): con el descuento premium si el cliente es premium y lo tiene activo;
      * si no, con el general. Se redondea a céntimos, la mitad hacia arriba.
      */

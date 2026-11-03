@@ -5,6 +5,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseC
 import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
 import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
+import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
@@ -58,7 +59,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // de un producto propio (HU16, T282 y T283): PATCH /api/seller/products/{id}/availability.
 // Los casos de uso son dobles de prueba; la seguridad es la real
 // (SecurityConfig: /api/seller/** solo para VENDEDOR, con CSRF).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU32-CP01 a CP05 y HU31-CP17 a CP22, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU32-CP01 a CP05, HU31-CP17 a CP22, HU31-CP34 y HU34-CP20, propuestos.
 @WebMvcTest(ProductoController.class)
 @Import({SecurityConfig.class, JacksonConfig.class})
 class ProductoControllerTest {
@@ -286,6 +287,18 @@ class ProductoControllerTest {
                 .andExpect(jsonPath("$.code").value("PRODUCT_NAME_ALREADY_EXISTS"));
     }
 
+    @Test
+    @DisplayName("HU31-CP34: una imagen que no supera el antivirus devuelve 400 con el código IMAGE_NOT_SAFE")
+    void imagenNoSeguraDevuelve400() throws Exception {
+        when(gestionProductos.crear(any())).thenThrow(new ImagenNoSeguraException());
+
+        mockMvc.perform(post(URL).with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("IMAGE_NOT_SAFE"))
+                .andExpect(jsonPath("$.mensaje").value("La imagen no ha superado el análisis antivirus"));
+    }
+
     // ---- Consulta de un producto propio (HU33) ----
 
     @Test
@@ -409,6 +422,17 @@ class ProductoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("PRODUCT_NAME_ALREADY_EXISTS"));
+    }
+
+    @Test
+    @DisplayName("HU34-CP20: cambiar la imagen por una que no supera el antivirus devuelve 400 con el código IMAGE_NOT_SAFE")
+    void imagenNoSeguraAlModificarDevuelve400() throws Exception {
+        when(gestionProductos.modificarMiProducto(any())).thenThrow(new ImagenNoSeguraException());
+
+        mockMvc.perform(put(URL + "/p-9").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpoValido()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("IMAGE_NOT_SAFE"));
     }
 
     @Test
