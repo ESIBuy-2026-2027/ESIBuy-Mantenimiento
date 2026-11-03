@@ -105,7 +105,10 @@ public class GestionProductosService implements GestionProductosUseCase {
                 && productoRepository.existePorVendedorYNombre(modificado.getVendedorId(), modificado.getNombre())) {
             throw new ProductoDuplicadoException();
         }
-        return productoRepository.guardar(modificado);
+        // La imagen solo se analiza si cambia: la que ya estaba guardada pasó el antivirus al guardarla (decisión del
+        // equipo, para no gastar la cuota de VirusTotal en cada modificación)
+        boolean cambiaLaImagen = !modificado.getImagen().equals(actual.getImagen());
+        return productoRepository.guardar(cambiaLaImagen ? conImagenAnalizada(modificado) : modificado);
     }
 
     @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO)
