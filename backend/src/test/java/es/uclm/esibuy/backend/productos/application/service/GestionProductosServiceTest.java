@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
 // prueba (Mockito): se prueba el caso de uso sin MongoDB ni Spring. El antivirus de las imágenes (HU31, T397) también
 // es un doble: por defecto da la imagen por segura.
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP13 a CP16, propuestos a partir del contrato del frontend, y
-// HU31-CP32, propuesto.
+// HU31-CP32 y CP33, propuestos.
 @ExtendWith(MockitoExtension.class)
 class GestionProductosServiceTest {
 
@@ -137,6 +137,43 @@ class GestionProductosServiceTest {
         assertThrows(ImagenNoSeguraException.class, () -> servicio.crear(comando));
 
         verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU31-CP33: si el antivirus no da resultado, el producto se guarda sin imagen")
+    void sinResultadoDelAntivirusSeGuardaSinImagen() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(analisisImagen.analizar("https://esibuy.test/teclado.png")).thenReturn(ResultadoAnalisis.SIN_RESULTADO);
+        when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        servicio.crear(comando(new BigDecimal("89.50"), 12, "cat-1"));
+
+        assertEquals("", productoGuardado().getImagen());
+    }
+
+    @Test
+    @DisplayName("HU31-CP33: si el antivirus da la imagen por segura, el producto se guarda con ella")
+    void unaImagenSeguraSeGuardaConElProducto() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(analisisImagen.analizar("https://esibuy.test/teclado.png")).thenReturn(ResultadoAnalisis.SEGURA);
+        when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        servicio.crear(comando(new BigDecimal("89.50"), 12, "cat-1"));
+
+        assertEquals("https://esibuy.test/teclado.png", productoGuardado().getImagen());
+    }
+
+    @Test
+    @DisplayName("HU31-CP33: un producto sin imagen no se envía al antivirus")
+    void unProductoSinImagenNoSeAnaliza() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        servicio.crear(new CrearProductoCommand(CORREO, "Teclado mecánico", "Con cable", new BigDecimal("89.50"),
+                12, "cat-1", null, true, Descuento.sinDescuento(), Descuento.sinDescuento()));
+
+        verify(analisisImagen, never()).analizar(any());
+        assertEquals("", productoGuardado().getImagen());
     }
 
     @Test
@@ -361,6 +398,12 @@ class GestionProductosServiceTest {
                 () -> servicio.cambiarDisponibilidadMiProducto(CORREO, "p-9", false));
 
         verify(productoRepository, never()).guardar(any());
+    }
+
+    private Producto productoGuardado() {
+        ArgumentCaptor<Producto> captor = ArgumentCaptor.forClass(Producto.class);
+        verify(productoRepository).guardar(captor.capture());
+        return captor.getValue();
     }
 
     private static Producto producto(String id, String vendedorId) {
