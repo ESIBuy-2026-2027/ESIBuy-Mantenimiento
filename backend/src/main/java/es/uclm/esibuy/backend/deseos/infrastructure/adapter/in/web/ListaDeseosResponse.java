@@ -12,6 +12,8 @@ public record ListaDeseosResponse(List<Item> items) {
     }
 
     public static ListaDeseosResponse desde(ListaDeseos lista) {
-        return new ListaDeseosResponse(List.of());
+        return new ListaDeseosResponse(lista.getItems().stream()
+                .map(item -> new Item(item.productoId(), item.addedAt()))
+                .toList());
     }
 }

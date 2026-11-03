@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import es.uclm.esibuy.backend.deseos.application.port.in.GestionListaDeseosUseCase;
-import es.uclm.esibuy.backend.deseos.domain.model.ListaDeseos;
 
 /**
  * Adaptador de entrada web de la lista de deseos (HU14). Recibe la petición y delega en el puerto de entrada. El
@@ -25,6 +24,6 @@ public class ListaDeseosController {
 
     @PostMapping("/items")
     public ListaDeseosResponse anadir(@RequestBody AnadirDeseoRequest request, Authentication autenticado) {
-        return ListaDeseosResponse.desde(ListaDeseos.vacia(autenticado.getName()));
+        return ListaDeseosResponse.desde(gestionListaDeseos.anadir(autenticado.getName(), request.productoId()));
     }
 }
