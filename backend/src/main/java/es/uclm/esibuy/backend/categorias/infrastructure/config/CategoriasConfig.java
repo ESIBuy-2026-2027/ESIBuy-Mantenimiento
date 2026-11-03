@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import es.uclm.esibuy.backend.categorias.application.port.in.AdministracionCategoriasUseCase;
 import es.uclm.esibuy.backend.categorias.application.port.in.ConsultaCategoriasUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ConteoProductosUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
 import es.uclm.esibuy.backend.categorias.application.port.out.ProductosPorCategoriaPort;
 import es.uclm.esibuy.backend.categorias.application.port.out.VendedoresPorCategoriaPort;
@@ -42,8 +43,8 @@ public class CategoriasConfig {
     }
 
     @Bean
-    VendedoresPorCategoriaPort vendedoresPorCategoriaPort() {
-        return new VendedoresPorCategoriaAdapter();
+    VendedoresPorCategoriaPort vendedoresPorCategoriaPort(AdministracionUsuariosUseCase administracionUsuariosUseCase) {
+        return new VendedoresPorCategoriaAdapter(administracionUsuariosUseCase);
     }
 
     @Bean
