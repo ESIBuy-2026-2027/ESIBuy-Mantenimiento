@@ -51,16 +51,23 @@ public class GestionProductosService implements GestionProductosUseCase {
         if (productoRepository.existePorVendedorYNombre(vendedorId, producto.getNombre())) {
             throw new ProductoDuplicadoException();
         }
-        comprobarImagen(producto.getImagen());
-        return productoRepository.guardar(producto);
+        return productoRepository.guardar(conImagenAnalizada(producto));
     }
 
-    // Antivirus de la URL de la imagen (HU31, T397): una imagen maliciosa no se guarda. Sin imagen, Producto la deja
-    // vacía ("") y no se analiza nada.
-    private void comprobarImagen(String imagen) {
-        if (!imagen.isEmpty() && analisisImagen.analizar(imagen) == ResultadoAnalisis.MALICIOSA) {
+    // Antivirus de la URL de la imagen (HU31, T397), decisión del equipo: una imagen maliciosa no se guarda y, si el
+    // antivirus no da resultado, el producto se guarda sin imagen. Sin imagen, Producto la deja vacía ("") y no se
+    // analiza nada.
+    // PENDIENTE DE DECIDIR (equipo, frontend): avisar al vendedor de que su imagen se ha descartado; hoy solo lo ve
+    // porque la respuesta trae la imagen vacía.
+    private Producto conImagenAnalizada(Producto producto) {
+        if (producto.getImagen().isEmpty()) {
+            return producto;
+        }
+        ResultadoAnalisis resultado = analisisImagen.analizar(producto.getImagen());
+        if (resultado == ResultadoAnalisis.MALICIOSA) {
             throw new ImagenNoSeguraException();
         }
+        return resultado == ResultadoAnalisis.SIN_RESULTADO ? producto.sinImagen() : producto;
     }
 
     @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO)
