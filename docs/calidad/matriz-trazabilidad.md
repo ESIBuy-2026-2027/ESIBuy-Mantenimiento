@@ -1698,40 +1698,51 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU11-CP01 | El historial devuelve los pedidos del cliente de la sesión, del más reciente al más antiguo (vacío si no tiene); se consulta con su id, no con su correo | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#378, PR sin abrir) |
-| HU11-CP02 | El detalle devuelve el pedido del cliente con sus productos, precios y estado | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#378, PR sin abrir) |
-| HU11-CP03 | El pedido de otro cliente se trata como si no existiera, igual que uno inexistente (`PedidoNoEncontradoException`) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#378, PR sin abrir) |
-| HU11-CP04 | En MongoDB se buscan los pedidos de un cliente, del más reciente al más antiguo, y un pedido por su id con sus líneas | Integración (Testcontainers) | 2 | 🔍 En revisión (2, AB#378, PR sin abrir) |
-| HU11-CP05 | Los estados de envío van en el orden en que avanza un pedido (`PAGADO`, `PREPARANDO`, `ENVIADO`, `ENTREGADO`) con `CANCELADO` al final, y cada uno se guarda y se lee igual | Unitario (dominio e infraestructura) | 2 | 🔍 En revisión (2, AB#378, PR sin abrir) |
-| HU11-CP06 | Solo el cliente consulta su historial y el detalle de sus pedidos: vendedor, administrador, otro cliente y sin sesión, rechazados | Seguridad (`@PreAuthorize`, contexto mínimo) | 5 | 🔍 En revisión (5, AB#378, PR sin abrir) |
+| HU11-CP01 | El historial devuelve los pedidos del cliente de la sesión, del más reciente al más antiguo (vacío si no tiene); se consulta con su id, no con su correo | Unitario (aplicación) | 2 | ✅ Pasa |
+| HU11-CP02 | El detalle devuelve el pedido del cliente con sus productos, precios y estado | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU11-CP03 | El pedido de otro cliente se trata como si no existiera, igual que uno inexistente (`PedidoNoEncontradoException`) | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU11-CP04 | En MongoDB se buscan los pedidos de un cliente, del más reciente al más antiguo, y un pedido por su id con sus líneas | Integración (Testcontainers) | 2 | ✅ Pasa |
+| HU11-CP05 | Los estados de envío van en el orden en que avanza un pedido (`PAGADO`, `PREPARANDO`, `ENVIADO`, `ENTREGADO`) con `CANCELADO` al final, y cada uno se guarda y se lee igual | Unitario (dominio e infraestructura) | 2 | ✅ Pasa |
+| HU11-CP06 | Solo el cliente consulta su historial y el detalle de sus pedidos: vendedor, administrador, otro cliente y sin sesión, rechazados | Seguridad (`@PreAuthorize`, contexto mínimo) | 5 | ✅ Pasa |
+| HU11-CP07 | `GET /api/customer/orders` responde 200 con los pedidos completos del cliente de la sesión (`[]` si no tiene); no expone el cliente | Integración web (`@WebMvcTest`) | 2 | 🔍 En revisión (2, AB#377, PR sin abrir) |
+| HU11-CP08 | `GET /api/customer/orders/{id}` responde 200 con el pedido: productos, desglose de precios, total, estado y dirección de envío | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#377, PR sin abrir) |
+| HU11-CP09 | Un pedido que no existe o es de otro cliente responde 400 con el code `ORDER_NOT_FOUND` («El pedido no existe») | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#377, PR sin abrir) |
+| HU11-CP10 | Sin sesión el historial y el detalle responden 401, y con otro rol (vendedor, administrador) 403 | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#377, PR sin abrir) |
 
 Notas:
 - **HU11-CP01 a CP06 (Sprint 2, backend, TDD):** casos propuestos en la T378 (AB#378, lógica de obtención de pedidos) a partir del criterio de aceptación de la HU11 (AB#73): «el sistema muestra el detalle de los productos, desglose de precios y la máquina de estados de envío cuando el cliente selecciona un pedido concreto». Pendientes de confirmar con el equipo y de añadir a la HU11 en Azure Boards.
 - **Decisiones del equipo:** el historial y el detalle se añaden a `ConsultaComprasUseCase` (mismo actor y propósito que `haComprado` de la HU13). Estados de envío: `PAGADO → PREPARANDO → ENVIADO → ENTREGADO`, más `CANCELADO` para la HU12; los hará avanzar el vendedor en otra HU. Un pedido ajeno se trata como inexistente.
-- **Pendiente:** el endpoint (T377, AB#377) y la vista del frontend (T376, AB#376). `haComprado` (HU13) solo cuenta los pedidos `PAGADO`: cuando los estados avancen, habrá que decidir si `ENTREGADO` cuenta como compra (comentario «PENDIENTE DE DECIDIR» en `ConsultaComprasService`).
+- **HU11-CP07 a CP10 (Sprint 2, backend, TDD):** casos propuestos en la T377 (AB#377, endpoint de obtención de pedidos): `GET /api/customer/orders` (historial, cada pedido completo con el formato de `PedidoResponse`) y `GET /api/customer/orders/{id}` (detalle). Un pedido ajeno o inexistente responde 400 `ORDER_NOT_FOUND`, como pide el CLAUDE.md para los pedidos. HU11-CP10 pasó sin rojo real: `SecurityConfig` ya protege `/api/customer/**`. Pendientes de confirmar con el equipo y de añadir a la HU11 en Azure Boards.
+- **Pendiente:** la vista del frontend (T376, AB#376). `haComprado` (HU13) solo cuenta los pedidos `PAGADO`: cuando los estados avancen, habrá que decidir si `ENTREGADO` cuenta como compra (comentario «PENDIENTE DE DECIDIR» en `ConsultaComprasService`).
 
 ### Tabla B · casos de prueba ↔ tests
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU11-CP01 | `ConsultaComprasServiceTest` | `listarPedidosDevuelveLosDelClienteEnElOrdenDelRepositorio` | Aplicación | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP01 | `ConsultaComprasServiceTest` | `listarPedidosSinPedidosDevuelveUnaListaVacia` | Aplicación | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP02 | `ConsultaComprasServiceTest` | `consultarPedidoDevuelveElPedidoDelCliente` | Aplicación | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP03 | `ConsultaComprasServiceTest` | `consultarPedidoAjenoOInexistenteNoLoRevela` | Aplicación | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP04 | `PedidoMongoAdapterTest` | `buscarPorClienteDevuelveSusPedidosDelMasRecienteAlMasAntiguo` | Infraestructura | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP04 | `PedidoMongoAdapterTest` | `buscarPorIdDevuelveElPedidoConSusLineas` | Infraestructura | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP05 | `EstadoPedidoTest` | `losEstadosVanEnElOrdenDelEnvio` | Dominio | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP05 | `PedidoDocumentMapperTest` | `cadaEstadoDeEnvioSeGuardaYSeLee` | Infraestructura | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP06 | `SeguridadPedidosServiceTest` | `unVendedorNoConsultaElHistorial` | Aplicación (seguridad) | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP06 | `SeguridadPedidosServiceTest` | `unAdministradorNoConsultaElHistorial` | Aplicación (seguridad) | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP06 | `SeguridadPedidosServiceTest` | `unClienteNoConsultaLosPedidosDeOtro` | Aplicación (seguridad) | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP06 | `SeguridadPedidosServiceTest` | `unClienteConsultaSuPropioHistorial` | Aplicación (seguridad) | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP06 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaConsultarPedidos` | Aplicación (seguridad) | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP01 | `ConsultaComprasServiceTest` | `listarPedidosDevuelveLosDelClienteEnElOrdenDelRepositorio` | Aplicación | AB#378 | PR #182 | ✅ |
+| HU11-CP01 | `ConsultaComprasServiceTest` | `listarPedidosSinPedidosDevuelveUnaListaVacia` | Aplicación | AB#378 | PR #182 | ✅ |
+| HU11-CP02 | `ConsultaComprasServiceTest` | `consultarPedidoDevuelveElPedidoDelCliente` | Aplicación | AB#378 | PR #182 | ✅ |
+| HU11-CP03 | `ConsultaComprasServiceTest` | `consultarPedidoAjenoOInexistenteNoLoRevela` | Aplicación | AB#378 | PR #182 | ✅ |
+| HU11-CP04 | `PedidoMongoAdapterTest` | `buscarPorClienteDevuelveSusPedidosDelMasRecienteAlMasAntiguo` | Infraestructura | AB#378 | PR #182 | ✅ |
+| HU11-CP04 | `PedidoMongoAdapterTest` | `buscarPorIdDevuelveElPedidoConSusLineas` | Infraestructura | AB#378 | PR #182 | ✅ |
+| HU11-CP05 | `EstadoPedidoTest` | `losEstadosVanEnElOrdenDelEnvio` | Dominio | AB#378 | PR #182 | ✅ |
+| HU11-CP05 | `PedidoDocumentMapperTest` | `cadaEstadoDeEnvioSeGuardaYSeLee` | Infraestructura | AB#378 | PR #182 | ✅ |
+| HU11-CP06 | `SeguridadPedidosServiceTest` | `unVendedorNoConsultaElHistorial` | Aplicación (seguridad) | AB#378 | PR #182 | ✅ |
+| HU11-CP06 | `SeguridadPedidosServiceTest` | `unAdministradorNoConsultaElHistorial` | Aplicación (seguridad) | AB#378 | PR #182 | ✅ |
+| HU11-CP06 | `SeguridadPedidosServiceTest` | `unClienteNoConsultaLosPedidosDeOtro` | Aplicación (seguridad) | AB#378 | PR #182 | ✅ |
+| HU11-CP06 | `SeguridadPedidosServiceTest` | `unClienteConsultaSuPropioHistorial` | Aplicación (seguridad) | AB#378 | PR #182 | ✅ |
+| HU11-CP06 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaConsultarPedidos` | Aplicación (seguridad) | AB#378 | PR #182 | ✅ |
+| HU11-CP07 | `PedidoControllerTest` | `elHistorialResponde200ConLosPedidosDelCliente` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP07 | `PedidoControllerTest` | `unClienteSinPedidosRecibeUnaListaVacia` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP08 | `PedidoControllerTest` | `elDetalleResponde200ConElPedido` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP09 | `PedidoControllerTest` | `unPedidoInexistenteOAjenoResponde400` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP10 | `PedidoControllerTest` | `soloElClienteConsultaSusPedidos` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/pedidos/`):
 - `ConsultaComprasServiceTest` y `SeguridadPedidosServiceTest`: `application/service/` (el primero sin Spring; el segundo con un contexto mínimo y `@WithMockUser`)
 - `EstadoPedidoTest`: `domain/model/` (JUnit)
 - `PedidoMongoAdapterTest` y `PedidoDocumentMapperTest`: `infrastructure/adapter/out/persistence/` (el primero con Testcontainers)
+- `PedidoControllerTest`: `infrastructure/adapter/in/web/` (`@WebMvcTest` con `SecurityConfig`, sin MongoDB)
 
 ---
 

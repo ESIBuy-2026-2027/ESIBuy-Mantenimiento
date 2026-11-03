@@ -20,6 +20,7 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.CarritoSinProductosDelPro
 import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
@@ -393,6 +394,13 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError pedidoInvalido() {
         return new RespuestaError("El pedido es inválido", CODIGO_VALIDACION);
+    }
+
+    // Pedidos (HU11): uno que no existe o es de otro cliente responde 400, no 404, para no revelar si existe
+    @ExceptionHandler(PedidoNoEncontradoException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError pedidoNoEncontrado() {
+        return new RespuestaError("El pedido no existe", "ORDER_NOT_FOUND");
     }
 
     @ExceptionHandler(CarritoSinProductosDelProveedorException.class)
