@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.shared.error;
 
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaConProductosException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaDuplicadaException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaInvalidaException;
 import es.uclm.esibuy.backend.carrito.domain.exception.CantidadInvalidaException;
@@ -259,6 +260,14 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public RespuestaError categoriaNoEncontrada() {
         return new RespuestaError("La categoría no existe", "CATEGORY_NOT_FOUND");
+    }
+
+    // 409 + code cuando la categoría que se elimina tiene productos (HU42, T325): el mensaje es genérico.
+    // PENDIENTE: confirmar el code con quien haga la vista de eliminación (T324).
+    @ExceptionHandler(CategoriaConProductosException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError categoriaConProductos() {
+        return new RespuestaError("La categoría tiene productos y no se puede eliminar", "CATEGORY_HAS_PRODUCTS");
     }
 
     // 400 + code al dar de alta un método de pago (HU6), también si la tarjeta está caducada. El mensaje es
