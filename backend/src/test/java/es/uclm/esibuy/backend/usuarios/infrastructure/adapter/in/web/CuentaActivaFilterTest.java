@@ -32,7 +32,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-// Invalidar la sesión de un usuario desactivado (HU23, T206). En cada petición con un usuario en sesión, el
+// Invalidar la sesión de un usuario bloqueado (HU23, T206). En cada petición con un usuario en sesión, el
 // filtro comprueba que su cuenta sigue activa; si no, invalida la sesión y responde 401 sin llegar al endpoint
 // (el frontend lo espera así: frontend/docs/hu23-desactivar-usuario.md). El usuario en sesión se identifica por
 // su email, como lo guarda el login (AutenticacionController.abrirSesion).
@@ -97,12 +97,12 @@ class CuentaActivaFilterTest {
     }
 
     @Test
-    @DisplayName("HU23-CP09: si la cuenta del usuario en sesión está desactivada, se invalida su sesión y responde 401")
-    void cuentaDesactivadaInvalidaLaSesionYDevuelve401() throws Exception {
+    @DisplayName("HU23-CP09: si la cuenta del usuario en sesión está bloqueada, se invalida su sesión y responde 401")
+    void cuentaBloqueadaInvalidaLaSesionYDevuelve401() throws Exception {
         iniciarSesionComo(EMAIL);
-        Usuario desactivado = vendedor(EMAIL);
-        desactivado.desactivar();
-        when(autenticacion.consultarUsuarioEnSesion(EMAIL)).thenReturn(desactivado);
+        Usuario bloqueado = vendedor(EMAIL);
+        bloqueado.bloquear();
+        when(autenticacion.consultarUsuarioEnSesion(EMAIL)).thenReturn(bloqueado);
 
         filtro.doFilter(peticion, respuesta, cadena);
 

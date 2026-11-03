@@ -13,8 +13,8 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.BloqueoPorIntentosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
@@ -54,7 +54,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-// Login, paso 1: credenciales, bloqueo por intentos y cuentas desactivadas (HU2, T19/T22).
+// Login, paso 1: credenciales, bloqueo por intentos y cuentas bloqueadas (HU2, T19/T22).
 // Login, paso 2: código de verificación por email (HU2, T21/T22).
 // El contrato que debe cumplir sale del frontend (frontend/src/mocks/authHandlers.js).
 @ExtendWith(MockitoExtension.class)
@@ -198,7 +198,7 @@ class AutenticacionServiceTest {
         // La contraseña correcta no se llega a comprobar: si se respondiera distinto al acertar,
         // un atacante sabría cuándo ha dado con ella.
         IniciarSesionCommand contrasenaCorrecta = new IniciarSesionCommand("juan@uclm.es", "clave1234");
-        assertThrows(CuentaBloqueadaException.class, () -> autenticacion.iniciarSesion(contrasenaCorrecta));
+        assertThrows(BloqueoPorIntentosException.class, () -> autenticacion.iniciarSesion(contrasenaCorrecta));
 
         // Cada fallo se guarda; si no, el contador se perdería entre un login y otro.
         verify(usuarioRepository, times(5)).guardar(usuario);
@@ -225,30 +225,30 @@ class AutenticacionServiceTest {
     }
 
     @Test
-    @DisplayName("HU2-CP04: rechaza una cuenta desactivada")
-    void rechazaCuentaDesactivada() {
-        // «Desactivada» = desactivada por un administrador (desactivar() de Usuario, T214).
+    @DisplayName("HU2-CP04: rechaza una cuenta bloqueada")
+    void rechazaCuentaBloqueada() {
+        // «Bloqueada» = bloqueada por un administrador (bloquear() de Usuario, T214).
         // Se comprueba después de la contraseña: quien no la conoce no puede averiguar el estado de la cuenta.
         Usuario usuario = activo(clienteNuevo());
-        usuario.desactivar();
+        usuario.bloquear();
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
         when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
         IniciarSesionCommand comando = new IniciarSesionCommand("juan@uclm.es", "clave1234");
 
-        assertThrows(CuentaDesactivadaException.class, () -> autenticacion.iniciarSesion(comando));
+        assertThrows(CuentaBloqueadaException.class, () -> autenticacion.iniciarSesion(comando));
     }
 
     @Test
     @DisplayName("HU2-CP28: una cuenta bloqueada por un administrador se rechaza antes de enviar el código del correo")
     void cuentaBloqueadaPorAdministradorNoRecibeCodigo() {
-        // Bloqueada por un administrador = estado DESACTIVADO (desactivar() de Usuario) hasta que se renombre (T246).
+        // Bloqueada por un administrador = estado BLOQUEADO (bloquear() de Usuario).
         Usuario usuario = activo(clienteNuevo());
-        usuario.desactivar();
+        usuario.bloquear();
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
         when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
         IniciarSesionCommand comando = new IniciarSesionCommand("juan@uclm.es", "clave1234");
 
-        assertThrows(CuentaDesactivadaException.class, () -> autenticacion.iniciarSesion(comando));
+        assertThrows(CuentaBloqueadaException.class, () -> autenticacion.iniciarSesion(comando));
         verify(generadorCodigo, never()).generar();
         verify(codigoRepository, never()).guardar(any());
         verify(envioEmail, never()).enviarCodigoVerificacion(any(), any());

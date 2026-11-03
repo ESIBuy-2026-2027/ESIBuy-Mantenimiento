@@ -168,12 +168,12 @@ class RecuperacionContrasenaServiceTest {
     }
 
     @Test
-    @DisplayName("HU3-CP03: a una cuenta pendiente o desactivada no le envía nada, y tampoco lo revela")
+    @DisplayName("HU3-CP03: a una cuenta pendiente o bloqueada no le envía nada, y tampoco lo revela")
     void solicitarConCuentaNoActivaNoEnviaNada() {
-        Usuario desactivada = clienteActivo();
-        desactivada.desactivar();
+        Usuario bloqueada = clienteActivo();
+        bloqueada.bloquear();
 
-        for (Usuario cuenta : List.of(clientePendiente(), desactivada)) {
+        for (Usuario cuenta : List.of(clientePendiente(), bloqueada)) {
             when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.of(cuenta));
 
             assertDoesNotThrow(() -> recuperacion.solicitarRecuperacion(EMAIL));

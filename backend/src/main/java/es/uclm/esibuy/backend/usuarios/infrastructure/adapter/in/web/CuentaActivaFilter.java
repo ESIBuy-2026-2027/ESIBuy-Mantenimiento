@@ -16,7 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 /**
- * Invalida la sesión de un usuario cuya cuenta ha sido desactivada (HU23, T206).
+ * Invalida la sesión de un usuario cuya cuenta ha sido bloqueada (HU23, T206).
  *
  * <p>En cada petición con un usuario en sesión comprueba que su cuenta sigue activa; si no lo está
  * (o el usuario ya no existe), invalida la sesión y responde 401 sin llegar al endpoint.

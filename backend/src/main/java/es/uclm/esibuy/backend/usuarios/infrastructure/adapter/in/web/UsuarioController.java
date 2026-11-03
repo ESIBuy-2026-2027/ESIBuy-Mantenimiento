@@ -105,13 +105,13 @@ public class UsuarioController {
         return UsuarioDetalleResponse.desde(administracionUsuarios.editar(id, request.aComando()));
     }
 
-    // Activar (HU24) o desactivar (HU23) una cuenta. La validación de CambiarEstadoRequest ya garantiza
+    // Activar (HU24) o bloquear (HU23) una cuenta. La validación de CambiarEstadoRequest ya garantiza
     // que el estado pedido es ACTIVO o BLOQUEADO. Al bloquear se pasa el email del administrador en sesión.
     @PatchMapping("/admin/usuarios/{id}/status")
     public UsuarioListadoResponse cambiarEstado(@PathVariable String id,
             @Valid @RequestBody CambiarEstadoRequest request, Authentication autenticado) {
         if ("BLOQUEADO".equals(request.estado())) {
-            return UsuarioListadoResponse.desde(administracionUsuarios.desactivar(id, autenticado.getName()));
+            return UsuarioListadoResponse.desde(administracionUsuarios.bloquear(id, autenticado.getName()));
         }
         return UsuarioListadoResponse.desde(administracionUsuarios.activar(id));
     }
@@ -164,13 +164,13 @@ public class UsuarioController {
         return VendedorResponse.desde(administracionUsuarios.consultarVendedor(id), nombresDeCategorias());
     }
 
-    // Activar o desactivar un vendedor desde su supervisión (HU21). Misma validación que el PATCH de usuarios
+    // Activar o bloquear un vendedor desde su supervisión (HU21). Misma validación que el PATCH de usuarios
     // (CambiarEstadoRequest). 404 si no existe o no es vendedor. Devuelve la ficha, como el GET de la HU26.
     @PatchMapping("/admin/sellers/{id}/status")
     public VendedorResponse cambiarEstadoVendedor(@PathVariable String id,
             @Valid @RequestBody CambiarEstadoRequest request) {
         Usuario vendedor = "BLOQUEADO".equals(request.estado())
-                ? administracionUsuarios.desactivarVendedor(id)
+                ? administracionUsuarios.bloquearVendedor(id)
                 : administracionUsuarios.activarVendedor(id);
         return VendedorResponse.desde(vendedor, nombresDeCategorias());
     }
