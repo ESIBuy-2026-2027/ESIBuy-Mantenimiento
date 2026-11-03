@@ -321,3 +321,94 @@ describe('ProductDetailPage (HU9): añadir al carrito', () => {
     expect(screen.queryByLabelText('Cantidad')).not.toBeInTheDocument()
   })
 })
+
+// Valoraciones de los clientes (HU13, T368): GET /api/products/{id}/valoraciones, sin el cliente ni la fecha. La media
+// y el número de valoraciones se calculan con esta lista; si no hay ninguna, se usan los del catálogo (decisión del
+// equipo: el backend aún no rellena valoracion ni numValoraciones).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP18 a CP20, propuestos.
+const VALORACIONES = [
+  { id: 'v-1', productoId: 'p-2', puntuacion: 5, comentario: 'Muy buen tacto, lo recomiendo.' },
+  { id: 'v-2', productoId: 'p-2', puntuacion: 4, comentario: '' },
+  { id: 'v-3', productoId: 'p-2', puntuacion: 3, comentario: 'Hace algo de ruido.' },
+]
+
+const responderValoraciones = (valoraciones) =>
+  server.use(http.get('/api/products/:id/valoraciones', () => HttpResponse.json(valoraciones)))
+
+describe('ProductDetailPage (HU13): valoraciones de los clientes', () => {
+  it('HU13-CP18: muestra cada valoración del producto con sus estrellas y su comentario', async () => {
+    responderCon()
+    responderValoraciones(VALORACIONES)
+    await abrirDetalle()
+
+    const lista = await screen.findByRole('list', { name: /valoraciones de los clientes/i })
+    const valoraciones = within(lista).getAllByRole('listitem')
+    expect(valoraciones).toHaveLength(3)
+    expect(within(valoraciones[0]).getByRole('img', { name: /valoración: 5,0 de 5/i })).toBeInTheDocument()
+    expect(within(valoraciones[0]).getByText('Muy buen tacto, lo recomiendo.')).toBeInTheDocument()
+    expect(within(valoraciones[2]).getByText('Hace algo de ruido.')).toBeInTheDocument()
+  })
+
+  it('HU13-CP18: una valoración sin comentario muestra solo sus estrellas', async () => {
+    responderCon()
+    responderValoraciones([VALORACIONES[1]])
+    await abrirDetalle()
+
+    const lista = await screen.findByRole('list', { name: /valoraciones de los clientes/i })
+    const [valoracion] = within(lista).getAllByRole('listitem')
+    expect(within(valoracion).getByRole('img', { name: /valoración: 4,0 de 5/i })).toBeInTheDocument()
+    expect(valoracion).toHaveTextContent(/^$/)
+  })
+
+  it('HU13-CP19: la media y el número de valoraciones salen de la lista aunque el catálogo no las tenga', async () => {
+    responderCon({ valoracion: null, numValoraciones: 0 })
+    responderValoraciones(VALORACIONES)
+    await abrirDetalle()
+
+    // (5 + 4 + 3) / 3 = 4
+    expect((await screen.findAllByRole('img', { name: /valoración: 4,0 de 5/i })).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/^3 valoraciones$/i).length).toBeGreaterThan(0)
+    expect(screen.queryByText(/^sin valoraciones$/i)).not.toBeInTheDocument()
+  })
+
+  it('HU13-CP19: si la lista está vacía se mantienen la media y el número del catálogo', async () => {
+    responderCon()
+    responderValoraciones([])
+    await abrirDetalle()
+
+    expect(await screen.findByText(/todavía no hay valoraciones de este producto/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/29 valoraciones/i).length).toBeGreaterThan(0)
+  })
+
+  it('HU13-CP20: un producto sin valoraciones lo indica en su sección', async () => {
+    responderCon({ valoracion: null, numValoraciones: 0 })
+    responderValoraciones([])
+    await abrirDetalle()
+
+    const seccion = await screen.findByRole('region', { name: /valoraciones de los clientes/i })
+    expect(within(seccion).getByText(/todavía no hay valoraciones de este producto/i)).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: /valoraciones de los clientes/i })).not.toBeInTheDocument()
+  })
+
+  it('HU13-CP20: si fallan las valoraciones avisa y permite reintentar, sin perder el producto', async () => {
+    const user = userEvent.setup()
+    let fallado = false
+    responderCon()
+    server.use(
+      http.get('/api/products/:id/valoraciones', () => {
+        if (!fallado) {
+          fallado = true
+          return new HttpResponse(null, { status: 500 })
+        }
+        return HttpResponse.json(VALORACIONES)
+      }),
+    )
+    await abrirDetalle()
+
+    expect(await screen.findByText(/no se han podido cargar las valoraciones/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Teclado mecánico' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /reintentar/i }))
+
+    expect(await screen.findByRole('list', { name: /valoraciones de los clientes/i })).toBeInTheDocument()
+  })
+})
