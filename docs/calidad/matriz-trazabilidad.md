@@ -27,7 +27,7 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | HU1-CP08 | Rechaza el registro si falta un campo obligatorio o supera su longitud máxima | Unitario + integración (capa web) | 11 | ✅ Pasa |
 | HU1-CP09 | Rechaza contraseñas de la lista de contraseñas comunes | Unitario | 4 | ✅ Pasa |
 | HU1-CP10 | Rechaza contraseñas que contienen datos personales del usuario | Unitario | 4 | ✅ Pasa |
-| HU1-CP11 | El usuario cumple sus invariantes de dominio (datos personales y de cliente obligatorios y coherentes con el rol, desactivación, fecha de alta) | Unitario | 17 | 🔍 En revisión |
+| HU1-CP11 | El usuario cumple sus invariantes de dominio (datos personales y de cliente obligatorios y coherentes con el rol, desactivación, fecha de alta) | Unitario | 17 | ✅ Pasa |
 | HU1-CP12 | Toda cuenta nueva nace en estado PENDIENTE hasta que un administrador la verifica | Unitario | 4 | ✅ Pasa |
 | HU1-CP13 | Rechaza a un cliente menor de edad | Unitario | 4 | ✅ Pasa |
 | HU1-CP14 | Rechaza el registro si las contraseñas no coinciden | Unitario | 1 | ✅ Pasa |
@@ -136,8 +136,8 @@ Notas:
 | HU1-CP11 | `UsuarioTest` | `rechazaEmailNulo` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaContrasenaHashEnBlanco` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaRolNulo` | Dominio | AB#214 | PR #34 | ✅ |
-| HU1-CP11 | `UsuarioTest` | `bloqueaUsuario` | Dominio | AB#214 · AB#243 · AB#252 | PR #34 (renombrado en PR #36) (modificado en PR #180) (renombrado en este PR) | 🔍 |
-| HU1-CP11 | `UsuarioTest` | `activaUsuarioBloqueado` | Dominio | AB#214 · AB#252 | PR #34 (renombrado en PR #36) (renombrado en este PR) | 🔍 |
+| HU1-CP11 | `UsuarioTest` | `bloqueaUsuario` | Dominio | AB#214 · AB#243 · AB#252 | PR #34 (renombrado en PR #36) (modificado en PR #180) (renombrado en PR #185) | ✅ |
+| HU1-CP11 | `UsuarioTest` | `activaUsuarioBloqueado` | Dominio | AB#214 · AB#252 | PR #34 (renombrado en PR #36) (renombrado en PR #185) | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaUsuarioSinDatosPersonales` | Dominio | AB#229 | PR #72 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaClienteSinDatosDeCliente` | Dominio | AB#229 | PR #72 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaDatosDeClienteSiNoEsCliente` | Dominio | AB#229 | PR #72 | ✅ |
@@ -255,8 +255,8 @@ Notas:
 | HU19-CP07 | La búsqueda trata los caracteres especiales como texto literal | Integración MongoDB | 1 | ✅ Pasa |
 | HU19-CP08 | Un administrador accede al listado HTTP sin exponer datos sensibles | Integración web | 1 | ✅ Pasa |
 | HU19-CP09 | Conserva el estado PENDIENTE al mapear el usuario | Unitario | 1 | ✅ Pasa |
-| HU19-CP10 | El adaptador filtra BLOQUEADO por el estado guardado, no por el bloqueo temporal por intentos | Integración MongoDB | 1 | 🔍 En revisión |
-| HU19-CP11 | El listado se ordena por nombre o por estado, en los dos sentidos | Integración (capa web y MongoDB) | 2 | 🔍 En revisión |
+| HU19-CP10 | El adaptador filtra BLOQUEADO por el estado guardado, no por el bloqueo temporal por intentos | Integración MongoDB | 1 | ✅ Pasa |
+| HU19-CP11 | El listado se ordena por nombre o por estado, en los dos sentidos | Integración (capa web y MongoDB) | 2 | ✅ Pasa |
 | HU19-CP12 | El orden por nombre no distingue mayúsculas ni tildes | Integración MongoDB | 1 | ✅ Pasa |
 | HU19-CP13 | El filtro de estado ofrece Pendiente, Activo y Bloqueado, sin Desactivado (los administradores no tienen Pendiente) | Frontend (componente y página) | 9 | ✅ Pasa (9, AB#247, PR #116) |
 | HU19-CP14 | Cada fila de la tabla permite bloquear o desbloquear la cuenta con confirmación (una pendiente se acepta desbloqueándola) y la ficha ya no cambia el estado | Frontend (componente y página) | 32 | ✅ Pasa (32, AB#248, PR #116) |
@@ -283,9 +283,9 @@ Notas:
 | HU19-CP07 | `UsuarioMongoAdapterTest` | `listarEscapaCaracteresEspecialesDeLaBusqueda` | Infraestructura | AB#61 | PR #59 | ✅ |
 | HU19-CP08 | `UsuarioControllerTest` | `administradorRecibeElListado` | Infraestructura | AB#61/AB#62 | PR #59 | ✅ |
 | HU19-CP09 | `UsuarioDocumentMapperTest` | `conservaEstadoPendienteEnElMapeo` | Infraestructura | AB#61 | PR #59 | ✅ |
-| HU19-CP10 | `UsuarioMongoAdapterTest` | `listarFiltraBloqueadoPorEstadoGuardado` | Infraestructura | AB#61 · AB#243 | PR #59 (sustituido en este PR) | 🔍 |
+| HU19-CP10 | `UsuarioMongoAdapterTest` | `listarFiltraBloqueadoPorEstadoGuardado` | Infraestructura | AB#61 · AB#243 | PR #59 (sustituido en PR #180) | ✅ |
 | HU19-CP11 | `UsuarioControllerTest` | `elListadoDeUsuariosAceptaOrdenYSentido` | Infraestructura | AB#61 | PR #104 | ✅ |
-| HU19-CP11 | `UsuarioMongoAdapterTest` | `ordenaClientesPorEstadoDescendente` | Infraestructura | AB#61 · AB#243 | PR #104 (modificado en este PR) | 🔍 |
+| HU19-CP11 | `UsuarioMongoAdapterTest` | `ordenaClientesPorEstadoDescendente` | Infraestructura | AB#61 · AB#243 | PR #104 (modificado en PR #180) | ✅ |
 | HU19-CP12 | `UsuarioMongoAdapterTest` | `ordenaPorNombreSinDistinguirMayusculasNiTildes` | Infraestructura | AB#29 | PR #104 | ✅ |
 | HU19-CP13 | `usersConfig.test.js` | `statusLabelsForRole_deAdministrador_noIncluyePendiente` | Frontend | AB#247 | PR #116 | ✅ |
 | HU19-CP13 | `usersConfig.test.js` | `statusLabelsForRole_ningunRol_ofreceDesactivado` | Frontend | AB#247 | PR #116 | ✅ |
@@ -453,7 +453,7 @@ Los tests de integración de MongoDB (`UsuarioMongoAdapterTest`, `UsuariosConfig
 | HU2-CP01 | Inicia sesión con credenciales correctas y pasa al paso del código por email | Unitario + integración | 5 | ✅ Pasa |
 | HU2-CP02 | Rechaza credenciales incorrectas sin revelar si el correo existe | Unitario + integración | 5 | ✅ Pasa |
 | HU2-CP03 | Bloquea la cuenta durante 15 minutos tras 5 intentos fallidos | Unitario + integración | 6 | ✅ Pasa |
-| HU2-CP04 | Rechaza el acceso a una cuenta desactivada | Unitario + integración | 3 | 🔍 En revisión |
+| HU2-CP04 | Rechaza el acceso a una cuenta desactivada | Unitario + integración | 3 | ✅ Pasa |
 | HU2-CP05 | Al validar las credenciales, envía al correo del usuario un código de verificación | Unitario + integración | 4 | ✅ Pasa |
 | HU2-CP06 | Un código correcto pasa al paso de Microsoft Authenticator | Unitario + integración | 3 | ✅ Pasa |
 | HU2-CP07 | Rechaza un código incorrecto | Unitario + integración | 6 | ✅ Pasa |
@@ -518,8 +518,8 @@ Notas:
 | HU2-CP03 | `AutenticacionServiceTest` | `desbloqueaLaCuentaPasados15Minutos` | Aplicación | AB#22 | PR #36 | ✅ |
 | HU2-CP03 | `UsuarioMongoAdapterTest` | `guardarUnUsuarioLeidoLoActualizaSinDuplicarlo` | Infraestructura | AB#225 | PR #46 | ✅ |
 | HU2-CP03 | `UsuarioMongoAdapterTest` | `conservaLosIntentosFallidosYElBloqueo` | Infraestructura | AB#225 · AB#210 | PR #46 (ampliado en PR #43) | ✅ |
-| HU2-CP04 | `AutenticacionServiceTest` | `rechazaCuentaBloqueada` | Aplicación | AB#22 · AB#252 | PR #36 (renombrado en este PR) | 🔍 |
-| HU2-CP04 | `UsuarioMongoAdapterTest` | `conservaElBloqueo` | Infraestructura | AB#225 · AB#210 · AB#243 · AB#252 | PR #46 (ampliado en PR #43) (modificado en PR #180) (renombrado en este PR) | 🔍 |
+| HU2-CP04 | `AutenticacionServiceTest` | `rechazaCuentaBloqueada` | Aplicación | AB#22 · AB#252 | PR #36 (renombrado en PR #185) | ✅ |
+| HU2-CP04 | `UsuarioMongoAdapterTest` | `conservaElBloqueo` | Infraestructura | AB#225 · AB#210 · AB#243 · AB#252 | PR #46 (ampliado en PR #43) (modificado en PR #180) (renombrado en PR #185) | ✅ |
 | HU2-CP04 | `UsuarioMongoAdapterTest` | `conservaUnUsuarioActivo` | Infraestructura | AB#225 | PR #46 | ✅ |
 | HU2-CP05 | `AutenticacionServiceTest` | `enviaElCodigoAlCorreoTrasValidarLasCredenciales` | Aplicación | AB#22 | PR #52 | ✅ |
 | HU2-CP05 | `SmtpEnvioEmailAdapterTest` | `enviaElCodigoAlCorreoDelUsuario` | Infraestructura | AB#231 | PR #54 | ✅ |
@@ -839,7 +839,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU5-CP26 | Eliminar una dirección tras confirmarlo; cancelar no elimina nada | Frontend (componente) | 2 | ✅ Pasa |
 | HU5-CP27 | Para eliminar la principal hay que elegir la sustituta, salvo si es la única; desde la página, la elegida pasa a ser la principal | Frontend (componente y página) | 3 | ✅ Pasa |
 | HU5-CP28 | Si la eliminación falla, se avisa sin cerrar el diálogo | Frontend (componente) | 1 | ✅ Pasa |
-| HU5-CP29 | La gestión de direcciones exige el rol cliente y que el correo recibido sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, rama `fix/seguridad-capa-negocio`) |
+| HU5-CP29 | La gestión de direcciones exige el rol cliente y que el correo recibido sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa |
 
 Notas:
 - **HU5-CP01 a CP16 (backend):** casos propuestos y aprobados por el equipo junto con el diseño de la HU5 (tasks AB#105, AB#106 y AB#107). Los casos de prueba no se registran en Azure Boards: viven en esta matriz y en el `@DisplayName` de cada test. Los del frontend, HU5-CP17 a CP28, se aprobaron con el mismo diseño (tasks AB#108 y AB#109).
@@ -848,7 +848,7 @@ Notas:
 - **Colección nueva:** `direcciones_envio` (`ColeccionesEsiBuy`), acordada con el equipo.
 - **Vista del frontend (AB#108):** `/addresses`, solo para clientes. Detalle en `frontend/docs/hu5-direcciones-de-envio.md`.
 - **Archivos de tests nuevos**, acordados con el equipo: `addresses.test.js`, `AddressesPage.test.jsx`, `AddressFormPanel.test.jsx` y `DeleteAddressDialog.test.jsx`.
-- **HU5-CP29 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Comprueba con `@PreAuthorize` que `GestionDireccionesUseCase` exige el rol cliente y que el correo recibido es el de la sesión. Clase de test nueva `direcciones/application/service/SeguridadDireccionesServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
+- **HU5-CP29 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio` (PR #168, mergeado), sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Comprueba con `@PreAuthorize` que `GestionDireccionesUseCase` exige el rol cliente y que el correo recibido es el de la sesión. Clase de test nueva `direcciones/application/service/SeguridadDireccionesServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -960,11 +960,11 @@ Notas:
 | HU5-CP27 | `DeleteAddressDialog.test.jsx` | `HU5-CP27: para eliminar la principal hay que elegir otra dirección como principal` | Frontend · componente | AB#109 | PR #163 | ✅ |
 | HU5-CP27 | `DeleteAddressDialog.test.jsx` | `HU5-CP27: la única dirección se elimina sin elegir sustituta` | Frontend · componente | AB#109 | PR #163 | ✅ |
 | HU5-CP28 | `DeleteAddressDialog.test.jsx` | `HU5-CP28: si la eliminación falla avisa y no cierra el diálogo` | Frontend · componente | AB#109 | PR #163 | ✅ |
-| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unVendedorNoUsaLasDirecciones` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
-| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unAdministradorNoUsaLasDirecciones` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
-| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unClienteNoOperaConElCorreoDeOtro` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
-| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unClienteOperaConSuPropioCorreo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
-| HU5-CP29 | `SeguridadDireccionesServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unVendedorNoUsaLasDirecciones` | Aplicación | — | PR #168 | ✅ |
+| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unAdministradorNoUsaLasDirecciones` | Aplicación | — | PR #168 | ✅ |
+| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unClienteNoOperaConElCorreoDeOtro` | Aplicación | — | PR #168 | ✅ |
+| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unClienteOperaConSuPropioCorreo` | Aplicación | — | PR #168 | ✅ |
+| HU5-CP29 | `SeguridadDireccionesServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | PR #168 | ✅ |
 
 ---
 
@@ -1569,7 +1569,7 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 | HU10-CP13 | Número de pedido `ESB-AAAA-NNNNNN`: año y correlativo de seis cifras, un contador por año en `contadores`, atómico aunque haya pedidos a la vez | Unitario + integración | 8 | 🔍 En revisión (8, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP14 | El pedido toma del carrito solo los productos de su proveedor, con los precios del servidor, los quita del carrito y responde 201 con el contrato del frontend | Unitario + controlador | 5 | 🔍 En revisión (5, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP15 | Se descuenta el stock de forma atómica; si falta de algún producto o no se puede guardar, no se crea el pedido, se repone lo descontado y responde 409 `INSUFFICIENT_STOCK` | Unitario + integración + controlador | 11 | 🔍 En revisión (11, AB#380 a AB#382 y AB#131, PR #166) |
-| HU10-CP16 | El método de pago y la dirección tienen que ser del cliente (si no, 400) y la dirección se copia en el pedido; una petición incompleta responde 400 | Unitario + controlador | 10 | 🔍 En revisión (10, AB#380 a AB#382 y AB#131, PR #166) |
+| HU10-CP16 | El método de pago y la dirección tienen que ser del cliente (si no, 400) y la dirección se copia en el pedido; una petición incompleta responde 400 | Unitario + controlador | 10 | ✅ Pasa |
 | HU10-CP17 | Sin productos de ese proveedor en el carrito no se crea el pedido (409 `CART_EMPTY`) | Unitario + controlador | 3 | 🔍 En revisión (3, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP18 | Solo el cliente en sesión realiza pedidos: sin sesión 401, otro rol 403 y sin CSRF se rechaza | Unitario + controlador | 2 | 🔍 En revisión (2, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP19 | Persistencia en `pedidos`: el mapper no pierde datos, importes como Decimal128, número de pedido único y con formato validado por la colección | Unitario + integración | 5 | 🔍 En revisión (5, AB#380 a AB#382 y AB#131, PR #166) |
@@ -1650,16 +1650,16 @@ Notas:
 | HU10-CP15 | `ProductoMongoAdapterTest` | `descontarStockLoRestaSiHaySuficiente` | Infraestructura | AB#131 | PR #166 | 🔍 |
 | HU10-CP15 | `ProductoMongoAdapterTest` | `dosDescuentosALaVezNoDejanElStockNegativo` | Infraestructura | AB#131 | PR #166 | 🔍 |
 | HU10-CP15 | `ProductoMongoAdapterTest` | `reponerStockDevuelveLasUnidades` | Infraestructura | AB#131 | PR #166 | 🔍 |
-| HU10-CP16 | `GestionDireccionesServiceTest` | `consultarParaPedidoDevuelveLosDatosDeUnaDireccionPropia` | Aplicación | AB#382 | PR #166 | 🔍 |
-| HU10-CP16 | `GestionDireccionesServiceTest` | `consultarParaPedidoNoDevuelveUnaDireccionAjena` | Aplicación | AB#382 | PR #166 | 🔍 |
-| HU10-CP16 | `GestionMetodosPagoServiceTest` | `esDelClienteSoloAceptaUnMetodoPropio` | Aplicación | AB#382 | PR #166 | 🔍 |
-| HU10-CP16 | `RealizacionPedidoServiceTest` | `elMetodoDePagoTieneQueSerDelCliente` | Aplicación | AB#382 | PR #166 | 🔍 |
-| HU10-CP16 | `RealizacionPedidoServiceTest` | `laDireccionTieneQueSerDelClienteYSeCopia` | Aplicación | AB#382 | PR #166 | 🔍 |
-| HU10-CP16 | `PedidoControllerTest` | `unMetodoODireccionAjenosResponden400` | Infraestructura | AB#381 | PR #166 | 🔍 |
-| HU10-CP16 | `PedidoControllerTest` | `unaPeticionIncompletaResponde400` | Infraestructura | AB#381 | PR #166 | 🔍 |
-| HU10-CP16 | `DireccionesAdapterTest` | `losDatosDeLaDireccionSeCopian` | Infraestructura | AB#382 | PR #166 | 🔍 |
-| HU10-CP16 | `DireccionesAdapterTest` | `unaDireccionAjenaNoSeDevuelve` | Infraestructura | AB#382 | PR #166 | 🔍 |
-| HU10-CP16 | `MetodosPagoAdapterTest` | `esDelClientePreguntaAlModuloDeMetodosDePago` | Infraestructura | AB#382 | PR #166 | 🔍 |
+| HU10-CP16 | `GestionDireccionesServiceTest` | `consultarParaPedidoDevuelveLosDatosDeUnaDireccionPropia` | Aplicación | AB#382 | PR #166 | ✅ |
+| HU10-CP16 | `GestionDireccionesServiceTest` | `consultarParaPedidoNoDevuelveUnaDireccionAjena` | Aplicación | AB#382 | PR #166 | ✅ |
+| HU10-CP16 | `GestionMetodosPagoServiceTest` | `esDelClienteSoloAceptaUnMetodoPropio` | Aplicación | AB#382 | PR #166 | ✅ |
+| HU10-CP16 | `RealizacionPedidoServiceTest` | `elMetodoDePagoTieneQueSerDelCliente` | Aplicación | AB#382 | PR #166 | ✅ |
+| HU10-CP16 | `RealizacionPedidoServiceTest` | `laDireccionTieneQueSerDelClienteYSeCopia` | Aplicación | AB#382 | PR #166 | ✅ |
+| HU10-CP16 | `PedidoControllerTest` | `unMetodoODireccionAjenosResponden400` | Infraestructura | AB#381 | PR #166 | ✅ |
+| HU10-CP16 | `PedidoControllerTest` | `unaPeticionIncompletaResponde400` | Infraestructura | AB#381 | PR #166 | ✅ |
+| HU10-CP16 | `DireccionesAdapterTest` | `losDatosDeLaDireccionSeCopian` | Infraestructura | AB#382 | PR #166 | ✅ |
+| HU10-CP16 | `DireccionesAdapterTest` | `unaDireccionAjenaNoSeDevuelve` | Infraestructura | AB#382 | PR #166 | ✅ |
+| HU10-CP16 | `MetodosPagoAdapterTest` | `esDelClientePreguntaAlModuloDeMetodosDePago` | Infraestructura | AB#382 | PR #166 | ✅ |
 | HU10-CP17 | `RealizacionPedidoServiceTest` | `sinProductosDelProveedorNoSeCreaElPedido` | Aplicación | AB#382 | PR #166 | 🔍 |
 | HU10-CP17 | `PedidoControllerTest` | `sinProductosDelProveedorResponde409` | Infraestructura | AB#381 | PR #166 | 🔍 |
 | HU10-CP17 | `CarritoAdapterTest` | `sinProductosDelProveedorNoHayCompra` | Infraestructura | AB#382 | PR #166 | 🔍 |
@@ -1769,6 +1769,12 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU13-CP15 | Consultar un producto devuelve todas sus valoraciones y solo las suyas; sin valoraciones, una lista vacía | Unitario | 2 | ✅ Pasa (2, AB#371, PR #179) |
 | HU13-CP16 | Consultar las valoraciones de un producto exige el rol cliente; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 4 | ✅ Pasa (4, AB#371, PR #179) |
 | HU13-CP17 | `GET /api/products/{id}/valoraciones`: 200 con la lista sin el cliente, o vacía; sin sesión 401 y otro rol 403 | Integración (capa web) | 3 | ✅ Pasa (3, AB#371, PR #179) |
+| HU13-CP18 | En el detalle del producto, cada valoración se muestra con sus estrellas y, si lo tiene, su comentario | Frontend (página) | 2 | 🔍 En revisión (2, AB#368, PR #191) |
+| HU13-CP19 | La media y el número de valoraciones del detalle salen de la lista; si la lista está vacía, se usan los del detalle del producto | Frontend (página) | 2 | 🔍 En revisión (2, AB#368, PR #191) |
+| HU13-CP20 | Sin valoraciones se indica en su sección; si fallan, se avisa con «Reintentar» sin perder el producto | Frontend (página) | 2 | 🔍 En revisión (2, AB#368, PR #191) |
+| HU13-CP21 | El cliente valora desde el detalle con estrellas y un comentario opcional; tras enviarla se le dan las gracias y su valoración aparece en la lista | Frontend (página) | 2 | 🔍 En revisión (2, AB#367, PR #191) |
+| HU13-CP22 | Sin puntuación no se envía y se pide elegir una; el comentario admite como mucho 500 caracteres | Frontend (página) | 2 | 🔍 En revisión (2, AB#367, PR #191) |
+| HU13-CP23 | Avisos al valorar: no comprado (403 `PRODUCT_NOT_PURCHASED`), ya valorado (409 `REVIEW_ALREADY_EXISTS`) y error general conservando lo escrito | Frontend (página) | 3 | 🔍 En revisión (3, AB#367, PR #191) |
 | HU13-CP24 | El producto guarda en MongoDB la media y el número de valoraciones que recibe, sin tocar el resto de sus datos | Integración MongoDB | 2 | 🔍 En revisión (2, AB#415, PR sin abrir) |
 | HU13-CP25 | El producto lee su media y su número de valoraciones (sin valoraciones: `null` y 0) y los conserva al modificarlo, activarlo o desactivarlo y al quitarle la imagen | Unitario (dominio) + integración MongoDB | 4 | 🔍 En revisión (4, AB#415, PR sin abrir) |
 | HU13-CP26 | El catálogo (HU7) y el detalle (HU8) devuelven la media y el número de valoraciones del producto | Unitario + integración (capa web) | 3 | 🔍 En revisión (3, AB#415, PR sin abrir) |
@@ -1778,11 +1784,12 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 Notas:
 - **HU13-CP01 a CP17 (Sprint 2, backend):** casos propuestos en las tasks AB#369 (entidad valoración), AB#370 (endpoint para crear una valoración) y AB#371 (endpoint para obtener las valoraciones), y desarrollados con TDD. PENDIENTE DE REVISAR CON EL EQUIPO: confirmarlos y añadirlos a la HU13 (AB#75) en Azure Boards.
 - **Decisiones del equipo:** módulo nuevo `valoraciones`; puntuación entera de 1 a 5 y comentario opcional de hasta 500 caracteres; una valoración por cliente y producto aunque lo compre varias veces; compra confirmada = pedido PAGADO (`ConsultaComprasUseCase`, puerto de entrada nuevo de `pedidos`); sin compra responde 403 `PRODUCT_NOT_PURCHASED`; el GET devuelve las valoraciones sin fecha ni orden garantizado.
-- **Fuera de alcance:** rellenar `valoracion` y `numValoraciones` del catálogo (HU7) y del detalle (HU8), que siguen `PENDIENTE DE DECIDIR (equipo)`; será una task aparte.
+- **Valoración en el catálogo:** `valoracion` y `numValoraciones` del catálogo (HU7) y del detalle (HU8) se rellenan en la T415 (AB#415, HU13-CP24 a CP28), que estaba fuera del alcance de las T369 a T371.
 - **Valoraciones simultáneas (HU13-CP05):** si dos peticiones del mismo cliente pasan a la vez la comprobación de duplicado, el índice único rechaza la segunda y el adaptador la traduce a `ValoracionDuplicadaException` (409, no 500).
 - **Seguridad:** `POST /api/products/*/valoraciones` tiene su propia regla en `SecurityConfig` (solo CLIENTE, con CSRF); el GET queda cubierto por `GET /api/products/**` (HU8). Los servicios llevan `@PreAuthorize`: `SOLO_CLIENTE_PROPIO_EN_COMANDO` para valorar, `SOLO_CLIENTE_PROPIO` para consultar compras y `SOLO_CLIENTE` para consultar valoraciones.
 - **Ciclos sin rojo real:** HU13-CP12 (el `@PreAuthorize` se puso con el servicio, regla 7 del CLAUDE.md) y la parte de seguridad de HU13-CP17 (la cubría ya la regla del catálogo).
 - **Clases de test nuevas**, acordadas con el equipo: `ValoracionTest`, `ValoracionMongoAdapterTest`, `ConsultaComprasServiceTest`, `ValoracionProductosServiceTest`, `SeguridadValoracionesServiceTest`, `ClienteEnSesionAdapterTest` (de valoraciones), `ComprasAdapterTest`, `ValoracionesConfigTest`, `ValoracionControllerTest` y `ConsultaValoracionesServiceTest`. **Tests en clases que ya existían** (módulo `pedidos`): `SeguridadPedidosServiceTest`, `PedidoMongoAdapterTest` y `PedidosConfigTest`.
+- **HU13-CP18 a CP23 (Sprint 2, frontend):** casos propuestos en las tasks AB#368 (consulta de las valoraciones) y AB#367 (vista para valorar), desarrollados con TDD; pendientes de confirmar con el equipo y de añadir a la HU13 en Azure Boards. Se valora desde el detalle del producto; la media y el número del detalle salen de la lista porque el backend aún no rellena `valoracion` ni `numValoraciones` (decisión del equipo). Los tests de la HU8 que usan `responderCon` (`ProductDetailPage.test.jsx`) responden también con la lista vacía, sin cambiar lo que comprueban. Detalle en `frontend/docs/hu13-valoraciones.md`.
 - **HU13-CP24 a CP28 (T415, AB#415):** casos propuestos, pendientes de confirmar con el equipo y de añadir a la HU13 en Azure Boards. Al guardar una valoración, el módulo de valoraciones calcula la media con todas las valoraciones del producto y se la pasa a productos por su puerto de entrada `ValoracionesProductoUseCase`, que la guarda en `valoracionMedia` y `numeroValoraciones` (decisión del equipo: recalcular desde todas las valoraciones es más simple que actualizar la media de forma incremental y se corrige sola; si dos clientes valoran a la vez el mismo producto, el último en escribir puede no contar la del otro hasta la siguiente valoración, riesgo asumido). El catálogo filtra y ordena por la media (HU7-CP15, modificado). Al modificar un producto se conservan las valoraciones guardadas. Se ajustaron sin cambiar lo que comprueban los tests que construyen `DetalleProductoCatalogo` (HU8-CP09, HU8-CP13 a CP15) y los comentarios de HU7-CP16 y HU8-CP13. Clases de test nuevas, acordadas con el equipo: `ValoracionesProductoServiceTest` y `ProductosAdapterTest` (de valoraciones).
 
 ### Tabla B · casos de prueba ↔ tests
@@ -1840,6 +1847,19 @@ Notas:
 | HU13-CP17 | `ValoracionControllerTest` | `consultarLasValoracionesResponde200ConLaLista` | Infraestructura | AB#371 | PR #179 | ✅ |
 | HU13-CP17 | `ValoracionControllerTest` | `unProductoSinValoracionesResponde200ConUnaListaVacia` | Infraestructura | AB#371 | PR #179 | ✅ |
 | HU13-CP17 | `ValoracionControllerTest` | `soloElClienteConsultaLasValoraciones` | Infraestructura | AB#371 | PR #179 | ✅ |
+| HU13-CP18 | `ProductDetailPage.test.jsx` | `HU13-CP18: muestra cada valoración del producto con sus estrellas y su comentario` | Frontend · página | AB#368 | PR #191 | 🔍 |
+| HU13-CP18 | `ProductDetailPage.test.jsx` | `HU13-CP18: una valoración sin comentario muestra solo sus estrellas` | Frontend · página | AB#368 | PR #191 | 🔍 |
+| HU13-CP19 | `ProductDetailPage.test.jsx` | `HU13-CP19: la media y el número de valoraciones salen de la lista aunque el catálogo no las tenga` | Frontend · página | AB#368 | PR #191 | 🔍 |
+| HU13-CP19 | `ProductDetailPage.test.jsx` | `HU13-CP19: si la lista está vacía se mantienen la media y el número del catálogo` | Frontend · página | AB#368 | PR #191 | 🔍 |
+| HU13-CP20 | `ProductDetailPage.test.jsx` | `HU13-CP20: un producto sin valoraciones lo indica en su sección` | Frontend · página | AB#368 | PR #191 | 🔍 |
+| HU13-CP20 | `ProductDetailPage.test.jsx` | `HU13-CP20: si fallan las valoraciones avisa y permite reintentar, sin perder el producto` | Frontend · página | AB#368 | PR #191 | 🔍 |
+| HU13-CP21 | `ProductDetailPage.test.jsx` | `HU13-CP21: el cliente valora con estrellas y un comentario, y su valoración aparece en la lista` | Frontend · página | AB#367 | PR #191 | 🔍 |
+| HU13-CP21 | `ProductDetailPage.test.jsx` | `HU13-CP21: el comentario es opcional: sin él se envía vacío` | Frontend · página | AB#367 | PR #191 | 🔍 |
+| HU13-CP22 | `ProductDetailPage.test.jsx` | `HU13-CP22: sin puntuación no se envía y se pide elegir una` | Frontend · página | AB#367 | PR #191 | 🔍 |
+| HU13-CP22 | `ProductDetailPage.test.jsx` | `HU13-CP22: el comentario admite como mucho 500 caracteres` | Frontend · página | AB#367 | PR #191 | 🔍 |
+| HU13-CP23 | `ProductDetailPage.test.jsx` | `HU13-CP23: si no ha comprado el producto se le avisa y el formulario sigue ahí` | Frontend · página | AB#367 | PR #191 | 🔍 |
+| HU13-CP23 | `ProductDetailPage.test.jsx` | `HU13-CP23: si ya lo había valorado se le avisa` | Frontend · página | AB#367 | PR #191 | 🔍 |
+| HU13-CP23 | `ProductDetailPage.test.jsx` | `HU13-CP23: si falla el envío avisa y conserva lo escrito para reintentar` | Frontend · página | AB#367 | PR #191 | 🔍 |
 | HU13-CP24 | `ProductoMongoAdapterTest` | `guardaLaMediaYElNumeroDeValoraciones` | Infraestructura | AB#415 | Rama `feature/US13-T415-valoracion-en-catalogo` (PR sin abrir) | 🔍 |
 | HU13-CP24 | `ProductoMongoAdapterTest` | `unaActualizacionNuevaSustituyeLaMediaYElNumero` | Infraestructura | AB#415 | Rama `feature/US13-T415-valoracion-en-catalogo` (PR sin abrir) | 🔍 |
 | HU13-CP25 | `ProductoTest` | `unProductoSinValoracionesNoTieneMedia` | Dominio | AB#415 | Rama `feature/US13-T415-valoracion-en-catalogo` (PR sin abrir) | 🔍 |
@@ -2080,10 +2100,10 @@ Rutas de los archivos de test (bajo `frontend/src/`):
 | HU21-CP08 | Usuarios sin rol ADMINISTRADOR no pueden crear administradores | Integración (capa web) | 1 | ✅ Pasa |
 | HU21-CP09 | Un administrador se lee sin datos de cliente ni consentimiento | Unitario | 1 | ✅ Pasa |
 | HU21-CP10 | Activar un vendedor pendiente lo deja activo y lo guarda | Unitario | 1 | ✅ Pasa |
-| HU21-CP11 | Desactivar un vendedor activo lo deja desactivado y lo guarda | Unitario | 1 | 🔍 En revisión |
-| HU21-CP12 | Activar o bloquear a un usuario que no es vendedor falla como si no existiera y no guarda nada | Unitario | 2 | 🔍 En revisión |
+| HU21-CP11 | Desactivar un vendedor activo lo deja desactivado y lo guarda | Unitario | 1 | ✅ Pasa |
+| HU21-CP12 | Activar o bloquear a un usuario que no es vendedor falla como si no existiera y no guarda nada | Unitario | 2 | ✅ Pasa |
 | HU21-CP13 | Un administrador activa un vendedor y recibe sus datos con estado ACTIVO | Integración (capa web) | 1 | ✅ Pasa |
-| HU21-CP14 | Un administrador bloquea un vendedor y recibe sus datos con estado BLOQUEADO | Integración (capa web) | 1 | 🔍 En revisión |
+| HU21-CP14 | Un administrador bloquea un vendedor y recibe sus datos con estado BLOQUEADO | Integración (capa web) | 1 | ✅ Pasa |
 | HU21-CP15 | Cambiar un vendedor a un estado que no es ACTIVO ni BLOQUEADO devuelve 400 y no cambia nada | Integración (capa web) | 1 | ✅ Pasa |
 | HU21-CP16 | Cambiar el estado de un usuario que no existe o no es vendedor devuelve 404 | Integración (capa web) | 1 | ✅ Pasa |
 | HU21-CP17 | Sin sesión o sin rol ADMINISTRADOR no se puede cambiar el estado de un vendedor | Integración (capa web) | 2 | ✅ Pasa |
@@ -2111,11 +2131,11 @@ Notas:
 | HU21-CP08 | `UsuarioControllerTest` | `crearAdministradorRechazaNoAdministradores` | Infraestructura | AB#49 | PR actual | ✅ |
 | HU21-CP09 | `UsuarioDocumentMapperTest` | `unAdministradorSeLeeSinDatosDeClienteYConsentimiento` | Infraestructura | AB#49 | PR actual | ✅ |
 | HU21-CP10 | `AdministracionUsuariosServiceTest` | `activarVendedorPendienteLoDejaActivoYLoGuarda` | Aplicación | AB#47 | PR #102 | ✅ |
-| HU21-CP11 | `AdministracionUsuariosServiceTest` | `bloquearVendedorActivoLoDejaBloqueadoYLoGuarda` | Aplicación | AB#47 · AB#243 · AB#252 | PR #102 (modificado en PR #180) (renombrado en este PR) | 🔍 |
+| HU21-CP11 | `AdministracionUsuariosServiceTest` | `bloquearVendedorActivoLoDejaBloqueadoYLoGuarda` | Aplicación | AB#47 · AB#243 · AB#252 | PR #102 (modificado en PR #180) (renombrado en PR #185) | ✅ |
 | HU21-CP12 | `AdministracionUsuariosServiceTest` | `activarVendedorDeOtroRolFalla` | Aplicación | AB#47 | PR #102 | ✅ |
-| HU21-CP12 | `AdministracionUsuariosServiceTest` | `bloquearVendedorDeOtroRolFalla` | Aplicación | AB#47 · AB#252 | PR #102 (renombrado en este PR) | 🔍 |
+| HU21-CP12 | `AdministracionUsuariosServiceTest` | `bloquearVendedorDeOtroRolFalla` | Aplicación | AB#47 · AB#252 | PR #102 (renombrado en PR #185) | ✅ |
 | HU21-CP13 | `UsuarioControllerTest` | `administradorActivaUnVendedorYRecibeSusDatos` | Infraestructura | AB#47 | PR #102 | ✅ |
-| HU21-CP14 | `UsuarioControllerTest` | `administradorBloqueaUnVendedorYRecibeSusDatos` | Infraestructura | AB#47 · AB#243 · AB#252 | PR #102 (modificado en PR #180) (renombrado en este PR) | 🔍 |
+| HU21-CP14 | `UsuarioControllerTest` | `administradorBloqueaUnVendedorYRecibeSusDatos` | Infraestructura | AB#47 · AB#243 · AB#252 | PR #102 (modificado en PR #180) (renombrado en PR #185) | ✅ |
 | HU21-CP15 | `UsuarioControllerTest` | `cambiarVendedorAUnEstadoNoAdmitidoDevuelve400` | Infraestructura | AB#47 | PR #102 | ✅ |
 | HU21-CP16 | `UsuarioControllerTest` | `cambiarEstadoDeUnNoVendedorDevuelve404` | Infraestructura | AB#47 | PR #102 | ✅ |
 | HU21-CP17 | `UsuarioControllerTest` | `cambiarEstadoDeVendedorSinSesionDevuelve401` | Infraestructura | AB#47 | PR #102 | ✅ |
@@ -2269,18 +2289,18 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU23-CP01 | Un administrador bloquea una cuenta activa y recibe sus datos con estado BLOQUEADO | Unitario + integración (capa web) | 2 | 🔍 En revisión |
-| HU23-CP02 | Bloquear un usuario que no existe devuelve 404 y no guarda nada | Unitario + integración (capa web) | 2 | 🔍 En revisión |
-| HU23-CP03 | Un administrador no puede bloquear su propia cuenta (409 `CANNOT_BLOCK_SELF`) | Unitario + integración (capa web) | 2 | 🔍 En revisión |
-| HU23-CP04 | No se puede bloquear al último administrador activo (409 `LAST_ACTIVE_ADMIN`) | Unitario + integración | 4 | 🔍 En revisión |
-| HU23-CP05 | Se puede desactivar a un administrador activo si queda otro administrador activo | Unitario | 1 | 🔍 En revisión |
-| HU23-CP06 | Sin sesión (401) o sin ser administrador (403) no se puede bloquear una cuenta | Integración (capa web) | 2 | 🔍 En revisión |
+| HU23-CP01 | Un administrador bloquea una cuenta activa y recibe sus datos con estado BLOQUEADO | Unitario + integración (capa web) | 2 | ✅ Pasa |
+| HU23-CP02 | Bloquear un usuario que no existe devuelve 404 y no guarda nada | Unitario + integración (capa web) | 2 | ✅ Pasa |
+| HU23-CP03 | Un administrador no puede bloquear su propia cuenta (409 `CANNOT_BLOCK_SELF`) | Unitario + integración (capa web) | 2 | ✅ Pasa |
+| HU23-CP04 | No se puede bloquear al último administrador activo (409 `LAST_ACTIVE_ADMIN`) | Unitario + integración | 4 | ✅ Pasa |
+| HU23-CP05 | Se puede desactivar a un administrador activo si queda otro administrador activo | Unitario | 1 | ✅ Pasa |
+| HU23-CP06 | Sin sesión (401) o sin ser administrador (403) no se puede bloquear una cuenta | Integración (capa web) | 2 | ✅ Pasa |
 | HU23-CP07 | Una petición sin usuario en sesión pasa sin consultar la cuenta | Unitario | 1 | ✅ Pasa |
 | HU23-CP08 | Una petición de un usuario con la cuenta activa pasa y conserva su sesión | Unitario | 1 | ✅ Pasa |
-| HU23-CP09 | Si la cuenta del usuario en sesión está bloqueada, se invalida su sesión y responde 401 | Unitario | 1 | 🔍 En revisión |
+| HU23-CP09 | Si la cuenta del usuario en sesión está bloqueada, se invalida su sesión y responde 401 | Unitario | 1 | ✅ Pasa |
 | HU23-CP10 | Si el usuario en sesión ya no existe, se invalida su sesión y responde 401 | Unitario | 1 | ✅ Pasa |
-| HU23-CP11 | Una cuenta con bloqueo temporal por intentos sale con su estado guardado en el listado, la ficha y los vendedores | Integración (capa web) | 3 | 🔍 En revisión |
-| HU23-CP12 | DESACTIVADO ya no es un estado válido para filtrar el listado | Unitario | 1 | 🔍 En revisión |
+| HU23-CP11 | Una cuenta con bloqueo temporal por intentos sale con su estado guardado en el listado, la ficha y los vendedores | Integración (capa web) | 3 | ✅ Pasa |
+| HU23-CP12 | DESACTIVADO ya no es un estado válido para filtrar el listado | Unitario | 1 | ✅ Pasa |
 
 Notas:
 - **HU23-CP01 a CP06:** casos propuestos en la T39 (AB#39) a partir del contrato del frontend (`frontend/docs/hu23-desactivar-usuario.md`). Pendientes de confirmar con el equipo y de añadir a la HU23 en Azure Boards.
@@ -2294,27 +2314,27 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU23-CP01 | `AdministracionUsuariosServiceTest` | `bloqueaUnaCuentaActivaYLaGuarda` | Aplicación | AB#39 · AB#243 · AB#252 | PR #79 (modificado en PR #180) (renombrado en este PR) | 🔍 |
-| HU23-CP01 | `UsuarioControllerTest` | `administradorBloqueaUnaCuentaYRecibeSusDatos` | Infraestructura | AB#39 · AB#243 · AB#252 | PR #79 (modificado en PR #180) (renombrado en este PR) | 🔍 |
-| HU23-CP02 | `AdministracionUsuariosServiceTest` | `rechazaBloquearUnUsuarioQueNoExiste` | Aplicación | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
-| HU23-CP02 | `UsuarioControllerTest` | `bloquearUnUsuarioInexistenteDevuelve404` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
-| HU23-CP03 | `AdministracionUsuariosServiceTest` | `rechazaQueUnAdministradorSeBloqueeASiMismo` | Aplicación | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
-| HU23-CP03 | `UsuarioControllerTest` | `bloquearseASiMismoDevuelve409` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
-| HU23-CP04 | `AdministracionUsuariosServiceTest` | `rechazaBloquearAlUltimoAdministradorActivo` | Aplicación | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
-| HU23-CP04 | `UsuarioControllerTest` | `bloquearAlUltimoAdministradorActivoDevuelve409` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
+| HU23-CP01 | `AdministracionUsuariosServiceTest` | `bloqueaUnaCuentaActivaYLaGuarda` | Aplicación | AB#39 · AB#243 · AB#252 | PR #79 (modificado en PR #180) (renombrado en PR #185) | ✅ |
+| HU23-CP01 | `UsuarioControllerTest` | `administradorBloqueaUnaCuentaYRecibeSusDatos` | Infraestructura | AB#39 · AB#243 · AB#252 | PR #79 (modificado en PR #180) (renombrado en PR #185) | ✅ |
+| HU23-CP02 | `AdministracionUsuariosServiceTest` | `rechazaBloquearUnUsuarioQueNoExiste` | Aplicación | AB#39 · AB#252 | PR #79 (renombrado en PR #185) | ✅ |
+| HU23-CP02 | `UsuarioControllerTest` | `bloquearUnUsuarioInexistenteDevuelve404` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en PR #185) | ✅ |
+| HU23-CP03 | `AdministracionUsuariosServiceTest` | `rechazaQueUnAdministradorSeBloqueeASiMismo` | Aplicación | AB#39 · AB#252 | PR #79 (renombrado en PR #185) | ✅ |
+| HU23-CP03 | `UsuarioControllerTest` | `bloquearseASiMismoDevuelve409` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en PR #185) | ✅ |
+| HU23-CP04 | `AdministracionUsuariosServiceTest` | `rechazaBloquearAlUltimoAdministradorActivo` | Aplicación | AB#39 · AB#252 | PR #79 (renombrado en PR #185) | ✅ |
+| HU23-CP04 | `UsuarioControllerTest` | `bloquearAlUltimoAdministradorActivoDevuelve409` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en PR #185) | ✅ |
 | HU23-CP04 | `UsuarioMongoAdapterTest` | `contarAdministradoresActivosSoloCuentaLosAdministradoresActivos` | Infraestructura | AB#39 | PR #79 | ✅ |
 | HU23-CP04 | `UsuarioMongoAdapterTest` | `contarAdministradoresActivosDevuelveCeroSinAdministradoresActivos` | Infraestructura | AB#39 | PR #79 | ✅ |
-| HU23-CP05 | `AdministracionUsuariosServiceTest` | `bloqueaAUnAdministradorSiQuedaOtroActivo` | Aplicación | AB#39 · AB#243 · AB#252 | PR #79 (modificado en PR #180) (renombrado en este PR) | 🔍 |
-| HU23-CP06 | `UsuarioControllerTest` | `unNoAdministradorNoPuedeBloquearCuentas` (cliente y vendedor) | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
-| HU23-CP06 | `UsuarioControllerTest` | `bloquearSinSesionEstaProtegido` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
+| HU23-CP05 | `AdministracionUsuariosServiceTest` | `bloqueaAUnAdministradorSiQuedaOtroActivo` | Aplicación | AB#39 · AB#243 · AB#252 | PR #79 (modificado en PR #180) (renombrado en PR #185) | ✅ |
+| HU23-CP06 | `UsuarioControllerTest` | `unNoAdministradorNoPuedeBloquearCuentas` (cliente y vendedor) | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en PR #185) | ✅ |
+| HU23-CP06 | `UsuarioControllerTest` | `bloquearSinSesionEstaProtegido` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en PR #185) | ✅ |
 | HU23-CP07 | `CuentaActivaFilterTest` | `sinUsuarioEnSesionDejaPasar` | Infraestructura | AB#39 | PR #85 | ✅ |
 | HU23-CP08 | `CuentaActivaFilterTest` | `cuentaActivaDejaPasar` | Infraestructura | AB#39 | PR #85 | ✅ |
-| HU23-CP09 | `CuentaActivaFilterTest` | `cuentaBloqueadaInvalidaLaSesionYDevuelve401` | Infraestructura | AB#39 · AB#252 | PR #85 (renombrado en este PR) | 🔍 |
+| HU23-CP09 | `CuentaActivaFilterTest` | `cuentaBloqueadaInvalidaLaSesionYDevuelve401` | Infraestructura | AB#39 · AB#252 | PR #85 (renombrado en PR #185) | ✅ |
 | HU23-CP10 | `CuentaActivaFilterTest` | `usuarioInexistenteInvalidaLaSesionYDevuelve401` | Infraestructura | AB#39 | PR #85 | ✅ |
-| HU23-CP11 | `UsuarioControllerTest` | `elListadoNoMuestraElBloqueoPorIntentosComoBloqueado` | Infraestructura | AB#243 | — | 🔍 |
-| HU23-CP11 | `UsuarioControllerTest` | `laFichaNoMuestraElBloqueoPorIntentosComoBloqueado` | Infraestructura | AB#243 | — | 🔍 |
-| HU23-CP11 | `UsuarioControllerTest` | `laFichaDeVendedorNoMuestraElBloqueoPorIntentosComoBloqueado` | Infraestructura | AB#243 | — | 🔍 |
-| HU23-CP12 | `ListadoUsuariosServiceTest` | `laConsultaRechazaElEstadoDesactivado` | Aplicación | AB#243 | — | 🔍 |
+| HU23-CP11 | `UsuarioControllerTest` | `elListadoNoMuestraElBloqueoPorIntentosComoBloqueado` | Infraestructura | AB#243 | PR #180 | ✅ |
+| HU23-CP11 | `UsuarioControllerTest` | `laFichaNoMuestraElBloqueoPorIntentosComoBloqueado` | Infraestructura | AB#243 | PR #180 | ✅ |
+| HU23-CP11 | `UsuarioControllerTest` | `laFichaDeVendedorNoMuestraElBloqueoPorIntentosComoBloqueado` | Infraestructura | AB#243 | PR #180 | ✅ |
+| HU23-CP12 | `ListadoUsuariosServiceTest` | `laConsultaRechazaElEstadoDesactivado` | Aplicación | AB#243 | PR #180 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
@@ -2330,8 +2350,8 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU24-CP01 | Un administrador activa una cuenta bloqueada y recibe sus datos con estado ACTIVO | Unitario + integración | 3 | 🔍 En revisión |
-| HU24-CP02 | Rechaza un estado que no es ACTIVO ni BLOQUEADO (400) y no cambia nada | Integración (capa web) | 1 | 🔍 En revisión |
+| HU24-CP01 | Un administrador activa una cuenta bloqueada y recibe sus datos con estado ACTIVO | Unitario + integración | 3 | ✅ Pasa |
+| HU24-CP02 | Rechaza un estado que no es ACTIVO ni BLOQUEADO (400) y no cambia nada | Integración (capa web) | 1 | ✅ Pasa |
 | HU24-CP03 | Activar un usuario que no existe devuelve 404 | Unitario + integración | 3 | ✅ Pasa |
 | HU24-CP04 | Un usuario que no es administrador no puede activar cuentas (403) | Integración (capa web) | 1 | ✅ Pasa |
 
@@ -2346,10 +2366,10 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU24-CP01 | `AdministracionUsuariosServiceTest` | `activaUnaCuentaBloqueadaYLaGuarda` | Aplicación | AB#34 · AB#252 | PR #63 (renombrado en este PR) | 🔍 |
+| HU24-CP01 | `AdministracionUsuariosServiceTest` | `activaUnaCuentaBloqueadaYLaGuarda` | Aplicación | AB#34 · AB#252 | PR #63 (renombrado en PR #185) | ✅ |
 | HU24-CP01 | `UsuarioControllerTest` | `administradorActivaUnaCuentaYRecibeSusDatos` | Infraestructura | AB#34 | PR #63 | ✅ |
 | HU24-CP01 | `UsuarioMongoAdapterTest` | `buscarPorIdDevuelveElUsuarioGuardado` | Infraestructura | AB#34 | PR #63 | ✅ |
-| HU24-CP02 | `UsuarioControllerTest` | `rechazaUnEstadoNoAdmitido` | Infraestructura | AB#34 · AB#39 · AB#243 | PR #63 (modificado en PR #79) (modificado en este PR) | 🔍 |
+| HU24-CP02 | `UsuarioControllerTest` | `rechazaUnEstadoNoAdmitido` | Infraestructura | AB#34 · AB#39 · AB#243 | PR #63 (modificado en PR #79) (modificado en PR #180) | ✅ |
 | HU24-CP03 | `AdministracionUsuariosServiceTest` | `rechazaActivarUnUsuarioQueNoExiste` | Aplicación | AB#34 | PR #63 | ✅ |
 | HU24-CP03 | `UsuarioControllerTest` | `activarUnUsuarioInexistenteDevuelve404` | Infraestructura | AB#34 | PR #63 | ✅ |
 | HU24-CP03 | `UsuarioMongoAdapterTest` | `buscarPorIdDevuelveVacioSiNoExiste` | Infraestructura | AB#34 | PR #63 | ✅ |
@@ -2362,6 +2382,43 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU25 · Eliminar mi cuenta de cliente
+
+### Tabla A · HU25 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU25-CP01 | Con la contraseña actual correcta se elimina la cuenta del cliente de la sesión | Unitario | 1 | 🔍 En revisión |
+| HU25-CP02 | Con una contraseña incorrecta no se elimina la cuenta | Unitario | 1 | 🔍 En revisión |
+| HU25-CP03 | Al eliminar la cuenta se responde 204, se invalida la sesión y se borra la cookie `JSESSIONID` | Integración (capa web) | 0 | ⏳ Pendiente (AB#274) |
+| HU25-CP04 | Solo el cliente elimina su propia cuenta: el correo de otro, un vendedor o un administrador dan 403 y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión |
+| HU25-CP05 | Sin contraseña (vacía o ausente) se responde 400 y no se llama al caso de uso | Integración (capa web) | 0 | ⏳ Pendiente (AB#274) |
+
+Notas:
+- **HU25-CP01 a CP05:** casos propuestos en las T274/T275 (AB#274, AB#275) a partir de los criterios de aceptación de la HU25. Pendientes de confirmar con el equipo y de añadir a la HU25 en Azure Boards.
+- **Lógica (T275, AB#275):** `GestionPerfilUseCase.eliminarCuenta(email, password)` con `@PreAuthorize` de `Permisos.SOLO_CLIENTE_PROPIO_POR_EMAIL`: comprueba la contraseña actual (si no coincide, `ContrasenaActualIncorrectaException`, sin borrar nada) y borra al usuario. El borrado es **físico**, como el de un administrador (HU37): solo se borra el documento del usuario. Tras borrarlo, el login con esa cuenta da 401 (correo inexistente) y `CuentaActivaFilter` invalida cualquier sesión abierta en su siguiente petición.
+- **Endpoint (T274, AB#274):** `DELETE /api/perfil` va en su propia rama y PR, con los tests del controlador de CP02 a CP05 (400 `WRONG_PASSWORD`, cierre de sesión, 401, CSRF y validación).
+- **Pendiente con el equipo:** el carrito, las direcciones, los métodos de pago (cifrados), los pedidos y las valoraciones del cliente quedan con un `clienteId` huérfano. Se decide junto con la HU38 (borrado lógico o anonimización).
+- **Tests existentes:** `GestionPerfilServiceTest` saca el usuario de prueba a un método (`lucia()`) que comparten HU4-CP01 y los casos nuevos, y `SeguridadSesionUsuarioServiceTest` crea el servicio con el doble del hash. No cambia lo que comprueban HU4-CP01 ni HU2-CP29.
+- **Frontend:** las tasks AB#272 y AB#273 están sin empezar.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU25-CP01 | `GestionPerfilServiceTest` | `eliminarCuentaConLaContrasenaCorrectaBorraAlUsuario` | Aplicación | AB#275 | este PR | 🔍 |
+| HU25-CP02 | `GestionPerfilServiceTest` | `eliminarCuentaConLaContrasenaIncorrectaNoBorraNada` | Aplicación | AB#275 | este PR | 🔍 |
+| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `unClienteEliminaSuCuenta` | Aplicación | AB#275 | este PR | 🔍 |
+| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `unClienteNoEliminaLaCuentaDeOtro` | Aplicación | AB#275 | este PR | 🔍 |
+| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `unVendedorNoEliminaSuCuenta` | Aplicación | AB#275 | este PR | 🔍 |
+| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `unAdministradorNoEliminaSuCuenta` | Aplicación | AB#275 | este PR | 🔍 |
+| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `sinSesionNoSeEliminaNingunaCuenta` | Aplicación | AB#275 | este PR | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `GestionPerfilServiceTest` y `SeguridadSesionUsuarioServiceTest`: `usuarios/application/service/` (Mockito sin Spring, y contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
+
+---
+
 ## HU26 · Supervisión de vendedores (solo lectura)
 
 ### Tabla A · HU26 ↔ casos de prueba
@@ -2369,7 +2426,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
 | HU26-CP01 | El listado solo trae vendedores, con sus datos (también el nombre comercial y la categoría principal) y sin datos sensibles | Integración (capa web) | 1 | ✅ Pasa |
-| HU26-CP02 | El listado se ordena por nombre o por estado (pendientes, activos, bloqueados), en sentido ascendente o descendente | Integración (capa web y MongoDB) | 4 | 🔍 En revisión |
+| HU26-CP02 | El listado se ordena por nombre o por estado (pendientes, activos, bloqueados), en sentido ascendente o descendente | Integración (capa web y MongoDB) | 4 | ✅ Pasa |
 | HU26-CP03 | La ficha de un vendedor trae sus datos (también el nombre comercial, la categoría principal con su nombre, el DNI y el teléfono), sin datos sensibles | Unitario + integración (capa web) | 2 | ✅ Pasa |
 | HU26-CP04 | La ficha de un usuario que no existe o que no es vendedor devuelve 404 | Unitario + integración (capa web) | 3 | ✅ Pasa |
 | HU26-CP05 | Sin sesión (401) o sin ser administrador (403) no se ve ni el listado ni la ficha | Integración (capa web) | 2 | ✅ Pasa |
@@ -2390,8 +2447,8 @@ Notas:
 |---|---|---|---|---|---|---|
 | HU26-CP01 | `UsuarioControllerTest` | `administradorRecibeElListadoDeVendedores` | Infraestructura | AB#30, AB#43 | PR #80, PR #100 | ✅ |
 | HU26-CP02 | `UsuarioControllerTest` | `listadoDeVendedoresTraduceLaOrdenacion` (nombre, estado, categoría y sin orden) | Infraestructura | AB#30 · AB#29 | PR #80 (modificado en PR #104: `category` pasa a `CATEGORIA`) | ✅ |
-| HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorEstadoAscendente` | Infraestructura | AB#30 · AB#243 | PR #80 (modificado en este PR) | 🔍 |
-| HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorEstadoDescendente` | Infraestructura | AB#30 · AB#243 | PR #80 (modificado en este PR) | 🔍 |
+| HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorEstadoAscendente` | Infraestructura | AB#30 · AB#243 | PR #80 (modificado en PR #180) | ✅ |
+| HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorEstadoDescendente` | Infraestructura | AB#30 · AB#243 | PR #80 (modificado en PR #180) | ✅ |
 | HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorNombre` | Infraestructura | AB#30 | PR #80 | ✅ |
 | HU26-CP03 | `AdministracionUsuariosServiceTest` | `consultarVendedorDevuelveElVendedor` | Aplicación | AB#30 | PR #80 | ✅ |
 | HU26-CP03 | `UsuarioControllerTest` | `fichaDeUnVendedor` | Infraestructura | AB#30, AB#43 | PR #80, PR #100 | ✅ |
@@ -2408,6 +2465,29 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
 - `UsuarioControllerTest`: `usuarios/infrastructure/adapter/in/web/` (con `@WebMvcTest` y `@WithMockUser`)
 - `UsuarioMongoAdapterTest`: `usuarios/infrastructure/adapter/out/persistence/` (con Testcontainers)
+
+---
+
+## HU30 · Desarrollo de una home
+
+### Tabla A · HU30 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU30-CP01 | El logotipo de la cabecera lleva al inicio de cada usuario: con sesión, al de su rol (cliente a los productos, vendedor a sus productos y administrador a su panel); sin sesión, a la home | Frontend (página) | 5 | 🔍 En revisión (5, AB#27, PR #193) |
+
+Notas:
+- **HU30-CP01 (fix, AB#27):** caso propuesto al corregir que el logotipo llevaba siempre a la home de invitado aunque hubiera sesión. Usa `getHomePath(rol)` (`auth/roles.js`), el mismo inicio por rol que el login. Pendiente de confirmar con el equipo y de añadir a la HU30 en Azure Boards. Los tests de la home (`Home.test.jsx`) no llevan ID de caso y no están en esta matriz.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU30-CP01 | `AppHeader.test.jsx` | `HU30-CP01: con la sesión de cliente@esibuy.test, el logotipo lleva a /products` | Frontend · página | AB#27 | PR #193 | 🔍 |
+| HU30-CP01 | `AppHeader.test.jsx` | `HU30-CP01: con la sesión de vendedor@esibuy.test, el logotipo lleva a /seller/products` | Frontend · página | AB#27 | PR #193 | 🔍 |
+| HU30-CP01 | `AppHeader.test.jsx` | `HU30-CP01: con la sesión de admin@esibuy.test, el logotipo lleva a /admin` | Frontend · página | AB#27 | PR #193 | 🔍 |
+| HU30-CP01 | `AppHeader.test.jsx` | `HU30-CP01: sin sesión, el logotipo lleva a la home` | Frontend · página | AB#27 | PR #193 | 🔍 |
+| HU30-CP01 | `AppHeader.test.jsx` | `HU30-CP01: un cliente que pulsa el logotipo llega a los productos, no a la home de invitado` | Frontend · página | AB#27 | PR #193 | 🔍 |
 
 ---
 

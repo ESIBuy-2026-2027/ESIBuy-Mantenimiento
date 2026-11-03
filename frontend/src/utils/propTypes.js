@@ -55,6 +55,13 @@ export const productDetailPropType = PropTypes.shape({
   numValoraciones: PropTypes.number.isRequired,
 })
 
+// Valoración de un producto (HU13), como la devuelve GET /api/products/{id}/valoraciones
+export const reviewPropType = PropTypes.shape({
+  id: PropTypes.string.isRequired,
+  puntuacion: PropTypes.number.isRequired,
+  comentario: PropTypes.string,
+})
+
 export const productValuesPropType = PropTypes.shape({
   nombre: PropTypes.string.isRequired,
   descripcion: PropTypes.string.isRequired,

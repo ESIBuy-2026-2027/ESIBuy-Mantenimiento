@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import { getUsuarioEnSesion } from './authHandlers'
 import { leerPagina, normalizar, paginar } from './paginar'
+import { resumenDeValoraciones } from './reviewsHandlers'
 
 export const VENDEDOR_CON_PRODUCTOS = 'u-2'
 export const OTRO_VENDEDOR = 'u-99'
@@ -92,18 +93,16 @@ const imagenDeEjemplo = (nombre, numero) => {
   return `data:image/svg+xml,${encodeURIComponent(svg)}`
 }
 
-// Para tener variedad sin escribirla a mano: cada séptimo producto no tiene valoraciones y cada noveno, imagen.
-// Las demás valoraciones salen de su número, así que son siempre las mismas.
+// Para tener variedad sin escribirla a mano, cada noveno producto no tiene imagen. La media y el número de valoraciones
+// salen de las valoraciones de ejemplo (HU13, reviewsHandlers), como hará el backend.
 const aCatalogo = ({ id, nombre, categoria }) => {
   const numero = Number(id.slice(2))
-  const sinValorar = numero % 7 === 0
   return {
     id,
     nombre,
     imagen: numero % 9 === 0 ? '' : imagenDeEjemplo(nombre, numero),
     categoriaId: categoria,
-    valoracion: sinValorar ? null : Math.round(25 + ((numero * 37) % 26)) / 10,
-    numValoraciones: sinValorar ? 0 : 3 + ((numero * 13) % 90),
+    ...resumenDeValoraciones(id),
   }
 }
 

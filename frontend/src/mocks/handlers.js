@@ -9,10 +9,12 @@ import { paymentMethodsHandlers } from './paymentMethodsHandlers'
 import { productsHandlers } from './productsHandlers'
 import { profileHandlers } from './profileHandlers'
 import { registroHandlers } from './registroHandlers'
+import { reviewsHandlers } from './reviewsHandlers'
 import { usersHandlers } from './usersHandlers'
 
 export const handlers = [
   ...authHandlers,
+  ...reviewsHandlers,
   ...productsHandlers,
   ...cartHandlers,
   ...ordersHandlers,
