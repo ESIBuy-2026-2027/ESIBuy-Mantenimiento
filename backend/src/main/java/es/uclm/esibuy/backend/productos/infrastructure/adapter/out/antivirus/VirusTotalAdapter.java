@@ -9,6 +9,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -16,7 +17,8 @@ import java.util.Base64;
 
 // Adaptador de AnalisisImagenPort con la API v3 de VirusTotal (HU31, T397). Primero busca el informe de la URL; si
 // VirusTotal no la conoce, la envía a analizar y consulta el análisis como mucho maxConsultas veces. Por imagen son
-// como mucho 2 + maxConsultas peticiones: con 2 consultas, las 4 por minuto de la API pública.
+// como mucho 2 + maxConsultas peticiones: con 2 consultas, las 4 por minuto de la API pública. Si VirusTotal falla o
+// no responde, devuelve SIN_RESULTADO en lugar de lanzar la excepción.
 public class VirusTotalAdapter implements AnalisisImagenPort {
 
     private static final String ANALISIS_TERMINADO = "completed";
@@ -33,6 +35,15 @@ public class VirusTotalAdapter implements AnalisisImagenPort {
 
     @Override
     public ResultadoAnalisis analizar(String urlImagen) {
+        try {
+            return consultarInforme(urlImagen);
+        } catch (RestClientException e) {
+            // Error de VirusTotal (401 API key, 429 cuota, 5xx) o sin conexión: no hay respuesta sobre la imagen
+            return ResultadoAnalisis.SIN_RESULTADO;
+        }
+    }
+
+    private ResultadoAnalisis consultarInforme(String urlImagen) {
         try {
             InformeUrl informe = virusTotal.get()
                     .uri("/urls/{id}", idDeUrl(urlImagen))
