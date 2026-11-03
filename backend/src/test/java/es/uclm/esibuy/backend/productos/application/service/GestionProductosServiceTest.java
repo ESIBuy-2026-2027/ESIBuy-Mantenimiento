@@ -2,8 +2,11 @@ package es.uclm.esibuy.backend.productos.application.service;
 
 import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
+import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
+import es.uclm.esibuy.backend.productos.application.port.out.ResultadoAnalisis;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
+import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
@@ -35,8 +38,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 // Alta (HU31, T204), consulta (HU33, T349), modificación (HU34, T343) eliminación (HU35, T346) y activación y desactivación (HU16, T284 y T285) de los productos propios del vendedor. El repositorio y el puerto hacia usuarios son dobles de
-// prueba (Mockito): se prueba el caso de uso sin MongoDB ni Spring.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP13 a CP16, propuestos a partir del contrato del frontend.
+// prueba (Mockito): se prueba el caso de uso sin MongoDB ni Spring. El antivirus de las imágenes (HU31, T397) también
+// es un doble: por defecto da la imagen por segura.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP13 a CP16, propuestos a partir del contrato del frontend, y
+// HU31-CP32, propuesto.
 @ExtendWith(MockitoExtension.class)
 class GestionProductosServiceTest {
 
@@ -48,11 +53,16 @@ class GestionProductosServiceTest {
     @Mock
     private UsuarioEnSesionPort usuarioEnSesion;
 
+    @Mock
+    private AnalisisImagenPort analisisImagen;
+
     private GestionProductosService servicio;
 
     @BeforeEach
     void preparar() {
-        servicio = new GestionProductosService(productoRepository, usuarioEnSesion);
+        servicio = new GestionProductosService(productoRepository, usuarioEnSesion, analisisImagen);
+        // Por defecto el antivirus da la imagen por buena: los tests que no tratan del análisis no dependen de él
+        lenient().when(analisisImagen.analizar(any())).thenReturn(ResultadoAnalisis.SEGURA);
     }
 
     @Test
@@ -113,6 +123,18 @@ class GestionProductosServiceTest {
 
         assertThrows(ProductoDuplicadoException.class,
                 () -> servicio.crear(comando(new BigDecimal("89.50"), 12, "cat-1")));
+
+        verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU31-CP32: un producto con una imagen que el antivirus marca como maliciosa se rechaza y no se guarda")
+    void rechazaUnaImagenMaliciosaYNoGuardaNada() {
+        lenient().when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(analisisImagen.analizar("https://esibuy.test/teclado.png")).thenReturn(ResultadoAnalisis.MALICIOSA);
+
+        CrearProductoCommand comando = comando(new BigDecimal("89.50"), 12, "cat-1");
+        assertThrows(ImagenNoSeguraException.class, () -> servicio.crear(comando));
 
         verify(productoRepository, never()).guardar(any());
     }
