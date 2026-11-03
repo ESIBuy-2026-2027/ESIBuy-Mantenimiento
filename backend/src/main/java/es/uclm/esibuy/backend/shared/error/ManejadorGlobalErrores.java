@@ -45,6 +45,7 @@ import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionDuplicadaE
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutoeliminacionNoPermitidaException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -112,12 +113,16 @@ public class ManejadorGlobalErrores {
         return new RespuestaError(DATOS_DE_REGISTRO_INVALIDOS, "INVALID_EMAIL");
     }
 
-    // Un @Valid que falla en el cuerpo de la petición (campo vacío o demasiado largo) responde con el mismo
-    // formato que el resto de 400, y no con el cuerpo por defecto de Spring. Afecta a todos los endpoints con @Valid.
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    // Un cuerpo que no pasa @Valid (campo vacío o demasiado largo) o que no se puede leer (JSON mal formado o un
+    // valor de un tipo incompatible) responde en todos los endpoints con el formato y el código del resto de 400 de
+    // validación, y no con el cuerpo por defecto de Spring. El mensaje es genérico: el detalle de la validación o de
+    // Jackson no sale al cliente (decisión del equipo en la daily del 03/11/2026).
+    private static final String DATOS_ENVIADOS_INVALIDOS = "Los datos enviados no son válidos";
+
+    @ExceptionHandler({MethodArgumentNotValidException.class, HttpMessageNotReadableException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError cuerpoDeLaPeticionInvalido() {
-        return new RespuestaError(DATOS_DE_REGISTRO_INVALIDOS, "INVALID_FIELD");
+        return new RespuestaError(DATOS_ENVIADOS_INVALIDOS, CODIGO_VALIDACION);
     }
 
     // Switch exhaustivo: si el dominio añade un motivo, esto deja de compilar hasta darle su code.

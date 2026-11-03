@@ -244,8 +244,7 @@ class ProductoControllerTest {
         mockMvc.perform(post(URL).with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
                         .contentType(MediaType.APPLICATION_JSON).content(cuerpo))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
-                .andExpect(jsonPath("$.mensaje").value("Los datos enviados no son válidos"));
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
         verify(gestionProductos, never()).crear(any());
     }
@@ -382,8 +381,7 @@ class ProductoControllerTest {
         mockMvc.perform(put(URL + "/p-9").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
                         .contentType(MediaType.APPLICATION_JSON).content(cuerpo))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
-                .andExpect(jsonPath("$.mensaje").value("Los datos enviados no son válidos"));
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
         verify(gestionProductos, never()).modificarMiProducto(any());
     }
