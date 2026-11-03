@@ -299,4 +299,33 @@ class AdministracionCategoriasControllerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("CATEGORY_HAS_SELLERS"));
     }
+
+    @Test
+    @DisplayName("HU42-CP14: eliminar una categoría que no existe devuelve 404")
+    void eliminarUnaCategoriaInexistenteDevuelve404() throws Exception {
+        doThrow(new CategoriaNoEncontradaException()).when(administracionCategorias).eliminar("c-9");
+
+        mockMvc.perform(eliminar("c-9").with(user("admin").roles("ADMINISTRADOR")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CATEGORY_NOT_FOUND"));
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "VENDEDOR"})
+    @DisplayName("HU42-CP15: un usuario sin rol de administrador no puede eliminar categorías (403)")
+    void eliminarConOtroRolDevuelve403(String rol) throws Exception {
+        mockMvc.perform(eliminar("c-9").with(user("usuario").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(administracionCategorias);
+    }
+
+    @Test
+    @DisplayName("HU42-CP15: sin sesión no se pueden eliminar categorías (401)")
+    void eliminarSinSesionDevuelve401() throws Exception {
+        mockMvc.perform(eliminar("c-9"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(administracionCategorias);
+    }
 }
