@@ -602,6 +602,8 @@ class ProductoControllerTest {
                 Arguments.of("descuento activo sin porcentaje",
                         cuerpo("\"Teclado\"", "89.5", "12", "\"cat-1\"", "\"\"",
                                 "{\"activo\": true, \"porcentaje\": null}")),
+                Arguments.of("disponible ausente", cuerpoValido().replace("\"disponible\": true, ", "")),
+                Arguments.of("disponible nulo", cuerpoValido().replace("\"disponible\": true", "\"disponible\": null")),
                 Arguments.of("descuento con porcentaje mayor que 100",
                         cuerpo("\"Teclado\"", "89.5", "12", "\"cat-1\"", "\"\"",
                                 "{\"activo\": true, \"porcentaje\": 101}")));
