@@ -232,3 +232,39 @@ describe('AppHeader: Mis pedidos (HU11)', () => {
     expect(screen.queryByRole('link', { name: /mis pedidos/i })).not.toBeInTheDocument()
   })
 })
+
+// El logotipo de la cabecera lleva al inicio de quien lo pulsa (HU30, AB#27): con sesión, a la página de inicio de su
+// rol (la misma a la que lleva el login); sin sesión, a la home. Antes llevaba siempre a la home de invitado.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU30-CP01, propuesto.
+describe('AppHeader (HU30): el logotipo lleva al inicio de cada usuario', () => {
+  const logotipo = () => screen.findByRole('link', { name: 'ESIBuy' })
+
+  it.each([
+    ['cliente@esibuy.test', '/products'],
+    ['vendedor@esibuy.test', '/seller/products'],
+    ['admin@esibuy.test', '/admin'],
+  ])('HU30-CP01: con la sesión de %s, el logotipo lleva a %s', async (email, inicio) => {
+    await abrirSesionPorApi(email)
+    renderApp('/profile')
+
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(await logotipo()).toHaveAttribute('href', inicio)
+  })
+
+  it('HU30-CP01: sin sesión, el logotipo lleva a la home', async () => {
+    renderApp('/')
+
+    await screen.findByRole('link', { name: /iniciar sesión/i })
+    expect(await logotipo()).toHaveAttribute('href', '/')
+  })
+
+  it('HU30-CP01: un cliente que pulsa el logotipo llega a los productos, no a la home de invitado', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/profile')
+
+    await user.click(await logotipo())
+
+    await esperarRuta('/products')
+  })
+})
