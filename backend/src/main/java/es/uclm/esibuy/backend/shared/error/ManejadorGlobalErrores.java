@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.shared.error;
 
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaConProductosException;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaConVendedoresException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaDuplicadaException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaInvalidaException;
 import es.uclm.esibuy.backend.carrito.domain.exception.CantidadInvalidaException;
@@ -268,6 +269,15 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError categoriaConProductos() {
         return new RespuestaError("La categoría tiene productos y no se puede eliminar", "CATEGORY_HAS_PRODUCTS");
+    }
+
+    // 409 + code cuando la categoría que se elimina es la principal de algún vendedor (HU42, T325).
+    // PENDIENTE: confirmar el code con quien haga la vista de eliminación (T324).
+    @ExceptionHandler(CategoriaConVendedoresException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError categoriaConVendedores() {
+        return new RespuestaError("La categoría es la principal de algún vendedor y no se puede eliminar",
+                "CATEGORY_HAS_SELLERS");
     }
 
     // 400 + code al dar de alta un método de pago (HU6), también si la tarjeta está caducada. El mensaje es
