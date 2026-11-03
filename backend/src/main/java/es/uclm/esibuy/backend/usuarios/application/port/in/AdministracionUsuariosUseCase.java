@@ -88,5 +88,10 @@ public interface AdministracionUsuariosUseCase {
      */
     void eliminarAdministrador(String usuarioId, String emailAdministrador);
 
+    /**
+     * ¿Algún vendedor tiene esta categoría como principal? Lo usa el módulo de categorías (HU42) para no eliminar
+     * una categoría en uso, sin ver el dominio de usuarios.
+     */
+    boolean existenVendedoresConCategoria(String categoriaId);
     
 }

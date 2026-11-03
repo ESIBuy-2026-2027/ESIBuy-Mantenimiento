@@ -40,4 +40,6 @@ public interface UsuarioRepositoryPort {
     // Elimina físicamente un usuario por su id (HU37).
     void eliminarPorId(String id);
 
+    // ¿Hay algún vendedor cuya categoría principal sea esta? (HU42)
+    boolean existeVendedorConCategoriaPrincipal(String categoriaId);
 }

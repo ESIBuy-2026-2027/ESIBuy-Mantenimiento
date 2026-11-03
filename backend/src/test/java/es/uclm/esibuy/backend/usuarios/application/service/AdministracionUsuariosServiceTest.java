@@ -33,6 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -45,8 +46,8 @@ import static org.mockito.Mockito.when;
 // Gestión de cuentas por el administrador: activar (HU24, T33/T34), consultar la ficha de un usuario (HU20)
 // y de un vendedor (HU26) y editar (HU22, T42/T44). El repositorio es un doble de prueba (Mockito): se prueba
 // el caso de uso sin MongoDB ni Spring.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU24-CP01 a CP04, HU20-CP01 a CP04, HU26-CP01 a CP05 y
-// HU22-CP01 a CP08, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU24-CP01 a CP04, HU20-CP01 a CP04, HU26-CP01 a CP05,
+// HU22-CP01 a CP08 y HU42-CP07, propuestos.
 @ExtendWith(MockitoExtension.class)
 class AdministracionUsuariosServiceTest {
 
@@ -540,5 +541,23 @@ class AdministracionUsuariosServiceTest {
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
 
         assertThrows(UsuarioNoEncontradoException.class, () -> servicio.consultarNombreComercial("u-1"));
+    }
+
+    // Vendedores de una categoría (HU42, T326): lo pregunta el módulo de categorías antes de eliminarla.
+
+    @Test
+    @DisplayName("HU42-CP07: existenVendedoresConCategoria es verdadero si algún vendedor la tiene como principal")
+    void hayVendedoresConLaCategoria() {
+        when(usuarioRepository.existeVendedorConCategoriaPrincipal("c-1")).thenReturn(true);
+
+        assertTrue(servicio.existenVendedoresConCategoria("c-1"));
+    }
+
+    @Test
+    @DisplayName("HU42-CP07: existenVendedoresConCategoria es falso si ningún vendedor la tiene como principal")
+    void noHayVendedoresConLaCategoria() {
+        when(usuarioRepository.existeVendedorConCategoriaPrincipal("c-2")).thenReturn(false);
+
+        assertFalse(servicio.existenVendedoresConCategoria("c-2"));
     }
 }

@@ -2915,6 +2915,77 @@ Ruta de la clase de test de seguridad (bajo `backend/src/test/java/es/uclm/esibu
 
 ---
 
+## HU42 · Eliminar categorías
+
+### Tabla A · HU42 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU42-CP01 | Eliminar borra una categoría sin productos ni vendedores | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
+| HU42-CP02 | Una categoría con productos no se puede eliminar y no se borra nada (409) | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
+| HU42-CP03 | Una categoría que es la principal de algún vendedor no se puede eliminar y no se borra nada (409) | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
+| HU42-CP04 | Eliminar una categoría que no existe falla sin consultar ni borrar nada (404) | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
+| HU42-CP05 | Eliminar categorías exige el rol administrador; cliente, vendedor y sin sesión se rechazan. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
+| HU42-CP06 | Eliminar borra físicamente solo la categoría indicada; un id que no existe, o que no tiene formato de id, no falla ni borra nada | Integración MongoDB | 2 | 🔍 En revisión (2, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
+| HU42-CP07 | El módulo de usuarios dice si algún vendedor tiene una categoría como principal | Unitario (aplicación) | 2 | 🔍 En revisión (2, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
+| HU42-CP08 | Preguntar por los vendedores de una categoría exige el rol administrador; cliente, vendedor y sin sesión se rechazan. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 4 | 🔍 En revisión (4, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
+| HU42-CP09 | La consulta en MongoDB detecta vendedores con la categoría como principal y no cuenta a quien no es vendedor | Integración MongoDB | 3 | 🔍 En revisión (3, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
+| HU42-CP10 | El adaptador de categorías pregunta al módulo de usuarios por su puerto de entrada | Unitario (adaptador) | 2 | 🔍 En revisión (2, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
+| HU42-CP11 | `DELETE /api/admin/categorias/{id}` responde 204 sin cuerpo | Controlador | 1 | 🔍 En revisión (1, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
+| HU42-CP12 | Eliminar una categoría con productos devuelve 409 `CATEGORY_HAS_PRODUCTS` | Controlador | 1 | 🔍 En revisión (1, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
+| HU42-CP13 | Eliminar la categoría principal de un vendedor devuelve 409 `CATEGORY_HAS_SELLERS` | Controlador | 1 | 🔍 En revisión (1, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
+| HU42-CP14 | Eliminar una categoría que no existe devuelve 404 `CATEGORY_NOT_FOUND` | Controlador | 1 | 🔍 En revisión (1, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
+| HU42-CP15 | Sin rol de administrador no se pueden eliminar categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | 🔍 En revisión (2, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
+
+Notas:
+- **HU42-CP01 a CP15:** casos propuestos en las T326 (AB#326) y T325 (AB#325), a partir de los criterios de la HU42. Pendientes de confirmar con el equipo y de añadir a la HU42 en Azure Boards.
+- **Endpoint (T325):** `DELETE /api/admin/categorias/{id}` → 204 sin cuerpo. Errores: 404 `CATEGORY_NOT_FOUND`, 409 `CATEGORY_HAS_PRODUCTS`, 409 `CATEGORY_HAS_SELLERS`, 401 sin sesión y 403 con otro rol. Necesita la cabecera CSRF `X-XSRF-TOKEN`.
+- **Backend (T326):** `AdministracionCategoriasUseCase.eliminar(id)`. Orden de comprobaciones: existe (404), productos (409), vendedores (409) y borrado físico. Puertos de salida `CategoriaRepositoryPort.eliminar` y `VendedoresPorCategoriaPort`. El módulo de usuarios ofrece `existenVendedoresConCategoria` (CP07 a CP09) y categorías lo consume solo por su puerto de entrada (CP10).
+- **Decisión:** además de los productos, no se puede eliminar la categoría que es la principal de un vendedor. El recuento de productos incluye los no disponibles.
+- **Pendiente (riesgo conocido):** puede haber una condición de carrera entre eliminar una categoría y crear un producto o un vendedor con ella, porque no hay transacción entre colecciones. No está resuelto.
+- **Pendiente (frontend):** la vista (T324) debe tratar los dos códigos 409 nuevos.
+- **HU42-CP05 y CP08 (R8, seguridad en la capa de negocio):** nacen en verde, sin rojo real, porque `@PreAuthorize` va desde el primer ciclo. CP05 usa la clase existente `SeguridadCategoriasServiceTest` y CP08 la de HU20-CP07; los tests de CP08 llegaron en un commit posterior al que solo cambió el comentario de cabecera.
+- **HU42-CP14 y CP15:** también sin rojo real, porque el handler del 404 (HU41) y la regla de `/api/admin/**` ya existían.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU42-CP01 | `AdministracionCategoriasServiceTest` | `eliminarBorraUnaCategoriaSinProductosNiVendedores` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP02 | `AdministracionCategoriasServiceTest` | `eliminarRechazaUnaCategoriaConProductos` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP03 | `AdministracionCategoriasServiceTest` | `eliminarRechazaUnaCategoriaConVendedores` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP04 | `AdministracionCategoriasServiceTest` | `eliminarUnaCategoriaInexistenteFalla` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP05 | `SeguridadCategoriasServiceTest` | `unClienteNoEliminaCategorias` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP05 | `SeguridadCategoriasServiceTest` | `unVendedorNoEliminaCategorias` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP05 | `SeguridadCategoriasServiceTest` | `unAnonimoNoEliminaCategorias` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP05 | `SeguridadCategoriasServiceTest` | `unAdministradorEliminaCategorias` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP05 | `SeguridadCategoriasServiceTest` | `sinSesionSeRechazaLaEliminacion` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP06 | `CategoriaMongoAdapterTest` | `eliminarBorraSoloLaCategoriaIndicada` | Infraestructura | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP06 | `CategoriaMongoAdapterTest` | `eliminarUnIdInexistenteNoBorraNada` (2 variantes) | Infraestructura | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP07 | `AdministracionUsuariosServiceTest` | `hayVendedoresConLaCategoria` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP07 | `AdministracionUsuariosServiceTest` | `noHayVendedoresConLaCategoria` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP08 | `SeguridadAdministracionUsuarioServiceTest` | `unClienteNoPreguntaPorLosVendedoresDeUnaCategoria` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP08 | `SeguridadAdministracionUsuarioServiceTest` | `unVendedorNoPreguntaPorLosVendedoresDeUnaCategoria` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP08 | `SeguridadAdministracionUsuarioServiceTest` | `unAdministradorPreguntaPorLosVendedoresDeUnaCategoria` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP08 | `SeguridadAdministracionUsuarioServiceTest` | `sinSesionSeRechazaLaPreguntaPorLosVendedores` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP09 | `UsuarioMongoAdapterTest` | `existeVendedorConLaCategoriaPrincipal` | Infraestructura | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP09 | `UsuarioMongoAdapterTest` | `noExisteVendedorConLaCategoriaPrincipal` | Infraestructura | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP09 | `UsuarioMongoAdapterTest` | `soloCuentanLosVendedores` | Infraestructura | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP10 | `VendedoresPorCategoriaAdapterTest` | `existenVendedoresPreguntaAlModuloDeUsuarios` | Infraestructura | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP10 | `VendedoresPorCategoriaAdapterTest` | `noExistenVendedoresSiElModuloDeUsuariosDiceQueNo` | Infraestructura | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP11 | `AdministracionCategoriasControllerTest` | `unAdministradorEliminaUnaCategoria` | Infraestructura | AB#325 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP12 | `AdministracionCategoriasControllerTest` | `eliminarUnaCategoriaConProductosDevuelve409` | Infraestructura | AB#325 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP13 | `AdministracionCategoriasControllerTest` | `eliminarUnaCategoriaPrincipalDeUnVendedorDevuelve409` | Infraestructura | AB#325 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP14 | `AdministracionCategoriasControllerTest` | `eliminarUnaCategoriaInexistenteDevuelve404` | Infraestructura | AB#325 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP15 | `AdministracionCategoriasControllerTest` | `eliminarConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#325 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP15 | `AdministracionCategoriasControllerTest` | `eliminarSinSesionDevuelve401` | Infraestructura | AB#325 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+
+Ruta de las clases de test de seguridad (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `SeguridadCategoriasServiceTest`: `categorias/application/service/` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB)
+- `SeguridadAdministracionUsuarioServiceTest`: `usuarios/application/service/` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB)
+
+---
+
 ## HU43 · Cerrar sesión
 
 ### Tabla A · HU43 ↔ casos de prueba

@@ -35,7 +35,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoExcep
 // el correo del administrador, que sea el de la sesión. consultarNombreComercial es del cliente (lo usa el carrito).
 // Las anotaciones solo se evalúan con Spring, así que se usa un contexto mínimo (sin MongoDB) con los servicios
 // reales y dobles de prueba de los puertos de salida.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU20-CP07, propuesto.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU20-CP07 y HU42-CP08, propuestos.
 @SpringJUnitConfig(SeguridadAdministracionUsuariosServiceTest.Configuracion.class)
 class SeguridadAdministracionUsuariosServiceTest {
 
@@ -108,6 +108,11 @@ class SeguridadAdministracionUsuariosServiceTest {
                 () -> assertThrows(AccessDeniedException.class, () -> crearAdministrador.crear(ALTA)));
         verifyNoInteractions(usuarioRepository, hashContrasena);
     }
+ 
+    private void comprobarQueRechazaLaPreguntaPorLosVendedores() {
+        assertThrows(AccessDeniedException.class, () -> administracionUsuarios.existenVendedoresConCategoria("c-1"));
+        verifyNoInteractions(usuarioRepository);
+    }
 
     @Test
     @WithMockUser(username = "cliente@esibuy.test", roles = "CLIENTE")
@@ -173,5 +178,34 @@ class SeguridadAdministracionUsuariosServiceTest {
                 () -> assertThrows(AuthenticationCredentialsNotFoundException.class,
                         () -> crearAdministrador.crear(ALTA)));
         verifyNoInteractions(usuarioRepository, hashContrasena);
+    }
+
+    @Test
+    @WithMockUser(username = "cliente@esibuy.test", roles = "CLIENTE")
+    @DisplayName("HU42-CP08: un cliente no puede preguntar si hay vendedores con una categoría como principal")
+    void unClienteNoPreguntaPorLosVendedoresDeUnaCategoria() {
+        comprobarQueRechazaLaPreguntaPorLosVendedores();
+    }
+
+    @Test
+    @WithMockUser(username = "vendedor@esibuy.test", roles = "VENDEDOR")
+    @DisplayName("HU42-CP08: un vendedor no puede preguntar si hay vendedores con una categoría como principal")
+    void unVendedorNoPreguntaPorLosVendedoresDeUnaCategoria() {
+        comprobarQueRechazaLaPreguntaPorLosVendedores();
+    }
+
+    @Test
+    @WithMockUser(username = ADMIN, roles = "ADMINISTRADOR")
+    @DisplayName("HU42-CP08: un administrador sí pregunta si hay vendedores con una categoría como principal")
+    void unAdministradorPreguntaPorLosVendedoresDeUnaCategoria() {
+        assertDoesNotThrow(() -> administracionUsuarios.existenVendedoresConCategoria("c-1"));
+    }
+
+    @Test
+    @DisplayName("HU42-CP08: sin sesión se rechaza la pregunta por los vendedores de una categoría")
+    void sinSesionSeRechazaLaPreguntaPorLosVendedores() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> administracionUsuarios.existenVendedoresConCategoria("c-1"));
+        verifyNoInteractions(usuarioRepository);
     }
 }

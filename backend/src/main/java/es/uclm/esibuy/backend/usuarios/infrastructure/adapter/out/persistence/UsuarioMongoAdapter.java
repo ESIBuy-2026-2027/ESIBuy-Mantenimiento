@@ -107,6 +107,12 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
         return repository.countByRolAndEstado("ADMINISTRADOR", ESTADO_ACTIVO);
     }
 
+    // Solo cuentan los vendedores (HU42): la categoría principal es un dato de su ficha.
+    @Override
+    public boolean existeVendedorConCategoriaPrincipal(String categoriaId) {
+        return repository.existsByRolAndCategoriaPrincipalId(Rol.VENDEDOR.name(), categoriaId);
+    }
+
     @Override
     public boolean existePorCorreo(String correo) {
         return repository.existsByEmail(correo);
