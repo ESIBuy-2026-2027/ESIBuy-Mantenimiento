@@ -167,21 +167,21 @@ class UsuarioTest {
     }
 
     @Test
-    @DisplayName("HU1-CP11: desactiva un usuario")
-    void desactivaUsuario() {
+    @DisplayName("HU1-CP11: bloquea un usuario")
+    void bloqueaUsuario() {
         Usuario usuario = cliente();
 
-        usuario.desactivar();
+        usuario.bloquear();
 
         assertFalse(usuario.estaActivo());
         assertEquals("BLOQUEADO", usuario.getEstado());
     }
 
     @Test
-    @DisplayName("HU1-CP11: activa un usuario desactivado")
-    void activaUsuarioDesactivado() {
+    @DisplayName("HU1-CP11: activa un usuario bloqueado")
+    void activaUsuarioBloqueado() {
         Usuario usuario = cliente();
-        usuario.desactivar();
+        usuario.bloquear();
 
         usuario.activar();
 

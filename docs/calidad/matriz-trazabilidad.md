@@ -136,8 +136,8 @@ Notas:
 | HU1-CP11 | `UsuarioTest` | `rechazaEmailNulo` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaContrasenaHashEnBlanco` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaRolNulo` | Dominio | AB#214 | PR #34 | ✅ |
-| HU1-CP11 | `UsuarioTest` | `desactivaUsuario` | Dominio | AB#214 · AB#243 | PR #34 (renombrado en PR #36) (modificado en este PR) | 🔍 |
-| HU1-CP11 | `UsuarioTest` | `activaUsuarioDesactivado` | Dominio | AB#214 | PR #34 (renombrado en PR #36) | ✅ |
+| HU1-CP11 | `UsuarioTest` | `bloqueaUsuario` | Dominio | AB#214 · AB#243 · AB#252 | PR #34 (renombrado en PR #36) (modificado en PR #180) (renombrado en este PR) | 🔍 |
+| HU1-CP11 | `UsuarioTest` | `activaUsuarioBloqueado` | Dominio | AB#214 · AB#252 | PR #34 (renombrado en PR #36) (renombrado en este PR) | 🔍 |
 | HU1-CP11 | `UsuarioTest` | `rechazaUsuarioSinDatosPersonales` | Dominio | AB#229 | PR #72 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaClienteSinDatosDeCliente` | Dominio | AB#229 | PR #72 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaDatosDeClienteSiNoEsCliente` | Dominio | AB#229 | PR #72 | ✅ |
@@ -485,7 +485,7 @@ Notas:
 - **HU2-CP01 a CP04:** casos definidos en la T19/T22 a partir del contrato del frontend (`frontend/src/mocks/authHandlers.js`). Pendientes de añadir a la descripción de la T22 en Azure Boards.
 - **HU2-CP04:** «desactivada» es la cuenta desactivada por un administrador (`desactivar()` de `Usuario`), distinta del bloqueo temporal de CP03.
 - **Persistencia (T225, AB#225):** `UsuarioDocument` guarda los intentos fallidos, el bloqueo y la desactivación, así que CP03 y CP04 se cumplen también en la aplicación real. Los tests de integración de `UsuarioMongoAdapterTest` lo comprueban contra MongoDB.
-- **AB#210:** el PR #43 guarda esos campos con los nombres del modelo de BBDD (`estado` ACTIVO/DESACTIVADO, `failedLoginAttempts`, `lockedUntil`) y amplía `conservaLaDesactivacion` y `conservaLosIntentosFallidosYElBloqueo` para comprobar esos nombres en el documento guardado.
+- **AB#210:** el PR #43 guarda esos campos con los nombres del modelo de BBDD (`estado` ACTIVO/DESACTIVADO, `failedLoginAttempts`, `lockedUntil`) y amplía `conservaElBloqueo` y `conservaLosIntentosFallidosYElBloqueo` para comprobar esos nombres en el documento guardado.
 - **HU2-CP05 a CP12:** casos definidos en la T21 (AB#21, tests con AB#22) a partir del contrato del frontend (`frontend/docs/hu2-login.md`). Pendientes de confirmar con el equipo y de añadir a la descripción de la T22 en Azure Boards. Reglas del código: 6 dígitos, válido 10 minutos, de un solo uso y se agota tras 5 intentos fallidos.
 - **HU2-CP11:** que un login nuevo sustituya al código anterior es responsabilidad del adaptador de persistencia de `CodigoVerificacionRepositoryPort` (`tokens_seguridad`). Lo prueba `CodigoVerificacionMongoAdapterTest` (T232).
 - **T21:** la T21 solo implementa el caso de uso con mocks. El endpoint, el envío real del correo y la persistencia de los códigos van en tasks nuevas. Los tres tests de la T19 que terminan con un login correcto (`iniciaSesionConCredencialesCorrectas`, `permiteCuartoIntentoFallidoSinBloquear` y `desbloqueaLaCuentaPasados15Minutos`) crean ahora el usuario con id, porque el código se asocia al id del usuario; lo que comprueban no cambia.
@@ -518,8 +518,8 @@ Notas:
 | HU2-CP03 | `AutenticacionServiceTest` | `desbloqueaLaCuentaPasados15Minutos` | Aplicación | AB#22 | PR #36 | ✅ |
 | HU2-CP03 | `UsuarioMongoAdapterTest` | `guardarUnUsuarioLeidoLoActualizaSinDuplicarlo` | Infraestructura | AB#225 | PR #46 | ✅ |
 | HU2-CP03 | `UsuarioMongoAdapterTest` | `conservaLosIntentosFallidosYElBloqueo` | Infraestructura | AB#225 · AB#210 | PR #46 (ampliado en PR #43) | ✅ |
-| HU2-CP04 | `AutenticacionServiceTest` | `rechazaCuentaDesactivada` | Aplicación | AB#22 | PR #36 | ✅ |
-| HU2-CP04 | `UsuarioMongoAdapterTest` | `conservaLaDesactivacion` | Infraestructura | AB#225 · AB#210 · AB#243 | PR #46 (ampliado en PR #43) (modificado en este PR) | 🔍 |
+| HU2-CP04 | `AutenticacionServiceTest` | `rechazaCuentaBloqueada` | Aplicación | AB#22 · AB#252 | PR #36 (renombrado en este PR) | 🔍 |
+| HU2-CP04 | `UsuarioMongoAdapterTest` | `conservaElBloqueo` | Infraestructura | AB#225 · AB#210 · AB#243 · AB#252 | PR #46 (ampliado en PR #43) (modificado en PR #180) (renombrado en este PR) | 🔍 |
 | HU2-CP04 | `UsuarioMongoAdapterTest` | `conservaUnUsuarioActivo` | Infraestructura | AB#225 | PR #46 | ✅ |
 | HU2-CP05 | `AutenticacionServiceTest` | `enviaElCodigoAlCorreoTrasValidarLasCredenciales` | Aplicación | AB#22 | PR #52 | ✅ |
 | HU2-CP05 | `SmtpEnvioEmailAdapterTest` | `enviaElCodigoAlCorreoDelUsuario` | Infraestructura | AB#231 | PR #54 | ✅ |
@@ -1741,23 +1741,23 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU13-CP01 | Una valoración se crea con su producto, su cliente, su puntuación y un comentario; nace sin id, y el comentario es opcional (vacío si no hay) y se guarda sin espacios en los extremos | Unitario (dominio) | 3 | 🔍 En revisión (3, AB#369, PR #179) |
-| HU13-CP02 | La puntuación es un entero de 1 a 5: se admiten los extremos y se rechaza lo de fuera | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#369, PR #179) |
-| HU13-CP03 | El comentario admite hasta 500 caracteres, sin contar los espacios de los extremos | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#369, PR #179) |
-| HU13-CP04 | El producto y el cliente son obligatorios (ni nulos ni en blanco) | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#369, PR #179) |
-| HU13-CP05 | Persistencia en `valoraciones`: se asigna el id, el cliente se guarda como `usuarioId`, se busca por producto, se sabe si un cliente ya valoró un producto y el índice único (usuarioId, productoId) rechaza la repetida como valoración duplicada | Integración MongoDB | 5 | 🔍 En revisión (5, AB#369, PR #179) |
-| HU13-CP06 | Pedidos indica si un cliente ha comprado un producto: un pedido PAGADO suyo que lo contenga; la consulta se hace con el id del cliente, no con su correo | Unitario | 3 | 🔍 En revisión (3, AB#370, PR #179) |
-| HU13-CP07 | Consultar si se ha comprado un producto exige el rol cliente y que el correo sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, AB#370, PR #179) |
-| HU13-CP08 | La consulta de compras en MongoDB encuentra el producto en cualquier línea de un pedido PAGADO del cliente, no cuenta los pedidos de otro cliente y solo cuenta el estado PAGADO | Integración MongoDB | 3 | 🔍 En revisión (3, AB#370, PR #179) |
-| HU13-CP09 | El cliente que ha comprado un producto lo valora: la valoración se guarda con el id del cliente y se devuelve con su id | Unitario | 2 | 🔍 En revisión (2, AB#370, PR #179) |
-| HU13-CP10 | No se puede valorar un producto que no se ha comprado, y no se guarda nada | Unitario | 1 | 🔍 En revisión (1, AB#370, PR #179) |
-| HU13-CP11 | No se puede valorar dos veces el mismo producto, y se conserva la primera valoración | Unitario | 1 | 🔍 En revisión (1, AB#370, PR #179) |
-| HU13-CP12 | Valorar exige el rol cliente y que el correo del comando sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, AB#370, PR #179) |
-| HU13-CP13 | Los adaptadores preguntan por su puerto de entrada al módulo de usuarios (id del cliente) y al de pedidos (si ha comprado) | Unitario | 3 | 🔍 En revisión (3, AB#370, PR #179) |
-| HU13-CP14 | `POST /api/products/{id}/valoraciones`: 201 con la valoración y sin el cliente; 400 `VALIDATION_ERROR`; 403 `PRODUCT_NOT_PURCHASED`; 409 `REVIEW_ALREADY_EXISTS`; sin sesión 401, otro rol 403 y sin CSRF se rechaza | Integración (capa web) | 5 | 🔍 En revisión (5, AB#370, PR #179) |
-| HU13-CP15 | Consultar un producto devuelve todas sus valoraciones y solo las suyas; sin valoraciones, una lista vacía | Unitario | 2 | 🔍 En revisión (2, AB#371, PR #179) |
-| HU13-CP16 | Consultar las valoraciones de un producto exige el rol cliente; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 4 | 🔍 En revisión (4, AB#371, PR #179) |
-| HU13-CP17 | `GET /api/products/{id}/valoraciones`: 200 con la lista sin el cliente, o vacía; sin sesión 401 y otro rol 403 | Integración (capa web) | 3 | 🔍 En revisión (3, AB#371, PR #179) |
+| HU13-CP01 | Una valoración se crea con su producto, su cliente, su puntuación y un comentario; nace sin id, y el comentario es opcional (vacío si no hay) y se guarda sin espacios en los extremos | Unitario (dominio) | 3 | ✅ Pasa (3, AB#369, PR #179) |
+| HU13-CP02 | La puntuación es un entero de 1 a 5: se admiten los extremos y se rechaza lo de fuera | Unitario (dominio) | 2 | ✅ Pasa (2, AB#369, PR #179) |
+| HU13-CP03 | El comentario admite hasta 500 caracteres, sin contar los espacios de los extremos | Unitario (dominio) | 2 | ✅ Pasa (2, AB#369, PR #179) |
+| HU13-CP04 | El producto y el cliente son obligatorios (ni nulos ni en blanco) | Unitario (dominio) | 2 | ✅ Pasa (2, AB#369, PR #179) |
+| HU13-CP05 | Persistencia en `valoraciones`: se asigna el id, el cliente se guarda como `usuarioId`, se busca por producto, se sabe si un cliente ya valoró un producto y el índice único (usuarioId, productoId) rechaza la repetida como valoración duplicada | Integración MongoDB | 5 | ✅ Pasa (5, AB#369, PR #179) |
+| HU13-CP06 | Pedidos indica si un cliente ha comprado un producto: un pedido PAGADO suyo que lo contenga; la consulta se hace con el id del cliente, no con su correo | Unitario | 3 | ✅ Pasa (3, AB#370, PR #179) |
+| HU13-CP07 | Consultar si se ha comprado un producto exige el rol cliente y que el correo sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#370, PR #179) |
+| HU13-CP08 | La consulta de compras en MongoDB encuentra el producto en cualquier línea de un pedido PAGADO del cliente, no cuenta los pedidos de otro cliente y solo cuenta el estado PAGADO | Integración MongoDB | 3 | ✅ Pasa (3, AB#370, PR #179) |
+| HU13-CP09 | El cliente que ha comprado un producto lo valora: la valoración se guarda con el id del cliente y se devuelve con su id | Unitario | 2 | ✅ Pasa (2, AB#370, PR #179) |
+| HU13-CP10 | No se puede valorar un producto que no se ha comprado, y no se guarda nada | Unitario | 1 | ✅ Pasa (1, AB#370, PR #179) |
+| HU13-CP11 | No se puede valorar dos veces el mismo producto, y se conserva la primera valoración | Unitario | 1 | ✅ Pasa (1, AB#370, PR #179) |
+| HU13-CP12 | Valorar exige el rol cliente y que el correo del comando sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#370, PR #179) |
+| HU13-CP13 | Los adaptadores preguntan por su puerto de entrada al módulo de usuarios (id del cliente) y al de pedidos (si ha comprado) | Unitario | 3 | ✅ Pasa (3, AB#370, PR #179) |
+| HU13-CP14 | `POST /api/products/{id}/valoraciones`: 201 con la valoración y sin el cliente; 400 `VALIDATION_ERROR`; 403 `PRODUCT_NOT_PURCHASED`; 409 `REVIEW_ALREADY_EXISTS`; sin sesión 401, otro rol 403 y sin CSRF se rechaza | Integración (capa web) | 5 | ✅ Pasa (5, AB#370, PR #179) |
+| HU13-CP15 | Consultar un producto devuelve todas sus valoraciones y solo las suyas; sin valoraciones, una lista vacía | Unitario | 2 | ✅ Pasa (2, AB#371, PR #179) |
+| HU13-CP16 | Consultar las valoraciones de un producto exige el rol cliente; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 4 | ✅ Pasa (4, AB#371, PR #179) |
+| HU13-CP17 | `GET /api/products/{id}/valoraciones`: 200 con la lista sin el cliente, o vacía; sin sesión 401 y otro rol 403 | Integración (capa web) | 3 | ✅ Pasa (3, AB#371, PR #179) |
 
 Notas:
 - **HU13-CP01 a CP17 (Sprint 2, backend):** casos propuestos en las tasks AB#369 (entidad valoración), AB#370 (endpoint para crear una valoración) y AB#371 (endpoint para obtener las valoraciones), y desarrollados con TDD. PENDIENTE DE REVISAR CON EL EQUIPO: confirmarlos y añadirlos a la HU13 (AB#75) en Azure Boards.
@@ -1772,57 +1772,57 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU13-CP01 | `ValoracionTest` | `creaUnaValoracionConSusDatos` | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP01 | `ValoracionTest` | `unaValoracionNuevaNaceSinId` | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP01 | `ValoracionTest` | `elComentarioEsOpcionalYSeRecorta` | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP02 | `ValoracionTest` | `admiteLasPuntuacionesDeLosExtremos` (1 y 5) | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP02 | `ValoracionTest` | `rechazaUnaPuntuacionFueraDeRango` (0, 6 y -1) | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP03 | `ValoracionTest` | `elComentarioAdmiteHasta500Caracteres` | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP03 | `ValoracionTest` | `rechazaUnComentarioDeMasDe500Caracteres` | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP04 | `ValoracionTest` | `rechazaUnaValoracionSinProducto` (null, vacío y en blanco) | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP04 | `ValoracionTest` | `rechazaUnaValoracionSinCliente` (null, vacío y en blanco) | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP05 | `ValoracionMongoAdapterTest` | `guardarUnaValoracionNuevaYRecuperarlaPorProducto` | Infraestructura | AB#369 | PR #179 | 🔍 |
-| HU13-CP05 | `ValoracionMongoAdapterTest` | `elClienteSeGuardaComoUsuarioId` | Infraestructura | AB#369 | PR #179 | 🔍 |
-| HU13-CP05 | `ValoracionMongoAdapterTest` | `buscarPorProductoDevuelveSoloLasDeEseProducto` | Infraestructura | AB#369 | PR #179 | 🔍 |
-| HU13-CP05 | `ValoracionMongoAdapterTest` | `sabeSiUnClienteYaHaValoradoUnProducto` | Infraestructura | AB#369 | PR #179 | 🔍 |
-| HU13-CP05 | `ValoracionMongoAdapterTest` | `laColeccionSoloAdmiteUnaValoracionPorClienteYProducto` | Infraestructura | AB#369 | PR #179 | 🔍 |
-| HU13-CP06 | `ConsultaComprasServiceTest` | `haCompradoSiTieneUnPedidoPagadoConElProducto` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP06 | `ConsultaComprasServiceTest` | `noHaCompradoSiNoTienePedidoPagadoConElProducto` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP06 | `ConsultaComprasServiceTest` | `laConsultaSeHaceConElIdDelCliente` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP07 | `SeguridadPedidosServiceTest` | `unVendedorNoConsultaCompras` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP07 | `SeguridadPedidosServiceTest` | `unAdministradorNoConsultaCompras` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP07 | `SeguridadPedidosServiceTest` | `unClienteNoConsultaLasComprasDeOtro` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP07 | `SeguridadPedidosServiceTest` | `unClienteConsultaSusPropiasCompras` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP07 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaConsultarCompras` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP08 | `PedidoMongoAdapterTest` | `unPedidoPagadoConElProductoEsUnaCompra` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP08 | `PedidoMongoAdapterTest` | `noEsCompraSinElProductoNiConElPedidoDeOtroCliente` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP08 | `PedidoMongoAdapterTest` | `soloCuentaUnPedidoPagado` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP09 | `ValoracionProductosServiceTest` | `elClienteQueHaCompradoValoraElProducto` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP09 | `ValoracionProductosServiceTest` | `valorarDevuelveLaValoracionGuardada` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP10 | `ValoracionProductosServiceTest` | `noPuedeValorarUnProductoQueNoHaComprado` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP11 | `ValoracionProductosServiceTest` | `noPuedeValorarDosVecesElMismoProducto` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unVendedorNoValora` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unAdministradorNoValora` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unClienteNoValoraConElCorreoDeOtro` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unClienteValoraConSuPropioCorreo` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP12 | `SeguridadValoracionesServiceTest` | `sinSesionSeRechazaValorar` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP13 | `ClienteEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP13 | `ComprasAdapterTest` | `haCompradoPreguntaAlModuloDePedidos` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP13 | `ComprasAdapterTest` | `siPedidosRespondeQueNoElAdaptadorTambien` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP14 | `ValoracionControllerTest` | `valorarUnProductoResponde201` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP14 | `ValoracionControllerTest` | `unaValoracionInvalidaResponde400` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP14 | `ValoracionControllerTest` | `valorarSinHaberCompradoResponde403` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP14 | `ValoracionControllerTest` | `valorarDosVecesResponde409` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP14 | `ValoracionControllerTest` | `soloElClienteValora` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP15 | `ConsultaValoracionesServiceTest` | `devuelveLasValoracionesDelProducto` | Aplicación | AB#371 | PR #179 | 🔍 |
-| HU13-CP15 | `ConsultaValoracionesServiceTest` | `unProductoSinValoracionesDevuelveUnaListaVacia` | Aplicación | AB#371 | PR #179 | 🔍 |
-| HU13-CP16 | `SeguridadValoracionesServiceTest` | `unVendedorNoConsultaValoraciones` | Aplicación | AB#371 | PR #179 | 🔍 |
-| HU13-CP16 | `SeguridadValoracionesServiceTest` | `unAdministradorNoConsultaValoraciones` | Aplicación | AB#371 | PR #179 | 🔍 |
-| HU13-CP16 | `SeguridadValoracionesServiceTest` | `unClienteConsultaValoraciones` | Aplicación | AB#371 | PR #179 | 🔍 |
-| HU13-CP16 | `SeguridadValoracionesServiceTest` | `sinSesionSeRechazaConsultarValoraciones` | Aplicación | AB#371 | PR #179 | 🔍 |
-| HU13-CP17 | `ValoracionControllerTest` | `consultarLasValoracionesResponde200ConLaLista` | Infraestructura | AB#371 | PR #179 | 🔍 |
-| HU13-CP17 | `ValoracionControllerTest` | `unProductoSinValoracionesResponde200ConUnaListaVacia` | Infraestructura | AB#371 | PR #179 | 🔍 |
-| HU13-CP17 | `ValoracionControllerTest` | `soloElClienteConsultaLasValoraciones` | Infraestructura | AB#371 | PR #179 | 🔍 |
+| HU13-CP01 | `ValoracionTest` | `creaUnaValoracionConSusDatos` | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP01 | `ValoracionTest` | `unaValoracionNuevaNaceSinId` | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP01 | `ValoracionTest` | `elComentarioEsOpcionalYSeRecorta` | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP02 | `ValoracionTest` | `admiteLasPuntuacionesDeLosExtremos` (1 y 5) | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP02 | `ValoracionTest` | `rechazaUnaPuntuacionFueraDeRango` (0, 6 y -1) | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP03 | `ValoracionTest` | `elComentarioAdmiteHasta500Caracteres` | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP03 | `ValoracionTest` | `rechazaUnComentarioDeMasDe500Caracteres` | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP04 | `ValoracionTest` | `rechazaUnaValoracionSinProducto` (null, vacío y en blanco) | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP04 | `ValoracionTest` | `rechazaUnaValoracionSinCliente` (null, vacío y en blanco) | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP05 | `ValoracionMongoAdapterTest` | `guardarUnaValoracionNuevaYRecuperarlaPorProducto` | Infraestructura | AB#369 | PR #179 | ✅ |
+| HU13-CP05 | `ValoracionMongoAdapterTest` | `elClienteSeGuardaComoUsuarioId` | Infraestructura | AB#369 | PR #179 | ✅ |
+| HU13-CP05 | `ValoracionMongoAdapterTest` | `buscarPorProductoDevuelveSoloLasDeEseProducto` | Infraestructura | AB#369 | PR #179 | ✅ |
+| HU13-CP05 | `ValoracionMongoAdapterTest` | `sabeSiUnClienteYaHaValoradoUnProducto` | Infraestructura | AB#369 | PR #179 | ✅ |
+| HU13-CP05 | `ValoracionMongoAdapterTest` | `laColeccionSoloAdmiteUnaValoracionPorClienteYProducto` | Infraestructura | AB#369 | PR #179 | ✅ |
+| HU13-CP06 | `ConsultaComprasServiceTest` | `haCompradoSiTieneUnPedidoPagadoConElProducto` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP06 | `ConsultaComprasServiceTest` | `noHaCompradoSiNoTienePedidoPagadoConElProducto` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP06 | `ConsultaComprasServiceTest` | `laConsultaSeHaceConElIdDelCliente` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP07 | `SeguridadPedidosServiceTest` | `unVendedorNoConsultaCompras` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP07 | `SeguridadPedidosServiceTest` | `unAdministradorNoConsultaCompras` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP07 | `SeguridadPedidosServiceTest` | `unClienteNoConsultaLasComprasDeOtro` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP07 | `SeguridadPedidosServiceTest` | `unClienteConsultaSusPropiasCompras` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP07 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaConsultarCompras` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP08 | `PedidoMongoAdapterTest` | `unPedidoPagadoConElProductoEsUnaCompra` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP08 | `PedidoMongoAdapterTest` | `noEsCompraSinElProductoNiConElPedidoDeOtroCliente` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP08 | `PedidoMongoAdapterTest` | `soloCuentaUnPedidoPagado` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP09 | `ValoracionProductosServiceTest` | `elClienteQueHaCompradoValoraElProducto` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP09 | `ValoracionProductosServiceTest` | `valorarDevuelveLaValoracionGuardada` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP10 | `ValoracionProductosServiceTest` | `noPuedeValorarUnProductoQueNoHaComprado` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP11 | `ValoracionProductosServiceTest` | `noPuedeValorarDosVecesElMismoProducto` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unVendedorNoValora` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unAdministradorNoValora` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unClienteNoValoraConElCorreoDeOtro` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unClienteValoraConSuPropioCorreo` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP12 | `SeguridadValoracionesServiceTest` | `sinSesionSeRechazaValorar` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP13 | `ClienteEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP13 | `ComprasAdapterTest` | `haCompradoPreguntaAlModuloDePedidos` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP13 | `ComprasAdapterTest` | `siPedidosRespondeQueNoElAdaptadorTambien` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP14 | `ValoracionControllerTest` | `valorarUnProductoResponde201` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP14 | `ValoracionControllerTest` | `unaValoracionInvalidaResponde400` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP14 | `ValoracionControllerTest` | `valorarSinHaberCompradoResponde403` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP14 | `ValoracionControllerTest` | `valorarDosVecesResponde409` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP14 | `ValoracionControllerTest` | `soloElClienteValora` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP15 | `ConsultaValoracionesServiceTest` | `devuelveLasValoracionesDelProducto` | Aplicación | AB#371 | PR #179 | ✅ |
+| HU13-CP15 | `ConsultaValoracionesServiceTest` | `unProductoSinValoracionesDevuelveUnaListaVacia` | Aplicación | AB#371 | PR #179 | ✅ |
+| HU13-CP16 | `SeguridadValoracionesServiceTest` | `unVendedorNoConsultaValoraciones` | Aplicación | AB#371 | PR #179 | ✅ |
+| HU13-CP16 | `SeguridadValoracionesServiceTest` | `unAdministradorNoConsultaValoraciones` | Aplicación | AB#371 | PR #179 | ✅ |
+| HU13-CP16 | `SeguridadValoracionesServiceTest` | `unClienteConsultaValoraciones` | Aplicación | AB#371 | PR #179 | ✅ |
+| HU13-CP16 | `SeguridadValoracionesServiceTest` | `sinSesionSeRechazaConsultarValoraciones` | Aplicación | AB#371 | PR #179 | ✅ |
+| HU13-CP17 | `ValoracionControllerTest` | `consultarLasValoracionesResponde200ConLaLista` | Infraestructura | AB#371 | PR #179 | ✅ |
+| HU13-CP17 | `ValoracionControllerTest` | `unProductoSinValoracionesResponde200ConUnaListaVacia` | Infraestructura | AB#371 | PR #179 | ✅ |
+| HU13-CP17 | `ValoracionControllerTest` | `soloElClienteConsultaLasValoraciones` | Infraestructura | AB#371 | PR #179 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `ValoracionTest`: `valoraciones/domain/model/` (JUnit, sin Spring)
@@ -2047,7 +2047,7 @@ Rutas de los archivos de test (bajo `frontend/src/`):
 | HU21-CP09 | Un administrador se lee sin datos de cliente ni consentimiento | Unitario | 1 | ✅ Pasa |
 | HU21-CP10 | Activar un vendedor pendiente lo deja activo y lo guarda | Unitario | 1 | ✅ Pasa |
 | HU21-CP11 | Desactivar un vendedor activo lo deja desactivado y lo guarda | Unitario | 1 | 🔍 En revisión |
-| HU21-CP12 | Activar o desactivar a un usuario que no es vendedor falla como si no existiera y no guarda nada | Unitario | 2 | ✅ Pasa |
+| HU21-CP12 | Activar o bloquear a un usuario que no es vendedor falla como si no existiera y no guarda nada | Unitario | 2 | 🔍 En revisión |
 | HU21-CP13 | Un administrador activa un vendedor y recibe sus datos con estado ACTIVO | Integración (capa web) | 1 | ✅ Pasa |
 | HU21-CP14 | Un administrador bloquea un vendedor y recibe sus datos con estado BLOQUEADO | Integración (capa web) | 1 | 🔍 En revisión |
 | HU21-CP15 | Cambiar un vendedor a un estado que no es ACTIVO ni BLOQUEADO devuelve 400 y no cambia nada | Integración (capa web) | 1 | ✅ Pasa |
@@ -2077,11 +2077,11 @@ Notas:
 | HU21-CP08 | `UsuarioControllerTest` | `crearAdministradorRechazaNoAdministradores` | Infraestructura | AB#49 | PR actual | ✅ |
 | HU21-CP09 | `UsuarioDocumentMapperTest` | `unAdministradorSeLeeSinDatosDeClienteYConsentimiento` | Infraestructura | AB#49 | PR actual | ✅ |
 | HU21-CP10 | `AdministracionUsuariosServiceTest` | `activarVendedorPendienteLoDejaActivoYLoGuarda` | Aplicación | AB#47 | PR #102 | ✅ |
-| HU21-CP11 | `AdministracionUsuariosServiceTest` | `desactivarVendedorActivoLoDejaDesactivadoYLoGuarda` | Aplicación | AB#47 · AB#243 | PR #102 (modificado en este PR) | 🔍 |
+| HU21-CP11 | `AdministracionUsuariosServiceTest` | `bloquearVendedorActivoLoDejaBloqueadoYLoGuarda` | Aplicación | AB#47 · AB#243 · AB#252 | PR #102 (modificado en PR #180) (renombrado en este PR) | 🔍 |
 | HU21-CP12 | `AdministracionUsuariosServiceTest` | `activarVendedorDeOtroRolFalla` | Aplicación | AB#47 | PR #102 | ✅ |
-| HU21-CP12 | `AdministracionUsuariosServiceTest` | `desactivarVendedorDeOtroRolFalla` | Aplicación | AB#47 | PR #102 | ✅ |
+| HU21-CP12 | `AdministracionUsuariosServiceTest` | `bloquearVendedorDeOtroRolFalla` | Aplicación | AB#47 · AB#252 | PR #102 (renombrado en este PR) | 🔍 |
 | HU21-CP13 | `UsuarioControllerTest` | `administradorActivaUnVendedorYRecibeSusDatos` | Infraestructura | AB#47 | PR #102 | ✅ |
-| HU21-CP14 | `UsuarioControllerTest` | `administradorDesactivaUnVendedorYRecibeSusDatos` | Infraestructura | AB#47 · AB#243 | PR #102 (modificado en este PR) | 🔍 |
+| HU21-CP14 | `UsuarioControllerTest` | `administradorBloqueaUnVendedorYRecibeSusDatos` | Infraestructura | AB#47 · AB#243 · AB#252 | PR #102 (modificado en PR #180) (renombrado en este PR) | 🔍 |
 | HU21-CP15 | `UsuarioControllerTest` | `cambiarVendedorAUnEstadoNoAdmitidoDevuelve400` | Infraestructura | AB#47 | PR #102 | ✅ |
 | HU21-CP16 | `UsuarioControllerTest` | `cambiarEstadoDeUnNoVendedorDevuelve404` | Infraestructura | AB#47 | PR #102 | ✅ |
 | HU21-CP17 | `UsuarioControllerTest` | `cambiarEstadoDeVendedorSinSesionDevuelve401` | Infraestructura | AB#47 | PR #102 | ✅ |
@@ -2236,14 +2236,14 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
 | HU23-CP01 | Un administrador bloquea una cuenta activa y recibe sus datos con estado BLOQUEADO | Unitario + integración (capa web) | 2 | 🔍 En revisión |
-| HU23-CP02 | Desactivar un usuario que no existe devuelve 404 y no guarda nada | Unitario + integración (capa web) | 2 | ✅ Pasa |
-| HU23-CP03 | Un administrador no puede desactivar su propia cuenta (409 `CANNOT_DEACTIVATE_SELF`) | Unitario + integración (capa web) | 2 | ✅ Pasa |
-| HU23-CP04 | No se puede desactivar al último administrador activo (409 `LAST_ACTIVE_ADMIN`) | Unitario + integración | 4 | ✅ Pasa |
+| HU23-CP02 | Bloquear un usuario que no existe devuelve 404 y no guarda nada | Unitario + integración (capa web) | 2 | 🔍 En revisión |
+| HU23-CP03 | Un administrador no puede bloquear su propia cuenta (409 `CANNOT_BLOCK_SELF`) | Unitario + integración (capa web) | 2 | 🔍 En revisión |
+| HU23-CP04 | No se puede bloquear al último administrador activo (409 `LAST_ACTIVE_ADMIN`) | Unitario + integración | 4 | 🔍 En revisión |
 | HU23-CP05 | Se puede desactivar a un administrador activo si queda otro administrador activo | Unitario | 1 | 🔍 En revisión |
-| HU23-CP06 | Sin sesión (401) o sin ser administrador (403) no se puede desactivar una cuenta | Integración (capa web) | 2 | ✅ Pasa |
+| HU23-CP06 | Sin sesión (401) o sin ser administrador (403) no se puede bloquear una cuenta | Integración (capa web) | 2 | 🔍 En revisión |
 | HU23-CP07 | Una petición sin usuario en sesión pasa sin consultar la cuenta | Unitario | 1 | ✅ Pasa |
 | HU23-CP08 | Una petición de un usuario con la cuenta activa pasa y conserva su sesión | Unitario | 1 | ✅ Pasa |
-| HU23-CP09 | Si la cuenta del usuario en sesión está desactivada, se invalida su sesión y responde 401 | Unitario | 1 | ✅ Pasa |
+| HU23-CP09 | Si la cuenta del usuario en sesión está bloqueada, se invalida su sesión y responde 401 | Unitario | 1 | 🔍 En revisión |
 | HU23-CP10 | Si el usuario en sesión ya no existe, se invalida su sesión y responde 401 | Unitario | 1 | ✅ Pasa |
 | HU23-CP11 | Una cuenta con bloqueo temporal por intentos sale con su estado guardado en el listado, la ficha y los vendedores | Integración (capa web) | 3 | 🔍 En revisión |
 | HU23-CP12 | DESACTIVADO ya no es un estado válido para filtrar el listado | Unitario | 1 | 🔍 En revisión |
@@ -2252,6 +2252,7 @@ Notas:
 - **HU23-CP01 a CP06:** casos propuestos en la T39 (AB#39) a partir del contrato del frontend (`frontend/docs/hu23-desactivar-usuario.md`). Pendientes de confirmar con el equipo y de añadir a la HU23 en Azure Boards.
 - **Backend (T37/T38, AB#37 y AB#38):** el mismo `PATCH /api/admin/usuarios/{id}/status` de la HU24, ahora con `{ "estado": "DESACTIVADO" }`, en `AdministracionUsuariosUseCase.desactivar`. El controlador pasa el email del usuario en sesión (`Authentication.getName()`, como `/api/auth/me`) para la regla de no desactivarse a sí mismo. El conteo de administradores activos es `UsuarioRepositoryPort.contarAdministradoresActivos()`. Los 409 llevan los códigos que espera el frontend.
 - **BLOQUEADO sustituye a DESACTIVADO (T243, AB#243):** decisión del equipo. Los estados guardados son `PENDIENTE`, `ACTIVO` y `BLOQUEADO`, y `PATCH /status` (usuarios y vendedores) recibe `BLOQUEADO`. El bloqueo temporal por intentos fallidos deja de mostrarse como `BLOQUEADO`: las respuestas devuelven el estado guardado y el filtro `status=BLOQUEADO` solo devuelve cuentas bloqueadas por un administrador (HU19-CP10); en el login sigue siendo 429. Los nombres `desactivar`, sus excepciones y el 409 `CANNOT_DEACTIVATE_SELF` los cambia la T252. **PENDIENTE DE CONFIRMAR CON EL EQUIPO:** casos HU23-CP11 y CP12, propuestos.
+- **Bloquear en vez de desactivar (T252, AB#252):** completa la T243 con los nombres. `Usuario.bloquear()`, `bloquear` y `bloquearVendedor` del caso de uso; la excepción del bloqueo de un administrador pasa a `CuentaBloqueadaException` (403 `ACCOUNT_BLOCKED`), la del bloqueo temporal por intentos a `BloqueoPorIntentosException` (429) y la de bloquearse a sí mismo a `AutobloqueoNoPermitidoException`. El 409 pasa a `CANNOT_BLOCK_SELF`, el código que ya espera el frontend, y los mensajes dicen «bloquear». Los tests de la tabla con «renombrado en este PR» solo cambian de nombre y de `@DisplayName`, salvo HU23-CP03, que espera el código nuevo.
 - **Invalidar la sesión (T206, AB#206):** `CuentaActivaFilter` comprueba en cada petición con un usuario en sesión que su cuenta sigue activa; si no (o si ya no existe), invalida la sesión y responde 401, como espera el frontend. Se registra como bean en `UsuariosConfig` y Spring Boot lo añade a los filtros de cada petición, sin tocar `SecurityConfig`. El login (HU2) guarda al usuario en sesión con su email como nombre, que es lo que usan el filtro y la regla de HU23-CP03. Casos HU23-CP07 a CP10 propuestos en la T206, pendientes de confirmar con el equipo.
 - **Frontend:** los tests de la HU23 (AB#41) no tienen todavía filas en la matriz.
 
@@ -2259,22 +2260,22 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU23-CP01 | `AdministracionUsuariosServiceTest` | `desactivaUnaCuentaActivaYLaGuarda` | Aplicación | AB#39 · AB#243 | PR #79 (modificado en este PR) | 🔍 |
-| HU23-CP01 | `UsuarioControllerTest` | `administradorDesactivaUnaCuentaYRecibeSusDatos` | Infraestructura | AB#39 · AB#243 | PR #79 (modificado en este PR) | 🔍 |
-| HU23-CP02 | `AdministracionUsuariosServiceTest` | `rechazaDesactivarUnUsuarioQueNoExiste` | Aplicación | AB#39 | PR #79 | ✅ |
-| HU23-CP02 | `UsuarioControllerTest` | `desactivarUnUsuarioInexistenteDevuelve404` | Infraestructura | AB#39 | PR #79 | ✅ |
-| HU23-CP03 | `AdministracionUsuariosServiceTest` | `rechazaQueUnAdministradorSeDesactiveASiMismo` | Aplicación | AB#39 | PR #79 | ✅ |
-| HU23-CP03 | `UsuarioControllerTest` | `desactivarseASiMismoDevuelve409` | Infraestructura | AB#39 | PR #79 | ✅ |
-| HU23-CP04 | `AdministracionUsuariosServiceTest` | `rechazaDesactivarAlUltimoAdministradorActivo` | Aplicación | AB#39 | PR #79 | ✅ |
-| HU23-CP04 | `UsuarioControllerTest` | `desactivarAlUltimoAdministradorActivoDevuelve409` | Infraestructura | AB#39 | PR #79 | ✅ |
+| HU23-CP01 | `AdministracionUsuariosServiceTest` | `bloqueaUnaCuentaActivaYLaGuarda` | Aplicación | AB#39 · AB#243 · AB#252 | PR #79 (modificado en PR #180) (renombrado en este PR) | 🔍 |
+| HU23-CP01 | `UsuarioControllerTest` | `administradorBloqueaUnaCuentaYRecibeSusDatos` | Infraestructura | AB#39 · AB#243 · AB#252 | PR #79 (modificado en PR #180) (renombrado en este PR) | 🔍 |
+| HU23-CP02 | `AdministracionUsuariosServiceTest` | `rechazaBloquearUnUsuarioQueNoExiste` | Aplicación | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
+| HU23-CP02 | `UsuarioControllerTest` | `bloquearUnUsuarioInexistenteDevuelve404` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
+| HU23-CP03 | `AdministracionUsuariosServiceTest` | `rechazaQueUnAdministradorSeBloqueeASiMismo` | Aplicación | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
+| HU23-CP03 | `UsuarioControllerTest` | `bloquearseASiMismoDevuelve409` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
+| HU23-CP04 | `AdministracionUsuariosServiceTest` | `rechazaBloquearAlUltimoAdministradorActivo` | Aplicación | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
+| HU23-CP04 | `UsuarioControllerTest` | `bloquearAlUltimoAdministradorActivoDevuelve409` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
 | HU23-CP04 | `UsuarioMongoAdapterTest` | `contarAdministradoresActivosSoloCuentaLosAdministradoresActivos` | Infraestructura | AB#39 | PR #79 | ✅ |
 | HU23-CP04 | `UsuarioMongoAdapterTest` | `contarAdministradoresActivosDevuelveCeroSinAdministradoresActivos` | Infraestructura | AB#39 | PR #79 | ✅ |
-| HU23-CP05 | `AdministracionUsuariosServiceTest` | `desactivaAUnAdministradorSiQuedaOtroActivo` | Aplicación | AB#39 · AB#243 | PR #79 (modificado en este PR) | 🔍 |
-| HU23-CP06 | `UsuarioControllerTest` | `unNoAdministradorNoPuedeDesactivarCuentas` (cliente y vendedor) | Infraestructura | AB#39 | PR #79 | ✅ |
-| HU23-CP06 | `UsuarioControllerTest` | `desactivarSinSesionEstaProtegido` | Infraestructura | AB#39 | PR #79 | ✅ |
+| HU23-CP05 | `AdministracionUsuariosServiceTest` | `bloqueaAUnAdministradorSiQuedaOtroActivo` | Aplicación | AB#39 · AB#243 · AB#252 | PR #79 (modificado en PR #180) (renombrado en este PR) | 🔍 |
+| HU23-CP06 | `UsuarioControllerTest` | `unNoAdministradorNoPuedeBloquearCuentas` (cliente y vendedor) | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
+| HU23-CP06 | `UsuarioControllerTest` | `bloquearSinSesionEstaProtegido` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
 | HU23-CP07 | `CuentaActivaFilterTest` | `sinUsuarioEnSesionDejaPasar` | Infraestructura | AB#39 | PR #85 | ✅ |
 | HU23-CP08 | `CuentaActivaFilterTest` | `cuentaActivaDejaPasar` | Infraestructura | AB#39 | PR #85 | ✅ |
-| HU23-CP09 | `CuentaActivaFilterTest` | `cuentaDesactivadaInvalidaLaSesionYDevuelve401` | Infraestructura | AB#39 | PR #85 | ✅ |
+| HU23-CP09 | `CuentaActivaFilterTest` | `cuentaBloqueadaInvalidaLaSesionYDevuelve401` | Infraestructura | AB#39 · AB#252 | PR #85 (renombrado en este PR) | 🔍 |
 | HU23-CP10 | `CuentaActivaFilterTest` | `usuarioInexistenteInvalidaLaSesionYDevuelve401` | Infraestructura | AB#39 | PR #85 | ✅ |
 | HU23-CP11 | `UsuarioControllerTest` | `elListadoNoMuestraElBloqueoPorIntentosComoBloqueado` | Infraestructura | AB#243 | — | 🔍 |
 | HU23-CP11 | `UsuarioControllerTest` | `laFichaNoMuestraElBloqueoPorIntentosComoBloqueado` | Infraestructura | AB#243 | — | 🔍 |
@@ -2295,7 +2296,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU24-CP01 | Un administrador activa una cuenta desactivada y recibe sus datos con estado ACTIVO | Unitario + integración | 3 | ✅ Pasa |
+| HU24-CP01 | Un administrador activa una cuenta bloqueada y recibe sus datos con estado ACTIVO | Unitario + integración | 3 | 🔍 En revisión |
 | HU24-CP02 | Rechaza un estado que no es ACTIVO ni BLOQUEADO (400) y no cambia nada | Integración (capa web) | 1 | 🔍 En revisión |
 | HU24-CP03 | Activar un usuario que no existe devuelve 404 | Unitario + integración | 3 | ✅ Pasa |
 | HU24-CP04 | Un usuario que no es administrador no puede activar cuentas (403) | Integración (capa web) | 1 | ✅ Pasa |
@@ -2311,7 +2312,7 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU24-CP01 | `AdministracionUsuariosServiceTest` | `activaUnaCuentaDesactivadaYLaGuarda` | Aplicación | AB#34 | PR #63 | ✅ |
+| HU24-CP01 | `AdministracionUsuariosServiceTest` | `activaUnaCuentaBloqueadaYLaGuarda` | Aplicación | AB#34 · AB#252 | PR #63 (renombrado en este PR) | 🔍 |
 | HU24-CP01 | `UsuarioControllerTest` | `administradorActivaUnaCuentaYRecibeSusDatos` | Infraestructura | AB#34 | PR #63 | ✅ |
 | HU24-CP01 | `UsuarioMongoAdapterTest` | `buscarPorIdDevuelveElUsuarioGuardado` | Infraestructura | AB#34 | PR #63 | ✅ |
 | HU24-CP02 | `UsuarioControllerTest` | `rechazaUnEstadoNoAdmitido` | Infraestructura | AB#34 · AB#39 · AB#243 | PR #63 (modificado en PR #79) (modificado en este PR) | 🔍 |

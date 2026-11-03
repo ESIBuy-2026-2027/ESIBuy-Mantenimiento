@@ -162,7 +162,7 @@ public class Usuario {
         return ESTADO_ACTIVO.equals(estado);
     }
 
-    public void desactivar() {
+    public void bloquear() {
         estado = "BLOQUEADO";
     }
 

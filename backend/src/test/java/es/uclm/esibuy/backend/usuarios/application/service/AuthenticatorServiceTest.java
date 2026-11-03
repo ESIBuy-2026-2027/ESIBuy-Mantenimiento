@@ -10,7 +10,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPor
 import es.uclm.esibuy.backend.usuarios.domain.exception.AuthenticatorYaDadoDeAltaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.BloqueoPorIntentosException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
@@ -226,7 +226,7 @@ class AuthenticatorServiceTest {
         }
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
 
-        assertThrows(CuentaBloqueadaException.class, () -> authenticator.verificarCodigo(comando(CODIGO)));
+        assertThrows(BloqueoPorIntentosException.class, () -> authenticator.verificarCodigo(comando(CODIGO)));
 
         verify(totp, never()).periodoDelCodigo(anyString(), anyString(), any());
     }
