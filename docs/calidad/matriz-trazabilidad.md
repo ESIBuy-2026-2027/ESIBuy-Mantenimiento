@@ -1741,23 +1741,23 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU13-CP01 | Una valoración se crea con su producto, su cliente, su puntuación y un comentario; nace sin id, y el comentario es opcional (vacío si no hay) y se guarda sin espacios en los extremos | Unitario (dominio) | 3 | 🔍 En revisión (3, AB#369, PR #179) |
-| HU13-CP02 | La puntuación es un entero de 1 a 5: se admiten los extremos y se rechaza lo de fuera | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#369, PR #179) |
-| HU13-CP03 | El comentario admite hasta 500 caracteres, sin contar los espacios de los extremos | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#369, PR #179) |
-| HU13-CP04 | El producto y el cliente son obligatorios (ni nulos ni en blanco) | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#369, PR #179) |
-| HU13-CP05 | Persistencia en `valoraciones`: se asigna el id, el cliente se guarda como `usuarioId`, se busca por producto, se sabe si un cliente ya valoró un producto y el índice único (usuarioId, productoId) rechaza la repetida como valoración duplicada | Integración MongoDB | 5 | 🔍 En revisión (5, AB#369, PR #179) |
-| HU13-CP06 | Pedidos indica si un cliente ha comprado un producto: un pedido PAGADO suyo que lo contenga; la consulta se hace con el id del cliente, no con su correo | Unitario | 3 | 🔍 En revisión (3, AB#370, PR #179) |
-| HU13-CP07 | Consultar si se ha comprado un producto exige el rol cliente y que el correo sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, AB#370, PR #179) |
-| HU13-CP08 | La consulta de compras en MongoDB encuentra el producto en cualquier línea de un pedido PAGADO del cliente, no cuenta los pedidos de otro cliente y solo cuenta el estado PAGADO | Integración MongoDB | 3 | 🔍 En revisión (3, AB#370, PR #179) |
-| HU13-CP09 | El cliente que ha comprado un producto lo valora: la valoración se guarda con el id del cliente y se devuelve con su id | Unitario | 2 | 🔍 En revisión (2, AB#370, PR #179) |
-| HU13-CP10 | No se puede valorar un producto que no se ha comprado, y no se guarda nada | Unitario | 1 | 🔍 En revisión (1, AB#370, PR #179) |
-| HU13-CP11 | No se puede valorar dos veces el mismo producto, y se conserva la primera valoración | Unitario | 1 | 🔍 En revisión (1, AB#370, PR #179) |
-| HU13-CP12 | Valorar exige el rol cliente y que el correo del comando sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, AB#370, PR #179) |
-| HU13-CP13 | Los adaptadores preguntan por su puerto de entrada al módulo de usuarios (id del cliente) y al de pedidos (si ha comprado) | Unitario | 3 | 🔍 En revisión (3, AB#370, PR #179) |
-| HU13-CP14 | `POST /api/products/{id}/valoraciones`: 201 con la valoración y sin el cliente; 400 `VALIDATION_ERROR`; 403 `PRODUCT_NOT_PURCHASED`; 409 `REVIEW_ALREADY_EXISTS`; sin sesión 401, otro rol 403 y sin CSRF se rechaza | Integración (capa web) | 5 | 🔍 En revisión (5, AB#370, PR #179) |
-| HU13-CP15 | Consultar un producto devuelve todas sus valoraciones y solo las suyas; sin valoraciones, una lista vacía | Unitario | 2 | 🔍 En revisión (2, AB#371, PR #179) |
-| HU13-CP16 | Consultar las valoraciones de un producto exige el rol cliente; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 4 | 🔍 En revisión (4, AB#371, PR #179) |
-| HU13-CP17 | `GET /api/products/{id}/valoraciones`: 200 con la lista sin el cliente, o vacía; sin sesión 401 y otro rol 403 | Integración (capa web) | 3 | 🔍 En revisión (3, AB#371, PR #179) |
+| HU13-CP01 | Una valoración se crea con su producto, su cliente, su puntuación y un comentario; nace sin id, y el comentario es opcional (vacío si no hay) y se guarda sin espacios en los extremos | Unitario (dominio) | 3 | ✅ Pasa (3, AB#369, PR #179) |
+| HU13-CP02 | La puntuación es un entero de 1 a 5: se admiten los extremos y se rechaza lo de fuera | Unitario (dominio) | 2 | ✅ Pasa (2, AB#369, PR #179) |
+| HU13-CP03 | El comentario admite hasta 500 caracteres, sin contar los espacios de los extremos | Unitario (dominio) | 2 | ✅ Pasa (2, AB#369, PR #179) |
+| HU13-CP04 | El producto y el cliente son obligatorios (ni nulos ni en blanco) | Unitario (dominio) | 2 | ✅ Pasa (2, AB#369, PR #179) |
+| HU13-CP05 | Persistencia en `valoraciones`: se asigna el id, el cliente se guarda como `usuarioId`, se busca por producto, se sabe si un cliente ya valoró un producto y el índice único (usuarioId, productoId) rechaza la repetida como valoración duplicada | Integración MongoDB | 5 | ✅ Pasa (5, AB#369, PR #179) |
+| HU13-CP06 | Pedidos indica si un cliente ha comprado un producto: un pedido PAGADO suyo que lo contenga; la consulta se hace con el id del cliente, no con su correo | Unitario | 3 | ✅ Pasa (3, AB#370, PR #179) |
+| HU13-CP07 | Consultar si se ha comprado un producto exige el rol cliente y que el correo sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#370, PR #179) |
+| HU13-CP08 | La consulta de compras en MongoDB encuentra el producto en cualquier línea de un pedido PAGADO del cliente, no cuenta los pedidos de otro cliente y solo cuenta el estado PAGADO | Integración MongoDB | 3 | ✅ Pasa (3, AB#370, PR #179) |
+| HU13-CP09 | El cliente que ha comprado un producto lo valora: la valoración se guarda con el id del cliente y se devuelve con su id | Unitario | 2 | ✅ Pasa (2, AB#370, PR #179) |
+| HU13-CP10 | No se puede valorar un producto que no se ha comprado, y no se guarda nada | Unitario | 1 | ✅ Pasa (1, AB#370, PR #179) |
+| HU13-CP11 | No se puede valorar dos veces el mismo producto, y se conserva la primera valoración | Unitario | 1 | ✅ Pasa (1, AB#370, PR #179) |
+| HU13-CP12 | Valorar exige el rol cliente y que el correo del comando sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#370, PR #179) |
+| HU13-CP13 | Los adaptadores preguntan por su puerto de entrada al módulo de usuarios (id del cliente) y al de pedidos (si ha comprado) | Unitario | 3 | ✅ Pasa (3, AB#370, PR #179) |
+| HU13-CP14 | `POST /api/products/{id}/valoraciones`: 201 con la valoración y sin el cliente; 400 `VALIDATION_ERROR`; 403 `PRODUCT_NOT_PURCHASED`; 409 `REVIEW_ALREADY_EXISTS`; sin sesión 401, otro rol 403 y sin CSRF se rechaza | Integración (capa web) | 5 | ✅ Pasa (5, AB#370, PR #179) |
+| HU13-CP15 | Consultar un producto devuelve todas sus valoraciones y solo las suyas; sin valoraciones, una lista vacía | Unitario | 2 | ✅ Pasa (2, AB#371, PR #179) |
+| HU13-CP16 | Consultar las valoraciones de un producto exige el rol cliente; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 4 | ✅ Pasa (4, AB#371, PR #179) |
+| HU13-CP17 | `GET /api/products/{id}/valoraciones`: 200 con la lista sin el cliente, o vacía; sin sesión 401 y otro rol 403 | Integración (capa web) | 3 | ✅ Pasa (3, AB#371, PR #179) |
 
 Notas:
 - **HU13-CP01 a CP17 (Sprint 2, backend):** casos propuestos en las tasks AB#369 (entidad valoración), AB#370 (endpoint para crear una valoración) y AB#371 (endpoint para obtener las valoraciones), y desarrollados con TDD. PENDIENTE DE REVISAR CON EL EQUIPO: confirmarlos y añadirlos a la HU13 (AB#75) en Azure Boards.
@@ -1772,57 +1772,57 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU13-CP01 | `ValoracionTest` | `creaUnaValoracionConSusDatos` | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP01 | `ValoracionTest` | `unaValoracionNuevaNaceSinId` | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP01 | `ValoracionTest` | `elComentarioEsOpcionalYSeRecorta` | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP02 | `ValoracionTest` | `admiteLasPuntuacionesDeLosExtremos` (1 y 5) | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP02 | `ValoracionTest` | `rechazaUnaPuntuacionFueraDeRango` (0, 6 y -1) | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP03 | `ValoracionTest` | `elComentarioAdmiteHasta500Caracteres` | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP03 | `ValoracionTest` | `rechazaUnComentarioDeMasDe500Caracteres` | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP04 | `ValoracionTest` | `rechazaUnaValoracionSinProducto` (null, vacío y en blanco) | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP04 | `ValoracionTest` | `rechazaUnaValoracionSinCliente` (null, vacío y en blanco) | Dominio | AB#369 | PR #179 | 🔍 |
-| HU13-CP05 | `ValoracionMongoAdapterTest` | `guardarUnaValoracionNuevaYRecuperarlaPorProducto` | Infraestructura | AB#369 | PR #179 | 🔍 |
-| HU13-CP05 | `ValoracionMongoAdapterTest` | `elClienteSeGuardaComoUsuarioId` | Infraestructura | AB#369 | PR #179 | 🔍 |
-| HU13-CP05 | `ValoracionMongoAdapterTest` | `buscarPorProductoDevuelveSoloLasDeEseProducto` | Infraestructura | AB#369 | PR #179 | 🔍 |
-| HU13-CP05 | `ValoracionMongoAdapterTest` | `sabeSiUnClienteYaHaValoradoUnProducto` | Infraestructura | AB#369 | PR #179 | 🔍 |
-| HU13-CP05 | `ValoracionMongoAdapterTest` | `laColeccionSoloAdmiteUnaValoracionPorClienteYProducto` | Infraestructura | AB#369 | PR #179 | 🔍 |
-| HU13-CP06 | `ConsultaComprasServiceTest` | `haCompradoSiTieneUnPedidoPagadoConElProducto` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP06 | `ConsultaComprasServiceTest` | `noHaCompradoSiNoTienePedidoPagadoConElProducto` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP06 | `ConsultaComprasServiceTest` | `laConsultaSeHaceConElIdDelCliente` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP07 | `SeguridadPedidosServiceTest` | `unVendedorNoConsultaCompras` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP07 | `SeguridadPedidosServiceTest` | `unAdministradorNoConsultaCompras` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP07 | `SeguridadPedidosServiceTest` | `unClienteNoConsultaLasComprasDeOtro` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP07 | `SeguridadPedidosServiceTest` | `unClienteConsultaSusPropiasCompras` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP07 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaConsultarCompras` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP08 | `PedidoMongoAdapterTest` | `unPedidoPagadoConElProductoEsUnaCompra` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP08 | `PedidoMongoAdapterTest` | `noEsCompraSinElProductoNiConElPedidoDeOtroCliente` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP08 | `PedidoMongoAdapterTest` | `soloCuentaUnPedidoPagado` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP09 | `ValoracionProductosServiceTest` | `elClienteQueHaCompradoValoraElProducto` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP09 | `ValoracionProductosServiceTest` | `valorarDevuelveLaValoracionGuardada` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP10 | `ValoracionProductosServiceTest` | `noPuedeValorarUnProductoQueNoHaComprado` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP11 | `ValoracionProductosServiceTest` | `noPuedeValorarDosVecesElMismoProducto` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unVendedorNoValora` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unAdministradorNoValora` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unClienteNoValoraConElCorreoDeOtro` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unClienteValoraConSuPropioCorreo` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP12 | `SeguridadValoracionesServiceTest` | `sinSesionSeRechazaValorar` | Aplicación | AB#370 | PR #179 | 🔍 |
-| HU13-CP13 | `ClienteEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP13 | `ComprasAdapterTest` | `haCompradoPreguntaAlModuloDePedidos` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP13 | `ComprasAdapterTest` | `siPedidosRespondeQueNoElAdaptadorTambien` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP14 | `ValoracionControllerTest` | `valorarUnProductoResponde201` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP14 | `ValoracionControllerTest` | `unaValoracionInvalidaResponde400` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP14 | `ValoracionControllerTest` | `valorarSinHaberCompradoResponde403` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP14 | `ValoracionControllerTest` | `valorarDosVecesResponde409` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP14 | `ValoracionControllerTest` | `soloElClienteValora` | Infraestructura | AB#370 | PR #179 | 🔍 |
-| HU13-CP15 | `ConsultaValoracionesServiceTest` | `devuelveLasValoracionesDelProducto` | Aplicación | AB#371 | PR #179 | 🔍 |
-| HU13-CP15 | `ConsultaValoracionesServiceTest` | `unProductoSinValoracionesDevuelveUnaListaVacia` | Aplicación | AB#371 | PR #179 | 🔍 |
-| HU13-CP16 | `SeguridadValoracionesServiceTest` | `unVendedorNoConsultaValoraciones` | Aplicación | AB#371 | PR #179 | 🔍 |
-| HU13-CP16 | `SeguridadValoracionesServiceTest` | `unAdministradorNoConsultaValoraciones` | Aplicación | AB#371 | PR #179 | 🔍 |
-| HU13-CP16 | `SeguridadValoracionesServiceTest` | `unClienteConsultaValoraciones` | Aplicación | AB#371 | PR #179 | 🔍 |
-| HU13-CP16 | `SeguridadValoracionesServiceTest` | `sinSesionSeRechazaConsultarValoraciones` | Aplicación | AB#371 | PR #179 | 🔍 |
-| HU13-CP17 | `ValoracionControllerTest` | `consultarLasValoracionesResponde200ConLaLista` | Infraestructura | AB#371 | PR #179 | 🔍 |
-| HU13-CP17 | `ValoracionControllerTest` | `unProductoSinValoracionesResponde200ConUnaListaVacia` | Infraestructura | AB#371 | PR #179 | 🔍 |
-| HU13-CP17 | `ValoracionControllerTest` | `soloElClienteConsultaLasValoraciones` | Infraestructura | AB#371 | PR #179 | 🔍 |
+| HU13-CP01 | `ValoracionTest` | `creaUnaValoracionConSusDatos` | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP01 | `ValoracionTest` | `unaValoracionNuevaNaceSinId` | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP01 | `ValoracionTest` | `elComentarioEsOpcionalYSeRecorta` | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP02 | `ValoracionTest` | `admiteLasPuntuacionesDeLosExtremos` (1 y 5) | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP02 | `ValoracionTest` | `rechazaUnaPuntuacionFueraDeRango` (0, 6 y -1) | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP03 | `ValoracionTest` | `elComentarioAdmiteHasta500Caracteres` | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP03 | `ValoracionTest` | `rechazaUnComentarioDeMasDe500Caracteres` | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP04 | `ValoracionTest` | `rechazaUnaValoracionSinProducto` (null, vacío y en blanco) | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP04 | `ValoracionTest` | `rechazaUnaValoracionSinCliente` (null, vacío y en blanco) | Dominio | AB#369 | PR #179 | ✅ |
+| HU13-CP05 | `ValoracionMongoAdapterTest` | `guardarUnaValoracionNuevaYRecuperarlaPorProducto` | Infraestructura | AB#369 | PR #179 | ✅ |
+| HU13-CP05 | `ValoracionMongoAdapterTest` | `elClienteSeGuardaComoUsuarioId` | Infraestructura | AB#369 | PR #179 | ✅ |
+| HU13-CP05 | `ValoracionMongoAdapterTest` | `buscarPorProductoDevuelveSoloLasDeEseProducto` | Infraestructura | AB#369 | PR #179 | ✅ |
+| HU13-CP05 | `ValoracionMongoAdapterTest` | `sabeSiUnClienteYaHaValoradoUnProducto` | Infraestructura | AB#369 | PR #179 | ✅ |
+| HU13-CP05 | `ValoracionMongoAdapterTest` | `laColeccionSoloAdmiteUnaValoracionPorClienteYProducto` | Infraestructura | AB#369 | PR #179 | ✅ |
+| HU13-CP06 | `ConsultaComprasServiceTest` | `haCompradoSiTieneUnPedidoPagadoConElProducto` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP06 | `ConsultaComprasServiceTest` | `noHaCompradoSiNoTienePedidoPagadoConElProducto` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP06 | `ConsultaComprasServiceTest` | `laConsultaSeHaceConElIdDelCliente` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP07 | `SeguridadPedidosServiceTest` | `unVendedorNoConsultaCompras` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP07 | `SeguridadPedidosServiceTest` | `unAdministradorNoConsultaCompras` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP07 | `SeguridadPedidosServiceTest` | `unClienteNoConsultaLasComprasDeOtro` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP07 | `SeguridadPedidosServiceTest` | `unClienteConsultaSusPropiasCompras` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP07 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaConsultarCompras` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP08 | `PedidoMongoAdapterTest` | `unPedidoPagadoConElProductoEsUnaCompra` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP08 | `PedidoMongoAdapterTest` | `noEsCompraSinElProductoNiConElPedidoDeOtroCliente` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP08 | `PedidoMongoAdapterTest` | `soloCuentaUnPedidoPagado` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP09 | `ValoracionProductosServiceTest` | `elClienteQueHaCompradoValoraElProducto` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP09 | `ValoracionProductosServiceTest` | `valorarDevuelveLaValoracionGuardada` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP10 | `ValoracionProductosServiceTest` | `noPuedeValorarUnProductoQueNoHaComprado` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP11 | `ValoracionProductosServiceTest` | `noPuedeValorarDosVecesElMismoProducto` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unVendedorNoValora` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unAdministradorNoValora` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unClienteNoValoraConElCorreoDeOtro` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP12 | `SeguridadValoracionesServiceTest` | `unClienteValoraConSuPropioCorreo` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP12 | `SeguridadValoracionesServiceTest` | `sinSesionSeRechazaValorar` | Aplicación | AB#370 | PR #179 | ✅ |
+| HU13-CP13 | `ClienteEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP13 | `ComprasAdapterTest` | `haCompradoPreguntaAlModuloDePedidos` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP13 | `ComprasAdapterTest` | `siPedidosRespondeQueNoElAdaptadorTambien` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP14 | `ValoracionControllerTest` | `valorarUnProductoResponde201` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP14 | `ValoracionControllerTest` | `unaValoracionInvalidaResponde400` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP14 | `ValoracionControllerTest` | `valorarSinHaberCompradoResponde403` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP14 | `ValoracionControllerTest` | `valorarDosVecesResponde409` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP14 | `ValoracionControllerTest` | `soloElClienteValora` | Infraestructura | AB#370 | PR #179 | ✅ |
+| HU13-CP15 | `ConsultaValoracionesServiceTest` | `devuelveLasValoracionesDelProducto` | Aplicación | AB#371 | PR #179 | ✅ |
+| HU13-CP15 | `ConsultaValoracionesServiceTest` | `unProductoSinValoracionesDevuelveUnaListaVacia` | Aplicación | AB#371 | PR #179 | ✅ |
+| HU13-CP16 | `SeguridadValoracionesServiceTest` | `unVendedorNoConsultaValoraciones` | Aplicación | AB#371 | PR #179 | ✅ |
+| HU13-CP16 | `SeguridadValoracionesServiceTest` | `unAdministradorNoConsultaValoraciones` | Aplicación | AB#371 | PR #179 | ✅ |
+| HU13-CP16 | `SeguridadValoracionesServiceTest` | `unClienteConsultaValoraciones` | Aplicación | AB#371 | PR #179 | ✅ |
+| HU13-CP16 | `SeguridadValoracionesServiceTest` | `sinSesionSeRechazaConsultarValoraciones` | Aplicación | AB#371 | PR #179 | ✅ |
+| HU13-CP17 | `ValoracionControllerTest` | `consultarLasValoracionesResponde200ConLaLista` | Infraestructura | AB#371 | PR #179 | ✅ |
+| HU13-CP17 | `ValoracionControllerTest` | `unProductoSinValoracionesResponde200ConUnaListaVacia` | Infraestructura | AB#371 | PR #179 | ✅ |
+| HU13-CP17 | `ValoracionControllerTest` | `soloElClienteConsultaLasValoraciones` | Infraestructura | AB#371 | PR #179 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `ValoracionTest`: `valoraciones/domain/model/` (JUnit, sin Spring)
