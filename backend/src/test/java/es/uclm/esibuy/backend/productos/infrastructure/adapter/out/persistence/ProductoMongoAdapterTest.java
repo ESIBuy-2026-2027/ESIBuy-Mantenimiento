@@ -437,6 +437,32 @@ class ProductoMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU13-CP25: al leer el producto trae su media y su número de valoraciones")
+    void alLeerElProductoTraeSuMediaYSuNumero() {
+        String id = adapter.guardar(producto(null, 5)).getId();
+        adapter.actualizarValoracion(id, 4.5, 2);
+
+        Producto leido = adapter.buscarPorId(id).orElseThrow();
+
+        assertEquals(4.5, leido.getValoracionMedia());
+        assertEquals(2, leido.getNumeroValoraciones());
+    }
+
+    @Test
+    @DisplayName("HU13-CP25: modificar el producto conserva su media y su número de valoraciones")
+    void modificarElProductoConservaSuMediaYSuNumero() {
+        String id = adapter.guardar(producto(null, 5)).getId();
+        adapter.actualizarValoracion(id, 4.5, 2);
+
+        adapter.guardar(producto(id, 9));
+
+        Document guardado = documentoEnBruto();
+        assertEquals(9, guardado.getInteger("stock"));
+        assertEquals(4.5, ((Number) guardado.get("valoracionMedia")).doubleValue());
+        assertEquals(2, guardado.getInteger("numeroValoraciones"));
+    }
+
+    @Test
     @DisplayName("HU10-CP15: descontar stock lo resta si hay suficiente y no lo deja negativo")
     void descontarStockLoRestaSiHaySuficiente() {
         String id = adapter.guardar(producto(null, 5)).getId();
