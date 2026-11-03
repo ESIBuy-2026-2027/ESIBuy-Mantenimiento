@@ -6,6 +6,8 @@ import es.uclm.esibuy.backend.deseos.domain.model.ListaDeseos;
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -16,6 +18,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.Instant;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -52,5 +57,18 @@ class ListaDeseosControllerTest {
                 .andExpect(jsonPath("$.items.length()").value(1))
                 .andExpect(jsonPath("$.items[0].productoId").value("p-1"))
                 .andExpect(jsonPath("$.items[0].addedAt").value("2026-11-04T10:00:00Z"));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"{}", "{\"productoId\": null}", "{\"productoId\": \"\"}", "{\"productoId\": \" \"}",
+            "{\"productoId\": "})
+    @DisplayName("HU14-CP08: un cuerpo sin productoId, con productoId vacío o ilegible devuelve 400 y no llega al caso de uso")
+    void cuerpoInvalidoNoLlegaAlCasoDeUso(String cuerpo) throws Exception {
+        mockMvc.perform(post(URL).with(user(CLIENTE).roles("CLIENTE")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(cuerpo))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+
+        verify(gestionListaDeseos, never()).anadir(any(), any());
     }
 }
