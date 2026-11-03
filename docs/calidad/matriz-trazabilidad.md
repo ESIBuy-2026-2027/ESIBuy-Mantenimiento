@@ -2411,12 +2411,12 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU31-CP26 | La categoría se elige en un desplegable con búsqueda con las categorías actuales: se puede escribir para filtrar sin distinguir mayúsculas ni tildes, y en los filtros la primera opción es «Todas las categorías» | Frontend (componente y página) | 11 | ✅ Pasa (11, AB#256, PR #123) |
 | HU31-CP27 | Un nombre que el vendedor ya usa (409 `PRODUCT_NAME_ALREADY_EXISTS`) se marca en el campo Nombre con un mensaje propio al dar de alta, y el aviso desaparece al cambiar el nombre | Frontend (página) | 2 | ✅ Pasa (2, AB#257, PR #123) |
 | HU31-CP28 | Los casos de uso de productos exigen su rol (vendedor, administrador o cliente según el caso de uso) y, los del vendedor, que el correo recibido sea el de la sesión; sin sesión se rechazan. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 9 | 🔍 En revisión (9, rama `fix/seguridad-capa-negocio`) |
-| HU31-CP29 | El antivirus (VirusTotal) da por maliciosa una URL ya analizada si algún motor la marca como `malicious`; los sospechosos no cuentan | Unitario (adaptador, servidor HTTP simulado) | 2 | 🔍 En revisión (2, AB#397, PR sin abrir) |
-| HU31-CP30 | Una URL que VirusTotal no conoce (404) se envía a analizar y se consulta el análisis como mucho 2 veces; si no termina a tiempo, no hay resultado | Unitario (adaptador, servidor HTTP simulado) | 3 | 🔍 En revisión (3, AB#397, PR sin abrir) |
-| HU31-CP31 | Un error de VirusTotal (401, 429, 500, 503), también al enviar la URL a analizar, o no poder conectar no da resultado en lugar de un error | Unitario (adaptador, servidor HTTP simulado) | 3 | 🔍 En revisión (3, AB#397, PR sin abrir) |
-| HU31-CP32 | Un producto con una imagen que el antivirus marca como maliciosa se rechaza al crearlo y no se guarda | Unitario | 1 | 🔍 En revisión (1, AB#397, PR sin abrir) |
-| HU31-CP33 | Si el antivirus no da resultado, el producto se guarda sin imagen; si la da por segura, con ella; un producto sin imagen no se analiza | Unitario | 3 | 🔍 En revisión (3, AB#397, PR sin abrir) |
-| HU31-CP34 | Una imagen que no supera el antivirus responde 400 con el código `IMAGE_NOT_SAFE` | Integración (capa web) | 1 | 🔍 En revisión (1, AB#397, PR sin abrir) |
+| HU31-CP29 | El antivirus (VirusTotal) da por maliciosa una URL ya analizada si algún motor la marca como `malicious`; los sospechosos no cuentan | Unitario (adaptador, servidor HTTP simulado) | 2 | 🔍 En revisión (2, AB#397, PR #189) |
+| HU31-CP30 | Una URL que VirusTotal no conoce (404) se envía a analizar y se consulta el análisis como mucho 2 veces; si no termina a tiempo, no hay resultado | Unitario (adaptador, servidor HTTP simulado) | 3 | 🔍 En revisión (3, AB#397, PR #189) |
+| HU31-CP31 | Un error de VirusTotal (401, 429, 500, 503), también al enviar la URL a analizar, o no poder conectar no da resultado en lugar de un error | Unitario (adaptador, servidor HTTP simulado) | 3 | 🔍 En revisión (3, AB#397, PR #189) |
+| HU31-CP32 | Un producto con una imagen que el antivirus marca como maliciosa se rechaza al crearlo y no se guarda | Unitario | 1 | 🔍 En revisión (1, AB#397, PR #189) |
+| HU31-CP33 | Si el antivirus no da resultado, el producto se guarda sin imagen; si la da por segura, con ella; un producto sin imagen no se analiza | Unitario | 3 | 🔍 En revisión (3, AB#397, PR #189) |
+| HU31-CP34 | Una imagen que no supera el antivirus responde 400 con el código `IMAGE_NOT_SAFE` | Integración (capa web) | 1 | 🔍 En revisión (1, AB#397, PR #189) |
 
 Notas:
 - **HU31-CP01 a CP10:** casos propuestos en la T201 (AB#201) a partir del contrato del formulario de producto del frontend (`frontend/docs/hu31-formulario-producto.md`). Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards.
@@ -2508,19 +2508,19 @@ Notas:
 | HU31-CP28 | `SeguridadProductosServiceTest` | `unVendedorNoUsaElCatalogoNiLasExistencias` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 | HU31-CP28 | `SeguridadProductosServiceTest` | `unClienteUsaElCatalogo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 | HU31-CP28 | `SeguridadProductosServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
-| HU31-CP29 | `VirusTotalAdapterTest` | `unaUrlConInformeMaliciosoEsMaliciosa` | Infraestructura | AB#397 | Rama `feature/US31-T397-antivirus-imagenes-virustotal` (PR sin abrir) | 🔍 |
-| HU31-CP29 | `VirusTotalAdapterTest` | `unaUrlConInformeSinMaliciososEsSegura` | Infraestructura | AB#397 | Rama `feature/US31-T397-antivirus-imagenes-virustotal` (PR sin abrir) | 🔍 |
-| HU31-CP30 | `VirusTotalAdapterTest` | `unaUrlNuevaSeEnviaAAnalizarYSeEsperaAlResultado` | Infraestructura | AB#397 | Rama `feature/US31-T397-antivirus-imagenes-virustotal` (PR sin abrir) | 🔍 |
-| HU31-CP30 | `VirusTotalAdapterTest` | `siElAnalisisTerminaEnLaPrimeraConsultaNoSeVuelveAConsultar` | Infraestructura | AB#397 | Rama `feature/US31-T397-antivirus-imagenes-virustotal` (PR sin abrir) | 🔍 |
-| HU31-CP30 | `VirusTotalAdapterTest` | `siElAnalisisNoTerminaNoHayResultado` | Infraestructura | AB#397 | Rama `feature/US31-T397-antivirus-imagenes-virustotal` (PR sin abrir) | 🔍 |
-| HU31-CP31 | `VirusTotalAdapterTest` | `unErrorAlBuscarElInformeNoDaResultado` (401, 429, 500 y 503) | Infraestructura | AB#397 | Rama `feature/US31-T397-antivirus-imagenes-virustotal` (PR sin abrir) | 🔍 |
-| HU31-CP31 | `VirusTotalAdapterTest` | `sinCuotaAlEnviarAAnalizarNoHayResultado` | Infraestructura | AB#397 | Rama `feature/US31-T397-antivirus-imagenes-virustotal` (PR sin abrir) | 🔍 |
-| HU31-CP31 | `VirusTotalAdapterTest` | `sinConexionNoHayResultado` | Infraestructura | AB#397 | Rama `feature/US31-T397-antivirus-imagenes-virustotal` (PR sin abrir) | 🔍 |
-| HU31-CP32 | `GestionProductosServiceTest` | `rechazaUnaImagenMaliciosaYNoGuardaNada` | Aplicación | AB#397 | Rama `feature/US31-T397-antivirus-imagenes-virustotal` (PR sin abrir) | 🔍 |
-| HU31-CP33 | `GestionProductosServiceTest` | `sinResultadoDelAntivirusSeGuardaSinImagen` | Aplicación | AB#397 | Rama `feature/US31-T397-antivirus-imagenes-virustotal` (PR sin abrir) | 🔍 |
-| HU31-CP33 | `GestionProductosServiceTest` | `unaImagenSeguraSeGuardaConElProducto` | Aplicación | AB#397 | Rama `feature/US31-T397-antivirus-imagenes-virustotal` (PR sin abrir) | 🔍 |
-| HU31-CP33 | `GestionProductosServiceTest` | `unProductoSinImagenNoSeAnaliza` | Aplicación | AB#397 | Rama `feature/US31-T397-antivirus-imagenes-virustotal` (PR sin abrir) | 🔍 |
-| HU31-CP34 | `ProductoControllerTest` | `imagenNoSeguraDevuelve400` | Infraestructura | AB#397 | Rama `feature/US31-T397-antivirus-imagenes-virustotal` (PR sin abrir) | 🔍 |
+| HU31-CP29 | `VirusTotalAdapterTest` | `unaUrlConInformeMaliciosoEsMaliciosa` | Infraestructura | AB#397 | PR #189 | 🔍 |
+| HU31-CP29 | `VirusTotalAdapterTest` | `unaUrlConInformeSinMaliciososEsSegura` | Infraestructura | AB#397 | PR #189 | 🔍 |
+| HU31-CP30 | `VirusTotalAdapterTest` | `unaUrlNuevaSeEnviaAAnalizarYSeEsperaAlResultado` | Infraestructura | AB#397 | PR #189 | 🔍 |
+| HU31-CP30 | `VirusTotalAdapterTest` | `siElAnalisisTerminaEnLaPrimeraConsultaNoSeVuelveAConsultar` | Infraestructura | AB#397 | PR #189 | 🔍 |
+| HU31-CP30 | `VirusTotalAdapterTest` | `siElAnalisisNoTerminaNoHayResultado` | Infraestructura | AB#397 | PR #189 | 🔍 |
+| HU31-CP31 | `VirusTotalAdapterTest` | `unErrorAlBuscarElInformeNoDaResultado` (401, 429, 500 y 503) | Infraestructura | AB#397 | PR #189 | 🔍 |
+| HU31-CP31 | `VirusTotalAdapterTest` | `sinCuotaAlEnviarAAnalizarNoHayResultado` | Infraestructura | AB#397 | PR #189 | 🔍 |
+| HU31-CP31 | `VirusTotalAdapterTest` | `sinConexionNoHayResultado` | Infraestructura | AB#397 | PR #189 | 🔍 |
+| HU31-CP32 | `GestionProductosServiceTest` | `rechazaUnaImagenMaliciosaYNoGuardaNada` | Aplicación | AB#397 | PR #189 | 🔍 |
+| HU31-CP33 | `GestionProductosServiceTest` | `sinResultadoDelAntivirusSeGuardaSinImagen` | Aplicación | AB#397 | PR #189 | 🔍 |
+| HU31-CP33 | `GestionProductosServiceTest` | `unaImagenSeguraSeGuardaConElProducto` | Aplicación | AB#397 | PR #189 | 🔍 |
+| HU31-CP33 | `GestionProductosServiceTest` | `unProductoSinImagenNoSeAnaliza` | Aplicación | AB#397 | PR #189 | 🔍 |
+| HU31-CP34 | `ProductoControllerTest` | `imagenNoSeguraDevuelve400` | Infraestructura | AB#397 | PR #189 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `ProductoTest` y `DescuentoTest`: `productos/domain/model/` (JUnit, sin Spring)
@@ -2654,8 +2654,8 @@ Rutas de las clases de test:
 | HU34-CP16 | Si el producto no carga, la vista muestra un error y permite reintentar | Frontend (página) | 1 | ✅ Pasa |
 | HU34-CP17 | Desde la ficha del producto, Editar abre el formulario de edición con sus datos | Frontend (página) | 1 | ✅ Pasa |
 | HU34-CP18 | Si el nombre ya lo tiene otro producto del vendedor (409), la edición lo indica en el campo Nombre con el mismo mensaje que el alta (HU31-CP27) y no sale del formulario | Frontend (página) | 1 | ✅ Pasa |
-| HU34-CP19 | Al modificar, cambiar la imagen por una maliciosa se rechaza y, si el antivirus no da resultado, se guarda sin imagen; si la imagen no cambia no se vuelve a analizar | Unitario | 3 | 🔍 En revisión (3, AB#397, PR sin abrir) |
-| HU34-CP20 | Cambiar la imagen por una que no supera el antivirus responde 400 con el código `IMAGE_NOT_SAFE` | Integración (capa web) | 1 | 🔍 En revisión (1, AB#397, PR sin abrir) |
+| HU34-CP19 | Al modificar, cambiar la imagen por una maliciosa se rechaza y, si el antivirus no da resultado, se guarda sin imagen; si la imagen no cambia no se vuelve a analizar | Unitario | 3 | 🔍 En revisión (3, AB#397, PR #189) |
+| HU34-CP20 | Cambiar la imagen por una que no supera el antivirus responde 400 con el código `IMAGE_NOT_SAFE` | Integración (capa web) | 1 | 🔍 En revisión (1, AB#397, PR #189) |
 
 Notas:
 - **HU34-CP01 a CP05:** casos propuestos en la T343 (AB#343) a partir de los criterios de aceptación de la HU34. Pendientes de añadir a la HU34 en Azure Boards.
@@ -2695,10 +2695,10 @@ Notas:
 | HU34-CP16 | `SellerProductFormPage.test.jsx` | `HU34-CP16: si el producto no carga, muestra un error y permite reintentar` | Frontend · página | AB#341 | PR #122 | ✅ |
 | HU34-CP17 | `SellerProductsPage.test.jsx` | `HU34-CP17: desde la ficha, Editar abre el formulario de edición con los datos del producto` | Frontend · página | AB#341 | PR #122 | ✅ |
 | HU34-CP18 | `SellerProductFormPage.test.jsx` | `HU34-CP18: si el nombre ya lo tiene otro producto del vendedor, lo indica y no sale del formulario` | Frontend · página | AB#341 | PR #122 | ✅ |
-| HU34-CP19 | `GestionProductosServiceTest` | `cambiarAUnaImagenMaliciosaSeRechaza` | Aplicación | AB#397 | Rama `feature/US31-T397-antivirus-imagenes-virustotal` (PR sin abrir) | 🔍 |
-| HU34-CP19 | `GestionProductosServiceTest` | `cambiarLaImagenSinResultadoSeGuardaSinImagen` | Aplicación | AB#397 | Rama `feature/US31-T397-antivirus-imagenes-virustotal` (PR sin abrir) | 🔍 |
-| HU34-CP19 | `GestionProductosServiceTest` | `siLaImagenNoCambiaNoSeVuelveAAnalizar` | Aplicación | AB#397 | Rama `feature/US31-T397-antivirus-imagenes-virustotal` (PR sin abrir) | 🔍 |
-| HU34-CP20 | `ProductoControllerTest` | `imagenNoSeguraAlModificarDevuelve400` | Infraestructura | AB#397 | Rama `feature/US31-T397-antivirus-imagenes-virustotal` (PR sin abrir) | 🔍 |
+| HU34-CP19 | `GestionProductosServiceTest` | `cambiarAUnaImagenMaliciosaSeRechaza` | Aplicación | AB#397 | PR #189 | 🔍 |
+| HU34-CP19 | `GestionProductosServiceTest` | `cambiarLaImagenSinResultadoSeGuardaSinImagen` | Aplicación | AB#397 | PR #189 | 🔍 |
+| HU34-CP19 | `GestionProductosServiceTest` | `siLaImagenNoCambiaNoSeVuelveAAnalizar` | Aplicación | AB#397 | PR #189 | 🔍 |
+| HU34-CP20 | `ProductoControllerTest` | `imagenNoSeguraAlModificarDevuelve400` | Infraestructura | AB#397 | PR #189 | 🔍 |
 
 Rutas de las clases de test:
 - `GestionProductosServiceTest`: `backend/src/test/java/es/uclm/esibuy/backend/productos/application/service/` (Mockito, sin Spring)
@@ -3156,6 +3156,6 @@ Tests que no validan una HU concreta.
 | `InicializadorColeccionesTest` | `rechazaDuplicadosEnLosIndicesUnicos` | Índices únicos de `carritos`, `valoraciones`, `categorias`, `listas_deseos` y `factores_autenticacion` (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `creaLosIndicesDeLasAnotaciones` | Que también crea los índices de las anotaciones de los `@Document` (email único en `usuarios`) (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `sesionesYTokensCaducan` | Índices TTL de `expiresAt` en `sesiones` y `tokens_seguridad` (AB#210, PR #43) |
-| `ProductosConfigTest` | `elContextoConectaElAnalisisDeImagenesConVirusTotal` | Que Spring conecta el análisis antivirus de las imágenes (`AnalisisImagenPort`) con `VirusTotalAdapter`, con una API key falsa (HU31; AB#397, PR sin abrir) |
+| `ProductosConfigTest` | `elContextoConectaElAnalisisDeImagenesConVirusTotal` | Que Spring conecta el análisis antivirus de las imágenes (`AnalisisImagenPort`) con `VirusTotalAdapter`, con una API key falsa (HU31; AB#397, PR #189) |
 
 `InicializadorColeccionesTest` está en `shared/infrastructure/config/` y usa Testcontainers. HU36 (crear la base de datos) no tiene casos de prueba en Azure Boards, por eso sus tests están en esta sección.
