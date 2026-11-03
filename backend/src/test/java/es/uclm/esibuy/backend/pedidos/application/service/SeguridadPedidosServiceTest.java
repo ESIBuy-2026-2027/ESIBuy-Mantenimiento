@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.pedidos.application.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -7,6 +8,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.time.Clock;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,7 +37,7 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoExcepti
 // Seguridad en la capa de negocio (R8): realizar un pedido y consultar si se ha comprado un producto exigen el rol
 // CLIENTE y que el correo sea el de la sesión. Las anotaciones solo se evalúan con Spring, así que se usa un
 // contexto mínimo (sin MongoDB) con los servicios reales y dobles de prueba de los puertos de salida.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU10-CP20 y HU13-CP07, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU10-CP20, HU13-CP07 y HU11-CP06, propuestos.
 @SpringJUnitConfig(SeguridadPedidosServiceTest.Configuracion.class)
 class SeguridadPedidosServiceTest {
 
@@ -208,6 +210,47 @@ class SeguridadPedidosServiceTest {
     void sinSesionSeRechazaConsultarCompras() {
         assertThrows(AuthenticationCredentialsNotFoundException.class,
                 () -> consultaCompras.haComprado(CLIENTE, "p-1"));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @WithMockUser(username = "vendedor@esibuy.test", roles = "VENDEDOR")
+    @DisplayName("HU11-CP06: un vendedor no puede consultar el historial de pedidos de un cliente")
+    void unVendedorNoConsultaElHistorial() {
+        assertThrows(AccessDeniedException.class, () -> consultaCompras.listarPedidos("vendedor@esibuy.test"));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @WithMockUser(username = "admin@esibuy.test", roles = "ADMINISTRADOR")
+    @DisplayName("HU11-CP06: un administrador no puede consultar el historial de pedidos de un cliente")
+    void unAdministradorNoConsultaElHistorial() {
+        assertThrows(AccessDeniedException.class, () -> consultaCompras.listarPedidos("admin@esibuy.test"));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU11-CP06: un cliente no puede consultar el historial ni el detalle de los pedidos de otro cliente")
+    void unClienteNoConsultaLosPedidosDeOtro() {
+        assertThrows(AccessDeniedException.class, () -> consultaCompras.listarPedidos(OTRO_CLIENTE));
+        assertThrows(AccessDeniedException.class, () -> consultaCompras.consultarPedido(OTRO_CLIENTE, "o-1"));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU11-CP06: un cliente sí consulta su propio historial")
+    void unClienteConsultaSuPropioHistorial() {
+        assertEquals(List.of(), consultaCompras.listarPedidos(CLIENTE));
+    }
+
+    @Test
+    @DisplayName("HU11-CP06: sin sesión se rechaza consultar el historial y el detalle de los pedidos")
+    void sinSesionSeRechazaConsultarPedidos() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> consultaCompras.listarPedidos(CLIENTE));
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> consultaCompras.consultarPedido(CLIENTE, "o-1"));
         comprobarQueNoSeTocaNada();
     }
 }
