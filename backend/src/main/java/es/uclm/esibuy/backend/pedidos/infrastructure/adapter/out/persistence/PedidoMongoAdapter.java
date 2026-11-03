@@ -1,5 +1,8 @@
 package es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.persistence;
 
+import java.util.List;
+import java.util.Optional;
+
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
 import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.Pedido;
@@ -24,5 +27,15 @@ public class PedidoMongoAdapter implements PedidoRepositoryPort {
     public boolean existePagadoConProducto(String clienteId, String productoId) {
         return repository.existsByClienteIdAndEstadoAndLineasProductoId(clienteId, EstadoPedido.PAGADO.name(),
                 productoId);
+    }
+
+    @Override
+    public List<Pedido> buscarPorCliente(String clienteId) {
+        return repository.findByClienteIdOrderByCreatedAtDesc(clienteId).stream().map(mapper::aDominio).toList();
+    }
+
+    @Override
+    public Optional<Pedido> buscarPorId(String id) {
+        return repository.findById(id).map(mapper::aDominio);
     }
 }
