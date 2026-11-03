@@ -33,6 +33,7 @@ import es.uclm.esibuy.backend.categorias.application.port.in.AdministracionCateg
 import es.uclm.esibuy.backend.categorias.application.port.in.CategoriaConProductos;
 import es.uclm.esibuy.backend.categorias.application.port.in.CrearCategoriaCommand;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaConProductosException;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaConVendedoresException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaDuplicadaException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaInvalidaException;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
@@ -287,5 +288,15 @@ class AdministracionCategoriasControllerTest {
         mockMvc.perform(eliminar("c-9").with(user("admin").roles("ADMINISTRADOR")))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("CATEGORY_HAS_PRODUCTS"));
+    }
+
+    @Test
+    @DisplayName("HU42-CP13: eliminar una categoría que es la principal de algún vendedor devuelve 409")
+    void eliminarUnaCategoriaPrincipalDeUnVendedorDevuelve409() throws Exception {
+        doThrow(new CategoriaConVendedoresException()).when(administracionCategorias).eliminar("c-9");
+
+        mockMvc.perform(eliminar("c-9").with(user("admin").roles("ADMINISTRADOR")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CATEGORY_HAS_SELLERS"));
     }
 }
