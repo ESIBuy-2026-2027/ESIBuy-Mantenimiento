@@ -74,6 +74,13 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
                 ProductoDocument.class).getModifiedCount() == 1;
     }
 
+    // Solo estos dos campos: el resto del producto no se toca
+    @Override
+    public void actualizarValoracion(String id, double media, int numero) {
+        mongoTemplate.updateFirst(new Query(Criteria.where("_id").is(id)),
+                new Update().set("valoracionMedia", media).set("numeroValoraciones", numero), ProductoDocument.class);
+    }
+
     @Override
     public void reponerStock(String id, int cantidad) {
         mongoTemplate.updateFirst(new Query(Criteria.where("_id").is(id)), new Update().inc(CAMPO_STOCK, cantidad),
