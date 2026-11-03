@@ -138,7 +138,7 @@ public class ManejadorGlobalErrores {
             case TELEFONO_INVALIDO -> "INVALID_PHONE";
             case MENOR_DE_EDAD -> "UNDERAGE";
             case PRIVACIDAD_NO_ACEPTADA -> "PRIVACY_NOT_ACCEPTED";
-            case DATO_INVALIDO -> "INVALID_FIELD";
+            case DATO_INVALIDO -> CODIGO_VALIDACION;
         };
     }
 
@@ -221,7 +221,8 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("No se puede desactivar al último administrador activo", "LAST_ACTIVE_ADMIN");
     }
 
-    // Código común de los 400 de producto, categoría y método de pago.
+    // Código común de los 400 de validación de toda la API: datos de dominio no válidos, un @Valid que falla y un
+    // cuerpo que no se puede leer. Los motivos del registro con campo propio llevan su code (ver codigo()).
     private static final String CODIGO_VALIDACION = "VALIDATION_ERROR";
 
     // 400 + code al dar de alta un producto (HU31, T179): el mensaje es genérico, nunca el detalle de la regla.
