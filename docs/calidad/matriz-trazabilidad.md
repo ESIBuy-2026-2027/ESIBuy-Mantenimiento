@@ -2365,7 +2365,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU25-CP01 | Con la contraseña actual correcta se elimina la cuenta del cliente de la sesión | Unitario | 1 | 🔍 En revisión |
+| HU25-CP01 | Con la contraseña actual correcta se elimina la cuenta del cliente de la sesión | Unitario | 1 | ✅ Pasa |
 | HU25-CP02 | Con una contraseña incorrecta no se elimina la cuenta: 400 `WRONG_PASSWORD` y la sesión sigue abierta | Unitario + integración (capa web) | 2 | 🔍 En revisión |
 | HU25-CP03 | Al eliminar la cuenta se responde 204, se invalida la sesión y se borra la cookie `JSESSIONID` | Integración (capa web) | 1 | 🔍 En revisión |
 | HU25-CP04 | Solo el cliente elimina su propia cuenta: el correo de otro, un vendedor o un administrador dan 403; sin sesión se rechaza (401) y sin token CSRF, 403. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) + integración (capa web) | 7 | 🔍 En revisión |
@@ -2373,7 +2373,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 Notas:
 - **HU25-CP01 a CP05:** casos propuestos en las T274/T275 (AB#274, AB#275) a partir de los criterios de aceptación de la HU25. Pendientes de confirmar con el equipo y de añadir a la HU25 en Azure Boards.
-- **Lógica (T275, AB#275):** `GestionPerfilUseCase.eliminarCuenta(email, password)` con `@PreAuthorize` de `Permisos.SOLO_CLIENTE_PROPIO_POR_EMAIL`: comprueba la contraseña actual (si no coincide, `ContrasenaActualIncorrectaException`, sin borrar nada) y borra al usuario. El borrado es **físico**, como el de un administrador (HU37): solo se borra el documento del usuario. Tras borrarlo, el login con esa cuenta da 401 (correo inexistente) y `CuentaActivaFilter` invalida cualquier otra sesión abierta en su siguiente petición. Va en su propia rama y PR.
+- **Lógica (T275, AB#275):** `GestionPerfilUseCase.eliminarCuenta(email, password)` con `@PreAuthorize` de `Permisos.SOLO_CLIENTE_PROPIO_POR_EMAIL`: comprueba la contraseña actual (si no coincide, `ContrasenaActualIncorrectaException`, sin borrar nada) y borra al usuario. El borrado es **físico**, como el de un administrador (HU37): solo se borra el documento del usuario. Tras borrarlo, el login con esa cuenta da 401 (correo inexistente) y `CuentaActivaFilter` invalida cualquier otra sesión abierta en su siguiente petición. Mergeada en el PR #190.
 - **Endpoint (T274, AB#274):** `DELETE /api/perfil` con `{ "password": "..." }` responde 204 y cierra la sesión; una contraseña incorrecta, 400 `WRONG_PASSWORD` con la sesión abierta.
 - **Pendiente con el equipo:** el carrito, las direcciones, los métodos de pago (cifrados), los pedidos y las valoraciones del cliente quedan con un `clienteId` huérfano. Se decide junto con la HU38 (borrado lógico o anonimización).
 - **Tests existentes:** `GestionPerfilServiceTest` saca el usuario de prueba a un método (`lucia()`) que comparten HU4-CP01 y los casos nuevos, y `SeguridadSesionUsuarioServiceTest` crea el servicio con el doble del hash. No cambia lo que comprueban HU4-CP01 ni HU2-CP29.
@@ -2383,15 +2383,15 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU25-CP01 | `GestionPerfilServiceTest` | `eliminarCuentaConLaContrasenaCorrectaBorraAlUsuario` | Aplicación | AB#275 | Rama `feature/US25-T275-logica-eliminar-cuenta` | 🔍 |
-| HU25-CP02 | `GestionPerfilServiceTest` | `eliminarCuentaConLaContrasenaIncorrectaNoBorraNada` | Aplicación | AB#275 | Rama `feature/US25-T275-logica-eliminar-cuenta` | 🔍 |
+| HU25-CP01 | `GestionPerfilServiceTest` | `eliminarCuentaConLaContrasenaCorrectaBorraAlUsuario` | Aplicación | AB#275 | PR #190 | ✅ |
+| HU25-CP02 | `GestionPerfilServiceTest` | `eliminarCuentaConLaContrasenaIncorrectaNoBorraNada` | Aplicación | AB#275 | PR #190 | ✅ |
 | HU25-CP02 | `PerfilControllerTest` | `eliminarConContrasenaIncorrectaRecibe400` | Infraestructura | AB#274 | este PR | 🔍 |
 | HU25-CP03 | `PerfilControllerTest` | `eliminarLaCuentaCierraLaSesion` | Infraestructura | AB#274 | este PR | 🔍 |
-| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `unClienteEliminaSuCuenta` | Aplicación | AB#275 | Rama `feature/US25-T275-logica-eliminar-cuenta` | 🔍 |
-| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `unClienteNoEliminaLaCuentaDeOtro` | Aplicación | AB#275 | Rama `feature/US25-T275-logica-eliminar-cuenta` | 🔍 |
-| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `unVendedorNoEliminaSuCuenta` | Aplicación | AB#275 | Rama `feature/US25-T275-logica-eliminar-cuenta` | 🔍 |
-| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `unAdministradorNoEliminaSuCuenta` | Aplicación | AB#275 | Rama `feature/US25-T275-logica-eliminar-cuenta` | 🔍 |
-| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `sinSesionNoSeEliminaNingunaCuenta` | Aplicación | AB#275 | Rama `feature/US25-T275-logica-eliminar-cuenta` | 🔍 |
+| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `unClienteEliminaSuCuenta` | Aplicación | AB#275 | PR #190 | ✅ |
+| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `unClienteNoEliminaLaCuentaDeOtro` | Aplicación | AB#275 | PR #190 | ✅ |
+| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `unVendedorNoEliminaSuCuenta` | Aplicación | AB#275 | PR #190 | ✅ |
+| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `unAdministradorNoEliminaSuCuenta` | Aplicación | AB#275 | PR #190 | ✅ |
+| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `sinSesionNoSeEliminaNingunaCuenta` | Aplicación | AB#275 | PR #190 | ✅ |
 | HU25-CP04 | `PerfilControllerTest` | `eliminarSinSesionRecibe401` | Infraestructura | AB#274 | este PR | 🔍 |
 | HU25-CP04 | `PerfilControllerTest` | `eliminarSinTokenCsrfRecibe403` | Infraestructura | AB#274 | este PR | 🔍 |
 | HU25-CP05 | `PerfilControllerTest` | `eliminarSinContrasenaRecibe400` (vacía y ausente) | Infraestructura | AB#274 | este PR | 🔍 |
