@@ -1559,12 +1559,12 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 | HU10-CP03 | Con el carrito vacío la pasarela lo indica, no ofrece pagar y permite volver a los productos | Frontend (página) | 1 | ✅ Pasa |
 | HU10-CP04 | Al pulsar «Simular pago» se indica que se procesa, se crea un pedido por cada proveedor, se confirma cada uno y el carrito queda vacío | Frontend (página) | 3 | ✅ Pasa |
 | HU10-CP05 | Si falla el pedido de un proveedor se confirman los demás, se avisa de cuál ha fallado, su compra se conserva en el carrito y se puede reintentar sin repetir lo ya pagado | Frontend (página) | 3 | ✅ Pasa |
-| HU10-CP06 | Cada pedido se pide con un solo proveedor, uno detrás de otro | Frontend (página) | 1 | 🔍 En revisión (1, AB#133, PR #157) |
-| HU10-CP07 | La pasarela lista los métodos de pago guardados del cliente (HU6), con su máscara, marca el predeterminado y deja elegir otro antes de pagar | Frontend (página) | 2 | 🔍 En revisión (2, AB#133, PR #157) |
-| HU10-CP08 | Sin métodos de pago guardados no se puede pagar y se lleva a la vista de métodos de pago (HU6) para añadir uno; si no se pueden cargar, se indica y se puede reintentar | Frontend (página) | 2 | 🔍 En revisión (2, AB#133, PR #157) |
-| HU10-CP09 | Cada pedido se crea con el método de pago elegido (`paymentMethodId`) | Frontend (página) | 1 | 🔍 En revisión (1, AB#133, PR #157) |
-| HU10-CP10 | Tras pagar se muestra un recibo con forma de ticket: total pagado (solo de los pedidos creados), fecha, cada pedido con su número, proveedor e importe, y el método de pago usado con su máscara | Frontend (página + componente) | 6 | 🔍 En revisión (6, AB#133, PR #157) |
-| HU10-CP11 | La decoración del recibo no estorba: el código de barras y el confeti quedan ocultos a los lectores de pantalla y no hay confeti si el usuario prefiere reducir el movimiento | Frontend (componente) | 3 | 🔍 En revisión (3, AB#133, PR #157) |
+| HU10-CP06 | Cada pedido se pide con un solo proveedor, uno detrás de otro | Frontend (página) | 1 | ✅ Pasa |
+| HU10-CP07 | La pasarela lista los métodos de pago guardados del cliente (HU6), con su máscara, marca el predeterminado y deja elegir otro antes de pagar | Frontend (página) | 2 | ✅ Pasa |
+| HU10-CP08 | Sin métodos de pago guardados no se puede pagar y se lleva a la vista de métodos de pago (HU6) para añadir uno; si no se pueden cargar, se indica y se puede reintentar | Frontend (página) | 2 | ✅ Pasa |
+| HU10-CP09 | Cada pedido se crea con el método de pago elegido (`paymentMethodId`) | Frontend (página) | 1 | 🔍 En revisión (1, AB#133, PR #194) |
+| HU10-CP10 | Tras pagar se muestra un recibo con forma de ticket: total pagado (solo de los pedidos creados), fecha, cada pedido con su número, proveedor e importe, y el método de pago usado con su máscara | Frontend (página + componente) | 6 | ✅ Pasa |
+| HU10-CP11 | La decoración del recibo no estorba: el código de barras y el confeti quedan ocultos a los lectores de pantalla y no hay confeti si el usuario prefiere reducir el movimiento | Frontend (componente) | 3 | ✅ Pasa |
 | HU10-CP12 | El pedido nace PAGADO, con un solo proveedor, al menos una línea, sin productos repetidos, cliente, dirección y método de pago, y su total es la suma de las líneas | Unitario | 5 | 🔍 En revisión (5, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP13 | Número de pedido `ESB-AAAA-NNNNNN`: año y correlativo de seis cifras, un contador por año en `contadores`, atómico aunque haya pedidos a la vez | Unitario + integración | 8 | 🔍 En revisión (8, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP14 | El pedido toma del carrito solo los productos de su proveedor, con los precios del servidor, los quita del carrito y responde 201 con el contrato del frontend | Unitario + controlador | 5 | 🔍 En revisión (5, AB#380 a AB#382 y AB#131, PR #166) |
@@ -1574,19 +1574,23 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 | HU10-CP18 | Solo el cliente en sesión realiza pedidos: sin sesión 401, otro rol 403 y sin CSRF se rechaza | Unitario + controlador | 2 | 🔍 En revisión (2, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP19 | Persistencia en `pedidos`: el mapper no pierde datos, importes como Decimal128, número de pedido único y con formato validado por la colección | Unitario + integración | 5 | 🔍 En revisión (5, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP20 | Realizar un pedido exige el rol cliente y que el correo del comando sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, rama `fix/seguridad-capa-negocio`) |
+| HU10-CP21 | La pasarela lista las direcciones de envío del cliente (HU5), marca la principal y deja elegir otra antes de pagar | Frontend (página) | 2 | 🔍 En revisión (2, AB#133, PR #194) |
+| HU10-CP22 | Sin direcciones de envío no se puede pagar y se lleva a la vista de direcciones (HU5) para añadir una; si no se pueden cargar, se indica y se puede reintentar | Frontend (página) | 2 | 🔍 En revisión (2, AB#133, PR #194) |
+| HU10-CP23 | Cada pedido se crea con la dirección de envío elegida (`direccionId`) | Frontend (página) | 1 | 🔍 En revisión (1, AB#133, PR #194) |
 
 Notas:
 - **HU10-CP01 a CP06 (Sprint 2, frontend):** casos propuestos en la task AB#401 (vista de la pasarela de pago) a partir de lo pedido (`frontend/docs/hu10-pasarela-de-pago.md`). Pendientes de confirmar con el equipo y de añadir a la HU10 (AB#72) en Azure Boards. La task AB#379 (vista de carrito) es la misma pantalla que la AB#384 (HU9).
-- **Backend:** la entidad pedido y su endpoint (AB#380 a AB#382) no existen todavía; los tests usan el contrato propuesto por el frontend y los mocks (MSW).
+- **Backend:** la entidad pedido y su endpoint (AB#380 a AB#382) no existen todavía; los tests usan el contrato propuesto por el frontend y los mocks (MSW). Superado: el backend existe desde el PR #166 y la pasarela lo usa desde PR #194.
 - **Decisión del equipo:** cada pedido tiene un solo proveedor, la pasarela da la orden de realización del pedido por proveedor y hay un botón para simular el pago (no se cobra nada).
 - **Archivo de tests nuevo** creado sin consulta previa: `CheckoutPage.test.jsx`.
 - **HU10-CP07 a CP11 (Sprint 2, frontend):** casos propuestos en la task AB#133 (flujo de checkout: pago y confirmación) y aprobados por el equipo junto con el diseño. Pendientes de añadir a la HU10 (AB#72) en Azure Boards. El ticket se adapta del componente de referencia `AnimatedTicket` (shadcn) a Fluent UI v9, sin instalar nada.
-- **Contrato propuesto:** `POST /api/orders` pasa a enviar `{ vendedorId, paymentMethodId }` (campo `paymentMethodId` de la colección `pedidos`), pendiente de acordar con el backend de pedidos (AB#380 a AB#382). Por eso HU10-CP06 compara ahora solo el proveedor de cada pedido.
+- **Contrato propuesto:** `POST /api/orders` pasa a enviar `{ vendedorId, paymentMethodId }` (campo `paymentMethodId` de la colección `pedidos`), pendiente de acordar con el backend de pedidos (AB#380 a AB#382). Por eso HU10-CP06 compara ahora solo el proveedor de cada pedido. Superado en AB#133 (PR #194): la pasarela usa el contrato real del backend, `POST /api/customer/orders` con `{ vendedorId, direccionId, paymentMethodId }`.
 - **Archivo de tests nuevo**, acordado con el equipo: `PaymentTicket.test.jsx`.
 
 - **Backend (HU10-CP12 a CP19):** módulo `pedidos` (AB#380 entidad, AB#382 lógica, AB#381 y AB#130 endpoint, AB#131 número y stock, AB#132 tests), con `POST /api/customer/orders` y `{ vendedorId, direccionId, paymentMethodId }`. Casos propuestos y aprobados por el equipo junto con el diseño; pendientes de añadir a la HU10 (AB#72) en Azure Boards. Decisiones del equipo: la ruta va bajo `/api/customer/**`, el número `ESB-AAAA-NNNNNN` vuelve a empezar cada año, el pedido nace PAGADO y, sin transacciones, lo que falla a mitad se compensa reponiendo el stock.
 - **Tests en clases que ya existían** (un archivo de tests por clase): `ProductoMongoAdapterTest` (productos), `GestionMetodosPagoServiceTest` (métodos de pago), `GestionDireccionesServiceTest` (direcciones) e `InicializadorColeccionesTest` (colecciones) ganan casos HU10, por los métodos y la colección nuevos que usa el pedido.
 - **HU10-CP20 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Comprueba con `@PreAuthorize` que `RealizacionPedidoUseCase` exige el rol cliente y que el correo del comando es el de la sesión. Clase de test nueva `pedidos/application/service/SeguridadPedidosServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
+- **HU10-CP21 a CP23 (frontend):** casos propuestos en la task AB#133 (pasarela con dirección de envío y endpoint real) y aprobados por el equipo junto con el diseño. Pendientes de añadir a la HU10 (AB#72) en Azure Boards. HU10-CP09 cambia porque cada pedido envía también la `direccionId`; los tests de CP05, CP06 y CP10 que espían la petición solo cambian la ruta a `/api/customer/orders`. Sin archivos de tests nuevos.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1606,21 +1610,21 @@ Notas:
 | HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: confirma los pedidos que sí se han creado e indica cuál ha fallado` | Frontend · página | AB#401 | PR #146 | ✅ |
 | HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: la compra del pedido que ha fallado se conserva en el carrito` | Frontend · página | AB#401 | PR #146 | ✅ |
 | HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: se puede reintentar el pago de lo que falló, sin repetir lo ya pagado` | Frontend · página | AB#401 | PR #146 | ✅ |
-| HU10-CP06 | `CheckoutPage.test.jsx` | `HU10-CP06: cada pedido se pide con un solo proveedor, uno detrás de otro` | Frontend · página | AB#401 | PR #146; modificado en PR #157 | 🔍 |
-| HU10-CP07 | `CheckoutPage.test.jsx` | `HU10-CP07: lista los métodos de pago guardados del cliente y marca el predeterminado` | Frontend · página | AB#133 | PR #157 | 🔍 |
-| HU10-CP07 | `CheckoutPage.test.jsx` | `HU10-CP07: se puede elegir otro método de pago antes de pagar` | Frontend · página | AB#133 | PR #157 | 🔍 |
-| HU10-CP08 | `CheckoutPage.test.jsx` | `HU10-CP08: sin métodos de pago guardados no deja pagar y lleva a sus métodos de pago para añadir uno` | Frontend · página | AB#133 | PR #157 | 🔍 |
-| HU10-CP08 | `CheckoutPage.test.jsx` | `HU10-CP08: si no se pueden cargar los métodos de pago lo indica y deja reintentar` | Frontend · página | AB#133 | PR #157 | 🔍 |
-| HU10-CP09 | `CheckoutPage.test.jsx` | `HU10-CP09: cada pedido se crea con el método de pago elegido` | Frontend · página | AB#133 | PR #157 | 🔍 |
-| HU10-CP10 | `CheckoutPage.test.jsx` | `HU10-CP10: tras pagar muestra un recibo con el total pagado, cada pedido y el método de pago usado` | Frontend · página | AB#133 | PR #157 | 🔍 |
-| HU10-CP10 | `CheckoutPage.test.jsx` | `HU10-CP10: si falla un pedido, el recibo solo cobra los pedidos creados` | Frontend · página | AB#133 | PR #157 | 🔍 |
-| HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: muestra el total pagado, la suma de los pedidos` | Frontend · componente | AB#133 | PR #157 | 🔍 |
-| HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: muestra la fecha del pago` | Frontend · componente | AB#133 | PR #157 | 🔍 |
-| HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: lista cada pedido con su número, su proveedor y su importe` | Frontend · componente | AB#133 | PR #157 | 🔍 |
-| HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: muestra el método de pago usado solo con su máscara` | Frontend · componente | AB#133 | PR #157 | 🔍 |
-| HU10-CP11 | `PaymentTicket.test.jsx` | `HU10-CP11: el código de barras es decorativo y queda oculto a los lectores de pantalla` | Frontend · componente | AB#133 | PR #157 | 🔍 |
-| HU10-CP11 | `PaymentTicket.test.jsx` | `HU10-CP11: celebra el pago con confeti decorativo` | Frontend · componente | AB#133 | PR #157 | 🔍 |
-| HU10-CP11 | `PaymentTicket.test.jsx` | `HU10-CP11: sin confeti si el usuario prefiere reducir el movimiento` | Frontend · componente | AB#133 | PR #157 | 🔍 |
+| HU10-CP06 | `CheckoutPage.test.jsx` | `HU10-CP06: cada pedido se pide con un solo proveedor, uno detrás de otro` | Frontend · página | AB#401 | PR #146; modificado en PR #157 | ✅ |
+| HU10-CP07 | `CheckoutPage.test.jsx` | `HU10-CP07: lista los métodos de pago guardados del cliente y marca el predeterminado` | Frontend · página | AB#133 | PR #157 |✅ |
+| HU10-CP07 | `CheckoutPage.test.jsx` | `HU10-CP07: se puede elegir otro método de pago antes de pagar` | Frontend · página | AB#133 | PR #157 |✅ |
+| HU10-CP08 | `CheckoutPage.test.jsx` | `HU10-CP08: sin métodos de pago guardados no deja pagar y lleva a sus métodos de pago para añadir uno` | Frontend · página | AB#133 | PR #157 |✅ |
+| HU10-CP08 | `CheckoutPage.test.jsx` | `HU10-CP08: si no se pueden cargar los métodos de pago lo indica y deja reintentar` | Frontend · página | AB#133 | PR #157 |✅ |
+| HU10-CP09 | `CheckoutPage.test.jsx` | `HU10-CP09: cada pedido se crea con el método de pago elegido` | Frontend · página | AB#133 | PR #157; modificado en PR #194 | 🔍 |
+| HU10-CP10 | `CheckoutPage.test.jsx` | `HU10-CP10: tras pagar muestra un recibo con el total pagado, cada pedido y el método de pago usado` | Frontend · página | AB#133 | PR #157 |✅ |
+| HU10-CP10 | `CheckoutPage.test.jsx` | `HU10-CP10: si falla un pedido, el recibo solo cobra los pedidos creados` | Frontend · página | AB#133 | PR #157 |✅ |
+| HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: muestra el total pagado, la suma de los pedidos` | Frontend · componente | AB#133 | PR #157 |✅ |
+| HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: muestra la fecha del pago` | Frontend · componente | AB#133 | PR #157 |✅ |
+| HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: lista cada pedido con su número, su proveedor y su importe` | Frontend · componente | AB#133 | PR #157 |✅ |
+| HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: muestra el método de pago usado solo con su máscara` | Frontend · componente | AB#133 | PR #157 |✅ |
+| HU10-CP11 | `PaymentTicket.test.jsx` | `HU10-CP11: el código de barras es decorativo y queda oculto a los lectores de pantalla` | Frontend · componente | AB#133 | PR #157 |✅ |
+| HU10-CP11 | `PaymentTicket.test.jsx` | `HU10-CP11: celebra el pago con confeti decorativo` | Frontend · componente | AB#133 | PR #157 |✅ |
+| HU10-CP11 | `PaymentTicket.test.jsx` | `HU10-CP11: sin confeti si el usuario prefiere reducir el movimiento` | Frontend · componente | AB#133 | PR #157 |✅ |
 | HU10-CP12 | `PedidoTest` | `unPedidoNuevoNacePagadoConSuTotal` | Dominio | AB#380 | PR #166 | 🔍 |
 | HU10-CP12 | `PedidoTest` | `unPedidoSinLineasNoEsValido` | Dominio | AB#380 | PR #166 | 🔍 |
 | HU10-CP12 | `PedidoTest` | `unPedidoSinDatosObligatoriosNoEsValido` | Dominio | AB#380 | PR #166 | 🔍 |
@@ -1675,6 +1679,11 @@ Notas:
 | HU10-CP20 | `SeguridadPedidosServiceTest` | `unClienteNoPideConElCorreoDeOtro` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 | HU10-CP20 | `SeguridadPedidosServiceTest` | `unClientePideConSuPropioCorreo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 | HU10-CP20 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaElPedido` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU10-CP21 | `CheckoutPage.test.jsx` | `HU10-CP21: lista las direcciones de envío del cliente y marca la principal` | Frontend · página | AB#133 | PR #194 | 🔍 |
+| HU10-CP21 | `CheckoutPage.test.jsx` | `HU10-CP21: se puede elegir otra dirección de envío antes de pagar` | Frontend · página | AB#133 | PR #194 | 🔍 |
+| HU10-CP22 | `CheckoutPage.test.jsx` | `HU10-CP22: sin direcciones de envío no deja pagar y lleva a sus direcciones para añadir una` | Frontend · página | AB#133 | PR #194 | 🔍 |
+| HU10-CP22 | `CheckoutPage.test.jsx` | `HU10-CP22: si no se pueden cargar las direcciones de envío lo indica y deja reintentar` | Frontend · página | AB#133 | PR #194 | 🔍 |
+| HU10-CP23 | `CheckoutPage.test.jsx` | `HU10-CP23: cada pedido se crea con la dirección de envío elegida` | Frontend · página | AB#133 | PR #194 | 🔍 |
 
 Ruta de la clase de test (bajo `frontend/src/`):
 - `CheckoutPage.test.jsx`: `pages/` (Vitest, React Testing Library y MSW)
