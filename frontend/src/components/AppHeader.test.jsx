@@ -207,3 +207,28 @@ describe('AppHeader', () => {
     expect(await screen.findByLabelText('Nombre')).toHaveValue('Carlos')
   })
 })
+
+describe('AppHeader: Mis pedidos (HU11)', () => {
+  it('HU11-CP18: el cliente tiene el enlace a sus pedidos y lleva a Mis pedidos', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/')
+
+    await user.click(await screen.findByRole('link', { name: /mis pedidos/i }))
+
+    await esperarRuta('/orders')
+  })
+
+  it('HU11-CP18: el vendedor y el administrador no tienen el enlace a Mis pedidos', async () => {
+    await abrirSesionPorApi('vendedor@esibuy.test')
+    const { unmount } = renderApp('/')
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(screen.queryByRole('link', { name: /mis pedidos/i })).not.toBeInTheDocument()
+    unmount()
+
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/')
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(screen.queryByRole('link', { name: /mis pedidos/i })).not.toBeInTheDocument()
+  })
+})
