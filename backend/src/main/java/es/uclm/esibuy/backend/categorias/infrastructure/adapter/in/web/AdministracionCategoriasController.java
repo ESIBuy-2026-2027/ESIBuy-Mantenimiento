@@ -5,6 +5,7 @@ import java.util.List;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,7 +21,8 @@ import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 
 /**
  * Adaptador de entrada web del administrador para las categorías: {@code GET /api/admin/categorias} (HU39),
- * {@code POST /api/admin/categorias} (HU40) y {@code PUT /api/admin/categorias/{id}} (HU41).
+ * {@code POST /api/admin/categorias} (HU40), {@code PUT /api/admin/categorias/{id}} (HU41) y
+ * {@code DELETE /api/admin/categorias/{id}} (HU42).
  * /api/admin/** solo lo usa un ADMINISTRADOR (SecurityConfig, T58): sin sesión 401, con otro rol 403.
  */
 @RestController
@@ -56,5 +58,13 @@ public class AdministracionCategoriasController {
     public CategoriaAdministracionResponse editar(@PathVariable String id,
             @Valid @RequestBody EditarCategoriaRequest request) {
         return CategoriaAdministracionResponse.desde(administracionCategorias.editar(request.aComando(id)));
+    }
+
+    // Elimina una categoría (HU42, T325) y responde 204 sin cuerpo. 404 si no existe; 409 si tiene productos o es
+    // la categoría principal de algún vendedor.
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminar(@PathVariable String id) {
+        administracionCategorias.eliminar(id);
     }
 }
