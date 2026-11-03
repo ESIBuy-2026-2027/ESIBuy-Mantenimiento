@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.categorias.infrastructure.adapter.in.web;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -31,6 +32,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import es.uclm.esibuy.backend.categorias.application.port.in.AdministracionCategoriasUseCase;
 import es.uclm.esibuy.backend.categorias.application.port.in.CategoriaConProductos;
 import es.uclm.esibuy.backend.categorias.application.port.in.CrearCategoriaCommand;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaConProductosException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaDuplicadaException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaInvalidaException;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
@@ -275,5 +277,15 @@ class AdministracionCategoriasControllerTest {
                 .andExpect(content().string(""));
 
         verify(administracionCategorias).eliminar("c-9");
+    }
+
+    @Test
+    @DisplayName("HU42-CP12: eliminar una categoría que tiene productos devuelve 409")
+    void eliminarUnaCategoriaConProductosDevuelve409() throws Exception {
+        doThrow(new CategoriaConProductosException()).when(administracionCategorias).eliminar("c-9");
+
+        mockMvc.perform(eliminar("c-9").with(user("admin").roles("ADMINISTRADOR")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CATEGORY_HAS_PRODUCTS"));
     }
 }
