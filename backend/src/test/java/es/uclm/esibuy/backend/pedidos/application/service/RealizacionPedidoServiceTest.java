@@ -228,5 +228,15 @@ class RealizacionPedidoServiceTest {
         public boolean existePagadoConProducto(String clienteId, String productoId) {
             throw new UnsupportedOperationException("Realizar un pedido no consulta compras");
         }
+
+        @Override
+        public List<Pedido> buscarPorCliente(String clienteId) {
+            throw new UnsupportedOperationException("Realizar un pedido no consulta el historial");
+        }
+
+        @Override
+        public Optional<Pedido> buscarPorId(String id) {
+            throw new UnsupportedOperationException("Realizar un pedido no consulta el detalle");
+        }
     }
 }

@@ -661,14 +661,14 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU3-CP15 | Restablecer con una contraseña que no cumple la política responde 400 con el código del motivo (p. ej. `PASSWORD_WEAK`) | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
 | HU3-CP16 | Los dos endpoints rechazan un cuerpo incompleto (400) y una petición sin token anti-CSRF (403) sin llamar al caso de uso | Integración web (`@WebMvcTest`) | 4 | ✅ Pasa |
 | HU3-CP17 | La petición de restablecer no muestra la contraseña ni el código en su `toString` (logs) | Unitario (infraestructura) | 1 | ✅ Pasa |
-| HU3-CP18 | El inicio de sesión tiene el enlace «¿Has olvidado tu contraseña?», que lleva a la recuperación | Frontend (página) | 1 | 🔍 En revisión (1, AB#398, PR sin abrir) |
-| HU3-CP19 | Sin email, o con uno mal formado, se avisa en el campo y no se pide ningún código | Frontend (página) | 1 | 🔍 En revisión (1, AB#398, PR sin abrir) |
-| HU3-CP20 | Se pide el código para el email escrito y se pasa al segundo paso con el mismo aviso exista o no la cuenta (caduca en 10 minutos); si el servidor falla, se avisa y no se avanza | Frontend (página) | 3 | 🔍 En revisión (3, AB#398, PR sin abrir) |
-| HU3-CP21 | Antes de enviar se comprueba que el código tiene 6 dígitos y que la contraseña nueva cumple los requisitos (que se muestran) y coincide con su repetición | Frontend (página) | 2 | 🔍 En revisión (2, AB#398, PR sin abrir) |
-| HU3-CP22 | Con el código correcto se envían email, código y contraseña, y se vuelve al login con «Contraseña cambiada. Ya puedes iniciar sesión.» | Frontend (página) | 1 | 🔍 En revisión (1, AB#398, PR sin abrir) |
-| HU3-CP23 | Con un código incorrecto o caducado se avisa y se puede volver a intentar o pedir otro código | Frontend (página) | 2 | 🔍 En revisión (2, AB#398, PR sin abrir) |
-| HU3-CP24 | Si el servidor rechaza la contraseña por la política, el motivo se muestra en el campo; con otro error, un aviso genérico | Frontend (página) | 2 | 🔍 En revisión (2, AB#398, PR sin abrir) |
-| HU3-CP25 | Desde la recuperación se vuelve al login; con la sesión abierta, la ruta lleva al inicio del usuario | Frontend (página) | 2 | 🔍 En revisión (2, AB#398, PR sin abrir) |
+| HU3-CP18 | El inicio de sesión tiene el enlace «¿Has olvidado tu contraseña?», que lleva a la recuperación | Frontend (página) | 1 | ✅ Pasa |
+| HU3-CP19 | Sin email, o con uno mal formado, se avisa en el campo y no se pide ningún código | Frontend (página) | 1 | ✅ Pasa |
+| HU3-CP20 | Se pide el código para el email escrito y se pasa al segundo paso con el mismo aviso exista o no la cuenta (caduca en 10 minutos); si el servidor falla, se avisa y no se avanza | Frontend (página) | 3 | ✅ Pasa |
+| HU3-CP21 | Antes de enviar se comprueba que el código tiene 6 dígitos y que la contraseña nueva cumple los requisitos (que se muestran) y coincide con su repetición | Frontend (página) | 2 | ✅ Pasa |
+| HU3-CP22 | Con el código correcto se envían email, código y contraseña, y se vuelve al login con «Contraseña cambiada. Ya puedes iniciar sesión.» | Frontend (página) | 1 | ✅ Pasa |
+| HU3-CP23 | Con un código incorrecto o caducado se avisa y se puede volver a intentar o pedir otro código | Frontend (página) | 2 | ✅ Pasa |
+| HU3-CP24 | Si el servidor rechaza la contraseña por la política, el motivo se muestra en el campo; con otro error, un aviso genérico | Frontend (página) | 2 | ✅ Pasa |
+| HU3-CP25 | Desde la recuperación se vuelve al login; con la sesión abierta, la ruta lleva al inicio del usuario | Frontend (página) | 2 | ✅ Pasa |
 
 Notas:
 - **HU3-CP01 a CP10 (Sprint 2, backend, TDD):** casos propuestos en la T400 (AB#400, lógica de recuperación de contraseña) a partir de los criterios de aceptación de la HU3 (AB#65): «envío de enlace/código temporal y de un solo uso», «expiración del enlace tras un tiempo determinado» y «la contraseña nueva debe cumplir la política de seguridad». Pendientes de confirmar con el equipo y de añadir a la HU3 en Azure Boards.
@@ -713,20 +713,20 @@ Notas:
 | HU3-CP16 | `RecuperacionContrasenaControllerTest` | `restablecerConCamposVaciosRespondeBadRequest` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
 | HU3-CP16 | `RecuperacionContrasenaControllerTest` | `restablecerSinCsrfRespondeForbidden` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
 | HU3-CP17 | `RestablecerContrasenaRequestTest` | `toStringNoMuestraLaContrasenaNiElCodigo` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
-| HU3-CP18 | `LoginFlow.test.jsx` | `HU3-CP18: el inicio de sesión tiene un enlace a la recuperación de contraseña` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP19 | `ForgotPasswordPage.test.jsx` | `HU3-CP19: sin email, o con uno mal formado, avisa en el campo y no pide ningún código` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP20 | `ForgotPasswordPage.test.jsx` | `HU3-CP20: pide el código para el email escrito y pasa al segundo paso con el aviso de que se ha enviado` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP20 | `ForgotPasswordPage.test.jsx` | `HU3-CP20: con un email que no está registrado muestra el mismo aviso (no revela qué emails existen)` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP20 | `ForgotPasswordPage.test.jsx` | `HU3-CP20: si el servidor falla al pedir el código, lo avisa y se queda en el primer paso` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP21 | `ForgotPasswordPage.test.jsx` | `HU3-CP21: comprueba el código y la contraseña nueva antes de enviarlos` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP21 | `ForgotPasswordPage.test.jsx` | `HU3-CP21: muestra los requisitos de la contraseña nueva y marca los que ya cumple` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP22 | `ForgotPasswordPage.test.jsx` | `HU3-CP22: con el código correcto cambia la contraseña y vuelve al login avisando del cambio` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP23 | `ForgotPasswordPage.test.jsx` | `HU3-CP23: con un código incorrecto o caducado lo avisa y se queda en el paso para volver a intentarlo` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP23 | `ForgotPasswordPage.test.jsx` | `HU3-CP23: se puede pedir otro código para el mismo email` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP24 | `ForgotPasswordPage.test.jsx` | `HU3-CP24: si el servidor rechaza la contraseña por la política, lo muestra en el campo` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP24 | `ForgotPasswordPage.test.jsx` | `HU3-CP24: si el servidor falla por otro motivo, muestra un aviso genérico sin detalles internos` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP25 | `ForgotPasswordPage.test.jsx` | `HU3-CP25: desde la recuperación se puede volver al inicio de sesión` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
-| HU3-CP25 | `ForgotPasswordPage.test.jsx` | `HU3-CP25: con la sesión abierta no se muestra la recuperación y lleva a su inicio` | Frontend · página | AB#398 | Rama `feature/US3-T398-formulario-recuperacion-contrasena` (PR sin abrir) | 🔍 |
+| HU3-CP18 | `LoginFlow.test.jsx` | `HU3-CP18: el inicio de sesión tiene un enlace a la recuperación de contraseña` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP19 | `ForgotPasswordPage.test.jsx` | `HU3-CP19: sin email, o con uno mal formado, avisa en el campo y no pide ningún código` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP20 | `ForgotPasswordPage.test.jsx` | `HU3-CP20: pide el código para el email escrito y pasa al segundo paso con el aviso de que se ha enviado` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP20 | `ForgotPasswordPage.test.jsx` | `HU3-CP20: con un email que no está registrado muestra el mismo aviso (no revela qué emails existen)` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP20 | `ForgotPasswordPage.test.jsx` | `HU3-CP20: si el servidor falla al pedir el código, lo avisa y se queda en el primer paso` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP21 | `ForgotPasswordPage.test.jsx` | `HU3-CP21: comprueba el código y la contraseña nueva antes de enviarlos` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP21 | `ForgotPasswordPage.test.jsx` | `HU3-CP21: muestra los requisitos de la contraseña nueva y marca los que ya cumple` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP22 | `ForgotPasswordPage.test.jsx` | `HU3-CP22: con el código correcto cambia la contraseña y vuelve al login avisando del cambio` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP23 | `ForgotPasswordPage.test.jsx` | `HU3-CP23: con un código incorrecto o caducado lo avisa y se queda en el paso para volver a intentarlo` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP23 | `ForgotPasswordPage.test.jsx` | `HU3-CP23: se puede pedir otro código para el mismo email` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP24 | `ForgotPasswordPage.test.jsx` | `HU3-CP24: si el servidor rechaza la contraseña por la política, lo muestra en el campo` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP24 | `ForgotPasswordPage.test.jsx` | `HU3-CP24: si el servidor falla por otro motivo, muestra un aviso genérico sin detalles internos` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP25 | `ForgotPasswordPage.test.jsx` | `HU3-CP25: desde la recuperación se puede volver al inicio de sesión` | Frontend · página | AB#398 | PR #178 | ✅ |
+| HU3-CP25 | `ForgotPasswordPage.test.jsx` | `HU3-CP25: con la sesión abierta no se muestra la recuperación y lleva a su inicio` | Frontend · página | AB#398 | PR #178 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `UsuarioTest`: `usuarios/domain/model/` (JUnit, sin Spring)
@@ -1689,6 +1689,49 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 - `ExistenciasProductosServiceTest` y `ProductoMongoAdapterTest`: `productos/application/service/` y `productos/infrastructure/adapter/out/persistence/`
 - `GestionMetodosPagoServiceTest` y `GestionDireccionesServiceTest`: `metodospago/application/service/` y `direcciones/application/service/`
 - `InicializadorColeccionesTest`: `shared/infrastructure/config/`
+
+---
+
+## HU11 · Historial y seguimiento de pedidos
+
+### Tabla A · HU11 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU11-CP01 | El historial devuelve los pedidos del cliente de la sesión, del más reciente al más antiguo (vacío si no tiene); se consulta con su id, no con su correo | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#378, PR sin abrir) |
+| HU11-CP02 | El detalle devuelve el pedido del cliente con sus productos, precios y estado | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#378, PR sin abrir) |
+| HU11-CP03 | El pedido de otro cliente se trata como si no existiera, igual que uno inexistente (`PedidoNoEncontradoException`) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#378, PR sin abrir) |
+| HU11-CP04 | En MongoDB se buscan los pedidos de un cliente, del más reciente al más antiguo, y un pedido por su id con sus líneas | Integración (Testcontainers) | 2 | 🔍 En revisión (2, AB#378, PR sin abrir) |
+| HU11-CP05 | Los estados de envío van en el orden en que avanza un pedido (`PAGADO`, `PREPARANDO`, `ENVIADO`, `ENTREGADO`) con `CANCELADO` al final, y cada uno se guarda y se lee igual | Unitario (dominio e infraestructura) | 2 | 🔍 En revisión (2, AB#378, PR sin abrir) |
+| HU11-CP06 | Solo el cliente consulta su historial y el detalle de sus pedidos: vendedor, administrador, otro cliente y sin sesión, rechazados | Seguridad (`@PreAuthorize`, contexto mínimo) | 5 | 🔍 En revisión (5, AB#378, PR sin abrir) |
+
+Notas:
+- **HU11-CP01 a CP06 (Sprint 2, backend, TDD):** casos propuestos en la T378 (AB#378, lógica de obtención de pedidos) a partir del criterio de aceptación de la HU11 (AB#73): «el sistema muestra el detalle de los productos, desglose de precios y la máquina de estados de envío cuando el cliente selecciona un pedido concreto». Pendientes de confirmar con el equipo y de añadir a la HU11 en Azure Boards.
+- **Decisiones del equipo:** el historial y el detalle se añaden a `ConsultaComprasUseCase` (mismo actor y propósito que `haComprado` de la HU13). Estados de envío: `PAGADO → PREPARANDO → ENVIADO → ENTREGADO`, más `CANCELADO` para la HU12; los hará avanzar el vendedor en otra HU. Un pedido ajeno se trata como inexistente.
+- **Pendiente:** el endpoint (T377, AB#377) y la vista del frontend (T376, AB#376). `haComprado` (HU13) solo cuenta los pedidos `PAGADO`: cuando los estados avancen, habrá que decidir si `ENTREGADO` cuenta como compra (comentario «PENDIENTE DE DECIDIR» en `ConsultaComprasService`).
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU11-CP01 | `ConsultaComprasServiceTest` | `listarPedidosDevuelveLosDelClienteEnElOrdenDelRepositorio` | Aplicación | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP01 | `ConsultaComprasServiceTest` | `listarPedidosSinPedidosDevuelveUnaListaVacia` | Aplicación | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP02 | `ConsultaComprasServiceTest` | `consultarPedidoDevuelveElPedidoDelCliente` | Aplicación | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP03 | `ConsultaComprasServiceTest` | `consultarPedidoAjenoOInexistenteNoLoRevela` | Aplicación | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP04 | `PedidoMongoAdapterTest` | `buscarPorClienteDevuelveSusPedidosDelMasRecienteAlMasAntiguo` | Infraestructura | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP04 | `PedidoMongoAdapterTest` | `buscarPorIdDevuelveElPedidoConSusLineas` | Infraestructura | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP05 | `EstadoPedidoTest` | `losEstadosVanEnElOrdenDelEnvio` | Dominio | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP05 | `PedidoDocumentMapperTest` | `cadaEstadoDeEnvioSeGuardaYSeLee` | Infraestructura | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP06 | `SeguridadPedidosServiceTest` | `unVendedorNoConsultaElHistorial` | Aplicación (seguridad) | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP06 | `SeguridadPedidosServiceTest` | `unAdministradorNoConsultaElHistorial` | Aplicación (seguridad) | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP06 | `SeguridadPedidosServiceTest` | `unClienteNoConsultaLosPedidosDeOtro` | Aplicación (seguridad) | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP06 | `SeguridadPedidosServiceTest` | `unClienteConsultaSuPropioHistorial` | Aplicación (seguridad) | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP06 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaConsultarPedidos` | Aplicación (seguridad) | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/pedidos/`):
+- `ConsultaComprasServiceTest` y `SeguridadPedidosServiceTest`: `application/service/` (el primero sin Spring; el segundo con un contexto mínimo y `@WithMockUser`)
+- `EstadoPedidoTest`: `domain/model/` (JUnit)
+- `PedidoMongoAdapterTest` y `PedidoDocumentMapperTest`: `infrastructure/adapter/out/persistence/` (el primero con Testcontainers)
 
 ---
 

@@ -60,4 +60,20 @@ class PedidoDocumentMapperTest {
 
         assertThrows(PedidoInvalidoException.class, () -> mapper.aDominio(documento));
     }
+
+    @Test
+    @DisplayName("HU11-CP05: cada estado de envío del pedido se guarda en el documento y se vuelve a leer igual")
+    void cadaEstadoDeEnvioSeGuardaYSeLee() {
+        for (EstadoPedido estado : EstadoPedido.values()) {
+            Pedido base = pedido("o-1", "ESB-2026-000001");
+            Pedido pedido = new Pedido(base.getId(), base.getNumeroPedido(), base.getClienteId(), base.getVendedorId(),
+                    base.getNombreComercial(), estado, base.getLineas(), base.getDireccionEnvio(),
+                    base.getPaymentMethodId(), base.getCreatedAt());
+
+            PedidoDocument documento = mapper.aDocumento(pedido);
+
+            assertEquals(estado.name(), documento.getEstado());
+            assertEquals(estado, mapper.aDominio(documento).getEstado());
+        }
+    }
 }

@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 // Test de integración del adaptador de MongoDB de pedidos (HU10). Usa un MongoDB real en Docker (Testcontainers):
 // Docker Desktop debe estar abierto. InicializadorColecciones crea las colecciones con su validación e índices.
 // También la consulta de compras de HU13 (T370). PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU13-CP08, propuesto.
+// Y el historial y el detalle de los pedidos del cliente (HU11, T378): caso HU11-CP04, propuesto.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class PedidoMongoAdapterTest {
@@ -118,5 +119,39 @@ class PedidoMongoAdapterTest {
                         .append("precioUnitario", new Decimal128(new BigDecimal("10.00"))))));
 
         assertFalse(adapter.existePagadoConProducto("c-1", "p-9"));
+    }
+
+    private static Pedido pedidoDelCliente(String numero, String clienteId, Instant creado) {
+        return new Pedido(null, new NumeroPedido(numero), clienteId, "u-2", "TecnoVera", EstadoPedido.PAGADO,
+                List.of(new LineaPedido("p-1", "Producto p-1", 1, new BigDecimal("10.00"))), DIRECCION, "mp-1",
+                creado);
+    }
+
+    @Test
+    @DisplayName("HU11-CP04: buscarPorCliente devuelve solo los pedidos del cliente, del más reciente al más antiguo")
+    void buscarPorClienteDevuelveSusPedidosDelMasRecienteAlMasAntiguo() {
+        adapter.guardar(pedidoDelCliente("ESB-2026-000001", "c-1", AHORA));
+        adapter.guardar(pedidoDelCliente("ESB-2026-000002", "c-2", AHORA.plusSeconds(60)));
+        adapter.guardar(pedidoDelCliente("ESB-2026-000003", "c-1", AHORA.plusSeconds(120)));
+
+        List<String> numeros = adapter.buscarPorCliente("c-1").stream()
+                .map(pedido -> pedido.getNumeroPedido().valor())
+                .toList();
+
+        assertEquals(List.of("ESB-2026-000003", "ESB-2026-000001"), numeros);
+        assertTrue(adapter.buscarPorCliente("c-sin-pedidos").isEmpty());
+    }
+
+    @Test
+    @DisplayName("HU11-CP04: buscarPorId devuelve el pedido con sus líneas, y nada si no existe")
+    void buscarPorIdDevuelveElPedidoConSusLineas() {
+        Pedido guardado = adapter.guardar(PedidoDocumentMapperTest.pedido(null, "ESB-2026-000001"));
+
+        Pedido leido = adapter.buscarPorId(guardado.getId()).orElseThrow();
+
+        assertEquals("ESB-2026-000001", leido.getNumeroPedido().valor());
+        assertEquals(2, leido.getLineas().size());
+        assertEquals(new BigDecimal("197.32"), leido.getTotal());
+        assertTrue(adapter.buscarPorId("000000000000000000000000").isEmpty());
     }
 }
