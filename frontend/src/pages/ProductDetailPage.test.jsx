@@ -23,9 +23,13 @@ const DETALLE = {
   numValoraciones: 29,
 }
 
-// Responde el detalle con estos datos (sobre los de ejemplo) en lugar de los del mock.
+// Responde el detalle con estos datos (sobre los de ejemplo) en lugar de los del mock, sin valoraciones en la lista
+// (HU13): así la media y el número de valoraciones son los del detalle.
 const responderCon = (cambios = {}) =>
-  server.use(http.get('/api/products/:id', () => HttpResponse.json({ ...DETALLE, ...cambios })))
+  server.use(
+    http.get('/api/products/:id', () => HttpResponse.json({ ...DETALLE, ...cambios })),
+    http.get('/api/products/:id/valoraciones', () => HttpResponse.json([])),
+  )
 
 async function abrirDetalle(ruta = '/products/p-2') {
   await abrirSesionPorApi(CLIENTE)
