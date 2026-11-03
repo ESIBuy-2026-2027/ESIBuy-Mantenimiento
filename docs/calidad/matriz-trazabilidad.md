@@ -1769,6 +1769,12 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU13-CP15 | Consultar un producto devuelve todas sus valoraciones y solo las suyas; sin valoraciones, una lista vacía | Unitario | 2 | ✅ Pasa (2, AB#371, PR #179) |
 | HU13-CP16 | Consultar las valoraciones de un producto exige el rol cliente; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 4 | ✅ Pasa (4, AB#371, PR #179) |
 | HU13-CP17 | `GET /api/products/{id}/valoraciones`: 200 con la lista sin el cliente, o vacía; sin sesión 401 y otro rol 403 | Integración (capa web) | 3 | ✅ Pasa (3, AB#371, PR #179) |
+| HU13-CP18 | En el detalle del producto, cada valoración se muestra con sus estrellas y, si lo tiene, su comentario | Frontend (página) | 2 | 🔍 En revisión (2, AB#368, PR sin abrir) |
+| HU13-CP19 | La media y el número de valoraciones del detalle salen de la lista; si la lista está vacía, se usan los del detalle del producto | Frontend (página) | 2 | 🔍 En revisión (2, AB#368, PR sin abrir) |
+| HU13-CP20 | Sin valoraciones se indica en su sección; si fallan, se avisa con «Reintentar» sin perder el producto | Frontend (página) | 2 | 🔍 En revisión (2, AB#368, PR sin abrir) |
+| HU13-CP21 | El cliente valora desde el detalle con estrellas y un comentario opcional; tras enviarla se le dan las gracias y su valoración aparece en la lista | Frontend (página) | 2 | 🔍 En revisión (2, AB#367, PR sin abrir) |
+| HU13-CP22 | Sin puntuación no se envía y se pide elegir una; el comentario admite como mucho 500 caracteres | Frontend (página) | 2 | 🔍 En revisión (2, AB#367, PR sin abrir) |
+| HU13-CP23 | Avisos al valorar: no comprado (403 `PRODUCT_NOT_PURCHASED`), ya valorado (409 `REVIEW_ALREADY_EXISTS`) y error general conservando lo escrito | Frontend (página) | 3 | 🔍 En revisión (3, AB#367, PR sin abrir) |
 
 Notas:
 - **HU13-CP01 a CP17 (Sprint 2, backend):** casos propuestos en las tasks AB#369 (entidad valoración), AB#370 (endpoint para crear una valoración) y AB#371 (endpoint para obtener las valoraciones), y desarrollados con TDD. PENDIENTE DE REVISAR CON EL EQUIPO: confirmarlos y añadirlos a la HU13 (AB#75) en Azure Boards.
@@ -1778,6 +1784,7 @@ Notas:
 - **Seguridad:** `POST /api/products/*/valoraciones` tiene su propia regla en `SecurityConfig` (solo CLIENTE, con CSRF); el GET queda cubierto por `GET /api/products/**` (HU8). Los servicios llevan `@PreAuthorize`: `SOLO_CLIENTE_PROPIO_EN_COMANDO` para valorar, `SOLO_CLIENTE_PROPIO` para consultar compras y `SOLO_CLIENTE` para consultar valoraciones.
 - **Ciclos sin rojo real:** HU13-CP12 (el `@PreAuthorize` se puso con el servicio, regla 7 del CLAUDE.md) y la parte de seguridad de HU13-CP17 (la cubría ya la regla del catálogo).
 - **Clases de test nuevas**, acordadas con el equipo: `ValoracionTest`, `ValoracionMongoAdapterTest`, `ConsultaComprasServiceTest`, `ValoracionProductosServiceTest`, `SeguridadValoracionesServiceTest`, `ClienteEnSesionAdapterTest` (de valoraciones), `ComprasAdapterTest`, `ValoracionesConfigTest`, `ValoracionControllerTest` y `ConsultaValoracionesServiceTest`. **Tests en clases que ya existían** (módulo `pedidos`): `SeguridadPedidosServiceTest`, `PedidoMongoAdapterTest` y `PedidosConfigTest`.
+- **HU13-CP18 a CP23 (Sprint 2, frontend):** casos propuestos en las tasks AB#368 (consulta de las valoraciones) y AB#367 (vista para valorar), desarrollados con TDD; pendientes de confirmar con el equipo y de añadir a la HU13 en Azure Boards. Se valora desde el detalle del producto; la media y el número del detalle salen de la lista porque el backend aún no rellena `valoracion` ni `numValoraciones` (decisión del equipo). Los tests de la HU8 que usan `responderCon` (`ProductDetailPage.test.jsx`) responden también con la lista vacía, sin cambiar lo que comprueban. Detalle en `frontend/docs/hu13-valoraciones.md`.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1834,6 +1841,19 @@ Notas:
 | HU13-CP17 | `ValoracionControllerTest` | `consultarLasValoracionesResponde200ConLaLista` | Infraestructura | AB#371 | PR #179 | ✅ |
 | HU13-CP17 | `ValoracionControllerTest` | `unProductoSinValoracionesResponde200ConUnaListaVacia` | Infraestructura | AB#371 | PR #179 | ✅ |
 | HU13-CP17 | `ValoracionControllerTest` | `soloElClienteConsultaLasValoraciones` | Infraestructura | AB#371 | PR #179 | ✅ |
+| HU13-CP18 | `ProductDetailPage.test.jsx` | `HU13-CP18: muestra cada valoración del producto con sus estrellas y su comentario` | Frontend · página | AB#368 | Rama `feature/US13-T367-T368-valoraciones-front` (PR sin abrir) | 🔍 |
+| HU13-CP18 | `ProductDetailPage.test.jsx` | `HU13-CP18: una valoración sin comentario muestra solo sus estrellas` | Frontend · página | AB#368 | Rama `feature/US13-T367-T368-valoraciones-front` (PR sin abrir) | 🔍 |
+| HU13-CP19 | `ProductDetailPage.test.jsx` | `HU13-CP19: la media y el número de valoraciones salen de la lista aunque el catálogo no las tenga` | Frontend · página | AB#368 | Rama `feature/US13-T367-T368-valoraciones-front` (PR sin abrir) | 🔍 |
+| HU13-CP19 | `ProductDetailPage.test.jsx` | `HU13-CP19: si la lista está vacía se mantienen la media y el número del catálogo` | Frontend · página | AB#368 | Rama `feature/US13-T367-T368-valoraciones-front` (PR sin abrir) | 🔍 |
+| HU13-CP20 | `ProductDetailPage.test.jsx` | `HU13-CP20: un producto sin valoraciones lo indica en su sección` | Frontend · página | AB#368 | Rama `feature/US13-T367-T368-valoraciones-front` (PR sin abrir) | 🔍 |
+| HU13-CP20 | `ProductDetailPage.test.jsx` | `HU13-CP20: si fallan las valoraciones avisa y permite reintentar, sin perder el producto` | Frontend · página | AB#368 | Rama `feature/US13-T367-T368-valoraciones-front` (PR sin abrir) | 🔍 |
+| HU13-CP21 | `ProductDetailPage.test.jsx` | `HU13-CP21: el cliente valora con estrellas y un comentario, y su valoración aparece en la lista` | Frontend · página | AB#367 | Rama `feature/US13-T367-T368-valoraciones-front` (PR sin abrir) | 🔍 |
+| HU13-CP21 | `ProductDetailPage.test.jsx` | `HU13-CP21: el comentario es opcional: sin él se envía vacío` | Frontend · página | AB#367 | Rama `feature/US13-T367-T368-valoraciones-front` (PR sin abrir) | 🔍 |
+| HU13-CP22 | `ProductDetailPage.test.jsx` | `HU13-CP22: sin puntuación no se envía y se pide elegir una` | Frontend · página | AB#367 | Rama `feature/US13-T367-T368-valoraciones-front` (PR sin abrir) | 🔍 |
+| HU13-CP22 | `ProductDetailPage.test.jsx` | `HU13-CP22: el comentario admite como mucho 500 caracteres` | Frontend · página | AB#367 | Rama `feature/US13-T367-T368-valoraciones-front` (PR sin abrir) | 🔍 |
+| HU13-CP23 | `ProductDetailPage.test.jsx` | `HU13-CP23: si no ha comprado el producto se le avisa y el formulario sigue ahí` | Frontend · página | AB#367 | Rama `feature/US13-T367-T368-valoraciones-front` (PR sin abrir) | 🔍 |
+| HU13-CP23 | `ProductDetailPage.test.jsx` | `HU13-CP23: si ya lo había valorado se le avisa` | Frontend · página | AB#367 | Rama `feature/US13-T367-T368-valoraciones-front` (PR sin abrir) | 🔍 |
+| HU13-CP23 | `ProductDetailPage.test.jsx` | `HU13-CP23: si falla el envío avisa y conserva lo escrito para reintentar` | Frontend · página | AB#367 | Rama `feature/US13-T367-T368-valoraciones-front` (PR sin abrir) | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `ValoracionTest`: `valoraciones/domain/model/` (JUnit, sin Spring)
