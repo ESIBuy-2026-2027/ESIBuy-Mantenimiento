@@ -11,6 +11,7 @@ import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoExc
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
+import es.uclm.esibuy.backend.shared.config.JacksonConfig;
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -59,7 +60,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // (SecurityConfig: /api/seller/** solo para VENDEDOR, con CSRF).
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU32-CP01 a CP05 y HU31-CP17 a CP22, propuestos.
 @WebMvcTest(ProductoController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, JacksonConfig.class})
 class ProductoControllerTest {
 
     private static final String URL = "/api/seller/products";
