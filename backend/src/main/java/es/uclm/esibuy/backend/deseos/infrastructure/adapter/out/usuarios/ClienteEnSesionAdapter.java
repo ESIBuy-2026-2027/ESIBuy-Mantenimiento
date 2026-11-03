@@ -17,6 +17,6 @@ public class ClienteEnSesionAdapter implements ClienteEnSesionPort {
 
     @Override
     public String idPorCorreo(String email) {
-        return null;
+        return autenticacion.consultarIdUsuarioEnSesion(email);
     }
 }

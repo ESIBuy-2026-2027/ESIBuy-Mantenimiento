@@ -18,11 +18,17 @@ public class ListaDeseosMongoAdapter implements ListaDeseosRepositoryPort {
 
     @Override
     public Optional<ListaDeseos> buscarPorCliente(String clienteId) {
-        return Optional.empty();
+        return repository.findByUsuarioId(clienteId).map(mapper::aDominio);
     }
 
     @Override
     public ListaDeseos guardar(ListaDeseos lista) {
-        return lista;
+        ListaDeseosDocument documento = mapper.aDocumento(lista);
+        if (lista.getId() != null) {
+            // Actualización: se conserva la fecha de creación del documento guardado
+            repository.findById(lista.getId())
+                    .ifPresent(guardado -> documento.setCreatedAt(guardado.getCreatedAt()));
+        }
+        return mapper.aDominio(repository.save(documento));
     }
 }

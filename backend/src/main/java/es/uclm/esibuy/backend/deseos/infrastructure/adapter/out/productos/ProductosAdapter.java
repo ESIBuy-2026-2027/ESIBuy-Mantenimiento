@@ -14,6 +14,7 @@ public class ProductosAdapter implements ProductosPort {
 
     @Override
     public boolean estaDisponible(String productoId) {
-        return false;
+        // Solo importa si se puede añadir: aquí no se usa el precio, así que da igual si el cliente es premium
+        return catalogo.consultarComprable(productoId, false).isPresent();
     }
 }
