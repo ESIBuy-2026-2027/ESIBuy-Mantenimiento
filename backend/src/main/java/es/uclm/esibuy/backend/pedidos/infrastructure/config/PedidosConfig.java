@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import es.uclm.esibuy.backend.carrito.application.port.in.GestionCarritoUseCase;
 import es.uclm.esibuy.backend.direcciones.application.port.in.GestionDireccionesUseCase;
 import es.uclm.esibuy.backend.metodospago.application.port.in.GestionMetodosPagoUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.out.CarritoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ClienteEnSesionPort;
@@ -17,6 +18,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.DireccionesPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ExistenciasPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.MetodosPagoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
+import es.uclm.esibuy.backend.pedidos.application.service.ConsultaComprasService;
 import es.uclm.esibuy.backend.pedidos.application.service.RealizacionPedidoService;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.carrito.CarritoAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.direcciones.DireccionesAdapter;
@@ -80,5 +82,11 @@ public class PedidosConfig {
             ExistenciasPort pedidosExistenciasPort, ContadorPedidosPort contadorPedidosPort, Clock reloj) {
         return new RealizacionPedidoService(pedidoRepositoryPort, pedidosClienteEnSesionPort, pedidosCarritoPort,
                 pedidosMetodosPagoPort, pedidosDireccionesPort, pedidosExistenciasPort, contadorPedidosPort, reloj);
+    }
+
+    @Bean
+    ConsultaComprasUseCase consultaComprasUseCase(PedidoRepositoryPort pedidoRepositoryPort,
+            ClienteEnSesionPort pedidosClienteEnSesionPort) {
+        return new ConsultaComprasService(pedidoRepositoryPort, pedidosClienteEnSesionPort);
     }
 }

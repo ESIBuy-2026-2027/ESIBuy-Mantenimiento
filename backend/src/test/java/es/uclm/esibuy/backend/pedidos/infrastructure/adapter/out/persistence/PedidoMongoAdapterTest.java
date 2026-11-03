@@ -1,14 +1,23 @@
 package es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.persistence;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
+import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
+import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
+import es.uclm.esibuy.backend.pedidos.domain.model.LineaPedido;
+import es.uclm.esibuy.backend.pedidos.domain.model.NumeroPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.Pedido;
 import es.uclm.esibuy.backend.shared.config.MongoConfig;
 import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColecciones;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
 import org.bson.Document;
 import org.bson.types.Decimal128;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,9 +31,14 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 
 // Test de integración del adaptador de MongoDB de pedidos (HU10). Usa un MongoDB real en Docker (Testcontainers):
 // Docker Desktop debe estar abierto. InicializadorColecciones crea las colecciones con su validación e índices.
+// También la consulta de compras de HU13 (T370). PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU13-CP08, propuesto.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class PedidoMongoAdapterTest {
+
+    private static final Instant AHORA = Instant.parse("2026-10-29T10:00:00Z");
+    private static final DireccionEnvioPedido DIRECCION = new DireccionEnvioPedido("Carlos Cliente",
+            "Calle Mayor 1", null, "13001", "Ciudad Real", "Ciudad Real", "611222333");
 
     @Autowired
     private PedidoMongoRepository pedidoMongoRepository;
@@ -64,5 +78,45 @@ class PedidoMongoAdapterTest {
 
         assertThrows(DuplicateKeyException.class,
                 () -> adapter.guardar(PedidoDocumentMapperTest.pedido(null, "ESB-2026-000001")));
+    }
+
+    private static Pedido pedidoPagado(String numero, String clienteId, String... productos) {
+        List<LineaPedido> lineas = Arrays.stream(productos)
+                .map(productoId -> new LineaPedido(productoId, "Producto " + productoId, 1, new BigDecimal("10.00")))
+                .toList();
+        return new Pedido(null, new NumeroPedido(numero), clienteId, "u-2", "TecnoVera", EstadoPedido.PAGADO, lineas,
+                DIRECCION, "mp-1", AHORA);
+    }
+
+    @Test
+    @DisplayName("HU13-CP08: un pedido pagado del cliente con el producto en cualquiera de sus líneas es una compra")
+    void unPedidoPagadoConElProductoEsUnaCompra() {
+        adapter.guardar(pedidoPagado("ESB-2026-000001", "c-1", "p-1", "p-2"));
+
+        assertTrue(adapter.existePagadoConProducto("c-1", "p-1"));
+        assertTrue(adapter.existePagadoConProducto("c-1", "p-2"));
+    }
+
+    @Test
+    @DisplayName("HU13-CP08: no es compra un producto que no está en sus pedidos ni el pedido de otro cliente")
+    void noEsCompraSinElProductoNiConElPedidoDeOtroCliente() {
+        adapter.guardar(pedidoPagado("ESB-2026-000001", "c-1", "p-1"));
+        adapter.guardar(pedidoPagado("ESB-2026-000002", "c-2", "p-2"));
+
+        assertFalse(adapter.existePagadoConProducto("c-1", "p-2"));
+        assertFalse(adapter.existePagadoConProducto("c-2", "p-1"));
+        assertFalse(adapter.existePagadoConProducto("c-3", "p-1"));
+    }
+
+    @Test
+    @DisplayName("HU13-CP08: solo cuenta como compra un pedido en estado PAGADO")
+    void soloCuentaUnPedidoPagado() {
+        // Un pedido en otro estado, insertado directamente: el dominio aún solo tiene PAGADO (HU11 y HU12)
+        mongoTemplate.getCollection("pedidos").insertOne(new Document("clienteId", "c-1")
+                .append("estado", "CANCELADO")
+                .append("lineas", List.of(new Document("productoId", "p-9").append("cantidad", 1)
+                        .append("precioUnitario", new Decimal128(new BigDecimal("10.00"))))));
+
+        assertFalse(adapter.existePagadoConProducto("c-1", "p-9"));
     }
 }
