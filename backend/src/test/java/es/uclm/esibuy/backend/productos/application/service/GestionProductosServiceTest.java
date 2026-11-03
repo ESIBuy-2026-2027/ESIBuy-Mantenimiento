@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
 // prueba (Mockito): se prueba el caso de uso sin MongoDB ni Spring. El antivirus de las imágenes (HU31, T397) también
 // es un doble: por defecto da la imagen por segura.
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP13 a CP16, propuestos a partir del contrato del frontend, y
-// HU31-CP32 y CP33, propuestos.
+// HU31-CP32, CP33 y HU34-CP19, propuestos.
 @ExtendWith(MockitoExtension.class)
 class GestionProductosServiceTest {
 
@@ -297,6 +297,47 @@ class GestionProductosServiceTest {
                 () -> servicio.modificarMiProducto(modificacion("p-9", "Teclado mecánico RGB", new BigDecimal("99.90"))));
 
         verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU34-CP19: cambiar la imagen por una que el antivirus marca como maliciosa se rechaza y no se guarda")
+    void cambiarAUnaImagenMaliciosaSeRechaza() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-1")));
+        when(analisisImagen.analizar("https://esibuy.test/rgb.png")).thenReturn(ResultadoAnalisis.MALICIOSA);
+
+        ModificarProductoCommand cambios = modificacion("p-9", "Teclado mecánico", new BigDecimal("99.90"));
+        assertThrows(ImagenNoSeguraException.class, () -> servicio.modificarMiProducto(cambios));
+
+        verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU34-CP19: si al cambiar la imagen el antivirus no da resultado, el producto se guarda sin imagen")
+    void cambiarLaImagenSinResultadoSeGuardaSinImagen() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-1")));
+        when(analisisImagen.analizar("https://esibuy.test/rgb.png")).thenReturn(ResultadoAnalisis.SIN_RESULTADO);
+        when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        servicio.modificarMiProducto(modificacion("p-9", "Teclado mecánico", new BigDecimal("99.90")));
+
+        assertEquals("", productoGuardado().getImagen());
+    }
+
+    @Test
+    @DisplayName("HU34-CP19: si la imagen no cambia no se vuelve a analizar y se conserva")
+    void siLaImagenNoCambiaNoSeVuelveAAnalizar() {
+        Producto conImagen = new Producto("p-9", "v-1", "Teclado mecánico", "Con cable", new BigDecimal("89.50"), 12,
+                "cat-1", "https://esibuy.test/rgb.png", true, Descuento.sinDescuento(), Descuento.sinDescuento());
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(conImagen));
+        when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        servicio.modificarMiProducto(modificacion("p-9", "Teclado mecánico", new BigDecimal("99.90")));
+
+        verify(analisisImagen, never()).analizar(any());
+        assertEquals("https://esibuy.test/rgb.png", productoGuardado().getImagen());
     }
 
     @Test
