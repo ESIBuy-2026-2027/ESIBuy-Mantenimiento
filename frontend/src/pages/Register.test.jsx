@@ -641,7 +641,7 @@ describe('Register', () => {
   })
 
   it('HU1-CP23: un error sin campo muestra un mensaje general', async () => {
-    registrarCliente.mockRejectedValue({ status: 400, code: 'INVALID_FIELD' })
+    registrarCliente.mockRejectedValue({ status: 400, code: 'VALIDATION_ERROR' })
     await renderYElegirCliente()
     await rellenarFormularioValido()
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))

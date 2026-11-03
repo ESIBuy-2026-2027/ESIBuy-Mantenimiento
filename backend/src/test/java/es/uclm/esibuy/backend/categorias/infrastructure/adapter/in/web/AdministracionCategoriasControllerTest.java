@@ -145,7 +145,7 @@ class AdministracionCategoriasControllerTest {
     void crearConDatosInvalidosDevuelve400(String cuerpo) throws Exception {
         mockMvc.perform(crear(cuerpo).with(user("admin").roles("ADMINISTRADOR")))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("INVALID_FIELD"));
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
         verifyNoInteractions(administracionCategorias);
     }
@@ -218,7 +218,7 @@ class AdministracionCategoriasControllerTest {
     void editarConDatosInvalidosDevuelve400(String cuerpo) throws Exception {
         mockMvc.perform(editar("c-9", cuerpo).with(user("admin").roles("ADMINISTRADOR")))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("INVALID_FIELD"));
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
         verifyNoInteractions(administracionCategorias);
     }

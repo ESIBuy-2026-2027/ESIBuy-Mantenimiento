@@ -11,6 +11,7 @@ import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoExc
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
+import es.uclm.esibuy.backend.shared.config.JacksonConfig;
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -59,7 +60,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // (SecurityConfig: /api/seller/** solo para VENDEDOR, con CSRF).
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU32-CP01 a CP05 y HU31-CP17 a CP22, propuestos.
 @WebMvcTest(ProductoController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, JacksonConfig.class})
 class ProductoControllerTest {
 
     private static final String URL = "/api/seller/products";
@@ -243,7 +244,8 @@ class ProductoControllerTest {
     void cuerpoInvalidoDevuelve400(String descripcion, String cuerpo) throws Exception {
         mockMvc.perform(post(URL).with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
                         .contentType(MediaType.APPLICATION_JSON).content(cuerpo))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
         verify(gestionProductos, never()).crear(any());
     }
@@ -253,7 +255,9 @@ class ProductoControllerTest {
     void cuerpoQueNoEsJsonDevuelve400() throws Exception {
         mockMvc.perform(post(URL).with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
                         .contentType(MediaType.APPLICATION_JSON).content("{esto no es json"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.mensaje").value("Los datos enviados no son válidos"));
 
         verify(gestionProductos, never()).crear(any());
     }
@@ -377,7 +381,8 @@ class ProductoControllerTest {
     void cuerpoInvalidoNoModificaElProducto(String descripcion, String cuerpo) throws Exception {
         mockMvc.perform(put(URL + "/p-9").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
                         .contentType(MediaType.APPLICATION_JSON).content(cuerpo))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
         verify(gestionProductos, never()).modificarMiProducto(any());
     }
@@ -515,14 +520,15 @@ class ProductoControllerTest {
         verify(gestionProductos).cambiarDisponibilidadMiProducto(VENDEDOR, "p-9", false);
     }
 
-    // Solo se comprueba el 400: un JSON ilegible no tiene hoy un code propio (decisión pendiente del equipo).
     @ParameterizedTest(name = "{0}")
     @MethodSource("cuerposDeDisponibilidadInvalidos")
     @DisplayName("HU16-CP12: un cuerpo sin disponible o con un valor que no es booleano devuelve 400 y no llega al caso de uso")
     void cuerpoDeDisponibilidadInvalidoNoCambiaElProducto(String descripcion, String cuerpo) throws Exception {
         mockMvc.perform(patch(URL + "/p-9/availability").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
                         .contentType(MediaType.APPLICATION_JSON).content(cuerpo))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.mensaje").value("Los datos enviados no son válidos"));
 
         verify(gestionProductos, never()).cambiarDisponibilidadMiProducto(any(), any(), anyBoolean());
     }
@@ -575,6 +581,8 @@ class ProductoControllerTest {
                 Arguments.of("sin disponible", "{}"),
                 Arguments.of("disponible nulo", "{\"disponible\": null}"),
                 Arguments.of("disponible que no es booleano", "{\"disponible\": \"abc\"}"),
+                Arguments.of("disponible como texto \"true\"", "{\"disponible\": \"true\"}"),
+                Arguments.of("disponible como número 1", "{\"disponible\": 1}"),
                 Arguments.of("JSON mal formado", "{\"disponible\": "));
     }
 
@@ -594,6 +602,8 @@ class ProductoControllerTest {
                 Arguments.of("descuento activo sin porcentaje",
                         cuerpo("\"Teclado\"", "89.5", "12", "\"cat-1\"", "\"\"",
                                 "{\"activo\": true, \"porcentaje\": null}")),
+                Arguments.of("disponible ausente", cuerpoValido().replace("\"disponible\": true, ", "")),
+                Arguments.of("disponible nulo", cuerpoValido().replace("\"disponible\": true", "\"disponible\": null")),
                 Arguments.of("descuento con porcentaje mayor que 100",
                         cuerpo("\"Teclado\"", "89.5", "12", "\"cat-1\"", "\"\"",
                                 "{\"activo\": true, \"porcentaje\": 101}")));

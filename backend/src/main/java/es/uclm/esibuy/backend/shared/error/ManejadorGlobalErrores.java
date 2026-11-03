@@ -47,6 +47,7 @@ import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionDuplicadaE
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutoeliminacionNoPermitidaException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -114,12 +115,16 @@ public class ManejadorGlobalErrores {
         return new RespuestaError(DATOS_DE_REGISTRO_INVALIDOS, "INVALID_EMAIL");
     }
 
-    // Un @Valid que falla en el cuerpo de la petición (campo vacío o demasiado largo) responde con el mismo
-    // formato que el resto de 400, y no con el cuerpo por defecto de Spring. Afecta a todos los endpoints con @Valid.
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    // Un cuerpo que no pasa @Valid (campo vacío o demasiado largo) o que no se puede leer (JSON mal formado o un
+    // valor de un tipo incompatible) responde en todos los endpoints con el formato y el código del resto de 400 de
+    // validación, y no con el cuerpo por defecto de Spring. El mensaje es genérico: el detalle de la validación o de
+    // Jackson no sale al cliente (decisión del equipo en la daily del 03/11/2026).
+    private static final String DATOS_ENVIADOS_INVALIDOS = "Los datos enviados no son válidos";
+
+    @ExceptionHandler({MethodArgumentNotValidException.class, HttpMessageNotReadableException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError cuerpoDeLaPeticionInvalido() {
-        return new RespuestaError(DATOS_DE_REGISTRO_INVALIDOS, "INVALID_FIELD");
+        return new RespuestaError(DATOS_ENVIADOS_INVALIDOS, CODIGO_VALIDACION);
     }
 
     // Switch exhaustivo: si el dominio añade un motivo, esto deja de compilar hasta darle su code.
@@ -135,7 +140,7 @@ public class ManejadorGlobalErrores {
             case TELEFONO_INVALIDO -> "INVALID_PHONE";
             case MENOR_DE_EDAD -> "UNDERAGE";
             case PRIVACIDAD_NO_ACEPTADA -> "PRIVACY_NOT_ACCEPTED";
-            case DATO_INVALIDO -> "INVALID_FIELD";
+            case DATO_INVALIDO -> CODIGO_VALIDACION;
         };
     }
 
@@ -218,7 +223,8 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("No se puede desactivar al último administrador activo", "LAST_ACTIVE_ADMIN");
     }
 
-    // Código común de los 400 de producto, categoría y método de pago.
+    // Código común de los 400 de validación de toda la API: datos de dominio no válidos, un @Valid que falla y un
+    // cuerpo que no se puede leer. Los motivos del registro con campo propio llevan su code (ver codigo()).
     private static final String CODIGO_VALIDACION = "VALIDATION_ERROR";
 
     // 400 + code al dar de alta un producto (HU31, T179): el mensaje es genérico, nunca el detalle de la regla.

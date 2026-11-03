@@ -81,8 +81,7 @@ Content-Type: application/json
 | Respuesta | Cuándo |
 |---|---|
 | `200` con el producto actualizado (mismo formato que `GET /api/seller/products/{id}`) | Cambio correcto. |
-| `400` con `INVALID_FIELD` | Falta `disponible` (el código que da hoy el backend a cualquier cuerpo que no pasa `@Valid`). |
-| `400` | `disponible` no se puede leer como booleano (p. ej. `"abc"`). Por ahora sin código propio: es la respuesta por defecto de Spring. |
+| `400` con `VALIDATION_ERROR` | Falta `disponible`, es `null` o no es un booleano de verdad: `"abc"`, `"true"` (texto) o `1` no valen. También un JSON mal formado. El mensaje es genérico: "Los datos enviados no son válidos". |
 | `401` / `403` | Sin sesión, sin ser vendedor o sin token CSRF. |
 | `404` con `PRODUCT_NOT_FOUND` | El producto no existe o es de otro vendedor (como en el resto de endpoints del vendedor). |
 

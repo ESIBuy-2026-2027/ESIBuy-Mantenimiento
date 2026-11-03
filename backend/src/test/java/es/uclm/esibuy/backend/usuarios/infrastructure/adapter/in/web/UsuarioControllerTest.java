@@ -1255,26 +1255,26 @@ class UsuarioControllerTest {
     }
 
     @Test
-    @DisplayName("HU1-CP22: un dato inválido sin motivo concreto devuelve 400 con INVALID_FIELD")
-    void datoInvalidoGenericoDevuelve400ConInvalidField() throws Exception {
+    @DisplayName("HU1-CP22: un dato inválido sin motivo concreto devuelve 400 con VALIDATION_ERROR")
+    void datoInvalidoGenericoDevuelve400ConValidationError() throws Exception {
         doThrow(new UsuarioInvalidoException("Un cliente debe tener datos de cliente"))
                 .when(registroUsuario).registrarCliente(any());
 
         mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(json("juan@uclm.es", "Clave-1234")))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("INVALID_FIELD"));
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
     }
 
     @Test
-    @DisplayName("HU1-CP22: un error de validación del formulario devuelve 400 con INVALID_FIELD y mensaje genérico")
-    void errorDeValidacionDelFormularioDevuelve400ConInvalidField() throws Exception {
+    @DisplayName("HU1-CP22: un error de validación del formulario devuelve 400 con VALIDATION_ERROR y mensaje genérico")
+    void errorDeValidacionDelFormularioDevuelve400ConValidationError() throws Exception {
         // La capa web (@Valid) rechaza el nombre vacío antes del caso de uso: también con el formato de error de la API
         String cuerpo = json("juan@uclm.es", "Clave-1234").replace("\"nombre\": \"Juan\"", "\"nombre\": \"\"");
 
         mockMvc.perform(post(URL_REGISTRO).contentType(MediaType.APPLICATION_JSON).content(cuerpo))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("INVALID_FIELD"))
-                .andExpect(jsonPath("$.mensaje").value("Datos de registro no válidos"));
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.mensaje").value("Los datos enviados no son válidos"));
 
         verify(registroUsuario, never()).registrarCliente(any());
     }

@@ -77,7 +77,7 @@ class RecuperacionContrasenaControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonSolicitar(" ")))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("INVALID_FIELD"));
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
         verifyNoInteractions(recuperacion);
     }
@@ -139,7 +139,7 @@ class RecuperacionContrasenaControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRestablecer(EMAIL, "", NUEVA)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("INVALID_FIELD"));
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
         mockMvc.perform(post(URL_RESTABLECER).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRestablecer(EMAIL, CODIGO, "")))
