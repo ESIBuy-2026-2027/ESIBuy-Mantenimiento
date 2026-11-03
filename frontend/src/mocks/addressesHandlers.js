@@ -38,6 +38,11 @@ export function resetAddressesMock() {
 
 resetAddressesMock()
 
+// Para comprobar que un pedido (HU10) se envía a una dirección del cliente
+export function direccionesDe(usuarioId) {
+  return direccionesPorCliente[usuarioId] ?? []
+}
+
 const URL_DIRECCIONES = '/api/customer/addresses'
 
 const MAXIMO_DIRECCIONES = 5
