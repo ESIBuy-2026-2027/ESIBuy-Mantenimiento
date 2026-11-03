@@ -243,7 +243,9 @@ class ProductoControllerTest {
     void cuerpoInvalidoDevuelve400(String descripcion, String cuerpo) throws Exception {
         mockMvc.perform(post(URL).with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
                         .contentType(MediaType.APPLICATION_JSON).content(cuerpo))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.mensaje").value("Los datos enviados no son válidos"));
 
         verify(gestionProductos, never()).crear(any());
     }
@@ -253,7 +255,9 @@ class ProductoControllerTest {
     void cuerpoQueNoEsJsonDevuelve400() throws Exception {
         mockMvc.perform(post(URL).with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
                         .contentType(MediaType.APPLICATION_JSON).content("{esto no es json"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.mensaje").value("Los datos enviados no son válidos"));
 
         verify(gestionProductos, never()).crear(any());
     }
@@ -377,7 +381,9 @@ class ProductoControllerTest {
     void cuerpoInvalidoNoModificaElProducto(String descripcion, String cuerpo) throws Exception {
         mockMvc.perform(put(URL + "/p-9").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
                         .contentType(MediaType.APPLICATION_JSON).content(cuerpo))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.mensaje").value("Los datos enviados no son válidos"));
 
         verify(gestionProductos, never()).modificarMiProducto(any());
     }
@@ -515,14 +521,15 @@ class ProductoControllerTest {
         verify(gestionProductos).cambiarDisponibilidadMiProducto(VENDEDOR, "p-9", false);
     }
 
-    // Solo se comprueba el 400: un JSON ilegible no tiene hoy un code propio (decisión pendiente del equipo).
     @ParameterizedTest(name = "{0}")
     @MethodSource("cuerposDeDisponibilidadInvalidos")
     @DisplayName("HU16-CP12: un cuerpo sin disponible o con un valor que no es booleano devuelve 400 y no llega al caso de uso")
     void cuerpoDeDisponibilidadInvalidoNoCambiaElProducto(String descripcion, String cuerpo) throws Exception {
         mockMvc.perform(patch(URL + "/p-9/availability").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
                         .contentType(MediaType.APPLICATION_JSON).content(cuerpo))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.mensaje").value("Los datos enviados no son válidos"));
 
         verify(gestionProductos, never()).cambiarDisponibilidadMiProducto(any(), any(), anyBoolean());
     }
