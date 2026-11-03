@@ -174,6 +174,7 @@ class UsuarioTest {
         usuario.desactivar();
 
         assertFalse(usuario.estaActivo());
+        assertEquals("BLOQUEADO", usuario.getEstado());
     }
 
     @Test

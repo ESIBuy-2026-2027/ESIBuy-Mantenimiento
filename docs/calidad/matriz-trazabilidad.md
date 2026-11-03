@@ -27,7 +27,7 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | HU1-CP08 | Rechaza el registro si falta un campo obligatorio o supera su longitud máxima | Unitario + integración (capa web) | 11 | ✅ Pasa |
 | HU1-CP09 | Rechaza contraseñas de la lista de contraseñas comunes | Unitario | 4 | ✅ Pasa |
 | HU1-CP10 | Rechaza contraseñas que contienen datos personales del usuario | Unitario | 4 | ✅ Pasa |
-| HU1-CP11 | El usuario cumple sus invariantes de dominio (datos personales y de cliente obligatorios y coherentes con el rol, desactivación, fecha de alta) | Unitario | 17 | ✅ Pasa |
+| HU1-CP11 | El usuario cumple sus invariantes de dominio (datos personales y de cliente obligatorios y coherentes con el rol, desactivación, fecha de alta) | Unitario | 17 | 🔍 En revisión |
 | HU1-CP12 | Toda cuenta nueva nace en estado PENDIENTE hasta que un administrador la verifica | Unitario | 4 | ✅ Pasa |
 | HU1-CP13 | Rechaza a un cliente menor de edad | Unitario | 4 | ✅ Pasa |
 | HU1-CP14 | Rechaza el registro si las contraseñas no coinciden | Unitario | 1 | ✅ Pasa |
@@ -136,7 +136,7 @@ Notas:
 | HU1-CP11 | `UsuarioTest` | `rechazaEmailNulo` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaContrasenaHashEnBlanco` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaRolNulo` | Dominio | AB#214 | PR #34 | ✅ |
-| HU1-CP11 | `UsuarioTest` | `desactivaUsuario` | Dominio | AB#214 | PR #34 (renombrado en PR #36) | ✅ |
+| HU1-CP11 | `UsuarioTest` | `desactivaUsuario` | Dominio | AB#214 · AB#243 | PR #34 (renombrado en PR #36) (modificado en este PR) | 🔍 |
 | HU1-CP11 | `UsuarioTest` | `activaUsuarioDesactivado` | Dominio | AB#214 | PR #34 (renombrado en PR #36) | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaUsuarioSinDatosPersonales` | Dominio | AB#229 | PR #72 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaClienteSinDatosDeCliente` | Dominio | AB#229 | PR #72 | ✅ |
@@ -255,8 +255,8 @@ Notas:
 | HU19-CP07 | La búsqueda trata los caracteres especiales como texto literal | Integración MongoDB | 1 | ✅ Pasa |
 | HU19-CP08 | Un administrador accede al listado HTTP sin exponer datos sensibles | Integración web | 1 | ✅ Pasa |
 | HU19-CP09 | Conserva el estado PENDIENTE al mapear el usuario | Unitario | 1 | ✅ Pasa |
-| HU19-CP10 | El adaptador filtra usuarios BLOQUEADO mediante lockedUntil | Integración MongoDB | 1 | ✅ Pasa |
-| HU19-CP11 | El listado se ordena por nombre o por estado, en los dos sentidos | Integración (capa web y MongoDB) | 2 | ✅ Pasa |
+| HU19-CP10 | El adaptador filtra BLOQUEADO por el estado guardado, no por el bloqueo temporal por intentos | Integración MongoDB | 1 | 🔍 En revisión |
+| HU19-CP11 | El listado se ordena por nombre o por estado, en los dos sentidos | Integración (capa web y MongoDB) | 2 | 🔍 En revisión |
 | HU19-CP12 | El orden por nombre no distingue mayúsculas ni tildes | Integración MongoDB | 1 | ✅ Pasa |
 | HU19-CP13 | El filtro de estado ofrece Pendiente, Activo y Bloqueado, sin Desactivado (los administradores no tienen Pendiente) | Frontend (componente y página) | 9 | ✅ Pasa (9, AB#247, PR #116) |
 | HU19-CP14 | Cada fila de la tabla permite bloquear o desbloquear la cuenta con confirmación (una pendiente se acepta desbloqueándola) y la ficha ya no cambia el estado | Frontend (componente y página) | 32 | ✅ Pasa (32, AB#248, PR #116) |
@@ -283,9 +283,9 @@ Notas:
 | HU19-CP07 | `UsuarioMongoAdapterTest` | `listarEscapaCaracteresEspecialesDeLaBusqueda` | Infraestructura | AB#61 | PR #59 | ✅ |
 | HU19-CP08 | `UsuarioControllerTest` | `administradorRecibeElListado` | Infraestructura | AB#61/AB#62 | PR #59 | ✅ |
 | HU19-CP09 | `UsuarioDocumentMapperTest` | `conservaEstadoPendienteEnElMapeo` | Infraestructura | AB#61 | PR #59 | ✅ |
-| HU19-CP10 | `UsuarioMongoAdapterTest` | `listarFiltraPorBloqueoTemporal` | Infraestructura | AB#61 | PR #59 | ✅ |
+| HU19-CP10 | `UsuarioMongoAdapterTest` | `listarFiltraBloqueadoPorEstadoGuardado` | Infraestructura | AB#61 · AB#243 | PR #59 (sustituido en este PR) | 🔍 |
 | HU19-CP11 | `UsuarioControllerTest` | `elListadoDeUsuariosAceptaOrdenYSentido` | Infraestructura | AB#61 | PR #104 | ✅ |
-| HU19-CP11 | `UsuarioMongoAdapterTest` | `ordenaClientesPorEstadoDescendente` | Infraestructura | AB#61 | PR #104 | ✅ |
+| HU19-CP11 | `UsuarioMongoAdapterTest` | `ordenaClientesPorEstadoDescendente` | Infraestructura | AB#61 · AB#243 | PR #104 (modificado en este PR) | 🔍 |
 | HU19-CP12 | `UsuarioMongoAdapterTest` | `ordenaPorNombreSinDistinguirMayusculasNiTildes` | Infraestructura | AB#29 | PR #104 | ✅ |
 | HU19-CP13 | `usersConfig.test.js` | `statusLabelsForRole_deAdministrador_noIncluyePendiente` | Frontend | AB#247 | PR #116 | ✅ |
 | HU19-CP13 | `usersConfig.test.js` | `statusLabelsForRole_ningunRol_ofreceDesactivado` | Frontend | AB#247 | PR #116 | ✅ |
@@ -453,7 +453,7 @@ Los tests de integración de MongoDB (`UsuarioMongoAdapterTest`, `UsuariosConfig
 | HU2-CP01 | Inicia sesión con credenciales correctas y pasa al paso del código por email | Unitario + integración | 5 | ✅ Pasa |
 | HU2-CP02 | Rechaza credenciales incorrectas sin revelar si el correo existe | Unitario + integración | 5 | ✅ Pasa |
 | HU2-CP03 | Bloquea la cuenta durante 15 minutos tras 5 intentos fallidos | Unitario + integración | 6 | ✅ Pasa |
-| HU2-CP04 | Rechaza el acceso a una cuenta desactivada | Unitario + integración | 3 | ✅ Pasa |
+| HU2-CP04 | Rechaza el acceso a una cuenta desactivada | Unitario + integración | 3 | 🔍 En revisión |
 | HU2-CP05 | Al validar las credenciales, envía al correo del usuario un código de verificación | Unitario + integración | 4 | ✅ Pasa |
 | HU2-CP06 | Un código correcto pasa al paso de Microsoft Authenticator | Unitario + integración | 3 | ✅ Pasa |
 | HU2-CP07 | Rechaza un código incorrecto | Unitario + integración | 6 | ✅ Pasa |
@@ -519,7 +519,7 @@ Notas:
 | HU2-CP03 | `UsuarioMongoAdapterTest` | `guardarUnUsuarioLeidoLoActualizaSinDuplicarlo` | Infraestructura | AB#225 | PR #46 | ✅ |
 | HU2-CP03 | `UsuarioMongoAdapterTest` | `conservaLosIntentosFallidosYElBloqueo` | Infraestructura | AB#225 · AB#210 | PR #46 (ampliado en PR #43) | ✅ |
 | HU2-CP04 | `AutenticacionServiceTest` | `rechazaCuentaDesactivada` | Aplicación | AB#22 | PR #36 | ✅ |
-| HU2-CP04 | `UsuarioMongoAdapterTest` | `conservaLaDesactivacion` | Infraestructura | AB#225 · AB#210 | PR #46 (ampliado en PR #43) | ✅ |
+| HU2-CP04 | `UsuarioMongoAdapterTest` | `conservaLaDesactivacion` | Infraestructura | AB#225 · AB#210 · AB#243 | PR #46 (ampliado en PR #43) (modificado en este PR) | 🔍 |
 | HU2-CP04 | `UsuarioMongoAdapterTest` | `conservaUnUsuarioActivo` | Infraestructura | AB#225 | PR #46 | ✅ |
 | HU2-CP05 | `AutenticacionServiceTest` | `enviaElCodigoAlCorreoTrasValidarLasCredenciales` | Aplicación | AB#22 | PR #52 | ✅ |
 | HU2-CP05 | `SmtpEnvioEmailAdapterTest` | `enviaElCodigoAlCorreoDelUsuario` | Infraestructura | AB#231 | PR #54 | ✅ |
@@ -1707,7 +1707,7 @@ Notas:
 - **HU15-CP01 a CP03:** casos propuestos en la T57 (AB#57) a partir de los criterios de la HU15 (`frontend/docs/Contexto_frontend.md`). Pendientes de confirmar con el equipo y de añadir a la HU15 en Azure Boards.
 - **Backend (T57):** `SecurityConfig` solo deja usar `/api/seller/**` al rol `VENDEDOR`. Aún no hay endpoints de vendedor (llegarán con los productos, HU31 y HU32): los tests usan un endpoint que solo existe en el test. La task, aunque es de tests, incluye la regla (avisado al equipo).
 - **El administrador** ve la información de los vendedores en solo lectura por su propia zona (`/api/admin/sellers/...`, HU26), no por `/api/seller/**`.
-- **«Vendedor activo»:** el estado de la cuenta lo comprueba el login (las cuentas `PENDIENTE` o `DESACTIVADO` no entran), no esta regla.
+- **«Vendedor activo»:** el estado de la cuenta lo comprueba el login (las cuentas `PENDIENTE` o `BLOQUEADO` no entran), no esta regla.
 - **Frontend:** los tests de la HU15 (AB#213) no tienen todavía filas en la matriz.
 
 ### Tabla B · casos de prueba ↔ tests
@@ -1903,11 +1903,11 @@ Rutas de los archivos de test (bajo `frontend/src/`):
 | HU21-CP08 | Usuarios sin rol ADMINISTRADOR no pueden crear administradores | Integración (capa web) | 1 | ✅ Pasa |
 | HU21-CP09 | Un administrador se lee sin datos de cliente ni consentimiento | Unitario | 1 | ✅ Pasa |
 | HU21-CP10 | Activar un vendedor pendiente lo deja activo y lo guarda | Unitario | 1 | ✅ Pasa |
-| HU21-CP11 | Desactivar un vendedor activo lo deja desactivado y lo guarda | Unitario | 1 | ✅ Pasa |
+| HU21-CP11 | Desactivar un vendedor activo lo deja desactivado y lo guarda | Unitario | 1 | 🔍 En revisión |
 | HU21-CP12 | Activar o desactivar a un usuario que no es vendedor falla como si no existiera y no guarda nada | Unitario | 2 | ✅ Pasa |
 | HU21-CP13 | Un administrador activa un vendedor y recibe sus datos con estado ACTIVO | Integración (capa web) | 1 | ✅ Pasa |
-| HU21-CP14 | Un administrador desactiva un vendedor y recibe sus datos con estado DESACTIVADO | Integración (capa web) | 1 | ✅ Pasa |
-| HU21-CP15 | Cambiar un vendedor a un estado que no es ACTIVO ni DESACTIVADO devuelve 400 y no cambia nada | Integración (capa web) | 1 | ✅ Pasa |
+| HU21-CP14 | Un administrador bloquea un vendedor y recibe sus datos con estado BLOQUEADO | Integración (capa web) | 1 | 🔍 En revisión |
+| HU21-CP15 | Cambiar un vendedor a un estado que no es ACTIVO ni BLOQUEADO devuelve 400 y no cambia nada | Integración (capa web) | 1 | ✅ Pasa |
 | HU21-CP16 | Cambiar el estado de un usuario que no existe o no es vendedor devuelve 404 | Integración (capa web) | 1 | ✅ Pasa |
 | HU21-CP17 | Sin sesión o sin rol ADMINISTRADOR no se puede cambiar el estado de un vendedor | Integración (capa web) | 2 | ✅ Pasa |
 | HU21-CP18 | Guarda el avatar elegido como imagen de perfil del administrador | Unitario + integración (capa web) | 2 | ✅ Pasa |
@@ -1934,11 +1934,11 @@ Notas:
 | HU21-CP08 | `UsuarioControllerTest` | `crearAdministradorRechazaNoAdministradores` | Infraestructura | AB#49 | PR actual | ✅ |
 | HU21-CP09 | `UsuarioDocumentMapperTest` | `unAdministradorSeLeeSinDatosDeClienteYConsentimiento` | Infraestructura | AB#49 | PR actual | ✅ |
 | HU21-CP10 | `AdministracionUsuariosServiceTest` | `activarVendedorPendienteLoDejaActivoYLoGuarda` | Aplicación | AB#47 | PR #102 | ✅ |
-| HU21-CP11 | `AdministracionUsuariosServiceTest` | `desactivarVendedorActivoLoDejaDesactivadoYLoGuarda` | Aplicación | AB#47 | PR #102 | ✅ |
+| HU21-CP11 | `AdministracionUsuariosServiceTest` | `desactivarVendedorActivoLoDejaDesactivadoYLoGuarda` | Aplicación | AB#47 · AB#243 | PR #102 (modificado en este PR) | 🔍 |
 | HU21-CP12 | `AdministracionUsuariosServiceTest` | `activarVendedorDeOtroRolFalla` | Aplicación | AB#47 | PR #102 | ✅ |
 | HU21-CP12 | `AdministracionUsuariosServiceTest` | `desactivarVendedorDeOtroRolFalla` | Aplicación | AB#47 | PR #102 | ✅ |
 | HU21-CP13 | `UsuarioControllerTest` | `administradorActivaUnVendedorYRecibeSusDatos` | Infraestructura | AB#47 | PR #102 | ✅ |
-| HU21-CP14 | `UsuarioControllerTest` | `administradorDesactivaUnVendedorYRecibeSusDatos` | Infraestructura | AB#47 | PR #102 | ✅ |
+| HU21-CP14 | `UsuarioControllerTest` | `administradorDesactivaUnVendedorYRecibeSusDatos` | Infraestructura | AB#47 · AB#243 | PR #102 (modificado en este PR) | 🔍 |
 | HU21-CP15 | `UsuarioControllerTest` | `cambiarVendedorAUnEstadoNoAdmitidoDevuelve400` | Infraestructura | AB#47 | PR #102 | ✅ |
 | HU21-CP16 | `UsuarioControllerTest` | `cambiarEstadoDeUnNoVendedorDevuelve404` | Infraestructura | AB#47 | PR #102 | ✅ |
 | HU21-CP17 | `UsuarioControllerTest` | `cambiarEstadoDeVendedorSinSesionDevuelve401` | Infraestructura | AB#47 | PR #102 | ✅ |
@@ -2092,20 +2092,23 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU23-CP01 | Un administrador desactiva una cuenta activa y recibe sus datos con estado DESACTIVADO | Unitario + integración (capa web) | 2 | ✅ Pasa |
+| HU23-CP01 | Un administrador bloquea una cuenta activa y recibe sus datos con estado BLOQUEADO | Unitario + integración (capa web) | 2 | 🔍 En revisión |
 | HU23-CP02 | Desactivar un usuario que no existe devuelve 404 y no guarda nada | Unitario + integración (capa web) | 2 | ✅ Pasa |
 | HU23-CP03 | Un administrador no puede desactivar su propia cuenta (409 `CANNOT_DEACTIVATE_SELF`) | Unitario + integración (capa web) | 2 | ✅ Pasa |
 | HU23-CP04 | No se puede desactivar al último administrador activo (409 `LAST_ACTIVE_ADMIN`) | Unitario + integración | 4 | ✅ Pasa |
-| HU23-CP05 | Se puede desactivar a un administrador activo si queda otro administrador activo | Unitario | 1 | ✅ Pasa |
+| HU23-CP05 | Se puede desactivar a un administrador activo si queda otro administrador activo | Unitario | 1 | 🔍 En revisión |
 | HU23-CP06 | Sin sesión (401) o sin ser administrador (403) no se puede desactivar una cuenta | Integración (capa web) | 2 | ✅ Pasa |
 | HU23-CP07 | Una petición sin usuario en sesión pasa sin consultar la cuenta | Unitario | 1 | ✅ Pasa |
 | HU23-CP08 | Una petición de un usuario con la cuenta activa pasa y conserva su sesión | Unitario | 1 | ✅ Pasa |
 | HU23-CP09 | Si la cuenta del usuario en sesión está desactivada, se invalida su sesión y responde 401 | Unitario | 1 | ✅ Pasa |
 | HU23-CP10 | Si el usuario en sesión ya no existe, se invalida su sesión y responde 401 | Unitario | 1 | ✅ Pasa |
+| HU23-CP11 | Una cuenta con bloqueo temporal por intentos sale con su estado guardado en el listado, la ficha y los vendedores | Integración (capa web) | 3 | 🔍 En revisión |
+| HU23-CP12 | DESACTIVADO ya no es un estado válido para filtrar el listado | Unitario | 1 | 🔍 En revisión |
 
 Notas:
 - **HU23-CP01 a CP06:** casos propuestos en la T39 (AB#39) a partir del contrato del frontend (`frontend/docs/hu23-desactivar-usuario.md`). Pendientes de confirmar con el equipo y de añadir a la HU23 en Azure Boards.
 - **Backend (T37/T38, AB#37 y AB#38):** el mismo `PATCH /api/admin/usuarios/{id}/status` de la HU24, ahora con `{ "estado": "DESACTIVADO" }`, en `AdministracionUsuariosUseCase.desactivar`. El controlador pasa el email del usuario en sesión (`Authentication.getName()`, como `/api/auth/me`) para la regla de no desactivarse a sí mismo. El conteo de administradores activos es `UsuarioRepositoryPort.contarAdministradoresActivos()`. Los 409 llevan los códigos que espera el frontend.
+- **BLOQUEADO sustituye a DESACTIVADO (T243, AB#243):** decisión del equipo. Los estados guardados son `PENDIENTE`, `ACTIVO` y `BLOQUEADO`, y `PATCH /status` (usuarios y vendedores) recibe `BLOQUEADO`. El bloqueo temporal por intentos fallidos deja de mostrarse como `BLOQUEADO`: las respuestas devuelven el estado guardado y el filtro `status=BLOQUEADO` solo devuelve cuentas bloqueadas por un administrador (HU19-CP10); en el login sigue siendo 429. Los nombres `desactivar`, sus excepciones y el 409 `CANNOT_DEACTIVATE_SELF` los cambia la T252. **PENDIENTE DE CONFIRMAR CON EL EQUIPO:** casos HU23-CP11 y CP12, propuestos.
 - **Invalidar la sesión (T206, AB#206):** `CuentaActivaFilter` comprueba en cada petición con un usuario en sesión que su cuenta sigue activa; si no (o si ya no existe), invalida la sesión y responde 401, como espera el frontend. Se registra como bean en `UsuariosConfig` y Spring Boot lo añade a los filtros de cada petición, sin tocar `SecurityConfig`. El login (HU2) guarda al usuario en sesión con su email como nombre, que es lo que usan el filtro y la regla de HU23-CP03. Casos HU23-CP07 a CP10 propuestos en la T206, pendientes de confirmar con el equipo.
 - **Frontend:** los tests de la HU23 (AB#41) no tienen todavía filas en la matriz.
 
@@ -2113,8 +2116,8 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU23-CP01 | `AdministracionUsuariosServiceTest` | `desactivaUnaCuentaActivaYLaGuarda` | Aplicación | AB#39 | PR #79 | ✅ |
-| HU23-CP01 | `UsuarioControllerTest` | `administradorDesactivaUnaCuentaYRecibeSusDatos` | Infraestructura | AB#39 | PR #79 | ✅ |
+| HU23-CP01 | `AdministracionUsuariosServiceTest` | `desactivaUnaCuentaActivaYLaGuarda` | Aplicación | AB#39 · AB#243 | PR #79 (modificado en este PR) | 🔍 |
+| HU23-CP01 | `UsuarioControllerTest` | `administradorDesactivaUnaCuentaYRecibeSusDatos` | Infraestructura | AB#39 · AB#243 | PR #79 (modificado en este PR) | 🔍 |
 | HU23-CP02 | `AdministracionUsuariosServiceTest` | `rechazaDesactivarUnUsuarioQueNoExiste` | Aplicación | AB#39 | PR #79 | ✅ |
 | HU23-CP02 | `UsuarioControllerTest` | `desactivarUnUsuarioInexistenteDevuelve404` | Infraestructura | AB#39 | PR #79 | ✅ |
 | HU23-CP03 | `AdministracionUsuariosServiceTest` | `rechazaQueUnAdministradorSeDesactiveASiMismo` | Aplicación | AB#39 | PR #79 | ✅ |
@@ -2123,13 +2126,17 @@ Notas:
 | HU23-CP04 | `UsuarioControllerTest` | `desactivarAlUltimoAdministradorActivoDevuelve409` | Infraestructura | AB#39 | PR #79 | ✅ |
 | HU23-CP04 | `UsuarioMongoAdapterTest` | `contarAdministradoresActivosSoloCuentaLosAdministradoresActivos` | Infraestructura | AB#39 | PR #79 | ✅ |
 | HU23-CP04 | `UsuarioMongoAdapterTest` | `contarAdministradoresActivosDevuelveCeroSinAdministradoresActivos` | Infraestructura | AB#39 | PR #79 | ✅ |
-| HU23-CP05 | `AdministracionUsuariosServiceTest` | `desactivaAUnAdministradorSiQuedaOtroActivo` | Aplicación | AB#39 | PR #79 | ✅ |
+| HU23-CP05 | `AdministracionUsuariosServiceTest` | `desactivaAUnAdministradorSiQuedaOtroActivo` | Aplicación | AB#39 · AB#243 | PR #79 (modificado en este PR) | 🔍 |
 | HU23-CP06 | `UsuarioControllerTest` | `unNoAdministradorNoPuedeDesactivarCuentas` (cliente y vendedor) | Infraestructura | AB#39 | PR #79 | ✅ |
 | HU23-CP06 | `UsuarioControllerTest` | `desactivarSinSesionEstaProtegido` | Infraestructura | AB#39 | PR #79 | ✅ |
 | HU23-CP07 | `CuentaActivaFilterTest` | `sinUsuarioEnSesionDejaPasar` | Infraestructura | AB#39 | PR #85 | ✅ |
 | HU23-CP08 | `CuentaActivaFilterTest` | `cuentaActivaDejaPasar` | Infraestructura | AB#39 | PR #85 | ✅ |
 | HU23-CP09 | `CuentaActivaFilterTest` | `cuentaDesactivadaInvalidaLaSesionYDevuelve401` | Infraestructura | AB#39 | PR #85 | ✅ |
 | HU23-CP10 | `CuentaActivaFilterTest` | `usuarioInexistenteInvalidaLaSesionYDevuelve401` | Infraestructura | AB#39 | PR #85 | ✅ |
+| HU23-CP11 | `UsuarioControllerTest` | `elListadoNoMuestraElBloqueoPorIntentosComoBloqueado` | Infraestructura | AB#243 | — | 🔍 |
+| HU23-CP11 | `UsuarioControllerTest` | `laFichaNoMuestraElBloqueoPorIntentosComoBloqueado` | Infraestructura | AB#243 | — | 🔍 |
+| HU23-CP11 | `UsuarioControllerTest` | `laFichaDeVendedorNoMuestraElBloqueoPorIntentosComoBloqueado` | Infraestructura | AB#243 | — | 🔍 |
+| HU23-CP12 | `ListadoUsuariosServiceTest` | `laConsultaRechazaElEstadoDesactivado` | Aplicación | AB#243 | — | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
@@ -2146,7 +2153,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
 | HU24-CP01 | Un administrador activa una cuenta desactivada y recibe sus datos con estado ACTIVO | Unitario + integración | 3 | ✅ Pasa |
-| HU24-CP02 | Rechaza un estado que no es ACTIVO ni DESACTIVADO (400) y no cambia nada | Integración (capa web) | 1 | ✅ Pasa |
+| HU24-CP02 | Rechaza un estado que no es ACTIVO ni BLOQUEADO (400) y no cambia nada | Integración (capa web) | 1 | 🔍 En revisión |
 | HU24-CP03 | Activar un usuario que no existe devuelve 404 | Unitario + integración | 3 | ✅ Pasa |
 | HU24-CP04 | Un usuario que no es administrador no puede activar cuentas (403) | Integración (capa web) | 1 | ✅ Pasa |
 
@@ -2164,7 +2171,7 @@ Notas:
 | HU24-CP01 | `AdministracionUsuariosServiceTest` | `activaUnaCuentaDesactivadaYLaGuarda` | Aplicación | AB#34 | PR #63 | ✅ |
 | HU24-CP01 | `UsuarioControllerTest` | `administradorActivaUnaCuentaYRecibeSusDatos` | Infraestructura | AB#34 | PR #63 | ✅ |
 | HU24-CP01 | `UsuarioMongoAdapterTest` | `buscarPorIdDevuelveElUsuarioGuardado` | Infraestructura | AB#34 | PR #63 | ✅ |
-| HU24-CP02 | `UsuarioControllerTest` | `rechazaUnEstadoNoAdmitido` | Infraestructura | AB#34 · AB#39 | PR #63 (modificado en PR #79) | ✅ |
+| HU24-CP02 | `UsuarioControllerTest` | `rechazaUnEstadoNoAdmitido` | Infraestructura | AB#34 · AB#39 · AB#243 | PR #63 (modificado en PR #79) (modificado en este PR) | 🔍 |
 | HU24-CP03 | `AdministracionUsuariosServiceTest` | `rechazaActivarUnUsuarioQueNoExiste` | Aplicación | AB#34 | PR #63 | ✅ |
 | HU24-CP03 | `UsuarioControllerTest` | `activarUnUsuarioInexistenteDevuelve404` | Infraestructura | AB#34 | PR #63 | ✅ |
 | HU24-CP03 | `UsuarioMongoAdapterTest` | `buscarPorIdDevuelveVacioSiNoExiste` | Infraestructura | AB#34 | PR #63 | ✅ |
@@ -2184,7 +2191,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
 | HU26-CP01 | El listado solo trae vendedores, con sus datos (también el nombre comercial y la categoría principal) y sin datos sensibles | Integración (capa web) | 1 | ✅ Pasa |
-| HU26-CP02 | El listado se ordena por nombre o por estado (pendientes, activos, desactivados), en sentido ascendente o descendente | Integración (capa web y MongoDB) | 4 | ✅ Pasa |
+| HU26-CP02 | El listado se ordena por nombre o por estado (pendientes, activos, bloqueados), en sentido ascendente o descendente | Integración (capa web y MongoDB) | 4 | 🔍 En revisión |
 | HU26-CP03 | La ficha de un vendedor trae sus datos (también el nombre comercial, la categoría principal con su nombre, el DNI y el teléfono), sin datos sensibles | Unitario + integración (capa web) | 2 | ✅ Pasa |
 | HU26-CP04 | La ficha de un usuario que no existe o que no es vendedor devuelve 404 | Unitario + integración (capa web) | 3 | ✅ Pasa |
 | HU26-CP05 | Sin sesión (401) o sin ser administrador (403) no se ve ni el listado ni la ficha | Integración (capa web) | 2 | ✅ Pasa |
@@ -2205,8 +2212,8 @@ Notas:
 |---|---|---|---|---|---|---|
 | HU26-CP01 | `UsuarioControllerTest` | `administradorRecibeElListadoDeVendedores` | Infraestructura | AB#30, AB#43 | PR #80, PR #100 | ✅ |
 | HU26-CP02 | `UsuarioControllerTest` | `listadoDeVendedoresTraduceLaOrdenacion` (nombre, estado, categoría y sin orden) | Infraestructura | AB#30 · AB#29 | PR #80 (modificado en PR #104: `category` pasa a `CATEGORIA`) | ✅ |
-| HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorEstadoAscendente` | Infraestructura | AB#30 | PR #80 | ✅ |
-| HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorEstadoDescendente` | Infraestructura | AB#30 | PR #80 | ✅ |
+| HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorEstadoAscendente` | Infraestructura | AB#30 · AB#243 | PR #80 (modificado en este PR) | 🔍 |
+| HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorEstadoDescendente` | Infraestructura | AB#30 · AB#243 | PR #80 (modificado en este PR) | 🔍 |
 | HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorNombre` | Infraestructura | AB#30 | PR #80 | ✅ |
 | HU26-CP03 | `AdministracionUsuariosServiceTest` | `consultarVendedorDevuelveElVendedor` | Aplicación | AB#30 | PR #80 | ✅ |
 | HU26-CP03 | `UsuarioControllerTest` | `fichaDeUnVendedor` | Infraestructura | AB#30, AB#43 | PR #80, PR #100 | ✅ |
@@ -2815,8 +2822,8 @@ Ruta de la clase de test de seguridad (bajo `backend/src/test/java/es/uclm/esibu
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
 | HU43-CP01 | Al cerrar sesión (`POST /api/auth/logout`) la sesión se invalida en el servidor y la cookie de sesión se borra del navegador | Controlador | 2 | ✅ Pasa |
-| HU43-CP02 | La sesión caduca tras 15 minutos sin actividad si no se configura otro tiempo (`ESIBUY_SESION_INACTIVIDAD`) | Integración (servidor real) | 1 | 🔍 En revisión |
-| HU43-CP03 | Las cookies de sesión (`JSESSIONID`: Secure, HttpOnly y SameSite=Strict) y de CSRF (`XSRF-TOKEN`: Secure y SameSite=Strict, legible por el frontend) llevan sus atributos de seguridad | Controlador + integración (servidor real) | 2 | 🔍 En revisión |
+| HU43-CP02 | La sesión caduca tras 15 minutos sin actividad si no se configura otro tiempo (`ESIBUY_SESION_INACTIVIDAD`) | Integración (servidor real) | 1 | ✅ Pasa |
+| HU43-CP03 | Las cookies de sesión (`JSESSIONID`: Secure, HttpOnly y SameSite=Strict) y de CSRF (`XSRF-TOKEN`: Secure y SameSite=Strict, legible por el frontend) llevan sus atributos de seguridad | Controlador + integración (servidor real) | 2 | ✅ Pasa |
 | HU43-CP04 | El cliente cierra sesión desde su zona: se avisa al servidor, vuelve al login con «Has cerrado sesión.» y su zona deja de ser accesible | Frontend (página) | 1 | 🔍 En revisión (1, AB#314, PR sin abrir) |
 | HU43-CP05 | El vendedor cierra sesión desde su zona, con el mismo resultado | Frontend (página) | 1 | 🔍 En revisión (1, AB#315, PR sin abrir) |
 | HU43-CP06 | El administrador cierra sesión desde su panel, con el mismo resultado | Frontend (página) | 1 | 🔍 En revisión (1, AB#316, PR sin abrir) |
@@ -2840,9 +2847,9 @@ Notas:
 |---|---|---|---|---|---|---|
 | HU43-CP01 | `AutenticacionControllerTest` | `logoutCierraLaSesion` (`@DisplayName` HU2-CP15) | Infraestructura | AB#230 | PR #67 | ✅ |
 | HU43-CP01 | `AutenticacionControllerTest` | `logoutBorraLaCookieDeSesion` | Infraestructura | AB#318 | PR #141 | ✅ |
-| HU43-CP02 | `ConfiguracionSesionTest` | `laSesionCaducaA15MinutosDeInactividadPorDefecto` | Infraestructura | AB#319 | PR #142 | 🔍 |
-| HU43-CP03 | `ConfiguracionSesionTest` | `laCookieDeSesionEsSecureHttpOnlyYSameSiteStrict` | Infraestructura | AB#319 | PR #142 | 🔍 |
-| HU43-CP03 | `SecurityConfigTest` | `laCookieCsrfEsSecureYSameSiteStrict` | Infraestructura | AB#319 | PR #142 | 🔍 |
+| HU43-CP02 | `ConfiguracionSesionTest` | `laSesionCaducaA15MinutosDeInactividadPorDefecto` | Infraestructura | AB#319 | PR #142 | ✅ |
+| HU43-CP03 | `ConfiguracionSesionTest` | `laCookieDeSesionEsSecureHttpOnlyYSameSiteStrict` | Infraestructura | AB#319 | PR #142 | ✅ |
+| HU43-CP03 | `SecurityConfigTest` | `laCookieCsrfEsSecureYSameSiteStrict` | Infraestructura | AB#319 | PR #142 | ✅ |
 | HU43-CP04 | `AppHeader.test.jsx` | `HU43-CP04: el cliente cierra sesión desde su zona, vuelve al login con un aviso y ya no puede entrar` | Frontend · página | AB#314 | Rama `feature/US43-T314-T317-cerrar-sesion` (PR sin abrir) | 🔍 |
 | HU43-CP05 | `AppHeader.test.jsx` | `HU43-CP05: el vendedor cierra sesión desde su zona, vuelve al login con un aviso y ya no puede entrar` | Frontend · página | AB#315 | Rama `feature/US43-T314-T317-cerrar-sesion` (PR sin abrir) | 🔍 |
 | HU43-CP06 | `AppHeader.test.jsx` | `HU43-CP06: el administrador cierra sesión desde su panel, vuelve al login con un aviso y ya no puede entrar` | Frontend · página | AB#316 | Rama `feature/US43-T314-T317-cerrar-sesion` (PR sin abrir) | 🔍 |

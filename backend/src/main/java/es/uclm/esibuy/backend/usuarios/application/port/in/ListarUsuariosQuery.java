@@ -30,7 +30,7 @@ public record ListarUsuariosQuery(
     public record Ordenacion(Orden campo, boolean descendente) {
     }
 
-    // Orden del listado (HU26). Por estado, el orden ascendente es pendientes, activos y desactivados.
+    // Orden del listado (HU26). Por estado, el orden ascendente es pendientes, activos y bloqueados.
     // Por categoría (fallos de la demo del Sprint 1): por el nombre de la categoría principal, no por su id.
     public enum Orden { NOMBRE, ESTADO, CATEGORIA }
 
@@ -64,7 +64,7 @@ public record ListarUsuariosQuery(
         }
         if (estado != null) {
             estado = estado.trim().toUpperCase(Locale.ROOT);
-            if (!Set.of("PENDIENTE", "ACTIVO", "BLOQUEADO", "DESACTIVADO").contains(estado)) {
+            if (!Set.of("PENDIENTE", "ACTIVO", "BLOQUEADO").contains(estado)) {
                 throw new IllegalArgumentException("El estado no es válido");
             }
         }

@@ -163,7 +163,7 @@ public class Usuario {
     }
 
     public void desactivar() {
-        estado = "DESACTIVADO";
+        estado = "BLOQUEADO";
     }
 
     public void activar() {

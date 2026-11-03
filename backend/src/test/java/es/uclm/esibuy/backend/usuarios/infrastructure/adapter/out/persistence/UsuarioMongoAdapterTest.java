@@ -259,7 +259,7 @@ class UsuarioMongoAdapterTest {
         adapter.guardar(usuario);
 
         assertFalse(adapter.buscarPorCorreo("juan@uclm.es").orElseThrow().estaActivo());
-        assertEquals("DESACTIVADO", documentoEnBruto().getString("estado"));   // nombre del modelo de BBDD
+        assertEquals("BLOQUEADO", documentoEnBruto().getString("estado"));   // nombre del modelo de BBDD
     }
 
     @Test
@@ -384,7 +384,7 @@ class UsuarioMongoAdapterTest {
         UsuarioDocument activo = documento("ana@esibuy.test", "hash-1", "CLIENTE");
         activo.setEstado("ACTIVO");
         UsuarioDocument desactivado = documento("bruno@esibuy.test", "hash-2", "VENDEDOR");
-        desactivado.setEstado("DESACTIVADO");
+        desactivado.setEstado("BLOQUEADO");
         usuarioMongoRepository.saveAll(List.of(activo, desactivado));
 
         UsuarioPage resultado = adapter.listar(
@@ -432,14 +432,14 @@ class UsuarioMongoAdapterTest {
     }
 
     @Test
-    @DisplayName("HU19-CP10: el adaptador filtra BLOQUEADO por lockedUntil")
-    void listarFiltraPorBloqueoTemporal() {
+    @DisplayName("HU19-CP10: el adaptador filtra BLOQUEADO por el estado guardado, no por el bloqueo temporal por intentos")
+    void listarFiltraBloqueadoPorEstadoGuardado() {
         UsuarioDocument bloqueado = documento("bloqueado@esibuy.test", "hash-1", "CLIENTE");
-        bloqueado.setEstado("ACTIVO");
-        bloqueado.setLockedUntil(Instant.now().plus(Duration.ofMinutes(10)));
-        UsuarioDocument activo = documento("activo@esibuy.test", "hash-2", "CLIENTE");
-        activo.setEstado("ACTIVO");
-        usuarioMongoRepository.saveAll(List.of(bloqueado, activo));
+        bloqueado.setEstado("BLOQUEADO");
+        UsuarioDocument conTimeout = documento("timeout@esibuy.test", "hash-2", "CLIENTE");
+        conTimeout.setEstado("ACTIVO");
+        conTimeout.setLockedUntil(Instant.now().plus(Duration.ofMinutes(10)));
+        usuarioMongoRepository.saveAll(List.of(bloqueado, conTimeout));
 
         UsuarioPage resultado = adapter.listar(
                 new ListarUsuariosQuery(null, null, "BLOQUEADO", 0, 10)
@@ -450,25 +450,25 @@ class UsuarioMongoAdapterTest {
     }
 
     @Test
-    @DisplayName("HU26-CP02: el adaptador ordena por estado ascendente: pendientes, activos y desactivados")
+    @DisplayName("HU26-CP02: el adaptador ordena por estado ascendente: pendientes, activos y bloqueados")
     void listarOrdenaPorEstadoAscendente() {
         guardarVendedoresConEstadosDesordenados();
 
         UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(
                 null, Rol.VENDEDOR, null, 0, 10, ListarUsuariosQuery.Orden.ESTADO, false));
 
-        assertEquals(List.of("PENDIENTE", "ACTIVO", "DESACTIVADO"), estados(resultado));
+        assertEquals(List.of("PENDIENTE", "ACTIVO", "BLOQUEADO"), estados(resultado));
     }
 
     @Test
-    @DisplayName("HU26-CP02: el adaptador ordena por estado descendente: desactivados, activos y pendientes")
+    @DisplayName("HU26-CP02: el adaptador ordena por estado descendente: bloqueados, activos y pendientes")
     void listarOrdenaPorEstadoDescendente() {
         guardarVendedoresConEstadosDesordenados();
 
         UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(
                 null, Rol.VENDEDOR, null, 0, 10, ListarUsuariosQuery.Orden.ESTADO, true));
 
-        assertEquals(List.of("DESACTIVADO", "ACTIVO", "PENDIENTE"), estados(resultado));
+        assertEquals(List.of("BLOQUEADO", "ACTIVO", "PENDIENTE"), estados(resultado));
     }
 
     @Test
@@ -491,7 +491,7 @@ class UsuarioMongoAdapterTest {
         UsuarioDocument activo = documento("activo@esibuy.test", "hash-1", "VENDEDOR");
         activo.setEstado("ACTIVO");
         UsuarioDocument desactivado = documento("desactivado@esibuy.test", "hash-2", "VENDEDOR");
-        desactivado.setEstado("DESACTIVADO");
+        desactivado.setEstado("BLOQUEADO");
         UsuarioDocument pendiente = documento("pendiente@esibuy.test", "hash-3", "VENDEDOR");
         pendiente.setEstado("PENDIENTE");
         usuarioMongoRepository.saveAll(List.of(activo, desactivado, pendiente));
@@ -514,7 +514,7 @@ class UsuarioMongoAdapterTest {
         usuarioMongoRepository.saveAll(List.of(
                 documentoConEstado("ana@esibuy.test", "ADMINISTRADOR", "ACTIVO"),
                 documentoConEstado("ada@esibuy.test", "ADMINISTRADOR", "ACTIVO"),
-                documentoConEstado("diego@esibuy.test", "ADMINISTRADOR", "DESACTIVADO"),
+                documentoConEstado("diego@esibuy.test", "ADMINISTRADOR", "BLOQUEADO"),
                 documentoConEstado("carlos@esibuy.test", "CLIENTE", "ACTIVO"),
                 documentoConEstado("vera@esibuy.test", "VENDEDOR", "ACTIVO")
         ));
@@ -525,7 +525,7 @@ class UsuarioMongoAdapterTest {
     @Test
     @DisplayName("HU23-CP04: contarAdministradoresActivos devuelve 0 si no hay administradores activos")
     void contarAdministradoresActivosDevuelveCeroSinAdministradoresActivos() {
-        usuarioMongoRepository.save(documentoConEstado("diego@esibuy.test", "ADMINISTRADOR", "DESACTIVADO"));
+        usuarioMongoRepository.save(documentoConEstado("diego@esibuy.test", "ADMINISTRADOR", "BLOQUEADO"));
 
         assertEquals(0, adapter.contarAdministradoresActivos());
     }
@@ -569,13 +569,13 @@ class UsuarioMongoAdapterTest {
         UsuarioDocument pendiente = documento("pendiente@esibuy.test", "hash", "CLIENTE");
         pendiente.setEstado("PENDIENTE");
         UsuarioDocument desactivado = documento("desactivado@esibuy.test", "hash", "CLIENTE");
-        desactivado.setEstado("DESACTIVADO");
+        desactivado.setEstado("BLOQUEADO");
         usuarioMongoRepository.saveAll(List.of(activo, pendiente, desactivado));
 
         UsuarioPage resultado = adapter.listar(new ListarUsuariosQuery(
                 null, Rol.CLIENTE, null, 0, 10, ListarUsuariosQuery.Orden.ESTADO, true));
 
-        assertEquals(List.of("DESACTIVADO", "ACTIVO", "PENDIENTE"), estados(resultado));
+        assertEquals(List.of("BLOQUEADO", "ACTIVO", "PENDIENTE"), estados(resultado));
     }
 
     @Test
