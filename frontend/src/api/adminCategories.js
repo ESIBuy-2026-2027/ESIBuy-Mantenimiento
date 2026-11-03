@@ -1,4 +1,5 @@
-// Esqueleto del ciclo rojo (HU39, T330): se completa en su ciclo.
+import { request } from './client'
+
 export function getAdminCategories() {
-  return Promise.resolve([])
+  return request('/api/admin/categorias')
 }
