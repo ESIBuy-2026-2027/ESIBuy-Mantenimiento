@@ -5,7 +5,8 @@ import java.math.BigDecimal;
 /**
  * Detalle de un producto del catálogo para el cliente (HU8): así el adaptador web no ve el dominio de productos.
  * {@code porcentajeDescuento} es el del descuento que le toca al cliente, o {@code null} si no tiene ninguno, y
- * {@code precioFinal} ya lo lleva aplicado.
+ * {@code precioFinal} ya lo lleva aplicado. {@code valoracion} es la media de las valoraciones (HU13), o
+ * {@code null} si no tiene ninguna.
  */
 public record DetalleProductoCatalogo(
         String id,
@@ -19,6 +20,8 @@ public record DetalleProductoCatalogo(
         BigDecimal porcentajeDescuento,
         BigDecimal precioFinal,
         int stock,
-        boolean disponible
+        boolean disponible,
+        Double valoracion,
+        int numValoraciones
 ) {
 }

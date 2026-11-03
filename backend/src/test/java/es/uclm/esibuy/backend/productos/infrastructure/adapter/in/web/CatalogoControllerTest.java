@@ -35,7 +35,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 // Catálogo de productos del cliente (HU7, T353): GET /api/products. Detalle de un producto (HU8, T355):
 // GET /api/products/{id}. El caso de uso es un doble de prueba; la seguridad es la real (SecurityConfig).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU7-CP16 a CP19 y HU8-CP13 a CP15, propuestos.
+// La media y el número de valoraciones (HU13, T415).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU7-CP16 a CP19, HU8-CP13 a CP15 y HU13-CP26, propuestos.
 @WebMvcTest(CatalogoController.class)
 @Import(SecurityConfig.class)
 class CatalogoControllerTest {
@@ -62,7 +63,7 @@ class CatalogoControllerTest {
                 .andExpect(jsonPath("$.items[0].nombre").value("Teclado mecánico"))
                 .andExpect(jsonPath("$.items[0].imagen").value("https://esibuy.test/teclado.png"))
                 .andExpect(jsonPath("$.items[0].categoriaId").value("cat-2"))
-                // Hasta HU13 no hay valoraciones: el campo existe, pero vale null, y el número es 0
+                // Un producto sin valoraciones: el campo existe, pero vale null, y el número es 0
                 .andExpect(jsonPath("$.items[0].valoracion").value(nullValue()))
                 .andExpect(jsonPath("$.items[0].numValoraciones").value(0))
                 .andExpect(jsonPath("$.items[0].precio").doesNotExist())
@@ -125,9 +126,36 @@ class CatalogoControllerTest {
         verify(catalogoProductos, never()).buscarProductos(any());
     }
 
+    @Test
+    @DisplayName("HU13-CP26: el catálogo devuelve la media y el número de valoraciones de cada producto")
+    void elCatalogoDevuelveLaMediaYElNumeroDeValoraciones() throws Exception {
+        Producto valorado = new Producto("p-1", "v-1", "Teclado mecánico", "", new BigDecimal("89.50"), 12, "cat-2",
+                "", true, Descuento.sinDescuento(), Descuento.sinDescuento(), 4.5, 2);
+        when(catalogoProductos.buscarProductos(any())).thenReturn(new ProductoPage(List.of(valorado), 0, 10, 1));
+
+        mockMvc.perform(get(URL).with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].valoracion").value(4.5))
+                .andExpect(jsonPath("$.items[0].numValoraciones").value(2));
+    }
+
+    @Test
+    @DisplayName("HU13-CP26: el detalle devuelve la media y el número de valoraciones del producto")
+    void elDetalleDevuelveLaMediaYElNumeroDeValoraciones() throws Exception {
+        when(catalogoProductos.consultarDetalle("p-1", CLIENTE)).thenReturn(new DetalleProductoCatalogo("p-1",
+                "Teclado mecánico", "", "", "cat-2", "u-2", "TecnoVera", new BigDecimal("50.00"), null,
+                new BigDecimal("50.00"), 7, true, 4.5, 2));
+
+        mockMvc.perform(get(URL + "/p-1").with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.valoracion").value(4.5))
+                .andExpect(jsonPath("$.numValoraciones").value(2));
+    }
+
     private static DetalleProductoCatalogo detalle(BigDecimal porcentajeDescuento, BigDecimal precioFinal) {
         return new DetalleProductoCatalogo("p-1", "Teclado mecánico", "Con cable", "https://esibuy.test/teclado.png",
-                "cat-2", "u-2", "TecnoVera", new BigDecimal("50.00"), porcentajeDescuento, precioFinal, 7, true);
+                "cat-2", "u-2", "TecnoVera", new BigDecimal("50.00"), porcentajeDescuento, precioFinal, 7, true,
+                null, 0);
     }
 
     @Test
@@ -151,7 +179,7 @@ class CatalogoControllerTest {
                 .andExpect(jsonPath("$.precioFinal").value(45.0))
                 .andExpect(jsonPath("$.stock").value(7))
                 .andExpect(jsonPath("$.disponible").value(true))
-                // Hasta HU13 no hay valoraciones: el campo existe, pero vale null, y el número es 0
+                // Un producto sin valoraciones: el campo existe, pero vale null, y el número es 0
                 .andExpect(jsonPath("$.valoracion").value(nullValue()))
                 .andExpect(jsonPath("$.numValoraciones").value(0))
                 .andExpect(jsonPath("$.vendedorId").doesNotExist())

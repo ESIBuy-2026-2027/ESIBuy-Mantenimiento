@@ -1195,7 +1195,7 @@ Tests del frontend (bajo `frontend/src/`, con Vitest, React Testing Library y MS
 | HU7-CP12 | La búsqueda por nombre no distingue mayúsculas ni tildes y trata el texto como literal, no como expresión regular | Integración MongoDB | 2 | ✅ Pasa (2, AB#352, PR #153) |
 | HU7-CP13 | El filtro por categoría se puede combinar con la búsqueda | Integración MongoDB | 1 | ✅ Pasa (1, AB#352, PR #153) |
 | HU7-CP14 | El catálogo se ordena por nombre en los dos sentidos, paginado y con el total completo | Integración MongoDB | 1 | ✅ Pasa (1, AB#352, PR #153) |
-| HU7-CP15 | Mientras no haya valoraciones (HU13), una valoración mínima no devuelve ningún producto y ordenar por valoración desempata por nombre de la A a la Z | Integración MongoDB | 2 | ✅ Pasa (2, AB#352, PR #153) |
+| HU7-CP15 | Una valoración mínima solo deja los productos con esa media o más, y ordenar por valoración ordena por la media (HU13), desempata por nombre de la A a la Z y trata los productos sin valoraciones como los de menor media | Integración MongoDB | 2 | 🔍 En revisión (2, AB#352 · AB#415, PR #195) |
 | HU7-CP16 | El cliente recibe el catálogo con el formato del contrato (sin precio, stock ni vendedor; `valoracion` null y `numValoraciones` 0) | Integración (capa web) | 1 | ✅ Pasa (1, AB#353, PR #153) |
 | HU7-CP17 | Los parámetros llegan al caso de uso traducidos: página desde 0, criterio de orden y sentido | Integración (capa web) | 1 | ✅ Pasa (1, AB#353, PR #153) |
 | HU7-CP18 | Un parámetro no válido (página o tamaño menor que 1, valoración fuera de 1 a 5, orden o sentido desconocidos) devuelve 400 y no llega al caso de uso | Integración (capa web) | 1 | ✅ Pasa (1, AB#353, PR #153) |
@@ -1204,7 +1204,7 @@ Tests del frontend (bajo `frontend/src/`, con Vitest, React Testing Library y MS
 Notas:
 - **HU7-CP01 a CP09 (Sprint 2, frontend):** casos propuestos en las tasks AB#350 (vista de productos) y AB#351 (vista de filtrado y búsqueda), a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu7-busqueda-y-filtrado-de-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU7 (AB#69) en Azure Boards.
 - **HU7-CP10 a CP19 (Sprint 2, backend):** casos propuestos en las tasks AB#352 (lógica de filtrado de productos) y AB#353 (endpoint para obtener productos), con el contrato de `GET /api/products` que ya usaba el frontend. Desarrollados con TDD. Pendientes de confirmar con el equipo y de añadir a la HU7 (AB#69) en Azure Boards.
-- **Valoraciones (HU13, sin hacer):** hasta que existan, `valoracion` es `null`, `numValoraciones` es 0, una valoración mínima no devuelve nada y ordenar por valoración equivale a ordenar por nombre de la A a la Z. Está marcado en el código como `PENDIENTE DE DECIDIR (equipo)`; HU7-CP15 y CP16 protegen ese comportamiento provisional.
+- **Valoraciones (HU13, T415):** `valoracion` y `numValoraciones` salen de la media y el número de valoraciones que el módulo de valoraciones guarda en el producto (`valoracionMedia` y `numeroValoraciones`). La valoración mínima filtra por esa media y ordenar por valoración ordena por ella. Hasta la T415, una valoración mínima no devolvía nada y ordenar por valoración equivalía a ordenar por nombre; HU7-CP15 se modificó en la T415 para comprobar el comportamiento real. Un producto sin valoraciones sigue dando `null` y 0 (HU7-CP16).
 - **Decisiones de HU7-CP18:** `sort` y `order` se validan con `@Pattern`, como `page`, `size` y `minRating` con `@Min` y `@Max`. Que `minRating=6` sea inválido es una propuesta (la valoración va de 1 a 5).
 - **Pendiente de decidir:** el orden por nombre no usa la collation en español (`ORDEN_ALFABETICO_ES` de `UsuarioMongoAdapter`): las mayúsculas salen antes y las vocales con tilde, tras la Z. HU7-CP14 usa nombres sin tilde y en mayúscula para no depender de ello.
 - **Decisión del equipo:** no se ordena por categoría (no tiene sentido); el listado es un scroll infinito de diez en diez y no una paginación numérica; la selección son los diez mejor valorados, como tarjetas dentro de la animación y a todo el ancho de la página.
@@ -1269,8 +1269,8 @@ Notas:
 | HU7-CP12 | `ProductoMongoAdapterTest` | `buscarEnCatalogoTrataLaBusquedaComoTextoLiteral` | Infraestructura | AB#352 | PR #153 | ✅ |
 | HU7-CP13 | `ProductoMongoAdapterTest` | `buscarEnCatalogoFiltraPorCategoriaYBusqueda` | Infraestructura | AB#352 | PR #153 | ✅ |
 | HU7-CP14 | `ProductoMongoAdapterTest` | `buscarEnCatalogoOrdenaPorNombreYPagina` | Infraestructura | AB#352 | PR #153 | ✅ |
-| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoConValoracionMinimaNoDevuelveNada` | Infraestructura | AB#352 | PR #153 | ✅ |
-| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoPorValoracionDesempataPorNombre` | Infraestructura | AB#352 | PR #153 | ✅ |
+| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoConValoracionMinimaFiltraPorLaMedia` | Infraestructura | AB#352 · AB#415 | PR #153 (sustituido en el PR #195) | 🔍 |
+| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoPorValoracionOrdenaPorLaMedia` | Infraestructura | AB#352 · AB#415 | PR #153 (sustituido en el PR #195) | 🔍 |
 | HU7-CP16 | `CatalogoControllerTest` | `clienteRecibeElCatalogoConElFormatoDelContrato` | Infraestructura | AB#353 | PR #153 | ✅ |
 | HU7-CP17 | `CatalogoControllerTest` | `traduceLosParametrosALaConsulta` | Infraestructura | AB#353 | PR #153 | ✅ |
 | HU7-CP18 | `CatalogoControllerTest` | `parametroNoValidoDevuelve400` | Infraestructura | AB#353 | PR #153 | ✅ |
@@ -1784,16 +1784,22 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU13-CP21 | El cliente valora desde el detalle con estrellas y un comentario opcional; tras enviarla se le dan las gracias y su valoración aparece en la lista | Frontend (página) | 2 | 🔍 En revisión (2, AB#367, PR #191) |
 | HU13-CP22 | Sin puntuación no se envía y se pide elegir una; el comentario admite como mucho 500 caracteres | Frontend (página) | 2 | 🔍 En revisión (2, AB#367, PR #191) |
 | HU13-CP23 | Avisos al valorar: no comprado (403 `PRODUCT_NOT_PURCHASED`), ya valorado (409 `REVIEW_ALREADY_EXISTS`) y error general conservando lo escrito | Frontend (página) | 3 | 🔍 En revisión (3, AB#367, PR #191) |
+| HU13-CP24 | El producto guarda en MongoDB la media y el número de valoraciones que recibe, sin tocar el resto de sus datos | Integración MongoDB | 2 | 🔍 En revisión (2, AB#415, PR #195) |
+| HU13-CP25 | El producto lee su media y su número de valoraciones (sin valoraciones: `null` y 0) y los conserva al modificarlo, activarlo o desactivarlo y al quitarle la imagen | Unitario (dominio) + integración MongoDB | 4 | 🔍 En revisión (4, AB#415, PR #195) |
+| HU13-CP26 | El catálogo (HU7) y el detalle (HU8) devuelven la media y el número de valoraciones del producto | Unitario + integración (capa web) | 3 | 🔍 En revisión (3, AB#415, PR #195) |
+| HU13-CP27 | Actualizar la valoración de un producto la guarda y solo lo puede hacer el cliente; un vendedor o un administrador reciben 403 y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario + unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, AB#415, PR #195) |
+| HU13-CP28 | Al valorar, la media y el número se calculan con todas las valoraciones del producto y se le pasan al módulo de productos; si la valoración no se guarda, el producto no cambia | Unitario | 3 | 🔍 En revisión (3, AB#415, PR #195) |
 
 Notas:
 - **HU13-CP01 a CP17 (Sprint 2, backend):** casos propuestos en las tasks AB#369 (entidad valoración), AB#370 (endpoint para crear una valoración) y AB#371 (endpoint para obtener las valoraciones), y desarrollados con TDD. PENDIENTE DE REVISAR CON EL EQUIPO: confirmarlos y añadirlos a la HU13 (AB#75) en Azure Boards.
 - **Decisiones del equipo:** módulo nuevo `valoraciones`; puntuación entera de 1 a 5 y comentario opcional de hasta 500 caracteres; una valoración por cliente y producto aunque lo compre varias veces; compra confirmada = pedido PAGADO (`ConsultaComprasUseCase`, puerto de entrada nuevo de `pedidos`); sin compra responde 403 `PRODUCT_NOT_PURCHASED`; el GET devuelve las valoraciones sin fecha ni orden garantizado.
-- **Fuera de alcance:** rellenar `valoracion` y `numValoraciones` del catálogo (HU7) y del detalle (HU8), que siguen `PENDIENTE DE DECIDIR (equipo)`; será una task aparte.
+- **Valoración en el catálogo:** `valoracion` y `numValoraciones` del catálogo (HU7) y del detalle (HU8) se rellenan en la T415 (AB#415, HU13-CP24 a CP28), que estaba fuera del alcance de las T369 a T371.
 - **Valoraciones simultáneas (HU13-CP05):** si dos peticiones del mismo cliente pasan a la vez la comprobación de duplicado, el índice único rechaza la segunda y el adaptador la traduce a `ValoracionDuplicadaException` (409, no 500).
 - **Seguridad:** `POST /api/products/*/valoraciones` tiene su propia regla en `SecurityConfig` (solo CLIENTE, con CSRF); el GET queda cubierto por `GET /api/products/**` (HU8). Los servicios llevan `@PreAuthorize`: `SOLO_CLIENTE_PROPIO_EN_COMANDO` para valorar, `SOLO_CLIENTE_PROPIO` para consultar compras y `SOLO_CLIENTE` para consultar valoraciones.
 - **Ciclos sin rojo real:** HU13-CP12 (el `@PreAuthorize` se puso con el servicio, regla 7 del CLAUDE.md) y la parte de seguridad de HU13-CP17 (la cubría ya la regla del catálogo).
 - **Clases de test nuevas**, acordadas con el equipo: `ValoracionTest`, `ValoracionMongoAdapterTest`, `ConsultaComprasServiceTest`, `ValoracionProductosServiceTest`, `SeguridadValoracionesServiceTest`, `ClienteEnSesionAdapterTest` (de valoraciones), `ComprasAdapterTest`, `ValoracionesConfigTest`, `ValoracionControllerTest` y `ConsultaValoracionesServiceTest`. **Tests en clases que ya existían** (módulo `pedidos`): `SeguridadPedidosServiceTest`, `PedidoMongoAdapterTest` y `PedidosConfigTest`.
 - **HU13-CP18 a CP23 (Sprint 2, frontend):** casos propuestos en las tasks AB#368 (consulta de las valoraciones) y AB#367 (vista para valorar), desarrollados con TDD; pendientes de confirmar con el equipo y de añadir a la HU13 en Azure Boards. Se valora desde el detalle del producto; la media y el número del detalle salen de la lista porque el backend aún no rellena `valoracion` ni `numValoraciones` (decisión del equipo). Los tests de la HU8 que usan `responderCon` (`ProductDetailPage.test.jsx`) responden también con la lista vacía, sin cambiar lo que comprueban. Detalle en `frontend/docs/hu13-valoraciones.md`.
+- **HU13-CP24 a CP28 (T415, AB#415):** casos propuestos, pendientes de confirmar con el equipo y de añadir a la HU13 en Azure Boards. Al guardar una valoración, el módulo de valoraciones calcula la media con todas las valoraciones del producto y se la pasa a productos por su puerto de entrada `ValoracionesProductoUseCase`, que la guarda en `valoracionMedia` y `numeroValoraciones` (decisión del equipo: recalcular desde todas las valoraciones es más simple que actualizar la media de forma incremental y se corrige sola; si dos clientes valoran a la vez el mismo producto, el último en escribir puede no contar la del otro hasta la siguiente valoración, riesgo asumido). El catálogo filtra y ordena por la media (HU7-CP15, modificado). Al modificar un producto se conservan las valoraciones guardadas. Se ajustaron sin cambiar lo que comprueban los tests que construyen `DetalleProductoCatalogo` (HU8-CP09, HU8-CP13 a CP15) y los comentarios de HU7-CP16 y HU8-CP13. Clases de test nuevas, acordadas con el equipo: `ValoracionesProductoServiceTest` y `ProductosAdapterTest` (de valoraciones).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1863,6 +1869,23 @@ Notas:
 | HU13-CP23 | `ProductDetailPage.test.jsx` | `HU13-CP23: si no ha comprado el producto se le avisa y el formulario sigue ahí` | Frontend · página | AB#367 | PR #191 | 🔍 |
 | HU13-CP23 | `ProductDetailPage.test.jsx` | `HU13-CP23: si ya lo había valorado se le avisa` | Frontend · página | AB#367 | PR #191 | 🔍 |
 | HU13-CP23 | `ProductDetailPage.test.jsx` | `HU13-CP23: si falla el envío avisa y conserva lo escrito para reintentar` | Frontend · página | AB#367 | PR #191 | 🔍 |
+| HU13-CP24 | `ProductoMongoAdapterTest` | `guardaLaMediaYElNumeroDeValoraciones` | Infraestructura | AB#415 | PR #195 | 🔍 |
+| HU13-CP24 | `ProductoMongoAdapterTest` | `unaActualizacionNuevaSustituyeLaMediaYElNumero` | Infraestructura | AB#415 | PR #195 | 🔍 |
+| HU13-CP25 | `ProductoTest` | `unProductoSinValoracionesNoTieneMedia` | Dominio | AB#415 | PR #195 | 🔍 |
+| HU13-CP25 | `ProductoTest` | `lasCopiasConservanLaMediaYElNumero` | Dominio | AB#415 | PR #195 | 🔍 |
+| HU13-CP25 | `ProductoMongoAdapterTest` | `alLeerElProductoTraeSuMediaYSuNumero` | Infraestructura | AB#415 | PR #195 | 🔍 |
+| HU13-CP25 | `ProductoMongoAdapterTest` | `modificarElProductoConservaSuMediaYSuNumero` | Infraestructura | AB#415 | PR #195 | 🔍 |
+| HU13-CP26 | `CatalogoProductosServiceTest` | `elDetalleLlevaSuMediaYSuNumeroDeValoraciones` | Aplicación | AB#415 | PR #195 | 🔍 |
+| HU13-CP26 | `CatalogoControllerTest` | `elCatalogoDevuelveLaMediaYElNumeroDeValoraciones` | Infraestructura | AB#415 | PR #195 | 🔍 |
+| HU13-CP26 | `CatalogoControllerTest` | `elDetalleDevuelveLaMediaYElNumeroDeValoraciones` | Infraestructura | AB#415 | PR #195 | 🔍 |
+| HU13-CP27 | `ValoracionesProductoServiceTest` | `actualizarLaValoracionGuardaLaMediaYElNumero` | Aplicación | AB#415 | PR #195 | 🔍 |
+| HU13-CP27 | `SeguridadProductosServiceTest` | `unClienteActualizaLaValoracionDelProducto` | Aplicación | AB#415 | PR #195 | 🔍 |
+| HU13-CP27 | `SeguridadProductosServiceTest` | `unVendedorNoCambiaLaValoracion` | Aplicación | AB#415 | PR #195 | 🔍 |
+| HU13-CP27 | `SeguridadProductosServiceTest` | `unAdministradorNoCambiaLaValoracion` | Aplicación | AB#415 | PR #195 | 🔍 |
+| HU13-CP27 | `SeguridadProductosServiceTest` | `sinSesionNoSeCambiaLaValoracion` | Aplicación | AB#415 | PR #195 | 🔍 |
+| HU13-CP28 | `ValoracionProductosServiceTest` | `alValorarElProductoRecibeLaMediaYElNumero` | Aplicación | AB#415 | PR #195 | 🔍 |
+| HU13-CP28 | `ValoracionProductosServiceTest` | `siLaValoracionNoSeGuardaElProductoNoCambia` | Aplicación | AB#415 | PR #195 | 🔍 |
+| HU13-CP28 | `ProductosAdapterTest` | `laMediaYElNumeroSeLePasanAlModuloDeProductos` | Infraestructura | AB#415 | PR #195 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `ValoracionTest`: `valoraciones/domain/model/` (JUnit, sin Spring)
@@ -3227,7 +3250,7 @@ Tests que no validan una HU concreta.
 | `MetodosPagoConfigTest` | `losDatosDePagoSeCifranConLaClaveConfigurada` | Que los datos de pago se cifran con la clave de `esibuy.pagos.clave-cifrado`, que en los tests pone `MongoTestcontainersConfig` (HU6; AB#271, PR #148) |
 | `CarritoConfigTest` | `elContextoConectaLasPiezasDelCarrito` | Que Spring conecta el servicio del carrito con su adaptador de MongoDB, los productos y los usuarios (HU9; AB#385, PR #162) |
 | `PedidosConfigTest` | `elContextoConectaLasPiezasDeLosPedidos` | Que Spring conecta la realización de pedidos con su repositorio, el contador y los adaptadores hacia usuarios, carrito, métodos de pago, direcciones y productos (HU10; AB#381, PR #166); y la consulta de compras de HU13 (AB#370, PR #179) |
-| `ValoracionesConfigTest` | `elContextoConectaLasPiezasDeLasValoraciones` | Que Spring conecta la valoración y la consulta de valoraciones con su adaptador de MongoDB y los adaptadores hacia usuarios y pedidos (HU13; AB#370 y AB#371, PR #179) |
+| `ValoracionesConfigTest` | `elContextoConectaLasPiezasDeLasValoraciones` | Que Spring conecta la valoración y la consulta de valoraciones con su adaptador de MongoDB y los adaptadores hacia usuarios y pedidos (HU13; AB#370 y AB#371, PR #179), y hacia productos (AB#415, PR #195) |
 | `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |
 | `SecurityConfigTest` | `unaPeticionRecibeElTokenCsrfEnUnaCookie` | Que cualquier respuesta, aunque sea un 401, entrega el token CSRF en la cookie `XSRF-TOKEN` sin `HttpOnly` (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostSinTokenCsrfSeRechaza` | Que un `POST` sin token CSRF se rechaza con 403 (AB#230, PR #67) |
@@ -3257,5 +3280,6 @@ Tests que no validan una HU concreta.
 | `InicializadorColeccionesTest` | `creaLosIndicesDeLasAnotaciones` | Que también crea los índices de las anotaciones de los `@Document` (email único en `usuarios`) (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `sesionesYTokensCaducan` | Índices TTL de `expiresAt` en `sesiones` y `tokens_seguridad` (AB#210, PR #43) |
 | `ProductosConfigTest` | `elContextoConectaElAnalisisDeImagenesConVirusTotal` | Que Spring conecta el análisis antivirus de las imágenes (`AnalisisImagenPort`) con `VirusTotalAdapter`, con una API key falsa (HU31; AB#397, PR #189) |
+| `ProductosConfigTest` | `elContextoConectaLaActualizacionDeLaValoracion` | Que Spring conecta la actualización de la valoración de los productos (`ValoracionesProductoUseCase`) con `ValoracionesProductoService` (HU13; AB#415, PR #195) |
 
 `InicializadorColeccionesTest` está en `shared/infrastructure/config/` y usa Testcontainers. HU36 (crear la base de datos) no tiene casos de prueba en Azure Boards, por eso sus tests están en esta sección.

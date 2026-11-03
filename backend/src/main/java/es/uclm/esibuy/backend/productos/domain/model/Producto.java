@@ -30,10 +30,21 @@ public class Producto {
     private final boolean disponible;
     private final Descuento descuento;
     private final Descuento descuentoPremium;
+    // Media y número de valoraciones (HU13): los calcula el módulo de valoraciones; sin valoraciones, null y 0
+    private final Double valoracionMedia;
+    private final int numeroValoraciones;
 
+    // Producto sin valoraciones: el alta, la modificación del vendedor y los tests
     public Producto(String id, String vendedorId, String nombre, String descripcion, BigDecimal precio,
             int stock, String categoriaId, String imagen, boolean disponible, Descuento descuento,
             Descuento descuentoPremium) {
+        this(id, vendedorId, nombre, descripcion, precio, stock, categoriaId, imagen, disponible, descuento,
+                descuentoPremium, null, 0);
+    }
+
+    public Producto(String id, String vendedorId, String nombre, String descripcion, BigDecimal precio,
+            int stock, String categoriaId, String imagen, boolean disponible, Descuento descuento,
+            Descuento descuentoPremium, Double valoracionMedia, int numeroValoraciones) {
         this.id = id;
         this.vendedorId = exigirTexto(vendedorId, "El vendedor es obligatorio");
         this.nombre = exigirNombre(nombre);
@@ -45,6 +56,8 @@ public class Producto {
         this.disponible = disponible;
         this.descuento = exigirNoNulo(descuento, "El descuento es obligatorio");
         this.descuentoPremium = exigirNoNulo(descuentoPremium, "El descuento premium es obligatorio");
+        this.valoracionMedia = valoracionMedia;
+        this.numeroValoraciones = numeroValoraciones;
     }
 
     // Se guarda sin espacios en los extremos: así el índice único (vendedorId, nombre) trata " Teclado" y
@@ -157,6 +170,14 @@ public class Producto {
         return descuentoPremium;
     }
 
+    public Double getValoracionMedia() {
+        return valoracionMedia;
+    }
+
+    public int getNumeroValoraciones() {
+        return numeroValoraciones;
+    }
+
     /**
      * Descuento que se aplica al cliente (HU8): el premium si el cliente es premium y lo tiene activo; si no, el
      * general. Puede ser un descuento inactivo (sin descuento).
@@ -171,7 +192,7 @@ public class Producto {
      */
     public Producto conDisponibilidad(boolean nuevaDisponibilidad) {
         return new Producto(id, vendedorId, nombre, descripcion, precio, stock, categoriaId, imagen,
-                nuevaDisponibilidad, descuento, descuentoPremium);
+                nuevaDisponibilidad, descuento, descuentoPremium, valoracionMedia, numeroValoraciones);
     }
 
     /**
@@ -180,7 +201,7 @@ public class Producto {
      */
     public Producto sinImagen() {
         return new Producto(id, vendedorId, nombre, descripcion, precio, stock, categoriaId, "", disponible,
-                descuento, descuentoPremium);
+                descuento, descuentoPremium, valoracionMedia, numeroValoraciones);
     }
 
     /**

@@ -5,10 +5,8 @@ import java.math.BigDecimal;
 import es.uclm.esibuy.backend.productos.application.port.in.DetalleProductoCatalogo;
 
 /**
- * Detalle de un producto del catálogo para el cliente (HU8), con su vendedor y el descuento que le corresponde.
- *
- * <p>PENDIENTE DE DECIDIR (equipo): {@code valoracion} y {@code numValoraciones} se conectarán con las
- * valoraciones de HU13; hasta entonces valen {@code null} y 0.
+ * Detalle de un producto del catálogo para el cliente (HU8), con su vendedor, el descuento que le corresponde y la
+ * media y el número de sus valoraciones (HU13; {@code null} y 0 si no tiene ninguna).
  */
 public record DetalleProductoCatalogoResponse(
         String id,
@@ -50,8 +48,8 @@ public record DetalleProductoCatalogoResponse(
                 detalle.precioFinal(),
                 detalle.stock(),
                 detalle.disponible(),
-                null,
-                0
+                detalle.valoracion(),
+                detalle.numValoraciones()
         );
     }
 }

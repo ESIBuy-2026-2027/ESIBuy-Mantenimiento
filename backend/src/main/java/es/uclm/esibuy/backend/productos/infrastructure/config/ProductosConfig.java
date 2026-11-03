@@ -15,6 +15,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.ConteoProductosUseCa
 import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.SupervisionProductosUseCase;
+import es.uclm.esibuy.backend.productos.application.port.in.ValoracionesProductoUseCase;
 import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
@@ -25,6 +26,7 @@ import es.uclm.esibuy.backend.productos.application.service.ConteoProductosServi
 import es.uclm.esibuy.backend.productos.application.service.GestionProductosService;
 import es.uclm.esibuy.backend.productos.application.service.ListadoProductosService;
 import es.uclm.esibuy.backend.productos.application.service.SupervisionProductosService;
+import es.uclm.esibuy.backend.productos.application.service.ValoracionesProductoService;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.antivirus.VirusTotalAdapter;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence.ProductoDocumentMapper;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence.ProductoMongoAdapter;
@@ -85,6 +87,12 @@ public class ProductosConfig {
     @Bean
     ExistenciasProductosUseCase existenciasProductosUseCase(ProductoRepositoryPort productoRepositoryPort) {
         return new ExistenciasProductosService(productoRepositoryPort);
+    }
+
+    // HU13: el módulo de valoraciones deja aquí la media y el número de valoraciones de cada producto
+    @Bean
+    ValoracionesProductoUseCase valoracionesProductoUseCase(ProductoRepositoryPort productoRepositoryPort) {
+        return new ValoracionesProductoService(productoRepositoryPort);
     }
 
     @Bean
