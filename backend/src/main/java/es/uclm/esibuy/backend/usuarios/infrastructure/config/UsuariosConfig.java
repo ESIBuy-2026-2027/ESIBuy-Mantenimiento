@@ -141,7 +141,7 @@ public class UsuariosConfig {
                 codigoRecuperacionRepositoryPort, generadorCodigoPort, envioEmailPort, reloj);
     }
 
-    // HU23 (T206): Spring Boot añade este filtro a cada petición e invalida la sesión de las cuentas desactivadas
+    // HU23 (T206): Spring Boot añade este filtro a cada petición e invalida la sesión de las cuentas bloqueadas
     @Bean
     CuentaActivaFilter cuentaActivaFilter(AutenticacionUseCase autenticacionUseCase) {
         return new CuentaActivaFilter(autenticacionUseCase);

@@ -8,7 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
-import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.AutobloqueoNoPermitidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException;
@@ -25,7 +25,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 /**
  * Implementa la gestión de cuentas por el administrador. Solo habla con el exterior a través del
- * puerto de salida del repositorio; la regla de qué significa activar o desactivar vive en {@link Usuario}.
+ * puerto de salida del repositorio; la regla de qué significa activar o bloquear vive en {@link Usuario}.
  * El reloj se inyecta para fijar en los tests la fecha con la que se calcula la mayoría de edad.
  */
 public class AdministracionUsuariosService implements AdministracionUsuariosUseCase {
@@ -88,16 +88,16 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
 
     @PreAuthorize(Permisos.SOLO_ADMINISTRADOR_PROPIO)
     @Override
-    public Usuario desactivar(String usuarioId, String emailAdministrador) {
+    public Usuario bloquear(String usuarioId, String emailAdministrador) {
         Usuario usuario = buscar(usuarioId);
         if (usuario.getEmail().valor().equalsIgnoreCase(emailAdministrador)) {
-            throw new AutodesactivacionNoPermitidaException("Un administrador no puede desactivar su propia cuenta");
+            throw new AutobloqueoNoPermitidoException("Un administrador no puede bloquear su propia cuenta");
         }
         if (usuario.getRol() == Rol.ADMINISTRADOR && usuario.estaActivo()
                 && usuarioRepository.contarAdministradoresActivos() <= 1) {
-            throw new UltimoAdministradorActivoException("No se puede desactivar al último administrador activo");
+            throw new UltimoAdministradorActivoException("No se puede bloquear al último administrador activo");
         }
-        usuario.desactivar();
+        usuario.bloquear();
         usuarioRepository.guardar(usuario);
         return usuario;
     }
@@ -111,12 +111,12 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
         return vendedor;
     }
 
-    // Un vendedor nunca es el administrador en sesión ni otro administrador: no aplican las reglas de desactivar.
+    // Un vendedor nunca es el administrador en sesión ni otro administrador: no aplican las reglas de bloquear.
     @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
     @Override
-    public Usuario desactivarVendedor(String usuarioId) {
+    public Usuario bloquearVendedor(String usuarioId) {
         Usuario vendedor = consultarVendedor(usuarioId);
-        vendedor.desactivar();
+        vendedor.bloquear();
         usuarioRepository.guardar(vendedor);
         return vendedor;
     }

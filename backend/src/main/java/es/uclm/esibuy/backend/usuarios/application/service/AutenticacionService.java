@@ -18,8 +18,8 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.BloqueoPorIntentosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
@@ -64,7 +64,7 @@ public class AutenticacionService implements AutenticacionUseCase {
 
         Instant ahora = reloj.instant();
         if (usuario.tieneBloqueoPorIntentos(ahora)) {
-            throw new CuentaBloqueadaException("Demasiados intentos. Inténtalo más tarde");
+            throw new BloqueoPorIntentosException("Demasiados intentos. Inténtalo más tarde");
         }
 
         if (!hashContrasena.coincide(comando.password(), usuario.getPasswordHash())) {
@@ -78,7 +78,7 @@ public class AutenticacionService implements AutenticacionUseCase {
         }
 
         if (!usuario.estaActivo()) {
-            throw new CuentaDesactivadaException("Esta cuenta está desactivada"); // <- No es demasiado verboso porque para llegar a este login necesitas haber pasado la contraseña
+            throw new CuentaBloqueadaException("Esta cuenta está bloqueada"); // <- No es demasiado verboso porque para llegar a este login necesitas haber pasado la contraseña
         }
 
         String codigo = generadorCodigo.generar();

@@ -6,7 +6,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
  * Casos de uso con los que el administrador gestiona las cuentas de los usuarios.
  *
  * <p>Agrupa las operaciones de un mismo actor con un mismo propósito (CLAUDE.md): de momento,
- * activar una cuenta (HU24), consultar su ficha (HU20) y la de un vendedor (HU26), desactivarla (HU23)
+ * activar una cuenta (HU24), consultar su ficha (HU20) y la de un vendedor (HU26), bloquearla (HU23)
  * y editar sus datos (HU22).
  */
 public interface AdministracionUsuariosUseCase {
@@ -52,13 +52,13 @@ public interface AdministracionUsuariosUseCase {
     Usuario editar(String usuarioId, EditarUsuarioCommand comando);
 
     /**
-     * Desactiva la cuenta del usuario y la devuelve ya desactivada.
+     * Bloquea la cuenta del usuario y la devuelve ya bloqueada.
      *
-     * @param usuarioId          id del usuario que se quiere desactivar
+     * @param usuarioId          id del usuario que se quiere bloquear
      * @param emailAdministrador email del administrador que hace la petición
      * @throws es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException si no existe
      */
-    Usuario desactivar(String usuarioId, String emailAdministrador);
+    Usuario bloquear(String usuarioId, String emailAdministrador);
 
     /**
      * Activa la cuenta de un vendedor desde su supervisión (HU21) y la devuelve ya activada.
@@ -69,12 +69,12 @@ public interface AdministracionUsuariosUseCase {
     Usuario activarVendedor(String usuarioId);
 
     /**
-     * Desactiva la cuenta de un vendedor desde su supervisión (HU21) y la devuelve ya desactivada.
+     * Bloquea la cuenta de un vendedor desde su supervisión (HU21) y la devuelve ya bloqueada.
      *
      * @throws es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException si no existe
      *         o no es un vendedor
      */
-    Usuario desactivarVendedor(String usuarioId);
+    Usuario bloquearVendedor(String usuarioId);
 
     /**
      * Elimina físicamente la cuenta de un administrador (HU37).
@@ -83,7 +83,7 @@ public interface AdministracionUsuariosUseCase {
      * @param emailAdministrador email del administrador que hace la petición
      * @throws es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoException si no existe
      *         o no es un administrador
-     * @throws es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException si intenta eliminarse a sí mismo
+     * @throws es.uclm.esibuy.backend.usuarios.domain.exception.AutobloqueoNoPermitidoException si intenta eliminarse a sí mismo
      * @throws es.uclm.esibuy.backend.usuarios.domain.exception.UltimoAdministradorActivoException si es el último administrador activo
      */
     void eliminarAdministrador(String usuarioId, String emailAdministrador);

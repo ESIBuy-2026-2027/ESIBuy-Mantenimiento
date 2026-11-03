@@ -26,13 +26,13 @@ import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoExcepti
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.usuarios.application.port.out.exception.EnvioEmailException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AuthenticatorYaDadoDeAltaException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.AutodesactivacionNoPermitidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.AutobloqueoNoPermitidoException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.BloqueoPorIntentosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYNombreComercialYaRegistradosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.DniYaRegistradoException;
@@ -150,15 +150,15 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("Credenciales Incorrectas");
     }
 
-    @ExceptionHandler(CuentaBloqueadaException.class)
+    @ExceptionHandler(BloqueoPorIntentosException.class)
     @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
-    public RespuestaError cuentaBloqueada() {
+    public RespuestaError bloqueoPorIntentos() {
         return new RespuestaError("Demasiados intentos. Inténtalo más tarde");
     }
 
-    @ExceptionHandler(CuentaDesactivadaException.class)
+    @ExceptionHandler(CuentaBloqueadaException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public RespuestaError cuentaDesactivada() {
+    public RespuestaError cuentaBloqueada() {
         return new RespuestaError("Esta cuenta está bloqueada", "ACCOUNT_BLOCKED");
     }
 
@@ -181,7 +181,7 @@ public class ManejadorGlobalErrores {
     }
 
     // Sin @ResponseStatus Spring respondería 200 y el frontend lo tomaría por un login correcto.
-    // 403 + code, como la cuenta desactivada: el frontend elige su mensaje por el code (T236).
+    // 403 + code, como la cuenta bloqueada: el frontend elige su mensaje por el code (T236).
     @ExceptionHandler(CuentaPendienteException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public RespuestaError cuentaPendiente() {
@@ -203,11 +203,11 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("El usuario ya tiene Authenticator", "AUTHENTICATOR_ALREADY_ENROLLED");
     }
 
-    // 409 + code al desactivar (HU23): códigos acordados con el frontend (frontend/docs/hu23-desactivar-usuario.md).
-    @ExceptionHandler(AutodesactivacionNoPermitidaException.class)
+    // 409 + code al bloquear (HU23): códigos acordados con el frontend (frontend/docs/hu23-desactivar-usuario.md).
+    @ExceptionHandler(AutobloqueoNoPermitidoException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public RespuestaError autodesactivacionNoPermitida() {
-        return new RespuestaError("No puedes desactivar tu propia cuenta", "CANNOT_DEACTIVATE_SELF");
+    public RespuestaError autobloqueoNoPermitido() {
+        return new RespuestaError("No puedes bloquear tu propia cuenta", "CANNOT_BLOCK_SELF");
     }
 
     // 409 + code al eliminar (HU37): código esperado por el frontend (CANNOT_DELETE_SELF).
@@ -220,7 +220,7 @@ public class ManejadorGlobalErrores {
     @ExceptionHandler(UltimoAdministradorActivoException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError ultimoAdministradorActivo() {
-        return new RespuestaError("No se puede desactivar al último administrador activo", "LAST_ACTIVE_ADMIN");
+        return new RespuestaError("No se puede bloquear al último administrador activo", "LAST_ACTIVE_ADMIN");
     }
 
     // Código común de los 400 de validación de toda la API: datos de dominio no válidos, un @Valid que falla y un

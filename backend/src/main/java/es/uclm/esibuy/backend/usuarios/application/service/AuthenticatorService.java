@@ -16,7 +16,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPor
 import es.uclm.esibuy.backend.usuarios.domain.exception.AuthenticatorYaDadoDeAltaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.BloqueoPorIntentosException;
 import es.uclm.esibuy.backend.usuarios.domain.model.FactorAutenticacion;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
@@ -85,7 +85,7 @@ public class AuthenticatorService implements AuthenticatorUseCase {
         // Con la cuenta bloqueada por intentos ni siquiera se calcula el código, como en el paso 1
         Instant ahora = reloj.instant();
         if (usuario.tieneBloqueoPorIntentos(ahora)) {
-            throw new CuentaBloqueadaException("Demasiados intentos. Inténtalo más tarde");
+            throw new BloqueoPorIntentosException("Demasiados intentos. Inténtalo más tarde");
         }
 
         FactorAutenticacion factor = factorAutenticacionRepository.buscarPorUsuario(usuario.getId())

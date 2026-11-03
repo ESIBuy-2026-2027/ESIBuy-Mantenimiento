@@ -13,8 +13,8 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.exception.EnvioEmail
 import es.uclm.esibuy.backend.usuarios.domain.exception.AuthenticatorYaDadoDeAltaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.BloqueoPorIntentosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaDesactivadaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
@@ -126,7 +126,7 @@ class AutenticacionControllerTest {
     void cuentaBloqueadaDevuelve429() throws Exception {
         // El servicio la lanza durante los 15 minutos de bloqueo tras 5 intentos fallidos (T19)
         when(autenticacion.iniciarSesion(any()))
-                .thenThrow(new CuentaBloqueadaException("Demasiados intentos. Inténtalo más tarde"));
+                .thenThrow(new BloqueoPorIntentosException("Demasiados intentos. Inténtalo más tarde"));
 
         mockMvc.perform(post(URL_LOGIN)
                         .with(csrf())
@@ -140,9 +140,9 @@ class AutenticacionControllerTest {
     @DisplayName("HU2-CP28: una cuenta bloqueada por un administrador devuelve 403 con el código ACCOUNT_BLOCKED")
     void cuentaBloqueadaPorAdministradorDevuelve403ConCodigo() throws Exception {
         // El servicio solo la lanza cuando la contraseña es correcta (T19). Desde el Sprint 2 las cuentas
-        // se bloquean en lugar de desactivarse: el frontend espera ACCOUNT_BLOCKED (T245, loginErrors.js)
+        // se bloquean (antes se desactivaban): el frontend espera ACCOUNT_BLOCKED (T245, loginErrors.js)
         when(autenticacion.iniciarSesion(any()))
-                .thenThrow(new CuentaDesactivadaException("Esta cuenta está desactivada"));
+                .thenThrow(new CuentaBloqueadaException("Esta cuenta está bloqueada"));
 
         mockMvc.perform(post(URL_LOGIN)
                         .with(csrf())
@@ -155,7 +155,7 @@ class AutenticacionControllerTest {
     @Test
     @DisplayName("HU2-CP16: una cuenta pendiente de verificación devuelve 403 con el código ACCOUNT_PENDING")
     void cuentaPendienteDevuelve403ConCodigo() throws Exception {
-        // El servicio solo la lanza cuando la contraseña es correcta (T235), igual que la cuenta desactivada
+        // El servicio solo la lanza cuando la contraseña es correcta (T235), igual que la cuenta bloqueada
         when(autenticacion.iniciarSesion(any()))
                 .thenThrow(new CuentaPendienteException("La cuenta está pendiente de verificación."));
 
