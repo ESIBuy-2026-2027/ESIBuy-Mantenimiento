@@ -2,6 +2,7 @@ import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Button, makeStyles, tokens } from '@fluentui/react-components'
 import { Delete20Regular, Search20Regular } from '@fluentui/react-icons'
+import { deleteAdminCategory } from '../../api/adminCategories'
 import CategoryDetailDialog from './CategoryDetailDialog'
 import StatusConfirmDialog from './StatusConfirmDialog'
 
@@ -14,11 +15,25 @@ const useStyles = makeStyles({
 })
 
 // Acciones de una fila de la tabla de categorías: la lupa que abre su ficha de solo lectura (HU39) y la papelera
-// para eliminarla (HU42), que pide confirmación.
-export default function CategoryRowActions({ category }) {
+// para eliminarla (HU42), que pide confirmación. `onResult` recibe el aviso que debe ver el administrador;
+// `onChanged`, que la lista se actualice.
+export default function CategoryRowActions({ category, onResult, onChanged }) {
   const styles = useStyles()
   const [dialogo, setDialogo] = useState(null)
+  const [eliminando, setEliminando] = useState(false)
   const cerrar = () => setDialogo(null)
+
+  const eliminar = async () => {
+    setEliminando(true)
+    try {
+      await deleteAdminCategory(category.id)
+      onResult({ intent: 'success', texto: `${category.nombre} se ha eliminado.` })
+      onChanged()
+    } finally {
+      setEliminando(false)
+      cerrar()
+    }
+  }
 
   return (
     <div className={styles.actions}>
@@ -43,8 +58,8 @@ export default function CategoryRowActions({ category }) {
           titulo="Eliminar categoría"
           pregunta={`¿Seguro que quieres eliminar la categoría ${category.nombre}? Esta acción no se puede deshacer.`}
           confirmar="Eliminar"
-          enviando={false}
-          onConfirm={cerrar}
+          enviando={eliminando}
+          onConfirm={eliminar}
           onCancel={cerrar}
         />
       )}
@@ -54,9 +69,12 @@ export default function CategoryRowActions({ category }) {
 
 CategoryRowActions.propTypes = {
   category: PropTypes.shape({
+    id: PropTypes.string.isRequired,
     nombre: PropTypes.string.isRequired,
     descripcion: PropTypes.string.isRequired,
     estado: PropTypes.string.isRequired,
     numeroProductos: PropTypes.number.isRequired,
   }).isRequired,
+  onResult: PropTypes.func.isRequired,
+  onChanged: PropTypes.func.isRequired,
 }

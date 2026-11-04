@@ -23,6 +23,7 @@ export default function AdminCategoriesPage() {
   const [status, setStatus] = useState('')
   const [sort, setSort] = useState('name')
   const [order, setOrder] = useState('asc')
+  const [feedback, setFeedback] = useState(null)
   const { data, failed, retry } = useApiQuery(getAdminCategories)
 
   const categories = useMemo(
@@ -36,7 +37,9 @@ export default function AdminCategoriesPage() {
     setStatus('')
   }
 
-  const renderActions = (category) => <CategoryRowActions category={category} />
+  const renderActions = (category) => (
+    <CategoryRowActions category={category} onResult={setFeedback} onChanged={retry} />
+  )
 
   return (
     <main className={styles.page}>
@@ -70,6 +73,12 @@ export default function AdminCategoriesPage() {
             onOrderChange={setOrder}
           />
         </UsersFilters>
+      )}
+
+      {feedback && (
+        <MessageBar intent={feedback.intent}>
+          <MessageBarBody>{feedback.texto}</MessageBarBody>
+        </MessageBar>
       )}
 
       {failed && (
