@@ -121,6 +121,19 @@ describe('AdminCategoriesPage (HU39): ficha de la categoría', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
+  it('HU40-CP14: no se puede crear una categoría repetida, aunque cambien las mayúsculas o las tildes', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.click(screen.getByRole('button', { name: 'Nueva categoría' }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Nueva categoría' })
+    await user.type(within(dialogo).getByRole('textbox', { name: /nombre/i }), 'TECNOLOGIA')
+    await user.click(within(dialogo).getByRole('button', { name: 'Crear' }))
+
+    expect(await within(dialogo).findByText('Ya existe una categoría con ese nombre.')).toBeInTheDocument()
+    expect(filasDeDatos()).toHaveLength(8)
+  })
+
   // Eliminar llega con la HU42 (la papelera de cada fila) y crear con la HU40; editar es de la HU41.
   it('HU39-CP11: la vista no ofrece editar categorías', async () => {
     await abrirListado()

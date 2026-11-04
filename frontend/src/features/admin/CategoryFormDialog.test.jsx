@@ -111,3 +111,43 @@ describe('CategoryFormDialog (HU40): crear', () => {
     expect(screen.getByRole('button', { name: 'Cancelar' })).toBeDisabled()
   })
 })
+
+const REPETIDO = 'Ya existe una categoría con ese nombre.'
+
+describe('CategoryFormDialog (HU40): errores al crear', () => {
+  it('HU40-CP14: si el nombre ya existe lo marca en el campo, no cierra y al cambiarlo desaparece el aviso', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/admin/categorias', () =>
+        HttpResponse.json({ code: 'CATEGORY_NAME_ALREADY_EXISTS' }, { status: 409 }),
+      ),
+    )
+    const { onSaved, onClose } = await renderFormulario()
+    const nombre = screen.getByRole('textbox', { name: /nombre/i })
+
+    await user.type(nombre, 'hogar')
+    await user.click(screen.getByRole('button', { name: 'Crear' }))
+
+    expect(await screen.findByText(REPETIDO)).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Nueva categoría' })).toBeInTheDocument()
+    expect(onSaved).not.toHaveBeenCalled()
+    expect(onClose).not.toHaveBeenCalled()
+
+    await user.type(nombre, ' y jardín')
+    expect(screen.queryByText(REPETIDO)).not.toBeInTheDocument()
+  })
+
+  it('HU40-CP14: cualquier otro error avisa con un mensaje genérico y deja el formulario abierto', async () => {
+    const user = userEvent.setup()
+    server.use(http.post('/api/admin/categorias', () => new HttpResponse(null, { status: 500 })))
+    const { onSaved } = await renderFormulario()
+
+    await user.type(screen.getByRole('textbox', { name: /nombre/i }), 'Jardín')
+    await user.click(screen.getByRole('button', { name: 'Crear' }))
+
+    expect(await screen.findByText('No se ha podido crear la categoría. Inténtalo de nuevo.')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: /nombre/i })).toHaveValue('Jardín')
+    expect(screen.getByRole('button', { name: 'Crear' })).toBeEnabled()
+    expect(onSaved).not.toHaveBeenCalled()
+  })
+})
