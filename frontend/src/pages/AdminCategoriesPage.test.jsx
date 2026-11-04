@@ -121,11 +121,21 @@ describe('AdminCategoriesPage (HU39): ficha de la categoría', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
-  it('HU39-CP11: la vista no ofrece crear, editar ni eliminar categorías', async () => {
+  // Eliminar llega con la HU42 (la papelera de cada fila); crear y editar son de las HU40 y HU41.
+  it('HU39-CP11: la vista no ofrece crear ni editar categorías', async () => {
     await abrirListado()
 
-    expect(screen.queryByRole('button', { name: /crear|nueva|editar|eliminar|borrar/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /crear|nueva|editar/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /crear|nueva/i })).not.toBeInTheDocument()
+  })
+})
+
+describe('AdminCategoriesPage (HU42): eliminar', () => {
+  it('HU42-CP17: cada fila de la lista tiene la papelera para eliminar su categoría', async () => {
+    await abrirListado()
+
+    expect(screen.getAllByRole('button', { name: /^eliminar /i })).toHaveLength(8)
+    expect(within(filaDe('Mascotas')).getByRole('button', { name: 'Eliminar Mascotas' })).toBeInTheDocument()
   })
 })
 
