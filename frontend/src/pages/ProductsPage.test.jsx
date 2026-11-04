@@ -604,4 +604,26 @@ describe('ProductsPage (HU14): favoritos', () => {
     expect(cuerpo).toEqual({ productoId: 'p-1' })
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/)
   })
+
+  it('HU14-CP23: al añadir, se rellenan también los corazones de los productos que ya estaban en la lista del cliente', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/customer/wishlist/items', () =>
+        HttpResponse.json({
+          items: [
+            { productoId: 'p-2', addedAt: '2026-11-01T09:00:00Z' },
+            { productoId: 'p-1', addedAt: '2026-11-04T10:00:00Z' },
+          ],
+        }),
+      ),
+    )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    await user.click(screen.getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' }))
+
+    expect(await screen.findByRole('button', { name: 'Teclado mecánico está en tus favoritos' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Auriculares inalámbricos está en tus favoritos' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Añadir Monitor 27 pulgadas a favoritos' })).toBeEnabled()
+  })
 })
