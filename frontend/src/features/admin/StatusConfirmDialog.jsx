@@ -9,7 +9,8 @@ import {
   DialogTitle,
 } from '@fluentui/react-components'
 
-// Ventana de confirmación antes de cambiar el estado de un usuario o de eliminarlo (bloquear, desbloquear o eliminar).
+// Ventana de confirmación antes de cambiar el estado de un usuario o de eliminarlo (bloquear, desbloquear o eliminar),
+// y antes de eliminar una categoría (HU42).
 export default function StatusConfirmDialog({ titulo, pregunta, confirmar, enviando, onConfirm, onCancel }) {
   return (
     <Dialog open modalType="alert" onOpenChange={(_event, data) => !data.open && onCancel()}>

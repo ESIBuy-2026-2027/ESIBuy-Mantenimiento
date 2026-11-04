@@ -1,17 +1,12 @@
 import { useMemo, useState } from 'react'
 import { Button, MessageBar, MessageBarActions, MessageBarBody, Spinner, Text, Title1 } from '@fluentui/react-components'
-import {
-  ArrowLeft20Regular,
-  Search20Regular,
-  SearchInfo24Regular,
-  TagMultiple24Regular,
-} from '@fluentui/react-icons'
+import { ArrowLeft20Regular, SearchInfo24Regular, TagMultiple24Regular } from '@fluentui/react-icons'
 import { getAdminCategories } from '../api/adminCategories'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import CategoriesTable from '../features/admin/CategoriesTable'
-import CategoryDetailDialog from '../features/admin/CategoryDetailDialog'
+import CategoryRowActions from '../features/admin/CategoryRowActions'
 import SortControls from '../features/admin/SortControls'
 import UsersFilters from '../features/admin/UsersFilters'
 import { CATEGORY_SORT_OPTIONS, filterAndSortCategories } from '../features/admin/categoriesList'
@@ -21,14 +16,13 @@ import { PATHS } from '../routes/paths'
 
 // Listado de las categorías de productos (HU39): todas, también las inactivas, con su descripción, su estado y su
 // número de productos. El backend las devuelve sin paginar, así que la búsqueda, el filtro por estado y la
-// ordenación se hacen aquí. Es de solo lectura: la lupa de cada fila abre su ficha.
+// ordenación se hacen aquí. La lupa de cada fila abre su ficha y la papelera la elimina (HU42).
 export default function AdminCategoriesPage() {
   const styles = usePageStyles()
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
   const [sort, setSort] = useState('name')
   const [order, setOrder] = useState('asc')
-  const [selected, setSelected] = useState(null)
   const { data, failed, retry } = useApiQuery(getAdminCategories)
 
   const categories = useMemo(
@@ -42,15 +36,7 @@ export default function AdminCategoriesPage() {
     setStatus('')
   }
 
-  const renderActions = (category) => (
-    <Button
-      appearance="subtle"
-      icon={<Search20Regular />}
-      aria-label={`Ver información de ${category.nombre}`}
-      title="Ver información"
-      onClick={() => setSelected(category)}
-    />
-  )
+  const renderActions = (category) => <CategoryRowActions category={category} />
 
   return (
     <main className={styles.page}>
@@ -116,8 +102,6 @@ export default function AdminCategoriesPage() {
       )}
 
       {categories.length > 0 && <CategoriesTable categories={categories} renderActions={renderActions} />}
-
-      {selected && <CategoryDetailDialog category={selected} onClose={() => setSelected(null)} />}
     </main>
   )
 }
