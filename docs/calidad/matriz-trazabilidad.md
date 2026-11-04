@@ -2966,11 +2966,23 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU37-CP09 | Intentar eliminarse a sí mismo devuelve 409 con el código `CANNOT_DELETE_SELF` | Integración (capa web) | 1 | ✅ Pasa |
 | HU37-CP10 | Intentar eliminar al último administrador activo devuelve 409 con el código `LAST_ACTIVE_ADMIN` | Integración (capa web) | 1 | ✅ Pasa |
 | HU37-CP11 | Sin sesión (401), sin ser administrador (403) o sin token CSRF (403) no se puede eliminar una cuenta | Integración (capa web) | 3 | ✅ Pasa |
+| HU37-CP12 | Eliminar a un administrador desde la fila pide confirmación con su nombre y, al confirmar, lo elimina, avisa y actualiza la lista | Frontend (componente y página) | 7 | 🔍 En revisión (7, AB#338, PR pendiente) |
+| HU37-CP13 | Cancelar la confirmación no elimina nada ni avisa, en la fila y en la ficha | Frontend (componente) | 2 | 🔍 En revisión (2, AB#338, PR pendiente) |
+| HU37-CP14 | La ficha de un administrador ofrece Eliminar con la misma confirmación; al eliminar se cierra, avisa y la lista se actualiza | Frontend (componente) | 3 | 🔍 En revisión (3, AB#338, PR pendiente) |
+| HU37-CP15 | Eliminar queda deshabilitado, con su explicación, para la propia cuenta y para el último administrador activo | Frontend (componente) | 6 | 🔍 En revisión (6, AB#338, PR pendiente) |
+| HU37-CP16 | Un 409 CANNOT_DELETE_SELF o LAST_ACTIVE_ADMIN muestra su motivo y otro fallo un error genérico, sin actualizar la lista | Frontend (componente) | 4 | 🔍 En revisión (4, AB#338, PR pendiente) |
+| HU37-CP17 | Un 404 al eliminar (alguien lo borró antes) avisa con un mensaje propio, actualiza la lista y cierra la ficha | Frontend (componente) | 2 | 🔍 En revisión (2, AB#338, PR pendiente) |
+| HU37-CP18 | Solo se eliminan administradores: la fila y la ficha de clientes y vendedores no ofrecen Eliminar | Frontend (componente y página) | 7 | 🔍 En revisión (7, AB#338, PR pendiente) |
+| HU37-CP19 | Si otro administrador elimina tu cuenta, tu siguiente petición da 401 y vuelves al login con el aviso de sesión caducada | Frontend (página) | 1 | 🔍 En revisión (1, AB#338, PR pendiente) |
+| HU37-CP20 | El mock del DELETE responde como el backend: 204 a un administrador, 404 a clientes, vendedores y cuentas inexistentes, 409 con su código, 401 y 403 | Frontend (API) | 4 | 🔍 En revisión (4, AB#338, PR pendiente) |
 
 Notas:
 - **HU37-CP01 a CP06 (AB#340):** casos propuestos para la lógica de negocio del borrado físico de administradores en `AdministracionUsuariosService.eliminarAdministrador` (PR #139). Pendientes de confirmar con el equipo y de añadir a la HU37 en Azure Boards.
 - **HU37-CP07 a CP11:** casos propuestos para el endpoint `DELETE /api/admin/usuarios/{id}` en `UsuarioController` y la traducción de `AutoeliminacionNoPermitidaException` a 409 `CANNOT_DELETE_SELF` en `ManejadorGlobalErrores`, siguiendo el contrato esperado por el frontend (ver notas de `HU19-CP13 a CP19`).
 - **Sesión del administrador eliminado:** la invalidación de la sesión al borrar físicamente la cuenta ya la cubre `CuentaActivaFilter` (ver **HU23-CP10**, `usuarioInexistenteInvalidaLaSesionYDevuelve401`, PR #85): en cuanto el documento desaparece de la colección `usuarios`, cualquier petición con su sesión recibe un 401 y la sesión queda invalidada.
+- **HU37-CP12 a CP20 (frontend, T338):** casos propuestos en la T338 (AB#338) a partir de los criterios de aceptación de la HU37 (acción en la ficha y en la fila, confirmación con el nombre, propia cuenta, último administrador y sesión invalidada) y del contrato del backend, y desarrollados con TDD. Pendientes de confirmar con el equipo y de añadir a la HU37 en Azure Boards. Rama `feature/US37-T338-boton-eliminacion-administrador`.
+- **Solo administradores (T338):** el backend responde 404 al eliminar a quien no es administrador, así que la papelera y el botón de la ficha solo salen en administradores (`canDelete`); el mock del DELETE responde igual (CP18 y CP20). Los tests de eliminar de la HU19 que usaban clientes y vendedores ahora usan administradores y conservan su nombre.
+- **HU37-CP19:** pasó ya en el ciclo rojo: el 401 con sesión abierta lo cubría la HU43 (ver **HU43-CP07**). El aviso dice «Tu sesión ha caducado», sin distinguir la baja de la cuenta.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -2989,6 +3001,42 @@ Notas:
 | HU37-CP11 | `UsuarioControllerTest` | `unNoAdministradorNoPuedeEliminarCuentas` (cliente y vendedor) | Infraestructura | AB#340 | PR actual | ✅ |
 | HU37-CP11 | `UsuarioControllerTest` | `eliminarSinSesionEstaProtegido` | Infraestructura | AB#340 | PR actual | ✅ |
 | HU37-CP11 | `UsuarioControllerTest` | `eliminarSinTokenCsrfSeRechaza` | Infraestructura | AB#340 | PR actual | ✅ |
+| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: al pulsar la papelera pide confirmación con el nombre y avisa de que no se puede deshacer` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: al confirmar elimina a ese administrador, avisa y pide actualizar la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: con un nombre indicado (label), la confirmación y el aviso lo usan` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: con withText el botón muestra el texto Eliminar además del icono` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: sin withText el botón es solo un icono` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP12 | `RoleUsersList.test.jsx` | `HU37-CP12: al eliminar a un administrador desde la fila, desaparece de la lista y avisa` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP12 | `AdminUsersPage.test.jsx` | `HU37-CP12: al eliminar a un administrador desde la tabla, la fila desaparece y avisa` | Frontend · página | AB#338 | PR pendiente | 🔍 |
+| HU37-CP13 | `UserDeleteButton.test.jsx` | `HU37-CP13: al cancelar no borra nada, no avisa ni actualiza la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP13 | `UserDetailDialog.test.jsx` | `HU37-CP13: al cancelar no borra nada y la ficha sigue abierta` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP14 | `UserDetailDialog.test.jsx` | `HU37-CP14: la ficha de un administrador ofrece el botón Eliminar con texto` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP14 | `UserDetailDialog.test.jsx` | `HU37-CP14: pide confirmación con el nombre y, al confirmar, elimina, avisa, actualiza la lista y cierra la ficha` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP14 | `UserRowActions.test.jsx` | `HU37-CP14: la lupa de un administrador abre una ficha con Eliminar y, al eliminar, la cierra, avisa y actualiza la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP15 | `UserDeleteButton.test.jsx` | `HU37-CP15: la propia cuenta queda deshabilitada y explica el motivo` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP15 | `UserDeleteButton.test.jsx` | `HU37-CP15: el último administrador activo queda deshabilitado y explica el motivo` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP15 | `UserDeleteButton.test.jsx` | `HU37-CP15: si el último administrador es otro, o no se sabe, queda disponible` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP15 | `UserDetailDialog.test.jsx` | `HU37-CP15: en la ficha de la propia cuenta, Eliminar queda deshabilitado y explica el motivo` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP15 | `UserDetailDialog.test.jsx` | `HU37-CP15: en la ficha del último administrador activo, Eliminar queda deshabilitado y explica el motivo` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP15 | `RoleUsersList.test.jsx` | `HU37-CP15: la fila del administrador en sesión tiene la papelera deshabilitada y la de otro, no` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP16 | `UserDeleteButton.test.jsx` | `HU37-CP16: un 409 %s muestra su motivo y no actualiza la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP16 | `UserDeleteButton.test.jsx` | `HU37-CP16: cualquier otro fallo muestra un error genérico y no actualiza la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP16 | `UserDeleteButton.test.jsx` | `HU37-CP16: con el mock real, eliminarse a sí mismo da el motivo y no borra la cuenta` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP16 | `UserDetailDialog.test.jsx` | `HU37-CP16: un 409 desde la ficha avisa de su motivo y la ficha sigue abierta` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP17 | `UserDeleteButton.test.jsx` | `HU37-CP17: un 404 (alguien lo eliminó antes) avisa con su mensaje propio y actualiza la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP17 | `UserDetailDialog.test.jsx` | `HU37-CP17: un 404 desde la ficha avisa de que ya no existe, actualiza la lista y cierra la ficha` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP18 | `UserDetailDialog.test.jsx` | `HU37-CP18: sin canDelete (clientes y vendedores) la ficha no ofrece Eliminar` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP18 | `UserRowActions.test.jsx` | `HU37-CP18: sin canDelete (clientes y vendedores) la fila no ofrece la papelera pero sí el resto de acciones` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP18 | `UserRowActions.test.jsx` | `HU37-CP18: un vendedor tampoco tiene papelera, aunque se le dé nombre comercial` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP18 | `UserRowActions.test.jsx` | `HU37-CP18: con canDelete la fila de un administrador ofrece la papelera` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP18 | `UserRowActions.test.jsx` | `HU37-CP18: la ficha de un cliente abierta desde su fila no ofrece Eliminar` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP18 | `AdminUsersPage.test.jsx` | `HU37-CP18: la fila de un cliente no tiene papelera y la de un administrador sí` | Frontend · página | AB#338 | PR pendiente | 🔍 |
+| HU37-CP18 | `AdminSellersPage.test.jsx` | `HU37-CP18: la fila de un vendedor no ofrece eliminarlo, porque el backend solo elimina administradores` | Frontend · página | AB#338 | PR pendiente | 🔍 |
+| HU37-CP19 | `LoginFlow.test.jsx` | `HU37-CP19: si otro administrador elimina tu cuenta, tu siguiente petición da 401 y vuelves al login con el aviso` | Frontend · página | AB#338 | PR pendiente | 🔍 |
+| HU37-CP20 | `users.test.js` | `HU37-CP20: eliminar a un administrador responde 204 sin cuerpo` | Frontend · API | AB#338 | PR pendiente | 🔍 |
+| HU37-CP20 | `users.test.js` | `HU37-CP20: eliminar a %s responde 404 y no lo borra` | Frontend · API | AB#338 | PR pendiente | 🔍 |
+| HU37-CP20 | `users.test.js` | `HU37-CP20: el mock da 409 con el código al eliminar la propia cuenta` | Frontend · API | AB#338 | PR pendiente | 🔍 |
+| HU37-CP20 | `users.test.js` | `HU37-CP20: sin sesión responde 401 y con otro rol 403` | Frontend · API | AB#338 | PR pendiente | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
