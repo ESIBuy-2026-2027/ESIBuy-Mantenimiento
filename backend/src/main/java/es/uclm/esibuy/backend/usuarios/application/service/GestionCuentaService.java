@@ -4,16 +4,16 @@ import java.util.Set;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
-import es.uclm.esibuy.backend.pedidos.application.port.in.ProductosConPedidosUseCase;
-import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosVendedorUseCase;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 import es.uclm.esibuy.backend.usuarios.application.port.in.GestionCuentaUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoRecuperacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.FactorAutenticacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.PedidosVendedorPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.ProductosVendedorPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
-import es.uclm.esibuy.backend.valoraciones.application.port.in.LimpiezaValoracionesUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.out.ValoracionesProductoPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
@@ -24,16 +24,16 @@ public class GestionCuentaService implements GestionCuentaUseCase {
 
     private final UsuarioRepositoryPort usuarioRepository;
     private final HashContrasenaPort hashContrasena;
-    private final GestionProductosVendedorUseCase productos;
-    private final ProductosConPedidosUseCase consultaProductosConPedidos;
-    private final LimpiezaValoracionesUseCase valoraciones;
+    private final ProductosVendedorPort productos;
+    private final PedidosVendedorPort consultaProductosConPedidos;
+    private final ValoracionesProductoPort valoraciones;
     private final FactorAutenticacionRepositoryPort factores;
     private final CodigoVerificacionRepositoryPort codigosVerificacion;
     private final CodigoRecuperacionRepositoryPort codigosRecuperacion;
 
     public GestionCuentaService(UsuarioRepositoryPort usuarioRepository, HashContrasenaPort hashContrasena,
-            GestionProductosVendedorUseCase productos, ProductosConPedidosUseCase productosConPedidos,
-            LimpiezaValoracionesUseCase valoraciones, FactorAutenticacionRepositoryPort factores,
+            ProductosVendedorPort productos, PedidosVendedorPort productosConPedidos,
+            ValoracionesProductoPort valoraciones, FactorAutenticacionRepositoryPort factores,
             CodigoVerificacionRepositoryPort codigosVerificacion,
             CodigoRecuperacionRepositoryPort codigosRecuperacion) {
         this.usuarioRepository = usuarioRepository;
@@ -48,8 +48,8 @@ public class GestionCuentaService implements GestionCuentaUseCase {
 
     @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO)
     @Override
-    public void eliminarCuentaVendedor(String email, String password) {
-        Usuario vendedor = usuarioRepository.buscarPorCorreo(email)
+    public void eliminarCuentaVendedor(String emailVendedor, String password) {
+        Usuario vendedor = usuarioRepository.buscarPorCorreo(emailVendedor)
                 .filter(usuario -> usuario.getRol() == Rol.VENDEDOR)
                 .orElseThrow(() -> new CredencialesInvalidasException(CREDENCIALES_INVALIDAS));
         if (!hashContrasena.coincide(password, vendedor.getPasswordHash())) {

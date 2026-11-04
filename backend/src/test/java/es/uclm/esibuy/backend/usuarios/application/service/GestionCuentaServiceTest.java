@@ -18,20 +18,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import es.uclm.esibuy.backend.pedidos.application.port.in.ProductosConPedidosUseCase;
-import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosVendedorUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoRecuperacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.FactorAutenticacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.PedidosVendedorPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.ProductosVendedorPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.ValoracionesProductoPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
-import es.uclm.esibuy.backend.valoraciones.application.port.in.LimpiezaValoracionesUseCase;
 
 @ExtendWith(MockitoExtension.class)
 class GestionCuentaServiceTest {
@@ -44,11 +44,11 @@ class GestionCuentaServiceTest {
     @Mock
     private HashContrasenaPort hashContrasena;
     @Mock
-    private GestionProductosVendedorUseCase productos;
+    private ProductosVendedorPort productos;
     @Mock
-    private ProductosConPedidosUseCase productosConPedidos;
+    private PedidosVendedorPort productosConPedidos;
     @Mock
-    private LimpiezaValoracionesUseCase valoraciones;
+    private ValoracionesProductoPort valoraciones;
     @Mock
     private FactorAutenticacionRepositoryPort factores;
     @Mock

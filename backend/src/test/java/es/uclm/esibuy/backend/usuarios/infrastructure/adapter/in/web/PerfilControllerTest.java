@@ -20,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpSession;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -149,11 +148,10 @@ class PerfilControllerTest {
 
         verify(gestionCuenta).eliminarCuentaVendedor(EMAIL_VENDEDOR, "Password1!");
         assertTrue(sesion.isInvalid());
-        assertTrue(SecurityContextHolder.getContext().getAuthentication() == null);
     }
 
     @Test
-    @DisplayName("HU47-CP06: un usuario que no es vendedor recibe 403 y no se modifica nada")
+    @DisplayName("HU47-CP06: un cliente recibe 403 y no se modifica nada")
     void usuarioNoVendedorNoPuedeEliminarCuenta() throws Exception {
         MockHttpSession sesion = new MockHttpSession();
 

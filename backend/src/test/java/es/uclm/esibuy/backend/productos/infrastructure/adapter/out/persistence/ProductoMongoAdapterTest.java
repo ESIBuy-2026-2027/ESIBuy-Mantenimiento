@@ -497,6 +497,20 @@ class ProductoMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU47-CP02: listar todos los productos devuelve solo los del vendedor indicado")
+    void listarTodosPorVendedorDevuelveSoloLosDelVendedor() {
+        adapter.guardar(producto(null, 5));
+        Producto deOtroVendedor = new Producto(null, "v-2", "Ratón", "Óptico", new BigDecimal("20.00"), 2,
+                "cat-2", "https://esibuy.test/raton.png", true, Descuento.sinDescuento(), Descuento.sinDescuento());
+        adapter.guardar(deOtroVendedor);
+
+        List<Producto> productos = adapter.listarTodosPorVendedor("v-1");
+
+        assertEquals(1, productos.size());
+        assertEquals("v-1", productos.get(0).getVendedorId());
+    }
+
+    @Test
     @DisplayName("HU10-CP15: dos descuentos a la vez del último stock no lo dejan negativo")
     void dosDescuentosALaVezNoDejanElStockNegativo() throws Exception {
         String id = adapter.guardar(producto(null, 1)).getId();

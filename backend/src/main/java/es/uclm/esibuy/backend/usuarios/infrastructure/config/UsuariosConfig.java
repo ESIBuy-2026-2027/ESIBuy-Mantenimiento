@@ -23,9 +23,9 @@ import es.uclm.esibuy.backend.usuarios.application.service.AutenticacionService;
 import es.uclm.esibuy.backend.usuarios.application.service.AuthenticatorService;
 import es.uclm.esibuy.backend.usuarios.application.service.GestionPerfilService;
 import es.uclm.esibuy.backend.usuarios.application.service.GestionCuentaService;
-import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosVendedorUseCase;
-import es.uclm.esibuy.backend.pedidos.application.port.in.ProductosConPedidosUseCase;
-import es.uclm.esibuy.backend.valoraciones.application.port.in.LimpiezaValoracionesUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.out.PedidosVendedorPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.ProductosVendedorPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.ValoracionesProductoPort;
 import es.uclm.esibuy.backend.usuarios.application.service.ListadoUsuariosService;
 import es.uclm.esibuy.backend.usuarios.application.service.RecuperacionContrasenaService;
 import es.uclm.esibuy.backend.usuarios.application.service.RegistroUsuarioService;
@@ -41,6 +41,9 @@ import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.Fa
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.UsuarioDocumentMapper;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.UsuarioMongoAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.UsuarioMongoRepository;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.pedidos.PedidosVendedorAdapter;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.productos.ProductosVendedorAdapter;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.valoraciones.ValoracionesProductoAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.AesGcmCifradoSecretoAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.BCryptHashContrasenaAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.JavaTotpAdapter;
@@ -189,9 +192,27 @@ public class UsuariosConfig {
     }
 
     @Bean
+    ProductosVendedorPort productosVendedorPort(
+            es.uclm.esibuy.backend.productos.application.port.in.GestionProductosVendedorUseCase productos) {
+        return new ProductosVendedorAdapter(productos);
+    }
+
+    @Bean
+    PedidosVendedorPort pedidosVendedorPort(
+            es.uclm.esibuy.backend.pedidos.application.port.in.ProductosConPedidosUseCase pedidos) {
+        return new PedidosVendedorAdapter(pedidos);
+    }
+
+    @Bean
+    ValoracionesProductoPort valoracionesProductoPort(
+            es.uclm.esibuy.backend.valoraciones.application.port.in.LimpiezaValoracionesUseCase valoraciones) {
+        return new ValoracionesProductoAdapter(valoraciones);
+    }
+
+    @Bean
     GestionCuentaUseCase gestionCuentaUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-            HashContrasenaPort hashContrasena, GestionProductosVendedorUseCase productos,
-            ProductosConPedidosUseCase productosConPedidos, LimpiezaValoracionesUseCase valoraciones,
+            HashContrasenaPort hashContrasena, ProductosVendedorPort productos,
+            PedidosVendedorPort productosConPedidos, ValoracionesProductoPort valoraciones,
             FactorAutenticacionRepositoryPort factores,
             CodigoVerificacionRepositoryPort codigosVerificacion,
             CodigoRecuperacionRepositoryPort codigosRecuperacion) {

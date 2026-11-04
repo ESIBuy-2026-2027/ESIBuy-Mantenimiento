@@ -8,5 +8,5 @@ public interface GestionCuentaUseCase {
     /**
      * Elimina la cuenta del vendedor tras comprobar la contraseña actual.
      */
-    void eliminarCuentaVendedor(String email, String password);
+    void eliminarCuentaVendedor(String emailVendedor, String password);
 }

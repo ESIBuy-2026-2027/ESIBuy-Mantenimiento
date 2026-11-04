@@ -32,6 +32,7 @@ import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
 public class ProductoMongoAdapter implements ProductoRepositoryPort {
 
     private static final String CAMPO_STOCK = "stock";
+    private static final String CAMPO_DISPONIBLE = "disponible";
     private static final String CAMPO_NOMBRE = "nombre";
     private static final String CAMPO_VALORACION_MEDIA = "valoracionMedia";
 
@@ -77,7 +78,7 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     public boolean descontarStock(String id, int cantidad) {
         Query conStockSuficiente = new Query(Criteria.where("_id").is(id)
                 .and(CAMPO_STOCK).gte(cantidad)
-                .and("disponible").is(true));
+                .and(CAMPO_DISPONIBLE).is(true));
         return mongoTemplate.updateFirst(conStockSuficiente, new Update().inc(CAMPO_STOCK, -cantidad),
                 ProductoDocument.class).getModifiedCount() == 1;
     }

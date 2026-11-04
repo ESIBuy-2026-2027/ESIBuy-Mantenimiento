@@ -126,6 +126,21 @@ class CodigoVerificacionMongoAdapterTest {
         assertEquals(2, codigoVerificacionMongoRepository.count());
     }
 
+    @Test
+    @DisplayName("HU47-CP02: eliminar por usuario borra el código de login y conserva el de recuperación")
+    void eliminarPorUsuarioBorraSoloElCodigoDeLogin() {
+        adapter.guardar(CodigoVerificacion.nuevo("u-1", "hash-login", AHORA));
+        mongoTemplate.getCollection("tokens_seguridad").insertOne(new Document("usuarioId", "u-1")
+                .append("purpose", "PASSWORD_RECOVERY").append("tokenHash", "hash-recuperacion")
+                .append("expiresAt", Date.from(AHORA.plus(Duration.ofHours(1)))));
+
+        adapter.eliminarPorUsuario("u-1");
+
+        assertTrue(adapter.buscarPorUsuario("u-1").isEmpty());
+        assertEquals(1, mongoTemplate.getCollection("tokens_seguridad")
+                .countDocuments(new Document("purpose", "PASSWORD_RECOVERY")));
+    }
+
     // MongoTemplate devuelve el documento tal cual está en MongoDB, con los nombres de sus campos.
     private Document documentoEnBruto() {
         Document guardado = mongoTemplate.getCollection("tokens_seguridad").find().first();

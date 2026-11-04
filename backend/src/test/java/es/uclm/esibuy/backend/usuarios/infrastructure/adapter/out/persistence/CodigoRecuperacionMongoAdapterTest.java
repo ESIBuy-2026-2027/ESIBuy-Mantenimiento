@@ -118,4 +118,16 @@ class CodigoRecuperacionMongoAdapterTest {
         assertEquals("hash-de-recuperacion", adapter.buscarPorUsuario("u-1").orElseThrow().getCodigoHash());
         assertEquals("hash-de-otro-login", adapterDelLogin.buscarPorUsuario("u-1").orElseThrow().getCodigoHash());
     }
+
+    @Test
+    @DisplayName("HU47-CP02: eliminar por usuario borra el código de recuperación y conserva el del login")
+    void eliminarPorUsuarioBorraSoloElCodigoDeRecuperacion() {
+        adapterDelLogin.guardar(CodigoVerificacion.nuevo("u-1", "hash-login", AHORA));
+        adapter.guardar(CodigoVerificacion.nuevo("u-1", "hash-recuperacion", AHORA));
+
+        adapter.eliminarPorUsuario("u-1");
+
+        assertTrue(adapter.buscarPorUsuario("u-1").isEmpty());
+        assertEquals("hash-login", adapterDelLogin.buscarPorUsuario("u-1").orElseThrow().getCodigoHash());
+    }
 }

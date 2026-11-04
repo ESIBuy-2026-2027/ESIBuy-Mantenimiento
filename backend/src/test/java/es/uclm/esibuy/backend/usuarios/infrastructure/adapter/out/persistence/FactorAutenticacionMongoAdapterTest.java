@@ -102,4 +102,16 @@ class FactorAutenticacionMongoAdapterTest {
         assertEquals(1, mongoTemplate.getCollection(COLECCION).countDocuments());
         assertEquals("secreto-nuevo", adapter.buscarPorUsuario("u-1").orElseThrow().getSecretoCifrado());
     }
+
+    @Test
+    @DisplayName("HU47-CP02: eliminar por usuario borra el factor del vendedor")
+    void eliminarPorUsuarioBorraElFactor() {
+        adapter.guardar(FactorAutenticacion.nuevo("u-1", "secreto-uno"));
+        adapter.guardar(FactorAutenticacion.nuevo("u-2", "secreto-dos"));
+
+        adapter.eliminarPorUsuario("u-1");
+
+        assertTrue(adapter.buscarPorUsuario("u-1").isEmpty());
+        assertTrue(adapter.buscarPorUsuario("u-2").isPresent());
+    }
 }
