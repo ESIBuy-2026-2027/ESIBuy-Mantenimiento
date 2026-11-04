@@ -59,6 +59,12 @@ export default function AdminCategoriesPage() {
     setStatus('')
   }
 
+  const avisarCreada = (creada) => {
+    setCreando(false)
+    setFeedback({ intent: 'success', texto: `${creada.nombre} se ha creado.` })
+    retry()
+  }
+
   const renderActions = (category) => (
     <CategoryRowActions category={category} onResult={setFeedback} onChanged={retry} />
   )
@@ -139,7 +145,7 @@ export default function AdminCategoriesPage() {
 
       {categories.length > 0 && <CategoriesTable categories={categories} renderActions={renderActions} />}
 
-      {creando && <CategoryFormDialog onClose={() => setCreando(false)} />}
+      {creando && <CategoryFormDialog onClose={() => setCreando(false)} onSaved={avisarCreada} />}
     </main>
   )
 }

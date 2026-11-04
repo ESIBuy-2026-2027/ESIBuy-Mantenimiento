@@ -16,6 +16,7 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
+import { createAdminCategory } from '../../api/adminCategories'
 import { CATEGORY_STATUS_LABELS } from './categoryStatus'
 
 // Los mismos límites que el dominio del backend (Categoria): con maxLength no se puede escribir más.
@@ -35,15 +36,26 @@ const useStyles = makeStyles({
 })
 
 // Formulario de alta de una categoría (HU40): nombre, descripción y estado, que por defecto es activa. El nombre es
-// obligatorio: si está vacío o solo tiene espacios, se avisa en el campo y no se envía nada.
-export default function CategoryFormDialog({ onClose }) {
+// obligatorio: si está vacío o solo tiene espacios, se avisa en el campo y no se envía nada. `onSaved` recibe la
+// categoría creada; `onClose`, que se cierra sin más.
+export default function CategoryFormDialog({ onClose, onSaved }) {
   const styles = useStyles()
   const [datos, setDatos] = useState({ nombre: '', descripcion: '', estado: 'ACTIVA' })
   const [errorNombre, setErrorNombre] = useState(null)
+  const [enviando, setEnviando] = useState(false)
   const cambiar = (campo) => (_event, data) => setDatos((actuales) => ({ ...actuales, [campo]: data.value }))
 
-  const crear = () => {
-    if (!datos.nombre.trim()) setErrorNombre(OBLIGATORIO)
+  const crear = async () => {
+    if (!datos.nombre.trim()) {
+      setErrorNombre(OBLIGATORIO)
+      return
+    }
+    setEnviando(true)
+    try {
+      onSaved(await createAdminCategory(datos))
+    } finally {
+      setEnviando(false)
+    }
   }
 
   return (
@@ -72,8 +84,10 @@ export default function CategoryFormDialog({ onClose }) {
             </Field>
           </DialogContent>
           <DialogActions>
-            <Button onClick={onClose}>Cancelar</Button>
-            <Button appearance="primary" onClick={crear}>
+            <Button onClick={onClose} disabled={enviando}>
+              Cancelar
+            </Button>
+            <Button appearance="primary" onClick={crear} disabled={enviando}>
               Crear
             </Button>
           </DialogActions>
@@ -85,4 +99,5 @@ export default function CategoryFormDialog({ onClose }) {
 
 CategoryFormDialog.propTypes = {
   onClose: PropTypes.func.isRequired,
+  onSaved: PropTypes.func.isRequired,
 }
