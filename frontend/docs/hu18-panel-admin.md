@@ -12,15 +12,16 @@ Documento para entender el panel de control del administrador: qué muestra, qu�
 
 ## 1. Resumen
 
-El administrador accede a un **panel de control** con tres tarjetas, una por tipo de usuario a gestionar:
+El administrador accede a un **panel de control** con tarjetas: tres, una por tipo de usuario a gestionar, y la de Categorías (HU39):
 
 | Tarjeta | Descripción mostrada |
 |---|---|
 | Clientes | Consulta y gestiona las cuentas de los clientes de ESIBuy. |
 | Vendedores | Supervisa a los vendedores y consulta sus catálogos. |
 | Administradores | Gestiona al equipo con acceso al panel de control. |
+| Categorías | Consulta las categorías de productos y cuántos productos tiene cada una. (Añadida por la HU39, `docs/hu39-consultar-categorias.md`: lleva a `/admin/categories`.) |
 
-**Alcance actual:** las tarjetas son botones con aspecto y animaciones completas, pero **todavía no ejecutan ninguna acción**. La gestión de cada tipo de usuario llegará con las historias HU19 a HU24 y HU26.
+**Alcance actual (HU18):** las tarjetas son botones con aspecto y animaciones completas, pero **todavía no ejecutan ninguna acción**. La gestión de cada tipo de usuario llegará con las historias HU19 a HU24 y HU26.
 
 ---
 

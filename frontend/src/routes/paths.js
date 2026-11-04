@@ -15,6 +15,7 @@ export const PATHS = {
   ADMIN_USERS: '/admin/users',
   ADMIN_CLIENTS: '/admin/clients',
   ADMIN_SELLERS: '/admin/sellers',
+  ADMIN_CATEGORIES: '/admin/categories',
   ADMIN_ADMINS: '/admin/admins',
   ADMIN_NEW_ADMIN: '/admin/admins/new',
   SELLER_PRODUCTS: '/seller/products',
