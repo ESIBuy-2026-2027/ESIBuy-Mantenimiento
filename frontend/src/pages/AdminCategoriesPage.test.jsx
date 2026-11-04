@@ -161,6 +161,26 @@ describe('AdminCategoriesPage (HU42): eliminar', () => {
     expect(within(filaDe('Mascotas')).getByRole('button', { name: 'Eliminar Mascotas' })).toBeEnabled()
     expect(within(filaDe('Moda')).getByRole('button', { name: 'Eliminar Moda' })).toBeEnabled()
   })
+
+  it('HU42-CP20: si el backend no deja eliminarla, avisa del motivo y la categoría sigue en la lista', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.delete(`${URL_CATEGORIAS}/:id`, () => HttpResponse.json({ code: 'CATEGORY_HAS_SELLERS' }, { status: 409 })),
+    )
+    await abrirListado()
+
+    await user.click(screen.getByRole('button', { name: 'Eliminar Mascotas' }))
+    const confirmacion = (await screen.findByText(/seguro que quieres eliminar la categoría mascotas/i)).closest(
+      '[role="alertdialog"]',
+    )
+    await user.click(within(confirmacion).getByText('Eliminar', { selector: 'button' }))
+
+    expect(
+      await screen.findByText('No se puede eliminar Mascotas porque es la categoría principal de algún vendedor.'),
+    ).toBeInTheDocument()
+    expect(nombresEnPantalla()).toContain('Mascotas')
+    expect(filasDeDatos()).toHaveLength(8)
+  })
 })
 
 describe('AdminCategoriesPage (HU39): errores', () => {

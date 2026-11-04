@@ -142,3 +142,62 @@ describe('CategoryRowActions (HU42): categoría con productos', () => {
     expect(screen.getByRole('button', { name: 'Eliminar Mascotas' })).toHaveAttribute('title', 'Eliminar')
   })
 })
+
+// El backend responde con este error al DELETE de Mascotas.
+function responderAlBorrarCon(status, code) {
+  server.use(
+    http.delete('/api/admin/categorias/:id', () =>
+      code ? HttpResponse.json({ code }, { status }) : new HttpResponse(null, { status }),
+    ),
+  )
+}
+
+async function confirmarEliminacion(user) {
+  await user.click(screen.getByRole('button', { name: 'Eliminar Mascotas' }))
+  const confirmacion = (await screen.findByText(PREGUNTA)).closest('[role="alertdialog"]')
+  await user.click(within(confirmacion).getByText('Eliminar', { selector: 'button' }))
+  await waitFor(() => expect(screen.queryByText(PREGUNTA)).not.toBeInTheDocument(), ESPERA)
+}
+
+describe('CategoryRowActions (HU42): errores al eliminar', () => {
+  // Con productos o ya eliminada, la lista que ve el administrador está desfasada y se pide actualizarla.
+  it.each([
+    {
+      caso: 'si ya tiene productos avisa de ello y pide actualizar la lista',
+      status: 409,
+      code: 'CATEGORY_HAS_PRODUCTS',
+      texto: 'No se puede eliminar Mascotas porque tiene productos.',
+      actualiza: true,
+    },
+    {
+      caso: 'si es la categoría principal de algún vendedor avisa de ello',
+      status: 409,
+      code: 'CATEGORY_HAS_SELLERS',
+      texto: 'No se puede eliminar Mascotas porque es la categoría principal de algún vendedor.',
+      actualiza: false,
+    },
+    {
+      caso: 'si ya no existe avisa de ello y pide actualizar la lista',
+      status: 404,
+      code: 'CATEGORY_NOT_FOUND',
+      texto: 'Mascotas ya no existe.',
+      actualiza: true,
+    },
+    {
+      caso: 'cualquier otro error muestra un mensaje genérico',
+      status: 500,
+      code: null,
+      texto: 'No se ha podido eliminar Mascotas. Inténtalo de nuevo.',
+      actualiza: false,
+    },
+  ])('HU42-CP20: $caso', async ({ status, code, texto, actualiza }) => {
+    const user = userEvent.setup()
+    responderAlBorrarCon(status, code)
+    const { onResult, onChanged } = await renderAcciones(MASCOTAS)
+
+    await confirmarEliminacion(user)
+
+    expect(onResult).toHaveBeenCalledWith({ intent: 'error', texto })
+    expect(onChanged).toHaveBeenCalledTimes(actualiza ? 1 : 0)
+  })
+})
