@@ -573,3 +573,14 @@ describe('ProductsPage (HU9): precio y carrito', () => {
     expect(await within(tarjetaDeAuriculares()).findByRole('alert')).toHaveTextContent(/no hay existencias suficientes/i)
   })
 })
+
+describe('ProductsPage (HU14): favoritos', () => {
+  it('HU14-CP21: cada tarjeta del catálogo tiene el corazón para añadir su producto a favoritos', async () => {
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    for (const tarjeta of tarjetas()) {
+      expect(within(tarjeta).getByRole('button', { name: /^añadir .+ a favoritos$/i })).toBeEnabled()
+    }
+  })
+})

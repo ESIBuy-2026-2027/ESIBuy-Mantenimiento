@@ -102,3 +102,43 @@ describe('ProductCard', () => {
     expect(screen.getByRole('link', { name: /teclado mecánico/i })).not.toHaveTextContent(/añadir/i)
   })
 })
+
+describe('ProductCard (HU14): favoritos', () => {
+  const pintarConFavoritos = (producto = PRODUCTO, props = {}) =>
+    renderWithProviders(
+      conCarrito(
+        <ProductCard
+          product={producto}
+          categoryName="Tecnología"
+          onAddFavorite={vi.fn().mockResolvedValue(undefined)}
+          {...props}
+        />,
+      ),
+    )
+
+  it('HU14-CP21: la tarjeta tiene un corazón para añadir el producto a favoritos, fuera del enlace al detalle', () => {
+    pintarConFavoritos()
+
+    const corazon = screen.getByRole('button', { name: 'Añadir Teclado mecánico a favoritos' })
+    expect(corazon).toBeEnabled()
+    expect(corazon.closest('a')).toBeNull()
+  })
+
+  it('HU14-CP21: un producto agotado también se puede añadir a favoritos', () => {
+    pintarConFavoritos({ ...PRODUCTO, stock: 0 })
+
+    expect(screen.getByRole('button', { name: /a favoritos/i })).toBeEnabled()
+  })
+
+  it('HU14-CP21: un producto no disponible no tiene el corazón', () => {
+    pintarConFavoritos({ ...PRODUCTO, disponible: false })
+
+    expect(screen.queryByRole('button', { name: /favoritos/i })).not.toBeInTheDocument()
+  })
+
+  it('HU14-CP21: sin onAddFavorite la tarjeta no ofrece favoritos', () => {
+    pintar()
+
+    expect(screen.queryByRole('button', { name: /favoritos/i })).not.toBeInTheDocument()
+  })
+})
