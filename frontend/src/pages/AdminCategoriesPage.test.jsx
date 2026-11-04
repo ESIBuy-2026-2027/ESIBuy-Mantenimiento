@@ -120,19 +120,6 @@ describe('AdminCategoriesPage (HU39): ficha de la categoría', () => {
     await user.click(within(dialogo).getByRole('button', { name: 'Cerrar' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
-
-  it('HU40-CP14: no se puede crear una categoría repetida, aunque cambien las mayúsculas o las tildes', async () => {
-    const user = userEvent.setup()
-    await abrirListado()
-
-    await user.click(screen.getByRole('button', { name: 'Nueva categoría' }))
-    const dialogo = await screen.findByRole('dialog', { name: 'Nueva categoría' })
-    await user.type(within(dialogo).getByRole('textbox', { name: /nombre/i }), 'TECNOLOGIA')
-    await user.click(within(dialogo).getByRole('button', { name: 'Crear' }))
-
-    expect(await within(dialogo).findByText('Ya existe una categoría con ese nombre.')).toBeInTheDocument()
-    expect(filasDeDatos()).toHaveLength(8)
-  })
 })
 
 describe('AdminCategoriesPage (HU40): crear', () => {
@@ -169,6 +156,19 @@ describe('AdminCategoriesPage (HU40): crear', () => {
     expect(filasDeDatos()).toHaveLength(9)
     expect(celdasDe('Jardín')).toEqual(['Jardín', '—', 'Inactiva', '0', ''])
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  it('HU40-CP14: no se puede crear una categoría repetida, aunque cambien las mayúsculas o las tildes', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.click(screen.getByRole('button', { name: 'Nueva categoría' }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Nueva categoría' })
+    await user.type(within(dialogo).getByRole('textbox', { name: /nombre/i }), 'TECNOLOGIA')
+    await user.click(within(dialogo).getByRole('button', { name: 'Crear' }))
+
+    expect(await within(dialogo).findByText('Ya existe una categoría con ese nombre.')).toBeInTheDocument()
+    expect(filasDeDatos()).toHaveLength(8)
   })
 })
 
