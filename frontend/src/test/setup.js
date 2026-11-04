@@ -12,6 +12,7 @@ import { resetPaymentMethodsMock } from '../mocks/paymentMethodsHandlers'
 import { resetProductsMock } from '../mocks/productsHandlers'
 import { resetReviewsMock } from '../mocks/reviewsHandlers'
 import { resetUsersMock } from '../mocks/usersHandlers'
+import { resetWishlistMock } from '../mocks/wishlistHandlers'
 import { server } from '../mocks/server'
 
 class ResizeObserverStub {
@@ -48,6 +49,7 @@ afterEach(() => {
   resetProductsMock()
   resetReviewsMock()
   resetUsersMock()
+  resetWishlistMock()
 })
 
 afterAll(() => {

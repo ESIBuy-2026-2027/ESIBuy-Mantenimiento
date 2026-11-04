@@ -128,6 +128,10 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground1,
     boxShadow: tokens.shadow4,
   },
+  // El corazón relleno está deshabilitado, pero no debe verse gris: es la señal de que ya está en favoritos.
+  favoriteIcon: {
+    color: tokens.colorPaletteRedForeground1,
+  },
 })
 
 // Tarjeta de un producto del catálogo: lo que se ve desde fuera (imagen, nombre, categoría, valoración y precio) y
@@ -203,7 +207,7 @@ export default function ProductCard({ product, categoryName, favorite = false, o
         <Button
           shape="circular"
           className={styles.favorite}
-          icon={favorite ? <Heart20Filled /> : <Heart20Regular />}
+          icon={favorite ? <Heart20Filled className={styles.favoriteIcon} /> : <Heart20Regular />}
           aria-label={favorite ? `${product.nombre} está en tus favoritos` : `Añadir ${product.nombre} a favoritos`}
           title={favorite ? 'Ya está en tus favoritos' : 'Añadir a favoritos'}
           disabled={favorite || addingFavorite}
