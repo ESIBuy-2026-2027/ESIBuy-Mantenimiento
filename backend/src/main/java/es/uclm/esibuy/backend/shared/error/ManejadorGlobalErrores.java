@@ -8,6 +8,7 @@ import es.uclm.esibuy.backend.carrito.domain.exception.CantidadInvalidaException
 import es.uclm.esibuy.backend.carrito.domain.exception.LineaCarritoNoEncontradaException;
 import es.uclm.esibuy.backend.carrito.domain.exception.ProductoNoComprableException;
 import es.uclm.esibuy.backend.carrito.domain.exception.StockInsuficienteException;
+import es.uclm.esibuy.backend.deseos.domain.exception.ProductoNoDisponibleException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionInvalidaException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionNoEncontradaException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.LimiteDireccionesException;
@@ -20,7 +21,9 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.CarritoSinProductosDelPro
 import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
+import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
@@ -242,6 +245,13 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("El producto ya existe con el mismo nombre", "PRODUCT_NAME_ALREADY_EXISTS");
     }
 
+    // 400 + code cuando la imagen del producto no supera el antivirus (HU31 y HU34, T397), al crear o al modificar.
+    @ExceptionHandler(ImagenNoSeguraException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError imagenNoSegura() {
+        return new RespuestaError("La imagen no ha superado el análisis antivirus", "IMAGE_NOT_SAFE");
+    }
+
     // 404 + code al consultar un producto propio (HU33, T348): un producto ajeno se responde igual que uno
     // inexistente, para no revelar que existe (frontend/docs/hu31-formulario-producto.md).
     @ExceptionHandler(ProductoNoEncontradoException.class)
@@ -335,9 +345,9 @@ public class ManejadorGlobalErrores {
     }
 
     // Un producto que no existe o no está disponible se responde igual que uno inexistente
-    @ExceptionHandler(ProductoNoComprableException.class)
+    @ExceptionHandler({ProductoNoComprableException.class, ProductoNoDisponibleException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public RespuestaError productoNoComprable() {
+    public RespuestaError productoNoDisponible() {
         return new RespuestaError("El producto no existe", "PRODUCT_NOT_FOUND");
     }
 
@@ -385,6 +395,13 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError pedidoInvalido() {
         return new RespuestaError("El pedido es inválido", CODIGO_VALIDACION);
+    }
+
+    // Pedidos (HU11): uno que no existe o es de otro cliente responde 400, no 404, para no revelar si existe
+    @ExceptionHandler(PedidoNoEncontradoException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError pedidoNoEncontrado() {
+        return new RespuestaError("El pedido no existe", "ORDER_NOT_FOUND");
     }
 
     @ExceptionHandler(CarritoSinProductosDelProveedorException.class)

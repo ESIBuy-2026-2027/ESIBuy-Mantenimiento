@@ -9,10 +9,13 @@ export const PATHS = {
   PROFILE: '/profile',
   PAYMENT_METHODS: '/payment-methods',
   ADDRESSES: '/addresses',
+  ORDERS: '/orders',
+  ORDER_DETAIL: '/orders/:id',
   ADMIN: '/admin',
   ADMIN_USERS: '/admin/users',
   ADMIN_CLIENTS: '/admin/clients',
   ADMIN_SELLERS: '/admin/sellers',
+  ADMIN_CATEGORIES: '/admin/categories',
   ADMIN_ADMINS: '/admin/admins',
   ADMIN_NEW_ADMIN: '/admin/admins/new',
   SELLER_PRODUCTS: '/seller/products',
@@ -21,6 +24,8 @@ export const PATHS = {
 }
 
 export const getProductDetailPath = (productId) => `/products/${encodeURIComponent(productId)}`
+
+export const getOrderDetailPath = (orderId) => `/orders/${encodeURIComponent(orderId)}`
 
 export const getSellerProductEditPath = (productId) =>
   `/seller/products/${encodeURIComponent(productId)}/edit`

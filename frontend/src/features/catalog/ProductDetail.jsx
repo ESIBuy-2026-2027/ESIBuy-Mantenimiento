@@ -5,7 +5,10 @@ import { BuildingShop20Regular, ImageOff24Regular } from '@fluentui/react-icons'
 import { formatRating } from '../../utils/format'
 import AddToCartButton from '../cart/AddToCartButton'
 import QuantityStepper from '../cart/QuantityStepper'
-import { productDetailPropType } from '../../utils/propTypes'
+import { productDetailPropType, reviewPropType } from '../../utils/propTypes'
+import ReviewForm from '../reviews/ReviewForm'
+import ReviewList from '../reviews/ReviewList'
+import { reviewSummary } from '../reviews/reviewSummary'
 import PriceBlock from './PriceBlock'
 import RatingStars from './RatingStars'
 import { stockStatus } from './stockStatus'
@@ -204,13 +207,15 @@ const useStyles = makeStyles({
 const valoraciones = (n) => `${n} ${n === 1 ? 'valoración' : 'valoraciones'}`
 
 // Detalle de un producto para el cliente (HU8): imagen, nombre, proveedor, valoración, precio, disponibilidad,
-// descripción y una ficha con los datos del producto. Solo presenta: la página es la que pide el producto.
-export default function ProductDetail({ product, categoryName }) {
+// descripción, una ficha con los datos del producto y las valoraciones de los clientes (HU13). Solo presenta: la
+// página es la que pide el producto y sus valoraciones.
+export default function ProductDetail({ product, categoryName, reviews = null, reviewsFailed = false, onRetryReviews }) {
   const styles = useStyles()
   // Si la imagen no carga (dirección rota), se enseña el mismo marcador que cuando no hay imagen.
   const [imageFailed, setImageFailed] = useState(false)
   const hasImage = Boolean(product.imagen) && !imageFailed
-  const rated = product.valoracion !== null && product.numValoraciones > 0
+  const { valoracion, numValoraciones } = reviewSummary(product, reviews)
+  const rated = valoracion !== null && numValoraciones > 0
   const status = stockStatus(product)
   const [quantity, setQuantity] = useState(1)
   const canBuy = status.key === 'in' || status.key === 'low'
@@ -245,9 +250,9 @@ export default function ProductDetail({ product, categoryName }) {
           <div className={styles.rating}>
             {rated ? (
               <>
-                <RatingStars value={product.valoracion} size={22} />
-                <Text weight="semibold">{formatRating(product.valoracion)}</Text>
-                <Text className={styles.muted}>{valoraciones(product.numValoraciones)}</Text>
+                <RatingStars value={valoracion} size={22} />
+                <Text weight="semibold">{formatRating(valoracion)}</Text>
+                <Text className={styles.muted}>{valoraciones(numValoraciones)}</Text>
               </>
             ) : (
               <Text className={styles.muted}>Sin valoraciones</Text>
@@ -294,20 +299,22 @@ export default function ProductDetail({ product, categoryName }) {
           </dl>
         </section>
 
-        {rated && (
-          <section className={styles.section} aria-labelledby="valoracion-producto">
-            <h2 id="valoracion-producto" className={styles.sectionTitle}>
-              Valoración de los clientes
-            </h2>
+        <section className={styles.section} aria-labelledby="valoraciones-producto">
+          <h2 id="valoraciones-producto" className={styles.sectionTitle}>
+            Valoraciones de los clientes
+          </h2>
+          {rated && (
             <div className={styles.summary}>
-              <span className={styles.average}>{formatRating(product.valoracion)}</span>
+              <span className={styles.average}>{formatRating(valoracion)}</span>
               <div className={styles.summaryRating}>
-                <RatingStars value={product.valoracion} size={24} />
-                <Text className={styles.muted}>Basada en {valoraciones(product.numValoraciones)}</Text>
+                <RatingStars value={valoracion} size={24} />
+                <Text className={styles.muted}>Basada en {valoraciones(numValoraciones)}</Text>
               </div>
             </div>
-          </section>
-        )}
+          )}
+          <ReviewForm productId={product.id} onCreated={onRetryReviews} />
+          <ReviewList reviews={reviews} failed={reviewsFailed} onRetry={onRetryReviews} />
+        </section>
       </div>
     </div>
   )
@@ -316,4 +323,7 @@ export default function ProductDetail({ product, categoryName }) {
 ProductDetail.propTypes = {
   product: productDetailPropType.isRequired,
   categoryName: PropTypes.string,
+  reviews: PropTypes.arrayOf(reviewPropType),
+  reviewsFailed: PropTypes.bool,
+  onRetryReviews: PropTypes.func.isRequired,
 }

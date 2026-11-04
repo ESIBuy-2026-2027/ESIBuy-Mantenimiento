@@ -30,7 +30,9 @@ public class ProductoDocumentMapper {
         return new Producto(documento.getId(), documento.getVendedorId(), documento.getNombre(),
                 documento.getDescripcion(), documento.getPrecio(), documento.getStock(),
                 documento.getCategoriaId(), documento.getImagen(), documento.isDisponible(),
-                aDominio(documento.getDescuento()), aDominio(documento.getDescuentoPremium()));
+                aDominio(documento.getDescuento()), aDominio(documento.getDescuentoPremium()),
+                documento.getValoracionMedia(),
+                documento.getNumeroValoraciones() == null ? 0 : documento.getNumeroValoraciones());
     }
 
     private static DescuentoDocument aDocumento(Descuento descuento) {

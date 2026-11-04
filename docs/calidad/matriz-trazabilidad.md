@@ -27,7 +27,7 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | HU1-CP08 | Rechaza el registro si falta un campo obligatorio o supera su longitud máxima | Unitario + integración (capa web) | 11 | ✅ Pasa |
 | HU1-CP09 | Rechaza contraseñas de la lista de contraseñas comunes | Unitario | 4 | ✅ Pasa |
 | HU1-CP10 | Rechaza contraseñas que contienen datos personales del usuario | Unitario | 4 | ✅ Pasa |
-| HU1-CP11 | El usuario cumple sus invariantes de dominio (datos personales y de cliente obligatorios y coherentes con el rol, desactivación, fecha de alta) | Unitario | 17 | 🔍 En revisión |
+| HU1-CP11 | El usuario cumple sus invariantes de dominio (datos personales y de cliente obligatorios y coherentes con el rol, desactivación, fecha de alta) | Unitario | 17 | ✅ Pasa |
 | HU1-CP12 | Toda cuenta nueva nace en estado PENDIENTE hasta que un administrador la verifica | Unitario | 4 | ✅ Pasa |
 | HU1-CP13 | Rechaza a un cliente menor de edad | Unitario | 4 | ✅ Pasa |
 | HU1-CP14 | Rechaza el registro si las contraseñas no coinciden | Unitario | 1 | ✅ Pasa |
@@ -38,8 +38,8 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | HU1-CP19 | Registra un vendedor en estado PENDIENTE con su nombre comercial y su categoría principal | Unitario + integración | 9 | ✅ Pasa |
 | HU1-CP20 | Rechaza un nombre comercial ya registrado, también cuando se repite junto con el correo | Unitario + integración | 6 | ✅ Pasa |
 | HU1-CP21 | Rechaza datos de vendedor inválidos o un perfil que no corresponde al rol | Unitario + integración (capa web) | 8 | ✅ Pasa |
-| HU1-CP22 | Los errores 400 del registro indican el motivo con un `code` (contraseña, DNI, teléfono, edad, privacidad, email o campo) | Unitario + integración (capa web) | 14 | 🔍 En revisión |
-| HU1-CP23 | El formulario marca en su campo el motivo que da el backend (o un mensaje general si no tiene campo), y un DNI repetido se marca en el DNI | Frontend (unitario y página) | 7 | 🔍 En revisión |
+| HU1-CP22 | Los errores 400 del registro indican el motivo con un `code` (contraseña, DNI, teléfono, edad, privacidad, email o campo) | Unitario + integración (capa web) | 14 | ✅ Pasa |
+| HU1-CP23 | El formulario marca en su campo el motivo que da el backend (o un mensaje general si no tiene campo), y un DNI repetido se marca en el DNI | Frontend (unitario y página) | 7 | ✅ Pasa |
 | HU1-CP24 | Tras registrarse se ofrece ir a iniciar sesión | Frontend (página) | 1 | ✅ Pasa (1, AB#234, PR #105) |
 | HU1-CP25 | Con la sesión iniciada no se ofrece crear una cuenta y /register lleva a la página del rol | Frontend (página y rutas) | 3 | ✅ Pasa (3, AB#17 · AB#18, PR #105) |
 | HU1-CP26 | Un registro correcto no se trata como un error aunque el backend responda 201 sin cuerpo | Frontend (API) | 1 | ✅ Pasa (1, AB#17 · AB#18, PR #105) |
@@ -136,8 +136,8 @@ Notas:
 | HU1-CP11 | `UsuarioTest` | `rechazaEmailNulo` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaContrasenaHashEnBlanco` | Dominio | AB#214 | PR #34 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaRolNulo` | Dominio | AB#214 | PR #34 | ✅ |
-| HU1-CP11 | `UsuarioTest` | `bloqueaUsuario` | Dominio | AB#214 · AB#243 · AB#252 | PR #34 (renombrado en PR #36) (modificado en PR #180) (renombrado en este PR) | 🔍 |
-| HU1-CP11 | `UsuarioTest` | `activaUsuarioBloqueado` | Dominio | AB#214 · AB#252 | PR #34 (renombrado en PR #36) (renombrado en este PR) | 🔍 |
+| HU1-CP11 | `UsuarioTest` | `bloqueaUsuario` | Dominio | AB#214 · AB#243 · AB#252 | PR #34 (renombrado en PR #36) (modificado en PR #180) (renombrado en PR #185) | ✅ |
+| HU1-CP11 | `UsuarioTest` | `activaUsuarioBloqueado` | Dominio | AB#214 · AB#252 | PR #34 (renombrado en PR #36) (renombrado en PR #185) | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaUsuarioSinDatosPersonales` | Dominio | AB#229 | PR #72 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaClienteSinDatosDeCliente` | Dominio | AB#229 | PR #72 | ✅ |
 | HU1-CP11 | `UsuarioTest` | `rechazaDatosDeClienteSiNoEsCliente` | Dominio | AB#229 | PR #72 | ✅ |
@@ -216,15 +216,15 @@ Notas:
 | HU1-CP22 | `UsuarioControllerTest` | `contrasenaConDatosPersonalesDevuelve400ConSuCodigo` | Infraestructura | AB#229 | PR #104 | ✅ |
 | HU1-CP22 | `UsuarioControllerTest` | `dniInvalidoDevuelve400ConSuCodigo` | Infraestructura | AB#229 | PR #104 | ✅ |
 | HU1-CP22 | `UsuarioControllerTest` | `emailInvalidoDevuelve400ConSuCodigo` | Infraestructura | AB#229 | PR #104 | ✅ |
-| HU1-CP22 | `UsuarioControllerTest` | `datoInvalidoGenericoDevuelve400ConValidationError` | Infraestructura | AB#229 | PR #104 (renombrado y modificado en este PR) | 🔍 |
-| HU1-CP22 | `UsuarioControllerTest` | `errorDeValidacionDelFormularioDevuelve400ConValidationError` | Infraestructura | AB#229 | PR #104 (renombrado y modificado en este PR) | 🔍 |
+| HU1-CP22 | `UsuarioControllerTest` | `datoInvalidoGenericoDevuelve400ConValidationError` | Infraestructura | AB#229 | PR #104 (renombrado y modificado en PR #183) | ✅ |
+| HU1-CP22 | `UsuarioControllerTest` | `errorDeValidacionDelFormularioDevuelve400ConValidationError` | Infraestructura | AB#229 | PR #104 (renombrado y modificado en PR #183) | ✅ |
 | HU1-CP23 | `registroErrors.test.js` | `HU1-CP23: traduce cada code a su campo y su mensaje` | Frontend · unitario | AB#17 · AB#18 | PR #105 | ✅ |
-| HU1-CP23 | `registroErrors.test.js` | `HU1-CP23: un code sin campo o desconocido da el mensaje general` | Frontend · unitario | AB#17 · AB#18 | PR #105 (modificado en este PR) | 🔍 |
+| HU1-CP23 | `registroErrors.test.js` | `HU1-CP23: un code sin campo o desconocido da el mensaje general` | Frontend · unitario | AB#17 · AB#18 | PR #105 (modificado en PR #183) | ✅ |
 | HU1-CP23 | `registroErrors.test.js` | `HU1-CP23: un error que no es de los datos da un mensaje de error del servidor` | Frontend · unitario | AB#17 · AB#18 | PR #105 | ✅ |
 | HU1-CP23 | `Register.test.jsx` | `HU1-CP23: una contraseña con datos personales se marca en el campo de la contraseña` | Frontend · página | AB#17 · AB#18 | PR #105 | ✅ |
 | HU1-CP23 | `Register.test.jsx` | `HU1-CP23: un DNI ya registrado se marca en el DNI y no en el email` | Frontend · página | AB#17 · AB#18 | PR #105 | ✅ |
 | HU1-CP23 | `Register.test.jsx` | `HU1-CP23: en el vendedor, un DNI ya registrado se marca en el DNI` | Frontend · página | AB#17 · AB#18 | PR #105 | ✅ |
-| HU1-CP23 | `Register.test.jsx` | `HU1-CP23: un error sin campo muestra un mensaje general` | Frontend · página | AB#17 · AB#18 | PR #105 (modificado en este PR) | 🔍 |
+| HU1-CP23 | `Register.test.jsx` | `HU1-CP23: un error sin campo muestra un mensaje general` | Frontend · página | AB#17 · AB#18 | PR #105 (modificado en PR #183) | ✅ |
 | HU1-CP24 | `Register.test.jsx` | `HU1-CP24: tras registrarse ofrece ir a iniciar sesión` | Frontend · página | AB#234 | PR #105 | ✅ |
 | HU1-CP25 | `Home.test.jsx` | `HU1-CP25: con la sesión iniciada no ofrece crear una cuenta` | Frontend · página | AB#17 · AB#18 | PR #105 | ✅ |
 | HU1-CP25 | `GuestOnlyRoute.test.jsx` | `HU1-CP25: con la sesión iniciada /register lleva a la página de inicio del rol` | Frontend · rutas | AB#17 · AB#18 | PR #105 | ✅ |
@@ -255,8 +255,8 @@ Notas:
 | HU19-CP07 | La búsqueda trata los caracteres especiales como texto literal | Integración MongoDB | 1 | ✅ Pasa |
 | HU19-CP08 | Un administrador accede al listado HTTP sin exponer datos sensibles | Integración web | 1 | ✅ Pasa |
 | HU19-CP09 | Conserva el estado PENDIENTE al mapear el usuario | Unitario | 1 | ✅ Pasa |
-| HU19-CP10 | El adaptador filtra BLOQUEADO por el estado guardado, no por el bloqueo temporal por intentos | Integración MongoDB | 1 | 🔍 En revisión |
-| HU19-CP11 | El listado se ordena por nombre o por estado, en los dos sentidos | Integración (capa web y MongoDB) | 2 | 🔍 En revisión |
+| HU19-CP10 | El adaptador filtra BLOQUEADO por el estado guardado, no por el bloqueo temporal por intentos | Integración MongoDB | 1 | ✅ Pasa |
+| HU19-CP11 | El listado se ordena por nombre o por estado, en los dos sentidos | Integración (capa web y MongoDB) | 2 | ✅ Pasa |
 | HU19-CP12 | El orden por nombre no distingue mayúsculas ni tildes | Integración MongoDB | 1 | ✅ Pasa |
 | HU19-CP13 | El filtro de estado ofrece Pendiente, Activo y Bloqueado, sin Desactivado (los administradores no tienen Pendiente) | Frontend (componente y página) | 9 | ✅ Pasa (9, AB#247, PR #116) |
 | HU19-CP14 | Cada fila de la tabla permite bloquear o desbloquear la cuenta con confirmación (una pendiente se acepta desbloqueándola) y la ficha ya no cambia el estado | Frontend (componente y página) | 32 | ✅ Pasa (32, AB#248, PR #116) |
@@ -283,9 +283,9 @@ Notas:
 | HU19-CP07 | `UsuarioMongoAdapterTest` | `listarEscapaCaracteresEspecialesDeLaBusqueda` | Infraestructura | AB#61 | PR #59 | ✅ |
 | HU19-CP08 | `UsuarioControllerTest` | `administradorRecibeElListado` | Infraestructura | AB#61/AB#62 | PR #59 | ✅ |
 | HU19-CP09 | `UsuarioDocumentMapperTest` | `conservaEstadoPendienteEnElMapeo` | Infraestructura | AB#61 | PR #59 | ✅ |
-| HU19-CP10 | `UsuarioMongoAdapterTest` | `listarFiltraBloqueadoPorEstadoGuardado` | Infraestructura | AB#61 · AB#243 | PR #59 (sustituido en este PR) | 🔍 |
+| HU19-CP10 | `UsuarioMongoAdapterTest` | `listarFiltraBloqueadoPorEstadoGuardado` | Infraestructura | AB#61 · AB#243 | PR #59 (sustituido en PR #180) | ✅ |
 | HU19-CP11 | `UsuarioControllerTest` | `elListadoDeUsuariosAceptaOrdenYSentido` | Infraestructura | AB#61 | PR #104 | ✅ |
-| HU19-CP11 | `UsuarioMongoAdapterTest` | `ordenaClientesPorEstadoDescendente` | Infraestructura | AB#61 · AB#243 | PR #104 (modificado en este PR) | 🔍 |
+| HU19-CP11 | `UsuarioMongoAdapterTest` | `ordenaClientesPorEstadoDescendente` | Infraestructura | AB#61 · AB#243 | PR #104 (modificado en PR #180) | ✅ |
 | HU19-CP12 | `UsuarioMongoAdapterTest` | `ordenaPorNombreSinDistinguirMayusculasNiTildes` | Infraestructura | AB#29 | PR #104 | ✅ |
 | HU19-CP13 | `usersConfig.test.js` | `statusLabelsForRole_deAdministrador_noIncluyePendiente` | Frontend | AB#247 | PR #116 | ✅ |
 | HU19-CP13 | `usersConfig.test.js` | `statusLabelsForRole_ningunRol_ofreceDesactivado` | Frontend | AB#247 | PR #116 | ✅ |
@@ -453,7 +453,7 @@ Los tests de integración de MongoDB (`UsuarioMongoAdapterTest`, `UsuariosConfig
 | HU2-CP01 | Inicia sesión con credenciales correctas y pasa al paso del código por email | Unitario + integración | 5 | ✅ Pasa |
 | HU2-CP02 | Rechaza credenciales incorrectas sin revelar si el correo existe | Unitario + integración | 5 | ✅ Pasa |
 | HU2-CP03 | Bloquea la cuenta durante 15 minutos tras 5 intentos fallidos | Unitario + integración | 6 | ✅ Pasa |
-| HU2-CP04 | Rechaza el acceso a una cuenta desactivada | Unitario + integración | 3 | 🔍 En revisión |
+| HU2-CP04 | Rechaza el acceso a una cuenta desactivada | Unitario + integración | 3 | ✅ Pasa |
 | HU2-CP05 | Al validar las credenciales, envía al correo del usuario un código de verificación | Unitario + integración | 4 | ✅ Pasa |
 | HU2-CP06 | Un código correcto pasa al paso de Microsoft Authenticator | Unitario + integración | 3 | ✅ Pasa |
 | HU2-CP07 | Rechaza un código incorrecto | Unitario + integración | 6 | ✅ Pasa |
@@ -518,8 +518,8 @@ Notas:
 | HU2-CP03 | `AutenticacionServiceTest` | `desbloqueaLaCuentaPasados15Minutos` | Aplicación | AB#22 | PR #36 | ✅ |
 | HU2-CP03 | `UsuarioMongoAdapterTest` | `guardarUnUsuarioLeidoLoActualizaSinDuplicarlo` | Infraestructura | AB#225 | PR #46 | ✅ |
 | HU2-CP03 | `UsuarioMongoAdapterTest` | `conservaLosIntentosFallidosYElBloqueo` | Infraestructura | AB#225 · AB#210 | PR #46 (ampliado en PR #43) | ✅ |
-| HU2-CP04 | `AutenticacionServiceTest` | `rechazaCuentaBloqueada` | Aplicación | AB#22 · AB#252 | PR #36 (renombrado en este PR) | 🔍 |
-| HU2-CP04 | `UsuarioMongoAdapterTest` | `conservaElBloqueo` | Infraestructura | AB#225 · AB#210 · AB#243 · AB#252 | PR #46 (ampliado en PR #43) (modificado en PR #180) (renombrado en este PR) | 🔍 |
+| HU2-CP04 | `AutenticacionServiceTest` | `rechazaCuentaBloqueada` | Aplicación | AB#22 · AB#252 | PR #36 (renombrado en PR #185) | ✅ |
+| HU2-CP04 | `UsuarioMongoAdapterTest` | `conservaElBloqueo` | Infraestructura | AB#225 · AB#210 · AB#243 · AB#252 | PR #46 (ampliado en PR #43) (modificado en PR #180) (renombrado en PR #185) | ✅ |
 | HU2-CP04 | `UsuarioMongoAdapterTest` | `conservaUnUsuarioActivo` | Infraestructura | AB#225 | PR #46 | ✅ |
 | HU2-CP05 | `AutenticacionServiceTest` | `enviaElCodigoAlCorreoTrasValidarLasCredenciales` | Aplicación | AB#22 | PR #52 | ✅ |
 | HU2-CP05 | `SmtpEnvioEmailAdapterTest` | `enviaElCodigoAlCorreoDelUsuario` | Infraestructura | AB#231 | PR #54 | ✅ |
@@ -659,7 +659,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU3-CP13 | `POST /api/auth/password-recovery/confirm` con el código correcto responde 204 y pasa email, código y contraseña al caso de uso | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
 | HU3-CP14 | Restablecer con un código que no sirve responde 401 «Código incorrecto» | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
 | HU3-CP15 | Restablecer con una contraseña que no cumple la política responde 400 con el código del motivo (p. ej. `PASSWORD_WEAK`) | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
-| HU3-CP16 | Los dos endpoints rechazan un cuerpo incompleto (400) y una petición sin token anti-CSRF (403) sin llamar al caso de uso | Integración web (`@WebMvcTest`) | 4 | 🔍 En revisión |
+| HU3-CP16 | Los dos endpoints rechazan un cuerpo incompleto (400) y una petición sin token anti-CSRF (403) sin llamar al caso de uso | Integración web (`@WebMvcTest`) | 4 | ✅ Pasa |
 | HU3-CP17 | La petición de restablecer no muestra la contraseña ni el código en su `toString` (logs) | Unitario (infraestructura) | 1 | ✅ Pasa |
 | HU3-CP18 | El inicio de sesión tiene el enlace «¿Has olvidado tu contraseña?», que lleva a la recuperación | Frontend (página) | 1 | ✅ Pasa |
 | HU3-CP19 | Sin email, o con uno mal formado, se avisa en el campo y no se pide ningún código | Frontend (página) | 1 | ✅ Pasa |
@@ -708,9 +708,9 @@ Notas:
 | HU3-CP13 | `RecuperacionContrasenaControllerTest` | `restablecerRespondeSinContenidoYPasaElComando` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
 | HU3-CP14 | `RecuperacionContrasenaControllerTest` | `restablecerConCodigoInvalidoRespondeUnauthorized` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
 | HU3-CP15 | `RecuperacionContrasenaControllerTest` | `restablecerConContrasenaDebilRespondeBadRequestConSuCodigo` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
-| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `solicitarSinEmailRespondeBadRequest` | Infraestructura (web) | AB#399 | PR #176 (modificado en este PR) | 🔍 |
+| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `solicitarSinEmailRespondeBadRequest` | Infraestructura (web) | AB#399 | PR #176 (modificado en PR #183) | ✅ |
 | HU3-CP16 | `RecuperacionContrasenaControllerTest` | `solicitarSinCsrfRespondeForbidden` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
-| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `restablecerConCamposVaciosRespondeBadRequest` | Infraestructura (web) | AB#399 | PR #176 (modificado en este PR) | 🔍 |
+| HU3-CP16 | `RecuperacionContrasenaControllerTest` | `restablecerConCamposVaciosRespondeBadRequest` | Infraestructura (web) | AB#399 | PR #176 (modificado en PR #183) | ✅ |
 | HU3-CP16 | `RecuperacionContrasenaControllerTest` | `restablecerSinCsrfRespondeForbidden` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
 | HU3-CP17 | `RestablecerContrasenaRequestTest` | `toStringNoMuestraLaContrasenaNiElCodigo` | Infraestructura (web) | AB#399 | PR #176 | ✅ |
 | HU3-CP18 | `LoginFlow.test.jsx` | `HU3-CP18: el inicio de sesión tiene un enlace a la recuperación de contraseña` | Frontend · página | AB#398 | PR #178 | ✅ |
@@ -839,7 +839,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU5-CP26 | Eliminar una dirección tras confirmarlo; cancelar no elimina nada | Frontend (componente) | 2 | ✅ Pasa |
 | HU5-CP27 | Para eliminar la principal hay que elegir la sustituta, salvo si es la única; desde la página, la elegida pasa a ser la principal | Frontend (componente y página) | 3 | ✅ Pasa |
 | HU5-CP28 | Si la eliminación falla, se avisa sin cerrar el diálogo | Frontend (componente) | 1 | ✅ Pasa |
-| HU5-CP29 | La gestión de direcciones exige el rol cliente y que el correo recibido sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, rama `fix/seguridad-capa-negocio`) |
+| HU5-CP29 | La gestión de direcciones exige el rol cliente y que el correo recibido sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa |
 
 Notas:
 - **HU5-CP01 a CP16 (backend):** casos propuestos y aprobados por el equipo junto con el diseño de la HU5 (tasks AB#105, AB#106 y AB#107). Los casos de prueba no se registran en Azure Boards: viven en esta matriz y en el `@DisplayName` de cada test. Los del frontend, HU5-CP17 a CP28, se aprobaron con el mismo diseño (tasks AB#108 y AB#109).
@@ -848,7 +848,7 @@ Notas:
 - **Colección nueva:** `direcciones_envio` (`ColeccionesEsiBuy`), acordada con el equipo.
 - **Vista del frontend (AB#108):** `/addresses`, solo para clientes. Detalle en `frontend/docs/hu5-direcciones-de-envio.md`.
 - **Archivos de tests nuevos**, acordados con el equipo: `addresses.test.js`, `AddressesPage.test.jsx`, `AddressFormPanel.test.jsx` y `DeleteAddressDialog.test.jsx`.
-- **HU5-CP29 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Comprueba con `@PreAuthorize` que `GestionDireccionesUseCase` exige el rol cliente y que el correo recibido es el de la sesión. Clase de test nueva `direcciones/application/service/SeguridadDireccionesServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
+- **HU5-CP29 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio` (PR #168, mergeado), sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Comprueba con `@PreAuthorize` que `GestionDireccionesUseCase` exige el rol cliente y que el correo recibido es el de la sesión. Clase de test nueva `direcciones/application/service/SeguridadDireccionesServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -960,11 +960,11 @@ Notas:
 | HU5-CP27 | `DeleteAddressDialog.test.jsx` | `HU5-CP27: para eliminar la principal hay que elegir otra dirección como principal` | Frontend · componente | AB#109 | PR #163 | ✅ |
 | HU5-CP27 | `DeleteAddressDialog.test.jsx` | `HU5-CP27: la única dirección se elimina sin elegir sustituta` | Frontend · componente | AB#109 | PR #163 | ✅ |
 | HU5-CP28 | `DeleteAddressDialog.test.jsx` | `HU5-CP28: si la eliminación falla avisa y no cierra el diálogo` | Frontend · componente | AB#109 | PR #163 | ✅ |
-| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unVendedorNoUsaLasDirecciones` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
-| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unAdministradorNoUsaLasDirecciones` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
-| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unClienteNoOperaConElCorreoDeOtro` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
-| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unClienteOperaConSuPropioCorreo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
-| HU5-CP29 | `SeguridadDireccionesServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unVendedorNoUsaLasDirecciones` | Aplicación | — | PR #168 | ✅ |
+| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unAdministradorNoUsaLasDirecciones` | Aplicación | — | PR #168 | ✅ |
+| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unClienteNoOperaConElCorreoDeOtro` | Aplicación | — | PR #168 | ✅ |
+| HU5-CP29 | `SeguridadDireccionesServiceTest` | `unClienteOperaConSuPropioCorreo` | Aplicación | — | PR #168 | ✅ |
+| HU5-CP29 | `SeguridadDireccionesServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | PR #168 | ✅ |
 
 ---
 
@@ -1195,7 +1195,7 @@ Tests del frontend (bajo `frontend/src/`, con Vitest, React Testing Library y MS
 | HU7-CP12 | La búsqueda por nombre no distingue mayúsculas ni tildes y trata el texto como literal, no como expresión regular | Integración MongoDB | 2 | ✅ Pasa (2, AB#352, PR #153) |
 | HU7-CP13 | El filtro por categoría se puede combinar con la búsqueda | Integración MongoDB | 1 | ✅ Pasa (1, AB#352, PR #153) |
 | HU7-CP14 | El catálogo se ordena por nombre en los dos sentidos, paginado y con el total completo | Integración MongoDB | 1 | ✅ Pasa (1, AB#352, PR #153) |
-| HU7-CP15 | Mientras no haya valoraciones (HU13), una valoración mínima no devuelve ningún producto y ordenar por valoración desempata por nombre de la A a la Z | Integración MongoDB | 2 | ✅ Pasa (2, AB#352, PR #153) |
+| HU7-CP15 | Una valoración mínima solo deja los productos con esa media o más, y ordenar por valoración ordena por la media (HU13), desempata por nombre de la A a la Z y trata los productos sin valoraciones como los de menor media | Integración MongoDB | 2 | 🔍 En revisión (2, AB#352 · AB#415, PR #195) |
 | HU7-CP16 | El cliente recibe el catálogo con el formato del contrato (sin precio, stock ni vendedor; `valoracion` null y `numValoraciones` 0) | Integración (capa web) | 1 | ✅ Pasa (1, AB#353, PR #153) |
 | HU7-CP17 | Los parámetros llegan al caso de uso traducidos: página desde 0, criterio de orden y sentido | Integración (capa web) | 1 | ✅ Pasa (1, AB#353, PR #153) |
 | HU7-CP18 | Un parámetro no válido (página o tamaño menor que 1, valoración fuera de 1 a 5, orden o sentido desconocidos) devuelve 400 y no llega al caso de uso | Integración (capa web) | 1 | ✅ Pasa (1, AB#353, PR #153) |
@@ -1204,7 +1204,7 @@ Tests del frontend (bajo `frontend/src/`, con Vitest, React Testing Library y MS
 Notas:
 - **HU7-CP01 a CP09 (Sprint 2, frontend):** casos propuestos en las tasks AB#350 (vista de productos) y AB#351 (vista de filtrado y búsqueda), a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu7-busqueda-y-filtrado-de-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU7 (AB#69) en Azure Boards.
 - **HU7-CP10 a CP19 (Sprint 2, backend):** casos propuestos en las tasks AB#352 (lógica de filtrado de productos) y AB#353 (endpoint para obtener productos), con el contrato de `GET /api/products` que ya usaba el frontend. Desarrollados con TDD. Pendientes de confirmar con el equipo y de añadir a la HU7 (AB#69) en Azure Boards.
-- **Valoraciones (HU13, sin hacer):** hasta que existan, `valoracion` es `null`, `numValoraciones` es 0, una valoración mínima no devuelve nada y ordenar por valoración equivale a ordenar por nombre de la A a la Z. Está marcado en el código como `PENDIENTE DE DECIDIR (equipo)`; HU7-CP15 y CP16 protegen ese comportamiento provisional.
+- **Valoraciones (HU13, T415):** `valoracion` y `numValoraciones` salen de la media y el número de valoraciones que el módulo de valoraciones guarda en el producto (`valoracionMedia` y `numeroValoraciones`). La valoración mínima filtra por esa media y ordenar por valoración ordena por ella. Hasta la T415, una valoración mínima no devolvía nada y ordenar por valoración equivalía a ordenar por nombre; HU7-CP15 se modificó en la T415 para comprobar el comportamiento real. Un producto sin valoraciones sigue dando `null` y 0 (HU7-CP16).
 - **Decisiones de HU7-CP18:** `sort` y `order` se validan con `@Pattern`, como `page`, `size` y `minRating` con `@Min` y `@Max`. Que `minRating=6` sea inválido es una propuesta (la valoración va de 1 a 5).
 - **Pendiente de decidir:** el orden por nombre no usa la collation en español (`ORDEN_ALFABETICO_ES` de `UsuarioMongoAdapter`): las mayúsculas salen antes y las vocales con tilde, tras la Z. HU7-CP14 usa nombres sin tilde y en mayúscula para no depender de ello.
 - **Decisión del equipo:** no se ordena por categoría (no tiene sentido); el listado es un scroll infinito de diez en diez y no una paginación numérica; la selección son los diez mejor valorados, como tarjetas dentro de la animación y a todo el ancho de la página.
@@ -1269,8 +1269,8 @@ Notas:
 | HU7-CP12 | `ProductoMongoAdapterTest` | `buscarEnCatalogoTrataLaBusquedaComoTextoLiteral` | Infraestructura | AB#352 | PR #153 | ✅ |
 | HU7-CP13 | `ProductoMongoAdapterTest` | `buscarEnCatalogoFiltraPorCategoriaYBusqueda` | Infraestructura | AB#352 | PR #153 | ✅ |
 | HU7-CP14 | `ProductoMongoAdapterTest` | `buscarEnCatalogoOrdenaPorNombreYPagina` | Infraestructura | AB#352 | PR #153 | ✅ |
-| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoConValoracionMinimaNoDevuelveNada` | Infraestructura | AB#352 | PR #153 | ✅ |
-| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoPorValoracionDesempataPorNombre` | Infraestructura | AB#352 | PR #153 | ✅ |
+| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoConValoracionMinimaFiltraPorLaMedia` | Infraestructura | AB#352 · AB#415 | PR #153 (sustituido en el PR #195) | 🔍 |
+| HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoPorValoracionOrdenaPorLaMedia` | Infraestructura | AB#352 · AB#415 | PR #153 (sustituido en el PR #195) | 🔍 |
 | HU7-CP16 | `CatalogoControllerTest` | `clienteRecibeElCatalogoConElFormatoDelContrato` | Infraestructura | AB#353 | PR #153 | ✅ |
 | HU7-CP17 | `CatalogoControllerTest` | `traduceLosParametrosALaConsulta` | Infraestructura | AB#353 | PR #153 | ✅ |
 | HU7-CP18 | `CatalogoControllerTest` | `parametroNoValidoDevuelve400` | Infraestructura | AB#353 | PR #153 | ✅ |
@@ -1559,34 +1559,38 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 | HU10-CP03 | Con el carrito vacío la pasarela lo indica, no ofrece pagar y permite volver a los productos | Frontend (página) | 1 | ✅ Pasa |
 | HU10-CP04 | Al pulsar «Simular pago» se indica que se procesa, se crea un pedido por cada proveedor, se confirma cada uno y el carrito queda vacío | Frontend (página) | 3 | ✅ Pasa |
 | HU10-CP05 | Si falla el pedido de un proveedor se confirman los demás, se avisa de cuál ha fallado, su compra se conserva en el carrito y se puede reintentar sin repetir lo ya pagado | Frontend (página) | 3 | ✅ Pasa |
-| HU10-CP06 | Cada pedido se pide con un solo proveedor, uno detrás de otro | Frontend (página) | 1 | 🔍 En revisión (1, AB#133, PR #157) |
-| HU10-CP07 | La pasarela lista los métodos de pago guardados del cliente (HU6), con su máscara, marca el predeterminado y deja elegir otro antes de pagar | Frontend (página) | 2 | 🔍 En revisión (2, AB#133, PR #157) |
-| HU10-CP08 | Sin métodos de pago guardados no se puede pagar y se lleva a la vista de métodos de pago (HU6) para añadir uno; si no se pueden cargar, se indica y se puede reintentar | Frontend (página) | 2 | 🔍 En revisión (2, AB#133, PR #157) |
-| HU10-CP09 | Cada pedido se crea con el método de pago elegido (`paymentMethodId`) | Frontend (página) | 1 | 🔍 En revisión (1, AB#133, PR #157) |
-| HU10-CP10 | Tras pagar se muestra un recibo con forma de ticket: total pagado (solo de los pedidos creados), fecha, cada pedido con su número, proveedor e importe, y el método de pago usado con su máscara | Frontend (página + componente) | 6 | 🔍 En revisión (6, AB#133, PR #157) |
-| HU10-CP11 | La decoración del recibo no estorba: el código de barras y el confeti quedan ocultos a los lectores de pantalla y no hay confeti si el usuario prefiere reducir el movimiento | Frontend (componente) | 3 | 🔍 En revisión (3, AB#133, PR #157) |
+| HU10-CP06 | Cada pedido se pide con un solo proveedor, uno detrás de otro | Frontend (página) | 1 | ✅ Pasa |
+| HU10-CP07 | La pasarela lista los métodos de pago guardados del cliente (HU6), con su máscara, marca el predeterminado y deja elegir otro antes de pagar | Frontend (página) | 2 | ✅ Pasa |
+| HU10-CP08 | Sin métodos de pago guardados no se puede pagar y se lleva a la vista de métodos de pago (HU6) para añadir uno; si no se pueden cargar, se indica y se puede reintentar | Frontend (página) | 2 | ✅ Pasa |
+| HU10-CP09 | Cada pedido se crea con el método de pago elegido (`paymentMethodId`) | Frontend (página) | 1 | 🔍 En revisión (1, AB#133, PR #194) |
+| HU10-CP10 | Tras pagar se muestra un recibo con forma de ticket: total pagado (solo de los pedidos creados), fecha, cada pedido con su número, proveedor e importe, y el método de pago usado con su máscara | Frontend (página + componente) | 6 | ✅ Pasa |
+| HU10-CP11 | La decoración del recibo no estorba: el código de barras y el confeti quedan ocultos a los lectores de pantalla y no hay confeti si el usuario prefiere reducir el movimiento | Frontend (componente) | 3 | ✅ Pasa |
 | HU10-CP12 | El pedido nace PAGADO, con un solo proveedor, al menos una línea, sin productos repetidos, cliente, dirección y método de pago, y su total es la suma de las líneas | Unitario | 5 | 🔍 En revisión (5, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP13 | Número de pedido `ESB-AAAA-NNNNNN`: año y correlativo de seis cifras, un contador por año en `contadores`, atómico aunque haya pedidos a la vez | Unitario + integración | 8 | 🔍 En revisión (8, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP14 | El pedido toma del carrito solo los productos de su proveedor, con los precios del servidor, los quita del carrito y responde 201 con el contrato del frontend | Unitario + controlador | 5 | 🔍 En revisión (5, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP15 | Se descuenta el stock de forma atómica; si falta de algún producto o no se puede guardar, no se crea el pedido, se repone lo descontado y responde 409 `INSUFFICIENT_STOCK` | Unitario + integración + controlador | 11 | 🔍 En revisión (11, AB#380 a AB#382 y AB#131, PR #166) |
-| HU10-CP16 | El método de pago y la dirección tienen que ser del cliente (si no, 400) y la dirección se copia en el pedido; una petición incompleta responde 400 | Unitario + controlador | 10 | 🔍 En revisión (10, AB#380 a AB#382 y AB#131, PR #166) |
+| HU10-CP16 | El método de pago y la dirección tienen que ser del cliente (si no, 400) y la dirección se copia en el pedido; una petición incompleta responde 400 | Unitario + controlador | 10 | ✅ Pasa |
 | HU10-CP17 | Sin productos de ese proveedor en el carrito no se crea el pedido (409 `CART_EMPTY`) | Unitario + controlador | 3 | 🔍 En revisión (3, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP18 | Solo el cliente en sesión realiza pedidos: sin sesión 401, otro rol 403 y sin CSRF se rechaza | Unitario + controlador | 2 | 🔍 En revisión (2, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP19 | Persistencia en `pedidos`: el mapper no pierde datos, importes como Decimal128, número de pedido único y con formato validado por la colección | Unitario + integración | 5 | 🔍 En revisión (5, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP20 | Realizar un pedido exige el rol cliente y que el correo del comando sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, rama `fix/seguridad-capa-negocio`) |
+| HU10-CP21 | La pasarela lista las direcciones de envío del cliente (HU5), marca la principal y deja elegir otra antes de pagar | Frontend (página) | 2 | 🔍 En revisión (2, AB#133, PR #194) |
+| HU10-CP22 | Sin direcciones de envío no se puede pagar y se lleva a la vista de direcciones (HU5) para añadir una; si no se pueden cargar, se indica y se puede reintentar | Frontend (página) | 2 | 🔍 En revisión (2, AB#133, PR #194) |
+| HU10-CP23 | Cada pedido se crea con la dirección de envío elegida (`direccionId`) | Frontend (página) | 1 | 🔍 En revisión (1, AB#133, PR #194) |
 
 Notas:
 - **HU10-CP01 a CP06 (Sprint 2, frontend):** casos propuestos en la task AB#401 (vista de la pasarela de pago) a partir de lo pedido (`frontend/docs/hu10-pasarela-de-pago.md`). Pendientes de confirmar con el equipo y de añadir a la HU10 (AB#72) en Azure Boards. La task AB#379 (vista de carrito) es la misma pantalla que la AB#384 (HU9).
-- **Backend:** la entidad pedido y su endpoint (AB#380 a AB#382) no existen todavía; los tests usan el contrato propuesto por el frontend y los mocks (MSW).
+- **Backend:** la entidad pedido y su endpoint (AB#380 a AB#382) no existen todavía; los tests usan el contrato propuesto por el frontend y los mocks (MSW). Superado: el backend existe desde el PR #166 y la pasarela lo usa desde PR #194.
 - **Decisión del equipo:** cada pedido tiene un solo proveedor, la pasarela da la orden de realización del pedido por proveedor y hay un botón para simular el pago (no se cobra nada).
 - **Archivo de tests nuevo** creado sin consulta previa: `CheckoutPage.test.jsx`.
 - **HU10-CP07 a CP11 (Sprint 2, frontend):** casos propuestos en la task AB#133 (flujo de checkout: pago y confirmación) y aprobados por el equipo junto con el diseño. Pendientes de añadir a la HU10 (AB#72) en Azure Boards. El ticket se adapta del componente de referencia `AnimatedTicket` (shadcn) a Fluent UI v9, sin instalar nada.
-- **Contrato propuesto:** `POST /api/orders` pasa a enviar `{ vendedorId, paymentMethodId }` (campo `paymentMethodId` de la colección `pedidos`), pendiente de acordar con el backend de pedidos (AB#380 a AB#382). Por eso HU10-CP06 compara ahora solo el proveedor de cada pedido.
+- **Contrato propuesto:** `POST /api/orders` pasa a enviar `{ vendedorId, paymentMethodId }` (campo `paymentMethodId` de la colección `pedidos`), pendiente de acordar con el backend de pedidos (AB#380 a AB#382). Por eso HU10-CP06 compara ahora solo el proveedor de cada pedido. Superado en AB#133 (PR #194): la pasarela usa el contrato real del backend, `POST /api/customer/orders` con `{ vendedorId, direccionId, paymentMethodId }`.
 - **Archivo de tests nuevo**, acordado con el equipo: `PaymentTicket.test.jsx`.
 
 - **Backend (HU10-CP12 a CP19):** módulo `pedidos` (AB#380 entidad, AB#382 lógica, AB#381 y AB#130 endpoint, AB#131 número y stock, AB#132 tests), con `POST /api/customer/orders` y `{ vendedorId, direccionId, paymentMethodId }`. Casos propuestos y aprobados por el equipo junto con el diseño; pendientes de añadir a la HU10 (AB#72) en Azure Boards. Decisiones del equipo: la ruta va bajo `/api/customer/**`, el número `ESB-AAAA-NNNNNN` vuelve a empezar cada año, el pedido nace PAGADO y, sin transacciones, lo que falla a mitad se compensa reponiendo el stock.
 - **Tests en clases que ya existían** (un archivo de tests por clase): `ProductoMongoAdapterTest` (productos), `GestionMetodosPagoServiceTest` (métodos de pago), `GestionDireccionesServiceTest` (direcciones) e `InicializadorColeccionesTest` (colecciones) ganan casos HU10, por los métodos y la colección nuevos que usa el pedido.
 - **HU10-CP20 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Comprueba con `@PreAuthorize` que `RealizacionPedidoUseCase` exige el rol cliente y que el correo del comando es el de la sesión. Clase de test nueva `pedidos/application/service/SeguridadPedidosServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
+- **HU10-CP21 a CP23 (frontend):** casos propuestos en la task AB#133 (pasarela con dirección de envío y endpoint real) y aprobados por el equipo junto con el diseño. Pendientes de añadir a la HU10 (AB#72) en Azure Boards. HU10-CP09 cambia porque cada pedido envía también la `direccionId`; los tests de CP05, CP06 y CP10 que espían la petición solo cambian la ruta a `/api/customer/orders`. Sin archivos de tests nuevos.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1606,21 +1610,21 @@ Notas:
 | HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: confirma los pedidos que sí se han creado e indica cuál ha fallado` | Frontend · página | AB#401 | PR #146 | ✅ |
 | HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: la compra del pedido que ha fallado se conserva en el carrito` | Frontend · página | AB#401 | PR #146 | ✅ |
 | HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: se puede reintentar el pago de lo que falló, sin repetir lo ya pagado` | Frontend · página | AB#401 | PR #146 | ✅ |
-| HU10-CP06 | `CheckoutPage.test.jsx` | `HU10-CP06: cada pedido se pide con un solo proveedor, uno detrás de otro` | Frontend · página | AB#401 | PR #146; modificado en PR #157 | 🔍 |
-| HU10-CP07 | `CheckoutPage.test.jsx` | `HU10-CP07: lista los métodos de pago guardados del cliente y marca el predeterminado` | Frontend · página | AB#133 | PR #157 | 🔍 |
-| HU10-CP07 | `CheckoutPage.test.jsx` | `HU10-CP07: se puede elegir otro método de pago antes de pagar` | Frontend · página | AB#133 | PR #157 | 🔍 |
-| HU10-CP08 | `CheckoutPage.test.jsx` | `HU10-CP08: sin métodos de pago guardados no deja pagar y lleva a sus métodos de pago para añadir uno` | Frontend · página | AB#133 | PR #157 | 🔍 |
-| HU10-CP08 | `CheckoutPage.test.jsx` | `HU10-CP08: si no se pueden cargar los métodos de pago lo indica y deja reintentar` | Frontend · página | AB#133 | PR #157 | 🔍 |
-| HU10-CP09 | `CheckoutPage.test.jsx` | `HU10-CP09: cada pedido se crea con el método de pago elegido` | Frontend · página | AB#133 | PR #157 | 🔍 |
-| HU10-CP10 | `CheckoutPage.test.jsx` | `HU10-CP10: tras pagar muestra un recibo con el total pagado, cada pedido y el método de pago usado` | Frontend · página | AB#133 | PR #157 | 🔍 |
-| HU10-CP10 | `CheckoutPage.test.jsx` | `HU10-CP10: si falla un pedido, el recibo solo cobra los pedidos creados` | Frontend · página | AB#133 | PR #157 | 🔍 |
-| HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: muestra el total pagado, la suma de los pedidos` | Frontend · componente | AB#133 | PR #157 | 🔍 |
-| HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: muestra la fecha del pago` | Frontend · componente | AB#133 | PR #157 | 🔍 |
-| HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: lista cada pedido con su número, su proveedor y su importe` | Frontend · componente | AB#133 | PR #157 | 🔍 |
-| HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: muestra el método de pago usado solo con su máscara` | Frontend · componente | AB#133 | PR #157 | 🔍 |
-| HU10-CP11 | `PaymentTicket.test.jsx` | `HU10-CP11: el código de barras es decorativo y queda oculto a los lectores de pantalla` | Frontend · componente | AB#133 | PR #157 | 🔍 |
-| HU10-CP11 | `PaymentTicket.test.jsx` | `HU10-CP11: celebra el pago con confeti decorativo` | Frontend · componente | AB#133 | PR #157 | 🔍 |
-| HU10-CP11 | `PaymentTicket.test.jsx` | `HU10-CP11: sin confeti si el usuario prefiere reducir el movimiento` | Frontend · componente | AB#133 | PR #157 | 🔍 |
+| HU10-CP06 | `CheckoutPage.test.jsx` | `HU10-CP06: cada pedido se pide con un solo proveedor, uno detrás de otro` | Frontend · página | AB#401 | PR #146; modificado en PR #157 | ✅ |
+| HU10-CP07 | `CheckoutPage.test.jsx` | `HU10-CP07: lista los métodos de pago guardados del cliente y marca el predeterminado` | Frontend · página | AB#133 | PR #157 |✅ |
+| HU10-CP07 | `CheckoutPage.test.jsx` | `HU10-CP07: se puede elegir otro método de pago antes de pagar` | Frontend · página | AB#133 | PR #157 |✅ |
+| HU10-CP08 | `CheckoutPage.test.jsx` | `HU10-CP08: sin métodos de pago guardados no deja pagar y lleva a sus métodos de pago para añadir uno` | Frontend · página | AB#133 | PR #157 |✅ |
+| HU10-CP08 | `CheckoutPage.test.jsx` | `HU10-CP08: si no se pueden cargar los métodos de pago lo indica y deja reintentar` | Frontend · página | AB#133 | PR #157 |✅ |
+| HU10-CP09 | `CheckoutPage.test.jsx` | `HU10-CP09: cada pedido se crea con el método de pago elegido` | Frontend · página | AB#133 | PR #157; modificado en PR #194 | 🔍 |
+| HU10-CP10 | `CheckoutPage.test.jsx` | `HU10-CP10: tras pagar muestra un recibo con el total pagado, cada pedido y el método de pago usado` | Frontend · página | AB#133 | PR #157 |✅ |
+| HU10-CP10 | `CheckoutPage.test.jsx` | `HU10-CP10: si falla un pedido, el recibo solo cobra los pedidos creados` | Frontend · página | AB#133 | PR #157 |✅ |
+| HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: muestra el total pagado, la suma de los pedidos` | Frontend · componente | AB#133 | PR #157 |✅ |
+| HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: muestra la fecha del pago` | Frontend · componente | AB#133 | PR #157 |✅ |
+| HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: lista cada pedido con su número, su proveedor y su importe` | Frontend · componente | AB#133 | PR #157 |✅ |
+| HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: muestra el método de pago usado solo con su máscara` | Frontend · componente | AB#133 | PR #157 |✅ |
+| HU10-CP11 | `PaymentTicket.test.jsx` | `HU10-CP11: el código de barras es decorativo y queda oculto a los lectores de pantalla` | Frontend · componente | AB#133 | PR #157 |✅ |
+| HU10-CP11 | `PaymentTicket.test.jsx` | `HU10-CP11: celebra el pago con confeti decorativo` | Frontend · componente | AB#133 | PR #157 |✅ |
+| HU10-CP11 | `PaymentTicket.test.jsx` | `HU10-CP11: sin confeti si el usuario prefiere reducir el movimiento` | Frontend · componente | AB#133 | PR #157 |✅ |
 | HU10-CP12 | `PedidoTest` | `unPedidoNuevoNacePagadoConSuTotal` | Dominio | AB#380 | PR #166 | 🔍 |
 | HU10-CP12 | `PedidoTest` | `unPedidoSinLineasNoEsValido` | Dominio | AB#380 | PR #166 | 🔍 |
 | HU10-CP12 | `PedidoTest` | `unPedidoSinDatosObligatoriosNoEsValido` | Dominio | AB#380 | PR #166 | 🔍 |
@@ -1650,16 +1654,16 @@ Notas:
 | HU10-CP15 | `ProductoMongoAdapterTest` | `descontarStockLoRestaSiHaySuficiente` | Infraestructura | AB#131 | PR #166 | 🔍 |
 | HU10-CP15 | `ProductoMongoAdapterTest` | `dosDescuentosALaVezNoDejanElStockNegativo` | Infraestructura | AB#131 | PR #166 | 🔍 |
 | HU10-CP15 | `ProductoMongoAdapterTest` | `reponerStockDevuelveLasUnidades` | Infraestructura | AB#131 | PR #166 | 🔍 |
-| HU10-CP16 | `GestionDireccionesServiceTest` | `consultarParaPedidoDevuelveLosDatosDeUnaDireccionPropia` | Aplicación | AB#382 | PR #166 | 🔍 |
-| HU10-CP16 | `GestionDireccionesServiceTest` | `consultarParaPedidoNoDevuelveUnaDireccionAjena` | Aplicación | AB#382 | PR #166 | 🔍 |
-| HU10-CP16 | `GestionMetodosPagoServiceTest` | `esDelClienteSoloAceptaUnMetodoPropio` | Aplicación | AB#382 | PR #166 | 🔍 |
-| HU10-CP16 | `RealizacionPedidoServiceTest` | `elMetodoDePagoTieneQueSerDelCliente` | Aplicación | AB#382 | PR #166 | 🔍 |
-| HU10-CP16 | `RealizacionPedidoServiceTest` | `laDireccionTieneQueSerDelClienteYSeCopia` | Aplicación | AB#382 | PR #166 | 🔍 |
-| HU10-CP16 | `PedidoControllerTest` | `unMetodoODireccionAjenosResponden400` | Infraestructura | AB#381 | PR #166 | 🔍 |
-| HU10-CP16 | `PedidoControllerTest` | `unaPeticionIncompletaResponde400` | Infraestructura | AB#381 | PR #166 | 🔍 |
-| HU10-CP16 | `DireccionesAdapterTest` | `losDatosDeLaDireccionSeCopian` | Infraestructura | AB#382 | PR #166 | 🔍 |
-| HU10-CP16 | `DireccionesAdapterTest` | `unaDireccionAjenaNoSeDevuelve` | Infraestructura | AB#382 | PR #166 | 🔍 |
-| HU10-CP16 | `MetodosPagoAdapterTest` | `esDelClientePreguntaAlModuloDeMetodosDePago` | Infraestructura | AB#382 | PR #166 | 🔍 |
+| HU10-CP16 | `GestionDireccionesServiceTest` | `consultarParaPedidoDevuelveLosDatosDeUnaDireccionPropia` | Aplicación | AB#382 | PR #166 | ✅ |
+| HU10-CP16 | `GestionDireccionesServiceTest` | `consultarParaPedidoNoDevuelveUnaDireccionAjena` | Aplicación | AB#382 | PR #166 | ✅ |
+| HU10-CP16 | `GestionMetodosPagoServiceTest` | `esDelClienteSoloAceptaUnMetodoPropio` | Aplicación | AB#382 | PR #166 | ✅ |
+| HU10-CP16 | `RealizacionPedidoServiceTest` | `elMetodoDePagoTieneQueSerDelCliente` | Aplicación | AB#382 | PR #166 | ✅ |
+| HU10-CP16 | `RealizacionPedidoServiceTest` | `laDireccionTieneQueSerDelClienteYSeCopia` | Aplicación | AB#382 | PR #166 | ✅ |
+| HU10-CP16 | `PedidoControllerTest` | `unMetodoODireccionAjenosResponden400` | Infraestructura | AB#381 | PR #166 | ✅ |
+| HU10-CP16 | `PedidoControllerTest` | `unaPeticionIncompletaResponde400` | Infraestructura | AB#381 | PR #166 | ✅ |
+| HU10-CP16 | `DireccionesAdapterTest` | `losDatosDeLaDireccionSeCopian` | Infraestructura | AB#382 | PR #166 | ✅ |
+| HU10-CP16 | `DireccionesAdapterTest` | `unaDireccionAjenaNoSeDevuelve` | Infraestructura | AB#382 | PR #166 | ✅ |
+| HU10-CP16 | `MetodosPagoAdapterTest` | `esDelClientePreguntaAlModuloDeMetodosDePago` | Infraestructura | AB#382 | PR #166 | ✅ |
 | HU10-CP17 | `RealizacionPedidoServiceTest` | `sinProductosDelProveedorNoSeCreaElPedido` | Aplicación | AB#382 | PR #166 | 🔍 |
 | HU10-CP17 | `PedidoControllerTest` | `sinProductosDelProveedorResponde409` | Infraestructura | AB#381 | PR #166 | 🔍 |
 | HU10-CP17 | `CarritoAdapterTest` | `sinProductosDelProveedorNoHayCompra` | Infraestructura | AB#382 | PR #166 | 🔍 |
@@ -1675,6 +1679,11 @@ Notas:
 | HU10-CP20 | `SeguridadPedidosServiceTest` | `unClienteNoPideConElCorreoDeOtro` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 | HU10-CP20 | `SeguridadPedidosServiceTest` | `unClientePideConSuPropioCorreo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 | HU10-CP20 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaElPedido` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU10-CP21 | `CheckoutPage.test.jsx` | `HU10-CP21: lista las direcciones de envío del cliente y marca la principal` | Frontend · página | AB#133 | PR #194 | 🔍 |
+| HU10-CP21 | `CheckoutPage.test.jsx` | `HU10-CP21: se puede elegir otra dirección de envío antes de pagar` | Frontend · página | AB#133 | PR #194 | 🔍 |
+| HU10-CP22 | `CheckoutPage.test.jsx` | `HU10-CP22: sin direcciones de envío no deja pagar y lleva a sus direcciones para añadir una` | Frontend · página | AB#133 | PR #194 | 🔍 |
+| HU10-CP22 | `CheckoutPage.test.jsx` | `HU10-CP22: si no se pueden cargar las direcciones de envío lo indica y deja reintentar` | Frontend · página | AB#133 | PR #194 | 🔍 |
+| HU10-CP23 | `CheckoutPage.test.jsx` | `HU10-CP23: cada pedido se crea con la dirección de envío elegida` | Frontend · página | AB#133 | PR #194 | 🔍 |
 
 Ruta de la clase de test (bajo `frontend/src/`):
 - `CheckoutPage.test.jsx`: `pages/` (Vitest, React Testing Library y MSW)
@@ -1698,40 +1707,51 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU11-CP01 | El historial devuelve los pedidos del cliente de la sesión, del más reciente al más antiguo (vacío si no tiene); se consulta con su id, no con su correo | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#378, PR sin abrir) |
-| HU11-CP02 | El detalle devuelve el pedido del cliente con sus productos, precios y estado | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#378, PR sin abrir) |
-| HU11-CP03 | El pedido de otro cliente se trata como si no existiera, igual que uno inexistente (`PedidoNoEncontradoException`) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#378, PR sin abrir) |
-| HU11-CP04 | En MongoDB se buscan los pedidos de un cliente, del más reciente al más antiguo, y un pedido por su id con sus líneas | Integración (Testcontainers) | 2 | 🔍 En revisión (2, AB#378, PR sin abrir) |
-| HU11-CP05 | Los estados de envío van en el orden en que avanza un pedido (`PAGADO`, `PREPARANDO`, `ENVIADO`, `ENTREGADO`) con `CANCELADO` al final, y cada uno se guarda y se lee igual | Unitario (dominio e infraestructura) | 2 | 🔍 En revisión (2, AB#378, PR sin abrir) |
-| HU11-CP06 | Solo el cliente consulta su historial y el detalle de sus pedidos: vendedor, administrador, otro cliente y sin sesión, rechazados | Seguridad (`@PreAuthorize`, contexto mínimo) | 5 | 🔍 En revisión (5, AB#378, PR sin abrir) |
+| HU11-CP01 | El historial devuelve los pedidos del cliente de la sesión, del más reciente al más antiguo (vacío si no tiene); se consulta con su id, no con su correo | Unitario (aplicación) | 2 | ✅ Pasa |
+| HU11-CP02 | El detalle devuelve el pedido del cliente con sus productos, precios y estado | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU11-CP03 | El pedido de otro cliente se trata como si no existiera, igual que uno inexistente (`PedidoNoEncontradoException`) | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU11-CP04 | En MongoDB se buscan los pedidos de un cliente, del más reciente al más antiguo, y un pedido por su id con sus líneas | Integración (Testcontainers) | 2 | ✅ Pasa |
+| HU11-CP05 | Los estados de envío van en el orden en que avanza un pedido (`PAGADO`, `PREPARANDO`, `ENVIADO`, `ENTREGADO`) con `CANCELADO` al final, y cada uno se guarda y se lee igual | Unitario (dominio e infraestructura) | 2 | ✅ Pasa |
+| HU11-CP06 | Solo el cliente consulta su historial y el detalle de sus pedidos: vendedor, administrador, otro cliente y sin sesión, rechazados | Seguridad (`@PreAuthorize`, contexto mínimo) | 5 | ✅ Pasa |
+| HU11-CP07 | `GET /api/customer/orders` responde 200 con los pedidos completos del cliente de la sesión (`[]` si no tiene); no expone el cliente | Integración web (`@WebMvcTest`) | 2 | 🔍 En revisión (2, AB#377, PR sin abrir) |
+| HU11-CP08 | `GET /api/customer/orders/{id}` responde 200 con el pedido: productos, desglose de precios, total, estado y dirección de envío | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#377, PR sin abrir) |
+| HU11-CP09 | Un pedido que no existe o es de otro cliente responde 400 con el code `ORDER_NOT_FOUND` («El pedido no existe») | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#377, PR sin abrir) |
+| HU11-CP10 | Sin sesión el historial y el detalle responden 401, y con otro rol (vendedor, administrador) 403 | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#377, PR sin abrir) |
 
 Notas:
 - **HU11-CP01 a CP06 (Sprint 2, backend, TDD):** casos propuestos en la T378 (AB#378, lógica de obtención de pedidos) a partir del criterio de aceptación de la HU11 (AB#73): «el sistema muestra el detalle de los productos, desglose de precios y la máquina de estados de envío cuando el cliente selecciona un pedido concreto». Pendientes de confirmar con el equipo y de añadir a la HU11 en Azure Boards.
 - **Decisiones del equipo:** el historial y el detalle se añaden a `ConsultaComprasUseCase` (mismo actor y propósito que `haComprado` de la HU13). Estados de envío: `PAGADO → PREPARANDO → ENVIADO → ENTREGADO`, más `CANCELADO` para la HU12; los hará avanzar el vendedor en otra HU. Un pedido ajeno se trata como inexistente.
-- **Pendiente:** el endpoint (T377, AB#377) y la vista del frontend (T376, AB#376). `haComprado` (HU13) solo cuenta los pedidos `PAGADO`: cuando los estados avancen, habrá que decidir si `ENTREGADO` cuenta como compra (comentario «PENDIENTE DE DECIDIR» en `ConsultaComprasService`).
+- **HU11-CP07 a CP10 (Sprint 2, backend, TDD):** casos propuestos en la T377 (AB#377, endpoint de obtención de pedidos): `GET /api/customer/orders` (historial, cada pedido completo con el formato de `PedidoResponse`) y `GET /api/customer/orders/{id}` (detalle). Un pedido ajeno o inexistente responde 400 `ORDER_NOT_FOUND`, como pide el CLAUDE.md para los pedidos. HU11-CP10 pasó sin rojo real: `SecurityConfig` ya protege `/api/customer/**`. Pendientes de confirmar con el equipo y de añadir a la HU11 en Azure Boards.
+- **Pendiente:** la vista del frontend (T376, AB#376). `haComprado` (HU13) solo cuenta los pedidos `PAGADO`: cuando los estados avancen, habrá que decidir si `ENTREGADO` cuenta como compra (comentario «PENDIENTE DE DECIDIR» en `ConsultaComprasService`).
 
 ### Tabla B · casos de prueba ↔ tests
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU11-CP01 | `ConsultaComprasServiceTest` | `listarPedidosDevuelveLosDelClienteEnElOrdenDelRepositorio` | Aplicación | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP01 | `ConsultaComprasServiceTest` | `listarPedidosSinPedidosDevuelveUnaListaVacia` | Aplicación | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP02 | `ConsultaComprasServiceTest` | `consultarPedidoDevuelveElPedidoDelCliente` | Aplicación | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP03 | `ConsultaComprasServiceTest` | `consultarPedidoAjenoOInexistenteNoLoRevela` | Aplicación | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP04 | `PedidoMongoAdapterTest` | `buscarPorClienteDevuelveSusPedidosDelMasRecienteAlMasAntiguo` | Infraestructura | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP04 | `PedidoMongoAdapterTest` | `buscarPorIdDevuelveElPedidoConSusLineas` | Infraestructura | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP05 | `EstadoPedidoTest` | `losEstadosVanEnElOrdenDelEnvio` | Dominio | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP05 | `PedidoDocumentMapperTest` | `cadaEstadoDeEnvioSeGuardaYSeLee` | Infraestructura | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP06 | `SeguridadPedidosServiceTest` | `unVendedorNoConsultaElHistorial` | Aplicación (seguridad) | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP06 | `SeguridadPedidosServiceTest` | `unAdministradorNoConsultaElHistorial` | Aplicación (seguridad) | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP06 | `SeguridadPedidosServiceTest` | `unClienteNoConsultaLosPedidosDeOtro` | Aplicación (seguridad) | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP06 | `SeguridadPedidosServiceTest` | `unClienteConsultaSuPropioHistorial` | Aplicación (seguridad) | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP06 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaConsultarPedidos` | Aplicación (seguridad) | AB#378 | Rama `feature/US11-T378-logica-obtencion-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP01 | `ConsultaComprasServiceTest` | `listarPedidosDevuelveLosDelClienteEnElOrdenDelRepositorio` | Aplicación | AB#378 | PR #182 | ✅ |
+| HU11-CP01 | `ConsultaComprasServiceTest` | `listarPedidosSinPedidosDevuelveUnaListaVacia` | Aplicación | AB#378 | PR #182 | ✅ |
+| HU11-CP02 | `ConsultaComprasServiceTest` | `consultarPedidoDevuelveElPedidoDelCliente` | Aplicación | AB#378 | PR #182 | ✅ |
+| HU11-CP03 | `ConsultaComprasServiceTest` | `consultarPedidoAjenoOInexistenteNoLoRevela` | Aplicación | AB#378 | PR #182 | ✅ |
+| HU11-CP04 | `PedidoMongoAdapterTest` | `buscarPorClienteDevuelveSusPedidosDelMasRecienteAlMasAntiguo` | Infraestructura | AB#378 | PR #182 | ✅ |
+| HU11-CP04 | `PedidoMongoAdapterTest` | `buscarPorIdDevuelveElPedidoConSusLineas` | Infraestructura | AB#378 | PR #182 | ✅ |
+| HU11-CP05 | `EstadoPedidoTest` | `losEstadosVanEnElOrdenDelEnvio` | Dominio | AB#378 | PR #182 | ✅ |
+| HU11-CP05 | `PedidoDocumentMapperTest` | `cadaEstadoDeEnvioSeGuardaYSeLee` | Infraestructura | AB#378 | PR #182 | ✅ |
+| HU11-CP06 | `SeguridadPedidosServiceTest` | `unVendedorNoConsultaElHistorial` | Aplicación (seguridad) | AB#378 | PR #182 | ✅ |
+| HU11-CP06 | `SeguridadPedidosServiceTest` | `unAdministradorNoConsultaElHistorial` | Aplicación (seguridad) | AB#378 | PR #182 | ✅ |
+| HU11-CP06 | `SeguridadPedidosServiceTest` | `unClienteNoConsultaLosPedidosDeOtro` | Aplicación (seguridad) | AB#378 | PR #182 | ✅ |
+| HU11-CP06 | `SeguridadPedidosServiceTest` | `unClienteConsultaSuPropioHistorial` | Aplicación (seguridad) | AB#378 | PR #182 | ✅ |
+| HU11-CP06 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaConsultarPedidos` | Aplicación (seguridad) | AB#378 | PR #182 | ✅ |
+| HU11-CP07 | `PedidoControllerTest` | `elHistorialResponde200ConLosPedidosDelCliente` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP07 | `PedidoControllerTest` | `unClienteSinPedidosRecibeUnaListaVacia` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP08 | `PedidoControllerTest` | `elDetalleResponde200ConElPedido` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP09 | `PedidoControllerTest` | `unPedidoInexistenteOAjenoResponde400` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP10 | `PedidoControllerTest` | `soloElClienteConsultaSusPedidos` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/pedidos/`):
 - `ConsultaComprasServiceTest` y `SeguridadPedidosServiceTest`: `application/service/` (el primero sin Spring; el segundo con un contexto mínimo y `@WithMockUser`)
 - `EstadoPedidoTest`: `domain/model/` (JUnit)
 - `PedidoMongoAdapterTest` y `PedidoDocumentMapperTest`: `infrastructure/adapter/out/persistence/` (el primero con Testcontainers)
+- `PedidoControllerTest`: `infrastructure/adapter/in/web/` (`@WebMvcTest` con `SecurityConfig`, sin MongoDB)
 
 ---
 
@@ -1758,15 +1778,28 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU13-CP15 | Consultar un producto devuelve todas sus valoraciones y solo las suyas; sin valoraciones, una lista vacía | Unitario | 2 | ✅ Pasa (2, AB#371, PR #179) |
 | HU13-CP16 | Consultar las valoraciones de un producto exige el rol cliente; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 4 | ✅ Pasa (4, AB#371, PR #179) |
 | HU13-CP17 | `GET /api/products/{id}/valoraciones`: 200 con la lista sin el cliente, o vacía; sin sesión 401 y otro rol 403 | Integración (capa web) | 3 | ✅ Pasa (3, AB#371, PR #179) |
+| HU13-CP18 | En el detalle del producto, cada valoración se muestra con sus estrellas y, si lo tiene, su comentario | Frontend (página) | 2 | 🔍 En revisión (2, AB#368, PR #191) |
+| HU13-CP19 | La media y el número de valoraciones del detalle salen de la lista; si la lista está vacía, se usan los del detalle del producto | Frontend (página) | 2 | 🔍 En revisión (2, AB#368, PR #191) |
+| HU13-CP20 | Sin valoraciones se indica en su sección; si fallan, se avisa con «Reintentar» sin perder el producto | Frontend (página) | 2 | 🔍 En revisión (2, AB#368, PR #191) |
+| HU13-CP21 | El cliente valora desde el detalle con estrellas y un comentario opcional; tras enviarla se le dan las gracias y su valoración aparece en la lista | Frontend (página) | 2 | 🔍 En revisión (2, AB#367, PR #191) |
+| HU13-CP22 | Sin puntuación no se envía y se pide elegir una; el comentario admite como mucho 500 caracteres | Frontend (página) | 2 | 🔍 En revisión (2, AB#367, PR #191) |
+| HU13-CP23 | Avisos al valorar: no comprado (403 `PRODUCT_NOT_PURCHASED`), ya valorado (409 `REVIEW_ALREADY_EXISTS`) y error general conservando lo escrito | Frontend (página) | 3 | 🔍 En revisión (3, AB#367, PR #191) |
+| HU13-CP24 | El producto guarda en MongoDB la media y el número de valoraciones que recibe, sin tocar el resto de sus datos | Integración MongoDB | 2 | 🔍 En revisión (2, AB#415, PR #195) |
+| HU13-CP25 | El producto lee su media y su número de valoraciones (sin valoraciones: `null` y 0) y los conserva al modificarlo, activarlo o desactivarlo y al quitarle la imagen | Unitario (dominio) + integración MongoDB | 4 | 🔍 En revisión (4, AB#415, PR #195) |
+| HU13-CP26 | El catálogo (HU7) y el detalle (HU8) devuelven la media y el número de valoraciones del producto | Unitario + integración (capa web) | 3 | 🔍 En revisión (3, AB#415, PR #195) |
+| HU13-CP27 | Actualizar la valoración de un producto la guarda y solo lo puede hacer el cliente; un vendedor o un administrador reciben 403 y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario + unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, AB#415, PR #195) |
+| HU13-CP28 | Al valorar, la media y el número se calculan con todas las valoraciones del producto y se le pasan al módulo de productos; si la valoración no se guarda, el producto no cambia | Unitario | 3 | 🔍 En revisión (3, AB#415, PR #195) |
 
 Notas:
 - **HU13-CP01 a CP17 (Sprint 2, backend):** casos propuestos en las tasks AB#369 (entidad valoración), AB#370 (endpoint para crear una valoración) y AB#371 (endpoint para obtener las valoraciones), y desarrollados con TDD. PENDIENTE DE REVISAR CON EL EQUIPO: confirmarlos y añadirlos a la HU13 (AB#75) en Azure Boards.
 - **Decisiones del equipo:** módulo nuevo `valoraciones`; puntuación entera de 1 a 5 y comentario opcional de hasta 500 caracteres; una valoración por cliente y producto aunque lo compre varias veces; compra confirmada = pedido PAGADO (`ConsultaComprasUseCase`, puerto de entrada nuevo de `pedidos`); sin compra responde 403 `PRODUCT_NOT_PURCHASED`; el GET devuelve las valoraciones sin fecha ni orden garantizado.
-- **Fuera de alcance:** rellenar `valoracion` y `numValoraciones` del catálogo (HU7) y del detalle (HU8), que siguen `PENDIENTE DE DECIDIR (equipo)`; será una task aparte.
+- **Valoración en el catálogo:** `valoracion` y `numValoraciones` del catálogo (HU7) y del detalle (HU8) se rellenan en la T415 (AB#415, HU13-CP24 a CP28), que estaba fuera del alcance de las T369 a T371.
 - **Valoraciones simultáneas (HU13-CP05):** si dos peticiones del mismo cliente pasan a la vez la comprobación de duplicado, el índice único rechaza la segunda y el adaptador la traduce a `ValoracionDuplicadaException` (409, no 500).
 - **Seguridad:** `POST /api/products/*/valoraciones` tiene su propia regla en `SecurityConfig` (solo CLIENTE, con CSRF); el GET queda cubierto por `GET /api/products/**` (HU8). Los servicios llevan `@PreAuthorize`: `SOLO_CLIENTE_PROPIO_EN_COMANDO` para valorar, `SOLO_CLIENTE_PROPIO` para consultar compras y `SOLO_CLIENTE` para consultar valoraciones.
 - **Ciclos sin rojo real:** HU13-CP12 (el `@PreAuthorize` se puso con el servicio, regla 7 del CLAUDE.md) y la parte de seguridad de HU13-CP17 (la cubría ya la regla del catálogo).
 - **Clases de test nuevas**, acordadas con el equipo: `ValoracionTest`, `ValoracionMongoAdapterTest`, `ConsultaComprasServiceTest`, `ValoracionProductosServiceTest`, `SeguridadValoracionesServiceTest`, `ClienteEnSesionAdapterTest` (de valoraciones), `ComprasAdapterTest`, `ValoracionesConfigTest`, `ValoracionControllerTest` y `ConsultaValoracionesServiceTest`. **Tests en clases que ya existían** (módulo `pedidos`): `SeguridadPedidosServiceTest`, `PedidoMongoAdapterTest` y `PedidosConfigTest`.
+- **HU13-CP18 a CP23 (Sprint 2, frontend):** casos propuestos en las tasks AB#368 (consulta de las valoraciones) y AB#367 (vista para valorar), desarrollados con TDD; pendientes de confirmar con el equipo y de añadir a la HU13 en Azure Boards. Se valora desde el detalle del producto; la media y el número del detalle salen de la lista porque el backend aún no rellena `valoracion` ni `numValoraciones` (decisión del equipo). Los tests de la HU8 que usan `responderCon` (`ProductDetailPage.test.jsx`) responden también con la lista vacía, sin cambiar lo que comprueban. Detalle en `frontend/docs/hu13-valoraciones.md`.
+- **HU13-CP24 a CP28 (T415, AB#415):** casos propuestos, pendientes de confirmar con el equipo y de añadir a la HU13 en Azure Boards. Al guardar una valoración, el módulo de valoraciones calcula la media con todas las valoraciones del producto y se la pasa a productos por su puerto de entrada `ValoracionesProductoUseCase`, que la guarda en `valoracionMedia` y `numeroValoraciones` (decisión del equipo: recalcular desde todas las valoraciones es más simple que actualizar la media de forma incremental y se corrige sola; si dos clientes valoran a la vez el mismo producto, el último en escribir puede no contar la del otro hasta la siguiente valoración, riesgo asumido). El catálogo filtra y ordena por la media (HU7-CP15, modificado). Al modificar un producto se conservan las valoraciones guardadas. Se ajustaron sin cambiar lo que comprueban los tests que construyen `DetalleProductoCatalogo` (HU8-CP09, HU8-CP13 a CP15) y los comentarios de HU7-CP16 y HU8-CP13. Clases de test nuevas, acordadas con el equipo: `ValoracionesProductoServiceTest` y `ProductosAdapterTest` (de valoraciones).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1823,6 +1856,36 @@ Notas:
 | HU13-CP17 | `ValoracionControllerTest` | `consultarLasValoracionesResponde200ConLaLista` | Infraestructura | AB#371 | PR #179 | ✅ |
 | HU13-CP17 | `ValoracionControllerTest` | `unProductoSinValoracionesResponde200ConUnaListaVacia` | Infraestructura | AB#371 | PR #179 | ✅ |
 | HU13-CP17 | `ValoracionControllerTest` | `soloElClienteConsultaLasValoraciones` | Infraestructura | AB#371 | PR #179 | ✅ |
+| HU13-CP18 | `ProductDetailPage.test.jsx` | `HU13-CP18: muestra cada valoración del producto con sus estrellas y su comentario` | Frontend · página | AB#368 | PR #191 | 🔍 |
+| HU13-CP18 | `ProductDetailPage.test.jsx` | `HU13-CP18: una valoración sin comentario muestra solo sus estrellas` | Frontend · página | AB#368 | PR #191 | 🔍 |
+| HU13-CP19 | `ProductDetailPage.test.jsx` | `HU13-CP19: la media y el número de valoraciones salen de la lista aunque el catálogo no las tenga` | Frontend · página | AB#368 | PR #191 | 🔍 |
+| HU13-CP19 | `ProductDetailPage.test.jsx` | `HU13-CP19: si la lista está vacía se mantienen la media y el número del catálogo` | Frontend · página | AB#368 | PR #191 | 🔍 |
+| HU13-CP20 | `ProductDetailPage.test.jsx` | `HU13-CP20: un producto sin valoraciones lo indica en su sección` | Frontend · página | AB#368 | PR #191 | 🔍 |
+| HU13-CP20 | `ProductDetailPage.test.jsx` | `HU13-CP20: si fallan las valoraciones avisa y permite reintentar, sin perder el producto` | Frontend · página | AB#368 | PR #191 | 🔍 |
+| HU13-CP21 | `ProductDetailPage.test.jsx` | `HU13-CP21: el cliente valora con estrellas y un comentario, y su valoración aparece en la lista` | Frontend · página | AB#367 | PR #191 | 🔍 |
+| HU13-CP21 | `ProductDetailPage.test.jsx` | `HU13-CP21: el comentario es opcional: sin él se envía vacío` | Frontend · página | AB#367 | PR #191 | 🔍 |
+| HU13-CP22 | `ProductDetailPage.test.jsx` | `HU13-CP22: sin puntuación no se envía y se pide elegir una` | Frontend · página | AB#367 | PR #191 | 🔍 |
+| HU13-CP22 | `ProductDetailPage.test.jsx` | `HU13-CP22: el comentario admite como mucho 500 caracteres` | Frontend · página | AB#367 | PR #191 | 🔍 |
+| HU13-CP23 | `ProductDetailPage.test.jsx` | `HU13-CP23: si no ha comprado el producto se le avisa y el formulario sigue ahí` | Frontend · página | AB#367 | PR #191 | 🔍 |
+| HU13-CP23 | `ProductDetailPage.test.jsx` | `HU13-CP23: si ya lo había valorado se le avisa` | Frontend · página | AB#367 | PR #191 | 🔍 |
+| HU13-CP23 | `ProductDetailPage.test.jsx` | `HU13-CP23: si falla el envío avisa y conserva lo escrito para reintentar` | Frontend · página | AB#367 | PR #191 | 🔍 |
+| HU13-CP24 | `ProductoMongoAdapterTest` | `guardaLaMediaYElNumeroDeValoraciones` | Infraestructura | AB#415 | PR #195 | 🔍 |
+| HU13-CP24 | `ProductoMongoAdapterTest` | `unaActualizacionNuevaSustituyeLaMediaYElNumero` | Infraestructura | AB#415 | PR #195 | 🔍 |
+| HU13-CP25 | `ProductoTest` | `unProductoSinValoracionesNoTieneMedia` | Dominio | AB#415 | PR #195 | 🔍 |
+| HU13-CP25 | `ProductoTest` | `lasCopiasConservanLaMediaYElNumero` | Dominio | AB#415 | PR #195 | 🔍 |
+| HU13-CP25 | `ProductoMongoAdapterTest` | `alLeerElProductoTraeSuMediaYSuNumero` | Infraestructura | AB#415 | PR #195 | 🔍 |
+| HU13-CP25 | `ProductoMongoAdapterTest` | `modificarElProductoConservaSuMediaYSuNumero` | Infraestructura | AB#415 | PR #195 | 🔍 |
+| HU13-CP26 | `CatalogoProductosServiceTest` | `elDetalleLlevaSuMediaYSuNumeroDeValoraciones` | Aplicación | AB#415 | PR #195 | 🔍 |
+| HU13-CP26 | `CatalogoControllerTest` | `elCatalogoDevuelveLaMediaYElNumeroDeValoraciones` | Infraestructura | AB#415 | PR #195 | 🔍 |
+| HU13-CP26 | `CatalogoControllerTest` | `elDetalleDevuelveLaMediaYElNumeroDeValoraciones` | Infraestructura | AB#415 | PR #195 | 🔍 |
+| HU13-CP27 | `ValoracionesProductoServiceTest` | `actualizarLaValoracionGuardaLaMediaYElNumero` | Aplicación | AB#415 | PR #195 | 🔍 |
+| HU13-CP27 | `SeguridadProductosServiceTest` | `unClienteActualizaLaValoracionDelProducto` | Aplicación | AB#415 | PR #195 | 🔍 |
+| HU13-CP27 | `SeguridadProductosServiceTest` | `unVendedorNoCambiaLaValoracion` | Aplicación | AB#415 | PR #195 | 🔍 |
+| HU13-CP27 | `SeguridadProductosServiceTest` | `unAdministradorNoCambiaLaValoracion` | Aplicación | AB#415 | PR #195 | 🔍 |
+| HU13-CP27 | `SeguridadProductosServiceTest` | `sinSesionNoSeCambiaLaValoracion` | Aplicación | AB#415 | PR #195 | 🔍 |
+| HU13-CP28 | `ValoracionProductosServiceTest` | `alValorarElProductoRecibeLaMediaYElNumero` | Aplicación | AB#415 | PR #195 | 🔍 |
+| HU13-CP28 | `ValoracionProductosServiceTest` | `siLaValoracionNoSeGuardaElProductoNoCambia` | Aplicación | AB#415 | PR #195 | 🔍 |
+| HU13-CP28 | `ProductosAdapterTest` | `laMediaYElNumeroSeLePasanAlModuloDeProductos` | Infraestructura | AB#415 | PR #195 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `ValoracionTest`: `valoraciones/domain/model/` (JUnit, sin Spring)
@@ -1832,6 +1895,65 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `ClienteEnSesionAdapterTest`: `valoraciones/infrastructure/adapter/out/usuarios/`; `ComprasAdapterTest`: `valoraciones/infrastructure/adapter/out/pedidos/` (JUnit y Mockito, sin Spring)
 - `ValoracionControllerTest`: `valoraciones/infrastructure/adapter/in/web/` (`@WebMvcTest` con la seguridad real)
 - `ConsultaComprasServiceTest` y `SeguridadPedidosServiceTest`: `pedidos/application/service/`; `PedidoMongoAdapterTest`: `pedidos/infrastructure/adapter/out/persistence/` (Testcontainers)
+
+---
+
+## HU14 · Gestión de Favoritos / Lista de Deseos
+
+### Tabla A · HU14 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU14-CP01 | El primer producto crea la lista del cliente en sesión y guarda la fecha; el id del cliente se pide al módulo de usuarios | Unitario | 3 | ✅ Pasa (3, AB#360, PR #196) |
+| HU14-CP02 | Añadir otro producto conserva los anteriores | Unitario | 2 | ✅ Pasa (2, AB#360, PR #196) |
+| HU14-CP03 | Un producto repetido no se duplica ni cambia su fecha, y no es un error | Unitario | 2 | ✅ Pasa (2, AB#360, PR #196) |
+| HU14-CP04 | Un producto inexistente o no disponible se rechaza y no se guarda nada; la disponibilidad se pregunta al módulo de productos | Unitario | 4 | ✅ Pasa (4, AB#360, PR #196) |
+| HU14-CP05 | Solo el cliente con su propio correo puede añadir: vendedor, administrador u otro correo reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#360, PR #196) |
+| HU14-CP06 | Persistencia en `listas_deseos`: guardar y recuperar por cliente; volver a guardar actualiza sin crear otra lista; la colección admite una sola lista por cliente | Unitario + integración MongoDB | 4 | ✅ Pasa (4, AB#360, PR #196) |
+| HU14-CP07 | `POST /api/customer/wishlist/items` devuelve 200 con la lista; el cliente sale de la sesión y un `clienteId` en el cuerpo se ignora | Integración (capa web) | 1 | 🔍 En revisión (1, Rama `feature/US14-T358-endpoint-anadir-deseo`) |
+| HU14-CP08 | Un cuerpo sin `productoId`, con `productoId` vacío o ilegible devuelve 400 `VALIDATION_ERROR` y no llega al caso de uso | Integración (capa web) | 1 | 🔍 En revisión (1, Rama `feature/US14-T358-endpoint-anadir-deseo`) |
+| HU14-CP09 | Un producto no disponible devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | 🔍 En revisión (1, Rama `feature/US14-T358-endpoint-anadir-deseo`) |
+| HU14-CP10 | Sin sesión (401), sin ser cliente (403) o sin token CSRF (403) no se añade a la lista | Integración (capa web) | 3 | 🔍 En revisión (3, Rama `feature/US14-T358-endpoint-anadir-deseo`) |
+
+- **HU14-CP01 a CP06 (Sprint 2, backend):** casos propuestos en la task AB#360 (lógica de guardado de deseo), revisados y aceptados por el desarrollador. Azure no los trae: habría que añadirlos a la HU14.
+- **Decisiones del equipo:** módulo nuevo `deseos`; una sola lista por cliente, como dicen el criterio de aceptación y la colección `listas_deseos`, que ya tenía su índice único. El campo de la colección sigue siendo `usuarioId`, y guarda el id del cliente. Añadir un producto repetido no es un error, y un producto inexistente o no disponible se rechaza.
+- **T359 (edición de la entidad cliente):** pasada a *Removed*. La lista va en su propia colección y se relaciona con el cliente por id, así que `Usuario` no cambia.
+- **Pendiente para la T362 (obtener deseos):** un producto desactivado sigue en la lista con un aviso de "no disponible", y uno eliminado desaparece al consultarla. `consultarComprable` devuelve vacío en los dos casos, así que hará falta otra consulta al módulo de productos.
+- **HU14-CP07 a CP10 (Sprint 2, backend):** casos propuestos en la task AB#358 (endpoint añadir deseo), revisados y aceptados por el desarrollador.
+- **Endpoint (T358):** `POST /api/customer/wishlist/items` con `{ "productoId": "p-1" }` → 200 `{ "items": [{ "productoId", "addedAt" }] }`, también si el producto ya estaba. Errores: 400 `VALIDATION_ERROR`, 404 `PRODUCT_NOT_FOUND`, 401 sin sesión y 403 con otro rol o sin CSRF. Los datos del producto (nombre, imagen, aviso de "no disponible") llegan con la consulta de la T361 y la T362. `ProductoNoDisponibleException` comparte el handler de `ProductoNoComprableException` en `ManejadorGlobalErrores`, porque responden igual.
+- **HU14-CP10 sin rojo real:** la regla de `/api/customer/**` de `SecurityConfig` ya lo cubría. Se comprobó con dos cambios temporales: con la ruta abierta fallaron los tres tests de sesión y rol, y sin CSRF falló el del token.
+- **Ciclo con rojo parcial:** HU14-CP03 pasaba en el rojo del dominio porque `anadir` no hacía nada. Se comprobó con una versión sin la regla de repetidos, y entonces falló.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU14-CP01 | `ListaDeseosTest` | `anadirElPrimerProductoLoGuardaConSuFecha` | Dominio | AB#360 | PR #196 | ✅ |
+| HU14-CP01 | `GestionListaDeseosServiceTest` | `elPrimerProductoCreaLaListaDelCliente` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP01 | `ClienteEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#360 | PR #196 | ✅ |
+| HU14-CP02 | `ListaDeseosTest` | `anadirOtroProductoConservaLosAnteriores` | Dominio | AB#360 | PR #196 | ✅ |
+| HU14-CP02 | `GestionListaDeseosServiceTest` | `anadirOtroProductoUsaLaListaDelCliente` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP03 | `ListaDeseosTest` | `anadirUnProductoQueYaEstaNoLoDuplica` | Dominio | AB#360 | PR #196 | ✅ |
+| HU14-CP03 | `GestionListaDeseosServiceTest` | `anadirUnProductoQueYaEstaNoEsUnError` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP04 | `GestionListaDeseosServiceTest` | `unProductoNoDisponibleNoCreaLaLista` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP04 | `GestionListaDeseosServiceTest` | `unProductoNoDisponibleNoCambiaLaLista` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP04 | `ProductosAdapterTest` | `unProductoQueDevuelveProductosEstaDisponible` | Infraestructura | AB#360 | PR #196 | ✅ |
+| HU14-CP04 | `ProductosAdapterTest` | `unProductoQueNoDevuelveProductosNoEstaDisponible` | Infraestructura | AB#360 | PR #196 | ✅ |
+| HU14-CP05 | `SeguridadDeseosServiceTest` | `elClienteAnadeConSuPropioCorreo` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP05 | `SeguridadDeseosServiceTest` | `unClienteNoAnadeConElCorreoDeOtro` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP05 | `SeguridadDeseosServiceTest` | `unVendedorNoAnade` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP05 | `SeguridadDeseosServiceTest` | `unAdministradorNoAnade` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP05 | `SeguridadDeseosServiceTest` | `sinSesionSeRechaza` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP06 | `ListaDeseosDocumentMapperTest` | `convierteADocumentoYVueltaSinPerderDatos` | Infraestructura | AB#360 | PR #196 | ✅ |
+| HU14-CP06 | `ListaDeseosMongoAdapterTest` | `guardarUnaListaNuevaYRecuperarlaPorCliente` | Infraestructura | AB#360 | PR #196 | ✅ |
+| HU14-CP06 | `ListaDeseosMongoAdapterTest` | `guardarOtraVezActualizaLaLista` | Infraestructura | AB#360 | PR #196 | ✅ |
+| HU14-CP06 | `ListaDeseosMongoAdapterTest` | `laColeccionSoloAdmiteUnaListaPorCliente` | Infraestructura | AB#360 | PR #196 | ✅ |
+| HU14-CP07 | `ListaDeseosControllerTest` | `anadirRespondeConLaListaDelClienteEnSesion` | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
+| HU14-CP08 | `ListaDeseosControllerTest` | `cuerpoInvalidoNoLlegaAlCasoDeUso` (sin `productoId`, nulo, vacío, en blanco y JSON mal formado) | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
+| HU14-CP09 | `ListaDeseosControllerTest` | `unProductoNoDisponibleResponde404` | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
+| HU14-CP10 | `ListaDeseosControllerTest` | `sinSesionNoSeAnade` | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
+| HU14-CP10 | `ListaDeseosControllerTest` | `noClienteNoAnade` (vendedor y administrador) | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
+| HU14-CP10 | `ListaDeseosControllerTest` | `sinTokenCsrfNoSeAnade` | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
 
 ---
 
@@ -1885,7 +2007,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU16-CP09 | Un producto ajeno o inexistente no se puede activar ni desactivar (`ProductoNoEncontradoException`) y no se guarda nada | Unitario | 2 | ✅ Pasa |
 | HU16-CP10 | Solo el vendedor dueño, con su correo, activa o desactiva su producto: cliente, administrador u otro vendedor reciben 403 y sin sesión se rechaza | Unitario (seguridad, contexto mínimo de Spring) | 5 | ✅ Pasa |
 | HU16-CP11 | `PATCH /api/seller/products/{id}/availability` devuelve 200 con el producto actualizado; el vendedor sale de la sesión | Integración (capa web) | 1 | ✅ Pasa |
-| HU16-CP12 | Un cuerpo sin `disponible` o con un valor que no es booleano devuelve 400 y no llega al caso de uso | Integración (capa web) | 1 | 🔍 En revisión |
+| HU16-CP12 | Un cuerpo sin `disponible` o con un valor que no es booleano devuelve 400 y no llega al caso de uso | Integración (capa web) | 1 | ✅ Pasa |
 | HU16-CP13 | Cambiar la disponibilidad de un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | ✅ Pasa |
 | HU16-CP14 | Sin sesión (401), sin ser vendedor (403) o sin token CSRF (403) no se cambia la disponibilidad | Integración (capa web) | 3 | ✅ Pasa |
 
@@ -1920,7 +2042,7 @@ Notas:
 | HU16-CP10 | `SeguridadProductosServiceTest` | `unVendedorCambiaLaDisponibilidadConSuPropioCorreo` | Aplicación | AB#284 · AB#285 | PR #171 | ✅ |
 | HU16-CP10 | `SeguridadProductosServiceTest` | `sinSesionNoSeCambiaLaDisponibilidad` | Aplicación | AB#284 · AB#285 | PR #171 | ✅ |
 | HU16-CP11 | `ProductoControllerTest` | `vendedorCambiaLaDisponibilidadDeSuProducto` | Infraestructura | AB#282 · AB#283 | PR #177 | ✅ |
-| HU16-CP12 | `ProductoControllerTest` | `cuerpoDeDisponibilidadInvalidoNoCambiaElProducto` (sin `disponible`, nulo, no booleano, `"true"` como texto, `1` y JSON mal formado; comprueba el `code` `VALIDATION_ERROR`) | Infraestructura | AB#282 · AB#283 | PR #177 (modificado en este PR) | 🔍 |
+| HU16-CP12 | `ProductoControllerTest` | `cuerpoDeDisponibilidadInvalidoNoCambiaElProducto` (sin `disponible`, nulo, no booleano, `"true"` como texto, `1` y JSON mal formado; comprueba el `code` `VALIDATION_ERROR`) | Infraestructura | AB#282 · AB#283 | PR #177 (modificado en PR #183) | ✅ |
 | HU16-CP13 | `ProductoControllerTest` | `cambiarLaDisponibilidadDeUnProductoNoEncontradoDevuelve404` | Infraestructura | AB#282 · AB#283 | PR #177 | ✅ |
 | HU16-CP14 | `ProductoControllerTest` | `sinSesionNoSeCambiaLaDisponibilidad` | Infraestructura | AB#282 · AB#283 | PR #177 | ✅ |
 | HU16-CP14 | `ProductoControllerTest` | `noVendedorNoCambiaLaDisponibilidad` (cliente y administrador) | Infraestructura | AB#282 · AB#283 | PR #177 | ✅ |
@@ -2046,10 +2168,10 @@ Rutas de los archivos de test (bajo `frontend/src/`):
 | HU21-CP08 | Usuarios sin rol ADMINISTRADOR no pueden crear administradores | Integración (capa web) | 1 | ✅ Pasa |
 | HU21-CP09 | Un administrador se lee sin datos de cliente ni consentimiento | Unitario | 1 | ✅ Pasa |
 | HU21-CP10 | Activar un vendedor pendiente lo deja activo y lo guarda | Unitario | 1 | ✅ Pasa |
-| HU21-CP11 | Desactivar un vendedor activo lo deja desactivado y lo guarda | Unitario | 1 | 🔍 En revisión |
-| HU21-CP12 | Activar o bloquear a un usuario que no es vendedor falla como si no existiera y no guarda nada | Unitario | 2 | 🔍 En revisión |
+| HU21-CP11 | Desactivar un vendedor activo lo deja desactivado y lo guarda | Unitario | 1 | ✅ Pasa |
+| HU21-CP12 | Activar o bloquear a un usuario que no es vendedor falla como si no existiera y no guarda nada | Unitario | 2 | ✅ Pasa |
 | HU21-CP13 | Un administrador activa un vendedor y recibe sus datos con estado ACTIVO | Integración (capa web) | 1 | ✅ Pasa |
-| HU21-CP14 | Un administrador bloquea un vendedor y recibe sus datos con estado BLOQUEADO | Integración (capa web) | 1 | 🔍 En revisión |
+| HU21-CP14 | Un administrador bloquea un vendedor y recibe sus datos con estado BLOQUEADO | Integración (capa web) | 1 | ✅ Pasa |
 | HU21-CP15 | Cambiar un vendedor a un estado que no es ACTIVO ni BLOQUEADO devuelve 400 y no cambia nada | Integración (capa web) | 1 | ✅ Pasa |
 | HU21-CP16 | Cambiar el estado de un usuario que no existe o no es vendedor devuelve 404 | Integración (capa web) | 1 | ✅ Pasa |
 | HU21-CP17 | Sin sesión o sin rol ADMINISTRADOR no se puede cambiar el estado de un vendedor | Integración (capa web) | 2 | ✅ Pasa |
@@ -2077,11 +2199,11 @@ Notas:
 | HU21-CP08 | `UsuarioControllerTest` | `crearAdministradorRechazaNoAdministradores` | Infraestructura | AB#49 | PR actual | ✅ |
 | HU21-CP09 | `UsuarioDocumentMapperTest` | `unAdministradorSeLeeSinDatosDeClienteYConsentimiento` | Infraestructura | AB#49 | PR actual | ✅ |
 | HU21-CP10 | `AdministracionUsuariosServiceTest` | `activarVendedorPendienteLoDejaActivoYLoGuarda` | Aplicación | AB#47 | PR #102 | ✅ |
-| HU21-CP11 | `AdministracionUsuariosServiceTest` | `bloquearVendedorActivoLoDejaBloqueadoYLoGuarda` | Aplicación | AB#47 · AB#243 · AB#252 | PR #102 (modificado en PR #180) (renombrado en este PR) | 🔍 |
+| HU21-CP11 | `AdministracionUsuariosServiceTest` | `bloquearVendedorActivoLoDejaBloqueadoYLoGuarda` | Aplicación | AB#47 · AB#243 · AB#252 | PR #102 (modificado en PR #180) (renombrado en PR #185) | ✅ |
 | HU21-CP12 | `AdministracionUsuariosServiceTest` | `activarVendedorDeOtroRolFalla` | Aplicación | AB#47 | PR #102 | ✅ |
-| HU21-CP12 | `AdministracionUsuariosServiceTest` | `bloquearVendedorDeOtroRolFalla` | Aplicación | AB#47 · AB#252 | PR #102 (renombrado en este PR) | 🔍 |
+| HU21-CP12 | `AdministracionUsuariosServiceTest` | `bloquearVendedorDeOtroRolFalla` | Aplicación | AB#47 · AB#252 | PR #102 (renombrado en PR #185) | ✅ |
 | HU21-CP13 | `UsuarioControllerTest` | `administradorActivaUnVendedorYRecibeSusDatos` | Infraestructura | AB#47 | PR #102 | ✅ |
-| HU21-CP14 | `UsuarioControllerTest` | `administradorBloqueaUnVendedorYRecibeSusDatos` | Infraestructura | AB#47 · AB#243 · AB#252 | PR #102 (modificado en PR #180) (renombrado en este PR) | 🔍 |
+| HU21-CP14 | `UsuarioControllerTest` | `administradorBloqueaUnVendedorYRecibeSusDatos` | Infraestructura | AB#47 · AB#243 · AB#252 | PR #102 (modificado en PR #180) (renombrado en PR #185) | ✅ |
 | HU21-CP15 | `UsuarioControllerTest` | `cambiarVendedorAUnEstadoNoAdmitidoDevuelve400` | Infraestructura | AB#47 | PR #102 | ✅ |
 | HU21-CP16 | `UsuarioControllerTest` | `cambiarEstadoDeUnNoVendedorDevuelve404` | Infraestructura | AB#47 | PR #102 | ✅ |
 | HU21-CP17 | `UsuarioControllerTest` | `cambiarEstadoDeVendedorSinSesionDevuelve401` | Infraestructura | AB#47 | PR #102 | ✅ |
@@ -2235,18 +2357,18 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU23-CP01 | Un administrador bloquea una cuenta activa y recibe sus datos con estado BLOQUEADO | Unitario + integración (capa web) | 2 | 🔍 En revisión |
-| HU23-CP02 | Bloquear un usuario que no existe devuelve 404 y no guarda nada | Unitario + integración (capa web) | 2 | 🔍 En revisión |
-| HU23-CP03 | Un administrador no puede bloquear su propia cuenta (409 `CANNOT_BLOCK_SELF`) | Unitario + integración (capa web) | 2 | 🔍 En revisión |
-| HU23-CP04 | No se puede bloquear al último administrador activo (409 `LAST_ACTIVE_ADMIN`) | Unitario + integración | 4 | 🔍 En revisión |
-| HU23-CP05 | Se puede desactivar a un administrador activo si queda otro administrador activo | Unitario | 1 | 🔍 En revisión |
-| HU23-CP06 | Sin sesión (401) o sin ser administrador (403) no se puede bloquear una cuenta | Integración (capa web) | 2 | 🔍 En revisión |
+| HU23-CP01 | Un administrador bloquea una cuenta activa y recibe sus datos con estado BLOQUEADO | Unitario + integración (capa web) | 2 | ✅ Pasa |
+| HU23-CP02 | Bloquear un usuario que no existe devuelve 404 y no guarda nada | Unitario + integración (capa web) | 2 | ✅ Pasa |
+| HU23-CP03 | Un administrador no puede bloquear su propia cuenta (409 `CANNOT_BLOCK_SELF`) | Unitario + integración (capa web) | 2 | ✅ Pasa |
+| HU23-CP04 | No se puede bloquear al último administrador activo (409 `LAST_ACTIVE_ADMIN`) | Unitario + integración | 4 | ✅ Pasa |
+| HU23-CP05 | Se puede desactivar a un administrador activo si queda otro administrador activo | Unitario | 1 | ✅ Pasa |
+| HU23-CP06 | Sin sesión (401) o sin ser administrador (403) no se puede bloquear una cuenta | Integración (capa web) | 2 | ✅ Pasa |
 | HU23-CP07 | Una petición sin usuario en sesión pasa sin consultar la cuenta | Unitario | 1 | ✅ Pasa |
 | HU23-CP08 | Una petición de un usuario con la cuenta activa pasa y conserva su sesión | Unitario | 1 | ✅ Pasa |
-| HU23-CP09 | Si la cuenta del usuario en sesión está bloqueada, se invalida su sesión y responde 401 | Unitario | 1 | 🔍 En revisión |
+| HU23-CP09 | Si la cuenta del usuario en sesión está bloqueada, se invalida su sesión y responde 401 | Unitario | 1 | ✅ Pasa |
 | HU23-CP10 | Si el usuario en sesión ya no existe, se invalida su sesión y responde 401 | Unitario | 1 | ✅ Pasa |
-| HU23-CP11 | Una cuenta con bloqueo temporal por intentos sale con su estado guardado en el listado, la ficha y los vendedores | Integración (capa web) | 3 | 🔍 En revisión |
-| HU23-CP12 | DESACTIVADO ya no es un estado válido para filtrar el listado | Unitario | 1 | 🔍 En revisión |
+| HU23-CP11 | Una cuenta con bloqueo temporal por intentos sale con su estado guardado en el listado, la ficha y los vendedores | Integración (capa web) | 3 | ✅ Pasa |
+| HU23-CP12 | DESACTIVADO ya no es un estado válido para filtrar el listado | Unitario | 1 | ✅ Pasa |
 
 Notas:
 - **HU23-CP01 a CP06:** casos propuestos en la T39 (AB#39) a partir del contrato del frontend (`frontend/docs/hu23-desactivar-usuario.md`). Pendientes de confirmar con el equipo y de añadir a la HU23 en Azure Boards.
@@ -2260,27 +2382,27 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU23-CP01 | `AdministracionUsuariosServiceTest` | `bloqueaUnaCuentaActivaYLaGuarda` | Aplicación | AB#39 · AB#243 · AB#252 | PR #79 (modificado en PR #180) (renombrado en este PR) | 🔍 |
-| HU23-CP01 | `UsuarioControllerTest` | `administradorBloqueaUnaCuentaYRecibeSusDatos` | Infraestructura | AB#39 · AB#243 · AB#252 | PR #79 (modificado en PR #180) (renombrado en este PR) | 🔍 |
-| HU23-CP02 | `AdministracionUsuariosServiceTest` | `rechazaBloquearUnUsuarioQueNoExiste` | Aplicación | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
-| HU23-CP02 | `UsuarioControllerTest` | `bloquearUnUsuarioInexistenteDevuelve404` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
-| HU23-CP03 | `AdministracionUsuariosServiceTest` | `rechazaQueUnAdministradorSeBloqueeASiMismo` | Aplicación | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
-| HU23-CP03 | `UsuarioControllerTest` | `bloquearseASiMismoDevuelve409` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
-| HU23-CP04 | `AdministracionUsuariosServiceTest` | `rechazaBloquearAlUltimoAdministradorActivo` | Aplicación | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
-| HU23-CP04 | `UsuarioControllerTest` | `bloquearAlUltimoAdministradorActivoDevuelve409` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
+| HU23-CP01 | `AdministracionUsuariosServiceTest` | `bloqueaUnaCuentaActivaYLaGuarda` | Aplicación | AB#39 · AB#243 · AB#252 | PR #79 (modificado en PR #180) (renombrado en PR #185) | ✅ |
+| HU23-CP01 | `UsuarioControllerTest` | `administradorBloqueaUnaCuentaYRecibeSusDatos` | Infraestructura | AB#39 · AB#243 · AB#252 | PR #79 (modificado en PR #180) (renombrado en PR #185) | ✅ |
+| HU23-CP02 | `AdministracionUsuariosServiceTest` | `rechazaBloquearUnUsuarioQueNoExiste` | Aplicación | AB#39 · AB#252 | PR #79 (renombrado en PR #185) | ✅ |
+| HU23-CP02 | `UsuarioControllerTest` | `bloquearUnUsuarioInexistenteDevuelve404` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en PR #185) | ✅ |
+| HU23-CP03 | `AdministracionUsuariosServiceTest` | `rechazaQueUnAdministradorSeBloqueeASiMismo` | Aplicación | AB#39 · AB#252 | PR #79 (renombrado en PR #185) | ✅ |
+| HU23-CP03 | `UsuarioControllerTest` | `bloquearseASiMismoDevuelve409` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en PR #185) | ✅ |
+| HU23-CP04 | `AdministracionUsuariosServiceTest` | `rechazaBloquearAlUltimoAdministradorActivo` | Aplicación | AB#39 · AB#252 | PR #79 (renombrado en PR #185) | ✅ |
+| HU23-CP04 | `UsuarioControllerTest` | `bloquearAlUltimoAdministradorActivoDevuelve409` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en PR #185) | ✅ |
 | HU23-CP04 | `UsuarioMongoAdapterTest` | `contarAdministradoresActivosSoloCuentaLosAdministradoresActivos` | Infraestructura | AB#39 | PR #79 | ✅ |
 | HU23-CP04 | `UsuarioMongoAdapterTest` | `contarAdministradoresActivosDevuelveCeroSinAdministradoresActivos` | Infraestructura | AB#39 | PR #79 | ✅ |
-| HU23-CP05 | `AdministracionUsuariosServiceTest` | `bloqueaAUnAdministradorSiQuedaOtroActivo` | Aplicación | AB#39 · AB#243 · AB#252 | PR #79 (modificado en PR #180) (renombrado en este PR) | 🔍 |
-| HU23-CP06 | `UsuarioControllerTest` | `unNoAdministradorNoPuedeBloquearCuentas` (cliente y vendedor) | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
-| HU23-CP06 | `UsuarioControllerTest` | `bloquearSinSesionEstaProtegido` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en este PR) | 🔍 |
+| HU23-CP05 | `AdministracionUsuariosServiceTest` | `bloqueaAUnAdministradorSiQuedaOtroActivo` | Aplicación | AB#39 · AB#243 · AB#252 | PR #79 (modificado en PR #180) (renombrado en PR #185) | ✅ |
+| HU23-CP06 | `UsuarioControllerTest` | `unNoAdministradorNoPuedeBloquearCuentas` (cliente y vendedor) | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en PR #185) | ✅ |
+| HU23-CP06 | `UsuarioControllerTest` | `bloquearSinSesionEstaProtegido` | Infraestructura | AB#39 · AB#252 | PR #79 (renombrado en PR #185) | ✅ |
 | HU23-CP07 | `CuentaActivaFilterTest` | `sinUsuarioEnSesionDejaPasar` | Infraestructura | AB#39 | PR #85 | ✅ |
 | HU23-CP08 | `CuentaActivaFilterTest` | `cuentaActivaDejaPasar` | Infraestructura | AB#39 | PR #85 | ✅ |
-| HU23-CP09 | `CuentaActivaFilterTest` | `cuentaBloqueadaInvalidaLaSesionYDevuelve401` | Infraestructura | AB#39 · AB#252 | PR #85 (renombrado en este PR) | 🔍 |
+| HU23-CP09 | `CuentaActivaFilterTest` | `cuentaBloqueadaInvalidaLaSesionYDevuelve401` | Infraestructura | AB#39 · AB#252 | PR #85 (renombrado en PR #185) | ✅ |
 | HU23-CP10 | `CuentaActivaFilterTest` | `usuarioInexistenteInvalidaLaSesionYDevuelve401` | Infraestructura | AB#39 | PR #85 | ✅ |
-| HU23-CP11 | `UsuarioControllerTest` | `elListadoNoMuestraElBloqueoPorIntentosComoBloqueado` | Infraestructura | AB#243 | — | 🔍 |
-| HU23-CP11 | `UsuarioControllerTest` | `laFichaNoMuestraElBloqueoPorIntentosComoBloqueado` | Infraestructura | AB#243 | — | 🔍 |
-| HU23-CP11 | `UsuarioControllerTest` | `laFichaDeVendedorNoMuestraElBloqueoPorIntentosComoBloqueado` | Infraestructura | AB#243 | — | 🔍 |
-| HU23-CP12 | `ListadoUsuariosServiceTest` | `laConsultaRechazaElEstadoDesactivado` | Aplicación | AB#243 | — | 🔍 |
+| HU23-CP11 | `UsuarioControllerTest` | `elListadoNoMuestraElBloqueoPorIntentosComoBloqueado` | Infraestructura | AB#243 | PR #180 | ✅ |
+| HU23-CP11 | `UsuarioControllerTest` | `laFichaNoMuestraElBloqueoPorIntentosComoBloqueado` | Infraestructura | AB#243 | PR #180 | ✅ |
+| HU23-CP11 | `UsuarioControllerTest` | `laFichaDeVendedorNoMuestraElBloqueoPorIntentosComoBloqueado` | Infraestructura | AB#243 | PR #180 | ✅ |
+| HU23-CP12 | `ListadoUsuariosServiceTest` | `laConsultaRechazaElEstadoDesactivado` | Aplicación | AB#243 | PR #180 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
@@ -2296,8 +2418,8 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU24-CP01 | Un administrador activa una cuenta bloqueada y recibe sus datos con estado ACTIVO | Unitario + integración | 3 | 🔍 En revisión |
-| HU24-CP02 | Rechaza un estado que no es ACTIVO ni BLOQUEADO (400) y no cambia nada | Integración (capa web) | 1 | 🔍 En revisión |
+| HU24-CP01 | Un administrador activa una cuenta bloqueada y recibe sus datos con estado ACTIVO | Unitario + integración | 3 | ✅ Pasa |
+| HU24-CP02 | Rechaza un estado que no es ACTIVO ni BLOQUEADO (400) y no cambia nada | Integración (capa web) | 1 | ✅ Pasa |
 | HU24-CP03 | Activar un usuario que no existe devuelve 404 | Unitario + integración | 3 | ✅ Pasa |
 | HU24-CP04 | Un usuario que no es administrador no puede activar cuentas (403) | Integración (capa web) | 1 | ✅ Pasa |
 
@@ -2312,10 +2434,10 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU24-CP01 | `AdministracionUsuariosServiceTest` | `activaUnaCuentaBloqueadaYLaGuarda` | Aplicación | AB#34 · AB#252 | PR #63 (renombrado en este PR) | 🔍 |
+| HU24-CP01 | `AdministracionUsuariosServiceTest` | `activaUnaCuentaBloqueadaYLaGuarda` | Aplicación | AB#34 · AB#252 | PR #63 (renombrado en PR #185) | ✅ |
 | HU24-CP01 | `UsuarioControllerTest` | `administradorActivaUnaCuentaYRecibeSusDatos` | Infraestructura | AB#34 | PR #63 | ✅ |
 | HU24-CP01 | `UsuarioMongoAdapterTest` | `buscarPorIdDevuelveElUsuarioGuardado` | Infraestructura | AB#34 | PR #63 | ✅ |
-| HU24-CP02 | `UsuarioControllerTest` | `rechazaUnEstadoNoAdmitido` | Infraestructura | AB#34 · AB#39 · AB#243 | PR #63 (modificado en PR #79) (modificado en este PR) | 🔍 |
+| HU24-CP02 | `UsuarioControllerTest` | `rechazaUnEstadoNoAdmitido` | Infraestructura | AB#34 · AB#39 · AB#243 | PR #63 (modificado en PR #79) (modificado en PR #180) | ✅ |
 | HU24-CP03 | `AdministracionUsuariosServiceTest` | `rechazaActivarUnUsuarioQueNoExiste` | Aplicación | AB#34 | PR #63 | ✅ |
 | HU24-CP03 | `UsuarioControllerTest` | `activarUnUsuarioInexistenteDevuelve404` | Infraestructura | AB#34 | PR #63 | ✅ |
 | HU24-CP03 | `UsuarioMongoAdapterTest` | `buscarPorIdDevuelveVacioSiNoExiste` | Infraestructura | AB#34 | PR #63 | ✅ |
@@ -2328,6 +2450,43 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU25 · Eliminar mi cuenta de cliente
+
+### Tabla A · HU25 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU25-CP01 | Con la contraseña actual correcta se elimina la cuenta del cliente de la sesión | Unitario | 1 | 🔍 En revisión |
+| HU25-CP02 | Con una contraseña incorrecta no se elimina la cuenta | Unitario | 1 | 🔍 En revisión |
+| HU25-CP03 | Al eliminar la cuenta se responde 204, se invalida la sesión y se borra la cookie `JSESSIONID` | Integración (capa web) | 0 | ⏳ Pendiente (AB#274) |
+| HU25-CP04 | Solo el cliente elimina su propia cuenta: el correo de otro, un vendedor o un administrador dan 403 y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión |
+| HU25-CP05 | Sin contraseña (vacía o ausente) se responde 400 y no se llama al caso de uso | Integración (capa web) | 0 | ⏳ Pendiente (AB#274) |
+
+Notas:
+- **HU25-CP01 a CP05:** casos propuestos en las T274/T275 (AB#274, AB#275) a partir de los criterios de aceptación de la HU25. Pendientes de confirmar con el equipo y de añadir a la HU25 en Azure Boards.
+- **Lógica (T275, AB#275):** `GestionPerfilUseCase.eliminarCuenta(email, password)` con `@PreAuthorize` de `Permisos.SOLO_CLIENTE_PROPIO_POR_EMAIL`: comprueba la contraseña actual (si no coincide, `ContrasenaActualIncorrectaException`, sin borrar nada) y borra al usuario. El borrado es **físico**, como el de un administrador (HU37): solo se borra el documento del usuario. Tras borrarlo, el login con esa cuenta da 401 (correo inexistente) y `CuentaActivaFilter` invalida cualquier sesión abierta en su siguiente petición.
+- **Endpoint (T274, AB#274):** `DELETE /api/perfil` va en su propia rama y PR, con los tests del controlador de CP02 a CP05 (400 `WRONG_PASSWORD`, cierre de sesión, 401, CSRF y validación).
+- **Pendiente con el equipo:** el carrito, las direcciones, los métodos de pago (cifrados), los pedidos y las valoraciones del cliente quedan con un `clienteId` huérfano. Se decide junto con la HU38 (borrado lógico o anonimización).
+- **Tests existentes:** `GestionPerfilServiceTest` saca el usuario de prueba a un método (`lucia()`) que comparten HU4-CP01 y los casos nuevos, y `SeguridadSesionUsuarioServiceTest` crea el servicio con el doble del hash. No cambia lo que comprueban HU4-CP01 ni HU2-CP29.
+- **Frontend:** las tasks AB#272 y AB#273 están sin empezar.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU25-CP01 | `GestionPerfilServiceTest` | `eliminarCuentaConLaContrasenaCorrectaBorraAlUsuario` | Aplicación | AB#275 | este PR | 🔍 |
+| HU25-CP02 | `GestionPerfilServiceTest` | `eliminarCuentaConLaContrasenaIncorrectaNoBorraNada` | Aplicación | AB#275 | este PR | 🔍 |
+| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `unClienteEliminaSuCuenta` | Aplicación | AB#275 | este PR | 🔍 |
+| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `unClienteNoEliminaLaCuentaDeOtro` | Aplicación | AB#275 | este PR | 🔍 |
+| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `unVendedorNoEliminaSuCuenta` | Aplicación | AB#275 | este PR | 🔍 |
+| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `unAdministradorNoEliminaSuCuenta` | Aplicación | AB#275 | este PR | 🔍 |
+| HU25-CP04 | `SeguridadSesionUsuarioServiceTest` | `sinSesionNoSeEliminaNingunaCuenta` | Aplicación | AB#275 | este PR | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `GestionPerfilServiceTest` y `SeguridadSesionUsuarioServiceTest`: `usuarios/application/service/` (Mockito sin Spring, y contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
+
+---
+
 ## HU26 · Supervisión de vendedores (solo lectura)
 
 ### Tabla A · HU26 ↔ casos de prueba
@@ -2335,7 +2494,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
 | HU26-CP01 | El listado solo trae vendedores, con sus datos (también el nombre comercial y la categoría principal) y sin datos sensibles | Integración (capa web) | 1 | ✅ Pasa |
-| HU26-CP02 | El listado se ordena por nombre o por estado (pendientes, activos, bloqueados), en sentido ascendente o descendente | Integración (capa web y MongoDB) | 4 | 🔍 En revisión |
+| HU26-CP02 | El listado se ordena por nombre o por estado (pendientes, activos, bloqueados), en sentido ascendente o descendente | Integración (capa web y MongoDB) | 4 | ✅ Pasa |
 | HU26-CP03 | La ficha de un vendedor trae sus datos (también el nombre comercial, la categoría principal con su nombre, el DNI y el teléfono), sin datos sensibles | Unitario + integración (capa web) | 2 | ✅ Pasa |
 | HU26-CP04 | La ficha de un usuario que no existe o que no es vendedor devuelve 404 | Unitario + integración (capa web) | 3 | ✅ Pasa |
 | HU26-CP05 | Sin sesión (401) o sin ser administrador (403) no se ve ni el listado ni la ficha | Integración (capa web) | 2 | ✅ Pasa |
@@ -2356,8 +2515,8 @@ Notas:
 |---|---|---|---|---|---|---|
 | HU26-CP01 | `UsuarioControllerTest` | `administradorRecibeElListadoDeVendedores` | Infraestructura | AB#30, AB#43 | PR #80, PR #100 | ✅ |
 | HU26-CP02 | `UsuarioControllerTest` | `listadoDeVendedoresTraduceLaOrdenacion` (nombre, estado, categoría y sin orden) | Infraestructura | AB#30 · AB#29 | PR #80 (modificado en PR #104: `category` pasa a `CATEGORIA`) | ✅ |
-| HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorEstadoAscendente` | Infraestructura | AB#30 · AB#243 | PR #80 (modificado en este PR) | 🔍 |
-| HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorEstadoDescendente` | Infraestructura | AB#30 · AB#243 | PR #80 (modificado en este PR) | 🔍 |
+| HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorEstadoAscendente` | Infraestructura | AB#30 · AB#243 | PR #80 (modificado en PR #180) | ✅ |
+| HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorEstadoDescendente` | Infraestructura | AB#30 · AB#243 | PR #80 (modificado en PR #180) | ✅ |
 | HU26-CP02 | `UsuarioMongoAdapterTest` | `listarOrdenaPorNombre` | Infraestructura | AB#30 | PR #80 | ✅ |
 | HU26-CP03 | `AdministracionUsuariosServiceTest` | `consultarVendedorDevuelveElVendedor` | Aplicación | AB#30 | PR #80 | ✅ |
 | HU26-CP03 | `UsuarioControllerTest` | `fichaDeUnVendedor` | Infraestructura | AB#30, AB#43 | PR #80, PR #100 | ✅ |
@@ -2374,6 +2533,29 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
 - `UsuarioControllerTest`: `usuarios/infrastructure/adapter/in/web/` (con `@WebMvcTest` y `@WithMockUser`)
 - `UsuarioMongoAdapterTest`: `usuarios/infrastructure/adapter/out/persistence/` (con Testcontainers)
+
+---
+
+## HU30 · Desarrollo de una home
+
+### Tabla A · HU30 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU30-CP01 | El logotipo de la cabecera lleva al inicio de cada usuario: con sesión, al de su rol (cliente a los productos, vendedor a sus productos y administrador a su panel); sin sesión, a la home | Frontend (página) | 5 | 🔍 En revisión (5, AB#27, PR #193) |
+
+Notas:
+- **HU30-CP01 (fix, AB#27):** caso propuesto al corregir que el logotipo llevaba siempre a la home de invitado aunque hubiera sesión. Usa `getHomePath(rol)` (`auth/roles.js`), el mismo inicio por rol que el login. Pendiente de confirmar con el equipo y de añadir a la HU30 en Azure Boards. Los tests de la home (`Home.test.jsx`) no llevan ID de caso y no están en esta matriz.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU30-CP01 | `AppHeader.test.jsx` | `HU30-CP01: con la sesión de cliente@esibuy.test, el logotipo lleva a /products` | Frontend · página | AB#27 | PR #193 | 🔍 |
+| HU30-CP01 | `AppHeader.test.jsx` | `HU30-CP01: con la sesión de vendedor@esibuy.test, el logotipo lleva a /seller/products` | Frontend · página | AB#27 | PR #193 | 🔍 |
+| HU30-CP01 | `AppHeader.test.jsx` | `HU30-CP01: con la sesión de admin@esibuy.test, el logotipo lleva a /admin` | Frontend · página | AB#27 | PR #193 | 🔍 |
+| HU30-CP01 | `AppHeader.test.jsx` | `HU30-CP01: sin sesión, el logotipo lleva a la home` | Frontend · página | AB#27 | PR #193 | 🔍 |
+| HU30-CP01 | `AppHeader.test.jsx` | `HU30-CP01: un cliente que pulsa el logotipo llega a los productos, no a la home de invitado` | Frontend · página | AB#27 | PR #193 | 🔍 |
 
 ---
 
@@ -2402,7 +2584,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU31-CP17 | `POST /api/seller/products` crea el producto y responde 201 con el producto creado, sin `vendedorId` | Integración (capa web) | 1 | ✅ Pasa |
 | HU31-CP18 | El vendedor sale de la sesión: un `vendedorId` en el cuerpo se ignora | Integración (capa web) | 1 | ✅ Pasa |
 | HU31-CP19 | Sin sesión (401), sin ser vendedor o sin token CSRF (403) no se crea el producto | Integración (capa web) | 3 | ✅ Pasa |
-| HU31-CP20 | Un cuerpo con datos no válidos o que no es JSON devuelve 400 y no llega al caso de uso | Integración (capa web) | 2 | 🔍 En revisión |
+| HU31-CP20 | Un cuerpo con datos no válidos o que no es JSON devuelve 400 y no llega al caso de uso | Integración (capa web) | 2 | ✅ Pasa |
 | HU31-CP21 | Una regla del dominio incumplida devuelve 400 con `code: VALIDATION_ERROR` y un mensaje genérico | Integración (capa web) | 1 | ✅ Pasa |
 | HU31-CP22 | Un nombre repetido del mismo vendedor devuelve 409 con `code: PRODUCT_NAME_ALREADY_EXISTS` | Integración (capa web) | 1 | ✅ Pasa |
 | HU31-CP23 | La comprobación de nombre repetido no distingue mayúsculas, compara el nombre completo como texto literal y solo cuenta los productos del mismo vendedor | Integración MongoDB | 2 | ✅ Pasa |
@@ -2411,6 +2593,12 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU31-CP26 | La categoría se elige en un desplegable con búsqueda con las categorías actuales: se puede escribir para filtrar sin distinguir mayúsculas ni tildes, y en los filtros la primera opción es «Todas las categorías» | Frontend (componente y página) | 11 | ✅ Pasa (11, AB#256, PR #123) |
 | HU31-CP27 | Un nombre que el vendedor ya usa (409 `PRODUCT_NAME_ALREADY_EXISTS`) se marca en el campo Nombre con un mensaje propio al dar de alta, y el aviso desaparece al cambiar el nombre | Frontend (página) | 2 | ✅ Pasa (2, AB#257, PR #123) |
 | HU31-CP28 | Los casos de uso de productos exigen su rol (vendedor, administrador o cliente según el caso de uso) y, los del vendedor, que el correo recibido sea el de la sesión; sin sesión se rechazan. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 9 | 🔍 En revisión (9, rama `fix/seguridad-capa-negocio`) |
+| HU31-CP29 | El antivirus (VirusTotal) da por maliciosa una URL ya analizada si algún motor la marca como `malicious`; los sospechosos no cuentan | Unitario (adaptador, servidor HTTP simulado) | 2 | 🔍 En revisión (2, AB#397, PR #189) |
+| HU31-CP30 | Una URL que VirusTotal no conoce (404) se envía a analizar y se consulta el análisis como mucho 2 veces; si no termina a tiempo, no hay resultado | Unitario (adaptador, servidor HTTP simulado) | 3 | 🔍 En revisión (3, AB#397, PR #189) |
+| HU31-CP31 | Un error de VirusTotal (401, 429, 500, 503), también al enviar la URL a analizar, o no poder conectar no da resultado en lugar de un error | Unitario (adaptador, servidor HTTP simulado) | 3 | 🔍 En revisión (3, AB#397, PR #189) |
+| HU31-CP32 | Un producto con una imagen que el antivirus marca como maliciosa se rechaza al crearlo y no se guarda | Unitario | 1 | 🔍 En revisión (1, AB#397, PR #189) |
+| HU31-CP33 | Si el antivirus no da resultado, el producto se guarda sin imagen; si la da por segura, con ella; un producto sin imagen no se analiza | Unitario | 3 | 🔍 En revisión (3, AB#397, PR #189) |
+| HU31-CP34 | Una imagen que no supera el antivirus responde 400 con el código `IMAGE_NOT_SAFE` | Integración (capa web) | 1 | 🔍 En revisión (1, AB#397, PR #189) |
 
 Notas:
 - **HU31-CP01 a CP10:** casos propuestos en la T201 (AB#201) a partir del contrato del formulario de producto del frontend (`frontend/docs/hu31-formulario-producto.md`). Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards.
@@ -2431,6 +2619,7 @@ Notas:
 - **Frontend:** los tests de la HU31 (AB#182) no tienen todavía filas en la matriz.
 - **HU31-CP26 y CP27 (revisión del Sprint 1, R5 y R6):** casos propuestos en las T256 (AB#256) y T257 (AB#257). Pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards. El desplegable es el componente compartido `CategoryCombobox` y, por decisión del equipo, se usa en todas las vistas que eligen una categoría: formulario de producto, registro de vendedor, edición de un vendedor por el administrador y filtros de los listados. Los tests de esas otras pantallas (`Register.test.jsx`, `ProfileEditor.test.jsx`, `EditableProfile.test.jsx`, `UserEditDialog.test.jsx`, `SellerProductsPage.test.jsx` y `AdminSellersPage.test.jsx`) solo se adaptan para elegir la categoría en el desplegable; no llevan ID de caso y no tienen filas en la Tabla B. `ProfileEditor.test.jsx` añade además `profileEditor_deUnVendedor_laCategoriaPrincipalSeEligeEnUnDesplegableConLasCategorias`, que por decisión del equipo tampoco lleva ID de caso. El 409 ya lo devolvía el backend (CP22); el mock del frontend lo devuelve ahora igual. Al editar, el mismo mensaje en el campo Nombre lo comprueba HU34-CP18 (decisión del equipo al resolver el conflicto con el PR #122: un único mensaje, junto al campo, en alta y en edición).
 - **HU31-CP28 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Comprueba con `@PreAuthorize` que cada caso de uso de productos exige su rol (gestión y listado: vendedor con su propio correo; supervisión y conteo por categoría: administrador; catálogo y existencias: cliente). Clase de test nueva `productos/application/service/SeguridadProductosServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
+- **HU31-CP29 a CP34 (T397, AB#397):** casos propuestos, pendientes de confirmar con el equipo y de añadir a la HU31 en Azure Boards. Antivirus de la URL de la imagen con la API pública v3 de VirusTotal (no hay subida de ficheros). Decisiones del equipo: maliciosa si `malicious > 0` → 400 `IMAGE_NOT_SAFE`; si VirusTotal no responde, se queda sin cuota o falla la API key, el producto se guarda sin imagen; una URL nueva se espera como mucho 2 consultas cada 3 s (4 peticiones, el límite por minuto); la API no avisa del descarte (PENDIENTE para el frontend). Los tests del adaptador no llaman a VirusTotal (`MockRestServiceServer`) y la API key de los tests es falsa (`MongoTestcontainersConfig`).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -2469,8 +2658,8 @@ Notas:
 | HU31-CP19 | `ProductoControllerTest` | `sinSesionNoSeCreaUnProducto` | Infraestructura | AB#205 | PR #99 | ✅ |
 | HU31-CP19 | `ProductoControllerTest` | `noVendedorNoCreaUnProducto (cliente y administrador)` | Infraestructura | AB#205 | PR #99 | ✅ |
 | HU31-CP19 | `ProductoControllerTest` | `sinTokenCsrfNoSeCreaUnProducto` | Infraestructura | AB#205 | PR #99 | ✅ |
-| HU31-CP20 | `ProductoControllerTest` | `cuerpoInvalidoDevuelve400 (nombre vacío o de más de 100 caracteres, precio 0, negativo o ausente, stock negativo, categoría vacía, imagen `javascript:`, `disponible` ausente o nulo, descuento activo sin porcentaje y porcentaje 101)` | Infraestructura | AB#179 | PR #99 (modificado en este PR) | 🔍 |
-| HU31-CP20 | `ProductoControllerTest` | `cuerpoQueNoEsJsonDevuelve400` | Infraestructura | AB#179 | PR #99 (modificado en este PR) | 🔍 |
+| HU31-CP20 | `ProductoControllerTest` | `cuerpoInvalidoDevuelve400 (nombre vacío o de más de 100 caracteres, precio 0, negativo o ausente, stock negativo, categoría vacía, imagen `javascript:`, `disponible` ausente o nulo, descuento activo sin porcentaje y porcentaje 101)` | Infraestructura | AB#179 | PR #99 (modificado en PR #183) | ✅ |
+| HU31-CP20 | `ProductoControllerTest` | `cuerpoQueNoEsJsonDevuelve400` | Infraestructura | AB#179 | PR #99 (modificado en PR #183) | ✅ |
 | HU31-CP21 | `ProductoControllerTest` | `reglaDeDominioIncumplidaDevuelve400Generico` | Infraestructura | AB#179 | PR #99 | ✅ |
 | HU31-CP22 | `ProductoControllerTest` | `nombreRepetidoDevuelve409` | Infraestructura | AB#179 | PR #99 | ✅ |
 | HU31-CP23 | `ProductoMongoAdapterTest` | `existePorVendedorYNombreNoDistingueMayusculas` | Infraestructura | AB#204 | PR #99 | ✅ |
@@ -2501,6 +2690,19 @@ Notas:
 | HU31-CP28 | `SeguridadProductosServiceTest` | `unVendedorNoUsaElCatalogoNiLasExistencias` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 | HU31-CP28 | `SeguridadProductosServiceTest` | `unClienteUsaElCatalogo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 | HU31-CP28 | `SeguridadProductosServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU31-CP29 | `VirusTotalAdapterTest` | `unaUrlConInformeMaliciosoEsMaliciosa` | Infraestructura | AB#397 | PR #189 | 🔍 |
+| HU31-CP29 | `VirusTotalAdapterTest` | `unaUrlConInformeSinMaliciososEsSegura` | Infraestructura | AB#397 | PR #189 | 🔍 |
+| HU31-CP30 | `VirusTotalAdapterTest` | `unaUrlNuevaSeEnviaAAnalizarYSeEsperaAlResultado` | Infraestructura | AB#397 | PR #189 | 🔍 |
+| HU31-CP30 | `VirusTotalAdapterTest` | `siElAnalisisTerminaEnLaPrimeraConsultaNoSeVuelveAConsultar` | Infraestructura | AB#397 | PR #189 | 🔍 |
+| HU31-CP30 | `VirusTotalAdapterTest` | `siElAnalisisNoTerminaNoHayResultado` | Infraestructura | AB#397 | PR #189 | 🔍 |
+| HU31-CP31 | `VirusTotalAdapterTest` | `unErrorAlBuscarElInformeNoDaResultado` (401, 429, 500 y 503) | Infraestructura | AB#397 | PR #189 | 🔍 |
+| HU31-CP31 | `VirusTotalAdapterTest` | `sinCuotaAlEnviarAAnalizarNoHayResultado` | Infraestructura | AB#397 | PR #189 | 🔍 |
+| HU31-CP31 | `VirusTotalAdapterTest` | `sinConexionNoHayResultado` | Infraestructura | AB#397 | PR #189 | 🔍 |
+| HU31-CP32 | `GestionProductosServiceTest` | `rechazaUnaImagenMaliciosaYNoGuardaNada` | Aplicación | AB#397 | PR #189 | 🔍 |
+| HU31-CP33 | `GestionProductosServiceTest` | `sinResultadoDelAntivirusSeGuardaSinImagen` | Aplicación | AB#397 | PR #189 | 🔍 |
+| HU31-CP33 | `GestionProductosServiceTest` | `unaImagenSeguraSeGuardaConElProducto` | Aplicación | AB#397 | PR #189 | 🔍 |
+| HU31-CP33 | `GestionProductosServiceTest` | `unProductoSinImagenNoSeAnaliza` | Aplicación | AB#397 | PR #189 | 🔍 |
+| HU31-CP34 | `ProductoControllerTest` | `imagenNoSeguraDevuelve400` | Infraestructura | AB#397 | PR #189 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `ProductoTest` y `DescuentoTest`: `productos/domain/model/` (JUnit, sin Spring)
@@ -2622,7 +2824,7 @@ Rutas de las clases de test:
 | HU34-CP04 | Conservar el nombre del producto, aunque cambien las mayúsculas, no es un nombre repetido | Unitario | 1 | ✅ Pasa |
 | HU34-CP05 | Un vendedor no puede modificar un producto de otro vendedor ni uno inexistente (`ProductoNoEncontradoException`) | Unitario | 2 | ✅ Pasa |
 | HU34-CP06 | `PUT /api/seller/products/{id}` devuelve 200 con el producto actualizado; el vendedor sale de la sesión, no del cuerpo | Integración (capa web) | 1 | ✅ Pasa |
-| HU34-CP07 | Una modificación con datos no válidos devuelve 400 y no llega al caso de uso; una regla del dominio incumplida, 400 genérico | Integración (capa web) | 2 | 🔍 En revisión |
+| HU34-CP07 | Una modificación con datos no válidos devuelve 400 y no llega al caso de uso; una regla del dominio incumplida, 400 genérico | Integración (capa web) | 2 | ✅ Pasa |
 | HU34-CP08 | Cambiar el nombre por uno repetido del mismo vendedor devuelve 409 con el código `PRODUCT_NAME_ALREADY_EXISTS` | Integración (capa web) | 1 | ✅ Pasa |
 | HU34-CP09 | Modificar un producto inexistente o de otro vendedor devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | ✅ Pasa |
 | HU34-CP10 | Sin sesión (401), sin ser vendedor (403) o sin token CSRF (403) no se modifica un producto | Integración (capa web) | 3 | ✅ Pasa |
@@ -2634,6 +2836,8 @@ Rutas de las clases de test:
 | HU34-CP16 | Si el producto no carga, la vista muestra un error y permite reintentar | Frontend (página) | 1 | ✅ Pasa |
 | HU34-CP17 | Desde la ficha del producto, Editar abre el formulario de edición con sus datos | Frontend (página) | 1 | ✅ Pasa |
 | HU34-CP18 | Si el nombre ya lo tiene otro producto del vendedor (409), la edición lo indica en el campo Nombre con el mismo mensaje que el alta (HU31-CP27) y no sale del formulario | Frontend (página) | 1 | ✅ Pasa |
+| HU34-CP19 | Al modificar, cambiar la imagen por una maliciosa se rechaza y, si el antivirus no da resultado, se guarda sin imagen; si la imagen no cambia no se vuelve a analizar | Unitario | 3 | 🔍 En revisión (3, AB#397, PR #189) |
+| HU34-CP20 | Cambiar la imagen por una que no supera el antivirus responde 400 con el código `IMAGE_NOT_SAFE` | Integración (capa web) | 1 | 🔍 En revisión (1, AB#397, PR #189) |
 
 Notas:
 - **HU34-CP01 a CP05:** casos propuestos en la T343 (AB#343) a partir de los criterios de aceptación de la HU34. Pendientes de añadir a la HU34 en Azure Boards.
@@ -2643,6 +2847,7 @@ Notas:
 - **HU34-CP11 · PENDIENTE DE VERIFICAR (decisión del equipo):** el criterio «los cambios se reflejan inmediatamente en el catálogo que ven los clientes» **no se verifica todavía**, porque en el backend aún no existe el catálogo de clientes. La modificación actualiza el mismo documento de la colección `productos` (lo prueba el test técnico «Persistencia: guardar un producto leído lo actualiza sin duplicarlo y conserva createdAt» de `ProductoMongoAdapterTest`), que es la que leerá el catálogo. **Cuando se desarrolle el catálogo de clientes, hay que añadir el test de este caso y pasarlo a ✅.**
 - **HU34-CP12 a CP16:** la vista de edición se hizo en la HU31 (formulario compartido con el alta). Por decisión del equipo, sus 7 tests se renombran en la T341 (AB#341, PR #122) con el ID de su caso de la HU34 y se trazan aquí; no tienen ciclo rojo porque no hay código nuevo detrás.
 - **HU34-CP17 y CP18:** casos nuevos de la T341. El nombre repetido se indica en el campo Nombre con el mismo mensaje en el alta y en la edición (decisión del equipo al resolver el conflicto del #123 con el #122; ver HU31-CP27).
+- **HU34-CP19 y CP20 (T397, AB#397):** casos propuestos, pendientes de confirmar con el equipo. Mismas reglas del antivirus que en el alta (HU31-CP29 a CP34), pero solo si la URL de la imagen cambia (decisión del equipo, para no gastar la cuota de VirusTotal en cada modificación).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -2655,7 +2860,7 @@ Notas:
 | HU34-CP05 | `GestionProductosServiceTest` | `unProductoQueNoExisteNoSeModifica` | Aplicación | AB#343 | PR #120 | ✅ |
 | HU34-CP05 | `GestionProductosServiceTest` | `unProductoDeOtroVendedorNoSeModifica` | Aplicación | AB#343 | PR #120 | ✅ |
 | HU34-CP06 | `ProductoControllerTest` | `vendedorModificaSuProducto` | Infraestructura | AB#342 | PR #121 | ✅ |
-| HU34-CP07 | `ProductoControllerTest` | `cuerpoInvalidoNoModificaElProducto` (los mismos cuerpos no válidos que el alta) | Infraestructura | AB#342 | PR #121 (modificado en este PR) | 🔍 |
+| HU34-CP07 | `ProductoControllerTest` | `cuerpoInvalidoNoModificaElProducto` (los mismos cuerpos no válidos que el alta) | Infraestructura | AB#342 | PR #121 (modificado en PR #183) | ✅ |
 | HU34-CP07 | `ProductoControllerTest` | `reglaDeDominioIncumplidaAlModificarDevuelve400Generico` | Infraestructura | AB#342 | PR #121 | ✅ |
 | HU34-CP08 | `ProductoControllerTest` | `nombreRepetidoAlModificarDevuelve409` | Infraestructura | AB#342 | PR #121 | ✅ |
 | HU34-CP09 | `ProductoControllerTest` | `modificarUnProductoNoEncontradoDevuelve404` | Infraestructura | AB#342 | PR #121 | ✅ |
@@ -2672,6 +2877,10 @@ Notas:
 | HU34-CP16 | `SellerProductFormPage.test.jsx` | `HU34-CP16: si el producto no carga, muestra un error y permite reintentar` | Frontend · página | AB#341 | PR #122 | ✅ |
 | HU34-CP17 | `SellerProductsPage.test.jsx` | `HU34-CP17: desde la ficha, Editar abre el formulario de edición con los datos del producto` | Frontend · página | AB#341 | PR #122 | ✅ |
 | HU34-CP18 | `SellerProductFormPage.test.jsx` | `HU34-CP18: si el nombre ya lo tiene otro producto del vendedor, lo indica y no sale del formulario` | Frontend · página | AB#341 | PR #122 | ✅ |
+| HU34-CP19 | `GestionProductosServiceTest` | `cambiarAUnaImagenMaliciosaSeRechaza` | Aplicación | AB#397 | PR #189 | 🔍 |
+| HU34-CP19 | `GestionProductosServiceTest` | `cambiarLaImagenSinResultadoSeGuardaSinImagen` | Aplicación | AB#397 | PR #189 | 🔍 |
+| HU34-CP19 | `GestionProductosServiceTest` | `siLaImagenNoCambiaNoSeVuelveAAnalizar` | Aplicación | AB#397 | PR #189 | 🔍 |
+| HU34-CP20 | `ProductoControllerTest` | `imagenNoSeguraAlModificarDevuelve400` | Infraestructura | AB#397 | PR #189 | 🔍 |
 
 Rutas de las clases de test:
 - `GestionProductosServiceTest`: `backend/src/test/java/es/uclm/esibuy/backend/productos/application/service/` (Mockito, sin Spring)
@@ -2798,13 +3007,27 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU39-CP03 | El administrador también ve las categorías `INACTIVA` | Unitario | 1 | ✅ Pasa |
 | HU39-CP04 | Sin rol de administrador el listado devuelve 403 (cliente y vendedor), y 401 sin sesión | Controlador | 2 | ✅ Pasa |
 | HU39-CP05 | El listado público de categorías (`GET /api/categorias`) solo devuelve las activas | Unitario | 1 | 🔍 En revisión (1, rama `fix/seguridad-capa-negocio`) |
+| HU39-CP06 | La llamada del administrador pide `GET /api/admin/categorias` y devuelve el array de categorías; un 403 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#330, PR pendiente) |
+| HU39-CP07 | El estado de cada categoría se muestra como Activa (color de éxito) o Inactiva (neutro); un estado desconocido, como Desconocido | Frontend (unitario y componente) | 5 | 🔍 En revisión (5, AB#330, PR pendiente) |
+| HU39-CP08 | Filtrar las categorías por nombre (sin distinguir mayúsculas ni tildes) y por estado, y ordenarlas por nombre, productos o estado, en el cliente | Frontend (unitario) | 10 | 🔍 En revisión (10, AB#330, PR pendiente) |
+| HU39-CP09 | La tabla de categorías muestra de cada una su nombre, descripción, estado y número de productos, con una columna de acciones | Frontend (componente y página) | 6 | 🔍 En revisión (6, AB#330, PR pendiente) |
+| HU39-CP10 | Una descripción vacía se muestra como un guion y una categoría sin productos muestra 0 | Frontend (componente y página) | 2 | 🔍 En revisión (2, AB#330, PR pendiente) |
+| HU39-CP11 | La lupa de cada fila abre la ficha de solo lectura con los datos de la categoría y su descripción completa; la vista no ofrece crear, editar ni eliminar | Frontend (componente y página) | 9 | 🔍 En revisión (9, AB#330, PR pendiente) |
+| HU39-CP12 | La vista muestra un indicador mientras carga, todas las categorías (también las inactivas) ordenadas por nombre y un estado vacío si no hay ninguna | Frontend (página) | 3 | 🔍 En revisión (3, AB#330, PR pendiente) |
+| HU39-CP13 | Un 403 o un error del servidor muestran el mismo mensaje genérico con «Reintentar», sin el texto del servidor | Frontend (página) | 2 | 🔍 En revisión (2, AB#330, PR pendiente) |
+| HU39-CP14 | La vista permite buscar por nombre, filtrar por estado y ordenar; sin coincidencias avisa y «Limpiar filtros» mantiene el orden | Frontend (página) | 4 | 🔍 En revisión (4, AB#330, PR pendiente) |
+| HU39-CP15 | El panel de control tiene la tarjeta Categorías, que lleva al listado, y «Volver al panel» regresa al panel | Frontend (página y rutas) | 3 | 🔍 En revisión (3, AB#330, PR pendiente) |
+| HU39-CP16 | El listado de categorías es solo del administrador: sin sesión va al login y un vendedor o un cliente van a su zona | Frontend (rutas) | 3 | 🔍 En revisión (3, AB#330, PR pendiente) |
 
 Notas:
 - **HU39-CP01 a CP03:** casos propuestos en la T332 (AB#332), a partir del criterio de aceptación «listado con nombre, descripción, estado y número de productos asociados». **HU39-CP04:** propuesto en la T331 (AB#331), a partir del criterio «cualquier llamada a la API sin rol de administrador devuelve 403». Pendientes de confirmar con el equipo y de añadir a la HU39 en Azure Boards.
 - **Endpoint (T331):** `GET /api/admin/categorias` → `[{id, nombre, descripcion, estado, numeroProductos}]`, sin paginar y ordenado por nombre, con `estado` como texto (`ACTIVA` / `INACTIVA`). Lo atiende `AdministracionCategoriasController`; el 401 y el 403 los da la regla `/api/admin/**` de `SecurityConfig`. Es el contrato de la vista del frontend (T330).
 - **Backend (T332):** `AdministracionCategoriasUseCase.listarConProductos()` devuelve `CategoriaConProductos`. Categorías pide el recuento a productos con `ProductosPorCategoriaPort` → `ProductosPorCategoriaAdapter` → `ConteoProductosUseCase` (puerto de entrada de productos). El recuento incluye todos los productos de la categoría, también los no disponibles. `GET /api/categorias` no cambia.
-- **Pendiente:** la vista del frontend (T330); el nombre único sin distinguir mayúsculas (T323).
+- **Pendiente:** el nombre único sin distinguir mayúsculas (T323).
 - **HU39-CP05 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Tapa un hueco de seguridad: el listado público de categorías devolvía también las inactivas, que solo debe ver el administrador (HU39-CP03). Se trazó al revisar la rama, porque el test ya estaba en el código.
+- **HU39-CP06 a CP16 (frontend, T330):** casos propuestos en la T330 (AB#330), a partir de los criterios de aceptación de la HU39 («opción de categorías en el panel de administrador», «listado con nombre, descripción, estado y número de productos» y «cualquier llamada a la API sin rol de administrador devuelve 403», que la vista trata como un error genérico), y desarrollados con TDD. Pendientes de confirmar con el equipo y de añadir a la HU39 en Azure Boards. Rama `feature/US39-T330-vista-consulta-categorias`.
+- **Vista (T330):** `/admin/categories`, solo del administrador, con la tarjeta Categorías del panel. Lee `GET /api/admin/categorias`, que devuelve todas las categorías sin paginar y ordenadas por nombre, y por eso la búsqueda por nombre, el filtro por estado y la ordenación (nombre, productos y estado) se hacen en el cliente y no hay paginación. La lupa de cada fila abre una ficha de solo lectura con los datos de la propia fila (no hay endpoint de detalle de categoría): era la interpretación del criterio «el botón de consultar debe estar en la tabla». Sin botones de crear, editar ni eliminar, que son de las HU40, HU41 y HU42.
+- **Fuera de alcance de la vista:** el criterio «nombre obligatorio y único sin distinguir mayúsculas» lo valida el backend (HU40); aquí solo se muestra el nombre.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -2821,6 +3044,55 @@ Notas:
 | HU39-CP04 | `AdministracionCategoriasControllerTest` | `otroRolRecibe403` (cliente y vendedor) | Infraestructura | AB#331 | PR #135 | ✅ |
 | HU39-CP04 | `AdministracionCategoriasControllerTest` | `sinSesionRecibe401` | Infraestructura | AB#331 | PR #135 | ✅ |
 | HU39-CP05 | `ConsultaCategoriasServiceTest` | `listarSoloDevuelveLasActivas` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU39-CP06 | `adminCategories.test.js` | `HU39-CP06: pide GET /api/admin/categorias y devuelve el array de categorías` | Frontend · API | AB#330 | PR pendiente | 🔍 |
+| HU39-CP06 | `adminCategories.test.js` | `HU39-CP06: un 403 llega como error con su estado y su código` | Frontend · API | AB#330 | PR pendiente | 🔍 |
+| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: una categoría ACTIVA se muestra como Activa, con color de éxito` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
+| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: una categoría INACTIVA se muestra como Inactiva, con color neutro` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
+| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: un estado desconocido se muestra como Desconocido` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
+| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: las etiquetas del filtro son las de los dos estados` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
+| HU39-CP07 | `CategoriesTable.test.jsx` | `HU39-CP07: el estado de cada categoría se muestra en una insignia` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: sin filtros devuelve todas las categorías, también las inactivas, ordenadas por nombre` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: la búsqueda por nombre no distingue mayúsculas ni tildes` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: la búsqueda encuentra el texto en cualquier parte del nombre y solo mira el nombre` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: el filtro por estado deja solo las activas o solo las inactivas` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: la búsqueda y el estado se combinan` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ordena por nombre en sentido descendente` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ordena por número de productos, de menos a más y al revés` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ordena por estado, las activas primero, y a igualdad desempata por nombre` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: no modifica la lista que recibe` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ofrece ordenar por nombre, productos y estado` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
+| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: muestra las cabeceras de las cuatro columnas` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
+| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: muestra de cada categoría su nombre, descripción, estado y número de productos` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
+| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: con renderActions añade la columna Acciones con lo que devuelva para cada categoría` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
+| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: mientras se refresca, la tabla avisa de que está ocupada` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
+| HU39-CP09 | `AdminCategoriesPage.test.jsx` | `HU39-CP09: la tabla tiene las columnas Nombre, Descripción, Estado, Productos y Acciones` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP09 | `AdminCategoriesPage.test.jsx` | `HU39-CP09: cada fila muestra el nombre, la descripción, el estado y el número de productos` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP10 | `CategoriesTable.test.jsx` | `HU39-CP10: una descripción vacía se muestra como un guion` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
+| HU39-CP10 | `AdminCategoriesPage.test.jsx` | `HU39-CP10: una categoría sin descripción muestra un guion y una sin productos muestra 0` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: muestra el nombre, el estado, el número de productos y la descripción completa` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: una categoría inactiva sin descripción ni productos muestra Inactiva, 0 y un guion` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: todos los campos son de solo lectura y la ficha avisa de ello` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: la ficha no ofrece editar, crear ni eliminar` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: se cierra con la X` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: se cierra con Escape` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
+| HU39-CP11 | `AdminCategoriesPage.test.jsx` | `HU39-CP11: cada fila tiene un botón con lupa para ver la información de su categoría` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP11 | `AdminCategoriesPage.test.jsx` | `HU39-CP11: la lupa abre la ficha de esa categoría con su descripción completa y se puede cerrar` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP11 | `AdminCategoriesPage.test.jsx` | `HU39-CP11: la vista no ofrece crear ni editar categorías` (modificado en la T324, AB#324: eliminar llega con la HU42) | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP12 | `AdminCategoriesPage.test.jsx` | `HU39-CP12: muestra el título de la vista y mientras carga un indicador` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP12 | `AdminCategoriesPage.test.jsx` | `HU39-CP12: muestra todas las categorías, también las inactivas, ordenadas por nombre` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP12 | `AdminCategoriesPage.test.jsx` | `HU39-CP12: sin categorías muestra el estado vacío y ningún filtro` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP13 | `AdminCategoriesPage.test.jsx` | `HU39-CP13: un 403 muestra el error genérico, sin el texto del servidor, y se puede reintentar` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP13 | `AdminCategoriesPage.test.jsx` | `HU39-CP13: un error del servidor muestra el mismo mensaje genérico con Reintentar` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: buscar por nombre no distingue mayúsculas ni tildes` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: filtrar por estado deja solo las inactivas o solo las activas` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: ordenar por productos y cambiar el sentido` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: sin coincidencias avisa y Limpiar filtros vuelve a mostrarlas todas, manteniendo el orden` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP15 | `AdminCategoriesPage.test.jsx` | `HU39-CP15: Volver al panel regresa al panel de control` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP15 | `AdminPage.test.jsx` | `HU39-CP15: el panel tiene la tarjeta Categorías, con su descripción` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP15 | `AdminPage.test.jsx` | `HU39-CP15: la tarjeta Categorías lleva al listado de categorías` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP16 | `AdminCategoriesPage.test.jsx` | `HU39-CP16: sin sesión redirige al login` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP16 | `AdminCategoriesPage.test.jsx` | `HU39-CP16: un vendedor no ve el listado y va a su zona` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP16 | `AdminCategoriesPage.test.jsx` | `HU39-CP16: un cliente no ve el listado y va a su zona` | Frontend · página | AB#330 | PR pendiente | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionCategoriasControllerTest`: `categorias/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
@@ -2828,6 +3100,9 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `ProductosPorCategoriaAdapterTest`: `categorias/infrastructure/adapter/out/productos/` (JUnit y Mockito, sin Spring)
 - `ConteoProductosServiceTest`: `productos/application/service/` (JUnit y Mockito, sin Spring)
 - `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/` (con Testcontainers)
+- `adminCategories.test.js`: `frontend/src/api/` (Vitest y MSW)
+- `categoryStatus.test.js`, `categoriesList.test.js`, `CategoriesTable.test.jsx` y `CategoryDetailDialog.test.jsx`: `frontend/src/features/admin/` (Vitest y React Testing Library)
+- `AdminCategoriesPage.test.jsx` y `AdminPage.test.jsx`: `frontend/src/pages/` (Vitest, React Testing Library y MSW)
 
 ---
 
@@ -2843,7 +3118,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU40-CP04 | El estado es obligatorio; la descripción y el estado se guardan en MongoDB, y una categoría guardada sin ellos se lee ACTIVA y sin descripción | Unitario + integración MongoDB | 5 | ✅ Pasa |
 | HU40-CP05 | El administrador crea una categoría con el estado que elige (ACTIVA o INACTIVA); se guarda con un id nuevo y `POST /api/admin/categorias` responde 201 con 0 productos | Unitario + integración MongoDB + controlador | 3 | ✅ Pasa |
 | HU40-CP06 | No se puede crear una categoría con un nombre que ya existe, sin distinguir mayúsculas ni tildes; el nombre se compara completo y literal, y la base de datos lo impide aunque se salte la comprobación previa (409) | Unitario + integración MongoDB + controlador | 5 | ✅ Pasa |
-| HU40-CP07 | Crear sin nombre, sin estado, con un estado desconocido o incumpliendo una regla del dominio devuelve 400 | Controlador | 2 | 🔍 En revisión |
+| HU40-CP07 | Crear sin nombre, sin estado, con un estado desconocido o incumpliendo una regla del dominio devuelve 400 | Controlador | 2 | ✅ Pasa |
 | HU40-CP08 | Sin rol de administrador no se pueden crear categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | ✅ Pasa |
 | HU40-CP09 | El listado público de categorías se puede usar sin sesión; administrarlas (listar con su número de productos y crear) exige el rol administrador; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 6 | 🔍 En revisión (6, rama `fix/seguridad-capa-negocio`) |
 
@@ -2877,7 +3152,7 @@ Notas:
 | HU40-CP06 | `CategoriaMongoAdapterTest` | `guardarRechazaUnNombreRepetidoConOtrasMayusculasOTildes` (mayúsculas y tildes) | Infraestructura | AB#323 | PR #137 | ✅ |
 | HU40-CP05 | `AdministracionCategoriasControllerTest` | `unAdministradorCreaUnaCategoria` | Infraestructura | AB#322 | PR #138 | ✅ |
 | HU40-CP06 | `AdministracionCategoriasControllerTest` | `crearUnNombreRepetidoDevuelve409` | Infraestructura | AB#322 | PR #138 | ✅ |
-| HU40-CP07 | `AdministracionCategoriasControllerTest` | `crearConDatosInvalidosDevuelve400` (sin nombre, sin estado y estado desconocido) | Infraestructura | AB#322 | PR #138 (modificado en este PR) | 🔍 |
+| HU40-CP07 | `AdministracionCategoriasControllerTest` | `crearConDatosInvalidosDevuelve400` (sin nombre, sin estado y estado desconocido) | Infraestructura | AB#322 | PR #138 (modificado en PR #183) | ✅ |
 | HU40-CP07 | `AdministracionCategoriasControllerTest` | `crearConUnaReglaDelDominioIncumplidaDevuelve400` | Infraestructura | AB#322 | PR #138 | ✅ |
 | HU40-CP08 | `AdministracionCategoriasControllerTest` | `crearConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#322 | PR #138 | ✅ |
 | HU40-CP08 | `AdministracionCategoriasControllerTest` | `crearSinSesionDevuelve401` | Infraestructura | AB#322 | PR #138 | ✅ |
@@ -2914,7 +3189,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU41-CP09 | Guardar una categoría con id la actualiza sin crear otra, y la base de datos rechaza cambiar su nombre al de otra aunque se salte la comprobación previa | Integración MongoDB | 2 | ✅ Pasa |
 | HU41-CP10 | `PUT /api/admin/categorias/{id}` responde 200 con la fila actualizada y su número de productos | Controlador | 1 | ✅ Pasa |
 | HU41-CP11 | Editar con el nombre de otra categoría devuelve 409 `CATEGORY_NAME_ALREADY_EXISTS` | Controlador | 1 | ✅ Pasa |
-| HU41-CP12 | Editar sin nombre o incumpliendo una regla del dominio devuelve 400 | Controlador | 2 | 🔍 En revisión |
+| HU41-CP12 | Editar sin nombre o incumpliendo una regla del dominio devuelve 400 | Controlador | 2 | ✅ Pasa |
 | HU41-CP13 | Editar una categoría que no existe devuelve 404 `CATEGORY_NOT_FOUND` | Controlador | 1 | ✅ Pasa |
 | HU41-CP14 | Sin rol de administrador no se pueden editar categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | ✅ Pasa |
 
@@ -2948,7 +3223,7 @@ Notas:
 | HU41-CP09 | `CategoriaMongoAdapterTest` | `guardarRechazaCambiarElNombreAlDeOtraCategoria` | Infraestructura | AB#329 | PR #175 | ✅ |
 | HU41-CP10 | `AdministracionCategoriasControllerTest` | `unAdministradorEditaUnaCategoria` | Infraestructura | AB#328 | PR #175 | ✅ |
 | HU41-CP11 | `AdministracionCategoriasControllerTest` | `editarUnNombreRepetidoDevuelve409` | Infraestructura | AB#328 | PR #175 | ✅ |
-| HU41-CP12 | `AdministracionCategoriasControllerTest` | `editarConDatosInvalidosDevuelve400` (2 variantes) | Infraestructura | AB#328 | PR #175 (modificado en este PR) | 🔍 |
+| HU41-CP12 | `AdministracionCategoriasControllerTest` | `editarConDatosInvalidosDevuelve400` (2 variantes) | Infraestructura | AB#328 | PR #175 (modificado en PR #183) | ✅ |
 | HU41-CP12 | `AdministracionCategoriasControllerTest` | `editarConUnaReglaDelDominioIncumplidaDevuelve400` | Infraestructura | AB#328 | PR #175 | ✅ |
 | HU41-CP13 | `AdministracionCategoriasControllerTest` | `editarUnaCategoriaInexistenteDevuelve404` | Infraestructura | AB#328 | PR #175 | ✅ |
 | HU41-CP14 | `AdministracionCategoriasControllerTest` | `editarConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#328 | PR #175 | ✅ |
@@ -2965,21 +3240,26 @@ Ruta de la clase de test de seguridad (bajo `backend/src/test/java/es/uclm/esibu
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU42-CP01 | Eliminar borra una categoría sin productos ni vendedores | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
-| HU42-CP02 | Una categoría con productos no se puede eliminar y no se borra nada (409) | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
-| HU42-CP03 | Una categoría que es la principal de algún vendedor no se puede eliminar y no se borra nada (409) | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
-| HU42-CP04 | Eliminar una categoría que no existe falla sin consultar ni borrar nada (404) | Unitario (aplicación) | 1 | 🔍 En revisión (1, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
-| HU42-CP05 | Eliminar categorías exige el rol administrador; cliente, vendedor y sin sesión se rechazan. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
-| HU42-CP06 | Eliminar borra físicamente solo la categoría indicada; un id que no existe, o que no tiene formato de id, no falla ni borra nada | Integración MongoDB | 2 | 🔍 En revisión (2, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
-| HU42-CP07 | El módulo de usuarios dice si algún vendedor tiene una categoría como principal | Unitario (aplicación) | 2 | 🔍 En revisión (2, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
-| HU42-CP08 | Preguntar por los vendedores de una categoría exige el rol administrador; cliente, vendedor y sin sesión se rechazan. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 4 | 🔍 En revisión (4, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
-| HU42-CP09 | La consulta en MongoDB detecta vendedores con la categoría como principal y no cuenta a quien no es vendedor | Integración MongoDB | 3 | 🔍 En revisión (3, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
-| HU42-CP10 | El adaptador de categorías pregunta al módulo de usuarios por su puerto de entrada | Unitario (adaptador) | 2 | 🔍 En revisión (2, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
-| HU42-CP11 | `DELETE /api/admin/categorias/{id}` responde 204 sin cuerpo | Controlador | 1 | 🔍 En revisión (1, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
-| HU42-CP12 | Eliminar una categoría con productos devuelve 409 `CATEGORY_HAS_PRODUCTS` | Controlador | 1 | 🔍 En revisión (1, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
-| HU42-CP13 | Eliminar la categoría principal de un vendedor devuelve 409 `CATEGORY_HAS_SELLERS` | Controlador | 1 | 🔍 En revisión (1, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
-| HU42-CP14 | Eliminar una categoría que no existe devuelve 404 `CATEGORY_NOT_FOUND` | Controlador | 1 | 🔍 En revisión (1, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
-| HU42-CP15 | Sin rol de administrador no se pueden eliminar categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | 🔍 En revisión (2, Rama `feature/US42-T326-T325-eliminacion-categorias`) |
+| HU42-CP01 | Eliminar borra una categoría sin productos ni vendedores | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU42-CP02 | Una categoría con productos no se puede eliminar y no se borra nada (409) | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU42-CP03 | Una categoría que es la principal de algún vendedor no se puede eliminar y no se borra nada (409) | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU42-CP04 | Eliminar una categoría que no existe falla sin consultar ni borrar nada (404) | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU42-CP05 | Eliminar categorías exige el rol administrador; cliente, vendedor y sin sesión se rechazan. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa |
+| HU42-CP06 | Eliminar borra físicamente solo la categoría indicada; un id que no existe, o que no tiene formato de id, no falla ni borra nada | Integración MongoDB | 2 | ✅ Pasa |
+| HU42-CP07 | El módulo de usuarios dice si algún vendedor tiene una categoría como principal | Unitario (aplicación) | 2 | ✅ Pasa |
+| HU42-CP08 | Preguntar por los vendedores de una categoría exige el rol administrador; cliente, vendedor y sin sesión se rechazan. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 4 | ✅ Pasa |
+| HU42-CP09 | La consulta en MongoDB detecta vendedores con la categoría como principal y no cuenta a quien no es vendedor | Integración MongoDB | 3 | ✅ Pasa |
+| HU42-CP10 | El adaptador de categorías pregunta al módulo de usuarios por su puerto de entrada | Unitario (adaptador) | 2 | ✅ Pasa |
+| HU42-CP11 | `DELETE /api/admin/categorias/{id}` responde 204 sin cuerpo | Controlador | 1 | ✅ Pasa |
+| HU42-CP12 | Eliminar una categoría con productos devuelve 409 `CATEGORY_HAS_PRODUCTS` | Controlador | 1 | ✅ Pasa |
+| HU42-CP13 | Eliminar la categoría principal de un vendedor devuelve 409 `CATEGORY_HAS_SELLERS` | Controlador | 1 | ✅ Pasa |
+| HU42-CP14 | Eliminar una categoría que no existe devuelve 404 `CATEGORY_NOT_FOUND` | Controlador | 1 | ✅ Pasa |
+| HU42-CP15 | Sin rol de administrador no se pueden eliminar categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | ✅ Pasa |
+| HU42-CP16 | La llamada del administrador pide `DELETE /api/admin/categorias/{id}` con el id de la categoría; un 409 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#324, PR #199) |
+| HU42-CP17 | Cada fila de la lista de categorías tiene la papelera; al pulsarla se pide confirmación avisando de que no se puede deshacer, y cancelar no borra nada | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#324, PR #199) |
+| HU42-CP18 | Al confirmar se borra la categoría, se avisa de que se ha eliminado y desaparece de la lista; mientras se elimina, los botones de la confirmación quedan deshabilitados | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#324, PR #199) |
+| HU42-CP19 | Una categoría con productos tiene la papelera deshabilitada con el motivo; una sin productos la tiene habilitada | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#324, PR #199) |
+| HU42-CP20 | Cada error del backend al eliminar muestra su mensaje (tiene productos, es la principal de un vendedor, ya no existe o genérico); con productos o ya eliminada, se recarga la lista | Frontend (componente y página) | 5 | 🔍 En revisión (5, AB#324, PR #199) |
 
 Notas:
 - **HU42-CP01 a CP15:** casos propuestos en las T326 (AB#326) y T325 (AB#325), a partir de los criterios de la HU42. Pendientes de confirmar con el equipo y de añadir a la HU42 en Azure Boards.
@@ -2987,7 +3267,11 @@ Notas:
 - **Backend (T326):** `AdministracionCategoriasUseCase.eliminar(id)`. Orden de comprobaciones: existe (404), productos (409), vendedores (409) y borrado físico. Puertos de salida `CategoriaRepositoryPort.eliminar` y `VendedoresPorCategoriaPort`. El módulo de usuarios ofrece `existenVendedoresConCategoria` (CP07 a CP09) y categorías lo consume solo por su puerto de entrada (CP10).
 - **Decisión:** además de los productos, no se puede eliminar la categoría que es la principal de un vendedor. El recuento de productos incluye los no disponibles.
 - **Pendiente (riesgo conocido):** puede haber una condición de carrera entre eliminar una categoría y crear un producto o un vendedor con ella, porque no hay transacción entre colecciones. No está resuelto.
-- **Pendiente (frontend):** la vista (T324) debe tratar los dos códigos 409 nuevos.
+- **HU42-CP16 a CP20 (frontend, T324):** casos propuestos en la T324 (AB#324), a partir de los criterios «el botón de eliminación debe estar en la lista de categorías» y «no debe ser posible la eliminación si la categoría tiene productos asociados». Pendientes de confirmar con el equipo y de añadir a la HU42 en Azure Boards.
+- **Vista (T324):** la papelera va en la columna Acciones de `/admin/categories`, junto a la lupa, en el componente `CategoryRowActions` (la lupa pasa de la página a este componente). Pide confirmación con `StatusConfirmDialog` y, al eliminar, la página muestra el aviso y vuelve a pedir el listado. Si la fila trae `numeroProductos > 0`, la papelera queda deshabilitada; los dos 409, el 404 y cualquier otro error tienen su mensaje. Con `CATEGORY_HAS_PRODUCTS` y `CATEGORY_NOT_FOUND` se recarga la lista, porque la que se ve está desfasada.
+- **Mock:** `adminCategoriesHandlers` simula el `DELETE` (404, 409 `CATEGORY_HAS_PRODUCTS` y 204) con una lista que se reinicia tras cada test (`resetAdminCategoriesMock`). El 409 `CATEGORY_HAS_SELLERS` no se simula: los tests que lo necesitan ponen su handler.
+- **HU42-CP19:** el test «una sin productos la tiene habilitada con el título Eliminar» nace en verde: ya se cumplía desde el ciclo 2 y se deja para que no se deshabilite por error.
+- **HU39-CP11 modificado:** el test de la página «la vista no ofrece crear, editar ni eliminar categorías» pasa a «no ofrece crear ni editar», porque la HU42 añade la papelera.
 - **HU42-CP05 y CP08 (R8, seguridad en la capa de negocio):** nacen en verde, sin rojo real, porque `@PreAuthorize` va desde el primer ciclo. CP05 usa la clase existente `SeguridadCategoriasServiceTest` y CP08 la de HU20-CP07; los tests de CP08 llegaron en un commit posterior al que solo cambió el comentario de cabecera.
 - **HU42-CP14 y CP15:** también sin rojo real, porque el handler del 404 (HU41) y la regla de `/api/admin/**` ya existían.
 
@@ -2995,34 +3279,48 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU42-CP01 | `AdministracionCategoriasServiceTest` | `eliminarBorraUnaCategoriaSinProductosNiVendedores` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP02 | `AdministracionCategoriasServiceTest` | `eliminarRechazaUnaCategoriaConProductos` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP03 | `AdministracionCategoriasServiceTest` | `eliminarRechazaUnaCategoriaConVendedores` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP04 | `AdministracionCategoriasServiceTest` | `eliminarUnaCategoriaInexistenteFalla` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP05 | `SeguridadCategoriasServiceTest` | `unClienteNoEliminaCategorias` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP05 | `SeguridadCategoriasServiceTest` | `unVendedorNoEliminaCategorias` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP05 | `SeguridadCategoriasServiceTest` | `unAnonimoNoEliminaCategorias` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP05 | `SeguridadCategoriasServiceTest` | `unAdministradorEliminaCategorias` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP05 | `SeguridadCategoriasServiceTest` | `sinSesionSeRechazaLaEliminacion` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP06 | `CategoriaMongoAdapterTest` | `eliminarBorraSoloLaCategoriaIndicada` | Infraestructura | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP06 | `CategoriaMongoAdapterTest` | `eliminarUnIdInexistenteNoBorraNada` (2 variantes) | Infraestructura | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP07 | `AdministracionUsuariosServiceTest` | `hayVendedoresConLaCategoria` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP07 | `AdministracionUsuariosServiceTest` | `noHayVendedoresConLaCategoria` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP08 | `SeguridadAdministracionUsuarioServiceTest` | `unClienteNoPreguntaPorLosVendedoresDeUnaCategoria` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP08 | `SeguridadAdministracionUsuarioServiceTest` | `unVendedorNoPreguntaPorLosVendedoresDeUnaCategoria` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP08 | `SeguridadAdministracionUsuarioServiceTest` | `unAdministradorPreguntaPorLosVendedoresDeUnaCategoria` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP08 | `SeguridadAdministracionUsuarioServiceTest` | `sinSesionSeRechazaLaPreguntaPorLosVendedores` | Aplicación | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP09 | `UsuarioMongoAdapterTest` | `existeVendedorConLaCategoriaPrincipal` | Infraestructura | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP09 | `UsuarioMongoAdapterTest` | `noExisteVendedorConLaCategoriaPrincipal` | Infraestructura | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP09 | `UsuarioMongoAdapterTest` | `soloCuentanLosVendedores` | Infraestructura | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP10 | `VendedoresPorCategoriaAdapterTest` | `existenVendedoresPreguntaAlModuloDeUsuarios` | Infraestructura | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP10 | `VendedoresPorCategoriaAdapterTest` | `noExistenVendedoresSiElModuloDeUsuariosDiceQueNo` | Infraestructura | AB#326 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP11 | `AdministracionCategoriasControllerTest` | `unAdministradorEliminaUnaCategoria` | Infraestructura | AB#325 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP12 | `AdministracionCategoriasControllerTest` | `eliminarUnaCategoriaConProductosDevuelve409` | Infraestructura | AB#325 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP13 | `AdministracionCategoriasControllerTest` | `eliminarUnaCategoriaPrincipalDeUnVendedorDevuelve409` | Infraestructura | AB#325 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP14 | `AdministracionCategoriasControllerTest` | `eliminarUnaCategoriaInexistenteDevuelve404` | Infraestructura | AB#325 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP15 | `AdministracionCategoriasControllerTest` | `eliminarConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#325 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
-| HU42-CP15 | `AdministracionCategoriasControllerTest` | `eliminarSinSesionDevuelve401` | Infraestructura | AB#325 | Rama `feature/US42-T326-T325-eliminacion-categorias` | 🔍 |
+| HU42-CP01 | `AdministracionCategoriasServiceTest` | `eliminarBorraUnaCategoriaSinProductosNiVendedores` | Aplicación | AB#326 | PR #181 | ✅ |
+| HU42-CP02 | `AdministracionCategoriasServiceTest` | `eliminarRechazaUnaCategoriaConProductos` | Aplicación | AB#326 | PR #181 | ✅ |
+| HU42-CP03 | `AdministracionCategoriasServiceTest` | `eliminarRechazaUnaCategoriaConVendedores` | Aplicación | AB#326 | PR #181 | ✅ |
+| HU42-CP04 | `AdministracionCategoriasServiceTest` | `eliminarUnaCategoriaInexistenteFalla` | Aplicación | AB#326 | PR #181 | ✅ |
+| HU42-CP05 | `SeguridadCategoriasServiceTest` | `unClienteNoEliminaCategorias` | Aplicación | AB#326 | PR #181 | ✅ |
+| HU42-CP05 | `SeguridadCategoriasServiceTest` | `unVendedorNoEliminaCategorias` | Aplicación | AB#326 | PR #181 | ✅ |
+| HU42-CP05 | `SeguridadCategoriasServiceTest` | `unAnonimoNoEliminaCategorias` | Aplicación | AB#326 | PR #181 | ✅ |
+| HU42-CP05 | `SeguridadCategoriasServiceTest` | `unAdministradorEliminaCategorias` | Aplicación | AB#326 | PR #181 | ✅ |
+| HU42-CP05 | `SeguridadCategoriasServiceTest` | `sinSesionSeRechazaLaEliminacion` | Aplicación | AB#326 | PR #181 | ✅ |
+| HU42-CP06 | `CategoriaMongoAdapterTest` | `eliminarBorraSoloLaCategoriaIndicada` | Infraestructura | AB#326 | PR #181 | ✅ |
+| HU42-CP06 | `CategoriaMongoAdapterTest` | `eliminarUnIdInexistenteNoBorraNada` (2 variantes) | Infraestructura | AB#326 | PR #181 | ✅ |
+| HU42-CP07 | `AdministracionUsuariosServiceTest` | `hayVendedoresConLaCategoria` | Aplicación | AB#326 | PR #181 | ✅ |
+| HU42-CP07 | `AdministracionUsuariosServiceTest` | `noHayVendedoresConLaCategoria` | Aplicación | AB#326 | PR #181 | ✅ |
+| HU42-CP08 | `SeguridadAdministracionUsuarioServiceTest` | `unClienteNoPreguntaPorLosVendedoresDeUnaCategoria` | Aplicación | AB#326 | PR #181 | ✅ |
+| HU42-CP08 | `SeguridadAdministracionUsuarioServiceTest` | `unVendedorNoPreguntaPorLosVendedoresDeUnaCategoria` | Aplicación | AB#326 | PR #181 | ✅ |
+| HU42-CP08 | `SeguridadAdministracionUsuarioServiceTest` | `unAdministradorPreguntaPorLosVendedoresDeUnaCategoria` | Aplicación | AB#326 | PR #181 | ✅ |
+| HU42-CP08 | `SeguridadAdministracionUsuarioServiceTest` | `sinSesionSeRechazaLaPreguntaPorLosVendedores` | Aplicación | AB#326 | PR #181 | ✅ |
+| HU42-CP09 | `UsuarioMongoAdapterTest` | `existeVendedorConLaCategoriaPrincipal` | Infraestructura | AB#326 | PR #181 | ✅ |
+| HU42-CP09 | `UsuarioMongoAdapterTest` | `noExisteVendedorConLaCategoriaPrincipal` | Infraestructura | AB#326 | PR #181 | ✅ |
+| HU42-CP09 | `UsuarioMongoAdapterTest` | `soloCuentanLosVendedores` | Infraestructura | AB#326 | PR #181 | ✅ |
+| HU42-CP10 | `VendedoresPorCategoriaAdapterTest` | `existenVendedoresPreguntaAlModuloDeUsuarios` | Infraestructura | AB#326 | PR #181 | ✅ |
+| HU42-CP10 | `VendedoresPorCategoriaAdapterTest` | `noExistenVendedoresSiElModuloDeUsuariosDiceQueNo` | Infraestructura | AB#326 | PR #181 | ✅ |
+| HU42-CP11 | `AdministracionCategoriasControllerTest` | `unAdministradorEliminaUnaCategoria` | Infraestructura | AB#325 | PR #181 | ✅ |
+| HU42-CP12 | `AdministracionCategoriasControllerTest` | `eliminarUnaCategoriaConProductosDevuelve409` | Infraestructura | AB#325 | PR #181 | ✅ |
+| HU42-CP13 | `AdministracionCategoriasControllerTest` | `eliminarUnaCategoriaPrincipalDeUnVendedorDevuelve409` | Infraestructura | AB#325 | PR #181 | ✅ |
+| HU42-CP14 | `AdministracionCategoriasControllerTest` | `eliminarUnaCategoriaInexistenteDevuelve404` | Infraestructura | AB#325 | PR #181 | ✅ |
+| HU42-CP15 | `AdministracionCategoriasControllerTest` | `eliminarConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#325 | PR #181 | ✅ |
+| HU42-CP15 | `AdministracionCategoriasControllerTest` | `eliminarSinSesionDevuelve401` | Infraestructura | AB#325 | PR #181 | ✅ |
+| HU42-CP16 | `adminCategories.test.js` | `HU42-CP16: pide DELETE /api/admin/categorias/{id} con el id de la categoría` | Frontend · API | AB#324 | PR #199 | 🔍 |
+| HU42-CP16 | `adminCategories.test.js` | `HU42-CP16: un 409 llega como error con su estado y su código` | Frontend · API | AB#324 | PR #199 | 🔍 |
+| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: ofrece la lupa para ver la ficha y la papelera para eliminar la categoría` | Frontend · componente | AB#324 | PR #199 | 🔍 |
+| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: al pulsar la papelera pide confirmación avisando de que no se puede deshacer` | Frontend · componente | AB#324 | PR #199 | 🔍 |
+| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: al cancelar se cierra la confirmación y no se borra nada` | Frontend · componente | AB#324 | PR #199 | 🔍 |
+| HU42-CP17 | `AdminCategoriesPage.test.jsx` | `HU42-CP17: cada fila de la lista tiene la papelera para eliminar su categoría` | Frontend · página | AB#324 | PR #199 | 🔍 |
+| HU42-CP18 | `CategoryRowActions.test.jsx` | `HU42-CP18: al confirmar borra la categoría, avisa de que se ha eliminado y pide actualizar la lista` | Frontend · componente | AB#324 | PR #199 | 🔍 |
+| HU42-CP18 | `CategoryRowActions.test.jsx` | `HU42-CP18: mientras se elimina, los botones de la confirmación quedan deshabilitados` | Frontend · componente | AB#324 | PR #199 | 🔍 |
+| HU42-CP18 | `AdminCategoriesPage.test.jsx` | `HU42-CP18: al confirmar, avisa de que se ha eliminado y la categoría desaparece de la lista` | Frontend · página | AB#324 | PR #199 | 🔍 |
+| HU42-CP19 | `CategoryRowActions.test.jsx` | `HU42-CP19: si la categoría tiene productos, la papelera queda deshabilitada y explica por qué` | Frontend · componente | AB#324 | PR #199 | 🔍 |
+| HU42-CP19 | `CategoryRowActions.test.jsx` | `HU42-CP19: una categoría sin productos tiene la papelera habilitada con el título Eliminar` | Frontend · componente | AB#324 | PR #199 | 🔍 |
+| HU42-CP19 | `AdminCategoriesPage.test.jsx` | `HU42-CP19: solo se pueden eliminar las categorías sin productos` | Frontend · página | AB#324 | PR #199 | 🔍 |
+| HU42-CP20 | `CategoryRowActions.test.jsx` | `HU42-CP20: $caso` (4 variantes: tiene productos, principal de un vendedor, ya no existe y error genérico) | Frontend · componente | AB#324 | PR #199 | 🔍 |
+| HU42-CP20 | `AdminCategoriesPage.test.jsx` | `HU42-CP20: si el backend no deja eliminarla, avisa del motivo y la categoría sigue en la lista` | Frontend · página | AB#324 | PR #199 | 🔍 |
 
 Ruta de las clases de test de seguridad (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `SeguridadCategoriasServiceTest`: `categorias/application/service/` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB)
@@ -3100,7 +3398,8 @@ Tests que no validan una HU concreta.
 | `MetodosPagoConfigTest` | `losDatosDePagoSeCifranConLaClaveConfigurada` | Que los datos de pago se cifran con la clave de `esibuy.pagos.clave-cifrado`, que en los tests pone `MongoTestcontainersConfig` (HU6; AB#271, PR #148) |
 | `CarritoConfigTest` | `elContextoConectaLasPiezasDelCarrito` | Que Spring conecta el servicio del carrito con su adaptador de MongoDB, los productos y los usuarios (HU9; AB#385, PR #162) |
 | `PedidosConfigTest` | `elContextoConectaLasPiezasDeLosPedidos` | Que Spring conecta la realización de pedidos con su repositorio, el contador y los adaptadores hacia usuarios, carrito, métodos de pago, direcciones y productos (HU10; AB#381, PR #166); y la consulta de compras de HU13 (AB#370, PR #179) |
-| `ValoracionesConfigTest` | `elContextoConectaLasPiezasDeLasValoraciones` | Que Spring conecta la valoración y la consulta de valoraciones con su adaptador de MongoDB y los adaptadores hacia usuarios y pedidos (HU13; AB#370 y AB#371, PR #179) |
+| `ValoracionesConfigTest` | `elContextoConectaLasPiezasDeLasValoraciones` | Que Spring conecta la valoración y la consulta de valoraciones con su adaptador de MongoDB y los adaptadores hacia usuarios y pedidos (HU13; AB#370 y AB#371, PR #179), y hacia productos (AB#415, PR #195) |
+| `DeseosConfigTest` | `elContextoConectaLasPiezasDeLaListaDeDeseos` | Que Spring conecta el servicio de la lista de deseos con su adaptador de MongoDB y los adaptadores hacia usuarios y productos (HU14; AB#360, PR #196) |
 | `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |
 | `SecurityConfigTest` | `unaPeticionRecibeElTokenCsrfEnUnaCookie` | Que cualquier respuesta, aunque sea un 401, entrega el token CSRF en la cookie `XSRF-TOKEN` sin `HttpOnly` (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostSinTokenCsrfSeRechaza` | Que un `POST` sin token CSRF se rechaza con 403 (AB#230, PR #67) |
@@ -3129,5 +3428,7 @@ Tests que no validan una HU concreta.
 | `InicializadorColeccionesTest` | `rechazaDuplicadosEnLosIndicesUnicos` | Índices únicos de `carritos`, `valoraciones`, `categorias`, `listas_deseos` y `factores_autenticacion` (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `creaLosIndicesDeLasAnotaciones` | Que también crea los índices de las anotaciones de los `@Document` (email único en `usuarios`) (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `sesionesYTokensCaducan` | Índices TTL de `expiresAt` en `sesiones` y `tokens_seguridad` (AB#210, PR #43) |
+| `ProductosConfigTest` | `elContextoConectaElAnalisisDeImagenesConVirusTotal` | Que Spring conecta el análisis antivirus de las imágenes (`AnalisisImagenPort`) con `VirusTotalAdapter`, con una API key falsa (HU31; AB#397, PR #189) |
+| `ProductosConfigTest` | `elContextoConectaLaActualizacionDeLaValoracion` | Que Spring conecta la actualización de la valoración de los productos (`ValoracionesProductoUseCase`) con `ValoracionesProductoService` (HU13; AB#415, PR #195) |
 
 `InicializadorColeccionesTest` está en `shared/infrastructure/config/` y usa Testcontainers. HU36 (crear la base de datos) no tiene casos de prueba en Azure Boards, por eso sus tests están en esta sección.

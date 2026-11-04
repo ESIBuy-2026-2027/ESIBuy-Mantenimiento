@@ -5,6 +5,7 @@ import { ROLES } from '../auth/roles'
 import AppLayout from '../components/AppLayout'
 import AddressesPage from '../pages/AddressesPage'
 import AdminAdminsPage from '../pages/AdminAdminsPage'
+import AdminCategoriesPage from '../pages/AdminCategoriesPage'
 import AdminClientsPage from '../pages/AdminClientsPage'
 import AdminNewAdminPage from '../pages/AdminNewAdminPage'
 import AdminPage from '../pages/AdminPage'
@@ -14,6 +15,8 @@ import CheckoutPage from '../pages/CheckoutPage'
 import ForgotPasswordPage from '../pages/ForgotPasswordPage'
 import Home from '../pages/Home'
 import LoginPage from '../pages/LoginPage'
+import OrderDetailPage from '../pages/OrderDetailPage'
+import OrdersPage from '../pages/OrdersPage'
 import PaymentMethodsPage from '../pages/PaymentMethodsPage'
 import ProductDetailPage from '../pages/ProductDetailPage'
 import ProductsPage from '../pages/ProductsPage'
@@ -41,6 +44,8 @@ export default function AppRoutes() {
           <Route path={PATHS.CHECKOUT} element={<CheckoutPage />} />
           <Route path={PATHS.PAYMENT_METHODS} element={<PaymentMethodsPage />} />
           <Route path={PATHS.ADDRESSES} element={<AddressesPage />} />
+          <Route path={PATHS.ORDERS} element={<OrdersPage />} />
+          <Route path={PATHS.ORDER_DETAIL} element={<OrderDetailPage />} />
         </Route>
 
         {/* El perfil propio (HU4) es del cliente y del vendedor: el backend responde 403 al administrador. */}
@@ -53,6 +58,7 @@ export default function AppRoutes() {
           <Route path={PATHS.ADMIN_SELLERS} element={<AdminSellersPage />} />
           <Route path={PATHS.ADMIN_USERS} element={<AdminUsersPage />} />
           <Route path={PATHS.ADMIN_CLIENTS} element={<AdminClientsPage />} />
+          <Route path={PATHS.ADMIN_CATEGORIES} element={<AdminCategoriesPage />} />
           <Route path={PATHS.ADMIN_ADMINS} element={<AdminAdminsPage />} />
           <Route path={PATHS.ADMIN_NEW_ADMIN} element={<AdminNewAdminPage />} />
         </Route>

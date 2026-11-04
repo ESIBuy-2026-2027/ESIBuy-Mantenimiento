@@ -1,5 +1,10 @@
 import { Text, Title1, makeStyles, tokens } from '@fluentui/react-components'
-import { BuildingShop24Regular, People24Regular, PersonKey24Regular } from '@fluentui/react-icons'
+import {
+  BuildingShop24Regular,
+  People24Regular,
+  PersonKey24Regular,
+  TagMultiple24Regular,
+} from '@fluentui/react-icons'
 import { useNavigate } from 'react-router-dom'
 import AdminSectionCard from '../features/admin/AdminSectionCard'
 import { PATHS } from '../routes/paths'
@@ -25,6 +30,13 @@ const sections = [
     title: 'Administradores',
     to: PATHS.ADMIN_ADMINS,
     description: 'Gestiona al equipo con acceso al panel de control.',
+  },
+  {
+    id: 'categories',
+    icon: <TagMultiple24Regular />,
+    title: 'Categorías',
+    to: PATHS.ADMIN_CATEGORIES,
+    description: 'Consulta las categorías de productos y cuántos productos tiene cada una.',
   },
 ]
 
