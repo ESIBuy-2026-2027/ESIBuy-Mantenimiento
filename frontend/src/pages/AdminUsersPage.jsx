@@ -97,6 +97,7 @@ export default function AdminUsersPage() {
       user={user}
       currentUserId={currentUser?.id}
       lastAdminId={lastAdminId}
+      canDelete={user.rol === ROLES.ADMIN}
       onResult={setFeedback}
       onChanged={changed}
     />
