@@ -112,7 +112,19 @@ export default function UserRowActions({
         />
       )}
 
-      {dialogo === 'ficha' && (renderDetail ? renderDetail(cerrar) : <UserDetailDialog userId={user.id} onClose={cerrar} />)}
+      {dialogo === 'ficha' && (renderDetail ? (
+          renderDetail(cerrar)
+        ) : (
+          <UserDetailDialog
+            userId={user.id}
+            onClose={cerrar}
+            canDelete={canDelete}
+            currentUserId={currentUserId}
+            lastAdminId={lastAdminId}
+            onResult={onResult}
+            onChanged={onChanged}
+          />
+        ))}
       {dialogo === 'editar' && <UserEditDialog userId={user.id} onClose={cerrar} onSaved={avisarEdicionGuardada} />}
     </div>
   )
