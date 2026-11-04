@@ -231,3 +231,49 @@ describe('CategoryFormDialog (HU41): guardar', () => {
     expect(ediciones).toEqual([])
   })
 })
+
+describe('CategoryFormDialog (HU41): errores al guardar', () => {
+  it('HU41-CP18: si el nombre nuevo es el de otra categoría lo marca en el campo y no cierra', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.put('/api/admin/categorias/:id', () =>
+        HttpResponse.json({ code: 'CATEGORY_NAME_ALREADY_EXISTS' }, { status: 409 }),
+      ),
+    )
+    const { onSaved } = await renderFormulario({ category: HOGAR })
+
+    const nombre = screen.getByRole('textbox', { name: /nombre/i })
+    await user.clear(nombre)
+    await user.type(nombre, 'Deportes')
+    await user.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    expect(await screen.findByText(REPETIDO)).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Editar categoría' })).toBeInTheDocument()
+    expect(onSaved).not.toHaveBeenCalled()
+  })
+
+  it('HU41-CP18: si la categoría ya no existe avisa a quien abrió el formulario', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.put('/api/admin/categorias/:id', () => HttpResponse.json({ code: 'CATEGORY_NOT_FOUND' }, { status: 404 })),
+    )
+    const onNotFound = vi.fn()
+    const { onSaved } = await renderFormulario({ category: HOGAR, onNotFound })
+
+    await user.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() => expect(onNotFound).toHaveBeenCalledTimes(1))
+    expect(onSaved).not.toHaveBeenCalled()
+  })
+
+  it('HU41-CP18: cualquier otro error avisa con un mensaje genérico y deja el formulario abierto', async () => {
+    const user = userEvent.setup()
+    server.use(http.put('/api/admin/categorias/:id', () => new HttpResponse(null, { status: 500 })))
+    await renderFormulario({ category: HOGAR })
+
+    await user.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    expect(await screen.findByText('No se han podido guardar los cambios. Inténtalo de nuevo.')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: /nombre/i })).toHaveValue('Hogar')
+  })
+})

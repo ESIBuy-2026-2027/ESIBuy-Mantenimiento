@@ -119,6 +119,24 @@ describe('CategoryRowActions (HU41): editar', () => {
   })
 })
 
+describe('CategoryRowActions (HU41): la categoría ya no existe', () => {
+  it('HU41-CP18: al guardar una categoría que ya no existe, cierra el formulario, avisa y pide actualizar la lista', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.put('/api/admin/categorias/:id', () => HttpResponse.json({ code: 'CATEGORY_NOT_FOUND' }, { status: 404 })),
+    )
+    const { onResult, onChanged } = await renderAcciones(MASCOTAS)
+
+    await user.click(screen.getByRole('button', { name: 'Editar Mascotas' }))
+    const formulario = await screen.findByRole('dialog', { name: 'Editar categoría' })
+    await user.click(within(formulario).getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1), ESPERA)
+    expect(onResult).toHaveBeenCalledWith({ intent: 'error', texto: 'Mascotas ya no existe.' })
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), ESPERA)
+  })
+})
+
 describe('CategoryRowActions (HU42): eliminar', () => {
   it('HU42-CP18: al confirmar borra la categoría, avisa de que se ha eliminado y pide actualizar la lista', async () => {
     const user = userEvent.setup()

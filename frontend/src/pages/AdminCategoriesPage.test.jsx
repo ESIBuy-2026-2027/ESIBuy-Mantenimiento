@@ -198,6 +198,21 @@ describe('AdminCategoriesPage (HU41): editar', () => {
     expect(nombresEnPantalla()).not.toContain('Libros')
     expect(celdasDe('Libros y cómics').slice(0, 4)).toEqual(['Libros y cómics', 'Novelas y tebeos.', 'Activa', '11'])
   })
+
+  it('HU41-CP18: no se puede poner el nombre de otra categoría, aunque cambien las mayúsculas o las tildes', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.click(screen.getByRole('button', { name: 'Editar Libros' }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Editar categoría' })
+    const nombre = within(dialogo).getByRole('textbox', { name: /nombre/i })
+    await user.clear(nombre)
+    await user.type(nombre, 'alimentacion')
+    await user.click(within(dialogo).getByRole('button', { name: 'Guardar' }))
+
+    expect(await within(dialogo).findByText('Ya existe una categoría con ese nombre.')).toBeInTheDocument()
+    expect(nombresEnPantalla()).toContain('Libros')
+  })
 })
 
 describe('AdminCategoriesPage (HU42): eliminar', () => {
