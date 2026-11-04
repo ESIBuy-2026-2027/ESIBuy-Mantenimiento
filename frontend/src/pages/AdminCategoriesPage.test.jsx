@@ -121,12 +121,31 @@ describe('AdminCategoriesPage (HU39): ficha de la categoría', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
-  // Eliminar llega con la HU42 (la papelera de cada fila); crear y editar son de las HU40 y HU41.
-  it('HU39-CP11: la vista no ofrece crear ni editar categorías', async () => {
+  // Eliminar llega con la HU42 (la papelera de cada fila) y crear con la HU40; editar es de la HU41.
+  it('HU39-CP11: la vista no ofrece editar categorías', async () => {
     await abrirListado()
 
-    expect(screen.queryByRole('button', { name: /crear|nueva|editar/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /crear|nueva/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /editar/i })).not.toBeInTheDocument()
+  })
+})
+
+describe('AdminCategoriesPage (HU40): crear', () => {
+  it('HU40-CP11: la vista tiene el botón Nueva categoría, que abre el formulario de creación', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.click(screen.getByRole('button', { name: 'Nueva categoría' }))
+
+    expect(await screen.findByRole('dialog', { name: 'Nueva categoría' })).toBeInTheDocument()
+  })
+
+  it('HU40-CP11: sin ninguna categoría también se puede crear la primera', async () => {
+    server.use(http.get(URL_CATEGORIAS, () => HttpResponse.json([])))
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderWithProviders(<AdminCategoriesPage />)
+
+    await screen.findByRole('heading', { name: /todavía no hay categorías/i })
+    expect(screen.getByRole('button', { name: 'Nueva categoría' })).toBeInTheDocument()
   })
 })
 
