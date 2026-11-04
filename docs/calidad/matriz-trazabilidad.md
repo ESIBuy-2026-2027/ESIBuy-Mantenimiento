@@ -3007,17 +3007,17 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU39-CP03 | El administrador también ve las categorías `INACTIVA` | Unitario | 1 | ✅ Pasa |
 | HU39-CP04 | Sin rol de administrador el listado devuelve 403 (cliente y vendedor), y 401 sin sesión | Controlador | 2 | ✅ Pasa |
 | HU39-CP05 | El listado público de categorías (`GET /api/categorias`) solo devuelve las activas | Unitario | 1 | 🔍 En revisión (1, rama `fix/seguridad-capa-negocio`) |
-| HU39-CP06 | La llamada del administrador pide `GET /api/admin/categorias` y devuelve el array de categorías; un 403 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#330, PR pendiente) |
-| HU39-CP07 | El estado de cada categoría se muestra como Activa (color de éxito) o Inactiva (neutro); un estado desconocido, como Desconocido | Frontend (unitario y componente) | 5 | 🔍 En revisión (5, AB#330, PR pendiente) |
-| HU39-CP08 | Filtrar las categorías por nombre (sin distinguir mayúsculas ni tildes) y por estado, y ordenarlas por nombre, productos o estado, en el cliente | Frontend (unitario) | 10 | 🔍 En revisión (10, AB#330, PR pendiente) |
-| HU39-CP09 | La tabla de categorías muestra de cada una su nombre, descripción, estado y número de productos, con una columna de acciones | Frontend (componente y página) | 6 | 🔍 En revisión (6, AB#330, PR pendiente) |
-| HU39-CP10 | Una descripción vacía se muestra como un guion y una categoría sin productos muestra 0 | Frontend (componente y página) | 2 | 🔍 En revisión (2, AB#330, PR pendiente) |
-| HU39-CP11 | La lupa de cada fila abre la ficha de solo lectura con los datos de la categoría y su descripción completa | Frontend (componente y página) | 8 | 🔍 En revisión (8, AB#330, PR pendiente) |
-| HU39-CP12 | La vista muestra un indicador mientras carga, todas las categorías (también las inactivas) ordenadas por nombre y un estado vacío si no hay ninguna | Frontend (página) | 3 | 🔍 En revisión (3, AB#330, PR pendiente) |
-| HU39-CP13 | Un 403 o un error del servidor muestran el mismo mensaje genérico con «Reintentar», sin el texto del servidor | Frontend (página) | 2 | 🔍 En revisión (2, AB#330, PR pendiente) |
-| HU39-CP14 | La vista permite buscar por nombre, filtrar por estado y ordenar; sin coincidencias avisa y «Limpiar filtros» mantiene el orden | Frontend (página) | 4 | 🔍 En revisión (4, AB#330, PR pendiente) |
-| HU39-CP15 | El panel de control tiene la tarjeta Categorías, que lleva al listado, y «Volver al panel» regresa al panel | Frontend (página y rutas) | 3 | 🔍 En revisión (3, AB#330, PR pendiente) |
-| HU39-CP16 | El listado de categorías es solo del administrador: sin sesión va al login y un vendedor o un cliente van a su zona | Frontend (rutas) | 3 | 🔍 En revisión (3, AB#330, PR pendiente) |
+| HU39-CP06 | La llamada del administrador pide `GET /api/admin/categorias` y devuelve el array de categorías; un 403 llega como error con su estado y su código | Frontend (API) | 2 | ✅ Pasa |
+| HU39-CP07 | El estado de cada categoría se muestra como Activa (color de éxito) o Inactiva (neutro); un estado desconocido, como Desconocido | Frontend (unitario y componente) | 5 | ✅ Pasa |
+| HU39-CP08 | Filtrar las categorías por nombre (sin distinguir mayúsculas ni tildes) y por estado, y ordenarlas por nombre, productos o estado, en el cliente | Frontend (unitario) | 10 | ✅ Pasa |
+| HU39-CP09 | La tabla de categorías muestra de cada una su nombre, descripción, estado y número de productos, con una columna de acciones | Frontend (componente y página) | 6 | ✅ Pasa |
+| HU39-CP10 | Una descripción vacía se muestra como un guion y una categoría sin productos muestra 0 | Frontend (componente y página) | 2 | ✅ Pasa |
+| HU39-CP11 | La lupa de cada fila abre la ficha de solo lectura con los datos de la categoría y su descripción completa | Frontend (componente y página) | 8 | ✅ Pasa |
+| HU39-CP12 | La vista muestra un indicador mientras carga, todas las categorías (también las inactivas) ordenadas por nombre y un estado vacío si no hay ninguna | Frontend (página) | 3 | ✅ Pasa |
+| HU39-CP13 | Un 403 o un error del servidor muestran el mismo mensaje genérico con «Reintentar», sin el texto del servidor | Frontend (página) | 2 | ✅ Pasa |
+| HU39-CP14 | La vista permite buscar por nombre, filtrar por estado y ordenar; sin coincidencias avisa y «Limpiar filtros» mantiene el orden | Frontend (página) | 4 | ✅ Pasa |
+| HU39-CP15 | El panel de control tiene la tarjeta Categorías, que lleva al listado, y «Volver al panel» regresa al panel | Frontend (página y rutas) | 3 | ✅ Pasa |
+| HU39-CP16 | El listado de categorías es solo del administrador: sin sesión va al login y un vendedor o un cliente van a su zona | Frontend (rutas) | 3 | ✅ Pasa |
 
 Notas:
 - **HU39-CP01 a CP03:** casos propuestos en la T332 (AB#332), a partir del criterio de aceptación «listado con nombre, descripción, estado y número de productos asociados». **HU39-CP04:** propuesto en la T331 (AB#331), a partir del criterio «cualquier llamada a la API sin rol de administrador devuelve 403». Pendientes de confirmar con el equipo y de añadir a la HU39 en Azure Boards.
@@ -3044,54 +3044,54 @@ Notas:
 | HU39-CP04 | `AdministracionCategoriasControllerTest` | `otroRolRecibe403` (cliente y vendedor) | Infraestructura | AB#331 | PR #135 | ✅ |
 | HU39-CP04 | `AdministracionCategoriasControllerTest` | `sinSesionRecibe401` | Infraestructura | AB#331 | PR #135 | ✅ |
 | HU39-CP05 | `ConsultaCategoriasServiceTest` | `listarSoloDevuelveLasActivas` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
-| HU39-CP06 | `adminCategories.test.js` | `HU39-CP06: pide GET /api/admin/categorias y devuelve el array de categorías` | Frontend · API | AB#330 | PR pendiente | 🔍 |
-| HU39-CP06 | `adminCategories.test.js` | `HU39-CP06: un 403 llega como error con su estado y su código` | Frontend · API | AB#330 | PR pendiente | 🔍 |
-| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: una categoría ACTIVA se muestra como Activa, con color de éxito` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: una categoría INACTIVA se muestra como Inactiva, con color neutro` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: un estado desconocido se muestra como Desconocido` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: las etiquetas del filtro son las de los dos estados` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP07 | `CategoriesTable.test.jsx` | `HU39-CP07: el estado de cada categoría se muestra en una insignia` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: sin filtros devuelve todas las categorías, también las inactivas, ordenadas por nombre` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: la búsqueda por nombre no distingue mayúsculas ni tildes` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: la búsqueda encuentra el texto en cualquier parte del nombre y solo mira el nombre` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: el filtro por estado deja solo las activas o solo las inactivas` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: la búsqueda y el estado se combinan` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ordena por nombre en sentido descendente` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ordena por número de productos, de menos a más y al revés` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ordena por estado, las activas primero, y a igualdad desempata por nombre` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: no modifica la lista que recibe` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ofrece ordenar por nombre, productos y estado` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: muestra las cabeceras de las cuatro columnas` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: muestra de cada categoría su nombre, descripción, estado y número de productos` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: con renderActions añade la columna Acciones con lo que devuelva para cada categoría` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: mientras se refresca, la tabla avisa de que está ocupada` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP09 | `AdminCategoriesPage.test.jsx` | `HU39-CP09: la tabla tiene las columnas Nombre, Descripción, Estado, Productos y Acciones` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP09 | `AdminCategoriesPage.test.jsx` | `HU39-CP09: cada fila muestra el nombre, la descripción, el estado y el número de productos` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP10 | `CategoriesTable.test.jsx` | `HU39-CP10: una descripción vacía se muestra como un guion` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP10 | `AdminCategoriesPage.test.jsx` | `HU39-CP10: una categoría sin descripción muestra un guion y una sin productos muestra 0` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: muestra el nombre, el estado, el número de productos y la descripción completa` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: una categoría inactiva sin descripción ni productos muestra Inactiva, 0 y un guion` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: todos los campos son de solo lectura y la ficha avisa de ello` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: la ficha no ofrece editar, crear ni eliminar` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: se cierra con la X` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: se cierra con Escape` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP11 | `AdminCategoriesPage.test.jsx` | `HU39-CP11: cada fila tiene un botón con lupa para ver la información de su categoría` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP11 | `AdminCategoriesPage.test.jsx` | `HU39-CP11: la lupa abre la ficha de esa categoría con su descripción completa y se puede cerrar` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP12 | `AdminCategoriesPage.test.jsx` | `HU39-CP12: muestra el título de la vista y mientras carga un indicador` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP12 | `AdminCategoriesPage.test.jsx` | `HU39-CP12: muestra todas las categorías, también las inactivas, ordenadas por nombre` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP12 | `AdminCategoriesPage.test.jsx` | `HU39-CP12: sin categorías muestra el estado vacío y ningún filtro` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP13 | `AdminCategoriesPage.test.jsx` | `HU39-CP13: un 403 muestra el error genérico, sin el texto del servidor, y se puede reintentar` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP13 | `AdminCategoriesPage.test.jsx` | `HU39-CP13: un error del servidor muestra el mismo mensaje genérico con Reintentar` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: buscar por nombre no distingue mayúsculas ni tildes` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: filtrar por estado deja solo las inactivas o solo las activas` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: ordenar por productos y cambiar el sentido` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: sin coincidencias avisa y Limpiar filtros vuelve a mostrarlas todas, manteniendo el orden` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP15 | `AdminCategoriesPage.test.jsx` | `HU39-CP15: Volver al panel regresa al panel de control` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP15 | `AdminPage.test.jsx` | `HU39-CP15: el panel tiene la tarjeta Categorías, con su descripción` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP15 | `AdminPage.test.jsx` | `HU39-CP15: la tarjeta Categorías lleva al listado de categorías` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP16 | `AdminCategoriesPage.test.jsx` | `HU39-CP16: sin sesión redirige al login` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP16 | `AdminCategoriesPage.test.jsx` | `HU39-CP16: un vendedor no ve el listado y va a su zona` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP16 | `AdminCategoriesPage.test.jsx` | `HU39-CP16: un cliente no ve el listado y va a su zona` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP06 | `adminCategories.test.js` | `HU39-CP06: pide GET /api/admin/categorias y devuelve el array de categorías` | Frontend · API | AB#330 | PR #197 | ✅ |
+| HU39-CP06 | `adminCategories.test.js` | `HU39-CP06: un 403 llega como error con su estado y su código` | Frontend · API | AB#330 | PR #197 | ✅ |
+| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: una categoría ACTIVA se muestra como Activa, con color de éxito` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: una categoría INACTIVA se muestra como Inactiva, con color neutro` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: un estado desconocido se muestra como Desconocido` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: las etiquetas del filtro son las de los dos estados` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP07 | `CategoriesTable.test.jsx` | `HU39-CP07: el estado de cada categoría se muestra en una insignia` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: sin filtros devuelve todas las categorías, también las inactivas, ordenadas por nombre` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: la búsqueda por nombre no distingue mayúsculas ni tildes` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: la búsqueda encuentra el texto en cualquier parte del nombre y solo mira el nombre` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: el filtro por estado deja solo las activas o solo las inactivas` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: la búsqueda y el estado se combinan` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ordena por nombre en sentido descendente` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ordena por número de productos, de menos a más y al revés` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ordena por estado, las activas primero, y a igualdad desempata por nombre` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: no modifica la lista que recibe` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ofrece ordenar por nombre, productos y estado` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: muestra las cabeceras de las cuatro columnas` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: muestra de cada categoría su nombre, descripción, estado y número de productos` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: con renderActions añade la columna Acciones con lo que devuelva para cada categoría` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: mientras se refresca, la tabla avisa de que está ocupada` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP09 | `AdminCategoriesPage.test.jsx` | `HU39-CP09: la tabla tiene las columnas Nombre, Descripción, Estado, Productos y Acciones` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP09 | `AdminCategoriesPage.test.jsx` | `HU39-CP09: cada fila muestra el nombre, la descripción, el estado y el número de productos` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP10 | `CategoriesTable.test.jsx` | `HU39-CP10: una descripción vacía se muestra como un guion` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP10 | `AdminCategoriesPage.test.jsx` | `HU39-CP10: una categoría sin descripción muestra un guion y una sin productos muestra 0` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: muestra el nombre, el estado, el número de productos y la descripción completa` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: una categoría inactiva sin descripción ni productos muestra Inactiva, 0 y un guion` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: todos los campos son de solo lectura y la ficha avisa de ello` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: la ficha no ofrece editar, crear ni eliminar` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: se cierra con la X` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: se cierra con Escape` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP11 | `AdminCategoriesPage.test.jsx` | `HU39-CP11: cada fila tiene un botón con lupa para ver la información de su categoría` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP11 | `AdminCategoriesPage.test.jsx` | `HU39-CP11: la lupa abre la ficha de esa categoría con su descripción completa y se puede cerrar` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP12 | `AdminCategoriesPage.test.jsx` | `HU39-CP12: muestra el título de la vista y mientras carga un indicador` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP12 | `AdminCategoriesPage.test.jsx` | `HU39-CP12: muestra todas las categorías, también las inactivas, ordenadas por nombre` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP12 | `AdminCategoriesPage.test.jsx` | `HU39-CP12: sin categorías muestra el estado vacío y ningún filtro` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP13 | `AdminCategoriesPage.test.jsx` | `HU39-CP13: un 403 muestra el error genérico, sin el texto del servidor, y se puede reintentar` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP13 | `AdminCategoriesPage.test.jsx` | `HU39-CP13: un error del servidor muestra el mismo mensaje genérico con Reintentar` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: buscar por nombre no distingue mayúsculas ni tildes` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: filtrar por estado deja solo las inactivas o solo las activas` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: ordenar por productos y cambiar el sentido` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: sin coincidencias avisa y Limpiar filtros vuelve a mostrarlas todas, manteniendo el orden` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP15 | `AdminCategoriesPage.test.jsx` | `HU39-CP15: Volver al panel regresa al panel de control` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP15 | `AdminPage.test.jsx` | `HU39-CP15: el panel tiene la tarjeta Categorías, con su descripción` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP15 | `AdminPage.test.jsx` | `HU39-CP15: la tarjeta Categorías lleva al listado de categorías` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP16 | `AdminCategoriesPage.test.jsx` | `HU39-CP16: sin sesión redirige al login` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP16 | `AdminCategoriesPage.test.jsx` | `HU39-CP16: un vendedor no ve el listado y va a su zona` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP16 | `AdminCategoriesPage.test.jsx` | `HU39-CP16: un cliente no ve el listado y va a su zona` | Frontend · página | AB#330 | PR #197 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionCategoriasControllerTest`: `categorias/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
@@ -3298,11 +3298,11 @@ Ruta de la clase de test de seguridad (bajo `backend/src/test/java/es/uclm/esibu
 | HU42-CP13 | Eliminar la categoría principal de un vendedor devuelve 409 `CATEGORY_HAS_SELLERS` | Controlador | 1 | ✅ Pasa |
 | HU42-CP14 | Eliminar una categoría que no existe devuelve 404 `CATEGORY_NOT_FOUND` | Controlador | 1 | ✅ Pasa |
 | HU42-CP15 | Sin rol de administrador no se pueden eliminar categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | ✅ Pasa |
-| HU42-CP16 | La llamada del administrador pide `DELETE /api/admin/categorias/{id}` con el id de la categoría; un 409 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#324, PR #199) |
-| HU42-CP17 | Cada fila de la lista de categorías tiene la papelera; al pulsarla se pide confirmación avisando de que no se puede deshacer, y cancelar no borra nada | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#324, PR #199) |
-| HU42-CP18 | Al confirmar se borra la categoría, se avisa de que se ha eliminado y desaparece de la lista; mientras se elimina, los botones de la confirmación quedan deshabilitados | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#324, PR #199) |
-| HU42-CP19 | Una categoría con productos tiene la papelera deshabilitada con el motivo; una sin productos la tiene habilitada | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#324, PR #199) |
-| HU42-CP20 | Cada error del backend al eliminar muestra su mensaje (tiene productos, es la principal de un vendedor, ya no existe o genérico); con productos o ya eliminada, se recarga la lista | Frontend (componente y página) | 5 | 🔍 En revisión (5, AB#324, PR #199) |
+| HU42-CP16 | La llamada del administrador pide `DELETE /api/admin/categorias/{id}` con el id de la categoría; un 409 llega como error con su estado y su código | Frontend (API) | 2 | ✅ Pasa |
+| HU42-CP17 | Cada fila de la lista de categorías tiene la papelera; al pulsarla se pide confirmación avisando de que no se puede deshacer, y cancelar no borra nada | Frontend (componente y página) | 4 | ✅ Pasa |
+| HU42-CP18 | Al confirmar se borra la categoría, se avisa de que se ha eliminado y desaparece de la lista; mientras se elimina, los botones de la confirmación quedan deshabilitados | Frontend (componente y página) | 3 | ✅ Pasa |
+| HU42-CP19 | Una categoría con productos tiene la papelera deshabilitada con el motivo; una sin productos la tiene habilitada | Frontend (componente y página) | 3 | ✅ Pasa |
+| HU42-CP20 | Cada error del backend al eliminar muestra su mensaje (tiene productos, es la principal de un vendedor, ya no existe o genérico); con productos o ya eliminada, se recarga la lista | Frontend (componente y página) | 5 | ✅ Pasa |
 
 Notas:
 - **HU42-CP01 a CP15:** casos propuestos en las T326 (AB#326) y T325 (AB#325), a partir de los criterios de la HU42. Pendientes de confirmar con el equipo y de añadir a la HU42 en Azure Boards.
@@ -3350,20 +3350,20 @@ Notas:
 | HU42-CP14 | `AdministracionCategoriasControllerTest` | `eliminarUnaCategoriaInexistenteDevuelve404` | Infraestructura | AB#325 | PR #181 | ✅ |
 | HU42-CP15 | `AdministracionCategoriasControllerTest` | `eliminarConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#325 | PR #181 | ✅ |
 | HU42-CP15 | `AdministracionCategoriasControllerTest` | `eliminarSinSesionDevuelve401` | Infraestructura | AB#325 | PR #181 | ✅ |
-| HU42-CP16 | `adminCategories.test.js` | `HU42-CP16: pide DELETE /api/admin/categorias/{id} con el id de la categoría` | Frontend · API | AB#324 | PR #199 | 🔍 |
-| HU42-CP16 | `adminCategories.test.js` | `HU42-CP16: un 409 llega como error con su estado y su código` | Frontend · API | AB#324 | PR #199 | 🔍 |
-| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: ofrece la lupa para ver la ficha y la papelera para eliminar la categoría` | Frontend · componente | AB#324 | PR #199 | 🔍 |
-| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: al pulsar la papelera pide confirmación avisando de que no se puede deshacer` | Frontend · componente | AB#324 | PR #199 | 🔍 |
-| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: al cancelar se cierra la confirmación y no se borra nada` | Frontend · componente | AB#324 | PR #199 | 🔍 |
-| HU42-CP17 | `AdminCategoriesPage.test.jsx` | `HU42-CP17: cada fila de la lista tiene la papelera para eliminar su categoría` | Frontend · página | AB#324 | PR #199 | 🔍 |
-| HU42-CP18 | `CategoryRowActions.test.jsx` | `HU42-CP18: al confirmar borra la categoría, avisa de que se ha eliminado y pide actualizar la lista` | Frontend · componente | AB#324 | PR #199 | 🔍 |
-| HU42-CP18 | `CategoryRowActions.test.jsx` | `HU42-CP18: mientras se elimina, los botones de la confirmación quedan deshabilitados` | Frontend · componente | AB#324 | PR #199 | 🔍 |
-| HU42-CP18 | `AdminCategoriesPage.test.jsx` | `HU42-CP18: al confirmar, avisa de que se ha eliminado y la categoría desaparece de la lista` | Frontend · página | AB#324 | PR #199 | 🔍 |
-| HU42-CP19 | `CategoryRowActions.test.jsx` | `HU42-CP19: si la categoría tiene productos, la papelera queda deshabilitada y explica por qué` | Frontend · componente | AB#324 | PR #199 | 🔍 |
-| HU42-CP19 | `CategoryRowActions.test.jsx` | `HU42-CP19: una categoría sin productos tiene la papelera habilitada con el título Eliminar` | Frontend · componente | AB#324 | PR #199 | 🔍 |
-| HU42-CP19 | `AdminCategoriesPage.test.jsx` | `HU42-CP19: solo se pueden eliminar las categorías sin productos` | Frontend · página | AB#324 | PR #199 | 🔍 |
-| HU42-CP20 | `CategoryRowActions.test.jsx` | `HU42-CP20: $caso` (4 variantes: tiene productos, principal de un vendedor, ya no existe y error genérico) | Frontend · componente | AB#324 | PR #199 | 🔍 |
-| HU42-CP20 | `AdminCategoriesPage.test.jsx` | `HU42-CP20: si el backend no deja eliminarla, avisa del motivo y la categoría sigue en la lista` | Frontend · página | AB#324 | PR #199 | 🔍 |
+| HU42-CP16 | `adminCategories.test.js` | `HU42-CP16: pide DELETE /api/admin/categorias/{id} con el id de la categoría` | Frontend · API | AB#324 | PR #199 | ✅ |
+| HU42-CP16 | `adminCategories.test.js` | `HU42-CP16: un 409 llega como error con su estado y su código` | Frontend · API | AB#324 | PR #199 | ✅ |
+| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: ofrece la lupa para ver la ficha y la papelera para eliminar la categoría` | Frontend · componente | AB#324 | PR #199 | ✅ |
+| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: al pulsar la papelera pide confirmación avisando de que no se puede deshacer` | Frontend · componente | AB#324 | PR #199 | ✅ |
+| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: al cancelar se cierra la confirmación y no se borra nada` | Frontend · componente | AB#324 | PR #199 | ✅ |
+| HU42-CP17 | `AdminCategoriesPage.test.jsx` | `HU42-CP17: cada fila de la lista tiene la papelera para eliminar su categoría` | Frontend · página | AB#324 | PR #199 | ✅ |
+| HU42-CP18 | `CategoryRowActions.test.jsx` | `HU42-CP18: al confirmar borra la categoría, avisa de que se ha eliminado y pide actualizar la lista` | Frontend · componente | AB#324 | PR #199 | ✅ |
+| HU42-CP18 | `CategoryRowActions.test.jsx` | `HU42-CP18: mientras se elimina, los botones de la confirmación quedan deshabilitados` | Frontend · componente | AB#324 | PR #199 | ✅ |
+| HU42-CP18 | `AdminCategoriesPage.test.jsx` | `HU42-CP18: al confirmar, avisa de que se ha eliminado y la categoría desaparece de la lista` | Frontend · página | AB#324 | PR #199 | ✅ |
+| HU42-CP19 | `CategoryRowActions.test.jsx` | `HU42-CP19: si la categoría tiene productos, la papelera queda deshabilitada y explica por qué` | Frontend · componente | AB#324 | PR #199 | ✅ |
+| HU42-CP19 | `CategoryRowActions.test.jsx` | `HU42-CP19: una categoría sin productos tiene la papelera habilitada con el título Eliminar` | Frontend · componente | AB#324 | PR #199 | ✅ |
+| HU42-CP19 | `AdminCategoriesPage.test.jsx` | `HU42-CP19: solo se pueden eliminar las categorías sin productos` | Frontend · página | AB#324 | PR #199 | ✅ |
+| HU42-CP20 | `CategoryRowActions.test.jsx` | `HU42-CP20: $caso` (4 variantes: tiene productos, principal de un vendedor, ya no existe y error genérico) | Frontend · componente | AB#324 | PR #199 | ✅ |
+| HU42-CP20 | `AdminCategoriesPage.test.jsx` | `HU42-CP20: si el backend no deja eliminarla, avisa del motivo y la categoría sigue en la lista` | Frontend · página | AB#324 | PR #199 | ✅ |
 
 Ruta de las clases de test de seguridad (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `SeguridadCategoriasServiceTest`: `categorias/application/service/` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB)
