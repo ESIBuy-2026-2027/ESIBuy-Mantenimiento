@@ -626,4 +626,23 @@ describe('ProductsPage (HU14): favoritos', () => {
     expect(screen.getByRole('button', { name: 'Auriculares inalámbricos está en tus favoritos' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Añadir Altavoz Bluetooth a favoritos' })).toBeEnabled()
   })
+
+  it('HU14-CP24: si el producto ya no está disponible, su tarjeta lo avisa y el corazón sigue vacío', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/customer/wishlist/items', () =>
+        HttpResponse.json({ code: 'PRODUCT_NOT_FOUND' }, { status: 404 }),
+      ),
+    )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+    const tarjeta = within(screen.getByRole('list', { name: /productos/i }))
+      .getByRole('link', { name: /auriculares/i })
+      .closest('li')
+
+    await user.click(within(tarjeta).getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' }))
+
+    expect(await within(tarjeta).findByRole('alert')).toHaveTextContent('Este producto ya no está disponible.')
+    expect(within(tarjeta).getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' })).toBeEnabled()
+  })
 })

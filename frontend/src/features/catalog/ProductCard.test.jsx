@@ -167,4 +167,29 @@ describe('ProductCard (HU14): favoritos', () => {
     expect(corazon).toHaveAttribute('title', 'Ya está en tus favoritos')
     expect(screen.queryByRole('button', { name: /añadir .* a favoritos/i })).not.toBeInTheDocument()
   })
+
+  it.each([
+    ['el producto ya no está disponible (404)', { status: 404, code: 'PRODUCT_NOT_FOUND' }, 'Este producto ya no está disponible.'],
+    ['falla por otro motivo', { status: 500 }, 'No se ha podido añadir a favoritos. Inténtalo de nuevo.'],
+  ])('HU14-CP24: si %s, la tarjeta lo avisa y el corazón se puede volver a pulsar', async (_caso, error, mensaje) => {
+    pintarConFavoritos(PRODUCTO, { onAddFavorite: vi.fn().mockRejectedValue(error) })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Añadir Teclado mecánico a favoritos' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(mensaje)
+    expect(screen.getByRole('button', { name: 'Añadir Teclado mecánico a favoritos' })).toBeEnabled()
+  })
+
+  it('HU14-CP24: al volver a pulsar el corazón desaparece el aviso anterior', async () => {
+    const onAddFavorite = vi.fn().mockRejectedValueOnce({ status: 500 }).mockResolvedValueOnce(undefined)
+    pintarConFavoritos(PRODUCTO, { onAddFavorite })
+    const corazon = () => screen.getByRole('button', { name: 'Añadir Teclado mecánico a favoritos' })
+
+    await userEvent.click(corazon())
+    await screen.findByRole('alert')
+    await userEvent.click(corazon())
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(onAddFavorite).toHaveBeenCalledTimes(2)
+  })
 })
