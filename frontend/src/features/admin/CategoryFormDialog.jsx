@@ -18,6 +18,10 @@ import {
 } from '@fluentui/react-components'
 import { CATEGORY_STATUS_LABELS } from './categoryStatus'
 
+// Los mismos límites que el dominio del backend (Categoria): con maxLength no se puede escribir más.
+const LONGITUD_MAXIMA = { nombre: 50, descripcion: 200 }
+const OBLIGATORIO = 'Este campo es obligatorio'
+
 const useStyles = makeStyles({
   surface: {
     width: '100%',
@@ -30,11 +34,17 @@ const useStyles = makeStyles({
   },
 })
 
-// Formulario de alta de una categoría (HU40): nombre, descripción y estado, que por defecto es activa.
+// Formulario de alta de una categoría (HU40): nombre, descripción y estado, que por defecto es activa. El nombre es
+// obligatorio: si está vacío o solo tiene espacios, se avisa en el campo y no se envía nada.
 export default function CategoryFormDialog({ onClose }) {
   const styles = useStyles()
   const [datos, setDatos] = useState({ nombre: '', descripcion: '', estado: 'ACTIVA' })
+  const [errorNombre, setErrorNombre] = useState(null)
   const cambiar = (campo) => (_event, data) => setDatos((actuales) => ({ ...actuales, [campo]: data.value }))
+
+  const crear = () => {
+    if (!datos.nombre.trim()) setErrorNombre(OBLIGATORIO)
+  }
 
   return (
     <Dialog open modalType="modal" onOpenChange={(_event, data) => !data.open && onClose()}>
@@ -42,11 +52,16 @@ export default function CategoryFormDialog({ onClose }) {
         <DialogBody>
           <DialogTitle>Nueva categoría</DialogTitle>
           <DialogContent className={styles.content}>
-            <Field label="Nombre" required>
-              <Input value={datos.nombre} onChange={cambiar('nombre')} />
+            <Field label="Nombre" required validationMessage={errorNombre}>
+              <Input maxLength={LONGITUD_MAXIMA.nombre} value={datos.nombre} onChange={cambiar('nombre')} />
             </Field>
             <Field label="Descripción">
-              <Textarea resize="vertical" value={datos.descripcion} onChange={cambiar('descripcion')} />
+              <Textarea
+                resize="vertical"
+                maxLength={LONGITUD_MAXIMA.descripcion}
+                value={datos.descripcion}
+                onChange={cambiar('descripcion')}
+              />
             </Field>
             <Field label="Estado">
               <RadioGroup layout="horizontal" value={datos.estado} onChange={cambiar('estado')}>
@@ -58,7 +73,9 @@ export default function CategoryFormDialog({ onClose }) {
           </DialogContent>
           <DialogActions>
             <Button onClick={onClose}>Cancelar</Button>
-            <Button appearance="primary">Crear</Button>
+            <Button appearance="primary" onClick={crear}>
+              Crear
+            </Button>
           </DialogActions>
         </DialogBody>
       </DialogSurface>
