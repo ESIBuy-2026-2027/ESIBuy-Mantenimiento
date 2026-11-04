@@ -546,3 +546,33 @@ describe('UserRowActions (HU37): solo se eliminan administradores', () => {
     expect(screen.getByRole('button', { name: 'Eliminar a Ana López García' })).toBeEnabled()
   })
 })
+
+describe('UserRowActions (HU37): eliminar desde la ficha de la fila', () => {
+  it('HU37-CP14: la lupa de un administrador abre una ficha con Eliminar y, al eliminar, la cierra, avisa y actualiza la lista', async () => {
+    const user = userEvent.setup()
+    const { onResult, onChanged } = await renderAcciones(ANA, { canDelete: true })
+    await user.click(screen.getByRole('button', { name: 'Ver información de Ana López García' }))
+    const ficha = await screen.findByRole('dialog', { name: /información del usuario/i })
+
+    await user.click(await within(ficha).findByRole('button', { name: 'Eliminar a Ana López García' }))
+    const confirmacion = (await screen.findByText(/seguro que quieres eliminar a ana/i)).closest('[role="alertdialog"]')
+    await user.click(within(confirmacion).getByText('Eliminar', { selector: 'button' }))
+
+    await waitFor(
+      () => expect(onResult).toHaveBeenCalledWith({ intent: 'success', texto: 'Ana López García se ha eliminado.' }),
+      ESPERA,
+    )
+    expect(onChanged).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /información del usuario/i })).not.toBeInTheDocument(), ESPERA)
+  })
+
+  it('HU37-CP18: la ficha de un cliente abierta desde su fila no ofrece Eliminar', async () => {
+    const user = userEvent.setup()
+    await renderAcciones(CARLOS)
+    await user.click(screen.getByRole('button', { name: 'Ver información de Carlos Moreno Gil' }))
+    const ficha = await screen.findByRole('dialog', { name: /información del usuario/i })
+    await within(ficha).findByLabelText('Nombre')
+
+    expect(within(ficha).queryByRole('button', { name: /eliminar/i })).not.toBeInTheDocument()
+  })
+})
