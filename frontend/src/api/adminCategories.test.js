@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
-import { createAdminCategory, deleteAdminCategory, getAdminCategories } from './adminCategories'
+import { createAdminCategory, deleteAdminCategory, getAdminCategories, updateAdminCategory } from './adminCategories'
 
 const CATEGORIAS = [
   { id: 'cat-1', nombre: 'Hogar', descripcion: 'Muebles', estado: 'ACTIVA', numeroProductos: 4 },
@@ -91,6 +91,41 @@ describe('createAdminCategory', () => {
     await expect(createAdminCategory({ nombre: 'Hogar', descripcion: '', estado: 'ACTIVA' })).rejects.toMatchObject({
       status: 409,
       code: 'CATEGORY_NAME_ALREADY_EXISTS',
+    })
+  })
+})
+
+describe('updateAdminCategory', () => {
+  it('HU41-CP15: pide PUT /api/admin/categorias/{id} con el nombre y la descripción, y devuelve la categoría editada', async () => {
+    const peticion = {}
+    const editada = { id: 'cat-2', nombre: 'Casa', descripcion: 'Todo para el hogar', estado: 'ACTIVA', numeroProductos: 14 }
+    server.use(
+      http.put('/api/admin/categorias/:id', async ({ request, params }) => {
+        peticion.metodo = request.method
+        peticion.id = params.id
+        peticion.cuerpo = await request.json()
+        return HttpResponse.json(editada)
+      }),
+    )
+
+    const respuesta = await updateAdminCategory('cat-2', { nombre: 'Casa', descripcion: 'Todo para el hogar' })
+
+    expect(peticion).toEqual({
+      metodo: 'PUT',
+      id: 'cat-2',
+      cuerpo: { nombre: 'Casa', descripcion: 'Todo para el hogar' },
+    })
+    expect(respuesta).toEqual(editada)
+  })
+
+  it('HU41-CP15: un 404 llega como error con su estado y su código', async () => {
+    server.use(
+      http.put('/api/admin/categorias/:id', () => HttpResponse.json({ code: 'CATEGORY_NOT_FOUND' }, { status: 404 })),
+    )
+
+    await expect(updateAdminCategory('cat-99', { nombre: 'Casa', descripcion: '' })).rejects.toMatchObject({
+      status: 404,
+      code: 'CATEGORY_NOT_FOUND',
     })
   })
 })
