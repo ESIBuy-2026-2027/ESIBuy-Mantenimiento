@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
-import { deleteAdminCategory, getAdminCategories } from './adminCategories'
+import { createAdminCategory, deleteAdminCategory, getAdminCategories } from './adminCategories'
 
 const CATEGORIAS = [
   { id: 'cat-1', nombre: 'Hogar', descripcion: 'Muebles', estado: 'ACTIVA', numeroProductos: 4 },
@@ -57,5 +57,40 @@ describe('deleteAdminCategory', () => {
     )
 
     await expect(deleteAdminCategory('cat-1')).rejects.toMatchObject({ status: 409, code: 'CATEGORY_HAS_PRODUCTS' })
+  })
+})
+
+describe('createAdminCategory', () => {
+  it('HU40-CP10: pide POST /api/admin/categorias con el nombre, la descripción y el estado, y devuelve la categoría creada', async () => {
+    const peticion = {}
+    const creada = { id: 'cat-11', nombre: 'Jardín', descripcion: 'Plantas', estado: 'INACTIVA', numeroProductos: 0 }
+    server.use(
+      http.post('/api/admin/categorias', async ({ request }) => {
+        peticion.metodo = request.method
+        peticion.cuerpo = await request.json()
+        return HttpResponse.json(creada, { status: 201 })
+      }),
+    )
+
+    const respuesta = await createAdminCategory({ nombre: 'Jardín', descripcion: 'Plantas', estado: 'INACTIVA' })
+
+    expect(peticion).toEqual({
+      metodo: 'POST',
+      cuerpo: { nombre: 'Jardín', descripcion: 'Plantas', estado: 'INACTIVA' },
+    })
+    expect(respuesta).toEqual(creada)
+  })
+
+  it('HU40-CP10: un 409 llega como error con su estado y su código', async () => {
+    server.use(
+      http.post('/api/admin/categorias', () =>
+        HttpResponse.json({ code: 'CATEGORY_NAME_ALREADY_EXISTS' }, { status: 409 }),
+      ),
+    )
+
+    await expect(createAdminCategory({ nombre: 'Hogar', descripcion: '', estado: 'ACTIVA' })).rejects.toMatchObject({
+      status: 409,
+      code: 'CATEGORY_NAME_ALREADY_EXISTS',
+    })
   })
 })
