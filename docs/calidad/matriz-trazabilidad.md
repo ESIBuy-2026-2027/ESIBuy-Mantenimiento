@@ -1910,10 +1910,15 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP04 | Un producto inexistente o no disponible se rechaza y no se guarda nada; la disponibilidad se pregunta al módulo de productos | Unitario | 4 | ✅ Pasa (4, AB#360, PR #196) |
 | HU14-CP05 | Solo el cliente con su propio correo puede añadir: vendedor, administrador u otro correo reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#360, PR #196) |
 | HU14-CP06 | Persistencia en `listas_deseos`: guardar y recuperar por cliente; volver a guardar actualiza sin crear otra lista; la colección admite una sola lista por cliente | Unitario + integración MongoDB | 4 | ✅ Pasa (4, AB#360, PR #196) |
-| HU14-CP07 | `POST /api/customer/wishlist/items` devuelve 200 con la lista; el cliente sale de la sesión y un `clienteId` en el cuerpo se ignora | Integración (capa web) | 1 | 🔍 En revisión (1, Rama `feature/US14-T358-endpoint-anadir-deseo`) |
-| HU14-CP08 | Un cuerpo sin `productoId`, con `productoId` vacío o ilegible devuelve 400 `VALIDATION_ERROR` y no llega al caso de uso | Integración (capa web) | 1 | 🔍 En revisión (1, Rama `feature/US14-T358-endpoint-anadir-deseo`) |
-| HU14-CP09 | Un producto no disponible devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | 🔍 En revisión (1, Rama `feature/US14-T358-endpoint-anadir-deseo`) |
-| HU14-CP10 | Sin sesión (401), sin ser cliente (403) o sin token CSRF (403) no se añade a la lista | Integración (capa web) | 3 | 🔍 En revisión (3, Rama `feature/US14-T358-endpoint-anadir-deseo`) |
+| HU14-CP07 | `POST /api/customer/wishlist/items` devuelve 200 con la lista; el cliente sale de la sesión y un `clienteId` en el cuerpo se ignora | Integración (capa web) | 1 | ✅ Pasa (1, AB#358, PR #198) |
+| HU14-CP08 | Un cuerpo sin `productoId`, con `productoId` vacío o ilegible devuelve 400 `VALIDATION_ERROR` y no llega al caso de uso | Integración (capa web) | 1 | ✅ Pasa (1, AB#358, PR #198) |
+| HU14-CP09 | Un producto no disponible devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | ✅ Pasa (1, AB#358, PR #198) |
+| HU14-CP10 | Sin sesión (401), sin ser cliente (403) o sin token CSRF (403) no se añade a la lista | Integración (capa web) | 3 | ✅ Pasa (3, AB#358, PR #198) |
+| HU14-CP20 | La llamada del cliente pide `POST /api/customer/wishlist/items` con el producto y devuelve la lista; un 404 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#357, PR pendiente) |
+| HU14-CP21 | Cada tarjeta del catálogo tiene un corazón para añadir su producto a favoritos, fuera del enlace al detalle; también los agotados, pero no los no disponibles | Frontend (componente y página) | 5 | 🔍 En revisión (5, AB#357, PR pendiente) |
+| HU14-CP22 | Al pulsar el corazón se añade el producto; mientras se añade queda deshabilitado y después queda relleno y deshabilitado, sin salir del catálogo | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#357, PR pendiente) |
+| HU14-CP23 | La lista que devuelve el backend al añadir rellena también los corazones de los productos que ya estaban en favoritos | Frontend (página) | 1 | 🔍 En revisión (1, AB#357, PR pendiente) |
+| HU14-CP24 | Si no se puede añadir, la tarjeta lo avisa (producto que ya no está disponible o mensaje genérico) y el corazón se puede volver a pulsar; al pulsarlo desaparece el aviso | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#357, PR pendiente) |
 
 - **HU14-CP01 a CP06 (Sprint 2, backend):** casos propuestos en la task AB#360 (lógica de guardado de deseo), revisados y aceptados por el desarrollador. Azure no los trae: habría que añadirlos a la HU14.
 - **Decisiones del equipo:** módulo nuevo `deseos`; una sola lista por cliente, como dicen el criterio de aceptación y la colección `listas_deseos`, que ya tenía su índice único. El campo de la colección sigue siendo `usuarioId`, y guarda el id del cliente. Añadir un producto repetido no es un error, y un producto inexistente o no disponible se rechaza.
@@ -1923,6 +1928,10 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - **Endpoint (T358):** `POST /api/customer/wishlist/items` con `{ "productoId": "p-1" }` → 200 `{ "items": [{ "productoId", "addedAt" }] }`, también si el producto ya estaba. Errores: 400 `VALIDATION_ERROR`, 404 `PRODUCT_NOT_FOUND`, 401 sin sesión y 403 con otro rol o sin CSRF. Los datos del producto (nombre, imagen, aviso de "no disponible") llegan con la consulta de la T361 y la T362. `ProductoNoDisponibleException` comparte el handler de `ProductoNoComprableException` en `ManejadorGlobalErrores`, porque responden igual.
 - **HU14-CP10 sin rojo real:** la regla de `/api/customer/**` de `SecurityConfig` ya lo cubría. Se comprobó con dos cambios temporales: con la ruta abierta fallaron los tres tests de sesión y rol, y sin CSRF falló el del token.
 - **Ciclo con rojo parcial:** HU14-CP03 pasaba en el rojo del dominio porque `anadir` no hacía nada. Se comprobó con una versión sin la regla de repetidos, y entonces falló.
+- **HU14-CP20 a CP24 (Sprint 2, frontend):** casos propuestos en la task AB#357 (botón de favoritos en la lista de productos), a partir del criterio «el sistema guarda el producto seleccionado por el cliente en la lista de deseos vinculada a su cuenta», y desarrollados con TDD. Empiezan en CP20 para dejar hueco a los casos del backend que faltan (T361, T362, T365 y T366). Pendientes de confirmar con el equipo y de añadir a la HU14 en Azure Boards. Rama `feature/US14-T357-boton-favoritos-lista-productos`.
+- **Vista (T357):** el corazón va en la tarjeta del catálogo (`ProductCard`), encima de la esquina de la imagen y fuera del enlace al detalle. Todavía no hay `GET` de la lista, así que al entrar todos los corazones salen vacíos: la página (`ProductsPage`) los rellena con la lista completa que devuelve el `POST`. Un corazón relleno queda deshabilitado, porque quitar de favoritos es la T364. Un producto no disponible no tiene corazón (el backend respondería 404); uno agotado sí.
+- **Tests que nacen en verde:** en HU14-CP21, «un producto no disponible no tiene el corazón» y «sin onAddFavorite la tarjeta no ofrece favoritos», porque antes del ciclo la tarjeta no tenía corazón. Se dejan para que no cambie sin darnos cuenta.
+- **Pendiente:** cargar los favoritos al entrar en el catálogo cuando exista el `GET` (T361 y T362), quitar de favoritos (T364) y el corazón en el detalle del producto, que no es de esta task.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1948,12 +1957,27 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP06 | `ListaDeseosMongoAdapterTest` | `guardarUnaListaNuevaYRecuperarlaPorCliente` | Infraestructura | AB#360 | PR #196 | ✅ |
 | HU14-CP06 | `ListaDeseosMongoAdapterTest` | `guardarOtraVezActualizaLaLista` | Infraestructura | AB#360 | PR #196 | ✅ |
 | HU14-CP06 | `ListaDeseosMongoAdapterTest` | `laColeccionSoloAdmiteUnaListaPorCliente` | Infraestructura | AB#360 | PR #196 | ✅ |
-| HU14-CP07 | `ListaDeseosControllerTest` | `anadirRespondeConLaListaDelClienteEnSesion` | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
-| HU14-CP08 | `ListaDeseosControllerTest` | `cuerpoInvalidoNoLlegaAlCasoDeUso` (sin `productoId`, nulo, vacío, en blanco y JSON mal formado) | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
-| HU14-CP09 | `ListaDeseosControllerTest` | `unProductoNoDisponibleResponde404` | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
-| HU14-CP10 | `ListaDeseosControllerTest` | `sinSesionNoSeAnade` | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
-| HU14-CP10 | `ListaDeseosControllerTest` | `noClienteNoAnade` (vendedor y administrador) | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
-| HU14-CP10 | `ListaDeseosControllerTest` | `sinTokenCsrfNoSeAnade` | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
+| HU14-CP07 | `ListaDeseosControllerTest` | `anadirRespondeConLaListaDelClienteEnSesion` | Infraestructura | AB#358 | PR #198 | ✅ |
+| HU14-CP08 | `ListaDeseosControllerTest` | `cuerpoInvalidoNoLlegaAlCasoDeUso` (sin `productoId`, nulo, vacío, en blanco y JSON mal formado) | Infraestructura | AB#358 | PR #198 | ✅ |
+| HU14-CP09 | `ListaDeseosControllerTest` | `unProductoNoDisponibleResponde404` | Infraestructura | AB#358 | PR #198 | ✅ |
+| HU14-CP10 | `ListaDeseosControllerTest` | `sinSesionNoSeAnade` | Infraestructura | AB#358 | PR #198 | ✅ |
+| HU14-CP10 | `ListaDeseosControllerTest` | `noClienteNoAnade` (vendedor y administrador) | Infraestructura | AB#358 | PR #198 | ✅ |
+| HU14-CP10 | `ListaDeseosControllerTest` | `sinTokenCsrfNoSeAnade` | Infraestructura | AB#358 | PR #198 | ✅ |
+| HU14-CP20 | `wishlist.test.js` | `HU14-CP20: pide POST /api/customer/wishlist/items con el producto y devuelve la lista del cliente` | Frontend · API | AB#357 | PR pendiente | 🔍 |
+| HU14-CP20 | `wishlist.test.js` | `HU14-CP20: un 404 llega como error con su estado y su código` | Frontend · API | AB#357 | PR pendiente | 🔍 |
+| HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: la tarjeta tiene un corazón para añadir el producto a favoritos, fuera del enlace al detalle` | Frontend · componente | AB#357 | PR pendiente | 🔍 |
+| HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: un producto agotado también se puede añadir a favoritos` | Frontend · componente | AB#357 | PR pendiente | 🔍 |
+| HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: un producto no disponible no tiene el corazón` | Frontend · componente | AB#357 | PR pendiente | 🔍 |
+| HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: sin onAddFavorite la tarjeta no ofrece favoritos` | Frontend · componente | AB#357 | PR pendiente | 🔍 |
+| HU14-CP21 | `ProductsPage.test.jsx` | `HU14-CP21: cada tarjeta del catálogo tiene el corazón para añadir su producto a favoritos` | Frontend · página | AB#357 | PR pendiente | 🔍 |
+| HU14-CP22 | `ProductCard.test.jsx` | `HU14-CP22: al pulsar el corazón pide añadir ese producto a favoritos` | Frontend · componente | AB#357 | PR pendiente | 🔍 |
+| HU14-CP22 | `ProductCard.test.jsx` | `HU14-CP22: mientras se añade, el corazón queda deshabilitado` | Frontend · componente | AB#357 | PR pendiente | 🔍 |
+| HU14-CP22 | `ProductCard.test.jsx` | `HU14-CP22: un producto que ya está en favoritos tiene el corazón relleno y deshabilitado` | Frontend · componente | AB#357 | PR pendiente | 🔍 |
+| HU14-CP22 | `ProductsPage.test.jsx` | `HU14-CP22: al pulsar el corazón se añade el producto a favoritos y el corazón queda relleno` | Frontend · página | AB#357 | PR pendiente | 🔍 |
+| HU14-CP23 | `ProductsPage.test.jsx` | `HU14-CP23: al añadir, se rellenan también los corazones de los productos que ya estaban en la lista del cliente` | Frontend · página | AB#357 | PR pendiente | 🔍 |
+| HU14-CP24 | `ProductCard.test.jsx` | `HU14-CP24: si %s, la tarjeta lo avisa y el corazón se puede volver a pulsar` (2 variantes: el producto ya no está disponible y falla por otro motivo) | Frontend · componente | AB#357 | PR pendiente | 🔍 |
+| HU14-CP24 | `ProductCard.test.jsx` | `HU14-CP24: al volver a pulsar el corazón desaparece el aviso anterior` | Frontend · componente | AB#357 | PR pendiente | 🔍 |
+| HU14-CP24 | `ProductsPage.test.jsx` | `HU14-CP24: si el producto ya no está disponible, su tarjeta lo avisa y el corazón sigue vacío` | Frontend · página | AB#357 | PR pendiente | 🔍 |
 
 ---
 
