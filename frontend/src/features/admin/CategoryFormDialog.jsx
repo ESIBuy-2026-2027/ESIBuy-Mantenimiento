@@ -38,14 +38,20 @@ const useStyles = makeStyles({
   },
 })
 
-// Formulario de alta de una categoría (HU40): nombre, descripción y estado, que por defecto es activa. El nombre es
+// Formulario de una categoría: de alta (HU40) o, si recibe `category`, de edición de su nombre y su descripción
+// (HU41), que no permite cambiar el estado. Al crear se elige el estado, que por defecto es activa. El nombre es
 // obligatorio: si está vacío o solo tiene espacios, se avisa en el campo y no se envía nada. Si el backend dice que el
 // nombre ya existe (sin distinguir mayúsculas ni tildes), también se avisa en el campo; cualquier otro error, con un
 // mensaje genérico, y el formulario sigue abierto con lo escrito. `onSaved` recibe la categoría creada; `onClose`,
 // que se cierra sin más.
-export default function CategoryFormDialog({ onClose, onSaved }) {
+export default function CategoryFormDialog({ category = null, onClose, onSaved }) {
   const styles = useStyles()
-  const [datos, setDatos] = useState({ nombre: '', descripcion: '', estado: 'ACTIVA' })
+  const editando = category !== null
+  const [datos, setDatos] = useState({
+    nombre: category?.nombre ?? '',
+    descripcion: category?.descripcion ?? '',
+    estado: category?.estado ?? 'ACTIVA',
+  })
   const [errorNombre, setErrorNombre] = useState(null)
   const [enviando, setEnviando] = useState(false)
   const [errorServidor, setErrorServidor] = useState(false)
@@ -55,11 +61,12 @@ export default function CategoryFormDialog({ onClose, onSaved }) {
     cambiar('nombre')(event, data)
   }
 
-  const crear = async () => {
+  const enviar = async () => {
     if (!datos.nombre.trim()) {
       setErrorNombre(OBLIGATORIO)
       return
     }
+    if (editando) return
     setEnviando(true)
     setErrorServidor(false)
     try {
@@ -76,7 +83,7 @@ export default function CategoryFormDialog({ onClose, onSaved }) {
     <Dialog open modalType="modal" onOpenChange={(_event, data) => !data.open && onClose()}>
       <DialogSurface className={styles.surface}>
         <DialogBody>
-          <DialogTitle>Nueva categoría</DialogTitle>
+          <DialogTitle>{editando ? 'Editar categoría' : 'Nueva categoría'}</DialogTitle>
           <DialogContent className={styles.content}>
             {errorServidor && (
               <MessageBar intent="error">
@@ -94,20 +101,22 @@ export default function CategoryFormDialog({ onClose, onSaved }) {
                 onChange={cambiar('descripcion')}
               />
             </Field>
-            <Field label="Estado">
-              <RadioGroup layout="horizontal" value={datos.estado} onChange={cambiar('estado')}>
-                {Object.entries(CATEGORY_STATUS_LABELS).map(([estado, etiqueta]) => (
-                  <Radio key={estado} value={estado} label={etiqueta} />
-                ))}
-              </RadioGroup>
-            </Field>
+            {!editando && (
+              <Field label="Estado">
+                <RadioGroup layout="horizontal" value={datos.estado} onChange={cambiar('estado')}>
+                  {Object.entries(CATEGORY_STATUS_LABELS).map(([estado, etiqueta]) => (
+                    <Radio key={estado} value={estado} label={etiqueta} />
+                  ))}
+                </RadioGroup>
+              </Field>
+            )}
           </DialogContent>
           <DialogActions>
             <Button onClick={onClose} disabled={enviando}>
               Cancelar
             </Button>
-            <Button appearance="primary" onClick={crear} disabled={enviando}>
-              Crear
+            <Button appearance="primary" onClick={enviar} disabled={enviando}>
+              {editando ? 'Guardar' : 'Crear'}
             </Button>
           </DialogActions>
         </DialogBody>
@@ -117,6 +126,12 @@ export default function CategoryFormDialog({ onClose, onSaved }) {
 }
 
 CategoryFormDialog.propTypes = {
+  category: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    nombre: PropTypes.string.isRequired,
+    descripcion: PropTypes.string.isRequired,
+    estado: PropTypes.string.isRequired,
+  }),
   onClose: PropTypes.func.isRequired,
   onSaved: PropTypes.func.isRequired,
 }
