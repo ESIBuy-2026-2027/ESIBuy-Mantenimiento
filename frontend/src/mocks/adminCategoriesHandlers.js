@@ -26,7 +26,7 @@ const CATEGORIAS_INICIALES = [
   numeroProductos,
 }))
 
-// Lista que puede cambiar durante la sesión: el administrador crea (HU40) y elimina (HU42) categorías.
+// Lista que puede cambiar durante la sesión: el administrador crea (HU40), edita (HU41) y elimina (HU42) categorías.
 let categorias = [...CATEGORIAS_INICIALES]
 let siguienteId = 11
 
@@ -42,7 +42,9 @@ const normalizar = (texto) =>
     .normalize('NFD')
     .replaceAll(/\p{M}/gu, '')
     .toLowerCase()
-const nombreRepetido = (nombre) => categorias.some((categoria) => normalizar(categoria.nombre) === normalizar(nombre))
+// `excepto`: al editar, la propia categoría no cuenta como repetida.
+const nombreRepetido = (nombre, excepto = null) =>
+  categorias.some((categoria) => categoria.id !== excepto && normalizar(categoria.nombre) === normalizar(nombre))
 const ordenarPorNombre = (lista) => [...lista].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
 
 function rechazarSiNoEsAdmin() {
@@ -74,6 +76,25 @@ export const adminCategoriesHandlers = [
     }
     categorias = ordenarPorNombre([...categorias, creada])
     return HttpResponse.json(creada, { status: 201 })
+  }),
+
+  // Como el backend (HU41): la fila actualizada, sin cambiar el estado; 400 sin nombre, 404 si no existe y 409 si el
+  // nombre es el de otra.
+  http.put('/api/admin/categorias/:id', async ({ request, params }) => {
+    const rechazo = rechazarSiNoEsAdmin()
+    if (rechazo) return rechazo
+
+    const existente = categorias.find((categoria) => categoria.id === params.id)
+    if (!existente) return HttpResponse.json({ code: 'CATEGORY_NOT_FOUND' }, { status: 404 })
+    const { nombre, descripcion } = await request.json()
+    if (!nombre?.trim()) return HttpResponse.json({ code: 'VALIDATION_ERROR' }, { status: 400 })
+    if (nombreRepetido(nombre, params.id)) {
+      return HttpResponse.json({ code: 'CATEGORY_NAME_ALREADY_EXISTS' }, { status: 409 })
+    }
+
+    const editada = { ...existente, nombre: nombre.trim(), descripcion: descripcion ?? '' }
+    categorias = ordenarPorNombre(categorias.map((categoria) => (categoria.id === params.id ? editada : categoria)))
+    return HttpResponse.json(editada)
   }),
 
   // Como el backend (HU42): 404 si no existe y 409 si tiene productos. El 409 CATEGORY_HAS_SELLERS (es la principal

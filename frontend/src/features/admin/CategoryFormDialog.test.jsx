@@ -199,3 +199,35 @@ describe('CategoryFormDialog (HU41): formulario de edición', () => {
     expect(ediciones).toEqual([])
   })
 })
+
+describe('CategoryFormDialog (HU41): guardar', () => {
+  it('HU41-CP17: envía el nombre y la descripción nuevos y avisa con la categoría editada', async () => {
+    const user = userEvent.setup()
+    const ediciones = capturarEdiciones()
+    const { onSaved } = await renderFormulario({ category: HOGAR })
+
+    const nombre = screen.getByRole('textbox', { name: /nombre/i })
+    await user.clear(nombre)
+    await user.type(nombre, 'Casa')
+    const descripcion = screen.getByRole('textbox', { name: /descripción/i })
+    await user.clear(descripcion)
+    await user.type(descripcion, 'Todo para la casa.')
+    await user.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1))
+    expect(ediciones).toEqual([{ id: 'cat-2', nombre: 'Casa', descripcion: 'Todo para la casa.' }])
+    expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({ id: 'cat-2', nombre: 'Casa', estado: 'ACTIVA' }))
+  })
+
+  it('HU41-CP17: al editar también se valida que el nombre no quede vacío', async () => {
+    const user = userEvent.setup()
+    const ediciones = capturarEdiciones()
+    await renderFormulario({ category: HOGAR })
+
+    await user.clear(screen.getByRole('textbox', { name: /nombre/i }))
+    await user.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    expect(await screen.findByText('Este campo es obligatorio')).toBeInTheDocument()
+    expect(ediciones).toEqual([])
+  })
+})

@@ -179,6 +179,24 @@ describe('AdminCategoriesPage (HU41): editar', () => {
     expect(screen.getAllByRole('button', { name: /^editar /i })).toHaveLength(8)
     expect(within(filaDe('Hogar')).getByRole('button', { name: 'Editar Hogar' })).toBeEnabled()
   })
+
+  it('HU41-CP17: al guardar, avisa y la lista muestra el nombre y la descripción nuevos', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.click(screen.getByRole('button', { name: 'Editar Libros' }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Editar categoría' })
+    const nombre = within(dialogo).getByRole('textbox', { name: /nombre/i })
+    await user.clear(nombre)
+    await user.type(nombre, 'Libros y cómics')
+    await user.type(within(dialogo).getByRole('textbox', { name: /descripción/i }), 'Novelas y tebeos.')
+    await user.click(within(dialogo).getByRole('button', { name: 'Guardar' }))
+
+    expect(await screen.findByText('Libros y cómics se ha actualizado.')).toBeInTheDocument()
+    await waitFor(() => expect(nombresEnPantalla()).toContain('Libros y cómics'))
+    expect(nombresEnPantalla()).not.toContain('Libros')
+    expect(celdasDe('Libros y cómics').slice(0, 4)).toEqual(['Libros y cómics', 'Novelas y tebeos.', 'Activa', '11'])
+  })
 })
 
 describe('AdminCategoriesPage (HU42): eliminar', () => {

@@ -101,6 +101,22 @@ describe('CategoryRowActions (HU41): editar', () => {
     const formulario = await screen.findByRole('dialog', { name: 'Editar categoría' })
     expect(within(formulario).getByRole('textbox', { name: /nombre/i })).toHaveValue('Mascotas')
   })
+
+  it('HU41-CP17: al guardar, avisa de que se ha actualizado y pide actualizar la lista', async () => {
+    const user = userEvent.setup()
+    const { onResult, onChanged } = await renderAcciones(MASCOTAS)
+
+    await user.click(screen.getByRole('button', { name: 'Editar Mascotas' }))
+    const formulario = await screen.findByRole('dialog', { name: 'Editar categoría' })
+    const nombre = within(formulario).getByRole('textbox', { name: /nombre/i })
+    await user.clear(nombre)
+    await user.type(nombre, 'Animales')
+    await user.click(within(formulario).getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1), ESPERA)
+    expect(onResult).toHaveBeenCalledWith({ intent: 'success', texto: 'Animales se ha actualizado.' })
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), ESPERA)
+  })
 })
 
 describe('CategoryRowActions (HU42): eliminar', () => {
