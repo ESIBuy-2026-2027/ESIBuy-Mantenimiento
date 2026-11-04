@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import { addressesHandlers } from './addressesHandlers'
+import { adminCategoriesHandlers } from './adminCategoriesHandlers'
 import { adminSellersHandlers } from './adminSellersHandlers'
 import { adminsHandlers } from './adminsHandlers'
 import { authHandlers } from './authHandlers'
@@ -9,10 +10,12 @@ import { paymentMethodsHandlers } from './paymentMethodsHandlers'
 import { productsHandlers } from './productsHandlers'
 import { profileHandlers } from './profileHandlers'
 import { registroHandlers } from './registroHandlers'
+import { reviewsHandlers } from './reviewsHandlers'
 import { usersHandlers } from './usersHandlers'
 
 export const handlers = [
   ...authHandlers,
+  ...reviewsHandlers,
   ...productsHandlers,
   ...cartHandlers,
   ...ordersHandlers,
@@ -20,6 +23,7 @@ export const handlers = [
   ...addressesHandlers,
   ...usersHandlers,
   ...profileHandlers,
+  ...adminCategoriesHandlers,
   ...adminSellersHandlers,
   ...adminsHandlers,
   ...registroHandlers,

@@ -32,6 +32,8 @@ import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
 public class ProductoMongoAdapter implements ProductoRepositoryPort {
 
     private static final String CAMPO_STOCK = "stock";
+    private static final String CAMPO_NOMBRE = "nombre";
+    private static final String CAMPO_VALORACION_MEDIA = "valoracionMedia";
 
     private final ProductoMongoRepository repository;
     private final ProductoDocumentMapper mapper;
@@ -48,9 +50,13 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     public Producto guardar(Producto producto) {
         ProductoDocument documento = mapper.aDocumento(producto);
         if (producto.getId() != null) {
-            // Actualización: se conserva la fecha de creación del documento guardado
-            repository.findById(producto.getId())
-                    .ifPresent(guardado -> documento.setCreatedAt(guardado.getCreatedAt()));
+            // Actualización: se conservan la fecha de creación y las valoraciones del documento guardado (HU13: las
+            // cambia solo actualizarValoracion, nunca el vendedor al editar el producto)
+            repository.findById(producto.getId()).ifPresent(guardado -> {
+                documento.setCreatedAt(guardado.getCreatedAt());
+                documento.setValoracionMedia(guardado.getValoracionMedia());
+                documento.setNumeroValoraciones(guardado.getNumeroValoraciones());
+            });
         }
         try {
             return mapper.aDominio(repository.save(documento));
@@ -74,6 +80,14 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
                 .and("disponible").is(true));
         return mongoTemplate.updateFirst(conStockSuficiente, new Update().inc(CAMPO_STOCK, -cantidad),
                 ProductoDocument.class).getModifiedCount() == 1;
+    }
+
+    // Solo estos dos campos: el resto del producto no se toca
+    @Override
+    public void actualizarValoracion(String id, double media, int numero) {
+        mongoTemplate.updateFirst(new Query(Criteria.where("_id").is(id)),
+                new Update().set(CAMPO_VALORACION_MEDIA, media).set("numeroValoraciones", numero),
+                ProductoDocument.class);
     }
 
     @Override
@@ -104,10 +118,6 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     // no distingue mayúsculas ni tildes y trata el texto como literal.
     @Override
     public ProductoPage buscarEnCatalogo(BuscarCatalogoQuery query) {
-        // PENDIENTE DE DECIDIR (equipo): conectar con las valoraciones de HU13
-        if (query.valoracionMinima() != null) {
-            return new ProductoPage(List.of(), query.pagina(), query.tamano(), 0);
-        }
         List<Criteria> filtros = new ArrayList<>();
         filtros.add(Criteria.where("disponible").is(true));
         if (query.busqueda() != null && !query.busqueda().isBlank()) {
@@ -116,16 +126,22 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         if (query.categoriaId() != null && !query.categoriaId().isBlank()) {
             filtros.add(Criteria.where("categoriaId").is(query.categoriaId()));
         }
+        // Media de las valoraciones (HU13): un producto sin valoraciones no tiene el campo y no llega a ningún mínimo
+        if (query.valoracionMinima() != null) {
+            filtros.add(Criteria.where(CAMPO_VALORACION_MEDIA).gte(query.valoracionMinima()));
+        }
         Criteria criterios = new Criteria().andOperator(filtros);
         long total = mongoTemplate.count(new Query(criterios), ProductoDocument.class);
-        // PENDIENTE DE DECIDIR (equipo): ordenar por la valoración real de HU13. Mientras tanto todos empatan
-        // a 0 y el empate se resuelve por nombre de la A a la Z, también si se pide descendente.
-        boolean descendente = query.criterio() == CriterioOrdenCatalogo.NOMBRE && query.descendente();
-        Sort.Direction direccion = descendente ? Sort.Direction.DESC : Sort.Direction.ASC;
+        // Por valoración, los empates van por nombre de la A a la Z en los dos sentidos. Sin valoraciones, MongoDB los
+        // trata como el valor más bajo: al principio en ascendente y al final en descendente.
+        Sort.Direction direccion = query.descendente() ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort orden = query.criterio() == CriterioOrdenCatalogo.VALORACION
+                ? Sort.by(direccion, CAMPO_VALORACION_MEDIA).and(Sort.by(Sort.Direction.ASC, CAMPO_NOMBRE))
+                : Sort.by(direccion, CAMPO_NOMBRE);
         // PENDIENTE DE DECIDIR (equipo): ordenar como en español con ORDEN_ALFABETICO_ES (UsuarioMongoAdapter).
         // Sin collation, MongoDB ordena por código Unicode: las mayúsculas antes y las vocales con tilde tras la Z.
         List<Producto> productos = mongoTemplate.find(new Query(criterios).with(PageRequest.of(
-                        query.pagina(), query.tamano(), Sort.by(direccion, "nombre"))),
+                        query.pagina(), query.tamano(), orden)),
                         ProductoDocument.class).stream()
                 .map(mapper::aDominio)
                 .toList();

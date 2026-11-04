@@ -17,8 +17,12 @@ const CARRITO_DE_DOS_PROVEEDORES = [
   ['p-24', 1],
 ]
 
-// Por defecto espera también a los métodos de pago del cliente, sin los que no se puede pagar.
-async function abrirPasarela({ productos = CARRITO_DE_DOS_PROVEEDORES, esperarMetodos = true } = {}) {
+// Por defecto espera también a las direcciones y a los métodos de pago del cliente, sin los que no se puede pagar.
+async function abrirPasarela({
+  productos = CARRITO_DE_DOS_PROVEEDORES,
+  esperarMetodos = true,
+  esperarDirecciones = true,
+} = {}) {
   await abrirSesionPorApi(CLIENTE)
   for (const [id, cantidad] of productos) await addCartItem(id, cantidad)
   renderApp('/checkout')
@@ -26,6 +30,7 @@ async function abrirPasarela({ productos = CARRITO_DE_DOS_PROVEEDORES, esperarMe
   // El carrito llega después del título.
   const resumen = await screen.findByRole('region', { name: /resumen del pago/i })
   if (esperarMetodos) await screen.findByRole('radiogroup', { name: /método de pago/i })
+  if (esperarDirecciones) await screen.findByRole('radiogroup', { name: /dirección de envío/i })
   return resumen
 }
 
@@ -147,7 +152,7 @@ describe('CheckoutPage (HU10): simular el pago', () => {
     const cuerpos = []
     // Anota lo que se envía y deja que responda el mock de siempre.
     server.use(
-      http.post('/api/orders', async ({ request }) => {
+      http.post('/api/customer/orders', async ({ request }) => {
         cuerpos.push(await request.clone().json())
         return undefined
       }),
@@ -210,7 +215,7 @@ describe('CheckoutPage (HU10): elegir el método de pago', () => {
     const user = userEvent.setup()
     const cuerpos = []
     server.use(
-      http.post('/api/orders', async ({ request }) => {
+      http.post('/api/customer/orders', async ({ request }) => {
         cuerpos.push(await request.clone().json())
         return undefined
       }),
@@ -222,9 +227,71 @@ describe('CheckoutPage (HU10): elegir el método de pago', () => {
 
     await screen.findByRole('heading', { level: 1, name: /pago realizado/i }, PAGO)
     expect(cuerpos).toEqual([
-      { vendedorId: 'u-2', paymentMethodId: 'm-2' },
-      { vendedorId: 'u-99', paymentMethodId: 'm-2' },
+      { vendedorId: 'u-2', direccionId: 'd-1', paymentMethodId: 'm-2' },
+      { vendedorId: 'u-99', direccionId: 'd-1', paymentMethodId: 'm-2' },
     ])
+  })
+})
+
+describe('CheckoutPage (HU10): elegir la dirección de envío', () => {
+  it('HU10-CP21: lista las direcciones de envío del cliente y marca la principal', async () => {
+    await abrirPasarela()
+
+    const direcciones = screen.getByRole('radiogroup', { name: /dirección de envío/i })
+    expect(within(direcciones).getAllByRole('radio')).toHaveLength(2)
+    expect(within(direcciones).getByRole('radio', { name: /calle mayor 1/i })).toBeChecked()
+    expect(within(direcciones).getByRole('radio', { name: /calle toledo 5/i })).not.toBeChecked()
+  })
+
+  it('HU10-CP21: se puede elegir otra dirección de envío antes de pagar', async () => {
+    const user = userEvent.setup()
+    await abrirPasarela()
+
+    await user.click(screen.getByRole('radio', { name: /calle toledo 5/i }))
+
+    expect(screen.getByRole('radio', { name: /calle toledo 5/i })).toBeChecked()
+    expect(screen.getByRole('radio', { name: /calle mayor 1/i })).not.toBeChecked()
+  })
+
+  it('HU10-CP22: sin direcciones de envío no deja pagar y lleva a sus direcciones para añadir una', async () => {
+    server.use(http.get('/api/customer/addresses', () => HttpResponse.json([])))
+    await abrirPasarela({ esperarDirecciones: false })
+
+    expect(await screen.findByText(/no tienes ninguna dirección de envío/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /añadir una dirección/i })).toHaveAttribute('href', '/addresses')
+    expect(botonDePago()).toBeDisabled()
+  })
+
+  it('HU10-CP22: si no se pueden cargar las direcciones de envío lo indica y deja reintentar', async () => {
+    const user = userEvent.setup()
+    server.use(http.get('/api/customer/addresses', () => new HttpResponse(null, { status: 500 }), { once: true }))
+    await abrirPasarela({ esperarDirecciones: false })
+
+    expect(await screen.findByText(/no se han podido cargar las direcciones de envío/i)).toBeInTheDocument()
+    expect(botonDePago()).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: /reintentar/i }))
+
+    expect(await screen.findByRole('radio', { name: /calle mayor 1/i })).toBeChecked()
+    expect(botonDePago()).toBeEnabled()
+  })
+
+  it('HU10-CP23: cada pedido se crea con la dirección de envío elegida', async () => {
+    const user = userEvent.setup()
+    const cuerpos = []
+    server.use(
+      http.post('/api/customer/orders', async ({ request }) => {
+        cuerpos.push(await request.clone().json())
+        return undefined
+      }),
+    )
+    await abrirPasarela()
+
+    await user.click(screen.getByRole('radio', { name: /calle toledo 5/i }))
+    await user.click(botonDePago())
+
+    await screen.findByRole('heading', { level: 1, name: /pago realizado/i }, PAGO)
+    expect(cuerpos.map(({ direccionId }) => direccionId)).toEqual(['d-2', 'd-2'])
   })
 })
 
@@ -245,7 +312,7 @@ describe('CheckoutPage (HU10): recibo del pago', () => {
   it('HU10-CP10: si falla un pedido, el recibo solo cobra los pedidos creados', async () => {
     const user = userEvent.setup()
     server.use(
-      http.post('/api/orders', async ({ request }) => {
+      http.post('/api/customer/orders', async ({ request }) => {
         const cuerpo = await request.clone().json()
         return cuerpo.vendedorId === 'u-99' ? new HttpResponse(null, { status: 500 }) : undefined
       }),
@@ -264,7 +331,7 @@ describe('CheckoutPage (HU10): si falla algún pedido', () => {
   const fallarElDe = (vendedorId, veces = Infinity) => {
     let fallos = 0
     server.use(
-      http.post('/api/orders', async ({ request }) => {
+      http.post('/api/customer/orders', async ({ request }) => {
         const cuerpo = await request.clone().json()
         if (cuerpo.vendedorId === vendedorId && fallos < veces) {
           fallos += 1
@@ -310,5 +377,17 @@ describe('CheckoutPage (HU10): si falla algún pedido', () => {
     await waitFor(() => expect(screen.getAllByRole('listitem', { name: /pedido/i })).toHaveLength(2), PAGO)
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(await screen.findByRole('button', { name: 'Carrito, vacío' })).toBeInTheDocument()
+  })
+})
+
+describe('CheckoutPage: acceso a los pedidos (HU11)', () => {
+  it('HU11-CP19: tras pagar se puede ir a Mis pedidos', async () => {
+    const user = userEvent.setup()
+    await abrirPasarela()
+
+    await user.click(botonDePago())
+
+    await screen.findByRole('heading', { level: 1, name: /pago realizado/i }, PAGO)
+    expect(screen.getByRole('link', { name: /ver mis pedidos/i })).toHaveAttribute('href', '/orders')
   })
 })

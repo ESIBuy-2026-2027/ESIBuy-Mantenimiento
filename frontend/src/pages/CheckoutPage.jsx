@@ -12,9 +12,11 @@ import {
   Text,
   Title1,
   makeStyles,
+  mergeClasses,
   tokens,
 } from '@fluentui/react-components'
 import { BuildingShop20Regular, Cart24Regular, LockClosed20Regular } from '@fluentui/react-icons'
+import { getAddresses } from '../api/addresses'
 import { getCart } from '../api/cart'
 import { createOrder } from '../api/orders'
 import { getPaymentMethods } from '../api/paymentMethods'
@@ -173,6 +175,14 @@ const useStyles = makeStyles({
   mask: {
     fontVariantNumeric: 'tabular-nums',
   },
+  addressLabel: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalXXS,
+  },
+  addressLine: {
+    overflowWrap: 'anywhere',
+  },
   failure: {
     display: 'flex',
     flexDirection: 'column',
@@ -214,6 +224,65 @@ function VendorOrder({ group, styles }) {
         ))}
       </ul>
     </section>
+  )
+}
+
+// Las direcciones de envío del cliente (HU5) para elegir a cuál se envían los pedidos. Sin ninguna no se puede pagar:
+// se lleva a su vista de direcciones para añadir una.
+function ShippingAddressPicker({ query, selectedId, onSelect, styles }) {
+  if (query.failed) {
+    return (
+      <MessageBar intent="error">
+        <MessageBarBody>No se han podido cargar las direcciones de envío.</MessageBarBody>
+        <MessageBarActions>
+          <Button onClick={query.retry}>Reintentar</Button>
+        </MessageBarActions>
+      </MessageBar>
+    )
+  }
+
+  if (!query.data) return <Spinner size="small" label="Cargando direcciones de envío…" />
+
+  if (query.data.length === 0) {
+    return (
+      <MessageBar intent="warning">
+        <MessageBarBody>No tienes ninguna dirección de envío guardada.</MessageBarBody>
+        <MessageBarActions>
+          <LinkButton to={PATHS.ADDRESSES}>Añadir una dirección</LinkButton>
+        </MessageBarActions>
+      </MessageBar>
+    )
+  }
+
+  return (
+    <Field label="Dirección de envío">
+      <RadioGroup value={selectedId} onChange={(_, data) => onSelect(data.value)}>
+        {query.data.map((address) => (
+          <Radio
+            key={address.id}
+            value={address.id}
+            label={
+              <span className={styles.addressLabel}>
+                <span className={styles.methodLabel}>
+                  <span className={styles.lineName}>{address.destinatario}</span>
+                  {address.principal && (
+                    <Badge appearance="tint" color="brand" size="small">
+                      Principal
+                    </Badge>
+                  )}
+                </span>
+                <span className={styles.addressLine}>
+                  {address.detalles ? `${address.calle}, ${address.detalles}` : address.calle}
+                </span>
+                <span className={mergeClasses(styles.addressLine, styles.muted)}>
+                  {address.codigoPostal} {address.ciudad} ({address.provincia})
+                </span>
+              </span>
+            }
+          />
+        ))}
+      </RadioGroup>
+    </Field>
   )
 }
 
@@ -276,27 +345,38 @@ function PaymentMethodPicker({ query, selectedId, onSelect, styles }) {
 }
 
 // Pasarela de pago (HU10): resume el pedido de cada proveedor y, al simular el pago, crea un pedido por proveedor
-// (cada uno con un solo proveedor), todos con el método de pago elegido. Al terminar muestra el recibo con forma de
-// ticket. Si alguno falla, se confirman los demás, se avisa de cuál y se puede reintentar con el mismo método.
+// (cada uno con un solo proveedor), todos a la dirección de envío y con el método de pago elegidos. Al terminar muestra
+// el recibo con forma de ticket. Si alguno falla, se confirman los demás, se avisa de cuál y se puede reintentar con la
+// misma dirección y el mismo método.
 export default function CheckoutPage() {
   const styles = useStyles()
   const { cart, status, reload } = useCart()
+  const addresses = useApiQuery(getAddresses)
   const paymentMethods = useApiQuery(getPaymentMethods)
+  const [selectedAddressId, setSelectedAddressId] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
   const [phase, setPhase] = useState('review')
   const [orders, setOrders] = useState([])
   const [failures, setFailures] = useState([])
   const [paidWith, setPaidWith] = useState(null)
+  const [shippedTo, setShippedTo] = useState(null)
   const [paidAt, setPaidAt] = useState(null)
 
-  // Mientras el cliente no elige, se usa su método predeterminado.
+  // Mientras el cliente no elige, se usan su dirección principal y su método predeterminado.
+  const addressList = addresses.failed ? [] : (addresses.data ?? [])
+  const selectedAddress =
+    addressList.find(({ id }) => id === selectedAddressId) ??
+    addressList.find(({ principal }) => principal) ??
+    addressList[0]
   const methods = paymentMethods.failed ? [] : (paymentMethods.data ?? [])
   const selectedMethod =
     methods.find(({ id }) => id === selectedId) ?? methods.find(({ predeterminado }) => predeterminado) ?? methods[0]
 
   const pay = async () => {
-    // Al reintentar se paga con el mismo método que la primera vez.
+    // Al reintentar se envía a la misma dirección y se paga con el mismo método que la primera vez.
+    const address = shippedTo ?? selectedAddress
     const method = paidWith ?? selectedMethod
+    setShippedTo(address)
     setPaidWith(method)
     setPhase('paying')
     setFailures([])
@@ -316,7 +396,7 @@ export default function CheckoutPage() {
     const failed = []
     for (const group of groups) {
       try {
-        created.push(await createOrder(group.vendedor.id, method.id))
+        created.push(await createOrder(group.vendedor.id, address.id, method.id))
       } catch {
         failed.push(group.vendedor)
       }
@@ -358,6 +438,11 @@ export default function CheckoutPage() {
             <LinkButton to={PATHS.PRODUCTS} appearance={failures.length > 0 ? 'secondary' : 'primary'}>
               Seguir comprando
             </LinkButton>
+            {orders.length > 0 && (
+              <LinkButton to={PATHS.ORDERS} appearance="secondary">
+                Ver mis pedidos
+              </LinkButton>
+            )}
           </div>
         </div>
       </main>
@@ -415,6 +500,12 @@ export default function CheckoutPage() {
             <Text size={200} className={styles.muted}>
               Se creará un pedido por cada proveedor: {pedidos(cart.grupos.length)} en total.
             </Text>
+            <ShippingAddressPicker
+              query={addresses}
+              selectedId={selectedAddress?.id ?? null}
+              onSelect={setSelectedAddressId}
+              styles={styles}
+            />
             <PaymentMethodPicker
               query={paymentMethods}
               selectedId={selectedMethod?.id ?? null}
@@ -425,7 +516,7 @@ export default function CheckoutPage() {
               appearance="primary"
               size="large"
               icon={phase === 'paying' ? <Spinner size="tiny" /> : <LockClosed20Regular />}
-              disabled={phase === 'paying' || !selectedMethod}
+              disabled={phase === 'paying' || !selectedAddress || !selectedMethod}
               onClick={pay}
             >
               {phase === 'paying' ? 'Procesando pago…' : 'Simular pago'}

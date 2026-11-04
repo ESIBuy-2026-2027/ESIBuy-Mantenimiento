@@ -2,8 +2,11 @@ package es.uclm.esibuy.backend.productos.application.service;
 
 import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
+import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
+import es.uclm.esibuy.backend.productos.application.port.out.ResultadoAnalisis;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
+import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
@@ -35,8 +38,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 // Alta (HU31, T204), consulta (HU33, T349), modificación (HU34, T343) eliminación (HU35, T346) y activación y desactivación (HU16, T284 y T285) de los productos propios del vendedor. El repositorio y el puerto hacia usuarios son dobles de
-// prueba (Mockito): se prueba el caso de uso sin MongoDB ni Spring.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP13 a CP16, propuestos a partir del contrato del frontend.
+// prueba (Mockito): se prueba el caso de uso sin MongoDB ni Spring. El antivirus de las imágenes (HU31, T397) también
+// es un doble: por defecto da la imagen por segura.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP13 a CP16, propuestos a partir del contrato del frontend, y
+// HU31-CP32, CP33 y HU34-CP19, propuestos.
 @ExtendWith(MockitoExtension.class)
 class GestionProductosServiceTest {
 
@@ -48,11 +53,16 @@ class GestionProductosServiceTest {
     @Mock
     private UsuarioEnSesionPort usuarioEnSesion;
 
+    @Mock
+    private AnalisisImagenPort analisisImagen;
+
     private GestionProductosService servicio;
 
     @BeforeEach
     void preparar() {
-        servicio = new GestionProductosService(productoRepository, usuarioEnSesion);
+        servicio = new GestionProductosService(productoRepository, usuarioEnSesion, analisisImagen);
+        // Por defecto el antivirus da la imagen por buena: los tests que no tratan del análisis no dependen de él
+        lenient().when(analisisImagen.analizar(any())).thenReturn(ResultadoAnalisis.SEGURA);
     }
 
     @Test
@@ -115,6 +125,55 @@ class GestionProductosServiceTest {
                 () -> servicio.crear(comando(new BigDecimal("89.50"), 12, "cat-1")));
 
         verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU31-CP32: un producto con una imagen que el antivirus marca como maliciosa se rechaza y no se guarda")
+    void rechazaUnaImagenMaliciosaYNoGuardaNada() {
+        lenient().when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(analisisImagen.analizar("https://esibuy.test/teclado.png")).thenReturn(ResultadoAnalisis.MALICIOSA);
+
+        CrearProductoCommand comando = comando(new BigDecimal("89.50"), 12, "cat-1");
+        assertThrows(ImagenNoSeguraException.class, () -> servicio.crear(comando));
+
+        verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU31-CP33: si el antivirus no da resultado, el producto se guarda sin imagen")
+    void sinResultadoDelAntivirusSeGuardaSinImagen() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(analisisImagen.analizar("https://esibuy.test/teclado.png")).thenReturn(ResultadoAnalisis.SIN_RESULTADO);
+        when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        servicio.crear(comando(new BigDecimal("89.50"), 12, "cat-1"));
+
+        assertEquals("", productoGuardado().getImagen());
+    }
+
+    @Test
+    @DisplayName("HU31-CP33: si el antivirus da la imagen por segura, el producto se guarda con ella")
+    void unaImagenSeguraSeGuardaConElProducto() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(analisisImagen.analizar("https://esibuy.test/teclado.png")).thenReturn(ResultadoAnalisis.SEGURA);
+        when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        servicio.crear(comando(new BigDecimal("89.50"), 12, "cat-1"));
+
+        assertEquals("https://esibuy.test/teclado.png", productoGuardado().getImagen());
+    }
+
+    @Test
+    @DisplayName("HU31-CP33: un producto sin imagen no se envía al antivirus")
+    void unProductoSinImagenNoSeAnaliza() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        servicio.crear(new CrearProductoCommand(CORREO, "Teclado mecánico", "Con cable", new BigDecimal("89.50"),
+                12, "cat-1", null, true, Descuento.sinDescuento(), Descuento.sinDescuento()));
+
+        verify(analisisImagen, never()).analizar(any());
+        assertEquals("", productoGuardado().getImagen());
     }
 
     @Test
@@ -241,6 +300,47 @@ class GestionProductosServiceTest {
     }
 
     @Test
+    @DisplayName("HU34-CP19: cambiar la imagen por una que el antivirus marca como maliciosa se rechaza y no se guarda")
+    void cambiarAUnaImagenMaliciosaSeRechaza() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-1")));
+        when(analisisImagen.analizar("https://esibuy.test/rgb.png")).thenReturn(ResultadoAnalisis.MALICIOSA);
+
+        ModificarProductoCommand cambios = modificacion("p-9", "Teclado mecánico", new BigDecimal("99.90"));
+        assertThrows(ImagenNoSeguraException.class, () -> servicio.modificarMiProducto(cambios));
+
+        verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU34-CP19: si al cambiar la imagen el antivirus no da resultado, el producto se guarda sin imagen")
+    void cambiarLaImagenSinResultadoSeGuardaSinImagen() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-1")));
+        when(analisisImagen.analizar("https://esibuy.test/rgb.png")).thenReturn(ResultadoAnalisis.SIN_RESULTADO);
+        when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        servicio.modificarMiProducto(modificacion("p-9", "Teclado mecánico", new BigDecimal("99.90")));
+
+        assertEquals("", productoGuardado().getImagen());
+    }
+
+    @Test
+    @DisplayName("HU34-CP19: si la imagen no cambia no se vuelve a analizar y se conserva")
+    void siLaImagenNoCambiaNoSeVuelveAAnalizar() {
+        Producto conImagen = new Producto("p-9", "v-1", "Teclado mecánico", "Con cable", new BigDecimal("89.50"), 12,
+                "cat-1", "https://esibuy.test/rgb.png", true, Descuento.sinDescuento(), Descuento.sinDescuento());
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(conImagen));
+        when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        servicio.modificarMiProducto(modificacion("p-9", "Teclado mecánico", new BigDecimal("99.90")));
+
+        verify(analisisImagen, never()).analizar(any());
+        assertEquals("https://esibuy.test/rgb.png", productoGuardado().getImagen());
+    }
+
+    @Test
     @DisplayName("HU35-CP01: el vendedor elimina un producto suyo")
     void elVendedorEliminaSuProducto() {
         when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
@@ -339,6 +439,12 @@ class GestionProductosServiceTest {
                 () -> servicio.cambiarDisponibilidadMiProducto(CORREO, "p-9", false));
 
         verify(productoRepository, never()).guardar(any());
+    }
+
+    private Producto productoGuardado() {
+        ArgumentCaptor<Producto> captor = ArgumentCaptor.forClass(Producto.class);
+        verify(productoRepository).guardar(captor.capture());
+        return captor.getValue();
     }
 
     private static Producto producto(String id, String vendedorId) {

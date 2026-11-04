@@ -61,6 +61,7 @@ public class CatalogoProductosService implements CatalogoProductosUseCase {
         return new DetalleProductoCatalogo(producto.getId(), producto.getNombre(), producto.getDescripcion(),
                 producto.getImagen(), producto.getCategoriaId(), producto.getVendedorId(),
                 vendedorPort.nombreComercial(producto.getVendedorId()), producto.getPrecio(),
-                descuento.porcentaje(), producto.precioFinal(premium), producto.getStock(), producto.isDisponible());
+                descuento.porcentaje(), producto.precioFinal(premium), producto.getStock(), producto.isDisponible(),
+                producto.getValoracionMedia(), producto.getNumeroValoraciones());
     }
 }

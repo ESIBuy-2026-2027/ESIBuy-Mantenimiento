@@ -4,9 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import java.time.Clock;
+import java.time.LocalDate;
+import java.time.Month;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,13 +46,21 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPor
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
+import es.uclm.esibuy.backend.usuarios.domain.model.Email;
+import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
+import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
+import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
 // Seguridad en la capa de negocio (R8): el registro y los pasos del login son públicos (se llaman sin sesión);
 // consultar al usuario en sesión exige estar autenticado y que el correo sea el de la sesión; el perfil y el id
 // del usuario son del cliente y del vendedor, y saber si es premium, solo del cliente. Las anotaciones solo se
 // evalúan con Spring, así que se usa un contexto mínimo (sin MongoDB) con los servicios reales y dobles de
 // prueba de los puertos de salida.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU2-CP29, propuesto.
+// Eliminar la cuenta propia (HU25) es solo del cliente y con su propio correo.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU2-CP29 y HU25-CP04, propuestos.
 @SpringJUnitConfig(SeguridadSesionUsuarioServiceTest.Configuracion.class)
 class SeguridadSesionUsuarioServiceTest {
 
@@ -55,6 +68,7 @@ class SeguridadSesionUsuarioServiceTest {
     private static final String VENDEDOR = "vendedor@esibuy.test";
     private static final String ADMIN = "admin@esibuy.test";
     private static final String OTRO = "otro@esibuy.test";
+    private static final String PASSWORD = "Clave-Segura-123";
 
     private static final IniciarSesionCommand INICIO_SESION = new IniciarSesionCommand(CLIENTE, "Clave-Segura-123");
     private static final VerificarCodigoEmailCommand CODIGO_EMAIL = new VerificarCodigoEmailCommand(CLIENTE, "123456");
@@ -129,13 +143,15 @@ class SeguridadSesionUsuarioServiceTest {
         }
 
         @Bean
-        GestionPerfilUseCase gestionPerfil(UsuarioRepositoryPort repositorio) {
-            return new GestionPerfilService(repositorio);
+        GestionPerfilUseCase gestionPerfil(UsuarioRepositoryPort repositorio, HashContrasenaPort hash) {
+            return new GestionPerfilService(repositorio, hash);
         }
     }
 
     @Autowired
     private UsuarioRepositoryPort usuarioRepository;
+    @Autowired
+    private HashContrasenaPort hashContrasena;
     @Autowired
     private AutenticacionUseCase autenticacion;
     @Autowired
@@ -147,7 +163,7 @@ class SeguridadSesionUsuarioServiceTest {
 
     @BeforeEach
     void limpiarDobles() {
-        reset(usuarioRepository);
+        reset(usuarioRepository, hashContrasena);
     }
 
     @Test
@@ -233,5 +249,57 @@ class SeguridadSesionUsuarioServiceTest {
                 () -> assertThrows(AuthenticationCredentialsNotFoundException.class,
                         () -> gestionPerfil.consultarPerfil(CLIENTE)));
         verifyNoInteractions(usuarioRepository);
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU25-CP04: un cliente elimina su propia cuenta")
+    void unClienteEliminaSuCuenta() {
+        // El repositorio y el hash dejan que la llamada termine: así se ve que la seguridad la ha dejado pasar
+        when(usuarioRepository.buscarPorCorreo(CLIENTE)).thenReturn(Optional.of(cliente()));
+        when(hashContrasena.coincide(PASSWORD, "hash-simulado")).thenReturn(true);
+
+        gestionPerfil.eliminarCuenta(CLIENTE, PASSWORD);
+
+        verify(usuarioRepository).eliminarPorId("u-1");
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU25-CP04: un cliente no elimina la cuenta de otro")
+    void unClienteNoEliminaLaCuentaDeOtro() {
+        assertThrows(AccessDeniedException.class, () -> gestionPerfil.eliminarCuenta(OTRO, PASSWORD));
+        verifyNoInteractions(usuarioRepository, hashContrasena);
+    }
+
+    @Test
+    @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
+    @DisplayName("HU25-CP04: un vendedor no elimina su cuenta por aquí")
+    void unVendedorNoEliminaSuCuenta() {
+        assertThrows(AccessDeniedException.class, () -> gestionPerfil.eliminarCuenta(VENDEDOR, PASSWORD));
+        verifyNoInteractions(usuarioRepository, hashContrasena);
+    }
+
+    @Test
+    @WithMockUser(username = ADMIN, roles = "ADMINISTRADOR")
+    @DisplayName("HU25-CP04: un administrador no elimina su cuenta por aquí")
+    void unAdministradorNoEliminaSuCuenta() {
+        assertThrows(AccessDeniedException.class, () -> gestionPerfil.eliminarCuenta(ADMIN, PASSWORD));
+        verifyNoInteractions(usuarioRepository, hashContrasena);
+    }
+
+    @Test
+    @DisplayName("HU25-CP04: sin sesión no se elimina ninguna cuenta")
+    void sinSesionNoSeEliminaNingunaCuenta() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> gestionPerfil.eliminarCuenta(CLIENTE, PASSWORD));
+        verifyNoInteractions(usuarioRepository, hashContrasena);
+    }
+
+    private static Usuario cliente() {
+        return new Usuario("u-1", new DatosPersonales("Lucía", "Torres Vega", null), new Email(CLIENTE),
+                "hash-simulado", Rol.CLIENTE,
+                new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"), LocalDate.of(1996, Month.MAY, 20), null),
+                null);
     }
 }

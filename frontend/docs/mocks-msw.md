@@ -123,6 +123,12 @@ Estado actual de `handlers.js`:
 | `GET /api/auth/me` | `401` (sin sesión) |
 | `GET /api/categorias` | Lista de 2 categorías de ejemplo |
 
+Además de `handlers.js`, cada módulo tiene su propio archivo de handlers en `src/mocks/` que `handlers.js` registra. Uno de ellos:
+
+| Archivo | Método y ruta | Respuesta |
+|---|---|---|
+| `adminCategoriesHandlers.js` (HU39) | `GET /api/admin/categorias` | `401` sin sesión, `403` con `{ "code": "ACCESS_DENIED" }` si el usuario no es administrador y, para el administrador, 8 categorías de ejemplo (6 activas y 2 inactivas, ordenadas por nombre, con alguna sin descripción o sin productos) |
+
 Pautas:
 
 - Las rutas y los formatos de los handlers deben seguir el **contrato de la API** acordado con backend. Si el contrato cambia, se cambia aquí.

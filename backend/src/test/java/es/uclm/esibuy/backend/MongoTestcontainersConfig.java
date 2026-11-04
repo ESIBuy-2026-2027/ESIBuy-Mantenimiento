@@ -39,4 +39,11 @@ public class MongoTestcontainersConfig {
         String claveBase64 = Base64.getEncoder().encodeToString(clave);
         return registro -> registro.add("esibuy.pagos.clave-cifrado", () -> claveBase64);
     }
+
+    // API key de VirusTotal falsa (HU31, T397): así ni el CI ni cada desarrollador necesitan VIRUSTOTAL_API_KEY para
+    // pasar la suite. Ningún test llama a VirusTotal: el adaptador se prueba con MockRestServiceServer
+    @Bean
+    DynamicPropertyRegistrar apiKeyVirusTotalDeTest() {
+        return registro -> registro.add("esibuy.virustotal.api-key", () -> "api-key-falsa-de-test");
+    }
 }

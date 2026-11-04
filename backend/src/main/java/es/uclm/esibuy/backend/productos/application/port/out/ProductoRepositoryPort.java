@@ -40,4 +40,7 @@ public interface ProductoRepositoryPort {
     boolean descontarStock(String id, int cantidad);
 
     void reponerStock(String id, int cantidad);
+
+    // Media y número de valoraciones del producto (HU13), ya calculados con todas sus valoraciones
+    void actualizarValoracion(String id, double media, int numero);
 }

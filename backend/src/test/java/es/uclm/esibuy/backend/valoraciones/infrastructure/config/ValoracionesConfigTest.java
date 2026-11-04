@@ -5,11 +5,13 @@ import es.uclm.esibuy.backend.valoraciones.application.port.in.ConsultaValoracio
 import es.uclm.esibuy.backend.valoraciones.application.port.in.ValoracionProductosUseCase;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ComprasPort;
+import es.uclm.esibuy.backend.valoraciones.application.port.out.ProductosPort;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ValoracionRepositoryPort;
 import es.uclm.esibuy.backend.valoraciones.application.service.ConsultaValoracionesService;
 import es.uclm.esibuy.backend.valoraciones.application.service.ValoracionProductosService;
 import es.uclm.esibuy.backend.valoraciones.infrastructure.adapter.out.pedidos.ComprasAdapter;
 import es.uclm.esibuy.backend.valoraciones.infrastructure.adapter.out.persistence.ValoracionMongoAdapter;
+import es.uclm.esibuy.backend.valoraciones.infrastructure.adapter.out.productos.ProductosAdapter;
 import es.uclm.esibuy.backend.valoraciones.infrastructure.adapter.out.usuarios.ClienteEnSesionAdapter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,5 +39,6 @@ class ValoracionesConfigTest {
         assertInstanceOf(ValoracionMongoAdapter.class, contexto.getBean(ValoracionRepositoryPort.class));
         assertInstanceOf(ClienteEnSesionAdapter.class, contexto.getBean(ClienteEnSesionPort.class));
         assertInstanceOf(ComprasAdapter.class, contexto.getBean(ComprasPort.class));
+        assertInstanceOf(ProductosAdapter.class, contexto.getBean(ProductosPort.class));
     }
 }
