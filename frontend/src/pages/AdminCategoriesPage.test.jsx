@@ -152,6 +152,15 @@ describe('AdminCategoriesPage (HU42): eliminar', () => {
     await waitFor(() => expect(nombresEnPantalla()).not.toContain('Mascotas'))
     expect(filasDeDatos()).toHaveLength(7)
   })
+
+  it('HU42-CP19: solo se pueden eliminar las categorías sin productos', async () => {
+    await abrirListado()
+
+    expect(within(filaDe('Tecnología')).getByRole('button', { name: 'Eliminar Tecnología' })).toBeDisabled()
+    expect(within(filaDe('Juguetes')).getByRole('button', { name: 'Eliminar Juguetes' })).toBeDisabled()
+    expect(within(filaDe('Mascotas')).getByRole('button', { name: 'Eliminar Mascotas' })).toBeEnabled()
+    expect(within(filaDe('Moda')).getByRole('button', { name: 'Eliminar Moda' })).toBeEnabled()
+  })
 })
 
 describe('AdminCategoriesPage (HU39): errores', () => {

@@ -15,6 +15,15 @@ const MASCOTAS = {
   estado: 'ACTIVA',
   numeroProductos: 0,
 }
+// Tecnología (cat-1) tiene 18 productos: el backend no deja eliminarla.
+const TECNOLOGIA = {
+  id: 'cat-1',
+  nombre: 'Tecnología',
+  descripcion: 'Ordenadores, móviles y accesorios.',
+  estado: 'ACTIVA',
+  numeroProductos: 18,
+}
+const CON_PRODUCTOS = 'No se puede eliminar una categoría que tiene productos.'
 const PREGUNTA = '¿Seguro que quieres eliminar la categoría Mascotas? Esta acción no se puede deshacer.'
 const ESPERA = { timeout: 3000 }
 
@@ -114,5 +123,22 @@ describe('CategoryRowActions (HU42): eliminar', () => {
 
     await waitFor(() => expect(within(confirmacion).getByText('Eliminar', { selector: 'button' })).toBeDisabled())
     expect(within(confirmacion).getByText('Cancelar', { selector: 'button' })).toBeDisabled()
+  })
+})
+
+describe('CategoryRowActions (HU42): categoría con productos', () => {
+  it('HU42-CP19: si la categoría tiene productos, la papelera queda deshabilitada y explica por qué', async () => {
+    await renderAcciones(TECNOLOGIA)
+
+    const papelera = screen.getByRole('button', { name: 'Eliminar Tecnología' })
+    expect(papelera).toBeDisabled()
+    expect(papelera).toHaveAttribute('title', CON_PRODUCTOS)
+    expect(screen.getByRole('button', { name: 'Ver información de Tecnología' })).toBeEnabled()
+  })
+
+  it('HU42-CP19: una categoría sin productos tiene la papelera habilitada con el título Eliminar', async () => {
+    await renderAcciones(MASCOTAS)
+
+    expect(screen.getByRole('button', { name: 'Eliminar Mascotas' })).toHaveAttribute('title', 'Eliminar')
   })
 })
