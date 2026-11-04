@@ -52,3 +52,28 @@ describe('CategoryFormDialog (HU40): formulario de creación', () => {
     expect(altas).toEqual([])
   })
 })
+
+describe('CategoryFormDialog (HU40): validación', () => {
+  it.each([
+    ['vacío', ''],
+    ['con solo espacios', '   '],
+  ])('HU40-CP12: con el nombre %s avisa de que es obligatorio y no envía nada', async (_caso, nombre) => {
+    const user = userEvent.setup()
+    const altas = capturarAltas()
+    const { onSaved } = await renderFormulario()
+
+    if (nombre) await user.type(screen.getByRole('textbox', { name: /nombre/i }), nombre)
+    await user.click(screen.getByRole('button', { name: 'Crear' }))
+
+    expect(await screen.findByText('Este campo es obligatorio')).toBeInTheDocument()
+    expect(altas).toEqual([])
+    expect(onSaved).not.toHaveBeenCalled()
+  })
+
+  it('HU40-CP12: el nombre admite como mucho 50 caracteres y la descripción 200, como el backend', async () => {
+    await renderFormulario()
+
+    expect(screen.getByRole('textbox', { name: /nombre/i })).toHaveAttribute('maxlength', '50')
+    expect(screen.getByRole('textbox', { name: /descripción/i })).toHaveAttribute('maxlength', '200')
+  })
+})
