@@ -127,6 +127,7 @@ Además de `handlers.js`, cada módulo tiene su propio archivo de handlers en `s
 
 | Archivo | Método y ruta | Respuesta |
 |---|---|---|
+| `usersHandlers.js` (HU19, HU37) | `DELETE /api/admin/usuarios/{id}` | Como el backend: `204` si es un administrador que no es la propia cuenta ni el último activo; `404` si es un cliente, un vendedor o no existe; `409` con `CANNOT_DELETE_SELF` o `LAST_ACTIVE_ADMIN`; `401` sin sesión y `403` con otro rol |
 | `adminCategoriesHandlers.js` (HU39) | `GET /api/admin/categorias` | `401` sin sesión, `403` con `{ "code": "ACCESS_DENIED" }` si el usuario no es administrador y, para el administrador, 8 categorías de ejemplo (6 activas y 2 inactivas, ordenadas por nombre, con alguna sin descripción o sin productos) |
 
 Pautas:
