@@ -9,3 +9,9 @@ export function getAdminCategories() {
 export function deleteAdminCategory(id) {
   return request(`/api/admin/categorias/${encodeURIComponent(id)}`, { method: 'DELETE' })
 }
+
+// Alta de una categoría (HU40) con nombre, descripción y estado (ACTIVA o INACTIVA). Responde 201 con la fila nueva
+// del listado; 409 CATEGORY_NAME_ALREADY_EXISTS si el nombre ya existe.
+export function createAdminCategory({ nombre, descripcion, estado }) {
+  return request('/api/admin/categorias', { method: 'POST', body: { nombre, descripcion, estado } })
+}
