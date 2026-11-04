@@ -11,6 +11,7 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { ArrowDown20Regular, Box24Regular, CheckmarkCircle20Regular, SearchInfo24Regular } from '@fluentui/react-icons'
+import { addWishlistItem } from '../api/wishlist'
 import EmptyState from '../components/EmptyState'
 import { usePageStyles } from '../components/pageStyles'
 import CatalogFilters from '../features/catalog/CatalogFilters'
@@ -184,7 +185,11 @@ export default function ProductsPage() {
                   className={styles.entry}
                   style={{ animationDelay: `${(index % PAGE_SIZE) * ENTRADA_ESCALONADA_MS}ms` }}
                 >
-                  <ProductCard product={product} categoryName={categoryNames.get(product.categoriaId)} />
+                  <ProductCard
+                    product={product}
+                    categoryName={categoryNames.get(product.categoriaId)}
+                    onAddFavorite={addWishlistItem}
+                  />
                 </li>
               ))}
             </ul>
