@@ -110,12 +110,13 @@ export default function ProductsPage() {
   })
   const endRef = useOnReachEnd(feed.loadMore, feed.hasMore && !feed.loadingMore && !feed.failedMore)
   const categoryNames = new Map(categories.map(({ id, nombre }) => [id, nombre]))
-  // Productos que el cliente tiene en favoritos (HU14).
+  // Productos que el cliente tiene en favoritos (HU14). Todavía no hay forma de leer la lista al entrar, así que se
+  // conocen al añadir el primero: el backend responde con la lista completa del cliente.
   const [favoritos, setFavoritos] = useState(() => new Set())
 
   const anadirFavorito = async (productId) => {
-    await addWishlistItem(productId)
-    setFavoritos((actuales) => new Set(actuales).add(productId))
+    const lista = await addWishlistItem(productId)
+    setFavoritos(new Set(lista.items.map((item) => item.productoId)))
   }
   // Sin ningún filtro, que no haya productos significa que el catálogo está vacío; con filtros, que no coinciden.
   const catalogEmpty = feed.loaded && feed.totalItems === 0 && !debouncedSearch && !category && !minRating
