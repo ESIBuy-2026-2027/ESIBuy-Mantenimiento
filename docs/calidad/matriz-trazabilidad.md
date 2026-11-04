@@ -1904,44 +1904,56 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU14-CP01 | El primer producto crea la lista del cliente en sesión y guarda la fecha; el id del cliente se pide al módulo de usuarios | Unitario | 3 | 🔍 En revisión (3, Rama `feature/US14-T360-logica-guardado-deseo`) |
-| HU14-CP02 | Añadir otro producto conserva los anteriores | Unitario | 2 | 🔍 En revisión (2, Rama `feature/US14-T360-logica-guardado-deseo`) |
-| HU14-CP03 | Un producto repetido no se duplica ni cambia su fecha, y no es un error | Unitario | 2 | 🔍 En revisión (2, Rama `feature/US14-T360-logica-guardado-deseo`) |
-| HU14-CP04 | Un producto inexistente o no disponible se rechaza y no se guarda nada; la disponibilidad se pregunta al módulo de productos | Unitario | 4 | 🔍 En revisión (4, Rama `feature/US14-T360-logica-guardado-deseo`) |
-| HU14-CP05 | Solo el cliente con su propio correo puede añadir: vendedor, administrador u otro correo reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, Rama `feature/US14-T360-logica-guardado-deseo`) |
-| HU14-CP06 | Persistencia en `listas_deseos`: guardar y recuperar por cliente; volver a guardar actualiza sin crear otra lista; la colección admite una sola lista por cliente | Unitario + integración MongoDB | 4 | 🔍 En revisión (4, Rama `feature/US14-T360-logica-guardado-deseo`) |
+| HU14-CP01 | El primer producto crea la lista del cliente en sesión y guarda la fecha; el id del cliente se pide al módulo de usuarios | Unitario | 3 | ✅ Pasa (3, AB#360, PR #196) |
+| HU14-CP02 | Añadir otro producto conserva los anteriores | Unitario | 2 | ✅ Pasa (2, AB#360, PR #196) |
+| HU14-CP03 | Un producto repetido no se duplica ni cambia su fecha, y no es un error | Unitario | 2 | ✅ Pasa (2, AB#360, PR #196) |
+| HU14-CP04 | Un producto inexistente o no disponible se rechaza y no se guarda nada; la disponibilidad se pregunta al módulo de productos | Unitario | 4 | ✅ Pasa (4, AB#360, PR #196) |
+| HU14-CP05 | Solo el cliente con su propio correo puede añadir: vendedor, administrador u otro correo reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#360, PR #196) |
+| HU14-CP06 | Persistencia en `listas_deseos`: guardar y recuperar por cliente; volver a guardar actualiza sin crear otra lista; la colección admite una sola lista por cliente | Unitario + integración MongoDB | 4 | ✅ Pasa (4, AB#360, PR #196) |
+| HU14-CP07 | `POST /api/customer/wishlist/items` devuelve 200 con la lista; el cliente sale de la sesión y un `clienteId` en el cuerpo se ignora | Integración (capa web) | 1 | 🔍 En revisión (1, Rama `feature/US14-T358-endpoint-anadir-deseo`) |
+| HU14-CP08 | Un cuerpo sin `productoId`, con `productoId` vacío o ilegible devuelve 400 `VALIDATION_ERROR` y no llega al caso de uso | Integración (capa web) | 1 | 🔍 En revisión (1, Rama `feature/US14-T358-endpoint-anadir-deseo`) |
+| HU14-CP09 | Un producto no disponible devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | 🔍 En revisión (1, Rama `feature/US14-T358-endpoint-anadir-deseo`) |
+| HU14-CP10 | Sin sesión (401), sin ser cliente (403) o sin token CSRF (403) no se añade a la lista | Integración (capa web) | 3 | 🔍 En revisión (3, Rama `feature/US14-T358-endpoint-anadir-deseo`) |
 
 - **HU14-CP01 a CP06 (Sprint 2, backend):** casos propuestos en la task AB#360 (lógica de guardado de deseo), revisados y aceptados por el desarrollador. Azure no los trae: habría que añadirlos a la HU14.
 - **Decisiones del equipo:** módulo nuevo `deseos`; una sola lista por cliente, como dicen el criterio de aceptación y la colección `listas_deseos`, que ya tenía su índice único. El campo de la colección sigue siendo `usuarioId`, y guarda el id del cliente. Añadir un producto repetido no es un error, y un producto inexistente o no disponible se rechaza.
 - **T359 (edición de la entidad cliente):** pasada a *Removed*. La lista va en su propia colección y se relaciona con el cliente por id, así que `Usuario` no cambia.
 - **Pendiente para la T362 (obtener deseos):** un producto desactivado sigue en la lista con un aviso de "no disponible", y uno eliminado desaparece al consultarla. `consultarComprable` devuelve vacío en los dos casos, así que hará falta otra consulta al módulo de productos.
-- **Sin endpoint todavía:** `ProductoNoDisponibleException` no tiene respuesta HTTP hasta la T358.
+- **HU14-CP07 a CP10 (Sprint 2, backend):** casos propuestos en la task AB#358 (endpoint añadir deseo), revisados y aceptados por el desarrollador.
+- **Endpoint (T358):** `POST /api/customer/wishlist/items` con `{ "productoId": "p-1" }` → 200 `{ "items": [{ "productoId", "addedAt" }] }`, también si el producto ya estaba. Errores: 400 `VALIDATION_ERROR`, 404 `PRODUCT_NOT_FOUND`, 401 sin sesión y 403 con otro rol o sin CSRF. Los datos del producto (nombre, imagen, aviso de "no disponible") llegan con la consulta de la T361 y la T362. `ProductoNoDisponibleException` comparte el handler de `ProductoNoComprableException` en `ManejadorGlobalErrores`, porque responden igual.
+- **HU14-CP10 sin rojo real:** la regla de `/api/customer/**` de `SecurityConfig` ya lo cubría. Se comprobó con dos cambios temporales: con la ruta abierta fallaron los tres tests de sesión y rol, y sin CSRF falló el del token.
 - **Ciclo con rojo parcial:** HU14-CP03 pasaba en el rojo del dominio porque `anadir` no hacía nada. Se comprobó con una versión sin la regla de repetidos, y entonces falló.
 
 ### Tabla B · casos de prueba ↔ tests
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU14-CP01 | `ListaDeseosTest` | `anadirElPrimerProductoLoGuardaConSuFecha` | Dominio | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP01 | `GestionListaDeseosServiceTest` | `elPrimerProductoCreaLaListaDelCliente` | Aplicación | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP01 | `ClienteEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP02 | `ListaDeseosTest` | `anadirOtroProductoConservaLosAnteriores` | Dominio | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP02 | `GestionListaDeseosServiceTest` | `anadirOtroProductoUsaLaListaDelCliente` | Aplicación | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP03 | `ListaDeseosTest` | `anadirUnProductoQueYaEstaNoLoDuplica` | Dominio | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP03 | `GestionListaDeseosServiceTest` | `anadirUnProductoQueYaEstaNoEsUnError` | Aplicación | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP04 | `GestionListaDeseosServiceTest` | `unProductoNoDisponibleNoCreaLaLista` | Aplicación | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP04 | `GestionListaDeseosServiceTest` | `unProductoNoDisponibleNoCambiaLaLista` | Aplicación | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP04 | `ProductosAdapterTest` | `unProductoQueDevuelveProductosEstaDisponible` | Infraestructura | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP04 | `ProductosAdapterTest` | `unProductoQueNoDevuelveProductosNoEstaDisponible` | Infraestructura | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP05 | `SeguridadDeseosServiceTest` | `elClienteAnadeConSuPropioCorreo` | Aplicación | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP05 | `SeguridadDeseosServiceTest` | `unClienteNoAnadeConElCorreoDeOtro` | Aplicación | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP05 | `SeguridadDeseosServiceTest` | `unVendedorNoAnade` | Aplicación | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP05 | `SeguridadDeseosServiceTest` | `unAdministradorNoAnade` | Aplicación | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP05 | `SeguridadDeseosServiceTest` | `sinSesionSeRechaza` | Aplicación | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP06 | `ListaDeseosDocumentMapperTest` | `convierteADocumentoYVueltaSinPerderDatos` | Infraestructura | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP06 | `ListaDeseosMongoAdapterTest` | `guardarUnaListaNuevaYRecuperarlaPorCliente` | Infraestructura | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP06 | `ListaDeseosMongoAdapterTest` | `guardarOtraVezActualizaLaLista` | Infraestructura | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
-| HU14-CP06 | `ListaDeseosMongoAdapterTest` | `laColeccionSoloAdmiteUnaListaPorCliente` | Infraestructura | AB#360 | Rama `feature/US14-T360-logica-guardado-deseo` | 🔍 |
+| HU14-CP01 | `ListaDeseosTest` | `anadirElPrimerProductoLoGuardaConSuFecha` | Dominio | AB#360 | PR #196 | ✅ |
+| HU14-CP01 | `GestionListaDeseosServiceTest` | `elPrimerProductoCreaLaListaDelCliente` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP01 | `ClienteEnSesionAdapterTest` | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#360 | PR #196 | ✅ |
+| HU14-CP02 | `ListaDeseosTest` | `anadirOtroProductoConservaLosAnteriores` | Dominio | AB#360 | PR #196 | ✅ |
+| HU14-CP02 | `GestionListaDeseosServiceTest` | `anadirOtroProductoUsaLaListaDelCliente` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP03 | `ListaDeseosTest` | `anadirUnProductoQueYaEstaNoLoDuplica` | Dominio | AB#360 | PR #196 | ✅ |
+| HU14-CP03 | `GestionListaDeseosServiceTest` | `anadirUnProductoQueYaEstaNoEsUnError` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP04 | `GestionListaDeseosServiceTest` | `unProductoNoDisponibleNoCreaLaLista` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP04 | `GestionListaDeseosServiceTest` | `unProductoNoDisponibleNoCambiaLaLista` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP04 | `ProductosAdapterTest` | `unProductoQueDevuelveProductosEstaDisponible` | Infraestructura | AB#360 | PR #196 | ✅ |
+| HU14-CP04 | `ProductosAdapterTest` | `unProductoQueNoDevuelveProductosNoEstaDisponible` | Infraestructura | AB#360 | PR #196 | ✅ |
+| HU14-CP05 | `SeguridadDeseosServiceTest` | `elClienteAnadeConSuPropioCorreo` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP05 | `SeguridadDeseosServiceTest` | `unClienteNoAnadeConElCorreoDeOtro` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP05 | `SeguridadDeseosServiceTest` | `unVendedorNoAnade` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP05 | `SeguridadDeseosServiceTest` | `unAdministradorNoAnade` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP05 | `SeguridadDeseosServiceTest` | `sinSesionSeRechaza` | Aplicación | AB#360 | PR #196 | ✅ |
+| HU14-CP06 | `ListaDeseosDocumentMapperTest` | `convierteADocumentoYVueltaSinPerderDatos` | Infraestructura | AB#360 | PR #196 | ✅ |
+| HU14-CP06 | `ListaDeseosMongoAdapterTest` | `guardarUnaListaNuevaYRecuperarlaPorCliente` | Infraestructura | AB#360 | PR #196 | ✅ |
+| HU14-CP06 | `ListaDeseosMongoAdapterTest` | `guardarOtraVezActualizaLaLista` | Infraestructura | AB#360 | PR #196 | ✅ |
+| HU14-CP06 | `ListaDeseosMongoAdapterTest` | `laColeccionSoloAdmiteUnaListaPorCliente` | Infraestructura | AB#360 | PR #196 | ✅ |
+| HU14-CP07 | `ListaDeseosControllerTest` | `anadirRespondeConLaListaDelClienteEnSesion` | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
+| HU14-CP08 | `ListaDeseosControllerTest` | `cuerpoInvalidoNoLlegaAlCasoDeUso` (sin `productoId`, nulo, vacío, en blanco y JSON mal formado) | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
+| HU14-CP09 | `ListaDeseosControllerTest` | `unProductoNoDisponibleResponde404` | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
+| HU14-CP10 | `ListaDeseosControllerTest` | `sinSesionNoSeAnade` | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
+| HU14-CP10 | `ListaDeseosControllerTest` | `noClienteNoAnade` (vendedor y administrador) | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
+| HU14-CP10 | `ListaDeseosControllerTest` | `sinTokenCsrfNoSeAnade` | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
 
 ---
 
@@ -3364,7 +3376,7 @@ Tests que no validan una HU concreta.
 | `CarritoConfigTest` | `elContextoConectaLasPiezasDelCarrito` | Que Spring conecta el servicio del carrito con su adaptador de MongoDB, los productos y los usuarios (HU9; AB#385, PR #162) |
 | `PedidosConfigTest` | `elContextoConectaLasPiezasDeLosPedidos` | Que Spring conecta la realización de pedidos con su repositorio, el contador y los adaptadores hacia usuarios, carrito, métodos de pago, direcciones y productos (HU10; AB#381, PR #166); y la consulta de compras de HU13 (AB#370, PR #179) |
 | `ValoracionesConfigTest` | `elContextoConectaLasPiezasDeLasValoraciones` | Que Spring conecta la valoración y la consulta de valoraciones con su adaptador de MongoDB y los adaptadores hacia usuarios y pedidos (HU13; AB#370 y AB#371, PR #179), y hacia productos (AB#415, PR #195) |
-| `DeseosConfigTest` | `elContextoConectaLasPiezasDeLaListaDeDeseos` | Que Spring conecta el servicio de la lista de deseos con su adaptador de MongoDB y los adaptadores hacia usuarios y productos (HU14; AB#360, Rama `feature/US14-T360-logica-guardado-deseo`) |
+| `DeseosConfigTest` | `elContextoConectaLasPiezasDeLaListaDeDeseos` | Que Spring conecta el servicio de la lista de deseos con su adaptador de MongoDB y los adaptadores hacia usuarios y productos (HU14; AB#360, PR #196) |
 | `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |
 | `SecurityConfigTest` | `unaPeticionRecibeElTokenCsrfEnUnaCookie` | Que cualquier respuesta, aunque sea un 401, entrega el token CSRF en la cookie `XSRF-TOKEN` sin `HttpOnly` (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostSinTokenCsrfSeRechaza` | Que un `POST` sin token CSRF se rechaza con 403 (AB#230, PR #67) |
