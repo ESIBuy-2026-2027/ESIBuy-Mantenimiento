@@ -118,6 +118,9 @@ const useStyles = makeStyles({
   muted: {
     color: tokens.colorNeutralForeground3,
   },
+  error: {
+    color: tokens.colorPaletteRedForeground1,
+  },
   favorite: {
     position: 'absolute',
     top: tokens.spacingVerticalS,
@@ -132,7 +135,7 @@ const useStyles = makeStyles({
 // categoría del producto. La imagen, el nombre y la valoración llevan al detalle (HU8). Con `onAddFavorite`, la
 // tarjeta tiene además un corazón para añadir el producto a favoritos (HU14), salvo si no está disponible, porque el
 // backend no lo aceptaría; uno agotado sí se puede añadir. Con `favorite`, el corazón sale relleno y deshabilitado:
-// quitarlo de favoritos todavía no se puede desde aquí.
+// quitarlo de favoritos todavía no se puede desde aquí. Si no se puede añadir, la tarjeta lo avisa.
 export default function ProductCard({ product, categoryName, favorite = false, onAddFavorite }) {
   const styles = useStyles()
   // Si la imagen no carga (dirección rota), se enseña el mismo marcador que cuando no hay imagen.
@@ -140,11 +143,19 @@ export default function ProductCard({ product, categoryName, favorite = false, o
   const hasImage = Boolean(product.imagen) && !imageFailed
   const rated = product.valoracion !== null && product.numValoraciones > 0
   const [addingFavorite, setAddingFavorite] = useState(false)
+  const [favoriteError, setFavoriteError] = useState('')
 
   const addFavorite = async () => {
+    setFavoriteError('')
     setAddingFavorite(true)
     try {
       await onAddFavorite(product.id)
+    } catch (failure) {
+      setFavoriteError(
+        failure?.code === 'PRODUCT_NOT_FOUND'
+          ? 'Este producto ya no está disponible.'
+          : 'No se ha podido añadir a favoritos. Inténtalo de nuevo.',
+      )
     } finally {
       setAddingFavorite(false)
     }
@@ -202,6 +213,11 @@ export default function ProductCard({ product, categoryName, favorite = false, o
       <div className={styles.footer}>
         <PriceBlock compact precio={product.precio} descuento={product.descuento} precioFinal={product.precioFinal} />
         <AddToCartButton product={product} size="small" fullWidth />
+        {favoriteError && (
+          <Text role="alert" size={200} className={styles.error}>
+            {favoriteError}
+          </Text>
+        )}
       </div>
     </div>
   )
