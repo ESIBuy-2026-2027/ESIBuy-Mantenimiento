@@ -43,6 +43,12 @@ export default function CategoryRowActions({ category, onResult, onChanged }) {
   const tieneProductos = category.numeroProductos > 0
   const cerrar = () => setDialogo(null)
 
+  const avisarEditada = (editada) => {
+    cerrar()
+    onResult({ intent: 'success', texto: `${editada.nombre} se ha actualizado.` })
+    onChanged()
+  }
+
   const eliminar = async () => {
     setEliminando(true)
     try {
@@ -88,7 +94,7 @@ export default function CategoryRowActions({ category, onResult, onChanged }) {
       />
 
       {dialogo === 'ficha' && <CategoryDetailDialog category={category} onClose={cerrar} />}
-      {dialogo === 'editar' && <CategoryFormDialog category={category} onClose={cerrar} onSaved={cerrar} />}
+      {dialogo === 'editar' && <CategoryFormDialog category={category} onClose={cerrar} onSaved={avisarEditada} />}
       {dialogo === 'eliminar' && (
         <StatusConfirmDialog
           titulo="Eliminar categoría"

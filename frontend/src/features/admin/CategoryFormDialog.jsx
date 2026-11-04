@@ -18,7 +18,7 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { createAdminCategory } from '../../api/adminCategories'
+import { createAdminCategory, updateAdminCategory } from '../../api/adminCategories'
 import { CATEGORY_STATUS_LABELS } from './categoryStatus'
 
 // Los mismos límites que el dominio del backend (Categoria): con maxLength no se puede escribir más.
@@ -42,8 +42,8 @@ const useStyles = makeStyles({
 // (HU41), que no permite cambiar el estado. Al crear se elige el estado, que por defecto es activa. El nombre es
 // obligatorio: si está vacío o solo tiene espacios, se avisa en el campo y no se envía nada. Si el backend dice que el
 // nombre ya existe (sin distinguir mayúsculas ni tildes), también se avisa en el campo; cualquier otro error, con un
-// mensaje genérico, y el formulario sigue abierto con lo escrito. `onSaved` recibe la categoría creada; `onClose`,
-// que se cierra sin más.
+// mensaje genérico, y el formulario sigue abierto con lo escrito. `onSaved` recibe la categoría creada o editada;
+// `onClose`, que se cierra sin más.
 export default function CategoryFormDialog({ category = null, onClose, onSaved }) {
   const styles = useStyles()
   const editando = category !== null
@@ -66,11 +66,10 @@ export default function CategoryFormDialog({ category = null, onClose, onSaved }
       setErrorNombre(OBLIGATORIO)
       return
     }
-    if (editando) return
     setEnviando(true)
     setErrorServidor(false)
     try {
-      onSaved(await createAdminCategory(datos))
+      onSaved(await (editando ? updateAdminCategory(category.id, datos) : createAdminCategory(datos)))
     } catch (error) {
       if (error?.code === 'CATEGORY_NAME_ALREADY_EXISTS') setErrorNombre(REPETIDO)
       else setErrorServidor(true)

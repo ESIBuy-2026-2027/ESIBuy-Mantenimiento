@@ -192,7 +192,8 @@ describe('AdminCategoriesPage (HU41): editar', () => {
     await user.type(within(dialogo).getByRole('textbox', { name: /descripción/i }), 'Novelas y tebeos.')
     await user.click(within(dialogo).getByRole('button', { name: 'Guardar' }))
 
-    expect(await screen.findByText('Libros y cómics se ha actualizado.')).toBeInTheDocument()
+    // Es el recorrido más largo (borrar y escribir dos campos): con toda la batería a la vez puede tardar más.
+    expect(await screen.findByText('Libros y cómics se ha actualizado.', {}, { timeout: 3000 })).toBeInTheDocument()
     await waitFor(() => expect(nombresEnPantalla()).toContain('Libros y cómics'))
     expect(nombresEnPantalla()).not.toContain('Libros')
     expect(celdasDe('Libros y cómics').slice(0, 4)).toEqual(['Libros y cómics', 'Novelas y tebeos.', 'Activa', '11'])
