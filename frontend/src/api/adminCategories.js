@@ -15,3 +15,9 @@ export function deleteAdminCategory(id) {
 export function createAdminCategory({ nombre, descripcion, estado }) {
   return request('/api/admin/categorias', { method: 'POST', body: { nombre, descripcion, estado } })
 }
+
+// Edición del nombre y la descripción de una categoría (HU41); el estado no se edita. Responde con la fila
+// actualizada; 409 CATEGORY_NAME_ALREADY_EXISTS si el nombre es el de otra y 404 si ya no existe.
+export function updateAdminCategory(id, { nombre, descripcion }) {
+  return request(`/api/admin/categorias/${encodeURIComponent(id)}`, { method: 'PUT', body: { nombre, descripcion } })
+}
