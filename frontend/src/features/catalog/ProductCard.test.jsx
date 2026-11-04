@@ -141,4 +141,30 @@ describe('ProductCard (HU14): favoritos', () => {
 
     expect(screen.queryByRole('button', { name: /favoritos/i })).not.toBeInTheDocument()
   })
+
+  it('HU14-CP22: al pulsar el corazón pide añadir ese producto a favoritos', async () => {
+    const onAddFavorite = vi.fn().mockResolvedValue(undefined)
+    pintarConFavoritos(PRODUCTO, { onAddFavorite })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Añadir Teclado mecánico a favoritos' }))
+
+    expect(onAddFavorite).toHaveBeenCalledWith('p-1')
+  })
+
+  it('HU14-CP22: mientras se añade, el corazón queda deshabilitado', async () => {
+    pintarConFavoritos(PRODUCTO, { onAddFavorite: vi.fn(() => new Promise(() => {})) })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Añadir Teclado mecánico a favoritos' }))
+
+    expect(screen.getByRole('button', { name: 'Añadir Teclado mecánico a favoritos' })).toBeDisabled()
+  })
+
+  it('HU14-CP22: un producto que ya está en favoritos tiene el corazón relleno y deshabilitado', () => {
+    pintarConFavoritos(PRODUCTO, { favorite: true })
+
+    const corazon = screen.getByRole('button', { name: 'Teclado mecánico está en tus favoritos' })
+    expect(corazon).toBeDisabled()
+    expect(corazon).toHaveAttribute('title', 'Ya está en tus favoritos')
+    expect(screen.queryByRole('button', { name: /añadir .* a favoritos/i })).not.toBeInTheDocument()
+  })
 })
