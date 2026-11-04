@@ -5,6 +5,7 @@ import { ROLES } from '../auth/roles'
 import AppLayout from '../components/AppLayout'
 import AddressesPage from '../pages/AddressesPage'
 import AdminAdminsPage from '../pages/AdminAdminsPage'
+import AdminCategoriesPage from '../pages/AdminCategoriesPage'
 import AdminClientsPage from '../pages/AdminClientsPage'
 import AdminNewAdminPage from '../pages/AdminNewAdminPage'
 import AdminPage from '../pages/AdminPage'
@@ -57,6 +58,7 @@ export default function AppRoutes() {
           <Route path={PATHS.ADMIN_SELLERS} element={<AdminSellersPage />} />
           <Route path={PATHS.ADMIN_USERS} element={<AdminUsersPage />} />
           <Route path={PATHS.ADMIN_CLIENTS} element={<AdminClientsPage />} />
+          <Route path={PATHS.ADMIN_CATEGORIES} element={<AdminCategoriesPage />} />
           <Route path={PATHS.ADMIN_ADMINS} element={<AdminAdminsPage />} />
           <Route path={PATHS.ADMIN_NEW_ADMIN} element={<AdminNewAdminPage />} />
         </Route>
