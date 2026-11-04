@@ -85,4 +85,35 @@ class ListaDeseosControllerTest {
                 .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"))
                 .andExpect(jsonPath("$.mensaje").value("El producto no existe"));
     }
+
+    @Test
+    @DisplayName("HU14-CP10: sin sesión no se añade a la lista de deseos")
+    void sinSesionNoSeAnade() throws Exception {
+        mockMvc.perform(post(URL).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"productoId\": \"p-1\"}"))
+                .andExpect(status().isUnauthorized());
+
+        verify(gestionListaDeseos, never()).anadir(any(), any());
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"VENDEDOR", "ADMINISTRADOR"})
+    @DisplayName("HU14-CP10: un usuario que no es cliente no añade a la lista de deseos")
+    void noClienteNoAnade(String rol) throws Exception {
+        mockMvc.perform(post(URL).with(user(CLIENTE).roles(rol)).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"productoId\": \"p-1\"}"))
+                .andExpect(status().isForbidden());
+
+        verify(gestionListaDeseos, never()).anadir(any(), any());
+    }
+
+    @Test
+    @DisplayName("HU14-CP10: una petición sin token CSRF se rechaza")
+    void sinTokenCsrfNoSeAnade() throws Exception {
+        mockMvc.perform(post(URL).with(user(CLIENTE).roles("CLIENTE"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"productoId\": \"p-1\"}"))
+                .andExpect(status().isForbidden());
+
+        verify(gestionListaDeseos, never()).anadir(any(), any());
+    }
 }
