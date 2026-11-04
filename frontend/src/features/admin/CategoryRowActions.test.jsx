@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http, HttpResponse } from 'msw'
+import { delay, http, HttpResponse } from 'msw'
 import { server } from '../../mocks/server'
 import { abrirSesionPorApi } from '../../test/renderApp'
 import { renderWithProviders } from '../../test/utils'
@@ -79,5 +79,40 @@ describe('CategoryRowActions (HU42): confirmación', () => {
     expect(borrados).toEqual([])
     expect(onResult).not.toHaveBeenCalled()
     expect(onChanged).not.toHaveBeenCalled()
+  })
+})
+
+describe('CategoryRowActions (HU42): eliminar', () => {
+  it('HU42-CP18: al confirmar borra la categoría, avisa de que se ha eliminado y pide actualizar la lista', async () => {
+    const user = userEvent.setup()
+    const borrados = capturarBorrados()
+    const { onResult, onChanged } = await renderAcciones(MASCOTAS)
+
+    await user.click(screen.getByRole('button', { name: 'Eliminar Mascotas' }))
+    const confirmacion = (await screen.findByText(PREGUNTA)).closest('[role="alertdialog"]')
+    await user.click(within(confirmacion).getByText('Eliminar', { selector: 'button' }))
+
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1), ESPERA)
+    expect(borrados).toEqual(['cat-9'])
+    expect(onResult).toHaveBeenCalledWith({ intent: 'success', texto: 'Mascotas se ha eliminado.' })
+    await waitFor(() => expect(screen.queryByText(PREGUNTA)).not.toBeInTheDocument(), ESPERA)
+  })
+
+  it('HU42-CP18: mientras se elimina, los botones de la confirmación quedan deshabilitados', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.delete('/api/admin/categorias/:id', async () => {
+        await delay('infinite')
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+    await renderAcciones(MASCOTAS)
+
+    await user.click(screen.getByRole('button', { name: 'Eliminar Mascotas' }))
+    const confirmacion = (await screen.findByText(PREGUNTA)).closest('[role="alertdialog"]')
+    await user.click(within(confirmacion).getByText('Eliminar', { selector: 'button' }))
+
+    await waitFor(() => expect(within(confirmacion).getByText('Eliminar', { selector: 'button' })).toBeDisabled())
+    expect(within(confirmacion).getByText('Cancelar', { selector: 'button' })).toBeDisabled()
   })
 })

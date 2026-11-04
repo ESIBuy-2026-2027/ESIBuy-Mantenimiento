@@ -137,6 +137,21 @@ describe('AdminCategoriesPage (HU42): eliminar', () => {
     expect(screen.getAllByRole('button', { name: /^eliminar /i })).toHaveLength(8)
     expect(within(filaDe('Mascotas')).getByRole('button', { name: 'Eliminar Mascotas' })).toBeInTheDocument()
   })
+
+  it('HU42-CP18: al confirmar, avisa de que se ha eliminado y la categoría desaparece de la lista', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.click(screen.getByRole('button', { name: 'Eliminar Mascotas' }))
+    const confirmacion = (await screen.findByText(/seguro que quieres eliminar la categoría mascotas/i)).closest(
+      '[role="alertdialog"]',
+    )
+    await user.click(within(confirmacion).getByText('Eliminar', { selector: 'button' }))
+
+    expect(await screen.findByText('Mascotas se ha eliminado.')).toBeInTheDocument()
+    await waitFor(() => expect(nombresEnPantalla()).not.toContain('Mascotas'))
+    expect(filasDeDatos()).toHaveLength(7)
+  })
 })
 
 describe('AdminCategoriesPage (HU39): errores', () => {
