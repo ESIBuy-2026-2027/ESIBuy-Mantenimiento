@@ -8,6 +8,7 @@ import es.uclm.esibuy.backend.carrito.domain.exception.CantidadInvalidaException
 import es.uclm.esibuy.backend.carrito.domain.exception.LineaCarritoNoEncontradaException;
 import es.uclm.esibuy.backend.carrito.domain.exception.ProductoNoComprableException;
 import es.uclm.esibuy.backend.carrito.domain.exception.StockInsuficienteException;
+import es.uclm.esibuy.backend.deseos.domain.exception.ProductoNoDisponibleException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionInvalidaException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionNoEncontradaException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.LimiteDireccionesException;
@@ -344,9 +345,9 @@ public class ManejadorGlobalErrores {
     }
 
     // Un producto que no existe o no está disponible se responde igual que uno inexistente
-    @ExceptionHandler(ProductoNoComprableException.class)
+    @ExceptionHandler({ProductoNoComprableException.class, ProductoNoDisponibleException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public RespuestaError productoNoComprable() {
+    public RespuestaError productoNoDisponible() {
         return new RespuestaError("El producto no existe", "PRODUCT_NOT_FOUND");
     }
 
