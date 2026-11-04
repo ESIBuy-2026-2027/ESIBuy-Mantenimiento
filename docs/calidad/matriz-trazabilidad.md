@@ -3120,11 +3120,11 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU40-CP07 | Crear sin nombre, sin estado, con un estado desconocido o incumpliendo una regla del dominio devuelve 400 | Controlador | 2 | ✅ Pasa |
 | HU40-CP08 | Sin rol de administrador no se pueden crear categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | ✅ Pasa |
 | HU40-CP09 | El listado público de categorías se puede usar sin sesión; administrarlas (listar con su número de productos y crear) exige el rol administrador; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 6 | 🔍 En revisión (6, rama `fix/seguridad-capa-negocio`) |
-| HU40-CP10 | La llamada del administrador pide `POST /api/admin/categorias` con nombre, descripción y estado y devuelve la categoría creada; un 409 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#320, PR pendiente) |
-| HU40-CP11 | La vista tiene el botón «Nueva categoría» (también sin ninguna categoría), que abre el formulario con nombre, descripción y estado (activa por defecto); cancelar no crea nada | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#320, PR pendiente) |
-| HU40-CP12 | El nombre es obligatorio (vacío o con solo espacios no se envía) y admite como mucho 50 caracteres; la descripción, 200 | Frontend (componente) | 2 | 🔍 En revisión (2, AB#320, PR pendiente) |
-| HU40-CP13 | Al crear se envían los datos elegidos, se avisa de que se ha creado y la categoría aparece en la lista con su estado; mientras se crea, los botones quedan deshabilitados | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#320, PR pendiente) |
-| HU40-CP14 | Un nombre repetido (aunque cambien las mayúsculas o las tildes) se marca en el campo y el aviso desaparece al cambiarlo; cualquier otro error muestra un mensaje genérico y el formulario sigue abierto | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#320, PR pendiente) |
+| HU40-CP10 | La llamada del administrador pide `POST /api/admin/categorias` con nombre, descripción y estado y devuelve la categoría creada; un 409 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#320, PR #201) |
+| HU40-CP11 | La vista tiene el botón «Nueva categoría» (también sin ninguna categoría), que abre el formulario con nombre, descripción y estado (activa por defecto); cancelar no crea nada | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#320, PR #201) |
+| HU40-CP12 | El nombre es obligatorio (vacío o con solo espacios no se envía) y admite como mucho 50 caracteres; la descripción, 200 | Frontend (componente) | 2 | 🔍 En revisión (2, AB#320, PR #201) |
+| HU40-CP13 | Al crear se envían los datos elegidos, se avisa de que se ha creado y la categoría aparece en la lista con su estado; mientras se crea, los botones quedan deshabilitados | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#320, PR #201) |
+| HU40-CP14 | Un nombre repetido (aunque cambien las mayúsculas o las tildes) se marca en el campo y el aviso desaparece al cambiarlo; cualquier otro error muestra un mensaje genérico y el formulario sigue abierto | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#320, PR #201) |
 
 Notas:
 - **HU40-CP01 a CP04:** casos propuestos en la T321 (AB#321), sin contrato del frontend todavía. **HU40-CP05 y CP06:** propuestos en la T323 (AB#323), a partir de los criterios «la categoría no puede estar repetida» y «se debe poder elegir si activar o desactivar la categoría en la creación». **HU40-CP07 y CP08:** propuestos en la T322 (AB#322). Pendientes de confirmar con el equipo y de añadir a la HU40 en Azure Boards.
@@ -3169,20 +3169,20 @@ Notas:
 | HU40-CP09 | `SeguridadCategoriasServiceTest` | `unAnonimoNoAdministraCategorias` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 | HU40-CP09 | `SeguridadCategoriasServiceTest` | `unAdministradorAdministraCategorias` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 | HU40-CP09 | `SeguridadCategoriasServiceTest` | `sinSesionSeRechazaLaAdministracion` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
-| HU40-CP10 | `adminCategories.test.js` | `HU40-CP10: pide POST /api/admin/categorias con el nombre, la descripción y el estado, y devuelve la categoría creada` | Frontend · API | AB#320 | PR pendiente | 🔍 |
-| HU40-CP10 | `adminCategories.test.js` | `HU40-CP10: un 409 llega como error con su estado y su código` | Frontend · API | AB#320 | PR pendiente | 🔍 |
-| HU40-CP11 | `CategoryFormDialog.test.jsx` | `HU40-CP11: pide el nombre, la descripción y el estado, con la categoría activa por defecto` | Frontend · componente | AB#320 | PR pendiente | 🔍 |
-| HU40-CP11 | `CategoryFormDialog.test.jsx` | `HU40-CP11: al cancelar se cierra sin crear nada` | Frontend · componente | AB#320 | PR pendiente | 🔍 |
-| HU40-CP11 | `AdminCategoriesPage.test.jsx` | `HU40-CP11: la vista tiene el botón Nueva categoría, que abre el formulario de creación` | Frontend · página | AB#320 | PR pendiente | 🔍 |
-| HU40-CP11 | `AdminCategoriesPage.test.jsx` | `HU40-CP11: sin ninguna categoría también se puede crear la primera` | Frontend · página | AB#320 | PR pendiente | 🔍 |
-| HU40-CP12 | `CategoryFormDialog.test.jsx` | `HU40-CP12: con el nombre %s avisa de que es obligatorio y no envía nada` (2 variantes: vacío y con solo espacios) | Frontend · componente | AB#320 | PR pendiente | 🔍 |
-| HU40-CP12 | `CategoryFormDialog.test.jsx` | `HU40-CP12: el nombre admite como mucho 50 caracteres y la descripción 200, como el backend` | Frontend · componente | AB#320 | PR pendiente | 🔍 |
-| HU40-CP13 | `CategoryFormDialog.test.jsx` | `HU40-CP13: envía el nombre, la descripción y el estado elegidos y avisa con la categoría creada` | Frontend · componente | AB#320 | PR pendiente | 🔍 |
-| HU40-CP13 | `CategoryFormDialog.test.jsx` | `HU40-CP13: mientras se crea, los botones quedan deshabilitados` | Frontend · componente | AB#320 | PR pendiente | 🔍 |
-| HU40-CP13 | `AdminCategoriesPage.test.jsx` | `HU40-CP13: al crearla, avisa y la categoría aparece en la lista con el estado elegido` | Frontend · página | AB#320 | PR pendiente | 🔍 |
-| HU40-CP14 | `CategoryFormDialog.test.jsx` | `HU40-CP14: si el nombre ya existe lo marca en el campo, no cierra y al cambiarlo desaparece el aviso` | Frontend · componente | AB#320 | PR pendiente | 🔍 |
-| HU40-CP14 | `CategoryFormDialog.test.jsx` | `HU40-CP14: cualquier otro error avisa con un mensaje genérico y deja el formulario abierto` | Frontend · componente | AB#320 | PR pendiente | 🔍 |
-| HU40-CP14 | `AdminCategoriesPage.test.jsx` | `HU40-CP14: no se puede crear una categoría repetida, aunque cambien las mayúsculas o las tildes` | Frontend · página | AB#320 | PR pendiente | 🔍 |
+| HU40-CP10 | `adminCategories.test.js` | `HU40-CP10: pide POST /api/admin/categorias con el nombre, la descripción y el estado, y devuelve la categoría creada` | Frontend · API | AB#320 | PR #201 | 🔍 |
+| HU40-CP10 | `adminCategories.test.js` | `HU40-CP10: un 409 llega como error con su estado y su código` | Frontend · API | AB#320 | PR #201 | 🔍 |
+| HU40-CP11 | `CategoryFormDialog.test.jsx` | `HU40-CP11: pide el nombre, la descripción y el estado, con la categoría activa por defecto` | Frontend · componente | AB#320 | PR #201 | 🔍 |
+| HU40-CP11 | `CategoryFormDialog.test.jsx` | `HU40-CP11: al cancelar se cierra sin crear nada` | Frontend · componente | AB#320 | PR #201 | 🔍 |
+| HU40-CP11 | `AdminCategoriesPage.test.jsx` | `HU40-CP11: la vista tiene el botón Nueva categoría, que abre el formulario de creación` | Frontend · página | AB#320 | PR #201 | 🔍 |
+| HU40-CP11 | `AdminCategoriesPage.test.jsx` | `HU40-CP11: sin ninguna categoría también se puede crear la primera` | Frontend · página | AB#320 | PR #201 | 🔍 |
+| HU40-CP12 | `CategoryFormDialog.test.jsx` | `HU40-CP12: con el nombre %s avisa de que es obligatorio y no envía nada` (2 variantes: vacío y con solo espacios) | Frontend · componente | AB#320 | PR #201 | 🔍 |
+| HU40-CP12 | `CategoryFormDialog.test.jsx` | `HU40-CP12: el nombre admite como mucho 50 caracteres y la descripción 200, como el backend` | Frontend · componente | AB#320 | PR #201 | 🔍 |
+| HU40-CP13 | `CategoryFormDialog.test.jsx` | `HU40-CP13: envía el nombre, la descripción y el estado elegidos y avisa con la categoría creada` | Frontend · componente | AB#320 | PR #201 | 🔍 |
+| HU40-CP13 | `CategoryFormDialog.test.jsx` | `HU40-CP13: mientras se crea, los botones quedan deshabilitados` | Frontend · componente | AB#320 | PR #201 | 🔍 |
+| HU40-CP13 | `AdminCategoriesPage.test.jsx` | `HU40-CP13: al crearla, avisa y la categoría aparece en la lista con el estado elegido` | Frontend · página | AB#320 | PR #201 | 🔍 |
+| HU40-CP14 | `CategoryFormDialog.test.jsx` | `HU40-CP14: si el nombre ya existe lo marca en el campo, no cierra y al cambiarlo desaparece el aviso` | Frontend · componente | AB#320 | PR #201 | 🔍 |
+| HU40-CP14 | `CategoryFormDialog.test.jsx` | `HU40-CP14: cualquier otro error avisa con un mensaje genérico y deja el formulario abierto` | Frontend · componente | AB#320 | PR #201 | 🔍 |
+| HU40-CP14 | `AdminCategoriesPage.test.jsx` | `HU40-CP14: no se puede crear una categoría repetida, aunque cambien las mayúsculas o las tildes` | Frontend · página | AB#320 | PR #201 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionCategoriasControllerTest`: `categorias/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
@@ -3213,10 +3213,10 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU41-CP12 | Editar sin nombre o incumpliendo una regla del dominio devuelve 400 | Controlador | 2 | ✅ Pasa |
 | HU41-CP13 | Editar una categoría que no existe devuelve 404 `CATEGORY_NOT_FOUND` | Controlador | 1 | ✅ Pasa |
 | HU41-CP14 | Sin rol de administrador no se pueden editar categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | ✅ Pasa |
-| HU41-CP15 | La llamada del administrador pide `PUT /api/admin/categorias/{id}` con nombre y descripción y devuelve la categoría editada; un 404 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#327, PR pendiente) |
-| HU41-CP16 | Cada fila de la lista tiene el lápiz, que abre el formulario con el nombre y la descripción de la categoría, sin el estado; cancelar no edita nada | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#327, PR pendiente) |
-| HU41-CP17 | Al guardar se envían el nombre y la descripción nuevos, se avisa de que se ha actualizado y la lista muestra los cambios; el nombre sigue siendo obligatorio | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#327, PR pendiente) |
-| HU41-CP18 | El nombre de otra categoría se marca en el campo; si la categoría ya no existe se cierra el formulario, se avisa y se recarga la lista; cualquier otro error muestra un mensaje genérico | Frontend (componente y página) | 5 | 🔍 En revisión (5, AB#327, PR pendiente) |
+| HU41-CP15 | La llamada del administrador pide `PUT /api/admin/categorias/{id}` con nombre y descripción y devuelve la categoría editada; un 404 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#327, PR #201) |
+| HU41-CP16 | Cada fila de la lista tiene el lápiz, que abre el formulario con el nombre y la descripción de la categoría, sin el estado; cancelar no edita nada | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#327, PR #201) |
+| HU41-CP17 | Al guardar se envían el nombre y la descripción nuevos, se avisa de que se ha actualizado y la lista muestra los cambios; el nombre sigue siendo obligatorio | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#327, PR #201) |
+| HU41-CP18 | El nombre de otra categoría se marca en el campo; si la categoría ya no existe se cierra el formulario, se avisa y se recarga la lista; cualquier otro error muestra un mensaje genérico | Frontend (componente y página) | 5 | 🔍 En revisión (5, AB#327, PR #201) |
 
 Notas:
 - **HU41-CP01 a CP14:** casos propuestos en las T329 (AB#329) y T328 (AB#328), a partir de los criterios de la HU41. Pendientes de confirmar con el equipo y de añadir a la HU41 en Azure Boards.
@@ -3256,21 +3256,21 @@ Notas:
 | HU41-CP13 | `AdministracionCategoriasControllerTest` | `editarUnaCategoriaInexistenteDevuelve404` | Infraestructura | AB#328 | PR #175 | ✅ |
 | HU41-CP14 | `AdministracionCategoriasControllerTest` | `editarConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#328 | PR #175 | ✅ |
 | HU41-CP14 | `AdministracionCategoriasControllerTest` | `editarSinSesionDevuelve401` | Infraestructura | AB#328 | PR #175 | ✅ |
-| HU41-CP15 | `adminCategories.test.js` | `HU41-CP15: pide PUT /api/admin/categorias/{id} con el nombre y la descripción, y devuelve la categoría editada` | Frontend · API | AB#327 | PR pendiente | 🔍 |
-| HU41-CP15 | `adminCategories.test.js` | `HU41-CP15: un 404 llega como error con su estado y su código` | Frontend · API | AB#327 | PR pendiente | 🔍 |
-| HU41-CP16 | `CategoryFormDialog.test.jsx` | `HU41-CP16: con una categoría, muestra su nombre y su descripción para editarlos, sin el estado` | Frontend · componente | AB#327 | PR pendiente | 🔍 |
-| HU41-CP16 | `CategoryFormDialog.test.jsx` | `HU41-CP16: al cancelar se cierra sin editar nada` | Frontend · componente | AB#327 | PR pendiente | 🔍 |
-| HU41-CP16 | `CategoryRowActions.test.jsx` | `HU41-CP16: ofrece el lápiz para editar la categoría, que abre su formulario con sus datos` | Frontend · componente | AB#327 | PR pendiente | 🔍 |
-| HU41-CP16 | `AdminCategoriesPage.test.jsx` | `HU41-CP16: cada fila de la lista tiene el lápiz para editar su categoría` | Frontend · página | AB#327 | PR pendiente | 🔍 |
-| HU41-CP17 | `CategoryFormDialog.test.jsx` | `HU41-CP17: envía el nombre y la descripción nuevos y avisa con la categoría editada` | Frontend · componente | AB#327 | PR pendiente | 🔍 |
-| HU41-CP17 | `CategoryFormDialog.test.jsx` | `HU41-CP17: al editar también se valida que el nombre no quede vacío` | Frontend · componente | AB#327 | PR pendiente | 🔍 |
-| HU41-CP17 | `CategoryRowActions.test.jsx` | `HU41-CP17: al guardar, avisa de que se ha actualizado y pide actualizar la lista` | Frontend · componente | AB#327 | PR pendiente | 🔍 |
-| HU41-CP17 | `AdminCategoriesPage.test.jsx` | `HU41-CP17: al guardar, avisa y la lista muestra el nombre y la descripción nuevos` | Frontend · página | AB#327 | PR pendiente | 🔍 |
-| HU41-CP18 | `CategoryFormDialog.test.jsx` | `HU41-CP18: si el nombre nuevo es el de otra categoría lo marca en el campo y no cierra` | Frontend · componente | AB#327 | PR pendiente | 🔍 |
-| HU41-CP18 | `CategoryFormDialog.test.jsx` | `HU41-CP18: si la categoría ya no existe avisa a quien abrió el formulario` | Frontend · componente | AB#327 | PR pendiente | 🔍 |
-| HU41-CP18 | `CategoryFormDialog.test.jsx` | `HU41-CP18: cualquier otro error avisa con un mensaje genérico y deja el formulario abierto` | Frontend · componente | AB#327 | PR pendiente | 🔍 |
-| HU41-CP18 | `CategoryRowActions.test.jsx` | `HU41-CP18: al guardar una categoría que ya no existe, cierra el formulario, avisa y pide actualizar la lista` | Frontend · componente | AB#327 | PR pendiente | 🔍 |
-| HU41-CP18 | `AdminCategoriesPage.test.jsx` | `HU41-CP18: no se puede poner el nombre de otra categoría, aunque cambien las mayúsculas o las tildes` | Frontend · página | AB#327 | PR pendiente | 🔍 |
+| HU41-CP15 | `adminCategories.test.js` | `HU41-CP15: pide PUT /api/admin/categorias/{id} con el nombre y la descripción, y devuelve la categoría editada` | Frontend · API | AB#327 | PR #201 | 🔍 |
+| HU41-CP15 | `adminCategories.test.js` | `HU41-CP15: un 404 llega como error con su estado y su código` | Frontend · API | AB#327 | PR #201 | 🔍 |
+| HU41-CP16 | `CategoryFormDialog.test.jsx` | `HU41-CP16: con una categoría, muestra su nombre y su descripción para editarlos, sin el estado` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP16 | `CategoryFormDialog.test.jsx` | `HU41-CP16: al cancelar se cierra sin editar nada` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP16 | `CategoryRowActions.test.jsx` | `HU41-CP16: ofrece el lápiz para editar la categoría, que abre su formulario con sus datos` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP16 | `AdminCategoriesPage.test.jsx` | `HU41-CP16: cada fila de la lista tiene el lápiz para editar su categoría` | Frontend · página | AB#327 | PR #201 | 🔍 |
+| HU41-CP17 | `CategoryFormDialog.test.jsx` | `HU41-CP17: envía el nombre y la descripción nuevos y avisa con la categoría editada` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP17 | `CategoryFormDialog.test.jsx` | `HU41-CP17: al editar también se valida que el nombre no quede vacío` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP17 | `CategoryRowActions.test.jsx` | `HU41-CP17: al guardar, avisa de que se ha actualizado y pide actualizar la lista` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP17 | `AdminCategoriesPage.test.jsx` | `HU41-CP17: al guardar, avisa y la lista muestra el nombre y la descripción nuevos` | Frontend · página | AB#327 | PR #201 | 🔍 |
+| HU41-CP18 | `CategoryFormDialog.test.jsx` | `HU41-CP18: si el nombre nuevo es el de otra categoría lo marca en el campo y no cierra` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP18 | `CategoryFormDialog.test.jsx` | `HU41-CP18: si la categoría ya no existe avisa a quien abrió el formulario` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP18 | `CategoryFormDialog.test.jsx` | `HU41-CP18: cualquier otro error avisa con un mensaje genérico y deja el formulario abierto` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP18 | `CategoryRowActions.test.jsx` | `HU41-CP18: al guardar una categoría que ya no existe, cierra el formulario, avisa y pide actualizar la lista` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP18 | `AdminCategoriesPage.test.jsx` | `HU41-CP18: no se puede poner el nombre de otra categoría, aunque cambien las mayúsculas o las tildes` | Frontend · página | AB#327 | PR #201 | 🔍 |
 
 Ruta de la clase de test de seguridad (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `SeguridadCategoriasServiceTest`: `categorias/application/service/` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB)
