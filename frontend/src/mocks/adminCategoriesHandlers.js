@@ -26,12 +26,24 @@ const CATEGORIAS_INICIALES = [
   numeroProductos,
 }))
 
-// Lista que puede cambiar durante la sesión: el administrador elimina categorías (HU42).
+// Lista que puede cambiar durante la sesión: el administrador crea (HU40) y elimina (HU42) categorías.
 let categorias = [...CATEGORIAS_INICIALES]
+let siguienteId = 11
 
 export function resetAdminCategoriesMock() {
   categorias = [...CATEGORIAS_INICIALES]
+  siguienteId = 11
 }
+
+// Como el backend: el nombre no puede repetirse sin distinguir mayúsculas ni tildes.
+const normalizar = (texto) =>
+  texto
+    .trim()
+    .normalize('NFD')
+    .replaceAll(/\p{M}/gu, '')
+    .toLowerCase()
+const nombreRepetido = (nombre) => categorias.some((categoria) => normalizar(categoria.nombre) === normalizar(nombre))
+const ordenarPorNombre = (lista) => [...lista].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
 
 function rechazarSiNoEsAdmin() {
   const usuario = getUsuarioEnSesion()
@@ -43,6 +55,26 @@ function rechazarSiNoEsAdmin() {
 export const adminCategoriesHandlers = [
   // Solo responde al administrador: 401 sin sesión y 403 ACCESS_DENIED con otro rol, como el backend (HU39).
   http.get('/api/admin/categorias', () => rechazarSiNoEsAdmin() ?? HttpResponse.json(categorias)),
+
+  // Como el backend (HU40): 201 con la fila nueva, sin productos; 400 sin nombre y 409 si el nombre ya existe.
+  http.post('/api/admin/categorias', async ({ request }) => {
+    const rechazo = rechazarSiNoEsAdmin()
+    if (rechazo) return rechazo
+
+    const { nombre, descripcion, estado } = await request.json()
+    if (!nombre?.trim()) return HttpResponse.json({ code: 'VALIDATION_ERROR' }, { status: 400 })
+    if (nombreRepetido(nombre)) return HttpResponse.json({ code: 'CATEGORY_NAME_ALREADY_EXISTS' }, { status: 409 })
+
+    const creada = {
+      id: `cat-${siguienteId++}`,
+      nombre: nombre.trim(),
+      descripcion: descripcion ?? '',
+      estado,
+      numeroProductos: 0,
+    }
+    categorias = ordenarPorNombre([...categorias, creada])
+    return HttpResponse.json(creada, { status: 201 })
+  }),
 
   // Como el backend (HU42): 404 si no existe y 409 si tiene productos. El 409 CATEGORY_HAS_SELLERS (es la principal
   // de algún vendedor) no se simula aquí: los tests que lo necesitan ponen su propio handler.

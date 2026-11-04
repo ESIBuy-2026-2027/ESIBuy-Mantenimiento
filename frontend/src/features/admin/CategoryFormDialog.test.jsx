@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http, HttpResponse } from 'msw'
+import { delay, http, HttpResponse } from 'msw'
 import { server } from '../../mocks/server'
 import { abrirSesionPorApi } from '../../test/renderApp'
 import { renderWithProviders } from '../../test/utils'
@@ -75,5 +75,39 @@ describe('CategoryFormDialog (HU40): validación', () => {
 
     expect(screen.getByRole('textbox', { name: /nombre/i })).toHaveAttribute('maxlength', '50')
     expect(screen.getByRole('textbox', { name: /descripción/i })).toHaveAttribute('maxlength', '200')
+  })
+})
+
+describe('CategoryFormDialog (HU40): crear', () => {
+  it('HU40-CP13: envía el nombre, la descripción y el estado elegidos y avisa con la categoría creada', async () => {
+    const user = userEvent.setup()
+    const altas = capturarAltas()
+    const { onSaved } = await renderFormulario()
+
+    await user.type(screen.getByRole('textbox', { name: /nombre/i }), 'Jardín')
+    await user.type(screen.getByRole('textbox', { name: /descripción/i }), 'Plantas y herramientas')
+    await user.click(screen.getByRole('radio', { name: 'Inactiva' }))
+    await user.click(screen.getByRole('button', { name: 'Crear' }))
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1))
+    expect(altas).toEqual([{ nombre: 'Jardín', descripcion: 'Plantas y herramientas', estado: 'INACTIVA' }])
+    expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({ id: 'cat-11', nombre: 'Jardín', estado: 'INACTIVA' }))
+  })
+
+  it('HU40-CP13: mientras se crea, los botones quedan deshabilitados', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/admin/categorias', async () => {
+        await delay('infinite')
+        return new HttpResponse(null, { status: 201 })
+      }),
+    )
+    await renderFormulario()
+
+    await user.type(screen.getByRole('textbox', { name: /nombre/i }), 'Jardín')
+    await user.click(screen.getByRole('button', { name: 'Crear' }))
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Crear' })).toBeDisabled())
+    expect(screen.getByRole('button', { name: 'Cancelar' })).toBeDisabled()
   })
 })

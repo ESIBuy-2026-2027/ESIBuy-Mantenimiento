@@ -147,6 +147,23 @@ describe('AdminCategoriesPage (HU40): crear', () => {
     await screen.findByRole('heading', { name: /todavía no hay categorías/i })
     expect(screen.getByRole('button', { name: 'Nueva categoría' })).toBeInTheDocument()
   })
+
+  it('HU40-CP13: al crearla, avisa y la categoría aparece en la lista con el estado elegido', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.click(screen.getByRole('button', { name: 'Nueva categoría' }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Nueva categoría' })
+    await user.type(within(dialogo).getByRole('textbox', { name: /nombre/i }), 'Jardín')
+    await user.click(within(dialogo).getByRole('radio', { name: 'Inactiva' }))
+    await user.click(within(dialogo).getByRole('button', { name: 'Crear' }))
+
+    expect(await screen.findByText('Jardín se ha creado.')).toBeInTheDocument()
+    await waitFor(() => expect(nombresEnPantalla()).toContain('Jardín'))
+    expect(filasDeDatos()).toHaveLength(9)
+    expect(celdasDe('Jardín')).toEqual(['Jardín', '—', 'Inactiva', '0', ''])
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
 })
 
 describe('AdminCategoriesPage (HU42): eliminar', () => {
