@@ -3255,11 +3255,11 @@ Ruta de la clase de test de seguridad (bajo `backend/src/test/java/es/uclm/esibu
 | HU42-CP13 | Eliminar la categoría principal de un vendedor devuelve 409 `CATEGORY_HAS_SELLERS` | Controlador | 1 | ✅ Pasa |
 | HU42-CP14 | Eliminar una categoría que no existe devuelve 404 `CATEGORY_NOT_FOUND` | Controlador | 1 | ✅ Pasa |
 | HU42-CP15 | Sin rol de administrador no se pueden eliminar categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | ✅ Pasa |
-| HU42-CP16 | La llamada del administrador pide `DELETE /api/admin/categorias/{id}` con el id de la categoría; un 409 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#324, PR pendiente) |
-| HU42-CP17 | Cada fila de la lista de categorías tiene la papelera; al pulsarla se pide confirmación avisando de que no se puede deshacer, y cancelar no borra nada | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#324, PR pendiente) |
-| HU42-CP18 | Al confirmar se borra la categoría, se avisa de que se ha eliminado y desaparece de la lista; mientras se elimina, los botones de la confirmación quedan deshabilitados | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#324, PR pendiente) |
-| HU42-CP19 | Una categoría con productos tiene la papelera deshabilitada con el motivo; una sin productos la tiene habilitada | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#324, PR pendiente) |
-| HU42-CP20 | Cada error del backend al eliminar muestra su mensaje (tiene productos, es la principal de un vendedor, ya no existe o genérico); con productos o ya eliminada, se recarga la lista | Frontend (componente y página) | 5 | 🔍 En revisión (5, AB#324, PR pendiente) |
+| HU42-CP16 | La llamada del administrador pide `DELETE /api/admin/categorias/{id}` con el id de la categoría; un 409 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#324, PR #199) |
+| HU42-CP17 | Cada fila de la lista de categorías tiene la papelera; al pulsarla se pide confirmación avisando de que no se puede deshacer, y cancelar no borra nada | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#324, PR #199) |
+| HU42-CP18 | Al confirmar se borra la categoría, se avisa de que se ha eliminado y desaparece de la lista; mientras se elimina, los botones de la confirmación quedan deshabilitados | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#324, PR #199) |
+| HU42-CP19 | Una categoría con productos tiene la papelera deshabilitada con el motivo; una sin productos la tiene habilitada | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#324, PR #199) |
+| HU42-CP20 | Cada error del backend al eliminar muestra su mensaje (tiene productos, es la principal de un vendedor, ya no existe o genérico); con productos o ya eliminada, se recarga la lista | Frontend (componente y página) | 5 | 🔍 En revisión (5, AB#324, PR #199) |
 
 Notas:
 - **HU42-CP01 a CP15:** casos propuestos en las T326 (AB#326) y T325 (AB#325), a partir de los criterios de la HU42. Pendientes de confirmar con el equipo y de añadir a la HU42 en Azure Boards.
@@ -3307,20 +3307,20 @@ Notas:
 | HU42-CP14 | `AdministracionCategoriasControllerTest` | `eliminarUnaCategoriaInexistenteDevuelve404` | Infraestructura | AB#325 | PR #181 | ✅ |
 | HU42-CP15 | `AdministracionCategoriasControllerTest` | `eliminarConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#325 | PR #181 | ✅ |
 | HU42-CP15 | `AdministracionCategoriasControllerTest` | `eliminarSinSesionDevuelve401` | Infraestructura | AB#325 | PR #181 | ✅ |
-| HU42-CP16 | `adminCategories.test.js` | `HU42-CP16: pide DELETE /api/admin/categorias/{id} con el id de la categoría` | Frontend · API | AB#324 | PR pendiente | 🔍 |
-| HU42-CP16 | `adminCategories.test.js` | `HU42-CP16: un 409 llega como error con su estado y su código` | Frontend · API | AB#324 | PR pendiente | 🔍 |
-| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: ofrece la lupa para ver la ficha y la papelera para eliminar la categoría` | Frontend · componente | AB#324 | PR pendiente | 🔍 |
-| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: al pulsar la papelera pide confirmación avisando de que no se puede deshacer` | Frontend · componente | AB#324 | PR pendiente | 🔍 |
-| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: al cancelar se cierra la confirmación y no se borra nada` | Frontend · componente | AB#324 | PR pendiente | 🔍 |
-| HU42-CP17 | `AdminCategoriesPage.test.jsx` | `HU42-CP17: cada fila de la lista tiene la papelera para eliminar su categoría` | Frontend · página | AB#324 | PR pendiente | 🔍 |
-| HU42-CP18 | `CategoryRowActions.test.jsx` | `HU42-CP18: al confirmar borra la categoría, avisa de que se ha eliminado y pide actualizar la lista` | Frontend · componente | AB#324 | PR pendiente | 🔍 |
-| HU42-CP18 | `CategoryRowActions.test.jsx` | `HU42-CP18: mientras se elimina, los botones de la confirmación quedan deshabilitados` | Frontend · componente | AB#324 | PR pendiente | 🔍 |
-| HU42-CP18 | `AdminCategoriesPage.test.jsx` | `HU42-CP18: al confirmar, avisa de que se ha eliminado y la categoría desaparece de la lista` | Frontend · página | AB#324 | PR pendiente | 🔍 |
-| HU42-CP19 | `CategoryRowActions.test.jsx` | `HU42-CP19: si la categoría tiene productos, la papelera queda deshabilitada y explica por qué` | Frontend · componente | AB#324 | PR pendiente | 🔍 |
-| HU42-CP19 | `CategoryRowActions.test.jsx` | `HU42-CP19: una categoría sin productos tiene la papelera habilitada con el título Eliminar` | Frontend · componente | AB#324 | PR pendiente | 🔍 |
-| HU42-CP19 | `AdminCategoriesPage.test.jsx` | `HU42-CP19: solo se pueden eliminar las categorías sin productos` | Frontend · página | AB#324 | PR pendiente | 🔍 |
-| HU42-CP20 | `CategoryRowActions.test.jsx` | `HU42-CP20: $caso` (4 variantes: tiene productos, principal de un vendedor, ya no existe y error genérico) | Frontend · componente | AB#324 | PR pendiente | 🔍 |
-| HU42-CP20 | `AdminCategoriesPage.test.jsx` | `HU42-CP20: si el backend no deja eliminarla, avisa del motivo y la categoría sigue en la lista` | Frontend · página | AB#324 | PR pendiente | 🔍 |
+| HU42-CP16 | `adminCategories.test.js` | `HU42-CP16: pide DELETE /api/admin/categorias/{id} con el id de la categoría` | Frontend · API | AB#324 | PR #199 | 🔍 |
+| HU42-CP16 | `adminCategories.test.js` | `HU42-CP16: un 409 llega como error con su estado y su código` | Frontend · API | AB#324 | PR #199 | 🔍 |
+| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: ofrece la lupa para ver la ficha y la papelera para eliminar la categoría` | Frontend · componente | AB#324 | PR #199 | 🔍 |
+| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: al pulsar la papelera pide confirmación avisando de que no se puede deshacer` | Frontend · componente | AB#324 | PR #199 | 🔍 |
+| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: al cancelar se cierra la confirmación y no se borra nada` | Frontend · componente | AB#324 | PR #199 | 🔍 |
+| HU42-CP17 | `AdminCategoriesPage.test.jsx` | `HU42-CP17: cada fila de la lista tiene la papelera para eliminar su categoría` | Frontend · página | AB#324 | PR #199 | 🔍 |
+| HU42-CP18 | `CategoryRowActions.test.jsx` | `HU42-CP18: al confirmar borra la categoría, avisa de que se ha eliminado y pide actualizar la lista` | Frontend · componente | AB#324 | PR #199 | 🔍 |
+| HU42-CP18 | `CategoryRowActions.test.jsx` | `HU42-CP18: mientras se elimina, los botones de la confirmación quedan deshabilitados` | Frontend · componente | AB#324 | PR #199 | 🔍 |
+| HU42-CP18 | `AdminCategoriesPage.test.jsx` | `HU42-CP18: al confirmar, avisa de que se ha eliminado y la categoría desaparece de la lista` | Frontend · página | AB#324 | PR #199 | 🔍 |
+| HU42-CP19 | `CategoryRowActions.test.jsx` | `HU42-CP19: si la categoría tiene productos, la papelera queda deshabilitada y explica por qué` | Frontend · componente | AB#324 | PR #199 | 🔍 |
+| HU42-CP19 | `CategoryRowActions.test.jsx` | `HU42-CP19: una categoría sin productos tiene la papelera habilitada con el título Eliminar` | Frontend · componente | AB#324 | PR #199 | 🔍 |
+| HU42-CP19 | `AdminCategoriesPage.test.jsx` | `HU42-CP19: solo se pueden eliminar las categorías sin productos` | Frontend · página | AB#324 | PR #199 | 🔍 |
+| HU42-CP20 | `CategoryRowActions.test.jsx` | `HU42-CP20: $caso` (4 variantes: tiene productos, principal de un vendedor, ya no existe y error genérico) | Frontend · componente | AB#324 | PR #199 | 🔍 |
+| HU42-CP20 | `AdminCategoriesPage.test.jsx` | `HU42-CP20: si el backend no deja eliminarla, avisa del motivo y la categoría sigue en la lista` | Frontend · página | AB#324 | PR #199 | 🔍 |
 
 Ruta de las clases de test de seguridad (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `SeguridadCategoriasServiceTest`: `categorias/application/service/` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB)
