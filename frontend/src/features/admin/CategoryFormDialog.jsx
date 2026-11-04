@@ -10,6 +10,8 @@ import {
   DialogTitle,
   Field,
   Input,
+  MessageBar,
+  MessageBarBody,
   Radio,
   RadioGroup,
   Textarea,
@@ -22,6 +24,7 @@ import { CATEGORY_STATUS_LABELS } from './categoryStatus'
 // Los mismos límites que el dominio del backend (Categoria): con maxLength no se puede escribir más.
 const LONGITUD_MAXIMA = { nombre: 50, descripcion: 200 }
 const OBLIGATORIO = 'Este campo es obligatorio'
+const REPETIDO = 'Ya existe una categoría con ese nombre.'
 
 const useStyles = makeStyles({
   surface: {
@@ -36,14 +39,21 @@ const useStyles = makeStyles({
 })
 
 // Formulario de alta de una categoría (HU40): nombre, descripción y estado, que por defecto es activa. El nombre es
-// obligatorio: si está vacío o solo tiene espacios, se avisa en el campo y no se envía nada. `onSaved` recibe la
-// categoría creada; `onClose`, que se cierra sin más.
+// obligatorio: si está vacío o solo tiene espacios, se avisa en el campo y no se envía nada. Si el backend dice que el
+// nombre ya existe (sin distinguir mayúsculas ni tildes), también se avisa en el campo; cualquier otro error, con un
+// mensaje genérico, y el formulario sigue abierto con lo escrito. `onSaved` recibe la categoría creada; `onClose`,
+// que se cierra sin más.
 export default function CategoryFormDialog({ onClose, onSaved }) {
   const styles = useStyles()
   const [datos, setDatos] = useState({ nombre: '', descripcion: '', estado: 'ACTIVA' })
   const [errorNombre, setErrorNombre] = useState(null)
   const [enviando, setEnviando] = useState(false)
+  const [errorServidor, setErrorServidor] = useState(false)
   const cambiar = (campo) => (_event, data) => setDatos((actuales) => ({ ...actuales, [campo]: data.value }))
+  const cambiarNombre = (event, data) => {
+    setErrorNombre(null)
+    cambiar('nombre')(event, data)
+  }
 
   const crear = async () => {
     if (!datos.nombre.trim()) {
@@ -51,8 +61,12 @@ export default function CategoryFormDialog({ onClose, onSaved }) {
       return
     }
     setEnviando(true)
+    setErrorServidor(false)
     try {
       onSaved(await createAdminCategory(datos))
+    } catch (error) {
+      if (error?.code === 'CATEGORY_NAME_ALREADY_EXISTS') setErrorNombre(REPETIDO)
+      else setErrorServidor(true)
     } finally {
       setEnviando(false)
     }
@@ -64,8 +78,13 @@ export default function CategoryFormDialog({ onClose, onSaved }) {
         <DialogBody>
           <DialogTitle>Nueva categoría</DialogTitle>
           <DialogContent className={styles.content}>
+            {errorServidor && (
+              <MessageBar intent="error">
+                <MessageBarBody>No se ha podido crear la categoría. Inténtalo de nuevo.</MessageBarBody>
+              </MessageBar>
+            )}
             <Field label="Nombre" required validationMessage={errorNombre}>
-              <Input maxLength={LONGITUD_MAXIMA.nombre} value={datos.nombre} onChange={cambiar('nombre')} />
+              <Input maxLength={LONGITUD_MAXIMA.nombre} value={datos.nombre} onChange={cambiarNombre} />
             </Field>
             <Field label="Descripción">
               <Textarea
