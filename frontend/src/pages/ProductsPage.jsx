@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Button,
   MessageBar,
@@ -109,6 +110,13 @@ export default function ProductsPage() {
   })
   const endRef = useOnReachEnd(feed.loadMore, feed.hasMore && !feed.loadingMore && !feed.failedMore)
   const categoryNames = new Map(categories.map(({ id, nombre }) => [id, nombre]))
+  // Productos que el cliente tiene en favoritos (HU14).
+  const [favoritos, setFavoritos] = useState(() => new Set())
+
+  const anadirFavorito = async (productId) => {
+    await addWishlistItem(productId)
+    setFavoritos((actuales) => new Set(actuales).add(productId))
+  }
   // Sin ningún filtro, que no haya productos significa que el catálogo está vacío; con filtros, que no coinciden.
   const catalogEmpty = feed.loaded && feed.totalItems === 0 && !debouncedSearch && !category && !minRating
   const noMatches = feed.loaded && feed.totalItems === 0 && !catalogEmpty
@@ -188,7 +196,8 @@ export default function ProductsPage() {
                   <ProductCard
                     product={product}
                     categoryName={categoryNames.get(product.categoriaId)}
-                    onAddFavorite={addWishlistItem}
+                    favorite={favoritos.has(product.id)}
+                    onAddFavorite={anadirFavorito}
                   />
                 </li>
               ))}

@@ -2,7 +2,7 @@ import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Text, makeStyles, tokens } from '@fluentui/react-components'
-import { Heart20Regular, ImageOff24Regular } from '@fluentui/react-icons'
+import { Heart20Filled, Heart20Regular, ImageOff24Regular } from '@fluentui/react-icons'
 import { getProductDetailPath } from '../../routes/paths'
 import { catalogProductPropType } from '../../utils/propTypes'
 import { formatRating } from '../../utils/format'
@@ -131,13 +131,24 @@ const useStyles = makeStyles({
 // el botón para añadirlo al carrito (HU9). `categoryName` lo traduce la página a partir del identificador de
 // categoría del producto. La imagen, el nombre y la valoración llevan al detalle (HU8). Con `onAddFavorite`, la
 // tarjeta tiene además un corazón para añadir el producto a favoritos (HU14), salvo si no está disponible, porque el
-// backend no lo aceptaría; uno agotado sí se puede añadir.
-export default function ProductCard({ product, categoryName, onAddFavorite }) {
+// backend no lo aceptaría; uno agotado sí se puede añadir. Con `favorite`, el corazón sale relleno y deshabilitado:
+// quitarlo de favoritos todavía no se puede desde aquí.
+export default function ProductCard({ product, categoryName, favorite = false, onAddFavorite }) {
   const styles = useStyles()
   // Si la imagen no carga (dirección rota), se enseña el mismo marcador que cuando no hay imagen.
   const [imageFailed, setImageFailed] = useState(false)
   const hasImage = Boolean(product.imagen) && !imageFailed
   const rated = product.valoracion !== null && product.numValoraciones > 0
+  const [addingFavorite, setAddingFavorite] = useState(false)
+
+  const addFavorite = async () => {
+    setAddingFavorite(true)
+    try {
+      await onAddFavorite(product.id)
+    } finally {
+      setAddingFavorite(false)
+    }
+  }
 
   return (
     <div className={styles.card}>
@@ -181,9 +192,11 @@ export default function ProductCard({ product, categoryName, onAddFavorite }) {
         <Button
           shape="circular"
           className={styles.favorite}
-          icon={<Heart20Regular />}
-          aria-label={`Añadir ${product.nombre} a favoritos`}
-          title="Añadir a favoritos"
+          icon={favorite ? <Heart20Filled /> : <Heart20Regular />}
+          aria-label={favorite ? `${product.nombre} está en tus favoritos` : `Añadir ${product.nombre} a favoritos`}
+          title={favorite ? 'Ya está en tus favoritos' : 'Añadir a favoritos'}
+          disabled={favorite || addingFavorite}
+          onClick={addFavorite}
         />
       )}
       <div className={styles.footer}>
@@ -197,5 +210,6 @@ export default function ProductCard({ product, categoryName, onAddFavorite }) {
 ProductCard.propTypes = {
   product: catalogProductPropType.isRequired,
   categoryName: PropTypes.string,
+  favorite: PropTypes.bool,
   onAddFavorite: PropTypes.func,
 }
