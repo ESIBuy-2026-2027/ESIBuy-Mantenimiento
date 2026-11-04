@@ -43,8 +43,8 @@ const useStyles = makeStyles({
 // obligatorio: si está vacío o solo tiene espacios, se avisa en el campo y no se envía nada. Si el backend dice que el
 // nombre ya existe (sin distinguir mayúsculas ni tildes), también se avisa en el campo; cualquier otro error, con un
 // mensaje genérico, y el formulario sigue abierto con lo escrito. `onSaved` recibe la categoría creada o editada;
-// `onClose`, que se cierra sin más.
-export default function CategoryFormDialog({ category = null, onClose, onSaved }) {
+// `onNotFound`, que la categoría que se editaba ya no existe (404); `onClose`, que se cierra sin más.
+export default function CategoryFormDialog({ category = null, onClose, onSaved, onNotFound }) {
   const styles = useStyles()
   const editando = category !== null
   const [datos, setDatos] = useState({
@@ -72,6 +72,7 @@ export default function CategoryFormDialog({ category = null, onClose, onSaved }
       onSaved(await (editando ? updateAdminCategory(category.id, datos) : createAdminCategory(datos)))
     } catch (error) {
       if (error?.code === 'CATEGORY_NAME_ALREADY_EXISTS') setErrorNombre(REPETIDO)
+      else if (editando && error?.code === 'CATEGORY_NOT_FOUND') onNotFound()
       else setErrorServidor(true)
     } finally {
       setEnviando(false)
@@ -86,7 +87,11 @@ export default function CategoryFormDialog({ category = null, onClose, onSaved }
           <DialogContent className={styles.content}>
             {errorServidor && (
               <MessageBar intent="error">
-                <MessageBarBody>No se ha podido crear la categoría. Inténtalo de nuevo.</MessageBarBody>
+                <MessageBarBody>
+                  {editando
+                    ? 'No se han podido guardar los cambios. Inténtalo de nuevo.'
+                    : 'No se ha podido crear la categoría. Inténtalo de nuevo.'}
+                </MessageBarBody>
               </MessageBar>
             )}
             <Field label="Nombre" required validationMessage={errorNombre}>
@@ -133,4 +138,5 @@ CategoryFormDialog.propTypes = {
   }),
   onClose: PropTypes.func.isRequired,
   onSaved: PropTypes.func.isRequired,
+  onNotFound: PropTypes.func,
 }

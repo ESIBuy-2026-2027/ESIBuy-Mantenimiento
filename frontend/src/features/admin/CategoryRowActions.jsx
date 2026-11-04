@@ -49,6 +49,13 @@ export default function CategoryRowActions({ category, onResult, onChanged }) {
     onChanged()
   }
 
+  // Otro administrador la ha eliminado mientras se editaba: la lista está desfasada y se recarga.
+  const avisarQueYaNoExiste = () => {
+    cerrar()
+    onResult({ intent: 'error', texto: ERRORES_AL_ELIMINAR.CATEGORY_NOT_FOUND.texto(category.nombre) })
+    onChanged()
+  }
+
   const eliminar = async () => {
     setEliminando(true)
     try {
@@ -94,7 +101,14 @@ export default function CategoryRowActions({ category, onResult, onChanged }) {
       />
 
       {dialogo === 'ficha' && <CategoryDetailDialog category={category} onClose={cerrar} />}
-      {dialogo === 'editar' && <CategoryFormDialog category={category} onClose={cerrar} onSaved={avisarEditada} />}
+      {dialogo === 'editar' && (
+        <CategoryFormDialog
+          category={category}
+          onClose={cerrar}
+          onSaved={avisarEditada}
+          onNotFound={avisarQueYaNoExiste}
+        />
+      )}
       {dialogo === 'eliminar' && (
         <StatusConfirmDialog
           titulo="Eliminar categoría"
