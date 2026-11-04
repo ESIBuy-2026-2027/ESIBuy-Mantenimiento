@@ -151,3 +151,51 @@ describe('CategoryFormDialog (HU40): errores al crear', () => {
     expect(onSaved).not.toHaveBeenCalled()
   })
 })
+
+// Hogar (cat-2) del mock de categorías, con su descripción y 14 productos.
+const HOGAR = {
+  id: 'cat-2',
+  nombre: 'Hogar',
+  descripcion: 'Muebles y decoración.',
+  estado: 'ACTIVA',
+  numeroProductos: 14,
+}
+
+// Apunta cada PUT que llega al backend, para comprobar qué se envía y que cancelar no edita nada.
+function capturarEdiciones() {
+  const ediciones = []
+  server.use(
+    http.put('/api/admin/categorias/:id', async ({ request, params }) => {
+      const cuerpo = await request.json()
+      ediciones.push({ id: params.id, ...cuerpo })
+      return HttpResponse.json({ ...HOGAR, ...cuerpo })
+    }),
+  )
+  return ediciones
+}
+
+describe('CategoryFormDialog (HU41): formulario de edición', () => {
+  it('HU41-CP16: con una categoría, muestra su nombre y su descripción para editarlos, sin el estado', async () => {
+    await renderFormulario({ category: HOGAR })
+
+    expect(screen.getByRole('dialog', { name: 'Editar categoría' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: /nombre/i })).toHaveValue('Hogar')
+    expect(screen.getByRole('textbox', { name: /descripción/i })).toHaveValue('Muebles y decoración.')
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Guardar' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Crear' })).not.toBeInTheDocument()
+  })
+
+  it('HU41-CP16: al cancelar se cierra sin editar nada', async () => {
+    const user = userEvent.setup()
+    const ediciones = capturarEdiciones()
+    const { onClose, onSaved } = await renderFormulario({ category: HOGAR })
+
+    await user.type(screen.getByRole('textbox', { name: /nombre/i }), ' y jardín')
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(onClose).toHaveBeenCalledTimes(1)
+    expect(onSaved).not.toHaveBeenCalled()
+    expect(ediciones).toEqual([])
+  })
+})

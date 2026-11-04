@@ -91,6 +91,18 @@ describe('CategoryRowActions (HU42): confirmación', () => {
   })
 })
 
+describe('CategoryRowActions (HU41): editar', () => {
+  it('HU41-CP16: ofrece el lápiz para editar la categoría, que abre su formulario con sus datos', async () => {
+    const user = userEvent.setup()
+    await renderAcciones(MASCOTAS)
+
+    await user.click(screen.getByRole('button', { name: 'Editar Mascotas' }))
+
+    const formulario = await screen.findByRole('dialog', { name: 'Editar categoría' })
+    expect(within(formulario).getByRole('textbox', { name: /nombre/i })).toHaveValue('Mascotas')
+  })
+})
+
 describe('CategoryRowActions (HU42): eliminar', () => {
   it('HU42-CP18: al confirmar borra la categoría, avisa de que se ha eliminado y pide actualizar la lista', async () => {
     const user = userEvent.setup()

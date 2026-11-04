@@ -133,13 +133,6 @@ describe('AdminCategoriesPage (HU39): ficha de la categoría', () => {
     expect(await within(dialogo).findByText('Ya existe una categoría con ese nombre.')).toBeInTheDocument()
     expect(filasDeDatos()).toHaveLength(8)
   })
-
-  // Eliminar llega con la HU42 (la papelera de cada fila) y crear con la HU40; editar es de la HU41.
-  it('HU39-CP11: la vista no ofrece editar categorías', async () => {
-    await abrirListado()
-
-    expect(screen.queryByRole('button', { name: /editar/i })).not.toBeInTheDocument()
-  })
 })
 
 describe('AdminCategoriesPage (HU40): crear', () => {
@@ -176,6 +169,15 @@ describe('AdminCategoriesPage (HU40): crear', () => {
     expect(filasDeDatos()).toHaveLength(9)
     expect(celdasDe('Jardín')).toEqual(['Jardín', '—', 'Inactiva', '0', ''])
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+})
+
+describe('AdminCategoriesPage (HU41): editar', () => {
+  it('HU41-CP16: cada fila de la lista tiene el lápiz para editar su categoría', async () => {
+    await abrirListado()
+
+    expect(screen.getAllByRole('button', { name: /^editar /i })).toHaveLength(8)
+    expect(within(filaDe('Hogar')).getByRole('button', { name: 'Editar Hogar' })).toBeEnabled()
   })
 })
 
