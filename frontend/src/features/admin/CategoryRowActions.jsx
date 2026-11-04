@@ -9,6 +9,20 @@ import StatusConfirmDialog from './StatusConfirmDialog'
 // El backend no deja eliminar una categoría con productos (409 CATEGORY_HAS_PRODUCTS, HU42).
 const MENSAJE_CON_PRODUCTOS = 'No se puede eliminar una categoría que tiene productos.'
 
+// Errores del backend al eliminar que tienen un mensaje propio. `actualiza`: la lista que ve el administrador está
+// desfasada (alguien ha añadido productos a la categoría o ya la ha eliminado) y se pide recargarla.
+const ERRORES_AL_ELIMINAR = {
+  CATEGORY_HAS_PRODUCTS: {
+    texto: (nombre) => `No se puede eliminar ${nombre} porque tiene productos.`,
+    actualiza: true,
+  },
+  CATEGORY_HAS_SELLERS: {
+    texto: (nombre) => `No se puede eliminar ${nombre} porque es la categoría principal de algún vendedor.`,
+    actualiza: false,
+  },
+  CATEGORY_NOT_FOUND: { texto: (nombre) => `${nombre} ya no existe.`, actualiza: true },
+}
+
 const useStyles = makeStyles({
   actions: {
     display: 'flex',
@@ -33,6 +47,13 @@ export default function CategoryRowActions({ category, onResult, onChanged }) {
       await deleteAdminCategory(category.id)
       onResult({ intent: 'success', texto: `${category.nombre} se ha eliminado.` })
       onChanged()
+    } catch (error) {
+      const conocido = ERRORES_AL_ELIMINAR[error?.code]
+      onResult({
+        intent: 'error',
+        texto: conocido?.texto(category.nombre) ?? `No se ha podido eliminar ${category.nombre}. Inténtalo de nuevo.`,
+      })
+      if (conocido?.actualiza) onChanged()
     } finally {
       setEliminando(false)
       cerrar()
