@@ -405,6 +405,16 @@ describe('Rutas protegidas y sesión', () => {
     expect(screen.queryByText('Has cerrado sesión.')).not.toBeInTheDocument()
   })
 
+  it('HU37-CP19: si otro administrador elimina tu cuenta, tu siguiente petición da 401 y vuelves al login con el aviso', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    // CuentaActivaFilter ya no encuentra la cuenta borrada: invalida la sesión y responde 401 a lo siguiente que pide.
+    server.use(http.get('/api/admin/usuarios', () => new HttpResponse(null, { status: 401 })))
+    renderApp('/admin/admins')
+
+    await esperarRuta('/login')
+    expect(await screen.findByText(/tu sesión ha caducado/i)).toBeInTheDocument()
+  })
+
   it('HU43-CP07: una contraseña incorrecta (401) no se toma por una sesión caducada', async () => {
     const user = userEvent.setup()
     renderApp('/login')
