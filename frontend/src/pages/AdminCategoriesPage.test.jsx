@@ -121,11 +121,65 @@ describe('AdminCategoriesPage (HU39): ficha de la categoría', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
-  it('HU39-CP11: la vista no ofrece crear, editar ni eliminar categorías', async () => {
+  // Eliminar llega con la HU42 (la papelera de cada fila); crear y editar son de las HU40 y HU41.
+  it('HU39-CP11: la vista no ofrece crear ni editar categorías', async () => {
     await abrirListado()
 
-    expect(screen.queryByRole('button', { name: /crear|nueva|editar|eliminar|borrar/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /crear|nueva|editar/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /crear|nueva/i })).not.toBeInTheDocument()
+  })
+})
+
+describe('AdminCategoriesPage (HU42): eliminar', () => {
+  it('HU42-CP17: cada fila de la lista tiene la papelera para eliminar su categoría', async () => {
+    await abrirListado()
+
+    expect(screen.getAllByRole('button', { name: /^eliminar /i })).toHaveLength(8)
+    expect(within(filaDe('Mascotas')).getByRole('button', { name: 'Eliminar Mascotas' })).toBeInTheDocument()
+  })
+
+  it('HU42-CP18: al confirmar, avisa de que se ha eliminado y la categoría desaparece de la lista', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.click(screen.getByRole('button', { name: 'Eliminar Mascotas' }))
+    const confirmacion = (await screen.findByText(/seguro que quieres eliminar la categoría mascotas/i)).closest(
+      '[role="alertdialog"]',
+    )
+    await user.click(within(confirmacion).getByText('Eliminar', { selector: 'button' }))
+
+    expect(await screen.findByText('Mascotas se ha eliminado.')).toBeInTheDocument()
+    await waitFor(() => expect(nombresEnPantalla()).not.toContain('Mascotas'))
+    expect(filasDeDatos()).toHaveLength(7)
+  })
+
+  it('HU42-CP19: solo se pueden eliminar las categorías sin productos', async () => {
+    await abrirListado()
+
+    expect(within(filaDe('Tecnología')).getByRole('button', { name: 'Eliminar Tecnología' })).toBeDisabled()
+    expect(within(filaDe('Juguetes')).getByRole('button', { name: 'Eliminar Juguetes' })).toBeDisabled()
+    expect(within(filaDe('Mascotas')).getByRole('button', { name: 'Eliminar Mascotas' })).toBeEnabled()
+    expect(within(filaDe('Moda')).getByRole('button', { name: 'Eliminar Moda' })).toBeEnabled()
+  })
+
+  it('HU42-CP20: si el backend no deja eliminarla, avisa del motivo y la categoría sigue en la lista', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.delete(`${URL_CATEGORIAS}/:id`, () => HttpResponse.json({ code: 'CATEGORY_HAS_SELLERS' }, { status: 409 })),
+    )
+    await abrirListado()
+
+    await user.click(screen.getByRole('button', { name: 'Eliminar Mascotas' }))
+    const confirmacion = (await screen.findByText(/seguro que quieres eliminar la categoría mascotas/i)).closest(
+      '[role="alertdialog"]',
+    )
+    await user.click(within(confirmacion).getByText('Eliminar', { selector: 'button' }))
+
+    expect(
+      await screen.findByText('No se puede eliminar Mascotas porque es la categoría principal de algún vendedor.'),
+    ).toBeInTheDocument()
+    expect(nombresEnPantalla()).toContain('Mascotas')
+    expect(filasDeDatos()).toHaveLength(8)
   })
 })
 

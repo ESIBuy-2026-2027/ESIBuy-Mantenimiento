@@ -31,7 +31,7 @@ const useStyles = makeStyles({
 })
 
 // renderActions es opcional: si se recibe, se añade la columna "Acciones" con lo que devuelva para cada categoría
-// (la lupa que abre su ficha).
+// (la lupa que abre su ficha y la papelera que la elimina).
 export default function CategoriesTable({ categories, refreshing = false, renderActions }) {
   const tableStyles = useTableStyles()
   const styles = useStyles()
