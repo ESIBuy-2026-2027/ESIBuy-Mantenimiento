@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
-import { http, HttpResponse } from 'msw'
+import userEvent from '@testing-library/user-event'
+import { delay, http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
@@ -127,5 +128,41 @@ describe('WishlistPage (HU14): lista de favoritos', () => {
     expect(within(filas()[2]).getByText('No disponible')).toBeInTheDocument()
     expect(within(filas()[2]).queryByRole('link')).not.toBeInTheDocument()
     expect(within(filas()[0]).queryByText(/agotado|no disponible/i)).not.toBeInTheDocument()
+  })
+})
+
+describe('WishlistPage (HU14): carga, lista vacía y error', () => {
+  it('HU14-CP34: mientras carga muestra un indicador', async () => {
+    server.use(
+      http.get(URL_LISTA, async () => {
+        await delay('infinite')
+      }),
+    )
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/wishlist')
+
+    expect(await screen.findByText('Cargando tus favoritos…')).toBeInTheDocument()
+  })
+
+  it('HU14-CP34: sin favoritos lo indica y ofrece ir a los productos', async () => {
+    await abrirMisFavoritos({ items: [] })
+
+    expect(await screen.findByText('Aún no tienes favoritos')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ver los productos' })).toHaveAttribute('href', '/products')
+    expect(screen.queryByRole('list', { name: 'Tus favoritos' })).not.toBeInTheDocument()
+  })
+
+  it('HU14-CP34: si no se pueden cargar los favoritos lo avisa y permite reintentar', async () => {
+    const user = userEvent.setup()
+    server.use(http.get(URL_LISTA, () => HttpResponse.json(LISTA)))
+    server.use(http.get(URL_LISTA, () => new HttpResponse(null, { status: 500 }), { once: true }))
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/wishlist')
+
+    expect(await screen.findByText('No se han podido cargar tus favoritos. Inténtalo de nuevo.')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+    await screen.findByRole('list', { name: 'Tus favoritos' })
+    expect(filas()).toHaveLength(3)
   })
 })
