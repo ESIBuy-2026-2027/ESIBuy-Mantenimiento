@@ -108,7 +108,10 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
 
     @Override
     public List<Producto> buscarTodosPorVendedor(String vendedorId) {
-        throw new UnsupportedOperationException("Funcionalidad no implementada");
+        return mongoTemplate.find(new Query(Criteria.where("vendedorId").is(vendedorId)), ProductoDocument.class)
+                .stream()
+                .map(mapper::aDominio)
+                .toList();
     }
 
     // Catálogo del cliente (HU7): solo productos disponibles, de todos los vendedores; la búsqueda por nombre
