@@ -33,7 +33,7 @@ public class ListaDeseos {
 
     // Quitar un producto que no está no es un error: la lista ya queda como se quería. Dice si ha cambiado
     public boolean quitar(String productoId) {
-        return false;
+        return items.removeIf(item -> item.productoId().equals(productoId));
     }
 
     /**
