@@ -21,6 +21,7 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.CarritoSinProductosDelPro
 import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
@@ -402,6 +403,13 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError pedidoNoEncontrado() {
         return new RespuestaError("El pedido no existe", "ORDER_NOT_FOUND");
+    }
+
+    // Pedidos (HU12): solo se cancela un pedido que aún no se ha enviado
+    @ExceptionHandler(PedidoNoCancelableException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError pedidoNoCancelable() {
+        return new RespuestaError("El pedido ya no se puede cancelar", "ORDER_NOT_CANCELLABLE");
     }
 
     @ExceptionHandler(CarritoSinProductosDelProveedorException.class)
