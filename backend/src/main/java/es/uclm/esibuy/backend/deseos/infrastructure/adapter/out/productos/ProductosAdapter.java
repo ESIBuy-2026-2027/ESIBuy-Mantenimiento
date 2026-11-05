@@ -23,6 +23,8 @@ public class ProductosAdapter implements ProductosPort {
 
     @Override
     public Optional<ProductoDeseado> consultarResumen(String productoId, boolean clientePremium) {
-        return Optional.empty();
+        return catalogo.consultarResumen(productoId, clientePremium)
+                .map(producto -> new ProductoDeseado(producto.id(), producto.nombre(), producto.imagen(),
+                        producto.precioFinal(), producto.stock(), producto.disponible()));
     }
 }

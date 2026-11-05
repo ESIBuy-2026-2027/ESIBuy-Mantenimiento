@@ -22,6 +22,6 @@ public class ClienteEnSesionAdapter implements ClienteEnSesionPort {
 
     @Override
     public boolean esPremium(String email) {
-        return false;
+        return autenticacion.esClientePremium(email);
     }
 }
