@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.deseos.infrastructure.adapter.in.web;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +23,11 @@ public class ListaDeseosController {
 
     public ListaDeseosController(GestionListaDeseosUseCase gestionListaDeseos) {
         this.gestionListaDeseos = gestionListaDeseos;
+    }
+
+    @GetMapping
+    public ListaDeseosDetalladaResponse consultar(Authentication autenticado) {
+        return new ListaDeseosDetalladaResponse(java.util.List.of());
     }
 
     @PostMapping("/items")
