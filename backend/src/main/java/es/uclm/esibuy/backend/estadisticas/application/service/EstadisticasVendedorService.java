@@ -26,6 +26,7 @@ public class EstadisticasVendedorService implements EstadisticasVendedorUseCase 
     @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO)
     @Override
     public EstadisticasVendedor consultar(String emailVendedor) {
-        throw new UnsupportedOperationException("Funcionalidad no implementada");
+        String vendedorId = vendedorEnSesion.idPorCorreo(emailVendedor);
+        return EstadisticasVendedor.calcular(ventas.ventasDe(vendedorId), inventario.productosDe(vendedorId));
     }
 }
