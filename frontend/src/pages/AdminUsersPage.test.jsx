@@ -14,12 +14,16 @@ async function abrirListado() {
   await screen.findByRole('heading', { level: 1, name: 'Usuarios' })
 }
 
+// Leen la tabla aunque una confirmación esté abierta o cerrándose encima: Fluent marca entonces el resto de la página
+// con aria-hidden, y sin `hidden: true` la tabla no se encuentra según lo rápido que vaya la máquina.
+const OCULTOS = { hidden: true }
+
 function filasDeDatos() {
-  return within(screen.getByRole('table', { name: 'Usuarios' })).getAllByRole('row').slice(1)
+  return within(screen.getByRole('table', { name: 'Usuarios', ...OCULTOS })).getAllByRole('row', OCULTOS).slice(1)
 }
 
 function columna(indice) {
-  return filasDeDatos().map((fila) => within(fila).getAllByRole('cell')[indice].textContent)
+  return filasDeDatos().map((fila) => within(fila).getAllByRole('cell', OCULTOS)[indice].textContent)
 }
 
 async function esperarFilas(cantidad) {

@@ -19,13 +19,15 @@ async function abrirListado() {
   await screen.findByRole('table')
 }
 
-const filasDeDatos = () => within(screen.getByRole('table')).getAllByRole('row').slice(1)
-const nombresEnPantalla = () => filasDeDatos().map((fila) => within(fila).getAllByRole('cell')[0].textContent)
+// Leen la tabla aunque haya un formulario abierto encima: mientras un diálogo modal está abierto (o cerrándose), Fluent
+// marca el resto de la página con aria-hidden, y sin `hidden: true` la tabla no se encuentra. Fluent pone esa marca un
+// poco después de abrir el diálogo, así que sin esto los tests fallaban al azar según lo rápido que fuera la máquina.
+const OCULTOS = { hidden: true }
+const filasDeDatos = () => within(screen.getByRole('table', OCULTOS)).getAllByRole('row', OCULTOS).slice(1)
+const celdasDeLaFila = (fila) => within(fila).getAllByRole('cell', OCULTOS)
+const nombresEnPantalla = () => filasDeDatos().map((fila) => celdasDeLaFila(fila)[0].textContent)
 const filaDe = (nombre) => filasDeDatos().find((fila) => within(fila).queryByText(nombre))
-const celdasDe = (nombre) =>
-  within(filaDe(nombre))
-    .getAllByRole('cell')
-    .map((celda) => celda.textContent)
+const celdasDe = (nombre) => celdasDeLaFila(filaDe(nombre)).map((celda) => celda.textContent)
 
 describe('AdminCategoriesPage (HU39): listado', () => {
   it('HU39-CP12: muestra el título de la vista y mientras carga un indicador', async () => {
