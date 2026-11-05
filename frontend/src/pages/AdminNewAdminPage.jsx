@@ -129,6 +129,8 @@ export default function AdminNewAdminPage() {
       onChange={cambiar(nombre)}
       error={errores[nombre]}
       maxLength={LONGITUD_MAXIMA[nombre]}
+      // R9: la contraseña de la cuenta nueva se escribe a mano, como en el registro
+      bloquearPegado
     />
   )
 

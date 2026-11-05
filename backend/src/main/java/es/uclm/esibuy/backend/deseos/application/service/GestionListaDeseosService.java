@@ -44,9 +44,7 @@ public class GestionListaDeseosService implements GestionListaDeseosUseCase {
         if (!productos.estaDisponible(productoId)) {
             throw new ProductoNoDisponibleException("El producto no está disponible");
         }
-        String clienteId = clienteEnSesion.idPorCorreo(emailCliente);
-        ListaDeseos lista = listaDeseosRepository.buscarPorCliente(clienteId)
-                .orElseGet(() -> ListaDeseos.vacia(clienteId));
+        ListaDeseos lista = listaDe(emailCliente);
         lista.anadir(productoId, Instant.now(reloj));
         return listaDeseosRepository.guardar(lista);
     }
@@ -54,9 +52,27 @@ public class GestionListaDeseosService implements GestionListaDeseosUseCase {
     @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public ListaDeseosDetallada consultar(String emailCliente) {
+        return detallar(listaDe(emailCliente), emailCliente);
+    }
+
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
+    @Override
+    public ListaDeseosDetallada quitar(String emailCliente, String productoId) {
+        ListaDeseos lista = listaDe(emailCliente);
+        if (lista.quitar(productoId)) {
+            listaDeseosRepository.guardar(lista);
+        }
+        return detallar(lista, emailCliente);
+    }
+
+    // La lista del cliente en sesión, o una vacía sin guardar si todavía no tiene
+    private ListaDeseos listaDe(String emailCliente) {
         String clienteId = clienteEnSesion.idPorCorreo(emailCliente);
-        ListaDeseos lista = listaDeseosRepository.buscarPorCliente(clienteId)
-                .orElseGet(() -> ListaDeseos.vacia(clienteId));
+        return listaDeseosRepository.buscarPorCliente(clienteId).orElseGet(() -> ListaDeseos.vacia(clienteId));
+    }
+
+    // Antes de enseñarla, quita de la lista los productos eliminados y la guarda si ha cambiado
+    private ListaDeseosDetallada detallar(ListaDeseos lista, String emailCliente) {
         Map<String, ProductoDeseado> existentes = productosExistentes(lista, clienteEnSesion.esPremium(emailCliente));
         if (lista.conservarSolo(existentes.keySet())) {
             listaDeseosRepository.guardar(lista);

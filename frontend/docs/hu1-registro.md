@@ -70,7 +70,8 @@ En la demo del Sprint 1 se vieron tres fallos del registro, corregidos con TDD e
 En el formulario de registro, tanto de cliente como de vendedor, **Password** y **Repetir password** no admiten copiar, cortar, pegar ni soltar texto arrastrado. Así el usuario tiene que escribir la contraseña **a mano dos veces** y no puede dar por buena una errata pegándola en los dos campos. Tampoco se puede copiar con el ojo activado (password visible).
 
 - **Cómo:** `PasswordField` tiene una propiedad nueva `bloquearPegado` (desactivada por defecto) que cancela los eventos `copy`, `cut`, `paste` y `drop` del campo. `Register.jsx` la activa en los dos campos de password.
-- **Solo en el registro:** el login (`CredentialsStep`) y el alta de administradores (`AdminNewAdminPage`) usan el mismo componente, pero no la activan. En el login hay que poder pegar la contraseña de un gestor de contraseñas.
+- **Dónde se usa (actualizado con el R9 de la revisión del Sprint 1, "no se puede copiar la contraseña"):** `bloquearPegado` (copiar, cortar, pegar y soltar) está en el registro, en la contraseña nueva de la recuperación (HU3) y en el alta de administradores (HU21): son contraseñas que se **crean**. El login (HU2) usa la propiedad nueva `bloquearCopia`, que cancela solo `copy` y `cut` (también con la contraseña visible) y **deja pegar**: la contraseña ya existe y los gestores de contraseñas la rellenan o la pegan. Bloquear también el pegado en el login los rompería.
+- **Dos propiedades:** `bloquearPegado` conserva su comportamiento (y ya incluye no copiar ni cortar); `bloquearCopia` es el modo suave del login. Si se pasan las dos, manda `bloquearPegado`. La lógica vive en un solo sitio, `PasswordField`.
 - **No es una barrera de seguridad:** es una ayuda de usabilidad. Se puede saltar, por ejemplo con las herramientas del navegador. La política de password y su validación en el backend no cambian.
 
 ---
@@ -246,7 +247,7 @@ Los tests sustituyen `api/auth` y `api/products` con `vi.mock`, así que no depe
 
 | Archivo | Tests | Qué cubre |
 |---|---|---|
-| `features/account/PasswordField.test.jsx` | 4 nuevos | Con `bloquearPegado` no se puede pegar, copiar, cortar ni soltar texto (tampoco con el password visible); sin él, como en el login, sí se puede pegar |
+| `features/account/PasswordField.test.jsx` | 4 nuevos | Con `bloquearPegado` no se puede pegar, copiar, cortar ni soltar texto (tampoco con el password visible); sin ninguna de las dos propiedades (campo sin restricciones) sí se puede pegar. El R9 añadió 5 tests de `bloquearCopia` (HU2-CP30) |
 | `pages/Register.test.jsx` | 3 nuevos | En cliente y en vendedor no se puede pegar ni el password ni su repetición; escrito a mano en los dos campos, el registro sigue funcionando |
 
 **Task AB#234** (con TDD: primero los tests en rojo y después el código):

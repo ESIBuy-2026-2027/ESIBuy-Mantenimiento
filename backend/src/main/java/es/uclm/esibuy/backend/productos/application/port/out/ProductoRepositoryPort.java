@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.productos.application.port.out;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.List;
 
 import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
@@ -22,8 +23,8 @@ public interface ProductoRepositoryPort {
 
     // Productos de un vendedor (HU32), del más reciente al más antiguo.
     ProductoPage listarPorVendedor(String vendedorId, ListarProductosQuery query);
-    // Todos los productos de un vendedor, sin paginar ni filtrar (HU17)
-    List<Producto> buscarTodosPorVendedor(String vendedorId);
+
+    List<Producto> listarTodosPorVendedor(String vendedorId);
 
     // ¿Tiene ya el vendedor un producto con ese nombre? No distingue mayúsculas (HU31).
     boolean existePorVendedorYNombre(String vendedorId, String nombre);

@@ -241,7 +241,7 @@ class RealizacionPedidoServiceTest {
 
         @Override
         public List<Pedido> buscarPorVendedor(String vendedorId) {
-            throw new UnsupportedOperationException("Realizar un pedido no consulta las ventas del vendedor");
+            throw new UnsupportedOperationException("Realizar un pedido no busca por vendedor");
         }
     }
 }

@@ -32,6 +32,7 @@ import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
 public class ProductoMongoAdapter implements ProductoRepositoryPort {
 
     private static final String CAMPO_STOCK = "stock";
+    private static final String CAMPO_DISPONIBLE = "disponible";
     private static final String CAMPO_NOMBRE = "nombre";
     private static final String CAMPO_VALORACION_MEDIA = "valoracionMedia";
 
@@ -75,7 +76,9 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     // último stock no pueden pasar las dos
     @Override
     public boolean descontarStock(String id, int cantidad) {
-        Query conStockSuficiente = new Query(Criteria.where("_id").is(id).and(CAMPO_STOCK).gte(cantidad));
+        Query conStockSuficiente = new Query(Criteria.where("_id").is(id)
+                .and(CAMPO_STOCK).gte(cantidad)
+                .and(CAMPO_DISPONIBLE).is(true));
         return mongoTemplate.updateFirst(conStockSuficiente, new Update().inc(CAMPO_STOCK, -cantidad),
                 ProductoDocument.class).getModifiedCount() == 1;
     }
@@ -107,11 +110,9 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     }
 
     @Override
-    public List<Producto> buscarTodosPorVendedor(String vendedorId) {
-        return mongoTemplate.find(new Query(Criteria.where("vendedorId").is(vendedorId)), ProductoDocument.class)
-                .stream()
-                .map(mapper::aDominio)
-                .toList();
+    public List<Producto> listarTodosPorVendedor(String vendedorId) {
+        return mongoTemplate.find(Query.query(Criteria.where("vendedorId").is(vendedorId)), ProductoDocument.class)
+                .stream().map(mapper::aDominio).toList();
     }
 
     // Catálogo del cliente (HU7): solo productos disponibles, de todos los vendedores; la búsqueda por nombre

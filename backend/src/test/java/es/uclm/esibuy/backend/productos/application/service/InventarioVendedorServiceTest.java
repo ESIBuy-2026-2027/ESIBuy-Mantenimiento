@@ -29,7 +29,7 @@ class InventarioVendedorServiceTest {
     @Test
     @DisplayName("HU17-CP08: el inventario del vendedor da el stock, la disponibilidad y las valoraciones de cada producto")
     void elInventarioDaStockDisponibilidadYValoraciones() {
-        when(productoRepository.buscarTodosPorVendedor("v-1")).thenReturn(List.of(
+        when(productoRepository.listarTodosPorVendedor("v-1")).thenReturn(List.of(
                 producto("p-1", "Teclado", 3, true, 4.5, 2),
                 producto("p-2", "Ratón", 0, false, null, 0)));
 
@@ -43,7 +43,7 @@ class InventarioVendedorServiceTest {
     @Test
     @DisplayName("HU17-CP08: un vendedor sin productos tiene el inventario vacío")
     void sinProductosElInventarioEstaVacio() {
-        when(productoRepository.buscarTodosPorVendedor("v-1")).thenReturn(List.of());
+        when(productoRepository.listarTodosPorVendedor("v-1")).thenReturn(List.of());
 
         assertEquals(List.of(), new InventarioVendedorService(productoRepository).productosDe("v-1"));
     }

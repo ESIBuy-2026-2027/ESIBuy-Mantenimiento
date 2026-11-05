@@ -18,6 +18,6 @@ public interface PedidoRepositoryPort {
     List<Pedido> buscarPorCliente(String clienteId);
 
     Optional<Pedido> buscarPorId(String id);
-    // Todos los pedidos del vendedor, en cualquier estado (HU17)
+
     List<Pedido> buscarPorVendedor(String vendedorId);
 }

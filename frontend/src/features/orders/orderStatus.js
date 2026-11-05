@@ -4,6 +4,9 @@ export const PASOS_DEL_ENVIO = ['PAGADO', 'PREPARANDO', 'ENVIADO', 'ENTREGADO']
 
 export const CANCELADO = 'CANCELADO'
 
+// HU12: solo se cancela un pedido que aún no se ha enviado, la misma regla que el backend (Pedido.cancelar)
+export const esCancelable = (estado) => estado === 'PAGADO' || estado === 'PREPARANDO'
+
 const ETIQUETAS = {
   PAGADO: 'Pagado',
   PREPARANDO: 'Preparando',

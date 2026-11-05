@@ -488,6 +488,30 @@ class ProductoMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU47-CP03: un producto no disponible no se puede comprar aunque tenga stock")
+    void productoNoDisponibleNoSePuedeComprarAunqueTengaStock() {
+        Producto producto = producto(null, 5).conDisponibilidad(false);
+        String id = adapter.guardar(producto).getId();
+
+        assertFalse(adapter.descontarStock(id, 1));
+        assertEquals(5, adapter.buscarPorId(id).orElseThrow().getStock());
+    }
+
+    @Test
+    @DisplayName("HU47-CP02: listar todos los productos devuelve solo los del vendedor indicado")
+    void listarTodosPorVendedorDevuelveSoloLosDelVendedor() {
+        adapter.guardar(producto(null, 5));
+        Producto deOtroVendedor = new Producto(null, "v-2", "Ratón", "Óptico", new BigDecimal("20.00"), 2,
+                "cat-2", "https://esibuy.test/raton.png", true, Descuento.sinDescuento(), Descuento.sinDescuento());
+        adapter.guardar(deOtroVendedor);
+
+        List<Producto> productos = adapter.listarTodosPorVendedor("v-1");
+
+        assertEquals(1, productos.size());
+        assertEquals("v-1", productos.get(0).getVendedorId());
+    }
+
+    @Test
     @DisplayName("HU10-CP15: dos descuentos a la vez del último stock no lo dejan negativo")
     void dosDescuentosALaVezNoDejanElStockNegativo() throws Exception {
         String id = adapter.guardar(producto(null, 1)).getId();
@@ -517,19 +541,19 @@ class ProductoMongoAdapterTest {
     }
 
     @Test
-    @DisplayName("HU17-CP09: buscarTodosPorVendedor devuelve todos sus productos, también los no disponibles, sin paginar")
-    void buscarTodosPorVendedorDevuelveTodosSusProductos() {
+    @DisplayName("HU17-CP09: listarTodosPorVendedor devuelve todos sus productos, también los no disponibles, sin paginar")
+    void listarTodosPorVendedorIncluyeLosNoDisponiblesSinPaginar() {
         for (int i = 1; i <= 12; i++) {
             adapter.guardar(productoNuevo("v-1", "Producto " + i));
         }
         Producto noDisponible = adapter.guardar(productoNuevo("v-1", "No disponible").conDisponibilidad(false));
         adapter.guardar(productoNuevo("v-2", "De otro vendedor"));
 
-        List<Producto> productos = adapter.buscarTodosPorVendedor("v-1");
+        List<Producto> productos = adapter.listarTodosPorVendedor("v-1");
 
         assertEquals(13, productos.size());
         assertTrue(productos.stream().allMatch(producto -> producto.getVendedorId().equals("v-1")));
         assertTrue(productos.stream().anyMatch(producto -> producto.getId().equals(noDisponible.getId())));
-        assertTrue(adapter.buscarTodosPorVendedor("v-sin-productos").isEmpty());
+        assertTrue(adapter.listarTodosPorVendedor("v-sin-productos").isEmpty());
     }
 }

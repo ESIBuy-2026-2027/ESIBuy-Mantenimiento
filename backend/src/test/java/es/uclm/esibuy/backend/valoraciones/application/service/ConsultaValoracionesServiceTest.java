@@ -56,5 +56,10 @@ class ConsultaValoracionesServiceTest {
         public List<Valoracion> buscarPorProducto(String productoId) {
             return guardadas.stream().filter(v -> v.productoId().equals(productoId)).toList();
         }
+
+        @Override
+        public void eliminarPorProducto(String productoId) {
+            throw new UnsupportedOperationException("Consultar valoraciones no elimina");
+        }
     }
 }

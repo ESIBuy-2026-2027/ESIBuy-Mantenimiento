@@ -43,7 +43,7 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | HU1-CP24 | Tras registrarse se ofrece ir a iniciar sesión | Frontend (página) | 1 | ✅ Pasa (1, AB#234, PR #105) |
 | HU1-CP25 | Con la sesión iniciada no se ofrece crear una cuenta y /register lleva a la página del rol | Frontend (página y rutas) | 3 | ✅ Pasa (3, AB#17 · AB#18, PR #105) |
 | HU1-CP26 | Un registro correcto no se trata como un error aunque el backend responda 201 sin cuerpo | Frontend (API) | 1 | ✅ Pasa (1, AB#17 · AB#18, PR #105) |
-| HU1-CP27 | En el registro, el password y su repetición solo se pueden escribir a mano: no admiten copiar, cortar, pegar ni soltar texto, y el login sigue admitiendo pegar | Frontend (componente y página) | 7 | ✅ Pasa (7, AB#242, PR #125) |
+| HU1-CP27 | En el registro, el password y su repetición solo se pueden escribir a mano: no admiten copiar, cortar, pegar ni soltar texto, y el login sigue admitiendo pegar (aunque no copiar, HU2-CP31) | Frontend (componente y página) | 7 | ✅ Pasa (7, AB#242, PR #125) |
 
 Notas:
 - **HU1-CP11:** en el PR #36, el bloqueo manual de la T214 se renombra a desactivar/activar (`desactivar()`, `activar()`, `estaDesactivado()`) para no confundirlo con el bloqueo temporal por intentos del login (HU2-CP03). En la T225 (AB#225) la consulta pasa a nombrarse en positivo: `estaActivo()`.
@@ -233,7 +233,7 @@ Notas:
 | HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con bloquearPegado no deja pegar texto en el campo` | Frontend · componente | AB#242 | PR #125 | ✅ |
 | HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con bloquearPegado tampoco deja copiar, cortar ni soltar texto arrastrado en el campo` | Frontend · componente | AB#242 | PR #125 | ✅ |
 | HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con el password visible sigue sin dejar copiarlo` | Frontend · componente | AB#242 | PR #125 | ✅ |
-| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: sin bloquearPegado (como en el login) se puede pegar` | Frontend · componente | AB#242 | PR #125 | ✅ |
+| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: sin bloquearPegado ni bloquearCopia (el campo sin restricciones) se puede pegar` | Frontend · componente | AB#242 | PR #125 | ✅ |
 | HU1-CP27 | `Register.test.jsx` | `HU1-CP27: en el registro de cliente no se puede pegar el password ni su repetición` | Frontend · página | AB#242 | PR #125 | ✅ |
 | HU1-CP27 | `Register.test.jsx` | `HU1-CP27: en el registro de vendedor no se puede pegar el password ni su repetición` | Frontend · página | AB#242 | PR #125 | ✅ |
 | HU1-CP27 | `Register.test.jsx` | `HU1-CP27: el password escrito a mano en los dos campos sigue permitiendo registrarse` | Frontend · página | AB#242 | PR #125 | ✅ |
@@ -479,6 +479,8 @@ Los tests de integración de MongoDB (`UsuarioMongoAdapterTest`, `UsuariosConfig
 | HU2-CP27 | El campo de la contraseña del login tiene un botón para mostrarla y ocultarla | Frontend (página) | 1 | ✅ Pasa (1, AB#19, PR #105) |
 | HU2-CP28 | Una cuenta bloqueada por un administrador muestra su mensaje en el paso 1, antes del código del correo, y no avanza al 2FA | Frontend (página) + unitario + integración | 4 | ✅ Pasa (2, AB#246, PR #114) |
 | HU2-CP29 | El registro y los pasos del login se pueden usar sin sesión; consultar el usuario en sesión exige estar autenticado y que el correo sea el de la sesión; el id del usuario y el perfil son del cliente y del vendedor, y saber si es premium, solo del cliente; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 7 | 🔍 En revisión (7, rama `fix/seguridad-capa-negocio`) |
+| HU2-CP30 | `PasswordField` con `bloquearCopia` no deja copiar ni cortar la contraseña (tampoco con el ojo activado) y sí pegar, soltar y escribir; sin ninguna propiedad se puede copiar | Frontend (componente) | 5 | 🔍 En revisión (5, AB#242, PR pendiente) |
+| HU2-CP31 | En el login la contraseña no se puede copiar ni cortar, tampoco con el ojo activado, pero sí pegar, y el login sigue funcionando pegando o escribiendo a mano | Frontend (página) | 4 | 🔍 En revisión (4, AB#242, PR pendiente) |
 
 Notas:
 - **HU2-CP25 y CP26 (fallos de la demo del Sprint 1):** el paso 1 busca el email normalizado (`Email`, T240) y responde «Credenciales inválidas» si está mal formado. El contador de intentos se reinicia al caducar el bloqueo (`Usuario.registrarIntentoFallido`) y al completar el tercer paso (`AuthenticatorService.verificarCodigo`), no al acertar la contraseña: así quien solo tenga la contraseña no puede probar códigos sin límite.
@@ -500,6 +502,7 @@ Notas:
 - **HU2-CP28 (AB#245, Sprint 2):** las cuentas ya no se desactivan, se bloquean (decisión del equipo). El frontend deja de esperar `ACCOUNT_DISABLED` y espera `403` con `ACCOUNT_BLOCKED` (estado `BLOQUEADO`); solo cambia el login. El backend lo completa en la T246 (AB#246): el `403` de `CuentaDesactivadaException` responde `ACCOUNT_BLOCKED` y un test fija que la cuenta se rechaza sin generar ni enviar el código del correo. El test del controlador que esperaba `ACCOUNT_DISABLED` (antes en CP04) pasa a CP28. El estado `DESACTIVADO` y la excepción no se renombran todavía, así que CP04 sigue cubriendo el rechazo y la persistencia de ese estado.
 - **Frontend (T20):** los tests de `LoginFlow.test.jsx` no llevan el ID del caso en el nombre (estilo del archivo, anterior a la convención de la HU19); se trazan aquí por su nombre.
 - **HU2-CP29 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Cubre con `@PreAuthorize` los servicios `AutenticacionService`, `AuthenticatorService`, `RegistroUsuarioService` y `GestionPerfilService`, que sirven también a las HU1 y HU4; se traza aquí por ser `AutenticacionService` el centro del ciclo. Los pasos del login y el registro son `permitAll()` explícito: el correo del login a medias vive en la sesión HTTP y no en `authentication.name`, así que la propiedad no se puede comprobar con `@PreAuthorize` sin rediseñar el login. Clase de test nueva `usuarios/application/service/SeguridadSesionUsuarioServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
+- **HU2-CP30 y CP31 (R9 de la revisión del Sprint 1, "no se puede copiar la contraseña", AB#242):** casos propuestos. `PasswordField` gana la propiedad `bloquearCopia` (cancela copiar y cortar, también con el ojo activado) y el login la usa: la contraseña no se copia, pero sí se pega, para no romper los gestores de contraseñas. `bloquearPegado` (registro, recuperación y alta de administrador) no cambia. Pendientes de confirmar con el equipo y de añadir a la HU2 en Azure Boards. Rama `fix/US1-T242-bloquear-copia-contrasena-login`.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -626,6 +629,15 @@ Notas:
 | HU2-CP29 | `SeguridadSesionUsuarioServiceTest` | `unClienteConsultaLoSuyo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 | HU2-CP29 | `SeguridadSesionUsuarioServiceTest` | `unAnonimoNoConsultaNada` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 | HU2-CP29 | `SeguridadSesionUsuarioServiceTest` | `sinSesionSeRechazanLasConsultas` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU2-CP30 | `PasswordField.test.jsx` | `HU2-CP30: con bloquearCopia no deja copiar ni cortar la contraseña` | Frontend · componente | AB#242 | PR pendiente | 🔍 |
+| HU2-CP30 | `PasswordField.test.jsx` | `HU2-CP30: con bloquearCopia sigue sin dejar copiarla ni cortarla con la contraseña visible` | Frontend · componente | AB#242 | PR pendiente | 🔍 |
+| HU2-CP30 | `PasswordField.test.jsx` | `HU2-CP30: con bloquearCopia sí deja pegar (gestores de contraseñas) y soltar texto` | Frontend · componente | AB#242 | PR pendiente | 🔍 |
+| HU2-CP30 | `PasswordField.test.jsx` | `HU2-CP30: con bloquearCopia se puede escribir a mano` | Frontend · componente | AB#242 | PR pendiente | 🔍 |
+| HU2-CP30 | `PasswordField.test.jsx` | `HU2-CP30: sin ninguna de las dos propiedades se puede copiar y cortar` | Frontend · componente | AB#242 | PR pendiente | 🔍 |
+| HU2-CP31 | `LoginFlow.test.jsx` | `HU2-CP31: la contraseña del login no se puede copiar ni cortar` | Frontend · página | AB#242 | PR pendiente | 🔍 |
+| HU2-CP31 | `LoginFlow.test.jsx` | `HU2-CP31: tampoco se puede copiar ni cortar con la contraseña visible` | Frontend · página | AB#242 | PR pendiente | 🔍 |
+| HU2-CP31 | `LoginFlow.test.jsx` | `HU2-CP31: sí se puede pegar la contraseña y el login sigue funcionando` | Frontend · página | AB#242 | PR pendiente | 🔍 |
+| HU2-CP31 | `LoginFlow.test.jsx` | `HU2-CP31: escribiendo la contraseña a mano el login sigue funcionando` | Frontend · página | AB#242 | PR pendiente | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AutenticacionServiceTest`: `usuarios/application/service/` (Mockito, con `Clock` fijo)
@@ -1792,41 +1804,72 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU12-CP01 | Un pedido que aún no se ha enviado (`PAGADO` o `PREPARANDO`) se puede cancelar y pasa a `CANCELADO` | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
-| HU12-CP02 | Un pedido `ENVIADO`, `ENTREGADO` o ya `CANCELADO` no se puede cancelar (`PedidoNoCancelableException`) y no cambia | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
-| HU12-CP03 | Cancelar un pedido del cliente lo guarda cancelado y lo devuelve | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
-| HU12-CP04 | Al cancelar se repone el stock de cada producto del pedido, después de guardar la cancelación | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
-| HU12-CP05 | Un pedido de otro cliente o que no existe no se cancela y se trata como inexistente (`PedidoNoEncontradoException`) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
-| HU12-CP06 | Un pedido enviado o ya cancelado no se cancela: ni se guarda ni se repone stock (cancelar dos veces repondría el stock dos veces) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
-| HU12-CP07 | Solo el cliente cancela sus pedidos: vendedor, administrador, otro cliente y sin sesión, rechazados | Seguridad (`@PreAuthorize`, contexto mínimo) | 5 | 🔍 En revisión (5, AB#375, PR sin abrir) |
-| HU12-CP08 | En MongoDB, guardar un pedido leído y cancelado actualiza el mismo documento, sin crear otro | Integración (Testcontainers) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
+| HU12-CP01 | Un pedido que aún no se ha enviado (`PAGADO` o `PREPARANDO`) se puede cancelar y pasa a `CANCELADO` | Unitario (dominio) | 1 | ✅ Pasa |
+| HU12-CP02 | Un pedido `ENVIADO`, `ENTREGADO` o ya `CANCELADO` no se puede cancelar (`PedidoNoCancelableException`) y no cambia | Unitario (dominio) | 1 | ✅ Pasa |
+| HU12-CP03 | Cancelar un pedido del cliente lo guarda cancelado y lo devuelve | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU12-CP04 | Al cancelar se repone el stock de cada producto del pedido, después de guardar la cancelación | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU12-CP05 | Un pedido de otro cliente o que no existe no se cancela y se trata como inexistente (`PedidoNoEncontradoException`) | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU12-CP06 | Un pedido enviado o ya cancelado no se cancela: ni se guarda ni se repone stock (cancelar dos veces repondría el stock dos veces) | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU12-CP07 | Solo el cliente cancela sus pedidos: vendedor, administrador, otro cliente y sin sesión, rechazados | Seguridad (`@PreAuthorize`, contexto mínimo) | 5 | ✅ Pasa |
+| HU12-CP08 | En MongoDB, guardar un pedido leído y cancelado actualiza el mismo documento, sin crear otro | Integración (Testcontainers) | 1 | ✅ Pasa |
+| HU12-CP09 | `POST /api/customer/orders/{id}/cancel` responde 200 con el pedido ya cancelado (`CANCELADO`), sin exponer el cliente | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU12-CP10 | Un pedido que ya no se puede cancelar (enviado, entregado o ya cancelado) responde 409 con el code `ORDER_NOT_CANCELLABLE` | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU12-CP11 | Cancelar un pedido que no existe o es de otro cliente responde 400 con el code `ORDER_NOT_FOUND` | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU12-CP12 | Sin sesión cancelar responde 401, con otro rol 403 y sin el token CSRF se rechaza (403) | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU12-CP13 | El detalle de un pedido pagado o en preparación tiene el botón «Cancelar pedido»; uno enviado, entregado o cancelado, no | Frontend (página) | 3 | 🔍 En revisión (3, AB#372, PR sin abrir) |
+| HU12-CP14 | Al pulsar «Cancelar pedido» se pide confirmación y todavía no se cancela | Frontend (página) | 1 | 🔍 En revisión (1, AB#372, PR sin abrir) |
+| HU12-CP15 | La confirmación nombra el pedido y avisa de que no se puede deshacer; «Volver» cierra sin cancelar | Frontend (componente) | 2 | 🔍 En revisión (2, AB#373, PR sin abrir) |
+| HU12-CP16 | Al confirmar se cancela el pedido y el detalle lo muestra cancelado, con el aviso «Pedido cancelado.» | Frontend (componente y página) | 2 | 🔍 En revisión (2, AB#373, PR sin abrir) |
+| HU12-CP17 | Si el pedido ya no se puede cancelar (409), no se da por cancelado: se cierra la confirmación y el detalle lo avisa | Frontend (componente y página) | 2 | 🔍 En revisión (2, AB#373, PR sin abrir) |
+| HU12-CP18 | Si la cancelación falla por otro motivo, se avisa dentro de la confirmación y se puede reintentar | Frontend (componente) | 1 | 🔍 En revisión (1, AB#373, PR sin abrir) |
 
 Notas:
 - **HU12-CP01 a CP08 (Sprint 2, backend, TDD):** casos propuestos en la T375 (AB#375, lógica de cancelación de pedido) a partir de los criterios de aceptación de la HU12 (AB#74): «solo permite cancelar si el pedido no ha sido enviado» y «el stock se repone al cancelar». Pendientes de confirmar con el equipo y de añadir a la HU12 en Azure Boards.
 - **Decisiones del equipo:** se cancelan los pedidos `PAGADO` y `PREPARANDO`, como dice el criterio (no los `ENVIADO`). Cancelar un pedido ya cancelado es un error, para no reponer el stock dos veces. Primero se guarda la cancelación y después se repone el stock. Caso de uso nuevo `CancelacionPedidoUseCase` (cancelar no es lo mismo que comprar). Un pedido ajeno se trata como inexistente.
-- **Pendiente:** el endpoint (T374, AB#374) y el frontend (T372 y T373, AB#372 y AB#373).
+- **HU12-CP09 a CP12 (Sprint 2, backend, TDD):** casos propuestos en la T374 (AB#374, endpoint de cancelación): `POST /api/customer/orders/{id}/cancel`, sin cuerpo y con CSRF, responde 200 con el pedido cancelado; 409 `ORDER_NOT_CANCELLABLE` si ya no se puede cancelar; 400 `ORDER_NOT_FOUND` si no existe o es de otro cliente. HU12-CP12 pasó sin rojo real: `SecurityConfig` ya protege `/api/customer/**`. Pendientes de confirmar con el equipo y de añadir a la HU12 en Azure Boards.
+- **HU12-CP13 a CP18 (Sprint 2, frontend, TDD, un ciclo por task):** casos propuestos en la T372 (botón de cancelar pedido) y la T373 (confirmación), con el contrato de la T374 (`frontend/docs/hu12-cancelar-pedido.md`). Sin rojo real: «un pedido enviado, entregado o ya cancelado no tiene el botón» (CP13, ciclo 1) y los dos de CP15 (ciclo 2), que quedaron hechos en el ciclo 1. Pendientes de confirmar con el equipo y de añadir a la HU12 en Azure Boards.
 
 ### Tabla B · casos de prueba ↔ tests
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU12-CP01 | `PedidoTest` | `unPedidoNoEnviadoSeCancela` | Dominio | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP02 | `PedidoTest` | `unPedidoEnviadoEntregadoOCanceladoNoSeCancela` | Dominio | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP03 | `CancelacionPedidoServiceTest` | `cancelarGuardaElPedidoCanceladoYLoDevuelve` | Aplicación | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP04 | `CancelacionPedidoServiceTest` | `cancelarReponeElStockDespuesDeGuardar` | Aplicación | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP05 | `CancelacionPedidoServiceTest` | `unPedidoAjenoOInexistenteNoSeCancela` | Aplicación | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP06 | `CancelacionPedidoServiceTest` | `unPedidoNoCancelableNoCambiaNada` | Aplicación | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP07 | `SeguridadPedidosServiceTest` | `unVendedorNoCancelaPedidos` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP07 | `SeguridadPedidosServiceTest` | `unAdministradorNoCancelaPedidos` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP07 | `SeguridadPedidosServiceTest` | `unClienteNoCancelaConElCorreoDeOtro` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP07 | `SeguridadPedidosServiceTest` | `unClienteCancelaConSuPropioCorreo` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP07 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaCancelar` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP08 | `PedidoMongoAdapterTest` | `guardarUnPedidoCanceladoActualizaElMismoDocumento` | Infraestructura | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP01 | `PedidoTest` | `unPedidoNoEnviadoSeCancela` | Dominio | AB#375 | PR #200 | ✅ |
+| HU12-CP02 | `PedidoTest` | `unPedidoEnviadoEntregadoOCanceladoNoSeCancela` | Dominio | AB#375 | PR #200 | ✅ |
+| HU12-CP03 | `CancelacionPedidoServiceTest` | `cancelarGuardaElPedidoCanceladoYLoDevuelve` | Aplicación | AB#375 | PR #200 | ✅ |
+| HU12-CP04 | `CancelacionPedidoServiceTest` | `cancelarReponeElStockDespuesDeGuardar` | Aplicación | AB#375 | PR #200 | ✅ |
+| HU12-CP05 | `CancelacionPedidoServiceTest` | `unPedidoAjenoOInexistenteNoSeCancela` | Aplicación | AB#375 | PR #200 | ✅ |
+| HU12-CP06 | `CancelacionPedidoServiceTest` | `unPedidoNoCancelableNoCambiaNada` | Aplicación | AB#375 | PR #200 | ✅ |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `unVendedorNoCancelaPedidos` | Aplicación (seguridad) | AB#375 | PR #200 | ✅ |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `unAdministradorNoCancelaPedidos` | Aplicación (seguridad) | AB#375 | PR #200 | ✅ |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `unClienteNoCancelaConElCorreoDeOtro` | Aplicación (seguridad) | AB#375 | PR #200 | ✅ |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `unClienteCancelaConSuPropioCorreo` | Aplicación (seguridad) | AB#375 | PR #200 | ✅ |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaCancelar` | Aplicación (seguridad) | AB#375 | PR #200 | ✅ |
+| HU12-CP08 | `PedidoMongoAdapterTest` | `guardarUnPedidoCanceladoActualizaElMismoDocumento` | Infraestructura | AB#375 | PR #200 | ✅ |
+| HU12-CP09 | `PedidoControllerTest` | `cancelarUnPedidoResponde200ConElPedidoCancelado` | Infraestructura (web) | AB#374 | PR #207 | ✅ |
+| HU12-CP10 | `PedidoControllerTest` | `unPedidoNoCancelableResponde409` | Infraestructura (web) | AB#374 | PR #207 | ✅ |
+| HU12-CP11 | `PedidoControllerTest` | `cancelarUnPedidoInexistenteOAjenoResponde400` | Infraestructura (web) | AB#374 | PR #207 | ✅ |
+| HU12-CP12 | `PedidoControllerTest` | `soloElClienteCancelaSusPedidos` | Infraestructura (web) | AB#374 | PR #207 | ✅ |
+| HU12-CP13 | `OrderDetailPage.test.jsx` | `HU12-CP13: un pedido pagado o en preparación, que aún no se ha enviado, tiene el botón «Cancelar pedido»` | Frontend · página | AB#372 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP13 | `OrderDetailPage.test.jsx` | `HU12-CP13: un pedido en preparación también se puede cancelar` | Frontend · página | AB#372 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP13 | `OrderDetailPage.test.jsx` | `HU12-CP13: un pedido enviado, entregado o ya cancelado no tiene el botón` | Frontend · página | AB#372 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP14 | `OrderDetailPage.test.jsx` | `HU12-CP14: al pulsar «Cancelar pedido» pide confirmación y todavía no cancela nada` | Frontend · página | AB#372 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP15 | `CancelOrderDialog.test.jsx` | `HU12-CP15: pregunta por el pedido que se va a cancelar y avisa de que no se puede deshacer` | Frontend · componente | AB#373 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP15 | `CancelOrderDialog.test.jsx` | `HU12-CP15: «Volver» cierra la confirmación sin cancelar el pedido` | Frontend · componente | AB#373 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP16 | `CancelOrderDialog.test.jsx` | `HU12-CP16: al confirmar cancela el pedido y entrega el pedido ya cancelado` | Frontend · componente | AB#373 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP16 | `OrderDetailPage.test.jsx` | `HU12-CP16: al confirmar, el detalle muestra el pedido cancelado y avisa de que se ha cancelado` | Frontend · página | AB#373 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP17 | `CancelOrderDialog.test.jsx` | `HU12-CP17: si el pedido ya no se puede cancelar (409), lo comunica sin darlo por cancelado` | Frontend · componente | AB#373 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP17 | `OrderDetailPage.test.jsx` | `HU12-CP17: si el pedido ya no se puede cancelar, cierra la confirmación y lo avisa en el detalle` | Frontend · página | AB#373 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP18 | `CancelOrderDialog.test.jsx` | `HU12-CP18: si falla por otro motivo avisa dentro de la confirmación y se puede reintentar` | Frontend · componente | AB#373 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/pedidos/`):
 - `PedidoTest`: `domain/model/` (JUnit)
 - `CancelacionPedidoServiceTest` y `SeguridadPedidosServiceTest`: `application/service/` (el primero con Mockito, sin Spring; el segundo con un contexto mínimo y `@WithMockUser`)
 - `PedidoMongoAdapterTest`: `infrastructure/adapter/out/persistence/` (Testcontainers)
+- `PedidoControllerTest`: `infrastructure/adapter/in/web/` (`@WebMvcTest` con `SecurityConfig`, sin MongoDB)
+
+Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing Library y MSW):
+- `OrderDetailPage.test.jsx`: `pages/`
+- `CancelOrderDialog.test.jsx`: `features/orders/`
 
 ---
 
@@ -1989,18 +2032,26 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP08 | Un cuerpo sin `productoId`, con `productoId` vacío o ilegible devuelve 400 `VALIDATION_ERROR` y no llega al caso de uso | Integración (capa web) | 1 | ✅ Pasa (1, AB#358, PR #198) |
 | HU14-CP09 | Un producto no disponible devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | ✅ Pasa (1, AB#358, PR #198) |
 | HU14-CP10 | Sin sesión (401), sin ser cliente (403) o sin token CSRF (403) no se añade a la lista | Integración (capa web) | 3 | ✅ Pasa (3, AB#358, PR #198) |
-| HU14-CP11 | Consultar devuelve cada producto con sus datos actuales y su fecha, en orden de añadido; sin lista, una vacía que no se guarda | Unitario | 2 | 🔍 En revisión (2, Rama `feature/US14-T362-logica-obtencion-deseos`) |
-| HU14-CP12 | Un producto desactivado sigue en la lista, marcado como no disponible | Unitario | 1 | 🔍 En revisión (1, Rama `feature/US14-T362-logica-obtencion-deseos`) |
-| HU14-CP13 | Un producto eliminado desaparece y la lista se guarda sin él; si no hay ninguno eliminado, no se guarda nada | Unitario | 4 | 🔍 En revisión (4, Rama `feature/US14-T362-logica-obtencion-deseos`) |
-| HU14-CP14 | El precio de cada producto es el que le toca al cliente, estándar o premium | Unitario | 1 | 🔍 En revisión (1, Rama `feature/US14-T362-logica-obtencion-deseos`) |
-| HU14-CP15 | Solo el cliente con su propio correo consulta su lista: otro correo, vendedor o administrador reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, Rama `feature/US14-T362-logica-obtencion-deseos`) |
-| HU14-CP16 | El resumen de `productos` devuelve los productos disponibles y los desactivados, vacío si no existe, y exige el rol cliente | Unitario y unitario con Spring Security (sin MongoDB) | 7 | 🔍 En revisión (7, Rama `feature/US14-T362-logica-obtencion-deseos`) |
-| HU14-CP17 | Los adaptadores preguntan a `usuarios` si el cliente es premium y a `productos` por los datos del producto | Unitario | 3 | 🔍 En revisión (3, Rama `feature/US14-T362-logica-obtencion-deseos`) |
+| HU14-CP11 | Consultar devuelve cada producto con sus datos actuales y su fecha, en orden de añadido; sin lista, una vacía que no se guarda | Unitario | 2 | ✅ Pasa (2, AB#362, PR #205) |
+| HU14-CP12 | Un producto desactivado sigue en la lista, marcado como no disponible | Unitario | 1 | ✅ Pasa (1, AB#362, PR #205) |
+| HU14-CP13 | Un producto eliminado desaparece y la lista se guarda sin él; si no hay ninguno eliminado, no se guarda nada | Unitario | 4 | ✅ Pasa (4, AB#362, PR #205) |
+| HU14-CP14 | El precio de cada producto es el que le toca al cliente, estándar o premium | Unitario | 1 | ✅ Pasa (1, AB#362, PR #205) |
+| HU14-CP15 | Solo el cliente con su propio correo consulta su lista: otro correo, vendedor o administrador reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#362, PR #205) |
+| HU14-CP16 | El resumen de `productos` devuelve los productos disponibles y los desactivados, vacío si no existe, y exige el rol cliente | Unitario y unitario con Spring Security (sin MongoDB) | 7 | ✅ Pasa (7, AB#362, PR #205) |
+| HU14-CP17 | Los adaptadores preguntan a `usuarios` si el cliente es premium y a `productos` por los datos del producto | Unitario | 3 | ✅ Pasa (3, AB#362, PR #205) |
+| HU14-CP18 | `GET /api/customer/wishlist` devuelve 200 con los datos de cada producto, también de uno desactivado, o con `items` vacío; el cliente sale de la sesión | Integración (capa web) | 2 | ✅ Pasa (2, AB#361, PR #206) |
+| HU14-CP19 | Sin sesión (401) o sin ser cliente (403) no se consulta la lista | Integración (capa web) | 2 | ✅ Pasa (2, AB#361, PR #206) |
 | HU14-CP20 | La llamada del cliente pide `POST /api/customer/wishlist/items` con el producto y devuelve la lista; un 404 llega como error con su estado y su código | Frontend (API) | 2 | ✅ Pasa (2, AB#357, PR #202) |
 | HU14-CP21 | Cada tarjeta del catálogo tiene un corazón para añadir su producto a favoritos, fuera del enlace al detalle; también los agotados, pero no los no disponibles | Frontend (componente y página) | 5 | ✅ Pasa (5, AB#357, PR #202) |
 | HU14-CP22 | Al pulsar el corazón se añade el producto; mientras se añade queda deshabilitado y después queda relleno y deshabilitado, sin salir del catálogo | Frontend (componente y página) | 4 | ✅ Pasa (4, AB#357, PR #202) |
 | HU14-CP23 | La lista que devuelve el backend al añadir rellena también los corazones de los productos que ya estaban en favoritos | Frontend (página) | 1 | ✅ Pasa (1, AB#357, PR #202) |
 | HU14-CP24 | Si no se puede añadir, la tarjeta lo avisa (producto que ya no está disponible o mensaje genérico) y el corazón se puede volver a pulsar; al pulsarlo desaparece el aviso | Frontend (componente y página) | 4 | ✅ Pasa (4, AB#357, PR #202) |
+| HU14-CP25 | Quitar un producto lo saca de la lista, conserva los demás, la guarda y devuelve la lista actualizada | Unitario | 2 | ✅ Pasa (2, AB#366, PR #208) |
+| HU14-CP26 | Quitar un producto que no está no es un error ni guarda nada; si el cliente no tiene lista, tampoco la crea | Unitario | 3 | ✅ Pasa (3, AB#366, PR #208) |
+| HU14-CP27 | Un producto desactivado también se puede quitar | Unitario | 1 | ✅ Pasa (1, AB#366, PR #208) |
+| HU14-CP28 | Solo el cliente con su propio correo puede quitar: otro correo, vendedor o administrador reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#366, PR #208) |
+| HU14-CP29 | `DELETE /api/customer/wishlist/items/{productoId}` devuelve 200 con la lista actualizada; el cliente sale de la sesión | Integración (capa web) | 1 | 🔍 En revisión (1, Rama `feature/US14-T365-endpoint-eliminacion-deseos`) |
+| HU14-CP30 | Sin sesión (401), sin ser cliente (403) o sin token CSRF (403) no se quita de la lista | Integración (capa web) | 3 | 🔍 En revisión (3, Rama `feature/US14-T365-endpoint-eliminacion-deseos`) |
 
 - **HU14-CP01 a CP06 (Sprint 2, backend):** casos propuestos en la task AB#360 (lógica de guardado de deseo), revisados y aceptados por el desarrollador. Azure no los trae: habría que añadirlos a la HU14.
 - **Decisiones del equipo:** módulo nuevo `deseos`; una sola lista por cliente, como dicen el criterio de aceptación y la colección `listas_deseos`, que ya tenía su índice único. El campo de la colección sigue siendo `usuarioId`, y guarda el id del cliente. Añadir un producto repetido no es un error, y un producto inexistente o no disponible se rechaza.
@@ -2008,6 +2059,14 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - **HU14-CP11 a CP17 (Sprint 2, backend):** casos propuestos en la task AB#362 (lógica de obtención de deseos), revisados y aceptados por el desarrollador.
 - **Consultar la lista (T362):** devuelve de cada producto `nombre`, `imagen`, `precioFinal` (el del cliente), `stock`, `disponible` y `addedAt`. Un producto desactivado sigue en la lista, con su precio, y uno eliminado desaparece. Como en el carrito (AB#390), la lista se limpia al consultarla: un borrado físico en `productos` no avisa a `deseos`. Para distinguir los dos casos, `productos` añade `CatalogoProductosUseCase.consultarResumen`, porque `consultarComprable` devuelve vacío en ambos.
 - **Tests que pasaban en el rojo (T362):** "sin lista" y "sin eliminados no se guarda" (HU14-CP11 y CP13) y "sin eliminados la lista no cambia" (HU14-CP13), porque el esqueleto no hacía nada. Se comprobaron con versiones que siempre guardaban o que siempre decían que la lista había cambiado, y entonces fallaron.
+- **HU14-CP18 y CP19 (Sprint 2, backend):** casos propuestos en la task AB#361 (endpoint obtener deseos), revisados y aceptados por el desarrollador. Los casos de frontend empiezan en CP20, así que los siguientes de backend irán desde CP25.
+- **Endpoint (T361):** `GET /api/customer/wishlist` → 200 `{ "items": [{ "productoId", "nombre", "imagen", "precioFinal", "stock", "disponible", "addedAt" }] }`, o `items` vacío; 401 sin sesión y 403 con otro rol. El `POST` sigue devolviendo solo `productoId` y `addedAt`, porque el botón de favoritos no necesita más.
+- **HU14-CP19 sin rojo real:** la regla de `/api/customer/**` de `SecurityConfig` ya lo cubría. Se comprobó abriendo la ruta de forma temporal, y entonces fallaron los tests de sesión y de rol.
+- **HU14-CP25 a CP28 (Sprint 2, backend):** casos propuestos en la task AB#366 (lógica de eliminación de deseos), revisados y aceptados por el desarrollador.
+- **Quitar un producto (T366):** devuelve la lista actualizada con los mismos datos que al consultarla, para que la vista se refresque sin otra llamada. Como en el carrito, quitar un producto que no está no es un error, y no se comprueba si está disponible para que se pueda quitar uno desactivado. Se comprobó con una versión que siempre guardaba: fallaron los dos tests que protegen "no se guarda nada" y "no se crea la lista", que pasaban en el rojo.
+- **HU14-CP29 y CP30 (Sprint 2, backend):** casos propuestos en la task AB#365 (endpoint de eliminación de deseos), revisados y aceptados por el desarrollador.
+- **Endpoint (T365):** `DELETE /api/customer/wishlist/items/{productoId}` → 200 con la lista actualizada, en el mismo formato que el `GET`, también si el producto no estaba; 401 sin sesión y 403 con otro rol o sin CSRF. Con esta task queda terminado el backend de la HU14.
+- **HU14-CP30 sin rojo real:** la regla de `/api/customer/**` de `SecurityConfig` ya lo cubría. Se comprobó con dos cambios temporales: con la ruta abierta fallaron los tests de sesión y rol, y sin CSRF falló el del token.
 - **HU14-CP07 a CP10 (Sprint 2, backend):** casos propuestos en la task AB#358 (endpoint añadir deseo), revisados y aceptados por el desarrollador.
 - **Endpoint (T358):** `POST /api/customer/wishlist/items` con `{ "productoId": "p-1" }` → 200 `{ "items": [{ "productoId", "addedAt" }] }`, también si el producto ya estaba. Errores: 400 `VALIDATION_ERROR`, 404 `PRODUCT_NOT_FOUND`, 401 sin sesión y 403 con otro rol o sin CSRF. Los datos del producto (nombre, imagen, aviso de "no disponible") llegan con la consulta de la T361 y la T362. `ProductoNoDisponibleException` comparte el handler de `ProductoNoComprableException` en `ManejadorGlobalErrores`, porque responden igual.
 - **HU14-CP10 sin rojo real:** la regla de `/api/customer/**` de `SecurityConfig` ya lo cubría. Se comprobó con dos cambios temporales: con la ruta abierta fallaron los tres tests de sesión y rol, y sin CSRF falló el del token.
@@ -2047,29 +2106,33 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP10 | `ListaDeseosControllerTest` | `sinSesionNoSeAnade` | Infraestructura | AB#358 | PR #198 | ✅ |
 | HU14-CP10 | `ListaDeseosControllerTest` | `noClienteNoAnade` (vendedor y administrador) | Infraestructura | AB#358 | PR #198 | ✅ |
 | HU14-CP10 | `ListaDeseosControllerTest` | `sinTokenCsrfNoSeAnade` | Infraestructura | AB#358 | PR #198 | ✅ |
-| HU14-CP11 | `GestionListaDeseosServiceTest` | `consultarDevuelveCadaProductoConSusDatosActuales` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP11 | `GestionListaDeseosServiceTest` | `sinListaDevuelveUnaVaciaSinGuardarla` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP12 | `GestionListaDeseosServiceTest` | `unProductoDesactivadoSigueEnLaLista` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP13 | `ListaDeseosTest` | `unProductoEliminadoDesapareceDeLaLista` | Dominio | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP13 | `ListaDeseosTest` | `sinProductosEliminadosLaListaNoCambia` | Dominio | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP13 | `GestionListaDeseosServiceTest` | `unProductoEliminadoDesapareceYLaListaSeGuarda` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP13 | `GestionListaDeseosServiceTest` | `sinProductosEliminadosNoSeGuardaLaLista` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP14 | `GestionListaDeseosServiceTest` | `elPrecioEsElQueLeTocaAlCliente` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP15 | `SeguridadDeseosServiceTest` | `elClienteConsultaConSuPropioCorreo` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP15 | `SeguridadDeseosServiceTest` | `unClienteNoConsultaConElCorreoDeOtro` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP15 | `SeguridadDeseosServiceTest` | `unVendedorNoConsulta` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP15 | `SeguridadDeseosServiceTest` | `unAdministradorNoConsulta` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP15 | `SeguridadDeseosServiceTest` | `sinSesionNoSeConsulta` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP16 | `CatalogoProductosServiceTest` | `elResumenDeUnProductoDisponibleLlevaSusDatos` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP16 | `CatalogoProductosServiceTest` | `unProductoDesactivadoTambienTieneResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP16 | `CatalogoProductosServiceTest` | `unProductoQueNoExisteNoTieneResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP16 | `SeguridadProductosServiceTest` | `unClienteConsultaElResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP16 | `SeguridadProductosServiceTest` | `unVendedorNoConsultaElResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP16 | `SeguridadProductosServiceTest` | `unAdministradorNoConsultaElResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP16 | `SeguridadProductosServiceTest` | `sinSesionNoSeConsultaElResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP17 | `ClienteEnSesionAdapterTest` | `esPremiumPreguntaAlModuloDeUsuarios` | Infraestructura | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP17 | `ProductosAdapterTest` | `consultarResumenPreguntaAlModuloDeProductos` | Infraestructura | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
-| HU14-CP17 | `ProductosAdapterTest` | `unProductoQueNoExisteNoTieneDatos` | Infraestructura | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP11 | `GestionListaDeseosServiceTest` | `consultarDevuelveCadaProductoConSusDatosActuales` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP11 | `GestionListaDeseosServiceTest` | `sinListaDevuelveUnaVaciaSinGuardarla` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP12 | `GestionListaDeseosServiceTest` | `unProductoDesactivadoSigueEnLaLista` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP13 | `ListaDeseosTest` | `unProductoEliminadoDesapareceDeLaLista` | Dominio | AB#362 | PR #205 | ✅ |
+| HU14-CP13 | `ListaDeseosTest` | `sinProductosEliminadosLaListaNoCambia` | Dominio | AB#362 | PR #205 | ✅ |
+| HU14-CP13 | `GestionListaDeseosServiceTest` | `unProductoEliminadoDesapareceYLaListaSeGuarda` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP13 | `GestionListaDeseosServiceTest` | `sinProductosEliminadosNoSeGuardaLaLista` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP14 | `GestionListaDeseosServiceTest` | `elPrecioEsElQueLeTocaAlCliente` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP15 | `SeguridadDeseosServiceTest` | `elClienteConsultaConSuPropioCorreo` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP15 | `SeguridadDeseosServiceTest` | `unClienteNoConsultaConElCorreoDeOtro` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP15 | `SeguridadDeseosServiceTest` | `unVendedorNoConsulta` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP15 | `SeguridadDeseosServiceTest` | `unAdministradorNoConsulta` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP15 | `SeguridadDeseosServiceTest` | `sinSesionNoSeConsulta` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP16 | `CatalogoProductosServiceTest` | `elResumenDeUnProductoDisponibleLlevaSusDatos` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP16 | `CatalogoProductosServiceTest` | `unProductoDesactivadoTambienTieneResumen` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP16 | `CatalogoProductosServiceTest` | `unProductoQueNoExisteNoTieneResumen` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP16 | `SeguridadProductosServiceTest` | `unClienteConsultaElResumen` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP16 | `SeguridadProductosServiceTest` | `unVendedorNoConsultaElResumen` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP16 | `SeguridadProductosServiceTest` | `unAdministradorNoConsultaElResumen` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP16 | `SeguridadProductosServiceTest` | `sinSesionNoSeConsultaElResumen` | Aplicación | AB#362 | PR #205 | ✅ |
+| HU14-CP17 | `ClienteEnSesionAdapterTest` | `esPremiumPreguntaAlModuloDeUsuarios` | Infraestructura | AB#362 | PR #205 | ✅ |
+| HU14-CP17 | `ProductosAdapterTest` | `consultarResumenPreguntaAlModuloDeProductos` | Infraestructura | AB#362 | PR #205 | ✅ |
+| HU14-CP17 | `ProductosAdapterTest` | `unProductoQueNoExisteNoTieneDatos` | Infraestructura | AB#362 | PR #205 | ✅ |
+| HU14-CP18 | `ListaDeseosControllerTest` | `consultarRespondeConLosDatosDeCadaProducto` | Infraestructura | AB#361 | PR #206 | ✅ |
+| HU14-CP18 | `ListaDeseosControllerTest` | `consultarUnaListaVaciaRespondeConItemsVacio` | Infraestructura | AB#361 | PR #206 | ✅ |
+| HU14-CP19 | `ListaDeseosControllerTest` | `sinSesionNoSeConsultaLaLista` | Infraestructura | AB#361 | PR #206 | ✅ |
+| HU14-CP19 | `ListaDeseosControllerTest` | `noClienteNoConsultaLaLista` (vendedor y administrador) | Infraestructura | AB#361 | PR #206 | ✅ |
 | HU14-CP20 | `wishlist.test.js` | `HU14-CP20: pide POST /api/customer/wishlist/items con el producto y devuelve la lista del cliente` | Frontend · API | AB#357 | PR #202 | ✅ |
 | HU14-CP20 | `wishlist.test.js` | `HU14-CP20: un 404 llega como error con su estado y su código` | Frontend · API | AB#357 | PR #202 | ✅ |
 | HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: la tarjeta tiene un corazón para añadir el producto a favoritos, fuera del enlace al detalle` | Frontend · componente | AB#357 | PR #202 | ✅ |
@@ -2085,6 +2148,21 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP24 | `ProductCard.test.jsx` | `HU14-CP24: si %s, la tarjeta lo avisa y el corazón se puede volver a pulsar` (2 variantes: el producto ya no está disponible y falla por otro motivo) | Frontend · componente | AB#357 | PR #202 | ✅ |
 | HU14-CP24 | `ProductCard.test.jsx` | `HU14-CP24: al volver a pulsar el corazón desaparece el aviso anterior` | Frontend · componente | AB#357 | PR #202 | ✅ |
 | HU14-CP24 | `ProductsPage.test.jsx` | `HU14-CP24: si el producto ya no está disponible, su tarjeta lo avisa y el corazón sigue vacío` | Frontend · página | AB#357 | PR #202 | ✅ |
+| HU14-CP25 | `ListaDeseosTest` | `quitarUnProductoLoSacaDeLaLista` | Dominio | AB#366 | PR #208 | ✅ |
+| HU14-CP25 | `GestionListaDeseosServiceTest` | `quitarUnProductoDevuelveLaListaActualizada` | Aplicación | AB#366 | PR #208 | ✅ |
+| HU14-CP26 | `ListaDeseosTest` | `quitarUnProductoQueNoEstaNoCambiaLaLista` | Dominio | AB#366 | PR #208 | ✅ |
+| HU14-CP26 | `GestionListaDeseosServiceTest` | `quitarUnProductoQueNoEstaNoGuardaNada` | Aplicación | AB#366 | PR #208 | ✅ |
+| HU14-CP26 | `GestionListaDeseosServiceTest` | `quitarSinListaNoLaCrea` | Aplicación | AB#366 | PR #208 | ✅ |
+| HU14-CP27 | `GestionListaDeseosServiceTest` | `unProductoDesactivadoTambienSeQuita` | Aplicación | AB#366 | PR #208 | ✅ |
+| HU14-CP28 | `SeguridadDeseosServiceTest` | `elClienteQuitaConSuPropioCorreo` | Aplicación | AB#366 | PR #208 | ✅ |
+| HU14-CP28 | `SeguridadDeseosServiceTest` | `unClienteNoQuitaConElCorreoDeOtro` | Aplicación | AB#366 | PR #208 | ✅ |
+| HU14-CP28 | `SeguridadDeseosServiceTest` | `unVendedorNoQuita` | Aplicación | AB#366 | PR #208 | ✅ |
+| HU14-CP28 | `SeguridadDeseosServiceTest` | `unAdministradorNoQuita` | Aplicación | AB#366 | PR #208 | ✅ |
+| HU14-CP28 | `SeguridadDeseosServiceTest` | `sinSesionNoSeQuita` | Aplicación | AB#366 | PR #208 | ✅ |
+| HU14-CP29 | `ListaDeseosControllerTest` | `quitarRespondeConLaListaActualizada` | Infraestructura | AB#365 | Rama `feature/US14-T365-endpoint-eliminacion-deseos` | 🔍 |
+| HU14-CP30 | `ListaDeseosControllerTest` | `sinSesionNoSeQuita` | Infraestructura | AB#365 | Rama `feature/US14-T365-endpoint-eliminacion-deseos` | 🔍 |
+| HU14-CP30 | `ListaDeseosControllerTest` | `noClienteNoQuita` (vendedor y administrador) | Infraestructura | AB#365 | Rama `feature/US14-T365-endpoint-eliminacion-deseos` | 🔍 |
+| HU14-CP30 | `ListaDeseosControllerTest` | `sinTokenCsrfNoSeQuita` | Infraestructura | AB#365 | Rama `feature/US14-T365-endpoint-eliminacion-deseos` | 🔍 |
 
 ---
 
@@ -2201,7 +2279,7 @@ Rutas de las clases de test:
 | HU17-CP06 | Las ventas del vendedor son las líneas de sus pedidos con su importe; los pedidos `CANCELADO` no cuentan | Unitario (aplicación, pedidos) | 3 | 🔍 En revisión (3, AB#280, PR sin abrir) |
 | HU17-CP07 | En MongoDB, `buscarPorVendedor` devuelve todos los pedidos del vendedor, también los cancelados | Integración (Testcontainers) | 1 | 🔍 En revisión (1, AB#280, PR sin abrir) |
 | HU17-CP08 | El inventario del vendedor da el stock, la disponibilidad y las valoraciones de cada producto | Unitario (aplicación, productos) | 2 | 🔍 En revisión (2, AB#280, PR sin abrir) |
-| HU17-CP09 | En MongoDB, `buscarTodosPorVendedor` devuelve todos sus productos, también los no disponibles, sin paginar | Integración (Testcontainers) | 1 | 🔍 En revisión (1, AB#280, PR sin abrir) |
+| HU17-CP09 | En MongoDB, `listarTodosPorVendedor` devuelve todos sus productos, también los no disponibles, sin paginar | Integración (Testcontainers) | 1 | 🔍 En revisión (1, AB#280, PR sin abrir) |
 | HU17-CP10 | Las estadísticas se calculan con las ventas y los productos del vendedor de la sesión, nunca de otro | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#280, PR sin abrir) |
 | HU17-CP11 | `GET /api/seller/statistics` devuelve las estadísticas agrupadas en ventas, valoraciones y stock; sin valoraciones, la media llega vacía | Web (`@WebMvcTest`) | 2 | 🔍 En revisión (2, AB#279, PR sin abrir) |
 | HU17-CP12 | Sin sesión, 401; un cliente o un administrador, 403 | Web (`@WebMvcTest`, seguridad real) | 3 | 🔍 En revisión (3, AB#279, PR sin abrir) |
@@ -2210,6 +2288,7 @@ Rutas de las clases de test:
 Notas:
 - **HU17-CP01 a CP13 (Sprint 2, backend, TDD):** casos propuestos en la T280 (AB#280, cálculo y devolución de estadísticas) y la T279 (AB#279, endpoint) a partir del criterio de aceptación de la HU17 (AB#78): «se muestran en una vista estadísticas básicas de ventas, valoraciones y stock». Pendientes de confirmar con el equipo.
 - **Decisiones del equipo:** set básico de métricas, desde siempre y sin filtro de fechas. Ventas: pedidos, unidades e ingresos sin contar los `CANCELADO`, y los 5 más vendidos. Valoraciones: media global ponderada y media por producto. Stock: productos, sin stock, stock bajo (de 1 a 5 unidades) y no disponibles. Módulo nuevo `estadisticas`, que pide los datos a `pedidos` (`VentasVendedorUseCase`) y a `productos` (`InventarioVendedorUseCase`) por sus puertos de entrada.
+- **Reutilización:** `buscarPorVendedor` (pedidos) y `listarTodosPorVendedor` (productos) los añadió la HU47 (AB#312 y AB#313, PR #203); la HU17 los reutiliza. HU17-CP07 y CP09 prueban lo que la HU17 necesita de ellos y los tests de la HU47 no cubren: que incluyen los pedidos cancelados y los productos no disponibles, sin paginar.
 - **Pendiente:** el frontend, una sección en «Mi perfil» del vendedor (T278, AB#278).
 
 ### Tabla B · casos de prueba ↔ tests
@@ -2229,10 +2308,10 @@ Notas:
 | HU17-CP06 | `VentasVendedorServiceTest` | `lasVentasSonLasLineasDeSusPedidos` | Aplicación | AB#280 | Rama `feature/US17-T280-T279-estadisticas-backend` (PR sin abrir) | 🔍 |
 | HU17-CP06 | `VentasVendedorServiceTest` | `losPedidosCanceladosNoCuentan` | Aplicación | AB#280 | Rama `feature/US17-T280-T279-estadisticas-backend` (PR sin abrir) | 🔍 |
 | HU17-CP06 | `VentasVendedorServiceTest` | `sinPedidosNoHayVentas` | Aplicación | AB#280 | Rama `feature/US17-T280-T279-estadisticas-backend` (PR sin abrir) | 🔍 |
-| HU17-CP07 | `PedidoMongoAdapterTest` | `buscarPorVendedorDevuelveTodosSusPedidos` | Infraestructura | AB#280 | Rama `feature/US17-T280-T279-estadisticas-backend` (PR sin abrir) | 🔍 |
+| HU17-CP07 | `PedidoMongoAdapterTest` | `buscarPorVendedorIncluyeLosPedidosCancelados` | Infraestructura | AB#280 | Rama `feature/US17-T280-T279-estadisticas-backend` (PR sin abrir) | 🔍 |
 | HU17-CP08 | `InventarioVendedorServiceTest` | `elInventarioDaStockDisponibilidadYValoraciones` | Aplicación | AB#280 | Rama `feature/US17-T280-T279-estadisticas-backend` (PR sin abrir) | 🔍 |
 | HU17-CP08 | `InventarioVendedorServiceTest` | `sinProductosElInventarioEstaVacio` | Aplicación | AB#280 | Rama `feature/US17-T280-T279-estadisticas-backend` (PR sin abrir) | 🔍 |
-| HU17-CP09 | `ProductoMongoAdapterTest` | `buscarTodosPorVendedorDevuelveTodosSusProductos` | Infraestructura | AB#280 | Rama `feature/US17-T280-T279-estadisticas-backend` (PR sin abrir) | 🔍 |
+| HU17-CP09 | `ProductoMongoAdapterTest` | `listarTodosPorVendedorIncluyeLosNoDisponiblesSinPaginar` | Infraestructura | AB#280 | Rama `feature/US17-T280-T279-estadisticas-backend` (PR sin abrir) | 🔍 |
 | HU17-CP10 | `EstadisticasVendedorServiceTest` | `calculaConLasVentasYLosProductosDelVendedorDeLaSesion` | Aplicación | AB#280 | Rama `feature/US17-T280-T279-estadisticas-backend` (PR sin abrir) | 🔍 |
 | HU17-CP11 | `EstadisticasVendedorControllerTest` | `vendedorRecibeSusEstadisticas` | Infraestructura | AB#279 | Rama `feature/US17-T280-T279-estadisticas-backend` (PR sin abrir) | 🔍 |
 | HU17-CP11 | `EstadisticasVendedorControllerTest` | `sinValoracionesLaMediaLlegaVacia` | Infraestructura | AB#279 | Rama `feature/US17-T280-T279-estadisticas-backend` (PR sin abrir) | 🔍 |
@@ -2375,6 +2454,7 @@ Rutas de los archivos de test (bajo `frontend/src/`):
 | HU21-CP17 | Sin sesión o sin rol ADMINISTRADOR no se puede cambiar el estado de un vendedor | Integración (capa web) | 2 | ✅ Pasa |
 | HU21-CP18 | Guarda el avatar elegido como imagen de perfil del administrador | Unitario + integración (capa web) | 2 | ✅ Pasa |
 | HU21-CP19 | Al crear un administrador, un dato rechazado por el backend se marca en su campo | Frontend (página) | 1 | ✅ Pasa (1, AB#50, PR #105) |
+| HU21-CP20 | En el alta de administrador, ni el password ni su repetición se pueden copiar, cortar ni pegar, y escribiéndolos a mano la cuenta se sigue creando | Frontend (página) | 3 | 🔍 En revisión (3, AB#242, PR pendiente) |
 
 Notas:
 - **Alta de administradores (AB#49):** Siguiendo el acuerdo con el frontend, la creación la realiza un administrador autenticado que establece manualmente la contraseña (opción "a" del documento `Contexto_frontend.md`).
@@ -2409,6 +2489,9 @@ Notas:
 | HU21-CP18 | `CrearAdministradorServiceTest` | `guardaElAvatarComoImagenDePerfil` | Aplicación | AB#47 | PR #102 | ✅ |
 | HU21-CP18 | `UsuarioControllerTest` | `crearAdministradorPasaElAvatar` | Infraestructura | AB#47 | PR #102 | ✅ |
 | HU21-CP19 | `AdminNewAdminPage.test.jsx` | `HU21-CP19: una contraseña rechazada por el backend se marca en su campo` | Frontend · página | AB#50 | PR #105 | ✅ |
+| HU21-CP20 | `AdminNewAdminPage.test.jsx` | `HU21-CP20: ni el password ni su repetición se pueden pegar` | Frontend · página | AB#242 | PR pendiente | 🔍 |
+| HU21-CP20 | `AdminNewAdminPage.test.jsx` | `HU21-CP20: ni el password ni su repetición se pueden copiar o cortar, tampoco con el password visible` | Frontend · página | AB#242 | PR pendiente | 🔍 |
+| HU21-CP20 | `AdminNewAdminPage.test.jsx` | `HU21-CP20: escribiendo el password a mano en los dos campos el administrador se sigue creando` | Frontend · página | AB#242 | PR pendiente | 🔍 |
 
 ---
 
@@ -3194,6 +3277,59 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU47 · Eliminar mi cuenta de vendedor
+
+### Tabla A · HU47 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU47-CP01 | Con la contraseña actual incorrecta no se elimina la cuenta ni se modifica ningún dato | Unitario (aplicación) | 1 | 🔍 En revisión |
+| HU47-CP02 | Al eliminar la cuenta se conservan como no disponibles los productos con pedidos y se eliminan los demás junto con sus valoraciones | Unitario + integración (aplicación y persistencia) | 10 | 🔍 En revisión |
+| HU47-CP03 | Un producto no disponible no se puede comprar aunque tenga stock | Integración (persistencia) | 1 | 🔍 En revisión |
+| HU47-CP04 | Si una eliminación quedó a medias se puede repetir y completarse sin errores | Unitario (aplicación) | 1 | 🔍 En revisión |
+| HU47-CP05 | Al eliminar la cuenta se invalida la sesión y se limpia el contexto de seguridad | Unitario + integración (capa de aplicación y web) | 2 | 🔍 En revisión |
+| HU47-CP06 | Un cliente recibe 403 y no se modifica nada al intentar eliminar la cuenta | Unitario + integración (capa de aplicación y web) | 2 | 🔍 En revisión |
+| HU47-CP07 | Una petición sin autenticar recibe 401 y no se modifica nada al intentar eliminar la cuenta | Integración (capa web) | 1 | 🔍 En revisión |
+
+Notas:
+- `DELETE /api/perfil` se restringe a VENDEDOR en la regla de ruta; `GET /api/perfil` sigue disponible para CLIENTE y VENDEDOR. Las pruebas web usan la cadena real de `SecurityConfig`, con CSRF activo.
+- La consulta interna se denomina `buscarPorVendedor`, no `buscarPagadosPorVendedor`, y considera todos los pedidos del vendedor. Se conservan los productos incluidos en cualquier pedido para no romper el historial si el estado del pedido cambia.
+- El `false` de descuento de existencias puede deberse a stock insuficiente o a producto no disponible; la respuesta 409 mantiene el código `INSUFFICIENT_STOCK` por compatibilidad y usa un mensaje neutral: «No se puede comprar un producto del pedido».
+- La eliminación de la cuenta cruza módulos mediante puertos de salida propios de `usuarios` y adaptadores en `usuarios/infrastructure/adapter/out/`, que delegan en los puertos de entrada de productos, pedidos y valoraciones.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU47-CP01 | `GestionCuentaServiceTest` | `contraseñaIncorrectaNoModificaNada` | Aplicación | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP02 | `GestionCuentaServiceTest` | `conservaProductosConPedidosYEliminaElResto` | Aplicación | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP02 | `GestionProductosVendedorServiceTest` | `desactivaTodosLosProductosDelVendedor` | Aplicación | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP02 | `ProductosConPedidosServiceTest` | `devuelveLosProductosDePedidosDelVendedor` | Aplicación | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP02 | `LimpiezaValoracionesServiceTest` | `eliminaLasValoracionesDelProductoEliminado` | Aplicación | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP02 | `ProductoMongoAdapterTest` | `listarTodosPorVendedorDevuelveSoloLosDelVendedor` | Infraestructura | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP02 | `PedidoMongoAdapterTest` | `buscarPorVendedorDevuelveSoloLosDelVendedor` | Infraestructura | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP02 | `FactorAutenticacionMongoAdapterTest` | `eliminarPorUsuarioBorraElFactor` | Infraestructura | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP02 | `CodigoVerificacionMongoAdapterTest` | `eliminarPorUsuarioBorraSoloElCodigoDeLogin` | Infraestructura | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP02 | `CodigoRecuperacionMongoAdapterTest` | `eliminarPorUsuarioBorraSoloElCodigoDeRecuperacion` | Infraestructura | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP02 | `ValoracionMongoAdapterTest` | `eliminarPorProductoBorraSoloLasValoracionesDelProducto` | Infraestructura | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP03 | `ProductoMongoAdapterTest` | `productoNoDisponibleNoSePuedeComprarAunqueTengaStock` | Infraestructura | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP04 | `GestionCuentaServiceTest` | `reintentaTrasUnBorradoParcial` | Aplicación | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP05 | `SeguridadGestionCuentaServiceTest` | `unVendedorPuedeInvocarSuEliminacion` | Aplicación | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP05 | `PerfilControllerTest` | `eliminarCuentaInvalidaSesionYLimpiaContexto` | Infraestructura | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP06 | `SeguridadGestionCuentaServiceTest` | `unClienteNoPuedeInvocarLaEliminacion` | Aplicación | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP06 | `PerfilControllerTest` | `usuarioNoVendedorNoPuedeEliminarCuenta` | Infraestructura | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+| HU47-CP07 | `PerfilControllerTest` | `sinAutenticarNoPuedeEliminarCuenta` | Infraestructura | AB#312 / AB#313 | Rama `feature/US47-T312-T313-eliminar-mi-cuenta-vendedor` (PR pendiente) | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `GestionCuentaServiceTest`: `usuarios/application/service/`
+- `GestionProductosVendedorServiceTest`: `productos/application/service/`
+- `ProductosConPedidosServiceTest`: `pedidos/application/service/`
+- `LimpiezaValoracionesServiceTest`: `valoraciones/application/service/`
+- `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/`
+- `PerfilControllerTest`: `usuarios/infrastructure/adapter/in/web/`
+
+---
+
 ## HU39 · Consultar categorías
 
 ### Tabla A · HU39 ↔ casos de prueba
@@ -3638,7 +3774,7 @@ Tests que no validan una HU concreta.
 | `MetodosPagoConfigTest` | `elContextoConectaLasPiezasDeLosMetodosDePago` | Que Spring conecta el servicio de métodos de pago con su adaptador de MongoDB, su cifrado AES-GCM y el cliente en sesión (HU6; AB#271, PR #148) |
 | `MetodosPagoConfigTest` | `losDatosDePagoSeCifranConLaClaveConfigurada` | Que los datos de pago se cifran con la clave de `esibuy.pagos.clave-cifrado`, que en los tests pone `MongoTestcontainersConfig` (HU6; AB#271, PR #148) |
 | `CarritoConfigTest` | `elContextoConectaLasPiezasDelCarrito` | Que Spring conecta el servicio del carrito con su adaptador de MongoDB, los productos y los usuarios (HU9; AB#385, PR #162) |
-| `PedidosConfigTest` | `elContextoConectaLasPiezasDeLosPedidos` | Que Spring conecta la realización de pedidos con su repositorio, el contador y los adaptadores hacia usuarios, carrito, métodos de pago, direcciones y productos (HU10; AB#381, PR #166); y la consulta de compras de HU13 (AB#370, PR #179). También la cancelación de pedidos (HU12; AB#375, PR sin abrir) y las ventas del vendedor (HU17; AB#280, PR sin abrir) |
+| `PedidosConfigTest` | `elContextoConectaLasPiezasDeLosPedidos` | Que Spring conecta la realización de pedidos con su repositorio, el contador y los adaptadores hacia usuarios, carrito, métodos de pago, direcciones y productos (HU10; AB#381, PR #166); y la consulta de compras de HU13 (AB#370, PR #179). También la cancelación de pedidos (HU12; AB#375, PR #200) y las ventas del vendedor (HU17; AB#280, PR sin abrir) |
 | `ValoracionesConfigTest` | `elContextoConectaLasPiezasDeLasValoraciones` | Que Spring conecta la valoración y la consulta de valoraciones con su adaptador de MongoDB y los adaptadores hacia usuarios y pedidos (HU13; AB#370 y AB#371, PR #179), y hacia productos (AB#415, PR #195) |
 | `DeseosConfigTest` | `elContextoConectaLasPiezasDeLaListaDeDeseos` | Que Spring conecta el servicio de la lista de deseos con su adaptador de MongoDB y los adaptadores hacia usuarios y productos (HU14; AB#360, PR #196) |
 | `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |

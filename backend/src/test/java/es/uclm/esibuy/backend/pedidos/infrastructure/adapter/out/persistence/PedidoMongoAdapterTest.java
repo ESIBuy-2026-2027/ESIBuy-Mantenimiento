@@ -101,6 +101,21 @@ class PedidoMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU47-CP02: buscar pedidos devuelve solo los del vendedor indicado")
+    void buscarPorVendedorDevuelveSoloLosDelVendedor() {
+        adapter.guardar(pedidoPagado("ESB-2026-000001", "c-1", "p-1"));
+        Pedido deOtroVendedor = new Pedido(null, new NumeroPedido("ESB-2026-000002"), "c-1", "u-3", "Otra tienda",
+                EstadoPedido.PAGADO, List.of(new LineaPedido("p-2", "Producto p-2", 1, new BigDecimal("10.00"))),
+                DIRECCION, "mp-1", AHORA);
+        adapter.guardar(deOtroVendedor);
+
+        List<Pedido> pedidos = adapter.buscarPorVendedor("u-2");
+
+        assertEquals(1, pedidos.size());
+        assertEquals("u-2", pedidos.get(0).getVendedorId());
+    }
+
+    @Test
     @DisplayName("HU13-CP08: no es compra un producto que no está en sus pedidos ni el pedido de otro cliente")
     void noEsCompraSinElProductoNiConElPedidoDeOtroCliente() {
         adapter.guardar(pedidoPagado("ESB-2026-000001", "c-1", "p-1"));
@@ -175,7 +190,7 @@ class PedidoMongoAdapterTest {
 
     @Test
     @DisplayName("HU17-CP07: buscarPorVendedor devuelve todos los pedidos del vendedor, también los cancelados")
-    void buscarPorVendedorDevuelveTodosSusPedidos() {
+    void buscarPorVendedorIncluyeLosPedidosCancelados() {
         adapter.guardar(pedidoDelVendedor("ESB-2026-000001", "u-2", EstadoPedido.PAGADO));
         adapter.guardar(pedidoDelVendedor("ESB-2026-000002", "u-3", EstadoPedido.PAGADO));
         adapter.guardar(pedidoDelVendedor("ESB-2026-000003", "u-2", EstadoPedido.CANCELADO));

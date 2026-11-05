@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { afterEach, describe, it, expect } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
@@ -106,5 +106,118 @@ describe('OrderDetailPage (HU11): errores', () => {
     await user.click(screen.getByRole('link', { name: /volver a mis pedidos/i }))
 
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/orders$/))
+  })
+})
+
+// --- Cancelar un pedido (HU12) ---------------------------------------------------------------------------------------
+// Solo se cancela un pedido que aún no se ha enviado (PAGADO o PREPARANDO), como en el backend (T375 y T374, PR #200 y
+// #207). Del mock: Nora (nuevo@esibuy.test) tiene o-201, PAGADO; los de Carlos están enviado, entregado y cancelado.
+
+const NORA = 'nuevo@esibuy.test'
+
+// Guarda las peticiones que llegan a una ruta, sin cambiar la respuesta del mock.
+function espiarPeticiones(metodo, ruta) {
+  const peticiones = []
+  server.events.on('request:start', ({ request }) => {
+    if (request.method === metodo && new URL(request.url).pathname === ruta) peticiones.push(request)
+  })
+  return peticiones
+}
+
+afterEach(() => server.events.removeAllListeners())
+
+async function abrirPedidoDe(email, id) {
+  await abrirSesionPorApi(email)
+  renderApp(`/orders/${id}`)
+  await screen.findByRole('heading', { level: 1, name: /pedido ESB-/i })
+}
+
+describe('OrderDetailPage (HU12): botón de cancelar', () => {
+  it('HU12-CP13: un pedido pagado o en preparación, que aún no se ha enviado, tiene el botón «Cancelar pedido»', async () => {
+    await abrirPedidoDe(NORA, 'o-201')
+    expect(screen.getByRole('button', { name: /cancelar pedido/i })).toBeInTheDocument()
+  })
+
+  it('HU12-CP13: un pedido en preparación también se puede cancelar', async () => {
+    server.use(
+      http.get('/api/customer/orders/o-103', () =>
+        HttpResponse.json({
+          id: 'o-103',
+          numeroPedido: 'ESB-2026-000103',
+          vendedor: { id: 'u-2', nombreComercial: 'TecnoVera' },
+          total: 89.5,
+          estado: 'PREPARANDO',
+          paymentMethodId: 'mp-1',
+          direccionEnvio: {
+            destinatario: 'Carlos Cliente',
+            calle: 'Calle Mayor 1',
+            detalles: null,
+            codigoPostal: '13001',
+            ciudad: 'Ciudad Real',
+            provincia: 'Ciudad Real',
+            telefono: '611222333',
+          },
+          lineas: [{ productoId: 'p-2', nombre: 'Teclado', cantidad: 1, precioUnitario: 89.5, subtotal: 89.5 }],
+          createdAt: '2026-10-30T10:00:00Z',
+        }),
+      ),
+    )
+    await abrirPedidoDe(CLIENTE, 'o-103')
+
+    expect(screen.getByRole('button', { name: /cancelar pedido/i })).toBeInTheDocument()
+  })
+
+  it('HU12-CP13: un pedido enviado, entregado o ya cancelado no tiene el botón', async () => {
+    await abrirSesionPorApi(CLIENTE)
+    for (const id of ['o-103', 'o-102', 'o-101']) {
+      const { unmount } = renderApp(`/orders/${id}`)
+      await screen.findByRole('heading', { level: 1, name: /pedido ESB-/i })
+
+      expect(screen.queryByRole('button', { name: /cancelar pedido/i })).not.toBeInTheDocument()
+      unmount()
+    }
+  })
+
+  it('HU12-CP14: al pulsar «Cancelar pedido» pide confirmación y todavía no cancela nada', async () => {
+    const user = userEvent.setup()
+    const cancelaciones = espiarPeticiones('POST', '/api/customer/orders/o-201/cancel')
+    await abrirPedidoDe(NORA, 'o-201')
+
+    await user.click(screen.getByRole('button', { name: /cancelar pedido/i }))
+
+    expect(await screen.findByRole('alertdialog', { name: /cancelar pedido/i })).toBeInTheDocument()
+    expect(cancelaciones).toHaveLength(0)
+  })
+})
+
+describe('OrderDetailPage (HU12): confirmar la cancelación', () => {
+  it('HU12-CP16: al confirmar, el detalle muestra el pedido cancelado y avisa de que se ha cancelado', async () => {
+    const user = userEvent.setup()
+    await abrirPedidoDe(NORA, 'o-201')
+
+    await user.click(screen.getByRole('button', { name: /cancelar pedido/i }))
+    await user.click(await screen.findByRole('button', { name: /sí, cancelar el pedido/i }))
+
+    expect(await screen.findByText('Pedido cancelado.')).toBeInTheDocument()
+    expect(screen.getByText(/este pedido está cancelado/i)).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: /estado del envío/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /cancelar pedido/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+  })
+
+  it('HU12-CP17: si el pedido ya no se puede cancelar, cierra la confirmación y lo avisa en el detalle', async () => {
+    server.use(
+      http.post('/api/customer/orders/o-201/cancel', () =>
+        HttpResponse.json({ code: 'ORDER_NOT_CANCELLABLE' }, { status: 409 }),
+      ),
+    )
+    const user = userEvent.setup()
+    await abrirPedidoDe(NORA, 'o-201')
+
+    await user.click(screen.getByRole('button', { name: /cancelar pedido/i }))
+    await user.click(await screen.findByRole('button', { name: /sí, cancelar el pedido/i }))
+
+    expect(await screen.findByText(/este pedido ya no se puede cancelar/i)).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
   })
 })

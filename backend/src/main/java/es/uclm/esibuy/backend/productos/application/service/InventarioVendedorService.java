@@ -21,7 +21,7 @@ public class InventarioVendedorService implements InventarioVendedorUseCase {
     @PreAuthorize(Permisos.SOLO_VENDEDOR)
     @Override
     public List<ProductoInventario> productosDe(String vendedorId) {
-        return productoRepository.buscarTodosPorVendedor(vendedorId).stream()
+        return productoRepository.listarTodosPorVendedor(vendedorId).stream()
                 .map(producto -> new ProductoInventario(producto.getId(), producto.getNombre(), producto.getStock(),
                         producto.isDisponible(), producto.getValoracionMedia(), producto.getNumeroValoraciones()))
                 .toList();

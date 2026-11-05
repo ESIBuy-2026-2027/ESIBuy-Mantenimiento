@@ -77,7 +77,7 @@ describe('PasswordField', () => {
     expect(fireEvent.copy(screen.getByLabelText(/^password/i))).toBe(false)
   })
 
-  it('HU1-CP27: sin bloquearPegado (como en el login) se puede pegar', async () => {
+  it('HU1-CP27: sin bloquearPegado ni bloquearCopia (el campo sin restricciones) se puede pegar', async () => {
     const user = userEvent.setup()
     const onChange = vi.fn()
     renderConTema(<PasswordField label="Password" value="" onChange={onChange} />)
@@ -86,6 +86,60 @@ describe('PasswordField', () => {
     await user.paste('Password123!')
 
     expect(onChange).toHaveBeenCalled()
+  })
+})
+
+describe('PasswordField (HU2, R9): bloquearCopia', () => {
+  it('HU2-CP30: con bloquearCopia no deja copiar ni cortar la contraseña', () => {
+    renderConTema(<PasswordField label="Contraseña" value="Password123!" onChange={vi.fn()} bloquearCopia />)
+    const campo = screen.getByLabelText(/^contraseña/i)
+
+    // fireEvent devuelve false cuando el evento se ha cancelado
+    expect(fireEvent.copy(campo)).toBe(false)
+    expect(fireEvent.cut(campo)).toBe(false)
+  })
+
+  it('HU2-CP30: con bloquearCopia sigue sin dejar copiarla ni cortarla con la contraseña visible', async () => {
+    const user = userEvent.setup()
+    renderConTema(<PasswordField label="Contraseña" value="Password123!" onChange={vi.fn()} bloquearCopia />)
+
+    await user.click(screen.getByRole('button', { name: /^mostrar contraseña$/i }))
+    const campo = screen.getByLabelText(/^contraseña/i)
+
+    expect(campo).toHaveAttribute('type', 'text')
+    expect(fireEvent.copy(campo)).toBe(false)
+    expect(fireEvent.cut(campo)).toBe(false)
+  })
+
+  it('HU2-CP30: con bloquearCopia sí deja pegar (gestores de contraseñas) y soltar texto', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    renderConTema(<PasswordField label="Contraseña" value="" onChange={onChange} bloquearCopia />)
+    const campo = screen.getByLabelText(/^contraseña/i)
+
+    await user.click(campo)
+    await user.paste('Password123!')
+
+    expect(onChange).toHaveBeenCalled()
+    expect(fireEvent.drop(campo, { dataTransfer: { getData: () => 'Password123!' } })).toBe(true)
+  })
+
+  it('HU2-CP30: con bloquearCopia se puede escribir a mano', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    renderConTema(<PasswordField label="Contraseña" value="" onChange={onChange} bloquearCopia />)
+
+    await user.type(screen.getByLabelText(/^contraseña/i), 'a')
+
+    expect(onChange).toHaveBeenCalled()
+  })
+
+  it('HU2-CP30: sin ninguna de las dos propiedades se puede copiar y cortar', () => {
+    renderConTema(<PasswordField label="Contraseña" value="Password123!" onChange={vi.fn()} />)
+    const campo = screen.getByLabelText(/^contraseña/i)
+
+    expect(fireEvent.copy(campo)).toBe(true)
+    expect(fireEvent.cut(campo)).toBe(true)
   })
 })
 

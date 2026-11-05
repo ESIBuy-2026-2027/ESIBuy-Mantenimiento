@@ -21,6 +21,7 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.CarritoSinProductosDelPro
 import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
@@ -404,6 +405,13 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("El pedido no existe", "ORDER_NOT_FOUND");
     }
 
+    // Pedidos (HU12): solo se cancela un pedido que aún no se ha enviado
+    @ExceptionHandler(PedidoNoCancelableException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError pedidoNoCancelable() {
+        return new RespuestaError("El pedido ya no se puede cancelar", "ORDER_NOT_CANCELLABLE");
+    }
+
     @ExceptionHandler(CarritoSinProductosDelProveedorException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError carritoSinProductosDelProveedor() {
@@ -413,7 +421,7 @@ public class ManejadorGlobalErrores {
     @ExceptionHandler(StockInsuficientePedidoException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError stockInsuficienteEnElPedido() {
-        return new RespuestaError("No hay stock suficiente", "INSUFFICIENT_STOCK");
+        return new RespuestaError("No se puede comprar un producto del pedido", "INSUFFICIENT_STOCK");
     }
 
     // Valoraciones (HU13): puntuación fuera de 1 a 5 o comentario de más de 500 caracteres

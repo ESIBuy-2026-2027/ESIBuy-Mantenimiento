@@ -48,6 +48,29 @@ class ListaDeseosTest {
     }
 
     @Test
+    @DisplayName("HU14-CP25: quitar un producto lo saca de la lista, conserva los demás y dice que ha cambiado")
+    void quitarUnProductoLoSacaDeLaLista() {
+        ListaDeseos lista = new ListaDeseos("l-1", CLIENTE,
+                List.of(new ItemDeseo("p-1", AYER), new ItemDeseo("p-2", HOY)));
+
+        boolean cambiada = lista.quitar("p-1");
+
+        assertTrue(cambiada);
+        assertEquals(List.of(new ItemDeseo("p-2", HOY)), lista.getItems());
+    }
+
+    @Test
+    @DisplayName("HU14-CP26: quitar un producto que no está no cambia la lista y lo dice")
+    void quitarUnProductoQueNoEstaNoCambiaLaLista() {
+        ListaDeseos lista = new ListaDeseos("l-1", CLIENTE, List.of(new ItemDeseo("p-1", AYER)));
+
+        boolean cambiada = lista.quitar("p-9");
+
+        assertFalse(cambiada);
+        assertEquals(List.of(new ItemDeseo("p-1", AYER)), lista.getItems());
+    }
+
+    @Test
     @DisplayName("HU14-CP13: un producto eliminado desaparece de la lista, que conserva los demás y dice que ha cambiado")
     void unProductoEliminadoDesapareceDeLaLista() {
         ListaDeseos lista = new ListaDeseos("l-1", CLIENTE,

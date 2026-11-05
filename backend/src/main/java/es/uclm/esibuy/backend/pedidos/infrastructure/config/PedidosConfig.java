@@ -12,6 +12,7 @@ import es.uclm.esibuy.backend.metodospago.application.port.in.GestionMetodosPago
 import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.ProductosConPedidosUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.VentasVendedorUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.out.CarritoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ClienteEnSesionPort;
@@ -23,6 +24,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
 import es.uclm.esibuy.backend.pedidos.application.service.CancelacionPedidoService;
 import es.uclm.esibuy.backend.pedidos.application.service.ConsultaComprasService;
 import es.uclm.esibuy.backend.pedidos.application.service.RealizacionPedidoService;
+import es.uclm.esibuy.backend.pedidos.application.service.ProductosConPedidosService;
 import es.uclm.esibuy.backend.pedidos.application.service.VentasVendedorService;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.carrito.CarritoAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.direcciones.DireccionesAdapter;
@@ -92,6 +94,11 @@ public class PedidosConfig {
     ConsultaComprasUseCase consultaComprasUseCase(PedidoRepositoryPort pedidoRepositoryPort,
             ClienteEnSesionPort pedidosClienteEnSesionPort) {
         return new ConsultaComprasService(pedidoRepositoryPort, pedidosClienteEnSesionPort);
+    }
+
+    @Bean
+    ProductosConPedidosUseCase productosConPedidosUseCase(PedidoRepositoryPort pedidoRepositoryPort) {
+        return new ProductosConPedidosService(pedidoRepositoryPort);
     }
 
     // Cancelación (HU12): repone el stock con el mismo puerto de existencias que usa la realización del pedido
