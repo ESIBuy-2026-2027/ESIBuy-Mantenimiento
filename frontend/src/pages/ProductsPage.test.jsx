@@ -627,6 +627,42 @@ describe('ProductsPage (HU14): favoritos', () => {
     expect(screen.getByRole('button', { name: 'Añadir Altavoz Bluetooth a favoritos' })).toBeEnabled()
   })
 
+  it('HU14-CP36: al entrar en el catálogo, los productos que ya están en favoritos tienen el corazón relleno', async () => {
+    server.use(
+      http.get('/api/customer/wishlist', () =>
+        HttpResponse.json({
+          items: [
+            {
+              productoId: 'p-10',
+              nombre: 'Cafetera de cápsulas',
+              imagen: '',
+              precioFinal: 79.99,
+              stock: 9,
+              disponible: true,
+              addedAt: '2026-11-01T09:00:00Z',
+            },
+          ],
+        }),
+      ),
+    )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    expect(await screen.findByRole('button', { name: 'Cafetera de cápsulas está en tus favoritos' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' })).toBeEnabled()
+  })
+
+  it('HU14-CP36: si no se pueden cargar los favoritos, el catálogo funciona con los corazones vacíos', async () => {
+    server.use(http.get('/api/customer/wishlist', () => new HttpResponse(null, { status: 500 })))
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    for (const tarjeta of tarjetas()) {
+      expect(within(tarjeta).getByRole('button', { name: /^añadir .+ a favoritos$/i })).toBeEnabled()
+    }
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
   it('HU14-CP24: si el producto ya no está disponible, su tarjeta lo avisa y el corazón sigue vacío', async () => {
     const user = userEvent.setup()
     server.use(
