@@ -51,9 +51,12 @@ public class CatalogoProductosService implements CatalogoProductosUseCase {
                         producto.getStock()));
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE)
     @Override
     public Optional<ResumenProducto> consultarResumen(String productoId, boolean clientePremium) {
-        return Optional.empty();
+        return productoRepository.buscarPorId(productoId)
+                .map(producto -> new ResumenProducto(producto.getId(), producto.getNombre(), producto.getImagen(),
+                        producto.precioFinal(clientePremium), producto.getStock(), producto.isDisponible()));
     }
 
     @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
