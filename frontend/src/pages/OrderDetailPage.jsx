@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import PropTypes from 'prop-types'
 import {
   Badge,
@@ -26,7 +26,14 @@ import { getOrder } from '../api/orders'
 import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import { resumenDeDireccion } from '../features/addresses/direccionPropType'
-import { CANCELADO, PASOS_DEL_ENVIO, colorDeEstado, etiquetaDeEstado } from '../features/orders/orderStatus'
+import CancelOrderDialog from '../features/orders/CancelOrderDialog'
+import {
+  CANCELADO,
+  PASOS_DEL_ENVIO,
+  colorDeEstado,
+  esCancelable,
+  etiquetaDeEstado,
+} from '../features/orders/orderStatus'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { PATHS } from '../routes/paths'
 import { formatDate, formatPrice } from '../utils/format'
@@ -68,6 +75,12 @@ const useStyles = makeStyles({
   },
   muted: {
     color: tokens.colorNeutralForeground3,
+  },
+  headingActions: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalM,
   },
 })
 
@@ -114,7 +127,7 @@ SeguimientoDelEnvio.propTypes = {
   estado: PropTypes.string.isRequired,
 }
 
-function DetalleDelPedido({ pedido }) {
+function DetalleDelPedido({ pedido, onCancelar }) {
   const pageStyles = usePageStyles()
   const styles = useStyles()
 
@@ -129,9 +142,17 @@ function DetalleDelPedido({ pedido }) {
             {formatDate(pedido.createdAt)} · {pedido.vendedor.nombreComercial}
           </Text>
         </div>
-        <Badge appearance="tint" size="large" color={colorDeEstado(pedido.estado)}>
-          {etiquetaDeEstado(pedido.estado)}
-        </Badge>
+        <div className={styles.headingActions}>
+          <Badge appearance="tint" size="large" color={colorDeEstado(pedido.estado)}>
+            {etiquetaDeEstado(pedido.estado)}
+          </Badge>
+          {/* HU12: solo mientras el pedido aún no se ha enviado */}
+          {esCancelable(pedido.estado) && (
+            <Button appearance="secondary" onClick={onCancelar}>
+              Cancelar pedido
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card className={styles.section}>
@@ -196,6 +217,7 @@ function DetalleDelPedido({ pedido }) {
 }
 
 DetalleDelPedido.propTypes = {
+  onCancelar: PropTypes.func.isRequired,
   pedido: PropTypes.shape({
     numeroPedido: PropTypes.string.isRequired,
     createdAt: PropTypes.string.isRequired,
@@ -225,6 +247,7 @@ export default function OrderDetailPage() {
   const { id } = useParams()
   const fetcher = useCallback(() => getOrder(id), [id])
   const { data: pedido, error, failed, retry } = useApiQuery(fetcher)
+  const [confirmando, setConfirmando] = useState(false)
   const noEncontrado = error?.code === 'ORDER_NOT_FOUND'
 
   return (
@@ -243,7 +266,8 @@ export default function OrderDetailPage() {
         </MessageBar>
       )}
       {!pedido && !failed && <Spinner label="Cargando pedido…" className={pageStyles.loading} />}
-      {pedido && <DetalleDelPedido pedido={pedido} />}
+      {pedido && <DetalleDelPedido pedido={pedido} onCancelar={() => setConfirmando(true)} />}
+      {pedido && confirmando && <CancelOrderDialog pedido={pedido} onClose={() => setConfirmando(false)} />}
       <div>
         <LinkButton to={PATHS.ORDERS} appearance="secondary">
           Volver a mis pedidos
