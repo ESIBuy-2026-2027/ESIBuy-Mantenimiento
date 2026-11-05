@@ -35,7 +35,7 @@ public class ListaDeseosController {
     // Quitar un producto que no está no es un error: responde igual, con la lista
     @DeleteMapping("/items/{productoId}")
     public ListaDeseosDetalladaResponse quitar(@PathVariable String productoId, Authentication autenticado) {
-        return new ListaDeseosDetalladaResponse(java.util.List.of());
+        return ListaDeseosDetalladaResponse.desde(gestionListaDeseos.quitar(autenticado.getName(), productoId));
     }
 
     @PostMapping("/items")
