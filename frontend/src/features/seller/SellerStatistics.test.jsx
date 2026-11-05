@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { screen, within } from '@testing-library/react'
+import { http, HttpResponse } from 'msw'
+import { server } from '../../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../../test/renderApp'
 
 // Del mock de estadísticas: Vera (vendedor@esibuy.test) tiene 6 pedidos con 16 unidades, 8 valoraciones y 23
@@ -85,5 +87,23 @@ describe('SellerStatistics (HU17): sin datos', () => {
 
     const stock = screen.getByRole('region', { name: 'Stock' })
     expect(cifra(stock, 'Productos')).toHaveTextContent('0')
+  })
+})
+
+describe('SellerStatistics (HU17): acceso', () => {
+  it('HU17-CP18: el cliente no ve las estadísticas y no se le piden al backend', async () => {
+    let pedidas = false
+    server.use(
+      http.get('/api/seller/statistics', () => {
+        pedidas = true
+        return new HttpResponse(null, { status: 403 })
+      }),
+    )
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/profile')
+
+    await screen.findByLabelText('Nombre')
+    expect(screen.queryByRole('region', { name: 'Mis estadísticas' })).not.toBeInTheDocument()
+    expect(pedidas).toBe(false)
   })
 })
