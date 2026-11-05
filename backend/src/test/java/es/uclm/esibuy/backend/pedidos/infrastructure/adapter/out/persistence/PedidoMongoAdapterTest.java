@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 // También la consulta de compras de HU13 (T370). PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU13-CP08, propuesto.
 // Y el historial y el detalle de los pedidos del cliente (HU11, T378): caso HU11-CP04, propuesto.
 // Y guardar un pedido cancelado (HU12, T375): caso HU12-CP08, propuesto.
+// Y los pedidos de un vendedor para sus estadísticas (HU17, T280): caso HU17-CP07, propuesto.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class PedidoMongoAdapterTest {
@@ -185,5 +186,27 @@ class PedidoMongoAdapterTest {
         assertEquals(EstadoPedido.CANCELADO, releido.getEstado());
         assertEquals("ESB-2026-000001", releido.getNumeroPedido().valor());
         assertEquals(AHORA, releido.getCreatedAt());
+    }
+
+    @Test
+    @DisplayName("HU17-CP07: buscarPorVendedor devuelve todos los pedidos del vendedor, también los cancelados")
+    void buscarPorVendedorIncluyeLosPedidosCancelados() {
+        adapter.guardar(pedidoDelVendedor("ESB-2026-000001", "u-2", EstadoPedido.PAGADO));
+        adapter.guardar(pedidoDelVendedor("ESB-2026-000002", "u-3", EstadoPedido.PAGADO));
+        adapter.guardar(pedidoDelVendedor("ESB-2026-000003", "u-2", EstadoPedido.CANCELADO));
+
+        List<String> numeros = adapter.buscarPorVendedor("u-2").stream()
+                .map(pedido -> pedido.getNumeroPedido().valor())
+                .sorted()
+                .toList();
+
+        assertEquals(List.of("ESB-2026-000001", "ESB-2026-000003"), numeros);
+        assertTrue(adapter.buscarPorVendedor("u-sin-pedidos").isEmpty());
+    }
+
+    private static Pedido pedidoDelVendedor(String numero, String vendedorId, EstadoPedido estado) {
+        return new Pedido(null, new NumeroPedido(numero), "c-1", vendedorId, "TecnoVera", estado,
+                List.of(new LineaPedido("p-1", "Producto p-1", 1, new BigDecimal("10.00"))), DIRECCION, "mp-1",
+                AHORA);
     }
 }
