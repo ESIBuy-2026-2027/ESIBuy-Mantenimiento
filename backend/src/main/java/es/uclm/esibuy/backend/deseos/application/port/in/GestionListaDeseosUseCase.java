@@ -23,4 +23,12 @@ public interface GestionListaDeseosUseCase {
      * como no disponible; uno eliminado desaparece y la lista se guarda sin él. Si no tiene lista, una vacía.
      */
     ListaDeseosDetallada consultar(String emailCliente);
+
+    /**
+     * Quita un producto de la lista del cliente, esté o no disponible. Quitar un producto que no está no es un
+     * error: la lista no cambia y, si el cliente no tiene lista, no se crea.
+     *
+     * @return la lista actualizada, como en {@link #consultar}
+     */
+    ListaDeseosDetallada quitar(String emailCliente, String productoId);
 }

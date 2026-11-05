@@ -144,6 +144,41 @@ class SeguridadDeseosServiceTest {
     }
 
     @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU14-CP28: el cliente quita de su lista con su propio correo")
+    void elClienteQuitaConSuPropioCorreo() {
+        assertDoesNotThrow(() -> gestionListaDeseos.quitar(CLIENTE, "p-1"));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU14-CP28: un cliente no quita con el correo de otro cliente")
+    void unClienteNoQuitaConElCorreoDeOtro() {
+        assertThrows(AccessDeniedException.class, () -> gestionListaDeseos.quitar(OTRO_CLIENTE, "p-1"));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "VENDEDOR")
+    @DisplayName("HU14-CP28: un vendedor no quita de una lista de deseos")
+    void unVendedorNoQuita() {
+        assertThrows(AccessDeniedException.class, () -> gestionListaDeseos.quitar(CLIENTE, "p-1"));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "ADMINISTRADOR")
+    @DisplayName("HU14-CP28: un administrador no quita de una lista de deseos")
+    void unAdministradorNoQuita() {
+        assertThrows(AccessDeniedException.class, () -> gestionListaDeseos.quitar(CLIENTE, "p-1"));
+    }
+
+    @Test
+    @DisplayName("HU14-CP28: sin sesión no se quita de la lista")
+    void sinSesionNoSeQuita() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> gestionListaDeseos.quitar(CLIENTE, "p-1"));
+    }
+
+    @Test
     @DisplayName("HU14-CP05: sin sesión se rechaza")
     void sinSesionSeRechaza() {
         assertThrows(AuthenticationCredentialsNotFoundException.class,

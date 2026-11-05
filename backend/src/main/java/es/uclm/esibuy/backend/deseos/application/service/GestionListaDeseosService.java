@@ -66,6 +66,11 @@ public class GestionListaDeseosService implements GestionListaDeseosUseCase {
                 .toList());
     }
 
+    @Override
+    public ListaDeseosDetallada quitar(String emailCliente, String productoId) {
+        return new ListaDeseosDetallada(java.util.List.of());
+    }
+
     // Los datos actuales de los productos de la lista que siguen existiendo, por su id
     private Map<String, ProductoDeseado> productosExistentes(ListaDeseos lista, boolean premium) {
         Map<String, ProductoDeseado> existentes = new HashMap<>();
