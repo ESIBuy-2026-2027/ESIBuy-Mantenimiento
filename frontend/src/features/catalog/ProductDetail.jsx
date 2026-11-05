@@ -138,6 +138,9 @@ const useStyles = makeStyles({
   favorite: {
     alignSelf: 'flex-start',
   },
+  favoriteError: {
+    color: tokens.colorPaletteRedForeground1,
+  },
   stock: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -216,7 +219,7 @@ const valoraciones = (n) => `${n} ${n === 1 ? 'valoración' : 'valoraciones'}`
 // Detalle de un producto para el cliente (HU8): imagen, nombre, proveedor, valoración, precio, disponibilidad,
 // descripción, una ficha con los datos del producto y las valoraciones de los clientes (HU13). Solo presenta: la
 // página es la que pide el producto y sus valoraciones. Con `onAddFavorite` ofrece además añadirlo a favoritos y, si
-// ya lo está (`favorite`), quitarlo con `onRemoveFavorite` (HU14).
+// ya lo está (`favorite`), quitarlo con `onRemoveFavorite` (HU14); si no se puede, lo avisa.
 export default function ProductDetail({
   product,
   categoryName,
@@ -238,11 +241,22 @@ export default function ProductDetail({
   const canBuy = status.key === 'in' || status.key === 'low'
   const category = categoryName ?? SIN_CATEGORIA
   const [savingFavorite, setSavingFavorite] = useState(false)
+  const [favoriteError, setFavoriteError] = useState('')
+
+  const favoriteFailure = (failure) => {
+    if (favorite) return 'No se ha podido quitar de favoritos. Inténtalo de nuevo.'
+    return failure?.code === 'PRODUCT_NOT_FOUND'
+      ? 'Este producto ya no está disponible.'
+      : 'No se ha podido añadir a favoritos. Inténtalo de nuevo.'
+  }
 
   const toggleFavorite = async () => {
+    setFavoriteError('')
     setSavingFavorite(true)
     try {
       await (favorite ? onRemoveFavorite(product.id) : onAddFavorite(product.id))
+    } catch (failure) {
+      setFavoriteError(favoriteFailure(failure))
     } finally {
       setSavingFavorite(false)
     }
@@ -311,6 +325,11 @@ export default function ProductDetail({
             >
               {favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
             </Button>
+          )}
+          {favoriteError && (
+            <Text role="alert" size={200} className={styles.favoriteError}>
+              {favoriteError}
+            </Text>
           )}
         </div>
 
