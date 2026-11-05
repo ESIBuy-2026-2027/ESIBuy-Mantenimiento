@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -21,8 +22,8 @@ import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 
 /**
  * Adaptador de entrada web del administrador para las categorías: {@code GET /api/admin/categorias} (HU39),
- * {@code POST /api/admin/categorias} (HU40), {@code PUT /api/admin/categorias/{id}} (HU41) y
- * {@code DELETE /api/admin/categorias/{id}} (HU42).
+ * {@code POST /api/admin/categorias} (HU40), {@code PUT /api/admin/categorias/{id}} y
+ * {@code PATCH /api/admin/categorias/{id}/status} (HU41) y {@code DELETE /api/admin/categorias/{id}} (HU42).
  * /api/admin/** solo lo usa un ADMINISTRADOR (SecurityConfig, T58): sin sesión 401, con otro rol 403.
  */
 @RestController
@@ -58,6 +59,14 @@ public class AdministracionCategoriasController {
     public CategoriaAdministracionResponse editar(@PathVariable String id,
             @Valid @RequestBody EditarCategoriaRequest request) {
         return CategoriaAdministracionResponse.desde(administracionCategorias.editar(request.aComando(id)));
+    }
+
+    // Activa o desactiva una categoría (HU41, T416) y devuelve la fila actualizada, con su número de productos. 400
+    // si el estado falta o no es ACTIVA ni INACTIVA; 404 si no existe.
+    @PatchMapping("/{id}/status")
+    public CategoriaAdministracionResponse cambiarEstado(@PathVariable String id,
+            @Valid @RequestBody CambiarEstadoCategoriaRequest request) {
+        return CategoriaAdministracionResponse.desde(administracionCategorias.cambiarEstado(id, request.aEstado()));
     }
 
     // Elimina una categoría (HU42, T325) y responde 204 sin cuerpo. 404 si no existe; 409 si tiene productos o es
