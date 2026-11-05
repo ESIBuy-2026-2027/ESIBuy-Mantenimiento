@@ -34,4 +34,9 @@ public class FactorAutenticacionMongoAdapter implements FactorAutenticacionRepos
     public Optional<FactorAutenticacion> buscarPorUsuario(String usuarioId) {
         return repository.findByUsuarioId(usuarioId).map(mapper::aDominio);
     }
+
+    @Override
+    public void eliminarPorUsuario(String usuarioId) {
+        repository.deleteByUsuarioId(usuarioId);
+    }
 }

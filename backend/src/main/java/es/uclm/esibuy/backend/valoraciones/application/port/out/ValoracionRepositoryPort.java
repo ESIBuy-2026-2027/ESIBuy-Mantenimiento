@@ -13,4 +13,6 @@ public interface ValoracionRepositoryPort {
     boolean existePorClienteYProducto(String clienteId, String productoId);
 
     List<Valoracion> buscarPorProducto(String productoId);
-}   
+
+    void eliminarPorProducto(String productoId);
+}
