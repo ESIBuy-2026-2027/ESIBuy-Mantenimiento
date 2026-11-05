@@ -28,6 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -122,6 +123,19 @@ class ListaDeseosControllerTest {
                 .andExpect(jsonPath("$.items.length()").value(0));
 
         verify(gestionListaDeseos).consultar(CLIENTE);
+    }
+
+    @Test
+    @DisplayName("HU14-CP29: quitar responde 200 con la lista actualizada; el cliente sale de la sesión")
+    void quitarRespondeConLaListaActualizada() throws Exception {
+        when(gestionListaDeseos.quitar(CLIENTE, "p-1")).thenReturn(new ListaDeseosDetallada(List.of(
+                new DeseoDetallado("p-2", "Ratón", "r.png", new BigDecimal("20.50"), 3, true, AHORA))));
+
+        mockMvc.perform(delete(URL + "/p-1").with(user(CLIENTE).roles("CLIENTE")).with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].productoId").value("p-2"))
+                .andExpect(jsonPath("$.items[0].nombre").value("Ratón"));
     }
 
     @Test
