@@ -86,6 +86,17 @@ export default function CategoryRowActions({ category, onResult, onChanged }) {
       await changeAdminCategoryStatus(category.id, cambioDeEstado.nuevo)
       onResult({ intent: 'success', texto: cambioDeEstado.hecho(category.nombre) })
       onChanged()
+    } catch (error) {
+      // Si otro administrador la ha eliminado, la lista está desfasada y se recarga; con otro error sigue siendo válida.
+      if (error?.code === 'CATEGORY_NOT_FOUND') {
+        onResult({ intent: 'error', texto: ERRORES_AL_ELIMINAR.CATEGORY_NOT_FOUND.texto(category.nombre) })
+        onChanged()
+      } else {
+        onResult({
+          intent: 'error',
+          texto: `No se ha podido ${cambioDeEstado.boton.toLowerCase()} ${category.nombre}. Inténtalo de nuevo.`,
+        })
+      }
     } finally {
       setCambiandoEstado(false)
       cerrar()
