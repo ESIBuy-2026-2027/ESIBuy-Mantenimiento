@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
   Button,
@@ -12,6 +12,7 @@ import {
 } from '@fluentui/react-components'
 import { ArrowLeft20Regular, BoxSearch24Regular } from '@fluentui/react-icons'
 import { getCatalogProduct, getProductReviews } from '../api/products'
+import { addWishlistItem, getWishlist } from '../api/wishlist'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
 import ProductDetail from '../features/catalog/ProductDetail'
@@ -97,8 +98,22 @@ export default function ProductDetailPage() {
   const reviewsFetcher = useCallback(() => getProductReviews(id), [id])
   const { data: reviews, failed: reviewsFailed, retry: retryReviews } = useApiQuery(reviewsFetcher)
   const { categories } = useCategories()
+  // Si el producto está en los favoritos del cliente (HU14). Si la lista no se puede leer, se ofrece añadirlo.
+  const [favorito, setFavorito] = useState(false)
   const notFound = failed && error?.status === NOT_FOUND
   const categoryName = categories.find((category) => category.id === product?.categoriaId)?.nombre
+
+  useEffect(() => {
+    let cancelled = false
+    getWishlist()
+      .then((lista) => {
+        if (!cancelled) setFavorito(lista.items.some((item) => item.productoId === id))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [id])
 
   return (
     <main className={styles.page}>
@@ -139,6 +154,8 @@ export default function ProductDetailPage() {
           reviews={reviews}
           reviewsFailed={reviewsFailed}
           onRetryReviews={retryReviews}
+          favorite={favorito}
+          onAddFavorite={addWishlistItem}
         />
       )}
     </main>
