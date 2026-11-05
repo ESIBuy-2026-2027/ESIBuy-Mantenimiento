@@ -1,5 +1,8 @@
 package es.uclm.esibuy.backend.deseos.infrastructure.adapter.out.productos;
 
+import java.util.Optional;
+
+import es.uclm.esibuy.backend.deseos.application.port.out.ProductoDeseado;
 import es.uclm.esibuy.backend.deseos.application.port.out.ProductosPort;
 import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUseCase;
 
@@ -16,5 +19,10 @@ public class ProductosAdapter implements ProductosPort {
     public boolean estaDisponible(String productoId) {
         // Solo importa si se puede añadir: aquí no se usa el precio, así que da igual si el cliente es premium
         return catalogo.consultarComprable(productoId, false).isPresent();
+    }
+
+    @Override
+    public Optional<ProductoDeseado> consultarResumen(String productoId, boolean clientePremium) {
+        return Optional.empty();
     }
 }

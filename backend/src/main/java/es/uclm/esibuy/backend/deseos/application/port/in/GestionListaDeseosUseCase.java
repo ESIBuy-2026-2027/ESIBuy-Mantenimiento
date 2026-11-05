@@ -17,4 +17,10 @@ public interface GestionListaDeseosUseCase {
      *         está disponible
      */
     ListaDeseos anadir(String emailCliente, String productoId);
+
+    /**
+     * La lista del cliente con los datos actuales de sus productos. Un producto desactivado sigue en ella, marcado
+     * como no disponible; uno eliminado desaparece y la lista se guarda sin él. Si no tiene lista, una vacía.
+     */
+    ListaDeseosDetallada consultar(String emailCliente);
 }

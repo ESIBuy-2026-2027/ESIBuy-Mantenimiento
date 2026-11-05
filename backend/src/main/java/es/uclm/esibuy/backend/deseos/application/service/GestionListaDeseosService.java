@@ -2,10 +2,12 @@ package es.uclm.esibuy.backend.deseos.application.service;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import es.uclm.esibuy.backend.deseos.application.port.in.GestionListaDeseosUseCase;
+import es.uclm.esibuy.backend.deseos.application.port.in.ListaDeseosDetallada;
 import es.uclm.esibuy.backend.deseos.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.deseos.application.port.out.ListaDeseosRepositoryPort;
 import es.uclm.esibuy.backend.deseos.application.port.out.ProductosPort;
@@ -43,5 +45,10 @@ public class GestionListaDeseosService implements GestionListaDeseosUseCase {
                 .orElseGet(() -> ListaDeseos.vacia(clienteId));
         lista.anadir(productoId, Instant.now(reloj));
         return listaDeseosRepository.guardar(lista);
+    }
+
+    @Override
+    public ListaDeseosDetallada consultar(String emailCliente) {
+        return new ListaDeseosDetallada(List.of());
     }
 }
