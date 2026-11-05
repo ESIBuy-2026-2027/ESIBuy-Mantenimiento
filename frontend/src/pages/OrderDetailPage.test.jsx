@@ -189,3 +189,35 @@ describe('OrderDetailPage (HU12): botón de cancelar', () => {
     expect(cancelaciones).toHaveLength(0)
   })
 })
+
+describe('OrderDetailPage (HU12): confirmar la cancelación', () => {
+  it('HU12-CP16: al confirmar, el detalle muestra el pedido cancelado y avisa de que se ha cancelado', async () => {
+    const user = userEvent.setup()
+    await abrirPedidoDe(NORA, 'o-201')
+
+    await user.click(screen.getByRole('button', { name: /cancelar pedido/i }))
+    await user.click(await screen.findByRole('button', { name: /sí, cancelar el pedido/i }))
+
+    expect(await screen.findByText('Pedido cancelado.')).toBeInTheDocument()
+    expect(screen.getByText(/este pedido está cancelado/i)).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: /estado del envío/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /cancelar pedido/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+  })
+
+  it('HU12-CP17: si el pedido ya no se puede cancelar, cierra la confirmación y lo avisa en el detalle', async () => {
+    server.use(
+      http.post('/api/customer/orders/o-201/cancel', () =>
+        HttpResponse.json({ code: 'ORDER_NOT_CANCELLABLE' }, { status: 409 }),
+      ),
+    )
+    const user = userEvent.setup()
+    await abrirPedidoDe(NORA, 'o-201')
+
+    await user.click(screen.getByRole('button', { name: /cancelar pedido/i }))
+    await user.click(await screen.findByRole('button', { name: /sí, cancelar el pedido/i }))
+
+    expect(await screen.findByText(/este pedido ya no se puede cancelar/i)).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+  })
+})
