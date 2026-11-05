@@ -12,12 +12,14 @@ import { profileHandlers } from './profileHandlers'
 import { registroHandlers } from './registroHandlers'
 import { reviewsHandlers } from './reviewsHandlers'
 import { usersHandlers } from './usersHandlers'
+import { wishlistHandlers } from './wishlistHandlers'
 
 export const handlers = [
   ...authHandlers,
   ...reviewsHandlers,
   ...productsHandlers,
   ...cartHandlers,
+  ...wishlistHandlers,
   ...ordersHandlers,
   ...paymentMethodsHandlers,
   ...addressesHandlers,
