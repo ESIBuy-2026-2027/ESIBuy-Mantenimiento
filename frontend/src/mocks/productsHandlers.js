@@ -95,7 +95,7 @@ const imagenDeEjemplo = (nombre, numero) => {
 
 // Para tener variedad sin escribirla a mano, cada noveno producto no tiene imagen. La media y el número de valoraciones
 // salen de las valoraciones de ejemplo (HU13, reviewsHandlers), como hará el backend.
-const aCatalogo = ({ id, nombre, categoria }) => {
+export const aCatalogo = ({ id, nombre, categoria }) => {
   const numero = Number(id.slice(2))
   return {
     id,

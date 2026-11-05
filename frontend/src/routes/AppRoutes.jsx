@@ -24,6 +24,7 @@ import ProfilePage from '../pages/ProfilePage'
 import Register from '../pages/Register'
 import SellerProductFormPage from '../pages/SellerProductFormPage'
 import SellerProductsPage from '../pages/SellerProductsPage'
+import WishlistPage from '../pages/WishlistPage'
 import { PATHS } from './paths'
 
 export default function AppRoutes() {
@@ -46,6 +47,7 @@ export default function AppRoutes() {
           <Route path={PATHS.ADDRESSES} element={<AddressesPage />} />
           <Route path={PATHS.ORDERS} element={<OrdersPage />} />
           <Route path={PATHS.ORDER_DETAIL} element={<OrderDetailPage />} />
+          <Route path={PATHS.WISHLIST} element={<WishlistPage />} />
         </Route>
 
         {/* El perfil propio (HU4) es del cliente y del vendedor: el backend responde 403 al administrador. */}

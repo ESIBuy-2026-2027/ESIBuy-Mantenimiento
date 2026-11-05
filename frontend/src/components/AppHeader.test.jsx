@@ -233,6 +233,31 @@ describe('AppHeader: Mis pedidos (HU11)', () => {
   })
 })
 
+describe('AppHeader: Mis favoritos (HU14)', () => {
+  it('HU14-CP32: el cliente tiene el enlace a sus favoritos y lleva a Mis favoritos', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/')
+
+    await user.click(await screen.findByRole('link', { name: 'Favoritos' }))
+
+    await esperarRuta('/wishlist')
+  })
+
+  it('HU14-CP32: el vendedor y el administrador no tienen el enlace a favoritos', async () => {
+    await abrirSesionPorApi('vendedor@esibuy.test')
+    const { unmount } = renderApp('/')
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(screen.queryByRole('link', { name: 'Favoritos' })).not.toBeInTheDocument()
+    unmount()
+
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/')
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(screen.queryByRole('link', { name: 'Favoritos' })).not.toBeInTheDocument()
+  })
+})
+
 // El logotipo de la cabecera lleva al inicio de quien lo pulsa (HU30, AB#27): con sesión, a la página de inicio de su
 // rol (la misma a la que lleva el login); sin sesión, a la home. Antes llevaba siempre a la home de invitado.
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU30-CP01, propuesto.
