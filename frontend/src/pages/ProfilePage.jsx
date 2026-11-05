@@ -16,6 +16,7 @@ import { getProfile } from '../api/profile'
 import { usePageStyles } from '../components/pageStyles'
 import { UserAvatar } from '../features/account/AvatarSelector'
 import ReadOnlyFields from '../features/admin/ReadOnlyFields'
+import SellerStatistics from '../features/seller/SellerStatistics'
 import { profileFieldsFor } from '../features/admin/profileFields'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { useCategories } from '../hooks/useCategories'
@@ -59,7 +60,7 @@ function profileFields(perfil, categoryName) {
 }
 
 // Perfil propio del cliente o del vendedor (HU4), en solo lectura. Los datos se piden al backend, que los saca de
-// la sesión. Modificarlos es de la HU45.
+// la sesión. Modificarlos es de la HU45. El vendedor ve además sus estadísticas (HU17).
 export default function ProfilePage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
@@ -102,6 +103,8 @@ export default function ProfilePage() {
           <ReadOnlyFields fields={profileFields(perfil, categoryName)} />
         </Card>
       )}
+
+      {perfil?.rol === 'VENDEDOR' && <SellerStatistics />}
     </main>
   )
 }
