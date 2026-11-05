@@ -68,3 +68,22 @@ describe('SellerStatistics (HU17): stock', () => {
     expect(cifra(stock, 'No disponibles')).toHaveTextContent('3')
   })
 })
+
+describe('SellerStatistics (HU17): sin datos', () => {
+  it('HU17-CP17: sin ventas ni valoraciones, avisa de que aún no hay en vez de mostrar tablas vacías', async () => {
+    await abrirEstadisticas('vendedor-vacio@esibuy.test')
+
+    const ventas = await screen.findByRole('region', { name: 'Ventas' })
+    expect(cifra(ventas, 'Pedidos')).toHaveTextContent('0')
+    expect(within(ventas).getByText(/aún no tienes ventas/i)).toBeInTheDocument()
+    expect(within(ventas).queryByRole('table')).not.toBeInTheDocument()
+
+    const valoraciones = screen.getByRole('region', { name: 'Valoraciones' })
+    expect(cifra(valoraciones, 'Valoración media')).toHaveTextContent('Sin valoraciones')
+    expect(within(valoraciones).getByText(/aún no tienes valoraciones/i)).toBeInTheDocument()
+    expect(within(valoraciones).queryByRole('table')).not.toBeInTheDocument()
+
+    const stock = screen.getByRole('region', { name: 'Stock' })
+    expect(cifra(stock, 'Productos')).toHaveTextContent('0')
+  })
+})
