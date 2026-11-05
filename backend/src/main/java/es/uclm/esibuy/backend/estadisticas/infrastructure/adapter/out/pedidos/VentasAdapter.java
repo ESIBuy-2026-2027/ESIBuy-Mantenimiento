@@ -17,6 +17,9 @@ public class VentasAdapter implements VentasPort {
 
     @Override
     public List<VentaRegistrada> ventasDe(String vendedorId) {
-        throw new UnsupportedOperationException("Funcionalidad no implementada");
+        return ventasVendedor.ventasDe(vendedorId).stream()
+                .map(venta -> new VentaRegistrada(venta.pedidoId(), venta.productoId(), venta.nombreProducto(),
+                        venta.unidades(), venta.importe()))
+                .toList();
     }
 }

@@ -17,6 +17,9 @@ public class InventarioAdapter implements InventarioPort {
 
     @Override
     public List<ProductoInventariado> productosDe(String vendedorId) {
-        throw new UnsupportedOperationException("Funcionalidad no implementada");
+        return inventarioVendedor.productosDe(vendedorId).stream()
+                .map(producto -> new ProductoInventariado(producto.id(), producto.nombre(), producto.stock(),
+                        producto.disponible(), producto.valoracionMedia(), producto.numeroValoraciones()))
+                .toList();
     }
 }

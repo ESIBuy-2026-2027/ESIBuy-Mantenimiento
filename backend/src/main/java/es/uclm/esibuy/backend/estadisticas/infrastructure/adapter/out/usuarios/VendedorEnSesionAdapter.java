@@ -17,6 +17,6 @@ public class VendedorEnSesionAdapter implements VendedorEnSesionPort {
 
     @Override
     public String idPorCorreo(String email) {
-        throw new UnsupportedOperationException("Funcionalidad no implementada");
+        return autenticacion.consultarIdUsuarioEnSesion(email);
     }
 }
