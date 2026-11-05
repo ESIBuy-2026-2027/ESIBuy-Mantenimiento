@@ -2006,13 +2006,17 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP15 | Solo el cliente con su propio correo consulta su lista: otro correo, vendedor o administrador reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#362, PR #205) |
 | HU14-CP16 | El resumen de `productos` devuelve los productos disponibles y los desactivados, vacío si no existe, y exige el rol cliente | Unitario y unitario con Spring Security (sin MongoDB) | 7 | ✅ Pasa (7, AB#362, PR #205) |
 | HU14-CP17 | Los adaptadores preguntan a `usuarios` si el cliente es premium y a `productos` por los datos del producto | Unitario | 3 | ✅ Pasa (3, AB#362, PR #205) |
-| HU14-CP18 | `GET /api/customer/wishlist` devuelve 200 con los datos de cada producto, también de uno desactivado, o con `items` vacío; el cliente sale de la sesión | Integración (capa web) | 2 | 🔍 En revisión (2, Rama `feature/US14-T361-endpoint-obtener-deseos`) |
-| HU14-CP19 | Sin sesión (401) o sin ser cliente (403) no se consulta la lista | Integración (capa web) | 2 | 🔍 En revisión (2, Rama `feature/US14-T361-endpoint-obtener-deseos`) |
+| HU14-CP18 | `GET /api/customer/wishlist` devuelve 200 con los datos de cada producto, también de uno desactivado, o con `items` vacío; el cliente sale de la sesión | Integración (capa web) | 2 | ✅ Pasa (2, AB#361, PR #206) |
+| HU14-CP19 | Sin sesión (401) o sin ser cliente (403) no se consulta la lista | Integración (capa web) | 2 | ✅ Pasa (2, AB#361, PR #206) |
 | HU14-CP20 | La llamada del cliente pide `POST /api/customer/wishlist/items` con el producto y devuelve la lista; un 404 llega como error con su estado y su código | Frontend (API) | 2 | ✅ Pasa (2, AB#357, PR #202) |
 | HU14-CP21 | Cada tarjeta del catálogo tiene un corazón para añadir su producto a favoritos, fuera del enlace al detalle; también los agotados, pero no los no disponibles | Frontend (componente y página) | 5 | ✅ Pasa (5, AB#357, PR #202) |
 | HU14-CP22 | Al pulsar el corazón se añade el producto; mientras se añade queda deshabilitado y después queda relleno y deshabilitado, sin salir del catálogo | Frontend (componente y página) | 4 | ✅ Pasa (4, AB#357, PR #202) |
 | HU14-CP23 | La lista que devuelve el backend al añadir rellena también los corazones de los productos que ya estaban en favoritos | Frontend (página) | 1 | ✅ Pasa (1, AB#357, PR #202) |
 | HU14-CP24 | Si no se puede añadir, la tarjeta lo avisa (producto que ya no está disponible o mensaje genérico) y el corazón se puede volver a pulsar; al pulsarlo desaparece el aviso | Frontend (componente y página) | 4 | ✅ Pasa (4, AB#357, PR #202) |
+| HU14-CP25 | Quitar un producto lo saca de la lista, conserva los demás, la guarda y devuelve la lista actualizada | Unitario | 2 | 🔍 En revisión (2, Rama `feature/US14-T366-logica-eliminacion-deseos`) |
+| HU14-CP26 | Quitar un producto que no está no es un error ni guarda nada; si el cliente no tiene lista, tampoco la crea | Unitario | 3 | 🔍 En revisión (3, Rama `feature/US14-T366-logica-eliminacion-deseos`) |
+| HU14-CP27 | Un producto desactivado también se puede quitar | Unitario | 1 | 🔍 En revisión (1, Rama `feature/US14-T366-logica-eliminacion-deseos`) |
+| HU14-CP28 | Solo el cliente con su propio correo puede quitar: otro correo, vendedor o administrador reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, Rama `feature/US14-T366-logica-eliminacion-deseos`) |
 
 - **HU14-CP01 a CP06 (Sprint 2, backend):** casos propuestos en la task AB#360 (lógica de guardado de deseo), revisados y aceptados por el desarrollador. Azure no los trae: habría que añadirlos a la HU14.
 - **Decisiones del equipo:** módulo nuevo `deseos`; una sola lista por cliente, como dicen el criterio de aceptación y la colección `listas_deseos`, que ya tenía su índice único. El campo de la colección sigue siendo `usuarioId`, y guarda el id del cliente. Añadir un producto repetido no es un error, y un producto inexistente o no disponible se rechaza.
@@ -2023,6 +2027,8 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - **HU14-CP18 y CP19 (Sprint 2, backend):** casos propuestos en la task AB#361 (endpoint obtener deseos), revisados y aceptados por el desarrollador. Los casos de frontend empiezan en CP20, así que los siguientes de backend irán desde CP25.
 - **Endpoint (T361):** `GET /api/customer/wishlist` → 200 `{ "items": [{ "productoId", "nombre", "imagen", "precioFinal", "stock", "disponible", "addedAt" }] }`, o `items` vacío; 401 sin sesión y 403 con otro rol. El `POST` sigue devolviendo solo `productoId` y `addedAt`, porque el botón de favoritos no necesita más.
 - **HU14-CP19 sin rojo real:** la regla de `/api/customer/**` de `SecurityConfig` ya lo cubría. Se comprobó abriendo la ruta de forma temporal, y entonces fallaron los tests de sesión y de rol.
+- **HU14-CP25 a CP28 (Sprint 2, backend):** casos propuestos en la task AB#366 (lógica de eliminación de deseos), revisados y aceptados por el desarrollador.
+- **Quitar un producto (T366):** devuelve la lista actualizada con los mismos datos que al consultarla, para que la vista se refresque sin otra llamada. Como en el carrito, quitar un producto que no está no es un error, y no se comprueba si está disponible para que se pueda quitar uno desactivado. Se comprobó con una versión que siempre guardaba: fallaron los dos tests que protegen "no se guarda nada" y "no se crea la lista", que pasaban en el rojo.
 - **HU14-CP07 a CP10 (Sprint 2, backend):** casos propuestos en la task AB#358 (endpoint añadir deseo), revisados y aceptados por el desarrollador.
 - **Endpoint (T358):** `POST /api/customer/wishlist/items` con `{ "productoId": "p-1" }` → 200 `{ "items": [{ "productoId", "addedAt" }] }`, también si el producto ya estaba. Errores: 400 `VALIDATION_ERROR`, 404 `PRODUCT_NOT_FOUND`, 401 sin sesión y 403 con otro rol o sin CSRF. Los datos del producto (nombre, imagen, aviso de "no disponible") llegan con la consulta de la T361 y la T362. `ProductoNoDisponibleException` comparte el handler de `ProductoNoComprableException` en `ManejadorGlobalErrores`, porque responden igual.
 - **HU14-CP10 sin rojo real:** la regla de `/api/customer/**` de `SecurityConfig` ya lo cubría. Se comprobó con dos cambios temporales: con la ruta abierta fallaron los tres tests de sesión y rol, y sin CSRF falló el del token.
@@ -2085,10 +2091,10 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP17 | `ClienteEnSesionAdapterTest` | `esPremiumPreguntaAlModuloDeUsuarios` | Infraestructura | AB#362 | PR #205 | ✅ |
 | HU14-CP17 | `ProductosAdapterTest` | `consultarResumenPreguntaAlModuloDeProductos` | Infraestructura | AB#362 | PR #205 | ✅ |
 | HU14-CP17 | `ProductosAdapterTest` | `unProductoQueNoExisteNoTieneDatos` | Infraestructura | AB#362 | PR #205 | ✅ |
-| HU14-CP18 | `ListaDeseosControllerTest` | `consultarRespondeConLosDatosDeCadaProducto` | Infraestructura | AB#361 | Rama `feature/US14-T361-endpoint-obtener-deseos` | 🔍 |
-| HU14-CP18 | `ListaDeseosControllerTest` | `consultarUnaListaVaciaRespondeConItemsVacio` | Infraestructura | AB#361 | Rama `feature/US14-T361-endpoint-obtener-deseos` | 🔍 |
-| HU14-CP19 | `ListaDeseosControllerTest` | `sinSesionNoSeConsultaLaLista` | Infraestructura | AB#361 | Rama `feature/US14-T361-endpoint-obtener-deseos` | 🔍 |
-| HU14-CP19 | `ListaDeseosControllerTest` | `noClienteNoConsultaLaLista` (vendedor y administrador) | Infraestructura | AB#361 | Rama `feature/US14-T361-endpoint-obtener-deseos` | 🔍 |
+| HU14-CP18 | `ListaDeseosControllerTest` | `consultarRespondeConLosDatosDeCadaProducto` | Infraestructura | AB#361 | PR #206 | ✅ |
+| HU14-CP18 | `ListaDeseosControllerTest` | `consultarUnaListaVaciaRespondeConItemsVacio` | Infraestructura | AB#361 | PR #206 | ✅ |
+| HU14-CP19 | `ListaDeseosControllerTest` | `sinSesionNoSeConsultaLaLista` | Infraestructura | AB#361 | PR #206 | ✅ |
+| HU14-CP19 | `ListaDeseosControllerTest` | `noClienteNoConsultaLaLista` (vendedor y administrador) | Infraestructura | AB#361 | PR #206 | ✅ |
 | HU14-CP20 | `wishlist.test.js` | `HU14-CP20: pide POST /api/customer/wishlist/items con el producto y devuelve la lista del cliente` | Frontend · API | AB#357 | PR #202 | ✅ |
 | HU14-CP20 | `wishlist.test.js` | `HU14-CP20: un 404 llega como error con su estado y su código` | Frontend · API | AB#357 | PR #202 | ✅ |
 | HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: la tarjeta tiene un corazón para añadir el producto a favoritos, fuera del enlace al detalle` | Frontend · componente | AB#357 | PR #202 | ✅ |
@@ -2104,6 +2110,17 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP24 | `ProductCard.test.jsx` | `HU14-CP24: si %s, la tarjeta lo avisa y el corazón se puede volver a pulsar` (2 variantes: el producto ya no está disponible y falla por otro motivo) | Frontend · componente | AB#357 | PR #202 | ✅ |
 | HU14-CP24 | `ProductCard.test.jsx` | `HU14-CP24: al volver a pulsar el corazón desaparece el aviso anterior` | Frontend · componente | AB#357 | PR #202 | ✅ |
 | HU14-CP24 | `ProductsPage.test.jsx` | `HU14-CP24: si el producto ya no está disponible, su tarjeta lo avisa y el corazón sigue vacío` | Frontend · página | AB#357 | PR #202 | ✅ |
+| HU14-CP25 | `ListaDeseosTest` | `quitarUnProductoLoSacaDeLaLista` | Dominio | AB#366 | Rama `feature/US14-T366-logica-eliminacion-deseos` | 🔍 |
+| HU14-CP25 | `GestionListaDeseosServiceTest` | `quitarUnProductoDevuelveLaListaActualizada` | Aplicación | AB#366 | Rama `feature/US14-T366-logica-eliminacion-deseos` | 🔍 |
+| HU14-CP26 | `ListaDeseosTest` | `quitarUnProductoQueNoEstaNoCambiaLaLista` | Dominio | AB#366 | Rama `feature/US14-T366-logica-eliminacion-deseos` | 🔍 |
+| HU14-CP26 | `GestionListaDeseosServiceTest` | `quitarUnProductoQueNoEstaNoGuardaNada` | Aplicación | AB#366 | Rama `feature/US14-T366-logica-eliminacion-deseos` | 🔍 |
+| HU14-CP26 | `GestionListaDeseosServiceTest` | `quitarSinListaNoLaCrea` | Aplicación | AB#366 | Rama `feature/US14-T366-logica-eliminacion-deseos` | 🔍 |
+| HU14-CP27 | `GestionListaDeseosServiceTest` | `unProductoDesactivadoTambienSeQuita` | Aplicación | AB#366 | Rama `feature/US14-T366-logica-eliminacion-deseos` | 🔍 |
+| HU14-CP28 | `SeguridadDeseosServiceTest` | `elClienteQuitaConSuPropioCorreo` | Aplicación | AB#366 | Rama `feature/US14-T366-logica-eliminacion-deseos` | 🔍 |
+| HU14-CP28 | `SeguridadDeseosServiceTest` | `unClienteNoQuitaConElCorreoDeOtro` | Aplicación | AB#366 | Rama `feature/US14-T366-logica-eliminacion-deseos` | 🔍 |
+| HU14-CP28 | `SeguridadDeseosServiceTest` | `unVendedorNoQuita` | Aplicación | AB#366 | Rama `feature/US14-T366-logica-eliminacion-deseos` | 🔍 |
+| HU14-CP28 | `SeguridadDeseosServiceTest` | `unAdministradorNoQuita` | Aplicación | AB#366 | Rama `feature/US14-T366-logica-eliminacion-deseos` | 🔍 |
+| HU14-CP28 | `SeguridadDeseosServiceTest` | `sinSesionNoSeQuita` | Aplicación | AB#366 | Rama `feature/US14-T366-logica-eliminacion-deseos` | 🔍 |
 
 ---
 

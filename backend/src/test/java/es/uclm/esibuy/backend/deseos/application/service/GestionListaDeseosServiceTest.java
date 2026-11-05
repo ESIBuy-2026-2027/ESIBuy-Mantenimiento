@@ -174,6 +174,48 @@ class GestionListaDeseosServiceTest {
         assertEquals(PRECIO_PREMIUM, servicio.consultar(EMAIL).items().get(0).precioFinal());
     }
 
+    @Test
+    @DisplayName("HU14-CP25: quitar un producto lo saca de la lista, la guarda y devuelve la lista actualizada")
+    void quitarUnProductoDevuelveLaListaActualizada() {
+        listaGuardadaCon("p-1", "p-2");
+
+        ListaDeseosDetallada lista = servicio.quitar(EMAIL, "p-1");
+
+        assertEquals(List.of("p-2"), lista.items().stream().map(DeseoDetallado::productoId).toList());
+        assertEquals(List.of(new ItemDeseo("p-2", AYER)),
+                repositorio.buscarPorCliente(CLIENTE).orElseThrow().getItems());
+    }
+
+    @Test
+    @DisplayName("HU14-CP26: quitar un producto que no está no es un error y no se guarda nada")
+    void quitarUnProductoQueNoEstaNoGuardaNada() {
+        listaGuardadaCon("p-1");
+        int guardadosAntes = repositorio.guardados;
+
+        ListaDeseosDetallada lista = servicio.quitar(EMAIL, "p-2");
+
+        assertEquals(List.of("p-1"), lista.items().stream().map(DeseoDetallado::productoId).toList());
+        assertEquals(guardadosAntes, repositorio.guardados);
+    }
+
+    @Test
+    @DisplayName("HU14-CP26: quitar con un cliente sin lista no es un error y no se crea la lista")
+    void quitarSinListaNoLaCrea() {
+        assertTrue(servicio.quitar(EMAIL, "p-1").items().isEmpty());
+
+        assertTrue(repositorio.listas.isEmpty());
+    }
+
+    @Test
+    @DisplayName("HU14-CP27: un producto desactivado también se puede quitar")
+    void unProductoDesactivadoTambienSeQuita() {
+        listaGuardadaCon("p-3");
+
+        servicio.quitar(EMAIL, "p-3");
+
+        assertTrue(repositorio.buscarPorCliente(CLIENTE).orElseThrow().getItems().isEmpty());
+    }
+
     private static final class ClienteFijo implements ClienteEnSesionPort {
 
         private boolean premium;
