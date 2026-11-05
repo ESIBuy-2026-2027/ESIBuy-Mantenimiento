@@ -13,6 +13,9 @@ public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal
         int noDisponibles) {
 
     public static EstadisticasVendedor calcular(List<VentaRegistrada> ventas, List<ProductoInventariado> productos) {
-        throw new UnsupportedOperationException("Funcionalidad no implementada");
+        int pedidos = (int) ventas.stream().map(VentaRegistrada::pedidoId).distinct().count();
+        int unidades = ventas.stream().mapToInt(VentaRegistrada::unidades).sum();
+        BigDecimal ingresos = ventas.stream().map(VentaRegistrada::importe).reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new EstadisticasVendedor(pedidos, unidades, ingresos, List.of(), null, 0, List.of(), 0, 0, 0, 0);
     }
 }
