@@ -66,7 +66,7 @@ public class AdministracionCategoriasController {
     @PatchMapping("/{id}/status")
     public CategoriaAdministracionResponse cambiarEstado(@PathVariable String id,
             @Valid @RequestBody CambiarEstadoCategoriaRequest request) {
-        return CategoriaAdministracionResponse.desde(administracionCategorias.cambiarEstado(id, request.aEstado()));
+        return CategoriaAdministracionResponse.desde(administracionCategorias.cambiarEstado(id, request.estado()));
     }
 
     // Elimina una categoría (HU42, T325) y responde 204 sin cuerpo. 404 si no existe; 409 si tiene productos o es
