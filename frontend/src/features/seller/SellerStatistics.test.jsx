@@ -55,3 +55,16 @@ describe('SellerStatistics (HU17): valoraciones', () => {
     ])
   })
 })
+
+describe('SellerStatistics (HU17): stock', () => {
+  it('HU17-CP16: el vendedor ve cuántos productos tiene, sin stock, con stock bajo y no disponibles', async () => {
+    await abrirEstadisticas('vendedor@esibuy.test')
+
+    const stock = await screen.findByRole('region', { name: 'Stock' })
+    expect(cifra(stock, 'Productos')).toHaveTextContent('23')
+    expect(cifra(stock, 'Sin stock')).toHaveTextContent('3')
+    expect(cifra(stock, 'Stock bajo')).toHaveTextContent('2')
+    expect(within(stock).getByText(/de 1 a 5 unidades/i)).toBeInTheDocument()
+    expect(cifra(stock, 'No disponibles')).toHaveTextContent('3')
+  })
+})
