@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import PropTypes from 'prop-types'
 import {
+  Caption1,
   Card,
   Subtitle1,
   Table,
@@ -52,8 +53,9 @@ const useStyles = makeStyles({
   },
 })
 
-// Una cifra con su nombre: el grupo toma el nombre de la etiqueta para que se lea como «Pedidos: 6».
-function Stat({ label, value }) {
+// Una cifra con su nombre: el grupo toma el nombre de la etiqueta para que se lea como «Pedidos: 6». `hint` aclara
+// qué se cuenta, debajo de la cifra.
+function Stat({ label, value, hint }) {
   const styles = useStyles()
   const labelId = useId('cifra')
 
@@ -65,6 +67,11 @@ function Stat({ label, value }) {
       <Title2 as="p" className={styles.heading}>
         {value}
       </Title2>
+      {hint && (
+        <Caption1 className={styles.statLabel}>
+          {hint}
+        </Caption1>
+      )}
     </div>
   )
 }
@@ -72,6 +79,7 @@ function Stat({ label, value }) {
 Stat.propTypes = {
   label: PropTypes.string.isRequired,
   value: PropTypes.node.isRequired,
+  hint: PropTypes.string,
 }
 
 function StatsBlock({ title, children }) {
@@ -210,6 +218,30 @@ RatingsBlock.propTypes = {
   }).isRequired,
 }
 
+function StockBlock({ stock }) {
+  const styles = useStyles()
+
+  return (
+    <StatsBlock title="Stock">
+      <div className={styles.stats}>
+        <Stat label="Productos" value={stock.productos} />
+        <Stat label="Sin stock" value={stock.sinStock} />
+        <Stat label="Stock bajo" value={stock.stockBajo} hint="De 1 a 5 unidades" />
+        <Stat label="No disponibles" value={stock.noDisponibles} />
+      </div>
+    </StatsBlock>
+  )
+}
+
+StockBlock.propTypes = {
+  stock: PropTypes.shape({
+    productos: PropTypes.number.isRequired,
+    sinStock: PropTypes.number.isRequired,
+    stockBajo: PropTypes.number.isRequired,
+    noDisponibles: PropTypes.number.isRequired,
+  }).isRequired,
+}
+
 // Estadísticas básicas del vendedor en sesión (HU17), como sección de «Mi perfil». El backend las calcula desde
 // siempre y sin los pedidos cancelados.
 export default function SellerStatistics() {
@@ -228,6 +260,7 @@ export default function SellerStatistics() {
           <>
             <SalesBlock ventas={estadisticas.ventas} />
             <RatingsBlock valoraciones={estadisticas.valoraciones} />
+            <StockBlock stock={estadisticas.stock} />
           </>
         )}
       </Card>
