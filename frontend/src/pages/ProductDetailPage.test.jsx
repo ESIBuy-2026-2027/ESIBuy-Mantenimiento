@@ -618,4 +618,23 @@ describe('ProductDetailPage (HU14): favoritos', () => {
 
     expect(screen.getByRole('button', { name: 'Añadir a favoritos' })).toBeDisabled()
   })
+
+  it('HU14-CP40: al pulsar Quitar de favoritos se quita el producto y el botón vuelve a ofrecer añadirlo', async () => {
+    const user = userEvent.setup()
+    let quitado = null
+    responderCon()
+    server.use(
+      http.get('/api/customer/wishlist', () => HttpResponse.json(CON_EL_TECLADO)),
+      http.delete('/api/customer/wishlist/items/:productoId', ({ params }) => {
+        quitado = params.productoId
+        return HttpResponse.json({ items: [] })
+      }),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: 'Quitar de favoritos' }))
+
+    expect(await screen.findByRole('button', { name: 'Añadir a favoritos' })).toBeEnabled()
+    expect(quitado).toBe('p-2')
+  })
 })
