@@ -2,7 +2,6 @@ package es.uclm.esibuy.backend.estadisticas.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -132,13 +131,32 @@ class EstadisticasVendedorTest {
     @Test
     @DisplayName("HU17-CP05: el stock cuenta los productos, los que no tienen stock y los no disponibles")
     void elStockCuentaProductosSinStockYNoDisponibles() {
-        fail("Funcionalidad no implementada");
+        List<ProductoInventariado> productos = List.of(
+                producto("p-1", 0, true, null, 0),
+                producto("p-2", 20, false, null, 0),
+                producto("p-3", 0, false, null, 0),
+                producto("p-4", 20, true, null, 0));
+
+        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(List.of(), productos);
+
+        assertEquals(4, estadisticas.productos());
+        assertEquals(2, estadisticas.sinStock());
+        assertEquals(2, estadisticas.noDisponibles());
     }
 
     @Test
     @DisplayName("HU17-CP05: tiene stock bajo el producto con entre 1 y 5 unidades")
     void stockBajoEsEntreUnaYCincoUnidades() {
-        fail("Funcionalidad no implementada");
+        List<ProductoInventariado> productos = List.of(
+                producto("p-0", 0, true, null, 0),
+                producto("p-1", 1, true, null, 0),
+                producto("p-5", 5, true, null, 0),
+                producto("p-6", 6, true, null, 0));
+
+        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(List.of(), productos);
+
+        // Frontera: 0 es sin stock, no stock bajo; 6 ya no es stock bajo
+        assertEquals(2, estadisticas.stockBajo());
     }
 
     private static VentaRegistrada venta(String pedidoId, String productoId, int unidades, String importe) {
