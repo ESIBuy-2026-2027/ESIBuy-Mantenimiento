@@ -24,6 +24,6 @@ public class EstadisticasVendedorController {
     // El vendedor sale de la sesión, nunca de un parámetro
     @GetMapping("/seller/statistics")
     public EstadisticasVendedorResponse consultar(Authentication autenticado) {
-        throw new UnsupportedOperationException("Funcionalidad no implementada");
+        return EstadisticasVendedorResponse.desde(estadisticasVendedor.consultar(autenticado.getName()));
     }
 }

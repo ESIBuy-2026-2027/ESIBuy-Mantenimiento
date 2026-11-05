@@ -25,6 +25,19 @@ public record EstadisticasVendedorResponse(Ventas ventas, Valoraciones valoracio
     }
 
     public static EstadisticasVendedorResponse desde(EstadisticasVendedor estadisticas) {
-        throw new UnsupportedOperationException("Funcionalidad no implementada");
+        List<MasVendido> masVendidos = estadisticas.masVendidos().stream()
+                .map(producto -> new MasVendido(producto.productoId(), producto.nombre(), producto.unidades(),
+                        producto.ingresos()))
+                .toList();
+        List<ValoracionDeProducto> porProducto = estadisticas.valoracionesPorProducto().stream()
+                .map(valoracion -> new ValoracionDeProducto(valoracion.productoId(), valoracion.nombre(),
+                        valoracion.media(), valoracion.numero()))
+                .toList();
+        return new EstadisticasVendedorResponse(
+                new Ventas(estadisticas.pedidos(), estadisticas.unidadesVendidas(), estadisticas.ingresos(),
+                        masVendidos),
+                new Valoraciones(estadisticas.valoracionMedia(), estadisticas.numeroValoraciones(), porProducto),
+                new Stock(estadisticas.productos(), estadisticas.sinStock(), estadisticas.stockBajo(),
+                        estadisticas.noDisponibles()));
     }
 }
