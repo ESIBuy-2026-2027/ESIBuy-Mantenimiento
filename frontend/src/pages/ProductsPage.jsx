@@ -12,7 +12,7 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { ArrowDown20Regular, Box24Regular, CheckmarkCircle20Regular, SearchInfo24Regular } from '@fluentui/react-icons'
-import { addWishlistItem, getWishlist } from '../api/wishlist'
+import { addWishlistItem, getWishlist, removeWishlistItem } from '../api/wishlist'
 import EmptyState from '../components/EmptyState'
 import { usePageStyles } from '../components/pageStyles'
 import CatalogFilters from '../features/catalog/CatalogFilters'
@@ -134,6 +134,12 @@ export default function ProductsPage() {
     cambiados.current = true
     setFavoritos(aFavoritos(lista))
   }
+
+  const quitarFavorito = async (productId) => {
+    const lista = await removeWishlistItem(productId)
+    cambiados.current = true
+    setFavoritos(aFavoritos(lista))
+  }
   // Sin ningún filtro, que no haya productos significa que el catálogo está vacío; con filtros, que no coinciden.
   const catalogEmpty = feed.loaded && feed.totalItems === 0 && !debouncedSearch && !category && !minRating
   const noMatches = feed.loaded && feed.totalItems === 0 && !catalogEmpty
@@ -215,6 +221,7 @@ export default function ProductsPage() {
                     categoryName={categoryNames.get(product.categoriaId)}
                     favorite={favoritos.has(product.id)}
                     onAddFavorite={anadirFavorito}
+                    onRemoveFavorite={quitarFavorito}
                   />
                 </li>
               ))}

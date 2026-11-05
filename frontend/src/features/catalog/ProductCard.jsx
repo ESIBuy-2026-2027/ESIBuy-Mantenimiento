@@ -128,7 +128,7 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground1,
     boxShadow: tokens.shadow4,
   },
-  // El corazón relleno está deshabilitado, pero no debe verse gris: es la señal de que ya está en favoritos.
+  // El corazón relleno en rojo es la señal de que ya está en favoritos, también mientras se quita.
   favoriteIcon: {
     color: tokens.colorPaletteRedForeground1,
   },
@@ -138,30 +138,33 @@ const useStyles = makeStyles({
 // el botón para añadirlo al carrito (HU9). `categoryName` lo traduce la página a partir del identificador de
 // categoría del producto. La imagen, el nombre y la valoración llevan al detalle (HU8). Con `onAddFavorite`, la
 // tarjeta tiene además un corazón para añadir el producto a favoritos (HU14), salvo si no está disponible, porque el
-// backend no lo aceptaría; uno agotado sí se puede añadir. Con `favorite`, el corazón sale relleno y deshabilitado:
-// quitarlo de favoritos todavía no se puede desde aquí. Si no se puede añadir, la tarjeta lo avisa.
-export default function ProductCard({ product, categoryName, favorite = false, onAddFavorite }) {
+// backend no lo aceptaría; uno agotado sí se puede añadir. Con `favorite`, el corazón sale relleno y, con
+// `onRemoveFavorite`, al pulsarlo se quita de favoritos. Si no se puede añadir o quitar, la tarjeta lo avisa.
+export default function ProductCard({ product, categoryName, favorite = false, onAddFavorite, onRemoveFavorite }) {
   const styles = useStyles()
   // Si la imagen no carga (dirección rota), se enseña el mismo marcador que cuando no hay imagen.
   const [imageFailed, setImageFailed] = useState(false)
   const hasImage = Boolean(product.imagen) && !imageFailed
   const rated = product.valoracion !== null && product.numValoraciones > 0
-  const [addingFavorite, setAddingFavorite] = useState(false)
+  const [savingFavorite, setSavingFavorite] = useState(false)
   const [favoriteError, setFavoriteError] = useState('')
 
-  const addFavorite = async () => {
+  const favoriteFailure = (failure) => {
+    if (favorite) return 'No se ha podido quitar de favoritos. Inténtalo de nuevo.'
+    return failure?.code === 'PRODUCT_NOT_FOUND'
+      ? 'Este producto ya no está disponible.'
+      : 'No se ha podido añadir a favoritos. Inténtalo de nuevo.'
+  }
+
+  const toggleFavorite = async () => {
     setFavoriteError('')
-    setAddingFavorite(true)
+    setSavingFavorite(true)
     try {
-      await onAddFavorite(product.id)
+      await (favorite ? onRemoveFavorite(product.id) : onAddFavorite(product.id))
     } catch (failure) {
-      setFavoriteError(
-        failure?.code === 'PRODUCT_NOT_FOUND'
-          ? 'Este producto ya no está disponible.'
-          : 'No se ha podido añadir a favoritos. Inténtalo de nuevo.',
-      )
+      setFavoriteError(favoriteFailure(failure))
     } finally {
-      setAddingFavorite(false)
+      setSavingFavorite(false)
     }
   }
 
@@ -208,10 +211,10 @@ export default function ProductCard({ product, categoryName, favorite = false, o
           shape="circular"
           className={styles.favorite}
           icon={favorite ? <Heart20Filled className={styles.favoriteIcon} /> : <Heart20Regular />}
-          aria-label={favorite ? `${product.nombre} está en tus favoritos` : `Añadir ${product.nombre} a favoritos`}
-          title={favorite ? 'Ya está en tus favoritos' : 'Añadir a favoritos'}
-          disabled={favorite || addingFavorite}
-          onClick={addFavorite}
+          aria-label={favorite ? `Quitar ${product.nombre} de favoritos` : `Añadir ${product.nombre} a favoritos`}
+          title={favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+          disabled={savingFavorite || (favorite && !onRemoveFavorite)}
+          onClick={toggleFavorite}
         />
       )}
       <div className={styles.footer}>
@@ -232,4 +235,5 @@ ProductCard.propTypes = {
   categoryName: PropTypes.string,
   favorite: PropTypes.bool,
   onAddFavorite: PropTypes.func,
+  onRemoveFavorite: PropTypes.func,
 }
