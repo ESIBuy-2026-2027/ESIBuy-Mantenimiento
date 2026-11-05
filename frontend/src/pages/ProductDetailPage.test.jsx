@@ -637,4 +637,38 @@ describe('ProductDetailPage (HU14): favoritos', () => {
     expect(await screen.findByRole('button', { name: 'Añadir a favoritos' })).toBeEnabled()
     expect(quitado).toBe('p-2')
   })
+
+  it.each([
+    ['el producto ya no está disponible (404)', { code: 'PRODUCT_NOT_FOUND' }, 404, 'Este producto ya no está disponible.'],
+    ['falla por otro motivo', null, 500, 'No se ha podido añadir a favoritos. Inténtalo de nuevo.'],
+  ])('HU14-CP41: si al añadir %s, lo avisa y se puede volver a intentar', async (_caso, cuerpo, estado, mensaje) => {
+    const user = userEvent.setup()
+    responderCon()
+    server.use(
+      http.post('/api/customer/wishlist/items', () =>
+        cuerpo ? HttpResponse.json(cuerpo, { status: estado }) : new HttpResponse(null, { status: estado }),
+      ),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir a favoritos' }))
+
+    expect(await screen.findByText(mensaje)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Añadir a favoritos' })).toBeEnabled()
+  })
+
+  it('HU14-CP41: si no se puede quitar, lo avisa y el producto sigue en favoritos', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    server.use(
+      http.get('/api/customer/wishlist', () => HttpResponse.json(CON_EL_TECLADO)),
+      http.delete('/api/customer/wishlist/items/:productoId', () => new HttpResponse(null, { status: 500 })),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: 'Quitar de favoritos' }))
+
+    expect(await screen.findByText('No se ha podido quitar de favoritos. Inténtalo de nuevo.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Quitar de favoritos' })).toBeEnabled()
+  })
 })
