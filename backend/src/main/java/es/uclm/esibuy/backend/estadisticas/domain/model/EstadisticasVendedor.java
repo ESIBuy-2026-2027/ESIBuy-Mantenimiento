@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * Estadísticas básicas de ventas, valoraciones y stock de un vendedor (HU17). Se calculan siempre a partir de sus
@@ -16,6 +17,8 @@ public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal
         int noDisponibles) {
 
     private static final int MAXIMO_MAS_VENDIDOS = 5;
+    // Decisión del equipo: un producto con entre 1 y 5 unidades tiene stock bajo; con 0, no tiene stock
+    private static final int UMBRAL_STOCK_BAJO = 5;
 
     public static EstadisticasVendedor calcular(List<VentaRegistrada> ventas, List<ProductoInventariado> productos) {
         int pedidos = (int) ventas.stream().map(VentaRegistrada::pedidoId).distinct().count();
@@ -25,7 +28,13 @@ public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal
         int numeroValoraciones = valorados.stream().mapToInt(ProductoInventariado::numeroValoraciones).sum();
         return new EstadisticasVendedor(pedidos, unidades, ingresos, masVendidos(ventas),
                 mediaPonderada(valorados, numeroValoraciones), numeroValoraciones, valoracionesPorProducto(valorados),
-                0, 0, 0, 0);
+                productos.size(), contar(productos, p -> p.stock() == 0),
+                contar(productos, p -> p.stock() > 0 && p.stock() <= UMBRAL_STOCK_BAJO),
+                contar(productos, p -> !p.disponible()));
+    }
+
+    private static int contar(List<ProductoInventariado> productos, Predicate<ProductoInventariado> condicion) {
+        return (int) productos.stream().filter(condicion).count();
     }
 
     // Cada producto pesa tanto como valoraciones tiene: es la media de todas las valoraciones del vendedor. Sin
