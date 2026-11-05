@@ -23,6 +23,8 @@ const TECNOLOGIA = {
   estado: 'ACTIVA',
   numeroProductos: 18,
 }
+// Moda (cat-10) es una categoría inactiva sin productos.
+const MODA = { id: 'cat-10', nombre: 'Moda', descripcion: '', estado: 'INACTIVA', numeroProductos: 0 }
 const CON_PRODUCTOS = 'No se puede eliminar una categoría que tiene productos.'
 const PREGUNTA = '¿Seguro que quieres eliminar la categoría Mascotas? Esta acción no se puede deshacer.'
 const ESPERA = { timeout: 3000 }
@@ -55,6 +57,74 @@ function capturarBorrados() {
   )
   return borrados
 }
+
+// Apunta cada cambio de estado que llega al backend, para comprobar que cancelar no cambia nada.
+function capturarCambiosDeEstado() {
+  const cambios = []
+  server.use(
+    http.patch('/api/admin/categorias/:id/status', async ({ params, request }) => {
+      cambios.push({ id: params.id, ...(await request.json()) })
+      return HttpResponse.json({ ...MASCOTAS, estado: 'INACTIVA' })
+    }),
+  )
+  return cambios
+}
+
+const DESACTIVAR_MASCOTAS =
+  '¿Seguro que quieres desactivar la categoría Mascotas? Dejará de mostrarse a los clientes y a los vendedores.'
+const ACTIVAR_MODA = '¿Seguro que quieres activar la categoría Moda? Volverá a mostrarse a los clientes y a los vendedores.'
+
+describe('CategoryRowActions (HU41): activar y desactivar', () => {
+  it('HU41-CP28: una categoría activa ofrece desactivarla', async () => {
+    await renderAcciones(MASCOTAS)
+    expect(screen.getByRole('button', { name: 'Desactivar Mascotas' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Activar Mascotas' })).not.toBeInTheDocument()
+  })
+
+  it('HU41-CP28: una categoría inactiva ofrece activarla', async () => {
+    await renderAcciones(MODA)
+
+    expect(screen.getByRole('button', { name: 'Activar Moda' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Desactivar Moda' })).not.toBeInTheDocument()
+  })
+
+  it('HU41-CP28: al pulsar Desactivar pide confirmación avisando de que dejará de mostrarse', async () => {
+    const user = userEvent.setup()
+    await renderAcciones(MASCOTAS)
+
+    await user.click(screen.getByRole('button', { name: 'Desactivar Mascotas' }))
+
+    const confirmacion = (await screen.findByText(DESACTIVAR_MASCOTAS)).closest('[role="alertdialog"]')
+    expect(confirmacion).toHaveTextContent('Desactivar categoría')
+    expect(within(confirmacion).getByText('Desactivar', { selector: 'button' })).toBeInTheDocument()
+  })
+
+  it('HU41-CP28: al pulsar Activar pide confirmación avisando de que volverá a mostrarse', async () => {
+    const user = userEvent.setup()
+    await renderAcciones(MODA)
+
+    await user.click(screen.getByRole('button', { name: 'Activar Moda' }))
+
+    const confirmacion = (await screen.findByText(ACTIVAR_MODA)).closest('[role="alertdialog"]')
+    expect(confirmacion).toHaveTextContent('Activar categoría')
+    expect(within(confirmacion).getByText('Activar', { selector: 'button' })).toBeInTheDocument()
+  })
+
+  it('HU41-CP28: al cancelar se cierra la confirmación y no se cambia nada', async () => {
+    const user = userEvent.setup()
+    const cambios = capturarCambiosDeEstado()
+    const { onResult, onChanged } = await renderAcciones(MASCOTAS)
+
+    await user.click(screen.getByRole('button', { name: 'Desactivar Mascotas' }))
+    const confirmacion = (await screen.findByText(DESACTIVAR_MASCOTAS)).closest('[role="alertdialog"]')
+    await user.click(within(confirmacion).getByText('Cancelar', { selector: 'button' }))
+
+    await waitFor(() => expect(screen.queryByText(DESACTIVAR_MASCOTAS)).not.toBeInTheDocument(), ESPERA)
+    expect(cambios).toEqual([])
+    expect(onResult).not.toHaveBeenCalled()
+    expect(onChanged).not.toHaveBeenCalled()
+  })
+})
 
 describe('CategoryRowActions (HU42): confirmación', () => {
   it('HU42-CP17: ofrece la lupa para ver la ficha y la papelera para eliminar la categoría', async () => {

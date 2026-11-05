@@ -215,6 +215,16 @@ describe('AdminCategoriesPage (HU41): editar', () => {
   })
 })
 
+describe('AdminCategoriesPage (HU41): activar y desactivar', () => {
+  it('HU41-CP28: cada fila ofrece activar o desactivar su categoría según su estado', async () => {
+    await abrirListado()
+
+    expect(within(filaDe('Hogar')).getByRole('button', { name: 'Desactivar Hogar' })).toBeEnabled()
+    expect(within(filaDe('Juguetes')).getByRole('button', { name: 'Activar Juguetes' })).toBeEnabled()
+    expect(screen.getAllByRole('button', { name: /^(activar|desactivar) /i })).toHaveLength(8)
+  })
+})
+
 describe('AdminCategoriesPage (HU42): eliminar', () => {
   it('HU42-CP17: cada fila de la lista tiene la papelera para eliminar su categoría', async () => {
     await abrirListado()
