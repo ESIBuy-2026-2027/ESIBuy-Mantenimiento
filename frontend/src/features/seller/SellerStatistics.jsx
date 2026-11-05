@@ -19,7 +19,7 @@ import {
 import { getSellerStatistics } from '../../api/statistics'
 import { useTableStyles } from '../../components/tableStyles'
 import { useApiQuery } from '../../hooks/useApiQuery'
-import { formatPrice } from '../../utils/format'
+import { formatPrice, formatRating } from '../../utils/format'
 
 const useStyles = makeStyles({
   card: {
@@ -93,9 +93,51 @@ StatsBlock.propTypes = {
   children: PropTypes.node.isRequired,
 }
 
+// Tabla de un bloque: la primera columna es el nombre del producto, en seminegrita.
+function StatsTable({ label, columns, rows }) {
+  const tableStyles = useTableStyles()
+
+  return (
+    <div className={tableStyles.wrapper}>
+      <Table aria-label={label}>
+        <TableHeader>
+          <TableRow>
+            {columns.map((column) => (
+              <TableHeaderCell key={column}>{column}</TableHeaderCell>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map(({ id, cells: [nombre, ...resto] }) => (
+            <TableRow key={id} className={tableStyles.row}>
+              <TableCell className={tableStyles.name}>
+                <Text weight="semibold">{nombre}</Text>
+              </TableCell>
+              {resto.map((valor, indice) => (
+                // Cada celda se identifica por el nombre de su columna.
+                <TableCell key={columns[indice + 1]}>{valor}</TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
+
+StatsTable.propTypes = {
+  label: PropTypes.string.isRequired,
+  columns: PropTypes.arrayOf(PropTypes.string).isRequired,
+  rows: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      cells: PropTypes.arrayOf(PropTypes.node).isRequired,
+    }),
+  ).isRequired,
+}
+
 function SalesBlock({ ventas }) {
   const styles = useStyles()
-  const tableStyles = useTableStyles()
 
   return (
     <StatsBlock title="Ventas">
@@ -104,28 +146,14 @@ function SalesBlock({ ventas }) {
         <Stat label="Unidades vendidas" value={ventas.unidadesVendidas} />
         <Stat label="Ingresos" value={formatPrice(ventas.ingresos)} />
       </div>
-      <div className={tableStyles.wrapper}>
-        <Table aria-label="Los más vendidos">
-          <TableHeader>
-            <TableRow>
-              <TableHeaderCell>Producto</TableHeaderCell>
-              <TableHeaderCell>Unidades</TableHeaderCell>
-              <TableHeaderCell>Ingresos</TableHeaderCell>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {ventas.masVendidos.map((producto) => (
-              <TableRow key={producto.productoId} className={tableStyles.row}>
-                <TableCell className={tableStyles.name}>
-                  <Text weight="semibold">{producto.nombre}</Text>
-                </TableCell>
-                <TableCell>{producto.unidades}</TableCell>
-                <TableCell>{formatPrice(producto.ingresos)}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <StatsTable
+        label="Los más vendidos"
+        columns={['Producto', 'Unidades', 'Ingresos']}
+        rows={ventas.masVendidos.map(({ productoId, nombre, unidades, ingresos }) => ({
+          id: productoId,
+          cells: [nombre, unidades, formatPrice(ingresos)],
+        }))}
+      />
     </StatsBlock>
   )
 }
@@ -146,6 +174,42 @@ SalesBlock.propTypes = {
   }).isRequired,
 }
 
+function RatingsBlock({ valoraciones }) {
+  const styles = useStyles()
+
+  return (
+    <StatsBlock title="Valoraciones">
+      <div className={styles.stats}>
+        <Stat label="Valoración media" value={`${formatRating(valoraciones.media)} de 5`} />
+        <Stat label="Valoraciones recibidas" value={valoraciones.total} />
+      </div>
+      <StatsTable
+        label="Valoración por producto"
+        columns={['Producto', 'Media', 'Valoraciones']}
+        rows={valoraciones.porProducto.map(({ productoId, nombre, media, numero }) => ({
+          id: productoId,
+          cells: [nombre, formatRating(media), numero],
+        }))}
+      />
+    </StatsBlock>
+  )
+}
+
+RatingsBlock.propTypes = {
+  valoraciones: PropTypes.shape({
+    media: PropTypes.number,
+    total: PropTypes.number.isRequired,
+    porProducto: PropTypes.arrayOf(
+      PropTypes.shape({
+        productoId: PropTypes.string.isRequired,
+        nombre: PropTypes.string.isRequired,
+        media: PropTypes.number.isRequired,
+        numero: PropTypes.number.isRequired,
+      }),
+    ).isRequired,
+  }).isRequired,
+}
+
 // Estadísticas básicas del vendedor en sesión (HU17), como sección de «Mi perfil». El backend las calcula desde
 // siempre y sin los pedidos cancelados.
 export default function SellerStatistics() {
@@ -160,7 +224,12 @@ export default function SellerStatistics() {
         <Title3 as="h2" id={titleId} className={styles.heading}>
           Estadísticas de ventas
         </Title3>
-        {estadisticas && <SalesBlock ventas={estadisticas.ventas} />}
+        {estadisticas && (
+          <>
+            <SalesBlock ventas={estadisticas.ventas} />
+            <RatingsBlock valoraciones={estadisticas.valoraciones} />
+          </>
+        )}
       </Card>
     </section>
   )
