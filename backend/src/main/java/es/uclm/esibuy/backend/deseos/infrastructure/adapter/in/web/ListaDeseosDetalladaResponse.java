@@ -14,6 +14,9 @@ public record ListaDeseosDetalladaResponse(List<Item> items) {
     }
 
     public static ListaDeseosDetalladaResponse desde(ListaDeseosDetallada lista) {
-        return new ListaDeseosDetalladaResponse(List.of());
+        return new ListaDeseosDetalladaResponse(lista.items().stream()
+                .map(item -> new Item(item.productoId(), item.nombre(), item.imagen(), item.precioFinal(),
+                        item.stock(), item.disponible(), item.addedAt()))
+                .toList());
     }
 }

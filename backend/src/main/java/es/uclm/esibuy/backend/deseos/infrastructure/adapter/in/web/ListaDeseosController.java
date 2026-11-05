@@ -27,7 +27,7 @@ public class ListaDeseosController {
 
     @GetMapping
     public ListaDeseosDetalladaResponse consultar(Authentication autenticado) {
-        return new ListaDeseosDetalladaResponse(java.util.List.of());
+        return ListaDeseosDetalladaResponse.desde(gestionListaDeseos.consultar(autenticado.getName()));
     }
 
     @PostMapping("/items")
