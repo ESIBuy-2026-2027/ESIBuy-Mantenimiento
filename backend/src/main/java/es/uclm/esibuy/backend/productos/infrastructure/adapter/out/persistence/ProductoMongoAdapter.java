@@ -106,6 +106,11 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         return new ProductoPage(productos, query.pagina(), query.tamano(), total);
     }
 
+    @Override
+    public List<Producto> buscarTodosPorVendedor(String vendedorId) {
+        throw new UnsupportedOperationException("Funcionalidad no implementada");
+    }
+
     // Catálogo del cliente (HU7): solo productos disponibles, de todos los vendedores; la búsqueda por nombre
     // no distingue mayúsculas ni tildes y trata el texto como literal.
     @Override
