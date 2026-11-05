@@ -91,6 +91,52 @@ describe('CategoryRowActions (HU42): confirmación', () => {
   })
 })
 
+describe('CategoryRowActions (HU41): editar', () => {
+  it('HU41-CP16: ofrece el lápiz para editar la categoría, que abre su formulario con sus datos', async () => {
+    const user = userEvent.setup()
+    await renderAcciones(MASCOTAS)
+
+    await user.click(screen.getByRole('button', { name: 'Editar Mascotas' }))
+
+    const formulario = await screen.findByRole('dialog', { name: 'Editar categoría' })
+    expect(within(formulario).getByRole('textbox', { name: /nombre/i })).toHaveValue('Mascotas')
+  })
+
+  it('HU41-CP17: al guardar, avisa de que se ha actualizado y pide actualizar la lista', async () => {
+    const user = userEvent.setup()
+    const { onResult, onChanged } = await renderAcciones(MASCOTAS)
+
+    await user.click(screen.getByRole('button', { name: 'Editar Mascotas' }))
+    const formulario = await screen.findByRole('dialog', { name: 'Editar categoría' })
+    const nombre = within(formulario).getByRole('textbox', { name: /nombre/i })
+    await user.clear(nombre)
+    await user.type(nombre, 'Animales')
+    await user.click(within(formulario).getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1), ESPERA)
+    expect(onResult).toHaveBeenCalledWith({ intent: 'success', texto: 'Animales se ha actualizado.' })
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), ESPERA)
+  })
+})
+
+describe('CategoryRowActions (HU41): la categoría ya no existe', () => {
+  it('HU41-CP18: al guardar una categoría que ya no existe, cierra el formulario, avisa y pide actualizar la lista', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.put('/api/admin/categorias/:id', () => HttpResponse.json({ code: 'CATEGORY_NOT_FOUND' }, { status: 404 })),
+    )
+    const { onResult, onChanged } = await renderAcciones(MASCOTAS)
+
+    await user.click(screen.getByRole('button', { name: 'Editar Mascotas' }))
+    const formulario = await screen.findByRole('dialog', { name: 'Editar categoría' })
+    await user.click(within(formulario).getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1), ESPERA)
+    expect(onResult).toHaveBeenCalledWith({ intent: 'error', texto: 'Mascotas ya no existe.' })
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), ESPERA)
+  })
+})
+
 describe('CategoryRowActions (HU42): eliminar', () => {
   it('HU42-CP18: al confirmar borra la categoría, avisa de que se ha eliminado y pide actualizar la lista', async () => {
     const user = userEvent.setup()
