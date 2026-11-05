@@ -599,8 +599,8 @@ describe('ProductsPage (HU14): favoritos', () => {
     await user.click(screen.getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' }))
 
     expect(
-      await screen.findByRole('button', { name: 'Auriculares inalámbricos está en tus favoritos' }),
-    ).toBeDisabled()
+      await screen.findByRole('button', { name: 'Quitar Auriculares inalámbricos de favoritos' }),
+    ).toBeEnabled()
     expect(cuerpo).toEqual({ productoId: 'p-1' })
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/)
   })
@@ -622,8 +622,8 @@ describe('ProductsPage (HU14): favoritos', () => {
 
     await user.click(screen.getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' }))
 
-    expect(await screen.findByRole('button', { name: 'Cafetera de cápsulas está en tus favoritos' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Auriculares inalámbricos está en tus favoritos' })).toBeDisabled()
+    expect(await screen.findByRole('button', { name: 'Quitar Cafetera de cápsulas de favoritos' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Quitar Auriculares inalámbricos de favoritos' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Añadir Altavoz Bluetooth a favoritos' })).toBeEnabled()
   })
 
@@ -648,7 +648,7 @@ describe('ProductsPage (HU14): favoritos', () => {
     await abrirCatalogo()
     await esperarTarjetas(10)
 
-    expect(await screen.findByRole('button', { name: 'Cafetera de cápsulas está en tus favoritos' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Quitar Cafetera de cápsulas de favoritos' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' })).toBeEnabled()
   })
 
@@ -680,5 +680,34 @@ describe('ProductsPage (HU14): favoritos', () => {
 
     expect(await within(tarjeta).findByRole('alert')).toHaveTextContent('Este producto ya no está disponible.')
     expect(within(tarjeta).getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' })).toBeEnabled()
+  })
+
+  it('HU14-CP37: al pulsar el corazón relleno se quita el producto de favoritos y el corazón queda vacío', async () => {
+    const user = userEvent.setup()
+    let quitado = null
+    const cafetera = {
+      productoId: 'p-10',
+      nombre: 'Cafetera de cápsulas',
+      imagen: '',
+      precioFinal: 79.99,
+      stock: 9,
+      disponible: true,
+      addedAt: '2026-11-01T09:00:00Z',
+    }
+    server.use(
+      http.get('/api/customer/wishlist', () => HttpResponse.json({ items: [cafetera] })),
+      http.delete('/api/customer/wishlist/items/:productoId', ({ params }) => {
+        quitado = params.productoId
+        return HttpResponse.json({ items: [] })
+      }),
+    )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    await user.click(await screen.findByRole('button', { name: 'Quitar Cafetera de cápsulas de favoritos' }))
+
+    expect(await screen.findByRole('button', { name: 'Añadir Cafetera de cápsulas a favoritos' })).toBeEnabled()
+    expect(quitado).toBe('p-10')
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/)
   })
 })
