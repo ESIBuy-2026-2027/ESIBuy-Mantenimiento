@@ -1,11 +1,13 @@
 package es.uclm.esibuy.backend.pedidos.infrastructure.adapter.in.web;
 
+import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizarPedidoCommand;
 import es.uclm.esibuy.backend.pedidos.domain.exception.CarritoSinProductosDelProveedorException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
@@ -44,6 +46,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // la real (SecurityConfig: /api/customer/** solo para CLIENTE, con CSRF).
 // También el historial y el detalle de los pedidos del cliente (HU11, T377): GET /api/customer/orders y
 // GET /api/customer/orders/{id}. PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU11-CP07 a CP10, propuestos.
+// Y la cancelación de un pedido (HU12, T374): POST /api/customer/orders/{id}/cancel, con CSRF.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU12-CP09 a CP12, propuestos.
 @WebMvcTest(PedidoController.class)
 @Import(SecurityConfig.class)
 class PedidoControllerTest {
@@ -62,6 +66,9 @@ class PedidoControllerTest {
 
     @MockitoBean
     private ConsultaComprasUseCase consultaCompras;
+
+    @MockitoBean
+    private CancelacionPedidoUseCase cancelacionPedido;
 
     private static final Pedido PEDIDO = new Pedido("o-1", new NumeroPedido("ESB-2026-000001"), "c-1", "u-2",
             "TecnoVera", EstadoPedido.PAGADO, List.of(new LineaPedido("p-1", "Auriculares", 2,
@@ -220,5 +227,59 @@ class PedidoControllerTest {
                 .andExpect(status().isForbidden());
 
         verifyNoInteractions(consultaCompras);
+    }
+
+    // --- Cancelación de un pedido (HU12) -----------------------------------------------------------------------
+
+    private static final Pedido CANCELADO = new Pedido("o-1", new NumeroPedido("ESB-2026-000001"), "c-1", "u-2",
+            "TecnoVera", EstadoPedido.CANCELADO, PEDIDO.getLineas(), PEDIDO.getDireccionEnvio(), "mp-1",
+            PEDIDO.getCreatedAt());
+
+    private ResultActions cancelar(String id) throws Exception {
+        return mockMvc.perform(post(URL + "/" + id + "/cancel").with(user(CLIENTE).roles("CLIENTE")).with(csrf()));
+    }
+
+    @Test
+    @DisplayName("HU12-CP09: cancelar un pedido responde 200 con el pedido ya cancelado")
+    void cancelarUnPedidoResponde200ConElPedidoCancelado() throws Exception {
+        when(cancelacionPedido.cancelarPedido(CLIENTE, "o-1")).thenReturn(CANCELADO);
+
+        cancelar("o-1")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("o-1"))
+                .andExpect(jsonPath("$.estado").value("CANCELADO"))
+                .andExpect(jsonPath("$.lineas[0].productoId").value("p-1"))
+                .andExpect(jsonPath("$.clienteId").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("HU12-CP10: un pedido que ya no se puede cancelar responde 409 con el code ORDER_NOT_CANCELLABLE")
+    void unPedidoNoCancelableResponde409() throws Exception {
+        when(cancelacionPedido.cancelarPedido(CLIENTE, "o-1")).thenThrow(new PedidoNoCancelableException("no"));
+
+        cancelar("o-1")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("ORDER_NOT_CANCELLABLE"))
+                .andExpect(jsonPath("$.mensaje").value("El pedido ya no se puede cancelar"));
+    }
+
+    @Test
+    @DisplayName("HU12-CP11: cancelar un pedido que no existe o es de otro cliente responde 400 con el code ORDER_NOT_FOUND")
+    void cancelarUnPedidoInexistenteOAjenoResponde400() throws Exception {
+        when(cancelacionPedido.cancelarPedido(CLIENTE, "o-9")).thenThrow(new PedidoNoEncontradoException("no"));
+
+        cancelar("o-9").andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("ORDER_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("HU12-CP12: sin sesión cancelar responde 401, con otro rol 403 y sin el token CSRF se rechaza")
+    void soloElClienteCancelaSusPedidos() throws Exception {
+        String url = URL + "/o-1/cancel";
+        mockMvc.perform(post(url).with(csrf())).andExpect(status().isUnauthorized());
+        mockMvc.perform(post(url).with(user("vendedor@esibuy.test").roles("VENDEDOR")).with(csrf()))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post(url).with(user(CLIENTE).roles("CLIENTE"))).andExpect(status().isForbidden());
+
+        verifyNoInteractions(cancelacionPedido);
     }
 }
