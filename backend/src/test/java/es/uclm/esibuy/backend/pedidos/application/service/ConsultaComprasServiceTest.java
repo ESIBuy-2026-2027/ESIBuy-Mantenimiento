@@ -154,5 +154,10 @@ class ConsultaComprasServiceTest {
         public Optional<Pedido> buscarPorId(String id) {
             return Optional.ofNullable(porId.get(id));
         }
+
+        @Override
+        public List<Pedido> buscarPorVendedor(String vendedorId) {
+            throw new UnsupportedOperationException("La consulta de compras no consulta las ventas del vendedor");
+        }
     }
 }

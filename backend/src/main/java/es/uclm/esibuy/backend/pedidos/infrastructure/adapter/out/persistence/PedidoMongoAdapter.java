@@ -38,4 +38,9 @@ public class PedidoMongoAdapter implements PedidoRepositoryPort {
     public Optional<Pedido> buscarPorId(String id) {
         return repository.findById(id).map(mapper::aDominio);
     }
+
+    @Override
+    public List<Pedido> buscarPorVendedor(String vendedorId) {
+        throw new UnsupportedOperationException("Funcionalidad no implementada");
+    }
 }
