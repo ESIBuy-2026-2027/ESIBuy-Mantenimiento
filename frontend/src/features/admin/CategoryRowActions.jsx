@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Button, makeStyles, tokens } from '@fluentui/react-components'
-import { Delete20Regular, Edit20Regular, Search20Regular } from '@fluentui/react-icons'
-import { deleteAdminCategory } from '../../api/adminCategories'
+import { Delete20Regular, Edit20Regular, Eye20Regular, EyeOff20Regular, Search20Regular } from '@fluentui/react-icons'
+import { changeAdminCategoryStatus, deleteAdminCategory } from '../../api/adminCategories'
 import CategoryDetailDialog from './CategoryDetailDialog'
 import CategoryFormDialog from './CategoryFormDialog'
 import StatusConfirmDialog from './StatusConfirmDialog'
@@ -24,6 +24,28 @@ const ERRORES_AL_ELIMINAR = {
   CATEGORY_NOT_FOUND: { texto: (nombre) => `${nombre} ya no existe.`, actualiza: true },
 }
 
+// Textos de cada cambio de estado (HU41): una categoría activa se desactiva y una inactiva se activa.
+const CAMBIOS_DE_ESTADO = {
+  ACTIVA: {
+    boton: 'Desactivar',
+    icono: <EyeOff20Regular />,
+    nuevo: 'INACTIVA',
+    hecho: (nombre) => `${nombre} se ha desactivado.`,
+    titulo: 'Desactivar categoría',
+    pregunta: (nombre) =>
+      `¿Seguro que quieres desactivar la categoría ${nombre}? Dejará de mostrarse a los clientes y a los vendedores.`,
+  },
+  INACTIVA: {
+    boton: 'Activar',
+    icono: <Eye20Regular />,
+    nuevo: 'ACTIVA',
+    hecho: (nombre) => `${nombre} se ha activado.`,
+    titulo: 'Activar categoría',
+    pregunta: (nombre) =>
+      `¿Seguro que quieres activar la categoría ${nombre}? Volverá a mostrarse a los clientes y a los vendedores.`,
+  },
+}
+
 const useStyles = makeStyles({
   actions: {
     display: 'flex',
@@ -33,14 +55,16 @@ const useStyles = makeStyles({
 })
 
 // Acciones de una fila de la tabla de categorías: la lupa que abre su ficha de solo lectura (HU39), el lápiz que abre
-// su formulario de edición (HU41) y la papelera para eliminarla (HU42), que pide confirmación. Si la categoría tiene
-// productos, la papelera queda deshabilitada y explica por qué. `onResult` recibe el aviso que debe ver el
-// administrador; `onChanged`, que la lista se actualice.
+// su formulario de edición (HU41), el botón para activarla o desactivarla (HU41) y la papelera para eliminarla (HU42).
+// Activar, desactivar y eliminar piden confirmación. Si la categoría tiene productos, la papelera queda deshabilitada y
+// explica por qué. `onResult` recibe el aviso que debe ver el administrador; `onChanged`, que la lista se actualice.
 export default function CategoryRowActions({ category, onResult, onChanged }) {
   const styles = useStyles()
   const [dialogo, setDialogo] = useState(null)
   const [eliminando, setEliminando] = useState(false)
+  const [cambiandoEstado, setCambiandoEstado] = useState(false)
   const tieneProductos = category.numeroProductos > 0
+  const cambioDeEstado = CAMBIOS_DE_ESTADO[category.estado]
   const cerrar = () => setDialogo(null)
 
   const avisarEditada = (editada) => {
@@ -54,6 +78,29 @@ export default function CategoryRowActions({ category, onResult, onChanged }) {
     cerrar()
     onResult({ intent: 'error', texto: ERRORES_AL_ELIMINAR.CATEGORY_NOT_FOUND.texto(category.nombre) })
     onChanged()
+  }
+
+  const cambiarEstado = async () => {
+    setCambiandoEstado(true)
+    try {
+      await changeAdminCategoryStatus(category.id, cambioDeEstado.nuevo)
+      onResult({ intent: 'success', texto: cambioDeEstado.hecho(category.nombre) })
+      onChanged()
+    } catch (error) {
+      // Si otro administrador la ha eliminado, la lista está desfasada y se recarga; con otro error sigue siendo válida.
+      if (error?.code === 'CATEGORY_NOT_FOUND') {
+        onResult({ intent: 'error', texto: ERRORES_AL_ELIMINAR.CATEGORY_NOT_FOUND.texto(category.nombre) })
+        onChanged()
+      } else {
+        onResult({
+          intent: 'error',
+          texto: `No se ha podido ${cambioDeEstado.boton.toLowerCase()} ${category.nombre}. Inténtalo de nuevo.`,
+        })
+      }
+    } finally {
+      setCambiandoEstado(false)
+      cerrar()
+    }
   }
 
   const eliminar = async () => {
@@ -91,6 +138,15 @@ export default function CategoryRowActions({ category, onResult, onChanged }) {
         title="Editar"
         onClick={() => setDialogo('editar')}
       />
+      {cambioDeEstado && (
+        <Button
+          appearance="subtle"
+          icon={cambioDeEstado.icono}
+          aria-label={`${cambioDeEstado.boton} ${category.nombre}`}
+          title={cambioDeEstado.boton}
+          onClick={() => setDialogo('estado')}
+        />
+      )}
       <Button
         appearance="subtle"
         icon={<Delete20Regular />}
@@ -107,6 +163,16 @@ export default function CategoryRowActions({ category, onResult, onChanged }) {
           onClose={cerrar}
           onSaved={avisarEditada}
           onNotFound={avisarQueYaNoExiste}
+        />
+      )}
+      {dialogo === 'estado' && (
+        <StatusConfirmDialog
+          titulo={cambioDeEstado.titulo}
+          pregunta={cambioDeEstado.pregunta(category.nombre)}
+          confirmar={cambioDeEstado.boton}
+          enviando={cambiandoEstado}
+          onConfirm={cambiarEstado}
+          onCancel={cerrar}
         />
       )}
       {dialogo === 'eliminar' && (

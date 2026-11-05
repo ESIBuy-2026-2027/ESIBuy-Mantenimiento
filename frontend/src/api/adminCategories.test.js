@@ -1,7 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
-import { createAdminCategory, deleteAdminCategory, getAdminCategories, updateAdminCategory } from './adminCategories'
+import {
+  changeAdminCategoryStatus,
+  createAdminCategory,
+  deleteAdminCategory,
+  getAdminCategories,
+  updateAdminCategory,
+} from './adminCategories'
 
 const CATEGORIAS = [
   { id: 'cat-1', nombre: 'Hogar', descripcion: 'Muebles', estado: 'ACTIVA', numeroProductos: 4 },
@@ -124,6 +130,39 @@ describe('updateAdminCategory', () => {
     )
 
     await expect(updateAdminCategory('cat-99', { nombre: 'Casa', descripcion: '' })).rejects.toMatchObject({
+      status: 404,
+      code: 'CATEGORY_NOT_FOUND',
+    })
+  })
+})
+
+describe('changeAdminCategoryStatus', () => {
+  it('HU41-CP27: pide PATCH /api/admin/categorias/{id}/status con el estado nuevo y devuelve la fila actualizada', async () => {
+    const peticion = {}
+    const desactivada = { id: 'a/b', nombre: 'Hogar', descripcion: '', estado: 'INACTIVA', numeroProductos: 4 }
+    server.use(
+      http.patch('/api/admin/categorias/:id/status', async ({ request, params }) => {
+        peticion.metodo = request.method
+        peticion.id = params.id
+        peticion.cuerpo = await request.json()
+        return HttpResponse.json(desactivada)
+      }),
+    )
+
+    const respuesta = await changeAdminCategoryStatus('a/b', 'INACTIVA')
+
+    expect(peticion).toEqual({ metodo: 'PATCH', id: 'a/b', cuerpo: { estado: 'INACTIVA' } })
+    expect(respuesta).toEqual(desactivada)
+  })
+
+  it('HU41-CP27: un 404 llega como error con su estado y su código', async () => {
+    server.use(
+      http.patch('/api/admin/categorias/:id/status', () =>
+        HttpResponse.json({ code: 'CATEGORY_NOT_FOUND' }, { status: 404 }),
+      ),
+    )
+
+    await expect(changeAdminCategoryStatus('cat-99', 'ACTIVA')).rejects.toMatchObject({
       status: 404,
       code: 'CATEGORY_NOT_FOUND',
     })

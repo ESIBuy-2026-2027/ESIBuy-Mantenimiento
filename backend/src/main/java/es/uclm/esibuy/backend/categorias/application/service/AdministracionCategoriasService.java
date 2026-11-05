@@ -16,6 +16,7 @@ import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaConProductosE
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaDuplicadaException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaConVendedoresException;
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
+import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 
@@ -72,6 +73,19 @@ public class AdministracionCategoriasService implements AdministracionCategorias
             throw new CategoriaDuplicadaException();
         }
         Categoria guardada = categoriaRepository.guardar(editada);
+        return new CategoriaConProductos(guardada,
+                productosPorCategoria.contarPorCategoria().getOrDefault(guardada.id(), 0L));
+    }
+
+    // Primero se comprueba que existe; después el dominio exige el estado. Una categoría desactivada deja de salir
+    // en el listado público, pero sus productos no cambian.
+    // PENDIENTE DE DECIDIR CON EL EQUIPO: qué pasa con los productos de una categoría desactivada.
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
+    @Override
+    public CategoriaConProductos cambiarEstado(String id, EstadoCategoria estado) {
+        Categoria actual = categoriaRepository.buscarPorId(id).orElseThrow(CategoriaNoEncontradaException::new);
+        Categoria cambiada = new Categoria(actual.id(), actual.nombre(), actual.descripcion(), estado);
+        Categoria guardada = categoriaRepository.guardar(cambiada);
         return new CategoriaConProductos(guardada,
                 productosPorCategoria.contarPorCategoria().getOrDefault(guardada.id(), 0L));
     }

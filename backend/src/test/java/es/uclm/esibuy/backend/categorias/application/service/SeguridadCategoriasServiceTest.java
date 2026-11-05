@@ -29,12 +29,13 @@ import es.uclm.esibuy.backend.categorias.application.port.out.ProductosPorCatego
 import es.uclm.esibuy.backend.categorias.application.port.out.VendedoresPorCategoriaPort;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaInvalidaException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
+import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 
 // Seguridad en la capa de negocio (R8): consultar las categorías es público (lo usan el registro del vendedor y
 // el desplegable de producto, sin sesión); administrarlas exige el rol ADMINISTRADOR. Las anotaciones solo se
 // evalúan con Spring, así que se usa un contexto mínimo (sin MongoDB) con los servicios reales y dobles de
 // prueba de los puertos de salida.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU40-CP09, HU41-CP06 y HU42-CP05, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU40-CP09, HU41-CP06, HU41-CP22 y HU42-CP05, propuestos.
 @SpringJUnitConfig(SeguridadCategoriasServiceTest.Configuracion.class)
 class SeguridadCategoriasServiceTest {
 
@@ -105,6 +106,12 @@ class SeguridadCategoriasServiceTest {
 
     private void comprobarQueRechazaLaEdicion() {
         assertThrows(AccessDeniedException.class, () -> administracionCategorias.editar(EDICION));
+        verifyNoInteractions(categoriaRepository, productosPorCategoria);
+    }
+
+    private void comprobarQueRechazaElCambioDeEstado() {
+        assertThrows(AccessDeniedException.class,
+                () -> administracionCategorias.cambiarEstado("c-1", EstadoCategoria.INACTIVA));
         verifyNoInteractions(categoriaRepository, productosPorCategoria);
     }
 
@@ -226,5 +233,42 @@ class SeguridadCategoriasServiceTest {
         assertThrows(AuthenticationCredentialsNotFoundException.class,
                 () -> administracionCategorias.eliminar("c-1"));
         verifyNoInteractions(categoriaRepository, productosPorCategoria, vendedoresPorCategoria);
+    }
+
+    @Test
+    @WithMockUser(username = "cliente@esibuy.test", roles = "CLIENTE")
+    @DisplayName("HU41-CP22: un cliente no puede activar ni desactivar categorías")
+    void unClienteNoCambiaElEstadoDeCategorias() {
+        comprobarQueRechazaElCambioDeEstado();
+    }
+
+    @Test
+    @WithMockUser(username = "vendedor@esibuy.test", roles = "VENDEDOR")
+    @DisplayName("HU41-CP22: un vendedor no puede activar ni desactivar categorías")
+    void unVendedorNoCambiaElEstadoDeCategorias() {
+        comprobarQueRechazaElCambioDeEstado();
+    }
+
+    @Test
+    @WithAnonymousUser
+    @DisplayName("HU41-CP22: un usuario anónimo no puede activar ni desactivar categorías")
+    void unAnonimoNoCambiaElEstadoDeCategorias() {
+        comprobarQueRechazaElCambioDeEstado();
+    }
+
+    @Test
+    @WithMockUser(username = "admin@esibuy.test", roles = "ADMINISTRADOR")
+    @DisplayName("HU41-CP22: un administrador sí activa y desactiva categorías (una que no existe la rechaza el caso de uso)")
+    void unAdministradorCambiaElEstadoDeCategorias() {
+        assertThrows(CategoriaNoEncontradaException.class,
+                () -> administracionCategorias.cambiarEstado("c-1", EstadoCategoria.INACTIVA));
+    }
+
+    @Test
+    @DisplayName("HU41-CP22: sin sesión se rechaza el cambio de estado de categorías")
+    void sinSesionSeRechazaElCambioDeEstado() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> administracionCategorias.cambiarEstado("c-1", EstadoCategoria.INACTIVA));
+        verifyNoInteractions(categoriaRepository, productosPorCategoria);
     }
 }

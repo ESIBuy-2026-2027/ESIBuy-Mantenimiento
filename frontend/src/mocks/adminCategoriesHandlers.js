@@ -97,6 +97,23 @@ export const adminCategoriesHandlers = [
     return HttpResponse.json(editada)
   }),
 
+  // Activar o desactivar (HU41): 404 si no existe y 400 si el estado no es ACTIVA ni INACTIVA.
+  http.patch('/api/admin/categorias/:id/status', async ({ request, params }) => {
+    const rechazo = rechazarSiNoEsAdmin()
+    if (rechazo) return rechazo
+
+    const existente = categorias.find((categoria) => categoria.id === params.id)
+    if (!existente) return HttpResponse.json({ code: 'CATEGORY_NOT_FOUND' }, { status: 404 })
+    const { estado } = await request.json()
+    if (estado !== 'ACTIVA' && estado !== 'INACTIVA') {
+      return HttpResponse.json({ code: 'VALIDATION_ERROR' }, { status: 400 })
+    }
+
+    const cambiada = { ...existente, estado }
+    categorias = categorias.map((categoria) => (categoria.id === params.id ? cambiada : categoria))
+    return HttpResponse.json(cambiada)
+  }),
+
   // Como el backend (HU42): 404 si no existe y 409 si tiene productos. El 409 CATEGORY_HAS_SELLERS (es la principal
   // de algún vendedor) no se simula aquí: los tests que lo necesitan ponen su propio handler.
   http.delete('/api/admin/categorias/:id', ({ params }) => {
