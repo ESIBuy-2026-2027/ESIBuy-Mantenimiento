@@ -125,6 +125,25 @@ class ListaDeseosControllerTest {
     }
 
     @Test
+    @DisplayName("HU14-CP19: sin sesión no se consulta la lista de deseos")
+    void sinSesionNoSeConsultaLaLista() throws Exception {
+        mockMvc.perform(get(URL_LISTA))
+                .andExpect(status().isUnauthorized());
+
+        verify(gestionListaDeseos, never()).consultar(any());
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"VENDEDOR", "ADMINISTRADOR"})
+    @DisplayName("HU14-CP19: un usuario que no es cliente no consulta la lista de deseos")
+    void noClienteNoConsultaLaLista(String rol) throws Exception {
+        mockMvc.perform(get(URL_LISTA).with(user(CLIENTE).roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(gestionListaDeseos, never()).consultar(any());
+    }
+
+    @Test
     @DisplayName("HU14-CP10: sin sesión no se añade a la lista de deseos")
     void sinSesionNoSeAnade() throws Exception {
         mockMvc.perform(post(URL).with(csrf())
