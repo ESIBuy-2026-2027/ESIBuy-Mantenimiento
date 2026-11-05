@@ -174,6 +174,43 @@ describe('CategoryRowActions (HU41): cambiar el estado', () => {
   })
 })
 
+describe('CategoryRowActions (HU41): errores al cambiar el estado', () => {
+  async function confirmarDesactivarMascotas(respuesta) {
+    const user = userEvent.setup()
+    server.use(http.patch('/api/admin/categorias/:id/status', () => respuesta))
+    const handlers = await renderAcciones(MASCOTAS)
+    await user.click(screen.getByRole('button', { name: 'Desactivar Mascotas' }))
+    const confirmacion = (await screen.findByText(DESACTIVAR_MASCOTAS)).closest('[role="alertdialog"]')
+    await user.click(within(confirmacion).getByText('Desactivar', { selector: 'button' }))
+    return handlers
+  }
+
+  it('HU41-CP30: si la categoría ya no existe, avisa y pide actualizar la lista', async () => {
+    const { onResult, onChanged } = await confirmarDesactivarMascotas(
+      HttpResponse.json({ code: 'CATEGORY_NOT_FOUND' }, { status: 404 }),
+    )
+
+    await waitFor(() => expect(onResult).toHaveBeenCalledWith({ intent: 'error', texto: 'Mascotas ya no existe.' }), ESPERA)
+    expect(onChanged).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(screen.queryByText(DESACTIVAR_MASCOTAS)).not.toBeInTheDocument(), ESPERA)
+  })
+
+  it('HU41-CP30: cualquier otro error muestra un mensaje genérico y no recarga la lista', async () => {
+    const { onResult, onChanged } = await confirmarDesactivarMascotas(new HttpResponse(null, { status: 500 }))
+
+    await waitFor(
+      () =>
+        expect(onResult).toHaveBeenCalledWith({
+          intent: 'error',
+          texto: 'No se ha podido desactivar Mascotas. Inténtalo de nuevo.',
+        }),
+      ESPERA,
+    )
+    expect(onChanged).not.toHaveBeenCalled()
+    await waitFor(() => expect(screen.queryByText(DESACTIVAR_MASCOTAS)).not.toBeInTheDocument(), ESPERA)
+  })
+})
+
 describe('CategoryRowActions (HU42): confirmación', () => {
   it('HU42-CP17: ofrece la lupa para ver la ficha y la papelera para eliminar la categoría', async () => {
     await renderAcciones(MASCOTAS)
