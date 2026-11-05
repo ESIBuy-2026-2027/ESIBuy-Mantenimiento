@@ -10,4 +10,7 @@ public interface PedidoMongoRepository extends MongoRepository<PedidoDocument, S
 
     // Historial del cliente (HU11): Spring Data genera la consulta y el orden a partir del nombre
     List<PedidoDocument> findByClienteIdOrderByCreatedAtDesc(String clienteId);
+
+    // Estadísticas del vendedor (HU17): todos sus pedidos, en cualquier estado
+    List<PedidoDocument> findByVendedorId(String vendedorId);
 }
