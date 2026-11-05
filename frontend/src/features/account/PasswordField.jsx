@@ -29,8 +29,13 @@ const useStyles = makeStyles({
 // Cancela el evento para que el navegador no copie, corte, pegue ni suelte nada en el campo.
 const cancelar = (event) => event.preventDefault()
 
+// Eventos que se cancelan en cada modo de bloqueo: la copia saca la contraseña del campo y el pegado la mete.
+const SIN_COPIA = { onCopy: cancelar, onCut: cancelar }
+const SIN_PEGADO = { onPaste: cancelar, onDrop: cancelar }
+
 // Campo de password (obligatorio por defecto) con un botón para mostrarlo u ocultarlo.
 // Con bloquearPegado no se puede copiar, cortar, pegar ni soltar texto: hay que escribirlo a mano (T242).
+// Con bloquearCopia solo se impide copiar y cortar (R9): se puede pegar, para los gestores de contraseñas.
 export function PasswordField({
   label,
   value,
@@ -40,12 +45,15 @@ export function PasswordField({
   autoComplete,
   required = true,
   bloquearPegado = false,
+  bloquearCopia = false,
 }) {
   const [visible, setVisible] = useState(false)
   const accion = visible ? 'Ocultar' : 'Mostrar'
-  const sinPortapapeles = bloquearPegado
-    ? { onCopy: cancelar, onCut: cancelar, onPaste: cancelar, onDrop: cancelar }
-    : {}
+  // bloquearPegado ya incluye no copiar ni cortar
+  const sinPortapapeles = {
+    ...(bloquearPegado || bloquearCopia ? SIN_COPIA : {}),
+    ...(bloquearPegado ? SIN_PEGADO : {}),
+  }
 
   return (
     <Field label={label} required={required} validationMessage={error}>
@@ -101,6 +109,8 @@ PasswordField.propTypes = {
   required: PropTypes.bool,
   // El registro lo activa para obligar a escribir el password a mano, también en el campo de repetirlo
   bloquearPegado: PropTypes.bool,
+  // El login lo activa (R9): la contraseña no se puede copiar ni cortar, pero sí pegar, por los gestores de contraseñas
+  bloquearCopia: PropTypes.bool,
 }
 
 PasswordRequirements.propTypes = {

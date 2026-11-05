@@ -119,7 +119,7 @@ Se sacaron del registro (HU1) para que el registro y el alta de administradores 
 | Archivo | Qué hace |
 |---|---|
 | `accountRules.js` | Requisitos del password, validación del email y comprobación de que los dos passwords coinciden. Desde la HU22 también valida DNI, teléfono y mayoría de edad. |
-| `PasswordField.jsx` | `PasswordField` (campo con botón para mostrar u ocultar) y `PasswordRequirements` (lista de requisitos con tick verde). Con la propiedad `bloquearPegado` el campo no admite copiar ni pegar; la usa el registro de la HU1, no el alta de administradores. |
+| `PasswordField.jsx` | `PasswordField` (campo con botón para mostrar u ocultar) y `PasswordRequirements` (lista de requisitos con tick verde). Con la propiedad `bloquearPegado` el campo no admite copiar, cortar, pegar ni soltar; la usan el registro de la HU1, la recuperación de la HU3 y, desde el R9 de la revisión del Sprint 1, este alta de administradores. El login usa `bloquearCopia` (ver `hu1-registro.md`, sección 1.3). |
 | `AvatarSelector.jsx` | Los tres avatares con iconos de animales. |
 | `registroErrors.js` | `erroresDelServidor(error)`: traduce el `code` de un 400 o 409 del backend al campo y su mensaje (fallos de la demo del Sprint 1; ver `docs/hu1-registro.md`, sección 1.2). |
 
@@ -143,6 +143,7 @@ Se sacaron del registro (HU1) para que el registro y el alta de administradores 
 - **Solo el administrador** accede a estas pantallas (rutas protegidas) y los mocks responden 401 sin sesión y 403 con otro rol. La barrera real tiene que ponerla el backend.
 - **Confirmación obligatoria** antes de activar o desactivar a un vendedor.
 - **Misma política de password que el registro**, con los requisitos visibles desde el principio.
+- **El password se escribe a mano** (R9): ni el password ni su repetición admiten copiar, cortar, pegar ni soltar, como en el registro. El administrador que crea la cuenta lo teclea (HU21-CP20). Es una contraseña nueva, no la de un gestor de contraseñas.
 - **El password no se guarda** ni en el navegador ni en el mock, y la repetición del password **no se envía** al backend.
 - **Los errores del servidor no se muestran tal cual:** un 400 o 409 con un `code` conocido se marca en su campo con un mensaje fijo; el resto, con un mensaje genérico.
 

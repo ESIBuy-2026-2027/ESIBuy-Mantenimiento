@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
@@ -268,5 +268,45 @@ describe('AdminNewAdminPage (HU21): acceso', () => {
     expect(await screen.findByText('La contraseña no puede contener tu nombre, tus apellidos ni tu email'))
       .toBeInTheDocument()
     expect(screen.queryByText(/no se ha podido crear el administrador/i)).not.toBeInTheDocument()
+  })
+})
+
+// R9 de la revisión del Sprint 1: la contraseña de la cuenta nueva se escribe a mano, como en el registro
+describe('AdminNewAdminPage (HU21, R9): la contraseña solo se escribe a mano', () => {
+  it('HU21-CP20: ni el password ni su repetición se pueden pegar', async () => {
+    const user = userEvent.setup()
+    await abrirFormulario()
+
+    await user.click(screen.getByLabelText(/^password/i))
+    await user.paste('Password123!')
+    await user.click(screen.getByLabelText(/^repetir password/i))
+    await user.paste('Password123!')
+
+    expect(screen.getByLabelText(/^password/i)).toHaveValue('')
+    expect(screen.getByLabelText(/^repetir password/i)).toHaveValue('')
+  })
+
+  it('HU21-CP20: ni el password ni su repetición se pueden copiar o cortar, tampoco con el password visible', async () => {
+    const user = userEvent.setup()
+    await abrirFormulario()
+    await rellenarFormularioValido(user)
+
+    await user.click(screen.getAllByRole('button', { name: /^mostrar password$/i })[0])
+
+    for (const campo of [screen.getByLabelText(/^password/i), screen.getByLabelText(/^repetir password/i)]) {
+      // fireEvent devuelve false cuando el evento se ha cancelado
+      expect(fireEvent.copy(campo)).toBe(false)
+      expect(fireEvent.cut(campo)).toBe(false)
+    }
+  })
+
+  it('HU21-CP20: escribiendo el password a mano en los dos campos el administrador se sigue creando', async () => {
+    const user = userEvent.setup()
+    await abrirFormulario()
+
+    await rellenarFormularioValido(user)
+    await crear(user)
+
+    expect(await screen.findByText(/administrador creado/i)).toBeInTheDocument()
   })
 })
