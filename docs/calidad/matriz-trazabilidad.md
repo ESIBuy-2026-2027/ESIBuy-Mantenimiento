@@ -1800,11 +1800,16 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 | HU12-CP06 | Un pedido enviado o ya cancelado no se cancela: ni se guarda ni se repone stock (cancelar dos veces repondría el stock dos veces) | Unitario (aplicación) | 1 | ✅ Pasa |
 | HU12-CP07 | Solo el cliente cancela sus pedidos: vendedor, administrador, otro cliente y sin sesión, rechazados | Seguridad (`@PreAuthorize`, contexto mínimo) | 5 | ✅ Pasa |
 | HU12-CP08 | En MongoDB, guardar un pedido leído y cancelado actualiza el mismo documento, sin crear otro | Integración (Testcontainers) | 1 | ✅ Pasa |
+| HU12-CP09 | `POST /api/customer/orders/{id}/cancel` responde 200 con el pedido ya cancelado (`CANCELADO`), sin exponer el cliente | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#374, PR sin abrir) |
+| HU12-CP10 | Un pedido que ya no se puede cancelar (enviado, entregado o ya cancelado) responde 409 con el code `ORDER_NOT_CANCELLABLE` | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#374, PR sin abrir) |
+| HU12-CP11 | Cancelar un pedido que no existe o es de otro cliente responde 400 con el code `ORDER_NOT_FOUND` | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#374, PR sin abrir) |
+| HU12-CP12 | Sin sesión cancelar responde 401, con otro rol 403 y sin el token CSRF se rechaza (403) | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#374, PR sin abrir) |
 
 Notas:
 - **HU12-CP01 a CP08 (Sprint 2, backend, TDD):** casos propuestos en la T375 (AB#375, lógica de cancelación de pedido) a partir de los criterios de aceptación de la HU12 (AB#74): «solo permite cancelar si el pedido no ha sido enviado» y «el stock se repone al cancelar». Pendientes de confirmar con el equipo y de añadir a la HU12 en Azure Boards.
 - **Decisiones del equipo:** se cancelan los pedidos `PAGADO` y `PREPARANDO`, como dice el criterio (no los `ENVIADO`). Cancelar un pedido ya cancelado es un error, para no reponer el stock dos veces. Primero se guarda la cancelación y después se repone el stock. Caso de uso nuevo `CancelacionPedidoUseCase` (cancelar no es lo mismo que comprar). Un pedido ajeno se trata como inexistente.
-- **Pendiente:** el endpoint (T374, AB#374) y el frontend (T372 y T373, AB#372 y AB#373).
+- **HU12-CP09 a CP12 (Sprint 2, backend, TDD):** casos propuestos en la T374 (AB#374, endpoint de cancelación): `POST /api/customer/orders/{id}/cancel`, sin cuerpo y con CSRF, responde 200 con el pedido cancelado; 409 `ORDER_NOT_CANCELLABLE` si ya no se puede cancelar; 400 `ORDER_NOT_FOUND` si no existe o es de otro cliente. HU12-CP12 pasó sin rojo real: `SecurityConfig` ya protege `/api/customer/**`. Pendientes de confirmar con el equipo y de añadir a la HU12 en Azure Boards.
+- **Pendiente:** el frontend (T372 y T373, AB#372 y AB#373).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1822,11 +1827,16 @@ Notas:
 | HU12-CP07 | `SeguridadPedidosServiceTest` | `unClienteCancelaConSuPropioCorreo` | Aplicación (seguridad) | AB#375 | PR #200 | ✅ |
 | HU12-CP07 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaCancelar` | Aplicación (seguridad) | AB#375 | PR #200 | ✅ |
 | HU12-CP08 | `PedidoMongoAdapterTest` | `guardarUnPedidoCanceladoActualizaElMismoDocumento` | Infraestructura | AB#375 | PR #200 | ✅ |
+| HU12-CP09 | `PedidoControllerTest` | `cancelarUnPedidoResponde200ConElPedidoCancelado` | Infraestructura (web) | AB#374 | Rama `feature/US12-T374-endpoint-cancelar-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP10 | `PedidoControllerTest` | `unPedidoNoCancelableResponde409` | Infraestructura (web) | AB#374 | Rama `feature/US12-T374-endpoint-cancelar-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP11 | `PedidoControllerTest` | `cancelarUnPedidoInexistenteOAjenoResponde400` | Infraestructura (web) | AB#374 | Rama `feature/US12-T374-endpoint-cancelar-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP12 | `PedidoControllerTest` | `soloElClienteCancelaSusPedidos` | Infraestructura (web) | AB#374 | Rama `feature/US12-T374-endpoint-cancelar-pedido` (PR sin abrir) | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/pedidos/`):
 - `PedidoTest`: `domain/model/` (JUnit)
 - `CancelacionPedidoServiceTest` y `SeguridadPedidosServiceTest`: `application/service/` (el primero con Mockito, sin Spring; el segundo con un contexto mínimo y `@WithMockUser`)
 - `PedidoMongoAdapterTest`: `infrastructure/adapter/out/persistence/` (Testcontainers)
+- `PedidoControllerTest`: `infrastructure/adapter/in/web/` (`@WebMvcTest` con `SecurityConfig`, sin MongoDB)
 
 ---
 
