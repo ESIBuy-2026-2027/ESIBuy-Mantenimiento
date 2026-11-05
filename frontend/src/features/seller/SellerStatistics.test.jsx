@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../../mocks/server'
@@ -128,5 +128,32 @@ describe('SellerStatistics (HU17): errores', () => {
     const ventas = await screen.findByRole('region', { name: 'Ventas' })
     expect(cifra(ventas, 'Pedidos')).toHaveTextContent('6')
     expect(within(seccion).queryByText(/no se han podido cargar/i)).not.toBeInTheDocument()
+  })
+})
+
+describe('SellerStatistics (HU17): carga', () => {
+  it('HU17-CP20: mientras cargan las estadísticas, la sección muestra que se están cargando', async () => {
+    let responder
+    const respuesta = new Promise((resolve) => {
+      responder = resolve
+    })
+    server.use(
+      http.get('/api/seller/statistics', async () => {
+        await respuesta
+        return HttpResponse.json({
+          ventas: { pedidos: 0, unidadesVendidas: 0, ingresos: 0, masVendidos: [] },
+          valoraciones: { media: null, total: 0, porProducto: [] },
+          stock: { productos: 0, sinStock: 0, stockBajo: 0, noDisponibles: 0 },
+        })
+      }),
+    )
+    const seccion = await abrirEstadisticas('vendedor@esibuy.test')
+
+    const cargando = await within(seccion).findByRole('progressbar', { name: /cargando tus estadísticas/i })
+    expect(cargando).toBeInTheDocument()
+    responder()
+
+    await within(seccion).findByRole('region', { name: 'Ventas' })
+    await waitFor(() => expect(within(seccion).queryByRole('progressbar')).not.toBeInTheDocument())
   })
 })
