@@ -2059,10 +2059,10 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP35 | Desde Mis favoritos se quita cada producto (también uno no disponible): se avisa y la lista se actualiza; mientras se quita, su botón queda deshabilitado; al quitar el último sale el estado vacío, y si falla se avisa y el producto sigue | Frontend (página) | 5 | ✅ Pasa (5, AB#364, PR #213) |
 | HU14-CP36 | Al entrar en el catálogo se cargan los favoritos y sus corazones salen rellenos; si no se pueden cargar, el catálogo funciona con los corazones vacíos | Frontend (página) | 2 | ✅ Pasa (2, AB#363, PR #213) |
 | HU14-CP37 | El corazón relleno del catálogo quita el producto de favoritos: queda deshabilitado mientras se quita, después vacío, y si falla la tarjeta lo avisa | Frontend (componente y página) | 4 | ✅ Pasa (4, AB#364, PR #213) |
-| HU14-CP38 | El detalle del producto lee los favoritos al entrar y ofrece «Añadir a favoritos» o, si ya está, «Quitar de favoritos»; también en un producto agotado, y si la lista no se puede leer ofrece añadirlo sin avisar de ningún error | Frontend (página) | 4 | 🔍 En revisión (4, AB#418, PR pendiente) |
-| HU14-CP39 | Desde el detalle se añade el producto a favoritos sin salir de la página y el botón pasa a quitarlo; mientras se añade queda deshabilitado | Frontend (página) | 2 | 🔍 En revisión (2, AB#418, PR pendiente) |
-| HU14-CP40 | Desde el detalle se quita el producto de favoritos y el botón vuelve a ofrecer añadirlo | Frontend (página) | 1 | 🔍 En revisión (1, AB#418, PR pendiente) |
-| HU14-CP41 | Si no se puede añadir (producto que ya no está disponible o mensaje genérico) o quitar, el detalle lo avisa y el botón se puede volver a pulsar | Frontend (página) | 3 | 🔍 En revisión (3, AB#418, PR pendiente) |
+| HU14-CP38 | El detalle del producto lee los favoritos al entrar y ofrece «Añadir a favoritos» o, si ya está, «Quitar de favoritos»; también en un producto agotado, y si la lista no se puede leer ofrece añadirlo sin avisar de ningún error | Frontend (página) | 4 | 🔍 En revisión (4, AB#418, PR #216) |
+| HU14-CP39 | Desde el detalle se añade el producto a favoritos sin salir de la página y el botón pasa a quitarlo; mientras se añade queda deshabilitado | Frontend (página) | 2 | 🔍 En revisión (2, AB#418, PR #216) |
+| HU14-CP40 | Desde el detalle se quita el producto de favoritos y el botón vuelve a ofrecer añadirlo | Frontend (página) | 1 | 🔍 En revisión (1, AB#418, PR #216) |
+| HU14-CP41 | Si no se puede añadir (producto que ya no está disponible o mensaje genérico) o quitar, el detalle lo avisa y el botón se puede volver a pulsar | Frontend (página) | 3 | 🔍 En revisión (3, AB#418, PR #216) |
 
 - **HU14-CP01 a CP06 (Sprint 2, backend):** casos propuestos en la task AB#360 (lógica de guardado de deseo), revisados y aceptados por el desarrollador. Azure no los trae: habría que añadirlos a la HU14.
 - **Decisiones del equipo:** módulo nuevo `deseos`; una sola lista por cliente, como dicen el criterio de aceptación y la colección `listas_deseos`, que ya tenía su índice único. El campo de la colección sigue siendo `usuarioId`, y guarda el id del cliente. Añadir un producto repetido no es un error, y un producto inexistente o no disponible se rechaza.
@@ -2206,15 +2206,15 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP37 | `ProductCard.test.jsx` | `HU14-CP37: mientras se quita, el corazón queda deshabilitado` | Frontend · componente | AB#364 | PR #213 | ✅ |
 | HU14-CP37 | `ProductCard.test.jsx` | `HU14-CP37: si no se puede quitar, la tarjeta lo avisa y el corazón se puede volver a pulsar` | Frontend · componente | AB#364 | PR #213 | ✅ |
 | HU14-CP37 | `ProductsPage.test.jsx` | `HU14-CP37: al pulsar el corazón relleno se quita el producto de favoritos y el corazón queda vacío` | Frontend · página | AB#364 | PR #213 | ✅ |
-| HU14-CP38 | `ProductDetailPage.test.jsx` | `HU14-CP38: el detalle tiene un botón para añadir el producto a favoritos` | Frontend · página | AB#418 | PR pendiente | 🔍 |
-| HU14-CP38 | `ProductDetailPage.test.jsx` | `HU14-CP38: si el producto ya está en favoritos, el botón permite quitarlo` | Frontend · página | AB#418 | PR pendiente | 🔍 |
-| HU14-CP38 | `ProductDetailPage.test.jsx` | `HU14-CP38: un producto agotado también se puede añadir a favoritos` | Frontend · página | AB#418 | PR pendiente | 🔍 |
-| HU14-CP38 | `ProductDetailPage.test.jsx` | `HU14-CP38: si no se pueden leer los favoritos, se ofrece añadirlo sin avisar de ningún error` | Frontend · página | AB#418 | PR pendiente | 🔍 |
-| HU14-CP39 | `ProductDetailPage.test.jsx` | `HU14-CP39: al pulsar Añadir a favoritos se añade el producto y el botón pasa a quitarlo` | Frontend · página | AB#418 | PR pendiente | 🔍 |
-| HU14-CP39 | `ProductDetailPage.test.jsx` | `HU14-CP39: mientras se añade, el botón queda deshabilitado` | Frontend · página | AB#418 | PR pendiente | 🔍 |
-| HU14-CP40 | `ProductDetailPage.test.jsx` | `HU14-CP40: al pulsar Quitar de favoritos se quita el producto y el botón vuelve a ofrecer añadirlo` | Frontend · página | AB#418 | PR pendiente | 🔍 |
-| HU14-CP41 | `ProductDetailPage.test.jsx` | `HU14-CP41: si al añadir %s, lo avisa y se puede volver a intentar` (2 variantes: el producto ya no está disponible y falla por otro motivo) | Frontend · página | AB#418 | PR pendiente | 🔍 |
-| HU14-CP41 | `ProductDetailPage.test.jsx` | `HU14-CP41: si no se puede quitar, lo avisa y el producto sigue en favoritos` | Frontend · página | AB#418 | PR pendiente | 🔍 |
+| HU14-CP38 | `ProductDetailPage.test.jsx` | `HU14-CP38: el detalle tiene un botón para añadir el producto a favoritos` | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP38 | `ProductDetailPage.test.jsx` | `HU14-CP38: si el producto ya está en favoritos, el botón permite quitarlo` | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP38 | `ProductDetailPage.test.jsx` | `HU14-CP38: un producto agotado también se puede añadir a favoritos` | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP38 | `ProductDetailPage.test.jsx` | `HU14-CP38: si no se pueden leer los favoritos, se ofrece añadirlo sin avisar de ningún error` | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP39 | `ProductDetailPage.test.jsx` | `HU14-CP39: al pulsar Añadir a favoritos se añade el producto y el botón pasa a quitarlo` | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP39 | `ProductDetailPage.test.jsx` | `HU14-CP39: mientras se añade, el botón queda deshabilitado` | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP40 | `ProductDetailPage.test.jsx` | `HU14-CP40: al pulsar Quitar de favoritos se quita el producto y el botón vuelve a ofrecer añadirlo` | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP41 | `ProductDetailPage.test.jsx` | `HU14-CP41: si al añadir %s, lo avisa y se puede volver a intentar` (2 variantes: el producto ya no está disponible y falla por otro motivo) | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP41 | `ProductDetailPage.test.jsx` | `HU14-CP41: si no se puede quitar, lo avisa y el producto sigue en favoritos` | Frontend · página | AB#418 | PR #216 | 🔍 |
 
 ---
 
