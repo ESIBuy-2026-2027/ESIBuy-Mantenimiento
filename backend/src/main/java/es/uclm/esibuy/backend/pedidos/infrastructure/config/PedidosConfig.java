@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import es.uclm.esibuy.backend.carrito.application.port.in.GestionCarritoUseCase;
 import es.uclm.esibuy.backend.direcciones.application.port.in.GestionDireccionesUseCase;
 import es.uclm.esibuy.backend.metodospago.application.port.in.GestionMetodosPagoUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.out.CarritoPort;
@@ -18,6 +19,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.DireccionesPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ExistenciasPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.MetodosPagoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
+import es.uclm.esibuy.backend.pedidos.application.service.CancelacionPedidoService;
 import es.uclm.esibuy.backend.pedidos.application.service.ConsultaComprasService;
 import es.uclm.esibuy.backend.pedidos.application.service.RealizacionPedidoService;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.carrito.CarritoAdapter;
@@ -88,5 +90,12 @@ public class PedidosConfig {
     ConsultaComprasUseCase consultaComprasUseCase(PedidoRepositoryPort pedidoRepositoryPort,
             ClienteEnSesionPort pedidosClienteEnSesionPort) {
         return new ConsultaComprasService(pedidoRepositoryPort, pedidosClienteEnSesionPort);
+    }
+
+    // Cancelación (HU12): repone el stock con el mismo puerto de existencias que usa la realización del pedido
+    @Bean
+    CancelacionPedidoUseCase cancelacionPedidoUseCase(PedidoRepositoryPort pedidoRepositoryPort,
+            ClienteEnSesionPort pedidosClienteEnSesionPort, ExistenciasPort pedidosExistenciasPort) {
+        return new CancelacionPedidoService(pedidoRepositoryPort, pedidosClienteEnSesionPort, pedidosExistenciasPort);
     }
 }

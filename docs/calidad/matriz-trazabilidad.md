@@ -1713,16 +1713,26 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 | HU11-CP04 | En MongoDB se buscan los pedidos de un cliente, del más reciente al más antiguo, y un pedido por su id con sus líneas | Integración (Testcontainers) | 2 | ✅ Pasa |
 | HU11-CP05 | Los estados de envío van en el orden en que avanza un pedido (`PAGADO`, `PREPARANDO`, `ENVIADO`, `ENTREGADO`) con `CANCELADO` al final, y cada uno se guarda y se lee igual | Unitario (dominio e infraestructura) | 2 | ✅ Pasa |
 | HU11-CP06 | Solo el cliente consulta su historial y el detalle de sus pedidos: vendedor, administrador, otro cliente y sin sesión, rechazados | Seguridad (`@PreAuthorize`, contexto mínimo) | 5 | ✅ Pasa |
-| HU11-CP07 | `GET /api/customer/orders` responde 200 con los pedidos completos del cliente de la sesión (`[]` si no tiene); no expone el cliente | Integración web (`@WebMvcTest`) | 2 | 🔍 En revisión (2, AB#377, PR sin abrir) |
-| HU11-CP08 | `GET /api/customer/orders/{id}` responde 200 con el pedido: productos, desglose de precios, total, estado y dirección de envío | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#377, PR sin abrir) |
-| HU11-CP09 | Un pedido que no existe o es de otro cliente responde 400 con el code `ORDER_NOT_FOUND` («El pedido no existe») | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#377, PR sin abrir) |
-| HU11-CP10 | Sin sesión el historial y el detalle responden 401, y con otro rol (vendedor, administrador) 403 | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#377, PR sin abrir) |
+| HU11-CP07 | `GET /api/customer/orders` responde 200 con los pedidos completos del cliente de la sesión (`[]` si no tiene); no expone el cliente | Integración web (`@WebMvcTest`) | 2 | ✅ Pasa |
+| HU11-CP08 | `GET /api/customer/orders/{id}` responde 200 con el pedido: productos, desglose de precios, total, estado y dirección de envío | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU11-CP09 | Un pedido que no existe o es de otro cliente responde 400 con el code `ORDER_NOT_FOUND` («El pedido no existe») | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU11-CP10 | Sin sesión el historial y el detalle responden 401, y con otro rol (vendedor, administrador) 403 | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU11-CP11 | Mis pedidos muestra los pedidos del cliente, del más reciente al más antiguo, con número, fecha, vendedor, total y estado; sin pedidos lo indica, y si falla permite reintentar | Frontend (página) | 3 | ✅ Pasa |
+| HU11-CP12 | Al seleccionar un pedido se abre su detalle | Frontend (página) | 1 | ✅ Pasa |
+| HU11-CP13 | Mis pedidos es solo del cliente: sin sesión lleva al login y un vendedor va a su página | Frontend (página) | 2 | ✅ Pasa |
+| HU11-CP14 | El detalle muestra número, fecha, vendedor y dirección de envío, y desglosa cada producto (cantidad, precio unitario, subtotal) y el total | Frontend (página) | 2 | ✅ Pasa |
+| HU11-CP15 | La línea de estados del envío (Pagado → Preparando → Enviado → Entregado) marca los pasos hechos, el actual y los pendientes | Frontend (página) | 2 | ✅ Pasa |
+| HU11-CP16 | Un pedido cancelado lo indica en lugar de la línea de estados del envío | Frontend (página) | 1 | ✅ Pasa |
+| HU11-CP17 | Un pedido inexistente o de otro cliente se ve como no encontrado; otro error permite reintentar; desde el detalle se vuelve a Mis pedidos | Frontend (página) | 3 | ✅ Pasa |
+| HU11-CP18 | La cabecera del cliente tiene el enlace «Mis pedidos»; la del vendedor y la del administrador, no | Frontend (componente) | 2 | ✅ Pasa |
+| HU11-CP19 | Tras pagar (HU10) se puede ir a Mis pedidos | Frontend (página) | 1 | ✅ Pasa |
 
 Notas:
 - **HU11-CP01 a CP06 (Sprint 2, backend, TDD):** casos propuestos en la T378 (AB#378, lógica de obtención de pedidos) a partir del criterio de aceptación de la HU11 (AB#73): «el sistema muestra el detalle de los productos, desglose de precios y la máquina de estados de envío cuando el cliente selecciona un pedido concreto». Pendientes de confirmar con el equipo y de añadir a la HU11 en Azure Boards.
 - **Decisiones del equipo:** el historial y el detalle se añaden a `ConsultaComprasUseCase` (mismo actor y propósito que `haComprado` de la HU13). Estados de envío: `PAGADO → PREPARANDO → ENVIADO → ENTREGADO`, más `CANCELADO` para la HU12; los hará avanzar el vendedor en otra HU. Un pedido ajeno se trata como inexistente.
 - **HU11-CP07 a CP10 (Sprint 2, backend, TDD):** casos propuestos en la T377 (AB#377, endpoint de obtención de pedidos): `GET /api/customer/orders` (historial, cada pedido completo con el formato de `PedidoResponse`) y `GET /api/customer/orders/{id}` (detalle). Un pedido ajeno o inexistente responde 400 `ORDER_NOT_FOUND`, como pide el CLAUDE.md para los pedidos. HU11-CP10 pasó sin rojo real: `SecurityConfig` ya protege `/api/customer/**`. Pendientes de confirmar con el equipo y de añadir a la HU11 en Azure Boards.
-- **Pendiente:** la vista del frontend (T376, AB#376). `haComprado` (HU13) solo cuenta los pedidos `PAGADO`: cuando los estados avancen, habrá que decidir si `ENTREGADO` cuenta como compra (comentario «PENDIENTE DE DECIDIR» en `ConsultaComprasService`).
+- **HU11-CP11 a CP19 (Sprint 2, frontend, TDD):** casos propuestos en la T376 (AB#376, vista de pedidos): «Mis pedidos» (`/orders`) y el detalle (`/orders/:id`) con la línea de estados del envío, el enlace en la cabecera y «Ver mis pedidos» tras pagar (`frontend/docs/hu11-historial-pedidos.md`). El test «el vendedor y el administrador no tienen el enlace» (CP18) pasó sin rojo real. El PR #187 se mergeó antes de añadirle estas filas, así que entran en la rama de la T375 (HU12). Pendientes de confirmar con el equipo y de añadir a la HU11 en Azure Boards.
+- **Pendiente:** `haComprado` (HU13) solo cuenta los pedidos `PAGADO`: cuando los estados avancen, habrá que decidir si `ENTREGADO` cuenta como compra (comentario «PENDIENTE DE DECIDIR» en `ConsultaComprasService`).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1741,17 +1751,82 @@ Notas:
 | HU11-CP06 | `SeguridadPedidosServiceTest` | `unClienteNoConsultaLosPedidosDeOtro` | Aplicación (seguridad) | AB#378 | PR #182 | ✅ |
 | HU11-CP06 | `SeguridadPedidosServiceTest` | `unClienteConsultaSuPropioHistorial` | Aplicación (seguridad) | AB#378 | PR #182 | ✅ |
 | HU11-CP06 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaConsultarPedidos` | Aplicación (seguridad) | AB#378 | PR #182 | ✅ |
-| HU11-CP07 | `PedidoControllerTest` | `elHistorialResponde200ConLosPedidosDelCliente` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP07 | `PedidoControllerTest` | `unClienteSinPedidosRecibeUnaListaVacia` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP08 | `PedidoControllerTest` | `elDetalleResponde200ConElPedido` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP09 | `PedidoControllerTest` | `unPedidoInexistenteOAjenoResponde400` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP10 | `PedidoControllerTest` | `soloElClienteConsultaSusPedidos` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP07 | `PedidoControllerTest` | `elHistorialResponde200ConLosPedidosDelCliente` | Infraestructura (web) | AB#377 | PR #186 | ✅ |
+| HU11-CP07 | `PedidoControllerTest` | `unClienteSinPedidosRecibeUnaListaVacia` | Infraestructura (web) | AB#377 | PR #186 | ✅ |
+| HU11-CP08 | `PedidoControllerTest` | `elDetalleResponde200ConElPedido` | Infraestructura (web) | AB#377 | PR #186 | ✅ |
+| HU11-CP09 | `PedidoControllerTest` | `unPedidoInexistenteOAjenoResponde400` | Infraestructura (web) | AB#377 | PR #186 | ✅ |
+| HU11-CP10 | `PedidoControllerTest` | `soloElClienteConsultaSusPedidos` | Infraestructura (web) | AB#377 | PR #186 | ✅ |
+| HU11-CP11 | `OrdersPage.test.jsx` | `HU11-CP11: muestra los pedidos del cliente, del más reciente al más antiguo, con número, fecha, vendedor, total y estado` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP11 | `OrdersPage.test.jsx` | `HU11-CP11: sin pedidos lo indica y ofrece ir a los productos` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP11 | `OrdersPage.test.jsx` | `HU11-CP11: si no se pueden cargar los pedidos lo avisa y permite reintentar` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP12 | `OrdersPage.test.jsx` | `HU11-CP12: al pulsar un pedido se abre su detalle` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP13 | `OrdersPage.test.jsx` | `HU11-CP13: sin sesión, Mis pedidos lleva a iniciar sesión` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP13 | `OrdersPage.test.jsx` | `HU11-CP13: un vendedor no ve los pedidos de los clientes: va a su página` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP14 | `OrderDetailPage.test.jsx` | `HU11-CP14: muestra el número, la fecha, el vendedor y la dirección de envío del pedido` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP14 | `OrderDetailPage.test.jsx` | `HU11-CP14: desglosa cada producto con su cantidad, precio unitario y subtotal, y el total` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP15 | `OrderDetailPage.test.jsx` | `HU11-CP15: la línea de estados del envío marca los pasos hechos, el actual y los pendientes` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP15 | `OrderDetailPage.test.jsx` | `HU11-CP15: un pedido entregado tiene todos los pasos hechos y el último como actual` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP16 | `OrderDetailPage.test.jsx` | `HU11-CP16: un pedido cancelado lo indica en lugar de la línea de estados del envío` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP17 | `OrderDetailPage.test.jsx` | `HU11-CP17: un pedido que no existe o es de otro cliente se muestra como no encontrado` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP17 | `OrderDetailPage.test.jsx` | `HU11-CP17: si falla por otro motivo lo avisa y permite reintentar` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP17 | `OrderDetailPage.test.jsx` | `HU11-CP17: desde el detalle se vuelve a Mis pedidos` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP18 | `AppHeader.test.jsx` | `HU11-CP18: el cliente tiene el enlace a sus pedidos y lleva a Mis pedidos` | Frontend · componente | AB#376 | PR #187 | ✅ |
+| HU11-CP18 | `AppHeader.test.jsx` | `HU11-CP18: el vendedor y el administrador no tienen el enlace a Mis pedidos` | Frontend · componente | AB#376 | PR #187 | ✅ |
+| HU11-CP19 | `CheckoutPage.test.jsx` | `HU11-CP19: tras pagar se puede ir a Mis pedidos` | Frontend · página | AB#376 | PR #187 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/pedidos/`):
 - `ConsultaComprasServiceTest` y `SeguridadPedidosServiceTest`: `application/service/` (el primero sin Spring; el segundo con un contexto mínimo y `@WithMockUser`)
 - `EstadoPedidoTest`: `domain/model/` (JUnit)
 - `PedidoMongoAdapterTest` y `PedidoDocumentMapperTest`: `infrastructure/adapter/out/persistence/` (el primero con Testcontainers)
 - `PedidoControllerTest`: `infrastructure/adapter/in/web/` (`@WebMvcTest` con `SecurityConfig`, sin MongoDB)
+
+Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing Library y MSW):
+- `OrdersPage.test.jsx`, `OrderDetailPage.test.jsx` y `CheckoutPage.test.jsx`: `pages/`
+- `AppHeader.test.jsx`: `components/`
+
+---
+
+## HU12 · Cancelación de pedido
+
+### Tabla A · HU12 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU12-CP01 | Un pedido que aún no se ha enviado (`PAGADO` o `PREPARANDO`) se puede cancelar y pasa a `CANCELADO` | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
+| HU12-CP02 | Un pedido `ENVIADO`, `ENTREGADO` o ya `CANCELADO` no se puede cancelar (`PedidoNoCancelableException`) y no cambia | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
+| HU12-CP03 | Cancelar un pedido del cliente lo guarda cancelado y lo devuelve | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
+| HU12-CP04 | Al cancelar se repone el stock de cada producto del pedido, después de guardar la cancelación | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
+| HU12-CP05 | Un pedido de otro cliente o que no existe no se cancela y se trata como inexistente (`PedidoNoEncontradoException`) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
+| HU12-CP06 | Un pedido enviado o ya cancelado no se cancela: ni se guarda ni se repone stock (cancelar dos veces repondría el stock dos veces) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
+| HU12-CP07 | Solo el cliente cancela sus pedidos: vendedor, administrador, otro cliente y sin sesión, rechazados | Seguridad (`@PreAuthorize`, contexto mínimo) | 5 | 🔍 En revisión (5, AB#375, PR sin abrir) |
+| HU12-CP08 | En MongoDB, guardar un pedido leído y cancelado actualiza el mismo documento, sin crear otro | Integración (Testcontainers) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
+
+Notas:
+- **HU12-CP01 a CP08 (Sprint 2, backend, TDD):** casos propuestos en la T375 (AB#375, lógica de cancelación de pedido) a partir de los criterios de aceptación de la HU12 (AB#74): «solo permite cancelar si el pedido no ha sido enviado» y «el stock se repone al cancelar». Pendientes de confirmar con el equipo y de añadir a la HU12 en Azure Boards.
+- **Decisiones del equipo:** se cancelan los pedidos `PAGADO` y `PREPARANDO`, como dice el criterio (no los `ENVIADO`). Cancelar un pedido ya cancelado es un error, para no reponer el stock dos veces. Primero se guarda la cancelación y después se repone el stock. Caso de uso nuevo `CancelacionPedidoUseCase` (cancelar no es lo mismo que comprar). Un pedido ajeno se trata como inexistente.
+- **Pendiente:** el endpoint (T374, AB#374) y el frontend (T372 y T373, AB#372 y AB#373).
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU12-CP01 | `PedidoTest` | `unPedidoNoEnviadoSeCancela` | Dominio | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP02 | `PedidoTest` | `unPedidoEnviadoEntregadoOCanceladoNoSeCancela` | Dominio | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP03 | `CancelacionPedidoServiceTest` | `cancelarGuardaElPedidoCanceladoYLoDevuelve` | Aplicación | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP04 | `CancelacionPedidoServiceTest` | `cancelarReponeElStockDespuesDeGuardar` | Aplicación | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP05 | `CancelacionPedidoServiceTest` | `unPedidoAjenoOInexistenteNoSeCancela` | Aplicación | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP06 | `CancelacionPedidoServiceTest` | `unPedidoNoCancelableNoCambiaNada` | Aplicación | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `unVendedorNoCancelaPedidos` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `unAdministradorNoCancelaPedidos` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `unClienteNoCancelaConElCorreoDeOtro` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `unClienteCancelaConSuPropioCorreo` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaCancelar` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP08 | `PedidoMongoAdapterTest` | `guardarUnPedidoCanceladoActualizaElMismoDocumento` | Infraestructura | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/pedidos/`):
+- `PedidoTest`: `domain/model/` (JUnit)
+- `CancelacionPedidoServiceTest` y `SeguridadPedidosServiceTest`: `application/service/` (el primero con Mockito, sin Spring; el segundo con un contexto mínimo y `@WithMockUser`)
+- `PedidoMongoAdapterTest`: `infrastructure/adapter/out/persistence/` (Testcontainers)
 
 ---
 
@@ -3397,7 +3472,7 @@ Tests que no validan una HU concreta.
 | `MetodosPagoConfigTest` | `elContextoConectaLasPiezasDeLosMetodosDePago` | Que Spring conecta el servicio de métodos de pago con su adaptador de MongoDB, su cifrado AES-GCM y el cliente en sesión (HU6; AB#271, PR #148) |
 | `MetodosPagoConfigTest` | `losDatosDePagoSeCifranConLaClaveConfigurada` | Que los datos de pago se cifran con la clave de `esibuy.pagos.clave-cifrado`, que en los tests pone `MongoTestcontainersConfig` (HU6; AB#271, PR #148) |
 | `CarritoConfigTest` | `elContextoConectaLasPiezasDelCarrito` | Que Spring conecta el servicio del carrito con su adaptador de MongoDB, los productos y los usuarios (HU9; AB#385, PR #162) |
-| `PedidosConfigTest` | `elContextoConectaLasPiezasDeLosPedidos` | Que Spring conecta la realización de pedidos con su repositorio, el contador y los adaptadores hacia usuarios, carrito, métodos de pago, direcciones y productos (HU10; AB#381, PR #166); y la consulta de compras de HU13 (AB#370, PR #179) |
+| `PedidosConfigTest` | `elContextoConectaLasPiezasDeLosPedidos` | Que Spring conecta la realización de pedidos con su repositorio, el contador y los adaptadores hacia usuarios, carrito, métodos de pago, direcciones y productos (HU10; AB#381, PR #166); y la consulta de compras de HU13 (AB#370, PR #179). También la cancelación de pedidos (HU12; AB#375, PR sin abrir) |
 | `ValoracionesConfigTest` | `elContextoConectaLasPiezasDeLasValoraciones` | Que Spring conecta la valoración y la consulta de valoraciones con su adaptador de MongoDB y los adaptadores hacia usuarios y pedidos (HU13; AB#370 y AB#371, PR #179), y hacia productos (AB#415, PR #195) |
 | `DeseosConfigTest` | `elContextoConectaLasPiezasDeLaListaDeDeseos` | Que Spring conecta el servicio de la lista de deseos con su adaptador de MongoDB y los adaptadores hacia usuarios y productos (HU14; AB#360, PR #196) |
 | `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |
