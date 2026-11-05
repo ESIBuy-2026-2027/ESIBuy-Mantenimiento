@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Button, makeStyles, tokens } from '@fluentui/react-components'
-import { Delete20Regular, Edit20Regular, Search20Regular } from '@fluentui/react-icons'
+import { Delete20Regular, Edit20Regular, Eye20Regular, EyeOff20Regular, Search20Regular } from '@fluentui/react-icons'
 import { deleteAdminCategory } from '../../api/adminCategories'
 import CategoryDetailDialog from './CategoryDetailDialog'
 import CategoryFormDialog from './CategoryFormDialog'
@@ -24,6 +24,24 @@ const ERRORES_AL_ELIMINAR = {
   CATEGORY_NOT_FOUND: { texto: (nombre) => `${nombre} ya no existe.`, actualiza: true },
 }
 
+// Textos de cada cambio de estado (HU41): una categoría activa se desactiva y una inactiva se activa.
+const CAMBIOS_DE_ESTADO = {
+  ACTIVA: {
+    boton: 'Desactivar',
+    icono: <EyeOff20Regular />,
+    titulo: 'Desactivar categoría',
+    pregunta: (nombre) =>
+      `¿Seguro que quieres desactivar la categoría ${nombre}? Dejará de mostrarse a los clientes y a los vendedores.`,
+  },
+  INACTIVA: {
+    boton: 'Activar',
+    icono: <Eye20Regular />,
+    titulo: 'Activar categoría',
+    pregunta: (nombre) =>
+      `¿Seguro que quieres activar la categoría ${nombre}? Volverá a mostrarse a los clientes y a los vendedores.`,
+  },
+}
+
 const useStyles = makeStyles({
   actions: {
     display: 'flex',
@@ -33,14 +51,15 @@ const useStyles = makeStyles({
 })
 
 // Acciones de una fila de la tabla de categorías: la lupa que abre su ficha de solo lectura (HU39), el lápiz que abre
-// su formulario de edición (HU41) y la papelera para eliminarla (HU42), que pide confirmación. Si la categoría tiene
-// productos, la papelera queda deshabilitada y explica por qué. `onResult` recibe el aviso que debe ver el
-// administrador; `onChanged`, que la lista se actualice.
+// su formulario de edición (HU41), el botón para activarla o desactivarla (HU41) y la papelera para eliminarla (HU42).
+// Activar, desactivar y eliminar piden confirmación. Si la categoría tiene productos, la papelera queda deshabilitada y
+// explica por qué. `onResult` recibe el aviso que debe ver el administrador; `onChanged`, que la lista se actualice.
 export default function CategoryRowActions({ category, onResult, onChanged }) {
   const styles = useStyles()
   const [dialogo, setDialogo] = useState(null)
   const [eliminando, setEliminando] = useState(false)
   const tieneProductos = category.numeroProductos > 0
+  const cambioDeEstado = CAMBIOS_DE_ESTADO[category.estado]
   const cerrar = () => setDialogo(null)
 
   const avisarEditada = (editada) => {
@@ -91,6 +110,15 @@ export default function CategoryRowActions({ category, onResult, onChanged }) {
         title="Editar"
         onClick={() => setDialogo('editar')}
       />
+      {cambioDeEstado && (
+        <Button
+          appearance="subtle"
+          icon={cambioDeEstado.icono}
+          aria-label={`${cambioDeEstado.boton} ${category.nombre}`}
+          title={cambioDeEstado.boton}
+          onClick={() => setDialogo('estado')}
+        />
+      )}
       <Button
         appearance="subtle"
         icon={<Delete20Regular />}
@@ -107,6 +135,16 @@ export default function CategoryRowActions({ category, onResult, onChanged }) {
           onClose={cerrar}
           onSaved={avisarEditada}
           onNotFound={avisarQueYaNoExiste}
+        />
+      )}
+      {dialogo === 'estado' && (
+        <StatusConfirmDialog
+          titulo={cambioDeEstado.titulo}
+          pregunta={cambioDeEstado.pregunta(category.nombre)}
+          confirmar={cambioDeEstado.boton}
+          enviando={false}
+          onConfirm={cerrar}
+          onCancel={cerrar}
         />
       )}
       {dialogo === 'eliminar' && (
