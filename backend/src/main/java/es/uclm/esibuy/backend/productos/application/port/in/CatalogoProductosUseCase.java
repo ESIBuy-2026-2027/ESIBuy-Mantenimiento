@@ -27,6 +27,15 @@ public interface CatalogoProductosUseCase {
     Optional<ProductoComercial> consultarComprable(String productoId, boolean clientePremium);
 
     /**
+     * Devuelve el resumen de un producto exista o no en el catálogo: a diferencia de {@link #consultarComprable},
+     * también el de uno que el vendedor ha desactivado (HU14).
+     *
+     * @param clientePremium si el cliente es premium, para aplicarle su descuento
+     * @return vacío solo si el producto no existe
+     */
+    Optional<ResumenProducto> consultarResumen(String productoId, boolean clientePremium);
+
+    /**
      * Devuelve el detalle de un producto del catálogo (HU8), con el nombre comercial de su vendedor y el precio
      * con el descuento que le corresponde al cliente.
      *
