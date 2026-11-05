@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.estadisticas.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.math.BigDecimal;
@@ -89,19 +90,43 @@ class EstadisticasVendedorTest {
     @Test
     @DisplayName("HU17-CP03: la media global pondera la media de cada producto por su número de valoraciones")
     void laMediaGlobalEstaPonderadaPorElNumeroDeValoraciones() {
-        fail("Funcionalidad no implementada");
+        List<ProductoInventariado> productos = List.of(
+                producto("p-1", 10, true, 5.0, 3),
+                producto("p-2", 10, true, 1.0, 1),
+                producto("p-3", 10, true, null, 0));
+
+        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(List.of(), productos);
+
+        // (5 × 3 + 1 × 1) / 4 = 4: sin ponderar sería 3
+        assertEquals(4.0, estadisticas.valoracionMedia(), 0.0001);
+        assertEquals(4, estadisticas.numeroValoraciones());
     }
 
     @Test
     @DisplayName("HU17-CP03: sin valoraciones la media global no existe y el total es cero")
     void sinValoracionesNoHayMediaGlobal() {
-        fail("Funcionalidad no implementada");
+        List<ProductoInventariado> productos = List.of(producto("p-1", 10, true, null, 0));
+
+        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(List.of(), productos);
+
+        assertNull(estadisticas.valoracionMedia());
+        assertEquals(0, estadisticas.numeroValoraciones());
     }
 
     @Test
     @DisplayName("HU17-CP04: la valoración por producto solo incluye los valorados, del mejor al peor")
     void laValoracionPorProductoSoloIncluyeLosValoradosDelMejorAlPeor() {
-        fail("Funcionalidad no implementada");
+        List<ProductoInventariado> productos = List.of(
+                producto("p-1", 10, true, 3.5, 2),
+                producto("p-2", 10, true, null, 0),
+                producto("p-3", 10, true, 4.5, 6));
+
+        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(List.of(), productos);
+
+        assertEquals(List.of(
+                new ValoracionProducto("p-3", "Producto p-3", 4.5, 6),
+                new ValoracionProducto("p-1", "Producto p-1", 3.5, 2)),
+                estadisticas.valoracionesPorProducto());
     }
 
     @Test
@@ -118,5 +143,11 @@ class EstadisticasVendedorTest {
 
     private static VentaRegistrada venta(String pedidoId, String productoId, int unidades, String importe) {
         return new VentaRegistrada(pedidoId, productoId, "Producto " + productoId, unidades, new BigDecimal(importe));
+    }
+
+    private static ProductoInventariado producto(String productoId, int stock, boolean disponible, Double media,
+            int numeroValoraciones) {
+        return new ProductoInventariado(productoId, "Producto " + productoId, stock, disponible, media,
+                numeroValoraciones);
     }
 }
