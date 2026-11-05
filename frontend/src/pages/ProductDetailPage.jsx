@@ -12,7 +12,7 @@ import {
 } from '@fluentui/react-components'
 import { ArrowLeft20Regular, BoxSearch24Regular } from '@fluentui/react-icons'
 import { getCatalogProduct, getProductReviews } from '../api/products'
-import { addWishlistItem, getWishlist } from '../api/wishlist'
+import { addWishlistItem, getWishlist, removeWishlistItem } from '../api/wishlist'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
 import ProductDetail from '../features/catalog/ProductDetail'
@@ -111,6 +111,12 @@ export default function ProductDetailPage() {
     cambiado.current = true
     setFavorito(estaEnLaLista(lista, id))
   }
+
+  const quitarFavorito = async (productId) => {
+    const lista = await removeWishlistItem(productId)
+    cambiado.current = true
+    setFavorito(estaEnLaLista(lista, id))
+  }
   const notFound = failed && error?.status === NOT_FOUND
   const categoryName = categories.find((category) => category.id === product?.categoriaId)?.nombre
 
@@ -167,6 +173,7 @@ export default function ProductDetailPage() {
           onRetryReviews={retryReviews}
           favorite={favorito}
           onAddFavorite={anadirFavorito}
+          onRemoveFavorite={quitarFavorito}
         />
       )}
     </main>

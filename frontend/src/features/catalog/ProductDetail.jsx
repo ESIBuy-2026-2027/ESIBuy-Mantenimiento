@@ -215,8 +215,8 @@ const valoraciones = (n) => `${n} ${n === 1 ? 'valoración' : 'valoraciones'}`
 
 // Detalle de un producto para el cliente (HU8): imagen, nombre, proveedor, valoración, precio, disponibilidad,
 // descripción, una ficha con los datos del producto y las valoraciones de los clientes (HU13). Solo presenta: la
-// página es la que pide el producto y sus valoraciones. Con `onAddFavorite` ofrece además añadirlo a favoritos o, si
-// ya lo está (`favorite`), quitarlo (HU14).
+// página es la que pide el producto y sus valoraciones. Con `onAddFavorite` ofrece además añadirlo a favoritos y, si
+// ya lo está (`favorite`), quitarlo con `onRemoveFavorite` (HU14).
 export default function ProductDetail({
   product,
   categoryName,
@@ -225,6 +225,7 @@ export default function ProductDetail({
   onRetryReviews,
   favorite = false,
   onAddFavorite,
+  onRemoveFavorite,
 }) {
   const styles = useStyles()
   // Si la imagen no carga (dirección rota), se enseña el mismo marcador que cuando no hay imagen.
@@ -241,7 +242,7 @@ export default function ProductDetail({
   const toggleFavorite = async () => {
     setSavingFavorite(true)
     try {
-      await onAddFavorite(product.id)
+      await (favorite ? onRemoveFavorite(product.id) : onAddFavorite(product.id))
     } finally {
       setSavingFavorite(false)
     }
@@ -365,4 +366,5 @@ ProductDetail.propTypes = {
   onRetryReviews: PropTypes.func.isRequired,
   favorite: PropTypes.bool,
   onAddFavorite: PropTypes.func,
+  onRemoveFavorite: PropTypes.func,
 }
