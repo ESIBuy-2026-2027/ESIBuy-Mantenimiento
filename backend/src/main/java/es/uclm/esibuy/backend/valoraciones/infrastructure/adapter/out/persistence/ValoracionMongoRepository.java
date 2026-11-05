@@ -9,4 +9,6 @@ public interface ValoracionMongoRepository extends MongoRepository<ValoracionDoc
     List<ValoracionDocument> findByProductoId(String productoId);
 
     boolean existsByUsuarioIdAndProductoId(String usuarioId, String productoId);
+
+    void deleteByProductoId(String productoId);
 }

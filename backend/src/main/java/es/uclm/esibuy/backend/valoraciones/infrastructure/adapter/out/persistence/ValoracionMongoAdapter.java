@@ -38,4 +38,9 @@ public class ValoracionMongoAdapter implements ValoracionRepositoryPort {
     public List<Valoracion> buscarPorProducto(String productoId) {
         return repository.findByProductoId(productoId).stream().map(mapper::aDominio).toList();
     }
+
+    @Override
+    public void eliminarPorProducto(String productoId) {
+        repository.deleteByProductoId(productoId);
+    }
 }

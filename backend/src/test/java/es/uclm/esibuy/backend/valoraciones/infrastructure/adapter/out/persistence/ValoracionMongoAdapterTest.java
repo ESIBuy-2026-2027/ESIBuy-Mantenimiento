@@ -82,6 +82,18 @@ class ValoracionMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU47-CP02: eliminar por producto borra sus valoraciones y conserva las demás")
+    void eliminarPorProductoBorraSoloLasValoracionesDelProducto() {
+        adapter.guardar(Valoracion.nueva("p-1", "u-1", 4, ""));
+        adapter.guardar(Valoracion.nueva("p-2", "u-1", 5, ""));
+
+        adapter.eliminarPorProducto("p-1");
+
+        assertTrue(adapter.buscarPorProducto("p-1").isEmpty());
+        assertEquals(1, adapter.buscarPorProducto("p-2").size());
+    }
+
+    @Test
     @DisplayName("HU13-CP05: sabe si un cliente ya ha valorado un producto")
     void sabeSiUnClienteYaHaValoradoUnProducto() {
         adapter.guardar(Valoracion.nueva("p-1", "u-1", 4, ""));
