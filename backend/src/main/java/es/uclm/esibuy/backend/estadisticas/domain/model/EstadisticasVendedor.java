@@ -21,8 +21,30 @@ public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal
         int pedidos = (int) ventas.stream().map(VentaRegistrada::pedidoId).distinct().count();
         int unidades = ventas.stream().mapToInt(VentaRegistrada::unidades).sum();
         BigDecimal ingresos = ventas.stream().map(VentaRegistrada::importe).reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new EstadisticasVendedor(pedidos, unidades, ingresos, masVendidos(ventas), null, 0, List.of(), 0, 0, 0,
-                0);
+        List<ProductoInventariado> valorados = productos.stream().filter(p -> p.numeroValoraciones() > 0).toList();
+        int numeroValoraciones = valorados.stream().mapToInt(ProductoInventariado::numeroValoraciones).sum();
+        return new EstadisticasVendedor(pedidos, unidades, ingresos, masVendidos(ventas),
+                mediaPonderada(valorados, numeroValoraciones), numeroValoraciones, valoracionesPorProducto(valorados),
+                0, 0, 0, 0);
+    }
+
+    // Cada producto pesa tanto como valoraciones tiene: es la media de todas las valoraciones del vendedor. Sin
+    // valoraciones no hay media.
+    private static Double mediaPonderada(List<ProductoInventariado> valorados, int numeroValoraciones) {
+        if (numeroValoraciones == 0) {
+            return null;
+        }
+        double suma = valorados.stream().mapToDouble(p -> p.valoracionMedia() * p.numeroValoraciones()).sum();
+        return suma / numeroValoraciones;
+    }
+
+    // Del mejor valorado al peor
+    private static List<ValoracionProducto> valoracionesPorProducto(List<ProductoInventariado> valorados) {
+        return valorados.stream()
+                .map(p -> new ValoracionProducto(p.productoId(), p.nombre(), p.valoracionMedia(),
+                        p.numeroValoraciones()))
+                .sorted(Comparator.comparingDouble(ValoracionProducto::media).reversed())
+                .toList();
     }
 
     // Suma las ventas de cada producto y se queda con los que más unidades han vendido; a igualdad de unidades, el
