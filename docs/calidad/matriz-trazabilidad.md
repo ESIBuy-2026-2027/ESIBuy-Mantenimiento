@@ -3551,18 +3551,18 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU41-CP16 | Cada fila de la lista tiene el lápiz, que abre el formulario con el nombre y la descripción de la categoría, sin el estado; cancelar no edita nada | Frontend (componente y página) | 4 | ✅ Pasa (4, AB#327, PR #201) |
 | HU41-CP17 | Al guardar se envían el nombre y la descripción nuevos, se avisa de que se ha actualizado y la lista muestra los cambios; el nombre sigue siendo obligatorio | Frontend (componente y página) | 4 | ✅ Pasa (4, AB#327, PR #201) |
 | HU41-CP18 | El nombre de otra categoría se marca en el campo; si la categoría ya no existe se cierra el formulario, se avisa y se recarga la lista; cualquier otro error muestra un mensaje genérico | Frontend (componente y página) | 5 | ✅ Pasa (5, AB#327, PR #201) |
-| HU41-CP19 | Cambiar el estado guarda la categoría con el estado nuevo (activar o desactivar), conserva su nombre y su descripción y devuelve su número de productos | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#416, PR pendiente) |
-| HU41-CP20 | Cambiar el estado de una categoría que no existe falla sin guardar nada (404) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#416, PR pendiente) |
-| HU41-CP21 | Cambiar el estado sin indicar el estado nuevo falla sin guardar nada (400) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#416, PR pendiente) |
-| HU41-CP22 | Activar y desactivar categorías exige el rol administrador; cliente, vendedor y sin sesión se rechazan. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, AB#416, PR pendiente) |
-| HU41-CP23 | `PATCH /api/admin/categorias/{id}/status` responde 200 con la fila actualizada y su número de productos | Controlador | 1 | 🔍 En revisión (1, AB#416, PR pendiente) |
-| HU41-CP24 | Cambiar el estado sin estado o con un estado desconocido devuelve 400 `VALIDATION_ERROR` y no llega al caso de uso | Controlador | 3 | 🔍 En revisión (3, AB#416, PR pendiente) |
-| HU41-CP25 | Cambiar el estado de una categoría que no existe devuelve 404 `CATEGORY_NOT_FOUND` | Controlador | 1 | 🔍 En revisión (1, AB#416, PR pendiente) |
-| HU41-CP26 | Sin rol de administrador no se puede cambiar el estado de las categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 3 | 🔍 En revisión (3, AB#416, PR pendiente) |
-| HU41-CP27 | La llamada del administrador pide `PATCH /api/admin/categorias/{id}/status` con el estado nuevo y devuelve la fila; un 404 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#417, PR pendiente) |
-| HU41-CP28 | Cada fila ofrece desactivar una categoría activa y activar una inactiva; el botón pide confirmación explicando si dejará de mostrarse o volverá a mostrarse, y cancelar no cambia nada | Frontend (componente y página) | 6 | 🔍 En revisión (6, AB#417, PR pendiente) |
-| HU41-CP29 | Al confirmar se cambia el estado, se avisa y la lista muestra el estado nuevo; mientras se cambia, los botones de la confirmación quedan deshabilitados | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#417, PR pendiente) |
-| HU41-CP30 | Si la categoría ya no existe se avisa y se recarga la lista; cualquier otro error muestra un mensaje genérico | Frontend (componente) | 2 | 🔍 En revisión (2, AB#417, PR pendiente) |
+| HU41-CP19 | Cambiar el estado guarda la categoría con el estado nuevo (activar o desactivar), conserva su nombre y su descripción y devuelve su número de productos | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#416, PR #215) |
+| HU41-CP20 | Cambiar el estado de una categoría que no existe falla sin guardar nada (404) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#416, PR #215) |
+| HU41-CP21 | Cambiar el estado sin indicar el estado nuevo falla sin guardar nada (400) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#416, PR #215) |
+| HU41-CP22 | Activar y desactivar categorías exige el rol administrador; cliente, vendedor y sin sesión se rechazan. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, AB#416, PR #215) |
+| HU41-CP23 | `PATCH /api/admin/categorias/{id}/status` responde 200 con la fila actualizada y su número de productos | Controlador | 1 | 🔍 En revisión (1, AB#416, PR #215) |
+| HU41-CP24 | Cambiar el estado sin estado o con un estado desconocido devuelve 400 `VALIDATION_ERROR` y no llega al caso de uso | Controlador | 3 | 🔍 En revisión (3, AB#416, PR #215) |
+| HU41-CP25 | Cambiar el estado de una categoría que no existe devuelve 404 `CATEGORY_NOT_FOUND` | Controlador | 1 | 🔍 En revisión (1, AB#416, PR #215) |
+| HU41-CP26 | Sin rol de administrador no se puede cambiar el estado de las categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 3 | 🔍 En revisión (3, AB#416, PR #215) |
+| HU41-CP27 | La llamada del administrador pide `PATCH /api/admin/categorias/{id}/status` con el estado nuevo y devuelve la fila; un 404 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#417, PR #215) |
+| HU41-CP28 | Cada fila ofrece desactivar una categoría activa y activar una inactiva; el botón pide confirmación explicando si dejará de mostrarse o volverá a mostrarse, y cancelar no cambia nada | Frontend (componente y página) | 6 | 🔍 En revisión (6, AB#417, PR #215) |
+| HU41-CP29 | Al confirmar se cambia el estado, se avisa y la lista muestra el estado nuevo; mientras se cambia, los botones de la confirmación quedan deshabilitados | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#417, PR #215) |
+| HU41-CP30 | Si la categoría ya no existe se avisa y se recarga la lista; cualquier otro error muestra un mensaje genérico | Frontend (componente) | 2 | 🔍 En revisión (2, AB#417, PR #215) |
 
 Notas:
 - **HU41-CP01 a CP14:** casos propuestos en las T329 (AB#329) y T328 (AB#328), a partir de los criterios de la HU41. Pendientes de confirmar con el equipo y de añadir a la HU41 en Azure Boards.
@@ -3622,33 +3622,33 @@ Notas:
 | HU41-CP18 | `CategoryFormDialog.test.jsx` | `HU41-CP18: cualquier otro error avisa con un mensaje genérico y deja el formulario abierto` | Frontend · componente | AB#327 | PR #201 | ✅ |
 | HU41-CP18 | `CategoryRowActions.test.jsx` | `HU41-CP18: al guardar una categoría que ya no existe, cierra el formulario, avisa y pide actualizar la lista` | Frontend · componente | AB#327 | PR #201 | ✅ |
 | HU41-CP18 | `AdminCategoriesPage.test.jsx` | `HU41-CP18: no se puede poner el nombre de otra categoría, aunque cambien las mayúsculas o las tildes` | Frontend · página | AB#327 | PR #201 | ✅ |
-| HU41-CP19 | `AdministracionCategoriasServiceTest` | `cambiarEstadoGuardaElEstadoNuevo` (activa e inactiva) | Aplicación | AB#416 | PR pendiente | 🔍 |
-| HU41-CP20 | `AdministracionCategoriasServiceTest` | `cambiarEstadoDeUnaCategoriaInexistenteFalla` | Aplicación | AB#416 | PR pendiente | 🔍 |
-| HU41-CP21 | `AdministracionCategoriasServiceTest` | `cambiarEstadoSinEstadoFalla` | Aplicación | AB#416 | PR pendiente | 🔍 |
-| HU41-CP22 | `SeguridadCategoriasServiceTest` | `unClienteNoCambiaElEstadoDeCategorias` | Aplicación | AB#416 | PR pendiente | 🔍 |
-| HU41-CP22 | `SeguridadCategoriasServiceTest` | `unVendedorNoCambiaElEstadoDeCategorias` | Aplicación | AB#416 | PR pendiente | 🔍 |
-| HU41-CP22 | `SeguridadCategoriasServiceTest` | `unAnonimoNoCambiaElEstadoDeCategorias` | Aplicación | AB#416 | PR pendiente | 🔍 |
-| HU41-CP22 | `SeguridadCategoriasServiceTest` | `unAdministradorCambiaElEstadoDeCategorias` | Aplicación | AB#416 | PR pendiente | 🔍 |
-| HU41-CP22 | `SeguridadCategoriasServiceTest` | `sinSesionSeRechazaElCambioDeEstado` | Aplicación | AB#416 | PR pendiente | 🔍 |
-| HU41-CP23 | `AdministracionCategoriasControllerTest` | `unAdministradorCambiaElEstadoDeUnaCategoria` | Infraestructura | AB#416 | PR pendiente | 🔍 |
-| HU41-CP24 | `AdministracionCategoriasControllerTest` | `cambiarEstadoConDatosInvalidosDevuelve400` (3 variantes: sin estado, desconocido y en minúsculas) | Infraestructura | AB#416 | PR pendiente | 🔍 |
-| HU41-CP25 | `AdministracionCategoriasControllerTest` | `cambiarEstadoDeUnaCategoriaInexistenteDevuelve404` | Infraestructura | AB#416 | PR pendiente | 🔍 |
-| HU41-CP26 | `AdministracionCategoriasControllerTest` | `cambiarEstadoConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#416 | PR pendiente | 🔍 |
-| HU41-CP26 | `AdministracionCategoriasControllerTest` | `cambiarEstadoSinSesionDevuelve401` | Infraestructura | AB#416 | PR pendiente | 🔍 |
-| HU41-CP27 | `adminCategories.test.js` | `HU41-CP27: pide PATCH /api/admin/categorias/{id}/status con el estado nuevo y devuelve la fila actualizada` | Frontend · API | AB#417 | PR pendiente | 🔍 |
-| HU41-CP27 | `adminCategories.test.js` | `HU41-CP27: un 404 llega como error con su estado y su código` | Frontend · API | AB#417 | PR pendiente | 🔍 |
-| HU41-CP28 | `CategoryRowActions.test.jsx` | `HU41-CP28: una categoría activa ofrece desactivarla` | Frontend · componente | AB#417 | PR pendiente | 🔍 |
-| HU41-CP28 | `CategoryRowActions.test.jsx` | `HU41-CP28: una categoría inactiva ofrece activarla` | Frontend · componente | AB#417 | PR pendiente | 🔍 |
-| HU41-CP28 | `CategoryRowActions.test.jsx` | `HU41-CP28: al pulsar Desactivar pide confirmación avisando de que dejará de mostrarse` | Frontend · componente | AB#417 | PR pendiente | 🔍 |
-| HU41-CP28 | `CategoryRowActions.test.jsx` | `HU41-CP28: al pulsar Activar pide confirmación avisando de que volverá a mostrarse` | Frontend · componente | AB#417 | PR pendiente | 🔍 |
-| HU41-CP28 | `CategoryRowActions.test.jsx` | `HU41-CP28: al cancelar se cierra la confirmación y no se cambia nada` | Frontend · componente | AB#417 | PR pendiente | 🔍 |
-| HU41-CP28 | `AdminCategoriesPage.test.jsx` | `HU41-CP28: cada fila ofrece activar o desactivar su categoría según su estado` | Frontend · página | AB#417 | PR pendiente | 🔍 |
-| HU41-CP29 | `CategoryRowActions.test.jsx` | `HU41-CP29: al confirmar desactiva la categoría, avisa y pide actualizar la lista` | Frontend · componente | AB#417 | PR pendiente | 🔍 |
-| HU41-CP29 | `CategoryRowActions.test.jsx` | `HU41-CP29: al confirmar activa una categoría inactiva y avisa` | Frontend · componente | AB#417 | PR pendiente | 🔍 |
-| HU41-CP29 | `CategoryRowActions.test.jsx` | `HU41-CP29: mientras se cambia el estado, los botones de la confirmación quedan deshabilitados` | Frontend · componente | AB#417 | PR pendiente | 🔍 |
-| HU41-CP29 | `AdminCategoriesPage.test.jsx` | `HU41-CP29: al desactivar una categoría, avisa y la lista la muestra inactiva` | Frontend · página | AB#417 | PR pendiente | 🔍 |
-| HU41-CP30 | `CategoryRowActions.test.jsx` | `HU41-CP30: si la categoría ya no existe, avisa y pide actualizar la lista` | Frontend · componente | AB#417 | PR pendiente | 🔍 |
-| HU41-CP30 | `CategoryRowActions.test.jsx` | `HU41-CP30: cualquier otro error muestra un mensaje genérico y no recarga la lista` | Frontend · componente | AB#417 | PR pendiente | 🔍 |
+| HU41-CP19 | `AdministracionCategoriasServiceTest` | `cambiarEstadoGuardaElEstadoNuevo` (activa e inactiva) | Aplicación | AB#416 | PR #215 | 🔍 |
+| HU41-CP20 | `AdministracionCategoriasServiceTest` | `cambiarEstadoDeUnaCategoriaInexistenteFalla` | Aplicación | AB#416 | PR #215 | 🔍 |
+| HU41-CP21 | `AdministracionCategoriasServiceTest` | `cambiarEstadoSinEstadoFalla` | Aplicación | AB#416 | PR #215 | 🔍 |
+| HU41-CP22 | `SeguridadCategoriasServiceTest` | `unClienteNoCambiaElEstadoDeCategorias` | Aplicación | AB#416 | PR #215 | 🔍 |
+| HU41-CP22 | `SeguridadCategoriasServiceTest` | `unVendedorNoCambiaElEstadoDeCategorias` | Aplicación | AB#416 | PR #215 | 🔍 |
+| HU41-CP22 | `SeguridadCategoriasServiceTest` | `unAnonimoNoCambiaElEstadoDeCategorias` | Aplicación | AB#416 | PR #215 | 🔍 |
+| HU41-CP22 | `SeguridadCategoriasServiceTest` | `unAdministradorCambiaElEstadoDeCategorias` | Aplicación | AB#416 | PR #215 | 🔍 |
+| HU41-CP22 | `SeguridadCategoriasServiceTest` | `sinSesionSeRechazaElCambioDeEstado` | Aplicación | AB#416 | PR #215 | 🔍 |
+| HU41-CP23 | `AdministracionCategoriasControllerTest` | `unAdministradorCambiaElEstadoDeUnaCategoria` | Infraestructura | AB#416 | PR #215 | 🔍 |
+| HU41-CP24 | `AdministracionCategoriasControllerTest` | `cambiarEstadoConDatosInvalidosDevuelve400` (3 variantes: sin estado, desconocido y en minúsculas) | Infraestructura | AB#416 | PR #215 | 🔍 |
+| HU41-CP25 | `AdministracionCategoriasControllerTest` | `cambiarEstadoDeUnaCategoriaInexistenteDevuelve404` | Infraestructura | AB#416 | PR #215 | 🔍 |
+| HU41-CP26 | `AdministracionCategoriasControllerTest` | `cambiarEstadoConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#416 | PR #215 | 🔍 |
+| HU41-CP26 | `AdministracionCategoriasControllerTest` | `cambiarEstadoSinSesionDevuelve401` | Infraestructura | AB#416 | PR #215 | 🔍 |
+| HU41-CP27 | `adminCategories.test.js` | `HU41-CP27: pide PATCH /api/admin/categorias/{id}/status con el estado nuevo y devuelve la fila actualizada` | Frontend · API | AB#417 | PR #215 | 🔍 |
+| HU41-CP27 | `adminCategories.test.js` | `HU41-CP27: un 404 llega como error con su estado y su código` | Frontend · API | AB#417 | PR #215 | 🔍 |
+| HU41-CP28 | `CategoryRowActions.test.jsx` | `HU41-CP28: una categoría activa ofrece desactivarla` | Frontend · componente | AB#417 | PR #215 | 🔍 |
+| HU41-CP28 | `CategoryRowActions.test.jsx` | `HU41-CP28: una categoría inactiva ofrece activarla` | Frontend · componente | AB#417 | PR #215 | 🔍 |
+| HU41-CP28 | `CategoryRowActions.test.jsx` | `HU41-CP28: al pulsar Desactivar pide confirmación avisando de que dejará de mostrarse` | Frontend · componente | AB#417 | PR #215 | 🔍 |
+| HU41-CP28 | `CategoryRowActions.test.jsx` | `HU41-CP28: al pulsar Activar pide confirmación avisando de que volverá a mostrarse` | Frontend · componente | AB#417 | PR #215 | 🔍 |
+| HU41-CP28 | `CategoryRowActions.test.jsx` | `HU41-CP28: al cancelar se cierra la confirmación y no se cambia nada` | Frontend · componente | AB#417 | PR #215 | 🔍 |
+| HU41-CP28 | `AdminCategoriesPage.test.jsx` | `HU41-CP28: cada fila ofrece activar o desactivar su categoría según su estado` | Frontend · página | AB#417 | PR #215 | 🔍 |
+| HU41-CP29 | `CategoryRowActions.test.jsx` | `HU41-CP29: al confirmar desactiva la categoría, avisa y pide actualizar la lista` | Frontend · componente | AB#417 | PR #215 | 🔍 |
+| HU41-CP29 | `CategoryRowActions.test.jsx` | `HU41-CP29: al confirmar activa una categoría inactiva y avisa` | Frontend · componente | AB#417 | PR #215 | 🔍 |
+| HU41-CP29 | `CategoryRowActions.test.jsx` | `HU41-CP29: mientras se cambia el estado, los botones de la confirmación quedan deshabilitados` | Frontend · componente | AB#417 | PR #215 | 🔍 |
+| HU41-CP29 | `AdminCategoriesPage.test.jsx` | `HU41-CP29: al desactivar una categoría, avisa y la lista la muestra inactiva` | Frontend · página | AB#417 | PR #215 | 🔍 |
+| HU41-CP30 | `CategoryRowActions.test.jsx` | `HU41-CP30: si la categoría ya no existe, avisa y pide actualizar la lista` | Frontend · componente | AB#417 | PR #215 | 🔍 |
+| HU41-CP30 | `CategoryRowActions.test.jsx` | `HU41-CP30: cualquier otro error muestra un mensaje genérico y no recarga la lista` | Frontend · componente | AB#417 | PR #215 | 🔍 |
 
 Ruta de la clase de test de seguridad (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `SeguridadCategoriasServiceTest`: `categorias/application/service/` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB)
