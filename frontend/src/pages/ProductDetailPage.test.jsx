@@ -535,3 +535,53 @@ describe('ProductDetailPage (HU13): valorar el producto', () => {
     expect(within(formulario).getByRole('radio', { name: '4 estrellas' })).toBeChecked()
   })
 })
+
+// Lista de deseos del cliente (HU14) con el teclado (p-2) dentro.
+const CON_EL_TECLADO = {
+  items: [
+    {
+      productoId: 'p-2',
+      nombre: 'Teclado mecánico',
+      imagen: '',
+      precioFinal: 89.5,
+      stock: 12,
+      disponible: true,
+      addedAt: '2026-11-01T10:00:00Z',
+    },
+  ],
+}
+
+describe('ProductDetailPage (HU14): favoritos', () => {
+  it('HU14-CP38: el detalle tiene un botón para añadir el producto a favoritos', async () => {
+    responderCon()
+    await abrirDetalle()
+
+    expect(await screen.findByRole('button', { name: 'Añadir a favoritos' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Quitar de favoritos' })).not.toBeInTheDocument()
+  })
+
+  it('HU14-CP38: si el producto ya está en favoritos, el botón permite quitarlo', async () => {
+    responderCon()
+    server.use(http.get('/api/customer/wishlist', () => HttpResponse.json(CON_EL_TECLADO)))
+    await abrirDetalle()
+
+    expect(await screen.findByRole('button', { name: 'Quitar de favoritos' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Añadir a favoritos' })).not.toBeInTheDocument()
+  })
+
+  it('HU14-CP38: un producto agotado también se puede añadir a favoritos', async () => {
+    responderCon({ stock: 0 })
+    await abrirDetalle()
+
+    expect(await screen.findByRole('button', { name: 'Añadir a favoritos' })).toBeEnabled()
+  })
+
+  it('HU14-CP38: si no se pueden leer los favoritos, se ofrece añadirlo sin avisar de ningún error', async () => {
+    responderCon()
+    server.use(http.get('/api/customer/wishlist', () => new HttpResponse(null, { status: 500 })))
+    await abrirDetalle()
+
+    expect(await screen.findByRole('button', { name: 'Añadir a favoritos' })).toBeEnabled()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+})
