@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../../test/renderApp'
@@ -105,5 +106,27 @@ describe('SellerStatistics (HU17): acceso', () => {
     await screen.findByLabelText('Nombre')
     expect(screen.queryByRole('region', { name: 'Mis estadísticas' })).not.toBeInTheDocument()
     expect(pedidas).toBe(false)
+  })
+})
+
+describe('SellerStatistics (HU17): errores', () => {
+  it('HU17-CP19: si las estadísticas no cargan, avisa sin detalles internos, permite reintentar y el perfil sigue visible', async () => {
+    server.use(
+      http.get('/api/seller/statistics', () => HttpResponse.json({ message: 'MongoTimeoutException' }, { status: 500 }), {
+        once: true,
+      }),
+    )
+    const user = userEvent.setup()
+    const seccion = await abrirEstadisticas('vendedor@esibuy.test')
+
+    const aviso = await within(seccion).findByText(/no se han podido cargar tus estadísticas/i)
+    expect(aviso).toBeInTheDocument()
+    expect(screen.queryByText(/mongotimeout/i)).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Nombre')).toHaveValue('Vera')
+    await user.click(within(seccion).getByRole('button', { name: /reintentar/i }))
+
+    const ventas = await screen.findByRole('region', { name: 'Ventas' })
+    expect(cifra(ventas, 'Pedidos')).toHaveTextContent('6')
+    expect(within(seccion).queryByText(/no se han podido cargar/i)).not.toBeInTheDocument()
   })
 })
