@@ -1,7 +1,9 @@
 package es.uclm.esibuy.backend.deseos.infrastructure.adapter.out.productos;
 
+import es.uclm.esibuy.backend.deseos.application.port.out.ProductoDeseado;
 import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ProductoComercial;
+import es.uclm.esibuy.backend.productos.application.port.in.ResumenProducto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
@@ -37,5 +40,23 @@ class ProductosAdapterTest {
         when(catalogo.consultarComprable("p-9", false)).thenReturn(Optional.empty());
 
         assertFalse(new ProductosAdapter(catalogo).estaDisponible("p-9"));
+    }
+
+    @Test
+    @DisplayName("HU14-CP17: los datos actuales de un producto se piden al módulo de productos con el precio del cliente")
+    void consultarResumenPreguntaAlModuloDeProductos() {
+        when(catalogo.consultarResumen("p-1", true)).thenReturn(Optional.of(
+                new ResumenProducto("p-1", "Teclado", "t.png", new BigDecimal("40.00"), 7, false)));
+
+        assertEquals(Optional.of(new ProductoDeseado("p-1", "Teclado", "t.png", new BigDecimal("40.00"), 7, false)),
+                new ProductosAdapter(catalogo).consultarResumen("p-1", true));
+    }
+
+    @Test
+    @DisplayName("HU14-CP17: un producto que no existe no tiene datos")
+    void unProductoQueNoExisteNoTieneDatos() {
+        when(catalogo.consultarResumen("p-9", false)).thenReturn(Optional.empty());
+
+        assertTrue(new ProductosAdapter(catalogo).consultarResumen("p-9", false).isEmpty());
     }
 }
