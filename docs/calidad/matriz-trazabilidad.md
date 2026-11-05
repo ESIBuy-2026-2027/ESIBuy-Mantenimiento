@@ -1792,14 +1792,14 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU12-CP01 | Un pedido que aún no se ha enviado (`PAGADO` o `PREPARANDO`) se puede cancelar y pasa a `CANCELADO` | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
-| HU12-CP02 | Un pedido `ENVIADO`, `ENTREGADO` o ya `CANCELADO` no se puede cancelar (`PedidoNoCancelableException`) y no cambia | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
-| HU12-CP03 | Cancelar un pedido del cliente lo guarda cancelado y lo devuelve | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
-| HU12-CP04 | Al cancelar se repone el stock de cada producto del pedido, después de guardar la cancelación | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
-| HU12-CP05 | Un pedido de otro cliente o que no existe no se cancela y se trata como inexistente (`PedidoNoEncontradoException`) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
-| HU12-CP06 | Un pedido enviado o ya cancelado no se cancela: ni se guarda ni se repone stock (cancelar dos veces repondría el stock dos veces) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
-| HU12-CP07 | Solo el cliente cancela sus pedidos: vendedor, administrador, otro cliente y sin sesión, rechazados | Seguridad (`@PreAuthorize`, contexto mínimo) | 5 | 🔍 En revisión (5, AB#375, PR sin abrir) |
-| HU12-CP08 | En MongoDB, guardar un pedido leído y cancelado actualiza el mismo documento, sin crear otro | Integración (Testcontainers) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
+| HU12-CP01 | Un pedido que aún no se ha enviado (`PAGADO` o `PREPARANDO`) se puede cancelar y pasa a `CANCELADO` | Unitario (dominio) | 1 | ✅ Pasa |
+| HU12-CP02 | Un pedido `ENVIADO`, `ENTREGADO` o ya `CANCELADO` no se puede cancelar (`PedidoNoCancelableException`) y no cambia | Unitario (dominio) | 1 | ✅ Pasa |
+| HU12-CP03 | Cancelar un pedido del cliente lo guarda cancelado y lo devuelve | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU12-CP04 | Al cancelar se repone el stock de cada producto del pedido, después de guardar la cancelación | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU12-CP05 | Un pedido de otro cliente o que no existe no se cancela y se trata como inexistente (`PedidoNoEncontradoException`) | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU12-CP06 | Un pedido enviado o ya cancelado no se cancela: ni se guarda ni se repone stock (cancelar dos veces repondría el stock dos veces) | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU12-CP07 | Solo el cliente cancela sus pedidos: vendedor, administrador, otro cliente y sin sesión, rechazados | Seguridad (`@PreAuthorize`, contexto mínimo) | 5 | ✅ Pasa |
+| HU12-CP08 | En MongoDB, guardar un pedido leído y cancelado actualiza el mismo documento, sin crear otro | Integración (Testcontainers) | 1 | ✅ Pasa |
 
 Notas:
 - **HU12-CP01 a CP08 (Sprint 2, backend, TDD):** casos propuestos en la T375 (AB#375, lógica de cancelación de pedido) a partir de los criterios de aceptación de la HU12 (AB#74): «solo permite cancelar si el pedido no ha sido enviado» y «el stock se repone al cancelar». Pendientes de confirmar con el equipo y de añadir a la HU12 en Azure Boards.
@@ -1810,18 +1810,18 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU12-CP01 | `PedidoTest` | `unPedidoNoEnviadoSeCancela` | Dominio | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP02 | `PedidoTest` | `unPedidoEnviadoEntregadoOCanceladoNoSeCancela` | Dominio | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP03 | `CancelacionPedidoServiceTest` | `cancelarGuardaElPedidoCanceladoYLoDevuelve` | Aplicación | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP04 | `CancelacionPedidoServiceTest` | `cancelarReponeElStockDespuesDeGuardar` | Aplicación | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP05 | `CancelacionPedidoServiceTest` | `unPedidoAjenoOInexistenteNoSeCancela` | Aplicación | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP06 | `CancelacionPedidoServiceTest` | `unPedidoNoCancelableNoCambiaNada` | Aplicación | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP07 | `SeguridadPedidosServiceTest` | `unVendedorNoCancelaPedidos` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP07 | `SeguridadPedidosServiceTest` | `unAdministradorNoCancelaPedidos` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP07 | `SeguridadPedidosServiceTest` | `unClienteNoCancelaConElCorreoDeOtro` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP07 | `SeguridadPedidosServiceTest` | `unClienteCancelaConSuPropioCorreo` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP07 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaCancelar` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
-| HU12-CP08 | `PedidoMongoAdapterTest` | `guardarUnPedidoCanceladoActualizaElMismoDocumento` | Infraestructura | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP01 | `PedidoTest` | `unPedidoNoEnviadoSeCancela` | Dominio | AB#375 | PR #200 | ✅ |
+| HU12-CP02 | `PedidoTest` | `unPedidoEnviadoEntregadoOCanceladoNoSeCancela` | Dominio | AB#375 | PR #200 | ✅ |
+| HU12-CP03 | `CancelacionPedidoServiceTest` | `cancelarGuardaElPedidoCanceladoYLoDevuelve` | Aplicación | AB#375 | PR #200 | ✅ |
+| HU12-CP04 | `CancelacionPedidoServiceTest` | `cancelarReponeElStockDespuesDeGuardar` | Aplicación | AB#375 | PR #200 | ✅ |
+| HU12-CP05 | `CancelacionPedidoServiceTest` | `unPedidoAjenoOInexistenteNoSeCancela` | Aplicación | AB#375 | PR #200 | ✅ |
+| HU12-CP06 | `CancelacionPedidoServiceTest` | `unPedidoNoCancelableNoCambiaNada` | Aplicación | AB#375 | PR #200 | ✅ |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `unVendedorNoCancelaPedidos` | Aplicación (seguridad) | AB#375 | PR #200 | ✅ |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `unAdministradorNoCancelaPedidos` | Aplicación (seguridad) | AB#375 | PR #200 | ✅ |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `unClienteNoCancelaConElCorreoDeOtro` | Aplicación (seguridad) | AB#375 | PR #200 | ✅ |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `unClienteCancelaConSuPropioCorreo` | Aplicación (seguridad) | AB#375 | PR #200 | ✅ |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaCancelar` | Aplicación (seguridad) | AB#375 | PR #200 | ✅ |
+| HU12-CP08 | `PedidoMongoAdapterTest` | `guardarUnPedidoCanceladoActualizaElMismoDocumento` | Infraestructura | AB#375 | PR #200 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/pedidos/`):
 - `PedidoTest`: `domain/model/` (JUnit)
@@ -3539,7 +3539,7 @@ Tests que no validan una HU concreta.
 | `MetodosPagoConfigTest` | `elContextoConectaLasPiezasDeLosMetodosDePago` | Que Spring conecta el servicio de métodos de pago con su adaptador de MongoDB, su cifrado AES-GCM y el cliente en sesión (HU6; AB#271, PR #148) |
 | `MetodosPagoConfigTest` | `losDatosDePagoSeCifranConLaClaveConfigurada` | Que los datos de pago se cifran con la clave de `esibuy.pagos.clave-cifrado`, que en los tests pone `MongoTestcontainersConfig` (HU6; AB#271, PR #148) |
 | `CarritoConfigTest` | `elContextoConectaLasPiezasDelCarrito` | Que Spring conecta el servicio del carrito con su adaptador de MongoDB, los productos y los usuarios (HU9; AB#385, PR #162) |
-| `PedidosConfigTest` | `elContextoConectaLasPiezasDeLosPedidos` | Que Spring conecta la realización de pedidos con su repositorio, el contador y los adaptadores hacia usuarios, carrito, métodos de pago, direcciones y productos (HU10; AB#381, PR #166); y la consulta de compras de HU13 (AB#370, PR #179). También la cancelación de pedidos (HU12; AB#375, PR sin abrir) |
+| `PedidosConfigTest` | `elContextoConectaLasPiezasDeLosPedidos` | Que Spring conecta la realización de pedidos con su repositorio, el contador y los adaptadores hacia usuarios, carrito, métodos de pago, direcciones y productos (HU10; AB#381, PR #166); y la consulta de compras de HU13 (AB#370, PR #179). También la cancelación de pedidos (HU12; AB#375, PR #200) |
 | `ValoracionesConfigTest` | `elContextoConectaLasPiezasDeLasValoraciones` | Que Spring conecta la valoración y la consulta de valoraciones con su adaptador de MongoDB y los adaptadores hacia usuarios y pedidos (HU13; AB#370 y AB#371, PR #179), y hacia productos (AB#415, PR #195) |
 | `DeseosConfigTest` | `elContextoConectaLasPiezasDeLaListaDeDeseos` | Que Spring conecta el servicio de la lista de deseos con su adaptador de MongoDB y los adaptadores hacia usuarios y productos (HU14; AB#360, PR #196) |
 | `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |
