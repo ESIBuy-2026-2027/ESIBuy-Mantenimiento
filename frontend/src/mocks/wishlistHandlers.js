@@ -67,4 +67,16 @@ export const wishlistHandlers = [
     }
     return HttpResponse.json({ items: lista })
   }),
+
+  // Quita un producto de la lista, esté o no disponible, y responde con la lista detallada. Quitar uno que no está no
+  // es un error.
+  http.delete('/api/customer/wishlist/items/:productoId', ({ params }) => {
+    const rechazo = rechazarSiNoEsCliente()
+    if (rechazo) return rechazo
+
+    const lista = listaDe(getUsuarioEnSesion())
+    const posicion = lista.findIndex((item) => item.productoId === params.productoId)
+    if (posicion >= 0) lista.splice(posicion, 1)
+    return HttpResponse.json(aListaDetallada(lista))
+  }),
 ]

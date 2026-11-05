@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import {
   Badge,
   Button,
@@ -14,9 +14,9 @@ import {
   mergeClasses,
   tokens,
 } from '@fluentui/react-components'
-import { Heart24Regular, ImageOff24Regular } from '@fluentui/react-icons'
+import { Delete20Regular, Heart24Regular, ImageOff24Regular } from '@fluentui/react-icons'
 import { Link } from 'react-router-dom'
-import { getWishlist } from '../api/wishlist'
+import { getWishlist, removeWishlistItem } from '../api/wishlist'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
@@ -84,6 +84,9 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground3,
   },
   summary: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalM,
     marginLeft: 'auto',
   },
 })
@@ -95,7 +98,7 @@ function availabilityBadge(item) {
   return null
 }
 
-function WishlistItem({ item }) {
+function WishlistItem({ item, removing, onRemove }) {
   const styles = useStyles()
 
   return (
@@ -122,9 +125,17 @@ function WishlistItem({ item }) {
         </Text>
         {availabilityBadge(item)}
       </div>
-      <Text weight="semibold" className={styles.summary}>
-        {formatPrice(item.precioFinal)}
-      </Text>
+      <div className={styles.summary}>
+        <Text weight="semibold">{formatPrice(item.precioFinal)}</Text>
+        <Button
+          appearance="subtle"
+          icon={<Delete20Regular />}
+          aria-label={`Quitar ${item.nombre} de favoritos`}
+          title="Quitar de favoritos"
+          disabled={removing}
+          onClick={() => onRemove(item)}
+        />
+      </div>
     </Card>
   )
 }
@@ -139,15 +150,35 @@ WishlistItem.propTypes = {
     disponible: PropTypes.bool.isRequired,
     addedAt: PropTypes.string.isRequired,
   }).isRequired,
+  removing: PropTypes.bool.isRequired,
+  onRemove: PropTypes.func.isRequired,
 }
 
 // «Mis favoritos» del cliente (HU14): su lista de deseos, en el orden en que añadió cada producto y con los datos
-// actuales de cada uno (precio, si está agotado o si el vendedor lo ha desactivado).
+// actuales de cada uno (precio, si está agotado o si el vendedor lo ha desactivado). Cada uno se puede quitar sin
+// confirmación, porque se puede volver a añadir desde el catálogo; el backend responde con la lista actualizada.
 export default function WishlistPage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
   const fetcher = useCallback(() => getWishlist(), [])
-  const { data: lista, failed, retry } = useApiQuery(fetcher)
+  const { data: cargada, failed, retry } = useApiQuery(fetcher)
+  const [actualizada, setActualizada] = useState(null)
+  const [quitando, setQuitando] = useState(null)
+  const [aviso, setAviso] = useState(null)
+  const lista = actualizada ?? cargada
+
+  const quitar = async (item) => {
+    setAviso(null)
+    setQuitando(item.productoId)
+    try {
+      setActualizada(await removeWishlistItem(item.productoId))
+      setAviso({ intent: 'success', texto: `${item.nombre} se ha quitado de tus favoritos.` })
+    } catch {
+      setAviso({ intent: 'error', texto: `No se ha podido quitar ${item.nombre} de tus favoritos. Inténtalo de nuevo.` })
+    } finally {
+      setQuitando(null)
+    }
+  }
 
   return (
     <main className={pageStyles.page}>
@@ -159,6 +190,11 @@ export default function WishlistPage() {
           <Text className={pageStyles.subtitle}>Los productos que has guardado para más adelante.</Text>
         </div>
       </div>
+      {aviso && (
+        <MessageBar intent={aviso.intent}>
+          <MessageBarBody>{aviso.texto}</MessageBarBody>
+        </MessageBar>
+      )}
       {failed && (
         <MessageBar intent="error">
           <MessageBarBody>No se han podido cargar tus favoritos. Inténtalo de nuevo.</MessageBarBody>
@@ -183,7 +219,7 @@ export default function WishlistPage() {
         <ul aria-label="Tus favoritos" className={styles.list}>
           {lista.items.map((item) => (
             <li key={item.productoId}>
-              <WishlistItem item={item} />
+              <WishlistItem item={item} removing={quitando === item.productoId} onRemove={quitar} />
             </li>
           ))}
         </ul>
