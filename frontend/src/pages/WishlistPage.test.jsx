@@ -166,3 +166,76 @@ describe('WishlistPage (HU14): carga, lista vacía y error', () => {
     expect(filas()).toHaveLength(3)
   })
 })
+
+describe('WishlistPage (HU14): quitar de favoritos', () => {
+  const sinProducto = (productoId) => ({ items: LISTA.items.filter((item) => item.productoId !== productoId) })
+
+  it('HU14-CP35: cada favorito, también uno que ya no está disponible, tiene su botón para quitarlo', async () => {
+    await abrirMisFavoritos()
+
+    await screen.findByRole('list', { name: 'Tus favoritos' })
+    expect(within(filas()[0]).getByRole('button', { name: 'Quitar Auriculares inalámbricos de favoritos' })).toBeEnabled()
+    expect(within(filas()[2]).getByRole('button', { name: 'Quitar Webcam Full HD de favoritos' })).toBeEnabled()
+  })
+
+  it('HU14-CP35: al quitar un favorito pide quitar ese producto, avisa y desaparece de la lista', async () => {
+    const user = userEvent.setup()
+    let quitado = null
+    server.use(
+      http.delete(`${URL_LISTA}/items/:productoId`, ({ params }) => {
+        quitado = params.productoId
+        return HttpResponse.json(sinProducto(params.productoId))
+      }),
+    )
+    await abrirMisFavoritos()
+    await screen.findByRole('list', { name: 'Tus favoritos' })
+
+    await user.click(screen.getByRole('button', { name: 'Quitar Ratón ergonómico de favoritos' }))
+
+    expect(await screen.findByText('Ratón ergonómico se ha quitado de tus favoritos.')).toBeInTheDocument()
+    expect(quitado).toBe('p-3')
+    expect(filas()).toHaveLength(2)
+    expect(screen.queryByRole('link', { name: 'Ratón ergonómico' })).not.toBeInTheDocument()
+  })
+
+  it('HU14-CP35: mientras se quita, su botón queda deshabilitado', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.delete(`${URL_LISTA}/items/:productoId`, async () => {
+        await delay('infinite')
+      }),
+    )
+    await abrirMisFavoritos()
+    await screen.findByRole('list', { name: 'Tus favoritos' })
+
+    await user.click(screen.getByRole('button', { name: 'Quitar Webcam Full HD de favoritos' }))
+
+    expect(screen.getByRole('button', { name: 'Quitar Webcam Full HD de favoritos' })).toBeDisabled()
+  })
+
+  it('HU14-CP35: al quitar el último favorito se muestra el estado vacío', async () => {
+    const user = userEvent.setup()
+    server.use(http.delete(`${URL_LISTA}/items/:productoId`, () => HttpResponse.json({ items: [] })))
+    await abrirMisFavoritos({ items: [LISTA.items[0]] })
+    await screen.findByRole('list', { name: 'Tus favoritos' })
+
+    await user.click(screen.getByRole('button', { name: 'Quitar Auriculares inalámbricos de favoritos' }))
+
+    expect(await screen.findByText('Aún no tienes favoritos')).toBeInTheDocument()
+  })
+
+  it('HU14-CP35: si no se puede quitar, lo avisa y el producto sigue en la lista', async () => {
+    const user = userEvent.setup()
+    server.use(http.delete(`${URL_LISTA}/items/:productoId`, () => new HttpResponse(null, { status: 500 })))
+    await abrirMisFavoritos()
+    await screen.findByRole('list', { name: 'Tus favoritos' })
+
+    await user.click(screen.getByRole('button', { name: 'Quitar Ratón ergonómico de favoritos' }))
+
+    expect(
+      await screen.findByText('No se ha podido quitar Ratón ergonómico de tus favoritos. Inténtalo de nuevo.'),
+    ).toBeInTheDocument()
+    expect(filas()).toHaveLength(3)
+    expect(screen.getByRole('button', { name: 'Quitar Ratón ergonómico de favoritos' })).toBeEnabled()
+  })
+})
