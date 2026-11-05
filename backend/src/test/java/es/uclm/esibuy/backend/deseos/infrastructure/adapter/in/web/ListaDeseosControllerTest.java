@@ -139,6 +139,34 @@ class ListaDeseosControllerTest {
     }
 
     @Test
+    @DisplayName("HU14-CP30: sin sesión no se quita de la lista de deseos")
+    void sinSesionNoSeQuita() throws Exception {
+        mockMvc.perform(delete(URL + "/p-1").with(csrf()))
+                .andExpect(status().isUnauthorized());
+
+        verify(gestionListaDeseos, never()).quitar(any(), any());
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"VENDEDOR", "ADMINISTRADOR"})
+    @DisplayName("HU14-CP30: un usuario que no es cliente no quita de la lista de deseos")
+    void noClienteNoQuita(String rol) throws Exception {
+        mockMvc.perform(delete(URL + "/p-1").with(user(CLIENTE).roles(rol)).with(csrf()))
+                .andExpect(status().isForbidden());
+
+        verify(gestionListaDeseos, never()).quitar(any(), any());
+    }
+
+    @Test
+    @DisplayName("HU14-CP30: una petición sin token CSRF no quita de la lista de deseos")
+    void sinTokenCsrfNoSeQuita() throws Exception {
+        mockMvc.perform(delete(URL + "/p-1").with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isForbidden());
+
+        verify(gestionListaDeseos, never()).quitar(any(), any());
+    }
+
+    @Test
     @DisplayName("HU14-CP19: sin sesión no se consulta la lista de deseos")
     void sinSesionNoSeConsultaLaLista() throws Exception {
         mockMvc.perform(get(URL_LISTA))
