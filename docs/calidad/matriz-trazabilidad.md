@@ -2043,8 +2043,8 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP19 | Sin sesión (401) o sin ser cliente (403) no se consulta la lista | Integración (capa web) | 2 | ✅ Pasa (2, AB#361, PR #206) |
 | HU14-CP20 | La llamada del cliente pide `POST /api/customer/wishlist/items` con el producto y devuelve la lista; un 404 llega como error con su estado y su código | Frontend (API) | 2 | ✅ Pasa (2, AB#357, PR #202) |
 | HU14-CP21 | Cada tarjeta del catálogo tiene un corazón para añadir su producto a favoritos, fuera del enlace al detalle; también los agotados, pero no los no disponibles | Frontend (componente y página) | 5 | ✅ Pasa (5, AB#357, PR #202) |
-| HU14-CP22 | Al pulsar el corazón se añade el producto; mientras se añade queda deshabilitado y después queda relleno, sin salir del catálogo | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#357 en PR #202; 2 modificados en AB#364, PR #213) |
-| HU14-CP23 | La lista que devuelve el backend al añadir rellena también los corazones de los productos que ya estaban en favoritos | Frontend (página) | 1 | 🔍 En revisión (1, AB#357 en PR #202; modificado en AB#364, PR #213) |
+| HU14-CP22 | Al pulsar el corazón se añade el producto; mientras se añade queda deshabilitado y después queda relleno, sin salir del catálogo | Frontend (componente y página) | 4 | ✅ Pasa (4, AB#357 en PR #202; 2 modificados en AB#364, PR #213) |
+| HU14-CP23 | La lista que devuelve el backend al añadir rellena también los corazones de los productos que ya estaban en favoritos | Frontend (página) | 1 | ✅ Pasa (1, AB#357 en PR #202; modificado en AB#364, PR #213) |
 | HU14-CP24 | Si no se puede añadir, la tarjeta lo avisa (producto que ya no está disponible o mensaje genérico) y el corazón se puede volver a pulsar; al pulsarlo desaparece el aviso | Frontend (componente y página) | 4 | ✅ Pasa (4, AB#357, PR #202) |
 | HU14-CP25 | Quitar un producto lo saca de la lista, conserva los demás, la guarda y devuelve la lista actualizada | Unitario | 2 | ✅ Pasa (2, AB#366, PR #208) |
 | HU14-CP26 | Quitar un producto que no está no es un error ni guarda nada; si el cliente no tiene lista, tampoco la crea | Unitario | 3 | ✅ Pasa (3, AB#366, PR #208) |
@@ -2052,13 +2052,17 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP28 | Solo el cliente con su propio correo puede quitar: otro correo, vendedor o administrador reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#366, PR #208) |
 | HU14-CP29 | `DELETE /api/customer/wishlist/items/{productoId}` devuelve 200 con la lista actualizada; el cliente sale de la sesión | Integración (capa web) | 1 | ✅ Pasa (1, AB#365, PR #209) |
 | HU14-CP30 | Sin sesión (401), sin ser cliente (403) o sin token CSRF (403) no se quita de la lista | Integración (capa web) | 3 | ✅ Pasa (3, AB#365, PR #209) |
-| HU14-CP31 | Las llamadas del cliente piden `GET /api/customer/wishlist` y `DELETE /api/customer/wishlist/items/{productoId}` (con el id codificado) y devuelven la lista; un 403 llega como error con su estado y su código | Frontend (API) | 3 | 🔍 En revisión (3, AB#363 y AB#364, PR #213) |
-| HU14-CP32 | Mis favoritos está en `/wishlist` y el cliente llega desde el enlace Favoritos de la cabecera; sin sesión va al login, y el vendedor y el administrador no tienen ni el enlace ni la vista | Frontend (página y rutas) | 5 | 🔍 En revisión (5, AB#363, PR #213) |
-| HU14-CP33 | Mis favoritos muestra cada producto en el orden en que se añadió, con su imagen (o un marcador), nombre, precio y fecha; uno agotado lo indica y uno no disponible lo indica y no enlaza al detalle | Frontend (página) | 5 | 🔍 En revisión (5, AB#363, PR #213) |
-| HU14-CP34 | Mis favoritos muestra un indicador mientras carga, un estado vacío que lleva al catálogo y, si falla, un error con «Reintentar» | Frontend (página) | 3 | 🔍 En revisión (3, AB#363, PR #213) |
-| HU14-CP35 | Desde Mis favoritos se quita cada producto (también uno no disponible): se avisa y la lista se actualiza; mientras se quita, su botón queda deshabilitado; al quitar el último sale el estado vacío, y si falla se avisa y el producto sigue | Frontend (página) | 5 | 🔍 En revisión (5, AB#364, PR #213) |
-| HU14-CP36 | Al entrar en el catálogo se cargan los favoritos y sus corazones salen rellenos; si no se pueden cargar, el catálogo funciona con los corazones vacíos | Frontend (página) | 2 | 🔍 En revisión (2, AB#363, PR #213) |
-| HU14-CP37 | El corazón relleno del catálogo quita el producto de favoritos: queda deshabilitado mientras se quita, después vacío, y si falla la tarjeta lo avisa | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#364, PR #213) |
+| HU14-CP31 | Las llamadas del cliente piden `GET /api/customer/wishlist` y `DELETE /api/customer/wishlist/items/{productoId}` (con el id codificado) y devuelven la lista; un 403 llega como error con su estado y su código | Frontend (API) | 3 | ✅ Pasa (3, AB#363 y AB#364, PR #213) |
+| HU14-CP32 | Mis favoritos está en `/wishlist` y el cliente llega desde el enlace Favoritos de la cabecera; sin sesión va al login, y el vendedor y el administrador no tienen ni el enlace ni la vista | Frontend (página y rutas) | 5 | ✅ Pasa (5, AB#363, PR #213) |
+| HU14-CP33 | Mis favoritos muestra cada producto en el orden en que se añadió, con su imagen (o un marcador), nombre, precio y fecha; uno agotado lo indica y uno no disponible lo indica y no enlaza al detalle | Frontend (página) | 5 | ✅ Pasa (5, AB#363, PR #213) |
+| HU14-CP34 | Mis favoritos muestra un indicador mientras carga, un estado vacío que lleva al catálogo y, si falla, un error con «Reintentar» | Frontend (página) | 3 | ✅ Pasa (3, AB#363, PR #213) |
+| HU14-CP35 | Desde Mis favoritos se quita cada producto (también uno no disponible): se avisa y la lista se actualiza; mientras se quita, su botón queda deshabilitado; al quitar el último sale el estado vacío, y si falla se avisa y el producto sigue | Frontend (página) | 5 | ✅ Pasa (5, AB#364, PR #213) |
+| HU14-CP36 | Al entrar en el catálogo se cargan los favoritos y sus corazones salen rellenos; si no se pueden cargar, el catálogo funciona con los corazones vacíos | Frontend (página) | 2 | ✅ Pasa (2, AB#363, PR #213) |
+| HU14-CP37 | El corazón relleno del catálogo quita el producto de favoritos: queda deshabilitado mientras se quita, después vacío, y si falla la tarjeta lo avisa | Frontend (componente y página) | 4 | ✅ Pasa (4, AB#364, PR #213) |
+| HU14-CP38 | El detalle del producto lee los favoritos al entrar y ofrece «Añadir a favoritos» o, si ya está, «Quitar de favoritos»; también en un producto agotado, y si la lista no se puede leer ofrece añadirlo sin avisar de ningún error | Frontend (página) | 4 | 🔍 En revisión (4, AB#418, PR #216) |
+| HU14-CP39 | Desde el detalle se añade el producto a favoritos sin salir de la página y el botón pasa a quitarlo; mientras se añade queda deshabilitado | Frontend (página) | 2 | 🔍 En revisión (2, AB#418, PR #216) |
+| HU14-CP40 | Desde el detalle se quita el producto de favoritos y el botón vuelve a ofrecer añadirlo | Frontend (página) | 1 | 🔍 En revisión (1, AB#418, PR #216) |
+| HU14-CP41 | Si no se puede añadir (producto que ya no está disponible o mensaje genérico) o quitar, el detalle lo avisa y el botón se puede volver a pulsar | Frontend (página) | 3 | 🔍 En revisión (3, AB#418, PR #216) |
 
 - **HU14-CP01 a CP06 (Sprint 2, backend):** casos propuestos en la task AB#360 (lógica de guardado de deseo), revisados y aceptados por el desarrollador. Azure no los trae: habría que añadirlos a la HU14.
 - **Decisiones del equipo:** módulo nuevo `deseos`; una sola lista por cliente, como dicen el criterio de aceptación y la colección `listas_deseos`, que ya tenía su índice único. El campo de la colección sigue siendo `usuarioId`, y guarda el id del cliente. Añadir un producto repetido no es un error, y un producto inexistente o no disponible se rechaza.
@@ -2085,7 +2089,8 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - **Vista (T363 y T364):** «Mis favoritos» en `/wishlist`, solo del cliente, con el enlace Favoritos en la cabecera. Lee `GET /api/customer/wishlist` y cada producto se quita sin confirmación (se puede volver a añadir) con `DELETE /api/customer/wishlist/items/{productoId}`, cuya respuesta sustituye a la lista. Un producto desactivado se ve atenuado, con la etiqueta «No disponible» y sin enlace al detalle; uno agotado lleva «Agotado» y sí enlaza.
 - **Catálogo (T363 y T364):** al entrar se cargan los favoritos, así que los corazones salen rellenos desde el principio; si la lista no se puede leer, el catálogo funciona igual con los corazones vacíos. El corazón relleno deja de estar deshabilitado y quita el producto de favoritos. Por eso cambian tres tests de la T357: HU14-CP22 de la tarjeta («…relleno y deshabilitado» pasa a «…relleno para quitarlo») y los de página de HU14-CP22 y CP23, que buscan el corazón por su nuevo nombre, «Quitar X de favoritos».
 - **Tests que nacen en verde (T363 y T364):** en HU14-CP32, «el vendedor y el administrador no tienen el enlace a favoritos», y en HU14-CP36, «si no se pueden cargar los favoritos, el catálogo funciona con los corazones vacíos», porque antes del ciclo no existían ni el enlace ni la lectura. Se dejan para que no cambie sin darnos cuenta.
-- **Pendiente:** el corazón en el detalle del producto y en los productos destacados del catálogo, que no son de estas tasks.
+- **HU14-CP38 a CP41 (detalle del producto, T418):** casos propuestos en la task AB#418, creada en el Sprint 2 porque ninguna task de la HU14 ofrecía favoritos en el detalle. Pendientes de confirmar con el equipo y de añadir a la HU14 en Azure Boards. Rama `feature/US14-T418-favoritos-detalle-producto`. `ProductDetailPage` lee la lista al entrar (si falla, ofrece añadirlo) y `ProductDetail` muestra el botón «Añadir a favoritos» o «Quitar de favoritos» junto a «Añadir al carrito», con el corazón relleno en rojo cuando ya está.
+- **Pendiente:** el corazón en los productos destacados del catálogo, que usan otro componente.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -2153,9 +2158,9 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP21 | `ProductsPage.test.jsx` | `HU14-CP21: cada tarjeta del catálogo tiene el corazón para añadir su producto a favoritos` | Frontend · página | AB#357 | PR #202 | ✅ |
 | HU14-CP22 | `ProductCard.test.jsx` | `HU14-CP22: al pulsar el corazón pide añadir ese producto a favoritos` | Frontend · componente | AB#357 | PR #202 | ✅ |
 | HU14-CP22 | `ProductCard.test.jsx` | `HU14-CP22: mientras se añade, el corazón queda deshabilitado` | Frontend · componente | AB#357 | PR #202 | ✅ |
-| HU14-CP22 | `ProductCard.test.jsx` | `HU14-CP22: un producto que ya está en favoritos tiene el corazón relleno para quitarlo` | Frontend · componente | AB#364 | PR #213 (modificado) | 🔍 |
-| HU14-CP22 | `ProductsPage.test.jsx` | `HU14-CP22: al pulsar el corazón se añade el producto a favoritos y el corazón queda relleno` | Frontend · página | AB#364 | PR #213 (modificado) | 🔍 |
-| HU14-CP23 | `ProductsPage.test.jsx` | `HU14-CP23: al añadir, se rellenan también los corazones de los productos que ya estaban en la lista del cliente` | Frontend · página | AB#364 | PR #213 (modificado) | 🔍 |
+| HU14-CP22 | `ProductCard.test.jsx` | `HU14-CP22: un producto que ya está en favoritos tiene el corazón relleno para quitarlo` | Frontend · componente | AB#364 | PR #213 (modificado) | ✅ |
+| HU14-CP22 | `ProductsPage.test.jsx` | `HU14-CP22: al pulsar el corazón se añade el producto a favoritos y el corazón queda relleno` | Frontend · página | AB#364 | PR #213 (modificado) | ✅ |
+| HU14-CP23 | `ProductsPage.test.jsx` | `HU14-CP23: al añadir, se rellenan también los corazones de los productos que ya estaban en la lista del cliente` | Frontend · página | AB#364 | PR #213 (modificado) | ✅ |
 | HU14-CP24 | `ProductCard.test.jsx` | `HU14-CP24: si %s, la tarjeta lo avisa y el corazón se puede volver a pulsar` (2 variantes: el producto ya no está disponible y falla por otro motivo) | Frontend · componente | AB#357 | PR #202 | ✅ |
 | HU14-CP24 | `ProductCard.test.jsx` | `HU14-CP24: al volver a pulsar el corazón desaparece el aviso anterior` | Frontend · componente | AB#357 | PR #202 | ✅ |
 | HU14-CP24 | `ProductsPage.test.jsx` | `HU14-CP24: si el producto ya no está disponible, su tarjeta lo avisa y el corazón sigue vacío` | Frontend · página | AB#357 | PR #202 | ✅ |
@@ -2174,33 +2179,42 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP30 | `ListaDeseosControllerTest` | `sinSesionNoSeQuita` | Infraestructura | AB#365 | PR #209 | ✅ |
 | HU14-CP30 | `ListaDeseosControllerTest` | `noClienteNoQuita` (vendedor y administrador) | Infraestructura | AB#365 | PR #209 | ✅ |
 | HU14-CP30 | `ListaDeseosControllerTest` | `sinTokenCsrfNoSeQuita` | Infraestructura | AB#365 | PR #209 | ✅ |
-| HU14-CP31 | `wishlist.test.js` | `HU14-CP31: pide GET /api/customer/wishlist y devuelve la lista con los datos de cada producto` | Frontend · API | AB#363 | PR #213 | 🔍 |
-| HU14-CP31 | `wishlist.test.js` | `HU14-CP31: un 403 llega como error con su estado y su código` | Frontend · API | AB#363 | PR #213 | 🔍 |
-| HU14-CP31 | `wishlist.test.js` | `HU14-CP31: pide DELETE /api/customer/wishlist/items/{productoId} y devuelve la lista actualizada` | Frontend · API | AB#364 | PR #213 | 🔍 |
-| HU14-CP32 | `WishlistPage.test.jsx` | `HU14-CP32: el cliente abre Mis favoritos en /wishlist` | Frontend · página | AB#363 | PR #213 | 🔍 |
-| HU14-CP32 | `WishlistPage.test.jsx` | `HU14-CP32: sin sesión, Mis favoritos lleva a iniciar sesión` | Frontend · página | AB#363 | PR #213 | 🔍 |
-| HU14-CP32 | `WishlistPage.test.jsx` | `HU14-CP32: un vendedor no tiene lista de deseos: va a su página` | Frontend · página | AB#363 | PR #213 | 🔍 |
-| HU14-CP32 | `AppHeader.test.jsx` | `HU14-CP32: el cliente tiene el enlace a sus favoritos y lleva a Mis favoritos` | Frontend · componente | AB#363 | PR #213 | 🔍 |
-| HU14-CP32 | `AppHeader.test.jsx` | `HU14-CP32: el vendedor y el administrador no tienen el enlace a favoritos` | Frontend · componente | AB#363 | PR #213 | 🔍 |
-| HU14-CP33 | `WishlistPage.test.jsx` | `HU14-CP33: muestra los favoritos en el orden en que se añadieron, con su nombre, precio y fecha` | Frontend · página | AB#363 | PR #213 | 🔍 |
-| HU14-CP33 | `WishlistPage.test.jsx` | `HU14-CP33: cada favorito muestra su imagen o, si no tiene, un marcador` | Frontend · página | AB#363 | PR #213 | 🔍 |
-| HU14-CP33 | `WishlistPage.test.jsx` | `HU14-CP33: el nombre de un producto disponible lleva a su detalle` | Frontend · página | AB#363 | PR #213 | 🔍 |
-| HU14-CP33 | `WishlistPage.test.jsx` | `HU14-CP33: un producto agotado lo indica y sigue llevando a su detalle` | Frontend · página | AB#363 | PR #213 | 🔍 |
-| HU14-CP33 | `WishlistPage.test.jsx` | `HU14-CP33: un producto que ya no está disponible lo indica y no lleva a su detalle` | Frontend · página | AB#363 | PR #213 | 🔍 |
-| HU14-CP34 | `WishlistPage.test.jsx` | `HU14-CP34: mientras carga muestra un indicador` | Frontend · página | AB#363 | PR #213 | 🔍 |
-| HU14-CP34 | `WishlistPage.test.jsx` | `HU14-CP34: sin favoritos lo indica y ofrece ir a los productos` | Frontend · página | AB#363 | PR #213 | 🔍 |
-| HU14-CP34 | `WishlistPage.test.jsx` | `HU14-CP34: si no se pueden cargar los favoritos lo avisa y permite reintentar` | Frontend · página | AB#363 | PR #213 | 🔍 |
-| HU14-CP35 | `WishlistPage.test.jsx` | `HU14-CP35: cada favorito, también uno que ya no está disponible, tiene su botón para quitarlo` | Frontend · página | AB#364 | PR #213 | 🔍 |
-| HU14-CP35 | `WishlistPage.test.jsx` | `HU14-CP35: al quitar un favorito pide quitar ese producto, avisa y desaparece de la lista` | Frontend · página | AB#364 | PR #213 | 🔍 |
-| HU14-CP35 | `WishlistPage.test.jsx` | `HU14-CP35: mientras se quita, su botón queda deshabilitado` | Frontend · página | AB#364 | PR #213 | 🔍 |
-| HU14-CP35 | `WishlistPage.test.jsx` | `HU14-CP35: al quitar el último favorito se muestra el estado vacío` | Frontend · página | AB#364 | PR #213 | 🔍 |
-| HU14-CP35 | `WishlistPage.test.jsx` | `HU14-CP35: si no se puede quitar, lo avisa y el producto sigue en la lista` | Frontend · página | AB#364 | PR #213 | 🔍 |
-| HU14-CP36 | `ProductsPage.test.jsx` | `HU14-CP36: al entrar en el catálogo, los productos que ya están en favoritos tienen el corazón relleno` | Frontend · página | AB#363 | PR #213 | 🔍 |
-| HU14-CP36 | `ProductsPage.test.jsx` | `HU14-CP36: si no se pueden cargar los favoritos, el catálogo funciona con los corazones vacíos` | Frontend · página | AB#363 | PR #213 | 🔍 |
-| HU14-CP37 | `ProductCard.test.jsx` | `HU14-CP37: al pulsar el corazón relleno pide quitar ese producto de favoritos` | Frontend · componente | AB#364 | PR #213 | 🔍 |
-| HU14-CP37 | `ProductCard.test.jsx` | `HU14-CP37: mientras se quita, el corazón queda deshabilitado` | Frontend · componente | AB#364 | PR #213 | 🔍 |
-| HU14-CP37 | `ProductCard.test.jsx` | `HU14-CP37: si no se puede quitar, la tarjeta lo avisa y el corazón se puede volver a pulsar` | Frontend · componente | AB#364 | PR #213 | 🔍 |
-| HU14-CP37 | `ProductsPage.test.jsx` | `HU14-CP37: al pulsar el corazón relleno se quita el producto de favoritos y el corazón queda vacío` | Frontend · página | AB#364 | PR #213 | 🔍 |
+| HU14-CP31 | `wishlist.test.js` | `HU14-CP31: pide GET /api/customer/wishlist y devuelve la lista con los datos de cada producto` | Frontend · API | AB#363 | PR #213 | ✅ |
+| HU14-CP31 | `wishlist.test.js` | `HU14-CP31: un 403 llega como error con su estado y su código` | Frontend · API | AB#363 | PR #213 | ✅ |
+| HU14-CP31 | `wishlist.test.js` | `HU14-CP31: pide DELETE /api/customer/wishlist/items/{productoId} y devuelve la lista actualizada` | Frontend · API | AB#364 | PR #213 | ✅ |
+| HU14-CP32 | `WishlistPage.test.jsx` | `HU14-CP32: el cliente abre Mis favoritos en /wishlist` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP32 | `WishlistPage.test.jsx` | `HU14-CP32: sin sesión, Mis favoritos lleva a iniciar sesión` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP32 | `WishlistPage.test.jsx` | `HU14-CP32: un vendedor no tiene lista de deseos: va a su página` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP32 | `AppHeader.test.jsx` | `HU14-CP32: el cliente tiene el enlace a sus favoritos y lleva a Mis favoritos` | Frontend · componente | AB#363 | PR #213 | ✅ |
+| HU14-CP32 | `AppHeader.test.jsx` | `HU14-CP32: el vendedor y el administrador no tienen el enlace a favoritos` | Frontend · componente | AB#363 | PR #213 | ✅ |
+| HU14-CP33 | `WishlistPage.test.jsx` | `HU14-CP33: muestra los favoritos en el orden en que se añadieron, con su nombre, precio y fecha` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP33 | `WishlistPage.test.jsx` | `HU14-CP33: cada favorito muestra su imagen o, si no tiene, un marcador` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP33 | `WishlistPage.test.jsx` | `HU14-CP33: el nombre de un producto disponible lleva a su detalle` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP33 | `WishlistPage.test.jsx` | `HU14-CP33: un producto agotado lo indica y sigue llevando a su detalle` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP33 | `WishlistPage.test.jsx` | `HU14-CP33: un producto que ya no está disponible lo indica y no lleva a su detalle` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP34 | `WishlistPage.test.jsx` | `HU14-CP34: mientras carga muestra un indicador` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP34 | `WishlistPage.test.jsx` | `HU14-CP34: sin favoritos lo indica y ofrece ir a los productos` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP34 | `WishlistPage.test.jsx` | `HU14-CP34: si no se pueden cargar los favoritos lo avisa y permite reintentar` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP35 | `WishlistPage.test.jsx` | `HU14-CP35: cada favorito, también uno que ya no está disponible, tiene su botón para quitarlo` | Frontend · página | AB#364 | PR #213 | ✅ |
+| HU14-CP35 | `WishlistPage.test.jsx` | `HU14-CP35: al quitar un favorito pide quitar ese producto, avisa y desaparece de la lista` | Frontend · página | AB#364 | PR #213 | ✅ |
+| HU14-CP35 | `WishlistPage.test.jsx` | `HU14-CP35: mientras se quita, su botón queda deshabilitado` | Frontend · página | AB#364 | PR #213 | ✅ |
+| HU14-CP35 | `WishlistPage.test.jsx` | `HU14-CP35: al quitar el último favorito se muestra el estado vacío` | Frontend · página | AB#364 | PR #213 | ✅ |
+| HU14-CP35 | `WishlistPage.test.jsx` | `HU14-CP35: si no se puede quitar, lo avisa y el producto sigue en la lista` | Frontend · página | AB#364 | PR #213 | ✅ |
+| HU14-CP36 | `ProductsPage.test.jsx` | `HU14-CP36: al entrar en el catálogo, los productos que ya están en favoritos tienen el corazón relleno` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP36 | `ProductsPage.test.jsx` | `HU14-CP36: si no se pueden cargar los favoritos, el catálogo funciona con los corazones vacíos` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP37 | `ProductCard.test.jsx` | `HU14-CP37: al pulsar el corazón relleno pide quitar ese producto de favoritos` | Frontend · componente | AB#364 | PR #213 | ✅ |
+| HU14-CP37 | `ProductCard.test.jsx` | `HU14-CP37: mientras se quita, el corazón queda deshabilitado` | Frontend · componente | AB#364 | PR #213 | ✅ |
+| HU14-CP37 | `ProductCard.test.jsx` | `HU14-CP37: si no se puede quitar, la tarjeta lo avisa y el corazón se puede volver a pulsar` | Frontend · componente | AB#364 | PR #213 | ✅ |
+| HU14-CP37 | `ProductsPage.test.jsx` | `HU14-CP37: al pulsar el corazón relleno se quita el producto de favoritos y el corazón queda vacío` | Frontend · página | AB#364 | PR #213 | ✅ |
+| HU14-CP38 | `ProductDetailPage.test.jsx` | `HU14-CP38: el detalle tiene un botón para añadir el producto a favoritos` | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP38 | `ProductDetailPage.test.jsx` | `HU14-CP38: si el producto ya está en favoritos, el botón permite quitarlo` | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP38 | `ProductDetailPage.test.jsx` | `HU14-CP38: un producto agotado también se puede añadir a favoritos` | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP38 | `ProductDetailPage.test.jsx` | `HU14-CP38: si no se pueden leer los favoritos, se ofrece añadirlo sin avisar de ningún error` | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP39 | `ProductDetailPage.test.jsx` | `HU14-CP39: al pulsar Añadir a favoritos se añade el producto y el botón pasa a quitarlo` | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP39 | `ProductDetailPage.test.jsx` | `HU14-CP39: mientras se añade, el botón queda deshabilitado` | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP40 | `ProductDetailPage.test.jsx` | `HU14-CP40: al pulsar Quitar de favoritos se quita el producto y el botón vuelve a ofrecer añadirlo` | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP41 | `ProductDetailPage.test.jsx` | `HU14-CP41: si al añadir %s, lo avisa y se puede volver a intentar` (2 variantes: el producto ya no está disponible y falla por otro motivo) | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP41 | `ProductDetailPage.test.jsx` | `HU14-CP41: si no se puede quitar, lo avisa y el producto sigue en favoritos` | Frontend · página | AB#418 | PR #216 | 🔍 |
 
 ---
 
