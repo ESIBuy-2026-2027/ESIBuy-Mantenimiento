@@ -1,8 +1,12 @@
 import { useCallback } from 'react'
 import PropTypes from 'prop-types'
 import {
+  Button,
   Caption1,
   Card,
+  MessageBar,
+  MessageBarActions,
+  MessageBarBody,
   Subtitle1,
   Table,
   TableBody,
@@ -274,7 +278,7 @@ export default function SellerStatistics() {
   const styles = useStyles()
   const titleId = useId('estadisticas')
   const fetcher = useCallback(() => getSellerStatistics(), [])
-  const { data: estadisticas } = useApiQuery(fetcher)
+  const { data: estadisticas, failed, retry } = useApiQuery(fetcher)
 
   return (
     <section aria-labelledby={titleId}>
@@ -282,6 +286,14 @@ export default function SellerStatistics() {
         <Title3 as="h2" id={titleId} className={styles.heading}>
           Mis estadísticas
         </Title3>
+        {failed && (
+          <MessageBar intent="error">
+            <MessageBarBody>No se han podido cargar tus estadísticas. Inténtalo de nuevo.</MessageBarBody>
+            <MessageBarActions>
+              <Button onClick={retry}>Reintentar</Button>
+            </MessageBarActions>
+          </MessageBar>
+        )}
         {estadisticas && (
           <>
             <SalesBlock ventas={estadisticas.ventas} />
