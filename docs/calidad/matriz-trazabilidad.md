@@ -2271,55 +2271,69 @@ Rutas de las clases de test:
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU17-CP01 | Las ventas cuentan los pedidos distintos, las unidades y los ingresos; sin ventas, todo a cero | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#280, PR #212) |
-| HU17-CP02 | Los 5 productos más vendidos, sumando las unidades de cada uno y de más a menos; a igualdad de unidades, primero el que más ha ingresado | Unitario (dominio) | 3 | 🔍 En revisión (3, AB#280, PR #212) |
-| HU17-CP03 | La valoración media global pondera la media de cada producto por su número de valoraciones; sin valoraciones no hay media y el total es 0 | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#280, PR #212) |
-| HU17-CP04 | La valoración por producto solo incluye los valorados, del mejor al peor | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#280, PR #212) |
-| HU17-CP05 | El stock cuenta los productos, los que no tienen stock, los de stock bajo (de 1 a 5 unidades) y los no disponibles | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#280, PR #212) |
-| HU17-CP06 | Las ventas del vendedor son las líneas de sus pedidos con su importe; los pedidos `CANCELADO` no cuentan | Unitario (aplicación, pedidos) | 3 | 🔍 En revisión (3, AB#280, PR #212) |
-| HU17-CP07 | En MongoDB, `buscarPorVendedor` devuelve todos los pedidos del vendedor, también los cancelados | Integración (Testcontainers) | 1 | 🔍 En revisión (1, AB#280, PR #212) |
-| HU17-CP08 | El inventario del vendedor da el stock, la disponibilidad y las valoraciones de cada producto | Unitario (aplicación, productos) | 2 | 🔍 En revisión (2, AB#280, PR #212) |
-| HU17-CP09 | En MongoDB, `listarTodosPorVendedor` devuelve todos sus productos, también los no disponibles, sin paginar | Integración (Testcontainers) | 1 | 🔍 En revisión (1, AB#280, PR #212) |
-| HU17-CP10 | Las estadísticas se calculan con las ventas y los productos del vendedor de la sesión, nunca de otro | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#280, PR #212) |
-| HU17-CP11 | `GET /api/seller/statistics` devuelve las estadísticas agrupadas en ventas, valoraciones y stock; sin valoraciones, la media llega vacía | Web (`@WebMvcTest`) | 2 | 🔍 En revisión (2, AB#279, PR #212) |
-| HU17-CP12 | Sin sesión, 401; un cliente o un administrador, 403 | Web (`@WebMvcTest`, seguridad real) | 3 | 🔍 En revisión (3, AB#279, PR #212) |
-| HU17-CP13 | Los adaptadores piden el vendedor en sesión a usuarios, las ventas a pedidos y los productos a productos, sin perder datos | Unitario (infraestructura, Mockito) | 3 | 🔍 En revisión (3, AB#279, PR #212) |
+| HU17-CP01 | Las ventas cuentan los pedidos distintos, las unidades y los ingresos; sin ventas, todo a cero | Unitario (dominio) | 2 | ✅ Pasa |
+| HU17-CP02 | Los 5 productos más vendidos, sumando las unidades de cada uno y de más a menos; a igualdad de unidades, primero el que más ha ingresado | Unitario (dominio) | 3 | ✅ Pasa |
+| HU17-CP03 | La valoración media global pondera la media de cada producto por su número de valoraciones; sin valoraciones no hay media y el total es 0 | Unitario (dominio) | 2 | ✅ Pasa |
+| HU17-CP04 | La valoración por producto solo incluye los valorados, del mejor al peor | Unitario (dominio) | 1 | ✅ Pasa |
+| HU17-CP05 | El stock cuenta los productos, los que no tienen stock, los de stock bajo (de 1 a 5 unidades) y los no disponibles | Unitario (dominio) | 2 | ✅ Pasa |
+| HU17-CP06 | Las ventas del vendedor son las líneas de sus pedidos con su importe; los pedidos `CANCELADO` no cuentan | Unitario (aplicación, pedidos) | 3 | ✅ Pasa |
+| HU17-CP07 | En MongoDB, `buscarPorVendedor` devuelve todos los pedidos del vendedor, también los cancelados | Integración (Testcontainers) | 1 | ✅ Pasa |
+| HU17-CP08 | El inventario del vendedor da el stock, la disponibilidad y las valoraciones de cada producto | Unitario (aplicación, productos) | 2 | ✅ Pasa |
+| HU17-CP09 | En MongoDB, `listarTodosPorVendedor` devuelve todos sus productos, también los no disponibles, sin paginar | Integración (Testcontainers) | 1 | ✅ Pasa |
+| HU17-CP10 | Las estadísticas se calculan con las ventas y los productos del vendedor de la sesión, nunca de otro | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU17-CP11 | `GET /api/seller/statistics` devuelve las estadísticas agrupadas en ventas, valoraciones y stock; sin valoraciones, la media llega vacía | Web (`@WebMvcTest`) | 2 | ✅ Pasa |
+| HU17-CP12 | Sin sesión, 401; un cliente o un administrador, 403 | Web (`@WebMvcTest`, seguridad real) | 3 | ✅ Pasa |
+| HU17-CP13 | Los adaptadores piden el vendedor en sesión a usuarios, las ventas a pedidos y los productos a productos, sin perder datos | Unitario (infraestructura, Mockito) | 3 | ✅ Pasa |
+| HU17-CP14 | En «Mi perfil» el vendedor ve sus ventas: pedidos, unidades, ingresos y los 5 más vendidos en orden | Frontend (página) | 1 | 🔍 En revisión (1, AB#278, PR pendiente) |
+| HU17-CP15 | Ve la valoración media global con un decimal, el total de valoraciones y la media de cada producto valorado, del mejor al peor | Frontend (página) | 1 | 🔍 En revisión (1, AB#278, PR pendiente) |
+| HU17-CP16 | Ve sus productos, los que no tienen stock, los de stock bajo (de 1 a 5 unidades) y los no disponibles | Frontend (página) | 1 | 🔍 En revisión (1, AB#278, PR pendiente) |
+| HU17-CP17 | Sin ventas ni valoraciones, se avisa con un estado vacío en vez de tablas vacías y la media se ve como «Sin valoraciones» | Frontend (página) | 1 | 🔍 En revisión (1, AB#278, PR pendiente) |
+| HU17-CP18 | El cliente no ve la sección de estadísticas y no se piden al backend | Frontend (página) | 1 | 🔍 En revisión (1, AB#278, PR pendiente) |
+| HU17-CP19 | Si las estadísticas no cargan, se avisa sin detalles internos, se puede reintentar y el perfil sigue visible | Frontend (página) | 1 | 🔍 En revisión (1, AB#278, PR pendiente) |
+| HU17-CP20 | Mientras cargan las estadísticas, la sección muestra que se están cargando | Frontend (página) | 1 | 🔍 En revisión (1, AB#278, PR pendiente) |
 
 Notas:
 - **HU17-CP01 a CP13 (Sprint 2, backend, TDD):** casos propuestos en la T280 (AB#280, cálculo y devolución de estadísticas) y la T279 (AB#279, endpoint) a partir del criterio de aceptación de la HU17 (AB#78): «se muestran en una vista estadísticas básicas de ventas, valoraciones y stock». Pendientes de confirmar con el equipo.
 - **Decisiones del equipo:** set básico de métricas, desde siempre y sin filtro de fechas. Ventas: pedidos, unidades e ingresos sin contar los `CANCELADO`, y los 5 más vendidos. Valoraciones: media global ponderada y media por producto. Stock: productos, sin stock, stock bajo (de 1 a 5 unidades) y no disponibles. Módulo nuevo `estadisticas`, que pide los datos a `pedidos` (`VentasVendedorUseCase`) y a `productos` (`InventarioVendedorUseCase`) por sus puertos de entrada.
 - **Reutilización:** `buscarPorVendedor` (pedidos) y `listarTodosPorVendedor` (productos) los añadió la HU47 (AB#312 y AB#313, PR #203); la HU17 los reutiliza. HU17-CP07 y CP09 prueban lo que la HU17 necesita de ellos y los tests de la HU47 no cubren: que incluyen los pedidos cancelados y los productos no disponibles, sin paginar.
-- **Pendiente:** el frontend, una sección en «Mi perfil» del vendedor (T278, AB#278).
+- **HU17-CP14 a CP20 (Sprint 2, frontend, TDD):** casos propuestos en la T278 (AB#278, vista de estadísticas) a partir del mismo criterio de aceptación y del contrato de la T279. Siguen la numeración del backend. La vista es una sección «Mis estadísticas» en «Mi perfil», solo para el rol `VENDEDOR`. El endpoint se simula con MSW (`frontend/src/mocks/statisticsHandlers.js`). HU17-CP18 no tuvo ciclo rojo: la condición por rol entró con el CP14, y se comprobó que el test falla si se quita. Pendientes de confirmar con el equipo.
 
 ### Tabla B · casos de prueba ↔ tests
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU17-CP01 | `EstadisticasVendedorTest` | `lasVentasCuentanPedidosUnidadesEIngresos` | Dominio | AB#280 | PR #212 | 🔍 |
-| HU17-CP01 | `EstadisticasVendedorTest` | `sinVentasLasVentasEstanACero` | Dominio | AB#280 | PR #212 | 🔍 |
-| HU17-CP02 | `EstadisticasVendedorTest` | `losMasVendidosAgrupanPorProductoYOrdenanPorUnidades` | Dominio | AB#280 | PR #212 | 🔍 |
-| HU17-CP02 | `EstadisticasVendedorTest` | `losMasVendidosDesempatanPorIngresos` | Dominio | AB#280 | PR #212 | 🔍 |
-| HU17-CP02 | `EstadisticasVendedorTest` | `soloSeMuestranLosCincoMasVendidos` | Dominio | AB#280 | PR #212 | 🔍 |
-| HU17-CP03 | `EstadisticasVendedorTest` | `laMediaGlobalEstaPonderadaPorElNumeroDeValoraciones` | Dominio | AB#280 | PR #212 | 🔍 |
-| HU17-CP03 | `EstadisticasVendedorTest` | `sinValoracionesNoHayMediaGlobal` | Dominio | AB#280 | PR #212 | 🔍 |
-| HU17-CP04 | `EstadisticasVendedorTest` | `laValoracionPorProductoSoloIncluyeLosValoradosDelMejorAlPeor` | Dominio | AB#280 | PR #212 | 🔍 |
-| HU17-CP05 | `EstadisticasVendedorTest` | `elStockCuentaProductosSinStockYNoDisponibles` | Dominio | AB#280 | PR #212 | 🔍 |
-| HU17-CP05 | `EstadisticasVendedorTest` | `stockBajoEsEntreUnaYCincoUnidades` | Dominio | AB#280 | PR #212 | 🔍 |
-| HU17-CP06 | `VentasVendedorServiceTest` | `lasVentasSonLasLineasDeSusPedidos` | Aplicación | AB#280 | PR #212 | 🔍 |
-| HU17-CP06 | `VentasVendedorServiceTest` | `losPedidosCanceladosNoCuentan` | Aplicación | AB#280 | PR #212 | 🔍 |
-| HU17-CP06 | `VentasVendedorServiceTest` | `sinPedidosNoHayVentas` | Aplicación | AB#280 | PR #212 | 🔍 |
-| HU17-CP07 | `PedidoMongoAdapterTest` | `buscarPorVendedorIncluyeLosPedidosCancelados` | Infraestructura | AB#280 | PR #212 | 🔍 |
-| HU17-CP08 | `InventarioVendedorServiceTest` | `elInventarioDaStockDisponibilidadYValoraciones` | Aplicación | AB#280 | PR #212 | 🔍 |
-| HU17-CP08 | `InventarioVendedorServiceTest` | `sinProductosElInventarioEstaVacio` | Aplicación | AB#280 | PR #212 | 🔍 |
-| HU17-CP09 | `ProductoMongoAdapterTest` | `listarTodosPorVendedorIncluyeLosNoDisponiblesSinPaginar` | Infraestructura | AB#280 | PR #212 | 🔍 |
-| HU17-CP10 | `EstadisticasVendedorServiceTest` | `calculaConLasVentasYLosProductosDelVendedorDeLaSesion` | Aplicación | AB#280 | PR #212 | 🔍 |
-| HU17-CP11 | `EstadisticasVendedorControllerTest` | `vendedorRecibeSusEstadisticas` | Infraestructura | AB#279 | PR #212 | 🔍 |
-| HU17-CP11 | `EstadisticasVendedorControllerTest` | `sinValoracionesLaMediaLlegaVacia` | Infraestructura | AB#279 | PR #212 | 🔍 |
-| HU17-CP12 | `EstadisticasVendedorControllerTest` | `sinSesionDevuelve401` | Infraestructura | AB#279 | PR #212 | 🔍 |
-| HU17-CP12 | `EstadisticasVendedorControllerTest` | `otroRolDevuelve403 (CLIENTE y ADMINISTRADOR)` | Infraestructura | AB#279 | PR #212 | 🔍 |
-| HU17-CP13 | `VendedorEnSesionAdapterTest` | `elIdDelVendedorSePideAlModuloDeUsuarios` | Infraestructura | AB#279 | PR #212 | 🔍 |
-| HU17-CP13 | `VentasAdapterTest` | `lasVentasSePidenAlModuloDePedidos` | Infraestructura | AB#279 | PR #212 | 🔍 |
-| HU17-CP13 | `InventarioAdapterTest` | `losProductosSePidenAlModuloDeProductos` | Infraestructura | AB#279 | PR #212 | 🔍 |
+| HU17-CP01 | `EstadisticasVendedorTest` | `lasVentasCuentanPedidosUnidadesEIngresos` | Dominio | AB#280 | PR #212 | ✅ |
+| HU17-CP01 | `EstadisticasVendedorTest` | `sinVentasLasVentasEstanACero` | Dominio | AB#280 | PR #212 | ✅ |
+| HU17-CP02 | `EstadisticasVendedorTest` | `losMasVendidosAgrupanPorProductoYOrdenanPorUnidades` | Dominio | AB#280 | PR #212 | ✅ |
+| HU17-CP02 | `EstadisticasVendedorTest` | `losMasVendidosDesempatanPorIngresos` | Dominio | AB#280 | PR #212 | ✅ |
+| HU17-CP02 | `EstadisticasVendedorTest` | `soloSeMuestranLosCincoMasVendidos` | Dominio | AB#280 | PR #212 | ✅ |
+| HU17-CP03 | `EstadisticasVendedorTest` | `laMediaGlobalEstaPonderadaPorElNumeroDeValoraciones` | Dominio | AB#280 | PR #212 | ✅ |
+| HU17-CP03 | `EstadisticasVendedorTest` | `sinValoracionesNoHayMediaGlobal` | Dominio | AB#280 | PR #212 | ✅ |
+| HU17-CP04 | `EstadisticasVendedorTest` | `laValoracionPorProductoSoloIncluyeLosValoradosDelMejorAlPeor` | Dominio | AB#280 | PR #212 | ✅ |
+| HU17-CP05 | `EstadisticasVendedorTest` | `elStockCuentaProductosSinStockYNoDisponibles` | Dominio | AB#280 | PR #212 | ✅ |
+| HU17-CP05 | `EstadisticasVendedorTest` | `stockBajoEsEntreUnaYCincoUnidades` | Dominio | AB#280 | PR #212 | ✅ |
+| HU17-CP06 | `VentasVendedorServiceTest` | `lasVentasSonLasLineasDeSusPedidos` | Aplicación | AB#280 | PR #212 | ✅ |
+| HU17-CP06 | `VentasVendedorServiceTest` | `losPedidosCanceladosNoCuentan` | Aplicación | AB#280 | PR #212 | ✅ |
+| HU17-CP06 | `VentasVendedorServiceTest` | `sinPedidosNoHayVentas` | Aplicación | AB#280 | PR #212 | ✅ |
+| HU17-CP07 | `PedidoMongoAdapterTest` | `buscarPorVendedorIncluyeLosPedidosCancelados` | Infraestructura | AB#280 | PR #212 | ✅ |
+| HU17-CP08 | `InventarioVendedorServiceTest` | `elInventarioDaStockDisponibilidadYValoraciones` | Aplicación | AB#280 | PR #212 | ✅ |
+| HU17-CP08 | `InventarioVendedorServiceTest` | `sinProductosElInventarioEstaVacio` | Aplicación | AB#280 | PR #212 | ✅ |
+| HU17-CP09 | `ProductoMongoAdapterTest` | `listarTodosPorVendedorIncluyeLosNoDisponiblesSinPaginar` | Infraestructura | AB#280 | PR #212 | ✅ |
+| HU17-CP10 | `EstadisticasVendedorServiceTest` | `calculaConLasVentasYLosProductosDelVendedorDeLaSesion` | Aplicación | AB#280 | PR #212 | ✅ |
+| HU17-CP11 | `EstadisticasVendedorControllerTest` | `vendedorRecibeSusEstadisticas` | Infraestructura | AB#279 | PR #212 | ✅ |
+| HU17-CP11 | `EstadisticasVendedorControllerTest` | `sinValoracionesLaMediaLlegaVacia` | Infraestructura | AB#279 | PR #212 | ✅ |
+| HU17-CP12 | `EstadisticasVendedorControllerTest` | `sinSesionDevuelve401` | Infraestructura | AB#279 | PR #212 | ✅ |
+| HU17-CP12 | `EstadisticasVendedorControllerTest` | `otroRolDevuelve403 (CLIENTE y ADMINISTRADOR)` | Infraestructura | AB#279 | PR #212 | ✅ |
+| HU17-CP13 | `VendedorEnSesionAdapterTest` | `elIdDelVendedorSePideAlModuloDeUsuarios` | Infraestructura | AB#279 | PR #212 | ✅ |
+| HU17-CP13 | `VentasAdapterTest` | `lasVentasSePidenAlModuloDePedidos` | Infraestructura | AB#279 | PR #212 | ✅ |
+| HU17-CP13 | `InventarioAdapterTest` | `losProductosSePidenAlModuloDeProductos` | Infraestructura | AB#279 | PR #212 | ✅ |
+| HU17-CP14 | `SellerStatistics.test.jsx` | `HU17-CP14: el vendedor ve sus pedidos, unidades e ingresos y los más vendidos en orden` | Frontend · página | AB#278 | PR pendiente | 🔍 |
+| HU17-CP15 | `SellerStatistics.test.jsx` | `HU17-CP15: el vendedor ve la media global, el total y la valoración de cada producto, del mejor al peor` | Frontend · página | AB#278 | PR pendiente | 🔍 |
+| HU17-CP16 | `SellerStatistics.test.jsx` | `HU17-CP16: el vendedor ve cuántos productos tiene, sin stock, con stock bajo y no disponibles` | Frontend · página | AB#278 | PR pendiente | 🔍 |
+| HU17-CP17 | `SellerStatistics.test.jsx` | `HU17-CP17: sin ventas ni valoraciones, avisa de que aún no hay en vez de mostrar tablas vacías` | Frontend · página | AB#278 | PR pendiente | 🔍 |
+| HU17-CP18 | `SellerStatistics.test.jsx` | `HU17-CP18: el cliente no ve las estadísticas y no se le piden al backend` | Frontend · página | AB#278 | PR pendiente | 🔍 |
+| HU17-CP19 | `SellerStatistics.test.jsx` | `HU17-CP19: si las estadísticas no cargan, avisa sin detalles internos, permite reintentar y el perfil sigue visible` | Frontend · página | AB#278 | PR pendiente | 🔍 |
+| HU17-CP20 | `SellerStatistics.test.jsx` | `HU17-CP20: mientras cargan las estadísticas, la sección muestra que se están cargando` | Frontend · página | AB#278 | PR pendiente | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `EstadisticasVendedorTest`: `estadisticas/domain/model/` (JUnit)
@@ -2330,6 +2344,9 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `PedidoMongoAdapterTest`: `pedidos/infrastructure/adapter/out/persistence/` (Testcontainers)
 - `InventarioVendedorServiceTest`: `productos/application/service/` (Mockito)
 - `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/` (Testcontainers)
+
+Ruta del test del frontend:
+- `SellerStatistics.test.jsx`: `frontend/src/features/seller/` (Vitest, RTL y MSW; renderiza la app en `/profile`)
 
 ---
 
