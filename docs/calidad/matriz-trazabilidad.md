@@ -1804,12 +1804,18 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 | HU12-CP10 | Un pedido que ya no se puede cancelar (enviado, entregado o ya cancelado) responde 409 con el code `ORDER_NOT_CANCELLABLE` | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
 | HU12-CP11 | Cancelar un pedido que no existe o es de otro cliente responde 400 con el code `ORDER_NOT_FOUND` | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
 | HU12-CP12 | Sin sesión cancelar responde 401, con otro rol 403 y sin el token CSRF se rechaza (403) | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU12-CP13 | El detalle de un pedido pagado o en preparación tiene el botón «Cancelar pedido»; uno enviado, entregado o cancelado, no | Frontend (página) | 3 | 🔍 En revisión (3, AB#372, PR sin abrir) |
+| HU12-CP14 | Al pulsar «Cancelar pedido» se pide confirmación y todavía no se cancela | Frontend (página) | 1 | 🔍 En revisión (1, AB#372, PR sin abrir) |
+| HU12-CP15 | La confirmación nombra el pedido y avisa de que no se puede deshacer; «Volver» cierra sin cancelar | Frontend (componente) | 2 | 🔍 En revisión (2, AB#373, PR sin abrir) |
+| HU12-CP16 | Al confirmar se cancela el pedido y el detalle lo muestra cancelado, con el aviso «Pedido cancelado.» | Frontend (componente y página) | 2 | 🔍 En revisión (2, AB#373, PR sin abrir) |
+| HU12-CP17 | Si el pedido ya no se puede cancelar (409), no se da por cancelado: se cierra la confirmación y el detalle lo avisa | Frontend (componente y página) | 2 | 🔍 En revisión (2, AB#373, PR sin abrir) |
+| HU12-CP18 | Si la cancelación falla por otro motivo, se avisa dentro de la confirmación y se puede reintentar | Frontend (componente) | 1 | 🔍 En revisión (1, AB#373, PR sin abrir) |
 
 Notas:
 - **HU12-CP01 a CP08 (Sprint 2, backend, TDD):** casos propuestos en la T375 (AB#375, lógica de cancelación de pedido) a partir de los criterios de aceptación de la HU12 (AB#74): «solo permite cancelar si el pedido no ha sido enviado» y «el stock se repone al cancelar». Pendientes de confirmar con el equipo y de añadir a la HU12 en Azure Boards.
 - **Decisiones del equipo:** se cancelan los pedidos `PAGADO` y `PREPARANDO`, como dice el criterio (no los `ENVIADO`). Cancelar un pedido ya cancelado es un error, para no reponer el stock dos veces. Primero se guarda la cancelación y después se repone el stock. Caso de uso nuevo `CancelacionPedidoUseCase` (cancelar no es lo mismo que comprar). Un pedido ajeno se trata como inexistente.
 - **HU12-CP09 a CP12 (Sprint 2, backend, TDD):** casos propuestos en la T374 (AB#374, endpoint de cancelación): `POST /api/customer/orders/{id}/cancel`, sin cuerpo y con CSRF, responde 200 con el pedido cancelado; 409 `ORDER_NOT_CANCELLABLE` si ya no se puede cancelar; 400 `ORDER_NOT_FOUND` si no existe o es de otro cliente. HU12-CP12 pasó sin rojo real: `SecurityConfig` ya protege `/api/customer/**`. Pendientes de confirmar con el equipo y de añadir a la HU12 en Azure Boards.
-- **Pendiente:** el frontend (T372 y T373, AB#372 y AB#373).
+- **HU12-CP13 a CP18 (Sprint 2, frontend, TDD, un ciclo por task):** casos propuestos en la T372 (botón de cancelar pedido) y la T373 (confirmación), con el contrato de la T374 (`frontend/docs/hu12-cancelar-pedido.md`). Sin rojo real: «un pedido enviado, entregado o ya cancelado no tiene el botón» (CP13, ciclo 1) y los dos de CP15 (ciclo 2), que quedaron hechos en el ciclo 1. Pendientes de confirmar con el equipo y de añadir a la HU12 en Azure Boards.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1831,12 +1837,27 @@ Notas:
 | HU12-CP10 | `PedidoControllerTest` | `unPedidoNoCancelableResponde409` | Infraestructura (web) | AB#374 | PR #207 | ✅ |
 | HU12-CP11 | `PedidoControllerTest` | `cancelarUnPedidoInexistenteOAjenoResponde400` | Infraestructura (web) | AB#374 | PR #207 | ✅ |
 | HU12-CP12 | `PedidoControllerTest` | `soloElClienteCancelaSusPedidos` | Infraestructura (web) | AB#374 | PR #207 | ✅ |
+| HU12-CP13 | `OrderDetailPage.test.jsx` | `HU12-CP13: un pedido pagado o en preparación, que aún no se ha enviado, tiene el botón «Cancelar pedido»` | Frontend · página | AB#372 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP13 | `OrderDetailPage.test.jsx` | `HU12-CP13: un pedido en preparación también se puede cancelar` | Frontend · página | AB#372 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP13 | `OrderDetailPage.test.jsx` | `HU12-CP13: un pedido enviado, entregado o ya cancelado no tiene el botón` | Frontend · página | AB#372 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP14 | `OrderDetailPage.test.jsx` | `HU12-CP14: al pulsar «Cancelar pedido» pide confirmación y todavía no cancela nada` | Frontend · página | AB#372 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP15 | `CancelOrderDialog.test.jsx` | `HU12-CP15: pregunta por el pedido que se va a cancelar y avisa de que no se puede deshacer` | Frontend · componente | AB#373 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP15 | `CancelOrderDialog.test.jsx` | `HU12-CP15: «Volver» cierra la confirmación sin cancelar el pedido` | Frontend · componente | AB#373 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP16 | `CancelOrderDialog.test.jsx` | `HU12-CP16: al confirmar cancela el pedido y entrega el pedido ya cancelado` | Frontend · componente | AB#373 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP16 | `OrderDetailPage.test.jsx` | `HU12-CP16: al confirmar, el detalle muestra el pedido cancelado y avisa de que se ha cancelado` | Frontend · página | AB#373 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP17 | `CancelOrderDialog.test.jsx` | `HU12-CP17: si el pedido ya no se puede cancelar (409), lo comunica sin darlo por cancelado` | Frontend · componente | AB#373 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP17 | `OrderDetailPage.test.jsx` | `HU12-CP17: si el pedido ya no se puede cancelar, cierra la confirmación y lo avisa en el detalle` | Frontend · página | AB#373 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
+| HU12-CP18 | `CancelOrderDialog.test.jsx` | `HU12-CP18: si falla por otro motivo avisa dentro de la confirmación y se puede reintentar` | Frontend · componente | AB#373 | Rama `feature/US12-T372-T373-cancelar-pedido-front` (PR sin abrir) | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/pedidos/`):
 - `PedidoTest`: `domain/model/` (JUnit)
 - `CancelacionPedidoServiceTest` y `SeguridadPedidosServiceTest`: `application/service/` (el primero con Mockito, sin Spring; el segundo con un contexto mínimo y `@WithMockUser`)
 - `PedidoMongoAdapterTest`: `infrastructure/adapter/out/persistence/` (Testcontainers)
 - `PedidoControllerTest`: `infrastructure/adapter/in/web/` (`@WebMvcTest` con `SecurityConfig`, sin MongoDB)
+
+Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing Library y MSW):
+- `OrderDetailPage.test.jsx`: `pages/`
+- `CancelOrderDialog.test.jsx`: `features/orders/`
 
 ---
 
