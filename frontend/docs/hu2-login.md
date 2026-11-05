@@ -139,7 +139,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | Archivo | Qué hace |
 |---|---|
 | `LoginForm.jsx` | Orquesta los tres pasos, controla el estado de envío y los errores. Solo avanza de paso cuando el backend responde bien. Si el backend indica cuenta pendiente, muestra `PendingAccountScreen`. |
-| `CredentialsStep.jsx` | Paso 1. Valida que haya correo y contraseña (todos los errores a la vez) y **vacía la contraseña del estado en cuanto se envía**. La contraseña usa `PasswordField` (de `features/account/`, el mismo del registro), con un botón para mostrarla u ocultarla; aquí no se marca como obligatoria ni se muestran los requisitos, y se puede pegar la contraseña (el registro la bloquea, ver `hu1-registro.md`, sección 1.3). |
+| `CredentialsStep.jsx` | Paso 1. Valida que haya correo y contraseña (todos los errores a la vez) y **vacía la contraseña del estado en cuanto se envía**. La contraseña usa `PasswordField` (de `features/account/`, el mismo del registro), con un botón para mostrarla u ocultarla; aquí no se marca como obligatoria ni se muestran los requisitos, y se puede pegar la contraseña, pero **no copiarla ni cortarla**, tampoco con el ojo activado (`bloquearCopia`, R9 de la revisión del Sprint 1; el registro bloquea además el pegado, ver `hu1-registro.md`, sección 1.3). |
 | `CodeStep.jsx` | Pasos 2 y 3. Campo de código de 6 dígitos (se reutiliza para el correo y para Microsoft Authenticator): solo admite números y vacía el valor al enviarlo. |
 | `loginErrors.js` | Traduce los errores del backend a mensajes fijos para el usuario. `isPendingAccountError` detecta la cuenta pendiente, que no se muestra como mensaje sino con su propia pantalla. |
 | `PendingAccountScreen.jsx` | Pantalla animada de "cuenta pendiente de activación" (task AB#236). Recibe el correo y la función para volver. |
@@ -177,6 +177,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | Sin almacenamiento del navegador | No se usa `localStorage` ni `sessionStorage`. La sesión va en una **cookie httpOnly** que gestiona el backend y que JavaScript no puede leer. Hay un test que comprueba que tras un login completo ambos están vacíos. |
 | Mensajes genéricos | Contraseña errónea y usuario inexistente dan exactamente el mismo mensaje. Excepciones acordadas: cuenta bloqueada por un administrador (antes desactivada, HU23) y exceso de intentos. |
 | No se muestran textos del servidor | Los mensajes salen de una tabla fija, así que un error interno nunca llega a la pantalla. |
+| La contraseña no se copia | El campo cancela copiar y cortar (R9), también con la contraseña visible, para que no se lleve al portapapeles. Sí se puede **pegar**, para no romper los gestores de contraseñas. Es una ayuda de usabilidad, no una barrera: se salta con las herramientas del navegador, y con la contraseña visible el texto aún se podría arrastrar fuera del campo. |
 | Higiene de datos sensibles | La contraseña y los códigos se vacían del estado al enviarse. Los campos usan `autocomplete` correcto (`current-password`, `one-time-code`). |
 | El backend impone el orden | El frontend sigue los pasos por comodidad, pero no se fía de ellos. La contraseña solo se envía en el paso 1. |
 | Sin redirección a URLs externas | Tras el login se va siempre al destino del rol; no se lee ninguna URL de la petición (evita el *open redirect*). |
@@ -257,7 +258,7 @@ Código del correo: `654321`. Código de Microsoft Authenticator: `123456`. Tras
 ### Tests automáticos
 
 ```bash
-npx vitest run     # 593 tests (5 de ellos de la cuenta pendiente, AB#236, y 2 de la cuenta bloqueada, AB#245)
+npx vitest run     # incluye los 5 tests de la cuenta pendiente (AB#236), 2 de la cuenta bloqueada (AB#245) y 4 de no copiar la contraseña (HU2-CP31, R9)
 npm run lint
 npm run build
 ```

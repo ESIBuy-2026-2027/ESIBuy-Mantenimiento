@@ -43,7 +43,7 @@ Relaciona cada historia de usuario (HU) con sus casos de prueba (CP) y cada caso
 | HU1-CP24 | Tras registrarse se ofrece ir a iniciar sesión | Frontend (página) | 1 | ✅ Pasa (1, AB#234, PR #105) |
 | HU1-CP25 | Con la sesión iniciada no se ofrece crear una cuenta y /register lleva a la página del rol | Frontend (página y rutas) | 3 | ✅ Pasa (3, AB#17 · AB#18, PR #105) |
 | HU1-CP26 | Un registro correcto no se trata como un error aunque el backend responda 201 sin cuerpo | Frontend (API) | 1 | ✅ Pasa (1, AB#17 · AB#18, PR #105) |
-| HU1-CP27 | En el registro, el password y su repetición solo se pueden escribir a mano: no admiten copiar, cortar, pegar ni soltar texto, y el login sigue admitiendo pegar | Frontend (componente y página) | 7 | ✅ Pasa (7, AB#242, PR #125) |
+| HU1-CP27 | En el registro, el password y su repetición solo se pueden escribir a mano: no admiten copiar, cortar, pegar ni soltar texto, y el login sigue admitiendo pegar (aunque no copiar, HU2-CP31) | Frontend (componente y página) | 7 | ✅ Pasa (7, AB#242, PR #125) |
 
 Notas:
 - **HU1-CP11:** en el PR #36, el bloqueo manual de la T214 se renombra a desactivar/activar (`desactivar()`, `activar()`, `estaDesactivado()`) para no confundirlo con el bloqueo temporal por intentos del login (HU2-CP03). En la T225 (AB#225) la consulta pasa a nombrarse en positivo: `estaActivo()`.
@@ -233,7 +233,7 @@ Notas:
 | HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con bloquearPegado no deja pegar texto en el campo` | Frontend · componente | AB#242 | PR #125 | ✅ |
 | HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con bloquearPegado tampoco deja copiar, cortar ni soltar texto arrastrado en el campo` | Frontend · componente | AB#242 | PR #125 | ✅ |
 | HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: con el password visible sigue sin dejar copiarlo` | Frontend · componente | AB#242 | PR #125 | ✅ |
-| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: sin bloquearPegado (como en el login) se puede pegar` | Frontend · componente | AB#242 | PR #125 | ✅ |
+| HU1-CP27 | `PasswordField.test.jsx` | `HU1-CP27: sin bloquearPegado ni bloquearCopia (el campo sin restricciones) se puede pegar` | Frontend · componente | AB#242 | PR #125 | ✅ |
 | HU1-CP27 | `Register.test.jsx` | `HU1-CP27: en el registro de cliente no se puede pegar el password ni su repetición` | Frontend · página | AB#242 | PR #125 | ✅ |
 | HU1-CP27 | `Register.test.jsx` | `HU1-CP27: en el registro de vendedor no se puede pegar el password ni su repetición` | Frontend · página | AB#242 | PR #125 | ✅ |
 | HU1-CP27 | `Register.test.jsx` | `HU1-CP27: el password escrito a mano en los dos campos sigue permitiendo registrarse` | Frontend · página | AB#242 | PR #125 | ✅ |
@@ -479,6 +479,8 @@ Los tests de integración de MongoDB (`UsuarioMongoAdapterTest`, `UsuariosConfig
 | HU2-CP27 | El campo de la contraseña del login tiene un botón para mostrarla y ocultarla | Frontend (página) | 1 | ✅ Pasa (1, AB#19, PR #105) |
 | HU2-CP28 | Una cuenta bloqueada por un administrador muestra su mensaje en el paso 1, antes del código del correo, y no avanza al 2FA | Frontend (página) + unitario + integración | 4 | ✅ Pasa (2, AB#246, PR #114) |
 | HU2-CP29 | El registro y los pasos del login se pueden usar sin sesión; consultar el usuario en sesión exige estar autenticado y que el correo sea el de la sesión; el id del usuario y el perfil son del cliente y del vendedor, y saber si es premium, solo del cliente; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 7 | 🔍 En revisión (7, rama `fix/seguridad-capa-negocio`) |
+| HU2-CP30 | `PasswordField` con `bloquearCopia` no deja copiar ni cortar la contraseña (tampoco con el ojo activado) y sí pegar, soltar y escribir; sin ninguna propiedad se puede copiar | Frontend (componente) | 5 | 🔍 En revisión (5, AB#242, PR pendiente) |
+| HU2-CP31 | En el login la contraseña no se puede copiar ni cortar, tampoco con el ojo activado, pero sí pegar, y el login sigue funcionando pegando o escribiendo a mano | Frontend (página) | 4 | 🔍 En revisión (4, AB#242, PR pendiente) |
 
 Notas:
 - **HU2-CP25 y CP26 (fallos de la demo del Sprint 1):** el paso 1 busca el email normalizado (`Email`, T240) y responde «Credenciales inválidas» si está mal formado. El contador de intentos se reinicia al caducar el bloqueo (`Usuario.registrarIntentoFallido`) y al completar el tercer paso (`AuthenticatorService.verificarCodigo`), no al acertar la contraseña: así quien solo tenga la contraseña no puede probar códigos sin límite.
@@ -500,6 +502,7 @@ Notas:
 - **HU2-CP28 (AB#245, Sprint 2):** las cuentas ya no se desactivan, se bloquean (decisión del equipo). El frontend deja de esperar `ACCOUNT_DISABLED` y espera `403` con `ACCOUNT_BLOCKED` (estado `BLOQUEADO`); solo cambia el login. El backend lo completa en la T246 (AB#246): el `403` de `CuentaDesactivadaException` responde `ACCOUNT_BLOCKED` y un test fija que la cuenta se rechaza sin generar ni enviar el código del correo. El test del controlador que esperaba `ACCOUNT_DISABLED` (antes en CP04) pasa a CP28. El estado `DESACTIVADO` y la excepción no se renombran todavía, así que CP04 sigue cubriendo el rechazo y la persistencia de ese estado.
 - **Frontend (T20):** los tests de `LoginFlow.test.jsx` no llevan el ID del caso en el nombre (estilo del archivo, anterior a la convención de la HU19); se trazan aquí por su nombre.
 - **HU2-CP29 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Cubre con `@PreAuthorize` los servicios `AutenticacionService`, `AuthenticatorService`, `RegistroUsuarioService` y `GestionPerfilService`, que sirven también a las HU1 y HU4; se traza aquí por ser `AutenticacionService` el centro del ciclo. Los pasos del login y el registro son `permitAll()` explícito: el correo del login a medias vive en la sesión HTTP y no en `authentication.name`, así que la propiedad no se puede comprobar con `@PreAuthorize` sin rediseñar el login. Clase de test nueva `usuarios/application/service/SeguridadSesionUsuarioServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
+- **HU2-CP30 y CP31 (R9 de la revisión del Sprint 1, "no se puede copiar la contraseña", AB#242):** casos propuestos. `PasswordField` gana la propiedad `bloquearCopia` (cancela copiar y cortar, también con el ojo activado) y el login la usa: la contraseña no se copia, pero sí se pega, para no romper los gestores de contraseñas. `bloquearPegado` (registro, recuperación y alta de administrador) no cambia. Pendientes de confirmar con el equipo y de añadir a la HU2 en Azure Boards. Rama `fix/US1-T242-bloquear-copia-contrasena-login`.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -626,6 +629,15 @@ Notas:
 | HU2-CP29 | `SeguridadSesionUsuarioServiceTest` | `unClienteConsultaLoSuyo` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 | HU2-CP29 | `SeguridadSesionUsuarioServiceTest` | `unAnonimoNoConsultaNada` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 | HU2-CP29 | `SeguridadSesionUsuarioServiceTest` | `sinSesionSeRechazanLasConsultas` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU2-CP30 | `PasswordField.test.jsx` | `HU2-CP30: con bloquearCopia no deja copiar ni cortar la contraseña` | Frontend · componente | AB#242 | PR pendiente | 🔍 |
+| HU2-CP30 | `PasswordField.test.jsx` | `HU2-CP30: con bloquearCopia sigue sin dejar copiarla ni cortarla con la contraseña visible` | Frontend · componente | AB#242 | PR pendiente | 🔍 |
+| HU2-CP30 | `PasswordField.test.jsx` | `HU2-CP30: con bloquearCopia sí deja pegar (gestores de contraseñas) y soltar texto` | Frontend · componente | AB#242 | PR pendiente | 🔍 |
+| HU2-CP30 | `PasswordField.test.jsx` | `HU2-CP30: con bloquearCopia se puede escribir a mano` | Frontend · componente | AB#242 | PR pendiente | 🔍 |
+| HU2-CP30 | `PasswordField.test.jsx` | `HU2-CP30: sin ninguna de las dos propiedades se puede copiar y cortar` | Frontend · componente | AB#242 | PR pendiente | 🔍 |
+| HU2-CP31 | `LoginFlow.test.jsx` | `HU2-CP31: la contraseña del login no se puede copiar ni cortar` | Frontend · página | AB#242 | PR pendiente | 🔍 |
+| HU2-CP31 | `LoginFlow.test.jsx` | `HU2-CP31: tampoco se puede copiar ni cortar con la contraseña visible` | Frontend · página | AB#242 | PR pendiente | 🔍 |
+| HU2-CP31 | `LoginFlow.test.jsx` | `HU2-CP31: sí se puede pegar la contraseña y el login sigue funcionando` | Frontend · página | AB#242 | PR pendiente | 🔍 |
+| HU2-CP31 | `LoginFlow.test.jsx` | `HU2-CP31: escribiendo la contraseña a mano el login sigue funcionando` | Frontend · página | AB#242 | PR pendiente | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AutenticacionServiceTest`: `usuarios/application/service/` (Mockito, con `Clock` fijo)
@@ -2374,6 +2386,7 @@ Rutas de los archivos de test (bajo `frontend/src/`):
 | HU21-CP17 | Sin sesión o sin rol ADMINISTRADOR no se puede cambiar el estado de un vendedor | Integración (capa web) | 2 | ✅ Pasa |
 | HU21-CP18 | Guarda el avatar elegido como imagen de perfil del administrador | Unitario + integración (capa web) | 2 | ✅ Pasa |
 | HU21-CP19 | Al crear un administrador, un dato rechazado por el backend se marca en su campo | Frontend (página) | 1 | ✅ Pasa (1, AB#50, PR #105) |
+| HU21-CP20 | En el alta de administrador, ni el password ni su repetición se pueden copiar, cortar ni pegar, y escribiéndolos a mano la cuenta se sigue creando | Frontend (página) | 3 | 🔍 En revisión (3, AB#242, PR pendiente) |
 
 Notas:
 - **Alta de administradores (AB#49):** Siguiendo el acuerdo con el frontend, la creación la realiza un administrador autenticado que establece manualmente la contraseña (opción "a" del documento `Contexto_frontend.md`).
@@ -2408,6 +2421,9 @@ Notas:
 | HU21-CP18 | `CrearAdministradorServiceTest` | `guardaElAvatarComoImagenDePerfil` | Aplicación | AB#47 | PR #102 | ✅ |
 | HU21-CP18 | `UsuarioControllerTest` | `crearAdministradorPasaElAvatar` | Infraestructura | AB#47 | PR #102 | ✅ |
 | HU21-CP19 | `AdminNewAdminPage.test.jsx` | `HU21-CP19: una contraseña rechazada por el backend se marca en su campo` | Frontend · página | AB#50 | PR #105 | ✅ |
+| HU21-CP20 | `AdminNewAdminPage.test.jsx` | `HU21-CP20: ni el password ni su repetición se pueden pegar` | Frontend · página | AB#242 | PR pendiente | 🔍 |
+| HU21-CP20 | `AdminNewAdminPage.test.jsx` | `HU21-CP20: ni el password ni su repetición se pueden copiar o cortar, tampoco con el password visible` | Frontend · página | AB#242 | PR pendiente | 🔍 |
+| HU21-CP20 | `AdminNewAdminPage.test.jsx` | `HU21-CP20: escribiendo el password a mano en los dos campos el administrador se sigue creando` | Frontend · página | AB#242 | PR pendiente | 🔍 |
 
 ---
 

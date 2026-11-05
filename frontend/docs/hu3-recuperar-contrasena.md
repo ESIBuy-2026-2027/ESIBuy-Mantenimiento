@@ -33,7 +33,7 @@ Decisiones:
 - **Página aparte**, y no un paso más del login: el login ya tiene tres pasos y así cada flujo queda separado.
 - **Se pide repetir la contraseña nueva**, como en el registro, aunque al backend solo se envía una.
 - **Antes de enviar se comprueba** que el código tiene 6 dígitos y que la contraseña cumple los requisitos de la política y coincide con su repetición. Se reutilizan `validarPasswords` y la lista de requisitos del registro.
-- Como en el registro, en los campos de la contraseña nueva no se puede pegar (T242).
+- Como en el registro, en los campos de la contraseña nueva no se puede copiar ni pegar (T242, `bloquearPegado`). Sin cambios con el R9: solo el login usa el modo `bloquearCopia`.
 - Los estilos de la tarjeta del login pasan a `authFormStyles.js` (`useAuthPageStyles`), para que las dos páginas no los dupliquen.
 
 ---
