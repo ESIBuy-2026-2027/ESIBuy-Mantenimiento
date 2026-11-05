@@ -1,6 +1,8 @@
 package es.uclm.esibuy.backend.deseos.infrastructure.adapter.in.web;
 
+import es.uclm.esibuy.backend.deseos.application.port.in.DeseoDetallado;
 import es.uclm.esibuy.backend.deseos.application.port.in.GestionListaDeseosUseCase;
+import es.uclm.esibuy.backend.deseos.application.port.in.ListaDeseosDetallada;
 import es.uclm.esibuy.backend.deseos.domain.exception.ProductoNoDisponibleException;
 import es.uclm.esibuy.backend.deseos.domain.model.ItemDeseo;
 import es.uclm.esibuy.backend.deseos.domain.model.ListaDeseos;
@@ -16,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -25,6 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -36,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ListaDeseosControllerTest {
 
     private static final String URL = "/api/customer/wishlist/items";
+    private static final String URL_LISTA = "/api/customer/wishlist";
     private static final String CLIENTE = "cliente@esibuy.test";
     private static final Instant AHORA = Instant.parse("2026-11-04T10:00:00Z");
 
@@ -84,6 +89,58 @@ class ListaDeseosControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"))
                 .andExpect(jsonPath("$.mensaje").value("El producto no existe"));
+    }
+
+    @Test
+    @DisplayName("HU14-CP18: consultar responde 200 con los datos de cada producto, también de uno desactivado; el cliente sale de la sesión")
+    void consultarRespondeConLosDatosDeCadaProducto() throws Exception {
+        when(gestionListaDeseos.consultar(CLIENTE)).thenReturn(new ListaDeseosDetallada(List.of(
+                new DeseoDetallado("p-1", "Teclado", "t.png", new BigDecimal("45.50"), 7, true, AHORA),
+                new DeseoDetallado("p-3", "Webcam", "w.png", new BigDecimal("30.25"), 0, false, AHORA))));
+
+        mockMvc.perform(get(URL_LISTA).with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(2))
+                .andExpect(jsonPath("$.items[0].productoId").value("p-1"))
+                .andExpect(jsonPath("$.items[0].nombre").value("Teclado"))
+                .andExpect(jsonPath("$.items[0].imagen").value("t.png"))
+                .andExpect(jsonPath("$.items[0].precioFinal").value(45.5))
+                .andExpect(jsonPath("$.items[0].stock").value(7))
+                .andExpect(jsonPath("$.items[0].disponible").value(true))
+                .andExpect(jsonPath("$.items[0].addedAt").value("2026-11-04T10:00:00Z"))
+                .andExpect(jsonPath("$.items[1].productoId").value("p-3"))
+                .andExpect(jsonPath("$.items[1].disponible").value(false));
+    }
+
+    @Test
+    @DisplayName("HU14-CP18: un cliente sin productos en la lista recibe 200 con items vacío")
+    void consultarUnaListaVaciaRespondeConItemsVacio() throws Exception {
+        when(gestionListaDeseos.consultar(CLIENTE)).thenReturn(new ListaDeseosDetallada(List.of()));
+
+        mockMvc.perform(get(URL_LISTA).with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(0));
+
+        verify(gestionListaDeseos).consultar(CLIENTE);
+    }
+
+    @Test
+    @DisplayName("HU14-CP19: sin sesión no se consulta la lista de deseos")
+    void sinSesionNoSeConsultaLaLista() throws Exception {
+        mockMvc.perform(get(URL_LISTA))
+                .andExpect(status().isUnauthorized());
+
+        verify(gestionListaDeseos, never()).consultar(any());
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"VENDEDOR", "ADMINISTRADOR"})
+    @DisplayName("HU14-CP19: un usuario que no es cliente no consulta la lista de deseos")
+    void noClienteNoConsultaLaLista(String rol) throws Exception {
+        mockMvc.perform(get(URL_LISTA).with(user(CLIENTE).roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verify(gestionListaDeseos, never()).consultar(any());
     }
 
     @Test

@@ -93,7 +93,7 @@ public class RealizacionPedidoService implements RealizacionPedidoUseCase {
         for (LineaPedido linea : lineas) {
             if (!existencias.descontar(linea.productoId(), linea.cantidad())) {
                 reponer(descontadas);
-                throw new StockInsuficientePedidoException("No hay stock suficiente de un producto del pedido");
+                throw new StockInsuficientePedidoException("No se puede comprar un producto del pedido");
             }
             descontadas.add(linea);
         }

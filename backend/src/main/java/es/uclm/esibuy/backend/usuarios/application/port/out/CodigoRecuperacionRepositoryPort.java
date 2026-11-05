@@ -9,4 +9,6 @@ import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
 public interface CodigoRecuperacionRepositoryPort {
     void guardar(CodigoVerificacion codigo);   // sustituye al código de recuperación anterior del mismo usuario
     Optional<CodigoVerificacion> buscarPorUsuario(String usuarioId);
+
+    void eliminarPorUsuario(String usuarioId);
 }
