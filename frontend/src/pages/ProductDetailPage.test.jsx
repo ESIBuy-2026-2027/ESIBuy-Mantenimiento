@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http, HttpResponse } from 'msw'
+import { delay, http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
@@ -583,5 +583,39 @@ describe('ProductDetailPage (HU14): favoritos', () => {
 
     expect(await screen.findByRole('button', { name: 'Añadir a favoritos' })).toBeEnabled()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('HU14-CP39: al pulsar Añadir a favoritos se añade el producto y el botón pasa a quitarlo', async () => {
+    const user = userEvent.setup()
+    let cuerpo = null
+    responderCon()
+    server.use(
+      http.post('/api/customer/wishlist/items', async ({ request }) => {
+        cuerpo = await request.json()
+        return HttpResponse.json({ items: [{ productoId: 'p-2', addedAt: '2026-11-05T10:00:00Z' }] })
+      }),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir a favoritos' }))
+
+    expect(await screen.findByRole('button', { name: 'Quitar de favoritos' })).toBeEnabled()
+    expect(cuerpo).toEqual({ productoId: 'p-2' })
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products\/p-2$/)
+  })
+
+  it('HU14-CP39: mientras se añade, el botón queda deshabilitado', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    server.use(
+      http.post('/api/customer/wishlist/items', async () => {
+        await delay('infinite')
+      }),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir a favoritos' }))
+
+    expect(screen.getByRole('button', { name: 'Añadir a favoritos' })).toBeDisabled()
   })
 })
