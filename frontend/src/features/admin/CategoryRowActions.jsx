@@ -2,7 +2,7 @@ import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Button, makeStyles, tokens } from '@fluentui/react-components'
 import { Delete20Regular, Edit20Regular, Eye20Regular, EyeOff20Regular, Search20Regular } from '@fluentui/react-icons'
-import { deleteAdminCategory } from '../../api/adminCategories'
+import { changeAdminCategoryStatus, deleteAdminCategory } from '../../api/adminCategories'
 import CategoryDetailDialog from './CategoryDetailDialog'
 import CategoryFormDialog from './CategoryFormDialog'
 import StatusConfirmDialog from './StatusConfirmDialog'
@@ -29,6 +29,8 @@ const CAMBIOS_DE_ESTADO = {
   ACTIVA: {
     boton: 'Desactivar',
     icono: <EyeOff20Regular />,
+    nuevo: 'INACTIVA',
+    hecho: (nombre) => `${nombre} se ha desactivado.`,
     titulo: 'Desactivar categoría',
     pregunta: (nombre) =>
       `¿Seguro que quieres desactivar la categoría ${nombre}? Dejará de mostrarse a los clientes y a los vendedores.`,
@@ -36,6 +38,8 @@ const CAMBIOS_DE_ESTADO = {
   INACTIVA: {
     boton: 'Activar',
     icono: <Eye20Regular />,
+    nuevo: 'ACTIVA',
+    hecho: (nombre) => `${nombre} se ha activado.`,
     titulo: 'Activar categoría',
     pregunta: (nombre) =>
       `¿Seguro que quieres activar la categoría ${nombre}? Volverá a mostrarse a los clientes y a los vendedores.`,
@@ -58,6 +62,7 @@ export default function CategoryRowActions({ category, onResult, onChanged }) {
   const styles = useStyles()
   const [dialogo, setDialogo] = useState(null)
   const [eliminando, setEliminando] = useState(false)
+  const [cambiandoEstado, setCambiandoEstado] = useState(false)
   const tieneProductos = category.numeroProductos > 0
   const cambioDeEstado = CAMBIOS_DE_ESTADO[category.estado]
   const cerrar = () => setDialogo(null)
@@ -73,6 +78,18 @@ export default function CategoryRowActions({ category, onResult, onChanged }) {
     cerrar()
     onResult({ intent: 'error', texto: ERRORES_AL_ELIMINAR.CATEGORY_NOT_FOUND.texto(category.nombre) })
     onChanged()
+  }
+
+  const cambiarEstado = async () => {
+    setCambiandoEstado(true)
+    try {
+      await changeAdminCategoryStatus(category.id, cambioDeEstado.nuevo)
+      onResult({ intent: 'success', texto: cambioDeEstado.hecho(category.nombre) })
+      onChanged()
+    } finally {
+      setCambiandoEstado(false)
+      cerrar()
+    }
   }
 
   const eliminar = async () => {
@@ -142,8 +159,8 @@ export default function CategoryRowActions({ category, onResult, onChanged }) {
           titulo={cambioDeEstado.titulo}
           pregunta={cambioDeEstado.pregunta(category.nombre)}
           confirmar={cambioDeEstado.boton}
-          enviando={false}
-          onConfirm={cerrar}
+          enviando={cambiandoEstado}
+          onConfirm={cambiarEstado}
           onCancel={cerrar}
         />
       )}
