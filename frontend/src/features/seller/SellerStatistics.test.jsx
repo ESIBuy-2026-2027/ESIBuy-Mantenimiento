@@ -7,7 +7,7 @@ import { abrirSesionPorApi, renderApp } from '../../test/renderApp'
 async function abrirEstadisticas(email) {
   await abrirSesionPorApi(email)
   renderApp('/profile')
-  return screen.findByRole('region', { name: 'Estadísticas de ventas' })
+  return screen.findByRole('region', { name: 'Mis estadísticas' })
 }
 
 const cifra = (bloque, nombre) => within(bloque).getByRole('group', { name: nombre })

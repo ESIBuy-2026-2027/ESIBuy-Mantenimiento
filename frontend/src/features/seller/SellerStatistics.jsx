@@ -254,7 +254,7 @@ export default function SellerStatistics() {
     <section aria-labelledby={titleId}>
       <Card className={styles.card}>
         <Title3 as="h2" id={titleId} className={styles.heading}>
-          Estadísticas de ventas
+          Mis estadísticas
         </Title3>
         {estadisticas && (
           <>
