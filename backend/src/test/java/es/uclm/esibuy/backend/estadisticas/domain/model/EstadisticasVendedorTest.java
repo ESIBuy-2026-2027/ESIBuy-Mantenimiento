@@ -43,19 +43,47 @@ class EstadisticasVendedorTest {
     @Test
     @DisplayName("HU17-CP02: los más vendidos suman las unidades de cada producto y van de más a menos unidades")
     void losMasVendidosAgrupanPorProductoYOrdenanPorUnidades() {
-        fail("Funcionalidad no implementada");
+        List<VentaRegistrada> ventas = List.of(
+                venta("o-1", "p-1", 2, "40.00"),
+                venta("o-1", "p-2", 5, "25.00"),
+                venta("o-2", "p-1", 4, "80.00"));
+
+        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(ventas, List.of());
+
+        assertEquals(List.of(
+                new ProductoMasVendido("p-1", "Producto p-1", 6, new BigDecimal("120.00")),
+                new ProductoMasVendido("p-2", "Producto p-2", 5, new BigDecimal("25.00"))),
+                estadisticas.masVendidos());
     }
 
     @Test
     @DisplayName("HU17-CP02: a igualdad de unidades, primero el producto que más ha ingresado")
     void losMasVendidosDesempatanPorIngresos() {
-        fail("Funcionalidad no implementada");
+        List<VentaRegistrada> ventas = List.of(
+                venta("o-1", "p-1", 3, "30.00"),
+                venta("o-2", "p-2", 3, "90.00"));
+
+        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(ventas, List.of());
+
+        assertEquals(List.of("p-2", "p-1"),
+                estadisticas.masVendidos().stream().map(ProductoMasVendido::productoId).toList());
     }
 
     @Test
     @DisplayName("HU17-CP02: solo se muestran los 5 productos más vendidos")
     void soloSeMuestranLosCincoMasVendidos() {
-        fail("Funcionalidad no implementada");
+        List<VentaRegistrada> ventas = List.of(
+                venta("o-1", "p-1", 6, "6.00"),
+                venta("o-1", "p-2", 5, "5.00"),
+                venta("o-1", "p-3", 4, "4.00"),
+                venta("o-1", "p-4", 3, "3.00"),
+                venta("o-1", "p-5", 2, "2.00"),
+                venta("o-1", "p-6", 1, "1.00"));
+
+        EstadisticasVendedor estadisticas = EstadisticasVendedor.calcular(ventas, List.of());
+
+        assertEquals(List.of("p-1", "p-2", "p-3", "p-4", "p-5"),
+                estadisticas.masVendidos().stream().map(ProductoMasVendido::productoId).toList());
     }
 
     @Test
