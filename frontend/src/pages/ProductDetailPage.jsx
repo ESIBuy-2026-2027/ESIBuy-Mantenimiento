@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
   Button,
@@ -21,6 +21,9 @@ import { useCategories } from '../hooks/useCategories'
 import { PATHS } from '../routes/paths'
 
 const NOT_FOUND = 404
+
+// Si un producto está en la lista de deseos que devuelve el backend (HU14).
+const estaEnLaLista = (lista, productId) => lista.items.some((item) => item.productoId === productId)
 
 const useStyles = makeStyles({
   page: {
@@ -99,7 +102,15 @@ export default function ProductDetailPage() {
   const { data: reviews, failed: reviewsFailed, retry: retryReviews } = useApiQuery(reviewsFetcher)
   const { categories } = useCategories()
   // Si el producto está en los favoritos del cliente (HU14). Si la lista no se puede leer, se ofrece añadirlo.
+  // `cambiado` evita que una lectura lenta pise un cambio que el cliente ya ha hecho.
   const [favorito, setFavorito] = useState(false)
+  const cambiado = useRef(false)
+
+  const anadirFavorito = async (productId) => {
+    const lista = await addWishlistItem(productId)
+    cambiado.current = true
+    setFavorito(estaEnLaLista(lista, id))
+  }
   const notFound = failed && error?.status === NOT_FOUND
   const categoryName = categories.find((category) => category.id === product?.categoriaId)?.nombre
 
@@ -107,7 +118,7 @@ export default function ProductDetailPage() {
     let cancelled = false
     getWishlist()
       .then((lista) => {
-        if (!cancelled) setFavorito(lista.items.some((item) => item.productoId === id))
+        if (!cancelled && !cambiado.current) setFavorito(estaEnLaLista(lista, id))
       })
       .catch(() => {})
     return () => {
@@ -155,7 +166,7 @@ export default function ProductDetailPage() {
           reviewsFailed={reviewsFailed}
           onRetryReviews={retryReviews}
           favorite={favorito}
-          onAddFavorite={addWishlistItem}
+          onAddFavorite={anadirFavorito}
         />
       )}
     </main>

@@ -236,6 +236,16 @@ export default function ProductDetail({
   const [quantity, setQuantity] = useState(1)
   const canBuy = status.key === 'in' || status.key === 'low'
   const category = categoryName ?? SIN_CATEGORIA
+  const [savingFavorite, setSavingFavorite] = useState(false)
+
+  const toggleFavorite = async () => {
+    setSavingFavorite(true)
+    try {
+      await onAddFavorite(product.id)
+    } finally {
+      setSavingFavorite(false)
+    }
+  }
 
   return (
     <div className={styles.layout}>
@@ -295,6 +305,8 @@ export default function ProductDetail({
               appearance="secondary"
               className={styles.favorite}
               icon={favorite ? <Heart20Filled className={styles.favoriteIcon} /> : <Heart20Regular />}
+              disabled={savingFavorite}
+              onClick={toggleFavorite}
             >
               {favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
             </Button>
