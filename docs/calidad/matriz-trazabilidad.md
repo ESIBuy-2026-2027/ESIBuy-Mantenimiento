@@ -1989,16 +1989,25 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP08 | Un cuerpo sin `productoId`, con `productoId` vacío o ilegible devuelve 400 `VALIDATION_ERROR` y no llega al caso de uso | Integración (capa web) | 1 | ✅ Pasa (1, AB#358, PR #198) |
 | HU14-CP09 | Un producto no disponible devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | ✅ Pasa (1, AB#358, PR #198) |
 | HU14-CP10 | Sin sesión (401), sin ser cliente (403) o sin token CSRF (403) no se añade a la lista | Integración (capa web) | 3 | ✅ Pasa (3, AB#358, PR #198) |
-| HU14-CP20 | La llamada del cliente pide `POST /api/customer/wishlist/items` con el producto y devuelve la lista; un 404 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#357, PR #202) |
-| HU14-CP21 | Cada tarjeta del catálogo tiene un corazón para añadir su producto a favoritos, fuera del enlace al detalle; también los agotados, pero no los no disponibles | Frontend (componente y página) | 5 | 🔍 En revisión (5, AB#357, PR #202) |
-| HU14-CP22 | Al pulsar el corazón se añade el producto; mientras se añade queda deshabilitado y después queda relleno y deshabilitado, sin salir del catálogo | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#357, PR #202) |
-| HU14-CP23 | La lista que devuelve el backend al añadir rellena también los corazones de los productos que ya estaban en favoritos | Frontend (página) | 1 | 🔍 En revisión (1, AB#357, PR #202) |
-| HU14-CP24 | Si no se puede añadir, la tarjeta lo avisa (producto que ya no está disponible o mensaje genérico) y el corazón se puede volver a pulsar; al pulsarlo desaparece el aviso | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#357, PR #202) |
+| HU14-CP11 | Consultar devuelve cada producto con sus datos actuales y su fecha, en orden de añadido; sin lista, una vacía que no se guarda | Unitario | 2 | 🔍 En revisión (2, Rama `feature/US14-T362-logica-obtencion-deseos`) |
+| HU14-CP12 | Un producto desactivado sigue en la lista, marcado como no disponible | Unitario | 1 | 🔍 En revisión (1, Rama `feature/US14-T362-logica-obtencion-deseos`) |
+| HU14-CP13 | Un producto eliminado desaparece y la lista se guarda sin él; si no hay ninguno eliminado, no se guarda nada | Unitario | 4 | 🔍 En revisión (4, Rama `feature/US14-T362-logica-obtencion-deseos`) |
+| HU14-CP14 | El precio de cada producto es el que le toca al cliente, estándar o premium | Unitario | 1 | 🔍 En revisión (1, Rama `feature/US14-T362-logica-obtencion-deseos`) |
+| HU14-CP15 | Solo el cliente con su propio correo consulta su lista: otro correo, vendedor o administrador reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, Rama `feature/US14-T362-logica-obtencion-deseos`) |
+| HU14-CP16 | El resumen de `productos` devuelve los productos disponibles y los desactivados, vacío si no existe, y exige el rol cliente | Unitario y unitario con Spring Security (sin MongoDB) | 7 | 🔍 En revisión (7, Rama `feature/US14-T362-logica-obtencion-deseos`) |
+| HU14-CP17 | Los adaptadores preguntan a `usuarios` si el cliente es premium y a `productos` por los datos del producto | Unitario | 3 | 🔍 En revisión (3, Rama `feature/US14-T362-logica-obtencion-deseos`) |
+| HU14-CP20 | La llamada del cliente pide `POST /api/customer/wishlist/items` con el producto y devuelve la lista; un 404 llega como error con su estado y su código | Frontend (API) | 2 | ✅ Pasa (2, AB#357, PR #202) |
+| HU14-CP21 | Cada tarjeta del catálogo tiene un corazón para añadir su producto a favoritos, fuera del enlace al detalle; también los agotados, pero no los no disponibles | Frontend (componente y página) | 5 | ✅ Pasa (5, AB#357, PR #202) |
+| HU14-CP22 | Al pulsar el corazón se añade el producto; mientras se añade queda deshabilitado y después queda relleno y deshabilitado, sin salir del catálogo | Frontend (componente y página) | 4 | ✅ Pasa (4, AB#357, PR #202) |
+| HU14-CP23 | La lista que devuelve el backend al añadir rellena también los corazones de los productos que ya estaban en favoritos | Frontend (página) | 1 | ✅ Pasa (1, AB#357, PR #202) |
+| HU14-CP24 | Si no se puede añadir, la tarjeta lo avisa (producto que ya no está disponible o mensaje genérico) y el corazón se puede volver a pulsar; al pulsarlo desaparece el aviso | Frontend (componente y página) | 4 | ✅ Pasa (4, AB#357, PR #202) |
 
 - **HU14-CP01 a CP06 (Sprint 2, backend):** casos propuestos en la task AB#360 (lógica de guardado de deseo), revisados y aceptados por el desarrollador. Azure no los trae: habría que añadirlos a la HU14.
 - **Decisiones del equipo:** módulo nuevo `deseos`; una sola lista por cliente, como dicen el criterio de aceptación y la colección `listas_deseos`, que ya tenía su índice único. El campo de la colección sigue siendo `usuarioId`, y guarda el id del cliente. Añadir un producto repetido no es un error, y un producto inexistente o no disponible se rechaza.
 - **T359 (edición de la entidad cliente):** pasada a *Removed*. La lista va en su propia colección y se relaciona con el cliente por id, así que `Usuario` no cambia.
-- **Pendiente para la T362 (obtener deseos):** un producto desactivado sigue en la lista con un aviso de "no disponible", y uno eliminado desaparece al consultarla. `consultarComprable` devuelve vacío en los dos casos, así que hará falta otra consulta al módulo de productos.
+- **HU14-CP11 a CP17 (Sprint 2, backend):** casos propuestos en la task AB#362 (lógica de obtención de deseos), revisados y aceptados por el desarrollador.
+- **Consultar la lista (T362):** devuelve de cada producto `nombre`, `imagen`, `precioFinal` (el del cliente), `stock`, `disponible` y `addedAt`. Un producto desactivado sigue en la lista, con su precio, y uno eliminado desaparece. Como en el carrito (AB#390), la lista se limpia al consultarla: un borrado físico en `productos` no avisa a `deseos`. Para distinguir los dos casos, `productos` añade `CatalogoProductosUseCase.consultarResumen`, porque `consultarComprable` devuelve vacío en ambos.
+- **Tests que pasaban en el rojo (T362):** "sin lista" y "sin eliminados no se guarda" (HU14-CP11 y CP13) y "sin eliminados la lista no cambia" (HU14-CP13), porque el esqueleto no hacía nada. Se comprobaron con versiones que siempre guardaban o que siempre decían que la lista había cambiado, y entonces fallaron.
 - **HU14-CP07 a CP10 (Sprint 2, backend):** casos propuestos en la task AB#358 (endpoint añadir deseo), revisados y aceptados por el desarrollador.
 - **Endpoint (T358):** `POST /api/customer/wishlist/items` con `{ "productoId": "p-1" }` → 200 `{ "items": [{ "productoId", "addedAt" }] }`, también si el producto ya estaba. Errores: 400 `VALIDATION_ERROR`, 404 `PRODUCT_NOT_FOUND`, 401 sin sesión y 403 con otro rol o sin CSRF. Los datos del producto (nombre, imagen, aviso de "no disponible") llegan con la consulta de la T361 y la T362. `ProductoNoDisponibleException` comparte el handler de `ProductoNoComprableException` en `ManejadorGlobalErrores`, porque responden igual.
 - **HU14-CP10 sin rojo real:** la regla de `/api/customer/**` de `SecurityConfig` ya lo cubría. Se comprobó con dos cambios temporales: con la ruta abierta fallaron los tres tests de sesión y rol, y sin CSRF falló el del token.
@@ -2038,21 +2047,44 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP10 | `ListaDeseosControllerTest` | `sinSesionNoSeAnade` | Infraestructura | AB#358 | PR #198 | ✅ |
 | HU14-CP10 | `ListaDeseosControllerTest` | `noClienteNoAnade` (vendedor y administrador) | Infraestructura | AB#358 | PR #198 | ✅ |
 | HU14-CP10 | `ListaDeseosControllerTest` | `sinTokenCsrfNoSeAnade` | Infraestructura | AB#358 | PR #198 | ✅ |
-| HU14-CP20 | `wishlist.test.js` | `HU14-CP20: pide POST /api/customer/wishlist/items con el producto y devuelve la lista del cliente` | Frontend · API | AB#357 | PR #202 | 🔍 |
-| HU14-CP20 | `wishlist.test.js` | `HU14-CP20: un 404 llega como error con su estado y su código` | Frontend · API | AB#357 | PR #202 | 🔍 |
-| HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: la tarjeta tiene un corazón para añadir el producto a favoritos, fuera del enlace al detalle` | Frontend · componente | AB#357 | PR #202 | 🔍 |
-| HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: un producto agotado también se puede añadir a favoritos` | Frontend · componente | AB#357 | PR #202 | 🔍 |
-| HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: un producto no disponible no tiene el corazón` | Frontend · componente | AB#357 | PR #202 | 🔍 |
-| HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: sin onAddFavorite la tarjeta no ofrece favoritos` | Frontend · componente | AB#357 | PR #202 | 🔍 |
-| HU14-CP21 | `ProductsPage.test.jsx` | `HU14-CP21: cada tarjeta del catálogo tiene el corazón para añadir su producto a favoritos` | Frontend · página | AB#357 | PR #202 | 🔍 |
-| HU14-CP22 | `ProductCard.test.jsx` | `HU14-CP22: al pulsar el corazón pide añadir ese producto a favoritos` | Frontend · componente | AB#357 | PR #202 | 🔍 |
-| HU14-CP22 | `ProductCard.test.jsx` | `HU14-CP22: mientras se añade, el corazón queda deshabilitado` | Frontend · componente | AB#357 | PR #202 | 🔍 |
-| HU14-CP22 | `ProductCard.test.jsx` | `HU14-CP22: un producto que ya está en favoritos tiene el corazón relleno y deshabilitado` | Frontend · componente | AB#357 | PR #202 | 🔍 |
-| HU14-CP22 | `ProductsPage.test.jsx` | `HU14-CP22: al pulsar el corazón se añade el producto a favoritos y el corazón queda relleno` | Frontend · página | AB#357 | PR #202 | 🔍 |
-| HU14-CP23 | `ProductsPage.test.jsx` | `HU14-CP23: al añadir, se rellenan también los corazones de los productos que ya estaban en la lista del cliente` | Frontend · página | AB#357 | PR #202 | 🔍 |
-| HU14-CP24 | `ProductCard.test.jsx` | `HU14-CP24: si %s, la tarjeta lo avisa y el corazón se puede volver a pulsar` (2 variantes: el producto ya no está disponible y falla por otro motivo) | Frontend · componente | AB#357 | PR #202 | 🔍 |
-| HU14-CP24 | `ProductCard.test.jsx` | `HU14-CP24: al volver a pulsar el corazón desaparece el aviso anterior` | Frontend · componente | AB#357 | PR #202 | 🔍 |
-| HU14-CP24 | `ProductsPage.test.jsx` | `HU14-CP24: si el producto ya no está disponible, su tarjeta lo avisa y el corazón sigue vacío` | Frontend · página | AB#357 | PR #202 | 🔍 |
+| HU14-CP11 | `GestionListaDeseosServiceTest` | `consultarDevuelveCadaProductoConSusDatosActuales` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP11 | `GestionListaDeseosServiceTest` | `sinListaDevuelveUnaVaciaSinGuardarla` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP12 | `GestionListaDeseosServiceTest` | `unProductoDesactivadoSigueEnLaLista` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP13 | `ListaDeseosTest` | `unProductoEliminadoDesapareceDeLaLista` | Dominio | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP13 | `ListaDeseosTest` | `sinProductosEliminadosLaListaNoCambia` | Dominio | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP13 | `GestionListaDeseosServiceTest` | `unProductoEliminadoDesapareceYLaListaSeGuarda` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP13 | `GestionListaDeseosServiceTest` | `sinProductosEliminadosNoSeGuardaLaLista` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP14 | `GestionListaDeseosServiceTest` | `elPrecioEsElQueLeTocaAlCliente` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP15 | `SeguridadDeseosServiceTest` | `elClienteConsultaConSuPropioCorreo` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP15 | `SeguridadDeseosServiceTest` | `unClienteNoConsultaConElCorreoDeOtro` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP15 | `SeguridadDeseosServiceTest` | `unVendedorNoConsulta` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP15 | `SeguridadDeseosServiceTest` | `unAdministradorNoConsulta` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP15 | `SeguridadDeseosServiceTest` | `sinSesionNoSeConsulta` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP16 | `CatalogoProductosServiceTest` | `elResumenDeUnProductoDisponibleLlevaSusDatos` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP16 | `CatalogoProductosServiceTest` | `unProductoDesactivadoTambienTieneResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP16 | `CatalogoProductosServiceTest` | `unProductoQueNoExisteNoTieneResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP16 | `SeguridadProductosServiceTest` | `unClienteConsultaElResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP16 | `SeguridadProductosServiceTest` | `unVendedorNoConsultaElResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP16 | `SeguridadProductosServiceTest` | `unAdministradorNoConsultaElResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP16 | `SeguridadProductosServiceTest` | `sinSesionNoSeConsultaElResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP17 | `ClienteEnSesionAdapterTest` | `esPremiumPreguntaAlModuloDeUsuarios` | Infraestructura | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP17 | `ProductosAdapterTest` | `consultarResumenPreguntaAlModuloDeProductos` | Infraestructura | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP17 | `ProductosAdapterTest` | `unProductoQueNoExisteNoTieneDatos` | Infraestructura | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP20 | `wishlist.test.js` | `HU14-CP20: pide POST /api/customer/wishlist/items con el producto y devuelve la lista del cliente` | Frontend · API | AB#357 | PR #202 | ✅ |
+| HU14-CP20 | `wishlist.test.js` | `HU14-CP20: un 404 llega como error con su estado y su código` | Frontend · API | AB#357 | PR #202 | ✅ |
+| HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: la tarjeta tiene un corazón para añadir el producto a favoritos, fuera del enlace al detalle` | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: un producto agotado también se puede añadir a favoritos` | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: un producto no disponible no tiene el corazón` | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: sin onAddFavorite la tarjeta no ofrece favoritos` | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP21 | `ProductsPage.test.jsx` | `HU14-CP21: cada tarjeta del catálogo tiene el corazón para añadir su producto a favoritos` | Frontend · página | AB#357 | PR #202 | ✅ |
+| HU14-CP22 | `ProductCard.test.jsx` | `HU14-CP22: al pulsar el corazón pide añadir ese producto a favoritos` | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP22 | `ProductCard.test.jsx` | `HU14-CP22: mientras se añade, el corazón queda deshabilitado` | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP22 | `ProductCard.test.jsx` | `HU14-CP22: un producto que ya está en favoritos tiene el corazón relleno y deshabilitado` | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP22 | `ProductsPage.test.jsx` | `HU14-CP22: al pulsar el corazón se añade el producto a favoritos y el corazón queda relleno` | Frontend · página | AB#357 | PR #202 | ✅ |
+| HU14-CP23 | `ProductsPage.test.jsx` | `HU14-CP23: al añadir, se rellenan también los corazones de los productos que ya estaban en la lista del cliente` | Frontend · página | AB#357 | PR #202 | ✅ |
+| HU14-CP24 | `ProductCard.test.jsx` | `HU14-CP24: si %s, la tarjeta lo avisa y el corazón se puede volver a pulsar` (2 variantes: el producto ya no está disponible y falla por otro motivo) | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP24 | `ProductCard.test.jsx` | `HU14-CP24: al volver a pulsar el corazón desaparece el aviso anterior` | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP24 | `ProductsPage.test.jsx` | `HU14-CP24: si el producto ya no está disponible, su tarjeta lo avisa y el corazón sigue vacío` | Frontend · página | AB#357 | PR #202 | ✅ |
 
 ---
 
