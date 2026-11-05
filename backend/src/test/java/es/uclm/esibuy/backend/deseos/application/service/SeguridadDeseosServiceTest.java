@@ -110,6 +110,40 @@ class SeguridadDeseosServiceTest {
     }
 
     @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU14-CP15: el cliente consulta su lista con su propio correo")
+    void elClienteConsultaConSuPropioCorreo() {
+        assertDoesNotThrow(() -> gestionListaDeseos.consultar(CLIENTE));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU14-CP15: un cliente no consulta la lista con el correo de otro cliente")
+    void unClienteNoConsultaConElCorreoDeOtro() {
+        assertThrows(AccessDeniedException.class, () -> gestionListaDeseos.consultar(OTRO_CLIENTE));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "VENDEDOR")
+    @DisplayName("HU14-CP15: un vendedor no consulta listas de deseos")
+    void unVendedorNoConsulta() {
+        assertThrows(AccessDeniedException.class, () -> gestionListaDeseos.consultar(CLIENTE));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "ADMINISTRADOR")
+    @DisplayName("HU14-CP15: un administrador no consulta listas de deseos")
+    void unAdministradorNoConsulta() {
+        assertThrows(AccessDeniedException.class, () -> gestionListaDeseos.consultar(CLIENTE));
+    }
+
+    @Test
+    @DisplayName("HU14-CP15: sin sesión no se consulta la lista")
+    void sinSesionNoSeConsulta() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> gestionListaDeseos.consultar(CLIENTE));
+    }
+
+    @Test
     @DisplayName("HU14-CP05: sin sesión se rechaza")
     void sinSesionSeRechaza() {
         assertThrows(AuthenticationCredentialsNotFoundException.class,

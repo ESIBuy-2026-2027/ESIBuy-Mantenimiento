@@ -120,13 +120,98 @@ describe('AdminCategoriesPage (HU39): ficha de la categoría', () => {
     await user.click(within(dialogo).getByRole('button', { name: 'Cerrar' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
+})
 
-  // Eliminar llega con la HU42 (la papelera de cada fila); crear y editar son de las HU40 y HU41.
-  it('HU39-CP11: la vista no ofrece crear ni editar categorías', async () => {
+describe('AdminCategoriesPage (HU40): crear', () => {
+  it('HU40-CP11: la vista tiene el botón Nueva categoría, que abre el formulario de creación', async () => {
+    const user = userEvent.setup()
     await abrirListado()
 
-    expect(screen.queryByRole('button', { name: /crear|nueva|editar/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /crear|nueva/i })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Nueva categoría' }))
+
+    expect(await screen.findByRole('dialog', { name: 'Nueva categoría' })).toBeInTheDocument()
+  })
+
+  it('HU40-CP11: sin ninguna categoría también se puede crear la primera', async () => {
+    server.use(http.get(URL_CATEGORIAS, () => HttpResponse.json([])))
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderWithProviders(<AdminCategoriesPage />)
+
+    await screen.findByRole('heading', { name: /todavía no hay categorías/i })
+    expect(screen.getByRole('button', { name: 'Nueva categoría' })).toBeInTheDocument()
+  })
+
+  it('HU40-CP13: al crearla, avisa y la categoría aparece en la lista con el estado elegido', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.click(screen.getByRole('button', { name: 'Nueva categoría' }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Nueva categoría' })
+    await user.type(within(dialogo).getByRole('textbox', { name: /nombre/i }), 'Jardín')
+    await user.click(within(dialogo).getByRole('radio', { name: 'Inactiva' }))
+    await user.click(within(dialogo).getByRole('button', { name: 'Crear' }))
+
+    expect(await screen.findByText('Jardín se ha creado.')).toBeInTheDocument()
+    await waitFor(() => expect(nombresEnPantalla()).toContain('Jardín'))
+    expect(filasDeDatos()).toHaveLength(9)
+    expect(celdasDe('Jardín')).toEqual(['Jardín', '—', 'Inactiva', '0', ''])
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  it('HU40-CP14: no se puede crear una categoría repetida, aunque cambien las mayúsculas o las tildes', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.click(screen.getByRole('button', { name: 'Nueva categoría' }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Nueva categoría' })
+    await user.type(within(dialogo).getByRole('textbox', { name: /nombre/i }), 'TECNOLOGIA')
+    await user.click(within(dialogo).getByRole('button', { name: 'Crear' }))
+
+    expect(await within(dialogo).findByText('Ya existe una categoría con ese nombre.')).toBeInTheDocument()
+    expect(filasDeDatos()).toHaveLength(8)
+  })
+})
+
+describe('AdminCategoriesPage (HU41): editar', () => {
+  it('HU41-CP16: cada fila de la lista tiene el lápiz para editar su categoría', async () => {
+    await abrirListado()
+
+    expect(screen.getAllByRole('button', { name: /^editar /i })).toHaveLength(8)
+    expect(within(filaDe('Hogar')).getByRole('button', { name: 'Editar Hogar' })).toBeEnabled()
+  })
+
+  it('HU41-CP17: al guardar, avisa y la lista muestra el nombre y la descripción nuevos', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.click(screen.getByRole('button', { name: 'Editar Libros' }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Editar categoría' })
+    const nombre = within(dialogo).getByRole('textbox', { name: /nombre/i })
+    await user.clear(nombre)
+    await user.type(nombre, 'Libros y cómics')
+    await user.type(within(dialogo).getByRole('textbox', { name: /descripción/i }), 'Novelas y tebeos.')
+    await user.click(within(dialogo).getByRole('button', { name: 'Guardar' }))
+
+    // Es el recorrido más largo (borrar y escribir dos campos): con toda la batería a la vez puede tardar más.
+    expect(await screen.findByText('Libros y cómics se ha actualizado.', {}, { timeout: 3000 })).toBeInTheDocument()
+    await waitFor(() => expect(nombresEnPantalla()).toContain('Libros y cómics'))
+    expect(nombresEnPantalla()).not.toContain('Libros')
+    expect(celdasDe('Libros y cómics').slice(0, 4)).toEqual(['Libros y cómics', 'Novelas y tebeos.', 'Activa', '11'])
+  })
+
+  it('HU41-CP18: no se puede poner el nombre de otra categoría, aunque cambien las mayúsculas o las tildes', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.click(screen.getByRole('button', { name: 'Editar Libros' }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Editar categoría' })
+    const nombre = within(dialogo).getByRole('textbox', { name: /nombre/i })
+    await user.clear(nombre)
+    await user.type(nombre, 'alimentacion')
+    await user.click(within(dialogo).getByRole('button', { name: 'Guardar' }))
+
+    expect(await within(dialogo).findByText('Ya existe una categoría con ese nombre.')).toBeInTheDocument()
+    expect(nombresEnPantalla()).toContain('Libros')
   })
 })
 

@@ -33,6 +33,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 // Docker Desktop debe estar abierto. InicializadorColecciones crea las colecciones con su validación e índices.
 // También la consulta de compras de HU13 (T370). PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU13-CP08, propuesto.
 // Y el historial y el detalle de los pedidos del cliente (HU11, T378): caso HU11-CP04, propuesto.
+// Y guardar un pedido cancelado (HU12, T375): caso HU12-CP08, propuesto.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class PedidoMongoAdapterTest {
@@ -168,5 +169,21 @@ class PedidoMongoAdapterTest {
         assertEquals(2, leido.getLineas().size());
         assertEquals(new BigDecimal("197.32"), leido.getTotal());
         assertTrue(adapter.buscarPorId("000000000000000000000000").isEmpty());
+    }
+
+    @Test
+    @DisplayName("HU12-CP08: guardar un pedido leído y cancelado actualiza el mismo documento, sin crear otro")
+    void guardarUnPedidoCanceladoActualizaElMismoDocumento() {
+        Pedido guardado = adapter.guardar(pedidoDelCliente("ESB-2026-000001", "c-1", AHORA));
+        Pedido leido = adapter.buscarPorId(guardado.getId()).orElseThrow();
+
+        leido.cancelar();
+        adapter.guardar(leido);
+
+        assertEquals(1, pedidoMongoRepository.count());
+        Pedido releido = adapter.buscarPorId(guardado.getId()).orElseThrow();
+        assertEquals(EstadoPedido.CANCELADO, releido.getEstado());
+        assertEquals("ESB-2026-000001", releido.getNumeroPedido().valor());
+        assertEquals(AHORA, releido.getCreatedAt());
     }
 }

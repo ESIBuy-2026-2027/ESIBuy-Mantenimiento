@@ -1,9 +1,10 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Button, makeStyles, tokens } from '@fluentui/react-components'
-import { Delete20Regular, Search20Regular } from '@fluentui/react-icons'
+import { Delete20Regular, Edit20Regular, Search20Regular } from '@fluentui/react-icons'
 import { deleteAdminCategory } from '../../api/adminCategories'
 import CategoryDetailDialog from './CategoryDetailDialog'
+import CategoryFormDialog from './CategoryFormDialog'
 import StatusConfirmDialog from './StatusConfirmDialog'
 
 // El backend no deja eliminar una categoría con productos (409 CATEGORY_HAS_PRODUCTS, HU42).
@@ -31,15 +32,29 @@ const useStyles = makeStyles({
   },
 })
 
-// Acciones de una fila de la tabla de categorías: la lupa que abre su ficha de solo lectura (HU39) y la papelera
-// para eliminarla (HU42), que pide confirmación. Si la categoría tiene productos, la papelera queda deshabilitada y
-// explica por qué. `onResult` recibe el aviso que debe ver el administrador; `onChanged`, que la lista se actualice.
+// Acciones de una fila de la tabla de categorías: la lupa que abre su ficha de solo lectura (HU39), el lápiz que abre
+// su formulario de edición (HU41) y la papelera para eliminarla (HU42), que pide confirmación. Si la categoría tiene
+// productos, la papelera queda deshabilitada y explica por qué. `onResult` recibe el aviso que debe ver el
+// administrador; `onChanged`, que la lista se actualice.
 export default function CategoryRowActions({ category, onResult, onChanged }) {
   const styles = useStyles()
   const [dialogo, setDialogo] = useState(null)
   const [eliminando, setEliminando] = useState(false)
   const tieneProductos = category.numeroProductos > 0
   const cerrar = () => setDialogo(null)
+
+  const avisarEditada = (editada) => {
+    cerrar()
+    onResult({ intent: 'success', texto: `${editada.nombre} se ha actualizado.` })
+    onChanged()
+  }
+
+  // Otro administrador la ha eliminado mientras se editaba: la lista está desfasada y se recarga.
+  const avisarQueYaNoExiste = () => {
+    cerrar()
+    onResult({ intent: 'error', texto: ERRORES_AL_ELIMINAR.CATEGORY_NOT_FOUND.texto(category.nombre) })
+    onChanged()
+  }
 
   const eliminar = async () => {
     setEliminando(true)
@@ -71,6 +86,13 @@ export default function CategoryRowActions({ category, onResult, onChanged }) {
       />
       <Button
         appearance="subtle"
+        icon={<Edit20Regular />}
+        aria-label={`Editar ${category.nombre}`}
+        title="Editar"
+        onClick={() => setDialogo('editar')}
+      />
+      <Button
+        appearance="subtle"
         icon={<Delete20Regular />}
         aria-label={`Eliminar ${category.nombre}`}
         title={tieneProductos ? MENSAJE_CON_PRODUCTOS : 'Eliminar'}
@@ -79,6 +101,14 @@ export default function CategoryRowActions({ category, onResult, onChanged }) {
       />
 
       {dialogo === 'ficha' && <CategoryDetailDialog category={category} onClose={cerrar} />}
+      {dialogo === 'editar' && (
+        <CategoryFormDialog
+          category={category}
+          onClose={cerrar}
+          onSaved={avisarEditada}
+          onNotFound={avisarQueYaNoExiste}
+        />
+      )}
       {dialogo === 'eliminar' && (
         <StatusConfirmDialog
           titulo="Eliminar categoría"

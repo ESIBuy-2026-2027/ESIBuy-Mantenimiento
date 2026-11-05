@@ -1713,16 +1713,26 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 | HU11-CP04 | En MongoDB se buscan los pedidos de un cliente, del más reciente al más antiguo, y un pedido por su id con sus líneas | Integración (Testcontainers) | 2 | ✅ Pasa |
 | HU11-CP05 | Los estados de envío van en el orden en que avanza un pedido (`PAGADO`, `PREPARANDO`, `ENVIADO`, `ENTREGADO`) con `CANCELADO` al final, y cada uno se guarda y se lee igual | Unitario (dominio e infraestructura) | 2 | ✅ Pasa |
 | HU11-CP06 | Solo el cliente consulta su historial y el detalle de sus pedidos: vendedor, administrador, otro cliente y sin sesión, rechazados | Seguridad (`@PreAuthorize`, contexto mínimo) | 5 | ✅ Pasa |
-| HU11-CP07 | `GET /api/customer/orders` responde 200 con los pedidos completos del cliente de la sesión (`[]` si no tiene); no expone el cliente | Integración web (`@WebMvcTest`) | 2 | 🔍 En revisión (2, AB#377, PR sin abrir) |
-| HU11-CP08 | `GET /api/customer/orders/{id}` responde 200 con el pedido: productos, desglose de precios, total, estado y dirección de envío | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#377, PR sin abrir) |
-| HU11-CP09 | Un pedido que no existe o es de otro cliente responde 400 con el code `ORDER_NOT_FOUND` («El pedido no existe») | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#377, PR sin abrir) |
-| HU11-CP10 | Sin sesión el historial y el detalle responden 401, y con otro rol (vendedor, administrador) 403 | Integración web (`@WebMvcTest`) | 1 | 🔍 En revisión (1, AB#377, PR sin abrir) |
+| HU11-CP07 | `GET /api/customer/orders` responde 200 con los pedidos completos del cliente de la sesión (`[]` si no tiene); no expone el cliente | Integración web (`@WebMvcTest`) | 2 | ✅ Pasa |
+| HU11-CP08 | `GET /api/customer/orders/{id}` responde 200 con el pedido: productos, desglose de precios, total, estado y dirección de envío | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU11-CP09 | Un pedido que no existe o es de otro cliente responde 400 con el code `ORDER_NOT_FOUND` («El pedido no existe») | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU11-CP10 | Sin sesión el historial y el detalle responden 401, y con otro rol (vendedor, administrador) 403 | Integración web (`@WebMvcTest`) | 1 | ✅ Pasa |
+| HU11-CP11 | Mis pedidos muestra los pedidos del cliente, del más reciente al más antiguo, con número, fecha, vendedor, total y estado; sin pedidos lo indica, y si falla permite reintentar | Frontend (página) | 3 | ✅ Pasa |
+| HU11-CP12 | Al seleccionar un pedido se abre su detalle | Frontend (página) | 1 | ✅ Pasa |
+| HU11-CP13 | Mis pedidos es solo del cliente: sin sesión lleva al login y un vendedor va a su página | Frontend (página) | 2 | ✅ Pasa |
+| HU11-CP14 | El detalle muestra número, fecha, vendedor y dirección de envío, y desglosa cada producto (cantidad, precio unitario, subtotal) y el total | Frontend (página) | 2 | ✅ Pasa |
+| HU11-CP15 | La línea de estados del envío (Pagado → Preparando → Enviado → Entregado) marca los pasos hechos, el actual y los pendientes | Frontend (página) | 2 | ✅ Pasa |
+| HU11-CP16 | Un pedido cancelado lo indica en lugar de la línea de estados del envío | Frontend (página) | 1 | ✅ Pasa |
+| HU11-CP17 | Un pedido inexistente o de otro cliente se ve como no encontrado; otro error permite reintentar; desde el detalle se vuelve a Mis pedidos | Frontend (página) | 3 | ✅ Pasa |
+| HU11-CP18 | La cabecera del cliente tiene el enlace «Mis pedidos»; la del vendedor y la del administrador, no | Frontend (componente) | 2 | ✅ Pasa |
+| HU11-CP19 | Tras pagar (HU10) se puede ir a Mis pedidos | Frontend (página) | 1 | ✅ Pasa |
 
 Notas:
 - **HU11-CP01 a CP06 (Sprint 2, backend, TDD):** casos propuestos en la T378 (AB#378, lógica de obtención de pedidos) a partir del criterio de aceptación de la HU11 (AB#73): «el sistema muestra el detalle de los productos, desglose de precios y la máquina de estados de envío cuando el cliente selecciona un pedido concreto». Pendientes de confirmar con el equipo y de añadir a la HU11 en Azure Boards.
 - **Decisiones del equipo:** el historial y el detalle se añaden a `ConsultaComprasUseCase` (mismo actor y propósito que `haComprado` de la HU13). Estados de envío: `PAGADO → PREPARANDO → ENVIADO → ENTREGADO`, más `CANCELADO` para la HU12; los hará avanzar el vendedor en otra HU. Un pedido ajeno se trata como inexistente.
 - **HU11-CP07 a CP10 (Sprint 2, backend, TDD):** casos propuestos en la T377 (AB#377, endpoint de obtención de pedidos): `GET /api/customer/orders` (historial, cada pedido completo con el formato de `PedidoResponse`) y `GET /api/customer/orders/{id}` (detalle). Un pedido ajeno o inexistente responde 400 `ORDER_NOT_FOUND`, como pide el CLAUDE.md para los pedidos. HU11-CP10 pasó sin rojo real: `SecurityConfig` ya protege `/api/customer/**`. Pendientes de confirmar con el equipo y de añadir a la HU11 en Azure Boards.
-- **Pendiente:** la vista del frontend (T376, AB#376). `haComprado` (HU13) solo cuenta los pedidos `PAGADO`: cuando los estados avancen, habrá que decidir si `ENTREGADO` cuenta como compra (comentario «PENDIENTE DE DECIDIR» en `ConsultaComprasService`).
+- **HU11-CP11 a CP19 (Sprint 2, frontend, TDD):** casos propuestos en la T376 (AB#376, vista de pedidos): «Mis pedidos» (`/orders`) y el detalle (`/orders/:id`) con la línea de estados del envío, el enlace en la cabecera y «Ver mis pedidos» tras pagar (`frontend/docs/hu11-historial-pedidos.md`). El test «el vendedor y el administrador no tienen el enlace» (CP18) pasó sin rojo real. El PR #187 se mergeó antes de añadirle estas filas, así que entran en la rama de la T375 (HU12). Pendientes de confirmar con el equipo y de añadir a la HU11 en Azure Boards.
+- **Pendiente:** `haComprado` (HU13) solo cuenta los pedidos `PAGADO`: cuando los estados avancen, habrá que decidir si `ENTREGADO` cuenta como compra (comentario «PENDIENTE DE DECIDIR» en `ConsultaComprasService`).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1741,17 +1751,82 @@ Notas:
 | HU11-CP06 | `SeguridadPedidosServiceTest` | `unClienteNoConsultaLosPedidosDeOtro` | Aplicación (seguridad) | AB#378 | PR #182 | ✅ |
 | HU11-CP06 | `SeguridadPedidosServiceTest` | `unClienteConsultaSuPropioHistorial` | Aplicación (seguridad) | AB#378 | PR #182 | ✅ |
 | HU11-CP06 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaConsultarPedidos` | Aplicación (seguridad) | AB#378 | PR #182 | ✅ |
-| HU11-CP07 | `PedidoControllerTest` | `elHistorialResponde200ConLosPedidosDelCliente` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP07 | `PedidoControllerTest` | `unClienteSinPedidosRecibeUnaListaVacia` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP08 | `PedidoControllerTest` | `elDetalleResponde200ConElPedido` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP09 | `PedidoControllerTest` | `unPedidoInexistenteOAjenoResponde400` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
-| HU11-CP10 | `PedidoControllerTest` | `soloElClienteConsultaSusPedidos` | Infraestructura (web) | AB#377 | Rama `feature/US11-T377-endpoint-obtener-pedidos` (PR sin abrir) | 🔍 |
+| HU11-CP07 | `PedidoControllerTest` | `elHistorialResponde200ConLosPedidosDelCliente` | Infraestructura (web) | AB#377 | PR #186 | ✅ |
+| HU11-CP07 | `PedidoControllerTest` | `unClienteSinPedidosRecibeUnaListaVacia` | Infraestructura (web) | AB#377 | PR #186 | ✅ |
+| HU11-CP08 | `PedidoControllerTest` | `elDetalleResponde200ConElPedido` | Infraestructura (web) | AB#377 | PR #186 | ✅ |
+| HU11-CP09 | `PedidoControllerTest` | `unPedidoInexistenteOAjenoResponde400` | Infraestructura (web) | AB#377 | PR #186 | ✅ |
+| HU11-CP10 | `PedidoControllerTest` | `soloElClienteConsultaSusPedidos` | Infraestructura (web) | AB#377 | PR #186 | ✅ |
+| HU11-CP11 | `OrdersPage.test.jsx` | `HU11-CP11: muestra los pedidos del cliente, del más reciente al más antiguo, con número, fecha, vendedor, total y estado` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP11 | `OrdersPage.test.jsx` | `HU11-CP11: sin pedidos lo indica y ofrece ir a los productos` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP11 | `OrdersPage.test.jsx` | `HU11-CP11: si no se pueden cargar los pedidos lo avisa y permite reintentar` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP12 | `OrdersPage.test.jsx` | `HU11-CP12: al pulsar un pedido se abre su detalle` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP13 | `OrdersPage.test.jsx` | `HU11-CP13: sin sesión, Mis pedidos lleva a iniciar sesión` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP13 | `OrdersPage.test.jsx` | `HU11-CP13: un vendedor no ve los pedidos de los clientes: va a su página` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP14 | `OrderDetailPage.test.jsx` | `HU11-CP14: muestra el número, la fecha, el vendedor y la dirección de envío del pedido` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP14 | `OrderDetailPage.test.jsx` | `HU11-CP14: desglosa cada producto con su cantidad, precio unitario y subtotal, y el total` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP15 | `OrderDetailPage.test.jsx` | `HU11-CP15: la línea de estados del envío marca los pasos hechos, el actual y los pendientes` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP15 | `OrderDetailPage.test.jsx` | `HU11-CP15: un pedido entregado tiene todos los pasos hechos y el último como actual` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP16 | `OrderDetailPage.test.jsx` | `HU11-CP16: un pedido cancelado lo indica en lugar de la línea de estados del envío` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP17 | `OrderDetailPage.test.jsx` | `HU11-CP17: un pedido que no existe o es de otro cliente se muestra como no encontrado` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP17 | `OrderDetailPage.test.jsx` | `HU11-CP17: si falla por otro motivo lo avisa y permite reintentar` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP17 | `OrderDetailPage.test.jsx` | `HU11-CP17: desde el detalle se vuelve a Mis pedidos` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP18 | `AppHeader.test.jsx` | `HU11-CP18: el cliente tiene el enlace a sus pedidos y lleva a Mis pedidos` | Frontend · componente | AB#376 | PR #187 | ✅ |
+| HU11-CP18 | `AppHeader.test.jsx` | `HU11-CP18: el vendedor y el administrador no tienen el enlace a Mis pedidos` | Frontend · componente | AB#376 | PR #187 | ✅ |
+| HU11-CP19 | `CheckoutPage.test.jsx` | `HU11-CP19: tras pagar se puede ir a Mis pedidos` | Frontend · página | AB#376 | PR #187 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/pedidos/`):
 - `ConsultaComprasServiceTest` y `SeguridadPedidosServiceTest`: `application/service/` (el primero sin Spring; el segundo con un contexto mínimo y `@WithMockUser`)
 - `EstadoPedidoTest`: `domain/model/` (JUnit)
 - `PedidoMongoAdapterTest` y `PedidoDocumentMapperTest`: `infrastructure/adapter/out/persistence/` (el primero con Testcontainers)
 - `PedidoControllerTest`: `infrastructure/adapter/in/web/` (`@WebMvcTest` con `SecurityConfig`, sin MongoDB)
+
+Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing Library y MSW):
+- `OrdersPage.test.jsx`, `OrderDetailPage.test.jsx` y `CheckoutPage.test.jsx`: `pages/`
+- `AppHeader.test.jsx`: `components/`
+
+---
+
+## HU12 · Cancelación de pedido
+
+### Tabla A · HU12 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU12-CP01 | Un pedido que aún no se ha enviado (`PAGADO` o `PREPARANDO`) se puede cancelar y pasa a `CANCELADO` | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
+| HU12-CP02 | Un pedido `ENVIADO`, `ENTREGADO` o ya `CANCELADO` no se puede cancelar (`PedidoNoCancelableException`) y no cambia | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
+| HU12-CP03 | Cancelar un pedido del cliente lo guarda cancelado y lo devuelve | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
+| HU12-CP04 | Al cancelar se repone el stock de cada producto del pedido, después de guardar la cancelación | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
+| HU12-CP05 | Un pedido de otro cliente o que no existe no se cancela y se trata como inexistente (`PedidoNoEncontradoException`) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
+| HU12-CP06 | Un pedido enviado o ya cancelado no se cancela: ni se guarda ni se repone stock (cancelar dos veces repondría el stock dos veces) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
+| HU12-CP07 | Solo el cliente cancela sus pedidos: vendedor, administrador, otro cliente y sin sesión, rechazados | Seguridad (`@PreAuthorize`, contexto mínimo) | 5 | 🔍 En revisión (5, AB#375, PR sin abrir) |
+| HU12-CP08 | En MongoDB, guardar un pedido leído y cancelado actualiza el mismo documento, sin crear otro | Integración (Testcontainers) | 1 | 🔍 En revisión (1, AB#375, PR sin abrir) |
+
+Notas:
+- **HU12-CP01 a CP08 (Sprint 2, backend, TDD):** casos propuestos en la T375 (AB#375, lógica de cancelación de pedido) a partir de los criterios de aceptación de la HU12 (AB#74): «solo permite cancelar si el pedido no ha sido enviado» y «el stock se repone al cancelar». Pendientes de confirmar con el equipo y de añadir a la HU12 en Azure Boards.
+- **Decisiones del equipo:** se cancelan los pedidos `PAGADO` y `PREPARANDO`, como dice el criterio (no los `ENVIADO`). Cancelar un pedido ya cancelado es un error, para no reponer el stock dos veces. Primero se guarda la cancelación y después se repone el stock. Caso de uso nuevo `CancelacionPedidoUseCase` (cancelar no es lo mismo que comprar). Un pedido ajeno se trata como inexistente.
+- **Pendiente:** el endpoint (T374, AB#374) y el frontend (T372 y T373, AB#372 y AB#373).
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU12-CP01 | `PedidoTest` | `unPedidoNoEnviadoSeCancela` | Dominio | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP02 | `PedidoTest` | `unPedidoEnviadoEntregadoOCanceladoNoSeCancela` | Dominio | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP03 | `CancelacionPedidoServiceTest` | `cancelarGuardaElPedidoCanceladoYLoDevuelve` | Aplicación | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP04 | `CancelacionPedidoServiceTest` | `cancelarReponeElStockDespuesDeGuardar` | Aplicación | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP05 | `CancelacionPedidoServiceTest` | `unPedidoAjenoOInexistenteNoSeCancela` | Aplicación | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP06 | `CancelacionPedidoServiceTest` | `unPedidoNoCancelableNoCambiaNada` | Aplicación | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `unVendedorNoCancelaPedidos` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `unAdministradorNoCancelaPedidos` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `unClienteNoCancelaConElCorreoDeOtro` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `unClienteCancelaConSuPropioCorreo` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP07 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaCancelar` | Aplicación (seguridad) | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+| HU12-CP08 | `PedidoMongoAdapterTest` | `guardarUnPedidoCanceladoActualizaElMismoDocumento` | Infraestructura | AB#375 | Rama `feature/US12-T375-logica-cancelacion-pedido` (PR sin abrir) | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/pedidos/`):
+- `PedidoTest`: `domain/model/` (JUnit)
+- `CancelacionPedidoServiceTest` y `SeguridadPedidosServiceTest`: `application/service/` (el primero con Mockito, sin Spring; el segundo con un contexto mínimo y `@WithMockUser`)
+- `PedidoMongoAdapterTest`: `infrastructure/adapter/out/persistence/` (Testcontainers)
 
 ---
 
@@ -1910,19 +1985,37 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP04 | Un producto inexistente o no disponible se rechaza y no se guarda nada; la disponibilidad se pregunta al módulo de productos | Unitario | 4 | ✅ Pasa (4, AB#360, PR #196) |
 | HU14-CP05 | Solo el cliente con su propio correo puede añadir: vendedor, administrador u otro correo reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#360, PR #196) |
 | HU14-CP06 | Persistencia en `listas_deseos`: guardar y recuperar por cliente; volver a guardar actualiza sin crear otra lista; la colección admite una sola lista por cliente | Unitario + integración MongoDB | 4 | ✅ Pasa (4, AB#360, PR #196) |
-| HU14-CP07 | `POST /api/customer/wishlist/items` devuelve 200 con la lista; el cliente sale de la sesión y un `clienteId` en el cuerpo se ignora | Integración (capa web) | 1 | 🔍 En revisión (1, Rama `feature/US14-T358-endpoint-anadir-deseo`) |
-| HU14-CP08 | Un cuerpo sin `productoId`, con `productoId` vacío o ilegible devuelve 400 `VALIDATION_ERROR` y no llega al caso de uso | Integración (capa web) | 1 | 🔍 En revisión (1, Rama `feature/US14-T358-endpoint-anadir-deseo`) |
-| HU14-CP09 | Un producto no disponible devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | 🔍 En revisión (1, Rama `feature/US14-T358-endpoint-anadir-deseo`) |
-| HU14-CP10 | Sin sesión (401), sin ser cliente (403) o sin token CSRF (403) no se añade a la lista | Integración (capa web) | 3 | 🔍 En revisión (3, Rama `feature/US14-T358-endpoint-anadir-deseo`) |
+| HU14-CP07 | `POST /api/customer/wishlist/items` devuelve 200 con la lista; el cliente sale de la sesión y un `clienteId` en el cuerpo se ignora | Integración (capa web) | 1 | ✅ Pasa (1, AB#358, PR #198) |
+| HU14-CP08 | Un cuerpo sin `productoId`, con `productoId` vacío o ilegible devuelve 400 `VALIDATION_ERROR` y no llega al caso de uso | Integración (capa web) | 1 | ✅ Pasa (1, AB#358, PR #198) |
+| HU14-CP09 | Un producto no disponible devuelve 404 con el código `PRODUCT_NOT_FOUND` | Integración (capa web) | 1 | ✅ Pasa (1, AB#358, PR #198) |
+| HU14-CP10 | Sin sesión (401), sin ser cliente (403) o sin token CSRF (403) no se añade a la lista | Integración (capa web) | 3 | ✅ Pasa (3, AB#358, PR #198) |
+| HU14-CP11 | Consultar devuelve cada producto con sus datos actuales y su fecha, en orden de añadido; sin lista, una vacía que no se guarda | Unitario | 2 | 🔍 En revisión (2, Rama `feature/US14-T362-logica-obtencion-deseos`) |
+| HU14-CP12 | Un producto desactivado sigue en la lista, marcado como no disponible | Unitario | 1 | 🔍 En revisión (1, Rama `feature/US14-T362-logica-obtencion-deseos`) |
+| HU14-CP13 | Un producto eliminado desaparece y la lista se guarda sin él; si no hay ninguno eliminado, no se guarda nada | Unitario | 4 | 🔍 En revisión (4, Rama `feature/US14-T362-logica-obtencion-deseos`) |
+| HU14-CP14 | El precio de cada producto es el que le toca al cliente, estándar o premium | Unitario | 1 | 🔍 En revisión (1, Rama `feature/US14-T362-logica-obtencion-deseos`) |
+| HU14-CP15 | Solo el cliente con su propio correo consulta su lista: otro correo, vendedor o administrador reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, Rama `feature/US14-T362-logica-obtencion-deseos`) |
+| HU14-CP16 | El resumen de `productos` devuelve los productos disponibles y los desactivados, vacío si no existe, y exige el rol cliente | Unitario y unitario con Spring Security (sin MongoDB) | 7 | 🔍 En revisión (7, Rama `feature/US14-T362-logica-obtencion-deseos`) |
+| HU14-CP17 | Los adaptadores preguntan a `usuarios` si el cliente es premium y a `productos` por los datos del producto | Unitario | 3 | 🔍 En revisión (3, Rama `feature/US14-T362-logica-obtencion-deseos`) |
+| HU14-CP20 | La llamada del cliente pide `POST /api/customer/wishlist/items` con el producto y devuelve la lista; un 404 llega como error con su estado y su código | Frontend (API) | 2 | ✅ Pasa (2, AB#357, PR #202) |
+| HU14-CP21 | Cada tarjeta del catálogo tiene un corazón para añadir su producto a favoritos, fuera del enlace al detalle; también los agotados, pero no los no disponibles | Frontend (componente y página) | 5 | ✅ Pasa (5, AB#357, PR #202) |
+| HU14-CP22 | Al pulsar el corazón se añade el producto; mientras se añade queda deshabilitado y después queda relleno y deshabilitado, sin salir del catálogo | Frontend (componente y página) | 4 | ✅ Pasa (4, AB#357, PR #202) |
+| HU14-CP23 | La lista que devuelve el backend al añadir rellena también los corazones de los productos que ya estaban en favoritos | Frontend (página) | 1 | ✅ Pasa (1, AB#357, PR #202) |
+| HU14-CP24 | Si no se puede añadir, la tarjeta lo avisa (producto que ya no está disponible o mensaje genérico) y el corazón se puede volver a pulsar; al pulsarlo desaparece el aviso | Frontend (componente y página) | 4 | ✅ Pasa (4, AB#357, PR #202) |
 
 - **HU14-CP01 a CP06 (Sprint 2, backend):** casos propuestos en la task AB#360 (lógica de guardado de deseo), revisados y aceptados por el desarrollador. Azure no los trae: habría que añadirlos a la HU14.
 - **Decisiones del equipo:** módulo nuevo `deseos`; una sola lista por cliente, como dicen el criterio de aceptación y la colección `listas_deseos`, que ya tenía su índice único. El campo de la colección sigue siendo `usuarioId`, y guarda el id del cliente. Añadir un producto repetido no es un error, y un producto inexistente o no disponible se rechaza.
 - **T359 (edición de la entidad cliente):** pasada a *Removed*. La lista va en su propia colección y se relaciona con el cliente por id, así que `Usuario` no cambia.
-- **Pendiente para la T362 (obtener deseos):** un producto desactivado sigue en la lista con un aviso de "no disponible", y uno eliminado desaparece al consultarla. `consultarComprable` devuelve vacío en los dos casos, así que hará falta otra consulta al módulo de productos.
+- **HU14-CP11 a CP17 (Sprint 2, backend):** casos propuestos en la task AB#362 (lógica de obtención de deseos), revisados y aceptados por el desarrollador.
+- **Consultar la lista (T362):** devuelve de cada producto `nombre`, `imagen`, `precioFinal` (el del cliente), `stock`, `disponible` y `addedAt`. Un producto desactivado sigue en la lista, con su precio, y uno eliminado desaparece. Como en el carrito (AB#390), la lista se limpia al consultarla: un borrado físico en `productos` no avisa a `deseos`. Para distinguir los dos casos, `productos` añade `CatalogoProductosUseCase.consultarResumen`, porque `consultarComprable` devuelve vacío en ambos.
+- **Tests que pasaban en el rojo (T362):** "sin lista" y "sin eliminados no se guarda" (HU14-CP11 y CP13) y "sin eliminados la lista no cambia" (HU14-CP13), porque el esqueleto no hacía nada. Se comprobaron con versiones que siempre guardaban o que siempre decían que la lista había cambiado, y entonces fallaron.
 - **HU14-CP07 a CP10 (Sprint 2, backend):** casos propuestos en la task AB#358 (endpoint añadir deseo), revisados y aceptados por el desarrollador.
 - **Endpoint (T358):** `POST /api/customer/wishlist/items` con `{ "productoId": "p-1" }` → 200 `{ "items": [{ "productoId", "addedAt" }] }`, también si el producto ya estaba. Errores: 400 `VALIDATION_ERROR`, 404 `PRODUCT_NOT_FOUND`, 401 sin sesión y 403 con otro rol o sin CSRF. Los datos del producto (nombre, imagen, aviso de "no disponible") llegan con la consulta de la T361 y la T362. `ProductoNoDisponibleException` comparte el handler de `ProductoNoComprableException` en `ManejadorGlobalErrores`, porque responden igual.
 - **HU14-CP10 sin rojo real:** la regla de `/api/customer/**` de `SecurityConfig` ya lo cubría. Se comprobó con dos cambios temporales: con la ruta abierta fallaron los tres tests de sesión y rol, y sin CSRF falló el del token.
 - **Ciclo con rojo parcial:** HU14-CP03 pasaba en el rojo del dominio porque `anadir` no hacía nada. Se comprobó con una versión sin la regla de repetidos, y entonces falló.
+- **HU14-CP20 a CP24 (Sprint 2, frontend):** casos propuestos en la task AB#357 (botón de favoritos en la lista de productos), a partir del criterio «el sistema guarda el producto seleccionado por el cliente en la lista de deseos vinculada a su cuenta», y desarrollados con TDD. Empiezan en CP20 para dejar hueco a los casos del backend que faltan (T361, T362, T365 y T366). Pendientes de confirmar con el equipo y de añadir a la HU14 en Azure Boards. Rama `feature/US14-T357-boton-favoritos-lista-productos`.
+- **Vista (T357):** el corazón va en la tarjeta del catálogo (`ProductCard`), encima de la esquina de la imagen y fuera del enlace al detalle. Todavía no hay `GET` de la lista, así que al entrar todos los corazones salen vacíos: la página (`ProductsPage`) los rellena con la lista completa que devuelve el `POST`. Un corazón relleno queda deshabilitado, porque quitar de favoritos es la T364. Un producto no disponible no tiene corazón (el backend respondería 404); uno agotado sí.
+- **Tests que nacen en verde:** en HU14-CP21, «un producto no disponible no tiene el corazón» y «sin onAddFavorite la tarjeta no ofrece favoritos», porque antes del ciclo la tarjeta no tenía corazón. Se dejan para que no cambie sin darnos cuenta.
+- **Pendiente:** cargar los favoritos al entrar en el catálogo cuando exista el `GET` (T361 y T362), quitar de favoritos (T364) y el corazón en el detalle del producto, que no es de esta task.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1948,12 +2041,50 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP06 | `ListaDeseosMongoAdapterTest` | `guardarUnaListaNuevaYRecuperarlaPorCliente` | Infraestructura | AB#360 | PR #196 | ✅ |
 | HU14-CP06 | `ListaDeseosMongoAdapterTest` | `guardarOtraVezActualizaLaLista` | Infraestructura | AB#360 | PR #196 | ✅ |
 | HU14-CP06 | `ListaDeseosMongoAdapterTest` | `laColeccionSoloAdmiteUnaListaPorCliente` | Infraestructura | AB#360 | PR #196 | ✅ |
-| HU14-CP07 | `ListaDeseosControllerTest` | `anadirRespondeConLaListaDelClienteEnSesion` | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
-| HU14-CP08 | `ListaDeseosControllerTest` | `cuerpoInvalidoNoLlegaAlCasoDeUso` (sin `productoId`, nulo, vacío, en blanco y JSON mal formado) | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
-| HU14-CP09 | `ListaDeseosControllerTest` | `unProductoNoDisponibleResponde404` | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
-| HU14-CP10 | `ListaDeseosControllerTest` | `sinSesionNoSeAnade` | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
-| HU14-CP10 | `ListaDeseosControllerTest` | `noClienteNoAnade` (vendedor y administrador) | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
-| HU14-CP10 | `ListaDeseosControllerTest` | `sinTokenCsrfNoSeAnade` | Infraestructura | AB#358 | Rama `feature/US14-T358-endpoint-anadir-deseo` | 🔍 |
+| HU14-CP07 | `ListaDeseosControllerTest` | `anadirRespondeConLaListaDelClienteEnSesion` | Infraestructura | AB#358 | PR #198 | ✅ |
+| HU14-CP08 | `ListaDeseosControllerTest` | `cuerpoInvalidoNoLlegaAlCasoDeUso` (sin `productoId`, nulo, vacío, en blanco y JSON mal formado) | Infraestructura | AB#358 | PR #198 | ✅ |
+| HU14-CP09 | `ListaDeseosControllerTest` | `unProductoNoDisponibleResponde404` | Infraestructura | AB#358 | PR #198 | ✅ |
+| HU14-CP10 | `ListaDeseosControllerTest` | `sinSesionNoSeAnade` | Infraestructura | AB#358 | PR #198 | ✅ |
+| HU14-CP10 | `ListaDeseosControllerTest` | `noClienteNoAnade` (vendedor y administrador) | Infraestructura | AB#358 | PR #198 | ✅ |
+| HU14-CP10 | `ListaDeseosControllerTest` | `sinTokenCsrfNoSeAnade` | Infraestructura | AB#358 | PR #198 | ✅ |
+| HU14-CP11 | `GestionListaDeseosServiceTest` | `consultarDevuelveCadaProductoConSusDatosActuales` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP11 | `GestionListaDeseosServiceTest` | `sinListaDevuelveUnaVaciaSinGuardarla` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP12 | `GestionListaDeseosServiceTest` | `unProductoDesactivadoSigueEnLaLista` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP13 | `ListaDeseosTest` | `unProductoEliminadoDesapareceDeLaLista` | Dominio | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP13 | `ListaDeseosTest` | `sinProductosEliminadosLaListaNoCambia` | Dominio | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP13 | `GestionListaDeseosServiceTest` | `unProductoEliminadoDesapareceYLaListaSeGuarda` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP13 | `GestionListaDeseosServiceTest` | `sinProductosEliminadosNoSeGuardaLaLista` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP14 | `GestionListaDeseosServiceTest` | `elPrecioEsElQueLeTocaAlCliente` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP15 | `SeguridadDeseosServiceTest` | `elClienteConsultaConSuPropioCorreo` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP15 | `SeguridadDeseosServiceTest` | `unClienteNoConsultaConElCorreoDeOtro` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP15 | `SeguridadDeseosServiceTest` | `unVendedorNoConsulta` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP15 | `SeguridadDeseosServiceTest` | `unAdministradorNoConsulta` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP15 | `SeguridadDeseosServiceTest` | `sinSesionNoSeConsulta` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP16 | `CatalogoProductosServiceTest` | `elResumenDeUnProductoDisponibleLlevaSusDatos` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP16 | `CatalogoProductosServiceTest` | `unProductoDesactivadoTambienTieneResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP16 | `CatalogoProductosServiceTest` | `unProductoQueNoExisteNoTieneResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP16 | `SeguridadProductosServiceTest` | `unClienteConsultaElResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP16 | `SeguridadProductosServiceTest` | `unVendedorNoConsultaElResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP16 | `SeguridadProductosServiceTest` | `unAdministradorNoConsultaElResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP16 | `SeguridadProductosServiceTest` | `sinSesionNoSeConsultaElResumen` | Aplicación | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP17 | `ClienteEnSesionAdapterTest` | `esPremiumPreguntaAlModuloDeUsuarios` | Infraestructura | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP17 | `ProductosAdapterTest` | `consultarResumenPreguntaAlModuloDeProductos` | Infraestructura | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP17 | `ProductosAdapterTest` | `unProductoQueNoExisteNoTieneDatos` | Infraestructura | AB#362 | Rama `feature/US14-T362-logica-obtencion-deseos` | 🔍 |
+| HU14-CP20 | `wishlist.test.js` | `HU14-CP20: pide POST /api/customer/wishlist/items con el producto y devuelve la lista del cliente` | Frontend · API | AB#357 | PR #202 | ✅ |
+| HU14-CP20 | `wishlist.test.js` | `HU14-CP20: un 404 llega como error con su estado y su código` | Frontend · API | AB#357 | PR #202 | ✅ |
+| HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: la tarjeta tiene un corazón para añadir el producto a favoritos, fuera del enlace al detalle` | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: un producto agotado también se puede añadir a favoritos` | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: un producto no disponible no tiene el corazón` | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP21 | `ProductCard.test.jsx` | `HU14-CP21: sin onAddFavorite la tarjeta no ofrece favoritos` | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP21 | `ProductsPage.test.jsx` | `HU14-CP21: cada tarjeta del catálogo tiene el corazón para añadir su producto a favoritos` | Frontend · página | AB#357 | PR #202 | ✅ |
+| HU14-CP22 | `ProductCard.test.jsx` | `HU14-CP22: al pulsar el corazón pide añadir ese producto a favoritos` | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP22 | `ProductCard.test.jsx` | `HU14-CP22: mientras se añade, el corazón queda deshabilitado` | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP22 | `ProductCard.test.jsx` | `HU14-CP22: un producto que ya está en favoritos tiene el corazón relleno y deshabilitado` | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP22 | `ProductsPage.test.jsx` | `HU14-CP22: al pulsar el corazón se añade el producto a favoritos y el corazón queda relleno` | Frontend · página | AB#357 | PR #202 | ✅ |
+| HU14-CP23 | `ProductsPage.test.jsx` | `HU14-CP23: al añadir, se rellenan también los corazones de los productos que ya estaban en la lista del cliente` | Frontend · página | AB#357 | PR #202 | ✅ |
+| HU14-CP24 | `ProductCard.test.jsx` | `HU14-CP24: si %s, la tarjeta lo avisa y el corazón se puede volver a pulsar` (2 variantes: el producto ya no está disponible y falla por otro motivo) | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP24 | `ProductCard.test.jsx` | `HU14-CP24: al volver a pulsar el corazón desaparece el aviso anterior` | Frontend · componente | AB#357 | PR #202 | ✅ |
+| HU14-CP24 | `ProductsPage.test.jsx` | `HU14-CP24: si el producto ya no está disponible, su tarjeta lo avisa y el corazón sigue vacío` | Frontend · página | AB#357 | PR #202 | ✅ |
 
 ---
 
@@ -3060,17 +3191,17 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU39-CP03 | El administrador también ve las categorías `INACTIVA` | Unitario | 1 | ✅ Pasa |
 | HU39-CP04 | Sin rol de administrador el listado devuelve 403 (cliente y vendedor), y 401 sin sesión | Controlador | 2 | ✅ Pasa |
 | HU39-CP05 | El listado público de categorías (`GET /api/categorias`) solo devuelve las activas | Unitario | 1 | 🔍 En revisión (1, rama `fix/seguridad-capa-negocio`) |
-| HU39-CP06 | La llamada del administrador pide `GET /api/admin/categorias` y devuelve el array de categorías; un 403 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#330, PR pendiente) |
-| HU39-CP07 | El estado de cada categoría se muestra como Activa (color de éxito) o Inactiva (neutro); un estado desconocido, como Desconocido | Frontend (unitario y componente) | 5 | 🔍 En revisión (5, AB#330, PR pendiente) |
-| HU39-CP08 | Filtrar las categorías por nombre (sin distinguir mayúsculas ni tildes) y por estado, y ordenarlas por nombre, productos o estado, en el cliente | Frontend (unitario) | 10 | 🔍 En revisión (10, AB#330, PR pendiente) |
-| HU39-CP09 | La tabla de categorías muestra de cada una su nombre, descripción, estado y número de productos, con una columna de acciones | Frontend (componente y página) | 6 | 🔍 En revisión (6, AB#330, PR pendiente) |
-| HU39-CP10 | Una descripción vacía se muestra como un guion y una categoría sin productos muestra 0 | Frontend (componente y página) | 2 | 🔍 En revisión (2, AB#330, PR pendiente) |
-| HU39-CP11 | La lupa de cada fila abre la ficha de solo lectura con los datos de la categoría y su descripción completa; la vista no ofrece crear, editar ni eliminar | Frontend (componente y página) | 9 | 🔍 En revisión (9, AB#330, PR pendiente) |
-| HU39-CP12 | La vista muestra un indicador mientras carga, todas las categorías (también las inactivas) ordenadas por nombre y un estado vacío si no hay ninguna | Frontend (página) | 3 | 🔍 En revisión (3, AB#330, PR pendiente) |
-| HU39-CP13 | Un 403 o un error del servidor muestran el mismo mensaje genérico con «Reintentar», sin el texto del servidor | Frontend (página) | 2 | 🔍 En revisión (2, AB#330, PR pendiente) |
-| HU39-CP14 | La vista permite buscar por nombre, filtrar por estado y ordenar; sin coincidencias avisa y «Limpiar filtros» mantiene el orden | Frontend (página) | 4 | 🔍 En revisión (4, AB#330, PR pendiente) |
-| HU39-CP15 | El panel de control tiene la tarjeta Categorías, que lleva al listado, y «Volver al panel» regresa al panel | Frontend (página y rutas) | 3 | 🔍 En revisión (3, AB#330, PR pendiente) |
-| HU39-CP16 | El listado de categorías es solo del administrador: sin sesión va al login y un vendedor o un cliente van a su zona | Frontend (rutas) | 3 | 🔍 En revisión (3, AB#330, PR pendiente) |
+| HU39-CP06 | La llamada del administrador pide `GET /api/admin/categorias` y devuelve el array de categorías; un 403 llega como error con su estado y su código | Frontend (API) | 2 | ✅ Pasa |
+| HU39-CP07 | El estado de cada categoría se muestra como Activa (color de éxito) o Inactiva (neutro); un estado desconocido, como Desconocido | Frontend (unitario y componente) | 5 | ✅ Pasa |
+| HU39-CP08 | Filtrar las categorías por nombre (sin distinguir mayúsculas ni tildes) y por estado, y ordenarlas por nombre, productos o estado, en el cliente | Frontend (unitario) | 10 | ✅ Pasa |
+| HU39-CP09 | La tabla de categorías muestra de cada una su nombre, descripción, estado y número de productos, con una columna de acciones | Frontend (componente y página) | 6 | ✅ Pasa |
+| HU39-CP10 | Una descripción vacía se muestra como un guion y una categoría sin productos muestra 0 | Frontend (componente y página) | 2 | ✅ Pasa |
+| HU39-CP11 | La lupa de cada fila abre la ficha de solo lectura con los datos de la categoría y su descripción completa | Frontend (componente y página) | 8 | ✅ Pasa |
+| HU39-CP12 | La vista muestra un indicador mientras carga, todas las categorías (también las inactivas) ordenadas por nombre y un estado vacío si no hay ninguna | Frontend (página) | 3 | ✅ Pasa |
+| HU39-CP13 | Un 403 o un error del servidor muestran el mismo mensaje genérico con «Reintentar», sin el texto del servidor | Frontend (página) | 2 | ✅ Pasa |
+| HU39-CP14 | La vista permite buscar por nombre, filtrar por estado y ordenar; sin coincidencias avisa y «Limpiar filtros» mantiene el orden | Frontend (página) | 4 | ✅ Pasa |
+| HU39-CP15 | El panel de control tiene la tarjeta Categorías, que lleva al listado, y «Volver al panel» regresa al panel | Frontend (página y rutas) | 3 | ✅ Pasa |
+| HU39-CP16 | El listado de categorías es solo del administrador: sin sesión va al login y un vendedor o un cliente van a su zona | Frontend (rutas) | 3 | ✅ Pasa |
 
 Notas:
 - **HU39-CP01 a CP03:** casos propuestos en la T332 (AB#332), a partir del criterio de aceptación «listado con nombre, descripción, estado y número de productos asociados». **HU39-CP04:** propuesto en la T331 (AB#331), a partir del criterio «cualquier llamada a la API sin rol de administrador devuelve 403». Pendientes de confirmar con el equipo y de añadir a la HU39 en Azure Boards.
@@ -3097,55 +3228,54 @@ Notas:
 | HU39-CP04 | `AdministracionCategoriasControllerTest` | `otroRolRecibe403` (cliente y vendedor) | Infraestructura | AB#331 | PR #135 | ✅ |
 | HU39-CP04 | `AdministracionCategoriasControllerTest` | `sinSesionRecibe401` | Infraestructura | AB#331 | PR #135 | ✅ |
 | HU39-CP05 | `ConsultaCategoriasServiceTest` | `listarSoloDevuelveLasActivas` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
-| HU39-CP06 | `adminCategories.test.js` | `HU39-CP06: pide GET /api/admin/categorias y devuelve el array de categorías` | Frontend · API | AB#330 | PR pendiente | 🔍 |
-| HU39-CP06 | `adminCategories.test.js` | `HU39-CP06: un 403 llega como error con su estado y su código` | Frontend · API | AB#330 | PR pendiente | 🔍 |
-| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: una categoría ACTIVA se muestra como Activa, con color de éxito` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: una categoría INACTIVA se muestra como Inactiva, con color neutro` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: un estado desconocido se muestra como Desconocido` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: las etiquetas del filtro son las de los dos estados` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP07 | `CategoriesTable.test.jsx` | `HU39-CP07: el estado de cada categoría se muestra en una insignia` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: sin filtros devuelve todas las categorías, también las inactivas, ordenadas por nombre` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: la búsqueda por nombre no distingue mayúsculas ni tildes` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: la búsqueda encuentra el texto en cualquier parte del nombre y solo mira el nombre` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: el filtro por estado deja solo las activas o solo las inactivas` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: la búsqueda y el estado se combinan` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ordena por nombre en sentido descendente` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ordena por número de productos, de menos a más y al revés` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ordena por estado, las activas primero, y a igualdad desempata por nombre` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: no modifica la lista que recibe` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ofrece ordenar por nombre, productos y estado` | Frontend · unitario | AB#330 | PR pendiente | 🔍 |
-| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: muestra las cabeceras de las cuatro columnas` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: muestra de cada categoría su nombre, descripción, estado y número de productos` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: con renderActions añade la columna Acciones con lo que devuelva para cada categoría` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: mientras se refresca, la tabla avisa de que está ocupada` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP09 | `AdminCategoriesPage.test.jsx` | `HU39-CP09: la tabla tiene las columnas Nombre, Descripción, Estado, Productos y Acciones` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP09 | `AdminCategoriesPage.test.jsx` | `HU39-CP09: cada fila muestra el nombre, la descripción, el estado y el número de productos` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP10 | `CategoriesTable.test.jsx` | `HU39-CP10: una descripción vacía se muestra como un guion` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP10 | `AdminCategoriesPage.test.jsx` | `HU39-CP10: una categoría sin descripción muestra un guion y una sin productos muestra 0` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: muestra el nombre, el estado, el número de productos y la descripción completa` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: una categoría inactiva sin descripción ni productos muestra Inactiva, 0 y un guion` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: todos los campos son de solo lectura y la ficha avisa de ello` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: la ficha no ofrece editar, crear ni eliminar` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: se cierra con la X` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: se cierra con Escape` | Frontend · componente | AB#330 | PR pendiente | 🔍 |
-| HU39-CP11 | `AdminCategoriesPage.test.jsx` | `HU39-CP11: cada fila tiene un botón con lupa para ver la información de su categoría` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP11 | `AdminCategoriesPage.test.jsx` | `HU39-CP11: la lupa abre la ficha de esa categoría con su descripción completa y se puede cerrar` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP11 | `AdminCategoriesPage.test.jsx` | `HU39-CP11: la vista no ofrece crear ni editar categorías` (modificado en la T324, AB#324: eliminar llega con la HU42) | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP12 | `AdminCategoriesPage.test.jsx` | `HU39-CP12: muestra el título de la vista y mientras carga un indicador` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP12 | `AdminCategoriesPage.test.jsx` | `HU39-CP12: muestra todas las categorías, también las inactivas, ordenadas por nombre` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP12 | `AdminCategoriesPage.test.jsx` | `HU39-CP12: sin categorías muestra el estado vacío y ningún filtro` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP13 | `AdminCategoriesPage.test.jsx` | `HU39-CP13: un 403 muestra el error genérico, sin el texto del servidor, y se puede reintentar` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP13 | `AdminCategoriesPage.test.jsx` | `HU39-CP13: un error del servidor muestra el mismo mensaje genérico con Reintentar` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: buscar por nombre no distingue mayúsculas ni tildes` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: filtrar por estado deja solo las inactivas o solo las activas` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: ordenar por productos y cambiar el sentido` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: sin coincidencias avisa y Limpiar filtros vuelve a mostrarlas todas, manteniendo el orden` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP15 | `AdminCategoriesPage.test.jsx` | `HU39-CP15: Volver al panel regresa al panel de control` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP15 | `AdminPage.test.jsx` | `HU39-CP15: el panel tiene la tarjeta Categorías, con su descripción` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP15 | `AdminPage.test.jsx` | `HU39-CP15: la tarjeta Categorías lleva al listado de categorías` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP16 | `AdminCategoriesPage.test.jsx` | `HU39-CP16: sin sesión redirige al login` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP16 | `AdminCategoriesPage.test.jsx` | `HU39-CP16: un vendedor no ve el listado y va a su zona` | Frontend · página | AB#330 | PR pendiente | 🔍 |
-| HU39-CP16 | `AdminCategoriesPage.test.jsx` | `HU39-CP16: un cliente no ve el listado y va a su zona` | Frontend · página | AB#330 | PR pendiente | 🔍 |
+| HU39-CP06 | `adminCategories.test.js` | `HU39-CP06: pide GET /api/admin/categorias y devuelve el array de categorías` | Frontend · API | AB#330 | PR #197 | ✅ |
+| HU39-CP06 | `adminCategories.test.js` | `HU39-CP06: un 403 llega como error con su estado y su código` | Frontend · API | AB#330 | PR #197 | ✅ |
+| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: una categoría ACTIVA se muestra como Activa, con color de éxito` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: una categoría INACTIVA se muestra como Inactiva, con color neutro` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: un estado desconocido se muestra como Desconocido` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP07 | `categoryStatus.test.js` | `HU39-CP07: las etiquetas del filtro son las de los dos estados` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP07 | `CategoriesTable.test.jsx` | `HU39-CP07: el estado de cada categoría se muestra en una insignia` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: sin filtros devuelve todas las categorías, también las inactivas, ordenadas por nombre` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: la búsqueda por nombre no distingue mayúsculas ni tildes` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: la búsqueda encuentra el texto en cualquier parte del nombre y solo mira el nombre` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: el filtro por estado deja solo las activas o solo las inactivas` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: la búsqueda y el estado se combinan` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ordena por nombre en sentido descendente` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ordena por número de productos, de menos a más y al revés` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ordena por estado, las activas primero, y a igualdad desempata por nombre` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: no modifica la lista que recibe` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP08 | `categoriesList.test.js` | `HU39-CP08: ofrece ordenar por nombre, productos y estado` | Frontend · unitario | AB#330 | PR #197 | ✅ |
+| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: muestra las cabeceras de las cuatro columnas` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: muestra de cada categoría su nombre, descripción, estado y número de productos` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: con renderActions añade la columna Acciones con lo que devuelva para cada categoría` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP09 | `CategoriesTable.test.jsx` | `HU39-CP09: mientras se refresca, la tabla avisa de que está ocupada` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP09 | `AdminCategoriesPage.test.jsx` | `HU39-CP09: la tabla tiene las columnas Nombre, Descripción, Estado, Productos y Acciones` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP09 | `AdminCategoriesPage.test.jsx` | `HU39-CP09: cada fila muestra el nombre, la descripción, el estado y el número de productos` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP10 | `CategoriesTable.test.jsx` | `HU39-CP10: una descripción vacía se muestra como un guion` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP10 | `AdminCategoriesPage.test.jsx` | `HU39-CP10: una categoría sin descripción muestra un guion y una sin productos muestra 0` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: muestra el nombre, el estado, el número de productos y la descripción completa` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: una categoría inactiva sin descripción ni productos muestra Inactiva, 0 y un guion` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: todos los campos son de solo lectura y la ficha avisa de ello` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: la ficha no ofrece editar, crear ni eliminar` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: se cierra con la X` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP11 | `CategoryDetailDialog.test.jsx` | `HU39-CP11: se cierra con Escape` | Frontend · componente | AB#330 | PR #197 | ✅ |
+| HU39-CP11 | `AdminCategoriesPage.test.jsx` | `HU39-CP11: cada fila tiene un botón con lupa para ver la información de su categoría` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP11 | `AdminCategoriesPage.test.jsx` | `HU39-CP11: la lupa abre la ficha de esa categoría con su descripción completa y se puede cerrar` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP12 | `AdminCategoriesPage.test.jsx` | `HU39-CP12: muestra el título de la vista y mientras carga un indicador` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP12 | `AdminCategoriesPage.test.jsx` | `HU39-CP12: muestra todas las categorías, también las inactivas, ordenadas por nombre` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP12 | `AdminCategoriesPage.test.jsx` | `HU39-CP12: sin categorías muestra el estado vacío y ningún filtro` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP13 | `AdminCategoriesPage.test.jsx` | `HU39-CP13: un 403 muestra el error genérico, sin el texto del servidor, y se puede reintentar` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP13 | `AdminCategoriesPage.test.jsx` | `HU39-CP13: un error del servidor muestra el mismo mensaje genérico con Reintentar` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: buscar por nombre no distingue mayúsculas ni tildes` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: filtrar por estado deja solo las inactivas o solo las activas` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: ordenar por productos y cambiar el sentido` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP14 | `AdminCategoriesPage.test.jsx` | `HU39-CP14: sin coincidencias avisa y Limpiar filtros vuelve a mostrarlas todas, manteniendo el orden` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP15 | `AdminCategoriesPage.test.jsx` | `HU39-CP15: Volver al panel regresa al panel de control` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP15 | `AdminPage.test.jsx` | `HU39-CP15: el panel tiene la tarjeta Categorías, con su descripción` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP15 | `AdminPage.test.jsx` | `HU39-CP15: la tarjeta Categorías lleva al listado de categorías` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP16 | `AdminCategoriesPage.test.jsx` | `HU39-CP16: sin sesión redirige al login` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP16 | `AdminCategoriesPage.test.jsx` | `HU39-CP16: un vendedor no ve el listado y va a su zona` | Frontend · página | AB#330 | PR #197 | ✅ |
+| HU39-CP16 | `AdminCategoriesPage.test.jsx` | `HU39-CP16: un cliente no ve el listado y va a su zona` | Frontend · página | AB#330 | PR #197 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionCategoriasControllerTest`: `categorias/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
@@ -3174,14 +3304,22 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU40-CP07 | Crear sin nombre, sin estado, con un estado desconocido o incumpliendo una regla del dominio devuelve 400 | Controlador | 2 | ✅ Pasa |
 | HU40-CP08 | Sin rol de administrador no se pueden crear categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | ✅ Pasa |
 | HU40-CP09 | El listado público de categorías se puede usar sin sesión; administrarlas (listar con su número de productos y crear) exige el rol administrador; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 6 | 🔍 En revisión (6, rama `fix/seguridad-capa-negocio`) |
+| HU40-CP10 | La llamada del administrador pide `POST /api/admin/categorias` con nombre, descripción y estado y devuelve la categoría creada; un 409 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#320, PR #201) |
+| HU40-CP11 | La vista tiene el botón «Nueva categoría» (también sin ninguna categoría), que abre el formulario con nombre, descripción y estado (activa por defecto); cancelar no crea nada | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#320, PR #201) |
+| HU40-CP12 | El nombre es obligatorio (vacío o con solo espacios no se envía) y admite como mucho 50 caracteres; la descripción, 200 | Frontend (componente) | 2 | 🔍 En revisión (2, AB#320, PR #201) |
+| HU40-CP13 | Al crear se envían los datos elegidos, se avisa de que se ha creado y la categoría aparece en la lista con su estado; mientras se crea, los botones quedan deshabilitados | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#320, PR #201) |
+| HU40-CP14 | Un nombre repetido (aunque cambien las mayúsculas o las tildes) se marca en el campo y el aviso desaparece al cambiarlo; cualquier otro error muestra un mensaje genérico y el formulario sigue abierto | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#320, PR #201) |
 
 Notas:
 - **HU40-CP01 a CP04:** casos propuestos en la T321 (AB#321), sin contrato del frontend todavía. **HU40-CP05 y CP06:** propuestos en la T323 (AB#323), a partir de los criterios «la categoría no puede estar repetida» y «se debe poder elegir si activar o desactivar la categoría en la creación». **HU40-CP07 y CP08:** propuestos en la T322 (AB#322). Pendientes de confirmar con el equipo y de añadir a la HU40 en Azure Boards.
 - **Endpoint (T322):** `POST /api/admin/categorias` con `{nombre, descripcion, estado: "ACTIVA"|"INACTIVA"}` → 201 `{id, nombre, descripcion, estado, numeroProductos: 0}`, el mismo formato que una fila de `GET /api/admin/categorias`. Errores: 400 `VALIDATION_ERROR` (falta el nombre o el estado, el estado es desconocido o se incumple una regla del dominio, p. ej. más de 50 caracteres), 409 `CATEGORY_NAME_ALREADY_EXISTS`, 401 sin sesión y 403 con otro rol. Necesita la cabecera CSRF `X-XSRF-TOKEN`. Es el contrato de la vista del frontend (T320).
 - **Backend (T323):** `AdministracionCategoriasUseCase.crear(CrearCategoriaCommand)`. El nombre único no distingue mayúsculas ni tildes (decisión del equipo, 27/10/2026): comprobación previa (`existePorNombre`) y un índice único nuevo, `nombre_sin_mayusculas` (collation `es` de nivel 1), que se crea junto al anterior para no chocar con él en Atlas. Errores: `CategoriaInvalidaException` → 400 `VALIDATION_ERROR`; `CategoriaDuplicadaException` → 409 `CATEGORY_NAME_ALREADY_EXISTS`.
 - **Backend (T321):** entidad `Categoria` (`id`, `nombre`, `descripcion`, `estado`), `EstadoCategoria` (`ACTIVA`, `INACTIVA`), `CategoriaInvalidaException` y `CategoriaDocumentMapper`. El validador de la colección `categorias` aplica los mismos límites. `GET /api/categorias` no cambia (sigue devolviendo `id` y `nombre`).
-- **Pendiente:** la vista (T320). Si una categoría `INACTIVA` debe dejar de verse para clientes y vendedores en `GET /api/categorias` (criterio «si la categoría se crea activada, debe ser visible para clientes y vendedores») queda pendiente de revisar con el equipo.
+- **Pendiente:** si una categoría `INACTIVA` debe dejar de verse para clientes y vendedores en `GET /api/categorias` (criterio «si la categoría se crea activada, debe ser visible para clientes y vendedores») queda pendiente de revisar con el equipo.
 - **HU40-CP09 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio`, sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Cubre con `@PreAuthorize` los servicios `AdministracionCategoriasService` y `ConsultaCategoriasService`, que sirven también a las HU39 y HU40. Clase de test nueva `categorias/application/service/SeguridadCategoriasServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
+- **HU40-CP10 a CP14 (frontend, T320):** casos propuestos en la T320 (AB#320), a partir de los criterios «el botón de creación debe estar en la vista de la tabla», «la categoría no puede estar repetida», «al crear la categoría debe ser visible en la lista» y «se debe poder elegir si activar o desactivar la categoría en la creación». Pendientes de confirmar con el equipo y de añadir a la HU40 en Azure Boards.
+- **Vista (T320):** botón «Nueva categoría» en la cabecera de `/admin/categories`, que abre `CategoryFormDialog` (el mismo formulario que la edición de la HU41). El estado se elige con dos opciones, Activa (por defecto) e Inactiva. Los límites (50 y 200) se aplican con `maxLength`, como en el alta de administrador. Al crear, la página avisa («Jardín se ha creado.») y vuelve a pedir el listado. El mock (`adminCategoriesHandlers`) simula el `POST`: 201, 400 sin nombre y 409 si el nombre se repite sin distinguir mayúsculas ni tildes.
+- **HU40-CP11 y CP12:** el test «al cancelar se cierra sin crear nada» y la variante del nombre «con solo espacios» no tuvieron rojo propio: cancelar ya funcionaba desde el ciclo 2 y la comprobación con `trim()` cubre las dos variantes.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -3215,6 +3353,20 @@ Notas:
 | HU40-CP09 | `SeguridadCategoriasServiceTest` | `unAnonimoNoAdministraCategorias` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 | HU40-CP09 | `SeguridadCategoriasServiceTest` | `unAdministradorAdministraCategorias` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
 | HU40-CP09 | `SeguridadCategoriasServiceTest` | `sinSesionSeRechazaLaAdministracion` | Aplicación | — | Rama `fix/seguridad-capa-negocio` | 🔍 |
+| HU40-CP10 | `adminCategories.test.js` | `HU40-CP10: pide POST /api/admin/categorias con el nombre, la descripción y el estado, y devuelve la categoría creada` | Frontend · API | AB#320 | PR #201 | 🔍 |
+| HU40-CP10 | `adminCategories.test.js` | `HU40-CP10: un 409 llega como error con su estado y su código` | Frontend · API | AB#320 | PR #201 | 🔍 |
+| HU40-CP11 | `CategoryFormDialog.test.jsx` | `HU40-CP11: pide el nombre, la descripción y el estado, con la categoría activa por defecto` | Frontend · componente | AB#320 | PR #201 | 🔍 |
+| HU40-CP11 | `CategoryFormDialog.test.jsx` | `HU40-CP11: al cancelar se cierra sin crear nada` | Frontend · componente | AB#320 | PR #201 | 🔍 |
+| HU40-CP11 | `AdminCategoriesPage.test.jsx` | `HU40-CP11: la vista tiene el botón Nueva categoría, que abre el formulario de creación` | Frontend · página | AB#320 | PR #201 | 🔍 |
+| HU40-CP11 | `AdminCategoriesPage.test.jsx` | `HU40-CP11: sin ninguna categoría también se puede crear la primera` | Frontend · página | AB#320 | PR #201 | 🔍 |
+| HU40-CP12 | `CategoryFormDialog.test.jsx` | `HU40-CP12: con el nombre %s avisa de que es obligatorio y no envía nada` (2 variantes: vacío y con solo espacios) | Frontend · componente | AB#320 | PR #201 | 🔍 |
+| HU40-CP12 | `CategoryFormDialog.test.jsx` | `HU40-CP12: el nombre admite como mucho 50 caracteres y la descripción 200, como el backend` | Frontend · componente | AB#320 | PR #201 | 🔍 |
+| HU40-CP13 | `CategoryFormDialog.test.jsx` | `HU40-CP13: envía el nombre, la descripción y el estado elegidos y avisa con la categoría creada` | Frontend · componente | AB#320 | PR #201 | 🔍 |
+| HU40-CP13 | `CategoryFormDialog.test.jsx` | `HU40-CP13: mientras se crea, los botones quedan deshabilitados` | Frontend · componente | AB#320 | PR #201 | 🔍 |
+| HU40-CP13 | `AdminCategoriesPage.test.jsx` | `HU40-CP13: al crearla, avisa y la categoría aparece en la lista con el estado elegido` | Frontend · página | AB#320 | PR #201 | 🔍 |
+| HU40-CP14 | `CategoryFormDialog.test.jsx` | `HU40-CP14: si el nombre ya existe lo marca en el campo, no cierra y al cambiarlo desaparece el aviso` | Frontend · componente | AB#320 | PR #201 | 🔍 |
+| HU40-CP14 | `CategoryFormDialog.test.jsx` | `HU40-CP14: cualquier otro error avisa con un mensaje genérico y deja el formulario abierto` | Frontend · componente | AB#320 | PR #201 | 🔍 |
+| HU40-CP14 | `AdminCategoriesPage.test.jsx` | `HU40-CP14: no se puede crear una categoría repetida, aunque cambien las mayúsculas o las tildes` | Frontend · página | AB#320 | PR #201 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionCategoriasControllerTest`: `categorias/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
@@ -3245,13 +3397,20 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU41-CP12 | Editar sin nombre o incumpliendo una regla del dominio devuelve 400 | Controlador | 2 | ✅ Pasa |
 | HU41-CP13 | Editar una categoría que no existe devuelve 404 `CATEGORY_NOT_FOUND` | Controlador | 1 | ✅ Pasa |
 | HU41-CP14 | Sin rol de administrador no se pueden editar categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | ✅ Pasa |
+| HU41-CP15 | La llamada del administrador pide `PUT /api/admin/categorias/{id}` con nombre y descripción y devuelve la categoría editada; un 404 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#327, PR #201) |
+| HU41-CP16 | Cada fila de la lista tiene el lápiz, que abre el formulario con el nombre y la descripción de la categoría, sin el estado; cancelar no edita nada | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#327, PR #201) |
+| HU41-CP17 | Al guardar se envían el nombre y la descripción nuevos, se avisa de que se ha actualizado y la lista muestra los cambios; el nombre sigue siendo obligatorio | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#327, PR #201) |
+| HU41-CP18 | El nombre de otra categoría se marca en el campo; si la categoría ya no existe se cierra el formulario, se avisa y se recarga la lista; cualquier otro error muestra un mensaje genérico | Frontend (componente y página) | 5 | 🔍 En revisión (5, AB#327, PR #201) |
 
 Notas:
 - **HU41-CP01 a CP14:** casos propuestos en las T329 (AB#329) y T328 (AB#328), a partir de los criterios de la HU41. Pendientes de confirmar con el equipo y de añadir a la HU41 en Azure Boards.
 - **Endpoint (T328):** `PUT /api/admin/categorias/{id}` con `{nombre, descripcion}` → 200 `{id, nombre, descripcion, estado, numeroProductos}`, el mismo formato que una fila de `GET /api/admin/categorias`, para que la vista (T327) sustituya la fila sin recargar. El estado no se edita. Errores: 400 `VALIDATION_ERROR` (falta el nombre o se incumple una regla del dominio), 404 `CATEGORY_NOT_FOUND`, 409 `CATEGORY_NAME_ALREADY_EXISTS`, 401 sin sesión y 403 con otro rol. Necesita la cabecera CSRF `X-XSRF-TOKEN`.
 - **Backend (T329):** `AdministracionCategoriasUseCase.editar(EditarCategoriaCommand)`, que devuelve `CategoriaConProductos`. Puerto de salida con `buscarPorId` y `existeOtraConNombre`. El listado público lee del mismo repositorio, así que una edición se ve a la vez para clientes y vendedores.
-- **Pendiente:** la edición reemplaza el documento y no copia `createdAt` (el mapper no lo lleva), así que la fecha de creación puede perderse al editar. Es una hipótesis sin comprobar; queda para una task aparte. La vista (T327) también.
+- **Pendiente:** la edición reemplaza el documento y no copia `createdAt` (el mapper no lo lleva), así que la fecha de creación puede perderse al editar. Es una hipótesis sin comprobar; queda para una task aparte.
 - **HU41-CP06 (R8, seguridad en la capa de negocio):** nace en verde, sin rojo real, porque `editar` lleva el `@PreAuthorize` desde el primer ciclo. Cubre el servicio `AdministracionCategoriasService` con la clase de test existente `SeguridadCategoriasServiceTest`.
+- **HU41-CP15 a CP18 (frontend, T327):** casos propuestos en la T327 (AB#327), a partir de los criterios «el botón de editar debe estar en la tabla», «el nuevo nombre no puede ser igual a uno existente» y «se debe actualizar en la lista de categorías». Pendientes de confirmar con el equipo y de añadir a la HU41 en Azure Boards.
+- **Vista (T327):** el lápiz de cada fila (`CategoryRowActions`) abre `CategoryFormDialog` con la categoría: nombre y descripción cargados, sin el estado (el backend no lo edita) y con el botón «Guardar». Al guardar se avisa («Casa se ha actualizado.») y se vuelve a pedir el listado. Si la categoría ya no existe (404), se cierra el formulario, se avisa con el mismo mensaje que al eliminar y se recarga la lista. El mock simula el `PUT` (404, 400, 409 si el nombre es el de otra y la fila actualizada).
+- **HU41-CP16 a CP18:** «al cancelar se cierra sin editar nada», «al editar también se valida que el nombre no quede vacío» y los dos tests del nombre repetido nacen en verde: el formulario es el mismo que el de creación, que ya lo hacía.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -3281,6 +3440,21 @@ Notas:
 | HU41-CP13 | `AdministracionCategoriasControllerTest` | `editarUnaCategoriaInexistenteDevuelve404` | Infraestructura | AB#328 | PR #175 | ✅ |
 | HU41-CP14 | `AdministracionCategoriasControllerTest` | `editarConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#328 | PR #175 | ✅ |
 | HU41-CP14 | `AdministracionCategoriasControllerTest` | `editarSinSesionDevuelve401` | Infraestructura | AB#328 | PR #175 | ✅ |
+| HU41-CP15 | `adminCategories.test.js` | `HU41-CP15: pide PUT /api/admin/categorias/{id} con el nombre y la descripción, y devuelve la categoría editada` | Frontend · API | AB#327 | PR #201 | 🔍 |
+| HU41-CP15 | `adminCategories.test.js` | `HU41-CP15: un 404 llega como error con su estado y su código` | Frontend · API | AB#327 | PR #201 | 🔍 |
+| HU41-CP16 | `CategoryFormDialog.test.jsx` | `HU41-CP16: con una categoría, muestra su nombre y su descripción para editarlos, sin el estado` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP16 | `CategoryFormDialog.test.jsx` | `HU41-CP16: al cancelar se cierra sin editar nada` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP16 | `CategoryRowActions.test.jsx` | `HU41-CP16: ofrece el lápiz para editar la categoría, que abre su formulario con sus datos` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP16 | `AdminCategoriesPage.test.jsx` | `HU41-CP16: cada fila de la lista tiene el lápiz para editar su categoría` | Frontend · página | AB#327 | PR #201 | 🔍 |
+| HU41-CP17 | `CategoryFormDialog.test.jsx` | `HU41-CP17: envía el nombre y la descripción nuevos y avisa con la categoría editada` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP17 | `CategoryFormDialog.test.jsx` | `HU41-CP17: al editar también se valida que el nombre no quede vacío` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP17 | `CategoryRowActions.test.jsx` | `HU41-CP17: al guardar, avisa de que se ha actualizado y pide actualizar la lista` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP17 | `AdminCategoriesPage.test.jsx` | `HU41-CP17: al guardar, avisa y la lista muestra el nombre y la descripción nuevos` | Frontend · página | AB#327 | PR #201 | 🔍 |
+| HU41-CP18 | `CategoryFormDialog.test.jsx` | `HU41-CP18: si el nombre nuevo es el de otra categoría lo marca en el campo y no cierra` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP18 | `CategoryFormDialog.test.jsx` | `HU41-CP18: si la categoría ya no existe avisa a quien abrió el formulario` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP18 | `CategoryFormDialog.test.jsx` | `HU41-CP18: cualquier otro error avisa con un mensaje genérico y deja el formulario abierto` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP18 | `CategoryRowActions.test.jsx` | `HU41-CP18: al guardar una categoría que ya no existe, cierra el formulario, avisa y pide actualizar la lista` | Frontend · componente | AB#327 | PR #201 | 🔍 |
+| HU41-CP18 | `AdminCategoriesPage.test.jsx` | `HU41-CP18: no se puede poner el nombre de otra categoría, aunque cambien las mayúsculas o las tildes` | Frontend · página | AB#327 | PR #201 | 🔍 |
 
 Ruta de la clase de test de seguridad (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `SeguridadCategoriasServiceTest`: `categorias/application/service/` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB)
@@ -3308,11 +3482,11 @@ Ruta de la clase de test de seguridad (bajo `backend/src/test/java/es/uclm/esibu
 | HU42-CP13 | Eliminar la categoría principal de un vendedor devuelve 409 `CATEGORY_HAS_SELLERS` | Controlador | 1 | ✅ Pasa |
 | HU42-CP14 | Eliminar una categoría que no existe devuelve 404 `CATEGORY_NOT_FOUND` | Controlador | 1 | ✅ Pasa |
 | HU42-CP15 | Sin rol de administrador no se pueden eliminar categorías: 403 (cliente y vendedor) y 401 sin sesión | Controlador | 2 | ✅ Pasa |
-| HU42-CP16 | La llamada del administrador pide `DELETE /api/admin/categorias/{id}` con el id de la categoría; un 409 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#324, PR #199) |
-| HU42-CP17 | Cada fila de la lista de categorías tiene la papelera; al pulsarla se pide confirmación avisando de que no se puede deshacer, y cancelar no borra nada | Frontend (componente y página) | 4 | 🔍 En revisión (4, AB#324, PR #199) |
-| HU42-CP18 | Al confirmar se borra la categoría, se avisa de que se ha eliminado y desaparece de la lista; mientras se elimina, los botones de la confirmación quedan deshabilitados | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#324, PR #199) |
-| HU42-CP19 | Una categoría con productos tiene la papelera deshabilitada con el motivo; una sin productos la tiene habilitada | Frontend (componente y página) | 3 | 🔍 En revisión (3, AB#324, PR #199) |
-| HU42-CP20 | Cada error del backend al eliminar muestra su mensaje (tiene productos, es la principal de un vendedor, ya no existe o genérico); con productos o ya eliminada, se recarga la lista | Frontend (componente y página) | 5 | 🔍 En revisión (5, AB#324, PR #199) |
+| HU42-CP16 | La llamada del administrador pide `DELETE /api/admin/categorias/{id}` con el id de la categoría; un 409 llega como error con su estado y su código | Frontend (API) | 2 | ✅ Pasa |
+| HU42-CP17 | Cada fila de la lista de categorías tiene la papelera; al pulsarla se pide confirmación avisando de que no se puede deshacer, y cancelar no borra nada | Frontend (componente y página) | 4 | ✅ Pasa |
+| HU42-CP18 | Al confirmar se borra la categoría, se avisa de que se ha eliminado y desaparece de la lista; mientras se elimina, los botones de la confirmación quedan deshabilitados | Frontend (componente y página) | 3 | ✅ Pasa |
+| HU42-CP19 | Una categoría con productos tiene la papelera deshabilitada con el motivo; una sin productos la tiene habilitada | Frontend (componente y página) | 3 | ✅ Pasa |
+| HU42-CP20 | Cada error del backend al eliminar muestra su mensaje (tiene productos, es la principal de un vendedor, ya no existe o genérico); con productos o ya eliminada, se recarga la lista | Frontend (componente y página) | 5 | ✅ Pasa |
 
 Notas:
 - **HU42-CP01 a CP15:** casos propuestos en las T326 (AB#326) y T325 (AB#325), a partir de los criterios de la HU42. Pendientes de confirmar con el equipo y de añadir a la HU42 en Azure Boards.
@@ -3324,7 +3498,7 @@ Notas:
 - **Vista (T324):** la papelera va en la columna Acciones de `/admin/categories`, junto a la lupa, en el componente `CategoryRowActions` (la lupa pasa de la página a este componente). Pide confirmación con `StatusConfirmDialog` y, al eliminar, la página muestra el aviso y vuelve a pedir el listado. Si la fila trae `numeroProductos > 0`, la papelera queda deshabilitada; los dos 409, el 404 y cualquier otro error tienen su mensaje. Con `CATEGORY_HAS_PRODUCTS` y `CATEGORY_NOT_FOUND` se recarga la lista, porque la que se ve está desfasada.
 - **Mock:** `adminCategoriesHandlers` simula el `DELETE` (404, 409 `CATEGORY_HAS_PRODUCTS` y 204) con una lista que se reinicia tras cada test (`resetAdminCategoriesMock`). El 409 `CATEGORY_HAS_SELLERS` no se simula: los tests que lo necesitan ponen su handler.
 - **HU42-CP19:** el test «una sin productos la tiene habilitada con el título Eliminar» nace en verde: ya se cumplía desde el ciclo 2 y se deja para que no se deshabilite por error.
-- **HU39-CP11 modificado:** el test de la página «la vista no ofrece crear, editar ni eliminar categorías» pasa a «no ofrece crear ni editar», porque la HU42 añade la papelera.
+- **HU39-CP11 eliminado de la página:** el test «la vista no ofrece crear, editar ni eliminar categorías» se modificó en la T324 (HU42, papelera) y se elimina en las T320 y T327 (HU40 y HU41), porque la vista ya ofrece crear, editar y eliminar.
 - **HU42-CP05 y CP08 (R8, seguridad en la capa de negocio):** nacen en verde, sin rojo real, porque `@PreAuthorize` va desde el primer ciclo. CP05 usa la clase existente `SeguridadCategoriasServiceTest` y CP08 la de HU20-CP07; los tests de CP08 llegaron en un commit posterior al que solo cambió el comentario de cabecera.
 - **HU42-CP14 y CP15:** también sin rojo real, porque el handler del 404 (HU41) y la regla de `/api/admin/**` ya existían.
 
@@ -3360,20 +3534,20 @@ Notas:
 | HU42-CP14 | `AdministracionCategoriasControllerTest` | `eliminarUnaCategoriaInexistenteDevuelve404` | Infraestructura | AB#325 | PR #181 | ✅ |
 | HU42-CP15 | `AdministracionCategoriasControllerTest` | `eliminarConOtroRolDevuelve403` (cliente y vendedor) | Infraestructura | AB#325 | PR #181 | ✅ |
 | HU42-CP15 | `AdministracionCategoriasControllerTest` | `eliminarSinSesionDevuelve401` | Infraestructura | AB#325 | PR #181 | ✅ |
-| HU42-CP16 | `adminCategories.test.js` | `HU42-CP16: pide DELETE /api/admin/categorias/{id} con el id de la categoría` | Frontend · API | AB#324 | PR #199 | 🔍 |
-| HU42-CP16 | `adminCategories.test.js` | `HU42-CP16: un 409 llega como error con su estado y su código` | Frontend · API | AB#324 | PR #199 | 🔍 |
-| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: ofrece la lupa para ver la ficha y la papelera para eliminar la categoría` | Frontend · componente | AB#324 | PR #199 | 🔍 |
-| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: al pulsar la papelera pide confirmación avisando de que no se puede deshacer` | Frontend · componente | AB#324 | PR #199 | 🔍 |
-| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: al cancelar se cierra la confirmación y no se borra nada` | Frontend · componente | AB#324 | PR #199 | 🔍 |
-| HU42-CP17 | `AdminCategoriesPage.test.jsx` | `HU42-CP17: cada fila de la lista tiene la papelera para eliminar su categoría` | Frontend · página | AB#324 | PR #199 | 🔍 |
-| HU42-CP18 | `CategoryRowActions.test.jsx` | `HU42-CP18: al confirmar borra la categoría, avisa de que se ha eliminado y pide actualizar la lista` | Frontend · componente | AB#324 | PR #199 | 🔍 |
-| HU42-CP18 | `CategoryRowActions.test.jsx` | `HU42-CP18: mientras se elimina, los botones de la confirmación quedan deshabilitados` | Frontend · componente | AB#324 | PR #199 | 🔍 |
-| HU42-CP18 | `AdminCategoriesPage.test.jsx` | `HU42-CP18: al confirmar, avisa de que se ha eliminado y la categoría desaparece de la lista` | Frontend · página | AB#324 | PR #199 | 🔍 |
-| HU42-CP19 | `CategoryRowActions.test.jsx` | `HU42-CP19: si la categoría tiene productos, la papelera queda deshabilitada y explica por qué` | Frontend · componente | AB#324 | PR #199 | 🔍 |
-| HU42-CP19 | `CategoryRowActions.test.jsx` | `HU42-CP19: una categoría sin productos tiene la papelera habilitada con el título Eliminar` | Frontend · componente | AB#324 | PR #199 | 🔍 |
-| HU42-CP19 | `AdminCategoriesPage.test.jsx` | `HU42-CP19: solo se pueden eliminar las categorías sin productos` | Frontend · página | AB#324 | PR #199 | 🔍 |
-| HU42-CP20 | `CategoryRowActions.test.jsx` | `HU42-CP20: $caso` (4 variantes: tiene productos, principal de un vendedor, ya no existe y error genérico) | Frontend · componente | AB#324 | PR #199 | 🔍 |
-| HU42-CP20 | `AdminCategoriesPage.test.jsx` | `HU42-CP20: si el backend no deja eliminarla, avisa del motivo y la categoría sigue en la lista` | Frontend · página | AB#324 | PR #199 | 🔍 |
+| HU42-CP16 | `adminCategories.test.js` | `HU42-CP16: pide DELETE /api/admin/categorias/{id} con el id de la categoría` | Frontend · API | AB#324 | PR #199 | ✅ |
+| HU42-CP16 | `adminCategories.test.js` | `HU42-CP16: un 409 llega como error con su estado y su código` | Frontend · API | AB#324 | PR #199 | ✅ |
+| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: ofrece la lupa para ver la ficha y la papelera para eliminar la categoría` | Frontend · componente | AB#324 | PR #199 | ✅ |
+| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: al pulsar la papelera pide confirmación avisando de que no se puede deshacer` | Frontend · componente | AB#324 | PR #199 | ✅ |
+| HU42-CP17 | `CategoryRowActions.test.jsx` | `HU42-CP17: al cancelar se cierra la confirmación y no se borra nada` | Frontend · componente | AB#324 | PR #199 | ✅ |
+| HU42-CP17 | `AdminCategoriesPage.test.jsx` | `HU42-CP17: cada fila de la lista tiene la papelera para eliminar su categoría` | Frontend · página | AB#324 | PR #199 | ✅ |
+| HU42-CP18 | `CategoryRowActions.test.jsx` | `HU42-CP18: al confirmar borra la categoría, avisa de que se ha eliminado y pide actualizar la lista` | Frontend · componente | AB#324 | PR #199 | ✅ |
+| HU42-CP18 | `CategoryRowActions.test.jsx` | `HU42-CP18: mientras se elimina, los botones de la confirmación quedan deshabilitados` | Frontend · componente | AB#324 | PR #199 | ✅ |
+| HU42-CP18 | `AdminCategoriesPage.test.jsx` | `HU42-CP18: al confirmar, avisa de que se ha eliminado y la categoría desaparece de la lista` | Frontend · página | AB#324 | PR #199 | ✅ |
+| HU42-CP19 | `CategoryRowActions.test.jsx` | `HU42-CP19: si la categoría tiene productos, la papelera queda deshabilitada y explica por qué` | Frontend · componente | AB#324 | PR #199 | ✅ |
+| HU42-CP19 | `CategoryRowActions.test.jsx` | `HU42-CP19: una categoría sin productos tiene la papelera habilitada con el título Eliminar` | Frontend · componente | AB#324 | PR #199 | ✅ |
+| HU42-CP19 | `AdminCategoriesPage.test.jsx` | `HU42-CP19: solo se pueden eliminar las categorías sin productos` | Frontend · página | AB#324 | PR #199 | ✅ |
+| HU42-CP20 | `CategoryRowActions.test.jsx` | `HU42-CP20: $caso` (4 variantes: tiene productos, principal de un vendedor, ya no existe y error genérico) | Frontend · componente | AB#324 | PR #199 | ✅ |
+| HU42-CP20 | `AdminCategoriesPage.test.jsx` | `HU42-CP20: si el backend no deja eliminarla, avisa del motivo y la categoría sigue en la lista` | Frontend · página | AB#324 | PR #199 | ✅ |
 
 Ruta de las clases de test de seguridad (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `SeguridadCategoriasServiceTest`: `categorias/application/service/` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB)
@@ -3450,7 +3624,7 @@ Tests que no validan una HU concreta.
 | `MetodosPagoConfigTest` | `elContextoConectaLasPiezasDeLosMetodosDePago` | Que Spring conecta el servicio de métodos de pago con su adaptador de MongoDB, su cifrado AES-GCM y el cliente en sesión (HU6; AB#271, PR #148) |
 | `MetodosPagoConfigTest` | `losDatosDePagoSeCifranConLaClaveConfigurada` | Que los datos de pago se cifran con la clave de `esibuy.pagos.clave-cifrado`, que en los tests pone `MongoTestcontainersConfig` (HU6; AB#271, PR #148) |
 | `CarritoConfigTest` | `elContextoConectaLasPiezasDelCarrito` | Que Spring conecta el servicio del carrito con su adaptador de MongoDB, los productos y los usuarios (HU9; AB#385, PR #162) |
-| `PedidosConfigTest` | `elContextoConectaLasPiezasDeLosPedidos` | Que Spring conecta la realización de pedidos con su repositorio, el contador y los adaptadores hacia usuarios, carrito, métodos de pago, direcciones y productos (HU10; AB#381, PR #166); y la consulta de compras de HU13 (AB#370, PR #179) |
+| `PedidosConfigTest` | `elContextoConectaLasPiezasDeLosPedidos` | Que Spring conecta la realización de pedidos con su repositorio, el contador y los adaptadores hacia usuarios, carrito, métodos de pago, direcciones y productos (HU10; AB#381, PR #166); y la consulta de compras de HU13 (AB#370, PR #179). También la cancelación de pedidos (HU12; AB#375, PR sin abrir) |
 | `ValoracionesConfigTest` | `elContextoConectaLasPiezasDeLasValoraciones` | Que Spring conecta la valoración y la consulta de valoraciones con su adaptador de MongoDB y los adaptadores hacia usuarios y pedidos (HU13; AB#370 y AB#371, PR #179), y hacia productos (AB#415, PR #195) |
 | `DeseosConfigTest` | `elContextoConectaLasPiezasDeLaListaDeDeseos` | Que Spring conecta el servicio de la lista de deseos con su adaptador de MongoDB y los adaptadores hacia usuarios y productos (HU14; AB#360, PR #196) |
 | `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |

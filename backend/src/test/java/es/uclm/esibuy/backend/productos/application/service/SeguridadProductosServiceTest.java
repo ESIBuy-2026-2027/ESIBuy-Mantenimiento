@@ -224,6 +224,34 @@ class SeguridadProductosServiceTest {
                 () -> assertThrows(AuthenticationCredentialsNotFoundException.class, () -> conteo.contarPorCategoria()));
     }
 
+    @Test
+    @WithMockUser(username = "cliente@esibuy.test", roles = "CLIENTE")
+    @DisplayName("HU14-CP16: un cliente consulta el resumen de un producto")
+    void unClienteConsultaElResumen() {
+        assertDoesNotThrow(() -> catalogo.consultarResumen("p-1", false));
+    }
+
+    @Test
+    @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
+    @DisplayName("HU14-CP16: un vendedor no consulta el resumen de un producto")
+    void unVendedorNoConsultaElResumen() {
+        assertThrows(AccessDeniedException.class, () -> catalogo.consultarResumen("p-1", false));
+    }
+
+    @Test
+    @WithMockUser(username = "admin@esibuy.test", roles = "ADMINISTRADOR")
+    @DisplayName("HU14-CP16: un administrador no consulta el resumen de un producto")
+    void unAdministradorNoConsultaElResumen() {
+        assertThrows(AccessDeniedException.class, () -> catalogo.consultarResumen("p-1", false));
+    }
+
+    @Test
+    @DisplayName("HU14-CP16: sin sesión no se consulta el resumen de un producto")
+    void sinSesionNoSeConsultaElResumen() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> catalogo.consultarResumen("p-1", false));
+    }
+
     // La valoración del producto (HU13, T415) la actualiza el módulo de valoraciones mientras el cliente valora
     @Test
     @WithMockUser(username = "cliente@esibuy.test", roles = "CLIENTE")
