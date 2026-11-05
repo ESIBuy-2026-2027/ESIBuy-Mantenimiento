@@ -1,12 +1,27 @@
 import PropTypes from 'prop-types'
 import { useCallback } from 'react'
-import { Badge, Card, Text, Title1, makeStyles, mergeClasses, tokens } from '@fluentui/react-components'
-import { ImageOff24Regular } from '@fluentui/react-icons'
+import {
+  Badge,
+  Button,
+  Card,
+  MessageBar,
+  MessageBarActions,
+  MessageBarBody,
+  Spinner,
+  Text,
+  Title1,
+  makeStyles,
+  mergeClasses,
+  tokens,
+} from '@fluentui/react-components'
+import { Heart24Regular, ImageOff24Regular } from '@fluentui/react-icons'
 import { Link } from 'react-router-dom'
 import { getWishlist } from '../api/wishlist'
+import EmptyState from '../components/EmptyState'
+import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import { useApiQuery } from '../hooks/useApiQuery'
-import { getProductDetailPath } from '../routes/paths'
+import { PATHS, getProductDetailPath } from '../routes/paths'
 import { formatDate, formatPrice } from '../utils/format'
 
 const useStyles = makeStyles({
@@ -132,7 +147,7 @@ export default function WishlistPage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
   const fetcher = useCallback(() => getWishlist(), [])
-  const { data: lista } = useApiQuery(fetcher)
+  const { data: lista, failed, retry } = useApiQuery(fetcher)
 
   return (
     <main className={pageStyles.page}>
@@ -144,6 +159,26 @@ export default function WishlistPage() {
           <Text className={pageStyles.subtitle}>Los productos que has guardado para más adelante.</Text>
         </div>
       </div>
+      {failed && (
+        <MessageBar intent="error">
+          <MessageBarBody>No se han podido cargar tus favoritos. Inténtalo de nuevo.</MessageBarBody>
+          <MessageBarActions>
+            <Button onClick={retry}>Reintentar</Button>
+          </MessageBarActions>
+        </MessageBar>
+      )}
+      {!lista && !failed && <Spinner label="Cargando tus favoritos…" className={pageStyles.loading} />}
+      {lista?.items.length === 0 && (
+        <EmptyState
+          icon={<Heart24Regular />}
+          title="Aún no tienes favoritos"
+          description="Pulsa el corazón de un producto del catálogo para guardarlo aquí."
+        >
+          <LinkButton to={PATHS.PRODUCTS} appearance="primary">
+            Ver los productos
+          </LinkButton>
+        </EmptyState>
+      )}
       {lista?.items.length > 0 && (
         <ul aria-label="Tus favoritos" className={styles.list}>
           {lista.items.map((item) => (
