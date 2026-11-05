@@ -1,0 +1,274 @@
+package es.uclm.esibuy.backend.productos.domain.model;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+// Entidad Producto (HU31, T201). Las invariantes son las del contrato del frontend y las de la colección
+// «productos»: vendedor y nombre obligatorios, precio > 0, stock >= 0, una sola categoría.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP01 a CP06 y CP09, propuestos a partir del formulario.
+class ProductoTest {
+
+    private static final BigDecimal PRECIO = new BigDecimal("89.50");
+
+    @Test
+    @DisplayName("HU31-CP01: crea un producto con datos correctos")
+    void creaUnProductoConDatosCorrectos() {
+        Descuento descuento = new Descuento(true, new BigDecimal("10"));
+        Descuento premium = new Descuento(true, new BigDecimal("15"));
+
+        Producto producto = new Producto("p-1", "u-2", "Teclado mecánico", "Con cable", PRECIO, 12, "cat-1",
+                "https://esibuy.test/teclado.png", true, descuento, premium);
+
+        assertEquals("p-1", producto.getId());
+        assertEquals("u-2", producto.getVendedorId());
+        assertEquals("Teclado mecánico", producto.getNombre());
+        assertEquals("Con cable", producto.getDescripcion());
+        assertEquals(PRECIO, producto.getPrecio());
+        assertEquals(12, producto.getStock());
+        assertEquals("cat-1", producto.getCategoriaId());
+        assertEquals("https://esibuy.test/teclado.png", producto.getImagen());
+        assertTrue(producto.isDisponible());
+        assertEquals(descuento, producto.getDescuento());
+        assertEquals(premium, producto.getDescuentoPremium());
+    }
+
+    @Test
+    @DisplayName("HU31-CP01: permite un producto sin id antes de persistirlo")
+    void permiteUnProductoSinIdAntesDePersistir() {
+        assertNull(productoConNombre("Teclado").getId());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"   "})
+    @DisplayName("HU31-CP02: rechaza un producto sin vendedor")
+    void rechazaUnProductoSinVendedor(String vendedorId) {
+        assertThrows(ProductoInvalidoException.class, () -> new Producto(null, vendedorId, "Teclado", "", PRECIO, 5,
+                "cat-1", "", true, Descuento.sinDescuento(), Descuento.sinDescuento()));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"   "})
+    @DisplayName("HU31-CP03: rechaza un producto sin nombre")
+    void rechazaUnProductoSinNombre(String nombre) {
+        assertThrows(ProductoInvalidoException.class, () -> productoConNombre(nombre));
+    }
+
+    @Test
+    @DisplayName("HU31-CP03: el nombre admite hasta 100 caracteres")
+    void elNombreTieneUnMaximoDe100Caracteres() {
+        assertDoesNotThrow(() -> productoConNombre("a".repeat(100)));
+        assertThrows(ProductoInvalidoException.class, () -> productoConNombre("a".repeat(101)));
+    }
+
+    // T258: el nombre se guarda recortado para que el índice único lo compare igual que la aplicación.
+    @Test
+    @DisplayName("HU31-CP25: el nombre se guarda sin los espacios de los extremos")
+    void quitaLosEspaciosDeLosExtremosDelNombre() {
+        assertEquals("Teclado mecánico", productoConNombre(" \tTeclado mecánico  ").getNombre());
+    }
+
+    @Test
+    @DisplayName("HU31-CP25: el límite de 100 caracteres se cuenta sin los espacios de los extremos")
+    void elLimiteDelNombreSeCuentaSinLosEspacios() {
+        String cienConEspacios = "  " + "a".repeat(100) + "  ";
+        String cientoUnoConEspacios = " " + "a".repeat(101) + " ";
+
+        assertEquals("a".repeat(100), productoConNombre(cienConEspacios).getNombre());
+        assertThrows(ProductoInvalidoException.class, () -> productoConNombre(cientoUnoConEspacios));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"0", "0.00", "-1", "-0.01"})
+    @DisplayName("HU31-CP04: rechaza un precio que no es mayor que 0")
+    void rechazaUnPrecioNoPositivo(String precio) {
+        assertThrows(ProductoInvalidoException.class, () -> productoConPrecio(new BigDecimal(precio)));
+    }
+
+    @Test
+    @DisplayName("HU31-CP04: rechaza un precio nulo y acepta el mínimo positivo")
+    void rechazaUnPrecioNuloYAceptaElMinimo() {
+        assertThrows(ProductoInvalidoException.class, () -> productoConPrecio(null));
+        assertDoesNotThrow(() -> productoConPrecio(new BigDecimal("0.01")));
+    }
+
+    @Test
+    @DisplayName("HU31-CP05: rechaza un stock negativo y acepta cero")
+    void rechazaUnStockNegativoYAceptaCero() {
+        assertThrows(ProductoInvalidoException.class, () -> productoConStock(-1));
+        assertDoesNotThrow(() -> productoConStock(0));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"   "})
+    @DisplayName("HU31-CP06: rechaza un producto sin categoría")
+    void rechazaUnProductoSinCategoria(String categoriaId) {
+        assertThrows(ProductoInvalidoException.class, () -> new Producto(null, "u-2", "Teclado", "", PRECIO, 5,
+                categoriaId, "", true, Descuento.sinDescuento(), Descuento.sinDescuento()));
+    }
+
+    @Test
+    @DisplayName("HU31-CP07: rechaza un producto sin descuento o sin descuento premium")
+    void rechazaUnProductoSinDescuentos() {
+        assertThrows(ProductoInvalidoException.class, () -> new Producto(null, "u-2", "Teclado", "", PRECIO, 5,
+                "cat-1", "", true, null, Descuento.sinDescuento()));
+        assertThrows(ProductoInvalidoException.class, () -> new Producto(null, "u-2", "Teclado", "", PRECIO, 5,
+                "cat-1", "", true, Descuento.sinDescuento(), null));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"https://esibuy.test/a.png", "http://esibuy.test/a.png", ""})
+    @DisplayName("HU31-CP09: la imagen es opcional y, si existe, es una dirección http o https")
+    void aceptaImagenesHttpOVacias(String imagen) {
+        assertDoesNotThrow(() -> productoConImagen(imagen));
+        assertDoesNotThrow(() -> productoConImagen(null));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"javascript:alert(1)", "ftp://esibuy.test/a.png", "no es una url", "data:text/html;base64,AAAA"})
+    @DisplayName("HU31-CP09: rechaza una imagen que no sea una dirección http o https")
+    void rechazaImagenesQueNoSonHttp(String imagen) {
+        assertThrows(ProductoInvalidoException.class, () -> productoConImagen(imagen));
+    }
+
+    @Test
+    @DisplayName("HU31-CP10: la descripción es opcional y admite hasta 1000 caracteres")
+    void laDescripcionTieneUnMaximoDe1000Caracteres() {
+        assertDoesNotThrow(() -> productoConDescripcion(null));
+        assertDoesNotThrow(() -> productoConDescripcion("a".repeat(1000)));
+        assertThrows(ProductoInvalidoException.class, () -> productoConDescripcion("a".repeat(1001)));
+    }
+
+    private static Producto productoConNombre(String nombre) {
+        return new Producto(null, "u-2", nombre, "", PRECIO, 5, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento());
+    }
+
+    private static Producto productoConPrecio(BigDecimal precio) {
+        return new Producto(null, "u-2", "Teclado", "", precio, 5, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento());
+    }
+
+    private static Producto productoConStock(int stock) {
+        return new Producto(null, "u-2", "Teclado", "", PRECIO, stock, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento());
+    }
+
+    private static Producto productoConImagen(String imagen) {
+        return new Producto(null, "u-2", "Teclado", "", PRECIO, 5, "cat-1", imagen, true,
+                Descuento.sinDescuento(), Descuento.sinDescuento());
+    }
+
+    private static Producto productoConDescripcion(String descripcion) {
+        return new Producto(null, "u-2", "Teclado", descripcion, PRECIO, 5, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento());
+    }
+
+    // Precio que paga el cliente (HU9): el descuento premium si es premium y está activo; si no, el general.
+    private static Producto productoConDescuentos(Descuento general, Descuento premium) {
+        return new Producto("p-1", "u-2", "Teclado", "", PRECIO, 5, "cat-1", "", true, general, premium);
+    }
+
+    @Test
+    @DisplayName("HU9-CP19: sin descuentos, el precio final es el precio")
+    void sinDescuentosElPrecioFinalEsElPrecio() {
+        Producto producto = productoConDescuentos(Descuento.sinDescuento(), Descuento.sinDescuento());
+
+        assertEquals(new BigDecimal("89.50"), producto.precioFinal(false));
+        assertEquals(new BigDecimal("89.50"), producto.precioFinal(true));
+    }
+
+    @Test
+    @DisplayName("HU9-CP19: el cliente estándar paga el precio con el descuento general, redondeado a céntimos")
+    void elClienteEstandarPagaConElDescuentoGeneral() {
+        Producto producto = productoConDescuentos(new Descuento(true, new BigDecimal("10")),
+                new Descuento(true, new BigDecimal("15")));
+
+        assertEquals(new BigDecimal("80.55"), producto.precioFinal(false));
+    }
+
+    @Test
+    @DisplayName("HU9-CP19: el cliente premium paga con el descuento premium si está activo")
+    void elClientePremiumPagaConElDescuentoPremium() {
+        Producto producto = productoConDescuentos(new Descuento(true, new BigDecimal("10")),
+                new Descuento(true, new BigDecimal("15")));
+
+        // 89,50 × 0,85 = 76,075, que se redondea a 76,08
+        assertEquals(new BigDecimal("76.08"), producto.precioFinal(true));
+    }
+
+    @Test
+    @DisplayName("HU9-CP19: sin descuento premium activo, el cliente premium paga con el general")
+    void sinDescuentoPremiumElPremiumPagaConElGeneral() {
+        Producto producto = productoConDescuentos(new Descuento(true, new BigDecimal("10")),
+                Descuento.sinDescuento());
+
+        assertEquals(new BigDecimal("80.55"), producto.precioFinal(true));
+    }
+
+    // Descuento que se aplica al cliente (HU8): el mismo criterio que precioFinal, para mostrar su porcentaje.
+    @Test
+    @DisplayName("HU8-CP08: sin descuentos activos no se aplica ninguno")
+    void sinDescuentosNoSeAplicaNinguno() {
+        Producto producto = productoConDescuentos(Descuento.sinDescuento(), Descuento.sinDescuento());
+
+        assertEquals(Descuento.sinDescuento(), producto.descuentoAplicado(false));
+        assertEquals(Descuento.sinDescuento(), producto.descuentoAplicado(true));
+    }
+
+    @Test
+    @DisplayName("HU8-CP08: al cliente estándar se le aplica el descuento general, aunque haya premium")
+    void alClienteEstandarSeLeAplicaElGeneral() {
+        Descuento general = new Descuento(true, new BigDecimal("10"));
+        Producto producto = productoConDescuentos(general, new Descuento(true, new BigDecimal("15")));
+
+        assertEquals(general, producto.descuentoAplicado(false));
+    }
+
+    @Test
+    @DisplayName("HU8-CP08: al cliente premium se le aplica el premium si está activo; si no, el general")
+    void alClientePremiumSeLeAplicaElPremiumOElGeneral() {
+        Descuento general = new Descuento(true, new BigDecimal("10"));
+        Descuento premium = new Descuento(true, new BigDecimal("15"));
+
+        assertEquals(premium, productoConDescuentos(general, premium).descuentoAplicado(true));
+        assertEquals(general, productoConDescuentos(general, Descuento.sinDescuento()).descuentoAplicado(true));
+    }
+
+    // Media y número de valoraciones (HU13, T415): los calcula el módulo de valoraciones; el producto solo los lleva.
+    @Test
+    @DisplayName("HU13-CP25: un producto sin valoraciones no tiene media y tiene 0 valoraciones")
+    void unProductoSinValoracionesNoTieneMedia() {
+        Producto producto = productoConImagen("");
+
+        assertNull(producto.getValoracionMedia());
+        assertEquals(0, producto.getNumeroValoraciones());
+    }
+
+    @Test
+    @DisplayName("HU13-CP25: activar, desactivar o quitar la imagen conserva la media y el número de valoraciones")
+    void lasCopiasConservanLaMediaYElNumero() {
+        Producto valorado = new Producto("p-1", "v-1", "Teclado", "", new BigDecimal("10"), 3, "cat-1",
+                "https://esibuy.test/t.png", true, Descuento.sinDescuento(), Descuento.sinDescuento(), 4.5, 2);
+
+        for (Producto copia : List.of(valorado.conDisponibilidad(false), valorado.sinImagen())) {
+            assertEquals(4.5, copia.getValoracionMedia());
+            assertEquals(2, copia.getNumeroValoraciones());
+        }
+    }
+}
