@@ -29,7 +29,8 @@ const useStyles = makeStyles({
   },
 })
 
-export default function EmptyState({ icon, title, description, children }) {
+// `headingLevel` permite meterlo dentro de una sección con su propio título sin romper la jerarquía (h2 por defecto).
+export default function EmptyState({ icon, title, description, headingLevel = 'h2', children }) {
   const styles = useStyles()
 
   return (
@@ -39,7 +40,7 @@ export default function EmptyState({ icon, title, description, children }) {
           {icon}
         </span>
       )}
-      <Subtitle1 as="h2">{title}</Subtitle1>
+      <Subtitle1 as={headingLevel}>{title}</Subtitle1>
       <Text className={styles.description}>{description}</Text>
       {children}
     </section>
@@ -50,5 +51,6 @@ EmptyState.propTypes = {
   icon: PropTypes.node,
   title: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
+  headingLevel: PropTypes.oneOf(['h2', 'h3', 'h4']),
   children: PropTypes.node,
 }

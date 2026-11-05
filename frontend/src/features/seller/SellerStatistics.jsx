@@ -17,10 +17,15 @@ import {
   tokens,
   useId,
 } from '@fluentui/react-components'
+import { ShoppingBag24Regular, Star24Regular } from '@fluentui/react-icons'
 import { getSellerStatistics } from '../../api/statistics'
+import EmptyState from '../../components/EmptyState'
 import { useTableStyles } from '../../components/tableStyles'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { formatPrice, formatRating } from '../../utils/format'
+
+// Sin valoraciones el backend no manda media (`null`): no se muestra como un 0.
+const SIN_VALORACIONES = 'Sin valoraciones'
 
 const useStyles = makeStyles({
   card: {
@@ -154,14 +159,23 @@ function SalesBlock({ ventas }) {
         <Stat label="Unidades vendidas" value={ventas.unidadesVendidas} />
         <Stat label="Ingresos" value={formatPrice(ventas.ingresos)} />
       </div>
-      <StatsTable
-        label="Los más vendidos"
-        columns={['Producto', 'Unidades', 'Ingresos']}
-        rows={ventas.masVendidos.map(({ productoId, nombre, unidades, ingresos }) => ({
-          id: productoId,
-          cells: [nombre, unidades, formatPrice(ingresos)],
-        }))}
-      />
+      {ventas.masVendidos.length > 0 ? (
+        <StatsTable
+          label="Los más vendidos"
+          columns={['Producto', 'Unidades', 'Ingresos']}
+          rows={ventas.masVendidos.map(({ productoId, nombre, unidades, ingresos }) => ({
+            id: productoId,
+            cells: [nombre, unidades, formatPrice(ingresos)],
+          }))}
+        />
+      ) : (
+        <EmptyState
+          icon={<ShoppingBag24Regular />}
+          headingLevel="h4"
+          title="Aún no tienes ventas"
+          description="Cuando un cliente compre alguno de tus productos, aquí verás los más vendidos."
+        />
+      )}
     </StatsBlock>
   )
 }
@@ -188,17 +202,29 @@ function RatingsBlock({ valoraciones }) {
   return (
     <StatsBlock title="Valoraciones">
       <div className={styles.stats}>
-        <Stat label="Valoración media" value={`${formatRating(valoraciones.media)} de 5`} />
+        <Stat
+          label="Valoración media"
+          value={valoraciones.media === null ? SIN_VALORACIONES : `${formatRating(valoraciones.media)} de 5`}
+        />
         <Stat label="Valoraciones recibidas" value={valoraciones.total} />
       </div>
-      <StatsTable
-        label="Valoración por producto"
-        columns={['Producto', 'Media', 'Valoraciones']}
-        rows={valoraciones.porProducto.map(({ productoId, nombre, media, numero }) => ({
-          id: productoId,
-          cells: [nombre, formatRating(media), numero],
-        }))}
-      />
+      {valoraciones.porProducto.length > 0 ? (
+        <StatsTable
+          label="Valoración por producto"
+          columns={['Producto', 'Media', 'Valoraciones']}
+          rows={valoraciones.porProducto.map(({ productoId, nombre, media, numero }) => ({
+            id: productoId,
+            cells: [nombre, formatRating(media), numero],
+          }))}
+        />
+      ) : (
+        <EmptyState
+          icon={<Star24Regular />}
+          headingLevel="h4"
+          title="Aún no tienes valoraciones"
+          description="Cuando un cliente valore alguno de tus productos, aquí verás su media."
+        />
+      )}
     </StatsBlock>
   )
 }
