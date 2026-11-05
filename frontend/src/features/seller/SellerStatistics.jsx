@@ -7,6 +7,7 @@ import {
   MessageBar,
   MessageBarActions,
   MessageBarBody,
+  Spinner,
   Subtitle1,
   Table,
   TableBody,
@@ -294,6 +295,7 @@ export default function SellerStatistics() {
             </MessageBarActions>
           </MessageBar>
         )}
+        {!estadisticas && !failed && <Spinner label="Cargando tus estadísticas…" />}
         {estadisticas && (
           <>
             <SalesBlock ventas={estadisticas.ventas} />
