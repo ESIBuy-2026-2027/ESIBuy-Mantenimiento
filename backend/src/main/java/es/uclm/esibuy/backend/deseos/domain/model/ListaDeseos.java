@@ -38,7 +38,7 @@ public class ListaDeseos {
      * @return si la lista ha cambiado y hay que guardarla
      */
     public boolean conservarSolo(Set<String> productosExistentes) {
-        return false;
+        return items.removeIf(item -> !productosExistentes.contains(item.productoId()));
     }
 
     public String getId() {
