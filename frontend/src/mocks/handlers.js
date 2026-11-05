@@ -11,6 +11,7 @@ import { productsHandlers } from './productsHandlers'
 import { profileHandlers } from './profileHandlers'
 import { registroHandlers } from './registroHandlers'
 import { reviewsHandlers } from './reviewsHandlers'
+import { statisticsHandlers } from './statisticsHandlers'
 import { usersHandlers } from './usersHandlers'
 import { wishlistHandlers } from './wishlistHandlers'
 
@@ -25,6 +26,7 @@ export const handlers = [
   ...addressesHandlers,
   ...usersHandlers,
   ...profileHandlers,
+  ...statisticsHandlers,
   ...adminCategoriesHandlers,
   ...adminSellersHandlers,
   ...adminsHandlers,
