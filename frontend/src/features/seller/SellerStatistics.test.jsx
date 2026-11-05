@@ -39,3 +39,19 @@ describe('SellerStatistics (HU17): ventas', () => {
     expect(filas[0][2]).toMatch(/^447,50\s€$/)
   })
 })
+
+describe('SellerStatistics (HU17): valoraciones', () => {
+  it('HU17-CP15: el vendedor ve la media global, el total y la valoración de cada producto, del mejor al peor', async () => {
+    await abrirEstadisticas('vendedor@esibuy.test')
+
+    const valoraciones = await screen.findByRole('region', { name: 'Valoraciones' })
+    expect(cifra(valoraciones, 'Valoración media')).toHaveTextContent('4,4 de 5')
+    expect(cifra(valoraciones, 'Valoraciones recibidas')).toHaveTextContent('8')
+
+    const porProducto = within(valoraciones).getByRole('table', { name: 'Valoración por producto' })
+    expect(filasDe(porProducto)).toEqual([
+      ['Teclado mecánico', '4,5', '6'],
+      ['Auriculares inalámbricos', '4,0', '2'],
+    ])
+  })
+})
