@@ -246,12 +246,34 @@ export default function OrderDetailPage() {
   const pageStyles = usePageStyles()
   const { id } = useParams()
   const fetcher = useCallback(() => getOrder(id), [id])
-  const { data: pedido, error, failed, retry } = useApiQuery(fetcher)
+  const { data: cargado, error, failed, retry } = useApiQuery(fetcher)
   const [confirmando, setConfirmando] = useState(false)
+  // Tras cancelar se muestra el pedido que devuelve el backend, sin volver a pedirlo
+  const [cancelado, setCancelado] = useState(null)
+  const [aviso, setAviso] = useState(null)
+  const pedido = cancelado ?? cargado
+
+  const alCancelar = (pedidoCancelado) => {
+    setConfirmando(false)
+    setCancelado(pedidoCancelado)
+    setAviso({ intent: 'success', texto: 'Pedido cancelado.' })
+  }
+
+  // 409: se acaba de enviar (o ya estaba cancelado). Se recarga para mostrar su estado real.
+  const alNoPoderCancelar = () => {
+    setConfirmando(false)
+    setAviso({ intent: 'warning', texto: 'Este pedido ya no se puede cancelar: ya se ha enviado.' })
+    retry()
+  }
   const noEncontrado = error?.code === 'ORDER_NOT_FOUND'
 
   return (
     <main className={pageStyles.page}>
+      {aviso && (
+        <MessageBar intent={aviso.intent}>
+          <MessageBarBody>{aviso.texto}</MessageBarBody>
+        </MessageBar>
+      )}
       {noEncontrado && (
         <MessageBar intent="warning">
           <MessageBarBody>Pedido no encontrado.</MessageBarBody>
@@ -267,7 +289,14 @@ export default function OrderDetailPage() {
       )}
       {!pedido && !failed && <Spinner label="Cargando pedido…" className={pageStyles.loading} />}
       {pedido && <DetalleDelPedido pedido={pedido} onCancelar={() => setConfirmando(true)} />}
-      {pedido && confirmando && <CancelOrderDialog pedido={pedido} onClose={() => setConfirmando(false)} />}
+      {pedido && confirmando && (
+        <CancelOrderDialog
+          pedido={pedido}
+          onClose={() => setConfirmando(false)}
+          onCancelled={alCancelar}
+          onNotCancellable={alNoPoderCancelar}
+        />
+      )}
       <div>
         <LinkButton to={PATHS.ORDERS} appearance="secondary">
           Volver a mis pedidos
