@@ -21,3 +21,9 @@ export function createAdminCategory({ nombre, descripcion, estado }) {
 export function updateAdminCategory(id, { nombre, descripcion }) {
   return request(`/api/admin/categorias/${encodeURIComponent(id)}`, { method: 'PUT', body: { nombre, descripcion } })
 }
+
+// Activa o desactiva una categoría (HU41): `estado` es ACTIVA o INACTIVA. Responde con la fila actualizada; 404 si
+// ya no existe.
+export function changeAdminCategoryStatus(id, estado) {
+  return request(`/api/admin/categorias/${encodeURIComponent(id)}/status`, { method: 'PATCH', body: { estado } })
+}
