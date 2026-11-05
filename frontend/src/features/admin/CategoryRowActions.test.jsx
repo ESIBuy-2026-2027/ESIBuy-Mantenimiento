@@ -126,6 +126,54 @@ describe('CategoryRowActions (HU41): activar y desactivar', () => {
   })
 })
 
+describe('CategoryRowActions (HU41): cambiar el estado', () => {
+  it('HU41-CP29: al confirmar desactiva la categoría, avisa y pide actualizar la lista', async () => {
+    const user = userEvent.setup()
+    const cambios = capturarCambiosDeEstado()
+    const { onResult, onChanged } = await renderAcciones(MASCOTAS)
+
+    await user.click(screen.getByRole('button', { name: 'Desactivar Mascotas' }))
+    const confirmacion = (await screen.findByText(DESACTIVAR_MASCOTAS)).closest('[role="alertdialog"]')
+    await user.click(within(confirmacion).getByText('Desactivar', { selector: 'button' }))
+
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1), ESPERA)
+    expect(cambios).toEqual([{ id: 'cat-9', estado: 'INACTIVA' }])
+    expect(onResult).toHaveBeenCalledWith({ intent: 'success', texto: 'Mascotas se ha desactivado.' })
+    await waitFor(() => expect(screen.queryByText(DESACTIVAR_MASCOTAS)).not.toBeInTheDocument(), ESPERA)
+  })
+
+  it('HU41-CP29: al confirmar activa una categoría inactiva y avisa', async () => {
+    const user = userEvent.setup()
+    const cambios = capturarCambiosDeEstado()
+    const { onResult, onChanged } = await renderAcciones(MODA)
+
+    await user.click(screen.getByRole('button', { name: 'Activar Moda' }))
+    const confirmacion = (await screen.findByText(ACTIVAR_MODA)).closest('[role="alertdialog"]')
+    await user.click(within(confirmacion).getByText('Activar', { selector: 'button' }))
+
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1), ESPERA)
+    expect(cambios).toEqual([{ id: 'cat-10', estado: 'ACTIVA' }])
+    expect(onResult).toHaveBeenCalledWith({ intent: 'success', texto: 'Moda se ha activado.' })
+  })
+
+  it('HU41-CP29: mientras se cambia el estado, los botones de la confirmación quedan deshabilitados', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.patch('/api/admin/categorias/:id/status', async () => {
+        await delay('infinite')
+      }),
+    )
+    await renderAcciones(MASCOTAS)
+
+    await user.click(screen.getByRole('button', { name: 'Desactivar Mascotas' }))
+    const confirmacion = (await screen.findByText(DESACTIVAR_MASCOTAS)).closest('[role="alertdialog"]')
+    await user.click(within(confirmacion).getByText('Desactivar', { selector: 'button' }))
+
+    await waitFor(() => expect(within(confirmacion).getByText('Desactivar', { selector: 'button' })).toBeDisabled())
+    expect(within(confirmacion).getByText('Cancelar', { selector: 'button' })).toBeDisabled()
+  })
+})
+
 describe('CategoryRowActions (HU42): confirmación', () => {
   it('HU42-CP17: ofrece la lupa para ver la ficha y la papelera para eliminar la categoría', async () => {
     await renderAcciones(MASCOTAS)
