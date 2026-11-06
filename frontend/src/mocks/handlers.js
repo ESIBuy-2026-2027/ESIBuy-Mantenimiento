@@ -7,6 +7,7 @@ import { authHandlers } from './authHandlers'
 import { cartHandlers } from './cartHandlers'
 import { ordersHandlers } from './ordersHandlers'
 import { paymentMethodsHandlers } from './paymentMethodsHandlers'
+import { preferencesHandlers } from './preferencesHandlers'
 import { productsHandlers } from './productsHandlers'
 import { profileHandlers } from './profileHandlers'
 import { registroHandlers } from './registroHandlers'
@@ -26,6 +27,7 @@ export const handlers = [
   ...addressesHandlers,
   ...usersHandlers,
   ...profileHandlers,
+  ...preferencesHandlers,
   ...statisticsHandlers,
   ...adminCategoriesHandlers,
   ...adminSellersHandlers,

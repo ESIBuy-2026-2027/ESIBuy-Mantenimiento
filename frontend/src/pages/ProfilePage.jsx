@@ -1,7 +1,9 @@
-import { useCallback } from 'react'
+import PropTypes from 'prop-types'
+import { useCallback, useId } from 'react'
 import {
   Button,
   Card,
+  Checkbox,
   MessageBar,
   MessageBarActions,
   MessageBarBody,
@@ -12,6 +14,7 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
+import { getPreferences } from '../api/preferences'
 import { getProfile } from '../api/profile'
 import { usePageStyles } from '../components/pageStyles'
 import { UserAvatar } from '../features/account/AvatarSelector'
@@ -47,7 +50,43 @@ const useStyles = makeStyles({
   email: {
     color: tokens.colorNeutralForeground3,
   },
+  preferencesText: {
+    color: tokens.colorNeutralForeground3,
+  },
+  categories: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    columnGap: tokens.spacingHorizontalL,
+  },
 })
+
+// Preferencias del cliente (HU46): una casilla por cada categoría activa, marcadas las que ya le interesan.
+function CustomerPreferences({ categories }) {
+  const styles = useStyles()
+  const titleId = useId()
+  const fetcher = useCallback(() => getPreferences(), [])
+  const { data: guardadas } = useApiQuery(fetcher)
+  const elegidas = new Set(guardadas?.categorias ?? [])
+
+  return (
+    <Card className={styles.card}>
+      <Title3 as="h2" id={titleId} className={styles.name}>
+        Mis preferencias
+      </Title3>
+      <Text className={styles.preferencesText}>Elige las categorías que te interesan.</Text>
+      <div role="group" aria-labelledby={titleId} className={styles.categories}>
+        {categories.map((category) => (
+          <Checkbox key={category.id} label={category.nombre} checked={elegidas.has(category.id)} />
+        ))}
+      </div>
+    </Card>
+  )
+}
+
+CustomerPreferences.propTypes = {
+  categories: PropTypes.arrayOf(PropTypes.shape({ id: PropTypes.string.isRequired, nombre: PropTypes.string.isRequired }))
+    .isRequired,
+}
 
 // Pares [etiqueta, texto] del perfil: los mismos campos y formatos que la ficha del administrador (HU20 y HU26),
 // sin el estado ni la imagen, y con la fecha de alta. La categoría del vendedor llega como identificador.
@@ -60,7 +99,8 @@ function profileFields(perfil, categoryName) {
 }
 
 // Perfil propio del cliente o del vendedor (HU4), en solo lectura. Los datos se piden al backend, que los saca de
-// la sesión. Modificarlos es de la HU45. El vendedor ve además sus estadísticas (HU17).
+// la sesión. Modificarlos es de la HU45. El cliente ve además sus preferencias (HU46) y el vendedor, sus estadísticas
+// (HU17).
 export default function ProfilePage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
@@ -104,6 +144,7 @@ export default function ProfilePage() {
         </Card>
       )}
 
+      {perfil?.rol === 'CLIENTE' && <CustomerPreferences categories={categories} />}
       {perfil?.rol === 'VENDEDOR' && <SellerStatistics />}
     </main>
   )
