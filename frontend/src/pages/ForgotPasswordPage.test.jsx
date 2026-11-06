@@ -193,13 +193,13 @@ describe('Recuperación de contraseña (HU3): acceso', () => {
 
     await user.click(await screen.findByRole('link', { name: /volver al inicio de sesión/i }))
 
-    await esperarRuta('/login')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/login$')))
   })
 
   it('HU3-CP25: con la sesión abierta no se muestra la recuperación y lleva a su inicio', async () => {
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/forgot-password')
 
-    await esperarRuta('/products')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/products$')))
   })
 })

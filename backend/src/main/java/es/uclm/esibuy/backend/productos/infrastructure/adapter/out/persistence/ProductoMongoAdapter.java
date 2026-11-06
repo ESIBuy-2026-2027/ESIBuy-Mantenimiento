@@ -34,6 +34,8 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     private static final String CAMPO_STOCK = "stock";
     private static final String CAMPO_DISPONIBLE = "disponible";
     private static final String CAMPO_NOMBRE = "nombre";
+    private static final String CAMPO_VENDEDOR_ID = "vendedorId";
+    private static final String CAMPO_CATEGORIA_ID = "categoriaId";
     private static final String CAMPO_VALORACION_MEDIA = "valoracionMedia";
 
     private final ProductoMongoRepository repository;
@@ -111,7 +113,7 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
 
     @Override
     public List<Producto> listarTodosPorVendedor(String vendedorId) {
-        return mongoTemplate.find(Query.query(Criteria.where("vendedorId").is(vendedorId)), ProductoDocument.class)
+        return mongoTemplate.find(Query.query(Criteria.where(CAMPO_VENDEDOR_ID).is(vendedorId)), ProductoDocument.class)
                 .stream().map(mapper::aDominio).toList();
     }
 
@@ -120,12 +122,12 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     @Override
     public ProductoPage buscarEnCatalogo(BuscarCatalogoQuery query) {
         List<Criteria> filtros = new ArrayList<>();
-        filtros.add(Criteria.where("disponible").is(true));
+        filtros.add(Criteria.where(CAMPO_DISPONIBLE).is(true));
         if (query.busqueda() != null && !query.busqueda().isBlank()) {
-            filtros.add(Criteria.where("nombre").regex(patronSinTildes(query.busqueda()), "i"));
+            filtros.add(Criteria.where(CAMPO_NOMBRE).regex(patronSinTildes(query.busqueda()), "i"));
         }
         if (query.categoriaId() != null && !query.categoriaId().isBlank()) {
-            filtros.add(Criteria.where("categoriaId").is(query.categoriaId()));
+            filtros.add(Criteria.where(CAMPO_CATEGORIA_ID).is(query.categoriaId()));
         }
         // Media de las valoraciones (HU13): un producto sin valoraciones no tiene el campo y no llega a ningún mínimo
         if (query.valoracionMinima() != null) {
@@ -153,20 +155,20 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     @Override
     public boolean existePorVendedorYNombre(String vendedorId, String nombre) {
         Criteria criterios = new Criteria().andOperator(
-                Criteria.where("vendedorId").is(vendedorId),
-                Criteria.where("nombre").regex("^" + Pattern.quote(nombre.trim()) + "$", "i"));
+                Criteria.where(CAMPO_VENDEDOR_ID).is(vendedorId),
+                Criteria.where(CAMPO_NOMBRE).regex("^" + Pattern.quote(nombre.trim()) + "$", "i"));
         return mongoTemplate.exists(new Query(criterios), ProductoDocument.class);
     }
 
     // Siempre del vendedor; el nombre se busca como texto literal (Pattern.quote), sin distinguir mayúsculas.
     private static Criteria construirCriterios(String vendedorId, ListarProductosQuery query) {
         List<Criteria> criterios = new ArrayList<>();
-        criterios.add(Criteria.where("vendedorId").is(vendedorId));
+        criterios.add(Criteria.where(CAMPO_VENDEDOR_ID).is(vendedorId));
         if (query.busqueda() != null && !query.busqueda().isBlank()) {
-            criterios.add(Criteria.where("nombre").regex(".*" + Pattern.quote(query.busqueda().trim()) + ".*", "i"));
+            criterios.add(Criteria.where(CAMPO_NOMBRE).regex(".*" + Pattern.quote(query.busqueda().trim()) + ".*", "i"));
         }
         if (query.categoriaId() != null && !query.categoriaId().isBlank()) {
-            criterios.add(Criteria.where("categoriaId").is(query.categoriaId()));
+            criterios.add(Criteria.where(CAMPO_CATEGORIA_ID).is(query.categoriaId()));
         }
         return new Criteria().andOperator(criterios);
     }
@@ -198,7 +200,7 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     @Override
     public Map<String, Long> contarPorCategoria() {
         Aggregation agrupar = Aggregation.newAggregation(
-                Aggregation.group("categoriaId").count().as("total"));
+                Aggregation.group(CAMPO_CATEGORIA_ID).count().as("total"));
         return mongoTemplate.aggregate(agrupar, ProductoDocument.class, Document.class).getMappedResults().stream()
                 .collect(Collectors.toMap(grupo -> grupo.getString("_id"),
                         grupo -> grupo.get("total", Number.class).longValue()));
