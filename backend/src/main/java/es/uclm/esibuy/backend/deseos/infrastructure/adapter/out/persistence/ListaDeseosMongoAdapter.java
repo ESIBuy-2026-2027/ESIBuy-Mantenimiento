@@ -34,5 +34,6 @@ public class ListaDeseosMongoAdapter implements ListaDeseosRepositoryPort {
 
     @Override
     public void eliminarPorCliente(String clienteId) {
+        repository.deleteByUsuarioId(clienteId);
     }
 }

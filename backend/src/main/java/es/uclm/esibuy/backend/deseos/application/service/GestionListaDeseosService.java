@@ -68,6 +68,7 @@ public class GestionListaDeseosService implements GestionListaDeseosUseCase {
     @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public void eliminar(String emailCliente) {
+        listaDeseosRepository.eliminarPorCliente(clienteEnSesion.idPorCorreo(emailCliente));
     }
 
     // La lista del cliente en sesión, o una vacía sin guardar si todavía no tiene
