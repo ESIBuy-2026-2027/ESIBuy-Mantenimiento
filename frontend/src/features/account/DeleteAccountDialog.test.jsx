@@ -62,6 +62,21 @@ describe('DeleteAccountDialog (HU47): eliminar', () => {
   })
 })
 
+describe('DeleteAccountDialog (HU47): cancelar', () => {
+  it('HU47-CP12: al cancelar no se elimina la cuenta', async () => {
+    const cuerpos = registrarEliminaciones()
+    const usuario = userEvent.setup()
+    const { onClose, onDeleted } = abrirDialogo()
+
+    await usuario.type(screen.getByLabelText(/^contraseña actual/i), CONTRASENA)
+    await usuario.click(screen.getByRole('button', { name: /cancelar/i }))
+
+    expect(onClose).toHaveBeenCalled()
+    expect(onDeleted).not.toHaveBeenCalled()
+    expect(cuerpos).toEqual([])
+  })
+})
+
 describe('DeleteAccountDialog (HU47): errores', () => {
   it('HU47-CP11: con la contraseña incorrecta lo avisa, no elimina y deja corregirla', async () => {
     registrarEliminaciones(() => HttpResponse.json({ code: 'WRONG_PASSWORD' }, { status: 400 }))
