@@ -11,4 +11,7 @@ public interface ListaDeseosRepositoryPort {
 
     // Devuelve la lista guardada: si era nueva, con el id que le ha asignado la base de datos
     ListaDeseos guardar(ListaDeseos lista);
+
+    // Si el cliente no tiene lista no hace nada
+    void eliminarPorCliente(String clienteId);
 }

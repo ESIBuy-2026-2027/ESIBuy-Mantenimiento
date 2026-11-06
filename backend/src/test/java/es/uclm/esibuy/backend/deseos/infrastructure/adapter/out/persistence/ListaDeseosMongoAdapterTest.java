@@ -81,6 +81,18 @@ class ListaDeseosMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU14-CP43: eliminar por cliente borra su lista de la colección y no la de otro cliente")
+    void eliminarPorClienteBorraSoloSuLista() {
+        adapter.guardar(listaNueva("cliente-1"));
+        adapter.guardar(listaNueva("cliente-2"));
+
+        adapter.eliminarPorCliente("cliente-1");
+
+        assertTrue(adapter.buscarPorCliente("cliente-1").isEmpty());
+        assertTrue(adapter.buscarPorCliente("cliente-2").isPresent());
+    }
+
+    @Test
     @DisplayName("HU14-CP06: la colección solo admite una lista por cliente")
     void laColeccionSoloAdmiteUnaListaPorCliente() {
         adapter.guardar(listaNueva("cliente-1"));

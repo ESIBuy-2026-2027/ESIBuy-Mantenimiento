@@ -65,6 +65,12 @@ public class GestionListaDeseosService implements GestionListaDeseosUseCase {
         return detallar(lista, emailCliente);
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
+    @Override
+    public void eliminar(String emailCliente) {
+        listaDeseosRepository.eliminarPorCliente(clienteEnSesion.idPorCorreo(emailCliente));
+    }
+
     // La lista del cliente en sesión, o una vacía sin guardar si todavía no tiene
     private ListaDeseos listaDe(String emailCliente) {
         String clienteId = clienteEnSesion.idPorCorreo(emailCliente);
