@@ -61,3 +61,32 @@ describe('DeleteAccountDialog (HU47): eliminar', () => {
     expect(cuerpos).toEqual([{ password: CONTRASENA }])
   })
 })
+
+describe('DeleteAccountDialog (HU47): errores', () => {
+  it('HU47-CP11: con la contraseña incorrecta lo avisa, no elimina y deja corregirla', async () => {
+    registrarEliminaciones(() => HttpResponse.json({ code: 'WRONG_PASSWORD' }, { status: 400 }))
+    const usuario = userEvent.setup()
+    const { onClose, onDeleted } = abrirDialogo()
+
+    await usuario.type(screen.getByLabelText(/^contraseña actual/i), CONTRASENA)
+    await usuario.click(screen.getByRole('button', { name: /^eliminar mi cuenta$/i }))
+
+    expect(await screen.findByText('La contraseña actual no es correcta.')).toBeInTheDocument()
+    expect(screen.getByRole('alertdialog')).not.toHaveTextContent(CONTRASENA)
+    expect(screen.getByRole('button', { name: /^eliminar mi cuenta$/i })).toBeEnabled()
+    expect(onDeleted).not.toHaveBeenCalled()
+    expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('HU47-CP11: si falla por otro motivo da un aviso genérico y no elimina', async () => {
+    registrarEliminaciones(() => new HttpResponse(null, { status: 500 }))
+    const usuario = userEvent.setup()
+    const { onDeleted } = abrirDialogo()
+
+    await usuario.type(screen.getByLabelText(/^contraseña actual/i), CONTRASENA)
+    await usuario.click(screen.getByRole('button', { name: /^eliminar mi cuenta$/i }))
+
+    expect(await screen.findByText('No se ha podido eliminar la cuenta. Inténtalo de nuevo.')).toBeInTheDocument()
+    expect(onDeleted).not.toHaveBeenCalled()
+  })
+})
