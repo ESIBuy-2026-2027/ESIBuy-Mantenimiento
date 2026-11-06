@@ -1,14 +1,21 @@
 package es.uclm.esibuy.backend.incidencias.application.service;
 
 import java.time.Clock;
+import java.time.Instant;
+
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import es.uclm.esibuy.backend.incidencias.application.port.in.CreacionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.CrearIncidenciaCommand;
 import es.uclm.esibuy.backend.incidencias.application.port.out.AutorEnSesionPort;
 import es.uclm.esibuy.backend.incidencias.application.port.out.IncidenciaRepositoryPort;
 import es.uclm.esibuy.backend.incidencias.domain.model.Incidencia;
+import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 
-/** Esqueleto del ciclo rojo: todavía no crea nada ni comprueba permisos. */
+/**
+ * Crea una incidencia en nombre del cliente o del vendedor en sesión (HU44). Solo habla con el exterior a través de
+ * los puertos de salida. La fecha sale del reloj para que se pueda probar.
+ */
 public class CreacionIncidenciasService implements CreacionIncidenciasUseCase {
 
     private final IncidenciaRepositoryPort incidenciaRepository;
@@ -22,8 +29,12 @@ public class CreacionIncidenciasService implements CreacionIncidenciasUseCase {
         this.reloj = reloj;
     }
 
+    @PreAuthorize(Permisos.CLIENTE_O_VENDEDOR_PROPIO_EN_COMANDO)
     @Override
     public Incidencia crear(CrearIncidenciaCommand comando) {
-        return null;
+        String autorId = autorEnSesion.idPorCorreo(comando.email());
+        Incidencia incidencia = Incidencia.nueva(autorId, comando.asunto(), comando.descripcion(),
+                Instant.now(reloj));
+        return incidenciaRepository.guardar(incidencia);
     }
 }
