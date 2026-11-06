@@ -3,7 +3,7 @@ package es.uclm.esibuy.backend.incidencias.infrastructure.adapter.out.persistenc
 import es.uclm.esibuy.backend.incidencias.application.port.out.IncidenciaRepositoryPort;
 import es.uclm.esibuy.backend.incidencias.domain.model.Incidencia;
 
-/** Esqueleto del ciclo rojo: todavía no guarda nada. */
+/** Adaptador de salida que implementa el repositorio de incidencias con Spring Data MongoDB. */
 public class IncidenciaMongoAdapter implements IncidenciaRepositoryPort {
 
     private final IncidenciaMongoRepository repository;
@@ -16,6 +16,6 @@ public class IncidenciaMongoAdapter implements IncidenciaRepositoryPort {
 
     @Override
     public Incidencia guardar(Incidencia incidencia) {
-        return incidencia;
+        return mapper.aDominio(repository.save(mapper.aDocumento(incidencia)));
     }
 }
