@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 import es.uclm.esibuy.backend.usuarios.application.port.in.GestionPerfilUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.GestionCuentaUseCase;
+import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaActualIncorrectaException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
@@ -175,5 +177,22 @@ class PerfilControllerTest {
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(gestionCuenta);
+    }
+
+    @Test
+    @DisplayName("HU47-CP08: con la contraseña incorrecta se recibe 400 WRONG_PASSWORD y la sesión sigue abierta")
+    void contrasenaIncorrectaDevuelve400SinCerrarLaSesion() throws Exception {
+        MockHttpSession sesion = new MockHttpSession();
+        doThrow(new ContrasenaActualIncorrectaException("La contraseña actual no es correcta"))
+                .when(gestionCuenta).eliminarCuentaVendedor(EMAIL_VENDEDOR, "incorrecta");
+
+        mockMvc.perform(delete(RUTA).session(sesion).with(user(EMAIL_VENDEDOR).roles("VENDEDOR"))
+                        .with(csrf())
+                        .contentType("application/json")
+                        .content("{\"password\":\"incorrecta\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("WRONG_PASSWORD"));
+
+        assertTrue(!sesion.isInvalid());
     }
 }
