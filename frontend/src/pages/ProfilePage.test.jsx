@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { screen, waitFor, within } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http, HttpResponse } from 'msw'
+import { delay, http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
@@ -118,6 +118,75 @@ describe('ProfilePage (HU46): preferencias', () => {
     const preferencias = await seccion()
     await waitFor(() => expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).toBeChecked())
     expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).not.toBeChecked()
+  })
+
+  it('HU46-CP21: al marcar una categoría se guarda al momento y se avisa', async () => {
+    const user = userEvent.setup()
+    let cuerpo = null
+    server.use(
+      http.put('/api/customer/preferences', async ({ request }) => {
+        cuerpo = await request.json()
+        return HttpResponse.json(cuerpo)
+      }),
+    )
+    await abrirPerfil('cliente@esibuy.test')
+    const preferencias = await seccion()
+
+    await user.click(within(preferencias).getByRole('checkbox', { name: 'Tecnología' }))
+
+    expect(await screen.findByText('Preferencias guardadas.')).toBeInTheDocument()
+    expect(cuerpo).toEqual({ categorias: ['cat-1'] })
+    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).toBeChecked()
+  })
+
+  it('HU46-CP21: al desmarcar una categoría elegida se guarda sin ella', async () => {
+    const user = userEvent.setup()
+    let cuerpo = null
+    server.use(
+      http.get('/api/customer/preferences', () => HttpResponse.json({ categorias: ['cat-2'] })),
+      http.put('/api/customer/preferences', async ({ request }) => {
+        cuerpo = await request.json()
+        return HttpResponse.json(cuerpo)
+      }),
+    )
+    await abrirPerfil('cliente@esibuy.test')
+    const preferencias = await seccion()
+    await waitFor(() => expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).toBeChecked())
+
+    await user.click(within(preferencias).getByRole('checkbox', { name: 'Hogar' }))
+
+    expect(await screen.findByText('Preferencias guardadas.')).toBeInTheDocument()
+    expect(cuerpo).toEqual({ categorias: [] })
+    expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).not.toBeChecked()
+  })
+
+  it('HU46-CP21: mientras se guarda, las casillas quedan deshabilitadas', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.put('/api/customer/preferences', async () => {
+        await delay('infinite')
+      }),
+    )
+    await abrirPerfil('cliente@esibuy.test')
+    const preferencias = await seccion()
+
+    await user.click(within(preferencias).getByRole('checkbox', { name: 'Tecnología' }))
+
+    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).toBeDisabled()
+    expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).toBeDisabled()
+  })
+
+  it('HU46-CP21: al volver al perfil, las preferencias siguen guardadas', async () => {
+    const user = userEvent.setup()
+    await abrirPerfil('cliente@esibuy.test')
+    await user.click(within(await seccion()).getByRole('checkbox', { name: 'Hogar' }))
+    await screen.findByText('Preferencias guardadas.')
+    cleanup()
+
+    renderApp('/profile')
+
+    const preferencias = await seccion()
+    await waitFor(() => expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).toBeChecked())
   })
 
   it('HU46-CP20: el vendedor no tiene preferencias', async () => {
