@@ -10,7 +10,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import es.uclm.esibuy.backend.incidencias.application.port.in.CreacionIncidenciasUseCase;
 
-/** Esqueleto del ciclo rojo: responde 201 pero todavía no crea nada. */
+/**
+ * Adaptador de entrada web de las incidencias (HU44). Recibe la petición, delega en el puerto de entrada y responde
+ * con la incidencia creada. El autor sale siempre de la sesión. Cliente y vendedor la usan desde su perfil
+ * (/api/perfil/** en SecurityConfig).
+ */
 @RestController
 @RequestMapping("/api/perfil/incidencias")
 public class IncidenciaController {
@@ -24,6 +28,6 @@ public class IncidenciaController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public IncidenciaResponse crear(@RequestBody CrearIncidenciaRequest request, Authentication autenticado) {
-        return null;
+        return IncidenciaResponse.desde(creacionIncidencias.crear(request.aComando(autenticado.getName())));
     }
 }
