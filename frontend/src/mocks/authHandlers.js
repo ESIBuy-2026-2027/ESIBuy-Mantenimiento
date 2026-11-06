@@ -37,6 +37,16 @@ export function getUsuarioEnSesion() {
   return estado.usuarioEnSesion
 }
 
+// Si la contraseña es la de los usuarios de ejemplo, para confirmar operaciones sobre la propia cuenta (HU47)
+export function esClaveValida(password) {
+  return password === CLAVE_VALIDA
+}
+
+// Cierra la sesión del mock, como hace el backend tras eliminar la cuenta (HU47)
+export function cerrarSesionMock() {
+  estado = nuevoEstado()
+}
+
 const sinAutorizacion = () => new HttpResponse(null, { status: 401 })
 
 export const authHandlers = [
@@ -116,7 +126,7 @@ export const authHandlers = [
   }),
 
   http.post('/api/auth/logout', () => {
-    estado = nuevoEstado()
+    cerrarSesionMock()
     return new HttpResponse(null, { status: 204 })
   }),
 ]

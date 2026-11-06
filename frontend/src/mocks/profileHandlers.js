@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import { getUsuarioEnSesion } from './authHandlers'
+import { cerrarSesionMock, esClaveValida, getUsuarioEnSesion } from './authHandlers'
 
 // Datos del perfil de los usuarios de ejemplo (HU4), además de los de la sesión (nombre, apellidos, email y rol).
 // Vicente (vendedor-vacio@esibuy.test) y Nora (nuevo@esibuy.test) no tienen teléfono ni imagen de perfil.
@@ -43,5 +43,20 @@ export const profileHandlers = [
 
     const { id, nombre, apellidos, email, rol } = usuario
     return HttpResponse.json({ id, nombre, apellidos, email, rol, ...DATOS_DE_PERFIL[id] })
+  }),
+
+  // Eliminar la cuenta propia (HU47, PR #203): solo el vendedor. Con la contraseña correcta cierra la sesión (204);
+  // con una incorrecta, 400 WRONG_PASSWORD y la sesión sigue abierta. La cuenta no se borra de USUARIOS: así el
+  // siguiente test, o la siguiente recarga, vuelve a tenerla.
+  http.delete('/api/perfil', async ({ request }) => {
+    const usuario = getUsuarioEnSesion()
+    if (!usuario) return new HttpResponse(null, { status: 401 })
+    if (usuario.rol !== 'VENDEDOR') return new HttpResponse(null, { status: 403 })
+
+    const { password } = await request.json()
+    if (!esClaveValida(password)) return HttpResponse.json({ code: 'WRONG_PASSWORD' }, { status: 400 })
+
+    cerrarSesionMock()
+    return new HttpResponse(null, { status: 204 })
   }),
 ]
