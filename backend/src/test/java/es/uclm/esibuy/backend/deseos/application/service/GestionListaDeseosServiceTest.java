@@ -216,6 +216,26 @@ class GestionListaDeseosServiceTest {
         assertTrue(repositorio.buscarPorCliente(CLIENTE).orElseThrow().getItems().isEmpty());
     }
 
+    @Test
+    @DisplayName("HU14-CP42: eliminar la lista del cliente la borra y no toca la de otro cliente")
+    void eliminarBorraLaListaDelCliente() {
+        listaGuardadaCon("p-1");
+        repositorio.guardar(new ListaDeseos(null, "c-2", List.of(new ItemDeseo("p-2", AYER))));
+
+        servicio.eliminar(EMAIL);
+
+        assertTrue(repositorio.buscarPorCliente(CLIENTE).isEmpty());
+        assertTrue(repositorio.buscarPorCliente("c-2").isPresent());
+    }
+
+    @Test
+    @DisplayName("HU14-CP42: eliminar la lista de un cliente que no tiene no es un error")
+    void eliminarSinListaNoEsUnError() {
+        servicio.eliminar(EMAIL);
+
+        assertTrue(repositorio.buscarPorCliente(CLIENTE).isEmpty());
+    }
+
     private static final class ClienteFijo implements ClienteEnSesionPort {
 
         private boolean premium;
@@ -265,6 +285,11 @@ class GestionListaDeseosServiceTest {
             listas.put(lista.getClienteId(), guardada);
             guardados++;
             return guardada;
+        }
+
+        @Override
+        public void eliminarPorCliente(String clienteId) {
+            listas.remove(clienteId);
         }
     }
 }

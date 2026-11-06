@@ -31,4 +31,8 @@ public class ListaDeseosMongoAdapter implements ListaDeseosRepositoryPort {
         }
         return mapper.aDominio(repository.save(documento));
     }
+
+    @Override
+    public void eliminarPorCliente(String clienteId) {
+    }
 }
