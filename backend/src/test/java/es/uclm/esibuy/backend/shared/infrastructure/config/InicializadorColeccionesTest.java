@@ -61,12 +61,12 @@ class InicializadorColeccionesTest {
     }
 
     @Test
-    @DisplayName("Inicialización: crea las 13 colecciones del modelo de BBDD")
-    void creaLasTreceColecciones() {
-        // Las 10 del modelo inicial, metodos_pago (HU6), direcciones_envio (HU5) y contadores (HU10)
+    @DisplayName("Inicialización: crea las 14 colecciones del modelo de BBDD")
+    void creaLasCatorceColecciones() {
+        // Las 10 del modelo inicial, metodos_pago (HU6), direcciones_envio (HU5), contadores (HU10) e incidencias (HU44)
         List<String> esperadas = List.of("usuarios", "sesiones", "factores_autenticacion", "tokens_seguridad",
                 "productos", "pedidos", "carritos", "valoraciones", "categorias", "listas_deseos", "metodos_pago",
-                "direcciones_envio", "contadores");
+                "direcciones_envio", "contadores", "incidencias");
 
         assertTrue(mongoTemplate.getCollectionNames().containsAll(esperadas));
     }
@@ -243,6 +243,21 @@ class InicializadorColeccionesTest {
     }
 
     @Test
+    @DisplayName("HU44-CP08: la colección incidencias valida los campos obligatorios, los máximos y el estado, y admite varias por usuario")
+    void validaLasIncidencias() {
+        acepta("incidencias", incidencia("u1", "Asunto", "Descripción", "PENDIENTE"));
+        acepta("incidencias", incidencia("u1", "Otro asunto", "Descripción", "ABIERTA").append("respuesta", "Revisada"));
+        acepta("incidencias", incidencia("u1", "a".repeat(100), "b".repeat(1000), "PENDIENTE"));
+        rechaza(VALIDACION, "incidencias", incidencia("u1", "", "Descripción", "PENDIENTE"));
+        rechaza(VALIDACION, "incidencias", incidencia("u1", "a".repeat(101), "Descripción", "PENDIENTE"));
+        rechaza(VALIDACION, "incidencias", incidencia("u1", "Asunto", "", "PENDIENTE"));
+        rechaza(VALIDACION, "incidencias", incidencia("u1", "Asunto", "b".repeat(1001), "PENDIENTE"));
+        rechaza(VALIDACION, "incidencias", incidencia("u1", "Asunto", "Descripción", "CERRADA"));
+        rechaza(VALIDACION, "incidencias", new Document("asunto", "Asunto").append("descripcion", "Descripción")
+                .append("estado", "PENDIENTE").append("fechaCreacion", AHORA));
+    }
+
+    @Test
     @DisplayName("Índices: los de las anotaciones de los @Document también se crean (email único en usuarios)")
     void creaLosIndicesDeLasAnotaciones() {
         acepta("usuarios", usuario("unico@uclm.es", "CLIENTE"));
@@ -298,5 +313,10 @@ class InicializadorColeccionesTest {
 
     private static Document valoracion(String usuarioId, String productoId, int puntuacion) {
         return new Document("usuarioId", usuarioId).append("productoId", productoId).append("puntuacion", puntuacion);
+    }
+
+    private static Document incidencia(String usuarioId, String asunto, String descripcion, String estado) {
+        return new Document("usuarioId", usuarioId).append("asunto", asunto).append("descripcion", descripcion)
+                .append("estado", estado).append("fechaCreacion", AHORA);
     }
 }
