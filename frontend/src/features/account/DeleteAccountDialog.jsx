@@ -8,6 +8,8 @@ import {
   DialogContent,
   DialogSurface,
   DialogTitle,
+  MessageBar,
+  MessageBarBody,
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
@@ -26,17 +28,29 @@ const useStyles = makeStyles({
   },
 })
 
+// Mensajes propios según el code del backend: nunca su texto ni la contraseña enviada
+const MENSAJE_CONTRASENA = 'La contraseña actual no es correcta.'
+const MENSAJE_FALLO = 'No se ha podido eliminar la cuenta. Inténtalo de nuevo.'
+const mensajeDeFallo = (error) => (error?.code === 'WRONG_PASSWORD' ? MENSAJE_CONTRASENA : MENSAJE_FALLO)
+
 // Confirmación para eliminar la cuenta propia del vendedor (HU47), con la contraseña actual. Las consecuencias son
 // las del backend (PR #203): los productos con pedidos se conservan desactivados para no perder la trazabilidad.
 export default function DeleteAccountDialog({ onClose, onDeleted }) {
   const styles = useStyles()
   const [password, setPassword] = useState('')
   const [eliminando, setEliminando] = useState(false)
+  const [fallo, setFallo] = useState(null)
 
   const confirmar = async () => {
     setEliminando(true)
-    await deleteAccount(password)
-    onDeleted()
+    setFallo(null)
+    try {
+      await deleteAccount(password)
+      onDeleted()
+    } catch (error) {
+      setFallo(mensajeDeFallo(error))
+      setEliminando(false)
+    }
   }
 
   return (
@@ -45,6 +59,11 @@ export default function DeleteAccountDialog({ onClose, onDeleted }) {
         <DialogBody>
           <DialogTitle>Eliminar mi cuenta</DialogTitle>
           <DialogContent className={styles.content}>
+            {fallo && (
+              <MessageBar intent="error">
+                <MessageBarBody>{fallo}</MessageBarBody>
+              </MessageBar>
+            )}
             <span>Esta acción no se puede deshacer. Al eliminar tu cuenta:</span>
             <ul className={styles.consequences}>
               <li>Los productos que no tienen pedidos se eliminan.</li>
