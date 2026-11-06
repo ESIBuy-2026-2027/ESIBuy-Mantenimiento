@@ -206,14 +206,18 @@ describe('ProfilePage (HU46): preferencias', () => {
 
   it('HU46-CP22: si no se pueden cargar, lo avisa sin mostrar las casillas y permite reintentar', async () => {
     const user = userEvent.setup()
+    // Falla hasta que se pulsa Reintentar (la página puede pedirlas más de una vez al montarse)
+    let falla = true
     server.use(
-      http.get('/api/customer/preferences', () => HttpResponse.json({ categorias: ['cat-1'] })),
-      http.get('/api/customer/preferences', () => new HttpResponse(null, { status: 500 }), { once: true }),
+      http.get('/api/customer/preferences', () =>
+        falla ? new HttpResponse(null, { status: 500 }) : HttpResponse.json({ categorias: ['cat-1'] }),
+      ),
     )
     await abrirPerfil('cliente@esibuy.test')
 
     expect(await screen.findByText('No se han podido cargar tus preferencias. Inténtalo de nuevo.')).toBeInTheDocument()
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+    falla = false
     await user.click(screen.getByRole('button', { name: 'Reintentar' }))
 
     const preferencias = await seccion()

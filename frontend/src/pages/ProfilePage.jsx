@@ -62,12 +62,14 @@ const useStyles = makeStyles({
 
 // Preferencias del cliente (HU46): una casilla por cada categoría activa, marcadas las que ya le interesan. Cada
 // cambio se guarda al momento, así que al salir del perfil ya están guardadas; mientras se guarda, las casillas
-// quedan deshabilitadas. La respuesta del backend es lo que se muestra después.
+// quedan deshabilitadas, igual que mientras cargan. La respuesta del backend es lo que se muestra después; si no se
+// pueden guardar, las casillas siguen como estaban. Si no cargan, no se muestran: guardar sin saber cuáles eligió
+// borraría las demás.
 function CustomerPreferences({ categories }) {
   const styles = useStyles()
   const titleId = useId()
   const fetcher = useCallback(() => getPreferences(), [])
-  const { data: cargadas } = useApiQuery(fetcher)
+  const { data: cargadas, failed, retry } = useApiQuery(fetcher)
   const [actualizadas, setActualizadas] = useState(null)
   const [guardando, setGuardando] = useState(false)
   const [aviso, setAviso] = useState(null)
@@ -80,6 +82,8 @@ function CustomerPreferences({ categories }) {
     try {
       setActualizadas(await savePreferences(nuevas))
       setAviso({ intent: 'success', texto: 'Preferencias guardadas.' })
+    } catch {
+      setAviso({ intent: 'error', texto: 'No se han podido guardar tus preferencias. Inténtalo de nuevo.' })
     } finally {
       setGuardando(false)
     }
@@ -96,17 +100,26 @@ function CustomerPreferences({ categories }) {
           <MessageBarBody>{aviso.texto}</MessageBarBody>
         </MessageBar>
       )}
-      <div role="group" aria-labelledby={titleId} className={styles.categories}>
-        {categories.map((category) => (
-          <Checkbox
-            key={category.id}
-            label={category.nombre}
-            checked={elegidas.has(category.id)}
-            disabled={guardando}
-            onChange={(_event, data) => cambiar(category.id, data.checked === true)}
-          />
-        ))}
-      </div>
+      {failed ? (
+        <MessageBar intent="error">
+          <MessageBarBody>No se han podido cargar tus preferencias. Inténtalo de nuevo.</MessageBarBody>
+          <MessageBarActions>
+            <Button onClick={retry}>Reintentar</Button>
+          </MessageBarActions>
+        </MessageBar>
+      ) : (
+        <div role="group" aria-labelledby={titleId} className={styles.categories}>
+          {categories.map((category) => (
+            <Checkbox
+              key={category.id}
+              label={category.nombre}
+              checked={elegidas.has(category.id)}
+              disabled={guardando || !(actualizadas ?? cargadas)}
+              onChange={(_event, data) => cambiar(category.id, data.checked === true)}
+            />
+          ))}
+        </div>
+      )}
     </Card>
   )
 }
