@@ -10,9 +10,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Import;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
+import es.uclm.esibuy.backend.incidencias.application.port.in.ConsultaIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.CreacionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.out.AutorEnSesionPort;
 import es.uclm.esibuy.backend.incidencias.application.port.out.IncidenciaRepositoryPort;
+import es.uclm.esibuy.backend.incidencias.application.service.ConsultaIncidenciasService;
 import es.uclm.esibuy.backend.incidencias.application.service.CreacionIncidenciasService;
 import es.uclm.esibuy.backend.incidencias.infrastructure.adapter.out.persistence.IncidenciaMongoAdapter;
 import es.uclm.esibuy.backend.incidencias.infrastructure.adapter.out.usuarios.AutorEnSesionAdapter;
@@ -32,5 +34,6 @@ class IncidenciasConfigTest {
         assertInstanceOf(CreacionIncidenciasService.class, contexto.getBean(CreacionIncidenciasUseCase.class));
         assertInstanceOf(IncidenciaMongoAdapter.class, contexto.getBean(IncidenciaRepositoryPort.class));
         assertInstanceOf(AutorEnSesionAdapter.class, contexto.getBean(AutorEnSesionPort.class));
+        assertInstanceOf(ConsultaIncidenciasService.class, contexto.getBean(ConsultaIncidenciasUseCase.class));
     }
 }

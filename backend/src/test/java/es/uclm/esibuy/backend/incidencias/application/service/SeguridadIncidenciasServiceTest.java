@@ -21,6 +21,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
+import es.uclm.esibuy.backend.incidencias.application.port.in.ConsultaIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.CreacionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.CrearIncidenciaCommand;
 import es.uclm.esibuy.backend.incidencias.application.port.out.AutorEnSesionPort;
@@ -55,6 +56,11 @@ class SeguridadIncidenciasServiceTest {
                 AutorEnSesionPort sesion) {
             return new CreacionIncidenciasService(repositorio, sesion, Clock.systemUTC());
         }
+
+        @Bean
+        ConsultaIncidenciasUseCase consultaIncidencias(IncidenciaRepositoryPort repositorio, AutorEnSesionPort sesion) {
+            return new ConsultaIncidenciasService(repositorio, sesion);
+        }
     }
 
     @Autowired
@@ -63,6 +69,8 @@ class SeguridadIncidenciasServiceTest {
     private AutorEnSesionPort autorEnSesion;
     @Autowired
     private CreacionIncidenciasUseCase creacionIncidencias;
+    @Autowired
+    private ConsultaIncidenciasUseCase consultaIncidencias;
 
     @BeforeEach
     void limpiarDobles() {
@@ -77,6 +85,11 @@ class SeguridadIncidenciasServiceTest {
         CrearIncidenciaCommand comando = comando(email);
 
         assertThrows(AccessDeniedException.class, () -> creacionIncidencias.crear(comando));
+        verifyNoInteractions(incidenciaRepository);
+    }
+
+    private void comprobarQueRechazaLaConsulta(String email) {
+        assertThrows(AccessDeniedException.class, () -> consultaIncidencias.consultarPropias(email, 0, 10));
         verifyNoInteractions(incidenciaRepository);
     }
 
@@ -127,6 +140,54 @@ class SeguridadIncidenciasServiceTest {
         CrearIncidenciaCommand comando = comando(CLIENTE);
 
         assertThrows(AuthenticationCredentialsNotFoundException.class, () -> creacionIncidencias.crear(comando));
+        verifyNoInteractions(incidenciaRepository);
+    }
+
+    
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU44-CP19: el cliente consulta sus incidencias con su propio correo")
+    void elClienteConsultaConSuPropioCorreo() {
+        when(autorEnSesion.idPorCorreo(CLIENTE)).thenReturn("c-1");
+
+        assertDoesNotThrow(() -> consultaIncidencias.consultarPropias(CLIENTE, 0, 10));
+    }
+
+    @Test
+    @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
+    @DisplayName("HU44-CP19: el vendedor consulta sus incidencias con su propio correo")
+    void elVendedorConsultaConSuPropioCorreo() {
+        when(autorEnSesion.idPorCorreo(VENDEDOR)).thenReturn("v-1");
+
+        assertDoesNotThrow(() -> consultaIncidencias.consultarPropias(VENDEDOR, 0, 10));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU44-CP19: un cliente no consulta las incidencias con el correo de otro usuario")
+    void unClienteNoConsultaConElCorreoDeOtro() {
+        comprobarQueRechazaLaConsulta(VENDEDOR);
+    }
+
+    @Test
+    @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
+    @DisplayName("HU44-CP19: un vendedor no consulta las incidencias con el correo de otro usuario")
+    void unVendedorNoConsultaConElCorreoDeOtro() {
+        comprobarQueRechazaLaConsulta(CLIENTE);
+    }
+
+    @Test
+    @WithMockUser(username = ADMINISTRADOR, roles = "ADMINISTRADOR")
+    @DisplayName("HU44-CP19: un administrador no consulta incidencias por aquí, ni siquiera con su propio correo")
+    void unAdministradorNoConsulta() {
+        comprobarQueRechazaLaConsulta(ADMINISTRADOR);
+    }
+
+    @Test
+    @DisplayName("HU44-CP19: sin sesión no se consultan las incidencias")
+    void sinSesionNoSeConsulta() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> consultaIncidencias.consultarPropias(CLIENTE, 0, 10));
         verifyNoInteractions(incidenciaRepository);
     }
 }
