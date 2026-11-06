@@ -244,7 +244,7 @@ class InicializadorColeccionesTest {
     }
 
     @Test
-    @DisplayName("HU44-CP08: la colección incidencias admite incidencias válidas, varias por usuario y con los máximos")
+    @DisplayName("HU44-CP11: la colección incidencias admite incidencias válidas, varias por usuario y con los máximos")
     void aceptaIncidenciasValidas() {
         acepta(INCIDENCIAS, incidencia("u1", "Asunto", "Descripción", "PENDIENTE"));
         acepta(INCIDENCIAS, incidencia("u1", "Otro asunto", "Descripción", "ABIERTA").append("respuesta", "Revisada"));
@@ -252,7 +252,7 @@ class InicializadorColeccionesTest {
     }
 
     @Test
-    @DisplayName("HU44-CP08: la colección incidencias rechaza un asunto o una descripción vacíos o demasiado largos")
+    @DisplayName("HU44-CP11: la colección incidencias rechaza un asunto o una descripción vacíos o demasiado largos")
     void rechazaIncidenciasConTextosInvalidos() {
         rechaza(VALIDACION, INCIDENCIAS, incidencia("u1", "", "Descripción", "PENDIENTE"));
         rechaza(VALIDACION, INCIDENCIAS, incidencia("u1", "a".repeat(101), "Descripción", "PENDIENTE"));
@@ -261,7 +261,7 @@ class InicializadorColeccionesTest {
     }
 
     @Test
-    @DisplayName("HU44-CP08: la colección incidencias rechaza un estado que no existe y una incidencia sin usuario")
+    @DisplayName("HU44-CP11: la colección incidencias rechaza un estado que no existe y una incidencia sin usuario")
     void rechazaIncidenciasConEstadoOUsuarioInvalidos() {
         rechaza(VALIDACION, INCIDENCIAS, incidencia("u1", "Asunto", "Descripción", "CERRADA"));
         rechaza(VALIDACION, INCIDENCIAS, new Document("asunto", "Asunto").append("descripcion", "Descripción")
