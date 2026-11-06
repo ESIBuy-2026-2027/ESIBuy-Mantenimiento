@@ -64,7 +64,7 @@ final class ColeccionesEsiBuy {
     static List<Coleccion> todas() {
         return List.of(usuarios(), sesiones(), factoresAutenticacion(), tokensSeguridad(), productos(),
                 pedidos(), carritos(), valoraciones(), categorias(), listasDeseos(), metodosPago(), direccionesEnvio(),
-                contadores());
+                contadores(), preferencias());
     }
 
     // 1. usuarios: identidad, rol, estado y perfil, con los campos del modelo en la raíz del documento,
@@ -298,6 +298,14 @@ final class ColeccionesEsiBuy {
     // (_id = "pedidos-2026"), que vuelven a empezar cada año (decisión del equipo).
     private static Coleccion contadores() {
         return new Coleccion("contadores", esquema(List.of("valor"), number("valor").gte(1)), List.of());
+    }
+
+    // 14. preferencias: las categorías que interesan a cada cliente (HU46), fuera del modelo inicial. Unas por cliente.
+    private static Coleccion preferencias() {
+        return new Coleccion("preferencias", esquema(List.of(CLIENTE_ID),
+                textoNoVacio(CLIENTE_ID),
+                array("categorias").items(JsonSchemaObject.string())),
+                List.of(indice(CLIENTE_ID).unique()));
     }
 
     // Todas las colecciones llevan createdAt y updatedAt («Convenciones comunes» del modelo).
