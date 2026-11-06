@@ -14,6 +14,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.PedidosVendedorPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.ProductosVendedorPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.ValoracionesProductoPort;
+import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaActualIncorrectaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
@@ -52,8 +53,9 @@ public class GestionCuentaService implements GestionCuentaUseCase {
         Usuario vendedor = usuarioRepository.buscarPorCorreo(emailVendedor)
                 .filter(usuario -> usuario.getRol() == Rol.VENDEDOR)
                 .orElseThrow(() -> new CredencialesInvalidasException(CREDENCIALES_INVALIDAS));
+        // 400 WRONG_PASSWORD y no 401: la sesión sigue abierta, así que no es una sesión caducada
         if (!hashContrasena.coincide(password, vendedor.getPasswordHash())) {
-            throw new CredencialesInvalidasException(CREDENCIALES_INVALIDAS);
+            throw new ContrasenaActualIncorrectaException("La contraseña actual no es correcta");
         }
 
         Set<String> productosDelVendedor = Set.copyOf(productos.desactivarTodos(vendedor.getId()));
