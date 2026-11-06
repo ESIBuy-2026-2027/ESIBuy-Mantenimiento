@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
@@ -95,6 +95,35 @@ describe('ProfilePage (HU4): datos del perfil', () => {
     await user.click(screen.getByRole('button', { name: /reintentar/i }))
 
     expect(await screen.findByLabelText('Nombre')).toHaveValue('Carlos')
+  })
+})
+
+// Preferencias del cliente (HU46, T286): las categorías que le interesan. Del mock de categorías: Tecnología (cat-1) y
+// Hogar (cat-2), las dos activas.
+describe('ProfilePage (HU46): preferencias', () => {
+  const seccion = () => screen.findByRole('group', { name: 'Mis preferencias' })
+
+  it('HU46-CP20: el cliente ve sus preferencias, con una casilla por cada categoría activa', async () => {
+    await abrirPerfil('cliente@esibuy.test')
+
+    const preferencias = await seccion()
+    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).not.toBeChecked()
+    expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).not.toBeChecked()
+  })
+
+  it('HU46-CP20: las categorías que ya eligió aparecen marcadas', async () => {
+    server.use(http.get('/api/customer/preferences', () => HttpResponse.json({ categorias: ['cat-2'] })))
+    await abrirPerfil('cliente@esibuy.test')
+
+    const preferencias = await seccion()
+    await waitFor(() => expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).toBeChecked())
+    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).not.toBeChecked()
+  })
+
+  it('HU46-CP20: el vendedor no tiene preferencias', async () => {
+    await abrirPerfil('vendedor@esibuy.test')
+
+    expect(screen.queryByRole('group', { name: 'Mis preferencias' })).not.toBeInTheDocument()
   })
 })
 
