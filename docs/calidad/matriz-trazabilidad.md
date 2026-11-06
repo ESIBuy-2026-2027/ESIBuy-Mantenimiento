@@ -779,7 +779,7 @@ Notas:
 - **Endpoint (T297):** `GET /api/perfil` → `{id, nombre, apellidos, email, rol, fechaAlta, dni, telefono, avatar}` y, según el rol, `fechaNacimiento` y `tipoCliente` (cliente) o `nombreComercial` y `categoriaPrincipalId` (vendedor). Los campos vacíos no aparecen. El usuario sale de la sesión (su email), nunca de la petición. Solo para `CLIENTE` y `VENDEDOR` (`SecurityConfig`). Es el contrato de la vista del frontend (T296).
 - **HU4-CP05 a CP11 (Sprint 2, frontend):** casos propuestos en la task AB#296 (vista de perfil) a partir del mismo criterio de aceptación y del contrato de la T297 (`frontend/docs/hu4-vista-perfil.md`). Siguen la numeración del backend. Pendientes de confirmar con el equipo y de añadir a la HU4 en Azure Boards.
 - **Archivo de tests nuevo** (con el OK del equipo): `ProfilePage.test.jsx`. `AppHeader.test.jsx` y `AvatarSelector.test.jsx` ganan casos HU4.
-- **Pendiente:** el criterio «el usuario debe dar al botón de guardar para modificar sus datos personales» es de la HU45 (edición de perfil). Aclarar con el equipo qué incluyen sus tasks 101 (endpoint consultar/editar perfil) y 298 (lógica para la obtención segura de datos), que se solapan con la T297.
+- **Resuelto:** el criterio «el usuario debe dar al botón de guardar para modificar sus datos personales» es de la HU45 (edición de perfil). La T298 es la lógica de la edición y la T101 su endpoint; ninguna se solapa con la T297 (ver la sección HU45).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -3869,6 +3869,49 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `AppHeader.test.jsx`: `frontend/src/components/` (Vitest, RTL y MSW)
 - `client.test.js`: `frontend/src/api/` (Vitest y MSW)
 - `LoginFlow.test.jsx`: `frontend/src/features/auth/` (Vitest, RTL y MSW)
+
+---
+
+## HU45 · Edición de perfil
+
+### Tabla A · HU45 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU45-CP01 | Un cliente edita sus datos modificables y se guardan; su email, DNI y tipo de cliente no cambian | Unitario | 1 | 🔍 En revisión |
+| HU45-CP02 | Un vendedor edita sus datos modificables (nombre comercial, categoría principal, teléfono…) y se guardan; su DNI no cambia | Unitario | 1 | 🔍 En revisión |
+| HU45-CP03 | Un vendedor no puede usar el nombre comercial de otro vendedor: no se guarda nada | Unitario | 1 | 🔍 En revisión |
+| HU45-CP04 | Con datos no válidos (nombre en blanco, cliente menor de edad o vendedor sin datos de vendedor) no se guarda nada | Unitario | 3 | 🔍 En revisión |
+| HU45-CP05 | Solo el cliente o el vendedor edita su propio perfil: con el correo de otro, 403; un administrador, 403; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión |
+
+Notas:
+- **HU45-CP01 a CP05:** casos propuestos en la T298 (AB#298) a partir de los criterios de aceptación de la HU45. Pendientes de confirmar con el equipo y de añadir a la HU45 en Azure Boards.
+- **Lógica (T298, AB#298):** `GestionPerfilUseCase.editarPerfil(email, EditarPerfilCommand)` con `@PreAuthorize` de `Permisos.CLIENTE_O_VENDEDOR_PROPIO`. Reutiliza `Usuario.modificarDatos` (el de la HU22), que valida todo antes de asignar.
+  - **Campos editables** (decisión del 05/11): nombre, apellidos, imagen de perfil y teléfono; el cliente, además, su fecha de nacimiento; el vendedor, su nombre comercial y su categoría principal.
+  - **No se editan** el email, el DNI, el tipo de cliente, el rol, la contraseña ni el estado.
+  - **Vendedor sin datos de vendedor** (cuentas anteriores a la T241 o creadas por un administrador): se rechaza, porque su DNI no se puede poner desde aquí; los completa un administrador (HU22).
+- **Pendiente con el equipo:** la categoría principal no se comprueba que exista, igual que en el registro y en la edición del administrador.
+- **Fuera del Sprint 2:** el endpoint (T101) y la pantalla (T103). Hasta entonces la lógica no se usa desde la API.
+- **Tests existentes:** `GestionPerfilServiceTest` crea el servicio a mano con un reloj fijo (`@InjectMocks` no inyecta un `Clock`) y el cliente de prueba pasa a ser Premium. No cambia lo que comprueban HU4-CP01, HU4-CP04, HU25-CP01 ni HU25-CP02.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU45-CP01 | `GestionPerfilServiceTest` | `unClienteEditaSusDatosYSeGuardan` | Aplicación | AB#298 | este PR | 🔍 |
+| HU45-CP02 | `GestionPerfilServiceTest` | `unVendedorEditaSusDatosYSeGuardan` | Aplicación | AB#298 | este PR | 🔍 |
+| HU45-CP03 | `GestionPerfilServiceTest` | `unVendedorNoUsaElNombreComercialDeOtro` | Aplicación | AB#298 | este PR | 🔍 |
+| HU45-CP04 | `GestionPerfilServiceTest` | `conDatosNoValidosNoSeGuardaNada` | Aplicación | AB#298 | este PR | 🔍 |
+| HU45-CP04 | `GestionPerfilServiceTest` | `unClienteNoPuedeQuedarMenorDeEdad` | Aplicación | AB#298 | este PR | 🔍 |
+| HU45-CP04 | `GestionPerfilServiceTest` | `unVendedorSinDatosDeVendedorNoEditaSuPerfil` | Aplicación | AB#298 | este PR | 🔍 |
+| HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `unClienteEditaSuPerfil` | Aplicación | AB#298 | este PR | 🔍 |
+| HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `unVendedorEditaSuPerfil` | Aplicación | AB#298 | este PR | 🔍 |
+| HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `nadieEditaElPerfilDeOtro` | Aplicación | AB#298 | este PR | 🔍 |
+| HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `unAdministradorNoEditaSuPerfilPorAqui` | Aplicación | AB#298 | este PR | 🔍 |
+| HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `sinSesionNoSeEditaNingunPerfil` | Aplicación | AB#298 | este PR | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `GestionPerfilServiceTest` y `SeguridadSesionUsuarioServiceTest`: `usuarios/application/service/` (Mockito sin Spring, y contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
 
 ---
 
