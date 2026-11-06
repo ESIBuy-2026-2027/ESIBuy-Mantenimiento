@@ -21,6 +21,7 @@ import es.uclm.esibuy.backend.incidencias.application.port.out.IncidenciaReposit
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaInvalidaException;
 import es.uclm.esibuy.backend.incidencias.domain.model.EstadoIncidencia;
 import es.uclm.esibuy.backend.incidencias.domain.model.Incidencia;
+import es.uclm.esibuy.backend.incidencias.domain.model.IncidenciaPage;
 
 // Sin Spring: los puertos de salida se sustituyen por dobles de prueba. Servicio de creación de incidencias
 // (HU44, T293): el autor sale de la sesión, la incidencia nace pendiente y la fecha sale del reloj.
@@ -46,6 +47,11 @@ class CreacionIncidenciasServiceTest {
                     incidencia.fechaCreacion());
             guardadas.add(conId);
             return conId;
+        }
+
+        @Override
+        public IncidenciaPage buscarPorAutor(String autorId, int pagina, int tamano) {
+            throw new UnsupportedOperationException("No lo usa la creación");
         }
     }
 
