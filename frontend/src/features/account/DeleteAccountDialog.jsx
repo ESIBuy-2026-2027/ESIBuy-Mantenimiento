@@ -11,6 +11,7 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
+import { deleteAccount } from '../../api/profile'
 import { PasswordField } from './PasswordField'
 
 const useStyles = makeStyles({
@@ -27,12 +28,19 @@ const useStyles = makeStyles({
 
 // Confirmación para eliminar la cuenta propia del vendedor (HU47), con la contraseña actual. Las consecuencias son
 // las del backend (PR #203): los productos con pedidos se conservan desactivados para no perder la trazabilidad.
-export default function DeleteAccountDialog({ onClose }) {
+export default function DeleteAccountDialog({ onClose, onDeleted }) {
   const styles = useStyles()
   const [password, setPassword] = useState('')
+  const [eliminando, setEliminando] = useState(false)
+
+  const confirmar = async () => {
+    setEliminando(true)
+    await deleteAccount(password)
+    onDeleted()
+  }
 
   return (
-    <Dialog open modalType="alert" onOpenChange={(_event, data) => !data.open && onClose()}>
+    <Dialog open modalType="alert" onOpenChange={(_event, data) => !data.open && !eliminando && onClose()}>
       <DialogSurface>
         <DialogBody>
           <DialogTitle>Eliminar mi cuenta</DialogTitle>
@@ -52,10 +60,10 @@ export default function DeleteAccountDialog({ onClose }) {
             />
           </DialogContent>
           <DialogActions>
-            <Button appearance="secondary" onClick={onClose}>
+            <Button appearance="secondary" onClick={onClose} disabled={eliminando}>
               Cancelar
             </Button>
-            <Button appearance="primary" disabled={!password}>
+            <Button appearance="primary" onClick={confirmar} disabled={eliminando || !password}>
               Eliminar mi cuenta
             </Button>
           </DialogActions>
