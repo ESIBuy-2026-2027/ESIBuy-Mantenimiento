@@ -180,6 +180,16 @@ function Band({ images, layout, aspectRatio, tileHeight, axis, bend, speed, fade
               animation: `${orbit} ${duration}s linear ${-t * speed}s infinite`,
             }}
             onClick={onSelect && img ? () => onSelect(img) : undefined}
+            // Mismo efecto con Enter o Espacio, como cualquier botón (Sonar S1082)
+            onKeyDown={
+              onSelect && img
+                ? (e) => {
+                    if (e.key !== 'Enter' && e.key !== ' ') return
+                    e.preventDefault()
+                    onSelect(img)
+                  }
+                : undefined
+            }
             onAnimationIteration={(e) => {
               // La animación de entrada de la banda no es la vuelta de una imagen.
               if (e.animationName !== orbit) return
