@@ -17,6 +17,8 @@ import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 /** Adaptador de salida que implementa el repositorio de categorías con Spring Data MongoDB. */
 public class CategoriaMongoAdapter implements CategoriaRepositoryPort {
 
+    private static final String CAMPO_NOMBRE = "nombre";
+
     // La misma collation que el índice nombre_sin_mayusculas (ColeccionesEsiBuy): nivel 1, sin distinguir
     // mayúsculas ni tildes. La «ñ» sí es otra letra en español.
     private static final Collation SIN_MAYUSCULAS_NI_TILDES =
@@ -35,7 +37,7 @@ public class CategoriaMongoAdapter implements CategoriaRepositoryPort {
 
     @Override
     public List<Categoria> listar() {
-        return repository.findAll(Sort.by("nombre")).stream()
+        return repository.findAll(Sort.by(CAMPO_NOMBRE)).stream()
                 .map(mapper::aDominio)
                 .toList();
     }
@@ -43,7 +45,7 @@ public class CategoriaMongoAdapter implements CategoriaRepositoryPort {
     // Igualdad con la collation, no una expresión regular: el nombre se compara completo y como texto literal.
     @Override
     public boolean existePorNombre(String nombre) {
-        Query consulta = new Query(Criteria.where("nombre").is(nombre.strip())).collation(SIN_MAYUSCULAS_NI_TILDES);
+        Query consulta = new Query(Criteria.where(CAMPO_NOMBRE).is(nombre.strip())).collation(SIN_MAYUSCULAS_NI_TILDES);
         return mongoTemplate.exists(consulta, CategoriaDocument.class);
     }
 
@@ -66,7 +68,7 @@ public class CategoriaMongoAdapter implements CategoriaRepositoryPort {
     // Igual que existePorNombre, pero sin contar la categoría con ese id.
     @Override
     public boolean existeOtraConNombre(String nombre, String idExcluido) {
-        Query consulta = new Query(Criteria.where("nombre").is(nombre.strip()).and("id").ne(idExcluido))
+        Query consulta = new Query(Criteria.where(CAMPO_NOMBRE).is(nombre.strip()).and("id").ne(idExcluido))
                 .collation(SIN_MAYUSCULAS_NI_TILDES);
         return mongoTemplate.exists(consulta, CategoriaDocument.class);
     }

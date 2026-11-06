@@ -91,14 +91,23 @@ describe('AppHeader', () => {
 
   it('HU43-CP04: el cliente cierra sesión desde su zona, vuelve al login con un aviso y ya no puede entrar', async () => {
     await cerrarSesionDesdeSuZona('cliente@esibuy.test', '/products')
+
+    // Tras volver a cargar la página, la zona sigue cerrada: se queda en el login.
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/)
   })
 
   it('HU43-CP05: el vendedor cierra sesión desde su zona, vuelve al login con un aviso y ya no puede entrar', async () => {
     await cerrarSesionDesdeSuZona('vendedor@esibuy.test', '/seller/products')
+
+    // Tras volver a cargar la página, la zona sigue cerrada: se queda en el login.
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/)
   })
 
   it('HU43-CP06: el administrador cierra sesión desde su panel, vuelve al login con un aviso y ya no puede entrar', async () => {
     await cerrarSesionDesdeSuZona('admin@esibuy.test', '/admin')
+
+    // Tras volver a cargar la página, la zona sigue cerrada: se queda en el login.
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/)
   })
 
   it('HU43-CP08: si el servidor falla al cerrar sesión, la sesión del navegador se cierra igualmente', async () => {
@@ -216,7 +225,7 @@ describe('AppHeader: Mis pedidos (HU11)', () => {
 
     await user.click(await screen.findByRole('link', { name: /mis pedidos/i }))
 
-    await esperarRuta('/orders')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/orders$')))
   })
 
   it('HU11-CP18: el vendedor y el administrador no tienen el enlace a Mis pedidos', async () => {
@@ -241,7 +250,7 @@ describe('AppHeader: Mis favoritos (HU14)', () => {
 
     await user.click(await screen.findByRole('link', { name: 'Favoritos' }))
 
-    await esperarRuta('/wishlist')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/wishlist$')))
   })
 
   it('HU14-CP32: el vendedor y el administrador no tienen el enlace a favoritos', async () => {
@@ -290,6 +299,6 @@ describe('AppHeader (HU30): el logotipo lleva al inicio de cada usuario', () => 
 
     await user.click(await logotipo())
 
-    await esperarRuta('/products')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/products$')))
   })
 })

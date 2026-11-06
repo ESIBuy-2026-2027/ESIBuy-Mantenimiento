@@ -79,13 +79,13 @@ describe('OrdersPage (HU11): acceso', () => {
   it('HU11-CP13: sin sesión, Mis pedidos lleva a iniciar sesión', async () => {
     renderApp('/orders')
 
-    await esperarRuta('/login')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/login$')))
   })
 
   it('HU11-CP13: un vendedor no ve los pedidos de los clientes: va a su página', async () => {
     await abrirSesionPorApi('vendedor@esibuy.test')
     renderApp('/orders')
 
-    await esperarRuta('/seller/products')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/seller/products$')))
   })
 })

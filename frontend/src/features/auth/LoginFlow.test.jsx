@@ -486,6 +486,6 @@ describe('Recuperación de contraseña (HU3)', () => {
 
     await completarLogin(user, 'cliente@esibuy.test')
 
-    await esperarRuta('/products')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/products$')))
   })
 })
