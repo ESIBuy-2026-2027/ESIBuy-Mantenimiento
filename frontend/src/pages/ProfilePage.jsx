@@ -14,10 +14,13 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
+import { Delete20Regular } from '@fluentui/react-icons'
 import { getPreferences, savePreferences } from '../api/preferences'
 import { getProfile } from '../api/profile'
+import { useAuth } from '../auth/useAuth'
 import { usePageStyles } from '../components/pageStyles'
 import { UserAvatar } from '../features/account/AvatarSelector'
+import DeleteAccountDialog from '../features/account/DeleteAccountDialog'
 import ReadOnlyFields from '../features/admin/ReadOnlyFields'
 import SellerStatistics from '../features/seller/SellerStatistics'
 import { profileFieldsFor } from '../features/admin/profileFields'
@@ -58,7 +61,38 @@ const useStyles = makeStyles({
     flexWrap: 'wrap',
     columnGap: tokens.spacingHorizontalL,
   },
+  deletion: {
+    gap: tokens.spacingVerticalM,
+    padding: tokens.spacingVerticalXL,
+  },
+  deletionAction: {
+    alignSelf: 'flex-start',
+  },
 })
+
+// Eliminar la cuenta propia del vendedor (HU47): se confirma en un diálogo con la contraseña. El servidor cierra la
+// sesión, así que después se cierra también en el navegador y el login lo avisa.
+function AccountDeletion() {
+  const styles = useStyles()
+  const titleId = useId()
+  const { accountDeleted } = useAuth()
+  const [abierto, setAbierto] = useState(false)
+
+  return (
+    <Card className={styles.deletion} aria-labelledby={titleId} role="region">
+      <Title3 as="h2" id={titleId} className={styles.name}>
+        Eliminar mi cuenta
+      </Title3>
+      <Text className={styles.preferencesText}>
+        Dejarás de formar parte de ESIBuy. Tus pedidos y valoraciones se conservan.
+      </Text>
+      <Button className={styles.deletionAction} icon={<Delete20Regular />} onClick={() => setAbierto(true)}>
+        Eliminar mi cuenta
+      </Button>
+      {abierto && <DeleteAccountDialog onClose={() => setAbierto(false)} onDeleted={accountDeleted} />}
+    </Card>
+  )
+}
 
 // Preferencias del cliente (HU46): una casilla por cada categoría activa, marcadas las que ya le interesan. Cada
 // cambio se guarda al momento, así que al salir del perfil ya están guardadas; mientras se guarda, las casillas
@@ -187,6 +221,7 @@ export default function ProfilePage() {
 
       {perfil?.rol === 'CLIENTE' && <CustomerPreferences categories={categories} />}
       {perfil?.rol === 'VENDEDOR' && <SellerStatistics />}
+      {perfil?.rol === 'VENDEDOR' && <AccountDeletion />}
     </main>
   )
 }
