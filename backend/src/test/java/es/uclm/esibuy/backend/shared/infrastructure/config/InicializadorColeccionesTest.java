@@ -47,6 +47,7 @@ class InicializadorColeccionesTest {
     private static final int VALIDACION = 121;   // "Document failed validation"
     private static final int DUPLICADO = 11000;  // "E11000 duplicate key error"
     private static final Date AHORA = Date.from(Instant.parse("2026-10-08T12:00:00Z"));
+        private static final String INCIDENCIAS = "incidencias";
 
     @Autowired
     private MongoTemplate mongoTemplate;
@@ -243,17 +244,27 @@ class InicializadorColeccionesTest {
     }
 
     @Test
-    @DisplayName("HU44-CP08: la colección incidencias valida los campos obligatorios, los máximos y el estado, y admite varias por usuario")
-    void validaLasIncidencias() {
-        acepta("incidencias", incidencia("u1", "Asunto", "Descripción", "PENDIENTE"));
-        acepta("incidencias", incidencia("u1", "Otro asunto", "Descripción", "ABIERTA").append("respuesta", "Revisada"));
-        acepta("incidencias", incidencia("u1", "a".repeat(100), "b".repeat(1000), "PENDIENTE"));
-        rechaza(VALIDACION, "incidencias", incidencia("u1", "", "Descripción", "PENDIENTE"));
-        rechaza(VALIDACION, "incidencias", incidencia("u1", "a".repeat(101), "Descripción", "PENDIENTE"));
-        rechaza(VALIDACION, "incidencias", incidencia("u1", "Asunto", "", "PENDIENTE"));
-        rechaza(VALIDACION, "incidencias", incidencia("u1", "Asunto", "b".repeat(1001), "PENDIENTE"));
-        rechaza(VALIDACION, "incidencias", incidencia("u1", "Asunto", "Descripción", "CERRADA"));
-        rechaza(VALIDACION, "incidencias", new Document("asunto", "Asunto").append("descripcion", "Descripción")
+    @DisplayName("HU44-CP08: la colección incidencias admite incidencias válidas, varias por usuario y con los máximos")
+    void aceptaIncidenciasValidas() {
+        acepta(INCIDENCIAS, incidencia("u1", "Asunto", "Descripción", "PENDIENTE"));
+        acepta(INCIDENCIAS, incidencia("u1", "Otro asunto", "Descripción", "ABIERTA").append("respuesta", "Revisada"));
+        acepta(INCIDENCIAS, incidencia("u1", "a".repeat(100), "b".repeat(1000), "PENDIENTE"));
+    }
+
+    @Test
+    @DisplayName("HU44-CP08: la colección incidencias rechaza un asunto o una descripción vacíos o demasiado largos")
+    void rechazaIncidenciasConTextosInvalidos() {
+        rechaza(VALIDACION, INCIDENCIAS, incidencia("u1", "", "Descripción", "PENDIENTE"));
+        rechaza(VALIDACION, INCIDENCIAS, incidencia("u1", "a".repeat(101), "Descripción", "PENDIENTE"));
+        rechaza(VALIDACION, INCIDENCIAS, incidencia("u1", "Asunto", "", "PENDIENTE"));
+        rechaza(VALIDACION, INCIDENCIAS, incidencia("u1", "Asunto", "b".repeat(1001), "PENDIENTE"));
+    }
+
+    @Test
+    @DisplayName("HU44-CP08: la colección incidencias rechaza un estado que no existe y una incidencia sin usuario")
+    void rechazaIncidenciasConEstadoOUsuarioInvalidos() {
+        rechaza(VALIDACION, INCIDENCIAS, incidencia("u1", "Asunto", "Descripción", "CERRADA"));
+        rechaza(VALIDACION, INCIDENCIAS, new Document("asunto", "Asunto").append("descripcion", "Descripción")
                 .append("estado", "PENDIENTE").append("fechaCreacion", AHORA));
     }
 
