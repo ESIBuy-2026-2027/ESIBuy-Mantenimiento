@@ -189,6 +189,37 @@ describe('ProfilePage (HU46): preferencias', () => {
     await waitFor(() => expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).toBeChecked())
   })
 
+  it('HU46-CP22: si no se pueden guardar, lo avisa y la casilla vuelve a como estaba', async () => {
+    const user = userEvent.setup()
+    server.use(http.put('/api/customer/preferences', () => new HttpResponse(null, { status: 500 })))
+    await abrirPerfil('cliente@esibuy.test')
+    const preferencias = await seccion()
+
+    await user.click(within(preferencias).getByRole('checkbox', { name: 'Tecnología' }))
+
+    expect(
+      await screen.findByText('No se han podido guardar tus preferencias. Inténtalo de nuevo.'),
+    ).toBeInTheDocument()
+    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).not.toBeChecked()
+    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).toBeEnabled()
+  })
+
+  it('HU46-CP22: si no se pueden cargar, lo avisa sin mostrar las casillas y permite reintentar', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.get('/api/customer/preferences', () => HttpResponse.json({ categorias: ['cat-1'] })),
+      http.get('/api/customer/preferences', () => new HttpResponse(null, { status: 500 }), { once: true }),
+    )
+    await abrirPerfil('cliente@esibuy.test')
+
+    expect(await screen.findByText('No se han podido cargar tus preferencias. Inténtalo de nuevo.')).toBeInTheDocument()
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+    const preferencias = await seccion()
+    await waitFor(() => expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).toBeChecked())
+  })
+
   it('HU46-CP20: el vendedor no tiene preferencias', async () => {
     await abrirPerfil('vendedor@esibuy.test')
 
