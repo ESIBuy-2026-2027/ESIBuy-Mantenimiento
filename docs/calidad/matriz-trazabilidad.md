@@ -2063,6 +2063,9 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP39 | Desde el detalle se añade el producto a favoritos sin salir de la página y el botón pasa a quitarlo; mientras se añade queda deshabilitado | Frontend (página) | 2 | 🔍 En revisión (2, AB#418, PR #216) |
 | HU14-CP40 | Desde el detalle se quita el producto de favoritos y el botón vuelve a ofrecer añadirlo | Frontend (página) | 1 | 🔍 En revisión (1, AB#418, PR #216) |
 | HU14-CP41 | Si no se puede añadir (producto que ya no está disponible o mensaje genérico) o quitar, el detalle lo avisa y el botón se puede volver a pulsar | Frontend (página) | 3 | 🔍 En revisión (3, AB#418, PR #216) |
+| HU14-CP42 | Eliminar la lista del cliente la borra sin tocar la de otro, y si no tiene lista no es un error | Unitario | 2 | 🔍 En revisión |
+| HU14-CP43 | Eliminar por cliente borra su lista de la colección y no la de otro cliente | Integración (MongoDB) | 1 | 🔍 En revisión |
+| HU14-CP44 | Solo el cliente con su propio correo elimina su lista: otro correo, vendedor o administrador reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión |
 
 - **HU14-CP01 a CP06 (Sprint 2, backend):** casos propuestos en la task AB#360 (lógica de guardado de deseo), revisados y aceptados por el desarrollador. Azure no los trae: habría que añadirlos a la HU14.
 - **Decisiones del equipo:** módulo nuevo `deseos`; una sola lista por cliente, como dicen el criterio de aceptación y la colección `listas_deseos`, que ya tenía su índice único. El campo de la colección sigue siendo `usuarioId`, y guarda el id del cliente. Añadir un producto repetido no es un error, y un producto inexistente o no disponible se rechaza.
@@ -2091,6 +2094,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - **Tests que nacen en verde (T363 y T364):** en HU14-CP32, «el vendedor y el administrador no tienen el enlace a favoritos», y en HU14-CP36, «si no se pueden cargar los favoritos, el catálogo funciona con los corazones vacíos», porque antes del ciclo no existían ni el enlace ni la lectura. Se dejan para que no cambie sin darnos cuenta.
 - **HU14-CP38 a CP41 (detalle del producto, T418):** casos propuestos en la task AB#418, creada en el Sprint 2 porque ninguna task de la HU14 ofrecía favoritos en el detalle. Pendientes de confirmar con el equipo y de añadir a la HU14 en Azure Boards. Rama `feature/US14-T418-favoritos-detalle-producto`. `ProductDetailPage` lee la lista al entrar (si falla, ofrece añadirlo) y `ProductDetail` muestra el botón «Añadir a favoritos» o «Quitar de favoritos» junto a «Añadir al carrito», con el corazón relleno en rojo cuando ya está.
 - **Pendiente:** el corazón en los productos destacados del catálogo, que usan otro componente.
+- **HU14-CP42 a CP44 (baja del cliente, AB#275):** casos propuestos. Según el correo del profesor, al eliminar una cuenta se borra lo que depende del usuario. `GestionListaDeseosUseCase.eliminar(emailCliente)` borra la lista del cliente, y con `SOLO_CLIENTE_PROPIO` solo puede hacerlo él. **Pendiente:** el módulo de usuarios debe llamarlo en la baja del cliente, antes de borrar al usuario; hasta entonces la lista no se borra al eliminar la cuenta.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -2215,6 +2219,14 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP40 | `ProductDetailPage.test.jsx` | `HU14-CP40: al pulsar Quitar de favoritos se quita el producto y el botón vuelve a ofrecer añadirlo` | Frontend · página | AB#418 | PR #216 | 🔍 |
 | HU14-CP41 | `ProductDetailPage.test.jsx` | `HU14-CP41: si al añadir %s, lo avisa y se puede volver a intentar` (2 variantes: el producto ya no está disponible y falla por otro motivo) | Frontend · página | AB#418 | PR #216 | 🔍 |
 | HU14-CP41 | `ProductDetailPage.test.jsx` | `HU14-CP41: si no se puede quitar, lo avisa y el producto sigue en favoritos` | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP42 | `GestionListaDeseosServiceTest` | `eliminarBorraLaListaDelCliente` | Aplicación | AB#275 | este PR | 🔍 |
+| HU14-CP42 | `GestionListaDeseosServiceTest` | `eliminarSinListaNoEsUnError` | Aplicación | AB#275 | este PR | 🔍 |
+| HU14-CP43 | `ListaDeseosMongoAdapterTest` | `eliminarPorClienteBorraSoloSuLista` | Infraestructura | AB#275 | este PR | 🔍 |
+| HU14-CP44 | `SeguridadDeseosServiceTest` | `elClienteEliminaConSuPropioCorreo` | Aplicación | AB#275 | este PR | 🔍 |
+| HU14-CP44 | `SeguridadDeseosServiceTest` | `unClienteNoEliminaConElCorreoDeOtro` | Aplicación | AB#275 | este PR | 🔍 |
+| HU14-CP44 | `SeguridadDeseosServiceTest` | `unVendedorNoElimina` | Aplicación | AB#275 | este PR | 🔍 |
+| HU14-CP44 | `SeguridadDeseosServiceTest` | `unAdministradorNoElimina` | Aplicación | AB#275 | este PR | 🔍 |
+| HU14-CP44 | `SeguridadDeseosServiceTest` | `sinSesionNoSeElimina` | Aplicación | AB#275 | este PR | 🔍 |
 
 ---
 
