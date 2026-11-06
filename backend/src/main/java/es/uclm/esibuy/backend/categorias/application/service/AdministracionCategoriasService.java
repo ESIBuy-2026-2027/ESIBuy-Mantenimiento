@@ -97,7 +97,9 @@ public class AdministracionCategoriasService implements AdministracionCategorias
     @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
     @Override
     public void eliminar(String id) {
-        categoriaRepository.buscarPorId(id).orElseThrow(CategoriaNoEncontradaException::new);
+        if (categoriaRepository.buscarPorId(id).isEmpty()) {
+            throw new CategoriaNoEncontradaException();
+        }
         if (productosPorCategoria.contarPorCategoria().getOrDefault(id, 0L) > 0) {
             throw new CategoriaConProductosException();
         }
