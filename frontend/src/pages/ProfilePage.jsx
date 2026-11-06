@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useCallback, useId } from 'react'
+import { useCallback, useId, useState } from 'react'
 import {
   Button,
   Card,
@@ -14,7 +14,7 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { getPreferences } from '../api/preferences'
+import { getPreferences, savePreferences } from '../api/preferences'
 import { getProfile } from '../api/profile'
 import { usePageStyles } from '../components/pageStyles'
 import { UserAvatar } from '../features/account/AvatarSelector'
@@ -60,13 +60,30 @@ const useStyles = makeStyles({
   },
 })
 
-// Preferencias del cliente (HU46): una casilla por cada categoría activa, marcadas las que ya le interesan.
+// Preferencias del cliente (HU46): una casilla por cada categoría activa, marcadas las que ya le interesan. Cada
+// cambio se guarda al momento, así que al salir del perfil ya están guardadas; mientras se guarda, las casillas
+// quedan deshabilitadas. La respuesta del backend es lo que se muestra después.
 function CustomerPreferences({ categories }) {
   const styles = useStyles()
   const titleId = useId()
   const fetcher = useCallback(() => getPreferences(), [])
-  const { data: guardadas } = useApiQuery(fetcher)
-  const elegidas = new Set(guardadas?.categorias ?? [])
+  const { data: cargadas } = useApiQuery(fetcher)
+  const [actualizadas, setActualizadas] = useState(null)
+  const [guardando, setGuardando] = useState(false)
+  const [aviso, setAviso] = useState(null)
+  const elegidas = new Set((actualizadas ?? cargadas)?.categorias ?? [])
+
+  const cambiar = async (categoryId, marcada) => {
+    const nuevas = marcada ? [...elegidas, categoryId] : [...elegidas].filter((id) => id !== categoryId)
+    setAviso(null)
+    setGuardando(true)
+    try {
+      setActualizadas(await savePreferences(nuevas))
+      setAviso({ intent: 'success', texto: 'Preferencias guardadas.' })
+    } finally {
+      setGuardando(false)
+    }
+  }
 
   return (
     <Card className={styles.card}>
@@ -74,9 +91,20 @@ function CustomerPreferences({ categories }) {
         Mis preferencias
       </Title3>
       <Text className={styles.preferencesText}>Elige las categorías que te interesan.</Text>
+      {aviso && (
+        <MessageBar intent={aviso.intent}>
+          <MessageBarBody>{aviso.texto}</MessageBarBody>
+        </MessageBar>
+      )}
       <div role="group" aria-labelledby={titleId} className={styles.categories}>
         {categories.map((category) => (
-          <Checkbox key={category.id} label={category.nombre} checked={elegidas.has(category.id)} />
+          <Checkbox
+            key={category.id}
+            label={category.nombre}
+            checked={elegidas.has(category.id)}
+            disabled={guardando}
+            onChange={(_event, data) => cambiar(category.id, data.checked === true)}
+          />
         ))}
       </div>
     </Card>
