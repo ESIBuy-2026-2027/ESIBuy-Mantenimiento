@@ -37,10 +37,11 @@ public class IncidenciaController {
         return IncidenciaResponse.desde(creacionIncidencias.crear(request.aComando(autenticado.getName())));
     }
 
-    // Esqueleto del ciclo rojo: todavía no consulta nada
+    // La página empieza en 1 en la API y en 0 en el caso de uso. Los rangos válidos los comprueba el servicio:
+    // una página o un tamaño fuera de rango acaba en 400 VALIDATION_ERROR (ManejadorGlobalErrores).
     @GetMapping
     public IncidenciaPageResponse consultar(@RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size, Authentication autenticado) {
-        return null;
+        return IncidenciaPageResponse.desde(consultaIncidencias.consultarPropias(autenticado.getName(), page - 1, size));
     }
 }
