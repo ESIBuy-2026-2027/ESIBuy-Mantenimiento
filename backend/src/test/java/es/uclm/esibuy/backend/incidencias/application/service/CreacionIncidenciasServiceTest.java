@@ -11,6 +11,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,6 +57,11 @@ class CreacionIncidenciasServiceTest {
 
         @Override
         public IncidenciaPage buscarTodas(int pagina, int tamano) {
+            throw new UnsupportedOperationException("No lo usa la creación");
+        }
+
+        @Override
+        public Optional<Incidencia> buscarPorId(String id) {
             throw new UnsupportedOperationException("No lo usa la creación");
         }
     }

@@ -67,6 +67,11 @@ class SupervisionIncidenciasServiceTest {
             tamanoPedido = tamano;
             return this.pagina;
         }
+
+        @Override
+        public Optional<Incidencia> buscarPorId(String id) {
+            throw new UnsupportedOperationException("No lo usa la supervisión");
+        }
     }
 
     // c-1 es un cliente y v-1 un vendedor; cualquier otro id es una cuenta eliminada. Apunta a quién se ha buscado.

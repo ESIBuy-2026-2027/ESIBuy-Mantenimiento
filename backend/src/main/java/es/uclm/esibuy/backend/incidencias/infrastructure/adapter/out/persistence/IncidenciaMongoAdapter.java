@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.incidencias.infrastructure.adapter.out.persistence;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -42,6 +43,11 @@ public class IncidenciaMongoAdapter implements IncidenciaRepositoryPort {
         Page<IncidenciaDocument> documentos = repository.findAll(
                 PageRequest.of(pagina, tamano, DE_MAS_ANTIGUA_A_MAS_RECIENTE));
         return aPagina(documentos, pagina, tamano);
+    }
+
+    @Override
+    public Optional<Incidencia> buscarPorId(String id) {
+        throw new UnsupportedOperationException("Pendiente de implementar (HU50)");
     }
 
     // Común a las dos búsquedas: convierte la página de documentos en la página del dominio

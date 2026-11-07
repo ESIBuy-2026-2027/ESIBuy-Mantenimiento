@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Instant;
 import java.util.Date;
@@ -29,7 +30,8 @@ import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColeccio
 // (Testcontainers): Docker Desktop debe estar abierto. InicializadorColecciones crea las colecciones con su
 // validación y sus índices, como en la aplicación real.
 // También la búsqueda de todas las incidencias para el administrador (HU49, T307).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU44-CP07 y HU49-CP04, propuestos.
+// Y la búsqueda por id para abrir una incidencia (HU50, T302).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU44-CP07, HU49-CP04 y HU50-CP08, propuestos.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class IncidenciaMongoAdapterTest {
@@ -203,5 +205,39 @@ class IncidenciaMongoAdapterTest {
 
         assertEquals(List.of(), asuntos(pagina));
         assertEquals(0, pagina.totalElementos());
+    }
+
+    // Resolución de incidencias (HU50): el administrador abre una incidencia concreta por su id
+
+    @Test
+    @DisplayName("HU50-CP08: buscar por id devuelve la incidencia guardada con todos sus datos")
+    void buscarPorIdDevuelveLaIncidenciaGuardada() {
+        Incidencia guardada = adapter.guardar(incidencia("u-1", "No me llega el pedido", 0));
+        adapter.guardar(incidencia("u-2", "Otra", 5));
+
+        Incidencia encontrada = adapter.buscarPorId(guardada.id()).orElseThrow();
+
+        assertEquals(guardada, encontrada);
+    }
+
+    @Test
+    @DisplayName("HU50-CP08: buscar por id una incidencia que no existe devuelve vacío")
+    void buscarPorIdUnaQueNoExisteDevuelveVacio() {
+        adapter.guardar(incidencia("u-1", "Una", 0));
+
+        assertTrue(adapter.buscarPorId("no-existe").isEmpty());
+    }
+
+    @Test
+    @DisplayName("HU50-CP08: guardar una incidencia abierta actualiza su estado y su respuesta, sin crear otra")
+    void guardarUnaIncidenciaAbiertaLaActualiza() {
+        Incidencia pendiente = adapter.guardar(incidencia("u-1", "No me llega el pedido", 0));
+
+        adapter.guardar(pendiente.abrir("Lo estamos revisando"));
+
+        Incidencia encontrada = adapter.buscarPorId(pendiente.id()).orElseThrow();
+        assertEquals(EstadoIncidencia.ABIERTA, encontrada.estado());
+        assertEquals("Lo estamos revisando", encontrada.respuesta());
+        assertEquals(1, incidenciaMongoRepository.count());
     }
 }
