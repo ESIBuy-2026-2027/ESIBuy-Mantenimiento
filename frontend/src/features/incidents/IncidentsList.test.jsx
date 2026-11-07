@@ -140,3 +140,20 @@ describe('IncidentsList con el autor (HU49)', () => {
     expect(screen.queryByText('Cuenta eliminada')).not.toBeInTheDocument()
   })
 })
+
+describe('IncidentsList con acciones (HU50)', () => {
+  it('HU50-CP22: con renderActions, cada tarjeta muestra las acciones de su incidencia', () => {
+    const renderActions = (incident) => <button type="button">{`Acción de ${incident.id}`}</button>
+
+    renderWithProviders(<IncidentsList incidents={SUPERVISADAS} showAuthor renderActions={renderActions} />)
+
+    expect(within(elemento('No me llega el pedido')).getByRole('button')).toHaveTextContent('Acción de inc-1')
+    expect(within(elemento('Cobro duplicado')).getByRole('button')).toHaveTextContent('Acción de inc-2')
+  })
+
+  it('HU50-CP22: sin renderActions las tarjetas no tienen acciones, como en Mis incidencias', () => {
+    renderWithProviders(<IncidentsList incidents={INCIDENCIAS} />)
+
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
+})

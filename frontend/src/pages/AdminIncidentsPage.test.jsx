@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { delay, http, HttpResponse } from 'msw'
+import { closeIncident } from '../api/adminIncidents'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
@@ -181,5 +182,119 @@ describe('AdminIncidentsPage (HU49): acceso', () => {
     renderApp('/admin/incidents')
 
     await esperarRuta('/login')
+  })
+})
+
+// Apertura y cierre desde la misma vista (HU50, T305) contra el contrato del backend (PR #233). En la página 1 del
+// mock, «Cobro duplicado» (la segunda) ya está abierta y «No me llega el pedido» (la primera), pendiente.
+const accion = (fila, nombre) => within(fila).queryByRole('button', { name: new RegExp(`^${nombre}`) })
+const AVISO_CAMBIADA = 'Otro administrador ya ha cambiado esa incidencia. Hemos actualizado la lista.'
+
+describe('AdminIncidentsPage (HU50): acciones', () => {
+  it('HU50-CP23: una incidencia pendiente se puede abrir y cerrar; una abierta, solo cerrar', async () => {
+    await abrirSupervision()
+
+    const [pendiente, abierta] = await incidencias()
+    expect(accion(pendiente, 'Abrir')).toBeInTheDocument()
+    expect(accion(pendiente, 'Cerrar')).toBeInTheDocument()
+    expect(accion(abierta, 'Abrir')).not.toBeInTheDocument()
+    expect(accion(abierta, 'Cerrar')).toBeInTheDocument()
+  })
+
+  it('HU50-CP24: al abrir una pendiente con una respuesta queda abierta con ella y lo confirma', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+
+    await user.click(accion((await incidencias())[0], 'Abrir'))
+    const dialogo = screen.getByRole('dialog', { name: 'Abrir incidencia' })
+    await user.type(within(dialogo).getByRole('textbox', { name: /respuesta/i }), 'Lo estamos revisando')
+    await user.click(within(dialogo).getByRole('button', { name: 'Abrir incidencia' }))
+
+    expect(await screen.findByText('Incidencia abierta.')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Abrir incidencia' })).not.toBeInTheDocument()
+    await waitFor(async () => expect((await incidencias())[0]).toHaveTextContent('Lo estamos revisando'))
+    const [abierta] = await incidencias()
+    expect(abierta).toHaveTextContent('Abierta')
+    expect(accion(abierta, 'Abrir')).not.toBeInTheDocument()
+  })
+
+  it('HU50-CP25: al cerrar una incidencia desaparece de la lista y lo confirma', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+
+    await user.click(accion((await incidencias())[1], 'Cerrar'))
+    await user.click(screen.getByRole('button', { name: 'Sí, cerrar la incidencia' }))
+
+    expect(await screen.findByText('Incidencia cerrada.')).toBeInTheDocument()
+    await screen.findByText(/Mostrando 1–10 de 14 incidencias/)
+    expect(screen.queryByText('Cobro duplicado')).not.toBeInTheDocument()
+    expect(screen.queryByRole('alertdialog', { name: 'Cerrar incidencia' })).not.toBeInTheDocument()
+  })
+
+  it('HU50-CP25: al cerrar la única incidencia de la última página vuelve a la anterior', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi(ADMIN)
+    // Deja la página 2 con una sola incidencia: la de la cuenta eliminada
+    for (const n of [11, 12, 13, 14]) await closeIncident(`inc-seed-${n}`)
+    renderApp('/admin/incidents')
+    await irALaSegundaPagina(user)
+
+    const [unica] = await incidencias()
+    await user.click(accion(unica, 'Cerrar'))
+    await user.click(screen.getByRole('button', { name: 'Sí, cerrar la incidencia' }))
+
+    expect(await screen.findByText('Página 1 de 1')).toBeInTheDocument()
+    expect(await incidencias()).toHaveLength(10)
+    expect(screen.getByText('Incidencia cerrada.')).toBeInTheDocument()
+  })
+
+  it('HU50-CP25: al cancelar la confirmación la incidencia sigue en la lista', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+
+    await user.click(accion((await incidencias())[1], 'Cerrar'))
+    await user.click(screen.getByRole('button', { name: 'Volver' }))
+
+    expect(screen.queryByRole('alertdialog', { name: 'Cerrar incidencia' })).not.toBeInTheDocument()
+    expect((await incidencias())[1]).toHaveTextContent('Cobro duplicado')
+    expect(screen.getByText(/Mostrando 1–10 de 15 incidencias/)).toBeInTheDocument()
+  })
+})
+
+describe('AdminIncidentsPage (HU50): cambios de otro administrador', () => {
+  it('HU50-CP26: si otro administrador ya la ha abierto, lo avisa y vuelve a cargar la lista', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+    server.use(
+      http.patch(`${URL_INCIDENCIAS}/:id/abrir`, () =>
+        HttpResponse.json({ mensaje: 'La incidencia ya está abierta', code: 'INCIDENT_ALREADY_OPEN' }, { status: 409 }),
+      ),
+    )
+    const peticiones = []
+    server.events.on('request:start', ({ request }) => {
+      if (request.method === 'GET' && new URL(request.url).pathname === URL_INCIDENCIAS) peticiones.push(request.url)
+    })
+
+    await user.click(accion((await incidencias())[0], 'Abrir'))
+    await user.type(screen.getByRole('textbox', { name: /respuesta/i }), 'Lo estamos revisando')
+    await user.click(screen.getByRole('button', { name: 'Abrir incidencia' }))
+
+    expect(await screen.findByText(AVISO_CAMBIADA)).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Abrir incidencia' })).not.toBeInTheDocument()
+    await waitFor(() => expect(peticiones).toHaveLength(1))
+    server.events.removeAllListeners()
+  })
+
+  it('HU50-CP26: si otro administrador ya la ha cerrado, lo avisa y la lista recargada ya no la muestra', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+    // Otro administrador la cierra mientras esta vista sigue mostrándola
+    await closeIncident('inc-seed-2')
+
+    await user.click(accion((await incidencias())[1], 'Cerrar'))
+    await user.click(screen.getByRole('button', { name: 'Sí, cerrar la incidencia' }))
+
+    expect(await screen.findByText(AVISO_CAMBIADA)).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText('Cobro duplicado')).not.toBeInTheDocument())
   })
 })
