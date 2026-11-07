@@ -34,6 +34,13 @@ export function validateIncident({ asunto, descripcion }) {
 export const RESPONSE_MAX = 1000
 
 // El error de la respuesta, o null si es válida.
-export function validateResponse(_respuesta) {
-  throw new Error('Sin implementar')
+export function validateResponse(respuesta) {
+  return validateText(
+    respuesta,
+    {
+      required: 'La respuesta es obligatoria.',
+      tooLong: `La respuesta no puede superar los ${RESPONSE_MAX} caracteres.`,
+    },
+    RESPONSE_MAX,
+  )
 }
