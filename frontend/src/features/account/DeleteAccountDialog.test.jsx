@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http, HttpResponse } from 'msw'
+import { delay, http, HttpResponse } from 'msw'
 import { server } from '../../mocks/server'
 import { renderWithProviders } from '../../test/utils'
 import DeleteAccountDialog from './DeleteAccountDialog'
@@ -173,5 +173,103 @@ describe('DeleteAccountDialog (HU25): contraseña', () => {
     const campo = screen.getByLabelText(/^contraseña actual/i)
     expect(campo).toBeRequired()
     expect(campo).toHaveAttribute('type', 'password')
+  })
+})
+
+describe('DeleteAccountDialog (HU25): errores del cliente', () => {
+  const campo = () => screen.getByLabelText(/^contraseña actual/i)
+  const confirmar = () => screen.getByRole('button', { name: /^eliminar mi cuenta$/i })
+
+  it('HU25-CP09: con la contraseña incorrecta lo avisa en el propio campo, no cierra la sesión y deja corregirla', async () => {
+    registrarEliminaciones(() => HttpResponse.json({ code: 'WRONG_PASSWORD' }, { status: 400 }))
+    const usuario = userEvent.setup()
+    const { onClose, onDeleted } = abrirDialogo('CLIENTE')
+
+    await usuario.type(campo(), CONTRASENA)
+    await usuario.click(confirmar())
+
+    await waitFor(() => expect(campo()).toHaveAccessibleDescription('La contraseña actual no es correcta.'))
+    expect(campo()).toBeInvalid()
+    expect(campo()).toHaveValue(CONTRASENA)
+    expect(screen.getAllByText('La contraseña actual no es correcta.')).toHaveLength(1)
+    expect(confirmar()).toBeEnabled()
+    expect(onDeleted).not.toHaveBeenCalled()
+    expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('HU25-CP09: el aviso de la contraseña desaparece al corregirla y se puede volver a confirmar', async () => {
+    const cuerpos = registrarEliminaciones(() => HttpResponse.json({ code: 'WRONG_PASSWORD' }, { status: 400 }))
+    const usuario = userEvent.setup()
+    abrirDialogo('CLIENTE')
+    await usuario.type(campo(), CONTRASENA)
+    await usuario.click(confirmar())
+    await waitFor(() => expect(campo()).toHaveAccessibleDescription('La contraseña actual no es correcta.'))
+
+    await usuario.type(campo(), 'x')
+
+    expect(campo()).not.toHaveAccessibleDescription('La contraseña actual no es correcta.')
+    await usuario.click(confirmar())
+    await waitFor(() => expect(cuerpos).toHaveLength(2))
+    expect(cuerpos[1]).toEqual({ password: `${CONTRASENA}x` })
+  })
+
+  it.each([
+    ['un error del servidor (500)', () => new HttpResponse(null, { status: 500 })],
+    ['una validación del backend (400)', () => HttpResponse.json({ code: 'VALIDATION_ERROR' }, { status: 400 })],
+    ['un error de red', () => HttpResponse.error()],
+  ])('HU25-CP09: %s da un aviso genérico, sin marcar el campo, y no elimina', async (_nombre, respuesta) => {
+    registrarEliminaciones(respuesta)
+    const usuario = userEvent.setup()
+    const { onDeleted } = abrirDialogo('CLIENTE')
+
+    await usuario.type(campo(), CONTRASENA)
+    await usuario.click(confirmar())
+
+    expect(await screen.findByText('No se ha podido eliminar la cuenta. Inténtalo de nuevo.')).toBeInTheDocument()
+    expect(campo()).not.toHaveAccessibleDescription('La contraseña actual no es correcta.')
+    expect(campo()).toBeValid()
+    expect(onDeleted).not.toHaveBeenCalled()
+    expect(screen.getByRole('alertdialog')).not.toHaveTextContent(CONTRASENA)
+  })
+
+  it('HU25-CP09: mientras se envía, los botones quedan deshabilitados y no se envía dos veces', async () => {
+    const cuerpos = registrarEliminaciones(async () => {
+      await delay(150)
+      return new HttpResponse(null, { status: 204 })
+    })
+    const usuario = userEvent.setup()
+    const { onDeleted } = abrirDialogo('CLIENTE')
+    await usuario.type(campo(), CONTRASENA)
+
+    await usuario.click(confirmar())
+    await usuario.click(confirmar())
+
+    expect(confirmar()).toBeDisabled()
+    expect(screen.getByRole('button', { name: /cancelar/i })).toBeDisabled()
+    await waitFor(() => expect(onDeleted).toHaveBeenCalledTimes(1))
+    expect(cuerpos).toHaveLength(1)
+  })
+
+  it('HU25-CP09: con la contraseña correcta elimina la cuenta del cliente enviando solo la contraseña', async () => {
+    const cuerpos = registrarEliminaciones()
+    const usuario = userEvent.setup()
+    const { onDeleted } = abrirDialogo('CLIENTE')
+
+    await usuario.type(campo(), CONTRASENA)
+    await usuario.click(confirmar())
+
+    await waitFor(() => expect(onDeleted).toHaveBeenCalled())
+    expect(cuerpos).toEqual([{ password: CONTRASENA }])
+  })
+})
+
+describe('DeleteAccountDialog (HU25): la contraseña actual no se copia (R9)', () => {
+  it.each([['CLIENTE'], ['VENDEDOR']])('HU25-CP10: en el diálogo del %s no se puede copiar ni cortar, pero sí pegar', (rol) => {
+    abrirDialogo(rol)
+    const campo = screen.getByLabelText(/^contraseña actual/i)
+
+    expect(fireEvent.copy(campo)).toBe(false)
+    expect(fireEvent.cut(campo)).toBe(false)
+    expect(fireEvent.paste(campo)).toBe(true)
   })
 })
