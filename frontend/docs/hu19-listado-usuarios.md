@@ -34,7 +34,7 @@ Desde el Sprint 2 las cuentas **no se desactivan, se bloquean** (decisión del e
 | Lupa (*Ver información de…*) | Abre la ficha, que ahora es **solo de lectura** (HU20) | Siempre |
 | Lápiz (*Editar a…*) | Abre el formulario de edición `UserEditDialog` (HU22), sin pasar por la ficha | Siempre |
 | Candado (*Bloquear a…* o *Desbloquear a…*) | Pide confirmación y cambia el estado. Una cuenta **activa** se bloquea; una **bloqueada o pendiente** se desbloquea, que es cómo se acepta una cuenta pendiente (HU1) | Bloquear no está disponible para la propia cuenta ni para el último administrador activo |
-| Papelera (*Eliminar a…*) | Pide confirmación (*Esta acción no se puede deshacer*) y elimina la cuenta | No está disponible para la propia cuenta ni para el último administrador activo |
+| Papelera (*Eliminar a…*) | Pide confirmación (*Esta acción no se puede deshacer*) y elimina la cuenta. **Solo sale en las filas de administradores** (HU37, `docs/hu37-eliminar-administrador.md`) | No está disponible para la propia cuenta ni para el último administrador activo |
 
 - **Botones deshabilitados con su motivo:** el botón que no se puede usar queda deshabilitado y su texto emergente (`title`) explica por qué (*No puedes bloquear tu propia cuenta*, *No se puede eliminar al último administrador activo*…).
 - **El último administrador activo:** la tabla pagina y filtra, así que no sabe cuántos administradores activos quedan. El hook `useLastActiveAdmin` lo pregunta al propio listado (`role=ADMINISTRADOR&status=ACTIVO&size=1`): si `totalItems` es 1, ese administrador queda protegido. Se vuelve a calcular tras cada cambio. Solo lo piden este listado y el de administradores; el de clientes no. El backend sigue imponiendo la regla con un `409`.
@@ -204,7 +204,7 @@ Respuesta 200:
 | Bloquear | `PATCH /api/admin/usuarios/{id}/status` con `{ "estado": "BLOQUEADO" }` | 200 con la cuenta |
 | Desbloquear o aceptar una cuenta pendiente | `PATCH /api/admin/usuarios/{id}/status` con `{ "estado": "ACTIVO" }` | 200 con la cuenta |
 | Editar | `PUT /api/admin/usuarios/{id}` (sin cambios, HU22) | 200 con la ficha |
-| Eliminar | `DELETE /api/admin/usuarios/{id}` | 204 sin cuerpo |
+| Eliminar (solo administradores, HU37) | `DELETE /api/admin/usuarios/{id}` | 204 sin cuerpo; 404 si no existe o no es administrador |
 
 | `409` con `code` | Cuándo |
 |---|---|
@@ -292,7 +292,7 @@ Cada test empieza por el ID de su caso de prueba (`HU19-CPnn`):
 
 - Ninguna tarjeta del panel de administración (HU18) enlaza con `/admin/users`. Las de **Clientes** y **Administradores** llevan a sus propios listados (HU24 y HU21), que reutilizan este.
 - En esta pantalla no hay ordenación por columnas (sí en los listados de clientes y administradores, HU24). Las acciones por fila (ver, editar, bloquear o desbloquear y eliminar) existen desde el Sprint 2 (sección 1.1).
-- **Eliminar es nuevo y no tiene backend todavía:** el contrato de la sección 5 es una propuesta del frontend y solo existe en el mock.
+- **Eliminar:** ya tiene backend desde la HU37 (`docs/hu37-eliminar-administrador.md`), que solo elimina administradores: la papelera solo sale en sus filas. El contrato de bloquear y desbloquear de la sección 5 sigue siendo el propuesto por el frontend.
 - **Vendedores (HU26):** ya tienen las mismas acciones y el mismo vocabulario (*Bloquear*, estado `BLOQUEADO`). Desaparece `PATCH /api/admin/sellers/{id}/status`: ahora se usa `PATCH /api/admin/usuarios/{id}/status`, como con el resto de usuarios.
 - Los nombres de los estados y el contrato están pendientes de confirmar con el backend (sección 5).
 

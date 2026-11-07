@@ -3,6 +3,7 @@ import { useCallback } from 'react'
 import {
   Button,
   Dialog,
+  DialogActions,
   DialogBody,
   DialogContent,
   DialogSurface,
@@ -19,6 +20,7 @@ import { Dismiss24Regular } from '@fluentui/react-icons'
 import { getUser } from '../../api/users'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import ReadOnlyFields from './ReadOnlyFields'
+import UserDeleteButton from './UserDeleteButton'
 import { readFields } from './profileFields'
 
 const useStyles = makeStyles({
@@ -34,10 +36,21 @@ const useStyles = makeStyles({
   },
 })
 
-// Ficha de un cliente o de un administrador (HU20), como la del vendedor (HU26): sus datos en solo lectura y
-// nada más. Editar, bloquear, desbloquear y eliminar la cuenta se hacen desde los botones de su fila en la tabla
-// (HU19, HU22, HU23 y HU24).
-export default function UserDetailDialog({ userId, onClose }) {
+// Ficha de un cliente o de un administrador (HU20), como la del vendedor (HU26): sus datos en solo lectura.
+// Editar, bloquear y desbloquear la cuenta se hacen desde los botones de su fila en la tabla (HU19, HU22, HU23 y
+// HU24). Con `canDelete` (la fila de un administrador, HU37) la ficha añade además el botón Eliminar, con la misma
+// confirmación y reglas que la papelera de la fila: `currentUserId` y `lastAdminId` deshabilitan el botón para la
+// propia cuenta y para el último administrador activo; `onResult` y `onChanged` avisan a la tabla, y al eliminar
+// (o si ya no existía) la ficha se cierra.
+export default function UserDetailDialog({
+  userId,
+  onClose,
+  canDelete = false,
+  currentUserId,
+  lastAdminId = null,
+  onResult,
+  onChanged,
+}) {
   const styles = useStyles()
   const fetcher = useCallback(() => getUser(userId), [userId])
   const { data: usuario, failed, retry } = useApiQuery(fetcher)
@@ -74,6 +87,19 @@ export default function UserDetailDialog({ userId, onClose }) {
 
             {usuario && <ReadOnlyFields fields={readFields(usuario.rol, usuario)} />}
           </DialogContent>
+          {canDelete && usuario && (
+            <DialogActions>
+              <UserDeleteButton
+                user={usuario}
+                currentUserId={currentUserId}
+                lastAdminId={lastAdminId}
+                withText
+                onResult={onResult}
+                onChanged={onChanged}
+                onDeleted={onClose}
+              />
+            </DialogActions>
+          )}
         </DialogBody>
       </DialogSurface>
     </Dialog>
@@ -83,4 +109,9 @@ export default function UserDetailDialog({ userId, onClose }) {
 UserDetailDialog.propTypes = {
   userId: PropTypes.string.isRequired,
   onClose: PropTypes.func.isRequired,
+  canDelete: PropTypes.bool,
+  currentUserId: PropTypes.string,
+  lastAdminId: PropTypes.string,
+  onResult: PropTypes.func,
+  onChanged: PropTypes.func,
 }
