@@ -47,19 +47,32 @@ public class GestionCuentaService implements GestionCuentaUseCase {
         this.codigosRecuperacion = codigosRecuperacion;
     }
 
-    @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO)
+    // Un único caso de uso para el cliente (HU25) y el vendedor (HU47), detrás de un único DELETE /api/perfil.
+    // El permiso deja pasar solo a esos dos roles y con su propio correo.
+    @PreAuthorize(Permisos.CLIENTE_O_VENDEDOR_PROPIO)
     @Override
-    public void eliminarCuentaVendedor(String emailVendedor, String password) {
-        Usuario vendedor = usuarioRepository.buscarPorCorreo(emailVendedor)
-                .filter(usuario -> usuario.getRol() == Rol.VENDEDOR)
+    public void eliminarCuentaPropia(String email, String password) {
+        Usuario usuario = usuarioRepository.buscarPorCorreo(email)
                 .orElseThrow(() -> new CredencialesInvalidasException(CREDENCIALES_INVALIDAS));
         // 400 WRONG_PASSWORD y no 401: la sesión sigue abierta, así que no es una sesión caducada
-        if (!hashContrasena.coincide(password, vendedor.getPasswordHash())) {
+        if (!hashContrasena.coincide(password, usuario.getPasswordHash())) {
             throw new ContrasenaActualIncorrectaException("La contraseña actual no es correcta");
         }
 
-        Set<String> productosDelVendedor = Set.copyOf(productos.desactivarTodos(vendedor.getId()));
-        Set<String> productosConPedidos = consultaProductosConPedidos.buscarDeVendedor(vendedor.getId());
+        if (usuario.getRol() == Rol.VENDEDOR) {
+            eliminarProductosDelVendedor(usuario.getId());
+        }
+        // El usuario se borra el último: si algo falla antes, se puede repetir la eliminación
+        factores.eliminarPorUsuario(usuario.getId());
+        codigosVerificacion.eliminarPorUsuario(usuario.getId());
+        codigosRecuperacion.eliminarPorUsuario(usuario.getId());
+        usuarioRepository.eliminarPorId(usuario.getId());
+    }
+
+    // Se conservan como no disponibles los productos con pedidos; los demás se borran con sus valoraciones
+    private void eliminarProductosDelVendedor(String vendedorId) {
+        Set<String> productosDelVendedor = Set.copyOf(productos.desactivarTodos(vendedorId));
+        Set<String> productosConPedidos = consultaProductosConPedidos.buscarDeVendedor(vendedorId);
         productosDelVendedor.stream()
                 .filter(productoId -> !productosConPedidos.contains(productoId))
                 .forEach(productoId -> {
@@ -67,10 +80,5 @@ public class GestionCuentaService implements GestionCuentaUseCase {
                     valoraciones.eliminarDeProducto(productoId);
                     productos.eliminar(productoId);
                 });
-
-        factores.eliminarPorUsuario(vendedor.getId());
-        codigosVerificacion.eliminarPorUsuario(vendedor.getId());
-        codigosRecuperacion.eliminarPorUsuario(vendedor.getId());
-        usuarioRepository.eliminarPorId(vendedor.getId());
     }
 }

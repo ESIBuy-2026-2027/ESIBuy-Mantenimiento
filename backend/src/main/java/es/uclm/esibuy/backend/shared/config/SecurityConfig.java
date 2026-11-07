@@ -67,7 +67,8 @@ public class SecurityConfig {
     private static final String ROL_ADMINISTRADOR = "ADMINISTRADOR";
     private static final String RUTAS_VENDEDOR = "/api/seller/**";
     private static final String ROL_VENDEDOR = "VENDEDOR";
-    // El perfil propio (HU4) es del cliente y del vendedor; el administrador no tiene perfil que consultar aquí.
+    // El perfil propio (HU4) y eliminar la cuenta propia (HU25 y HU47) son del cliente y del vendedor; el
+    // administrador no tiene perfil aquí.
     private static final String RUTAS_PERFIL = "/api/perfil/**";
     private static final String ROL_CLIENTE = "CLIENTE";
     private static final String RUTAS_CLIENTE = "/api/customer/**";
@@ -89,7 +90,6 @@ public class SecurityConfig {
                         .requestMatchers(RUTAS_ADMINISTRACION).hasRole(ROL_ADMINISTRADOR)
                         .requestMatchers(RUTAS_VENDEDOR).hasRole(ROL_VENDEDOR)
                         .requestMatchers(RUTAS_CLIENTE).hasRole(ROL_CLIENTE)
-                        .requestMatchers(HttpMethod.DELETE, RUTAS_PERFIL).hasRole(ROL_VENDEDOR)
                         .requestMatchers(RUTAS_PERFIL).hasAnyRole(ROL_CLIENTE, ROL_VENDEDOR)
                         .requestMatchers(HttpMethod.GET, RUTAS_CATALOGO).hasRole(ROL_CLIENTE)
                         .requestMatchers(HttpMethod.POST, RUTA_VALORACIONES).hasRole(ROL_CLIENTE)

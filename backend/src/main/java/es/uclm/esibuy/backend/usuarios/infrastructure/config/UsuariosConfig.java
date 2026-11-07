@@ -186,9 +186,8 @@ public class UsuariosConfig {
     }
 
     @Bean
-    GestionPerfilUseCase gestionPerfilUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-                                              HashContrasenaPort hashContrasenaPort, Clock reloj) {
-        return new GestionPerfilService(usuarioRepositoryPort, hashContrasenaPort, reloj);
+    GestionPerfilUseCase gestionPerfilUseCase(UsuarioRepositoryPort usuarioRepositoryPort, Clock reloj) {
+        return new GestionPerfilService(usuarioRepositoryPort, reloj);
     }
 
     @Bean
