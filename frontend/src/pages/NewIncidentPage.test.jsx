@@ -168,3 +168,20 @@ describe('NewIncidentPage (HU44): errores y cancelar', () => {
     expect(screen.queryByText(/incidencia enviada/i)).not.toBeInTheDocument()
   })
 })
+
+describe('NewIncidentPage (HU44): vendedor', () => {
+  it('HU44-CP33: un vendedor sin incidencias crea la primera y la ve en su lista', async () => {
+    const user = userEvent.setup()
+    await abrirFormulario('vendedor-vacio@esibuy.test')
+
+    await rellenar(user)
+    await user.click(enviar())
+
+    await esperarRuta('/incidents')
+    expect(await screen.findByText(/incidencia enviada/i)).toBeInTheDocument()
+    const fila = await screen.findByRole('row', { name: new RegExp(ASUNTO) })
+    expect(within(fila).getByText('Pendiente')).toBeInTheDocument()
+    expect(screen.queryByText('Todavía no has reportado ninguna incidencia')).not.toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Paginación' })).not.toBeInTheDocument()
+  })
+})

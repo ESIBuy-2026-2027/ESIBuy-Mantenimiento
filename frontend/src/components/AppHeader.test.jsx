@@ -326,3 +326,48 @@ describe('AppHeader (HU44): incidencias del cliente', () => {
     expect(enlace).toHaveFocus()
   })
 })
+
+describe('AppHeader (HU44): incidencias del vendedor, del administrador y sin sesión', () => {
+  it('HU44-CP33: el vendedor ve el botón Incidencias y lleva a Mis incidencias', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('vendedor@esibuy.test')
+    renderApp('/seller/products')
+
+    await user.click(await screen.findByRole('link', { name: /^incidencias$/i }))
+
+    await esperarRuta('/incidents')
+    expect(await screen.findByRole('heading', { level: 1, name: /mis incidencias/i })).toBeInTheDocument()
+  })
+
+  it('HU44-CP33: el administrador no ve el botón Incidencias', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/admin')
+
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(screen.queryByRole('link', { name: /^incidencias$/i })).not.toBeInTheDocument()
+  })
+
+  it('HU44-CP33: sin sesión no se ve el botón Incidencias', async () => {
+    renderApp('/')
+
+    await screen.findByRole('link', { name: /iniciar sesión/i })
+    expect(screen.queryByRole('link', { name: /^incidencias$/i })).not.toBeInTheDocument()
+  })
+
+  it('HU44-CP33: el administrador que abre Mis incidencias o Nueva incidencia vuelve a su panel', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    const { unmount } = renderApp('/incidents')
+    await esperarRuta('/admin')
+    unmount()
+
+    renderApp('/incidents/new')
+
+    await esperarRuta('/admin')
+  })
+
+  it('HU44-CP33: sin sesión, Mis incidencias lleva al login', async () => {
+    renderApp('/incidents')
+
+    await esperarRuta('/login')
+  })
+})
