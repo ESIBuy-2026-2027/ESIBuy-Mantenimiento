@@ -107,6 +107,20 @@ class MetodoPagoMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU6-CP39: eliminar por cliente borra sus métodos de la colección y no los de otro cliente")
+    void eliminarPorClienteBorraSoloSusMetodos() {
+        adapter.guardar(nuevoMetodo("cliente-1"));
+        adapter.guardar(nuevoMetodo("cliente-1"));
+        String ajeno = adapter.guardar(nuevoMetodo("cliente-2")).getId();
+
+        adapter.eliminarPorCliente("cliente-1");
+
+        assertEquals(List.of(), adapter.buscarPorCliente("cliente-1"));
+        assertEquals(List.of(ajeno),
+                adapter.buscarPorCliente("cliente-2").stream().map(MetodoPago::getId).toList());
+    }
+
+    @Test
     @DisplayName("HU6-CP18: en MongoDB no queda ningún dato de la tarjeta en claro")
     void enMongoNoQuedaNingunDatoEnClaro() {
         // Criterio de aceptación de la HU6: se cifra con el adaptador real, como en la aplicación
