@@ -16,6 +16,7 @@ import ForgotPasswordPage from '../pages/ForgotPasswordPage'
 import Home from '../pages/Home'
 import IncidentsPage from '../pages/IncidentsPage'
 import LoginPage from '../pages/LoginPage'
+import NewIncidentPage from '../pages/NewIncidentPage'
 import OrderDetailPage from '../pages/OrderDetailPage'
 import OrdersPage from '../pages/OrdersPage'
 import PaymentMethodsPage from '../pages/PaymentMethodsPage'
@@ -55,6 +56,7 @@ export default function AppRoutes() {
         <Route element={<ProtectedRoute allowedRoles={[ROLES.CLIENTE, ROLES.VENDEDOR]} />}>
           <Route path={PATHS.PROFILE} element={<ProfilePage />} />
           <Route path={PATHS.INCIDENTS} element={<IncidentsPage />} />
+          <Route path={PATHS.INCIDENT_NEW} element={<NewIncidentPage />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
