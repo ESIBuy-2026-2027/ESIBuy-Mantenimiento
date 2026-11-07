@@ -3328,15 +3328,15 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU37-CP09 | Intentar eliminarse a sí mismo devuelve 409 con el código `CANNOT_DELETE_SELF` | Integración (capa web) | 1 | ✅ Pasa |
 | HU37-CP10 | Intentar eliminar al último administrador activo devuelve 409 con el código `LAST_ACTIVE_ADMIN` | Integración (capa web) | 1 | ✅ Pasa |
 | HU37-CP11 | Sin sesión (401), sin ser administrador (403) o sin token CSRF (403) no se puede eliminar una cuenta | Integración (capa web) | 3 | ✅ Pasa |
-| HU37-CP12 | Eliminar a un administrador desde la fila pide confirmación con su nombre y, al confirmar, lo elimina, avisa y actualiza la lista | Frontend (componente y página) | 7 | 🔍 En revisión (7, AB#338, PR pendiente) |
-| HU37-CP13 | Cancelar la confirmación no elimina nada ni avisa, en la fila y en la ficha | Frontend (componente) | 2 | 🔍 En revisión (2, AB#338, PR pendiente) |
-| HU37-CP14 | La ficha de un administrador ofrece Eliminar con la misma confirmación; al eliminar se cierra, avisa y la lista se actualiza | Frontend (componente) | 3 | 🔍 En revisión (3, AB#338, PR pendiente) |
-| HU37-CP15 | Eliminar queda deshabilitado, con su explicación, para la propia cuenta y para el último administrador activo | Frontend (componente) | 6 | 🔍 En revisión (6, AB#338, PR pendiente) |
-| HU37-CP16 | Un 409 CANNOT_DELETE_SELF o LAST_ACTIVE_ADMIN muestra su motivo y otro fallo un error genérico, sin actualizar la lista | Frontend (componente) | 4 | 🔍 En revisión (4, AB#338, PR pendiente) |
-| HU37-CP17 | Un 404 al eliminar (alguien lo borró antes) avisa con un mensaje propio, actualiza la lista y cierra la ficha | Frontend (componente) | 2 | 🔍 En revisión (2, AB#338, PR pendiente) |
-| HU37-CP18 | Solo se eliminan administradores: la fila y la ficha de clientes y vendedores no ofrecen Eliminar | Frontend (componente y página) | 7 | 🔍 En revisión (7, AB#338, PR pendiente) |
-| HU37-CP19 | Si otro administrador elimina tu cuenta, tu siguiente petición da 401 y vuelves al login con el aviso de sesión caducada | Frontend (página) | 1 | 🔍 En revisión (1, AB#338, PR pendiente) |
-| HU37-CP20 | El mock del DELETE responde como el backend: 204 a un administrador, 404 a clientes, vendedores y cuentas inexistentes, 409 con su código, 401 y 403 | Frontend (API) | 4 | 🔍 En revisión (4, AB#338, PR pendiente) |
+| HU37-CP12 | Eliminar a un administrador desde la fila pide confirmación con su nombre y, al confirmar, lo elimina, avisa y actualiza la lista | Frontend (componente y página) | 7 | ✅ Pasa (7, AB#338, PR #204) |
+| HU37-CP13 | Cancelar la confirmación no elimina nada ni avisa, en la fila y en la ficha | Frontend (componente) | 2 | ✅ Pasa (2, AB#338, PR #204) |
+| HU37-CP14 | La ficha de un administrador ofrece Eliminar con la misma confirmación; al eliminar se cierra, avisa y la lista se actualiza | Frontend (componente) | 3 | ✅ Pasa (3, AB#338, PR #204) |
+| HU37-CP15 | Eliminar queda deshabilitado, con su explicación, para la propia cuenta y para el último administrador activo | Frontend (componente) | 6 | ✅ Pasa (6, AB#338, PR #204) |
+| HU37-CP16 | Un 409 CANNOT_DELETE_SELF o LAST_ACTIVE_ADMIN muestra su motivo y otro fallo un error genérico, sin actualizar la lista | Frontend (componente) | 4 | ✅ Pasa (4, AB#338, PR #204) |
+| HU37-CP17 | Un 404 al eliminar (alguien lo borró antes) avisa con un mensaje propio, actualiza la lista y cierra la ficha | Frontend (componente) | 2 | ✅ Pasa (2, AB#338, PR #204) |
+| HU37-CP18 | Solo se eliminan administradores: la fila y la ficha de clientes y vendedores no ofrecen Eliminar | Frontend (componente y página) | 7 | ✅ Pasa (7, AB#338, PR #204) |
+| HU37-CP19 | Si otro administrador elimina tu cuenta, tu siguiente petición da 401 y vuelves al login con el aviso de sesión caducada | Frontend (página) | 1 | ✅ Pasa (1, AB#338, PR #204) |
+| HU37-CP20 | El mock del DELETE responde como el backend: 204 a un administrador, 404 a clientes, vendedores y cuentas inexistentes, 409 con su código, 401 y 403 | Frontend (API) | 4 | ✅ Pasa (4, AB#338, PR #204) |
 
 Notas:
 - **HU37-CP01 a CP06 (AB#340):** casos propuestos para la lógica de negocio del borrado físico de administradores en `AdministracionUsuariosService.eliminarAdministrador` (PR #139). Pendientes de confirmar con el equipo y de añadir a la HU37 en Azure Boards.
@@ -3363,42 +3363,42 @@ Notas:
 | HU37-CP11 | `UsuarioControllerTest` | `unNoAdministradorNoPuedeEliminarCuentas` (cliente y vendedor) | Infraestructura | AB#340 | PR actual | ✅ |
 | HU37-CP11 | `UsuarioControllerTest` | `eliminarSinSesionEstaProtegido` | Infraestructura | AB#340 | PR actual | ✅ |
 | HU37-CP11 | `UsuarioControllerTest` | `eliminarSinTokenCsrfSeRechaza` | Infraestructura | AB#340 | PR actual | ✅ |
-| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: al pulsar la papelera pide confirmación con el nombre y avisa de que no se puede deshacer` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: al confirmar elimina a ese administrador, avisa y pide actualizar la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: con un nombre indicado (label), la confirmación y el aviso lo usan` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: con withText el botón muestra el texto Eliminar además del icono` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: sin withText el botón es solo un icono` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP12 | `RoleUsersList.test.jsx` | `HU37-CP12: al eliminar a un administrador desde la fila, desaparece de la lista y avisa` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP12 | `AdminUsersPage.test.jsx` | `HU37-CP12: al eliminar a un administrador desde la tabla, la fila desaparece y avisa` | Frontend · página | AB#338 | PR pendiente | 🔍 |
-| HU37-CP13 | `UserDeleteButton.test.jsx` | `HU37-CP13: al cancelar no borra nada, no avisa ni actualiza la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP13 | `UserDetailDialog.test.jsx` | `HU37-CP13: al cancelar no borra nada y la ficha sigue abierta` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP14 | `UserDetailDialog.test.jsx` | `HU37-CP14: la ficha de un administrador ofrece el botón Eliminar con texto` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP14 | `UserDetailDialog.test.jsx` | `HU37-CP14: pide confirmación con el nombre y, al confirmar, elimina, avisa, actualiza la lista y cierra la ficha` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP14 | `UserRowActions.test.jsx` | `HU37-CP14: la lupa de un administrador abre una ficha con Eliminar y, al eliminar, la cierra, avisa y actualiza la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP15 | `UserDeleteButton.test.jsx` | `HU37-CP15: la propia cuenta queda deshabilitada y explica el motivo` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP15 | `UserDeleteButton.test.jsx` | `HU37-CP15: el último administrador activo queda deshabilitado y explica el motivo` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP15 | `UserDeleteButton.test.jsx` | `HU37-CP15: si el último administrador es otro, o no se sabe, queda disponible` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP15 | `UserDetailDialog.test.jsx` | `HU37-CP15: en la ficha de la propia cuenta, Eliminar queda deshabilitado y explica el motivo` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP15 | `UserDetailDialog.test.jsx` | `HU37-CP15: en la ficha del último administrador activo, Eliminar queda deshabilitado y explica el motivo` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP15 | `RoleUsersList.test.jsx` | `HU37-CP15: la fila del administrador en sesión tiene la papelera deshabilitada y la de otro, no` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP16 | `UserDeleteButton.test.jsx` | `HU37-CP16: un 409 %s muestra su motivo y no actualiza la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP16 | `UserDeleteButton.test.jsx` | `HU37-CP16: cualquier otro fallo muestra un error genérico y no actualiza la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP16 | `UserDeleteButton.test.jsx` | `HU37-CP16: con el mock real, eliminarse a sí mismo da el motivo y no borra la cuenta` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP16 | `UserDetailDialog.test.jsx` | `HU37-CP16: un 409 desde la ficha avisa de su motivo y la ficha sigue abierta` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP17 | `UserDeleteButton.test.jsx` | `HU37-CP17: un 404 (alguien lo eliminó antes) avisa con su mensaje propio y actualiza la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP17 | `UserDetailDialog.test.jsx` | `HU37-CP17: un 404 desde la ficha avisa de que ya no existe, actualiza la lista y cierra la ficha` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP18 | `UserDetailDialog.test.jsx` | `HU37-CP18: sin canDelete (clientes y vendedores) la ficha no ofrece Eliminar` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP18 | `UserRowActions.test.jsx` | `HU37-CP18: sin canDelete (clientes y vendedores) la fila no ofrece la papelera pero sí el resto de acciones` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP18 | `UserRowActions.test.jsx` | `HU37-CP18: un vendedor tampoco tiene papelera, aunque se le dé nombre comercial` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP18 | `UserRowActions.test.jsx` | `HU37-CP18: con canDelete la fila de un administrador ofrece la papelera` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP18 | `UserRowActions.test.jsx` | `HU37-CP18: la ficha de un cliente abierta desde su fila no ofrece Eliminar` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
-| HU37-CP18 | `AdminUsersPage.test.jsx` | `HU37-CP18: la fila de un cliente no tiene papelera y la de un administrador sí` | Frontend · página | AB#338 | PR pendiente | 🔍 |
-| HU37-CP18 | `AdminSellersPage.test.jsx` | `HU37-CP18: la fila de un vendedor no ofrece eliminarlo, porque el backend solo elimina administradores` | Frontend · página | AB#338 | PR pendiente | 🔍 |
-| HU37-CP19 | `LoginFlow.test.jsx` | `HU37-CP19: si otro administrador elimina tu cuenta, tu siguiente petición da 401 y vuelves al login con el aviso` | Frontend · página | AB#338 | PR pendiente | 🔍 |
-| HU37-CP20 | `users.test.js` | `HU37-CP20: eliminar a un administrador responde 204 sin cuerpo` | Frontend · API | AB#338 | PR pendiente | 🔍 |
-| HU37-CP20 | `users.test.js` | `HU37-CP20: eliminar a %s responde 404 y no lo borra` | Frontend · API | AB#338 | PR pendiente | 🔍 |
-| HU37-CP20 | `users.test.js` | `HU37-CP20: el mock da 409 con el código al eliminar la propia cuenta` | Frontend · API | AB#338 | PR pendiente | 🔍 |
-| HU37-CP20 | `users.test.js` | `HU37-CP20: sin sesión responde 401 y con otro rol 403` | Frontend · API | AB#338 | PR pendiente | 🔍 |
+| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: al pulsar la papelera pide confirmación con el nombre y avisa de que no se puede deshacer` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: al confirmar elimina a ese administrador, avisa y pide actualizar la lista` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: con un nombre indicado (label), la confirmación y el aviso lo usan` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: con withText el botón muestra el texto Eliminar además del icono` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: sin withText el botón es solo un icono` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP12 | `RoleUsersList.test.jsx` | `HU37-CP12: al eliminar a un administrador desde la fila, desaparece de la lista y avisa` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP12 | `AdminUsersPage.test.jsx` | `HU37-CP12: al eliminar a un administrador desde la tabla, la fila desaparece y avisa` | Frontend · página | AB#338 | PR #204 | ✅ |
+| HU37-CP13 | `UserDeleteButton.test.jsx` | `HU37-CP13: al cancelar no borra nada, no avisa ni actualiza la lista` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP13 | `UserDetailDialog.test.jsx` | `HU37-CP13: al cancelar no borra nada y la ficha sigue abierta` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP14 | `UserDetailDialog.test.jsx` | `HU37-CP14: la ficha de un administrador ofrece el botón Eliminar con texto` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP14 | `UserDetailDialog.test.jsx` | `HU37-CP14: pide confirmación con el nombre y, al confirmar, elimina, avisa, actualiza la lista y cierra la ficha` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP14 | `UserRowActions.test.jsx` | `HU37-CP14: la lupa de un administrador abre una ficha con Eliminar y, al eliminar, la cierra, avisa y actualiza la lista` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP15 | `UserDeleteButton.test.jsx` | `HU37-CP15: la propia cuenta queda deshabilitada y explica el motivo` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP15 | `UserDeleteButton.test.jsx` | `HU37-CP15: el último administrador activo queda deshabilitado y explica el motivo` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP15 | `UserDeleteButton.test.jsx` | `HU37-CP15: si el último administrador es otro, o no se sabe, queda disponible` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP15 | `UserDetailDialog.test.jsx` | `HU37-CP15: en la ficha de la propia cuenta, Eliminar queda deshabilitado y explica el motivo` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP15 | `UserDetailDialog.test.jsx` | `HU37-CP15: en la ficha del último administrador activo, Eliminar queda deshabilitado y explica el motivo` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP15 | `RoleUsersList.test.jsx` | `HU37-CP15: la fila del administrador en sesión tiene la papelera deshabilitada y la de otro, no` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP16 | `UserDeleteButton.test.jsx` | `HU37-CP16: un 409 %s muestra su motivo y no actualiza la lista` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP16 | `UserDeleteButton.test.jsx` | `HU37-CP16: cualquier otro fallo muestra un error genérico y no actualiza la lista` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP16 | `UserDeleteButton.test.jsx` | `HU37-CP16: con el mock real, eliminarse a sí mismo da el motivo y no borra la cuenta` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP16 | `UserDetailDialog.test.jsx` | `HU37-CP16: un 409 desde la ficha avisa de su motivo y la ficha sigue abierta` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP17 | `UserDeleteButton.test.jsx` | `HU37-CP17: un 404 (alguien lo eliminó antes) avisa con su mensaje propio y actualiza la lista` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP17 | `UserDetailDialog.test.jsx` | `HU37-CP17: un 404 desde la ficha avisa de que ya no existe, actualiza la lista y cierra la ficha` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP18 | `UserDetailDialog.test.jsx` | `HU37-CP18: sin canDelete (clientes y vendedores) la ficha no ofrece Eliminar` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP18 | `UserRowActions.test.jsx` | `HU37-CP18: sin canDelete (clientes y vendedores) la fila no ofrece la papelera pero sí el resto de acciones` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP18 | `UserRowActions.test.jsx` | `HU37-CP18: un vendedor tampoco tiene papelera, aunque se le dé nombre comercial` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP18 | `UserRowActions.test.jsx` | `HU37-CP18: con canDelete la fila de un administrador ofrece la papelera` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP18 | `UserRowActions.test.jsx` | `HU37-CP18: la ficha de un cliente abierta desde su fila no ofrece Eliminar` | Frontend · componente | AB#338 | PR #204 | ✅ |
+| HU37-CP18 | `AdminUsersPage.test.jsx` | `HU37-CP18: la fila de un cliente no tiene papelera y la de un administrador sí` | Frontend · página | AB#338 | PR #204 | ✅ |
+| HU37-CP18 | `AdminSellersPage.test.jsx` | `HU37-CP18: la fila de un vendedor no ofrece eliminarlo, porque el backend solo elimina administradores` | Frontend · página | AB#338 | PR #204 | ✅ |
+| HU37-CP19 | `LoginFlow.test.jsx` | `HU37-CP19: si otro administrador elimina tu cuenta, tu siguiente petición da 401 y vuelves al login con el aviso` | Frontend · página | AB#338 | PR #204 | ✅ |
+| HU37-CP20 | `users.test.js` | `HU37-CP20: eliminar a un administrador responde 204 sin cuerpo` | Frontend · API | AB#338 | PR #204 | ✅ |
+| HU37-CP20 | `users.test.js` | `HU37-CP20: eliminar a %s responde 404 y no lo borra` | Frontend · API | AB#338 | PR #204 | ✅ |
+| HU37-CP20 | `users.test.js` | `HU37-CP20: el mock da 409 con el código al eliminar la propia cuenta` | Frontend · API | AB#338 | PR #204 | ✅ |
+| HU37-CP20 | `users.test.js` | `HU37-CP20: sin sesión responde 401 y con otro rol 403` | Frontend · API | AB#338 | PR #204 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
@@ -3412,20 +3412,20 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU47-CP01 | Con la contraseña actual incorrecta no se elimina la cuenta ni se modifica ningún dato (`ContrasenaActualIncorrectaException`, no `CredencialesInvalidasException`) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#313, PR #223) |
+| HU47-CP01 | Con la contraseña actual incorrecta no se elimina la cuenta ni se modifica ningún dato (`ContrasenaActualIncorrectaException`, no `CredencialesInvalidasException`) | Unitario (aplicación) | 1 | ✅ Pasa (1, AB#313, PR #223) |
 | HU47-CP02 | Al eliminar la cuenta se conservan como no disponibles los productos con pedidos y se eliminan los demás junto con sus valoraciones | Unitario + integración (aplicación y persistencia) | 10 | ✅ Pasa |
 | HU47-CP03 | Un producto no disponible no se puede comprar aunque tenga stock | Integración (persistencia) | 1 | ✅ Pasa |
 | HU47-CP04 | Si una eliminación quedó a medias se puede repetir y completarse sin errores | Unitario (aplicación) | 1 | ✅ Pasa |
 | HU47-CP05 | Al eliminar la cuenta se invalida la sesión y se limpia el contexto de seguridad | Unitario + integración (capa de aplicación y web) | 2 | ✅ Pasa |
 | HU47-CP06 | Un cliente recibe 403 y no se modifica nada al intentar eliminar la cuenta | Unitario + integración (capa de aplicación y web) | 2 | ✅ Pasa |
 | HU47-CP07 | Una petición sin autenticar recibe 401 y no se modifica nada al intentar eliminar la cuenta | Integración (capa web) | 1 | ✅ Pasa |
-| HU47-CP08 | Con la contraseña incorrecta, `DELETE /api/perfil` responde 400 con code `WRONG_PASSWORD` y la sesión sigue abierta (un 401 haría que el frontend la diera por caducada) | Integración (capa web) | 1 | 🔍 En revisión (1, AB#312, PR #223) |
-| HU47-CP09 | El diálogo explica qué se borra y qué se conserva, y sin la contraseña actual no deja eliminar | Frontend (componente) | 1 | 🔍 En revisión (1, AB#311, PR #223) |
-| HU47-CP10 | Con la contraseña escrita se elimina la cuenta enviando solo la contraseña | Frontend (componente) | 1 | 🔍 En revisión (1, AB#311, PR #223) |
-| HU47-CP11 | Con la contraseña incorrecta se avisa sin repetirla y se puede corregir; otro fallo da un aviso genérico. El diálogo no se cierra | Frontend (componente) | 2 | 🔍 En revisión (2, AB#311, PR #223) |
-| HU47-CP12 | Al cancelar no se elimina la cuenta | Frontend (componente) | 1 | 🔍 En revisión (1, AB#311, PR #223) |
-| HU47-CP13 | La opción «Eliminar mi cuenta» está en el perfil del vendedor y no en el del cliente | Frontend (página) | 1 | 🔍 En revisión (1, AB#311, PR #223) |
-| HU47-CP14 | Tras eliminar la cuenta se cierra la sesión y el login avisa «Tu cuenta se ha eliminado.» | Frontend (página) | 1 | 🔍 En revisión (1, AB#311, PR #223) |
+| HU47-CP08 | Con la contraseña incorrecta, `DELETE /api/perfil` responde 400 con code `WRONG_PASSWORD` y la sesión sigue abierta (un 401 haría que el frontend la diera por caducada) | Integración (capa web) | 1 | ✅ Pasa (1, AB#312, PR #223) |
+| HU47-CP09 | El diálogo explica qué se borra y qué se conserva, y sin la contraseña actual no deja eliminar | Frontend (componente) | 1 | ✅ Pasa (1, AB#311, PR #223) |
+| HU47-CP10 | Con la contraseña escrita se elimina la cuenta enviando solo la contraseña | Frontend (componente) | 1 | ✅ Pasa (1, AB#311, PR #223) |
+| HU47-CP11 | Con la contraseña incorrecta se avisa sin repetirla y se puede corregir; otro fallo da un aviso genérico. El diálogo no se cierra | Frontend (componente) | 2 | ✅ Pasa (2, AB#311, PR #223) |
+| HU47-CP12 | Al cancelar no se elimina la cuenta | Frontend (componente) | 1 | ✅ Pasa (1, AB#311, PR #223) |
+| HU47-CP13 | La opción «Eliminar mi cuenta» está en el perfil del vendedor y no en el del cliente | Frontend (página) | 1 | ✅ Pasa (1, AB#311, PR #223) |
+| HU47-CP14 | Tras eliminar la cuenta se cierra la sesión y el login avisa «Tu cuenta se ha eliminado.» | Frontend (página) | 1 | ✅ Pasa (1, AB#311, PR #223) |
 
 Notas:
 - `DELETE /api/perfil` se restringe a VENDEDOR en la regla de ruta; `GET /api/perfil` sigue disponible para CLIENTE y VENDEDOR. Las pruebas web usan la cadena real de `SecurityConfig`, con CSRF activo.
@@ -3439,7 +3439,7 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU47-CP01 | `GestionCuentaServiceTest` | `contraseñaIncorrectaNoModificaNada` | Aplicación | AB#312 / AB#313; ajustado en AB#313 | PR #203; PR #223 | 🔍 |
+| HU47-CP01 | `GestionCuentaServiceTest` | `contraseñaIncorrectaNoModificaNada` | Aplicación | AB#312 / AB#313; ajustado en AB#313 | PR #203; PR #223 | ✅ |
 | HU47-CP02 | `GestionCuentaServiceTest` | `conservaProductosConPedidosYEliminaElResto` | Aplicación | AB#312 / AB#313 | PR #203 | ✅ |
 | HU47-CP02 | `GestionProductosVendedorServiceTest` | `desactivaTodosLosProductosDelVendedor` | Aplicación | AB#312 / AB#313 | PR #203 | ✅ |
 | HU47-CP02 | `ProductosConPedidosServiceTest` | `devuelveLosProductosDePedidosDelVendedor` | Aplicación | AB#312 / AB#313 | PR #203 | ✅ |
@@ -3457,14 +3457,14 @@ Notas:
 | HU47-CP06 | `SeguridadGestionCuentaServiceTest` | `unClienteNoPuedeInvocarLaEliminacion` | Aplicación | AB#312 / AB#313 | PR #203 | ✅ |
 | HU47-CP06 | `PerfilControllerTest` | `usuarioNoVendedorNoPuedeEliminarCuenta` | Infraestructura | AB#312 / AB#313 | PR #203 | ✅ |
 | HU47-CP07 | `PerfilControllerTest` | `sinAutenticarNoPuedeEliminarCuenta` | Infraestructura | AB#312 / AB#313 | PR #203 | ✅ |
-| HU47-CP08 | `PerfilControllerTest` | `contrasenaIncorrectaDevuelve400SinCerrarLaSesion` | Infraestructura | AB#312 | PR #223 | 🔍 |
-| HU47-CP09 | `DeleteAccountDialog.test.jsx` | `HU47-CP09: explica qué se borra y qué se conserva, y sin la contraseña no deja eliminar` | Frontend · componente | AB#311 | PR #223 | 🔍 |
-| HU47-CP10 | `DeleteAccountDialog.test.jsx` | `HU47-CP10: con la contraseña escrita elimina la cuenta enviando solo la contraseña` | Frontend · componente | AB#311 | PR #223 | 🔍 |
-| HU47-CP11 | `DeleteAccountDialog.test.jsx` | `HU47-CP11: con la contraseña incorrecta lo avisa, no elimina y deja corregirla` | Frontend · componente | AB#311 | PR #223 | 🔍 |
-| HU47-CP11 | `DeleteAccountDialog.test.jsx` | `HU47-CP11: si falla por otro motivo da un aviso genérico y no elimina` | Frontend · componente | AB#311 | PR #223 | 🔍 |
-| HU47-CP12 | `DeleteAccountDialog.test.jsx` | `HU47-CP12: al cancelar no se elimina la cuenta` | Frontend · componente | AB#311 | PR #223 | 🔍 |
-| HU47-CP13 | `ProfilePage.test.jsx` | `HU47-CP13: el vendedor tiene la opción de eliminar su cuenta y el cliente no` | Frontend · página | AB#311 | PR #223 | 🔍 |
-| HU47-CP14 | `ProfilePage.test.jsx` | `HU47-CP14: tras eliminar la cuenta se cierra la sesión y el login avisa de que se ha eliminado` | Frontend · página | AB#311 | PR #223 | 🔍 |
+| HU47-CP08 | `PerfilControllerTest` | `contrasenaIncorrectaDevuelve400SinCerrarLaSesion` | Infraestructura | AB#312 | PR #223 | ✅ |
+| HU47-CP09 | `DeleteAccountDialog.test.jsx` | `HU47-CP09: explica qué se borra y qué se conserva, y sin la contraseña no deja eliminar` | Frontend · componente | AB#311 | PR #223 | ✅ |
+| HU47-CP10 | `DeleteAccountDialog.test.jsx` | `HU47-CP10: con la contraseña escrita elimina la cuenta enviando solo la contraseña` | Frontend · componente | AB#311 | PR #223 | ✅ |
+| HU47-CP11 | `DeleteAccountDialog.test.jsx` | `HU47-CP11: con la contraseña incorrecta lo avisa, no elimina y deja corregirla` | Frontend · componente | AB#311 | PR #223 | ✅ |
+| HU47-CP11 | `DeleteAccountDialog.test.jsx` | `HU47-CP11: si falla por otro motivo da un aviso genérico y no elimina` | Frontend · componente | AB#311 | PR #223 | ✅ |
+| HU47-CP12 | `DeleteAccountDialog.test.jsx` | `HU47-CP12: al cancelar no se elimina la cuenta` | Frontend · componente | AB#311 | PR #223 | ✅ |
+| HU47-CP13 | `ProfilePage.test.jsx` | `HU47-CP13: el vendedor tiene la opción de eliminar su cuenta y el cliente no` | Frontend · página | AB#311 | PR #223 | ✅ |
+| HU47-CP14 | `ProfilePage.test.jsx` | `HU47-CP14: tras eliminar la cuenta se cierra la sesión y el login avisa de que se ha eliminado` | Frontend · página | AB#311 | PR #223 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `GestionCuentaServiceTest`: `usuarios/application/service/`
@@ -3956,39 +3956,39 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU44-CP01 | Una incidencia se crea con autor, asunto, descripción, estado, respuesta y fecha; una nueva nace PENDIENTE, sin id y sin respuesta | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#291, PR pendiente) |
-| HU44-CP02 | El asunto y la descripción son obligatorios (no valen vacíos ni solo espacios) | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#291, PR pendiente) |
-| HU44-CP03 | El asunto, la descripción y la respuesta se guardan sin espacios en los extremos; la respuesta es opcional y, si falta, queda vacía | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#291, PR pendiente) |
-| HU44-CP04 | El asunto admite hasta 100 caracteres y la descripción hasta 1000 (sin contar los espacios de los extremos); más se rechaza | Unitario (dominio) | 4 | 🔍 En revisión (4, AB#291, PR pendiente) |
-| HU44-CP05 | La incidencia necesita un autor, un estado y una fecha de creación | Unitario (dominio) | 3 | 🔍 En revisión (3, AB#291, PR pendiente) |
-| HU44-CP06 | El mapper pasa la incidencia a documento y vuelve sin perder datos; sin respuesta se lee vacía y un documento que incumple el dominio se rechaza | Unitario (mapper) | 4 | 🔍 En revisión (4, AB#291, PR pendiente) |
-| HU44-CP07 | El adaptador de MongoDB guarda la incidencia con un id nuevo, el autor como `usuarioId` y el estado como texto; un usuario puede tener varias | Integración MongoDB | 3 | 🔍 En revisión (3, AB#291, PR pendiente) |
-| HU44-CP08 | El servicio crea la incidencia del usuario en sesión (cliente o vendedor), pendiente y con la fecha del reloj, y la guarda una sola vez | Unitario (aplicación) | 3 | 🔍 En revisión (3, AB#293, PR pendiente) |
-| HU44-CP09 | El servicio guarda asunto y descripción sin espacios en los extremos y rechaza uno vacío sin guardar nada | Unitario (aplicación) | 3 | 🔍 En revisión (3, AB#293, PR pendiente) |
-| HU44-CP10 | Solo cliente y vendedor crean incidencias y solo con su propio correo; administrador y sin sesión se rechazan. Seguridad en la capa de negocio | Unitario con Spring Security (sin MongoDB) | 6 | 🔍 En revisión (6, AB#293, PR pendiente) |
-| HU44-CP11 | La colección `incidencias` valida asunto (1 a 100), descripción (1 a 1000), estado (PENDIENTE o ABIERTA), usuario y fecha, y admite varias por usuario | Integración MongoDB | 3 | 🔍 En revisión (3, AB#291, PR pendiente) |
-| HU44-CP12 | El adaptador hacia el módulo de usuarios obtiene el id del cliente o del vendedor en sesión a partir de su correo | Unitario (adaptador) | 2 | 🔍 En revisión (2, AB#293, PR pendiente) |
-| HU44-CP13 | `POST /api/perfil/incidencias` crea la incidencia del usuario en sesión (cliente o vendedor) y responde 201 con ella | Controlador | 2 | 🔍 En revisión (2, AB#292, PR pendiente) |
-| HU44-CP14 | Una incidencia inválida, un cuerpo vacío o un cuerpo ilegible responden 400 `VALIDATION_ERROR` con un mensaje genérico | Controlador | 3 | 🔍 En revisión (3, AB#292, PR pendiente) |
-| HU44-CP15 | Sin sesión crear responde 401; el administrador, 403 `ACCESS_DENIED`; sin token CSRF se rechaza | Controlador | 3 | 🔍 En revisión (3, AB#292, PR pendiente) |
-| HU44-CP16 | Buscar por autor devuelve solo sus incidencias, por páginas, de las más antiguas a las más recientes, con orden estable y con el total | Integración MongoDB | 5 | 🔍 En revisión (5, AB#419, PR pendiente) |
-| HU44-CP17 | El servicio consulta las incidencias del usuario en sesión (cliente o vendedor) con la página y el tamaño pedidos | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#419, PR pendiente) |
-| HU44-CP18 | El servicio admite la primera página y los tamaños de 1 a 50 y rechaza una página negativa o un tamaño fuera de rango sin consultar nada | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#419, PR pendiente) |
-| HU44-CP19 | Solo cliente y vendedor consultan sus incidencias y solo con su propio correo; administrador y sin sesión se rechazan. Seguridad en la capa de negocio | Unitario con Spring Security (sin MongoDB) | 6 | 🔍 En revisión (6, AB#419, PR pendiente) |
-| HU44-CP20 | `GET /api/perfil/incidencias` responde 200 con la página `{items, page, size, totalItems, totalPages}` sin el autor; `page` empieza en 1 y `size` vale 10 por defecto | Controlador | 4 | 🔍 En revisión (4, AB#419, PR pendiente) |
-| HU44-CP21 | Una página o un tamaño fuera de rango, o una página que no es un número, responden 400 | Controlador | 2 | 🔍 En revisión (2, AB#419, PR pendiente) |
-| HU44-CP22 | Sin sesión consultar responde 401 y el administrador recibe 403 `ACCESS_DENIED` | Controlador | 2 | 🔍 En revisión (2, AB#419, PR pendiente) |
-| HU44-CP23 | Las llamadas del frontend piden `GET /api/perfil/incidencias?page&size` y `POST /api/perfil/incidencias` con el asunto y la descripción; un 400 o un 403 llegan como error con su estado y su código | Frontend (API) | 4 | 🔍 En revisión (4, AB#289, PR pendiente) |
-| HU44-CP24 | El asunto y la descripción son obligatorios (no valen vacíos ni solo espacios), con un máximo de 100 y 1000 caracteres que no cuenta los espacios de los extremos | Frontend (utilidad) | 8 | 🔍 En revisión (8, AB#289, PR pendiente) |
-| HU44-CP25 | El estado de cada incidencia se muestra como Pendiente o Abierta, en un badge de su color; un estado desconocido se muestra tal cual | Frontend (utilidad y componente) | 4 | 🔍 En revisión (4, AB#289, PR pendiente) |
-| HU44-CP26 | Las incidencias se muestran como la lista de pedidos, una tarjeta cada una, con asunto, fecha de creación en hora local, estado, descripción completa y respuesta del administrador («Sin respuesta todavía» si está vacía), sin ningún botón | Frontend (componente) | 7 | 🔍 En revisión (7, AB#289, PR pendiente) |
-| HU44-CP27 | Mis incidencias abre en la última página (la de las más recientes), con paginación, estados de carga, error con reintentar y lista vacía que invita a reportar la primera | Frontend (página) | 8 | 🔍 En revisión (8, AB#289, PR pendiente) |
-| HU44-CP28 | El botón Nueva incidencia (y reportar la primera, si no hay ninguna) lleva al formulario | Frontend (página) | 2 | 🔍 En revisión (2, AB#289, PR pendiente) |
-| HU44-CP29 | El formulario pide asunto y descripción con contador de caracteres, avisa en cada campo (obligatorio, máximo) y envía los textos sin espacios en los extremos; un formulario no válido no llama al servidor | Frontend (componente y página) | 11 | 🔍 En revisión (11, AB#289, PR pendiente) |
-| HU44-CP30 | Al crear la incidencia se avisa del éxito y se vuelve a la lista con la incidencia nueva visible, en la última página; mientras se envía, el botón queda deshabilitado | Frontend (página) | 3 | 🔍 En revisión (3, AB#289, PR pendiente) |
-| HU44-CP31 | Un 400 o un error de red avisan sin salir del formulario y conservan lo escrito, se puede reenviar y cancelar vuelve a la lista sin crear nada | Frontend (página) | 4 | 🔍 En revisión (4, AB#289, PR pendiente) |
-| HU44-CP32 | El cliente ve el botón Incidencias en la cabecera, un enlace con foco de teclado que lleva a Mis incidencias | Frontend (página) | 2 | 🔍 En revisión (2, AB#289, PR pendiente) |
-| HU44-CP33 | El vendedor ve el botón Incidencias, abre su vista y crea incidencias; el administrador y el invitado no lo ven y las rutas de incidencias los redirigen | Frontend (página) | 6 | 🔍 En revisión (6, AB#290, PR pendiente) |
+| HU44-CP01 | Una incidencia se crea con autor, asunto, descripción, estado, respuesta y fecha; una nueva nace PENDIENTE, sin id y sin respuesta | Unitario (dominio) | 2 | ✅ Pasa (2, AB#291, PR #224) |
+| HU44-CP02 | El asunto y la descripción son obligatorios (no valen vacíos ni solo espacios) | Unitario (dominio) | 2 | ✅ Pasa (2, AB#291, PR #224) |
+| HU44-CP03 | El asunto, la descripción y la respuesta se guardan sin espacios en los extremos; la respuesta es opcional y, si falta, queda vacía | Unitario (dominio) | 2 | ✅ Pasa (2, AB#291, PR #224) |
+| HU44-CP04 | El asunto admite hasta 100 caracteres y la descripción hasta 1000 (sin contar los espacios de los extremos); más se rechaza | Unitario (dominio) | 4 | ✅ Pasa (4, AB#291, PR #224) |
+| HU44-CP05 | La incidencia necesita un autor, un estado y una fecha de creación | Unitario (dominio) | 3 | ✅ Pasa (3, AB#291, PR #224) |
+| HU44-CP06 | El mapper pasa la incidencia a documento y vuelve sin perder datos; sin respuesta se lee vacía y un documento que incumple el dominio se rechaza | Unitario (mapper) | 4 | ✅ Pasa (4, AB#291, PR #224) |
+| HU44-CP07 | El adaptador de MongoDB guarda la incidencia con un id nuevo, el autor como `usuarioId` y el estado como texto; un usuario puede tener varias | Integración MongoDB | 3 | ✅ Pasa (3, AB#291, PR #224) |
+| HU44-CP08 | El servicio crea la incidencia del usuario en sesión (cliente o vendedor), pendiente y con la fecha del reloj, y la guarda una sola vez | Unitario (aplicación) | 3 | ✅ Pasa (3, AB#293, PR #224) |
+| HU44-CP09 | El servicio guarda asunto y descripción sin espacios en los extremos y rechaza uno vacío sin guardar nada | Unitario (aplicación) | 3 | ✅ Pasa (3, AB#293, PR #224) |
+| HU44-CP10 | Solo cliente y vendedor crean incidencias y solo con su propio correo; administrador y sin sesión se rechazan. Seguridad en la capa de negocio | Unitario con Spring Security (sin MongoDB) | 6 | ✅ Pasa (6, AB#293, PR #224) |
+| HU44-CP11 | La colección `incidencias` valida asunto (1 a 100), descripción (1 a 1000), estado (PENDIENTE o ABIERTA), usuario y fecha, y admite varias por usuario | Integración MongoDB | 3 | ✅ Pasa (3, AB#291, PR #224) |
+| HU44-CP12 | El adaptador hacia el módulo de usuarios obtiene el id del cliente o del vendedor en sesión a partir de su correo | Unitario (adaptador) | 2 | ✅ Pasa (2, AB#293, PR #224) |
+| HU44-CP13 | `POST /api/perfil/incidencias` crea la incidencia del usuario en sesión (cliente o vendedor) y responde 201 con ella | Controlador | 2 | ✅ Pasa (2, AB#292, PR #224) |
+| HU44-CP14 | Una incidencia inválida, un cuerpo vacío o un cuerpo ilegible responden 400 `VALIDATION_ERROR` con un mensaje genérico | Controlador | 3 | ✅ Pasa (3, AB#292, PR #224) |
+| HU44-CP15 | Sin sesión crear responde 401; el administrador, 403 `ACCESS_DENIED`; sin token CSRF se rechaza | Controlador | 3 | ✅ Pasa (3, AB#292, PR #224) |
+| HU44-CP16 | Buscar por autor devuelve solo sus incidencias, por páginas, de las más antiguas a las más recientes, con orden estable y con el total | Integración MongoDB | 5 | ✅ Pasa (5, AB#419, PR #224) |
+| HU44-CP17 | El servicio consulta las incidencias del usuario en sesión (cliente o vendedor) con la página y el tamaño pedidos | Unitario (aplicación) | 2 | ✅ Pasa (2, AB#419, PR #224) |
+| HU44-CP18 | El servicio admite la primera página y los tamaños de 1 a 50 y rechaza una página negativa o un tamaño fuera de rango sin consultar nada | Unitario (aplicación) | 2 | ✅ Pasa (2, AB#419, PR #224) |
+| HU44-CP19 | Solo cliente y vendedor consultan sus incidencias y solo con su propio correo; administrador y sin sesión se rechazan. Seguridad en la capa de negocio | Unitario con Spring Security (sin MongoDB) | 6 | ✅ Pasa (6, AB#419, PR #224) |
+| HU44-CP20 | `GET /api/perfil/incidencias` responde 200 con la página `{items, page, size, totalItems, totalPages}` sin el autor; `page` empieza en 1 y `size` vale 10 por defecto | Controlador | 4 | ✅ Pasa (4, AB#419, PR #224) |
+| HU44-CP21 | Una página o un tamaño fuera de rango, o una página que no es un número, responden 400 | Controlador | 2 | ✅ Pasa (2, AB#419, PR #224) |
+| HU44-CP22 | Sin sesión consultar responde 401 y el administrador recibe 403 `ACCESS_DENIED` | Controlador | 2 | ✅ Pasa (2, AB#419, PR #224) |
+| HU44-CP23 | Las llamadas del frontend piden `GET /api/perfil/incidencias?page&size` y `POST /api/perfil/incidencias` con el asunto y la descripción; un 400 o un 403 llegan como error con su estado y su código | Frontend (API) | 4 | ✅ Pasa (4, AB#289, PR #226) |
+| HU44-CP24 | El asunto y la descripción son obligatorios (no valen vacíos ni solo espacios), con un máximo de 100 y 1000 caracteres que no cuenta los espacios de los extremos | Frontend (utilidad) | 8 | ✅ Pasa (8, AB#289, PR #226) |
+| HU44-CP25 | El estado de cada incidencia se muestra como Pendiente o Abierta, en un badge de su color; un estado desconocido se muestra tal cual | Frontend (utilidad y componente) | 4 | ✅ Pasa (4, AB#289, PR #226) |
+| HU44-CP26 | Las incidencias se muestran como la lista de pedidos, una tarjeta cada una, con asunto, fecha de creación en hora local, estado, descripción completa y respuesta del administrador («Sin respuesta todavía» si está vacía), sin ningún botón | Frontend (componente) | 7 | ✅ Pasa (7, AB#289, PR #226) |
+| HU44-CP27 | Mis incidencias abre en la última página (la de las más recientes), con paginación, estados de carga, error con reintentar y lista vacía que invita a reportar la primera | Frontend (página) | 8 | ✅ Pasa (8, AB#289, PR #226) |
+| HU44-CP28 | El botón Nueva incidencia (y reportar la primera, si no hay ninguna) lleva al formulario | Frontend (página) | 2 | ✅ Pasa (2, AB#289, PR #226) |
+| HU44-CP29 | El formulario pide asunto y descripción con contador de caracteres, avisa en cada campo (obligatorio, máximo) y envía los textos sin espacios en los extremos; un formulario no válido no llama al servidor | Frontend (componente y página) | 11 | ✅ Pasa (11, AB#289, PR #226) |
+| HU44-CP30 | Al crear la incidencia se avisa del éxito y se vuelve a la lista con la incidencia nueva visible, en la última página; mientras se envía, el botón queda deshabilitado | Frontend (página) | 3 | ✅ Pasa (3, AB#289, PR #226) |
+| HU44-CP31 | Un 400 o un error de red avisan sin salir del formulario y conservan lo escrito, se puede reenviar y cancelar vuelve a la lista sin crear nada | Frontend (página) | 4 | ✅ Pasa (4, AB#289, PR #226) |
+| HU44-CP32 | El cliente ve el botón Incidencias en la cabecera, un enlace con foco de teclado que lleva a Mis incidencias | Frontend (página) | 2 | ✅ Pasa (2, AB#289, PR #226) |
+| HU44-CP33 | El vendedor ve el botón Incidencias, abre su vista y crea incidencias; el administrador y el invitado no lo ven y las rutas de incidencias los redirigen | Frontend (página) | 6 | ✅ Pasa (6, AB#290, PR #226) |
 
 Notas:
 - **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** HU44-CP01 a CP22 los propone el desarrollo backend a partir de los criterios de la HU44 y no salen de Azure Boards. Rama `feature/US44-T291-T293-T292-T419-incidencias`.
@@ -4008,133 +4008,133 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU44-CP01 | `IncidenciaTest` | `HU44-CP01: crea una incidencia con sus datos` | Dominio | AB#291 | PR pendiente | 🔍 |
-| HU44-CP01 | `IncidenciaTest` | `HU44-CP01: una incidencia nueva nace pendiente, sin id y sin respuesta` | Dominio | AB#291 | PR pendiente | 🔍 |
-| HU44-CP02 | `IncidenciaTest` | `HU44-CP02: el asunto es obligatorio` | Dominio | AB#291 | PR pendiente | 🔍 |
-| HU44-CP02 | `IncidenciaTest` | `HU44-CP02: la descripción es obligatoria` | Dominio | AB#291 | PR pendiente | 🔍 |
-| HU44-CP03 | `IncidenciaTest` | `HU44-CP03: el asunto, la descripción y la respuesta se guardan sin espacios en los extremos` | Dominio | AB#291 | PR pendiente | 🔍 |
-| HU44-CP03 | `IncidenciaTest` | `HU44-CP03: la respuesta es opcional: si falta, queda vacía` | Dominio | AB#291 | PR pendiente | 🔍 |
-| HU44-CP04 | `IncidenciaTest` | `HU44-CP04: el asunto admite hasta 100 caracteres y la descripción hasta 1000` | Dominio | AB#291 | PR pendiente | 🔍 |
-| HU44-CP04 | `IncidenciaTest` | `HU44-CP04: no cuentan los espacios de los extremos para el máximo` | Dominio | AB#291 | PR pendiente | 🔍 |
-| HU44-CP04 | `IncidenciaTest` | `HU44-CP04: rechaza un asunto de más de 100 caracteres` | Dominio | AB#291 | PR pendiente | 🔍 |
-| HU44-CP04 | `IncidenciaTest` | `HU44-CP04: rechaza una descripción de más de 1000 caracteres` | Dominio | AB#291 | PR pendiente | 🔍 |
-| HU44-CP05 | `IncidenciaTest` | `HU44-CP05: la incidencia necesita un autor` | Dominio | AB#291 | PR pendiente | 🔍 |
-| HU44-CP05 | `IncidenciaTest` | `HU44-CP05: la incidencia necesita una fecha de creación` | Dominio | AB#291 | PR pendiente | 🔍 |
-| HU44-CP05 | `IncidenciaTest` | `HU44-CP05: la incidencia necesita un estado` | Dominio | AB#291 | PR pendiente | 🔍 |
-| HU44-CP06 | `IncidenciaDocumentMapperTest` | `HU44-CP06: una incidencia pasa a documento y vuelve sin perder ningún dato` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
-| HU44-CP06 | `IncidenciaDocumentMapperTest` | `HU44-CP06: una incidencia nueva pasa a documento sin id, pendiente y sin respuesta` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
-| HU44-CP06 | `IncidenciaDocumentMapperTest` | `HU44-CP06: un documento sin respuesta se lee con la respuesta vacía` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
-| HU44-CP06 | `IncidenciaDocumentMapperTest` | `HU44-CP06: un documento que no cumple las reglas del dominio se rechaza al leerlo` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
-| HU44-CP07 | `IncidenciaMongoAdapterTest` | `HU44-CP07: guardar una incidencia nueva le asigna un id y devuelve sus datos` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
-| HU44-CP07 | `IncidenciaMongoAdapterTest` | `HU44-CP07: en la colección el autor se guarda como usuarioId y el estado como texto` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
-| HU44-CP07 | `IncidenciaMongoAdapterTest` | `HU44-CP07: un mismo usuario puede guardar varias incidencias` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
-| HU44-CP08 | `CreacionIncidenciasServiceTest` | `HU44-CP08: crea la incidencia del cliente en sesión, pendiente y con la fecha del reloj` | Aplicación | AB#293 | PR pendiente | 🔍 |
-| HU44-CP08 | `CreacionIncidenciasServiceTest` | `HU44-CP08: un vendedor también crea incidencias: el autor es el vendedor en sesión` | Aplicación | AB#293 | PR pendiente | 🔍 |
-| HU44-CP08 | `CreacionIncidenciasServiceTest` | `HU44-CP08: guarda una sola incidencia y devuelve la guardada` | Aplicación | AB#293 | PR pendiente | 🔍 |
-| HU44-CP09 | `CreacionIncidenciasServiceTest` | `HU44-CP09: el asunto y la descripción se guardan sin espacios en los extremos` | Aplicación | AB#293 | PR pendiente | 🔍 |
-| HU44-CP09 | `CreacionIncidenciasServiceTest` | `HU44-CP09: un asunto vacío se rechaza y no se guarda nada` | Aplicación | AB#293 | PR pendiente | 🔍 |
-| HU44-CP09 | `CreacionIncidenciasServiceTest` | `HU44-CP09: una descripción vacía se rechaza y no se guarda nada` | Aplicación | AB#293 | PR pendiente | 🔍 |
-| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: el cliente crea una incidencia con su propio correo` | Aplicación · seguridad | AB#293 | PR pendiente | 🔍 |
-| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: el vendedor crea una incidencia con su propio correo` | Aplicación · seguridad | AB#293 | PR pendiente | 🔍 |
-| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: un cliente no crea una incidencia con el correo de otro usuario` | Aplicación · seguridad | AB#293 | PR pendiente | 🔍 |
-| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: un vendedor no crea una incidencia con el correo de otro usuario` | Aplicación · seguridad | AB#293 | PR pendiente | 🔍 |
-| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: un administrador no crea incidencias, ni siquiera con su propio correo` | Aplicación · seguridad | AB#293 | PR pendiente | 🔍 |
-| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: sin sesión se rechaza` | Aplicación · seguridad | AB#293 | PR pendiente | 🔍 |
-| HU44-CP11 | `InicializadorColeccionesTest` | `HU44-CP11: la colección incidencias admite incidencias válidas, varias por usuario y con los máximos` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
-| HU44-CP11 | `InicializadorColeccionesTest` | `HU44-CP11: la colección incidencias rechaza un asunto o una descripción vacíos o demasiado largos` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
-| HU44-CP11 | `InicializadorColeccionesTest` | `HU44-CP11: la colección incidencias rechaza un estado que no existe y una incidencia sin usuario` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
-| HU44-CP12 | `AutorEnSesionAdapterTest` | `HU44-CP12: el id del cliente que reporta se pide al módulo de usuarios` | Infraestructura · adaptador | AB#293 | PR pendiente | 🔍 |
-| HU44-CP12 | `AutorEnSesionAdapterTest` | `HU44-CP12: el id del vendedor que reporta se pide al módulo de usuarios` | Infraestructura · adaptador | AB#293 | PR pendiente | 🔍 |
-| HU44-CP13 | `IncidenciaControllerTest` | `HU44-CP13: crear una incidencia responde 201 con la incidencia creada, con el cliente de la sesión` | Infraestructura · controlador | AB#292 | PR pendiente | 🔍 |
-| HU44-CP13 | `IncidenciaControllerTest` | `HU44-CP13: un vendedor también crea incidencias: el caso de uso recibe su correo` | Infraestructura · controlador | AB#292 | PR pendiente | 🔍 |
-| HU44-CP14 | `IncidenciaControllerTest` | `HU44-CP14: una incidencia que no cumple las reglas responde 400 VALIDATION_ERROR con un mensaje genérico` | Infraestructura · controlador | AB#292 | PR pendiente | 🔍 |
-| HU44-CP14 | `IncidenciaControllerTest` | `HU44-CP14: un cuerpo sin asunto ni descripción llega al caso de uso vacío y responde 400` | Infraestructura · controlador | AB#292 | PR pendiente | 🔍 |
-| HU44-CP14 | `IncidenciaControllerTest` | `HU44-CP14: un cuerpo que no se puede leer responde 400 VALIDATION_ERROR y no llega al caso de uso` | Infraestructura · controlador | AB#292 | PR pendiente | 🔍 |
-| HU44-CP15 | `IncidenciaControllerTest` | `HU44-CP15: sin sesión crear una incidencia responde 401` | Infraestructura · controlador | AB#292 | PR pendiente | 🔍 |
-| HU44-CP15 | `IncidenciaControllerTest` | `HU44-CP15: el administrador no crea incidencias: responde 403 con el code ACCESS_DENIED` | Infraestructura · controlador | AB#292 | PR pendiente | 🔍 |
-| HU44-CP15 | `IncidenciaControllerTest` | `HU44-CP15: sin token CSRF la petición se rechaza` | Infraestructura · controlador | AB#292 | PR pendiente | 🔍 |
-| HU44-CP16 | `IncidenciaMongoAdapterTest` | `HU44-CP16: buscar por autor devuelve solo sus incidencias, de las más antiguas a las más recientes` | Infraestructura · persistencia | AB#419 | PR pendiente | 🔍 |
-| HU44-CP16 | `IncidenciaMongoAdapterTest` | `HU44-CP16: devuelve una página cada vez, con el total de todas` | Infraestructura · persistencia | AB#419 | PR pendiente | 🔍 |
-| HU44-CP16 | `IncidenciaMongoAdapterTest` | `HU44-CP16: con la misma fecha conserva el orden en que se guardaron, para que las páginas sean estables` | Infraestructura · persistencia | AB#419 | PR pendiente | 🔍 |
-| HU44-CP16 | `IncidenciaMongoAdapterTest` | `HU44-CP16: una página más allá de la última viene vacía, pero con el total` | Infraestructura · persistencia | AB#419 | PR pendiente | 🔍 |
-| HU44-CP16 | `IncidenciaMongoAdapterTest` | `HU44-CP16: un autor sin incidencias recibe una página vacía` | Infraestructura · persistencia | AB#419 | PR pendiente | 🔍 |
-| HU44-CP17 | `ConsultaIncidenciasServiceTest` | `HU44-CP17: consulta las incidencias del cliente en sesión, con la página y el tamaño pedidos` | Aplicación | AB#419 | PR pendiente | 🔍 |
-| HU44-CP17 | `ConsultaIncidenciasServiceTest` | `HU44-CP17: un vendedor consulta las suyas: el autor es el vendedor en sesión` | Aplicación | AB#419 | PR pendiente | 🔍 |
-| HU44-CP18 | `ConsultaIncidenciasServiceTest` | `HU44-CP18: admite la primera página y los tamaños de 1 a 50` | Aplicación | AB#419 | PR pendiente | 🔍 |
-| HU44-CP18 | `ConsultaIncidenciasServiceTest` | `HU44-CP18: rechaza una página negativa y un tamaño menor que 1 o mayor que 50, sin consultar nada` | Aplicación | AB#419 | PR pendiente | 🔍 |
-| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: el cliente consulta sus incidencias con su propio correo` | Aplicación · seguridad | AB#419 | PR pendiente | 🔍 |
-| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: el vendedor consulta sus incidencias con su propio correo` | Aplicación · seguridad | AB#419 | PR pendiente | 🔍 |
-| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: un cliente no consulta las incidencias con el correo de otro usuario` | Aplicación · seguridad | AB#419 | PR pendiente | 🔍 |
-| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: un vendedor no consulta las incidencias con el correo de otro usuario` | Aplicación · seguridad | AB#419 | PR pendiente | 🔍 |
-| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: un administrador no consulta incidencias por aquí, ni siquiera con su propio correo` | Aplicación · seguridad | AB#419 | PR pendiente | 🔍 |
-| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: sin sesión no se consultan las incidencias` | Aplicación · seguridad | AB#419 | PR pendiente | 🔍 |
-| HU44-CP20 | `IncidenciaControllerTest` | `HU44-CP20: consultar las incidencias responde 200 con la página, sin el autor, y por defecto pide la 1 de tamaño 10` | Infraestructura · controlador | AB#419 | PR pendiente | 🔍 |
-| HU44-CP20 | `IncidenciaControllerTest` | `HU44-CP20: la página empieza en 1: page=3 y size=2 piden la página 2 (desde 0) y se devuelve con page 3` | Infraestructura · controlador | AB#419 | PR pendiente | 🔍 |
-| HU44-CP20 | `IncidenciaControllerTest` | `HU44-CP20: sin incidencias responde 200 con una lista vacía y cero páginas` | Infraestructura · controlador | AB#419 | PR pendiente | 🔍 |
-| HU44-CP20 | `IncidenciaControllerTest` | `HU44-CP20: un vendedor también consulta las suyas: el caso de uso recibe su correo` | Infraestructura · controlador | AB#419 | PR pendiente | 🔍 |
-| HU44-CP21 | `IncidenciaControllerTest` | `HU44-CP21: una página o un tamaño que el caso de uso rechaza responden 400 VALIDATION_ERROR` | Infraestructura · controlador | AB#419 | PR pendiente | 🔍 |
-| HU44-CP21 | `IncidenciaControllerTest` | `HU44-CP21: una página que no es un número responde 400 y no llega al caso de uso` | Infraestructura · controlador | AB#419 | PR pendiente | 🔍 |
-| HU44-CP22 | `IncidenciaControllerTest` | `HU44-CP22: sin sesión consultar las incidencias responde 401` | Infraestructura · controlador | AB#419 | PR pendiente | 🔍 |
-| HU44-CP22 | `IncidenciaControllerTest` | `HU44-CP22: el administrador no consulta incidencias por aquí: responde 403 con el code ACCESS_DENIED` | Infraestructura · controlador | AB#419 | PR pendiente | 🔍 |
-| HU44-CP23 | `incidents.test.js` | `HU44-CP23: pide GET /api/perfil/incidencias con la página y el tamaño y devuelve la página` | Frontend · API | AB#289 | PR pendiente | 🔍 |
-| HU44-CP23 | `incidents.test.js` | `HU44-CP23: un 403 llega como error con su estado y su código` | Frontend · API | AB#289 | PR pendiente | 🔍 |
-| HU44-CP23 | `incidents.test.js` | `HU44-CP23: pide POST /api/perfil/incidencias con el asunto y la descripción y devuelve la incidencia` | Frontend · API | AB#289 | PR pendiente | 🔍 |
-| HU44-CP23 | `incidents.test.js` | `HU44-CP23: un 400 llega como error con su estado y su código` | Frontend · API | AB#289 | PR pendiente | 🔍 |
-| HU44-CP24 | `incidentRules.test.js` | `HU44-CP24: una incidencia con asunto y descripción dentro de los límites no tiene errores` | Frontend · utilidad | AB#289 | PR pendiente | 🔍 |
-| HU44-CP24 | `incidentRules.test.js` | `HU44-CP24: un asunto %s es obligatorio` (2 variantes: vacío y con solo espacios) | Frontend · utilidad | AB#289 | PR pendiente | 🔍 |
-| HU44-CP24 | `incidentRules.test.js` | `HU44-CP24: una descripción %s es obligatoria` (2 variantes: vacía y con solo espacios) | Frontend · utilidad | AB#289 | PR pendiente | 🔍 |
-| HU44-CP24 | `incidentRules.test.js` | `HU44-CP24: los límites son 100 caracteres para el asunto y 1000 para la descripción` | Frontend · utilidad | AB#289 | PR pendiente | 🔍 |
-| HU44-CP24 | `incidentRules.test.js` | `HU44-CP24: el asunto admite 100 caracteres y rechaza 101` | Frontend · utilidad | AB#289 | PR pendiente | 🔍 |
-| HU44-CP24 | `incidentRules.test.js` | `HU44-CP24: la descripción admite 1000 caracteres y rechaza 1001` | Frontend · utilidad | AB#289 | PR pendiente | 🔍 |
-| HU44-CP24 | `incidentRules.test.js` | `HU44-CP24: los espacios de los extremos no cuentan para el máximo` | Frontend · utilidad | AB#289 | PR pendiente | 🔍 |
-| HU44-CP24 | `incidentRules.test.js` | `HU44-CP24: informa del asunto y de la descripción a la vez` | Frontend · utilidad | AB#289 | PR pendiente | 🔍 |
-| HU44-CP25 | `incidentStatus.test.js` | `HU44-CP25: PENDIENTE se muestra como Pendiente y ABIERTA como Abierta` | Frontend · utilidad | AB#289 | PR pendiente | 🔍 |
-| HU44-CP25 | `incidentStatus.test.js` | `HU44-CP25: un estado que el frontend no conoce se muestra tal cual` | Frontend · utilidad | AB#289 | PR pendiente | 🔍 |
-| HU44-CP25 | `incidentStatus.test.js` | `HU44-CP25: cada estado tiene su color: pendiente en aviso y abierta en la marca` | Frontend · utilidad | AB#289 | PR pendiente | 🔍 |
-| HU44-CP25 | `IncidentsList.test.jsx` | `HU44-CP25: el estado de cada incidencia se muestra en un badge: Pendiente o Abierta` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: la lista tiene un elemento por incidencia, en el orden en que llegan` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: cada incidencia muestra su asunto, su descripción completa, su respuesta y su fecha` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: la fecha se muestra en hora local y su atributo datetime conserva la fecha del servidor` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: una descripción larga se muestra entera` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: sin respuesta, la incidencia dice Sin respuesta todavía` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: la lista no tiene ningún botón: el usuario no cierra incidencias` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: mientras se recarga, la lista avisa con aria-busy` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: abre en la última página, la de las incidencias más recientes` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: pide la primera página para saber cuántas hay y después la última` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: la paginación lleva a la página anterior y a la siguiente` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: con una sola página no hay paginación y se ven todas, con el estado y la respuesta` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: mientras carga muestra un indicador de carga y no la lista` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: si no se pueden cargar lo avisa y permite reintentar` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: sin incidencias invita a reportar la primera` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: el título y el subtítulo explican la vista` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP28 | `IncidentsPage.test.jsx` | `HU44-CP28: el botón Nueva incidencia lleva al formulario` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP28 | `IncidentsPage.test.jsx` | `HU44-CP28: sin incidencias, reportar la primera también lleva al formulario` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: pide el asunto y la descripción, obligatorios, con su contador de caracteres` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: el contador cuenta lo escrito sin los espacios de los extremos` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: enviar vacío marca los dos campos, con su mensaje, y no envía nada` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: un asunto o una descripción con solo espacios se tratan como vacíos` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: pasarse del máximo avisa al momento y no deja enviar` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: 100 caracteres de asunto y 1000 de descripción valen, aunque lleven espacios en los extremos` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: el aviso de un campo desaparece al corregirlo` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: al enviar entrega el asunto y la descripción sin espacios en los extremos` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: mientras se envía, el botón queda deshabilitado y no se envía dos veces` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: si el envío falla, muestra el aviso y conserva lo escrito` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP29 | `NewIncidentPage.test.jsx` | `HU44-CP29: un formulario no válido no llama al servidor` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP30 | `NewIncidentPage.test.jsx` | `HU44-CP30: crear la incidencia avisa del éxito y vuelve a la lista con la incidencia nueva visible` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP30 | `NewIncidentPage.test.jsx` | `HU44-CP30: se envían el asunto y la descripción sin espacios en los extremos y sin ningún autor` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP30 | `NewIncidentPage.test.jsx` | `HU44-CP30: mientras se envía, el botón queda deshabilitado` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP31 | `NewIncidentPage.test.jsx` | `HU44-CP31: un 400 avisa con un mensaje genérico, no sale del formulario y conserva lo escrito` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP31 | `NewIncidentPage.test.jsx` | `HU44-CP31: un error de red avisa de la conexión y conserva lo escrito` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP31 | `NewIncidentPage.test.jsx` | `HU44-CP31: tras un fallo se puede volver a enviar y se crea la incidencia` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP31 | `NewIncidentPage.test.jsx` | `HU44-CP31: cancelar vuelve a la lista sin crear nada` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP32 | `AppHeader.test.jsx` | `HU44-CP32: el cliente ve el botón Incidencias en la cabecera y lleva a Mis incidencias` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP32 | `AppHeader.test.jsx` | `HU44-CP32: el botón Incidencias es un enlace con su destino, que recibe el foco con el teclado` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP33 | `NewIncidentPage.test.jsx` | `HU44-CP33: un vendedor sin incidencias crea la primera y la ve en su lista` | Frontend · página | AB#290 | PR pendiente | 🔍 |
-| HU44-CP33 | `AppHeader.test.jsx` | `HU44-CP33: el vendedor ve el botón Incidencias y lleva a Mis incidencias` | Frontend · página | AB#290 | PR pendiente | 🔍 |
-| HU44-CP33 | `AppHeader.test.jsx` | `HU44-CP33: el administrador no ve el botón Incidencias` | Frontend · página | AB#290 | PR pendiente | 🔍 |
-| HU44-CP33 | `AppHeader.test.jsx` | `HU44-CP33: sin sesión no se ve el botón Incidencias` | Frontend · página | AB#290 | PR pendiente | 🔍 |
-| HU44-CP33 | `AppHeader.test.jsx` | `HU44-CP33: el administrador que abre Mis incidencias o Nueva incidencia vuelve a su panel` | Frontend · página | AB#290 | PR pendiente | 🔍 |
-| HU44-CP33 | `AppHeader.test.jsx` | `HU44-CP33: sin sesión, Mis incidencias lleva al login` | Frontend · página | AB#290 | PR pendiente | 🔍 |
+| HU44-CP01 | `IncidenciaTest` | `HU44-CP01: crea una incidencia con sus datos` | Dominio | AB#291 | PR #224 | ✅ |
+| HU44-CP01 | `IncidenciaTest` | `HU44-CP01: una incidencia nueva nace pendiente, sin id y sin respuesta` | Dominio | AB#291 | PR #224 | ✅ |
+| HU44-CP02 | `IncidenciaTest` | `HU44-CP02: el asunto es obligatorio` | Dominio | AB#291 | PR #224 | ✅ |
+| HU44-CP02 | `IncidenciaTest` | `HU44-CP02: la descripción es obligatoria` | Dominio | AB#291 | PR #224 | ✅ |
+| HU44-CP03 | `IncidenciaTest` | `HU44-CP03: el asunto, la descripción y la respuesta se guardan sin espacios en los extremos` | Dominio | AB#291 | PR #224 | ✅ |
+| HU44-CP03 | `IncidenciaTest` | `HU44-CP03: la respuesta es opcional: si falta, queda vacía` | Dominio | AB#291 | PR #224 | ✅ |
+| HU44-CP04 | `IncidenciaTest` | `HU44-CP04: el asunto admite hasta 100 caracteres y la descripción hasta 1000` | Dominio | AB#291 | PR #224 | ✅ |
+| HU44-CP04 | `IncidenciaTest` | `HU44-CP04: no cuentan los espacios de los extremos para el máximo` | Dominio | AB#291 | PR #224 | ✅ |
+| HU44-CP04 | `IncidenciaTest` | `HU44-CP04: rechaza un asunto de más de 100 caracteres` | Dominio | AB#291 | PR #224 | ✅ |
+| HU44-CP04 | `IncidenciaTest` | `HU44-CP04: rechaza una descripción de más de 1000 caracteres` | Dominio | AB#291 | PR #224 | ✅ |
+| HU44-CP05 | `IncidenciaTest` | `HU44-CP05: la incidencia necesita un autor` | Dominio | AB#291 | PR #224 | ✅ |
+| HU44-CP05 | `IncidenciaTest` | `HU44-CP05: la incidencia necesita una fecha de creación` | Dominio | AB#291 | PR #224 | ✅ |
+| HU44-CP05 | `IncidenciaTest` | `HU44-CP05: la incidencia necesita un estado` | Dominio | AB#291 | PR #224 | ✅ |
+| HU44-CP06 | `IncidenciaDocumentMapperTest` | `HU44-CP06: una incidencia pasa a documento y vuelve sin perder ningún dato` | Infraestructura · persistencia | AB#291 | PR #224 | ✅ |
+| HU44-CP06 | `IncidenciaDocumentMapperTest` | `HU44-CP06: una incidencia nueva pasa a documento sin id, pendiente y sin respuesta` | Infraestructura · persistencia | AB#291 | PR #224 | ✅ |
+| HU44-CP06 | `IncidenciaDocumentMapperTest` | `HU44-CP06: un documento sin respuesta se lee con la respuesta vacía` | Infraestructura · persistencia | AB#291 | PR #224 | ✅ |
+| HU44-CP06 | `IncidenciaDocumentMapperTest` | `HU44-CP06: un documento que no cumple las reglas del dominio se rechaza al leerlo` | Infraestructura · persistencia | AB#291 | PR #224 | ✅ |
+| HU44-CP07 | `IncidenciaMongoAdapterTest` | `HU44-CP07: guardar una incidencia nueva le asigna un id y devuelve sus datos` | Infraestructura · persistencia | AB#291 | PR #224 | ✅ |
+| HU44-CP07 | `IncidenciaMongoAdapterTest` | `HU44-CP07: en la colección el autor se guarda como usuarioId y el estado como texto` | Infraestructura · persistencia | AB#291 | PR #224 | ✅ |
+| HU44-CP07 | `IncidenciaMongoAdapterTest` | `HU44-CP07: un mismo usuario puede guardar varias incidencias` | Infraestructura · persistencia | AB#291 | PR #224 | ✅ |
+| HU44-CP08 | `CreacionIncidenciasServiceTest` | `HU44-CP08: crea la incidencia del cliente en sesión, pendiente y con la fecha del reloj` | Aplicación | AB#293 | PR #224 | ✅ |
+| HU44-CP08 | `CreacionIncidenciasServiceTest` | `HU44-CP08: un vendedor también crea incidencias: el autor es el vendedor en sesión` | Aplicación | AB#293 | PR #224 | ✅ |
+| HU44-CP08 | `CreacionIncidenciasServiceTest` | `HU44-CP08: guarda una sola incidencia y devuelve la guardada` | Aplicación | AB#293 | PR #224 | ✅ |
+| HU44-CP09 | `CreacionIncidenciasServiceTest` | `HU44-CP09: el asunto y la descripción se guardan sin espacios en los extremos` | Aplicación | AB#293 | PR #224 | ✅ |
+| HU44-CP09 | `CreacionIncidenciasServiceTest` | `HU44-CP09: un asunto vacío se rechaza y no se guarda nada` | Aplicación | AB#293 | PR #224 | ✅ |
+| HU44-CP09 | `CreacionIncidenciasServiceTest` | `HU44-CP09: una descripción vacía se rechaza y no se guarda nada` | Aplicación | AB#293 | PR #224 | ✅ |
+| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: el cliente crea una incidencia con su propio correo` | Aplicación · seguridad | AB#293 | PR #224 | ✅ |
+| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: el vendedor crea una incidencia con su propio correo` | Aplicación · seguridad | AB#293 | PR #224 | ✅ |
+| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: un cliente no crea una incidencia con el correo de otro usuario` | Aplicación · seguridad | AB#293 | PR #224 | ✅ |
+| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: un vendedor no crea una incidencia con el correo de otro usuario` | Aplicación · seguridad | AB#293 | PR #224 | ✅ |
+| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: un administrador no crea incidencias, ni siquiera con su propio correo` | Aplicación · seguridad | AB#293 | PR #224 | ✅ |
+| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: sin sesión se rechaza` | Aplicación · seguridad | AB#293 | PR #224 | ✅ |
+| HU44-CP11 | `InicializadorColeccionesTest` | `HU44-CP11: la colección incidencias admite incidencias válidas, varias por usuario y con los máximos` | Infraestructura · persistencia | AB#291 | PR #224 | ✅ |
+| HU44-CP11 | `InicializadorColeccionesTest` | `HU44-CP11: la colección incidencias rechaza un asunto o una descripción vacíos o demasiado largos` | Infraestructura · persistencia | AB#291 | PR #224 | ✅ |
+| HU44-CP11 | `InicializadorColeccionesTest` | `HU44-CP11: la colección incidencias rechaza un estado que no existe y una incidencia sin usuario` | Infraestructura · persistencia | AB#291 | PR #224 | ✅ |
+| HU44-CP12 | `AutorEnSesionAdapterTest` | `HU44-CP12: el id del cliente que reporta se pide al módulo de usuarios` | Infraestructura · adaptador | AB#293 | PR #224 | ✅ |
+| HU44-CP12 | `AutorEnSesionAdapterTest` | `HU44-CP12: el id del vendedor que reporta se pide al módulo de usuarios` | Infraestructura · adaptador | AB#293 | PR #224 | ✅ |
+| HU44-CP13 | `IncidenciaControllerTest` | `HU44-CP13: crear una incidencia responde 201 con la incidencia creada, con el cliente de la sesión` | Infraestructura · controlador | AB#292 | PR #224 | ✅ |
+| HU44-CP13 | `IncidenciaControllerTest` | `HU44-CP13: un vendedor también crea incidencias: el caso de uso recibe su correo` | Infraestructura · controlador | AB#292 | PR #224 | ✅ |
+| HU44-CP14 | `IncidenciaControllerTest` | `HU44-CP14: una incidencia que no cumple las reglas responde 400 VALIDATION_ERROR con un mensaje genérico` | Infraestructura · controlador | AB#292 | PR #224 | ✅ |
+| HU44-CP14 | `IncidenciaControllerTest` | `HU44-CP14: un cuerpo sin asunto ni descripción llega al caso de uso vacío y responde 400` | Infraestructura · controlador | AB#292 | PR #224 | ✅ |
+| HU44-CP14 | `IncidenciaControllerTest` | `HU44-CP14: un cuerpo que no se puede leer responde 400 VALIDATION_ERROR y no llega al caso de uso` | Infraestructura · controlador | AB#292 | PR #224 | ✅ |
+| HU44-CP15 | `IncidenciaControllerTest` | `HU44-CP15: sin sesión crear una incidencia responde 401` | Infraestructura · controlador | AB#292 | PR #224 | ✅ |
+| HU44-CP15 | `IncidenciaControllerTest` | `HU44-CP15: el administrador no crea incidencias: responde 403 con el code ACCESS_DENIED` | Infraestructura · controlador | AB#292 | PR #224 | ✅ |
+| HU44-CP15 | `IncidenciaControllerTest` | `HU44-CP15: sin token CSRF la petición se rechaza` | Infraestructura · controlador | AB#292 | PR #224 | ✅ |
+| HU44-CP16 | `IncidenciaMongoAdapterTest` | `HU44-CP16: buscar por autor devuelve solo sus incidencias, de las más antiguas a las más recientes` | Infraestructura · persistencia | AB#419 | PR #224 | ✅ |
+| HU44-CP16 | `IncidenciaMongoAdapterTest` | `HU44-CP16: devuelve una página cada vez, con el total de todas` | Infraestructura · persistencia | AB#419 | PR #224 | ✅ |
+| HU44-CP16 | `IncidenciaMongoAdapterTest` | `HU44-CP16: con la misma fecha conserva el orden en que se guardaron, para que las páginas sean estables` | Infraestructura · persistencia | AB#419 | PR #224 | ✅ |
+| HU44-CP16 | `IncidenciaMongoAdapterTest` | `HU44-CP16: una página más allá de la última viene vacía, pero con el total` | Infraestructura · persistencia | AB#419 | PR #224 | ✅ |
+| HU44-CP16 | `IncidenciaMongoAdapterTest` | `HU44-CP16: un autor sin incidencias recibe una página vacía` | Infraestructura · persistencia | AB#419 | PR #224 | ✅ |
+| HU44-CP17 | `ConsultaIncidenciasServiceTest` | `HU44-CP17: consulta las incidencias del cliente en sesión, con la página y el tamaño pedidos` | Aplicación | AB#419 | PR #224 | ✅ |
+| HU44-CP17 | `ConsultaIncidenciasServiceTest` | `HU44-CP17: un vendedor consulta las suyas: el autor es el vendedor en sesión` | Aplicación | AB#419 | PR #224 | ✅ |
+| HU44-CP18 | `ConsultaIncidenciasServiceTest` | `HU44-CP18: admite la primera página y los tamaños de 1 a 50` | Aplicación | AB#419 | PR #224 | ✅ |
+| HU44-CP18 | `ConsultaIncidenciasServiceTest` | `HU44-CP18: rechaza una página negativa y un tamaño menor que 1 o mayor que 50, sin consultar nada` | Aplicación | AB#419 | PR #224 | ✅ |
+| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: el cliente consulta sus incidencias con su propio correo` | Aplicación · seguridad | AB#419 | PR #224 | ✅ |
+| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: el vendedor consulta sus incidencias con su propio correo` | Aplicación · seguridad | AB#419 | PR #224 | ✅ |
+| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: un cliente no consulta las incidencias con el correo de otro usuario` | Aplicación · seguridad | AB#419 | PR #224 | ✅ |
+| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: un vendedor no consulta las incidencias con el correo de otro usuario` | Aplicación · seguridad | AB#419 | PR #224 | ✅ |
+| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: un administrador no consulta incidencias por aquí, ni siquiera con su propio correo` | Aplicación · seguridad | AB#419 | PR #224 | ✅ |
+| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: sin sesión no se consultan las incidencias` | Aplicación · seguridad | AB#419 | PR #224 | ✅ |
+| HU44-CP20 | `IncidenciaControllerTest` | `HU44-CP20: consultar las incidencias responde 200 con la página, sin el autor, y por defecto pide la 1 de tamaño 10` | Infraestructura · controlador | AB#419 | PR #224 | ✅ |
+| HU44-CP20 | `IncidenciaControllerTest` | `HU44-CP20: la página empieza en 1: page=3 y size=2 piden la página 2 (desde 0) y se devuelve con page 3` | Infraestructura · controlador | AB#419 | PR #224 | ✅ |
+| HU44-CP20 | `IncidenciaControllerTest` | `HU44-CP20: sin incidencias responde 200 con una lista vacía y cero páginas` | Infraestructura · controlador | AB#419 | PR #224 | ✅ |
+| HU44-CP20 | `IncidenciaControllerTest` | `HU44-CP20: un vendedor también consulta las suyas: el caso de uso recibe su correo` | Infraestructura · controlador | AB#419 | PR #224 | ✅ |
+| HU44-CP21 | `IncidenciaControllerTest` | `HU44-CP21: una página o un tamaño que el caso de uso rechaza responden 400 VALIDATION_ERROR` | Infraestructura · controlador | AB#419 | PR #224 | ✅ |
+| HU44-CP21 | `IncidenciaControllerTest` | `HU44-CP21: una página que no es un número responde 400 y no llega al caso de uso` | Infraestructura · controlador | AB#419 | PR #224 | ✅ |
+| HU44-CP22 | `IncidenciaControllerTest` | `HU44-CP22: sin sesión consultar las incidencias responde 401` | Infraestructura · controlador | AB#419 | PR #224 | ✅ |
+| HU44-CP22 | `IncidenciaControllerTest` | `HU44-CP22: el administrador no consulta incidencias por aquí: responde 403 con el code ACCESS_DENIED` | Infraestructura · controlador | AB#419 | PR #224 | ✅ |
+| HU44-CP23 | `incidents.test.js` | `HU44-CP23: pide GET /api/perfil/incidencias con la página y el tamaño y devuelve la página` | Frontend · API | AB#289 | PR #226 | ✅ |
+| HU44-CP23 | `incidents.test.js` | `HU44-CP23: un 403 llega como error con su estado y su código` | Frontend · API | AB#289 | PR #226 | ✅ |
+| HU44-CP23 | `incidents.test.js` | `HU44-CP23: pide POST /api/perfil/incidencias con el asunto y la descripción y devuelve la incidencia` | Frontend · API | AB#289 | PR #226 | ✅ |
+| HU44-CP23 | `incidents.test.js` | `HU44-CP23: un 400 llega como error con su estado y su código` | Frontend · API | AB#289 | PR #226 | ✅ |
+| HU44-CP24 | `incidentRules.test.js` | `HU44-CP24: una incidencia con asunto y descripción dentro de los límites no tiene errores` | Frontend · utilidad | AB#289 | PR #226 | ✅ |
+| HU44-CP24 | `incidentRules.test.js` | `HU44-CP24: un asunto %s es obligatorio` (2 variantes: vacío y con solo espacios) | Frontend · utilidad | AB#289 | PR #226 | ✅ |
+| HU44-CP24 | `incidentRules.test.js` | `HU44-CP24: una descripción %s es obligatoria` (2 variantes: vacía y con solo espacios) | Frontend · utilidad | AB#289 | PR #226 | ✅ |
+| HU44-CP24 | `incidentRules.test.js` | `HU44-CP24: los límites son 100 caracteres para el asunto y 1000 para la descripción` | Frontend · utilidad | AB#289 | PR #226 | ✅ |
+| HU44-CP24 | `incidentRules.test.js` | `HU44-CP24: el asunto admite 100 caracteres y rechaza 101` | Frontend · utilidad | AB#289 | PR #226 | ✅ |
+| HU44-CP24 | `incidentRules.test.js` | `HU44-CP24: la descripción admite 1000 caracteres y rechaza 1001` | Frontend · utilidad | AB#289 | PR #226 | ✅ |
+| HU44-CP24 | `incidentRules.test.js` | `HU44-CP24: los espacios de los extremos no cuentan para el máximo` | Frontend · utilidad | AB#289 | PR #226 | ✅ |
+| HU44-CP24 | `incidentRules.test.js` | `HU44-CP24: informa del asunto y de la descripción a la vez` | Frontend · utilidad | AB#289 | PR #226 | ✅ |
+| HU44-CP25 | `incidentStatus.test.js` | `HU44-CP25: PENDIENTE se muestra como Pendiente y ABIERTA como Abierta` | Frontend · utilidad | AB#289 | PR #226 | ✅ |
+| HU44-CP25 | `incidentStatus.test.js` | `HU44-CP25: un estado que el frontend no conoce se muestra tal cual` | Frontend · utilidad | AB#289 | PR #226 | ✅ |
+| HU44-CP25 | `incidentStatus.test.js` | `HU44-CP25: cada estado tiene su color: pendiente en aviso y abierta en la marca` | Frontend · utilidad | AB#289 | PR #226 | ✅ |
+| HU44-CP25 | `IncidentsList.test.jsx` | `HU44-CP25: el estado de cada incidencia se muestra en un badge: Pendiente o Abierta` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: la lista tiene un elemento por incidencia, en el orden en que llegan` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: cada incidencia muestra su asunto, su descripción completa, su respuesta y su fecha` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: la fecha se muestra en hora local y su atributo datetime conserva la fecha del servidor` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: una descripción larga se muestra entera` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: sin respuesta, la incidencia dice Sin respuesta todavía` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: la lista no tiene ningún botón: el usuario no cierra incidencias` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: mientras se recarga, la lista avisa con aria-busy` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: abre en la última página, la de las incidencias más recientes` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: pide la primera página para saber cuántas hay y después la última` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: la paginación lleva a la página anterior y a la siguiente` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: con una sola página no hay paginación y se ven todas, con el estado y la respuesta` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: mientras carga muestra un indicador de carga y no la lista` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: si no se pueden cargar lo avisa y permite reintentar` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: sin incidencias invita a reportar la primera` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: el título y el subtítulo explican la vista` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP28 | `IncidentsPage.test.jsx` | `HU44-CP28: el botón Nueva incidencia lleva al formulario` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP28 | `IncidentsPage.test.jsx` | `HU44-CP28: sin incidencias, reportar la primera también lleva al formulario` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: pide el asunto y la descripción, obligatorios, con su contador de caracteres` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: el contador cuenta lo escrito sin los espacios de los extremos` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: enviar vacío marca los dos campos, con su mensaje, y no envía nada` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: un asunto o una descripción con solo espacios se tratan como vacíos` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: pasarse del máximo avisa al momento y no deja enviar` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: 100 caracteres de asunto y 1000 de descripción valen, aunque lleven espacios en los extremos` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: el aviso de un campo desaparece al corregirlo` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: al enviar entrega el asunto y la descripción sin espacios en los extremos` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: mientras se envía, el botón queda deshabilitado y no se envía dos veces` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP29 | `IncidentForm.test.jsx` | `HU44-CP29: si el envío falla, muestra el aviso y conserva lo escrito` | Frontend · componente | AB#289 | PR #226 | ✅ |
+| HU44-CP29 | `NewIncidentPage.test.jsx` | `HU44-CP29: un formulario no válido no llama al servidor` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP30 | `NewIncidentPage.test.jsx` | `HU44-CP30: crear la incidencia avisa del éxito y vuelve a la lista con la incidencia nueva visible` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP30 | `NewIncidentPage.test.jsx` | `HU44-CP30: se envían el asunto y la descripción sin espacios en los extremos y sin ningún autor` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP30 | `NewIncidentPage.test.jsx` | `HU44-CP30: mientras se envía, el botón queda deshabilitado` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP31 | `NewIncidentPage.test.jsx` | `HU44-CP31: un 400 avisa con un mensaje genérico, no sale del formulario y conserva lo escrito` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP31 | `NewIncidentPage.test.jsx` | `HU44-CP31: un error de red avisa de la conexión y conserva lo escrito` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP31 | `NewIncidentPage.test.jsx` | `HU44-CP31: tras un fallo se puede volver a enviar y se crea la incidencia` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP31 | `NewIncidentPage.test.jsx` | `HU44-CP31: cancelar vuelve a la lista sin crear nada` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP32 | `AppHeader.test.jsx` | `HU44-CP32: el cliente ve el botón Incidencias en la cabecera y lleva a Mis incidencias` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP32 | `AppHeader.test.jsx` | `HU44-CP32: el botón Incidencias es un enlace con su destino, que recibe el foco con el teclado` | Frontend · página | AB#289 | PR #226 | ✅ |
+| HU44-CP33 | `NewIncidentPage.test.jsx` | `HU44-CP33: un vendedor sin incidencias crea la primera y la ve en su lista` | Frontend · página | AB#290 | PR #226 | ✅ |
+| HU44-CP33 | `AppHeader.test.jsx` | `HU44-CP33: el vendedor ve el botón Incidencias y lleva a Mis incidencias` | Frontend · página | AB#290 | PR #226 | ✅ |
+| HU44-CP33 | `AppHeader.test.jsx` | `HU44-CP33: el administrador no ve el botón Incidencias` | Frontend · página | AB#290 | PR #226 | ✅ |
+| HU44-CP33 | `AppHeader.test.jsx` | `HU44-CP33: sin sesión no se ve el botón Incidencias` | Frontend · página | AB#290 | PR #226 | ✅ |
+| HU44-CP33 | `AppHeader.test.jsx` | `HU44-CP33: el administrador que abre Mis incidencias o Nueva incidencia vuelve a su panel` | Frontend · página | AB#290 | PR #226 | ✅ |
+| HU44-CP33 | `AppHeader.test.jsx` | `HU44-CP33: sin sesión, Mis incidencias lleva al login` | Frontend · página | AB#290 | PR #226 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `IncidenciaTest`: `incidencias/domain/model/` (JUnit, sin Spring)
@@ -4397,6 +4397,91 @@ Rutas de las clases de test (bajo `frontend/src/`):
 
 ---
 
+## HU50 · Apertura y cierre de incidencias
+
+### Tabla A · HU50 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU50-CP01 | Abrir una incidencia pendiente la deja `ABIERTA` con la respuesta del administrador y conserva el resto de sus datos | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#302, PR pendiente) |
+| HU50-CP02 | La respuesta es obligatoria para abrir una incidencia: se rechaza nula, vacía o solo con espacios | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#302, PR pendiente) |
+| HU50-CP03 | La respuesta admite hasta 1000 caracteres, sin contar los espacios de los extremos, que no se guardan; con más se rechaza | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#302, PR pendiente) |
+| HU50-CP04 | Una incidencia ya abierta no se vuelve a abrir | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#302, PR pendiente) |
+| HU50-CP05 | El servicio abre la incidencia pedida, la guarda abierta con la respuesta y la devuelve | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#302, PR pendiente) |
+| HU50-CP06 | Abrir una incidencia que no existe se rechaza sin guardar nada | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#302, PR pendiente) |
+| HU50-CP07 | Si no se puede abrir (ya abierta o sin respuesta), el servicio no guarda nada y la incidencia queda como estaba | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#302, PR pendiente) |
+| HU50-CP08 | El adaptador de MongoDB busca una incidencia por su id (vacío si no existe) y, al guardarla abierta, la actualiza sin crear otra | Integración MongoDB | 3 | 🔍 En revisión (3, AB#302, PR pendiente) |
+| HU50-CP09 | Solo el administrador abre y cierra incidencias; cliente y vendedor reciben 403 y sin sesión se rechaza. Seguridad en la capa de negocio | Unitario con Spring Security (sin MongoDB) | 8 | 🔍 En revisión (8, AB#302 · AB#303, PR pendiente) |
+| HU50-CP10 | Cerrar una incidencia la elimina, esté pendiente o abierta, y no toca las demás | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#303, PR pendiente) |
+| HU50-CP11 | Cerrar una incidencia que no existe se rechaza sin eliminar nada | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#303, PR pendiente) |
+| HU50-CP12 | El adaptador de MongoDB elimina solo la incidencia con ese id, y con un id que no existe no borra nada | Integración MongoDB | 2 | 🔍 En revisión (2, AB#303, PR pendiente) |
+| HU50-CP13 | `PATCH /api/admin/incidencias/{id}/abrir` con `{"respuesta"}` responde 200 con la incidencia abierta y su respuesta, sin el id del autor | Controlador | 1 | 🔍 En revisión (1, AB#300, PR pendiente) |
+| HU50-CP14 | Abrir responde 404 `INCIDENT_NOT_FOUND` si no existe, 409 `INCIDENT_ALREADY_OPEN` si ya está abierta y 400 `VALIDATION_ERROR` (mensaje genérico) si la respuesta no es válida; un cuerpo que no es JSON, 400 sin llegar al caso de uso | Controlador | 4 | 🔍 En revisión (4, AB#300, PR pendiente) |
+| HU50-CP15 | `DELETE /api/admin/incidencias/{id}` responde 204 sin cuerpo y cierra esa incidencia | Controlador | 1 | 🔍 En revisión (1, AB#301, PR pendiente) |
+| HU50-CP16 | Cerrar una incidencia que no existe responde 404 `INCIDENT_NOT_FOUND` | Controlador | 1 | 🔍 En revisión (1, AB#301, PR pendiente) |
+| HU50-CP17 | Sin sesión, abrir y cerrar responden 401; un cliente o un vendedor reciben 403 `ACCESS_DENIED` | Controlador | 4 | 🔍 En revisión (4, AB#300 · AB#301, PR pendiente) |
+
+Notas:
+- **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** HU50-CP01 a CP17 los propone el desarrollo backend a partir de los criterios de la HU50 («la vista de incidencias debe poder abrir / cerrar la incidencia», «una vez cerrada la incidencia, esta se elimina») y no salen de Azure Boards. Rama `feature/US50-T302-apertura-incidencias`.
+- **T302 (AB#302, lógica de apertura):** `Incidencia.abrir(respuesta)` en el dominio (solo desde `PENDIENTE`, `IncidenciaYaAbiertaException` si no) y el puerto de entrada `ResolucionIncidenciasUseCase` con su servicio `ResolucionIncidenciasService` (`@PreAuthorize(SOLO_ADMINISTRADOR)`), que busca por id (`IncidenciaRepositoryPort.buscarPorId`, nuevo) y guarda (CP01 a CP09).
+- **T303 (AB#303, lógica de cierre y eliminación):** `ResolucionIncidenciasUseCase.cerrar(id)` comprueba que existe y la elimina (`IncidenciaRepositoryPort.eliminar`, nuevo) (CP09 a CP12).
+- **Puerto propio (decisión del desarrollo, 07/11/2026):** el actor es el mismo que en la HU49, pero `SupervisionIncidenciasUseCase` solo consulta y este cambia las incidencias, así que es un puerto aparte.
+- **La respuesta se escribe al abrir y es obligatoria (decisión del desarrollo, 07/11/2026):** al cerrar, la incidencia se elimina, así que la respuesta es lo único que llega a ver su autor. Hasta 1000 caracteres, como la descripción (CP02 y CP03).
+- **Cerrar en cualquier estado (decisión del desarrollo, 07/11/2026):** se puede cerrar una incidencia pendiente sin abrirla antes, para descartar spam o duplicados (CP10).
+- **Seguridad en la capa de negocio (R8):** CP09 comprueba, para abrir y para cerrar, que el administrador pasa, que cliente y vendedor reciben 403 y que sin sesión se rechaza.
+- **T300 y T301 (AB#300 y AB#301, endpoints):** `PATCH /api/admin/incidencias/{id}/abrir` (cuerpo `AbrirIncidenciaRequest`, responde `IncidenciaResponse`) y `DELETE /api/admin/incidencias/{id}` (204) en el `AdministracionIncidenciasController` de la HU49. `ManejadorGlobalErrores` traduce `IncidenciaNoEncontradaException` a 404 `INCIDENT_NOT_FOUND` e `IncidenciaYaAbiertaException` a 409 `INCIDENT_ALREADY_OPEN` (CP13 a CP17).
+- **CP17 sin rojo real:** los 401 y 403 ya los daba `SecurityConfig` (`/api/admin/**` solo para el administrador) antes de que existieran las rutas; se mantienen como defensa en profundidad del borde.
+- **Pendiente:** el botón del frontend (T305).
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU50-CP01 | `IncidenciaTest` | `HU50-CP01: abrir una incidencia pendiente la deja abierta con la respuesta del administrador` | Dominio | AB#302 | PR pendiente | 🔍 |
+| HU50-CP02 | `IncidenciaTest` | `HU50-CP02: la respuesta es obligatoria para abrir una incidencia` (parametrizado: nula, vacía, espacios y tabulador) | Dominio | AB#302 | PR pendiente | 🔍 |
+| HU50-CP03 | `IncidenciaTest` | `HU50-CP03: la respuesta admite hasta 1000 caracteres y se guarda sin espacios en los extremos` | Dominio | AB#302 | PR pendiente | 🔍 |
+| HU50-CP03 | `IncidenciaTest` | `HU50-CP03: rechaza una respuesta de más de 1000 caracteres` | Dominio | AB#302 | PR pendiente | 🔍 |
+| HU50-CP04 | `IncidenciaTest` | `HU50-CP04: una incidencia ya abierta no se vuelve a abrir` | Dominio | AB#302 | PR pendiente | 🔍 |
+| HU50-CP05 | `ResolucionIncidenciasServiceTest` | `HU50-CP05: abrir una incidencia pendiente la guarda abierta con la respuesta y la devuelve` | Aplicación | AB#302 | PR pendiente | 🔍 |
+| HU50-CP06 | `ResolucionIncidenciasServiceTest` | `HU50-CP06: abrir una incidencia que no existe se rechaza sin guardar nada` | Aplicación | AB#302 | PR pendiente | 🔍 |
+| HU50-CP07 | `ResolucionIncidenciasServiceTest` | `HU50-CP07: abrir una incidencia ya abierta se rechaza y conserva la respuesta que tenía` | Aplicación | AB#302 | PR pendiente | 🔍 |
+| HU50-CP07 | `ResolucionIncidenciasServiceTest` | `HU50-CP07: abrir sin respuesta se rechaza y la incidencia sigue pendiente` | Aplicación | AB#302 | PR pendiente | 🔍 |
+| HU50-CP08 | `IncidenciaMongoAdapterTest` | `HU50-CP08: buscar por id devuelve la incidencia guardada con todos sus datos` | Infraestructura (MongoDB) | AB#302 | PR pendiente | 🔍 |
+| HU50-CP08 | `IncidenciaMongoAdapterTest` | `HU50-CP08: buscar por id una incidencia que no existe devuelve vacío` | Infraestructura (MongoDB) | AB#302 | PR pendiente | 🔍 |
+| HU50-CP08 | `IncidenciaMongoAdapterTest` | `HU50-CP08: guardar una incidencia abierta actualiza su estado y su respuesta, sin crear otra` | Infraestructura (MongoDB) | AB#302 | PR pendiente | 🔍 |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: el administrador abre una incidencia` | Aplicación · seguridad | AB#302 | PR pendiente | 🔍 |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un cliente no abre incidencias` | Aplicación · seguridad | AB#302 | PR pendiente | 🔍 |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un vendedor no abre incidencias` | Aplicación · seguridad | AB#302 | PR pendiente | 🔍 |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: sin sesión no se abren incidencias` | Aplicación · seguridad | AB#302 | PR pendiente | 🔍 |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: el administrador cierra una incidencia` | Aplicación · seguridad | AB#303 | PR pendiente | 🔍 |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un cliente no cierra incidencias` | Aplicación · seguridad | AB#303 | PR pendiente | 🔍 |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un vendedor no cierra incidencias` | Aplicación · seguridad | AB#303 | PR pendiente | 🔍 |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: sin sesión no se cierran incidencias` | Aplicación · seguridad | AB#303 | PR pendiente | 🔍 |
+| HU50-CP10 | `ResolucionIncidenciasServiceTest` | `HU50-CP10: cerrar una incidencia la elimina, esté pendiente o abierta` (parametrizado: `PENDIENTE` y `ABIERTA`) | Aplicación | AB#303 | PR pendiente | 🔍 |
+| HU50-CP11 | `ResolucionIncidenciasServiceTest` | `HU50-CP11: cerrar una incidencia que no existe se rechaza sin eliminar nada` | Aplicación | AB#303 | PR pendiente | 🔍 |
+| HU50-CP12 | `IncidenciaMongoAdapterTest` | `HU50-CP12: eliminar borra solo la incidencia con ese id` | Infraestructura (MongoDB) | AB#303 | PR pendiente | 🔍 |
+| HU50-CP12 | `IncidenciaMongoAdapterTest` | `HU50-CP12: eliminar una incidencia que no existe no borra nada` | Infraestructura (MongoDB) | AB#303 | PR pendiente | 🔍 |
+| HU50-CP13 | `AdministracionIncidenciasControllerTest` | `HU50-CP13: abrir responde 200 con la incidencia abierta y su respuesta, sin el id del autor` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
+| HU50-CP14 | `AdministracionIncidenciasControllerTest` | `HU50-CP14: abrir una incidencia que no existe responde 404 INCIDENT_NOT_FOUND` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
+| HU50-CP14 | `AdministracionIncidenciasControllerTest` | `HU50-CP14: abrir una incidencia ya abierta responde 409 INCIDENT_ALREADY_OPEN` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
+| HU50-CP14 | `AdministracionIncidenciasControllerTest` | `HU50-CP14: una respuesta que el dominio rechaza responde 400 VALIDATION_ERROR con un mensaje genérico` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
+| HU50-CP14 | `AdministracionIncidenciasControllerTest` | `HU50-CP14: un cuerpo que no es JSON responde 400 y no llega al caso de uso` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
+| HU50-CP15 | `AdministracionIncidenciasControllerTest` | `HU50-CP15: cerrar responde 204 sin cuerpo y cierra esa incidencia` | Infraestructura (web) | AB#301 | PR pendiente | 🔍 |
+| HU50-CP16 | `AdministracionIncidenciasControllerTest` | `HU50-CP16: cerrar una incidencia que no existe responde 404 INCIDENT_NOT_FOUND` | Infraestructura (web) | AB#301 | PR pendiente | 🔍 |
+| HU50-CP17 | `AdministracionIncidenciasControllerTest` | `HU50-CP17: sin sesión abrir responde 401` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
+| HU50-CP17 | `AdministracionIncidenciasControllerTest` | `HU50-CP17: un cliente o un vendedor que intentan abrir reciben 403 ACCESS_DENIED` (parametrizado: cliente y vendedor) | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
+| HU50-CP17 | `AdministracionIncidenciasControllerTest` | `HU50-CP17: sin sesión cerrar responde 401` | Infraestructura (web) | AB#301 | PR pendiente | 🔍 |
+| HU50-CP17 | `AdministracionIncidenciasControllerTest` | `HU50-CP17: un cliente o un vendedor que intentan cerrar reciben 403 ACCESS_DENIED` (parametrizado: cliente y vendedor) | Infraestructura (web) | AB#301 | PR pendiente | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `IncidenciaTest`: `incidencias/domain/model/` (JUnit, sin Spring)
+- `ResolucionIncidenciasServiceTest`: `incidencias/application/service/` (JUnit, sin Spring, con un repositorio en memoria)
+- `SeguridadIncidenciasServiceTest`: `incidencias/application/service/` (contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
+- `IncidenciaMongoAdapterTest`: `incidencias/infrastructure/adapter/out/persistence/` (con Testcontainers)
+- `AdministracionIncidenciasControllerTest`: `incidencias/infrastructure/adapter/in/web/` (`@WebMvcTest` con la `SecurityConfig` real y el caso de uso como doble de prueba)
+
+---
+
 ## Tests técnicos sin caso de prueba
 
 Tests que no validan una HU concreta.
@@ -4417,8 +4502,9 @@ Tests que no validan una HU concreta.
 | `DeseosConfigTest` | `elContextoConectaLasPiezasDeLaListaDeDeseos` | Que Spring conecta el servicio de la lista de deseos con su adaptador de MongoDB y los adaptadores hacia usuarios y productos (HU14; AB#360, PR #196) |
 | `PreferenciasConfigTest` | `elContextoConectaLasPiezasDeLasPreferencias` | Que Spring conecta el servicio de las preferencias con su adaptador de MongoDB y los adaptadores hacia usuarios y categorías (HU46; AB#287, PR #220) |
 | `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |
-| `IncidenciasConfigTest` | `elContextoConectaLasPiezasDeLasIncidencias` | Que Spring conecta la creación y la consulta de incidencias con su adaptador de MongoDB y el adaptador hacia usuarios (HU44; AB#293 y AB#419, PR pendiente) |
+| `IncidenciasConfigTest` | `elContextoConectaLasPiezasDeLasIncidencias` | Que Spring conecta la creación y la consulta de incidencias con su adaptador de MongoDB y el adaptador hacia usuarios (HU44; AB#293 y AB#419, PR #224) |
 | `IncidenciasConfigTest` | `elContextoConectaLaSupervisionDeIncidencias` | Que Spring conecta la supervisión de incidencias del administrador con el adaptador hacia usuarios (HU49; AB#307, PR #229) |
+| `IncidenciasConfigTest` | `elContextoConectaLaResolucionDeIncidencias` | Que Spring conecta la resolución de incidencias del administrador (abrir y cerrar) con `ResolucionIncidenciasService` (HU50; AB#302, PR pendiente) |
 | `SecurityConfigTest` | `unaPeticionRecibeElTokenCsrfEnUnaCookie` | Que cualquier respuesta, aunque sea un 401, entrega el token CSRF en la cookie `XSRF-TOKEN` sin `HttpOnly` (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostSinTokenCsrfSeRechaza` | Que un `POST` sin token CSRF se rechaza con 403 (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostConElTokenDeLaCookieEnLaCabeceraSeAcepta` | Que un `POST` con el token de la cookie en la cabecera `X-XSRF-TOKEN` pasa el filtro CSRF (AB#230, PR #67) |
@@ -4434,7 +4520,7 @@ Tests que no validan una HU concreta.
 | `UsuarioMongoAdapterTest` | `guardaFechasDeCreacionYModificacion` | Que se guardan `createdAt` y `updatedAt` (auditoría de Spring Data) y que `createdAt` no cambia al actualizar (AB#210, PR #43) |
 | `ProductoMongoAdapterTest` | `guardarUnProductoLeidoLoActualiza` | Que guardar un producto leído lo actualiza sin duplicarlo y conserva `createdAt` (AB#202, PR #86) |
 | `ProductoMongoAdapterTest` | `elPrecioSeGuardaComoNumero` | Que el precio y los porcentajes de descuento se guardan como `Decimal128`, no como texto (AB#202, PR #86) |
-| `InicializadorColeccionesTest` | `creaLasQuinceColecciones` | Que al arrancar se crean las 15 colecciones: las 10 del modelo de BBDD, `metodos_pago`, `direcciones_envio`, `contadores`, `preferencias` e `incidencias` (AB#210, PR #43; ampliado en AB#271, PR #148, y en AB#105, PR #161; ampliado en AB#131, PR #166, y en AB#287, PR #220; ampliado en AB#291, PR pendiente) |
+| `InicializadorColeccionesTest` | `creaLasQuinceColecciones` | Que al arrancar se crean las 15 colecciones: las 10 del modelo de BBDD, `metodos_pago`, `direcciones_envio`, `contadores`, `preferencias` e `incidencias` (AB#210, PR #43; ampliado en AB#271, PR #148, y en AB#105, PR #161; ampliado en AB#131, PR #166, y en AB#287, PR #220; ampliado en AB#291, PR #224) |
 | `InicializadorColeccionesTest` | `sePuedeEjecutarOtraVez` | Que el inicializador se puede ejecutar en cada arranque sin fallar ni duplicar índices (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `actualizaLaValidacionDeUnaColeccionExistente` | Que aplica la validación a una colección que ya existía sin ella (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `sinPermisoParaCambiarLaValidacionNoFalla` | Que sin permiso `collMod` (usuario de la aplicación en Atlas) avisa y la aplicación arranca igual (AB#210, PR #43) |

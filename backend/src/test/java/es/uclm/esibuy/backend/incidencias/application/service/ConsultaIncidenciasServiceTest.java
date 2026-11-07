@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -58,6 +59,16 @@ class ConsultaIncidenciasServiceTest {
 
         @Override
         public IncidenciaPage buscarTodas(int pagina, int tamano) {
+            throw new UnsupportedOperationException("No lo usa la consulta de las propias");
+        }
+
+        @Override
+        public Optional<Incidencia> buscarPorId(String id) {
+            throw new UnsupportedOperationException("No lo usa la consulta de las propias");
+        }
+
+        @Override
+        public void eliminar(String id) {
             throw new UnsupportedOperationException("No lo usa la consulta de las propias");
         }
     }

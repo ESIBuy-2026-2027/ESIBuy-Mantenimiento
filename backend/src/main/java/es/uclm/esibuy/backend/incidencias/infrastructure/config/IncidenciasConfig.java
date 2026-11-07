@@ -7,12 +7,14 @@ import org.springframework.context.annotation.Configuration;
 
 import es.uclm.esibuy.backend.incidencias.application.port.in.ConsultaIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.CreacionIncidenciasUseCase;
+import es.uclm.esibuy.backend.incidencias.application.port.in.ResolucionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.SupervisionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.out.AutorEnSesionPort;
 import es.uclm.esibuy.backend.incidencias.application.port.out.AutoresPort;
 import es.uclm.esibuy.backend.incidencias.application.port.out.IncidenciaRepositoryPort;
 import es.uclm.esibuy.backend.incidencias.application.service.ConsultaIncidenciasService;
 import es.uclm.esibuy.backend.incidencias.application.service.CreacionIncidenciasService;
+import es.uclm.esibuy.backend.incidencias.application.service.ResolucionIncidenciasService;
 import es.uclm.esibuy.backend.incidencias.application.service.SupervisionIncidenciasService;
 import es.uclm.esibuy.backend.incidencias.infrastructure.adapter.out.persistence.IncidenciaDocumentMapper;
 import es.uclm.esibuy.backend.incidencias.infrastructure.adapter.out.persistence.IncidenciaMongoAdapter;
@@ -23,7 +25,8 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuario
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 
 /**
- * Conecta las piezas del módulo de incidencias (HU44) y de su supervisión por el administrador (HU49): los servicios
+ * Conecta las piezas del módulo de incidencias (HU44), de su supervisión (HU49) y de su resolución (HU50) por el
+ * administrador: los servicios
  * de aplicación, sus adaptadores de salida y el reloj. Los servicios no llevan @Service: los crea esta configuración,
  * así dominio y aplicación no conocen Spring.
  */
@@ -62,5 +65,11 @@ public class IncidenciasConfig {
     SupervisionIncidenciasUseCase supervisionIncidenciasUseCase(IncidenciaRepositoryPort incidenciaRepositoryPort,
             AutoresPort incidenciasAutoresPort) {
         return new SupervisionIncidenciasService(incidenciaRepositoryPort, incidenciasAutoresPort);
+    }
+
+    // Resolución (HU50): abrir y cerrar incidencias
+    @Bean
+    ResolucionIncidenciasUseCase resolucionIncidenciasUseCase(IncidenciaRepositoryPort incidenciaRepositoryPort) {
+        return new ResolucionIncidenciasService(incidenciaRepositoryPort);
     }
 }
