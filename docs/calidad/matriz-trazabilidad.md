@@ -779,7 +779,7 @@ Notas:
 - **Endpoint (T297):** `GET /api/perfil` → `{id, nombre, apellidos, email, rol, fechaAlta, dni, telefono, avatar}` y, según el rol, `fechaNacimiento` y `tipoCliente` (cliente) o `nombreComercial` y `categoriaPrincipalId` (vendedor). Los campos vacíos no aparecen. El usuario sale de la sesión (su email), nunca de la petición. Solo para `CLIENTE` y `VENDEDOR` (`SecurityConfig`). Es el contrato de la vista del frontend (T296).
 - **HU4-CP05 a CP11 (Sprint 2, frontend):** casos propuestos en la task AB#296 (vista de perfil) a partir del mismo criterio de aceptación y del contrato de la T297 (`frontend/docs/hu4-vista-perfil.md`). Siguen la numeración del backend. Pendientes de confirmar con el equipo y de añadir a la HU4 en Azure Boards.
 - **Archivo de tests nuevo** (con el OK del equipo): `ProfilePage.test.jsx`. `AppHeader.test.jsx` y `AvatarSelector.test.jsx` ganan casos HU4.
-- **Pendiente:** el criterio «el usuario debe dar al botón de guardar para modificar sus datos personales» es de la HU45 (edición de perfil). Aclarar con el equipo qué incluyen sus tasks 101 (endpoint consultar/editar perfil) y 298 (lógica para la obtención segura de datos), que se solapan con la T297.
+- **Resuelto:** el criterio «el usuario debe dar al botón de guardar para modificar sus datos personales» es de la HU45 (edición de perfil). La T298 es la lógica de la edición y la T101 su endpoint; ninguna se solapa con la T297 (ver la sección HU45).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -2063,6 +2063,9 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP39 | Desde el detalle se añade el producto a favoritos sin salir de la página y el botón pasa a quitarlo; mientras se añade queda deshabilitado | Frontend (página) | 2 | 🔍 En revisión (2, AB#418, PR #216) |
 | HU14-CP40 | Desde el detalle se quita el producto de favoritos y el botón vuelve a ofrecer añadirlo | Frontend (página) | 1 | 🔍 En revisión (1, AB#418, PR #216) |
 | HU14-CP41 | Si no se puede añadir (producto que ya no está disponible o mensaje genérico) o quitar, el detalle lo avisa y el botón se puede volver a pulsar | Frontend (página) | 3 | 🔍 En revisión (3, AB#418, PR #216) |
+| HU14-CP42 | Eliminar la lista del cliente la borra sin tocar la de otro, y si no tiene lista no es un error | Unitario | 2 | 🔍 En revisión |
+| HU14-CP43 | Eliminar por cliente borra su lista de la colección y no la de otro cliente | Integración (MongoDB) | 1 | 🔍 En revisión |
+| HU14-CP44 | Solo el cliente con su propio correo elimina su lista: otro correo, vendedor o administrador reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión |
 
 - **HU14-CP01 a CP06 (Sprint 2, backend):** casos propuestos en la task AB#360 (lógica de guardado de deseo), revisados y aceptados por el desarrollador. Azure no los trae: habría que añadirlos a la HU14.
 - **Decisiones del equipo:** módulo nuevo `deseos`; una sola lista por cliente, como dicen el criterio de aceptación y la colección `listas_deseos`, que ya tenía su índice único. El campo de la colección sigue siendo `usuarioId`, y guarda el id del cliente. Añadir un producto repetido no es un error, y un producto inexistente o no disponible se rechaza.
@@ -2091,6 +2094,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - **Tests que nacen en verde (T363 y T364):** en HU14-CP32, «el vendedor y el administrador no tienen el enlace a favoritos», y en HU14-CP36, «si no se pueden cargar los favoritos, el catálogo funciona con los corazones vacíos», porque antes del ciclo no existían ni el enlace ni la lectura. Se dejan para que no cambie sin darnos cuenta.
 - **HU14-CP38 a CP41 (detalle del producto, T418):** casos propuestos en la task AB#418, creada en el Sprint 2 porque ninguna task de la HU14 ofrecía favoritos en el detalle. Pendientes de confirmar con el equipo y de añadir a la HU14 en Azure Boards. Rama `feature/US14-T418-favoritos-detalle-producto`. `ProductDetailPage` lee la lista al entrar (si falla, ofrece añadirlo) y `ProductDetail` muestra el botón «Añadir a favoritos» o «Quitar de favoritos» junto a «Añadir al carrito», con el corazón relleno en rojo cuando ya está.
 - **Pendiente:** el corazón en los productos destacados del catálogo, que usan otro componente.
+- **HU14-CP42 a CP44 (baja del cliente, AB#275):** casos propuestos. Según el correo del profesor, al eliminar una cuenta se borra lo que depende del usuario. `GestionListaDeseosUseCase.eliminar(emailCliente)` borra la lista del cliente, y con `SOLO_CLIENTE_PROPIO` solo puede hacerlo él. **Pendiente:** el módulo de usuarios debe llamarlo en la baja del cliente, antes de borrar al usuario; hasta entonces la lista no se borra al eliminar la cuenta.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -2215,6 +2219,14 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP40 | `ProductDetailPage.test.jsx` | `HU14-CP40: al pulsar Quitar de favoritos se quita el producto y el botón vuelve a ofrecer añadirlo` | Frontend · página | AB#418 | PR #216 | 🔍 |
 | HU14-CP41 | `ProductDetailPage.test.jsx` | `HU14-CP41: si al añadir %s, lo avisa y se puede volver a intentar` (2 variantes: el producto ya no está disponible y falla por otro motivo) | Frontend · página | AB#418 | PR #216 | 🔍 |
 | HU14-CP41 | `ProductDetailPage.test.jsx` | `HU14-CP41: si no se puede quitar, lo avisa y el producto sigue en favoritos` | Frontend · página | AB#418 | PR #216 | 🔍 |
+| HU14-CP42 | `GestionListaDeseosServiceTest` | `eliminarBorraLaListaDelCliente` | Aplicación | AB#275 | este PR | 🔍 |
+| HU14-CP42 | `GestionListaDeseosServiceTest` | `eliminarSinListaNoEsUnError` | Aplicación | AB#275 | este PR | 🔍 |
+| HU14-CP43 | `ListaDeseosMongoAdapterTest` | `eliminarPorClienteBorraSoloSuLista` | Infraestructura | AB#275 | este PR | 🔍 |
+| HU14-CP44 | `SeguridadDeseosServiceTest` | `elClienteEliminaConSuPropioCorreo` | Aplicación | AB#275 | este PR | 🔍 |
+| HU14-CP44 | `SeguridadDeseosServiceTest` | `unClienteNoEliminaConElCorreoDeOtro` | Aplicación | AB#275 | este PR | 🔍 |
+| HU14-CP44 | `SeguridadDeseosServiceTest` | `unVendedorNoElimina` | Aplicación | AB#275 | este PR | 🔍 |
+| HU14-CP44 | `SeguridadDeseosServiceTest` | `unAdministradorNoElimina` | Aplicación | AB#275 | este PR | 🔍 |
+| HU14-CP44 | `SeguridadDeseosServiceTest` | `sinSesionNoSeElimina` | Aplicación | AB#275 | este PR | 🔍 |
 
 ---
 
@@ -3996,6 +4008,134 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU45 · Edición de perfil
+
+### Tabla A · HU45 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU45-CP01 | Un cliente edita sus datos modificables y se guardan; su email, DNI y tipo de cliente no cambian | Unitario | 1 | ✅ Pasa |
+| HU45-CP02 | Un vendedor edita sus datos modificables (nombre comercial, categoría principal, teléfono…) y se guardan; su DNI no cambia | Unitario | 1 | ✅ Pasa |
+| HU45-CP03 | Un vendedor no puede usar el nombre comercial de otro vendedor: no se guarda nada | Unitario | 1 | ✅ Pasa |
+| HU45-CP04 | Con datos no válidos (nombre en blanco, cliente menor de edad o vendedor sin datos de vendedor) no se guarda nada | Unitario | 3 | ✅ Pasa |
+| HU45-CP05 | Solo el cliente o el vendedor edita su propio perfil: con el correo de otro, 403; un administrador, 403; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa |
+
+Notas:
+- **HU45-CP01 a CP05:** casos propuestos en la T298 (AB#298) a partir de los criterios de aceptación de la HU45. Pendientes de confirmar con el equipo y de añadir a la HU45 en Azure Boards.
+- **Lógica (T298, AB#298):** `GestionPerfilUseCase.editarPerfil(email, EditarPerfilCommand)` con `@PreAuthorize` de `Permisos.CLIENTE_O_VENDEDOR_PROPIO`. Reutiliza `Usuario.modificarDatos` (el de la HU22), que valida todo antes de asignar.
+  - **Campos editables** (decisión del 05/11): nombre, apellidos, imagen de perfil y teléfono; el cliente, además, su fecha de nacimiento; el vendedor, su nombre comercial y su categoría principal.
+  - **No se editan** el email, el DNI, el tipo de cliente, el rol, la contraseña ni el estado.
+  - **Vendedor sin datos de vendedor** (cuentas anteriores a la T241 o creadas por un administrador): se rechaza, porque su DNI no se puede poner desde aquí; los completa un administrador (HU22).
+- **Pendiente con el equipo:** la categoría principal no se comprueba que exista, igual que en el registro y en la edición del administrador.
+- **Fuera del Sprint 2:** el endpoint (T101) y la pantalla (T103). Hasta entonces la lógica no se usa desde la API.
+- **Tests existentes:** `GestionPerfilServiceTest` crea el servicio a mano con un reloj fijo (`@InjectMocks` no inyecta un `Clock`) y el cliente de prueba pasa a ser Premium. No cambia lo que comprueban HU4-CP01, HU4-CP04, HU25-CP01 ni HU25-CP02.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU45-CP01 | `GestionPerfilServiceTest` | `unClienteEditaSusDatosYSeGuardan` | Aplicación | AB#298 | PR #218 | ✅ |
+| HU45-CP02 | `GestionPerfilServiceTest` | `unVendedorEditaSusDatosYSeGuardan` | Aplicación | AB#298 | PR #218 | ✅ |
+| HU45-CP03 | `GestionPerfilServiceTest` | `unVendedorNoUsaElNombreComercialDeOtro` | Aplicación | AB#298 | PR #218 | ✅ |
+| HU45-CP04 | `GestionPerfilServiceTest` | `conDatosNoValidosNoSeGuardaNada` | Aplicación | AB#298 | PR #218 | ✅ |
+| HU45-CP04 | `GestionPerfilServiceTest` | `unClienteNoPuedeQuedarMenorDeEdad` | Aplicación | AB#298 | PR #218 | ✅ |
+| HU45-CP04 | `GestionPerfilServiceTest` | `unVendedorSinDatosDeVendedorNoEditaSuPerfil` | Aplicación | AB#298 | PR #218 | ✅ |
+| HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `unClienteEditaSuPerfil` | Aplicación | AB#298 | PR #218 | ✅ |
+| HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `unVendedorEditaSuPerfil` | Aplicación | AB#298 | PR #218 | ✅ |
+| HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `nadieEditaElPerfilDeOtro` | Aplicación | AB#298 | PR #218 | ✅ |
+| HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `unAdministradorNoEditaSuPerfilPorAqui` | Aplicación | AB#298 | PR #218 | ✅ |
+| HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `sinSesionNoSeEditaNingunPerfil` | Aplicación | AB#298 | PR #218 | ✅ |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `GestionPerfilServiceTest` y `SeguridadSesionUsuarioServiceTest`: `usuarios/application/service/` (Mockito sin Spring, y contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
+
+---
+
+## HU46 · Gestión de preferencias
+
+### Tabla A · HU46 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU46-CP01 | Un cliente que aún no ha elegido preferencias no tiene ninguna categoría | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#287, PR #220) |
+| HU46-CP02 | Elegir categorías las guarda en el orden elegido y sin repetir ninguna | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#287, PR #220) |
+| HU46-CP03 | Elegir una lista vacía quita todas las categorías | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#287, PR #220) |
+| HU46-CP04 | Sin preferencias guardadas, consultar devuelve una lista vacía y no guarda nada | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#287, PR #220) |
+| HU46-CP05 | Consultar devuelve, en su orden, las categorías elegidas que siguen activas | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#287, PR #220) |
+| HU46-CP06 | Guardar por primera vez crea las preferencias del cliente con las categorías elegidas, sin repetidas | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#287, PR #220) |
+| HU46-CP07 | Guardar otra vez sustituye las categorías anteriores en las mismas preferencias | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#287, PR #220) |
+| HU46-CP08 | Guardar una categoría inactiva o que no existe falla sin guardar nada | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#287, PR #220) |
+| HU46-CP09 | Guardar sin indicar las categorías falla sin guardar nada | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#287, PR #220) |
+| HU46-CP10 | Solo el cliente con su propio correo consulta y guarda sus preferencias: otro correo, vendedor o administrador reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, AB#287, PR #220) |
+| HU46-CP11 | Las preferencias pasan a documento de MongoDB y vuelven sin perder ningún dato | Unitario (adaptador) | 1 | 🔍 En revisión (1, AB#287, PR #220) |
+| HU46-CP12 | Persistencia en `preferencias`: guardar y recuperar por cliente; volver a guardar actualiza sin crear otras y conserva la fecha de creación; la colección admite unas por cliente y exige el cliente | Integración MongoDB | 3 | 🔍 En revisión (3, AB#287, PR #220) |
+| HU46-CP13 | Los adaptadores preguntan a `usuarios` por el id del cliente y a `categorias` por las activas, por sus puertos de entrada | Unitario (adaptador) | 2 | 🔍 En revisión (2, AB#287, PR #220) |
+| HU46-CP14 | `GET /api/customer/preferences` responde 200 con las categorías del cliente en sesión | Controlador | 1 | 🔍 En revisión (1, AB#287, PR #220) |
+| HU46-CP15 | `PUT /api/customer/preferences` envía las categorías del cuerpo para el cliente en sesión y responde 200 con las guardadas | Controlador | 1 | 🔍 En revisión (1, AB#287, PR #220) |
+| HU46-CP16 | Un cuerpo sin categorías, con categorías que no son una lista o ilegible devuelve 400 `VALIDATION_ERROR` y no llega al caso de uso | Controlador | 4 | 🔍 En revisión (4, AB#287, PR #220) |
+| HU46-CP17 | Guardar una categoría inactiva o que no existe devuelve 400 `VALIDATION_ERROR` | Controlador | 1 | 🔍 En revisión (1, AB#287, PR #220) |
+| HU46-CP18 | Sin sesión (401), sin ser cliente (403) o sin token CSRF (403) no se consultan ni se guardan las preferencias | Controlador | 3 | 🔍 En revisión (3, AB#287, PR #220) |
+| HU46-CP19 | Las llamadas del cliente piden `GET` y `PUT /api/customer/preferences` y devuelven las categorías; un 400 llega como error con su estado y su código | Frontend (API) | 3 | 🔍 En revisión (3, AB#286, PR #220) |
+| HU46-CP20 | El perfil del cliente muestra «Mis preferencias» con una casilla por cada categoría activa, marcadas las que ya eligió; el vendedor no la tiene | Frontend (página) | 3 | 🔍 En revisión (3, AB#286, PR #220) |
+| HU46-CP21 | Marcar o desmarcar una categoría guarda las preferencias al momento y avisa; mientras se guarda, las casillas quedan deshabilitadas; al volver al perfil siguen guardadas | Frontend (página) | 4 | 🔍 En revisión (4, AB#286, PR #220) |
+| HU46-CP22 | Si las preferencias no se pueden guardar, se avisa y la casilla vuelve a como estaba; si no se pueden cargar, se avisa sin mostrar las casillas y se puede reintentar | Frontend (página) | 2 | 🔍 En revisión (2, AB#286, PR #220) |
+
+- **HU46-CP01 a CP22 (Sprint 2):** casos propuestos en las tasks AB#287 (backend) y AB#286 (frontend), a partir de los criterios «las preferencias se muestran en el perfil», «se pueden modificar en cualquier momento» y «al salir, las preferencias deben de haberse quedado guardadas». Pendientes de confirmar con el equipo y de añadir a la HU46 en Azure Boards. Rama `feature/US46-T287-T286-preferencias`.
+- **Qué son las preferencias (decisión del equipo):** ni la HU ni el enunciado lo concretan («gestionar […] sus preferencias»; en el mantenimiento, «recomendaciones de productos de acuerdo con las preferencias»). Se decidió que son las **categorías de interés** del cliente, que encajan con esas recomendaciones futuras. Solo el cliente las tiene, como dice la HU.
+- **Backend (T287):** módulo nuevo `preferencias`, con su colección `preferencias` (unas por cliente, índice único por `clienteId`, la 14 de `ColeccionesEsiBuy`). `GestionPreferenciasUseCase.consultar` y `guardar` llevan `@PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)`. Las categorías activas se piden al listado público de `categorias` y el id del cliente a `usuarios`, por sus puertos de entrada; un módulo nuevo evita chocar con el PR #218 (HU45), que toca `usuarios`.
+- **Endpoint (T287):** `GET /api/customer/preferences` → 200 `{ "categorias": [id] }` (vacía si no hay); `PUT /api/customer/preferences` con `{ "categorias": [id] }` → 200 con las guardadas. 400 `VALIDATION_ERROR` sin categorías, con un cuerpo ilegible o con alguna categoría que no existe o no está activa (`PreferenciasInvalidasException` en `ManejadorGlobalErrores`, sin decir cuál); 401 sin sesión y 403 con otro rol o sin CSRF.
+- **Decisiones:** una categoría que no existe o está inactiva se rechaza al guardar y no se guarda nada; una ya elegida que después se desactiva o se elimina no sale al consultar, pero sigue guardada y reaparece si se vuelve a activar.
+- **Vista (T286):** sección «Mis preferencias» en el perfil del cliente (`ProfilePage`), con una casilla por categoría activa. Cada cambio se guarda al momento (así no se puede salir sin guardar) y avisa con «Preferencias guardadas.»; si falla, la casilla vuelve a como estaba. Si no cargan, no se muestran las casillas: guardar sin saber cuáles eligió borraría las demás.
+- **Tests que nacen en verde:** HU46-CP10 (el `@PreAuthorize` va desde el ciclo 2; se comprobó quitándolo de forma temporal: fallan los cuatro tests de rechazo), HU46-CP18 (la regla de `/api/customer/**` de `SecurityConfig` ya lo cubría) y HU46-CP20 «el vendedor no tiene preferencias».
+- **Pendiente para el siguiente sprint (decisión del equipo):** la lógica de las preferencias en el catálogo. Por ahora solo se guardan y se muestran; usarlas para recomendar u ordenar productos (por ejemplo, una sección «Para ti» o un filtro «Mis categorías») irá en una HU o task nueva.
+- **Test técnico modificado:** `InicializadorColeccionesTest.creaLasTreceColecciones` pasa a `creaLasCatorceColecciones`, con `preferencias`.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU46-CP01 | `PreferenciasTest` | `unClienteSinPreferenciasNoTieneCategorias` | Dominio | AB#287 | PR #220 | 🔍 |
+| HU46-CP02 | `PreferenciasTest` | `elegirCategoriasLasGuardaSinRepetidas` | Dominio | AB#287 | PR #220 | 🔍 |
+| HU46-CP03 | `PreferenciasTest` | `elegirUnaListaVaciaQuitaLasCategorias` | Dominio | AB#287 | PR #220 | 🔍 |
+| HU46-CP04 | `GestionPreferenciasServiceTest` | `consultarSinPreferenciasDevuelveUnaListaVacia` | Aplicación | AB#287 | PR #220 | 🔍 |
+| HU46-CP05 | `GestionPreferenciasServiceTest` | `consultarDevuelveSoloLasCategoriasActivas` | Aplicación | AB#287 | PR #220 | 🔍 |
+| HU46-CP06 | `GestionPreferenciasServiceTest` | `guardarPorPrimeraVezCreaLasPreferencias` | Aplicación | AB#287 | PR #220 | 🔍 |
+| HU46-CP07 | `GestionPreferenciasServiceTest` | `guardarOtraVezSustituyeLasCategorias` | Aplicación | AB#287 | PR #220 | 🔍 |
+| HU46-CP08 | `GestionPreferenciasServiceTest` | `guardarUnaCategoriaNoValidaFalla` (inactiva y que no existe) | Aplicación | AB#287 | PR #220 | 🔍 |
+| HU46-CP09 | `GestionPreferenciasServiceTest` | `guardarSinCategoriasFalla` | Aplicación | AB#287 | PR #220 | 🔍 |
+| HU46-CP10 | `SeguridadPreferenciasServiceTest` | `elClienteUsaSusPreferencias` | Aplicación | AB#287 | PR #220 | 🔍 |
+| HU46-CP10 | `SeguridadPreferenciasServiceTest` | `unClienteNoUsaLasPreferenciasDeOtro` | Aplicación | AB#287 | PR #220 | 🔍 |
+| HU46-CP10 | `SeguridadPreferenciasServiceTest` | `unVendedorNoTienePreferencias` | Aplicación | AB#287 | PR #220 | 🔍 |
+| HU46-CP10 | `SeguridadPreferenciasServiceTest` | `unAdministradorNoTienePreferencias` | Aplicación | AB#287 | PR #220 | 🔍 |
+| HU46-CP10 | `SeguridadPreferenciasServiceTest` | `sinSesionSeRechazanLasPreferencias` | Aplicación | AB#287 | PR #220 | 🔍 |
+| HU46-CP11 | `PreferenciasDocumentMapperTest` | `convierteADocumentoYVueltaSinPerderDatos` | Infraestructura | AB#287 | PR #220 | 🔍 |
+| HU46-CP12 | `PreferenciasMongoAdapterTest` | `guardarPreferenciasNuevasYRecuperarlasPorCliente` | Infraestructura | AB#287 | PR #220 | 🔍 |
+| HU46-CP12 | `PreferenciasMongoAdapterTest` | `guardarOtraVezActualizaLasPreferencias` | Infraestructura | AB#287 | PR #220 | 🔍 |
+| HU46-CP12 | `PreferenciasMongoAdapterTest` | `laColeccionSoloAdmiteUnasPreferenciasPorCliente` | Infraestructura | AB#287 | PR #220 | 🔍 |
+| HU46-CP13 | `ClienteEnSesionAdapterTest` (preferencias) | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#287 | PR #220 | 🔍 |
+| HU46-CP13 | `CategoriasAdapterTest` | `activasPreguntaAlModuloDeCategorias` | Infraestructura | AB#287 | PR #220 | 🔍 |
+| HU46-CP14 | `PreferenciasControllerTest` | `consultarRespondeConLasCategoriasDelCliente` | Infraestructura | AB#287 | PR #220 | 🔍 |
+| HU46-CP15 | `PreferenciasControllerTest` | `guardarRespondeConLasCategoriasGuardadas` | Infraestructura | AB#287 | PR #220 | 🔍 |
+| HU46-CP16 | `PreferenciasControllerTest` | `cuerpoInvalidoNoLlegaAlCasoDeUso` (4 variantes: sin categorías, nulas, que no son una lista e ilegible) | Infraestructura | AB#287 | PR #220 | 🔍 |
+| HU46-CP17 | `PreferenciasControllerTest` | `unaCategoriaNoValidaDevuelve400` | Infraestructura | AB#287 | PR #220 | 🔍 |
+| HU46-CP18 | `PreferenciasControllerTest` | `sinSesionNoSeUsanLasPreferencias` | Infraestructura | AB#287 | PR #220 | 🔍 |
+| HU46-CP18 | `PreferenciasControllerTest` | `noClienteNoTienePreferencias` (vendedor y administrador) | Infraestructura | AB#287 | PR #220 | 🔍 |
+| HU46-CP18 | `PreferenciasControllerTest` | `sinTokenCsrfNoSeGuardan` | Infraestructura | AB#287 | PR #220 | 🔍 |
+| HU46-CP19 | `preferences.test.js` | `HU46-CP19: pide GET /api/customer/preferences y devuelve las categorías del cliente` | Frontend · API | AB#286 | PR #220 | 🔍 |
+| HU46-CP19 | `preferences.test.js` | `HU46-CP19: pide PUT /api/customer/preferences con las categorías y devuelve las guardadas` | Frontend · API | AB#286 | PR #220 | 🔍 |
+| HU46-CP19 | `preferences.test.js` | `HU46-CP19: un 400 llega como error con su estado y su código` | Frontend · API | AB#286 | PR #220 | 🔍 |
+| HU46-CP20 | `ProfilePage.test.jsx` | `HU46-CP20: el cliente ve sus preferencias, con una casilla por cada categoría activa` | Frontend · página | AB#286 | PR #220 | 🔍 |
+| HU46-CP20 | `ProfilePage.test.jsx` | `HU46-CP20: las categorías que ya eligió aparecen marcadas` | Frontend · página | AB#286 | PR #220 | 🔍 |
+| HU46-CP20 | `ProfilePage.test.jsx` | `HU46-CP20: el vendedor no tiene preferencias` | Frontend · página | AB#286 | PR #220 | 🔍 |
+| HU46-CP21 | `ProfilePage.test.jsx` | `HU46-CP21: al marcar una categoría se guarda al momento y se avisa` | Frontend · página | AB#286 | PR #220 | 🔍 |
+| HU46-CP21 | `ProfilePage.test.jsx` | `HU46-CP21: al desmarcar una categoría elegida se guarda sin ella` | Frontend · página | AB#286 | PR #220 | 🔍 |
+| HU46-CP21 | `ProfilePage.test.jsx` | `HU46-CP21: mientras se guarda, las casillas quedan deshabilitadas` | Frontend · página | AB#286 | PR #220 | 🔍 |
+| HU46-CP21 | `ProfilePage.test.jsx` | `HU46-CP21: al volver al perfil, las preferencias siguen guardadas` | Frontend · página | AB#286 | PR #220 | 🔍 |
+| HU46-CP22 | `ProfilePage.test.jsx` | `HU46-CP22: si no se pueden guardar, lo avisa y la casilla vuelve a como estaba` | Frontend · página | AB#286 | PR #220 | 🔍 |
+| HU46-CP22 | `ProfilePage.test.jsx` | `HU46-CP22: si no se pueden cargar, lo avisa sin mostrar las casillas y permite reintentar` | Frontend · página | AB#286 | PR #220 | 🔍 |
+
+---
+
 ## Tests técnicos sin caso de prueba
 
 Tests que no validan una HU concreta.
@@ -4014,6 +4154,7 @@ Tests que no validan una HU concreta.
 | `PedidosConfigTest` | `elContextoConectaLasPiezasDeLosPedidos` | Que Spring conecta la realización de pedidos con su repositorio, el contador y los adaptadores hacia usuarios, carrito, métodos de pago, direcciones y productos (HU10; AB#381, PR #166); y la consulta de compras de HU13 (AB#370, PR #179). También la cancelación de pedidos (HU12; AB#375, PR #200) y las ventas del vendedor (HU17; AB#280, PR #212) |
 | `ValoracionesConfigTest` | `elContextoConectaLasPiezasDeLasValoraciones` | Que Spring conecta la valoración y la consulta de valoraciones con su adaptador de MongoDB y los adaptadores hacia usuarios y pedidos (HU13; AB#370 y AB#371, PR #179), y hacia productos (AB#415, PR #195) |
 | `DeseosConfigTest` | `elContextoConectaLasPiezasDeLaListaDeDeseos` | Que Spring conecta el servicio de la lista de deseos con su adaptador de MongoDB y los adaptadores hacia usuarios y productos (HU14; AB#360, PR #196) |
+| `PreferenciasConfigTest` | `elContextoConectaLasPiezasDeLasPreferencias` | Que Spring conecta el servicio de las preferencias con su adaptador de MongoDB y los adaptadores hacia usuarios y categorías (HU46; AB#287, PR #220) |
 | `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |
 | `IncidenciasConfigTest` | `elContextoConectaLasPiezasDeLasIncidencias` | Que Spring conecta la creación y la consulta de incidencias con su adaptador de MongoDB y el adaptador hacia usuarios (HU44; AB#293 y AB#419, PR pendiente) |
 | `SecurityConfigTest` | `unaPeticionRecibeElTokenCsrfEnUnaCookie` | Que cualquier respuesta, aunque sea un 401, entrega el token CSRF en la cookie `XSRF-TOKEN` sin `HttpOnly` (AB#230, PR #67) |
@@ -4029,7 +4170,7 @@ Tests que no validan una HU concreta.
 | `UsuarioMongoAdapterTest` | `guardaFechasDeCreacionYModificacion` | Que se guardan `createdAt` y `updatedAt` (auditoría de Spring Data) y que `createdAt` no cambia al actualizar (AB#210, PR #43) |
 | `ProductoMongoAdapterTest` | `guardarUnProductoLeidoLoActualiza` | Que guardar un producto leído lo actualiza sin duplicarlo y conserva `createdAt` (AB#202, PR #86) |
 | `ProductoMongoAdapterTest` | `elPrecioSeGuardaComoNumero` | Que el precio y los porcentajes de descuento se guardan como `Decimal128`, no como texto (AB#202, PR #86) |
-| `InicializadorColeccionesTest` | `creaLasCatorceColecciones` | Que al arrancar se crean las 14 colecciones: las 10 del modelo de BBDD, `metodos_pago`, `direcciones_envio`, `contadores` e `incidencias` (AB#210, PR #43; ampliado en AB#271, PR #148, y en AB#105, PR #161; ampliado en AB#131, PR #166; ampliado en AB#291, PR pendiente) |
+| `InicializadorColeccionesTest` | `creaLasQuinceColecciones` | Que al arrancar se crean las 15 colecciones: las 10 del modelo de BBDD, `metodos_pago`, `direcciones_envio`, `contadores`, `preferencias` e `incidencias` (AB#210, PR #43; ampliado en AB#271, PR #148, y en AB#105, PR #161; ampliado en AB#131, PR #166, y en AB#287, PR #220; ampliado en AB#291, PR pendiente) |
 | `InicializadorColeccionesTest` | `sePuedeEjecutarOtraVez` | Que el inicializador se puede ejecutar en cada arranque sin fallar ni duplicar índices (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `actualizaLaValidacionDeUnaColeccionExistente` | Que aplica la validación a una colección que ya existía sin ella (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `sinPermisoParaCambiarLaValidacionNoFalla` | Que sin permiso `collMod` (usuario de la aplicación en Atlas) avisa y la aplicación arranca igual (AB#210, PR #43) |

@@ -31,4 +31,10 @@ public interface GestionListaDeseosUseCase {
      * @return la lista actualizada, como en {@link #consultar}
      */
     ListaDeseosDetallada quitar(String emailCliente, String productoId);
+
+    /**
+     * Borra la lista del cliente, para cuando elimina su cuenta. Si no tiene lista no es un error. Hay que llamarlo
+     * antes de borrar al usuario: la lista se busca por el id del cliente, que se obtiene de su correo.
+     */
+    void eliminar(String emailCliente);
 }

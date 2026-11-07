@@ -9,6 +9,7 @@ import es.uclm.esibuy.backend.carrito.domain.exception.LineaCarritoNoEncontradaE
 import es.uclm.esibuy.backend.carrito.domain.exception.ProductoNoComprableException;
 import es.uclm.esibuy.backend.carrito.domain.exception.StockInsuficienteException;
 import es.uclm.esibuy.backend.deseos.domain.exception.ProductoNoDisponibleException;
+import es.uclm.esibuy.backend.preferencias.domain.exception.PreferenciasInvalidasException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionInvalidaException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionNoEncontradaException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.LimiteDireccionesException;
@@ -267,6 +268,14 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError categoriaInvalida() {
         return new RespuestaError("La categoría es inválida", CODIGO_VALIDACION);
+    }
+
+    // 400 + code al guardar las preferencias (HU46, T287): faltan las categorías, o alguna no existe o no está activa.
+    // El mensaje es genérico: no dice cuál.
+    @ExceptionHandler(PreferenciasInvalidasException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError preferenciasInvalidas() {
+        return new RespuestaError("Las preferencias son inválidas", CODIGO_VALIDACION);
     }
 
     // 409 + code cuando ya hay una categoría con ese nombre, sin distinguir mayúsculas ni tildes (HU40, T323).

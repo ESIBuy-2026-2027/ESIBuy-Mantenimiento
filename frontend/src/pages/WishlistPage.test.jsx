@@ -75,7 +75,7 @@ describe('WishlistPage (HU14): acceso', () => {
     await abrirSesionPorApi('vendedor@esibuy.test')
     renderApp('/wishlist')
 
-    await esperarRuta('/seller/products')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/seller/products$')))
   })
 })
 

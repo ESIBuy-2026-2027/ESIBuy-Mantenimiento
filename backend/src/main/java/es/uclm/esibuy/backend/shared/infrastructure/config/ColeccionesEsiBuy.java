@@ -51,6 +51,8 @@ final class ColeccionesEsiBuy {
     private static final String PRODUCTO_ID = "productoId";
     private static final String TOKEN_HASH = "tokenHash";
     private static final String CATEGORIA_ID = "categoriaId";
+    private static final String TELEFONO = "telefono";
+    private static final String NOMBRE_COMERCIAL = "nombreComercial";
 
     /** Una colección: su nombre, su validación y los índices que no vienen de anotaciones. */
     record Coleccion(String nombre, MongoJsonSchema esquema, List<Index> indices) {
@@ -62,7 +64,7 @@ final class ColeccionesEsiBuy {
     static List<Coleccion> todas() {
         return List.of(usuarios(), sesiones(), factoresAutenticacion(), tokensSeguridad(), productos(),
                 pedidos(), carritos(), valoraciones(), categorias(), listasDeseos(), metodosPago(), direccionesEnvio(),
-                contadores(), incidencias());
+                contadores(), preferencias(), incidencias());
     }
 
     // 1. usuarios: identidad, rol, estado y perfil, con los campos del modelo en la raíz del documento,
@@ -80,7 +82,7 @@ final class ColeccionesEsiBuy {
                 textoNoVacio(NOMBRE),
                 textoNoVacio("apellidos"),
                 textoNoVacio("dni"),
-                textoNoVacio("telefono"),
+                textoNoVacio(TELEFONO),
                 string("imagenPerfil"),
                 bool("emailVerificado"),
                 date("fechaNacimiento"),
@@ -91,7 +93,7 @@ final class ColeccionesEsiBuy {
                 fechaOpcional("lockedUntil"), // null = sin bloqueo, como en el ejemplo del modelo
                 fechaOpcional("lastLoginAt"),
                 // Vendedor y administrador (modelo: «campos específicos»).
-                textoNoVacio("nombreComercial"),
+                textoNoVacio(NOMBRE_COMERCIAL),
                 textoNoVacio("categoriaPrincipalId"),
                 textoNoVacio("sede"),
                 date("fechaIncorporacion")),
@@ -101,7 +103,7 @@ final class ColeccionesEsiBuy {
                 List.of(indice("rol").on("dni", Sort.Direction.ASC).unique().named("rol_dni")
                                 .partial(PartialIndexFilter.of(Criteria.where("dni").exists(true))),
                         // Modelo: nombreComercial → único, si aplica (sparse: solo cuentan los vendedores).
-                        indice("nombreComercial").unique().sparse()));
+                        indice(NOMBRE_COMERCIAL).unique().sparse()));
     }
 
     // 2. sesiones: revocables y caducables. TTL: MongoDB borra la sesión al llegar a expiresAt.
@@ -206,7 +208,7 @@ final class ColeccionesEsiBuy {
                 string("paymentMethodId"),
                 string("numeroPedido").matching("^ESB-[0-9]{4}-[0-9]{6}$"),
                 textoNoVacio(VENDEDOR_ID),
-                string("nombreComercial")),
+                string(NOMBRE_COMERCIAL)),
                 List.of(indice(CLIENTE_ID), indice(ESTADO), indice("createdAt"), indice("lineas.productoId"),
                         indice("lineas.vendedorId"), indice("numeroPedido").unique().sparse()));
     }
@@ -279,7 +281,7 @@ final class ColeccionesEsiBuy {
     private static Coleccion direccionesEnvio() {
         return new Coleccion("direcciones_envio",
                 esquema(List.of(CLIENTE_ID, "destinatario", "calle", "codigoPostal", "ciudad", "provincia",
-                                "telefono", "principal"),
+                                TELEFONO, "principal"),
                         textoNoVacio(CLIENTE_ID),
                         string("destinatario").minLength(1).maxLength(100),
                         string("calle").minLength(1).maxLength(150),
@@ -287,7 +289,7 @@ final class ColeccionesEsiBuy {
                         string("codigoPostal").matching("^[0-9]{5}$"),
                         string("ciudad").minLength(1).maxLength(100),
                         string("provincia").minLength(1).maxLength(100),
-                        string("telefono").matching("^[0-9]{9}$"),
+                        string(TELEFONO).matching("^[0-9]{9}$"),
                         bool("principal")),
                 List.of());
     }
@@ -298,7 +300,15 @@ final class ColeccionesEsiBuy {
         return new Coleccion("contadores", esquema(List.of("valor"), number("valor").gte(1)), List.of());
     }
 
-    // 14. incidencias: lo que un cliente o un vendedor reporta para que un administrador lo revise (HU44). Mismas
+    // 14. preferencias: las categorías que interesan a cada cliente (HU46), fuera del modelo inicial. Unas por cliente.
+    private static Coleccion preferencias() {
+        return new Coleccion("preferencias", esquema(List.of(CLIENTE_ID),
+                textoNoVacio(CLIENTE_ID),
+                array("categorias").items(JsonSchemaObject.string())),
+                List.of(indice(CLIENTE_ID).unique()));
+    }
+
+    // 15. incidencias: lo que un cliente o un vendedor reporta para que un administrador lo revise (HU44). Mismas
     // reglas que la entidad Incidencia: asunto de hasta 100 caracteres, descripción de hasta 1000 y estado PENDIENTE
     // o ABIERTA (una incidencia cerrada se elimina). El índice por usuario sirve para consultar las suyas.
     private static Coleccion incidencias() {
