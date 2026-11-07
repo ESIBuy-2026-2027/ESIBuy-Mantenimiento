@@ -4346,6 +4346,72 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU50 · Apertura y cierre de incidencias
+
+### Tabla A · HU50 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU50-CP01 | Abrir una incidencia pendiente la deja `ABIERTA` con la respuesta del administrador y conserva el resto de sus datos | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#302, PR pendiente) |
+| HU50-CP02 | La respuesta es obligatoria para abrir una incidencia: se rechaza nula, vacía o solo con espacios | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#302, PR pendiente) |
+| HU50-CP03 | La respuesta admite hasta 1000 caracteres, sin contar los espacios de los extremos, que no se guardan; con más se rechaza | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#302, PR pendiente) |
+| HU50-CP04 | Una incidencia ya abierta no se vuelve a abrir | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#302, PR pendiente) |
+| HU50-CP05 | El servicio abre la incidencia pedida, la guarda abierta con la respuesta y la devuelve | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#302, PR pendiente) |
+| HU50-CP06 | Abrir una incidencia que no existe se rechaza sin guardar nada | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#302, PR pendiente) |
+| HU50-CP07 | Si no se puede abrir (ya abierta o sin respuesta), el servicio no guarda nada y la incidencia queda como estaba | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#302, PR pendiente) |
+| HU50-CP08 | El adaptador de MongoDB busca una incidencia por su id (vacío si no existe) y, al guardarla abierta, la actualiza sin crear otra | Integración MongoDB | 3 | 🔍 En revisión (3, AB#302, PR pendiente) |
+| HU50-CP09 | Solo el administrador abre y cierra incidencias; cliente y vendedor reciben 403 y sin sesión se rechaza. Seguridad en la capa de negocio | Unitario con Spring Security (sin MongoDB) | 8 | 🔍 En revisión (8, AB#302 · AB#303, PR pendiente) |
+| HU50-CP10 | Cerrar una incidencia la elimina, esté pendiente o abierta, y no toca las demás | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#303, PR pendiente) |
+| HU50-CP11 | Cerrar una incidencia que no existe se rechaza sin eliminar nada | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#303, PR pendiente) |
+| HU50-CP12 | El adaptador de MongoDB elimina solo la incidencia con ese id, y con un id que no existe no borra nada | Integración MongoDB | 2 | 🔍 En revisión (2, AB#303, PR pendiente) |
+
+Notas:
+- **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** HU50-CP01 a CP12 los propone el desarrollo backend a partir de los criterios de la HU50 («la vista de incidencias debe poder abrir / cerrar la incidencia», «una vez cerrada la incidencia, esta se elimina») y no salen de Azure Boards. Rama `feature/US50-T302-apertura-incidencias`.
+- **T302 (AB#302, lógica de apertura):** `Incidencia.abrir(respuesta)` en el dominio (solo desde `PENDIENTE`, `IncidenciaYaAbiertaException` si no) y el puerto de entrada `ResolucionIncidenciasUseCase` con su servicio `ResolucionIncidenciasService` (`@PreAuthorize(SOLO_ADMINISTRADOR)`), que busca por id (`IncidenciaRepositoryPort.buscarPorId`, nuevo) y guarda (CP01 a CP09).
+- **T303 (AB#303, lógica de cierre y eliminación):** `ResolucionIncidenciasUseCase.cerrar(id)` comprueba que existe y la elimina (`IncidenciaRepositoryPort.eliminar`, nuevo) (CP09 a CP12).
+- **Puerto propio (decisión del desarrollo, 07/11/2026):** el actor es el mismo que en la HU49, pero `SupervisionIncidenciasUseCase` solo consulta y este cambia las incidencias, así que es un puerto aparte.
+- **La respuesta se escribe al abrir y es obligatoria (decisión del desarrollo, 07/11/2026):** al cerrar, la incidencia se elimina, así que la respuesta es lo único que llega a ver su autor. Hasta 1000 caracteres, como la descripción (CP02 y CP03).
+- **Cerrar en cualquier estado (decisión del desarrollo, 07/11/2026):** se puede cerrar una incidencia pendiente sin abrirla antes, para descartar spam o duplicados (CP10).
+- **Seguridad en la capa de negocio (R8):** CP09 comprueba, para abrir y para cerrar, que el administrador pasa, que cliente y vendedor reciben 403 y que sin sesión se rechaza.
+- **Pendiente:** los endpoints de abrir y cerrar (T300 y T301), cuando exista el controlador de `/api/admin/incidencias` de la HU49 (T306), con la traducción de los errores (409 `INCIDENT_ALREADY_OPEN` y 404 `INCIDENT_NOT_FOUND`); y el botón del frontend (T305).
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU50-CP01 | `IncidenciaTest` | `HU50-CP01: abrir una incidencia pendiente la deja abierta con la respuesta del administrador` | Dominio | AB#302 | PR pendiente | 🔍 |
+| HU50-CP02 | `IncidenciaTest` | `HU50-CP02: la respuesta es obligatoria para abrir una incidencia` (parametrizado: nula, vacía, espacios y tabulador) | Dominio | AB#302 | PR pendiente | 🔍 |
+| HU50-CP03 | `IncidenciaTest` | `HU50-CP03: la respuesta admite hasta 1000 caracteres y se guarda sin espacios en los extremos` | Dominio | AB#302 | PR pendiente | 🔍 |
+| HU50-CP03 | `IncidenciaTest` | `HU50-CP03: rechaza una respuesta de más de 1000 caracteres` | Dominio | AB#302 | PR pendiente | 🔍 |
+| HU50-CP04 | `IncidenciaTest` | `HU50-CP04: una incidencia ya abierta no se vuelve a abrir` | Dominio | AB#302 | PR pendiente | 🔍 |
+| HU50-CP05 | `ResolucionIncidenciasServiceTest` | `HU50-CP05: abrir una incidencia pendiente la guarda abierta con la respuesta y la devuelve` | Aplicación | AB#302 | PR pendiente | 🔍 |
+| HU50-CP06 | `ResolucionIncidenciasServiceTest` | `HU50-CP06: abrir una incidencia que no existe se rechaza sin guardar nada` | Aplicación | AB#302 | PR pendiente | 🔍 |
+| HU50-CP07 | `ResolucionIncidenciasServiceTest` | `HU50-CP07: abrir una incidencia ya abierta se rechaza y conserva la respuesta que tenía` | Aplicación | AB#302 | PR pendiente | 🔍 |
+| HU50-CP07 | `ResolucionIncidenciasServiceTest` | `HU50-CP07: abrir sin respuesta se rechaza y la incidencia sigue pendiente` | Aplicación | AB#302 | PR pendiente | 🔍 |
+| HU50-CP08 | `IncidenciaMongoAdapterTest` | `HU50-CP08: buscar por id devuelve la incidencia guardada con todos sus datos` | Infraestructura (MongoDB) | AB#302 | PR pendiente | 🔍 |
+| HU50-CP08 | `IncidenciaMongoAdapterTest` | `HU50-CP08: buscar por id una incidencia que no existe devuelve vacío` | Infraestructura (MongoDB) | AB#302 | PR pendiente | 🔍 |
+| HU50-CP08 | `IncidenciaMongoAdapterTest` | `HU50-CP08: guardar una incidencia abierta actualiza su estado y su respuesta, sin crear otra` | Infraestructura (MongoDB) | AB#302 | PR pendiente | 🔍 |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: el administrador abre una incidencia` | Aplicación · seguridad | AB#302 | PR pendiente | 🔍 |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un cliente no abre incidencias` | Aplicación · seguridad | AB#302 | PR pendiente | 🔍 |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un vendedor no abre incidencias` | Aplicación · seguridad | AB#302 | PR pendiente | 🔍 |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: sin sesión no se abren incidencias` | Aplicación · seguridad | AB#302 | PR pendiente | 🔍 |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: el administrador cierra una incidencia` | Aplicación · seguridad | AB#303 | PR pendiente | 🔍 |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un cliente no cierra incidencias` | Aplicación · seguridad | AB#303 | PR pendiente | 🔍 |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un vendedor no cierra incidencias` | Aplicación · seguridad | AB#303 | PR pendiente | 🔍 |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: sin sesión no se cierran incidencias` | Aplicación · seguridad | AB#303 | PR pendiente | 🔍 |
+| HU50-CP10 | `ResolucionIncidenciasServiceTest` | `HU50-CP10: cerrar una incidencia la elimina, esté pendiente o abierta` (parametrizado: `PENDIENTE` y `ABIERTA`) | Aplicación | AB#303 | PR pendiente | 🔍 |
+| HU50-CP11 | `ResolucionIncidenciasServiceTest` | `HU50-CP11: cerrar una incidencia que no existe se rechaza sin eliminar nada` | Aplicación | AB#303 | PR pendiente | 🔍 |
+| HU50-CP12 | `IncidenciaMongoAdapterTest` | `HU50-CP12: eliminar borra solo la incidencia con ese id` | Infraestructura (MongoDB) | AB#303 | PR pendiente | 🔍 |
+| HU50-CP12 | `IncidenciaMongoAdapterTest` | `HU50-CP12: eliminar una incidencia que no existe no borra nada` | Infraestructura (MongoDB) | AB#303 | PR pendiente | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `IncidenciaTest`: `incidencias/domain/model/` (JUnit, sin Spring)
+- `ResolucionIncidenciasServiceTest`: `incidencias/application/service/` (JUnit, sin Spring, con un repositorio en memoria)
+- `SeguridadIncidenciasServiceTest`: `incidencias/application/service/` (contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
+- `IncidenciaMongoAdapterTest`: `incidencias/infrastructure/adapter/out/persistence/` (con Testcontainers)
+
+---
+
 ## Tests técnicos sin caso de prueba
 
 Tests que no validan una HU concreta.
@@ -4368,6 +4434,7 @@ Tests que no validan una HU concreta.
 | `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |
 | `IncidenciasConfigTest` | `elContextoConectaLasPiezasDeLasIncidencias` | Que Spring conecta la creación y la consulta de incidencias con su adaptador de MongoDB y el adaptador hacia usuarios (HU44; AB#293 y AB#419, PR pendiente) |
 | `IncidenciasConfigTest` | `elContextoConectaLaSupervisionDeIncidencias` | Que Spring conecta la supervisión de incidencias del administrador con el adaptador hacia usuarios (HU49; AB#307, PR pendiente) |
+| `IncidenciasConfigTest` | `elContextoConectaLaResolucionDeIncidencias` | Que Spring conecta la resolución de incidencias del administrador (abrir y cerrar) con `ResolucionIncidenciasService` (HU50; AB#302, PR pendiente) |
 | `SecurityConfigTest` | `unaPeticionRecibeElTokenCsrfEnUnaCookie` | Que cualquier respuesta, aunque sea un 401, entrega el token CSRF en la cookie `XSRF-TOKEN` sin `HttpOnly` (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostSinTokenCsrfSeRechaza` | Que un `POST` sin token CSRF se rechaza con 403 (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostConElTokenDeLaCookieEnLaCabeceraSeAcepta` | Que un `POST` con el token de la cookie en la cabecera `X-XSRF-TOKEN` pasa el filtro CSRF (AB#230, PR #67) |
