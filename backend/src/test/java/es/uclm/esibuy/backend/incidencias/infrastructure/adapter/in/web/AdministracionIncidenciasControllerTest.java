@@ -2,12 +2,16 @@ package es.uclm.esibuy.backend.incidencias.infrastructure.adapter.in.web;
 
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -22,12 +26,16 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import es.uclm.esibuy.backend.incidencias.application.port.in.ResolucionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.SupervisionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaInvalidaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaNoEncontradaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaYaAbiertaException;
 import es.uclm.esibuy.backend.incidencias.domain.model.AutorIncidencia;
 import es.uclm.esibuy.backend.incidencias.domain.model.EstadoIncidencia;
 import es.uclm.esibuy.backend.incidencias.domain.model.Incidencia;
@@ -37,7 +45,8 @@ import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 
 // Supervisión de incidencias por el administrador (HU49, T306): GET /api/admin/incidencias. El caso de uso es un
 // doble de prueba; la seguridad es la real (SecurityConfig: /api/admin/** solo para ADMINISTRADOR).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU49-CP11 a CP14, propuestos.
+// Y abrir y cerrar incidencias (HU50, T300 y T301), con el caso de uso de resolución como doble de prueba.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU49-CP11 a CP14 y HU50-CP13 a CP17, propuestos.
 @WebMvcTest(AdministracionIncidenciasController.class)
 @Import(SecurityConfig.class)
 class AdministracionIncidenciasControllerTest {
@@ -52,6 +61,9 @@ class AdministracionIncidenciasControllerTest {
 
     @MockitoBean
     private SupervisionIncidenciasUseCase supervisionIncidencias;
+
+    @MockitoBean
+    private ResolucionIncidenciasUseCase resolucionIncidencias;
 
     private static IncidenciaSupervisada supervisada(AutorIncidencia autor) {
         Incidencia incidencia = new Incidencia("i-1", "c-1", "No me llega el pedido", "Lo pedi hace una semana",
@@ -163,5 +175,99 @@ class AdministracionIncidenciasControllerTest {
                 .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
 
         verify(supervisionIncidencias, never()).consultarTodas(anyInt(), anyInt());
+    }
+
+    // Abrir una incidencia (HU50, T300): PATCH /api/admin/incidencias/{id}/abrir con la respuesta del administrador
+
+    private static final String URL_ABRIR = URL + "/i-1/abrir";
+    private static final String CUERPO_ABRIR = "{\"respuesta\": \"Lo estamos revisando\"}";
+
+    private static Incidencia abierta() {
+        return new Incidencia("i-1", "c-1", "No me llega el pedido", "Lo pedi hace una semana",
+                EstadoIncidencia.ABIERTA, "Lo estamos revisando", AHORA);
+    }
+
+    private ResultActions abrirComoAdministrador(String cuerpo) throws Exception {
+        return mockMvc.perform(patch(URL_ABRIR).with(user(ADMINISTRADOR).roles("ADMINISTRADOR")).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON).content(cuerpo));
+    }
+
+    @Test
+    @DisplayName("HU50-CP13: abrir responde 200 con la incidencia abierta y su respuesta, sin el id del autor")
+    void abrirResponde200ConLaIncidenciaAbierta() throws Exception {
+        when(resolucionIncidencias.abrir("i-1", "Lo estamos revisando")).thenReturn(abierta());
+
+        abrirComoAdministrador(CUERPO_ABRIR)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("i-1"))
+                .andExpect(jsonPath("$.asunto").value("No me llega el pedido"))
+                .andExpect(jsonPath("$.descripcion").value("Lo pedi hace una semana"))
+                .andExpect(jsonPath("$.estado").value("ABIERTA"))
+                .andExpect(jsonPath("$.respuesta").value("Lo estamos revisando"))
+                .andExpect(jsonPath("$.fechaCreacion").value("2026-11-06T10:15:30Z"))
+                .andExpect(jsonPath("$.autorId").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("HU50-CP14: abrir una incidencia que no existe responde 404 INCIDENT_NOT_FOUND")
+    void abrirUnaQueNoExisteResponde404() throws Exception {
+        when(resolucionIncidencias.abrir(anyString(), anyString())).thenThrow(new IncidenciaNoEncontradaException());
+
+        abrirComoAdministrador(CUERPO_ABRIR)
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("INCIDENT_NOT_FOUND"))
+                .andExpect(jsonPath("$.mensaje").value("La incidencia no existe"));
+    }
+
+    @Test
+    @DisplayName("HU50-CP14: abrir una incidencia ya abierta responde 409 INCIDENT_ALREADY_OPEN")
+    void abrirUnaYaAbiertaResponde409() throws Exception {
+        when(resolucionIncidencias.abrir(anyString(), anyString())).thenThrow(new IncidenciaYaAbiertaException());
+
+        abrirComoAdministrador(CUERPO_ABRIR)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INCIDENT_ALREADY_OPEN"))
+                .andExpect(jsonPath("$.mensaje").value("La incidencia ya está abierta"));
+    }
+
+    @Test
+    @DisplayName("HU50-CP14: una respuesta que el dominio rechaza responde 400 VALIDATION_ERROR con un mensaje genérico")
+    void unaRespuestaInvalidaResponde400() throws Exception {
+        when(resolucionIncidencias.abrir(anyString(), any()))
+                .thenThrow(new IncidenciaInvalidaException("detalle interno"));
+
+        abrirComoAdministrador("{\"respuesta\": \"  \"}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.mensaje").value("La incidencia es inválida"));
+    }
+
+    @Test
+    @DisplayName("HU50-CP14: un cuerpo que no es JSON responde 400 y no llega al caso de uso")
+    void unCuerpoIlegibleResponde400() throws Exception {
+        abrirComoAdministrador("no es json").andExpect(status().isBadRequest());
+
+        verify(resolucionIncidencias, never()).abrir(any(), any());
+    }
+
+    @Test
+    @DisplayName("HU50-CP17: sin sesión abrir responde 401")
+    void sinSesionAbrirResponde401() throws Exception {
+        mockMvc.perform(patch(URL_ABRIR).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(CUERPO_ABRIR))
+                .andExpect(status().isUnauthorized());
+
+        verify(resolucionIncidencias, never()).abrir(any(), any());
+    }
+
+    @ParameterizedTest(name = "rol {1}")
+    @CsvSource({"cliente@esibuy.test,CLIENTE", "vendedor@esibuy.test,VENDEDOR"})
+    @DisplayName("HU50-CP17: un cliente o un vendedor que intentan abrir reciben 403 ACCESS_DENIED")
+    void clienteYVendedorNoAbren(String email, String rol) throws Exception {
+        mockMvc.perform(patch(URL_ABRIR).with(user(email).roles(rol)).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(CUERPO_ABRIR))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+
+        verify(resolucionIncidencias, never()).abrir(any(), any());
     }
 }
