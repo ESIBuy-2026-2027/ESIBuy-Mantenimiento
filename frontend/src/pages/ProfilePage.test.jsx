@@ -248,13 +248,11 @@ describe('ProfilePage (HU4): acceso', () => {
 })
 
 describe('ProfilePage (HU47): eliminar mi cuenta', () => {
-  it('HU47-CP13: el vendedor tiene la opción de eliminar su cuenta y el cliente no', async () => {
+  it('HU47-CP13: el vendedor tiene la opción de eliminar su cuenta en su perfil', async () => {
     await abrirPerfil('vendedor@esibuy.test')
-    expect(screen.getByRole('button', { name: /^eliminar mi cuenta$/i })).toBeInTheDocument()
-    cleanup()
 
-    await abrirPerfil('cliente@esibuy.test')
-    expect(screen.queryByRole('button', { name: /^eliminar mi cuenta$/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('region', { name: /^eliminar mi cuenta$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^eliminar mi cuenta$/i })).toBeInTheDocument()
   })
 
   it('HU47-CP14: tras eliminar la cuenta se cierra la sesión y el login avisa de que se ha eliminado', async () => {
@@ -269,5 +267,36 @@ describe('ProfilePage (HU47): eliminar mi cuenta', () => {
 
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/))
     expect(await screen.findByText('Tu cuenta se ha eliminado.')).toBeInTheDocument()
+  })
+})
+
+describe('ProfilePage (HU25): eliminar mi cuenta de cliente', () => {
+  it('HU25-CP06: el cliente tiene la opción de eliminar su cuenta en su perfil, igual que el vendedor', async () => {
+    await abrirPerfil('cliente@esibuy.test')
+
+    const seccion = screen.getByRole('region', { name: /^eliminar mi cuenta$/i })
+    expect(within(seccion).getByRole('button', { name: /^eliminar mi cuenta$/i })).toBeInTheDocument()
+    expect(seccion).toHaveTextContent(/pedidos y valoraciones se conservan/i)
+  })
+
+  it('HU25-CP06: la opción es del perfil propio: el administrador no la tiene, porque no tiene perfil', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/profile')
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/admin$/))
+    expect(screen.queryByRole('region', { name: /^eliminar mi cuenta$/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^eliminar mi cuenta$/i })).not.toBeInTheDocument()
+  })
+
+  it('HU25-CP06: al pulsar el botón se abre la confirmación y al cancelarla no se elimina nada', async () => {
+    const usuario = userEvent.setup()
+    await abrirPerfil('cliente@esibuy.test')
+
+    await usuario.click(screen.getByRole('button', { name: /^eliminar mi cuenta$/i }))
+    const dialogo = await screen.findByRole('alertdialog', { name: /eliminar mi cuenta/i })
+    await usuario.click(within(dialogo).getByRole('button', { name: /cancelar/i }))
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/profile$/)
   })
 })
