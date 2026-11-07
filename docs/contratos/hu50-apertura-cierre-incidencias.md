@@ -12,7 +12,7 @@ Se apoya en el módulo `incidencias` de la HU44 (crear, contrato en `hu44-incide
 | T303 (AB#303) | Backend: lógica de cierre y eliminación de incidencias | Hecha |
 | T300 (AB#300) | Backend: endpoint `PATCH /api/admin/incidencias/{id}/abrir` | Hecha |
 | T301 (AB#301) | Backend: endpoint `DELETE /api/admin/incidencias/{id}` | Hecha |
-| T305 (AB#305) | Frontend: botón de apertura y cierre de incidencias | Pendiente |
+| T305 (AB#305) | Frontend: botón de apertura y cierre de incidencias (`frontend/docs/hu50-apertura-cierre-incidencias.md`) | Hecha |
 
 ## Ciclo de vida de una incidencia
 
