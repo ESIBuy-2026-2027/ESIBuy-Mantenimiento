@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import { cerrarSesionMock, esClaveValida, getUsuarioEnSesion } from './authHandlers'
+import { cerrarSesionMock, eliminarCuentaMock, esClaveValida, getUsuarioEnSesion } from './authHandlers'
 
 // Datos del perfil de los usuarios de ejemplo (HU4), además de los de la sesión (nombre, apellidos, email y rol).
 // Vicente (vendedor-vacio@esibuy.test) y Nora (nuevo@esibuy.test) no tienen teléfono ni imagen de perfil.
@@ -45,18 +45,24 @@ export const profileHandlers = [
     return HttpResponse.json({ id, nombre, apellidos, email, rol, ...DATOS_DE_PERFIL[id] })
   }),
 
-  // Eliminar la cuenta propia (HU47, PR #203): solo el vendedor. Con la contraseña correcta cierra la sesión (204);
-  // con una incorrecta, 400 WRONG_PASSWORD y la sesión sigue abierta. La cuenta no se borra de USUARIOS: así el
-  // siguiente test, o la siguiente recarga, vuelve a tenerla.
+  // Eliminar la cuenta propia: un único endpoint para el vendedor (HU47, PR #203) y el cliente (HU25, PR #235). Sin
+  // sesión 401 y el administrador 403. Sin contraseña, 400 VALIDATION_ERROR; con una incorrecta, 400 WRONG_PASSWORD y
+  // la sesión sigue abierta. Con la correcta responde 204 y cierra la sesión; la cuenta del cliente deja de existir
+  // para el login. La del vendedor no se borra de USUARIOS: así el siguiente test, o la siguiente recarga, vuelve a
+  // tenerla.
   http.delete('/api/perfil', async ({ request }) => {
     const usuario = getUsuarioEnSesion()
     if (!usuario) return new HttpResponse(null, { status: 401 })
-    if (usuario.rol !== 'VENDEDOR') return new HttpResponse(null, { status: 403 })
+    if (usuario.rol === 'ADMINISTRADOR') return HttpResponse.json({ code: 'ACCESS_DENIED' }, { status: 403 })
 
     const { password } = await request.json()
+    if (typeof password !== 'string' || !password.trim()) {
+      return HttpResponse.json({ code: 'VALIDATION_ERROR' }, { status: 400 })
+    }
     if (!esClaveValida(password)) return HttpResponse.json({ code: 'WRONG_PASSWORD' }, { status: 400 })
 
-    cerrarSesionMock()
+    if (usuario.rol === 'CLIENTE') eliminarCuentaMock(usuario)
+    else cerrarSesionMock()
     return new HttpResponse(null, { status: 204 })
   }),
 ]
