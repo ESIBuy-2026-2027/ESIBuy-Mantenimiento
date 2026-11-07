@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { delay, http, HttpResponse } from 'msw'
+import { login } from '../api/auth'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
@@ -298,5 +299,81 @@ describe('ProfilePage (HU25): eliminar mi cuenta de cliente', () => {
 
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/profile$/)
+  })
+})
+
+// Contraseña de las cuentas de ejemplo de los mocks: la que el mock da por buena al confirmar la eliminación
+const CLAVE_DE_LOS_MOCKS = 'Mock-Clave-1!'
+
+async function confirmarEliminacion(usuario, contrasena) {
+  await usuario.click(screen.getByRole('button', { name: /^eliminar mi cuenta$/i }))
+  const dialogo = await screen.findByRole('alertdialog', { name: /eliminar mi cuenta/i })
+  await usuario.type(within(dialogo).getByLabelText(/^contraseña actual/i), contrasena)
+  await usuario.click(within(dialogo).getByRole('button', { name: /^eliminar mi cuenta$/i }))
+  return dialogo
+}
+
+describe('ProfilePage (HU25): confirmar la eliminación de la cuenta del cliente', () => {
+  it('HU25-CP11: con la contraseña correcta se cierra la sesión, se va al login y se avisa de que la cuenta se ha eliminado', async () => {
+    const usuario = userEvent.setup()
+    await abrirPerfil('cliente@esibuy.test')
+
+    await confirmarEliminacion(usuario, CLAVE_DE_LOS_MOCKS)
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/))
+    expect(await screen.findByText('Tu cuenta se ha eliminado.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /cerrar sesión/i })).not.toBeInTheDocument()
+  })
+
+  it('HU25-CP11: la zona del cliente deja de ser accesible tras eliminar la cuenta', async () => {
+    const usuario = userEvent.setup()
+    await abrirPerfil('cliente@esibuy.test')
+    await confirmarEliminacion(usuario, CLAVE_DE_LOS_MOCKS)
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/))
+    cleanup()
+
+    renderApp('/profile')
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/))
+  })
+
+  it('HU25-CP11: con una contraseña incorrecta la sesión sigue abierta, se avisa en el campo y se queda en el perfil', async () => {
+    const usuario = userEvent.setup()
+    await abrirPerfil('cliente@esibuy.test')
+
+    const dialogo = await confirmarEliminacion(usuario, 'Otra-clave-1!')
+
+    await waitFor(() =>
+      expect(within(dialogo).getByLabelText(/^contraseña actual/i)).toHaveAccessibleDescription(
+        'La contraseña actual no es correcta.',
+      ),
+    )
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/profile$/)
+    expect(screen.getByRole('button', { name: /cerrar sesión/i, hidden: true })).toBeInTheDocument()
+    expect(screen.queryByText('Tu cuenta se ha eliminado.')).not.toBeInTheDocument()
+  })
+
+  it('HU25-CP12: después de eliminarla no se puede iniciar sesión con esa cuenta, y las demás siguen entrando', async () => {
+    const usuario = userEvent.setup()
+    await abrirPerfil('cliente@esibuy.test')
+    await confirmarEliminacion(usuario, CLAVE_DE_LOS_MOCKS)
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/))
+
+    await expect(login({ email: 'cliente@esibuy.test', password: CLAVE_DE_LOS_MOCKS })).rejects.toMatchObject({
+      status: 401,
+    })
+    await expect(login({ email: 'vendedor@esibuy.test', password: CLAVE_DE_LOS_MOCKS })).resolves.toBeDefined()
+  })
+
+  it('HU25-CP12: eliminar la cuenta de un cliente no elimina la de otro', async () => {
+    const usuario = userEvent.setup()
+    await abrirPerfil('cliente@esibuy.test')
+    await confirmarEliminacion(usuario, CLAVE_DE_LOS_MOCKS)
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/))
+    cleanup()
+
+    await abrirPerfil('nuevo@esibuy.test')
+
+    expect(screen.getByRole('region', { name: /^eliminar mi cuenta$/i })).toBeInTheDocument()
   })
 })
