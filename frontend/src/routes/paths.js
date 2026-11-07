@@ -12,6 +12,8 @@ export const PATHS = {
   ORDERS: '/orders',
   ORDER_DETAIL: '/orders/:id',
   WISHLIST: '/wishlist',
+  INCIDENTS: '/incidents',
+  INCIDENT_NEW: '/incidents/new',
   ADMIN: '/admin',
   ADMIN_USERS: '/admin/users',
   ADMIN_CLIENTS: '/admin/clients',

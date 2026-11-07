@@ -128,6 +128,8 @@ Además de `handlers.js`, cada módulo tiene su propio archivo de handlers en `s
 | Archivo | Método y ruta | Respuesta |
 |---|---|---|
 | `adminCategoriesHandlers.js` (HU39) | `GET /api/admin/categorias` | `401` sin sesión, `403` con `{ "code": "ACCESS_DENIED" }` si el usuario no es administrador y, para el administrador, 8 categorías de ejemplo (6 activas y 2 inactivas, ordenadas por nombre, con alguna sin descripción o sin productos) |
+| `incidentsHandlers.js` (HU44) | `GET /api/perfil/incidencias?page&size` | `401` sin sesión, `403` con `{ "code": "ACCESS_DENIED" }` si es administrador y, para cliente y vendedor, sus incidencias de más antiguas a más recientes, por páginas (`page` desde 1, `size` de 1 a 50, por defecto 10). `400 VALIDATION_ERROR` si la página o el tamaño están fuera de rango y `400` sin cuerpo si no son números. Datos de ejemplo: Carlos (`cliente@esibuy.test`) 12 incidencias (dos páginas, con estados y respuestas variados), Vera (`vendedor@esibuy.test`) 2 y Vicente (`vendedor-vacio@esibuy.test`) ninguna |
+| `incidentsHandlers.js` (HU44) | `POST /api/perfil/incidencias` | `401`, `403` (administrador), `400 VALIDATION_ERROR` con `{ "mensaje": "La incidencia es inválida" }` si el asunto (hasta 100) o la descripción (hasta 1000) están vacíos o se pasan, sin contar los espacios de los extremos; si no, `201` con la incidencia `PENDIENTE`, sin respuesta y con los textos recortados, que se añade a las del usuario en sesión (se pierde al reiniciar los mocks) |
 
 Pautas:
 

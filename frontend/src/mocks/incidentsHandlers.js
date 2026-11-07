@@ -1,0 +1,119 @@
+import { http, HttpResponse } from 'msw'
+import { getUsuarioEnSesion } from './authHandlers'
+import { paginar } from './paginar'
+
+const ASUNTO_MAXIMO = 100
+const DESCRIPCION_MAXIMA = 1000
+const TAMANO_MAXIMO = 50
+
+const fecha = (dia) => `2026-10-${String(dia).padStart(2, '0')}T10:15:30Z`
+
+const incidencia = (n, asunto, descripcion, estado = 'PENDIENTE', respuesta = '') => ({
+  id: `inc-seed-${n}`,
+  asunto,
+  descripcion,
+  estado,
+  respuesta,
+  fechaCreacion: fecha(n),
+})
+
+// Incidencias de ejemplo de cada usuario (HU44), de las más antiguas a las más recientes, como las devuelve el
+// backend. El cliente tiene 12 (dos páginas de 10), el vendedor 2 y el otro vendedor ninguna.
+const SEMILLA = {
+  'u-3': [
+    incidencia(1, 'No me llega el pedido', 'Lo pedí hace una semana y sigue sin llegar. ' + 'Necesito saber dónde está. '.repeat(8)),
+    incidencia(2, 'Cobro duplicado', 'Me han cobrado dos veces el mismo pedido.', 'ABIERTA', 'Estamos revisando el cobro con el banco.'),
+    incidencia(3, 'No puedo cambiar mi dirección', 'El formulario de direcciones no guarda los cambios.'),
+    incidencia(4, 'Producto dañado', 'La lámpara llegó con la pantalla rota.', 'ABIERTA', 'Te enviaremos una nueva sin coste.'),
+    incidencia(5, 'Error al pagar con tarjeta', 'El pago se queda cargando y no termina.'),
+    incidencia(6, 'Factura incorrecta', 'El nombre de la factura no es el mío.'),
+    incidencia(7, 'No encuentro mi pedido', 'No aparece en el historial el pedido de ayer.'),
+    incidencia(8, 'Cupón que no funciona', 'El cupón de bienvenida no se aplica.'),
+    incidencia(9, 'Consulta sobre devoluciones', '¿Cuántos días tengo para devolver un producto?', 'ABIERTA', 'Dispones de 14 días desde la entrega.'),
+    incidencia(10, 'Imagen que no carga', 'En la ficha de un producto la imagen no se ve.'),
+    incidencia(11, 'Valoración que no se publica', 'He valorado un producto y no aparece mi valoración.'),
+    incidencia(12, 'Aviso de stock', 'Quiero que me avisen cuando haya stock de un producto.'),
+  ],
+  'u-2': [
+    incidencia(13, 'No puedo subir la imagen de un producto', 'Al guardar el producto con una imagen nueva da error.', 'ABIERTA', 'Ya lo hemos corregido, prueba de nuevo.'),
+    incidencia(14, 'Estadísticas sin datos', 'La pantalla de estadísticas sale vacía desde ayer.'),
+  ],
+}
+
+let almacen = nuevoAlmacen()
+let siguienteId = 1
+
+function nuevoAlmacen() {
+  return new Map(Object.entries(SEMILLA).map(([usuarioId, lista]) => [usuarioId, lista.map((item) => ({ ...item }))]))
+}
+
+export function resetIncidentsMock() {
+  almacen = nuevoAlmacen()
+  siguienteId = 1
+}
+
+const incidenciasDe = (usuario) => {
+  if (!almacen.has(usuario.id)) almacen.set(usuario.id, [])
+  return almacen.get(usuario.id)
+}
+
+// Solo cliente y vendedor: sin sesión 401 y el administrador 403, como el backend.
+const rechazarSiNoEsClienteNiVendedor = () => {
+  const usuario = getUsuarioEnSesion()
+  if (!usuario) return new HttpResponse(null, { status: 401 })
+  if (usuario.rol === 'ADMINISTRADOR') return HttpResponse.json({ code: 'ACCESS_DENIED' }, { status: 403 })
+  return null
+}
+
+const incidenciaInvalida = () =>
+  HttpResponse.json({ mensaje: 'La incidencia es inválida', code: 'VALIDATION_ERROR' }, { status: 400 })
+
+const textoValido = (valor, maximo) => {
+  if (typeof valor !== 'string') return false
+  const recortado = valor.trim()
+  return recortado.length > 0 && recortado.length <= maximo
+}
+
+export const incidentsHandlers = [
+  // Las incidencias del usuario en sesión, de las más antiguas a las más recientes, por páginas (page desde 1, size de
+  // 1 a 50, por defecto 10). Una página o un tamaño fuera de rango responde 400 VALIDATION_ERROR y uno que no es un
+  // número, 400 sin cuerpo (el error por defecto de Spring).
+  http.get('/api/perfil/incidencias', ({ request }) => {
+    const rechazo = rechazarSiNoEsClienteNiVendedor()
+    if (rechazo) return rechazo
+
+    const params = new URL(request.url).searchParams
+    const noEsNumero = ['page', 'size'].some((nombre) => params.has(nombre) && !/^-?\d+$/.test(params.get(nombre)))
+    if (noEsNumero) return new HttpResponse(null, { status: 400 })
+
+    const pagina = params.has('page') ? Number(params.get('page')) : 1
+    const tamano = params.has('size') ? Number(params.get('size')) : 10
+    if (pagina < 1 || tamano < 1 || tamano > TAMANO_MAXIMO) return incidenciaInvalida()
+
+    return HttpResponse.json(paginar(incidenciasDe(getUsuarioEnSesion()), { pagina, tamano }))
+  }),
+
+  // Crea una incidencia del usuario en sesión: nace PENDIENTE, sin respuesta y con los textos sin espacios en los
+  // extremos. Nunca se lee un autor del cuerpo.
+  http.post('/api/perfil/incidencias', async ({ request }) => {
+    const rechazo = rechazarSiNoEsClienteNiVendedor()
+    if (rechazo) return rechazo
+
+    const { asunto, descripcion } = await request.json()
+    if (!textoValido(asunto, ASUNTO_MAXIMO) || !textoValido(descripcion, DESCRIPCION_MAXIMA)) {
+      return incidenciaInvalida()
+    }
+
+    const nueva = {
+      id: `inc-${siguienteId}`,
+      asunto: asunto.trim(),
+      descripcion: descripcion.trim(),
+      estado: 'PENDIENTE',
+      respuesta: '',
+      fechaCreacion: new Date().toISOString(),
+    }
+    siguienteId += 1
+    incidenciasDe(getUsuarioEnSesion()).push(nueva)
+    return HttpResponse.json(nueva, { status: 201 })
+  }),
+]
