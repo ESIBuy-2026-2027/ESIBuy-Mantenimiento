@@ -14,6 +14,7 @@ import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionInvalidaExce
 import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionNoEncontradaException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.LimiteDireccionesException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.NuevaPrincipalObligatoriaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaInvalidaException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.LimiteMetodosPagoException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoInvalidoException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoNoEncontradoException;
@@ -461,5 +462,12 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError valoracionDuplicada() {
         return new RespuestaError("Ya has valorado este producto", "REVIEW_ALREADY_EXISTS");
+    }
+
+    // Incidencias (HU44, T292): asunto o descripción vacíos o demasiado largos. El mensaje es siempre genérico.
+    @ExceptionHandler(IncidenciaInvalidaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError incidenciaInvalida() {
+        return new RespuestaError("La incidencia es inválida", CODIGO_VALIDACION);
     }
 }

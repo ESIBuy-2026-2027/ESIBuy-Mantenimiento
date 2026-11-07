@@ -64,7 +64,7 @@ final class ColeccionesEsiBuy {
     static List<Coleccion> todas() {
         return List.of(usuarios(), sesiones(), factoresAutenticacion(), tokensSeguridad(), productos(),
                 pedidos(), carritos(), valoraciones(), categorias(), listasDeseos(), metodosPago(), direccionesEnvio(),
-                contadores(), preferencias());
+                contadores(), preferencias(), incidencias());
     }
 
     // 1. usuarios: identidad, rol, estado y perfil, con los campos del modelo en la raíz del documento,
@@ -306,6 +306,21 @@ final class ColeccionesEsiBuy {
                 textoNoVacio(CLIENTE_ID),
                 array("categorias").items(JsonSchemaObject.string())),
                 List.of(indice(CLIENTE_ID).unique()));
+    }
+
+    // 15. incidencias: lo que un cliente o un vendedor reporta para que un administrador lo revise (HU44). Mismas
+    // reglas que la entidad Incidencia: asunto de hasta 100 caracteres, descripción de hasta 1000 y estado PENDIENTE
+    // o ABIERTA (una incidencia cerrada se elimina). El índice por usuario sirve para consultar las suyas.
+    private static Coleccion incidencias() {
+        return new Coleccion("incidencias", esquema(
+                List.of(USUARIO_ID, "asunto", "descripcion", ESTADO, "fechaCreacion"),
+                textoNoVacio(USUARIO_ID),
+                string("asunto").minLength(1).maxLength(100),
+                string("descripcion").minLength(1).maxLength(1000),
+                string(ESTADO).possibleValues("PENDIENTE", "ABIERTA"),
+                string("respuesta"),
+                date("fechaCreacion")),
+                List.of(indice(USUARIO_ID)));
     }
 
     // Todas las colecciones llevan createdAt y updatedAt («Convenciones comunes» del modelo).
