@@ -1,17 +1,26 @@
 import '@testing-library/jest-dom/vitest'
 import { afterAll, afterEach, beforeAll, vi } from 'vitest'
-import { cleanup } from '@testing-library/react'
+import { cleanup, configure } from '@testing-library/react'
 import { resetAddressesMock } from '../mocks/addressesHandlers'
+import { resetAdminCategoriesMock } from '../mocks/adminCategoriesHandlers'
 import { resetAdminSellersMock } from '../mocks/adminSellersHandlers'
 import { resetAdminsMock } from '../mocks/adminsHandlers'
 import { resetAuthMock } from '../mocks/authHandlers'
 import { resetCartMock } from '../mocks/cartHandlers'
+import { resetIncidentsMock } from '../mocks/incidentsHandlers'
 import { resetOrdersMock } from '../mocks/ordersHandlers'
 import { resetPaymentMethodsMock } from '../mocks/paymentMethodsHandlers'
+import { resetPreferencesMock } from '../mocks/preferencesHandlers'
 import { resetProductsMock } from '../mocks/productsHandlers'
 import { resetReviewsMock } from '../mocks/reviewsHandlers'
 import { resetUsersMock } from '../mocks/usersHandlers'
+import { resetWishlistMock } from '../mocks/wishlistHandlers'
 import { server } from '../mocks/server'
+
+// Las esperas de Testing Library (findBy*, waitFor) aguantan 3 s y no 1 s: al ejecutar toda la batería a la vez, la
+// máquina va cargada y algunas cargas (una ficha, una lista tras guardar) podían pasarse del segundo y fallar al azar
+// aunque el código estuviera bien. Un test que falla de verdad tarda un poco más en avisar.
+configure({ asyncUtilTimeout: 3000 })
 
 class ResizeObserverStub {
   observe = vi.fn()
@@ -38,14 +47,18 @@ afterEach(() => {
   server.resetHandlers()
   resetAuthMock()
   resetCartMock()
+  resetIncidentsMock()
   resetOrdersMock()
   resetPaymentMethodsMock()
+  resetPreferencesMock()
   resetAddressesMock()
+  resetAdminCategoriesMock()
   resetAdminSellersMock()
   resetAdminsMock()
   resetProductsMock()
   resetReviewsMock()
   resetUsersMock()
+  resetWishlistMock()
 })
 
 afterAll(() => {

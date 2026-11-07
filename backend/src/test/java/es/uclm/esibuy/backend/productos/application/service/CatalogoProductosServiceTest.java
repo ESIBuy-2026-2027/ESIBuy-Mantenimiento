@@ -4,6 +4,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
 import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalogo;
 import es.uclm.esibuy.backend.productos.application.port.in.DetalleProductoCatalogo;
 import es.uclm.esibuy.backend.productos.application.port.in.ProductoComercial;
+import es.uclm.esibuy.backend.productos.application.port.in.ResumenProducto;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.application.port.out.VendedorPort;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -84,6 +86,35 @@ class CatalogoProductosServiceTest {
         assertTrue(servicio.consultarComprable("no-existe", false).isEmpty());
     }
 
+    @Test
+    @DisplayName("HU14-CP16: el resumen de un producto disponible lleva sus datos y el precio final para el cliente")
+    void elResumenDeUnProductoDisponibleLlevaSusDatos() {
+        when(productoRepository.buscarPorId("p-1")).thenReturn(Optional.of(producto(true)));
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort, usuarioEnSesion);
+
+        assertEquals(new ResumenProducto("p-1", "Teclado", "https://esibuy.test/teclado.png", new BigDecimal("40.00"), 7, true),
+                servicio.consultarResumen("p-1", true).orElseThrow());
+        assertEquals(new BigDecimal("45.00"), servicio.consultarResumen("p-1", false).orElseThrow().precioFinal());
+    }
+
+    @Test
+    @DisplayName("HU14-CP16: un producto desactivado también tiene resumen, marcado como no disponible")
+    void unProductoDesactivadoTambienTieneResumen() {
+        when(productoRepository.buscarPorId("p-1")).thenReturn(Optional.of(producto(false)));
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort, usuarioEnSesion);
+
+        assertFalse(servicio.consultarResumen("p-1", false).orElseThrow().disponible());
+    }
+
+    @Test
+    @DisplayName("HU14-CP16: un producto que no existe no tiene resumen")
+    void unProductoQueNoExisteNoTieneResumen() {
+        when(productoRepository.buscarPorId("no-existe")).thenReturn(Optional.empty());
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort, usuarioEnSesion);
+
+        assertTrue(servicio.consultarResumen("no-existe", false).isEmpty());
+    }
+
     // Detalle de un producto del catálogo (HU8, T356): sus datos, el vendedor con su nombre comercial y el precio
     // con el descuento que le toca al cliente. Este cliente es estándar: se le aplica el descuento general.
     @Test
@@ -97,7 +128,23 @@ class CatalogoProductosServiceTest {
 
         assertEquals(new DetalleProductoCatalogo("p-1", "Teclado", "Con cable", "https://esibuy.test/teclado.png",
                 "cat-1", "u-2", "TecnoVera", new BigDecimal("50.00"), new BigDecimal("10"), new BigDecimal("45.00"), 7,
-                true), detalle);
+                true, null, 0), detalle);
+    }
+
+    @Test
+    @DisplayName("HU13-CP26: el detalle de un producto lleva su media y su número de valoraciones")
+    void elDetalleLlevaSuMediaYSuNumeroDeValoraciones() {
+        Producto valorado = new Producto("p-1", "u-2", "Teclado", "Con cable", new BigDecimal("50.00"), 7, "cat-1",
+                "https://esibuy.test/teclado.png", true, Descuento.sinDescuento(), Descuento.sinDescuento(), 4.5, 2);
+        when(productoRepository.buscarPorId("p-1")).thenReturn(Optional.of(valorado));
+        when(vendedorPort.nombreComercial("u-2")).thenReturn("TecnoVera");
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort,
+                usuarioEnSesion);
+
+        DetalleProductoCatalogo detalle = servicio.consultarDetalle("p-1", "cliente@esibuy.test");
+
+        assertEquals(4.5, detalle.valoracion());
+        assertEquals(2, detalle.numValoraciones());
     }
 
     @Test

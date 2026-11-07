@@ -19,6 +19,8 @@ public final class Permisos {
     public static final String AUTENTICADO_PROPIO = "isAuthenticated() and #email == authentication.name";
     public static final String CLIENTE_O_VENDEDOR_PROPIO = CLIENTE_O_VENDEDOR + " and #email == authentication.name";
     public static final String SOLO_CLIENTE_PROPIO_POR_EMAIL = SOLO_CLIENTE + " and #email == authentication.name";
+    public static final String CLIENTE_O_VENDEDOR_PROPIO_EN_COMANDO =
+            CLIENTE_O_VENDEDOR + " and #comando.email() == authentication.name";
 
     private Permisos() {
     }

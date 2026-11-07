@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../../mocks/server'
@@ -405,6 +405,16 @@ describe('Rutas protegidas y sesión', () => {
     expect(screen.queryByText('Has cerrado sesión.')).not.toBeInTheDocument()
   })
 
+  it('HU37-CP19: si otro administrador elimina tu cuenta, tu siguiente petición da 401 y vuelves al login con el aviso', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    // CuentaActivaFilter ya no encuentra la cuenta borrada: invalida la sesión y responde 401 a lo siguiente que pide.
+    server.use(http.get('/api/admin/usuarios', () => new HttpResponse(null, { status: 401 })))
+    renderApp('/admin/admins')
+
+    await esperarRuta('/login')
+    expect(await screen.findByText(/tu sesión ha caducado/i)).toBeInTheDocument()
+  })
+
   it('HU43-CP07: una contraseña incorrecta (401) no se toma por una sesión caducada', async () => {
     const user = userEvent.setup()
     renderApp('/login')
@@ -439,5 +449,53 @@ describe('Recuperación de contraseña (HU3)', () => {
 
     await esperarRuta('/forgot-password')
     expect(await screen.findByRole('heading', { name: /recuperar contraseña/i })).toBeInTheDocument()
+  })
+
+  // R9 de la revisión del Sprint 1: la contraseña no se puede copiar, pero sí pegar (gestores de contraseñas)
+  it('HU2-CP31: la contraseña del login no se puede copiar ni cortar', async () => {
+    const user = userEvent.setup()
+    renderApp('/login')
+    await user.type(await screen.findByLabelText(/^contraseña/i), CLAVE)
+    const contrasena = screen.getByLabelText(/^contraseña/i)
+
+    // fireEvent devuelve false cuando el evento se ha cancelado
+    expect(fireEvent.copy(contrasena)).toBe(false)
+    expect(fireEvent.cut(contrasena)).toBe(false)
+  })
+
+  it('HU2-CP31: tampoco se puede copiar ni cortar con la contraseña visible', async () => {
+    const user = userEvent.setup()
+    renderApp('/login')
+    await user.type(await screen.findByLabelText(/^contraseña/i), CLAVE)
+
+    await user.click(screen.getByRole('button', { name: /mostrar contraseña/i }))
+    const contrasena = screen.getByLabelText(/^contraseña/i)
+
+    expect(contrasena).toHaveAttribute('type', 'text')
+    expect(fireEvent.copy(contrasena)).toBe(false)
+    expect(fireEvent.cut(contrasena)).toBe(false)
+  })
+
+  it('HU2-CP31: sí se puede pegar la contraseña y el login sigue funcionando', async () => {
+    const user = userEvent.setup()
+    renderApp('/login')
+    await user.type(await screen.findByLabelText(/correo electrónico/i), 'admin@esibuy.test')
+    await user.click(screen.getByLabelText(/^contraseña/i))
+    await user.paste(CLAVE)
+    expect(screen.getByLabelText(/^contraseña/i)).toHaveValue(CLAVE)
+    await user.click(screen.getByRole('button', { name: /continuar/i }))
+    await resolverCodigoDeCorreo(user)
+    await resolverCodigoDeAutenticador(user)
+
+    await esperarRuta('/admin')
+  })
+
+  it('HU2-CP31: escribiendo la contraseña a mano el login sigue funcionando', async () => {
+    const user = userEvent.setup()
+    renderApp('/login')
+
+    await completarLogin(user, 'cliente@esibuy.test')
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/products$')))
   })
 })

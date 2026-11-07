@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { screen, waitFor } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http, HttpResponse } from 'msw'
+import { delay, http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
@@ -98,6 +98,139 @@ describe('ProfilePage (HU4): datos del perfil', () => {
   })
 })
 
+// Preferencias del cliente (HU46, T286): las categorías que le interesan. Del mock de categorías: Tecnología (cat-1) y
+// Hogar (cat-2), las dos activas.
+describe('ProfilePage (HU46): preferencias', () => {
+  const seccion = () => screen.findByRole('group', { name: 'Mis preferencias' })
+
+  it('HU46-CP20: el cliente ve sus preferencias, con una casilla por cada categoría activa', async () => {
+    await abrirPerfil('cliente@esibuy.test')
+
+    const preferencias = await seccion()
+    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).not.toBeChecked()
+    expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).not.toBeChecked()
+  })
+
+  it('HU46-CP20: las categorías que ya eligió aparecen marcadas', async () => {
+    server.use(http.get('/api/customer/preferences', () => HttpResponse.json({ categorias: ['cat-2'] })))
+    await abrirPerfil('cliente@esibuy.test')
+
+    const preferencias = await seccion()
+    await waitFor(() => expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).toBeChecked())
+    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).not.toBeChecked()
+  })
+
+  it('HU46-CP21: al marcar una categoría se guarda al momento y se avisa', async () => {
+    const user = userEvent.setup()
+    let cuerpo = null
+    server.use(
+      http.put('/api/customer/preferences', async ({ request }) => {
+        cuerpo = await request.json()
+        return HttpResponse.json(cuerpo)
+      }),
+    )
+    await abrirPerfil('cliente@esibuy.test')
+    const preferencias = await seccion()
+
+    await user.click(within(preferencias).getByRole('checkbox', { name: 'Tecnología' }))
+
+    expect(await screen.findByText('Preferencias guardadas.')).toBeInTheDocument()
+    expect(cuerpo).toEqual({ categorias: ['cat-1'] })
+    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).toBeChecked()
+  })
+
+  it('HU46-CP21: al desmarcar una categoría elegida se guarda sin ella', async () => {
+    const user = userEvent.setup()
+    let cuerpo = null
+    server.use(
+      http.get('/api/customer/preferences', () => HttpResponse.json({ categorias: ['cat-2'] })),
+      http.put('/api/customer/preferences', async ({ request }) => {
+        cuerpo = await request.json()
+        return HttpResponse.json(cuerpo)
+      }),
+    )
+    await abrirPerfil('cliente@esibuy.test')
+    const preferencias = await seccion()
+    await waitFor(() => expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).toBeChecked())
+
+    await user.click(within(preferencias).getByRole('checkbox', { name: 'Hogar' }))
+
+    expect(await screen.findByText('Preferencias guardadas.')).toBeInTheDocument()
+    expect(cuerpo).toEqual({ categorias: [] })
+    expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).not.toBeChecked()
+  })
+
+  it('HU46-CP21: mientras se guarda, las casillas quedan deshabilitadas', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.put('/api/customer/preferences', async () => {
+        await delay('infinite')
+      }),
+    )
+    await abrirPerfil('cliente@esibuy.test')
+    const preferencias = await seccion()
+
+    await user.click(within(preferencias).getByRole('checkbox', { name: 'Tecnología' }))
+
+    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).toBeDisabled()
+    expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).toBeDisabled()
+  })
+
+  it('HU46-CP21: al volver al perfil, las preferencias siguen guardadas', async () => {
+    const user = userEvent.setup()
+    await abrirPerfil('cliente@esibuy.test')
+    await user.click(within(await seccion()).getByRole('checkbox', { name: 'Hogar' }))
+    await screen.findByText('Preferencias guardadas.')
+    cleanup()
+
+    renderApp('/profile')
+
+    const preferencias = await seccion()
+    await waitFor(() => expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).toBeChecked())
+  })
+
+  it('HU46-CP22: si no se pueden guardar, lo avisa y la casilla vuelve a como estaba', async () => {
+    const user = userEvent.setup()
+    server.use(http.put('/api/customer/preferences', () => new HttpResponse(null, { status: 500 })))
+    await abrirPerfil('cliente@esibuy.test')
+    const preferencias = await seccion()
+
+    await user.click(within(preferencias).getByRole('checkbox', { name: 'Tecnología' }))
+
+    expect(
+      await screen.findByText('No se han podido guardar tus preferencias. Inténtalo de nuevo.'),
+    ).toBeInTheDocument()
+    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).not.toBeChecked()
+    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).toBeEnabled()
+  })
+
+  it('HU46-CP22: si no se pueden cargar, lo avisa sin mostrar las casillas y permite reintentar', async () => {
+    const user = userEvent.setup()
+    // Falla hasta que se pulsa Reintentar (la página puede pedirlas más de una vez al montarse)
+    let falla = true
+    server.use(
+      http.get('/api/customer/preferences', () =>
+        falla ? new HttpResponse(null, { status: 500 }) : HttpResponse.json({ categorias: ['cat-1'] }),
+      ),
+    )
+    await abrirPerfil('cliente@esibuy.test')
+
+    expect(await screen.findByText('No se han podido cargar tus preferencias. Inténtalo de nuevo.')).toBeInTheDocument()
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+    falla = false
+    await user.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+    const preferencias = await seccion()
+    await waitFor(() => expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).toBeChecked())
+  })
+
+  it('HU46-CP20: el vendedor no tiene preferencias', async () => {
+    await abrirPerfil('vendedor@esibuy.test')
+
+    expect(screen.queryByRole('group', { name: 'Mis preferencias' })).not.toBeInTheDocument()
+  })
+})
+
 describe('ProfilePage (HU4): acceso', () => {
   it('HU4-CP10: sin sesión, redirige al login', async () => {
     renderApp('/profile')
@@ -111,5 +244,30 @@ describe('ProfilePage (HU4): acceso', () => {
 
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/admin$/))
     expect(screen.queryByRole('heading', { name: /mi perfil/i })).not.toBeInTheDocument()
+  })
+})
+
+describe('ProfilePage (HU47): eliminar mi cuenta', () => {
+  it('HU47-CP13: el vendedor tiene la opción de eliminar su cuenta y el cliente no', async () => {
+    await abrirPerfil('vendedor@esibuy.test')
+    expect(screen.getByRole('button', { name: /^eliminar mi cuenta$/i })).toBeInTheDocument()
+    cleanup()
+
+    await abrirPerfil('cliente@esibuy.test')
+    expect(screen.queryByRole('button', { name: /^eliminar mi cuenta$/i })).not.toBeInTheDocument()
+  })
+
+  it('HU47-CP14: tras eliminar la cuenta se cierra la sesión y el login avisa de que se ha eliminado', async () => {
+    server.use(http.delete('/api/perfil', () => new HttpResponse(null, { status: 204 })))
+    const usuario = userEvent.setup()
+    await abrirPerfil('vendedor@esibuy.test')
+
+    await usuario.click(screen.getByRole('button', { name: /^eliminar mi cuenta$/i }))
+    const dialogo = await screen.findByRole('alertdialog', { name: /eliminar mi cuenta/i })
+    await usuario.type(within(dialogo).getByLabelText(/^contraseña actual/i), 'Contraseña-de-prueba-1!')
+    await usuario.click(within(dialogo).getByRole('button', { name: /^eliminar mi cuenta$/i }))
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/))
+    expect(await screen.findByText('Tu cuenta se ha eliminado.')).toBeInTheDocument()
   })
 })

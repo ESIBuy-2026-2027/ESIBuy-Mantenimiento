@@ -14,12 +14,16 @@ async function abrirListado() {
   await screen.findByRole('heading', { level: 1, name: 'Usuarios' })
 }
 
+// Leen la tabla aunque una confirmación esté abierta o cerrándose encima: Fluent marca entonces el resto de la página
+// con aria-hidden, y sin `hidden: true` la tabla no se encuentra según lo rápido que vaya la máquina.
+const OCULTOS = { hidden: true }
+
 function filasDeDatos() {
-  return within(screen.getByRole('table', { name: 'Usuarios' })).getAllByRole('row').slice(1)
+  return within(screen.getByRole('table', { name: 'Usuarios', ...OCULTOS })).getAllByRole('row', OCULTOS).slice(1)
 }
 
 function columna(indice) {
-  return filasDeDatos().map((fila) => within(fila).getAllByRole('cell')[indice].textContent)
+  return filasDeDatos().map((fila) => within(fila).getAllByRole('cell', OCULTOS)[indice].textContent)
 }
 
 async function esperarFilas(cantidad) {
@@ -238,7 +242,10 @@ describe('AdminUsersPage (HU19): acciones en la tabla', () => {
     expect(screen.getAllByRole('button', { name: /^ver información de/i })).toHaveLength(10)
     expect(screen.getAllByRole('button', { name: /^(bloquear|desbloquear) a /i })).toHaveLength(10)
     expect(screen.getAllByRole('button', { name: /^editar a /i })).toHaveLength(10)
-    expect(screen.getAllByRole('button', { name: /^eliminar a /i })).toHaveLength(10)
+    // La papelera solo está en las filas de administradores (HU37).
+    const papeleras = screen.getAllByRole('button', { name: /^eliminar a /i })
+    expect(papeleras.length).toBeGreaterThan(0)
+    expect(papeleras.length).toBeLessThan(10)
   })
 
   it('adminUsersPage_alBloquearDesdeLaTabla_laFilaPasaABloqueadoYAvisa', async () => {
@@ -325,16 +332,25 @@ describe('AdminUsersPage (HU19): acciones en la tabla', () => {
     expect(await screen.findByText('Carla Moreno Gil', {}, { timeout: 3000 })).toBeInTheDocument()
   })
 
-  it('adminUsersPage_alEliminarDesdeLaTabla_laFilaDesapareceYAvisa', async () => {
+  it('HU37-CP12: al eliminar a un administrador desde la tabla, la fila desaparece y avisa', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+    await buscar(user, 'diego.delgado')
+
+    await user.click(await screen.findByRole('button', { name: 'Eliminar a Diego Delgado Iglesias' }))
+    const pregunta = await screen.findByText(/seguro que quieres eliminar a diego delgado iglesias/i)
+    await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Eliminar', { selector: 'button' }))
+
+    expect(await screen.findByText('Diego Delgado Iglesias se ha eliminado.', {}, { timeout: 3000 })).toBeInTheDocument()
+    expect(await screen.findByText('No se han encontrado usuarios', {}, { timeout: 3000 })).toBeInTheDocument()
+  })
+
+  it('HU37-CP18: la fila de un cliente no tiene papelera y la de un administrador sí', async () => {
     const user = userEvent.setup()
     await abrirListado()
     await buscar(user, 'carlos.moreno')
 
-    await user.click(screen.getByRole('button', { name: 'Eliminar a Carlos Moreno Gil' }))
-    const pregunta = await screen.findByText(/seguro que quieres eliminar a carlos moreno gil/i)
-    await user.click(within(pregunta.closest('[role="alertdialog"]')).getByText('Eliminar', { selector: 'button' }))
-
-    expect(await screen.findByText('Carlos Moreno Gil se ha eliminado.', {}, { timeout: 3000 })).toBeInTheDocument()
-    expect(await screen.findByText('No se han encontrado usuarios', {}, { timeout: 3000 })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Bloquear a Carlos Moreno Gil' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Eliminar a Carlos Moreno Gil' })).not.toBeInTheDocument()
   })
 })

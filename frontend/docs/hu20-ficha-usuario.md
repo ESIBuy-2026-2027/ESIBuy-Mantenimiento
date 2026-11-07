@@ -11,6 +11,8 @@ Documento para entender cómo el administrador consulta la ficha de un cliente o
 
 ---
 
+> **Actualizado por la HU37 (AB#338):** la ficha de un **administrador** vuelve a tener la acción *Eliminar* (botón con texto, en el pie), con la confirmación y las reglas de `UserDeleteButton`. Las fichas de clientes y vendedores no la tienen.
+
 > **Cambio del Sprint 2 (AB#248 y AB#249):** la ficha es ahora **solo de lectura**. Editar, bloquear, desbloquear y eliminar se hacen desde los botones de la fila de la tabla (`UserRowActions`, ver `docs/hu19-listado-usuarios.md`, sección 1.1). Las secciones de abajo que hablan de los botones *Activar*, *Desactivar* o *Editar* dentro de la ficha describen el diseño anterior.
 
 ---
@@ -183,7 +185,7 @@ Los tests de activar y desactivar que la HU23 y la HU24 hacían sobre los botone
 
 ## 8. Limitaciones y trabajo pendiente
 
-- **Editar los datos** desde la ficha lo hace la HU22 (`docs/hu22-editar-usuario.md`); **eliminar** usuarios no tiene HU en este sprint.
+- **Editar los datos** desde la ficha lo hace la HU22 (`docs/hu22-editar-usuario.md`); **eliminar** a un administrador lo hace la HU37 (`docs/hu37-eliminar-administrador.md`): la ficha de un administrador, abierta desde su fila, tiene el botón *Eliminar* con la misma confirmación y reglas que la papelera de la fila.
 - **La imagen de perfil** se muestra como texto ("Avatar 2"), no como el dibujo del avatar.
 - **La pantalla general de Usuarios** (`/admin/users`, HU19) no tiene lupa ni enlace desde el panel; se decidirá más adelante si se unifica con estos listados.
 - **El título del diálogo** es genérico ("Información del usuario") para clientes y administradores.

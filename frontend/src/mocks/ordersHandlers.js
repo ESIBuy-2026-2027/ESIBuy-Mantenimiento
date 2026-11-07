@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw'
+import { direccionesDe } from './addressesHandlers'
 import { getUsuarioEnSesion } from './authHandlers'
 import { rechazarSiNoEsCliente, retirarGrupoDelCarrito } from './cartHandlers'
 import { metodosDePagoDe } from './paymentMethodsHandlers'
@@ -86,16 +87,18 @@ export function resetOrdersMock() {
 const aRespuesta = (pedido) => Object.fromEntries(Object.entries(pedido).filter(([campo]) => campo !== 'clienteId'))
 
 export const ordersHandlers = [
-  // Crea el pedido de un proveedor con lo que hay de él en el carrito y lo quita del carrito (HU10). El método de pago
-  // tiene que ser uno de los del cliente (HU6).
-  http.post('/api/orders', async ({ request }) => {
+  // Crea el pedido de un proveedor con lo que hay de él en el carrito y lo quita del carrito (HU10). La dirección (HU5)
+  // y el método de pago (HU6) tienen que ser del cliente; si no, 400 como en el backend, sin decir cuál falla. La
+  // dirección se copia en el pedido.
+  http.post('/api/customer/orders', async ({ request }) => {
     const rechazo = rechazarSiNoEsCliente()
     if (rechazo) return rechazo
 
-    const { vendedorId, paymentMethodId } = await request.json()
+    const { vendedorId, direccionId, paymentMethodId } = await request.json()
     const usuarioId = getUsuarioEnSesion().id
     const metodoDelCliente = metodosDePagoDe(usuarioId).some(({ id }) => id === paymentMethodId)
-    if (typeof vendedorId !== 'string' || vendedorId === '' || !metodoDelCliente) {
+    const direccion = direccionesDe(usuarioId).find(({ id }) => id === direccionId)
+    if (typeof vendedorId !== 'string' || vendedorId === '' || !metodoDelCliente || !direccion) {
       return HttpResponse.json({ code: 'VALIDATION_ERROR' }, { status: 400 })
     }
 
@@ -103,12 +106,15 @@ export const ordersHandlers = [
     if (!grupo) return HttpResponse.json({ code: 'CART_EMPTY' }, { status: 409 })
 
     pedidosCreados += 1
+    const { destinatario, calle, detalles, codigoPostal, ciudad, provincia, telefono } = direccion
     const creado = {
       id: `o-${pedidosCreados}`,
+      numeroPedido: `ESB-2026-${String(pedidosCreados).padStart(6, '0')}`,
       vendedor: grupo.vendedor,
       total: grupo.total,
       estado: 'PAGADO',
       paymentMethodId,
+      direccionEnvio: { destinatario, calle, detalles, codigoPostal, ciudad, provincia, telefono },
       lineas: grupo.lineas.map(({ productoId, nombre, cantidad, precioUnitario, subtotal }) => ({
         productoId,
         nombre,
@@ -116,15 +122,10 @@ export const ordersHandlers = [
         precioUnitario,
         subtotal,
       })),
+      createdAt: new Date().toISOString(),
     }
     // También aparece en el historial (HU11), como el más reciente
-    pedidos.unshift({
-      ...creado,
-      clienteId: usuarioId,
-      numeroPedido: `ESB-2026-${String(pedidosCreados).padStart(6, '0')}`,
-      direccionEnvio: DIRECCION_DE_CARLOS,
-      createdAt: new Date().toISOString(),
-    })
+    pedidos.unshift({ ...creado, clienteId: usuarioId })
     return HttpResponse.json(creado, { status: 201 })
   }),
 
@@ -149,5 +150,24 @@ export const ordersHandlers = [
     return pedido
       ? HttpResponse.json(aRespuesta(pedido))
       : HttpResponse.json({ mensaje: 'El pedido no existe', code: 'ORDER_NOT_FOUND' }, { status: 400 })
+  }),
+
+  // Cancelación (HU12), como el backend: solo un pedido del cliente que aún no se ha enviado (PAGADO o PREPARANDO)
+  http.post('/api/customer/orders/:id/cancel', ({ params }) => {
+    const rechazo = rechazarSiNoEsCliente()
+    if (rechazo) return rechazo
+
+    const pedido = pedidos.find(({ id, clienteId }) => id === params.id && clienteId === getUsuarioEnSesion().id)
+    if (!pedido) {
+      return HttpResponse.json({ mensaje: 'El pedido no existe', code: 'ORDER_NOT_FOUND' }, { status: 400 })
+    }
+    if (pedido.estado !== 'PAGADO' && pedido.estado !== 'PREPARANDO') {
+      return HttpResponse.json(
+        { mensaje: 'El pedido ya no se puede cancelar', code: 'ORDER_NOT_CANCELLABLE' },
+        { status: 409 },
+      )
+    }
+    pedido.estado = 'CANCELADO'
+    return HttpResponse.json(aRespuesta(pedido))
   }),
 ]

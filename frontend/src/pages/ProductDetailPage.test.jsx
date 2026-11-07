@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http, HttpResponse } from 'msw'
+import { delay, http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
@@ -533,5 +533,142 @@ describe('ProductDetailPage (HU13): valorar el producto', () => {
     expect(await within(formulario).findByText(/no se ha podido enviar tu valoración/i)).toBeInTheDocument()
     expect(within(formulario).getByLabelText(/comentario/i)).toHaveValue('Buen producto')
     expect(within(formulario).getByRole('radio', { name: '4 estrellas' })).toBeChecked()
+  })
+})
+
+// Lista de deseos del cliente (HU14) con el teclado (p-2) dentro.
+const CON_EL_TECLADO = {
+  items: [
+    {
+      productoId: 'p-2',
+      nombre: 'Teclado mecánico',
+      imagen: '',
+      precioFinal: 89.5,
+      stock: 12,
+      disponible: true,
+      addedAt: '2026-11-01T10:00:00Z',
+    },
+  ],
+}
+
+describe('ProductDetailPage (HU14): favoritos', () => {
+  it('HU14-CP38: el detalle tiene un botón para añadir el producto a favoritos', async () => {
+    responderCon()
+    await abrirDetalle()
+
+    expect(await screen.findByRole('button', { name: 'Añadir a favoritos' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Quitar de favoritos' })).not.toBeInTheDocument()
+  })
+
+  it('HU14-CP38: si el producto ya está en favoritos, el botón permite quitarlo', async () => {
+    responderCon()
+    server.use(http.get('/api/customer/wishlist', () => HttpResponse.json(CON_EL_TECLADO)))
+    await abrirDetalle()
+
+    expect(await screen.findByRole('button', { name: 'Quitar de favoritos' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Añadir a favoritos' })).not.toBeInTheDocument()
+  })
+
+  it('HU14-CP38: un producto agotado también se puede añadir a favoritos', async () => {
+    responderCon({ stock: 0 })
+    await abrirDetalle()
+
+    expect(await screen.findByRole('button', { name: 'Añadir a favoritos' })).toBeEnabled()
+  })
+
+  it('HU14-CP38: si no se pueden leer los favoritos, se ofrece añadirlo sin avisar de ningún error', async () => {
+    responderCon()
+    server.use(http.get('/api/customer/wishlist', () => new HttpResponse(null, { status: 500 })))
+    await abrirDetalle()
+
+    expect(await screen.findByRole('button', { name: 'Añadir a favoritos' })).toBeEnabled()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('HU14-CP39: al pulsar Añadir a favoritos se añade el producto y el botón pasa a quitarlo', async () => {
+    const user = userEvent.setup()
+    let cuerpo = null
+    responderCon()
+    server.use(
+      http.post('/api/customer/wishlist/items', async ({ request }) => {
+        cuerpo = await request.json()
+        return HttpResponse.json({ items: [{ productoId: 'p-2', addedAt: '2026-11-05T10:00:00Z' }] })
+      }),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir a favoritos' }))
+
+    expect(await screen.findByRole('button', { name: 'Quitar de favoritos' })).toBeEnabled()
+    expect(cuerpo).toEqual({ productoId: 'p-2' })
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products\/p-2$/)
+  })
+
+  it('HU14-CP39: mientras se añade, el botón queda deshabilitado', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    server.use(
+      http.post('/api/customer/wishlist/items', async () => {
+        await delay('infinite')
+      }),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir a favoritos' }))
+
+    expect(screen.getByRole('button', { name: 'Añadir a favoritos' })).toBeDisabled()
+  })
+
+  it('HU14-CP40: al pulsar Quitar de favoritos se quita el producto y el botón vuelve a ofrecer añadirlo', async () => {
+    const user = userEvent.setup()
+    let quitado = null
+    responderCon()
+    server.use(
+      http.get('/api/customer/wishlist', () => HttpResponse.json(CON_EL_TECLADO)),
+      http.delete('/api/customer/wishlist/items/:productoId', ({ params }) => {
+        quitado = params.productoId
+        return HttpResponse.json({ items: [] })
+      }),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: 'Quitar de favoritos' }))
+
+    expect(await screen.findByRole('button', { name: 'Añadir a favoritos' })).toBeEnabled()
+    expect(quitado).toBe('p-2')
+  })
+
+  it.each([
+    ['el producto ya no está disponible (404)', { code: 'PRODUCT_NOT_FOUND' }, 404, 'Este producto ya no está disponible.'],
+    ['falla por otro motivo', null, 500, 'No se ha podido añadir a favoritos. Inténtalo de nuevo.'],
+  ])('HU14-CP41: si al añadir %s, lo avisa y se puede volver a intentar', async (_caso, cuerpo, estado, mensaje) => {
+    const user = userEvent.setup()
+    responderCon()
+    server.use(
+      http.post('/api/customer/wishlist/items', () =>
+        cuerpo ? HttpResponse.json(cuerpo, { status: estado }) : new HttpResponse(null, { status: estado }),
+      ),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir a favoritos' }))
+
+    expect(await screen.findByText(mensaje)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Añadir a favoritos' })).toBeEnabled()
+  })
+
+  it('HU14-CP41: si no se puede quitar, lo avisa y el producto sigue en favoritos', async () => {
+    const user = userEvent.setup()
+    responderCon()
+    server.use(
+      http.get('/api/customer/wishlist', () => HttpResponse.json(CON_EL_TECLADO)),
+      http.delete('/api/customer/wishlist/items/:productoId', () => new HttpResponse(null, { status: 500 })),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: 'Quitar de favoritos' }))
+
+    expect(await screen.findByText('No se ha podido quitar de favoritos. Inténtalo de nuevo.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Quitar de favoritos' })).toBeEnabled()
   })
 })

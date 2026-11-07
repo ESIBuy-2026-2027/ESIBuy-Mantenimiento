@@ -9,6 +9,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -43,10 +44,10 @@ import es.uclm.esibuy.backend.categorias.application.port.in.EditarCategoriaComm
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 
 // Gestión de las categorías del administrador: listado (HU39, T331, GET /api/admin/categorias), creación
-// (HU40, T322, POST /api/admin/categorias), edición (HU41, T328, PUT /api/admin/categorias/{id}) y eliminación
-// (HU42, T325, DELETE /api/admin/categorias/{id}). El caso de uso es un doble de prueba; la seguridad es la
+// (HU40, T322, POST /api/admin/categorias), edición (HU41, T328, PUT /api/admin/categorias/{id}), cambio de estado
+// (HU41, T416, PATCH /api/admin/categorias/{id}/status) y eliminación (HU42, T325, DELETE /api/admin/categorias/{id}). El caso de uso es un doble de prueba; la seguridad es la
 // real (SecurityConfig) y los errores los traduce ManejadorGlobalErrores.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU39-CP01 y CP04, HU40-CP05 a CP08, HU41-CP10 a CP14 y y HU42-CP11 a CP15, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU39-CP01 y CP04, HU40-CP05 a CP08, HU41-CP10 a CP14, HU41-CP23 a CP26 y HU42-CP11 a CP15, propuestos.
 @WebMvcTest(AdministracionCategoriasController.class)
 @Import(SecurityConfig.class)
 class AdministracionCategoriasControllerTest {
@@ -264,6 +265,72 @@ class AdministracionCategoriasControllerTest {
     }
 
     
+    // Cambio de estado de categorías (HU41, T416).
+
+    private static final String DESACTIVAR = """
+            {"estado": "INACTIVA"}
+            """;
+
+    private static MockHttpServletRequestBuilder cambiarEstado(String id, String cuerpo) {
+        return patch(RUTA + "/" + id + "/status").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(cuerpo);
+    }
+
+    @Test
+    @DisplayName("HU41-CP23: un administrador desactiva una categoría y recibe la fila actualizada con su número de productos")
+    void unAdministradorCambiaElEstadoDeUnaCategoria() throws Exception {
+        when(administracionCategorias.cambiarEstado("c-9", EstadoCategoria.INACTIVA))
+                .thenReturn(new CategoriaConProductos(
+                        new Categoria("c-9", "Hogar", "Muebles", EstadoCategoria.INACTIVA), 4));
+
+        mockMvc.perform(cambiarEstado("c-9", DESACTIVAR).with(user("admin").roles("ADMINISTRADOR")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("c-9"))
+                .andExpect(jsonPath("$.nombre").value("Hogar"))
+                .andExpect(jsonPath("$.descripcion").value("Muebles"))
+                .andExpect(jsonPath("$.estado").value("INACTIVA"))
+                .andExpect(jsonPath("$.numeroProductos").value(4));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"{}", "{\"estado\": \"BORRADA\"}", "{\"estado\": \"activa\"}"})
+    @DisplayName("HU41-CP24: cambiar el estado sin estado o con un estado desconocido devuelve 400")
+    void cambiarEstadoConDatosInvalidosDevuelve400(String cuerpo) throws Exception {
+        mockMvc.perform(cambiarEstado("c-9", cuerpo).with(user("admin").roles("ADMINISTRADOR")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+
+        verifyNoInteractions(administracionCategorias);
+    }
+
+    @Test
+    @DisplayName("HU41-CP25: cambiar el estado de una categoría que no existe devuelve 404")
+    void cambiarEstadoDeUnaCategoriaInexistenteDevuelve404() throws Exception {
+        when(administracionCategorias.cambiarEstado(any(), any())).thenThrow(new CategoriaNoEncontradaException());
+
+        mockMvc.perform(cambiarEstado("c-9", DESACTIVAR).with(user("admin").roles("ADMINISTRADOR")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CATEGORY_NOT_FOUND"));
+    }
+
+    @ParameterizedTest(name = "rol {0}")
+    @ValueSource(strings = {"CLIENTE", "VENDEDOR"})
+    @DisplayName("HU41-CP26: un usuario sin rol de administrador no puede cambiar el estado de las categorías (403)")
+    void cambiarEstadoConOtroRolDevuelve403(String rol) throws Exception {
+        mockMvc.perform(cambiarEstado("c-9", DESACTIVAR).with(user("usuario").roles(rol)))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(administracionCategorias);
+    }
+
+    @Test
+    @DisplayName("HU41-CP26: sin sesión no se puede cambiar el estado de las categorías (401)")
+    void cambiarEstadoSinSesionDevuelve401() throws Exception {
+        mockMvc.perform(cambiarEstado("c-9", DESACTIVAR))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(administracionCategorias);
+    }
+
     // Eliminación de categorías (HU42, T325).
 
     private static MockHttpServletRequestBuilder eliminar(String id) {

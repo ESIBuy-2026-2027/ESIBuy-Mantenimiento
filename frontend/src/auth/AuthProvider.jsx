@@ -58,9 +58,15 @@ export default function AuthProvider({ children }) {
     setSessionEnd(SESSION_END.SIGNED_OUT)
   }, [])
 
+  // Al eliminar la cuenta (HU47) el servidor ya ha cerrado la sesión: aquí solo se cierra la del navegador
+  const accountDeleted = useCallback(() => {
+    setUser(null)
+    setSessionEnd(SESSION_END.ACCOUNT_DELETED)
+  }, [])
+
   const value = useMemo(
-    () => ({ user, loading, sessionEnd, signIn, signOut }),
-    [user, loading, sessionEnd, signIn, signOut],
+    () => ({ user, loading, sessionEnd, signIn, signOut, accountDeleted }),
+    [user, loading, sessionEnd, signIn, signOut, accountDeleted],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -1,7 +1,9 @@
-import { useCallback } from 'react'
+import PropTypes from 'prop-types'
+import { useCallback, useId, useState } from 'react'
 import {
   Button,
   Card,
+  Checkbox,
   MessageBar,
   MessageBarActions,
   MessageBarBody,
@@ -12,10 +14,15 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
+import { Delete20Regular } from '@fluentui/react-icons'
+import { getPreferences, savePreferences } from '../api/preferences'
 import { getProfile } from '../api/profile'
+import { useAuth } from '../auth/useAuth'
 import { usePageStyles } from '../components/pageStyles'
 import { UserAvatar } from '../features/account/AvatarSelector'
+import DeleteAccountDialog from '../features/account/DeleteAccountDialog'
 import ReadOnlyFields from '../features/admin/ReadOnlyFields'
+import SellerStatistics from '../features/seller/SellerStatistics'
 import { profileFieldsFor } from '../features/admin/profileFields'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { useCategories } from '../hooks/useCategories'
@@ -46,7 +53,115 @@ const useStyles = makeStyles({
   email: {
     color: tokens.colorNeutralForeground3,
   },
+  preferencesText: {
+    color: tokens.colorNeutralForeground3,
+  },
+  categories: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    columnGap: tokens.spacingHorizontalL,
+  },
+  deletion: {
+    gap: tokens.spacingVerticalM,
+    padding: tokens.spacingVerticalXL,
+  },
+  deletionAction: {
+    alignSelf: 'flex-start',
+  },
 })
+
+// Eliminar la cuenta propia del vendedor (HU47): se confirma en un diálogo con la contraseña. El servidor cierra la
+// sesión, así que después se cierra también en el navegador y el login lo avisa.
+function AccountDeletion() {
+  const styles = useStyles()
+  const titleId = useId()
+  const { accountDeleted } = useAuth()
+  const [abierto, setAbierto] = useState(false)
+
+  return (
+    <Card className={styles.deletion} aria-labelledby={titleId} role="region">
+      <Title3 as="h2" id={titleId} className={styles.name}>
+        Eliminar mi cuenta
+      </Title3>
+      <Text className={styles.preferencesText}>
+        Dejarás de formar parte de ESIBuy. Tus pedidos y valoraciones se conservan.
+      </Text>
+      <Button className={styles.deletionAction} icon={<Delete20Regular />} onClick={() => setAbierto(true)}>
+        Eliminar mi cuenta
+      </Button>
+      {abierto && <DeleteAccountDialog onClose={() => setAbierto(false)} onDeleted={accountDeleted} />}
+    </Card>
+  )
+}
+
+// Preferencias del cliente (HU46): una casilla por cada categoría activa, marcadas las que ya le interesan. Cada
+// cambio se guarda al momento, así que al salir del perfil ya están guardadas; mientras se guarda, las casillas
+// quedan deshabilitadas, igual que mientras cargan. La respuesta del backend es lo que se muestra después; si no se
+// pueden guardar, las casillas siguen como estaban. Si no cargan, no se muestran: guardar sin saber cuáles eligió
+// borraría las demás.
+function CustomerPreferences({ categories }) {
+  const styles = useStyles()
+  const titleId = useId()
+  const fetcher = useCallback(() => getPreferences(), [])
+  const { data: cargadas, failed, retry } = useApiQuery(fetcher)
+  const [actualizadas, setActualizadas] = useState(null)
+  const [guardando, setGuardando] = useState(false)
+  const [aviso, setAviso] = useState(null)
+  const elegidas = new Set((actualizadas ?? cargadas)?.categorias ?? [])
+
+  const cambiar = async (categoryId, marcada) => {
+    const nuevas = marcada ? [...elegidas, categoryId] : [...elegidas].filter((id) => id !== categoryId)
+    setAviso(null)
+    setGuardando(true)
+    try {
+      setActualizadas(await savePreferences(nuevas))
+      setAviso({ intent: 'success', texto: 'Preferencias guardadas.' })
+    } catch {
+      setAviso({ intent: 'error', texto: 'No se han podido guardar tus preferencias. Inténtalo de nuevo.' })
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  return (
+    <Card className={styles.card}>
+      <Title3 as="h2" id={titleId} className={styles.name}>
+        Mis preferencias
+      </Title3>
+      <Text className={styles.preferencesText}>Elige las categorías que te interesan.</Text>
+      {aviso && (
+        <MessageBar intent={aviso.intent}>
+          <MessageBarBody>{aviso.texto}</MessageBarBody>
+        </MessageBar>
+      )}
+      {failed ? (
+        <MessageBar intent="error">
+          <MessageBarBody>No se han podido cargar tus preferencias. Inténtalo de nuevo.</MessageBarBody>
+          <MessageBarActions>
+            <Button onClick={retry}>Reintentar</Button>
+          </MessageBarActions>
+        </MessageBar>
+      ) : (
+        <div role="group" aria-labelledby={titleId} className={styles.categories}>
+          {categories.map((category) => (
+            <Checkbox
+              key={category.id}
+              label={category.nombre}
+              checked={elegidas.has(category.id)}
+              disabled={guardando || !(actualizadas ?? cargadas)}
+              onChange={(_event, data) => cambiar(category.id, data.checked === true)}
+            />
+          ))}
+        </div>
+      )}
+    </Card>
+  )
+}
+
+CustomerPreferences.propTypes = {
+  categories: PropTypes.arrayOf(PropTypes.shape({ id: PropTypes.string.isRequired, nombre: PropTypes.string.isRequired }))
+    .isRequired,
+}
 
 // Pares [etiqueta, texto] del perfil: los mismos campos y formatos que la ficha del administrador (HU20 y HU26),
 // sin el estado ni la imagen, y con la fecha de alta. La categoría del vendedor llega como identificador.
@@ -59,7 +174,8 @@ function profileFields(perfil, categoryName) {
 }
 
 // Perfil propio del cliente o del vendedor (HU4), en solo lectura. Los datos se piden al backend, que los saca de
-// la sesión. Modificarlos es de la HU45.
+// la sesión. Modificarlos es de la HU45. El cliente ve además sus preferencias (HU46) y el vendedor, sus estadísticas
+// (HU17).
 export default function ProfilePage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
@@ -102,6 +218,10 @@ export default function ProfilePage() {
           <ReadOnlyFields fields={profileFields(perfil, categoryName)} />
         </Card>
       )}
+
+      {perfil?.rol === 'CLIENTE' && <CustomerPreferences categories={categories} />}
+      {perfil?.rol === 'VENDEDOR' && <SellerStatistics />}
+      {perfil?.rol === 'VENDEDOR' && <AccountDeletion />}
     </main>
   )
 }

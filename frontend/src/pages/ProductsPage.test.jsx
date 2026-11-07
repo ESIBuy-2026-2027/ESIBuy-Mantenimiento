@@ -573,3 +573,141 @@ describe('ProductsPage (HU9): precio y carrito', () => {
     expect(await within(tarjetaDeAuriculares()).findByRole('alert')).toHaveTextContent(/no hay existencias suficientes/i)
   })
 })
+
+describe('ProductsPage (HU14): favoritos', () => {
+  it('HU14-CP21: cada tarjeta del catálogo tiene el corazón para añadir su producto a favoritos', async () => {
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    for (const tarjeta of tarjetas()) {
+      expect(within(tarjeta).getByRole('button', { name: /^añadir .+ a favoritos$/i })).toBeEnabled()
+    }
+  })
+
+  it('HU14-CP22: al pulsar el corazón se añade el producto a favoritos y el corazón queda relleno', async () => {
+    const user = userEvent.setup()
+    let cuerpo = null
+    server.use(
+      http.post('/api/customer/wishlist/items', async ({ request }) => {
+        cuerpo = await request.json()
+        return HttpResponse.json({ items: [{ productoId: 'p-1', addedAt: '2026-11-04T10:00:00Z' }] })
+      }),
+    )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    await user.click(screen.getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' }))
+
+    expect(
+      await screen.findByRole('button', { name: 'Quitar Auriculares inalámbricos de favoritos' }),
+    ).toBeEnabled()
+    expect(cuerpo).toEqual({ productoId: 'p-1' })
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/)
+  })
+
+  it('HU14-CP23: al añadir, se rellenan también los corazones de los productos que ya estaban en la lista del cliente', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/customer/wishlist/items', () =>
+        HttpResponse.json({
+          items: [
+            { productoId: 'p-10', addedAt: '2026-11-01T09:00:00Z' },
+            { productoId: 'p-1', addedAt: '2026-11-04T10:00:00Z' },
+          ],
+        }),
+      ),
+    )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    await user.click(screen.getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' }))
+
+    expect(await screen.findByRole('button', { name: 'Quitar Cafetera de cápsulas de favoritos' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Quitar Auriculares inalámbricos de favoritos' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Añadir Altavoz Bluetooth a favoritos' })).toBeEnabled()
+  })
+
+  it('HU14-CP36: al entrar en el catálogo, los productos que ya están en favoritos tienen el corazón relleno', async () => {
+    server.use(
+      http.get('/api/customer/wishlist', () =>
+        HttpResponse.json({
+          items: [
+            {
+              productoId: 'p-10',
+              nombre: 'Cafetera de cápsulas',
+              imagen: '',
+              precioFinal: 79.99,
+              stock: 9,
+              disponible: true,
+              addedAt: '2026-11-01T09:00:00Z',
+            },
+          ],
+        }),
+      ),
+    )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    expect(await screen.findByRole('button', { name: 'Quitar Cafetera de cápsulas de favoritos' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' })).toBeEnabled()
+  })
+
+  it('HU14-CP36: si no se pueden cargar los favoritos, el catálogo funciona con los corazones vacíos', async () => {
+    server.use(http.get('/api/customer/wishlist', () => new HttpResponse(null, { status: 500 })))
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    for (const tarjeta of tarjetas()) {
+      expect(within(tarjeta).getByRole('button', { name: /^añadir .+ a favoritos$/i })).toBeEnabled()
+    }
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('HU14-CP24: si el producto ya no está disponible, su tarjeta lo avisa y el corazón sigue vacío', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/customer/wishlist/items', () =>
+        HttpResponse.json({ code: 'PRODUCT_NOT_FOUND' }, { status: 404 }),
+      ),
+    )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+    const tarjeta = within(screen.getByRole('list', { name: /productos/i }))
+      .getByRole('link', { name: /auriculares/i })
+      .closest('li')
+
+    await user.click(within(tarjeta).getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' }))
+
+    expect(await within(tarjeta).findByRole('alert')).toHaveTextContent('Este producto ya no está disponible.')
+    expect(within(tarjeta).getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' })).toBeEnabled()
+  })
+
+  it('HU14-CP37: al pulsar el corazón relleno se quita el producto de favoritos y el corazón queda vacío', async () => {
+    const user = userEvent.setup()
+    let quitado = null
+    const cafetera = {
+      productoId: 'p-10',
+      nombre: 'Cafetera de cápsulas',
+      imagen: '',
+      precioFinal: 79.99,
+      stock: 9,
+      disponible: true,
+      addedAt: '2026-11-01T09:00:00Z',
+    }
+    server.use(
+      http.get('/api/customer/wishlist', () => HttpResponse.json({ items: [cafetera] })),
+      http.delete('/api/customer/wishlist/items/:productoId', ({ params }) => {
+        quitado = params.productoId
+        return HttpResponse.json({ items: [] })
+      }),
+    )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    await user.click(await screen.findByRole('button', { name: 'Quitar Cafetera de cápsulas de favoritos' }))
+
+    expect(await screen.findByRole('button', { name: 'Añadir Cafetera de cápsulas a favoritos' })).toBeEnabled()
+    expect(quitado).toBe('p-10')
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/)
+  })
+})

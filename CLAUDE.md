@@ -31,6 +31,7 @@ Funcionalidad básica: administración de productos, gestión de pedidos, carrit
 - **Gestión de proyecto**: SCRUM con Azure DevOps (Azure Boards)
 - **Control de versiones**: Git
 - **CI**: GitHub Actions (`.github/workflows/ci.yml`)
+- **CD**: Render, plan gratuito (`render.yaml`): frontend como Static Site y backend como Web Service con Docker (`backend/Dockerfile`), desplegados desde `main` cuando pasa el CI. Guía en `docs/despliegue/render.md`.
 - **IA de apoyo**: Claude Code (herramienta de IA agéntica del equipo)
 
 ## Estructura del proyecto
@@ -43,6 +44,7 @@ ESIBuy separa backend y frontend en carpetas independientes, sin tooling unifica
   - `src/test/java/es/uclm/esibuy/backend/` — pruebas unitarias y de integración con JUnit
 - `.claude/` — configuración de Claude Code (incluye `hooks-pendientes.md` y `settings.json` con los permisos compartidos)
 - `.mcp.json` — servidor MCP de Azure DevOps (Boards) compartido por el equipo
+- `render.yaml` — Blueprint de Render con los dos servicios del despliegue (ver `docs/despliegue/render.md`)
 
 **Estado actual**: el proyecto está **sin desarrollar**. El backend solo contiene la clase generada `BackendApplication.java`; aún no hay controladores, servicios, repositorios, modelos ni configuración de dominio. La organización de paquetes ya está acordada: hexagonal por módulos funcionales (ver sección "Arquitectura").
 - `frontend/` — React + Vite
@@ -181,6 +183,8 @@ Usar siempre el wrapper de Maven:
 
 - **MongoDB**: MongoDB Atlas (clúster `cluster0`, base `EsiBuy`). La conexión se configura en `application.properties` con `spring.mongodb.uri=${MONGODB_URI}` y `spring.mongodb.database=EsiBuy` (en Spring Boot 4 la propiedad es `spring.mongodb.uri`, no `spring.data.mongodb.uri`; y la base se llama `EsiBuy`, con esas mayúsculas, porque MongoDB no admite dos bases que solo difieran en mayúsculas). La URI con credenciales solo existe en la variable de entorno `MONGODB_URI` de cada desarrollador: **nunca** en el repositorio. Sin esa variable la aplicación no arranca. Los tests no usan Atlas: los que arrancan Spring importan `MongoTestcontainersConfig` (MongoDB en Docker) y el CI no tiene `MONGODB_URI`. Cualquier otro cambio en la configuración de Mongo se consulta antes.
 - **Clave de cifrado de los datos de pago (HU6)**: `application.properties` la lee con `esibuy.pagos.clave-cifrado=${ESIBUY_PAGOS_CLAVE_CIFRADO}`. Es una clave AES-256 en Base64 (32 bytes), distinta de la del secreto TOTP, que cada desarrollador genera con `openssl rand -base64 32` y guarda en la variable de entorno `ESIBUY_PAGOS_CLAVE_CIFRADO`: **nunca** en el repositorio. Sin ella, o con una clave que no mida 32 bytes, la aplicación no arranca. Los tests no la necesitan: `MongoTestcontainersConfig` registra una aleatoria, así que el CI tampoco la tiene.
+- **Clave de cifrado del secreto TOTP y SMTP key de Brevo**: `application.properties` las lee con `esibuy.totp.clave-cifrado=${ESIBUY_TOTP_CLAVE_CIFRADO}` (AES-256 en Base64, 32 bytes, `openssl rand -base64 32`, distinta de la de pagos) y `spring.mail.password=${BREVO_SMTP_KEY}` (SMTP key de la pestaña SMTP de Brevo). Van solo en esas variables de entorno de cada desarrollador y del despliegue: **nunca** en el repositorio. Sin ellas la aplicación no arranca. Los tests no las necesitan: `MongoTestcontainersConfig` registra valores de test, así que el CI tampoco las tiene.
+- **Despliegue (Render)**: `application.properties` lee además `server.port=${PORT:8080}` (Render inyecta `PORT`) y `spring.mail.port=${ESIBUY_MAIL_PUERTO:587}` (en Render, `2525`, porque el plan gratuito bloquea el 25, el 465 y el 587), y confía en las cabeceras `X-Forwarded-*` del proxy (`server.forward-headers-strategy=native`). Sin esas variables, en local todo sigue igual. Los secretos del despliegue se cargan en el panel de Render (`sync: false` en `render.yaml`), **nunca** en el repositorio. Cualquier cambio en `render.yaml` o en el `Dockerfile` se consulta antes.
 - No hay Checkstyle ni Spotless; el análisis de estilo/calidad se hará vía Sonar. No añadas linters locales duplicados.
 - Frontend con Vitest (React Testing Library y MSW para simular la API; tests junto al código, `*.test.js(x)`). Algunos tests fallan al azar al ejecutar toda la batería a la vez (p. ej. `SellerDetailDialog.test.jsx`); si falla uno, ejecútalo solo antes de darlo por roto.
 - `@types/react*` en devDependencies son solo para el editor; no hay `tsconfig.json`.
@@ -244,9 +248,10 @@ Comunes a todos los usuarios: registro, inicio de sesión, gestión de perfil, d
   - **Obligatorio**: `tipo/descripcion` (`feature/`, `chore/`…; ej. `chore/configuracion-ia`), sin segmento de área.
   - **Recomendado (buena práctica, no obligatorio)**: tras el tipo, indicar la historia de usuario y la task de Azure Boards: `tipo/USx-Tx-descripcion`. Ej.: `feature/US12-T45-alta-producto-service`.
   - **Recomendado (pendiente de acordar, no obligatorio)**: cada rama debería corresponder a una **task**, no a una historia de usuario completa.
-- Mensajes de commit: `tipo(area): descripción AB#<id>`, donde `<id>` es el ID real del work item de Azure Boards. **Nunca** dejes el placeholder literal `AB#ID`; si no conoces el ID, pregúntalo antes de commitear. **Excepción acordada:** los cambios transversales de seguridad que no pertenecen a ninguna HU ni task (rama `fix/seguridad-capa-negocio`) se commitean sin `AB#`: `tipo(area): descripción`.
+- Mensajes de commit: `tipo(area): descripción AB#<id>`, donde `<id>` es el ID real del work item de Azure Boards. **Nunca** dejes el placeholder literal `AB#ID`; si no conoces el ID, pregúntalo antes de commitear. **Excepción acordada:** los cambios transversales de seguridad que no pertenecen a ninguna HU ni task (rama `fix/seguridad-capa-negocio`) y los del despliegue continuo en Render se commitean sin `AB#`: `tipo(area): descripción`.
 - Antes de cada commit: `./mvnw test` en verde. Antes de cada PR: revisión de calidad (Sonar/SonarLint) y `npm run lint` si se toca el frontend.
 - CI: GitHub Actions (`.github/workflows/ci.yml`). En cada push y PR a `develop` o `main` ejecuta `mvn -B verify` en el backend (tests y umbral de cobertura del 60 %) y el lint y el build del frontend.
+- CD: Render despliega desde `main` cuando pasan todos los checks de GitHub del commit (`autoDeployTrigger: checksPass`), y cada servicio solo si cambian sus rutas (`backend/**` o `frontend/**`). Integrar `develop` en `main` es, por tanto, desplegar.
 
 ## Flujo de trabajo con Claude
 

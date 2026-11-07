@@ -161,7 +161,8 @@ describe('RoleUsersList (HU24)', () => {
     expect(screen.getAllByRole('button', { name: /^(bloquear|desbloquear) a /i })).toHaveLength(10)
     expect(screen.queryByRole('button', { name: /desactivar|^activar/i })).not.toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /^editar a /i })).toHaveLength(10)
-    expect(screen.getAllByRole('button', { name: /^eliminar a /i })).toHaveLength(10)
+    // Solo se eliminan administradores (HU37): los clientes no tienen papelera.
+    expect(screen.queryByRole('button', { name: /^eliminar a /i })).not.toBeInTheDocument()
   })
 
   it('roleUsersList_alPulsarLaLupa_abreLaFichaDeEseUsuario', async () => {
@@ -178,8 +179,6 @@ describe('RoleUsersList (HU24)', () => {
     await renderClientes('usr-3')
 
     expect(screen.getByRole('button', { name: 'Bloquear a Carlos Moreno Gil' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Eliminar a Carlos Moreno Gil' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Eliminar a Claudia Peña Calvo' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Bloquear a Claudia Peña Calvo' })).toBeEnabled()
   })
 
@@ -215,16 +214,6 @@ describe('RoleUsersList (HU24)', () => {
 
     expect(roles.length).toBeGreaterThan(0)
     expect(roles.every((rol) => rol === 'CLIENTE')).toBe(true)
-  })
-
-  it('roleUsersList_alEliminarDesdeLaFila_laFilaDesapareceYAvisa', async () => {
-    const user = userEvent.setup()
-    await renderClientes()
-
-    await cambiarEstadoDesdeLaFila(user, 'Eliminar', 'Carlos Moreno Gil')
-
-    expect(await screen.findByText('Carlos Moreno Gil se ha eliminado.')).toBeInTheDocument()
-    await waitFor(() => expect(screen.queryByText('carlos.moreno@esibuy.test')).not.toBeInTheDocument(), ESPERA)
   })
 
   it('roleUsersList_siFallaElBloqueo_muestraElErrorYNoCambiaLaFila', async () => {
@@ -272,5 +261,38 @@ describe('RoleUsersList (HU22): los administradores no están pendientes', () =>
     await screen.findByText('ana.lopez@esibuy.test')
 
     expect(screen.queryByText('Pendiente')).not.toBeInTheDocument()
+  })
+})
+
+describe('RoleUsersList (HU37): eliminar administradores', () => {
+  async function renderAdministradores(currentUserId) {
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderWithProviders(
+      <RoleUsersList
+        role="ADMINISTRADOR"
+        itemLabel="administradores"
+        errorMessage="No se ha podido cargar el listado de administradores."
+        loadingLabel="Cargando administradores…"
+        currentUserId={currentUserId}
+      />,
+    )
+    await screen.findByText('ana.lopez@esibuy.test')
+  }
+
+  it('HU37-CP12: al eliminar a un administrador desde la fila, desaparece de la lista y avisa', async () => {
+    const user = userEvent.setup()
+    await renderAdministradores('u-1')
+
+    await cambiarEstadoDesdeLaFila(user, 'Eliminar', 'Ana López García')
+
+    expect(await screen.findByText('Ana López García se ha eliminado.')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText('ana.lopez@esibuy.test')).not.toBeInTheDocument(), ESPERA)
+  })
+
+  it('HU37-CP15: la fila del administrador en sesión tiene la papelera deshabilitada y la de otro, no', async () => {
+    await renderAdministradores('usr-1')
+
+    expect(screen.getByRole('button', { name: 'Eliminar a Ana López García' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Eliminar a Diego Delgado Iglesias' })).toBeEnabled()
   })
 })

@@ -6,3 +6,10 @@ import { request } from './client'
 export function getProfile() {
   return request('/api/perfil')
 }
+
+// Eliminación de la cuenta propia del vendedor (HU47), confirmada con la contraseña actual. El backend borra la cuenta
+// y cierra la sesión (204). Una contraseña incorrecta responde 400 con code WRONG_PASSWORD, no 401: la sesión sigue
+// abierta.
+export function deleteAccount(password) {
+  return request('/api/perfil', { method: 'DELETE', body: { password } })
+}

@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
   Button,
@@ -12,6 +12,7 @@ import {
 } from '@fluentui/react-components'
 import { ArrowLeft20Regular, BoxSearch24Regular } from '@fluentui/react-icons'
 import { getCatalogProduct, getProductReviews } from '../api/products'
+import { addWishlistItem, getWishlist, removeWishlistItem } from '../api/wishlist'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
 import ProductDetail from '../features/catalog/ProductDetail'
@@ -20,6 +21,9 @@ import { useCategories } from '../hooks/useCategories'
 import { PATHS } from '../routes/paths'
 
 const NOT_FOUND = 404
+
+// Si un producto está en la lista de deseos que devuelve el backend (HU14).
+const estaEnLaLista = (lista, productId) => lista.items.some((item) => item.productoId === productId)
 
 const useStyles = makeStyles({
   page: {
@@ -97,8 +101,36 @@ export default function ProductDetailPage() {
   const reviewsFetcher = useCallback(() => getProductReviews(id), [id])
   const { data: reviews, failed: reviewsFailed, retry: retryReviews } = useApiQuery(reviewsFetcher)
   const { categories } = useCategories()
+  // Si el producto está en los favoritos del cliente (HU14). Si la lista no se puede leer, se ofrece añadirlo.
+  // `cambiado` evita que una lectura lenta pise un cambio que el cliente ya ha hecho.
+  const [favorito, setFavorito] = useState(false)
+  const cambiado = useRef(false)
+
+  const anadirFavorito = async (productId) => {
+    const lista = await addWishlistItem(productId)
+    cambiado.current = true
+    setFavorito(estaEnLaLista(lista, id))
+  }
+
+  const quitarFavorito = async (productId) => {
+    const lista = await removeWishlistItem(productId)
+    cambiado.current = true
+    setFavorito(estaEnLaLista(lista, id))
+  }
   const notFound = failed && error?.status === NOT_FOUND
   const categoryName = categories.find((category) => category.id === product?.categoriaId)?.nombre
+
+  useEffect(() => {
+    let cancelled = false
+    getWishlist()
+      .then((lista) => {
+        if (!cancelled && !cambiado.current) setFavorito(estaEnLaLista(lista, id))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [id])
 
   return (
     <main className={styles.page}>
@@ -139,6 +171,9 @@ export default function ProductDetailPage() {
           reviews={reviews}
           reviewsFailed={reviewsFailed}
           onRetryReviews={retryReviews}
+          favorite={favorito}
+          onAddFavorite={anadirFavorito}
+          onRemoveFavorite={quitarFavorito}
         />
       )}
     </main>

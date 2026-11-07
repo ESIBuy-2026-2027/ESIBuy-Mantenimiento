@@ -1,8 +1,10 @@
 package es.uclm.esibuy.backend.pedidos.infrastructure.config;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
+import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.VentasVendedorUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.out.CarritoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ContadorPedidosPort;
@@ -10,8 +12,10 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.DireccionesPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ExistenciasPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.MetodosPagoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
+import es.uclm.esibuy.backend.pedidos.application.service.CancelacionPedidoService;
 import es.uclm.esibuy.backend.pedidos.application.service.ConsultaComprasService;
 import es.uclm.esibuy.backend.pedidos.application.service.RealizacionPedidoService;
+import es.uclm.esibuy.backend.pedidos.application.service.VentasVendedorService;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.carrito.CarritoAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.direcciones.DireccionesAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.metodospago.MetodosPagoAdapter;
@@ -29,6 +33,7 @@ import org.springframework.context.annotation.Import;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 // Test técnico: Spring monta las piezas de los pedidos al arrancar (HU10, y la consulta de compras de HU13).
+// También la cancelación de pedidos (HU12, T375) y las ventas del vendedor (HU17, T280).
 // Arranca la aplicación entera con un MongoDB de Testcontainers: Docker Desktop debe estar abierto.
 @SpringBootTest
 @Import(MongoTestcontainersConfig.class)
@@ -42,6 +47,8 @@ class PedidosConfigTest {
     void elContextoConectaLasPiezasDeLosPedidos() {
         assertInstanceOf(RealizacionPedidoService.class, contexto.getBean(RealizacionPedidoUseCase.class));
         assertInstanceOf(ConsultaComprasService.class, contexto.getBean(ConsultaComprasUseCase.class));
+        assertInstanceOf(CancelacionPedidoService.class, contexto.getBean(CancelacionPedidoUseCase.class));
+        assertInstanceOf(VentasVendedorService.class, contexto.getBean(VentasVendedorUseCase.class));
         assertInstanceOf(PedidoMongoAdapter.class, contexto.getBean(PedidoRepositoryPort.class));
         assertInstanceOf(ContadorPedidosMongoAdapter.class, contexto.getBean(ContadorPedidosPort.class));
         assertInstanceOf(ClienteEnSesionAdapter.class, contexto.getBean(ClienteEnSesionPort.class));

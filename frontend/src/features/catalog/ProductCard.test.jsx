@@ -102,3 +102,120 @@ describe('ProductCard', () => {
     expect(screen.getByRole('link', { name: /teclado mecánico/i })).not.toHaveTextContent(/añadir/i)
   })
 })
+
+describe('ProductCard (HU14): favoritos', () => {
+  const pintarConFavoritos = (producto = PRODUCTO, props = {}) =>
+    renderWithProviders(
+      conCarrito(
+        <ProductCard
+          product={producto}
+          categoryName="Tecnología"
+          onAddFavorite={vi.fn().mockResolvedValue(undefined)}
+          {...props}
+        />,
+      ),
+    )
+
+  it('HU14-CP21: la tarjeta tiene un corazón para añadir el producto a favoritos, fuera del enlace al detalle', () => {
+    pintarConFavoritos()
+
+    const corazon = screen.getByRole('button', { name: 'Añadir Teclado mecánico a favoritos' })
+    expect(corazon).toBeEnabled()
+    expect(corazon.closest('a')).toBeNull()
+  })
+
+  it('HU14-CP21: un producto agotado también se puede añadir a favoritos', () => {
+    pintarConFavoritos({ ...PRODUCTO, stock: 0 })
+
+    expect(screen.getByRole('button', { name: /a favoritos/i })).toBeEnabled()
+  })
+
+  it('HU14-CP21: un producto no disponible no tiene el corazón', () => {
+    pintarConFavoritos({ ...PRODUCTO, disponible: false })
+
+    expect(screen.queryByRole('button', { name: /favoritos/i })).not.toBeInTheDocument()
+  })
+
+  it('HU14-CP21: sin onAddFavorite la tarjeta no ofrece favoritos', () => {
+    pintar()
+
+    expect(screen.queryByRole('button', { name: /favoritos/i })).not.toBeInTheDocument()
+  })
+
+  it('HU14-CP22: al pulsar el corazón pide añadir ese producto a favoritos', async () => {
+    const onAddFavorite = vi.fn().mockResolvedValue(undefined)
+    pintarConFavoritos(PRODUCTO, { onAddFavorite })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Añadir Teclado mecánico a favoritos' }))
+
+    expect(onAddFavorite).toHaveBeenCalledWith('p-1')
+  })
+
+  it('HU14-CP22: mientras se añade, el corazón queda deshabilitado', async () => {
+    pintarConFavoritos(PRODUCTO, { onAddFavorite: vi.fn(() => new Promise(() => {})) })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Añadir Teclado mecánico a favoritos' }))
+
+    expect(screen.getByRole('button', { name: 'Añadir Teclado mecánico a favoritos' })).toBeDisabled()
+  })
+
+  it('HU14-CP22: un producto que ya está en favoritos tiene el corazón relleno para quitarlo', () => {
+    pintarConFavoritos(PRODUCTO, { favorite: true, onRemoveFavorite: vi.fn().mockResolvedValue(undefined) })
+
+    const corazon = screen.getByRole('button', { name: 'Quitar Teclado mecánico de favoritos' })
+    expect(corazon).toBeEnabled()
+    expect(corazon).toHaveAttribute('title', 'Quitar de favoritos')
+    expect(screen.queryByRole('button', { name: /añadir .* a favoritos/i })).not.toBeInTheDocument()
+  })
+
+  it.each([
+    ['el producto ya no está disponible (404)', { status: 404, code: 'PRODUCT_NOT_FOUND' }, 'Este producto ya no está disponible.'],
+    ['falla por otro motivo', { status: 500 }, 'No se ha podido añadir a favoritos. Inténtalo de nuevo.'],
+  ])('HU14-CP24: si %s, la tarjeta lo avisa y el corazón se puede volver a pulsar', async (_caso, error, mensaje) => {
+    pintarConFavoritos(PRODUCTO, { onAddFavorite: vi.fn().mockRejectedValue(error) })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Añadir Teclado mecánico a favoritos' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(mensaje)
+    expect(screen.getByRole('button', { name: 'Añadir Teclado mecánico a favoritos' })).toBeEnabled()
+  })
+
+  it('HU14-CP24: al volver a pulsar el corazón desaparece el aviso anterior', async () => {
+    const onAddFavorite = vi.fn().mockRejectedValueOnce({ status: 500 }).mockResolvedValueOnce(undefined)
+    pintarConFavoritos(PRODUCTO, { onAddFavorite })
+    const corazon = () => screen.getByRole('button', { name: 'Añadir Teclado mecánico a favoritos' })
+
+    await userEvent.click(corazon())
+    await screen.findByRole('alert')
+    await userEvent.click(corazon())
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(onAddFavorite).toHaveBeenCalledTimes(2)
+  })
+
+  it('HU14-CP37: al pulsar el corazón relleno pide quitar ese producto de favoritos', async () => {
+    const onRemoveFavorite = vi.fn().mockResolvedValue(undefined)
+    pintarConFavoritos(PRODUCTO, { favorite: true, onRemoveFavorite })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Quitar Teclado mecánico de favoritos' }))
+
+    expect(onRemoveFavorite).toHaveBeenCalledWith('p-1')
+  })
+
+  it('HU14-CP37: mientras se quita, el corazón queda deshabilitado', async () => {
+    pintarConFavoritos(PRODUCTO, { favorite: true, onRemoveFavorite: vi.fn(() => new Promise(() => {})) })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Quitar Teclado mecánico de favoritos' }))
+
+    expect(screen.getByRole('button', { name: 'Quitar Teclado mecánico de favoritos' })).toBeDisabled()
+  })
+
+  it('HU14-CP37: si no se puede quitar, la tarjeta lo avisa y el corazón se puede volver a pulsar', async () => {
+    pintarConFavoritos(PRODUCTO, { favorite: true, onRemoveFavorite: vi.fn().mockRejectedValue({ status: 500 }) })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Quitar Teclado mecánico de favoritos' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se ha podido quitar de favoritos. Inténtalo de nuevo.')
+    expect(screen.getByRole('button', { name: 'Quitar Teclado mecánico de favoritos' })).toBeEnabled()
+  })
+})

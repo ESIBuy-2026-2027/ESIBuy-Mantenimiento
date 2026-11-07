@@ -3,6 +3,8 @@ import { useState } from 'react'
 import { Button, makeStyles, tokens } from '@fluentui/react-components'
 import {
   ArrowExit20Regular,
+  ChatWarning20Regular,
+  Heart20Regular,
   Location20Regular,
   Payment20Regular,
   Person20Regular,
@@ -10,7 +12,7 @@ import {
   Receipt20Regular,
 } from '@fluentui/react-icons'
 import { Link, useNavigate } from 'react-router-dom'
-import { ROLES } from '../auth/roles'
+import { ROLES, getHomePath } from '../auth/roles'
 import { useAuth } from '../auth/useAuth'
 import { PATHS } from '../routes/paths'
 import LinkButton from './LinkButton'
@@ -77,6 +79,12 @@ function UserActions({ rol, onSignOut, disabled }) {
           Mis pedidos
         </LinkButton>
       )}
+      {/* La lista de deseos (HU14) es solo del cliente */}
+      {rol === ROLES.CLIENTE && (
+        <LinkButton to={PATHS.WISHLIST} appearance="subtle" icon={<Heart20Regular />}>
+          Favoritos
+        </LinkButton>
+      )}
       {/* Los métodos de pago (HU6) son solo del cliente */}
       {rol === ROLES.CLIENTE && (
         <LinkButton to={PATHS.PAYMENT_METHODS} appearance="subtle" icon={<Payment20Regular />}>
@@ -87,6 +95,12 @@ function UserActions({ rol, onSignOut, disabled }) {
       {rol === ROLES.CLIENTE && (
         <LinkButton to={PATHS.ADDRESSES} appearance="subtle" icon={<Location20Regular />}>
           Direcciones
+        </LinkButton>
+      )}
+      {/* Las incidencias (HU44) son del cliente y del vendedor */}
+      {(rol === ROLES.CLIENTE || rol === ROLES.VENDEDOR) && (
+        <LinkButton to={PATHS.INCIDENTS} appearance="subtle" icon={<ChatWarning20Regular />}>
+          Incidencias
         </LinkButton>
       )}
       {/* El perfil propio (HU4) es del cliente y del vendedor */}
@@ -118,7 +132,8 @@ export default function AppHeader() {
 
   return (
     <header className={styles.header}>
-      <Link to={PATHS.HOME} className={styles.logo}>
+      {/* Con sesión, el logotipo lleva al inicio del rol (el mismo que tras el login); sin sesión, a la home (HU30) */}
+      <Link to={user ? getHomePath(user.rol) : PATHS.HOME} className={styles.logo}>
         ESI<span className={styles.logoAccent}>Buy</span>
       </Link>
       <nav className={styles.actions} aria-label="Cuenta">

@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
 
 /**
  * Pedido de un cliente a un solo proveedor (HU10; decisión del equipo: un pedido por proveedor). El total se
@@ -17,7 +18,7 @@ public class Pedido {
     private final String clienteId;
     private final String vendedorId;
     private final String nombreComercial;
-    private final EstadoPedido estado;
+    private EstadoPedido estado;
     private final List<LineaPedido> lineas;
     private final DireccionEnvioPedido direccionEnvio;
     private final String paymentMethodId;
@@ -55,6 +56,15 @@ public class Pedido {
             List<LineaPedido> lineas, DireccionEnvioPedido direccionEnvio, String paymentMethodId, Instant ahora) {
         return new Pedido(null, numeroPedido, clienteId, vendedorId, nombreComercial, EstadoPedido.PAGADO, lineas,
                 direccionEnvio, paymentMethodId, ahora);
+    }
+
+    // Cancelación (HU12): solo mientras el pedido aún no se ha enviado (PAGADO o PREPARANDO). Un pedido enviado,
+    // entregado o ya cancelado no se puede cancelar.
+    public void cancelar() {
+        if (estado != EstadoPedido.PAGADO && estado != EstadoPedido.PREPARANDO) {
+            throw new PedidoNoCancelableException("El pedido ya no se puede cancelar");
+        }
+        estado = EstadoPedido.CANCELADO;
     }
 
     private static void exigirTexto(String valor, String mensaje) {

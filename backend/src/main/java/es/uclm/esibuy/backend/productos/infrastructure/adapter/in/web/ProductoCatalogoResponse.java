@@ -3,10 +3,8 @@ package es.uclm.esibuy.backend.productos.infrastructure.adapter.in.web;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 
 /**
- * Producto del catálogo del cliente (HU7). No lleva precio, stock ni vendedorId.
- *
- * <p>PENDIENTE DE DECIDIR (equipo): {@code valoracion} y {@code numValoraciones} se conectarán con las
- * valoraciones de HU13; hasta entonces valen {@code null} y 0.
+ * Producto del catálogo del cliente (HU7). No lleva precio, stock ni vendedorId. {@code valoracion} es la media de
+ * sus valoraciones (HU13), o {@code null} si no tiene ninguna.
  */
 public record ProductoCatalogoResponse(
         String id,
@@ -23,8 +21,8 @@ public record ProductoCatalogoResponse(
                 producto.getNombre(),
                 producto.getImagen(),
                 producto.getCategoriaId(),
-                null,
-                0
+                producto.getValoracionMedia(),
+                producto.getNumeroValoraciones()
         );
     }
 }

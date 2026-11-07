@@ -40,6 +40,23 @@ public class MongoTestcontainersConfig {
         return registro -> registro.add("esibuy.pagos.clave-cifrado", () -> claveBase64);
     }
 
+    // Clave de cifrado del secreto TOTP, aleatoria y solo para los tests: así ni el CI ni cada desarrollador
+    // necesitan la variable ESIBUY_TOTP_CLAVE_CIFRADO para pasar la suite
+    @Bean
+    DynamicPropertyRegistrar claveCifradoTotpDeTest() {
+        byte[] clave = new byte[32];
+        new SecureRandom().nextBytes(clave);
+        String claveBase64 = Base64.getEncoder().encodeToString(clave);
+        return registro -> registro.add("esibuy.totp.clave-cifrado", () -> claveBase64);
+    }
+
+    // SMTP key de Brevo falsa: así ni el CI ni cada desarrollador necesitan BREVO_SMTP_KEY para pasar la suite.
+    // Ningún test envía correo real
+    @Bean
+    DynamicPropertyRegistrar smtpKeyBrevoDeTest() {
+        return registro -> registro.add("spring.mail.password", () -> "smtp-key-falsa-de-test");
+    }
+
     // API key de VirusTotal falsa (HU31, T397): así ni el CI ni cada desarrollador necesitan VIRUSTOTAL_API_KEY para
     // pasar la suite. Ningún test llama a VirusTotal: el adaptador se prueba con MockRestServiceServer
     @Bean

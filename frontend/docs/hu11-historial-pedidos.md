@@ -89,4 +89,4 @@ El test «el vendedor y el administrador no tienen el enlace a Mis pedidos» (HU
 
 ## 5. Pendiente
 
-- **La pasarela de pago (HU10) aún no crea los pedidos contra el backend real:** el frontend usa `POST /api/orders` sin dirección, y el backend espera `POST /api/customer/orders` con `direccionId`. Lo tiene que ajustar quien lleve la HU10 en el frontend. El historial y el detalle ya usan las rutas reales del backend.
+- ~~La pasarela de pago (HU10) aún no crea los pedidos contra el backend real~~: resuelto en la task AB#133. La pasarela usa `POST /api/customer/orders` con la `direccionId` elegida, y los pedidos nuevos llegan al historial con esa dirección.

@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.categorias.application.port.in;
 import java.util.List;
 
 import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
+import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 
 /** Puerto de entrada de la gestión de las categorías por el administrador (HU39 a HU42). */
 public interface AdministracionCategoriasUseCase {
@@ -27,6 +28,13 @@ public interface AdministracionCategoriasUseCase {
      * validan en el dominio ({@code CategoriaInvalidaException}).
      */
     CategoriaConProductos editar(EditarCategoriaCommand comando);
+
+    /**
+     * Activa o desactiva una categoría y la devuelve con su número de productos; el nombre y la descripción no se
+     * tocan. La categoría debe existir ({@code CategoriaNoEncontradaException}) y el estado es obligatorio
+     * ({@code CategoriaInvalidaException}).
+     */
+    CategoriaConProductos cambiarEstado(String id, EstadoCategoria estado);
 
     /**
      * Elimina físicamente una categoría. La categoría debe existir ({@code CategoriaNoEncontradaException}), no

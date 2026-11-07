@@ -35,7 +35,8 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioNoEncontradoExcep
 // el correo del administrador, que sea el de la sesión. consultarNombreComercial es del cliente (lo usa el carrito).
 // Las anotaciones solo se evalúan con Spring, así que se usa un contexto mínimo (sin MongoDB) con los servicios
 // reales y dobles de prueba de los puertos de salida.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU20-CP07 y HU42-CP08, propuestos.
+// consultarContacto es solo del administrador (lo usa la supervisión de incidencias, HU49).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU20-CP07, HU42-CP08 y HU49-CP03, propuestos.
 @SpringJUnitConfig(SeguridadAdministracionUsuariosServiceTest.Configuracion.class)
 class SeguridadAdministracionUsuariosServiceTest {
 
@@ -206,6 +207,39 @@ class SeguridadAdministracionUsuariosServiceTest {
     void sinSesionSeRechazaLaPreguntaPorLosVendedores() {
         assertThrows(AuthenticationCredentialsNotFoundException.class,
                 () -> administracionUsuarios.existenVendedoresConCategoria("c-1"));
+        verifyNoInteractions(usuarioRepository);
+    }
+
+    // El contacto del autor de una incidencia (HU49) solo lo pide la supervisión de incidencias del administrador
+
+    @Test
+    @WithMockUser(username = "cliente@esibuy.test", roles = "CLIENTE")
+    @DisplayName("HU49-CP03: un cliente no puede consultar el contacto de un usuario")
+    void unClienteNoConsultaElContacto() {
+        assertThrows(AccessDeniedException.class, () -> administracionUsuarios.consultarContacto("u-1"));
+        verifyNoInteractions(usuarioRepository);
+    }
+
+    @Test
+    @WithMockUser(username = "vendedor@esibuy.test", roles = "VENDEDOR")
+    @DisplayName("HU49-CP03: un vendedor no puede consultar el contacto de un usuario")
+    void unVendedorNoConsultaElContacto() {
+        assertThrows(AccessDeniedException.class, () -> administracionUsuarios.consultarContacto("u-1"));
+        verifyNoInteractions(usuarioRepository);
+    }
+
+    @Test
+    @WithMockUser(username = ADMIN, roles = "ADMINISTRADOR")
+    @DisplayName("HU49-CP03: un administrador sí consulta el contacto de un usuario")
+    void unAdministradorConsultaElContacto() {
+        assertDoesNotThrow(() -> administracionUsuarios.consultarContacto("u-1"));
+    }
+
+    @Test
+    @DisplayName("HU49-CP03: sin sesión se rechaza la consulta del contacto de un usuario")
+    void sinSesionSeRechazaElContacto() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> administracionUsuarios.consultarContacto("u-1"));
         verifyNoInteractions(usuarioRepository);
     }
 }

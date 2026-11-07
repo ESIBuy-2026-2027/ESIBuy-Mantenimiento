@@ -50,7 +50,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 // También prueba el listado de los productos propios del vendedor (HU32, T184), el borrado físico (HU35, T346),
 // el catálogo del cliente (HU7, T352) y el recuento de productos por categoría (HU39, T332).
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU31-CP11, CP12 y CP23, HU32-CP01 a CP03, HU7-CP11 a CP15
-// y HU39-CP02, propuestos.
+// y HU39-CP02, propuestos. La media y el número de valoraciones (HU13, T415): caso HU13-CP24, propuesto.
+// Todos los productos de un vendedor para sus estadísticas (HU17, T280): caso HU17-CP09, propuesto.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class ProductoMongoAdapterTest {
@@ -363,32 +364,46 @@ class ProductoMongoAdapterTest {
         assertEquals(List.of("Cesta", "Banco"), nombres(descendente));
     }
 
+    // Valoración mínima y orden por valoración (HU7) con la media de las valoraciones de HU13 (T415). Un producto
+    // sin valoraciones no llega a ningún mínimo y al ordenar cuenta como el que menos.
     @Test
-    @DisplayName("HU7-CP15: con una valoración mínima no sale ningún producto mientras no haya valoraciones")
-    void buscarEnCatalogoConValoracionMinimaNoDevuelveNada() {
-        // Hasta HU13 ningún producto tiene valoraciones, así que ninguno llega al mínimo (decisión 3 del plan).
-        adapter.guardar(productoNuevo("v-1", "Teclado"));
-        adapter.guardar(productoNuevo("v-2", "Ratón"));
+    @DisplayName("HU7-CP15: con una valoración mínima solo salen los productos con esa media o más")
+    void buscarEnCatalogoConValoracionMinimaFiltraPorLaMedia() {
+        guardarValorado("Atril", 4.5);
+        guardarValorado("Banco", 3.0);
+        adapter.guardar(productoNuevo("v-1", "Cesta"));
 
-        ProductoPage pagina = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, 2, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+        ProductoPage desdeCuatro = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, 4, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+        ProductoPage desdeTres = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, 3, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
 
-        assertEquals(List.of(), nombres(pagina));
-        assertEquals(0, pagina.totalElementos());
+        assertEquals(List.of("Atril"), nombres(desdeCuatro));
+        assertEquals(1, desdeCuatro.totalElementos());
+        assertEquals(List.of("Atril", "Banco"), nombres(desdeTres));
     }
 
     @Test
-    @DisplayName("HU7-CP15: ordenar por valoración desempata por nombre de la A a la Z mientras no haya valoraciones")
-    void buscarEnCatalogoPorValoracionDesempataPorNombre() {
-        // Sin valoraciones todos cuentan como 0 y empatan; el empate se resuelve de la A a la Z aunque se pida descendente.
-        adapter.guardar(productoNuevo("v-1", "Cesta"));
+    @DisplayName("HU7-CP15: por valoración ordena por la media, desempata por nombre y sin valoraciones es la menor")
+    void buscarEnCatalogoPorValoracionOrdenaPorLaMedia() {
         adapter.guardar(productoNuevo("v-1", "Atril"));
-        adapter.guardar(productoNuevo("v-2", "Banco"));
+        guardarValorado("Cesta", 4.0);
+        guardarValorado("Banco", 4.0);
+        guardarValorado("Dado", 2.0);
 
-        ProductoPage pagina = adapter.buscarEnCatalogo(
+        ProductoPage descendente = adapter.buscarEnCatalogo(
                 new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.VALORACION, true, 0, 10));
+        ProductoPage ascendente = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.VALORACION, false, 0, 10));
 
-        assertEquals(List.of("Atril", "Banco", "Cesta"), nombres(pagina));
+        // Banco y Cesta empatan a 4,0: el empate se resuelve de la A a la Z en los dos sentidos
+        assertEquals(List.of("Banco", "Cesta", "Dado", "Atril"), nombres(descendente));
+        assertEquals(List.of("Atril", "Dado", "Banco", "Cesta"), nombres(ascendente));
+    }
+
+    private void guardarValorado(String nombre, double media) {
+        String id = adapter.guardar(productoNuevo("v-1", nombre)).getId();
+        adapter.actualizarValoracion(id, media, 2);
     }
 
     // Catálogo sin búsqueda, categoría ni valoración mínima, por nombre de la A a la Z, primera página de 10.
@@ -407,6 +422,61 @@ class ProductoMongoAdapterTest {
     }
 
     // Stock al realizar un pedido (HU10): se descuenta en una sola operación de MongoDB, condicionada al stock
+    // Media y número de valoraciones del producto (HU13, T415): el módulo de valoraciones los calcula con todas las
+    // valoraciones del producto y el adaptador solo los guarda, para que el catálogo pueda ordenar y filtrar por ellos.
+    @Test
+    @DisplayName("HU13-CP24: guarda en el producto la media y el número de valoraciones que recibe")
+    void guardaLaMediaYElNumeroDeValoraciones() {
+        String id = adapter.guardar(producto(null, 5)).getId();
+
+        adapter.actualizarValoracion(id, 4.5, 2);
+
+        Document guardado = documentoEnBruto();
+        assertEquals(4.5, ((Number) guardado.get("valoracionMedia")).doubleValue());
+        assertEquals(2, guardado.getInteger("numeroValoraciones"));
+    }
+
+    @Test
+    @DisplayName("HU13-CP24: una actualización nueva sustituye la media y el número y no toca el resto del producto")
+    void unaActualizacionNuevaSustituyeLaMediaYElNumero() {
+        String id = adapter.guardar(producto(null, 5)).getId();
+
+        adapter.actualizarValoracion(id, 4.5, 2);
+        adapter.actualizarValoracion(id, 4.0, 3);
+
+        Document guardado = documentoEnBruto();
+        assertEquals(4.0, ((Number) guardado.get("valoracionMedia")).doubleValue());
+        assertEquals(3, guardado.getInteger("numeroValoraciones"));
+        assertEquals("Teclado mecánico", guardado.getString("nombre"));
+        assertEquals(5, guardado.getInteger("stock"));
+    }
+
+    @Test
+    @DisplayName("HU13-CP25: al leer el producto trae su media y su número de valoraciones")
+    void alLeerElProductoTraeSuMediaYSuNumero() {
+        String id = adapter.guardar(producto(null, 5)).getId();
+        adapter.actualizarValoracion(id, 4.5, 2);
+
+        Producto leido = adapter.buscarPorId(id).orElseThrow();
+
+        assertEquals(4.5, leido.getValoracionMedia());
+        assertEquals(2, leido.getNumeroValoraciones());
+    }
+
+    @Test
+    @DisplayName("HU13-CP25: modificar el producto conserva su media y su número de valoraciones")
+    void modificarElProductoConservaSuMediaYSuNumero() {
+        String id = adapter.guardar(producto(null, 5)).getId();
+        adapter.actualizarValoracion(id, 4.5, 2);
+
+        adapter.guardar(producto(id, 9));
+
+        Document guardado = documentoEnBruto();
+        assertEquals(9, guardado.getInteger("stock"));
+        assertEquals(4.5, ((Number) guardado.get("valoracionMedia")).doubleValue());
+        assertEquals(2, guardado.getInteger("numeroValoraciones"));
+    }
+
     @Test
     @DisplayName("HU10-CP15: descontar stock lo resta si hay suficiente y no lo deja negativo")
     void descontarStockLoRestaSiHaySuficiente() {
@@ -415,6 +485,30 @@ class ProductoMongoAdapterTest {
         assertTrue(adapter.descontarStock(id, 3));
         assertFalse(adapter.descontarStock(id, 3));
         assertEquals(2, adapter.buscarPorId(id).orElseThrow().getStock());
+    }
+
+    @Test
+    @DisplayName("HU47-CP03: un producto no disponible no se puede comprar aunque tenga stock")
+    void productoNoDisponibleNoSePuedeComprarAunqueTengaStock() {
+        Producto producto = producto(null, 5).conDisponibilidad(false);
+        String id = adapter.guardar(producto).getId();
+
+        assertFalse(adapter.descontarStock(id, 1));
+        assertEquals(5, adapter.buscarPorId(id).orElseThrow().getStock());
+    }
+
+    @Test
+    @DisplayName("HU47-CP02: listar todos los productos devuelve solo los del vendedor indicado")
+    void listarTodosPorVendedorDevuelveSoloLosDelVendedor() {
+        adapter.guardar(producto(null, 5));
+        Producto deOtroVendedor = new Producto(null, "v-2", "Ratón", "Óptico", new BigDecimal("20.00"), 2,
+                "cat-2", "https://esibuy.test/raton.png", true, Descuento.sinDescuento(), Descuento.sinDescuento());
+        adapter.guardar(deOtroVendedor);
+
+        List<Producto> productos = adapter.listarTodosPorVendedor("v-1");
+
+        assertEquals(1, productos.size());
+        assertEquals("v-1", productos.get(0).getVendedorId());
     }
 
     @Test
@@ -444,5 +538,22 @@ class ProductoMongoAdapterTest {
         adapter.reponerStock(id, 4);
 
         assertEquals(5, adapter.buscarPorId(id).orElseThrow().getStock());
+    }
+
+    @Test
+    @DisplayName("HU17-CP09: listarTodosPorVendedor devuelve todos sus productos, también los no disponibles, sin paginar")
+    void listarTodosPorVendedorIncluyeLosNoDisponiblesSinPaginar() {
+        for (int i = 1; i <= 12; i++) {
+            adapter.guardar(productoNuevo("v-1", "Producto " + i));
+        }
+        Producto noDisponible = adapter.guardar(productoNuevo("v-1", "No disponible").conDisponibilidad(false));
+        adapter.guardar(productoNuevo("v-2", "De otro vendedor"));
+
+        List<Producto> productos = adapter.listarTodosPorVendedor("v-1");
+
+        assertEquals(13, productos.size());
+        assertTrue(productos.stream().allMatch(producto -> producto.getVendedorId().equals("v-1")));
+        assertTrue(productos.stream().anyMatch(producto -> producto.getId().equals(noDisponible.getId())));
+        assertTrue(adapter.listarTodosPorVendedor("v-sin-productos").isEmpty());
     }
 }

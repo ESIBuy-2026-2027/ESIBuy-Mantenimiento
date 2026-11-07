@@ -91,14 +91,23 @@ describe('AppHeader', () => {
 
   it('HU43-CP04: el cliente cierra sesión desde su zona, vuelve al login con un aviso y ya no puede entrar', async () => {
     await cerrarSesionDesdeSuZona('cliente@esibuy.test', '/products')
+
+    // Tras volver a cargar la página, la zona sigue cerrada: se queda en el login.
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/)
   })
 
   it('HU43-CP05: el vendedor cierra sesión desde su zona, vuelve al login con un aviso y ya no puede entrar', async () => {
     await cerrarSesionDesdeSuZona('vendedor@esibuy.test', '/seller/products')
+
+    // Tras volver a cargar la página, la zona sigue cerrada: se queda en el login.
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/)
   })
 
   it('HU43-CP06: el administrador cierra sesión desde su panel, vuelve al login con un aviso y ya no puede entrar', async () => {
     await cerrarSesionDesdeSuZona('admin@esibuy.test', '/admin')
+
+    // Tras volver a cargar la página, la zona sigue cerrada: se queda en el login.
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/)
   })
 
   it('HU43-CP08: si el servidor falla al cerrar sesión, la sesión del navegador se cierra igualmente', async () => {
@@ -216,7 +225,7 @@ describe('AppHeader: Mis pedidos (HU11)', () => {
 
     await user.click(await screen.findByRole('link', { name: /mis pedidos/i }))
 
-    await esperarRuta('/orders')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/orders$')))
   })
 
   it('HU11-CP18: el vendedor y el administrador no tienen el enlace a Mis pedidos', async () => {
@@ -230,5 +239,135 @@ describe('AppHeader: Mis pedidos (HU11)', () => {
     renderApp('/')
     await screen.findByRole('button', { name: /cerrar sesión/i })
     expect(screen.queryByRole('link', { name: /mis pedidos/i })).not.toBeInTheDocument()
+  })
+})
+
+describe('AppHeader: Mis favoritos (HU14)', () => {
+  it('HU14-CP32: el cliente tiene el enlace a sus favoritos y lleva a Mis favoritos', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/')
+
+    await user.click(await screen.findByRole('link', { name: 'Favoritos' }))
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/wishlist$')))
+  })
+
+  it('HU14-CP32: el vendedor y el administrador no tienen el enlace a favoritos', async () => {
+    await abrirSesionPorApi('vendedor@esibuy.test')
+    const { unmount } = renderApp('/')
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(screen.queryByRole('link', { name: 'Favoritos' })).not.toBeInTheDocument()
+    unmount()
+
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/')
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(screen.queryByRole('link', { name: 'Favoritos' })).not.toBeInTheDocument()
+  })
+})
+
+// El logotipo de la cabecera lleva al inicio de quien lo pulsa (HU30, AB#27): con sesión, a la página de inicio de su
+// rol (la misma a la que lleva el login); sin sesión, a la home. Antes llevaba siempre a la home de invitado.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU30-CP01, propuesto.
+describe('AppHeader (HU30): el logotipo lleva al inicio de cada usuario', () => {
+  const logotipo = () => screen.findByRole('link', { name: 'ESIBuy' })
+
+  it.each([
+    ['cliente@esibuy.test', '/products'],
+    ['vendedor@esibuy.test', '/seller/products'],
+    ['admin@esibuy.test', '/admin'],
+  ])('HU30-CP01: con la sesión de %s, el logotipo lleva a %s', async (email, inicio) => {
+    await abrirSesionPorApi(email)
+    renderApp('/profile')
+
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(await logotipo()).toHaveAttribute('href', inicio)
+  })
+
+  it('HU30-CP01: sin sesión, el logotipo lleva a la home', async () => {
+    renderApp('/')
+
+    await screen.findByRole('link', { name: /iniciar sesión/i })
+    expect(await logotipo()).toHaveAttribute('href', '/')
+  })
+
+  it('HU30-CP01: un cliente que pulsa el logotipo llega a los productos, no a la home de invitado', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/profile')
+
+    await user.click(await logotipo())
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/products$')))
+  })
+})
+
+describe('AppHeader (HU44): incidencias del cliente', () => {
+  it('HU44-CP32: el cliente ve el botón Incidencias en la cabecera y lleva a Mis incidencias', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/')
+
+    await user.click(await screen.findByRole('link', { name: /^incidencias$/i }))
+
+    await esperarRuta('/incidents')
+    expect(await screen.findByRole('heading', { level: 1, name: /mis incidencias/i })).toBeInTheDocument()
+  })
+
+  it('HU44-CP32: el botón Incidencias es un enlace con su destino, que recibe el foco con el teclado', async () => {
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/')
+
+    const enlace = await screen.findByRole('link', { name: /^incidencias$/i })
+
+    expect(enlace).toHaveAttribute('href', '/incidents')
+    enlace.focus()
+    expect(enlace).toHaveFocus()
+  })
+})
+
+describe('AppHeader (HU44): incidencias del vendedor, del administrador y sin sesión', () => {
+  it('HU44-CP33: el vendedor ve el botón Incidencias y lleva a Mis incidencias', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('vendedor@esibuy.test')
+    renderApp('/seller/products')
+
+    await user.click(await screen.findByRole('link', { name: /^incidencias$/i }))
+
+    await esperarRuta('/incidents')
+    expect(await screen.findByRole('heading', { level: 1, name: /mis incidencias/i })).toBeInTheDocument()
+  })
+
+  it('HU44-CP33: el administrador no ve el botón Incidencias', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/admin')
+
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(screen.queryByRole('link', { name: /^incidencias$/i })).not.toBeInTheDocument()
+  })
+
+  it('HU44-CP33: sin sesión no se ve el botón Incidencias', async () => {
+    renderApp('/')
+
+    await screen.findByRole('link', { name: /iniciar sesión/i })
+    expect(screen.queryByRole('link', { name: /^incidencias$/i })).not.toBeInTheDocument()
+  })
+
+  it('HU44-CP33: el administrador que abre Mis incidencias o Nueva incidencia vuelve a su panel', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    const { unmount } = renderApp('/incidents')
+    await esperarRuta('/admin')
+    unmount()
+
+    renderApp('/incidents/new')
+
+    await esperarRuta('/admin')
+  })
+
+  it('HU44-CP33: sin sesión, Mis incidencias lleva al login', async () => {
+    renderApp('/incidents')
+
+    await esperarRuta('/login')
   })
 })

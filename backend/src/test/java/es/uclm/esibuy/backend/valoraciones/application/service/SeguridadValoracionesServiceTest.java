@@ -23,6 +23,7 @@ import es.uclm.esibuy.backend.valoraciones.application.port.in.ValoracionProduct
 import es.uclm.esibuy.backend.valoraciones.application.port.in.ValorarProductoCommand;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ComprasPort;
+import es.uclm.esibuy.backend.valoraciones.application.port.out.ProductosPort;
 import es.uclm.esibuy.backend.valoraciones.application.port.out.ValoracionRepositoryPort;
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ProductoNoCompradoException;
 
@@ -55,9 +56,14 @@ class SeguridadValoracionesServiceTest {
         }
 
         @Bean
+        ProductosPort productos() {
+            return mock(ProductosPort.class);
+        }
+
+        @Bean
         ValoracionProductosUseCase valoracionProductos(ValoracionRepositoryPort valoracionRepository,
-                ClienteEnSesionPort clienteEnSesion, ComprasPort compras) {
-            return new ValoracionProductosService(valoracionRepository, clienteEnSesion, compras);
+                ClienteEnSesionPort clienteEnSesion, ComprasPort compras, ProductosPort productos) {
+            return new ValoracionProductosService(valoracionRepository, clienteEnSesion, compras, productos);
         }
 
         @Bean
@@ -73,13 +79,15 @@ class SeguridadValoracionesServiceTest {
     @Autowired
     private ComprasPort compras;
     @Autowired
+    private ProductosPort productos;
+    @Autowired
     private ValoracionProductosUseCase valoracionProductos;
     @Autowired
     private ConsultaValoracionesUseCase consultaValoraciones;
 
     @BeforeEach
     void limpiarDobles() {
-        reset(valoracionRepository, clienteEnSesion, compras);
+        reset(valoracionRepository, clienteEnSesion, compras, productos);
     }
 
     private static ValorarProductoCommand valoracionDe(String email) {
@@ -87,7 +95,7 @@ class SeguridadValoracionesServiceTest {
     }
 
     private void comprobarQueNoSeTocaNada() {
-        verifyNoInteractions(valoracionRepository, clienteEnSesion, compras);
+        verifyNoInteractions(valoracionRepository, clienteEnSesion, compras, productos);
     }
 
     @Test
