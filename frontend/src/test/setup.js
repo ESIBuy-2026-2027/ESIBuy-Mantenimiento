@@ -7,6 +7,7 @@ import { resetAdminSellersMock } from '../mocks/adminSellersHandlers'
 import { resetAdminsMock } from '../mocks/adminsHandlers'
 import { resetAuthMock } from '../mocks/authHandlers'
 import { resetCartMock } from '../mocks/cartHandlers'
+import { resetIncidentsMock } from '../mocks/incidentsHandlers'
 import { resetOrdersMock } from '../mocks/ordersHandlers'
 import { resetPaymentMethodsMock } from '../mocks/paymentMethodsHandlers'
 import { resetPreferencesMock } from '../mocks/preferencesHandlers'
@@ -46,6 +47,7 @@ afterEach(() => {
   server.resetHandlers()
   resetAuthMock()
   resetCartMock()
+  resetIncidentsMock()
   resetOrdersMock()
   resetPaymentMethodsMock()
   resetPreferencesMock()

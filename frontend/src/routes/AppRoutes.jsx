@@ -14,7 +14,9 @@ import AdminUsersPage from '../pages/AdminUsersPage'
 import CheckoutPage from '../pages/CheckoutPage'
 import ForgotPasswordPage from '../pages/ForgotPasswordPage'
 import Home from '../pages/Home'
+import IncidentsPage from '../pages/IncidentsPage'
 import LoginPage from '../pages/LoginPage'
+import NewIncidentPage from '../pages/NewIncidentPage'
 import OrderDetailPage from '../pages/OrderDetailPage'
 import OrdersPage from '../pages/OrdersPage'
 import PaymentMethodsPage from '../pages/PaymentMethodsPage'
@@ -50,9 +52,11 @@ export default function AppRoutes() {
           <Route path={PATHS.WISHLIST} element={<WishlistPage />} />
         </Route>
 
-        {/* El perfil propio (HU4) es del cliente y del vendedor: el backend responde 403 al administrador. */}
+        {/* El perfil propio (HU4) y las incidencias (HU44) son del cliente y del vendedor: el backend responde 403 al administrador. */}
         <Route element={<ProtectedRoute allowedRoles={[ROLES.CLIENTE, ROLES.VENDEDOR]} />}>
           <Route path={PATHS.PROFILE} element={<ProfilePage />} />
+          <Route path={PATHS.INCIDENTS} element={<IncidentsPage />} />
+          <Route path={PATHS.INCIDENT_NEW} element={<NewIncidentPage />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>

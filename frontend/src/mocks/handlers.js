@@ -5,6 +5,7 @@ import { adminSellersHandlers } from './adminSellersHandlers'
 import { adminsHandlers } from './adminsHandlers'
 import { authHandlers } from './authHandlers'
 import { cartHandlers } from './cartHandlers'
+import { incidentsHandlers } from './incidentsHandlers'
 import { ordersHandlers } from './ordersHandlers'
 import { paymentMethodsHandlers } from './paymentMethodsHandlers'
 import { preferencesHandlers } from './preferencesHandlers'
@@ -28,6 +29,7 @@ export const handlers = [
   ...usersHandlers,
   ...profileHandlers,
   ...preferencesHandlers,
+  ...incidentsHandlers,
   ...statisticsHandlers,
   ...adminCategoriesHandlers,
   ...adminSellersHandlers,
