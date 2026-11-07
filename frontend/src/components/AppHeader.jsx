@@ -98,7 +98,7 @@ function UserActions({ rol, onSignOut, disabled }) {
         </LinkButton>
       )}
       {/* Las incidencias (HU44) son del cliente y del vendedor */}
-      {rol === ROLES.CLIENTE && (
+      {(rol === ROLES.CLIENTE || rol === ROLES.VENDEDOR) && (
         <LinkButton to={PATHS.INCIDENTS} appearance="subtle" icon={<ChatWarning20Regular />}>
           Incidencias
         </LinkButton>
