@@ -2,13 +2,16 @@ package es.uclm.esibuy.backend.incidencias.application.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,17 +28,20 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import es.uclm.esibuy.backend.incidencias.application.port.in.ConsultaIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.CreacionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.CrearIncidenciaCommand;
+import es.uclm.esibuy.backend.incidencias.application.port.in.ResolucionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.SupervisionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.out.AutorEnSesionPort;
 import es.uclm.esibuy.backend.incidencias.application.port.out.AutoresPort;
 import es.uclm.esibuy.backend.incidencias.application.port.out.IncidenciaRepositoryPort;
+import es.uclm.esibuy.backend.incidencias.domain.model.EstadoIncidencia;
+import es.uclm.esibuy.backend.incidencias.domain.model.Incidencia;
 import es.uclm.esibuy.backend.incidencias.domain.model.IncidenciaPage;
 
 // Seguridad en la capa de negocio (R8): crear una incidencia exige el rol CLIENTE o VENDEDOR y que el correo del
 // comando sea el de la sesión; el administrador no crea incidencias. Las anotaciones solo se evalúan con Spring, así
 // que se usa un contexto mínimo (sin MongoDB) con el servicio real y dobles de los puertos de salida.
-// Ver las incidencias de todos (HU49) es solo del administrador.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU44-CP10 y HU49-CP09, propuestos.
+// Ver las incidencias de todos (HU49) y abrirlas o cerrarlas (HU50) es solo del administrador.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU44-CP10, HU49-CP09 y HU50-CP09, propuestos.
 @SpringJUnitConfig(SeguridadIncidenciasServiceTest.Configuracion.class)
 class SeguridadIncidenciasServiceTest {
 
@@ -76,6 +82,11 @@ class SeguridadIncidenciasServiceTest {
         SupervisionIncidenciasUseCase supervisionIncidencias(IncidenciaRepositoryPort repositorio, AutoresPort autores) {
             return new SupervisionIncidenciasService(repositorio, autores);
         }
+
+        @Bean
+        ResolucionIncidenciasUseCase resolucionIncidencias(IncidenciaRepositoryPort repositorio) {
+            return new ResolucionIncidenciasService(repositorio);
+        }
     }
 
     @Autowired
@@ -90,6 +101,8 @@ class SeguridadIncidenciasServiceTest {
     private AutoresPort autores;
     @Autowired
     private SupervisionIncidenciasUseCase supervisionIncidencias;
+    @Autowired
+    private ResolucionIncidenciasUseCase resolucionIncidencias;
 
     @BeforeEach
     void limpiarDobles() {
@@ -246,5 +259,85 @@ class SeguridadIncidenciasServiceTest {
         assertThrows(AuthenticationCredentialsNotFoundException.class,
                 () -> supervisionIncidencias.consultarTodas(0, 10));
         verifyNoInteractions(incidenciaRepository, autores);
+    }
+
+    // Resolución (HU50): solo el administrador abre y cierra incidencias
+
+    private static final String ID = "i-1";
+
+    private static Incidencia pendiente() {
+        return new Incidencia(ID, "u-1", "Asunto", "Descripción", EstadoIncidencia.PENDIENTE, "", Instant.EPOCH);
+    }
+
+    private void comprobarQueRechazaAbrir() {
+        assertThrows(AccessDeniedException.class, () -> resolucionIncidencias.abrir(ID, "Respuesta"));
+        verifyNoInteractions(incidenciaRepository);
+    }
+
+    @Test
+    @WithMockUser(username = ADMINISTRADOR, roles = "ADMINISTRADOR")
+    @DisplayName("HU50-CP09: el administrador abre una incidencia")
+    void elAdministradorAbreUnaIncidencia() {
+        when(incidenciaRepository.buscarPorId(ID)).thenReturn(Optional.of(pendiente()));
+        when(incidenciaRepository.guardar(any())).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        assertDoesNotThrow(() -> resolucionIncidencias.abrir(ID, "Respuesta"));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU50-CP09: un cliente no abre incidencias")
+    void unClienteNoAbreIncidencias() {
+        comprobarQueRechazaAbrir();
+    }
+
+    @Test
+    @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
+    @DisplayName("HU50-CP09: un vendedor no abre incidencias")
+    void unVendedorNoAbreIncidencias() {
+        comprobarQueRechazaAbrir();
+    }
+
+    @Test
+    @DisplayName("HU50-CP09: sin sesión no se abren incidencias")
+    void sinSesionNoSeAbrenIncidencias() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> resolucionIncidencias.abrir(ID, "Respuesta"));
+        verifyNoInteractions(incidenciaRepository);
+    }
+
+    private void comprobarQueRechazaCerrar() {
+        assertThrows(AccessDeniedException.class, () -> resolucionIncidencias.cerrar(ID));
+        verifyNoInteractions(incidenciaRepository);
+    }
+
+    @Test
+    @WithMockUser(username = ADMINISTRADOR, roles = "ADMINISTRADOR")
+    @DisplayName("HU50-CP09: el administrador cierra una incidencia")
+    void elAdministradorCierraUnaIncidencia() {
+        when(incidenciaRepository.buscarPorId(ID)).thenReturn(Optional.of(pendiente()));
+
+        assertDoesNotThrow(() -> resolucionIncidencias.cerrar(ID));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU50-CP09: un cliente no cierra incidencias")
+    void unClienteNoCierraIncidencias() {
+        comprobarQueRechazaCerrar();
+    }
+
+    @Test
+    @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
+    @DisplayName("HU50-CP09: un vendedor no cierra incidencias")
+    void unVendedorNoCierraIncidencias() {
+        comprobarQueRechazaCerrar();
+    }
+
+    @Test
+    @DisplayName("HU50-CP09: sin sesión no se cierran incidencias")
+    void sinSesionNoSeCierranIncidencias() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> resolucionIncidencias.cerrar(ID));
+        verifyNoInteractions(incidenciaRepository);
     }
 }
