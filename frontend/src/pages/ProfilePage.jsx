@@ -70,8 +70,8 @@ const useStyles = makeStyles({
   },
 })
 
-// Eliminar la cuenta propia del vendedor (HU47): se confirma en un diálogo con la contraseña. El servidor cierra la
-// sesión, así que después se cierra también en el navegador y el login lo avisa.
+// Eliminar la cuenta propia del vendedor (HU47) y del cliente (HU25): se confirma en un diálogo con la contraseña. El
+// servidor cierra la sesión, así que después se cierra también en el navegador y el login lo avisa.
 function AccountDeletion() {
   const styles = useStyles()
   const titleId = useId()
@@ -175,7 +175,7 @@ function profileFields(perfil, categoryName) {
 
 // Perfil propio del cliente o del vendedor (HU4), en solo lectura. Los datos se piden al backend, que los saca de
 // la sesión. Modificarlos es de la HU45. El cliente ve además sus preferencias (HU46) y el vendedor, sus estadísticas
-// (HU17).
+// (HU17). Los dos pueden eliminar su cuenta desde aquí (HU47 y HU25).
 export default function ProfilePage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
@@ -221,7 +221,7 @@ export default function ProfilePage() {
 
       {perfil?.rol === 'CLIENTE' && <CustomerPreferences categories={categories} />}
       {perfil?.rol === 'VENDEDOR' && <SellerStatistics />}
-      {perfil?.rol === 'VENDEDOR' && <AccountDeletion />}
+      {(perfil?.rol === 'CLIENTE' || perfil?.rol === 'VENDEDOR') && <AccountDeletion />}
     </main>
   )
 }
