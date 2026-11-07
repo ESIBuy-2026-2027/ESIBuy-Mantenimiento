@@ -36,6 +36,10 @@ public record Incidencia(String id, String autorId, String asunto, String descri
         return new Incidencia(null, autorId, asunto, descripcion, EstadoIncidencia.PENDIENTE, "", fechaCreacion);
     }
 
+    public Incidencia abrir(String respuesta) {
+        throw new UnsupportedOperationException("Pendiente de implementar (HU50)");
+    }
+
     private static void exigir(String valor, String descripcion) {
         if (valor == null || valor.isBlank()) {
             throw new IncidenciaInvalidaException("La incidencia necesita " + descripcion);
