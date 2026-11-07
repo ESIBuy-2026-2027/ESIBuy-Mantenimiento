@@ -4,7 +4,6 @@ import {
   cambiarEstadoVendedorMock,
   detalleVendedorMock,
   editarVendedorMock,
-  eliminarVendedorMock,
   vendedoresMock,
 } from './adminSellersHandlers'
 import { getUsuarioEnSesion } from './authHandlers'
@@ -325,17 +324,14 @@ export const usersHandlers = [
 
   // Eliminar una cuenta (contrato propuesto por el frontend, AB#249). Un administrador no puede eliminarse a sí
   // mismo ni eliminar al último administrador activo.
+  // Como el backend (HU37): solo elimina administradores. Un cliente, un vendedor o una cuenta que no existe son
+  // un 404; la propia cuenta y el último administrador activo, un 409 con su código.
   http.delete('/api/admin/usuarios/:id', ({ params }) => {
     const rechazo = rechazarSiNoEsAdmin()
     if (rechazo) return rechazo
 
-    if (buscarVendedorMock(params.id)) {
-      eliminarVendedorMock(params.id)
-      return new HttpResponse(null, { status: 204 })
-    }
-
     const existente = usuarios.find((candidato) => candidato.id === params.id)
-    if (!existente) return new HttpResponse(null, { status: 404 })
+    if (existente?.rol !== 'ADMINISTRADOR') return new HttpResponse(null, { status: 404 })
 
     const conflicto = conflictoAlEliminar(existente)
     if (conflicto) return HttpResponse.json({ code: conflicto }, { status: 409 })

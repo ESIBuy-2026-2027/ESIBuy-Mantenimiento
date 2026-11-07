@@ -314,3 +314,36 @@ describe('deleteUser', () => {
     expect(error.code).toBe('LAST_ACTIVE_ADMIN')
   })
 })
+
+describe('deleteUser (HU37): el mock se comporta como el backend', () => {
+  it('HU37-CP20: eliminar a un administrador responde 204 sin cuerpo', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+
+    // Diego Delgado Iglesias (usr-11) es un administrador bloqueado
+    await expect(deleteUser('usr-11')).resolves.toBeNull()
+  })
+
+  it.each([
+    ['un cliente', 'usr-3'],
+    ['un vendedor', 'u-2'],
+    ['un usuario que no existe', 'no-existe'],
+  ])('HU37-CP20: eliminar a %s responde 404 y no lo borra', async (_quien, id) => {
+    await abrirSesionPorApi('admin@esibuy.test')
+
+    await expect(deleteUser(id)).rejects.toMatchObject({ status: 404 })
+    if (id.startsWith('usr-')) await expect(getUser(id)).resolves.toMatchObject({ id })
+  })
+
+  it('HU37-CP20: el mock da 409 con el código al eliminar la propia cuenta', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+
+    await expect(deleteUser('u-1')).rejects.toMatchObject({ status: 409, code: 'CANNOT_DELETE_SELF' })
+  })
+
+  it('HU37-CP20: sin sesión responde 401 y con otro rol 403', async () => {
+    await expect(deleteUser('usr-11')).rejects.toMatchObject({ status: 401 })
+
+    await abrirSesionPorApi('cliente@esibuy.test')
+    await expect(deleteUser('usr-11')).rejects.toMatchObject({ status: 403 })
+  })
+})

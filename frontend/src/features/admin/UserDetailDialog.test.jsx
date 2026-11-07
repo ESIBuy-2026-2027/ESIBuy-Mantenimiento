@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../../mocks/server'
@@ -14,11 +14,13 @@ const LUCIA = 'usr-4'
 const CARLOS = 'usr-3'
 const DIEGO = 'usr-11'
 const GONZALO = 'usr-25'
+const ANA = 'usr-1'
+const ADA = 'u-1'
 
-async function abrirFicha(userId) {
+async function abrirFicha(userId, props = {}) {
   await abrirSesionPorApi('admin@esibuy.test')
   const handlers = { onClose: vi.fn() }
-  renderWithProviders(<UserDetailDialog userId={userId} {...handlers} />)
+  renderWithProviders(<UserDetailDialog userId={userId} {...handlers} {...props} />)
   const dialogo = await screen.findByRole('dialog', { name: /información del usuario/i })
   await within(dialogo).findByLabelText('Nombre')
   return { dialogo, ...handlers }
@@ -147,5 +149,133 @@ describe('UserDetailDialog (HU22): solo lectura', () => {
 
     expect(valorDe(dialogo, 'Rol')).toHaveValue('Administrador')
     expect(valorDe(dialogo, 'Sede')).toHaveAttribute('readonly')
+  })
+})
+
+describe('UserDetailDialog (HU37): eliminar desde la ficha', () => {
+  const ESPERA = { timeout: 3000 }
+  const eliminables = () => ({ canDelete: true, currentUserId: ADA, onResult: vi.fn(), onChanged: vi.fn() })
+
+  // La confirmación se busca por texto: mientras se abre o se cierra, Fluent marca partes de la página
+  // con aria-hidden y las búsquedas por rol pueden fallar por tiempos.
+  async function pedirConfirmacion(user, dialogo, nombre) {
+    await user.click(await within(dialogo).findByRole('button', { name: `Eliminar a ${nombre}` }))
+    return (await screen.findByText(/seguro que quieres eliminar a/i)).closest('[role="alertdialog"]')
+  }
+
+  it('HU37-CP14: la ficha de un administrador ofrece el botón Eliminar con texto', async () => {
+    const { dialogo } = await abrirFicha(ANA, eliminables())
+
+    const eliminar = await within(dialogo).findByRole('button', { name: 'Eliminar a Ana López García' })
+    expect(eliminar).toHaveTextContent('Eliminar')
+    expect(eliminar).toBeEnabled()
+  })
+
+  it('HU37-CP18: sin canDelete (clientes y vendedores) la ficha no ofrece Eliminar', async () => {
+    const { dialogo } = await abrirFicha(CARLOS, { currentUserId: ADA })
+
+    expect(within(dialogo).queryByRole('button', { name: /eliminar/i })).not.toBeInTheDocument()
+  })
+
+  it('HU37-CP14: pide confirmación con el nombre y, al confirmar, elimina, avisa, actualiza la lista y cierra la ficha', async () => {
+    const peticion = { id: null, llamadas: 0 }
+    server.use(
+      http.delete('/api/admin/usuarios/:id', ({ params }) => {
+        peticion.llamadas += 1
+        peticion.id = params.id
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+    const user = userEvent.setup()
+    const props = eliminables()
+    const { dialogo, onClose } = await abrirFicha(ANA, props)
+
+    const confirmacion = await pedirConfirmacion(user, dialogo, 'Ana López García')
+    expect(confirmacion).toHaveTextContent('¿Seguro que quieres eliminar a Ana López García? Esta acción no se puede deshacer.')
+    expect(peticion.llamadas).toBe(0)
+    await user.click(within(confirmacion).getByText('Eliminar', { selector: 'button' }))
+
+    await waitFor(
+      () => expect(props.onResult).toHaveBeenCalledWith({ intent: 'success', texto: 'Ana López García se ha eliminado.' }),
+      ESPERA,
+    )
+    expect(peticion).toEqual({ id: 'usr-1', llamadas: 1 })
+    expect(props.onChanged).toHaveBeenCalledTimes(1)
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('HU37-CP13: al cancelar no borra nada y la ficha sigue abierta', async () => {
+    const user = userEvent.setup()
+    const props = eliminables()
+    const { dialogo, onClose } = await abrirFicha(ANA, props)
+    const confirmacion = await pedirConfirmacion(user, dialogo, 'Ana López García')
+
+    await user.click(within(confirmacion).getByText('Cancelar', { selector: 'button' }))
+
+    await waitFor(() => expect(screen.queryByText(/seguro que quieres eliminar/i)).not.toBeInTheDocument(), ESPERA)
+    expect(props.onResult).not.toHaveBeenCalled()
+    expect(props.onChanged).not.toHaveBeenCalled()
+    expect(onClose).not.toHaveBeenCalled()
+    expect(screen.getByRole('dialog', { name: /información del usuario/i })).toBeInTheDocument()
+  })
+
+  it('HU37-CP15: en la ficha de la propia cuenta, Eliminar queda deshabilitado y explica el motivo', async () => {
+    const { dialogo } = await abrirFicha(ADA, eliminables())
+
+    const eliminar = await within(dialogo).findByRole('button', { name: 'Eliminar a Ada Admin' })
+    expect(eliminar).toBeDisabled()
+    expect(eliminar).toHaveAttribute('title', 'No puedes eliminar tu propia cuenta.')
+  })
+
+  it('HU37-CP15: en la ficha del último administrador activo, Eliminar queda deshabilitado y explica el motivo', async () => {
+    const { dialogo } = await abrirFicha(ANA, { ...eliminables(), lastAdminId: ANA })
+
+    const eliminar = await within(dialogo).findByRole('button', { name: 'Eliminar a Ana López García' })
+    expect(eliminar).toBeDisabled()
+    expect(eliminar).toHaveAttribute('title', 'No se puede eliminar al último administrador activo.')
+  })
+
+  it('HU37-CP16: un 409 desde la ficha avisa de su motivo y la ficha sigue abierta', async () => {
+    server.use(
+      http.delete('/api/admin/usuarios/:id', () => HttpResponse.json({ code: 'LAST_ACTIVE_ADMIN' }, { status: 409 })),
+    )
+    const user = userEvent.setup()
+    const props = eliminables()
+    const { dialogo, onClose } = await abrirFicha(ANA, props)
+    const confirmacion = await pedirConfirmacion(user, dialogo, 'Ana López García')
+
+    await user.click(within(confirmacion).getByText('Eliminar', { selector: 'button' }))
+
+    await waitFor(
+      () =>
+        expect(props.onResult).toHaveBeenCalledWith({
+          intent: 'error',
+          texto: 'No se puede eliminar al último administrador activo.',
+        }),
+      ESPERA,
+    )
+    expect(props.onChanged).not.toHaveBeenCalled()
+    expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('HU37-CP17: un 404 desde la ficha avisa de que ya no existe, actualiza la lista y cierra la ficha', async () => {
+    server.use(http.delete('/api/admin/usuarios/:id', () => new HttpResponse(null, { status: 404 })))
+    const user = userEvent.setup()
+    const props = eliminables()
+    const { dialogo, onClose } = await abrirFicha(ANA, props)
+    const confirmacion = await pedirConfirmacion(user, dialogo, 'Ana López García')
+
+    await user.click(within(confirmacion).getByText('Eliminar', { selector: 'button' }))
+
+    await waitFor(
+      () =>
+        expect(props.onResult).toHaveBeenCalledWith({
+          intent: 'error',
+          texto: 'Ana López García ya no existe. Se ha actualizado la lista.',
+        }),
+      ESPERA,
+    )
+    expect(props.onChanged).toHaveBeenCalledTimes(1)
+    expect(onClose).toHaveBeenCalledTimes(1)
   })
 })
