@@ -265,6 +265,10 @@ class SeguridadIncidenciasServiceTest {
 
     private static final String ID = "i-1";
 
+    private static Incidencia pendiente() {
+        return new Incidencia(ID, "u-1", "Asunto", "Descripción", EstadoIncidencia.PENDIENTE, "", Instant.EPOCH);
+    }
+
     private void comprobarQueRechazaAbrir() {
         assertThrows(AccessDeniedException.class, () -> resolucionIncidencias.abrir(ID, "Respuesta"));
         verifyNoInteractions(incidenciaRepository);
@@ -274,10 +278,7 @@ class SeguridadIncidenciasServiceTest {
     @WithMockUser(username = ADMINISTRADOR, roles = "ADMINISTRADOR")
     @DisplayName("HU50-CP09: el administrador abre una incidencia")
     void elAdministradorAbreUnaIncidencia() {
-        Incidencia pendiente = Incidencia.nueva("u-1", "Asunto", "Descripción", Instant.EPOCH);
-        Incidencia conId = new Incidencia(ID, pendiente.autorId(), pendiente.asunto(), pendiente.descripcion(),
-                pendiente.estado(), pendiente.respuesta(), pendiente.fechaCreacion());
-        when(incidenciaRepository.buscarPorId(ID)).thenReturn(Optional.of(conId));
+        when(incidenciaRepository.buscarPorId(ID)).thenReturn(Optional.of(pendiente()));
         when(incidenciaRepository.guardar(any())).thenAnswer(invocacion -> invocacion.getArgument(0));
 
         assertDoesNotThrow(() -> resolucionIncidencias.abrir(ID, "Respuesta"));
@@ -314,8 +315,7 @@ class SeguridadIncidenciasServiceTest {
     @WithMockUser(username = ADMINISTRADOR, roles = "ADMINISTRADOR")
     @DisplayName("HU50-CP09: el administrador cierra una incidencia")
     void elAdministradorCierraUnaIncidencia() {
-        when(incidenciaRepository.buscarPorId(ID)).thenReturn(Optional.of(
-                new Incidencia(ID, "u-1", "Asunto", "Descripción", EstadoIncidencia.PENDIENTE, "", Instant.EPOCH)));
+        when(incidenciaRepository.buscarPorId(ID)).thenReturn(Optional.of(pendiente()));
 
         assertDoesNotThrow(() -> resolucionIncidencias.cerrar(ID));
     }
