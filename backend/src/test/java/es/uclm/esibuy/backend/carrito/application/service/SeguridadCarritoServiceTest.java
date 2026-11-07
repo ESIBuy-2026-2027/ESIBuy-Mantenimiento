@@ -131,4 +131,40 @@ class SeguridadCarritoServiceTest {
                         () -> gestionCarrito.anadir(CLIENTE, "p-1", 1)));
         verifyNoInteractions(carritoRepository, clienteEnSesion, productos, vendedores);
     }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU9-CP23: el cliente elimina su carrito con su propio correo")
+    void elClienteEliminaSuCarritoConSuPropioCorreo() {
+        assertDoesNotThrow(() -> gestionCarrito.eliminar(CLIENTE));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU9-CP23: un cliente no elimina el carrito de otro cliente")
+    void unClienteNoEliminaElCarritoDeOtro() {
+        assertThrows(AccessDeniedException.class, () -> gestionCarrito.eliminar(OTRO_CLIENTE));
+        verifyNoInteractions(carritoRepository, clienteEnSesion, productos, vendedores);
+    }
+
+    @Test
+    @WithMockUser(username = "vendedor@esibuy.test", roles = "VENDEDOR")
+    @DisplayName("HU9-CP23: un vendedor no elimina carritos")
+    void unVendedorNoEliminaCarritos() {
+        assertThrows(AccessDeniedException.class, () -> gestionCarrito.eliminar("vendedor@esibuy.test"));
+    }
+
+    @Test
+    @WithMockUser(username = "admin@esibuy.test", roles = "ADMINISTRADOR")
+    @DisplayName("HU9-CP23: un administrador no elimina carritos")
+    void unAdministradorNoEliminaCarritos() {
+        assertThrows(AccessDeniedException.class, () -> gestionCarrito.eliminar("admin@esibuy.test"));
+    }
+
+    @Test
+    @DisplayName("HU9-CP23: sin sesión no se elimina el carrito")
+    void sinSesionNoSeEliminaElCarrito() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> gestionCarrito.eliminar(CLIENTE));
+        verifyNoInteractions(carritoRepository, clienteEnSesion, productos, vendedores);
+    }
 }
