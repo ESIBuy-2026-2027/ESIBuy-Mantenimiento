@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Button, makeStyles, tokens } from '@fluentui/react-components'
 import {
   ArrowExit20Regular,
+  ChatWarning20Regular,
   Heart20Regular,
   Location20Regular,
   Payment20Regular,
@@ -94,6 +95,12 @@ function UserActions({ rol, onSignOut, disabled }) {
       {rol === ROLES.CLIENTE && (
         <LinkButton to={PATHS.ADDRESSES} appearance="subtle" icon={<Location20Regular />}>
           Direcciones
+        </LinkButton>
+      )}
+      {/* Las incidencias (HU44) son del cliente y del vendedor */}
+      {rol === ROLES.CLIENTE && (
+        <LinkButton to={PATHS.INCIDENTS} appearance="subtle" icon={<ChatWarning20Regular />}>
+          Incidencias
         </LinkButton>
       )}
       {/* El perfil propio (HU4) es del cliente y del vendedor */}
