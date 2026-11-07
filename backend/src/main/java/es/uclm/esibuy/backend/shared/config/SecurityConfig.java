@@ -54,6 +54,9 @@ public class SecurityConfig {
     private static final String RUTA_RESTABLECER_CONTRASENA = "/api/auth/password-recovery/confirm";
     // Página de error interna de Spring Boot: abierta para que un 403 o un 500 no se conviertan en 401
     private static final String RUTA_ERROR = "/error";
+    // Health check de Render (Actuator): abierto porque Render lo consulta sin sesión. Es lo único de /actuator que se
+    // expone (management.endpoints.web.exposure.include=health) y sin detalles de los componentes.
+    private static final String RUTAS_SALUD = "/actuator/health/**";
     private static final String RUTA_CODIGO_EMAIL = "/api/auth/verify-email-code";
     private static final String RUTA_ALTA_AUTHENTICATOR = "/api/auth/enroll-authenticator";
     private static final String RUTA_CODIGO_AUTHENTICATOR = "/api/auth/verify-authenticator-code";
@@ -82,6 +85,7 @@ public class SecurityConfig {
                                 RUTA_SOLICITAR_RECUPERACION, RUTA_RESTABLECER_CONTRASENA).permitAll()
                         .requestMatchers(HttpMethod.GET, RUTA_CATEGORIAS).permitAll()
                         .requestMatchers(RUTA_ERROR).permitAll()
+                        .requestMatchers(HttpMethod.GET, RUTAS_SALUD).permitAll()
                         .requestMatchers(RUTAS_ADMINISTRACION).hasRole(ROL_ADMINISTRADOR)
                         .requestMatchers(RUTAS_VENDEDOR).hasRole(ROL_VENDEDOR)
                         .requestMatchers(RUTAS_CLIENTE).hasRole(ROL_CLIENTE)
