@@ -75,6 +75,7 @@ export default function RoleUsersList({ role, itemLabel, errorMessage, loadingLa
       user={user}
       currentUserId={currentUserId}
       lastAdminId={lastAdminId}
+      canDelete={role === ROLES.ADMIN}
       onResult={setFeedback}
       onChanged={changed}
     />

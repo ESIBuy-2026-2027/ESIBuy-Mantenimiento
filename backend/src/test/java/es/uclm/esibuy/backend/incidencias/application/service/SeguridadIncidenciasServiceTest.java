@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,13 +25,17 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import es.uclm.esibuy.backend.incidencias.application.port.in.ConsultaIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.CreacionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.CrearIncidenciaCommand;
+import es.uclm.esibuy.backend.incidencias.application.port.in.SupervisionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.out.AutorEnSesionPort;
+import es.uclm.esibuy.backend.incidencias.application.port.out.AutoresPort;
 import es.uclm.esibuy.backend.incidencias.application.port.out.IncidenciaRepositoryPort;
+import es.uclm.esibuy.backend.incidencias.domain.model.IncidenciaPage;
 
 // Seguridad en la capa de negocio (R8): crear una incidencia exige el rol CLIENTE o VENDEDOR y que el correo del
 // comando sea el de la sesión; el administrador no crea incidencias. Las anotaciones solo se evalúan con Spring, así
 // que se usa un contexto mínimo (sin MongoDB) con el servicio real y dobles de los puertos de salida.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU44-CP10, propuesto.
+// Ver las incidencias de todos (HU49) es solo del administrador.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU44-CP10 y HU49-CP09, propuestos.
 @SpringJUnitConfig(SeguridadIncidenciasServiceTest.Configuracion.class)
 class SeguridadIncidenciasServiceTest {
 
@@ -61,6 +66,16 @@ class SeguridadIncidenciasServiceTest {
         ConsultaIncidenciasUseCase consultaIncidencias(IncidenciaRepositoryPort repositorio, AutorEnSesionPort sesion) {
             return new ConsultaIncidenciasService(repositorio, sesion);
         }
+
+        @Bean
+        AutoresPort autores() {
+            return mock(AutoresPort.class);
+        }
+
+        @Bean
+        SupervisionIncidenciasUseCase supervisionIncidencias(IncidenciaRepositoryPort repositorio, AutoresPort autores) {
+            return new SupervisionIncidenciasService(repositorio, autores);
+        }
     }
 
     @Autowired
@@ -71,10 +86,14 @@ class SeguridadIncidenciasServiceTest {
     private CreacionIncidenciasUseCase creacionIncidencias;
     @Autowired
     private ConsultaIncidenciasUseCase consultaIncidencias;
+    @Autowired
+    private AutoresPort autores;
+    @Autowired
+    private SupervisionIncidenciasUseCase supervisionIncidencias;
 
     @BeforeEach
     void limpiarDobles() {
-        reset(incidenciaRepository, autorEnSesion);
+        reset(incidenciaRepository, autorEnSesion, autores);
     }
 
     private static CrearIncidenciaCommand comando(String email) {
@@ -189,5 +208,43 @@ class SeguridadIncidenciasServiceTest {
         assertThrows(AuthenticationCredentialsNotFoundException.class,
                 () -> consultaIncidencias.consultarPropias(CLIENTE, 0, 10));
         verifyNoInteractions(incidenciaRepository);
+    }
+
+    // Supervisión (HU49): solo el administrador ve las incidencias de todos
+
+    private void comprobarQueRechazaLaSupervision() {
+        assertThrows(AccessDeniedException.class, () -> supervisionIncidencias.consultarTodas(0, 10));
+        verifyNoInteractions(incidenciaRepository, autores);
+    }
+
+    @Test
+    @WithMockUser(username = ADMINISTRADOR, roles = "ADMINISTRADOR")
+    @DisplayName("HU49-CP09: el administrador consulta las incidencias de todos")
+    void elAdministradorSupervisaLasIncidencias() {
+        when(incidenciaRepository.buscarTodas(0, 10)).thenReturn(new IncidenciaPage(List.of(), 0, 10, 0));
+
+        assertDoesNotThrow(() -> supervisionIncidencias.consultarTodas(0, 10));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU49-CP09: un cliente no consulta las incidencias de todos")
+    void unClienteNoSupervisaLasIncidencias() {
+        comprobarQueRechazaLaSupervision();
+    }
+
+    @Test
+    @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
+    @DisplayName("HU49-CP09: un vendedor no consulta las incidencias de todos")
+    void unVendedorNoSupervisaLasIncidencias() {
+        comprobarQueRechazaLaSupervision();
+    }
+
+    @Test
+    @DisplayName("HU49-CP09: sin sesión no se consultan las incidencias de todos")
+    void sinSesionNoSeSupervisan() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> supervisionIncidencias.consultarTodas(0, 10));
+        verifyNoInteractions(incidenciaRepository, autores);
     }
 }

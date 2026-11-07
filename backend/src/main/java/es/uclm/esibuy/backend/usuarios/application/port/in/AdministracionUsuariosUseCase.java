@@ -1,5 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.application.port.in;
 
+import java.util.Optional;
+
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
 /**
@@ -42,6 +44,12 @@ public interface AdministracionUsuariosUseCase {
      *         o no es un vendedor
      */
     String consultarNombreComercial(String vendedorId);
+
+    /**
+     * Solo el correo y el rol del usuario, para la supervisión de incidencias (HU49): así no ve el dominio de
+     * usuarios. Si el usuario no existe (p. ej. una cuenta eliminada), devuelve vacío en vez de fallar.
+     */
+    Optional<ContactoUsuario> consultarContacto(String usuarioId);
 
     /**
      * Modifica los datos del usuario y lo devuelve ya modificado (HU22).

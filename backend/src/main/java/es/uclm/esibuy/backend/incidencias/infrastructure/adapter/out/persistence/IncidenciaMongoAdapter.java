@@ -33,6 +33,19 @@ public class IncidenciaMongoAdapter implements IncidenciaRepositoryPort {
     public IncidenciaPage buscarPorAutor(String autorId, int pagina, int tamano) {
         Page<IncidenciaDocument> documentos = repository.findByUsuarioId(autorId,
                 PageRequest.of(pagina, tamano, DE_MAS_ANTIGUA_A_MAS_RECIENTE));
+        return aPagina(documentos, pagina, tamano);
+    }
+
+    // findAll con paginación ya viene en MongoRepository: no hace falta tocar IncidenciaMongoRepository
+    @Override
+    public IncidenciaPage buscarTodas(int pagina, int tamano) {
+        Page<IncidenciaDocument> documentos = repository.findAll(
+                PageRequest.of(pagina, tamano, DE_MAS_ANTIGUA_A_MAS_RECIENTE));
+        return aPagina(documentos, pagina, tamano);
+    }
+
+    // Común a las dos búsquedas: convierte la página de documentos en la página del dominio
+    private IncidenciaPage aPagina(Page<IncidenciaDocument> documentos, int pagina, int tamano) {
         List<Incidencia> incidencias = documentos.getContent().stream().map(mapper::aDominio).toList();
         return new IncidenciaPage(incidencias, pagina, tamano, documentos.getTotalElements());
     }

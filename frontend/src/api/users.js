@@ -33,8 +33,11 @@ export function updateUserStatus(userId, estado) {
   })
 }
 
-// Elimina una cuenta (HU19, AB#249). Contrato propuesto por el frontend: responde 204 sin cuerpo, o 409 con
-// CANNOT_DELETE_SELF si es la propia cuenta del administrador y LAST_ACTIVE_ADMIN si es el último activo.
+// Elimina un administrador (HU37; la usa también la tabla desde la HU19). Contrato del backend
+// (UsuarioController.eliminar): 204 sin cuerpo; 404 si la cuenta no existe o no es de un administrador (hoy solo se
+// eliminan administradores); 409 con CANNOT_DELETE_SELF si es la propia cuenta y LAST_ACTIVE_ADMIN si es el último
+// administrador activo; 401 sin sesión y 403 ACCESS_DENIED con otro rol. El borrado es físico y la sesión de la
+// cuenta eliminada deja de valer en su siguiente petición.
 export function deleteUser(userId) {
   return request(`/api/admin/usuarios/${encodeURIComponent(userId)}`, { method: 'DELETE' })
 }

@@ -3328,11 +3328,23 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU37-CP09 | Intentar eliminarse a sí mismo devuelve 409 con el código `CANNOT_DELETE_SELF` | Integración (capa web) | 1 | ✅ Pasa |
 | HU37-CP10 | Intentar eliminar al último administrador activo devuelve 409 con el código `LAST_ACTIVE_ADMIN` | Integración (capa web) | 1 | ✅ Pasa |
 | HU37-CP11 | Sin sesión (401), sin ser administrador (403) o sin token CSRF (403) no se puede eliminar una cuenta | Integración (capa web) | 3 | ✅ Pasa |
+| HU37-CP12 | Eliminar a un administrador desde la fila pide confirmación con su nombre y, al confirmar, lo elimina, avisa y actualiza la lista | Frontend (componente y página) | 7 | 🔍 En revisión (7, AB#338, PR pendiente) |
+| HU37-CP13 | Cancelar la confirmación no elimina nada ni avisa, en la fila y en la ficha | Frontend (componente) | 2 | 🔍 En revisión (2, AB#338, PR pendiente) |
+| HU37-CP14 | La ficha de un administrador ofrece Eliminar con la misma confirmación; al eliminar se cierra, avisa y la lista se actualiza | Frontend (componente) | 3 | 🔍 En revisión (3, AB#338, PR pendiente) |
+| HU37-CP15 | Eliminar queda deshabilitado, con su explicación, para la propia cuenta y para el último administrador activo | Frontend (componente) | 6 | 🔍 En revisión (6, AB#338, PR pendiente) |
+| HU37-CP16 | Un 409 CANNOT_DELETE_SELF o LAST_ACTIVE_ADMIN muestra su motivo y otro fallo un error genérico, sin actualizar la lista | Frontend (componente) | 4 | 🔍 En revisión (4, AB#338, PR pendiente) |
+| HU37-CP17 | Un 404 al eliminar (alguien lo borró antes) avisa con un mensaje propio, actualiza la lista y cierra la ficha | Frontend (componente) | 2 | 🔍 En revisión (2, AB#338, PR pendiente) |
+| HU37-CP18 | Solo se eliminan administradores: la fila y la ficha de clientes y vendedores no ofrecen Eliminar | Frontend (componente y página) | 7 | 🔍 En revisión (7, AB#338, PR pendiente) |
+| HU37-CP19 | Si otro administrador elimina tu cuenta, tu siguiente petición da 401 y vuelves al login con el aviso de sesión caducada | Frontend (página) | 1 | 🔍 En revisión (1, AB#338, PR pendiente) |
+| HU37-CP20 | El mock del DELETE responde como el backend: 204 a un administrador, 404 a clientes, vendedores y cuentas inexistentes, 409 con su código, 401 y 403 | Frontend (API) | 4 | 🔍 En revisión (4, AB#338, PR pendiente) |
 
 Notas:
 - **HU37-CP01 a CP06 (AB#340):** casos propuestos para la lógica de negocio del borrado físico de administradores en `AdministracionUsuariosService.eliminarAdministrador` (PR #139). Pendientes de confirmar con el equipo y de añadir a la HU37 en Azure Boards.
 - **HU37-CP07 a CP11:** casos propuestos para el endpoint `DELETE /api/admin/usuarios/{id}` en `UsuarioController` y la traducción de `AutoeliminacionNoPermitidaException` a 409 `CANNOT_DELETE_SELF` en `ManejadorGlobalErrores`, siguiendo el contrato esperado por el frontend (ver notas de `HU19-CP13 a CP19`).
 - **Sesión del administrador eliminado:** la invalidación de la sesión al borrar físicamente la cuenta ya la cubre `CuentaActivaFilter` (ver **HU23-CP10**, `usuarioInexistenteInvalidaLaSesionYDevuelve401`, PR #85): en cuanto el documento desaparece de la colección `usuarios`, cualquier petición con su sesión recibe un 401 y la sesión queda invalidada.
+- **HU37-CP12 a CP20 (frontend, T338):** casos propuestos en la T338 (AB#338) a partir de los criterios de aceptación de la HU37 (acción en la ficha y en la fila, confirmación con el nombre, propia cuenta, último administrador y sesión invalidada) y del contrato del backend, y desarrollados con TDD. Pendientes de confirmar con el equipo y de añadir a la HU37 en Azure Boards. Rama `feature/US37-T338-boton-eliminacion-administrador`.
+- **Solo administradores (T338):** el backend responde 404 al eliminar a quien no es administrador, así que la papelera y el botón de la ficha solo salen en administradores (`canDelete`); el mock del DELETE responde igual (CP18 y CP20). Los tests de eliminar de la HU19 que usaban clientes y vendedores ahora usan administradores y conservan su nombre.
+- **HU37-CP19:** pasó ya en el ciclo rojo: el 401 con sesión abierta lo cubría la HU43 (ver **HU43-CP07**). El aviso dice «Tu sesión ha caducado», sin distinguir la baja de la cuenta.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -3351,6 +3363,42 @@ Notas:
 | HU37-CP11 | `UsuarioControllerTest` | `unNoAdministradorNoPuedeEliminarCuentas` (cliente y vendedor) | Infraestructura | AB#340 | PR actual | ✅ |
 | HU37-CP11 | `UsuarioControllerTest` | `eliminarSinSesionEstaProtegido` | Infraestructura | AB#340 | PR actual | ✅ |
 | HU37-CP11 | `UsuarioControllerTest` | `eliminarSinTokenCsrfSeRechaza` | Infraestructura | AB#340 | PR actual | ✅ |
+| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: al pulsar la papelera pide confirmación con el nombre y avisa de que no se puede deshacer` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: al confirmar elimina a ese administrador, avisa y pide actualizar la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: con un nombre indicado (label), la confirmación y el aviso lo usan` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: con withText el botón muestra el texto Eliminar además del icono` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP12 | `UserDeleteButton.test.jsx` | `HU37-CP12: sin withText el botón es solo un icono` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP12 | `RoleUsersList.test.jsx` | `HU37-CP12: al eliminar a un administrador desde la fila, desaparece de la lista y avisa` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP12 | `AdminUsersPage.test.jsx` | `HU37-CP12: al eliminar a un administrador desde la tabla, la fila desaparece y avisa` | Frontend · página | AB#338 | PR pendiente | 🔍 |
+| HU37-CP13 | `UserDeleteButton.test.jsx` | `HU37-CP13: al cancelar no borra nada, no avisa ni actualiza la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP13 | `UserDetailDialog.test.jsx` | `HU37-CP13: al cancelar no borra nada y la ficha sigue abierta` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP14 | `UserDetailDialog.test.jsx` | `HU37-CP14: la ficha de un administrador ofrece el botón Eliminar con texto` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP14 | `UserDetailDialog.test.jsx` | `HU37-CP14: pide confirmación con el nombre y, al confirmar, elimina, avisa, actualiza la lista y cierra la ficha` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP14 | `UserRowActions.test.jsx` | `HU37-CP14: la lupa de un administrador abre una ficha con Eliminar y, al eliminar, la cierra, avisa y actualiza la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP15 | `UserDeleteButton.test.jsx` | `HU37-CP15: la propia cuenta queda deshabilitada y explica el motivo` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP15 | `UserDeleteButton.test.jsx` | `HU37-CP15: el último administrador activo queda deshabilitado y explica el motivo` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP15 | `UserDeleteButton.test.jsx` | `HU37-CP15: si el último administrador es otro, o no se sabe, queda disponible` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP15 | `UserDetailDialog.test.jsx` | `HU37-CP15: en la ficha de la propia cuenta, Eliminar queda deshabilitado y explica el motivo` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP15 | `UserDetailDialog.test.jsx` | `HU37-CP15: en la ficha del último administrador activo, Eliminar queda deshabilitado y explica el motivo` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP15 | `RoleUsersList.test.jsx` | `HU37-CP15: la fila del administrador en sesión tiene la papelera deshabilitada y la de otro, no` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP16 | `UserDeleteButton.test.jsx` | `HU37-CP16: un 409 %s muestra su motivo y no actualiza la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP16 | `UserDeleteButton.test.jsx` | `HU37-CP16: cualquier otro fallo muestra un error genérico y no actualiza la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP16 | `UserDeleteButton.test.jsx` | `HU37-CP16: con el mock real, eliminarse a sí mismo da el motivo y no borra la cuenta` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP16 | `UserDetailDialog.test.jsx` | `HU37-CP16: un 409 desde la ficha avisa de su motivo y la ficha sigue abierta` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP17 | `UserDeleteButton.test.jsx` | `HU37-CP17: un 404 (alguien lo eliminó antes) avisa con su mensaje propio y actualiza la lista` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP17 | `UserDetailDialog.test.jsx` | `HU37-CP17: un 404 desde la ficha avisa de que ya no existe, actualiza la lista y cierra la ficha` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP18 | `UserDetailDialog.test.jsx` | `HU37-CP18: sin canDelete (clientes y vendedores) la ficha no ofrece Eliminar` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP18 | `UserRowActions.test.jsx` | `HU37-CP18: sin canDelete (clientes y vendedores) la fila no ofrece la papelera pero sí el resto de acciones` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP18 | `UserRowActions.test.jsx` | `HU37-CP18: un vendedor tampoco tiene papelera, aunque se le dé nombre comercial` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP18 | `UserRowActions.test.jsx` | `HU37-CP18: con canDelete la fila de un administrador ofrece la papelera` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP18 | `UserRowActions.test.jsx` | `HU37-CP18: la ficha de un cliente abierta desde su fila no ofrece Eliminar` | Frontend · componente | AB#338 | PR pendiente | 🔍 |
+| HU37-CP18 | `AdminUsersPage.test.jsx` | `HU37-CP18: la fila de un cliente no tiene papelera y la de un administrador sí` | Frontend · página | AB#338 | PR pendiente | 🔍 |
+| HU37-CP18 | `AdminSellersPage.test.jsx` | `HU37-CP18: la fila de un vendedor no ofrece eliminarlo, porque el backend solo elimina administradores` | Frontend · página | AB#338 | PR pendiente | 🔍 |
+| HU37-CP19 | `LoginFlow.test.jsx` | `HU37-CP19: si otro administrador elimina tu cuenta, tu siguiente petición da 401 y vuelves al login con el aviso` | Frontend · página | AB#338 | PR pendiente | 🔍 |
+| HU37-CP20 | `users.test.js` | `HU37-CP20: eliminar a un administrador responde 204 sin cuerpo` | Frontend · API | AB#338 | PR pendiente | 🔍 |
+| HU37-CP20 | `users.test.js` | `HU37-CP20: eliminar a %s responde 404 y no lo borra` | Frontend · API | AB#338 | PR pendiente | 🔍 |
+| HU37-CP20 | `users.test.js` | `HU37-CP20: el mock da 409 con el código al eliminar la propia cuenta` | Frontend · API | AB#338 | PR pendiente | 🔍 |
+| HU37-CP20 | `users.test.js` | `HU37-CP20: sin sesión responde 401 y con otro rol 403` | Frontend · API | AB#338 | PR pendiente | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
@@ -4236,6 +4284,68 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU49 · Supervisión de incidencias
+
+### Tabla A · HU49 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU49-CP01 | El módulo de usuarios da el correo y el rol de un usuario (cliente o vendedor) por su id, sin exponer su dominio | Unitario (aplicación, usuarios) | 2 | 🔍 En revisión (2, AB#307, PR pendiente) |
+| HU49-CP02 | Si el usuario ya no existe (cuenta eliminada), el contacto viene vacío en vez de fallar | Unitario (aplicación, usuarios) | 1 | 🔍 En revisión (1, AB#307, PR pendiente) |
+| HU49-CP03 | Solo el administrador consulta el contacto de un usuario; cliente y vendedor reciben 403 y sin sesión se rechaza. Seguridad en la capa de negocio | Unitario con Spring Security (sin MongoDB) | 4 | 🔍 En revisión (4, AB#307, PR pendiente) |
+| HU49-CP04 | El adaptador de MongoDB devuelve las incidencias de todos los autores, por páginas, de las más antiguas a las más recientes, con orden estable y con el total | Integración MongoDB | 3 | 🔍 En revisión (3, AB#307, PR pendiente) |
+| HU49-CP05 | El servicio devuelve la página pedida con el correo y el rol del autor de cada incidencia | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#307, PR pendiente) |
+| HU49-CP06 | Una incidencia cuyo autor ya no existe se devuelve sin autor y no hace fallar la consulta | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#307, PR pendiente) |
+| HU49-CP07 | Cada autor se busca una sola vez por página, aunque tenga varias incidencias; una página vacía no busca ninguno | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#307, PR pendiente) |
+| HU49-CP08 | El servicio admite la primera página y los tamaños de 1 a 50 y rechaza una página negativa o un tamaño fuera de rango sin consultar nada | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#307, PR pendiente) |
+| HU49-CP09 | Solo el administrador consulta las incidencias de todos; cliente y vendedor reciben 403 y sin sesión se rechaza. Seguridad en la capa de negocio | Unitario con Spring Security (sin MongoDB) | 4 | 🔍 En revisión (4, AB#307, PR pendiente) |
+| HU49-CP10 | El adaptador hacia el módulo de usuarios convierte el contacto en el autor de la incidencia, o en ninguno si la cuenta ya no existe | Unitario (adaptador) | 2 | 🔍 En revisión (2, AB#307, PR pendiente) |
+
+Notas:
+- **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** HU49-CP01 a CP10 los propone el desarrollo backend a partir del criterio de la HU49 («el administrador debe disponer de una vista para las incidencias») y no salen de Azure Boards. Rama `feature/US49-T307-logica-supervision-incidencias`.
+- **T307 (AB#307, lógica de obtención de incidencias):** puerto de entrada `SupervisionIncidenciasUseCase` (otro actor que la consulta de la HU44, por eso es un puerto aparte) y su servicio `SupervisionIncidenciasService` con `@PreAuthorize(SOLO_ADMINISTRADOR)`; `IncidenciaRepositoryPort.buscarTodas`, en el mismo orden y con la misma paginación que la HU44 (CP04 a CP09).
+- **El autor de cada incidencia (decisión del equipo):** el administrador ve el correo y el rol de quien la reportó. Incidencias no usa el dominio de usuarios: pide el contacto por el puerto de entrada de usuarios (`AdministracionUsuariosUseCase.consultarContacto`, nuevo, solo para el administrador) a través de `AutoresPort` y `AutoresAdapter` (CP01 a CP03 y CP10). Cada autor se busca una sola vez por página (CP07).
+- **Cuenta eliminada (decisión del equipo):** con la HU25 y la HU47 la cuenta se borra, pero sus incidencias siguen; la incidencia se devuelve sin autor en vez de hacer fallar el listado (CP02, CP06 y CP10).
+- **Seguridad en la capa de negocio (R8):** CP03 y CP09 comprueban que el administrador pasa, que cliente y vendedor reciben 403 y que sin sesión se rechaza.
+- **Pendiente:** el endpoint `GET /api/admin/incidencias` (T306) y la vista del administrador (T304).
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU49-CP01 | `AdministracionUsuariosServiceTest` | `HU49-CP01: consultarContacto devuelve el correo y el rol de un cliente` | Aplicación (usuarios) | AB#307 | PR pendiente | 🔍 |
+| HU49-CP01 | `AdministracionUsuariosServiceTest` | `HU49-CP01: consultarContacto devuelve el correo y el rol de un vendedor` | Aplicación (usuarios) | AB#307 | PR pendiente | 🔍 |
+| HU49-CP02 | `AdministracionUsuariosServiceTest` | `HU49-CP02: consultarContacto de un usuario que ya no existe devuelve vacío, sin fallar` | Aplicación (usuarios) | AB#307 | PR pendiente | 🔍 |
+| HU49-CP03 | `SeguridadAdministracionUsuariosServiceTest` | `HU49-CP03: un cliente no puede consultar el contacto de un usuario` | Aplicación (usuarios) · seguridad | AB#307 | PR pendiente | 🔍 |
+| HU49-CP03 | `SeguridadAdministracionUsuariosServiceTest` | `HU49-CP03: un vendedor no puede consultar el contacto de un usuario` | Aplicación (usuarios) · seguridad | AB#307 | PR pendiente | 🔍 |
+| HU49-CP03 | `SeguridadAdministracionUsuariosServiceTest` | `HU49-CP03: un administrador sí consulta el contacto de un usuario` | Aplicación (usuarios) · seguridad | AB#307 | PR pendiente | 🔍 |
+| HU49-CP03 | `SeguridadAdministracionUsuariosServiceTest` | `HU49-CP03: sin sesión se rechaza la consulta del contacto de un usuario` | Aplicación (usuarios) · seguridad | AB#307 | PR pendiente | 🔍 |
+| HU49-CP04 | `IncidenciaMongoAdapterTest` | `HU49-CP04: buscar todas devuelve las de todos los autores, de las más antiguas a las más recientes` | Infraestructura (MongoDB) | AB#307 | PR pendiente | 🔍 |
+| HU49-CP04 | `IncidenciaMongoAdapterTest` | `HU49-CP04: buscar todas devuelve una página cada vez, con el total de todas` | Infraestructura (MongoDB) | AB#307 | PR pendiente | 🔍 |
+| HU49-CP04 | `IncidenciaMongoAdapterTest` | `HU49-CP04: sin incidencias, buscar todas devuelve una página vacía` | Infraestructura (MongoDB) | AB#307 | PR pendiente | 🔍 |
+| HU49-CP05 | `SupervisionIncidenciasServiceTest` | `HU49-CP05: devuelve la página pedida con el autor de cada incidencia` | Aplicación | AB#307 | PR pendiente | 🔍 |
+| HU49-CP06 | `SupervisionIncidenciasServiceTest` | `HU49-CP06: una incidencia cuyo autor ya no existe se devuelve sin autor y no hace fallar la consulta` | Aplicación | AB#307 | PR pendiente | 🔍 |
+| HU49-CP07 | `SupervisionIncidenciasServiceTest` | `HU49-CP07: busca cada autor una sola vez, aunque tenga varias incidencias en la página` | Aplicación | AB#307 | PR pendiente | 🔍 |
+| HU49-CP07 | `SupervisionIncidenciasServiceTest` | `HU49-CP07: una página vacía no busca ningún autor` | Aplicación | AB#307 | PR pendiente | 🔍 |
+| HU49-CP08 | `SupervisionIncidenciasServiceTest` | `HU49-CP08: admite la primera página y los tamaños de 1 a 50` | Aplicación | AB#307 | PR pendiente | 🔍 |
+| HU49-CP08 | `SupervisionIncidenciasServiceTest` | `HU49-CP08: rechaza una página negativa y un tamaño menor que 1 o mayor que 50, sin consultar nada` | Aplicación | AB#307 | PR pendiente | 🔍 |
+| HU49-CP09 | `SeguridadIncidenciasServiceTest` | `HU49-CP09: el administrador consulta las incidencias de todos` | Aplicación · seguridad | AB#307 | PR pendiente | 🔍 |
+| HU49-CP09 | `SeguridadIncidenciasServiceTest` | `HU49-CP09: un cliente no consulta las incidencias de todos` | Aplicación · seguridad | AB#307 | PR pendiente | 🔍 |
+| HU49-CP09 | `SeguridadIncidenciasServiceTest` | `HU49-CP09: un vendedor no consulta las incidencias de todos` | Aplicación · seguridad | AB#307 | PR pendiente | 🔍 |
+| HU49-CP09 | `SeguridadIncidenciasServiceTest` | `HU49-CP09: sin sesión no se consultan las incidencias de todos` | Aplicación · seguridad | AB#307 | PR pendiente | 🔍 |
+| HU49-CP10 | `AutoresAdapterTest` | `HU49-CP10: el correo y el rol del autor se piden al módulo de usuarios` | Infraestructura (adaptador) | AB#307 | PR pendiente | 🔍 |
+| HU49-CP10 | `AutoresAdapterTest` | `HU49-CP10: si la cuenta del autor ya no existe, no hay autor` | Infraestructura (adaptador) | AB#307 | PR pendiente | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (JUnit y Mockito, sin Spring)
+- `SeguridadAdministracionUsuariosServiceTest`: `usuarios/application/service/`, archivo `SeguridadAdministracionUsuarioServiceTest.java` (contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
+- `IncidenciaMongoAdapterTest`: `incidencias/infrastructure/adapter/out/persistence/` (con Testcontainers)
+- `SupervisionIncidenciasServiceTest`: `incidencias/application/service/` (JUnit, sin Spring)
+- `SeguridadIncidenciasServiceTest`: `incidencias/application/service/` (contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
+- `AutoresAdapterTest`: `incidencias/infrastructure/adapter/out/usuarios/` (JUnit y Mockito, sin Spring)
+
+---
+
 ## Tests técnicos sin caso de prueba
 
 Tests que no validan una HU concreta.
@@ -4257,10 +4367,13 @@ Tests que no validan una HU concreta.
 | `PreferenciasConfigTest` | `elContextoConectaLasPiezasDeLasPreferencias` | Que Spring conecta el servicio de las preferencias con su adaptador de MongoDB y los adaptadores hacia usuarios y categorías (HU46; AB#287, PR #220) |
 | `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |
 | `IncidenciasConfigTest` | `elContextoConectaLasPiezasDeLasIncidencias` | Que Spring conecta la creación y la consulta de incidencias con su adaptador de MongoDB y el adaptador hacia usuarios (HU44; AB#293 y AB#419, PR pendiente) |
+| `IncidenciasConfigTest` | `elContextoConectaLaSupervisionDeIncidencias` | Que Spring conecta la supervisión de incidencias del administrador con el adaptador hacia usuarios (HU49; AB#307, PR pendiente) |
 | `SecurityConfigTest` | `unaPeticionRecibeElTokenCsrfEnUnaCookie` | Que cualquier respuesta, aunque sea un 401, entrega el token CSRF en la cookie `XSRF-TOKEN` sin `HttpOnly` (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostSinTokenCsrfSeRechaza` | Que un `POST` sin token CSRF se rechaza con 403 (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostConElTokenDeLaCookieEnLaCabeceraSeAcepta` | Que un `POST` con el token de la cookie en la cabecera `X-XSRF-TOKEN` pasa el filtro CSRF (AB#230, PR #67) |
 | `SecurityConfigTest` | `laPaginaDeErrorConservaElCodigoSinSesion` | Que `/error` es accesible sin sesión, para que un 403 (CSRF) o un 500 no lleguen como 401 (AB#230, PR #67) |
+| `SecurityConfigTest` | `elEndpointDeSaludEsPublico` | Que `/actuator/health` y `/actuator/health/liveness` responden 200 sin sesión, para el health check de Render (CD; sin HU ni AB#) |
+| `SecurityConfigTest` | `elRestoDeActuatorExigeSesion` | Que el resto de rutas de `/actuator` exige sesión (401); no pasó por rojo real, `anyRequest().authenticated()` ya lo cubría (CD; sin HU ni AB#) |
 | `client.test.js` (frontend) | `request_postConCookieCsrf_enviaElTokenEnLaCabecera` | Que el cliente HTTP copia la cookie `XSRF-TOKEN` en la cabecera `X-XSRF-TOKEN` (AB#230, PR #67) |
 | `client.test.js` (frontend) | `request_postSinCookieCsrf_noEnviaLaCabecera` | Que sin la cookie no envía la cabecera CSRF (AB#230, PR #67) |
 | `UsuarioControllerTest` | `otraRutaSinSesionEstaProtegida` | Que una ruta distinta del registro exige sesión (mínimo privilegio en `SecurityConfig`; AB#14, PR #30) |

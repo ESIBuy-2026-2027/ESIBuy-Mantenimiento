@@ -14,6 +14,7 @@ const CARLOS = { id: 'usr-3', nombre: 'Carlos', apellidos: 'Moreno Gil', estado:
 const LUCIA = { id: 'usr-4', nombre: 'Lucía', apellidos: 'Torres Vega', estado: 'BLOQUEADO' }
 const GONZALO = { id: 'usr-25', nombre: 'Gonzalo', apellidos: 'Ibáñez Roca', estado: 'PENDIENTE' }
 const ADA = { id: 'u-1', nombre: 'Ada', apellidos: 'Admin', estado: 'ACTIVO' }
+const ANA = { id: 'usr-1', nombre: 'Ana', apellidos: 'López García', estado: 'ACTIVO' }
 const ESPERA = { timeout: 3000 }
 
 async function renderAcciones(usuario, props = {}) {
@@ -215,7 +216,7 @@ describe('UserRowActions (HU23 y HU24): bloquear y desbloquear', () => {
 
 describe('UserRowActions (HU19): editar', () => {
   it('userRowActions_ofreceEditarYEliminarAunqueLaCuentaEsteBloqueada', async () => {
-    await renderAcciones(LUCIA)
+    await renderAcciones(LUCIA, { canDelete: true })
 
     expect(screen.getByRole('button', { name: 'Editar a Lucía Torres Vega' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Eliminar a Lucía Torres Vega' })).toBeInTheDocument()
@@ -278,12 +279,12 @@ describe('UserRowActions (HU19): eliminar', () => {
   it('userRowActions_alPulsarEliminar_pideConfirmacionAvisandoDeQueNoSePuedeDeshacer', async () => {
     const peticion = capturarBorrado()
     const user = userEvent.setup()
-    await renderAcciones(CARLOS)
+    await renderAcciones(ANA, { canDelete: true })
 
-    await user.click(screen.getByRole('button', { name: 'Eliminar a Carlos Moreno Gil' }))
+    await user.click(screen.getByRole('button', { name: 'Eliminar a Ana López García' }))
 
     const confirmacion = (
-      await screen.findByText('¿Seguro que quieres eliminar a Carlos Moreno Gil? Esta acción no se puede deshacer.')
+      await screen.findByText('¿Seguro que quieres eliminar a Ana López García? Esta acción no se puede deshacer.')
     ).closest('[role="alertdialog"]')
     expect(confirmacion).toHaveTextContent('Eliminar usuario')
     expect(peticion.llamadas).toBe(0)
@@ -292,9 +293,9 @@ describe('UserRowActions (HU19): eliminar', () => {
   it('userRowActions_alCancelarLaEliminacion_noBorraNada', async () => {
     const peticion = capturarBorrado()
     const user = userEvent.setup()
-    const { onResult, onChanged } = await renderAcciones(CARLOS)
-    await user.click(screen.getByRole('button', { name: 'Eliminar a Carlos Moreno Gil' }))
-    const confirmacion = (await screen.findByText(/seguro que quieres eliminar a carlos/i)).closest('[role="alertdialog"]')
+    const { onResult, onChanged } = await renderAcciones(ANA, { canDelete: true })
+    await user.click(screen.getByRole('button', { name: 'Eliminar a Ana López García' }))
+    const confirmacion = (await screen.findByText(/seguro que quieres eliminar a ana/i)).closest('[role="alertdialog"]')
 
     await user.click(within(confirmacion).getByText('Cancelar', { selector: 'button' }))
 
@@ -307,15 +308,15 @@ describe('UserRowActions (HU19): eliminar', () => {
   it('userRowActions_alConfirmarLaEliminacion_borraAvisaYActualizaElListado', async () => {
     const peticion = capturarBorrado()
     const user = userEvent.setup()
-    const { onResult, onChanged } = await renderAcciones(CARLOS)
+    const { onResult, onChanged } = await renderAcciones(ANA, { canDelete: true })
 
-    await confirmar(user, 'Eliminar a Carlos Moreno Gil', /seguro que quieres eliminar a carlos moreno gil/i, 'Eliminar')
+    await confirmar(user, 'Eliminar a Ana López García', /seguro que quieres eliminar a ana lópez garcía/i, 'Eliminar')
 
     await waitFor(
-      () => expect(onResult).toHaveBeenCalledWith({ intent: 'success', texto: 'Carlos Moreno Gil se ha eliminado.' }),
+      () => expect(onResult).toHaveBeenCalledWith({ intent: 'success', texto: 'Ana López García se ha eliminado.' }),
       ESPERA,
     )
-    expect(peticion).toEqual({ id: 'usr-3', llamadas: 1 })
+    expect(peticion).toEqual({ id: 'usr-1', llamadas: 1 })
     expect(onChanged).toHaveBeenCalledTimes(1)
   })
 
@@ -324,9 +325,9 @@ describe('UserRowActions (HU19): eliminar', () => {
       http.delete('/api/admin/usuarios/:id', () => HttpResponse.json({ code: 'LAST_ACTIVE_ADMIN' }, { status: 409 })),
     )
     const user = userEvent.setup()
-    const { onResult, onChanged } = await renderAcciones(CARLOS)
+    const { onResult, onChanged } = await renderAcciones(ANA, { canDelete: true })
 
-    await confirmar(user, 'Eliminar a Carlos Moreno Gil', /seguro que quieres eliminar/i, 'Eliminar')
+    await confirmar(user, 'Eliminar a Ana López García', /seguro que quieres eliminar/i, 'Eliminar')
 
     await waitFor(
       () =>
@@ -344,9 +345,9 @@ describe('UserRowActions (HU19): eliminar', () => {
       http.delete('/api/admin/usuarios/:id', () => HttpResponse.json({ code: 'CANNOT_DELETE_SELF' }, { status: 409 })),
     )
     const user = userEvent.setup()
-    const { onResult } = await renderAcciones(CARLOS)
+    const { onResult } = await renderAcciones(ANA, { canDelete: true })
 
-    await confirmar(user, 'Eliminar a Carlos Moreno Gil', /seguro que quieres eliminar/i, 'Eliminar')
+    await confirmar(user, 'Eliminar a Ana López García', /seguro que quieres eliminar/i, 'Eliminar')
 
     await waitFor(
       () => expect(onResult).toHaveBeenCalledWith({ intent: 'error', texto: 'No puedes eliminar tu propia cuenta.' }),
@@ -357,15 +358,15 @@ describe('UserRowActions (HU19): eliminar', () => {
   it('userRowActions_siFallaLaEliminacion_muestraUnErrorGenericoYNoActualiza', async () => {
     server.use(http.delete('/api/admin/usuarios/:id', () => new HttpResponse(null, { status: 500 })))
     const user = userEvent.setup()
-    const { onResult, onChanged } = await renderAcciones(CARLOS)
+    const { onResult, onChanged } = await renderAcciones(ANA, { canDelete: true })
 
-    await confirmar(user, 'Eliminar a Carlos Moreno Gil', /seguro que quieres eliminar/i, 'Eliminar')
+    await confirmar(user, 'Eliminar a Ana López García', /seguro que quieres eliminar/i, 'Eliminar')
 
     await waitFor(
       () =>
         expect(onResult).toHaveBeenCalledWith({
           intent: 'error',
-          texto: 'No se ha podido eliminar a Carlos Moreno Gil. Inténtalo de nuevo.',
+          texto: 'No se ha podido eliminar a Ana López García. Inténtalo de nuevo.',
         }),
       ESPERA,
     )
@@ -374,10 +375,8 @@ describe('UserRowActions (HU19): eliminar', () => {
 })
 
 describe('UserRowActions (HU19, AB#250): el administrador en sesión y el último', () => {
-  const ANA = { id: 'usr-1', nombre: 'Ana', apellidos: 'López García', estado: 'ACTIVO' }
-
   it('userRowActions_deLaPropiaCuenta_dejaEliminarDeshabilitadoYExplicaElMotivo', async () => {
-    await renderAcciones(ADA)
+    await renderAcciones(ADA, { canDelete: true })
 
     const boton = screen.getByRole('button', { name: 'Eliminar a Ada Admin' })
     expect(boton).toBeDisabled()
@@ -385,14 +384,14 @@ describe('UserRowActions (HU19, AB#250): el administrador en sesión y el últim
   })
 
   it('userRowActions_deLaPropiaCuenta_dejaVerYEditarDisponibles', async () => {
-    await renderAcciones(ADA)
+    await renderAcciones(ADA, { canDelete: true })
 
     expect(screen.getByRole('button', { name: 'Ver información de Ada Admin' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Editar a Ada Admin' })).toBeEnabled()
   })
 
   it('userRowActions_delUltimoAdministradorActivo_dejaBloquearYEliminarDeshabilitadosConSuMotivo', async () => {
-    await renderAcciones(ANA, { lastAdminId: 'usr-1' })
+    await renderAcciones(ANA, { canDelete: true, lastAdminId: 'usr-1' })
 
     const bloquear = screen.getByRole('button', { name: 'Bloquear a Ana López García' })
     const eliminar = screen.getByRole('button', { name: 'Eliminar a Ana López García' })
@@ -403,29 +402,29 @@ describe('UserRowActions (HU19, AB#250): el administrador en sesión y el últim
   })
 
   it('userRowActions_delUltimoAdministradorActivo_dejaVerYEditarDisponibles', async () => {
-    await renderAcciones(ANA, { lastAdminId: 'usr-1' })
+    await renderAcciones(ANA, { canDelete: true, lastAdminId: 'usr-1' })
 
     expect(screen.getByRole('button', { name: 'Ver información de Ana López García' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Editar a Ana López García' })).toBeEnabled()
   })
 
   it('userRowActions_siElUltimoAdministradorEsOtro_dejaBloquearYEliminarDisponibles', async () => {
-    await renderAcciones(ANA, { lastAdminId: 'usr-99' })
+    await renderAcciones(ANA, { canDelete: true, lastAdminId: 'usr-99' })
 
     expect(screen.getByRole('button', { name: 'Bloquear a Ana López García' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Eliminar a Ana López García' })).toBeEnabled()
   })
 
   it('userRowActions_sinDatosDelUltimoAdministrador_dejaBloquearYEliminarDisponibles', async () => {
-    await renderAcciones(CARLOS)
+    await renderAcciones(ANA, { canDelete: true })
 
-    expect(screen.getByRole('button', { name: 'Bloquear a Carlos Moreno Gil' })).toBeEnabled()
-    expect(screen.getByRole('button', { name: 'Eliminar a Carlos Moreno Gil' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Bloquear a Ana López García' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Eliminar a Ana López García' })).toBeEnabled()
   })
 
   it('userRowActions_deUnaCuentaDeshabilitada_noAbreLaConfirmacionAlPulsar', async () => {
     const user = userEvent.setup()
-    await renderAcciones(ADA)
+    await renderAcciones(ADA, { canDelete: true })
 
     await user.click(screen.getByRole('button', { name: 'Eliminar a Ada Admin' }))
 
@@ -456,7 +455,6 @@ describe('UserRowActions (HU26): vendedores', () => {
 
     expect(screen.getByRole('button', { name: 'Ver información de TecnoVera' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Editar a TecnoVera' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Eliminar a TecnoVera' })).toBeInTheDocument()
     await confirmar(user, 'Bloquear a TecnoVera', /seguro que quieres bloquear a tecnovera/i, 'Bloquear')
 
     await waitFor(
@@ -513,17 +511,6 @@ describe('UserRowActions (HU26): vendedores', () => {
     expect(peticion.id).toBe('s-05')
   })
 
-  it('userRowActions_alEliminarUnVendedor_usaElMismoEndpointQueElRestoDeUsuarios', async () => {
-    const peticion = capturarPeticion('delete', 204)
-    const user = userEvent.setup()
-    const { onResult } = await renderAcciones(TECNOVERA, { label: 'TecnoVera' })
-
-    await confirmar(user, 'Eliminar a TecnoVera', /seguro que quieres eliminar a tecnovera/i, 'Eliminar')
-
-    await waitFor(() => expect(onResult).toHaveBeenCalledWith({ intent: 'success', texto: 'TecnoVera se ha eliminado.' }), ESPERA)
-    expect(peticion.id).toBe('u-2')
-  })
-
   it('userRowActions_alEditarUnVendedor_abreElFormularioConSusDatos', async () => {
     const user = userEvent.setup()
     await renderAcciones(TECNOVERA, { label: 'TecnoVera' })
@@ -532,5 +519,60 @@ describe('UserRowActions (HU26): vendedores', () => {
 
     const dialogo = await screen.findByRole('dialog', { name: /editar usuario/i })
     expect(await within(dialogo).findByLabelText(/^nombre comercial/i, undefined, ESPERA)).toHaveValue('TecnoVera')
+  })
+})
+
+describe('UserRowActions (HU37): solo se eliminan administradores', () => {
+  const TECNOVERA = { id: 'u-2', nombre: 'Vera', apellidos: 'Vendedora', estado: 'ACTIVO' }
+
+  it('HU37-CP18: sin canDelete (clientes y vendedores) la fila no ofrece la papelera pero sí el resto de acciones', async () => {
+    await renderAcciones(CARLOS)
+
+    expect(screen.queryByRole('button', { name: /^eliminar a /i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ver información de Carlos Moreno Gil' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Editar a Carlos Moreno Gil' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Bloquear a Carlos Moreno Gil' })).toBeInTheDocument()
+  })
+
+  it('HU37-CP18: un vendedor tampoco tiene papelera, aunque se le dé nombre comercial', async () => {
+    await renderAcciones(TECNOVERA, { label: 'TecnoVera' })
+
+    expect(screen.queryByRole('button', { name: /^eliminar a /i })).not.toBeInTheDocument()
+  })
+
+  it('HU37-CP18: con canDelete la fila de un administrador ofrece la papelera', async () => {
+    await renderAcciones(ANA, { canDelete: true })
+
+    expect(screen.getByRole('button', { name: 'Eliminar a Ana López García' })).toBeEnabled()
+  })
+})
+
+describe('UserRowActions (HU37): eliminar desde la ficha de la fila', () => {
+  it('HU37-CP14: la lupa de un administrador abre una ficha con Eliminar y, al eliminar, la cierra, avisa y actualiza la lista', async () => {
+    const user = userEvent.setup()
+    const { onResult, onChanged } = await renderAcciones(ANA, { canDelete: true })
+    await user.click(screen.getByRole('button', { name: 'Ver información de Ana López García' }))
+    const ficha = await screen.findByRole('dialog', { name: /información del usuario/i })
+
+    await user.click(await within(ficha).findByRole('button', { name: 'Eliminar a Ana López García' }))
+    const confirmacion = (await screen.findByText(/seguro que quieres eliminar a ana/i)).closest('[role="alertdialog"]')
+    await user.click(within(confirmacion).getByText('Eliminar', { selector: 'button' }))
+
+    await waitFor(
+      () => expect(onResult).toHaveBeenCalledWith({ intent: 'success', texto: 'Ana López García se ha eliminado.' }),
+      ESPERA,
+    )
+    expect(onChanged).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /información del usuario/i })).not.toBeInTheDocument(), ESPERA)
+  })
+
+  it('HU37-CP18: la ficha de un cliente abierta desde su fila no ofrece Eliminar', async () => {
+    const user = userEvent.setup()
+    await renderAcciones(CARLOS)
+    await user.click(screen.getByRole('button', { name: 'Ver información de Carlos Moreno Gil' }))
+    const ficha = await screen.findByRole('dialog', { name: /información del usuario/i })
+    await within(ficha).findByLabelText('Nombre')
+
+    expect(within(ficha).queryByRole('button', { name: /eliminar/i })).not.toBeInTheDocument()
   })
 })

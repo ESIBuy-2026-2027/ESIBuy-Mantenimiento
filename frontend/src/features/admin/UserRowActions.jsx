@@ -1,9 +1,8 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Button, makeStyles, tokens } from '@fluentui/react-components'
-import { Delete20Regular, Edit20Regular, Search20Regular } from '@fluentui/react-icons'
-import { deleteUser } from '../../api/users'
-import StatusConfirmDialog from './StatusConfirmDialog'
+import { Edit20Regular, Search20Regular } from '@fluentui/react-icons'
+import UserDeleteButton from './UserDeleteButton'
 import UserDetailDialog from './UserDetailDialog'
 import UserEditDialog from './UserEditDialog'
 import UserStatusButton from './UserStatusButton'
@@ -28,15 +27,10 @@ const MENSAJES_CONFLICTO_BLOQUEO = {
   LAST_ACTIVE_ADMIN: 'No se puede bloquear al último administrador activo.',
 }
 
-// Errores del backend al eliminar que tienen un mensaje propio.
-const MENSAJES_CONFLICTO_ELIMINACION = {
-  CANNOT_DELETE_SELF: 'No puedes eliminar tu propia cuenta.',
-  LAST_ACTIVE_ADMIN: 'No se puede eliminar al último administrador activo.',
-}
-
 // Acciones de una fila de la tabla de usuarios (HU19): la lupa que abre su ficha de solo lectura (HU20), el lápiz
 // que abre el formulario de edición (HU22), el botón para bloquear o desbloquear la cuenta (HU23 y HU24) y la
-// papelera para eliminarla. Una cuenta activa se bloquea; una bloqueada o pendiente (HU1) se desbloquea, que es
+// papelera para eliminarla, que solo sale con `canDelete`: el backend solo elimina administradores (HU37), así que
+// los listados la activan únicamente para las filas de administradores. Una cuenta activa se bloquea; una bloqueada o pendiente (HU1) se desbloquea, que es
 // como se acepta. Bloquear y eliminar piden confirmación. Un administrador no puede bloquearse ni eliminarse a sí
 // mismo, ni se puede bloquear o eliminar al último administrador activo (`lastAdminId`, AB#250): esos botones
 // quedan deshabilitados y explican por qué.
@@ -48,6 +42,7 @@ export default function UserRowActions({
   user,
   currentUserId,
   lastAdminId = null,
+  canDelete = false,
   label,
   renderDetail,
   onResult,
@@ -55,7 +50,6 @@ export default function UserRowActions({
 }) {
   const styles = useStyles()
   const [dialogo, setDialogo] = useState(null)
-  const [eliminando, setEliminando] = useState(false)
   const nombre = label ?? `${user.nombre} ${user.apellidos}`
   const accion = user.estado === USER_STATUS.ACTIVO ? 'bloquear' : 'desbloquear'
   const esPropia = user.id === currentUserId
@@ -80,23 +74,6 @@ export default function UserRowActions({
     cerrar()
     onResult({ intent: 'success', texto: 'Los cambios se han guardado.' })
     onChanged()
-  }
-
-  const eliminar = async () => {
-    setEliminando(true)
-    try {
-      await deleteUser(user.id)
-      onResult({ intent: 'success', texto: `${nombre} se ha eliminado.` })
-      onChanged()
-    } catch (error) {
-      onResult({
-        intent: 'error',
-        texto: MENSAJES_CONFLICTO_ELIMINACION[error?.code] ?? `No se ha podido eliminar a ${nombre}. Inténtalo de nuevo.`,
-      })
-    } finally {
-      setEliminando(false)
-      cerrar()
-    }
   }
 
   return (
@@ -124,31 +101,31 @@ export default function UserRowActions({
         onDone={avisarEstadoCambiado}
         onError={avisarErrorDeEstado}
       />
-      <Button
-        appearance="subtle"
-        icon={<Delete20Regular />}
-        aria-label={`Eliminar a ${nombre}`}
-        title={
-          protegida
-            ? MENSAJES_CONFLICTO_ELIMINACION[esPropia ? 'CANNOT_DELETE_SELF' : 'LAST_ACTIVE_ADMIN']
-            : 'Eliminar'
-        }
-        disabled={protegida}
-        onClick={() => setDialogo('eliminar')}
-      />
-
-      {dialogo === 'ficha' && (renderDetail ? renderDetail(cerrar) : <UserDetailDialog userId={user.id} onClose={cerrar} />)}
-      {dialogo === 'editar' && <UserEditDialog userId={user.id} onClose={cerrar} onSaved={avisarEdicionGuardada} />}
-      {dialogo === 'eliminar' && (
-        <StatusConfirmDialog
-          titulo="Eliminar usuario"
-          pregunta={`¿Seguro que quieres eliminar a ${nombre}? Esta acción no se puede deshacer.`}
-          confirmar="Eliminar"
-          enviando={eliminando}
-          onConfirm={eliminar}
-          onCancel={cerrar}
+      {canDelete && (
+        <UserDeleteButton
+          user={user}
+          label={label}
+          currentUserId={currentUserId}
+          lastAdminId={lastAdminId}
+          onResult={onResult}
+          onChanged={onChanged}
         />
       )}
+
+      {dialogo === 'ficha' && (renderDetail ? (
+          renderDetail(cerrar)
+        ) : (
+          <UserDetailDialog
+            userId={user.id}
+            onClose={cerrar}
+            canDelete={canDelete}
+            currentUserId={currentUserId}
+            lastAdminId={lastAdminId}
+            onResult={onResult}
+            onChanged={onChanged}
+          />
+        ))}
+      {dialogo === 'editar' && <UserEditDialog userId={user.id} onClose={cerrar} onSaved={avisarEdicionGuardada} />}
     </div>
   )
 }
@@ -162,6 +139,7 @@ UserRowActions.propTypes = {
   }).isRequired,
   currentUserId: PropTypes.string,
   lastAdminId: PropTypes.string,
+  canDelete: PropTypes.bool,
   label: PropTypes.string,
   renderDetail: PropTypes.func,
   onResult: PropTypes.func.isRequired,
