@@ -15,7 +15,7 @@ import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
 import Pagination from '../components/Pagination'
 import { usePageStyles } from '../components/pageStyles'
-import IncidentsTable from '../features/incidents/IncidentsTable'
+import IncidentsList from '../features/incidents/IncidentsList'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { PATHS } from '../routes/paths'
 
@@ -99,7 +99,7 @@ export default function IncidentsPage() {
 
       {data && data.totalItems > 0 && (
         <>
-          <IncidentsTable incidents={data.items} refreshing={refreshing} />
+          <IncidentsList incidents={data.items} refreshing={refreshing} />
           <Pagination
             page={data.page}
             totalPages={data.totalPages}
