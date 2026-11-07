@@ -5,13 +5,16 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -269,5 +272,52 @@ class AdministracionIncidenciasControllerTest {
                 .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
 
         verify(resolucionIncidencias, never()).abrir(any(), any());
+    }
+
+    // Cerrar una incidencia (HU50, T301): DELETE /api/admin/incidencias/{id}, que la elimina
+
+    private static final String URL_CERRAR = URL + "/i-1";
+
+    private ResultActions cerrarComoAdministrador() throws Exception {
+        return mockMvc.perform(delete(URL_CERRAR).with(user(ADMINISTRADOR).roles("ADMINISTRADOR")).with(csrf()));
+    }
+
+    @Test
+    @DisplayName("HU50-CP15: cerrar responde 204 sin cuerpo y cierra esa incidencia")
+    void cerrarResponde204() throws Exception {
+        cerrarComoAdministrador()
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(""));
+
+        verify(resolucionIncidencias).cerrar("i-1");
+    }
+
+    @Test
+    @DisplayName("HU50-CP16: cerrar una incidencia que no existe responde 404 INCIDENT_NOT_FOUND")
+    void cerrarUnaQueNoExisteResponde404() throws Exception {
+        doThrow(new IncidenciaNoEncontradaException()).when(resolucionIncidencias).cerrar("i-1");
+
+        cerrarComoAdministrador()
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("INCIDENT_NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("HU50-CP17: sin sesión cerrar responde 401")
+    void sinSesionCerrarResponde401() throws Exception {
+        mockMvc.perform(delete(URL_CERRAR).with(csrf())).andExpect(status().isUnauthorized());
+
+        verify(resolucionIncidencias, never()).cerrar(any());
+    }
+
+    @ParameterizedTest(name = "rol {1}")
+    @CsvSource({"cliente@esibuy.test,CLIENTE", "vendedor@esibuy.test,VENDEDOR"})
+    @DisplayName("HU50-CP17: un cliente o un vendedor que intentan cerrar reciben 403 ACCESS_DENIED")
+    void clienteYVendedorNoCierran(String email, String rol) throws Exception {
+        mockMvc.perform(delete(URL_CERRAR).with(user(email).roles(rol)).with(csrf()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+
+        verify(resolucionIncidencias, never()).cerrar(any());
     }
 }
