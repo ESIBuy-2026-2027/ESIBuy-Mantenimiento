@@ -130,4 +130,5 @@ Los casos siguen la numeración del backend (HU44-CP01 a CP22): el frontend empi
 
 - **Botón Cerrar incidencia:** conectarlo con el endpoint de la HU50.
 - **Responder y abrir incidencias (administrador):** HU49 y HU50.
+- **Cabecera en móvil:** a 375 px los botones de `AppHeader` no caben en una línea y la cabecera ensancha la página (ya pasaba con los botones del cliente antes de la HU44; el botón Incidencias suma unos 130 px). La vista de incidencias en sí no desborda: su tabla se desplaza dentro de su contenedor. Arreglarlo es un cambio de la cabecera, fuera de esta HU: queda por consultar con el equipo.
 - **Mocks y backend real:** los mocks de `incidentsHandlers.js` conviven con el backend del PR #224; no hay que quitarlos al mergearlo.
