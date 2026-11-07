@@ -26,6 +26,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.PedidosVendedorPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.ProductosVendedorPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.ValoracionesProductoPort;
+import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaActualIncorrectaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
@@ -70,7 +71,9 @@ class GestionCuentaServiceTest {
     void contraseñaIncorrectaNoModificaNada() {
         when(hashContrasena.coincide("incorrecta", "hash")).thenReturn(false);
 
-        assertThrows(CredencialesInvalidasException.class,
+        // No es CredencialesInvalidasException (401): la sesión sigue abierta y el frontend no debe tratarlo como
+        // una sesión caducada
+        assertThrows(ContrasenaActualIncorrectaException.class,
                 () -> servicio.eliminarCuentaVendedor(EMAIL, "incorrecta"));
 
         verifyNoInteractions(productos, productosConPedidos, valoraciones, factores, codigosVerificacion,

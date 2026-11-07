@@ -246,3 +246,28 @@ describe('ProfilePage (HU4): acceso', () => {
     expect(screen.queryByRole('heading', { name: /mi perfil/i })).not.toBeInTheDocument()
   })
 })
+
+describe('ProfilePage (HU47): eliminar mi cuenta', () => {
+  it('HU47-CP13: el vendedor tiene la opción de eliminar su cuenta y el cliente no', async () => {
+    await abrirPerfil('vendedor@esibuy.test')
+    expect(screen.getByRole('button', { name: /^eliminar mi cuenta$/i })).toBeInTheDocument()
+    cleanup()
+
+    await abrirPerfil('cliente@esibuy.test')
+    expect(screen.queryByRole('button', { name: /^eliminar mi cuenta$/i })).not.toBeInTheDocument()
+  })
+
+  it('HU47-CP14: tras eliminar la cuenta se cierra la sesión y el login avisa de que se ha eliminado', async () => {
+    server.use(http.delete('/api/perfil', () => new HttpResponse(null, { status: 204 })))
+    const usuario = userEvent.setup()
+    await abrirPerfil('vendedor@esibuy.test')
+
+    await usuario.click(screen.getByRole('button', { name: /^eliminar mi cuenta$/i }))
+    const dialogo = await screen.findByRole('alertdialog', { name: /eliminar mi cuenta/i })
+    await usuario.type(within(dialogo).getByLabelText(/^contraseña actual/i), 'Contraseña-de-prueba-1!')
+    await usuario.click(within(dialogo).getByRole('button', { name: /^eliminar mi cuenta$/i }))
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/))
+    expect(await screen.findByText('Tu cuenta se ha eliminado.')).toBeInTheDocument()
+  })
+})

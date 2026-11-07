@@ -3364,25 +3364,34 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU47-CP01 | Con la contraseña actual incorrecta no se elimina la cuenta ni se modifica ningún dato | Unitario (aplicación) | 1 | ✅ Pasa |
+| HU47-CP01 | Con la contraseña actual incorrecta no se elimina la cuenta ni se modifica ningún dato (`ContrasenaActualIncorrectaException`, no `CredencialesInvalidasException`) | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#313, PR #223) |
 | HU47-CP02 | Al eliminar la cuenta se conservan como no disponibles los productos con pedidos y se eliminan los demás junto con sus valoraciones | Unitario + integración (aplicación y persistencia) | 10 | ✅ Pasa |
 | HU47-CP03 | Un producto no disponible no se puede comprar aunque tenga stock | Integración (persistencia) | 1 | ✅ Pasa |
 | HU47-CP04 | Si una eliminación quedó a medias se puede repetir y completarse sin errores | Unitario (aplicación) | 1 | ✅ Pasa |
 | HU47-CP05 | Al eliminar la cuenta se invalida la sesión y se limpia el contexto de seguridad | Unitario + integración (capa de aplicación y web) | 2 | ✅ Pasa |
 | HU47-CP06 | Un cliente recibe 403 y no se modifica nada al intentar eliminar la cuenta | Unitario + integración (capa de aplicación y web) | 2 | ✅ Pasa |
 | HU47-CP07 | Una petición sin autenticar recibe 401 y no se modifica nada al intentar eliminar la cuenta | Integración (capa web) | 1 | ✅ Pasa |
+| HU47-CP08 | Con la contraseña incorrecta, `DELETE /api/perfil` responde 400 con code `WRONG_PASSWORD` y la sesión sigue abierta (un 401 haría que el frontend la diera por caducada) | Integración (capa web) | 1 | 🔍 En revisión (1, AB#312, PR #223) |
+| HU47-CP09 | El diálogo explica qué se borra y qué se conserva, y sin la contraseña actual no deja eliminar | Frontend (componente) | 1 | 🔍 En revisión (1, AB#311, PR #223) |
+| HU47-CP10 | Con la contraseña escrita se elimina la cuenta enviando solo la contraseña | Frontend (componente) | 1 | 🔍 En revisión (1, AB#311, PR #223) |
+| HU47-CP11 | Con la contraseña incorrecta se avisa sin repetirla y se puede corregir; otro fallo da un aviso genérico. El diálogo no se cierra | Frontend (componente) | 2 | 🔍 En revisión (2, AB#311, PR #223) |
+| HU47-CP12 | Al cancelar no se elimina la cuenta | Frontend (componente) | 1 | 🔍 En revisión (1, AB#311, PR #223) |
+| HU47-CP13 | La opción «Eliminar mi cuenta» está en el perfil del vendedor y no en el del cliente | Frontend (página) | 1 | 🔍 En revisión (1, AB#311, PR #223) |
+| HU47-CP14 | Tras eliminar la cuenta se cierra la sesión y el login avisa «Tu cuenta se ha eliminado.» | Frontend (página) | 1 | 🔍 En revisión (1, AB#311, PR #223) |
 
 Notas:
 - `DELETE /api/perfil` se restringe a VENDEDOR en la regla de ruta; `GET /api/perfil` sigue disponible para CLIENTE y VENDEDOR. Las pruebas web usan la cadena real de `SecurityConfig`, con CSRF activo.
 - La consulta interna se denomina `buscarPorVendedor`, no `buscarPagadosPorVendedor`, y considera todos los pedidos del vendedor. Se conservan los productos incluidos en cualquier pedido para no romper el historial si el estado del pedido cambia.
 - El `false` de descuento de existencias puede deberse a stock insuficiente o a producto no disponible; la respuesta 409 mantiene el código `INSUFFICIENT_STOCK` por compatibilidad y usa un mensaje neutral: «No se puede comprar un producto del pedido».
+- **Contraseña incorrecta (T311):** antes respondía 401 (`CredencialesInvalidasException`), que el cliente de la API del frontend trata como sesión caducada y echaba al vendedor al login. Ahora lanza `ContrasenaActualIncorrectaException`, que `ManejadorGlobalErrores` devuelve como 400 con code `WRONG_PASSWORD`. Es el mismo manejador que la rama de la HU25 `feature/US25-T274-endpoint-eliminar-cuenta`, aún sin PR. Lo autorizó el equipo.
+- **HU47-CP08 a CP14 (Sprint 2, TDD):** casos propuestos en la T311 (AB#311, botón eliminar cuenta) a partir de los criterios de aceptación de la HU47 (AB#276). Pendientes de confirmar con el equipo.
 - La eliminación de la cuenta cruza módulos mediante puertos de salida propios de `usuarios` y adaptadores en `usuarios/infrastructure/adapter/out/`, que delegan en los puertos de entrada de productos, pedidos y valoraciones.
 
 ### Tabla B · casos de prueba ↔ tests
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU47-CP01 | `GestionCuentaServiceTest` | `contraseñaIncorrectaNoModificaNada` | Aplicación | AB#312 / AB#313 | PR #203 | ✅ |
+| HU47-CP01 | `GestionCuentaServiceTest` | `contraseñaIncorrectaNoModificaNada` | Aplicación | AB#312 / AB#313; ajustado en AB#313 | PR #203; PR #223 | 🔍 |
 | HU47-CP02 | `GestionCuentaServiceTest` | `conservaProductosConPedidosYEliminaElResto` | Aplicación | AB#312 / AB#313 | PR #203 | ✅ |
 | HU47-CP02 | `GestionProductosVendedorServiceTest` | `desactivaTodosLosProductosDelVendedor` | Aplicación | AB#312 / AB#313 | PR #203 | ✅ |
 | HU47-CP02 | `ProductosConPedidosServiceTest` | `devuelveLosProductosDePedidosDelVendedor` | Aplicación | AB#312 / AB#313 | PR #203 | ✅ |
@@ -3400,6 +3409,14 @@ Notas:
 | HU47-CP06 | `SeguridadGestionCuentaServiceTest` | `unClienteNoPuedeInvocarLaEliminacion` | Aplicación | AB#312 / AB#313 | PR #203 | ✅ |
 | HU47-CP06 | `PerfilControllerTest` | `usuarioNoVendedorNoPuedeEliminarCuenta` | Infraestructura | AB#312 / AB#313 | PR #203 | ✅ |
 | HU47-CP07 | `PerfilControllerTest` | `sinAutenticarNoPuedeEliminarCuenta` | Infraestructura | AB#312 / AB#313 | PR #203 | ✅ |
+| HU47-CP08 | `PerfilControllerTest` | `contrasenaIncorrectaDevuelve400SinCerrarLaSesion` | Infraestructura | AB#312 | PR #223 | 🔍 |
+| HU47-CP09 | `DeleteAccountDialog.test.jsx` | `HU47-CP09: explica qué se borra y qué se conserva, y sin la contraseña no deja eliminar` | Frontend · componente | AB#311 | PR #223 | 🔍 |
+| HU47-CP10 | `DeleteAccountDialog.test.jsx` | `HU47-CP10: con la contraseña escrita elimina la cuenta enviando solo la contraseña` | Frontend · componente | AB#311 | PR #223 | 🔍 |
+| HU47-CP11 | `DeleteAccountDialog.test.jsx` | `HU47-CP11: con la contraseña incorrecta lo avisa, no elimina y deja corregirla` | Frontend · componente | AB#311 | PR #223 | 🔍 |
+| HU47-CP11 | `DeleteAccountDialog.test.jsx` | `HU47-CP11: si falla por otro motivo da un aviso genérico y no elimina` | Frontend · componente | AB#311 | PR #223 | 🔍 |
+| HU47-CP12 | `DeleteAccountDialog.test.jsx` | `HU47-CP12: al cancelar no se elimina la cuenta` | Frontend · componente | AB#311 | PR #223 | 🔍 |
+| HU47-CP13 | `ProfilePage.test.jsx` | `HU47-CP13: el vendedor tiene la opción de eliminar su cuenta y el cliente no` | Frontend · página | AB#311 | PR #223 | 🔍 |
+| HU47-CP14 | `ProfilePage.test.jsx` | `HU47-CP14: tras eliminar la cuenta se cierra la sesión y el login avisa de que se ha eliminado` | Frontend · página | AB#311 | PR #223 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `GestionCuentaServiceTest`: `usuarios/application/service/`
@@ -3408,6 +3425,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `LimpiezaValoracionesServiceTest`: `valoraciones/application/service/`
 - `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/`
 - `PerfilControllerTest`: `usuarios/infrastructure/adapter/in/web/`
+- Frontend (bajo `frontend/src/`): `DeleteAccountDialog.test.jsx` en `features/account/` y `ProfilePage.test.jsx` en `pages/` (Vitest, React Testing Library y MSW)
 
 ---
 
