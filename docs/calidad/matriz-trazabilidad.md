@@ -3893,7 +3893,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU44-CP23 | Las llamadas del frontend piden `GET /api/perfil/incidencias?page&size` y `POST /api/perfil/incidencias` con el asunto y la descripción; un 400 o un 403 llegan como error con su estado y su código | Frontend (API) | 4 | 🔍 En revisión (4, AB#289, PR pendiente) |
 | HU44-CP24 | El asunto y la descripción son obligatorios (no valen vacíos ni solo espacios), con un máximo de 100 y 1000 caracteres que no cuenta los espacios de los extremos | Frontend (utilidad) | 8 | 🔍 En revisión (8, AB#289, PR pendiente) |
 | HU44-CP25 | El estado de cada incidencia se muestra como Pendiente o Abierta, en un badge de su color; un estado desconocido se muestra tal cual | Frontend (utilidad y componente) | 4 | 🔍 En revisión (4, AB#289, PR pendiente) |
-| HU44-CP26 | La tabla de incidencias tiene asunto, descripción (recortada, con el texto completo accesible), estado, respuesta («Sin respuesta todavía» si está vacía), fecha de creación en hora local y acciones | Frontend (componente) | 6 | 🔍 En revisión (6, AB#289, PR pendiente) |
+| HU44-CP26 | Las incidencias se muestran como la lista de pedidos, una tarjeta cada una, con asunto, fecha de creación en hora local, estado, descripción completa y respuesta del administrador («Sin respuesta todavía» si está vacía), sin ningún botón | Frontend (componente) | 7 | 🔍 En revisión (7, AB#289, PR pendiente) |
 | HU44-CP27 | Mis incidencias abre en la última página (la de las más recientes), con paginación, estados de carga, error con reintentar y lista vacía que invita a reportar la primera | Frontend (página) | 8 | 🔍 En revisión (8, AB#289, PR pendiente) |
 | HU44-CP28 | El botón Nueva incidencia (y reportar la primera, si no hay ninguna) lleva al formulario | Frontend (página) | 2 | 🔍 En revisión (2, AB#289, PR pendiente) |
 | HU44-CP29 | El formulario pide asunto y descripción con contador de caracteres, avisa en cada campo (obligatorio, máximo) y envía los textos sin espacios en los extremos; un formulario no válido no llama al servidor | Frontend (componente y página) | 11 | 🔍 En revisión (11, AB#289, PR pendiente) |
@@ -3901,13 +3901,12 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU44-CP31 | Un 400 o un error de red avisan sin salir del formulario y conservan lo escrito, se puede reenviar y cancelar vuelve a la lista sin crear nada | Frontend (página) | 4 | 🔍 En revisión (4, AB#289, PR pendiente) |
 | HU44-CP32 | El cliente ve el botón Incidencias en la cabecera, un enlace con foco de teclado que lleva a Mis incidencias | Frontend (página) | 2 | 🔍 En revisión (2, AB#289, PR pendiente) |
 | HU44-CP33 | El vendedor ve el botón Incidencias, abre su vista y crea incidencias; el administrador y el invitado no lo ven y las rutas de incidencias los redirigen | Frontend (página) | 6 | 🔍 En revisión (6, AB#290, PR pendiente) |
-| HU44-CP34 | Cada fila tiene un botón Cerrar incidencia, con el asunto en su nombre accesible, enfocable, deshabilitado con el aviso «Disponible pronto» y sin llamar a ningún endpoint (se conectará con la HU50) | Frontend (componente) | 3 | 🔍 En revisión (3, AB#289, PR pendiente) |
 
 Notas:
-- **HU44-CP23 a CP34 (frontend, T289 y T290):** casos propuestos, **PENDIENTES DE CONFIRMAR CON EL EQUIPO**, a partir de los criterios de la HU44. Siguen la numeración del backend (HU44-CP01 a CP22, PR #224). Rama `feature/US44-T289-T290-incidencias-front`.
+- **HU44-CP23 a CP33 (frontend, T289 y T290):** casos propuestos, **PENDIENTES DE CONFIRMAR CON EL EQUIPO**, a partir de los criterios de la HU44. Siguen la numeración del backend (HU44-CP01 a CP22, PR #224). Rama `feature/US44-T289-T290-incidencias-front`.
 - **Contrato:** `docs/contratos/hu44-incidencias.md` (PR #224). El frontend trabaja contra mocks de MSW (`incidentsHandlers.js`) que lo cumplen; conviven con el backend real.
-- **Vista y rutas:** `/incidents` («Mis incidencias», abre en la última página porque el backend ordena de las más antiguas a las más recientes) y `/incidents/new` (formulario), para cliente y vendedor. El botón Incidencias de la cabecera lleva a la lista.
-- **Botón Cerrar incidencia (HU44-CP34):** deshabilitado a propósito hasta la HU50 (administrador), que será quien cierre y elimine incidencias.
+- **Vista y rutas:** `/incidents` («Mis incidencias», una lista de tarjetas como la de pedidos, abre en la última página porque el backend ordena de las más antiguas a las más recientes) y `/incidents/new` (formulario), para cliente y vendedor. El botón Incidencias de la cabecera lleva a la lista.
+- **Sin botón de cerrar ni de ordenar:** el usuario no cierra incidencias (lo hará el administrador, HU50) y la lista llega de las más antiguas a las más recientes, sin opción de ordenar (el contrato no tiene parámetro de orden). HU44-CP26 comprueba que la lista no tiene botones.
 - **Tests sin rojo propio:** HU44-CP33 (el administrador y el invitado no ven el botón y las rutas los redirigen; el vendedor crea su primera incidencia) pasaron al escribirse, porque la protección de rutas ya existía; lo que dio rojo fue el botón del vendedor en la cabecera.
 
 ### Tabla B · casos de prueba ↔ tests
@@ -3929,18 +3928,19 @@ Notas:
 | HU44-CP25 | `incidentStatus.test.js` | `HU44-CP25: PENDIENTE se muestra como Pendiente y ABIERTA como Abierta` | Frontend · utilidad | AB#289 | PR pendiente | 🔍 |
 | HU44-CP25 | `incidentStatus.test.js` | `HU44-CP25: un estado que el frontend no conoce se muestra tal cual` | Frontend · utilidad | AB#289 | PR pendiente | 🔍 |
 | HU44-CP25 | `incidentStatus.test.js` | `HU44-CP25: cada estado tiene su color: pendiente en aviso y abierta en la marca` | Frontend · utilidad | AB#289 | PR pendiente | 🔍 |
-| HU44-CP25 | `IncidentsTable.test.jsx` | `HU44-CP25: el estado de cada incidencia se muestra en un badge: Pendiente o Abierta` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP26 | `IncidentsTable.test.jsx` | `HU44-CP26: la tabla tiene los encabezados asunto, descripción, estado, respuesta, fecha y acciones` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP26 | `IncidentsTable.test.jsx` | `HU44-CP26: cada incidencia ocupa una fila con su asunto, descripción, respuesta y fecha` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP26 | `IncidentsTable.test.jsx` | `HU44-CP26: la fecha se muestra en hora local y su atributo datetime conserva la fecha del servidor` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP26 | `IncidentsTable.test.jsx` | `HU44-CP26: la descripción larga se recorta en pantalla y su texto completo sigue accesible` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP26 | `IncidentsTable.test.jsx` | `HU44-CP26: sin respuesta, la fila dice Sin respuesta todavía` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP26 | `IncidentsTable.test.jsx` | `HU44-CP26: mientras se recarga, la tabla avisa con aria-busy` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
+| HU44-CP25 | `IncidentsList.test.jsx` | `HU44-CP25: el estado de cada incidencia se muestra en un badge: Pendiente o Abierta` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
+| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: la lista tiene un elemento por incidencia, en el orden en que llegan` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
+| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: cada incidencia muestra su asunto, su descripción completa, su respuesta y su fecha` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
+| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: la fecha se muestra en hora local y su atributo datetime conserva la fecha del servidor` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
+| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: una descripción larga se muestra entera` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
+| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: sin respuesta, la incidencia dice Sin respuesta todavía` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
+| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: la lista no tiene ningún botón: el usuario no cierra incidencias` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
+| HU44-CP26 | `IncidentsList.test.jsx` | `HU44-CP26: mientras se recarga, la lista avisa con aria-busy` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
 | HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: abre en la última página, la de las incidencias más recientes` | Frontend · página | AB#289 | PR pendiente | 🔍 |
 | HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: pide la primera página para saber cuántas hay y después la última` | Frontend · página | AB#289 | PR pendiente | 🔍 |
 | HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: la paginación lleva a la página anterior y a la siguiente` | Frontend · página | AB#289 | PR pendiente | 🔍 |
 | HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: con una sola página no hay paginación y se ven todas, con el estado y la respuesta` | Frontend · página | AB#289 | PR pendiente | 🔍 |
-| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: mientras carga muestra un indicador de carga y no la tabla` | Frontend · página | AB#289 | PR pendiente | 🔍 |
+| HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: mientras carga muestra un indicador de carga y no la lista` | Frontend · página | AB#289 | PR pendiente | 🔍 |
 | HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: si no se pueden cargar lo avisa y permite reintentar` | Frontend · página | AB#289 | PR pendiente | 🔍 |
 | HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: sin incidencias invita a reportar la primera` | Frontend · página | AB#289 | PR pendiente | 🔍 |
 | HU44-CP27 | `IncidentsPage.test.jsx` | `HU44-CP27: el título y el subtítulo explican la vista` | Frontend · página | AB#289 | PR pendiente | 🔍 |
@@ -3972,14 +3972,11 @@ Notas:
 | HU44-CP33 | `AppHeader.test.jsx` | `HU44-CP33: sin sesión no se ve el botón Incidencias` | Frontend · página | AB#290 | PR pendiente | 🔍 |
 | HU44-CP33 | `AppHeader.test.jsx` | `HU44-CP33: el administrador que abre Mis incidencias o Nueva incidencia vuelve a su panel` | Frontend · página | AB#290 | PR pendiente | 🔍 |
 | HU44-CP33 | `AppHeader.test.jsx` | `HU44-CP33: sin sesión, Mis incidencias lleva al login` | Frontend · página | AB#290 | PR pendiente | 🔍 |
-| HU44-CP34 | `IncidentsTable.test.jsx` | `HU44-CP34: cada fila tiene un botón Cerrar incidencia, con el asunto en su nombre, que todavía no está disponible` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP34 | `IncidentsTable.test.jsx` | `HU44-CP34: el botón de cerrar se puede enfocar con el teclado y explica que estará disponible pronto` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
-| HU44-CP34 | `IncidentsTable.test.jsx` | `HU44-CP34: pulsar el botón de cerrar no llama a ningún endpoint` | Frontend · componente | AB#289 | PR pendiente | 🔍 |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `incidents.test.js`: `api/` (Vitest y MSW)
 - `incidentRules.test.js` e `incidentStatus.test.js`: `features/incidents/` (Vitest)
-- `IncidentsTable.test.jsx` e `IncidentForm.test.jsx`: `features/incidents/` (Vitest y RTL)
+- `IncidentsList.test.jsx` e `IncidentForm.test.jsx`: `features/incidents/` (Vitest y RTL)
 - `IncidentsPage.test.jsx` y `NewIncidentPage.test.jsx`: `pages/` (Vitest, RTL y MSW)
 - `AppHeader.test.jsx`: `components/` (Vitest, RTL y MSW)
 

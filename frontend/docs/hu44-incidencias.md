@@ -13,13 +13,13 @@ Documento para entender cómo el cliente y el vendedor reportan una incidencia d
 
 ## 1. Resumen
 
-El cliente y el vendedor tienen un botón **Incidencias** en la cabecera que lleva a **Mis incidencias** (`/incidents`): una tabla con sus incidencias, su estado y la respuesta del administrador. Desde ahí, **Nueva incidencia** abre el formulario (`/incidents/new`) para reportar una. La gestión por el administrador (responder, abrir y cerrar) es de las HU49 y HU50 y queda fuera de esta HU.
+El cliente y el vendedor tienen un botón **Incidencias** en la cabecera que lleva a **Mis incidencias** (`/incidents`): una lista de tarjetas, como la de **Mis pedidos**, con sus incidencias, su estado y la respuesta del administrador. Desde ahí, **Nueva incidencia** abre el formulario (`/incidents/new`) para reportar una. La gestión por el administrador (responder, abrir y cerrar) es de las HU49 y HU50 y queda fuera de esta HU.
 
 | Criterio de aceptación | Cómo se cumple |
 |---|---|
 | Los usuarios pueden reportar una incidencia (asunto y descripción) desde su perfil | Botón **Incidencias** en la cabecera y formulario `/incidents/new` (`NewIncidentPage` con `IncidentForm`). |
-| El usuario ve el estado de sus incidencias y la respuesta del administrador | `IncidentsPage` con `IncidentsTable`: columnas Estado (Pendiente o Abierta) y Respuesta («Sin respuesta todavía» si aún no hay). |
-| La gestión por el administrador es de las HU49 y HU50 | Fuera de alcance. El botón **Cerrar incidencia** de cada fila está deshabilitado hasta la HU50. |
+| El usuario ve el estado de sus incidencias y la respuesta del administrador | `IncidentsPage` con `IncidentsList`: una tarjeta por incidencia con su Estado (Pendiente o Abierta) y la Respuesta del administrador («Sin respuesta todavía» si aún no hay). |
+| La gestión por el administrador es de las HU49 y HU50 | Fuera de alcance. El usuario no cierra ni elimina sus incidencias: no hay ningún botón para ello en su vista. |
 
 ---
 
@@ -45,7 +45,7 @@ flowchart TD
     D --> E
     E --> F{¿Hay incidencias?}
     F -- No --> G[Estado vacío: Reportar mi primera incidencia]
-    F -- Sí --> H[Tabla + paginación]
+    F -- Sí --> H[Lista de tarjetas + paginación]
     H -- Nueva incidencia --> N[Formulario]
     G --> N
     N -- Cancelar --> A
@@ -65,9 +65,9 @@ flowchart TD
 | `src/api/incidents.js` | `getIncidents({ page, size })` y `createIncident({ asunto, descripcion })`. |
 | `src/features/incidents/incidentRules.js` | Límites (asunto 100 y descripción 1000) y `validateIncident`, que no cuenta los espacios de los extremos. |
 | `src/features/incidents/incidentStatus.js` | Etiqueta y color del estado: Pendiente (aviso) y Abierta (marca). |
-| `src/features/incidents/IncidentsTable.jsx` | La tabla y el botón **Cerrar incidencia** (sin conectar). |
+| `src/features/incidents/IncidentsList.jsx` | La lista de tarjetas (`ul` con `Card`, como `OrdersPage`): asunto, fecha, estado, descripción y respuesta. |
 | `src/features/incidents/IncidentForm.jsx` | El formulario: campos con contador, errores por campo y botones Enviar incidencia y Cancelar. |
-| `src/pages/IncidentsPage.jsx` | Mis incidencias: carga, error, lista vacía, tabla, paginación y aviso de éxito. |
+| `src/pages/IncidentsPage.jsx` | Mis incidencias: carga, error, lista vacía, lista, paginación y aviso de éxito. |
 | `src/pages/NewIncidentPage.jsx` | Crea la incidencia y vuelve a la lista con el aviso. |
 | `src/components/AppHeader.jsx` | Botón **Incidencias** para cliente y vendedor. |
 | `src/routes/paths.js` y `AppRoutes.jsx` | `INCIDENTS` e `INCIDENT_NEW`. |
@@ -96,10 +96,11 @@ Detalle completo en `docs/contratos/hu44-incidencias.md`.
 ## 6. Decisiones
 
 - **Abre en la última página.** El backend ordena de las más antiguas a las más recientes, así que la primera página enseña lo más viejo. `IncidentsPage` pide la página 1 para saber cuántas hay y, si hay más de una, pide la última (una petición más solo en ese caso). Dentro de una página se respeta el orden del backend. Al crear una incidencia se vuelve a la lista, que abre en la última página, donde queda la nueva.
-- **Botón Cerrar incidencia deshabilitado hasta la HU50.** Cerrar una incidencia (y eliminarla) es del administrador. El botón se ve en cada fila, con `aria-label="Cerrar incidencia: {asunto}"`, pero está `disabledFocusable`: se puede enfocar con el teclado, lo anuncia como no disponible y su tooltip dice «Disponible pronto». No llama a ningún endpoint ni tiene ningún manejador; se conectará con la HU50.
+- **Sin botón de cerrar.** El usuario no cierra ni elimina sus incidencias (decisión del equipo): cerrarlas es solo del administrador, en la HU50. Por eso la vista no tiene ese botón, ni deshabilitado.
+- **Sin botón de ordenar.** La lista llega de las más antiguas a las más recientes y se muestra así: el contrato no tiene ningún parámetro de orden y ordenar solo en el cliente dejaría las páginas mal cortadas (decisión del equipo).
+- **Como los pedidos, no como una tabla.** Cada incidencia es una tarjeta (`Card`) de una lista, igual que en `OrdersPage`, y en pantallas estrechas el estado baja a una segunda línea. La descripción y la respuesta se muestran enteras.
 - **Validación en el cliente con los límites del backend.** El contador cuenta lo escrito sin los espacios de los extremos, como el backend. «Obligatorio» se avisa al intentar enviar; pasarse del máximo, al momento. El backend responde 400 con un mensaje genérico, así que el formulario no puede saber qué campo falló: avisa en general y conserva lo escrito.
 - **Errores al crear.** Un 400 avisa «Revisa el asunto y la descripción»; cualquier otro fallo (red, 401, 403, 500) avisa de la conexión. En los dos casos el formulario sigue abierto y se puede reenviar.
-- **Descripción y respuesta recortadas a tres líneas** con CSS; el texto completo sigue en el documento y en el `title`. La tabla se desplaza dentro de su contenedor en pantallas estrechas, como las demás tablas, sin scroll horizontal de la página.
 - **Misma vista para cliente y vendedor.** Lo específico del vendedor (AB#290) es que ve el botón y puede entrar y crear; el contrato es el mismo.
 - **Sin estado activo en el botón de la cabecera:** ningún botón de `AppHeader` lo tiene hoy, así que no se añade solo a este.
 
@@ -107,14 +108,14 @@ Detalle completo en `docs/contratos/hu44-incidencias.md`.
 
 ## 7. Tests
 
-Los casos siguen la numeración del backend (HU44-CP01 a CP22): el frontend empieza en el CP23. Todos están pendientes de confirmar con el equipo.
+Los casos siguen la numeración del backend (HU44-CP01 a CP22): el frontend empieza en el CP23 y llega al CP33 (el CP34 se descartó al quitar el botón de cerrar). Todos están pendientes de confirmar con el equipo.
 
 | Caso | Task | Qué se prueba | Archivo |
 |---|---|---|---|
 | HU44-CP23 | AB#289 | Las llamadas de la API: `GET` con la página y el tamaño, `POST` con el asunto y la descripción, y los errores 400 y 403 | `incidents.test.js` |
 | HU44-CP24 | AB#289 | Obligatorios, límites de 100 y 1000 y espacios de los extremos | `incidentRules.test.js` |
-| HU44-CP25 | AB#289 | Etiqueta y color de cada estado y su badge en la tabla | `incidentStatus.test.js`, `IncidentsTable.test.jsx` |
-| HU44-CP26 | AB#289 | Columnas, filas, fecha local, descripción recortada y accesible, respuesta vacía y `aria-busy` | `IncidentsTable.test.jsx` |
+| HU44-CP25 | AB#289 | Etiqueta y color de cada estado y su badge en la lista | `incidentStatus.test.js`, `IncidentsList.test.jsx` |
+| HU44-CP26 | AB#289 | Un elemento por incidencia, con asunto, fecha local, descripción entera y respuesta (o «Sin respuesta todavía»); sin botones y con `aria-busy` al recargar | `IncidentsList.test.jsx` |
 | HU44-CP27 | AB#289 | Última página por defecto, paginación, una sola página, carga, error con reintentar y lista vacía | `IncidentsPage.test.jsx` |
 | HU44-CP28 | AB#289 | Nueva incidencia (y reportar la primera) lleva al formulario | `IncidentsPage.test.jsx` |
 | HU44-CP29 | AB#289 | Campos, contador, validación y envío sin espacios en los extremos; un formulario no válido no llama al servidor | `IncidentForm.test.jsx`, `NewIncidentPage.test.jsx` |
@@ -122,13 +123,11 @@ Los casos siguen la numeración del backend (HU44-CP01 a CP22): el frontend empi
 | HU44-CP31 | AB#289 | Un 400 y un error de red conservan lo escrito, reenviar y cancelar | `NewIncidentPage.test.jsx` |
 | HU44-CP32 | AB#289 | El cliente ve el botón Incidencias en la cabecera y lleva a la vista | `AppHeader.test.jsx` |
 | HU44-CP33 | AB#290 | El vendedor ve el botón y crea incidencias; el administrador y el invitado no lo ven y las rutas los redirigen | `AppHeader.test.jsx`, `NewIncidentPage.test.jsx` |
-| HU44-CP34 | AB#289 | Cerrar incidencia: nombre accesible, enfocable, deshabilitado con «Disponible pronto» y sin llamar al API | `IncidentsTable.test.jsx` |
 
 ---
 
 ## 8. Pendiente
 
-- **Botón Cerrar incidencia:** conectarlo con el endpoint de la HU50.
-- **Responder y abrir incidencias (administrador):** HU49 y HU50.
-- **Cabecera en móvil:** a 375 px los botones de `AppHeader` no caben en una línea y la cabecera ensancha la página (ya pasaba con los botones del cliente antes de la HU44; el botón Incidencias suma unos 130 px). La vista de incidencias en sí no desborda: su tabla se desplaza dentro de su contenedor. Arreglarlo es un cambio de la cabecera, fuera de esta HU: queda por consultar con el equipo.
+- **Responder, abrir y cerrar incidencias (administrador):** HU49 y HU50.
+- **Cabecera en móvil:** a 375 px los botones de `AppHeader` no caben en una línea y la cabecera ensancha la página (ya pasaba con los botones del cliente antes de la HU44; el botón Incidencias suma unos 130 px). La vista de incidencias en sí no desborda. Arreglarlo es un cambio de la cabecera, fuera de esta HU: queda por consultar con el equipo.
 - **Mocks y backend real:** los mocks de `incidentsHandlers.js` conviven con el backend del PR #224; no hay que quitarlos al mergearlo.
