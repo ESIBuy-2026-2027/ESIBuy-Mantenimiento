@@ -49,7 +49,7 @@ describe('AdminPage (HU18)', () => {
 
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/admin\/admins$/))
   })
-
+
   it('HU39-CP15: el panel tiene la tarjeta Categorías, con su descripción', async () => {
     await abrirSesionPorApi('admin@esibuy.test')
     renderApp('/admin')
@@ -67,6 +67,25 @@ describe('AdminPage (HU18)', () => {
 
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/admin\/categories$/))
     expect(await screen.findByRole('heading', { level: 1, name: 'Categorías' })).toBeInTheDocument()
+  })
+
+  it('HU49-CP16: el panel tiene la tarjeta Incidencias, con su descripción', async () => {
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/admin')
+
+    const tarjeta = await screen.findByRole('button', { name: /incidencias/i })
+    expect(tarjeta).toHaveTextContent('Revisa las incidencias que reportan los usuarios y quién ha reportado cada una.')
+  })
+
+  it('HU49-CP16: la tarjeta Incidencias lleva a la supervisión de incidencias', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/admin')
+
+    await user.click(await screen.findByRole('button', { name: /incidencias/i }))
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/admin\/incidents$/))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Incidencias' })).toBeInTheDocument()
   })
 
   it('adminPage_sinSesion_redirigeAlLogin', async () => {

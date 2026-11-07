@@ -4304,6 +4304,14 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU49-CP12 | Una incidencia cuya cuenta se ha eliminado viene con `"autor": null` | Controlador | 1 | ✅ Pasa (1, AB#306, PR #232) |
 | HU49-CP13 | Una página o un tamaño fuera de rango responden 400 `VALIDATION_ERROR`; una página que no es un número, 400 sin llegar al caso de uso | Controlador | 2 | ✅ Pasa (2, AB#306, PR #232) |
 | HU49-CP14 | Sin sesión responde 401; un cliente o un vendedor reciben 403 `ACCESS_DENIED` | Controlador | 2 | ✅ Pasa (2, AB#306, PR #232) |
+| HU49-CP15 | La llamada del frontend pide `GET /api/admin/incidencias?page&size` y devuelve la página con los autores; un 403 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#304, PR pendiente) |
+| HU49-CP16 | El Panel de control tiene la tarjeta Incidencias, con su descripción, y lleva a la supervisión de incidencias | Frontend (página) | 2 | 🔍 En revisión (2, AB#304, PR pendiente) |
+| HU49-CP17 | La supervisión abre en la primera página (las incidencias más antiguas), la pide una sola vez y explica la vista | Frontend (página) | 3 | 🔍 En revisión (3, AB#304, PR pendiente) |
+| HU49-CP18 | Cada incidencia muestra el correo y el rol (Cliente o Vendedor) de quien la reportó, además de su estado y su respuesta; «Mis incidencias» sigue sin mostrar el autor | Frontend (componente y página) | 5 | 🔍 En revisión (5, AB#304, PR pendiente) |
+| HU49-CP19 | Una incidencia cuya cuenta se ha eliminado dice «Cuenta eliminada» | Frontend (componente y página) | 2 | 🔍 En revisión (2, AB#304, PR pendiente) |
+| HU49-CP20 | La paginación lleva a la página siguiente y a la anterior; el administrador no tiene botones para crear incidencias | Frontend (página) | 2 | 🔍 En revisión (2, AB#304, PR pendiente) |
+| HU49-CP21 | Mientras carga muestra un indicador; sin incidencias dice «No hay incidencias»; si falla avisa y permite reintentar | Frontend (página) | 3 | 🔍 En revisión (3, AB#304, PR pendiente) |
+| HU49-CP22 | Solo el administrador abre la supervisión: el cliente y el vendedor vuelven a su inicio y sin sesión se va al login | Frontend (página) | 3 | 🔍 En revisión (3, AB#304, PR pendiente) |
 
 Notas:
 - **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** HU49-CP01 a CP10 los propone el desarrollo backend a partir del criterio de la HU49 («el administrador debe disponer de una vista para las incidencias») y no salen de Azure Boards. Rama `feature/US49-T307-logica-supervision-incidencias` (PR #229, mergeado).
@@ -4311,8 +4319,10 @@ Notas:
 - **El autor de cada incidencia (decisión del equipo):** el administrador ve el correo y el rol de quien la reportó. Incidencias no usa el dominio de usuarios: pide el contacto por el puerto de entrada de usuarios (`AdministracionUsuariosUseCase.consultarContacto`, nuevo, solo para el administrador) a través de `AutoresPort` y `AutoresAdapter` (CP01 a CP03 y CP10). Cada autor se busca una sola vez por página (CP07).
 - **Cuenta eliminada (decisión del equipo):** con la HU25 y la HU47 la cuenta se borra, pero sus incidencias siguen; la incidencia se devuelve sin autor en vez de hacer fallar el listado (CP02, CP06 y CP10).
 - **Seguridad en la capa de negocio (R8):** CP03 y CP09 comprueban que el administrador pasa, que cliente y vendedor reciben 403 y que sin sesión se rechaza.
-- **T306 (AB#306, endpoint):** `GET /api/admin/incidencias?page=1&size=10` en `AdministracionIncidenciasController`, paginado como el de la HU44, con el autor de cada incidencia como objeto `{email, rol}` o `null` si la cuenta se ha eliminado (decisión del equipo) (CP11 a CP14). Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO. Rama `feature/US49-T306-endpoint-supervision-incidencias`. Contrato en `docs/contratos/hu49-supervision-incidencias.md`.
-- **Pendiente:** la vista del administrador (T304).
+- **T306 (AB#306, endpoint):** `GET /api/admin/incidencias?page=1&size=10` en `AdministracionIncidenciasController`, paginado como el de la HU44, con el autor de cada incidencia como objeto `{email, rol}` o `null` si la cuenta se ha eliminado (decisión del equipo) (CP11 a CP14). Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO. Rama `feature/US49-T306-endpoint-supervision-incidencias` (PR #232, mergeado). Contrato en `docs/contratos/hu49-supervision-incidencias.md`.
+- **HU49-CP15 a CP22 (frontend, T304, AB#304, TDD en dos ciclos):** casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO, a partir del criterio de la HU49. Rama `feature/US49-T304-vista-supervision-incidencias`. La vista `/admin/incidents` (tarjeta Incidencias del Panel de control) reutiliza `IncidentsList` de la HU44 con `showAuthor` (decisión del equipo) y abre en la primera página, la de las más antiguas (decisión del equipo). Detalle en `frontend/docs/hu49-supervision-incidencias.md`.
+- **Test sin rojo propio:** «sin showAuthor no se muestra el autor» (CP18) pasó al escribirse, porque el componente aún no mostraba ningún autor.
+- **Pendiente:** abrir y cerrar incidencias (HU50); responder a una incidencia está por confirmar con el equipo.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -4348,6 +4358,28 @@ Notas:
 | HU49-CP13 | `AdministracionIncidenciasControllerTest` | `HU49-CP13: una página que no es un número responde 400 y no llega al caso de uso` | Infraestructura (web) | AB#306 | PR #232 | ✅ |
 | HU49-CP14 | `AdministracionIncidenciasControllerTest` | `HU49-CP14: sin sesión responde 401` | Infraestructura (web) | AB#306 | PR #232 | ✅ |
 | HU49-CP14 | `AdministracionIncidenciasControllerTest` | `HU49-CP14: un cliente o un vendedor reciben 403 con el code ACCESS_DENIED` | Infraestructura (web) | AB#306 | PR #232 | ✅ |
+| HU49-CP15 | `adminIncidents.test.js` | `HU49-CP15: pide GET /api/admin/incidencias con la página y el tamaño y devuelve la página con los autores` | Frontend · API | AB#304 | PR pendiente | 🔍 |
+| HU49-CP15 | `adminIncidents.test.js` | `HU49-CP15: un 403 llega como error con su estado y su código` | Frontend · API | AB#304 | PR pendiente | 🔍 |
+| HU49-CP16 | `AdminPage.test.jsx` | `HU49-CP16: el panel tiene la tarjeta Incidencias, con su descripción` | Frontend · página | AB#304 | PR pendiente | 🔍 |
+| HU49-CP16 | `AdminPage.test.jsx` | `HU49-CP16: la tarjeta Incidencias lleva a la supervisión de incidencias` | Frontend · página | AB#304 | PR pendiente | 🔍 |
+| HU49-CP17 | `AdminIncidentsPage.test.jsx` | `HU49-CP17: abre en la primera página, la de las incidencias más antiguas` | Frontend · página | AB#304 | PR pendiente | 🔍 |
+| HU49-CP17 | `AdminIncidentsPage.test.jsx` | `HU49-CP17: pide una sola vez la primera página de tamaño 10` | Frontend · página | AB#304 | PR pendiente | 🔍 |
+| HU49-CP17 | `AdminIncidentsPage.test.jsx` | `HU49-CP17: el título y el subtítulo explican la vista` | Frontend · página | AB#304 | PR pendiente | 🔍 |
+| HU49-CP18 | `IncidentsList.test.jsx` | `HU49-CP18: con showAuthor, cada incidencia muestra el correo y el rol de quien la reportó` | Frontend · componente | AB#304 | PR pendiente | 🔍 |
+| HU49-CP18 | `IncidentsList.test.jsx` | `HU49-CP18: el nombre accesible de la lista se puede cambiar` | Frontend · componente | AB#304 | PR pendiente | 🔍 |
+| HU49-CP18 | `IncidentsList.test.jsx` | `HU49-CP18: sin showAuthor no se muestra el autor, como en Mis incidencias` | Frontend · componente | AB#304 | PR pendiente | 🔍 |
+| HU49-CP18 | `AdminIncidentsPage.test.jsx` | `HU49-CP18: cada incidencia muestra su autor, su estado y su respuesta` | Frontend · página | AB#304 | PR pendiente | 🔍 |
+| HU49-CP18 | `AdminIncidentsPage.test.jsx` | `HU49-CP18: las incidencias de un vendedor muestran su correo y el rol Vendedor` | Frontend · página | AB#304 | PR pendiente | 🔍 |
+| HU49-CP19 | `IncidentsList.test.jsx` | `HU49-CP19: una incidencia cuya cuenta se ha eliminado dice Cuenta eliminada` | Frontend · componente | AB#304 | PR pendiente | 🔍 |
+| HU49-CP19 | `AdminIncidentsPage.test.jsx` | `HU49-CP19: la incidencia de una cuenta eliminada dice Cuenta eliminada` | Frontend · página | AB#304 | PR pendiente | 🔍 |
+| HU49-CP20 | `AdminIncidentsPage.test.jsx` | `HU49-CP20: la paginación lleva a la página siguiente y vuelve a la anterior` | Frontend · página | AB#304 | PR pendiente | 🔍 |
+| HU49-CP20 | `AdminIncidentsPage.test.jsx` | `HU49-CP20: el administrador no tiene botones para crear incidencias` | Frontend · página | AB#304 | PR pendiente | 🔍 |
+| HU49-CP21 | `AdminIncidentsPage.test.jsx` | `HU49-CP21: mientras carga muestra un indicador de carga y no la lista` | Frontend · página | AB#304 | PR pendiente | 🔍 |
+| HU49-CP21 | `AdminIncidentsPage.test.jsx` | `HU49-CP21: sin incidencias lo dice, sin lista ni paginación` | Frontend · página | AB#304 | PR pendiente | 🔍 |
+| HU49-CP21 | `AdminIncidentsPage.test.jsx` | `HU49-CP21: si no se pueden cargar lo avisa y permite reintentar` | Frontend · página | AB#304 | PR pendiente | 🔍 |
+| HU49-CP22 | `AdminIncidentsPage.test.jsx` | `HU49-CP22: un cliente que abre la supervisión vuelve a su inicio` | Frontend · página | AB#304 | PR pendiente | 🔍 |
+| HU49-CP22 | `AdminIncidentsPage.test.jsx` | `HU49-CP22: un vendedor que abre la supervisión vuelve a su inicio` | Frontend · página | AB#304 | PR pendiente | 🔍 |
+| HU49-CP22 | `AdminIncidentsPage.test.jsx` | `HU49-CP22: sin sesión, la supervisión lleva al login` | Frontend · página | AB#304 | PR pendiente | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (JUnit y Mockito, sin Spring)
@@ -4357,6 +4389,11 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `SeguridadIncidenciasServiceTest`: `incidencias/application/service/` (contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
 - `AutoresAdapterTest`: `incidencias/infrastructure/adapter/out/usuarios/` (JUnit y Mockito, sin Spring)
 - `AdministracionIncidenciasControllerTest`: `incidencias/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
+
+Rutas de las clases de test (bajo `frontend/src/`):
+- `adminIncidents.test.js`: `api/` (Vitest y MSW)
+- `IncidentsList.test.jsx`: `features/incidents/` (Vitest y RTL)
+- `AdminPage.test.jsx` y `AdminIncidentsPage.test.jsx`: `pages/` (Vitest, RTL y MSW)
 
 ---
 
