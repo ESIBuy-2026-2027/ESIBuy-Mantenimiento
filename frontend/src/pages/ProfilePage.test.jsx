@@ -272,7 +272,7 @@ describe('ProfilePage (HU47): eliminar mi cuenta', () => {
 })
 
 describe('ProfilePage (HU25): eliminar mi cuenta de cliente', () => {
-  it('HU25-CP06: el cliente tiene la opción de eliminar su cuenta en su perfil, igual que el vendedor', async () => {
+  it('HU25-CP07: el cliente tiene la opción de eliminar su cuenta en su perfil, igual que el vendedor', async () => {
     await abrirPerfil('cliente@esibuy.test')
 
     const seccion = screen.getByRole('region', { name: /^eliminar mi cuenta$/i })
@@ -280,7 +280,7 @@ describe('ProfilePage (HU25): eliminar mi cuenta de cliente', () => {
     expect(seccion).toHaveTextContent(/pedidos y valoraciones se conservan/i)
   })
 
-  it('HU25-CP06: la opción es del perfil propio: el administrador no la tiene, porque no tiene perfil', async () => {
+  it('HU25-CP07: la opción es del perfil propio: el administrador no la tiene, porque no tiene perfil', async () => {
     await abrirSesionPorApi('admin@esibuy.test')
     renderApp('/profile')
 
@@ -289,7 +289,7 @@ describe('ProfilePage (HU25): eliminar mi cuenta de cliente', () => {
     expect(screen.queryByRole('button', { name: /^eliminar mi cuenta$/i })).not.toBeInTheDocument()
   })
 
-  it('HU25-CP06: al pulsar el botón se abre la confirmación y al cancelarla no se elimina nada', async () => {
+  it('HU25-CP07: al pulsar el botón se abre la confirmación y al cancelarla no se elimina nada', async () => {
     const usuario = userEvent.setup()
     await abrirPerfil('cliente@esibuy.test')
 
@@ -314,7 +314,7 @@ async function confirmarEliminacion(usuario, contrasena) {
 }
 
 describe('ProfilePage (HU25): confirmar la eliminación de la cuenta del cliente', () => {
-  it('HU25-CP11: con la contraseña correcta se cierra la sesión, se va al login y se avisa de que la cuenta se ha eliminado', async () => {
+  it('HU25-CP12: con la contraseña correcta se cierra la sesión, se va al login y se avisa de que la cuenta se ha eliminado', async () => {
     const usuario = userEvent.setup()
     await abrirPerfil('cliente@esibuy.test')
 
@@ -325,7 +325,7 @@ describe('ProfilePage (HU25): confirmar la eliminación de la cuenta del cliente
     expect(screen.queryByRole('button', { name: /cerrar sesión/i })).not.toBeInTheDocument()
   })
 
-  it('HU25-CP11: la zona del cliente deja de ser accesible tras eliminar la cuenta', async () => {
+  it('HU25-CP12: la zona del cliente deja de ser accesible tras eliminar la cuenta', async () => {
     const usuario = userEvent.setup()
     await abrirPerfil('cliente@esibuy.test')
     await confirmarEliminacion(usuario, CLAVE_DE_LOS_MOCKS)
@@ -337,7 +337,7 @@ describe('ProfilePage (HU25): confirmar la eliminación de la cuenta del cliente
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/))
   })
 
-  it('HU25-CP11: con una contraseña incorrecta la sesión sigue abierta, se avisa en el campo y se queda en el perfil', async () => {
+  it('HU25-CP12: con una contraseña incorrecta la sesión sigue abierta, se avisa en el campo y se queda en el perfil', async () => {
     const usuario = userEvent.setup()
     await abrirPerfil('cliente@esibuy.test')
 
@@ -353,7 +353,7 @@ describe('ProfilePage (HU25): confirmar la eliminación de la cuenta del cliente
     expect(screen.queryByText('Tu cuenta se ha eliminado.')).not.toBeInTheDocument()
   })
 
-  it('HU25-CP12: después de eliminarla no se puede iniciar sesión con esa cuenta, y las demás siguen entrando', async () => {
+  it('HU25-CP13: después de eliminarla no se puede iniciar sesión con esa cuenta, y las demás siguen entrando', async () => {
     const usuario = userEvent.setup()
     await abrirPerfil('cliente@esibuy.test')
     await confirmarEliminacion(usuario, CLAVE_DE_LOS_MOCKS)
@@ -365,7 +365,7 @@ describe('ProfilePage (HU25): confirmar la eliminación de la cuenta del cliente
     await expect(login({ email: 'vendedor@esibuy.test', password: CLAVE_DE_LOS_MOCKS })).resolves.toBeDefined()
   })
 
-  it('HU25-CP12: eliminar la cuenta de un cliente no elimina la de otro', async () => {
+  it('HU25-CP13: eliminar la cuenta de un cliente no elimina la de otro', async () => {
     const usuario = userEvent.setup()
     await abrirPerfil('cliente@esibuy.test')
     await confirmarEliminacion(usuario, CLAVE_DE_LOS_MOCKS)

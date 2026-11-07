@@ -7,7 +7,7 @@ Documento para entender cómo el cliente elimina su propia cuenta desde su perfi
 - **Tasks:** T272 (AB#272, botón de eliminación de cuenta) y T273 (AB#273, confirmación y comunicación de consecuencias)
 - **Rama:** `feature/US25-T272-T273-eliminar-cuenta-cliente-front`
 - **Metodología:** TDD. Cada pieza tiene su commit de rojo (`test(front-HU25)`) antes del de verde (`feat(front-HU25)`).
-- **Depende de:** el backend de la HU25 (T274 y T275, PR #235: un único `DELETE /api/perfil` para cliente y vendedor, con el borrado en cascada de los datos del cliente) y de la HU47 (`DeleteAccountDialog` y la sección del perfil, PR #223); `docs/hu4-vista-perfil.md` (perfil) y `docs/hu43-cerrar-sesion.md` (cierre de sesión).
+- **Depende de:** el backend de la HU25 (T274 y T275, PR #235, ya en `develop`: un único `DELETE /api/perfil` para cliente y vendedor, con el borrado en cascada de los datos del cliente) y de la HU47 (`DeleteAccountDialog` y la sección del perfil, PR #223); `docs/hu4-vista-perfil.md` (perfil) y `docs/hu43-cerrar-sesion.md` (cierre de sesión).
 
 ---
 
@@ -76,7 +76,7 @@ Un único `DELETE /api/perfil` con `{ "password": "..." }`, para el cliente y pa
 | 401 | Sin sesión | El cliente HTTP ya trata el 401 como sesión caducada (HU43). |
 | 403 `ACCESS_DENIED` | Administrador | No ve la opción. |
 
-Mientras el PR #235 no esté en `develop`, el `DELETE` solo lo puede usar el vendedor: el controlador de `develop` llama a la eliminación del vendedor y el servicio responde 403 a un cliente. El frontend no depende de eso: trabaja contra los mocks.
+El PR #235 ya está en `develop`: antes, el controlador llamaba solo a la eliminación del vendedor y un cliente recibía 403. Los mocks cumplen este contrato, y conviven con el backend real.
 
 ---
 
@@ -94,17 +94,17 @@ Mientras el PR #235 no esté en `develop`, el `DELETE` solo lo puede usar el ven
 
 ## 7. Tests
 
-Los casos siguen la numeración del backend (HU25-CP01 a CP05): el frontend empieza en el CP06. Todos están pendientes de confirmar con el equipo.
+Los casos siguen la numeración del backend (HU25-CP01 a CP06): el frontend empieza en el CP07. Todos están pendientes de confirmar con el equipo.
 
 | Caso | Task | Qué se prueba | Archivo |
 |---|---|---|---|
-| HU25-CP06 | AB#272 | El cliente tiene la sección en su perfil y el administrador no; el botón abre la confirmación y cancelar no elimina nada | `ProfilePage.test.jsx` |
-| HU25-CP07 | AB#273 | Las consecuencias del cliente, que no ve las del vendedor, y las del vendedor no cambian | `DeleteAccountDialog.test.jsx` |
-| HU25-CP08 | AB#273 | Contraseña vacía o con solo espacios: no se confirma; el foco está en el campo | `DeleteAccountDialog.test.jsx` |
-| HU25-CP09 | AB#273 | `WRONG_PASSWORD` en el campo y corregible; fallo genérico (500, validación o red); botones deshabilitados al enviar; se envía solo la contraseña | `DeleteAccountDialog.test.jsx` |
-| HU25-CP10 | AB#273 | La contraseña actual no se copia ni se corta (R9), pero se pega, en los dos roles | `DeleteAccountDialog.test.jsx` |
-| HU25-CP11 | AB#273 | Con la contraseña correcta se cierra la sesión, se va al login con el aviso y la zona deja de ser accesible; con una incorrecta la sesión sigue | `ProfilePage.test.jsx` |
-| HU25-CP12 | AB#273 | Tras eliminar la cuenta no se puede iniciar sesión con ella y las demás cuentas siguen entrando | `ProfilePage.test.jsx` |
+| HU25-CP07 | AB#272 | El cliente tiene la sección en su perfil y el administrador no; el botón abre la confirmación y cancelar no elimina nada | `ProfilePage.test.jsx` |
+| HU25-CP08 | AB#273 | Las consecuencias del cliente, que no ve las del vendedor, y las del vendedor no cambian | `DeleteAccountDialog.test.jsx` |
+| HU25-CP09 | AB#273 | Contraseña vacía o con solo espacios: no se confirma; el foco está en el campo | `DeleteAccountDialog.test.jsx` |
+| HU25-CP10 | AB#273 | `WRONG_PASSWORD` en el campo y corregible; fallo genérico (500, validación o red); botones deshabilitados al enviar; se envía solo la contraseña | `DeleteAccountDialog.test.jsx` |
+| HU25-CP11 | AB#273 | La contraseña actual no se copia ni se corta (R9), pero se pega, en los dos roles | `DeleteAccountDialog.test.jsx` |
+| HU25-CP12 | AB#273 | Con la contraseña correcta se cierra la sesión, se va al login con el aviso y la zona deja de ser accesible; con una incorrecta la sesión sigue | `ProfilePage.test.jsx` |
+| HU25-CP13 | AB#273 | Tras eliminar la cuenta no se puede iniciar sesión con ella y las demás cuentas siguen entrando | `ProfilePage.test.jsx` |
 
 Cambia también el test HU47-CP13 de `ProfilePage.test.jsx`, que ya no dice que el cliente no tiene la opción. Los tests HU47-CP09 a CP12 del diálogo pasan sin cambios.
 
@@ -112,5 +112,5 @@ Cambia también el test HU47-CP13 de `ProfilePage.test.jsx`, que ya no dice que 
 
 ## 8. Pendiente
 
-- **Backend (PR #235, T274 y T275):** hasta que entre en `develop`, el `DELETE /api/perfil` de un cliente responde 403 en el servidor real (el controlador de `develop` solo llama a la eliminación del vendedor). El PR #235 lo arregla con un único endpoint para los dos roles.
-- **Matriz:** al mergear, el PR #235 y este PR tocan la sección HU25 de la matriz: habrá que juntarlas. Rellenar el número de este PR (`PR pendiente`).
+- **Matriz:** rellenar el número de este PR (`PR pendiente`) y pasar los tests de 🔍 a ✅ al mergear.
+- **Casos de prueba:** HU25-CP07 a CP13 están propuestos y pendientes de confirmar con el equipo.
