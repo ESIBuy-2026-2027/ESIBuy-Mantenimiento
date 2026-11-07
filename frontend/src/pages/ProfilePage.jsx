@@ -72,7 +72,7 @@ const useStyles = makeStyles({
 
 // Eliminar la cuenta propia del vendedor (HU47) y del cliente (HU25): se confirma en un diálogo con la contraseña. El
 // servidor cierra la sesión, así que después se cierra también en el navegador y el login lo avisa.
-function AccountDeletion() {
+function AccountDeletion({ rol }) {
   const styles = useStyles()
   const titleId = useId()
   const { accountDeleted } = useAuth()
@@ -89,9 +89,13 @@ function AccountDeletion() {
       <Button className={styles.deletionAction} icon={<Delete20Regular />} onClick={() => setAbierto(true)}>
         Eliminar mi cuenta
       </Button>
-      {abierto && <DeleteAccountDialog onClose={() => setAbierto(false)} onDeleted={accountDeleted} />}
+      {abierto && <DeleteAccountDialog rol={rol} onClose={() => setAbierto(false)} onDeleted={accountDeleted} />}
     </Card>
   )
+}
+
+AccountDeletion.propTypes = {
+  rol: PropTypes.oneOf(['CLIENTE', 'VENDEDOR']).isRequired,
 }
 
 // Preferencias del cliente (HU46): una casilla por cada categoría activa, marcadas las que ya le interesan. Cada
@@ -221,7 +225,7 @@ export default function ProfilePage() {
 
       {perfil?.rol === 'CLIENTE' && <CustomerPreferences categories={categories} />}
       {perfil?.rol === 'VENDEDOR' && <SellerStatistics />}
-      {(perfil?.rol === 'CLIENTE' || perfil?.rol === 'VENDEDOR') && <AccountDeletion />}
+      {(perfil?.rol === 'CLIENTE' || perfil?.rol === 'VENDEDOR') && <AccountDeletion rol={perfil.rol} />}
     </main>
   )
 }
