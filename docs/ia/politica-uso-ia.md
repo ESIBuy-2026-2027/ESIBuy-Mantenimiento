@@ -66,6 +66,7 @@ Una skill es un conjunto de instrucciones que Claude Code sigue para una tarea c
 | Calidad | Analizar y explicar incidencias de Sonar y SonarLint y proponer cómo corregirlas. |
 | Gestión | Leer historias de usuario, tasks y el sprint en Azure Boards; preparar planes, commits y PR. |
 | Documentación | Redactar documentación del proyecto, que el equipo revisa antes de integrarla. |
+| Despliegue | Proponer y escribir la configuración del despliegue (`Dockerfile`, `render.yaml`) y probarla en local. Crear los servicios, cargar los secretos en Render y cambiar la lista de acceso de Atlas lo hace el equipo. |
 
 ## 6. Pruebas asistidas por IA y TDD
 
