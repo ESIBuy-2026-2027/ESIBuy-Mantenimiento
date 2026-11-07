@@ -29,3 +29,18 @@ export function validateIncident({ asunto, descripcion }) {
     ...(description && { descripcion: description }),
   }
 }
+
+// Límite de la respuesta del administrador al abrir una incidencia (HU50), el mismo que el backend.
+export const RESPONSE_MAX = 1000
+
+// El error de la respuesta, o null si es válida.
+export function validateResponse(respuesta) {
+  return validateText(
+    respuesta,
+    {
+      required: 'La respuesta es obligatoria.',
+      tooLong: `La respuesta no puede superar los ${RESPONSE_MAX} caracteres.`,
+    },
+    RESPONSE_MAX,
+  )
+}

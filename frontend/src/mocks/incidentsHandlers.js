@@ -4,6 +4,7 @@ import { paginar } from './paginar'
 
 const ASUNTO_MAXIMO = 100
 const DESCRIPCION_MAXIMA = 1000
+const RESPUESTA_MAXIMA = 1000
 const TAMANO_MAXIMO = 50
 
 const fecha = (dia) => `2026-10-${String(dia).padStart(2, '0')}T10:15:30Z`
@@ -105,6 +106,18 @@ function leerPaginacion(request) {
 const incidenciaInvalida = () =>
   HttpResponse.json({ mensaje: 'La incidencia es inválida', code: 'VALIDATION_ERROR' }, { status: 400 })
 
+const incidenciaNoEncontrada = () =>
+  HttpResponse.json({ mensaje: 'La incidencia no existe', code: 'INCIDENT_NOT_FOUND' }, { status: 404 })
+
+// La lista que guarda la incidencia con ese id y su posición en ella, o null si no existe (HU50)
+function buscarIncidencia(id) {
+  for (const lista of almacen.values()) {
+    const posicion = lista.findIndex((item) => item.id === id)
+    if (posicion >= 0) return { lista, posicion }
+  }
+  return null
+}
+
 const textoValido = (valor, maximo) => {
   if (typeof valor !== 'string') return false
   const recortado = valor.trim()
@@ -158,5 +171,43 @@ export const incidentsHandlers = [
     siguienteId += 1
     incidenciasDe(getUsuarioEnSesion()).push(nueva)
     return HttpResponse.json(nueva, { status: 201 })
+  }),
+
+  // Abre una incidencia pendiente con la respuesta del administrador (HU50), en el orden del backend: un cuerpo que no
+  // es JSON, 400 sin cuerpo; si no existe, 404; si ya está abierta, 409; y una respuesta vacía o de más de 1000
+  // caracteres, 400 VALIDATION_ERROR. Responde la incidencia abierta, sin autor.
+  http.patch('/api/admin/incidencias/:id/abrir', async ({ request, params }) => {
+    const rechazo = rechazarSiNoEsAdministrador()
+    if (rechazo) return rechazo
+
+    let cuerpo
+    try {
+      cuerpo = await request.json()
+    } catch {
+      return new HttpResponse(null, { status: 400 })
+    }
+
+    const encontrada = buscarIncidencia(params.id)
+    if (!encontrada) return incidenciaNoEncontrada()
+    const { lista, posicion } = encontrada
+    if (lista[posicion].estado !== 'PENDIENTE') {
+      return HttpResponse.json({ mensaje: 'La incidencia ya está abierta', code: 'INCIDENT_ALREADY_OPEN' }, { status: 409 })
+    }
+    if (!textoValido(cuerpo?.respuesta, RESPUESTA_MAXIMA)) return incidenciaInvalida()
+
+    const abierta = { ...lista[posicion], estado: 'ABIERTA', respuesta: cuerpo.respuesta.trim() }
+    lista[posicion] = abierta
+    return HttpResponse.json(abierta)
+  }),
+
+  // Cierra una incidencia, pendiente o abierta (HU50): se elimina y responde 204 sin cuerpo; si no existe, 404.
+  http.delete('/api/admin/incidencias/:id', ({ params }) => {
+    const rechazo = rechazarSiNoEsAdministrador()
+    if (rechazo) return rechazo
+
+    const encontrada = buscarIncidencia(params.id)
+    if (!encontrada) return incidenciaNoEncontrada()
+    encontrada.lista.splice(encontrada.posicion, 1)
+    return new HttpResponse(null, { status: 204 })
   }),
 ]

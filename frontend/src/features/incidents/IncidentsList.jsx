@@ -70,6 +70,13 @@ const useStyles = makeStyles({
     borderRadius: tokens.borderRadiusMedium,
     backgroundColor: tokens.colorNeutralBackground2,
   },
+  // Acciones del administrador sobre la incidencia (HU50), alineadas a la derecha; en pantallas estrechas se apilan
+  actions: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    gap: tokens.spacingHorizontalS,
+  },
 })
 
 // Quién reportó la incidencia, para el administrador (HU49): su correo y su rol, o «Cuenta eliminada» si el backend
@@ -99,8 +106,15 @@ IncidentAuthor.propTypes = {
 
 // Las incidencias, una tarjeta cada una como los pedidos de la HU11, en el orden en que llegan del backend: de las más
 // antiguas a las más recientes. Las del usuario en sesión (HU44) y, con `showAuthor`, las de todos para el
-// administrador (HU49), cada una con quién la reportó.
-export default function IncidentsList({ incidents, refreshing = false, showAuthor = false, label = 'Tus incidencias' }) {
+// administrador (HU49), cada una con quién la reportó. Con `renderActions`, cada tarjeta acaba con las acciones que
+// devuelve para su incidencia (abrir y cerrar, HU50).
+export default function IncidentsList({
+  incidents,
+  refreshing = false,
+  showAuthor = false,
+  label = 'Tus incidencias',
+  renderActions,
+}) {
   const styles = useStyles()
 
   return (
@@ -133,6 +147,7 @@ export default function IncidentsList({ incidents, refreshing = false, showAutho
                 {incident.respuesta || SIN_RESPUESTA}
               </Text>
             </div>
+            {renderActions && <div className={styles.actions}>{renderActions(incident)}</div>}
           </Card>
         </li>
       ))}
@@ -160,4 +175,6 @@ IncidentsList.propTypes = {
   showAuthor: PropTypes.bool,
   // Nombre accesible de la lista
   label: PropTypes.string,
+  // Recibe la incidencia y devuelve sus acciones (HU50); sin él, las tarjetas no tienen acciones
+  renderActions: PropTypes.func,
 }

@@ -4396,14 +4396,14 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU49-CP12 | Una incidencia cuya cuenta se ha eliminado viene con `"autor": null` | Controlador | 1 | ✅ Pasa (1, AB#306, PR #232) |
 | HU49-CP13 | Una página o un tamaño fuera de rango responden 400 `VALIDATION_ERROR`; una página que no es un número, 400 sin llegar al caso de uso | Controlador | 2 | ✅ Pasa (2, AB#306, PR #232) |
 | HU49-CP14 | Sin sesión responde 401; un cliente o un vendedor reciben 403 `ACCESS_DENIED` | Controlador | 2 | ✅ Pasa (2, AB#306, PR #232) |
-| HU49-CP15 | La llamada del frontend pide `GET /api/admin/incidencias?page&size` y devuelve la página con los autores; un 403 llega como error con su estado y su código | Frontend (API) | 2 | 🔍 En revisión (2, AB#304, PR pendiente) |
-| HU49-CP16 | El Panel de control tiene la tarjeta Incidencias, con su descripción, y lleva a la supervisión de incidencias | Frontend (página) | 2 | 🔍 En revisión (2, AB#304, PR pendiente) |
-| HU49-CP17 | La supervisión abre en la primera página (las incidencias más antiguas), la pide una sola vez y explica la vista | Frontend (página) | 3 | 🔍 En revisión (3, AB#304, PR pendiente) |
-| HU49-CP18 | Cada incidencia muestra el correo y el rol (Cliente o Vendedor) de quien la reportó, además de su estado y su respuesta; «Mis incidencias» sigue sin mostrar el autor | Frontend (componente y página) | 5 | 🔍 En revisión (5, AB#304, PR pendiente) |
-| HU49-CP19 | Una incidencia cuya cuenta se ha eliminado dice «Cuenta eliminada» | Frontend (componente y página) | 2 | 🔍 En revisión (2, AB#304, PR pendiente) |
-| HU49-CP20 | La paginación lleva a la página siguiente y a la anterior; el administrador no tiene botones para crear incidencias | Frontend (página) | 2 | 🔍 En revisión (2, AB#304, PR pendiente) |
-| HU49-CP21 | Mientras carga muestra un indicador; sin incidencias dice «No hay incidencias»; si falla avisa y permite reintentar | Frontend (página) | 3 | 🔍 En revisión (3, AB#304, PR pendiente) |
-| HU49-CP22 | Solo el administrador abre la supervisión: el cliente y el vendedor vuelven a su inicio y sin sesión se va al login | Frontend (página) | 3 | 🔍 En revisión (3, AB#304, PR pendiente) |
+| HU49-CP15 | La llamada del frontend pide `GET /api/admin/incidencias?page&size` y devuelve la página con los autores; un 403 llega como error con su estado y su código | Frontend (API) | 2 | ✅ Pasa (2, AB#304, PR #234) |
+| HU49-CP16 | El Panel de control tiene la tarjeta Incidencias, con su descripción, y lleva a la supervisión de incidencias | Frontend (página) | 2 | ✅ Pasa (2, AB#304, PR #234) |
+| HU49-CP17 | La supervisión abre en la primera página (las incidencias más antiguas), la pide una sola vez y explica la vista | Frontend (página) | 3 | ✅ Pasa (3, AB#304, PR #234) |
+| HU49-CP18 | Cada incidencia muestra el correo y el rol (Cliente o Vendedor) de quien la reportó, además de su estado y su respuesta; «Mis incidencias» sigue sin mostrar el autor | Frontend (componente y página) | 5 | ✅ Pasa (5, AB#304, PR #234) |
+| HU49-CP19 | Una incidencia cuya cuenta se ha eliminado dice «Cuenta eliminada» | Frontend (componente y página) | 2 | ✅ Pasa (2, AB#304, PR #234) |
+| HU49-CP20 | La paginación lleva a la página siguiente y a la anterior; el administrador no tiene botones para crear incidencias | Frontend (página) | 2 | ✅ Pasa (2, AB#304, PR #234) |
+| HU49-CP21 | Mientras carga muestra un indicador; sin incidencias dice «No hay incidencias»; si falla avisa y permite reintentar | Frontend (página) | 3 | ✅ Pasa (3, AB#304, PR #234) |
+| HU49-CP22 | Solo el administrador abre la supervisión: el cliente y el vendedor vuelven a su inicio y sin sesión se va al login | Frontend (página) | 3 | ✅ Pasa (3, AB#304, PR #234) |
 
 Notas:
 - **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** HU49-CP01 a CP10 los propone el desarrollo backend a partir del criterio de la HU49 («el administrador debe disponer de una vista para las incidencias») y no salen de Azure Boards. Rama `feature/US49-T307-logica-supervision-incidencias` (PR #229, mergeado).
@@ -4450,28 +4450,28 @@ Notas:
 | HU49-CP13 | `AdministracionIncidenciasControllerTest` | `HU49-CP13: una página que no es un número responde 400 y no llega al caso de uso` | Infraestructura (web) | AB#306 | PR #232 | ✅ |
 | HU49-CP14 | `AdministracionIncidenciasControllerTest` | `HU49-CP14: sin sesión responde 401` | Infraestructura (web) | AB#306 | PR #232 | ✅ |
 | HU49-CP14 | `AdministracionIncidenciasControllerTest` | `HU49-CP14: un cliente o un vendedor reciben 403 con el code ACCESS_DENIED` | Infraestructura (web) | AB#306 | PR #232 | ✅ |
-| HU49-CP15 | `adminIncidents.test.js` | `HU49-CP15: pide GET /api/admin/incidencias con la página y el tamaño y devuelve la página con los autores` | Frontend · API | AB#304 | PR pendiente | 🔍 |
-| HU49-CP15 | `adminIncidents.test.js` | `HU49-CP15: un 403 llega como error con su estado y su código` | Frontend · API | AB#304 | PR pendiente | 🔍 |
-| HU49-CP16 | `AdminPage.test.jsx` | `HU49-CP16: el panel tiene la tarjeta Incidencias, con su descripción` | Frontend · página | AB#304 | PR pendiente | 🔍 |
-| HU49-CP16 | `AdminPage.test.jsx` | `HU49-CP16: la tarjeta Incidencias lleva a la supervisión de incidencias` | Frontend · página | AB#304 | PR pendiente | 🔍 |
-| HU49-CP17 | `AdminIncidentsPage.test.jsx` | `HU49-CP17: abre en la primera página, la de las incidencias más antiguas` | Frontend · página | AB#304 | PR pendiente | 🔍 |
-| HU49-CP17 | `AdminIncidentsPage.test.jsx` | `HU49-CP17: pide una sola vez la primera página de tamaño 10` | Frontend · página | AB#304 | PR pendiente | 🔍 |
-| HU49-CP17 | `AdminIncidentsPage.test.jsx` | `HU49-CP17: el título y el subtítulo explican la vista` | Frontend · página | AB#304 | PR pendiente | 🔍 |
-| HU49-CP18 | `IncidentsList.test.jsx` | `HU49-CP18: con showAuthor, cada incidencia muestra el correo y el rol de quien la reportó` | Frontend · componente | AB#304 | PR pendiente | 🔍 |
-| HU49-CP18 | `IncidentsList.test.jsx` | `HU49-CP18: el nombre accesible de la lista se puede cambiar` | Frontend · componente | AB#304 | PR pendiente | 🔍 |
-| HU49-CP18 | `IncidentsList.test.jsx` | `HU49-CP18: sin showAuthor no se muestra el autor, como en Mis incidencias` | Frontend · componente | AB#304 | PR pendiente | 🔍 |
-| HU49-CP18 | `AdminIncidentsPage.test.jsx` | `HU49-CP18: cada incidencia muestra su autor, su estado y su respuesta` | Frontend · página | AB#304 | PR pendiente | 🔍 |
-| HU49-CP18 | `AdminIncidentsPage.test.jsx` | `HU49-CP18: las incidencias de un vendedor muestran su correo y el rol Vendedor` | Frontend · página | AB#304 | PR pendiente | 🔍 |
-| HU49-CP19 | `IncidentsList.test.jsx` | `HU49-CP19: una incidencia cuya cuenta se ha eliminado dice Cuenta eliminada` | Frontend · componente | AB#304 | PR pendiente | 🔍 |
-| HU49-CP19 | `AdminIncidentsPage.test.jsx` | `HU49-CP19: la incidencia de una cuenta eliminada dice Cuenta eliminada` | Frontend · página | AB#304 | PR pendiente | 🔍 |
-| HU49-CP20 | `AdminIncidentsPage.test.jsx` | `HU49-CP20: la paginación lleva a la página siguiente y vuelve a la anterior` | Frontend · página | AB#304 | PR pendiente | 🔍 |
-| HU49-CP20 | `AdminIncidentsPage.test.jsx` | `HU49-CP20: el administrador no tiene botones para crear incidencias` | Frontend · página | AB#304 | PR pendiente | 🔍 |
-| HU49-CP21 | `AdminIncidentsPage.test.jsx` | `HU49-CP21: mientras carga muestra un indicador de carga y no la lista` | Frontend · página | AB#304 | PR pendiente | 🔍 |
-| HU49-CP21 | `AdminIncidentsPage.test.jsx` | `HU49-CP21: sin incidencias lo dice, sin lista ni paginación` | Frontend · página | AB#304 | PR pendiente | 🔍 |
-| HU49-CP21 | `AdminIncidentsPage.test.jsx` | `HU49-CP21: si no se pueden cargar lo avisa y permite reintentar` | Frontend · página | AB#304 | PR pendiente | 🔍 |
-| HU49-CP22 | `AdminIncidentsPage.test.jsx` | `HU49-CP22: un cliente que abre la supervisión vuelve a su inicio` | Frontend · página | AB#304 | PR pendiente | 🔍 |
-| HU49-CP22 | `AdminIncidentsPage.test.jsx` | `HU49-CP22: un vendedor que abre la supervisión vuelve a su inicio` | Frontend · página | AB#304 | PR pendiente | 🔍 |
-| HU49-CP22 | `AdminIncidentsPage.test.jsx` | `HU49-CP22: sin sesión, la supervisión lleva al login` | Frontend · página | AB#304 | PR pendiente | 🔍 |
+| HU49-CP15 | `adminIncidents.test.js` | `HU49-CP15: pide GET /api/admin/incidencias con la página y el tamaño y devuelve la página con los autores` | Frontend · API | AB#304 | PR #234 | ✅ |
+| HU49-CP15 | `adminIncidents.test.js` | `HU49-CP15: un 403 llega como error con su estado y su código` | Frontend · API | AB#304 | PR #234 | ✅ |
+| HU49-CP16 | `AdminPage.test.jsx` | `HU49-CP16: el panel tiene la tarjeta Incidencias, con su descripción` | Frontend · página | AB#304 | PR #234 | ✅ |
+| HU49-CP16 | `AdminPage.test.jsx` | `HU49-CP16: la tarjeta Incidencias lleva a la supervisión de incidencias` | Frontend · página | AB#304 | PR #234 | ✅ |
+| HU49-CP17 | `AdminIncidentsPage.test.jsx` | `HU49-CP17: abre en la primera página, la de las incidencias más antiguas` | Frontend · página | AB#304 | PR #234 | ✅ |
+| HU49-CP17 | `AdminIncidentsPage.test.jsx` | `HU49-CP17: pide una sola vez la primera página de tamaño 10` | Frontend · página | AB#304 | PR #234 | ✅ |
+| HU49-CP17 | `AdminIncidentsPage.test.jsx` | `HU49-CP17: el título y el subtítulo explican la vista` | Frontend · página | AB#304 | PR #234 | ✅ |
+| HU49-CP18 | `IncidentsList.test.jsx` | `HU49-CP18: con showAuthor, cada incidencia muestra el correo y el rol de quien la reportó` | Frontend · componente | AB#304 | PR #234 | ✅ |
+| HU49-CP18 | `IncidentsList.test.jsx` | `HU49-CP18: el nombre accesible de la lista se puede cambiar` | Frontend · componente | AB#304 | PR #234 | ✅ |
+| HU49-CP18 | `IncidentsList.test.jsx` | `HU49-CP18: sin showAuthor no se muestra el autor, como en Mis incidencias` | Frontend · componente | AB#304 | PR #234 | ✅ |
+| HU49-CP18 | `AdminIncidentsPage.test.jsx` | `HU49-CP18: cada incidencia muestra su autor, su estado y su respuesta` | Frontend · página | AB#304 | PR #234 | ✅ |
+| HU49-CP18 | `AdminIncidentsPage.test.jsx` | `HU49-CP18: las incidencias de un vendedor muestran su correo y el rol Vendedor` | Frontend · página | AB#304 | PR #234 | ✅ |
+| HU49-CP19 | `IncidentsList.test.jsx` | `HU49-CP19: una incidencia cuya cuenta se ha eliminado dice Cuenta eliminada` | Frontend · componente | AB#304 | PR #234 | ✅ |
+| HU49-CP19 | `AdminIncidentsPage.test.jsx` | `HU49-CP19: la incidencia de una cuenta eliminada dice Cuenta eliminada` | Frontend · página | AB#304 | PR #234 | ✅ |
+| HU49-CP20 | `AdminIncidentsPage.test.jsx` | `HU49-CP20: la paginación lleva a la página siguiente y vuelve a la anterior` | Frontend · página | AB#304 | PR #234 | ✅ |
+| HU49-CP20 | `AdminIncidentsPage.test.jsx` | `HU49-CP20: el administrador no tiene botones para crear incidencias` | Frontend · página | AB#304 | PR #234 | ✅ |
+| HU49-CP21 | `AdminIncidentsPage.test.jsx` | `HU49-CP21: mientras carga muestra un indicador de carga y no la lista` | Frontend · página | AB#304 | PR #234 | ✅ |
+| HU49-CP21 | `AdminIncidentsPage.test.jsx` | `HU49-CP21: sin incidencias lo dice, sin lista ni paginación` | Frontend · página | AB#304 | PR #234 | ✅ |
+| HU49-CP21 | `AdminIncidentsPage.test.jsx` | `HU49-CP21: si no se pueden cargar lo avisa y permite reintentar` | Frontend · página | AB#304 | PR #234 | ✅ |
+| HU49-CP22 | `AdminIncidentsPage.test.jsx` | `HU49-CP22: un cliente que abre la supervisión vuelve a su inicio` | Frontend · página | AB#304 | PR #234 | ✅ |
+| HU49-CP22 | `AdminIncidentsPage.test.jsx` | `HU49-CP22: un vendedor que abre la supervisión vuelve a su inicio` | Frontend · página | AB#304 | PR #234 | ✅ |
+| HU49-CP22 | `AdminIncidentsPage.test.jsx` | `HU49-CP22: sin sesión, la supervisión lleva al login` | Frontend · página | AB#304 | PR #234 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (JUnit y Mockito, sin Spring)
@@ -4495,26 +4495,35 @@ Rutas de las clases de test (bajo `frontend/src/`):
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU50-CP01 | Abrir una incidencia pendiente la deja `ABIERTA` con la respuesta del administrador y conserva el resto de sus datos | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#302, PR pendiente) |
-| HU50-CP02 | La respuesta es obligatoria para abrir una incidencia: se rechaza nula, vacía o solo con espacios | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#302, PR pendiente) |
-| HU50-CP03 | La respuesta admite hasta 1000 caracteres, sin contar los espacios de los extremos, que no se guardan; con más se rechaza | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#302, PR pendiente) |
-| HU50-CP04 | Una incidencia ya abierta no se vuelve a abrir | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#302, PR pendiente) |
-| HU50-CP05 | El servicio abre la incidencia pedida, la guarda abierta con la respuesta y la devuelve | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#302, PR pendiente) |
-| HU50-CP06 | Abrir una incidencia que no existe se rechaza sin guardar nada | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#302, PR pendiente) |
-| HU50-CP07 | Si no se puede abrir (ya abierta o sin respuesta), el servicio no guarda nada y la incidencia queda como estaba | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#302, PR pendiente) |
-| HU50-CP08 | El adaptador de MongoDB busca una incidencia por su id (vacío si no existe) y, al guardarla abierta, la actualiza sin crear otra | Integración MongoDB | 3 | 🔍 En revisión (3, AB#302, PR pendiente) |
-| HU50-CP09 | Solo el administrador abre y cierra incidencias; cliente y vendedor reciben 403 y sin sesión se rechaza. Seguridad en la capa de negocio | Unitario con Spring Security (sin MongoDB) | 8 | 🔍 En revisión (8, AB#302 · AB#303, PR pendiente) |
-| HU50-CP10 | Cerrar una incidencia la elimina, esté pendiente o abierta, y no toca las demás | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#303, PR pendiente) |
-| HU50-CP11 | Cerrar una incidencia que no existe se rechaza sin eliminar nada | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#303, PR pendiente) |
-| HU50-CP12 | El adaptador de MongoDB elimina solo la incidencia con ese id, y con un id que no existe no borra nada | Integración MongoDB | 2 | 🔍 En revisión (2, AB#303, PR pendiente) |
-| HU50-CP13 | `PATCH /api/admin/incidencias/{id}/abrir` con `{"respuesta"}` responde 200 con la incidencia abierta y su respuesta, sin el id del autor | Controlador | 1 | 🔍 En revisión (1, AB#300, PR pendiente) |
-| HU50-CP14 | Abrir responde 404 `INCIDENT_NOT_FOUND` si no existe, 409 `INCIDENT_ALREADY_OPEN` si ya está abierta y 400 `VALIDATION_ERROR` (mensaje genérico) si la respuesta no es válida; un cuerpo que no es JSON, 400 sin llegar al caso de uso | Controlador | 4 | 🔍 En revisión (4, AB#300, PR pendiente) |
-| HU50-CP15 | `DELETE /api/admin/incidencias/{id}` responde 204 sin cuerpo y cierra esa incidencia | Controlador | 1 | 🔍 En revisión (1, AB#301, PR pendiente) |
-| HU50-CP16 | Cerrar una incidencia que no existe responde 404 `INCIDENT_NOT_FOUND` | Controlador | 1 | 🔍 En revisión (1, AB#301, PR pendiente) |
-| HU50-CP17 | Sin sesión, abrir y cerrar responden 401; un cliente o un vendedor reciben 403 `ACCESS_DENIED` | Controlador | 4 | 🔍 En revisión (4, AB#300 · AB#301, PR pendiente) |
+| HU50-CP01 | Abrir una incidencia pendiente la deja `ABIERTA` con la respuesta del administrador y conserva el resto de sus datos | Unitario (dominio) | 1 | ✅ Pasa (1, AB#302, PR #233) |
+| HU50-CP02 | La respuesta es obligatoria para abrir una incidencia: se rechaza nula, vacía o solo con espacios | Unitario (dominio) | 1 | ✅ Pasa (1, AB#302, PR #233) |
+| HU50-CP03 | La respuesta admite hasta 1000 caracteres, sin contar los espacios de los extremos, que no se guardan; con más se rechaza | Unitario (dominio) | 2 | ✅ Pasa (2, AB#302, PR #233) |
+| HU50-CP04 | Una incidencia ya abierta no se vuelve a abrir | Unitario (dominio) | 1 | ✅ Pasa (1, AB#302, PR #233) |
+| HU50-CP05 | El servicio abre la incidencia pedida, la guarda abierta con la respuesta y la devuelve | Unitario (aplicación) | 1 | ✅ Pasa (1, AB#302, PR #233) |
+| HU50-CP06 | Abrir una incidencia que no existe se rechaza sin guardar nada | Unitario (aplicación) | 1 | ✅ Pasa (1, AB#302, PR #233) |
+| HU50-CP07 | Si no se puede abrir (ya abierta o sin respuesta), el servicio no guarda nada y la incidencia queda como estaba | Unitario (aplicación) | 2 | ✅ Pasa (2, AB#302, PR #233) |
+| HU50-CP08 | El adaptador de MongoDB busca una incidencia por su id (vacío si no existe) y, al guardarla abierta, la actualiza sin crear otra | Integración MongoDB | 3 | ✅ Pasa (3, AB#302, PR #233) |
+| HU50-CP09 | Solo el administrador abre y cierra incidencias; cliente y vendedor reciben 403 y sin sesión se rechaza. Seguridad en la capa de negocio | Unitario con Spring Security (sin MongoDB) | 8 | ✅ Pasa (8, AB#302 · AB#303, PR #233) |
+| HU50-CP10 | Cerrar una incidencia la elimina, esté pendiente o abierta, y no toca las demás | Unitario (aplicación) | 1 | ✅ Pasa (1, AB#303, PR #233) |
+| HU50-CP11 | Cerrar una incidencia que no existe se rechaza sin eliminar nada | Unitario (aplicación) | 1 | ✅ Pasa (1, AB#303, PR #233) |
+| HU50-CP12 | El adaptador de MongoDB elimina solo la incidencia con ese id, y con un id que no existe no borra nada | Integración MongoDB | 2 | ✅ Pasa (2, AB#303, PR #233) |
+| HU50-CP13 | `PATCH /api/admin/incidencias/{id}/abrir` con `{"respuesta"}` responde 200 con la incidencia abierta y su respuesta, sin el id del autor | Controlador | 1 | ✅ Pasa (1, AB#300, PR #233) |
+| HU50-CP14 | Abrir responde 404 `INCIDENT_NOT_FOUND` si no existe, 409 `INCIDENT_ALREADY_OPEN` si ya está abierta y 400 `VALIDATION_ERROR` (mensaje genérico) si la respuesta no es válida; un cuerpo que no es JSON, 400 sin llegar al caso de uso | Controlador | 4 | ✅ Pasa (4, AB#300, PR #233) |
+| HU50-CP15 | `DELETE /api/admin/incidencias/{id}` responde 204 sin cuerpo y cierra esa incidencia | Controlador | 1 | ✅ Pasa (1, AB#301, PR #233) |
+| HU50-CP16 | Cerrar una incidencia que no existe responde 404 `INCIDENT_NOT_FOUND` | Controlador | 1 | ✅ Pasa (1, AB#301, PR #233) |
+| HU50-CP17 | Sin sesión, abrir y cerrar responden 401; un cliente o un vendedor reciben 403 `ACCESS_DENIED` | Controlador | 4 | ✅ Pasa (4, AB#300 · AB#301, PR #233) |
+| HU50-CP18 | Las llamadas del frontend piden `PATCH /api/admin/incidencias/{id}/abrir` con `{respuesta}` (devuelve la incidencia abierta) y `DELETE /api/admin/incidencias/{id}` (204, sin cuerpo); un 409 o un 404 llegan como error con su estado y su código | Frontend (API) | 4 | 🔍 En revisión (4, AB#305, PR pendiente) |
+| HU50-CP19 | La respuesta es obligatoria y admite hasta 1000 caracteres, sin contar los espacios de los extremos, como en el backend | Frontend (reglas) | 3 | 🔍 En revisión (3, AB#305, PR pendiente) |
+| HU50-CP20 | El diálogo de apertura muestra el asunto y el contador, envía la respuesta recortada y entrega la incidencia abierta; sin respuesta o con más de 1000 caracteres no envía; cancelar no envía; un fallo se avisa y se puede reintentar; un 409 o un 404 se comunican a la página | Frontend (componente) | 7 | 🔍 En revisión (7, AB#305, PR pendiente) |
+| HU50-CP21 | El diálogo de cierre pide confirmación con el asunto y avisa de que se elimina; confirmar cierra esa incidencia; volver no cierra nada; un fallo se avisa y se puede reintentar; un 404 se comunica a la página | Frontend (componente) | 5 | 🔍 En revisión (5, AB#305, PR pendiente) |
+| HU50-CP22 | La lista de incidencias muestra en cada tarjeta las acciones que se le pasan; sin ellas, «Mis incidencias» sigue sin acciones | Frontend (componente) | 2 | 🔍 En revisión (2, AB#305, PR pendiente) |
+| HU50-CP23 | En la supervisión, una incidencia pendiente tiene los botones Abrir y Cerrar; una abierta, solo Cerrar | Frontend (página) | 1 | 🔍 En revisión (1, AB#305, PR pendiente) |
+| HU50-CP24 | Abrir una pendiente con una respuesta la deja abierta con ella en la lista, sin el botón Abrir, y lo confirma | Frontend (página) | 1 | 🔍 En revisión (1, AB#305, PR pendiente) |
+| HU50-CP25 | Cerrar una incidencia la quita de la lista y lo confirma; si era la única de la última página, vuelve a la anterior; cancelar la confirmación no cambia nada | Frontend (página) | 3 | 🔍 En revisión (3, AB#305, PR pendiente) |
+| HU50-CP26 | Si otro administrador ya ha abierto o cerrado la incidencia (409 o 404), se avisa y se vuelve a cargar la lista | Frontend (página) | 2 | 🔍 En revisión (2, AB#305, PR pendiente) |
 
 Notas:
-- **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** HU50-CP01 a CP17 los propone el desarrollo backend a partir de los criterios de la HU50 («la vista de incidencias debe poder abrir / cerrar la incidencia», «una vez cerrada la incidencia, esta se elimina») y no salen de Azure Boards. Rama `feature/US50-T302-apertura-incidencias`.
+- **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** HU50-CP01 a CP17 los propone el desarrollo backend a partir de los criterios de la HU50 («la vista de incidencias debe poder abrir / cerrar la incidencia», «una vez cerrada la incidencia, esta se elimina») y no salen de Azure Boards. Rama `feature/US50-T302-apertura-incidencias` (PR #233, mergeado).
 - **T302 (AB#302, lógica de apertura):** `Incidencia.abrir(respuesta)` en el dominio (solo desde `PENDIENTE`, `IncidenciaYaAbiertaException` si no) y el puerto de entrada `ResolucionIncidenciasUseCase` con su servicio `ResolucionIncidenciasService` (`@PreAuthorize(SOLO_ADMINISTRADOR)`), que busca por id (`IncidenciaRepositoryPort.buscarPorId`, nuevo) y guarda (CP01 a CP09).
 - **T303 (AB#303, lógica de cierre y eliminación):** `ResolucionIncidenciasUseCase.cerrar(id)` comprueba que existe y la elimina (`IncidenciaRepositoryPort.eliminar`, nuevo) (CP09 a CP12).
 - **Puerto propio (decisión del desarrollo, 07/11/2026):** el actor es el mismo que en la HU49, pero `SupervisionIncidenciasUseCase` solo consulta y este cambia las incidencias, así que es un puerto aparte.
@@ -4523,47 +4532,78 @@ Notas:
 - **Seguridad en la capa de negocio (R8):** CP09 comprueba, para abrir y para cerrar, que el administrador pasa, que cliente y vendedor reciben 403 y que sin sesión se rechaza.
 - **T300 y T301 (AB#300 y AB#301, endpoints):** `PATCH /api/admin/incidencias/{id}/abrir` (cuerpo `AbrirIncidenciaRequest`, responde `IncidenciaResponse`) y `DELETE /api/admin/incidencias/{id}` (204) en el `AdministracionIncidenciasController` de la HU49. `ManejadorGlobalErrores` traduce `IncidenciaNoEncontradaException` a 404 `INCIDENT_NOT_FOUND` e `IncidenciaYaAbiertaException` a 409 `INCIDENT_ALREADY_OPEN` (CP13 a CP17).
 - **CP17 sin rojo real:** los 401 y 403 ya los daba `SecurityConfig` (`/api/admin/**` solo para el administrador) antes de que existieran las rutas; se mantienen como defensa en profundidad del borde.
-- **Pendiente:** el botón del frontend (T305).
+- **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** HU50-CP18 a CP26 los propone el desarrollo frontend a partir de los mismos criterios y del contrato `docs/contratos/hu50-apertura-cierre-incidencias.md`. Rama `feature/US50-T305-botones-apertura-cierre-incidencias`.
+- **T305 (AB#305, botones de apertura y cierre):** `openIncident` y `closeIncident` en `api/adminIncidents.js`, `validateResponse` en `incidentRules.js`, los diálogos `OpenIncidentDialog` y `CloseIncidentDialog`, el prop `renderActions` de `IncidentsList` y las acciones en `AdminIncidentsPage`. Detalle en `frontend/docs/hu50-apertura-cierre-incidencias.md`.
+- **Cerrar pide confirmación (decisión del equipo, 07/11/2026):** cerrar elimina la incidencia y no se puede deshacer (CP21).
+- **CP22 sin rojo real:** «sin `renderActions` las tarjetas no tienen acciones» pasó al escribirse, porque la lista todavía no tenía acciones; protege «Mis incidencias» (HU44).
 
 ### Tabla B · casos de prueba ↔ tests
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU50-CP01 | `IncidenciaTest` | `HU50-CP01: abrir una incidencia pendiente la deja abierta con la respuesta del administrador` | Dominio | AB#302 | PR pendiente | 🔍 |
-| HU50-CP02 | `IncidenciaTest` | `HU50-CP02: la respuesta es obligatoria para abrir una incidencia` (parametrizado: nula, vacía, espacios y tabulador) | Dominio | AB#302 | PR pendiente | 🔍 |
-| HU50-CP03 | `IncidenciaTest` | `HU50-CP03: la respuesta admite hasta 1000 caracteres y se guarda sin espacios en los extremos` | Dominio | AB#302 | PR pendiente | 🔍 |
-| HU50-CP03 | `IncidenciaTest` | `HU50-CP03: rechaza una respuesta de más de 1000 caracteres` | Dominio | AB#302 | PR pendiente | 🔍 |
-| HU50-CP04 | `IncidenciaTest` | `HU50-CP04: una incidencia ya abierta no se vuelve a abrir` | Dominio | AB#302 | PR pendiente | 🔍 |
-| HU50-CP05 | `ResolucionIncidenciasServiceTest` | `HU50-CP05: abrir una incidencia pendiente la guarda abierta con la respuesta y la devuelve` | Aplicación | AB#302 | PR pendiente | 🔍 |
-| HU50-CP06 | `ResolucionIncidenciasServiceTest` | `HU50-CP06: abrir una incidencia que no existe se rechaza sin guardar nada` | Aplicación | AB#302 | PR pendiente | 🔍 |
-| HU50-CP07 | `ResolucionIncidenciasServiceTest` | `HU50-CP07: abrir una incidencia ya abierta se rechaza y conserva la respuesta que tenía` | Aplicación | AB#302 | PR pendiente | 🔍 |
-| HU50-CP07 | `ResolucionIncidenciasServiceTest` | `HU50-CP07: abrir sin respuesta se rechaza y la incidencia sigue pendiente` | Aplicación | AB#302 | PR pendiente | 🔍 |
-| HU50-CP08 | `IncidenciaMongoAdapterTest` | `HU50-CP08: buscar por id devuelve la incidencia guardada con todos sus datos` | Infraestructura (MongoDB) | AB#302 | PR pendiente | 🔍 |
-| HU50-CP08 | `IncidenciaMongoAdapterTest` | `HU50-CP08: buscar por id una incidencia que no existe devuelve vacío` | Infraestructura (MongoDB) | AB#302 | PR pendiente | 🔍 |
-| HU50-CP08 | `IncidenciaMongoAdapterTest` | `HU50-CP08: guardar una incidencia abierta actualiza su estado y su respuesta, sin crear otra` | Infraestructura (MongoDB) | AB#302 | PR pendiente | 🔍 |
-| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: el administrador abre una incidencia` | Aplicación · seguridad | AB#302 | PR pendiente | 🔍 |
-| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un cliente no abre incidencias` | Aplicación · seguridad | AB#302 | PR pendiente | 🔍 |
-| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un vendedor no abre incidencias` | Aplicación · seguridad | AB#302 | PR pendiente | 🔍 |
-| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: sin sesión no se abren incidencias` | Aplicación · seguridad | AB#302 | PR pendiente | 🔍 |
-| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: el administrador cierra una incidencia` | Aplicación · seguridad | AB#303 | PR pendiente | 🔍 |
-| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un cliente no cierra incidencias` | Aplicación · seguridad | AB#303 | PR pendiente | 🔍 |
-| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un vendedor no cierra incidencias` | Aplicación · seguridad | AB#303 | PR pendiente | 🔍 |
-| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: sin sesión no se cierran incidencias` | Aplicación · seguridad | AB#303 | PR pendiente | 🔍 |
-| HU50-CP10 | `ResolucionIncidenciasServiceTest` | `HU50-CP10: cerrar una incidencia la elimina, esté pendiente o abierta` (parametrizado: `PENDIENTE` y `ABIERTA`) | Aplicación | AB#303 | PR pendiente | 🔍 |
-| HU50-CP11 | `ResolucionIncidenciasServiceTest` | `HU50-CP11: cerrar una incidencia que no existe se rechaza sin eliminar nada` | Aplicación | AB#303 | PR pendiente | 🔍 |
-| HU50-CP12 | `IncidenciaMongoAdapterTest` | `HU50-CP12: eliminar borra solo la incidencia con ese id` | Infraestructura (MongoDB) | AB#303 | PR pendiente | 🔍 |
-| HU50-CP12 | `IncidenciaMongoAdapterTest` | `HU50-CP12: eliminar una incidencia que no existe no borra nada` | Infraestructura (MongoDB) | AB#303 | PR pendiente | 🔍 |
-| HU50-CP13 | `AdministracionIncidenciasControllerTest` | `HU50-CP13: abrir responde 200 con la incidencia abierta y su respuesta, sin el id del autor` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
-| HU50-CP14 | `AdministracionIncidenciasControllerTest` | `HU50-CP14: abrir una incidencia que no existe responde 404 INCIDENT_NOT_FOUND` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
-| HU50-CP14 | `AdministracionIncidenciasControllerTest` | `HU50-CP14: abrir una incidencia ya abierta responde 409 INCIDENT_ALREADY_OPEN` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
-| HU50-CP14 | `AdministracionIncidenciasControllerTest` | `HU50-CP14: una respuesta que el dominio rechaza responde 400 VALIDATION_ERROR con un mensaje genérico` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
-| HU50-CP14 | `AdministracionIncidenciasControllerTest` | `HU50-CP14: un cuerpo que no es JSON responde 400 y no llega al caso de uso` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
-| HU50-CP15 | `AdministracionIncidenciasControllerTest` | `HU50-CP15: cerrar responde 204 sin cuerpo y cierra esa incidencia` | Infraestructura (web) | AB#301 | PR pendiente | 🔍 |
-| HU50-CP16 | `AdministracionIncidenciasControllerTest` | `HU50-CP16: cerrar una incidencia que no existe responde 404 INCIDENT_NOT_FOUND` | Infraestructura (web) | AB#301 | PR pendiente | 🔍 |
-| HU50-CP17 | `AdministracionIncidenciasControllerTest` | `HU50-CP17: sin sesión abrir responde 401` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
-| HU50-CP17 | `AdministracionIncidenciasControllerTest` | `HU50-CP17: un cliente o un vendedor que intentan abrir reciben 403 ACCESS_DENIED` (parametrizado: cliente y vendedor) | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
-| HU50-CP17 | `AdministracionIncidenciasControllerTest` | `HU50-CP17: sin sesión cerrar responde 401` | Infraestructura (web) | AB#301 | PR pendiente | 🔍 |
-| HU50-CP17 | `AdministracionIncidenciasControllerTest` | `HU50-CP17: un cliente o un vendedor que intentan cerrar reciben 403 ACCESS_DENIED` (parametrizado: cliente y vendedor) | Infraestructura (web) | AB#301 | PR pendiente | 🔍 |
+| HU50-CP01 | `IncidenciaTest` | `HU50-CP01: abrir una incidencia pendiente la deja abierta con la respuesta del administrador` | Dominio | AB#302 | PR #233 | ✅ |
+| HU50-CP02 | `IncidenciaTest` | `HU50-CP02: la respuesta es obligatoria para abrir una incidencia` (parametrizado: nula, vacía, espacios y tabulador) | Dominio | AB#302 | PR #233 | ✅ |
+| HU50-CP03 | `IncidenciaTest` | `HU50-CP03: la respuesta admite hasta 1000 caracteres y se guarda sin espacios en los extremos` | Dominio | AB#302 | PR #233 | ✅ |
+| HU50-CP03 | `IncidenciaTest` | `HU50-CP03: rechaza una respuesta de más de 1000 caracteres` | Dominio | AB#302 | PR #233 | ✅ |
+| HU50-CP04 | `IncidenciaTest` | `HU50-CP04: una incidencia ya abierta no se vuelve a abrir` | Dominio | AB#302 | PR #233 | ✅ |
+| HU50-CP05 | `ResolucionIncidenciasServiceTest` | `HU50-CP05: abrir una incidencia pendiente la guarda abierta con la respuesta y la devuelve` | Aplicación | AB#302 | PR #233 | ✅ |
+| HU50-CP06 | `ResolucionIncidenciasServiceTest` | `HU50-CP06: abrir una incidencia que no existe se rechaza sin guardar nada` | Aplicación | AB#302 | PR #233 | ✅ |
+| HU50-CP07 | `ResolucionIncidenciasServiceTest` | `HU50-CP07: abrir una incidencia ya abierta se rechaza y conserva la respuesta que tenía` | Aplicación | AB#302 | PR #233 | ✅ |
+| HU50-CP07 | `ResolucionIncidenciasServiceTest` | `HU50-CP07: abrir sin respuesta se rechaza y la incidencia sigue pendiente` | Aplicación | AB#302 | PR #233 | ✅ |
+| HU50-CP08 | `IncidenciaMongoAdapterTest` | `HU50-CP08: buscar por id devuelve la incidencia guardada con todos sus datos` | Infraestructura (MongoDB) | AB#302 | PR #233 | ✅ |
+| HU50-CP08 | `IncidenciaMongoAdapterTest` | `HU50-CP08: buscar por id una incidencia que no existe devuelve vacío` | Infraestructura (MongoDB) | AB#302 | PR #233 | ✅ |
+| HU50-CP08 | `IncidenciaMongoAdapterTest` | `HU50-CP08: guardar una incidencia abierta actualiza su estado y su respuesta, sin crear otra` | Infraestructura (MongoDB) | AB#302 | PR #233 | ✅ |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: el administrador abre una incidencia` | Aplicación · seguridad | AB#302 | PR #233 | ✅ |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un cliente no abre incidencias` | Aplicación · seguridad | AB#302 | PR #233 | ✅ |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un vendedor no abre incidencias` | Aplicación · seguridad | AB#302 | PR #233 | ✅ |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: sin sesión no se abren incidencias` | Aplicación · seguridad | AB#302 | PR #233 | ✅ |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: el administrador cierra una incidencia` | Aplicación · seguridad | AB#303 | PR #233 | ✅ |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un cliente no cierra incidencias` | Aplicación · seguridad | AB#303 | PR #233 | ✅ |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un vendedor no cierra incidencias` | Aplicación · seguridad | AB#303 | PR #233 | ✅ |
+| HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: sin sesión no se cierran incidencias` | Aplicación · seguridad | AB#303 | PR #233 | ✅ |
+| HU50-CP10 | `ResolucionIncidenciasServiceTest` | `HU50-CP10: cerrar una incidencia la elimina, esté pendiente o abierta` (parametrizado: `PENDIENTE` y `ABIERTA`) | Aplicación | AB#303 | PR #233 | ✅ |
+| HU50-CP11 | `ResolucionIncidenciasServiceTest` | `HU50-CP11: cerrar una incidencia que no existe se rechaza sin eliminar nada` | Aplicación | AB#303 | PR #233 | ✅ |
+| HU50-CP12 | `IncidenciaMongoAdapterTest` | `HU50-CP12: eliminar borra solo la incidencia con ese id` | Infraestructura (MongoDB) | AB#303 | PR #233 | ✅ |
+| HU50-CP12 | `IncidenciaMongoAdapterTest` | `HU50-CP12: eliminar una incidencia que no existe no borra nada` | Infraestructura (MongoDB) | AB#303 | PR #233 | ✅ |
+| HU50-CP13 | `AdministracionIncidenciasControllerTest` | `HU50-CP13: abrir responde 200 con la incidencia abierta y su respuesta, sin el id del autor` | Infraestructura (web) | AB#300 | PR #233 | ✅ |
+| HU50-CP14 | `AdministracionIncidenciasControllerTest` | `HU50-CP14: abrir una incidencia que no existe responde 404 INCIDENT_NOT_FOUND` | Infraestructura (web) | AB#300 | PR #233 | ✅ |
+| HU50-CP14 | `AdministracionIncidenciasControllerTest` | `HU50-CP14: abrir una incidencia ya abierta responde 409 INCIDENT_ALREADY_OPEN` | Infraestructura (web) | AB#300 | PR #233 | ✅ |
+| HU50-CP14 | `AdministracionIncidenciasControllerTest` | `HU50-CP14: una respuesta que el dominio rechaza responde 400 VALIDATION_ERROR con un mensaje genérico` | Infraestructura (web) | AB#300 | PR #233 | ✅ |
+| HU50-CP14 | `AdministracionIncidenciasControllerTest` | `HU50-CP14: un cuerpo que no es JSON responde 400 y no llega al caso de uso` | Infraestructura (web) | AB#300 | PR #233 | ✅ |
+| HU50-CP15 | `AdministracionIncidenciasControllerTest` | `HU50-CP15: cerrar responde 204 sin cuerpo y cierra esa incidencia` | Infraestructura (web) | AB#301 | PR #233 | ✅ |
+| HU50-CP16 | `AdministracionIncidenciasControllerTest` | `HU50-CP16: cerrar una incidencia que no existe responde 404 INCIDENT_NOT_FOUND` | Infraestructura (web) | AB#301 | PR #233 | ✅ |
+| HU50-CP17 | `AdministracionIncidenciasControllerTest` | `HU50-CP17: sin sesión abrir responde 401` | Infraestructura (web) | AB#300 | PR #233 | ✅ |
+| HU50-CP17 | `AdministracionIncidenciasControllerTest` | `HU50-CP17: un cliente o un vendedor que intentan abrir reciben 403 ACCESS_DENIED` (parametrizado: cliente y vendedor) | Infraestructura (web) | AB#300 | PR #233 | ✅ |
+| HU50-CP17 | `AdministracionIncidenciasControllerTest` | `HU50-CP17: sin sesión cerrar responde 401` | Infraestructura (web) | AB#301 | PR #233 | ✅ |
+| HU50-CP17 | `AdministracionIncidenciasControllerTest` | `HU50-CP17: un cliente o un vendedor que intentan cerrar reciben 403 ACCESS_DENIED` (parametrizado: cliente y vendedor) | Infraestructura (web) | AB#301 | PR #233 | ✅ |
+| HU50-CP18 | `adminIncidents.test.js` | `HU50-CP18: pide PATCH /api/admin/incidencias/{id}/abrir con la respuesta y devuelve la incidencia abierta` | Frontend · API | AB#305 | PR pendiente | 🔍 |
+| HU50-CP18 | `adminIncidents.test.js` | `HU50-CP18: un 409 llega como error con su estado y su código` | Frontend · API | AB#305 | PR pendiente | 🔍 |
+| HU50-CP18 | `adminIncidents.test.js` | `HU50-CP18: pide DELETE /api/admin/incidencias/{id} y un 204 sin cuerpo no es un error` | Frontend · API | AB#305 | PR pendiente | 🔍 |
+| HU50-CP18 | `adminIncidents.test.js` | `HU50-CP18: un 404 llega como error con su estado y su código` | Frontend · API | AB#305 | PR pendiente | 🔍 |
+| HU50-CP19 | `incidentRules.test.js` | `HU50-CP19: una respuesta dentro del límite es válida` | Frontend · reglas | AB#305 | PR pendiente | 🔍 |
+| HU50-CP19 | `incidentRules.test.js` | `HU50-CP19: una respuesta %s es obligatoria` (parametrizado: vacía y con solo espacios) | Frontend · reglas | AB#305 | PR pendiente | 🔍 |
+| HU50-CP19 | `incidentRules.test.js` | `HU50-CP19: la respuesta admite 1000 caracteres, sin contar los espacios de los extremos, y rechaza 1001` | Frontend · reglas | AB#305 | PR pendiente | 🔍 |
+| HU50-CP20 | `OpenIncidentDialog.test.jsx` | `HU50-CP20: muestra el asunto de la incidencia y el contador de la respuesta` | Frontend · componente | AB#305 | PR pendiente | 🔍 |
+| HU50-CP20 | `OpenIncidentDialog.test.jsx` | `HU50-CP20: envía la respuesta sin espacios en los extremos y entrega la incidencia abierta` | Frontend · componente | AB#305 | PR pendiente | 🔍 |
+| HU50-CP20 | `OpenIncidentDialog.test.jsx` | `HU50-CP20: sin respuesta no envía nada y dice que es obligatoria` | Frontend · componente | AB#305 | PR pendiente | 🔍 |
+| HU50-CP20 | `OpenIncidentDialog.test.jsx` | `HU50-CP20: con más de 1000 caracteres lo avisa en cuanto ocurre y no envía nada` | Frontend · componente | AB#305 | PR pendiente | 🔍 |
+| HU50-CP20 | `OpenIncidentDialog.test.jsx` | `HU50-CP20: al cancelar no envía nada` | Frontend · componente | AB#305 | PR pendiente | 🔍 |
+| HU50-CP20 | `OpenIncidentDialog.test.jsx` | `HU50-CP20: si no se puede abrir lo avisa y permite volver a intentarlo` | Frontend · componente | AB#305 | PR pendiente | 🔍 |
+| HU50-CP20 | `OpenIncidentDialog.test.jsx` | `HU50-CP20: si otro administrador la ha cambiado porque %s, lo comunica a la página` (parametrizado: 409 y 404) | Frontend · componente | AB#305 | PR pendiente | 🔍 |
+| HU50-CP21 | `CloseIncidentDialog.test.jsx` | `HU50-CP21: pide confirmación con el asunto y avisa de que se elimina` | Frontend · componente | AB#305 | PR pendiente | 🔍 |
+| HU50-CP21 | `CloseIncidentDialog.test.jsx` | `HU50-CP21: al confirmar cierra esa incidencia y lo comunica` | Frontend · componente | AB#305 | PR pendiente | 🔍 |
+| HU50-CP21 | `CloseIncidentDialog.test.jsx` | `HU50-CP21: al volver no cierra nada` | Frontend · componente | AB#305 | PR pendiente | 🔍 |
+| HU50-CP21 | `CloseIncidentDialog.test.jsx` | `HU50-CP21: si no se puede cerrar lo avisa y permite volver a intentarlo` | Frontend · componente | AB#305 | PR pendiente | 🔍 |
+| HU50-CP21 | `CloseIncidentDialog.test.jsx` | `HU50-CP21: si otro administrador ya la ha cerrado (404), lo comunica a la página` | Frontend · componente | AB#305 | PR pendiente | 🔍 |
+| HU50-CP22 | `IncidentsList.test.jsx` | `HU50-CP22: con renderActions, cada tarjeta muestra las acciones de su incidencia` | Frontend · componente | AB#305 | PR pendiente | 🔍 |
+| HU50-CP22 | `IncidentsList.test.jsx` | `HU50-CP22: sin renderActions las tarjetas no tienen acciones, como en Mis incidencias` | Frontend · componente | AB#305 | PR pendiente | 🔍 |
+| HU50-CP23 | `AdminIncidentsPage.test.jsx` | `HU50-CP23: una incidencia pendiente se puede abrir y cerrar; una abierta, solo cerrar` | Frontend · página | AB#305 | PR pendiente | 🔍 |
+| HU50-CP24 | `AdminIncidentsPage.test.jsx` | `HU50-CP24: al abrir una pendiente con una respuesta queda abierta con ella y lo confirma` | Frontend · página | AB#305 | PR pendiente | 🔍 |
+| HU50-CP25 | `AdminIncidentsPage.test.jsx` | `HU50-CP25: al cerrar una incidencia desaparece de la lista y lo confirma` | Frontend · página | AB#305 | PR pendiente | 🔍 |
+| HU50-CP25 | `AdminIncidentsPage.test.jsx` | `HU50-CP25: al cerrar la única incidencia de la última página vuelve a la anterior` | Frontend · página | AB#305 | PR pendiente | 🔍 |
+| HU50-CP25 | `AdminIncidentsPage.test.jsx` | `HU50-CP25: al cancelar la confirmación la incidencia sigue en la lista` | Frontend · página | AB#305 | PR pendiente | 🔍 |
+| HU50-CP26 | `AdminIncidentsPage.test.jsx` | `HU50-CP26: si otro administrador ya la ha abierto, lo avisa y vuelve a cargar la lista` | Frontend · página | AB#305 | PR pendiente | 🔍 |
+| HU50-CP26 | `AdminIncidentsPage.test.jsx` | `HU50-CP26: si otro administrador ya la ha cerrado, lo avisa y la lista recargada ya no la muestra` | Frontend · página | AB#305 | PR pendiente | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `IncidenciaTest`: `incidencias/domain/model/` (JUnit, sin Spring)
@@ -4571,6 +4611,11 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `SeguridadIncidenciasServiceTest`: `incidencias/application/service/` (contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
 - `IncidenciaMongoAdapterTest`: `incidencias/infrastructure/adapter/out/persistence/` (con Testcontainers)
 - `AdministracionIncidenciasControllerTest`: `incidencias/infrastructure/adapter/in/web/` (`@WebMvcTest` con la `SecurityConfig` real y el caso de uso como doble de prueba)
+
+Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing Library y MSW):
+- `adminIncidents.test.js`: `api/`
+- `incidentRules.test.js`, `OpenIncidentDialog.test.jsx`, `CloseIncidentDialog.test.jsx` e `IncidentsList.test.jsx`: `features/incidents/`
+- `AdminIncidentsPage.test.jsx`: `pages/`
 
 ---
 
@@ -4596,7 +4641,7 @@ Tests que no validan una HU concreta.
 | `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |
 | `IncidenciasConfigTest` | `elContextoConectaLasPiezasDeLasIncidencias` | Que Spring conecta la creación y la consulta de incidencias con su adaptador de MongoDB y el adaptador hacia usuarios (HU44; AB#293 y AB#419, PR #224) |
 | `IncidenciasConfigTest` | `elContextoConectaLaSupervisionDeIncidencias` | Que Spring conecta la supervisión de incidencias del administrador con el adaptador hacia usuarios (HU49; AB#307, PR #229) |
-| `IncidenciasConfigTest` | `elContextoConectaLaResolucionDeIncidencias` | Que Spring conecta la resolución de incidencias del administrador (abrir y cerrar) con `ResolucionIncidenciasService` (HU50; AB#302, PR pendiente) |
+| `IncidenciasConfigTest` | `elContextoConectaLaResolucionDeIncidencias` | Que Spring conecta la resolución de incidencias del administrador (abrir y cerrar) con `ResolucionIncidenciasService` (HU50; AB#302, PR #233) |
 | `SecurityConfigTest` | `unaPeticionRecibeElTokenCsrfEnUnaCookie` | Que cualquier respuesta, aunque sea un 401, entrega el token CSRF en la cookie `XSRF-TOKEN` sin `HttpOnly` (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostSinTokenCsrfSeRechaza` | Que un `POST` sin token CSRF se rechaza con 403 (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostConElTokenDeLaCookieEnLaCabeceraSeAcepta` | Que un `POST` con el token de la cookie en la cabecera `X-XSRF-TOKEN` pasa el filtro CSRF (AB#230, PR #67) |
