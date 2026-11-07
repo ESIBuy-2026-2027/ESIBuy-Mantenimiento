@@ -4309,6 +4309,8 @@ Tests que no validan una HU concreta.
 | `SecurityConfigTest` | `unPostSinTokenCsrfSeRechaza` | Que un `POST` sin token CSRF se rechaza con 403 (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostConElTokenDeLaCookieEnLaCabeceraSeAcepta` | Que un `POST` con el token de la cookie en la cabecera `X-XSRF-TOKEN` pasa el filtro CSRF (AB#230, PR #67) |
 | `SecurityConfigTest` | `laPaginaDeErrorConservaElCodigoSinSesion` | Que `/error` es accesible sin sesión, para que un 403 (CSRF) o un 500 no lleguen como 401 (AB#230, PR #67) |
+| `SecurityConfigTest` | `elEndpointDeSaludEsPublico` | Que `/actuator/health` y `/actuator/health/liveness` responden 200 sin sesión, para el health check de Render (CD; sin HU ni AB#) |
+| `SecurityConfigTest` | `elRestoDeActuatorExigeSesion` | Que el resto de rutas de `/actuator` exige sesión (401); no pasó por rojo real, `anyRequest().authenticated()` ya lo cubría (CD; sin HU ni AB#) |
 | `client.test.js` (frontend) | `request_postConCookieCsrf_enviaElTokenEnLaCabecera` | Que el cliente HTTP copia la cookie `XSRF-TOKEN` en la cabecera `X-XSRF-TOKEN` (AB#230, PR #67) |
 | `client.test.js` (frontend) | `request_postSinCookieCsrf_noEnviaLaCabecera` | Que sin la cookie no envía la cabecera CSRF (AB#230, PR #67) |
 | `UsuarioControllerTest` | `otraRutaSinSesionEstaProtegida` | Que una ruta distinta del registro exige sesión (mínimo privilegio en `SecurityConfig`; AB#14, PR #30) |
