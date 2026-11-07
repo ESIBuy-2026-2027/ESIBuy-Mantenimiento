@@ -243,8 +243,11 @@ describe('AdminIncidentsPage (HU50): acciones', () => {
     await user.click(accion(unica, 'Cerrar'))
     await user.click(screen.getByRole('button', { name: 'Sí, cerrar la incidencia' }))
 
-    expect(await screen.findByText('Página 1 de 1')).toBeInTheDocument()
-    expect(await incidencias()).toHaveLength(10)
+    // Con una sola página la paginación ya no se muestra
+    await waitFor(() => expect(screen.queryByRole('navigation', { name: 'Paginación' })).not.toBeInTheDocument())
+    const filas = await incidencias()
+    expect(filas).toHaveLength(10)
+    expect(filas[0]).toHaveTextContent('No me llega el pedido')
     expect(screen.getByText('Incidencia cerrada.')).toBeInTheDocument()
   })
 
