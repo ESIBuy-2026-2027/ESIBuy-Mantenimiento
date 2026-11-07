@@ -15,6 +15,8 @@ import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionNoEncontrada
 import es.uclm.esibuy.backend.direcciones.domain.exception.LimiteDireccionesException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.NuevaPrincipalObligatoriaException;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaInvalidaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaNoEncontradaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaYaAbiertaException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.LimiteMetodosPagoException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoInvalidoException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoNoEncontradoException;
@@ -469,5 +471,19 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError incidenciaInvalida() {
         return new RespuestaError("La incidencia es inválida", CODIGO_VALIDACION);
+    }
+
+    // Incidencias (HU50): abrir o cerrar una que no existe, por ejemplo porque otro administrador ya la cerró
+    @ExceptionHandler(IncidenciaNoEncontradaException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public RespuestaError incidenciaNoEncontrada() {
+        return new RespuestaError("La incidencia no existe", "INCIDENT_NOT_FOUND");
+    }
+
+    // Incidencias (HU50): solo se abre una incidencia pendiente, para no sobrescribir la respuesta que ya tiene
+    @ExceptionHandler(IncidenciaYaAbiertaException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError incidenciaYaAbierta() {
+        return new RespuestaError("La incidencia ya está abierta", "INCIDENT_ALREADY_OPEN");
     }
 }

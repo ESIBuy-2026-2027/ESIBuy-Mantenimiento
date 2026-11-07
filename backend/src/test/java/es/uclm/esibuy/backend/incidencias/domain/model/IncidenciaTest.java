@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaInvalidaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaYaAbiertaException;
 
 // Entidad Incidencia (HU44, T291): lo que un cliente o un vendedor reporta desde su perfil para que un administrador
 // la revise. El asunto (hasta 100 caracteres) y la descripción (hasta 1000) son obligatorios y se guardan sin espacios
@@ -140,5 +141,64 @@ class IncidenciaTest {
     void necesitaUnEstado() {
         assertThrows(IncidenciaInvalidaException.class,
                 () -> new Incidencia(null, "u-1", "Asunto", "Descripción", null, "", AHORA));
+    }
+
+    // Apertura (HU50, T302): un administrador abre una incidencia pendiente y le escribe la respuesta, que es lo único
+    // que el autor llega a ver, porque al cerrarla se elimina. La respuesta es obligatoria (hasta 1000 caracteres, sin
+    // espacios en los extremos) y una incidencia ya abierta no se vuelve a abrir.
+    // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU50-CP01 a CP04, propuestos.
+
+    @Test
+    @DisplayName("HU50-CP01: abrir una incidencia pendiente la deja abierta con la respuesta del administrador")
+    void abrirUnaIncidenciaPendienteLaDejaAbiertaConLaRespuesta() {
+        Incidencia pendiente = new Incidencia("i-1", "u-1", "No me llega el pedido", "Lo pedí hace una semana",
+                EstadoIncidencia.PENDIENTE, "", AHORA);
+
+        Incidencia abierta = pendiente.abrir("Lo estamos revisando");
+
+        assertEquals(EstadoIncidencia.ABIERTA, abierta.estado());
+        assertEquals("Lo estamos revisando", abierta.respuesta());
+        assertEquals("i-1", abierta.id());
+        assertEquals("u-1", abierta.autorId());
+        assertEquals("No me llega el pedido", abierta.asunto());
+        assertEquals("Lo pedí hace una semana", abierta.descripcion());
+        assertEquals(AHORA, abierta.fechaCreacion());
+    }
+
+    @ParameterizedTest(name = "respuesta \"{0}\"")
+    @NullAndEmptySource
+    @ValueSource(strings = {"   ", "\t"})
+    @DisplayName("HU50-CP02: la respuesta es obligatoria para abrir una incidencia")
+    void laRespuestaEsObligatoriaParaAbrir(String respuesta) {
+        Incidencia pendiente = Incidencia.nueva("u-1", "Asunto", "Descripción", AHORA);
+
+        assertThrows(IncidenciaInvalidaException.class, () -> pendiente.abrir(respuesta));
+    }
+
+    @Test
+    @DisplayName("HU50-CP03: la respuesta admite hasta 1000 caracteres y se guarda sin espacios en los extremos")
+    void laRespuestaAdmiteElMaximoSinEspaciosEnLosExtremos() {
+        String mil = "r".repeat(1000);
+        Incidencia pendiente = Incidencia.nueva("u-1", "Asunto", "Descripción", AHORA);
+
+        assertEquals(mil, pendiente.abrir("  " + mil + "  ").respuesta());
+    }
+
+    @Test
+    @DisplayName("HU50-CP03: rechaza una respuesta de más de 1000 caracteres")
+    void rechazaUnaRespuestaDemasiadoLarga() {
+        String larga = "r".repeat(1001);
+        Incidencia pendiente = Incidencia.nueva("u-1", "Asunto", "Descripción", AHORA);
+
+        assertThrows(IncidenciaInvalidaException.class, () -> pendiente.abrir(larga));
+    }
+
+    @Test
+    @DisplayName("HU50-CP04: una incidencia ya abierta no se vuelve a abrir")
+    void unaIncidenciaYaAbiertaNoSeVuelveAAbrir() {
+        Incidencia abierta = new Incidencia("i-1", "u-1", "Asunto", "Descripción", EstadoIncidencia.ABIERTA,
+                "Lo estamos revisando", AHORA);
+
+        assertThrows(IncidenciaYaAbiertaException.class, () -> abierta.abrir("Otra respuesta"));
     }
 }

@@ -12,12 +12,14 @@ import org.springframework.context.annotation.Import;
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.incidencias.application.port.in.ConsultaIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.CreacionIncidenciasUseCase;
+import es.uclm.esibuy.backend.incidencias.application.port.in.ResolucionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.SupervisionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.out.AutorEnSesionPort;
 import es.uclm.esibuy.backend.incidencias.application.port.out.AutoresPort;
 import es.uclm.esibuy.backend.incidencias.application.port.out.IncidenciaRepositoryPort;
 import es.uclm.esibuy.backend.incidencias.application.service.ConsultaIncidenciasService;
 import es.uclm.esibuy.backend.incidencias.application.service.CreacionIncidenciasService;
+import es.uclm.esibuy.backend.incidencias.application.service.ResolucionIncidenciasService;
 import es.uclm.esibuy.backend.incidencias.application.service.SupervisionIncidenciasService;
 import es.uclm.esibuy.backend.incidencias.infrastructure.adapter.out.persistence.IncidenciaMongoAdapter;
 import es.uclm.esibuy.backend.incidencias.infrastructure.adapter.out.usuarios.AutorEnSesionAdapter;
@@ -46,5 +48,11 @@ class IncidenciasConfigTest {
     void elContextoConectaLaSupervisionDeIncidencias() {
         assertInstanceOf(SupervisionIncidenciasService.class, contexto.getBean(SupervisionIncidenciasUseCase.class));
         assertInstanceOf(AutoresAdapter.class, contexto.getBean(AutoresPort.class));
+    }
+
+    @Test
+    @DisplayName("Configuración: el contexto conecta la resolución de incidencias (HU50)")
+    void elContextoConectaLaResolucionDeIncidencias() {
+        assertInstanceOf(ResolucionIncidenciasService.class, contexto.getBean(ResolucionIncidenciasUseCase.class));
     }
 }

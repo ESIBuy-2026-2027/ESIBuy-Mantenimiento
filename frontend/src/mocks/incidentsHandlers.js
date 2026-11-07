@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw'
-import { getUsuarioEnSesion } from './authHandlers'
+import { USUARIOS, getUsuarioEnSesion } from './authHandlers'
 import { paginar } from './paginar'
 
 const ASUNTO_MAXIMO = 100
@@ -38,6 +38,11 @@ const SEMILLA = {
     incidencia(13, 'No puedo subir la imagen de un producto', 'Al guardar el producto con una imagen nueva da error.', 'ABIERTA', 'Ya lo hemos corregido, prueba de nuevo.'),
     incidencia(14, 'Estadísticas sin datos', 'La pantalla de estadísticas sale vacía desde ayer.'),
   ],
+  // De una cuenta que ya se ha eliminado (HU25, HU47): sus incidencias se quedan, y el administrador las ve sin
+  // autor (HU49). Es la más reciente de todas.
+  'u-eliminado': [
+    incidencia(15, 'Producto que no existe', 'Aparece en la búsqueda pero no se puede abrir.'),
+  ],
 }
 
 let almacen = nuevoAlmacen()
@@ -65,6 +70,38 @@ const rechazarSiNoEsClienteNiVendedor = () => {
   return null
 }
 
+// Solo el administrador: sin sesión 401 y el cliente o el vendedor 403, como el backend (HU49).
+const rechazarSiNoEsAdministrador = () => {
+  const usuario = getUsuarioEnSesion()
+  if (!usuario) return new HttpResponse(null, { status: 401 })
+  if (usuario.rol !== 'ADMINISTRADOR') return HttpResponse.json({ code: 'ACCESS_DENIED' }, { status: 403 })
+  return null
+}
+
+// Las incidencias de todos, de las más antiguas a las más recientes (por fecha y después por id), cada una con el
+// correo y el rol de su autor; null si la cuenta ya no existe.
+const incidenciasDeTodos = () =>
+  [...almacen.entries()]
+    .flatMap(([usuarioId, lista]) => {
+      const usuario = USUARIOS.find(({ id }) => id === usuarioId)
+      const autor = usuario ? { email: usuario.email, rol: usuario.rol } : null
+      return lista.map((item) => ({ ...item, autor }))
+    })
+    .sort((a, b) => a.fechaCreacion.localeCompare(b.fechaCreacion) || a.id.localeCompare(b.id))
+
+// Lee page y size como el backend: 400 sin cuerpo si no son números (el error por defecto de Spring) y 400
+// VALIDATION_ERROR si están fuera de rango. Devuelve la respuesta de error o la página pedida.
+function leerPaginacion(request) {
+  const params = new URL(request.url).searchParams
+  const noEsNumero = ['page', 'size'].some((nombre) => params.has(nombre) && !/^-?\d+$/.test(params.get(nombre)))
+  if (noEsNumero) return { error: new HttpResponse(null, { status: 400 }) }
+
+  const pagina = params.has('page') ? Number(params.get('page')) : 1
+  const tamano = params.has('size') ? Number(params.get('size')) : 10
+  if (pagina < 1 || tamano < 1 || tamano > TAMANO_MAXIMO) return { error: incidenciaInvalida() }
+  return { pagina, tamano }
+}
+
 const incidenciaInvalida = () =>
   HttpResponse.json({ mensaje: 'La incidencia es inválida', code: 'VALIDATION_ERROR' }, { status: 400 })
 
@@ -82,15 +119,21 @@ export const incidentsHandlers = [
     const rechazo = rechazarSiNoEsClienteNiVendedor()
     if (rechazo) return rechazo
 
-    const params = new URL(request.url).searchParams
-    const noEsNumero = ['page', 'size'].some((nombre) => params.has(nombre) && !/^-?\d+$/.test(params.get(nombre)))
-    if (noEsNumero) return new HttpResponse(null, { status: 400 })
-
-    const pagina = params.has('page') ? Number(params.get('page')) : 1
-    const tamano = params.has('size') ? Number(params.get('size')) : 10
-    if (pagina < 1 || tamano < 1 || tamano > TAMANO_MAXIMO) return incidenciaInvalida()
+    const { error, pagina, tamano } = leerPaginacion(request)
+    if (error) return error
 
     return HttpResponse.json(paginar(incidenciasDe(getUsuarioEnSesion()), { pagina, tamano }))
+  }),
+
+  // Supervisión del administrador (HU49): las incidencias de todos con su autor, por páginas como las del perfil.
+  http.get('/api/admin/incidencias', ({ request }) => {
+    const rechazo = rechazarSiNoEsAdministrador()
+    if (rechazo) return rechazo
+
+    const { error, pagina, tamano } = leerPaginacion(request)
+    if (error) return error
+
+    return HttpResponse.json(paginar(incidenciasDeTodos(), { pagina, tamano }))
   }),
 
   // Crea una incidencia del usuario en sesión: nace PENDIENTE, sin respuesta y con los textos sin espacios en los

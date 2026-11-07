@@ -93,3 +93,50 @@ describe('IncidentsList', () => {
     expect(screen.getByRole('list', { name: 'Tus incidencias' })).toHaveAttribute('aria-busy', 'true')
   })
 })
+
+// La misma lista en la supervisión del administrador (HU49, T304): cada incidencia lleva además su autor
+const SUPERVISADAS = [
+  { ...INCIDENCIAS[0], autor: { email: 'cliente@esibuy.test', rol: 'CLIENTE' } },
+  { ...INCIDENCIAS[1], autor: { email: 'vendedor@esibuy.test', rol: 'VENDEDOR' } },
+  {
+    id: 'inc-3',
+    asunto: 'Producto que no existe',
+    descripcion: 'Aparece en la búsqueda pero no se puede abrir.',
+    estado: 'PENDIENTE',
+    respuesta: '',
+    fechaCreacion: '2026-10-03T09:00:00Z',
+    autor: null,
+  },
+]
+
+describe('IncidentsList con el autor (HU49)', () => {
+  it('HU49-CP18: con showAuthor, cada incidencia muestra el correo y el rol de quien la reportó', () => {
+    renderWithProviders(<IncidentsList incidents={SUPERVISADAS} showAuthor label="Incidencias de los usuarios" />)
+
+    expect(elemento('No me llega el pedido')).toHaveTextContent('cliente@esibuy.test')
+    expect(elemento('No me llega el pedido')).toHaveTextContent('Cliente')
+    expect(elemento('Cobro duplicado')).toHaveTextContent('vendedor@esibuy.test')
+    expect(elemento('Cobro duplicado')).toHaveTextContent('Vendedor')
+  })
+
+  it('HU49-CP19: una incidencia cuya cuenta se ha eliminado dice Cuenta eliminada', () => {
+    renderWithProviders(<IncidentsList incidents={SUPERVISADAS} showAuthor label="Incidencias de los usuarios" />)
+
+    expect(elemento('Producto que no existe')).toHaveTextContent('Cuenta eliminada')
+    expect(elemento('No me llega el pedido')).not.toHaveTextContent('Cuenta eliminada')
+  })
+
+  it('HU49-CP18: el nombre accesible de la lista se puede cambiar', () => {
+    renderWithProviders(<IncidentsList incidents={SUPERVISADAS} showAuthor label="Incidencias de los usuarios" />)
+
+    expect(screen.getByRole('list', { name: 'Incidencias de los usuarios' })).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Tus incidencias' })).not.toBeInTheDocument()
+  })
+
+  it('HU49-CP18: sin showAuthor no se muestra el autor, como en Mis incidencias', () => {
+    renderWithProviders(<IncidentsList incidents={SUPERVISADAS} />)
+
+    expect(screen.queryByText('cliente@esibuy.test')).not.toBeInTheDocument()
+    expect(screen.queryByText('Cuenta eliminada')).not.toBeInTheDocument()
+  })
+})
