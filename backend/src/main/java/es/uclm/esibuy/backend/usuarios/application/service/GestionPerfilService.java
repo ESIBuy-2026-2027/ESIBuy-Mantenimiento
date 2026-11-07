@@ -8,9 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarPerfilCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.GestionPerfilUseCase;
-import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
-import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaActualIncorrectaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
@@ -23,22 +21,19 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
 /**
- * Implementa la consulta (HU4) y la edición (HU45) del perfil propio, y la eliminación de la cuenta propia del
- * cliente (HU25). Solo habla con el exterior a través del repositorio de usuarios y del hash de contraseñas. El
- * reloj se inyecta para fijar en los tests la fecha con la que se calcula la mayoría de edad.
+ * Implementa la consulta (HU4) y la edición (HU45) del perfil propio. Solo habla con el exterior a través del
+ * repositorio de usuarios. El reloj se inyecta para fijar en los tests la fecha con la que se calcula la mayoría de
+ * edad.
  */
 public class GestionPerfilService implements GestionPerfilUseCase {
 
     private static final String SESION_NO_VALIDA = "Credenciales inválidas";
 
     private final UsuarioRepositoryPort usuarioRepository;
-    private final HashContrasenaPort hashContrasena;
     private final Clock reloj;
 
-    public GestionPerfilService(UsuarioRepositoryPort usuarioRepository, HashContrasenaPort hashContrasena,
-            Clock reloj) {
+    public GestionPerfilService(UsuarioRepositoryPort usuarioRepository, Clock reloj) {
         this.usuarioRepository = usuarioRepository;
-        this.hashContrasena = hashContrasena;
         this.reloj = reloj;
     }
 
@@ -62,16 +57,6 @@ public class GestionPerfilService implements GestionPerfilUseCase {
         usuario.modificarDatos(datosPersonales, perfil, LocalDate.now(reloj));
         usuarioRepository.guardar(usuario);
         return usuario;
-    }
-
-    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO_POR_EMAIL)
-    @Override
-    public void eliminarCuenta(String email, String password) {
-        Usuario cliente = buscarUsuarioEnSesion(email);
-        if (!hashContrasena.coincide(password, cliente.getPasswordHash())) {
-            throw new ContrasenaActualIncorrectaException("La contraseña actual no es correcta");
-        }
-        usuarioRepository.eliminarPorId(cliente.getId());
     }
 
     private Usuario buscarUsuarioEnSesion(String email) {

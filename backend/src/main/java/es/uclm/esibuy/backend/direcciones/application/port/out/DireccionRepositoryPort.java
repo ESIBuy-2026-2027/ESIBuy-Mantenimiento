@@ -11,4 +11,6 @@ public interface DireccionRepositoryPort {
     DireccionEnvio guardar(DireccionEnvio direccion);
 
     void eliminar(String direccionId);
+
+    void eliminarPorCliente(String clienteId);
 }

@@ -169,6 +169,26 @@ class GestionCarritoServiceTest {
         assertEquals(List.of(true), productos.premiumPedidos.stream().distinct().toList());
     }
 
+    @Test
+    @DisplayName("HU9-CP21: eliminar el carrito lo borra y no toca el de otro cliente")
+    void eliminarBorraElCarritoDelCliente() {
+        servicio.anadir(EMAIL, "p-1", 2);
+        repositorio.guardar(Carrito.vacio("c-2"));
+
+        servicio.eliminar(EMAIL);
+
+        assertTrue(repositorio.buscarPorCliente(CLIENTE).isEmpty());
+        assertTrue(repositorio.buscarPorCliente("c-2").isPresent());
+    }
+
+    @Test
+    @DisplayName("HU9-CP21: eliminar el carrito de un cliente que no tiene no es un error")
+    void eliminarSinCarritoNoEsUnError() {
+        servicio.eliminar(EMAIL);
+
+        assertTrue(repositorio.buscarPorCliente(CLIENTE).isEmpty());
+    }
+
     private static final class RepositorioEnMemoria implements CarritoRepositoryPort {
         private final Map<String, Carrito> porCliente = new HashMap<>();
 
@@ -183,6 +203,11 @@ class GestionCarritoServiceTest {
                     carrito.getLineas());
             porCliente.put(carrito.getClienteId(), guardado);
             return guardado;
+        }
+
+        @Override
+        public void eliminarPorCliente(String clienteId) {
+            porCliente.remove(clienteId);
         }
     }
 

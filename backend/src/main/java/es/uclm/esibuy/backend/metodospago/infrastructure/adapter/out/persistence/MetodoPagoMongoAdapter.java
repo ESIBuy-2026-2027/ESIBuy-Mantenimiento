@@ -36,4 +36,9 @@ public class MetodoPagoMongoAdapter implements MetodoPagoRepositoryPort {
     public void eliminar(String metodoId) {
         repository.deleteById(metodoId);
     }
+
+    @Override
+    public void eliminarPorCliente(String clienteId) {
+        repository.deleteByClienteId(clienteId);
+    }
 }

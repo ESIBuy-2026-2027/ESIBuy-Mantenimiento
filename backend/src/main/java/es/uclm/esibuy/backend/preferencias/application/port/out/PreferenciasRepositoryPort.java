@@ -11,4 +11,6 @@ public interface PreferenciasRepositoryPort {
 
     // Devuelve las preferencias guardadas: si eran nuevas, con el id que les ha asignado la base de datos
     Preferencias guardar(Preferencias preferencias);
+
+    void eliminarPorCliente(String clienteId);
 }

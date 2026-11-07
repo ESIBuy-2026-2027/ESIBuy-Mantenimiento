@@ -37,8 +37,8 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.AuthenticatorYaDadoDeAlt
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutobloqueoNoPermitidoException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaActualIncorrectaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.BloqueoPorIntentosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
@@ -159,7 +159,7 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("Credenciales Incorrectas");
     }
 
-    // 400 + code al eliminar la cuenta propia con una contraseña incorrecta (HU25). No es 401: la sesión sigue
+    // 400 + code al eliminar la cuenta propia con una contraseña incorrecta (HU25 y HU47). No es 401: la sesión sigue
     // siendo válida y el frontend no debe tratarlo como una sesión caducada.
     @ExceptionHandler(ContrasenaActualIncorrectaException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

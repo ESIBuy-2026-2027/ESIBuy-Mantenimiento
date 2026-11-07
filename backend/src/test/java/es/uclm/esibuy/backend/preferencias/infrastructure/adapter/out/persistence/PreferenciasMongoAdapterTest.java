@@ -59,6 +59,18 @@ class PreferenciasMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU46-CP24: eliminar por cliente borra sus preferencias de la colección y no las de otro cliente")
+    void eliminarPorClienteBorraSoloSusPreferencias() {
+        adapter.guardar(new Preferencias(null, "cliente-1", List.of("cat-1")));
+        adapter.guardar(new Preferencias(null, "cliente-2", List.of("cat-2")));
+
+        adapter.eliminarPorCliente("cliente-1");
+
+        assertTrue(adapter.buscarPorCliente("cliente-1").isEmpty());
+        assertTrue(adapter.buscarPorCliente("cliente-2").isPresent());
+    }
+
+    @Test
     @DisplayName("HU46-CP12: guardar otra vez las preferencias las actualiza sin crear otras y conserva su fecha de creación")
     void guardarOtraVezActualizaLasPreferencias() {
         Preferencias guardadas = adapter.guardar(new Preferencias(null, "cliente-1", List.of("cat-1")));

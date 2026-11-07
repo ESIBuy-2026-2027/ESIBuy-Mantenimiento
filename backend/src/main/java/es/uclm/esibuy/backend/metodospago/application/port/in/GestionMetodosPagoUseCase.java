@@ -39,4 +39,11 @@ public interface GestionMetodosPagoUseCase {
 
     /** Si el método de pago es del cliente en sesión, para el pedido (HU10): así no ve el dominio de metodospago. */
     boolean esDelCliente(String emailCliente, String metodoId);
+
+    /**
+     * Borra todos los métodos de pago del cliente, para cuando elimina su cuenta (HU25). Si no tiene ninguno no es
+     * un error. Hay que llamarlo antes de borrar al usuario: los métodos se buscan por el id del cliente, que se
+     * obtiene de su correo.
+     */
+    void eliminarTodos(String emailCliente);
 }

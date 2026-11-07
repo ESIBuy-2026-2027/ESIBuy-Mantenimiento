@@ -122,4 +122,41 @@ class SeguridadDireccionesServiceTest {
                         () -> gestionDirecciones.anadir(CLIENTE, DIRECCION)));
         verifyNoInteractions(direccionRepository, clienteEnSesion);
     }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU5-CP32: el cliente elimina todas sus direcciones con su propio correo")
+    void elClienteEliminaTodasConSuPropioCorreo() {
+        assertDoesNotThrow(() -> gestionDirecciones.eliminarTodas(CLIENTE));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU5-CP32: un cliente no elimina las direcciones de otro cliente")
+    void unClienteNoEliminaTodasConElCorreoDeOtro() {
+        assertThrows(AccessDeniedException.class, () -> gestionDirecciones.eliminarTodas(OTRO_CLIENTE));
+        verifyNoInteractions(direccionRepository, clienteEnSesion);
+    }
+
+    @Test
+    @WithMockUser(username = "vendedor@esibuy.test", roles = "VENDEDOR")
+    @DisplayName("HU5-CP32: un vendedor no elimina direcciones de clientes")
+    void unVendedorNoEliminaTodas() {
+        assertThrows(AccessDeniedException.class, () -> gestionDirecciones.eliminarTodas("vendedor@esibuy.test"));
+    }
+
+    @Test
+    @WithMockUser(username = "admin@esibuy.test", roles = "ADMINISTRADOR")
+    @DisplayName("HU5-CP32: un administrador no elimina direcciones de clientes")
+    void unAdministradorNoEliminaTodas() {
+        assertThrows(AccessDeniedException.class, () -> gestionDirecciones.eliminarTodas("admin@esibuy.test"));
+    }
+
+    @Test
+    @DisplayName("HU5-CP32: sin sesión no se eliminan direcciones")
+    void sinSesionNoSeEliminanTodas() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> gestionDirecciones.eliminarTodas(CLIENTE));
+        verifyNoInteractions(direccionRepository, clienteEnSesion);
+    }
 }

@@ -36,4 +36,9 @@ public class DireccionMongoAdapter implements DireccionRepositoryPort {
     public void eliminar(String direccionId) {
         repository.deleteById(direccionId);
     }
+
+    @Override
+    public void eliminarPorCliente(String clienteId) {
+        repository.deleteByClienteId(clienteId);
+    }
 }

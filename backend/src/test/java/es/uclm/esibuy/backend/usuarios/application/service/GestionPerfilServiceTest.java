@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,9 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarPerfilCommand;
-import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
-import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaActualIncorrectaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
@@ -41,23 +38,19 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
-// Consulta (HU4, T297) y edición (HU45, T298) del perfil propio, y eliminación de la cuenta propia del cliente
-// (HU25, T275). El repositorio y el hash son dobles de prueba y el reloj está fijo: se prueba el caso de uso sin
-// MongoDB ni Spring, y la mayoría de edad no depende del día en que se ejecute.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU4-CP01 y CP04, HU25-CP01 y CP02, y HU45-CP01 a CP04, propuestos.
+// Consulta (HU4, T297) y edición (HU45, T298) del perfil propio. El repositorio es un doble de prueba y el reloj
+// está fijo: se prueba el caso de uso sin MongoDB ni Spring, y la mayoría de edad no depende del día en que se
+// ejecute. La eliminación de la cuenta propia (HU25) se prueba en GestionCuentaServiceTest.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU4-CP01 y CP04, y HU45-CP01 a CP04, propuestos.
 @ExtendWith(MockitoExtension.class)
 class GestionPerfilServiceTest {
 
     private static final String EMAIL = "lucia@esibuy.test";
     private static final String EMAIL_VENDEDOR = "tienda@esibuy.test";
-    private static final String PASSWORD = "Clave-Segura-123";
     private static final String DNI = "12345678Z";
 
     @Mock
     private UsuarioRepositoryPort usuarioRepository;
-
-    @Mock
-    private HashContrasenaPort hashContrasena;
 
     private GestionPerfilService servicio;
 
@@ -65,7 +58,7 @@ class GestionPerfilServiceTest {
     @BeforeEach
     void crearServicio() {
         Clock reloj = Clock.fixed(Instant.parse("2026-11-05T10:00:00Z"), ZoneOffset.UTC);
-        servicio = new GestionPerfilService(usuarioRepository, hashContrasena, reloj);
+        servicio = new GestionPerfilService(usuarioRepository, reloj);
     }
 
     @Test
@@ -83,27 +76,6 @@ class GestionPerfilServiceTest {
         when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.empty());
 
         assertThrows(CredencialesInvalidasException.class, () -> servicio.consultarPerfil(EMAIL));
-    }
-
-    @Test
-    @DisplayName("HU25-CP01: con la contraseña actual correcta se elimina la cuenta del cliente de la sesión")
-    void eliminarCuentaConLaContrasenaCorrectaBorraAlUsuario() {
-        when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.of(lucia()));
-        when(hashContrasena.coincide(PASSWORD, "hash-simulado")).thenReturn(true);
-
-        servicio.eliminarCuenta(EMAIL, PASSWORD);
-
-        verify(usuarioRepository).eliminarPorId("u-1");
-    }
-
-    @Test
-    @DisplayName("HU25-CP02: con una contraseña incorrecta no se elimina la cuenta")
-    void eliminarCuentaConLaContrasenaIncorrectaNoBorraNada() {
-        when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.of(lucia()));
-        when(hashContrasena.coincide("Otra-Clave-1", "hash-simulado")).thenReturn(false);
-
-        assertThrows(ContrasenaActualIncorrectaException.class, () -> servicio.eliminarCuenta(EMAIL, "Otra-Clave-1"));
-        verify(usuarioRepository, never()).eliminarPorId(anyString());
     }
 
     @Test

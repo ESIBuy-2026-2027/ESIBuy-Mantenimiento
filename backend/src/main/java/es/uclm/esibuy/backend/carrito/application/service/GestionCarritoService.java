@@ -89,6 +89,12 @@ public class GestionCarritoService implements GestionCarritoUseCase {
         return detallar(carritoRepository.guardar(carrito), clienteEnSesion.esPremium(emailCliente));
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
+    @Override
+    public void eliminar(String emailCliente) {
+        carritoRepository.eliminarPorCliente(clienteEnSesion.idPorCorreo(emailCliente));
+    }
+
     // El carrito del cliente en sesión, o uno vacío sin guardar si todavía no tiene
     private Carrito carritoDe(String emailCliente) {
         String clienteId = clienteEnSesion.idPorCorreo(emailCliente);

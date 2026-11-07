@@ -6,4 +6,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 public interface PreferenciasMongoRepository extends MongoRepository<PreferenciasDocument, String> {
 
     Optional<PreferenciasDocument> findByClienteId(String clienteId);
+
+    void deleteByClienteId(String clienteId);
 }
