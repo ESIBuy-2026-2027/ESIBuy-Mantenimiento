@@ -22,13 +22,23 @@ import { colorDeEstado, etiquetaDeEstado } from './incidentStatus'
 const SIN_RESPUESTA = 'Sin respuesta todavía'
 
 const useStyles = makeStyles({
+  // En pantallas estrechas las columnas no se aprietan hasta no poder leerse: la tabla mantiene un ancho mínimo y se
+  // desplaza dentro de su contenedor (sin scroll horizontal de la página).
+  table: {
+    minWidth: '860px',
+  },
   subject: {
     minWidth: '160px',
     overflowWrap: 'anywhere',
   },
-  // La descripción y la respuesta se recortan a tres líneas en pantalla; el texto completo sigue en el documento
-  text: {
+  // Las celdas de la descripción y de la respuesta son más anchas que las demás para que el texto no se monte sobre las
+  // columnas de al lado; si no cabe, la tabla se desplaza dentro de su contenedor.
+  wide: {
     minWidth: '220px',
+    flexGrow: 2,
+  },
+  // Se recortan a tres líneas en pantalla; el texto completo sigue en el documento
+  text: {
     overflowWrap: 'anywhere',
     display: '-webkit-box',
     WebkitBoxOrient: 'vertical',
@@ -50,7 +60,7 @@ export default function IncidentsTable({ incidents, refreshing = false }) {
 
   return (
     <div className={mergeClasses(tableStyles.wrapper, refreshing && tableStyles.refreshing)} aria-busy={refreshing}>
-      <Table aria-label="Mis incidencias">
+      <Table aria-label="Mis incidencias" className={styles.table}>
         <TableHeader>
           <TableRow>
             <TableHeaderCell>Asunto</TableHeaderCell>
@@ -67,7 +77,7 @@ export default function IncidentsTable({ incidents, refreshing = false }) {
               <TableCell className={styles.subject}>
                 <Text weight="semibold">{incident.asunto}</Text>
               </TableCell>
-              <TableCell>
+              <TableCell className={styles.wide}>
                 <Text className={styles.text} title={incident.descripcion}>
                   {incident.descripcion}
                 </Text>
@@ -77,7 +87,7 @@ export default function IncidentsTable({ incidents, refreshing = false }) {
                   {etiquetaDeEstado(incident.estado)}
                 </Badge>
               </TableCell>
-              <TableCell>
+              <TableCell className={styles.wide}>
                 {incident.respuesta ? (
                   <Text className={styles.text} title={incident.respuesta}>
                     {incident.respuesta}
