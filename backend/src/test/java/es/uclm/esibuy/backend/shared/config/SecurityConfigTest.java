@@ -31,10 +31,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU18-CP01 a CP03, propuestos a partir de los criterios
 // de aceptación de la HU18.
 @WebMvcTest({SecurityConfigTest.AdministracionDePruebaController.class, SecurityConfigTest.VendedorDePruebaController.class,
-        SecurityConfigTest.MetodoDePruebaController.class})
+        SecurityConfigTest.MetodoDePruebaController.class, SecurityConfigTest.ActuatorDePruebaController.class})
 @Import({SecurityConfig.class, SecurityConfigTest.AdministracionDePruebaController.class,
         SecurityConfigTest.VendedorDePruebaController.class, SecurityConfigTest.MetodoDePruebaController.class,
-        SecurityConfigTest.ServicioDePrueba.class})
+        SecurityConfigTest.ActuatorDePruebaController.class, SecurityConfigTest.ServicioDePrueba.class})
 class SecurityConfigTest {
 
     private static final String RUTA_ADMINISTRACION = "/api/admin/prueba";
@@ -43,6 +43,9 @@ class SecurityConfigTest {
     private static final String COOKIE_CSRF = "XSRF-TOKEN";
     private static final String CABECERA_CSRF = "X-XSRF-TOKEN";
     private static final String RUTA_METODO = "/api/prueba-metodo";
+    private static final String RUTA_SALUD = "/actuator/health";
+    private static final String RUTA_LIVENESS = "/actuator/health/liveness";
+    private static final String RUTA_ACTUATOR_PROTEGIDA = "/actuator/env";
 
     @Autowired
     private MockMvc mockMvc;
@@ -188,6 +191,19 @@ class SecurityConfigTest {
                 .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
     }
 
+    @Test
+    @DisplayName("Seguridad: El endpoint de salud de Actuator responde sin sesión, para el health check de Render")
+    void elEndpointDeSaludEsPublico() throws Exception {
+        mockMvc.perform(get(RUTA_SALUD)).andExpect(status().isOk());
+        mockMvc.perform(get(RUTA_LIVENESS)).andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Seguridad: El resto de endpoints de Actuator exige sesión")
+    void elRestoDeActuatorExigeSesion() throws Exception {
+        mockMvc.perform(get(RUTA_ACTUATOR_PROTEGIDA)).andExpect(status().isUnauthorized());
+    }
+
     // Endpoint de administración de prueba: así el test comprueba un 200 real sin depender de los
     // endpoints de otras tasks (HU19 a HU24).
     @RestController
@@ -205,6 +221,16 @@ class SecurityConfigTest {
     static class VendedorDePruebaController {
 
         @GetMapping(RUTA_VENDEDOR)
+        String responder() {
+            return "ok";
+        }
+    }
+
+    // Sustituye a Actuator, que este test no carga: solo comprueba qué rutas de /actuator deja abiertas SecurityConfig.
+    @RestController
+    static class ActuatorDePruebaController {
+
+        @GetMapping({RUTA_SALUD, RUTA_LIVENESS, RUTA_ACTUATOR_PROTEGIDA})
         String responder() {
             return "ok";
         }
