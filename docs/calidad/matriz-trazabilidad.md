@@ -4300,10 +4300,10 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU49-CP08 | El servicio admite la primera página y los tamaños de 1 a 50 y rechaza una página negativa o un tamaño fuera de rango sin consultar nada | Unitario (aplicación) | 2 | ✅ Pasa (2, AB#307, PR #229) |
 | HU49-CP09 | Solo el administrador consulta las incidencias de todos; cliente y vendedor reciben 403 y sin sesión se rechaza. Seguridad en la capa de negocio | Unitario con Spring Security (sin MongoDB) | 4 | ✅ Pasa (4, AB#307, PR #229) |
 | HU49-CP10 | El adaptador hacia el módulo de usuarios convierte el contacto en el autor de la incidencia, o en ninguno si la cuenta ya no existe | Unitario (adaptador) | 2 | ✅ Pasa (2, AB#307, PR #229) |
-| HU49-CP11 | `GET /api/admin/incidencias` responde 200 con la página `{items, page, size, totalItems, totalPages}` y el autor (`{email, rol}`) de cada incidencia, sin su id interno; `page` empieza en 1 y `size` vale 10 por defecto | Controlador | 3 | 🔍 En revisión (3, AB#306, PR pendiente) |
-| HU49-CP12 | Una incidencia cuya cuenta se ha eliminado viene con `"autor": null` | Controlador | 1 | 🔍 En revisión (1, AB#306, PR pendiente) |
-| HU49-CP13 | Una página o un tamaño fuera de rango responden 400 `VALIDATION_ERROR`; una página que no es un número, 400 sin llegar al caso de uso | Controlador | 2 | 🔍 En revisión (2, AB#306, PR pendiente) |
-| HU49-CP14 | Sin sesión responde 401; un cliente o un vendedor reciben 403 `ACCESS_DENIED` | Controlador | 2 | 🔍 En revisión (2, AB#306, PR pendiente) |
+| HU49-CP11 | `GET /api/admin/incidencias` responde 200 con la página `{items, page, size, totalItems, totalPages}` y el autor (`{email, rol}`) de cada incidencia, sin su id interno; `page` empieza en 1 y `size` vale 10 por defecto | Controlador | 3 | ✅ Pasa (3, AB#306, PR #232) |
+| HU49-CP12 | Una incidencia cuya cuenta se ha eliminado viene con `"autor": null` | Controlador | 1 | ✅ Pasa (1, AB#306, PR #232) |
+| HU49-CP13 | Una página o un tamaño fuera de rango responden 400 `VALIDATION_ERROR`; una página que no es un número, 400 sin llegar al caso de uso | Controlador | 2 | ✅ Pasa (2, AB#306, PR #232) |
+| HU49-CP14 | Sin sesión responde 401; un cliente o un vendedor reciben 403 `ACCESS_DENIED` | Controlador | 2 | ✅ Pasa (2, AB#306, PR #232) |
 
 Notas:
 - **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** HU49-CP01 a CP10 los propone el desarrollo backend a partir del criterio de la HU49 («el administrador debe disponer de una vista para las incidencias») y no salen de Azure Boards. Rama `feature/US49-T307-logica-supervision-incidencias` (PR #229, mergeado).
@@ -4311,7 +4311,7 @@ Notas:
 - **El autor de cada incidencia (decisión del equipo):** el administrador ve el correo y el rol de quien la reportó. Incidencias no usa el dominio de usuarios: pide el contacto por el puerto de entrada de usuarios (`AdministracionUsuariosUseCase.consultarContacto`, nuevo, solo para el administrador) a través de `AutoresPort` y `AutoresAdapter` (CP01 a CP03 y CP10). Cada autor se busca una sola vez por página (CP07).
 - **Cuenta eliminada (decisión del equipo):** con la HU25 y la HU47 la cuenta se borra, pero sus incidencias siguen; la incidencia se devuelve sin autor en vez de hacer fallar el listado (CP02, CP06 y CP10).
 - **Seguridad en la capa de negocio (R8):** CP03 y CP09 comprueban que el administrador pasa, que cliente y vendedor reciben 403 y que sin sesión se rechaza.
-- **T306 (AB#306, endpoint):** `GET /api/admin/incidencias?page=1&size=10` en `AdministracionIncidenciasController`, paginado como el de la HU44, con el autor de cada incidencia como objeto `{email, rol}` o `null` si la cuenta se ha eliminado (decisión del equipo) (CP11 a CP14). Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO. Rama `feature/US49-T306-endpoint-supervision-incidencias`. Contrato en `docs/contratos/hu49-supervision-incidencias.md`.
+- **T306 (AB#306, endpoint):** `GET /api/admin/incidencias?page=1&size=10` en `AdministracionIncidenciasController`, paginado como el de la HU44, con el autor de cada incidencia como objeto `{email, rol}` o `null` si la cuenta se ha eliminado (decisión del equipo) (CP11 a CP14). Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO. Rama `feature/US49-T306-endpoint-supervision-incidencias` (PR #232, mergeado). Contrato en `docs/contratos/hu49-supervision-incidencias.md`.
 - **Pendiente:** la vista del administrador (T304).
 
 ### Tabla B · casos de prueba ↔ tests
@@ -4340,14 +4340,14 @@ Notas:
 | HU49-CP09 | `SeguridadIncidenciasServiceTest` | `HU49-CP09: sin sesión no se consultan las incidencias de todos` | Aplicación · seguridad | AB#307 | PR #229 | ✅ |
 | HU49-CP10 | `AutoresAdapterTest` | `HU49-CP10: el correo y el rol del autor se piden al módulo de usuarios` | Infraestructura (adaptador) | AB#307 | PR #229 | ✅ |
 | HU49-CP10 | `AutoresAdapterTest` | `HU49-CP10: si la cuenta del autor ya no existe, no hay autor` | Infraestructura (adaptador) | AB#307 | PR #229 | ✅ |
-| HU49-CP11 | `AdministracionIncidenciasControllerTest` | `HU49-CP11: responde 200 con la página y el autor de cada incidencia, y por defecto pide la 1 de tamaño 10` | Infraestructura (web) | AB#306 | PR pendiente | 🔍 |
-| HU49-CP11 | `AdministracionIncidenciasControllerTest` | `HU49-CP11: la página empieza en 1: page=3 y size=2 piden la página 2 (desde 0) y se devuelve con page 3` | Infraestructura (web) | AB#306 | PR pendiente | 🔍 |
-| HU49-CP11 | `AdministracionIncidenciasControllerTest` | `HU49-CP11: sin incidencias responde 200 con una lista vacía y cero páginas` | Infraestructura (web) | AB#306 | PR pendiente | 🔍 |
-| HU49-CP12 | `AdministracionIncidenciasControllerTest` | `HU49-CP12: una incidencia cuya cuenta se ha eliminado viene con autor null` | Infraestructura (web) | AB#306 | PR pendiente | 🔍 |
-| HU49-CP13 | `AdministracionIncidenciasControllerTest` | `HU49-CP13: una página o un tamaño que el caso de uso rechaza responden 400 VALIDATION_ERROR` | Infraestructura (web) | AB#306 | PR pendiente | 🔍 |
-| HU49-CP13 | `AdministracionIncidenciasControllerTest` | `HU49-CP13: una página que no es un número responde 400 y no llega al caso de uso` | Infraestructura (web) | AB#306 | PR pendiente | 🔍 |
-| HU49-CP14 | `AdministracionIncidenciasControllerTest` | `HU49-CP14: sin sesión responde 401` | Infraestructura (web) | AB#306 | PR pendiente | 🔍 |
-| HU49-CP14 | `AdministracionIncidenciasControllerTest` | `HU49-CP14: un cliente o un vendedor reciben 403 con el code ACCESS_DENIED` | Infraestructura (web) | AB#306 | PR pendiente | 🔍 |
+| HU49-CP11 | `AdministracionIncidenciasControllerTest` | `HU49-CP11: responde 200 con la página y el autor de cada incidencia, y por defecto pide la 1 de tamaño 10` | Infraestructura (web) | AB#306 | PR #232 | ✅ |
+| HU49-CP11 | `AdministracionIncidenciasControllerTest` | `HU49-CP11: la página empieza en 1: page=3 y size=2 piden la página 2 (desde 0) y se devuelve con page 3` | Infraestructura (web) | AB#306 | PR #232 | ✅ |
+| HU49-CP11 | `AdministracionIncidenciasControllerTest` | `HU49-CP11: sin incidencias responde 200 con una lista vacía y cero páginas` | Infraestructura (web) | AB#306 | PR #232 | ✅ |
+| HU49-CP12 | `AdministracionIncidenciasControllerTest` | `HU49-CP12: una incidencia cuya cuenta se ha eliminado viene con autor null` | Infraestructura (web) | AB#306 | PR #232 | ✅ |
+| HU49-CP13 | `AdministracionIncidenciasControllerTest` | `HU49-CP13: una página o un tamaño que el caso de uso rechaza responden 400 VALIDATION_ERROR` | Infraestructura (web) | AB#306 | PR #232 | ✅ |
+| HU49-CP13 | `AdministracionIncidenciasControllerTest` | `HU49-CP13: una página que no es un número responde 400 y no llega al caso de uso` | Infraestructura (web) | AB#306 | PR #232 | ✅ |
+| HU49-CP14 | `AdministracionIncidenciasControllerTest` | `HU49-CP14: sin sesión responde 401` | Infraestructura (web) | AB#306 | PR #232 | ✅ |
+| HU49-CP14 | `AdministracionIncidenciasControllerTest` | `HU49-CP14: un cliente o un vendedor reciben 403 con el code ACCESS_DENIED` | Infraestructura (web) | AB#306 | PR #232 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (JUnit y Mockito, sin Spring)
