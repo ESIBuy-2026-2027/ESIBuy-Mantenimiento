@@ -2857,6 +2857,13 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU25-CP04 | Solo el cliente o el vendedor eliminan su propia cuenta: el correo de otro o un administrador dan 403; sin sesión se rechaza y sin token CSRF, 403. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) + integración (capa web) | 5 | ✅ Pasa (PR #235) |
 | HU25-CP05 | Sin contraseña (vacía o ausente) se responde 400 y no se llama al caso de uso | Integración (capa web) | 1 | ✅ Pasa (PR #235) |
 | HU25-CP06 | Al eliminar la cuenta del cliente se borran su lista de deseos, su carrito, sus preferencias, sus métodos de pago y sus direcciones, y el usuario el último; se conservan sus pedidos y valoraciones | Unitario (aplicación e infraestructura) | 7 | ✅ Pasa (PR #235) |
+| HU25-CP07 | La opción «Eliminar mi cuenta» está en el perfil del cliente, igual que en el del vendedor, y no la tiene el administrador; el botón abre la confirmación y cancelarla no elimina nada | Frontend (página) | 3 | ✅ Pasa (3, AB#272, PR #236) |
+| HU25-CP08 | El diálogo explica las consecuencias de la cuenta de un cliente (se eliminan sus direcciones, métodos de pago, carrito, lista de deseos, preferencias y doble factor; se conservan los pedidos y las valoraciones; se cierra la sesión) y las del vendedor no cambian | Frontend (componente) | 4 | ✅ Pasa (4, AB#273, PR #236) |
+| HU25-CP09 | Sin contraseña (vacía o con solo espacios) no se puede confirmar ni se llama al servidor; al abrir el diálogo el foco está en el campo de la contraseña actual | Frontend (componente) | 3 | ✅ Pasa (3, AB#273, PR #236) |
+| HU25-CP10 | Una contraseña incorrecta se avisa en el propio campo y se puede corregir; cualquier otro fallo da un aviso genérico; mientras se envía, los botones quedan deshabilitados; con la correcta se envía solo la contraseña | Frontend (componente) | 5 | ✅ Pasa (5, AB#273, PR #236) |
+| HU25-CP11 | La contraseña actual no se puede copiar ni cortar (R9), pero sí pegar, en el diálogo del cliente y en el del vendedor | Frontend (componente) | 1 | ✅ Pasa (1, AB#273, PR #236) |
+| HU25-CP12 | Con la contraseña correcta se cierra la sesión, se va al login con «Tu cuenta se ha eliminado.» y la zona del cliente deja de ser accesible; con una incorrecta la sesión sigue abierta y se avisa en el campo | Frontend (página) | 3 | ✅ Pasa (3, AB#273, PR #236) |
+| HU25-CP13 | Tras eliminar la cuenta de un cliente no se puede iniciar sesión con ella (en el mock) y las cuentas de otros usuarios no se ven afectadas | Frontend (página) | 2 | ✅ Pasa (2, AB#273, PR #236) |
 
 Notas:
 - **HU25-CP01 a CP06:** casos propuestos en las T274/T275 (AB#274, AB#275) a partir de los criterios de aceptación de la HU25 y del correo del profesor (06/11/2026). Pendientes de confirmar con el equipo y de añadir a la HU25 en Azure Boards.
@@ -2864,7 +2871,10 @@ Notas:
 - **Endpoint único (T274, AB#274):** `DELETE /api/perfil` es el mismo para el cliente (HU25) y el vendedor (HU47). Delega en `GestionCuentaUseCase.eliminarCuentaPropia(email, password)`, con `@PreAuthorize(Permisos.CLIENTE_O_VENDEDOR_PROPIO)`, que distingue el rol. Sustituye a `GestionPerfilUseCase.eliminarCuenta` (PR #190) y a `GestionCuentaUseCase.eliminarCuentaVendedor` (PR #203). `SecurityConfig` deja de restringir el `DELETE` al vendedor.
 - **Cascada (T275, AB#275):** `usuarios` llama a los módulos `deseos` (PR #221), `carrito`, `preferencias`, `metodospago` y `direcciones` por cinco puertos de salida con sus adaptadores, antes de borrar al usuario, porque esos módulos sacan el id del correo. Los borrados de cada módulo tienen sus propios casos: HU5-CP30 a CP32, HU6-CP38 a CP40, HU9-CP21 a CP23 y HU46-CP23 a CP25.
 - **Tests movidos:** los de CP01, CP02 y CP04 pasan de `GestionPerfilServiceTest` y `SeguridadSesionUsuarioServiceTest` (PR #190) a `GestionCuentaServiceTest` y `SeguridadGestionCuentaServiceTest`. Se elimina `unVendedorNoEliminaSuCuenta`: con el endpoint único, el vendedor sí elimina su cuenta por aquí (HU47-CP05).
-- **Frontend:** las tasks AB#272 y AB#273 están sin empezar. El mock de `DELETE /api/perfil` (`profileHandlers.js`) todavía responde 403 al cliente.
+- **HU25-CP07 a CP12 (frontend, T272 y T273):** casos propuestos, **PENDIENTES DE CONFIRMAR CON EL EQUIPO**, a partir de los criterios de la HU25. Siguen la numeración del backend (HU25-CP01 a CP06). Rama `feature/US25-T272-T273-eliminar-cuenta-cliente-front`.
+- **Reutiliza la HU47:** la sección del perfil (`AccountDeletion` en `ProfilePage`) y `DeleteAccountDialog` son los de la HU47; el diálogo recibe el rol y de él salen las consecuencias que explica. Contrato: un único `DELETE /api/perfil` con `{ password }` para cliente y vendedor (PR #235 del backend, T274 y T275): 204 con la sesión cerrada, 400 `WRONG_PASSWORD`, 400 de validación sin contraseña y 401 sin sesión.
+- **Cambios en el diálogo que afectan al vendedor:** la contraseña incorrecta se avisa ahora en el campo y no en un aviso arriba, la contraseña actual no se puede copiar ni cortar (R9) y el botón no se activa con solo espacios. Los tests HU47-CP09 a CP12 siguen pasando sin cambios; solo cambia HU47-CP13, que ya no dice que el cliente no tiene la opción.
+- **Mocks:** `DELETE /api/perfil` también para el cliente, que deja de existir para el login hasta que se reinician los mocks; el vendedor no se borra, como antes.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -2887,11 +2897,36 @@ Notas:
 | HU25-CP06 | `CarritoClienteAdapterTest` | `eliminarDelegaEnElCasoDeUsoConElMismoCorreo` | Infraestructura | AB#275 | PR #235 | ✅ |
 | HU25-CP06 | `ListaDeseosClienteAdapterTest` | `eliminarDelegaEnElCasoDeUsoConElMismoCorreo` | Infraestructura | AB#275 | PR #235 | ✅ |
 | HU25-CP06 | `PreferenciasClienteAdapterTest` | `eliminarDelegaEnElCasoDeUsoConElMismoCorreo` | Infraestructura | AB#275 | PR #235 | ✅ |
+| HU25-CP07 | `ProfilePage.test.jsx` | `HU25-CP07: el cliente tiene la opción de eliminar su cuenta en su perfil, igual que el vendedor` | Frontend · página | AB#272 | PR #236 | ✅ |
+| HU25-CP07 | `ProfilePage.test.jsx` | `HU25-CP07: la opción es del perfil propio: el administrador no la tiene, porque no tiene perfil` | Frontend · página | AB#272 | PR #236 | ✅ |
+| HU25-CP07 | `ProfilePage.test.jsx` | `HU25-CP07: al pulsar el botón se abre la confirmación y al cancelarla no se elimina nada` | Frontend · página | AB#272 | PR #236 | ✅ |
+| HU25-CP08 | `DeleteAccountDialog.test.jsx` | `HU25-CP08: explica qué se elimina y qué se conserva de la cuenta de un cliente` | Frontend · componente | AB#273 | PR #236 | ✅ |
+| HU25-CP08 | `DeleteAccountDialog.test.jsx` | `HU25-CP08: el cliente no ve las consecuencias del vendedor` | Frontend · componente | AB#273 | PR #236 | ✅ |
+| HU25-CP08 | `DeleteAccountDialog.test.jsx` | `HU25-CP08: las consecuencias del vendedor no cambian y no hablan de las del cliente` | Frontend · componente | AB#273 | PR #236 | ✅ |
+| HU25-CP08 | `DeleteAccountDialog.test.jsx` | `HU25-CP08: las consecuencias salen de una lista, un elemento por consecuencia` | Frontend · componente | AB#273 | PR #236 | ✅ |
+| HU25-CP09 | `DeleteAccountDialog.test.jsx` | `HU25-CP09: con la contraseña %s no se puede confirmar ni se llama al servidor` (2 variantes: vacía y con solo espacios) | Frontend · componente | AB#273 | PR #236 | ✅ |
+| HU25-CP09 | `DeleteAccountDialog.test.jsx` | `HU25-CP09: al abrir el diálogo el foco está en el campo de la contraseña actual` | Frontend · componente | AB#273 | PR #236 | ✅ |
+| HU25-CP09 | `DeleteAccountDialog.test.jsx` | `HU25-CP09: la contraseña actual se pide como un campo obligatorio de contraseña, oculta por defecto` | Frontend · componente | AB#273 | PR #236 | ✅ |
+| HU25-CP10 | `DeleteAccountDialog.test.jsx` | `HU25-CP10: con la contraseña incorrecta lo avisa en el propio campo, no cierra la sesión y deja corregirla` | Frontend · componente | AB#273 | PR #236 | ✅ |
+| HU25-CP10 | `DeleteAccountDialog.test.jsx` | `HU25-CP10: el aviso de la contraseña desaparece al corregirla y se puede volver a confirmar` | Frontend · componente | AB#273 | PR #236 | ✅ |
+| HU25-CP10 | `DeleteAccountDialog.test.jsx` | `HU25-CP10: %s da un aviso genérico, sin marcar el campo, y no elimina` (3 variantes: error del servidor, validación del backend y error de red) | Frontend · componente | AB#273 | PR #236 | ✅ |
+| HU25-CP10 | `DeleteAccountDialog.test.jsx` | `HU25-CP10: mientras se envía, los botones quedan deshabilitados y no se envía dos veces` | Frontend · componente | AB#273 | PR #236 | ✅ |
+| HU25-CP10 | `DeleteAccountDialog.test.jsx` | `HU25-CP10: con la contraseña correcta elimina la cuenta del cliente enviando solo la contraseña` | Frontend · componente | AB#273 | PR #236 | ✅ |
+| HU25-CP11 | `DeleteAccountDialog.test.jsx` | `HU25-CP11: en el diálogo del %s no se puede copiar ni cortar, pero sí pegar` (2 variantes: cliente y vendedor) | Frontend · componente | AB#273 | PR #236 | ✅ |
+| HU25-CP12 | `ProfilePage.test.jsx` | `HU25-CP12: con la contraseña correcta se cierra la sesión, se va al login y se avisa de que la cuenta se ha eliminado` | Frontend · página | AB#273 | PR #236 | ✅ |
+| HU25-CP12 | `ProfilePage.test.jsx` | `HU25-CP12: la zona del cliente deja de ser accesible tras eliminar la cuenta` | Frontend · página | AB#273 | PR #236 | ✅ |
+| HU25-CP12 | `ProfilePage.test.jsx` | `HU25-CP12: con una contraseña incorrecta la sesión sigue abierta, se avisa en el campo y se queda en el perfil` | Frontend · página | AB#273 | PR #236 | ✅ |
+| HU25-CP13 | `ProfilePage.test.jsx` | `HU25-CP13: después de eliminarla no se puede iniciar sesión con esa cuenta, y las demás siguen entrando` | Frontend · página | AB#273 | PR #236 | ✅ |
+| HU25-CP13 | `ProfilePage.test.jsx` | `HU25-CP13: eliminar la cuenta de un cliente no elimina la de otro` | Frontend · página | AB#273 | PR #236 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `GestionCuentaServiceTest` y `SeguridadGestionCuentaServiceTest`: `usuarios/application/service/` (Mockito sin Spring, y contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
 - `PerfilControllerTest`: `usuarios/infrastructure/adapter/in/web/` (`@WebMvcTest` con la `SecurityConfig` real)
 - `*ClienteAdapterTest`: `usuarios/infrastructure/adapter/out/<módulo>/` (Mockito sin Spring)
+
+Rutas de las clases de test del frontend (bajo `frontend/src/`):
+- `DeleteAccountDialog.test.jsx`: `features/account/` (Vitest, RTL y MSW)
+- `ProfilePage.test.jsx`: `pages/` (Vitest, RTL y MSW)
 
 ---
 
@@ -3470,7 +3505,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU47-CP10 | Con la contraseña escrita se elimina la cuenta enviando solo la contraseña | Frontend (componente) | 1 | ✅ Pasa (1, AB#311, PR #223) |
 | HU47-CP11 | Con la contraseña incorrecta se avisa sin repetirla y se puede corregir; otro fallo da un aviso genérico. El diálogo no se cierra | Frontend (componente) | 2 | ✅ Pasa (2, AB#311, PR #223) |
 | HU47-CP12 | Al cancelar no se elimina la cuenta | Frontend (componente) | 1 | ✅ Pasa (1, AB#311, PR #223) |
-| HU47-CP13 | La opción «Eliminar mi cuenta» está en el perfil del vendedor y no en el del cliente | Frontend (página) | 1 | ✅ Pasa (1, AB#311, PR #223) |
+| HU47-CP13 | La opción «Eliminar mi cuenta» está en el perfil del vendedor (la del cliente es de la HU25-CP07) | Frontend (página) | 1 | ✅ Pasa (1, AB#311, modificado en PR #236) |
 | HU47-CP14 | Tras eliminar la cuenta se cierra la sesión y el login avisa «Tu cuenta se ha eliminado.» | Frontend (página) | 1 | ✅ Pasa (1, AB#311, PR #223) |
 
 Notas:
@@ -3509,7 +3544,7 @@ Notas:
 | HU47-CP11 | `DeleteAccountDialog.test.jsx` | `HU47-CP11: con la contraseña incorrecta lo avisa, no elimina y deja corregirla` | Frontend · componente | AB#311 | PR #223 | ✅ |
 | HU47-CP11 | `DeleteAccountDialog.test.jsx` | `HU47-CP11: si falla por otro motivo da un aviso genérico y no elimina` | Frontend · componente | AB#311 | PR #223 | ✅ |
 | HU47-CP12 | `DeleteAccountDialog.test.jsx` | `HU47-CP12: al cancelar no se elimina la cuenta` | Frontend · componente | AB#311 | PR #223 | ✅ |
-| HU47-CP13 | `ProfilePage.test.jsx` | `HU47-CP13: el vendedor tiene la opción de eliminar su cuenta y el cliente no` | Frontend · página | AB#311 | PR #223 | ✅ |
+| HU47-CP13 | `ProfilePage.test.jsx` | `HU47-CP13: el vendedor tiene la opción de eliminar su cuenta en su perfil` | Frontend · página | AB#311 | PR #223 (modificado en PR #236) | ✅ |
 | HU47-CP14 | `ProfilePage.test.jsx` | `HU47-CP14: tras eliminar la cuenta se cierra la sesión y el login avisa de que se ha eliminado` | Frontend · página | AB#311 | PR #223 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
