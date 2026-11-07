@@ -53,6 +53,11 @@ class CreacionIncidenciasServiceTest {
         public IncidenciaPage buscarPorAutor(String autorId, int pagina, int tamano) {
             throw new UnsupportedOperationException("No lo usa la creación");
         }
+
+        @Override
+        public IncidenciaPage buscarTodas(int pagina, int tamano) {
+            throw new UnsupportedOperationException("No lo usa la creación");
+        }
     }
 
     // Cada correo de la sesión tiene su id de usuario
