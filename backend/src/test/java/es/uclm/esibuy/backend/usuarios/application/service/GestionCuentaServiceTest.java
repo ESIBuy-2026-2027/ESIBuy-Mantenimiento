@@ -127,12 +127,16 @@ class GestionCuentaServiceTest {
         servicio.eliminarCuentaPropia(EMAIL_CLIENTE, PASSWORD);
 
         // Los otros módulos sacan el id del correo: todo va antes de borrar al usuario
-        InOrder orden = inOrder(listaDeseos, carrito, preferencias, metodosPago, direcciones, usuarioRepository);
+        InOrder orden = inOrder(listaDeseos, carrito, preferencias, metodosPago, direcciones, factores,
+                codigosVerificacion, codigosRecuperacion, usuarioRepository);
         orden.verify(listaDeseos).eliminar(EMAIL_CLIENTE);
         orden.verify(carrito).eliminar(EMAIL_CLIENTE);
         orden.verify(preferencias).eliminar(EMAIL_CLIENTE);
         orden.verify(metodosPago).eliminarTodos(EMAIL_CLIENTE);
         orden.verify(direcciones).eliminarTodas(EMAIL_CLIENTE);
+        orden.verify(factores).eliminarPorUsuario("u-1");
+        orden.verify(codigosVerificacion).eliminarPorUsuario("u-1");
+        orden.verify(codigosRecuperacion).eliminarPorUsuario("u-1");
         orden.verify(usuarioRepository).eliminarPorId("u-1");
     }
 
