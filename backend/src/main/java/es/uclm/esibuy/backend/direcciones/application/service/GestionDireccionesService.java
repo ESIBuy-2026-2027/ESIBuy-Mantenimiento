@@ -92,6 +92,12 @@ public class GestionDireccionesService implements GestionDireccionesUseCase {
         direcciones.getDirecciones().forEach(direccionRepository::guardar);
     }
 
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
+    @Override
+    public void eliminarTodas(String emailCliente) {
+        direccionRepository.eliminarPorCliente(clienteEnSesion.idPorCorreo(emailCliente));
+    }
+
     // Solo las del cliente en sesión: un id de otro cliente no se encuentra
     private DireccionesCliente direccionesDelCliente(String emailCliente) {
         return new DireccionesCliente(

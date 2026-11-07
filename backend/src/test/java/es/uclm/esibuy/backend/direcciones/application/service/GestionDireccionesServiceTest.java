@@ -249,6 +249,11 @@ class GestionDireccionesServiceTest {
             guardados.removeIf(direccion -> direccion.getId().equals(direccionId));
         }
 
+        @Override
+        public void eliminarPorCliente(String clienteId) {
+            guardados.removeIf(direccion -> direccion.getClienteId().equals(clienteId));
+        }
+
         private DireccionEnvio buscarGuardada(String id) {
             return guardados.get(posicionDe(id));
         }
@@ -265,6 +270,27 @@ class GestionDireccionesServiceTest {
         private static DireccionEnvio copia(DireccionEnvio direccion, String id) {
             return new DireccionEnvio(id, direccion.getClienteId(), direccion.getDatos(), direccion.isPrincipal());
         }
+    }
+
+    @Test
+    @DisplayName("HU5-CP30: eliminar todas borra las direcciones del cliente y no las de otro cliente")
+    void eliminarTodasBorraSoloLasDelCliente() {
+        servicio.anadir(EMAIL_CLIENTE, direccion("Calle Mayor 1"));
+        servicio.anadir(EMAIL_CLIENTE, direccion("Calle Mayor 2"));
+        String ajena = guardarDeOtroCliente().getId();
+
+        servicio.eliminarTodas(EMAIL_CLIENTE);
+
+        assertTrue(repositorio.buscarPorCliente(ID_CLIENTE).isEmpty());
+        assertEquals(List.of(ajena), repositorio.guardados.stream().map(DireccionEnvio::getId).toList());
+    }
+
+    @Test
+    @DisplayName("HU5-CP30: eliminar todas las direcciones de un cliente que no tiene no es un error")
+    void eliminarTodasSinDireccionesNoEsUnError() {
+        servicio.eliminarTodas(EMAIL_CLIENTE);
+
+        assertTrue(repositorio.buscarPorCliente(ID_CLIENTE).isEmpty());
     }
 
     // Siempre el mismo cliente en sesión
