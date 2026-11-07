@@ -2,10 +2,12 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.Optional;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.ContactoUsuario;
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutobloqueoNoPermitidoException;
@@ -52,6 +54,14 @@ public class AdministracionUsuariosService implements AdministracionUsuariosUseC
     public String consultarNombreComercial(String vendedorId) {
         DatosVendedor datos = consultarVendedor(vendedorId).getDatosVendedor();
         return datos == null ? null : datos.nombreComercial();
+    }
+
+    // Supervisión de incidencias (HU49): una cuenta eliminada no hace fallar la consulta, devuelve vacío
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
+    @Override
+    public Optional<ContactoUsuario> consultarContacto(String usuarioId) {
+        return usuarioRepository.buscarPorId(usuarioId)
+                .map(usuario -> new ContactoUsuario(usuario.getEmail().valor(), usuario.getRol().name()));
     }
 
     @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)

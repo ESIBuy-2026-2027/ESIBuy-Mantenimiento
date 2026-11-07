@@ -11,4 +11,7 @@ public interface IncidenciaRepositoryPort {
 
     // Las incidencias de un autor, de las más antiguas a las más recientes, por páginas (la primera es la 0)
     IncidenciaPage buscarPorAutor(String autorId, int pagina, int tamano);
+
+    // Las incidencias de todos los autores, de las más antiguas a las más recientes, por páginas (la primera es la 0)
+    IncidenciaPage buscarTodas(int pagina, int tamano);
 }

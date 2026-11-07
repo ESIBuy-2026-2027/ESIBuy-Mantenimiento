@@ -55,6 +55,11 @@ class ConsultaIncidenciasServiceTest {
             tamanoPedido = tamano;
             return PAGINA;
         }
+
+        @Override
+        public IncidenciaPage buscarTodas(int pagina, int tamano) {
+            throw new UnsupportedOperationException("No lo usa la consulta de las propias");
+        }
     }
 
     // Cada correo de la sesión tiene su id de usuario

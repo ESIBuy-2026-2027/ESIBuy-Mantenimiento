@@ -4284,6 +4284,68 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 ---
 
+## HU49 · Supervisión de incidencias
+
+### Tabla A · HU49 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU49-CP01 | El módulo de usuarios da el correo y el rol de un usuario (cliente o vendedor) por su id, sin exponer su dominio | Unitario (aplicación, usuarios) | 2 | 🔍 En revisión (2, AB#307, PR pendiente) |
+| HU49-CP02 | Si el usuario ya no existe (cuenta eliminada), el contacto viene vacío en vez de fallar | Unitario (aplicación, usuarios) | 1 | 🔍 En revisión (1, AB#307, PR pendiente) |
+| HU49-CP03 | Solo el administrador consulta el contacto de un usuario; cliente y vendedor reciben 403 y sin sesión se rechaza. Seguridad en la capa de negocio | Unitario con Spring Security (sin MongoDB) | 4 | 🔍 En revisión (4, AB#307, PR pendiente) |
+| HU49-CP04 | El adaptador de MongoDB devuelve las incidencias de todos los autores, por páginas, de las más antiguas a las más recientes, con orden estable y con el total | Integración MongoDB | 3 | 🔍 En revisión (3, AB#307, PR pendiente) |
+| HU49-CP05 | El servicio devuelve la página pedida con el correo y el rol del autor de cada incidencia | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#307, PR pendiente) |
+| HU49-CP06 | Una incidencia cuyo autor ya no existe se devuelve sin autor y no hace fallar la consulta | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#307, PR pendiente) |
+| HU49-CP07 | Cada autor se busca una sola vez por página, aunque tenga varias incidencias; una página vacía no busca ninguno | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#307, PR pendiente) |
+| HU49-CP08 | El servicio admite la primera página y los tamaños de 1 a 50 y rechaza una página negativa o un tamaño fuera de rango sin consultar nada | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#307, PR pendiente) |
+| HU49-CP09 | Solo el administrador consulta las incidencias de todos; cliente y vendedor reciben 403 y sin sesión se rechaza. Seguridad en la capa de negocio | Unitario con Spring Security (sin MongoDB) | 4 | 🔍 En revisión (4, AB#307, PR pendiente) |
+| HU49-CP10 | El adaptador hacia el módulo de usuarios convierte el contacto en el autor de la incidencia, o en ninguno si la cuenta ya no existe | Unitario (adaptador) | 2 | 🔍 En revisión (2, AB#307, PR pendiente) |
+
+Notas:
+- **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** HU49-CP01 a CP10 los propone el desarrollo backend a partir del criterio de la HU49 («el administrador debe disponer de una vista para las incidencias») y no salen de Azure Boards. Rama `feature/US49-T307-logica-supervision-incidencias`.
+- **T307 (AB#307, lógica de obtención de incidencias):** puerto de entrada `SupervisionIncidenciasUseCase` (otro actor que la consulta de la HU44, por eso es un puerto aparte) y su servicio `SupervisionIncidenciasService` con `@PreAuthorize(SOLO_ADMINISTRADOR)`; `IncidenciaRepositoryPort.buscarTodas`, en el mismo orden y con la misma paginación que la HU44 (CP04 a CP09).
+- **El autor de cada incidencia (decisión del equipo):** el administrador ve el correo y el rol de quien la reportó. Incidencias no usa el dominio de usuarios: pide el contacto por el puerto de entrada de usuarios (`AdministracionUsuariosUseCase.consultarContacto`, nuevo, solo para el administrador) a través de `AutoresPort` y `AutoresAdapter` (CP01 a CP03 y CP10). Cada autor se busca una sola vez por página (CP07).
+- **Cuenta eliminada (decisión del equipo):** con la HU25 y la HU47 la cuenta se borra, pero sus incidencias siguen; la incidencia se devuelve sin autor en vez de hacer fallar el listado (CP02, CP06 y CP10).
+- **Seguridad en la capa de negocio (R8):** CP03 y CP09 comprueban que el administrador pasa, que cliente y vendedor reciben 403 y que sin sesión se rechaza.
+- **Pendiente:** el endpoint `GET /api/admin/incidencias` (T306) y la vista del administrador (T304).
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU49-CP01 | `AdministracionUsuariosServiceTest` | `HU49-CP01: consultarContacto devuelve el correo y el rol de un cliente` | Aplicación (usuarios) | AB#307 | PR pendiente | 🔍 |
+| HU49-CP01 | `AdministracionUsuariosServiceTest` | `HU49-CP01: consultarContacto devuelve el correo y el rol de un vendedor` | Aplicación (usuarios) | AB#307 | PR pendiente | 🔍 |
+| HU49-CP02 | `AdministracionUsuariosServiceTest` | `HU49-CP02: consultarContacto de un usuario que ya no existe devuelve vacío, sin fallar` | Aplicación (usuarios) | AB#307 | PR pendiente | 🔍 |
+| HU49-CP03 | `SeguridadAdministracionUsuariosServiceTest` | `HU49-CP03: un cliente no puede consultar el contacto de un usuario` | Aplicación (usuarios) · seguridad | AB#307 | PR pendiente | 🔍 |
+| HU49-CP03 | `SeguridadAdministracionUsuariosServiceTest` | `HU49-CP03: un vendedor no puede consultar el contacto de un usuario` | Aplicación (usuarios) · seguridad | AB#307 | PR pendiente | 🔍 |
+| HU49-CP03 | `SeguridadAdministracionUsuariosServiceTest` | `HU49-CP03: un administrador sí consulta el contacto de un usuario` | Aplicación (usuarios) · seguridad | AB#307 | PR pendiente | 🔍 |
+| HU49-CP03 | `SeguridadAdministracionUsuariosServiceTest` | `HU49-CP03: sin sesión se rechaza la consulta del contacto de un usuario` | Aplicación (usuarios) · seguridad | AB#307 | PR pendiente | 🔍 |
+| HU49-CP04 | `IncidenciaMongoAdapterTest` | `HU49-CP04: buscar todas devuelve las de todos los autores, de las más antiguas a las más recientes` | Infraestructura (MongoDB) | AB#307 | PR pendiente | 🔍 |
+| HU49-CP04 | `IncidenciaMongoAdapterTest` | `HU49-CP04: buscar todas devuelve una página cada vez, con el total de todas` | Infraestructura (MongoDB) | AB#307 | PR pendiente | 🔍 |
+| HU49-CP04 | `IncidenciaMongoAdapterTest` | `HU49-CP04: sin incidencias, buscar todas devuelve una página vacía` | Infraestructura (MongoDB) | AB#307 | PR pendiente | 🔍 |
+| HU49-CP05 | `SupervisionIncidenciasServiceTest` | `HU49-CP05: devuelve la página pedida con el autor de cada incidencia` | Aplicación | AB#307 | PR pendiente | 🔍 |
+| HU49-CP06 | `SupervisionIncidenciasServiceTest` | `HU49-CP06: una incidencia cuyo autor ya no existe se devuelve sin autor y no hace fallar la consulta` | Aplicación | AB#307 | PR pendiente | 🔍 |
+| HU49-CP07 | `SupervisionIncidenciasServiceTest` | `HU49-CP07: busca cada autor una sola vez, aunque tenga varias incidencias en la página` | Aplicación | AB#307 | PR pendiente | 🔍 |
+| HU49-CP07 | `SupervisionIncidenciasServiceTest` | `HU49-CP07: una página vacía no busca ningún autor` | Aplicación | AB#307 | PR pendiente | 🔍 |
+| HU49-CP08 | `SupervisionIncidenciasServiceTest` | `HU49-CP08: admite la primera página y los tamaños de 1 a 50` | Aplicación | AB#307 | PR pendiente | 🔍 |
+| HU49-CP08 | `SupervisionIncidenciasServiceTest` | `HU49-CP08: rechaza una página negativa y un tamaño menor que 1 o mayor que 50, sin consultar nada` | Aplicación | AB#307 | PR pendiente | 🔍 |
+| HU49-CP09 | `SeguridadIncidenciasServiceTest` | `HU49-CP09: el administrador consulta las incidencias de todos` | Aplicación · seguridad | AB#307 | PR pendiente | 🔍 |
+| HU49-CP09 | `SeguridadIncidenciasServiceTest` | `HU49-CP09: un cliente no consulta las incidencias de todos` | Aplicación · seguridad | AB#307 | PR pendiente | 🔍 |
+| HU49-CP09 | `SeguridadIncidenciasServiceTest` | `HU49-CP09: un vendedor no consulta las incidencias de todos` | Aplicación · seguridad | AB#307 | PR pendiente | 🔍 |
+| HU49-CP09 | `SeguridadIncidenciasServiceTest` | `HU49-CP09: sin sesión no se consultan las incidencias de todos` | Aplicación · seguridad | AB#307 | PR pendiente | 🔍 |
+| HU49-CP10 | `AutoresAdapterTest` | `HU49-CP10: el correo y el rol del autor se piden al módulo de usuarios` | Infraestructura (adaptador) | AB#307 | PR pendiente | 🔍 |
+| HU49-CP10 | `AutoresAdapterTest` | `HU49-CP10: si la cuenta del autor ya no existe, no hay autor` | Infraestructura (adaptador) | AB#307 | PR pendiente | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `AdministracionUsuariosServiceTest`: `usuarios/application/service/` (JUnit y Mockito, sin Spring)
+- `SeguridadAdministracionUsuariosServiceTest`: `usuarios/application/service/`, archivo `SeguridadAdministracionUsuarioServiceTest.java` (contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
+- `IncidenciaMongoAdapterTest`: `incidencias/infrastructure/adapter/out/persistence/` (con Testcontainers)
+- `SupervisionIncidenciasServiceTest`: `incidencias/application/service/` (JUnit, sin Spring)
+- `SeguridadIncidenciasServiceTest`: `incidencias/application/service/` (contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
+- `AutoresAdapterTest`: `incidencias/infrastructure/adapter/out/usuarios/` (JUnit y Mockito, sin Spring)
+
+---
+
 ## Tests técnicos sin caso de prueba
 
 Tests que no validan una HU concreta.
@@ -4305,6 +4367,7 @@ Tests que no validan una HU concreta.
 | `PreferenciasConfigTest` | `elContextoConectaLasPiezasDeLasPreferencias` | Que Spring conecta el servicio de las preferencias con su adaptador de MongoDB y los adaptadores hacia usuarios y categorías (HU46; AB#287, PR #220) |
 | `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |
 | `IncidenciasConfigTest` | `elContextoConectaLasPiezasDeLasIncidencias` | Que Spring conecta la creación y la consulta de incidencias con su adaptador de MongoDB y el adaptador hacia usuarios (HU44; AB#293 y AB#419, PR pendiente) |
+| `IncidenciasConfigTest` | `elContextoConectaLaSupervisionDeIncidencias` | Que Spring conecta la supervisión de incidencias del administrador con el adaptador hacia usuarios (HU49; AB#307, PR pendiente) |
 | `SecurityConfigTest` | `unaPeticionRecibeElTokenCsrfEnUnaCookie` | Que cualquier respuesta, aunque sea un 401, entrega el token CSRF en la cookie `XSRF-TOKEN` sin `HttpOnly` (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostSinTokenCsrfSeRechaza` | Que un `POST` sin token CSRF se rechaza con 403 (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostConElTokenDeLaCookieEnLaCabeceraSeAcepta` | Que un `POST` con el token de la cookie en la cabecera `X-XSRF-TOKEN` pasa el filtro CSRF (AB#230, PR #67) |

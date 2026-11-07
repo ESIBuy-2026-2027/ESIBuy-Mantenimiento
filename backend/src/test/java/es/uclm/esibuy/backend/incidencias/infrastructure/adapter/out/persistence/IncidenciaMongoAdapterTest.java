@@ -28,7 +28,8 @@ import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColeccio
 // Test de integración del adaptador de MongoDB de las incidencias (HU44, T291). Usa un MongoDB real en Docker
 // (Testcontainers): Docker Desktop debe estar abierto. InicializadorColecciones crea las colecciones con su
 // validación y sus índices, como en la aplicación real.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU44-CP07, propuesto.
+// También la búsqueda de todas las incidencias para el administrador (HU49, T307).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU44-CP07 y HU49-CP04, propuestos.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class IncidenciaMongoAdapterTest {
@@ -158,6 +159,47 @@ class IncidenciaMongoAdapterTest {
         adapter.guardar(incidencia("u-2", "De otro", 0));
 
         IncidenciaPage pagina = adapter.buscarPorAutor("u-1", 0, 10);
+
+        assertEquals(List.of(), asuntos(pagina));
+        assertEquals(0, pagina.totalElementos());
+    }
+
+    // Supervisión de incidencias (HU49, T307): el administrador ve las de todos los autores, en el mismo orden
+
+    @Test
+    @DisplayName("HU49-CP04: buscar todas devuelve las de todos los autores, de las más antiguas a las más recientes")
+    void buscarTodasDevuelveLasDeTodosLosAutoresDeLasMasAntiguasALasMasRecientes() {
+        adapter.guardar(incidencia("u-1", "Tercera", 30));
+        adapter.guardar(incidencia("u-2", "Primera", 10));
+        adapter.guardar(incidencia("u-1", "Segunda", 20));
+        adapter.guardar(incidencia("u-2", "Misma fecha que la tercera", 30));
+
+        IncidenciaPage pagina = adapter.buscarTodas(0, 10);
+
+        assertEquals(List.of("Primera", "Segunda", "Tercera", "Misma fecha que la tercera"), asuntos(pagina));
+        assertEquals(List.of("u-2", "u-1", "u-1", "u-2"), pagina.incidencias().stream().map(Incidencia::autorId).toList());
+        assertEquals(4, pagina.totalElementos());
+    }
+
+    @Test
+    @DisplayName("HU49-CP04: buscar todas devuelve una página cada vez, con el total de todas")
+    void buscarTodasDevuelveUnaPaginaCadaVezConElTotalDeTodas() {
+        for (int i = 1; i <= 5; i++) {
+            adapter.guardar(incidencia(i % 2 == 0 ? "u-2" : "u-1", "Incidencia " + i, i));
+        }
+
+        IncidenciaPage segunda = adapter.buscarTodas(1, 2);
+
+        assertEquals(List.of("Incidencia 3", "Incidencia 4"), asuntos(segunda));
+        assertEquals(1, segunda.pagina());
+        assertEquals(2, segunda.tamano());
+        assertEquals(5, segunda.totalElementos());
+    }
+
+    @Test
+    @DisplayName("HU49-CP04: sin incidencias, buscar todas devuelve una página vacía")
+    void sinIncidenciasBuscarTodasDevuelveUnaPaginaVacia() {
+        IncidenciaPage pagina = adapter.buscarTodas(0, 10);
 
         assertEquals(List.of(), asuntos(pagina));
         assertEquals(0, pagina.totalElementos());
