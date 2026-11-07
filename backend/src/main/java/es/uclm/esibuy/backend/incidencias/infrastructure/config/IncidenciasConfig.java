@@ -7,19 +7,25 @@ import org.springframework.context.annotation.Configuration;
 
 import es.uclm.esibuy.backend.incidencias.application.port.in.ConsultaIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.CreacionIncidenciasUseCase;
+import es.uclm.esibuy.backend.incidencias.application.port.in.SupervisionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.out.AutorEnSesionPort;
+import es.uclm.esibuy.backend.incidencias.application.port.out.AutoresPort;
 import es.uclm.esibuy.backend.incidencias.application.port.out.IncidenciaRepositoryPort;
 import es.uclm.esibuy.backend.incidencias.application.service.ConsultaIncidenciasService;
 import es.uclm.esibuy.backend.incidencias.application.service.CreacionIncidenciasService;
+import es.uclm.esibuy.backend.incidencias.application.service.SupervisionIncidenciasService;
 import es.uclm.esibuy.backend.incidencias.infrastructure.adapter.out.persistence.IncidenciaDocumentMapper;
 import es.uclm.esibuy.backend.incidencias.infrastructure.adapter.out.persistence.IncidenciaMongoAdapter;
 import es.uclm.esibuy.backend.incidencias.infrastructure.adapter.out.persistence.IncidenciaMongoRepository;
 import es.uclm.esibuy.backend.incidencias.infrastructure.adapter.out.usuarios.AutorEnSesionAdapter;
+import es.uclm.esibuy.backend.incidencias.infrastructure.adapter.out.usuarios.AutoresAdapter;
+import es.uclm.esibuy.backend.usuarios.application.port.in.AdministracionUsuariosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 
 /**
- * Conecta las piezas del módulo de incidencias (HU44): los servicios de aplicación, sus adaptadores de salida y el
- * reloj. Los servicios no llevan @Service: los crea esta configuración, así dominio y aplicación no conocen Spring.
+ * Conecta las piezas del módulo de incidencias (HU44) y de su supervisión por el administrador (HU49): los servicios
+ * de aplicación, sus adaptadores de salida y el reloj. Los servicios no llevan @Service: los crea esta configuración,
+ * así dominio y aplicación no conocen Spring.
  */
 @Configuration
 public class IncidenciasConfig {
@@ -44,5 +50,17 @@ public class IncidenciasConfig {
     ConsultaIncidenciasUseCase consultaIncidenciasUseCase(IncidenciaRepositoryPort incidenciaRepositoryPort,
             AutorEnSesionPort incidenciasAutorEnSesionPort) {
         return new ConsultaIncidenciasService(incidenciaRepositoryPort, incidenciasAutorEnSesionPort);
+    }
+
+    // Supervisión (HU49): el prefijo «incidencias» evita chocar con beans de otros módulos
+    @Bean
+    AutoresPort incidenciasAutoresPort(AdministracionUsuariosUseCase administracionUsuarios) {
+        return new AutoresAdapter(administracionUsuarios);
+    }
+
+    @Bean
+    SupervisionIncidenciasUseCase supervisionIncidenciasUseCase(IncidenciaRepositoryPort incidenciaRepositoryPort,
+            AutoresPort incidenciasAutoresPort) {
+        return new SupervisionIncidenciasService(incidenciaRepositoryPort, incidenciasAutoresPort);
     }
 }
