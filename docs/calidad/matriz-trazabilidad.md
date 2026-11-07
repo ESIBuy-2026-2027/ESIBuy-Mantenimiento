@@ -3890,6 +3890,28 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
+| HU44-CP01 | Una incidencia se crea con autor, asunto, descripción, estado, respuesta y fecha; una nueva nace PENDIENTE, sin id y sin respuesta | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#291, PR pendiente) |
+| HU44-CP02 | El asunto y la descripción son obligatorios (no valen vacíos ni solo espacios) | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#291, PR pendiente) |
+| HU44-CP03 | El asunto, la descripción y la respuesta se guardan sin espacios en los extremos; la respuesta es opcional y, si falta, queda vacía | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#291, PR pendiente) |
+| HU44-CP04 | El asunto admite hasta 100 caracteres y la descripción hasta 1000 (sin contar los espacios de los extremos); más se rechaza | Unitario (dominio) | 4 | 🔍 En revisión (4, AB#291, PR pendiente) |
+| HU44-CP05 | La incidencia necesita un autor, un estado y una fecha de creación | Unitario (dominio) | 3 | 🔍 En revisión (3, AB#291, PR pendiente) |
+| HU44-CP06 | El mapper pasa la incidencia a documento y vuelve sin perder datos; sin respuesta se lee vacía y un documento que incumple el dominio se rechaza | Unitario (mapper) | 4 | 🔍 En revisión (4, AB#291, PR pendiente) |
+| HU44-CP07 | El adaptador de MongoDB guarda la incidencia con un id nuevo, el autor como `usuarioId` y el estado como texto; un usuario puede tener varias | Integración MongoDB | 3 | 🔍 En revisión (3, AB#291, PR pendiente) |
+| HU44-CP08 | El servicio crea la incidencia del usuario en sesión (cliente o vendedor), pendiente y con la fecha del reloj, y la guarda una sola vez | Unitario (aplicación) | 3 | 🔍 En revisión (3, AB#293, PR pendiente) |
+| HU44-CP09 | El servicio guarda asunto y descripción sin espacios en los extremos y rechaza uno vacío sin guardar nada | Unitario (aplicación) | 3 | 🔍 En revisión (3, AB#293, PR pendiente) |
+| HU44-CP10 | Solo cliente y vendedor crean incidencias y solo con su propio correo; administrador y sin sesión se rechazan. Seguridad en la capa de negocio | Unitario con Spring Security (sin MongoDB) | 6 | 🔍 En revisión (6, AB#293, PR pendiente) |
+| HU44-CP11 | La colección `incidencias` valida asunto (1 a 100), descripción (1 a 1000), estado (PENDIENTE o ABIERTA), usuario y fecha, y admite varias por usuario | Integración MongoDB | 3 | 🔍 En revisión (3, AB#291, PR pendiente) |
+| HU44-CP12 | El adaptador hacia el módulo de usuarios obtiene el id del cliente o del vendedor en sesión a partir de su correo | Unitario (adaptador) | 2 | 🔍 En revisión (2, AB#293, PR pendiente) |
+| HU44-CP13 | `POST /api/perfil/incidencias` crea la incidencia del usuario en sesión (cliente o vendedor) y responde 201 con ella | Controlador | 2 | 🔍 En revisión (2, AB#292, PR pendiente) |
+| HU44-CP14 | Una incidencia inválida, un cuerpo vacío o un cuerpo ilegible responden 400 `VALIDATION_ERROR` con un mensaje genérico | Controlador | 3 | 🔍 En revisión (3, AB#292, PR pendiente) |
+| HU44-CP15 | Sin sesión crear responde 401; el administrador, 403 `ACCESS_DENIED`; sin token CSRF se rechaza | Controlador | 3 | 🔍 En revisión (3, AB#292, PR pendiente) |
+| HU44-CP16 | Buscar por autor devuelve solo sus incidencias, por páginas, de las más antiguas a las más recientes, con orden estable y con el total | Integración MongoDB | 5 | 🔍 En revisión (5, AB#419, PR pendiente) |
+| HU44-CP17 | El servicio consulta las incidencias del usuario en sesión (cliente o vendedor) con la página y el tamaño pedidos | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#419, PR pendiente) |
+| HU44-CP18 | El servicio admite la primera página y los tamaños de 1 a 50 y rechaza una página negativa o un tamaño fuera de rango sin consultar nada | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#419, PR pendiente) |
+| HU44-CP19 | Solo cliente y vendedor consultan sus incidencias y solo con su propio correo; administrador y sin sesión se rechazan. Seguridad en la capa de negocio | Unitario con Spring Security (sin MongoDB) | 6 | 🔍 En revisión (6, AB#419, PR pendiente) |
+| HU44-CP20 | `GET /api/perfil/incidencias` responde 200 con la página `{items, page, size, totalItems, totalPages}` sin el autor; `page` empieza en 1 y `size` vale 10 por defecto | Controlador | 4 | 🔍 En revisión (4, AB#419, PR pendiente) |
+| HU44-CP21 | Una página o un tamaño fuera de rango, o una página que no es un número, responden 400 | Controlador | 2 | 🔍 En revisión (2, AB#419, PR pendiente) |
+| HU44-CP22 | Sin sesión consultar responde 401 y el administrador recibe 403 `ACCESS_DENIED` | Controlador | 2 | 🔍 En revisión (2, AB#419, PR pendiente) |
 | HU44-CP23 | Las llamadas del frontend piden `GET /api/perfil/incidencias?page&size` y `POST /api/perfil/incidencias` con el asunto y la descripción; un 400 o un 403 llegan como error con su estado y su código | Frontend (API) | 4 | 🔍 En revisión (4, AB#289, PR pendiente) |
 | HU44-CP24 | El asunto y la descripción son obligatorios (no valen vacíos ni solo espacios), con un máximo de 100 y 1000 caracteres que no cuenta los espacios de los extremos | Frontend (utilidad) | 8 | 🔍 En revisión (8, AB#289, PR pendiente) |
 | HU44-CP25 | El estado de cada incidencia se muestra como Pendiente o Abierta, en un badge de su color; un estado desconocido se muestra tal cual | Frontend (utilidad y componente) | 4 | 🔍 En revisión (4, AB#289, PR pendiente) |
@@ -3903,6 +3925,13 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU44-CP33 | El vendedor ve el botón Incidencias, abre su vista y crea incidencias; el administrador y el invitado no lo ven y las rutas de incidencias los redirigen | Frontend (página) | 6 | 🔍 En revisión (6, AB#290, PR pendiente) |
 
 Notas:
+- **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** HU44-CP01 a CP22 los propone el desarrollo backend a partir de los criterios de la HU44 y no salen de Azure Boards. Rama `feature/US44-T291-T293-T292-T419-incidencias`.
+- **T291 (AB#291):** entidad `Incidencia` (`id`, `autorId`, `asunto`, `descripcion`, `estado`, `respuesta`, `fechaCreacion`), `EstadoIncidencia` (`PENDIENTE`, `ABIERTA`; no hay estado cerrada: una incidencia cerrada se elimina, HU50), `IncidenciaInvalidaException`, `IncidenciaDocumentMapper`, `IncidenciaMongoAdapter` y la colección `incidencias` con su validador (CP01 a CP07 y CP11).
+- **T293 (AB#293):** servicio `CreacionIncidenciasService` (`@PreAuthorize` con `CLIENTE_O_VENDEDOR_PROPIO_EN_COMANDO`, constante nueva en `Permisos`), `AutorEnSesionAdapter` hacia el módulo de usuarios y `IncidenciasConfig` (CP08 a CP10 y CP12). El autor sale de la sesión, nunca del cuerpo de la petición.
+- **T292 (AB#292):** `POST /api/perfil/incidencias` con `{asunto, descripcion}` → 201 `{id, asunto, descripcion, estado, respuesta, fechaCreacion}` (CP13 a CP15). Errores: 400 `VALIDATION_ERROR` (incidencia inválida o cuerpo ilegible), 401 sin sesión y 403 `ACCESS_DENIED` (administrador o sin token CSRF). El contrato completo para el frontend está en `docs/contratos/hu44-incidencias.md`.
+- **T419 (AB#419, creada para consultar mis incidencias desde el perfil):** `GET /api/perfil/incidencias?page=1&size=10`, paginada como `/api/admin/usuarios` (`page` desde 1, `size` de 1 a 50, por defecto 10), de las más antiguas a las más recientes (decisión del equipo) (CP16 a CP22). `ConsultaIncidenciasService` valida la paginación y `IncidenciaMongoAdapter` ordena por `fechaCreacion` y `id`.
+- **Seguridad en la capa de negocio (R8):** CP10 y CP19 comprueban que el rol correcto pasa, que los demás reciben 403 y que sin sesión se rechaza.
+- **Pendiente:** la `respuesta` y el cambio a `ABIERTA` los escribirán HU49 y HU50 (fuera de este alcance); el frontend de la HU44 (T289 y T290) usa el contrato.
 - **HU44-CP23 a CP33 (frontend, T289 y T290):** casos propuestos, **PENDIENTES DE CONFIRMAR CON EL EQUIPO**, a partir de los criterios de la HU44. Siguen la numeración del backend (HU44-CP01 a CP22, PR #224). Rama `feature/US44-T289-T290-incidencias-front`.
 - **Contrato:** `docs/contratos/hu44-incidencias.md` (PR #224). El frontend trabaja contra mocks de MSW (`incidentsHandlers.js`) que lo cumplen; conviven con el backend real.
 - **Vista y rutas:** `/incidents` («Mis incidencias», una lista de tarjetas como la de pedidos, abre en la última página porque el backend ordena de las más antiguas a las más recientes) y `/incidents/new` (formulario), para cliente y vendedor. El botón Incidencias de la cabecera lleva a la lista.
@@ -3913,6 +3942,74 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
+| HU44-CP01 | `IncidenciaTest` | `HU44-CP01: crea una incidencia con sus datos` | Dominio | AB#291 | PR pendiente | 🔍 |
+| HU44-CP01 | `IncidenciaTest` | `HU44-CP01: una incidencia nueva nace pendiente, sin id y sin respuesta` | Dominio | AB#291 | PR pendiente | 🔍 |
+| HU44-CP02 | `IncidenciaTest` | `HU44-CP02: el asunto es obligatorio` | Dominio | AB#291 | PR pendiente | 🔍 |
+| HU44-CP02 | `IncidenciaTest` | `HU44-CP02: la descripción es obligatoria` | Dominio | AB#291 | PR pendiente | 🔍 |
+| HU44-CP03 | `IncidenciaTest` | `HU44-CP03: el asunto, la descripción y la respuesta se guardan sin espacios en los extremos` | Dominio | AB#291 | PR pendiente | 🔍 |
+| HU44-CP03 | `IncidenciaTest` | `HU44-CP03: la respuesta es opcional: si falta, queda vacía` | Dominio | AB#291 | PR pendiente | 🔍 |
+| HU44-CP04 | `IncidenciaTest` | `HU44-CP04: el asunto admite hasta 100 caracteres y la descripción hasta 1000` | Dominio | AB#291 | PR pendiente | 🔍 |
+| HU44-CP04 | `IncidenciaTest` | `HU44-CP04: no cuentan los espacios de los extremos para el máximo` | Dominio | AB#291 | PR pendiente | 🔍 |
+| HU44-CP04 | `IncidenciaTest` | `HU44-CP04: rechaza un asunto de más de 100 caracteres` | Dominio | AB#291 | PR pendiente | 🔍 |
+| HU44-CP04 | `IncidenciaTest` | `HU44-CP04: rechaza una descripción de más de 1000 caracteres` | Dominio | AB#291 | PR pendiente | 🔍 |
+| HU44-CP05 | `IncidenciaTest` | `HU44-CP05: la incidencia necesita un autor` | Dominio | AB#291 | PR pendiente | 🔍 |
+| HU44-CP05 | `IncidenciaTest` | `HU44-CP05: la incidencia necesita una fecha de creación` | Dominio | AB#291 | PR pendiente | 🔍 |
+| HU44-CP05 | `IncidenciaTest` | `HU44-CP05: la incidencia necesita un estado` | Dominio | AB#291 | PR pendiente | 🔍 |
+| HU44-CP06 | `IncidenciaDocumentMapperTest` | `HU44-CP06: una incidencia pasa a documento y vuelve sin perder ningún dato` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
+| HU44-CP06 | `IncidenciaDocumentMapperTest` | `HU44-CP06: una incidencia nueva pasa a documento sin id, pendiente y sin respuesta` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
+| HU44-CP06 | `IncidenciaDocumentMapperTest` | `HU44-CP06: un documento sin respuesta se lee con la respuesta vacía` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
+| HU44-CP06 | `IncidenciaDocumentMapperTest` | `HU44-CP06: un documento que no cumple las reglas del dominio se rechaza al leerlo` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
+| HU44-CP07 | `IncidenciaMongoAdapterTest` | `HU44-CP07: guardar una incidencia nueva le asigna un id y devuelve sus datos` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
+| HU44-CP07 | `IncidenciaMongoAdapterTest` | `HU44-CP07: en la colección el autor se guarda como usuarioId y el estado como texto` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
+| HU44-CP07 | `IncidenciaMongoAdapterTest` | `HU44-CP07: un mismo usuario puede guardar varias incidencias` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
+| HU44-CP08 | `CreacionIncidenciasServiceTest` | `HU44-CP08: crea la incidencia del cliente en sesión, pendiente y con la fecha del reloj` | Aplicación | AB#293 | PR pendiente | 🔍 |
+| HU44-CP08 | `CreacionIncidenciasServiceTest` | `HU44-CP08: un vendedor también crea incidencias: el autor es el vendedor en sesión` | Aplicación | AB#293 | PR pendiente | 🔍 |
+| HU44-CP08 | `CreacionIncidenciasServiceTest` | `HU44-CP08: guarda una sola incidencia y devuelve la guardada` | Aplicación | AB#293 | PR pendiente | 🔍 |
+| HU44-CP09 | `CreacionIncidenciasServiceTest` | `HU44-CP09: el asunto y la descripción se guardan sin espacios en los extremos` | Aplicación | AB#293 | PR pendiente | 🔍 |
+| HU44-CP09 | `CreacionIncidenciasServiceTest` | `HU44-CP09: un asunto vacío se rechaza y no se guarda nada` | Aplicación | AB#293 | PR pendiente | 🔍 |
+| HU44-CP09 | `CreacionIncidenciasServiceTest` | `HU44-CP09: una descripción vacía se rechaza y no se guarda nada` | Aplicación | AB#293 | PR pendiente | 🔍 |
+| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: el cliente crea una incidencia con su propio correo` | Aplicación · seguridad | AB#293 | PR pendiente | 🔍 |
+| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: el vendedor crea una incidencia con su propio correo` | Aplicación · seguridad | AB#293 | PR pendiente | 🔍 |
+| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: un cliente no crea una incidencia con el correo de otro usuario` | Aplicación · seguridad | AB#293 | PR pendiente | 🔍 |
+| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: un vendedor no crea una incidencia con el correo de otro usuario` | Aplicación · seguridad | AB#293 | PR pendiente | 🔍 |
+| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: un administrador no crea incidencias, ni siquiera con su propio correo` | Aplicación · seguridad | AB#293 | PR pendiente | 🔍 |
+| HU44-CP10 | `SeguridadIncidenciasServiceTest` | `HU44-CP10: sin sesión se rechaza` | Aplicación · seguridad | AB#293 | PR pendiente | 🔍 |
+| HU44-CP11 | `InicializadorColeccionesTest` | `HU44-CP11: la colección incidencias admite incidencias válidas, varias por usuario y con los máximos` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
+| HU44-CP11 | `InicializadorColeccionesTest` | `HU44-CP11: la colección incidencias rechaza un asunto o una descripción vacíos o demasiado largos` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
+| HU44-CP11 | `InicializadorColeccionesTest` | `HU44-CP11: la colección incidencias rechaza un estado que no existe y una incidencia sin usuario` | Infraestructura · persistencia | AB#291 | PR pendiente | 🔍 |
+| HU44-CP12 | `AutorEnSesionAdapterTest` | `HU44-CP12: el id del cliente que reporta se pide al módulo de usuarios` | Infraestructura · adaptador | AB#293 | PR pendiente | 🔍 |
+| HU44-CP12 | `AutorEnSesionAdapterTest` | `HU44-CP12: el id del vendedor que reporta se pide al módulo de usuarios` | Infraestructura · adaptador | AB#293 | PR pendiente | 🔍 |
+| HU44-CP13 | `IncidenciaControllerTest` | `HU44-CP13: crear una incidencia responde 201 con la incidencia creada, con el cliente de la sesión` | Infraestructura · controlador | AB#292 | PR pendiente | 🔍 |
+| HU44-CP13 | `IncidenciaControllerTest` | `HU44-CP13: un vendedor también crea incidencias: el caso de uso recibe su correo` | Infraestructura · controlador | AB#292 | PR pendiente | 🔍 |
+| HU44-CP14 | `IncidenciaControllerTest` | `HU44-CP14: una incidencia que no cumple las reglas responde 400 VALIDATION_ERROR con un mensaje genérico` | Infraestructura · controlador | AB#292 | PR pendiente | 🔍 |
+| HU44-CP14 | `IncidenciaControllerTest` | `HU44-CP14: un cuerpo sin asunto ni descripción llega al caso de uso vacío y responde 400` | Infraestructura · controlador | AB#292 | PR pendiente | 🔍 |
+| HU44-CP14 | `IncidenciaControllerTest` | `HU44-CP14: un cuerpo que no se puede leer responde 400 VALIDATION_ERROR y no llega al caso de uso` | Infraestructura · controlador | AB#292 | PR pendiente | 🔍 |
+| HU44-CP15 | `IncidenciaControllerTest` | `HU44-CP15: sin sesión crear una incidencia responde 401` | Infraestructura · controlador | AB#292 | PR pendiente | 🔍 |
+| HU44-CP15 | `IncidenciaControllerTest` | `HU44-CP15: el administrador no crea incidencias: responde 403 con el code ACCESS_DENIED` | Infraestructura · controlador | AB#292 | PR pendiente | 🔍 |
+| HU44-CP15 | `IncidenciaControllerTest` | `HU44-CP15: sin token CSRF la petición se rechaza` | Infraestructura · controlador | AB#292 | PR pendiente | 🔍 |
+| HU44-CP16 | `IncidenciaMongoAdapterTest` | `HU44-CP16: buscar por autor devuelve solo sus incidencias, de las más antiguas a las más recientes` | Infraestructura · persistencia | AB#419 | PR pendiente | 🔍 |
+| HU44-CP16 | `IncidenciaMongoAdapterTest` | `HU44-CP16: devuelve una página cada vez, con el total de todas` | Infraestructura · persistencia | AB#419 | PR pendiente | 🔍 |
+| HU44-CP16 | `IncidenciaMongoAdapterTest` | `HU44-CP16: con la misma fecha conserva el orden en que se guardaron, para que las páginas sean estables` | Infraestructura · persistencia | AB#419 | PR pendiente | 🔍 |
+| HU44-CP16 | `IncidenciaMongoAdapterTest` | `HU44-CP16: una página más allá de la última viene vacía, pero con el total` | Infraestructura · persistencia | AB#419 | PR pendiente | 🔍 |
+| HU44-CP16 | `IncidenciaMongoAdapterTest` | `HU44-CP16: un autor sin incidencias recibe una página vacía` | Infraestructura · persistencia | AB#419 | PR pendiente | 🔍 |
+| HU44-CP17 | `ConsultaIncidenciasServiceTest` | `HU44-CP17: consulta las incidencias del cliente en sesión, con la página y el tamaño pedidos` | Aplicación | AB#419 | PR pendiente | 🔍 |
+| HU44-CP17 | `ConsultaIncidenciasServiceTest` | `HU44-CP17: un vendedor consulta las suyas: el autor es el vendedor en sesión` | Aplicación | AB#419 | PR pendiente | 🔍 |
+| HU44-CP18 | `ConsultaIncidenciasServiceTest` | `HU44-CP18: admite la primera página y los tamaños de 1 a 50` | Aplicación | AB#419 | PR pendiente | 🔍 |
+| HU44-CP18 | `ConsultaIncidenciasServiceTest` | `HU44-CP18: rechaza una página negativa y un tamaño menor que 1 o mayor que 50, sin consultar nada` | Aplicación | AB#419 | PR pendiente | 🔍 |
+| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: el cliente consulta sus incidencias con su propio correo` | Aplicación · seguridad | AB#419 | PR pendiente | 🔍 |
+| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: el vendedor consulta sus incidencias con su propio correo` | Aplicación · seguridad | AB#419 | PR pendiente | 🔍 |
+| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: un cliente no consulta las incidencias con el correo de otro usuario` | Aplicación · seguridad | AB#419 | PR pendiente | 🔍 |
+| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: un vendedor no consulta las incidencias con el correo de otro usuario` | Aplicación · seguridad | AB#419 | PR pendiente | 🔍 |
+| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: un administrador no consulta incidencias por aquí, ni siquiera con su propio correo` | Aplicación · seguridad | AB#419 | PR pendiente | 🔍 |
+| HU44-CP19 | `SeguridadIncidenciasServiceTest` | `HU44-CP19: sin sesión no se consultan las incidencias` | Aplicación · seguridad | AB#419 | PR pendiente | 🔍 |
+| HU44-CP20 | `IncidenciaControllerTest` | `HU44-CP20: consultar las incidencias responde 200 con la página, sin el autor, y por defecto pide la 1 de tamaño 10` | Infraestructura · controlador | AB#419 | PR pendiente | 🔍 |
+| HU44-CP20 | `IncidenciaControllerTest` | `HU44-CP20: la página empieza en 1: page=3 y size=2 piden la página 2 (desde 0) y se devuelve con page 3` | Infraestructura · controlador | AB#419 | PR pendiente | 🔍 |
+| HU44-CP20 | `IncidenciaControllerTest` | `HU44-CP20: sin incidencias responde 200 con una lista vacía y cero páginas` | Infraestructura · controlador | AB#419 | PR pendiente | 🔍 |
+| HU44-CP20 | `IncidenciaControllerTest` | `HU44-CP20: un vendedor también consulta las suyas: el caso de uso recibe su correo` | Infraestructura · controlador | AB#419 | PR pendiente | 🔍 |
+| HU44-CP21 | `IncidenciaControllerTest` | `HU44-CP21: una página o un tamaño que el caso de uso rechaza responden 400 VALIDATION_ERROR` | Infraestructura · controlador | AB#419 | PR pendiente | 🔍 |
+| HU44-CP21 | `IncidenciaControllerTest` | `HU44-CP21: una página que no es un número responde 400 y no llega al caso de uso` | Infraestructura · controlador | AB#419 | PR pendiente | 🔍 |
+| HU44-CP22 | `IncidenciaControllerTest` | `HU44-CP22: sin sesión consultar las incidencias responde 401` | Infraestructura · controlador | AB#419 | PR pendiente | 🔍 |
+| HU44-CP22 | `IncidenciaControllerTest` | `HU44-CP22: el administrador no consulta incidencias por aquí: responde 403 con el code ACCESS_DENIED` | Infraestructura · controlador | AB#419 | PR pendiente | 🔍 |
 | HU44-CP23 | `incidents.test.js` | `HU44-CP23: pide GET /api/perfil/incidencias con la página y el tamaño y devuelve la página` | Frontend · API | AB#289 | PR pendiente | 🔍 |
 | HU44-CP23 | `incidents.test.js` | `HU44-CP23: un 403 llega como error con su estado y su código` | Frontend · API | AB#289 | PR pendiente | 🔍 |
 | HU44-CP23 | `incidents.test.js` | `HU44-CP23: pide POST /api/perfil/incidencias con el asunto y la descripción y devuelve la incidencia` | Frontend · API | AB#289 | PR pendiente | 🔍 |
@@ -3972,6 +4069,17 @@ Notas:
 | HU44-CP33 | `AppHeader.test.jsx` | `HU44-CP33: sin sesión no se ve el botón Incidencias` | Frontend · página | AB#290 | PR pendiente | 🔍 |
 | HU44-CP33 | `AppHeader.test.jsx` | `HU44-CP33: el administrador que abre Mis incidencias o Nueva incidencia vuelve a su panel` | Frontend · página | AB#290 | PR pendiente | 🔍 |
 | HU44-CP33 | `AppHeader.test.jsx` | `HU44-CP33: sin sesión, Mis incidencias lleva al login` | Frontend · página | AB#290 | PR pendiente | 🔍 |
+
+Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `IncidenciaTest`: `incidencias/domain/model/` (JUnit, sin Spring)
+- `IncidenciaDocumentMapperTest`: `incidencias/infrastructure/adapter/out/persistence/` (JUnit, sin Spring)
+- `IncidenciaMongoAdapterTest`: `incidencias/infrastructure/adapter/out/persistence/` (con Testcontainers)
+- `AutorEnSesionAdapterTest`: `incidencias/infrastructure/adapter/out/usuarios/` (JUnit y Mockito, sin Spring)
+- `CreacionIncidenciasServiceTest`: `incidencias/application/service/` (JUnit y Mockito, sin Spring)
+- `ConsultaIncidenciasServiceTest`: `incidencias/application/service/` (JUnit y Mockito, sin Spring)
+- `SeguridadIncidenciasServiceTest`: `incidencias/application/service/` (contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
+- `IncidenciaControllerTest`: `incidencias/infrastructure/adapter/in/web/` (con `@WebMvcTest` y la seguridad real)
+- `InicializadorColeccionesTest`: `shared/infrastructure/config/` (con Testcontainers)
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `incidents.test.js`: `api/` (Vitest y MSW)
@@ -4130,6 +4238,7 @@ Tests que no validan una HU concreta.
 | `DeseosConfigTest` | `elContextoConectaLasPiezasDeLaListaDeDeseos` | Que Spring conecta el servicio de la lista de deseos con su adaptador de MongoDB y los adaptadores hacia usuarios y productos (HU14; AB#360, PR #196) |
 | `PreferenciasConfigTest` | `elContextoConectaLasPiezasDeLasPreferencias` | Que Spring conecta el servicio de las preferencias con su adaptador de MongoDB y los adaptadores hacia usuarios y categorías (HU46; AB#287, PR #220) |
 | `DireccionesConfigTest` | `elContextoConectaLasPiezasDeLasDirecciones` | Que Spring conecta el servicio de direcciones de envío con su adaptador de MongoDB y su propio cliente en sesión, distinto del de métodos de pago (HU5; AB#105, PR #161) |
+| `IncidenciasConfigTest` | `elContextoConectaLasPiezasDeLasIncidencias` | Que Spring conecta la creación y la consulta de incidencias con su adaptador de MongoDB y el adaptador hacia usuarios (HU44; AB#293 y AB#419, PR pendiente) |
 | `SecurityConfigTest` | `unaPeticionRecibeElTokenCsrfEnUnaCookie` | Que cualquier respuesta, aunque sea un 401, entrega el token CSRF en la cookie `XSRF-TOKEN` sin `HttpOnly` (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostSinTokenCsrfSeRechaza` | Que un `POST` sin token CSRF se rechaza con 403 (AB#230, PR #67) |
 | `SecurityConfigTest` | `unPostConElTokenDeLaCookieEnLaCabeceraSeAcepta` | Que un `POST` con el token de la cookie en la cabecera `X-XSRF-TOKEN` pasa el filtro CSRF (AB#230, PR #67) |
@@ -4143,7 +4252,7 @@ Tests que no validan una HU concreta.
 | `UsuarioMongoAdapterTest` | `guardaFechasDeCreacionYModificacion` | Que se guardan `createdAt` y `updatedAt` (auditoría de Spring Data) y que `createdAt` no cambia al actualizar (AB#210, PR #43) |
 | `ProductoMongoAdapterTest` | `guardarUnProductoLeidoLoActualiza` | Que guardar un producto leído lo actualiza sin duplicarlo y conserva `createdAt` (AB#202, PR #86) |
 | `ProductoMongoAdapterTest` | `elPrecioSeGuardaComoNumero` | Que el precio y los porcentajes de descuento se guardan como `Decimal128`, no como texto (AB#202, PR #86) |
-| `InicializadorColeccionesTest` | `creaLasCatorceColecciones` | Que al arrancar se crean las 14 colecciones: las 10 del modelo de BBDD, `metodos_pago`, `direcciones_envio`, `contadores` y `preferencias` (AB#210, PR #43; ampliado en AB#271, PR #148, y en AB#105, PR #161; ampliado en AB#131, PR #166, y en AB#287, PR #220) |
+| `InicializadorColeccionesTest` | `creaLasQuinceColecciones` | Que al arrancar se crean las 15 colecciones: las 10 del modelo de BBDD, `metodos_pago`, `direcciones_envio`, `contadores`, `preferencias` e `incidencias` (AB#210, PR #43; ampliado en AB#271, PR #148, y en AB#105, PR #161; ampliado en AB#131, PR #166, y en AB#287, PR #220; ampliado en AB#291, PR pendiente) |
 | `InicializadorColeccionesTest` | `sePuedeEjecutarOtraVez` | Que el inicializador se puede ejecutar en cada arranque sin fallar ni duplicar índices (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `actualizaLaValidacionDeUnaColeccionExistente` | Que aplica la validación a una colección que ya existía sin ella (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `sinPermisoParaCambiarLaValidacionNoFalla` | Que sin permiso `collMod` (usuario de la aplicación en Atlas) avisa y la aplicación arranca igual (AB#210, PR #43) |
