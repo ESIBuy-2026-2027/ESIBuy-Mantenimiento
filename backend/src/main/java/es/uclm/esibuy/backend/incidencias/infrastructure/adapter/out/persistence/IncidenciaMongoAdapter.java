@@ -52,7 +52,7 @@ public class IncidenciaMongoAdapter implements IncidenciaRepositoryPort {
 
     @Override
     public void eliminar(String id) {
-        throw new UnsupportedOperationException("Pendiente de implementar (HU50)");
+        repository.deleteById(id);
     }
 
     // Común a las dos búsquedas: convierte la página de documentos en la página del dominio

@@ -27,6 +27,9 @@ public class ResolucionIncidenciasService implements ResolucionIncidenciasUseCas
     @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
     @Override
     public void cerrar(String id) {
-        throw new UnsupportedOperationException("Pendiente de implementar (HU50)");
+        if (incidenciaRepository.buscarPorId(id).isEmpty()) {
+            throw new IncidenciaNoEncontradaException();
+        }
+        incidenciaRepository.eliminar(id);
     }
 }
