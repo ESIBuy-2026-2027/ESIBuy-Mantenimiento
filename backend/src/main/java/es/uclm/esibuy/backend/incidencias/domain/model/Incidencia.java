@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.incidencias.domain.model;
 import java.time.Instant;
 
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaInvalidaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaYaAbiertaException;
 
 /**
  * Incidencia que un cliente o un vendedor reporta desde su perfil (HU44) para que un administrador la revise y le
@@ -17,6 +18,7 @@ public record Incidencia(String id, String autorId, String asunto, String descri
 
     private static final int ASUNTO_MAXIMO = 100;
     private static final int DESCRIPCION_MAXIMA = 1000;
+    private static final int RESPUESTA_MAXIMA = 1000;
 
     public Incidencia {
         exigir(autorId, "un autor");
@@ -36,8 +38,16 @@ public record Incidencia(String id, String autorId, String asunto, String descri
         return new Incidencia(null, autorId, asunto, descripcion, EstadoIncidencia.PENDIENTE, "", fechaCreacion);
     }
 
+    /**
+     * La incidencia abierta por un administrador (HU50) con su respuesta, que es obligatoria (hasta 1000 caracteres)
+     * porque es lo único que el autor llega a ver: al cerrarla se elimina. Solo se abre una incidencia pendiente.
+     */
     public Incidencia abrir(String respuesta) {
-        throw new UnsupportedOperationException("Pendiente de implementar (HU50)");
+        if (estado != EstadoIncidencia.PENDIENTE) {
+            throw new IncidenciaYaAbiertaException();
+        }
+        String texto = exigirTexto(respuesta, "una respuesta", RESPUESTA_MAXIMA);
+        return new Incidencia(id, autorId, asunto, descripcion, EstadoIncidencia.ABIERTA, texto, fechaCreacion);
     }
 
     private static void exigir(String valor, String descripcion) {
