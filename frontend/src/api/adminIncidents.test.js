@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
-import { getAdminIncidents } from './adminIncidents'
+import { closeIncident, getAdminIncidents, openIncident } from './adminIncidents'
 
 // Supervisión de incidencias del administrador (HU49, T304) contra el contrato del backend (PR #232):
 // GET /api/admin/incidencias?page&size, con el autor de cada incidencia ({email, rol} o null).
@@ -61,5 +61,73 @@ describe('getAdminIncidents', () => {
       status: 403,
       code: 'ACCESS_DENIED',
     })
+  })
+})
+
+// Apertura y cierre de incidencias del administrador (HU50, T305) contra el contrato del backend (PR #233):
+// PATCH /api/admin/incidencias/{id}/abrir con { respuesta } y DELETE /api/admin/incidencias/{id}.
+
+const ABIERTA = {
+  id: 'inc-1',
+  asunto: 'No me llega el pedido',
+  descripcion: 'Lo pedí hace una semana',
+  estado: 'ABIERTA',
+  respuesta: 'Lo estamos revisando',
+  fechaCreacion: '2026-11-06T10:15:30Z',
+}
+
+describe('openIncident', () => {
+  it('HU50-CP18: pide PATCH /api/admin/incidencias/{id}/abrir con la respuesta y devuelve la incidencia abierta', async () => {
+    const peticion = {}
+    server.use(
+      http.patch('/api/admin/incidencias/:id/abrir', async ({ request, params }) => {
+        peticion.id = params.id
+        peticion.cuerpo = await request.json()
+        return HttpResponse.json(ABIERTA)
+      }),
+    )
+
+    const respuesta = await openIncident('inc-1', 'Lo estamos revisando')
+
+    expect(peticion).toEqual({ id: 'inc-1', cuerpo: { respuesta: 'Lo estamos revisando' } })
+    expect(respuesta).toEqual(ABIERTA)
+  })
+
+  it('HU50-CP18: un 409 llega como error con su estado y su código', async () => {
+    server.use(
+      http.patch('/api/admin/incidencias/:id/abrir', () =>
+        HttpResponse.json({ mensaje: 'La incidencia ya está abierta', code: 'INCIDENT_ALREADY_OPEN' }, { status: 409 }),
+      ),
+    )
+
+    await expect(openIncident('inc-1', 'Respuesta')).rejects.toMatchObject({
+      status: 409,
+      code: 'INCIDENT_ALREADY_OPEN',
+    })
+  })
+})
+
+describe('closeIncident', () => {
+  it('HU50-CP18: pide DELETE /api/admin/incidencias/{id} y un 204 sin cuerpo no es un error', async () => {
+    const ids = []
+    server.use(
+      http.delete('/api/admin/incidencias/:id', ({ params }) => {
+        ids.push(params.id)
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+
+    await expect(closeIncident('inc-1')).resolves.toBeNull()
+    expect(ids).toEqual(['inc-1'])
+  })
+
+  it('HU50-CP18: un 404 llega como error con su estado y su código', async () => {
+    server.use(
+      http.delete('/api/admin/incidencias/:id', () =>
+        HttpResponse.json({ mensaje: 'La incidencia no existe', code: 'INCIDENT_NOT_FOUND' }, { status: 404 }),
+      ),
+    )
+
+    await expect(closeIncident('inc-1')).rejects.toMatchObject({ status: 404, code: 'INCIDENT_NOT_FOUND' })
   })
 })

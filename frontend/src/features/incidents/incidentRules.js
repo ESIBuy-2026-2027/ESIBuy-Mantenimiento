@@ -29,3 +29,11 @@ export function validateIncident({ asunto, descripcion }) {
     ...(description && { descripcion: description }),
   }
 }
+
+// Límite de la respuesta del administrador al abrir una incidencia (HU50), el mismo que el backend.
+export const RESPONSE_MAX = 1000
+
+// El error de la respuesta, o null si es válida.
+export function validateResponse(_respuesta) {
+  throw new Error('Sin implementar')
+}

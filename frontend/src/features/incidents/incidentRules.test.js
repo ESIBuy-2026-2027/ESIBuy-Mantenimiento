@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { DESCRIPTION_MAX, SUBJECT_MAX, validateIncident } from './incidentRules'
+import { DESCRIPTION_MAX, RESPONSE_MAX, SUBJECT_MAX, validateIncident, validateResponse } from './incidentRules'
 
 const valida = { asunto: 'No me llega el pedido', descripcion: 'Lo pedí hace una semana' }
 
@@ -53,5 +53,24 @@ describe('validateIncident', () => {
       asunto: 'El asunto es obligatorio.',
       descripcion: 'La descripción es obligatoria.',
     })
+  })
+})
+
+describe('validateResponse', () => {
+  it('HU50-CP19: una respuesta dentro del límite es válida', () => {
+    expect(validateResponse('Lo estamos revisando')).toBeNull()
+  })
+
+  it.each([
+    ['vacía', ''],
+    ['con solo espacios', ' \t\n '],
+  ])('HU50-CP19: una respuesta %s es obligatoria', (_nombre, respuesta) => {
+    expect(validateResponse(respuesta)).toBe('La respuesta es obligatoria.')
+  })
+
+  it('HU50-CP19: la respuesta admite 1000 caracteres, sin contar los espacios de los extremos, y rechaza 1001', () => {
+    expect(RESPONSE_MAX).toBe(1000)
+    expect(validateResponse(`  ${'r'.repeat(1000)}  `)).toBeNull()
+    expect(validateResponse('r'.repeat(1001))).toBe('La respuesta no puede superar los 1000 caracteres.')
   })
 })

@@ -9,3 +9,14 @@ import { request } from './client'
 export function getAdminIncidents({ page, size }) {
   return request(`/api/admin/incidencias?page=${page}&size=${size}`)
 }
+
+// Abre una incidencia pendiente con la respuesta del administrador (HU50) y responde 200 con ella. Contrato en
+// docs/contratos/hu50-apertura-cierre-incidencias.md.
+export function openIncident(_id, _respuesta) {
+  throw new Error('Sin implementar')
+}
+
+// Cierra una incidencia, pendiente o abierta (HU50): se elimina y responde 204 sin cuerpo.
+export function closeIncident(_id) {
+  throw new Error('Sin implementar')
+}
