@@ -31,4 +31,9 @@ public class PreferenciasMongoAdapter implements PreferenciasRepositoryPort {
         }
         return mapper.aDominio(repository.save(documento));
     }
+
+    @Override
+    public void eliminarPorCliente(String clienteId) {
+        repository.deleteByClienteId(clienteId);
+    }
 }

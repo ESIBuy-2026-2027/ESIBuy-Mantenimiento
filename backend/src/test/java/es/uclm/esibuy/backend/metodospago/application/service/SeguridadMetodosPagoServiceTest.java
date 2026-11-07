@@ -134,4 +134,41 @@ class SeguridadMetodosPagoServiceTest {
                         () -> gestionMetodosPago.anadir(alta)));
         verifyNoInteractions(metodoPagoRepository, cifradoDatosPago, clienteEnSesion);
     }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU6-CP40: el cliente elimina todos sus métodos de pago con su propio correo")
+    void elClienteEliminaTodosConSuPropioCorreo() {
+        assertDoesNotThrow(() -> gestionMetodosPago.eliminarTodos(CLIENTE));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU6-CP40: un cliente no elimina los métodos de pago de otro cliente")
+    void unClienteNoEliminaTodosConElCorreoDeOtro() {
+        assertThrows(AccessDeniedException.class, () -> gestionMetodosPago.eliminarTodos(OTRO_CLIENTE));
+        verifyNoInteractions(metodoPagoRepository, cifradoDatosPago, clienteEnSesion);
+    }
+
+    @Test
+    @WithMockUser(username = "vendedor@esibuy.test", roles = "VENDEDOR")
+    @DisplayName("HU6-CP40: un vendedor no elimina métodos de pago de clientes")
+    void unVendedorNoEliminaTodos() {
+        assertThrows(AccessDeniedException.class, () -> gestionMetodosPago.eliminarTodos("vendedor@esibuy.test"));
+    }
+
+    @Test
+    @WithMockUser(username = "admin@esibuy.test", roles = "ADMINISTRADOR")
+    @DisplayName("HU6-CP40: un administrador no elimina métodos de pago de clientes")
+    void unAdministradorNoEliminaTodos() {
+        assertThrows(AccessDeniedException.class, () -> gestionMetodosPago.eliminarTodos("admin@esibuy.test"));
+    }
+
+    @Test
+    @DisplayName("HU6-CP40: sin sesión no se eliminan métodos de pago")
+    void sinSesionNoSeEliminanTodos() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> gestionMetodosPago.eliminarTodos(CLIENTE));
+        verifyNoInteractions(metodoPagoRepository, cifradoDatosPago, clienteEnSesion);
+    }
 }

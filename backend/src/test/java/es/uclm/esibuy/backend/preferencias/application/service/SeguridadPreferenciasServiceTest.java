@@ -121,4 +121,40 @@ class SeguridadPreferenciasServiceTest {
                 () -> gestionPreferencias.guardar(CLIENTE, List.of()));
         verifyNoInteractions(preferenciasRepository, clienteEnSesion, categorias);
     }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU46-CP25: el cliente elimina sus preferencias con su propio correo")
+    void elClienteEliminaSusPreferenciasConSuPropioCorreo() {
+        assertDoesNotThrow(() -> gestionPreferencias.eliminar(CLIENTE));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU46-CP25: un cliente no elimina las preferencias de otro cliente")
+    void unClienteNoEliminaLasPreferenciasDeOtro() {
+        assertThrows(AccessDeniedException.class, () -> gestionPreferencias.eliminar(OTRO_CLIENTE));
+        verifyNoInteractions(preferenciasRepository, clienteEnSesion, categorias);
+    }
+
+    @Test
+    @WithMockUser(username = "vendedor@esibuy.test", roles = "VENDEDOR")
+    @DisplayName("HU46-CP25: un vendedor no elimina preferencias de clientes")
+    void unVendedorNoEliminaPreferencias() {
+        assertThrows(AccessDeniedException.class, () -> gestionPreferencias.eliminar("vendedor@esibuy.test"));
+    }
+
+    @Test
+    @WithMockUser(username = "admin@esibuy.test", roles = "ADMINISTRADOR")
+    @DisplayName("HU46-CP25: un administrador no elimina preferencias de clientes")
+    void unAdministradorNoEliminaPreferencias() {
+        assertThrows(AccessDeniedException.class, () -> gestionPreferencias.eliminar("admin@esibuy.test"));
+    }
+
+    @Test
+    @DisplayName("HU46-CP25: sin sesión no se eliminan las preferencias")
+    void sinSesionNoSeEliminanLasPreferencias() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> gestionPreferencias.eliminar(CLIENTE));
+        verifyNoInteractions(preferenciasRepository, clienteEnSesion, categorias);
+    }
 }

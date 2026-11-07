@@ -7,4 +7,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 public interface DireccionMongoRepository extends MongoRepository<DireccionDocument, String> {
 
     List<DireccionDocument> findByClienteId(String clienteId);
+
+    void deleteByClienteId(String clienteId);
 }

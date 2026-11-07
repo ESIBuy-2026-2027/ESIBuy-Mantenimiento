@@ -30,4 +30,11 @@ public interface GestionCarritoUseCase {
     CarritoDetallado quitar(String emailCliente, String productoId);
 
     CarritoDetallado vaciar(String emailCliente);
+
+    /**
+     * Borra el carrito del cliente, para cuando elimina su cuenta (HU25). A diferencia de {@link #vaciar}, no queda
+     * ningún carrito guardado. Si no tiene no es un error. Hay que llamarlo antes de borrar al usuario: el carrito se
+     * busca por el id del cliente, que se obtiene de su correo.
+     */
+    void eliminar(String emailCliente);
 }

@@ -26,6 +26,11 @@ import es.uclm.esibuy.backend.usuarios.application.service.GestionCuentaService;
 import es.uclm.esibuy.backend.usuarios.application.port.out.PedidosVendedorPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.ProductosVendedorPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.ValoracionesProductoPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.CarritoClientePort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.DireccionesClientePort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.ListaDeseosClientePort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.MetodosPagoClientePort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.PreferenciasClientePort;
 import es.uclm.esibuy.backend.usuarios.application.service.ListadoUsuariosService;
 import es.uclm.esibuy.backend.usuarios.application.service.RecuperacionContrasenaService;
 import es.uclm.esibuy.backend.usuarios.application.service.RegistroUsuarioService;
@@ -44,6 +49,11 @@ import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.Us
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.pedidos.PedidosVendedorAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.productos.ProductosVendedorAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.valoraciones.ValoracionesProductoAdapter;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.carrito.CarritoClienteAdapter;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.deseos.ListaDeseosClienteAdapter;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.direcciones.DireccionesClienteAdapter;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.metodospago.MetodosPagoClienteAdapter;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.preferencias.PreferenciasClienteAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.AesGcmCifradoSecretoAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.BCryptHashContrasenaAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.JavaTotpAdapter;
@@ -186,9 +196,8 @@ public class UsuariosConfig {
     }
 
     @Bean
-    GestionPerfilUseCase gestionPerfilUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-                                              HashContrasenaPort hashContrasenaPort, Clock reloj) {
-        return new GestionPerfilService(usuarioRepositoryPort, hashContrasenaPort, reloj);
+    GestionPerfilUseCase gestionPerfilUseCase(UsuarioRepositoryPort usuarioRepositoryPort, Clock reloj) {
+        return new GestionPerfilService(usuarioRepositoryPort, reloj);
     }
 
     @Bean
@@ -209,14 +218,48 @@ public class UsuariosConfig {
         return new ValoracionesProductoAdapter(valoraciones);
     }
 
+    // Lo que depende del cliente en otros módulos, para borrarlo al eliminar su cuenta (HU25)
+    @Bean
+    ListaDeseosClientePort listaDeseosClientePort(
+            es.uclm.esibuy.backend.deseos.application.port.in.GestionListaDeseosUseCase listaDeseos) {
+        return new ListaDeseosClienteAdapter(listaDeseos);
+    }
+
+    @Bean
+    CarritoClientePort carritoClientePort(
+            es.uclm.esibuy.backend.carrito.application.port.in.GestionCarritoUseCase carrito) {
+        return new CarritoClienteAdapter(carrito);
+    }
+
+    @Bean
+    PreferenciasClientePort preferenciasClientePort(
+            es.uclm.esibuy.backend.preferencias.application.port.in.GestionPreferenciasUseCase preferencias) {
+        return new PreferenciasClienteAdapter(preferencias);
+    }
+
+    @Bean
+    MetodosPagoClientePort metodosPagoClientePort(
+            es.uclm.esibuy.backend.metodospago.application.port.in.GestionMetodosPagoUseCase metodosPago) {
+        return new MetodosPagoClienteAdapter(metodosPago);
+    }
+
+    @Bean
+    DireccionesClientePort direccionesClientePort(
+            es.uclm.esibuy.backend.direcciones.application.port.in.GestionDireccionesUseCase direcciones) {
+        return new DireccionesClienteAdapter(direcciones);
+    }
+
     @Bean
     GestionCuentaUseCase gestionCuentaUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
             HashContrasenaPort hashContrasena, ProductosVendedorPort productos,
             PedidosVendedorPort productosConPedidos, ValoracionesProductoPort valoraciones,
             FactorAutenticacionRepositoryPort factores,
             CodigoVerificacionRepositoryPort codigosVerificacion,
-            CodigoRecuperacionRepositoryPort codigosRecuperacion) {
+            CodigoRecuperacionRepositoryPort codigosRecuperacion, ListaDeseosClientePort listaDeseos,
+            CarritoClientePort carrito, PreferenciasClientePort preferencias, MetodosPagoClientePort metodosPago,
+            DireccionesClientePort direcciones) {
         return new GestionCuentaService(usuarioRepositoryPort, hashContrasena, productos, productosConPedidos,
-                valoraciones, factores, codigosVerificacion, codigosRecuperacion);
+                valoraciones, factores, codigosVerificacion, codigosRecuperacion, listaDeseos, carrito,
+                preferencias, metodosPago, direcciones);
     }
 }

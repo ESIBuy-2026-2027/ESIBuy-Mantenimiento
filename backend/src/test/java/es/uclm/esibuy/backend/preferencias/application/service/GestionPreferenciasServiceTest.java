@@ -83,6 +83,26 @@ class GestionPreferenciasServiceTest {
         assertTrue(repositorio.guardadas.isEmpty());
     }
 
+    @Test
+    @DisplayName("HU46-CP23: eliminar las preferencias del cliente las borra y no toca las de otro cliente")
+    void eliminarBorraLasPreferenciasDelCliente() {
+        servicio.guardar(EMAIL, List.of("cat-1", "cat-2"));
+        repositorio.guardar(new Preferencias(null, "c-2", List.of("cat-4")));
+
+        servicio.eliminar(EMAIL);
+
+        assertTrue(repositorio.buscarPorCliente(CLIENTE).isEmpty());
+        assertTrue(repositorio.buscarPorCliente("c-2").isPresent());
+    }
+
+    @Test
+    @DisplayName("HU46-CP23: eliminar las preferencias de un cliente que no tiene no es un error")
+    void eliminarSinPreferenciasNoEsUnError() {
+        servicio.eliminar(EMAIL);
+
+        assertTrue(repositorio.buscarPorCliente(CLIENTE).isEmpty());
+    }
+
     // Guarda las preferencias en una lista: unas por cliente, que se sustituyen al volver a guardar.
     private static final class RepositorioEnMemoria implements PreferenciasRepositoryPort {
 
@@ -101,6 +121,11 @@ class GestionPreferenciasServiceTest {
                     preferencias.getClienteId(), preferencias.getCategorias());
             guardadas.add(conId);
             return conId;
+        }
+
+        @Override
+        public void eliminarPorCliente(String clienteId) {
+            guardadas.removeIf(p -> p.getClienteId().equals(clienteId));
         }
     }
 }

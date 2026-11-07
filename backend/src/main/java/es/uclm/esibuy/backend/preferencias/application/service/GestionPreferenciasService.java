@@ -56,4 +56,10 @@ public class GestionPreferenciasService implements GestionPreferenciasUseCase {
         preferencias.elegirCategorias(elegidas);
         return preferenciasRepository.guardar(preferencias).getCategorias();
     }
+
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
+    @Override
+    public void eliminar(String emailCliente) {
+        preferenciasRepository.eliminarPorCliente(clienteEnSesion.idPorCorreo(emailCliente));
+    }
 }

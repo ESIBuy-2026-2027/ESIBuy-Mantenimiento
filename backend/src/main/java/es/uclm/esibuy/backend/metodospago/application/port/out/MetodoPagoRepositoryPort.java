@@ -11,4 +11,6 @@ public interface MetodoPagoRepositoryPort {
     MetodoPago guardar(MetodoPago metodo);
 
     void eliminar(String metodoId);
+
+    void eliminarPorCliente(String clienteId);
 }

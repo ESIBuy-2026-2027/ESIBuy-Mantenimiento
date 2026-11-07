@@ -1,28 +1,27 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.logout.CookieClearingLogoutHandler;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestBody;
 
-import jakarta.servlet.http.HttpSession;
+import es.uclm.esibuy.backend.usuarios.application.port.in.GestionCuentaUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.GestionPerfilUseCase;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
-import es.uclm.esibuy.backend.usuarios.application.port.in.GestionPerfilUseCase;
-import es.uclm.esibuy.backend.usuarios.application.port.in.GestionCuentaUseCase;
-
 /**
- * Adaptador de entrada web del perfil propio (HU4): {@code GET /api/perfil}. Solo lo usan un CLIENTE o un
- * VENDEDOR (SecurityConfig): sin sesión 401, el administrador 403. El usuario sale de la sesión (su email),
- * nunca de la petición, así que nadie puede pedir el perfil de otro.
- *
- * <p>El {@code DELETE /api/perfil} permite a un VENDEDOR eliminar su propia cuenta. Requiere autenticación,
- * contraseña y token CSRF; al terminar invalida la sesión y limpia el contexto de seguridad.
+ * Adaptador de entrada web del perfil propio: {@code GET /api/perfil} (HU4) y {@code DELETE /api/perfil}, que
+ * elimina la cuenta propia del cliente (HU25) o del vendedor (HU47). Solo lo usan un CLIENTE o un VENDEDOR
+ * (SecurityConfig y @PreAuthorize de los servicios): sin sesión 401, el administrador 403. El usuario sale de la
+ * sesión (su email), nunca de la petición, así que nadie puede consultar ni eliminar la cuenta de otro.
  */
 @RestController
 @RequestMapping("/api/perfil")
@@ -41,12 +40,14 @@ public class PerfilController {
         return PerfilResponse.desde(gestionPerfil.consultarPerfil(autenticado.getName()));
     }
 
+    // Eliminar la cuenta propia: el servicio distingue el rol. 204 sin cuerpo y la sesión cerrada, igual que el
+    // logout de SecurityConfig; si el caso de uso falla (p. ej. contraseña incorrecta, 400), la sesión sigue abierta.
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void eliminarCuenta(@Valid @RequestBody EliminarCuentaRequest request,
-            Authentication autenticado, HttpSession sesion) {
-        gestionCuenta.eliminarCuentaVendedor(autenticado.getName(), request.password());
-        SecurityContextHolder.clearContext();
-        sesion.invalidate();
+    public void eliminarCuenta(@Valid @RequestBody EliminarCuentaRequest request, Authentication autenticado,
+            HttpServletRequest peticion, HttpServletResponse respuesta) {
+        gestionCuenta.eliminarCuentaPropia(autenticado.getName(), request.password());
+        new SecurityContextLogoutHandler().logout(peticion, respuesta, autenticado);
+        new CookieClearingLogoutHandler("JSESSIONID").logout(peticion, respuesta, autenticado);
     }
 }

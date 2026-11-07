@@ -61,9 +61,9 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 // del usuario son del cliente y del vendedor, y saber si es premium, solo del cliente. Las anotaciones solo se
 // evalúan con Spring, así que se usa un contexto mínimo (sin MongoDB) con los servicios reales y dobles de
 // prueba de los puertos de salida.
-// Eliminar la cuenta propia (HU25) es solo del cliente y con su propio correo; editar el perfil propio (HU45), del
-// cliente o el vendedor y con su propio correo.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU2-CP29, HU25-CP04 y HU45-CP05, propuestos.
+// Editar el perfil propio (HU45) es del cliente o el vendedor y con su propio correo. La seguridad de eliminar la
+// cuenta propia (HU25) se prueba en SeguridadGestionCuentaServiceTest.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU2-CP29 y HU45-CP05, propuestos.
 @SpringJUnitConfig(SeguridadSesionUsuarioServiceTest.Configuracion.class)
 class SeguridadSesionUsuarioServiceTest {
 
@@ -71,7 +71,6 @@ class SeguridadSesionUsuarioServiceTest {
     private static final String VENDEDOR = "vendedor@esibuy.test";
     private static final String ADMIN = "admin@esibuy.test";
     private static final String OTRO = "otro@esibuy.test";
-    private static final String PASSWORD = "Clave-Segura-123";
 
     private static final IniciarSesionCommand INICIO_SESION = new IniciarSesionCommand(CLIENTE, "Clave-Segura-123");
     private static final VerificarCodigoEmailCommand CODIGO_EMAIL = new VerificarCodigoEmailCommand(CLIENTE, "123456");
@@ -150,8 +149,8 @@ class SeguridadSesionUsuarioServiceTest {
         }
 
         @Bean
-        GestionPerfilUseCase gestionPerfil(UsuarioRepositoryPort repositorio, HashContrasenaPort hash) {
-            return new GestionPerfilService(repositorio, hash, Clock.systemUTC());
+        GestionPerfilUseCase gestionPerfil(UsuarioRepositoryPort repositorio) {
+            return new GestionPerfilService(repositorio, Clock.systemUTC());
         }
     }
 
@@ -256,51 +255,6 @@ class SeguridadSesionUsuarioServiceTest {
                 () -> assertThrows(AuthenticationCredentialsNotFoundException.class,
                         () -> gestionPerfil.consultarPerfil(CLIENTE)));
         verifyNoInteractions(usuarioRepository);
-    }
-
-    @Test
-    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
-    @DisplayName("HU25-CP04: un cliente elimina su propia cuenta")
-    void unClienteEliminaSuCuenta() {
-        // El repositorio y el hash dejan que la llamada termine: así se ve que la seguridad la ha dejado pasar
-        when(usuarioRepository.buscarPorCorreo(CLIENTE)).thenReturn(Optional.of(cliente()));
-        when(hashContrasena.coincide(PASSWORD, "hash-simulado")).thenReturn(true);
-
-        gestionPerfil.eliminarCuenta(CLIENTE, PASSWORD);
-
-        verify(usuarioRepository).eliminarPorId("u-1");
-    }
-
-    @Test
-    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
-    @DisplayName("HU25-CP04: un cliente no elimina la cuenta de otro")
-    void unClienteNoEliminaLaCuentaDeOtro() {
-        assertThrows(AccessDeniedException.class, () -> gestionPerfil.eliminarCuenta(OTRO, PASSWORD));
-        verifyNoInteractions(usuarioRepository, hashContrasena);
-    }
-
-    @Test
-    @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
-    @DisplayName("HU25-CP04: un vendedor no elimina su cuenta por aquí")
-    void unVendedorNoEliminaSuCuenta() {
-        assertThrows(AccessDeniedException.class, () -> gestionPerfil.eliminarCuenta(VENDEDOR, PASSWORD));
-        verifyNoInteractions(usuarioRepository, hashContrasena);
-    }
-
-    @Test
-    @WithMockUser(username = ADMIN, roles = "ADMINISTRADOR")
-    @DisplayName("HU25-CP04: un administrador no elimina su cuenta por aquí")
-    void unAdministradorNoEliminaSuCuenta() {
-        assertThrows(AccessDeniedException.class, () -> gestionPerfil.eliminarCuenta(ADMIN, PASSWORD));
-        verifyNoInteractions(usuarioRepository, hashContrasena);
-    }
-
-    @Test
-    @DisplayName("HU25-CP04: sin sesión no se elimina ninguna cuenta")
-    void sinSesionNoSeEliminaNingunaCuenta() {
-        assertThrows(AuthenticationCredentialsNotFoundException.class,
-                () -> gestionPerfil.eliminarCuenta(CLIENTE, PASSWORD));
-        verifyNoInteractions(usuarioRepository, hashContrasena);
     }
 
     @Test
