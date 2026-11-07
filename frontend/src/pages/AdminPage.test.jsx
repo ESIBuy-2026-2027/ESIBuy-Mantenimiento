@@ -74,7 +74,7 @@ describe('AdminPage (HU18)', () => {
     renderApp('/admin')
 
     const tarjeta = await screen.findByRole('button', { name: /incidencias/i })
-    expect(tarjeta).toHaveTextContent('Revisa las incidencias que reportan los clientes y los vendedores.')
+    expect(tarjeta).toHaveTextContent('Revisa las incidencias que reportan los usuarios y quién ha reportado cada una.')
   })
 
   it('HU49-CP16: la tarjeta Incidencias lleva a la supervisión de incidencias', async () => {

@@ -1,6 +1,7 @@
 import { Text, Title1, makeStyles, tokens } from '@fluentui/react-components'
 import {
   BuildingShop24Regular,
+  ChatWarning24Regular,
   People24Regular,
   PersonKey24Regular,
   TagMultiple24Regular,
@@ -37,6 +38,13 @@ const sections = [
     title: 'Categorías',
     to: PATHS.ADMIN_CATEGORIES,
     description: 'Consulta las categorías de productos y cuántos productos tiene cada una.',
+  },
+  {
+    id: 'incidents',
+    icon: <ChatWarning24Regular />,
+    title: 'Incidencias',
+    to: PATHS.ADMIN_INCIDENTS,
+    description: 'Revisa las incidencias que reportan los usuarios y quién ha reportado cada una.',
   },
 ]
 
