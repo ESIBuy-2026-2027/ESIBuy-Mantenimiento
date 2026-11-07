@@ -4,6 +4,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import es.uclm.esibuy.backend.incidencias.application.port.in.ResolucionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.out.IncidenciaRepositoryPort;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaNoEncontradaException;
 import es.uclm.esibuy.backend.incidencias.domain.model.Incidencia;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 
@@ -19,6 +20,7 @@ public class ResolucionIncidenciasService implements ResolucionIncidenciasUseCas
     @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
     @Override
     public Incidencia abrir(String id, String respuesta) {
-        throw new UnsupportedOperationException("Pendiente de implementar (HU50)");
+        Incidencia incidencia = incidenciaRepository.buscarPorId(id).orElseThrow(IncidenciaNoEncontradaException::new);
+        return incidenciaRepository.guardar(incidencia.abrir(respuesta));
     }
 }

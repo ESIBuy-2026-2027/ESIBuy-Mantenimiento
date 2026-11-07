@@ -47,7 +47,7 @@ public class IncidenciaMongoAdapter implements IncidenciaRepositoryPort {
 
     @Override
     public Optional<Incidencia> buscarPorId(String id) {
-        throw new UnsupportedOperationException("Pendiente de implementar (HU50)");
+        return repository.findById(id).map(mapper::aDominio);
     }
 
     // Común a las dos búsquedas: convierte la página de documentos en la página del dominio
