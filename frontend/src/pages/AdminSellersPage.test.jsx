@@ -118,7 +118,8 @@ describe('AdminSellersPage (HU26): listado', () => {
     expect(screen.getAllByRole('button', { name: /^ver información de /i })).toHaveLength(10)
     expect(screen.getAllByRole('button', { name: /^editar a /i })).toHaveLength(10)
     expect(screen.getAllByRole('button', { name: /^(bloquear|desbloquear) a /i })).toHaveLength(10)
-    expect(screen.getAllByRole('button', { name: /^eliminar a /i })).toHaveLength(10)
+    // Solo se eliminan administradores (HU37): un vendedor no tiene papelera.
+    expect(screen.queryByRole('button', { name: /^eliminar a /i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /desactivar|^activar/i })).not.toBeInTheDocument()
   })
 
@@ -465,15 +466,13 @@ describe('AdminSellersPage (HU19): acciones en la tabla', () => {
     await waitFor(() => expect(within(filasDeDatos()[0]).getByText('Activo')).toBeInTheDocument(), { timeout: 3000 })
   })
 
-  it('adminSellersPage_alEliminarUnVendedor_laFilaDesapareceYAvisa', async () => {
+  it('HU37-CP18: la fila de un vendedor no ofrece eliminarlo, porque el backend solo elimina administradores', async () => {
     const user = userEvent.setup()
     await abrirListado()
     await buscar(user, 'casa vicente')
 
-    await confirmar(user, 'Eliminar a Casa Vicente', /seguro que quieres eliminar a casa vicente/i, 'Eliminar')
-
-    expect(await screen.findByText('Casa Vicente se ha eliminado.', {}, { timeout: 3000 })).toBeInTheDocument()
-    expect(await screen.findByText(/no hay vendedores que coincidan/i, {}, { timeout: 3000 })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Bloquear a Casa Vicente' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Eliminar a Casa Vicente' })).not.toBeInTheDocument()
   })
 
   it('adminSellersPage_siFallaElBloqueo_muestraElErrorYNoCambiaLaFila', async () => {
