@@ -19,4 +19,11 @@ public interface ResolucionIncidenciasUseCase {
      *         supera los 1000 caracteres
      */
     Incidencia abrir(String id, String respuesta);
+
+    /**
+     * Cierra una incidencia, pendiente o abierta: al cerrarla se elimina.
+     *
+     * @throws es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaNoEncontradaException si no existe
+     */
+    void cerrar(String id);
 }

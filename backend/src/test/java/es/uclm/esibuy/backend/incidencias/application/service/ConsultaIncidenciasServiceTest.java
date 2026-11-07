@@ -66,6 +66,11 @@ class ConsultaIncidenciasServiceTest {
         public Optional<Incidencia> buscarPorId(String id) {
             throw new UnsupportedOperationException("No lo usa la consulta de las propias");
         }
+
+        @Override
+        public void eliminar(String id) {
+            throw new UnsupportedOperationException("No lo usa la consulta de las propias");
+        }
     }
 
     // Cada correo de la sesión tiene su id de usuario

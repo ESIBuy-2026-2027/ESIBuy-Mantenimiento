@@ -33,6 +33,7 @@ import es.uclm.esibuy.backend.incidencias.application.port.in.SupervisionInciden
 import es.uclm.esibuy.backend.incidencias.application.port.out.AutorEnSesionPort;
 import es.uclm.esibuy.backend.incidencias.application.port.out.AutoresPort;
 import es.uclm.esibuy.backend.incidencias.application.port.out.IncidenciaRepositoryPort;
+import es.uclm.esibuy.backend.incidencias.domain.model.EstadoIncidencia;
 import es.uclm.esibuy.backend.incidencias.domain.model.Incidencia;
 import es.uclm.esibuy.backend.incidencias.domain.model.IncidenciaPage;
 
@@ -301,6 +302,42 @@ class SeguridadIncidenciasServiceTest {
     void sinSesionNoSeAbrenIncidencias() {
         assertThrows(AuthenticationCredentialsNotFoundException.class,
                 () -> resolucionIncidencias.abrir(ID, "Respuesta"));
+        verifyNoInteractions(incidenciaRepository);
+    }
+
+    private void comprobarQueRechazaCerrar() {
+        assertThrows(AccessDeniedException.class, () -> resolucionIncidencias.cerrar(ID));
+        verifyNoInteractions(incidenciaRepository);
+    }
+
+    @Test
+    @WithMockUser(username = ADMINISTRADOR, roles = "ADMINISTRADOR")
+    @DisplayName("HU50-CP09: el administrador cierra una incidencia")
+    void elAdministradorCierraUnaIncidencia() {
+        when(incidenciaRepository.buscarPorId(ID)).thenReturn(Optional.of(
+                new Incidencia(ID, "u-1", "Asunto", "Descripción", EstadoIncidencia.PENDIENTE, "", Instant.EPOCH)));
+
+        assertDoesNotThrow(() -> resolucionIncidencias.cerrar(ID));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU50-CP09: un cliente no cierra incidencias")
+    void unClienteNoCierraIncidencias() {
+        comprobarQueRechazaCerrar();
+    }
+
+    @Test
+    @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
+    @DisplayName("HU50-CP09: un vendedor no cierra incidencias")
+    void unVendedorNoCierraIncidencias() {
+        comprobarQueRechazaCerrar();
+    }
+
+    @Test
+    @DisplayName("HU50-CP09: sin sesión no se cierran incidencias")
+    void sinSesionNoSeCierranIncidencias() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> resolucionIncidencias.cerrar(ID));
         verifyNoInteractions(incidenciaRepository);
     }
 }

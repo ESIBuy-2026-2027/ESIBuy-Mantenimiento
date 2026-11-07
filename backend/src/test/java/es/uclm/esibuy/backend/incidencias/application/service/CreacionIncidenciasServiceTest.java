@@ -64,6 +64,11 @@ class CreacionIncidenciasServiceTest {
         public Optional<Incidencia> buscarPorId(String id) {
             throw new UnsupportedOperationException("No lo usa la creación");
         }
+
+        @Override
+        public void eliminar(String id) {
+            throw new UnsupportedOperationException("No lo usa la creación");
+        }
     }
 
     // Cada correo de la sesión tiene su id de usuario

@@ -50,6 +50,11 @@ public class IncidenciaMongoAdapter implements IncidenciaRepositoryPort {
         return repository.findById(id).map(mapper::aDominio);
     }
 
+    @Override
+    public void eliminar(String id) {
+        throw new UnsupportedOperationException("Pendiente de implementar (HU50)");
+    }
+
     // Común a las dos búsquedas: convierte la página de documentos en la página del dominio
     private IncidenciaPage aPagina(Page<IncidenciaDocument> documentos, int pagina, int tamano) {
         List<Incidencia> incidencias = documentos.getContent().stream().map(mapper::aDominio).toList();

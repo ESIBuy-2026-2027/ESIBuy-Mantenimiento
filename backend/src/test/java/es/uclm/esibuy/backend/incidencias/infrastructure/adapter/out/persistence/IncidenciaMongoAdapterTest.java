@@ -30,8 +30,8 @@ import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColeccio
 // (Testcontainers): Docker Desktop debe estar abierto. InicializadorColecciones crea las colecciones con su
 // validación y sus índices, como en la aplicación real.
 // También la búsqueda de todas las incidencias para el administrador (HU49, T307).
-// Y la búsqueda por id para abrir una incidencia (HU50, T302).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU44-CP07, HU49-CP04 y HU50-CP08, propuestos.
+// Y la búsqueda por id para abrir una incidencia y el borrado al cerrarla (HU50, T302 y T303).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU44-CP07, HU49-CP04, HU50-CP08 y CP12, propuestos.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class IncidenciaMongoAdapterTest {
@@ -238,6 +238,29 @@ class IncidenciaMongoAdapterTest {
         Incidencia encontrada = adapter.buscarPorId(pendiente.id()).orElseThrow();
         assertEquals(EstadoIncidencia.ABIERTA, encontrada.estado());
         assertEquals("Lo estamos revisando", encontrada.respuesta());
+        assertEquals(1, incidenciaMongoRepository.count());
+    }
+
+    @Test
+    @DisplayName("HU50-CP12: eliminar borra solo la incidencia con ese id")
+    void eliminarBorraSoloLaIncidenciaConEseId() {
+        Incidencia cerrada = adapter.guardar(incidencia("u-1", "Se cierra", 0));
+        Incidencia otra = adapter.guardar(incidencia("u-1", "Se queda", 5));
+
+        adapter.eliminar(cerrada.id());
+
+        assertTrue(adapter.buscarPorId(cerrada.id()).isEmpty());
+        assertTrue(adapter.buscarPorId(otra.id()).isPresent());
+        assertEquals(1, incidenciaMongoRepository.count());
+    }
+
+    @Test
+    @DisplayName("HU50-CP12: eliminar una incidencia que no existe no borra nada")
+    void eliminarUnaQueNoExisteNoBorraNada() {
+        adapter.guardar(incidencia("u-1", "Una", 0));
+
+        adapter.eliminar("no-existe");
+
         assertEquals(1, incidenciaMongoRepository.count());
     }
 }

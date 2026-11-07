@@ -23,4 +23,10 @@ public class ResolucionIncidenciasService implements ResolucionIncidenciasUseCas
         Incidencia incidencia = incidenciaRepository.buscarPorId(id).orElseThrow(IncidenciaNoEncontradaException::new);
         return incidenciaRepository.guardar(incidencia.abrir(respuesta));
     }
+
+    @PreAuthorize(Permisos.SOLO_ADMINISTRADOR)
+    @Override
+    public void cerrar(String id) {
+        throw new UnsupportedOperationException("Pendiente de implementar (HU50)");
+    }
 }

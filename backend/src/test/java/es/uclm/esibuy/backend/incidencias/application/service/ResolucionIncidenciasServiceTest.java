@@ -11,6 +11,8 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import es.uclm.esibuy.backend.incidencias.application.port.out.IncidenciaRepositoryPort;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaInvalidaException;
@@ -21,8 +23,8 @@ import es.uclm.esibuy.backend.incidencias.domain.model.Incidencia;
 import es.uclm.esibuy.backend.incidencias.domain.model.IncidenciaPage;
 
 // Sin Spring: el repositorio se sustituye por uno en memoria. Resolución de incidencias por el administrador (HU50):
-// abrir una incidencia pendiente con su respuesta (T302).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU50-CP05 a CP07, propuestos.
+// abrir una incidencia pendiente con su respuesta (T302) y cerrarla, que la elimina (T303).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU50-CP05 a CP07, CP10 y CP11, propuestos.
 class ResolucionIncidenciasServiceTest {
 
     private static final Instant FECHA = Instant.parse("2026-11-06T10:15:30Z");
@@ -34,10 +36,11 @@ class ResolucionIncidenciasServiceTest {
         return new Incidencia(id, "u-1", "No me llega el pedido", "Lo pedí hace una semana", estado, respuesta, FECHA);
     }
 
-    // Guarda las incidencias por id y apunta cuántas veces se ha guardado
+    // Guarda las incidencias por id y apunta cuántas veces se ha guardado y eliminado
     private static class RepositorioEnMemoria implements IncidenciaRepositoryPort {
         private final Map<String, Incidencia> incidencias = new HashMap<>();
         private int guardados;
+        private int eliminados;
 
         void preparar(Incidencia incidencia) {
             incidencias.put(incidencia.id(), incidencia);
@@ -63,6 +66,12 @@ class ResolucionIncidenciasServiceTest {
         @Override
         public Optional<Incidencia> buscarPorId(String id) {
             return Optional.ofNullable(incidencias.get(id));
+        }
+
+        @Override
+        public void eliminar(String id) {
+            eliminados++;
+            incidencias.remove(id);
         }
     }
 
@@ -106,5 +115,31 @@ class ResolucionIncidenciasServiceTest {
         assertThrows(IncidenciaInvalidaException.class, () -> servicio.abrir("i-1", "  "));
         assertEquals(0, repositorio.guardados);
         assertTrue(repositorio.buscarPorId("i-1").map(i -> i.estado() == EstadoIncidencia.PENDIENTE).orElseThrow());
+    }
+
+    // Cierre (T303): al cerrar una incidencia se elimina, esté pendiente o abierta
+
+    @ParameterizedTest(name = "estado {0}")
+    @EnumSource(EstadoIncidencia.class)
+    @DisplayName("HU50-CP10: cerrar una incidencia la elimina, esté pendiente o abierta")
+    void cerrarUnaIncidenciaLaElimina(EstadoIncidencia estado) {
+        repositorio.preparar(incidencia("i-1", estado, estado == EstadoIncidencia.ABIERTA ? "Respuesta" : ""));
+        repositorio.preparar(incidencia("i-2", EstadoIncidencia.PENDIENTE, ""));
+
+        servicio.cerrar("i-1");
+
+        assertTrue(repositorio.buscarPorId("i-1").isEmpty());
+        assertTrue(repositorio.buscarPorId("i-2").isPresent());
+        assertEquals(1, repositorio.eliminados);
+    }
+
+    @Test
+    @DisplayName("HU50-CP11: cerrar una incidencia que no existe se rechaza sin eliminar nada")
+    void cerrarUnaIncidenciaQueNoExisteSeRechaza() {
+        repositorio.preparar(incidencia("i-1", EstadoIncidencia.PENDIENTE, ""));
+
+        assertThrows(IncidenciaNoEncontradaException.class, () -> servicio.cerrar("no-existe"));
+        assertEquals(0, repositorio.eliminados);
+        assertTrue(repositorio.buscarPorId("i-1").isPresent());
     }
 }

@@ -19,4 +19,7 @@ public interface IncidenciaRepositoryPort {
 
     // La incidencia con ese id, o vacío si no existe
     Optional<Incidencia> buscarPorId(String id);
+
+    // Borra la incidencia con ese id; si no existe, no hace nada
+    void eliminar(String id);
 }
