@@ -54,7 +54,7 @@ describe('NewIncidentPage (HU44): crear', () => {
 
     await esperarRuta('/incidents')
     expect(await screen.findByText(/incidencia enviada/i)).toBeInTheDocument()
-    const fila = await screen.findByRole('row', { name: new RegExp(ASUNTO) })
+    const fila = (await screen.findByText(ASUNTO)).closest('li')
     expect(within(fila).getByText('Pendiente')).toBeInTheDocument()
     expect(within(fila).getByText('Sin respuesta todavía')).toBeInTheDocument()
     expect(screen.getByText('Página 2 de 2')).toBeInTheDocument()
@@ -151,7 +151,7 @@ describe('NewIncidentPage (HU44): errores y cancelar', () => {
     await user.click(enviar())
 
     await esperarRuta('/incidents')
-    expect(await screen.findByRole('row', { name: new RegExp(ASUNTO) })).toBeInTheDocument()
+    expect(await screen.findByText(ASUNTO)).toBeInTheDocument()
   })
 
   it('HU44-CP31: cancelar vuelve a la lista sin crear nada', async () => {
@@ -163,7 +163,7 @@ describe('NewIncidentPage (HU44): errores y cancelar', () => {
     await user.click(screen.getByRole('link', { name: /cancelar/i }))
 
     await esperarRuta('/incidents')
-    await screen.findByRole('table', { name: 'Mis incidencias' })
+    await screen.findByRole('list', { name: 'Tus incidencias' })
     expect(envio.llamadas).toBe(0)
     expect(screen.queryByText(/incidencia enviada/i)).not.toBeInTheDocument()
   })
@@ -179,7 +179,7 @@ describe('NewIncidentPage (HU44): vendedor', () => {
 
     await esperarRuta('/incidents')
     expect(await screen.findByText(/incidencia enviada/i)).toBeInTheDocument()
-    const fila = await screen.findByRole('row', { name: new RegExp(ASUNTO) })
+    const fila = (await screen.findByText(ASUNTO)).closest('li')
     expect(within(fila).getByText('Pendiente')).toBeInTheDocument()
     expect(screen.queryByText('Todavía no has reportado ninguna incidencia')).not.toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: 'Paginación' })).not.toBeInTheDocument()

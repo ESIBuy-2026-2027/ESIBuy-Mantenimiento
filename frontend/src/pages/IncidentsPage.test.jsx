@@ -23,8 +23,8 @@ async function abrirMisIncidencias(email = CLIENTE) {
   await screen.findByRole('heading', { level: 1, name: /mis incidencias/i })
 }
 
-const tabla = () => screen.findByRole('table', { name: 'Mis incidencias' })
-const filasDeDatos = async () => within(await tabla()).getAllByRole('row').slice(1)
+const lista = () => screen.findByRole('list', { name: 'Tus incidencias' })
+const incidencias = async () => within(await lista()).getAllByRole('listitem')
 
 async function esperarRuta(ruta) {
   await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp(`^${ruta}$`)))
@@ -34,9 +34,10 @@ describe('IncidentsPage (HU44): lista', () => {
   it('HU44-CP27: abre en la última página, la de las incidencias más recientes', async () => {
     await abrirMisIncidencias()
 
-    const filas = await screen.findAllByRole('row', { name: /Aviso de stock|Valoración que no se publica/ })
+    const filas = await incidencias()
     expect(filas).toHaveLength(2)
-    expect(await filasDeDatos()).toHaveLength(2)
+    expect(filas[0]).toHaveTextContent('Valoración que no se publica')
+    expect(filas[1]).toHaveTextContent('Aviso de stock')
     expect(screen.getByText('Página 2 de 2')).toBeInTheDocument()
     expect(screen.getByText(/Mostrando 11–12 de 12 incidencias/)).toBeInTheDocument()
   })
@@ -49,7 +50,7 @@ describe('IncidentsPage (HU44): lista', () => {
     })
 
     await abrirMisIncidencias()
-    await tabla()
+    await lista()
 
     await waitFor(() => expect(paginas).toEqual(['1/10', '2/10']))
     server.events.removeAllListeners()
@@ -58,12 +59,12 @@ describe('IncidentsPage (HU44): lista', () => {
   it('HU44-CP27: la paginación lleva a la página anterior y a la siguiente', async () => {
     const user = userEvent.setup()
     await abrirMisIncidencias()
-    await tabla()
+    await lista()
 
     await user.click(screen.getByRole('button', { name: /anterior/i }))
 
     await screen.findByText('Página 1 de 2')
-    const filas = await filasDeDatos()
+    const filas = await incidencias()
     expect(filas).toHaveLength(10)
     expect(filas[0]).toHaveTextContent('No me llega el pedido')
     expect(filas[9]).toHaveTextContent('Imagen que no carga')
@@ -71,13 +72,13 @@ describe('IncidentsPage (HU44): lista', () => {
     await user.click(screen.getByRole('button', { name: /siguiente/i }))
 
     await screen.findByText('Página 2 de 2')
-    expect(await filasDeDatos()).toHaveLength(2)
+    expect(await incidencias()).toHaveLength(2)
   })
 
   it('HU44-CP27: con una sola página no hay paginación y se ven todas, con el estado y la respuesta', async () => {
     await abrirMisIncidencias(VENDEDOR)
 
-    const filas = await screen.findAllByRole('row', { name: /No puedo subir la imagen|Estadísticas sin datos/ })
+    const filas = await incidencias()
     expect(filas).toHaveLength(2)
     expect(screen.queryByRole('navigation', { name: 'Paginación' })).not.toBeInTheDocument()
     expect(filas[0]).toHaveTextContent('Abierta')
@@ -86,7 +87,7 @@ describe('IncidentsPage (HU44): lista', () => {
     expect(filas[1]).toHaveTextContent('Sin respuesta todavía')
   })
 
-  it('HU44-CP27: mientras carga muestra un indicador de carga y no la tabla', async () => {
+  it('HU44-CP27: mientras carga muestra un indicador de carga y no la lista', async () => {
     server.use(
       http.get(URL_INCIDENCIAS, async () => {
         await delay(150)
@@ -96,7 +97,7 @@ describe('IncidentsPage (HU44): lista', () => {
     await abrirMisIncidencias()
 
     expect(screen.getByText('Cargando incidencias…')).toBeInTheDocument()
-    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Tus incidencias' })).not.toBeInTheDocument()
     await screen.findByText(/todavía no has reportado ninguna incidencia/i)
     expect(screen.queryByText('Cargando incidencias…')).not.toBeInTheDocument()
   })
@@ -107,11 +108,11 @@ describe('IncidentsPage (HU44): lista', () => {
     await abrirMisIncidencias()
 
     expect(await screen.findByText('No se han podido cargar tus incidencias. Inténtalo de nuevo.')).toBeInTheDocument()
-    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Tus incidencias' })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /reintentar/i }))
 
-    await tabla()
+    await lista()
     expect(screen.queryByText(/no se han podido cargar tus incidencias/i)).not.toBeInTheDocument()
   })
 
@@ -120,7 +121,7 @@ describe('IncidentsPage (HU44): lista', () => {
 
     expect(await screen.findByText('Todavía no has reportado ninguna incidencia')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /reportar mi primera incidencia/i })).toBeInTheDocument()
-    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Tus incidencias' })).not.toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: 'Paginación' })).not.toBeInTheDocument()
   })
 
@@ -135,7 +136,7 @@ describe('IncidentsPage (HU44): nueva incidencia', () => {
   it('HU44-CP28: el botón Nueva incidencia lleva al formulario', async () => {
     const user = userEvent.setup()
     await abrirMisIncidencias()
-    await tabla()
+    await lista()
 
     await user.click(screen.getByRole('link', { name: /^nueva incidencia$/i }))
 
