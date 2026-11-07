@@ -4378,16 +4378,23 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU50-CP10 | Cerrar una incidencia la elimina, esté pendiente o abierta, y no toca las demás | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#303, PR pendiente) |
 | HU50-CP11 | Cerrar una incidencia que no existe se rechaza sin eliminar nada | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#303, PR pendiente) |
 | HU50-CP12 | El adaptador de MongoDB elimina solo la incidencia con ese id, y con un id que no existe no borra nada | Integración MongoDB | 2 | 🔍 En revisión (2, AB#303, PR pendiente) |
+| HU50-CP13 | `PATCH /api/admin/incidencias/{id}/abrir` con `{"respuesta"}` responde 200 con la incidencia abierta y su respuesta, sin el id del autor | Controlador | 1 | 🔍 En revisión (1, AB#300, PR pendiente) |
+| HU50-CP14 | Abrir responde 404 `INCIDENT_NOT_FOUND` si no existe, 409 `INCIDENT_ALREADY_OPEN` si ya está abierta y 400 `VALIDATION_ERROR` (mensaje genérico) si la respuesta no es válida; un cuerpo que no es JSON, 400 sin llegar al caso de uso | Controlador | 4 | 🔍 En revisión (4, AB#300, PR pendiente) |
+| HU50-CP15 | `DELETE /api/admin/incidencias/{id}` responde 204 sin cuerpo y cierra esa incidencia | Controlador | 1 | 🔍 En revisión (1, AB#301, PR pendiente) |
+| HU50-CP16 | Cerrar una incidencia que no existe responde 404 `INCIDENT_NOT_FOUND` | Controlador | 1 | 🔍 En revisión (1, AB#301, PR pendiente) |
+| HU50-CP17 | Sin sesión, abrir y cerrar responden 401; un cliente o un vendedor reciben 403 `ACCESS_DENIED` | Controlador | 4 | 🔍 En revisión (4, AB#300 · AB#301, PR pendiente) |
 
 Notas:
-- **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** HU50-CP01 a CP12 los propone el desarrollo backend a partir de los criterios de la HU50 («la vista de incidencias debe poder abrir / cerrar la incidencia», «una vez cerrada la incidencia, esta se elimina») y no salen de Azure Boards. Rama `feature/US50-T302-apertura-incidencias`.
+- **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** HU50-CP01 a CP17 los propone el desarrollo backend a partir de los criterios de la HU50 («la vista de incidencias debe poder abrir / cerrar la incidencia», «una vez cerrada la incidencia, esta se elimina») y no salen de Azure Boards. Rama `feature/US50-T302-apertura-incidencias`.
 - **T302 (AB#302, lógica de apertura):** `Incidencia.abrir(respuesta)` en el dominio (solo desde `PENDIENTE`, `IncidenciaYaAbiertaException` si no) y el puerto de entrada `ResolucionIncidenciasUseCase` con su servicio `ResolucionIncidenciasService` (`@PreAuthorize(SOLO_ADMINISTRADOR)`), que busca por id (`IncidenciaRepositoryPort.buscarPorId`, nuevo) y guarda (CP01 a CP09).
 - **T303 (AB#303, lógica de cierre y eliminación):** `ResolucionIncidenciasUseCase.cerrar(id)` comprueba que existe y la elimina (`IncidenciaRepositoryPort.eliminar`, nuevo) (CP09 a CP12).
 - **Puerto propio (decisión del desarrollo, 07/11/2026):** el actor es el mismo que en la HU49, pero `SupervisionIncidenciasUseCase` solo consulta y este cambia las incidencias, así que es un puerto aparte.
 - **La respuesta se escribe al abrir y es obligatoria (decisión del desarrollo, 07/11/2026):** al cerrar, la incidencia se elimina, así que la respuesta es lo único que llega a ver su autor. Hasta 1000 caracteres, como la descripción (CP02 y CP03).
 - **Cerrar en cualquier estado (decisión del desarrollo, 07/11/2026):** se puede cerrar una incidencia pendiente sin abrirla antes, para descartar spam o duplicados (CP10).
 - **Seguridad en la capa de negocio (R8):** CP09 comprueba, para abrir y para cerrar, que el administrador pasa, que cliente y vendedor reciben 403 y que sin sesión se rechaza.
-- **Pendiente:** los endpoints de abrir y cerrar (T300 y T301), cuando exista el controlador de `/api/admin/incidencias` de la HU49 (T306), con la traducción de los errores (409 `INCIDENT_ALREADY_OPEN` y 404 `INCIDENT_NOT_FOUND`); y el botón del frontend (T305).
+- **T300 y T301 (AB#300 y AB#301, endpoints):** `PATCH /api/admin/incidencias/{id}/abrir` (cuerpo `AbrirIncidenciaRequest`, responde `IncidenciaResponse`) y `DELETE /api/admin/incidencias/{id}` (204) en el `AdministracionIncidenciasController` de la HU49. `ManejadorGlobalErrores` traduce `IncidenciaNoEncontradaException` a 404 `INCIDENT_NOT_FOUND` e `IncidenciaYaAbiertaException` a 409 `INCIDENT_ALREADY_OPEN` (CP13 a CP17).
+- **CP17 sin rojo real:** los 401 y 403 ya los daba `SecurityConfig` (`/api/admin/**` solo para el administrador) antes de que existieran las rutas; se mantienen como defensa en profundidad del borde.
+- **Pendiente:** el botón del frontend (T305).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -4417,12 +4424,24 @@ Notas:
 | HU50-CP11 | `ResolucionIncidenciasServiceTest` | `HU50-CP11: cerrar una incidencia que no existe se rechaza sin eliminar nada` | Aplicación | AB#303 | PR pendiente | 🔍 |
 | HU50-CP12 | `IncidenciaMongoAdapterTest` | `HU50-CP12: eliminar borra solo la incidencia con ese id` | Infraestructura (MongoDB) | AB#303 | PR pendiente | 🔍 |
 | HU50-CP12 | `IncidenciaMongoAdapterTest` | `HU50-CP12: eliminar una incidencia que no existe no borra nada` | Infraestructura (MongoDB) | AB#303 | PR pendiente | 🔍 |
+| HU50-CP13 | `AdministracionIncidenciasControllerTest` | `HU50-CP13: abrir responde 200 con la incidencia abierta y su respuesta, sin el id del autor` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
+| HU50-CP14 | `AdministracionIncidenciasControllerTest` | `HU50-CP14: abrir una incidencia que no existe responde 404 INCIDENT_NOT_FOUND` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
+| HU50-CP14 | `AdministracionIncidenciasControllerTest` | `HU50-CP14: abrir una incidencia ya abierta responde 409 INCIDENT_ALREADY_OPEN` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
+| HU50-CP14 | `AdministracionIncidenciasControllerTest` | `HU50-CP14: una respuesta que el dominio rechaza responde 400 VALIDATION_ERROR con un mensaje genérico` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
+| HU50-CP14 | `AdministracionIncidenciasControllerTest` | `HU50-CP14: un cuerpo que no es JSON responde 400 y no llega al caso de uso` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
+| HU50-CP15 | `AdministracionIncidenciasControllerTest` | `HU50-CP15: cerrar responde 204 sin cuerpo y cierra esa incidencia` | Infraestructura (web) | AB#301 | PR pendiente | 🔍 |
+| HU50-CP16 | `AdministracionIncidenciasControllerTest` | `HU50-CP16: cerrar una incidencia que no existe responde 404 INCIDENT_NOT_FOUND` | Infraestructura (web) | AB#301 | PR pendiente | 🔍 |
+| HU50-CP17 | `AdministracionIncidenciasControllerTest` | `HU50-CP17: sin sesión abrir responde 401` | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
+| HU50-CP17 | `AdministracionIncidenciasControllerTest` | `HU50-CP17: un cliente o un vendedor que intentan abrir reciben 403 ACCESS_DENIED` (parametrizado: cliente y vendedor) | Infraestructura (web) | AB#300 | PR pendiente | 🔍 |
+| HU50-CP17 | `AdministracionIncidenciasControllerTest` | `HU50-CP17: sin sesión cerrar responde 401` | Infraestructura (web) | AB#301 | PR pendiente | 🔍 |
+| HU50-CP17 | `AdministracionIncidenciasControllerTest` | `HU50-CP17: un cliente o un vendedor que intentan cerrar reciben 403 ACCESS_DENIED` (parametrizado: cliente y vendedor) | Infraestructura (web) | AB#301 | PR pendiente | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `IncidenciaTest`: `incidencias/domain/model/` (JUnit, sin Spring)
 - `ResolucionIncidenciasServiceTest`: `incidencias/application/service/` (JUnit, sin Spring, con un repositorio en memoria)
 - `SeguridadIncidenciasServiceTest`: `incidencias/application/service/` (contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
 - `IncidenciaMongoAdapterTest`: `incidencias/infrastructure/adapter/out/persistence/` (con Testcontainers)
+- `AdministracionIncidenciasControllerTest`: `incidencias/infrastructure/adapter/in/web/` (`@WebMvcTest` con la `SecurityConfig` real y el caso de uso como doble de prueba)
 
 ---
 
