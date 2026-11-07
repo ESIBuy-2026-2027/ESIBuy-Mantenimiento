@@ -302,3 +302,27 @@ describe('AppHeader (HU30): el logotipo lleva al inicio de cada usuario', () => 
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/products$')))
   })
 })
+
+describe('AppHeader (HU44): incidencias del cliente', () => {
+  it('HU44-CP32: el cliente ve el botón Incidencias en la cabecera y lleva a Mis incidencias', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/')
+
+    await user.click(await screen.findByRole('link', { name: /^incidencias$/i }))
+
+    await esperarRuta('/incidents')
+    expect(await screen.findByRole('heading', { level: 1, name: /mis incidencias/i })).toBeInTheDocument()
+  })
+
+  it('HU44-CP32: el botón Incidencias es un enlace con su destino, que recibe el foco con el teclado', async () => {
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/')
+
+    const enlace = await screen.findByRole('link', { name: /^incidencias$/i })
+
+    expect(enlace).toHaveAttribute('href', '/incidents')
+    enlace.focus()
+    expect(enlace).toHaveFocus()
+  })
+})
