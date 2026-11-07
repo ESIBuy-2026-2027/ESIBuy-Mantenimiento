@@ -47,10 +47,11 @@ const CONSECUENCIAS = {
   ],
 }
 
-// Mensajes propios según el code del backend: nunca su texto ni la contraseña enviada
+// Mensajes propios según el code del backend: nunca su texto ni la contraseña enviada. Una contraseña incorrecta se
+// avisa en su campo; cualquier otro fallo, en un aviso general.
 const MENSAJE_CONTRASENA = 'La contraseña actual no es correcta.'
 const MENSAJE_FALLO = 'No se ha podido eliminar la cuenta. Inténtalo de nuevo.'
-const mensajeDeFallo = (error) => (error?.code === 'WRONG_PASSWORD' ? MENSAJE_CONTRASENA : MENSAJE_FALLO)
+const fallaPorLaContrasena = (error) => error?.code === 'WRONG_PASSWORD'
 
 // Confirmación para eliminar la cuenta propia del vendedor (HU47) o del cliente (HU25), con la contraseña actual. Las
 // consecuencias que explica dependen del rol.
@@ -59,6 +60,7 @@ export default function DeleteAccountDialog({ rol, onClose, onDeleted }) {
   const contenido = useRef(null)
   const [password, setPassword] = useState('')
   const [eliminando, setEliminando] = useState(false)
+  const [contrasenaIncorrecta, setContrasenaIncorrecta] = useState(false)
   const [fallo, setFallo] = useState(null)
 
   // Al abrirse el foco va al campo de la contraseña, que es lo único que hay que rellenar
@@ -66,14 +68,22 @@ export default function DeleteAccountDialog({ rol, onClose, onDeleted }) {
     contenido.current?.querySelector('input')?.focus()
   }, [])
 
+  // El aviso de la contraseña incorrecta se quita en cuanto se cambia el texto
+  const cambiarContrasena = (_event, data) => {
+    setPassword(data.value)
+    setContrasenaIncorrecta(false)
+  }
+
   const confirmar = async () => {
     setEliminando(true)
     setFallo(null)
+    setContrasenaIncorrecta(false)
     try {
       await deleteAccount(password)
       onDeleted()
     } catch (error) {
-      setFallo(mensajeDeFallo(error))
+      if (fallaPorLaContrasena(error)) setContrasenaIncorrecta(true)
+      else setFallo(MENSAJE_FALLO)
       setEliminando(false)
     }
   }
@@ -98,8 +108,10 @@ export default function DeleteAccountDialog({ rol, onClose, onDeleted }) {
             <PasswordField
               label="Contraseña actual"
               value={password}
-              onChange={(_event, data) => setPassword(data.value)}
+              onChange={cambiarContrasena}
+              error={contrasenaIncorrecta ? MENSAJE_CONTRASENA : undefined}
               autoComplete="current-password"
+              bloquearCopia
             />
           </DialogContent>
           <DialogActions>
