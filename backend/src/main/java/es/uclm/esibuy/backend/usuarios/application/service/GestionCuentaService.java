@@ -6,11 +6,16 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 import es.uclm.esibuy.backend.usuarios.application.port.in.GestionCuentaUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.out.CarritoClientePort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoRecuperacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.DireccionesClientePort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.FactorAutenticacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.ListaDeseosClientePort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.MetodosPagoClientePort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.PedidosVendedorPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.PreferenciasClientePort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.ProductosVendedorPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.ValoracionesProductoPort;
@@ -31,12 +36,19 @@ public class GestionCuentaService implements GestionCuentaUseCase {
     private final FactorAutenticacionRepositoryPort factores;
     private final CodigoVerificacionRepositoryPort codigosVerificacion;
     private final CodigoRecuperacionRepositoryPort codigosRecuperacion;
+    private final ListaDeseosClientePort listaDeseos;
+    private final CarritoClientePort carrito;
+    private final PreferenciasClientePort preferencias;
+    private final MetodosPagoClientePort metodosPago;
+    private final DireccionesClientePort direcciones;
 
     public GestionCuentaService(UsuarioRepositoryPort usuarioRepository, HashContrasenaPort hashContrasena,
             ProductosVendedorPort productos, PedidosVendedorPort productosConPedidos,
             ValoracionesProductoPort valoraciones, FactorAutenticacionRepositoryPort factores,
             CodigoVerificacionRepositoryPort codigosVerificacion,
-            CodigoRecuperacionRepositoryPort codigosRecuperacion) {
+            CodigoRecuperacionRepositoryPort codigosRecuperacion, ListaDeseosClientePort listaDeseos,
+            CarritoClientePort carrito, PreferenciasClientePort preferencias, MetodosPagoClientePort metodosPago,
+            DireccionesClientePort direcciones) {
         this.usuarioRepository = usuarioRepository;
         this.hashContrasena = hashContrasena;
         this.productos = productos;
@@ -45,6 +57,11 @@ public class GestionCuentaService implements GestionCuentaUseCase {
         this.factores = factores;
         this.codigosVerificacion = codigosVerificacion;
         this.codigosRecuperacion = codigosRecuperacion;
+        this.listaDeseos = listaDeseos;
+        this.carrito = carrito;
+        this.preferencias = preferencias;
+        this.metodosPago = metodosPago;
+        this.direcciones = direcciones;
     }
 
     // Un único caso de uso para el cliente (HU25) y el vendedor (HU47), detrás de un único DELETE /api/perfil.
@@ -61,12 +78,24 @@ public class GestionCuentaService implements GestionCuentaUseCase {
 
         if (usuario.getRol() == Rol.VENDEDOR) {
             eliminarProductosDelVendedor(usuario.getId());
+        } else {
+            eliminarDatosDelCliente(email);
         }
         // El usuario se borra el último: si algo falla antes, se puede repetir la eliminación
         factores.eliminarPorUsuario(usuario.getId());
         codigosVerificacion.eliminarPorUsuario(usuario.getId());
         codigosRecuperacion.eliminarPorUsuario(usuario.getId());
         usuarioRepository.eliminarPorId(usuario.getId());
+    }
+
+    // Lo que depende del cliente (correo del profesor, 06/11/2026). Se conservan sus pedidos y valoraciones para las
+    // estadísticas y los históricos. Los otros módulos sacan el id del correo, así que va antes de borrar al usuario.
+    private void eliminarDatosDelCliente(String email) {
+        listaDeseos.eliminar(email);
+        carrito.eliminar(email);
+        preferencias.eliminar(email);
+        metodosPago.eliminarTodos(email);
+        direcciones.eliminarTodas(email);
     }
 
     // Se conservan como no disponibles los productos con pedidos; los demás se borran con sus valoraciones

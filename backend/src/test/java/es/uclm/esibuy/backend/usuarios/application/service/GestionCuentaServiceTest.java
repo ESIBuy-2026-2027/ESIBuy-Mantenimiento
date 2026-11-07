@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.usuarios.application.service;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -18,14 +19,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import es.uclm.esibuy.backend.usuarios.application.port.out.CarritoClientePort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoRecuperacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.DireccionesClientePort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.FactorAutenticacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.ListaDeseosClientePort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.MetodosPagoClientePort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.PedidosVendedorPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.PreferenciasClientePort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.ProductosVendedorPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.ValoracionesProductoPort;
@@ -62,13 +69,24 @@ class GestionCuentaServiceTest {
     private CodigoVerificacionRepositoryPort codigosVerificacion;
     @Mock
     private CodigoRecuperacionRepositoryPort codigosRecuperacion;
+    @Mock
+    private ListaDeseosClientePort listaDeseos;
+    @Mock
+    private CarritoClientePort carrito;
+    @Mock
+    private PreferenciasClientePort preferencias;
+    @Mock
+    private MetodosPagoClientePort metodosPago;
+    @Mock
+    private DireccionesClientePort direcciones;
 
     private GestionCuentaService servicio;
 
     @BeforeEach
     void preparar() {
         servicio = new GestionCuentaService(usuarioRepository, hashContrasena, productos, productosConPedidos,
-                valoraciones, factores, codigosVerificacion, codigosRecuperacion);
+                valoraciones, factores, codigosVerificacion, codigosRecuperacion, listaDeseos, carrito, preferencias,
+                metodosPago, direcciones);
         // lenient: cada test usa solo la cuenta de uno de los dos roles
         lenient().when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.of(vendedor()));
         lenient().when(usuarioRepository.buscarPorCorreo(EMAIL_CLIENTE)).thenReturn(Optional.of(cliente()));
@@ -96,8 +114,39 @@ class GestionCuentaServiceTest {
         assertThrows(ContrasenaActualIncorrectaException.class,
                 () -> servicio.eliminarCuentaPropia(EMAIL_CLIENTE, "incorrecta"));
 
-        verifyNoInteractions(factores, codigosVerificacion, codigosRecuperacion);
+        verifyNoInteractions(factores, codigosVerificacion, codigosRecuperacion, listaDeseos, carrito, preferencias,
+                metodosPago, direcciones);
         verify(usuarioRepository, never()).eliminarPorId("u-1");
+    }
+
+    @Test
+    @DisplayName("HU25-CP06: al eliminar la cuenta del cliente se borra lo que depende de él y, el último, el usuario")
+    void eliminarLaCuentaDeUnClienteBorraSusDatosAntesQueAlUsuario() {
+        when(hashContrasena.coincide(PASSWORD, "hash")).thenReturn(true);
+
+        servicio.eliminarCuentaPropia(EMAIL_CLIENTE, PASSWORD);
+
+        // Los otros módulos sacan el id del correo: todo va antes de borrar al usuario
+        InOrder orden = inOrder(listaDeseos, carrito, preferencias, metodosPago, direcciones, usuarioRepository);
+        orden.verify(listaDeseos).eliminar(EMAIL_CLIENTE);
+        orden.verify(carrito).eliminar(EMAIL_CLIENTE);
+        orden.verify(preferencias).eliminar(EMAIL_CLIENTE);
+        orden.verify(metodosPago).eliminarTodos(EMAIL_CLIENTE);
+        orden.verify(direcciones).eliminarTodas(EMAIL_CLIENTE);
+        orden.verify(usuarioRepository).eliminarPorId("u-1");
+    }
+
+    @Test
+    @DisplayName("HU25-CP06: al eliminar la cuenta de un vendedor no se toca nada de clientes")
+    void eliminarLaCuentaDeUnVendedorNoTocaDatosDeClientes() {
+        when(hashContrasena.coincide(PASSWORD, "hash")).thenReturn(true);
+        when(productos.desactivarTodos("v-1")).thenReturn(List.of());
+        when(productosConPedidos.buscarDeVendedor("v-1")).thenReturn(Set.of());
+
+        servicio.eliminarCuentaPropia(EMAIL, PASSWORD);
+
+        verifyNoInteractions(listaDeseos, carrito, preferencias, metodosPago, direcciones);
+        verify(usuarioRepository).eliminarPorId("v-1");
     }
 
     @Test

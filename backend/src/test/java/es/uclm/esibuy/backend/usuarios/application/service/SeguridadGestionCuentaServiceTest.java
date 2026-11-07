@@ -27,11 +27,16 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.GestionCuentaUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.out.CarritoClientePort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoRecuperacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.DireccionesClientePort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.FactorAutenticacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.ListaDeseosClientePort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.MetodosPagoClientePort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.PedidosVendedorPort;
+import es.uclm.esibuy.backend.usuarios.application.port.out.PreferenciasClientePort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.ProductosVendedorPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.ValoracionesProductoPort;
@@ -96,13 +101,16 @@ class SeguridadGestionCuentaServiceTest {
             return mock(CodigoRecuperacionRepositoryPort.class);
         }
 
+        // Los puertos hacia los datos del cliente en otros módulos no se comprueban aquí: basta con dobles sueltos
         @Bean
         GestionCuentaUseCase gestionCuenta(UsuarioRepositoryPort usuarios, HashContrasenaPort hash,
                 ProductosVendedorPort productos, PedidosVendedorPort pedidos, ValoracionesProductoPort valoraciones,
                 FactorAutenticacionRepositoryPort factores, CodigoVerificacionRepositoryPort codigosVerificacion,
                 CodigoRecuperacionRepositoryPort codigosRecuperacion) {
             return new GestionCuentaService(usuarios, hash, productos, pedidos, valoraciones, factores,
-                    codigosVerificacion, codigosRecuperacion);
+                    codigosVerificacion, codigosRecuperacion, mock(ListaDeseosClientePort.class),
+                    mock(CarritoClientePort.class), mock(PreferenciasClientePort.class),
+                    mock(MetodosPagoClientePort.class), mock(DireccionesClientePort.class));
         }
     }
 
