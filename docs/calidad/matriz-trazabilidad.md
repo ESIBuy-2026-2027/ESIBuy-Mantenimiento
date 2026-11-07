@@ -852,9 +852,9 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU5-CP27 | Para eliminar la principal hay que elegir la sustituta, salvo si es la única; desde la página, la elegida pasa a ser la principal | Frontend (componente y página) | 3 | ✅ Pasa |
 | HU5-CP28 | Si la eliminación falla, se avisa sin cerrar el diálogo | Frontend (componente) | 1 | ✅ Pasa |
 | HU5-CP29 | La gestión de direcciones exige el rol cliente y que el correo recibido sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa |
-| HU5-CP30 | Al eliminar su cuenta (HU25) se borran todas las direcciones del cliente y no las de otro; si no tiene, no es un error | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#275, este PR) |
-| HU5-CP31 | Eliminar por cliente borra sus direcciones de la colección y no las de otro cliente | Integración (persistencia) | 1 | 🔍 En revisión (1, AB#275, este PR) |
-| HU5-CP32 | Borrar todas las direcciones exige el rol cliente y su propio correo; un vendedor, un administrador o sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, AB#275, este PR) |
+| HU5-CP30 | Al eliminar su cuenta (HU25) se borran todas las direcciones del cliente y no las de otro; si no tiene, no es un error | Unitario (aplicación) | 2 | ✅ Pasa (2, AB#275, PR #235) |
+| HU5-CP31 | Eliminar por cliente borra sus direcciones de la colección y no las de otro cliente | Integración (persistencia) | 1 | ✅ Pasa (1, AB#275, PR #235) |
+| HU5-CP32 | Borrar todas las direcciones exige el rol cliente y su propio correo; un vendedor, un administrador o sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#275, PR #235) |
 
 Notas:
 - **HU5-CP01 a CP16 (backend):** casos propuestos y aprobados por el equipo junto con el diseño de la HU5 (tasks AB#105, AB#106 y AB#107). Los casos de prueba no se registran en Azure Boards: viven en esta matriz y en el `@DisplayName` de cada test. Los del frontend, HU5-CP17 a CP28, se aprobaron con el mismo diseño (tasks AB#108 y AB#109).
@@ -980,14 +980,14 @@ Notas:
 | HU5-CP29 | `SeguridadDireccionesServiceTest` | `unClienteNoOperaConElCorreoDeOtro` | Aplicación | — | PR #168 | ✅ |
 | HU5-CP29 | `SeguridadDireccionesServiceTest` | `unClienteOperaConSuPropioCorreo` | Aplicación | — | PR #168 | ✅ |
 | HU5-CP29 | `SeguridadDireccionesServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | PR #168 | ✅ |
-| HU5-CP30 | `GestionDireccionesServiceTest` | `eliminarTodasBorraSoloLasDelCliente` | Aplicación | AB#275 | este PR | 🔍 |
-| HU5-CP30 | `GestionDireccionesServiceTest` | `eliminarTodasSinDireccionesNoEsUnError` | Aplicación | AB#275 | este PR | 🔍 |
-| HU5-CP31 | `DireccionMongoAdapterTest` | `eliminarPorClienteBorraSoloSusDirecciones` | Infraestructura | AB#275 | este PR | 🔍 |
-| HU5-CP32 | `SeguridadDireccionesServiceTest` | `elClienteEliminaTodasConSuPropioCorreo` | Aplicación | AB#275 | este PR | 🔍 |
-| HU5-CP32 | `SeguridadDireccionesServiceTest` | `unClienteNoEliminaTodasConElCorreoDeOtro` | Aplicación | AB#275 | este PR | 🔍 |
-| HU5-CP32 | `SeguridadDireccionesServiceTest` | `unVendedorNoEliminaTodas` | Aplicación | AB#275 | este PR | 🔍 |
-| HU5-CP32 | `SeguridadDireccionesServiceTest` | `unAdministradorNoEliminaTodas` | Aplicación | AB#275 | este PR | 🔍 |
-| HU5-CP32 | `SeguridadDireccionesServiceTest` | `sinSesionNoSeEliminanTodas` | Aplicación | AB#275 | este PR | 🔍 |
+| HU5-CP30 | `GestionDireccionesServiceTest` | `eliminarTodasBorraSoloLasDelCliente` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU5-CP30 | `GestionDireccionesServiceTest` | `eliminarTodasSinDireccionesNoEsUnError` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU5-CP31 | `DireccionMongoAdapterTest` | `eliminarPorClienteBorraSoloSusDirecciones` | Infraestructura | AB#275 | PR #235 | ✅ |
+| HU5-CP32 | `SeguridadDireccionesServiceTest` | `elClienteEliminaTodasConSuPropioCorreo` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU5-CP32 | `SeguridadDireccionesServiceTest` | `unClienteNoEliminaTodasConElCorreoDeOtro` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU5-CP32 | `SeguridadDireccionesServiceTest` | `unVendedorNoEliminaTodas` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU5-CP32 | `SeguridadDireccionesServiceTest` | `unAdministradorNoEliminaTodas` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU5-CP32 | `SeguridadDireccionesServiceTest` | `sinSesionNoSeEliminanTodas` | Aplicación | AB#275 | PR #235 | ✅ |
 
 ---
 
@@ -1034,9 +1034,9 @@ Notas:
 | HU6-CP35 | Para eliminar el predeterminado hay que elegir el sustituto, salvo si es el único; desde la página, el elegido pasa a ser el predeterminado | Frontend (componente y página) | 3 | ✅ Pasa |
 | HU6-CP36 | Si la eliminación falla, se avisa sin cerrar el diálogo | Frontend (componente) | 1 | ✅ Pasa |
 | HU6-CP37 | La gestión de métodos de pago exige el rol cliente y que el correo recibido sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, PR #168) |
-| HU6-CP38 | Al eliminar su cuenta (HU25) se borran todos los métodos de pago del cliente y no los de otro; si no tiene, no es un error | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#275, este PR) |
-| HU6-CP39 | Eliminar por cliente borra sus métodos de la colección y no los de otro cliente | Integración (persistencia) | 1 | 🔍 En revisión (1, AB#275, este PR) |
-| HU6-CP40 | Borrar todos los métodos de pago exige el rol cliente y su propio correo; un vendedor, un administrador o sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, AB#275, este PR) |
+| HU6-CP38 | Al eliminar su cuenta (HU25) se borran todos los métodos de pago del cliente y no los de otro; si no tiene, no es un error | Unitario (aplicación) | 2 | ✅ Pasa (2, AB#275, PR #235) |
+| HU6-CP39 | Eliminar por cliente borra sus métodos de la colección y no los de otro cliente | Integración (persistencia) | 1 | ✅ Pasa (1, AB#275, PR #235) |
+| HU6-CP40 | Borrar todos los métodos de pago exige el rol cliente y su propio correo; un vendedor, un administrador o sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#275, PR #235) |
 
 Notas:
 - **HU6-CP01 a CP36:** casos propuestos y aprobados por el equipo durante el desarrollo de la HU6: el backend (CP01 a CP24, tasks 271, 110, 270 y 112) y la vista del frontend (CP25 a CP36, tasks 269, 113 y 114). Los casos de prueba no se registran en Azure Boards: viven en esta matriz y en el `@DisplayName` de cada test.
@@ -1184,14 +1184,14 @@ Notas:
 | HU6-CP37 | `SeguridadMetodosPagoServiceTest` | `unClienteNoOperaConElCorreoDeOtro` | Aplicación | — | PR #168 | ✅ |
 | HU6-CP37 | `SeguridadMetodosPagoServiceTest` | `unClienteOperaConSuPropioCorreo` | Aplicación | — | PR #168 | ✅ |
 | HU6-CP37 | `SeguridadMetodosPagoServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | PR #168 | ✅ |
-| HU6-CP38 | `GestionMetodosPagoServiceTest` | `eliminarTodosBorraSoloLosDelCliente` | Aplicación | AB#275 | este PR | 🔍 |
-| HU6-CP38 | `GestionMetodosPagoServiceTest` | `eliminarTodosSinMetodosNoEsUnError` | Aplicación | AB#275 | este PR | 🔍 |
-| HU6-CP39 | `MetodoPagoMongoAdapterTest` | `eliminarPorClienteBorraSoloSusMetodos` | Infraestructura | AB#275 | este PR | 🔍 |
-| HU6-CP40 | `SeguridadMetodosPagoServiceTest` | `elClienteEliminaTodosConSuPropioCorreo` | Aplicación | AB#275 | este PR | 🔍 |
-| HU6-CP40 | `SeguridadMetodosPagoServiceTest` | `unClienteNoEliminaTodosConElCorreoDeOtro` | Aplicación | AB#275 | este PR | 🔍 |
-| HU6-CP40 | `SeguridadMetodosPagoServiceTest` | `unVendedorNoEliminaTodos` | Aplicación | AB#275 | este PR | 🔍 |
-| HU6-CP40 | `SeguridadMetodosPagoServiceTest` | `unAdministradorNoEliminaTodos` | Aplicación | AB#275 | este PR | 🔍 |
-| HU6-CP40 | `SeguridadMetodosPagoServiceTest` | `sinSesionNoSeEliminanTodos` | Aplicación | AB#275 | este PR | 🔍 |
+| HU6-CP38 | `GestionMetodosPagoServiceTest` | `eliminarTodosBorraSoloLosDelCliente` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU6-CP38 | `GestionMetodosPagoServiceTest` | `eliminarTodosSinMetodosNoEsUnError` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU6-CP39 | `MetodoPagoMongoAdapterTest` | `eliminarPorClienteBorraSoloSusMetodos` | Infraestructura | AB#275 | PR #235 | ✅ |
+| HU6-CP40 | `SeguridadMetodosPagoServiceTest` | `elClienteEliminaTodosConSuPropioCorreo` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU6-CP40 | `SeguridadMetodosPagoServiceTest` | `unClienteNoEliminaTodosConElCorreoDeOtro` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU6-CP40 | `SeguridadMetodosPagoServiceTest` | `unVendedorNoEliminaTodos` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU6-CP40 | `SeguridadMetodosPagoServiceTest` | `unAdministradorNoEliminaTodos` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU6-CP40 | `SeguridadMetodosPagoServiceTest` | `sinSesionNoSeEliminanTodos` | Aplicación | AB#275 | PR #235 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `NumeroTarjetaTest`, `CaducidadTarjetaTest`, `TitularTarjetaTest`, `UrlPayPalTest`, `TelefonoBizumTest`, `MetodoPagoTest` y `MetodosPagoClienteTest`: `metodospago/domain/model/` (solo JUnit)
@@ -1447,9 +1447,9 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU9-CP18 | Limpieza del carrito (AB#390): al consultarlo se quitan los productos que ya no se pueden comprar o sin stock y se ajusta la cantidad al stock | Unitario | 4 | ✅ Pasa (4, AB#385 a AB#390, PR #162) |
 | HU9-CP19 | El precio de cada línea lleva el descuento del cliente: el premium si es PREMIUM y está activo; si no, el general, redondeado a céntimos | Unitario | 9 | ✅ Pasa (9, AB#385 a AB#390, PR #162) |
 | HU9-CP20 | El carrito exige el rol cliente y que el correo recibido sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, PR #168) |
-| HU9-CP21 | Al eliminar su cuenta (HU25) se borra el carrito del cliente, sin dejar uno vacío guardado, y no el de otro; si no tiene, no es un error | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#275, este PR) |
-| HU9-CP22 | Eliminar por cliente borra su carrito de la colección y no el de otro cliente | Integración (persistencia) | 1 | 🔍 En revisión (1, AB#275, este PR) |
-| HU9-CP23 | Borrar el carrito exige el rol cliente y su propio correo; un vendedor, un administrador o sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, AB#275, este PR) |
+| HU9-CP21 | Al eliminar su cuenta (HU25) se borra el carrito del cliente, sin dejar uno vacío guardado, y no el de otro; si no tiene, no es un error | Unitario (aplicación) | 2 | ✅ Pasa (2, AB#275, PR #235) |
+| HU9-CP22 | Eliminar por cliente borra su carrito de la colección y no el de otro cliente | Integración (persistencia) | 1 | ✅ Pasa (1, AB#275, PR #235) |
+| HU9-CP23 | Borrar el carrito exige el rol cliente y su propio correo; un vendedor, un administrador o sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#275, PR #235) |
 
 Notas:
 - **HU9-CP01 a CP09 (Sprint 2, frontend):** casos propuestos en las tasks AB#383 (vista añadir al carrito) y AB#384 (vista de carrito) a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu9-carrito-de-compra.md`). Pendientes de confirmar con el equipo y de añadir a la HU9 (AB#71) en Azure Boards.
@@ -1567,14 +1567,14 @@ Notas:
 | HU9-CP20 | `SeguridadCarritoServiceTest` | `unClienteNoOperaConElCorreoDeOtro` | Aplicación | — | PR #168 | ✅ |
 | HU9-CP20 | `SeguridadCarritoServiceTest` | `unClienteConsultaSuPropioCarrito` | Aplicación | — | PR #168 | ✅ |
 | HU9-CP20 | `SeguridadCarritoServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | PR #168 | ✅ |
-| HU9-CP21 | `GestionCarritoServiceTest` | `eliminarBorraElCarritoDelCliente` | Aplicación | AB#275 | este PR | 🔍 |
-| HU9-CP21 | `GestionCarritoServiceTest` | `eliminarSinCarritoNoEsUnError` | Aplicación | AB#275 | este PR | 🔍 |
-| HU9-CP22 | `CarritoMongoAdapterTest` | `eliminarPorClienteBorraSoloSuCarrito` | Infraestructura | AB#275 | este PR | 🔍 |
-| HU9-CP23 | `SeguridadCarritoServiceTest` | `elClienteEliminaSuCarritoConSuPropioCorreo` | Aplicación | AB#275 | este PR | 🔍 |
-| HU9-CP23 | `SeguridadCarritoServiceTest` | `unClienteNoEliminaElCarritoDeOtro` | Aplicación | AB#275 | este PR | 🔍 |
-| HU9-CP23 | `SeguridadCarritoServiceTest` | `unVendedorNoEliminaCarritos` | Aplicación | AB#275 | este PR | 🔍 |
-| HU9-CP23 | `SeguridadCarritoServiceTest` | `unAdministradorNoEliminaCarritos` | Aplicación | AB#275 | este PR | 🔍 |
-| HU9-CP23 | `SeguridadCarritoServiceTest` | `sinSesionNoSeEliminaElCarrito` | Aplicación | AB#275 | este PR | 🔍 |
+| HU9-CP21 | `GestionCarritoServiceTest` | `eliminarBorraElCarritoDelCliente` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU9-CP21 | `GestionCarritoServiceTest` | `eliminarSinCarritoNoEsUnError` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU9-CP22 | `CarritoMongoAdapterTest` | `eliminarPorClienteBorraSoloSuCarrito` | Infraestructura | AB#275 | PR #235 | ✅ |
+| HU9-CP23 | `SeguridadCarritoServiceTest` | `elClienteEliminaSuCarritoConSuPropioCorreo` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU9-CP23 | `SeguridadCarritoServiceTest` | `unClienteNoEliminaElCarritoDeOtro` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU9-CP23 | `SeguridadCarritoServiceTest` | `unVendedorNoEliminaCarritos` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU9-CP23 | `SeguridadCarritoServiceTest` | `unAdministradorNoEliminaCarritos` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU9-CP23 | `SeguridadCarritoServiceTest` | `sinSesionNoSeEliminaElCarrito` | Aplicación | AB#275 | PR #235 | ✅ |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `AddToCartButton.test.jsx` y `CartWidget.test.jsx`: `features/cart/` (Vitest, React Testing Library y MSW)
@@ -2851,12 +2851,12 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU25-CP01 | Con la contraseña actual correcta se elimina la cuenta del cliente de la sesión, con su doble factor y sus códigos | Unitario | 1 | 🔍 En revisión |
-| HU25-CP02 | Con una contraseña incorrecta no se elimina la cuenta: 400 `WRONG_PASSWORD` y la sesión sigue abierta | Unitario + integración (capa web) | 2 | 🔍 En revisión |
-| HU25-CP03 | Al eliminar la cuenta se responde 204, se invalida la sesión y se borra la cookie `JSESSIONID` | Integración (capa web) | 1 | 🔍 En revisión |
-| HU25-CP04 | Solo el cliente o el vendedor eliminan su propia cuenta: el correo de otro o un administrador dan 403; sin sesión se rechaza y sin token CSRF, 403. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) + integración (capa web) | 5 | 🔍 En revisión |
-| HU25-CP05 | Sin contraseña (vacía o ausente) se responde 400 y no se llama al caso de uso | Integración (capa web) | 1 | 🔍 En revisión |
-| HU25-CP06 | Al eliminar la cuenta del cliente se borran su lista de deseos, su carrito, sus preferencias, sus métodos de pago y sus direcciones, y el usuario el último; se conservan sus pedidos y valoraciones | Unitario (aplicación e infraestructura) | 7 | 🔍 En revisión |
+| HU25-CP01 | Con la contraseña actual correcta se elimina la cuenta del cliente de la sesión, con su doble factor y sus códigos | Unitario | 1 | ✅ Pasa (PR #235) |
+| HU25-CP02 | Con una contraseña incorrecta no se elimina la cuenta: 400 `WRONG_PASSWORD` y la sesión sigue abierta | Unitario + integración (capa web) | 2 | ✅ Pasa (PR #235) |
+| HU25-CP03 | Al eliminar la cuenta se responde 204, se invalida la sesión y se borra la cookie `JSESSIONID` | Integración (capa web) | 1 | ✅ Pasa (PR #235) |
+| HU25-CP04 | Solo el cliente o el vendedor eliminan su propia cuenta: el correo de otro o un administrador dan 403; sin sesión se rechaza y sin token CSRF, 403. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) + integración (capa web) | 5 | ✅ Pasa (PR #235) |
+| HU25-CP05 | Sin contraseña (vacía o ausente) se responde 400 y no se llama al caso de uso | Integración (capa web) | 1 | ✅ Pasa (PR #235) |
+| HU25-CP06 | Al eliminar la cuenta del cliente se borran su lista de deseos, su carrito, sus preferencias, sus métodos de pago y sus direcciones, y el usuario el último; se conservan sus pedidos y valoraciones | Unitario (aplicación e infraestructura) | 7 | ✅ Pasa (PR #235) |
 
 Notas:
 - **HU25-CP01 a CP06:** casos propuestos en las T274/T275 (AB#274, AB#275) a partir de los criterios de aceptación de la HU25 y del correo del profesor (06/11/2026). Pendientes de confirmar con el equipo y de añadir a la HU25 en Azure Boards.
@@ -2870,23 +2870,23 @@ Notas:
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU25-CP01 | `GestionCuentaServiceTest` | `eliminarLaCuentaDeUnClienteBorraAlUsuario` | Aplicación | AB#274 | este PR | 🔍 |
-| HU25-CP02 | `GestionCuentaServiceTest` | `eliminarLaCuentaDeUnClienteConContrasenaIncorrectaNoBorraNada` | Aplicación | AB#274 | este PR | 🔍 |
-| HU25-CP02 | `PerfilControllerTest` | `unClienteConContrasenaIncorrectaRecibe400` | Infraestructura | AB#274 | este PR | 🔍 |
-| HU25-CP03 | `PerfilControllerTest` | `unClienteEliminaSuCuentaYSeCierraLaSesion` | Infraestructura | AB#274 | este PR | 🔍 |
-| HU25-CP04 | `SeguridadGestionCuentaServiceTest` | `unClienteEliminaSuCuenta` | Aplicación | AB#274 | este PR | 🔍 |
-| HU25-CP04 | `SeguridadGestionCuentaServiceTest` | `unClienteNoEliminaLaCuentaDeOtro` | Aplicación | AB#274 | este PR | 🔍 |
-| HU25-CP04 | `SeguridadGestionCuentaServiceTest` | `unAdministradorNoEliminaSuCuentaPorAqui` | Aplicación | AB#274 | este PR | 🔍 |
-| HU25-CP04 | `SeguridadGestionCuentaServiceTest` | `sinSesionNoSeEliminaNingunaCuenta` | Aplicación | AB#274 | este PR | 🔍 |
-| HU25-CP04 | `PerfilControllerTest` | `sinTokenCsrfNoSeEliminaLaCuenta` | Infraestructura | AB#274 | este PR | 🔍 |
-| HU25-CP05 | `PerfilControllerTest` | `sinContrasenaNoSeLlamaALaEliminacion` (vacía y ausente) | Infraestructura | AB#274 | este PR | 🔍 |
-| HU25-CP06 | `GestionCuentaServiceTest` | `eliminarLaCuentaDeUnClienteBorraSusDatosAntesQueAlUsuario` | Aplicación | AB#275 | este PR | 🔍 |
-| HU25-CP06 | `GestionCuentaServiceTest` | `eliminarLaCuentaDeUnVendedorNoTocaDatosDeClientes` | Aplicación | AB#275 | este PR | 🔍 |
-| HU25-CP06 | `DireccionesClienteAdapterTest` | `eliminarTodasDelegaEnElCasoDeUsoConElMismoCorreo` | Infraestructura | AB#275 | este PR | 🔍 |
-| HU25-CP06 | `MetodosPagoClienteAdapterTest` | `eliminarTodosDelegaEnElCasoDeUsoConElMismoCorreo` | Infraestructura | AB#275 | este PR | 🔍 |
-| HU25-CP06 | `CarritoClienteAdapterTest` | `eliminarDelegaEnElCasoDeUsoConElMismoCorreo` | Infraestructura | AB#275 | este PR | 🔍 |
-| HU25-CP06 | `ListaDeseosClienteAdapterTest` | `eliminarDelegaEnElCasoDeUsoConElMismoCorreo` | Infraestructura | AB#275 | este PR | 🔍 |
-| HU25-CP06 | `PreferenciasClienteAdapterTest` | `eliminarDelegaEnElCasoDeUsoConElMismoCorreo` | Infraestructura | AB#275 | este PR | 🔍 |
+| HU25-CP01 | `GestionCuentaServiceTest` | `eliminarLaCuentaDeUnClienteBorraAlUsuario` | Aplicación | AB#274 | PR #235 | ✅ |
+| HU25-CP02 | `GestionCuentaServiceTest` | `eliminarLaCuentaDeUnClienteConContrasenaIncorrectaNoBorraNada` | Aplicación | AB#274 | PR #235 | ✅ |
+| HU25-CP02 | `PerfilControllerTest` | `unClienteConContrasenaIncorrectaRecibe400` | Infraestructura | AB#274 | PR #235 | ✅ |
+| HU25-CP03 | `PerfilControllerTest` | `unClienteEliminaSuCuentaYSeCierraLaSesion` | Infraestructura | AB#274 | PR #235 | ✅ |
+| HU25-CP04 | `SeguridadGestionCuentaServiceTest` | `unClienteEliminaSuCuenta` | Aplicación | AB#274 | PR #235 | ✅ |
+| HU25-CP04 | `SeguridadGestionCuentaServiceTest` | `unClienteNoEliminaLaCuentaDeOtro` | Aplicación | AB#274 | PR #235 | ✅ |
+| HU25-CP04 | `SeguridadGestionCuentaServiceTest` | `unAdministradorNoEliminaSuCuentaPorAqui` | Aplicación | AB#274 | PR #235 | ✅ |
+| HU25-CP04 | `SeguridadGestionCuentaServiceTest` | `sinSesionNoSeEliminaNingunaCuenta` | Aplicación | AB#274 | PR #235 | ✅ |
+| HU25-CP04 | `PerfilControllerTest` | `sinTokenCsrfNoSeEliminaLaCuenta` | Infraestructura | AB#274 | PR #235 | ✅ |
+| HU25-CP05 | `PerfilControllerTest` | `sinContrasenaNoSeLlamaALaEliminacion` (vacía y ausente) | Infraestructura | AB#274 | PR #235 | ✅ |
+| HU25-CP06 | `GestionCuentaServiceTest` | `eliminarLaCuentaDeUnClienteBorraSusDatosAntesQueAlUsuario` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU25-CP06 | `GestionCuentaServiceTest` | `eliminarLaCuentaDeUnVendedorNoTocaDatosDeClientes` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU25-CP06 | `DireccionesClienteAdapterTest` | `eliminarTodasDelegaEnElCasoDeUsoConElMismoCorreo` | Infraestructura | AB#275 | PR #235 | ✅ |
+| HU25-CP06 | `MetodosPagoClienteAdapterTest` | `eliminarTodosDelegaEnElCasoDeUsoConElMismoCorreo` | Infraestructura | AB#275 | PR #235 | ✅ |
+| HU25-CP06 | `CarritoClienteAdapterTest` | `eliminarDelegaEnElCasoDeUsoConElMismoCorreo` | Infraestructura | AB#275 | PR #235 | ✅ |
+| HU25-CP06 | `ListaDeseosClienteAdapterTest` | `eliminarDelegaEnElCasoDeUsoConElMismoCorreo` | Infraestructura | AB#275 | PR #235 | ✅ |
+| HU25-CP06 | `PreferenciasClienteAdapterTest` | `eliminarDelegaEnElCasoDeUsoConElMismoCorreo` | Infraestructura | AB#275 | PR #235 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `GestionCuentaServiceTest` y `SeguridadGestionCuentaServiceTest`: `usuarios/application/service/` (Mockito sin Spring, y contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
@@ -3463,7 +3463,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU47-CP03 | Un producto no disponible no se puede comprar aunque tenga stock | Integración (persistencia) | 1 | ✅ Pasa |
 | HU47-CP04 | Si una eliminación quedó a medias se puede repetir y completarse sin errores | Unitario (aplicación) | 1 | ✅ Pasa |
 | HU47-CP05 | Al eliminar la cuenta se invalida la sesión y se limpia el contexto de seguridad | Unitario + integración (capa de aplicación y web) | 2 | ✅ Pasa |
-| HU47-CP06 | Nadie elimina la cuenta de un vendedor salvo él mismo: un cliente con el correo del vendedor o un administrador reciben 403 y no se modifica nada | Unitario + integración (capa de aplicación y web) | 2 | 🔍 En revisión (1, AB#274, este PR) |
+| HU47-CP06 | Nadie elimina la cuenta de un vendedor salvo él mismo: un cliente con el correo del vendedor o un administrador reciben 403 y no se modifica nada | Unitario + integración (capa de aplicación y web) | 2 | ✅ Pasa (1, AB#274, PR #235) |
 | HU47-CP07 | Una petición sin autenticar recibe 401 y no se modifica nada al intentar eliminar la cuenta | Integración (capa web) | 1 | ✅ Pasa |
 | HU47-CP08 | Con la contraseña incorrecta, `DELETE /api/perfil` responde 400 con code `WRONG_PASSWORD` y la sesión sigue abierta (un 401 haría que el frontend la diera por caducada) | Integración (capa web) | 1 | ✅ Pasa (1, AB#312, PR #223) |
 | HU47-CP09 | El diálogo explica qué se borra y qué se conserva, y sin la contraseña actual no deja eliminar | Frontend (componente) | 1 | ✅ Pasa (1, AB#311, PR #223) |
@@ -3501,7 +3501,7 @@ Notas:
 | HU47-CP05 | `SeguridadGestionCuentaServiceTest` | `unVendedorPuedeInvocarSuEliminacion` | Aplicación | AB#312 / AB#313 | PR #203 | ✅ |
 | HU47-CP05 | `PerfilControllerTest` | `eliminarCuentaInvalidaSesionYLimpiaContexto` | Infraestructura | AB#312 / AB#313 | PR #203 | ✅ |
 | HU47-CP06 | `SeguridadGestionCuentaServiceTest` | `unClienteNoPuedeInvocarLaEliminacion` | Aplicación | AB#312 / AB#313 | PR #203 | ✅ |
-| HU47-CP06 | `PerfilControllerTest` | `unAdministradorNoPuedeEliminarCuentaPorAqui` (antes `usuarioNoVendedorNoPuedeEliminarCuenta`, con un cliente) | Infraestructura | AB#312 / AB#313; cambiado en AB#274 | PR #203; este PR | 🔍 |
+| HU47-CP06 | `PerfilControllerTest` | `unAdministradorNoPuedeEliminarCuentaPorAqui` (antes `usuarioNoVendedorNoPuedeEliminarCuenta`, con un cliente) | Infraestructura | AB#312 / AB#313; cambiado en AB#274 | PR #203; PR #235 | ✅ |
 | HU47-CP07 | `PerfilControllerTest` | `sinAutenticarNoPuedeEliminarCuenta` | Infraestructura | AB#312 / AB#313 | PR #203 | ✅ |
 | HU47-CP08 | `PerfilControllerTest` | `contrasenaIncorrectaDevuelve400SinCerrarLaSesion` | Infraestructura | AB#312 | PR #223 | ✅ |
 | HU47-CP09 | `DeleteAccountDialog.test.jsx` | `HU47-CP09: explica qué se borra y qué se conserva, y sin la contraseña no deja eliminar` | Frontend · componente | AB#311 | PR #223 | ✅ |
@@ -4273,9 +4273,9 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU46-CP20 | El perfil del cliente muestra «Mis preferencias» con una casilla por cada categoría activa, marcadas las que ya eligió; el vendedor no la tiene | Frontend (página) | 3 | ✅ Pasa (3, AB#286, PR #220) |
 | HU46-CP21 | Marcar o desmarcar una categoría guarda las preferencias al momento y avisa; mientras se guarda, las casillas quedan deshabilitadas; al volver al perfil siguen guardadas | Frontend (página) | 4 | ✅ Pasa (4, AB#286, PR #220) |
 | HU46-CP22 | Si las preferencias no se pueden guardar, se avisa y la casilla vuelve a como estaba; si no se pueden cargar, se avisa sin mostrar las casillas y se puede reintentar | Frontend (página) | 2 | ✅ Pasa (2, AB#286, PR #220) |
-| HU46-CP23 | Al eliminar su cuenta (HU25) se borran las preferencias del cliente y no las de otro; si no tiene, no es un error | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#275, este PR) |
-| HU46-CP24 | Eliminar por cliente borra sus preferencias de la colección y no las de otro cliente | Integración (persistencia) | 1 | 🔍 En revisión (1, AB#275, este PR) |
-| HU46-CP25 | Borrar las preferencias exige el rol cliente y su propio correo; un vendedor, un administrador o sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, AB#275, este PR) |
+| HU46-CP23 | Al eliminar su cuenta (HU25) se borran las preferencias del cliente y no las de otro; si no tiene, no es un error | Unitario (aplicación) | 2 | ✅ Pasa (2, AB#275, PR #235) |
+| HU46-CP24 | Eliminar por cliente borra sus preferencias de la colección y no las de otro cliente | Integración (persistencia) | 1 | ✅ Pasa (1, AB#275, PR #235) |
+| HU46-CP25 | Borrar las preferencias exige el rol cliente y su propio correo; un vendedor, un administrador o sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#275, PR #235) |
 
 - **HU46-CP01 a CP22 (Sprint 2):** casos propuestos en las tasks AB#287 (backend) y AB#286 (frontend), a partir de los criterios «las preferencias se muestran en el perfil», «se pueden modificar en cualquier momento» y «al salir, las preferencias deben de haberse quedado guardadas». Pendientes de confirmar con el equipo y de añadir a la HU46 en Azure Boards. Rama `feature/US46-T287-T286-preferencias`.
 - **Qué son las preferencias (decisión del equipo):** ni la HU ni el enunciado lo concretan («gestionar […] sus preferencias»; en el mantenimiento, «recomendaciones de productos de acuerdo con las preferencias»). Se decidió que son las **categorías de interés** del cliente, que encajan con esas recomendaciones futuras. Solo el cliente las tiene, como dice la HU.
@@ -4330,14 +4330,14 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU46-CP21 | `ProfilePage.test.jsx` | `HU46-CP21: al volver al perfil, las preferencias siguen guardadas` | Frontend · página | AB#286 | PR #220 | ✅ |
 | HU46-CP22 | `ProfilePage.test.jsx` | `HU46-CP22: si no se pueden guardar, lo avisa y la casilla vuelve a como estaba` | Frontend · página | AB#286 | PR #220 | ✅ |
 | HU46-CP22 | `ProfilePage.test.jsx` | `HU46-CP22: si no se pueden cargar, lo avisa sin mostrar las casillas y permite reintentar` | Frontend · página | AB#286 | PR #220 | ✅ |
-| HU46-CP23 | `GestionPreferenciasServiceTest` | `eliminarBorraLasPreferenciasDelCliente` | Aplicación | AB#275 | este PR | 🔍 |
-| HU46-CP23 | `GestionPreferenciasServiceTest` | `eliminarSinPreferenciasNoEsUnError` | Aplicación | AB#275 | este PR | 🔍 |
-| HU46-CP24 | `PreferenciasMongoAdapterTest` | `eliminarPorClienteBorraSoloSusPreferencias` | Infraestructura | AB#275 | este PR | 🔍 |
-| HU46-CP25 | `SeguridadPreferenciasServiceTest` | `elClienteEliminaSusPreferenciasConSuPropioCorreo` | Aplicación | AB#275 | este PR | 🔍 |
-| HU46-CP25 | `SeguridadPreferenciasServiceTest` | `unClienteNoEliminaLasPreferenciasDeOtro` | Aplicación | AB#275 | este PR | 🔍 |
-| HU46-CP25 | `SeguridadPreferenciasServiceTest` | `unVendedorNoEliminaPreferencias` | Aplicación | AB#275 | este PR | 🔍 |
-| HU46-CP25 | `SeguridadPreferenciasServiceTest` | `unAdministradorNoEliminaPreferencias` | Aplicación | AB#275 | este PR | 🔍 |
-| HU46-CP25 | `SeguridadPreferenciasServiceTest` | `sinSesionNoSeEliminanLasPreferencias` | Aplicación | AB#275 | este PR | 🔍 |
+| HU46-CP23 | `GestionPreferenciasServiceTest` | `eliminarBorraLasPreferenciasDelCliente` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU46-CP23 | `GestionPreferenciasServiceTest` | `eliminarSinPreferenciasNoEsUnError` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU46-CP24 | `PreferenciasMongoAdapterTest` | `eliminarPorClienteBorraSoloSusPreferencias` | Infraestructura | AB#275 | PR #235 | ✅ |
+| HU46-CP25 | `SeguridadPreferenciasServiceTest` | `elClienteEliminaSusPreferenciasConSuPropioCorreo` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU46-CP25 | `SeguridadPreferenciasServiceTest` | `unClienteNoEliminaLasPreferenciasDeOtro` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU46-CP25 | `SeguridadPreferenciasServiceTest` | `unVendedorNoEliminaPreferencias` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU46-CP25 | `SeguridadPreferenciasServiceTest` | `unAdministradorNoEliminaPreferencias` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU46-CP25 | `SeguridadPreferenciasServiceTest` | `sinSesionNoSeEliminanLasPreferencias` | Aplicación | AB#275 | PR #235 | ✅ |
 
 ---
 
