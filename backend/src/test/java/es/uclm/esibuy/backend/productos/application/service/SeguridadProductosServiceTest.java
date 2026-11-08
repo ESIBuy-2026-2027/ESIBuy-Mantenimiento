@@ -200,8 +200,7 @@ class SeguridadProductosServiceTest {
     @DisplayName("HU31-CP28: un vendedor no usa el catálogo ni las existencias, que son del flujo de compra del cliente")
     void unVendedorNoUsaElCatalogoNiLasExistencias() {
         assertAll(
-                () -> assertThrows(AccessDeniedException.class, () -> catalogo.buscarProductos(null)),
-                () -> assertThrows(AccessDeniedException.class, () -> catalogo.consultarComprable("p-1", false)),
+                () -> assertThrows(AccessDeniedException.class, () -> catalogo.buscarProductos(null, VENDEDOR)),                () -> assertThrows(AccessDeniedException.class, () -> catalogo.consultarComprable("p-1", false)),
                 () -> assertThrows(AccessDeniedException.class, () -> existencias.descontar("p-1", 1)),
                 () -> assertThrows(AccessDeniedException.class, () -> existencias.reponer("p-1", 1)));
     }

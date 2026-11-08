@@ -39,12 +39,13 @@ public class CatalogoController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) @Min(1) @Max(5) Integer minRating,
             @RequestParam(defaultValue = "nombre") @Pattern(regexp = "nombre|valoracion") String sort,
-            @RequestParam(defaultValue = "asc") @Pattern(regexp = "asc|desc") String order) {
+            @RequestParam(defaultValue = "asc") @Pattern(regexp = "asc|desc") String order,
+            Authentication autenticado) {
         CriterioOrdenCatalogo criterio = "valoracion".equals(sort)
                 ? CriterioOrdenCatalogo.VALORACION
                 : CriterioOrdenCatalogo.NOMBRE;
         return ProductoCatalogoPageResponse.desde(catalogoProductos.buscarProductos(new BuscarCatalogoQuery(
-                search, category, minRating, criterio, "desc".equals(order), page - 1, size)));
+                search, category, minRating, criterio, "desc".equals(order), page - 1, size), autenticado.getName()));
     }
 
     // Detalle de un producto del catálogo (HU8): el cliente sale de la sesión para aplicarle su descuento. Uno que
