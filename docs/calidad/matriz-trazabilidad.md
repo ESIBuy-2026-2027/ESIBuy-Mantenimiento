@@ -4248,15 +4248,22 @@ Rutas de las clases de test (bajo `frontend/src/`):
 | HU45-CP03 | Un vendedor no puede usar el nombre comercial de otro vendedor: no se guarda nada | Unitario | 1 | ✅ Pasa |
 | HU45-CP04 | Con datos no válidos (nombre en blanco, cliente menor de edad o vendedor sin datos de vendedor) no se guarda nada | Unitario | 3 | ✅ Pasa |
 | HU45-CP05 | Solo el cliente o el vendedor edita su propio perfil: con el correo de otro, 403; un administrador, 403; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa |
+| HU45-CP06 | Un cliente o un vendedor editan su perfil con `PUT /api/perfil` y reciben 200 con el perfil actualizado (el mismo JSON que `GET /api/perfil`); el caso de uso recibe el correo de la sesión y los datos del cuerpo | Integración (capa web) | 2 | 🔍 En revisión (2, AB#101, este PR) |
+| HU45-CP07 | El cuerpo no puede cambiar el correo, el DNI, el rol ni el tipo de cliente: se edita al usuario de la sesión y esos campos se ignoran | Integración (capa web) | 1 | 🔍 En revisión (1, AB#101, este PR) |
+| HU45-CP08 | Datos no válidos: nombre vacío o de más de 30 caracteres, 400 `VALIDATION_ERROR` sin llamar al caso de uso; un dato que rechaza el dominio, 400 con el code de su motivo (`UNDERAGE`) o `VALIDATION_ERROR` si no tiene motivo concreto | Integración (capa web) | 3 | 🔍 En revisión (3, AB#101, este PR) |
+| HU45-CP09 | Un nombre comercial que ya usa otro vendedor responde 409 `COMMERCIAL_NAME_ALREADY_REGISTERED` | Integración (capa web) | 1 | 🔍 En revisión (1, AB#101, este PR) |
+| HU45-CP10 | Solo el cliente o el vendedor editan su perfil por la API: el administrador recibe 403, sin sesión 401 y sin token CSRF 403 | Integración (capa web) | 3 | 🔍 En revisión (3, AB#101, este PR) |
 
 Notas:
 - **HU45-CP01 a CP05:** casos propuestos en la T298 (AB#298) a partir de los criterios de aceptación de la HU45. Pendientes de confirmar con el equipo y de añadir a la HU45 en Azure Boards.
+- **HU45-CP06 a CP10:** casos propuestos en la T101 (AB#101) para el endpoint. Pendientes de confirmar con el equipo.
+- **Endpoint (T101, AB#101):** `PUT /api/perfil` con `EditarPerfilRequest` (`nombre` y `apellidos` con `@NotBlank @Size(max = 30)`, `avatar`, `telefono`, `fechaNacimiento`, `nombreComercial` y `categoriaPrincipalId`). Responde 200 con el `PerfilResponse`. Se envían todos los datos modificables del rol, porque el PUT los sustituye todos. Los errores reutilizan los handlers de `ManejadorGlobalErrores`, como la edición del administrador (HU22); sus mensajes hablan de «registro» (pendiente con el equipo), pero el frontend se guía por el `code`.
 - **Lógica (T298, AB#298):** `GestionPerfilUseCase.editarPerfil(email, EditarPerfilCommand)` con `@PreAuthorize` de `Permisos.CLIENTE_O_VENDEDOR_PROPIO`. Reutiliza `Usuario.modificarDatos` (el de la HU22), que valida todo antes de asignar.
   - **Campos editables** (decisión del 05/11): nombre, apellidos, imagen de perfil y teléfono; el cliente, además, su fecha de nacimiento; el vendedor, su nombre comercial y su categoría principal.
   - **No se editan** el email, el DNI, el tipo de cliente, el rol, la contraseña ni el estado.
   - **Vendedor sin datos de vendedor** (cuentas anteriores a la T241 o creadas por un administrador): se rechaza, porque su DNI no se puede poner desde aquí; los completa un administrador (HU22).
 - **Pendiente con el equipo:** la categoría principal no se comprueba que exista, igual que en el registro y en la edición del administrador.
-- **Fuera del Sprint 2:** el endpoint (T101) y la pantalla (T103). Hasta entonces la lógica no se usa desde la API.
+- **Pantalla (T103):** sin sprint ni asignar; usará el contrato de `PUT /api/perfil`.
 - **Tests existentes:** `GestionPerfilServiceTest` crea el servicio a mano con un reloj fijo (`@InjectMocks` no inyecta un `Clock`) y el cliente de prueba pasa a ser Premium. No cambia lo que comprueban HU4-CP01, HU4-CP04, HU25-CP01 ni HU25-CP02.
 
 ### Tabla B · casos de prueba ↔ tests
@@ -4274,9 +4281,20 @@ Notas:
 | HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `nadieEditaElPerfilDeOtro` | Aplicación | AB#298 | PR #218 | ✅ |
 | HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `unAdministradorNoEditaSuPerfilPorAqui` | Aplicación | AB#298 | PR #218 | ✅ |
 | HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `sinSesionNoSeEditaNingunPerfil` | Aplicación | AB#298 | PR #218 | ✅ |
+| HU45-CP06 | `PerfilControllerTest` | `unClienteEditaSuPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
+| HU45-CP06 | `PerfilControllerTest` | `unVendedorEditaSuPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
+| HU45-CP07 | `PerfilControllerTest` | `elCuerpoNoCambiaElCorreoNiElDni` | Infraestructura | AB#101 | este PR | 🔍 |
+| HU45-CP08 | `PerfilControllerTest` | `sinNombreSeResponde400SinLlamarAlCasoDeUso` (vacío y de más de 30 caracteres) | Infraestructura | AB#101 | este PR | 🔍 |
+| HU45-CP08 | `PerfilControllerTest` | `unDatoQueRechazaElDominioDa400ConSuCode` | Infraestructura | AB#101 | este PR | 🔍 |
+| HU45-CP08 | `PerfilControllerTest` | `unDatoNoValidoSinMotivoDa400Generico` | Infraestructura | AB#101 | este PR | 🔍 |
+| HU45-CP09 | `PerfilControllerTest` | `unNombreComercialOcupadoDa409` | Infraestructura | AB#101 | este PR | 🔍 |
+| HU45-CP10 | `PerfilControllerTest` | `unAdministradorNoEditaSuPerfilPorAqui` | Infraestructura | AB#101 | este PR | 🔍 |
+| HU45-CP10 | `PerfilControllerTest` | `sinSesionNoSeEditaElPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
+| HU45-CP10 | `PerfilControllerTest` | `sinTokenCsrfNoSeEditaElPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `GestionPerfilServiceTest` y `SeguridadSesionUsuarioServiceTest`: `usuarios/application/service/` (Mockito sin Spring, y contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
+- `PerfilControllerTest`: `usuarios/infrastructure/adapter/in/web/` (`@WebMvcTest` con la `SecurityConfig` real)
 
 ---
 
