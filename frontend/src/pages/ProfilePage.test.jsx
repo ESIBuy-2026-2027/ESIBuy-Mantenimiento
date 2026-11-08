@@ -471,7 +471,7 @@ describe('ProfilePage (HU45): editar el perfil', () => {
         avatar: 'avatar1',
       },
     ])
-    expect(screen.getByRole('status')).toHaveTextContent('Tus cambios se han guardado.')
+    expect(screen.getByText('Tus cambios se han guardado.').closest('[role="status"]')).not.toBeNull()
     expect(screen.getByRole('heading', { level: 2, name: 'Carla Cliente' })).toBeInTheDocument()
     expect(screen.getByLabelText('Nombre')).toHaveValue('Carla')
     expect(screen.getByLabelText('Nombre')).toHaveAttribute('readonly')
