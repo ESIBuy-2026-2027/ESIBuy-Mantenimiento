@@ -11,8 +11,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 
+import es.uclm.esibuy.backend.usuarios.domain.exception.ClienteYaPremiumException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -462,4 +464,35 @@ class UsuarioTest {
         assertEquals(0, usuario.getIntentosFallidos());
         assertFalse(usuario.tieneBloqueoPorIntentos(ahora));
     }
+
+    @Test
+    @DisplayName("HU45-CP17: un cliente Estándar pasa a Premium y conserva el resto de sus datos de cliente")
+    void pasarAPremiumCambiaElTipoYConservaLoDemas() {
+        DatosCliente estandar = new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"),
+                LocalDate.of(1996, 5, 20), new Telefono("612345678"));
+        Usuario usuario = new Usuario("u-1", DATOS_PERSONALES, EMAIL, HASH, Rol.CLIENTE, estandar, CONSENTIMIENTO);
+
+        usuario.pasarAPremium();
+
+        assertEquals(new DatosCliente(TipoCliente.PREMIUM, estandar.dni(), estandar.fechaNacimiento(),
+                estandar.telefono()), usuario.getDatosCliente());
+    }
+
+    @Test
+    @DisplayName("HU45-CP17: un cliente que ya es Premium no vuelve a pasar a Premium")
+    void pasarAPremiumRechazaAUnClienteQueYaLoEs() {
+        Usuario usuario = cliente();
+
+        assertThrows(ClienteYaPremiumException.class, usuario::pasarAPremium);
+        assertEquals(DATOS_CLIENTE, usuario.getDatosCliente());
+    }
+
+    @Test
+    @DisplayName("HU45-CP17: solo un cliente puede pasar a Premium")
+    void pasarAPremiumRechazaAQuienNoEsCliente() {
+        Usuario administrador = new Usuario("u-3", DATOS_PERSONALES, EMAIL, HASH, Rol.ADMINISTRADOR, null, null);
+
+        assertThrows(UsuarioInvalidoException.class, administrador::pasarAPremium);
+    }
+
 }

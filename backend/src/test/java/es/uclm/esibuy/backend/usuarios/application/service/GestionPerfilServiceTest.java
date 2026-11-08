@@ -37,6 +37,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
+import es.uclm.esibuy.backend.usuarios.domain.exception.ClienteYaPremiumException;
 
 // Consulta (HU4, T297) y edición (HU45, T298) del perfil propio. El repositorio es un doble de prueba y el reloj
 // está fijo: se prueba el caso de uso sin MongoDB ni Spring, y la mayoría de edad no depende del día en que se
@@ -171,6 +172,41 @@ class GestionPerfilServiceTest {
                 "hash-simulado", Rol.CLIENTE,
                 new DatosCliente(TipoCliente.PREMIUM, new Dni(DNI), LocalDate.of(1996, Month.MAY, 20), null),
                 null);
+    }
+
+    @Test
+    @DisplayName("HU45-CP18: un cliente Estándar pasa a Premium y se guarda")
+    void pasarAPremiumGuardaAlClienteComoPremium() {
+        Usuario estandar = clienteEstandar();
+        when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.of(estandar));
+
+        Usuario resultado = servicio.pasarAPremium(EMAIL);
+
+        assertEquals(TipoCliente.PREMIUM, resultado.getDatosCliente().tipoCliente());
+        verify(usuarioRepository).guardar(estandar);
+    }
+
+    @Test
+    @DisplayName("HU45-CP18: si el cliente ya es Premium no se guarda nada")
+    void pasarAPremiumDeUnPremiumNoGuarda() {
+        when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.of(lucia()));
+
+        assertThrows(ClienteYaPremiumException.class, () -> servicio.pasarAPremium(EMAIL));
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU45-CP18: si el usuario de la sesión ya no existe, la sesión no es válida")
+    void pasarAPremiumDeUnCorreoQueNoExisteLanzaExcepcion() {
+        when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.empty());
+
+        assertThrows(CredencialesInvalidasException.class, () -> servicio.pasarAPremium(EMAIL));
+    }
+
+    private static Usuario clienteEstandar() {
+        return new Usuario("u-2", new DatosPersonales("Pablo", "Gil Mora", null), new Email(EMAIL), "hash-simulado",
+                Rol.CLIENTE, new DatosCliente(TipoCliente.ESTANDAR, new Dni(DNI), LocalDate.of(1996, Month.MAY, 20),
+                        null), null);
     }
 
     private static Usuario vendedor() {

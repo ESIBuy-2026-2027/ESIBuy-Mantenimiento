@@ -59,6 +59,16 @@ public class GestionPerfilService implements GestionPerfilUseCase {
         return usuario;
     }
 
+    // Solo el cliente, sobre su propia cuenta. El dominio rechaza a quien ya es Premium antes de guardar nada.
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO_POR_EMAIL)
+    @Override
+    public Usuario pasarAPremium(String email) {
+        Usuario usuario = buscarUsuarioEnSesion(email);
+        usuario.pasarAPremium();
+        usuarioRepository.guardar(usuario);
+        return usuario;
+    }
+
     private Usuario buscarUsuarioEnSesion(String email) {
         return usuarioRepository.buscarPorCorreo(email)
                 .orElseThrow(() -> new CredencialesInvalidasException(SESION_NO_VALIDA));

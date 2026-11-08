@@ -29,4 +29,15 @@ public interface GestionPerfilUseCase {
      *         la sesión ya no existe
      */
     Usuario editarPerfil(String email, EditarPerfilCommand comando);
+
+    /**
+     * Pasa a Premium al cliente en sesión (HU45, T422) y devuelve el usuario actualizado. No hay cobro: el pago
+     * de la pasarela es simulado en el frontend.
+     *
+     * @param email correo de la sesión: solo el propio cliente
+     * @throws es.uclm.esibuy.backend.usuarios.domain.exception.ClienteYaPremiumException si ya era Premium
+     * @throws es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException si el usuario de
+     *         la sesión ya no existe
+     */
+    Usuario pasarAPremium(String email);
 }
