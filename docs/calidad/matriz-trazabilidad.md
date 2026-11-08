@@ -766,7 +766,7 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 | HU4-CP02 | Un vendedor consulta su perfil y recibe sus datos personales y los de vendedor, sin los de cliente | Controlador | 1 | ✅ Pasa |
 | HU4-CP03 | El perfil no expone la contraseña ni datos internos de la cuenta (estado, intentos, bloqueo) | Controlador | 1 | ✅ Pasa |
 | HU4-CP04 | Solo el cliente y el vendedor consultan su perfil: administrador 403, sin sesión 401, y una sesión de un usuario que ya no existe no es válida | Unitario + controlador | 3 | ✅ Pasa |
-| HU4-CP05 | En «Mi perfil» el cliente ve sus datos personales y los de cliente, en solo lectura | Frontend (página) | 2 | ✅ Pasa |
+| HU4-CP05 | En «Mi perfil» el cliente ve sus datos personales y los de cliente, en solo lectura | Frontend (página) | 2 | 🔍 En revisión (2, AB#296, modificado en PR pendiente) |
 | HU4-CP06 | El vendedor ve sus datos y los de vendedor, con el nombre de su categoría; un dato opcional que falta se ve con un guion | Frontend (página) | 2 | ✅ Pasa |
 | HU4-CP07 | La imagen de perfil se ve como el avatar elegido; sin avatar, se ven las iniciales | Frontend (componente y página) | 4 | ✅ Pasa |
 | HU4-CP08 | La vista no muestra la contraseña ni el estado de la cuenta | Frontend (página) | 1 | ✅ Pasa |
@@ -793,7 +793,7 @@ Notas:
 | HU4-CP04 | `PerfilControllerTest` | `unAdministradorRecibe403` | Infraestructura | AB#297 | PR #140 | ✅ |
 | HU4-CP04 | `PerfilControllerTest` | `sinSesionRecibe401` | Infraestructura | AB#297 | PR #140 | ✅ |
 | HU4-CP05 | `ProfilePage.test.jsx` | `HU4-CP05: el cliente ve sus datos personales y los de cliente` | Frontend · página | AB#296 | PR #150 | ✅ |
-| HU4-CP05 | `ProfilePage.test.jsx` | `HU4-CP05: los datos del perfil son de solo lectura` | Frontend · página | AB#296 | PR #150 | ✅ |
+| HU4-CP05 | `ProfilePage.test.jsx` | `HU4-CP05: los datos del perfil son de solo lectura` | Frontend · página | AB#296 | PR #150 (modificado en PR pendiente) | 🔍 |
 | HU4-CP06 | `ProfilePage.test.jsx` | `HU4-CP06: el vendedor ve sus datos y los de vendedor, con el nombre de su categoría` | Frontend · página | AB#296 | PR #150 | ✅ |
 | HU4-CP06 | `ProfilePage.test.jsx` | `HU4-CP06: los datos opcionales que no tiene se muestran con un guion` | Frontend · página | AB#296 | PR #150 | ✅ |
 | HU4-CP07 | `ProfilePage.test.jsx` | `HU4-CP07: muestra como imagen el avatar que eligió el usuario` | Frontend · página | AB#296 | PR #150 | ✅ |
@@ -4248,11 +4248,17 @@ Rutas de las clases de test (bajo `frontend/src/`):
 | HU45-CP03 | Un vendedor no puede usar el nombre comercial de otro vendedor: no se guarda nada | Unitario | 1 | ✅ Pasa |
 | HU45-CP04 | Con datos no válidos (nombre en blanco, cliente menor de edad o vendedor sin datos de vendedor) no se guarda nada | Unitario | 3 | ✅ Pasa |
 | HU45-CP05 | Solo el cliente o el vendedor edita su propio perfil: con el correo de otro, 403; un administrador, 403; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa |
-| HU45-CP06 | Un cliente o un vendedor editan su perfil con `PUT /api/perfil` y reciben 200 con el perfil actualizado (el mismo JSON que `GET /api/perfil`); el caso de uso recibe el correo de la sesión y los datos del cuerpo | Integración (capa web) | 2 | 🔍 En revisión (2, AB#101, este PR) |
-| HU45-CP07 | El cuerpo no puede cambiar el correo, el DNI, el rol ni el tipo de cliente: se edita al usuario de la sesión y esos campos se ignoran | Integración (capa web) | 1 | 🔍 En revisión (1, AB#101, este PR) |
-| HU45-CP08 | Datos no válidos: nombre vacío o de más de 30 caracteres, 400 `VALIDATION_ERROR` sin llamar al caso de uso; un dato que rechaza el dominio, 400 con el code de su motivo (`UNDERAGE`) o `VALIDATION_ERROR` si no tiene motivo concreto | Integración (capa web) | 3 | 🔍 En revisión (3, AB#101, este PR) |
-| HU45-CP09 | Un nombre comercial que ya usa otro vendedor responde 409 `COMMERCIAL_NAME_ALREADY_REGISTERED` | Integración (capa web) | 1 | 🔍 En revisión (1, AB#101, este PR) |
-| HU45-CP10 | Solo el cliente o el vendedor editan su perfil por la API: el administrador recibe 403, sin sesión 401 y sin token CSRF 403 | Integración (capa web) | 3 | 🔍 En revisión (3, AB#101, este PR) |
+| HU45-CP06 | Un cliente o un vendedor editan su perfil con `PUT /api/perfil` y reciben 200 con el perfil actualizado (el mismo JSON que `GET /api/perfil`); el caso de uso recibe el correo de la sesión y los datos del cuerpo | Integración (capa web) | 2 | ✅ Pasa (2, AB#101, PR #239) |
+| HU45-CP07 | El cuerpo no puede cambiar el correo, el DNI, el rol ni el tipo de cliente: se edita al usuario de la sesión y esos campos se ignoran | Integración (capa web) | 1 | ✅ Pasa (1, AB#101, PR #239) |
+| HU45-CP08 | Datos no válidos: nombre vacío o de más de 30 caracteres, 400 `VALIDATION_ERROR` sin llamar al caso de uso; un dato que rechaza el dominio, 400 con el code de su motivo (`UNDERAGE`) o `VALIDATION_ERROR` si no tiene motivo concreto | Integración (capa web) | 3 | ✅ Pasa (3, AB#101, PR #239) |
+| HU45-CP09 | Un nombre comercial que ya usa otro vendedor responde 409 `COMMERCIAL_NAME_ALREADY_REGISTERED` | Integración (capa web) | 1 | ✅ Pasa (1, AB#101, PR #239) |
+| HU45-CP10 | Solo el cliente o el vendedor editan su perfil por la API: el administrador recibe 403, sin sesión 401 y sin token CSRF 403 | Integración (capa web) | 3 | ✅ Pasa (3, AB#101, PR #239) |
+| HU45-CP11 | En «Mi perfil», con «Editar perfil», el cliente y el vendedor ven en el propio panel sus datos modificables como campos editables y, en solo lectura, el email, el DNI, el tipo de cliente (cliente) y el rol; el estado de la cuenta no aparece | Frontend (unitario, componente y página) | 9 | 🔍 En revisión (9, AB#103, PR pendiente) |
+| HU45-CP12 | Al pulsar «Guardar cambios» se envía `PUT /api/perfil` con todos los datos modificables del rol, el botón queda deshabilitado mientras se guarda, se avisa con un mensaje accesible y el perfil muestra lo guardado; sin pulsar guardar no se envía nada | Frontend (unitario, componente y página) | 8 | 🔍 En revisión (8, AB#103, PR pendiente) |
+| HU45-CP13 | Con datos no válidos (nombre o apellidos vacíos, teléfono que no tiene 9 números, cliente menor de edad o sin fecha, vendedor sin nombre comercial o categoría) no se envía nada, cada error sale en su campo y el foco va al primero | Frontend (unitario, componente y página) | 7 | 🔍 En revisión (7, AB#103, PR pendiente) |
+| HU45-CP14 | Cada code de error del backend (`INVALID_PHONE`, `UNDERAGE`, `COMMERCIAL_NAME_ALREADY_REGISTERED`) sale en su campo con su propio mensaje, nunca el del backend; `VALIDATION_ERROR` y los fallos del servidor dan un aviso general sin detalles internos y se conserva lo escrito | Frontend (unitario, componente y página) | 7 | 🔍 En revisión (7, AB#103, PR pendiente) |
+| HU45-CP15 | El formulario avisa de si hay cambios sin guardar; «Cancelar» descarta los cambios sin enviar nada, y si los hay pregunta antes (seguir editando los conserva) | Frontend (componente y página) | 5 | 🔍 En revisión (5, AB#103, PR pendiente) |
+| HU45-CP16 | Con cambios sin guardar se pide confirmación al ir a otra pantalla de la aplicación y al cerrar o recargar la pestaña (seguir editando o salir sin guardar); sin cambios, tras guardar o tras volver a escribir lo que había, no se avisa | Frontend (hook, componente y página) | 21 | 🔍 En revisión (21, AB#103, PR pendiente) |
 
 Notas:
 - **HU45-CP01 a CP05:** casos propuestos en la T298 (AB#298) a partir de los criterios de aceptación de la HU45. Pendientes de confirmar con el equipo y de añadir a la HU45 en Azure Boards.
@@ -4263,7 +4269,10 @@ Notas:
   - **No se editan** el email, el DNI, el tipo de cliente, el rol, la contraseña ni el estado.
   - **Vendedor sin datos de vendedor** (cuentas anteriores a la T241 o creadas por un administrador): se rechaza, porque su DNI no se puede poner desde aquí; los completa un administrador (HU22).
 - **Pendiente con el equipo:** la categoría principal no se comprueba que exista, igual que en el registro y en la edición del administrador.
-- **Pantalla (T103):** sin sprint ni asignar; usará el contrato de `PUT /api/perfil`.
+- **HU45-CP11 a CP16 (frontend, T103):** casos propuestos, **PENDIENTES DE CONFIRMAR CON EL EQUIPO**, a partir de los criterios de la HU45 y del contrato de `PUT /api/perfil` (T101). Siguen la numeración del backend (HU45-CP01 a CP10). Rama `feature/US45-T103-pantalla-edicion-perfil`; documentación en `frontend/docs/hu45-edicion-perfil.md`.
+- **Pantalla (T103):** «Editar perfil» abre el formulario en el propio panel de `ProfilePage`; reutiliza `ProfileEditor` de la HU22 en modo `own`, que muestra en solo lectura el DNI y el tipo de cliente, no tiene estado y envía solo los datos que el backend deja modificar. El aviso de cambios sin guardar (`useUnsavedChangesGuard` y `UnsavedChangesDialog`) usa `useBlocker`, que necesita un router de datos: `App.jsx` y `renderApp` pasan a `createBrowserRouter` y `createMemoryRouter` (refactor sin cambios de comportamiento).
+- **Diferencia con lo acordado de palabra:** el nombre comercial repetido responde **409** `COMMERCIAL_NAME_ALREADY_REGISTERED` (no 400); `erroresDelServidor` ya trata el 400 y el 409. `VALIDATION_ERROR` no dice qué campo falla: va a un aviso general.
+- **HU4-CP05 (modificado):** el test «los datos del perfil son de solo lectura» ya no afirma que no hay ningún botón «guardar|editar» (ahora el perfil tiene «Editar perfil»), sino que no hay «guardar» en la lectura; los campos siguen siendo de solo lectura.
 - **Tests existentes:** `GestionPerfilServiceTest` crea el servicio a mano con un reloj fijo (`@InjectMocks` no inyecta un `Clock`) y el cliente de prueba pasa a ser Premium. No cambia lo que comprueban HU4-CP01, HU4-CP04, HU25-CP01 ni HU25-CP02.
 
 ### Tabla B · casos de prueba ↔ tests
@@ -4281,20 +4290,81 @@ Notas:
 | HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `nadieEditaElPerfilDeOtro` | Aplicación | AB#298 | PR #218 | ✅ |
 | HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `unAdministradorNoEditaSuPerfilPorAqui` | Aplicación | AB#298 | PR #218 | ✅ |
 | HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `sinSesionNoSeEditaNingunPerfil` | Aplicación | AB#298 | PR #218 | ✅ |
-| HU45-CP06 | `PerfilControllerTest` | `unClienteEditaSuPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP06 | `PerfilControllerTest` | `unVendedorEditaSuPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP07 | `PerfilControllerTest` | `elCuerpoNoCambiaElCorreoNiElDni` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP08 | `PerfilControllerTest` | `sinNombreSeResponde400SinLlamarAlCasoDeUso` (vacío y de más de 30 caracteres) | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP08 | `PerfilControllerTest` | `unDatoQueRechazaElDominioDa400ConSuCode` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP08 | `PerfilControllerTest` | `unDatoNoValidoSinMotivoDa400Generico` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP09 | `PerfilControllerTest` | `unNombreComercialOcupadoDa409` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP10 | `PerfilControllerTest` | `unAdministradorNoEditaSuPerfilPorAqui` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP10 | `PerfilControllerTest` | `sinSesionNoSeEditaElPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP10 | `PerfilControllerTest` | `sinTokenCsrfNoSeEditaElPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
+| HU45-CP06 | `PerfilControllerTest` | `unClienteEditaSuPerfil` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP06 | `PerfilControllerTest` | `unVendedorEditaSuPerfil` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP07 | `PerfilControllerTest` | `elCuerpoNoCambiaElCorreoNiElDni` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP08 | `PerfilControllerTest` | `sinNombreSeResponde400SinLlamarAlCasoDeUso` (vacío y de más de 30 caracteres) | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP08 | `PerfilControllerTest` | `unDatoQueRechazaElDominioDa400ConSuCode` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP08 | `PerfilControllerTest` | `unDatoNoValidoSinMotivoDa400Generico` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP09 | `PerfilControllerTest` | `unNombreComercialOcupadoDa409` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP10 | `PerfilControllerTest` | `unAdministradorNoEditaSuPerfilPorAqui` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP10 | `PerfilControllerTest` | `sinSesionNoSeEditaElPerfil` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP10 | `PerfilControllerTest` | `sinTokenCsrfNoSeEditaElPerfil` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP11 | `profileFields.test.js` | `HU45-CP11: el cliente edita sus datos personales y ve en solo lectura el email, el DNI, el tipo y el rol` | Frontend · unitario | AB#103 | PR pendiente | 🔍 |
+| HU45-CP11 | `profileFields.test.js` | `HU45-CP11: el vendedor edita sus datos y su negocio y ve en solo lectura el email, el DNI y el rol` | Frontend · unitario | AB#103 | PR pendiente | 🔍 |
+| HU45-CP11 | `profileFields.test.js` | `HU45-CP11: el perfil propio no muestra el estado de la cuenta` | Frontend · unitario | AB#103 | PR pendiente | 🔍 |
+| HU45-CP11 | `profileFields.test.js` | `HU45-CP11: los valores iniciales son los datos actuales del usuario, sin el DNI ni el tipo de cliente` | Frontend · unitario | AB#103 | PR pendiente | 🔍 |
+| HU45-CP11 | `ProfileEditor.test.jsx` | `HU45-CP11: el cliente modifica sus datos personales y ve en solo lectura el email, el DNI, el tipo y el rol` | Frontend · componente | AB#103 | PR pendiente | 🔍 |
+| HU45-CP11 | `ProfileEditor.test.jsx` | `HU45-CP11: el vendedor modifica sus datos y su negocio y ve en solo lectura el email, el DNI y el rol` | Frontend · componente | AB#103 | PR pendiente | 🔍 |
+| HU45-CP11 | `ProfilePage.test.jsx` | `HU45-CP11: el perfil tiene un botón para editarlo y, en lectura, no tiene el de guardar` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP11 | `ProfilePage.test.jsx` | `HU45-CP11: el cliente edita en el propio panel sus datos y ve en solo lectura el email, el DNI, el tipo y el rol` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP11 | `ProfilePage.test.jsx` | `HU45-CP11: el vendedor edita sus datos y su negocio y ve en solo lectura el email y el DNI` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP12 | `profileFields.test.js` | `HU45-CP12: el cuerpo de la petición lleva todos los datos modificables del cliente y nada más` | Frontend · unitario | AB#103 | PR pendiente | 🔍 |
+| HU45-CP12 | `profileFields.test.js` | `HU45-CP12: el cuerpo de la petición lleva todos los datos modificables del vendedor y nada más` | Frontend · unitario | AB#103 | PR pendiente | 🔍 |
+| HU45-CP12 | `ProfileEditor.test.jsx` | `HU45-CP12: al guardar envía todos los datos modificables del cliente y avisa con la respuesta del servidor` | Frontend · componente | AB#103 | PR pendiente | 🔍 |
+| HU45-CP12 | `ProfileEditor.test.jsx` | `HU45-CP12: mientras se guarda, el botón queda deshabilitado y no se envía dos veces` | Frontend · componente | AB#103 | PR pendiente | 🔍 |
+| HU45-CP12 | `ProfileEditor.test.jsx` | `HU45-CP12: sin pulsar guardar no se envía nada aunque se modifiquen los datos` | Frontend · componente | AB#103 | PR pendiente | 🔍 |
+| HU45-CP12 | `ProfilePage.test.jsx` | `HU45-CP12: al guardar envía todos los datos del cliente, vuelve a la lectura y avisa de que se ha guardado` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP12 | `ProfilePage.test.jsx` | `HU45-CP12: lo guardado es lo que muestra el perfil al volver a cargarlo` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP12 | `ProfilePage.test.jsx` | `HU45-CP12: sin pulsar guardar no se envía nada, aunque se escriba en los campos` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP13 | `profileFields.test.js` | `HU45-CP13: con los datos actuales no hay errores, aunque el DNI del usuario no se valide` | Frontend · unitario | AB#103 | PR pendiente | 🔍 |
+| HU45-CP13 | `profileFields.test.js` | `HU45-CP13: nombre y apellidos vacíos o con solo espacios dan error en cada campo` | Frontend · unitario | AB#103 | PR pendiente | 🔍 |
+| HU45-CP13 | `profileFields.test.js` | `HU45-CP13: un teléfono que no tiene 9 números da error, y vacío es válido` | Frontend · unitario | AB#103 | PR pendiente | 🔍 |
+| HU45-CP13 | `profileFields.test.js` | `HU45-CP13: el cliente menor de edad o sin fecha de nacimiento da error` | Frontend · unitario | AB#103 | PR pendiente | 🔍 |
+| HU45-CP13 | `profileFields.test.js` | `HU45-CP13: el vendedor sin nombre comercial o sin categoría da error` | Frontend · unitario | AB#103 | PR pendiente | 🔍 |
+| HU45-CP13 | `ProfileEditor.test.jsx` | `HU45-CP13: con datos incorrectos no se envía, cada error sale en su campo y el foco va al primero` | Frontend · componente | AB#103 | PR pendiente | 🔍 |
+| HU45-CP13 | `ProfilePage.test.jsx` | `HU45-CP13: con un dato obligatorio vacío no se envía y el error sale en su campo` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP14 | `ProfileEditor.test.jsx` | `HU45-CP14: el code %s del backend sale en su campo con su propio mensaje` (3 variantes: INVALID_PHONE, UNDERAGE y COMMERCIAL_NAME_ALREADY_REGISTERED) | Frontend · componente | AB#103 | PR pendiente | 🔍 |
+| HU45-CP14 | `ProfileEditor.test.jsx` | `HU45-CP14: un VALIDATION_ERROR o un fallo del servidor dan un aviso general y conservan lo escrito` | Frontend · componente | AB#103 | PR pendiente | 🔍 |
+| HU45-CP14 | `registroErrors.test.js` | `HU45-CP14: un formulario puede cambiar el mensaje de un code sin tocar los demás` | Frontend · unitario | AB#103 | PR pendiente | 🔍 |
+| HU45-CP14 | `ProfilePage.test.jsx` | `HU45-CP14: un nombre comercial repetido se avisa en su campo y se sigue editando` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP14 | `ProfilePage.test.jsx` | `HU45-CP14: si el servidor falla, avisa sin detalles internos y conserva lo escrito` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP15 | `ProfileEditor.test.jsx` | `HU45-CP15: avisa de si hay cambios sin guardar cada vez que cambia` | Frontend · componente | AB#103 | PR pendiente | 🔍 |
+| HU45-CP15 | `ProfileEditor.test.jsx` | `HU45-CP15: el botón Cancelar avisa al pulsarlo` | Frontend · componente | AB#103 | PR pendiente | 🔍 |
+| HU45-CP15 | `ProfilePage.test.jsx` | `HU45-CP15: cancelar sin haber cambiado nada vuelve a la lectura sin preguntar` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP15 | `ProfilePage.test.jsx` | `HU45-CP15: cancelar con cambios pregunta antes, y seguir editando los conserva` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP15 | `ProfilePage.test.jsx` | `HU45-CP15: cancelar y salir sin guardar descarta los cambios y no envía nada` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `UnsavedChangesDialog.test.jsx` | `HU45-CP16: avisa de que hay cambios sin guardar y de que se perderán si se sale` | Frontend · componente | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `UnsavedChangesDialog.test.jsx` | `HU45-CP16: el foco empieza en la opción segura, seguir editando` | Frontend · componente | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `UnsavedChangesDialog.test.jsx` | `HU45-CP16: seguir editando avisa de que se quiere seguir en la pantalla` | Frontend · componente | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `UnsavedChangesDialog.test.jsx` | `HU45-CP16: salir sin guardar avisa de que se descartan los cambios` | Frontend · componente | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `UnsavedChangesDialog.test.jsx` | `HU45-CP16: con la tecla Escape se sigue editando, no se descarta nada` | Frontend · componente | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: con cambios sin guardar, navegar a otra pantalla se bloquea y se avisa` | Frontend · hook | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: sin cambios se navega a otra pantalla sin avisar` | Frontend · hook | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: al decidir salir se completa la navegación que estaba bloqueada` | Frontend · hook | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: al decidir quedarse se cancela la navegación y se sigue en la pantalla` | Frontend · hook | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: cuando deja de haber cambios ya no se bloquea la navegación` | Frontend · hook | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: con cambios sin guardar, cerrar o recargar la pestaña pide confirmación al navegador` | Frontend · hook | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: sin cambios, cerrar o recargar la pestaña no pregunta nada` | Frontend · hook | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: cuando deja de haber cambios ya no se pide confirmación al cerrar` | Frontend · hook | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: al desmontar la pantalla se deja de escuchar el cierre de la pestaña` | Frontend · hook | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `ProfilePage.test.jsx` | `HU45-CP16: con cambios, ir a otra pantalla pide confirmación y seguir editando se queda en el perfil` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `ProfilePage.test.jsx` | `HU45-CP16: con cambios, salir sin guardar lleva a la otra pantalla` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `ProfilePage.test.jsx` | `HU45-CP16: sin cambios, ir a otra pantalla no pregunta nada` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `ProfilePage.test.jsx` | `HU45-CP16: si se vuelve a escribir lo mismo que había, ya no hay cambios que avisar` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `ProfilePage.test.jsx` | `HU45-CP16: tras guardar ya no hay cambios sin guardar, ni al navegar ni al cerrar la pestaña` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `ProfilePage.test.jsx` | `HU45-CP16: con cambios sin guardar, cerrar o recargar la pestaña pide confirmación al navegador` | Frontend · página | AB#103 | PR pendiente | 🔍 |
+| HU45-CP16 | `ProfilePage.test.jsx` | `HU45-CP16: en lectura, sin editar, no se avisa al cerrar la pestaña` | Frontend · página | AB#103 | PR pendiente | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `GestionPerfilServiceTest` y `SeguridadSesionUsuarioServiceTest`: `usuarios/application/service/` (Mockito sin Spring, y contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
 - `PerfilControllerTest`: `usuarios/infrastructure/adapter/in/web/` (`@WebMvcTest` con la `SecurityConfig` real)
+
+Rutas de las clases de test del frontend (bajo `frontend/src/`):
+- `profileFields.test.js`, `ProfileEditor.test.jsx`: `features/admin/` (Vitest y RTL)
+- `registroErrors.test.js`, `UnsavedChangesDialog.test.jsx`: `features/account/` (Vitest y RTL)
+- `useUnsavedChangesGuard.test.jsx`: `hooks/` (Vitest y RTL, con un router de datos en memoria)
+- `ProfilePage.test.jsx`: `pages/` (Vitest, RTL y MSW)
 
 ---
 
