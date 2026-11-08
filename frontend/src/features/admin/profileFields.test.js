@@ -347,3 +347,115 @@ describe('el rol no se puede cambiar (HU22)', () => {
     expect(Object.keys(validateProfile(ROLES.CLIENTE, valores))).toEqual(['dni'])
   })
 })
+
+describe('campos del perfil propio (HU45)', () => {
+  const PROPIO = { own: true }
+  const campo = (rol, nombre) => profileFieldsFor(rol, PROPIO).find((candidato) => candidato.name === nombre)
+  const nombresDeSoloLectura = (rol) =>
+    profileFieldsFor(rol, PROPIO)
+      .filter((candidato) => !candidato.edit)
+      .map((candidato) => candidato.name)
+
+  it('HU45-CP11: el cliente edita sus datos personales y ve en solo lectura el email, el DNI, el tipo y el rol', () => {
+    const editables = profileFieldsFor(ROLES.CLIENTE, PROPIO)
+      .filter((candidato) => candidato.edit)
+      .map((candidato) => candidato.name)
+
+    expect(editables).toEqual(['nombre', 'apellidos', 'telefono', 'fechaNacimiento', 'avatar'])
+    expect(nombresDeSoloLectura(ROLES.CLIENTE)).toEqual(['email', 'rol', 'dni', 'tipoCliente'])
+  })
+
+  it('HU45-CP11: el vendedor edita sus datos y su negocio y ve en solo lectura el email, el DNI y el rol', () => {
+    const editables = profileFieldsFor(ROLES.VENDEDOR, PROPIO)
+      .filter((candidato) => candidato.edit)
+      .map((candidato) => candidato.name)
+
+    expect(editables).toEqual([
+      'nombre',
+      'apellidos',
+      'nombreComercial',
+      'telefono',
+      'categoriaPrincipalId',
+      'avatar',
+    ])
+    expect(nombresDeSoloLectura(ROLES.VENDEDOR)).toEqual(['email', 'rol', 'dni'])
+  })
+
+  it('HU45-CP11: el perfil propio no muestra el estado de la cuenta', () => {
+    expect(campo(ROLES.CLIENTE, 'estado')).toBeUndefined()
+    expect(campo(ROLES.VENDEDOR, 'estado')).toBeUndefined()
+  })
+
+  it('HU45-CP11: los valores iniciales son los datos actuales del usuario, sin el DNI ni el tipo de cliente', () => {
+    expect(initialValues(ROLES.CLIENTE, CLIENTE, PROPIO)).toEqual({
+      nombre: 'Carlos',
+      apellidos: 'Moreno Gil',
+      telefono: '620023757',
+      fechaNacimiento: '1978-04-13',
+      avatar: 'avatar1',
+    })
+  })
+
+  it('HU45-CP12: el cuerpo de la petición lleva todos los datos modificables del cliente y nada más', () => {
+    const valores = initialValues(ROLES.CLIENTE, CLIENTE, PROPIO)
+
+    expect(profilePayload(ROLES.CLIENTE, valores, PROPIO)).toEqual({
+      nombre: 'Carlos',
+      apellidos: 'Moreno Gil',
+      telefono: '620023757',
+      fechaNacimiento: '1978-04-13',
+      avatar: 'avatar1',
+    })
+  })
+
+  it('HU45-CP12: el cuerpo de la petición lleva todos los datos modificables del vendedor y nada más', () => {
+    const valores = initialValues(ROLES.VENDEDOR, VENDEDOR, PROPIO)
+
+    expect(profilePayload(ROLES.VENDEDOR, { ...valores, nombre: '  Vera  ' }, PROPIO)).toEqual({
+      nombre: 'Vera',
+      apellidos: 'Vendedora',
+      nombreComercial: 'TecnoVera',
+      telefono: '612345601',
+      categoriaPrincipalId: 'cat-1',
+      avatar: 'avatar2',
+    })
+  })
+
+  it('HU45-CP13: con los datos actuales no hay errores, aunque el DNI del usuario no se valide', () => {
+    expect(validateProfile(ROLES.CLIENTE, initialValues(ROLES.CLIENTE, CLIENTE, PROPIO), PROPIO)).toEqual({})
+    expect(validateProfile(ROLES.VENDEDOR, initialValues(ROLES.VENDEDOR, VENDEDOR, PROPIO), PROPIO)).toEqual({})
+  })
+
+  it('HU45-CP13: nombre y apellidos vacíos o con solo espacios dan error en cada campo', () => {
+    const valores = { ...initialValues(ROLES.CLIENTE, CLIENTE, PROPIO), nombre: '', apellidos: '   ' }
+
+    expect(Object.keys(validateProfile(ROLES.CLIENTE, valores, PROPIO))).toEqual(['nombre', 'apellidos'])
+  })
+
+  it('HU45-CP13: un teléfono que no tiene 9 números da error, y vacío es válido', () => {
+    const valores = initialValues(ROLES.CLIENTE, CLIENTE, PROPIO)
+
+    expect(validateProfile(ROLES.CLIENTE, { ...valores, telefono: '12345' }, PROPIO)).toHaveProperty('telefono')
+    expect(validateProfile(ROLES.CLIENTE, { ...valores, telefono: '' }, PROPIO)).toEqual({})
+  })
+
+  it('HU45-CP13: el cliente menor de edad o sin fecha de nacimiento da error', () => {
+    const valores = initialValues(ROLES.CLIENTE, CLIENTE, PROPIO)
+
+    expect(validateProfile(ROLES.CLIENTE, { ...valores, fechaNacimiento: hacerAnios(17) }, PROPIO)).toEqual({
+      fechaNacimiento: 'Debes ser mayor de edad',
+    })
+    expect(Object.keys(validateProfile(ROLES.CLIENTE, { ...valores, fechaNacimiento: '' }, PROPIO))).toEqual([
+      'fechaNacimiento',
+    ])
+  })
+
+  it('HU45-CP13: el vendedor sin nombre comercial o sin categoría da error', () => {
+    const valores = { ...initialValues(ROLES.VENDEDOR, VENDEDOR, PROPIO), nombreComercial: '', categoriaPrincipalId: '' }
+
+    expect(Object.keys(validateProfile(ROLES.VENDEDOR, valores, PROPIO))).toEqual([
+      'nombreComercial',
+      'categoriaPrincipalId',
+    ])
+  })
+})
