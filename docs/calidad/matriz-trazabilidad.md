@@ -4252,11 +4252,15 @@ Rutas de las clases de test (bajo `frontend/src/`):
 | HU45-CP03 | Un vendedor no puede usar el nombre comercial de otro vendedor: no se guarda nada | Unitario | 1 | ✅ Pasa |
 | HU45-CP04 | Con datos no válidos (nombre en blanco, cliente menor de edad o vendedor sin datos de vendedor) no se guarda nada | Unitario | 3 | ✅ Pasa |
 | HU45-CP05 | Solo el cliente o el vendedor edita su propio perfil: con el correo de otro, 403; un administrador, 403; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa |
-| HU45-CP06 | Un cliente o un vendedor editan su perfil con `PUT /api/perfil` y reciben 200 con el perfil actualizado (el mismo JSON que `GET /api/perfil`); el caso de uso recibe el correo de la sesión y los datos del cuerpo | Integración (capa web) | 2 | 🔍 En revisión (2, AB#101, este PR) |
-| HU45-CP07 | El cuerpo no puede cambiar el correo, el DNI, el rol ni el tipo de cliente: se edita al usuario de la sesión y esos campos se ignoran | Integración (capa web) | 1 | 🔍 En revisión (1, AB#101, este PR) |
-| HU45-CP08 | Datos no válidos: nombre vacío o de más de 30 caracteres, 400 `VALIDATION_ERROR` sin llamar al caso de uso; un dato que rechaza el dominio, 400 con el code de su motivo (`UNDERAGE`) o `VALIDATION_ERROR` si no tiene motivo concreto | Integración (capa web) | 3 | 🔍 En revisión (3, AB#101, este PR) |
-| HU45-CP09 | Un nombre comercial que ya usa otro vendedor responde 409 `COMMERCIAL_NAME_ALREADY_REGISTERED` | Integración (capa web) | 1 | 🔍 En revisión (1, AB#101, este PR) |
-| HU45-CP10 | Solo el cliente o el vendedor editan su perfil por la API: el administrador recibe 403, sin sesión 401 y sin token CSRF 403 | Integración (capa web) | 3 | 🔍 En revisión (3, AB#101, este PR) |
+| HU45-CP06 | Un cliente o un vendedor editan su perfil con `PUT /api/perfil` y reciben 200 con el perfil actualizado (el mismo JSON que `GET /api/perfil`); el caso de uso recibe el correo de la sesión y los datos del cuerpo | Integración (capa web) | 2 | ✅ Pasa (2, AB#101, PR #239) |
+| HU45-CP07 | El cuerpo no puede cambiar el correo, el DNI, el rol ni el tipo de cliente: se edita al usuario de la sesión y esos campos se ignoran | Integración (capa web) | 1 | ✅ Pasa (1, AB#101, PR #239) |
+| HU45-CP08 | Datos no válidos: nombre vacío o de más de 30 caracteres, 400 `VALIDATION_ERROR` sin llamar al caso de uso; un dato que rechaza el dominio, 400 con el code de su motivo (`UNDERAGE`) o `VALIDATION_ERROR` si no tiene motivo concreto | Integración (capa web) | 3 | ✅ Pasa (3, AB#101, PR #239) |
+| HU45-CP09 | Un nombre comercial que ya usa otro vendedor responde 409 `COMMERCIAL_NAME_ALREADY_REGISTERED` | Integración (capa web) | 1 | ✅ Pasa (1, AB#101, PR #239) |
+| HU45-CP10 | Solo el cliente o el vendedor editan su perfil por la API: el administrador recibe 403, sin sesión 401 y sin token CSRF 403 | Integración (capa web) | 3 | ✅ Pasa (3, AB#101, PR #239) |
+| HU45-CP11 | Un cliente Estándar pasa a Premium y conserva su DNI, su fecha de nacimiento y su teléfono; un cliente que ya es Premium no vuelve a pasar y quien no es cliente no puede pasar | Unitario (dominio) | 3 | 🔍 En revisión (3, AB#422, este PR) |
+| HU45-CP12 | El caso de uso pasa a Premium al cliente de la sesión y lo guarda; si ya era Premium no guarda nada; si el usuario de la sesión ya no existe, la sesión no es válida | Unitario | 3 | 🔍 En revisión (3, AB#422, este PR) |
+| HU45-CP13 | Solo el propio cliente pasa a Premium su cuenta: con el correo de otro, 403; un vendedor o un administrador, 403; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, AB#422, este PR) |
+| HU45-CP14 | `POST /api/perfil/premium` responde 200 con el perfil Premium; si ya era Premium, 400 `ALREADY_PREMIUM`; un administrador recibe 403 y sin sesión 401, sin llamar al caso de uso | Integración (capa web) | 4 | 🔍 En revisión (4, AB#423, este PR) |
 
 Notas:
 - **HU45-CP01 a CP05:** casos propuestos en la T298 (AB#298) a partir de los criterios de aceptación de la HU45. Pendientes de confirmar con el equipo y de añadir a la HU45 en Azure Boards.
@@ -4267,7 +4271,12 @@ Notas:
   - **No se editan** el email, el DNI, el tipo de cliente, el rol, la contraseña ni el estado.
   - **Vendedor sin datos de vendedor** (cuentas anteriores a la T241 o creadas por un administrador): se rechaza, porque su DNI no se puede poner desde aquí; los completa un administrador (HU22).
 - **Pendiente con el equipo:** la categoría principal no se comprueba que exista, igual que en el registro y en la edición del administrador.
-- **Pantalla (T103):** sin sprint ni asignar; usará el contrato de `PUT /api/perfil`.
+- **HU45-CP11 a CP14:** casos propuestos en la T422 (AB#422) y la T423 (AB#423) para el paso a Premium. Pendientes de confirmar con el equipo.
+- **Paso a Premium (T422, T423):** tareas añadidas a la HU45 por decisión del equipo (08/11), sin crear una HU nueva. El pago es simulado en el frontend (pasarela con «Simular pago», T420 y T421): el backend no cobra nada.
+  - **Lógica (T422):** `Usuario.pasarAPremium()` cambia solo el tipo de cliente (ESTANDAR → PREMIUM) y lanza `ClienteYaPremiumException` si ya lo era, o `UsuarioInvalidoException` si no es cliente. `GestionPerfilUseCase.pasarAPremium(email)` lleva `@PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO_POR_EMAIL)`.
+  - **Endpoint (T423):** `POST /api/perfil/premium`, sin cuerpo; 200 con el `PerfilResponse`. `ManejadorGlobalErrores` traduce `ClienteYaPremiumException` a 400 `ALREADY_PREMIUM`. La ruta ya la cubre `/api/perfil/**` (CLIENTE y VENDEDOR) en `SecurityConfig`; al vendedor lo frena el `@PreAuthorize` del servicio (CP13), que en `@WebMvcTest` no se evalúa porque el caso de uso es un mock.
+  - **Riesgo conocido:** `POST /api/auth/register/cliente` sigue aceptando `tipoCliente: PREMIUM` sin pasar por la pasarela; la pasarela del registro solo lo garantiza en el frontend.
+- **Pantalla (T103):** en el Sprint 2, sin asignar; usará el contrato de `PUT /api/perfil`.
 - **Tests existentes:** `GestionPerfilServiceTest` crea el servicio a mano con un reloj fijo (`@InjectMocks` no inyecta un `Clock`) y el cliente de prueba pasa a ser Premium. No cambia lo que comprueban HU4-CP01, HU4-CP04, HU25-CP01 ni HU25-CP02.
 
 ### Tabla B · casos de prueba ↔ tests
@@ -4285,18 +4294,34 @@ Notas:
 | HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `nadieEditaElPerfilDeOtro` | Aplicación | AB#298 | PR #218 | ✅ |
 | HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `unAdministradorNoEditaSuPerfilPorAqui` | Aplicación | AB#298 | PR #218 | ✅ |
 | HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `sinSesionNoSeEditaNingunPerfil` | Aplicación | AB#298 | PR #218 | ✅ |
-| HU45-CP06 | `PerfilControllerTest` | `unClienteEditaSuPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP06 | `PerfilControllerTest` | `unVendedorEditaSuPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP07 | `PerfilControllerTest` | `elCuerpoNoCambiaElCorreoNiElDni` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP08 | `PerfilControllerTest` | `sinNombreSeResponde400SinLlamarAlCasoDeUso` (vacío y de más de 30 caracteres) | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP08 | `PerfilControllerTest` | `unDatoQueRechazaElDominioDa400ConSuCode` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP08 | `PerfilControllerTest` | `unDatoNoValidoSinMotivoDa400Generico` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP09 | `PerfilControllerTest` | `unNombreComercialOcupadoDa409` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP10 | `PerfilControllerTest` | `unAdministradorNoEditaSuPerfilPorAqui` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP10 | `PerfilControllerTest` | `sinSesionNoSeEditaElPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP10 | `PerfilControllerTest` | `sinTokenCsrfNoSeEditaElPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
+| HU45-CP06 | `PerfilControllerTest` | `unClienteEditaSuPerfil` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP06 | `PerfilControllerTest` | `unVendedorEditaSuPerfil` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP07 | `PerfilControllerTest` | `elCuerpoNoCambiaElCorreoNiElDni` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP08 | `PerfilControllerTest` | `sinNombreSeResponde400SinLlamarAlCasoDeUso` (vacío y de más de 30 caracteres) | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP08 | `PerfilControllerTest` | `unDatoQueRechazaElDominioDa400ConSuCode` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP08 | `PerfilControllerTest` | `unDatoNoValidoSinMotivoDa400Generico` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP09 | `PerfilControllerTest` | `unNombreComercialOcupadoDa409` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP10 | `PerfilControllerTest` | `unAdministradorNoEditaSuPerfilPorAqui` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP10 | `PerfilControllerTest` | `sinSesionNoSeEditaElPerfil` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP10 | `PerfilControllerTest` | `sinTokenCsrfNoSeEditaElPerfil` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP11 | `UsuarioTest` | `pasarAPremiumCambiaElTipoYConservaLoDemas` | Dominio | AB#422 | este PR | 🔍 |
+| HU45-CP11 | `UsuarioTest` | `pasarAPremiumRechazaAUnClienteQueYaLoEs` | Dominio | AB#422 | este PR | 🔍 |
+| HU45-CP11 | `UsuarioTest` | `pasarAPremiumRechazaAQuienNoEsCliente` | Dominio | AB#422 | este PR | 🔍 |
+| HU45-CP12 | `GestionPerfilServiceTest` | `pasarAPremiumGuardaAlClienteComoPremium` | Aplicación | AB#422 | este PR | 🔍 |
+| HU45-CP12 | `GestionPerfilServiceTest` | `pasarAPremiumDeUnPremiumNoGuarda` | Aplicación | AB#422 | este PR | 🔍 |
+| HU45-CP12 | `GestionPerfilServiceTest` | `pasarAPremiumDeUnCorreoQueNoExisteLanzaExcepcion` | Aplicación | AB#422 | este PR | 🔍 |
+| HU45-CP13 | `SeguridadSesionUsuarioServiceTest` | `unClientePasaAPremium` | Aplicación | AB#422 | este PR | 🔍 |
+| HU45-CP13 | `SeguridadSesionUsuarioServiceTest` | `unClienteNoPasaAPremiumAOtro` | Aplicación | AB#422 | este PR | 🔍 |
+| HU45-CP13 | `SeguridadSesionUsuarioServiceTest` | `unVendedorNoPasaAPremium` | Aplicación | AB#422 | este PR | 🔍 |
+| HU45-CP13 | `SeguridadSesionUsuarioServiceTest` | `unAdministradorNoPasaAPremium` | Aplicación | AB#422 | este PR | 🔍 |
+| HU45-CP13 | `SeguridadSesionUsuarioServiceTest` | `sinSesionNadiePasaAPremium` | Aplicación | AB#422 | este PR | 🔍 |
+| HU45-CP14 | `PerfilControllerTest` | `unClientePasaAPremium` | Infraestructura | AB#423 | este PR | 🔍 |
+| HU45-CP14 | `PerfilControllerTest` | `unClienteQueYaEsPremiumRecibe400` | Infraestructura | AB#423 | este PR | 🔍 |
+| HU45-CP14 | `PerfilControllerTest` | `unAdministradorNoPasaAPremium` | Infraestructura | AB#423 | este PR | 🔍 |
+| HU45-CP14 | `PerfilControllerTest` | `sinSesionNoSePasaAPremium` | Infraestructura | AB#423 | este PR | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `UsuarioTest`: `usuarios/domain/model/` (JUnit sin Spring)
 - `GestionPerfilServiceTest` y `SeguridadSesionUsuarioServiceTest`: `usuarios/application/service/` (Mockito sin Spring, y contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
 - `PerfilControllerTest`: `usuarios/infrastructure/adapter/in/web/` (`@WebMvcTest` con la `SecurityConfig` real)
 
