@@ -21,12 +21,14 @@ import { useAuth } from '../auth/useAuth'
 import { usePageStyles } from '../components/pageStyles'
 import { UserAvatar } from '../features/account/AvatarSelector'
 import DeleteAccountDialog from '../features/account/DeleteAccountDialog'
+import UnsavedChangesDialog from '../features/account/UnsavedChangesDialog'
 import ProfileEditor from '../features/admin/ProfileEditor'
 import ReadOnlyFields from '../features/admin/ReadOnlyFields'
 import SellerStatistics from '../features/seller/SellerStatistics'
 import { profileFieldsFor } from '../features/admin/profileFields'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { useCategories } from '../hooks/useCategories'
+import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard'
 import { formatDate } from '../utils/format'
 
 const SIN_DATO = '—'
@@ -185,7 +187,8 @@ function profileFields(perfil, categoryName) {
 
 // Perfil propio del cliente o del vendedor (HU4), en solo lectura. Los datos se piden al backend, que los saca de
 // la sesión. Con «Editar perfil» (HU45) los datos modificables se editan en este mismo panel; al guardar, el perfil
-// pasa a ser el que devuelve el backend y se avisa. El cliente ve además sus preferencias (HU46) y el vendedor, sus
+// pasa a ser el que devuelve el backend y se avisa. Si hay cambios sin guardar, se pregunta antes de cancelar, de ir
+// a otra pantalla y de cerrar o recargar la pestaña. El cliente ve además sus preferencias (HU46) y el vendedor, sus
 // estadísticas (HU17). Los dos pueden eliminar su cuenta desde aquí (HU47 y HU25).
 export default function ProfilePage() {
   const pageStyles = usePageStyles()
@@ -194,8 +197,11 @@ export default function ProfilePage() {
   const { data: cargado, failed, retry } = useApiQuery(fetcher)
   const { categories } = useCategories()
   const [editando, setEditando] = useState(false)
+  const [conCambios, setConCambios] = useState(false)
+  const [confirmandoCancelar, setConfirmandoCancelar] = useState(false)
   const [guardado, setGuardado] = useState(null)
   const [aviso, setAviso] = useState('')
+  const guard = useUnsavedChangesGuard(editando && conCambios)
   const perfil = guardado ?? cargado
   const categoryName = categories.find(({ id }) => id === perfil?.categoriaPrincipalId)?.nombre
 
@@ -204,11 +210,19 @@ export default function ProfilePage() {
     setEditando(true)
   }
 
+  const dejarDeEditar = () => {
+    setEditando(false)
+    setConCambios(false)
+    setConfirmandoCancelar(false)
+  }
+
   const alGuardar = (_enviado, actualizado) => {
     setGuardado(actualizado)
     setAviso(CAMBIOS_GUARDADOS)
-    setEditando(false)
+    dejarDeEditar()
   }
+
+  const cancelar = () => (conCambios ? setConfirmandoCancelar(true) : dejarDeEditar())
 
   return (
     <main className={pageStyles.page}>
@@ -259,7 +273,8 @@ export default function ProfilePage() {
               categories={categories}
               save={updateProfile}
               onSaved={alGuardar}
-              onCancel={() => setEditando(false)}
+              onCancel={cancelar}
+              onDirtyChange={setConCambios}
             />
           ) : (
             <>
@@ -271,6 +286,9 @@ export default function ProfilePage() {
           )}
         </Card>
       )}
+
+      {confirmandoCancelar && <UnsavedChangesDialog onStay={() => setConfirmandoCancelar(false)} onLeave={dejarDeEditar} />}
+      {guard.blocked && <UnsavedChangesDialog onStay={guard.reset} onLeave={guard.proceed} />}
 
       {perfil?.rol === 'CLIENTE' && <CustomerPreferences categories={categories} />}
       {perfil?.rol === 'VENDEDOR' && <SellerStatistics />}
