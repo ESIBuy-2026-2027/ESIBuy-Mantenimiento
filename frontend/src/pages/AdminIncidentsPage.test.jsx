@@ -268,6 +268,8 @@ describe('AdminIncidentsPage (HU50): cambios de otro administrador', () => {
   it('HU50-CP26: si otro administrador ya la ha abierto, lo avisa y vuelve a cargar la lista', async () => {
     const user = userEvent.setup()
     await abrirSupervision()
+    // Primero, que la lista ya esté cargada: si no, su primera petición contaría como la recarga
+    await lista()
     server.use(
       http.patch(`${URL_INCIDENCIAS}/:id/abrir`, () =>
         HttpResponse.json({ mensaje: 'La incidencia ya está abierta', code: 'INCIDENT_ALREADY_OPEN' }, { status: 409 }),
@@ -291,10 +293,13 @@ describe('AdminIncidentsPage (HU50): cambios de otro administrador', () => {
   it('HU50-CP26: si otro administrador ya la ha cerrado, lo avisa y la lista recargada ya no la muestra', async () => {
     const user = userEvent.setup()
     await abrirSupervision()
+    // Primero, que la vista ya la muestre: si se cierra antes de cargar la lista, la fila [1] sería otra incidencia
+    const filas = await incidencias()
+    expect(filas[1]).toHaveTextContent('Cobro duplicado')
     // Otro administrador la cierra mientras esta vista sigue mostrándola
     await closeIncident('inc-seed-2')
 
-    await user.click(accion((await incidencias())[1], 'Cerrar'))
+    await user.click(accion(filas[1], 'Cerrar'))
     await user.click(screen.getByRole('button', { name: 'Sí, cerrar la incidencia' }))
 
     expect(await screen.findByText(AVISO_CAMBIADA)).toBeInTheDocument()
