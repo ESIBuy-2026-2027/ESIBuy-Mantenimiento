@@ -15,7 +15,7 @@ services:
     dockerContext: ./backend
     # Liveness: responde si el proceso vive, sin consultar MongoDB (ver application.properties).
     healthCheckPath: /actuator/health/liveness
-    autoDeployTrigger: off
+    autoDeployTrigger: 'off'
     envVars:
       # Secretos: Render pide su valor al crear el Blueprint y nunca se guardan en el repositorio.
       - key: MONGODB_URI
@@ -42,7 +42,7 @@ services:
     branch: main
     buildCommand: cd frontend && npm ci && npm run build
     staticPublishPath: ./frontend/dist
-    autoDeployTrigger: off
+    autoDeployTrigger: 'off'
     envVars:
       # La misma versión de Node que el CI. VITE_USE_MOCKS no se define: los mocks de MSW solo se activan en desarrollo.
       - key: NODE_VERSION
