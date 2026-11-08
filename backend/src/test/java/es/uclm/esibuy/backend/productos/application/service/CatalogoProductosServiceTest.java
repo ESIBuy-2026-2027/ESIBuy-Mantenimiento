@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.productos.application.service;
 import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
 import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalogo;
 import es.uclm.esibuy.backend.productos.application.port.in.DetalleProductoCatalogo;
+import es.uclm.esibuy.backend.productos.application.port.in.PaginaCatalogo;
 import es.uclm.esibuy.backend.productos.application.port.in.ProductoComercial;
 import es.uclm.esibuy.backend.productos.application.port.in.ResumenProducto;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
@@ -51,10 +52,15 @@ class CatalogoProductosServiceTest {
                 true, 0, 10);
         ProductoPage pagina = new ProductoPage(List.of(), 0, 10, 0);
         when(productoRepository.buscarEnCatalogo(query)).thenReturn(pagina);
+        when(usuarioEnSesion.esClientePremium("cliente@esibuy.test")).thenReturn(true);
 
         CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort, usuarioEnSesion);
 
-        assertSame(pagina, servicio.buscarProductos(query));
+        PaginaCatalogo resultado = servicio.buscarProductos(query, "cliente@esibuy.test");
+
+        // La página es la del repositorio y lleva si el cliente es Premium, para darle su precio
+        assertSame(pagina, resultado.pagina());
+        assertTrue(resultado.clientePremium());
     }
 
     private static Producto producto(boolean disponible) {

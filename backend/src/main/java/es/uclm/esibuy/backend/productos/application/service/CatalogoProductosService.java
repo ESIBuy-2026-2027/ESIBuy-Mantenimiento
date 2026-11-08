@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.productos.application.service;
 import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
 import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.DetalleProductoCatalogo;
+import es.uclm.esibuy.backend.productos.application.port.in.PaginaCatalogo;
 import es.uclm.esibuy.backend.productos.application.port.in.ProductoComercial;
 import es.uclm.esibuy.backend.productos.application.port.in.ResumenProducto;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
@@ -35,10 +36,11 @@ public class CatalogoProductosService implements CatalogoProductosUseCase {
         this.usuarioEnSesion = usuarioEnSesion;
     }
 
-    @PreAuthorize(Permisos.SOLO_CLIENTE)
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
-    public ProductoPage buscarProductos(BuscarCatalogoQuery query) {
-        return productoRepository.buscarEnCatalogo(query);
+    public PaginaCatalogo buscarProductos(BuscarCatalogoQuery query, String emailCliente) {
+        return new PaginaCatalogo(productoRepository.buscarEnCatalogo(query),
+                usuarioEnSesion.esClientePremium(emailCliente));
     }
 
     @PreAuthorize(Permisos.SOLO_CLIENTE)
