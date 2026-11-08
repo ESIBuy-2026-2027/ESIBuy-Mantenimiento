@@ -447,7 +447,7 @@ describe('ProfileEditor (HU45): perfil propio', () => {
 
   it.each([
     ['INVALID_PHONE', 400, ROLES.CLIENTE, CLIENTE, 'El teléfono debe tener 9 números'],
-    ['UNDERAGE', 400, ROLES.CLIENTE, CLIENTE, 'Debes ser mayor de edad'],
+    ['UNDERAGE', 400, ROLES.CLIENTE, CLIENTE, 'Debe ser mayor de edad'],
     ['COMMERCIAL_NAME_ALREADY_REGISTERED', 409, ROLES.VENDEDOR, VENDEDOR, 'Este nombre comercial ya está registrado'],
   ])('HU45-CP14: el code %s del backend sale en su campo con su propio mensaje', async (code, estado, rol, usuario, mensaje) => {
     const user = userEvent.setup()
