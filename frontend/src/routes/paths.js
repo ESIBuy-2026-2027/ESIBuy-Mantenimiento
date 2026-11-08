@@ -3,6 +3,7 @@ export const PATHS = {
   LOGIN: '/login',
   FORGOT_PASSWORD: '/forgot-password',
   REGISTER: '/register',
+  REGISTER_PAYMENT: '/register/pago',
   PRODUCTS: '/products',
   PRODUCT_DETAIL: '/products/:id',
   CHECKOUT: '/checkout',

@@ -14,6 +14,7 @@ import {
 } from '@fluentui/react-components'
 import { BuildingShop24Regular, Cart24Regular } from '@fluentui/react-icons'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { registrarCliente, registrarVendedor } from '../api/auth'
 import { getCategories } from '../api/products'
 import CategoryCombobox from '../components/CategoryCombobox'
@@ -21,12 +22,14 @@ import LinkButton from '../components/LinkButton'
 import AvatarSelector from '../features/account/AvatarSelector'
 import { PasswordField, PasswordRequirements } from '../features/account/PasswordField'
 import { erroresDelServidor } from '../features/account/registroErrors'
+import { useRegistroPremium } from '../features/account/RegistroPremiumContext'
 import { PATHS } from '../routes/paths'
 import {
   esDniValido,
   esEmailValido,
   esMayorDeEdad,
   esTelefonoValido,
+  sinTelefonoVacio,
   validarPasswords,
 } from '../features/account/accountRules'
 
@@ -58,6 +61,21 @@ const LONGITUD_MAXIMA = {
   repeticionPassword: 64,
 }
 
+const DATOS_INICIALES = {
+  nombre: '',
+  apellidos: '',
+  nombreComercial: '',
+  categoriaPrincipalId: '',
+  fechaNacimiento: '',
+  dni: '',
+  email: '',
+  telefono: '',
+  password: '',
+  repeticionPassword: '',
+  tipoCliente: 'ESTANDAR',
+  avatar: '',
+  aceptaPrivacidad: false,
+}
 
 const useStyles = makeStyles({
   page: {
@@ -113,33 +131,24 @@ function validarCamposComunes(datos, obligatorios) {
   return errores
 }
 
-// El teléfono es opcional: si está vacío no se envía, porque el backend solo lo da por ausente si no llega
-function sinTelefonoVacio(datos) {
-  const { telefono, ...resto } = datos
-  return telefono ? datos : resto
+// Lo que el formulario muestra al volver de la pasarela Premium (HU45): si el servidor rechazó el registro, los
+// errores en sus campos o el mensaje general.
+function erroresTrasLaPasarela(resultado) {
+  return resultado?.error ? erroresDelServidor(resultado.error) : {}
 }
 
+// Registro de cliente y de vendedor (HU1). El cliente Premium (HU45) no se registra al pulsar Registrarse: sus datos
+// pasan a la memoria del flujo de registro y se le lleva a la pasarela de pago simulada, que es la única que envía el
+// registro como PREMIUM. Al volver de ella, el formulario recupera sus datos y muestra el resultado.
 export default function Register() {
   const styles = useStyles()
-  const [tipo, setTipo] = useState(null)
-  const [datos, setDatos] = useState({
-    nombre: '',
-    apellidos: '',
-    nombreComercial: '',
-    categoriaPrincipalId: '',
-    fechaNacimiento: '',
-    dni: '',
-    email: '',
-    telefono: '',
-    password: '',
-    repeticionPassword: '',
-    tipoCliente: 'ESTANDAR',
-    avatar: '',
-    aceptaPrivacidad: false,
-  })
-  const [errores, setErrores] = useState({})
-  const [errorGeneral, setErrorGeneral] = useState(null)
-  const [registrado, setRegistrado] = useState(false)
+  const navigate = useNavigate()
+  const flujo = useRegistroPremium()
+  const [tipo, setTipo] = useState(flujo.pendiente ? 'cliente' : null)
+  const [datos, setDatos] = useState(flujo.pendiente ?? DATOS_INICIALES)
+  const [errores, setErrores] = useState(() => erroresTrasLaPasarela(flujo.resultado).campos ?? {})
+  const [errorGeneral, setErrorGeneral] = useState(() => erroresTrasLaPasarela(flujo.resultado).general ?? null)
+  const [registrado, setRegistrado] = useState(flujo.resultado?.registrado === true)
   const [categoriasDisponibles, setCategoriasDisponibles] = useState([])
 
   useEffect(() => {
@@ -167,6 +176,12 @@ export default function Register() {
     setErrores(nuevosErrores)
 
     if (Object.keys(nuevosErrores).length > 0) return
+
+    if (datos.tipoCliente === 'PREMIUM') {
+      flujo.iniciarPago(datos)
+      navigate(PATHS.REGISTER_PAYMENT)
+      return
+    }
 
     try {
       await registrarCliente(sinTelefonoVacio(datos))
@@ -275,7 +290,15 @@ export default function Register() {
         {campo('apellidos', 'Apellidos')}
         {campo('fechaNacimiento', 'Fecha de nacimiento', { type: 'date' })}
         {camposComunes}
-        <Field label="Tipo de cliente" required>
+        <Field
+          label="Tipo de cliente"
+          required
+          hint={
+            datos.tipoCliente === 'PREMIUM'
+              ? 'Antes de crear la cuenta pasarás por una pasarela de pago simulada.'
+              : undefined
+          }
+        >
           <Select value={datos.tipoCliente} onChange={cambiar('tipoCliente')}>
             <option value="ESTANDAR">Estándar</option>
             <option value="PREMIUM">Premium</option>

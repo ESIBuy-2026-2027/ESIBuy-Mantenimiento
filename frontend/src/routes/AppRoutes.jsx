@@ -3,6 +3,7 @@ import GuestOnlyRoute from '../auth/GuestOnlyRoute'
 import ProtectedRoute from '../auth/ProtectedRoute'
 import { ROLES } from '../auth/roles'
 import AppLayout from '../components/AppLayout'
+import RegistroPremiumFlow from '../features/account/RegistroPremiumFlow'
 import AddressesPage from '../pages/AddressesPage'
 import AdminAdminsPage from '../pages/AdminAdminsPage'
 import AdminCategoriesPage from '../pages/AdminCategoriesPage'
@@ -25,6 +26,7 @@ import ProductDetailPage from '../pages/ProductDetailPage'
 import ProductsPage from '../pages/ProductsPage'
 import ProfilePage from '../pages/ProfilePage'
 import Register from '../pages/Register'
+import RegisterPaymentPage from '../pages/RegisterPaymentPage'
 import SellerProductFormPage from '../pages/SellerProductFormPage'
 import SellerProductsPage from '../pages/SellerProductsPage'
 import WishlistPage from '../pages/WishlistPage'
@@ -39,7 +41,11 @@ export default function AppRoutes() {
       <Route element={<AppLayout />}>
         <Route path={PATHS.HOME} element={<Home />} />
         <Route element={<GuestOnlyRoute />}>
-          <Route path={PATHS.REGISTER} element={<Register />} />
+          {/* El registro y su pasarela Premium (HU45) comparten los datos del formulario, solo en memoria */}
+          <Route element={<RegistroPremiumFlow />}>
+            <Route path={PATHS.REGISTER} element={<Register />} />
+            <Route path={PATHS.REGISTER_PAYMENT} element={<RegisterPaymentPage />} />
+          </Route>
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.CLIENTE]} />}>

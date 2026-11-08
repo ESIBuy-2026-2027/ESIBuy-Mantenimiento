@@ -37,3 +37,9 @@ export function validarPasswords({ password, repeticionPassword }) {
   }
   return errores
 }
+
+// El teléfono es opcional: si está vacío no se envía, porque el backend solo lo da por ausente si no llega
+export function sinTelefonoVacio(datos) {
+  const { telefono, ...resto } = datos
+  return telefono ? datos : resto
+}
