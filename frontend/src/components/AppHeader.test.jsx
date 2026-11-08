@@ -357,18 +357,18 @@ describe('AppHeader (HU44): incidencias del vendedor, del administrador y sin se
   it('HU44-CP33: el administrador que abre Mis incidencias o Nueva incidencia vuelve a su panel', async () => {
     await abrirSesionPorApi('admin@esibuy.test')
     const { unmount } = renderApp('/incidents')
-    await esperarRuta('/admin')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/admin$')))
     unmount()
 
     renderApp('/incidents/new')
 
-    await esperarRuta('/admin')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/admin$')))
   })
 
   it('HU44-CP33: sin sesión, Mis incidencias lleva al login', async () => {
     renderApp('/incidents')
 
-    await esperarRuta('/login')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/login$')))
   })
 })
 

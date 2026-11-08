@@ -26,10 +26,6 @@ async function abrirMisIncidencias(email = CLIENTE) {
 const lista = () => screen.findByRole('list', { name: 'Tus incidencias' })
 const incidencias = async () => within(await lista()).getAllByRole('listitem')
 
-async function esperarRuta(ruta) {
-  await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp(`^${ruta}$`)))
-}
-
 describe('IncidentsPage (HU44): lista', () => {
   it('HU44-CP27: abre en la última página, la de las incidencias más recientes', async () => {
     await abrirMisIncidencias()
@@ -140,7 +136,7 @@ describe('IncidentsPage (HU44): nueva incidencia', () => {
 
     await user.click(screen.getByRole('link', { name: /^nueva incidencia$/i }))
 
-    await esperarRuta('/incidents/new')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/incidents/new$')))
   })
 
   it('HU44-CP28: sin incidencias, reportar la primera también lleva al formulario', async () => {
@@ -149,6 +145,6 @@ describe('IncidentsPage (HU44): nueva incidencia', () => {
 
     await user.click(await screen.findByRole('link', { name: /reportar mi primera incidencia/i }))
 
-    await esperarRuta('/incidents/new')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/incidents/new$')))
   })
 })
