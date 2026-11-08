@@ -15,19 +15,22 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { Delete20Regular, Diamond16Filled, Diamond20Regular } from '@fluentui/react-icons'
+import { Delete20Regular, Diamond16Filled, Diamond20Regular, Edit20Regular } from '@fluentui/react-icons'
 import { getPreferences, savePreferences } from '../api/preferences'
-import { getProfile } from '../api/profile'
+import { getProfile, updateProfile } from '../api/profile'
 import { useAuth } from '../auth/useAuth'
 import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import { UserAvatar } from '../features/account/AvatarSelector'
 import DeleteAccountDialog from '../features/account/DeleteAccountDialog'
+import UnsavedChangesDialog from '../features/account/UnsavedChangesDialog'
+import ProfileEditor from '../features/admin/ProfileEditor'
 import ReadOnlyFields from '../features/admin/ReadOnlyFields'
 import SellerStatistics from '../features/seller/SellerStatistics'
 import { profileFieldsFor } from '../features/admin/profileFields'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { useCategories } from '../hooks/useCategories'
+import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard'
 import { PATHS } from '../routes/paths'
 import { formatDate } from '../utils/format'
 
@@ -73,7 +76,12 @@ const useStyles = makeStyles({
   deletionAction: {
     alignSelf: 'flex-start',
   },
+  editAction: {
+    alignSelf: 'flex-start',
+  },
 })
+
+const CAMBIOS_GUARDADOS = 'Tus cambios se han guardado.'
 
 // Eliminar la cuenta propia del vendedor (HU47) y del cliente (HU25): se confirma en un diálogo con la contraseña. El
 // servidor cierra la sesión, así que después se cierra también en el navegador y el login lo avisa.
@@ -204,15 +212,43 @@ function profileFields(perfil, categoryName) {
 }
 
 // Perfil propio del cliente o del vendedor (HU4), en solo lectura. Los datos se piden al backend, que los saca de
-// la sesión. Modificarlos es de la HU45. El cliente ve además sus preferencias (HU46) y su acceso a ESIBuy Premium
-// (HU45), y el vendedor, sus estadísticas (HU17). Los dos pueden eliminar su cuenta desde aquí (HU47 y HU25).
+// la sesión. Con «Editar perfil» (HU45) los datos modificables se editan en este mismo panel; al guardar, el perfil
+// pasa a ser el que devuelve el backend y se avisa. Si hay cambios sin guardar, se pregunta antes de cancelar, de ir
+// a otra pantalla y de cerrar o recargar la pestaña. El cliente ve además sus preferencias (HU46) y su acceso a ESIBuy
+// Premium (HU45), y el vendedor, sus estadísticas (HU17). Los dos pueden eliminar su cuenta desde aquí (HU47 y HU25).
 export default function ProfilePage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
   const fetcher = useCallback(() => getProfile(), [])
-  const { data: perfil, failed, retry } = useApiQuery(fetcher)
+  const { data: cargado, failed, retry } = useApiQuery(fetcher)
   const { categories } = useCategories()
+  const [editando, setEditando] = useState(false)
+  const [conCambios, setConCambios] = useState(false)
+  const [confirmandoCancelar, setConfirmandoCancelar] = useState(false)
+  const [guardado, setGuardado] = useState(null)
+  const [aviso, setAviso] = useState('')
+  const guard = useUnsavedChangesGuard(editando && conCambios)
+  const perfil = guardado ?? cargado
   const categoryName = categories.find(({ id }) => id === perfil?.categoriaPrincipalId)?.nombre
+
+  const empezarAEditar = () => {
+    setAviso('')
+    setEditando(true)
+  }
+
+  const dejarDeEditar = () => {
+    setEditando(false)
+    setConCambios(false)
+    setConfirmandoCancelar(false)
+  }
+
+  const alGuardar = (_enviado, actualizado) => {
+    setGuardado(actualizado)
+    setAviso(CAMBIOS_GUARDADOS)
+    dejarDeEditar()
+  }
+
+  const cancelar = () => (conCambios ? setConfirmandoCancelar(true) : dejarDeEditar())
 
   return (
     <main className={pageStyles.page}>
@@ -220,7 +256,7 @@ export default function ProfilePage() {
         <Title1 as="h1" className={pageStyles.title}>
           Mi perfil
         </Title1>
-        <Text className={pageStyles.subtitle}>Consulta tus datos personales.</Text>
+        <Text className={pageStyles.subtitle}>Consulta y edita tus datos personales.</Text>
       </div>
 
       {failed && (
@@ -235,6 +271,16 @@ export default function ProfilePage() {
       {!perfil && !failed && <Spinner className={pageStyles.loading} label="Cargando tu perfil…" />}
 
       {perfil && (
+        <div role="status">
+          {aviso && (
+            <MessageBar intent="success">
+              <MessageBarBody>{aviso}</MessageBarBody>
+            </MessageBar>
+          )}
+        </div>
+      )}
+
+      {perfil && (
         <Card className={styles.card}>
           <div className={styles.identity}>
             <UserAvatar value={perfil.avatar} name={`${perfil.nombre} ${perfil.apellidos}`} />
@@ -246,9 +292,30 @@ export default function ProfilePage() {
               {perfil.rol === 'CLIENTE' && <PremiumAccess tipoCliente={perfil.tipoCliente} />}
             </div>
           </div>
-          <ReadOnlyFields fields={profileFields(perfil, categoryName)} />
+          {editando ? (
+            <ProfileEditor
+              own
+              rol={perfil.rol}
+              usuario={perfil}
+              categories={categories}
+              save={updateProfile}
+              onSaved={alGuardar}
+              onCancel={cancelar}
+              onDirtyChange={setConCambios}
+            />
+          ) : (
+            <>
+              <ReadOnlyFields fields={profileFields(perfil, categoryName)} />
+              <Button className={styles.editAction} icon={<Edit20Regular />} onClick={empezarAEditar}>
+                Editar perfil
+              </Button>
+            </>
+          )}
         </Card>
       )}
+
+      {confirmandoCancelar && <UnsavedChangesDialog onStay={() => setConfirmandoCancelar(false)} onLeave={dejarDeEditar} />}
+      {guard.blocked && <UnsavedChangesDialog onStay={guard.reset} onLeave={guard.proceed} />}
 
       {perfil?.rol === 'CLIENTE' && <CustomerPreferences categories={categories} />}
       {perfil?.rol === 'VENDEDOR' && <SellerStatistics />}

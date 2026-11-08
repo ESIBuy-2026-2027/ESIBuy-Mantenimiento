@@ -61,7 +61,7 @@ Notas:
 - **Fallos de la demo del Sprint 1 (HU1-CP22, rama `fix/sprint1-demo-backend`):** el dominio indica el motivo del rechazo con el enum `MotivoRechazo` dentro de `ContrasenaInvalidaException` y `UsuarioInvalidoException`, y `ManejadorGlobalErrores` lo traduce a un `code` en inglés (`PASSWORD_TOO_SHORT`, `PASSWORD_TOO_LONG`, `PASSWORD_WEAK`, `PASSWORD_TOO_COMMON`, `PASSWORD_CONTAINS_PERSONAL_DATA`, `PASSWORDS_DO_NOT_MATCH`, `INVALID_EMAIL`, `INVALID_DNI`, `INVALID_PHONE`, `UNDERAGE`, `PRIVACY_NOT_ACCEPTED`; el motivo genérico `DATO_INVALIDO`, `VALIDATION_ERROR`). Los errores de `@Valid` de cualquier endpoint responden con el mismo formato y `VALIDATION_ERROR` (antes `INVALID_FIELD`; cambiado en la rama `fix/errores-validacion-api`, ver la nota de HU16-CP12). El registro recibe la imagen como `avatar`, igual que el resto de la API. Sin tasks nuevas en Azure: los commits llevan el `AB#` de la task original de cada parte.
 - **HU1-CP23 a CP26 (fallos de la demo del Sprint 1, frontend):** `features/account/registroErrors.js` traduce cada `code` del backend a su campo y su mensaje; lo usan el registro, el alta de administrador (HU21-CP19) y la edición (HU22-CP16). Tras registrarse, un botón lleva al login, sin redirección automática. `GuestOnlyRoute` lleva a la página del rol a quien abre `/register` con sesión. El backend responde al registro con un 201 sin cuerpo, y `api/client.js` intentaba leerlo como JSON: el usuario se creaba pero la pantalla mostraba un error (CP26). El mock del registro responde ahora igual que el backend. Como en la HU19, el ID del caso va al principio del nombre del test (`it('HU1-CP23: …')`). Los tests anteriores de estas pantallas no tienen todavía filas en la matriz.
 - **HU1-CP16 (AB#43):** la comprobación del DNI repetido pasa de `existePorDni` a `existePorDniYRol`, en el registro del cliente y en el del vendedor, para que coincida con el índice `rol_dni` (una persona puede tener una cuenta de cliente y otra de vendedor con el mismo DNI). Antes, un vendedor con el DNI de un cliente recibía un 409 aunque MongoDB lo habría aceptado. Lo pidió el equipo en la edición del vendedor (HU22); cambia código de la T241.
-- **Frontend, fix del registro (sin task):** el formulario enviaba `tipoCliente` como `normal`/`premium` y el backend espera el enum `ESTANDAR`/`PREMIUM` (400 sin llegar al registro), y enviaba `telefono: ""` cuando se dejaba vacío, que el dominio rechaza como teléfono inválido. En `Register.test.jsx` se adapta `register_alElegirCliente_muestraTipoConNormalPreseleccionado` (ahora `register_alElegirCliente_muestraTipoEstandarPreseleccionadoConLosValoresDelBackend`) y se añaden `register_alEnviarDatosValidosDeCliente_enviaElTipoEstandarPorDefecto`, `register_alElegirPremium_enviaElTipoPremium` (sustituido en la HU45 por HU45-CP15, ver HU45), `register_siElClienteNoIndicaTelefono_noEnviaElTelefono` y `register_siElVendedorNoIndicaTelefono_noEnviaElTelefono`. Los tests de `Register.test.jsx` no tienen todavía filas en la Tabla B ni un caso propio para el contrato del cuerpo de la petición: pendiente de decidir con el equipo a qué casos de la HU1 se asignan.
+- **Frontend, fix del registro (sin task):** el formulario enviaba `tipoCliente` como `normal`/`premium` y el backend espera el enum `ESTANDAR`/`PREMIUM` (400 sin llegar al registro), y enviaba `telefono: ""` cuando se dejaba vacío, que el dominio rechaza como teléfono inválido. En `Register.test.jsx` se adapta `register_alElegirCliente_muestraTipoConNormalPreseleccionado` (ahora `register_alElegirCliente_muestraTipoEstandarPreseleccionadoConLosValoresDelBackend`) y se añaden `register_alEnviarDatosValidosDeCliente_enviaElTipoEstandarPorDefecto`, `register_alElegirPremium_enviaElTipoPremium` (sustituido en la HU45 por HU45-CP21, ver HU45), `register_siElClienteNoIndicaTelefono_noEnviaElTelefono` y `register_siElVendedorNoIndicaTelefono_noEnviaElTelefono`. Los tests de `Register.test.jsx` no tienen todavía filas en la Tabla B ni un caso propio para el contrato del cuerpo de la petición: pendiente de decidir con el equipo a qué casos de la HU1 se asignan.
 - **AB#210:** el test de email duplicado (CP03) comprueba el índice único de `email` a nivel de base de datos, sin pasar por `existePorCorreo`. `conservaLosDatosDePerfil` (CP01) comprueba contra MongoDB lo que `conservaNombreApellidosYTipoDeCliente` (T225) prueba en el mapper. Al integrar `develop`, el PR #43 deja la persistencia del estado de acceso de la T225 (sin `Usuario.reconstruir` ni sus tests) y guarda sus campos con los nombres del modelo de BBDD (`estado`, `failedLoginAttempts`, `lockedUntil`); decisión del equipo del 08/10/2026.
 
 ### Tabla B · casos de prueba ↔ tests
@@ -766,7 +766,7 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 | HU4-CP02 | Un vendedor consulta su perfil y recibe sus datos personales y los de vendedor, sin los de cliente | Controlador | 1 | ✅ Pasa |
 | HU4-CP03 | El perfil no expone la contraseña ni datos internos de la cuenta (estado, intentos, bloqueo) | Controlador | 1 | ✅ Pasa |
 | HU4-CP04 | Solo el cliente y el vendedor consultan su perfil: administrador 403, sin sesión 401, y una sesión de un usuario que ya no existe no es válida | Unitario + controlador | 3 | ✅ Pasa |
-| HU4-CP05 | En «Mi perfil» el cliente ve sus datos personales y los de cliente, en solo lectura | Frontend (página) | 2 | ✅ Pasa |
+| HU4-CP05 | En «Mi perfil» el cliente ve sus datos personales y los de cliente, en solo lectura | Frontend (página) | 2 | 🔍 En revisión (2, AB#296, modificado en PR pendiente) |
 | HU4-CP06 | El vendedor ve sus datos y los de vendedor, con el nombre de su categoría; un dato opcional que falta se ve con un guion | Frontend (página) | 2 | ✅ Pasa |
 | HU4-CP07 | La imagen de perfil se ve como el avatar elegido; sin avatar, se ven las iniciales | Frontend (componente y página) | 4 | ✅ Pasa |
 | HU4-CP08 | La vista no muestra la contraseña ni el estado de la cuenta | Frontend (página) | 1 | ✅ Pasa |
@@ -793,7 +793,7 @@ Notas:
 | HU4-CP04 | `PerfilControllerTest` | `unAdministradorRecibe403` | Infraestructura | AB#297 | PR #140 | ✅ |
 | HU4-CP04 | `PerfilControllerTest` | `sinSesionRecibe401` | Infraestructura | AB#297 | PR #140 | ✅ |
 | HU4-CP05 | `ProfilePage.test.jsx` | `HU4-CP05: el cliente ve sus datos personales y los de cliente` | Frontend · página | AB#296 | PR #150 | ✅ |
-| HU4-CP05 | `ProfilePage.test.jsx` | `HU4-CP05: los datos del perfil son de solo lectura` | Frontend · página | AB#296 | PR #150 | ✅ |
+| HU4-CP05 | `ProfilePage.test.jsx` | `HU4-CP05: los datos del perfil son de solo lectura` | Frontend · página | AB#296 | PR #150 (modificado en PR pendiente) | 🔍 |
 | HU4-CP06 | `ProfilePage.test.jsx` | `HU4-CP06: el vendedor ve sus datos y los de vendedor, con el nombre de su categoría` | Frontend · página | AB#296 | PR #150 | ✅ |
 | HU4-CP06 | `ProfilePage.test.jsx` | `HU4-CP06: los datos opcionales que no tiene se muestran con un guion` | Frontend · página | AB#296 | PR #150 | ✅ |
 | HU4-CP07 | `ProfilePage.test.jsx` | `HU4-CP07: muestra como imagen el avatar que eligió el usuario` | Frontend · página | AB#296 | PR #150 | ✅ |
@@ -4252,42 +4252,58 @@ Rutas de las clases de test (bajo `frontend/src/`):
 | HU45-CP03 | Un vendedor no puede usar el nombre comercial de otro vendedor: no se guarda nada | Unitario | 1 | ✅ Pasa |
 | HU45-CP04 | Con datos no válidos (nombre en blanco, cliente menor de edad o vendedor sin datos de vendedor) no se guarda nada | Unitario | 3 | ✅ Pasa |
 | HU45-CP05 | Solo el cliente o el vendedor edita su propio perfil: con el correo de otro, 403; un administrador, 403; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa |
-| HU45-CP06 | Un cliente o un vendedor editan su perfil con `PUT /api/perfil` y reciben 200 con el perfil actualizado (el mismo JSON que `GET /api/perfil`); el caso de uso recibe el correo de la sesión y los datos del cuerpo | Integración (capa web) | 2 | 🔍 En revisión (2, AB#101, este PR) |
-| HU45-CP07 | El cuerpo no puede cambiar el correo, el DNI, el rol ni el tipo de cliente: se edita al usuario de la sesión y esos campos se ignoran | Integración (capa web) | 1 | 🔍 En revisión (1, AB#101, este PR) |
-| HU45-CP08 | Datos no válidos: nombre vacío o de más de 30 caracteres, 400 `VALIDATION_ERROR` sin llamar al caso de uso; un dato que rechaza el dominio, 400 con el code de su motivo (`UNDERAGE`) o `VALIDATION_ERROR` si no tiene motivo concreto | Integración (capa web) | 3 | 🔍 En revisión (3, AB#101, este PR) |
-| HU45-CP09 | Un nombre comercial que ya usa otro vendedor responde 409 `COMMERCIAL_NAME_ALREADY_REGISTERED` | Integración (capa web) | 1 | 🔍 En revisión (1, AB#101, este PR) |
-| HU45-CP10 | Solo el cliente o el vendedor editan su perfil por la API: el administrador recibe 403, sin sesión 401 y sin token CSRF 403 | Integración (capa web) | 3 | 🔍 En revisión (3, AB#101, este PR) |
-| HU45-CP15 | Al elegir Premium, Registrarse valida el formulario y lleva a la pasarela de pago simulada sin enviar el registro | Frontend (página) | 2 | 🔍 En revisión (2, AB#420, este PR) |
-| HU45-CP16 | Sin datos del formulario en memoria (URL escrita a mano o recarga) la pasarela del registro vuelve al registro vacío | Frontend (página) | 2 | 🔍 En revisión (2, AB#420, este PR) |
-| HU45-CP17 | El registro como PREMIUM solo se envía al pulsar Simular pago y muestra el mismo éxito; si el servidor lo rechaza, vuelve al formulario con sus datos y el motivo | Frontend (página) | 2 | 🔍 En revisión (2, AB#420, este PR) |
-| HU45-CP18 | Cancelar la pasarela vuelve al formulario con sus datos: con Estándar se registra directo y con Premium vuelve a exigir la pasarela | Frontend (página) | 2 | 🔍 En revisión (2, AB#420, este PR) |
-| HU45-CP19 | La contraseña no aparece en la URL ni se guarda en localStorage ni en sessionStorage durante el registro Premium | Frontend (página) | 1 | 🔍 En revisión (1, AB#420, este PR) |
-| HU45-CP20 | La pasarela simulada muestra el resumen de ESIBuy Premium sin precio ni datos de tarjeta, con Simular pago (procesando y deshabilitado mientras termina), volver y su aviso de error | Frontend (componente) | 5 | 🔍 En revisión (5, AB#420, este PR) |
-| HU45-CP21 | El botón Premium de la cabecera solo lo ve el cliente y lleva a la vista de ventajas Premium | Frontend (componente) | 2 | 🔍 En revisión (2, AB#421, este PR) |
-| HU45-CP22 | En el perfil, el cliente Estándar tiene Hazte Premium hacia la vista Premium y el Premium, el distintivo; el vendedor ninguno | Frontend (página) | 3 | 🔍 En revisión (3, AB#421, este PR) |
-| HU45-CP23 | La vista Premium muestra las tres ventajas (descuentos exclusivos, sin gastos de envío y envíos más rápidos) con su texto y ningún precio, con un único h1 | Frontend (página) | 2 | 🔍 En revisión (2, AB#421, este PR) |
-| HU45-CP24 | Solo el cliente entra en la vista Premium y en su pasarela: sin sesión, al login; vendedor y administrador, a su inicio | Frontend (página) | 3 | 🔍 En revisión (3, AB#421, este PR) |
-| HU45-CP25 | El cliente Premium ve «Ya eres ESIBuy Premium» sin la pasarela, y entrar directo en ella lleva a la vista Premium | Frontend (página) | 2 | 🔍 En revisión (2, AB#421, este PR) |
-| HU45-CP26 | El cliente Estándar pasa por la pasarela y, al simular el pago, se llama a POST /api/perfil/premium, se confirma con aria-live y queda en estado Premium (también en su perfil); Volver no cambia nada | Frontend (página) | 4 | 🔍 En revisión (4, AB#421, este PR) |
-| HU45-CP27 | Un 400 ALREADY_PREMIUM avisa con un mensaje propio y deja la vista en estado Premium, sin el texto del backend | Frontend (página) | 1 | 🔍 En revisión (1, AB#421, este PR) |
-| HU45-CP28 | Un error de red o 5xx muestra un mensaje genérico y se puede reintentar; un 403 avisa de que no tiene permiso; un 401 lleva al login con el aviso de sesión caducada | Frontend (página) | 4 | 🔍 En revisión (4, AB#421, este PR) |
-| HU45-CP29 | becomePremium y su mock responden con el contrato del backend: 200 con el perfil Premium, 400 ALREADY_PREMIUM, 403 ACCESS_DENIED, 401 y sin el texto del backend | Frontend (API) | 5 | 🔍 En revisión (5, AB#421, este PR) |
+| HU45-CP06 | Un cliente o un vendedor editan su perfil con `PUT /api/perfil` y reciben 200 con el perfil actualizado (el mismo JSON que `GET /api/perfil`); el caso de uso recibe el correo de la sesión y los datos del cuerpo | Integración (capa web) | 2 | ✅ Pasa (2, AB#101, PR #239) |
+| HU45-CP07 | El cuerpo no puede cambiar el correo, el DNI, el rol ni el tipo de cliente: se edita al usuario de la sesión y esos campos se ignoran | Integración (capa web) | 1 | ✅ Pasa (1, AB#101, PR #239) |
+| HU45-CP08 | Datos no válidos: nombre vacío o de más de 30 caracteres, 400 `VALIDATION_ERROR` sin llamar al caso de uso; un dato que rechaza el dominio, 400 con el code de su motivo (`UNDERAGE`) o `VALIDATION_ERROR` si no tiene motivo concreto | Integración (capa web) | 3 | ✅ Pasa (3, AB#101, PR #239) |
+| HU45-CP09 | Un nombre comercial que ya usa otro vendedor responde 409 `COMMERCIAL_NAME_ALREADY_REGISTERED` | Integración (capa web) | 1 | ✅ Pasa (1, AB#101, PR #239) |
+| HU45-CP10 | Solo el cliente o el vendedor editan su perfil por la API: el administrador recibe 403, sin sesión 401 y sin token CSRF 403 | Integración (capa web) | 3 | ✅ Pasa (3, AB#101, PR #239) |
+| HU45-CP11 | En «Mi perfil», con «Editar perfil», el cliente y el vendedor ven en el propio panel sus datos modificables como campos editables y, en solo lectura, el email, el DNI, el tipo de cliente (cliente) y el rol; el estado de la cuenta no aparece | Frontend (unitario, componente y página) | 9 | ✅ Pasa (9, AB#103, PR #241) |
+| HU45-CP12 | Al pulsar «Guardar cambios» se envía `PUT /api/perfil` con todos los datos modificables del rol, el botón queda deshabilitado mientras se guarda, se avisa con un mensaje accesible y el perfil muestra lo guardado; sin pulsar guardar no se envía nada | Frontend (unitario, componente y página) | 8 | ✅ Pasa (8, AB#103, PR #241) |
+| HU45-CP13 | Con datos no válidos (nombre o apellidos vacíos, teléfono que no tiene 9 números, cliente menor de edad o sin fecha, vendedor sin nombre comercial o categoría) no se envía nada, cada error sale en su campo y el foco va al primero | Frontend (unitario, componente y página) | 7 | ✅ Pasa (7, AB#103, PR #241) |
+| HU45-CP14 | Cada code de error del backend (`INVALID_PHONE`, `UNDERAGE`, `COMMERCIAL_NAME_ALREADY_REGISTERED`) sale en su campo con su propio mensaje, nunca el del backend; `VALIDATION_ERROR` y los fallos del servidor dan un aviso general sin detalles internos y se conserva lo escrito | Frontend (unitario, componente y página) | 7 | ✅ Pasa (7, AB#103, PR #241) |
+| HU45-CP15 | El formulario avisa de si hay cambios sin guardar; «Cancelar» descarta los cambios sin enviar nada, y si los hay pregunta antes (seguir editando los conserva) | Frontend (componente y página) | 5 | ✅ Pasa (5, AB#103, PR #241) |
+| HU45-CP16 | Con cambios sin guardar se pide confirmación al ir a otra pantalla de la aplicación y al cerrar o recargar la pestaña (seguir editando o salir sin guardar); sin cambios, tras guardar o tras volver a escribir lo que había, no se avisa | Frontend (hook, componente y página) | 21 | ✅ Pasa (21, AB#103, PR #241) |
+| HU45-CP17 | Un cliente Estándar pasa a Premium y conserva su DNI, su fecha de nacimiento y su teléfono; un cliente que ya es Premium no vuelve a pasar y quien no es cliente no puede pasar | Unitario (dominio) | 3 | 🔍 En revisión (3, AB#422, PR #243) |
+| HU45-CP18 | El caso de uso pasa a Premium al cliente de la sesión y lo guarda; si ya era Premium no guarda nada; si el usuario de la sesión ya no existe, la sesión no es válida | Unitario | 3 | 🔍 En revisión (3, AB#422, PR #243) |
+| HU45-CP19 | Solo el propio cliente pasa a Premium su cuenta: con el correo de otro, 403; un vendedor o un administrador, 403; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 En revisión (5, AB#422, PR #243) |
+| HU45-CP20 | `POST /api/perfil/premium` responde 200 con el perfil Premium; si ya era Premium, 400 `ALREADY_PREMIUM`; un administrador recibe 403 y sin sesión 401, sin llamar al caso de uso | Integración (capa web) | 4 | 🔍 En revisión (4, AB#423, PR #243) |
+| HU45-CP21 | Al elegir Premium, Registrarse valida el formulario y lleva a la pasarela de pago simulada sin enviar el registro | Frontend (página) | 2 | 🔍 En revisión (2, AB#420, PR #244) |
+| HU45-CP22 | Sin datos del formulario en memoria (URL escrita a mano o recarga) la pasarela del registro vuelve al registro vacío | Frontend (página) | 2 | 🔍 En revisión (2, AB#420, PR #244) |
+| HU45-CP23 | El registro como PREMIUM solo se envía al pulsar Simular pago y muestra el mismo éxito; si el servidor lo rechaza, vuelve al formulario con sus datos y el motivo | Frontend (página) | 2 | 🔍 En revisión (2, AB#420, PR #244) |
+| HU45-CP24 | Cancelar la pasarela vuelve al formulario con sus datos: con Estándar se registra directo y con Premium vuelve a exigir la pasarela | Frontend (página) | 2 | 🔍 En revisión (2, AB#420, PR #244) |
+| HU45-CP25 | La contraseña no aparece en la URL ni se guarda en localStorage ni en sessionStorage durante el registro Premium | Frontend (página) | 1 | 🔍 En revisión (1, AB#420, PR #244) |
+| HU45-CP26 | La pasarela simulada muestra el resumen de ESIBuy Premium sin precio ni datos de tarjeta, con Simular pago (procesando y deshabilitado mientras termina), volver y su aviso de error | Frontend (componente) | 5 | 🔍 En revisión (5, AB#420, PR #244) |
+| HU45-CP27 | El botón Premium de la cabecera solo lo ve el cliente y lleva a la vista de ventajas Premium | Frontend (componente) | 2 | 🔍 En revisión (2, AB#421, PR #244) |
+| HU45-CP28 | En el perfil, el cliente Estándar tiene Hazte Premium hacia la vista Premium y el Premium, el distintivo; el vendedor ninguno | Frontend (página) | 3 | 🔍 En revisión (3, AB#421, PR #244) |
+| HU45-CP29 | La vista Premium muestra las tres ventajas (descuentos exclusivos, sin gastos de envío y envíos más rápidos) con su texto y ningún precio, con un único h1 | Frontend (página) | 2 | 🔍 En revisión (2, AB#421, PR #244) |
+| HU45-CP30 | Solo el cliente entra en la vista Premium y en su pasarela: sin sesión, al login; vendedor y administrador, a su inicio | Frontend (página) | 3 | 🔍 En revisión (3, AB#421, PR #244) |
+| HU45-CP31 | El cliente Premium ve «Ya eres ESIBuy Premium» sin la pasarela, y entrar directo en ella lleva a la vista Premium | Frontend (página) | 2 | 🔍 En revisión (2, AB#421, PR #244) |
+| HU45-CP32 | El cliente Estándar pasa por la pasarela y, al simular el pago, se llama a POST /api/perfil/premium, se confirma con aria-live y queda en estado Premium (también en su perfil); Volver no cambia nada | Frontend (página) | 4 | 🔍 En revisión (4, AB#421, PR #244) |
+| HU45-CP33 | Un 400 ALREADY_PREMIUM avisa con un mensaje propio y deja la vista en estado Premium, sin el texto del backend | Frontend (página) | 1 | 🔍 En revisión (1, AB#421, PR #244) |
+| HU45-CP34 | Un error de red o 5xx muestra un mensaje genérico y se puede reintentar; un 403 avisa de que no tiene permiso; un 401 lleva al login con el aviso de sesión caducada | Frontend (página) | 4 | 🔍 En revisión (4, AB#421, PR #244) |
+| HU45-CP35 | becomePremium y su mock responden con el contrato del backend: 200 con el perfil Premium, 400 ALREADY_PREMIUM, 403 ACCESS_DENIED, 401 y sin el texto del backend | Frontend (API) | 5 | 🔍 En revisión (5, AB#421, PR #244) |
 
 Notas:
 - **HU45-CP01 a CP05:** casos propuestos en la T298 (AB#298) a partir de los criterios de aceptación de la HU45. Pendientes de confirmar con el equipo y de añadir a la HU45 en Azure Boards.
 - **HU45-CP06 a CP10:** casos propuestos en la T101 (AB#101) para el endpoint. Pendientes de confirmar con el equipo.
-- **HU45-CP11 a CP14:** reservados para el backend del paso a Premium (tasks T422 y T423), que se desarrolla en paralelo.
-- **HU45-CP15 a CP29 (frontend, T420 y T421):** casos propuestos en la T420 (AB#420, pasarela de pago simulada obligatoria al registrarse como Premium: CP15 a CP20) y en la T421 (AB#421, vista de ventajas Premium, acceso desde la cabecera y el perfil y paso a Premium: CP21 a CP29), desarrollados con TDD. Pendientes de confirmar con el equipo y de añadir a la HU45 en Azure Boards. Rama `feature/US45-T420-T421-premium-front`; contrato y flujos en `frontend/docs/hu45-premium.md`. `POST /api/perfil/premium` es de las tasks T422 y T423 del backend: mientras tanto los tests usan el mock de MSW.
-- **HU45-CP15:** sustituye a `register_alElegirPremium_enviaElTipoPremium` de `Register.test.jsx` (ver HU1), que comprobaba que elegir Premium enviaba el registro al momento: ahora se envía solo tras la pasarela (HU45-CP17).
-- **Riesgo conocido (HU45-CP15 a CP19):** la pasarela obligatoria es una garantía del flujo en el cliente; `POST /api/auth/register/cliente` sigue aceptando `tipoCliente: 'PREMIUM'` directamente. Cerrarlo es del backend.
 - **Endpoint (T101, AB#101):** `PUT /api/perfil` con `EditarPerfilRequest` (`nombre` y `apellidos` con `@NotBlank @Size(max = 30)`, `avatar`, `telefono`, `fechaNacimiento`, `nombreComercial` y `categoriaPrincipalId`). Responde 200 con el `PerfilResponse`. Se envían todos los datos modificables del rol, porque el PUT los sustituye todos. Los errores reutilizan los handlers de `ManejadorGlobalErrores`, como la edición del administrador (HU22); sus mensajes hablan de «registro» (pendiente con el equipo), pero el frontend se guía por el `code`.
 - **Lógica (T298, AB#298):** `GestionPerfilUseCase.editarPerfil(email, EditarPerfilCommand)` con `@PreAuthorize` de `Permisos.CLIENTE_O_VENDEDOR_PROPIO`. Reutiliza `Usuario.modificarDatos` (el de la HU22), que valida todo antes de asignar.
   - **Campos editables** (decisión del 05/11): nombre, apellidos, imagen de perfil y teléfono; el cliente, además, su fecha de nacimiento; el vendedor, su nombre comercial y su categoría principal.
   - **No se editan** el email, el DNI, el tipo de cliente, el rol, la contraseña ni el estado.
   - **Vendedor sin datos de vendedor** (cuentas anteriores a la T241 o creadas por un administrador): se rechaza, porque su DNI no se puede poner desde aquí; los completa un administrador (HU22).
 - **Pendiente con el equipo:** la categoría principal no se comprueba que exista, igual que en el registro y en la edición del administrador.
-- **Pantalla (T103):** sin sprint ni asignar; usará el contrato de `PUT /api/perfil`.
+- **HU45-CP11 a CP16 (frontend, T103):** casos propuestos, **PENDIENTES DE CONFIRMAR CON EL EQUIPO**, a partir de los criterios de la HU45 y del contrato de `PUT /api/perfil` (T101). Siguen la numeración del backend (HU45-CP01 a CP10). Rama `feature/US45-T103-pantalla-edicion-perfil`; documentación en `frontend/docs/hu45-edicion-perfil.md`.
+- **Pantalla (T103):** «Editar perfil» abre el formulario en el propio panel de `ProfilePage`; reutiliza `ProfileEditor` de la HU22 en modo `own`, que muestra en solo lectura el DNI y el tipo de cliente, no tiene estado y envía solo los datos que el backend deja modificar. El aviso de cambios sin guardar (`useUnsavedChangesGuard` y `UnsavedChangesDialog`) usa `useBlocker`, que necesita un router de datos: `App.jsx` y `renderApp` pasan a `createBrowserRouter` y `createMemoryRouter` (refactor sin cambios de comportamiento).
+- **Diferencia con lo acordado de palabra:** el nombre comercial repetido responde **409** `COMMERCIAL_NAME_ALREADY_REGISTERED` (no 400); `erroresDelServidor` ya trata el 400 y el 409. `VALIDATION_ERROR` no dice qué campo falla: va a un aviso general.
+- **HU4-CP05 (modificado):** el test «los datos del perfil son de solo lectura» ya no afirma que no hay ningún botón «guardar|editar» (ahora el perfil tiene «Editar perfil»), sino que no hay «guardar» en la lectura; los campos siguen siendo de solo lectura.
 - **Tests existentes:** `GestionPerfilServiceTest` crea el servicio a mano con un reloj fijo (`@InjectMocks` no inyecta un `Clock`) y el cliente de prueba pasa a ser Premium. No cambia lo que comprueban HU4-CP01, HU4-CP04, HU25-CP01 ni HU25-CP02.
+- **HU45-CP17 a CP20:** casos propuestos en la T422 (AB#422) y la T423 (AB#423) para el paso a Premium. Pendientes de confirmar con el equipo.
+- **Paso a Premium (T422, T423):** tareas añadidas a la HU45 por decisión del equipo (08/11), sin crear una HU nueva. El pago es simulado en el frontend (pasarela con «Simular pago», T420 y T421): el backend no cobra nada.
+  - **Lógica (T422):** `Usuario.pasarAPremium()` cambia solo el tipo de cliente (ESTANDAR → PREMIUM) y lanza `ClienteYaPremiumException` si ya lo era, o `UsuarioInvalidoException` si no es cliente. `GestionPerfilUseCase.pasarAPremium(email)` lleva `@PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO_POR_EMAIL)`.
+  - **Endpoint (T423):** `POST /api/perfil/premium`, sin cuerpo; 200 con el `PerfilResponse`. `ManejadorGlobalErrores` traduce `ClienteYaPremiumException` a 400 `ALREADY_PREMIUM`. La ruta ya la cubre `/api/perfil/**` (CLIENTE y VENDEDOR) en `SecurityConfig`; al vendedor lo frena el `@PreAuthorize` del servicio (CP19), que en `@WebMvcTest` no se evalúa porque el caso de uso es un mock.
+  - **Riesgo conocido:** `POST /api/auth/register/cliente` sigue aceptando `tipoCliente: PREMIUM` sin pasar por la pasarela; la pasarela del registro (HU45-CP21 a CP25, PR #244) solo lo garantiza en el frontend.
+- **HU45-CP21 a CP35 (frontend, T420 y T421):** casos propuestos en la T420 (AB#420, pasarela de pago simulada obligatoria al registrarse como Premium: CP21 a CP26) y en la T421 (AB#421, vista de ventajas Premium, acceso desde la cabecera y el perfil y paso a Premium: CP27 a CP35), desarrollados con TDD. Pendientes de confirmar con el equipo y de añadir a la HU45 en Azure Boards. Rama `feature/US45-T420-T421-premium-front`; contrato y flujos en `frontend/docs/hu45-premium.md`. `POST /api/perfil/premium` es de las tasks T422 y T423 del backend (HU45-CP17 a CP20, PR #243); los tests del frontend usan el mock de MSW.
+- **HU45-CP21:** sustituye a `register_alElegirPremium_enviaElTipoPremium` de `Register.test.jsx` (ver HU1), que comprobaba que elegir Premium enviaba el registro al momento: ahora se envía solo tras la pasarela (HU45-CP23).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -4304,61 +4320,140 @@ Notas:
 | HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `nadieEditaElPerfilDeOtro` | Aplicación | AB#298 | PR #218 | ✅ |
 | HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `unAdministradorNoEditaSuPerfilPorAqui` | Aplicación | AB#298 | PR #218 | ✅ |
 | HU45-CP05 | `SeguridadSesionUsuarioServiceTest` | `sinSesionNoSeEditaNingunPerfil` | Aplicación | AB#298 | PR #218 | ✅ |
-| HU45-CP06 | `PerfilControllerTest` | `unClienteEditaSuPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP06 | `PerfilControllerTest` | `unVendedorEditaSuPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP07 | `PerfilControllerTest` | `elCuerpoNoCambiaElCorreoNiElDni` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP08 | `PerfilControllerTest` | `sinNombreSeResponde400SinLlamarAlCasoDeUso` (vacío y de más de 30 caracteres) | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP08 | `PerfilControllerTest` | `unDatoQueRechazaElDominioDa400ConSuCode` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP08 | `PerfilControllerTest` | `unDatoNoValidoSinMotivoDa400Generico` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP09 | `PerfilControllerTest` | `unNombreComercialOcupadoDa409` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP10 | `PerfilControllerTest` | `unAdministradorNoEditaSuPerfilPorAqui` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP10 | `PerfilControllerTest` | `sinSesionNoSeEditaElPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP10 | `PerfilControllerTest` | `sinTokenCsrfNoSeEditaElPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP15 | `Register.test.jsx` | `HU45-CP15: al elegir Premium, Registrarse no envía el registro y lleva a la pasarela de pago` | Frontend · página | AB#420 | este PR | 🔍 |
-| HU45-CP15 | `Register.test.jsx` | `HU45-CP15: con datos no válidos, elegir Premium marca los errores y no lleva a la pasarela` | Frontend · página | AB#420 | este PR | 🔍 |
-| HU45-CP16 | `RegisterPaymentPage.test.jsx` | `HU45-CP16: navegar directo a la pasarela sin datos lleva al registro, sin pasarela` | Frontend · página | AB#420 | este PR | 🔍 |
-| HU45-CP16 | `RegisterPaymentPage.test.jsx` | `HU45-CP16: al recargar la pasarela se pierden los datos y vuelve al registro con el formulario vacío` | Frontend · página | AB#420 | este PR | 🔍 |
-| HU45-CP17 | `RegisterPaymentPage.test.jsx` | `HU45-CP17: la pasarela no registra nada hasta pulsar Simular pago; entonces se registra como PREMIUM` | Frontend · página | AB#420 | este PR | 🔍 |
-| HU45-CP17 | `RegisterPaymentPage.test.jsx` | `HU45-CP17: si el servidor rechaza el registro tras el pago, vuelve al formulario con sus datos y el motivo` | Frontend · página | AB#420 | este PR | 🔍 |
-| HU45-CP18 | `RegisterPaymentPage.test.jsx` | `HU45-CP18: cancelar vuelve al formulario con sus datos; con Estándar se registra sin pasar por la pasarela` | Frontend · página | AB#420 | este PR | 🔍 |
-| HU45-CP18 | `RegisterPaymentPage.test.jsx` | `HU45-CP18: tras cancelar, volver a elegir Premium vuelve a exigir la pasarela` | Frontend · página | AB#420 | este PR | 🔍 |
-| HU45-CP19 | `RegisterPaymentPage.test.jsx` | `HU45-CP19: la contraseña no sale en la URL ni se guarda en localStorage ni en sessionStorage` | Frontend · página | AB#420 | este PR | 🔍 |
-| HU45-CP20 | `PremiumCheckout.test.jsx` | `HU45-CP20: muestra el resumen de ESIBuy Premium sin ningún precio y avisa de que es una simulación` | Frontend · componente | AB#420 | este PR | 🔍 |
-| HU45-CP20 | `PremiumCheckout.test.jsx` | `HU45-CP20: no pide datos de tarjeta: solo tiene los botones de simular el pago y de volver` | Frontend · componente | AB#420 | este PR | 🔍 |
-| HU45-CP20 | `PremiumCheckout.test.jsx` | `HU45-CP20: Simular pago llama a onPay y, mientras tanto, muestra Procesando pago… deshabilitado` | Frontend · componente | AB#420 | este PR | 🔍 |
-| HU45-CP20 | `PremiumCheckout.test.jsx` | `HU45-CP20: el botón de volver llama a onCancel sin simular el pago` | Frontend · componente | AB#420 | este PR | 🔍 |
-| HU45-CP20 | `PremiumCheckout.test.jsx` | `HU45-CP20: el error que se le indica se muestra en un aviso` | Frontend · componente | AB#420 | este PR | 🔍 |
-| HU45-CP21 | `AppHeader.test.jsx` | `HU45-CP21: el cliente ve el botón Premium en la cabecera y lleva a la vista de ventajas Premium` | Frontend · componente | AB#421 | este PR | 🔍 |
-| HU45-CP21 | `AppHeader.test.jsx` | `HU45-CP21: el vendedor, el administrador y quien no tiene sesión no ven el botón Premium` | Frontend · componente | AB#421 | este PR | 🔍 |
-| HU45-CP22 | `ProfilePage.test.jsx` | `HU45-CP22: el cliente Estándar tiene en su perfil el botón Hazte Premium, que lleva a la vista Premium` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP22 | `ProfilePage.test.jsx` | `HU45-CP22: el cliente Premium ve el distintivo Premium en vez del botón` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP22 | `ProfilePage.test.jsx` | `HU45-CP22: el vendedor no tiene ni el botón ni el distintivo` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP23 | `PremiumPage.test.jsx` | `HU45-CP23: muestra las tres ventajas de ESIBuy Premium, cada una con su texto, y ningún precio` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP23 | `PremiumPage.test.jsx` | `HU45-CP23: la jerarquía de encabezados empieza por un único h1` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP24 | `PremiumPage.test.jsx` | `HU45-CP24: sin sesión, la vista Premium lleva al login` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP24 | `PremiumPage.test.jsx` | `HU45-CP24: el vendedor y el administrador no entran en la vista Premium: vuelven a su inicio` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP24 | `PremiumPaymentPage.test.jsx` | `HU45-CP24: sin sesión, la pasarela de Premium lleva al login; el vendedor vuelve a su inicio` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP25 | `PremiumPage.test.jsx` | `HU45-CP25: el cliente Premium ve que ya es ESIBuy Premium y no se le ofrece la pasarela` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP25 | `PremiumPaymentPage.test.jsx` | `HU45-CP25: siendo Premium, entrar directo en la pasarela lleva a la vista Premium` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP26 | `PremiumPage.test.jsx` | `HU45-CP26: el cliente Estándar ve Hazte Premium, que lleva a la pasarela de pago` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP26 | `PremiumPaymentPage.test.jsx` | `HU45-CP26: Simular pago hace al cliente Premium, lo confirma y vuelve a la vista en estado Premium` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP26 | `PremiumPaymentPage.test.jsx` | `HU45-CP26: tras hacerse Premium, su perfil lo muestra sin recargar` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP26 | `PremiumPaymentPage.test.jsx` | `HU45-CP26: Volver deja al cliente en la vista Premium sin hacerle Premium` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP27 | `PremiumPaymentPage.test.jsx` | `HU45-CP27: si el servidor responde ALREADY_PREMIUM, se avisa con un mensaje propio y queda en estado Premium` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP28 | `PremiumPaymentPage.test.jsx` | `HU45-CP28: un error del servidor muestra un mensaje genérico, sin el texto del backend, y se puede reintentar` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP28 | `PremiumPaymentPage.test.jsx` | `HU45-CP28: un fallo de red muestra el mismo mensaje genérico` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP28 | `PremiumPaymentPage.test.jsx` | `HU45-CP28: un 403 ACCESS_DENIED avisa de que no tiene permiso, sin el texto del backend` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP28 | `PremiumPaymentPage.test.jsx` | `HU45-CP28: un 401 (sesión caducada) lleva al login con su aviso` | Frontend · página | AB#421 | este PR | 🔍 |
-| HU45-CP29 | `profile.test.js` | `HU45-CP29: pide POST /api/perfil/premium sin cuerpo y devuelve el perfil ya Premium` | Frontend · API | AB#421 | este PR | 🔍 |
-| HU45-CP29 | `profile.test.js` | `HU45-CP29: si el cliente ya era Premium, el mock responde 400 ALREADY_PREMIUM` | Frontend · API | AB#421 | este PR | 🔍 |
-| HU45-CP29 | `profile.test.js` | `HU45-CP29: un vendedor recibe 403 ACCESS_DENIED y sin sesión se responde 401` | Frontend · API | AB#421 | este PR | 🔍 |
-| HU45-CP29 | `profile.test.js` | `HU45-CP29: el cambio a Premium del mock no pasa de un test a otro` | Frontend · API | AB#421 | este PR | 🔍 |
-| HU45-CP29 | `profile.test.js` | `HU45-CP29: un error del servidor llega con su estado y sin el texto del backend` | Frontend · API | AB#421 | este PR | 🔍 |
+| HU45-CP06 | `PerfilControllerTest` | `unClienteEditaSuPerfil` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP06 | `PerfilControllerTest` | `unVendedorEditaSuPerfil` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP07 | `PerfilControllerTest` | `elCuerpoNoCambiaElCorreoNiElDni` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP08 | `PerfilControllerTest` | `sinNombreSeResponde400SinLlamarAlCasoDeUso` (vacío y de más de 30 caracteres) | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP08 | `PerfilControllerTest` | `unDatoQueRechazaElDominioDa400ConSuCode` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP08 | `PerfilControllerTest` | `unDatoNoValidoSinMotivoDa400Generico` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP09 | `PerfilControllerTest` | `unNombreComercialOcupadoDa409` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP10 | `PerfilControllerTest` | `unAdministradorNoEditaSuPerfilPorAqui` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP10 | `PerfilControllerTest` | `sinSesionNoSeEditaElPerfil` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP10 | `PerfilControllerTest` | `sinTokenCsrfNoSeEditaElPerfil` | Infraestructura | AB#101 | PR #239 | ✅ |
+| HU45-CP11 | `profileFields.test.js` | `HU45-CP11: el cliente edita sus datos personales y ve en solo lectura el email, el DNI, el tipo y el rol` | Frontend · unitario | AB#103 | PR #241 | ✅ |
+| HU45-CP11 | `profileFields.test.js` | `HU45-CP11: el vendedor edita sus datos y su negocio y ve en solo lectura el email, el DNI y el rol` | Frontend · unitario | AB#103 | PR #241 | ✅ |
+| HU45-CP11 | `profileFields.test.js` | `HU45-CP11: el perfil propio no muestra el estado de la cuenta` | Frontend · unitario | AB#103 | PR #241 | ✅ |
+| HU45-CP11 | `profileFields.test.js` | `HU45-CP11: los valores iniciales son los datos actuales del usuario, sin el DNI ni el tipo de cliente` | Frontend · unitario | AB#103 | PR #241 | ✅ |
+| HU45-CP11 | `ProfileEditor.test.jsx` | `HU45-CP11: el cliente modifica sus datos personales y ve en solo lectura el email, el DNI, el tipo y el rol` | Frontend · componente | AB#103 | PR #241 | ✅ |
+| HU45-CP11 | `ProfileEditor.test.jsx` | `HU45-CP11: el vendedor modifica sus datos y su negocio y ve en solo lectura el email, el DNI y el rol` | Frontend · componente | AB#103 | PR #241 | ✅ |
+| HU45-CP11 | `ProfilePage.test.jsx` | `HU45-CP11: el perfil tiene un botón para editarlo y, en lectura, no tiene el de guardar` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP11 | `ProfilePage.test.jsx` | `HU45-CP11: el cliente edita en el propio panel sus datos y ve en solo lectura el email, el DNI, el tipo y el rol` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP11 | `ProfilePage.test.jsx` | `HU45-CP11: el vendedor edita sus datos y su negocio y ve en solo lectura el email y el DNI` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP12 | `profileFields.test.js` | `HU45-CP12: el cuerpo de la petición lleva todos los datos modificables del cliente y nada más` | Frontend · unitario | AB#103 | PR #241 | ✅ |
+| HU45-CP12 | `profileFields.test.js` | `HU45-CP12: el cuerpo de la petición lleva todos los datos modificables del vendedor y nada más` | Frontend · unitario | AB#103 | PR #241 | ✅ |
+| HU45-CP12 | `ProfileEditor.test.jsx` | `HU45-CP12: al guardar envía todos los datos modificables del cliente y avisa con la respuesta del servidor` | Frontend · componente | AB#103 | PR #241 | ✅ |
+| HU45-CP12 | `ProfileEditor.test.jsx` | `HU45-CP12: mientras se guarda, el botón queda deshabilitado y no se envía dos veces` | Frontend · componente | AB#103 | PR #241 | ✅ |
+| HU45-CP12 | `ProfileEditor.test.jsx` | `HU45-CP12: sin pulsar guardar no se envía nada aunque se modifiquen los datos` | Frontend · componente | AB#103 | PR #241 | ✅ |
+| HU45-CP12 | `ProfilePage.test.jsx` | `HU45-CP12: al guardar envía todos los datos del cliente, vuelve a la lectura y avisa de que se ha guardado` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP12 | `ProfilePage.test.jsx` | `HU45-CP12: lo guardado es lo que muestra el perfil al volver a cargarlo` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP12 | `ProfilePage.test.jsx` | `HU45-CP12: sin pulsar guardar no se envía nada, aunque se escriba en los campos` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP13 | `profileFields.test.js` | `HU45-CP13: con los datos actuales no hay errores, aunque el DNI del usuario no se valide` | Frontend · unitario | AB#103 | PR #241 | ✅ |
+| HU45-CP13 | `profileFields.test.js` | `HU45-CP13: nombre y apellidos vacíos o con solo espacios dan error en cada campo` | Frontend · unitario | AB#103 | PR #241 | ✅ |
+| HU45-CP13 | `profileFields.test.js` | `HU45-CP13: un teléfono que no tiene 9 números da error, y vacío es válido` | Frontend · unitario | AB#103 | PR #241 | ✅ |
+| HU45-CP13 | `profileFields.test.js` | `HU45-CP13: el cliente menor de edad o sin fecha de nacimiento da error` | Frontend · unitario | AB#103 | PR #241 | ✅ |
+| HU45-CP13 | `profileFields.test.js` | `HU45-CP13: el vendedor sin nombre comercial o sin categoría da error` | Frontend · unitario | AB#103 | PR #241 | ✅ |
+| HU45-CP13 | `ProfileEditor.test.jsx` | `HU45-CP13: con datos incorrectos no se envía, cada error sale en su campo y el foco va al primero` | Frontend · componente | AB#103 | PR #241 | ✅ |
+| HU45-CP13 | `ProfilePage.test.jsx` | `HU45-CP13: con un dato obligatorio vacío no se envía y el error sale en su campo` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP14 | `ProfileEditor.test.jsx` | `HU45-CP14: el code %s del backend sale en su campo con su propio mensaje` (3 variantes: INVALID_PHONE, UNDERAGE y COMMERCIAL_NAME_ALREADY_REGISTERED) | Frontend · componente | AB#103 | PR #241 | ✅ |
+| HU45-CP14 | `ProfileEditor.test.jsx` | `HU45-CP14: un VALIDATION_ERROR o un fallo del servidor dan un aviso general y conservan lo escrito` | Frontend · componente | AB#103 | PR #241 | ✅ |
+| HU45-CP14 | `registroErrors.test.js` | `HU45-CP14: un formulario puede cambiar el mensaje de un code sin tocar los demás` | Frontend · unitario | AB#103 | PR #241 | ✅ |
+| HU45-CP14 | `ProfilePage.test.jsx` | `HU45-CP14: un nombre comercial repetido se avisa en su campo y se sigue editando` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP14 | `ProfilePage.test.jsx` | `HU45-CP14: si el servidor falla, avisa sin detalles internos y conserva lo escrito` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP15 | `ProfileEditor.test.jsx` | `HU45-CP15: avisa de si hay cambios sin guardar cada vez que cambia` | Frontend · componente | AB#103 | PR #241 | ✅ |
+| HU45-CP15 | `ProfileEditor.test.jsx` | `HU45-CP15: el botón Cancelar avisa al pulsarlo` | Frontend · componente | AB#103 | PR #241 | ✅ |
+| HU45-CP15 | `ProfilePage.test.jsx` | `HU45-CP15: cancelar sin haber cambiado nada vuelve a la lectura sin preguntar` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP15 | `ProfilePage.test.jsx` | `HU45-CP15: cancelar con cambios pregunta antes, y seguir editando los conserva` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP15 | `ProfilePage.test.jsx` | `HU45-CP15: cancelar y salir sin guardar descarta los cambios y no envía nada` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `UnsavedChangesDialog.test.jsx` | `HU45-CP16: avisa de que hay cambios sin guardar y de que se perderán si se sale` | Frontend · componente | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `UnsavedChangesDialog.test.jsx` | `HU45-CP16: el foco empieza en la opción segura, seguir editando` | Frontend · componente | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `UnsavedChangesDialog.test.jsx` | `HU45-CP16: seguir editando avisa de que se quiere seguir en la pantalla` | Frontend · componente | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `UnsavedChangesDialog.test.jsx` | `HU45-CP16: salir sin guardar avisa de que se descartan los cambios` | Frontend · componente | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `UnsavedChangesDialog.test.jsx` | `HU45-CP16: con la tecla Escape se sigue editando, no se descarta nada` | Frontend · componente | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: con cambios sin guardar, navegar a otra pantalla se bloquea y se avisa` | Frontend · hook | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: sin cambios se navega a otra pantalla sin avisar` | Frontend · hook | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: al decidir salir se completa la navegación que estaba bloqueada` | Frontend · hook | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: al decidir quedarse se cancela la navegación y se sigue en la pantalla` | Frontend · hook | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: cuando deja de haber cambios ya no se bloquea la navegación` | Frontend · hook | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: con cambios sin guardar, cerrar o recargar la pestaña pide confirmación al navegador` | Frontend · hook | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: sin cambios, cerrar o recargar la pestaña no pregunta nada` | Frontend · hook | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: cuando deja de haber cambios ya no se pide confirmación al cerrar` | Frontend · hook | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `useUnsavedChangesGuard.test.jsx` | `HU45-CP16: al desmontar la pantalla se deja de escuchar el cierre de la pestaña` | Frontend · hook | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `ProfilePage.test.jsx` | `HU45-CP16: con cambios, ir a otra pantalla pide confirmación y seguir editando se queda en el perfil` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `ProfilePage.test.jsx` | `HU45-CP16: con cambios, salir sin guardar lleva a la otra pantalla` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `ProfilePage.test.jsx` | `HU45-CP16: sin cambios, ir a otra pantalla no pregunta nada` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `ProfilePage.test.jsx` | `HU45-CP16: si se vuelve a escribir lo mismo que había, ya no hay cambios que avisar` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `ProfilePage.test.jsx` | `HU45-CP16: tras guardar ya no hay cambios sin guardar, ni al navegar ni al cerrar la pestaña` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `ProfilePage.test.jsx` | `HU45-CP16: con cambios sin guardar, cerrar o recargar la pestaña pide confirmación al navegador` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP16 | `ProfilePage.test.jsx` | `HU45-CP16: en lectura, sin editar, no se avisa al cerrar la pestaña` | Frontend · página | AB#103 | PR #241 | ✅ |
+| HU45-CP17 | `UsuarioTest` | `pasarAPremiumCambiaElTipoYConservaLoDemas` | Dominio | AB#422 | PR #243 | 🔍 |
+| HU45-CP17 | `UsuarioTest` | `pasarAPremiumRechazaAUnClienteQueYaLoEs` | Dominio | AB#422 | PR #243 | 🔍 |
+| HU45-CP17 | `UsuarioTest` | `pasarAPremiumRechazaAQuienNoEsCliente` | Dominio | AB#422 | PR #243 | 🔍 |
+| HU45-CP18 | `GestionPerfilServiceTest` | `pasarAPremiumGuardaAlClienteComoPremium` | Aplicación | AB#422 | PR #243 | 🔍 |
+| HU45-CP18 | `GestionPerfilServiceTest` | `pasarAPremiumDeUnPremiumNoGuarda` | Aplicación | AB#422 | PR #243 | 🔍 |
+| HU45-CP18 | `GestionPerfilServiceTest` | `pasarAPremiumDeUnCorreoQueNoExisteLanzaExcepcion` | Aplicación | AB#422 | PR #243 | 🔍 |
+| HU45-CP19 | `SeguridadSesionUsuarioServiceTest` | `unClientePasaAPremium` | Aplicación | AB#422 | PR #243 | 🔍 |
+| HU45-CP19 | `SeguridadSesionUsuarioServiceTest` | `unClienteNoPasaAPremiumAOtro` | Aplicación | AB#422 | PR #243 | 🔍 |
+| HU45-CP19 | `SeguridadSesionUsuarioServiceTest` | `unVendedorNoPasaAPremium` | Aplicación | AB#422 | PR #243 | 🔍 |
+| HU45-CP19 | `SeguridadSesionUsuarioServiceTest` | `unAdministradorNoPasaAPremium` | Aplicación | AB#422 | PR #243 | 🔍 |
+| HU45-CP19 | `SeguridadSesionUsuarioServiceTest` | `sinSesionNadiePasaAPremium` | Aplicación | AB#422 | PR #243 | 🔍 |
+| HU45-CP20 | `PerfilControllerTest` | `unClientePasaAPremium` | Infraestructura | AB#423 | PR #243 | 🔍 |
+| HU45-CP20 | `PerfilControllerTest` | `unClienteQueYaEsPremiumRecibe400` | Infraestructura | AB#423 | PR #243 | 🔍 |
+| HU45-CP20 | `PerfilControllerTest` | `unAdministradorNoPasaAPremium` | Infraestructura | AB#423 | PR #243 | 🔍 |
+| HU45-CP20 | `PerfilControllerTest` | `sinSesionNoSePasaAPremium` | Infraestructura | AB#423 | PR #243 | 🔍 |
+| HU45-CP21 | `Register.test.jsx` | `HU45-CP21: al elegir Premium, Registrarse no envía el registro y lleva a la pasarela de pago` | Frontend · página | AB#420 | PR #244 | 🔍 |
+| HU45-CP21 | `Register.test.jsx` | `HU45-CP21: con datos no válidos, elegir Premium marca los errores y no lleva a la pasarela` | Frontend · página | AB#420 | PR #244 | 🔍 |
+| HU45-CP22 | `RegisterPaymentPage.test.jsx` | `HU45-CP22: navegar directo a la pasarela sin datos lleva al registro, sin pasarela` | Frontend · página | AB#420 | PR #244 | 🔍 |
+| HU45-CP22 | `RegisterPaymentPage.test.jsx` | `HU45-CP22: al recargar la pasarela se pierden los datos y vuelve al registro con el formulario vacío` | Frontend · página | AB#420 | PR #244 | 🔍 |
+| HU45-CP23 | `RegisterPaymentPage.test.jsx` | `HU45-CP23: la pasarela no registra nada hasta pulsar Simular pago; entonces se registra como PREMIUM` | Frontend · página | AB#420 | PR #244 | 🔍 |
+| HU45-CP23 | `RegisterPaymentPage.test.jsx` | `HU45-CP23: si el servidor rechaza el registro tras el pago, vuelve al formulario con sus datos y el motivo` | Frontend · página | AB#420 | PR #244 | 🔍 |
+| HU45-CP24 | `RegisterPaymentPage.test.jsx` | `HU45-CP24: cancelar vuelve al formulario con sus datos; con Estándar se registra sin pasar por la pasarela` | Frontend · página | AB#420 | PR #244 | 🔍 |
+| HU45-CP24 | `RegisterPaymentPage.test.jsx` | `HU45-CP24: tras cancelar, volver a elegir Premium vuelve a exigir la pasarela` | Frontend · página | AB#420 | PR #244 | 🔍 |
+| HU45-CP25 | `RegisterPaymentPage.test.jsx` | `HU45-CP25: la contraseña no sale en la URL ni se guarda en localStorage ni en sessionStorage` | Frontend · página | AB#420 | PR #244 | 🔍 |
+| HU45-CP26 | `PremiumCheckout.test.jsx` | `HU45-CP26: muestra el resumen de ESIBuy Premium sin ningún precio y avisa de que es una simulación` | Frontend · componente | AB#420 | PR #244 | 🔍 |
+| HU45-CP26 | `PremiumCheckout.test.jsx` | `HU45-CP26: no pide datos de tarjeta: solo tiene los botones de simular el pago y de volver` | Frontend · componente | AB#420 | PR #244 | 🔍 |
+| HU45-CP26 | `PremiumCheckout.test.jsx` | `HU45-CP26: Simular pago llama a onPay y, mientras tanto, muestra Procesando pago… deshabilitado` | Frontend · componente | AB#420 | PR #244 | 🔍 |
+| HU45-CP26 | `PremiumCheckout.test.jsx` | `HU45-CP26: el botón de volver llama a onCancel sin simular el pago` | Frontend · componente | AB#420 | PR #244 | 🔍 |
+| HU45-CP26 | `PremiumCheckout.test.jsx` | `HU45-CP26: el error que se le indica se muestra en un aviso` | Frontend · componente | AB#420 | PR #244 | 🔍 |
+| HU45-CP27 | `AppHeader.test.jsx` | `HU45-CP27: el cliente ve el botón Premium en la cabecera y lleva a la vista de ventajas Premium` | Frontend · componente | AB#421 | PR #244 | 🔍 |
+| HU45-CP27 | `AppHeader.test.jsx` | `HU45-CP27: el vendedor, el administrador y quien no tiene sesión no ven el botón Premium` | Frontend · componente | AB#421 | PR #244 | 🔍 |
+| HU45-CP28 | `ProfilePage.test.jsx` | `HU45-CP28: el cliente Estándar tiene en su perfil el botón Hazte Premium, que lleva a la vista Premium` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP28 | `ProfilePage.test.jsx` | `HU45-CP28: el cliente Premium ve el distintivo Premium en vez del botón` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP28 | `ProfilePage.test.jsx` | `HU45-CP28: el vendedor no tiene ni el botón ni el distintivo` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP29 | `PremiumPage.test.jsx` | `HU45-CP29: muestra las tres ventajas de ESIBuy Premium, cada una con su texto, y ningún precio` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP29 | `PremiumPage.test.jsx` | `HU45-CP29: la jerarquía de encabezados empieza por un único h1` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP30 | `PremiumPage.test.jsx` | `HU45-CP30: sin sesión, la vista Premium lleva al login` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP30 | `PremiumPage.test.jsx` | `HU45-CP30: el vendedor y el administrador no entran en la vista Premium: vuelven a su inicio` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP30 | `PremiumPaymentPage.test.jsx` | `HU45-CP30: sin sesión, la pasarela de Premium lleva al login; el vendedor vuelve a su inicio` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP31 | `PremiumPage.test.jsx` | `HU45-CP31: el cliente Premium ve que ya es ESIBuy Premium y no se le ofrece la pasarela` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP31 | `PremiumPaymentPage.test.jsx` | `HU45-CP31: siendo Premium, entrar directo en la pasarela lleva a la vista Premium` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP32 | `PremiumPage.test.jsx` | `HU45-CP32: el cliente Estándar ve Hazte Premium, que lleva a la pasarela de pago` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP32 | `PremiumPaymentPage.test.jsx` | `HU45-CP32: Simular pago hace al cliente Premium, lo confirma y vuelve a la vista en estado Premium` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP32 | `PremiumPaymentPage.test.jsx` | `HU45-CP32: tras hacerse Premium, su perfil lo muestra sin recargar` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP32 | `PremiumPaymentPage.test.jsx` | `HU45-CP32: Volver deja al cliente en la vista Premium sin hacerle Premium` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP33 | `PremiumPaymentPage.test.jsx` | `HU45-CP33: si el servidor responde ALREADY_PREMIUM, se avisa con un mensaje propio y queda en estado Premium` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP34 | `PremiumPaymentPage.test.jsx` | `HU45-CP34: un error del servidor muestra un mensaje genérico, sin el texto del backend, y se puede reintentar` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP34 | `PremiumPaymentPage.test.jsx` | `HU45-CP34: un fallo de red muestra el mismo mensaje genérico` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP34 | `PremiumPaymentPage.test.jsx` | `HU45-CP34: un 403 ACCESS_DENIED avisa de que no tiene permiso, sin el texto del backend` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP34 | `PremiumPaymentPage.test.jsx` | `HU45-CP34: un 401 (sesión caducada) lleva al login con su aviso` | Frontend · página | AB#421 | PR #244 | 🔍 |
+| HU45-CP35 | `profile.test.js` | `HU45-CP35: pide POST /api/perfil/premium sin cuerpo y devuelve el perfil ya Premium` | Frontend · API | AB#421 | PR #244 | 🔍 |
+| HU45-CP35 | `profile.test.js` | `HU45-CP35: si el cliente ya era Premium, el mock responde 400 ALREADY_PREMIUM` | Frontend · API | AB#421 | PR #244 | 🔍 |
+| HU45-CP35 | `profile.test.js` | `HU45-CP35: un vendedor recibe 403 ACCESS_DENIED y sin sesión se responde 401` | Frontend · API | AB#421 | PR #244 | 🔍 |
+| HU45-CP35 | `profile.test.js` | `HU45-CP35: el cambio a Premium del mock no pasa de un test a otro` | Frontend · API | AB#421 | PR #244 | 🔍 |
+| HU45-CP35 | `profile.test.js` | `HU45-CP35: un error del servidor llega con su estado y sin el texto del backend` | Frontend · API | AB#421 | PR #244 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
+- `UsuarioTest`: `usuarios/domain/model/` (JUnit sin Spring)
 - `GestionPerfilServiceTest` y `SeguridadSesionUsuarioServiceTest`: `usuarios/application/service/` (Mockito sin Spring, y contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
 - `PerfilControllerTest`: `usuarios/infrastructure/adapter/in/web/` (`@WebMvcTest` con la `SecurityConfig` real)
-- Tests del frontend (bajo `frontend/src/`): `api/profile.test.js`, `components/AppHeader.test.jsx`, `features/premium/PremiumCheckout.test.jsx`, `pages/PremiumPage.test.jsx`, `pages/PremiumPaymentPage.test.jsx`, `pages/ProfilePage.test.jsx`, `pages/Register.test.jsx` y `pages/RegisterPaymentPage.test.jsx` (Vitest, React Testing Library y MSW)
+
+Rutas de las clases de test del frontend (bajo `frontend/src/`):
+- `profileFields.test.js`, `ProfileEditor.test.jsx`: `features/admin/` (Vitest y RTL)
+- `registroErrors.test.js`, `UnsavedChangesDialog.test.jsx`: `features/account/` (Vitest y RTL)
+- `useUnsavedChangesGuard.test.jsx`: `hooks/` (Vitest y RTL, con un router de datos en memoria)
+- `PremiumCheckout.test.jsx`: `features/premium/` (Vitest y RTL)
+- `profile.test.js`: `api/` (Vitest y MSW)
+- `AppHeader.test.jsx`: `components/` (Vitest, RTL y MSW)
+- `PremiumPage.test.jsx`, `PremiumPaymentPage.test.jsx`, `ProfilePage.test.jsx`, `Register.test.jsx` y `RegisterPaymentPage.test.jsx`: `pages/` (Vitest, RTL y MSW)
 
 ---
 

@@ -1,5 +1,8 @@
 import { http, HttpResponse } from 'msw'
-import { cerrarSesionMock, eliminarCuentaMock, esClaveValida, getUsuarioEnSesion } from './authHandlers'
+import { USUARIOS, cerrarSesionMock, eliminarCuentaMock, esClaveValida, getUsuarioEnSesion } from './authHandlers'
+
+const TEXTO_MAXIMO = 30
+const EDAD_MINIMA = 18
 
 // Datos del perfil de los usuarios de ejemplo (HU4), además de los de la sesión (nombre, apellidos, email y rol).
 // Vicente (vendedor-vacio@esibuy.test) y Nora (nuevo@esibuy.test) no tienen teléfono ni imagen de perfil.
@@ -34,16 +37,50 @@ const DATOS_DE_PERFIL = {
   },
 }
 
-// Clientes que se han hecho Premium (HU45) desde que se reiniciaron los mocks
+// Lo que cada usuario ha editado de su perfil (HU45), encima de los datos de ejemplo, y los clientes que se han hecho
+// Premium (HU45); los dos se vacían al reiniciar los mocks.
+let ediciones = new Map()
 let pasadosAPremium = new Set()
 
 export function resetProfileMock() {
+  ediciones = new Map()
   pasadosAPremium = new Set()
 }
 
 function perfilDe({ id, nombre, apellidos, email, rol }) {
-  const perfil = { id, nombre, apellidos, email, rol, ...DATOS_DE_PERFIL[id] }
+  const perfil = { id, nombre, apellidos, email, rol, ...DATOS_DE_PERFIL[id], ...ediciones.get(id) }
   return pasadosAPremium.has(id) ? { ...perfil, tipoCliente: 'PREMIUM' } : perfil
+}
+
+const respuestaDeError = (status, code) => HttpResponse.json({ mensaje: 'Datos inválidos', code }, { status })
+
+const textoValido = (valor) => typeof valor === 'string' && valor.trim().length > 0 && valor.trim().length <= TEXTO_MAXIMO
+
+const esMayorDeEdad = (fecha) => {
+  const limite = new Date()
+  limite.setFullYear(limite.getFullYear() - EDAD_MINIMA)
+  return new Date(fecha) <= limite
+}
+
+// Valida el cuerpo del PUT como el backend: primero la forma (nombre, apellidos y, en el vendedor, nombre comercial y
+// categoría), después el teléfono, la mayoría de edad del cliente y, por último, que el nombre comercial sea único.
+// Devuelve la respuesta de error o null si todo es correcto.
+function rechazarSiEsInvalido(usuario, cuerpo) {
+  if (!textoValido(cuerpo?.nombre) || !textoValido(cuerpo?.apellidos)) return respuestaDeError(400, 'VALIDATION_ERROR')
+  if (usuario.rol === 'VENDEDOR' && (!textoValido(cuerpo.nombreComercial) || !cuerpo.categoriaPrincipalId)) {
+    return respuestaDeError(400, 'VALIDATION_ERROR')
+  }
+  if (cuerpo.telefono && !/^[0-9]{9}$/.test(cuerpo.telefono)) return respuestaDeError(400, 'INVALID_PHONE')
+  if (usuario.rol === 'CLIENTE' && !(cuerpo.fechaNacimiento && esMayorDeEdad(cuerpo.fechaNacimiento))) {
+    return respuestaDeError(400, cuerpo.fechaNacimiento ? 'UNDERAGE' : 'VALIDATION_ERROR')
+  }
+  if (usuario.rol === 'VENDEDOR') {
+    const repetido = USUARIOS.some(
+      (otro) => otro.id !== usuario.id && perfilDe(otro).nombreComercial === cuerpo.nombreComercial.trim(),
+    )
+    if (repetido) return respuestaDeError(409, 'COMMERCIAL_NAME_ALREADY_REGISTERED')
+  }
+  return null
 }
 
 // Como el backend (PR #140): solo el cliente y el vendedor tienen perfil; el usuario sale de la sesión.
@@ -53,6 +90,32 @@ export const profileHandlers = [
     if (!usuario) return new HttpResponse(null, { status: 401 })
     if (usuario.rol !== 'CLIENTE' && usuario.rol !== 'VENDEDOR') return new HttpResponse(null, { status: 403 })
 
+    return HttpResponse.json(perfilDe(usuario))
+  }),
+
+  // Editar el perfil propio (HU45, PR #239): el PUT sustituye todos los datos modificables del rol. Sin sesión 401 y
+  // el administrador 403. El email, el DNI, el tipo de cliente y el rol no se editan y se ignoran. Responde 200 con el
+  // perfil actualizado, con la misma forma que el GET.
+  http.put('/api/perfil', async ({ request }) => {
+    const usuario = getUsuarioEnSesion()
+    if (!usuario) return new HttpResponse(null, { status: 401 })
+    if (usuario.rol === 'ADMINISTRADOR') return HttpResponse.json({ code: 'ACCESS_DENIED' }, { status: 403 })
+
+    const cuerpo = await request.json()
+    const rechazo = rechazarSiEsInvalido(usuario, cuerpo)
+    if (rechazo) return rechazo
+
+    const comunes = {
+      nombre: cuerpo.nombre.trim(),
+      apellidos: cuerpo.apellidos.trim(),
+      avatar: cuerpo.avatar || undefined,
+      telefono: cuerpo.telefono || undefined,
+    }
+    const propios =
+      usuario.rol === 'CLIENTE'
+        ? { fechaNacimiento: cuerpo.fechaNacimiento }
+        : { nombreComercial: cuerpo.nombreComercial.trim(), categoriaPrincipalId: cuerpo.categoriaPrincipalId }
+    ediciones.set(usuario.id, { ...comunes, ...propios })
     return HttpResponse.json(perfilDe(usuario))
   }),
 

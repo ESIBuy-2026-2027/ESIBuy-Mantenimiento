@@ -37,7 +37,7 @@ describe('ProfilePage (HU4): datos del perfil', () => {
     await abrirPerfil('cliente@esibuy.test')
 
     screen.getAllByRole('textbox').forEach((campo) => expect(campo).toHaveAttribute('readonly'))
-    expect(screen.queryByRole('button', { name: /guardar|editar/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /guardar/i })).not.toBeInTheDocument()
   })
 
   it('HU4-CP06: el vendedor ve sus datos y los de vendedor, con el nombre de su categoría', async () => {
@@ -404,5 +404,320 @@ describe('ProfilePage (HU25): confirmar la eliminación de la cuenta del cliente
     await abrirPerfil('nuevo@esibuy.test')
 
     expect(screen.getByRole('region', { name: /^eliminar mi cuenta$/i })).toBeInTheDocument()
+  })
+})
+
+// Edición del perfil propio (HU45, T103): en el propio panel del perfil, sin cambiar de página. Del mock: el PUT
+// responde con las mismas reglas y códigos que el backend (PR #239) y guarda lo editado hasta que se reinician los mocks.
+describe('ProfilePage (HU45): editar el perfil', () => {
+  const editarPerfil = (user) => user.click(screen.getByRole('button', { name: /^editar perfil$/i }))
+  const guardarCambios = (user) => user.click(screen.getByRole('button', { name: /^guardar cambios$/i }))
+  const campoNombre = () => screen.getByLabelText(/^nombre(?! comercial)/i)
+  const esDeSoloLectura = (etiqueta) => screen.getByLabelText(etiqueta).hasAttribute('readonly')
+
+  async function abrirEdicion(email, user) {
+    await abrirPerfil(email)
+    await editarPerfil(user)
+    await screen.findByRole('button', { name: /^guardar cambios$/i })
+  }
+
+  const escribir = async (user, campo, texto) => {
+    await user.clear(campo)
+    if (texto) await user.type(campo, texto)
+  }
+
+  // Guarda en `peticiones` el cuerpo de cada PUT que llega al backend
+  const espiarPut = () => {
+    const peticiones = []
+    server.use(
+      http.put('/api/perfil', async ({ request }) => {
+        const cuerpo = await request.clone().json()
+        peticiones.push(cuerpo)
+        return HttpResponse.json({
+          id: 'u-3',
+          nombre: cuerpo.nombre,
+          apellidos: cuerpo.apellidos,
+          email: 'cliente@esibuy.test',
+          rol: 'CLIENTE',
+          dni: '87654321X',
+          tipoCliente: 'PREMIUM',
+          fechaAlta: '2026-04-10T17:40:00Z',
+          ...cuerpo,
+        })
+      }),
+    )
+    return peticiones
+  }
+
+  it('HU45-CP11: el perfil tiene un botón para editarlo y, en lectura, no tiene el de guardar', async () => {
+    await abrirPerfil('cliente@esibuy.test')
+
+    expect(screen.getByRole('button', { name: /^editar perfil$/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /guardar cambios/i })).not.toBeInTheDocument()
+  })
+
+  it('HU45-CP11: el cliente edita en el propio panel sus datos y ve en solo lectura el email, el DNI, el tipo y el rol', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion('cliente@esibuy.test', user)
+
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/profile')
+    expect(screen.getByRole('heading', { level: 1, name: /mi perfil/i })).toBeInTheDocument()
+    expect(campoNombre()).toHaveValue('Carlos')
+    expect(campoNombre()).not.toHaveAttribute('readonly')
+    expect(screen.getByLabelText(/^teléfono/i)).toHaveValue('611222333')
+    for (const etiqueta of ['Email', 'Rol', 'DNI', 'Tipo de cliente']) {
+      expect(esDeSoloLectura(etiqueta)).toBe(true)
+    }
+    expect(screen.getByRole('button', { name: /^cancelar$/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^editar perfil$/i })).not.toBeInTheDocument()
+  })
+
+  it('HU45-CP11: el vendedor edita sus datos y su negocio y ve en solo lectura el email y el DNI', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion('vendedor@esibuy.test', user)
+
+    expect(screen.getByLabelText(/^nombre comercial/i)).toHaveValue('Tienda de Vera')
+    expect(await screen.findByRole('combobox', { name: /^categoría principal/i })).toHaveValue('Tecnología')
+    expect(esDeSoloLectura('Correo electrónico')).toBe(true)
+    expect(esDeSoloLectura('DNI')).toBe(true)
+  })
+
+  it('HU45-CP12: al guardar envía todos los datos del cliente, vuelve a la lectura y avisa de que se ha guardado', async () => {
+    const user = userEvent.setup()
+    const peticiones = espiarPut()
+    await abrirEdicion('cliente@esibuy.test', user)
+
+    await escribir(user, campoNombre(), 'Carla')
+    await guardarCambios(user)
+
+    expect(await screen.findByText('Tus cambios se han guardado.')).toBeInTheDocument()
+    expect(peticiones).toEqual([
+      {
+        nombre: 'Carla',
+        apellidos: 'Cliente',
+        telefono: '611222333',
+        fechaNacimiento: '1998-05-14',
+        avatar: 'avatar1',
+      },
+    ])
+    expect(screen.getByText('Tus cambios se han guardado.').closest('[role="status"]')).not.toBeNull()
+    expect(screen.getByRole('heading', { level: 2, name: 'Carla Cliente' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Nombre')).toHaveValue('Carla')
+    expect(screen.getByLabelText('Nombre')).toHaveAttribute('readonly')
+    expect(screen.queryByRole('button', { name: /guardar cambios/i })).not.toBeInTheDocument()
+  })
+
+  it('HU45-CP12: lo guardado es lo que muestra el perfil al volver a cargarlo', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion('vendedor@esibuy.test', user)
+
+    await escribir(user, screen.getByLabelText(/^nombre comercial/i), 'Tienda Nueva')
+    await guardarCambios(user)
+    await screen.findByText('Tus cambios se han guardado.')
+    cleanup()
+    await abrirPerfil('vendedor@esibuy.test')
+
+    expect(valorDe('Nombre comercial')).toHaveValue('Tienda Nueva')
+  })
+
+  it('HU45-CP12: sin pulsar guardar no se envía nada, aunque se escriba en los campos', async () => {
+    const user = userEvent.setup()
+    const peticiones = espiarPut()
+    await abrirEdicion('cliente@esibuy.test', user)
+
+    await escribir(user, campoNombre(), 'Carla')
+    await escribir(user, screen.getByLabelText(/^teléfono/i), '699888777')
+
+    expect(peticiones).toHaveLength(0)
+    expect(screen.queryByText('Tus cambios se han guardado.')).not.toBeInTheDocument()
+  })
+
+  it('HU45-CP13: con un dato obligatorio vacío no se envía y el error sale en su campo', async () => {
+    const user = userEvent.setup()
+    const peticiones = espiarPut()
+    await abrirEdicion('cliente@esibuy.test', user)
+
+    await escribir(user, campoNombre(), '')
+    await guardarCambios(user)
+
+    expect(await screen.findByText('Este campo es obligatorio')).toBeInTheDocument()
+    expect(peticiones).toHaveLength(0)
+    expect(campoNombre()).toHaveFocus()
+  })
+
+  it('HU45-CP14: un nombre comercial repetido se avisa en su campo y se sigue editando', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion('vendedor@esibuy.test', user)
+
+    await escribir(user, screen.getByLabelText(/^nombre comercial/i), 'Casa Vicente')
+    await guardarCambios(user)
+
+    expect(await screen.findByText('Este nombre comercial ya está registrado')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^guardar cambios$/i })).toBeEnabled()
+    expect(screen.queryByText('Tus cambios se han guardado.')).not.toBeInTheDocument()
+  })
+
+  it('HU45-CP14: si el servidor falla, avisa sin detalles internos y conserva lo escrito', async () => {
+    server.use(
+      http.put('/api/perfil', () => HttpResponse.json({ message: 'MongoTimeoutException' }, { status: 500 })),
+    )
+    const user = userEvent.setup()
+    await abrirEdicion('cliente@esibuy.test', user)
+
+    await escribir(user, campoNombre(), 'Carla')
+    await guardarCambios(user)
+
+    expect(await screen.findByText('No se han podido guardar los cambios. Inténtalo de nuevo.')).toBeInTheDocument()
+    expect(screen.queryByText(/mongotimeout/i)).not.toBeInTheDocument()
+    expect(campoNombre()).toHaveValue('Carla')
+  })
+})
+
+// Aviso de cambios sin guardar (HU45): al cancelar la edición, al ir a otra pantalla y al cerrar o recargar la pestaña.
+describe('ProfilePage (HU45): cambios sin guardar', () => {
+  const nombre = () => screen.getByLabelText(/^nombre(?! comercial)/i)
+  const aviso = () => screen.queryByRole('alertdialog', { name: '¿Salir sin guardar?' })
+
+  async function abrirEdicion(user) {
+    await abrirPerfil('cliente@esibuy.test')
+    await user.click(screen.getByRole('button', { name: /^editar perfil$/i }))
+    await screen.findByRole('button', { name: /^guardar cambios$/i })
+  }
+
+  const escribirNombre = async (user, texto) => {
+    await user.clear(nombre())
+    await user.type(nombre(), texto)
+  }
+
+  const irA = (user, enlace) => user.click(screen.getByRole('link', { name: enlace }))
+
+  // El evento que lanza el navegador al cerrar o recargar la pestaña; si se cancela, el navegador pregunta antes
+  const cerrarLaPestana = () => {
+    const evento = new Event('beforeunload', { cancelable: true })
+    window.dispatchEvent(evento)
+    return evento
+  }
+
+  it('HU45-CP15: cancelar sin haber cambiado nada vuelve a la lectura sin preguntar', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+
+    await user.click(screen.getByRole('button', { name: /^cancelar$/i }))
+
+    expect(aviso()).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^editar perfil$/i })).toBeInTheDocument()
+  })
+
+  it('HU45-CP15: cancelar con cambios pregunta antes, y seguir editando los conserva', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+    await escribirNombre(user, 'Carla')
+
+    await user.click(screen.getByRole('button', { name: /^cancelar$/i }))
+    expect(aviso()).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+
+    await waitFor(() => expect(aviso()).not.toBeInTheDocument())
+    expect(nombre()).toHaveValue('Carla')
+  })
+
+  it('HU45-CP15: cancelar y salir sin guardar descarta los cambios y no envía nada', async () => {
+    const peticiones = []
+    server.use(
+      http.put('/api/perfil', async ({ request }) => {
+        peticiones.push(await request.json())
+        return HttpResponse.json({})
+      }),
+    )
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+    await escribirNombre(user, 'Carla')
+
+    await user.click(screen.getByRole('button', { name: /^cancelar$/i }))
+    await user.click(screen.getByRole('button', { name: 'Salir sin guardar' }))
+
+    expect(await screen.findByRole('button', { name: /^editar perfil$/i })).toBeInTheDocument()
+    expect(valorDe('Nombre')).toHaveValue('Carlos')
+    expect(peticiones).toHaveLength(0)
+    await user.click(screen.getByRole('button', { name: /^editar perfil$/i }))
+    expect(nombre()).toHaveValue('Carlos')
+  })
+
+  it('HU45-CP16: con cambios, ir a otra pantalla pide confirmación y seguir editando se queda en el perfil', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+    await escribirNombre(user, 'Carla')
+
+    await irA(user, 'Mis pedidos')
+    expect(aviso()).toBeInTheDocument()
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/profile')
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+
+    await waitFor(() => expect(aviso()).not.toBeInTheDocument())
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/profile')
+    expect(nombre()).toHaveValue('Carla')
+  })
+
+  it('HU45-CP16: con cambios, salir sin guardar lleva a la otra pantalla', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+    await escribirNombre(user, 'Carla')
+
+    await irA(user, 'Mis pedidos')
+    await user.click(screen.getByRole('button', { name: 'Salir sin guardar' }))
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/orders'))
+  })
+
+  it('HU45-CP16: sin cambios, ir a otra pantalla no pregunta nada', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+
+    await irA(user, 'Mis pedidos')
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/orders'))
+    expect(aviso()).not.toBeInTheDocument()
+  })
+
+  it('HU45-CP16: si se vuelve a escribir lo mismo que había, ya no hay cambios que avisar', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+    await escribirNombre(user, 'Carla')
+    await escribirNombre(user, 'Carlos')
+
+    await irA(user, 'Mis pedidos')
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/orders'))
+    expect(aviso()).not.toBeInTheDocument()
+  })
+
+  it('HU45-CP16: tras guardar ya no hay cambios sin guardar, ni al navegar ni al cerrar la pestaña', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+    await escribirNombre(user, 'Carla')
+    await user.click(screen.getByRole('button', { name: /^guardar cambios$/i }))
+    await screen.findByText('Tus cambios se han guardado.')
+
+    expect(cerrarLaPestana().defaultPrevented).toBe(false)
+    await irA(user, 'Mis pedidos')
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/orders'))
+    expect(aviso()).not.toBeInTheDocument()
+  })
+
+  it('HU45-CP16: con cambios sin guardar, cerrar o recargar la pestaña pide confirmación al navegador', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+    expect(cerrarLaPestana().defaultPrevented).toBe(false)
+
+    await escribirNombre(user, 'Carla')
+
+    expect(cerrarLaPestana().defaultPrevented).toBe(true)
+  })
+
+  it('HU45-CP16: en lectura, sin editar, no se avisa al cerrar la pestaña', async () => {
+    await abrirPerfil('cliente@esibuy.test')
+
+    expect(cerrarLaPestana().defaultPrevented).toBe(false)
   })
 })
