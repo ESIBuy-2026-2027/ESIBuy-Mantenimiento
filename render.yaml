@@ -1,6 +1,7 @@
 # Despliegue continuo de ESIBuy en Render (Blueprint). Guía y pasos manuales: docs/despliegue/render.md.
-# Los dos servicios se despliegan desde main y solo cuando han pasado los checks del CI de GitHub (checksPass). Cada uno
-# se redespliega únicamente si cambian sus rutas (buildFilter); un cambio en este archivo los redespliega a los dos.
+# Los dos servicios se despliegan desde main, pero Render no lo hace por su cuenta (autoDeployTrigger: off): se lo pide
+# el stage Desplegar del pipeline de Sonar (azure-pipelines-sonar.yml) con el Deploy Hook de cada servicio, después de
+# que pasen los tests y el Quality Gate de SonarQube.
 services:
   # Backend Spring Boot en contenedor (backend/Dockerfile). Plan gratuito: se duerme tras 15 minutos sin tráfico.
   - type: web
@@ -14,10 +15,7 @@ services:
     dockerContext: ./backend
     # Liveness: responde si el proceso vive, sin consultar MongoDB (ver application.properties).
     healthCheckPath: /actuator/health/liveness
-    autoDeployTrigger: checksPass
-    buildFilter:
-      paths:
-        - backend/**
+    autoDeployTrigger: off
     envVars:
       # Secretos: Render pide su valor al crear el Blueprint y nunca se guardan en el repositorio.
       - key: MONGODB_URI
@@ -44,10 +42,7 @@ services:
     branch: main
     buildCommand: cd frontend && npm ci && npm run build
     staticPublishPath: ./frontend/dist
-    autoDeployTrigger: checksPass
-    buildFilter:
-      paths:
-        - frontend/**
+    autoDeployTrigger: off
     envVars:
       # La misma versión de Node que el CI. VITE_USE_MOCKS no se define: los mocks de MSW solo se activan en desarrollo.
       - key: NODE_VERSION
