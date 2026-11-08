@@ -481,7 +481,7 @@ Los tests de integración de MongoDB (`UsuarioMongoAdapterTest`, `UsuariosConfig
 | HU2-CP29 | El registro y los pasos del login se pueden usar sin sesión; consultar el usuario en sesión exige estar autenticado y que el correo sea el de la sesión; el id del usuario y el perfil son del cliente y del vendedor, y saber si es premium, solo del cliente; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 7 | ✅ Pasa (7, PR #168) |
 | HU2-CP30 | `PasswordField` con `bloquearCopia` no deja copiar ni cortar la contraseña (tampoco con el ojo activado) y sí pegar, soltar y escribir; sin ninguna propiedad se puede copiar | Frontend (componente) | 5 | ✅ Pasa (5, AB#242, PR #211) |
 | HU2-CP31 | En el login la contraseña no se puede copiar ni cortar, tampoco con el ojo activado, pero sí pegar, y el login sigue funcionando pegando o escribiendo a mano | Frontend (página) | 4 | ✅ Pasa (4, AB#242, PR #211) |
-| HU2-CP32 | Si una petición que cambia datos sale sin la cookie del token CSRF (primer login con el backend dormido), el cliente pide antes el token con un `GET` y lo envía en la cabecera; ese 401 no cierra la sesión y, con la cookie ya puesta, no se vuelve a pedir | Frontend (cliente de la API) | 3 | 🔍 En revisión (3, hotfix, PR pendiente) |
+| HU2-CP32 | Si una petición que cambia datos sale sin la cookie del token CSRF (primer login con el backend dormido), el cliente pide antes el token con un `GET` y lo envía en la cabecera; ese 401 no cierra la sesión y, con la cookie ya puesta, no se vuelve a pedir | Frontend (cliente de la API) | 3 | 🔍 En revisión (3, hotfix, PR #260) |
 
 Notas:
 - **HU2-CP25 y CP26 (fallos de la demo del Sprint 1):** el paso 1 busca el email normalizado (`Email`, T240) y responde «Credenciales inválidas» si está mal formado. El contador de intentos se reinicia al caducar el bloqueo (`Usuario.registrarIntentoFallido`) y al completar el tercer paso (`AuthenticatorService.verificarCodigo`), no al acertar la contraseña: así quien solo tenga la contraseña no puede probar códigos sin límite.
@@ -640,9 +640,9 @@ Notas:
 | HU2-CP31 | `LoginFlow.test.jsx` | `HU2-CP31: tampoco se puede copiar ni cortar con la contraseña visible` | Frontend · página | AB#242 | PR #211 | ✅ |
 | HU2-CP31 | `LoginFlow.test.jsx` | `HU2-CP31: sí se puede pegar la contraseña y el login sigue funcionando` | Frontend · página | AB#242 | PR #211 | ✅ |
 | HU2-CP31 | `LoginFlow.test.jsx` | `HU2-CP31: escribiendo la contraseña a mano el login sigue funcionando` | Frontend · página | AB#242 | PR #211 | ✅ |
-| HU2-CP32 | `client.test.js` | `HU2-CP32: pide el token antes del POST y lo envía en la cabecera` | Frontend · cliente de la API | — (hotfix) | PR pendiente | 🔍 |
-| HU2-CP32 | `client.test.js` | `HU2-CP32: el 401 de la petición del token no avisa de sesión caducada` | Frontend · cliente de la API | — (hotfix) | PR pendiente | 🔍 |
-| HU2-CP32 | `client.test.js` | `HU2-CP32: con la cookie ya puesta, no vuelve a pedir el token` | Frontend · cliente de la API | — (hotfix) | PR pendiente | 🔍 |
+| HU2-CP32 | `client.test.js` | `HU2-CP32: pide el token antes del POST y lo envía en la cabecera` | Frontend · cliente de la API | — (hotfix) | PR #260 | 🔍 |
+| HU2-CP32 | `client.test.js` | `HU2-CP32: el 401 de la petición del token no avisa de sesión caducada` | Frontend · cliente de la API | — (hotfix) | PR #260 | 🔍 |
+| HU2-CP32 | `client.test.js` | `HU2-CP32: con la cookie ya puesta, no vuelve a pedir el token` | Frontend · cliente de la API | — (hotfix) | PR #260 | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AutenticacionServiceTest`: `usuarios/application/service/` (Mockito, con `Clock` fijo)
