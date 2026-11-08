@@ -8,6 +8,8 @@ export const PATHS = {
   PRODUCT_DETAIL: '/products/:id',
   CHECKOUT: '/checkout',
   PROFILE: '/profile',
+  PREMIUM: '/premium',
+  PREMIUM_PAYMENT: '/premium/pago',
   PAYMENT_METHODS: '/payment-methods',
   ADDRESSES: '/addresses',
   ORDERS: '/orders',

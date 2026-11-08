@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types'
 import { useCallback, useId, useState } from 'react'
 import {
+  Badge,
   Button,
   Card,
   Checkbox,
@@ -14,10 +15,11 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { Delete20Regular } from '@fluentui/react-icons'
+import { Delete20Regular, Diamond16Filled, Diamond20Regular } from '@fluentui/react-icons'
 import { getPreferences, savePreferences } from '../api/preferences'
 import { getProfile } from '../api/profile'
 import { useAuth } from '../auth/useAuth'
+import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import { UserAvatar } from '../features/account/AvatarSelector'
 import DeleteAccountDialog from '../features/account/DeleteAccountDialog'
@@ -26,6 +28,7 @@ import SellerStatistics from '../features/seller/SellerStatistics'
 import { profileFieldsFor } from '../features/admin/profileFields'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { useCategories } from '../hooks/useCategories'
+import { PATHS } from '../routes/paths'
 import { formatDate } from '../utils/format'
 
 const SIN_DATO = '—'
@@ -39,12 +42,14 @@ const useStyles = makeStyles({
   },
   identity: {
     display: 'flex',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: tokens.spacingHorizontalL,
   },
   identityText: {
     display: 'flex',
     flexDirection: 'column',
+    alignItems: 'flex-start',
     gap: tokens.spacingVerticalXXS,
   },
   name: {
@@ -167,6 +172,27 @@ CustomerPreferences.propTypes = {
     .isRequired,
 }
 
+// ESIBuy Premium en el perfil del cliente (HU45): el Estándar tiene el acceso a la vista Premium y el Premium, su
+// distintivo.
+function PremiumAccess({ tipoCliente }) {
+  if (tipoCliente === 'PREMIUM') {
+    return (
+      <Badge appearance="filled" color="brand" size="large" icon={<Diamond16Filled />}>
+        Premium
+      </Badge>
+    )
+  }
+  return (
+    <LinkButton to={PATHS.PREMIUM} appearance="primary" size="small" icon={<Diamond20Regular />}>
+      Hazte Premium
+    </LinkButton>
+  )
+}
+
+PremiumAccess.propTypes = {
+  tipoCliente: PropTypes.string,
+}
+
 // Pares [etiqueta, texto] del perfil: los mismos campos y formatos que la ficha del administrador (HU20 y HU26),
 // sin el estado ni la imagen, y con la fecha de alta. La categoría del vendedor llega como identificador.
 function profileFields(perfil, categoryName) {
@@ -178,8 +204,8 @@ function profileFields(perfil, categoryName) {
 }
 
 // Perfil propio del cliente o del vendedor (HU4), en solo lectura. Los datos se piden al backend, que los saca de
-// la sesión. Modificarlos es de la HU45. El cliente ve además sus preferencias (HU46) y el vendedor, sus estadísticas
-// (HU17). Los dos pueden eliminar su cuenta desde aquí (HU47 y HU25).
+// la sesión. Modificarlos es de la HU45. El cliente ve además sus preferencias (HU46) y su acceso a ESIBuy Premium
+// (HU45), y el vendedor, sus estadísticas (HU17). Los dos pueden eliminar su cuenta desde aquí (HU47 y HU25).
 export default function ProfilePage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
@@ -217,6 +243,7 @@ export default function ProfilePage() {
                 {perfil.nombre} {perfil.apellidos}
               </Title3>
               <Text className={styles.email}>{perfil.email}</Text>
+              {perfil.rol === 'CLIENTE' && <PremiumAccess tipoCliente={perfil.tipoCliente} />}
             </div>
           </div>
           <ReadOnlyFields fields={profileFields(perfil, categoryName)} />

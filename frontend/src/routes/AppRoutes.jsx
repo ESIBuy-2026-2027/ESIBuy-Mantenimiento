@@ -22,6 +22,8 @@ import NewIncidentPage from '../pages/NewIncidentPage'
 import OrderDetailPage from '../pages/OrderDetailPage'
 import OrdersPage from '../pages/OrdersPage'
 import PaymentMethodsPage from '../pages/PaymentMethodsPage'
+import PremiumPage from '../pages/PremiumPage'
+import PremiumPaymentPage from '../pages/PremiumPaymentPage'
 import ProductDetailPage from '../pages/ProductDetailPage'
 import ProductsPage from '../pages/ProductsPage'
 import ProfilePage from '../pages/ProfilePage'
@@ -57,6 +59,8 @@ export default function AppRoutes() {
           <Route path={PATHS.ORDERS} element={<OrdersPage />} />
           <Route path={PATHS.ORDER_DETAIL} element={<OrderDetailPage />} />
           <Route path={PATHS.WISHLIST} element={<WishlistPage />} />
+          <Route path={PATHS.PREMIUM} element={<PremiumPage />} />
+          <Route path={PATHS.PREMIUM_PAYMENT} element={<PremiumPaymentPage />} />
         </Route>
 
         {/* El perfil propio (HU4) y las incidencias (HU44) son del cliente y del vendedor: el backend responde 403 al administrador. */}
