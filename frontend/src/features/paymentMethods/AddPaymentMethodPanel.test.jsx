@@ -101,6 +101,56 @@ describe('AddPaymentMethodPanel (HU6): validación', () => {
   })
 })
 
+// Fallo de las pruebas del equipo: la caducidad no ponía la barra y los campos admitían más dígitos de la cuenta
+describe('AddPaymentMethodPanel (HU6): formato mientras se escribe', () => {
+  it('HU6-CP41: el número de tarjeta solo admite dígitos, se agrupa de 4 en 4 y no pasa de 19', async () => {
+    const usuario = userEvent.setup()
+    abrirPanel()
+    const numero = screen.getByLabelText(/número de tarjeta/i)
+
+    await usuario.type(numero, '4111abc111111111111')
+    expect(numero).toHaveValue('4111 1111 1111 1111')
+
+    await usuario.clear(numero)
+    await usuario.type(numero, '1234567890123456789999')
+    expect(numero).toHaveValue('1234 5678 9012 3456 789')
+  })
+
+  it('HU6-CP41: la caducidad pone la barra sola tras el mes, la quita al borrar y no pasa de MM/AA', async () => {
+    const usuario = userEvent.setup()
+    abrirPanel()
+    const caducidad = screen.getByLabelText(/caducidad/i)
+
+    await usuario.type(caducidad, '12')
+    expect(caducidad).toHaveValue('12/')
+
+    await usuario.type(caducidad, '{Backspace}')
+    expect(caducidad).toHaveValue('12')
+
+    await usuario.type(caducidad, '27999')
+    expect(caducidad).toHaveValue('12/27')
+
+    // Un mes de una cifra mayor que 1 se completa con un 0 delante
+    await usuario.clear(caducidad)
+    await usuario.type(caducidad, '4')
+    expect(caducidad).toHaveValue('04/')
+  })
+
+  it('HU6-CP41: el CVV y el teléfono de Bizum solo admiten dígitos, hasta 4 y 9', async () => {
+    const usuario = userEvent.setup()
+    abrirPanel()
+
+    const cvv = screen.getByLabelText(/cvv/i)
+    await usuario.type(cvv, '12a345')
+    expect(cvv).toHaveValue('1234')
+
+    await usuario.click(screen.getByRole('button', { name: 'Bizum' }))
+    const telefono = screen.getByLabelText(/teléfono/i)
+    await usuario.type(telefono, '612 345 6789')
+    expect(telefono).toHaveValue('612345678')
+  })
+})
+
 describe('AddPaymentMethodPanel (HU6): guardar', () => {
   it('HU6-CP32: guarda solo los datos del tipo elegido y avisa de que se ha añadido', async () => {
     const peticion = {}

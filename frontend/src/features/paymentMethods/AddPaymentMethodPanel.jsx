@@ -51,6 +51,29 @@ const FORMATO_TELEFONO = /^\d{9}$/
 // El número se puede escribir con espacios, como en la tarjeta; se envía sin ellos
 const sinEspacios = (texto) => texto.replaceAll(/\s/g, '')
 
+const soloDigitos = (texto, maximo) => texto.replaceAll(/\D/g, '').slice(0, maximo)
+
+// Formato mientras se escribe: solo dígitos y nunca más de los que admite cada campo. El número va en grupos de 4,
+// como en la tarjeta; la caducidad pone la barra sola tras el mes (y la quita al borrar), y un mes de una cifra
+// mayor que 1 se completa con un 0 delante («4» → «04/»).
+const MAX_DIGITOS_TARJETA = 19
+const formatearNumero = (texto) => soloDigitos(texto, MAX_DIGITOS_TARJETA).replaceAll(/(\d{4})(?=\d)/g, '$1 ')
+
+function formatearCaducidad(texto, anterior) {
+  let digitos = soloDigitos(texto, 4)
+  if (/^[2-9]$/.test(digitos)) digitos = `0${digitos}`
+  if (digitos.length > 2) return `${digitos.slice(0, 2)}/${digitos.slice(2)}`
+  const escribiendo = texto.length > anterior.length
+  return digitos.length === 2 && escribiendo ? `${digitos}/` : digitos
+}
+
+const FORMATEADORES = {
+  numeroTarjeta: formatearNumero,
+  caducidad: formatearCaducidad,
+  cvv: (texto) => soloDigitos(texto, 4),
+  telefonoBizum: (texto) => soloDigitos(texto, 9),
+}
+
 function erroresDeTarjeta({ numeroTarjeta, caducidad, cvv, titular }) {
   const errores = {}
   if (!FORMATO_NUMERO.test(sinEspacios(numeroTarjeta))) {
@@ -185,10 +208,15 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
   const [errores, setErrores] = useState({})
   const [fallo, setFallo] = useState(null)
 
-  // Props comunes de cada campo: su valor, su cambio y su mensaje de error
+  // Props comunes de cada campo: su valor, su cambio (con su formato, si lo tiene) y su mensaje de error
   const campo = (nombre) => ({
     value: campos[nombre],
-    onChange: (_event, data) => setCampos((actuales) => ({ ...actuales, [nombre]: data.value })),
+    onChange: (_event, data) =>
+      setCampos((actuales) => {
+        const formatear = FORMATEADORES[nombre]
+        const valor = formatear ? formatear(data.value, actuales[nombre]) : data.value
+        return { ...actuales, [nombre]: valor }
+      }),
   })
   const error = (nombre) =>
     errores[nombre] ? { validationState: 'error', validationMessage: errores[nombre] } : {}
@@ -250,6 +278,7 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
               contentBefore={<Payment20Regular />}
               placeholder="0000 0000 0000 0000"
               inputMode="numeric"
+              maxLength={23}
               autoComplete="cc-number"
             />
           </Field>
@@ -260,6 +289,8 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
                 className={styles.shrinkable}
                 contentBefore={<Calendar20Regular />}
                 placeholder="MM/AA"
+                inputMode="numeric"
+                maxLength={5}
                 autoComplete="cc-exp"
               />
             </Field>
@@ -271,6 +302,7 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
                 type="password"
                 placeholder="123"
                 inputMode="numeric"
+                maxLength={4}
                 autoComplete="cc-csc"
               />
             </Field>
@@ -289,7 +321,7 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
 
       {tipo === 'BIZUM' && (
         <Field label="Teléfono de Bizum" {...error('telefonoBizum')}>
-          <Input {...campo('telefonoBizum')} contentBefore={<Phone20Regular />} type="tel" placeholder="600000000" autoComplete="tel-national" />
+          <Input {...campo('telefonoBizum')} contentBefore={<Phone20Regular />} type="tel" inputMode="numeric" maxLength={9} placeholder="600000000" autoComplete="tel-national" />
         </Field>
       )}
 
