@@ -55,7 +55,7 @@ describe('RegisterPaymentPage (HU45): pasarela obligatoria del registro Premium'
     vi.restoreAllMocks()
   })
 
-  it('HU45-CP16: navegar directo a la pasarela sin datos lleva al registro, sin pasarela', async () => {
+  it('HU45-CP22: navegar directo a la pasarela sin datos lleva al registro, sin pasarela', async () => {
     renderApp('/register/pago')
 
     await esperarRuta('/register')
@@ -63,7 +63,7 @@ describe('RegisterPaymentPage (HU45): pasarela obligatoria del registro Premium'
     expect(screen.queryByRole('button', { name: /simular pago/i })).not.toBeInTheDocument()
   })
 
-  it('HU45-CP16: al recargar la pasarela se pierden los datos y vuelve al registro con el formulario vacío', async () => {
+  it('HU45-CP22: al recargar la pasarela se pierden los datos y vuelve al registro con el formulario vacío', async () => {
     const cuerpos = capturarRegistros()
     const { unmount } = await llegarALaPasarela('recarga@correo.test')
 
@@ -75,7 +75,7 @@ describe('RegisterPaymentPage (HU45): pasarela obligatoria del registro Premium'
     expect(cuerpos).toHaveLength(0)
   })
 
-  it('HU45-CP17: la pasarela no registra nada hasta pulsar Simular pago; entonces se registra como PREMIUM', async () => {
+  it('HU45-CP23: la pasarela no registra nada hasta pulsar Simular pago; entonces se registra como PREMIUM', async () => {
     const cuerpos = capturarRegistros()
     const { user } = await llegarALaPasarela('premium@correo.test')
 
@@ -91,7 +91,7 @@ describe('RegisterPaymentPage (HU45): pasarela obligatoria del registro Premium'
     expect(screen.getByRole('link', { name: /ir a iniciar sesión/i })).toHaveAttribute('href', '/login')
   })
 
-  it('HU45-CP17: si el servidor rechaza el registro tras el pago, vuelve al formulario con sus datos y el motivo', async () => {
+  it('HU45-CP23: si el servidor rechaza el registro tras el pago, vuelve al formulario con sus datos y el motivo', async () => {
     capturarRegistros(() => HttpResponse.json({ code: 'EMAIL_ALREADY_REGISTERED' }, { status: 409 }))
     const { user } = await llegarALaPasarela('repetido@correo.test')
 
@@ -103,7 +103,7 @@ describe('RegisterPaymentPage (HU45): pasarela obligatoria del registro Premium'
     expect(screen.getByLabelText(/email/i)).toHaveAccessibleDescription('Este email ya está registrado')
   })
 
-  it('HU45-CP18: cancelar vuelve al formulario con sus datos; con Estándar se registra sin pasar por la pasarela', async () => {
+  it('HU45-CP24: cancelar vuelve al formulario con sus datos; con Estándar se registra sin pasar por la pasarela', async () => {
     const cuerpos = capturarRegistros()
     const { user } = await llegarALaPasarela('cambia@correo.test')
 
@@ -124,7 +124,7 @@ describe('RegisterPaymentPage (HU45): pasarela obligatoria del registro Premium'
     expect(cuerpos[0]).toMatchObject({ email: 'cambia@correo.test', tipoCliente: 'ESTANDAR' })
   })
 
-  it('HU45-CP18: tras cancelar, volver a elegir Premium vuelve a exigir la pasarela', async () => {
+  it('HU45-CP24: tras cancelar, volver a elegir Premium vuelve a exigir la pasarela', async () => {
     const cuerpos = capturarRegistros()
     const { user } = await llegarALaPasarela('reintenta@correo.test')
 
@@ -136,7 +136,7 @@ describe('RegisterPaymentPage (HU45): pasarela obligatoria del registro Premium'
     expect(cuerpos).toHaveLength(0)
   })
 
-  it('HU45-CP19: la contraseña no sale en la URL ni se guarda en localStorage ni en sessionStorage', async () => {
+  it('HU45-CP25: la contraseña no sale en la URL ni se guarda en localStorage ni en sessionStorage', async () => {
     capturarRegistros()
     const guardados = vi.spyOn(Storage.prototype, 'setItem')
     const { user } = await llegarALaPasarela('privado@correo.test')

@@ -234,7 +234,7 @@ describe('ProfilePage (HU46): preferencias', () => {
 
 // Nora (nuevo@esibuy.test) es cliente Estándar en el mock y Carlos (cliente@esibuy.test), Premium
 describe('ProfilePage (HU45): ESIBuy Premium', () => {
-  it('HU45-CP22: el cliente Estándar tiene en su perfil el botón Hazte Premium, que lleva a la vista Premium', async () => {
+  it('HU45-CP28: el cliente Estándar tiene en su perfil el botón Hazte Premium, que lleva a la vista Premium', async () => {
     const user = userEvent.setup()
     await abrirPerfil('nuevo@esibuy.test')
 
@@ -246,14 +246,14 @@ describe('ProfilePage (HU45): ESIBuy Premium', () => {
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/premium$/))
   })
 
-  it('HU45-CP22: el cliente Premium ve el distintivo Premium en vez del botón', async () => {
+  it('HU45-CP28: el cliente Premium ve el distintivo Premium en vez del botón', async () => {
     await abrirPerfil('cliente@esibuy.test')
 
     expect(within(screen.getByRole('main')).getByText('Premium')).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /hazte premium/i })).not.toBeInTheDocument()
   })
 
-  it('HU45-CP22: el vendedor no tiene ni el botón ni el distintivo', async () => {
+  it('HU45-CP28: el vendedor no tiene ni el botón ni el distintivo', async () => {
     await abrirPerfil('vendedor@esibuy.test')
 
     expect(screen.queryByRole('link', { name: /hazte premium/i })).not.toBeInTheDocument()

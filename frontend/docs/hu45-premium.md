@@ -8,7 +8,7 @@ Documento para entender cómo se hace un cliente ESIBuy Premium desde el fronten
 - **Rama:** `feature/US45-T420-T421-premium-front`
 - **Metodología:** TDD (commit de rojo `test(front-HU45)` y de verde `feat(front-HU45)` por task)
 - **Backend:** `POST /api/perfil/premium` es de las tasks **T422 y T423** del backend, que se desarrollan en paralelo. Mientras tanto, el frontend usa el mock de MSW (sección 5).
-- **Casos de prueba:** HU45-CP15 a HU45-CP29 (los CP01 a CP14 son del backend). Ver `docs/calidad/matriz-trazabilidad.md`.
+- **Casos de prueba:** HU45-CP21 a HU45-CP35 (los CP01 a CP10 y CP17 a CP20 son del backend; CP11 a CP16, del frontend de la edición del perfil, T103). Ver `docs/calidad/matriz-trazabilidad.md`.
 
 ---
 

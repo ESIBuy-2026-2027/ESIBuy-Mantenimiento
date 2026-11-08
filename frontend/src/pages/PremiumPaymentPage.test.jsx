@@ -30,7 +30,7 @@ async function abrirPasarelaDesdePremium() {
 }
 
 describe('PremiumPaymentPage (HU45): paso a Premium del cliente Estándar', () => {
-  it('HU45-CP26: Simular pago hace al cliente Premium, lo confirma y vuelve a la vista en estado Premium', async () => {
+  it('HU45-CP32: Simular pago hace al cliente Premium, lo confirma y vuelve a la vista en estado Premium', async () => {
     const peticiones = contarPasosAPremium()
     try {
       const user = await abrirPasarelaDesdePremium()
@@ -50,7 +50,7 @@ describe('PremiumPaymentPage (HU45): paso a Premium del cliente Estándar', () =
     }
   })
 
-  it('HU45-CP26: tras hacerse Premium, su perfil lo muestra sin recargar', async () => {
+  it('HU45-CP32: tras hacerse Premium, su perfil lo muestra sin recargar', async () => {
     const user = await abrirPasarelaDesdePremium()
     await user.click(screen.getByRole('button', { name: /simular pago/i }))
     await screen.findByRole('heading', { level: 2, name: /ya eres esibuy premium/i })
@@ -60,7 +60,7 @@ describe('PremiumPaymentPage (HU45): paso a Premium del cliente Estándar', () =
     expect(await screen.findByLabelText('Tipo de cliente')).toHaveValue('Premium')
   })
 
-  it('HU45-CP26: Volver deja al cliente en la vista Premium sin hacerle Premium', async () => {
+  it('HU45-CP32: Volver deja al cliente en la vista Premium sin hacerle Premium', async () => {
     const peticiones = contarPasosAPremium()
     try {
       const user = await abrirPasarelaDesdePremium()
@@ -75,7 +75,7 @@ describe('PremiumPaymentPage (HU45): paso a Premium del cliente Estándar', () =
     }
   })
 
-  it('HU45-CP25: siendo Premium, entrar directo en la pasarela lleva a la vista Premium', async () => {
+  it('HU45-CP31: siendo Premium, entrar directo en la pasarela lleva a la vista Premium', async () => {
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/premium/pago')
 
@@ -84,7 +84,7 @@ describe('PremiumPaymentPage (HU45): paso a Premium del cliente Estándar', () =
     expect(screen.queryByRole('button', { name: /simular pago/i })).not.toBeInTheDocument()
   })
 
-  it('HU45-CP24: sin sesión, la pasarela de Premium lleva al login; el vendedor vuelve a su inicio', async () => {
+  it('HU45-CP30: sin sesión, la pasarela de Premium lleva al login; el vendedor vuelve a su inicio', async () => {
     const { unmount } = renderApp('/premium/pago')
     await esperarRuta('/login')
     unmount()
@@ -94,7 +94,7 @@ describe('PremiumPaymentPage (HU45): paso a Premium del cliente Estándar', () =
     await esperarRuta('/seller/products')
   })
 
-  it('HU45-CP27: si el servidor responde ALREADY_PREMIUM, se avisa con un mensaje propio y queda en estado Premium', async () => {
+  it('HU45-CP33: si el servidor responde ALREADY_PREMIUM, se avisa con un mensaje propio y queda en estado Premium', async () => {
     server.use(
       http.post('/api/perfil/premium', () =>
         HttpResponse.json({ mensaje: 'Texto del backend', code: 'ALREADY_PREMIUM' }, { status: 400 }),
@@ -110,7 +110,7 @@ describe('PremiumPaymentPage (HU45): paso a Premium del cliente Estándar', () =
     expect(screen.queryByText('Texto del backend')).not.toBeInTheDocument()
   })
 
-  it('HU45-CP28: un error del servidor muestra un mensaje genérico, sin el texto del backend, y se puede reintentar', async () => {
+  it('HU45-CP34: un error del servidor muestra un mensaje genérico, sin el texto del backend, y se puede reintentar', async () => {
     server.use(
       http.post('/api/perfil/premium', () =>
         HttpResponse.json({ mensaje: 'NullPointerException en PerfilService' }, { status: 500 }),
@@ -126,7 +126,7 @@ describe('PremiumPaymentPage (HU45): paso a Premium del cliente Estándar', () =
     expect(screen.getByRole('button', { name: /simular pago/i })).toBeEnabled()
   })
 
-  it('HU45-CP28: un fallo de red muestra el mismo mensaje genérico', async () => {
+  it('HU45-CP34: un fallo de red muestra el mismo mensaje genérico', async () => {
     server.use(http.post('/api/perfil/premium', () => HttpResponse.error()))
     const user = await abrirPasarelaDesdePremium()
 
@@ -135,7 +135,7 @@ describe('PremiumPaymentPage (HU45): paso a Premium del cliente Estándar', () =
     expect(await screen.findByText(MENSAJE_GENERICO)).toBeInTheDocument()
   })
 
-  it('HU45-CP28: un 403 ACCESS_DENIED avisa de que no tiene permiso, sin el texto del backend', async () => {
+  it('HU45-CP34: un 403 ACCESS_DENIED avisa de que no tiene permiso, sin el texto del backend', async () => {
     server.use(
       http.post('/api/perfil/premium', () =>
         HttpResponse.json({ mensaje: 'Acceso denegado', code: 'ACCESS_DENIED' }, { status: 403 }),
@@ -149,7 +149,7 @@ describe('PremiumPaymentPage (HU45): paso a Premium del cliente Estándar', () =
     expect(screen.queryByText('Acceso denegado')).not.toBeInTheDocument()
   })
 
-  it('HU45-CP28: un 401 (sesión caducada) lleva al login con su aviso', async () => {
+  it('HU45-CP34: un 401 (sesión caducada) lleva al login con su aviso', async () => {
     server.use(http.post('/api/perfil/premium', () => new HttpResponse(null, { status: 401 })))
     const user = await abrirPasarelaDesdePremium()
 

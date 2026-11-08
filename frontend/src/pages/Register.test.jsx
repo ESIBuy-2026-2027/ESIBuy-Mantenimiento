@@ -490,7 +490,7 @@ describe('Register', () => {
   })
 
   // HU45 (T420): elegir Premium no registra al momento; antes hay que pasar por la pasarela de pago simulada
-  it('HU45-CP15: al elegir Premium, Registrarse no envía el registro y lleva a la pasarela de pago', async () => {
+  it('HU45-CP21: al elegir Premium, Registrarse no envía el registro y lleva a la pasarela de pago', async () => {
     await renderYElegirCliente()
     await rellenarFormularioValido()
     await userEvent.selectOptions(screen.getByLabelText(/tipo/i), 'PREMIUM')
@@ -501,7 +501,7 @@ describe('Register', () => {
     expect(registrarCliente).not.toHaveBeenCalled()
   })
 
-  it('HU45-CP15: con datos no válidos, elegir Premium marca los errores y no lleva a la pasarela', async () => {
+  it('HU45-CP21: con datos no válidos, elegir Premium marca los errores y no lleva a la pasarela', async () => {
     await renderYElegirCliente()
     await userEvent.selectOptions(screen.getByLabelText(/tipo/i), 'PREMIUM')
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))

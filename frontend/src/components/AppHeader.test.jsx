@@ -373,7 +373,7 @@ describe('AppHeader (HU44): incidencias del vendedor, del administrador y sin se
 })
 
 describe('AppHeader (HU45): acceso a ESIBuy Premium', () => {
-  it('HU45-CP21: el cliente ve el botón Premium en la cabecera y lleva a la vista de ventajas Premium', async () => {
+  it('HU45-CP27: el cliente ve el botón Premium en la cabecera y lleva a la vista de ventajas Premium', async () => {
     const user = userEvent.setup()
     await abrirSesionPorApi('nuevo@esibuy.test')
     renderApp('/products')
@@ -386,7 +386,7 @@ describe('AppHeader (HU45): acceso a ESIBuy Premium', () => {
     expect(await screen.findByRole('heading', { level: 1, name: /esibuy premium/i })).toBeInTheDocument()
   })
 
-  it('HU45-CP21: el vendedor, el administrador y quien no tiene sesión no ven el botón Premium', async () => {
+  it('HU45-CP27: el vendedor, el administrador y quien no tiene sesión no ven el botón Premium', async () => {
     const invitado = renderApp('/')
     await screen.findByRole('link', { name: /iniciar sesión/i })
     expect(screen.queryByRole('link', { name: /^premium$/i })).not.toBeInTheDocument()

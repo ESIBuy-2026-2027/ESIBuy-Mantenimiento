@@ -17,7 +17,7 @@ function renderCheckout(props = {}) {
 }
 
 describe('PremiumCheckout (HU45): pasarela de pago simulada de ESIBuy Premium', () => {
-  it('HU45-CP20: muestra el resumen de ESIBuy Premium sin ningún precio y avisa de que es una simulación', () => {
+  it('HU45-CP26: muestra el resumen de ESIBuy Premium sin ningún precio y avisa de que es una simulación', () => {
     renderCheckout()
 
     expect(screen.getByRole('heading', { level: 1, name: /pasarela de pago/i })).toBeInTheDocument()
@@ -27,7 +27,7 @@ describe('PremiumCheckout (HU45): pasarela de pago simulada de ESIBuy Premium', 
     expect(document.body).not.toHaveTextContent(/€|\d+[.,]\d{2}/)
   })
 
-  it('HU45-CP20: no pide datos de tarjeta: solo tiene los botones de simular el pago y de volver', () => {
+  it('HU45-CP26: no pide datos de tarjeta: solo tiene los botones de simular el pago y de volver', () => {
     renderCheckout()
 
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
@@ -35,7 +35,7 @@ describe('PremiumCheckout (HU45): pasarela de pago simulada de ESIBuy Premium', 
     expect(screen.getByRole('button', { name: 'Volver' })).toBeEnabled()
   })
 
-  it('HU45-CP20: Simular pago llama a onPay y, mientras tanto, muestra Procesando pago… deshabilitado', async () => {
+  it('HU45-CP26: Simular pago llama a onPay y, mientras tanto, muestra Procesando pago… deshabilitado', async () => {
     let terminar
     const onPay = vi.fn(() => new Promise((resolver) => { terminar = resolver }))
     renderCheckout({ onPay })
@@ -49,7 +49,7 @@ describe('PremiumCheckout (HU45): pasarela de pago simulada de ESIBuy Premium', 
     expect(await screen.findByRole('button', { name: /simular pago/i })).toBeEnabled()
   })
 
-  it('HU45-CP20: el botón de volver llama a onCancel sin simular el pago', async () => {
+  it('HU45-CP26: el botón de volver llama a onCancel sin simular el pago', async () => {
     const { onCancel, onPay } = renderCheckout()
 
     await userEvent.click(screen.getByRole('button', { name: 'Volver' }))
@@ -58,7 +58,7 @@ describe('PremiumCheckout (HU45): pasarela de pago simulada de ESIBuy Premium', 
     expect(onPay).not.toHaveBeenCalled()
   })
 
-  it('HU45-CP20: el error que se le indica se muestra en un aviso', () => {
+  it('HU45-CP26: el error que se le indica se muestra en un aviso', () => {
     renderCheckout({ error: 'No se ha podido completar el pago.' })
 
     expect(screen.getByText('No se ha podido completar el pago.')).toBeInTheDocument()

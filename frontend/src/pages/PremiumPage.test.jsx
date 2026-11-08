@@ -13,7 +13,7 @@ async function abrirPremium(email) {
 }
 
 describe('PremiumPage (HU45): ventajas de ESIBuy Premium', () => {
-  it('HU45-CP23: muestra las tres ventajas de ESIBuy Premium, cada una con su texto, y ningún precio', async () => {
+  it('HU45-CP29: muestra las tres ventajas de ESIBuy Premium, cada una con su texto, y ningún precio', async () => {
     await abrirPremium('nuevo@esibuy.test')
 
     const lista = screen.getByRole('list', { name: /ventajas/i })
@@ -26,20 +26,20 @@ describe('PremiumPage (HU45): ventajas de ESIBuy Premium', () => {
     expect(screen.getByRole('main')).not.toHaveTextContent(/€|\d+[.,]\d{2}|precio de la suscripción/i)
   })
 
-  it('HU45-CP23: la jerarquía de encabezados empieza por un único h1', async () => {
+  it('HU45-CP29: la jerarquía de encabezados empieza por un único h1', async () => {
     await abrirPremium('nuevo@esibuy.test')
 
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(screen.getByRole('heading', { level: 2, name: /ventajas/i })).toBeInTheDocument()
   })
 
-  it('HU45-CP24: sin sesión, la vista Premium lleva al login', async () => {
+  it('HU45-CP30: sin sesión, la vista Premium lleva al login', async () => {
     renderApp('/premium')
 
     await esperarRuta('/login')
   })
 
-  it('HU45-CP24: el vendedor y el administrador no entran en la vista Premium: vuelven a su inicio', async () => {
+  it('HU45-CP30: el vendedor y el administrador no entran en la vista Premium: vuelven a su inicio', async () => {
     await abrirSesionPorApi('vendedor@esibuy.test')
     const { unmount } = renderApp('/premium')
     await esperarRuta('/seller/products')
@@ -50,14 +50,14 @@ describe('PremiumPage (HU45): ventajas de ESIBuy Premium', () => {
     await esperarRuta('/admin')
   })
 
-  it('HU45-CP25: el cliente Premium ve que ya es ESIBuy Premium y no se le ofrece la pasarela', async () => {
+  it('HU45-CP31: el cliente Premium ve que ya es ESIBuy Premium y no se le ofrece la pasarela', async () => {
     await abrirPremium('cliente@esibuy.test')
 
     expect(await screen.findByRole('heading', { level: 2, name: /ya eres esibuy premium/i })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /hazte premium/i })).not.toBeInTheDocument()
   })
 
-  it('HU45-CP26: el cliente Estándar ve Hazte Premium, que lleva a la pasarela de pago', async () => {
+  it('HU45-CP32: el cliente Estándar ve Hazte Premium, que lleva a la pasarela de pago', async () => {
     await abrirPremium('nuevo@esibuy.test')
 
     const enlace = await screen.findByRole('link', { name: /hazte premium/i })
