@@ -371,3 +371,36 @@ describe('AppHeader (HU44): incidencias del vendedor, del administrador y sin se
     await esperarRuta('/login')
   })
 })
+
+describe('AppHeader (HU45): acceso a ESIBuy Premium', () => {
+  it('HU45-CP21: el cliente ve el botón Premium en la cabecera y lleva a la vista de ventajas Premium', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('nuevo@esibuy.test')
+    renderApp('/products')
+
+    const premium = await screen.findByRole('link', { name: /^premium$/i })
+    expect(premium).toHaveAttribute('href', '/premium')
+    await user.click(premium)
+
+    await esperarRuta('/premium')
+    expect(await screen.findByRole('heading', { level: 1, name: /esibuy premium/i })).toBeInTheDocument()
+  })
+
+  it('HU45-CP21: el vendedor, el administrador y quien no tiene sesión no ven el botón Premium', async () => {
+    const invitado = renderApp('/')
+    await screen.findByRole('link', { name: /iniciar sesión/i })
+    expect(screen.queryByRole('link', { name: /^premium$/i })).not.toBeInTheDocument()
+    invitado.unmount()
+
+    await abrirSesionPorApi('vendedor@esibuy.test')
+    const vendedor = renderApp('/seller/products')
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(screen.queryByRole('link', { name: /^premium$/i })).not.toBeInTheDocument()
+    vendedor.unmount()
+
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/admin')
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(screen.queryByRole('link', { name: /^premium$/i })).not.toBeInTheDocument()
+  })
+})
