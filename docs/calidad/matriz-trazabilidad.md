@@ -1234,11 +1234,13 @@ Tests del frontend (bajo `frontend/src/`, con Vitest, React Testing Library y MS
 | HU7-CP17 | Los parámetros llegan al caso de uso traducidos: página desde 0, criterio de orden y sentido | Integración (capa web) | 1 | ✅ Pasa (1, AB#353, PR #153) |
 | HU7-CP18 | Un parámetro no válido (página o tamaño menor que 1, valoración fuera de 1 a 5, orden o sentido desconocidos) devuelve 400 y no llega al caso de uso | Integración (capa web) | 1 | ✅ Pasa (1, AB#353, PR #153) |
 | HU7-CP19 | Sin sesión (401) o sin ser cliente (403) no se ve el catálogo | Integración (capa web) | 2 | ✅ Pasa (2, AB#353, PR #153) |
+| HU7-CP20 | La colección `productos` tiene los índices de filtrado del catálogo: `disponible` con `nombre` y `disponible` con `valoracionMedia` (descendente) y `nombre` | Integración MongoDB | 1 | ✅ Pasa (1, AB#116, PR #240) |
 
 Notas:
 - **HU7-CP01 a CP09 (Sprint 2, frontend):** casos propuestos en las tasks AB#350 (vista de productos) y AB#351 (vista de filtrado y búsqueda), a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu7-busqueda-y-filtrado-de-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU7 (AB#69) en Azure Boards.
 - **HU7-CP10 a CP19 (Sprint 2, backend):** casos propuestos en las tasks AB#352 (lógica de filtrado de productos) y AB#353 (endpoint para obtener productos), con el contrato de `GET /api/products` que ya usaba el frontend. Desarrollados con TDD. Pendientes de confirmar con el equipo y de añadir a la HU7 (AB#69) en Azure Boards.
 - **Valoraciones (HU13, T415):** `valoracion` y `numValoraciones` salen de la media y el número de valoraciones que el módulo de valoraciones guarda en el producto (`valoracionMedia` y `numeroValoraciones`). La valoración mínima filtra por esa media y ordenar por valoración ordena por ella. Hasta la T415, una valoración mínima no devolvía nada y ordenar por valoración equivalía a ordenar por nombre; HU7-CP15 se modificó en la T415 para comprobar el comportamiento real. Un producto sin valoraciones sigue dando `null` y 0 (HU7-CP16).
+- **HU7-CP20 (T116, backend):** caso propuesto en la task AB#116 (índices de filtrado en Mongo), desarrollado con TDD. Solo se crean índices compuestos para lo que filtran y ordenan todas las búsquedas (`disponible` con el orden por nombre o por valoración, regla ESR: igualdad, orden y rango); la categoría usa su índice propio. **No se crea índice de texto:** `$text` busca palabras completas y la búsqueda actual (HU7-CP12) encuentra partes del nombre, así que cambiaría el comportamiento. Pendiente de comentar con el equipo y de confirmar el caso en la HU7 (AB#69) en Azure Boards.
 - **Decisiones de HU7-CP18:** `sort` y `order` se validan con `@Pattern`, como `page`, `size` y `minRating` con `@Min` y `@Max`. Que `minRating=6` sea inválido es una propuesta (la valoración va de 1 a 5).
 - **Pendiente de decidir:** el orden por nombre no usa la collation en español (`ORDEN_ALFABETICO_ES` de `UsuarioMongoAdapter`): las mayúsculas salen antes y las vocales con tilde, tras la Z. HU7-CP14 usa nombres sin tilde y en mayúscula para no depender de ello.
 - **Decisión del equipo:** no se ordena por categoría (no tiene sentido); el listado es un scroll infinito de diez en diez y no una paginación numérica; la selección son los diez mejor valorados, como tarjetas dentro de la animación y a todo el ancho de la página.
@@ -1310,6 +1312,7 @@ Notas:
 | HU7-CP18 | `CatalogoControllerTest` | `parametroNoValidoDevuelve400` | Infraestructura | AB#353 | PR #153 | ✅ |
 | HU7-CP19 | `CatalogoControllerTest` | `sinSesionDevuelve401` | Infraestructura | AB#353 | PR #153 | ✅ |
 | HU7-CP19 | `CatalogoControllerTest` | `otroRolDevuelve403` | Infraestructura | AB#353 | PR #153 | ✅ |
+| HU7-CP20 | `InicializadorColeccionesTest` | `HU7-CP20: productos tiene los índices de filtrado del catálogo (disponible con nombre y con valoración)` | Infraestructura · persistencia | AB#116 | PR #240 | ✅ |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `ProductCard.test.jsx`: `features/catalog/` (Vitest y React Testing Library)
@@ -1320,6 +1323,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 - `CatalogoProductosServiceTest`: `productos/application/service/` (JUnit y Mockito, sin Spring)
 - `ProductoMongoAdapterTest`: `productos/infrastructure/adapter/out/persistence/` (`@DataMongoTest` con Testcontainers)
 - `CatalogoControllerTest`: `productos/infrastructure/adapter/in/web/` (`@WebMvcTest` con la seguridad real)
+- `InicializadorColeccionesTest`: `shared/infrastructure/config/` (`@DataMongoTest` con Testcontainers)
 
 ---
 

@@ -53,6 +53,9 @@ final class ColeccionesEsiBuy {
     private static final String CATEGORIA_ID = "categoriaId";
     private static final String TELEFONO = "telefono";
     private static final String NOMBRE_COMERCIAL = "nombreComercial";
+    // Campos de productos que se repiten entre su validación y sus índices.
+    private static final String DISPONIBLE = "disponible";
+    private static final String VALORACION_MEDIA = "valoracionMedia";
 
     /** Una colección: su nombre, su validación y los índices que no vienen de anotaciones. */
     record Coleccion(String nombre, MongoJsonSchema esquema, List<Index> indices) {
@@ -170,11 +173,17 @@ final class ColeccionesEsiBuy {
                 string("imagen"),
                 string(ESTADO),
                 bool("visible"),
-                bool("disponible"),
-                number("valoracionMedia").gte(0).lte(5),
+                bool(DISPONIBLE),
+                number(VALORACION_MEDIA).gte(0).lte(5),
                 enteroNoNegativo("numeroValoraciones")),
                 List.of(indice(VENDEDOR_ID), indice(CATEGORIA_ID), indice(NOMBRE), indice(ESTADO),
                         indice("visible"),
+                        // Catálogo del cliente (HU7, T116): siempre filtra por disponible y ordena por nombre o por
+                        // valoración, con el empate por nombre (regla ESR: igualdad, orden y rango). La categoría
+                        // usa su propio índice y la búsqueda por nombre (regex sin mayúsculas) no aprovecha índices.
+                        indice(DISPONIBLE).on(NOMBRE, Sort.Direction.ASC).named("disponible_nombre"),
+                        indice(DISPONIBLE).on(VALORACION_MEDIA, Sort.Direction.DESC).on(NOMBRE, Sort.Direction.ASC)
+                                .named("disponible_valoracion"),
                         // Un vendedor no repite nombre de producto (HU31). La collation de nivel 2 ignora
                         // mayúsculas y minúsculas pero no tildes. Cierra la condición de carrera de dos
                         // altas simultáneas que pasaron a la vez existePorVendedorYNombre.

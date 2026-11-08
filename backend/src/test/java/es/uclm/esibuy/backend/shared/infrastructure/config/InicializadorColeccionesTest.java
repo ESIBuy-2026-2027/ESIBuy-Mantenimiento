@@ -288,6 +288,23 @@ class InicializadorColeccionesTest {
         }
     }
 
+    @Test
+    @DisplayName("HU7-CP20: productos tiene los índices de filtrado del catálogo (disponible con nombre y con valoración)")
+    void productosTieneLosIndicesDelCatalogo() {
+        // Se compara el JSON de la clave porque el orden de los campos importa en un índice compuesto
+        // y la igualdad de Document no lo tiene en cuenta.
+        List<Document> indices = mongoTemplate.getCollection("productos").listIndexes().into(new ArrayList<>());
+        assertEquals("{\"disponible\": 1, \"nombre\": 1}", claveDelIndice(indices, "disponible_nombre"));
+        assertEquals("{\"disponible\": 1, \"valoracionMedia\": -1, \"nombre\": 1}",
+                claveDelIndice(indices, "disponible_valoracion"));
+    }
+
+    private static String claveDelIndice(List<Document> indices, String nombre) {
+        return indices.stream().filter(i -> nombre.equals(i.getString("name")))
+                .findFirst().orElseThrow(() -> new AssertionError("Falta el índice " + nombre))
+                .get("key", Document.class).toJson();
+    }
+
     private void acepta(String coleccion, Document documento) {
         assertDoesNotThrow(() -> mongoTemplate.getCollection(coleccion).insertOne(documento),
                 () -> coleccion + " debería aceptar " + documento.toJson());
