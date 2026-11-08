@@ -173,6 +173,41 @@ class GestionPerfilServiceTest {
                 null);
     }
 
+    @Test
+    @DisplayName("HU45-CP12: un cliente Estándar pasa a Premium y se guarda")
+    void pasarAPremiumGuardaAlClienteComoPremium() {
+        Usuario estandar = clienteEstandar();
+        when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.of(estandar));
+
+        Usuario resultado = servicio.pasarAPremium(EMAIL);
+
+        assertEquals(TipoCliente.PREMIUM, resultado.getDatosCliente().tipoCliente());
+        verify(usuarioRepository).guardar(estandar);
+    }
+
+    @Test
+    @DisplayName("HU45-CP12: si el cliente ya es Premium no se guarda nada")
+    void pasarAPremiumDeUnPremiumNoGuarda() {
+        when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.of(lucia()));
+
+        assertThrows(ClienteYaPremiumException.class, () -> servicio.pasarAPremium(EMAIL));
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU45-CP12: si el usuario de la sesión ya no existe, la sesión no es válida")
+    void pasarAPremiumDeUnCorreoQueNoExisteLanzaExcepcion() {
+        when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.empty());
+
+        assertThrows(CredencialesInvalidasException.class, () -> servicio.pasarAPremium(EMAIL));
+    }
+
+    private static Usuario clienteEstandar() {
+        return new Usuario("u-2", new DatosPersonales("Pablo", "Gil Mora", null), new Email(EMAIL), "hash-simulado",
+                Rol.CLIENTE, new DatosCliente(TipoCliente.ESTANDAR, new Dni(DNI), LocalDate.of(1996, Month.MAY, 20),
+                        null), null);
+    }
+
     private static Usuario vendedor() {
         return new Usuario("v-1", new DatosPersonales("Mario", "Ruiz Sanz", null), new Email(EMAIL_VENDEDOR),
                 "hash-simulado", Rol.VENDEDOR, new DatosVendedor("Tienda Mario", "cat-1", new Dni(DNI), null), null);

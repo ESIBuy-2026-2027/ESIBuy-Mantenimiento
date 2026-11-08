@@ -304,6 +304,48 @@ class SeguridadSesionUsuarioServiceTest {
         verifyNoInteractions(usuarioRepository);
     }
 
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU45-CP13: un cliente pasa a Premium su propia cuenta")
+    void unClientePasaAPremium() {
+        when(usuarioRepository.buscarPorCorreo(CLIENTE)).thenReturn(Optional.of(cliente()));
+
+        Usuario premium = gestionPerfil.pasarAPremium(CLIENTE);
+
+        verify(usuarioRepository).guardar(premium);
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU45-CP13: un cliente no pasa a Premium la cuenta de otro")
+    void unClienteNoPasaAPremiumAOtro() {
+        assertThrows(AccessDeniedException.class, () -> gestionPerfil.pasarAPremium(OTRO));
+        verifyNoInteractions(usuarioRepository);
+    }
+
+    @Test
+    @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
+    @DisplayName("HU45-CP13: un vendedor no puede pasar a Premium")
+    void unVendedorNoPasaAPremium() {
+        assertThrows(AccessDeniedException.class, () -> gestionPerfil.pasarAPremium(VENDEDOR));
+        verifyNoInteractions(usuarioRepository);
+    }
+
+    @Test
+    @WithMockUser(username = ADMIN, roles = "ADMINISTRADOR")
+    @DisplayName("HU45-CP13: un administrador no puede pasar a Premium")
+    void unAdministradorNoPasaAPremium() {
+        assertThrows(AccessDeniedException.class, () -> gestionPerfil.pasarAPremium(ADMIN));
+        verifyNoInteractions(usuarioRepository);
+    }
+
+    @Test
+    @DisplayName("HU45-CP13: sin sesión nadie pasa a Premium")
+    void sinSesionNadiePasaAPremium() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> gestionPerfil.pasarAPremium(CLIENTE));
+        verifyNoInteractions(usuarioRepository);
+    }
+
     private static Usuario vendedor() {
         return new Usuario("v-1", new DatosPersonales("Mario", "Ruiz Sanz", null), new Email(VENDEDOR),
                 "hash-simulado", Rol.VENDEDOR, new DatosVendedor("Tienda Mario", "cat-1", new Dni("12345678Z"), null),
