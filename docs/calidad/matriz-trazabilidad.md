@@ -1037,6 +1037,7 @@ Notas:
 | HU6-CP38 | Al eliminar su cuenta (HU25) se borran todos los métodos de pago del cliente y no los de otro; si no tiene, no es un error | Unitario (aplicación) | 2 | ✅ Pasa (2, AB#275, PR #235) |
 | HU6-CP39 | Eliminar por cliente borra sus métodos de la colección y no los de otro cliente | Integración (persistencia) | 1 | ✅ Pasa (1, AB#275, PR #235) |
 | HU6-CP40 | Borrar todos los métodos de pago exige el rol cliente y su propio correo; un vendedor, un administrador o sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#275, PR #235) |
+| HU6-CP41 | Mientras se escribe, el panel da formato a los datos: número de tarjeta solo con dígitos, en grupos de 4 y hasta 19; caducidad con la barra puesta sola y como mucho MM/AA; CVV hasta 4 dígitos y teléfono de Bizum hasta 9 | Frontend (componente) | 3 | 🔍 En revisión (3, AB#269, este PR) |
 
 Notas:
 - **HU6-CP01 a CP36:** casos propuestos y aprobados por el equipo durante el desarrollo de la HU6: el backend (CP01 a CP24, tasks 271, 110, 270 y 112) y la vista del frontend (CP25 a CP36, tasks 269, 113 y 114). Los casos de prueba no se registran en Azure Boards: viven en esta matriz y en el `@DisplayName` de cada test.
@@ -1045,6 +1046,7 @@ Notas:
 - **Vista del frontend (T269 y T113):** `/payment-methods`, solo para clientes. Detalle en `frontend/docs/hu6-metodos-de-pago.md`.
 - **Pendiente:** confirmar con el equipo los códigos de error y sus mensajes en la vista. La clave de cifrado va en la variable de entorno `ESIBUY_PAGOS_CLAVE_CIFRADO`.
 - **HU6-CP37 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio` (PR #168, mergeado), sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Comprueba con `@PreAuthorize` que `GestionMetodosPagoUseCase` exige el rol cliente y que el correo recibido es el de la sesión. Clase de test nueva `metodospago/application/service/SeguridadMetodosPagoServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
+- **HU6-CP41 (fix, AB#269, rama `fix/formulario-metodo-pago`):** caso propuesto al corregir un fallo de las pruebas del equipo: la caducidad no ponía la barra y los campos admitían más dígitos de la cuenta. El formato se aplica al escribir (`maxLength` e `inputMode` incluidos); la validación al enviar (HU6-CP31) no cambia. Pendiente de confirmar con el equipo y de añadir a la HU6 en Azure Boards.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1192,6 +1194,9 @@ Notas:
 | HU6-CP40 | `SeguridadMetodosPagoServiceTest` | `unVendedorNoEliminaTodos` | Aplicación | AB#275 | PR #235 | ✅ |
 | HU6-CP40 | `SeguridadMetodosPagoServiceTest` | `unAdministradorNoEliminaTodos` | Aplicación | AB#275 | PR #235 | ✅ |
 | HU6-CP40 | `SeguridadMetodosPagoServiceTest` | `sinSesionNoSeEliminanTodos` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU6-CP41 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP41: el número de tarjeta solo admite dígitos, se agrupa de 4 en 4 y no pasa de 19` | Frontend · componente | AB#269 | este PR | 🔍 |
+| HU6-CP41 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP41: la caducidad pone la barra sola tras el mes, la quita al borrar y no pasa de MM/AA` | Frontend · componente | AB#269 | este PR | 🔍 |
+| HU6-CP41 | `AddPaymentMethodPanel.test.jsx` | `HU6-CP41: el CVV y el teléfono de Bizum solo admiten dígitos, hasta 4 y 9` | Frontend · componente | AB#269 | este PR | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `NumeroTarjetaTest`, `CaducidadTarjetaTest`, `TitularTarjetaTest`, `UrlPayPalTest`, `TelefonoBizumTest`, `MetodoPagoTest` y `MetodosPagoClienteTest`: `metodospago/domain/model/` (solo JUnit)
