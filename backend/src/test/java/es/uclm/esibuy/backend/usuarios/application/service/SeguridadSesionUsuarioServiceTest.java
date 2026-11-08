@@ -306,7 +306,7 @@ class SeguridadSesionUsuarioServiceTest {
 
     @Test
     @WithMockUser(username = CLIENTE, roles = "CLIENTE")
-    @DisplayName("HU45-CP13: un cliente pasa a Premium su propia cuenta")
+    @DisplayName("HU45-CP19: un cliente pasa a Premium su propia cuenta")
     void unClientePasaAPremium() {
         when(usuarioRepository.buscarPorCorreo(CLIENTE)).thenReturn(Optional.of(cliente()));
 
@@ -317,7 +317,7 @@ class SeguridadSesionUsuarioServiceTest {
 
     @Test
     @WithMockUser(username = CLIENTE, roles = "CLIENTE")
-    @DisplayName("HU45-CP13: un cliente no pasa a Premium la cuenta de otro")
+    @DisplayName("HU45-CP19: un cliente no pasa a Premium la cuenta de otro")
     void unClienteNoPasaAPremiumAOtro() {
         assertThrows(AccessDeniedException.class, () -> gestionPerfil.pasarAPremium(OTRO));
         verifyNoInteractions(usuarioRepository);
@@ -325,7 +325,7 @@ class SeguridadSesionUsuarioServiceTest {
 
     @Test
     @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
-    @DisplayName("HU45-CP13: un vendedor no puede pasar a Premium")
+    @DisplayName("HU45-CP19: un vendedor no puede pasar a Premium")
     void unVendedorNoPasaAPremium() {
         assertThrows(AccessDeniedException.class, () -> gestionPerfil.pasarAPremium(VENDEDOR));
         verifyNoInteractions(usuarioRepository);
@@ -333,14 +333,14 @@ class SeguridadSesionUsuarioServiceTest {
 
     @Test
     @WithMockUser(username = ADMIN, roles = "ADMINISTRADOR")
-    @DisplayName("HU45-CP13: un administrador no puede pasar a Premium")
+    @DisplayName("HU45-CP19: un administrador no puede pasar a Premium")
     void unAdministradorNoPasaAPremium() {
         assertThrows(AccessDeniedException.class, () -> gestionPerfil.pasarAPremium(ADMIN));
         verifyNoInteractions(usuarioRepository);
     }
 
     @Test
-    @DisplayName("HU45-CP13: sin sesión nadie pasa a Premium")
+    @DisplayName("HU45-CP19: sin sesión nadie pasa a Premium")
     void sinSesionNadiePasaAPremium() {
         assertThrows(AuthenticationCredentialsNotFoundException.class, () -> gestionPerfil.pasarAPremium(CLIENTE));
         verifyNoInteractions(usuarioRepository);

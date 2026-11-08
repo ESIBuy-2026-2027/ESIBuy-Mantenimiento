@@ -466,7 +466,7 @@ class UsuarioTest {
     }
 
     @Test
-    @DisplayName("HU45-CP11: un cliente Estándar pasa a Premium y conserva el resto de sus datos de cliente")
+    @DisplayName("HU45-CP17: un cliente Estándar pasa a Premium y conserva el resto de sus datos de cliente")
     void pasarAPremiumCambiaElTipoYConservaLoDemas() {
         DatosCliente estandar = new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"),
                 LocalDate.of(1996, 5, 20), new Telefono("612345678"));
@@ -479,7 +479,7 @@ class UsuarioTest {
     }
 
     @Test
-    @DisplayName("HU45-CP11: un cliente que ya es Premium no vuelve a pasar a Premium")
+    @DisplayName("HU45-CP17: un cliente que ya es Premium no vuelve a pasar a Premium")
     void pasarAPremiumRechazaAUnClienteQueYaLoEs() {
         Usuario usuario = cliente();
 
@@ -488,7 +488,7 @@ class UsuarioTest {
     }
 
     @Test
-    @DisplayName("HU45-CP11: solo un cliente puede pasar a Premium")
+    @DisplayName("HU45-CP17: solo un cliente puede pasar a Premium")
     void pasarAPremiumRechazaAQuienNoEsCliente() {
         Usuario administrador = new Usuario("u-3", DATOS_PERSONALES, EMAIL, HASH, Rol.ADMINISTRADOR, null, null);
 

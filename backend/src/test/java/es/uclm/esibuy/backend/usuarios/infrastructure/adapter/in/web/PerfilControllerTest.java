@@ -420,7 +420,7 @@ class PerfilControllerTest {
     }
 
         @Test
-        @DisplayName("HU45-CP14: un cliente pasa a Premium y recibe 200 con su perfil Premium")
+        @DisplayName("HU45-CP20: un cliente pasa a Premium y recibe 200 con su perfil Premium")
         void unClientePasaAPremium() throws Exception {
         when(gestionPerfil.pasarAPremium(EMAIL_CLIENTE)).thenReturn(new Usuario("u-1",
                 new DatosPersonales("Lucía", "Torres Vega", null), new Email(EMAIL_CLIENTE), "hash-no-debe-salir",
@@ -434,7 +434,7 @@ class PerfilControllerTest {
         }
 
         @Test
-        @DisplayName("HU45-CP14: si el cliente ya es Premium se responde 400 ALREADY_PREMIUM")
+        @DisplayName("HU45-CP20: si el cliente ya es Premium se responde 400 ALREADY_PREMIUM")
         void unClienteQueYaEsPremiumRecibe400() throws Exception {
         when(gestionPerfil.pasarAPremium(EMAIL_CLIENTE)).thenThrow(new ClienteYaPremiumException("El cliente ya es Premium"));
 
@@ -444,7 +444,7 @@ class PerfilControllerTest {
         }
 
         @Test
-        @DisplayName("HU45-CP14: un administrador recibe 403 y no se llama al caso de uso")
+        @DisplayName("HU45-CP20: un administrador recibe 403 y no se llama al caso de uso")
         void unAdministradorNoPasaAPremium() throws Exception {
         mockMvc.perform(post(RUTA + "/premium").with(user("admin@esibuy.test").roles("ADMINISTRADOR")).with(csrf()))
                 .andExpect(status().isForbidden());
@@ -452,7 +452,7 @@ class PerfilControllerTest {
         }
 
         @Test
-        @DisplayName("HU45-CP14: sin sesión se responde 401 y no se llama al caso de uso")
+        @DisplayName("HU45-CP20: sin sesión se responde 401 y no se llama al caso de uso")
         void sinSesionNoSePasaAPremium() throws Exception {
         mockMvc.perform(post(RUTA + "/premium").with(csrf()))
                 .andExpect(status().isUnauthorized());

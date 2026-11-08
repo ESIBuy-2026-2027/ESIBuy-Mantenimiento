@@ -175,7 +175,7 @@ class GestionPerfilServiceTest {
     }
 
     @Test
-    @DisplayName("HU45-CP12: un cliente Estándar pasa a Premium y se guarda")
+    @DisplayName("HU45-CP18: un cliente Estándar pasa a Premium y se guarda")
     void pasarAPremiumGuardaAlClienteComoPremium() {
         Usuario estandar = clienteEstandar();
         when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.of(estandar));
@@ -187,7 +187,7 @@ class GestionPerfilServiceTest {
     }
 
     @Test
-    @DisplayName("HU45-CP12: si el cliente ya es Premium no se guarda nada")
+    @DisplayName("HU45-CP18: si el cliente ya es Premium no se guarda nada")
     void pasarAPremiumDeUnPremiumNoGuarda() {
         when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.of(lucia()));
 
@@ -196,7 +196,7 @@ class GestionPerfilServiceTest {
     }
 
     @Test
-    @DisplayName("HU45-CP12: si el usuario de la sesión ya no existe, la sesión no es válida")
+    @DisplayName("HU45-CP18: si el usuario de la sesión ya no existe, la sesión no es válida")
     void pasarAPremiumDeUnCorreoQueNoExisteLanzaExcepcion() {
         when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.empty());
 
