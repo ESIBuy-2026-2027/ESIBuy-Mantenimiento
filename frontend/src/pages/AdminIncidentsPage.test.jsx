@@ -175,13 +175,13 @@ describe('AdminIncidentsPage (HU49): acceso', () => {
     await abrirSesionPorApi('vendedor@esibuy.test')
     renderApp('/admin/incidents')
 
-    await esperarRuta('/seller/products')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/seller/products$')))
   })
 
   it('HU49-CP22: sin sesión, la supervisión lleva al login', async () => {
     renderApp('/admin/incidents')
 
-    await esperarRuta('/login')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/login$')))
   })
 })
 
