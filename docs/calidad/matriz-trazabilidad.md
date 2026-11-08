@@ -1234,7 +1234,7 @@ Tests del frontend (bajo `frontend/src/`, con Vitest, React Testing Library y MS
 | HU7-CP17 | Los parámetros llegan al caso de uso traducidos: página desde 0, criterio de orden y sentido | Integración (capa web) | 1 | ✅ Pasa (1, AB#353, PR #153) |
 | HU7-CP18 | Un parámetro no válido (página o tamaño menor que 1, valoración fuera de 1 a 5, orden o sentido desconocidos) devuelve 400 y no llega al caso de uso | Integración (capa web) | 1 | ✅ Pasa (1, AB#353, PR #153) |
 | HU7-CP19 | Sin sesión (401) o sin ser cliente (403) no se ve el catálogo | Integración (capa web) | 2 | ✅ Pasa (2, AB#353, PR #153) |
-| HU7-CP20 | La colección `productos` tiene los índices de filtrado del catálogo: `disponible` con `nombre` y `disponible` con `valoracionMedia` (descendente) y `nombre` | Integración MongoDB | 1 | 🔍 En revisión (1, AB#116, PR pendiente) |
+| HU7-CP20 | La colección `productos` tiene los índices de filtrado del catálogo: `disponible` con `nombre` y `disponible` con `valoracionMedia` (descendente) y `nombre` | Integración MongoDB | 1 | ✅ Pasa (1, AB#116, PR #240) |
 
 Notas:
 - **HU7-CP01 a CP09 (Sprint 2, frontend):** casos propuestos en las tasks AB#350 (vista de productos) y AB#351 (vista de filtrado y búsqueda), a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu7-busqueda-y-filtrado-de-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU7 (AB#69) en Azure Boards.
@@ -1312,7 +1312,7 @@ Notas:
 | HU7-CP18 | `CatalogoControllerTest` | `parametroNoValidoDevuelve400` | Infraestructura | AB#353 | PR #153 | ✅ |
 | HU7-CP19 | `CatalogoControllerTest` | `sinSesionDevuelve401` | Infraestructura | AB#353 | PR #153 | ✅ |
 | HU7-CP19 | `CatalogoControllerTest` | `otroRolDevuelve403` | Infraestructura | AB#353 | PR #153 | ✅ |
-| HU7-CP20 | `InicializadorColeccionesTest` | `HU7-CP20: productos tiene los índices de filtrado del catálogo (disponible con nombre y con valoración)` | Infraestructura · persistencia | AB#116 | PR pendiente | 🔍 |
+| HU7-CP20 | `InicializadorColeccionesTest` | `HU7-CP20: productos tiene los índices de filtrado del catálogo (disponible con nombre y con valoración)` | Infraestructura · persistencia | AB#116 | PR #240 | ✅ |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `ProductCard.test.jsx`: `features/catalog/` (Vitest y React Testing Library)
