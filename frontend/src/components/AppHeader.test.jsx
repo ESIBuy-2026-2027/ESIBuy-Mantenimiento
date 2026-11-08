@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
@@ -135,6 +135,30 @@ describe('AppHeader', () => {
 
     await screen.findByRole('button', { name: /cerrar sesión/i })
     expect(screen.queryByRole('link', { name: /panel de control/i })).not.toBeInTheDocument()
+  })
+
+  // Fallo de las pruebas del equipo: la cabecera del cliente no cabía. En el tamaño medio sus accesos solo enseñan el
+  // icono (CSS que jsdom no aplica): aquí se comprueba que cada uno conserva su nombre y lleva el texto como tooltip.
+  it('appHeader_conSesionDeCliente_cadaAccesoConservaSuNombreYSuTooltip', async () => {
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/')
+
+    const nav = await screen.findByRole('navigation', { name: 'Cuenta' })
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    const accesos = ['Premium', 'Mis pedidos', 'Favoritos', 'Métodos de pago', 'Direcciones', 'Incidencias', 'Mi perfil']
+    for (const nombre of accesos) {
+      expect(within(nav).getByRole('link', { name: nombre })).toHaveAttribute('title', nombre)
+    }
+    expect(within(nav).getByRole('button', { name: 'Cerrar sesión' })).toHaveAttribute('title', 'Cerrar sesión')
+  })
+
+  it('appHeader_conSesionDeVendedor_susAccesosNoSeCompactan', async () => {
+    await abrirSesionPorApi('vendedor@esibuy.test')
+    renderApp('/')
+
+    const nav = await screen.findByRole('navigation', { name: 'Cuenta' })
+    expect(await within(nav).findByRole('link', { name: 'Mis productos' })).not.toHaveAttribute('title')
+    expect(within(nav).getByRole('button', { name: 'Cerrar sesión' })).not.toHaveAttribute('title')
   })
 
   it('appHeader_conSesionDeVendedor_noMuestraLaOpcionPanelDeControl', async () => {
