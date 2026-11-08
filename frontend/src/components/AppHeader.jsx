@@ -1,10 +1,12 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
-import { Button, makeStyles, tokens } from '@fluentui/react-components'
+import { Button, makeStyles, mergeClasses, tokens } from '@fluentui/react-components'
 import {
   ArrowExit20Regular,
+  BoxMultiple20Regular,
   ChatWarning20Regular,
   Diamond20Regular,
+  Grid20Regular,
   Heart20Regular,
   Location20Regular,
   Payment20Regular,
@@ -18,10 +20,29 @@ import { useAuth } from '../auth/useAuth'
 import { PATHS } from '../routes/paths'
 import LinkButton from './LinkButton'
 
+// Tres tamaños. Ancho: iconos con texto. Medio: con muchos accesos (el cliente tiene nueve) solo se ven los iconos;
+// el texto sigue ahí para los lectores de pantalla y como tooltip. Móvil: el logotipo arriba y, debajo, una barra de
+// accesos con su texto que se desliza en horizontal. Todo es CSS: los enlaces están siempre en la página.
+const MOVIL = '@media (max-width: 767px)'
+const MEDIO = '@media (min-width: 768px) and (max-width: 1279px)'
+
+// Oculto a la vista, pero no a los lectores de pantalla
+const visuallyHidden = {
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  margin: '-1px',
+  padding: 0,
+  overflow: 'hidden',
+  clip: 'rect(0 0 0 0)',
+  whiteSpace: 'nowrap',
+  border: 0,
+}
+
 const useStyles = makeStyles({
   header: {
     width: '100%',
-    maxWidth: '1200px',
+    maxWidth: '1280px',
     margin: '0 auto',
     boxSizing: 'border-box',
     display: 'flex',
@@ -29,8 +50,17 @@ const useStyles = makeStyles({
     justifyContent: 'space-between',
     gap: tokens.spacingHorizontalM,
     padding: `${tokens.spacingVerticalL} ${tokens.spacingHorizontalL}`,
+    [MOVIL]: {
+      flexWrap: 'wrap',
+      rowGap: tokens.spacingVerticalS,
+      paddingTop: tokens.spacingVerticalM,
+      paddingBottom: tokens.spacingVerticalS,
+      paddingLeft: tokens.spacingHorizontalM,
+      paddingRight: tokens.spacingHorizontalM,
+    },
   },
   logo: {
+    flexShrink: 0,
     color: tokens.colorNeutralForeground1,
     textDecorationLine: 'none',
     fontSize: tokens.fontSizeBase500,
@@ -44,8 +74,58 @@ const useStyles = makeStyles({
     display: 'flex',
     alignItems: 'center',
     gap: tokens.spacingHorizontalS,
+    minWidth: 0,
+    [MEDIO]: { gap: tokens.spacingHorizontalXS },
+  },
+  // Con sesión, en el móvil la barra ocupa una fila propia bajo el logotipo y se desliza
+  userActions: {
+    [MOVIL]: {
+      order: 1,
+      flexBasis: '100%',
+      overflowX: 'auto',
+      scrollbarWidth: 'none',
+      paddingBottom: tokens.spacingVerticalXXS,
+      maskImage: 'linear-gradient(to right, black 85%, transparent)',
+      WebkitMaskImage: 'linear-gradient(to right, black 85%, transparent)',
+      '::-webkit-scrollbar': { display: 'none' },
+    },
+  },
+  item: {
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
+  },
+  // Solo el texto de los accesos con icono se esconde en el tamaño medio
+  compactLabel: {
+    [MEDIO]: visuallyHidden,
+  },
+  compactItem: {
+    [MEDIO]: { minWidth: 'auto', paddingLeft: tokens.spacingHorizontalS, paddingRight: tokens.spacingHorizontalS },
   },
 })
+
+// Un acceso de la cabecera: icono y texto. Con `compact`, en el tamaño medio solo se ve el icono y el texto pasa a
+// ser su tooltip; el nombre accesible no cambia.
+function NavLink({ to, icon, compact = false, children }) {
+  const styles = useStyles()
+  return (
+    <LinkButton
+      to={to}
+      appearance="subtle"
+      icon={icon}
+      title={compact ? children : undefined}
+      className={mergeClasses(styles.item, compact && styles.compactItem)}
+    >
+      <span className={compact ? styles.compactLabel : undefined}>{children}</span>
+    </LinkButton>
+  )
+}
+
+NavLink.propTypes = {
+  to: PropTypes.string.isRequired,
+  icon: PropTypes.element,
+  compact: PropTypes.bool,
+  children: PropTypes.string.isRequired,
+}
 
 function GuestActions() {
   return (
@@ -61,63 +141,75 @@ function GuestActions() {
 }
 
 function UserActions({ rol, onSignOut, disabled }) {
+  const styles = useStyles()
+  const esCliente = rol === ROLES.CLIENTE
+  // El cliente es quien tiene muchos accesos: solo los suyos se compactan en el tamaño medio
+  const compact = esCliente
+
   return (
     <>
       {rol === ROLES.ADMIN && (
-        <LinkButton to={PATHS.ADMIN} appearance="subtle">
+        <NavLink to={PATHS.ADMIN} icon={<Grid20Regular />}>
           Panel de control
-        </LinkButton>
+        </NavLink>
       )}
       {/* Fallos de la demo del Sprint 1: el vendedor no tenía acceso a sus productos desde el menú */}
       {rol === ROLES.VENDEDOR && (
-        <LinkButton to={PATHS.SELLER_PRODUCTS} appearance="subtle">
+        <NavLink to={PATHS.SELLER_PRODUCTS} icon={<BoxMultiple20Regular />}>
           Mis productos
-        </LinkButton>
+        </NavLink>
       )}
       {/* Las ventajas de ESIBuy Premium (HU45) son solo del cliente */}
-      {rol === ROLES.CLIENTE && (
-        <LinkButton to={PATHS.PREMIUM} appearance="subtle" icon={<Diamond20Regular />}>
+      {esCliente && (
+        <NavLink to={PATHS.PREMIUM} icon={<Diamond20Regular />} compact={compact}>
           Premium
-        </LinkButton>
+        </NavLink>
       )}
       {/* El historial de pedidos (HU11) es solo del cliente */}
-      {rol === ROLES.CLIENTE && (
-        <LinkButton to={PATHS.ORDERS} appearance="subtle" icon={<Receipt20Regular />}>
+      {esCliente && (
+        <NavLink to={PATHS.ORDERS} icon={<Receipt20Regular />} compact={compact}>
           Mis pedidos
-        </LinkButton>
+        </NavLink>
       )}
       {/* La lista de deseos (HU14) es solo del cliente */}
-      {rol === ROLES.CLIENTE && (
-        <LinkButton to={PATHS.WISHLIST} appearance="subtle" icon={<Heart20Regular />}>
+      {esCliente && (
+        <NavLink to={PATHS.WISHLIST} icon={<Heart20Regular />} compact={compact}>
           Favoritos
-        </LinkButton>
+        </NavLink>
       )}
       {/* Los métodos de pago (HU6) son solo del cliente */}
-      {rol === ROLES.CLIENTE && (
-        <LinkButton to={PATHS.PAYMENT_METHODS} appearance="subtle" icon={<Payment20Regular />}>
+      {esCliente && (
+        <NavLink to={PATHS.PAYMENT_METHODS} icon={<Payment20Regular />} compact={compact}>
           Métodos de pago
-        </LinkButton>
+        </NavLink>
       )}
       {/* Las direcciones de envío (HU5) son solo del cliente */}
-      {rol === ROLES.CLIENTE && (
-        <LinkButton to={PATHS.ADDRESSES} appearance="subtle" icon={<Location20Regular />}>
+      {esCliente && (
+        <NavLink to={PATHS.ADDRESSES} icon={<Location20Regular />} compact={compact}>
           Direcciones
-        </LinkButton>
+        </NavLink>
       )}
       {/* Las incidencias (HU44) son del cliente y del vendedor */}
-      {(rol === ROLES.CLIENTE || rol === ROLES.VENDEDOR) && (
-        <LinkButton to={PATHS.INCIDENTS} appearance="subtle" icon={<ChatWarning20Regular />}>
+      {(esCliente || rol === ROLES.VENDEDOR) && (
+        <NavLink to={PATHS.INCIDENTS} icon={<ChatWarning20Regular />} compact={compact}>
           Incidencias
-        </LinkButton>
+        </NavLink>
       )}
       {/* El perfil propio (HU4) es del cliente y del vendedor */}
-      {(rol === ROLES.CLIENTE || rol === ROLES.VENDEDOR) && (
-        <LinkButton to={PATHS.PROFILE} appearance="subtle" icon={<Person20Regular />}>
+      {(esCliente || rol === ROLES.VENDEDOR) && (
+        <NavLink to={PATHS.PROFILE} icon={<Person20Regular />} compact={compact}>
           Mi perfil
-        </LinkButton>
+        </NavLink>
       )}
-      <Button appearance="primary" icon={<ArrowExit20Regular />} onClick={onSignOut} disabled={disabled}>
-        Cerrar sesión
+      <Button
+        appearance="primary"
+        icon={<ArrowExit20Regular />}
+        onClick={onSignOut}
+        disabled={disabled}
+        title={compact ? 'Cerrar sesión' : undefined}
+        className={mergeClasses(styles.item, compact && styles.compactItem)}
+      >
+        <span className={compact ? styles.compactLabel : undefined}>Cerrar sesión</span>
       </Button>
     </>
   )
@@ -143,7 +235,7 @@ export default function AppHeader() {
       <Link to={user ? getHomePath(user.rol) : PATHS.HOME} className={styles.logo}>
         ESI<span className={styles.logoAccent}>Buy</span>
       </Link>
-      <nav className={styles.actions} aria-label="Cuenta">
+      <nav className={mergeClasses(styles.actions, user && styles.userActions)} aria-label="Cuenta">
         {!loading && (user ? <UserActions rol={user.rol} onSignOut={handleSignOut} disabled={signingOut} /> : <GuestActions />)}
       </nav>
     </header>
