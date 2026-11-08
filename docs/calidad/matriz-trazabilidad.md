@@ -4856,5 +4856,9 @@ Tests que no validan una HU concreta.
 | `ProductosConfigTest` | `elContextoConectaLaActualizacionDeLaValoracion` | Que Spring conecta la actualización de la valoración de los productos (`ValoracionesProductoUseCase`) con `ValoracionesProductoService` (HU13; AB#415, PR #195) |
 | `ProductosConfigTest` | `elContextoConectaElInventarioDelVendedor` | Que Spring conecta el inventario del vendedor (`InventarioVendedorUseCase`) con `InventarioVendedorService` (HU17; AB#280, PR #212) |
 | `EstadisticasConfigTest` | `elContextoConectaLasPiezasDeLasEstadisticas` | Que Spring conecta las estadísticas del vendedor (`EstadisticasVendedorService`) con sus adaptadores hacia usuarios, pedidos y productos (HU17; AB#279, PR #212) |
+| `Home.test.jsx` (frontend) | `home_alRenderizar_explicaComoFuncionaParaQuienCompra` | Que la home explica «Cómo funciona» con la pestaña «Quiero comprar» elegida y sus 4 pasos (rama `fix/mejora-home`, sin HU ni AB#) |
+| `Home.test.jsx` (frontend) | `home_alElegirOtroPerfil_muestraSusPasos` | Que al elegir «Quiero vender» o «Administro» se muestran los pasos de ese perfil y no los del anterior (rama `fix/mejora-home`, sin HU ni AB#) |
+| `Home.test.jsx` (frontend) | `home_sinSesion_invitaAEmpezarHaciaElRegistro` | Que sin sesión la llamada final «Empezar ahora» lleva al registro (rama `fix/mejora-home`, sin HU ni AB#) |
+| `Home.test.jsx` (frontend) | `home_conSesion_noInvitaAEmpezar` | Que con la sesión iniciada no se ofrece «Empezar ahora», como «Crear mi cuenta» en HU1-CP25 (rama `fix/mejora-home`, sin HU ni AB#) |
 
 `InicializadorColeccionesTest` está en `shared/infrastructure/config/` y usa Testcontainers. HU36 (crear la base de datos) no tiene casos de prueba en Azure Boards, por eso sus tests están en esta sección.
