@@ -136,19 +136,37 @@ const PROFILE_FIELDS = {
 
 const FALLBACK_FIELDS = [nombre, apellidos, email, estado]
 
-export const profileFieldsFor = (rolDeLaCuenta) => PROFILE_FIELDS[rolDeLaCuenta] ?? FALLBACK_FIELDS
+// Campos que el propio usuario no puede cambiar (HU45): el DNI y el tipo de cliente los gestiona el administrador
+// (HU22), y el estado de la cuenta no es un dato del perfil. Siguen viéndose en solo lectura, salvo el estado.
+const SOLO_LECTURA_EN_EL_PERFIL_PROPIO = new Set(['dni', 'tipoCliente'])
+const OCULTOS_EN_EL_PERFIL_PROPIO = new Set(['estado'])
+
+const ownFields = (fields) =>
+  fields
+    .filter((field) => !OCULTOS_EN_EL_PERFIL_PROPIO.has(field.name))
+    .map((field) => {
+      if (!SOLO_LECTURA_EN_EL_PERFIL_PROPIO.has(field.name)) return field
+      return Object.fromEntries(Object.entries(field).filter(([clave]) => clave !== 'edit'))
+    })
+
+// Los campos de la ficha de un rol. Con `own` son los del propio usuario editando su perfil (HU45), que son menos
+// que los que edita el administrador (HU22).
+export const profileFieldsFor = (rolDeLaCuenta, { own = false } = {}) => {
+  const fields = PROFILE_FIELDS[rolDeLaCuenta] ?? FALLBACK_FIELDS
+  return own ? ownFields(fields) : fields
+}
 
 const isEditable = (field) => Boolean(field.edit)
-const editableFieldsFor = (rolDeLaCuenta) => profileFieldsFor(rolDeLaCuenta).filter(isEditable)
+const editableFieldsFor = (rolDeLaCuenta, options) => profileFieldsFor(rolDeLaCuenta, options).filter(isEditable)
 
 // Pares [etiqueta, texto] para el modo lectura. Nunca incluye la contraseña.
 export const readFields = (rolDeLaCuenta, usuario) =>
   profileFieldsFor(rolDeLaCuenta).map((field) => [field.label, field.read(usuario, rolDeLaCuenta)])
 
 // Valores iniciales del formulario: los campos modificables del rol de la cuenta, siempre como texto.
-export function initialValues(rolDeLaCuenta, usuario) {
+export function initialValues(rolDeLaCuenta, usuario, options) {
   const valores = Object.fromEntries(
-    editableFieldsFor(rolDeLaCuenta).map((field) => {
+    editableFieldsFor(rolDeLaCuenta, options).map((field) => {
       const texto = String(usuario[field.name] ?? '')
       return [field.name, field.edit.type === 'date' ? texto.slice(0, 10) : texto]
     }),
@@ -159,9 +177,9 @@ export function initialValues(rolDeLaCuenta, usuario) {
 
 // Un mensaje por cada campo incorrecto (vacío si todo es correcto), para mostrarlos todos a la vez. Se valida
 // con los campos del rol de la cuenta.
-export function validateProfile(rolDeLaCuenta, values) {
+export function validateProfile(rolDeLaCuenta, values, options) {
   const errors = {}
-  for (const field of editableFieldsFor(rolDeLaCuenta)) {
+  for (const field of editableFieldsFor(rolDeLaCuenta, options)) {
     const valor = (values[field.name] ?? '').trim()
     if (field.edit.required && !valor) errors[field.name] = 'Este campo es obligatorio'
     else if (valor && field.edit.validate) {
@@ -174,8 +192,8 @@ export function validateProfile(rolDeLaCuenta, values) {
 
 // Cuerpo de la petición: solo los campos modificables del rol de la cuenta. El email, el rol, la fecha de
 // incorporación y la contraseña no viajan nunca.
-export function profilePayload(rolDeLaCuenta, values) {
+export function profilePayload(rolDeLaCuenta, values, options) {
   return Object.fromEntries(
-    editableFieldsFor(rolDeLaCuenta).map((field) => [field.name, (values[field.name] ?? '').trim()]),
+    editableFieldsFor(rolDeLaCuenta, options).map((field) => [field.name, (values[field.name] ?? '').trim()]),
   )
 }

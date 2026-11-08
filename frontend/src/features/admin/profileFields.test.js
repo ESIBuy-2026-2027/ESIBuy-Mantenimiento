@@ -443,7 +443,7 @@ describe('campos del perfil propio (HU45)', () => {
     const valores = initialValues(ROLES.CLIENTE, CLIENTE, PROPIO)
 
     expect(validateProfile(ROLES.CLIENTE, { ...valores, fechaNacimiento: hacerAnios(17) }, PROPIO)).toEqual({
-      fechaNacimiento: 'Debes ser mayor de edad',
+      fechaNacimiento: 'Debe ser mayor de edad',
     })
     expect(Object.keys(validateProfile(ROLES.CLIENTE, { ...valores, fechaNacimiento: '' }, PROPIO))).toEqual([
       'fechaNacimiento',
