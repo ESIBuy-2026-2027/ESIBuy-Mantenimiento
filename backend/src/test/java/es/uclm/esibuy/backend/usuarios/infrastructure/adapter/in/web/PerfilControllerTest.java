@@ -1,5 +1,7 @@
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verify;
@@ -10,6 +12,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -27,9 +30,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
+import es.uclm.esibuy.backend.usuarios.application.port.in.EditarPerfilCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.GestionPerfilUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.GestionCuentaUseCase;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaActualIncorrectaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
+import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
@@ -40,11 +47,12 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
-// Consulta del perfil propio (HU4, T297): GET /api/perfil; y eliminación de la cuenta propia del cliente (HU25,
-// T274) o del vendedor (HU47): DELETE /api/perfil. Los casos de uso son dobles de prueba; la seguridad es la real
-// (SecurityConfig). El usuario en sesión se identifica por su email (el username de user(...)).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU4-CP01 a CP04 y HU25-CP02 a CP05, propuestos; HU47-CP06 pasa de
-// «un cliente recibe 403» a «un administrador recibe 403» con el endpoint único.
+// Consulta del perfil propio (HU4, T297): GET /api/perfil; edición del perfil propio (HU45, T101): PUT /api/perfil;
+// y eliminación de la cuenta propia del cliente (HU25, T274) o del vendedor (HU47): DELETE /api/perfil. Los casos
+// de uso son dobles de prueba; la seguridad es la real (SecurityConfig). El usuario en sesión se identifica por su
+// email (el username de user(...)).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU4-CP01 a CP04, HU25-CP02 a CP05 y HU45-CP06 a CP10, propuestos;
+// HU47-CP06 pasa de «un cliente recibe 403» a «un administrador recibe 403» con el endpoint único.
 @WebMvcTest(PerfilController.class)
 @Import(SecurityConfig.class)
 class PerfilControllerTest {
@@ -255,5 +263,157 @@ class PerfilControllerTest {
                 .andExpect(jsonPath("$.code").value("WRONG_PASSWORD"));
 
         assertTrue(!sesion.isInvalid());
+    }
+
+    @Test
+    @DisplayName("HU45-CP06: un cliente edita su perfil y recibe 200 con el perfil actualizado")
+    void unClienteEditaSuPerfil() throws Exception {
+        EditarPerfilCommand comando = new EditarPerfilCommand("Lucía María", "Torres Gil", "avatar3", "612345678",
+                LocalDate.of(1980, Month.JUNE, 1), null, null);
+        when(gestionPerfil.editarPerfil(EMAIL_CLIENTE, comando)).thenReturn(new Usuario("u-1",
+                new DatosPersonales("Lucía María", "Torres Gil", "avatar3"), new Email(EMAIL_CLIENTE),
+                "hash-no-debe-salir", Rol.CLIENTE, new DatosCliente(TipoCliente.PREMIUM, new Dni("12345678Z"),
+                        LocalDate.of(1980, Month.JUNE, 1), new Telefono("612345678")), null));
+
+        mockMvc.perform(put(RUTA).with(user(EMAIL_CLIENTE).roles("CLIENTE")).with(csrf())
+                        .contentType("application/json")
+                        .content("""
+                                {"nombre":"Lucía María","apellidos":"Torres Gil","avatar":"avatar3",
+                                 "telefono":"612345678","fechaNacimiento":"1980-06-01"}"""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombre").value("Lucía María"))
+                .andExpect(jsonPath("$.apellidos").value("Torres Gil"))
+                .andExpect(jsonPath("$.avatar").value("avatar3"))
+                .andExpect(jsonPath("$.telefono").value("612345678"))
+                .andExpect(jsonPath("$.fechaNacimiento").value("1980-06-01"))
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+
+        // El correo sale de la sesión y el avatar llega al comando como imagen de perfil
+        verify(gestionPerfil).editarPerfil(EMAIL_CLIENTE, comando);
+    }
+
+    @Test
+    @DisplayName("HU45-CP06: un vendedor edita su perfil y recibe 200 con su nombre comercial y su categoría")
+    void unVendedorEditaSuPerfil() throws Exception {
+        EditarPerfilCommand comando = new EditarPerfilCommand("Vera", "Vendedora", null, null, null, "Tienda Nueva",
+                "cat-2");
+        when(gestionPerfil.editarPerfil(EMAIL_VENDEDOR, comando)).thenReturn(new Usuario("u-4",
+                new DatosPersonales("Vera", "Vendedora", null), new Email(EMAIL_VENDEDOR), "hash-no-debe-salir",
+                Rol.VENDEDOR, new DatosVendedor("Tienda Nueva", "cat-2", new Dni("87654321X"), null), null));
+
+        mockMvc.perform(put(RUTA).with(user(EMAIL_VENDEDOR).roles("VENDEDOR")).with(csrf())
+                        .contentType("application/json")
+                        .content("""
+                                {"nombre":"Vera","apellidos":"Vendedora","nombreComercial":"Tienda Nueva",
+                                 "categoriaPrincipalId":"cat-2"}"""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombreComercial").value("Tienda Nueva"))
+                .andExpect(jsonPath("$.categoriaPrincipalId").value("cat-2"))
+                .andExpect(jsonPath("$.dni").value("87654321X"));
+
+        verify(gestionPerfil).editarPerfil(EMAIL_VENDEDOR, comando);
+    }
+
+    @Test
+    @DisplayName("HU45-CP07: el cuerpo no puede cambiar el correo, el DNI, el rol ni el tipo de cliente")
+    void elCuerpoNoCambiaElCorreoNiElDni() throws Exception {
+        when(gestionPerfil.editarPerfil(eq(EMAIL_CLIENTE), any())).thenReturn(clienteLucia());
+
+        mockMvc.perform(put(RUTA).with(user(EMAIL_CLIENTE).roles("CLIENTE")).with(csrf())
+                        .contentType("application/json")
+                        .content("""
+                                {"nombre":"Lucía","apellidos":"Torres Vega","email":"otro@esibuy.test",
+                                 "dni":"00000000T","rol":"ADMINISTRADOR","tipoCliente":"ESTANDAR"}"""))
+                .andExpect(status().isOk());
+
+        // Se edita al usuario de la sesión, no al del cuerpo; el comando no tiene sitio para DNI, rol ni tipo
+        verify(gestionPerfil).editarPerfil(EMAIL_CLIENTE,
+                new EditarPerfilCommand("Lucía", "Torres Vega", null, null, null, null, null));
+    }
+
+    @Test
+    @DisplayName("HU45-CP08: sin nombre o con uno de más de 30 caracteres se responde 400 y no se llama al caso de uso")
+    void sinNombreSeResponde400SinLlamarAlCasoDeUso() throws Exception {
+        mockMvc.perform(put(RUTA).with(user(EMAIL_CLIENTE).roles("CLIENTE")).with(csrf())
+                        .contentType("application/json").content("{\"nombre\":\" \",\"apellidos\":\"Torres\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        mockMvc.perform(put(RUTA).with(user(EMAIL_CLIENTE).roles("CLIENTE")).with(csrf())
+                        .contentType("application/json")
+                        .content("{\"nombre\":\"" + "a".repeat(31) + "\",\"apellidos\":\"Torres\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+
+        verifyNoInteractions(gestionPerfil);
+    }
+
+    @Test
+    @DisplayName("HU45-CP08: un dato que rechaza el dominio responde 400 con el code de su motivo")
+    void unDatoQueRechazaElDominioDa400ConSuCode() throws Exception {
+        when(gestionPerfil.editarPerfil(eq(EMAIL_CLIENTE), any()))
+                .thenThrow(new UsuarioInvalidoException(MotivoRechazo.MENOR_DE_EDAD,
+                        "El cliente debe ser mayor de edad"));
+
+        mockMvc.perform(put(RUTA).with(user(EMAIL_CLIENTE).roles("CLIENTE")).with(csrf())
+                        .contentType("application/json")
+                        .content("{\"nombre\":\"Lucía\",\"apellidos\":\"Torres\",\"fechaNacimiento\":\"2015-01-01\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("UNDERAGE"));
+    }
+
+    @Test
+    @DisplayName("HU45-CP08: un dato no válido sin motivo concreto responde 400 VALIDATION_ERROR")
+    void unDatoNoValidoSinMotivoDa400Generico() throws Exception {
+        when(gestionPerfil.editarPerfil(eq(EMAIL_VENDEDOR), any()))
+                .thenThrow(new UsuarioInvalidoException("Un vendedor debe tener datos de vendedor"));
+
+        mockMvc.perform(put(RUTA).with(user(EMAIL_VENDEDOR).roles("VENDEDOR")).with(csrf())
+                        .contentType("application/json").content("{\"nombre\":\"Vera\",\"apellidos\":\"Vendedora\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    @DisplayName("HU45-CP09: un nombre comercial que ya usa otro vendedor responde 409")
+    void unNombreComercialOcupadoDa409() throws Exception {
+        when(gestionPerfil.editarPerfil(eq(EMAIL_VENDEDOR), any()))
+                .thenThrow(new NombreComercialYaRegistradoException("El nombre comercial ya está registrado"));
+
+        mockMvc.perform(put(RUTA).with(user(EMAIL_VENDEDOR).roles("VENDEDOR")).with(csrf())
+                        .contentType("application/json")
+                        .content("""
+                                {"nombre":"Vera","apellidos":"Vendedora","nombreComercial":"Tienda Ajena"}"""))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("COMMERCIAL_NAME_ALREADY_REGISTERED"));
+    }
+
+    @Test
+    @DisplayName("HU45-CP10: un administrador no edita su perfil por aquí (403)")
+    void unAdministradorNoEditaSuPerfilPorAqui() throws Exception {
+        mockMvc.perform(put(RUTA).with(user("admin@esibuy.test").roles("ADMINISTRADOR")).with(csrf())
+                        .contentType("application/json").content("{\"nombre\":\"Ana\",\"apellidos\":\"Admin\"}"))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(gestionPerfil);
+    }
+
+    @Test
+    @DisplayName("HU45-CP10: sin sesión no se edita el perfil (401)")
+    void sinSesionNoSeEditaElPerfil() throws Exception {
+        mockMvc.perform(put(RUTA).with(csrf())
+                        .contentType("application/json").content("{\"nombre\":\"Lucía\",\"apellidos\":\"Torres\"}"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(gestionPerfil);
+    }
+
+    @Test
+    @DisplayName("HU45-CP10: sin token CSRF no se edita el perfil (403)")
+    void sinTokenCsrfNoSeEditaElPerfil() throws Exception {
+        mockMvc.perform(put(RUTA).with(user(EMAIL_CLIENTE).roles("CLIENTE"))
+                        .contentType("application/json").content("{\"nombre\":\"Lucía\",\"apellidos\":\"Torres\"}"))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(gestionPerfil);
     }
 }
