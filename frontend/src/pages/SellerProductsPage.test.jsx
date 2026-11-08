@@ -484,7 +484,8 @@ describe('SellerProductsPage (HU34): editar desde la ficha', () => {
     await user.click(screen.getByRole('button', { name: 'Ver Teclado mecánico' }))
     const dialogo = await screen.findByRole('dialog', { name: /información del producto/i })
     await within(dialogo).findByLabelText('Nombre')
-    await user.click(within(dialogo).getByRole('link', { name: 'Editar' }))
+    // hidden: Fluent marca a veces el propio diálogo con aria-hidden mientras termina de abrirse (como en el PR #217)
+    await user.click(within(dialogo).getByRole('link', { name: 'Editar', hidden: true }))
 
     expect(await screen.findByRole('heading', { level: 1, name: /editar producto/i })).toBeInTheDocument()
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/seller\/products\/p-2\/edit$/)
