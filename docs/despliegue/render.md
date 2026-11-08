@@ -15,10 +15,15 @@ Las URL son las previstas: si el nombre ya está cogido en Render, se le añade 
 
 **Cuándo se despliega.**
 
+El despliegue lo decide el pipeline de Sonar (`azure-pipelines-sonar.yml`), no Render: en `render.yaml` los dos servicios tienen `autoDeployTrigger: off`.
+
 1. Se mergea un cambio en `main` (los PR siguen yendo a `develop`; `develop` se integra en `main`).
-2. El CI de GitHub Actions (`.github/workflows/ci.yml`) se ejecuta sobre ese commit.
-3. Con `autoDeployTrigger: checksPass`, Render espera a que pasen **todos** los checks de GitHub del commit (cuentan como pasados los que terminan en *success*, *neutral* o *skipped*) y entonces despliega. Si alguno falla, o no detecta ningún check, no despliega.
-4. Cada servicio se despliega solo si cambian sus rutas (`buildFilter`): `backend/**` el backend y `frontend/**` el frontend. Un cambio en `render.yaml` los despliega a los dos.
+2. El pipeline de Sonar se lanza sobre ese commit y lo ejecuta un agente propio del equipo (pool `Default`), con la VPN de la UCLM y Docker.
+3. **Compilar y testear**: `./mvnw -B verify` en el backend y lint, tests con cobertura y build en el frontend. Si algo falla, se para.
+4. **Analizar con SonarQube**: analiza los dos proyectos con `-Dsonar.qualitygate.wait=true`. Si alguno no pasa el Quality Gate, el paso falla y el pipeline se para.
+5. **Desplegar**: solo en `main` y solo si el análisis se ha hecho de verdad y ha pasado (resultado *Succeeded*). El job «Desplegar en Render» llama al *Deploy Hook* del backend y al del frontend, y Render construye y despliega los dos servicios desde ese commit.
+
+Sin VPN, el análisis se salta con un aviso (*SucceededWithIssues*) y **no se despliega**. En `develop` el pipeline hace lo mismo menos el despliegue. El CI de GitHub Actions y «Pipeline tests» de Azure siguen validando cada PR y cada push, pero ya no deciden el despliegue.
 
 **Comprobación de salud.** Render consulta `/actuator/health/liveness` (Actuator, PR 228). No manda tráfico a una versión nueva hasta que responde 200, y reinicia el servicio si deja de responder. Esa ruta no consulta MongoDB, y el indicador de correo está desactivado, para que un fallo de Atlas o del SMTP no provoque reinicios en bucle.
 
@@ -45,7 +50,9 @@ El frontend solo tiene `NODE_VERSION=22`, la misma que el CI. **No** se define `
 2. **Cargar los secretos.** Render pide el valor de cada variable con `sync: false` (sección 2).
 3. **Comprobar la URL del backend.** Cuando exista el servicio `esibuy-backend`, comprobar que su URL es `https://esibuy-backend.onrender.com`. Si Render le ha añadido un sufijo, cambiar el `destination` del rewrite de `/api/*` en `render.yaml` (en un PR, como cualquier cambio).
 4. **Permitir a Render en MongoDB Atlas.** Las IP de salida de Render no son fijas por servicio: son bloques CIDR de la región (Fráncfort), compartidos por los servicios de esa región. Para verlos: en el panel del servicio `esibuy-backend`, *Connect → Outbound*. Añadir cada bloque en Atlas en *Network Access → IP Access List*. **No** usar `0.0.0.0/0`. Si Render cambia los bloques, hay que actualizar la lista.
-5. **Revisar la configuración de auto-deploy.** En cada servicio, *Settings → Auto-Deploy* debe mostrar *After CI Checks Pass* y la rama `main`.
+5. **Revisar la configuración de auto-deploy.** En cada servicio, *Settings → Auto-Deploy* debe estar en *Off* (lo pone `render.yaml` al sincronizar el Blueprint) y la rama debe ser `main`.
+6. **Crear los Deploy Hooks.** En cada servicio, *Settings → Deploy Hook* da una URL secreta que, al recibir un `POST`, despliega el servicio. Quien la tenga puede desplegar: no se comparte ni se escribe en el repositorio.
+7. **Guardarlos en Azure Pipelines.** En el pipeline de Sonar, *Edit → Variables*, crear `RENDER_DEPLOY_HOOK_BACKEND` y `RENDER_DEPLOY_HOOK_FRONTEND` con la URL de cada servicio y marcar *Keep this value secret* (como `SQ_TOKEN`). En los logs salen como `***`.
 
 ## 4. Lista de comprobación del primer despliegue
 
@@ -61,7 +68,9 @@ El frontend solo tiene `NODE_VERSION=22`, la misma que el CI. **No** se define `
 
 - **Cookies en el rewrite (riesgo abierto).** Render documenta que el destino de un rewrite puede ser una URL pública y que sirve su contenido sin redirigir al navegador, pero no documenta qué hace con las cabeceras `Set-Cookie`, con la cabecera `Host` ni con las cookies que envía el navegador. Si el login no funciona a través del rewrite, el plan B es **servir el `dist/` del frontend desde el propio Spring Boot** y desplegar un solo servicio. Elimina el problema de raíz, pero acopla los builds y hay que acordarlo con el equipo.
 - **Orden de las reglas.** La documentación de Render no dice qué regla gana si varias coinciden. En `render.yaml`, `/api/*` va antes que el fallback `/*`. Además, Render sirve primero un archivo estático si existe en la ruta pedida.
-- **Checks de otras herramientas.** Render espera a todos los checks de GitHub del commit. Si Azure Pipelines (o Sonar) informa a GitHub y su check falla o se queda pendiente, el despliegue se bloquea.
+- **El despliegue depende de un agente propio.** El pipeline de Sonar solo corre en un ordenador del equipo con el agente encendido, la VPN de la UCLM y Docker. Si nadie lo enciende, la ejecución espera en cola y no se despliega. Con varias fusiones seguidas se lanza una sola ejecución con el último estado (`batch: true`).
+- **Un Quality Gate en ERROR bloquea el despliegue.** Es lo que se busca, pero también lo bloquea una incidencia nueva de Sonar en los tests (p. ej. un `S2699`): hay que arreglarla antes de poder desplegar.
+- **Desplegar a mano.** Si hace falta desplegar sin pasar por el pipeline (p. ej. para volver a una versión anterior), se hace desde el panel de Render (*Manual Deploy* o *Rollback*).
 - **`mockServiceWorker.js` en producción.** El archivo viene de `frontend/public/` y acaba en `dist/`. Es inerte, porque en producción nadie lo registra, pero se podría excluir del build más adelante.
 
 ### Para el AGR (ISO/IEC 27001:2022)
@@ -85,6 +94,6 @@ El frontend solo tiene `NODE_VERSION=22`, la misma que el CI. **No** se define `
 - Plan gratuito: https://render.com/docs/free
 - Especificación de `render.yaml`: https://render.com/docs/blueprint-spec (esquema JSON: https://render.com/schema/render.yaml.json)
 - Redirects y rewrites: https://render.com/docs/redirects-rewrites
-- Monorepos y `buildFilter`: https://render.com/docs/monorepo-support
+- Deploy Hooks: https://render.com/docs/deploy-hooks
 - Auto-deploy: https://render.com/docs/deploys
 - IP de salida: https://render.com/docs/outbound-ip-addresses

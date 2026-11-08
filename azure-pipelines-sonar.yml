@@ -14,7 +14,14 @@
 #       macOS:   brew install sonar-scanner
 #       Windows: descargar el zip de SonarScanner CLI y añadir su carpeta bin al PATH
 #   - VPN de la UCLM conectada
-# Variable secreta en Azure: SQ_TOKEN (Pipelines → Edit → Variables → Keep this value secret)
+# Variables secretas en Azure (Pipelines → Edit → Variables → Keep this value secret):
+#   - SQ_TOKEN: token de SonarQube
+#   - RENDER_DEPLOY_HOOK_BACKEND y RENDER_DEPLOY_HOOK_FRONTEND: Deploy Hook de cada servicio de Render
+#     (Render → servicio → Settings → Deploy Hook). Ver docs/despliegue/render.md.
+#
+# Despliegue continuo (CD): en main, si los tests pasan y los dos proyectos superan el Quality Gate,
+# el stage Desplegar pide a Render que despliegue el backend y el frontend. Render no despliega por su
+# cuenta (autoDeployTrigger: off en render.yaml): solo lo hace cuando se lo pide este pipeline.
 
 trigger:
   # Si se acumulan varias fusiones mientras no hay ningún agente conectado,
@@ -127,7 +134,7 @@ stages:
               path: $(Build.SourcesDirectory)/frontend/coverage
 
           # ¿Se llega al servidor? Si no responde, este paso queda en naranja (aviso),
-          # el job pasa a "SucceededWithIssues" y los dos análisis de abajo se saltan.
+          # el job pasa a "SucceededWithIssues", los dos análisis de abajo se saltan y no se despliega.
           - script: curl -sSf -m 15 $(SQ_URL)/api/system/status
             displayName: Comprobar que SonarQube responde (¿VPN conectada?)
             continueOnError: true
@@ -135,16 +142,18 @@ stages:
           # El token llega de la variable secreta SQ_TOKEN (en los logs sale como ***).
           # El -D de la línea de comandos tiene prioridad sobre el sonar.token de
           # sonar-project.properties, que solo está ahí para los análisis en local.
-          - script: sonar-scanner -Dsonar.host.url=$(SQ_URL) -Dsonar.token=$(SQ_TOKEN)
-            displayName: Analizar backend
+          # -Dsonar.qualitygate.wait=true: el paso espera al Quality Gate y falla si no se pasa, así que
+          # el pipeline se para y no se despliega. El frontend se analiza aunque el backend no pase el
+          # Quality Gate (estado Failed), para tener siempre los resultados de los dos proyectos; sin
+          # VPN (SucceededWithIssues) se salta igual que el backend.
+          - script: sonar-scanner -Dsonar.host.url=$(SQ_URL) -Dsonar.token=$(SQ_TOKEN) -Dsonar.qualitygate.wait=true
+            displayName: Analizar backend (y esperar al Quality Gate)
             workingDirectory: backend
             condition: eq(variables['Agent.JobStatus'], 'Succeeded')
-          - script: sonar-scanner -Dsonar.host.url=$(SQ_URL) -Dsonar.token=$(SQ_TOKEN)
-            displayName: Analizar frontend
+          - script: sonar-scanner -Dsonar.host.url=$(SQ_URL) -Dsonar.token=$(SQ_TOKEN) -Dsonar.qualitygate.wait=true
+            displayName: Analizar frontend (y esperar al Quality Gate)
             workingDirectory: frontend
-            condition: eq(variables['Agent.JobStatus'], 'Succeeded')
-          # Para que el pipeline se pare si no se pasa el Quality Gate (escena 5),
-          # añadir a los dos comandos:  -Dsonar.qualitygate.wait=true
+            condition: and(not(canceled()), in(variables['Agent.JobStatus'], 'Succeeded', 'Failed'))
 
   # 4 ─────────────────────────────────────────────────────────────
   - stage: Desplegar
@@ -174,3 +183,18 @@ stages:
           - publish: $(Build.ArtifactStagingDirectory)/esibuy
             artifact: esibuy-release
             displayName: Publicar versión lista para desplegar
+
+      # Despliegue en Render. Solo en main y solo si el análisis se hizo de verdad y pasó el Quality Gate
+      # (resultado Succeeded): sin VPN el análisis se salta (SucceededWithIssues) y no se despliega.
+      # Render construye cada servicio desde el commit de main y no le manda tráfico hasta que pasa
+      # su health check; el resultado del despliegue se ve en el panel de Render.
+      - job: render
+        displayName: Desplegar en Render
+        condition: and(eq(stageDependencies.Analizar.sonar.result, 'Succeeded'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+        steps:
+          - checkout: none
+          # Las URL de los Deploy Hooks son secretas: salen de variables secretas (en los logs, ***).
+          - script: curl -fsS -m 30 -X POST "$(RENDER_DEPLOY_HOOK_BACKEND)"
+            displayName: Pedir a Render que despliegue el backend
+          - script: curl -fsS -m 30 -X POST "$(RENDER_DEPLOY_HOOK_FRONTEND)"
+            displayName: Pedir a Render que despliegue el frontend
