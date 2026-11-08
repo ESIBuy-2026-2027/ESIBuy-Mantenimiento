@@ -350,3 +350,148 @@ describe('ProfileEditor (HU22): el rol no se puede cambiar', () => {
     expect(onSaved).not.toHaveBeenCalled()
   })
 })
+
+describe('ProfileEditor (HU45): perfil propio', () => {
+  const guardarCambios = (user) => user.click(screen.getByRole('button', { name: /^guardar cambios$/i }))
+  const renderizarPropio = (opciones = {}) => renderizar({ own: true, ...opciones })
+  const escribir = async (user, etiqueta, texto) => {
+    const campo = screen.getByLabelText(etiqueta)
+    await user.clear(campo)
+    if (texto) await user.type(campo, texto)
+  }
+
+  it('HU45-CP11: el cliente modifica sus datos personales y ve en solo lectura el email, el DNI, el tipo y el rol', () => {
+    renderizarPropio()
+
+    for (const etiqueta of [/^nombre/i, /^apellidos/i, /^teléfono/i, /^fecha de nacimiento/i]) {
+      expect(esDeSoloLectura(etiqueta)).toBe(false)
+    }
+    for (const etiqueta of ['Email', 'Rol', 'DNI', 'Tipo de cliente']) {
+      expect(esDeSoloLectura(etiqueta)).toBe(true)
+    }
+    expect(screen.getByLabelText('DNI')).toHaveValue('10004119A')
+    expect(screen.getByLabelText('Tipo de cliente')).toHaveValue('Premium')
+    expect(screen.queryByLabelText('Estado')).not.toBeInTheDocument()
+  })
+
+  it('HU45-CP11: el vendedor modifica sus datos y su negocio y ve en solo lectura el email, el DNI y el rol', () => {
+    renderizarPropio({ rol: ROLES.VENDEDOR, usuario: VENDEDOR })
+
+    for (const etiqueta of [/^nombre(?! comercial)/i, /^apellidos/i, /^nombre comercial/i]) {
+      expect(esDeSoloLectura(etiqueta)).toBe(false)
+    }
+    for (const etiqueta of ['Correo electrónico', 'Rol', 'DNI']) {
+      expect(esDeSoloLectura(etiqueta)).toBe(true)
+    }
+    expect(screen.getByRole('combobox', { name: /^categoría principal/i })).toHaveValue('Tecnología')
+    expect(screen.queryByLabelText('Estado')).not.toBeInTheDocument()
+  })
+
+  it('HU45-CP12: al guardar envía todos los datos modificables del cliente y avisa con la respuesta del servidor', async () => {
+    const user = userEvent.setup()
+    const respuesta = { id: 'usr-3', nombre: 'Carla' }
+    const { save, onSaved } = renderizarPropio({ save: vi.fn().mockResolvedValue(respuesta) })
+
+    await escribir(user, /^nombre/i, 'Carla')
+    await guardarCambios(user)
+
+    const enviado = {
+      nombre: 'Carla',
+      apellidos: 'Moreno Gil',
+      telefono: '620023757',
+      fechaNacimiento: '1978-04-13',
+      avatar: 'avatar1',
+    }
+    await waitFor(() => expect(save).toHaveBeenCalledWith(enviado))
+    expect(onSaved).toHaveBeenCalledWith(enviado, respuesta)
+  })
+
+  it('HU45-CP12: mientras se guarda, el botón queda deshabilitado y no se envía dos veces', async () => {
+    const user = userEvent.setup()
+    let terminar
+    const save = vi.fn(() => new Promise((resolve) => (terminar = resolve)))
+    renderizarPropio({ save })
+
+    await guardarCambios(user)
+    await waitFor(() => expect(screen.getByRole('button', { name: /^guardar cambios$/i })).toBeDisabled())
+    await guardarCambios(user)
+
+    expect(save).toHaveBeenCalledTimes(1)
+    terminar({})
+  })
+
+  it('HU45-CP12: sin pulsar guardar no se envía nada aunque se modifiquen los datos', async () => {
+    const user = userEvent.setup()
+    const { save, onSaved } = renderizarPropio()
+
+    await escribir(user, /^nombre/i, 'Carla')
+    await escribir(user, /^teléfono/i, '699888777')
+
+    expect(save).not.toHaveBeenCalled()
+    expect(onSaved).not.toHaveBeenCalled()
+  })
+
+  it('HU45-CP13: con datos incorrectos no se envía, cada error sale en su campo y el foco va al primero', async () => {
+    const user = userEvent.setup()
+    const { save } = renderizarPropio()
+
+    await escribir(user, /^nombre/i, '')
+    await escribir(user, /^teléfono/i, '123')
+    await guardarCambios(user)
+
+    expect(save).not.toHaveBeenCalled()
+    expect(await screen.findByText('Este campo es obligatorio')).toBeInTheDocument()
+    expect(screen.getByText('Introduce un teléfono válido (9 números)')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveFocus())
+  })
+
+  it.each([
+    ['INVALID_PHONE', 400, ROLES.CLIENTE, CLIENTE, 'El teléfono debe tener 9 números'],
+    ['UNDERAGE', 400, ROLES.CLIENTE, CLIENTE, 'Debes ser mayor de edad'],
+    ['COMMERCIAL_NAME_ALREADY_REGISTERED', 409, ROLES.VENDEDOR, VENDEDOR, 'Este nombre comercial ya está registrado'],
+  ])('HU45-CP14: el code %s del backend sale en su campo con su propio mensaje', async (code, estado, rol, usuario, mensaje) => {
+    const user = userEvent.setup()
+    const save = vi.fn().mockRejectedValue(new ApiError(estado, 'Texto del backend que no se muestra', code))
+    const { onSaved } = renderizarPropio({ rol, usuario, save })
+
+    await guardarCambios(user)
+
+    expect(await screen.findByText(mensaje)).toBeInTheDocument()
+    expect(screen.queryByText('Texto del backend que no se muestra')).not.toBeInTheDocument()
+    expect(onSaved).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: /^guardar cambios$/i })).toBeEnabled()
+  })
+
+  it('HU45-CP14: un VALIDATION_ERROR o un fallo del servidor dan un aviso general y conservan lo escrito', async () => {
+    const user = userEvent.setup()
+    const save = vi.fn().mockRejectedValue(new ApiError(400, 'inválido', 'VALIDATION_ERROR'))
+    renderizarPropio({ save })
+
+    await escribir(user, /^nombre/i, 'Carla')
+    await guardarCambios(user)
+
+    expect(await screen.findByText('No se han podido guardar los cambios. Inténtalo de nuevo.')).toBeInTheDocument()
+    expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Carla')
+  })
+
+  it('HU45-CP15: avisa de si hay cambios sin guardar cada vez que cambia', async () => {
+    const user = userEvent.setup()
+    const onDirtyChange = vi.fn()
+    renderizarPropio({ onDirtyChange })
+
+    expect(onDirtyChange).toHaveBeenLastCalledWith(false)
+    await escribir(user, /^nombre/i, 'Carla')
+    expect(onDirtyChange).toHaveBeenLastCalledWith(true)
+    await escribir(user, /^nombre/i, 'Carlos')
+    expect(onDirtyChange).toHaveBeenLastCalledWith(false)
+  })
+
+  it('HU45-CP15: el botón Cancelar avisa al pulsarlo', async () => {
+    const user = userEvent.setup()
+    const { onCancel } = renderizarPropio()
+
+    await user.click(screen.getByRole('button', { name: /^cancelar$/i }))
+
+    expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+})
