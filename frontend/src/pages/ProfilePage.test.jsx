@@ -543,3 +543,152 @@ describe('ProfilePage (HU45): editar el perfil', () => {
     expect(campoNombre()).toHaveValue('Carla')
   })
 })
+
+// Aviso de cambios sin guardar (HU45): al cancelar la edición, al ir a otra pantalla y al cerrar o recargar la pestaña.
+describe('ProfilePage (HU45): cambios sin guardar', () => {
+  const nombre = () => screen.getByLabelText(/^nombre(?! comercial)/i)
+  const aviso = () => screen.queryByRole('alertdialog', { name: '¿Salir sin guardar?' })
+
+  async function abrirEdicion(user) {
+    await abrirPerfil('cliente@esibuy.test')
+    await user.click(screen.getByRole('button', { name: /^editar perfil$/i }))
+    await screen.findByRole('button', { name: /^guardar cambios$/i })
+  }
+
+  const escribirNombre = async (user, texto) => {
+    await user.clear(nombre())
+    await user.type(nombre(), texto)
+  }
+
+  const irA = (user, enlace) => user.click(screen.getByRole('link', { name: enlace }))
+
+  // El evento que lanza el navegador al cerrar o recargar la pestaña; si se cancela, el navegador pregunta antes
+  const cerrarLaPestana = () => {
+    const evento = new Event('beforeunload', { cancelable: true })
+    window.dispatchEvent(evento)
+    return evento
+  }
+
+  it('HU45-CP15: cancelar sin haber cambiado nada vuelve a la lectura sin preguntar', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+
+    await user.click(screen.getByRole('button', { name: /^cancelar$/i }))
+
+    expect(aviso()).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^editar perfil$/i })).toBeInTheDocument()
+  })
+
+  it('HU45-CP15: cancelar con cambios pregunta antes, y seguir editando los conserva', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+    await escribirNombre(user, 'Carla')
+
+    await user.click(screen.getByRole('button', { name: /^cancelar$/i }))
+    expect(aviso()).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+
+    await waitFor(() => expect(aviso()).not.toBeInTheDocument())
+    expect(nombre()).toHaveValue('Carla')
+  })
+
+  it('HU45-CP15: cancelar y salir sin guardar descarta los cambios y no envía nada', async () => {
+    const peticiones = []
+    server.use(
+      http.put('/api/perfil', async ({ request }) => {
+        peticiones.push(await request.json())
+        return HttpResponse.json({})
+      }),
+    )
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+    await escribirNombre(user, 'Carla')
+
+    await user.click(screen.getByRole('button', { name: /^cancelar$/i }))
+    await user.click(screen.getByRole('button', { name: 'Salir sin guardar' }))
+
+    expect(await screen.findByRole('button', { name: /^editar perfil$/i })).toBeInTheDocument()
+    expect(valorDe('Nombre')).toHaveValue('Carlos')
+    expect(peticiones).toHaveLength(0)
+    await user.click(screen.getByRole('button', { name: /^editar perfil$/i }))
+    expect(nombre()).toHaveValue('Carlos')
+  })
+
+  it('HU45-CP16: con cambios, ir a otra pantalla pide confirmación y seguir editando se queda en el perfil', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+    await escribirNombre(user, 'Carla')
+
+    await irA(user, 'Mis pedidos')
+    expect(aviso()).toBeInTheDocument()
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/profile')
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }))
+
+    await waitFor(() => expect(aviso()).not.toBeInTheDocument())
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/profile')
+    expect(nombre()).toHaveValue('Carla')
+  })
+
+  it('HU45-CP16: con cambios, salir sin guardar lleva a la otra pantalla', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+    await escribirNombre(user, 'Carla')
+
+    await irA(user, 'Mis pedidos')
+    await user.click(screen.getByRole('button', { name: 'Salir sin guardar' }))
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/orders'))
+  })
+
+  it('HU45-CP16: sin cambios, ir a otra pantalla no pregunta nada', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+
+    await irA(user, 'Mis pedidos')
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/orders'))
+    expect(aviso()).not.toBeInTheDocument()
+  })
+
+  it('HU45-CP16: si se vuelve a escribir lo mismo que había, ya no hay cambios que avisar', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+    await escribirNombre(user, 'Carla')
+    await escribirNombre(user, 'Carlos')
+
+    await irA(user, 'Mis pedidos')
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/orders'))
+    expect(aviso()).not.toBeInTheDocument()
+  })
+
+  it('HU45-CP16: tras guardar ya no hay cambios sin guardar, ni al navegar ni al cerrar la pestaña', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+    await escribirNombre(user, 'Carla')
+    await user.click(screen.getByRole('button', { name: /^guardar cambios$/i }))
+    await screen.findByText('Tus cambios se han guardado.')
+
+    expect(cerrarLaPestana().defaultPrevented).toBe(false)
+    await irA(user, 'Mis pedidos')
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent('/orders'))
+    expect(aviso()).not.toBeInTheDocument()
+  })
+
+  it('HU45-CP16: con cambios sin guardar, cerrar o recargar la pestaña pide confirmación al navegador', async () => {
+    const user = userEvent.setup()
+    await abrirEdicion(user)
+    expect(cerrarLaPestana().defaultPrevented).toBe(false)
+
+    await escribirNombre(user, 'Carla')
+
+    expect(cerrarLaPestana().defaultPrevented).toBe(true)
+  })
+
+  it('HU45-CP16: en lectura, sin editar, no se avisa al cerrar la pestaña', async () => {
+    await abrirPerfil('cliente@esibuy.test')
+
+    expect(cerrarLaPestana().defaultPrevented).toBe(false)
+  })
+})
