@@ -22,3 +22,10 @@ export function updateProfile(datos) {
 export function deleteAccount(password) {
   return request('/api/perfil', { method: 'DELETE', body: { password } })
 }
+
+// Paso a ESIBuy Premium del cliente en sesión (HU45, backend en las tasks T422 y T423). Sin cuerpo: el backend lo
+// deduce de la sesión. Responde 200 con el perfil actualizado (como getProfile), 400 ALREADY_PREMIUM si ya lo era,
+// 403 ACCESS_DENIED si no es cliente y 401 sin sesión.
+export function becomePremium() {
+  return request('/api/perfil/premium', { method: 'POST' })
+}

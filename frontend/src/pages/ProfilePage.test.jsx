@@ -232,6 +232,35 @@ describe('ProfilePage (HU46): preferencias', () => {
   })
 })
 
+// Nora (nuevo@esibuy.test) es cliente Estándar en el mock y Carlos (cliente@esibuy.test), Premium
+describe('ProfilePage (HU45): ESIBuy Premium', () => {
+  it('HU45-CP28: el cliente Estándar tiene en su perfil el botón Hazte Premium, que lleva a la vista Premium', async () => {
+    const user = userEvent.setup()
+    await abrirPerfil('nuevo@esibuy.test')
+
+    const enlace = within(screen.getByRole('main')).getByRole('link', { name: /hazte premium/i })
+    expect(enlace).toHaveAttribute('href', '/premium')
+    expect(within(screen.getByRole('main')).queryByText('Premium')).not.toBeInTheDocument()
+    await user.click(enlace)
+
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/premium$/))
+  })
+
+  it('HU45-CP28: el cliente Premium ve el distintivo Premium en vez del botón', async () => {
+    await abrirPerfil('cliente@esibuy.test')
+
+    expect(within(screen.getByRole('main')).getByText('Premium')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /hazte premium/i })).not.toBeInTheDocument()
+  })
+
+  it('HU45-CP28: el vendedor no tiene ni el botón ni el distintivo', async () => {
+    await abrirPerfil('vendedor@esibuy.test')
+
+    expect(screen.queryByRole('link', { name: /hazte premium/i })).not.toBeInTheDocument()
+    expect(within(screen.getByRole('main')).queryByText('Premium')).not.toBeInTheDocument()
+  })
+})
+
 describe('ProfilePage (HU4): acceso', () => {
   it('HU4-CP10: sin sesión, redirige al login', async () => {
     renderApp('/profile')

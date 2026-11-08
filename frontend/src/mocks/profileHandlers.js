@@ -37,22 +37,20 @@ const DATOS_DE_PERFIL = {
   },
 }
 
-// Lo que cada usuario ha editado de su perfil (HU45), encima de los datos de ejemplo; se vacía al reiniciar los mocks.
+// Lo que cada usuario ha editado de su perfil (HU45), encima de los datos de ejemplo, y los clientes que se han hecho
+// Premium (HU45); los dos se vacían al reiniciar los mocks.
 let ediciones = new Map()
+let pasadosAPremium = new Set()
 
 export function resetProfileMock() {
   ediciones = new Map()
+  pasadosAPremium = new Set()
 }
 
-const perfilDe = ({ id, nombre, apellidos, email, rol }) => ({
-  id,
-  nombre,
-  apellidos,
-  email,
-  rol,
-  ...DATOS_DE_PERFIL[id],
-  ...ediciones.get(id),
-})
+function perfilDe({ id, nombre, apellidos, email, rol }) {
+  const perfil = { id, nombre, apellidos, email, rol, ...DATOS_DE_PERFIL[id], ...ediciones.get(id) }
+  return pasadosAPremium.has(id) ? { ...perfil, tipoCliente: 'PREMIUM' } : perfil
+}
 
 const respuestaDeError = (status, code) => HttpResponse.json({ mensaje: 'Datos inválidos', code }, { status })
 
@@ -118,6 +116,22 @@ export const profileHandlers = [
         ? { fechaNacimiento: cuerpo.fechaNacimiento }
         : { nombreComercial: cuerpo.nombreComercial.trim(), categoriaPrincipalId: cuerpo.categoriaPrincipalId }
     ediciones.set(usuario.id, { ...comunes, ...propios })
+    return HttpResponse.json(perfilDe(usuario))
+  }),
+
+  // Paso a Premium (HU45), con el contrato de las tasks T422 y T423 del backend: solo el cliente sobre sí mismo.
+  // 200 con el perfil ya Premium; 400 ALREADY_PREMIUM si ya lo era; 403 ACCESS_DENIED con otro rol; 401 sin sesión.
+  http.post('/api/perfil/premium', () => {
+    const usuario = getUsuarioEnSesion()
+    if (!usuario) return new HttpResponse(null, { status: 401 })
+    if (usuario.rol !== 'CLIENTE') {
+      return HttpResponse.json({ mensaje: 'Acceso denegado', code: 'ACCESS_DENIED' }, { status: 403 })
+    }
+    if (perfilDe(usuario).tipoCliente === 'PREMIUM') {
+      return HttpResponse.json({ mensaje: 'El cliente ya es Premium', code: 'ALREADY_PREMIUM' }, { status: 400 })
+    }
+
+    pasadosAPremium.add(usuario.id)
     return HttpResponse.json(perfilDe(usuario))
   }),
 

@@ -4,6 +4,7 @@ import { Button, makeStyles, tokens } from '@fluentui/react-components'
 import {
   ArrowExit20Regular,
   ChatWarning20Regular,
+  Diamond20Regular,
   Heart20Regular,
   Location20Regular,
   Payment20Regular,
@@ -71,6 +72,12 @@ function UserActions({ rol, onSignOut, disabled }) {
       {rol === ROLES.VENDEDOR && (
         <LinkButton to={PATHS.SELLER_PRODUCTS} appearance="subtle">
           Mis productos
+        </LinkButton>
+      )}
+      {/* Las ventajas de ESIBuy Premium (HU45) son solo del cliente */}
+      {rol === ROLES.CLIENTE && (
+        <LinkButton to={PATHS.PREMIUM} appearance="subtle" icon={<Diamond20Regular />}>
+          Premium
         </LinkButton>
       )}
       {/* El historial de pedidos (HU11) es solo del cliente */}

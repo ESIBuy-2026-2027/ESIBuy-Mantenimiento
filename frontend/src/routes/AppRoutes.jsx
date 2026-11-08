@@ -3,6 +3,7 @@ import GuestOnlyRoute from '../auth/GuestOnlyRoute'
 import ProtectedRoute from '../auth/ProtectedRoute'
 import { ROLES } from '../auth/roles'
 import AppLayout from '../components/AppLayout'
+import RegistroPremiumFlow from '../features/account/RegistroPremiumFlow'
 import AddressesPage from '../pages/AddressesPage'
 import AdminAdminsPage from '../pages/AdminAdminsPage'
 import AdminCategoriesPage from '../pages/AdminCategoriesPage'
@@ -21,10 +22,13 @@ import NewIncidentPage from '../pages/NewIncidentPage'
 import OrderDetailPage from '../pages/OrderDetailPage'
 import OrdersPage from '../pages/OrdersPage'
 import PaymentMethodsPage from '../pages/PaymentMethodsPage'
+import PremiumPage from '../pages/PremiumPage'
+import PremiumPaymentPage from '../pages/PremiumPaymentPage'
 import ProductDetailPage from '../pages/ProductDetailPage'
 import ProductsPage from '../pages/ProductsPage'
 import ProfilePage from '../pages/ProfilePage'
 import Register from '../pages/Register'
+import RegisterPaymentPage from '../pages/RegisterPaymentPage'
 import SellerProductFormPage from '../pages/SellerProductFormPage'
 import SellerProductsPage from '../pages/SellerProductsPage'
 import WishlistPage from '../pages/WishlistPage'
@@ -39,7 +43,11 @@ export default function AppRoutes() {
       <Route element={<AppLayout />}>
         <Route path={PATHS.HOME} element={<Home />} />
         <Route element={<GuestOnlyRoute />}>
-          <Route path={PATHS.REGISTER} element={<Register />} />
+          {/* El registro y su pasarela Premium (HU45) comparten los datos del formulario, solo en memoria */}
+          <Route element={<RegistroPremiumFlow />}>
+            <Route path={PATHS.REGISTER} element={<Register />} />
+            <Route path={PATHS.REGISTER_PAYMENT} element={<RegisterPaymentPage />} />
+          </Route>
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.CLIENTE]} />}>
@@ -51,6 +59,8 @@ export default function AppRoutes() {
           <Route path={PATHS.ORDERS} element={<OrdersPage />} />
           <Route path={PATHS.ORDER_DETAIL} element={<OrderDetailPage />} />
           <Route path={PATHS.WISHLIST} element={<WishlistPage />} />
+          <Route path={PATHS.PREMIUM} element={<PremiumPage />} />
+          <Route path={PATHS.PREMIUM_PAYMENT} element={<PremiumPaymentPage />} />
         </Route>
 
         {/* El perfil propio (HU4) y las incidencias (HU44) son del cliente y del vendedor: el backend responde 403 al administrador. */}
