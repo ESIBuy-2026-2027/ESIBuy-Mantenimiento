@@ -13,6 +13,8 @@ import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUse
 import es.uclm.esibuy.backend.productos.application.port.in.ExistenciasProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ConteoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
+import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosVendedorUseCase;
+import es.uclm.esibuy.backend.productos.application.port.in.InventarioVendedorUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.SupervisionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ValoracionesProductoUseCase;
@@ -24,6 +26,8 @@ import es.uclm.esibuy.backend.productos.application.service.CatalogoProductosSer
 import es.uclm.esibuy.backend.productos.application.service.ExistenciasProductosService;
 import es.uclm.esibuy.backend.productos.application.service.ConteoProductosService;
 import es.uclm.esibuy.backend.productos.application.service.GestionProductosService;
+import es.uclm.esibuy.backend.productos.application.service.GestionProductosVendedorService;
+import es.uclm.esibuy.backend.productos.application.service.InventarioVendedorService;
 import es.uclm.esibuy.backend.productos.application.service.ListadoProductosService;
 import es.uclm.esibuy.backend.productos.application.service.SupervisionProductosService;
 import es.uclm.esibuy.backend.productos.application.service.ValoracionesProductoService;
@@ -85,6 +89,11 @@ public class ProductosConfig {
     }
 
     @Bean
+    GestionProductosVendedorUseCase gestionProductosVendedorUseCase(ProductoRepositoryPort productoRepositoryPort) {
+        return new GestionProductosVendedorService(productoRepositoryPort);
+    }
+
+    @Bean
     ExistenciasProductosUseCase existenciasProductosUseCase(ProductoRepositoryPort productoRepositoryPort) {
         return new ExistenciasProductosService(productoRepositoryPort);
     }
@@ -104,6 +113,12 @@ public class ProductosConfig {
     @Bean
     ConteoProductosUseCase conteoProductosUseCase(ProductoRepositoryPort productoRepositoryPort) {
         return new ConteoProductosService(productoRepositoryPort);
+    }
+
+    // HU17: el módulo de estadísticas pide aquí los productos del vendedor
+    @Bean
+    InventarioVendedorUseCase inventarioVendedorUseCase(ProductoRepositoryPort productoRepositoryPort) {
+        return new InventarioVendedorService(productoRepositoryPort);
     }
 
     // Análisis antivirus de la URL de las imágenes con VirusTotal (HU31, T397). La API key sale de la variable de

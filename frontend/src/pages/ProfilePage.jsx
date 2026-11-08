@@ -1,7 +1,10 @@
-import { useCallback } from 'react'
+import PropTypes from 'prop-types'
+import { useCallback, useId, useState } from 'react'
 import {
+  Badge,
   Button,
   Card,
+  Checkbox,
   MessageBar,
   MessageBarActions,
   MessageBarBody,
@@ -12,13 +15,23 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { getProfile } from '../api/profile'
+import { Delete20Regular, Diamond16Filled, Diamond20Regular, Edit20Regular } from '@fluentui/react-icons'
+import { getPreferences, savePreferences } from '../api/preferences'
+import { getProfile, updateProfile } from '../api/profile'
+import { useAuth } from '../auth/useAuth'
+import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import { UserAvatar } from '../features/account/AvatarSelector'
+import DeleteAccountDialog from '../features/account/DeleteAccountDialog'
+import UnsavedChangesDialog from '../features/account/UnsavedChangesDialog'
+import ProfileEditor from '../features/admin/ProfileEditor'
 import ReadOnlyFields from '../features/admin/ReadOnlyFields'
+import SellerStatistics from '../features/seller/SellerStatistics'
 import { profileFieldsFor } from '../features/admin/profileFields'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { useCategories } from '../hooks/useCategories'
+import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard'
+import { PATHS } from '../routes/paths'
 import { formatDate } from '../utils/format'
 
 const SIN_DATO = '—'
@@ -32,12 +45,14 @@ const useStyles = makeStyles({
   },
   identity: {
     display: 'flex',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: tokens.spacingHorizontalL,
   },
   identityText: {
     display: 'flex',
     flexDirection: 'column',
+    alignItems: 'flex-start',
     gap: tokens.spacingVerticalXXS,
   },
   name: {
@@ -46,7 +61,145 @@ const useStyles = makeStyles({
   email: {
     color: tokens.colorNeutralForeground3,
   },
+  preferencesText: {
+    color: tokens.colorNeutralForeground3,
+  },
+  categories: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    columnGap: tokens.spacingHorizontalL,
+  },
+  deletion: {
+    gap: tokens.spacingVerticalM,
+    padding: tokens.spacingVerticalXL,
+  },
+  deletionAction: {
+    alignSelf: 'flex-start',
+  },
+  editAction: {
+    alignSelf: 'flex-start',
+  },
 })
+
+const CAMBIOS_GUARDADOS = 'Tus cambios se han guardado.'
+
+// Eliminar la cuenta propia del vendedor (HU47) y del cliente (HU25): se confirma en un diálogo con la contraseña. El
+// servidor cierra la sesión, así que después se cierra también en el navegador y el login lo avisa.
+function AccountDeletion({ rol }) {
+  const styles = useStyles()
+  const titleId = useId()
+  const { accountDeleted } = useAuth()
+  const [abierto, setAbierto] = useState(false)
+
+  return (
+    <Card className={styles.deletion} aria-labelledby={titleId} role="region">
+      <Title3 as="h2" id={titleId} className={styles.name}>
+        Eliminar mi cuenta
+      </Title3>
+      <Text className={styles.preferencesText}>
+        Dejarás de formar parte de ESIBuy. Tus pedidos y valoraciones se conservan.
+      </Text>
+      <Button className={styles.deletionAction} icon={<Delete20Regular />} onClick={() => setAbierto(true)}>
+        Eliminar mi cuenta
+      </Button>
+      {abierto && <DeleteAccountDialog rol={rol} onClose={() => setAbierto(false)} onDeleted={accountDeleted} />}
+    </Card>
+  )
+}
+
+AccountDeletion.propTypes = {
+  rol: PropTypes.oneOf(['CLIENTE', 'VENDEDOR']).isRequired,
+}
+
+// Preferencias del cliente (HU46): una casilla por cada categoría activa, marcadas las que ya le interesan. Cada
+// cambio se guarda al momento, así que al salir del perfil ya están guardadas; mientras se guarda, las casillas
+// quedan deshabilitadas, igual que mientras cargan. La respuesta del backend es lo que se muestra después; si no se
+// pueden guardar, las casillas siguen como estaban. Si no cargan, no se muestran: guardar sin saber cuáles eligió
+// borraría las demás.
+function CustomerPreferences({ categories }) {
+  const styles = useStyles()
+  const titleId = useId()
+  const fetcher = useCallback(() => getPreferences(), [])
+  const { data: cargadas, failed, retry } = useApiQuery(fetcher)
+  const [actualizadas, setActualizadas] = useState(null)
+  const [guardando, setGuardando] = useState(false)
+  const [aviso, setAviso] = useState(null)
+  const elegidas = new Set((actualizadas ?? cargadas)?.categorias ?? [])
+
+  const cambiar = async (categoryId, marcada) => {
+    const nuevas = marcada ? [...elegidas, categoryId] : [...elegidas].filter((id) => id !== categoryId)
+    setAviso(null)
+    setGuardando(true)
+    try {
+      setActualizadas(await savePreferences(nuevas))
+      setAviso({ intent: 'success', texto: 'Preferencias guardadas.' })
+    } catch {
+      setAviso({ intent: 'error', texto: 'No se han podido guardar tus preferencias. Inténtalo de nuevo.' })
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  return (
+    <Card className={styles.card}>
+      <Title3 as="h2" id={titleId} className={styles.name}>
+        Mis preferencias
+      </Title3>
+      <Text className={styles.preferencesText}>Elige las categorías que te interesan.</Text>
+      {aviso && (
+        <MessageBar intent={aviso.intent}>
+          <MessageBarBody>{aviso.texto}</MessageBarBody>
+        </MessageBar>
+      )}
+      {failed ? (
+        <MessageBar intent="error">
+          <MessageBarBody>No se han podido cargar tus preferencias. Inténtalo de nuevo.</MessageBarBody>
+          <MessageBarActions>
+            <Button onClick={retry}>Reintentar</Button>
+          </MessageBarActions>
+        </MessageBar>
+      ) : (
+        <div role="group" aria-labelledby={titleId} className={styles.categories}>
+          {categories.map((category) => (
+            <Checkbox
+              key={category.id}
+              label={category.nombre}
+              checked={elegidas.has(category.id)}
+              disabled={guardando || !(actualizadas ?? cargadas)}
+              onChange={(_event, data) => cambiar(category.id, data.checked === true)}
+            />
+          ))}
+        </div>
+      )}
+    </Card>
+  )
+}
+
+CustomerPreferences.propTypes = {
+  categories: PropTypes.arrayOf(PropTypes.shape({ id: PropTypes.string.isRequired, nombre: PropTypes.string.isRequired }))
+    .isRequired,
+}
+
+// ESIBuy Premium en el perfil del cliente (HU45): el Estándar tiene el acceso a la vista Premium y el Premium, su
+// distintivo.
+function PremiumAccess({ tipoCliente }) {
+  if (tipoCliente === 'PREMIUM') {
+    return (
+      <Badge appearance="filled" color="brand" size="large" icon={<Diamond16Filled />}>
+        Premium
+      </Badge>
+    )
+  }
+  return (
+    <LinkButton to={PATHS.PREMIUM} appearance="primary" size="small" icon={<Diamond20Regular />}>
+      Hazte Premium
+    </LinkButton>
+  )
+}
+
+PremiumAccess.propTypes = {
+  tipoCliente: PropTypes.string,
+}
 
 // Pares [etiqueta, texto] del perfil: los mismos campos y formatos que la ficha del administrador (HU20 y HU26),
 // sin el estado ni la imagen, y con la fecha de alta. La categoría del vendedor llega como identificador.
@@ -59,14 +212,43 @@ function profileFields(perfil, categoryName) {
 }
 
 // Perfil propio del cliente o del vendedor (HU4), en solo lectura. Los datos se piden al backend, que los saca de
-// la sesión. Modificarlos es de la HU45.
+// la sesión. Con «Editar perfil» (HU45) los datos modificables se editan en este mismo panel; al guardar, el perfil
+// pasa a ser el que devuelve el backend y se avisa. Si hay cambios sin guardar, se pregunta antes de cancelar, de ir
+// a otra pantalla y de cerrar o recargar la pestaña. El cliente ve además sus preferencias (HU46) y su acceso a ESIBuy
+// Premium (HU45), y el vendedor, sus estadísticas (HU17). Los dos pueden eliminar su cuenta desde aquí (HU47 y HU25).
 export default function ProfilePage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
   const fetcher = useCallback(() => getProfile(), [])
-  const { data: perfil, failed, retry } = useApiQuery(fetcher)
+  const { data: cargado, failed, retry } = useApiQuery(fetcher)
   const { categories } = useCategories()
+  const [editando, setEditando] = useState(false)
+  const [conCambios, setConCambios] = useState(false)
+  const [confirmandoCancelar, setConfirmandoCancelar] = useState(false)
+  const [guardado, setGuardado] = useState(null)
+  const [aviso, setAviso] = useState('')
+  const guard = useUnsavedChangesGuard(editando && conCambios)
+  const perfil = guardado ?? cargado
   const categoryName = categories.find(({ id }) => id === perfil?.categoriaPrincipalId)?.nombre
+
+  const empezarAEditar = () => {
+    setAviso('')
+    setEditando(true)
+  }
+
+  const dejarDeEditar = () => {
+    setEditando(false)
+    setConCambios(false)
+    setConfirmandoCancelar(false)
+  }
+
+  const alGuardar = (_enviado, actualizado) => {
+    setGuardado(actualizado)
+    setAviso(CAMBIOS_GUARDADOS)
+    dejarDeEditar()
+  }
+
+  const cancelar = () => (conCambios ? setConfirmandoCancelar(true) : dejarDeEditar())
 
   return (
     <main className={pageStyles.page}>
@@ -74,7 +256,7 @@ export default function ProfilePage() {
         <Title1 as="h1" className={pageStyles.title}>
           Mi perfil
         </Title1>
-        <Text className={pageStyles.subtitle}>Consulta tus datos personales.</Text>
+        <Text className={pageStyles.subtitle}>Consulta y edita tus datos personales.</Text>
       </div>
 
       {failed && (
@@ -89,6 +271,16 @@ export default function ProfilePage() {
       {!perfil && !failed && <Spinner className={pageStyles.loading} label="Cargando tu perfil…" />}
 
       {perfil && (
+        <div role="status">
+          {aviso && (
+            <MessageBar intent="success">
+              <MessageBarBody>{aviso}</MessageBarBody>
+            </MessageBar>
+          )}
+        </div>
+      )}
+
+      {perfil && (
         <Card className={styles.card}>
           <div className={styles.identity}>
             <UserAvatar value={perfil.avatar} name={`${perfil.nombre} ${perfil.apellidos}`} />
@@ -97,11 +289,37 @@ export default function ProfilePage() {
                 {perfil.nombre} {perfil.apellidos}
               </Title3>
               <Text className={styles.email}>{perfil.email}</Text>
+              {perfil.rol === 'CLIENTE' && <PremiumAccess tipoCliente={perfil.tipoCliente} />}
             </div>
           </div>
-          <ReadOnlyFields fields={profileFields(perfil, categoryName)} />
+          {editando ? (
+            <ProfileEditor
+              own
+              rol={perfil.rol}
+              usuario={perfil}
+              categories={categories}
+              save={updateProfile}
+              onSaved={alGuardar}
+              onCancel={cancelar}
+              onDirtyChange={setConCambios}
+            />
+          ) : (
+            <>
+              <ReadOnlyFields fields={profileFields(perfil, categoryName)} />
+              <Button className={styles.editAction} icon={<Edit20Regular />} onClick={empezarAEditar}>
+                Editar perfil
+              </Button>
+            </>
+          )}
         </Card>
       )}
+
+      {confirmandoCancelar && <UnsavedChangesDialog onStay={() => setConfirmandoCancelar(false)} onLeave={dejarDeEditar} />}
+      {guard.blocked && <UnsavedChangesDialog onStay={guard.reset} onLeave={guard.proceed} />}
+
+      {perfil?.rol === 'CLIENTE' && <CustomerPreferences categories={categories} />}
+      {perfil?.rol === 'VENDEDOR' && <SellerStatistics />}
+      {(perfil?.rol === 'CLIENTE' || perfil?.rol === 'VENDEDOR') && <AccountDeletion rol={perfil.rol} />}
     </main>
   )
 }

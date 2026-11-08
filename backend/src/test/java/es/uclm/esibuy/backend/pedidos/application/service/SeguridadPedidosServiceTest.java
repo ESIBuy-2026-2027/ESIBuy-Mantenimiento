@@ -22,6 +22,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
+import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizarPedidoCommand;
@@ -33,11 +34,12 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.ExistenciasPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.MetodosPagoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
 
 // Seguridad en la capa de negocio (R8): realizar un pedido y consultar si se ha comprado un producto exigen el rol
 // CLIENTE y que el correo sea el de la sesión. Las anotaciones solo se evalúan con Spring, así que se usa un
 // contexto mínimo (sin MongoDB) con los servicios reales y dobles de prueba de los puertos de salida.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU10-CP20, HU13-CP07 y HU11-CP06, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU10-CP20, HU13-CP07, HU11-CP06 y HU12-CP07, propuestos.
 @SpringJUnitConfig(SeguridadPedidosServiceTest.Configuracion.class)
 class SeguridadPedidosServiceTest {
 
@@ -95,6 +97,12 @@ class SeguridadPedidosServiceTest {
                 ClienteEnSesionPort clienteEnSesion) {
             return new ConsultaComprasService(pedidoRepository, clienteEnSesion);
         }
+
+        @Bean
+        CancelacionPedidoUseCase cancelacionPedido(PedidoRepositoryPort pedidoRepository,
+                ClienteEnSesionPort clienteEnSesion, ExistenciasPort existencias) {
+            return new CancelacionPedidoService(pedidoRepository, clienteEnSesion, existencias);
+        }
     }
 
     @Autowired
@@ -115,6 +123,8 @@ class SeguridadPedidosServiceTest {
     private RealizacionPedidoUseCase realizacionPedido;
     @Autowired
     private ConsultaComprasUseCase consultaCompras;
+    @Autowired
+    private CancelacionPedidoUseCase cancelacionPedido;
 
     @BeforeEach
     void limpiarDobles() {
@@ -251,6 +261,46 @@ class SeguridadPedidosServiceTest {
         assertThrows(AuthenticationCredentialsNotFoundException.class, () -> consultaCompras.listarPedidos(CLIENTE));
         assertThrows(AuthenticationCredentialsNotFoundException.class,
                 () -> consultaCompras.consultarPedido(CLIENTE, "o-1"));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @WithMockUser(username = "vendedor@esibuy.test", roles = "VENDEDOR")
+    @DisplayName("HU12-CP07: un vendedor no puede cancelar un pedido de un cliente")
+    void unVendedorNoCancelaPedidos() {
+        assertThrows(AccessDeniedException.class,
+                () -> cancelacionPedido.cancelarPedido("vendedor@esibuy.test", "o-1"));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @WithMockUser(username = "admin@esibuy.test", roles = "ADMINISTRADOR")
+    @DisplayName("HU12-CP07: un administrador no puede cancelar un pedido de un cliente")
+    void unAdministradorNoCancelaPedidos() {
+        assertThrows(AccessDeniedException.class, () -> cancelacionPedido.cancelarPedido("admin@esibuy.test", "o-1"));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU12-CP07: un cliente no puede cancelar con el correo de otro cliente y no se toca nada")
+    void unClienteNoCancelaConElCorreoDeOtro() {
+        assertThrows(AccessDeniedException.class, () -> cancelacionPedido.cancelarPedido(OTRO_CLIENTE, "o-1"));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU12-CP07: un cliente sí cancela con su propio correo (el rechazo que llega es el del negocio)")
+    void unClienteCancelaConSuPropioCorreo() {
+        assertThrows(PedidoNoEncontradoException.class, () -> cancelacionPedido.cancelarPedido(CLIENTE, "o-1"));
+    }
+
+    @Test
+    @DisplayName("HU12-CP07: sin sesión se rechaza cancelar un pedido")
+    void sinSesionSeRechazaCancelar() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> cancelacionPedido.cancelarPedido(CLIENTE, "o-1"));
         comprobarQueNoSeTocaNada();
     }
 }

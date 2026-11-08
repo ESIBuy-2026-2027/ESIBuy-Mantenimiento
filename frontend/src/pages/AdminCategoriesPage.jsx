@@ -1,11 +1,22 @@
 import { useMemo, useState } from 'react'
-import { Button, MessageBar, MessageBarActions, MessageBarBody, Spinner, Text, Title1 } from '@fluentui/react-components'
-import { ArrowLeft20Regular, SearchInfo24Regular, TagMultiple24Regular } from '@fluentui/react-icons'
+import {
+  Button,
+  MessageBar,
+  MessageBarActions,
+  MessageBarBody,
+  Spinner,
+  Text,
+  Title1,
+  makeStyles,
+  tokens,
+} from '@fluentui/react-components'
+import { Add20Regular, ArrowLeft20Regular, SearchInfo24Regular, TagMultiple24Regular } from '@fluentui/react-icons'
 import { getAdminCategories } from '../api/adminCategories'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import CategoriesTable from '../features/admin/CategoriesTable'
+import CategoryFormDialog from '../features/admin/CategoryFormDialog'
 import CategoryRowActions from '../features/admin/CategoryRowActions'
 import SortControls from '../features/admin/SortControls'
 import UsersFilters from '../features/admin/UsersFilters'
@@ -14,16 +25,27 @@ import { CATEGORY_STATUS_LABELS } from '../features/admin/categoryStatus'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { PATHS } from '../routes/paths'
 
+const useStyles = makeStyles({
+  actions: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: tokens.spacingHorizontalS,
+  },
+})
+
 // Listado de las categorías de productos (HU39): todas, también las inactivas, con su descripción, su estado y su
 // número de productos. El backend las devuelve sin paginar, así que la búsqueda, el filtro por estado y la
-// ordenación se hacen aquí. La lupa de cada fila abre su ficha y la papelera la elimina (HU42).
+// ordenación se hacen aquí. «Nueva categoría» abre el formulario de alta (HU40); la lupa de cada fila abre su ficha y
+// la papelera la elimina (HU42).
 export default function AdminCategoriesPage() {
   const styles = usePageStyles()
+  const own = useStyles()
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
   const [sort, setSort] = useState('name')
   const [order, setOrder] = useState('asc')
   const [feedback, setFeedback] = useState(null)
+  const [creando, setCreando] = useState(false)
   const { data, failed, retry } = useApiQuery(getAdminCategories)
 
   const categories = useMemo(
@@ -35,6 +57,12 @@ export default function AdminCategoriesPage() {
   const clearFilters = () => {
     setSearch('')
     setStatus('')
+  }
+
+  const avisarCreada = (creada) => {
+    setCreando(false)
+    setFeedback({ intent: 'success', texto: `${creada.nombre} se ha creado.` })
+    retry()
   }
 
   const renderActions = (category) => (
@@ -50,9 +78,14 @@ export default function AdminCategoriesPage() {
           </Title1>
           <Text className={styles.subtitle}>Consulta las categorías de productos y cuántos productos tiene cada una.</Text>
         </div>
-        <LinkButton to={PATHS.ADMIN} appearance="subtle" icon={<ArrowLeft20Regular />}>
-          Volver al panel
-        </LinkButton>
+        <div className={own.actions}>
+          <LinkButton to={PATHS.ADMIN} appearance="subtle" icon={<ArrowLeft20Regular />}>
+            Volver al panel
+          </LinkButton>
+          <Button appearance="primary" icon={<Add20Regular />} onClick={() => setCreando(true)}>
+            Nueva categoría
+          </Button>
+        </div>
       </div>
 
       {data?.length > 0 && (
@@ -111,6 +144,8 @@ export default function AdminCategoriesPage() {
       )}
 
       {categories.length > 0 && <CategoriesTable categories={categories} renderActions={renderActions} />}
+
+      {creando && <CategoryFormDialog onClose={() => setCreando(false)} onSaved={avisarCreada} />}
     </main>
   )
 }

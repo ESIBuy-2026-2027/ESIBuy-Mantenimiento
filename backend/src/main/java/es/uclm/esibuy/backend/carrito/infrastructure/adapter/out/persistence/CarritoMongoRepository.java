@@ -7,4 +7,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 public interface CarritoMongoRepository extends MongoRepository<CarritoDocument, String> {
 
     Optional<CarritoDocument> findByClienteId(String clienteId);
+
+    void deleteByClienteId(String clienteId);
 }

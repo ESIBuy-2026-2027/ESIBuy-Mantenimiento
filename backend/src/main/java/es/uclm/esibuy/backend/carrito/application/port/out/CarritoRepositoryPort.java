@@ -11,4 +11,6 @@ public interface CarritoRepositoryPort {
 
     // Devuelve el carrito guardado: si era nuevo, con el id que le ha asignado la base de datos
     Carrito guardar(Carrito carrito);
+
+    void eliminarPorCliente(String clienteId);
 }

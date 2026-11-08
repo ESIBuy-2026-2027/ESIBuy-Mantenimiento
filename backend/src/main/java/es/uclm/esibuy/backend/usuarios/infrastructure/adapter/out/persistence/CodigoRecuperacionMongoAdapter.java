@@ -42,4 +42,9 @@ public class CodigoRecuperacionMongoAdapter implements CodigoRecuperacionReposit
     public Optional<CodigoVerificacion> buscarPorUsuario(String usuarioId) {
         return repository.findByUsuarioIdAndPurpose(usuarioId, PROPOSITO_RECUPERACION).map(mapper::aDominio);
     }
+
+    @Override
+    public void eliminarPorUsuario(String usuarioId) {
+        repository.deleteByUsuarioIdAndPurpose(usuarioId, PROPOSITO_RECUPERACION);
+    }
 }

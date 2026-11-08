@@ -276,6 +276,28 @@ class GestionMetodosPagoServiceTest {
         assertEquals(List.of(ajeno), repositorio.guardados.stream().map(MetodoPago::getId).toList());
     }
 
+    @Test
+    @DisplayName("HU6-CP38: eliminar todos borra los métodos de pago del cliente y no los de otro cliente")
+    void eliminarTodosBorraSoloLosDelCliente() {
+        servicio.anadir(tarjeta("4111111111111111", "Juan Pérez", "12/27"));
+        servicio.anadir(tarjeta("5500000000000004", "Juan Pérez", "11/28"));
+        String ajeno = repositorio.guardar(
+                MetodoPago.nuevo("otro-cliente", TipoMetodoPago.BIZUM, "•••• 678", "bloque-cifrado")).getId();
+
+        servicio.eliminarTodos(EMAIL_CLIENTE);
+
+        assertTrue(repositorio.buscarPorCliente(ID_CLIENTE).isEmpty());
+        assertEquals(List.of(ajeno), repositorio.guardados.stream().map(MetodoPago::getId).toList());
+    }
+
+    @Test
+    @DisplayName("HU6-CP38: eliminar todos los métodos de pago de un cliente que no tiene no es un error")
+    void eliminarTodosSinMetodosNoEsUnError() {
+        servicio.eliminarTodos(EMAIL_CLIENTE);
+
+        assertTrue(repositorio.buscarPorCliente(ID_CLIENTE).isEmpty());
+    }
+
     // Repositorio en memoria: asigna un id al guardar, como haría MongoDB. Guarda y devuelve copias, para que
     // un cambio solo llegue a lo guardado si el servicio llama a guardar()
     private static class RepositorioEnMemoria implements MetodoPagoRepositoryPort {
@@ -306,6 +328,11 @@ class GestionMetodosPagoServiceTest {
         @Override
         public void eliminar(String metodoId) {
             guardados.removeIf(metodo -> metodo.getId().equals(metodoId));
+        }
+
+        @Override
+        public void eliminarPorCliente(String clienteId) {
+            guardados.removeIf(metodo -> metodo.getClienteId().equals(clienteId));
         }
 
         private MetodoPago buscarGuardado(String id) {

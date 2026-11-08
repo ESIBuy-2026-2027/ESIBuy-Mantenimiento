@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import {
   Button,
   MessageBar,
@@ -11,6 +12,7 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { ArrowDown20Regular, Box24Regular, CheckmarkCircle20Regular, SearchInfo24Regular } from '@fluentui/react-icons'
+import { addWishlistItem, getWishlist, removeWishlistItem } from '../api/wishlist'
 import EmptyState from '../components/EmptyState'
 import { usePageStyles } from '../components/pageStyles'
 import CatalogFilters from '../features/catalog/CatalogFilters'
@@ -108,6 +110,36 @@ export default function ProductsPage() {
   })
   const endRef = useOnReachEnd(feed.loadMore, feed.hasMore && !feed.loadingMore && !feed.failedMore)
   const categoryNames = new Map(categories.map(({ id, nombre }) => [id, nombre]))
+  // Productos que el cliente tiene en favoritos (HU14): se leen al entrar y, después, cada cambio responde con la lista
+  // completa. Si la lista no se puede leer, el catálogo funciona igual con los corazones vacíos. `cambiados` evita que
+  // una lectura lenta pise un cambio que el cliente ya ha hecho.
+  const [favoritos, setFavoritos] = useState(() => new Set())
+  const cambiados = useRef(false)
+  const aFavoritos = (lista) => new Set(lista.items.map((item) => item.productoId))
+
+  useEffect(() => {
+    let cancelled = false
+    getWishlist()
+      .then((lista) => {
+        if (!cancelled && !cambiados.current) setFavoritos(aFavoritos(lista))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const anadirFavorito = async (productId) => {
+    const lista = await addWishlistItem(productId)
+    cambiados.current = true
+    setFavoritos(aFavoritos(lista))
+  }
+
+  const quitarFavorito = async (productId) => {
+    const lista = await removeWishlistItem(productId)
+    cambiados.current = true
+    setFavoritos(aFavoritos(lista))
+  }
   // Sin ningún filtro, que no haya productos significa que el catálogo está vacío; con filtros, que no coinciden.
   const catalogEmpty = feed.loaded && feed.totalItems === 0 && !debouncedSearch && !category && !minRating
   const noMatches = feed.loaded && feed.totalItems === 0 && !catalogEmpty
@@ -184,7 +216,13 @@ export default function ProductsPage() {
                   className={styles.entry}
                   style={{ animationDelay: `${(index % PAGE_SIZE) * ENTRADA_ESCALONADA_MS}ms` }}
                 >
-                  <ProductCard product={product} categoryName={categoryNames.get(product.categoriaId)} />
+                  <ProductCard
+                    product={product}
+                    categoryName={categoryNames.get(product.categoriaId)}
+                    favorite={favoritos.has(product.id)}
+                    onAddFavorite={anadirFavorito}
+                    onRemoveFavorite={quitarFavorito}
+                  />
                 </li>
               ))}
             </ul>

@@ -127,6 +127,20 @@ class DireccionMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU5-CP31: eliminar por cliente borra sus direcciones de la colección y no las de otro cliente")
+    void eliminarPorClienteBorraSoloSusDirecciones() {
+        adapter.guardar(nuevaDireccion("cliente-1"));
+        adapter.guardar(nuevaDireccion("cliente-1"));
+        String ajena = adapter.guardar(nuevaDireccion("cliente-2")).getId();
+
+        adapter.eliminarPorCliente("cliente-1");
+
+        assertEquals(List.of(), adapter.buscarPorCliente("cliente-1"));
+        assertEquals(List.of(ajena),
+                adapter.buscarPorCliente("cliente-2").stream().map(DireccionEnvio::getId).toList());
+    }
+
+    @Test
     @DisplayName("HU5-CP10: la colección acepta una dirección completa y rechaza una sin un campo obligatorio")
     void laColeccionRechazaDocumentoIncompleto() {
         // Segunda barrera, a nivel de BBDD: aunque fallen las capas superiores, MongoDB no acepta una dirección

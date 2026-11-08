@@ -29,12 +29,34 @@ const nuevoEstado = () => ({
 
 let estado = nuevoEstado()
 
+// Cuentas que se han eliminado (HU25): ya no existen para el login. Vive aparte del estado de la sesión, que se
+// reinicia al cerrarla, y solo se vacía al reiniciar los mocks.
+let cuentasEliminadas = new Set()
+
 export function resetAuthMock() {
   estado = nuevoEstado()
+  cuentasEliminadas = new Set()
 }
 
 export function getUsuarioEnSesion() {
   return estado.usuarioEnSesion
+}
+
+// Si la contraseña es la de los usuarios de ejemplo, para confirmar operaciones sobre la propia cuenta (HU47)
+export function esClaveValida(password) {
+  return password === CLAVE_VALIDA
+}
+
+// Cierra la sesión del mock, como hace el backend tras eliminar la cuenta (HU47)
+export function cerrarSesionMock() {
+  estado = nuevoEstado()
+}
+
+// Elimina la cuenta del usuario y cierra su sesión, como el backend con el cliente (HU25): después ya no se puede
+// iniciar sesión con ella.
+export function eliminarCuentaMock(usuario) {
+  cuentasEliminadas.add(usuario.id)
+  cerrarSesionMock()
 }
 
 const sinAutorizacion = () => new HttpResponse(null, { status: 401 })
@@ -46,7 +68,7 @@ export const authHandlers = [
     }
 
     const { email, password } = await request.json()
-    const usuario = USUARIOS.find((candidato) => candidato.email === email)
+    const usuario = USUARIOS.find((candidato) => candidato.email === email && !cuentasEliminadas.has(candidato.id))
 
     if (!usuario || password !== CLAVE_VALIDA) {
       estado.intentosFallidos += 1
@@ -116,7 +138,7 @@ export const authHandlers = [
   }),
 
   http.post('/api/auth/logout', () => {
-    estado = nuevoEstado()
+    cerrarSesionMock()
     return new HttpResponse(null, { status: 204 })
   }),
 ]

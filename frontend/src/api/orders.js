@@ -26,3 +26,10 @@ export function getOrders() {
 export function getOrder(orderId) {
   return request(`/api/customer/orders/${encodeURIComponent(orderId)}`)
 }
+
+// Cancela un pedido del cliente que aún no se ha enviado (HU12; backend en T374, PR #207). Responde con el pedido ya
+// cancelado; 409 con `code: ORDER_NOT_CANCELLABLE` si ya no se puede cancelar, y 400 con `code: ORDER_NOT_FOUND` si no
+// existe o es de otro cliente.
+export function cancelOrder(orderId) {
+  return request(`/api/customer/orders/${encodeURIComponent(orderId)}/cancel`, { method: 'POST' })
+}

@@ -151,4 +151,23 @@ export const ordersHandlers = [
       ? HttpResponse.json(aRespuesta(pedido))
       : HttpResponse.json({ mensaje: 'El pedido no existe', code: 'ORDER_NOT_FOUND' }, { status: 400 })
   }),
+
+  // Cancelación (HU12), como el backend: solo un pedido del cliente que aún no se ha enviado (PAGADO o PREPARANDO)
+  http.post('/api/customer/orders/:id/cancel', ({ params }) => {
+    const rechazo = rechazarSiNoEsCliente()
+    if (rechazo) return rechazo
+
+    const pedido = pedidos.find(({ id, clienteId }) => id === params.id && clienteId === getUsuarioEnSesion().id)
+    if (!pedido) {
+      return HttpResponse.json({ mensaje: 'El pedido no existe', code: 'ORDER_NOT_FOUND' }, { status: 400 })
+    }
+    if (pedido.estado !== 'PAGADO' && pedido.estado !== 'PREPARANDO') {
+      return HttpResponse.json(
+        { mensaje: 'El pedido ya no se puede cancelar', code: 'ORDER_NOT_CANCELLABLE' },
+        { status: 409 },
+      )
+    }
+    pedido.estado = 'CANCELADO'
+    return HttpResponse.json(aRespuesta(pedido))
+  }),
 ]

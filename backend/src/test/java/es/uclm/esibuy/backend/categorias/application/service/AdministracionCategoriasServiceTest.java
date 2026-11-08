@@ -37,8 +37,10 @@ import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 
 // Listado de las categorías del administrador con su número de productos (HU39, T332). El repositorio y el
 // puerto hacia productos son dobles de prueba: se prueba el caso de uso sin MongoDB ni Spring. También prueba la
-// creación de categorías (HU40, T323), la edición (HU41, T329) y la eliminación (HU42, T326).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU39-CP01 a CP03, HU40-CP05 y CP06, HU41-CP01 a CP05 y HU42-CP01 a CP04, propuestos.
+// creación de categorías (HU40, T323), la edición (HU41, T329), el cambio de estado (HU41, T416) y la eliminación
+// (HU42, T326).
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU39-CP01 a CP03, HU40-CP05 y CP06, HU41-CP01 a CP05, HU41-CP19 a CP21 y
+// HU42-CP01 a CP04, propuestos.
 @ExtendWith(MockitoExtension.class)
 class AdministracionCategoriasServiceTest {
 
@@ -220,5 +222,38 @@ class AdministracionCategoriasServiceTest {
         assertThrows(CategoriaNoEncontradaException.class, () -> servicio.eliminar("c-9"));
         verifyNoInteractions(productosPorCategoria, vendedoresPorCategoria);
         verify(categoriaRepository, never()).eliminar(any());
+    }
+
+    @ParameterizedTest
+    @EnumSource(EstadoCategoria.class)
+    @DisplayName("HU41-CP19: cambiar el estado guarda la categoría con el estado nuevo, conserva sus datos y devuelve su número de productos")
+    void cambiarEstadoGuardaElEstadoNuevo(EstadoCategoria estado) {
+        EstadoCategoria anterior = estado == EstadoCategoria.ACTIVA ? EstadoCategoria.INACTIVA : EstadoCategoria.ACTIVA;
+        Categoria actual = new Categoria("c-1", "Hogar", "Muebles", anterior);
+        Categoria cambiada = new Categoria("c-1", "Hogar", "Muebles", estado);
+        when(categoriaRepository.buscarPorId("c-1")).thenReturn(Optional.of(actual));
+        when(categoriaRepository.guardar(cambiada)).thenReturn(cambiada);
+        when(productosPorCategoria.contarPorCategoria()).thenReturn(Map.of("c-1", 4L));
+
+        assertEquals(new CategoriaConProductos(cambiada, 4), servicio.cambiarEstado("c-1", estado));
+    }
+
+    @Test
+    @DisplayName("HU41-CP20: cambiar el estado de una categoría que no existe lanza «no encontrada» y no guarda nada")
+    void cambiarEstadoDeUnaCategoriaInexistenteFalla() {
+        when(categoriaRepository.buscarPorId("c-9")).thenReturn(Optional.empty());
+
+        assertThrows(CategoriaNoEncontradaException.class,
+                () -> servicio.cambiarEstado("c-9", EstadoCategoria.INACTIVA));
+        verify(categoriaRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU41-CP21: cambiar el estado sin indicar el estado nuevo falla sin guardar nada")
+    void cambiarEstadoSinEstadoFalla() {
+        when(categoriaRepository.buscarPorId("c-1")).thenReturn(Optional.of(HOGAR));
+
+        assertThrows(CategoriaInvalidaException.class, () -> servicio.cambiarEstado("c-1", null));
+        verify(categoriaRepository, never()).guardar(any());
     }
 }

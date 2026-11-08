@@ -65,6 +65,18 @@ class CarritoMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU9-CP22: eliminar por cliente borra su carrito de la colección y no el de otro cliente")
+    void eliminarPorClienteBorraSoloSuCarrito() {
+        adapter.guardar(carritoNuevo("cliente-1"));
+        adapter.guardar(carritoNuevo("cliente-2"));
+
+        adapter.eliminarPorCliente("cliente-1");
+
+        assertTrue(adapter.buscarPorCliente("cliente-1").isEmpty());
+        assertTrue(adapter.buscarPorCliente("cliente-2").isPresent());
+    }
+
+    @Test
     @DisplayName("HU9-CP17: guardar otra vez el carrito lo actualiza y conserva su fecha de creación")
     void guardarOtraVezActualizaElCarrito() {
         Carrito guardado = adapter.guardar(carritoNuevo("cliente-1"));

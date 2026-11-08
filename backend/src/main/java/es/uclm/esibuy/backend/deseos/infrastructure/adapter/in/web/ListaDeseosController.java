@@ -1,6 +1,9 @@
 package es.uclm.esibuy.backend.deseos.infrastructure.adapter.in.web;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +25,17 @@ public class ListaDeseosController {
 
     public ListaDeseosController(GestionListaDeseosUseCase gestionListaDeseos) {
         this.gestionListaDeseos = gestionListaDeseos;
+    }
+
+    @GetMapping
+    public ListaDeseosDetalladaResponse consultar(Authentication autenticado) {
+        return ListaDeseosDetalladaResponse.desde(gestionListaDeseos.consultar(autenticado.getName()));
+    }
+
+    // Quitar un producto que no está no es un error: responde igual, con la lista
+    @DeleteMapping("/items/{productoId}")
+    public ListaDeseosDetalladaResponse quitar(@PathVariable String productoId, Authentication autenticado) {
+        return ListaDeseosDetalladaResponse.desde(gestionListaDeseos.quitar(autenticado.getName(), productoId));
     }
 
     @PostMapping("/items")

@@ -4,6 +4,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
 import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.DetalleProductoCatalogo;
 import es.uclm.esibuy.backend.productos.application.port.in.ProductoComercial;
+import es.uclm.esibuy.backend.productos.application.port.in.ResumenProducto;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.application.port.out.VendedorPort;
@@ -48,6 +49,14 @@ public class CatalogoProductosService implements CatalogoProductosUseCase {
                 .map(producto -> new ProductoComercial(producto.getId(), producto.getVendedorId(),
                         producto.getNombre(), producto.getImagen(), producto.precioFinal(clientePremium),
                         producto.getStock()));
+    }
+
+    @PreAuthorize(Permisos.SOLO_CLIENTE)
+    @Override
+    public Optional<ResumenProducto> consultarResumen(String productoId, boolean clientePremium) {
+        return productoRepository.buscarPorId(productoId)
+                .map(producto -> new ResumenProducto(producto.getId(), producto.getNombre(), producto.getImagen(),
+                        producto.precioFinal(clientePremium), producto.getStock(), producto.isDisponible()));
     }
 
     @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)

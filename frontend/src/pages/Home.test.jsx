@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { AuthContext } from '../auth/AuthContext'
 import { renderWithProviders } from '../test/utils'
 import Home from './Home'
@@ -44,5 +45,46 @@ describe('Home', () => {
     renderHome({ id: 'u-3', nombre: 'Carla', rol: 'CLIENTE' })
 
     expect(screen.queryByRole('link', { name: /crear mi cuenta/i })).not.toBeInTheDocument()
+  })
+
+  it('home_alRenderizar_explicaComoFuncionaParaQuienCompra', () => {
+    renderHome()
+
+    expect(screen.getByRole('heading', { level: 2, name: /cómo funciona/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /quiero comprar/i })).toHaveAttribute('aria-selected', 'true')
+    const pasos = within(screen.getByRole('tabpanel')).getAllByRole('heading', { level: 3 })
+    expect(pasos.map((paso) => paso.textContent)).toEqual([
+      'Crea tu cuenta',
+      'Busca y filtra',
+      'Compra en un paso',
+      'Sigue tu envío y valora',
+    ])
+  })
+
+  it('home_alElegirOtroPerfil_muestraSusPasos', async () => {
+    const user = userEvent.setup()
+    renderHome()
+
+    await user.click(screen.getByRole('tab', { name: /quiero vender/i }))
+
+    const panel = screen.getByRole('tabpanel')
+    expect(within(panel).getByRole('heading', { name: 'Registra tu tienda' })).toBeInTheDocument()
+    expect(within(panel).queryByRole('heading', { name: 'Busca y filtra' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('tab', { name: /administro/i }))
+
+    expect(within(screen.getByRole('tabpanel')).getByRole('heading', { name: 'Resuelve incidencias' })).toBeInTheDocument()
+  })
+
+  it('home_sinSesion_invitaAEmpezarHaciaElRegistro', () => {
+    renderHome()
+
+    expect(screen.getByRole('link', { name: /empezar ahora/i })).toHaveAttribute('href', '/register')
+  })
+
+  it('home_conSesion_noInvitaAEmpezar', () => {
+    renderHome({ id: 'u-3', nombre: 'Carla', rol: 'CLIENTE' })
+
+    expect(screen.queryByRole('link', { name: /empezar ahora/i })).not.toBeInTheDocument()
   })
 })

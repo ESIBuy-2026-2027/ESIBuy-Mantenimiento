@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.usuarios.application.service;
 
+import es.uclm.esibuy.backend.usuarios.application.port.in.ContactoUsuario;
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutobloqueoNoPermitidoException;
@@ -47,7 +48,7 @@ import static org.mockito.Mockito.when;
 // y de un vendedor (HU26) y editar (HU22, T42/T44). El repositorio es un doble de prueba (Mockito): se prueba
 // el caso de uso sin MongoDB ni Spring.
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU24-CP01 a CP04, HU20-CP01 a CP04, HU26-CP01 a CP05,
-// HU22-CP01 a CP08 y HU42-CP07, propuestos.
+// HU22-CP01 a CP08, HU42-CP07 y HU49-CP01 y CP02, propuestos.
 @ExtendWith(MockitoExtension.class)
 class AdministracionUsuariosServiceTest {
 
@@ -541,6 +542,35 @@ class AdministracionUsuariosServiceTest {
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
 
         assertThrows(UsuarioNoEncontradoException.class, () -> servicio.consultarNombreComercial("u-1"));
+    }
+
+    // Para la supervisión de incidencias (HU49, T307): el correo y el rol del autor, sin que incidencias vea el dominio
+    // de usuarios. Una cuenta eliminada (HU25, HU47) no es un error: sus incidencias siguen ahí.
+
+    @Test
+    @DisplayName("HU49-CP01: consultarContacto devuelve el correo y el rol de un cliente")
+    void consultarContactoDeUnCliente() {
+        when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
+
+        assertEquals(Optional.of(new ContactoUsuario("lucia@uclm.es", "CLIENTE")), servicio.consultarContacto("u-1"));
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU49-CP01: consultarContacto devuelve el correo y el rol de un vendedor")
+    void consultarContactoDeUnVendedor() {
+        when(usuarioRepository.buscarPorId("u-4")).thenReturn(Optional.of(vendedorVera()));
+
+        assertEquals(Optional.of(new ContactoUsuario("vendedor@esibuy.test", "VENDEDOR")),
+                servicio.consultarContacto("u-4"));
+    }
+
+    @Test
+    @DisplayName("HU49-CP02: consultarContacto de un usuario que ya no existe devuelve vacío, sin fallar")
+    void consultarContactoDeUnaCuentaEliminada() {
+        when(usuarioRepository.buscarPorId("eliminado")).thenReturn(Optional.empty());
+
+        assertEquals(Optional.empty(), servicio.consultarContacto("eliminado"));
     }
 
     // Vendedores de una categoría (HU42, T326): lo pregunta el módulo de categorías antes de eliminarla.

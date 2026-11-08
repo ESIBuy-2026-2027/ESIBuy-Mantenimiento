@@ -48,6 +48,13 @@ public interface GestionDireccionesUseCase {
     void eliminar(String emailCliente, String direccionId, String nuevaPrincipalId);
 
     /**
+     * Borra todas las direcciones del cliente, para cuando elimina su cuenta (HU25). Si no tiene ninguna no es un
+     * error. Hay que llamarlo antes de borrar al usuario: las direcciones se buscan por el id del cliente, que se
+     * obtiene de su correo.
+     */
+    void eliminarTodas(String emailCliente);
+
+    /**
      * Los datos de una dirección del cliente en sesión para el pedido (HU10).
      *
      * @return vacío si la dirección no existe o es de otro cliente

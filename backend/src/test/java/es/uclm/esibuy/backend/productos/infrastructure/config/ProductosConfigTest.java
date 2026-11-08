@@ -1,8 +1,10 @@
 package es.uclm.esibuy.backend.productos.infrastructure.config;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
+import es.uclm.esibuy.backend.productos.application.port.in.InventarioVendedorUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ValoracionesProductoUseCase;
 import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
+import es.uclm.esibuy.backend.productos.application.service.InventarioVendedorService;
 import es.uclm.esibuy.backend.productos.application.service.ValoracionesProductoService;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.antivirus.VirusTotalAdapter;
 import org.junit.jupiter.api.DisplayName;
@@ -34,5 +36,11 @@ class ProductosConfigTest {
     @DisplayName("Configuración: el contexto conecta la actualización de la valoración de los productos (HU13)")
     void elContextoConectaLaActualizacionDeLaValoracion() {
         assertInstanceOf(ValoracionesProductoService.class, contexto.getBean(ValoracionesProductoUseCase.class));
+    }
+
+    @Test
+    @DisplayName("Configuración: el contexto conecta el inventario del vendedor para sus estadísticas (HU17)")
+    void elContextoConectaElInventarioDelVendedor() {
+        assertInstanceOf(InventarioVendedorService.class, contexto.getBean(InventarioVendedorUseCase.class));
     }
 }

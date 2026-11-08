@@ -3,6 +3,9 @@ import { useState } from 'react'
 import { Button, makeStyles, tokens } from '@fluentui/react-components'
 import {
   ArrowExit20Regular,
+  ChatWarning20Regular,
+  Diamond20Regular,
+  Heart20Regular,
   Location20Regular,
   Payment20Regular,
   Person20Regular,
@@ -71,10 +74,22 @@ function UserActions({ rol, onSignOut, disabled }) {
           Mis productos
         </LinkButton>
       )}
+      {/* Las ventajas de ESIBuy Premium (HU45) son solo del cliente */}
+      {rol === ROLES.CLIENTE && (
+        <LinkButton to={PATHS.PREMIUM} appearance="subtle" icon={<Diamond20Regular />}>
+          Premium
+        </LinkButton>
+      )}
       {/* El historial de pedidos (HU11) es solo del cliente */}
       {rol === ROLES.CLIENTE && (
         <LinkButton to={PATHS.ORDERS} appearance="subtle" icon={<Receipt20Regular />}>
           Mis pedidos
+        </LinkButton>
+      )}
+      {/* La lista de deseos (HU14) es solo del cliente */}
+      {rol === ROLES.CLIENTE && (
+        <LinkButton to={PATHS.WISHLIST} appearance="subtle" icon={<Heart20Regular />}>
+          Favoritos
         </LinkButton>
       )}
       {/* Los métodos de pago (HU6) son solo del cliente */}
@@ -87,6 +102,12 @@ function UserActions({ rol, onSignOut, disabled }) {
       {rol === ROLES.CLIENTE && (
         <LinkButton to={PATHS.ADDRESSES} appearance="subtle" icon={<Location20Regular />}>
           Direcciones
+        </LinkButton>
+      )}
+      {/* Las incidencias (HU44) son del cliente y del vendedor */}
+      {(rol === ROLES.CLIENTE || rol === ROLES.VENDEDOR) && (
+        <LinkButton to={PATHS.INCIDENTS} appearance="subtle" icon={<ChatWarning20Regular />}>
+          Incidencias
         </LinkButton>
       )}
       {/* El perfil propio (HU4) es del cliente y del vendedor */}

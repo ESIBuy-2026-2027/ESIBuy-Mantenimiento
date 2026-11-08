@@ -47,6 +47,7 @@ class InicializadorColeccionesTest {
     private static final int VALIDACION = 121;   // "Document failed validation"
     private static final int DUPLICADO = 11000;  // "E11000 duplicate key error"
     private static final Date AHORA = Date.from(Instant.parse("2026-10-08T12:00:00Z"));
+        private static final String INCIDENCIAS = "incidencias";
 
     @Autowired
     private MongoTemplate mongoTemplate;
@@ -61,12 +62,13 @@ class InicializadorColeccionesTest {
     }
 
     @Test
-    @DisplayName("Inicialización: crea las 13 colecciones del modelo de BBDD")
-    void creaLasTreceColecciones() {
-        // Las 10 del modelo inicial, metodos_pago (HU6), direcciones_envio (HU5) y contadores (HU10)
+    @DisplayName("Inicialización: crea las 15 colecciones del modelo de BBDD")
+    void creaLasQuinceColecciones() {
+        // Las 10 del modelo inicial, metodos_pago (HU6), direcciones_envio (HU5), contadores (HU10), preferencias (HU46)
+        // e incidencias (HU44)
         List<String> esperadas = List.of("usuarios", "sesiones", "factores_autenticacion", "tokens_seguridad",
                 "productos", "pedidos", "carritos", "valoraciones", "categorias", "listas_deseos", "metodos_pago",
-                "direcciones_envio", "contadores");
+                "direcciones_envio", "contadores", "preferencias", "incidencias");
 
         assertTrue(mongoTemplate.getCollectionNames().containsAll(esperadas));
     }
@@ -243,6 +245,31 @@ class InicializadorColeccionesTest {
     }
 
     @Test
+    @DisplayName("HU44-CP11: la colección incidencias admite incidencias válidas, varias por usuario y con los máximos")
+    void aceptaIncidenciasValidas() {
+        acepta(INCIDENCIAS, incidencia("u1", "Asunto", "Descripción", "PENDIENTE"));
+        acepta(INCIDENCIAS, incidencia("u1", "Otro asunto", "Descripción", "ABIERTA").append("respuesta", "Revisada"));
+        acepta(INCIDENCIAS, incidencia("u1", "a".repeat(100), "b".repeat(1000), "PENDIENTE"));
+    }
+
+    @Test
+    @DisplayName("HU44-CP11: la colección incidencias rechaza un asunto o una descripción vacíos o demasiado largos")
+    void rechazaIncidenciasConTextosInvalidos() {
+        rechaza(VALIDACION, INCIDENCIAS, incidencia("u1", "", "Descripción", "PENDIENTE"));
+        rechaza(VALIDACION, INCIDENCIAS, incidencia("u1", "a".repeat(101), "Descripción", "PENDIENTE"));
+        rechaza(VALIDACION, INCIDENCIAS, incidencia("u1", "Asunto", "", "PENDIENTE"));
+        rechaza(VALIDACION, INCIDENCIAS, incidencia("u1", "Asunto", "b".repeat(1001), "PENDIENTE"));
+    }
+
+    @Test
+    @DisplayName("HU44-CP11: la colección incidencias rechaza un estado que no existe y una incidencia sin usuario")
+    void rechazaIncidenciasConEstadoOUsuarioInvalidos() {
+        rechaza(VALIDACION, INCIDENCIAS, incidencia("u1", "Asunto", "Descripción", "CERRADA"));
+        rechaza(VALIDACION, INCIDENCIAS, new Document("asunto", "Asunto").append("descripcion", "Descripción")
+                .append("estado", "PENDIENTE").append("fechaCreacion", AHORA));
+    }
+
+    @Test
     @DisplayName("Índices: los de las anotaciones de los @Document también se crean (email único en usuarios)")
     void creaLosIndicesDeLasAnotaciones() {
         acepta("usuarios", usuario("unico@uclm.es", "CLIENTE"));
@@ -259,6 +286,23 @@ class InicializadorColeccionesTest {
                     .findFirst().orElseThrow();
             assertEquals(0, ((Number) indice.get("expireAfterSeconds")).intValue(), coleccion);
         }
+    }
+
+    @Test
+    @DisplayName("HU7-CP20: productos tiene los índices de filtrado del catálogo (disponible con nombre y con valoración)")
+    void productosTieneLosIndicesDelCatalogo() {
+        // Se compara el JSON de la clave porque el orden de los campos importa en un índice compuesto
+        // y la igualdad de Document no lo tiene en cuenta.
+        List<Document> indices = mongoTemplate.getCollection("productos").listIndexes().into(new ArrayList<>());
+        assertEquals("{\"disponible\": 1, \"nombre\": 1}", claveDelIndice(indices, "disponible_nombre"));
+        assertEquals("{\"disponible\": 1, \"valoracionMedia\": -1, \"nombre\": 1}",
+                claveDelIndice(indices, "disponible_valoracion"));
+    }
+
+    private static String claveDelIndice(List<Document> indices, String nombre) {
+        return indices.stream().filter(i -> nombre.equals(i.getString("name")))
+                .findFirst().orElseThrow(() -> new AssertionError("Falta el índice " + nombre))
+                .get("key", Document.class).toJson();
     }
 
     private void acepta(String coleccion, Document documento) {
@@ -298,5 +342,10 @@ class InicializadorColeccionesTest {
 
     private static Document valoracion(String usuarioId, String productoId, int puntuacion) {
         return new Document("usuarioId", usuarioId).append("productoId", productoId).append("puntuacion", puntuacion);
+    }
+
+    private static Document incidencia(String usuarioId, String asunto, String descripcion, String estado) {
+        return new Document("usuarioId", usuarioId).append("asunto", asunto).append("descripcion", descripcion)
+                .append("estado", estado).append("fechaCreacion", AHORA);
     }
 }

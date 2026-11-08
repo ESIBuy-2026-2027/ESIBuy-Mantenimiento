@@ -61,6 +61,8 @@ export default function CredentialsStep({ onSubmit, submitting }) {
         autoComplete="current-password"
         maxLength={128}
         required={false}
+        // R9: la contraseña no se copia ni se corta, pero se puede pegar, por los gestores de contraseñas
+        bloquearCopia
       />
       <Button
         type="submit"

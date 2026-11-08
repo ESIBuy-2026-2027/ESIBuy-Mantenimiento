@@ -19,6 +19,7 @@ import { PATHS } from '../routes/paths'
 const SESSION_END_NOTICES = {
   [SESSION_END.SIGNED_OUT]: { intent: 'success', text: 'Has cerrado sesión.' },
   [SESSION_END.EXPIRED]: { intent: 'warning', text: 'Tu sesión ha caducado. Vuelve a iniciar sesión.' },
+  [SESSION_END.ACCOUNT_DELETED]: { intent: 'success', text: 'Tu cuenta se ha eliminado.' },
 }
 
 // Aviso al volver de la recuperación de contraseña (HU3).

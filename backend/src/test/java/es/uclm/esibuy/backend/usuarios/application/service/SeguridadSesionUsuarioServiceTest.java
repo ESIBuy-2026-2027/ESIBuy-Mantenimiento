@@ -28,6 +28,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AuthenticatorUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.EditarPerfilCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.GestionPerfilUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.IniciarSesionCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarClienteCommand;
@@ -48,6 +49,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasExc
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
+import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
@@ -59,8 +61,9 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 // del usuario son del cliente y del vendedor, y saber si es premium, solo del cliente. Las anotaciones solo se
 // evalúan con Spring, así que se usa un contexto mínimo (sin MongoDB) con los servicios reales y dobles de
 // prueba de los puertos de salida.
-// Eliminar la cuenta propia (HU25) es solo del cliente y con su propio correo.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU2-CP29 y HU25-CP04, propuestos.
+// Editar el perfil propio (HU45) es del cliente o el vendedor y con su propio correo. La seguridad de eliminar la
+// cuenta propia (HU25) se prueba en SeguridadGestionCuentaServiceTest.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU2-CP29 y HU45-CP05, propuestos.
 @SpringJUnitConfig(SeguridadSesionUsuarioServiceTest.Configuracion.class)
 class SeguridadSesionUsuarioServiceTest {
 
@@ -68,7 +71,6 @@ class SeguridadSesionUsuarioServiceTest {
     private static final String VENDEDOR = "vendedor@esibuy.test";
     private static final String ADMIN = "admin@esibuy.test";
     private static final String OTRO = "otro@esibuy.test";
-    private static final String PASSWORD = "Clave-Segura-123";
 
     private static final IniciarSesionCommand INICIO_SESION = new IniciarSesionCommand(CLIENTE, "Clave-Segura-123");
     private static final VerificarCodigoEmailCommand CODIGO_EMAIL = new VerificarCodigoEmailCommand(CLIENTE, "123456");
@@ -79,6 +81,10 @@ class SeguridadSesionUsuarioServiceTest {
             new RegistrarClienteCommand(null, null, null, null, null, null, null, null, null, null, false);
     private static final RegistrarVendedorCommand REGISTRO_VENDEDOR =
             new RegistrarVendedorCommand(null, null, null, null, null, null, null, null, null, null, false);
+
+    // Datos válidos para los dos roles: el cliente usa la fecha de nacimiento y el vendedor, su nombre comercial y categoría
+    private static final EditarPerfilCommand EDICION_PERFIL = new EditarPerfilCommand("Nombre", "Apellidos", null,
+            null, LocalDate.of(1990, Month.JANUARY, 1), "Tienda Mario", "cat-1");
 
     @Configuration
     @EnableMethodSecurity
@@ -143,8 +149,8 @@ class SeguridadSesionUsuarioServiceTest {
         }
 
         @Bean
-        GestionPerfilUseCase gestionPerfil(UsuarioRepositoryPort repositorio, HashContrasenaPort hash) {
-            return new GestionPerfilService(repositorio, hash);
+        GestionPerfilUseCase gestionPerfil(UsuarioRepositoryPort repositorio) {
+            return new GestionPerfilService(repositorio, Clock.systemUTC());
         }
     }
 
@@ -253,47 +259,97 @@ class SeguridadSesionUsuarioServiceTest {
 
     @Test
     @WithMockUser(username = CLIENTE, roles = "CLIENTE")
-    @DisplayName("HU25-CP04: un cliente elimina su propia cuenta")
-    void unClienteEliminaSuCuenta() {
-        // El repositorio y el hash dejan que la llamada termine: así se ve que la seguridad la ha dejado pasar
+    @DisplayName("HU45-CP05: un cliente edita su propio perfil")
+    void unClienteEditaSuPerfil() {
+        // El repositorio deja que la llamada termine: así se ve que la seguridad la ha dejado pasar
         when(usuarioRepository.buscarPorCorreo(CLIENTE)).thenReturn(Optional.of(cliente()));
-        when(hashContrasena.coincide(PASSWORD, "hash-simulado")).thenReturn(true);
 
-        gestionPerfil.eliminarCuenta(CLIENTE, PASSWORD);
+        Usuario editado = gestionPerfil.editarPerfil(CLIENTE, EDICION_PERFIL);
 
-        verify(usuarioRepository).eliminarPorId("u-1");
-    }
-
-    @Test
-    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
-    @DisplayName("HU25-CP04: un cliente no elimina la cuenta de otro")
-    void unClienteNoEliminaLaCuentaDeOtro() {
-        assertThrows(AccessDeniedException.class, () -> gestionPerfil.eliminarCuenta(OTRO, PASSWORD));
-        verifyNoInteractions(usuarioRepository, hashContrasena);
+        verify(usuarioRepository).guardar(editado);
     }
 
     @Test
     @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
-    @DisplayName("HU25-CP04: un vendedor no elimina su cuenta por aquí")
-    void unVendedorNoEliminaSuCuenta() {
-        assertThrows(AccessDeniedException.class, () -> gestionPerfil.eliminarCuenta(VENDEDOR, PASSWORD));
-        verifyNoInteractions(usuarioRepository, hashContrasena);
+    @DisplayName("HU45-CP05: un vendedor edita su propio perfil")
+    void unVendedorEditaSuPerfil() {
+        when(usuarioRepository.buscarPorCorreo(VENDEDOR)).thenReturn(Optional.of(vendedor()));
+
+        Usuario editado = gestionPerfil.editarPerfil(VENDEDOR, EDICION_PERFIL);
+
+        verify(usuarioRepository).guardar(editado);
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU45-CP05: nadie edita el perfil de otro")
+    void nadieEditaElPerfilDeOtro() {
+        assertThrows(AccessDeniedException.class, () -> gestionPerfil.editarPerfil(OTRO, EDICION_PERFIL));
+        verifyNoInteractions(usuarioRepository);
     }
 
     @Test
     @WithMockUser(username = ADMIN, roles = "ADMINISTRADOR")
-    @DisplayName("HU25-CP04: un administrador no elimina su cuenta por aquí")
-    void unAdministradorNoEliminaSuCuenta() {
-        assertThrows(AccessDeniedException.class, () -> gestionPerfil.eliminarCuenta(ADMIN, PASSWORD));
-        verifyNoInteractions(usuarioRepository, hashContrasena);
+    @DisplayName("HU45-CP05: un administrador no edita su perfil por aquí")
+    void unAdministradorNoEditaSuPerfilPorAqui() {
+        assertThrows(AccessDeniedException.class, () -> gestionPerfil.editarPerfil(ADMIN, EDICION_PERFIL));
+        verifyNoInteractions(usuarioRepository);
     }
 
     @Test
-    @DisplayName("HU25-CP04: sin sesión no se elimina ninguna cuenta")
-    void sinSesionNoSeEliminaNingunaCuenta() {
+    @DisplayName("HU45-CP05: sin sesión no se edita ningún perfil")
+    void sinSesionNoSeEditaNingunPerfil() {
         assertThrows(AuthenticationCredentialsNotFoundException.class,
-                () -> gestionPerfil.eliminarCuenta(CLIENTE, PASSWORD));
-        verifyNoInteractions(usuarioRepository, hashContrasena);
+                () -> gestionPerfil.editarPerfil(CLIENTE, EDICION_PERFIL));
+        verifyNoInteractions(usuarioRepository);
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU45-CP19: un cliente pasa a Premium su propia cuenta")
+    void unClientePasaAPremium() {
+        when(usuarioRepository.buscarPorCorreo(CLIENTE)).thenReturn(Optional.of(cliente()));
+
+        Usuario premium = gestionPerfil.pasarAPremium(CLIENTE);
+
+        verify(usuarioRepository).guardar(premium);
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU45-CP19: un cliente no pasa a Premium la cuenta de otro")
+    void unClienteNoPasaAPremiumAOtro() {
+        assertThrows(AccessDeniedException.class, () -> gestionPerfil.pasarAPremium(OTRO));
+        verifyNoInteractions(usuarioRepository);
+    }
+
+    @Test
+    @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
+    @DisplayName("HU45-CP19: un vendedor no puede pasar a Premium")
+    void unVendedorNoPasaAPremium() {
+        assertThrows(AccessDeniedException.class, () -> gestionPerfil.pasarAPremium(VENDEDOR));
+        verifyNoInteractions(usuarioRepository);
+    }
+
+    @Test
+    @WithMockUser(username = ADMIN, roles = "ADMINISTRADOR")
+    @DisplayName("HU45-CP19: un administrador no puede pasar a Premium")
+    void unAdministradorNoPasaAPremium() {
+        assertThrows(AccessDeniedException.class, () -> gestionPerfil.pasarAPremium(ADMIN));
+        verifyNoInteractions(usuarioRepository);
+    }
+
+    @Test
+    @DisplayName("HU45-CP19: sin sesión nadie pasa a Premium")
+    void sinSesionNadiePasaAPremium() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> gestionPerfil.pasarAPremium(CLIENTE));
+        verifyNoInteractions(usuarioRepository);
+    }
+
+    private static Usuario vendedor() {
+        return new Usuario("v-1", new DatosPersonales("Mario", "Ruiz Sanz", null), new Email(VENDEDOR),
+                "hash-simulado", Rol.VENDEDOR, new DatosVendedor("Tienda Mario", "cat-1", new Dni("12345678Z"), null),
+                null);
     }
 
     private static Usuario cliente() {

@@ -1,8 +1,11 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { Route, Routes } from 'react-router-dom'
 import { registrarCliente, registrarVendedor } from '../api/auth'
 import { getCategories } from '../api/products'
+import RegistroPremiumFlow from '../features/account/RegistroPremiumFlow'
+import LocationProbe from '../test/LocationProbe'
 import { elegirCategoria, renderWithProviders } from '../test/utils'
 import Register from './Register'
 
@@ -15,13 +18,30 @@ vi.mock('../api/products', () => ({
   getCategories: vi.fn(),
 }))
 
+// El registro vive dentro del flujo que guarda en memoria los datos mientras el cliente Premium pasa por la
+// pasarela (HU45). Aquí la pasarela es un marcador: lo que se comprueba es que se llega a ella.
+function renderRegister() {
+  return renderWithProviders(
+    <>
+      <Routes>
+        <Route element={<RegistroPremiumFlow />}>
+          <Route path="/register" element={<Register />} />
+          <Route path="/register/pago" element={<p>Pasarela de prueba</p>} />
+        </Route>
+      </Routes>
+      <LocationProbe />
+    </>,
+    { route: '/register' },
+  )
+}
+
 async function renderYElegirCliente() {
-  renderWithProviders(<Register />)
+  renderRegister()
   await userEvent.click(screen.getByRole('button', { name: /cliente/i }))
 }
 
 async function renderYElegirVendedor() {
-  renderWithProviders(<Register />)
+  renderRegister()
   await userEvent.click(screen.getByRole('button', { name: /vendedor/i }))
 }
 
@@ -58,7 +78,7 @@ describe('Register', () => {
   })
 
   it('register_alRenderizar_muestraOpcionesClienteYVendedor', () => {
-    renderWithProviders(<Register />)
+    renderRegister()
 
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
     expect(screen.getByText(/cliente/i)).toBeInTheDocument()
@@ -72,7 +92,7 @@ describe('Register', () => {
   })
 
   it('register_alElegirVendedor_muestraFormularioDeVendedor', async () => {
-    renderWithProviders(<Register />)
+    renderRegister()
 
     await userEvent.click(screen.getByRole('button', { name: /vendedor/i }))
 
@@ -469,14 +489,27 @@ describe('Register', () => {
     expect(registrarCliente).toHaveBeenCalledWith(expect.objectContaining({ tipoCliente: 'ESTANDAR' }))
   })
 
-  it('register_alElegirPremium_enviaElTipoPremium', async () => {
-    registrarCliente.mockResolvedValue({})
+  // HU45 (T420): elegir Premium no registra al momento; antes hay que pasar por la pasarela de pago simulada
+  it('HU45-CP21: al elegir Premium, Registrarse no envía el registro y lleva a la pasarela de pago', async () => {
     await renderYElegirCliente()
     await rellenarFormularioValido()
     await userEvent.selectOptions(screen.getByLabelText(/tipo/i), 'PREMIUM')
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
-    expect(registrarCliente).toHaveBeenCalledWith(expect.objectContaining({ tipoCliente: 'PREMIUM' }))
+    expect(await screen.findByText('Pasarela de prueba')).toBeInTheDocument()
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/register\/pago$/)
+    expect(registrarCliente).not.toHaveBeenCalled()
+  })
+
+  it('HU45-CP21: con datos no válidos, elegir Premium marca los errores y no lleva a la pasarela', async () => {
+    await renderYElegirCliente()
+    await userEvent.selectOptions(screen.getByLabelText(/tipo/i), 'PREMIUM')
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    expect(screen.getAllByText(/obligatorio/i).length).toBeGreaterThan(0)
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/register$/)
+    expect(screen.queryByText('Pasarela de prueba')).not.toBeInTheDocument()
+    expect(registrarCliente).not.toHaveBeenCalled()
   })
 
   it('register_siElClienteNoIndicaTelefono_noEnviaElTelefono', async () => {

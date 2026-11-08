@@ -91,6 +91,12 @@ public class GestionMetodosPagoService implements GestionMetodosPagoUseCase {
 
     @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
+    public void eliminarTodos(String emailCliente) {
+        metodoPagoRepository.eliminarPorCliente(clienteEnSesion.idPorCorreo(emailCliente));
+    }
+
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
+    @Override
     public boolean esDelCliente(String emailCliente, String metodoId) {
         return listar(emailCliente).stream().anyMatch(metodo -> metodo.getId().equals(metodoId));
     }

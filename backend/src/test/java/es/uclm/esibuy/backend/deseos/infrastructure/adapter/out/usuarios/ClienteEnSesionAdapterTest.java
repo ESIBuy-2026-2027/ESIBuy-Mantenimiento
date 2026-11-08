@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 // Adaptador de la lista de deseos hacia el módulo de usuarios (HU14), sin Spring ni MongoDB
@@ -23,5 +24,13 @@ class ClienteEnSesionAdapterTest {
         when(autenticacion.consultarIdUsuarioEnSesion("cliente@esibuy.test")).thenReturn("c-1");
 
         assertEquals("c-1", new ClienteEnSesionAdapter(autenticacion).idPorCorreo("cliente@esibuy.test"));
+    }
+
+    @Test
+    @DisplayName("HU14-CP17: si el cliente es premium se pregunta al módulo de usuarios")
+    void esPremiumPreguntaAlModuloDeUsuarios() {
+        when(autenticacion.esClientePremium("cliente@esibuy.test")).thenReturn(true);
+
+        assertTrue(new ClienteEnSesionAdapter(autenticacion).esPremium("cliente@esibuy.test"));
     }
 }

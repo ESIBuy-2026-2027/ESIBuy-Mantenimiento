@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
-import { Text, Title1, makeStyles, mergeClasses, tokens } from '@fluentui/react-components'
-import { BuildingShop20Regular, ImageOff24Regular } from '@fluentui/react-icons'
+import { Button, Text, Title1, makeStyles, mergeClasses, tokens } from '@fluentui/react-components'
+import { BuildingShop20Regular, Heart20Filled, Heart20Regular, ImageOff24Regular } from '@fluentui/react-icons'
 import { formatRating } from '../../utils/format'
 import AddToCartButton from '../cart/AddToCartButton'
 import QuantityStepper from '../cart/QuantityStepper'
@@ -131,6 +131,16 @@ const useStyles = makeStyles({
     alignItems: 'flex-start',
     gap: tokens.spacingHorizontalM,
   },
+  // El corazón relleno en rojo es la señal de que el producto ya está en favoritos.
+  favoriteIcon: {
+    color: tokens.colorPaletteRedForeground1,
+  },
+  favorite: {
+    alignSelf: 'flex-start',
+  },
+  favoriteError: {
+    color: tokens.colorPaletteRedForeground1,
+  },
   stock: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -208,8 +218,18 @@ const valoraciones = (n) => `${n} ${n === 1 ? 'valoración' : 'valoraciones'}`
 
 // Detalle de un producto para el cliente (HU8): imagen, nombre, proveedor, valoración, precio, disponibilidad,
 // descripción, una ficha con los datos del producto y las valoraciones de los clientes (HU13). Solo presenta: la
-// página es la que pide el producto y sus valoraciones.
-export default function ProductDetail({ product, categoryName, reviews = null, reviewsFailed = false, onRetryReviews }) {
+// página es la que pide el producto y sus valoraciones. Con `onAddFavorite` ofrece además añadirlo a favoritos y, si
+// ya lo está (`favorite`), quitarlo con `onRemoveFavorite` (HU14); si no se puede, lo avisa.
+export default function ProductDetail({
+  product,
+  categoryName,
+  reviews = null,
+  reviewsFailed = false,
+  onRetryReviews,
+  favorite = false,
+  onAddFavorite,
+  onRemoveFavorite,
+}) {
   const styles = useStyles()
   // Si la imagen no carga (dirección rota), se enseña el mismo marcador que cuando no hay imagen.
   const [imageFailed, setImageFailed] = useState(false)
@@ -220,6 +240,27 @@ export default function ProductDetail({ product, categoryName, reviews = null, r
   const [quantity, setQuantity] = useState(1)
   const canBuy = status.key === 'in' || status.key === 'low'
   const category = categoryName ?? SIN_CATEGORIA
+  const [savingFavorite, setSavingFavorite] = useState(false)
+  const [favoriteError, setFavoriteError] = useState('')
+
+  const favoriteFailure = (failure) => {
+    if (favorite) return 'No se ha podido quitar de favoritos. Inténtalo de nuevo.'
+    return failure?.code === 'PRODUCT_NOT_FOUND'
+      ? 'Este producto ya no está disponible.'
+      : 'No se ha podido añadir a favoritos. Inténtalo de nuevo.'
+  }
+
+  const toggleFavorite = async () => {
+    setFavoriteError('')
+    setSavingFavorite(true)
+    try {
+      await (favorite ? onRemoveFavorite(product.id) : onAddFavorite(product.id))
+    } catch (failure) {
+      setFavoriteError(favoriteFailure(failure))
+    } finally {
+      setSavingFavorite(false)
+    }
+  }
 
   return (
     <div className={styles.layout}>
@@ -274,6 +315,22 @@ export default function ProductDetail({ product, categoryName, reviews = null, r
           ) : (
             <AddToCartButton product={product} />
           )}
+          {onAddFavorite && (
+            <Button
+              appearance="secondary"
+              className={styles.favorite}
+              icon={favorite ? <Heart20Filled className={styles.favoriteIcon} /> : <Heart20Regular />}
+              disabled={savingFavorite}
+              onClick={toggleFavorite}
+            >
+              {favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+            </Button>
+          )}
+          {favoriteError && (
+            <Text role="alert" size={200} className={styles.favoriteError}>
+              {favoriteError}
+            </Text>
+          )}
         </div>
 
         <section className={styles.section} aria-labelledby="descripcion-producto">
@@ -326,4 +383,7 @@ ProductDetail.propTypes = {
   reviews: PropTypes.arrayOf(reviewPropType),
   reviewsFailed: PropTypes.bool,
   onRetryReviews: PropTypes.func.isRequired,
+  favorite: PropTypes.bool,
+  onAddFavorite: PropTypes.func,
+  onRemoveFavorite: PropTypes.func,
 }

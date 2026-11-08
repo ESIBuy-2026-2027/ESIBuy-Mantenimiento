@@ -34,10 +34,12 @@ export const MENSAJE_DATOS_INVALIDOS = 'Revisa los datos del formulario'
 export const MENSAJE_ERROR_SERVIDOR = 'No se ha podido completar la operación. Inténtalo de nuevo más tarde'
 
 // Devuelve { campos: { campo: mensaje } } si el error se puede marcar en el formulario, o { general: mensaje }.
-export function erroresDelServidor(error) {
+// `propios` cambia el campo o el mensaje de un code en un formulario concreto (p. ej. «para registrarte» no vale al
+// editar el perfil, HU45); los que no cambia siguen como en el resto de formularios.
+export function erroresDelServidor(error, propios = {}) {
   if (!ERRORES_DE_DATOS.has(error?.status)) {
     return { general: MENSAJE_ERROR_SERVIDOR }
   }
-  const campos = CAMPOS_POR_CODE[error.code]
+  const campos = propios[error.code] ?? CAMPOS_POR_CODE[error.code]
   return campos ? { campos } : { general: MENSAJE_DATOS_INVALIDOS }
 }

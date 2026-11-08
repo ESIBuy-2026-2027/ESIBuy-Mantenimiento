@@ -9,10 +9,14 @@ import es.uclm.esibuy.backend.carrito.domain.exception.LineaCarritoNoEncontradaE
 import es.uclm.esibuy.backend.carrito.domain.exception.ProductoNoComprableException;
 import es.uclm.esibuy.backend.carrito.domain.exception.StockInsuficienteException;
 import es.uclm.esibuy.backend.deseos.domain.exception.ProductoNoDisponibleException;
+import es.uclm.esibuy.backend.preferencias.domain.exception.PreferenciasInvalidasException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionInvalidaException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionNoEncontradaException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.LimiteDireccionesException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.NuevaPrincipalObligatoriaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaInvalidaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaNoEncontradaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaYaAbiertaException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.LimiteMetodosPagoException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoInvalidoException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoNoEncontradoException;
@@ -21,6 +25,7 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.CarritoSinProductosDelPro
 import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
@@ -32,6 +37,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.AuthenticatorYaDadoDeAlt
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutobloqueoNoPermitidoException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaActualIncorrectaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.BloqueoPorIntentosException;
@@ -49,6 +55,7 @@ import es.uclm.esibuy.backend.valoraciones.domain.exception.ProductoNoCompradoEx
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionDuplicadaException;
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutoeliminacionNoPermitidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.ClienteYaPremiumException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -151,6 +158,14 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public RespuestaError credencialesInvalidas() {
         return new RespuestaError("Credenciales Incorrectas");
+    }
+
+    // 400 + code al eliminar la cuenta propia con una contraseña incorrecta (HU25 y HU47). No es 401: la sesión sigue
+    // siendo válida y el frontend no debe tratarlo como una sesión caducada.
+    @ExceptionHandler(ContrasenaActualIncorrectaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError contrasenaActualIncorrecta() {
+        return new RespuestaError("La contraseña actual no es correcta", "WRONG_PASSWORD");
     }
 
     @ExceptionHandler(BloqueoPorIntentosException.class)
@@ -265,6 +280,14 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError categoriaInvalida() {
         return new RespuestaError("La categoría es inválida", CODIGO_VALIDACION);
+    }
+
+    // 400 + code al guardar las preferencias (HU46, T287): faltan las categorías, o alguna no existe o no está activa.
+    // El mensaje es genérico: no dice cuál.
+    @ExceptionHandler(PreferenciasInvalidasException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError preferenciasInvalidas() {
+        return new RespuestaError("Las preferencias son inválidas", CODIGO_VALIDACION);
     }
 
     // 409 + code cuando ya hay una categoría con ese nombre, sin distinguir mayúsculas ni tildes (HU40, T323).
@@ -404,6 +427,13 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("El pedido no existe", "ORDER_NOT_FOUND");
     }
 
+    // Pedidos (HU12): solo se cancela un pedido que aún no se ha enviado
+    @ExceptionHandler(PedidoNoCancelableException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError pedidoNoCancelable() {
+        return new RespuestaError("El pedido ya no se puede cancelar", "ORDER_NOT_CANCELLABLE");
+    }
+
     @ExceptionHandler(CarritoSinProductosDelProveedorException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError carritoSinProductosDelProveedor() {
@@ -413,7 +443,7 @@ public class ManejadorGlobalErrores {
     @ExceptionHandler(StockInsuficientePedidoException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError stockInsuficienteEnElPedido() {
-        return new RespuestaError("No hay stock suficiente", "INSUFFICIENT_STOCK");
+        return new RespuestaError("No se puede comprar un producto del pedido", "INSUFFICIENT_STOCK");
     }
 
     // Valoraciones (HU13): puntuación fuera de 1 a 5 o comentario de más de 500 caracteres
@@ -435,5 +465,33 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError valoracionDuplicada() {
         return new RespuestaError("Ya has valorado este producto", "REVIEW_ALREADY_EXISTS");
+    }
+
+    // Incidencias (HU44, T292): asunto o descripción vacíos o demasiado largos. El mensaje es siempre genérico.
+    @ExceptionHandler(IncidenciaInvalidaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError incidenciaInvalida() {
+        return new RespuestaError("La incidencia es inválida", CODIGO_VALIDACION);
+    }
+
+    // Incidencias (HU50): abrir o cerrar una que no existe, por ejemplo porque otro administrador ya la cerró
+    @ExceptionHandler(IncidenciaNoEncontradaException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public RespuestaError incidenciaNoEncontrada() {
+        return new RespuestaError("La incidencia no existe", "INCIDENT_NOT_FOUND");
+    }
+
+    // Incidencias (HU50): solo se abre una incidencia pendiente, para no sobrescribir la respuesta que ya tiene
+    @ExceptionHandler(IncidenciaYaAbiertaException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError incidenciaYaAbierta() {
+        return new RespuestaError("La incidencia ya está abierta", "INCIDENT_ALREADY_OPEN");
+    }
+
+    // 400 + code al pasar a Premium (HU45, T423): el cliente ya lo era.
+    @ExceptionHandler(ClienteYaPremiumException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError clienteYaPremium() {
+        return new RespuestaError("Ya eres cliente Premium", "ALREADY_PREMIUM");
     }
 }
