@@ -11,6 +11,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 
+import es.uclm.esibuy.backend.usuarios.domain.exception.ClienteYaPremiumException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 

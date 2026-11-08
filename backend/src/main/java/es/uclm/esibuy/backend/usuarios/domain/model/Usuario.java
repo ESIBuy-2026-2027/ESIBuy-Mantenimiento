@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 
+import es.uclm.esibuy.backend.usuarios.domain.exception.ClienteYaPremiumException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 
@@ -59,6 +60,18 @@ public class Usuario {
         }
         this.datosPersonales = personales;
         this.perfil = perfilCoherente;
+    }
+
+    // Paso a Premium del propio cliente (HU45, T422). Solo cambia el tipo: el DNI, la fecha y el teléfono se conservan.
+    public void pasarAPremium() {
+        if (!(perfil instanceof DatosCliente datosCliente)) {
+            throw new UsuarioInvalidoException("Solo un cliente puede pasar a Premium");
+        }
+        if (datosCliente.tipoCliente() == TipoCliente.PREMIUM) {
+            throw new ClienteYaPremiumException("El cliente ya es Premium");
+        }
+        this.perfil = new DatosCliente(TipoCliente.PREMIUM, datosCliente.dni(), datosCliente.fechaNacimiento(),
+                datosCliente.telefono());
     }
 
     public static Usuario nuevoCliente(DatosPersonales datosPersonales, Email email, String passwordHash,

@@ -37,6 +37,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
+import es.uclm.esibuy.backend.usuarios.domain.exception.ClienteYaPremiumException;
 
 // Consulta (HU4, T297) y edición (HU45, T298) del perfil propio. El repositorio es un doble de prueba y el reloj
 // está fijo: se prueba el caso de uso sin MongoDB ni Spring, y la mayoría de edad no depende del día en que se
