@@ -4827,6 +4827,10 @@ Tests que no validan una HU concreta.
 | `SecurityConfigTest` | `elRestoDeActuatorExigeSesion` | Que el resto de rutas de `/actuator` exige sesión (401); no pasó por rojo real, `anyRequest().authenticated()` ya lo cubría (CD; sin HU ni AB#) |
 | `client.test.js` (frontend) | `request_postConCookieCsrf_enviaElTokenEnLaCabecera` | Que el cliente HTTP copia la cookie `XSRF-TOKEN` en la cabecera `X-XSRF-TOKEN` (AB#230, PR #67) |
 | `client.test.js` (frontend) | `request_postSinCookieCsrf_noEnviaLaCabecera` | Que sin la cookie no envía la cabecera CSRF (AB#230, PR #67) |
+| `registroHandlers.test.js` (frontend) | `registroHandlers_clienteConElEmailDeUnVendedorDelPanel_responde409` | Que el mock del registro rechaza con 409 `EMAIL_ALREADY_REGISTERED` el correo de un vendedor del panel de administración, como el backend (fallo de la demo del Sprint 2; sin HU ni AB#) |
+| `registroHandlers.test.js` (frontend) | `registroHandlers_clienteConElEmailDeUnUsuarioDelListadoDeAdministracion_responde409` | Que el mock del registro rechaza el correo de un usuario del listado de administración (fallo de la demo del Sprint 2; sin HU ni AB#) |
+| `registroHandlers.test.js` (frontend) | `registroHandlers_vendedorConElEmailDeUnClienteEnMayusculasYConEspacios_responde409` | Que el mock del registro compara el correo sin espacios y en minúsculas, como el backend (fallo de la demo del Sprint 2; sin HU ni AB#) |
+| `registroHandlers.test.js` (frontend) | `registroHandlers_conUnEmailNuevo_registraLaCuenta` | Que el mock del registro sigue aceptando un correo nuevo con 201 sin cuerpo; no pasó por rojo, ya lo hacía (fallo de la demo del Sprint 2; sin HU ni AB#) |
 | `UsuarioControllerTest` | `otraRutaSinSesionEstaProtegida` | Que una ruta distinta del registro exige sesión (mínimo privilegio en `SecurityConfig`; AB#14, PR #30) |
 | `EmailTest` | `dosEmailsConElMismoValorSonIguales` | Que `Email` es un value object con igualdad por valor (AB#214, PR #34) |
 | `UsuarioControllerTest` | `listadoSinSesionEstaProtegido` | Que el listado administrativo sin sesión devuelve 401 (`SecurityConfig`) |
