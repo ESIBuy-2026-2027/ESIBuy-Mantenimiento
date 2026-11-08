@@ -4257,21 +4257,21 @@ Rutas de las clases de test (bajo `frontend/src/`):
 | HU45-CP08 | Datos no válidos: nombre vacío o de más de 30 caracteres, 400 `VALIDATION_ERROR` sin llamar al caso de uso; un dato que rechaza el dominio, 400 con el code de su motivo (`UNDERAGE`) o `VALIDATION_ERROR` si no tiene motivo concreto | Integración (capa web) | 3 | 🔍 En revisión (3, AB#101, este PR) |
 | HU45-CP09 | Un nombre comercial que ya usa otro vendedor responde 409 `COMMERCIAL_NAME_ALREADY_REGISTERED` | Integración (capa web) | 1 | 🔍 En revisión (1, AB#101, este PR) |
 | HU45-CP10 | Solo el cliente o el vendedor editan su perfil por la API: el administrador recibe 403, sin sesión 401 y sin token CSRF 403 | Integración (capa web) | 3 | 🔍 En revisión (3, AB#101, este PR) |
-| HU45-CP15 | Al elegir Premium, Registrarse valida el formulario y lleva a la pasarela de pago simulada sin enviar el registro | Frontend (página) | 2 | ✅ Pasa (2, AB#420, PR pendiente) |
-| HU45-CP16 | Sin datos del formulario en memoria (URL escrita a mano o recarga) la pasarela del registro vuelve al registro vacío | Frontend (página) | 2 | ✅ Pasa (2, AB#420, PR pendiente) |
-| HU45-CP17 | El registro como PREMIUM solo se envía al pulsar Simular pago y muestra el mismo éxito; si el servidor lo rechaza, vuelve al formulario con sus datos y el motivo | Frontend (página) | 2 | ✅ Pasa (2, AB#420, PR pendiente) |
-| HU45-CP18 | Cancelar la pasarela vuelve al formulario con sus datos: con Estándar se registra directo y con Premium vuelve a exigir la pasarela | Frontend (página) | 2 | ✅ Pasa (2, AB#420, PR pendiente) |
-| HU45-CP19 | La contraseña no aparece en la URL ni se guarda en localStorage ni en sessionStorage durante el registro Premium | Frontend (página) | 1 | ✅ Pasa (1, AB#420, PR pendiente) |
-| HU45-CP20 | La pasarela simulada muestra el resumen de ESIBuy Premium sin precio ni datos de tarjeta, con Simular pago (procesando y deshabilitado mientras termina), volver y su aviso de error | Frontend (componente) | 5 | ✅ Pasa (5, AB#420, PR pendiente) |
-| HU45-CP21 | El botón Premium de la cabecera solo lo ve el cliente y lleva a la vista de ventajas Premium | Frontend (componente) | 2 | ✅ Pasa (2, AB#421, PR pendiente) |
-| HU45-CP22 | En el perfil, el cliente Estándar tiene Hazte Premium hacia la vista Premium y el Premium, el distintivo; el vendedor ninguno | Frontend (página) | 3 | ✅ Pasa (3, AB#421, PR pendiente) |
-| HU45-CP23 | La vista Premium muestra las tres ventajas (descuentos exclusivos, sin gastos de envío y envíos más rápidos) con su texto y ningún precio, con un único h1 | Frontend (página) | 2 | ✅ Pasa (2, AB#421, PR pendiente) |
-| HU45-CP24 | Solo el cliente entra en la vista Premium y en su pasarela: sin sesión, al login; vendedor y administrador, a su inicio | Frontend (página) | 3 | ✅ Pasa (3, AB#421, PR pendiente) |
-| HU45-CP25 | El cliente Premium ve «Ya eres ESIBuy Premium» sin la pasarela, y entrar directo en ella lleva a la vista Premium | Frontend (página) | 2 | ✅ Pasa (2, AB#421, PR pendiente) |
-| HU45-CP26 | El cliente Estándar pasa por la pasarela y, al simular el pago, se llama a POST /api/perfil/premium, se confirma con aria-live y queda en estado Premium (también en su perfil); Volver no cambia nada | Frontend (página) | 4 | ✅ Pasa (4, AB#421, PR pendiente) |
-| HU45-CP27 | Un 400 ALREADY_PREMIUM avisa con un mensaje propio y deja la vista en estado Premium, sin el texto del backend | Frontend (página) | 1 | ✅ Pasa (1, AB#421, PR pendiente) |
-| HU45-CP28 | Un error de red o 5xx muestra un mensaje genérico y se puede reintentar; un 403 avisa de que no tiene permiso; un 401 lleva al login con el aviso de sesión caducada | Frontend (página) | 4 | ✅ Pasa (4, AB#421, PR pendiente) |
-| HU45-CP29 | becomePremium y su mock responden con el contrato del backend: 200 con el perfil Premium, 400 ALREADY_PREMIUM, 403 ACCESS_DENIED, 401 y sin el texto del backend | Frontend (API) | 5 | ✅ Pasa (5, AB#421, PR pendiente) |
+| HU45-CP15 | Al elegir Premium, Registrarse valida el formulario y lleva a la pasarela de pago simulada sin enviar el registro | Frontend (página) | 2 | 🔍 En revisión (2, AB#420, este PR) |
+| HU45-CP16 | Sin datos del formulario en memoria (URL escrita a mano o recarga) la pasarela del registro vuelve al registro vacío | Frontend (página) | 2 | 🔍 En revisión (2, AB#420, este PR) |
+| HU45-CP17 | El registro como PREMIUM solo se envía al pulsar Simular pago y muestra el mismo éxito; si el servidor lo rechaza, vuelve al formulario con sus datos y el motivo | Frontend (página) | 2 | 🔍 En revisión (2, AB#420, este PR) |
+| HU45-CP18 | Cancelar la pasarela vuelve al formulario con sus datos: con Estándar se registra directo y con Premium vuelve a exigir la pasarela | Frontend (página) | 2 | 🔍 En revisión (2, AB#420, este PR) |
+| HU45-CP19 | La contraseña no aparece en la URL ni se guarda en localStorage ni en sessionStorage durante el registro Premium | Frontend (página) | 1 | 🔍 En revisión (1, AB#420, este PR) |
+| HU45-CP20 | La pasarela simulada muestra el resumen de ESIBuy Premium sin precio ni datos de tarjeta, con Simular pago (procesando y deshabilitado mientras termina), volver y su aviso de error | Frontend (componente) | 5 | 🔍 En revisión (5, AB#420, este PR) |
+| HU45-CP21 | El botón Premium de la cabecera solo lo ve el cliente y lleva a la vista de ventajas Premium | Frontend (componente) | 2 | 🔍 En revisión (2, AB#421, este PR) |
+| HU45-CP22 | En el perfil, el cliente Estándar tiene Hazte Premium hacia la vista Premium y el Premium, el distintivo; el vendedor ninguno | Frontend (página) | 3 | 🔍 En revisión (3, AB#421, este PR) |
+| HU45-CP23 | La vista Premium muestra las tres ventajas (descuentos exclusivos, sin gastos de envío y envíos más rápidos) con su texto y ningún precio, con un único h1 | Frontend (página) | 2 | 🔍 En revisión (2, AB#421, este PR) |
+| HU45-CP24 | Solo el cliente entra en la vista Premium y en su pasarela: sin sesión, al login; vendedor y administrador, a su inicio | Frontend (página) | 3 | 🔍 En revisión (3, AB#421, este PR) |
+| HU45-CP25 | El cliente Premium ve «Ya eres ESIBuy Premium» sin la pasarela, y entrar directo en ella lleva a la vista Premium | Frontend (página) | 2 | 🔍 En revisión (2, AB#421, este PR) |
+| HU45-CP26 | El cliente Estándar pasa por la pasarela y, al simular el pago, se llama a POST /api/perfil/premium, se confirma con aria-live y queda en estado Premium (también en su perfil); Volver no cambia nada | Frontend (página) | 4 | 🔍 En revisión (4, AB#421, este PR) |
+| HU45-CP27 | Un 400 ALREADY_PREMIUM avisa con un mensaje propio y deja la vista en estado Premium, sin el texto del backend | Frontend (página) | 1 | 🔍 En revisión (1, AB#421, este PR) |
+| HU45-CP28 | Un error de red o 5xx muestra un mensaje genérico y se puede reintentar; un 403 avisa de que no tiene permiso; un 401 lleva al login con el aviso de sesión caducada | Frontend (página) | 4 | 🔍 En revisión (4, AB#421, este PR) |
+| HU45-CP29 | becomePremium y su mock responden con el contrato del backend: 200 con el perfil Premium, 400 ALREADY_PREMIUM, 403 ACCESS_DENIED, 401 y sin el texto del backend | Frontend (API) | 5 | 🔍 En revisión (5, AB#421, este PR) |
 
 Notas:
 - **HU45-CP01 a CP05:** casos propuestos en la T298 (AB#298) a partir de los criterios de aceptación de la HU45. Pendientes de confirmar con el equipo y de añadir a la HU45 en Azure Boards.
@@ -4314,46 +4314,46 @@ Notas:
 | HU45-CP10 | `PerfilControllerTest` | `unAdministradorNoEditaSuPerfilPorAqui` | Infraestructura | AB#101 | este PR | 🔍 |
 | HU45-CP10 | `PerfilControllerTest` | `sinSesionNoSeEditaElPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
 | HU45-CP10 | `PerfilControllerTest` | `sinTokenCsrfNoSeEditaElPerfil` | Infraestructura | AB#101 | este PR | 🔍 |
-| HU45-CP15 | `Register.test.jsx` | `HU45-CP15: al elegir Premium, Registrarse no envía el registro y lleva a la pasarela de pago` | Frontend · página | AB#420 | PR pendiente | ✅ |
-| HU45-CP15 | `Register.test.jsx` | `HU45-CP15: con datos no válidos, elegir Premium marca los errores y no lleva a la pasarela` | Frontend · página | AB#420 | PR pendiente | ✅ |
-| HU45-CP16 | `RegisterPaymentPage.test.jsx` | `HU45-CP16: navegar directo a la pasarela sin datos lleva al registro, sin pasarela` | Frontend · página | AB#420 | PR pendiente | ✅ |
-| HU45-CP16 | `RegisterPaymentPage.test.jsx` | `HU45-CP16: al recargar la pasarela se pierden los datos y vuelve al registro con el formulario vacío` | Frontend · página | AB#420 | PR pendiente | ✅ |
-| HU45-CP17 | `RegisterPaymentPage.test.jsx` | `HU45-CP17: la pasarela no registra nada hasta pulsar Simular pago; entonces se registra como PREMIUM` | Frontend · página | AB#420 | PR pendiente | ✅ |
-| HU45-CP17 | `RegisterPaymentPage.test.jsx` | `HU45-CP17: si el servidor rechaza el registro tras el pago, vuelve al formulario con sus datos y el motivo` | Frontend · página | AB#420 | PR pendiente | ✅ |
-| HU45-CP18 | `RegisterPaymentPage.test.jsx` | `HU45-CP18: cancelar vuelve al formulario con sus datos; con Estándar se registra sin pasar por la pasarela` | Frontend · página | AB#420 | PR pendiente | ✅ |
-| HU45-CP18 | `RegisterPaymentPage.test.jsx` | `HU45-CP18: tras cancelar, volver a elegir Premium vuelve a exigir la pasarela` | Frontend · página | AB#420 | PR pendiente | ✅ |
-| HU45-CP19 | `RegisterPaymentPage.test.jsx` | `HU45-CP19: la contraseña no sale en la URL ni se guarda en localStorage ni en sessionStorage` | Frontend · página | AB#420 | PR pendiente | ✅ |
-| HU45-CP20 | `PremiumCheckout.test.jsx` | `HU45-CP20: muestra el resumen de ESIBuy Premium sin ningún precio y avisa de que es una simulación` | Frontend · componente | AB#420 | PR pendiente | ✅ |
-| HU45-CP20 | `PremiumCheckout.test.jsx` | `HU45-CP20: no pide datos de tarjeta: solo tiene los botones de simular el pago y de volver` | Frontend · componente | AB#420 | PR pendiente | ✅ |
-| HU45-CP20 | `PremiumCheckout.test.jsx` | `HU45-CP20: Simular pago llama a onPay y, mientras tanto, muestra Procesando pago… deshabilitado` | Frontend · componente | AB#420 | PR pendiente | ✅ |
-| HU45-CP20 | `PremiumCheckout.test.jsx` | `HU45-CP20: el botón de volver llama a onCancel sin simular el pago` | Frontend · componente | AB#420 | PR pendiente | ✅ |
-| HU45-CP20 | `PremiumCheckout.test.jsx` | `HU45-CP20: el error que se le indica se muestra en un aviso` | Frontend · componente | AB#420 | PR pendiente | ✅ |
-| HU45-CP21 | `AppHeader.test.jsx` | `HU45-CP21: el cliente ve el botón Premium en la cabecera y lleva a la vista de ventajas Premium` | Frontend · componente | AB#421 | PR pendiente | ✅ |
-| HU45-CP21 | `AppHeader.test.jsx` | `HU45-CP21: el vendedor, el administrador y quien no tiene sesión no ven el botón Premium` | Frontend · componente | AB#421 | PR pendiente | ✅ |
-| HU45-CP22 | `ProfilePage.test.jsx` | `HU45-CP22: el cliente Estándar tiene en su perfil el botón Hazte Premium, que lleva a la vista Premium` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP22 | `ProfilePage.test.jsx` | `HU45-CP22: el cliente Premium ve el distintivo Premium en vez del botón` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP22 | `ProfilePage.test.jsx` | `HU45-CP22: el vendedor no tiene ni el botón ni el distintivo` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP23 | `PremiumPage.test.jsx` | `HU45-CP23: muestra las tres ventajas de ESIBuy Premium, cada una con su texto, y ningún precio` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP23 | `PremiumPage.test.jsx` | `HU45-CP23: la jerarquía de encabezados empieza por un único h1` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP24 | `PremiumPage.test.jsx` | `HU45-CP24: sin sesión, la vista Premium lleva al login` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP24 | `PremiumPage.test.jsx` | `HU45-CP24: el vendedor y el administrador no entran en la vista Premium: vuelven a su inicio` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP24 | `PremiumPaymentPage.test.jsx` | `HU45-CP24: sin sesión, la pasarela de Premium lleva al login; el vendedor vuelve a su inicio` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP25 | `PremiumPage.test.jsx` | `HU45-CP25: el cliente Premium ve que ya es ESIBuy Premium y no se le ofrece la pasarela` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP25 | `PremiumPaymentPage.test.jsx` | `HU45-CP25: siendo Premium, entrar directo en la pasarela lleva a la vista Premium` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP26 | `PremiumPage.test.jsx` | `HU45-CP26: el cliente Estándar ve Hazte Premium, que lleva a la pasarela de pago` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP26 | `PremiumPaymentPage.test.jsx` | `HU45-CP26: Simular pago hace al cliente Premium, lo confirma y vuelve a la vista en estado Premium` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP26 | `PremiumPaymentPage.test.jsx` | `HU45-CP26: tras hacerse Premium, su perfil lo muestra sin recargar` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP26 | `PremiumPaymentPage.test.jsx` | `HU45-CP26: Volver deja al cliente en la vista Premium sin hacerle Premium` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP27 | `PremiumPaymentPage.test.jsx` | `HU45-CP27: si el servidor responde ALREADY_PREMIUM, se avisa con un mensaje propio y queda en estado Premium` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP28 | `PremiumPaymentPage.test.jsx` | `HU45-CP28: un error del servidor muestra un mensaje genérico, sin el texto del backend, y se puede reintentar` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP28 | `PremiumPaymentPage.test.jsx` | `HU45-CP28: un fallo de red muestra el mismo mensaje genérico` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP28 | `PremiumPaymentPage.test.jsx` | `HU45-CP28: un 403 ACCESS_DENIED avisa de que no tiene permiso, sin el texto del backend` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP28 | `PremiumPaymentPage.test.jsx` | `HU45-CP28: un 401 (sesión caducada) lleva al login con su aviso` | Frontend · página | AB#421 | PR pendiente | ✅ |
-| HU45-CP29 | `profile.test.js` | `HU45-CP29: pide POST /api/perfil/premium sin cuerpo y devuelve el perfil ya Premium` | Frontend · API | AB#421 | PR pendiente | ✅ |
-| HU45-CP29 | `profile.test.js` | `HU45-CP29: si el cliente ya era Premium, el mock responde 400 ALREADY_PREMIUM` | Frontend · API | AB#421 | PR pendiente | ✅ |
-| HU45-CP29 | `profile.test.js` | `HU45-CP29: un vendedor recibe 403 ACCESS_DENIED y sin sesión se responde 401` | Frontend · API | AB#421 | PR pendiente | ✅ |
-| HU45-CP29 | `profile.test.js` | `HU45-CP29: el cambio a Premium del mock no pasa de un test a otro` | Frontend · API | AB#421 | PR pendiente | ✅ |
-| HU45-CP29 | `profile.test.js` | `HU45-CP29: un error del servidor llega con su estado y sin el texto del backend` | Frontend · API | AB#421 | PR pendiente | ✅ |
+| HU45-CP15 | `Register.test.jsx` | `HU45-CP15: al elegir Premium, Registrarse no envía el registro y lleva a la pasarela de pago` | Frontend · página | AB#420 | este PR | 🔍 |
+| HU45-CP15 | `Register.test.jsx` | `HU45-CP15: con datos no válidos, elegir Premium marca los errores y no lleva a la pasarela` | Frontend · página | AB#420 | este PR | 🔍 |
+| HU45-CP16 | `RegisterPaymentPage.test.jsx` | `HU45-CP16: navegar directo a la pasarela sin datos lleva al registro, sin pasarela` | Frontend · página | AB#420 | este PR | 🔍 |
+| HU45-CP16 | `RegisterPaymentPage.test.jsx` | `HU45-CP16: al recargar la pasarela se pierden los datos y vuelve al registro con el formulario vacío` | Frontend · página | AB#420 | este PR | 🔍 |
+| HU45-CP17 | `RegisterPaymentPage.test.jsx` | `HU45-CP17: la pasarela no registra nada hasta pulsar Simular pago; entonces se registra como PREMIUM` | Frontend · página | AB#420 | este PR | 🔍 |
+| HU45-CP17 | `RegisterPaymentPage.test.jsx` | `HU45-CP17: si el servidor rechaza el registro tras el pago, vuelve al formulario con sus datos y el motivo` | Frontend · página | AB#420 | este PR | 🔍 |
+| HU45-CP18 | `RegisterPaymentPage.test.jsx` | `HU45-CP18: cancelar vuelve al formulario con sus datos; con Estándar se registra sin pasar por la pasarela` | Frontend · página | AB#420 | este PR | 🔍 |
+| HU45-CP18 | `RegisterPaymentPage.test.jsx` | `HU45-CP18: tras cancelar, volver a elegir Premium vuelve a exigir la pasarela` | Frontend · página | AB#420 | este PR | 🔍 |
+| HU45-CP19 | `RegisterPaymentPage.test.jsx` | `HU45-CP19: la contraseña no sale en la URL ni se guarda en localStorage ni en sessionStorage` | Frontend · página | AB#420 | este PR | 🔍 |
+| HU45-CP20 | `PremiumCheckout.test.jsx` | `HU45-CP20: muestra el resumen de ESIBuy Premium sin ningún precio y avisa de que es una simulación` | Frontend · componente | AB#420 | este PR | 🔍 |
+| HU45-CP20 | `PremiumCheckout.test.jsx` | `HU45-CP20: no pide datos de tarjeta: solo tiene los botones de simular el pago y de volver` | Frontend · componente | AB#420 | este PR | 🔍 |
+| HU45-CP20 | `PremiumCheckout.test.jsx` | `HU45-CP20: Simular pago llama a onPay y, mientras tanto, muestra Procesando pago… deshabilitado` | Frontend · componente | AB#420 | este PR | 🔍 |
+| HU45-CP20 | `PremiumCheckout.test.jsx` | `HU45-CP20: el botón de volver llama a onCancel sin simular el pago` | Frontend · componente | AB#420 | este PR | 🔍 |
+| HU45-CP20 | `PremiumCheckout.test.jsx` | `HU45-CP20: el error que se le indica se muestra en un aviso` | Frontend · componente | AB#420 | este PR | 🔍 |
+| HU45-CP21 | `AppHeader.test.jsx` | `HU45-CP21: el cliente ve el botón Premium en la cabecera y lleva a la vista de ventajas Premium` | Frontend · componente | AB#421 | este PR | 🔍 |
+| HU45-CP21 | `AppHeader.test.jsx` | `HU45-CP21: el vendedor, el administrador y quien no tiene sesión no ven el botón Premium` | Frontend · componente | AB#421 | este PR | 🔍 |
+| HU45-CP22 | `ProfilePage.test.jsx` | `HU45-CP22: el cliente Estándar tiene en su perfil el botón Hazte Premium, que lleva a la vista Premium` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP22 | `ProfilePage.test.jsx` | `HU45-CP22: el cliente Premium ve el distintivo Premium en vez del botón` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP22 | `ProfilePage.test.jsx` | `HU45-CP22: el vendedor no tiene ni el botón ni el distintivo` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP23 | `PremiumPage.test.jsx` | `HU45-CP23: muestra las tres ventajas de ESIBuy Premium, cada una con su texto, y ningún precio` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP23 | `PremiumPage.test.jsx` | `HU45-CP23: la jerarquía de encabezados empieza por un único h1` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP24 | `PremiumPage.test.jsx` | `HU45-CP24: sin sesión, la vista Premium lleva al login` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP24 | `PremiumPage.test.jsx` | `HU45-CP24: el vendedor y el administrador no entran en la vista Premium: vuelven a su inicio` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP24 | `PremiumPaymentPage.test.jsx` | `HU45-CP24: sin sesión, la pasarela de Premium lleva al login; el vendedor vuelve a su inicio` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP25 | `PremiumPage.test.jsx` | `HU45-CP25: el cliente Premium ve que ya es ESIBuy Premium y no se le ofrece la pasarela` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP25 | `PremiumPaymentPage.test.jsx` | `HU45-CP25: siendo Premium, entrar directo en la pasarela lleva a la vista Premium` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP26 | `PremiumPage.test.jsx` | `HU45-CP26: el cliente Estándar ve Hazte Premium, que lleva a la pasarela de pago` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP26 | `PremiumPaymentPage.test.jsx` | `HU45-CP26: Simular pago hace al cliente Premium, lo confirma y vuelve a la vista en estado Premium` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP26 | `PremiumPaymentPage.test.jsx` | `HU45-CP26: tras hacerse Premium, su perfil lo muestra sin recargar` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP26 | `PremiumPaymentPage.test.jsx` | `HU45-CP26: Volver deja al cliente en la vista Premium sin hacerle Premium` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP27 | `PremiumPaymentPage.test.jsx` | `HU45-CP27: si el servidor responde ALREADY_PREMIUM, se avisa con un mensaje propio y queda en estado Premium` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP28 | `PremiumPaymentPage.test.jsx` | `HU45-CP28: un error del servidor muestra un mensaje genérico, sin el texto del backend, y se puede reintentar` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP28 | `PremiumPaymentPage.test.jsx` | `HU45-CP28: un fallo de red muestra el mismo mensaje genérico` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP28 | `PremiumPaymentPage.test.jsx` | `HU45-CP28: un 403 ACCESS_DENIED avisa de que no tiene permiso, sin el texto del backend` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP28 | `PremiumPaymentPage.test.jsx` | `HU45-CP28: un 401 (sesión caducada) lleva al login con su aviso` | Frontend · página | AB#421 | este PR | 🔍 |
+| HU45-CP29 | `profile.test.js` | `HU45-CP29: pide POST /api/perfil/premium sin cuerpo y devuelve el perfil ya Premium` | Frontend · API | AB#421 | este PR | 🔍 |
+| HU45-CP29 | `profile.test.js` | `HU45-CP29: si el cliente ya era Premium, el mock responde 400 ALREADY_PREMIUM` | Frontend · API | AB#421 | este PR | 🔍 |
+| HU45-CP29 | `profile.test.js` | `HU45-CP29: un vendedor recibe 403 ACCESS_DENIED y sin sesión se responde 401` | Frontend · API | AB#421 | este PR | 🔍 |
+| HU45-CP29 | `profile.test.js` | `HU45-CP29: el cambio a Premium del mock no pasa de un test a otro` | Frontend · API | AB#421 | este PR | 🔍 |
+| HU45-CP29 | `profile.test.js` | `HU45-CP29: un error del servidor llega con su estado y sin el texto del backend` | Frontend · API | AB#421 | este PR | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `GestionPerfilServiceTest` y `SeguridadSesionUsuarioServiceTest`: `usuarios/application/service/` (Mockito sin Spring, y contexto mínimo con `@EnableMethodSecurity` y `@WithMockUser`)
