@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Button,
   Field,
@@ -47,18 +47,46 @@ const OPCIONES = {
   tipoCliente: TIPOS_CLIENTE,
 }
 
+// Al editar el propio perfil (HU45), el aviso de un menor de edad no habla de registrarse
+const ERRORES_DEL_PERFIL_PROPIO = { UNDERAGE: { fechaNacimiento: 'Debe ser mayor de edad' } }
+
 // Formulario de edición de la ficha de un usuario (HU22). Muestra todos los campos de la ficha: los que se
 // pueden modificar, como campos normales, y el resto en solo lectura (más oscuros). El rol de una cuenta no se
 // puede cambiar ("el que nace cliente muere cliente", decisión del equipo), así que siempre es de solo lectura.
 // Hasta el primer intento de guardar no se muestra ningún error; después se validan en vivo, todos a la vez.
-export default function ProfileEditor({ rol, usuario, categories = [], save, onSaved, onCancel }) {
+// Con `own` es el propio usuario quien edita su perfil (HU45): el DNI y el tipo de cliente se ven pero no se
+// modifican, no hay estado, y el formulario avisa con `onDirtyChange` de si hay cambios sin guardar y lleva el foco al
+// primer campo con error. `onSaved` recibe lo enviado y la respuesta de `save`.
+export default function ProfileEditor({
+  rol,
+  usuario,
+  categories = [],
+  own = false,
+  save,
+  onSaved,
+  onCancel,
+  onDirtyChange,
+}) {
   const styles = useStyles()
-  const [values, setValues] = useState(() => initialValues(rol, usuario))
+  const options = { own }
+  const [initial] = useState(() => initialValues(rol, usuario, options))
+  const [values, setValues] = useState(initial)
   const [attempted, setAttempted] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [serverErrors, setServerErrors] = useState({})
-  const errors = { ...serverErrors, ...(attempted ? validateProfile(rol, values) : {}) }
+  const [focusRequest, setFocusRequest] = useState(0)
+  const formRef = useRef(null)
+  const errors = { ...serverErrors, ...(attempted ? validateProfile(rol, values, options) : {}) }
+  const dirty = Object.keys(initial).some((name) => values[name] !== initial[name])
+
+  useEffect(() => {
+    onDirtyChange?.(dirty)
+  }, [dirty, onDirtyChange])
+
+  useEffect(() => {
+    if (focusRequest > 0) formRef.current?.querySelector('[aria-invalid="true"]')?.focus()
+  }, [focusRequest])
 
   const change = (name, value) => {
     setValues((current) => ({ ...current, [name]: value }))
@@ -70,20 +98,25 @@ export default function ProfileEditor({ rol, usuario, categories = [], save, onS
     if (saving) return
 
     setAttempted(true)
-    if (Object.keys(validateProfile(rol, values)).length > 0) return
+    if (Object.keys(validateProfile(rol, values, options)).length > 0) {
+      if (own) setFocusRequest((current) => current + 1)
+      return
+    }
 
-    const payload = profilePayload(rol, values)
+    const payload = profilePayload(rol, values, options)
     setSaving(true)
     setSaveError('')
     try {
-      await save(payload)
-      onSaved(payload)
+      const result = await save(payload)
+      onSaved(payload, result)
     } catch (error) {
       // Los errores del backend con campo (nombre comercial o DNI repetidos, formatos…) se muestran junto a él
       // (PR #104); el resto, con el mensaje genérico
-      const { campos } = erroresDelServidor(error)
-      if (campos) setServerErrors(campos)
-      else setSaveError(MENSAJE_GENERICO)
+      const { campos } = erroresDelServidor(error, own ? ERRORES_DEL_PERFIL_PROPIO : undefined)
+      if (campos) {
+        setServerErrors(campos)
+        if (own) setFocusRequest((current) => current + 1)
+      } else setSaveError(MENSAJE_GENERICO)
       setSaving(false)
     }
   }
@@ -161,13 +194,13 @@ export default function ProfileEditor({ rol, usuario, categories = [], save, onS
   }
 
   return (
-    <form className={styles.form} onSubmit={submit} noValidate>
+    <form ref={formRef} className={styles.form} onSubmit={submit} noValidate>
       {saveError && (
         <MessageBar intent="error">
           <MessageBarBody>{saveError}</MessageBarBody>
         </MessageBar>
       )}
-      <div className={styles.grid}>{profileFieldsFor(rol).map(renderField)}</div>
+      <div className={styles.grid}>{profileFieldsFor(rol, options).map(renderField)}</div>
       <div className={styles.actions}>
         <Button
           type="submit"
@@ -175,7 +208,7 @@ export default function ProfileEditor({ rol, usuario, categories = [], save, onS
           disabled={saving}
           icon={saving ? <Spinner size="tiny" /> : <Save20Regular />}
         >
-          Guardar
+          {own ? 'Guardar cambios' : 'Guardar'}
         </Button>
         <Button type="button" onClick={onCancel} disabled={saving}>
           Cancelar
@@ -189,7 +222,9 @@ ProfileEditor.propTypes = {
   rol: PropTypes.string.isRequired,
   usuario: PropTypes.shape({ id: PropTypes.string.isRequired, estado: PropTypes.string }).isRequired,
   categories: PropTypes.arrayOf(categoryPropType),
+  own: PropTypes.bool,
   save: PropTypes.func.isRequired,
   onSaved: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
+  onDirtyChange: PropTypes.func,
 }
