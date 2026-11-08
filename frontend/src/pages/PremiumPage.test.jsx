@@ -2,9 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
-const esperarRuta = (ruta) =>
-  waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp(`^${ruta}$`)))
-
 // Del mock: Nora (nuevo@esibuy.test) es cliente Estándar y Carlos (cliente@esibuy.test), cliente Premium.
 async function abrirPremium(email) {
   await abrirSesionPorApi(email)
@@ -36,18 +33,18 @@ describe('PremiumPage (HU45): ventajas de ESIBuy Premium', () => {
   it('HU45-CP30: sin sesión, la vista Premium lleva al login', async () => {
     renderApp('/premium')
 
-    await esperarRuta('/login')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/login$')))
   })
 
   it('HU45-CP30: el vendedor y el administrador no entran en la vista Premium: vuelven a su inicio', async () => {
     await abrirSesionPorApi('vendedor@esibuy.test')
     const { unmount } = renderApp('/premium')
-    await esperarRuta('/seller/products')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/seller/products$')))
     unmount()
 
     await abrirSesionPorApi('admin@esibuy.test')
     renderApp('/premium')
-    await esperarRuta('/admin')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/admin$')))
   })
 
   it('HU45-CP31: el cliente Premium ve que ya es ESIBuy Premium y no se le ofrece la pasarela', async () => {
