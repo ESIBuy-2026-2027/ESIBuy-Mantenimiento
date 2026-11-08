@@ -86,12 +86,12 @@ describe('PremiumPaymentPage (HU45): paso a Premium del cliente Estándar', () =
 
   it('HU45-CP30: sin sesión, la pasarela de Premium lleva al login; el vendedor vuelve a su inicio', async () => {
     const { unmount } = renderApp('/premium/pago')
-    await esperarRuta('/login')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/login$')))
     unmount()
 
     await abrirSesionPorApi('vendedor@esibuy.test')
     renderApp('/premium/pago')
-    await esperarRuta('/seller/products')
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/seller/products$')))
   })
 
   it('HU45-CP33: si el servidor responde ALREADY_PREMIUM, se avisa con un mensaje propio y queda en estado Premium', async () => {

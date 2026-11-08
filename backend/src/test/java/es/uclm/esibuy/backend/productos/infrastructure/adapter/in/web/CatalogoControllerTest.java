@@ -4,6 +4,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
 import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalogo;
 import es.uclm.esibuy.backend.productos.application.port.in.DetalleProductoCatalogo;
+import es.uclm.esibuy.backend.productos.application.port.in.PaginaCatalogo;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
@@ -19,6 +20,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -55,7 +58,8 @@ class CatalogoControllerTest {
     void clienteRecibeElCatalogoConElFormatoDelContrato() throws Exception {
         Producto producto = new Producto("p-1", "v-1", "Teclado mecánico", "", new BigDecimal("89.50"), 12, "cat-2",
                 "https://esibuy.test/teclado.png", true, Descuento.sinDescuento(), Descuento.sinDescuento());
-        when(catalogoProductos.buscarProductos(any())).thenReturn(new ProductoPage(List.of(producto), 0, 10, 11));
+        when(catalogoProductos.buscarProductos(any(), any()))
+                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(producto), 0, 10, 11), false));
 
         mockMvc.perform(get(URL).with(user(CLIENTE).roles("CLIENTE")))
                 .andExpect(status().isOk())
@@ -63,10 +67,13 @@ class CatalogoControllerTest {
                 .andExpect(jsonPath("$.items[0].nombre").value("Teclado mecánico"))
                 .andExpect(jsonPath("$.items[0].imagen").value("https://esibuy.test/teclado.png"))
                 .andExpect(jsonPath("$.items[0].categoriaId").value("cat-2"))
+                // El precio que paga el cliente: sin descuento, el precio final es el precio
+                .andExpect(jsonPath("$.items[0].precio").value(89.5))
+                .andExpect(jsonPath("$.items[0].descuento").value(nullValue()))
+                .andExpect(jsonPath("$.items[0].precioFinal").value(89.5))
                 // Un producto sin valoraciones: el campo existe, pero vale null, y el número es 0
                 .andExpect(jsonPath("$.items[0].valoracion").value(nullValue()))
                 .andExpect(jsonPath("$.items[0].numValoraciones").value(0))
-                .andExpect(jsonPath("$.items[0].precio").doesNotExist())
                 .andExpect(jsonPath("$.items[0].stock").doesNotExist())
                 .andExpect(jsonPath("$.items[0].vendedorId").doesNotExist())
                 .andExpect(jsonPath("$.page").value(1))
@@ -78,16 +85,18 @@ class CatalogoControllerTest {
     @Test
     @DisplayName("HU7-CP17: los parámetros llegan al caso de uso traducidos: página desde 0, criterio y sentido")
     void traduceLosParametrosALaConsulta() throws Exception {
-        when(catalogoProductos.buscarProductos(any())).thenReturn(new ProductoPage(List.of(), 1, 10, 0));
+        when(catalogoProductos.buscarProductos(any(), any()))
+                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 1, 10, 0), false));
 
         mockMvc.perform(get(URL).param("page", "2").param("size", "10").param("search", "teclado")
                         .param("category", "cat-2").param("minRating", "4").param("sort", "valoracion")
                         .param("order", "desc").with(user(CLIENTE).roles("CLIENTE")))
                 .andExpect(status().isOk());
 
-        // La página llega al caso de uso empezando en 0; sort y order se traducen al enum y al boolean
+        // La página llega al caso de uso empezando en 0; sort y order se traducen al enum y al boolean. El cliente
+        // sale de la sesión, para darle su precio
         verify(catalogoProductos).buscarProductos(new BuscarCatalogoQuery("teclado", "cat-2", 4,
-                CriterioOrdenCatalogo.VALORACION, true, 1, 10));
+                CriterioOrdenCatalogo.VALORACION, true, 1, 10), CLIENTE);
     }
 
     // Que minRating=6 no sea válido es una propuesta: la valoración va de 1 a 5.
@@ -96,12 +105,13 @@ class CatalogoControllerTest {
     @DisplayName("HU7-CP18: un parámetro no válido devuelve 400 y no llega al caso de uso")
     void parametroNoValidoDevuelve400(String parametro, String valor) throws Exception {
         // Con el caso de uso respondiendo, un 200 indicaría que el parámetro se ha aceptado
-        when(catalogoProductos.buscarProductos(any())).thenReturn(new ProductoPage(List.of(), 0, 10, 0));
+        when(catalogoProductos.buscarProductos(any(), any()))
+                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 0, 10, 0), false));
 
         mockMvc.perform(get(URL).param(parametro, valor).with(user(CLIENTE).roles("CLIENTE")))
                 .andExpect(status().isBadRequest());
 
-        verify(catalogoProductos, never()).buscarProductos(any());
+        verify(catalogoProductos, never()).buscarProductos(any(), any());
     }
 
     @Test
@@ -110,7 +120,7 @@ class CatalogoControllerTest {
         mockMvc.perform(get(URL))
                 .andExpect(status().isUnauthorized());
 
-        verify(catalogoProductos, never()).buscarProductos(any());
+        verify(catalogoProductos, never()).buscarProductos(any(), any());
     }
 
     @ParameterizedTest(name = "rol {0}")
@@ -118,12 +128,13 @@ class CatalogoControllerTest {
     @DisplayName("HU7-CP19: un usuario que no es cliente no ve el catálogo")
     void otroRolDevuelve403(String rol) throws Exception {
         // Con el caso de uso respondiendo, un 200 indicaría que el rol tiene acceso
-        when(catalogoProductos.buscarProductos(any())).thenReturn(new ProductoPage(List.of(), 0, 10, 0));
+        when(catalogoProductos.buscarProductos(any(), any()))
+                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 0, 10, 0), false));
 
         mockMvc.perform(get(URL).with(user("usuario@esibuy.test").roles(rol)))
                 .andExpect(status().isForbidden());
 
-        verify(catalogoProductos, never()).buscarProductos(any());
+        verify(catalogoProductos, never()).buscarProductos(any(), any());
     }
 
     @Test
@@ -131,7 +142,8 @@ class CatalogoControllerTest {
     void elCatalogoDevuelveLaMediaYElNumeroDeValoraciones() throws Exception {
         Producto valorado = new Producto("p-1", "v-1", "Teclado mecánico", "", new BigDecimal("89.50"), 12, "cat-2",
                 "", true, Descuento.sinDescuento(), Descuento.sinDescuento(), 4.5, 2);
-        when(catalogoProductos.buscarProductos(any())).thenReturn(new ProductoPage(List.of(valorado), 0, 10, 1));
+        when(catalogoProductos.buscarProductos(any(), any()))
+                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(valorado), 0, 10, 1), false));
 
         mockMvc.perform(get(URL).with(user(CLIENTE).roles("CLIENTE")))
                 .andExpect(status().isOk())

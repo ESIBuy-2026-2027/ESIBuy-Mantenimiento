@@ -53,6 +53,7 @@ final class ColeccionesEsiBuy {
     private static final String CATEGORIA_ID = "categoriaId";
     private static final String TELEFONO = "telefono";
     private static final String NOMBRE_COMERCIAL = "nombreComercial";
+    private static final String DESCRIPCION = "descripcion";
     // Campos de productos que se repiten entre su validación y sus índices.
     private static final String DISPONIBLE = "disponible";
     private static final String VALORACION_MEDIA = "valoracionMedia";
@@ -163,7 +164,7 @@ final class ColeccionesEsiBuy {
         return new Coleccion("productos", esquema(List.of(VENDEDOR_ID, NOMBRE, "precio", "stock", CATEGORIA_ID),
                 textoNoVacio(VENDEDOR_ID),
                 textoNoVacio(NOMBRE),
-                string("descripcion"),
+                string(DESCRIPCION),
                 number("precio").gt(0),
                 enteroNoNegativo("stock"),
                 descuento("descuento"),
@@ -250,7 +251,7 @@ final class ColeccionesEsiBuy {
     private static Coleccion categorias() {
         return new Coleccion("categorias", esquema(List.of(NOMBRE),
                 string(NOMBRE).minLength(1).maxLength(50),
-                string("descripcion").maxLength(200),
+                string(DESCRIPCION).maxLength(200),
                 string(ESTADO).possibleValues("ACTIVA", "INACTIVA")),
                 List.of(indice(NOMBRE).unique(),
                         // No se repite el nombre sin distinguir mayúsculas ni tildes (HU40, T323): collation de
@@ -322,10 +323,10 @@ final class ColeccionesEsiBuy {
     // o ABIERTA (una incidencia cerrada se elimina). El índice por usuario sirve para consultar las suyas.
     private static Coleccion incidencias() {
         return new Coleccion("incidencias", esquema(
-                List.of(USUARIO_ID, "asunto", "descripcion", ESTADO, "fechaCreacion"),
+                List.of(USUARIO_ID, "asunto", DESCRIPCION, ESTADO, "fechaCreacion"),
                 textoNoVacio(USUARIO_ID),
                 string("asunto").minLength(1).maxLength(100),
-                string("descripcion").minLength(1).maxLength(1000),
+                string(DESCRIPCION).minLength(1).maxLength(1000),
                 string(ESTADO).possibleValues("PENDIENTE", "ABIERTA"),
                 string("respuesta"),
                 date("fechaCreacion")),

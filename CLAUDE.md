@@ -31,7 +31,7 @@ Funcionalidad básica: administración de productos, gestión de pedidos, carrit
 - **Gestión de proyecto**: SCRUM con Azure DevOps (Azure Boards)
 - **Control de versiones**: Git
 - **CI**: GitHub Actions (`.github/workflows/ci.yml`)
-- **CD**: Render, plan gratuito (`render.yaml`): frontend como Static Site y backend como Web Service con Docker (`backend/Dockerfile`), desplegados desde `main` cuando pasa el CI. Guía en `docs/despliegue/render.md`.
+- **CD**: Render, plan gratuito (`render.yaml`): frontend como Static Site y backend como Web Service con Docker (`backend/Dockerfile`), desplegados desde `main` por el stage Desplegar del pipeline de Sonar (`azure-pipelines-sonar.yml`) cuando pasan los tests y el Quality Gate. Guía en `docs/despliegue/render.md`.
 - **IA de apoyo**: Claude Code (herramienta de IA agéntica del equipo)
 
 ## Estructura del proyecto
@@ -251,7 +251,7 @@ Comunes a todos los usuarios: registro, inicio de sesión, gestión de perfil, d
 - Mensajes de commit: `tipo(area): descripción AB#<id>`, donde `<id>` es el ID real del work item de Azure Boards. **Nunca** dejes el placeholder literal `AB#ID`; si no conoces el ID, pregúntalo antes de commitear. **Excepción acordada:** los cambios transversales de seguridad que no pertenecen a ninguna HU ni task (rama `fix/seguridad-capa-negocio`) y los del despliegue continuo en Render se commitean sin `AB#`: `tipo(area): descripción`.
 - Antes de cada commit: `./mvnw test` en verde. Antes de cada PR: revisión de calidad (Sonar/SonarLint) y `npm run lint` si se toca el frontend.
 - CI: GitHub Actions (`.github/workflows/ci.yml`). En cada push y PR a `develop` o `main` ejecuta `mvn -B verify` en el backend (tests y umbral de cobertura del 60 %) y el lint y el build del frontend.
-- CD: Render despliega desde `main` cuando pasan todos los checks de GitHub del commit (`autoDeployTrigger: checksPass`), y cada servicio solo si cambian sus rutas (`backend/**` o `frontend/**`). Integrar `develop` en `main` es, por tanto, desplegar.
+- CD: Render no despliega por su cuenta (`autoDeployTrigger: off`). En `main`, el pipeline de Sonar compila y testea, analiza con SonarQube esperando al Quality Gate y, si todo pasa, llama a los Deploy Hooks de Render (variables secretas `RENDER_DEPLOY_HOOK_BACKEND` y `RENDER_DEPLOY_HOOK_FRONTEND` en Azure). Integrar `develop` en `main` es, por tanto, desplegar en cuanto un agente del equipo ejecute ese pipeline (VPN de la UCLM y Docker).
 
 ## Flujo de trabajo con Claude
 

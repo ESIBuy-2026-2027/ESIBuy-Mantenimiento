@@ -10,12 +10,14 @@ import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
 public interface CatalogoProductosUseCase {
 
     /**
-     * Devuelve la página del catálogo con los productos disponibles que cumplen los criterios.
+     * Devuelve la página del catálogo con los productos disponibles que cumplen los criterios, y si el cliente es
+     * Premium para darle a cada producto su precio.
      *
-     * @param query criterios de búsqueda, filtro, orden y paginación
-     * @return resultado paginado de productos
+     * @param query        criterios de búsqueda, filtro, orden y paginación
+     * @param emailCliente email del cliente en sesión, para saber si es premium
+     * @return la página de productos y si el cliente es premium
      */
-    ProductoPage buscarProductos(BuscarCatalogoQuery query);
+    PaginaCatalogo buscarProductos(BuscarCatalogoQuery query, String emailCliente);
 
     /**
      * Devuelve lo comercial de un producto si se puede comprar (existe y está disponible), con el precio final
