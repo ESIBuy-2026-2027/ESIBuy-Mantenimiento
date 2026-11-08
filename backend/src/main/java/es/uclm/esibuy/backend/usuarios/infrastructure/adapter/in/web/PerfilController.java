@@ -7,6 +7,7 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -46,6 +47,12 @@ public class PerfilController {
     @PutMapping
     public PerfilResponse editar(@Valid @RequestBody EditarPerfilRequest request, Authentication autenticado) {
         return PerfilResponse.desde(gestionPerfil.editarPerfil(autenticado.getName(), request.aComando()));
+    }
+    
+    // Paso a Premium del cliente en sesión (HU45, T423). El pago es simulado en el frontend: aquí no se cobra nada.
+    @PostMapping("/premium")
+    public PerfilResponse pasarAPremium(Authentication autenticado) {
+        return PerfilResponse.desde(gestionPerfil.pasarAPremium(autenticado.getName()));
     }
 
     // Eliminar la cuenta propia: el servicio distingue el rol. 204 sin cuerpo y la sesión cerrada, igual que el

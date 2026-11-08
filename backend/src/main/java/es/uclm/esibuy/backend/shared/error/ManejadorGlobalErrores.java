@@ -55,6 +55,7 @@ import es.uclm.esibuy.backend.valoraciones.domain.exception.ProductoNoCompradoEx
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionDuplicadaException;
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutoeliminacionNoPermitidaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.ClienteYaPremiumException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -485,5 +486,12 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError incidenciaYaAbierta() {
         return new RespuestaError("La incidencia ya está abierta", "INCIDENT_ALREADY_OPEN");
+    }
+
+    // 400 + code al pasar a Premium (HU45, T423): el cliente ya lo era.
+    @ExceptionHandler(ClienteYaPremiumException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError clienteYaPremium() {
+        return new RespuestaError("Ya eres cliente Premium", "ALREADY_PREMIUM");
     }
 }
