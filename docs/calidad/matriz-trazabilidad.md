@@ -4860,5 +4860,7 @@ Tests que no validan una HU concreta.
 | `Home.test.jsx` (frontend) | `home_alElegirOtroPerfil_muestraSusPasos` | Que al elegir «Quiero vender» o «Administro» se muestran los pasos de ese perfil y no los del anterior (rama `fix/mejora-home`, sin HU ni AB#) |
 | `Home.test.jsx` (frontend) | `home_sinSesion_invitaAEmpezarHaciaElRegistro` | Que sin sesión la llamada final «Empezar ahora» lleva al registro (rama `fix/mejora-home`, sin HU ni AB#) |
 | `Home.test.jsx` (frontend) | `home_conSesion_noInvitaAEmpezar` | Que con la sesión iniciada no se ofrece «Empezar ahora», como «Crear mi cuenta» en HU1-CP25 (rama `fix/mejora-home`, sin HU ni AB#) |
+| `AppHeader.test.jsx` (frontend) | `appHeader_conSesionDeCliente_cadaAccesoConservaSuNombreYSuTooltip` | Que, aunque en pantallas medianas solo se vea el icono, cada acceso del cliente conserva su nombre accesible y lleva el texto como tooltip (rama `fix/appheader-responsive`, sin HU ni AB#) |
+| `AppHeader.test.jsx` (frontend) | `appHeader_conSesionDeVendedor_susAccesosNoSeCompactan` | Que los accesos del vendedor, que son pocos, no se compactan: no llevan tooltip (rama `fix/appheader-responsive`, sin HU ni AB#) |
 
 `InicializadorColeccionesTest` está en `shared/infrastructure/config/` y usa Testcontainers. HU36 (crear la base de datos) no tiene casos de prueba en Azure Boards, por eso sus tests están en esta sección.
