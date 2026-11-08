@@ -110,6 +110,54 @@ describe('request', () => {
 
       expect(capturado.cabecera).toBeNull()
     })
+
+    // Primer login tras abrir la página con el backend dormido (Render): la petición inicial a /api/auth/me no llegó a
+    // dejar la cookie, el POST salía sin token, el backend respondía 403 y el login decía que los datos estaban mal.
+    describe('sin cookie CSRF', () => {
+      const servirTokenEnMe = () => {
+        const llamadas = { me: 0 }
+        server.use(
+          http.get('/api/auth/me', () => {
+            llamadas.me += 1
+            document.cookie = 'XSRF-TOKEN=token-nuevo; path=/'
+            return new HttpResponse(null, { status: 401 })
+          }),
+        )
+        return llamadas
+      }
+
+      it('HU2-CP32: pide el token antes del POST y lo envía en la cabecera', async () => {
+        const llamadas = servirTokenEnMe()
+        const capturado = capturarCabeceraCsrf()
+
+        await request('/api/auth/login', { method: 'POST', body: { email: 'a@b.es' } })
+
+        expect(llamadas.me).toBe(1)
+        expect(capturado.cabecera).toBe('token-nuevo')
+      })
+
+      it('HU2-CP32: el 401 de la petición del token no avisa de sesión caducada', async () => {
+        servirTokenEnMe()
+        capturarCabeceraCsrf()
+        const aviso = vi.fn()
+        const dejarDeEscuchar = onUnauthorized(aviso)
+
+        await request('/api/auth/login', { method: 'POST', body: { email: 'a@b.es' } })
+
+        expect(aviso).not.toHaveBeenCalled()
+        dejarDeEscuchar()
+      })
+
+      it('HU2-CP32: con la cookie ya puesta, no vuelve a pedir el token', async () => {
+        document.cookie = 'XSRF-TOKEN=token-de-prueba; path=/'
+        const llamadas = servirTokenEnMe()
+        capturarCabeceraCsrf()
+
+        await request('/api/auth/login', { method: 'POST', body: { email: 'a@b.es' } })
+
+        expect(llamadas.me).toBe(0)
+      })
+    })
   })
 
   it('request_conError_esInstanciaDeApiError', async () => {
