@@ -1,19 +1,31 @@
 import { render } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { FluentProvider, webLightTheme } from '@fluentui/react-components'
 import { login, verifyAuthenticatorCode, verifyEmailCode } from '../api/auth'
 import AuthProvider from '../auth/AuthProvider'
 import AppRoutes from '../routes/AppRoutes'
 import LocationProbe from './LocationProbe'
 
+// Con un router de datos, como la aplicación (HU45): hace falta para el aviso de cambios sin guardar (useBlocker)
 export function renderApp(route = '/') {
+  const router = createMemoryRouter(
+    [
+      {
+        path: '*',
+        element: (
+          <>
+            <AppRoutes />
+            <LocationProbe />
+          </>
+        ),
+      },
+    ],
+    { initialEntries: [route] },
+  )
   return render(
     <FluentProvider theme={webLightTheme}>
       <AuthProvider>
-        <MemoryRouter initialEntries={[route]}>
-          <AppRoutes />
-          <LocationProbe />
-        </MemoryRouter>
+        <RouterProvider router={router} />
       </AuthProvider>
     </FluentProvider>,
   )

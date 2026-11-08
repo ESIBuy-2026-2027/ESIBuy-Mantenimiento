@@ -13,7 +13,7 @@ Documento para entender la vista «Mi perfil»: quién la ve, qué muestra, qué
 
 ## 1. Resumen
 
-El cliente y el vendedor ven sus datos personales en `/profile`, en solo lectura. Llegan desde el enlace **Mi perfil** de la cabecera. Modificarlos es de la HU45.
+El cliente y el vendedor ven sus datos personales en `/profile`, en solo lectura. Llegan desde el enlace **Mi perfil** de la cabecera. Modificarlos es de la HU45 (`docs/hu45-edicion-perfil.md`): desde esta misma vista, con el botón **Editar perfil**.
 
 | Criterio | Cómo se cumple |
 |---|---|

@@ -32,4 +32,18 @@ describe('erroresDelServidor', () => {
     expect(erroresDelServidor(new ApiError(500, 'Error interno')))
       .toEqual({ general: 'No se ha podido completar la operación. Inténtalo de nuevo más tarde' })
   })
+
+  it('HU45-CP14: un formulario puede cambiar el mensaje de un code sin tocar los demás', () => {
+    const propios = { UNDERAGE: { fechaNacimiento: 'Debe ser mayor de edad' } }
+
+    expect(erroresDelServidor(new ApiError(400, 'Menor', 'UNDERAGE'), propios)).toEqual({
+      campos: { fechaNacimiento: 'Debe ser mayor de edad' },
+    })
+    expect(erroresDelServidor(new ApiError(400, 'Menor', 'UNDERAGE'))).toEqual({
+      campos: { fechaNacimiento: 'Debes ser mayor de edad para registrarte' },
+    })
+    expect(erroresDelServidor(new ApiError(400, 'Teléfono', 'INVALID_PHONE'), propios)).toEqual({
+      campos: { telefono: 'El teléfono debe tener 9 números' },
+    })
+  })
 })
