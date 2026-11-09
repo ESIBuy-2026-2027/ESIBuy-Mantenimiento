@@ -32,6 +32,19 @@ function leerTokenCsrf() {
   return cookie ? decodeURIComponent(cookie.slice(COOKIE_CSRF.length + 1)) : null
 }
 
+// Primera petición que cambia datos sin la cookie del token (p. ej. el primer login, si la petición a /api/auth/me
+// al abrir la página no llegó a dejarla porque el backend de Render estaba dormido): sin token el backend responde 403
+// y el login lo mostraba como datos incorrectos. Se pide antes el token con un GET, cuya respuesta (aunque sea un 401)
+// deja la cookie. Ese 401 no es una sesión caducada, así que no pasa por avisoDe401. Si falla, la petición sale igual.
+const RUTA_TOKEN_CSRF = '/api/auth/me'
+
+async function asegurarTokenCsrf(method) {
+  if (METODOS_SIN_CSRF.has(method) || leerTokenCsrf()) return
+  await fetch(new URL(`${BASE_URL}${RUTA_TOKEN_CSRF}`, window.location.origin), { credentials: 'include' }).catch(
+    () => null,
+  )
+}
+
 function construirCabeceras(method, body) {
   const headers = {}
   if (body) {
@@ -57,6 +70,7 @@ export function onUnauthorized(handler) {
 
 export async function request(path, { method = 'GET', body } = {}) {
   const url = new URL(`${BASE_URL}${path}`, window.location.origin)
+  await asegurarTokenCsrf(method)
   const response = await fetch(url, {
     method,
     credentials: 'include',
