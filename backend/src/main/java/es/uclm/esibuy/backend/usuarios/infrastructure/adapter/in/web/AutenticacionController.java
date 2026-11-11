@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.SessionAttribute;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AuthenticatorUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.IniciarSesionCommand;
+import es.uclm.esibuy.backend.usuarios.application.port.in.PasoLogin;
 import es.uclm.esibuy.backend.usuarios.application.port.in.ResultadoInicioSesion;
 import es.uclm.esibuy.backend.usuarios.application.port.in.VerificarCodigoAuthenticatorCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.VerificarCodigoEmailCommand;
@@ -29,24 +30,31 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 /**
- * Adaptador web del login en tres pasos (HU2): contraseña (T230), código del correo (T230) y
- * Microsoft Authenticator (T20), más {@code /me}. El logout lo hace Spring Security (SecurityConfig).
+ * Adaptador web del login en tres pasos (HU2): contraseña (T230), código del
+ * correo (T230) y
+ * Microsoft Authenticator (T20), más {@code /me}. El logout lo hace Spring
+ * Security (SecurityConfig).
  *
- * <p>Entre pasos, la sesión del servidor recuerda el correo y si se superó el código del correo; el
- * navegador solo lleva la cookie de sesión. Al superar el paso 3 se abre la sesión de Spring Security.
+ * <p>
+ * Entre pasos, la sesión del servidor recuerda el correo y si se superó el
+ * código del correo; el
+ * navegador solo lleva la cookie de sesión. Al superar el paso 3 se abre la
+ * sesión de Spring Security.
  */
 @RestController
 @RequestMapping("/api/auth")
 public class AutenticacionController {
 
     private static final String CORREO_PENDIENTE = "login.correoPendiente";
-    // La sesión recuerda que se superó el código del correo: el paso 3 lo exige (T20, D8)
+    // La sesión recuerda que se superó el código del correo: el paso 3 lo exige
+    // (T20, D8)
     private static final String CODIGO_EMAIL_VERIFICADO = "login.codigoEmailVerificado";
     private static final String CODIGO_INVALIDO = "Código inválido";
 
     private final AutenticacionUseCase autenticacion;
     private final AuthenticatorUseCase authenticator;
-    // Guarda el usuario autenticado en la sesión HTTP; es lo que leen /me y las reglas de SecurityConfig
+    // Guarda el usuario autenticado en la sesión HTTP; es lo que leen /me y las
+    // reglas de SecurityConfig
     private final SecurityContextRepository repositorioContexto = new HttpSessionSecurityContextRepository();
 
     public AutenticacionController(AutenticacionUseCase autenticacion, AuthenticatorUseCase authenticator) {
@@ -55,9 +63,19 @@ public class AutenticacionController {
     }
 
     @PostMapping("/login")
-    public SiguientePasoResponse login(@RequestBody LoginRequest request, HttpServletRequest peticion) {
+    public SiguientePasoResponse login(
+            @RequestBody LoginRequest request,
+            HttpServletRequest peticion,
+            HttpServletResponse respuesta) {
+
         ResultadoInicioSesion resultado = autenticacion.iniciarSesion(
                 new IniciarSesionCommand(request.email(), request.password()));
+
+        if (resultado.siguientePaso() == PasoLogin.ACCESO_DIRECTO) {
+            abrirSesion(resultado.usuario(), peticion, respuesta);
+            return SiguientePasoResponse.desde(resultado.siguientePaso());
+        }
+
         recordarCorreo(peticion, resultado.email());
         return SiguientePasoResponse.desde(resultado.siguientePaso());
     }
@@ -106,22 +124,25 @@ public class AutenticacionController {
         peticion.changeSessionId();
     }
 
-    // Sin los pasos 1 y 2 superados en esta sesión: el mismo 401 que un código incorrecto
+    // Sin los pasos 1 y 2 superados en esta sesión: el mismo 401 que un código
+    // incorrecto
     private static void exigirPasoDosSuperado(String email, Boolean pasoDosSuperado) {
         if (email == null || !Boolean.TRUE.equals(pasoDosSuperado)) {
             throw new CodigoInvalidoException(CODIGO_INVALIDO);
         }
     }
 
-    // Paso 3 superado: el usuario queda autenticado en la sesión con su rol (T20, D9)
+    // Paso 3 superado: el usuario queda autenticado en la sesión con su rol (T20,
+    // D9)
     private void abrirSesion(Usuario usuario, HttpServletRequest peticion, HttpServletResponse respuesta) {
         // El login a medias ya no hace falta
         HttpSession sesion = peticion.getSession();
         sesion.removeAttribute(CORREO_PENDIENTE);
         sesion.removeAttribute(CODIGO_EMAIL_VERIFICADO);
-        peticion.changeSessionId();   // id nuevo al autenticarse (session fixation)
+        peticion.changeSessionId(); // id nuevo al autenticarse (session fixation)
 
-        // Su correo como nombre y ROLE_<rol> como permiso, que es lo que comprueba /api/admin/**
+        // Su correo como nombre y ROLE_<rol> como permiso, que es lo que comprueba
+        // /api/admin/**
         Authentication credenciales = UsernamePasswordAuthenticationToken.authenticated(
                 usuario.getEmail().valor(), null,
                 List.of(new SimpleGrantedAuthority("ROLE_" + usuario.getRol().name())));

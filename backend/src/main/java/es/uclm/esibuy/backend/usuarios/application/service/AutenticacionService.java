@@ -57,10 +57,17 @@ public class AutenticacionService implements AutenticacionUseCase {
     @PreAuthorize(Permisos.PUBLICO)
     @Override
     public ResultadoInicioSesion iniciarSesion(IniciarSesionCommand comando) {
-        
-        // El email se busca normalizado (minúsculas, sin espacios), como se guardó en el registro (T240, fallos de la demo)
+
+        // El email se busca normalizado (minúsculas, sin espacios), como se guardó en
+        // el registro (T240, fallos de la demo)
         String email = emailNormalizado(comando.email());
-        Usuario usuario = usuarioRepository.buscarPorCorreo(email).orElseThrow(() -> new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS)); // <- Este orElseThrow() viene de buscarPorCorreo() que devuelve Optional<>
+        Usuario usuario = usuarioRepository.buscarPorCorreo(email)
+                .orElseThrow(() -> new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS)); // <- Este
+                                                                                                        // orElseThrow()
+                                                                                                        // viene de
+                                                                                                        // buscarPorCorreo()
+                                                                                                        // que devuelve
+                                                                                                        // Optional<>
 
         Instant ahora = reloj.instant();
         if (usuario.tieneBloqueoPorIntentos(ahora)) {
@@ -73,20 +80,50 @@ public class AutenticacionService implements AutenticacionUseCase {
             throw new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS);
         }
 
-        if (usuario.estaPendiente()) { //comprobamos que la cuenta haya sido activada por un administrador.
+        if (usuario.estaPendiente()) { // comprobamos que la cuenta haya sido activada por un administrador.
             throw new CuentaPendienteException("La cuenta está pendiente de verificación.");
         }
 
         if (!usuario.estaActivo()) {
-            throw new CuentaBloqueadaException("Esta cuenta está bloqueada"); // <- No es demasiado verboso porque para llegar a este login necesitas haber pasado la contraseña
+            throw new CuentaBloqueadaException("Esta cuenta está bloqueada"); // <- No es demasiado verboso porque para
+                                                                              // llegar a este login necesitas haber
+                                                                              // pasado la contraseña
         }
 
-        String codigo = generadorCodigo.generar();
-        String codigoHash = hashContrasena.hashear(codigo);
-        codigoVerificacionRepository.guardar(CodigoVerificacion.nuevo(usuario.getId(), codigoHash, ahora));
-        envioEmail.enviarCodigoVerificacion(usuario.getEmail().valor(), codigo);
+        boolean emailOtpEnabled = usuario.isEmailOtpEnabled();
+        boolean authenticatorEnabled = usuario.isAuthenticatorEnabled();
 
-        return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.CODIGO_EMAIL);
+        // Si no hay factores adicionales activos, el login termina tras validar
+        // las credenciales y el estado de la cuenta.
+        if (!emailOtpEnabled && !authenticatorEnabled) {
+            usuario.reiniciarIntentos();
+            usuarioRepository.guardar(usuario);
+
+            return new ResultadoInicioSesion(
+                    usuario.getEmail().valor(),
+                    PasoLogin.ACCESO_DIRECTO,
+                    usuario);
+        }
+
+        // Si el OTP por correo está activo, se solicita primero.
+        if (emailOtpEnabled) {
+            String codigo = generadorCodigo.generar();
+            String codigoHash = hashContrasena.hashear(codigo);
+
+            codigoVerificacionRepository.guardar(
+                    CodigoVerificacion.nuevo(usuario.getId(), codigoHash, ahora));
+
+            envioEmail.enviarCodigoVerificacion(usuario.getEmail().valor(), codigo);
+
+            return new ResultadoInicioSesion(
+                    usuario.getEmail().valor(),
+                    PasoLogin.CODIGO_EMAIL);
+        }
+
+        // Si solo está activo Authenticator, se solicita directamente.
+        return new ResultadoInicioSesion(
+                usuario.getEmail().valor(),
+                PasoLogin.AUTHENTICATOR);
     }
 
     @PreAuthorize(Permisos.PUBLICO)
@@ -111,15 +148,16 @@ public class AutenticacionService implements AutenticacionUseCase {
         codigo.marcarUsado(ahora);
         codigoVerificacionRepository.guardar(codigo);
         PasoLogin siguientePaso = tieneAuthenticatorConfirmado(usuario)
-        ? PasoLogin.AUTHENTICATOR
-        : PasoLogin.ALTA_AUTHENTICATOR;
+                ? PasoLogin.AUTHENTICATOR
+                : PasoLogin.ALTA_AUTHENTICATOR;
         return new ResultadoInicioSesion(usuario.getEmail().valor(), siguientePaso);
     }
 
     @PreAuthorize(Permisos.AUTENTICADO_PROPIO)
     @Override
     public Usuario consultarUsuarioEnSesion(String email) {
-        return usuarioRepository.buscarPorCorreo(email).orElseThrow(() -> new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS));
+        return usuarioRepository.buscarPorCorreo(email)
+                .orElseThrow(() -> new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS));
     }
 
     @PreAuthorize(Permisos.CLIENTE_O_VENDEDOR_PROPIO)
@@ -137,14 +175,11 @@ public class AutenticacionService implements AutenticacionUseCase {
 
     private boolean tieneAuthenticatorConfirmado(Usuario usuario) {
         return factorAutenticacionRepository.buscarPorUsuario(usuario.getId())
-        .map(factor -> factor.estaConfirmado()).orElse(false);
+                .map(factor -> factor.estaConfirmado()).orElse(false);
     }
 
-    
-    
-
-
-    // Un email mal formado responde igual que uno inexistente: 401 y nada más (fallos de la demo del Sprint 1)
+    // Un email mal formado responde igual que uno inexistente: 401 y nada más
+    // (fallos de la demo del Sprint 1)
     private static String emailNormalizado(String email) {
         try {
             return new Email(email).valor();

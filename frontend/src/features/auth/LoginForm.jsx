@@ -1,6 +1,12 @@
 import { useState } from 'react'
 import { MessageBar, MessageBarBody, Subtitle1 } from '@fluentui/react-components'
-import { enrollAuthenticator, login, verifyAuthenticatorCode, verifyEmailCode } from '../../api/auth'
+import {
+  enrollAuthenticator,
+  getCurrentUser,
+  login,
+  verifyAuthenticatorCode,
+  verifyEmailCode,
+} from '../../api/auth'
 import { useAuth } from '../../auth/useAuth'
 import CodeStep from './CodeStep'
 import CredentialsStep from './CredentialsStep'
@@ -39,7 +45,38 @@ export default function LoginForm() {
 
   const handleCredentials = (credentials) => {
     setPendingEmail(credentials.email)
-    return run(() => login(credentials), () => setStep('emailCode'))
+
+    return run(
+      async () => {
+        const respuesta = await login(credentials)
+
+        if (respuesta?.nextStep === 'authenticated') {
+          const user = await getCurrentUser()
+
+          if (!user?.rol) {
+            throw new TypeError('Respuesta de sesión no válida')
+          }
+
+          return { user }
+        }
+
+        return { nextStep: respuesta?.nextStep }
+      },
+      (resultado) => {
+        if (resultado.user) {
+          signIn(resultado.user)
+          return
+        }
+
+        if (resultado.nextStep === 'emailCode') {
+          setStep('emailCode')
+        } else if (resultado.nextStep === 'authenticator') {
+          setStep('authenticator')
+        } else {
+          setError('El servidor ha devuelto un paso de autenticación no válido.')
+        }
+      },
+    )
   }
 
   // Tras el código del correo: si el usuario aún no tiene Authenticator, se pide el QR del alta (T20)
