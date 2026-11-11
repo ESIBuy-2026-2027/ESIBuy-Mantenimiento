@@ -37,7 +37,6 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.ProductosVendedorPor
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.ValoracionesProductoPort;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaActualIncorrectaException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosVendedor;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
@@ -126,7 +125,7 @@ class GestionCuentaServiceTest {
 
         servicio.eliminarCuentaPropia(EMAIL_CLIENTE, PASSWORD);
 
-        // Los otros módulos sacan el id del correo: todo va antes de borrar al usuario
+        // Los otros módulos sacan el id del correo: va antes de borrar al usuario
         InOrder orden = inOrder(listaDeseos, carrito, preferencias, metodosPago, direcciones, factores,
                 codigosVerificacion, codigosRecuperacion, usuarioRepository);
         orden.verify(listaDeseos).eliminar(EMAIL_CLIENTE);
@@ -158,7 +157,8 @@ class GestionCuentaServiceTest {
     void contraseñaIncorrectaNoModificaNada() {
         when(hashContrasena.coincide("incorrecta", "hash")).thenReturn(false);
 
-        // No es CredencialesInvalidasException (401): la sesión sigue abierta y el frontend no debe tratarlo como
+        // No es CredencialesInvalidasException (401): la sesión sigue abierta y el
+        // frontend no debe tratarlo como
         // una sesión caducada
         assertThrows(ContrasenaActualIncorrectaException.class,
                 () -> servicio.eliminarCuentaPropia(EMAIL, "incorrecta"));

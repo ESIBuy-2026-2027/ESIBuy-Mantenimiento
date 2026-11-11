@@ -12,14 +12,22 @@ import org.springframework.data.mongodb.core.mapping.Document;
 /**
  * Forma en que se guarda un usuario en MongoDB (colección {@code usuarios}).
  *
- * <p>Es distinta de {@code Usuario} del dominio, que no conoce MongoDB. Los nombres de los
- * campos siguen el «Planteamiento inicial BBDD». El rol se guarda como texto para que el
+ * <p>
+ * Es distinta de {@code Usuario} del dominio, que no conoce MongoDB. Los
+ * nombres de los
+ * campos siguen el «Planteamiento inicial BBDD». El rol se guarda como texto
+ * para que el
  * documento no dependa del enum del dominio.
  *
- * <p>Guarda todos los datos del {@code Usuario}: los de perfil y el estado de acceso
- * ({@code estado} ACTIVO/BLOQUEADO/PENDIENTE, {@code failedLoginAttempts} y {@code lockedUntil}),
- * los datos del cliente (DNI, fecha de nacimiento, teléfono, imagen) y el consentimiento de privacidad.
- * Un documento antiguo no tiene estos campos: el mapper les da los valores por defecto al leerlo.
+ * <p>
+ * Guarda todos los datos del {@code Usuario}: los de perfil y el estado de
+ * acceso
+ * ({@code estado} ACTIVO/BLOQUEADO/PENDIENTE, {@code failedLoginAttempts} y
+ * {@code lockedUntil}),
+ * los datos del cliente (DNI, fecha de nacimiento, teléfono, imagen) y el
+ * consentimiento de privacidad.
+ * Un documento antiguo no tiene estos campos: el mapper les da los valores por
+ * defecto al leerlo.
  */
 @Document(collection = "usuarios")
 public class UsuarioDocument {
@@ -33,12 +41,14 @@ public class UsuarioDocument {
     private String nombre;
     private String apellidos;
     private String tipoCliente;
-    // Datos del cliente y consentimiento (T229), con los nombres del esquema de ColeccionesEsiBuy.
+    // Datos del cliente y consentimiento (T229), con los nombres del esquema de
+    // ColeccionesEsiBuy.
     private String dni;
     private LocalDate fechaNacimiento;
     private String telefono;
     private String imagenPerfil;
-    // Vendedor (T241): nombres del esquema de la T210; el índice único de nombreComercial lo declara ColeccionesEsiBuy.
+    // Vendedor (T241): nombres del esquema de la T210; el índice único de
+    // nombreComercial lo declara ColeccionesEsiBuy.
     private String nombreComercial;
     private String categoriaPrincipalId;
     private boolean privacyPolicyAccepted;
@@ -51,6 +61,8 @@ public class UsuarioDocument {
     private Instant createdAt;
     @LastModifiedDate
     private Instant updatedAt;
+    private Boolean emailOtpEnabled;
+    private Boolean authenticatorEnabled;
 
     public UsuarioDocument(String email, String passwordHash, String rol) {
         this.email = email;
@@ -62,7 +74,8 @@ public class UsuarioDocument {
         return id;
     }
 
-    // Con el id, guardar un usuario ya existente lo actualiza en vez de insertar otro.
+    // Con el id, guardar un usuario ya existente lo actualiza en vez de insertar
+    // otro.
     public void setId(String id) {
         this.id = id;
     }
@@ -119,8 +132,10 @@ public class UsuarioDocument {
         return createdAt;
     }
 
-    // Al actualizar un usuario hay que conservar su fecha de creación: el documento se rehace desde
-    // el dominio, que no la conoce, y Spring solo rellena createdAt en los documentos nuevos.
+    // Al actualizar un usuario hay que conservar su fecha de creación: el documento
+    // se rehace desde
+    // el dominio, que no la conoce, y Spring solo rellena createdAt en los
+    // documentos nuevos.
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
@@ -211,5 +226,21 @@ public class UsuarioDocument {
 
     public String getRol() {
         return rol;
+    }
+
+    public Boolean getEmailOtpEnabled() {
+        return emailOtpEnabled;
+    }
+
+    public void setEmailOtpEnabled(Boolean emailOtpEnabled) {
+        this.emailOtpEnabled = emailOtpEnabled;
+    }
+
+    public Boolean getAuthenticatorEnabled() {
+        return authenticatorEnabled;
+    }
+
+    public void setAuthenticatorEnabled(Boolean authenticatorEnabled) {
+        this.authenticatorEnabled = authenticatorEnabled;
     }
 }

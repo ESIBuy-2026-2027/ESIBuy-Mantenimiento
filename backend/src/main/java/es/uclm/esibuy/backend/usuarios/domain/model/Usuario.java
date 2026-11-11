@@ -17,15 +17,18 @@ public class Usuario {
 
     private final String id;
     private DatosPersonales datosPersonales;
-    private PerfilUsuario perfil;        // datos propios del rol: DatosCliente, DatosVendedor o null
+    private PerfilUsuario perfil; // datos propios del rol: DatosCliente, DatosVendedor o null
     private final ConsentimientoPrivacidad consentimiento;
     private final Email email;
     private String passwordHash;
     private final Rol rol;
     private Instant fechaAlta;
     private String estado;
-    private int intentosFallidos;        // intentos de login fallidos seguidos
-    private Instant bloqueadoHasta;      // bloqueo temporal por intentos; null = sin bloqueo
+    private int intentosFallidos; // intentos de login fallidos seguidos
+    private Instant bloqueadoHasta; // bloqueo temporal por intentos; null = sin bloqueo
+    private boolean emailOtpEnabled = false; // true = el usuario puede usar OTP por email; false = no puede
+    private boolean authenticatorEnabled = false; // true = el usuario puede usar OTP por app de autenticación; false =
+                                                  // no puede
 
     public Usuario(String id, DatosPersonales datosPersonales, Email email,
             String passwordHash, Rol rol, PerfilUsuario perfil, ConsentimientoPrivacidad consentimiento) {
@@ -46,12 +49,15 @@ public class Usuario {
         }
     }
 
-    // Edición de los datos por un administrador (HU22). El email, el rol y la contraseña no cambian por aquí.
+    // Edición de los datos por un administrador (HU22). El email, el rol y la
+    // contraseña no cambian por aquí.
     public void modificarDatos(DatosPersonales datosPersonales, PerfilUsuario nuevoPerfil, LocalDate hoy) {
-        // Se comprueba todo antes de asignar: si algo falla, el usuario se queda como estaba.
+        // Se comprueba antes de asignar: si algo falla, el usuario se queda como
+        // estaba.
         DatosPersonales personales = exigirNoNulo(datosPersonales, "Los datos personales son obligatorios");
         PerfilUsuario perfilCoherente = exigirPerfilCoherente(rol, nuevoPerfil);
-        // Al editar, un vendedor siempre lleva sus datos: si no, se borrarían los que tiene (T241).
+        // Al editar, un vendedor siempre lleva sus datos: si no, se borrarían los que
+        // tiene (T241).
         if (rol == Rol.VENDEDOR && !(perfilCoherente instanceof DatosVendedor)) {
             throw new UsuarioInvalidoException("Un vendedor debe tener datos de vendedor");
         }
@@ -62,7 +68,8 @@ public class Usuario {
         this.perfil = perfilCoherente;
     }
 
-    // Paso a Premium del propio cliente (HU45, T422). Solo cambia el tipo: el DNI, la fecha y el teléfono se conservan.
+    // Paso a Premium del propio cliente (HU45, T422). Solo cambia el tipo: el DNI,
+    // la fecha y el teléfono se conservan.
     public void pasarAPremium() {
         if (!(perfil instanceof DatosCliente datosCliente)) {
             throw new UsuarioInvalidoException("Solo un cliente puede pasar a Premium");
@@ -75,12 +82,13 @@ public class Usuario {
     }
 
     public static Usuario nuevoCliente(DatosPersonales datosPersonales, Email email, String passwordHash,
-        DatosCliente datosCliente, ConsentimientoPrivacidad consentimiento, LocalDate hoy) {
+            DatosCliente datosCliente, ConsentimientoPrivacidad consentimiento, LocalDate hoy) {
         exigirMayoriaDeEdad(datosCliente, hoy);
         return new Usuario(null, datosPersonales, email, passwordHash, Rol.CLIENTE, datosCliente, consentimiento);
     }
 
-    // El vendedor no tiene fecha de nacimiento: no hay mayoría de edad que comprobar (T241).
+    // El vendedor no tiene fecha de nacimiento: no hay mayoría de edad que
+    // comprobar (T241).
     public static Usuario nuevoVendedor(DatosPersonales datosPersonales, Email email, String passwordHash,
             DatosVendedor datosVendedor, ConsentimientoPrivacidad consentimiento) {
         exigirNoNulo(datosVendedor, "Un vendedor debe tener datos de vendedor");
@@ -100,7 +108,8 @@ public class Usuario {
         return admin;
     }
 
-    // Un cliente lleva siempre DatosCliente; un vendedor o un administrador pueden no tener perfil
+    // Un cliente lleva siempre DatosCliente; un vendedor o un administrador pueden
+    // no tener perfil
     // (cuentas anteriores a la T241 o creadas por un administrador).
     private static PerfilUsuario exigirPerfilCoherente(Rol rol, PerfilUsuario perfil) {
         boolean esCliente = rol == Rol.CLIENTE;
@@ -184,8 +193,10 @@ public class Usuario {
     }
 
     public void registrarIntentoFallido(Instant ahora) {
-        // Un bloqueo ya caducado es una serie cerrada: el fallo nuevo empieza a contar desde cero
-        // (fallos de la demo del Sprint 1: antes cada fallo tras el bloqueo volvía a bloquear 15 minutos).
+        // Un bloqueo ya caducado es una serie cerrada: el fallo nuevo empieza a contar
+        // desde cero
+        // (fallos de la demo del Sprint 1: antes cada fallo tras el bloqueo volvía a
+        // bloquear 15 minutos).
         if (bloqueadoHasta != null && !ahora.isBefore(bloqueadoHasta)) {
             reiniciarIntentos();
         }
@@ -195,14 +206,17 @@ public class Usuario {
         }
     }
 
-    // Al completar el login (paso 3) y al caducar un bloqueo: la cuenta vuelve a tener sus 5 intentos
+    // Al completar el login (paso 3) y al caducar un bloqueo: la cuenta vuelve a
+    // tener sus 5 intentos
     public void reiniciarIntentos() {
         intentosFallidos = 0;
         bloqueadoHasta = null;
     }
 
-    // Cambio de contraseña (HU3). Recibe el hash ya calculado: hashear y validar la política es cosa del servicio.
-    // Se valida antes de asignar: si el hash no es válido, el usuario se queda como estaba.
+    // Cambio de contraseña (HU3). Recibe el hash ya calculado: hashear y validar la
+    // política es cosa del servicio.
+    // Se valida antes de asignar: si el hash no es válido, el usuario se queda como
+    // estaba.
     public void cambiarContrasena(String nuevoHash) {
         passwordHash = exigirTexto(nuevoHash, "La contraseña es obligatoria");
         reiniciarIntentos();
@@ -220,7 +234,16 @@ public class Usuario {
         return bloqueadoHasta;
     }
 
-    // Usamos esta operación para obligar a que se restauren a la vez los dos parámetros, además de ser más descriptivos pese a ser dos setters
+    public boolean isEmailOtpEnabled() {
+        return emailOtpEnabled;
+    }
+
+    public boolean isAuthenticatorEnabled() {
+        return authenticatorEnabled;
+    }
+
+    // Usamos esta operación para obligar a que se restauren a la vez los dos
+    // parámetros, además de ser más descriptivos pese a ser dos setters
     public void restaurarBloqueoPorIntentos(int intentosFallidos, Instant bloqueadoHasta) {
         this.intentosFallidos = intentosFallidos;
         this.bloqueadoHasta = bloqueadoHasta;
@@ -231,6 +254,36 @@ public class Usuario {
     }
 
     public boolean estaPendiente() {
-        return "PENDIENTE".equals(this.estado); 
+        return "PENDIENTE".equals(this.estado);
+    }
+
+    public void activarEmailOtp() {
+        this.emailOtpEnabled = true;
+    }
+
+    public void desactivarEmailOtp() {
+        this.emailOtpEnabled = false;
+    }
+
+    public void activarAuthenticator() {
+        this.authenticatorEnabled = true;
+    }
+
+    public void desactivarAuthenticator() {
+        this.authenticatorEnabled = false;
+    }
+
+    public void restaurarPreferenciasSeguridad(
+            boolean emailOtpEnabled,
+            boolean authenticatorEnabled) {
+        this.emailOtpEnabled = emailOtpEnabled;
+        this.authenticatorEnabled = authenticatorEnabled;
+    }
+
+    public void actualizarPreferenciasSeguridad(
+            boolean emailOtpEnabled,
+            boolean authenticatorEnabled) {
+        this.emailOtpEnabled = emailOtpEnabled;
+        this.authenticatorEnabled = authenticatorEnabled;
     }
 }

@@ -60,6 +60,8 @@ import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.Java
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.SecureRandomGeneradorCodigoAdapter;
 import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorUseCase;
 import es.uclm.esibuy.backend.usuarios.application.service.CrearAdministradorService;
+import es.uclm.esibuy.backend.usuarios.application.port.in.GestionSeguridadUseCase;
+import es.uclm.esibuy.backend.usuarios.application.service.GestionSeguridadService;
 
 import java.security.SecureRandom;
 import java.time.Clock;
@@ -71,11 +73,16 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
 
 /**
- * Presenta a Spring las piezas del módulo de usuarios y cómo se conectan entre sí.
+ * Presenta a Spring las piezas del módulo de usuarios y cómo se conectan entre
+ * sí.
  *
- * <p>Se hace aquí, en infraestructura, para que dominio y aplicación no lleven anotaciones de
- * Spring. Cada {@code @Bean} es singleton por defecto: Spring crea una sola instancia y la
- * inyecta donde se necesita (por eso no se programa el patrón Singleton a mano).
+ * <p>
+ * Se hace aquí, en infraestructura, para que dominio y aplicación no lleven
+ * anotaciones de
+ * Spring. Cada {@code @Bean} es singleton por defecto: Spring crea una sola
+ * instancia y la
+ * inyecta donde se necesita (por eso no se programa el patrón Singleton a
+ * mano).
  */
 @Configuration
 public class UsuariosConfig {
@@ -94,7 +101,7 @@ public class UsuariosConfig {
 
     @Bean
     RegistroUsuarioUseCase registroUsuarioUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-                                                  HashContrasenaPort hashContrasenaPort, Clock reloj) {
+            HashContrasenaPort hashContrasenaPort, Clock reloj) {
         return new RegistroUsuarioService(usuarioRepositoryPort, hashContrasenaPort, reloj);
     }
 
@@ -105,7 +112,7 @@ public class UsuariosConfig {
 
     @Bean
     CrearAdministradorUseCase crearAdministradorUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-                                                        HashContrasenaPort hashContrasenaPort) {
+            HashContrasenaPort hashContrasenaPort) {
         return new CrearAdministradorService(usuarioRepositoryPort, hashContrasenaPort);
     }
 
@@ -114,7 +121,8 @@ public class UsuariosConfig {
         return new CodigoVerificacionMongoAdapter(repository, new CodigoVerificacionDocumentMapper());
     }
 
-    // HU3: misma colección y repositorio que los códigos del login, pero con su propio propósito
+    // HU3: misma colección y repositorio que los códigos del login, pero con su
+    // propio propósito
     @Bean
     CodigoRecuperacionRepositoryPort codigoRecuperacionRepositoryPort(CodigoVerificacionMongoRepository repository) {
         return new CodigoRecuperacionMongoAdapter(repository, new CodigoVerificacionDocumentMapper());
@@ -127,39 +135,42 @@ public class UsuariosConfig {
 
     @Bean
     EnvioEmailPort envioEmailPort(JavaMailSender mailSender,
-                                @Value("${esibuy.mail.remitente}") String remitente) {
+            @Value("${esibuy.mail.remitente}") String remitente) {
         return new SmtpEnvioEmailAdapter(mailSender, remitente);
     }
 
     @Bean
     Clock reloj() {
-        return Clock.systemUTC(); // la hora real; los tests de AutenticacionService y RegistroUsuarioService usan un Clock fijo
+        return Clock.systemUTC(); // la hora real; los tests de AutenticacionService y RegistroUsuarioService usan
+                                  // un Clock fijo
     }
 
     @Bean
     AutenticacionUseCase autenticacionUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-                                            HashContrasenaPort hashContrasenaPort,
-                                            CodigoVerificacionRepositoryPort codigoVerificacionRepositoryPort,
-                                            GeneradorCodigoPort generadorCodigoPort,
-                                            EnvioEmailPort envioEmailPort,
-                                            FactorAutenticacionRepositoryPort factorAutenticacionRepositoryPort,
-                                            Clock reloj) {
+            HashContrasenaPort hashContrasenaPort,
+            CodigoVerificacionRepositoryPort codigoVerificacionRepositoryPort,
+            GeneradorCodigoPort generadorCodigoPort,
+            EnvioEmailPort envioEmailPort,
+            FactorAutenticacionRepositoryPort factorAutenticacionRepositoryPort,
+            Clock reloj) {
         return new AutenticacionService(usuarioRepositoryPort, hashContrasenaPort,
-                codigoVerificacionRepositoryPort, generadorCodigoPort, envioEmailPort, factorAutenticacionRepositoryPort, reloj);
+                codigoVerificacionRepositoryPort, generadorCodigoPort, envioEmailPort,
+                factorAutenticacionRepositoryPort, reloj);
     }
 
     @Bean
     RecuperacionContrasenaUseCase recuperacionContrasenaUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-                                                                HashContrasenaPort hashContrasenaPort,
-                                                                CodigoRecuperacionRepositoryPort codigoRecuperacionRepositoryPort,
-                                                                GeneradorCodigoPort generadorCodigoPort,
-                                                                EnvioEmailPort envioEmailPort,
-                                                                Clock reloj) {
+            HashContrasenaPort hashContrasenaPort,
+            CodigoRecuperacionRepositoryPort codigoRecuperacionRepositoryPort,
+            GeneradorCodigoPort generadorCodigoPort,
+            EnvioEmailPort envioEmailPort,
+            Clock reloj) {
         return new RecuperacionContrasenaService(usuarioRepositoryPort, hashContrasenaPort,
                 codigoRecuperacionRepositoryPort, generadorCodigoPort, envioEmailPort, reloj);
     }
 
-    // HU23 (T206): Spring Boot añade este filtro a cada petición e invalida la sesión de las cuentas bloqueadas
+    // HU23 (T206): Spring Boot añade este filtro a cada petición e invalida la
+    // sesión de las cuentas bloqueadas
     @Bean
     CuentaActivaFilter cuentaActivaFilter(AutenticacionUseCase autenticacionUseCase) {
         return new CuentaActivaFilter(autenticacionUseCase);
@@ -167,7 +178,7 @@ public class UsuariosConfig {
 
     @Bean
     AdministracionUsuariosUseCase administracionUsuariosUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-                                                                Clock reloj) {
+            Clock reloj) {
         return new AdministracionUsuariosService(usuarioRepositoryPort, reloj);
     }
 
@@ -181,7 +192,8 @@ public class UsuariosConfig {
         return new JavaTotpAdapter();
     }
 
-    // La clave AES del secreto TOTP sale de application.properties (T20, D3: riesgo asumido)
+    // La clave AES del secreto TOTP sale de application.properties (T20, D3: riesgo
+    // asumido)
     @Bean
     CifradoSecretoPort cifradoSecretoPort(@Value("${esibuy.totp.clave-cifrado}") String clave) {
         return new AesGcmCifradoSecretoAdapter(clave);
@@ -189,8 +201,8 @@ public class UsuariosConfig {
 
     @Bean
     AuthenticatorUseCase authenticatorUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-                                              FactorAutenticacionRepositoryPort factorAutenticacionRepositoryPort,
-                                              TotpPort totpPort, CifradoSecretoPort cifradoSecretoPort, Clock reloj) {
+            FactorAutenticacionRepositoryPort factorAutenticacionRepositoryPort,
+            TotpPort totpPort, CifradoSecretoPort cifradoSecretoPort, Clock reloj) {
         return new AuthenticatorService(usuarioRepositoryPort, factorAutenticacionRepositoryPort, totpPort,
                 cifradoSecretoPort, reloj);
     }
@@ -218,7 +230,8 @@ public class UsuariosConfig {
         return new ValoracionesProductoAdapter(valoraciones);
     }
 
-    // Lo que depende del cliente en otros módulos, para borrarlo al eliminar su cuenta (HU25)
+    // Lo que depende del cliente en otros módulos, para borrarlo al eliminar su
+    // cuenta (HU25)
     @Bean
     ListaDeseosClientePort listaDeseosClientePort(
             es.uclm.esibuy.backend.deseos.application.port.in.GestionListaDeseosUseCase listaDeseos) {
@@ -262,4 +275,14 @@ public class UsuariosConfig {
                 valoraciones, factores, codigosVerificacion, codigosRecuperacion, listaDeseos, carrito,
                 preferencias, metodosPago, direcciones);
     }
+
+    @Bean
+    GestionSeguridadUseCase gestionSeguridadUseCase(
+            UsuarioRepositoryPort usuarioRepositoryPort,
+            FactorAutenticacionRepositoryPort factorAutenticacionRepositoryPort) {
+        return new GestionSeguridadService(
+                usuarioRepositoryPort,
+                factorAutenticacionRepositoryPort);
+    }
+
 }

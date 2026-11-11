@@ -15,20 +15,28 @@ import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
 /**
- * Convierte entre el {@code Usuario} del dominio y el documento que se guarda en MongoDB.
+ * Convierte entre el {@code Usuario} del dominio y el documento que se guarda
+ * en MongoDB.
  *
- * <p>Al guardar aplana los value objects en los campos del modelo de BBDD. Al leer los reconstruye
- * y restaura el estado guardado (estado, bloqueo por intentos y fecha de alta), que el constructor
+ * <p>
+ * Al guardar aplana los value objects en los campos del modelo de BBDD. Al leer
+ * los reconstruye
+ * y restaura el estado guardado (estado, bloqueo por intentos y fecha de alta),
+ * que el constructor
  * de {@code Usuario} no conoce porque describe un usuario nuevo.
  *
- * <p>Un documento sin nombre, apellidos o, en un cliente, sin DNI o fecha de nacimiento, no se
+ * <p>
+ * Un documento sin nombre, apellidos o, en un cliente, sin DNI o fecha de
+ * nacimiento, no se
  * puede reconstruir: el dominio los exige desde la T229 y se lanza
- * {@link UsuarioPersistidoInvalidoException} (T228). PENDIENTE DE REVISAR CON EL EQUIPO qué hacer
+ * {@link UsuarioPersistidoInvalidoException} (T228). PENDIENTE DE REVISAR CON
+ * EL EQUIPO qué hacer
  * con las cuentas de prueba anteriores guardadas en Atlas.
  */
 public class UsuarioDocumentMapper {
 
-    // Un documento anterior a la T225 no tiene estado: es una cuenta creada antes de la verificación por administrador.
+    // Un documento anterior a la T225 no tiene estado: es una cuenta creada antes
+    // de la verificación por administrador.
     private static final String ESTADO_ACTIVO = "ACTIVO";
 
     public UsuarioDocument aDocumento(Usuario usuario) {
@@ -38,6 +46,8 @@ public class UsuarioDocumentMapper {
         documento.setEstado(usuario.getEstado());
         documento.setFailedLoginAttempts(usuario.getIntentosFallidos());
         documento.setLockedUntil(usuario.getBloqueadoHasta());
+        documento.setEmailOtpEnabled(usuario.isEmailOtpEnabled());
+        documento.setAuthenticatorEnabled(usuario.isAuthenticatorEnabled());
 
         DatosPersonales datosPersonales = usuario.getDatosPersonales();
         documento.setNombre(datosPersonales.nombre());
@@ -70,7 +80,8 @@ public class UsuarioDocumentMapper {
         try {
             return reconstruir(documento);
         } catch (UsuarioInvalidoException | EmailInvalidoException e) {
-            // Las reglas del dominio han rechazado datos ya guardados: es un fallo del servidor, no del cliente.
+            // Las reglas del dominio han rechazado datos ya guardados: es un fallo del
+            // servidor, no del cliente.
             throw new UsuarioPersistidoInvalidoException(documento.getId(), e);
         }
     }
@@ -82,6 +93,10 @@ public class UsuarioDocumentMapper {
                 new Email(documento.getEmail()), documento.getPasswordHash(), rol,
                 perfil(rol, documento),
                 consentimiento(documento));
+
+        usuario.restaurarPreferenciasSeguridad(
+                documento.getEmailOtpEnabled() == null || documento.getEmailOtpEnabled(),
+                documento.getAuthenticatorEnabled() == null || documento.getAuthenticatorEnabled());
 
         usuario.restaurarEstado(documento.getEstado() == null ? ESTADO_ACTIVO : documento.getEstado());
         usuario.restaurarBloqueoPorIntentos(documento.getFailedLoginAttempts(), documento.getLockedUntil());
@@ -95,7 +110,8 @@ public class UsuarioDocumentMapper {
         documento.setTelefono(perfil.telefono() == null ? null : perfil.telefono().valor());
     }
 
-    // El perfil se elige por rol. Un vendedor sin nombre comercial (anterior a la T241) se lee sin perfil.
+    // El perfil se elige por rol. Un vendedor sin nombre comercial (anterior a la
+    // T241) se lee sin perfil.
     private static PerfilUsuario perfil(Rol rol, UsuarioDocument documento) {
         return switch (rol) {
             case CLIENTE -> datosCliente(documento);
@@ -113,7 +129,8 @@ public class UsuarioDocumentMapper {
         return documento.getTelefono() == null ? null : new Telefono(documento.getTelefono());
     }
 
-    // Tipo de cliente: el guardado si existe; si no (documento anterior a la T225), ESTANDAR.
+    // Tipo de cliente: el guardado si existe; si no (documento anterior a la T225),
+    // ESTANDAR.
     private static DatosCliente datosCliente(UsuarioDocument documento) {
         TipoCliente tipoCliente = documento.getTipoCliente() == null
                 ? TipoCliente.ESTANDAR
@@ -126,6 +143,7 @@ public class UsuarioDocumentMapper {
         if (!documento.isPrivacyPolicyAccepted()) {
             return null;
         }
-        return new ConsentimientoPrivacidad(documento.getPrivacyPolicyAcceptedAt(), documento.getPrivacyPolicyVersion());
+        return new ConsentimientoPrivacidad(documento.getPrivacyPolicyAcceptedAt(),
+                documento.getPrivacyPolicyVersion());
     }
 }
