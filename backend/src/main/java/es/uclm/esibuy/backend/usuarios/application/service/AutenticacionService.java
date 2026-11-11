@@ -16,17 +16,17 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.FactorAutenticacionR
 import es.uclm.esibuy.backend.usuarios.application.port.out.GeneradorCodigoPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.HashContrasenaPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.UsuarioRepositoryPort;
+import es.uclm.esibuy.backend.usuarios.domain.exception.BloqueoPorIntentosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.BloqueoPorIntentosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
-import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 
 public class AutenticacionService implements AutenticacionUseCase {
@@ -57,17 +57,9 @@ public class AutenticacionService implements AutenticacionUseCase {
     @PreAuthorize(Permisos.PUBLICO)
     @Override
     public ResultadoInicioSesion iniciarSesion(IniciarSesionCommand comando) {
-
-        // El email se busca normalizado (minúsculas, sin espacios), como se guardó en
-        // el registro (T240, fallos de la demo)
         String email = emailNormalizado(comando.email());
         Usuario usuario = usuarioRepository.buscarPorCorreo(email)
-                .orElseThrow(() -> new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS)); // <- Este
-                                                                                                        // orElseThrow()
-                                                                                                        // viene de
-                                                                                                        // buscarPorCorreo()
-                                                                                                        // que devuelve
-                                                                                                        // Optional<>
+                .orElseThrow(() -> new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS));
 
         Instant ahora = reloj.instant();
         if (usuario.tieneBloqueoPorIntentos(ahora)) {
@@ -80,50 +72,34 @@ public class AutenticacionService implements AutenticacionUseCase {
             throw new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS);
         }
 
-        if (usuario.estaPendiente()) { // comprobamos que la cuenta haya sido activada por un administrador.
+        if (usuario.estaPendiente()) {
             throw new CuentaPendienteException("La cuenta está pendiente de verificación.");
         }
 
         if (!usuario.estaActivo()) {
-            throw new CuentaBloqueadaException("Esta cuenta está bloqueada"); // <- No es demasiado verboso porque para
-                                                                              // llegar a este login necesitas haber
-                                                                              // pasado la contraseña
+            throw new CuentaBloqueadaException("Esta cuenta está bloqueada");
         }
 
         boolean emailOtpEnabled = usuario.isEmailOtpEnabled();
         boolean authenticatorEnabled = usuario.isAuthenticatorEnabled();
 
-        // Si no hay factores adicionales activos, el login termina tras validar
-        // las credenciales y el estado de la cuenta.
         if (!emailOtpEnabled && !authenticatorEnabled) {
             usuario.reiniciarIntentos();
             usuarioRepository.guardar(usuario);
-
-            return new ResultadoInicioSesion(
-                    usuario.getEmail().valor(),
-                    PasoLogin.ACCESO_DIRECTO,
-                    usuario);
+            return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.ACCESO_DIRECTO, usuario);
         }
 
-        // Si el OTP por correo está activo, se solicita primero.
         if (emailOtpEnabled) {
             String codigo = generadorCodigo.generar();
             String codigoHash = hashContrasena.hashear(codigo);
-
             codigoVerificacionRepository.guardar(
                     CodigoVerificacion.nuevo(usuario.getId(), codigoHash, ahora));
-
             envioEmail.enviarCodigoVerificacion(usuario.getEmail().valor(), codigo);
-
-            return new ResultadoInicioSesion(
-                    usuario.getEmail().valor(),
-                    PasoLogin.CODIGO_EMAIL);
+            return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.CODIGO_EMAIL);
         }
 
-        // Si solo está activo Authenticator, se solicita directamente.
-        return new ResultadoInicioSesion(
-                usuario.getEmail().valor(),
-                PasoLogin.AUTHENTICATOR);
+        // Si solo está activo Authenticator, el login pasa directamente a ese factor.
+        return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.AUTHENTICATOR);
     }
 
     @PreAuthorize(Permisos.PUBLICO)
@@ -147,10 +123,21 @@ public class AutenticacionService implements AutenticacionUseCase {
 
         codigo.marcarUsado(ahora);
         codigoVerificacionRepository.guardar(codigo);
-        PasoLogin siguientePaso = tieneAuthenticatorConfirmado(usuario)
-                ? PasoLogin.AUTHENTICATOR
-                : PasoLogin.ALTA_AUTHENTICATOR;
-        return new ResultadoInicioSesion(usuario.getEmail().valor(), siguientePaso);
+
+        // El segundo factor solo se solicita si el usuario lo tiene ACTIVADO.
+        // Que exista un secreto confirmado no significa que quiera utilizarlo en el login.
+        if (usuario.isAuthenticatorEnabled()) {
+            if (!tieneAuthenticatorConfirmado(usuario)) {
+                // Estado inconsistente: no se degrada silenciosamente a un login de un solo factor.
+                throw new CodigoInvalidoException(CODIGO_INVALIDO);
+            }
+            return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.AUTHENTICATOR);
+        }
+
+        // Correo activado sin Authenticator: el código de correo completa el login.
+        usuario.reiniciarIntentos();
+        usuarioRepository.guardar(usuario);
+        return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.ACCESO_DIRECTO, usuario);
     }
 
     @PreAuthorize(Permisos.AUTENTICADO_PROPIO)
@@ -178,8 +165,6 @@ public class AutenticacionService implements AutenticacionUseCase {
                 .map(factor -> factor.estaConfirmado()).orElse(false);
     }
 
-    // Un email mal formado responde igual que uno inexistente: 401 y nada más
-    // (fallos de la demo del Sprint 1)
     private static String emailNormalizado(String email) {
         try {
             return new Email(email).valor();

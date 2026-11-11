@@ -41,6 +41,15 @@ export default function LoginForm() {
   const restart = () => {
     setError('')
     setStep('credentials')
+    setQr('')
+  }
+
+  const obtenerUsuario = async () => {
+    const user = await getCurrentUser()
+    if (!user?.rol) {
+      throw new TypeError('Respuesta de sesión no válida')
+    }
+    return user
   }
 
   const handleCredentials = (credentials) => {
@@ -49,26 +58,15 @@ export default function LoginForm() {
     return run(
       async () => {
         const respuesta = await login(credentials)
-
         if (respuesta?.nextStep === 'authenticated') {
-          const user = await getCurrentUser()
-
-          if (!user?.rol) {
-            throw new TypeError('Respuesta de sesión no válida')
-          }
-
-          return { user }
+          return { user: await obtenerUsuario() }
         }
-
         return { nextStep: respuesta?.nextStep }
       },
       (resultado) => {
         if (resultado.user) {
           signIn(resultado.user)
-          return
-        }
-
-        if (resultado.nextStep === 'emailCode') {
+        } else if (resultado.nextStep === 'emailCode') {
           setStep('emailCode')
         } else if (resultado.nextStep === 'authenticator') {
           setStep('authenticator')
@@ -79,20 +77,29 @@ export default function LoginForm() {
     )
   }
 
-  // Tras el código del correo: si el usuario aún no tiene Authenticator, se pide el QR del alta (T20)
   const handleEmailCode = (code) =>
     run(
       async () => {
         const respuesta = await verifyEmailCode(code)
-        if (respuesta?.nextStep !== 'enrollAuthenticator') {
+        if (respuesta?.nextStep === 'authenticated') {
+          return { user: await obtenerUsuario() }
+        }
+        if (respuesta?.nextStep === 'enrollAuthenticator') {
+          const { qr: imagen } = await enrollAuthenticator()
+          return { siguiente: 'enrollAuthenticator', imagen }
+        }
+        if (respuesta?.nextStep === 'authenticator') {
           return { siguiente: 'authenticator' }
         }
-        const { qr: imagen } = await enrollAuthenticator()
-        return { siguiente: 'enrollAuthenticator', imagen }
+        throw new TypeError('Respuesta de autenticación no válida')
       },
-      ({ siguiente, imagen }) => {
-        setQr(imagen ?? '')
-        setStep(siguiente)
+      (resultado) => {
+        if (resultado.user) {
+          signIn(resultado.user)
+          return
+        }
+        setQr(resultado.imagen ?? '')
+        setStep(resultado.siguiente)
       },
     )
 
