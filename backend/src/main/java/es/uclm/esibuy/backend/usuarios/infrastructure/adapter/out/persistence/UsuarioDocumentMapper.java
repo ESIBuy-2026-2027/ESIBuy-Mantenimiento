@@ -95,8 +95,8 @@ public class UsuarioDocumentMapper {
                 consentimiento(documento));
 
         usuario.restaurarPreferenciasSeguridad(
-                documento.getEmailOtpEnabled() == null || documento.getEmailOtpEnabled(),
-                documento.getAuthenticatorEnabled() == null || documento.getAuthenticatorEnabled());
+                Boolean.TRUE.equals(documento.getEmailOtpEnabled()),
+                Boolean.TRUE.equals(documento.getAuthenticatorEnabled()));
 
         usuario.restaurarEstado(documento.getEstado() == null ? ESTADO_ACTIVO : documento.getEstado());
         usuario.restaurarBloqueoPorIntentos(documento.getFailedLoginAttempts(), documento.getLockedUntil());

@@ -17,6 +17,7 @@ import { resetReviewsMock } from '../mocks/reviewsHandlers'
 import { resetUsersMock } from '../mocks/usersHandlers'
 import { resetWishlistMock } from '../mocks/wishlistHandlers'
 import { server } from '../mocks/server'
+import { resetSecurityMock } from '../mocks/securityHandlers'
 
 // Las esperas de Testing Library (findBy*, waitFor) aguantan 3 s y no 1 s: al ejecutar toda la batería a la vez, la
 // máquina va cargada y algunas cargas (una ficha, una lista tras guardar) podían pasarse del segundo y fallar al azar
@@ -61,6 +62,7 @@ afterEach(() => {
   resetReviewsMock()
   resetUsersMock()
   resetWishlistMock()
+  resetSecurityMock()
 })
 
 afterAll(() => {

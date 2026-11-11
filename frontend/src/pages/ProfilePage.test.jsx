@@ -217,7 +217,7 @@ describe('ProfilePage (HU46): preferencias', () => {
     await abrirPerfil('cliente@esibuy.test')
 
     expect(await screen.findByText('No se han podido cargar tus preferencias. Inténtalo de nuevo.')).toBeInTheDocument()
-    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: /preferencias/i })).not.toBeInTheDocument()
     falla = false
     await user.click(screen.getByRole('button', { name: 'Reintentar' }))
 

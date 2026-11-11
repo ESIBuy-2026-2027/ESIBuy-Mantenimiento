@@ -9,6 +9,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import AdminSectionCard from '../features/admin/AdminSectionCard'
 import { PATHS } from '../routes/paths'
+import SecurityFactors from '../features/account/SecurityFactors'
 
 const sections = [
   {
@@ -101,6 +102,8 @@ export default function AdminPage() {
           />
         ))}
       </div>
+
+      <SecurityFactors />
     </main>
   )
 }

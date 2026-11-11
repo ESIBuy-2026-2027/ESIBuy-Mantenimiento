@@ -16,6 +16,7 @@ import { reviewsHandlers } from './reviewsHandlers'
 import { statisticsHandlers } from './statisticsHandlers'
 import { usersHandlers } from './usersHandlers'
 import { wishlistHandlers } from './wishlistHandlers'
+import { securityHandlers } from './securityHandlers'
 
 export const handlers = [
   ...authHandlers,
@@ -33,6 +34,7 @@ export const handlers = [
   ...statisticsHandlers,
   ...adminCategoriesHandlers,
   ...adminSellersHandlers,
+  ...securityHandlers,
   ...adminsHandlers,
   ...registroHandlers,
   http.get('/api/categorias', () =>

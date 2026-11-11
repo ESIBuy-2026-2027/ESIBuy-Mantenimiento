@@ -33,6 +33,7 @@ import { useCategories } from '../hooks/useCategories'
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard'
 import { PATHS } from '../routes/paths'
 import { formatDate } from '../utils/format'
+import SecurityFactors from '../features/account/SecurityFactors'
 
 const SIN_DATO = '—'
 // El perfil no trae el estado de la cuenta, y la imagen se muestra como avatar, no como texto.
@@ -319,6 +320,9 @@ export default function ProfilePage() {
 
       {perfil?.rol === 'CLIENTE' && <CustomerPreferences categories={categories} />}
       {perfil?.rol === 'VENDEDOR' && <SellerStatistics />}
+
+      {(perfil?.rol === 'CLIENTE' || perfil?.rol === 'VENDEDOR') && <SecurityFactors />}
+
       {(perfil?.rol === 'CLIENTE' || perfil?.rol === 'VENDEDOR') && <AccountDeletion rol={perfil.rol} />}
     </main>
   )
