@@ -9,6 +9,7 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CorreoYaRegistradoExcept
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
+import es.uclm.esibuy.backend.usuarios.application.port.out.ComprobadorContrasenaComprometidaPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,11 +40,19 @@ class CrearAdministradorServiceTest {
     @Mock
     private HashContrasenaPort hashContrasena;
 
+    @Mock
+    private ComprobadorContrasenaComprometidaPort comprobadorContrasena;
+
     private CrearAdministradorUseCase crearAdministrador; // Tipado como el puerto de entrada
 
     @BeforeEach
     void crearServicio() {
-        crearAdministrador = new CrearAdministradorService(usuarioRepository, hashContrasena);
+        ValidacionContrasenaService validacionContrasena = new ValidacionContrasenaService(comprobadorContrasena);
+
+        crearAdministrador = new CrearAdministradorService(
+                usuarioRepository,
+                hashContrasena,
+                validacionContrasena);
     }
 
     // Comando de un administrador válido para reutilizar en los tests.
@@ -61,7 +70,7 @@ class CrearAdministradorServiceTest {
 
         ArgumentCaptor<Usuario> usuarioGuardado = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).guardar(usuarioGuardado.capture());
-        
+
         Usuario usuario = usuarioGuardado.getValue();
         assertEquals(new DatosPersonales("Nora", "Díaz Ruiz", null), usuario.getDatosPersonales());
         assertEquals("nora@esibuy.test", usuario.getEmail().valor());
@@ -85,7 +94,8 @@ class CrearAdministradorServiceTest {
     @Test
     @DisplayName("HU21-CP03: delega a la política de contraseñas y rechaza una muy corta")
     void rechazaContrasenaMuyCorta() {
-        // lenient: si el servicio rechaza la contraseña (validación de dominio), no llegará a hashear
+        // lenient: si el servicio rechaza la contraseña (validación de dominio), no
+        // llegará a hashear
         lenient().when(hashContrasena.hashear(any())).thenReturn("hash-simulado");
         CrearAdministradorCommand comando = comando("nora@esibuy.test", "1234");
 

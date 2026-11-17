@@ -74,15 +74,17 @@ class SeguridadSesionUsuarioServiceTest {
 
     private static final IniciarSesionCommand INICIO_SESION = new IniciarSesionCommand(CLIENTE, "Clave-Segura-123");
     private static final VerificarCodigoEmailCommand CODIGO_EMAIL = new VerificarCodigoEmailCommand(CLIENTE, "123456");
-    private static final VerificarCodigoAuthenticatorCommand CODIGO_AUTHENTICATOR =
-            new VerificarCodigoAuthenticatorCommand(CLIENTE, "123456");
-    // Sin datos: el servicio los rechaza por inválidos, lo que demuestra que la seguridad ha dejado pasar la llamada
-    private static final RegistrarClienteCommand REGISTRO_CLIENTE =
-            new RegistrarClienteCommand(null, null, null, null, null, null, null, null, null, null, false);
-    private static final RegistrarVendedorCommand REGISTRO_VENDEDOR =
-            new RegistrarVendedorCommand(null, null, null, null, null, null, null, null, null, null, false);
+    private static final VerificarCodigoAuthenticatorCommand CODIGO_AUTHENTICATOR = new VerificarCodigoAuthenticatorCommand(
+            CLIENTE, "123456");
+    // Sin datos: el servicio los rechaza por inválidos, lo que demuestra que la
+    // seguridad ha dejado pasar la llamada
+    private static final RegistrarClienteCommand REGISTRO_CLIENTE = new RegistrarClienteCommand(null, null, null, null,
+            null, null, null, null, null, null, false);
+    private static final RegistrarVendedorCommand REGISTRO_VENDEDOR = new RegistrarVendedorCommand(null, null, null,
+            null, null, null, null, null, null, null, false);
 
-    // Datos válidos para los dos roles: el cliente usa la fecha de nacimiento y el vendedor, su nombre comercial y categoría
+    // Datos válidos para los dos roles: el cliente usa la fecha de nacimiento y el
+    // vendedor, su nombre comercial y categoría
     private static final EditarPerfilCommand EDICION_PERFIL = new EditarPerfilCommand("Nombre", "Apellidos", null,
             null, LocalDate.of(1990, Month.JANUARY, 1), "Tienda Mario", "cat-1");
 
@@ -144,13 +146,26 @@ class SeguridadSesionUsuarioServiceTest {
         }
 
         @Bean
-        RegistroUsuarioUseCase registroUsuario(UsuarioRepositoryPort repositorio, HashContrasenaPort hash) {
-            return new RegistroUsuarioService(repositorio, hash, Clock.systemUTC());
+        RegistroUsuarioUseCase registroUsuario(
+                UsuarioRepositoryPort repositorio,
+                HashContrasenaPort hash,
+                ValidacionContrasenaService validacionContrasena) {
+
+            return new RegistroUsuarioService(
+                    repositorio,
+                    hash,
+                    validacionContrasena,
+                    Clock.systemUTC());
         }
 
         @Bean
         GestionPerfilUseCase gestionPerfil(UsuarioRepositoryPort repositorio) {
             return new GestionPerfilService(repositorio, Clock.systemUTC());
+        }
+
+        @Bean
+        ValidacionContrasenaService validacionContrasena() {
+            return mock(ValidacionContrasenaService.class);
         }
     }
 
@@ -177,10 +192,14 @@ class SeguridadSesionUsuarioServiceTest {
     @DisplayName("HU2-CP29: el registro y los pasos del login se pueden usar sin sesión")
     void elRegistroYElLoginSonPublicos() {
         assertAll(
-                () -> assertThrows(UsuarioInvalidoException.class, () -> registroUsuario.registrarCliente(REGISTRO_CLIENTE)),
-                () -> assertThrows(UsuarioInvalidoException.class, () -> registroUsuario.registrarVendedor(REGISTRO_VENDEDOR)),
-                () -> assertThrows(CredencialesInvalidasException.class, () -> autenticacion.iniciarSesion(INICIO_SESION)),
-                () -> assertThrows(CodigoInvalidoException.class, () -> autenticacion.verificarCodigoEmail(CODIGO_EMAIL)),
+                () -> assertThrows(UsuarioInvalidoException.class,
+                        () -> registroUsuario.registrarCliente(REGISTRO_CLIENTE)),
+                () -> assertThrows(UsuarioInvalidoException.class,
+                        () -> registroUsuario.registrarVendedor(REGISTRO_VENDEDOR)),
+                () -> assertThrows(CredencialesInvalidasException.class,
+                        () -> autenticacion.iniciarSesion(INICIO_SESION)),
+                () -> assertThrows(CodigoInvalidoException.class,
+                        () -> autenticacion.verificarCodigoEmail(CODIGO_EMAIL)),
                 () -> assertThrows(CredencialesInvalidasException.class, () -> authenticator.prepararAlta(CLIENTE)),
                 () -> assertThrows(CodigoInvalidoException.class,
                         () -> authenticator.verificarCodigo(CODIGO_AUTHENTICATOR)));
@@ -233,7 +252,8 @@ class SeguridadSesionUsuarioServiceTest {
                 () -> assertThrows(CredencialesInvalidasException.class,
                         () -> autenticacion.consultarIdUsuarioEnSesion(CLIENTE)),
                 () -> assertThrows(CredencialesInvalidasException.class, () -> gestionPerfil.consultarPerfil(CLIENTE)),
-                () -> assertThrows(CredencialesInvalidasException.class, () -> autenticacion.esClientePremium(CLIENTE)));
+                () -> assertThrows(CredencialesInvalidasException.class,
+                        () -> autenticacion.esClientePremium(CLIENTE)));
     }
 
     @Test
@@ -261,7 +281,8 @@ class SeguridadSesionUsuarioServiceTest {
     @WithMockUser(username = CLIENTE, roles = "CLIENTE")
     @DisplayName("HU45-CP05: un cliente edita su propio perfil")
     void unClienteEditaSuPerfil() {
-        // El repositorio deja que la llamada termine: así se ve que la seguridad la ha dejado pasar
+        // El repositorio deja que la llamada termine: así se ve que la seguridad la ha
+        // dejado pasar
         when(usuarioRepository.buscarPorCorreo(CLIENTE)).thenReturn(Optional.of(cliente()));
 
         Usuario editado = gestionPerfil.editarPerfil(CLIENTE, EDICION_PERFIL);

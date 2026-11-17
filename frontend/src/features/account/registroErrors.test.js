@@ -46,4 +46,12 @@ describe('erroresDelServidor', () => {
       campos: { telefono: 'El teléfono debe tener 9 números' },
     })
   })
+
+  expect(erroresDelServidor(new ApiError(400, 'Datos de registro no válidos', 'PASSWORD_COMPROMISED')))
+    .toEqual({
+      campos: {
+        password: 'Esta contraseña se ha detectado en filtraciones de datos. Elige otra contraseña.',
+      },
+    })
+
 })

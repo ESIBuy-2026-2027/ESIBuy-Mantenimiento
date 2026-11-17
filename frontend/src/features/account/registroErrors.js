@@ -10,6 +10,9 @@ const CAMPOS_POR_CODE = {
   PASSWORD_TOO_LONG: { password: 'La contraseña no puede tener más de 64 caracteres' },
   PASSWORD_WEAK: { password: 'La contraseña debe tener mayúscula, minúscula, número y símbolo' },
   PASSWORD_TOO_COMMON: { password: 'Esta contraseña es demasiado común' },
+  PASSWORD_COMPROMISED: {
+    password: 'Esta contraseña se ha detectado en filtraciones de datos. Elige otra contraseña.',
+  },
   PASSWORD_CONTAINS_PERSONAL_DATA: {
     password: 'La contraseña no puede contener tu nombre, tus apellidos ni tu email',
   },
