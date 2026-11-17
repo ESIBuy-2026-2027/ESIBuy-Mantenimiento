@@ -18,6 +18,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.web.context.WebApplicationContext;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
+import java.security.SecureRandom;
+import java.util.Base64;
+
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 // Configuración de la sesión (HU43, T319). Los atributos de la cookie JSESSIONID y el tiempo de inactividad los
 // aplica Tomcat, que @WebMvcTest no arranca: aquí se levanta la aplicación entera en un puerto aleatorio, con el
@@ -43,7 +48,8 @@ class ConfiguracionSesionTest {
     @Test
     @DisplayName("HU43-CP03: la cookie de sesión es Secure, HttpOnly y SameSite=Strict")
     void laCookieDeSesionEsSecureHttpOnlyYSameSiteStrict() throws Exception {
-        // Sin sesión, Spring Security guarda la petición en una sesión nueva antes de responder 401: así el
+        // Sin sesión, Spring Security guarda la petición en una sesión nueva antes de
+        // responder 401: así el
         // servidor envía la cookie JSESSIONID tal como la configura Tomcat
         HttpResponse<Void> respuesta = HttpClient.newHttpClient().send(
                 HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + "/api/auth/me")).GET().build(),
@@ -58,5 +64,15 @@ class ConfiguracionSesionTest {
         assertTrue(cookieSesion.contains("; Secure"), cookieSesion);
         assertTrue(cookieSesion.contains("; HttpOnly"), cookieSesion);
         assertTrue(cookieSesion.contains("; SameSite=Strict"), cookieSesion);
+    }
+
+    @DynamicPropertySource
+    static void propiedadesDinamicas(DynamicPropertyRegistry registry) {
+        byte[] pepper = new byte[32];
+        new SecureRandom().nextBytes(pepper);
+
+        registry.add(
+                "esibuy.contrasenas.pepper",
+                () -> Base64.getEncoder().encodeToString(pepper));
     }
 }

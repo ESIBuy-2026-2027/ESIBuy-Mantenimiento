@@ -80,6 +80,12 @@ public class AutenticacionService implements AutenticacionUseCase {
             throw new CuentaBloqueadaException("Esta cuenta está bloqueada");
         }
 
+        if (hashContrasena.necesitaRehash(usuario.getPasswordHash())) {
+            String nuevoHash = hashContrasena.hashear(comando.password());
+            usuario.cambiarContrasena(nuevoHash);
+            usuarioRepository.guardar(usuario);
+        }
+
         boolean emailOtpEnabled = usuario.isEmailOtpEnabled();
         boolean authenticatorEnabled = usuario.isAuthenticatorEnabled();
 
@@ -125,10 +131,12 @@ public class AutenticacionService implements AutenticacionUseCase {
         codigoVerificacionRepository.guardar(codigo);
 
         // El segundo factor solo se solicita si el usuario lo tiene ACTIVADO.
-        // Que exista un secreto confirmado no significa que quiera utilizarlo en el login.
+        // Que exista un secreto confirmado no significa que quiera utilizarlo en el
+        // login.
         if (usuario.isAuthenticatorEnabled()) {
             if (!tieneAuthenticatorConfirmado(usuario)) {
-                // Estado inconsistente: no se degrada silenciosamente a un login de un solo factor.
+                // Estado inconsistente: no se degrada silenciosamente a un login de un solo
+                // factor.
                 throw new CodigoInvalidoException(CODIGO_INVALIDO);
             }
             return new ResultadoInicioSesion(usuario.getEmail().valor(), PasoLogin.AUTHENTICATOR);

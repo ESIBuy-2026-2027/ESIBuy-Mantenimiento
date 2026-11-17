@@ -88,8 +88,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 public class UsuariosConfig {
 
     @Bean
-    HashContrasenaPort hashContrasenaPort() {
-        return new BCryptHashContrasenaAdapter();
+    HashContrasenaPort hashContrasenaPort(
+            @Value("${esibuy.contrasenas.pepper}") String pepper) {
+        return new BCryptHashContrasenaAdapter(pepper);
     }
 
     @Bean

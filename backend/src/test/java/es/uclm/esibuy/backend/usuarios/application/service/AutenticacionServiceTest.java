@@ -319,8 +319,13 @@ class AutenticacionServiceTest {
     @Test
     @DisplayName("HU2-CP06: un código correcto pasa al paso de Microsoft Authenticator")
     void codigoCorrectoPasaAlAuthenticator() {
-        when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(clienteConId()));
-        when(factorRepository.buscarPorUsuario("u-1")).thenReturn(Optional.of(factorConfirmado())); // T20
+        Usuario usuario = clienteConId();
+        usuario.actualizarPreferenciasSeguridad(true, true);
+
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es"))
+                .thenReturn(Optional.of(usuario));
+        when(factorRepository.buscarPorUsuario("u-1"))
+                .thenReturn(Optional.of(factorConfirmado()));
         when(codigoRepository.buscarPorUsuario("u-1"))
                 .thenReturn(Optional.of(CodigoVerificacion.nuevo("u-1", HASH_CODIGO, AHORA)));
         when(hashContrasena.coincide(CODIGO, HASH_CODIGO)).thenReturn(true);
@@ -331,39 +336,45 @@ class AutenticacionServiceTest {
         assertEquals("juan@uclm.es", resultado.email());
         assertEquals(PasoLogin.AUTHENTICATOR, resultado.siguientePaso());
 
-        // Se guarda como usado: el mismo código no sirve para un segundo intento
-        // (CP09).
         ArgumentCaptor<CodigoVerificacion> guardado = ArgumentCaptor.forClass(CodigoVerificacion.class);
         verify(codigoRepository).guardar(guardado.capture());
+
         assertFalse(guardado.getValue().puedeUsarse(AHORA));
-        assertEquals(AHORA, guardado.getValue().getUsadoEn()); // con la hora del servicio (su Clock)
+        assertEquals(AHORA, guardado.getValue().getUsadoEn());
     }
 
     @Test
-    @DisplayName("HU2-CP22: un código correcto de un usuario sin Authenticator pasa al alta")
-    void sinAuthenticatorPasaAlAlta() {
+    @DisplayName("HU2-CP22: un usuario sin Authenticator activado accede tras verificar el correo")
+    void sinAuthenticatorAccedeTrasVerificarCorreo() {
         prepararCodigoCorrecto();
-        when(factorRepository.buscarPorUsuario("u-1")).thenReturn(Optional.empty());
 
         ResultadoInicioSesion resultado = autenticacion.verificarCodigoEmail(
                 new VerificarCodigoEmailCommand("juan@uclm.es", CODIGO));
 
-        assertEquals(PasoLogin.ALTA_AUTHENTICATOR, resultado.siguientePaso());
+        assertEquals(PasoLogin.ACCESO_DIRECTO, resultado.siguientePaso());
+        assertEquals("juan@uclm.es", resultado.email());
+
+        verify(usuarioRepository).guardar(any(Usuario.class));
     }
 
     @Test
-    @DisplayName("HU2-CP22: con un alta de Authenticator sin confirmar vuelve al alta")
-    void conAltaSinConfirmarVuelveAlAlta() {
-        // Escaneó el QR pero nunca introdujo el primer código: tiene que poder volver a
-        // darse de alta
-        prepararCodigoCorrecto();
-        when(factorRepository.buscarPorUsuario("u-1"))
-                .thenReturn(Optional.of(FactorAutenticacion.nuevo("u-1", "secreto-cifrado")));
+    @DisplayName("HU2-CP22: un Authenticator sin confirmar no se utiliza para iniciar sesión")
+    void conAltaSinConfirmarNoUtilizaAuthenticator() {
+        Usuario usuario = clienteConId();
+
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es"))
+                .thenReturn(Optional.of(usuario));
+        when(codigoRepository.buscarPorUsuario("u-1"))
+                .thenReturn(Optional.of(CodigoVerificacion.nuevo("u-1", HASH_CODIGO, AHORA)));
+        when(hashContrasena.coincide(CODIGO, HASH_CODIGO)).thenReturn(true);
 
         ResultadoInicioSesion resultado = autenticacion.verificarCodigoEmail(
                 new VerificarCodigoEmailCommand("juan@uclm.es", CODIGO));
 
-        assertEquals(PasoLogin.ALTA_AUTHENTICATOR, resultado.siguientePaso());
+        assertEquals(PasoLogin.ACCESO_DIRECTO, resultado.siguientePaso());
+        assertEquals("juan@uclm.es", resultado.email());
+
+        verify(usuarioRepository).guardar(usuario);
     }
 
     // Usuario con un código del correo pendiente y correcto (paso 2 superado)
@@ -562,4 +573,48 @@ class AutenticacionServiceTest {
         assertTrue(autenticacion.esClientePremium("ana@uclm.es"));
         assertFalse(autenticacion.esClientePremium("juan@uclm.es"));
     }
+
+    @Test
+    @DisplayName("Migra el hash antiguo a Pepper después de validar correctamente la contraseña")
+    void migraHashAntiguoAlIniciarSesion() {
+        Usuario usuario = clienteConId();
+
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es"))
+                .thenReturn(Optional.of(usuario));
+        when(hashContrasena.coincide("clave1234", "hash-guardado"))
+                .thenReturn(true);
+        when(hashContrasena.necesitaRehash("hash-guardado"))
+                .thenReturn(true);
+        when(hashContrasena.hashear("clave1234"))
+                .thenReturn("{bcrypt-pepper-v1}nuevo-hash");
+
+        autenticacion.iniciarSesion(
+                new IniciarSesionCommand("juan@uclm.es", "clave1234"));
+
+        assertEquals("{bcrypt-pepper-v1}nuevo-hash", usuario.getPasswordHash());
+        verify(hashContrasena).hashear("clave1234");
+        verify(usuarioRepository).guardar(usuario);
+    }
+
+    @Test
+    @DisplayName("No vuelve a generar el hash cuando ya utiliza Pepper")
+    void noMigraHashQueYaUtilizaPepper() {
+        Usuario usuario = clienteConId();
+        usuario.cambiarContrasena("{bcrypt-pepper-v1}hash-nuevo");
+
+        when(usuarioRepository.buscarPorCorreo("juan@uclm.es"))
+                .thenReturn(Optional.of(usuario));
+        when(hashContrasena.coincide(
+                "clave1234",
+                "{bcrypt-pepper-v1}hash-nuevo")).thenReturn(true);
+        when(hashContrasena.necesitaRehash(
+                "{bcrypt-pepper-v1}hash-nuevo")).thenReturn(false);
+
+        autenticacion.iniciarSesion(
+                new IniciarSesionCommand("juan@uclm.es", "clave1234"));
+
+        verify(hashContrasena, never()).hashear("clave1234");
+        verify(usuarioRepository, never()).guardar(usuario);
+    }
+
 }
