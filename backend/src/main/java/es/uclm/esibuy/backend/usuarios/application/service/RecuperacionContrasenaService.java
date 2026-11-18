@@ -18,7 +18,6 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
 import es.uclm.esibuy.backend.usuarios.domain.model.Email;
-import es.uclm.esibuy.backend.usuarios.domain.model.PoliticaContrasenas;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
 public class RecuperacionContrasenaService implements RecuperacionContrasenaUseCase {
@@ -31,9 +30,11 @@ public class RecuperacionContrasenaService implements RecuperacionContrasenaUseC
     private final GeneradorCodigoPort generadorCodigo;
     private final EnvioEmailPort envioEmail;
     private final Clock reloj;
+    private final ValidacionContrasenaService validacionContrasena;
 
     public RecuperacionContrasenaService(UsuarioRepositoryPort usuarioRepository, HashContrasenaPort hashContrasena,
-            CodigoRecuperacionRepositoryPort codigoRepository, GeneradorCodigoPort generadorCodigo,
+            ValidacionContrasenaService validacionContrasena, CodigoRecuperacionRepositoryPort codigoRepository,
+            GeneradorCodigoPort generadorCodigo,
             EnvioEmailPort envioEmail, Clock reloj) {
         this.usuarioRepository = usuarioRepository;
         this.hashContrasena = hashContrasena;
@@ -41,9 +42,11 @@ public class RecuperacionContrasenaService implements RecuperacionContrasenaUseC
         this.generadorCodigo = generadorCodigo;
         this.envioEmail = envioEmail;
         this.reloj = reloj;
+        this.validacionContrasena = validacionContrasena;
     }
 
-    // HU3-CP02 y CP03: la respuesta es siempre la misma, exista o no la cuenta, para no revelar qué emails hay
+    // HU3-CP02 y CP03: la respuesta es siempre la misma, exista o no la cuenta,
+    // para no revelar qué emails hay
     @Override
     @PreAuthorize(Permisos.PUBLICO)
     public void solicitarRecuperacion(String email) {
@@ -63,18 +66,22 @@ public class RecuperacionContrasenaService implements RecuperacionContrasenaUseC
         try {
             envioEmail.enviarCodigoRecuperacion(normalizado.get(), codigo);
         } catch (EnvioEmailException e) {
-            // HU3-CP11: se ignora a propósito. Con un email desconocido no se intenta enviar nada y la respuesta
-            // es correcta; si el fallo del envío llegara al cliente, solo pasaría con cuentas que existen y lo
+            // HU3-CP11: se ignora a propósito. Con un email desconocido no se intenta
+            // enviar nada y la respuesta
+            // es correcta; si el fallo del envío llegara al cliente, solo pasaría con
+            // cuentas que existen y lo
             // revelaría. El usuario puede volver a pedir el código.
         }
     }
 
-    // HU3-CP04 a CP07. El orden importa: la política se comprueba después del código y antes de guardar nada.
+    // HU3-CP04 a CP07. El orden importa: la política se comprueba después del
+    // código y antes de guardar nada.
     @Override
     @PreAuthorize(Permisos.PUBLICO)
     public void restablecerContrasena(RestablecerContrasenaCommand comando) {
         String email = normalizar(comando.email()).orElseThrow(RecuperacionContrasenaService::codigoInvalido);
-        // Email desconocido: misma respuesta que un código incorrecto, para no revelar qué emails existen
+        // Email desconocido: misma respuesta que un código incorrecto, para no revelar
+        // qué emails existen
         Usuario usuario = usuarioRepository.buscarPorCorreo(email)
                 .orElseThrow(RecuperacionContrasenaService::codigoInvalido);
         CodigoVerificacion codigo = codigoRepository.buscarPorUsuario(usuario.getId())
@@ -90,8 +97,12 @@ public class RecuperacionContrasenaService implements RecuperacionContrasenaUseC
             throw codigoInvalido();
         }
 
-        // Si no cumple la política lanza ContrasenaInvalidaException y el código no se gasta (HU3-CP07)
-        PoliticaContrasenas.validar(comando.password(), usuario.getDatosPersonales(), usuario.getEmail());
+        // Si no cumple la política lanza ContrasenaInvalidaException y el código no se
+        // gasta (HU3-CP07)
+        validacionContrasena.validar(
+                comando.password(),
+                usuario.getDatosPersonales(),
+                usuario.getEmail());
 
         usuario.cambiarContrasena(hashContrasena.hashear(comando.password()));
         codigo.marcarUsado(reloj.instant());
@@ -99,7 +110,8 @@ public class RecuperacionContrasenaService implements RecuperacionContrasenaUseC
         codigoRepository.guardar(codigo);
     }
 
-    // Como emailNormalizado de AutenticacionService, pero sin lanzar: cada caso de uso decide qué hacer
+    // Como emailNormalizado de AutenticacionService, pero sin lanzar: cada caso de
+    // uso decide qué hacer
     private static Optional<String> normalizar(String email) {
         try {
             return Optional.of(new Email(email).valor());

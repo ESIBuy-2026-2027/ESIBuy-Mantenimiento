@@ -72,6 +72,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
 
+import es.uclm.esibuy.backend.usuarios.application.port.out.ComprobadorContrasenaComprometidaPort;
+import es.uclm.esibuy.backend.usuarios.application.service.ValidacionContrasenaService;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.HibpContrasenaAdapter;
+
 /**
  * Presenta a Spring las piezas del módulo de usuarios y cómo se conectan entre
  * sí.
@@ -94,6 +98,17 @@ public class UsuariosConfig {
     }
 
     @Bean
+    ComprobadorContrasenaComprometidaPort comprobadorContrasenaComprometidaPort() {
+        return new HibpContrasenaAdapter();
+    }
+
+    @Bean
+    ValidacionContrasenaService validacionContrasenaService(
+            ComprobadorContrasenaComprometidaPort comprobadorContrasenaComprometidaPort) {
+        return new ValidacionContrasenaService(comprobadorContrasenaComprometidaPort);
+    }
+
+    @Bean
     UsuarioRepositoryPort usuarioRepositoryPort(UsuarioMongoRepository usuarioMongoRepository,
             MongoTemplate mongoTemplate, ConsultaCategoriasUseCase consultaCategorias) {
         return new UsuarioMongoAdapter(usuarioMongoRepository, new UsuarioDocumentMapper(), mongoTemplate,
@@ -101,9 +116,16 @@ public class UsuariosConfig {
     }
 
     @Bean
-    RegistroUsuarioUseCase registroUsuarioUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-            HashContrasenaPort hashContrasenaPort, Clock reloj) {
-        return new RegistroUsuarioService(usuarioRepositoryPort, hashContrasenaPort, reloj);
+    RegistroUsuarioUseCase registroUsuarioUseCase(
+            UsuarioRepositoryPort usuarioRepositoryPort,
+            HashContrasenaPort hashContrasenaPort,
+            ValidacionContrasenaService validacionContrasenaService,
+            Clock reloj) {
+        return new RegistroUsuarioService(
+                usuarioRepositoryPort,
+                hashContrasenaPort,
+                validacionContrasenaService,
+                reloj);
     }
 
     @Bean
@@ -112,9 +134,14 @@ public class UsuariosConfig {
     }
 
     @Bean
-    CrearAdministradorUseCase crearAdministradorUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-            HashContrasenaPort hashContrasenaPort) {
-        return new CrearAdministradorService(usuarioRepositoryPort, hashContrasenaPort);
+    CrearAdministradorUseCase crearAdministradorUseCase(
+            UsuarioRepositoryPort usuarioRepositoryPort,
+            HashContrasenaPort hashContrasenaPort,
+            ValidacionContrasenaService validacionContrasenaService) {
+        return new CrearAdministradorService(
+                usuarioRepositoryPort,
+                hashContrasenaPort,
+                validacionContrasenaService);
     }
 
     @Bean
@@ -160,14 +187,22 @@ public class UsuariosConfig {
     }
 
     @Bean
-    RecuperacionContrasenaUseCase recuperacionContrasenaUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
+    RecuperacionContrasenaUseCase recuperacionContrasenaUseCase(
+            UsuarioRepositoryPort usuarioRepositoryPort,
             HashContrasenaPort hashContrasenaPort,
+            ValidacionContrasenaService validacionContrasenaService,
             CodigoRecuperacionRepositoryPort codigoRecuperacionRepositoryPort,
             GeneradorCodigoPort generadorCodigoPort,
             EnvioEmailPort envioEmailPort,
             Clock reloj) {
-        return new RecuperacionContrasenaService(usuarioRepositoryPort, hashContrasenaPort,
-                codigoRecuperacionRepositoryPort, generadorCodigoPort, envioEmailPort, reloj);
+        return new RecuperacionContrasenaService(
+                usuarioRepositoryPort,
+                hashContrasenaPort,
+                validacionContrasenaService,
+                codigoRecuperacionRepositoryPort,
+                generadorCodigoPort,
+                envioEmailPort,
+                reloj);
     }
 
     // HU23 (T206): Spring Boot añade este filtro a cada petición e invalida la

@@ -20,6 +20,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
 import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
+import es.uclm.esibuy.backend.usuarios.application.port.out.ComprobadorContrasenaComprometidaPort;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -64,23 +65,36 @@ class RegistroUsuarioServiceTest {
     @Mock
     private HashContrasenaPort hashContrasena;
 
-    private RegistroUsuarioUseCase registroUsuario; // Tipado como el puerto de entrada: obliga a implementarlo y se prueba como lo usará el controlador
+    @Mock
+    private ComprobadorContrasenaComprometidaPort comprobadorContrasena;
 
-    // Reloj fijo: la fecha de hoy (mayoría de edad) y el instante del consentimiento no dependen de cuándo se ejecuta el test.
+    private RegistroUsuarioUseCase registroUsuario; // Tipado como el puerto de entrada: obliga a implementarlo y se
+                                                    // prueba como lo usará el controlador
+
+    // Reloj fijo: la fecha de hoy (mayoría de edad) y el instante del
+    // consentimiento no dependen de cuándo se ejecuta el test.
     private static final Clock RELOJ = Clock.fixed(Instant.parse("2026-10-10T10:00:00Z"), ZoneOffset.UTC);
 
     @BeforeEach
     void crearServicio() {
-        registroUsuario = new RegistroUsuarioService(usuarioRepository, hashContrasena, RELOJ);
+        ValidacionContrasenaService validacionContrasena = new ValidacionContrasenaService(comprobadorContrasena);
+
+        registroUsuario = new RegistroUsuarioService(
+                usuarioRepository,
+                hashContrasena,
+                validacionContrasena,
+                RELOJ);
     }
 
-    // Comando de un cliente válido (T229); solo cambian el email y la contraseña, que es lo que prueba cada test.
+    // Comando de un cliente válido (T229); solo cambian el email y la contraseña,
+    // que es lo que prueba cada test.
     private static RegistrarClienteCommand comando(String email, String password) {
         return new RegistrarClienteCommand("Juan", "Pérez García", LocalDate.of(1996, 5, 20), "12345678Z",
                 email, null, password, password, TipoCliente.ESTANDAR, null, true);
     }
 
-    // Comando de un vendedor válido (T241): solo cambian el email y la contraseña, como en el del cliente.
+    // Comando de un vendedor válido (T241): solo cambian el email y la contraseña,
+    // como en el del cliente.
     private static RegistrarVendedorCommand comandoVendedor(String email, String password) {
         return new RegistrarVendedorCommand("Luis", "Pérez García", "Tienda Luis", "cat-1", "87654321X",
                 email, "612345678", password, password, "avatar1", true);
@@ -97,7 +111,8 @@ class RegistroUsuarioServiceTest {
         ArgumentCaptor<Usuario> usuarioGuardado = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).guardar(usuarioGuardado.capture());
         assertEquals(Rol.CLIENTE, usuarioGuardado.getValue().getRol());
-        assertEquals("PENDIENTE", usuarioGuardado.getValue().getEstado()); // La cuenta se crea en estado PENDIENTE de activación por un administrador.
+        assertEquals("PENDIENTE", usuarioGuardado.getValue().getEstado()); // La cuenta se crea en estado PENDIENTE de
+                                                                           // activación por un administrador.
     }
 
     @Test
@@ -132,12 +147,15 @@ class RegistroUsuarioServiceTest {
         // Frontera: 7 caracteres → excepción
         RegistrarClienteCommand comando = comando("juan@uclm.es", "1234567");
 
-        // assertThrows(TipoDeExcepcion.class, () -> codigo) ejecuta el código de la lambda
+        // assertThrows(TipoDeExcepcion.class, () -> codigo) ejecuta el código de la
+        // lambda
         // y comprueba que lanza exactamente esa excepción (o una subclase suya):
         // - si la lanza, el test sigue;
         // - si no lanza nada, o lanza otra distinta, el test falla.
-        // El código va dentro de una lambda (() -> ...) y no se llama directamente porque,
-        // si se llamara aquí, la excepción saldría antes de que assertThrows pudiera capturarla.
+        // El código va dentro de una lambda (() -> ...) y no se llama directamente
+        // porque,
+        // si se llamara aquí, la excepción saldría antes de que assertThrows pudiera
+        // capturarla.
         assertThrows(ContrasenaInvalidaException.class, () -> registroUsuario.registrarCliente(comando));
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
@@ -160,7 +178,8 @@ class RegistroUsuarioServiceTest {
         when(usuarioRepository.existePorDniYRol("12345678Z", Rol.CLIENTE)).thenReturn(true);
         lenient().when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
 
-        assertThrows(DniYaRegistradoException.class, () -> registroUsuario.registrarCliente(comando("juan@uclm.es", "Clave-1234")));
+        assertThrows(DniYaRegistradoException.class,
+                () -> registroUsuario.registrarCliente(comando("juan@uclm.es", "Clave-1234")));
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
@@ -211,8 +230,10 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP06: rechaza el registro si no se acepta la política de privacidad")
     void rechazaSiNoAceptaLaPrivacidad() {
-        // lenient: si el servicio rechaza antes de hashear (lo correcto), este stub no se usa y Mockito no debe quejarse.
-        // Sin el stub, el hash nulo haría fallar al dominio por otro motivo y el test pasaría sin comprobar la privacidad.
+        // lenient: si el servicio rechaza antes de hashear (lo correcto), este stub no
+        // se usa y Mockito no debe quejarse.
+        // Sin el stub, el hash nulo haría fallar al dominio por otro motivo y el test
+        // pasaría sin comprobar la privacidad.
         lenient().when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
         RegistrarClienteCommand comando = new RegistrarClienteCommand("Juan", "Pérez García",
                 LocalDate.of(1996, 5, 20), "12345678Z", "juan@uclm.es", null, "Clave-1234", "Clave-1234",
@@ -232,13 +253,15 @@ class RegistroUsuarioServiceTest {
 
         ArgumentCaptor<Usuario> usuarioGuardado = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).guardar(usuarioGuardado.capture());
-        assertEquals(new ConsentimientoPrivacidad(RELOJ.instant(), "1.0"), usuarioGuardado.getValue().getConsentimiento());
+        assertEquals(new ConsentimientoPrivacidad(RELOJ.instant(), "1.0"),
+                usuarioGuardado.getValue().getConsentimiento());
     }
 
     @Test
     @DisplayName("HU1-CP13: rechaza a un cliente menor de edad")
     void rechazaClienteMenorDeEdad() {
-        // Comprueba que el servicio pasa al dominio la fecha del reloj: la regla vive en Usuario.nuevoCliente.
+        // Comprueba que el servicio pasa al dominio la fecha del reloj: la regla vive
+        // en Usuario.nuevoCliente.
         when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
         LocalDate hace17Anos = LocalDate.now(RELOJ).minusYears(17);
         RegistrarClienteCommand comando = new RegistrarClienteCommand("Juan", "Pérez García", hace17Anos,
@@ -254,7 +277,8 @@ class RegistroUsuarioServiceTest {
     void rechazaContrasenaComun() {
         lenient().when(hashContrasena.hashear("Password1!")).thenReturn("hash-simulado");
 
-        assertThrows(ContrasenaInvalidaException.class, () -> registroUsuario.registrarCliente(comando("juan@uclm.es", "Password1!")));
+        assertThrows(ContrasenaInvalidaException.class,
+                () -> registroUsuario.registrarCliente(comando("juan@uclm.es", "Password1!")));
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
@@ -262,10 +286,12 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP10: rechaza una contraseña que contiene el nombre")
     void rechazaContrasenaConElNombre() {
-        // El comando lleva nombre "Juan": la política lo recibe a través de DatosPersonales
+        // El comando lleva nombre "Juan": la política lo recibe a través de
+        // DatosPersonales
         lenient().when(hashContrasena.hashear("clave-Juan-2026")).thenReturn("hash-simulado");
 
-        assertThrows(ContrasenaInvalidaException.class, () -> registroUsuario.registrarCliente(comando("juan@uclm.es", "clave-Juan-2026")));
+        assertThrows(ContrasenaInvalidaException.class,
+                () -> registroUsuario.registrarCliente(comando("juan@uclm.es", "clave-Juan-2026")));
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
@@ -275,7 +301,8 @@ class RegistroUsuarioServiceTest {
     void rechazaContrasenaSinSimboloYNoGuardaNada() {
         lenient().when(hashContrasena.hashear("Clave1234")).thenReturn("hash-simulado");
 
-        assertThrows(ContrasenaInvalidaException.class, () -> registroUsuario.registrarCliente(comando("juan@uclm.es", "Clave1234")));
+        assertThrows(ContrasenaInvalidaException.class,
+                () -> registroUsuario.registrarCliente(comando("juan@uclm.es", "Clave1234")));
 
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
@@ -283,7 +310,8 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP18: rechaza un correo ya registrado aunque cambien las mayúsculas")
     void rechazaUnCorreoYaRegistradoAunqueCambienLasMayusculas() {
-        // El duplicado se comprueba con el email normalizado, no con el texto del comando
+        // El duplicado se comprueba con el email normalizado, no con el texto del
+        // comando
         when(usuarioRepository.existePorCorreo("juan@uclm.es")).thenReturn(true);
 
         assertThrows(CorreoYaRegistradoException.class,
@@ -350,7 +378,8 @@ class RegistroUsuarioServiceTest {
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
 
-    // El DNI es único por rol (índice rol_dni): el mismo DNI puede tener una cuenta de cliente y otra de vendedor.
+    // El DNI es único por rol (índice rol_dni): el mismo DNI puede tener una cuenta
+    // de cliente y otra de vendedor.
     @Test
     @DisplayName("HU1-CP16: el registro de un vendedor rechaza el DNI de otro vendedor y no guarda nada")
     void rechazaElDniDeOtroVendedor() {
@@ -378,7 +407,8 @@ class RegistroUsuarioServiceTest {
     @Test
     @DisplayName("HU1-CP20: si se repiten el correo y el nombre comercial lo dice de una vez y no guarda nada")
     void rechazaCorreoYNombreComercialYaRegistradosYNoGuardaNada() {
-        // El frontend muestra los dos errores a la vez, así que el backend los comunica en un único 409
+        // El frontend muestra los dos errores a la vez, así que el backend los comunica
+        // en un único 409
         lenient().when(hashContrasena.hashear("Clave-1234")).thenReturn("hash-simulado");
         when(usuarioRepository.existePorCorreo("luis@uclm.es")).thenReturn(true);
         when(usuarioRepository.existePorNombreComercial("Tienda Luis")).thenReturn(true);
@@ -389,7 +419,8 @@ class RegistroUsuarioServiceTest {
         verify(usuarioRepository, never()).guardar(any(Usuario.class));
     }
 
-    // Fallos de la demo del Sprint 1: los rechazos del servicio indican su motivo para el code de la API.
+    // Fallos de la demo del Sprint 1: los rechazos del servicio indican su motivo
+    // para el code de la API.
 
     @Test
     @DisplayName("HU1-CP22: el rechazo por contraseñas distintas indica su motivo")

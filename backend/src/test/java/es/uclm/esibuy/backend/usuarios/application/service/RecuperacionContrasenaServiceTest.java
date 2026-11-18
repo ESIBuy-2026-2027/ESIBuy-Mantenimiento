@@ -18,6 +18,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Email;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
+import es.uclm.esibuy.backend.usuarios.application.port.out.ComprobadorContrasenaComprometidaPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -59,14 +60,17 @@ class RecuperacionContrasenaServiceTest {
     private static final String EMAIL = "juan@uclm.es";
     private static final String HASH_ACTUAL = "hash-de-la-contrasena-actual";
 
-    // Hora fija: el servicio la recibe en un Clock para que los tests puedan probar la caducidad.
+    // Hora fija: el servicio la recibe en un Clock para que los tests puedan probar
+    // la caducidad.
     private static final Instant AHORA = Instant.parse("2026-10-31T10:00:00Z");
 
-    // Código que "genera" el generador y su hash, para comprobar qué se envía y qué se guarda.
+    // Código que "genera" el generador y su hash, para comprobar qué se envía y qué
+    // se guarda.
     private static final String CODIGO = "654321";
     private static final String HASH_CODIGO = "hash-del-codigo";
 
-    // Contraseña nueva que cumple la política (y no contiene el nombre, los apellidos ni el email) y su hash.
+    // Contraseña nueva que cumple la política (y no contiene el nombre, los
+    // apellidos ni el email) y su hash.
     private static final String NUEVA = "Nueva-Clave-9!";
     private static final String HASH_NUEVA = "hash-de-la-nueva";
 
@@ -75,6 +79,9 @@ class RecuperacionContrasenaServiceTest {
 
     @Mock
     private HashContrasenaPort hashContrasena;
+
+    @Mock
+    private ComprobadorContrasenaComprometidaPort comprobadorContrasena;
 
     @Mock
     private CodigoRecuperacionRepositoryPort codigoRepository;
@@ -89,8 +96,16 @@ class RecuperacionContrasenaServiceTest {
 
     @BeforeEach
     void crearServicio() {
-        recuperacion = new RecuperacionContrasenaService(usuarioRepository, hashContrasena, codigoRepository,
-                generadorCodigo, envioEmail, Clock.fixed(AHORA, ZoneOffset.UTC));
+        ValidacionContrasenaService validacionContrasena = new ValidacionContrasenaService(comprobadorContrasena);
+
+        recuperacion = new RecuperacionContrasenaService(
+                usuarioRepository,
+                hashContrasena,
+                validacionContrasena,
+                codigoRepository,
+                generadorCodigo,
+                envioEmail,
+                Clock.fixed(AHORA, ZoneOffset.UTC));
     }
 
     private static Usuario clientePendiente() {
@@ -103,7 +118,8 @@ class RecuperacionContrasenaServiceTest {
         return usuario;
     }
 
-    // Código de recuperación pendiente: enviado hace un minuto, sin usar y sin fallos.
+    // Código de recuperación pendiente: enviado hace un minuto, sin usar y sin
+    // fallos.
     private static CodigoVerificacion codigoPendiente() {
         return CodigoVerificacion.reconstruir("c-1", "u-1", HASH_CODIGO, AHORA.plus(Duration.ofMinutes(9)), null, 0);
     }
@@ -112,7 +128,8 @@ class RecuperacionContrasenaServiceTest {
         return new RestablecerContrasenaCommand(EMAIL, codigo, password);
     }
 
-    // Prepara una cuenta activa con un código pendiente; devuelve el código para poder comprobar cómo queda.
+    // Prepara una cuenta activa con un código pendiente; devuelve el código para
+    // poder comprobar cómo queda.
     private CodigoVerificacion cuentaConCodigoPendiente(Usuario usuario) {
         CodigoVerificacion codigo = codigoPendiente();
         when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.of(usuario));
@@ -120,7 +137,8 @@ class RecuperacionContrasenaServiceTest {
         return codigo;
     }
 
-    // --- Paso 1: solicitar la recuperación ---------------------------------------------------------------------
+    // --- Paso 1: solicitar la recuperación
+    // ---------------------------------------------------------------------
 
     @Test
     @DisplayName("HU3-CP02: con una cuenta activa envía un código por correo y guarda solo su hash, válido 10 minutos")
@@ -191,11 +209,13 @@ class RecuperacionContrasenaServiceTest {
         doThrow(new EnvioEmailException("No se ha podido enviar el correo", new RuntimeException("SMTP caído")))
                 .when(envioEmail).enviarCodigoRecuperacion(EMAIL, CODIGO);
 
-        // Solo se intenta enviar a cuentas activas: si el fallo llegara al cliente, revelaría que el email existe.
+        // Solo se intenta enviar a cuentas activas: si el fallo llegara al cliente,
+        // revelaría que el email existe.
         assertDoesNotThrow(() -> recuperacion.solicitarRecuperacion(EMAIL));
     }
 
-    // --- Paso 2: restablecer la contraseña ---------------------------------------------------------------------
+    // --- Paso 2: restablecer la contraseña
+    // ---------------------------------------------------------------------
 
     @Test
     @DisplayName("HU3-CP04: con el código correcto guarda el hash de la contraseña nueva y el código queda usado")
@@ -259,10 +279,12 @@ class RecuperacionContrasenaServiceTest {
 
         when(usuarioRepository.buscarPorCorreo("otro@uclm.es")).thenReturn(Optional.empty());
         assertThrows(CodigoInvalidoException.class,
-                () -> recuperacion.restablecerContrasena(new RestablecerContrasenaCommand("otro@uclm.es", CODIGO, NUEVA)));
+                () -> recuperacion
+                        .restablecerContrasena(new RestablecerContrasenaCommand("otro@uclm.es", CODIGO, NUEVA)));
 
         assertThrows(CodigoInvalidoException.class,
-                () -> recuperacion.restablecerContrasena(new RestablecerContrasenaCommand("no-es-un-email", CODIGO, NUEVA)));
+                () -> recuperacion
+                        .restablecerContrasena(new RestablecerContrasenaCommand("no-es-un-email", CODIGO, NUEVA)));
 
         assertEquals(HASH_ACTUAL, usuario.getPasswordHash());
         verify(usuarioRepository, never()).guardar(any());
@@ -275,7 +297,8 @@ class RecuperacionContrasenaServiceTest {
         CodigoVerificacion codigo = cuentaConCodigoPendiente(usuario);
         when(hashContrasena.coincide(CODIGO, HASH_CODIGO)).thenReturn(true);
 
-        assertThrows(ContrasenaInvalidaException.class, () -> recuperacion.restablecerContrasena(comando(CODIGO, "corta")));
+        assertThrows(ContrasenaInvalidaException.class,
+                () -> recuperacion.restablecerContrasena(comando(CODIGO, "corta")));
 
         assertEquals(HASH_ACTUAL, usuario.getPasswordHash());
         assertNull(codigo.getUsadoEn());
