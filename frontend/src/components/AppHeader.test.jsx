@@ -210,6 +210,24 @@ describe('AppHeader', () => {
     expect(screen.queryByRole('link', { name: /mis productos/i })).not.toBeInTheDocument()
   })
 
+  it('maquetacion-pedidos-vendedor: el vendedor tiene el enlace a su panel de pedidos', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('vendedor@esibuy.test')
+    renderApp('/')
+
+    await user.click(await screen.findByRole('link', { name: /mis pedidos/i }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: /mis pedidos/i })).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/seller\/orders$/))
+  })
+
+  it('maquetacion-pedidos-vendedor: el cliente conserva su propio enlace a Mis pedidos', async () => {
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/')
+
+    expect(await screen.findByRole('link', { name: /mis pedidos/i })).toHaveAttribute('href', '/orders')
+  })
+
   it('HU4-CP11: el cliente y el vendedor tienen el enlace a su perfil', async () => {
     await abrirSesionPorApi('cliente@esibuy.test')
     const { unmount } = renderApp('/')
@@ -252,13 +270,7 @@ describe('AppHeader: Mis pedidos (HU11)', () => {
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/orders$')))
   })
 
-  it('HU11-CP18: el vendedor y el administrador no tienen el enlace a Mis pedidos', async () => {
-    await abrirSesionPorApi('vendedor@esibuy.test')
-    const { unmount } = renderApp('/')
-    await screen.findByRole('button', { name: /cerrar sesión/i })
-    expect(screen.queryByRole('link', { name: /mis pedidos/i })).not.toBeInTheDocument()
-    unmount()
-
+  it('HU11-CP18: el administrador no tiene el enlace a Mis pedidos del cliente', async () => {
     await abrirSesionPorApi('admin@esibuy.test')
     renderApp('/')
     await screen.findByRole('button', { name: /cerrar sesión/i })

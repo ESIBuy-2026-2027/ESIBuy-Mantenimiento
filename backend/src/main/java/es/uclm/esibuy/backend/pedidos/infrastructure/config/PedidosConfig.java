@@ -14,6 +14,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ProductosConPedidosUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.VentasVendedorUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.GestionPedidosVendedorUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.out.CarritoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ContadorPedidosPort;
@@ -21,11 +22,13 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.DireccionesPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ExistenciasPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.MetodosPagoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
+import es.uclm.esibuy.backend.pedidos.application.port.out.VendedorEnSesionPort;
 import es.uclm.esibuy.backend.pedidos.application.service.CancelacionPedidoService;
 import es.uclm.esibuy.backend.pedidos.application.service.ConsultaComprasService;
 import es.uclm.esibuy.backend.pedidos.application.service.RealizacionPedidoService;
 import es.uclm.esibuy.backend.pedidos.application.service.ProductosConPedidosService;
 import es.uclm.esibuy.backend.pedidos.application.service.VentasVendedorService;
+import es.uclm.esibuy.backend.pedidos.application.service.GestionPedidosVendedorService;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.carrito.CarritoAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.direcciones.DireccionesAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.metodospago.MetodosPagoAdapter;
@@ -35,6 +38,7 @@ import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.persistence.Ped
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.persistence.PedidoMongoRepository;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.productos.ExistenciasAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.usuarios.ClienteEnSesionAdapter;
+import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.usuarios.VendedorEnSesionAdapter;
 import es.uclm.esibuy.backend.productos.application.port.in.ExistenciasProductosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 
@@ -58,6 +62,11 @@ public class PedidosConfig {
     @Bean
     ClienteEnSesionPort pedidosClienteEnSesionPort(AutenticacionUseCase autenticacionUseCase) {
         return new ClienteEnSesionAdapter(autenticacionUseCase);
+    }
+
+    @Bean
+    VendedorEnSesionPort pedidosVendedorEnSesionPort(AutenticacionUseCase autenticacionUseCase) {
+        return new VendedorEnSesionAdapter(autenticacionUseCase);
     }
 
     @Bean
@@ -112,5 +121,11 @@ public class PedidosConfig {
     @Bean
     VentasVendedorUseCase ventasVendedorUseCase(PedidoRepositoryPort pedidoRepositoryPort) {
         return new VentasVendedorService(pedidoRepositoryPort);
+    }
+
+    @Bean
+    GestionPedidosVendedorUseCase gestionPedidosVendedorUseCase(PedidoRepositoryPort pedidoRepositoryPort,
+            VendedorEnSesionPort pedidosVendedorEnSesionPort) {
+        return new GestionPedidosVendedorService(pedidoRepositoryPort, pedidosVendedorEnSesionPort);
     }
 }

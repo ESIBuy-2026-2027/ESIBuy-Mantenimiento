@@ -6,6 +6,7 @@ import java.util.List;
 
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoEstadoNoAvanzableException;
 
 /**
  * Pedido de un cliente a un solo proveedor (HU10; decisión del equipo: un pedido por proveedor). El total se
@@ -65,6 +66,17 @@ public class Pedido {
             throw new PedidoNoCancelableException("El pedido ya no se puede cancelar");
         }
         estado = EstadoPedido.CANCELADO;
+    }
+
+    // Avance lineal del vendedor: no retrocede ni reabre pedidos cancelados o entregados.
+    public void avanzarEstado() {
+        estado = switch (estado) {
+            case PAGADO -> EstadoPedido.PREPARANDO;
+            case PREPARANDO -> EstadoPedido.ENVIADO;
+            case ENVIADO -> EstadoPedido.ENTREGADO;
+            case ENTREGADO, CANCELADO -> throw new PedidoEstadoNoAvanzableException(
+                    "El estado del pedido ya no se puede avanzar");
+        };
     }
 
     private static void exigirTexto(String valor, String mensaje) {

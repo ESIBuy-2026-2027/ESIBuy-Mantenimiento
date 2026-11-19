@@ -27,6 +27,7 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoExcepti
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoEstadoNoAvanzableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
@@ -432,6 +433,12 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError pedidoNoCancelable() {
         return new RespuestaError("El pedido ya no se puede cancelar", "ORDER_NOT_CANCELLABLE");
+    }
+
+    @ExceptionHandler(PedidoEstadoNoAvanzableException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError pedidoEstadoNoAvanzable() {
+        return new RespuestaError("El estado del pedido ya no se puede avanzar", "ORDER_STATUS_NOT_ADVANCEABLE");
     }
 
     @ExceptionHandler(CarritoSinProductosDelProveedorException.class)

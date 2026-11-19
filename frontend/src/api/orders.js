@@ -33,3 +33,17 @@ export function getOrder(orderId) {
 export function cancelOrder(orderId) {
   return request(`/api/customer/orders/${encodeURIComponent(orderId)}/cancel`, { method: 'POST' })
 }
+
+// Pedidos reales del vendedor en sesión (listado y detalle). El backend solo devuelve pedidos cuyo vendedorId
+// coincide con la sesión y nunca permite acceder al pedido de otro vendedor.
+export function getSellerOrders() {
+  return request('/api/seller/orders')
+}
+
+export function getSellerOrder(orderId) {
+  return request(`/api/seller/orders/${encodeURIComponent(orderId)}`)
+}
+
+export function advanceSellerOrder(orderId) {
+  return request(`/api/seller/orders/${encodeURIComponent(orderId)}/advance`, { method: 'POST' })
+}

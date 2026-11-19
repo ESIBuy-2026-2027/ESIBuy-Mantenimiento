@@ -87,6 +87,53 @@ export function resetOrdersMock() {
 const aRespuesta = (pedido) => Object.fromEntries(Object.entries(pedido).filter(([campo]) => campo !== 'clienteId'))
 
 export const ordersHandlers = [
+  // Panel real del vendedor (HU pendiente): solo pedidos que contienen productos del vendedor autenticado.
+  http.get('/api/seller/orders', () => {
+    const usuario = getUsuarioEnSesion()
+    if (usuario?.rol !== 'VENDEDOR') {
+      return HttpResponse.json({ code: 'ACCESS_DENIED' }, { status: 403 })
+    }
+    const suyos = pedidos
+      .filter((pedido) => pedido.vendedor.id === usuario.id)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    return HttpResponse.json(suyos.map(aRespuesta))
+  }),
+
+  http.get('/api/seller/orders/:id', ({ params }) => {
+    const usuario = getUsuarioEnSesion()
+    if (usuario?.rol !== 'VENDEDOR') {
+      return HttpResponse.json({ code: 'ACCESS_DENIED' }, { status: 403 })
+    }
+    const pedido = pedidos.find(({ id, vendedor }) => id === params.id && vendedor.id === usuario.id)
+    return pedido
+      ? HttpResponse.json(aRespuesta(pedido))
+      : HttpResponse.json({ mensaje: 'El pedido no existe', code: 'ORDER_NOT_FOUND' }, { status: 400 })
+  }),
+
+  http.post('/api/seller/orders/:id/advance', ({ params }) => {
+    const usuario = getUsuarioEnSesion()
+    if (usuario?.rol !== 'VENDEDOR') {
+      return HttpResponse.json({ code: 'ACCESS_DENIED' }, { status: 403 })
+    }
+    const pedido = pedidos.find(({ id, vendedor }) => id === params.id && vendedor.id === usuario.id)
+    if (!pedido) {
+      return HttpResponse.json({ mensaje: 'El pedido no existe', code: 'ORDER_NOT_FOUND' }, { status: 400 })
+    }
+    const siguiente = {
+      PAGADO: 'PREPARANDO',
+      PREPARANDO: 'ENVIADO',
+      ENVIADO: 'ENTREGADO',
+    }[pedido.estado]
+    if (!siguiente) {
+      return HttpResponse.json(
+        { mensaje: 'El estado del pedido ya no se puede avanzar', code: 'ORDER_STATUS_NOT_ADVANCEABLE' },
+        { status: 409 },
+      )
+    }
+    pedido.estado = siguiente
+    return HttpResponse.json(aRespuesta(pedido))
+  }),
+
   // Crea el pedido de un proveedor con lo que hay de él en el carrito y lo quita del carrito (HU10). La dirección (HU5)
   // y el método de pago (HU6) tienen que ser del cliente; si no, 400 como en el backend, sin decir cuál falla. La
   // dirección se copia en el pedido.

@@ -30,6 +30,8 @@ import ProfilePage from '../pages/ProfilePage'
 import Register from '../pages/Register'
 import RegisterPaymentPage from '../pages/RegisterPaymentPage'
 import SellerProductFormPage from '../pages/SellerProductFormPage'
+import SellerOrdersPage from '../pages/SellerOrdersPage'
+import SellerOrderDetailPage from '../pages/SellerOrderDetailPage'
 import SellerProductsPage from '../pages/SellerProductsPage'
 import WishlistPage from '../pages/WishlistPage'
 import { PATHS } from './paths'
@@ -83,6 +85,8 @@ export default function AppRoutes() {
 
         <Route element={<ProtectedRoute allowedRoles={[ROLES.VENDEDOR]} />}>
           <Route path={PATHS.SELLER_PRODUCTS} element={<SellerProductsPage />} />
+          <Route path={PATHS.SELLER_ORDERS} element={<SellerOrdersPage />} />
+          <Route path={PATHS.SELLER_ORDER_DETAIL} element={<SellerOrderDetailPage />} />
           <Route path={PATHS.SELLER_PRODUCT_NEW} element={<SellerProductFormPage />} />
           <Route path={PATHS.SELLER_PRODUCT_EDIT} element={<SellerProductFormPage />} />
         </Route>

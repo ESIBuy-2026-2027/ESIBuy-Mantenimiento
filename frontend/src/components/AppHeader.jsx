@@ -155,9 +155,14 @@ function UserActions({ rol, onSignOut, disabled }) {
       )}
       {/* Fallos de la demo del Sprint 1: el vendedor no tenía acceso a sus productos desde el menú */}
       {rol === ROLES.VENDEDOR && (
-        <NavLink to={PATHS.SELLER_PRODUCTS} icon={<BoxMultiple20Regular />}>
-          Mis productos
-        </NavLink>
+        <>
+          <NavLink to={PATHS.SELLER_PRODUCTS} icon={<BoxMultiple20Regular />}>
+            Mis productos
+          </NavLink>
+          <NavLink to={PATHS.SELLER_ORDERS} icon={<Receipt20Regular />}>
+            Mis pedidos
+          </NavLink>
+        </>
       )}
       {/* Las ventajas de ESIBuy Premium (HU45) son solo del cliente */}
       {esCliente && (

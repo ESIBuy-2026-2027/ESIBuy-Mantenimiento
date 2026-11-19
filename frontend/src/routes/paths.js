@@ -26,6 +26,8 @@ export const PATHS = {
   ADMIN_ADMINS: '/admin/admins',
   ADMIN_NEW_ADMIN: '/admin/admins/new',
   SELLER_PRODUCTS: '/seller/products',
+  SELLER_ORDERS: '/seller/orders',
+  SELLER_ORDER_DETAIL: '/seller/orders/:id',
   SELLER_PRODUCT_NEW: '/seller/products/new',
   SELLER_PRODUCT_EDIT: '/seller/products/:id/edit',
 }
@@ -36,3 +38,5 @@ export const getOrderDetailPath = (orderId) => `/orders/${encodeURIComponent(ord
 
 export const getSellerProductEditPath = (productId) =>
   `/seller/products/${encodeURIComponent(productId)}/edit`
+
+export const getSellerOrderDetailPath = (orderId) => `/seller/orders/${encodeURIComponent(orderId)}`

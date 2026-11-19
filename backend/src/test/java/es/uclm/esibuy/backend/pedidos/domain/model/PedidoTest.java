@@ -109,4 +109,29 @@ class PedidoTest {
             assertEquals(estado, pedido.getEstado());
         }
     }
+
+    @Test
+    @DisplayName("gestion-pedidos-vendedor: el estado avanza linealmente sin retroceder")
+    void elEstadoAvanzaLinealmente() {
+        Pedido pedido = pedidoEn(EstadoPedido.PAGADO);
+
+        pedido.avanzarEstado();
+        assertEquals(EstadoPedido.PREPARANDO, pedido.getEstado());
+        pedido.avanzarEstado();
+        assertEquals(EstadoPedido.ENVIADO, pedido.getEstado());
+        pedido.avanzarEstado();
+        assertEquals(EstadoPedido.ENTREGADO, pedido.getEstado());
+    }
+
+    @Test
+    @DisplayName("gestion-pedidos-vendedor: no se avanza un pedido entregado o cancelado")
+    void noSeAvanzaUnPedidoFinal() {
+        for (EstadoPedido estado : List.of(EstadoPedido.ENTREGADO, EstadoPedido.CANCELADO)) {
+            Pedido pedido = pedidoEn(estado);
+
+            assertThrows(es.uclm.esibuy.backend.pedidos.domain.exception.PedidoEstadoNoAvanzableException.class,
+                    pedido::avanzarEstado);
+            assertEquals(estado, pedido.getEstado());
+        }
+    }
 }
