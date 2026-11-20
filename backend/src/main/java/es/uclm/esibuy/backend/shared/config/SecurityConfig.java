@@ -24,11 +24,7 @@ import es.uclm.esibuy.backend.shared.error.ManejadorAccesoDenegado;
  * permiso, 403.
  *
  * <p>
- * CSRF: el token va en la cookie {@code XSRF-TOKEN}, que el frontend puede
- * leer, y el frontend lo devuelve en la cabecera {@code X-XSRF-TOKEN} en cada
- * petición que cambia datos (T230, D4). La protección CSRF se aplica también a
- * las rutas públicas de registro. El frontend obtiene el token y lo devuelve en
- * la cabecera {@code X-XSRF-TOKEN} en las peticiones que modifican datos.
+ * CSRF: Spring's SPA cookie-to-header pattern is used. React must read `XSRF-TOKEN` and return it as `X-XSRF-TOKEN` on state-changing requests, so this cookie intentionally has `HttpOnly=false`. The session cookie remains HttpOnly. The CSRF token is not a session credential and is checked against the request token. `Secure` and `SameSite=Strict` reduce exposure; this does not replace XSS prevention, since same-origin script execution can read the CSRF cookie. Protection also covers public registration routes.
  *
  * <p>
  * El logout ({@code POST /api/auth/logout}) lo hace Spring Security: invalida
@@ -132,11 +128,9 @@ public class SecurityConfig {
                                                 .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(
                                                                 HttpStatus.NO_CONTENT))
                                                 .deleteCookies("JSESSIONID"))
-                                // spa(): el token CSRF va en la cookie XSRF-TOKEN (legible por el frontend, sin
-                                // HttpOnly) y
-                                // el frontend lo devuelve en la cabecera X-XSRF-TOKEN (T230, D4). La cookie es
-                                // además Secure y
-                                // SameSite=Strict, como la de sesión (HU43, T319).
+                                // spa(): React reads XSRF-TOKEN and copies it into X-XSRF-TOKEN (T230, D4).
+                                // HttpOnly=false is required for that flow; Secure and SameSite=Strict
+                                // limit transport and cross-site exposure. JSESSIONID remains HttpOnly.
                                 .csrf(csrf -> csrf
                                                 .spa()
                                                 .csrfTokenRepository(repositorioTokenCsrf()));
