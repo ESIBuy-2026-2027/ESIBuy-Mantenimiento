@@ -18,46 +18,40 @@ import es.uclm.esibuy.backend.shared.error.ManejadorAccesoDenegado;
  *
  * <p>
  * Por defecto se deniega, (mínimo privilegio) y solo se abren el registro,
- * los dos primeros
- * pasos del login (HU2, T230), la recuperación de contraseña (HU3) y la
- * consulta de las categorías, porque
- * quien los usa todavía no tiene sesión. Sin sesión se responde
- * 401 («no sé quién eres»); con sesión pero sin permiso, 403.
+ * los dos primeros pasos del login (HU2, T230), la recuperación de contraseña
+ * (HU3) y la consulta de las categorías, porque quien los usa todavía no tiene
+ * sesión. Sin sesión se responde 401 («no sé quién eres»); con sesión pero sin
+ * permiso, 403.
  *
  * <p>
  * CSRF: el token va en la cookie {@code XSRF-TOKEN}, que el frontend puede
- * leer, y el frontend lo
- * devuelve en la cabecera {@code X-XSRF-TOKEN} en cada petición que cambia
- * datos (T230, D4). Se ignora
- * solo en el registro: no hay sesión que un ataque CSRF pueda aprovechar.
+ * leer, y el frontend lo devuelve en la cabecera {@code X-XSRF-TOKEN} en cada
+ * petición que cambia datos (T230, D4). La protección CSRF se aplica también a
+ * las rutas públicas de registro. El frontend obtiene el token y lo devuelve en
+ * la cabecera {@code X-XSRF-TOKEN} en las peticiones que modifican datos.
  *
  * <p>
  * El logout ({@code POST /api/auth/logout}) lo hace Spring Security: invalida
- * la sesión, borra la
- * cookie y responde 204 (T230, D14).
+ * la sesión, borra la cookie y responde 204 (T230, D14).
  *
  * <p>
  * La zona de administración ({@code /api/admin/**}) solo la usa el rol
- * ADMINISTRADOR (HU18, T58):
- * ocultar el menú en el frontend es solo experiencia de usuario, la barrera
- * real es esta. Spring
- * comprueba la autoridad {@code ROLE_ADMINISTRADOR}, que el login tendrá que
- * dar a cada usuario según
- * su rol.
+ * ADMINISTRADOR (HU18, T58): ocultar el menú en el frontend es solo
+ * experiencia de usuario, la barrera real es esta. Spring comprueba la
+ * autoridad {@code ROLE_ADMINISTRADOR}, que el login tendrá que dar a cada
+ * usuario según su rol.
  *
  * <p>
  * La zona de vendedor ({@code /api/seller/**}) solo la usa el rol VENDEDOR
- * (HU15, T57). El
- * administrador supervisa los productos y pedidos de los vendedores en solo
- * lectura por su propia zona
+ * (HU15, T57). El administrador supervisa los productos y pedidos de los
+ * vendedores en solo lectura por su propia zona
  * ({@code /api/admin/sellers/...}, HU26); los datos de la cuenta del vendedor
- * sí los gestiona él (HU22, HU23 y
- * HU24). Que el vendedor esté activo lo comprueba el login.
+ * sí los gestiona él (HU22, HU23 y HU24). Que el vendedor esté activo lo
+ * comprueba el login.
  *
  * <p>
  * La zona de cliente ({@code /api/customer/**}) solo la usa el rol CLIENTE: de
- * momento, sus métodos de
- * pago (HU6) y sus direcciones de envío (HU5).
+ * momento, sus métodos de pago (HU6) y sus direcciones de envío (HU5).
  */
 @EnableMethodSecurity
 @Configuration
@@ -145,8 +139,7 @@ public class SecurityConfig {
                                 // SameSite=Strict, como la de sesión (HU43, T319).
                                 .csrf(csrf -> csrf
                                                 .spa()
-                                                .csrfTokenRepository(repositorioTokenCsrf())
-                                                .ignoringRequestMatchers(RUTA_REGISTRO, RUTA_REGISTRO_VENDEDOR));
+                                                .csrfTokenRepository(repositorioTokenCsrf()));
                 return http.build();
         }
 
