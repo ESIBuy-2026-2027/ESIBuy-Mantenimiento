@@ -13,7 +13,8 @@ async function abrirEstadisticas(email) {
   return screen.findByRole('region', { name: 'Mis estadísticas' })
 }
 
-const cifra = (bloque, nombre) => within(bloque).getByRole('group', { name: nombre })
+const cifra = (bloque, nombre) =>
+  within(bloque).getAllByText(nombre).find((element) => element.tagName === 'DT').closest('dl')
 
 const filasDe = (tabla) =>
   within(tabla)

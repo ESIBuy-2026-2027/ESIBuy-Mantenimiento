@@ -1,4 +1,3 @@
-
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad;
 
 import java.io.IOException;
@@ -21,8 +20,10 @@ import es.uclm.esibuy.backend.usuarios.application.port.out.exception.Comprobaci
  * Adaptador que consulta Have I Been Pwned para comprobar si una
  * contraseña aparece en bases de datos de contraseñas comprometidas.
  *
- * Utiliza el mecanismo k-anonymity: únicamente envía los cinco
- * primeros caracteres del hash SHA-1 de la contraseña.
+ * Uses the k-anonymity protocol required by Pwned Passwords: SHA-1 is calculated
+ * locally and only its first five characters are sent over HTTPS. SHA-1 is used
+ * solely as the protocol-compatible lookup identifier, never to store or authenticate
+ * passwords. The remaining suffix is matched locally; the password is never sent.
  */
 public class HibpContrasenaAdapter implements ComprobadorContrasenaComprometidaPort {
 
@@ -33,8 +34,7 @@ public class HibpContrasenaAdapter implements ComprobadorContrasenaComprometidaP
 
     private static final int HASH_PREFIX_LENGTH = 5;
 
-    private static final Pattern RESPONSE_LINE_PATTERN = Pattern.compile("^([0-9A-Fa-f]{35}):([0-9]+)$");
-
+    private static final Pattern RESPONSE_LINE_PATTERN = Pattern.compile("^([0-9A-Fa-f]{35}):(\\d+)$");
     private final HttpClient httpClient;
 
     public HibpContrasenaAdapter() {

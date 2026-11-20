@@ -8,7 +8,7 @@ import { catalogProductPropType } from '../../utils/propTypes'
 import { formatRating } from '../../utils/format'
 
 const useStyles = makeStyles({
-  // A todo lo ancho de la página: solo el título se queda en la columna de contenido.
+  // A lo ancho de la página: solo el título se queda en la columna de contenido.
   section: {
     display: 'flex',
     flexDirection: 'column',
@@ -111,7 +111,7 @@ const useStyles = makeStyles({
     gap: tokens.spacingHorizontalXXS,
     color: tokens.colorPaletteMarigoldForeground2,
   },
-  // Lo que se dibuja sobre cada tarjeta de la animación. Todo en `em`: la banda fija el tamaño de letra según el
+  // Lo que se dibuja sobre cada tarjeta de la animación. En `em`: la banda fija el tamaño de letra según el
   // tamaño de la tarjeta.
   captionRank: {
     position: 'absolute',
@@ -177,7 +177,7 @@ function CardCaption({ rank, product, styles }) {
   )
 }
 
-// Los productos mejor valorados: una banda curva de tarjetas (a todo el ancho de la página) que se pueden pulsar
+// Los productos mejor valorados: una banda curva de tarjetas (al ancho de la página) que se pueden pulsar
 // con el ratón y, para el teclado y los lectores de pantalla, la lista numerada de los mismos productos. Todas llevan
 // al detalle del producto (HU8). `products` llega ya ordenado de mejor a peor.
 export default function FeaturedShowcase({ products }) {
@@ -206,19 +206,19 @@ export default function FeaturedShowcase({ products }) {
 
       <div className={styles.stage}>
         {cards.length > 0 && (
-          <TiltedGridHero
-            role="group"
-            aria-label="Los mejor valorados en movimiento"
-            className={styles.band}
-            images={cards}
-            onSelect={(card) => navigate(getProductDetailPath(card.product.id))}
-            tileHeight={56}
-            aspectRatio={4 / 3}
-            gap={5}
-            axis={50}
-            curve={68}
-            speed={4}
-          />
+          <section aria-label="Los mejor valorados en movimiento">
+            <TiltedGridHero
+              className={styles.band}
+              images={cards}
+              onSelect={(card) => navigate(getProductDetailPath(card.product.id))}
+              tileHeight={56}
+              aspectRatio={4 / 3}
+              gap={5}
+              axis={50}
+              curve={68}
+              speed={4}
+            />
+          </section>
         )}
 
         <ul className={styles.list} aria-label="Selección destacada">

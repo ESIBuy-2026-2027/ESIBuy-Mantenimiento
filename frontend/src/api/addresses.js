@@ -29,5 +29,6 @@ export function setPrincipalAddress(id) {
 // (no es la principal o es la única), no se envía. Responde 204 sin cuerpo.
 export function deleteAddress(id, nuevaPrincipal) {
   const query = buildQuery({ nuevaPrincipal })
-  return request(`${URL_DIRECCIONES}/${encodeURIComponent(id)}${query ? `?${query}` : ''}`, { method: 'DELETE' })
+  const url = `${URL_DIRECCIONES}/${encodeURIComponent(id)}${query ? '?' + query : ''}`
+  return request(url, { method: 'DELETE' })
 }

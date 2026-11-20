@@ -22,7 +22,7 @@ import LinkButton from './LinkButton'
 
 // Tres tamaños. Ancho: iconos con texto. Medio: con muchos accesos (el cliente tiene nueve) solo se ven los iconos;
 // el texto sigue ahí para los lectores de pantalla y como tooltip. Móvil: el logotipo arriba y, debajo, una barra de
-// accesos con su texto que se desliza en horizontal. Todo es CSS: los enlaces están siempre en la página.
+// accesos con su texto que se desliza en horizontal. Es CSS: los enlaces están siempre en la página.
 const MOVIL = '@media (max-width: 767px)'
 const MEDIO = '@media (min-width: 768px) and (max-width: 1279px)'
 

@@ -5,9 +5,10 @@ import java.util.regex.Pattern;
 
 public record TelefonoBizum(String valor) {
 
-    // Nueve dígitos sin prefijo de país. Duplica la regla del Telefono de usuarios a propósito: un módulo
+    // Nueve dígitos sin prefijo de país. Duplica la regla del Telefono de usuarios
+    // a propósito: un módulo
     // no puede importar el dominio de otro.
-    private static final Pattern FORMATO = Pattern.compile("^[0-9]{9}$");
+    private static final Pattern FORMATO = Pattern.compile("^\\d{9}$");
 
     public TelefonoBizum {
         if (valor == null || !FORMATO.matcher(valor).matches()) {

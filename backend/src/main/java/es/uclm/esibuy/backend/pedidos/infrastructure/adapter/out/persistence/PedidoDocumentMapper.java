@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.persistence;
 import java.util.ArrayList;
 
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
+import es.uclm.esibuy.backend.pedidos.domain.model.DatosPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.LineaPedido;
@@ -10,9 +11,12 @@ import es.uclm.esibuy.backend.pedidos.domain.model.NumeroPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.Pedido;
 
 /**
- * Convierte entre el pedido del dominio y su documento de MongoDB. Al leer se vuelve a pasar por los
- * constructores del dominio, así que un documento que no cumpla sus reglas se rechaza. El total y los subtotales
- * se guardan para consultarlos en la base de datos, pero al leer se recalculan desde las líneas.
+ * Convierte entre el pedido del dominio y su documento de MongoDB. Al leer se
+ * vuelve a pasar por los
+ * constructores del dominio, así que un documento que no cumpla sus reglas se
+ * rechaza. El total y los subtotales
+ * se guardan para consultarlos en la base de datos, pero al leer se recalculan
+ * desde las líneas.
  */
 public class PedidoDocumentMapper {
 
@@ -34,13 +38,25 @@ public class PedidoDocumentMapper {
     }
 
     public Pedido aDominio(PedidoDocument documento) {
-        return new Pedido(documento.getId(), new NumeroPedido(documento.getNumeroPedido()), documento.getClienteId(),
-                documento.getVendedorId(), documento.getNombreComercial(), aEstado(documento.getEstado()),
+        DatosPedido datosPedido = new DatosPedido(
+                documento.getId(),
+                new NumeroPedido(documento.getNumeroPedido()),
+                documento.getClienteId(),
+                documento.getVendedorId(),
+                documento.getNombreComercial(),
+                aEstado(documento.getEstado()),
                 documento.getLineas().stream()
-                        .map(linea -> new LineaPedido(linea.getProductoId(), linea.getNombreProducto(),
-                                linea.getCantidad(), linea.getPrecioUnitario()))
+                        .map(linea -> new LineaPedido(
+                                linea.getProductoId(),
+                                linea.getNombreProducto(),
+                                linea.getCantidad(),
+                                linea.getPrecioUnitario()))
                         .toList(),
-                aDominio(documento.getDireccionEnvio()), documento.getPaymentMethodId(), documento.getCreatedAt());
+                aDominio(documento.getDireccionEnvio()),
+                documento.getPaymentMethodId(),
+                documento.getCreatedAt());
+
+        return new Pedido(datosPedido);
     }
 
     private static LineaPedidoDocument aDocumento(LineaPedido linea, String vendedorId) {

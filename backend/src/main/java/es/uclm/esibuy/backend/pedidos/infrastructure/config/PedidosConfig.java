@@ -23,6 +23,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.MetodosPagoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
 import es.uclm.esibuy.backend.pedidos.application.service.CancelacionPedidoService;
 import es.uclm.esibuy.backend.pedidos.application.service.ConsultaComprasService;
+import es.uclm.esibuy.backend.pedidos.application.service.DependenciasRealizacionPedido;
 import es.uclm.esibuy.backend.pedidos.application.service.RealizacionPedidoService;
 import es.uclm.esibuy.backend.pedidos.application.service.ProductosConPedidosService;
 import es.uclm.esibuy.backend.pedidos.application.service.VentasVendedorService;
@@ -39,8 +40,10 @@ import es.uclm.esibuy.backend.productos.application.port.in.ExistenciasProductos
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 
 /**
- * Configuración de Spring de los pedidos (HU10): conecta cada puerto con su adaptador, como CarritoConfig. Los
- * nombres de los beans llevan «pedidos» para no chocar con los puertos del mismo nombre de otros módulos.
+ * Configuración de Spring de los pedidos (HU10): conecta cada puerto con su
+ * adaptador, como CarritoConfig. Los
+ * nombres de los beans llevan «pedidos» para no chocar con los puertos del
+ * mismo nombre de otros módulos.
  */
 @Configuration
 public class PedidosConfig {
@@ -80,14 +83,25 @@ public class PedidosConfig {
         return new ExistenciasAdapter(existenciasProductosUseCase);
     }
 
-    // El reloj es el de UsuariosConfig: con él se fecha el pedido y se elige el año de su número
+    // El reloj es el de UsuariosConfig: con él se fecha el pedido y se elige el año
+    // de su número
     @Bean
     RealizacionPedidoUseCase realizacionPedidoUseCase(PedidoRepositoryPort pedidoRepositoryPort,
             ClienteEnSesionPort pedidosClienteEnSesionPort, CarritoPort pedidosCarritoPort,
             MetodosPagoPort pedidosMetodosPagoPort, DireccionesPort pedidosDireccionesPort,
             ExistenciasPort pedidosExistenciasPort, ContadorPedidosPort contadorPedidosPort, Clock reloj) {
-        return new RealizacionPedidoService(pedidoRepositoryPort, pedidosClienteEnSesionPort, pedidosCarritoPort,
-                pedidosMetodosPagoPort, pedidosDireccionesPort, pedidosExistenciasPort, contadorPedidosPort, reloj);
+
+        DependenciasRealizacionPedido dependencias = new DependenciasRealizacionPedido(
+                pedidoRepositoryPort,
+                pedidosClienteEnSesionPort,
+                pedidosCarritoPort,
+                pedidosMetodosPagoPort,
+                pedidosDireccionesPort,
+                pedidosExistenciasPort,
+                contadorPedidosPort,
+                reloj);
+
+        return new RealizacionPedidoService(dependencias);
     }
 
     @Bean
@@ -101,7 +115,8 @@ public class PedidosConfig {
         return new ProductosConPedidosService(pedidoRepositoryPort);
     }
 
-    // Cancelación (HU12): repone el stock con el mismo puerto de existencias que usa la realización del pedido
+    // Cancelación (HU12): repone el stock con el mismo puerto de existencias que
+    // usa la realización del pedido
     @Bean
     CancelacionPedidoUseCase cancelacionPedidoUseCase(PedidoRepositoryPort pedidoRepositoryPort,
             ClienteEnSesionPort pedidosClienteEnSesionPort, ExistenciasPort pedidosExistenciasPort) {

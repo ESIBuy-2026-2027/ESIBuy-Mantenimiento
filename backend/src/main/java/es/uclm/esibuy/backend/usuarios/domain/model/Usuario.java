@@ -71,14 +71,19 @@ public class Usuario {
     // Paso a Premium del propio cliente (HU45, T422). Solo cambia el tipo: el DNI,
     // la fecha y el teléfono se conservan.
     public void pasarAPremium() {
-        if (!(perfil instanceof DatosCliente datosCliente)) {
+        if (!(perfil instanceof DatosCliente(TipoCliente tipoCliente, Dni dni, LocalDate fechaNacimiento, Telefono telefono))) {
             throw new UsuarioInvalidoException("Solo un cliente puede pasar a Premium");
         }
-        if (datosCliente.tipoCliente() == TipoCliente.PREMIUM) {
+
+        if (tipoCliente == TipoCliente.PREMIUM) {
             throw new ClienteYaPremiumException("El cliente ya es Premium");
         }
-        this.perfil = new DatosCliente(TipoCliente.PREMIUM, datosCliente.dni(), datosCliente.fechaNacimiento(),
-                datosCliente.telefono());
+
+        this.perfil = new DatosCliente(
+                TipoCliente.PREMIUM,
+                dni,
+                fechaNacimiento,
+                telefono);
     }
 
     public static Usuario nuevoCliente(DatosPersonales datosPersonales, Email email, String passwordHash,
@@ -283,7 +288,6 @@ public class Usuario {
     public void actualizarPreferenciasSeguridad(
             boolean emailOtpEnabled,
             boolean authenticatorEnabled) {
-        this.emailOtpEnabled = emailOtpEnabled;
-        this.authenticatorEnabled = authenticatorEnabled;
+        restaurarPreferenciasSeguridad(emailOtpEnabled, authenticatorEnabled);
     }
 }

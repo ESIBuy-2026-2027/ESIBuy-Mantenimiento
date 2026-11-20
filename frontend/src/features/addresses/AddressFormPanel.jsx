@@ -170,66 +170,68 @@ export default function AddressFormPanel({ direccion, onSaved, onCancel }) {
   }
 
   return (
-    <Card className={styles.panel} aria-labelledby="titulo-direccion" role="region">
-      <Subtitle1 as="h2" id="titulo-direccion" className={styles.title}>
-        {editando ? 'Editar dirección' : 'Nueva dirección'}
-      </Subtitle1>
+    <section aria-labelledby="titulo-direccion">
+      <Card className={styles.panel}>
+        <Subtitle1 as="h2" id="titulo-direccion" className={styles.title}>
+          {editando ? 'Editar dirección' : 'Nueva dirección'}
+        </Subtitle1>
 
-      {fallo && (
-        <MessageBar intent="error">
-          <MessageBarBody>{fallo}</MessageBarBody>
-        </MessageBar>
-      )}
+        {fallo && (
+          <MessageBar intent="error">
+            <MessageBarBody>{fallo}</MessageBarBody>
+          </MessageBar>
+        )}
 
-      <div className={styles.fields}>
-        <Field label="Destinatario" {...error('destinatario')}>
-          <Input {...campo('destinatario')} placeholder="Nombre y apellidos" autoComplete="name" />
-        </Field>
-        <Field label="Calle y número" {...error('calle')}>
-          <Input {...campo('calle')} placeholder="Calle Mayor 1" autoComplete="address-line1" />
-        </Field>
-        <Field label="Piso, puerta… (opcional)" {...error('detalles')}>
-          <Input {...campo('detalles')} placeholder="2º B" autoComplete="address-line2" />
-        </Field>
-        <div className={styles.twoColumns}>
-          <Field label="Código postal" {...error('codigoPostal')}>
-            <Input
-              {...campo('codigoPostal')}
-              className={styles.shrinkable}
-              placeholder="13071"
-              inputMode="numeric"
-              autoComplete="postal-code"
-            />
+        <div className={styles.fields}>
+          <Field label="Destinatario" {...error('destinatario')}>
+            <Input {...campo('destinatario')} placeholder="Nombre y apellidos" autoComplete="name" />
           </Field>
-          <Field label="Ciudad" {...error('ciudad')}>
-            <Input {...campo('ciudad')} className={styles.shrinkable} autoComplete="address-level2" />
+          <Field label="Calle y número" {...error('calle')}>
+            <Input {...campo('calle')} placeholder="Calle Mayor 1" autoComplete="address-line1" />
           </Field>
+          <Field label="Piso, puerta… (opcional)" {...error('detalles')}>
+            <Input {...campo('detalles')} placeholder="2º B" autoComplete="address-line2" />
+          </Field>
+          <div className={styles.twoColumns}>
+            <Field label="Código postal" {...error('codigoPostal')}>
+              <Input
+                {...campo('codigoPostal')}
+                className={styles.shrinkable}
+                placeholder="13071"
+                inputMode="numeric"
+                autoComplete="postal-code"
+              />
+            </Field>
+            <Field label="Ciudad" {...error('ciudad')}>
+              <Input {...campo('ciudad')} className={styles.shrinkable} autoComplete="address-level2" />
+            </Field>
+          </div>
+          <div className={styles.twoColumns}>
+            <Field label="Provincia" {...error('provincia')}>
+              <Input {...campo('provincia')} className={styles.shrinkable} autoComplete="address-level1" />
+            </Field>
+            <Field label="Teléfono" {...error('telefono')}>
+              <Input
+                {...campo('telefono')}
+                className={styles.shrinkable}
+                type="tel"
+                placeholder="600000000"
+                autoComplete="tel-national"
+              />
+            </Field>
+          </div>
         </div>
-        <div className={styles.twoColumns}>
-          <Field label="Provincia" {...error('provincia')}>
-            <Input {...campo('provincia')} className={styles.shrinkable} autoComplete="address-level1" />
-          </Field>
-          <Field label="Teléfono" {...error('telefono')}>
-            <Input
-              {...campo('telefono')}
-              className={styles.shrinkable}
-              type="tel"
-              placeholder="600000000"
-              autoComplete="tel-national"
-            />
-          </Field>
-        </div>
-      </div>
 
-      <div className={styles.actions}>
-        <Button appearance="primary" onClick={guardar} disabled={guardando}>
-          Guardar dirección
-        </Button>
-        <Button appearance="subtle" onClick={onCancel} disabled={guardando}>
-          Cancelar
-        </Button>
-      </div>
-    </Card>
+        <div className={styles.actions}>
+          <Button appearance="primary" onClick={guardar} disabled={guardando}>
+            Guardar dirección
+          </Button>
+          <Button appearance="subtle" onClick={onCancel} disabled={guardando}>
+            Cancelar
+          </Button>
+        </div>
+      </Card>
+    </section>
   )
 }
 

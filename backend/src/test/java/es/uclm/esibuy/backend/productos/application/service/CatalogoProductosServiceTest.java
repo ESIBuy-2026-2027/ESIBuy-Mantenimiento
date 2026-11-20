@@ -10,6 +10,7 @@ import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryP
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.application.port.out.VendedorPort;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
+import es.uclm.esibuy.backend.productos.domain.model.DatosProducto;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
@@ -54,29 +55,52 @@ class CatalogoProductosServiceTest {
         when(productoRepository.buscarEnCatalogo(query)).thenReturn(pagina);
         when(usuarioEnSesion.esClientePremium("cliente@esibuy.test")).thenReturn(true);
 
-        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort, usuarioEnSesion);
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort,
+                usuarioEnSesion);
 
         PaginaCatalogo resultado = servicio.buscarProductos(query, "cliente@esibuy.test");
 
-        // La página es la del repositorio y lleva si el cliente es Premium, para darle su precio
+        // La página es la del repositorio y lleva si el cliente es Premium, para darle
+        // su precio
         assertSame(pagina, resultado.pagina());
         assertTrue(resultado.clientePremium());
     }
 
     private static Producto producto(boolean disponible) {
-        return new Producto("p-1", "u-2", "Teclado", "Con cable", new BigDecimal("50.00"), 7, "cat-1", "https://esibuy.test/teclado.png",
-                disponible, new Descuento(true, new BigDecimal("10")), new Descuento(true, new BigDecimal("20")));
+        return producto(disponible, null, 0);
+    }
+
+    private static Producto producto(boolean disponible, Double valoracionMedia, int numeroValoraciones) {
+        DatosProducto datos = new DatosProducto(
+                new DatosProducto.DatosBasicos(
+                        "u-2",
+                        "Teclado",
+                        "Con cable",
+                        new BigDecimal("50.00"),
+                        7,
+                        "cat-1",
+                        "https://esibuy.test/teclado.png"),
+                new DatosProducto.Configuracion(
+                        disponible,
+                        new Descuento(true, new BigDecimal("10")),
+                        new Descuento(true, new BigDecimal("20"))),
+                new DatosProducto.Valoraciones(valoracionMedia, numeroValoraciones));
+
+        return new Producto("p-1", datos);
     }
 
     @Test
     @DisplayName("HU9-CP19: consultar un producto que se puede comprar devuelve sus datos y su precio final para el cliente")
     void consultarUnProductoComprableDevuelveSusDatosYSuPrecioFinal() {
         when(productoRepository.buscarPorId("p-1")).thenReturn(Optional.of(producto(true)));
-        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort, usuarioEnSesion);
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort,
+                usuarioEnSesion);
 
         ProductoComercial comercial = servicio.consultarComprable("p-1", true).orElseThrow();
 
-        assertEquals(new ProductoComercial("p-1", "u-2", "Teclado", "https://esibuy.test/teclado.png", new BigDecimal("40.00"), 7),
+        assertEquals(
+                new ProductoComercial("p-1", "u-2", "Teclado", "https://esibuy.test/teclado.png",
+                        new BigDecimal("40.00"), 7),
                 comercial);
         assertEquals(new BigDecimal("45.00"), servicio.consultarComprable("p-1", false).orElseThrow().precioFinal());
     }
@@ -86,7 +110,8 @@ class CatalogoProductosServiceTest {
     void unProductoQueNoExisteONoEstaDisponibleNoSePuedeComprar() {
         when(productoRepository.buscarPorId("p-1")).thenReturn(Optional.of(producto(false)));
         when(productoRepository.buscarPorId("no-existe")).thenReturn(Optional.empty());
-        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort, usuarioEnSesion);
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort,
+                usuarioEnSesion);
 
         assertTrue(servicio.consultarComprable("p-1", false).isEmpty());
         assertTrue(servicio.consultarComprable("no-existe", false).isEmpty());
@@ -96,9 +121,12 @@ class CatalogoProductosServiceTest {
     @DisplayName("HU14-CP16: el resumen de un producto disponible lleva sus datos y el precio final para el cliente")
     void elResumenDeUnProductoDisponibleLlevaSusDatos() {
         when(productoRepository.buscarPorId("p-1")).thenReturn(Optional.of(producto(true)));
-        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort, usuarioEnSesion);
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort,
+                usuarioEnSesion);
 
-        assertEquals(new ResumenProducto("p-1", "Teclado", "https://esibuy.test/teclado.png", new BigDecimal("40.00"), 7, true),
+        assertEquals(
+                new ResumenProducto("p-1", "Teclado", "https://esibuy.test/teclado.png", new BigDecimal("40.00"), 7,
+                        true),
                 servicio.consultarResumen("p-1", true).orElseThrow());
         assertEquals(new BigDecimal("45.00"), servicio.consultarResumen("p-1", false).orElseThrow().precioFinal());
     }
@@ -107,7 +135,8 @@ class CatalogoProductosServiceTest {
     @DisplayName("HU14-CP16: un producto desactivado también tiene resumen, marcado como no disponible")
     void unProductoDesactivadoTambienTieneResumen() {
         when(productoRepository.buscarPorId("p-1")).thenReturn(Optional.of(producto(false)));
-        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort, usuarioEnSesion);
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort,
+                usuarioEnSesion);
 
         assertFalse(servicio.consultarResumen("p-1", false).orElseThrow().disponible());
     }
@@ -116,19 +145,23 @@ class CatalogoProductosServiceTest {
     @DisplayName("HU14-CP16: un producto que no existe no tiene resumen")
     void unProductoQueNoExisteNoTieneResumen() {
         when(productoRepository.buscarPorId("no-existe")).thenReturn(Optional.empty());
-        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort, usuarioEnSesion);
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort,
+                usuarioEnSesion);
 
         assertTrue(servicio.consultarResumen("no-existe", false).isEmpty());
     }
 
-    // Detalle de un producto del catálogo (HU8, T356): sus datos, el vendedor con su nombre comercial y el precio
-    // con el descuento que le toca al cliente. Este cliente es estándar: se le aplica el descuento general.
+    // Detalle de un producto del catálogo (HU8, T356): sus datos, el vendedor con
+    // su nombre comercial y el precio
+    // con el descuento que le toca al cliente. Este cliente es estándar: se le
+    // aplica el descuento general.
     @Test
     @DisplayName("HU8-CP09: el detalle de un producto disponible lleva sus datos y el nombre comercial del vendedor")
     void elDetalleLlevaSusDatosYElNombreComercialDelVendedor() {
         when(productoRepository.buscarPorId("p-1")).thenReturn(Optional.of(producto(true)));
         when(vendedorPort.nombreComercial("u-2")).thenReturn("TecnoVera");
-        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort, usuarioEnSesion);
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort,
+                usuarioEnSesion);
 
         DetalleProductoCatalogo detalle = servicio.consultarDetalle("p-1", "cliente@esibuy.test");
 
@@ -140,8 +173,7 @@ class CatalogoProductosServiceTest {
     @Test
     @DisplayName("HU13-CP26: el detalle de un producto lleva su media y su número de valoraciones")
     void elDetalleLlevaSuMediaYSuNumeroDeValoraciones() {
-        Producto valorado = new Producto("p-1", "u-2", "Teclado", "Con cable", new BigDecimal("50.00"), 7, "cat-1",
-                "https://esibuy.test/teclado.png", true, Descuento.sinDescuento(), Descuento.sinDescuento(), 4.5, 2);
+        Producto valorado = producto(true, 4.5, 2);
         when(productoRepository.buscarPorId("p-1")).thenReturn(Optional.of(valorado));
         when(vendedorPort.nombreComercial("u-2")).thenReturn("TecnoVera");
         CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort,
@@ -169,7 +201,8 @@ class CatalogoProductosServiceTest {
         assertEquals(new BigDecimal("40.00"), detalle.precioFinal());
     }
 
-    // El cliente no distingue un producto que no existe de uno que el vendedor ha desactivado: los dos son un 404.
+    // El cliente no distingue un producto que no existe de uno que el vendedor ha
+    // desactivado: los dos son un 404.
     @Test
     @DisplayName("HU8-CP11: el detalle de un producto que no existe o no está disponible no se encuentra")
     void elDetalleDeUnProductoQueNoExisteONoEstaDisponibleNoSeEncuentra() {

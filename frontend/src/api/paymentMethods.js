@@ -25,5 +25,6 @@ export function setDefaultPaymentMethod(id) {
 // falta (no es el predeterminado o es el único), no se envía. Responde 204 sin cuerpo.
 export function deletePaymentMethod(id, nuevoPredeterminado) {
   const query = buildQuery({ nuevoPredeterminado })
-  return request(`${URL_METODOS}/${encodeURIComponent(id)}${query ? `?${query}` : ''}`, { method: 'DELETE' })
+  const url = `${URL_METODOS}/${encodeURIComponent(id)}${query ? '?' + query : ''}`
+  return request(url, { method: 'DELETE' })
 }

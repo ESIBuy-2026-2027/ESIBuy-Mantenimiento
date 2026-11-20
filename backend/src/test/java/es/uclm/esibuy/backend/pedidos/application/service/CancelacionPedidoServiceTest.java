@@ -16,6 +16,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.ExistenciasPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
+import es.uclm.esibuy.backend.pedidos.domain.model.DatosPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.LineaPedido;
@@ -60,12 +61,28 @@ class CancelacionPedidoServiceTest {
 
     // Pedido de dos productos: 2 auriculares y 1 teclado
     private static Pedido pedido(String clienteId, EstadoPedido estado) {
-        return new Pedido("o-1", new NumeroPedido("ESB-2026-000001"), clienteId, "u-2", "TecnoVera", estado,
-                List.of(new LineaPedido("p-1", "Auriculares", 2, new BigDecimal("53.91")),
+        DatosPedido datosPedido = new DatosPedido(
+                "o-1",
+                new NumeroPedido("ESB-2026-000001"),
+                clienteId,
+                "u-2",
+                "TecnoVera",
+                estado,
+                List.of(
+                        new LineaPedido("p-1", "Auriculares", 2, new BigDecimal("53.91")),
                         new LineaPedido("p-2", "Teclado", 1, new BigDecimal("89.50"))),
-                new DireccionEnvioPedido("Carlos Cliente", "Calle Mayor 1", null, "13001", "Ciudad Real",
-                        "Ciudad Real", "611222333"),
-                "mp-1", Instant.parse("2026-10-29T10:00:00Z"));
+                new DireccionEnvioPedido(
+                        "Carlos Cliente",
+                        "Calle Mayor 1",
+                        null,
+                        "13001",
+                        "Ciudad Real",
+                        "Ciudad Real",
+                        "611222333"),
+                "mp-1",
+                Instant.parse("2026-10-29T10:00:00Z"));
+
+        return new Pedido(datosPedido);
     }
 
     private void elPedidoEs(Pedido pedido) {

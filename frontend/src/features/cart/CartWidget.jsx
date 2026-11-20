@@ -212,7 +212,7 @@ function VendorGroup({ group, busy, onQuantity, onRemove, styles }) {
   const headingId = useId()
 
   return (
-    <div role="group" aria-labelledby={headingId} className={styles.group}>
+    <section aria-labelledby={headingId} className={styles.group}>
       <h3 id={headingId} className={styles.groupHeader}>
         <BuildingShop20Regular aria-hidden="true" />
         <span>
@@ -252,7 +252,7 @@ function VendorGroup({ group, busy, onQuantity, onRemove, styles }) {
           </li>
         ))}
       </ul>
-    </div>
+    </section>
   )
 }
 
@@ -272,8 +272,28 @@ export default function CartWidget() {
   const button = useRef(null)
 
   // Al abrir el panel, el foco pasa a él (para que Escape lo cierre); al cerrarlo, vuelve al botón.
+  // Al abrir el panel, el foco pasa a él. Escape cierra el panel y devuelve el foco al botón.
   useEffect(() => {
-    if (open) panel.current?.focus()
+    if (open) {
+      panel.current?.focus()
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return undefined
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setOpenPath(null)
+        button.current?.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [open])
 
   if (status === 'idle') return null
@@ -307,11 +327,9 @@ export default function CartWidget() {
       {open && (
         <section
           ref={panel}
-          role="region"
           aria-label="Tu carrito"
           tabIndex={-1}
           className={styles.panel}
-          onKeyDown={(event) => event.key === 'Escape' && close()}
         >
           <div className={styles.header}>
             <h2 className={styles.title}>

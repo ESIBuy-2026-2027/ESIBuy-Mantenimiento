@@ -62,7 +62,7 @@ public class RegistroUsuarioService implements RegistroUsuarioUseCase {
     @PreAuthorize(Permisos.PUBLICO)
     @Override
     public void registrarCliente(RegistrarClienteCommand comando) {
-        // Todo lo que se puede comprobar sin salir del núcleo va antes de consultar la
+        // Lo que se puede comprobar sin salir del núcleo va antes de consultar la
         // base de datos.
         DatosPersonales datosPersonales = new DatosPersonales(comando.nombre(), comando.apellidos(),
                 comando.imagenPerfil());

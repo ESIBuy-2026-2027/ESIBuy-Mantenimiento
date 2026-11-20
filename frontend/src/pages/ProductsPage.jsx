@@ -27,7 +27,7 @@ const PAGE_SIZE = 10
 const ENTRADA_ESCALONADA_MS = 60
 
 const useStyles = makeStyles({
-  // La página ocupa todo el ancho (la selección de los mejores, también); el resto del contenido va en una columna.
+  // La página ocupa el ancho (la selección de los mejores, también); el resto del contenido va en una columna.
   main: {
     display: 'flex',
     flexDirection: 'column',
@@ -123,7 +123,7 @@ export default function ProductsPage() {
       .then((lista) => {
         if (!cancelled && !cambiados.current) setFavoritos(aFavoritos(lista))
       })
-      .catch(() => {})
+      .catch(() => { })
     return () => {
       cancelled = true
     }

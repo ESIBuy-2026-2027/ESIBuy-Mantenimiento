@@ -38,7 +38,7 @@ const useStyles = makeStyles({
 })
 
 // Precio de un producto: el final, destacado, y, si hay descuento, el original tachado, el porcentaje y lo que se
-// ahorra. Todo llega calculado por el servidor para quien consulta (cliente Estándar o Premium). La versión `compact`
+// ahorra. El servidor hace el cálculo para quien consulta (cliente Estándar o Premium). La versión `compact`
 // (para las tarjetas) usa letra más pequeña y no dice cuánto se ahorra.
 export default function PriceBlock({ precio, descuento, precioFinal, compact = false }) {
   const styles = useStyles()

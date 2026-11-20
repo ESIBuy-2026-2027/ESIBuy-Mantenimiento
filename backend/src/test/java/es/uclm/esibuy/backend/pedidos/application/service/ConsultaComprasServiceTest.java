@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
+import es.uclm.esibuy.backend.pedidos.domain.model.DatosPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.LineaPedido;
@@ -63,7 +64,8 @@ class ConsultaComprasServiceTest {
         assertEquals(List.of(par("c-1", "p-1")), pedidos.consultas);
     }
 
-    // --- Historial y detalle de los pedidos (HU11) -------------------------------------------------------------
+    // --- Historial y detalle de los pedidos (HU11)
+    // -------------------------------------------------------------
 
     @Test
     @DisplayName("HU11-CP01: el historial devuelve los pedidos del cliente de la sesión, del más reciente al más antiguo")
@@ -105,11 +107,27 @@ class ConsultaComprasServiceTest {
     }
 
     private static Pedido pedidoDe(String id, String clienteId) {
-        return new Pedido(id, new NumeroPedido("ESB-2026-000001"), clienteId, "u-2", "TecnoVera",
-                EstadoPedido.PAGADO, List.of(new LineaPedido("p-1", "Auriculares", 2, new BigDecimal("53.91"))),
-                new DireccionEnvioPedido("Carlos Cliente", "Calle Mayor 1", null, "13001", "Ciudad Real",
-                        "Ciudad Real", "611222333"),
-                "mp-1", Instant.parse("2026-10-29T10:00:00Z"));
+        DatosPedido datosPedido = new DatosPedido(
+                id,
+                new NumeroPedido("ESB-2026-000001"),
+                clienteId,
+                "u-2",
+                "TecnoVera",
+                EstadoPedido.PAGADO,
+                List.of(
+                        new LineaPedido("p-1", "Auriculares", 2, new BigDecimal("53.91"))),
+                new DireccionEnvioPedido(
+                        "Carlos Cliente",
+                        "Calle Mayor 1",
+                        null,
+                        "13001",
+                        "Ciudad Real",
+                        "Ciudad Real",
+                        "611222333"),
+                "mp-1",
+                Instant.parse("2026-10-29T10:00:00Z"));
+
+        return new Pedido(datosPedido);
     }
 
     private static String par(String clienteId, String productoId) {
@@ -124,8 +142,10 @@ class ConsultaComprasServiceTest {
         }
     }
 
-    // Pedidos pagados guardados como pares cliente|producto; apunta cada consulta que recibe.
-    // Para el historial (HU11), los pedidos de cada cliente ya ordenados y los pedidos por id.
+    // Pedidos pagados guardados como pares cliente|producto; apunta cada consulta
+    // que recibe.
+    // Para el historial (HU11), los pedidos de cada cliente ya ordenados y los
+    // pedidos por id.
     private static final class PedidosPagadosFijos implements PedidoRepositoryPort {
         private final Set<String> pagados = new HashSet<>();
         private final List<String> consultas = new ArrayList<>();

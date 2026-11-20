@@ -38,7 +38,8 @@ public class VirusTotalAdapter implements AnalisisImagenPort {
         try {
             return consultarInforme(urlImagen);
         } catch (RestClientException e) {
-            // Error de VirusTotal (401 API key, 429 cuota, 5xx) o sin conexión: no hay respuesta sobre la imagen
+            // Error de VirusTotal (401 API key, 429 cuota, 5xx) o sin conexión: no hay
+            // respuesta sobre la imagen
             return ResultadoAnalisis.SIN_RESULTADO;
         }
     }
@@ -51,7 +52,8 @@ public class VirusTotalAdapter implements AnalisisImagenPort {
                     .body(InformeUrl.class);
             return segun(informe.data().attributes().estadisticas());
         } catch (HttpClientErrorException.NotFound e) {
-            // Nadie la ha analizado todavía: se envía a analizar y se espera un poco al resultado
+            // Nadie la ha analizado todavía: se envía a analizar y se espera un poco al
+            // resultado
             return analizarUrlNueva(urlImagen);
         }
     }
@@ -80,7 +82,8 @@ public class VirusTotalAdapter implements AnalisisImagenPort {
         return ResultadoAnalisis.SIN_RESULTADO;
     }
 
-    // Maliciosa si algún motor la marca como malicious; los sospechosos no cuentan (decisión del equipo)
+    // Maliciosa si algún motor la marca como malicious; los sospechosos no cuentan
+    // (decisión del equipo)
     private static ResultadoAnalisis segun(Estadisticas estadisticas) {
         return estadisticas.malicious() > 0 ? ResultadoAnalisis.MALICIOSA : ResultadoAnalisis.SEGURA;
     }
@@ -93,7 +96,8 @@ public class VirusTotalAdapter implements AnalisisImagenPort {
         }
     }
 
-    // VirusTotal identifica una URL por la propia URL en Base64 URL-safe sin el relleno '='
+    // VirusTotal identifica una URL por la propia URL en Base64 URL-safe sin el
+    // relleno '='
     private static String idDeUrl(String url) {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(url.getBytes(StandardCharsets.UTF_8));
     }
@@ -102,32 +106,37 @@ public class VirusTotalAdapter implements AnalisisImagenPort {
 
     // Recuento de motores, igual en el informe de una URL y en un análisis
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record Estadisticas(int malicious) {}
+    record Estadisticas(int malicious) {
+    }
 
-    // GET /urls/{id}
     @JsonIgnoreProperties(ignoreUnknown = true)
     record InformeUrl(Datos data) {
         @JsonIgnoreProperties(ignoreUnknown = true)
-        record Datos(Atributos attributes) {}
+        record Datos(Atributos attributes) {
+        }
 
         @JsonIgnoreProperties(ignoreUnknown = true)
-        record Atributos(@JsonProperty("last_analysis_stats") Estadisticas estadisticas) {}
+        record Atributos(@JsonProperty("last_analysis_stats") Estadisticas estadisticas) {
+        }
     }
 
     // POST /urls: devuelve el id del análisis
     @JsonIgnoreProperties(ignoreUnknown = true)
     record EnvioAnalisis(Datos data) {
         @JsonIgnoreProperties(ignoreUnknown = true)
-        record Datos(String id) {}
+        record Datos(String id) {
+        }
     }
 
     // GET /analyses/{id}: status queued, in-progress o completed
     @JsonIgnoreProperties(ignoreUnknown = true)
     record Analisis(Datos data) {
         @JsonIgnoreProperties(ignoreUnknown = true)
-        record Datos(Atributos attributes) {}
+        record Datos(Atributos attributes) {
+        }
 
         @JsonIgnoreProperties(ignoreUnknown = true)
-        record Atributos(String status, Estadisticas stats) {}
+        record Atributos(String status, Estadisticas stats) {
+        }
     }
 }
