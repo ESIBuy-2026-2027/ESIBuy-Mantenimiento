@@ -5,6 +5,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
 import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalogo;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
+import es.uclm.esibuy.backend.productos.domain.model.DatosProducto;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.domain.model.ProductoPage;
@@ -53,7 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 // y HU39-CP02, propuestos. La media y el número de valoraciones (HU13, T415): caso HU13-CP24, propuesto.
 // Todos los productos de un vendedor para sus estadísticas (HU17, T280): caso HU17-CP09, propuesto.
 @DataMongoTest
-@Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
+@Import({ MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class })
 class ProductoMongoAdapterTest {
 
     private static final String COLECCION = "productos";
@@ -73,12 +74,45 @@ class ProductoMongoAdapterTest {
     }
 
     private static Producto producto(String id, int stock) {
-        return new Producto(id, "v-1", "Teclado mecánico", "Switches rojos", new BigDecimal("89.50"), stock,
-                "cat-2", "https://esibuy.test/teclado.png", true,
-                new Descuento(true, new BigDecimal("12.5")), Descuento.sinDescuento());
+        return crearProducto(
+                id,
+                "v-1",
+                "Teclado mecánico",
+                "Switches rojos",
+                new BigDecimal("89.50"),
+                stock,
+                "cat-2",
+                "https://esibuy.test/teclado.png",
+                true,
+                new Descuento(true, new BigDecimal("12.5")),
+                Descuento.sinDescuento());
     }
 
-    // MongoTemplate devuelve el documento tal cual está en MongoDB, sin pasar por el mapper.
+    private static Producto crearProducto(
+            String id,
+            String vendedorId,
+            String nombre,
+            String descripcion,
+            BigDecimal precio,
+            int stock,
+            String categoriaId,
+            String imagen,
+            boolean disponible,
+            Descuento descuento,
+            Descuento descuentoPremium) {
+
+        DatosProducto datos = new DatosProducto(
+                new DatosProducto.DatosBasicos(
+                        vendedorId, nombre, descripcion, precio, stock, categoriaId, imagen),
+                new DatosProducto.Configuracion(
+                        disponible, descuento, descuentoPremium),
+                new DatosProducto.Valoraciones(null, 0));
+
+        return new Producto(id, datos);
+    }
+
+    // MongoTemplate devuelve el documento tal cual está en MongoDB, sin pasar por
+    // el mapper.
     private Document documentoEnBruto() {
         Document guardado = mongoTemplate.getCollection(COLECCION).find().first();
         assertNotNull(guardado);
@@ -174,12 +208,27 @@ class ProductoMongoAdapterTest {
 
     // Listado de los productos propios (HU32, T184).
 
-    // Guarda un producto y fija su createdAt a mano, para que el orden no dependa del reloj.
+    // Guarda un producto y fija su createdAt a mano, para que el orden no dependa
+    // del reloj.
     private String guardarProducto(String vendedorId, String nombre, String categoriaId, String creadoEn) {
-        String id = adapter.guardar(new Producto(null, vendedorId, nombre, "", new BigDecimal("10"), 1, categoriaId,
-                "", true, Descuento.sinDescuento(), Descuento.sinDescuento())).getId();
-        mongoTemplate.updateFirst(Query.query(Criteria.where("_id").is(new ObjectId(id))),
-                Update.update("createdAt", Date.from(Instant.parse(creadoEn))), COLECCION);
+        String id = adapter.guardar(crearProducto(
+                null,
+                vendedorId,
+                nombre,
+                "",
+                new BigDecimal("10"),
+                1,
+                categoriaId,
+                "",
+                true,
+                Descuento.sinDescuento(),
+                Descuento.sinDescuento())).getId();
+
+        mongoTemplate.updateFirst(
+                Query.query(Criteria.where("_id").is(new ObjectId(id))),
+                Update.update("createdAt", Date.from(Instant.parse(creadoEn))),
+                COLECCION);
+
         return id;
     }
 
@@ -241,7 +290,7 @@ class ProductoMongoAdapterTest {
         assertEquals(3, segunda.totalElementos());
     }
 
-        @Test
+    @Test
     @DisplayName("HU31-CP24: la base de datos rechaza un nombre repetido del mismo vendedor aunque se salte la comprobación previa")
     void guardarRechazaUnNombreRepetidoDelMismoVendedor() {
         adapter.guardar(productoNuevo("v-1", "Teclado"));
@@ -251,7 +300,8 @@ class ProductoMongoAdapterTest {
         assertEquals(2, mongoTemplate.getCollection(COLECCION).countDocuments());
     }
 
-    // T258: el dominio guarda el nombre recortado, así que el índice único también para los espacios.
+    // T258: el dominio guarda el nombre recortado, así que el índice único también
+    // para los espacios.
     @Test
     @DisplayName("HU31-CP25: la base de datos rechaza el mismo nombre con espacios en los extremos")
     void guardarRechazaUnNombreRepetidoConEspacios() {
@@ -298,8 +348,18 @@ class ProductoMongoAdapterTest {
     void buscarEnCatalogoSoloDevuelveDisponiblesDeTodosLosVendedores() {
         adapter.guardar(productoNuevo("v-1", "Teclado"));
         adapter.guardar(productoNuevo("v-2", "Ratón"));
-        adapter.guardar(new Producto(null, "v-1", "Monitor retirado", "", new BigDecimal("10"), 1, "cat-1", "", false,
-                Descuento.sinDescuento(), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(
+                null,
+                "v-1",
+                "Monitor retirado",
+                "",
+                new BigDecimal("10"),
+                1,
+                "cat-1",
+                "",
+                false,
+                Descuento.sinDescuento(),
+                Descuento.sinDescuento()));
 
         ProductoPage pagina = adapter.buscarEnCatalogo(sinFiltros());
 
@@ -314,7 +374,8 @@ class ProductoMongoAdapterTest {
         adapter.guardar(productoNuevo("v-1", "Lámpara de escritorio"));
         adapter.guardar(productoNuevo("v-2", "Teclado"));
 
-        // Sin tilde y en mayúsculas, y con tilde en minúsculas: las dos encuentran «Lámpara».
+        // Sin tilde y en mayúsculas, y con tilde en minúsculas: las dos encuentran
+        // «Lámpara».
         assertEquals(List.of("Lámpara de escritorio"), nombres(adapter.buscarEnCatalogo(buscando("LAMPARA"))));
         assertEquals(List.of("Lámpara de escritorio"), nombres(adapter.buscarEnCatalogo(buscando("lámpara"))));
     }
@@ -325,7 +386,8 @@ class ProductoMongoAdapterTest {
         adapter.guardar(productoNuevo("v-1", "Cable (USB-C)"));
         adapter.guardar(productoNuevo("v-1", "Cable USB"));
 
-        // «(» y «.*» se buscan como caracteres: como regex, «(usb» no compilaría y «.*» lo encontraría todo.
+        // «(» y «.*» se buscan como caracteres: como regex, «(usb» no compilaría y «.*»
+        // lo encontraría todo.
         assertEquals(List.of("Cable (USB-C)"), nombres(adapter.buscarEnCatalogo(buscando("(usb"))));
         assertEquals(List.of(), nombres(adapter.buscarEnCatalogo(buscando(".*"))));
     }
@@ -333,7 +395,8 @@ class ProductoMongoAdapterTest {
     @Test
     @DisplayName("HU7-CP13: el filtro por categoría se puede combinar con la búsqueda")
     void buscarEnCatalogoFiltraPorCategoriaYBusqueda() {
-        // Dos «Teclado» de vendedores distintos (un vendedor no repite nombre): uno en cat-1 y otro en cat-2.
+        // Dos «Teclado» de vendedores distintos (un vendedor no repite nombre): uno en
+        // cat-1 y otro en cat-2.
         guardarProducto("v-1", "Teclado", "cat-1", "2026-10-01T10:00:00Z");
         guardarProducto("v-2", "Teclado", "cat-2", "2026-10-02T10:00:00Z");
         guardarProducto("v-2", "Ratón", "cat-2", "2026-10-03T10:00:00Z");
@@ -349,7 +412,8 @@ class ProductoMongoAdapterTest {
     @Test
     @DisplayName("HU7-CP14: el catálogo se ordena por nombre en los dos sentidos, paginado y con el total completo")
     void buscarEnCatalogoOrdenaPorNombreYPagina() {
-        // Guardados fuera de orden y sin tilde inicial, para no depender del orden alfabético en español.
+        // Guardados fuera de orden y sin tilde inicial, para no depender del orden
+        // alfabético en español.
         adapter.guardar(productoNuevo("v-1", "Cesta"));
         adapter.guardar(productoNuevo("v-1", "Atril"));
         adapter.guardar(productoNuevo("v-2", "Banco"));
@@ -364,8 +428,10 @@ class ProductoMongoAdapterTest {
         assertEquals(List.of("Cesta", "Banco"), nombres(descendente));
     }
 
-    // Valoración mínima y orden por valoración (HU7) con la media de las valoraciones de HU13 (T415). Un producto
-    // sin valoraciones no llega a ningún mínimo y al ordenar cuenta como el que menos.
+    // Valoración mínima y orden por valoración (HU7) con la media de las
+    // valoraciones de HU13 (T415). Un producto
+    // sin valoraciones no llega a ningún mínimo y al ordenar cuenta como el que
+    // menos.
     @Test
     @DisplayName("HU7-CP15: con una valoración mínima solo salen los productos con esa media o más")
     void buscarEnCatalogoConValoracionMinimaFiltraPorLaMedia() {
@@ -396,7 +462,8 @@ class ProductoMongoAdapterTest {
         ProductoPage ascendente = adapter.buscarEnCatalogo(
                 new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.VALORACION, false, 0, 10));
 
-        // Banco y Cesta empatan a 4,0: el empate se resuelve de la A a la Z en los dos sentidos
+        // Banco y Cesta empatan a 4,0: el empate se resuelve de la A a la Z en los dos
+        // sentidos
         assertEquals(List.of("Banco", "Cesta", "Dado", "Atril"), nombres(descendente));
         assertEquals(List.of("Atril", "Dado", "Banco", "Cesta"), nombres(ascendente));
     }
@@ -406,7 +473,8 @@ class ProductoMongoAdapterTest {
         adapter.actualizarValoracion(id, media, 2);
     }
 
-    // Catálogo sin búsqueda, categoría ni valoración mínima, por nombre de la A a la Z, primera página de 10.
+    // Catálogo sin búsqueda, categoría ni valoración mínima, por nombre de la A a
+    // la Z, primera página de 10.
     private static BuscarCatalogoQuery sinFiltros() {
         return new BuscarCatalogoQuery(null, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
     }
@@ -417,13 +485,26 @@ class ProductoMongoAdapterTest {
     }
 
     private static Producto productoNuevo(String vendedorId, String nombre) {
-        return new Producto(null, vendedorId, nombre, "", new BigDecimal("10"), 1, "cat-1", "", true,
-                Descuento.sinDescuento(), Descuento.sinDescuento());
+        return crearProducto(
+                null,
+                vendedorId,
+                nombre,
+                "",
+                new BigDecimal("10"),
+                1,
+                "cat-1",
+                "",
+                true,
+                Descuento.sinDescuento(),
+                Descuento.sinDescuento());
     }
 
-    // Stock al realizar un pedido (HU10): se descuenta en una sola operación de MongoDB, condicionada al stock
-    // Media y número de valoraciones del producto (HU13, T415): el módulo de valoraciones los calcula con todas las
-    // valoraciones del producto y el adaptador solo los guarda, para que el catálogo pueda ordenar y filtrar por ellos.
+    // Stock al realizar un pedido (HU10): se descuenta en una sola operación de
+    // MongoDB, condicionada al stock
+    // Media y número de valoraciones del producto (HU13, T415): el módulo de
+    // valoraciones los calcula con todas las
+    // valoraciones del producto y el adaptador solo los guarda, para que el
+    // catálogo pueda ordenar y filtrar por ellos.
     @Test
     @DisplayName("HU13-CP24: guarda en el producto la media y el número de valoraciones que recibe")
     void guardaLaMediaYElNumeroDeValoraciones() {
@@ -501,8 +582,18 @@ class ProductoMongoAdapterTest {
     @DisplayName("HU47-CP02: listar todos los productos devuelve solo los del vendedor indicado")
     void listarTodosPorVendedorDevuelveSoloLosDelVendedor() {
         adapter.guardar(producto(null, 5));
-        Producto deOtroVendedor = new Producto(null, "v-2", "Ratón", "Óptico", new BigDecimal("20.00"), 2,
-                "cat-2", "https://esibuy.test/raton.png", true, Descuento.sinDescuento(), Descuento.sinDescuento());
+        Producto deOtroVendedor = crearProducto(
+                null,
+                "v-2",
+                "Ratón",
+                "Óptico",
+                new BigDecimal("20.00"),
+                2,
+                "cat-2",
+                "https://esibuy.test/raton.png",
+                true,
+                Descuento.sinDescuento(),
+                Descuento.sinDescuento());
         adapter.guardar(deOtroVendedor);
 
         List<Producto> productos = adapter.listarTodosPorVendedor("v-1");

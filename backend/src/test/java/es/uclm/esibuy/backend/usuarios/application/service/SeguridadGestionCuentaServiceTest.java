@@ -101,16 +101,35 @@ class SeguridadGestionCuentaServiceTest {
             return mock(CodigoRecuperacionRepositoryPort.class);
         }
 
-        // Los puertos hacia los datos del cliente en otros módulos no se comprueban aquí: basta con dobles sueltos
+        // Los puertos hacia los datos del cliente en otros módulos no se comprueban
+        // aquí: basta con dobles sueltos
         @Bean
-        GestionCuentaUseCase gestionCuenta(UsuarioRepositoryPort usuarios, HashContrasenaPort hash,
-                ProductosVendedorPort productos, PedidosVendedorPort pedidos, ValoracionesProductoPort valoraciones,
-                FactorAutenticacionRepositoryPort factores, CodigoVerificacionRepositoryPort codigosVerificacion,
+        GestionCuentaUseCase gestionCuenta(
+                UsuarioRepositoryPort usuarios,
+                HashContrasenaPort hash,
+                ProductosVendedorPort productos,
+                PedidosVendedorPort pedidos,
+                ValoracionesProductoPort valoraciones,
+                FactorAutenticacionRepositoryPort factores,
+                CodigoVerificacionRepositoryPort codigosVerificacion,
                 CodigoRecuperacionRepositoryPort codigosRecuperacion) {
-            return new GestionCuentaService(usuarios, hash, productos, pedidos, valoraciones, factores,
-                    codigosVerificacion, codigosRecuperacion, mock(ListaDeseosClientePort.class),
-                    mock(CarritoClientePort.class), mock(PreferenciasClientePort.class),
-                    mock(MetodosPagoClientePort.class), mock(DireccionesClientePort.class));
+
+            DependenciasGestionCuenta dependencias = new DependenciasGestionCuenta(
+                    usuarios,
+                    hash,
+                    productos,
+                    pedidos,
+                    valoraciones,
+                    factores,
+                    codigosVerificacion,
+                    codigosRecuperacion,
+                    mock(ListaDeseosClientePort.class),
+                    mock(CarritoClientePort.class),
+                    mock(PreferenciasClientePort.class),
+                    mock(MetodosPagoClientePort.class),
+                    mock(DireccionesClientePort.class));
+
+            return new GestionCuentaService(dependencias);
         }
     }
 
@@ -166,7 +185,8 @@ class SeguridadGestionCuentaServiceTest {
     @WithMockUser(username = CLIENTE, roles = "CLIENTE")
     @DisplayName("HU25-CP04: un cliente elimina su propia cuenta")
     void unClienteEliminaSuCuenta() {
-        // El repositorio y el hash dejan que la llamada termine: así se ve que la seguridad la ha dejado pasar
+        // El repositorio y el hash dejan que la llamada termine: así se ve que la
+        // seguridad la ha dejado pasar
         when(usuarioRepository.buscarPorCorreo(CLIENTE)).thenReturn(Optional.of(cliente()));
         when(hashContrasena.coincide("Password1!", "hash")).thenReturn(true);
 
@@ -204,7 +224,8 @@ class SeguridadGestionCuentaServiceTest {
     private static Usuario cliente() {
         return new Usuario("u-1", new DatosPersonales("Lucía", "Torres Vega", null), new Email(CLIENTE), "hash",
                 Rol.CLIENTE, new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"),
-                        LocalDate.of(1996, Month.MAY, 20), null), null);
+                        LocalDate.of(1996, Month.MAY, 20), null),
+                null);
     }
 
     private static Usuario vendedor() {

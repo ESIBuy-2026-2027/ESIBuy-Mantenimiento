@@ -10,6 +10,7 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoExcepti
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
+import es.uclm.esibuy.backend.pedidos.domain.model.DatosPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.LineaPedido;
@@ -52,236 +53,268 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(SecurityConfig.class)
 class PedidoControllerTest {
 
-    private static final String URL = "/api/customer/orders";
-    private static final String CLIENTE = "cliente@esibuy.test";
-    private static final String CUERPO =
-            "{\"vendedorId\": \"u-2\", \"direccionId\": \"d-1\", \"paymentMethodId\": \"mp-1\", \"clienteId\": \"otro\"}";
-    private static final RealizarPedidoCommand COMANDO = new RealizarPedidoCommand(CLIENTE, "u-2", "d-1", "mp-1");
+        private static final String URL = "/api/customer/orders";
+        private static final String CLIENTE = "cliente@esibuy.test";
+        private static final String CUERPO = "{\"vendedorId\": \"u-2\", \"direccionId\": \"d-1\", \"paymentMethodId\": \"mp-1\", \"clienteId\": \"otro\"}";
+        private static final RealizarPedidoCommand COMANDO = new RealizarPedidoCommand(CLIENTE, "u-2", "d-1", "mp-1");
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @MockitoBean
-    private RealizacionPedidoUseCase realizacionPedido;
+        @MockitoBean
+        private RealizacionPedidoUseCase realizacionPedido;
 
-    @MockitoBean
-    private ConsultaComprasUseCase consultaCompras;
+        @MockitoBean
+        private ConsultaComprasUseCase consultaCompras;
 
-    @MockitoBean
-    private CancelacionPedidoUseCase cancelacionPedido;
+        @MockitoBean
+        private CancelacionPedidoUseCase cancelacionPedido;
 
-    private static final Pedido PEDIDO = new Pedido("o-1", new NumeroPedido("ESB-2026-000001"), "c-1", "u-2",
-            "TecnoVera", EstadoPedido.PAGADO, List.of(new LineaPedido("p-1", "Auriculares", 2,
-                    new BigDecimal("53.91"))),
-            new DireccionEnvioPedido("Carlos", "Calle Mayor 1", null, "13001", "Ciudad Real", "Ciudad Real",
-                    "611222333"),
-            "mp-1", Instant.parse("2026-10-29T10:00:00Z"));
+        private static final Pedido PEDIDO = new Pedido(
+                        new DatosPedido(
+                                        "o-1",
+                                        new NumeroPedido("ESB-2026-000001"),
+                                        "c-1",
+                                        "u-2",
+                                        "TecnoVera",
+                                        EstadoPedido.PAGADO,
+                                        List.of(new LineaPedido(
+                                                        "p-1",
+                                                        "Auriculares",
+                                                        2,
+                                                        new BigDecimal("53.91"))),
+                                        new DireccionEnvioPedido(
+                                                        "Carlos",
+                                                        "Calle Mayor 1",
+                                                        null,
+                                                        "13001",
+                                                        "Ciudad Real",
+                                                        "Ciudad Real",
+                                                        "611222333"),
+                                        "mp-1",
+                                        Instant.parse("2026-10-29T10:00:00Z")));
 
-    private ResultActions realizar(String cuerpo) throws Exception {
-        return mockMvc.perform(post(URL).with(user(CLIENTE).roles("CLIENTE")).with(csrf())
-                .contentType(MediaType.APPLICATION_JSON).content(cuerpo));
-    }
+        private ResultActions realizar(String cuerpo) throws Exception {
+                return mockMvc.perform(post(URL).with(user(CLIENTE).roles("CLIENTE")).with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON).content(cuerpo));
+        }
 
-    @Test
-    @DisplayName("HU10-CP14: realizar un pedido responde 201 con el pedido con el contrato del frontend")
-    void realizarUnPedidoResponde201ConElPedido() throws Exception {
-        when(realizacionPedido.realizar(COMANDO)).thenReturn(PEDIDO);
+        @Test
+        @DisplayName("HU10-CP14: realizar un pedido responde 201 con el pedido con el contrato del frontend")
+        void realizarUnPedidoResponde201ConElPedido() throws Exception {
+                when(realizacionPedido.realizar(COMANDO)).thenReturn(PEDIDO);
 
-        realizar(CUERPO)
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value("o-1"))
-                .andExpect(jsonPath("$.numeroPedido").value("ESB-2026-000001"))
-                .andExpect(jsonPath("$.vendedor.id").value("u-2"))
-                .andExpect(jsonPath("$.vendedor.nombreComercial").value("TecnoVera"))
-                .andExpect(jsonPath("$.total").value(107.82))
-                .andExpect(jsonPath("$.estado").value("PAGADO"))
-                .andExpect(jsonPath("$.paymentMethodId").value("mp-1"))
-                .andExpect(jsonPath("$.direccionEnvio.calle").value("Calle Mayor 1"))
-                .andExpect(jsonPath("$.lineas[0].productoId").value("p-1"))
-                .andExpect(jsonPath("$.lineas[0].nombre").value("Auriculares"))
-                .andExpect(jsonPath("$.lineas[0].cantidad").value(2))
-                .andExpect(jsonPath("$.lineas[0].precioUnitario").value(53.91))
-                .andExpect(jsonPath("$.lineas[0].subtotal").value(107.82))
-                .andExpect(jsonPath("$.createdAt").value("2026-10-29T10:00:00Z"))
-                .andExpect(jsonPath("$.clienteId").doesNotExist());
-    }
+                realizar(CUERPO)
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.id").value("o-1"))
+                                .andExpect(jsonPath("$.numeroPedido").value("ESB-2026-000001"))
+                                .andExpect(jsonPath("$.vendedor.id").value("u-2"))
+                                .andExpect(jsonPath("$.vendedor.nombreComercial").value("TecnoVera"))
+                                .andExpect(jsonPath("$.total").value(107.82))
+                                .andExpect(jsonPath("$.estado").value("PAGADO"))
+                                .andExpect(jsonPath("$.paymentMethodId").value("mp-1"))
+                                .andExpect(jsonPath("$.direccionEnvio.calle").value("Calle Mayor 1"))
+                                .andExpect(jsonPath("$.lineas[0].productoId").value("p-1"))
+                                .andExpect(jsonPath("$.lineas[0].nombre").value("Auriculares"))
+                                .andExpect(jsonPath("$.lineas[0].cantidad").value(2))
+                                .andExpect(jsonPath("$.lineas[0].precioUnitario").value(53.91))
+                                .andExpect(jsonPath("$.lineas[0].subtotal").value(107.82))
+                                .andExpect(jsonPath("$.createdAt").value("2026-10-29T10:00:00Z"))
+                                .andExpect(jsonPath("$.clienteId").doesNotExist());
+        }
 
-    @Test
-    @DisplayName("HU10-CP16: un método de pago o una dirección que no son del cliente responden 400")
-    void unMetodoODireccionAjenosResponden400() throws Exception {
-        when(realizacionPedido.realizar(COMANDO))
-                .thenThrow(new MetodoPagoNoValidoException("no"), new DireccionNoValidaException("no"));
+        @Test
+        @DisplayName("HU10-CP16: un método de pago o una dirección que no son del cliente responden 400")
+        void unMetodoODireccionAjenosResponden400() throws Exception {
+                when(realizacionPedido.realizar(COMANDO))
+                                .thenThrow(new MetodoPagoNoValidoException("no"), new DireccionNoValidaException("no"));
 
-        realizar(CUERPO).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
-        realizar(CUERPO).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
-    }
+                realizar(CUERPO).andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+                realizar(CUERPO).andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        }
 
-    @Test
-    @DisplayName("HU10-CP16: una petición sin proveedor, dirección o método de pago responde 400 sin llegar al caso de uso")
-    void unaPeticionIncompletaResponde400() throws Exception {
-        realizar("{\"vendedorId\": \"u-2\", \"direccionId\": \"d-1\"}").andExpect(status().isBadRequest());
-        realizar("{\"vendedorId\": \"u-2\", \"paymentMethodId\": \"mp-1\"}").andExpect(status().isBadRequest());
-        realizar("{\"direccionId\": \"d-1\", \"paymentMethodId\": \"mp-1\"}").andExpect(status().isBadRequest());
+        @Test
+        @DisplayName("HU10-CP16: una petición sin proveedor, dirección o método de pago responde 400 sin llegar al caso de uso")
+        void unaPeticionIncompletaResponde400() throws Exception {
+                realizar("{\"vendedorId\": \"u-2\", \"direccionId\": \"d-1\"}").andExpect(status().isBadRequest());
+                realizar("{\"vendedorId\": \"u-2\", \"paymentMethodId\": \"mp-1\"}").andExpect(status().isBadRequest());
+                realizar("{\"direccionId\": \"d-1\", \"paymentMethodId\": \"mp-1\"}")
+                                .andExpect(status().isBadRequest());
 
-        verify(realizacionPedido, never()).realizar(any());
-    }
+                verify(realizacionPedido, never()).realizar(any());
+        }
 
-    @Test
-    @DisplayName("HU10-CP15: si falta stock responde 409 con el code INSUFFICIENT_STOCK")
-    void siFaltaStockResponde409() throws Exception {
-        when(realizacionPedido.realizar(COMANDO)).thenThrow(new StockInsuficientePedidoException("no"));
+        @Test
+        @DisplayName("HU10-CP15: si falta stock responde 409 con el code INSUFFICIENT_STOCK")
+        void siFaltaStockResponde409() throws Exception {
+                when(realizacionPedido.realizar(COMANDO)).thenThrow(new StockInsuficientePedidoException("no"));
 
-        realizar(CUERPO).andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("INSUFFICIENT_STOCK"))
-                .andExpect(jsonPath("$.mensaje").value("No se puede comprar un producto del pedido"));
-    }
+                realizar(CUERPO).andExpect(status().isConflict())
+                                .andExpect(jsonPath("$.code").value("INSUFFICIENT_STOCK"))
+                                .andExpect(jsonPath("$.mensaje").value("No se puede comprar un producto del pedido"));
+        }
 
-    @Test
-    @DisplayName("HU10-CP17: sin productos de ese proveedor en el carrito responde 409 con el code CART_EMPTY")
-    void sinProductosDelProveedorResponde409() throws Exception {
-        when(realizacionPedido.realizar(COMANDO)).thenThrow(new CarritoSinProductosDelProveedorException("no"));
+        @Test
+        @DisplayName("HU10-CP17: sin productos de ese proveedor en el carrito responde 409 con el code CART_EMPTY")
+        void sinProductosDelProveedorResponde409() throws Exception {
+                when(realizacionPedido.realizar(COMANDO)).thenThrow(new CarritoSinProductosDelProveedorException("no"));
 
-        realizar(CUERPO).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("CART_EMPTY"));
-    }
+                realizar(CUERPO).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("CART_EMPTY"));
+        }
 
-    @Test
-    @DisplayName("HU10-CP18: sin sesión responde 401, otro rol 403 y sin CSRF se rechaza")
-    void soloElClienteRealizaPedidos() throws Exception {
-        mockMvc.perform(post(URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(CUERPO))
-                .andExpect(status().isUnauthorized());
-        mockMvc.perform(post(URL).with(user("vendedor@esibuy.test").roles("VENDEDOR")).with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON).content(CUERPO))
-                .andExpect(status().isForbidden());
-        mockMvc.perform(post(URL).with(user(CLIENTE).roles("CLIENTE"))
-                        .contentType(MediaType.APPLICATION_JSON).content(CUERPO))
-                .andExpect(status().isForbidden());
+        @Test
+        @DisplayName("HU10-CP18: sin sesión responde 401, otro rol 403 y sin CSRF se rechaza")
+        void soloElClienteRealizaPedidos() throws Exception {
+                mockMvc.perform(post(URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(CUERPO))
+                                .andExpect(status().isUnauthorized());
+                mockMvc.perform(post(URL).with(user("vendedor@esibuy.test").roles("VENDEDOR")).with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON).content(CUERPO))
+                                .andExpect(status().isForbidden());
+                mockMvc.perform(post(URL).with(user(CLIENTE).roles("CLIENTE"))
+                                .contentType(MediaType.APPLICATION_JSON).content(CUERPO))
+                                .andExpect(status().isForbidden());
 
-        verify(realizacionPedido, never()).realizar(any());
-    }
+                verify(realizacionPedido, never()).realizar(any());
+        }
 
-    // --- Historial y detalle de los pedidos (HU11) -------------------------------------------------------------
+        // --- Historial y detalle de los pedidos (HU11)
+        // -------------------------------------------------------------
 
-    private ResultActions consultar(String url) throws Exception {
-        return mockMvc.perform(get(url).with(user(CLIENTE).roles("CLIENTE")));
-    }
+        private ResultActions consultar(String url) throws Exception {
+                return mockMvc.perform(get(url).with(user(CLIENTE).roles("CLIENTE")));
+        }
 
-    @Test
-    @DisplayName("HU11-CP07: el historial responde 200 con los pedidos del cliente de la sesión, cada uno completo")
-    void elHistorialResponde200ConLosPedidosDelCliente() throws Exception {
-        when(consultaCompras.listarPedidos(CLIENTE)).thenReturn(List.of(PEDIDO));
+        @Test
+        @DisplayName("HU11-CP07: el historial responde 200 con los pedidos del cliente de la sesión, cada uno completo")
+        void elHistorialResponde200ConLosPedidosDelCliente() throws Exception {
+                when(consultaCompras.listarPedidos(CLIENTE)).thenReturn(List.of(PEDIDO));
 
-        consultar(URL)
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value("o-1"))
-                .andExpect(jsonPath("$[0].numeroPedido").value("ESB-2026-000001"))
-                .andExpect(jsonPath("$[0].vendedor.nombreComercial").value("TecnoVera"))
-                .andExpect(jsonPath("$[0].estado").value("PAGADO"))
-                .andExpect(jsonPath("$[0].total").value(107.82))
-                .andExpect(jsonPath("$[0].lineas[0].precioUnitario").value(53.91))
-                .andExpect(jsonPath("$[0].lineas[0].subtotal").value(107.82))
-                .andExpect(jsonPath("$[0].createdAt").value("2026-10-29T10:00:00Z"))
-                .andExpect(jsonPath("$[0].clienteId").doesNotExist());
-    }
+                consultar(URL)
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(1))
+                                .andExpect(jsonPath("$[0].id").value("o-1"))
+                                .andExpect(jsonPath("$[0].numeroPedido").value("ESB-2026-000001"))
+                                .andExpect(jsonPath("$[0].vendedor.nombreComercial").value("TecnoVera"))
+                                .andExpect(jsonPath("$[0].estado").value("PAGADO"))
+                                .andExpect(jsonPath("$[0].total").value(107.82))
+                                .andExpect(jsonPath("$[0].lineas[0].precioUnitario").value(53.91))
+                                .andExpect(jsonPath("$[0].lineas[0].subtotal").value(107.82))
+                                .andExpect(jsonPath("$[0].createdAt").value("2026-10-29T10:00:00Z"))
+                                .andExpect(jsonPath("$[0].clienteId").doesNotExist());
+        }
 
-    @Test
-    @DisplayName("HU11-CP07: un cliente sin pedidos recibe un historial vacío")
-    void unClienteSinPedidosRecibeUnaListaVacia() throws Exception {
-        when(consultaCompras.listarPedidos(CLIENTE)).thenReturn(List.of());
+        @Test
+        @DisplayName("HU11-CP07: un cliente sin pedidos recibe un historial vacío")
+        void unClienteSinPedidosRecibeUnaListaVacia() throws Exception {
+                when(consultaCompras.listarPedidos(CLIENTE)).thenReturn(List.of());
 
-        consultar(URL).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
-    }
+                consultar(URL).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        }
 
-    @Test
-    @DisplayName("HU11-CP08: el detalle responde 200 con el pedido: productos, desglose de precios, estado y envío")
-    void elDetalleResponde200ConElPedido() throws Exception {
-        when(consultaCompras.consultarPedido(CLIENTE, "o-1")).thenReturn(PEDIDO);
+        @Test
+        @DisplayName("HU11-CP08: el detalle responde 200 con el pedido: productos, desglose de precios, estado y envío")
+        void elDetalleResponde200ConElPedido() throws Exception {
+                when(consultaCompras.consultarPedido(CLIENTE, "o-1")).thenReturn(PEDIDO);
 
-        consultar(URL + "/o-1")
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("o-1"))
-                .andExpect(jsonPath("$.estado").value("PAGADO"))
-                .andExpect(jsonPath("$.total").value(107.82))
-                .andExpect(jsonPath("$.lineas[0].nombre").value("Auriculares"))
-                .andExpect(jsonPath("$.lineas[0].cantidad").value(2))
-                .andExpect(jsonPath("$.direccionEnvio.calle").value("Calle Mayor 1"));
-    }
+                consultar(URL + "/o-1")
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.id").value("o-1"))
+                                .andExpect(jsonPath("$.estado").value("PAGADO"))
+                                .andExpect(jsonPath("$.total").value(107.82))
+                                .andExpect(jsonPath("$.lineas[0].nombre").value("Auriculares"))
+                                .andExpect(jsonPath("$.lineas[0].cantidad").value(2))
+                                .andExpect(jsonPath("$.direccionEnvio.calle").value("Calle Mayor 1"));
+        }
 
-    @Test
-    @DisplayName("HU11-CP09: un pedido que no existe o es de otro cliente responde 400 con el code ORDER_NOT_FOUND")
-    void unPedidoInexistenteOAjenoResponde400() throws Exception {
-        when(consultaCompras.consultarPedido(CLIENTE, "o-9")).thenThrow(new PedidoNoEncontradoException("no"));
+        @Test
+        @DisplayName("HU11-CP09: un pedido que no existe o es de otro cliente responde 400 con el code ORDER_NOT_FOUND")
+        void unPedidoInexistenteOAjenoResponde400() throws Exception {
+                when(consultaCompras.consultarPedido(CLIENTE, "o-9")).thenThrow(new PedidoNoEncontradoException("no"));
 
-        consultar(URL + "/o-9")
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("ORDER_NOT_FOUND"))
-                .andExpect(jsonPath("$.mensaje").value("El pedido no existe"));
-    }
+                consultar(URL + "/o-9")
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.code").value("ORDER_NOT_FOUND"))
+                                .andExpect(jsonPath("$.mensaje").value("El pedido no existe"));
+        }
 
-    @Test
-    @DisplayName("HU11-CP10: sin sesión el historial y el detalle responden 401, y con otro rol 403")
-    void soloElClienteConsultaSusPedidos() throws Exception {
-        mockMvc.perform(get(URL)).andExpect(status().isUnauthorized());
-        mockMvc.perform(get(URL + "/o-1")).andExpect(status().isUnauthorized());
-        mockMvc.perform(get(URL).with(user("vendedor@esibuy.test").roles("VENDEDOR")))
-                .andExpect(status().isForbidden());
-        mockMvc.perform(get(URL + "/o-1").with(user("admin@esibuy.test").roles("ADMINISTRADOR")))
-                .andExpect(status().isForbidden());
+        @Test
+        @DisplayName("HU11-CP10: sin sesión el historial y el detalle responden 401, y con otro rol 403")
+        void soloElClienteConsultaSusPedidos() throws Exception {
+                mockMvc.perform(get(URL)).andExpect(status().isUnauthorized());
+                mockMvc.perform(get(URL + "/o-1")).andExpect(status().isUnauthorized());
+                mockMvc.perform(get(URL).with(user("vendedor@esibuy.test").roles("VENDEDOR")))
+                                .andExpect(status().isForbidden());
+                mockMvc.perform(get(URL + "/o-1").with(user("admin@esibuy.test").roles("ADMINISTRADOR")))
+                                .andExpect(status().isForbidden());
 
-        verifyNoInteractions(consultaCompras);
-    }
+                verifyNoInteractions(consultaCompras);
+        }
 
-    // --- Cancelación de un pedido (HU12) -----------------------------------------------------------------------
+        // --- Cancelación de un pedido (HU12)
+        // -----------------------------------------------------------------------
 
-    private static final Pedido CANCELADO = new Pedido("o-1", new NumeroPedido("ESB-2026-000001"), "c-1", "u-2",
-            "TecnoVera", EstadoPedido.CANCELADO, PEDIDO.getLineas(), PEDIDO.getDireccionEnvio(), "mp-1",
-            PEDIDO.getCreatedAt());
+        private static final Pedido CANCELADO = new Pedido(
+                        new DatosPedido(
+                                        "o-1",
+                                        new NumeroPedido("ESB-2026-000001"),
+                                        "c-1",
+                                        "u-2",
+                                        "TecnoVera",
+                                        EstadoPedido.CANCELADO,
+                                        PEDIDO.getLineas(),
+                                        PEDIDO.getDireccionEnvio(),
+                                        "mp-1",
+                                        PEDIDO.getCreatedAt()));
 
-    private ResultActions cancelar(String id) throws Exception {
-        return mockMvc.perform(post(URL + "/" + id + "/cancel").with(user(CLIENTE).roles("CLIENTE")).with(csrf()));
-    }
+        private ResultActions cancelar(String id) throws Exception {
+                return mockMvc.perform(
+                                post(URL + "/" + id + "/cancel").with(user(CLIENTE).roles("CLIENTE")).with(csrf()));
+        }
 
-    @Test
-    @DisplayName("HU12-CP09: cancelar un pedido responde 200 con el pedido ya cancelado")
-    void cancelarUnPedidoResponde200ConElPedidoCancelado() throws Exception {
-        when(cancelacionPedido.cancelarPedido(CLIENTE, "o-1")).thenReturn(CANCELADO);
+        @Test
+        @DisplayName("HU12-CP09: cancelar un pedido responde 200 con el pedido ya cancelado")
+        void cancelarUnPedidoResponde200ConElPedidoCancelado() throws Exception {
+                when(cancelacionPedido.cancelarPedido(CLIENTE, "o-1")).thenReturn(CANCELADO);
 
-        cancelar("o-1")
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("o-1"))
-                .andExpect(jsonPath("$.estado").value("CANCELADO"))
-                .andExpect(jsonPath("$.lineas[0].productoId").value("p-1"))
-                .andExpect(jsonPath("$.clienteId").doesNotExist());
-    }
+                cancelar("o-1")
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.id").value("o-1"))
+                                .andExpect(jsonPath("$.estado").value("CANCELADO"))
+                                .andExpect(jsonPath("$.lineas[0].productoId").value("p-1"))
+                                .andExpect(jsonPath("$.clienteId").doesNotExist());
+        }
 
-    @Test
-    @DisplayName("HU12-CP10: un pedido que ya no se puede cancelar responde 409 con el code ORDER_NOT_CANCELLABLE")
-    void unPedidoNoCancelableResponde409() throws Exception {
-        when(cancelacionPedido.cancelarPedido(CLIENTE, "o-1")).thenThrow(new PedidoNoCancelableException("no"));
+        @Test
+        @DisplayName("HU12-CP10: un pedido que ya no se puede cancelar responde 409 con el code ORDER_NOT_CANCELLABLE")
+        void unPedidoNoCancelableResponde409() throws Exception {
+                when(cancelacionPedido.cancelarPedido(CLIENTE, "o-1")).thenThrow(new PedidoNoCancelableException("no"));
 
-        cancelar("o-1")
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("ORDER_NOT_CANCELLABLE"))
-                .andExpect(jsonPath("$.mensaje").value("El pedido ya no se puede cancelar"));
-    }
+                cancelar("o-1")
+                                .andExpect(status().isConflict())
+                                .andExpect(jsonPath("$.code").value("ORDER_NOT_CANCELLABLE"))
+                                .andExpect(jsonPath("$.mensaje").value("El pedido ya no se puede cancelar"));
+        }
 
-    @Test
-    @DisplayName("HU12-CP11: cancelar un pedido que no existe o es de otro cliente responde 400 con el code ORDER_NOT_FOUND")
-    void cancelarUnPedidoInexistenteOAjenoResponde400() throws Exception {
-        when(cancelacionPedido.cancelarPedido(CLIENTE, "o-9")).thenThrow(new PedidoNoEncontradoException("no"));
+        @Test
+        @DisplayName("HU12-CP11: cancelar un pedido que no existe o es de otro cliente responde 400 con el code ORDER_NOT_FOUND")
+        void cancelarUnPedidoInexistenteOAjenoResponde400() throws Exception {
+                when(cancelacionPedido.cancelarPedido(CLIENTE, "o-9")).thenThrow(new PedidoNoEncontradoException("no"));
 
-        cancelar("o-9").andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("ORDER_NOT_FOUND"));
-    }
+                cancelar("o-9").andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.code").value("ORDER_NOT_FOUND"));
+        }
 
-    @Test
-    @DisplayName("HU12-CP12: sin sesión cancelar responde 401, con otro rol 403 y sin el token CSRF se rechaza")
-    void soloElClienteCancelaSusPedidos() throws Exception {
-        String url = URL + "/o-1/cancel";
-        mockMvc.perform(post(url).with(csrf())).andExpect(status().isUnauthorized());
-        mockMvc.perform(post(url).with(user("vendedor@esibuy.test").roles("VENDEDOR")).with(csrf()))
-                .andExpect(status().isForbidden());
-        mockMvc.perform(post(url).with(user(CLIENTE).roles("CLIENTE"))).andExpect(status().isForbidden());
+        @Test
+        @DisplayName("HU12-CP12: sin sesión cancelar responde 401, con otro rol 403 y sin el token CSRF se rechaza")
+        void soloElClienteCancelaSusPedidos() throws Exception {
+                String url = URL + "/o-1/cancel";
+                mockMvc.perform(post(url).with(csrf())).andExpect(status().isUnauthorized());
+                mockMvc.perform(post(url).with(user("vendedor@esibuy.test").roles("VENDEDOR")).with(csrf()))
+                                .andExpect(status().isForbidden());
+                mockMvc.perform(post(url).with(user(CLIENTE).roles("CLIENTE"))).andExpect(status().isForbidden());
 
-        verifyNoInteractions(cancelacionPedido);
-    }
+                verifyNoInteractions(cancelacionPedido);
+        }
 }

@@ -10,6 +10,7 @@ import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
+import es.uclm.esibuy.backend.productos.domain.model.DatosProducto;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,7 +62,8 @@ class GestionProductosServiceTest {
     @BeforeEach
     void preparar() {
         servicio = new GestionProductosService(productoRepository, usuarioEnSesion, analisisImagen);
-        // Por defecto el antivirus da la imagen por buena: los tests que no tratan del análisis no dependen de él
+        // Por defecto el antivirus da la imagen por buena: los tests que no tratan del
+        // análisis no dependen de él
         lenient().when(analisisImagen.analizar(any())).thenReturn(ResultadoAnalisis.SEGURA);
     }
 
@@ -261,12 +263,13 @@ class GestionProductosServiceTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"Teclado mecánico", "TECLADO MECÁNICO"})
+    @ValueSource(strings = { "Teclado mecánico", "TECLADO MECÁNICO" })
     @DisplayName("HU34-CP04: conservar el nombre del producto, aunque cambien las mayúsculas, no es un nombre repetido")
     void conservarElNombreNoEsUnNombreRepetido(String nombre) {
         when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
         when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-1")));
-        // El propio producto ya tiene ese nombre: la consulta al repositorio lo encontraría a él.
+        // El propio producto ya tiene ese nombre: la consulta al repositorio lo
+        // encontraría a él.
         lenient().when(productoRepository.existePorVendedorYNombre("v-1", nombre)).thenReturn(true);
         when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
 
@@ -282,7 +285,8 @@ class GestionProductosServiceTest {
         when(productoRepository.buscarPorId("p-404")).thenReturn(Optional.empty());
 
         assertThrows(ProductoNoEncontradoException.class,
-                () -> servicio.modificarMiProducto(modificacion("p-404", "Teclado mecánico RGB", new BigDecimal("99.90"))));
+                () -> servicio
+                        .modificarMiProducto(modificacion("p-404", "Teclado mecánico RGB", new BigDecimal("99.90"))));
 
         verify(productoRepository, never()).guardar(any());
     }
@@ -294,7 +298,8 @@ class GestionProductosServiceTest {
         when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-2")));
 
         assertThrows(ProductoNoEncontradoException.class,
-                () -> servicio.modificarMiProducto(modificacion("p-9", "Teclado mecánico RGB", new BigDecimal("99.90"))));
+                () -> servicio
+                        .modificarMiProducto(modificacion("p-9", "Teclado mecánico RGB", new BigDecimal("99.90"))));
 
         verify(productoRepository, never()).guardar(any());
     }
@@ -328,8 +333,22 @@ class GestionProductosServiceTest {
     @Test
     @DisplayName("HU34-CP19: si la imagen no cambia no se vuelve a analizar y se conserva")
     void siLaImagenNoCambiaNoSeVuelveAAnalizar() {
-        Producto conImagen = new Producto("p-9", "v-1", "Teclado mecánico", "Con cable", new BigDecimal("89.50"), 12,
-                "cat-1", "https://esibuy.test/rgb.png", true, Descuento.sinDescuento(), Descuento.sinDescuento());
+        DatosProducto datos = new DatosProducto(
+                new DatosProducto.DatosBasicos(
+                        "v-1",
+                        "Teclado mecánico",
+                        "Con cable",
+                        new BigDecimal("89.50"),
+                        12,
+                        "cat-1",
+                        "https://esibuy.test/rgb.png"),
+                new DatosProducto.Configuracion(
+                        true,
+                        Descuento.sinDescuento(),
+                        Descuento.sinDescuento()),
+                new DatosProducto.Valoraciones(null, 0));
+
+        Producto conImagen = new Producto("p-9", datos);
         when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
         when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(conImagen));
         when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
@@ -448,8 +467,22 @@ class GestionProductosServiceTest {
     }
 
     private static Producto producto(String id, String vendedorId) {
-        return new Producto(id, vendedorId, "Teclado mecánico", "Con cable", new BigDecimal("89.50"), 12,
-                "cat-1", "", true, Descuento.sinDescuento(), Descuento.sinDescuento());
+        DatosProducto datos = new DatosProducto(
+                new DatosProducto.DatosBasicos(
+                        vendedorId,
+                        "Teclado mecánico",
+                        "Con cable",
+                        new BigDecimal("89.50"),
+                        12,
+                        "cat-1",
+                        ""),
+                new DatosProducto.Configuracion(
+                        true,
+                        Descuento.sinDescuento(),
+                        Descuento.sinDescuento()),
+                new DatosProducto.Valoraciones(null, 0));
+
+        return new Producto(id, datos);
     }
 
     private static CrearProductoCommand comando(BigDecimal precio, int stock, String categoriaId) {

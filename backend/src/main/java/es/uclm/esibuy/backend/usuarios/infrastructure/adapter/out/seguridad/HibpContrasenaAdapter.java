@@ -33,8 +33,7 @@ public class HibpContrasenaAdapter implements ComprobadorContrasenaComprometidaP
 
     private static final int HASH_PREFIX_LENGTH = 5;
 
-    private static final Pattern RESPONSE_LINE_PATTERN = Pattern.compile("^([0-9A-Fa-f]{35}):([0-9]+)$");
-
+    private static final Pattern RESPONSE_LINE_PATTERN = Pattern.compile("^([0-9A-Fa-f]{35}):(\\d+)$");
     private final HttpClient httpClient;
 
     public HibpContrasenaAdapter() {

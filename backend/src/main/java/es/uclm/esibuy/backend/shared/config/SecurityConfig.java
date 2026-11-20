@@ -17,7 +17,7 @@ import es.uclm.esibuy.backend.shared.error.ManejadorAccesoDenegado;
  * Configuración mínima de Spring Security.
  *
  * <p>
- * Por defecto se deniega todo (mínimo privilegio) y solo se abren el registro,
+ * Por defecto se deniega, (mínimo privilegio) y solo se abren el registro,
  * los dos primeros
  * pasos del login (HU2, T230), la recuperación de contraseña (HU3) y la
  * consulta de las categorías, porque
@@ -107,7 +107,7 @@ public class SecurityConfig {
         private static final String RUTAS_SEGURIDAD = "/api/seguridad/**";
 
         @Bean
-        SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        SecurityFilterChain securityFilterChain(HttpSecurity http) {
                 http
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers(HttpMethod.POST, RUTA_REGISTRO, RUTA_REGISTRO_VENDEDOR,

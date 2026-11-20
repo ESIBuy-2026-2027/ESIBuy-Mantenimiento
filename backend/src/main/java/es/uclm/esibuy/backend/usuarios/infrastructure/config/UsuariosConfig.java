@@ -60,6 +60,7 @@ import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.Java
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.SecureRandomGeneradorCodigoAdapter;
 import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorUseCase;
 import es.uclm.esibuy.backend.usuarios.application.service.CrearAdministradorService;
+import es.uclm.esibuy.backend.usuarios.application.service.DependenciasGestionCuenta;
 import es.uclm.esibuy.backend.usuarios.application.port.in.GestionSeguridadUseCase;
 import es.uclm.esibuy.backend.usuarios.application.service.GestionSeguridadService;
 
@@ -299,17 +300,37 @@ public class UsuariosConfig {
     }
 
     @Bean
-    GestionCuentaUseCase gestionCuentaUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-            HashContrasenaPort hashContrasena, ProductosVendedorPort productos,
-            PedidosVendedorPort productosConPedidos, ValoracionesProductoPort valoraciones,
+    GestionCuentaUseCase gestionCuentaUseCase(
+            UsuarioRepositoryPort usuarioRepositoryPort,
+            HashContrasenaPort hashContrasena,
+            ProductosVendedorPort productos,
+            PedidosVendedorPort productosConPedidos,
+            ValoracionesProductoPort valoraciones,
             FactorAutenticacionRepositoryPort factores,
             CodigoVerificacionRepositoryPort codigosVerificacion,
-            CodigoRecuperacionRepositoryPort codigosRecuperacion, ListaDeseosClientePort listaDeseos,
-            CarritoClientePort carrito, PreferenciasClientePort preferencias, MetodosPagoClientePort metodosPago,
+            CodigoRecuperacionRepositoryPort codigosRecuperacion,
+            ListaDeseosClientePort listaDeseos,
+            CarritoClientePort carrito,
+            PreferenciasClientePort preferencias,
+            MetodosPagoClientePort metodosPago,
             DireccionesClientePort direcciones) {
-        return new GestionCuentaService(usuarioRepositoryPort, hashContrasena, productos, productosConPedidos,
-                valoraciones, factores, codigosVerificacion, codigosRecuperacion, listaDeseos, carrito,
-                preferencias, metodosPago, direcciones);
+
+        DependenciasGestionCuenta dependencias = new DependenciasGestionCuenta(
+                usuarioRepositoryPort,
+                hashContrasena,
+                productos,
+                productosConPedidos,
+                valoraciones,
+                factores,
+                codigosVerificacion,
+                codigosRecuperacion,
+                listaDeseos,
+                carrito,
+                preferencias,
+                metodosPago,
+                direcciones);
+
+        return new GestionCuentaService(dependencias);
     }
 
     @Bean

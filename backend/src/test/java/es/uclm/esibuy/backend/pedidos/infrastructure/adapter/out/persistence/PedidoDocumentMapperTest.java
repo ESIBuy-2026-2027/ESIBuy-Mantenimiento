@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
+import es.uclm.esibuy.backend.pedidos.domain.model.DatosPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.LineaPedido;
@@ -23,12 +24,28 @@ class PedidoDocumentMapperTest {
     private final PedidoDocumentMapper mapper = new PedidoDocumentMapper();
 
     static Pedido pedido(String id, String numero) {
-        return new Pedido(id, new NumeroPedido(numero), "c-1", "u-2", "TecnoVera", EstadoPedido.PAGADO,
-                List.of(new LineaPedido("p-1", "Auriculares", 2, new BigDecimal("53.91")),
+        DatosPedido datosPedido = new DatosPedido(
+                id,
+                new NumeroPedido(numero),
+                "c-1",
+                "u-2",
+                "TecnoVera",
+                EstadoPedido.PAGADO,
+                List.of(
+                        new LineaPedido("p-1", "Auriculares", 2, new BigDecimal("53.91")),
                         new LineaPedido("p-2", "Teclado", 1, new BigDecimal("89.50"))),
-                new DireccionEnvioPedido("Carlos Cliente", "Calle Mayor 1", "2º B", "13001", "Ciudad Real",
-                        "Ciudad Real", "611222333"),
-                "mp-1", AHORA);
+                new DireccionEnvioPedido(
+                        "Carlos Cliente",
+                        "Calle Mayor 1",
+                        "2º B",
+                        "13001",
+                        "Ciudad Real",
+                        "Ciudad Real",
+                        "611222333"),
+                "mp-1",
+                AHORA);
+
+        return new Pedido(datosPedido);
     }
 
     @Test
@@ -66,9 +83,20 @@ class PedidoDocumentMapperTest {
     void cadaEstadoDeEnvioSeGuardaYSeLee() {
         for (EstadoPedido estado : EstadoPedido.values()) {
             Pedido base = pedido("o-1", "ESB-2026-000001");
-            Pedido pedido = new Pedido(base.getId(), base.getNumeroPedido(), base.getClienteId(), base.getVendedorId(),
-                    base.getNombreComercial(), estado, base.getLineas(), base.getDireccionEnvio(),
-                    base.getPaymentMethodId(), base.getCreatedAt());
+
+            DatosPedido datosPedido = new DatosPedido(
+                    base.getId(),
+                    base.getNumeroPedido(),
+                    base.getClienteId(),
+                    base.getVendedorId(),
+                    base.getNombreComercial(),
+                    estado,
+                    base.getLineas(),
+                    base.getDireccionEnvio(),
+                    base.getPaymentMethodId(),
+                    base.getCreatedAt());
+
+            Pedido pedido = new Pedido(datosPedido);
 
             PedidoDocument documento = mapper.aDocumento(pedido);
 

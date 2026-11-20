@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
+import es.uclm.esibuy.backend.pedidos.domain.model.DatosPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.LineaPedido;
@@ -36,7 +37,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 // Y guardar un pedido cancelado (HU12, T375): caso HU12-CP08, propuesto.
 // Y los pedidos de un vendedor para sus estadísticas (HU17, T280): caso HU17-CP07, propuesto.
 @DataMongoTest
-@Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
+@Import({ MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class })
 class PedidoMongoAdapterTest {
 
     private static final Instant AHORA = Instant.parse("2026-10-29T10:00:00Z");
@@ -69,7 +70,8 @@ class PedidoMongoAdapterTest {
         assertEquals("c-1", enMongo.get("clienteId"));
         assertEquals("PAGADO", enMongo.get("estado"));
         assertEquals("mp-1", enMongo.get("paymentMethodId"));
-        // Los importes van como Decimal128: el validador de la colección exige un número
+        // Los importes van como Decimal128: el validador de la colección exige un
+        // número
         assertEquals(new Decimal128(new BigDecimal("197.32")), enMongo.get("total"));
         assertEquals("Calle Mayor 1", enMongo.get("direccionEnvio", Document.class).get("calle"));
     }
@@ -85,10 +87,26 @@ class PedidoMongoAdapterTest {
 
     private static Pedido pedidoPagado(String numero, String clienteId, String... productos) {
         List<LineaPedido> lineas = Arrays.stream(productos)
-                .map(productoId -> new LineaPedido(productoId, "Producto " + productoId, 1, new BigDecimal("10.00")))
+                .map(productoId -> new LineaPedido(
+                        productoId,
+                        "Producto " + productoId,
+                        1,
+                        new BigDecimal("10.00")))
                 .toList();
-        return new Pedido(null, new NumeroPedido(numero), clienteId, "u-2", "TecnoVera", EstadoPedido.PAGADO, lineas,
-                DIRECCION, "mp-1", AHORA);
+
+        DatosPedido datosPedido = new DatosPedido(
+                null,
+                new NumeroPedido(numero),
+                clienteId,
+                "u-2",
+                "TecnoVera",
+                EstadoPedido.PAGADO,
+                lineas,
+                DIRECCION,
+                "mp-1",
+                AHORA);
+
+        return new Pedido(datosPedido);
     }
 
     @Test
@@ -104,9 +122,19 @@ class PedidoMongoAdapterTest {
     @DisplayName("HU47-CP02: buscar pedidos devuelve solo los del vendedor indicado")
     void buscarPorVendedorDevuelveSoloLosDelVendedor() {
         adapter.guardar(pedidoPagado("ESB-2026-000001", "c-1", "p-1"));
-        Pedido deOtroVendedor = new Pedido(null, new NumeroPedido("ESB-2026-000002"), "c-1", "u-3", "Otra tienda",
-                EstadoPedido.PAGADO, List.of(new LineaPedido("p-2", "Producto p-2", 1, new BigDecimal("10.00"))),
-                DIRECCION, "mp-1", AHORA);
+        DatosPedido datosOtroVendedor = new DatosPedido(
+                null,
+                new NumeroPedido("ESB-2026-000002"),
+                "c-1",
+                "u-3",
+                "Otra tienda",
+                EstadoPedido.PAGADO,
+                List.of(new LineaPedido("p-2", "Producto p-2", 1, new BigDecimal("10.00"))),
+                DIRECCION,
+                "mp-1",
+                AHORA);
+
+        Pedido deOtroVendedor = new Pedido(datosOtroVendedor);
         adapter.guardar(deOtroVendedor);
 
         List<Pedido> pedidos = adapter.buscarPorVendedor("u-2");
@@ -129,7 +157,8 @@ class PedidoMongoAdapterTest {
     @Test
     @DisplayName("HU13-CP08: solo cuenta como compra un pedido en estado PAGADO")
     void soloCuentaUnPedidoPagado() {
-        // Un pedido en otro estado, insertado directamente: el dominio aún solo tiene PAGADO (HU11 y HU12)
+        // Un pedido en otro estado, insertado directamente: el dominio aún solo tiene
+        // PAGADO (HU11 y HU12)
         mongoTemplate.getCollection("pedidos").insertOne(new Document("clienteId", "c-1")
                 .append("estado", "CANCELADO")
                 .append("lineas", List.of(new Document("productoId", "p-9").append("cantidad", 1)
@@ -139,9 +168,18 @@ class PedidoMongoAdapterTest {
     }
 
     private static Pedido pedidoDelCliente(String numero, String clienteId, Instant creado) {
-        return new Pedido(null, new NumeroPedido(numero), clienteId, "u-2", "TecnoVera", EstadoPedido.PAGADO,
-                List.of(new LineaPedido("p-1", "Producto p-1", 1, new BigDecimal("10.00"))), DIRECCION, "mp-1",
+        DatosPedido datos = new DatosPedido(
+                null,
+                new NumeroPedido(numero),
+                clienteId,
+                "u-2",
+                "TecnoVera",
+                EstadoPedido.PAGADO,
+                List.of(new LineaPedido("p-1", "Producto p-1", 1, new BigDecimal("10.00"))),
+                DIRECCION,
+                "mp-1",
                 creado);
+        return new Pedido(datos);
     }
 
     @Test
@@ -205,8 +243,17 @@ class PedidoMongoAdapterTest {
     }
 
     private static Pedido pedidoDelVendedor(String numero, String vendedorId, EstadoPedido estado) {
-        return new Pedido(null, new NumeroPedido(numero), "c-1", vendedorId, "TecnoVera", estado,
-                List.of(new LineaPedido("p-1", "Producto p-1", 1, new BigDecimal("10.00"))), DIRECCION, "mp-1",
+        DatosPedido datos = new DatosPedido(
+                null,
+                new NumeroPedido(numero),
+                "c-1",
+                vendedorId,
+                "TecnoVera",
+                estado,
+                List.of(new LineaPedido("p-1", "Producto p-1", 1, new BigDecimal("10.00"))),
+                DIRECCION,
+                "mp-1",
                 AHORA);
+        return new Pedido(datos);
     }
 }

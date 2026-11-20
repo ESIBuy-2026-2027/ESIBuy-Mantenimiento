@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import es.uclm.esibuy.backend.productos.application.port.in.ProductoInventario;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
+import es.uclm.esibuy.backend.productos.domain.model.DatosProducto;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 
@@ -50,7 +51,21 @@ class InventarioVendedorServiceTest {
 
     private static Producto producto(String id, String nombre, int stock, boolean disponible, Double media,
             int numeroValoraciones) {
-        return new Producto(id, "v-1", nombre, "", new BigDecimal("10"), stock, "cat-1", "", disponible,
-                Descuento.sinDescuento(), Descuento.sinDescuento(), media, numeroValoraciones);
+        DatosProducto datos = new DatosProducto(
+                new DatosProducto.DatosBasicos(
+                        "v-1",
+                        nombre,
+                        "",
+                        new BigDecimal("10"),
+                        stock,
+                        "cat-1",
+                        ""),
+                new DatosProducto.Configuracion(
+                        disponible,
+                        Descuento.sinDescuento(),
+                        Descuento.sinDescuento()),
+                new DatosProducto.Valoraciones(media, numeroValoraciones));
+
+        return new Producto(id, datos);
     }
 }
