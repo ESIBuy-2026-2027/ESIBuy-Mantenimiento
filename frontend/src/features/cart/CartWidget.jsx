@@ -212,7 +212,7 @@ function VendorGroup({ group, busy, onQuantity, onRemove, styles }) {
   const headingId = useId()
 
   return (
-    <div aria-labelledby={headingId} className={styles.group}>
+    <div role="group" aria-labelledby={headingId} className={styles.group}>
       <h3 id={headingId} className={styles.groupHeader}>
         <BuildingShop20Regular aria-hidden="true" />
         <span>

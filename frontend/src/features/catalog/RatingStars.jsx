@@ -28,10 +28,7 @@ export default function RatingStars({ value, size = 20 }) {
   const styles = useStyles()
 
   return (
-    <span className={styles.stars}>
-      <span className={styles.visuallyHidden}>
-        Valoración: {formatRating(value)} de {TOTAL_ESTRELLAS}
-      </span>
+    <span className={styles.stars} role="img" aria-label={`Valoraci\u00f3n: ${formatRating(value)} de ${TOTAL_ESTRELLAS}`}>
       <span aria-hidden="true">
         {Array.from({ length: TOTAL_ESTRELLAS }, (_, indice) => {
           const Estrella = estrellaDe(indice + 1, value)

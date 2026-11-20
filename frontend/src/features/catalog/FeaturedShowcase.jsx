@@ -207,6 +207,7 @@ export default function FeaturedShowcase({ products }) {
       <div className={styles.stage}>
         {cards.length > 0 && (
           <TiltedGridHero
+            role="group"
             aria-label="Los mejor valorados en movimiento"
             className={styles.band}
             images={cards}

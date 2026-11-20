@@ -107,8 +107,7 @@ function WishlistItem({ item, removing, onRemove }) {
         {item.imagen ? (
           <img className={styles.image} src={item.imagen} alt={item.nombre} loading="lazy" />
         ) : (
-          <span className={styles.placeholder}>
-            <span className={styles.visuallyHidden}>Sin imagen</span>
+          <span className={styles.placeholder} role="img" aria-label="Sin imagen">
             <span aria-hidden="true">
               <ImageOff24Regular />
             </span>

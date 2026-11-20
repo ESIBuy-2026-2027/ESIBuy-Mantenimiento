@@ -133,6 +133,7 @@ function Band({ images, layout, aspectRatio, tileHeight, axis, bend, speed, fade
         return (
           <Tile
             key={t}
+            aria-label={img?.alt}
             {...(onSelect ? { type: 'button', tabIndex: -1 } : {})}
             className={mergeClasses(tile, styles.tile, onSelect && styles.clickable)}
             style={{

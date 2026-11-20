@@ -235,6 +235,7 @@ export default function ProductCard({
                     className={styles.srOnly}
                     src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
                     alt={`Valoración: ${formatRating(product.valoracion)} de 5`}
+                    aria-label={`Valoración: ${formatRating(product.valoracion)} de 5`}
                   />
                   <span aria-hidden="true">
                     <RatingStars value={product.valoracion} />
