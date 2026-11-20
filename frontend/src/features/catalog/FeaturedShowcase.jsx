@@ -206,19 +206,19 @@ export default function FeaturedShowcase({ products }) {
 
       <div className={styles.stage}>
         {cards.length > 0 && (
-          <TiltedGridHero
-            role="group"
-            aria-label="Los mejor valorados en movimiento"
-            className={styles.band}
-            images={cards}
-            onSelect={(card) => navigate(getProductDetailPath(card.product.id))}
-            tileHeight={56}
-            aspectRatio={4 / 3}
-            gap={5}
-            axis={50}
-            curve={68}
-            speed={4}
-          />
+          <section aria-label="Los mejor valorados en movimiento">
+            <TiltedGridHero
+              className={styles.band}
+              images={cards}
+              onSelect={(card) => navigate(getProductDetailPath(card.product.id))}
+              tileHeight={56}
+              aspectRatio={4 / 3}
+              gap={5}
+              axis={50}
+              curve={68}
+              speed={4}
+            />
+          </section>
         )}
 
         <ul className={styles.list} aria-label="Selección destacada">

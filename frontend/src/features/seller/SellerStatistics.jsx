@@ -2,7 +2,6 @@ import { useCallback } from 'react'
 import PropTypes from 'prop-types'
 import {
   Button,
-  Caption1,
   Card,
   MessageBar,
   MessageBarActions,
@@ -16,7 +15,6 @@ import {
   TableHeaderCell,
   TableRow,
   Text,
-  Title2,
   Title3,
   makeStyles,
   tokens,
@@ -54,6 +52,7 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     gap: tokens.spacingVerticalXXS,
+    margin: 0,
     padding: tokens.spacingVerticalM,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     borderRadius: tokens.borderRadiusXLarge,
@@ -70,19 +69,19 @@ function Stat({ label, value, hint }) {
   const labelId = useId('cifra')
 
   return (
-    <div role="group" aria-label={label} className={styles.stat}>
-      <Text id={labelId} className={styles.statLabel}>
+    <dl className={styles.stat}>
+      <dt id={labelId} className={styles.statLabel}>
         {label}
-      </Text>
-      <Title2 as="p" className={styles.heading}>
+      </dt>
+      <dd className={styles.heading}>
         {value}
-      </Title2>
+      </dd>
       {hint && (
-        <Caption1 className={styles.statLabel}>
+        <dd className={styles.statLabel}>
           {hint}
-        </Caption1>
+        </dd>
       )}
-    </div>
+    </dl>
   )
 }
 

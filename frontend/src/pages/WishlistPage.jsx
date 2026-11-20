@@ -14,7 +14,7 @@ import {
   mergeClasses,
   tokens,
 } from '@fluentui/react-components'
-import { Delete20Regular, Heart24Regular, ImageOff24Regular } from '@fluentui/react-icons'
+import { Delete20Regular, Heart24Regular } from '@fluentui/react-icons'
 import { Link } from 'react-router-dom'
 import { getWishlist, removeWishlistItem } from '../api/wishlist'
 import EmptyState from '../components/EmptyState'
@@ -67,6 +67,11 @@ const useStyles = makeStyles({
     height: '100%',
     color: tokens.colorNeutralForeground4,
   },
+  placeholderImage: {
+    width: '24px',
+    height: '24px',
+    objectFit: 'contain',
+  },
   text: {
     display: 'flex',
     flexDirection: 'column',
@@ -107,10 +112,12 @@ function WishlistItem({ item, removing, onRemove }) {
         {item.imagen ? (
           <img className={styles.image} src={item.imagen} alt={item.nombre} loading="lazy" />
         ) : (
-          <span className={styles.placeholder} role="img" aria-label="Sin imagen">
-            <span aria-hidden="true">
-              <ImageOff24Regular />
-            </span>
+          <span className={styles.placeholder}>
+            <img
+              className={styles.placeholderImage}
+              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 3l18 18M10 12l-4 6h12l-3-4-2 2M6 6h11a2 2 0 0 1 2 2v8' fill='none' stroke='%23999999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+              alt="Sin imagen"
+            />
           </span>
         )}
       </div>

@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button, Text, Title1, makeStyles, mergeClasses, tokens } from '@fluentui/react-components'
-import { BuildingShop20Regular, Heart20Filled, Heart20Regular, ImageOff24Regular } from '@fluentui/react-icons'
+import { BuildingShop20Regular, Heart20Filled, Heart20Regular } from '@fluentui/react-icons'
 import { formatRating } from '../../utils/format'
 import AddToCartButton from '../cart/AddToCartButton'
 import QuantityStepper from '../cart/QuantityStepper'
@@ -74,6 +74,11 @@ const useStyles = makeStyles({
     width: '100%',
     height: '100%',
     color: tokens.colorNeutralForeground4,
+  },
+  placeholderImage: {
+    width: '24px',
+    height: '24px',
+    objectFit: 'contain',
   },
   info: {
     display: 'flex',
@@ -233,6 +238,7 @@ export default function ProductDetail({
   const styles = useStyles()
   // Si la imagen no carga (dirección rota), se enseña el mismo marcador que cuando no hay imagen.
   const [imageFailed, setImageFailed] = useState(false)
+  const imageRef = useRef(null)
   const hasImage = Boolean(product.imagen) && !imageFailed
   const { valoracion, numValoraciones } = reviewSummary(product, reviews)
   const rated = valoracion !== null && numValoraciones > 0
@@ -242,6 +248,17 @@ export default function ProductDetail({
   const category = categoryName ?? SIN_CATEGORIA
   const [savingFavorite, setSavingFavorite] = useState(false)
   const [favoriteError, setFavoriteError] = useState('')
+
+  useEffect(() => {
+    const image = imageRef.current
+    if (!image) return undefined
+
+    const handleError = () => setImageFailed(true)
+    image.addEventListener('error', handleError)
+    if (image.complete && image.naturalWidth === 0) handleError()
+
+    return () => image.removeEventListener('error', handleError)
+  }, [])
 
   const favoriteFailure = (failure) => {
     if (favorite) return 'No se ha podido quitar de favoritos. Inténtalo de nuevo.'
@@ -266,10 +283,14 @@ export default function ProductDetail({
     <div className={styles.layout}>
       <div className={styles.media}>
         {hasImage ? (
-          <img className={styles.image} src={product.imagen} alt={product.nombre} onError={() => setImageFailed(true)} />
+          <img ref={imageRef} className={styles.image} src={product.imagen} alt={product.nombre} />
         ) : (
-          <span className={styles.placeholder} role="img" aria-label="Sin imagen">
-            <ImageOff24Regular aria-hidden="true" />
+          <span className={styles.placeholder}>
+            <img
+              className={styles.placeholderImage}
+              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 3l18 18M10 12l-4 6h12l-3-4-2 2M6 6h11a2 2 0 0 1 2 2v8' fill='none' stroke='%23999999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+              alt="Sin imagen"
+            />
           </span>
         )}
       </div>
@@ -317,6 +338,7 @@ export default function ProductDetail({
           )}
           {onAddFavorite && (
             <Button
+              as="button"
               appearance="secondary"
               className={styles.favorite}
               icon={favorite ? <Heart20Filled className={styles.favoriteIcon} /> : <Heart20Regular />}

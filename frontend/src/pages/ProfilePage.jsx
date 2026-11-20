@@ -93,7 +93,8 @@ function AccountDeletion({ rol }) {
   const [abierto, setAbierto] = useState(false)
 
   return (
-    <Card role="region" className={styles.deletion} aria-labelledby={titleId}>
+    <section aria-labelledby={titleId}>
+      <Card className={styles.deletion}>
       <Title3 as="h2" id={titleId} className={styles.name}>
         Eliminar mi cuenta
       </Title3>
@@ -104,7 +105,8 @@ function AccountDeletion({ rol }) {
         Eliminar mi cuenta
       </Button>
       {abierto && <DeleteAccountDialog rol={rol} onClose={() => setAbierto(false)} onDeleted={accountDeleted} />}
-    </Card>
+      </Card>
+    </section>
   )
 }
 
@@ -272,7 +274,7 @@ export default function ProfilePage() {
       {!perfil && !failed && <Spinner className={pageStyles.loading} label="Cargando tu perfil…" />}
 
       {perfil && (
-        <output role="status">
+        <output>
           {aviso && (
             <MessageBar intent="success">
               <MessageBarBody>{aviso}</MessageBarBody>

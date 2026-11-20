@@ -14,6 +14,17 @@ const useStyles = makeStyles({
   empty: {
     color: tokens.colorNeutralForeground4,
   },
+  srOnly: {
+    position: 'absolute',
+    width: '1px',
+    height: '1px',
+    padding: 0,
+    margin: '-1px',
+    overflow: 'hidden',
+    clip: 'rect(0, 0, 0, 0)',
+    whiteSpace: 'nowrap',
+    border: 0,
+  },
 })
 
 // Una estrella llena por cada punto, media si sobra al menos medio punto y vacía en el resto.
@@ -28,8 +39,9 @@ export default function RatingStars({ value, size = 20 }) {
   const styles = useStyles()
 
   return (
-    <span className={styles.stars} role="img" aria-label={`Valoraci\u00f3n: ${formatRating(value)} de ${TOTAL_ESTRELLAS}`}>
-      <span aria-hidden="true">
+    <>
+      <img className={styles.srOnly} src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt={`Valoraci\u00f3n: ${formatRating(value)} de ${TOTAL_ESTRELLAS}`} />
+      <span className={styles.stars} aria-hidden="true">
         {Array.from({ length: TOTAL_ESTRELLAS }, (_, indice) => {
           const Estrella = estrellaDe(indice + 1, value)
           return (
@@ -41,7 +53,7 @@ export default function RatingStars({ value, size = 20 }) {
           )
         })}
       </span>
-    </span>
+    </>
   )
 }
 

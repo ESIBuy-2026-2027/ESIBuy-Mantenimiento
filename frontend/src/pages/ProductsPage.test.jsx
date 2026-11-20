@@ -472,7 +472,7 @@ describe('ProductsPage (HU8): detalle de un producto', () => {
   it('HU8-CP06: al pulsar una tarjeta de la animación de los mejores se abre el detalle de su producto', async () => {
     const user = userEvent.setup()
     await abrirCatalogo()
-    const animacion = await screen.findByRole('group', { name: /en movimiento/i })
+    const animacion = await screen.findByRole('region', { name: /en movimiento/i })
     const tarjetasDeLaAnimacion = within(animacion)
       .getAllByRole('button', { hidden: true })
       .filter((boton) => boton.closest('[aria-hidden="true"]'))

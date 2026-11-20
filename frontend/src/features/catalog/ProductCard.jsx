@@ -1,6 +1,6 @@
 
 import PropTypes from 'prop-types'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Text, makeStyles, tokens } from '@fluentui/react-components'
 import { Heart20Filled, Heart20Regular } from '@fluentui/react-icons'
@@ -168,8 +168,20 @@ export default function ProductCard({
 
   // Si la imagen no carga (dirección rota), se enseña el mismo marcador que cuando no hay imagen.
   const [imageFailed, setImageFailed] = useState(false)
+  const imageRef = useRef(null)
   const hasImage = Boolean(product.imagen) && !imageFailed
   const rated = product.valoracion !== null && product.numValoraciones > 0
+
+  useEffect(() => {
+    const image = imageRef.current
+    if (!image) return undefined
+
+    const handleError = () => setImageFailed(true)
+    image.addEventListener('error', handleError)
+    if (image.complete && image.naturalWidth === 0) handleError()
+
+    return () => image.removeEventListener('error', handleError)
+  }, [])
 
   const [savingFavorite, setSavingFavorite] = useState(false)
   const [favoriteError, setFavoriteError] = useState('')
@@ -201,11 +213,11 @@ export default function ProductCard({
         <span className={styles.media}>
           {hasImage ? (
             <img
+              ref={imageRef}
               className={styles.image}
               src={product.imagen}
               alt={product.nombre}
               loading="lazy"
-              onError={() => setImageFailed(true)}
             />
           ) : (
             <span className={styles.placeholder}>
@@ -258,6 +270,7 @@ export default function ProductCard({
 
       {onAddFavorite && product.disponible && (
         <Button
+          as="button"
           shape="circular"
           className={styles.favorite}
           icon={favorite ? <Heart20Filled className={styles.favoriteIcon} /> : <Heart20Regular />}
