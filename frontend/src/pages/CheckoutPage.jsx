@@ -1,4 +1,6 @@
+
 import { useState } from 'react'
+import PropTypes from 'prop-types'
 import {
   Badge,
   Button,
@@ -200,7 +202,8 @@ const useStyles = makeStyles({
   },
 })
 
-// El pedido de un proveedor: su cabecera («Proveedor: total») y sus productos. Cada pedido tiene un solo proveedor.
+// El pedido de un proveedor: su cabecera («Proveedor: total») y sus productos.
+// Cada pedido tiene un solo proveedor.
 function VendorOrder({ group, styles }) {
   return (
     <section aria-label={`Pedido de ${group.vendedor.nombreComercial}`} className={styles.card}>
@@ -227,8 +230,27 @@ function VendorOrder({ group, styles }) {
   )
 }
 
-// Las direcciones de envío del cliente (HU5) para elegir a cuál se envían los pedidos. Sin ninguna no se puede pagar:
-// se lleva a su vista de direcciones para añadir una.
+VendorOrder.propTypes = {
+  group: PropTypes.shape({
+    vendedor: PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      nombreComercial: PropTypes.string.isRequired,
+    }).isRequired,
+    total: PropTypes.number.isRequired,
+    lineas: PropTypes.arrayOf(
+      PropTypes.shape({
+        productoId: PropTypes.string.isRequired,
+        nombre: PropTypes.string.isRequired,
+        cantidad: PropTypes.number.isRequired,
+        precioUnitario: PropTypes.number.isRequired,
+        subtotal: PropTypes.number.isRequired,
+      }),
+    ).isRequired,
+  }).isRequired,
+  styles: PropTypes.object.isRequired,
+}
+
+// Las direcciones de envío del cliente (HU5).
 function ShippingAddressPicker({ query, selectedId, onSelect, styles }) {
   if (query.failed) {
     return (
@@ -286,8 +308,29 @@ function ShippingAddressPicker({ query, selectedId, onSelect, styles }) {
   )
 }
 
-// Los métodos de pago guardados del cliente (HU6) para elegir con cuál pagar. Sin ninguno no se puede pagar: se
-// lleva a su vista de métodos de pago para añadir uno.
+ShippingAddressPicker.propTypes = {
+  query: PropTypes.shape({
+    failed: PropTypes.bool.isRequired,
+    retry: PropTypes.func.isRequired,
+    data: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.string.isRequired,
+        destinatario: PropTypes.string.isRequired,
+        principal: PropTypes.bool.isRequired,
+        detalles: PropTypes.string,
+        calle: PropTypes.string.isRequired,
+        codigoPostal: PropTypes.string.isRequired,
+        ciudad: PropTypes.string.isRequired,
+        provincia: PropTypes.string.isRequired,
+      }),
+    ),
+  }).isRequired,
+  selectedId: PropTypes.string,
+  onSelect: PropTypes.func.isRequired,
+  styles: PropTypes.object.isRequired,
+}
+
+// Métodos de pago guardados del cliente (HU6).
 function PaymentMethodPicker({ query, selectedId, onSelect, styles }) {
   if (query.failed) {
     return (
@@ -344,10 +387,25 @@ function PaymentMethodPicker({ query, selectedId, onSelect, styles }) {
   )
 }
 
-// Pasarela de pago (HU10): resume el pedido de cada proveedor y, al simular el pago, crea un pedido por proveedor
-// (cada uno con un solo proveedor), todos a la dirección de envío y con el método de pago elegidos. Al terminar muestra
-// el recibo con forma de ticket. Si alguno falla, se confirman los demás, se avisa de cuál y se puede reintentar con la
-// misma dirección y el mismo método.
+PaymentMethodPicker.propTypes = {
+  query: PropTypes.shape({
+    failed: PropTypes.bool.isRequired,
+    retry: PropTypes.func.isRequired,
+    data: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.string.isRequired,
+        tipo: PropTypes.string.isRequired,
+        mascara: PropTypes.string.isRequired,
+        predeterminado: PropTypes.bool.isRequired,
+      }),
+    ),
+  }).isRequired,
+  selectedId: PropTypes.string,
+  onSelect: PropTypes.func.isRequired,
+  styles: PropTypes.object.isRequired,
+}
+
+// Pasarela de pago (HU10).
 export default function CheckoutPage() {
   const styles = useStyles()
   const { cart, status, reload } = useCart()
@@ -368,18 +426,23 @@ export default function CheckoutPage() {
     addressList.find(({ id }) => id === selectedAddressId) ??
     addressList.find(({ principal }) => principal) ??
     addressList[0]
+
   const methods = paymentMethods.failed ? [] : (paymentMethods.data ?? [])
   const selectedMethod =
-    methods.find(({ id }) => id === selectedId) ?? methods.find(({ predeterminado }) => predeterminado) ?? methods[0]
+    methods.find(({ id }) => id === selectedId) ??
+    methods.find(({ predeterminado }) => predeterminado) ??
+    methods[0]
 
   const pay = async () => {
-    // Al reintentar se envía a la misma dirección y se paga con el mismo método que la primera vez.
+    // Al reintentar se envía a la misma dirección y se paga con el mismo método.
     const address = shippedTo ?? selectedAddress
     const method = paidWith ?? selectedMethod
+
     setShippedTo(address)
     setPaidWith(method)
     setPhase('paying')
     setFailures([])
+
     await esperar(PAGO_SIMULADO_MS)
 
     let groups
@@ -394,6 +457,7 @@ export default function CheckoutPage() {
     // Un pedido por proveedor, uno detrás de otro. Lo que falla se queda en el carrito.
     const created = []
     const failed = []
+
     for (const group of groups) {
       try {
         created.push(await createOrder(group.vendedor.id, address.id, method.id))
@@ -403,7 +467,9 @@ export default function CheckoutPage() {
     }
 
     reload()
+
     if (created.length > 0) setPaidAt(new Date())
+
     setOrders((previous) => [...previous, ...created])
     setFailures(failed)
     setPhase(groups.length === 0 ? 'review' : 'done')
@@ -417,13 +483,16 @@ export default function CheckoutPage() {
         <Title1 as="h1" className={styles.title}>
           {paid ? 'Pago realizado' : 'No se ha podido completar el pago'}
         </Title1>
+
         <div className={styles.done}>
           {paid && <PaymentTicket orders={orders} paymentMethod={paidWith} paidAt={paidAt} />}
 
           {failures.length > 0 && (
             <div role="alert" className={styles.failure}>
               {failures.map((vendedor) => (
-                <Text key={vendedor.id}>No se ha podido crear el pedido de {vendedor.nombreComercial}.</Text>
+                <Text key={vendedor.id}>
+                  No se ha podido crear el pedido de {vendedor.nombreComercial}.
+                </Text>
               ))}
               <Text size={200}>Su compra sigue en el carrito, sin pagar.</Text>
             </div>
@@ -435,9 +504,11 @@ export default function CheckoutPage() {
                 Reintentar el pago
               </Button>
             )}
+
             <LinkButton to={PATHS.PRODUCTS} appearance={failures.length > 0 ? 'secondary' : 'primary'}>
               Seguir comprando
             </LinkButton>
+
             {orders.length > 0 && (
               <LinkButton to={PATHS.ORDERS} appearance="secondary">
                 Ver mis pedidos
@@ -493,25 +564,30 @@ export default function CheckoutPage() {
 
           <section aria-label="Resumen del pago" className={styles.summary}>
             <h2 className={styles.summaryTitle}>Resumen del pago</h2>
+
             <div className={styles.total}>
               <Text className={styles.muted}>Total a pagar</Text>
               <span className={styles.totalAmount}>{formatPrice(cart.total)}</span>
             </div>
+
             <Text size={200} className={styles.muted}>
               Se creará un pedido por cada proveedor: {pedidos(cart.grupos.length)} en total.
             </Text>
+
             <ShippingAddressPicker
               query={addresses}
               selectedId={selectedAddress?.id ?? null}
               onSelect={setSelectedAddressId}
               styles={styles}
             />
+
             <PaymentMethodPicker
               query={paymentMethods}
               selectedId={selectedMethod?.id ?? null}
               onSelect={setSelectedId}
               styles={styles}
             />
+
             <Button
               appearance="primary"
               size="large"
@@ -521,6 +597,7 @@ export default function CheckoutPage() {
             >
               {phase === 'paying' ? 'Procesando pago…' : 'Simular pago'}
             </Button>
+
             <Text size={200} className={styles.muted}>
               Es una simulación: no se realiza ningún cobro real.
             </Text>

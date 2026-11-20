@@ -1,8 +1,9 @@
+
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Text, makeStyles, tokens } from '@fluentui/react-components'
-import { Heart20Filled, Heart20Regular, ImageOff24Regular } from '@fluentui/react-icons'
+import { Heart20Filled, Heart20Regular } from '@fluentui/react-icons'
 import { getProductDetailPath } from '../../routes/paths'
 import { catalogProductPropType } from '../../utils/propTypes'
 import { formatRating } from '../../utils/format'
@@ -132,6 +133,22 @@ const useStyles = makeStyles({
   favoriteIcon: {
     color: tokens.colorPaletteRedForeground1,
   },
+  srOnly: {
+    position: 'absolute',
+    width: '1px',
+    height: '1px',
+    padding: 0,
+    margin: '-1px',
+    overflow: 'hidden',
+    clip: 'rect(0, 0, 0, 0)',
+    whiteSpace: 'nowrap',
+    border: 0,
+  },
+  placeholderImage: {
+    width: '24px',
+    height: '24px',
+    objectFit: 'contain',
+  },
 })
 
 // Tarjeta de un producto del catálogo: lo que se ve desde fuera (imagen, nombre, categoría, valoración y precio) y
@@ -140,17 +157,26 @@ const useStyles = makeStyles({
 // tarjeta tiene además un corazón para añadir el producto a favoritos (HU14), salvo si no está disponible, porque el
 // backend no lo aceptaría; uno agotado sí se puede añadir. Con `favorite`, el corazón sale relleno y, con
 // `onRemoveFavorite`, al pulsarlo se quita de favoritos. Si no se puede añadir o quitar, la tarjeta lo avisa.
-export default function ProductCard({ product, categoryName, favorite = false, onAddFavorite, onRemoveFavorite }) {
+export default function ProductCard({
+  product,
+  categoryName,
+  favorite = false,
+  onAddFavorite,
+  onRemoveFavorite,
+}) {
   const styles = useStyles()
+
   // Si la imagen no carga (dirección rota), se enseña el mismo marcador que cuando no hay imagen.
   const [imageFailed, setImageFailed] = useState(false)
   const hasImage = Boolean(product.imagen) && !imageFailed
   const rated = product.valoracion !== null && product.numValoraciones > 0
+
   const [savingFavorite, setSavingFavorite] = useState(false)
   const [favoriteError, setFavoriteError] = useState('')
 
   const favoriteFailure = (failure) => {
     if (favorite) return 'No se ha podido quitar de favoritos. Inténtalo de nuevo.'
+
     return failure?.code === 'PRODUCT_NOT_FOUND'
       ? 'Este producto ya no está disponible.'
       : 'No se ha podido añadir a favoritos. Inténtalo de nuevo.'
@@ -159,6 +185,7 @@ export default function ProductCard({ product, categoryName, favorite = false, o
   const toggleFavorite = async () => {
     setFavoriteError('')
     setSavingFavorite(true)
+
     try {
       await (favorite ? onRemoveFavorite(product.id) : onAddFavorite(product.id))
     } catch (failure) {
@@ -181,24 +208,45 @@ export default function ProductCard({ product, categoryName, favorite = false, o
               onError={() => setImageFailed(true)}
             />
           ) : (
-            <span className={styles.placeholder} role="img" aria-label="Sin imagen">
-              <ImageOff24Regular />
+            <span className={styles.placeholder}>
+              <img
+                className={styles.placeholderImage}
+                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 3l18 18M10 12l-4 6h12l-3-4-2 2M6 6h11a2 2 0 0 1 2 2v8' fill='none' stroke='%23999999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+                alt="Sin imagen"
+              />
             </span>
           )}
         </span>
+
         <span className={styles.body}>
           <Text size={200} className={styles.category}>
             {categoryName ?? SIN_CATEGORIA}
           </Text>
+
           <Text weight="semibold" size={400} className={styles.name}>
             {product.nombre}
           </Text>
+
           <span className={styles.rating}>
             {rated ? (
               <>
-                <RatingStars value={product.valoracion} />
-                <Text weight="semibold">{formatRating(product.valoracion)}</Text>
-                <Text className={styles.muted}>({product.numValoraciones})</Text>
+                <span>
+                  <img
+                    className={styles.srOnly}
+                    src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
+                    alt={`Valoración: ${formatRating(product.valoracion)} de 5`}
+                  />
+                  <span aria-hidden="true">
+                    <RatingStars value={product.valoracion} />
+                  </span>
+                </span>
+                <Text weight="semibold">
+                  {formatRating(product.valoracion)}
+                </Text>
+
+                <Text className={styles.muted}>
+                  ({product.numValoraciones})
+                </Text>
               </>
             ) : (
               <Text className={styles.muted}>Sin valoraciones</Text>
@@ -206,20 +254,33 @@ export default function ProductCard({ product, categoryName, favorite = false, o
           </span>
         </span>
       </Link>
+
       {onAddFavorite && product.disponible && (
         <Button
           shape="circular"
           className={styles.favorite}
           icon={favorite ? <Heart20Filled className={styles.favoriteIcon} /> : <Heart20Regular />}
-          aria-label={favorite ? `Quitar ${product.nombre} de favoritos` : `Añadir ${product.nombre} a favoritos`}
+          aria-label={
+            favorite
+              ? `Quitar ${product.nombre} de favoritos`
+              : `Añadir ${product.nombre} a favoritos`
+          }
           title={favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
           disabled={savingFavorite || (favorite && !onRemoveFavorite)}
           onClick={toggleFavorite}
         />
       )}
+
       <div className={styles.footer}>
-        <PriceBlock compact precio={product.precio} descuento={product.descuento} precioFinal={product.precioFinal} />
+        <PriceBlock
+          compact
+          precio={product.precio}
+          descuento={product.descuento}
+          precioFinal={product.precioFinal}
+        />
+
         <AddToCartButton product={product} size="small" fullWidth />
+
         {favoriteError && (
           <Text role="alert" size={200} className={styles.error}>
             {favoriteError}

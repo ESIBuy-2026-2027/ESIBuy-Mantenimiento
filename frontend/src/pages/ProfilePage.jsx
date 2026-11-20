@@ -93,7 +93,7 @@ function AccountDeletion({ rol }) {
   const [abierto, setAbierto] = useState(false)
 
   return (
-    <Card className={styles.deletion} aria-labelledby={titleId} role="region">
+    <Card className={styles.deletion} aria-labelledby={titleId}>
       <Title3 as="h2" id={titleId} className={styles.name}>
         Eliminar mi cuenta
       </Title3>
@@ -160,7 +160,7 @@ function CustomerPreferences({ categories }) {
           </MessageBarActions>
         </MessageBar>
       ) : (
-        <div role="group" aria-labelledby={titleId} className={styles.categories}>
+        <fieldset aria-labelledby={titleId} className={styles.categories}>
           {categories.map((category) => (
             <Checkbox
               key={category.id}
@@ -170,7 +170,7 @@ function CustomerPreferences({ categories }) {
               onChange={(_event, data) => cambiar(category.id, data.checked === true)}
             />
           ))}
-        </div>
+        </fieldset>
       )}
     </Card>
   )
@@ -272,13 +272,13 @@ export default function ProfilePage() {
       {!perfil && !failed && <Spinner className={pageStyles.loading} label="Cargando tu perfil…" />}
 
       {perfil && (
-        <div role="status">
+        <output>
           {aviso && (
             <MessageBar intent="success">
               <MessageBarBody>{aviso}</MessageBarBody>
             </MessageBar>
           )}
-        </div>
+        </output>
       )}
 
       {perfil && (

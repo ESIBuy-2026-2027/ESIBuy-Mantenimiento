@@ -30,6 +30,11 @@ export default function AddToCartButton({ product, quantity = 1, appearance = 'p
   useEffect(() => () => clearTimeout(timer.current), [])
 
   const buttonStyle = fullWidth ? { width: '100%' } : undefined
+  const buttonLabel = {
+    adding: 'Añadiendo…',
+    added: 'Añadido',
+    idle: 'Añadir al carrito',
+  }[phase]
 
   if (!product.disponible || product.stock <= 0) {
     return (
@@ -66,8 +71,7 @@ export default function AddToCartButton({ product, quantity = 1, appearance = 'p
         disabled={phase === 'adding'}
         onClick={handleClick}
       >
-        {phase === 'adding' ? 'Añadiendo…' : phase === 'added' ? 'Añadido' : 'Añadir al carrito'}
-      </Button>
+        {buttonLabel}      </Button>
       {error && (
         <Text role="alert" size={200} className={styles.error}>
           {error}

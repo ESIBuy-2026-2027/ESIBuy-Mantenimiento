@@ -70,7 +70,7 @@ function Stat({ label, value, hint }) {
   const labelId = useId('cifra')
 
   return (
-    <div role="group" aria-labelledby={labelId} className={styles.stat}>
+    <div className={styles.stat}>
       <Text id={labelId} className={styles.statLabel}>
         {label}
       </Text>

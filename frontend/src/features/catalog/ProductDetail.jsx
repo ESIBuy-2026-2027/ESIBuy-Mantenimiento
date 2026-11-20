@@ -268,8 +268,8 @@ export default function ProductDetail({
         {hasImage ? (
           <img className={styles.image} src={product.imagen} alt={product.nombre} onError={() => setImageFailed(true)} />
         ) : (
-          <span className={styles.placeholder} role="img" aria-label="Sin imagen">
-            <ImageOff24Regular fontSize={48} />
+          <span className={styles.placeholder} aria-label="Sin imagen">
+            <ImageOff24Regular aria-hidden="true" />
           </span>
         )}
       </div>
