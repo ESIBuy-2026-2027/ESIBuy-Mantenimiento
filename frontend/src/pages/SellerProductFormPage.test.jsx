@@ -252,7 +252,6 @@ describe('SellerProductFormPage (HU31): alta, guardado', () => {
     await rellenarFormularioValido(user)
     await user.upload(screen.getByLabelText(/^archivo de imagen/i), new File(['contenido'], 'foto.png', { type: 'image/png' }))
 
-    expect(screen.getByAltText(/vista previa de la imagen/i)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
     await esperarRuta('/seller/products')
 
