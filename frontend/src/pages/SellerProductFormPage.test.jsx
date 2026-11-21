@@ -49,7 +49,8 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
     expect(screen.getByLabelText(/^descripción/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^precio/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^stock/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^url de la imagen/i)).toBeInTheDocument()\n    expect(screen.getByLabelText(/^archivo de imagen/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^url de la imagen/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^archivo de imagen/i)).toBeInTheDocument()
     expect(campoCategoria()).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: 'Disponible para la venta' })).toBeChecked()
     expect(screen.getByRole('switch', { name: 'Activar descuento' })).not.toBeChecked()
@@ -336,7 +337,8 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
     expect(screen.getByLabelText(/^descripción/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^precio/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^stock/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^url de la imagen/i)).toBeInTheDocument()\n    expect(screen.getByLabelText(/^archivo de imagen/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^url de la imagen/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^archivo de imagen/i)).toBeInTheDocument()
     expect(campoCategoria()).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: 'Disponible para la venta' })).toBeChecked()
     expect(screen.getByRole('switch', { name: 'Activar descuento' })).not.toBeChecked()
@@ -524,7 +526,8 @@ describe('SellerProductFormPage (HU31): alta, guardado', () => {
 
     expect(llamadas).toEqual({ alta: 1, modificacion: 1, subida: 2 })
   })
-\n  it('sellerProductFormPage_conStockVacio_loEnviaComoCero', async () => {
+
+  it('sellerProductFormPage_conStockVacio_loEnviaComoCero', async () => {
     const user = userEvent.setup()
     const envio = capturarEnvio('post', '/api/seller/products', () => HttpResponse.json({ id: 'p-nuevo' }, { status: 201 }))
     await abrirFormulario()
