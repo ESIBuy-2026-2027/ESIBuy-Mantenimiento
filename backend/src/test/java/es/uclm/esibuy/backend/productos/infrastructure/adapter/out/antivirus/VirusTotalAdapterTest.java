@@ -138,6 +138,49 @@ class VirusTotalAdapterTest {
         virusTotal.verify();
     }
 
+    @Test
+    @DisplayName("HU31: un archivo cuya análisis detecta malware se clasifica como MALICIOSO")
+    void archivoMaliciosoSeClasificaComoMalicioso() {
+        esperarArchivoEnviado();
+        esperarConsultaDelAnalisis(analisis("completed", 1));
+
+        assertEquals(ResultadoAnalisis.MALICIOSA,
+                adapter.analizarArchivo(new byte[] {1, 2, 3}, "imagen.png", "image/png"));
+        virusTotal.verify();
+    }
+
+    @Test
+    @DisplayName("HU31: si VirusTotal no termina el análisis del archivo no hay resultado")
+    void archivoSinAnalisisTerminadoNoDaResultado() {
+        esperarArchivoEnviado();
+        esperarConsultaDelAnalisis(analisis("queued", 0));
+        esperarConsultaDelAnalisis(analisis("in-progress", 0));
+
+        assertEquals(ResultadoAnalisis.SIN_RESULTADO,
+                adapter.analizarArchivo(new byte[] {1, 2, 3}, "imagen.png", "image/png"));
+        virusTotal.verify();
+    }
+
+    @Test
+    @DisplayName("HU31: si VirusTotal rechaza la subida del archivo no hay resultado")
+    void errorAlEnviarArchivoNoDaResultado() {
+        virusTotal.expect(requestTo(BASE + "/files")).andExpect(method(HttpMethod.POST))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.MULTIPART_FORM_DATA))
+                .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS));
+
+        assertEquals(ResultadoAnalisis.SIN_RESULTADO,
+                adapter.analizarArchivo(new byte[] {1, 2, 3}, "imagen.png", "image/png"));
+        virusTotal.verify();
+    }
+
+    private void esperarArchivoEnviado() {
+        virusTotal.expect(requestTo(BASE + "/files")).andExpect(method(HttpMethod.POST))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.MULTIPART_FORM_DATA))
+                .andRespond(withSuccess(
+                        "{\\"data\\": {\\"type\\": \\"analysis\\", \\"id\\": \\"" + ID_ANALISIS + "\\"}}",
+                        MediaType.APPLICATION_JSON));
+    }
+
     // GET /urls/{id} de una URL que nadie ha analizado: 404 NotFoundError
     private void esperarUrlDesconocida() {
         virusTotal.expect(requestTo(BASE + "/urls/" + ID_URL)).andExpect(method(HttpMethod.GET))
