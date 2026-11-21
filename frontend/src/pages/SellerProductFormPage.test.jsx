@@ -471,7 +471,8 @@ describe('SellerProductFormPage: subida de imágenes', () => {
   it('sube la imagen seleccionada después de crear el producto', async () => {
     const user = userEvent.setup()
     const llamadas = { alta: 0, subida: 0 }
-    let archivoSubido = null
+    let cuerpoMultipart = ''
+    let tipoContenido = ''
 
     server.use(
       http.post('/api/seller/products', async ({ request }) => {
@@ -481,8 +482,8 @@ describe('SellerProductFormPage: subida de imágenes', () => {
       }),
       http.post('/api/seller/products/p-imagen/image', async ({ request }) => {
         llamadas.subida += 1
-        const formData = await request.formData()
-        archivoSubido = formData.get('file')
+        tipoContenido = request.headers.get('content-type') ?? ''
+        cuerpoMultipart = await request.text()
         return HttpResponse.json({ id: 'p-imagen' })
       }),
     )
@@ -494,8 +495,9 @@ describe('SellerProductFormPage: subida de imágenes', () => {
 
     await esperarRuta('/seller/products')
     expect(llamadas).toEqual({ alta: 1, subida: 1 })
-    expect(archivoSubido).toBeInstanceOf(File)
-    expect(archivoSubido.name).toBe('foto.png')
+    expect(tipoContenido).toMatch(/^multipart\\/form-data; boundary=/i)
+    expect(cuerpoMultipart).toContain('name="file"; filename="foto.png"')
+    expect(cuerpoMultipart).toContain('Content-Type: image/png')
   })
 
   it('permite reintentar la subida fallida sin duplicar el producto', async () => {
