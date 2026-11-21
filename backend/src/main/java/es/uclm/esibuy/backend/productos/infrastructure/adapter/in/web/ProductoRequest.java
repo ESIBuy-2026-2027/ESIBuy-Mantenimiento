@@ -20,7 +20,7 @@ public record ProductoRequest(
         @NotNull @DecimalMin(value = "0", inclusive = false) BigDecimal precio,
         @NotNull @Min(0) Integer stock,
         @NotBlank String categoriaId,
-        @Pattern(regexp = "(?i)(https?://\\S+)?") String imagen,
+        @Pattern(regexp = "(?i)(https?://\\S+|/api/product-images/[a-f0-9]{24})?") String imagen,
         boolean disponible,
         @NotNull @Valid DescuentoDto descuento,
         @NotNull @Valid DescuentoDto descuentoPremium
