@@ -232,6 +232,12 @@ describe('SellerProductFormPage (HU31): alta, guardado', () => {
     })
   })
 
+))
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+    await esperarRuta('/seller/products')
+
+    expect(llamadas).toEqual({ alta: 1, modificacion: 1, subida: 2 })
+  })
 
   it('sellerProductFormPage_alSeleccionarUnaImagen_laSubeTrasCrearElProducto', async () => {
     const user = userEvent.setup()
@@ -521,6 +527,14 @@ describe('SellerProductFormPage (HU31): alta, guardado', () => {
   })
 
 ))
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+    await esperarRuta('/seller/products')
+
+    expect(llamadas).toEqual({ alta: 1, modificacion: 1, subida: 2 })
+  })
+
+))
+
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
     await esperarRuta('/seller/products')
 
