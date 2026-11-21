@@ -177,7 +177,9 @@ class VirusTotalAdapterTest {
         virusTotal.expect(requestTo(BASE + "/files")).andExpect(method(HttpMethod.POST))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.MULTIPART_FORM_DATA))
                 .andRespond(withSuccess(
-                        "{\\"data\\": {\\"type\\": \\"analysis\\", \\"id\\": \\"" + ID_ANALISIS + "\\"}}",
+                        """
+                {"data": {"type": "analysis", "id": "%s"}}
+                """.formatted(ID_ANALISIS),
                         MediaType.APPLICATION_JSON));
     }
 
