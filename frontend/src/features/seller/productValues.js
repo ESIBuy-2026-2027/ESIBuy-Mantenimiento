@@ -71,7 +71,9 @@ export function validateProduct(values) {
     errors.descripcion = `La descripción no puede superar los ${DESCRIPTION_MAX_LENGTH} caracteres.`
   }
 
-  if (image && !isHttpUrl(image) && !/^\\/api\\/product-images\\/[a-fA-F0-9]{24}$/.test(image)) {\n    errors.imagen = 'Introduce una dirección web válida (http o https).'\n  }
+  if (image && !isHttpUrl(image) && !/^\\/api\\/product-images\\/[a-fA-F0-9]{24}$/.test(image)) {
+    errors.imagen = 'Introduce una dirección web válida (http o https).'
+  }
 
   const discount = discountError(values.descuentoActivo, values.descuentoPorcentaje, 'El descuento')
   if (discount) errors.descuentoPorcentaje = discount
