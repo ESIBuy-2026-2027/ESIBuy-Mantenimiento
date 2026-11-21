@@ -11,8 +11,11 @@ import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -24,6 +27,7 @@ import java.util.Base64;
 // no responde, devuelve SIN_RESULTADO en lugar de lanzar la excepción.
 public class VirusTotalAdapter implements AnalisisImagenPort {
 
+    private static final Logger log = LoggerFactory.getLogger(VirusTotalAdapter.class);
     private static final String ANALISIS_TERMINADO = "completed";
 
     private final RestClient virusTotal;
@@ -40,9 +44,13 @@ public class VirusTotalAdapter implements AnalisisImagenPort {
     public ResultadoAnalisis analizar(String urlImagen) {
         try {
             return consultarInforme(urlImagen);
+        } catch (HttpStatusCodeException e) {
+            log.warn("VirusTotal no pudo analizar la URL de la imagen. HTTP {}: {}",
+                    e.getStatusCode().value(), e.getStatusText());
+            return ResultadoAnalisis.SIN_RESULTADO;
         } catch (RestClientException e) {
-            // Error de VirusTotal (401 API key, 429 cuota, 5xx) o sin conexión: no hay
-            // respuesta sobre la imagen
+            log.warn("No se pudo completar el análisis de la URL con VirusTotal: {}: {}",
+                    e.getClass().getSimpleName(), e.getMessage());
             return ResultadoAnalisis.SIN_RESULTADO;
         }
     }
@@ -89,8 +97,13 @@ public class VirusTotalAdapter implements AnalisisImagenPort {
     public ResultadoAnalisis analizarArchivo(byte[] contenido, String nombreArchivo, String tipoContenido) {
         try {
             return enviarArchivoAAnalizar(contenido, nombreArchivo, tipoContenido);
+        } catch (HttpStatusCodeException e) {
+            log.warn("VirusTotal rechazó el archivo de imagen. HTTP {}: {}",
+                    e.getStatusCode().value(), e.getStatusText());
+            return ResultadoAnalisis.SIN_RESULTADO;
         } catch (RestClientException e) {
-            // Error de VirusTotal (cuota, credenciales, servidor) o sin conexión: no hay resultado.
+            log.warn("No se pudo completar el análisis del archivo con VirusTotal: {}: {}",
+                    e.getClass().getSimpleName(), e.getMessage());
             return ResultadoAnalisis.SIN_RESULTADO;
         }
     }
@@ -118,6 +131,7 @@ public class VirusTotalAdapter implements AnalisisImagenPort {
                 .body(EnvioAnalisis.class);
 
         if (envio == null || envio.data() == null || envio.data().id() == null) {
+            log.warn("VirusTotal aceptó la petición del archivo, pero no devolvió un identificador de análisis.");
             return ResultadoAnalisis.SIN_RESULTADO;
         }
 
@@ -133,14 +147,29 @@ public class VirusTotalAdapter implements AnalisisImagenPort {
                     && ANALISIS_TERMINADO.equals(analisis.data().attributes().status())) {
                 return segun(analisis.data().attributes().stats());
             }
+            String estado = analisis != null && analisis.data() != null
+                    && analisis.data().attributes() != null
+                    ? analisis.data().attributes().status() : "respuesta incompleta";
+            log.info("Análisis de imagen en VirusTotal aún no terminado (consulta {}/{}; estado: {}).",
+                    consulta + 1, maxConsultas, estado);
         }
+        log.warn("VirusTotal no terminó el análisis del archivo tras {} consultas.", maxConsultas);
         return ResultadoAnalisis.SIN_RESULTADO;
     }
 
     // Maliciosa si algún motor la marca como malicious; los sospechosos no cuentan
     // (decisión del equipo)
     private static ResultadoAnalisis segun(Estadisticas estadisticas) {
-        return estadisticas.malicious() > 0 ? ResultadoAnalisis.MALICIOSA : ResultadoAnalisis.SEGURA;
+        if (estadisticas == null) {
+            log.warn("VirusTotal devolvió un análisis sin estadísticas; no se puede determinar si la imagen es segura.");
+            return ResultadoAnalisis.SIN_RESULTADO;
+        }
+        if (estadisticas.malicious() > 0) {
+            log.warn("VirusTotal detectó la imagen como maliciosa ({} motores).", estadisticas.malicious());
+            return ResultadoAnalisis.MALICIOSA;
+        }
+        log.info("VirusTotal completó el análisis de imagen sin detecciones maliciosas.");
+        return ResultadoAnalisis.SEGURA;
     }
 
     private void esperar() {
