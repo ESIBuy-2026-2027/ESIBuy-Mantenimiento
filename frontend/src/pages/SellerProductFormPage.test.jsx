@@ -50,7 +50,7 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
     expect(screen.getByLabelText(/^precio/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^stock/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^url de la imagen/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^archivo de imagen/i)).toBeInTheDocument()
+    expect(screen.getByLabelText('Archivo de imagen')).toHaveAttribute('accept', 'image/jpeg,image/png')
     expect(campoCategoria()).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: 'Disponible para la venta' })).toBeChecked()
     expect(screen.getByRole('switch', { name: 'Activar descuento' })).not.toBeChecked()
@@ -230,331 +230,6 @@ describe('SellerProductFormPage (HU31): alta, guardado', () => {
       descuento: { activo: true, porcentaje: 10 },
       descuentoPremium: { activo: false, porcentaje: null },
     })
-  })
-
-))
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-    await esperarRuta('/seller/products')
-
-    expect(llamadas).toEqual({ alta: 1, modificacion: 1, subida: 2 })
-  })
-
-))
-
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-    await esperarRuta('/seller/products')
-
-    expect(llamadas).toEqual({ alta: 1, modificacion: 1, subida: 2 })
-  })
-
-  it('sellerProductFormPage_alSeleccionarUnaImagen_laSubeTrasCrearElProducto', async () => {
-    const user = userEvent.setup()
-    const llamadas = { alta: 0, subida: 0, nombreArchivo: null }
-    server.use(
-      http.post('/api/seller/products', async ({ request }) => {
-        llamadas.alta += 1
-        await request.json()
-        return HttpResponse.json({ id: 'p-imagen' }, { status: 201 })
-      }),
-      http.post('/api/seller/products/p-imagen/image', async ({ request }) => {
-        llamadas.subida += 1
-        const datos = await request.formData()
-        llamadas.nombreArchivo = datos.get('file')?.name
-        return HttpResponse.json({ imagen: '/api/product-images/0123456789abcdef01234567' })
-      }),
-    )
-    await abrirFormulario()
-    await rellenarFormularioValido(user)
-    await user.upload(screen.getByLabelText(/^archivo de imagen/i), new File(['contenido'], 'foto.png', { type: 'image/png' }))
-
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-    await esperarRuta('/seller/products')
-
-    expect(llamadas).toEqual({ alta: 1, subida: 1, nombreArchivo: 'foto.png' })
-  })
-
-  it('sellerProductFormPage_siFallaLaSubida_reintentaSinCrearOtroProducto', async () => {
-    const user = userEvent.setup()
-    const llamadas = { alta: 0, modificacion: 0, subida: 0 }
-    server.use(
-      http.post('/api/seller/products', async ({ request }) => {
-        llamadas.alta += 1
-        await request.json()
-        return HttpResponse.json({ id: 'p-reintento' }, { status: 201 })
-      }),
-      http.put('/api/seller/products/p-reintento', async ({ request }) => {
-        llamadas.modificacion += 1
-        await request.json()
-        return HttpResponse.json({ id: 'p-reintento' })
-      }),
-      http.post('/api/seller/products/p-reintento/image', () => {
-        llamadas.subida += 1
-        return llamadas.subida === 1
-          ? HttpResponse.json({ code: 'IMAGE_NOT_SAFE' }, { status: 400 })
-          : HttpResponse.json({ imagen: '/api/product-images/0123456789abcdef01234567' })
-      }),
-    )
-    await abrirFormulario()
-    await rellenarFormularioValido(user)
-    await user.upload(screen.getByLabelText(/^archivo de imagen/i), new File(['contenido'], 'foto.png', { type: 'image/png' }))
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-
-    expect(await screen.findByText(/el producto se ha guardado, pero no se ha podido subir la imagen/i)).toBeInTheDocument()
-    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp(`^${RUTA_NUEVO}import { describe, it, expect } from 'vitest'
-import { screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { http, HttpResponse } from 'msw'
-import { server } from '../mocks/server'
-import { abrirSesionPorApi, renderApp } from '../test/renderApp'
-import { elegirCategoria } from '../test/utils'
-
-const VENDEDOR = 'vendedor@esibuy.test'
-const RUTA_NUEVO = '/seller/products/new'
-const NOMBRE_EN_USO = 'Este nombre ya está en uso en tus productos. Usa uno distinto.'
-
-const campoCategoria = () => screen.getByRole('combobox', { name: /categoría/i })
-
-async function abrirFormulario(ruta = RUTA_NUEVO, titulo = /añadir producto/i) {
-  await abrirSesionPorApi(VENDEDOR)
-  renderApp(ruta)
-  await screen.findByRole('heading', { level: 1, name: titulo })
-  await screen.findByRole('combobox', { name: /categoría/i })
-}
-
-function capturarEnvio(metodo, ruta, respuesta) {
-  const envio = { cuerpo: null, llamadas: 0 }
-  server.use(
-    http[metodo](ruta, async ({ request }) => {
-      envio.llamadas += 1
-      envio.cuerpo = await request.json()
-      return respuesta()
-    }),
-  )
-  return envio
-}
-
-async function rellenarFormularioValido(user) {
-  await user.type(screen.getByLabelText(/^nombre/i), 'Lámpara de pie')
-  await elegirCategoria(user, 'Hogar')
-  await user.type(screen.getByLabelText(/^precio/i), '45.5')
-}
-
-async function esperarRuta(ruta) {
-  await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp(`^${ruta}$`)))
-}
-
-describe('SellerProductFormPage (HU31): alta, campos', () => {
-  it('sellerProductFormPage_muestraTodosLosCamposDelProducto', async () => {
-    await abrirFormulario()
-
-    expect(screen.getByLabelText(/^nombre/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^descripción/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^precio/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^stock/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^url de la imagen/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^archivo de imagen/i)).toBeInTheDocument()
-    expect(campoCategoria()).toBeInTheDocument()
-    expect(screen.getByRole('switch', { name: 'Disponible para la venta' })).toBeChecked()
-    expect(screen.getByRole('switch', { name: 'Activar descuento' })).not.toBeChecked()
-    expect(screen.getByRole('switch', { name: 'Activar descuento premium' })).not.toBeChecked()
-    expect(screen.getByRole('button', { name: /^guardar$/i })).toBeInTheDocument()
-  })
-
-  it('sellerProductFormPage_enAlta_empiezaConElFormularioVacio', async () => {
-    await abrirFormulario()
-
-    expect(screen.getByLabelText(/^nombre/i)).toHaveValue('')
-    expect(screen.getByLabelText(/^precio/i)).toHaveValue(null)
-    expect(campoCategoria()).toHaveValue('')
-  })
-
-  it('sellerProductFormPage_explicaQueLosDescuentosSeAcumulan', async () => {
-    await abrirFormulario()
-
-    expect(screen.getByText(/los descuentos se acumulan/i)).toBeInTheDocument()
-    expect(screen.queryByText(/no se acumulan/i)).not.toBeInTheDocument()
-  })
-
-  it('sellerProductFormPage_losCamposDeDescuento_aparecenAlActivarElDescuento', async () => {
-    const user = userEvent.setup()
-    await abrirFormulario()
-    expect(screen.queryByLabelText(/^descuento \(%\)/i)).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('switch', { name: 'Activar descuento' }))
-    expect(screen.getByLabelText(/^descuento \(%\)/i)).toBeInTheDocument()
-
-    await user.click(screen.getByRole('switch', { name: 'Activar descuento premium' }))
-    expect(screen.getByLabelText(/^descuento premium \(%\)/i)).toBeInTheDocument()
-  })
-
-  it('sellerProductFormPage_alPulsarCancelar_vuelveAlListadoSinGuardar', async () => {
-    const user = userEvent.setup()
-    const envio = capturarEnvio('post', '/api/seller/products', () => HttpResponse.json({}, { status: 201 }))
-    await abrirFormulario()
-
-    await user.click(screen.getByRole('link', { name: /cancelar/i }))
-
-    await esperarRuta('/seller/products')
-    expect(envio.llamadas).toBe(0)
-  })
-
-  it('sellerProductFormPage_sinSesion_redirigeAlLogin', async () => {
-    renderApp(RUTA_NUEVO)
-
-    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/login$')))
-  })
-
-  it('sellerProductFormPage_conSesionDeCliente_noMuestraElFormulario', async () => {
-    await abrirSesionPorApi('cliente@esibuy.test')
-    renderApp(RUTA_NUEVO)
-
-    await esperarRuta('/products')
-    expect(screen.queryByRole('button', { name: /^guardar$/i })).not.toBeInTheDocument()
-  })
-
-  it('sellerProductFormPage_conErrorAlCargarLasCategorias_avisaYPermiteReintentar', async () => {
-    server.use(http.get('/api/categorias', () => new HttpResponse(null, { status: 500 }), { once: true }))
-    const user = userEvent.setup()
-    await abrirSesionPorApi(VENDEDOR)
-    renderApp(RUTA_NUEVO)
-
-    expect(await screen.findByText(/no se han podido cargar las categorías/i)).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /reintentar/i }))
-
-    expect(await screen.findByRole('combobox', { name: /categoría/i })).toBeInTheDocument()
-  })
-})
-
-describe('SellerProductFormPage (HU31): validación', () => {
-  it('sellerProductFormPage_alGuardarVacio_muestraTodosLosErroresALaVezYNoLlamaAlServidor', async () => {
-    const user = userEvent.setup()
-    const envio = capturarEnvio('post', '/api/seller/products', () => HttpResponse.json({}, { status: 201 }))
-    await abrirFormulario()
-
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-
-    expect(screen.getByText(/introduce el nombre del producto/i)).toBeInTheDocument()
-    expect(screen.getByText(/elige una categoría/i)).toBeInTheDocument()
-    expect(screen.getByText(/introduce el precio/i)).toBeInTheDocument()
-    expect(envio.llamadas).toBe(0)
-    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp(`^${RUTA_NUEVO}$`))
-  })
-
-  it('sellerProductFormPage_conPrecioCero_muestraQueDebeSerMayorQueCero', async () => {
-    const user = userEvent.setup()
-    await abrirFormulario()
-
-    await rellenarFormularioValido(user)
-    await user.clear(screen.getByLabelText(/^precio/i))
-    await user.type(screen.getByLabelText(/^precio/i), '0')
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-
-    expect(screen.getByText(/el precio debe ser mayor que 0/i)).toBeInTheDocument()
-  })
-
-  it('sellerProductFormPage_conStockNegativo_muestraQueDebeSerMayorOIgualQueCero', async () => {
-    const user = userEvent.setup()
-    await abrirFormulario()
-
-    await rellenarFormularioValido(user)
-    await user.type(screen.getByLabelText(/^stock/i), '-1')
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-
-    expect(screen.getByText(/stock debe ser un número entero mayor o igual que 0/i)).toBeInTheDocument()
-  })
-
-  it('sellerProductFormPage_conDescuentoActivoSinPorcentaje_muestraError', async () => {
-    const user = userEvent.setup()
-    await abrirFormulario()
-
-    await rellenarFormularioValido(user)
-    await user.click(screen.getByRole('switch', { name: 'Activar descuento' }))
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-
-    expect(screen.getByText(/el descuento debe ser mayor que 0 y no superar 100/i)).toBeInTheDocument()
-  })
-
-  it('sellerProductFormPage_alCorregirUnCampoTrasUnIntentoFallido_loValidaEnVivo', async () => {
-    const user = userEvent.setup()
-    await abrirFormulario()
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-    expect(screen.getByText(/introduce el nombre del producto/i)).toBeInTheDocument()
-
-    await user.type(screen.getByLabelText(/^nombre/i), 'Lámpara')
-
-    expect(screen.queryByText(/introduce el nombre del producto/i)).not.toBeInTheDocument()
-    expect(screen.getByText(/introduce el precio/i)).toBeInTheDocument()
-  })
-
-  it('sellerProductFormPage_antesDelPrimerIntento_noMuestraErrores', async () => {
-    const user = userEvent.setup()
-    await abrirFormulario()
-
-    await user.type(screen.getByLabelText(/^nombre/i), 'a')
-    await user.clear(screen.getByLabelText(/^nombre/i))
-
-    expect(screen.queryByText(/introduce el nombre del producto/i)).not.toBeInTheDocument()
-  })
-
-  it('sellerProductFormPage_conUrlDeImagenNoValida_muestraError', async () => {
-    const user = userEvent.setup()
-    await abrirFormulario()
-
-    await rellenarFormularioValido(user)
-    await user.type(screen.getByLabelText(/^url de la imagen/i), 'esto no es una url')
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-
-    expect(screen.getByText(/dirección web válida/i)).toBeInTheDocument()
-  })
-})
-
-describe('SellerProductFormPage (HU31): alta, guardado', () => {
-  it('sellerProductFormPage_alGuardarUnProductoValido_enviaSusDatosSinIdentificarAlVendedor', async () => {
-    const user = userEvent.setup()
-    const envio = capturarEnvio('post', '/api/seller/products', () => HttpResponse.json({ id: 'p-nuevo' }, { status: 201 }))
-    await abrirFormulario()
-
-    await rellenarFormularioValido(user)
-    await user.type(screen.getByLabelText(/^stock/i), '7')
-    await user.click(screen.getByRole('switch', { name: 'Activar descuento' }))
-    await user.type(screen.getByLabelText(/^descuento \(%\)/i), '10')
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-
-    await esperarRuta('/seller/products')
-    expect(envio.cuerpo).toEqual({
-      nombre: 'Lámpara de pie',
-      descripcion: '',
-      precio: 45.5,
-      stock: 7,
-      categoriaId: 'cat-2',
-      imagen: '',
-      disponible: true,
-      descuento: { activo: true, porcentaje: 10 },
-      descuentoPremium: { activo: false, porcentaje: null },
-    })
-  })
-
-))
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-    await esperarRuta('/seller/products')
-
-    expect(llamadas).toEqual({ alta: 1, modificacion: 1, subida: 2 })
-  })
-
-))
-
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-    await esperarRuta('/seller/products')
-
-    expect(llamadas).toEqual({ alta: 1, modificacion: 1, subida: 2 })
-  })
-
-))
-
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-    await esperarRuta('/seller/products')
-
-    expect(llamadas).toEqual({ alta: 1, modificacion: 1, subida: 2 })
   })
 
   it('sellerProductFormPage_conStockVacio_loEnviaComoCero', async () => {
@@ -788,5 +463,78 @@ describe('SellerProductFormPage (HU34): edición', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: /editar producto/i })).toBeInTheDocument()
     await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Auriculares inalámbricos'))
+  })
+})
+
+
+describe('SellerProductFormPage: subida de imágenes', () => {
+  it('sube la imagen seleccionada después de crear el producto', async () => {
+    const user = userEvent.setup()
+    const llamadas = { alta: 0, subida: 0 }
+    let archivoSubido = null
+
+    server.use(
+      http.post('/api/seller/products', async ({ request }) => {
+        llamadas.alta += 1
+        await request.json()
+        return HttpResponse.json({ id: 'p-imagen' }, { status: 201 })
+      }),
+      http.post('/api/seller/products/p-imagen/image', async ({ request }) => {
+        llamadas.subida += 1
+        const formData = await request.formData()
+        archivoSubido = formData.get('file')
+        return HttpResponse.json({ id: 'p-imagen' })
+      }),
+    )
+
+    await abrirFormulario()
+    await rellenarFormularioValido(user)
+    await user.upload(screen.getByLabelText('Archivo de imagen'), new File(['contenido png'], 'foto.png', { type: 'image/png' }))
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+
+    await esperarRuta('/seller/products')
+    expect(llamadas).toEqual({ alta: 1, subida: 1 })
+    expect(archivoSubido).toBeInstanceOf(File)
+    expect(archivoSubido.name).toBe('foto.png')
+  })
+
+  it('permite reintentar la subida fallida sin duplicar el producto', async () => {
+    const user = userEvent.setup()
+    const llamadas = { alta: 0, modificacion: 0, subida: 0 }
+
+    server.use(
+      http.post('/api/seller/products', async ({ request }) => {
+        llamadas.alta += 1
+        await request.json()
+        return HttpResponse.json({ id: 'p-reintento' }, { status: 201 })
+      }),
+      http.put('/api/seller/products/p-reintento', async ({ request }) => {
+        llamadas.modificacion += 1
+        await request.json()
+        return HttpResponse.json({ id: 'p-reintento' })
+      }),
+      http.post('/api/seller/products/p-reintento/image', async () => {
+        llamadas.subida += 1
+        if (llamadas.subida === 1) {
+          return HttpResponse.json({ code: 'IMAGE_NOT_SAFE' }, { status: 400 })
+        }
+        return HttpResponse.json({ id: 'p-reintento' })
+      }),
+    )
+
+    await abrirFormulario()
+    await rellenarFormularioValido(user)
+    await user.upload(
+      screen.getByLabelText('Archivo de imagen'),
+      new File(['contenido png'], 'foto.png', { type: 'image/png' }),
+    )
+
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+    expect(await screen.findByText(/el producto se ha guardado, pero no se ha podido subir la imagen/i)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+    await esperarRuta('/seller/products')
+
+    expect(llamadas).toEqual({ alta: 1, modificacion: 1, subida: 2 })
   })
 })
