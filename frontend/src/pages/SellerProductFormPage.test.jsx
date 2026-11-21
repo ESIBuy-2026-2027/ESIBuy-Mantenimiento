@@ -495,7 +495,7 @@ describe('SellerProductFormPage: subida de imágenes', () => {
 
     await esperarRuta('/seller/products')
     expect(llamadas).toEqual({ alta: 1, subida: 1 })
-    expect(tipoContenido).toMatch(/^multipart\\/form-data; boundary=/i)
+    expect(tipoContenido).toMatch(/^multipart\/form-data; boundary=/i)
     expect(cuerpoMultipart).toContain('name="file"; filename="foto.png"')
     expect(cuerpoMultipart).toContain('Content-Type: image/png')
   })
