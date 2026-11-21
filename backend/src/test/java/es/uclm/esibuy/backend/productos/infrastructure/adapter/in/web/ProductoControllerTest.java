@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.productos.infrastructure.adapter.in.web;
 
 import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
+import es.uclm.esibuy.backend.productos.application.service.GestionImagenesProductoService;
 import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
 import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
@@ -99,6 +100,9 @@ class ProductoControllerTest {
 
         @MockitoBean
         private GestionProductosUseCase gestionProductos;
+
+        @MockitoBean
+        private GestionImagenesProductoService gestionImagenes;
 
         @Test
         @DisplayName("HU32-CP01: el vendedor recibe su listado con el formato del contrato y sin el id del vendedor")
