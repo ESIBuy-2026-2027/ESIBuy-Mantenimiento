@@ -101,16 +101,22 @@ public class Producto {
         if (imagen == null || imagen.isBlank()) {
             return "";
         }
+        String valor = imagen.trim();
+        // Las imágenes subidas se sirven desde un endpoint interno y autenticado del catálogo.
+        // El identificador es un ObjectId hexadecimal de MongoDB (24 caracteres).
+        if (valor.matches("/api/product-images/[a-fA-F0-9]{24}")) {
+            return valor;
+        }
         String esquema;
         try {
-            esquema = URI.create(imagen.trim()).getScheme();
+            esquema = URI.create(valor).getScheme();
         } catch (IllegalArgumentException e) {
             throw new ProductoInvalidoException("La imagen debe ser una dirección web válida (http o https)");
         }
         if (esquema == null || !ESQUEMAS_IMAGEN.contains(esquema.toLowerCase(Locale.ROOT))) {
             throw new ProductoInvalidoException("La imagen debe ser una dirección web válida (http o https)");
         }
-        return imagen.trim();
+        return valor;
     }
 
     private static String exigirTexto(String valor, String mensaje) {
