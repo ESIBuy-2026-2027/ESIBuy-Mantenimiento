@@ -28,6 +28,8 @@ import es.uclm.esibuy.backend.productos.application.service.CatalogoProductosSer
 import es.uclm.esibuy.backend.productos.application.service.ExistenciasProductosService;
 import es.uclm.esibuy.backend.productos.application.service.ConteoProductosService;
 import es.uclm.esibuy.backend.productos.application.service.GestionProductosService;
+import es.uclm.esibuy.backend.productos.application.service.GestionImagenesProductoService;
+import es.uclm.esibuy.backend.productos.infrastructure.imagen.ValidadorImagen;
 import es.uclm.esibuy.backend.productos.application.service.GestionProductosVendedorService;
 import es.uclm.esibuy.backend.productos.application.service.InventarioVendedorService;
 import es.uclm.esibuy.backend.productos.application.service.ListadoProductosService;
@@ -94,6 +96,13 @@ public class ProductosConfig {
     GestionProductosUseCase gestionProductosUseCase(ProductoRepositoryPort productoRepositoryPort,
             UsuarioEnSesionPort usuarioEnSesionPort, AnalisisImagenPort analisisImagenPort) {
         return new GestionProductosService(productoRepositoryPort, usuarioEnSesionPort, analisisImagenPort);
+    }
+
+    @Bean
+    GestionImagenesProductoService gestionImagenesProductoService(ProductoRepositoryPort productos,
+            ImagenStoragePort almacenamiento, AnalisisImagenPort antivirus, UsuarioEnSesionPort usuarioEnSesion) {
+        return new GestionImagenesProductoService(productos, almacenamiento, antivirus,
+                new ValidadorImagen(), usuarioEnSesion);
     }
 
     @Bean
