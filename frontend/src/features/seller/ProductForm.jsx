@@ -57,9 +57,10 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
       setPreviewUrl(null)
       return undefined
     }
+    if (typeof URL.createObjectURL !== 'function') return undefined
     const url = URL.createObjectURL(imageFile)
     setPreviewUrl(url)
-    return () => URL.revokeObjectURL(url)
+    return () => { if (typeof URL.revokeObjectURL === 'function') URL.revokeObjectURL(url) }
   }, [imageFile])
 
   const setField = (field) => (value) => setValues((current) => ({ ...current, [field]: value }))
