@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
 import es.uclm.esibuy.backend.productos.application.port.out.ResultadoAnalisis;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -76,6 +79,58 @@ public class VirusTotalAdapter implements AnalisisImagenPort {
                     .retrieve()
                     .body(Analisis.class);
             if (ANALISIS_TERMINADO.equals(analisis.data().attributes().status())) {
+                return segun(analisis.data().attributes().stats());
+            }
+        }
+        return ResultadoAnalisis.SIN_RESULTADO;
+    }
+
+    @Override
+    public ResultadoAnalisis analizarArchivo(byte[] contenido, String nombreArchivo, String tipoContenido) {
+        try {
+            return enviarArchivoAAnalizar(contenido, nombreArchivo, tipoContenido);
+        } catch (RestClientException e) {
+            // Error de VirusTotal (cuota, credenciales, servidor) o sin conexión: no hay resultado.
+            return ResultadoAnalisis.SIN_RESULTADO;
+        }
+    }
+
+    private ResultadoAnalisis enviarArchivoAAnalizar(byte[] contenido, String nombreArchivo, String tipoContenido) {
+        ByteArrayResource archivo = new ByteArrayResource(contenido) {
+            @Override
+            public String getFilename() {
+                return nombreArchivo;
+            }
+        };
+
+        HttpHeaders cabecerasArchivo = new HttpHeaders();
+        cabecerasArchivo.setContentType(MediaType.parseMediaType(tipoContenido));
+        cabecerasArchivo.setContentDispositionFormData("file", nombreArchivo);
+
+        MultiValueMap<String, Object> formulario = new LinkedMultiValueMap<>();
+        formulario.add("file", new HttpEntity<>(archivo, cabecerasArchivo));
+
+        EnvioAnalisis envio = virusTotal.post()
+                .uri("/files")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(formulario)
+                .retrieve()
+                .body(EnvioAnalisis.class);
+
+        if (envio == null || envio.data() == null || envio.data().id() == null) {
+            return ResultadoAnalisis.SIN_RESULTADO;
+        }
+
+        String idAnalisis = envio.data().id();
+        for (int consulta = 0; consulta < maxConsultas; consulta++) {
+            esperar();
+            Analisis analisis = virusTotal.get()
+                    .uri("/analyses/{id}", idAnalisis)
+                    .retrieve()
+                    .body(Analisis.class);
+            if (analisis != null && analisis.data() != null
+                    && analisis.data().attributes() != null
+                    && ANALISIS_TERMINADO.equals(analisis.data().attributes().status())) {
                 return segun(analisis.data().attributes().stats());
             }
         }
