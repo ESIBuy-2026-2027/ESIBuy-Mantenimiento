@@ -17,6 +17,16 @@ export function updateSellerProduct(productId, product) {
   return request(`/api/seller/products/${encodeURIComponent(productId)}`, { method: 'PUT', body: product })
 }
 
+// Sube una imagen binaria del producto propio. El backend valida formato, tamaño y análisis antivirus.
+export function uploadSellerProductImage(productId, file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request(`/api/seller/products/${encodeURIComponent(productId)}/image`, {
+    method: 'POST',
+    body: formData,
+  })
+}
+
 export function deleteSellerProduct(productId) {
   return request(`/api/seller/products/${encodeURIComponent(productId)}`, { method: 'DELETE' })
 }
