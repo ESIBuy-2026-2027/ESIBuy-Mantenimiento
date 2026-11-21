@@ -4,9 +4,11 @@ import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.productos.application.port.in.InventarioVendedorUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ValoracionesProductoUseCase;
 import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
+import es.uclm.esibuy.backend.productos.application.port.out.ImagenStoragePort;
 import es.uclm.esibuy.backend.productos.application.service.InventarioVendedorService;
 import es.uclm.esibuy.backend.productos.application.service.ValoracionesProductoService;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.antivirus.VirusTotalAdapter;
+import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.imagen.GridFsImagenAdapter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,12 @@ class ProductosConfigTest {
     @DisplayName("Configuración: el contexto conecta el análisis antivirus de las imágenes con VirusTotal")
     void elContextoConectaElAnalisisDeImagenesConVirusTotal() {
         assertInstanceOf(VirusTotalAdapter.class, contexto.getBean(AnalisisImagenPort.class));
+    }
+
+    @Test
+    @DisplayName("Configuración: el almacenamiento de imágenes se conecta con GridFS")
+    void elContextoConectaElAlmacenamientoDeImagenesConGridFs() {
+        assertInstanceOf(GridFsImagenAdapter.class, contexto.getBean(ImagenStoragePort.class));
     }
 
     @Test

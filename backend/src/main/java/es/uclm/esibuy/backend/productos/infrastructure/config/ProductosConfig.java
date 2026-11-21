@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
@@ -19,6 +20,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseC
 import es.uclm.esibuy.backend.productos.application.port.in.SupervisionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ValoracionesProductoUseCase;
 import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
+import es.uclm.esibuy.backend.productos.application.port.out.ImagenStoragePort;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.application.port.out.VendedorPort;
@@ -32,6 +34,7 @@ import es.uclm.esibuy.backend.productos.application.service.ListadoProductosServ
 import es.uclm.esibuy.backend.productos.application.service.SupervisionProductosService;
 import es.uclm.esibuy.backend.productos.application.service.ValoracionesProductoService;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.antivirus.VirusTotalAdapter;
+import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.imagen.GridFsImagenAdapter;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence.ProductoDocumentMapper;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence.ProductoMongoAdapter;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence.ProductoMongoRepository;
@@ -53,6 +56,11 @@ public class ProductosConfig {
     // la API pública (decisión del equipo)
     private static final int CONSULTAS_ANALISIS_VIRUSTOTAL = 2;
     private static final Duration ESPERA_ENTRE_CONSULTAS_VIRUSTOTAL = Duration.ofSeconds(3);
+
+    @Bean
+    ImagenStoragePort imagenStoragePort(GridFsTemplate gridFsTemplate) {
+        return new GridFsImagenAdapter(gridFsTemplate);
+    }
 
     @Bean
     ProductoRepositoryPort productoRepositoryPort(ProductoMongoRepository productoMongoRepository,
