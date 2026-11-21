@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
 import es.uclm.esibuy.backend.productos.application.port.out.ImagenStoragePort;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
+import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
@@ -24,21 +25,23 @@ public class GestionImagenesProductoService {
     private final ImagenStoragePort almacenamiento;
     private final AnalisisImagenPort antivirus;
     private final ValidadorImagen validador;
+    private final UsuarioEnSesionPort usuarioEnSesion;
 
     public GestionImagenesProductoService(ProductoRepositoryPort productos, ImagenStoragePort almacenamiento,
-            AnalisisImagenPort antivirus, ValidadorImagen validador) {
+            AnalisisImagenPort antivirus, ValidadorImagen validador, UsuarioEnSesionPort usuarioEnSesion) {
         this.productos = productos;
         this.almacenamiento = almacenamiento;
         this.antivirus = antivirus;
         this.validador = validador;
+        this.usuarioEnSesion = usuarioEnSesion;
     }
 
     @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO)
     public String subirImagen(String emailVendedor, String productoId, byte[] contenido,
             String nombreArchivo, String tipoContenido) {
+        String vendedorId = usuarioEnSesion.idPorCorreo(emailVendedor);
         Producto producto = productos.buscarPorId(productoId)
-                .filter(p -> p.getVendedorId().equalsIgnoreCase(emailVendedor)
-                        || p.getVendedorId().equals(emailVendedor))
+                .filter(p -> p.getVendedorId().equals(vendedorId))
                 .orElseThrow(ProductoNoEncontradoException::new);
 
         validador.validar(contenido, nombreArchivo, tipoContenido);
