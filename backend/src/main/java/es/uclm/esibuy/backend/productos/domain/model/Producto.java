@@ -247,6 +247,16 @@ public class Producto {
         return new Producto(id, datos);
     }
 
+    /** Copia inmutable del producto con una nueva referencia de imagen. */
+    public Producto conImagen(String nuevaImagen) {
+        DatosProducto datos = new DatosProducto(
+                new DatosProducto.DatosBasicos(
+                        vendedorId, nombre, descripcion, precio, stock, categoriaId, nuevaImagen),
+                new DatosProducto.Configuracion(disponible, descuento, descuentoPremium),
+                new DatosProducto.Valoraciones(valoracionMedia, numeroValoraciones));
+        return new Producto(id, datos);
+    }
+
     /**
      * Precio que paga el cliente (HU9): con el descuento premium si el cliente es
      * premium y lo tiene activo;
