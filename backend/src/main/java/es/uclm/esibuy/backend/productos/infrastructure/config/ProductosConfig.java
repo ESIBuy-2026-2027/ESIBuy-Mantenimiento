@@ -54,10 +54,10 @@ public class ProductosConfig {
 
     private static final String URL_VIRUSTOTAL = "https://www.virustotal.com/api/v3";
     private static final Duration TIEMPO_MAXIMO_VIRUSTOTAL = Duration.ofSeconds(5);
-    // 2 consultas cada 3 s: el alta de una URL nueva espera unos 6 s y gasta 4 peticiones, el límite por minuto de
-    // la API pública (decisión del equipo)
+    // Se mantienen 2 consultas para limitar las peticiones a VirusTotal (1 subida + 2 consultas por archivo).
+    // Se espacian 15 s porque la API puede mantener el análisis en cola durante varios segundos.
     private static final int CONSULTAS_ANALISIS_VIRUSTOTAL = 2;
-    private static final Duration ESPERA_ENTRE_CONSULTAS_VIRUSTOTAL = Duration.ofSeconds(3);
+    private static final Duration ESPERA_ENTRE_CONSULTAS_VIRUSTOTAL = Duration.ofSeconds(15);
 
     @Bean
     ImagenStoragePort imagenStoragePort(GridFsTemplate gridFsTemplate) {
