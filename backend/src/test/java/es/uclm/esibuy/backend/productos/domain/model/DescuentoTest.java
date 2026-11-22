@@ -30,8 +30,8 @@ class DescuentoTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"0.01", "50", "100"})
-    @DisplayName("HU31-CP07: acepta los porcentajes de los extremos válidos (0,01 y 100)")
+    @ValueSource(strings = {"1", "50", "99"})
+    @DisplayName("HU31-CP07: acepta los porcentajes enteros de los extremos válidos (1 y 99)")
     void aceptaLosPorcentajesLimite(String porcentaje) {
         assertDoesNotThrow(() -> new Descuento(true, new BigDecimal(porcentaje)));
     }
@@ -55,8 +55,8 @@ class DescuentoTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"0", "-5", "100.01", "150"})
-    @DisplayName("HU31-CP08: rechaza un descuento activo con un porcentaje que no está entre 0 (excluido) y 100")
+    @ValueSource(strings = {"0", "-5", "100", "1.5", "99.5", "150"})
+    @DisplayName("HU31-CP08: rechaza un descuento activo con un porcentaje que no es entero entre 1 y 99")
     void rechazaPorcentajesFueraDeRango(String porcentaje) {
         assertThrows(ProductoInvalidoException.class, () -> new Descuento(true, new BigDecimal(porcentaje)));
     }
