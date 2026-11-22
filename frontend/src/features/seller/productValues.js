@@ -1,6 +1,7 @@
 const NAME_MAX_LENGTH = 100
 const DESCRIPTION_MAX_LENGTH = 1000
-const MAX_DISCOUNT = 100
+const MIN_DISCOUNT = 1
+const MAX_DISCOUNT = 99
 
 export const emptyProductValues = () => ({
   nombre: '',
@@ -10,9 +11,7 @@ export const emptyProductValues = () => ({
   categoriaId: '',
   imagen: '',
   disponible: true,
-  descuentoActivo: false,
   descuentoPorcentaje: '',
-  descuentoPremiumActivo: false,
   descuentoPremiumPorcentaje: '',
 })
 
@@ -26,9 +25,7 @@ export const valuesFromProduct = (product) => ({
   categoriaId: product.categoriaId,
   imagen: product.imagen,
   disponible: product.disponible,
-  descuentoActivo: product.descuento.activo,
   descuentoPorcentaje: percentToText(product.descuento.porcentaje),
-  descuentoPremiumActivo: product.descuentoPremium.activo,
   descuentoPremiumPorcentaje: percentToText(product.descuentoPremium.porcentaje),
 })
 
@@ -40,11 +37,11 @@ function isHttpUrl(text) {
   }
 }
 
-function discountError(active, percent, label) {
-  if (!active) return undefined
+function discountError(percent, label) {
+  if (percent.trim() === '') return undefined
   const value = Number(percent)
-  return percent.trim() === '' || !(value > 0 && value <= MAX_DISCOUNT)
-    ? `${label} debe ser mayor que 0 y no superar ${MAX_DISCOUNT}.`
+  return !/^\d+$/.test(percent) || value < MIN_DISCOUNT || value > MAX_DISCOUNT
+    ? `${label} debe ser un número entero entre ${MIN_DISCOUNT} y ${MAX_DISCOUNT}.`
     : undefined
 }
 
@@ -75,20 +72,19 @@ export function validateProduct(values) {
     errors.imagen = 'Introduce una dirección web válida (http o https).'
   }
 
-  const discount = discountError(values.descuentoActivo, values.descuentoPorcentaje, 'El descuento')
+  const discount = discountError(values.descuentoPorcentaje, 'El descuento general')
   if (discount) errors.descuentoPorcentaje = discount
 
-  const premiumDiscount = discountError(
-    values.descuentoPremiumActivo,
-    values.descuentoPremiumPorcentaje,
-    'El descuento premium',
-  )
+  const premiumDiscount = discountError(values.descuentoPremiumPorcentaje, 'El descuento adicional Premium')
   if (premiumDiscount) errors.descuentoPremiumPorcentaje = premiumDiscount
 
   return errors
 }
 
-const toDiscount = (active, percent) => ({ activo: active, porcentaje: active ? Number(percent) : null })
+const toDiscount = (percent) => {
+  const active = percent.trim() !== ''
+  return { activo: active, porcentaje: active ? Number(percent) : null }
+}
 
 // Cuerpo que se envía al backend. No incluye al vendedor: lo deduce el servidor de la sesión.
 export const toProductPayload = (values) => ({
@@ -99,6 +95,6 @@ export const toProductPayload = (values) => ({
   categoriaId: values.categoriaId,
   imagen: values.imagen.trim(),
   disponible: values.disponible,
-  descuento: toDiscount(values.descuentoActivo, values.descuentoPorcentaje),
-  descuentoPremium: toDiscount(values.descuentoPremiumActivo, values.descuentoPremiumPorcentaje),
+  descuento: toDiscount(values.descuentoPorcentaje),
+  descuentoPremium: toDiscount(values.descuentoPremiumPorcentaje),
 })
