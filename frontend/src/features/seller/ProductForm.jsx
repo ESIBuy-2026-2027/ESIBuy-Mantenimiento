@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import { categoryPropType, productValuesPropType } from '../../utils/propTypes'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Button,
   Field,
@@ -48,20 +48,26 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
   const [imageFile, setImageFile] = useState(null)
   const [imageError, setImageError] = useState(null)
   const [previewUrl, setPreviewUrl] = useState(null)
+  const previewUrlRef = useRef(null)
   const errors = attempted ? validateProduct(values) : {}
   const nameTaken = takenName !== null && values.nombre.trim().toLowerCase() === takenName.toLowerCase()
   const nameError = errors.nombre ?? (nameTaken ? NOMBRE_EN_USO : undefined)
 
-  useEffect(() => {
-    if (!imageFile) {
-      setPreviewUrl(null)
-      return undefined
+  useEffect(() => () => {
+    if (previewUrlRef.current && typeof URL.revokeObjectURL === 'function') {
+      URL.revokeObjectURL(previewUrlRef.current)
     }
-    if (typeof URL.createObjectURL !== 'function') return undefined
-    const url = URL.createObjectURL(imageFile)
-    setPreviewUrl(url)
-    return () => { if (typeof URL.revokeObjectURL === 'function') URL.revokeObjectURL(url) }
-  }, [imageFile])
+  }, [])
+
+  const updatePreview = (file) => {
+    if (previewUrlRef.current && typeof URL.revokeObjectURL === 'function') {
+      URL.revokeObjectURL(previewUrlRef.current)
+    }
+    previewUrlRef.current = file && typeof URL.createObjectURL === 'function'
+      ? URL.createObjectURL(file)
+      : null
+    setPreviewUrl(previewUrlRef.current)
+  }
 
   const setField = (field) => (value) => setValues((current) => ({ ...current, [field]: value }))
   const onText = (field) => (_event, data) => setField(field)(data.value)
@@ -71,21 +77,25 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
     setImageError(null)
     if (!file) {
       setImageFile(null)
+      updatePreview(null)
       return
     }
     if (!TIPOS_IMAGEN.includes(file.type)) {
       setImageFile(null)
+      updatePreview(null)
       setImageError('Selecciona una imagen JPG o PNG.')
       event.target.value = ''
       return
     }
     if (file.size > TAMANO_MAXIMO_IMAGEN) {
       setImageFile(null)
+      updatePreview(null)
       setImageError('La imagen no puede superar los 5 MB.')
       event.target.value = ''
       return
     }
     setImageFile(file)
+    updatePreview(file)
     setField('imagen')('')
   }
 
