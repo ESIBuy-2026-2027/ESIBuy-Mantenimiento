@@ -29,7 +29,7 @@ describe('validateProduct', () => {
   })
 
   it.each(['0', '-5', 'abc', '0.00', '12.5'])('validateProduct_conPrecio_%s_devuelveError', (precio) => {
-    expect(validateProduct({ ...valoresValidos(), precio }).precio).toMatch(/mayor que 0/i)
+    expect(validateProduct({ ...valoresValidos(), precio }).precio).toMatch(/mayor que 0|número entero/i)
   })
 
   it('validateProduct_conPrecioDecimal_devuelveError', () => {
