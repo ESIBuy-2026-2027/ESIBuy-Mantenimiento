@@ -8,7 +8,6 @@ import {
   MessageBar,
   MessageBarBody,
   Spinner,
-  Switch,
   Text,
   Textarea,
   makeStyles,
@@ -139,16 +138,16 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
           <div><img className={styles.preview} src={previewUrl || values.imagen} alt="Vista previa de la imagen del producto" /></div>
         </div>
       )}
-      <DiscountField switchLabel="Activar descuento" percentLabel="Descuento (%)"
-        active={values.descuentoActivo} percent={values.descuentoPorcentaje}
-        error={errors.descuentoPorcentaje} onActiveChange={setField('descuentoActivo')}
-        onPercentChange={setField('descuentoPorcentaje')} />
-      <DiscountField switchLabel="Activar descuento premium" percentLabel="Descuento premium (%)"
-        active={values.descuentoPremiumActivo} percent={values.descuentoPremiumPorcentaje}
-        error={errors.descuentoPremiumPorcentaje} onActiveChange={setField('descuentoPremiumActivo')}
-        onPercentChange={setField('descuentoPremiumPorcentaje')} />
+      <div className={styles.pair}>
+        <DiscountField label="Descuento general (%)" percent={values.descuentoPorcentaje}
+          error={errors.descuentoPorcentaje} onPercentChange={setField('descuentoPorcentaje')} />
+        <DiscountField label="Descuento adicional Premium (%)" percent={values.descuentoPremiumPorcentaje}
+          error={errors.descuentoPremiumPorcentaje} onPercentChange={setField('descuentoPremiumPorcentaje')} />
+      </div>
       <Text className={styles.hint}>
-        El descuento se aplica a todos los clientes y el descuento premium, solo a los clientes premium. Los descuentos se acumulan.
+        Introduce un porcentaje entero entre 1 y 99. Si dejas un campo vacío, ese descuento no se aplicará.
+        El descuento general se aplica a todos los clientes y el descuento adicional Premium solo a clientes Premium.
+        Ambos descuentos se acumulan.
       </Text>
       <Switch label="Disponible para la venta" checked={values.disponible}
         onChange={(_event, data) => setField('disponible')(data.checked)} />
