@@ -53,8 +53,8 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
     expect(screen.getByLabelText('Archivo de imagen')).toHaveAttribute('accept', 'image/jpeg,image/png')
     expect(campoCategoria()).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: 'Disponible para la venta' })).toBeChecked()
-    expect(screen.getByRole('switch', { name: 'Activar descuento' })).not.toBeChecked()
-    expect(screen.getByRole('switch', { name: 'Activar descuento premium' })).not.toBeChecked()
+    expect(screen.getByLabelText(/^descuento general \(%\)/i)).toHaveValue(null)
+    expect(screen.getByLabelText(/^descuento adicional premium \(%\)/i)).toHaveValue(null)
     expect(screen.getByRole('button', { name: /^guardar$/i })).toBeInTheDocument()
   })
 
@@ -73,16 +73,12 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
     expect(screen.queryByText(/no se acumulan/i)).not.toBeInTheDocument()
   })
 
-  it('sellerProductFormPage_losCamposDeDescuento_aparecenAlActivarElDescuento', async () => {
-    const user = userEvent.setup()
+  it('sellerProductFormPage_muestraAmbosCamposDeDescuentoEnLaMismaFilaYSonOpcionales', async () => {
     await abrirFormulario()
-    expect(screen.queryByLabelText(/^descuento \(%\)/i)).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('switch', { name: 'Activar descuento' }))
-    expect(screen.getByLabelText(/^descuento \(%\)/i)).toBeInTheDocument()
-
-    await user.click(screen.getByRole('switch', { name: 'Activar descuento premium' }))
-    expect(screen.getByLabelText(/^descuento premium \(%\)/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^descuento general \(%\)/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^descuento adicional premium \(%\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/si dejas un campo vacío, ese descuento no se aplicará/i)).toBeInTheDocument()
   })
 
   it('sellerProductFormPage_alPulsarCancelar_vuelveAlListadoSinGuardar', async () => {
@@ -161,15 +157,15 @@ describe('SellerProductFormPage (HU31): validación', () => {
     expect(screen.getByText(/stock debe ser un número entero mayor o igual que 0/i)).toBeInTheDocument()
   })
 
-  it('sellerProductFormPage_conDescuentoActivoSinPorcentaje_muestraError', async () => {
+  it.each(['-1', '0', '100', '1.5'])('sellerProductFormPage_rechazaDescuentoFueraDelRango_%s', async (porcentaje) => {
     const user = userEvent.setup()
     await abrirFormulario()
 
     await rellenarFormularioValido(user)
-    await user.click(screen.getByRole('switch', { name: 'Activar descuento' }))
+    await user.type(screen.getByLabelText(/^descuento general \(%\)/i), porcentaje)
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
-    expect(screen.getByText(/el descuento debe ser mayor que 0 y no superar 100/i)).toBeInTheDocument()
+    expect(screen.getByText(/número entero entre 1 y 99/i)).toBeInTheDocument()
   })
 
   it('sellerProductFormPage_alCorregirUnCampoTrasUnIntentoFallido_loValidaEnVivo', async () => {
@@ -204,8 +200,7 @@ describe('SellerProductFormPage (HU31): alta, guardado', () => {
 
     await rellenarFormularioValido(user)
     await user.type(screen.getByLabelText(/^stock/i), '7')
-    await user.click(screen.getByRole('switch', { name: 'Activar descuento' }))
-    await user.type(screen.getByLabelText(/^descuento \(%\)/i), '10')
+    await user.type(screen.getByLabelText(/^descuento general \(%\)/i), '10')
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
     await esperarRuta('/seller/products')
@@ -377,9 +372,8 @@ describe('SellerProductFormPage (HU34): edición', () => {
   it('HU34-CP12: la vista de edición muestra los descuentos activos del producto', async () => {
     await abrirFormulario(RUTA_EDITAR, /editar producto/i)
 
-    await waitFor(() => expect(screen.getByRole('switch', { name: 'Activar descuento' })).toBeChecked())
-    expect(screen.getByLabelText(/^descuento \(%\)/i)).toHaveValue(10)
-    expect(screen.getByLabelText(/^descuento premium \(%\)/i)).toHaveValue(15)
+    await waitFor(() => expect(screen.getByLabelText(/^descuento general \(%\)/i)).toHaveValue(10))
+    expect(screen.getByLabelText(/^descuento adicional premium \(%\)/i)).toHaveValue(15)
   })
 
   it('HU34-CP13: al guardar, envía los cambios al producto indicado y vuelve al listado con un aviso', async () => {
