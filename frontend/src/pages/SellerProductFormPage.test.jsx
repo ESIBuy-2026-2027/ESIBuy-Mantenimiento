@@ -390,7 +390,7 @@ describe('SellerProductFormPage (HU34): edición', () => {
 
     await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Auriculares inalámbricos'))
     expect(screen.getByLabelText(/^precio/i)).toHaveValue('59.9')
-    expect(screen.getByLabelText(/^stock/i)).toHaveValue(34)
+    expect(screen.getByLabelText(/^stock/i)).toHaveValue('34')
     expect(campoCategoria()).toHaveTextContent('Tecnología')
     expect(screen.getByLabelText(/^descripción/i)).toHaveValue('Descripción de Auriculares inalámbricos.')
   })
@@ -439,6 +439,9 @@ describe('SellerProductFormPage (HU34): edición', () => {
 
     await user.clear(screen.getByLabelText(/^nombre/i))
     await user.type(screen.getByLabelText(/^nombre/i), 'Teclado mecánico')
+    // El formulario ya exige precios enteros; el producto de prueba conserva un precio histórico decimal.
+    await user.clear(screen.getByLabelText(/^precio/i))
+    await user.type(screen.getByLabelText(/^precio/i), '59')
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
     expect(await screen.findByText(NOMBRE_EN_USO)).toBeInTheDocument()
