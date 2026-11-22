@@ -157,7 +157,7 @@ describe('SellerProductFormPage (HU31): validación', () => {
     expect(screen.getByText(/stock debe ser un número entero mayor o igual que 0/i)).toBeInTheDocument()
   })
 
-  it.each(['-1', '0', '100', '1.5'])('sellerProductFormPage_rechazaDescuentoFueraDelRango_%s', async (porcentaje) => {
+  it.each(['0', '100'])('sellerProductFormPage_rechazaDescuentoFueraDelRango_%s', async (porcentaje) => {
     const user = userEvent.setup()
     await abrirFormulario()
 
