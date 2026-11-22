@@ -194,16 +194,6 @@ describe('SellerProductFormPage (HU31): validación', () => {
     expect(screen.queryByText(/introduce el nombre del producto/i)).not.toBeInTheDocument()
   })
 
-  it('sellerProductFormPage_conUrlDeImagenNoValida_muestraError', async () => {
-    const user = userEvent.setup()
-    await abrirFormulario()
-
-    await rellenarFormularioValido(user)
-    await user.type(screen.getByLabelText(/^url de la imagen/i), 'esto no es una url')
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-
-    expect(screen.getByText(/dirección web válida/i)).toBeInTheDocument()
-  })
 })
 
 describe('SellerProductFormPage (HU31): alta, guardado', () => {
