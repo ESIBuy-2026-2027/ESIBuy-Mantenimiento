@@ -1,5 +1,8 @@
 package es.uclm.esibuy.backend.productos.application.service;
 
+import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
+import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
+import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
@@ -52,6 +55,9 @@ class GestionProductosServiceTest {
     private ProductoRepositoryPort productoRepository;
 
     @Mock
+    private CategoriaRepositoryPort categoriaRepository;
+
+    @Mock
     private UsuarioEnSesionPort usuarioEnSesion;
 
     @Mock
@@ -61,7 +67,9 @@ class GestionProductosServiceTest {
 
     @BeforeEach
     void preparar() {
-        servicio = new GestionProductosService(productoRepository, usuarioEnSesion, analisisImagen);
+        servicio = new GestionProductosService(productoRepository, categoriaRepository, usuarioEnSesion, analisisImagen);
+        lenient().when(categoriaRepository.buscarPorId(any())).thenAnswer(invocacion -> Optional.of(
+                new Categoria(invocacion.getArgument(0), "Categoría", "", EstadoCategoria.ACTIVA)));
         // Por defecto el antivirus da la imagen por buena: los tests que no tratan del
         // análisis no dependen de él
         lenient().when(analisisImagen.analizar(any())).thenReturn(ResultadoAnalisis.SEGURA);
