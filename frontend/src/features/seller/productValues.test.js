@@ -5,7 +5,7 @@ const valoresValidos = () => ({
   ...emptyProductValues(),
   nombre: 'Teclado mecánico',
   categoriaId: 'cat-1',
-  precio: '89.5',
+  precio: '89',
 })
 
 describe('validateProduct', () => {
@@ -28,12 +28,16 @@ describe('validateProduct', () => {
     expect(validateProduct({ ...valoresValidos(), nombre: 'a'.repeat(100) }).nombre).toBeUndefined()
   })
 
-  it.each(['0', '-5', 'abc', '0.00'])('validateProduct_conPrecio_%s_devuelveError', (precio) => {
+  it.each(['0', '-5', 'abc', '0.00', '12.5'])('validateProduct_conPrecio_%s_devuelveError', (precio) => {
     expect(validateProduct({ ...valoresValidos(), precio }).precio).toMatch(/mayor que 0/i)
   })
 
+  it('validateProduct_conPrecioDecimal_devuelveError', () => {
+    expect(validateProduct({ ...valoresValidos(), precio: '12.5' }).precio).toMatch(/número entero/i)
+  })
+
   it('validateProduct_conPrecioMinimoPositivo_loAcepta', () => {
-    expect(validateProduct({ ...valoresValidos(), precio: '0.01' }).precio).toBeUndefined()
+    expect(validateProduct({ ...valoresValidos(), precio: '1' }).precio).toBeUndefined()
   })
 
   it.each(['', '0', '10'])('validateProduct_conStock_%s_loAcepta', (stock) => {
@@ -95,7 +99,7 @@ describe('toProductPayload', () => {
       nombre: '  Teclado  ',
       descripcion: ' Con luz ',
       imagen: ' https://esibuy.test/a.png ',
-      precio: '89.5',
+      precio: '89',
       stock: '12',
     })
 
