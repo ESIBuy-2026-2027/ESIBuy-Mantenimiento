@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -17,7 +18,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCom
 public record ProductoRequest(
         @NotBlank @Size(max = 100) String nombre,
         @Size(max = 1000) String descripcion,
-        @NotNull @DecimalMin(value = "0", inclusive = false) BigDecimal precio,
+        @NotNull @DecimalMin(value = "0", inclusive = false) @Digits(integer = 18, fraction = 0) BigDecimal precio,
         @NotNull @Min(0) Integer stock,
         @NotBlank String categoriaId,
         @Pattern(regexp = "(?i)(https?://\\S+|/api/product-images/[a-f0-9]{24})?") String imagen,
