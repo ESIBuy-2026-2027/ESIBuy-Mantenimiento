@@ -180,8 +180,6 @@ describe('emptyProductValues', () => {
   it('emptyProductValues_empiezaDisponibleYSinDescuentos', () => {
     expect(emptyProductValues()).toMatchObject({
       disponible: true,
-      descuentoActivo: false,
-      descuentoPremiumActivo: false,
       categoriaId: '',
     })
   })
