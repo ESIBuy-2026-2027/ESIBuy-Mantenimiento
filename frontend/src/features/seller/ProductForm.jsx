@@ -37,6 +37,16 @@ const useStyles = makeStyles({
     alignItems: 'start', gap: tokens.spacingHorizontalL,
   },
   hint: { color: tokens.colorNeutralForeground3 },
+  discountHint: {
+    color: tokens.colorNeutralForeground3,
+    fontSize: tokens.fontSizeBase200,
+    lineHeight: tokens.lineHeightBase200,
+  },
+  discountHelp: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalXS,
+  },
   actions: { display: 'flex', flexWrap: 'wrap', gap: tokens.spacingHorizontalM },
   preview: { maxWidth: '240px', maxHeight: '180px', objectFit: 'contain', borderRadius: tokens.borderRadiusMedium },
 })
@@ -145,11 +155,15 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
         <DiscountField label="Descuento adicional Premium (%)" percent={values.descuentoPremiumPorcentaje}
           error={errors.descuentoPremiumPorcentaje} onPercentChange={setField('descuentoPremiumPorcentaje')} />
       </div>
-      <Text className={styles.hint}>
-        Introduce un porcentaje entero entre 1 y 99. Si dejas un campo vacío, ese descuento no se aplicará.
-        El descuento general se aplica a todos los clientes y el descuento adicional Premium solo a clientes Premium.
-        Ambos descuentos se acumulan.
-      </Text>
+      <div className={styles.discountHelp}>
+        <Text className={styles.discountHint}>
+          Introduce un porcentaje entero entre 1 y 99. Si dejas un campo vacío, ese descuento no se aplicará.
+        </Text>
+        <Text className={styles.discountHint}>
+          El descuento general se aplica a todos los clientes y el descuento Premium solo a clientes Premium.
+          Ambos descuentos se acumulan.
+        </Text>
+      </div>
       <Switch label="Disponible para la venta" checked={values.disponible}
         onChange={(_event, data) => setField('disponible')(data.checked)} />
       <div className={styles.actions}>
