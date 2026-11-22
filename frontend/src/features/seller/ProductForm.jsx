@@ -125,15 +125,17 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
       </Field>
       <Field label="Categoría" required validationState={errors.categoriaId ? 'error' : 'none'} validationMessage={errors.categoriaId}>
         <CategoryCombobox value={values.categoriaId} categories={categories}
-          placeholder="Escribe o elige una categoría" onChange={setField('categoriaId')} />
+          searchable={false} placeholder="Selecciona una categoría" onChange={setField('categoriaId')} />
       </Field>
       <div className={styles.pair}>
         <Field label="Precio (€)" required validationState={errors.precio ? 'error' : 'none'} validationMessage={errors.precio}>
-          <Input type="number" step="0.01" value={values.precio} onChange={onText('precio')} />
+          <Input type="text" inputMode="numeric" pattern="[0-9]*" value={values.precio}
+            onChange={(_event, data) => setField('precio')(data.value.replace(/\\D/g, ''))} />
         </Field>
         <Field label="Stock" hint="Si lo dejas vacío, el stock será 0."
           validationState={errors.stock ? 'error' : 'none'} validationMessage={errors.stock}>
-          <Input type="number" step="1" value={values.stock} onChange={onText('stock')} />
+          <Input type="text" inputMode="numeric" pattern="[0-9]*" value={values.stock}
+            onChange={(_event, data) => setField('stock')(data.value.replace(/\\D/g, ''))} />
         </Field>
       </div>
       <Field label="Descripción" validationState={errors.descripcion ? 'error' : 'none'} validationMessage={errors.descripcion}>
