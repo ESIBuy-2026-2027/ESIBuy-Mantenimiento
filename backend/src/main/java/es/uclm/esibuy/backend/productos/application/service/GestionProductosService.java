@@ -1,5 +1,8 @@
 package es.uclm.esibuy.backend.productos.application.service;
 
+import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
+import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
@@ -18,12 +21,14 @@ import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 public class GestionProductosService implements GestionProductosUseCase {
 
     private final ProductoRepositoryPort productoRepository;
+    private final CategoriaRepositoryPort categoriaRepository;
     private final UsuarioEnSesionPort usuarioEnSesion;
     private final AnalisisImagenPort analisisImagen;
 
-    public GestionProductosService(ProductoRepositoryPort productoRepository, UsuarioEnSesionPort usuarioEnSesion,
-            AnalisisImagenPort analisisImagen) {
+    public GestionProductosService(ProductoRepositoryPort productoRepository, CategoriaRepositoryPort categoriaRepository,
+            UsuarioEnSesionPort usuarioEnSesion, AnalisisImagenPort analisisImagen) {
         this.productoRepository = productoRepository;
+        this.categoriaRepository = categoriaRepository;
         this.usuarioEnSesion = usuarioEnSesion;
         this.analisisImagen = analisisImagen;
     }
@@ -32,6 +37,7 @@ public class GestionProductosService implements GestionProductosUseCase {
     @Override
     public Producto crear(CrearProductoCommand comando) {
         String vendedorId = usuarioEnSesion.idPorCorreo(comando.emailVendedor());
+        validarCategoriaActiva(comando.categoriaId());
 
         // Las reglas del producto se validan en el dominio: si algo está mal, el
         // constructor de Producto lanza
@@ -59,6 +65,16 @@ public class GestionProductosService implements GestionProductosUseCase {
             throw new ProductoDuplicadoException();
         }
         return productoRepository.guardar(conImagenAnalizada(producto));
+    }
+
+
+    private void validarCategoriaActiva(String categoriaId) {
+        boolean activa = categoriaRepository.buscarPorId(categoriaId)
+                .map(categoria -> categoria.estado() == EstadoCategoria.ACTIVA)
+                .orElse(false);
+        if (!activa) {
+            throw new CategoriaNoEncontradaException();
+        }
     }
 
     // Antivirus de la URL de la imagen (HU31, T397), decisión del equipo: una
@@ -95,6 +111,7 @@ public class GestionProductosService implements GestionProductosUseCase {
     @Override
     public Producto modificarMiProducto(ModificarProductoCommand comando) {
         Producto actual = consultarMiProducto(comando.emailVendedor(), comando.productoId());
+        validarCategoriaActiva(comando.categoriaId());
         // El id y el vendedor se conservan: así se actualiza el mismo documento y sigue
         // siendo del mismo vendedor.
         Producto modificado = new Producto(
