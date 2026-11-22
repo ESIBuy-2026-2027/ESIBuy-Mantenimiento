@@ -53,8 +53,8 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
     expect(screen.getByLabelText('Archivo de imagen')).toHaveAttribute('accept', 'image/jpeg,image/png')
     expect(campoCategoria()).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: 'Disponible para la venta' })).toBeChecked()
-    expect(screen.getByLabelText(/^descuento general \(%\)/i)).toHaveValue(null)
-    expect(screen.getByLabelText(/^descuento adicional premium \(%\)/i)).toHaveValue(null)
+    expect(screen.getByLabelText(/^descuento general \(%\)/i)).toHaveValue('')
+    expect(screen.getByLabelText(/^descuento adicional premium \(%\)/i)).toHaveValue('')
     expect(screen.getByRole('button', { name: /^guardar$/i })).toBeInTheDocument()
   })
 
@@ -85,7 +85,7 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
     const user = userEvent.setup()
     await abrirFormulario()
 
-    const descuento = screen.getByLabelText(/^descuento general \\(%\\)/i)
+    const descuento = screen.getByLabelText(/^descuento general \(%\)/i)
     expect(descuento).toHaveAttribute('maxLength', '2')
     expect(descuento).toHaveAttribute('inputmode', 'numeric')
 
@@ -170,12 +170,12 @@ describe('SellerProductFormPage (HU31): validación', () => {
     expect(screen.getByText(/stock debe ser un número entero mayor o igual que 0/i)).toBeInTheDocument()
   })
 
-  it.each(['0', '100'])('sellerProductFormPage_rechazaDescuentoFueraDelRango_%s', async (porcentaje) => {
+  it('sellerProductFormPage_rechazaDescuentoFueraDelRango_0', async () => {
     const user = userEvent.setup()
     await abrirFormulario()
 
     await rellenarFormularioValido(user)
-    await user.type(screen.getByLabelText(/^descuento general \(%\)/i), porcentaje)
+    await user.type(screen.getByLabelText(/^descuento general \(%\)/i), '0')
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
     expect(screen.getByText(/número entero entre 1 y 99/i)).toBeInTheDocument()
@@ -385,8 +385,8 @@ describe('SellerProductFormPage (HU34): edición', () => {
   it('HU34-CP12: la vista de edición muestra los descuentos activos del producto', async () => {
     await abrirFormulario(RUTA_EDITAR, /editar producto/i)
 
-    await waitFor(() => expect(screen.getByLabelText(/^descuento general \(%\)/i)).toHaveValue(10))
-    expect(screen.getByLabelText(/^descuento adicional premium \(%\)/i)).toHaveValue(15)
+    await waitFor(() => expect(screen.getByLabelText(/^descuento general \(%\)/i)).toHaveValue('10'))
+    expect(screen.getByLabelText(/^descuento adicional premium \(%\)/i)).toHaveValue('15')
   })
 
   it('HU34-CP13: al guardar, envía los cambios al producto indicado y vuelve al listado con un aviso', async () => {
