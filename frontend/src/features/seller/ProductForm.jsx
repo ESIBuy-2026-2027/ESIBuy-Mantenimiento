@@ -129,7 +129,7 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
       <Field label="Descripción" validationState={errors.descripcion ? 'error' : 'none'} validationMessage={errors.descripcion}>
         <Textarea value={values.descripcion} onChange={onText('descripcion')} rows={4} resize="vertical" />
       </Field>
-      <Field label="O subir una imagen" hint="Formatos JPG o PNG. Tamaño máximo: 5 MB."
+      <Field label="Añade una imagen" hint="Formatos JPG o PNG. Tamaño máximo: 5 MB."
         validationState={imageError ? 'error' : 'none'} validationMessage={imageError}>
         <input aria-label="Archivo de imagen" type="file" accept="image/jpeg,image/png" onChange={handleImageChange} />
       </Field>
