@@ -661,7 +661,7 @@ class ProductoControllerTest {
                                 Arguments.of("nombre vacío",
                                                 cuerpo("\"\"", "89", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO)),
                                 Arguments.of("nombre de más de 100 caracteres",
-                                                cuerpo(nombreLargo, "89.5", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO)),
+                                                cuerpo(nombreLargo, "89", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO)),
                                 Arguments.of("precio cero",
                                                 cuerpo("\"Teclado\"", "0", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO)),
                                 Arguments.of("precio negativo",
@@ -672,27 +672,33 @@ class ProductoControllerTest {
                                                 cuerpo("\"Teclado\"", "null", "12", "\"cat-1\"", "\"\"",
                                                                 SIN_DESCUENTO)),
                                 Arguments.of("stock negativo",
-                                                cuerpo("\"Teclado\"", "89.5", "-1", "\"cat-1\"", "\"\"",
+                                                cuerpo("\"Teclado\"", "89", "-1", "\"cat-1\"", "\"\"",
                                                                 SIN_DESCUENTO)),
                                 Arguments.of("categoría vacía",
-                                                cuerpo("\"Teclado\"", "89.5", "12", "\"\"", "\"\"", SIN_DESCUENTO)),
+                                                cuerpo("\"Teclado\"", "89", "12", "\"\"", "\"\"", SIN_DESCUENTO)),
                                 Arguments.of("imagen con esquema javascript",
-                                                cuerpo("\"Teclado\"", "89.5", "12", "\"cat-1\"",
+                                                cuerpo("\"Teclado\"", "89", "12", "\"cat-1\"",
                                                                 "\"javascript:alert(1)\"", SIN_DESCUENTO)),
                                 Arguments.of("descuento activo sin porcentaje",
-                                                cuerpo("\"Teclado\"", "89.5", "12", "\"cat-1\"", "\"\"",
+                                                cuerpo("\"Teclado\"", "89", "12", "\"cat-1\"", "\"\"",
                                                                 "{\"activo\": true, \"porcentaje\": null}")),
                                 Arguments.of("disponible ausente",
                                                 cuerpoValido().replace("\"disponible\": true, ", "")),
                                 Arguments.of("disponible nulo",
                                                 cuerpoValido().replace("\"disponible\": true", "\"disponible\": null")),
                                 Arguments.of("descuento con porcentaje mayor que 100",
-                                                cuerpo("\"Teclado\"", "89.5", "12", "\"cat-1\"", "\"\"",
-                                                                "{\"activo\": true, \"porcentaje\": 101}")));
+                                                cuerpo("\"Teclado\"", "89", "12", "\"cat-1\"", "\"\"",
+                                                                "{\"activo\": true, \"porcentaje\": 101}")),
+                                Arguments.of("descuento con porcentaje igual a 100",
+                                                cuerpo("\"Teclado\"", "89", "12", "\"cat-1\"", "\"\"",
+                                                                "{\"activo\": true, \"porcentaje\": 100}")),
+                                Arguments.of("descuento con porcentaje decimal",
+                                                cuerpo("\"Teclado\"", "89", "12", "\"cat-1\"", "\"\"",
+                                                                "{\"activo\": true, \"porcentaje\": 1.5}")));
         }
 
         private static String cuerpoValido() {
-                return cuerpo("\"Teclado mecánico\"", "89.5", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO);
+                return cuerpo("\"Teclado mecánico\"", "89", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO);
         }
 
         // Cada argumento es un valor JSON ya escrito (con sus comillas), para poder
