@@ -170,18 +170,17 @@ describe('SellerProductFormPage (HU31): validación', () => {
     await user.type(screen.getByLabelText(/^precio/i), '0')
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
-    expect(screen.getByText(/el precio debe ser mayor que 0/i)).toBeInTheDocument()
+    expect(screen.getByText(/el precio debe ser un número entero mayor que 0/i)).toBeInTheDocument()
   })
 
-  it('sellerProductFormPage_conStockNegativo_muestraQueDebeSerMayorOIgualQueCero', async () => {
+  it('sellerProductFormPage_noPermiteIntroducirStockNegativo', async () => {
     const user = userEvent.setup()
     await abrirFormulario()
 
-    await rellenarFormularioValido(user)
-    await user.type(screen.getByLabelText(/^stock/i), '-1')
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+    const stock = screen.getByLabelText(/^stock/i)
+    await user.type(stock, '-1')
 
-    expect(screen.getByText(/stock debe ser un número entero mayor o igual que 0/i)).toBeInTheDocument()
+    expect(stock).toHaveValue('1')
   })
 
   it('sellerProductFormPage_rechazaDescuentoFueraDelRango_0', async () => {
@@ -234,7 +233,7 @@ describe('SellerProductFormPage (HU31): alta, guardado', () => {
     expect(envio.cuerpo).toEqual({
       nombre: 'Lámpara de pie',
       descripcion: '',
-      precio: 45.5,
+      precio: 45,
       stock: 7,
       categoriaId: 'cat-2',
       imagen: '',
@@ -340,7 +339,7 @@ describe('SellerProductFormPage (HU31): categoría en un desplegable', () => {
     await user.type(screen.getByLabelText(/^nombre/i), 'Lámpara de pie')
     await user.click(campoCategoria())
     await user.click(screen.getByRole('option', { name: 'Hogar' }))
-    await user.type(screen.getByLabelText(/^precio/i), '45.5')
+    await user.type(screen.getByLabelText(/^precio/i), '45')
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
     await esperarRuta('/seller/products')
