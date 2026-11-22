@@ -62,7 +62,7 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
     await abrirFormulario()
 
     expect(screen.getByLabelText(/^nombre/i)).toHaveValue('')
-    expect(screen.getByLabelText(/^precio/i)).toHaveValue(null)
+    expect(screen.getByLabelText(/^precio/i)).toHaveValue('')
     expect(campoCategoria()).toHaveValue('')
   })
 
