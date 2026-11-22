@@ -10,6 +10,7 @@ import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryP
 import es.uclm.esibuy.backend.productos.application.port.out.ResultadoAnalisis;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
@@ -121,6 +122,31 @@ class GestionProductosServiceTest {
                 () -> servicio.crear(comando(new BigDecimal("89.50"), -1, "cat-1")));
         assertThrows(ProductoInvalidoException.class,
                 () -> servicio.crear(comando(new BigDecimal("89.50"), 12, " ")));
+
+        verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("VEN-08: rechaza una categoría inexistente y no guarda el producto")
+    void rechazaUnaCategoriaInexistente() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(categoriaRepository.buscarPorId("cat-inexistente")).thenReturn(Optional.empty());
+
+        assertThrows(CategoriaNoEncontradaException.class,
+                () -> servicio.crear(comando(new BigDecimal("89"), 12, "cat-inexistente")));
+
+        verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("VEN-08: rechaza una categoría inactiva y no guarda el producto")
+    void rechazaUnaCategoriaInactiva() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(categoriaRepository.buscarPorId("cat-inactiva")).thenReturn(Optional.of(
+                new Categoria("cat-inactiva", "Categoría", "", EstadoCategoria.INACTIVA)));
+
+        assertThrows(CategoriaNoEncontradaException.class,
+                () -> servicio.crear(comando(new BigDecimal("89"), 12, "cat-inactiva")));
 
         verify(productoRepository, never()).guardar(any());
     }
