@@ -69,7 +69,7 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
   it('sellerProductFormPage_explicaQueLosDescuentosSeAcumulan', async () => {
     await abrirFormulario()
 
-    expect(screen.getByText(/los descuentos se acumulan/i)).toBeInTheDocument()
+    expect(screen.getByText(/ambos descuentos se acumulan/i)).toBeInTheDocument()
     expect(screen.queryByText(/no se acumulan/i)).not.toBeInTheDocument()
   })
 
