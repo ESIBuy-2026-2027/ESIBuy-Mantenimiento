@@ -69,6 +69,9 @@ public class GestionProductosService implements GestionProductosUseCase {
 
 
     private void validarCategoriaActiva(String categoriaId) {
+        if (categoriaId == null || categoriaId.isBlank()) {
+            throw new ProductoInvalidoException("La categoría es obligatoria");
+        }
         boolean activa = categoriaRepository.buscarPorId(categoriaId)
                 .map(categoria -> categoria.estado() == EstadoCategoria.ACTIVA)
                 .orElse(false);
