@@ -15,14 +15,13 @@ export default function DiscountField({ label, percent, error, onPercentChange }
       validationMessage={error}
     >
       <Input
-        type="number"
-        min={1}
-        max={99}
-        step={1}
+        type="text"
         inputMode="numeric"
+        maxLength={2}
+        pattern="[0-9]*"
         value={percent}
         onKeyDown={handleKeyDown}
-        onChange={(_event, data) => onPercentChange(data.value)}
+        onChange={(_event, data) => onPercentChange(data.value.replace(/\\D/g, '').slice(0, 2))}
       />
     </Field>
   )
