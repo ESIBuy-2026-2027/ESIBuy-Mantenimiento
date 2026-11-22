@@ -70,8 +70,6 @@ export const productValuesPropType = PropTypes.shape({
   categoriaId: PropTypes.string.isRequired,
   imagen: PropTypes.string.isRequired,
   disponible: PropTypes.bool.isRequired,
-  descuentoActivo: PropTypes.bool.isRequired,
   descuentoPorcentaje: PropTypes.string.isRequired,
-  descuentoPremiumActivo: PropTypes.bool.isRequired,
   descuentoPremiumPorcentaje: PropTypes.string.isRequired,
 })
