@@ -13,6 +13,7 @@ import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort
 import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 import es.uclm.esibuy.backend.productos.domain.model.DatosProducto;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import org.springframework.security.access.prepost.PreAuthorize;
