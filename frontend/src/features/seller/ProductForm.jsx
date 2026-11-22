@@ -161,6 +161,8 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
         </Text>
         <Text className={styles.discountHint}>
           El descuento general se aplica a todos los clientes y el descuento Premium solo a clientes Premium.
+        </Text>
+        <Text className={styles.discountHint}>
           Ambos descuentos se acumulan.
         </Text>
       </div>
