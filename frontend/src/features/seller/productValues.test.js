@@ -107,7 +107,7 @@ describe('toProductPayload', () => {
       nombre: 'Teclado',
       descripcion: 'Con luz',
       imagen: 'https://esibuy.test/a.png',
-      precio: 89.5,
+      precio: 89,
       stock: 12,
     })
   })
