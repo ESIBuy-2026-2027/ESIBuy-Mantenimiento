@@ -185,7 +185,7 @@ class ProductoControllerTest {
         @DisplayName("HU31-CP17: el vendedor crea un producto y recibe 201 con el producto creado")
         void vendedorCreaUnProducto() throws Exception {
                 Producto creado = producto(
-                                "p-9", "v-1", "Lámpara de pie", "Con regulador", new BigDecimal("45.50"),
+                                "p-9", "v-1", "Lámpara de pie", "Con regulador", new BigDecimal("45"),
                                 7, "cat-2", "https://esibuy.test/lampara.png", true,
                                 new Descuento(true, new BigDecimal("10")), Descuento.sinDescuento());
                 when(gestionProductos.crear(any())).thenReturn(creado);
@@ -193,7 +193,7 @@ class ProductoControllerTest {
                 mockMvc.perform(post(URL).with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
-                                                {"nombre": "Lámpara de pie", "descripcion": "Con regulador", "precio": 45.5,
+                                                {"nombre": "Lámpara de pie", "descripcion": "Con regulador", "precio": 45,
                                                  "stock": 7, "categoriaId": "cat-2", "imagen": "https://esibuy.test/lampara.png",
                                                  "disponible": true, "descuento": {"activo": true, "porcentaje": 10},
                                                  "descuentoPremium": {"activo": false, "porcentaje": null}}
@@ -202,7 +202,7 @@ class ProductoControllerTest {
                                 .andExpect(jsonPath("$.id").value("p-9"))
                                 .andExpect(jsonPath("$.nombre").value("Lámpara de pie"))
                                 .andExpect(jsonPath("$.descripcion").value("Con regulador"))
-                                .andExpect(jsonPath("$.precio").value(45.5))
+                                .andExpect(jsonPath("$.precio").value(45))
                                 .andExpect(jsonPath("$.stock").value(7))
                                 .andExpect(jsonPath("$.categoriaId").value("cat-2"))
                                 .andExpect(jsonPath("$.imagen").value("https://esibuy.test/lampara.png"))
@@ -217,7 +217,7 @@ class ProductoControllerTest {
                 CrearProductoCommand comando = captor.getValue();
                 assertEquals(VENDEDOR, comando.emailVendedor());
                 assertEquals("Lámpara de pie", comando.nombre());
-                assertEquals(0, new BigDecimal("45.5").compareTo(comando.precio()));
+                assertEquals(0, new BigDecimal("45").compareTo(comando.precio()));
                 assertEquals(7, comando.stock());
                 assertEquals("cat-2", comando.categoriaId());
                 assertEquals(true, comando.descuento().activo());
@@ -398,11 +398,11 @@ class ProductoControllerTest {
         @DisplayName("HU34-CP06: el vendedor modifica su producto y recibe 200 con el producto actualizado; el vendedor sale de la sesión")
         void vendedorModificaSuProducto() throws Exception {
                 Producto modificado = producto(
-                                "p-9", "v-1", "Lámpara de pie LED", "Con regulador", new BigDecimal("39.90"),
+                                "p-9", "v-1", "Lámpara de pie LED", "Con regulador", new BigDecimal("39"),
                                 3, "cat-2", "https://esibuy.test/lampara.png", false,
                                 Descuento.sinDescuento(), new Descuento(true, new BigDecimal("15")));
                 when(gestionProductos.modificarMiProducto(any())).thenReturn(modificado);
-                String conVendedor = cuerpo("\"Lámpara de pie LED\"", "39.9", "3", "\"cat-2\"", "\"\"", SIN_DESCUENTO)
+                String conVendedor = cuerpo("\"Lámpara de pie LED\"", "39", "3", "\"cat-2\"", "\"\"", SIN_DESCUENTO)
                                 .replace("{\"nombre\"", "{\"vendedorId\": \"v-otro\", \"nombre\"");
 
                 mockMvc.perform(put(URL + "/p-9").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
@@ -410,7 +410,7 @@ class ProductoControllerTest {
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.id").value("p-9"))
                                 .andExpect(jsonPath("$.nombre").value("Lámpara de pie LED"))
-                                .andExpect(jsonPath("$.precio").value(39.9))
+                                .andExpect(jsonPath("$.precio").value(39))
                                 .andExpect(jsonPath("$.stock").value(3))
                                 .andExpect(jsonPath("$.disponible").value(false))
                                 .andExpect(jsonPath("$.descuentoPremium.porcentaje").value(15))
@@ -423,7 +423,7 @@ class ProductoControllerTest {
                 assertEquals(VENDEDOR, comando.emailVendedor());
                 assertEquals("p-9", comando.productoId());
                 assertEquals("Lámpara de pie LED", comando.nombre());
-                assertEquals(0, new BigDecimal("39.9").compareTo(comando.precio()));
+                assertEquals(0, new BigDecimal("39").compareTo(comando.precio()));
                 assertEquals(3, comando.stock());
                 assertEquals("cat-2", comando.categoriaId());
         }
@@ -659,13 +659,15 @@ class ProductoControllerTest {
                 String nombreLargo = "\"" + "a".repeat(101) + "\"";
                 return Stream.of(
                                 Arguments.of("nombre vacío",
-                                                cuerpo("\"\"", "89.5", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO)),
+                                                cuerpo("\"\"", "89", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO)),
                                 Arguments.of("nombre de más de 100 caracteres",
                                                 cuerpo(nombreLargo, "89.5", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO)),
                                 Arguments.of("precio cero",
                                                 cuerpo("\"Teclado\"", "0", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO)),
                                 Arguments.of("precio negativo",
                                                 cuerpo("\"Teclado\"", "-5", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO)),
+                                Arguments.of("precio decimal",
+                                                cuerpo("\"Teclado\"", "89.5", "12", "\"cat-1\"", "\"\"", SIN_DESCUENTO)),
                                 Arguments.of("precio ausente",
                                                 cuerpo("\"Teclado\"", "null", "12", "\"cat-1\"", "\"\"",
                                                                 SIN_DESCUENTO)),
