@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
+import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ExistenciasProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ConteoProductosUseCase;
@@ -94,8 +95,10 @@ public class ProductosConfig {
 
     @Bean
     GestionProductosUseCase gestionProductosUseCase(ProductoRepositoryPort productoRepositoryPort,
-            UsuarioEnSesionPort usuarioEnSesionPort, AnalisisImagenPort analisisImagenPort) {
-        return new GestionProductosService(productoRepositoryPort, usuarioEnSesionPort, analisisImagenPort);
+            CategoriaRepositoryPort categoriaRepositoryPort, UsuarioEnSesionPort usuarioEnSesionPort,
+            AnalisisImagenPort analisisImagenPort) {
+        return new GestionProductosService(productoRepositoryPort, categoriaRepositoryPort, usuarioEnSesionPort,
+                analisisImagenPort);
     }
 
     @Bean
