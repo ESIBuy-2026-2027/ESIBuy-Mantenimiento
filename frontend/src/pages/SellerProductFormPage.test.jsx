@@ -49,7 +49,7 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
     expect(screen.getByLabelText(/^descripción/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^precio/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^stock/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^url de la imagen/i)).toBeInTheDocument()
+    expect(screen.queryByLabelText(/^url de la imagen/i)).not.toBeInTheDocument()
     expect(screen.getByLabelText('Archivo de imagen')).toHaveAttribute('accept', 'image/jpeg,image/png')
     expect(campoCategoria()).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: 'Disponible para la venta' })).toBeChecked()
