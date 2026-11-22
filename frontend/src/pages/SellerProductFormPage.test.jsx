@@ -81,6 +81,19 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
     expect(screen.getByText(/si dejas un campo vacío, ese descuento no se aplicará/i)).toBeInTheDocument()
   })
 
+  it('sellerProductFormPage_limitaLosDescuentosADosDigitos', async () => {
+    const user = userEvent.setup()
+    await abrirFormulario()
+
+    const descuento = screen.getByLabelText(/^descuento general \\(%\\)/i)
+    expect(descuento).toHaveAttribute('maxLength', '2')
+    expect(descuento).toHaveAttribute('inputmode', 'numeric')
+
+    await user.type(descuento, '11111')
+
+    expect(descuento).toHaveValue('11')
+  })
+
   it('sellerProductFormPage_alPulsarCancelar_vuelveAlListadoSinGuardar', async () => {
     const user = userEvent.setup()
     const envio = capturarEnvio('post', '/api/seller/products', () => HttpResponse.json({}, { status: 201 }))
