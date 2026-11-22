@@ -165,7 +165,7 @@ describe('valuesFromProduct', () => {
     })
   })
 
-  it('valuesFromProduct_yDespuesToProductPayload_recuperaElProductoOriginal', () => {
+  it('valuesFromProduct_yDespuesToProductPayload_conservaLaImagenExistenteAlEditar', () => {
     const original = {
       nombre: 'Auriculares',
       descripcion: 'Con cable',
