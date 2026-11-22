@@ -63,7 +63,7 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
 
     expect(screen.getByLabelText(/^nombre/i)).toHaveValue('')
     expect(screen.getByLabelText(/^precio/i)).toHaveValue('')
-    expect(campoCategoria()).toHaveValue('')
+    expect(campoCategoria()).toHaveTextContent('Selecciona una categoría')
   })
 
   it('sellerProductFormPage_explicaQueLosDescuentosSeAcumulan', async () => {
@@ -389,9 +389,9 @@ describe('SellerProductFormPage (HU34): edición', () => {
     await abrirFormulario(RUTA_EDITAR, /editar producto/i)
 
     await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Auriculares inalámbricos'))
-    expect(screen.getByLabelText(/^precio/i)).toHaveValue(59.9)
+    expect(screen.getByLabelText(/^precio/i)).toHaveValue('59.9')
     expect(screen.getByLabelText(/^stock/i)).toHaveValue(34)
-    expect(campoCategoria()).toHaveValue('Tecnología')
+    expect(campoCategoria()).toHaveTextContent('Tecnología')
     expect(screen.getByLabelText(/^descripción/i)).toHaveValue('Descripción de Auriculares inalámbricos.')
   })
 
