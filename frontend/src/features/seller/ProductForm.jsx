@@ -130,12 +130,12 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
       <div className={styles.pair}>
         <Field label="Precio (€)" required validationState={errors.precio ? 'error' : 'none'} validationMessage={errors.precio}>
           <Input type="text" inputMode="numeric" pattern="[0-9]*" value={values.precio}
-            onChange={(_event, data) => setField('precio')(data.value.replace(/\\D/g, ''))} />
+            onChange={(_event, data) => setField('precio')(data.value.replace(/\D/g, ''))} />
         </Field>
         <Field label="Stock" hint="Si lo dejas vacío, el stock será 0."
           validationState={errors.stock ? 'error' : 'none'} validationMessage={errors.stock}>
           <Input type="text" inputMode="numeric" pattern="[0-9]*" value={values.stock}
-            onChange={(_event, data) => setField('stock')(data.value.replace(/\\D/g, ''))} />
+            onChange={(_event, data) => setField('stock')(data.value.replace(/\D/g, ''))} />
         </Field>
       </div>
       <Field label="Descripción" validationState={errors.descripcion ? 'error' : 'none'} validationMessage={errors.descripcion}>
