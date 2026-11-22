@@ -34,7 +34,7 @@ function capturarEnvio(metodo, ruta, respuesta) {
 async function rellenarFormularioValido(user) {
   await user.type(screen.getByLabelText(/^nombre/i), 'Lámpara de pie')
   await elegirCategoria(user, 'Hogar')
-  await user.type(screen.getByLabelText(/^precio/i), '45.5')
+  await user.type(screen.getByLabelText(/^precio/i), '45')
 }
 
 async function esperarRuta(ruta) {
@@ -145,6 +145,20 @@ describe('SellerProductFormPage (HU31): validación', () => {
     expect(screen.getByText(/introduce el precio/i)).toBeInTheDocument()
     expect(envio.llamadas).toBe(0)
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp(`^${RUTA_NUEVO}$`))
+  })
+
+  it('VEN-08: precio y stock solo admiten cifras enteras', async () => {
+    const user = userEvent.setup()
+    await abrirFormulario()
+
+    const precio = screen.getByLabelText(/^precio/i)
+    const stock = screen.getByLabelText(/^stock/i)
+
+    await user.type(precio, '12.5')
+    await user.type(stock, '-3.5')
+
+    expect(precio).toHaveValue('125')
+    expect(stock).toHaveValue('35')
   })
 
   it('sellerProductFormPage_conPrecioCero_muestraQueDebeSerMayorQueCero', async () => {
@@ -318,13 +332,13 @@ describe('SellerProductFormPage (HU31): categoría en un desplegable', () => {
     expect(screen.queryByRole('radio', { name: 'Tecnología' })).not.toBeInTheDocument()
   })
 
-  it('HU31-CP26: se puede escribir para buscar la categoría y se envía su identificador', async () => {
+  it('VEN-08: se selecciona una categoría del desplegable y se envía su identificador', async () => {
     const user = userEvent.setup()
     const envio = capturarEnvio('post', '/api/seller/products', () => HttpResponse.json({ id: 'p-nuevo' }, { status: 201 }))
     await abrirFormulario()
 
     await user.type(screen.getByLabelText(/^nombre/i), 'Lámpara de pie')
-    await user.type(campoCategoria(), 'hog')
+    await user.click(campoCategoria())
     await user.click(screen.getByRole('option', { name: 'Hogar' }))
     await user.type(screen.getByLabelText(/^precio/i), '45.5')
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
@@ -396,11 +410,11 @@ describe('SellerProductFormPage (HU34): edición', () => {
     await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Auriculares inalámbricos'))
 
     await user.clear(screen.getByLabelText(/^precio/i))
-    await user.type(screen.getByLabelText(/^precio/i), '49.99')
+    await user.type(screen.getByLabelText(/^precio/i), '49')
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
     await esperarRuta('/seller/products')
-    expect(envio.cuerpo).toMatchObject({ nombre: 'Auriculares inalámbricos', precio: 49.99, stock: 34 })
+    expect(envio.cuerpo).toMatchObject({ nombre: 'Auriculares inalámbricos', precio: 49, stock: 34 })
     expect(await screen.findByText(/cambios guardados/i)).toBeInTheDocument()
   })
 
