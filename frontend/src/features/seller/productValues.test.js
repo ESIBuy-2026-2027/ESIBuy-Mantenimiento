@@ -61,28 +61,26 @@ describe('validateProduct', () => {
     expect(Boolean(validateProduct({ ...valoresValidos(), imagen }).imagen)).toBe(hayError)
   })
 
-  it.each(['', '0', '-3', '101', 'abc'])('validateProduct_conDescuentoActivoYPorcentaje_%s_devuelveError', (porcentaje) => {
-    const errores = validateProduct({ ...valoresValidos(), descuentoActivo: true, descuentoPorcentaje: porcentaje })
+  it.each(['0', '-3', '100', '1.5', 'abc'])('validateProduct_conDescuento_%s_devuelveError', (porcentaje) => {
+    const errores = validateProduct({ ...valoresValidos(), descuentoPorcentaje: porcentaje })
 
     expect(errores.descuentoPorcentaje).toBeDefined()
   })
 
-  it.each(['1', '10', '100'])('validateProduct_conDescuentoActivoYPorcentaje_%s_loAcepta', (porcentaje) => {
-    const errores = validateProduct({ ...valoresValidos(), descuentoActivo: true, descuentoPorcentaje: porcentaje })
+  it.each(['1', '10', '99'])('validateProduct_conDescuento_%s_loAcepta', (porcentaje) => {
+    const errores = validateProduct({ ...valoresValidos(), descuentoPorcentaje: porcentaje })
 
     expect(errores.descuentoPorcentaje).toBeUndefined()
   })
 
-  it('validateProduct_conDescuentoPremiumActivoSinPorcentaje_devuelveError', () => {
-    const errores = validateProduct({ ...valoresValidos(), descuentoPremiumActivo: true })
+  it('validateProduct_conDescuentoVacio_loAceptaComoDesactivado', () => {
+    expect(validateProduct({ ...valoresValidos(), descuentoPorcentaje: '' }).descuentoPorcentaje).toBeUndefined()
+  })
+
+  it('validateProduct_conDescuentoPremiumInvalido_devuelveError', () => {
+    const errores = validateProduct({ ...valoresValidos(), descuentoPremiumPorcentaje: '100' })
 
     expect(errores.descuentoPremiumPorcentaje).toBeDefined()
-  })
-
-  it('validateProduct_conDescuentoDesactivado_ignoraSuPorcentaje', () => {
-    const errores = validateProduct({ ...valoresValidos(), descuentoActivo: false, descuentoPorcentaje: 'basura' })
-
-    expect(errores.descuentoPorcentaje).toBeUndefined()
   })
 })
 
@@ -110,8 +108,8 @@ describe('toProductPayload', () => {
     })
   })
 
-  it('toProductPayload_conDescuentosInactivos_envia_porcentajeNulo', () => {
-    const payload = toProductPayload({ ...valoresValidos(), descuentoPorcentaje: '20' })
+  it('toProductPayload_conDescuentosVacios_envia_porcentajeNulo', () => {
+    const payload = toProductPayload(valoresValidos())
 
     expect(payload.descuento).toEqual({ activo: false, porcentaje: null })
     expect(payload.descuentoPremium).toEqual({ activo: false, porcentaje: null })
@@ -120,9 +118,7 @@ describe('toProductPayload', () => {
   it('toProductPayload_conDescuentosActivos_envia_losPorcentajes', () => {
     const payload = toProductPayload({
       ...valoresValidos(),
-      descuentoActivo: true,
       descuentoPorcentaje: '10',
-      descuentoPremiumActivo: true,
       descuentoPremiumPorcentaje: '15',
     })
 
@@ -158,9 +154,7 @@ describe('valuesFromProduct', () => {
       categoriaId: 'cat-2',
       imagen: '',
       disponible: false,
-      descuentoActivo: true,
       descuentoPorcentaje: '10',
-      descuentoPremiumActivo: false,
       descuentoPremiumPorcentaje: '',
     })
   })
