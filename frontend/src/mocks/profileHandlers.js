@@ -40,16 +40,16 @@ const DATOS_DE_PERFIL = {
 // Lo que cada usuario ha editado de su perfil (HU45), encima de los datos de ejemplo, y los clientes que se han hecho
 // Premium (HU45); los dos se vacían al reiniciar los mocks.
 let ediciones = new Map()
-let pasadosAPremium = new Set()
+let pasadosAPremium = new Set()\nlet canceladosPremium = new Set()
 
 export function resetProfileMock() {
   ediciones = new Map()
-  pasadosAPremium = new Set()
+  pasadosAPremium = new Set()\n  canceladosPremium = new Set()
 }
 
 function perfilDe({ id, nombre, apellidos, email, rol }) {
   const perfil = { id, nombre, apellidos, email, rol, ...DATOS_DE_PERFIL[id], ...ediciones.get(id) }
-  return pasadosAPremium.has(id) ? { ...perfil, tipoCliente: 'PREMIUM' } : perfil
+  if (canceladosPremium.has(id)) return { ...perfil, tipoCliente: 'ESTANDAR' }\n  return pasadosAPremium.has(id) ? { ...perfil, tipoCliente: 'PREMIUM' } : perfil
 }
 
 const respuestaDeError = (status, code) => HttpResponse.json({ mensaje: 'Datos inválidos', code }, { status })
@@ -132,6 +132,22 @@ export const profileHandlers = [
     }
 
     pasadosAPremium.add(usuario.id)
+    return HttpResponse.json(perfilDe(usuario))
+  }),
+
+  // Cancelar Premium (CLI-02): solo el cliente en sesión. Devuelve el perfil actualizado.
+  http.delete('/api/perfil/premium', () => {
+    const usuario = getUsuarioEnSesion()
+    if (!usuario) return new HttpResponse(null, { status: 401 })
+    if (usuario.rol !== 'CLIENTE') {
+      return HttpResponse.json({ mensaje: 'Acceso denegado', code: 'ACCESS_DENIED' }, { status: 403 })
+    }
+    if (perfilDe(usuario).tipoCliente !== 'PREMIUM') {
+      return HttpResponse.json({ mensaje: 'El cliente no tiene una suscripción Premium', code: 'NOT_PREMIUM' }, { status: 400 })
+    }
+
+    canceladosPremium.add(usuario.id)
+    pasadosAPremium.delete(usuario.id)
     return HttpResponse.json(perfilDe(usuario))
   }),
 
