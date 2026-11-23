@@ -16,9 +16,9 @@ async function abrirFormulario() {
 async function rellenarFormularioValido(user, { email = 'nora@esibuy.test' } = {}) {
   await user.type(screen.getByLabelText(/^nombre/i), 'Nora')
   await user.type(screen.getByLabelText(/apellidos/i), 'Díaz Ruiz')
-  await user.type(screen.getByLabelText(/email/i), email)
-  await user.type(screen.getByLabelText(/^password/i), 'Password123!')
-  await user.type(screen.getByLabelText(/^repetir password/i), 'Password123!')
+  await user.type(screen.getByLabelText(/correo electrónico/i), email)
+  await user.type(screen.getByLabelText(/^contraseña/i), 'Password123!')
+  await user.type(screen.getByLabelText(/^repetir contraseña/i), 'Password123!')
 }
 
 const crear = (user) => user.click(screen.getByRole('button', { name: /crear administrador/i }))
@@ -29,11 +29,11 @@ describe('AdminNewAdminPage (HU21): formulario', () => {
 
     expect(screen.getByLabelText(/^nombre/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/apellidos/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/sede/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/fecha de incorporación/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^password/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^repetir password/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^contraseña/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^repetir contraseña/i)).toBeInTheDocument()
     expect(screen.getAllByRole('radio')).toHaveLength(3)
     expect(screen.getByRole('list', { name: /requisitos de la contraseña/i })).toBeInTheDocument()
   })
@@ -43,9 +43,9 @@ describe('AdminNewAdminPage (HU21): formulario', () => {
 
     expect(screen.getByLabelText(/^nombre/i)).toBeRequired()
     expect(screen.getByLabelText(/apellidos/i)).toBeRequired()
-    expect(screen.getByLabelText(/email/i)).toBeRequired()
-    expect(screen.getByLabelText(/^password/i)).toBeRequired()
-    expect(screen.getByLabelText(/^repetir password/i)).toBeRequired()
+    expect(screen.getByLabelText(/correo electrónico/i)).toBeRequired()
+    expect(screen.getByLabelText(/^contraseña/i)).toBeRequired()
+    expect(screen.getByLabelText(/^repetir contraseña/i)).toBeRequired()
     expect(screen.getByLabelText(/sede/i)).not.toBeRequired()
   })
 
@@ -66,10 +66,10 @@ describe('AdminNewAdminPage (HU21): formulario', () => {
 
     expect(screen.getByLabelText(/^nombre/i)).toHaveAttribute('maxlength', '30')
     expect(screen.getByLabelText(/apellidos/i)).toHaveAttribute('maxlength', '30')
-    expect(screen.getByLabelText(/email/i)).toHaveAttribute('maxlength', '100')
+    expect(screen.getByLabelText(/correo electrónico/i)).toHaveAttribute('maxlength', '100')
     expect(screen.getByLabelText(/sede/i)).toHaveAttribute('maxlength', '30')
-    expect(screen.getByLabelText(/^password/i)).toHaveAttribute('maxlength', '64')
-    expect(screen.getByLabelText(/^repetir password/i)).toHaveAttribute('maxlength', '64')
+    expect(screen.getByLabelText(/^contraseña/i)).toHaveAttribute('maxlength', '64')
+    expect(screen.getByLabelText(/^repetir contraseña/i)).toHaveAttribute('maxlength', '64')
   })
 
   it('adminNewAdminPage_alPulsarMostrarPassword_loMuestraEnClaro', async () => {
@@ -78,7 +78,7 @@ describe('AdminNewAdminPage (HU21): formulario', () => {
 
     await user.click(screen.getByRole('button', { name: /^mostrar password$/i }))
 
-    expect(screen.getByLabelText(/^password/i)).toHaveAttribute('type', 'text')
+    expect(screen.getByLabelText(/^contraseña/i)).toHaveAttribute('type', 'text')
   })
 })
 
@@ -100,7 +100,7 @@ describe('AdminNewAdminPage (HU21): validaciones', () => {
     await rellenarFormularioValido(user, { email: 'esto-no-es-un-email' })
     await crear(user)
 
-    expect(screen.getByText(/introduce un email válido/i)).toBeInTheDocument()
+    expect(screen.getByText(/introduce un correo electrónico válido/i)).toBeInTheDocument()
   })
 
   it('adminNewAdminPage_conPasswordQueNoCumpleLosRequisitos_muestraError', async () => {
@@ -108,10 +108,10 @@ describe('AdminNewAdminPage (HU21): validaciones', () => {
     await abrirFormulario()
 
     await rellenarFormularioValido(user)
-    await user.clear(screen.getByLabelText(/^password/i))
-    await user.clear(screen.getByLabelText(/^repetir password/i))
-    await user.type(screen.getByLabelText(/^password/i), 'password')
-    await user.type(screen.getByLabelText(/^repetir password/i), 'password')
+    await user.clear(screen.getByLabelText(/^contraseña/i))
+    await user.clear(screen.getByLabelText(/^repetir contraseña/i))
+    await user.type(screen.getByLabelText(/^contraseña/i), 'password')
+    await user.type(screen.getByLabelText(/^repetir contraseña/i), 'password')
     await crear(user)
 
     expect(screen.getByText(/no cumple los requisitos/i)).toBeInTheDocument()
@@ -123,7 +123,7 @@ describe('AdminNewAdminPage (HU21): validaciones', () => {
     await abrirFormulario()
 
     await rellenarFormularioValido(user)
-    await user.type(screen.getByLabelText(/^repetir password/i), 'Extra')
+    await user.type(screen.getByLabelText(/^repetir contraseña/i), 'Extra')
     await crear(user)
 
     expect(screen.getByText(/las contraseñas no coinciden/i)).toBeInTheDocument()
@@ -234,7 +234,7 @@ describe('AdminNewAdminPage (HU21): alta', () => {
     await user.click(await screen.findByRole('button', { name: /crear otro administrador/i }))
 
     expect(screen.getByLabelText(/^nombre/i)).toHaveValue('')
-    expect(screen.getByLabelText(/email/i)).toHaveValue('')
+    expect(screen.getByLabelText(/correo electrónico/i)).toHaveValue('')
   })
 })
 
@@ -296,13 +296,13 @@ describe('AdminNewAdminPage (HU21, R9): la contraseña solo se escribe a mano', 
     const user = userEvent.setup()
     await abrirFormulario()
 
-    await user.click(screen.getByLabelText(/^password/i))
+    await user.click(screen.getByLabelText(/^contraseña/i))
     await user.paste('Password123!')
-    await user.click(screen.getByLabelText(/^repetir password/i))
+    await user.click(screen.getByLabelText(/^repetir contraseña/i))
     await user.paste('Password123!')
 
-    expect(screen.getByLabelText(/^password/i)).toHaveValue('')
-    expect(screen.getByLabelText(/^repetir password/i)).toHaveValue('')
+    expect(screen.getByLabelText(/^contraseña/i)).toHaveValue('')
+    expect(screen.getByLabelText(/^repetir contraseña/i)).toHaveValue('')
   })
 
   it('HU21-CP20: ni el password ni su repetición se pueden copiar o cortar, tampoco con el password visible', async () => {
@@ -312,7 +312,7 @@ describe('AdminNewAdminPage (HU21, R9): la contraseña solo se escribe a mano', 
 
     await user.click(screen.getAllByRole('button', { name: /^mostrar password$/i })[0])
 
-    for (const campo of [screen.getByLabelText(/^password/i), screen.getByLabelText(/^repetir password/i)]) {
+    for (const campo of [screen.getByLabelText(/^contraseña/i), screen.getByLabelText(/^repetir contraseña/i)]) {
       // fireEvent devuelve false cuando el evento se ha cancelado
       expect(fireEvent.copy(campo)).toBe(false)
       expect(fireEvent.cut(campo)).toBe(false)
