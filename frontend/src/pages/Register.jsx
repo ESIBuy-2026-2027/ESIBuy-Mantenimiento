@@ -115,6 +115,45 @@ const useStyles = makeStyles({
     gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
     gap: tokens.spacingHorizontalM,
   },
+  privacidad: {
+    display: 'flex',
+    alignItems: 'center',
+    columnGap: tokens.spacingHorizontalS,
+    rowGap: tokens.spacingVerticalXS,
+    flexWrap: 'wrap',
+  },
+  textoPrivacidad: {
+    display: 'inline-flex',
+    alignItems: 'baseline',
+    flexWrap: 'wrap',
+    columnGap: tokens.spacingHorizontalXXS,
+  },
+  enlacePrivacidad: {
+    minWidth: 'auto',
+    padding: 0,
+    height: 'auto',
+    verticalAlign: 'baseline',
+    color: tokens.colorBrandForegroundLink,
+    textDecorationLine: 'underline',
+  },
+  contenidoPolitica: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalL,
+  },
+  seccionPolitica: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalXS,
+  },
+  parrafoPolitica: {
+    marginTop: 0,
+    marginBottom: 0,
+    lineHeight: tokens.lineHeightBase300,
+  },
+  avisoPolitica: {
+    color: tokens.colorNeutralForeground2,
+  },
 })
 
 function validarCamposComunes(datos, obligatorios) {
@@ -282,19 +321,26 @@ export default function Register() {
 
   const casillaPrivacidad = (
     <Field validationMessage={errores.aceptaPrivacidad}>
-      <Checkbox
-        required
-        label="Acepto la política de privacidad"
-        checked={datos.aceptaPrivacidad}
-        onChange={(e, data) => setDatos({ ...datos, aceptaPrivacidad: data.checked })}
-      />
-      <Text>
-        Antes de aceptar, puedes{' '}
-        <Button appearance="transparent" size="small" onClick={() => setPoliticaAbierta(true)}>
-          consultar la política de privacidad
-        </Button>
-        .
-      </Text>
+      <div className={styles.privacidad}>
+        <Checkbox
+          required
+          aria-label="Aceptar la política de privacidad"
+          checked={datos.aceptaPrivacidad}
+          onChange={(_event, data) => setDatos({ ...datos, aceptaPrivacidad: data.checked })}
+        />
+        <Text className={styles.textoPrivacidad}>
+          Acepto la{' '}
+          <Button
+            appearance="transparent"
+            size="small"
+            className={styles.enlacePrivacidad}
+            onClick={() => setPoliticaAbierta(true)}
+          >
+            política de privacidad
+          </Button>
+          *
+        </Text>
+      </div>
     </Field>
   )
 
@@ -304,36 +350,47 @@ export default function Register() {
         <DialogBody>
           <DialogTitle>Política de privacidad</DialogTitle>
           <DialogContent>
-            <Text weight="semibold">Información general</Text>
-            <Text>
-              Esta política es un texto informativo de ejemplo para el proyecto académico ESIBuy.
-              Debe sustituirse por la política oficial y revisarse antes de utilizar la aplicación
-              en un entorno real.
-            </Text>
-            <Text weight="semibold">Datos que se solicitan</Text>
-            <Text>
-              Durante el registro se solicitan datos de identificación y contacto, como nombre,
-              apellidos, correo electrónico y, según el tipo de cuenta, otros datos necesarios para
-              crear y gestionar el perfil.
-            </Text>
-            <Text weight="semibold">Finalidad del tratamiento</Text>
-            <Text>
-              Los datos se utilizarán para gestionar el registro, identificar a la persona usuaria,
-              administrar su cuenta y permitir el uso de las funcionalidades de ESIBuy que
-              correspondan a su perfil.
-            </Text>
-            <Text weight="semibold">Uso y conservación</Text>
-            <Text>
-              Los datos solo deben utilizarse para las finalidades descritas y conservarse durante
-              el tiempo necesario para la gestión de la cuenta y las obligaciones que resulten
-              aplicables. Los plazos concretos deben definirse en la política oficial.
-            </Text>
-            <Text weight="semibold">Derechos y contacto</Text>
-            <Text>
-              La política definitiva deberá indicar cómo ejercer los derechos de protección de
-              datos y facilitar los datos de contacto del responsable del tratamiento. Esta
-              información está pendiente de concretar en esta versión de ejemplo.
-            </Text>
+            <div className={styles.contenidoPolitica}>
+              <Text className={styles.avisoPolitica} size={200}>
+                Texto informativo de ejemplo para el proyecto académico ESIBuy. No constituye una
+                política jurídica oficial y deberá revisarse y completarse antes de utilizar la
+                aplicación en un entorno real.
+              </Text>
+              <section className={styles.seccionPolitica}>
+                <Text weight="semibold" as="h3">1. Datos que se recogen</Text>
+                <Text className={styles.parrafoPolitica}>
+                  Durante el registro se solicitan datos de identificación y contacto, como nombre,
+                  apellidos y correo electrónico. Según el tipo de cuenta, también pueden solicitarse
+                  otros datos necesarios para crear y gestionar el perfil.
+                </Text>
+              </section>
+              <section className={styles.seccionPolitica}>
+                <Text weight="semibold" as="h3">2. Finalidad del tratamiento</Text>
+                <Text className={styles.parrafoPolitica}>
+                  Los datos se utilizan en el contexto de este proyecto para gestionar el registro,
+                  identificar a la persona usuaria, administrar su cuenta y permitir el uso de las
+                  funcionalidades de ESIBuy correspondientes a su perfil.
+                </Text>
+              </section>
+              <section className={styles.seccionPolitica}>
+                <Text weight="semibold" as="h3">3. Conservación y protección</Text>
+                <Text className={styles.parrafoPolitica}>
+                  Los datos deben conservarse únicamente durante el tiempo necesario para las
+                  finalidades indicadas y tratarse conforme a las medidas de seguridad y obligaciones
+                  aplicables. Los plazos y medidas concretos quedan pendientes de definir en la
+                  política oficial.
+                </Text>
+              </section>
+              <section className={styles.seccionPolitica}>
+                <Text weight="semibold" as="h3">4. Derechos y contacto</Text>
+                <Text className={styles.parrafoPolitica}>
+                  La política definitiva deberá identificar al responsable del tratamiento, facilitar
+                  sus datos de contacto e indicar cómo ejercer los derechos reconocidos por la
+                  normativa de protección de datos. Esta información todavía no está concretada en
+                  esta versión de ejemplo.
+                </Text>
+              </section>
+            </div>
           </DialogContent>
           <DialogActions>
             <Button appearance="primary" onClick={() => setPoliticaAbierta(false)}>
