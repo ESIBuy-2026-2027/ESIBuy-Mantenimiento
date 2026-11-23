@@ -54,7 +54,8 @@ class ValoracionMongoAdapterTest {
         assertNotNull(guardada.id());
         assertEquals("Ana Pérez", recuperada.nombreCliente());
         assertNotNull(recuperada.fechaCreacion());
-        assertEquals(guardada.fechaCreacion(), recuperada.fechaCreacion());
+        // BSON Date almacena precisión de milisegundos; Instant puede contener nanosegundos.
+        assertEquals(guardada.fechaCreacion().toEpochMilli(), recuperada.fechaCreacion().toEpochMilli());
     }
 
     @Test
