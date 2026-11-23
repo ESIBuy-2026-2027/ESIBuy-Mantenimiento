@@ -72,11 +72,24 @@ export function onUnauthorized(handler) {
 export async function request(path, { method = 'GET', body } = {}) {
   const url = new URL(`${BASE_URL}${path}`, window.location.origin)
   await asegurarTokenCsrf(method)
+
+  const esFormData = typeof FormData !== 'undefined' && body instanceof FormData
+
+  let cuerpoPeticion
+
+  if (body) {
+    if (esFormData) {
+      cuerpoPeticion = body
+    } else {
+      cuerpoPeticion = JSON.stringify(body)
+    }
+  }
+
   const response = await fetch(url, {
     method,
     credentials: 'include',
     headers: construirCabeceras(method, body),
-    body: body ? (typeof FormData !== 'undefined' && body instanceof FormData ? body : JSON.stringify(body)) : undefined,
+    body: cuerpoPeticion,
   })
 
   if (!response.ok) {
@@ -92,3 +105,5 @@ export async function request(path, { method = 'GET', body } = {}) {
   const texto = await response.text()
   return texto ? JSON.parse(texto) : null
 }
+
+

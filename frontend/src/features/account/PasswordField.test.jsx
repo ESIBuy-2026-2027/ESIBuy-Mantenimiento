@@ -145,7 +145,7 @@ describe('PasswordField (HU2, R9): bloquearCopia', () => {
 
 describe('PasswordRequirements', () => {
   const iconos = (nombre) =>
-    within(screen.getByRole('list', { name: /requisitos del password/i })).queryAllByRole('img', { name: nombre })
+    within(screen.getByRole('list', { name: /requisitos de la contraseña/i })).queryAllByRole('img', { name: nombre })
 
   it('passwordRequirements_sinPassword_muestraLosCincoRequisitosPendientes', () => {
     renderConTema(<PasswordRequirements password="" />)

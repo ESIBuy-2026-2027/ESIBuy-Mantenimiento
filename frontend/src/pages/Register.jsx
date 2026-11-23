@@ -2,6 +2,12 @@ import {
   Button,
   Card,
   Checkbox,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogSurface,
+  DialogTitle,
   Field,
   Input,
   MessageBar,
@@ -25,8 +31,9 @@ import { erroresDelServidor } from '../features/account/registroErrors'
 import { useRegistroPremium } from '../features/account/RegistroPremiumContext'
 import { PATHS } from '../routes/paths'
 import {
-  esDniValido,
   esEmailValido,
+  esNombreValido,
+  filtrarNombre,
   esMayorDeEdad,
   esTelefonoValido,
   sinTelefonoVacio,
@@ -73,7 +80,7 @@ const DATOS_INICIALES = {
   password: '',
   repeticionPassword: '',
   tipoCliente: 'ESTANDAR',
-  avatar: '',
+  avatar: 'avatar1',
   aceptaPrivacidad: false,
 }
 
@@ -108,6 +115,45 @@ const useStyles = makeStyles({
     gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
     gap: tokens.spacingHorizontalM,
   },
+  privacidad: {
+    display: 'flex',
+    alignItems: 'center',
+    columnGap: tokens.spacingHorizontalS,
+    rowGap: tokens.spacingVerticalXS,
+    flexWrap: 'wrap',
+  },
+  textoPrivacidad: {
+    display: 'inline-flex',
+    alignItems: 'baseline',
+    flexWrap: 'wrap',
+    columnGap: tokens.spacingHorizontalXXS,
+  },
+  enlacePrivacidad: {
+    minWidth: 'auto',
+    padding: 0,
+    height: 'auto',
+    verticalAlign: 'baseline',
+    color: tokens.colorBrandForegroundLink,
+    textDecorationLine: 'underline',
+  },
+  contenidoPolitica: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalL,
+  },
+  seccionPolitica: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalXS,
+  },
+  parrafoPolitica: {
+    marginTop: 0,
+    marginBottom: 0,
+    lineHeight: tokens.lineHeightBase300,
+  },
+  avisoPolitica: {
+    color: tokens.colorNeutralForeground2,
+  },
 })
 
 function validarCamposComunes(datos, obligatorios) {
@@ -115,11 +161,13 @@ function validarCamposComunes(datos, obligatorios) {
   obligatorios.forEach((campo) => {
     if (!datos[campo].trim()) errores[campo] = 'Este campo es obligatorio'
   })
-  if (datos.dni && !esDniValido(datos.dni)) {
-    errores.dni = 'Introduce un DNI válido (8 números y una letra)'
+  for (const campo of ['nombre', 'apellidos']) {
+    if (datos[campo] && !esNombreValido(datos[campo])) {
+      errores[campo] = 'Introduce entre 2 y 30 caracteres usando solo letras, espacios, guiones o apóstrofos'
+    }
   }
-  if (datos.email && !esEmailValido(datos.email)) {
-    errores.email = 'Introduce un email válido'
+  if (datos.email && !esEmailValido(datos.email.trim())) {
+    errores.email = 'Introduce un correo electrónico válido. Ejemplo: email@dominio.es'
   }
   if (datos.telefono && !esTelefonoValido(datos.telefono)) {
     errores.telefono = 'Introduce un teléfono válido (9 números)'
@@ -145,18 +193,26 @@ export default function Register() {
   const navigate = useNavigate()
   const flujo = useRegistroPremium()
   const [tipo, setTipo] = useState(flujo.pendiente ? 'cliente' : null)
-  const [datos, setDatos] = useState(flujo.pendiente ?? DATOS_INICIALES)
+  const [datos, setDatos] = useState(() => ({ ...DATOS_INICIALES, ...(flujo.pendiente ?? {}), avatar: flujo.pendiente?.avatar || DATOS_INICIALES.avatar }))
   const [errores, setErrores] = useState(() => erroresTrasLaPasarela(flujo.resultado).campos ?? {})
   const [errorGeneral, setErrorGeneral] = useState(() => erroresTrasLaPasarela(flujo.resultado).general ?? null)
   const [registrado, setRegistrado] = useState(flujo.resultado?.registrado === true)
   const [categoriasDisponibles, setCategoriasDisponibles] = useState([])
+  const [politicaAbierta, setPoliticaAbierta] = useState(false)
 
   useEffect(() => {
     if (tipo !== 'vendedor') return
     getCategories().then(setCategoriasDisponibles)
   }, [tipo])
 
-  const cambiar = (campo) => (e, data) => setDatos({ ...datos, [campo]: data.value })
+  useEffect(() => {
+    const primerCampoConError = document.querySelector('[data-register-error="true"]')
+    const destino = primerCampoConError ?? document.querySelector('[data-register-error-message="true"]')
+    destino?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+  }, [errores, errorGeneral])
+
+  const cambiar = (campo) => (_e, data) =>
+    setDatos((actuales) => ({ ...actuales, [campo]: ['nombre', 'apellidos'].includes(campo) ? filtrarNombre(data.value) : data.value }))
 
   const cambiarCategoria = (categoriaPrincipalId) => setDatos({ ...datos, categoriaPrincipalId })
 
@@ -184,7 +240,7 @@ export default function Register() {
     }
 
     try {
-      await registrarCliente(sinTelefonoVacio(datos))
+      await registrarCliente(sinTelefonoVacio({ ...datos, avatar: datos.avatar || 'avatar1' }))
       setRegistrado(true)
     } catch (error) {
       mostrarErroresDelServidor(error)
@@ -202,7 +258,7 @@ export default function Register() {
     if (Object.keys(nuevosErrores).length > 0) return
 
     try {
-      await registrarVendedor(sinTelefonoVacio(datos))
+      await registrarVendedor(sinTelefonoVacio({ ...datos, avatar: datos.avatar || 'avatar1' }))
       setRegistrado(true)
     } catch (error) {
       mostrarErroresDelServidor(error)
@@ -237,47 +293,124 @@ export default function Register() {
   }
 
   const campo = (nombre, label, { type, required = true } = {}) => (
-    <Field label={label} required={required} validationMessage={errores[nombre]}>
-      <Input
-        type={type}
-        maxLength={LONGITUD_MAXIMA[nombre]}
-        value={datos[nombre]}
-        onChange={cambiar(nombre)}
-      />
-    </Field>
+    <div data-register-error={errores[nombre] ? 'true' : undefined}>
+      <Field label={label} required={required} validationMessage={errores[nombre]}>
+        <Input
+          type={type}
+          maxLength={LONGITUD_MAXIMA[nombre]}
+          value={datos[nombre]}
+          onChange={cambiar(nombre)}
+        />
+      </Field>
+    </div>
   )
 
   const campoPassword = (nombre, label) => (
-    <PasswordField
-      label={label}
-      value={datos[nombre]}
-      onChange={cambiar(nombre)}
-      error={errores[nombre]}
-      maxLength={LONGITUD_MAXIMA[nombre]}
-      bloquearPegado
-    />
+    <div data-register-error={errores[nombre] ? 'true' : undefined}>
+      <PasswordField
+        label={label}
+        value={datos[nombre]}
+        onChange={cambiar(nombre)}
+        error={errores[nombre]}
+        maxLength={LONGITUD_MAXIMA[nombre]}
+        bloquearPegado
+      />
+    </div>
   )
 
   const camposComunes = (
     <>
       {campo('dni', 'DNI')}
-      {campo('email', 'Email', { type: 'email' })}
+      {campo('email', 'Correo electrónico', { type: 'email' })}
       {campo('telefono', 'Teléfono', { type: 'tel', required: false })}
-      {campoPassword('password', 'Password')}
+      {campoPassword('password', 'Contraseña')}
       <PasswordRequirements password={datos.password} />
-      {campoPassword('repeticionPassword', 'Repetir password')}
+      {campoPassword('repeticionPassword', 'Repetir contraseña')}
     </>
   )
 
   const casillaPrivacidad = (
-    <Field validationMessage={errores.aceptaPrivacidad}>
-      <Checkbox
-        required
-        label="Acepto la política de privacidad"
-        checked={datos.aceptaPrivacidad}
-        onChange={(e, data) => setDatos({ ...datos, aceptaPrivacidad: data.checked })}
-      />
-    </Field>
+    <div data-register-error={errores.aceptaPrivacidad ? 'true' : undefined}>
+      <Field validationMessage={errores.aceptaPrivacidad}>
+        <div className={styles.privacidad}>
+          <Checkbox
+            required
+            aria-label="Acepto la política de privacidad"
+            checked={datos.aceptaPrivacidad}
+            onChange={(_event, data) => setDatos({ ...datos, aceptaPrivacidad: data.checked })}
+          />
+          <Text className={styles.textoPrivacidad}>
+            Acepto la{' '}
+            <Button
+              appearance="transparent"
+              className={styles.enlacePrivacidad}
+              onClick={() => setPoliticaAbierta(true)}
+            >
+              política de privacidad
+            </Button>
+            *
+          </Text>
+        </div>
+      </Field>
+    </div>
+  )
+
+  const dialogoPoliticaPrivacidad = (
+    <Dialog open={politicaAbierta} onOpenChange={(_event, data) => setPoliticaAbierta(data.open)}>
+      <DialogSurface>
+        <DialogBody>
+          <DialogTitle>Política de privacidad</DialogTitle>
+          <DialogContent>
+            <div className={styles.contenidoPolitica}>
+              <Text className={styles.avisoPolitica} size={200}>
+                Texto informativo de ejemplo para el proyecto académico ESIBuy. No constituye una
+                política jurídica oficial y deberá revisarse y completarse antes de utilizar la
+                aplicación en un entorno real.
+              </Text>
+              <section className={styles.seccionPolitica}>
+                <Text weight="semibold" as="h3">1. Datos que se recogen</Text>
+                <Text className={styles.parrafoPolitica}>
+                  Durante el registro se solicitan datos de identificación y contacto, como nombre,
+                  apellidos y correo electrónico. Según el tipo de cuenta, también pueden solicitarse
+                  otros datos necesarios para crear y gestionar el perfil.
+                </Text>
+              </section>
+              <section className={styles.seccionPolitica}>
+                <Text weight="semibold" as="h3">2. Finalidad del tratamiento</Text>
+                <Text className={styles.parrafoPolitica}>
+                  Los datos se utilizan en el contexto de este proyecto para gestionar el registro,
+                  identificar a la persona usuaria, administrar su cuenta y permitir el uso de las
+                  funcionalidades de ESIBuy correspondientes a su perfil.
+                </Text>
+              </section>
+              <section className={styles.seccionPolitica}>
+                <Text weight="semibold" as="h3">3. Conservación y protección</Text>
+                <Text className={styles.parrafoPolitica}>
+                  Los datos deben conservarse únicamente durante el tiempo necesario para las
+                  finalidades indicadas y tratarse conforme a las medidas de seguridad y obligaciones
+                  aplicables. Los plazos y medidas concretos quedan pendientes de definir en la
+                  política oficial.
+                </Text>
+              </section>
+              <section className={styles.seccionPolitica}>
+                <Text weight="semibold" as="h3">4. Derechos y contacto</Text>
+                <Text className={styles.parrafoPolitica}>
+                  La política definitiva deberá identificar al responsable del tratamiento, facilitar
+                  sus datos de contacto e indicar cómo ejercer los derechos reconocidos por la
+                  normativa de protección de datos. Esta información todavía no está concretada en
+                  esta versión de ejemplo.
+                </Text>
+              </section>
+            </div>
+          </DialogContent>
+          <DialogActions>
+            <Button appearance="primary" onClick={() => setPoliticaAbierta(false)}>
+              Cerrar
+            </Button>
+          </DialogActions>
+        </DialogBody>
+      </DialogSurface>
+    </Dialog>
   )
 
   const selectorAvatar = <AvatarSelector value={datos.avatar} onChange={cambiar('avatar')} />
@@ -306,10 +439,13 @@ export default function Register() {
         </Field>
         {selectorAvatar}
         {casillaPrivacidad}
+        {dialogoPoliticaPrivacidad}
         {errorGeneral && (
-          <MessageBar intent="error">
-            <MessageBarBody>{errorGeneral}</MessageBarBody>
-          </MessageBar>
+          <div data-register-error-message="true">
+            <MessageBar intent="error">
+              <MessageBarBody>{errorGeneral}</MessageBarBody>
+            </MessageBar>
+          </div>
         )}
         <Button appearance="primary" size="large" onClick={enviarCliente}>
           Registrarse
@@ -325,26 +461,32 @@ export default function Register() {
         {campo('nombre', 'Nombre')}
         {campo('apellidos', 'Apellidos')}
         {campo('nombreComercial', 'Nombre comercial')}
-        <Field
-          label="Categoría"
-          required
-          validationState={errores.categoriaPrincipalId ? 'error' : 'none'}
-          validationMessage={errores.categoriaPrincipalId}
-        >
-          <CategoryCombobox
-            value={datos.categoriaPrincipalId}
-            categories={categoriasDisponibles}
-            placeholder="Escribe o elige una categoría"
-            onChange={cambiarCategoria}
-          />
-        </Field>
+        <div data-register-error={errores.categoriaPrincipalId ? 'true' : undefined}>
+          <Field
+            label="Categoría"
+            required
+            validationState={errores.categoriaPrincipalId ? 'error' : 'none'}
+            validationMessage={errores.categoriaPrincipalId}
+          >
+            <CategoryCombobox
+              value={datos.categoriaPrincipalId}
+              categories={categoriasDisponibles}
+              searchable={false}
+              placeholder="Selecciona una categoría"
+              onChange={cambiarCategoria}
+            />
+          </Field>
+        </div>
         {camposComunes}
         {selectorAvatar}
         {casillaPrivacidad}
+        {dialogoPoliticaPrivacidad}
         {errorGeneral && (
-          <MessageBar intent="error">
-            <MessageBarBody>{errorGeneral}</MessageBarBody>
-          </MessageBar>
+          <div data-register-error-message="true">
+            <MessageBar intent="error">
+              <MessageBarBody>{errorGeneral}</MessageBarBody>
+            </MessageBar>
+          </div>
         )}
         <Button appearance="primary" size="large" onClick={enviarVendedor}>
           Registrarse

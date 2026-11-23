@@ -1,6 +1,6 @@
 import { ROLES } from '../../auth/roles'
 import { formatDate } from '../../utils/format'
-import { esDniValido, esMayorDeEdad, esTelefonoValido } from '../account/accountRules'
+import { esMayorDeEdad, esNombreValido, esTelefonoValido } from '../account/accountRules'
 import { ROLE_LABELS, STATUS_LABELS } from './usersConfig'
 
 // Campos de la ficha de cada tipo de usuario (HU20, HU22 y HU26). Una sola definición sirve para los dos modos:
@@ -12,19 +12,19 @@ export const TIPOS_CLIENTE = { ESTANDAR: 'Estándar', PREMIUM: 'Premium' }
 
 const SIN_DATO = '—'
 const AVATAR = 'avatar'
-const DNI_LENGTH = 9
 const TIPO_CLIENTE_POR_DEFECTO = 'ESTANDAR'
 
 const textoOSinDato = (valor) => valor || SIN_DATO
 const fechaOSinDato = (valor) => (valor ? formatDate(valor) : SIN_DATO)
 const imagenDePerfil = (avatar) => (avatar ? `Avatar ${avatar.replace('avatar', '')}` : 'Sin elegir')
 
-const nombre = { name: 'nombre', label: 'Nombre', read: (u) => u.nombre, edit: { required: true, maxLength: 30 } }
+const validarNombre = (valor) => (esNombreValido(valor) ? undefined : 'Introduce entre 2 y 30 caracteres usando solo letras, espacios, guiones o apóstrofos')
+const nombre = { name: 'nombre', label: 'Nombre', read: (u) => u.nombre, edit: { required: true, maxLength: 30, validate: validarNombre } }
 const apellidos = {
   name: 'apellidos',
   label: 'Apellidos',
   read: (u) => u.apellidos,
-  edit: { required: true, maxLength: 30 },
+  edit: { required: true, maxLength: 30, validate: validarNombre },
 }
 const email = { name: 'email', label: 'Email', read: (u) => u.email }
 // El rol de una cuenta no se puede cambiar ("el que nace cliente muere cliente", decisión del equipo): siempre
@@ -41,11 +41,7 @@ const dni = {
   name: 'dni',
   label: 'DNI',
   read: (u) => textoOSinDato(u.dni),
-  edit: {
-    required: true,
-    maxLength: DNI_LENGTH,
-    validate: (valor) => (esDniValido(valor) ? undefined : 'Introduce un DNI válido (8 números y una letra)'),
-  },
+  edit: { required: true },
 }
 const telefono = {
   name: 'telefono',

@@ -292,7 +292,7 @@ describe('ProfilePage (HU47): eliminar mi cuenta', () => {
 
     await usuario.click(screen.getByRole('button', { name: /^eliminar mi cuenta$/i }))
     const primeraConfirmacion = await screen.findByRole('alertdialog', { name: /confirmar eliminación de cuenta/i })
-    await usuario.click(within(primeraConfirmacion).getByRole('button', { name: /^continuar$/i }))
+    await usuario.click(await within(primeraConfirmacion).findByRole('button', { name: /^continuar$/i }))
     const dialogo = await screen.findByRole('alertdialog', { name: /eliminar mi cuenta/i })
     await usuario.type(within(dialogo).getByLabelText(/^contraseña actual/i), 'Contraseña-de-prueba-1!')
     await usuario.click(within(dialogo).getByRole('button', { name: /^eliminar mi cuenta$/i }))
@@ -339,7 +339,7 @@ describe('ProfilePage (HU25): eliminar mi cuenta de cliente', () => {
 
     await usuario.click(screen.getByRole('button', { name: /^eliminar mi cuenta$/i }))
     const primeraConfirmacion = await screen.findByRole('alertdialog', { name: /confirmar eliminación de cuenta/i })
-    await usuario.click(within(primeraConfirmacion).getByRole('button', { name: /^continuar$/i }))
+    await usuario.click(await within(primeraConfirmacion).findByRole('button', { name: /^continuar$/i }))
 
     const dialogo = await screen.findByRole('alertdialog', { name: /eliminar mi cuenta/i })
     expect(within(dialogo).getByLabelText(/^contraseña actual/i)).toBeInTheDocument()
@@ -353,7 +353,7 @@ const CLAVE_DE_LOS_MOCKS = 'Mock-Clave-1!'
 async function confirmarEliminacion(usuario, contrasena) {
   await usuario.click(screen.getByRole('button', { name: /^eliminar mi cuenta$/i }))
   const primeraConfirmacion = await screen.findByRole('alertdialog', { name: /confirmar eliminación de cuenta/i })
-  await usuario.click(within(primeraConfirmacion).getByRole('button', { name: /^continuar$/i }))
+  await usuario.click(await within(primeraConfirmacion).findByRole('button', { name: /^continuar$/i }))
   const dialogo = await screen.findByRole('alertdialog', { name: /eliminar mi cuenta/i })
   await usuario.type(within(dialogo).getByLabelText(/^contraseña actual/i), contrasena)
   await usuario.click(within(dialogo).getByRole('button', { name: /^eliminar mi cuenta$/i }))

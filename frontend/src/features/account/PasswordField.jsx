@@ -83,7 +83,7 @@ export function PasswordRequirements({ password }) {
   const styles = useStyles()
 
   return (
-    <ul aria-label="Requisitos del password" className={styles.requisitos}>
+    <ul aria-label="Requisitos de la contraseña" className={styles.requisitos}>
       {REQUISITOS_PASSWORD.map(({ texto, cumple }) => (
         <li key={texto} className={styles.requisito}>
           {cumple(password) ? (

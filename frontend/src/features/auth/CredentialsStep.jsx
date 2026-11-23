@@ -2,16 +2,15 @@ import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { Button, Field, Input, Spinner } from '@fluentui/react-components'
 import { PasswordField } from '../account/PasswordField'
+import { esEmailValido } from '../account/accountRules'
 import { useFormStyles } from './authFormStyles'
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+$/
 
 function validate({ email, password }) {
   const errors = {}
   if (!email.trim()) {
     errors.email = 'Introduce tu correo electrónico.'
-  } else if (!EMAIL_PATTERN.test(email.trim())) {
-    errors.email = 'Introduce un correo electrónico válido.'
+  } else if (!esEmailValido(email.trim())) {
+    errors.email = 'Introduce un correo electrónico válido. Ejemplo: email@dominio.es'
   }
   if (!password) {
     errors.password = 'Introduce tu contraseña.'

@@ -10,7 +10,14 @@ export const REQUISITOS_PASSWORD = [
 
 export const esEmailValido = (email) => /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test(email)
 
-export const esDniValido = (dni) => /^\d{8}[A-Za-z]$/.test(dni)
+// Nombres personales: letras Unicode, espacios, guiones y apóstrofos; longitud de 2 a 30 caracteres.
+// Descarta caracteres no admitidos al escribir o pegar.
+export const filtrarNombre = (nombre) => nombre.replace(/[^\p{L}\p{M} '-]/gu, '')
+
+export const esNombreValido = (nombre) => {
+  const valor = nombre.trim()
+  return valor.length >= 2 && valor.length <= 30 && /^\p{L}[\p{L}\p{M}]*(?:[ '-][\p{L}\p{M}]+)*$/u.test(valor)
+}
 
 export const esTelefonoValido = (telefono) => /^\d{9}$/.test(telefono)
 
@@ -25,15 +32,15 @@ export function esMayorDeEdad(fecha) {
   return edad >= 18
 }
 
-// Errores del password y de su repetición. Solo se comprueba lo que está relleno:
+// Errores de la contraseña y de su repetición. Solo se comprueba lo que está relleno:
 // los campos vacíos los marca la validación de obligatorios.
 export function validarPasswords({ password, repeticionPassword }) {
   const errores = {}
   if (password && !REQUISITOS_PASSWORD.every(({ cumple }) => cumple(password))) {
-    errores.password = 'El password no cumple los requisitos'
+    errores.password = 'La contraseña no cumple los requisitos'
   }
   if (password && repeticionPassword && password !== repeticionPassword) {
-    errores.repeticionPassword = 'Los passwords no coinciden'
+    errores.repeticionPassword = 'Las contraseñas no coinciden'
   }
   return errores
 }

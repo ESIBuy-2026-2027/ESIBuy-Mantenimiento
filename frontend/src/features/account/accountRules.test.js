@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
   REQUISITOS_PASSWORD,
-  esDniValido,
+  esNombreValido,
+  filtrarNombre,
   esEmailValido,
   esMayorDeEdad,
   esTelefonoValido,
@@ -64,13 +65,13 @@ describe('validarPasswords', () => {
 
   it('validarPasswords_conPasswordQueNoCumpleLosRequisitos_devuelveErrorEnElPassword', () => {
     expect(validarPasswords({ password: 'password', repeticionPassword: 'password' })).toEqual({
-      password: 'El password no cumple los requisitos',
+      password: 'La contraseña no cumple los requisitos',
     })
   })
 
   it('validarPasswords_conPasswordsDistintos_devuelveErrorEnLaRepeticion', () => {
     expect(validarPasswords({ password: 'Password123!', repeticionPassword: 'Otro123!' })).toEqual({
-      repeticionPassword: 'Los passwords no coinciden',
+      repeticionPassword: 'Las contraseñas no coinciden',
     })
   })
 
@@ -89,17 +90,30 @@ const haceAnios = (anios, dias = 0) => {
   return `${fecha.getFullYear()}-${mes}-${dia}`
 }
 
-describe('esDniValido', () => {
-  it('esDniValido_conOchoNumerosYUnaLetra_devuelveTrue', () => {
-    expect(esDniValido('12345678Z')).toBe(true)
-    expect(esDniValido('12345678z')).toBe(true)
+describe('filtrarNombre', () => {
+  it('filtrarNombre_descartaNumerosYSimbolosNoAdmitidosPeroConservaLetrasYSeparadores', () => {
+    expect(filtrarNombre('Ana2')).toBe('Ana')
+    expect(filtrarNombre('Juan123')).toBe('Juan')
+    expect(filtrarNombre('María-José O\'Connor')).toBe('María-José O\'Connor')
+    expect(filtrarNombre('Peña_3')).toBe('Peña')
+  })
+})
+
+describe('esNombreValido', () => {
+  it('esNombreValido_admiteNombresConTildesEspaciosGuionesYApostrofos', () => {
+    expect(esNombreValido('Ana')).toBe(true)
+    expect(esNombreValido('María José')).toBe(true)
+    expect(esNombreValido('Jean-Luc')).toBe(true)
+    expect(esNombreValido("O'Connor")).toBe(true)
+    expect(esNombreValido('Iñaki')).toBe(true)
   })
 
-  it('esDniValido_conOtroFormato_devuelveFalse', () => {
-    expect(esDniValido('1234567Z')).toBe(false)
-    expect(esDniValido('123456789')).toBe(false)
-    expect(esDniValido('ABCDEFGHZ')).toBe(false)
-    expect(esDniValido('')).toBe(false)
+  it('esNombreValido_rechazaNumerosSimbolosYLongitudesFueraDeRango', () => {
+    expect(esNombreValido('Ana2')).toBe(false)
+    expect(esNombreValido('Ana_')).toBe(false)
+    expect(esNombreValido('A')).toBe(false)
+    expect(esNombreValido('A'.repeat(31))).toBe(false)
+    expect(esNombreValido('')).toBe(false)
   })
 })
 

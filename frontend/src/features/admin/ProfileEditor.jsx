@@ -15,6 +15,7 @@ import { Save20Regular } from '@fluentui/react-icons'
 import CategoryCombobox from '../../components/CategoryCombobox'
 import { categoryPropType } from '../../utils/propTypes'
 import AvatarSelector from '../account/AvatarSelector'
+import { filtrarNombre } from '../account/accountRules'
 import { erroresDelServidor } from '../account/registroErrors'
 import { TIPOS_CLIENTE, initialValues, profileFieldsFor, profilePayload, validateProfile } from './profileFields'
 
@@ -89,7 +90,8 @@ export default function ProfileEditor({
   }, [focusRequest])
 
   const change = (name, value) => {
-    setValues((current) => ({ ...current, [name]: value }))
+    const valor = ['nombre', 'apellidos'].includes(name) ? filtrarNombre(value) : value
+    setValues((current) => ({ ...current, [name]: valor }))
     setServerErrors((current) => Object.fromEntries(Object.entries(current).filter(([key]) => key !== name)))
   }
 

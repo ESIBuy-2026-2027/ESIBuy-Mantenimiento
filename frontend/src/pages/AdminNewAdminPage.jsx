@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Button,
   Card,
@@ -19,7 +19,7 @@ import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import AvatarSelector from '../features/account/AvatarSelector'
 import { PasswordField, PasswordRequirements } from '../features/account/PasswordField'
-import { esEmailValido, validarPasswords } from '../features/account/accountRules'
+import { esEmailValido, esNombreValido, filtrarNombre, validarPasswords } from '../features/account/accountRules'
 import { erroresDelServidor } from '../features/account/registroErrors'
 import { PATHS } from '../routes/paths'
 
@@ -41,7 +41,7 @@ const DATOS_INICIALES = {
   sede: '',
   password: '',
   repeticionPassword: '',
-  avatar: '',
+  avatar: 'avatar1',
 }
 
 const formatoFecha = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -67,8 +67,11 @@ function validar(datos) {
   OBLIGATORIOS.forEach((campo) => {
     if (!datos[campo].trim()) errores[campo] = 'Este campo es obligatorio'
   })
+  for (const campo of ['nombre', 'apellidos']) {
+    if (datos[campo] && !esNombreValido(datos[campo])) errores[campo] = 'Introduce entre 2 y 30 caracteres usando solo letras, espacios, guiones o apóstrofos'
+  }
   if (datos.email && !esEmailValido(datos.email)) {
-    errores.email = 'Introduce un email válido'
+    errores.email = 'Introduce un correo electrónico válido. Ejemplo: email@dominio.es'
   }
   return { ...errores, ...validarPasswords(datos) }
 }
@@ -84,7 +87,14 @@ export default function AdminNewAdminPage() {
   // La fecha de incorporación es la del alta: se muestra, pero no se edita ni se envía.
   const [fechaIncorporacion] = useState(() => formatoFecha.format(new Date()))
 
-  const cambiar = (campo) => (_event, data) => setDatos({ ...datos, [campo]: data.value })
+  useEffect(() => {
+    const primerCampoConError = document.querySelector('[data-admin-register-error="true"]')
+    const destino = primerCampoConError ?? document.querySelector('[data-admin-register-error-message="true"]')
+    destino?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+  }, [errores, errorServidor])
+
+  const cambiar = (campo) => (_event, data) =>
+    setDatos((actuales) => ({ ...actuales, [campo]: ['nombre', 'apellidos'].includes(campo) ? filtrarNombre(data.value) : data.value }))
 
   const crear = async () => {
     const nuevosErrores = validar(datos)
@@ -95,7 +105,7 @@ export default function AdminNewAdminPage() {
     setEnviando(true)
     try {
       const { nombre, apellidos, email, sede, avatar, password } = datos
-      await createAdmin({ nombre, apellidos, email, sede, avatar, password })
+      await createAdmin({ nombre, apellidos, email, sede, avatar: avatar || 'avatar1', password })
       setCreado(`${nombre} ${apellidos}`)
     } catch (error) {
       // El backend indica con un code qué dato rechaza (PR #104): se marca en su campo; si no, el mensaje genérico
@@ -117,21 +127,25 @@ export default function AdminNewAdminPage() {
   }
 
   const campo = (nombre, label, { type, required = true } = {}) => (
-    <Field label={label} required={required} validationMessage={errores[nombre]}>
-      <Input type={type} maxLength={LONGITUD_MAXIMA[nombre]} value={datos[nombre]} onChange={cambiar(nombre)} />
-    </Field>
+    <div data-admin-register-error={errores[nombre] ? 'true' : undefined}>
+      <Field label={label} required={required} validationMessage={errores[nombre]}>
+        <Input type={type} maxLength={LONGITUD_MAXIMA[nombre]} value={datos[nombre]} onChange={cambiar(nombre)} />
+      </Field>
+    </div>
   )
 
   const campoPassword = (nombre, label) => (
-    <PasswordField
-      label={label}
-      value={datos[nombre]}
-      onChange={cambiar(nombre)}
-      error={errores[nombre]}
-      maxLength={LONGITUD_MAXIMA[nombre]}
-      // R9: la contraseña de la cuenta nueva se escribe a mano, como en el registro
-      bloquearPegado
-    />
+    <div data-admin-register-error={errores[nombre] ? 'true' : undefined}>
+      <PasswordField
+        label={label}
+        value={datos[nombre]}
+        onChange={cambiar(nombre)}
+        error={errores[nombre]}
+        maxLength={LONGITUD_MAXIMA[nombre]}
+        // R9: la contraseña de la cuenta nueva se escribe a mano, como en el registro
+        bloquearPegado
+      />
+    </div>
   )
 
   return (
@@ -153,7 +167,7 @@ export default function AdminNewAdminPage() {
           <MessageBar intent="success">
             <MessageBarBody>
               <MessageBarTitle>Administrador creado</MessageBarTitle>
-              {creado} ya puede iniciar sesión con su email y el password indicado.
+              {creado} ya puede iniciar sesión con su correo electrónico y la contraseña indicada.
             </MessageBarBody>
           </MessageBar>
           <div className={own.actions}>
@@ -166,20 +180,22 @@ export default function AdminNewAdminPage() {
       ) : (
         <Card className={own.card}>
           {errorServidor && (
-            <MessageBar intent="error">
-              <MessageBarBody>No se ha podido crear el administrador. Inténtalo de nuevo.</MessageBarBody>
-            </MessageBar>
+            <div data-admin-register-error-message="true">
+              <MessageBar intent="error">
+                <MessageBarBody>No se ha podido crear el administrador. Inténtalo de nuevo.</MessageBarBody>
+              </MessageBar>
+            </div>
           )}
           {campo('nombre', 'Nombre')}
           {campo('apellidos', 'Apellidos')}
-          {campo('email', 'Email', { type: 'email' })}
+          {campo('email', 'Correo electrónico', { type: 'email' })}
           {campo('sede', 'Sede', { required: false })}
           <Field label="Fecha de incorporación" hint="Se asigna automáticamente con la fecha de alta.">
             <Input value={fechaIncorporacion} readOnly />
           </Field>
-          {campoPassword('password', 'Password')}
+          {campoPassword('password', 'Contraseña')}
           <PasswordRequirements password={datos.password} />
-          {campoPassword('repeticionPassword', 'Repetir password')}
+          {campoPassword('repeticionPassword', 'Repetir contraseña')}
           <AvatarSelector value={datos.avatar} onChange={cambiar('avatar')} />
           <div className={own.actions}>
             <Button appearance="primary" onClick={crear} disabled={enviando}>

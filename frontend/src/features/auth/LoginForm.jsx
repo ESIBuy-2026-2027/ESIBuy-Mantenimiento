@@ -11,15 +11,13 @@ import { useAuth } from '../../auth/useAuth'
 import CodeStep from './CodeStep'
 import CredentialsStep from './CredentialsStep'
 import EnrollAuthenticatorStep from './EnrollAuthenticatorStep'
-import { getLoginErrorMessage, isPendingAccountError } from './loginErrors'
-import PendingAccountScreen from './PendingAccountScreen'
+import { getLoginErrorMessage } from './loginErrors'
 
 export default function LoginForm() {
   const { signIn } = useAuth()
   const [step, setStep] = useState('credentials')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [pendingEmail, setPendingEmail] = useState('')
   const [qr, setQr] = useState('')
 
   const run = async (action, onSuccess) => {
@@ -28,11 +26,7 @@ export default function LoginForm() {
     try {
       onSuccess(await action())
     } catch (err) {
-      if (isPendingAccountError(err)) {
-        setStep('pending')
-      } else {
-        setError(getLoginErrorMessage(err, step))
-      }
+      setError(getLoginErrorMessage(err, step))
     } finally {
       setSubmitting(false)
     }
@@ -53,8 +47,6 @@ export default function LoginForm() {
   }
 
   const handleCredentials = (credentials) => {
-    setPendingEmail(credentials.email)
-
     return run(
       async () => {
         const respuesta = await login(credentials)
@@ -123,8 +115,6 @@ export default function LoginForm() {
       {step === 'credentials' && (
         <CredentialsStep onSubmit={handleCredentials} submitting={submitting} />
       )}
-
-      {step === 'pending' && <PendingAccountScreen email={pendingEmail} onBack={restart} />}
 
       {step === 'emailCode' && (
         <>

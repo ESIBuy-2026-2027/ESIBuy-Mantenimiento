@@ -1,3 +1,4 @@
+
 package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
 import java.time.LocalDate;
@@ -5,6 +6,7 @@ import java.time.LocalDate;
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -20,8 +22,16 @@ import jakarta.validation.constraints.Size;
  * <p>PENDIENTE: {@code sede} del administrador, cuando exista en el modelo (decisión del equipo: este sprint no).
  */
 public record EditarUsuarioRequest(
-        @NotBlank @Size(max = 30) String nombre,
-        @NotBlank @Size(max = 30) String apellidos,
+        @NotBlank
+        @Size(min = 2, max = 30)
+        @Pattern(regexp = FORMATO_NOMBRE)
+        String nombre,
+
+        @NotBlank
+        @Size(min = 2, max = 30)
+        @Pattern(regexp = FORMATO_NOMBRE)
+        String apellidos,
+
         String avatar,
         String dni,
         String telefono,
@@ -30,8 +40,11 @@ public record EditarUsuarioRequest(
         String nombreComercial,
         String categoriaPrincipalId) {
 
+    private static final String FORMATO_NOMBRE =
+            "^\\p{L}[\\p{L}\\p{M}]*+(?:[ '-][\\p{L}\\p{M}]++)*+$";
+
     EditarUsuarioCommand aComando() {
-        return new EditarUsuarioCommand(nombre, apellidos, avatar, dni, telefono, fechaNacimiento, tipoCliente, nombreComercial,
-                categoriaPrincipalId);
+        return new EditarUsuarioCommand(nombre, apellidos, avatar, dni, telefono, fechaNacimiento, tipoCliente,
+                nombreComercial, categoriaPrincipalId);
     }
 }

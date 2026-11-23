@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { beforeEach, describe, it, expect, vi } from 'vitest'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
@@ -6,6 +6,10 @@ import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
 const RUTA = '/admin/admins/new'
+
+beforeEach(() => {
+  Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: vi.fn() })
+})
 
 async function abrirFormulario() {
   await abrirSesionPorApi('admin@esibuy.test')
@@ -16,9 +20,9 @@ async function abrirFormulario() {
 async function rellenarFormularioValido(user, { email = 'nora@esibuy.test' } = {}) {
   await user.type(screen.getByLabelText(/^nombre/i), 'Nora')
   await user.type(screen.getByLabelText(/apellidos/i), 'Díaz Ruiz')
-  await user.type(screen.getByLabelText(/email/i), email)
-  await user.type(screen.getByLabelText(/^password/i), 'Password123!')
-  await user.type(screen.getByLabelText(/^repetir password/i), 'Password123!')
+  await user.type(screen.getByLabelText(/correo electrónico/i), email)
+  await user.type(screen.getByLabelText(/^contraseña/i), 'Password123!')
+  await user.type(screen.getByLabelText(/^repetir contraseña/i), 'Password123!')
 }
 
 const crear = (user) => user.click(screen.getByRole('button', { name: /crear administrador/i }))
@@ -29,13 +33,13 @@ describe('AdminNewAdminPage (HU21): formulario', () => {
 
     expect(screen.getByLabelText(/^nombre/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/apellidos/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/sede/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/fecha de incorporación/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^password/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^repetir password/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^contraseña/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^repetir contraseña/i)).toBeInTheDocument()
     expect(screen.getAllByRole('radio')).toHaveLength(3)
-    expect(screen.getByRole('list', { name: /requisitos del password/i })).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: /requisitos de la contraseña/i })).toBeInTheDocument()
   })
 
   it('adminNewAdminPage_marcaComoObligatoriosLosCamposObligatorios', async () => {
@@ -43,9 +47,9 @@ describe('AdminNewAdminPage (HU21): formulario', () => {
 
     expect(screen.getByLabelText(/^nombre/i)).toBeRequired()
     expect(screen.getByLabelText(/apellidos/i)).toBeRequired()
-    expect(screen.getByLabelText(/email/i)).toBeRequired()
-    expect(screen.getByLabelText(/^password/i)).toBeRequired()
-    expect(screen.getByLabelText(/^repetir password/i)).toBeRequired()
+    expect(screen.getByLabelText(/correo electrónico/i)).toBeRequired()
+    expect(screen.getByLabelText(/^contraseña/i)).toBeRequired()
+    expect(screen.getByLabelText(/^repetir contraseña/i)).toBeRequired()
     expect(screen.getByLabelText(/sede/i)).not.toBeRequired()
   })
 
@@ -66,19 +70,19 @@ describe('AdminNewAdminPage (HU21): formulario', () => {
 
     expect(screen.getByLabelText(/^nombre/i)).toHaveAttribute('maxlength', '30')
     expect(screen.getByLabelText(/apellidos/i)).toHaveAttribute('maxlength', '30')
-    expect(screen.getByLabelText(/email/i)).toHaveAttribute('maxlength', '100')
+    expect(screen.getByLabelText(/correo electrónico/i)).toHaveAttribute('maxlength', '100')
     expect(screen.getByLabelText(/sede/i)).toHaveAttribute('maxlength', '30')
-    expect(screen.getByLabelText(/^password/i)).toHaveAttribute('maxlength', '64')
-    expect(screen.getByLabelText(/^repetir password/i)).toHaveAttribute('maxlength', '64')
+    expect(screen.getByLabelText(/^contraseña/i)).toHaveAttribute('maxlength', '64')
+    expect(screen.getByLabelText(/^repetir contraseña/i)).toHaveAttribute('maxlength', '64')
   })
 
   it('adminNewAdminPage_alPulsarMostrarPassword_loMuestraEnClaro', async () => {
     const user = userEvent.setup()
     await abrirFormulario()
 
-    await user.click(screen.getByRole('button', { name: /^mostrar password$/i }))
+    await user.click(screen.getByRole('button', { name: /^mostrar contraseña$/i }))
 
-    expect(screen.getByLabelText(/^password/i)).toHaveAttribute('type', 'text')
+    expect(screen.getByLabelText(/^contraseña/i)).toHaveAttribute('type', 'text')
   })
 })
 
@@ -93,6 +97,15 @@ describe('AdminNewAdminPage (HU21): validaciones', () => {
     expect(screen.queryByText(/administrador creado/i)).not.toBeInTheDocument()
   })
 
+  it('adminNewAdminPage_alEnviarVacio_desplazaLaPantallaAlPrimerCampoConError', async () => {
+    const user = userEvent.setup()
+    await abrirFormulario()
+
+    await crear(user)
+
+    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' })
+  })
+
   it('adminNewAdminPage_conEmailInvalido_muestraErrorDeFormato', async () => {
     const user = userEvent.setup()
     await abrirFormulario()
@@ -100,7 +113,7 @@ describe('AdminNewAdminPage (HU21): validaciones', () => {
     await rellenarFormularioValido(user, { email: 'esto-no-es-un-email' })
     await crear(user)
 
-    expect(screen.getByText(/introduce un email válido/i)).toBeInTheDocument()
+    expect(screen.getByText(/introduce un correo electrónico válido/i)).toBeInTheDocument()
   })
 
   it('adminNewAdminPage_conPasswordQueNoCumpleLosRequisitos_muestraError', async () => {
@@ -108,10 +121,10 @@ describe('AdminNewAdminPage (HU21): validaciones', () => {
     await abrirFormulario()
 
     await rellenarFormularioValido(user)
-    await user.clear(screen.getByLabelText(/^password/i))
-    await user.clear(screen.getByLabelText(/^repetir password/i))
-    await user.type(screen.getByLabelText(/^password/i), 'password')
-    await user.type(screen.getByLabelText(/^repetir password/i), 'password')
+    await user.clear(screen.getByLabelText(/^contraseña/i))
+    await user.clear(screen.getByLabelText(/^repetir contraseña/i))
+    await user.type(screen.getByLabelText(/^contraseña/i), 'password')
+    await user.type(screen.getByLabelText(/^repetir contraseña/i), 'password')
     await crear(user)
 
     expect(screen.getByText(/no cumple los requisitos/i)).toBeInTheDocument()
@@ -123,10 +136,10 @@ describe('AdminNewAdminPage (HU21): validaciones', () => {
     await abrirFormulario()
 
     await rellenarFormularioValido(user)
-    await user.type(screen.getByLabelText(/^repetir password/i), 'Extra')
+    await user.type(screen.getByLabelText(/^repetir contraseña/i), 'Extra')
     await crear(user)
 
-    expect(screen.getByText(/los passwords no coinciden/i)).toBeInTheDocument()
+    expect(screen.getByText(/las contraseñas no coinciden/i)).toBeInTheDocument()
   })
 })
 
@@ -140,6 +153,25 @@ describe('AdminNewAdminPage (HU21): alta', () => {
 
     expect(await screen.findByText(/administrador creado/i)).toBeInTheDocument()
     expect(screen.getByText(/nora díaz ruiz ya puede iniciar sesión/i)).toBeInTheDocument()
+  })
+
+  it('adminNewAdminPage_siNoSeCambiaElAvatar_enviaElPrimeroPorDefecto', async () => {
+    let cuerpo = null
+    server.use(
+      http.post('/api/admin/admins', async ({ request }) => {
+        cuerpo = await request.json()
+        return HttpResponse.json({ id: 'adm-1' }, { status: 201 })
+      }),
+    )
+    const user = userEvent.setup()
+    await abrirFormulario()
+    await rellenarFormularioValido(user)
+    expect(screen.getByRole('radio', { name: /avatar 1/i })).toBeChecked()
+
+    await crear(user)
+    await screen.findByText(/administrador creado/i)
+
+    expect(cuerpo.avatar).toBe('avatar1')
   })
 
   it('adminNewAdminPage_alCrear_enviaLosDatosSinLaRepeticionDelPassword', async () => {
@@ -176,8 +208,22 @@ describe('AdminNewAdminPage (HU21): alta', () => {
     await rellenarFormularioValido(user, { email: 'cliente@esibuy.test' })
     await crear(user)
 
-    expect(await screen.findByText(/este email ya está registrado/i)).toBeInTheDocument()
+    expect(await screen.findByText(/este correo electrónico ya está registrado/i)).toBeInTheDocument()
     expect(screen.queryByText(/administrador creado/i)).not.toBeInTheDocument()
+  })
+
+  it('adminNewAdminPage_conErrorDeServidor_desplazaLaPantallaAlMensajeGeneral', async () => {
+    server.use(
+      http.post('/api/admin/admins', () => HttpResponse.json({ message: 'MongoTimeoutException' }, { status: 500 })),
+    )
+    const user = userEvent.setup()
+    await abrirFormulario()
+
+    await rellenarFormularioValido(user)
+    await crear(user)
+
+    expect(await screen.findByText(/no se ha podido crear el administrador/i)).toBeInTheDocument()
+    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' })
   })
 
   it('adminNewAdminPage_conErrorDeServidor_muestraMensajeGenerico', async () => {
@@ -215,7 +261,7 @@ describe('AdminNewAdminPage (HU21): alta', () => {
     await user.click(await screen.findByRole('button', { name: /crear otro administrador/i }))
 
     expect(screen.getByLabelText(/^nombre/i)).toHaveValue('')
-    expect(screen.getByLabelText(/email/i)).toHaveValue('')
+    expect(screen.getByLabelText(/correo electrónico/i)).toHaveValue('')
   })
 })
 
@@ -247,7 +293,7 @@ describe('AdminNewAdminPage (HU21): acceso', () => {
     await abrirFormulario()
 
     const avatares = within(screen.getByRole('radiogroup'))
-    expect(avatares.getByRole('radio', { name: /avatar 1/i })).toBeInTheDocument()
+    expect(avatares.getByRole('radio', { name: /avatar 1/i })).toBeChecked()
     expect(avatares.getByRole('radio', { name: /avatar 3/i })).toBeInTheDocument()
   })
 
@@ -265,7 +311,7 @@ describe('AdminNewAdminPage (HU21): acceso', () => {
     await rellenarFormularioValido(user)
     await crear(user)
 
-    expect(await screen.findByText('La contraseña no puede contener tu nombre, tus apellidos ni tu email'))
+    expect(await screen.findByText('La contraseña no puede contener tu nombre, tus apellidos ni tu correo electrónico'))
       .toBeInTheDocument()
     expect(screen.queryByText(/no se ha podido crear el administrador/i)).not.toBeInTheDocument()
   })
@@ -277,13 +323,13 @@ describe('AdminNewAdminPage (HU21, R9): la contraseña solo se escribe a mano', 
     const user = userEvent.setup()
     await abrirFormulario()
 
-    await user.click(screen.getByLabelText(/^password/i))
+    await user.click(screen.getByLabelText(/^contraseña/i))
     await user.paste('Password123!')
-    await user.click(screen.getByLabelText(/^repetir password/i))
+    await user.click(screen.getByLabelText(/^repetir contraseña/i))
     await user.paste('Password123!')
 
-    expect(screen.getByLabelText(/^password/i)).toHaveValue('')
-    expect(screen.getByLabelText(/^repetir password/i)).toHaveValue('')
+    expect(screen.getByLabelText(/^contraseña/i)).toHaveValue('')
+    expect(screen.getByLabelText(/^repetir contraseña/i)).toHaveValue('')
   })
 
   it('HU21-CP20: ni el password ni su repetición se pueden copiar o cortar, tampoco con el password visible', async () => {
@@ -291,9 +337,9 @@ describe('AdminNewAdminPage (HU21, R9): la contraseña solo se escribe a mano', 
     await abrirFormulario()
     await rellenarFormularioValido(user)
 
-    await user.click(screen.getAllByRole('button', { name: /^mostrar password$/i })[0])
+    await user.click(screen.getAllByRole('button', { name: /^mostrar contraseña$/i })[0])
 
-    for (const campo of [screen.getByLabelText(/^password/i), screen.getByLabelText(/^repetir password/i)]) {
+    for (const campo of [screen.getByLabelText(/^contraseña/i), screen.getByLabelText(/^repetir contraseña/i)]) {
       // fireEvent devuelve false cuando el evento se ha cancelado
       expect(fireEvent.copy(campo)).toBe(false)
       expect(fireEvent.cut(campo)).toBe(false)

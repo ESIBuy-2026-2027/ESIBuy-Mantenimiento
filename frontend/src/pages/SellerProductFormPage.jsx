@@ -38,41 +38,62 @@ export default function SellerProductFormPage() {
   const loadProduct = useCallback(() => (id ? getSellerProduct(id) : Promise.resolve(null)), [id])
   const { data: product, error: productError, failed: productFailed, retry: retryProduct } = useApiQuery(loadProduct)
 
+  const guardarProducto = async (payload, productId) => {
+    if (productId) {
+      return updateSellerProduct(productId, payload)
+    }
+
+    const saved = await createSellerProduct(payload)
+    if (saved?.id) setCreatedProductId(saved.id)
+
+    return saved
+  }
+
+  const subirImagen = async (imageFile, savedId) => {
+    if (!imageFile) return true
+
+    if (!savedId) {
+      setSaveError(IMAGE_UPLOAD_ERROR)
+      return false
+    }
+
+    try {
+      await uploadSellerProductImage(savedId, imageFile)
+      return true
+    } catch {
+      setSaveError(IMAGE_UPLOAD_ERROR)
+      return false
+    }
+  }
+
   const handleSubmit = async (payload, imageFile) => {
     if (saving) return
+
     setSaving(true)
     setSaveError(null)
     setTakenName(null)
+
     try {
       const productId = id || createdProductId
-      let saved
-      if (productId) {
-        saved = await updateSellerProduct(productId, payload)
-      } else {
-        saved = await createSellerProduct(payload)
-        if (saved?.id) setCreatedProductId(saved.id)
-      }
-
+      const saved = await guardarProducto(payload, productId)
       const savedId = productId || saved?.id
-      if (imageFile) {
-        if (!savedId) {
-          setSaveError(IMAGE_UPLOAD_ERROR)
-          return
-        }
-        try {
-          await uploadSellerProductImage(savedId, imageFile)
-        } catch {
-          setSaveError(IMAGE_UPLOAD_ERROR)
-          return
-        }
-      }
+
+      const imagenSubida = await subirImagen(imageFile, savedId)
+      if (!imagenSubida) return
 
       navigate(PATHS.SELLER_PRODUCTS, {
-        state: { notice: isEdit || productId ? 'Cambios guardados.' : 'Producto guardado correctamente.' },
+        state: {
+          notice: isEdit || productId
+            ? 'Cambios guardados.'
+            : 'Producto guardado correctamente.',
+        },
       })
     } catch (error) {
-      if (error?.code === DUPLICATE_NAME) setTakenName(payload.nombre)
-      else setSaveError(GENERIC_SAVE_ERROR)
+      if (error?.code === DUPLICATE_NAME) {
+        setTakenName(payload.nombre)
+      } else {
+        setSaveError(GENERIC_SAVE_ERROR)
+      }
     } finally {
       setSaving(false)
     }
