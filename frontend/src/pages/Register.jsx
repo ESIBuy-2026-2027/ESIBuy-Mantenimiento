@@ -332,25 +332,25 @@ export default function Register() {
   const casillaPrivacidad = (
     <div data-register-error={errores.aceptaPrivacidad ? 'true' : undefined}>
       <Field validationMessage={errores.aceptaPrivacidad}>
-      <div className={styles.privacidad}>
-        <Checkbox
-          required
-          aria-label="Acepto la política de privacidad"
-          checked={datos.aceptaPrivacidad}
-          onChange={(_event, data) => setDatos({ ...datos, aceptaPrivacidad: data.checked })}
-        />
-        <Text className={styles.textoPrivacidad}>
-          Acepto la{' '}
-          <Button
-            appearance="transparent"
-            className={styles.enlacePrivacidad}
-            onClick={() => setPoliticaAbierta(true)}
-          >
-            política de privacidad
-          </Button>
-          *
-        </Text>
-      </div>
+        <div className={styles.privacidad}>
+          <Checkbox
+            required
+            aria-label="Acepto la política de privacidad"
+            checked={datos.aceptaPrivacidad}
+            onChange={(_event, data) => setDatos({ ...datos, aceptaPrivacidad: data.checked })}
+          />
+          <Text className={styles.textoPrivacidad}>
+            Acepto la{' '}
+            <Button
+              appearance="transparent"
+              className={styles.enlacePrivacidad}
+              onClick={() => setPoliticaAbierta(true)}
+            >
+              política de privacidad
+            </Button>
+            *
+          </Text>
+        </div>
       </Field>
     </div>
   )
