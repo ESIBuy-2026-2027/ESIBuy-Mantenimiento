@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   REQUISITOS_PASSWORD,
   esNombreValido,
+  filtrarNombre,
   esEmailValido,
   esMayorDeEdad,
   esTelefonoValido,
@@ -88,6 +89,15 @@ const haceAnios = (anios, dias = 0) => {
   const dia = String(fecha.getDate()).padStart(2, '0')
   return `${fecha.getFullYear()}-${mes}-${dia}`
 }
+
+describe('filtrarNombre', () => {
+  it('filtrarNombre_descartaNumerosYSimbolosNoAdmitidosPeroConservaLetrasYSeparadores', () => {
+    expect(filtrarNombre('Ana2')).toBe('Ana')
+    expect(filtrarNombre('Juan123')).toBe('Juan')
+    expect(filtrarNombre('María-José O\'Connor')).toBe('María-José O\'Connor')
+    expect(filtrarNombre('Peña_3')).toBe('Peña')
+  })
+})
 
 describe('esNombreValido', () => {
   it('esNombreValido_admiteNombresConTildesEspaciosGuionesYApostrofos', () => {
