@@ -40,16 +40,19 @@ const DATOS_DE_PERFIL = {
 // Lo que cada usuario ha editado de su perfil (HU45), encima de los datos de ejemplo, y los clientes que se han hecho
 // Premium (HU45); los dos se vacían al reiniciar los mocks.
 let ediciones = new Map()
-let pasadosAPremium = new Set()\nlet canceladosPremium = new Set()
+let pasadosAPremium = new Set()
+let canceladosPremium = new Set()
 
 export function resetProfileMock() {
   ediciones = new Map()
-  pasadosAPremium = new Set()\n  canceladosPremium = new Set()
+  pasadosAPremium = new Set()
+  canceladosPremium = new Set()
 }
 
 function perfilDe({ id, nombre, apellidos, email, rol }) {
   const perfil = { id, nombre, apellidos, email, rol, ...DATOS_DE_PERFIL[id], ...ediciones.get(id) }
-  if (canceladosPremium.has(id)) return { ...perfil, tipoCliente: 'ESTANDAR' }\n  return pasadosAPremium.has(id) ? { ...perfil, tipoCliente: 'PREMIUM' } : perfil
+  if (canceladosPremium.has(id)) return { ...perfil, tipoCliente: 'ESTANDAR' }
+  return pasadosAPremium.has(id) ? { ...perfil, tipoCliente: 'PREMIUM' } : perfil
 }
 
 const respuestaDeError = (status, code) => HttpResponse.json({ mensaje: 'Datos inválidos', code }, { status })
