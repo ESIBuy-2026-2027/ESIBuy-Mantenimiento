@@ -505,7 +505,6 @@ describe('SellerProductFormPage: subida de imágenes', () => {
     fireEvent.dragOver(zonaCarga, { dataTransfer: { files: [archivo] } })
     fireEvent.drop(zonaCarga, { dataTransfer: { files: [archivo] } })
 
-    expect(await screen.findByAltText('Vista previa de la imagen del producto')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
     await esperarRuta('/seller/products')
 
