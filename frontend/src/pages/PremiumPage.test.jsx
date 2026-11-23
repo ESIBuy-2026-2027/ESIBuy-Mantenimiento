@@ -94,7 +94,7 @@ describe('PremiumPage (HU45): ventajas de ESIBuy Premium', () => {
     expect(segundaConfirmacion).toHaveTextContent(/descuentos exclusivos/i)
     expect(segundaConfirmacion).toHaveTextContent(/envíos sin coste/i)
     expect(segundaConfirmacion).toHaveTextContent(/prioridad en los envíos/i)
-    expect(within(segundaConfirmacion).getByRole('button', { name: /sí, cancelar premium/i })).toBeDisabled()
+    expect(within(segundaConfirmacion).getByRole('button', { name: /sí, cancelar premium/i })).toBeEnabled()
   })
 
   it('CLI-02: confirmar la baja cambia la pantalla a cliente Estándar', async () => {
