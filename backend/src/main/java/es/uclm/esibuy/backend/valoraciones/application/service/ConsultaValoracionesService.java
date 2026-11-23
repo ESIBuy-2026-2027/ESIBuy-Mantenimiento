@@ -32,7 +32,7 @@ public class ConsultaValoracionesService implements ConsultaValoracionesUseCase 
         return valoracionRepository.buscarPorProducto(productoId);
     }
 
-    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO_POR_EMAIL)
+    @PreAuthorize("hasRole('CLIENTE') and #emailCliente == authentication.name")
     @Override
     public EstadoValoracion consultarEstado(String emailCliente, String productoId) {
         boolean haComprado = compras.haComprado(emailCliente, productoId);
