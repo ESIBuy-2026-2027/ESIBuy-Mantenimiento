@@ -55,18 +55,19 @@ const fallaPorLaContrasena = (error) => error?.code === 'WRONG_PASSWORD'
 
 // Confirmación para eliminar la cuenta propia del vendedor (HU47) o del cliente (HU25), con la contraseña actual. Las
 // consecuencias que explica dependen del rol.
-export default function DeleteAccountDialog({ rol, onClose, onDeleted }) {
+export default function DeleteAccountDialog({ rol, confirmBeforeDelete = false, onClose, onDeleted }) {
   const styles = useStyles()
   const contenido = useRef(null)
   const [password, setPassword] = useState('')
   const [eliminando, setEliminando] = useState(false)
   const [contrasenaIncorrecta, setContrasenaIncorrecta] = useState(false)
   const [fallo, setFallo] = useState(null)
+  const [confirmando, setConfirmando] = useState(confirmBeforeDelete)
 
-  // Al abrirse el foco va al campo de la contraseña, que es lo único que hay que rellenar
+  // El foco va al campo cuando se alcanza el paso de introducir la contraseña.
   useEffect(() => {
-    contenido.current?.querySelector('input')?.focus()
-  }, [])
+    if (!confirmando) contenido.current?.querySelector('input')?.focus()
+  }, [confirmando])
 
   // El aviso de la contraseña incorrecta se quita en cuanto se cambia el texto
   const cambiarContrasena = (_event, data) => {
@@ -92,36 +93,56 @@ export default function DeleteAccountDialog({ rol, onClose, onDeleted }) {
     <Dialog open modalType="alert" onOpenChange={(_event, data) => !data.open && !eliminando && onClose()}>
       <DialogSurface>
         <DialogBody>
-          <DialogTitle>Eliminar mi cuenta</DialogTitle>
-          <DialogContent ref={contenido} className={styles.content}>
-            {fallo && (
-              <MessageBar intent="error">
-                <MessageBarBody>{fallo}</MessageBarBody>
-              </MessageBar>
-            )}
-            <span>Esta acción no se puede deshacer. Al eliminar tu cuenta:</span>
-            <ul className={styles.consequences}>
-              {CONSECUENCIAS[rol].map((consecuencia) => (
-                <li key={consecuencia}>{consecuencia}</li>
-              ))}
-            </ul>
-            <PasswordField
-              label="Contraseña actual"
-              value={password}
-              onChange={cambiarContrasena}
-              error={contrasenaIncorrecta ? MENSAJE_CONTRASENA : undefined}
-              autoComplete="current-password"
-              bloquearCopia
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button appearance="secondary" onClick={onClose} disabled={eliminando}>
-              Cancelar
-            </Button>
-            <Button appearance="primary" onClick={confirmar} disabled={eliminando || !password.trim()}>
-              Eliminar mi cuenta
-            </Button>
-          </DialogActions>
+          <DialogTitle>
+            {confirmando ? 'Confirmar eliminación de cuenta' : 'Eliminar mi cuenta'}
+          </DialogTitle>
+          {confirmando ? (
+            <>
+              <DialogContent>
+                ¿Estás seguro de que quieres eliminar tu cuenta? Esta acción es irreversible.
+              </DialogContent>
+              <DialogActions>
+                <Button appearance="secondary" onClick={onClose}>
+                  Cancelar
+                </Button>
+                <Button appearance="primary" onClick={() => setConfirmando(false)}>
+                  Continuar
+                </Button>
+              </DialogActions>
+            </>
+          ) : (
+            <>
+              <DialogContent ref={contenido} className={styles.content}>
+                {fallo && (
+                  <MessageBar intent="error">
+                    <MessageBarBody>{fallo}</MessageBarBody>
+                  </MessageBar>
+                )}
+                <span>Esta acción no se puede deshacer. Al eliminar tu cuenta:</span>
+                <ul className={styles.consequences}>
+                  {CONSECUENCIAS[rol].map((consecuencia) => (
+                    <li key={consecuencia}>{consecuencia}</li>
+                  ))}
+                </ul>
+                <PasswordField
+                  label="Contraseña actual"
+                  value={password}
+                  onChange={cambiarContrasena}
+                  error={contrasenaIncorrecta ? MENSAJE_CONTRASENA : undefined}
+                  autoComplete="current-password"
+                  bloquearCopia
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button appearance="secondary" onClick={onClose} disabled={eliminando}>
+                  Cancelar
+                </Button>
+                <Button appearance="primary" onClick={confirmar} disabled={eliminando || !password.trim()}>
+                  Eliminar mi cuenta
+                </Button>
+              </DialogActions>
+            </>
+          )}
         </DialogBody>
       </DialogSurface>
     </Dialog>
@@ -130,6 +151,7 @@ export default function DeleteAccountDialog({ rol, onClose, onDeleted }) {
 
 DeleteAccountDialog.propTypes = {
   rol: PropTypes.oneOf(Object.keys(CONSECUENCIAS)).isRequired,
+  confirmBeforeDelete: PropTypes.bool,
   onClose: PropTypes.func.isRequired,
   onDeleted: PropTypes.func.isRequired,
 }

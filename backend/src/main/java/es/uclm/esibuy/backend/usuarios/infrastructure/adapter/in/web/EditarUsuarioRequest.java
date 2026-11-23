@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarUsuarioCommand;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -20,8 +21,8 @@ import jakarta.validation.constraints.Size;
  * <p>PENDIENTE: {@code sede} del administrador, cuando exista en el modelo (decisión del equipo: este sprint no).
  */
 public record EditarUsuarioRequest(
-        @NotBlank @Size(max = 30) String nombre,
-        @NotBlank @Size(max = 30) String apellidos,
+        @NotBlank @Size(min = 2, max = 30) @Pattern(regexp = "^\\p{L}[\\p{L}\\p{M}]*(?:[ '-][\\p{L}\\p{M}]+)*$") String nombre,
+        @NotBlank @Size(min = 2, max = 30) @Pattern(regexp = "^\\p{L}[\\p{L}\\p{M}]*(?:[ '-][\\p{L}\\p{M}]+)*$") String apellidos,
         String avatar,
         String dni,
         String telefono,

@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -16,8 +17,8 @@ import jakarta.validation.constraints.Size;
  * contraseñas...) las aplica el dominio a través del servicio.
  */
 public record RegistroRequest(
-        @NotBlank @Size(max = 30) String nombre,
-        @NotBlank @Size(max = 30) String apellidos,
+        @NotBlank @Size(min = 2, max = 30) @Pattern(regexp = "^\\p{L}[\\p{L}\\p{M}]*(?:[ '-][\\p{L}\\p{M}]+)*$") String nombre,
+        @NotBlank @Size(min = 2, max = 30) @Pattern(regexp = "^\\p{L}[\\p{L}\\p{M}]*(?:[ '-][\\p{L}\\p{M}]+)*$") String apellidos,
         @NotNull LocalDate fechaNacimiento,
         @NotBlank String dni,
         @NotBlank @Email @Size(max = 100) String email,

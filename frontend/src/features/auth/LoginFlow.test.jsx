@@ -84,6 +84,16 @@ describe('Login (HU2): paso 1, credenciales', () => {
     expect(screen.getByText(/introduce tu contraseña/i)).toBeInTheDocument()
   })
 
+  it('login_conEmailInvalido_muestraEjemploDeFormato', async () => {
+    const user = userEvent.setup()
+    renderApp('/login')
+    await user.type(await screen.findByLabelText(/correo electrónico/i), 'correo-invalido')
+    await user.type(screen.getByLabelText(/^contraseña/i), CLAVE)
+    await user.click(screen.getByRole('button', { name: /continuar/i }))
+
+    expect(screen.getByText(/ejemplo: email@dominio\.es/i)).toBeInTheDocument()
+  })
+
   it('login_conContrasenaIncorrecta_muestraMensajeGenerico', async () => {
     const user = userEvent.setup()
     renderApp('/login')

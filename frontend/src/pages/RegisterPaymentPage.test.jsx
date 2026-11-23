@@ -29,9 +29,9 @@ async function rellenarCliente(user, email) {
   await user.type(screen.getByLabelText(/apellidos/i), 'García')
   await user.type(screen.getByLabelText(/fecha de nacimiento/i), '1990-05-20')
   await user.type(screen.getByLabelText(/dni/i), '12345678Z')
-  await user.type(screen.getByLabelText(/email/i), email)
-  await user.type(screen.getByLabelText(/^password/i), PASSWORD)
-  await user.type(screen.getByLabelText(/^repetir password/i), PASSWORD)
+  await user.type(screen.getByLabelText(/correo electrónico/i), email)
+  await user.type(screen.getByLabelText(/^contraseña/i), PASSWORD)
+  await user.type(screen.getByLabelText(/^repetir contraseña/i), PASSWORD)
   await user.click(screen.getByRole('checkbox', { name: /política de privacidad/i }))
 }
 
@@ -99,8 +99,8 @@ describe('RegisterPaymentPage (HU45): pasarela obligatoria del registro Premium'
 
     expect(await screen.findByRole('heading', { level: 1, name: /registro de cliente/i })).toBeInTheDocument()
     await esperarRuta('/register')
-    expect(screen.getByLabelText(/email/i)).toHaveValue('repetido@correo.test')
-    expect(screen.getByLabelText(/email/i)).toHaveAccessibleDescription('Este email ya está registrado')
+    expect(screen.getByLabelText(/correo electrónico/i)).toHaveValue('repetido@correo.test')
+    expect(screen.getByLabelText(/correo electrónico/i)).toHaveAccessibleDescription('Este correo electrónico ya está registrado')
   })
 
   it('HU45-CP24: cancelar vuelve al formulario con sus datos; con Estándar se registra sin pasar por la pasarela', async () => {
@@ -112,7 +112,7 @@ describe('RegisterPaymentPage (HU45): pasarela obligatoria del registro Premium'
     expect(await screen.findByRole('heading', { level: 1, name: /registro de cliente/i })).toBeInTheDocument()
     await esperarRuta('/register')
     expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Ana')
-    expect(screen.getByLabelText(/email/i)).toHaveValue('cambia@correo.test')
+    expect(screen.getByLabelText(/correo electrónico/i)).toHaveValue('cambia@correo.test')
     expect(screen.getByLabelText(/tipo de cliente/i)).toHaveValue('PREMIUM')
     expect(cuerpos).toHaveLength(0)
 

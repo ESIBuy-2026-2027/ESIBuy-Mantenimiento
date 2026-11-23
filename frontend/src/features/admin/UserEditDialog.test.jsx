@@ -367,11 +367,11 @@ describe('UserEditDialog (HU22): vendedor', () => {
     const { dialogo, user } = await abrirEdicionDeVendedor()
 
     await escribir(user, dialogo, /^nombre comercial/i, '')
-    await escribir(user, dialogo, /^dni/i, 'ABC')
+    await escribir(user, dialogo, /^dni/i, '')
     await guardar(user, dialogo)
 
-    expect(within(dialogo).getByText(/este campo es obligatorio/i)).toBeInTheDocument()
-    expect(within(dialogo).getByText(/introduce un dni válido/i)).toBeInTheDocument()
+    expect(within(dialogo).getAllByText(/este campo es obligatorio/i)).toHaveLength(2)
+    expect(within(dialogo).queryByText(/dni válido/i)).not.toBeInTheDocument()
     expect(envio.llamadas).toBe(0)
   })
 

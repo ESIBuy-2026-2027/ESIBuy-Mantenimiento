@@ -170,7 +170,7 @@ describe('Recuperación de contraseña (HU3): paso 2, cambiar la contraseña', (
     await restablecer(user)
 
     expect(
-      await screen.findByText(/la contraseña no puede contener tu nombre, tus apellidos ni tu email/i),
+      await screen.findByText(/la contraseña no puede contener tu nombre, tus apellidos ni tu correo electrónico/i),
     ).toBeInTheDocument()
   })
 

@@ -447,7 +447,7 @@ describe('SellerProductsPage (HU31 y HU35): editar y eliminar desde el listado',
     const user = userEvent.setup()
     await user.click(await screen.findByRole('button', { name: /ver información de casa vicente/i }))
     const dialogo = await screen.findByRole('dialog', { name: /información del vendedor/i })
-    await user.click(within(dialogo).getByRole('tab', { name: 'Productos' }))
+    await user.click(await within(dialogo).findByRole('tab', { name: 'Productos' }))
 
     expect(await within(dialogo).findByText(/todavía no tiene productos/i)).toBeInTheDocument()
     expect(within(dialogo).queryByRole('link', { name: /^editar /i })).not.toBeInTheDocument()
@@ -511,7 +511,7 @@ describe('SellerProductsPage (HU35): eliminar desde la ficha', () => {
     await user.click(screen.getByRole('button', { name: 'Ver Teclado mecánico' }))
     const ficha = await screen.findByRole('dialog', { name: /información del producto/i })
     await within(ficha).findByLabelText('Nombre')
-    await user.click(within(ficha).getByRole('button', { name: 'Eliminar' }))
+    await user.click(await within(ficha).findByRole('button', { name: 'Eliminar' }))
 
     // Como en UserRowActions.test.jsx, la confirmación se busca por texto: mientras un diálogo se cierra y otro
     // se abre, Fluent marca partes de la página con aria-hidden y las búsquedas por rol fallan por tiempos.

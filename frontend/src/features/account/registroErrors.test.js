@@ -6,7 +6,7 @@ import { erroresDelServidor } from './registroErrors'
 describe('erroresDelServidor', () => {
   it('HU1-CP23: traduce cada code a su campo y su mensaje', () => {
     expect(erroresDelServidor(new ApiError(400, 'Datos de registro no válidos', 'PASSWORD_CONTAINS_PERSONAL_DATA')))
-      .toEqual({ campos: { password: 'La contraseña no puede contener tu nombre, tus apellidos ni tu email' } })
+      .toEqual({ campos: { password: 'La contraseña no puede contener tu nombre, tus apellidos ni tu correo electrónico' } })
     expect(erroresDelServidor(new ApiError(400, 'Datos de registro no válidos', 'PASSWORDS_DO_NOT_MATCH')))
       .toEqual({ campos: { repeticionPassword: 'Las contraseñas no coinciden' } })
     expect(erroresDelServidor(new ApiError(409, 'No se ha podido completar el registro', 'DNI_ALREADY_REGISTERED')))
@@ -15,7 +15,7 @@ describe('erroresDelServidor', () => {
       'EMAIL_AND_COMMERCIAL_NAME_ALREADY_REGISTERED')))
       .toEqual({
         campos: {
-          email: 'Este email ya está registrado',
+          email: 'Este correo electrónico ya está registrado',
           nombreComercial: 'Este nombre comercial ya está registrado',
         },
       })

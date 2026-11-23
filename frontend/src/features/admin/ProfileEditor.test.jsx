@@ -184,15 +184,16 @@ describe('ProfileEditor (HU22): validación', () => {
     expect(save).not.toHaveBeenCalled()
   })
 
-  it('profileEditor_conUnDniIncorrecto_muestraElErrorDelCampo', async () => {
+  it('profileEditor_aceptaUnIdentificadorAlternativoNoVacio', async () => {
     const user = userEvent.setup()
-    renderizar()
+    const { save } = renderizar()
 
     await user.clear(screen.getByLabelText(/^dni/i))
-    await user.type(screen.getByLabelText(/^dni/i), '123')
+    await user.type(screen.getByLabelText(/^dni/i), 'NIF extranjero 123')
     await guardar(user)
 
-    expect(screen.getByText(/introduce un dni válido/i)).toBeInTheDocument()
+    await waitFor(() => expect(save).toHaveBeenCalledWith(expect.objectContaining({ dni: 'NIF extranjero 123' })))
+    expect(screen.queryByText(/dni válido/i)).not.toBeInTheDocument()
   })
 
   it('profileEditor_alCorregirUnCampoTrasUnIntentoFallido_loValidaEnVivo', async () => {
