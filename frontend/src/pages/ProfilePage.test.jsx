@@ -291,6 +291,8 @@ describe('ProfilePage (HU47): eliminar mi cuenta', () => {
     await abrirPerfil('vendedor@esibuy.test')
 
     await usuario.click(screen.getByRole('button', { name: /^eliminar mi cuenta$/i }))
+    const primeraConfirmacion = await screen.findByRole('alertdialog', { name: /confirmar eliminación de cuenta/i })
+    await usuario.click(within(primeraConfirmacion).getByRole('button', { name: /^continuar$/i }))
     const dialogo = await screen.findByRole('alertdialog', { name: /eliminar mi cuenta/i })
     await usuario.type(within(dialogo).getByLabelText(/^contraseña actual/i), 'Contraseña-de-prueba-1!')
     await usuario.click(within(dialogo).getByRole('button', { name: /^eliminar mi cuenta$/i }))
