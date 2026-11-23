@@ -318,12 +318,26 @@ export const productsHandlers = [
     const params = new URL(request.url).searchParams
     const busqueda = normalizar(params.get('search') ?? '')
     const categoria = params.get('category')
+    const estado = params.get('status')
+    const orden = params.get('sort')
+    const minimo = params.get('minPrice') === null ? null : Number(params.get('minPrice'))
+    const maximo = params.get('maxPrice') === null ? null : Number(params.get('maxPrice'))
     const coincidentes = PRODUCTOS.map(conDisponibilidadActual).filter(
       (producto) =>
         producto.vendedorId === usuario.id &&
         normalizar(producto.nombre).includes(busqueda) &&
-        (!categoria || producto.categoria === categoria),
+        (!categoria || producto.categoria === categoria) &&
+        (!estado || (estado === 'visible' ? producto.disponible : !producto.disponible)) &&
+        (minimo === null || Number.isNaN(minimo) || producto.precio >= minimo) &&
+        (maximo === null || Number.isNaN(maximo) || producto.precio <= maximo),
     )
-    return HttpResponse.json(paginar(coincidentes, leerPagina(params), aRespuesta))
+    const ordenados = [...coincidentes].sort((a, b) => {
+      if (orden === 'price-asc') return a.precio - b.precio
+      if (orden === 'price-desc') return b.precio - a.precio
+      if (orden === 'stock-asc') return a.stock - b.stock
+      if (orden === 'stock-desc') return b.stock - a.stock
+      return 0
+    })
+    return HttpResponse.json(paginar(ordenados, leerPagina(params), aRespuesta))
   }),
 ]

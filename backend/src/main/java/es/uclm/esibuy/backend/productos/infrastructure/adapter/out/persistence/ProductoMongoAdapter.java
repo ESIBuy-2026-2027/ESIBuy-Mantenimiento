@@ -37,6 +37,7 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     private static final String CAMPO_VENDEDOR_ID = "vendedorId";
     private static final String CAMPO_CATEGORIA_ID = "categoriaId";
     private static final String CAMPO_VALORACION_MEDIA = "valoracionMedia";
+    private static final String CAMPO_PRECIO = "precio";
 
     private final ProductoMongoRepository repository;
     private final ProductoDocumentMapper mapper;
@@ -103,8 +104,9 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     public ProductoPage listarPorVendedor(String vendedorId, ListarProductosQuery query) {
         Criteria criterios = construirCriterios(vendedorId, query);
         long total = mongoTemplate.count(new Query(criterios), ProductoDocument.class);
+        Sort orden = ordenarPor(query);
         List<Producto> productos = mongoTemplate.find(new Query(criterios).with(PageRequest.of(
-                        query.pagina(), query.tamano(), Sort.by(Sort.Direction.DESC, "createdAt"))),
+                        query.pagina(), query.tamano(), orden)),
                         ProductoDocument.class).stream()
                 .map(mapper::aDominio)
                 .toList();
@@ -170,7 +172,28 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         if (query.categoriaId() != null && !query.categoriaId().isBlank()) {
             criterios.add(Criteria.where(CAMPO_CATEGORIA_ID).is(query.categoriaId()));
         }
+        if (query.disponible() != null) {
+            criterios.add(Criteria.where(CAMPO_DISPONIBLE).is(query.disponible()));
+        }
+        if (query.precioMinimo() != null) {
+            criterios.add(Criteria.where(CAMPO_PRECIO).gte(query.precioMinimo()));
+        }
+        if (query.precioMaximo() != null) {
+            criterios.add(Criteria.where(CAMPO_PRECIO).lte(query.precioMaximo()));
+        }
         return new Criteria().andOperator(criterios);
+    }
+
+    private static Sort ordenarPor(ListarProductosQuery query) {
+        Sort.Direction direccion = query.direccionOrden() != null
+                && query.direccionOrden().name().equals("DESC")
+                ? Sort.Direction.DESC : Sort.Direction.ASC;
+        if (query.criterioOrden() != null) {
+            String campo = query.criterioOrden().name().equals("PRECIO")
+                    ? CAMPO_PRECIO : CAMPO_STOCK;
+            return Sort.by(direccion, campo);
+        }
+        return Sort.by(Sort.Direction.DESC, "createdAt");
     }
 
     // Regex que encuentra el texto con o sin tildes en las vocales; el resto de caracteres (la ñ incluida) se

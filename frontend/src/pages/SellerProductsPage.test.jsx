@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
@@ -195,6 +195,42 @@ describe('SellerProductsPage (HU32): estados', () => {
 })
 
 describe('SellerProductsPage (HU32): filtros', () => {
+  it('sellerProductsPage_filtraPorEstadoVisibleYNoVisible', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.selectOptions(await screen.findByLabelText('Estado'), 'No visible')
+
+    await waitFor(() => expect(filasDeDatos()).toHaveLength(3))
+    expect(screen.getByText('Set de cuchillos de cocina')).toBeInTheDocument()
+    expect(screen.queryByText('Auriculares inalámbricos')).not.toBeInTheDocument()
+  })
+
+  it('sellerProductsPage_ordenaPorPrecioYStockAscendenteYDescendente', async () => {
+    const user = userEvent.setup()
+    await abrirListado()
+
+    await user.selectOptions(await screen.findByLabelText('Ordenar por'), 'price-desc')
+    await waitFor(() => expect(within(filasDeDatos()[0]).getByText('Monitor 27 pulgadas')).toBeInTheDocument())
+
+    await user.selectOptions(screen.getByLabelText('Ordenar por'), 'stock-asc')
+    await waitFor(() => expect(within(filasDeDatos()[0]).getByText('Ratón ergonómico')).toBeInTheDocument())
+
+    await user.selectOptions(screen.getByLabelText('Ordenar por'), 'stock-desc')
+    await waitFor(() => expect(within(filasDeDatos()[0]).getByText('Memoria USB 128 GB')).toBeInTheDocument())
+  })
+
+  it('sellerProductsPage_filtraPorPrecioMinimoYMaximo', async () => {
+    await abrirListado()
+
+    fireEvent.change(await screen.findByLabelText('Precio mínimo'), { target: { value: '40' } })
+    fireEvent.change(screen.getByLabelText('Precio máximo'), { target: { value: '50' } })
+
+    await waitFor(() => expect(filasDeDatos()).toHaveLength(3))
+    expect(screen.getByText('Juego de sábanas algodón')).toBeInTheDocument()
+    expect(screen.getByText('Webcam Full HD')).toBeInTheDocument()
+  })
+
   it('sellerProductsPage_alBuscarPorNombre_filtraElListadoSinPulsarNingunBoton', async () => {
     const user = userEvent.setup()
     await abrirListado()

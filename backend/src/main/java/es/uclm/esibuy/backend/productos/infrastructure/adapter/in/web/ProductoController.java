@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.productos.infrastructure.adapter.in.web;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import java.math.BigDecimal;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,6 +26,8 @@ import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseC
 import es.uclm.esibuy.backend.productos.application.service.GestionImagenesProductoService;
 import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
+import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenProductos;
+import es.uclm.esibuy.backend.productos.application.port.in.DireccionOrden;
 
 /**
  * Adaptador de entrada web del módulo de productos. Recibe la petición, la traduce a una consulta o a un
@@ -74,9 +77,24 @@ public class ProductoController {
             @RequestParam(defaultValue = "10") @Min(1) int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String category,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
             Authentication autenticado) {
+        Boolean disponible = "visible".equalsIgnoreCase(status) ? Boolean.TRUE
+                : "hidden".equalsIgnoreCase(status) ? Boolean.FALSE : null;
+        CriterioOrdenProductos criterioOrden = switch (sort == null ? "" : sort.toLowerCase()) {
+            case "price-asc", "price-desc" -> CriterioOrdenProductos.PRECIO;
+            case "stock-asc", "stock-desc" -> CriterioOrdenProductos.STOCK;
+            default -> null;
+        };
+        DireccionOrden direccionOrden = criterioOrden == null ? null
+                : sort.toLowerCase().endsWith("-desc") ? DireccionOrden.DESC : DireccionOrden.ASC;
         return ProductoListadoPageResponse.desde(listadoProductos.listarMisProductos(
-                autenticado.getName(), new ListarProductosQuery(search, category, page - 1, size)));
+                autenticado.getName(), new ListarProductosQuery(
+                        search, category, disponible, criterioOrden, direccionOrden,
+                        minPrice, maxPrice, page - 1, size)));
     }
 
     // Detalle de un producto propio (HU33): el vendedor sale de la sesión; uno ajeno o inexistente da 404.

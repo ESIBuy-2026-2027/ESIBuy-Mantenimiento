@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import {
   Button,
+  Field,
   MessageBar,
   MessageBarActions,
   MessageBarBody,
+  Select,
   Spinner,
   Text,
   Title1,
+  makeStyles,
+  tokens,
 } from '@fluentui/react-components'
 import {
   Add20Regular,
@@ -32,8 +36,33 @@ import { PATHS } from '../routes/paths'
 
 const PAGE_SIZE = 10
 
+const useFilterStyles = makeStyles({
+  range: {
+    flexGrow: 1,
+    flexBasis: '280px',
+  },
+  rangeControl: {
+    position: 'relative',
+    height: '36px',
+  },
+  rangeInput: {
+    position: 'absolute',
+    width: '25%',
+    height: '36px',
+    margin: 0,
+  },
+  rangeValue: {
+    color: EA580C,
+  },
+  actions: {
+    display: 'flex',
+    alignItems: 'flex-end',
+  },
+})
+
 export default function SellerProductsPage() {
   const styles = usePageStyles()
+  const filterStyles = useFilterStyles()
   const location = useLocation()
   // Aviso que deja el formulario de producto al guardar (llega en el estado de la navegación).
   const [notice, setNotice] = useState(
@@ -42,11 +71,18 @@ export default function SellerProductsPage() {
   const [productToView, setProductToView] = useState(null)
   const [productToDelete, setProductToDelete] = useState(null)
   const { categories } = useCategories()
-  const { search, category, page, debouncedSearch, filtersActive, setPage, changeSearch, changeCategory, clearFilters } =
-    useListFilters()
+  const {
+    search, category, status, sort, minPrice, maxPrice, page, debouncedSearch,
+    debouncedMinPrice, debouncedMaxPrice, filtersActive, setPage, changeSearch,
+    changeCategory, changeStatus, changeSort, changeMinPrice, changeMaxPrice, clearFilters,
+  } = useListFilters()
   const { data, failed, refreshing, retry } = useSellerProducts({
     search: debouncedSearch,
     category,
+    status,
+    sort,
+    minPrice: debouncedMinPrice,
+    maxPrice: debouncedMaxPrice,
     page,
     size: PAGE_SIZE,
   })
@@ -105,7 +141,62 @@ export default function SellerProductsPage() {
           searchPlaceholder="Escribe el nombre de un producto"
           onSearchChange={changeSearch}
           onCategoryChange={changeCategory}
-        />
+        >
+          <Field label="Estado" style={{ flexGrow: 1, flexBasis: '180px' }}>
+            <Select value={status} onChange={(_event, data) => changeStatus(data.value)}>
+              <option value="">Todos los estados</option>
+              <option value="visible">Visible</option>
+              <option value="hidden">No visible</option>
+            </Select>
+          </Field>
+          <Field label="Ordenar por" style={{ flexGrow: 1, flexBasis: '200px' }}>
+            <Select value={sort} onChange={(_event, data) => changeSort(data.value)}>
+              <option value="">Sin ordenar</option>
+              <option value="price-asc">Precio: menor a mayor</option>
+              <option value="price-desc">Precio: mayor a menor</option>
+              <option value="stock-asc">Stock: menor a mayor</option>
+              <option value="stock-desc">Stock: mayor a menor</option>
+            </Select>
+          </Field>
+          <Field
+            label={`Rango de precio: ${minPrice || 0} € – ${maxPrice || 50000} €`}
+            className={filterStyles.range}
+          >
+            <div className={filterStyles.rangeControl}>
+              <input
+                className={filterStyles.rangeInput}
+                aria-label="Precio mínimo"
+                type="range"
+                min="0"
+                max="50000"
+                step="1"
+                value={minPrice}
+                onChange={(event) => {
+                  const next = Math.min(Number(event.target.value), Number(maxPrice))
+                  changeMinPrice(String(next))
+                }}
+              />
+              <input
+                className={filterStyles.rangeInput}
+                aria-label="Precio máximo"
+                type="range"
+                min="0"
+                max="50000"
+                step="1"
+                value={maxPrice}
+                onChange={(event) => {
+                  const next = Math.max(Number(event.target.value), Number(minPrice))
+                  changeMaxPrice(String(next))
+                }}
+              />
+            </div>
+          </Field>
+          <div className={filterStyles.actions}>
+            <Button appearance="subtle" onClick={clearFilters} disabled={!filtersActive}>
+              Limpiar filtros
+            </Button>
+          </div>
+        </ListFilters>
       )}
 
       {failed && (
@@ -136,9 +227,7 @@ export default function SellerProductsPage() {
           icon={<SearchInfo24Regular />}
           title="No hay productos que coincidan con los filtros"
           description="Prueba con otro nombre u otra categoría."
-        >
-          <Button onClick={clearFilters}>Limpiar filtros</Button>
-        </EmptyState>
+        />
       )}
 
       {data && data.totalItems > 0 && (
