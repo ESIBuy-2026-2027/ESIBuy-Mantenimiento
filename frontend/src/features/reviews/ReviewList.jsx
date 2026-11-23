@@ -1,11 +1,13 @@
 import PropTypes from 'prop-types'
 import { Button, MessageBar, MessageBarActions, MessageBarBody, Text, makeStyles, tokens } from '@fluentui/react-components'
 import RatingStars from '../catalog/RatingStars'
+import { reviewPropType } from '../../utils/propTypes'
 
 const formatearFecha = (fecha) => new Intl.DateTimeFormat('es-ES', {
-  day: 'numeric', month: 'long', year: 'numeric',
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
 }).format(new Date(fecha))
-import { reviewPropType } from '../../utils/propTypes'
 
 const useStyles = makeStyles({
   list: {
