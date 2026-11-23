@@ -141,7 +141,9 @@ describe('Register', () => {
   it('register_alElegirVendedor_muestraUnDesplegableConLasCategoriasYSoloPermiteElegirUna', async () => {
     await renderYElegirVendedor()
 
-    await userEvent.click(screen.getByRole('combobox', { name: /categoría/i }))
+    const selectorCategoria = screen.getByRole('combobox', { name: /categoría/i })
+    expect(selectorCategoria.tagName).toBe('BUTTON')
+    await userEvent.click(selectorCategoria)
     expect((await screen.findAllByRole('option')).map((opcion) => opcion.textContent)).toEqual(['Tecnología', 'Hogar'])
     await userEvent.click(screen.getByRole('option', { name: /tecnología/i }))
     await elegirCategoria(userEvent, /hogar/i)
@@ -149,10 +151,17 @@ describe('Register', () => {
     expect(screen.getByRole('combobox', { name: /categoría/i })).toHaveValue('Hogar')
   })
 
+  it('register_alElegirCliente_marcaElPrimerAvatarComoPredeterminado', async () => {
+    await renderYElegirCliente()
+
+    expect(screen.getByRole('radio', { name: /avatar 1/i })).toBeChecked()
+  })
+
   it('register_alElegirVendedor_permiteElegirUnAvatar', async () => {
     await renderYElegirVendedor()
 
     expect(screen.getAllByRole('radio', { name: /avatar/i })).toHaveLength(3)
+    expect(screen.getByRole('radio', { name: /avatar 1/i })).toBeChecked()
 
     await userEvent.click(screen.getByRole('radio', { name: /avatar 2/i }))
 
