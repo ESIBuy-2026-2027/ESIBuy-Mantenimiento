@@ -39,10 +39,15 @@ const useStyles = makeStyles({
   muted: {
     color: tokens.colorNeutralForeground3,
   },
+  ownItem: {
+    borderColor: tokens.colorBrandStroke1,
+    backgroundColor: tokens.colorBrandBackground2,
+    scrollMarginTop: tokens.spacingVerticalXXL,
+  },
 })
 
 // Valoraciones de un producto (CLI-03): cada una muestra puntuación, autor, fecha y comentario opcional.
-export default function ReviewList({ reviews, failed, onRetry }) {
+export default function ReviewList({ reviews, failed, onRetry, myReviewId = null }) {
   const styles = useStyles()
 
   if (failed) {
@@ -63,7 +68,11 @@ export default function ReviewList({ reviews, failed, onRetry }) {
   return (
     <ul className={styles.list} aria-label="Valoraciones de los clientes">
       {reviews.map((review) => (
-        <li key={review.id} className={styles.item}>
+        <li
+          key={review.id}
+          id={`valoracion-${review.id}`}
+          className={myReviewId === review.id ? `${styles.item} ${styles.ownItem}` : styles.item}
+        >
           <RatingStars value={review.puntuacion} size={18} />
           <Text className={styles.author}>{review.nombreCliente}</Text>
           <Text size={200} className={styles.muted}>{formatearFecha(review.fechaCreacion)}</Text>
@@ -78,4 +87,5 @@ ReviewList.propTypes = {
   reviews: PropTypes.arrayOf(reviewPropType),
   failed: PropTypes.bool.isRequired,
   onRetry: PropTypes.func.isRequired,
+  myReviewId: PropTypes.string,
 }
