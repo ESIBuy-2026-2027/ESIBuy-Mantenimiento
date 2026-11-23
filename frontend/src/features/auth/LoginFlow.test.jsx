@@ -3,6 +3,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../../mocks/server'
+import { login } from '../../api/auth'
 import { abrirSesionPorApi, renderApp } from '../../test/renderApp'
 
 const CLAVE = 'Mock-Clave-1!'
@@ -145,61 +146,34 @@ describe('Login (HU2): paso 1, credenciales', () => {
     expect(screen.queryByText(/no se ha podido iniciar sesión/i)).not.toBeInTheDocument()
   })
 
-  it('login_cuentaPendiente_muestraLaPantallaDeActivacionConSuCorreo', async () => {
+  it('login_cuentaPendiente_muestraElMensajeGenericoYNoAvanza', async () => {
     const user = userEvent.setup()
     renderApp('/login')
 
     await escribirCredenciales(user, 'pendiente@esibuy.test', CLAVE)
 
-    expect(await screen.findByRole('heading', { name: /pendiente de activación/i })).toBeInTheDocument()
-    expect(screen.getByText('pendiente@esibuy.test')).toBeInTheDocument()
-    expect(screen.getByText(/verificación por un administrador/i)).toBeInTheDocument()
+    expect(await screen.findByText('No se ha podido iniciar sesión. Revisa tus datos e inténtalo de nuevo.')).toBeInTheDocument()
+    expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument()
     expect(screen.queryByLabelText(/recibido por correo/i)).not.toBeInTheDocument()
-    expect(screen.queryByLabelText(/^contraseña/i)).not.toBeInTheDocument()
-  })
-
-  it('login_cuentaPendiente_noMuestraUnMensajeDeError', async () => {
-    const user = userEvent.setup()
-    renderApp('/login')
-
-    await escribirCredenciales(user, 'pendiente@esibuy.test', CLAVE)
-    await screen.findByRole('heading', { name: /pendiente de activación/i })
-
-    expect(screen.queryByText(/no se ha podido iniciar sesión/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/bloqueada/i)).not.toBeInTheDocument()
-  })
-
-  it('login_cuentaPendiente_volverRecuperaElFormularioVacio', async () => {
-    const user = userEvent.setup()
-    renderApp('/login')
-
-    await escribirCredenciales(user, 'pendiente@esibuy.test', CLAVE)
-    await user.click(await screen.findByRole('button', { name: /volver al inicio de sesión/i }))
-
-    expect(await screen.findByLabelText(/correo electrónico/i)).toHaveValue('')
-    expect(screen.getByLabelText(/^contraseña/i)).toHaveValue('')
+    expect(screen.queryByLabelText(/código de microsoft authenticator/i)).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: /pendiente de activación/i })).not.toBeInTheDocument()
   })
 
-  it('login_cuentaPendienteConContrasenaIncorrecta_noRevelaQueEstaPendiente', async () => {
-    const user = userEvent.setup()
-    renderApp('/login')
-
-    await escribirCredenciales(user, 'pendiente@esibuy.test', 'otra-clave')
-
-    expect(await screen.findByText(/no se ha podido iniciar sesión/i)).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: /pendiente de activación/i })).not.toBeInTheDocument()
-  })
-
-  it('login_cuentaPendiente_unaVezActivadaPermiteEntrarTrasVolver', async () => {
+  it('login_cuentaPendiente_muestraElMismoMensajeQueCredencialesIncorrectas', async () => {
     const user = userEvent.setup()
     renderApp('/login')
 
     await escribirCredenciales(user, 'pendiente@esibuy.test', CLAVE)
-    await user.click(await screen.findByRole('button', { name: /volver al inicio de sesión/i }))
-    await completarLogin(user, 'cliente@esibuy.test')
 
-    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/products$')))
+    expect(await screen.findByText('No se ha podido iniciar sesión. Revisa tus datos e inténtalo de nuevo.')).toBeInTheDocument()
+  })
+
+  it('login_cuentaPendiente_mockDevuelve401SinCodigoQueIdentifiqueLaCuenta', async () => {
+    await expect(login({ email: 'pendiente@esibuy.test', password: CLAVE })).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 401,
+      code: null,
+    })
   })
 
   it('login_tras_cincoIntentosFallidos_muestraMensajeDeBloqueo', async () => {
