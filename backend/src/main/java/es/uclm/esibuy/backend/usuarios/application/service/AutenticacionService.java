@@ -20,7 +20,6 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.BloqueoPorIntentosExcept
 import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.EmailInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.model.CodigoVerificacion;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
@@ -73,7 +72,7 @@ public class AutenticacionService implements AutenticacionUseCase {
         }
 
         if (usuario.estaPendiente()) {
-            throw new CuentaPendienteException("La cuenta está pendiente de verificación.");
+            throw new CredencialesInvalidasException(MENSAJE_CREDENCIALES_INVALIDAS);
         }
 
         if (!usuario.estaActivo()) {
