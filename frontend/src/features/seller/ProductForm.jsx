@@ -14,7 +14,7 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { Save20Regular } from '@fluentui/react-icons'
+import { Camera20Regular, Save20Regular } from '@fluentui/react-icons'
 import CategoryCombobox from '../../components/CategoryCombobox'
 import LinkButton from '../../components/LinkButton'
 import { PATHS } from '../../routes/paths'
@@ -31,6 +31,16 @@ const useStyles = makeStyles({
     boxSizing: 'border-box', padding: tokens.spacingVerticalXXL,
     backgroundColor: tokens.colorNeutralBackground1, border: `1px solid ${tokens.colorNeutralStroke2}`,
     borderRadius: tokens.borderRadiusXLarge, boxShadow: tokens.shadow4,
+  },
+  control: {
+    borderRadius: tokens.borderRadiusLarge,
+    boxShadow: tokens.shadow2,
+    transitionProperty: 'border-color, box-shadow',
+    transitionDuration: tokens.durationFaster,
+    '&:focus-within': {
+      borderColor: tokens.colorBrandStroke1,
+      boxShadow: `0 0 0 1px ${tokens.colorBrandStroke1}`,
+    },
   },
   pair: {
     display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -49,6 +59,43 @@ const useStyles = makeStyles({
   },
   actions: { display: 'flex', flexWrap: 'wrap', gap: tokens.spacingHorizontalM },
   preview: { maxWidth: '240px', maxHeight: '180px', objectFit: 'contain', borderRadius: tokens.borderRadiusMedium },
+  imageDropzone: {
+    position: 'relative',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: tokens.spacingVerticalS,
+    minHeight: '150px',
+    padding: tokens.spacingVerticalXL,
+    border: `1px dashed ${tokens.colorNeutralStroke1}`,
+    borderRadius: tokens.borderRadiusXLarge,
+    backgroundColor: tokens.colorNeutralBackground2,
+    color: tokens.colorNeutralForeground2,
+    textAlign: 'center',
+    cursor: 'pointer',
+    transitionProperty: 'border-color, background-color, box-shadow',
+    transitionDuration: tokens.durationFaster,
+    '&:hover, &:focus-within': {
+      borderColor: tokens.colorBrandStroke1,
+      boxShadow: tokens.shadow2,
+    },
+  },
+  imageDropzoneActive: {
+    borderColor: tokens.colorBrandStroke1,
+    backgroundColor: tokens.colorBrandBackground2,
+    boxShadow: `0 0 0 1px ${tokens.colorBrandStroke1}`,
+  },
+  imageInput: {
+    position: 'absolute',
+    inset: 0,
+    width: '100%',
+    height: '100%',
+    opacity: 0,
+    cursor: 'pointer',
+  },
+  imageIcon: { color: tokens.colorBrandForeground1 },
+  imageTitle: { fontWeight: tokens.fontWeightSemibold },
 })
 
 export default function ProductForm({ initialValues, categories, saving, saveError, takenName = null, onSubmit }) {
@@ -58,7 +105,9 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
   const [imageFile, setImageFile] = useState(null)
   const [imageError, setImageError] = useState(null)
   const [previewUrl, setPreviewUrl] = useState(null)
+  const [draggingImage, setDraggingImage] = useState(false)
   const previewUrlRef = useRef(null)
+  const imageInputRef = useRef(null)
   const errors = attempted ? validateProduct(values) : {}
   const nameTaken = takenName !== null && values.nombre.trim().toLowerCase() === takenName.toLowerCase()
   const nameError = errors.nombre ?? (nameTaken ? NOMBRE_EN_USO : undefined)
@@ -82,31 +131,36 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
   const setField = (field) => (value) => setValues((current) => ({ ...current, [field]: value }))
   const onText = (field) => (_event, data) => setField(field)(data.value)
 
-  const handleImageChange = (event) => {
-    const file = event.target.files?.[0] ?? null
+  const handleImageFile = (file, inputElement = null) => {
     setImageError(null)
-    if (!file) {
-      setImageFile(null)
-      updatePreview(null)
-      return
-    }
+    if (!file) return
     if (!TIPOS_IMAGEN.includes(file.type)) {
       setImageFile(null)
       updatePreview(null)
       setImageError('Selecciona una imagen JPG o PNG.')
-      event.target.value = ''
+      if (inputElement) inputElement.value = ''
       return
     }
     if (file.size > TAMANO_MAXIMO_IMAGEN) {
       setImageFile(null)
       updatePreview(null)
       setImageError('La imagen no puede superar los 5 MB.')
-      event.target.value = ''
+      if (inputElement) inputElement.value = ''
       return
     }
     setImageFile(file)
     updatePreview(file)
     setField('imagen')('')
+  }
+
+  const handleImageChange = (event) => {
+    handleImageFile(event.target.files?.[0] ?? null, event.target)
+  }
+
+  const handleImageDrop = (event) => {
+    event.preventDefault()
+    setDraggingImage(false)
+    handleImageFile(event.dataTransfer.files?.[0] ?? null, imageInputRef.current)
   }
 
   const handleSubmit = (event) => {
@@ -121,29 +175,49 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
     <form className={styles.form} onSubmit={handleSubmit} noValidate>
       {saveError && <MessageBar intent="error"><MessageBarBody>{saveError}</MessageBarBody></MessageBar>}
       <Field label="Nombre" required validationState={nameError ? 'error' : 'none'} validationMessage={nameError}>
-        <Input value={values.nombre} onChange={onText('nombre')} maxLength={120} />
+        <Input className={styles.control} value={values.nombre} onChange={onText('nombre')} maxLength={120} />
       </Field>
       <Field label="Categoría" required validationState={errors.categoriaId ? 'error' : 'none'} validationMessage={errors.categoriaId}>
-        <CategoryCombobox value={values.categoriaId} categories={categories}
+        <CategoryCombobox className={styles.control} value={values.categoriaId} categories={categories}
           searchable={false} placeholder="Selecciona una categoría" onChange={setField('categoriaId')} />
       </Field>
       <div className={styles.pair}>
         <Field label="Precio (€)" required validationState={errors.precio ? 'error' : 'none'} validationMessage={errors.precio}>
-          <Input type="text" inputMode="numeric" pattern="[0-9]*" value={values.precio}
+          <Input className={styles.control} type="text" inputMode="numeric" pattern="[0-9]*" value={values.precio}
             onChange={(_event, data) => setField('precio')(data.value.replace(/\D/g, ''))} />
         </Field>
         <Field label="Stock" hint="Si lo dejas vacío, el stock será 0."
           validationState={errors.stock ? 'error' : 'none'} validationMessage={errors.stock}>
-          <Input type="text" inputMode="numeric" pattern="[0-9]*" value={values.stock}
+          <Input className={styles.control} type="text" inputMode="numeric" pattern="[0-9]*" value={values.stock}
             onChange={(_event, data) => setField('stock')(data.value.replace(/\D/g, ''))} />
         </Field>
       </div>
       <Field label="Descripción" validationState={errors.descripcion ? 'error' : 'none'} validationMessage={errors.descripcion}>
-        <Textarea value={values.descripcion} onChange={onText('descripcion')} rows={4} resize="vertical" />
+        <Textarea className={styles.control} value={values.descripcion} onChange={onText('descripcion')} rows={4} resize="vertical" />
       </Field>
       <Field label="Añade una imagen" hint="Formatos JPG o PNG. Tamaño máximo: 5 MB."
         validationState={imageError ? 'error' : 'none'} validationMessage={imageError}>
-        <input aria-label="Archivo de imagen" type="file" accept="image/jpeg,image/png" onChange={handleImageChange} />
+        <label
+          className={`${styles.imageDropzone} ${draggingImage ? styles.imageDropzoneActive : ''}`}
+          onDragEnter={(event) => { event.preventDefault(); setDraggingImage(true) }}
+          onDragOver={(event) => { event.preventDefault(); setDraggingImage(true) }}
+          onDragLeave={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setDraggingImage(false)
+          }}
+          onDrop={handleImageDrop}
+        >
+          <Camera20Regular className={styles.imageIcon} fontSize={28} />
+          <Text className={styles.imageTitle}>Arrastra una imagen aquí</Text>
+          <Text>o haz clic para seleccionar un archivo</Text>
+          <input
+            ref={imageInputRef}
+            className={styles.imageInput}
+            aria-label="Archivo de imagen"
+            type="file"
+            accept="image/jpeg,image/png"
+            onChange={handleImageChange}
+          />
+        </label>
       </Field>
       {(previewUrl || values.imagen) && (
         <div>
@@ -153,9 +227,9 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
       )}
       <div className={styles.pair}>
         <DiscountField label="Descuento general (%)" percent={values.descuentoPorcentaje}
-          error={errors.descuentoPorcentaje} onPercentChange={setField('descuentoPorcentaje')} />
+          error={errors.descuentoPorcentaje} inputClassName={styles.control} onPercentChange={setField('descuentoPorcentaje')} />
         <DiscountField label="Descuento adicional Premium (%)" percent={values.descuentoPremiumPorcentaje}
-          error={errors.descuentoPremiumPorcentaje} onPercentChange={setField('descuentoPremiumPorcentaje')} />
+          error={errors.descuentoPremiumPorcentaje} inputClassName={styles.control} onPercentChange={setField('descuentoPremiumPorcentaje')} />
       </div>
       <div className={styles.discountHelp}>
         <Text className={styles.discountHint}>
