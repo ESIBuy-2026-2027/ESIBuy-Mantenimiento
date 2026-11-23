@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { server } from '../mocks/server'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
@@ -93,6 +95,37 @@ describe('PremiumPage (HU45): ventajas de ESIBuy Premium', () => {
     expect(segundaConfirmacion).toHaveTextContent(/envíos sin coste/i)
     expect(segundaConfirmacion).toHaveTextContent(/prioridad en los envíos/i)
     expect(within(segundaConfirmacion).getByRole('button', { name: /sí, cancelar premium/i })).toBeDisabled()
+  })
+
+  it('CLI-02: confirmar la baja cambia la pantalla a cliente Estándar', async () => {
+    const usuario = userEvent.setup()
+    await abrirPremium('cliente@esibuy.test')
+
+    await usuario.click(await screen.findByRole('button', { name: /cancelar mi suscripción/i }))
+    await usuario.click(await screen.findByRole('button', { name: /^continuar$/i }))
+    await usuario.click(await screen.findByRole('button', { name: /sí, cancelar premium/i }))
+
+    expect(await screen.findByRole('link', { name: /hazte premium/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /cancelar mi suscripción/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+  })
+
+  it('CLI-02: si falla la cancelación, informa del error y permite reintentar', async () => {
+    const usuario = userEvent.setup()
+    server.use(
+      http.delete('/api/perfil/premium', () =>
+        HttpResponse.json({ mensaje: 'Error interno' }, { status: 500 }),
+      ),
+    )
+    await abrirPremium('cliente@esibuy.test')
+
+    await usuario.click(await screen.findByRole('button', { name: /cancelar mi suscripción/i }))
+    await usuario.click(await screen.findByRole('button', { name: /^continuar$/i }))
+    await usuario.click(await screen.findByRole('button', { name: /sí, cancelar premium/i }))
+
+    expect(await screen.findByText(/no se ha podido cancelar premium/i)).toBeInTheDocument()
+    expect(screen.getByRole('alertdialog', { name: /ventajas que perderás/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /sí, cancelar premium/i })).toBeEnabled()
   })
 
   it('CLI-02: mantener Premium en la segunda confirmación cierra el diálogo sin cambiar el estado', async () => {
