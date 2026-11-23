@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
@@ -481,6 +481,38 @@ describe('SellerProductFormPage (HU34): edición', () => {
 
 
 describe('SellerProductFormPage: subida de imágenes', () => {
+  it('permite arrastrar y soltar una imagen en el área de carga', async () => {
+    const user = userEvent.setup()
+    const llamadas = { alta: 0, subida: 0 }
+
+    server.use(
+      http.post('/api/seller/products', async ({ request }) => {
+        llamadas.alta += 1
+        await request.json()
+        return HttpResponse.json({ id: 'p-drop' }, { status: 201 })
+      }),
+      http.post('/api/seller/products/p-drop/image', async () => {
+        llamadas.subida += 1
+        return HttpResponse.json({ id: 'p-drop' })
+      }),
+    )
+
+    await abrirFormulario()
+    await rellenarFormularioValido(user)
+    const zonaCarga = screen.getByText('Arrastra una imagen aquí').closest('label')
+    const archivo = new File(['contenido png'], 'foto.png', { type: 'image/png' })
+
+    fireEvent.dragOver(zonaCarga, { dataTransfer: { files: [archivo] } })
+    expect(zonaCarga).toHaveClass(/./)
+    fireEvent.drop(zonaCarga, { dataTransfer: { files: [archivo] } })
+
+    expect(await screen.findByAltText('Vista previa de la imagen del producto')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+    await esperarRuta('/seller/products')
+
+    expect(llamadas).toEqual({ alta: 1, subida: 1 })
+  })
+
   it('sube la imagen seleccionada después de crear el producto', async () => {
     const user = userEvent.setup()
     const llamadas = { alta: 0, subida: 0 }
