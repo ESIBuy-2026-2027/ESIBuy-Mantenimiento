@@ -5,7 +5,7 @@ import { BuildingShop20Regular, Heart20Filled, Heart20Regular } from '@fluentui/
 import { formatRating } from '../../utils/format'
 import AddToCartButton from '../cart/AddToCartButton'
 import QuantityStepper from '../cart/QuantityStepper'
-import { productDetailPropType, reviewPropType } from '../../utils/propTypes'
+import { productDetailPropType, reviewPropType, reviewStatusPropType } from '../../utils/propTypes'
 import ReviewForm from '../reviews/ReviewForm'
 import ReviewList from '../reviews/ReviewList'
 import { reviewSummary } from '../reviews/reviewSummary'
@@ -231,6 +231,10 @@ export default function ProductDetail({
   reviews = null,
   reviewsFailed = false,
   onRetryReviews,
+  reviewStatus = null,
+  reviewStatusFailed = false,
+  onRetryReviewStatus,
+  onReviewCreated,
   favorite = false,
   onAddFavorite,
   onRemoveFavorite,
@@ -391,7 +395,20 @@ export default function ProductDetail({
               </div>
             </div>
           )}
-          <ReviewForm productId={product.id} onCreated={onRetryReviews} />
+          {reviewStatusFailed ? (
+            <div>
+              <Text role="alert">No se ha podido comprobar si puedes valorar este producto.</Text>
+              <Button appearance="secondary" onClick={onRetryReviewStatus}>Reintentar</Button>
+            </div>
+          ) : !reviewStatus ? (
+            <Text className={styles.muted}>Comprobando si puedes valorar este producto…</Text>
+          ) : reviewStatus.haValorado ? (
+            <Text className={styles.muted}>Ya has valorado este producto.</Text>
+          ) : reviewStatus.haComprado ? (
+            <ReviewForm productId={product.id} onCreated={onReviewCreated} />
+          ) : (
+            <Text className={styles.muted}>Solo puedes valorar productos que has comprado.</Text>
+          )}
           <ReviewList reviews={reviews} failed={reviewsFailed} onRetry={onRetryReviews} />
         </section>
       </div>
@@ -405,6 +422,10 @@ ProductDetail.propTypes = {
   reviews: PropTypes.arrayOf(reviewPropType),
   reviewsFailed: PropTypes.bool,
   onRetryReviews: PropTypes.func.isRequired,
+  reviewStatus: reviewStatusPropType,
+  reviewStatusFailed: PropTypes.bool,
+  onRetryReviewStatus: PropTypes.func.isRequired,
+  onReviewCreated: PropTypes.func.isRequired,
   favorite: PropTypes.bool,
   onAddFavorite: PropTypes.func,
   onRemoveFavorite: PropTypes.func,
