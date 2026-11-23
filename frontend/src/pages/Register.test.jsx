@@ -187,8 +187,8 @@ describe('Register', () => {
   it('register_alIntroducirNombreConNumeros_muestraError', async () => {
     await renderYElegirCliente()
     await rellenarFormularioValido()
-    await userEvent.clear(screen.getByLabelText(/^nombre$/i))
-    await userEvent.type(screen.getByLabelText(/^nombre$/i), 'Ana2')
+    await userEvent.clear(screen.getByLabelText(/^nombre/i))
+    await userEvent.type(screen.getByLabelText(/^nombre/i), 'Ana2')
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
     expect(screen.getByText(/solo letras, espacios, guiones o apóstrofos/i)).toBeInTheDocument()
     expect(registrarCliente).not.toHaveBeenCalled()
@@ -197,8 +197,8 @@ describe('Register', () => {
   it('register_alIntroducirApellidosConNumeros_muestraError', async () => {
     await renderYElegirCliente()
     await rellenarFormularioValido()
-    await userEvent.clear(screen.getByLabelText(/^apellidos$/i))
-    await userEvent.type(screen.getByLabelText(/^apellidos$/i), 'García2')
+    await userEvent.clear(screen.getByLabelText(/^apellidos/i))
+    await userEvent.type(screen.getByLabelText(/^apellidos/i), 'García2')
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
     expect(screen.getByText(/solo letras, espacios, guiones o apóstrofos/i)).toBeInTheDocument()
     expect(registrarCliente).not.toHaveBeenCalled()
@@ -674,7 +674,7 @@ describe('Register', () => {
     expect(await screen.findByText('La contraseña no puede contener tu nombre, tus apellidos ni tu correo electrónico'))
       .toBeInTheDocument()
     expect(screen.getByLabelText(/^contraseña/i)).toHaveAccessibleDescription(
-      'La contraseña no puede contener tu nombre, tus apellidos ni tu email'
+      'La contraseña no puede contener tu nombre, tus apellidos ni tu correo electrónico'
     )
   })
 

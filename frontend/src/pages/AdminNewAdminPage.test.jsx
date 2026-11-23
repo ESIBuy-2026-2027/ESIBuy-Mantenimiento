@@ -35,7 +35,7 @@ describe('AdminNewAdminPage (HU21): formulario', () => {
     expect(screen.getByLabelText(/^password/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^repetir password/i)).toBeInTheDocument()
     expect(screen.getAllByRole('radio')).toHaveLength(3)
-    expect(screen.getByRole('list', { name: /requisitos del password/i })).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: /requisitos de la contraseña/i })).toBeInTheDocument()
   })
 
   it('adminNewAdminPage_marcaComoObligatoriosLosCamposObligatorios', async () => {
@@ -126,7 +126,7 @@ describe('AdminNewAdminPage (HU21): validaciones', () => {
     await user.type(screen.getByLabelText(/^repetir password/i), 'Extra')
     await crear(user)
 
-    expect(screen.getByText(/los passwords no coinciden/i)).toBeInTheDocument()
+    expect(screen.getByText(/las contraseñas no coinciden/i)).toBeInTheDocument()
   })
 })
 
@@ -176,7 +176,7 @@ describe('AdminNewAdminPage (HU21): alta', () => {
     await rellenarFormularioValido(user, { email: 'cliente@esibuy.test' })
     await crear(user)
 
-    expect(await screen.findByText(/este email ya está registrado/i)).toBeInTheDocument()
+    expect(await screen.findByText(/este correo electrónico ya está registrado/i)).toBeInTheDocument()
     expect(screen.queryByText(/administrador creado/i)).not.toBeInTheDocument()
   })
 
@@ -265,7 +265,7 @@ describe('AdminNewAdminPage (HU21): acceso', () => {
     await rellenarFormularioValido(user)
     await crear(user)
 
-    expect(await screen.findByText('La contraseña no puede contener tu nombre, tus apellidos ni tu email'))
+    expect(await screen.findByText('La contraseña no puede contener tu nombre, tus apellidos ni tu correo electrónico'))
       .toBeInTheDocument()
     expect(screen.queryByText(/no se ha podido crear el administrador/i)).not.toBeInTheDocument()
   })
