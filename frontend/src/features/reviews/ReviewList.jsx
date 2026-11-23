@@ -1,6 +1,10 @@
 import PropTypes from 'prop-types'
 import { Button, MessageBar, MessageBarActions, MessageBarBody, Text, makeStyles, tokens } from '@fluentui/react-components'
 import RatingStars from '../catalog/RatingStars'
+
+const formatearFecha = (fecha) => new Intl.DateTimeFormat('es-ES', {
+  day: 'numeric', month: 'long', year: 'numeric',
+}).format(new Date(fecha))
 import { reviewPropType } from '../../utils/propTypes'
 
 const useStyles = makeStyles({
@@ -21,6 +25,10 @@ const useStyles = makeStyles({
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     borderRadius: tokens.borderRadiusXLarge,
   },
+  author: {
+    color: tokens.colorNeutralForeground2,
+    fontWeight: tokens.fontWeightSemibold,
+  },
   comment: {
     whiteSpace: 'pre-line',
     overflowWrap: 'anywhere',
@@ -31,8 +39,7 @@ const useStyles = makeStyles({
   },
 })
 
-// Valoraciones de un producto (HU13, T368): cada una con sus estrellas y, si lo tiene, su comentario. No se sabe quién
-// la escribió ni cuándo: el backend no lo devuelve. Mientras llegan no se muestra nada.
+// Valoraciones de un producto (CLI-03): cada una muestra puntuación, autor, fecha y comentario opcional.
 export default function ReviewList({ reviews, failed, onRetry }) {
   const styles = useStyles()
 
@@ -56,6 +63,8 @@ export default function ReviewList({ reviews, failed, onRetry }) {
       {reviews.map((review) => (
         <li key={review.id} className={styles.item}>
           <RatingStars value={review.puntuacion} size={18} />
+          <Text className={styles.author}>{review.nombreCliente}</Text>
+          <Text size={200} className={styles.muted}>{formatearFecha(review.fechaCreacion)}</Text>
           {review.comentario && <Text className={styles.comment}>{review.comentario}</Text>}
         </li>
       ))}
