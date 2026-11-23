@@ -4,20 +4,33 @@ Plataforma web de comercio electrónico que permite a usuarios registrados busca
 
 ## Stack
 
-- Lenguaje: Java
-- Framework / runtime: Spring Framework (Spring Boot) para el backend
-- Base de datos: MongoDB
-- Tests: JUnit (enfoque TDD)
-- Frontend: HTML y CSS, con apoyo de GitHub Copilot o cualquier otra herramienta de IA generativa para generación de componentes de interfaz y mejora de usabilidad
+- Backend: Java 25 + Spring Boot 4.1.1 (Maven con wrapper `mvnw`), Spring Data MongoDB, Spring Security, Validation, Web MVC, Lombok
+- Base de datos: MongoDB Atlas (cloud); los tests usan MongoDB en Docker (Testcontainers)
+- Tests: JUnit (enfoque TDD) en backend; Vitest + React Testing Library + MSW en frontend
+- Frontend: React 19 + Vite 8, JavaScript puro (sin TypeScript), con mocks de la API (MSW) activables con `VITE_USE_MOCKS`
+- Calidad: SonarQube y SonarLint; CI en GitHub Actions; despliegue en Render
 - Gestión de proyecto: SCRUM, con planificación de tareas en Azure DevOps
 - Control de versiones: Git
 
+## Puesta en marcha
+
+Programas, variables de entorno, mocks del frontend y arranque: ver `docs/puesta-en-marcha.md`. Nunca se commitea `.env` ni se copian secretos a archivos versionados, issues, PR o chats.
+
+Variables del backend (en `backend/.env`, que Spring Boot importa al arrancar con `spring.config.import`; las del sistema tienen prioridad):
+
+- Obligatorias: `MONGODB_URI` (Atlas, base `EsiBuy`), `ESIBUY_TOTP_CLAVE_CIFRADO` y `ESIBUY_PAGOS_CLAVE_CIFRADO` (AES-256, Base64 de 32 bytes, distintas entre sí), `ESIBUY_PASSWORD_PEPPER` (Base64 de 32 bytes), `BREVO_SMTP_KEY`, `VIRUSTOTAL_API_KEY`.
+- Opcionales: `ESIBUY_MAIL_PUERTO` (587; 2525 en Render), `ESIBUY_SESION_INACTIVIDAD` (15m), `PORT` (8080), `SONAR_TOKEN` (solo scripts de Sonar).
+- Los tests no usan ninguna: `MongoTestcontainersConfig` registra valores de prueba y MongoDB en Docker.
+
 ## Comandos
 
-- `mvn spring-boot:run` — arranca el servidor en local
-- `mvn test` — ejecuta los tests JUnit (deben pasar antes de cada commit)
-- `mvn sonar:sonar` / SonarLint — revisa la calidad y el estilo del código (antes de cada PR)
-- `mvn clean package` — compila para producción
+Backend (`backend/`, siempre con el wrapper de Maven; `mvnw.cmd` en Windows):
+
+- `./mvnw spring-boot:run` — arranca el servidor en local (lee `backend/.env`)
+- `./mvnw test` — ejecuta los tests JUnit (deben pasar antes de cada commit; necesitan Docker en marcha)
+- `./mvnw verify` — tests + cobertura JaCoCo (el build falla por debajo del 60 %)
+- Sonar / SonarLint — revisa la calidad y el estilo del código (antes de cada PR)
+- `./mvnw clean package` — compila para producción
 
 Frontend (`frontend/`, React + Vite, tests con Vitest):
 
@@ -28,18 +41,23 @@ Frontend (`frontend/`, React + Vite, tests con Vitest):
 
 ## Estructura del proyecto
 
-- `src/main/java/` — código fuente del backend, organizado en módulos funcionales con arquitectura hexagonal (ver sección "Arquitectura del backend")
-- `src/main/resources/` — configuración de la aplicación, vistas y recursos estáticos (HTML/CSS)
-- `src/test/java/` — pruebas unitarias e de integración con JUnit
+- `backend/` — Spring Boot
+  - `src/main/java/es/uclm/esibuy/backend/` — código fuente, organizado en módulos funcionales con arquitectura hexagonal (ver sección "Arquitectura del backend"): `carrito`, `categorias`, `deseos`, `direcciones`, `estadisticas`, `incidencias`, `metodospago`, `pedidos`, `preferencias`, `productos`, `usuarios`, `valoraciones` y `shared`
+  - `src/main/resources/` — configuración de la aplicación (`application.properties`)
+  - `src/test/java/es/uclm/esibuy/backend/` — pruebas unitarias y de integración con JUnit
+- `frontend/` — React + Vite
+- `docs/` — documentación (puesta en marcha, requisitos, calidad, seguridad, contratos de API, despliegue)
+
+El proyecto es **heredado de otro equipo** y ya está desarrollado: estamos en fase de mantenimiento y evolución.
 
 ## Arquitectura del backend
 
-El backend (Java + Spring, MongoDB) sigue una arquitectura **hexagonal (puertos y adaptadores) organizada por módulos funcionales**. Cada funcionalidad del sistema es un módulo bajo el paquete raíz `es.uclm.esibuy` (p. ej. `usuarios` o `catalogo`), y cada módulo contiene su propio hexágono con tres capas: dominio, aplicación e infraestructura.
+El backend (Java + Spring, MongoDB) sigue una arquitectura **hexagonal (puertos y adaptadores) organizada por módulos funcionales**. Cada funcionalidad del sistema es un módulo bajo el paquete raíz `es.uclm.esibuy.backend` (p. ej. `usuarios` o `catalogo`), y cada módulo contiene su propio hexágono con tres capas: dominio, aplicación e infraestructura.
 
 ### Estructura de paquetes (backend)
 
 ```
-es.uclm.esibuy
+es.uclm.esibuy.backend
 ├── usuarios
 │   ├── domain
 │   │   ├── model            Entidades, objetos de valor y enumerados
@@ -65,11 +83,11 @@ Los módulos concretos que existan más allá de los ejemplos (`usuarios`, `cata
 Las dependencias apuntan **siempre hacia el interior del hexágono**:
 
 - `domain` no depende de ninguna otra capa ni de ningún framework: **Java puro**, sin anotaciones de Spring, Spring Data ni MongoDB.
-- `application` depende únicamente de `domain`. Define los puertos y orquesta los casos de uso. La **única anotación de Spring permitida es `@Service`**.
+- `application` depende únicamente de `domain`. Define los puertos y orquesta los casos de uso. Las **únicas anotaciones de Spring permitidas son `@Service` y `@PreAuthorize`** (seguridad en la capa de negocio, con las constantes de `shared.seguridad`).
 - `infrastructure` depende de `application` y de `domain`. Es la **única capa** que conoce Spring Web, Spring Security, MongoDB y cualquier servicio externo.
 - Ninguna clase de `domain` o `application` puede importar nada de `infrastructure`.
 - No exponer entidades de dominio ni documentos de MongoDB directamente en la API: usar DTOs en el borde y mapear en los adaptadores.
-- La seguridad (RBAC, 2FA/3FA, sesión) se aplica en el borde (configuración de Spring Security en `shared` / adaptadores de entrada); las reglas de negocio que dependan del rol (p. ej. valorar solo si se ha comprado) viven en el dominio/aplicación.
+- La seguridad se aplica en dos niveles: en el borde (configuración de Spring Security en `shared`: rutas, sesión, CSRF, 2FA/3FA) y en la capa de negocio (`@PreAuthorize` en cada método de los servicios de aplicación, denegar por defecto; sin permiso, 403 con `ACCESS_DENIED`). Detalle en `CLAUDE.md` y `docs/seguridad/seguridad-capa-negocio.md`. Las reglas de negocio que dependan del rol (p. ej. valorar solo si se ha comprado) viven en el dominio/aplicación.
 
 ### Responsabilidad de cada capa
 
@@ -108,7 +126,9 @@ Las dependencias apuntan **siempre hacia el interior del hexágono**:
 ### Pruebas por capa
 
 - Dominio y servicios de aplicación se prueban con JUnit **sin levantar el contexto de Spring**, sustituyendo los puertos de salida por dobles de prueba.
+- Las anotaciones `@PreAuthorize` se prueban con un contexto mínimo (sin MongoDB), `@EnableMethodSecurity` y `@WithMockUser`: rol correcto pasa, los demás reciben 403 y sin sesión se rechaza.
 - Los adaptadores se prueban con **tests de integración**.
+- Cada test lleva un `@DisplayName` que empieza por el ID de su caso de prueba (`HU<n>-CP<nn>: ...`) y se traza en `docs/calidad/matriz-trazabilidad.md` en el mismo PR. Un archivo de tests por clase.
 
 ### Reglas al generar o modificar código
 
@@ -145,6 +165,24 @@ Las dependencias apuntan **siempre hacia el interior del hexágono**:
 - **Obligatorio**: `tipo/descripcion` (`feature/`, `chore/`…; ej. `chore/configuracion-ia`), sin segmento de área.
 - **Recomendado (buena práctica, no obligatorio)**: tras el tipo, indicar la historia de usuario y la task de Azure Boards: `tipo/USx-Tx-descripcion`. Ej.: `feature/US12-T45-alta-producto-service`.
 - **Recomendado (pendiente de acordar, no obligatorio)**: cada rama debería corresponder a una **task**, no a una historia de usuario completa.
+
+## Commits, PR e integración continua
+
+- Flujo git-flow: las ramas parten de `develop` y los PR apuntan a `develop`. Integrar `develop` en `main` despliega en Render (vía el pipeline de Sonar de Azure).
+- Mensajes de commit: `tipo(area): descripción AB#<id>` con el ID real de Azure Boards (nunca el placeholder `AB#ID`). Las excepciones acordadas que van sin `AB#` están en `CLAUDE.md` (Convenciones de Git).
+- Antes de cada commit, `./mvnw test` en verde; antes de cada PR, Sonar/SonarLint y `npm run lint` si se toca el frontend. Plantilla de PR en `.github/pull_request_template.md`.
+- CI (`.github/workflows/ci.yml`): en cada push y PR a `develop` o `main`, `mvn -B verify` (tests y cobertura del 60 %) y lint y build del frontend.
+
+## Trampas conocidas (entorno local)
+
+- **JDK 25 obligatorio**: con otro JDK, Maven falla en `maven-toolchains-plugin` (`Cannot find matching toolchain definitions ... [25,26)`). Basta con `JAVA_HOME` apuntando al 25; no hace falta `toolchains.xml`. Maven no hace falta instalarlo: el wrapper lo descarga.
+- **Docker solo para los tests**: los tests del backend levantan MongoDB con Testcontainers; sin Docker en marcha fallan. Arrancar la aplicación no lo necesita (usa Atlas).
+- **Claves compartidas**: las claves AES (TOTP y pagos) y el pepper deben ser las mismas para todo el que use el clúster compartido; con otras no se pueden comprobar contraseñas ni descifrar TOTP o métodos de pago ya guardados.
+- **Mocks del frontend**: `frontend/.env.development` activa MSW (`VITE_USE_MOCKS=true`). Para trabajar contra el backend real, cada uno crea `frontend/.env.development.local` con `VITE_USE_MOCKS=false` (ignorado por `*.local`); no se modifica `.env.development`. El proxy de Vite envía `/api` a `http://localhost:8080`.
+- **Tests de Vitest inestables**: con toda la batería (y más si la máquina va cargada) fallan algunos al azar (`SellerDetailDialog`, `SellerProductFormPage`, `productValues`…); se repiten solos antes de darlos por rotos.
+- **Sonar**: el servidor (`seralu4.esi.uclm.es`) solo es accesible por la VPN de la UCLM. Los scripts `backend/scripts/sonar.ps1` y `frontend/scripts/sonar.ps1` leen `SONAR_TOKEN` de `backend/.env`; el del backend no ejecuta `./mvnw verify` antes, así que sin ese paso previo el análisis sale sin cobertura.
+- **Render**: `render.yaml` no declara `ESIBUY_PASSWORD_PEPPER`; el backend desplegado solo arranca si esa variable está puesta a mano en el panel de Render. Cambiar `render.yaml` se consulta antes.
+- **Secretos en el historial**: el commit `ce5d4b4` (rama `feature/gestion_pedidos_vendedor`) subió un `.env` en la raíz con secretos reales; hay que darlos por expuestos y rotarlos. `backend/.gitignore` ignora `backend/.env`, pero un `.env` en la raíz no está ignorado.
 
 ## Flujo de trabajo
 
