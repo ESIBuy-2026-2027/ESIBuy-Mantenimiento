@@ -134,6 +134,7 @@ export const profileHandlers = [
       return HttpResponse.json({ mensaje: 'El cliente ya es Premium', code: 'ALREADY_PREMIUM' }, { status: 400 })
     }
 
+    canceladosPremium.delete(usuario.id)
     pasadosAPremium.add(usuario.id)
     return HttpResponse.json(perfilDe(usuario))
   }),
