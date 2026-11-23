@@ -67,8 +67,9 @@ class SeguridadValoracionesServiceTest {
         }
 
         @Bean
-        ConsultaValoracionesUseCase consultaValoraciones(ValoracionRepositoryPort valoracionRepository) {
-            return new ConsultaValoracionesService(valoracionRepository);
+        ConsultaValoracionesUseCase consultaValoraciones(ValoracionRepositoryPort valoracionRepository,
+                ClienteEnSesionPort clienteEnSesion, ComprasPort compras) {
+            return new ConsultaValoracionesService(valoracionRepository, clienteEnSesion, compras);
         }
     }
 
