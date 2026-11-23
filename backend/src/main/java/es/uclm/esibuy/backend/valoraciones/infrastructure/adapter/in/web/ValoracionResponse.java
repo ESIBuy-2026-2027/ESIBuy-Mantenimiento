@@ -1,12 +1,15 @@
 package es.uclm.esibuy.backend.valoraciones.infrastructure.adapter.in.web;
 
+import java.time.Instant;
+
 import es.uclm.esibuy.backend.valoraciones.domain.model.Valoracion;
 
-/** Lo que la API devuelve de una valoración. No lleva el cliente: no se expone su id interno. */
-public record ValoracionResponse(String id, String productoId, int puntuacion, String comentario) {
+/** Respuesta pública de una valoración, sin exponer el identificador interno del cliente. */
+public record ValoracionResponse(String id, String productoId, int puntuacion, String comentario,
+        String nombreCliente, Instant fechaCreacion) {
 
     public static ValoracionResponse desde(Valoracion valoracion) {
         return new ValoracionResponse(valoracion.id(), valoracion.productoId(), valoracion.puntuacion(),
-                valoracion.comentario());
+                valoracion.comentario(), valoracion.nombreCliente(), valoracion.fechaCreacion());
     }
 }
