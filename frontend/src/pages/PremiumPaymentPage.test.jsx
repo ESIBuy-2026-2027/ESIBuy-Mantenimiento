@@ -96,6 +96,8 @@ describe('PremiumPaymentPage (HU45): paso a Premium del cliente Estándar', () =
 
   it('HU45-CP33: si el servidor responde ALREADY_PREMIUM, se avisa con un mensaje propio y queda en estado Premium', async () => {
     server.use(
+      // El error ALREADY_PREMIUM implica que el perfil real ya es Premium; la consulta posterior debe reflejarlo.
+      http.get('/api/perfil', () => HttpResponse.json({ tipoCliente: 'PREMIUM' })),
       http.post('/api/perfil/premium', () =>
         HttpResponse.json({ mensaje: 'Texto del backend', code: 'ALREADY_PREMIUM' }, { status: 400 }),
       ),
