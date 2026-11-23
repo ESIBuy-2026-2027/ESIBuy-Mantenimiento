@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -10,8 +11,8 @@ import jakarta.validation.constraints.Size;
  * duplicados) las aplica el dominio. Sin fecha de nacimiento ni tipo de cliente; una única categoría principal.
  */
 public record RegistroVendedorRequest(
-        @NotBlank @Size(max = 30) String nombre,
-        @NotBlank @Size(max = 30) String apellidos,
+        @NotBlank @Size(min = 2, max = 30) @Pattern(regexp = "^\\p{L}[\\p{L}\\p{M}]*(?:[ '-][\\p{L}\\p{M}]+)*$") String nombre,
+        @NotBlank @Size(min = 2, max = 30) @Pattern(regexp = "^\\p{L}[\\p{L}\\p{M}]*(?:[ '-][\\p{L}\\p{M}]+)*$") String apellidos,
         @NotBlank @Size(max = 30) String nombreComercial,
         @NotBlank String categoriaPrincipalId,
         @NotBlank String dni,
