@@ -23,10 +23,6 @@ import es.uclm.esibuy.backend.valoraciones.infrastructure.adapter.out.persistenc
 import es.uclm.esibuy.backend.valoraciones.infrastructure.adapter.out.persistence.ValoracionMongoRepository;
 import es.uclm.esibuy.backend.valoraciones.infrastructure.adapter.out.usuarios.ClienteEnSesionAdapter;
 
-/**
- * Configuración de Spring de las valoraciones (HU13): conecta cada puerto con su adaptador, como PedidosConfig. Los
- * nombres de los beans llevan «valoraciones» para no chocar con los puertos del mismo nombre de otros módulos.
- */
 @Configuration
 public class ValoracionesConfig {
 
@@ -45,7 +41,6 @@ public class ValoracionesConfig {
         return new ComprasAdapter(consultaComprasUseCase);
     }
 
-    // T415: la media y el número de valoraciones van al producto por el puerto de entrada de productos
     @Bean
     ProductosPort valoracionesProductosPort(ValoracionesProductoUseCase valoracionesProductoUseCase) {
         return new ProductosAdapter(valoracionesProductoUseCase);
@@ -53,15 +48,14 @@ public class ValoracionesConfig {
 
     @Bean
     ValoracionProductosUseCase valoracionProductosUseCase(ValoracionRepositoryPort valoracionRepositoryPort,
-            ClienteEnSesionPort valoracionesClienteEnSesionPort, ComprasPort valoracionesComprasPort,
-            ProductosPort valoracionesProductosPort) {
-        return new ValoracionProductosService(valoracionRepositoryPort, valoracionesClienteEnSesionPort,
-                valoracionesComprasPort, valoracionesProductosPort);
+            ClienteEnSesionPort clienteEnSesionPort, ComprasPort comprasPort, ProductosPort productosPort) {
+        return new ValoracionProductosService(valoracionRepositoryPort, clienteEnSesionPort, comprasPort, productosPort);
     }
-    
+
     @Bean
-    ConsultaValoracionesUseCase consultaValoracionesUseCase(ValoracionRepositoryPort valoracionRepositoryPort) {
-        return new ConsultaValoracionesService(valoracionRepositoryPort);
+    ConsultaValoracionesUseCase consultaValoracionesUseCase(ValoracionRepositoryPort valoracionRepositoryPort,
+            ClienteEnSesionPort clienteEnSesionPort, ComprasPort comprasPort) {
+        return new ConsultaValoracionesService(valoracionRepositoryPort, clienteEnSesionPort, comprasPort);
     }
 
     @Bean
