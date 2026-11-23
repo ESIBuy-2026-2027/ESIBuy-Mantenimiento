@@ -302,7 +302,9 @@ export default function PremiumPage() {
   const location = useLocation()
   const profile = useApiQuery(getProfile)
   const [primeraConfirmacionAbierta, setPrimeraConfirmacionAbierta] = useState(false)
-  const [segundaConfirmacionAbierta, setSegundaConfirmacionAbierta] = useState(false)\n  const [cancelandoPremium, setCancelandoPremium] = useState(false)\n  const [errorCancelacion, setErrorCancelacion] = useState(false)
+  const [segundaConfirmacionAbierta, setSegundaConfirmacionAbierta] = useState(false)
+  const [cancelandoPremium, setCancelandoPremium] = useState(false)
+  const [errorCancelacion, setErrorCancelacion] = useState(false)
   const aviso = TEXTO_AVISO_PREMIUM[location.state?.aviso] ?? null
   const esPremium = profile.data?.tipoCliente === 'PREMIUM'
 
