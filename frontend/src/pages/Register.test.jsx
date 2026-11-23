@@ -584,7 +584,7 @@ describe('Register', () => {
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
     expect(registrarCliente).toHaveBeenCalledWith(
-      expect.objectContaining({ nombre: 'Ana', email: 'ana@correo.com' })
+      expect.objectContaining({ nombre: 'Ana', email: 'ana@correo.com', avatar: 'avatar1' })
     )
   })
 
