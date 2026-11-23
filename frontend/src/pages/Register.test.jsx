@@ -184,24 +184,34 @@ describe('Register', () => {
     expect(registrarVendedor).toHaveBeenCalledWith(expect.objectContaining({ dni: 'AB-1234-X' }))
   })
 
-  it('register_alIntroducirNombreConNumeros_muestraError', async () => {
+  it('register_alIntroducirNombreConNumeros_filtraLosCaracteresNoPermitidos', async () => {
+    registrarCliente.mockResolvedValue({})
     await renderYElegirCliente()
     await rellenarFormularioValido()
-    await userEvent.clear(screen.getByLabelText(/^nombre/i))
-    await userEvent.type(screen.getByLabelText(/^nombre/i), 'Ana2')
+    const nombre = screen.getByLabelText(/^nombre/i)
+    await userEvent.clear(nombre)
+    await userEvent.type(nombre, 'Ana2')
+    
+    expect(nombre).toHaveValue('Ana')
+
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
-    expect(screen.getByText(/solo letras, espacios, guiones o apóstrofos/i)).toBeInTheDocument()
-    expect(registrarCliente).not.toHaveBeenCalled()
+
+    expect(registrarCliente).toHaveBeenCalledWith(expect.objectContaining({ nombre: 'Ana' }))
   })
 
-  it('register_alIntroducirApellidosConNumeros_muestraError', async () => {
+  it('register_alIntroducirApellidosConNumeros_filtraLosCaracteresNoPermitidos', async () => {
+    registrarCliente.mockResolvedValue({})
     await renderYElegirCliente()
     await rellenarFormularioValido()
-    await userEvent.clear(screen.getByLabelText(/^apellidos/i))
-    await userEvent.type(screen.getByLabelText(/^apellidos/i), 'García2')
+    const apellidos = screen.getByLabelText(/^apellidos/i)
+    await userEvent.clear(apellidos)
+    await userEvent.type(apellidos, 'García2')
+
+    expect(apellidos).toHaveValue('García')
+
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
-    expect(screen.getByText(/solo letras, espacios, guiones o apóstrofos/i)).toBeInTheDocument()
-    expect(registrarCliente).not.toHaveBeenCalled()
+
+    expect(registrarCliente).toHaveBeenCalledWith(expect.objectContaining({ apellidos: 'García' }))
   })
 
   it('register_alIntroducirEmailInvalidoComoVendedor_muestraErrorDeFormato', async () => {
