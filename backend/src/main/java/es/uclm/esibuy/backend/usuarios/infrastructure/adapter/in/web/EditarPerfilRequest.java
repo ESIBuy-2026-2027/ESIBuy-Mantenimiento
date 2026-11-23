@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import es.uclm.esibuy.backend.usuarios.application.port.in.EditarPerfilCommand;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -17,8 +18,8 @@ import jakarta.validation.constraints.Size;
  * la contraseña no se editan: no están aquí y se ignoran aunque lleguen en el cuerpo.
  */
 public record EditarPerfilRequest(
-        @NotBlank @Size(max = 30) String nombre,
-        @NotBlank @Size(max = 30) String apellidos,
+        @NotBlank @Size(min = 2, max = 30) @Pattern(regexp = "^\\p{L}[\\p{L}\\p{M}]*(?:[ '-][\\p{L}\\p{M}]+)*$") String nombre,
+        @NotBlank @Size(min = 2, max = 30) @Pattern(regexp = "^\\p{L}[\\p{L}\\p{M}]*(?:[ '-][\\p{L}\\p{M}]+)*$") String apellidos,
         String avatar,
         String telefono,
         LocalDate fechaNacimiento,
