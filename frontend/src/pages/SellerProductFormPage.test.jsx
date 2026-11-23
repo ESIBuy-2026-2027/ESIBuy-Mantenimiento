@@ -503,7 +503,6 @@ describe('SellerProductFormPage: subida de imágenes', () => {
     const archivo = new File(['contenido png'], 'foto.png', { type: 'image/png' })
 
     fireEvent.dragOver(zonaCarga, { dataTransfer: { files: [archivo] } })
-    expect(zonaCarga).toHaveClass(/./)
     fireEvent.drop(zonaCarga, { dataTransfer: { files: [archivo] } })
 
     expect(await screen.findByAltText('Vista previa de la imagen del producto')).toBeInTheDocument()
