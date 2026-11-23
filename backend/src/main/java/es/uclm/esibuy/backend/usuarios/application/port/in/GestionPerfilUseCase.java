@@ -40,4 +40,13 @@ public interface GestionPerfilUseCase {
      *         la sesión ya no existe
      */
     Usuario pasarAPremium(String email);
+
+    /**
+     * Cancela Premium al cliente en sesión (CLI-02) y devuelve el usuario actualizado.
+     *
+     * @param email correo del cliente en sesión; solo puede actuar sobre su propia cuenta
+     * @throws es.uclm.esibuy.backend.usuarios.domain.exception.ClienteNoPremiumException si ya es Estándar
+     * @throws es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException si el usuario ya no existe
+     */
+    Usuario cancelarPremium(String email);
 }
