@@ -128,8 +128,9 @@ const useStyles = makeStyles({
     alignSelf: 'flex-start',
   },
   confirmationButton: {
-    minWidth: '170px',
+    minWidth: '210px',
     whiteSpace: 'nowrap',
+    flexShrink: 0,
   },
   lossList: {
     margin: 0,
@@ -353,11 +354,16 @@ export default function PremiumPage() {
               ¿Quieres continuar con la cancelación de tu suscripción ESIBuy Premium?
             </DialogContent>
             <DialogActions>
-              <Button appearance="secondary" onClick={() => setPrimeraConfirmacionAbierta(false)}>
+              <Button
+                appearance="secondary"
+                className={styles.confirmationButton}
+                onClick={() => setPrimeraConfirmacionAbierta(false)}
+              >
                 No, mantener Premium
               </Button>
               <Button
                 appearance="primary"
+                className={styles.confirmationButton}
                 onClick={() => {
                   setPrimeraConfirmacionAbierta(false)
                   setSegundaConfirmacionAbierta(true)
