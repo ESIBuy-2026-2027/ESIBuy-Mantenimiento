@@ -524,6 +524,28 @@ describe('Register', () => {
     expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' })
   })
 
+  it('register_clienteConErrorDeCampoDelServidor_desplazaHastaElCampoAfectado', async () => {
+    registrarCliente.mockRejectedValue({ status: 409, code: 'EMAIL_ALREADY_REGISTERED' })
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    const campoConError = document.querySelector('[data-register-error="true"]')
+    expect(campoConError).toContainElement(screen.getByLabelText(/correo electrónico/i))
+    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' })
+  })
+
+  it('register_vendedorConErrorGeneralDelServidor_desplazaHastaElMensajeGeneral', async () => {
+    registrarVendedor.mockRejectedValue({ status: 400, code: 'VALIDATION_ERROR' })
+    await renderYElegirVendedor()
+    await rellenarFormularioVendedorValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    const mensajeGeneral = await screen.findByText('Revisa los datos del formulario')
+    expect(mensajeGeneral.closest('[data-register-error-message="true"]')).not.toBeNull()
+    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' })
+  })
+
   it('register_alEnviarFormularioClienteVacio_muestraErroresDeCamposObligatorios', async () => {
     await renderYElegirCliente()
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
