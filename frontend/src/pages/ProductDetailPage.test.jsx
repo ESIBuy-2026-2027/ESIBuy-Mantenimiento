@@ -331,9 +331,9 @@ describe('ProductDetailPage (HU9): añadir al carrito', () => {
 // equipo: el backend aún no rellena valoracion ni numValoraciones).
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP18 a CP20, propuestos.
 const VALORACIONES = [
-  { id: 'v-1', productoId: 'p-2', puntuacion: 5, comentario: 'Muy buen tacto, lo recomiendo.' },
-  { id: 'v-2', productoId: 'p-2', puntuacion: 4, comentario: '' },
-  { id: 'v-3', productoId: 'p-2', puntuacion: 3, comentario: 'Hace algo de ruido.' },
+  { id: 'v-1', productoId: 'p-2', puntuacion: 5, comentario: 'Muy buen tacto, lo recomiendo.', nombreCliente: 'Ana López', fechaCreacion: '2026-01-01T10:00:00Z' },
+  { id: 'v-2', productoId: 'p-2', puntuacion: 4, comentario: '', nombreCliente: 'Carlos García', fechaCreacion: '2026-01-02T10:00:00Z' },
+  { id: 'v-3', productoId: 'p-2', puntuacion: 3, comentario: 'Hace algo de ruido.', nombreCliente: 'Lucía Martín', fechaCreacion: '2026-01-03T10:00:00Z' },
 ]
 
 const responderValoraciones = (valoraciones) =>
@@ -349,7 +349,10 @@ describe('ProductDetailPage (HU13): valoraciones de los clientes', () => {
     const valoraciones = within(lista).getAllByRole('listitem')
     expect(valoraciones).toHaveLength(3)
     expect(within(valoraciones[0]).getByRole('img', { name: /valoración: 5,0 de 5/i })).toBeInTheDocument()
+    expect(within(valoraciones[0]).getByText('Ana López')).toBeInTheDocument()
+    expect(within(valoraciones[0]).getByText('1 de enero de 2026')).toBeInTheDocument()
     expect(within(valoraciones[0]).getByText('Muy buen tacto, lo recomiendo.')).toBeInTheDocument()
+    expect(within(valoraciones[2]).getByText('Lucía Martín')).toBeInTheDocument()
     expect(within(valoraciones[2]).getByText('Hace algo de ruido.')).toBeInTheDocument()
   })
 
@@ -361,7 +364,8 @@ describe('ProductDetailPage (HU13): valoraciones de los clientes', () => {
     const lista = await screen.findByRole('list', { name: /valoraciones de los clientes/i })
     const [valoracion] = within(lista).getAllByRole('listitem')
     expect(within(valoracion).getByRole('img', { name: /valoración: 4,0 de 5/i })).toBeInTheDocument()
-    expect(valoracion).toHaveTextContent(/^$/)
+    expect(within(valoracion).getByText('Carlos García')).toBeInTheDocument()
+    expect(within(valoracion).queryByText(/comentario/i)).not.toBeInTheDocument()
   })
 
   it('HU13-CP19: la media y el número de valoraciones salen de la lista aunque el catálogo no las tenga', async () => {
@@ -417,10 +421,7 @@ describe('ProductDetailPage (HU13): valoraciones de los clientes', () => {
   })
 })
 
-// Valorar el producto (HU13, T367): POST /api/products/{id}/valoraciones con { puntuacion, comentario }. El backend
-// decide si se puede: 403 PRODUCT_NOT_PURCHASED si el cliente no lo ha comprado y 409 REVIEW_ALREADY_EXISTS si ya lo
-// valoró; el frontend no puede saberlo antes de enviar.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP21 a CP23, propuestos.
+// Valorar el producto (HU13): POST /api/products/{id}/valoraciones. El estado previo se consulta con CLI-04.
 function responderAlValorar(respuesta) {
   const enviado = {}
   server.use(
@@ -434,6 +435,9 @@ function responderAlValorar(respuesta) {
 }
 
 const rechazarCon = (status, code) => () => HttpResponse.json({ code }, { status })
+
+const responderEstadoValoracion = (estado) =>
+  server.use(http.get('/api/products/:id/valoraciones/estado', () => HttpResponse.json(estado)))
 
 async function abrirFormulario() {
   await abrirDetalle()
@@ -511,6 +515,7 @@ describe('ProductDetailPage (HU13): valorar el producto', () => {
   it('HU13-CP23: si ya lo había valorado se le avisa', async () => {
     const user = userEvent.setup()
     responderCon()
+    responderEstadoValoracion({ haComprado: true, haValorado: false, miValoracionId: null })
     responderAlValorar(rechazarCon(409, 'REVIEW_ALREADY_EXISTS'))
     const formulario = await abrirFormulario()
 
@@ -533,6 +538,53 @@ describe('ProductDetailPage (HU13): valorar el producto', () => {
     expect(await within(formulario).findByText(/no se ha podido enviar tu valoración/i)).toBeInTheDocument()
     expect(within(formulario).getByLabelText(/comentario/i)).toHaveValue('Buen producto')
     expect(within(formulario).getByRole('radio', { name: '4 estrellas' })).toBeChecked()
+  })
+})
+
+
+describe('ProductDetailPage (CLI-04): estado de compra y valoración', () => {
+  it('muestra el formulario cuando el cliente ha comprado el producto y aún no lo ha valorado', async () => {
+    responderCon()
+    responderEstadoValoracion({ haComprado: true, haValorado: false, miValoracionId: null })
+    await abrirDetalle()
+
+    expect(await screen.findByRole('form', { name: /valora este producto/i })).toBeInTheDocument()
+  })
+
+  it('no muestra el formulario si el cliente no ha comprado el producto', async () => {
+    responderCon()
+    responderEstadoValoracion({ haComprado: false, haValorado: false, miValoracionId: null })
+    await abrirDetalle()
+
+    expect(await screen.findByText(/solo puedes valorar productos que has comprado/i)).toBeInTheDocument()
+    expect(screen.queryByRole('form', { name: /valora este producto/i })).not.toBeInTheDocument()
+  })
+
+  it('indica que el cliente ya ha valorado el producto y oculta el formulario', async () => {
+    responderCon()
+    responderEstadoValoracion({ haComprado: true, haValorado: true, miValoracionId: 'v-1' })
+    await abrirDetalle()
+
+    expect(await screen.findByText(/ya has valorado este producto/i)).toBeInTheDocument()
+    expect(screen.queryByRole('form', { name: /valora este producto/i })).not.toBeInTheDocument()
+  })
+
+  it('si falla la consulta del estado, no muestra el formulario y permite reintentar', async () => {
+    let fallado = false
+    responderCon()
+    server.use(http.get('/api/products/:id/valoraciones/estado', () => {
+      if (!fallado) {
+        fallado = true
+        return new HttpResponse(null, { status: 500 })
+      }
+      return HttpResponse.json({ haComprado: true, haValorado: false, miValoracionId: null })
+    }))
+    await abrirDetalle()
+
+    expect(await screen.findByText(/no se ha podido comprobar si puedes valorar/i)).toBeInTheDocument()
+    expect(screen.queryByRole('form', { name: /valora este producto/i })).not.toBeInTheDocument()
+    await userEvent.setup().click(screen.getByRole('button', { name: /reintentar/i }))
+    expect(await screen.findByRole('form', { name: /valora este producto/i })).toBeInTheDocument()
   })
 })
 
