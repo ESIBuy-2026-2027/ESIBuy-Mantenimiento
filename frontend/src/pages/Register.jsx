@@ -462,29 +462,31 @@ export default function Register() {
         {campo('apellidos', 'Apellidos')}
         {campo('nombreComercial', 'Nombre comercial')}
         <div data-register-error={errores.categoriaPrincipalId ? 'true' : undefined}>
-        <Field
-          label="Categoría"
-          required
-          validationState={errores.categoriaPrincipalId ? 'error' : 'none'}
-          validationMessage={errores.categoriaPrincipalId}
-        >
-          <CategoryCombobox
-            value={datos.categoriaPrincipalId}
-            categories={categoriasDisponibles}
-            searchable={false}
-            placeholder="Selecciona una categoría"
-            onChange={cambiarCategoria}
-          />
-        </Field>
+          <Field
+            label="Categoría"
+            required
+            validationState={errores.categoriaPrincipalId ? 'error' : 'none'}
+            validationMessage={errores.categoriaPrincipalId}
+          >
+            <CategoryCombobox
+              value={datos.categoriaPrincipalId}
+              categories={categoriasDisponibles}
+              searchable={false}
+              placeholder="Selecciona una categoría"
+              onChange={cambiarCategoria}
+            />
+          </Field>
         </div>
         {camposComunes}
         {selectorAvatar}
         {casillaPrivacidad}
         {dialogoPoliticaPrivacidad}
         {errorGeneral && (
-          <MessageBar intent="error">
-            <MessageBarBody>{errorGeneral}</MessageBarBody>
-          </MessageBar>
+          <div data-register-error-message="true">
+            <MessageBar intent="error">
+              <MessageBarBody>{errorGeneral}</MessageBarBody>
+            </MessageBar>
+          </div>
         )}
         <Button appearance="primary" size="large" onClick={enviarVendedor}>
           Registrarse
