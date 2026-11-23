@@ -12,7 +12,7 @@ export const esEmailValido = (email) => /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test
 
 // Nombres personales: letras Unicode, espacios, guiones y apóstrofos; longitud de 2 a 30 caracteres.
 // Descarta caracteres no admitidos al escribir o pegar.
-export const filtrarNombre = (nombre) => nombre.replace(/[^\\p{L}\\p{M} '-]/gu, '')
+export const filtrarNombre = (nombre) => nombre.replace(/[^\p{L}\p{M} '-]/gu, '')
 
 export const esNombreValido = (nombre) => {
   const valor = nombre.trim()
