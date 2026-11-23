@@ -323,6 +323,11 @@ export default function ProductDetail({
             ) : (
               <Text className={styles.muted}>Sin valoraciones</Text>
             )}
+            {reviewStatus?.haValorado && reviewStatus.miValoracionId && (
+              <a href={`#valoracion-${reviewStatus.miValoracionId}`}>
+                Ya has valorado este producto · Ver mi valoración
+              </a>
+            )}
           </div>
         </div>
 
@@ -409,7 +414,12 @@ export default function ProductDetail({
           ) : (
             <Text className={styles.muted}>Solo puedes valorar productos que has comprado.</Text>
           )}
-          <ReviewList reviews={reviews} failed={reviewsFailed} onRetry={onRetryReviews} />
+          <ReviewList
+            reviews={reviews}
+            failed={reviewsFailed}
+            onRetry={onRetryReviews}
+            myReviewId={reviewStatus?.haValorado ? reviewStatus.miValoracionId : null}
+          />
         </section>
       </div>
     </div>
