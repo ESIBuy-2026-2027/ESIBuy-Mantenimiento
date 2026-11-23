@@ -385,6 +385,17 @@ describe('SellerProductFormPage (HU31): nombre repetido', () => {
 describe('SellerProductFormPage (HU34): edición', () => {
   const RUTA_EDITAR = '/seller/products/p-1/edit'
 
+  it('HU34-CP13: desde la edición puede volver al listado de mis productos sin guardar', async () => {
+    const user = userEvent.setup()
+    const envio = capturarEnvio('put', '/api/seller/products/:id', () => HttpResponse.json({ id: 'p-1' }))
+    await abrirFormulario(RUTA_EDITAR, /editar producto/i)
+
+    await user.click(screen.getByRole('link', { name: /volver a mis productos/i }))
+
+    await esperarRuta('/seller/products')
+    expect(envio.llamadas).toBe(0)
+  })
+
   it('HU34-CP12: la vista de edición se abre con los datos actuales del producto', async () => {
     await abrirFormulario(RUTA_EDITAR, /editar producto/i)
 

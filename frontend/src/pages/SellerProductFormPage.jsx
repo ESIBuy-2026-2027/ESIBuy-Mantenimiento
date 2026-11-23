@@ -2,10 +2,12 @@ import { useCallback, useState } from 'react'
 import {
   Button, MessageBar, MessageBarActions, MessageBarBody, Spinner, Text, Title1, makeStyles, mergeClasses,
 } from '@fluentui/react-components'
+import { ArrowLeft20Regular } from '@fluentui/react-icons'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   createSellerProduct, getSellerProduct, updateSellerProduct, uploadSellerProductImage,
 } from '../api/products'
+import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import ProductForm from '../features/seller/ProductForm'
 import { emptyProductValues, valuesFromProduct } from '../features/seller/productValues'
@@ -86,6 +88,11 @@ export default function SellerProductFormPage() {
         <Title1 as="h1" className={styles.title}>{isEdit ? 'Editar producto' : 'Añadir producto'}</Title1>
         <Text className={styles.subtitle}>Los campos marcados con * son obligatorios.</Text>
       </div>
+      {isEdit && (
+        <LinkButton to={PATHS.SELLER_PRODUCTS} appearance="subtle" icon={<ArrowLeft20Regular />}>
+          Volver a mis productos
+        </LinkButton>
+      )}
       {categoriesFailed && (
         <MessageBar intent="error">
           <MessageBarBody>No se han podido cargar las categorías.</MessageBarBody>

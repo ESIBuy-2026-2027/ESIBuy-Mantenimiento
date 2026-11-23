@@ -23,6 +23,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import es.uclm.esibuy.backend.pedidos.application.port.in.GestionPedidosVendedorUseCase;
+import es.uclm.esibuy.backend.pedidos.domain.model.DatosPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.LineaPedido;
@@ -43,12 +44,18 @@ class SellerPedidoControllerTest {
     @MockitoBean
     private GestionPedidosVendedorUseCase gestionPedidos;
 
-    private static final Pedido PEDIDO = new Pedido("o-1", new NumeroPedido("ESB-2026-000001"),
-            "c-1", "u-2", "TecnoVera", EstadoPedido.PAGADO,
+    private static final Pedido PEDIDO = new Pedido(new DatosPedido(
+            "o-1",
+            new NumeroPedido("ESB-2026-000001"),
+            "c-1",
+            "u-2",
+            "TecnoVera",
+            EstadoPedido.PAGADO,
             List.of(new LineaPedido("p-1", "Auriculares", 2, new BigDecimal("53.91"))),
             new DireccionEnvioPedido("Carlos", "Calle Mayor 1", null, "13001", "Ciudad Real",
                     "Ciudad Real", "611222333"),
-            "mp-1", Instant.parse("2026-10-29T10:00:00Z"));
+            "mp-1",
+            Instant.parse("2026-10-29T10:00:00Z")));
 
     @Test
     @DisplayName("gestion-pedidos-vendedor: GET listado devuelve los pedidos reales del vendedor")
@@ -79,9 +86,17 @@ class SellerPedidoControllerTest {
     @Test
     @DisplayName("gestion-pedidos-vendedor: POST avance cambia y devuelve el estado")
     void elAvanceDevuelvePedido() throws Exception {
-        Pedido preparado = new Pedido("o-1", new NumeroPedido("ESB-2026-000001"),
-                "c-1", "u-2", "TecnoVera", EstadoPedido.PREPARANDO,
-                PEDIDO.getLineas(), PEDIDO.getDireccionEnvio(), "mp-1", PEDIDO.getCreatedAt());
+        Pedido preparado = new Pedido(new DatosPedido(
+                "o-1",
+                new NumeroPedido("ESB-2026-000001"),
+                "c-1",
+                "u-2",
+                "TecnoVera",
+                EstadoPedido.PREPARANDO,
+                PEDIDO.getLineas(),
+                PEDIDO.getDireccionEnvio(),
+                "mp-1",
+                PEDIDO.getCreatedAt()));
         when(gestionPedidos.avanzarEstado(VENDEDOR, "o-1")).thenReturn(preparado);
 
         mockMvc.perform(post(URL + "/o-1/advance").with(user(VENDEDOR).roles("VENDEDOR")).with(csrf()))

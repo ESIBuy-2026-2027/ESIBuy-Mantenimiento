@@ -18,6 +18,7 @@ import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 public class CategoriaMongoAdapter implements CategoriaRepositoryPort {
 
     private static final String CAMPO_NOMBRE = "nombre";
+    private static final String CAMPO_ID = "_id";
 
     // La misma collation que el índice nombre_sin_mayusculas (ColeccionesEsiBuy): nivel 1, sin distinguir
     // mayúsculas ni tildes. La «ñ» sí es otra letra en español.
@@ -68,7 +69,7 @@ public class CategoriaMongoAdapter implements CategoriaRepositoryPort {
     // Igual que existePorNombre, pero sin contar la categoría con ese id.
     @Override
     public boolean existeOtraConNombre(String nombre, String idExcluido) {
-        Query consulta = new Query(Criteria.where(CAMPO_NOMBRE).is(nombre.strip()).and("id").ne(idExcluido))
+        Query consulta = new Query(Criteria.where(CAMPO_NOMBRE).is(nombre.strip()).and(CAMPO_ID).ne(idExcluido))
                 .collation(SIN_MAYUSCULAS_NI_TILDES);
         return mongoTemplate.exists(consulta, CategoriaDocument.class);
     }

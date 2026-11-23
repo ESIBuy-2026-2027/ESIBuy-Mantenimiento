@@ -15,7 +15,9 @@ import es.uclm.esibuy.backend.incidencias.domain.model.IncidenciaPage;
 public class IncidenciaMongoAdapter implements IncidenciaRepositoryPort {
 
     // De las más antiguas a las más recientes; con la misma fecha, por id, para que las páginas sean estables
-    private static final Sort DE_MAS_ANTIGUA_A_MAS_RECIENTE = Sort.by(Sort.Direction.ASC, "fechaCreacion", "id");
+    private static final Sort DE_MAS_ANTIGUA_A_MAS_RECIENTE = Sort.by(
+            Sort.Order.asc("fechaCreacion"),
+            Sort.Order.asc("id"));
 
     private final IncidenciaMongoRepository repository;
     private final IncidenciaDocumentMapper mapper;

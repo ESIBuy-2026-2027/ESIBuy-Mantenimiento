@@ -14,9 +14,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
-import es.uclm.esibuy.backend.pedidos.application.port.out.VendedorEnSesionPort;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
+import es.uclm.esibuy.backend.pedidos.domain.model.DatosPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.LineaPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.NumeroPedido;
@@ -77,11 +77,18 @@ class GestionPedidosVendedorServiceTest {
     }
 
     private static Pedido pedido(String id, String vendedorId, EstadoPedido estado) {
-        return new Pedido(id, new NumeroPedido("ESB-2026-000001"), "c-1", vendedorId, "TecnoVera", estado,
+        return new Pedido(new DatosPedido(
+                id,
+                new NumeroPedido("ESB-2026-000001"),
+                "c-1",
+                vendedorId,
+                "TecnoVera",
+                estado,
                 List.of(new LineaPedido("p-1", "Auriculares", 2, new BigDecimal("53.91"))),
                 new DireccionEnvioPedido("Carlos Cliente", "Calle Mayor 1", null, "13001",
                         "Ciudad Real", "Ciudad Real", "611222333"),
-                "mp-1", Instant.parse("2026-10-29T10:00:00Z"));
+                "mp-1",
+                Instant.parse("2026-10-29T10:00:00Z")));
     }
 
     private static final class PedidosEnMemoria implements PedidoRepositoryPort {
