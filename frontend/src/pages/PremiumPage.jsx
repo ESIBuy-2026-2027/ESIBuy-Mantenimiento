@@ -18,7 +18,7 @@ import {
 } from '@fluentui/react-components'
 import { Diamond20Regular, Diamond48Regular, Sparkle24Regular } from '@fluentui/react-icons'
 import { useLocation } from 'react-router-dom'
-import { getProfile } from '../api/profile'
+import { cancelPremium, getProfile } from '../api/profile'
 import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import { PREMIUM_BENEFITS } from '../features/premium/premiumBenefits'
@@ -302,9 +302,23 @@ export default function PremiumPage() {
   const location = useLocation()
   const profile = useApiQuery(getProfile)
   const [primeraConfirmacionAbierta, setPrimeraConfirmacionAbierta] = useState(false)
-  const [segundaConfirmacionAbierta, setSegundaConfirmacionAbierta] = useState(false)
+  const [segundaConfirmacionAbierta, setSegundaConfirmacionAbierta] = useState(false)\n  const [cancelandoPremium, setCancelandoPremium] = useState(false)\n  const [errorCancelacion, setErrorCancelacion] = useState(false)
   const aviso = TEXTO_AVISO_PREMIUM[location.state?.aviso] ?? null
-  const esPremium = profile.data?.tipoCliente === 'PREMIUM' || aviso !== null
+  const esPremium = profile.data?.tipoCliente === 'PREMIUM'
+
+  const confirmarCancelacionPremium = async () => {
+    setCancelandoPremium(true)
+    setErrorCancelacion(false)
+    try {
+      await cancelPremium()
+      setSegundaConfirmacionAbierta(false)
+      profile.retry()
+    } catch {
+      setErrorCancelacion(true)
+    } finally {
+      setCancelandoPremium(false)
+    }
+  }
 
   return (
     <main className={pageStyles.page}>
@@ -317,6 +331,11 @@ export default function PremiumPage() {
           Compra con más ventajas: descuentos exclusivos, envíos sin coste y pedidos que llegan antes.
         </Text>
         <div aria-live="polite">
+          {errorCancelacion && (
+            <MessageBar intent="error">
+              <MessageBarBody>No se ha podido cancelar Premium. Inténtalo de nuevo.</MessageBarBody>
+            </MessageBar>
+          )}
           {aviso && (
             <MessageBar intent={aviso.intent}>
               <MessageBarBody>{aviso.texto}</MessageBarBody>
@@ -403,8 +422,13 @@ export default function PremiumPage() {
               >
                 Mantener Premium
               </Button>
-              <Button appearance="primary" className={styles.confirmationButton} disabled>
-                Sí, cancelar Premium
+              <Button
+                appearance="primary"
+                className={styles.confirmationButton}
+                disabled={cancelandoPremium}
+                onClick={confirmarCancelacionPremium}
+              >
+                {cancelandoPremium ? 'Cancelando…' : 'Sí, cancelar Premium'}
               </Button>
             </DialogActions>
           </DialogBody>
