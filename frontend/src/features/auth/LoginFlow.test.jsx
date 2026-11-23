@@ -159,13 +159,23 @@ describe('Login (HU2): paso 1, credenciales', () => {
     expect(screen.queryByRole('heading', { name: /pendiente de activación/i })).not.toBeInTheDocument()
   })
 
-  it('login_cuentaPendiente_muestraElMismoMensajeQueCredencialesIncorrectas', async () => {
+  it('login_cuentaPendienteConContrasenaCorrecta_muestraMensajeGenerico', async () => {
     const user = userEvent.setup()
     renderApp('/login')
 
     await escribirCredenciales(user, 'pendiente@esibuy.test', CLAVE)
 
     expect(await screen.findByText('No se ha podido iniciar sesión. Revisa tus datos e inténtalo de nuevo.')).toBeInTheDocument()
+  })
+
+  it('login_cuentaPendienteConContrasenaIncorrecta_tambienMuestraMensajeGenerico', async () => {
+    const user = userEvent.setup()
+    renderApp('/login')
+
+    await escribirCredenciales(user, 'pendiente@esibuy.test', 'otra-clave')
+
+    expect(await screen.findByText('No se ha podido iniciar sesión. Revisa tus datos e inténtalo de nuevo.')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /pendiente de activación/i })).not.toBeInTheDocument()
   })
 
   it('login_cuentaPendiente_mockDevuelve401SinCodigoQueIdentifiqueLaCuenta', async () => {
