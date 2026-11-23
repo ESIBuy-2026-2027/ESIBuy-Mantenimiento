@@ -118,6 +118,20 @@ const useStyles = makeStyles({
   muted: {
     color: tokens.colorNeutralForeground3,
   },
+  ownReviewLink: {
+    color: tokens.colorPaletteMarigoldForeground2,
+    fontWeight: tokens.fontWeightSemibold,
+    textDecorationLine: 'underline',
+    textUnderlineOffset: '2px',
+    ':hover': {
+      color: tokens.colorPaletteMarigoldForeground1,
+    },
+    ':focus-visible': {
+      outline: `2px solid ${tokens.colorPaletteMarigoldForeground2}`,
+      outlineOffset: '2px',
+      borderRadius: tokens.borderRadiusSmall,
+    },
+  },
   panel: {
     ...aparece,
     animationDelay: '160ms',
@@ -324,7 +338,7 @@ export default function ProductDetail({
               <Text className={styles.muted}>Sin valoraciones</Text>
             )}
             {reviewStatus?.haValorado && reviewStatus.miValoracionId && (
-              <a href={`#valoracion-${reviewStatus.miValoracionId}`}>
+              <a className={styles.ownReviewLink} href={`#valoracion-${reviewStatus.miValoracionId}`}>
                 Ya has valorado este producto · Ver mi valoración
               </a>
             )}
