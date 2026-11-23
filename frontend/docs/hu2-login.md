@@ -6,7 +6,7 @@ Documento para entender cómo funciona el login del frontend de ESIBuy: qué hac
 - **HU:** HU2 (inicio de sesión seguro) y la parte de redirección por rol de HU15 y HU18
 - **Rama:** `feature/front/login`
 - **Metodología:** esta HU **no se desarrolló con TDD**; los tests se añadieron después
-- **Ampliada por la task AB#236** (rama `feature/US2-T236-mensaje-cuenta-pendiente-login`): pantalla animada para las cuentas pendientes de activación. Ver la sección 2.1.
+- **Actualizada por la task AB#236:** las cuentas pendientes reciben el mismo 401 genérico que las credenciales incorrectas y los correos inexistentes. Ver la sección 2.1.
 - **Ampliada por la task AB#245** (Sprint 2, rama `feature/US2-T245-mensaje-cuenta-bloqueada-antes-del-2fa`): las cuentas ya no se desactivan, se bloquean. El login muestra el mensaje de cuenta bloqueada antes del código del correo. Ver la sección 2.2.
 - **Depende de:** `docs/mocks-msw.md` (MSW y cliente HTTP)
 
@@ -64,7 +64,7 @@ flowchart TD
 
 ### 2.2 Cuenta bloqueada por un administrador (task AB#245, Sprint 2)
 
-Desde el Sprint 2 las cuentas **no se desactivan, se bloquean** (decisión del equipo). En el login, una cuenta bloqueada por un administrador se rechaza **en el paso 1**, igual que una cuenta pendiente: el usuario ve el mensaje antes del código del correo y el backend no envía ningún código.
+Desde el Sprint 2 las cuentas **no se desactivan, se bloquean** (decisión del equipo). En el login, una cuenta bloqueada por un administrador se rechaza **en el paso 1**: el usuario ve el mensaje específico antes del código del correo y el backend no envía ningún código. A diferencia de una cuenta pendiente, el bloqueo administrativo sí conserva su respuesta 403 diferenciada.
 
 | Respuesta del backend | Qué ve el usuario |
 |---|---|
@@ -131,8 +131,7 @@ Todas las rutas son relativas a `frontend/src/`.
 | `LoginForm.jsx` | Orquesta los tres pasos, controla el estado de envío y los errores. Solo avanza de paso cuando el backend responde bien. Si el backend rechaza las credenciales, muestra el mensaje genérico correspondiente. |
 | `CredentialsStep.jsx` | Paso 1. Valida que haya correo y contraseña (todos los errores a la vez) y **vacía la contraseña del estado en cuanto se envía**. La contraseña usa `PasswordField` (de `features/account/`, el mismo del registro), con un botón para mostrarla u ocultarla; aquí no se marca como obligatoria ni se muestran los requisitos, y se puede pegar la contraseña, pero **no copiarla ni cortarla**, tampoco con el ojo activado (`bloquearCopia`, R9 de la revisión del Sprint 1; el registro bloquea además el pegado, ver `hu1-registro.md`, sección 1.3). |
 | `CodeStep.jsx` | Pasos 2 y 3. Campo de código de 6 dígitos (se reutiliza para el correo y para Microsoft Authenticator): solo admite números y vacía el valor al enviarlo. |
-| `loginErrors.js` | Traduce los errores del backend a mensajes fijos para el usuario. Traduce los errores HTTP a mensajes fijos; las cuentas pendientes reciben el mismo mensaje genérico que unas credenciales incorrectas. |
-| 
+| `loginErrors.js` | Traduce los errores HTTP a mensajes fijos para el usuario; las cuentas pendientes reciben el mismo mensaje genérico que unas credenciales incorrectas. |
 | `authFormStyles.js` | Estilos compartidos de los formularios. |
 | `LoginFlow.test.jsx` | Tests del flujo completo, los errores y las rutas protegidas. |
 
@@ -195,9 +194,9 @@ Todas las rutas son relativas a `frontend/src/`.
 
 | Estado | Significado para el frontend |
 |---|---|
-| 401 (u otro 4xx) | Dato incorrecto: mensaje genérico según el paso |
-| 403 con `{ "code": "ACCOUNT_BLOCKED" }` | Cuenta bloqueada por un administrador (task AB#245; antes `ACCOUNT_DISABLED`). Solo debe enviarse cuando la contraseña es correcta y antes de enviar ningún código. **Código propuesto por el frontend: hay que acordarlo con el backend** |
-| 403 con `{ "code": "ACCOUNT_PENDING" }` | Cuenta pendiente de activación (task AB#236). Solo debe enviarse en el paso 1 y cuando la contraseña es correcta. **Código propuesto por el frontend: hay que acordarlo con el backend** |
+| 401 | Credenciales incorrectas, correo inexistente o cuenta pendiente: mensaje genérico en el paso de credenciales. En los pasos de verificación se muestra el error correspondiente al código. |
+| 403 con `{ "code": "ACCOUNT_BLOCKED" }` | Cuenta bloqueada por un administrador (task AB#245; antes `ACCOUNT_DISABLED`). Se envía antes de enviar ningún código. |
+
 | 429 | Demasiados intentos |
 | 5xx o sin respuesta | "No se ha podido conectar con el servidor" |
 
@@ -258,7 +257,6 @@ npm run build
 - La página de login no tiene enlace para volver a la home.
 - Las rutas en inglés sustituyen a las que mencionaba HU15 (`/vendedor/productos`): `/seller/products`.
 - El login real depende de que el backend cumpla el contrato de la sección 5.
-- **Cuenta bloqueada (AB#245):** hasta que el backend renombre su código, sigue respondiendo `ACCOUNT_DISABLED` y el frontend lo trata como un error genérico. El mensaje es propuesta del frontend. No se ha probado contra el backend real.
 
 ---
 
@@ -271,7 +269,7 @@ Este documento y el trabajo técnico que describe se hicieron con ayuda de un as
 - **Cómo se comprobó:** el asistente reprodujo el proyecto en un entorno temporal, aparte del repositorio, con los archivos reales del equipo. Allí se ejecutaron **40 tests (todos en verde)** con el captcha; tras sustituirlo por Authenticator la suite completa del frontend tiene **51 tests en verde**, ESLint sin errores y un build de producción correcto. También se comprobó que el build no contiene los mocks ni sus credenciales.
 - **Qué NO se comprobó:** la app Microsoft Authenticator real, ni el flujo contra un backend real. Debe verificarse en el proyecto del equipo.
 - **Cómo guió el proceso:** el asistente propuso el orden de commits y ramas siguiendo las convenciones del proyecto, y explicó cada paso para aplicarlo a mano.
-- **Task AB#236:** la IA escribió la pantalla animada, el cambio en el formulario, el usuario pendiente del mock, los 5 tests y esta sección. La decisión de mostrar una pantalla (en lugar de un mensaje) tras pulsar "Continuar", que sea animada y dinámica y que no se haga push, fue del equipo. Suite completa: **523 tests en verde**, ESLint sin errores y build correcto.
+- **Task AB#236:** el contrato se actualizó para que una cuenta pendiente reciba el mismo 401 genérico que unas credenciales incorrectas o un correo inexistente. Se adaptaron el formulario, los mocks, los tests y esta documentación.
 - **Task AB#245:** la IA escribió con TDD el mensaje de cuenta bloqueada del login (HU2-CP28, en `LoginFlow.test.jsx`), actualizó el mock (`bloqueado@esibuy.test`, `ACCOUNT_BLOCKED`) y esta documentación. El equipo decidió el cambio de vocabulario (bloquear en lugar de desactivar), que solo afecte al login y los nombres `ACCOUNT_BLOCKED` y `BLOQUEADO`.
 - **Fallos de la demo del Sprint 1:** la IA escribió con TDD el botón para mostrar la contraseña en el login (HU2-CP27, en `LoginFlow.test.jsx`) y el enlace "Mis productos" de la cabecera para el vendedor (HU15-CP04, en `AppHeader.test.jsx`), y actualizó este documento. Los tests del login buscan ahora el campo con `/^contraseña/i`, porque `/contraseña/i` también encontraba el botón "Mostrar contraseña". El equipo decidió qué fallos se corregían. Suite completa: **591 tests en verde**, ESLint sin errores y build correcto.
 - **Revisión humana:** el código fue revisado, ejecutado y validado por el equipo antes de su integración. Revisado por: Ricardo.
