@@ -19,7 +19,7 @@ import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import AvatarSelector from '../features/account/AvatarSelector'
 import { PasswordField, PasswordRequirements } from '../features/account/PasswordField'
-import { esEmailValido, validarPasswords } from '../features/account/accountRules'
+import { esEmailValido, esNombreValido, filtrarNombre, validarPasswords } from '../features/account/accountRules'
 import { erroresDelServidor } from '../features/account/registroErrors'
 import { PATHS } from '../routes/paths'
 
@@ -67,6 +67,9 @@ function validar(datos) {
   OBLIGATORIOS.forEach((campo) => {
     if (!datos[campo].trim()) errores[campo] = 'Este campo es obligatorio'
   })
+  for (const campo of ['nombre', 'apellidos']) {
+    if (datos[campo] && !esNombreValido(datos[campo])) errores[campo] = 'Introduce entre 2 y 30 caracteres usando solo letras, espacios, guiones o apóstrofos'
+  }
   if (datos.email && !esEmailValido(datos.email)) {
     errores.email = 'Introduce un email válido'
   }
@@ -84,7 +87,8 @@ export default function AdminNewAdminPage() {
   // La fecha de incorporación es la del alta: se muestra, pero no se edita ni se envía.
   const [fechaIncorporacion] = useState(() => formatoFecha.format(new Date()))
 
-  const cambiar = (campo) => (_event, data) => setDatos({ ...datos, [campo]: data.value })
+  const cambiar = (campo) => (_event, data) =>
+    setDatos((actuales) => ({ ...actuales, [campo]: ['nombre', 'apellidos'].includes(campo) ? filtrarNombre(data.value) : data.value }))
 
   const crear = async () => {
     const nuevosErrores = validar(datos)
