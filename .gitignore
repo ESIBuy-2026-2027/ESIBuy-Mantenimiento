@@ -30,7 +30,6 @@ docs/planes/
 # Configuración local de VS Code
 .vscode/
 
-#.env
+# Secretos locales: nunca se suben
 .env
-.env.*
-!.env.example
+.env.local
