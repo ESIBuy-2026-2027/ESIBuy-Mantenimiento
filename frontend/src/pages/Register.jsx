@@ -205,6 +205,12 @@ export default function Register() {
     getCategories().then(setCategoriasDisponibles)
   }, [tipo])
 
+  useEffect(() => {
+    const primerCampoConError = document.querySelector('[data-register-error="true"]')
+    const destino = primerCampoConError ?? document.querySelector('[data-register-error-message="true"]')
+    destino?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+  }, [errores, errorGeneral])
+
   const cambiar = (campo) => (_e, data) =>
     setDatos((actuales) => ({ ...actuales, [campo]: ['nombre', 'apellidos'].includes(campo) ? filtrarNombre(data.value) : data.value }))
 
@@ -287,25 +293,29 @@ export default function Register() {
   }
 
   const campo = (nombre, label, { type, required = true } = {}) => (
-    <Field label={label} required={required} validationMessage={errores[nombre]}>
-      <Input
-        type={type}
-        maxLength={LONGITUD_MAXIMA[nombre]}
-        value={datos[nombre]}
-        onChange={cambiar(nombre)}
-      />
-    </Field>
+    <div data-register-error={errores[nombre] ? 'true' : undefined}>
+      <Field label={label} required={required} validationMessage={errores[nombre]}>
+        <Input
+          type={type}
+          maxLength={LONGITUD_MAXIMA[nombre]}
+          value={datos[nombre]}
+          onChange={cambiar(nombre)}
+        />
+      </Field>
+    </div>
   )
 
   const campoPassword = (nombre, label) => (
-    <PasswordField
-      label={label}
-      value={datos[nombre]}
-      onChange={cambiar(nombre)}
-      error={errores[nombre]}
-      maxLength={LONGITUD_MAXIMA[nombre]}
-      bloquearPegado
-    />
+    <div data-register-error={errores[nombre] ? 'true' : undefined}>
+      <PasswordField
+        label={label}
+        value={datos[nombre]}
+        onChange={cambiar(nombre)}
+        error={errores[nombre]}
+        maxLength={LONGITUD_MAXIMA[nombre]}
+        bloquearPegado
+      />
+    </div>
   )
 
   const camposComunes = (
@@ -320,7 +330,8 @@ export default function Register() {
   )
 
   const casillaPrivacidad = (
-    <Field validationMessage={errores.aceptaPrivacidad}>
+    <div data-register-error={errores.aceptaPrivacidad ? 'true' : undefined}>
+      <Field validationMessage={errores.aceptaPrivacidad}>
       <div className={styles.privacidad}>
         <Checkbox
           required
@@ -340,7 +351,8 @@ export default function Register() {
           *
         </Text>
       </div>
-    </Field>
+      </Field>
+    </div>
   )
 
   const dialogoPoliticaPrivacidad = (
@@ -429,9 +441,11 @@ export default function Register() {
         {casillaPrivacidad}
         {dialogoPoliticaPrivacidad}
         {errorGeneral && (
-          <MessageBar intent="error">
-            <MessageBarBody>{errorGeneral}</MessageBarBody>
-          </MessageBar>
+          <div data-register-error-message="true">
+            <MessageBar intent="error">
+              <MessageBarBody>{errorGeneral}</MessageBarBody>
+            </MessageBar>
+          </div>
         )}
         <Button appearance="primary" size="large" onClick={enviarCliente}>
           Registrarse
@@ -447,6 +461,7 @@ export default function Register() {
         {campo('nombre', 'Nombre')}
         {campo('apellidos', 'Apellidos')}
         {campo('nombreComercial', 'Nombre comercial')}
+        <div data-register-error={errores.categoriaPrincipalId ? 'true' : undefined}>
         <Field
           label="Categoría"
           required
@@ -461,6 +476,7 @@ export default function Register() {
             onChange={cambiarCategoria}
           />
         </Field>
+        </div>
         {camposComunes}
         {selectorAvatar}
         {casillaPrivacidad}
