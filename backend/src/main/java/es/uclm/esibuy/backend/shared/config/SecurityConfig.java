@@ -111,6 +111,7 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.GET, RUTAS_SALUD).permitAll()
                                                 .requestMatchers(RUTAS_ADMINISTRACION).hasRole(ROL_ADMINISTRADOR)
                                                 .requestMatchers(RUTAS_VENDEDOR).hasRole(ROL_VENDEDOR)
+                                                .requestMatchers(HttpMethod.DELETE, "/api/perfil/premium").hasRole(ROL_CLIENTE)
                                                 .requestMatchers(RUTAS_CLIENTE).hasRole(ROL_CLIENTE)
                                                 .requestMatchers(RUTAS_PERFIL).hasAnyRole(ROL_CLIENTE, ROL_VENDEDOR)
                                                 .requestMatchers(HttpMethod.GET, RUTAS_CATALOGO).hasRole(ROL_CLIENTE)
