@@ -127,6 +127,10 @@ const useStyles = makeStyles({
   cancellationAction: {
     alignSelf: 'flex-start',
   },
+  confirmationButton: {
+    minWidth: '170px',
+    whiteSpace: 'nowrap',
+  },
   lossList: {
     margin: 0,
     paddingLeft: tokens.spacingHorizontalXL,
@@ -384,15 +388,16 @@ export default function PremiumPage() {
               <Text className={styles.cancellationText}>
                 ¿Confirmas que quieres cancelar tu suscripción?
               </Text>
-              <Text size={200} className={styles.cancellationText}>
-                La cancelación estará disponible cuando se integre la operación correspondiente.
-              </Text>
             </DialogContent>
             <DialogActions>
-              <Button appearance="secondary" onClick={() => setSegundaConfirmacionAbierta(false)}>
+              <Button
+                appearance="secondary"
+                className={styles.confirmationButton}
+                onClick={() => setSegundaConfirmacionAbierta(false)}
+              >
                 Mantener Premium
               </Button>
-              <Button appearance="primary" disabled>
+              <Button appearance="primary" className={styles.confirmationButton} disabled>
                 Sí, cancelar Premium
               </Button>
             </DialogActions>
