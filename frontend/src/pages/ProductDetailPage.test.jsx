@@ -451,7 +451,7 @@ describe('ProductDetailPage (HU13): valorar el producto', () => {
     responderCon()
     server.use(http.get('/api/products/:id/valoraciones', () => HttpResponse.json(valoraciones)))
     const enviado = responderAlValorar((cuerpo) => {
-      valoraciones = [{ id: 'v-9', productoId: 'p-2', ...cuerpo }]
+      valoraciones = [{ id: 'v-9', productoId: 'p-2', ...cuerpo, nombreCliente: 'Carlos García', fechaCreacion: '2026-02-01T10:00:00Z' }]
       return HttpResponse.json(valoraciones[0], { status: 201 })
     })
     const formulario = await abrirFormulario()
