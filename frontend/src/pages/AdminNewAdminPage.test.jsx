@@ -247,7 +247,7 @@ describe('AdminNewAdminPage (HU21): acceso', () => {
     await abrirFormulario()
 
     const avatares = within(screen.getByRole('radiogroup'))
-    expect(avatares.getByRole('radio', { name: /avatar 1/i })).toBeInTheDocument()
+    expect(avatares.getByRole('radio', { name: /avatar 1/i })).toBeChecked()
     expect(avatares.getByRole('radio', { name: /avatar 3/i })).toBeInTheDocument()
   })
 
