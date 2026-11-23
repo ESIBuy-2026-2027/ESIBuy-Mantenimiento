@@ -34,6 +34,11 @@ public record Valoracion(String id, String productoId, String clienteId, String 
         }
     }
 
+    /** Compatibilidad para reconstrucciones y pruebas que no necesitan metadatos del autor. */
+    public static Valoracion nueva(String productoId, String clienteId, int puntuacion, String comentario) {
+        return new Valoracion(null, productoId, clienteId, puntuacion, comentario);
+    }
+
     /** Una valoración nueva: todavía sin id y con fecha de creación. */
     public static Valoracion nueva(String productoId, String clienteId, String nombreCliente, int puntuacion,
             String comentario) {
