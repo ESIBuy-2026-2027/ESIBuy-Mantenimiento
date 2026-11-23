@@ -100,7 +100,7 @@ describe('RegisterPaymentPage (HU45): pasarela obligatoria del registro Premium'
     expect(await screen.findByRole('heading', { level: 1, name: /registro de cliente/i })).toBeInTheDocument()
     await esperarRuta('/register')
     expect(screen.getByLabelText(/correo electrónico/i)).toHaveValue('repetido@correo.test')
-    expect(screen.getByLabelText(/correo electrónico/i)).toHaveAccessibleDescription('Este email ya está registrado')
+    expect(screen.getByLabelText(/correo electrónico/i)).toHaveAccessibleDescription('Este correo electrónico ya está registrado')
   })
 
   it('HU45-CP24: cancelar vuelve al formulario con sus datos; con Estándar se registra sin pasar por la pasarela', async () => {
