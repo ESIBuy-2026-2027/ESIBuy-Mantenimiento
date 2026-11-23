@@ -41,7 +41,7 @@ const DATOS_INICIALES = {
   sede: '',
   password: '',
   repeticionPassword: '',
-  avatar: '',
+  avatar: 'avatar1',
 }
 
 const formatoFecha = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -99,7 +99,7 @@ export default function AdminNewAdminPage() {
     setEnviando(true)
     try {
       const { nombre, apellidos, email, sede, avatar, password } = datos
-      await createAdmin({ nombre, apellidos, email, sede, avatar, password })
+      await createAdmin({ nombre, apellidos, email, sede, avatar: avatar || 'avatar1', password })
       setCreado(`${nombre} ${apellidos}`)
     } catch (error) {
       // El backend indica con un code qué dato rechaza (PR #104): se marca en su campo; si no, el mensaje genérico
