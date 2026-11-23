@@ -324,7 +324,7 @@ export default function Register() {
       <div className={styles.privacidad}>
         <Checkbox
           required
-          aria-label="Aceptar la política de privacidad"
+          aria-label="Acepto la política de privacidad"
           checked={datos.aceptaPrivacidad}
           onChange={(_event, data) => setDatos({ ...datos, aceptaPrivacidad: data.checked })}
         />
