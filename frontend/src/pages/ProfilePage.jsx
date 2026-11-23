@@ -5,6 +5,12 @@ import {
   Button,
   Card,
   Checkbox,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogSurface,
+  DialogTitle,
   MessageBar,
   MessageBarActions,
   MessageBarBody,
@@ -90,6 +96,7 @@ function AccountDeletion({ rol }) {
   const styles = useStyles()
   const titleId = useId()
   const { accountDeleted } = useAuth()
+  const [confirmacionInicial, setConfirmacionInicial] = useState(false)
   const [abierto, setAbierto] = useState(false)
 
   return (
@@ -101,9 +108,30 @@ function AccountDeletion({ rol }) {
       <Text className={styles.preferencesText}>
         Dejarás de formar parte de ESIBuy. Tus pedidos y valoraciones se conservan.
       </Text>
-      <Button className={styles.deletionAction} icon={<Delete20Regular />} onClick={() => setAbierto(true)}>
+      <Button className={styles.deletionAction} icon={<Delete20Regular />} onClick={() => setConfirmacionInicial(true)}>
         Eliminar mi cuenta
       </Button>
+      <Dialog open={confirmacionInicial} modalType="alert" onOpenChange={(_event, data) => !data.open && setConfirmacionInicial(false)}>
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle>Confirmar eliminación de cuenta</DialogTitle>
+            <DialogContent>
+              ¿Estás seguro de que quieres eliminar tu cuenta? Esta acción es irreversible.
+            </DialogContent>
+            <DialogActions>
+              <Button appearance="secondary" onClick={() => setConfirmacionInicial(false)}>
+                Cancelar
+              </Button>
+              <Button appearance="primary" onClick={() => {
+                setConfirmacionInicial(false)
+                setAbierto(true)
+              }}>
+                Continuar
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
       {abierto && <DeleteAccountDialog rol={rol} onClose={() => setAbierto(false)} onDeleted={accountDeleted} />}
       </Card>
     </section>

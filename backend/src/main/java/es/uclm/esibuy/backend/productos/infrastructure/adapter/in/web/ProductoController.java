@@ -4,6 +4,10 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
+import es.uclm.esibuy.backend.productos.application.service.GestionImagenesProductoService;
 import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
 
@@ -31,10 +36,34 @@ public class ProductoController {
 
     private final ListadoProductosUseCase listadoProductos;
     private final GestionProductosUseCase gestionProductos;
+    private final GestionImagenesProductoService gestionImagenes;
 
-    public ProductoController(ListadoProductosUseCase listadoProductos, GestionProductosUseCase gestionProductos) {
+    public ProductoController(ListadoProductosUseCase listadoProductos, GestionProductosUseCase gestionProductos,
+            GestionImagenesProductoService gestionImagenes) {
         this.listadoProductos = listadoProductos;
         this.gestionProductos = gestionProductos;
+        this.gestionImagenes = gestionImagenes;
+    }
+
+    // Subida o sustitución de imagen binaria del producto propio.
+    @PostMapping(value = "/seller/products/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ProductoImagenResponse subirImagen(@PathVariable String id,
+            @RequestParam("file") MultipartFile archivo, Authentication autenticado) throws IOException {
+        String referencia = gestionImagenes.subirImagen(autenticado.getName(), id, archivo.getBytes(),
+                archivo.getOriginalFilename(), archivo.getContentType());
+        return new ProductoImagenResponse(referencia);
+    }
+
+    // Las imágenes se sirven únicamente a usuarios autenticados por la configuración global de seguridad.
+    @GetMapping("/product-images/{id}")
+    public ResponseEntity<byte[]> obtenerImagen(@PathVariable String id) {
+        return gestionImagenes.obtener(id)
+                .map(imagen -> ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(imagen.tipoContenido()))
+                        .header("X-Content-Type-Options", "nosniff")
+                        .header("Content-Disposition", "inline")
+                        .body(imagen.contenido()))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     // Listado de los productos propios (HU32): el vendedor sale de la sesión, nunca de un parámetro.

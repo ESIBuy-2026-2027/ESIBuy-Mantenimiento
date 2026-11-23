@@ -5,7 +5,7 @@ const valoresValidos = () => ({
   ...emptyProductValues(),
   nombre: 'Teclado mecánico',
   categoriaId: 'cat-1',
-  precio: '89.5',
+  precio: '89',
 })
 
 describe('validateProduct', () => {
@@ -28,12 +28,16 @@ describe('validateProduct', () => {
     expect(validateProduct({ ...valoresValidos(), nombre: 'a'.repeat(100) }).nombre).toBeUndefined()
   })
 
-  it.each(['0', '-5', 'abc', '0.00'])('validateProduct_conPrecio_%s_devuelveError', (precio) => {
-    expect(validateProduct({ ...valoresValidos(), precio }).precio).toMatch(/mayor que 0/i)
+  it.each(['0', '-5', 'abc', '0.00', '12.5'])('validateProduct_conPrecio_%s_devuelveError', (precio) => {
+    expect(validateProduct({ ...valoresValidos(), precio }).precio).toMatch(/mayor que 0|número entero/i)
+  })
+
+  it('validateProduct_conPrecioDecimal_devuelveError', () => {
+    expect(validateProduct({ ...valoresValidos(), precio: '12.5' }).precio).toMatch(/número entero/i)
   })
 
   it('validateProduct_conPrecioMinimoPositivo_loAcepta', () => {
-    expect(validateProduct({ ...valoresValidos(), precio: '0.01' }).precio).toBeUndefined()
+    expect(validateProduct({ ...valoresValidos(), precio: '1' }).precio).toBeUndefined()
   })
 
   it.each(['', '0', '10'])('validateProduct_conStock_%s_loAcepta', (stock) => {
@@ -61,28 +65,26 @@ describe('validateProduct', () => {
     expect(Boolean(validateProduct({ ...valoresValidos(), imagen }).imagen)).toBe(hayError)
   })
 
-  it.each(['', '0', '-3', '101', 'abc'])('validateProduct_conDescuentoActivoYPorcentaje_%s_devuelveError', (porcentaje) => {
-    const errores = validateProduct({ ...valoresValidos(), descuentoActivo: true, descuentoPorcentaje: porcentaje })
+  it.each(['0', '-3', '100', '1.5', 'abc'])('validateProduct_conDescuento_%s_devuelveError', (porcentaje) => {
+    const errores = validateProduct({ ...valoresValidos(), descuentoPorcentaje: porcentaje })
 
     expect(errores.descuentoPorcentaje).toBeDefined()
   })
 
-  it.each(['1', '10', '100'])('validateProduct_conDescuentoActivoYPorcentaje_%s_loAcepta', (porcentaje) => {
-    const errores = validateProduct({ ...valoresValidos(), descuentoActivo: true, descuentoPorcentaje: porcentaje })
+  it.each(['1', '10', '99'])('validateProduct_conDescuento_%s_loAcepta', (porcentaje) => {
+    const errores = validateProduct({ ...valoresValidos(), descuentoPorcentaje: porcentaje })
 
     expect(errores.descuentoPorcentaje).toBeUndefined()
   })
 
-  it('validateProduct_conDescuentoPremiumActivoSinPorcentaje_devuelveError', () => {
-    const errores = validateProduct({ ...valoresValidos(), descuentoPremiumActivo: true })
+  it('validateProduct_conDescuentoVacio_loAceptaComoDesactivado', () => {
+    expect(validateProduct({ ...valoresValidos(), descuentoPorcentaje: '' }).descuentoPorcentaje).toBeUndefined()
+  })
+
+  it('validateProduct_conDescuentoPremiumInvalido_devuelveError', () => {
+    const errores = validateProduct({ ...valoresValidos(), descuentoPremiumPorcentaje: '100' })
 
     expect(errores.descuentoPremiumPorcentaje).toBeDefined()
-  })
-
-  it('validateProduct_conDescuentoDesactivado_ignoraSuPorcentaje', () => {
-    const errores = validateProduct({ ...valoresValidos(), descuentoActivo: false, descuentoPorcentaje: 'basura' })
-
-    expect(errores.descuentoPorcentaje).toBeUndefined()
   })
 })
 
@@ -97,7 +99,7 @@ describe('toProductPayload', () => {
       nombre: '  Teclado  ',
       descripcion: ' Con luz ',
       imagen: ' https://esibuy.test/a.png ',
-      precio: '89.5',
+      precio: '89',
       stock: '12',
     })
 
@@ -105,13 +107,13 @@ describe('toProductPayload', () => {
       nombre: 'Teclado',
       descripcion: 'Con luz',
       imagen: 'https://esibuy.test/a.png',
-      precio: 89.5,
+      precio: 89,
       stock: 12,
     })
   })
 
-  it('toProductPayload_conDescuentosInactivos_envia_porcentajeNulo', () => {
-    const payload = toProductPayload({ ...valoresValidos(), descuentoPorcentaje: '20' })
+  it('toProductPayload_conDescuentosVacios_envia_porcentajeNulo', () => {
+    const payload = toProductPayload(valoresValidos())
 
     expect(payload.descuento).toEqual({ activo: false, porcentaje: null })
     expect(payload.descuentoPremium).toEqual({ activo: false, porcentaje: null })
@@ -120,9 +122,7 @@ describe('toProductPayload', () => {
   it('toProductPayload_conDescuentosActivos_envia_losPorcentajes', () => {
     const payload = toProductPayload({
       ...valoresValidos(),
-      descuentoActivo: true,
       descuentoPorcentaje: '10',
-      descuentoPremiumActivo: true,
       descuentoPremiumPorcentaje: '15',
     })
 
@@ -158,14 +158,12 @@ describe('valuesFromProduct', () => {
       categoriaId: 'cat-2',
       imagen: '',
       disponible: false,
-      descuentoActivo: true,
       descuentoPorcentaje: '10',
-      descuentoPremiumActivo: false,
       descuentoPremiumPorcentaje: '',
     })
   })
 
-  it('valuesFromProduct_yDespuesToProductPayload_recuperaElProductoOriginal', () => {
+  it('valuesFromProduct_yDespuesToProductPayload_conservaLaImagenExistenteAlEditar', () => {
     const original = {
       nombre: 'Auriculares',
       descripcion: 'Con cable',
@@ -186,8 +184,6 @@ describe('emptyProductValues', () => {
   it('emptyProductValues_empiezaDisponibleYSinDescuentos', () => {
     expect(emptyProductValues()).toMatchObject({
       disponible: true,
-      descuentoActivo: false,
-      descuentoPremiumActivo: false,
       categoriaId: '',
     })
   })

@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
-import { Combobox, Option } from '@fluentui/react-components'
+import { Combobox, Dropdown, Option } from '@fluentui/react-components'
 import { categoryPropType } from '../utils/propTypes'
 
 // Valor interno de la opción «todas»: Fluent no admite una opción con valor vacío. Fuera del componente es ''.
@@ -11,7 +11,7 @@ const normalizar = (texto) => texto.normalize('NFD').replace(/\p{Diacritic}/gu, 
 
 // Desplegable con búsqueda para elegir una categoría (HU31): con muchas categorías se puede escribir para filtrar.
 // Va dentro de un Field, que le da la etiqueta, el asterisco de obligatorio y el mensaje de error.
-export default function CategoryCombobox({ value, categories, onChange, allLabel, placeholder, ...fieldProps }) {
+export default function CategoryCombobox({ value, categories, onChange, allLabel, placeholder, searchable = true, ...fieldProps }) {
   // null mientras no se escribe: entonces se muestra la categoría elegida y se ofrecen todas.
   const [busqueda, setBusqueda] = useState(null)
 
@@ -29,6 +29,24 @@ export default function CategoryCombobox({ value, categories, onChange, allLabel
     setBusqueda(null)
     if (!data.optionValue) return
     onChange(data.optionValue === TODAS ? '' : data.optionValue)
+  }
+
+  if (!searchable) {
+    return (
+      <Dropdown
+        {...fieldProps}
+        value={elegida?.label ?? ''}
+        selectedOptions={elegida ? [elegida.value] : []}
+        placeholder={placeholder}
+        onOptionSelect={elegir}
+      >
+        {opciones.map((opcion) => (
+          <Option key={opcion.value} value={opcion.value}>
+            {opcion.label}
+          </Option>
+        ))}
+      </Dropdown>
+    )
   }
 
   return (
@@ -65,4 +83,5 @@ CategoryCombobox.propTypes = {
   // Si se indica, la primera opción es «todas» (para los filtros) y equivale a no elegir ninguna.
   allLabel: PropTypes.string,
   placeholder: PropTypes.string,
+  searchable: PropTypes.bool,
 }

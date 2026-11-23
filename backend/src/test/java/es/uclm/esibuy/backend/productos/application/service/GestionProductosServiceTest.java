@@ -1,5 +1,8 @@
 package es.uclm.esibuy.backend.productos.application.service;
 
+import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
+import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
+import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
@@ -7,6 +10,7 @@ import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryP
 import es.uclm.esibuy.backend.productos.application.port.out.ResultadoAnalisis;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
@@ -52,6 +56,9 @@ class GestionProductosServiceTest {
     private ProductoRepositoryPort productoRepository;
 
     @Mock
+    private CategoriaRepositoryPort categoriaRepository;
+
+    @Mock
     private UsuarioEnSesionPort usuarioEnSesion;
 
     @Mock
@@ -61,7 +68,9 @@ class GestionProductosServiceTest {
 
     @BeforeEach
     void preparar() {
-        servicio = new GestionProductosService(productoRepository, usuarioEnSesion, analisisImagen);
+        servicio = new GestionProductosService(productoRepository, categoriaRepository, usuarioEnSesion, analisisImagen);
+        lenient().when(categoriaRepository.buscarPorId(any())).thenAnswer(invocacion -> Optional.of(
+                new Categoria(invocacion.getArgument(0), "Categoría", "", EstadoCategoria.ACTIVA)));
         // Por defecto el antivirus da la imagen por buena: los tests que no tratan del
         // análisis no dependen de él
         lenient().when(analisisImagen.analizar(any())).thenReturn(ResultadoAnalisis.SEGURA);
@@ -113,6 +122,31 @@ class GestionProductosServiceTest {
                 () -> servicio.crear(comando(new BigDecimal("89.50"), -1, "cat-1")));
         assertThrows(ProductoInvalidoException.class,
                 () -> servicio.crear(comando(new BigDecimal("89.50"), 12, " ")));
+
+        verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("VEN-08: rechaza una categoría inexistente y no guarda el producto")
+    void rechazaUnaCategoriaInexistente() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(categoriaRepository.buscarPorId("cat-inexistente")).thenReturn(Optional.empty());
+
+        assertThrows(CategoriaNoEncontradaException.class,
+                () -> servicio.crear(comando(new BigDecimal("89"), 12, "cat-inexistente")));
+
+        verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("VEN-08: rechaza una categoría inactiva y no guarda el producto")
+    void rechazaUnaCategoriaInactiva() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(categoriaRepository.buscarPorId("cat-inactiva")).thenReturn(Optional.of(
+                new Categoria("cat-inactiva", "Categoría", "", EstadoCategoria.INACTIVA)));
+
+        assertThrows(CategoriaNoEncontradaException.class,
+                () -> servicio.crear(comando(new BigDecimal("89"), 12, "cat-inactiva")));
 
         verify(productoRepository, never()).guardar(any());
     }

@@ -47,7 +47,8 @@ async function asegurarTokenCsrf(method) {
 
 function construirCabeceras(method, body) {
   const headers = {}
-  if (body) {
+  const esFormData = typeof FormData !== 'undefined' && body instanceof FormData
+  if (body && !esFormData) {
     headers['Content-Type'] = 'application/json'
   }
   const tokenCsrf = METODOS_SIN_CSRF.has(method) ? null : leerTokenCsrf()
@@ -75,7 +76,7 @@ export async function request(path, { method = 'GET', body } = {}) {
     method,
     credentials: 'include',
     headers: construirCabeceras(method, body),
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? (typeof FormData !== 'undefined' && body instanceof FormData ? body : JSON.stringify(body)) : undefined,
   })
 
   if (!response.ok) {

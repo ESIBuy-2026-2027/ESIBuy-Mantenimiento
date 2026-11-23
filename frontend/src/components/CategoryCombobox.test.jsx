@@ -33,6 +33,19 @@ describe('CategoryCombobox (HU31)', () => {
     expect(nombresDeLasOpciones()).toEqual(['Tecnología', 'Hogar', 'Jardín'])
   })
 
+  it('VEN-08: en modo no editable solo permite seleccionar una categoría del desplegable', async () => {
+    const user = userEvent.setup()
+    const { combobox, onChange } = renderizar({ searchable: false })
+
+    expect(combobox.tagName).toBe('BUTTON')
+    await user.click(combobox)
+
+    expect(nombresDeLasOpciones()).toEqual(['Tecnología', 'Hogar', 'Jardín'])
+    await user.click(screen.getByRole('option', { name: 'Hogar' }))
+
+    expect(onChange).toHaveBeenCalledWith('cat-2')
+  })
+
   it('HU31-CP26: al escribir filtra las categorías sin distinguir mayúsculas ni tildes', async () => {
     const user = userEvent.setup()
     const { combobox } = renderizar()

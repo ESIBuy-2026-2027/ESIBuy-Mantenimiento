@@ -159,6 +159,19 @@ class ProductoTest {
         assertDoesNotThrow(() -> productoConImagen(null));
     }
 
+    @Test
+    @DisplayName("HU31: acepta una referencia interna de imagen con identificador GridFS válido")
+    void aceptaReferenciaInternaDeImagen() {
+        assertDoesNotThrow(() -> productoConImagen("/api/product-images/507f1f77bcf86cd799439011"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "/api/product-images/no-valido", "/api/product-images/507f1f77bcf86cd79943901" })
+    @DisplayName("HU31: rechaza referencias internas de imagen con identificadores inválidos")
+    void rechazaReferenciaInternaDeImagenInvalida(String imagen) {
+        assertThrows(ProductoInvalidoException.class, () -> productoConImagen(imagen));
+    }
+
     @ParameterizedTest
     @ValueSource(strings = { "javascript:alert(1)", "ftp://esibuy.test/a.png",
             "no es una url", "data:text/html;base64,AAAA" })
