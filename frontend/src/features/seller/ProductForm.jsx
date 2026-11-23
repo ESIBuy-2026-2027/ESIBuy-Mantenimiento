@@ -94,7 +94,7 @@ const useStyles = makeStyles({
     opacity: 0,
     cursor: 'pointer',
   },
-  imageIcon: { color: tokens.colorBrandForeground1 },
+  imageIcon: { color: tokens.colorBrandForeground1, width: '28px', height: '28px' },
   imageTitle: { fontWeight: tokens.fontWeightSemibold },
 })
 
