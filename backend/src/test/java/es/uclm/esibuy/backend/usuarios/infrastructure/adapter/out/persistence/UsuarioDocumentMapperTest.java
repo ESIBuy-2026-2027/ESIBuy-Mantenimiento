@@ -141,11 +141,10 @@ class UsuarioDocumentMapperTest {
     @Test
     @DisplayName("HU1-CP11: un documento que no cumple las reglas del dominio no se confunde con un error del cliente")
     void documentoInvalidoNoSeConfundeConUnErrorDelCliente() {
-        // Un documento corrupto (p. ej. un DNI mal formado guardado a mano) es un fallo del servidor, no del
-        // cliente: el mapper lo envuelve en una excepción de infraestructura para que acabe en un 500 y no en
-        // el 400 del registro. La causa original se conserva para el log.
+        // Un documento corrupto (p. ej. un DNI obligatorio vacío guardado a mano) es un fallo del servidor,
+        // no del cliente: el mapper lo envuelve en una excepción de infraestructura. La causa original se conserva para el log.
         UsuarioDocument corrupto = documentoDeCliente("juan@uclm.es");
-        corrupto.setDni("DNI-INVALIDO");
+        corrupto.setDni(" ");
 
         UsuarioPersistidoInvalidoException excepcion = assertThrows(UsuarioPersistidoInvalidoException.class,
                 () -> mapper.aDominio(corrupto));

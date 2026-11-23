@@ -149,7 +149,7 @@ class AdministracionUsuariosServiceTest {
     void rechazaEditarUnClienteConDatosNoValidos() {
         when(usuarioRepository.buscarPorId("u-1")).thenReturn(Optional.of(clienteLucia()));
         EditarUsuarioCommand dniNoValido = new EditarUsuarioCommand("Carla", "Moreno Gil", null,
-                "1234", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR, null, null);
+                " ", null, LocalDate.of(1978, 4, 13), TipoCliente.ESTANDAR, null, null);
         EditarUsuarioCommand menorDeEdad = new EditarUsuarioCommand("Carla", "Moreno Gil", null,
                 "10004119A", null, LocalDate.of(2010, 1, 1), TipoCliente.ESTANDAR, null, null);
 
