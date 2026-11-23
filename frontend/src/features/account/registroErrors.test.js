@@ -15,7 +15,7 @@ describe('erroresDelServidor', () => {
       'EMAIL_AND_COMMERCIAL_NAME_ALREADY_REGISTERED')))
       .toEqual({
         campos: {
-          email: 'Este email ya está registrado',
+          email: 'Este correo electrónico ya está registrado',
           nombreComercial: 'Este nombre comercial ya está registrado',
         },
       })

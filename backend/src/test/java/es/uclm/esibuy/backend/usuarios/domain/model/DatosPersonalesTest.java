@@ -25,6 +25,25 @@ class DatosPersonalesTest {
     }
 
     @Test
+    @DisplayName("Acepta nombres con tildes, guiones y apóstrofos")
+    void aceptaNombresConCaracteresDelIdioma() {
+        assertDoesNotThrow(() -> new DatosPersonales("María-José", "O'Connor", null));
+    }
+
+    @Test
+    @DisplayName("Rechaza números en el nombre y los apellidos")
+    void rechazaNumerosEnNombreYApellidos() {
+        assertThrows(UsuarioInvalidoException.class, () -> new DatosPersonales("Ana2", "García López", null));
+        assertThrows(UsuarioInvalidoException.class, () -> new DatosPersonales("Ana", "García2", null));
+    }
+
+    @Test
+    @DisplayName("Rechaza un nombre de menos de dos caracteres")
+    void rechazaNombreDemasiadoCorto() {
+        assertThrows(UsuarioInvalidoException.class, () -> new DatosPersonales("A", "García López", null));
+    }
+
+    @Test
     @DisplayName("HU1-CP08: rechaza un nombre en blanco")
     void rechazaNombreEnBlanco() {
         assertThrows(UsuarioInvalidoException.class, () -> new DatosPersonales("   ", "García López", null));
@@ -47,7 +66,6 @@ class DatosPersonalesTest {
     @Test
     @DisplayName("HU1-CP08: acepta un nombre de exactamente 30 caracteres")
     void aceptaNombreDe30Caracteres() {
-        // Frontera del máximo del Product Owner: 30 sí, 31 no (lo mismo aplica a los apellidos)
         assertDoesNotThrow(() -> new DatosPersonales(NOMBRE_DE_30, "García López", null));
     }
 }

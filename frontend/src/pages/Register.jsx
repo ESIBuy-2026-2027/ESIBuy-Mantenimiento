@@ -25,8 +25,8 @@ import { erroresDelServidor } from '../features/account/registroErrors'
 import { useRegistroPremium } from '../features/account/RegistroPremiumContext'
 import { PATHS } from '../routes/paths'
 import {
-  esDniValido,
   esEmailValido,
+  esNombreValido,
   esMayorDeEdad,
   esTelefonoValido,
   sinTelefonoVacio,
@@ -115,11 +115,13 @@ function validarCamposComunes(datos, obligatorios) {
   obligatorios.forEach((campo) => {
     if (!datos[campo].trim()) errores[campo] = 'Este campo es obligatorio'
   })
-  if (datos.dni && !esDniValido(datos.dni)) {
-    errores.dni = 'Introduce un DNI válido (8 números y una letra)'
+  for (const campo of ['nombre', 'apellidos']) {
+    if (datos[campo] && !esNombreValido(datos[campo])) {
+      errores[campo] = 'Introduce entre 2 y 30 caracteres usando solo letras, espacios, guiones o apóstrofos'
+    }
   }
-  if (datos.email && !esEmailValido(datos.email)) {
-    errores.email = 'Introduce un email válido'
+  if (datos.email && !esEmailValido(datos.email.trim())) {
+    errores.email = 'Introduce un correo electrónico válido. Ejemplo: email@dominio.es'
   }
   if (datos.telefono && !esTelefonoValido(datos.telefono)) {
     errores.telefono = 'Introduce un teléfono válido (9 números)'
@@ -261,11 +263,11 @@ export default function Register() {
   const camposComunes = (
     <>
       {campo('dni', 'DNI')}
-      {campo('email', 'Email', { type: 'email' })}
+      {campo('email', 'Correo electrónico', { type: 'email' })}
       {campo('telefono', 'Teléfono', { type: 'tel', required: false })}
-      {campoPassword('password', 'Password')}
+      {campoPassword('password', 'Contraseña')}
       <PasswordRequirements password={datos.password} />
-      {campoPassword('repeticionPassword', 'Repetir password')}
+      {campoPassword('repeticionPassword', 'Repetir contraseña')}
     </>
   )
 

@@ -2,7 +2,7 @@
 // al campo que hay que marcar y su mensaje. El backend indica el motivo con un code (fallos de la demo del
 // Sprint 1, PR #104); el mensaje del backend es siempre genérico y no se muestra.
 
-const EMAIL_YA_REGISTRADO = 'Este email ya está registrado'
+const EMAIL_YA_REGISTRADO = 'Este correo electrónico ya está registrado'
 const NOMBRE_COMERCIAL_YA_REGISTRADO = 'Este nombre comercial ya está registrado'
 
 const CAMPOS_POR_CODE = {
@@ -14,11 +14,11 @@ const CAMPOS_POR_CODE = {
     password: 'Esta contraseña se ha detectado en filtraciones de datos. Elige otra contraseña.',
   },
   PASSWORD_CONTAINS_PERSONAL_DATA: {
-    password: 'La contraseña no puede contener tu nombre, tus apellidos ni tu email',
+    password: 'La contraseña no puede contener tu nombre, tus apellidos ni tu correo electrónico',
   },
   PASSWORDS_DO_NOT_MATCH: { repeticionPassword: 'Las contraseñas no coinciden' },
-  INVALID_EMAIL: { email: 'El email no tiene un formato válido' },
-  INVALID_DNI: { dni: 'El DNI debe tener 8 números y una letra' },
+  INVALID_EMAIL: { email: 'El correo electrónico no tiene un formato válido' },
+  INVALID_DNI: { dni: 'El DNI es obligatorio' },
   INVALID_PHONE: { telefono: 'El teléfono debe tener 9 números' },
   UNDERAGE: { fechaNacimiento: 'Debes ser mayor de edad para registrarte' },
   PRIVACY_NOT_ACCEPTED: { aceptaPrivacidad: 'Debes aceptar la política de privacidad' },

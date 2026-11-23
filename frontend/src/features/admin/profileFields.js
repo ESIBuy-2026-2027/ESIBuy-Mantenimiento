@@ -1,6 +1,6 @@
 import { ROLES } from '../../auth/roles'
 import { formatDate } from '../../utils/format'
-import { esDniValido, esMayorDeEdad, esTelefonoValido } from '../account/accountRules'
+import { esMayorDeEdad, esTelefonoValido } from '../account/accountRules'
 import { ROLE_LABELS, STATUS_LABELS } from './usersConfig'
 
 // Campos de la ficha de cada tipo de usuario (HU20, HU22 y HU26). Una sola definición sirve para los dos modos:
@@ -12,7 +12,6 @@ export const TIPOS_CLIENTE = { ESTANDAR: 'Estándar', PREMIUM: 'Premium' }
 
 const SIN_DATO = '—'
 const AVATAR = 'avatar'
-const DNI_LENGTH = 9
 const TIPO_CLIENTE_POR_DEFECTO = 'ESTANDAR'
 
 const textoOSinDato = (valor) => valor || SIN_DATO
@@ -41,11 +40,7 @@ const dni = {
   name: 'dni',
   label: 'DNI',
   read: (u) => textoOSinDato(u.dni),
-  edit: {
-    required: true,
-    maxLength: DNI_LENGTH,
-    validate: (valor) => (esDniValido(valor) ? undefined : 'Introduce un DNI válido (8 números y una letra)'),
-  },
+  edit: { required: true },
 }
 const telefono = {
   name: 'telefono',

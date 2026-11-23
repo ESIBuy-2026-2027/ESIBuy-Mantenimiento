@@ -231,10 +231,6 @@ describe('validateProfile', () => {
     ])
   })
 
-  it.each(['1234567', '12345678', 'ABCDEFGHI', '123456789A'])('validateProfile_conDni_%s_devuelveError', (dni) => {
-    expect(validateProfile(ROLES.CLIENTE, { ...valoresDeCliente(), dni }).dni).toMatch(/dni válido/i)
-  })
-
   it.each(['', '12345', '12345678a', '1234567890'])('validateProfile_conTelefono_%s', (telefono) => {
     const error = validateProfile(ROLES.CLIENTE, { ...valoresDeCliente(), telefono }).telefono
 
@@ -282,10 +278,9 @@ describe('validateProfile', () => {
     ])
   })
 
-  it('validateProfile_deUnVendedorConDniIncorrecto_devuelveElMismoErrorQueUnCliente', () => {
-    const errores = validateProfile(ROLES.VENDEDOR, { ...initialValues(ROLES.VENDEDOR, VENDEDOR), dni: 'B12345601' })
-
-    expect(errores.dni).toMatch(/dni válido \(8 números y una letra\)/i)
+  it('validateProfile_aceptaDniConFormatoAlternativo', () => {
+    expect(validateProfile(ROLES.CLIENTE, { ...valoresDeCliente(), dni: 'AB-1234-X' })).toEqual({})
+    expect(validateProfile(ROLES.VENDEDOR, { ...initialValues(ROLES.VENDEDOR, VENDEDOR), dni: 'NIF extranjero 123' })).toEqual({})
   })
 })
 
