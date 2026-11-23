@@ -27,6 +27,7 @@ import { PATHS } from '../routes/paths'
 import {
   esEmailValido,
   esNombreValido,
+  filtrarNombre,
   esMayorDeEdad,
   esTelefonoValido,
   sinTelefonoVacio,
@@ -158,7 +159,8 @@ export default function Register() {
     getCategories().then(setCategoriasDisponibles)
   }, [tipo])
 
-  const cambiar = (campo) => (e, data) => setDatos({ ...datos, [campo]: data.value })
+  const cambiar = (campo) => (_e, data) =>
+    setDatos((actuales) => ({ ...actuales, [campo]: ['nombre', 'apellidos'].includes(campo) ? filtrarNombre(data.value) : data.value }))
 
   const cambiarCategoria = (categoriaPrincipalId) => setDatos({ ...datos, categoriaPrincipalId })
 
