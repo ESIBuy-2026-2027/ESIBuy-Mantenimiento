@@ -407,9 +407,9 @@ export default function ProductDetail({
             </div>
           ) : !reviewStatus ? (
             <Text className={styles.muted}>Comprobando si puedes valorar este producto…</Text>
-          ) : reviewStatus.haValorado ? (
+          ) : reviewStatus.haValorado && !reviewStatus.miValoracionId ? (
             <Text className={styles.muted}>Ya has valorado este producto.</Text>
-          ) : reviewStatus.haComprado ? (
+          ) : reviewStatus.haComprado && !reviewStatus.haValorado ? (
             <ReviewForm productId={product.id} onCreated={onReviewCreated} />
           ) : (
             <Text className={styles.muted}>Solo puedes valorar productos que has comprado.</Text>
