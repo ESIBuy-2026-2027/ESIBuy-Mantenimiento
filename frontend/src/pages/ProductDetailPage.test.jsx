@@ -560,6 +560,34 @@ describe('ProductDetailPage (CLI-04): estado de compra y valoración', () => {
     expect(screen.queryByRole('form', { name: /valora este producto/i })).not.toBeInTheDocument()
   })
 
+  it('muestra un acceso junto a la valoración superior y enlaza con la valoración propia', async () => {
+    responderCon()
+    responderValoraciones([
+      { id: 'v-propia', productoId: 'p-2', puntuacion: 5, comentario: 'Mi valoración', nombreCliente: 'Carlos García', fechaCreacion: '2026-11-20T10:00:00Z' },
+      { id: 'v-otra', productoId: 'p-2', puntuacion: 4, comentario: 'Otra valoración', nombreCliente: 'Ana López', fechaCreacion: '2026-11-21T10:00:00Z' },
+    ])
+    responderEstadoValoracion({ haComprado: true, haValorado: true, miValoracionId: 'v-propia' })
+    await abrirDetalle()
+
+    const acceso = await screen.findByRole('link', { name: /ya has valorado este producto.*ver mi valoración/i })
+    expect(acceso).toHaveAttribute('href', '#valoracion-v-propia')
+
+    const lista = await screen.findByRole('list', { name: /valoraciones de los clientes/i })
+    const propia = within(lista).getByText('Mi valoración').closest('li')
+    const otra = within(lista).getByText('Otra valoración').closest('li')
+    expect(propia).toHaveAttribute('id', 'valoracion-v-propia')
+    expect(otra).toHaveAttribute('id', 'valoracion-v-otra')
+    expect(propia.className).not.toBe(otra.className)
+  })
+
+  it('no muestra el acceso a la valoración propia si el cliente todavía no ha valorado', async () => {
+    responderCon()
+    responderEstadoValoracion({ haComprado: true, haValorado: false, miValoracionId: null })
+    await abrirDetalle()
+
+    expect(screen.queryByRole('link', { name: /ver mi valoración/i })).not.toBeInTheDocument()
+  })
+
   it('indica que el cliente ya ha valorado el producto y oculta el formulario', async () => {
     responderCon()
     responderEstadoValoracion({ haComprado: true, haValorado: true, miValoracionId: 'v-1' })
