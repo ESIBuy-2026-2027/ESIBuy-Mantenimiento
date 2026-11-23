@@ -301,8 +301,7 @@ export default function PremiumPage() {
   const benefitsTitleId = useId()
   const location = useLocation()
   const profile = useApiQuery(getProfile)
-  const [primeraConfirmacionAbierta, setPrimeraConfirmacionAbierta] = useState(false)
-  const [segundaConfirmacionAbierta, setSegundaConfirmacionAbierta] = useState(false)
+  const [faseCancelacion, setFaseCancelacion] = useState(null)
   const [cancelandoPremium, setCancelandoPremium] = useState(false)
   const [errorCancelacion, setErrorCancelacion] = useState(false)
   const aviso = TEXTO_AVISO_PREMIUM[location.state?.aviso] ?? null
@@ -313,7 +312,7 @@ export default function PremiumPage() {
     setErrorCancelacion(false)
     try {
       await cancelPremium()
-      setSegundaConfirmacionAbierta(false)
+      setFaseCancelacion(null)
       profile.retry()
     } catch {
       setErrorCancelacion(true)
@@ -356,7 +355,7 @@ export default function PremiumPage() {
           <Button
             appearance="secondary"
             className={styles.cancellationAction}
-            onClick={() => setPrimeraConfirmacionAbierta(true)}
+            onClick={() => setFaseCancelacion('inicial')}
           >
             Cancelar mi suscripción
           </Button>
@@ -364,75 +363,72 @@ export default function PremiumPage() {
       )}
 
       <Dialog
-        open={primeraConfirmacionAbierta}
+        open={faseCancelacion !== null}
         modalType="alert"
-        onOpenChange={(_event, data) => !data.open && setPrimeraConfirmacionAbierta(false)}
+        onOpenChange={(_event, data) => !data.open && !cancelandoPremium && setFaseCancelacion(null)}
       >
         <DialogSurface>
           <DialogBody>
-            <DialogTitle>¿Estás seguro?</DialogTitle>
-            <DialogContent>
-              ¿Quieres continuar con la cancelación de tu suscripción ESIBuy Premium?
-            </DialogContent>
-            <DialogActions>
-              <Button
-                appearance="secondary"
-                className={styles.confirmationButton}
-                onClick={() => setPrimeraConfirmacionAbierta(false)}
-              >
-                No, mantener Premium
-              </Button>
-              <Button
-                appearance="primary"
-                className={styles.confirmationButton}
-                onClick={() => {
-                  setPrimeraConfirmacionAbierta(false)
-                  setSegundaConfirmacionAbierta(true)
-                }}
-              >
-                Continuar
-              </Button>
-            </DialogActions>
-          </DialogBody>
-        </DialogSurface>
-      </Dialog>
-
-      <Dialog
-        open={segundaConfirmacionAbierta}
-        modalType="alert"
-        onOpenChange={(_event, data) => !data.open && setSegundaConfirmacionAbierta(false)}
-      >
-        <DialogSurface>
-          <DialogBody>
-            <DialogTitle>Ventajas que perderás</DialogTitle>
-            <DialogContent>
-              <Text>Al cancelar Premium, tu cuenta pasará a ser Estándar y dejarás de disfrutar de:</Text>
-              <ul className={styles.lossList}>
-                <li>Descuentos exclusivos para clientes Premium.</li>
-                <li>Envíos sin coste.</li>
-                <li>Prioridad en los envíos.</li>
-              </ul>
-              <Text className={styles.cancellationText}>
-                ¿Confirmas que quieres cancelar tu suscripción?
-              </Text>
-            </DialogContent>
-            <DialogActions>
-              <Button
-                appearance="secondary"
-                className={styles.confirmationButton}
-                onClick={() => setSegundaConfirmacionAbierta(false)}
-              >
-                Mantener Premium
-              </Button>
-              <Button
-                appearance="primary"
-                className={styles.confirmationButton}
-                disabled={cancelandoPremium}
-                onClick={confirmarCancelacionPremium}
-              >
-                {cancelandoPremium ? 'Cancelando…' : 'Sí, cancelar Premium'}
-              </Button>
-            </DialogActions>
+            {faseCancelacion === 'inicial' ? (
+              <>
+                <DialogTitle>¿Estás seguro?</DialogTitle>
+                <DialogContent>
+                  ¿Quieres continuar con la cancelación de tu suscripción ESIBuy Premium?
+                </DialogContent>
+                <DialogActions>
+                  <Button
+                    appearance="secondary"
+                    className={styles.confirmationButton}
+                    onClick={() => setFaseCancelacion(null)}
+                  >
+                    No, mantener Premium
+                  </Button>
+                  <Button
+                    appearance="primary"
+                    className={styles.confirmationButton}
+                    onClick={() => {
+                      setErrorCancelacion(false)
+                      setFaseCancelacion('final')
+                    }}
+                  >
+                    Continuar
+                  </Button>
+                </DialogActions>
+              </>
+            ) : (
+              <>
+                <DialogTitle>Ventajas que perderás</DialogTitle>
+                <DialogContent>
+                  <Text>Al cancelar Premium, tu cuenta pasará a ser Estándar y dejarás de disfrutar de:</Text>
+                  <ul className={styles.lossList}>
+                    <li>Descuentos exclusivos para clientes Premium.</li>
+                    <li>Envíos sin coste.</li>
+                    <li>Prioridad en los envíos.</li>
+                  </ul>
+                  <Text className={styles.cancellationText}>
+                    ¿Confirmas que quieres cancelar tu suscripción?
+                  </Text>
+                </DialogContent>
+                <DialogActions>
+                  <Button
+                    appearance="secondary"
+                    className={styles.confirmationButton}
+                    disabled={cancelandoPremium}
+                    onClick={() => setFaseCancelacion(null)}
+                  >
+                    Mantener Premium
+                  </Button>
+                  <Button
+                    appearance="primary"
+                    className={styles.confirmationButton}
+                    disabled={cancelandoPremium}
+                    onClick={confirmarCancelacionPremium}
+                  >
+                    {cancelandoPremium ? 'Cancelando…' : 'Sí, cancelar Premium'}
+                  </Button>
+                </DialogActions>
+              </>
+            )}
           </DialogBody>
         </DialogSurface>
       </Dialog>
