@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { beforeEach, describe, it, expect, vi } from 'vitest'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
@@ -6,6 +6,10 @@ import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
 const RUTA = '/admin/admins/new'
+
+beforeEach(() => {
+  Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: vi.fn() })
+})
 
 async function abrirFormulario() {
   await abrirSesionPorApi('admin@esibuy.test')
@@ -76,7 +80,7 @@ describe('AdminNewAdminPage (HU21): formulario', () => {
     const user = userEvent.setup()
     await abrirFormulario()
 
-    await user.click(screen.getByRole('button', { name: /^mostrar password$/i }))
+    await user.click(screen.getByRole('button', { name: /^mostrar contraseña$/i }))
 
     expect(screen.getByLabelText(/^contraseña/i)).toHaveAttribute('type', 'text')
   })
@@ -91,6 +95,15 @@ describe('AdminNewAdminPage (HU21): validaciones', () => {
 
     expect(screen.getAllByText(/este campo es obligatorio/i)).toHaveLength(5)
     expect(screen.queryByText(/administrador creado/i)).not.toBeInTheDocument()
+  })
+
+  it('adminNewAdminPage_alEnviarVacio_desplazaLaPantallaAlPrimerCampoConError', async () => {
+    const user = userEvent.setup()
+    await abrirFormulario()
+
+    await crear(user)
+
+    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' })
   })
 
   it('adminNewAdminPage_conEmailInvalido_muestraErrorDeFormato', async () => {
@@ -197,6 +210,20 @@ describe('AdminNewAdminPage (HU21): alta', () => {
 
     expect(await screen.findByText(/este correo electrónico ya está registrado/i)).toBeInTheDocument()
     expect(screen.queryByText(/administrador creado/i)).not.toBeInTheDocument()
+  })
+
+  it('adminNewAdminPage_conErrorDeServidor_desplazaLaPantallaAlMensajeGeneral', async () => {
+    server.use(
+      http.post('/api/admin/admins', () => HttpResponse.json({ message: 'MongoTimeoutException' }, { status: 500 })),
+    )
+    const user = userEvent.setup()
+    await abrirFormulario()
+
+    await rellenarFormularioValido(user)
+    await crear(user)
+
+    expect(await screen.findByText(/no se ha podido crear el administrador/i)).toBeInTheDocument()
+    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' })
   })
 
   it('adminNewAdminPage_conErrorDeServidor_muestraMensajeGenerico', async () => {
@@ -310,7 +337,7 @@ describe('AdminNewAdminPage (HU21, R9): la contraseña solo se escribe a mano', 
     await abrirFormulario()
     await rellenarFormularioValido(user)
 
-    await user.click(screen.getAllByRole('button', { name: /^mostrar password$/i })[0])
+    await user.click(screen.getAllByRole('button', { name: /^mostrar contraseña$/i })[0])
 
     for (const campo of [screen.getByLabelText(/^contraseña/i), screen.getByLabelText(/^repetir contraseña/i)]) {
       // fireEvent devuelve false cuando el evento se ha cancelado
