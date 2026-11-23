@@ -29,3 +29,10 @@ export function deleteAccount(password) {
 export function becomePremium() {
   return request('/api/perfil/premium', { method: 'POST' })
 }
+
+
+// Cancelación de ESIBuy Premium (CLI-02). Sin cuerpo: el backend identifica al cliente por la sesión
+// y devuelve el perfil actualizado con tipoCliente ESTANDAR.
+export function cancelPremium() {
+  return request('/api/perfil/premium', { method: 'DELETE' })
+}
