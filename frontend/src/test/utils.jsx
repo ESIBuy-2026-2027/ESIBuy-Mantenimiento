@@ -16,6 +16,8 @@ export function renderWithProviders(ui, { route = '/' } = {}) {
 // así que se buscan en toda la pantalla aunque el desplegable esté dentro de un diálogo.
 export async function elegirCategoria(user, nombre, { campo = /categoría/i, dentro } = {}) {
   const zona = dentro ? within(dentro) : screen
-  await user.click(await zona.findByRole('combobox', { name: campo }))
+  const selector = zona.queryByRole('combobox', { name: campo })
+    ?? await zona.findByRole('button', { name: campo })
+  await user.click(selector)
   await user.click(await screen.findByRole('option', { name: nombre }))
 }
