@@ -35,6 +35,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.EditarPerfilCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.GestionPerfilUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.GestionCuentaUseCase;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ClienteYaPremiumException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.ClienteNoPremiumException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ContrasenaActualIncorrectaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import es.uclm.esibuy.backend.usuarios.domain.exception.NombreComercialYaRegistradoException;
@@ -441,6 +442,62 @@ class PerfilControllerTest {
         mockMvc.perform(post(RUTA + "/premium").with(user(EMAIL_CLIENTE).roles("CLIENTE")).with(csrf()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("ALREADY_PREMIUM"));
+        }
+
+        @Test
+        @DisplayName("CLI-02: un cliente Premium cancela y recibe su perfil como Estándar")
+        void unClienteCancelaPremium() throws Exception {
+        when(gestionPerfil.cancelarPremium(EMAIL_CLIENTE)).thenReturn(new Usuario("u-1",
+                new DatosPersonales("Lucía", "Torres Vega", null), new Email(EMAIL_CLIENTE), "hash-no-debe-salir",
+                Rol.CLIENTE, new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"),
+                        LocalDate.of(1996, Month.MAY, 20), null), null));
+
+        mockMvc.perform(delete(RUTA + "/premium").with(user(EMAIL_CLIENTE).roles("CLIENTE")).with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tipoCliente").value("ESTANDAR"))
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+
+        verify(gestionPerfil).cancelarPremium(EMAIL_CLIENTE);
+        }
+
+        @Test
+        @DisplayName("CLI-02: un cliente Estándar recibe 400 NOT_PREMIUM")
+        void unClienteEstandarNoPuedeCancelarPremium() throws Exception {
+        when(gestionPerfil.cancelarPremium(EMAIL_CLIENTE))
+                .thenThrow(new ClienteNoPremiumException("El cliente no tiene una suscripción Premium"));
+
+        mockMvc.perform(delete(RUTA + "/premium").with(user(EMAIL_CLIENTE).roles("CLIENTE")).with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("NOT_PREMIUM"));
+        }
+
+        @Test
+        @DisplayName("CLI-02: vendedor y administrador reciben 403 al intentar cancelar Premium")
+        void rolesDistintosDeClienteNoPuedenCancelarPremium() throws Exception {
+        mockMvc.perform(delete(RUTA + "/premium").with(user(EMAIL_VENDEDOR).roles("VENDEDOR")).with(csrf()))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(delete(RUTA + "/premium").with(user("admin@esibuy.test").roles("ADMINISTRADOR")).with(csrf()))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(gestionPerfil);
+        }
+
+        @Test
+        @DisplayName("CLI-02: sin sesión no se puede cancelar Premium")
+        void sinSesionNoPuedeCancelarPremium() throws Exception {
+        mockMvc.perform(delete(RUTA + "/premium").with(csrf()))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(gestionPerfil);
+        }
+
+        @Test
+        @DisplayName("CLI-02: sin CSRF no se puede cancelar Premium")
+        void sinCsrfNoPuedeCancelarPremium() throws Exception {
+        mockMvc.perform(delete(RUTA + "/premium").with(user(EMAIL_CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(gestionPerfil);
         }
 
         @Test

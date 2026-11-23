@@ -3,6 +3,12 @@ import { Button, MessageBar, MessageBarActions, MessageBarBody, Text, makeStyles
 import RatingStars from '../catalog/RatingStars'
 import { reviewPropType } from '../../utils/propTypes'
 
+const formatearFecha = (fecha) => new Intl.DateTimeFormat('es-ES', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+}).format(new Date(fecha))
+
 const useStyles = makeStyles({
   list: {
     display: 'flex',
@@ -21,6 +27,10 @@ const useStyles = makeStyles({
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     borderRadius: tokens.borderRadiusXLarge,
   },
+  author: {
+    color: tokens.colorNeutralForeground2,
+    fontWeight: tokens.fontWeightSemibold,
+  },
   comment: {
     whiteSpace: 'pre-line',
     overflowWrap: 'anywhere',
@@ -29,11 +39,15 @@ const useStyles = makeStyles({
   muted: {
     color: tokens.colorNeutralForeground3,
   },
+  ownItem: {
+    border: `1px solid ${tokens.colorBrandStroke1}`,
+    backgroundColor: tokens.colorBrandBackground2,
+    scrollMarginTop: tokens.spacingVerticalXXL,
+  },
 })
 
-// Valoraciones de un producto (HU13, T368): cada una con sus estrellas y, si lo tiene, su comentario. No se sabe quién
-// la escribió ni cuándo: el backend no lo devuelve. Mientras llegan no se muestra nada.
-export default function ReviewList({ reviews, failed, onRetry }) {
+// Valoraciones de un producto (CLI-03): cada una muestra puntuación, autor, fecha y comentario opcional.
+export default function ReviewList({ reviews, failed, onRetry, myReviewId = null }) {
   const styles = useStyles()
 
   if (failed) {
@@ -54,8 +68,14 @@ export default function ReviewList({ reviews, failed, onRetry }) {
   return (
     <ul className={styles.list} aria-label="Valoraciones de los clientes">
       {reviews.map((review) => (
-        <li key={review.id} className={styles.item}>
+        <li
+          key={review.id}
+          id={`valoracion-${review.id}`}
+          className={myReviewId === review.id ? `${styles.item} ${styles.ownItem}` : styles.item}
+        >
           <RatingStars value={review.puntuacion} size={18} />
+          <Text className={styles.author}>{review.nombreCliente}</Text>
+          <Text size={200} className={styles.muted}>{formatearFecha(review.fechaCreacion)}</Text>
           {review.comentario && <Text className={styles.comment}>{review.comentario}</Text>}
         </li>
       ))}
@@ -67,4 +87,5 @@ ReviewList.propTypes = {
   reviews: PropTypes.arrayOf(reviewPropType),
   failed: PropTypes.bool.isRequired,
   onRetry: PropTypes.func.isRequired,
+  myReviewId: PropTypes.string,
 }

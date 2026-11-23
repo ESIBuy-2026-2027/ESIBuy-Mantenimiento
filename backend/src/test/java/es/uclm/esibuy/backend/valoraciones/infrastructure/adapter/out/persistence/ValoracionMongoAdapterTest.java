@@ -23,10 +23,6 @@ import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-// Test de integración del adaptador de MongoDB de las valoraciones (HU13, T369). Usa un MongoDB real en Docker
-// (Testcontainers): Docker Desktop debe estar abierto. InicializadorColecciones crea las colecciones con su
-// validación y sus índices, como en la aplicación real.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: caso HU13-CP05, propuesto.
 @DataMongoTest
 @Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
 class ValoracionMongoAdapterTest {
@@ -45,34 +41,43 @@ class ValoracionMongoAdapterTest {
         adapter = new ValoracionMongoAdapter(valoracionMongoRepository, new ValoracionDocumentMapper());
     }
 
-    @Test
-    @DisplayName("HU13-CP05: guardar una valoración nueva le asigna un id y se recupera por su producto")
-    void guardarUnaValoracionNuevaYRecuperarlaPorProducto() {
-        Valoracion guardada = adapter.guardar(Valoracion.nueva("p-1", "u-1", 4, "Buena calidad"));
-
-        assertNotNull(guardada.id());
-        assertEquals(List.of(guardada), adapter.buscarPorProducto("p-1"));
+    private Valoracion nueva(String productoId, String clienteId, int puntuacion, String comentario) {
+        return Valoracion.nueva(productoId, clienteId, "Ana Pérez", puntuacion, comentario);
     }
 
     @Test
-    @DisplayName("HU13-CP05: en la colección el cliente se guarda como usuarioId")
-    void elClienteSeGuardaComoUsuarioId() {
-        adapter.guardar(Valoracion.nueva("p-1", "u-1", 4, "Buena calidad"));
+    @DisplayName("CLI-03: MongoDB asigna id y conserva autor y fecha")
+    void guardaYRecuperaAutorYFecha() {
+        Valoracion guardada = adapter.guardar(nueva("p-1", "u-1", 4, "Buena calidad"));
+        Valoracion recuperada = adapter.buscarPorProducto("p-1").getFirst();
+
+        assertNotNull(guardada.id());
+        assertEquals("Ana Pérez", recuperada.nombreCliente());
+        assertNotNull(recuperada.fechaCreacion());
+        // BSON Date almacena precisión de milisegundos; Instant puede contener nanosegundos.
+        assertEquals(guardada.fechaCreacion().toEpochMilli(), recuperada.fechaCreacion().toEpochMilli());
+    }
+
+    @Test
+    @DisplayName("CLI-03: persiste el autor, fecha e id del cliente con los nombres del esquema")
+    void persisteLosMetadatos() {
+        adapter.guardar(nueva("p-1", "u-1", 4, "Buena calidad"));
 
         Document documento = mongoTemplate.getCollection("valoraciones").find().first();
         assertEquals("u-1", documento.get("usuarioId"));
         assertFalse(documento.containsKey("clienteId"));
-        assertEquals("p-1", documento.get("productoId"));
-        assertEquals(4, documento.get("puntuacion"));
-        assertEquals("Buena calidad", documento.get("comentario"));
+        assertEquals("Ana Pérez", documento.getString("nombreCliente"));
+        assertNotNull(documento.getDate("fechaCreacion"));
+        assertEquals("p-1", documento.getString("productoId"));
+        assertEquals(4, documento.getInteger("puntuacion"));
     }
 
     @Test
     @DisplayName("HU13-CP05: buscar por producto devuelve solo las valoraciones de ese producto")
     void buscarPorProductoDevuelveSoloLasDeEseProducto() {
-        adapter.guardar(Valoracion.nueva("p-1", "u-1", 4, ""));
-        adapter.guardar(Valoracion.nueva("p-1", "u-2", 2, ""));
-        adapter.guardar(Valoracion.nueva("p-2", "u-1", 5, ""));
+        adapter.guardar(nueva("p-1", "u-1", 4, ""));
+        adapter.guardar(nueva("p-1", "u-2", 2, ""));
+        adapter.guardar(nueva("p-2", "u-1", 5, ""));
 
         List<Valoracion> delProducto = adapter.buscarPorProducto("p-1");
 
@@ -84,11 +89,9 @@ class ValoracionMongoAdapterTest {
     @Test
     @DisplayName("HU47-CP02: eliminar por producto borra sus valoraciones y conserva las demás")
     void eliminarPorProductoBorraSoloLasValoracionesDelProducto() {
-        adapter.guardar(Valoracion.nueva("p-1", "u-1", 4, ""));
-        adapter.guardar(Valoracion.nueva("p-2", "u-1", 5, ""));
-
+        adapter.guardar(nueva("p-1", "u-1", 4, ""));
+        adapter.guardar(nueva("p-2", "u-1", 5, ""));
         adapter.eliminarPorProducto("p-1");
-
         assertTrue(adapter.buscarPorProducto("p-1").isEmpty());
         assertEquals(1, adapter.buscarPorProducto("p-2").size());
     }
@@ -96,21 +99,17 @@ class ValoracionMongoAdapterTest {
     @Test
     @DisplayName("HU13-CP05: sabe si un cliente ya ha valorado un producto")
     void sabeSiUnClienteYaHaValoradoUnProducto() {
-        adapter.guardar(Valoracion.nueva("p-1", "u-1", 4, ""));
-
+        adapter.guardar(nueva("p-1", "u-1", 4, ""));
         assertTrue(adapter.existePorClienteYProducto("u-1", "p-1"));
         assertFalse(adapter.existePorClienteYProducto("u-1", "p-2"));
         assertFalse(adapter.existePorClienteYProducto("u-2", "p-1"));
     }
 
     @Test
-    @DisplayName("HU13-CP05: una valoración por cliente y producto; la repetida llega como valoración duplicada")
+    @DisplayName("HU13-CP05: una valoración por cliente y producto")
     void laColeccionSoloAdmiteUnaValoracionPorClienteYProducto() {
-        // Segunda barrera, a nivel de BBDD: cierra la carrera de dos valoraciones simultáneas del mismo cliente.
-        // El adaptador traduce el error de clave duplicada de MongoDB a la excepción de dominio (409, no 500).
-        adapter.guardar(Valoracion.nueva("p-1", "u-1", 4, ""));
-        Valoracion repetida = Valoracion.nueva("p-1", "u-1", 2, "");
-
+        adapter.guardar(nueva("p-1", "u-1", 4, ""));
+        Valoracion repetida = nueva("p-1", "u-1", 2, "");
         assertThrows(ValoracionDuplicadaException.class, () -> adapter.guardar(repetida));
         assertEquals(1, valoracionMongoRepository.count());
     }

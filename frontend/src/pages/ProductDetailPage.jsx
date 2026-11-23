@@ -11,7 +11,7 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { ArrowLeft20Regular, BoxSearch24Regular } from '@fluentui/react-icons'
-import { getCatalogProduct, getProductReviews } from '../api/products'
+import { getCatalogProduct, getProductReviews, getProductReviewStatus } from '../api/products'
 import { addWishlistItem, getWishlist, removeWishlistItem } from '../api/wishlist'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
@@ -105,6 +105,9 @@ export default function ProductDetailPage() {
   // Las valoraciones (HU13) se piden aparte: si fallan, el producto se sigue viendo
   const reviewsFetcher = useCallback(() => getProductReviews(id), [id])
   const { data: reviews, failed: reviewsFailed, retry: retryReviews } = useApiQuery(reviewsFetcher)
+  // El estado determina si el cliente puede enviar una valoración (CLI-04).
+  const reviewStatusFetcher = useCallback(() => getProductReviewStatus(id), [id])
+  const { data: reviewStatus, failed: reviewStatusFailed, retry: retryReviewStatus } = useApiQuery(reviewStatusFetcher)
   const { categories } = useCategories()
   // Si el producto está en los favoritos del cliente (HU14). Si la lista no se puede leer, se ofrece añadirlo.
   // `cambiado` evita que una lectura lenta pise un cambio que el cliente ya ha hecho.
@@ -176,6 +179,13 @@ export default function ProductDetailPage() {
           reviews={reviews}
           reviewsFailed={reviewsFailed}
           onRetryReviews={retryReviews}
+          reviewStatus={reviewStatus}
+          reviewStatusFailed={reviewStatusFailed}
+          onRetryReviewStatus={retryReviewStatus}
+          onReviewCreated={() => {
+            retryReviews()
+            retryReviewStatus()
+          }}
           favorite={favorito}
           onAddFavorite={anadirFavorito}
           onRemoveFavorite={quitarFavorito}

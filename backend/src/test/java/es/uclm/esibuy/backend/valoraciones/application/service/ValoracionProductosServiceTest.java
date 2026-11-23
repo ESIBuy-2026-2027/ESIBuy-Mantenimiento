@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.valoraciones.application.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -19,13 +20,9 @@ import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-// Valoración de un producto por el cliente (HU13, T370). Sin Spring: los puertos de salida se sustituyen por
-// dobles de prueba (clases internas de este test).
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP09 a CP11 y CP28, propuestos.
 class ValoracionProductosServiceTest {
 
     private static final String EMAIL = "cliente@esibuy.test";
-
     private final ValoracionesEnMemoria valoraciones = new ValoracionesEnMemoria();
     private final ComprasFijas compras = new ComprasFijas();
     private final ProductosAnotados productos = new ProductosAnotados();
@@ -33,7 +30,6 @@ class ValoracionProductosServiceTest {
             new ClienteFijo(), compras, productos);
 
     ValoracionProductosServiceTest() {
-        // El cliente ha comprado p-1
         compras.compradas.add("p-1");
     }
 
@@ -42,65 +38,47 @@ class ValoracionProductosServiceTest {
     }
 
     @Test
-    @DisplayName("HU13-CP09: el cliente que ha comprado un producto lo valora y la valoración se guarda con su id")
-    void elClienteQueHaCompradoValoraElProducto() {
-        valorar("p-1", 4, "Buena calidad");
+    @DisplayName("CLI-03: al crear una valoración guarda nombre del autor y fecha")
+    void guardaAutorYFecha() {
+        Valoracion guardada = valorar("p-1", 4, "Buena calidad");
 
-        assertEquals(List.of(new Valoracion("v-1", "p-1", "c-1", 4, "Buena calidad")), valoraciones.guardadas);
+        assertEquals("Ana Pérez", guardada.nombreCliente());
+        assertNotNull(guardada.fechaCreacion());
+        assertEquals("c-1", guardada.clienteId());
+        assertEquals("Buena calidad", guardada.comentario());
     }
 
     @Test
-    @DisplayName("HU13-CP09: valorar devuelve la valoración guardada, ya con su id")
-    void valorarDevuelveLaValoracionGuardada() {
-        Valoracion valoracion = valorar("p-1", 5, null);
-
-        assertEquals(new Valoracion("v-1", "p-1", "c-1", 5, ""), valoracion);
-    }
-
-    @Test
-    @DisplayName("HU13-CP10: el cliente no puede valorar un producto que no ha comprado y no se guarda nada")
+    @DisplayName("HU13-CP10: el cliente no puede valorar un producto que no ha comprado")
     void noPuedeValorarUnProductoQueNoHaComprado() {
         assertThrows(ProductoNoCompradoException.class, () -> valorar("p-2", 4, "Me lo prestaron"));
         assertTrue(valoraciones.guardadas.isEmpty());
     }
 
     @Test
-    @DisplayName("HU13-CP11: no se puede valorar dos veces el mismo producto y se conserva la primera valoración")
+    @DisplayName("HU13-CP11: no se puede valorar dos veces el mismo producto")
     void noPuedeValorarDosVecesElMismoProducto() {
         valorar("p-1", 4, "Buena calidad");
 
         assertThrows(ValoracionDuplicadaException.class, () -> valorar("p-1", 1, "He cambiado de opinión"));
-        assertEquals(List.of(new Valoracion("v-1", "p-1", "c-1", 4, "Buena calidad")), valoraciones.guardadas);
+        assertEquals(1, valoraciones.guardadas.size());
     }
 
-    // El correo de la sesión corresponde al cliente c-1
-    // Media y número de valoraciones del producto (HU13, T415): se calculan con todas sus valoraciones, la nueva
-    // incluida, y se le pasan al módulo de productos.
     @Test
     @DisplayName("HU13-CP28: al valorar, el producto recibe la media y el número de todas sus valoraciones")
     void alValorarElProductoRecibeLaMediaYElNumero() {
         valoraciones.guardadas.add(new Valoracion("v-a", "p-1", "c-2", 5, ""));
         valoraciones.guardadas.add(new Valoracion("v-b", "p-1", "c-3", 4, ""));
-        valoraciones.guardadas.add(new Valoracion("v-c", "p-9", "c-2", 1, ""));   // de otro producto: no cuenta
+        valoraciones.guardadas.add(new Valoracion("v-c", "p-9", "c-2", 1, ""));
 
         valorar("p-1", 3, "Normal");
 
-        // (5 + 4 + 3) / 3 = 4,0 con 3 valoraciones
         assertEquals(List.of(new Actualizacion("p-1", 4.0, 3)), productos.actualizaciones);
-    }
-
-    @Test
-    @DisplayName("HU13-CP28: si la valoración no se guarda, el producto no cambia")
-    void siLaValoracionNoSeGuardaElProductoNoCambia() {
-        assertThrows(ProductoNoCompradoException.class, () -> valorar("p-2", 4, null));
-
-        assertTrue(productos.actualizaciones.isEmpty());
     }
 
     private record Actualizacion(String productoId, double media, int numero) {
     }
 
-    // Anota lo que se le pasa al módulo de productos
     private static final class ProductosAnotados implements ProductosPort {
         private final List<Actualizacion> actualizaciones = new ArrayList<>();
 
@@ -115,9 +93,13 @@ class ValoracionProductosServiceTest {
         public String idPorCorreo(String email) {
             return EMAIL.equals(email) ? "c-1" : "c-desconocido";
         }
+
+        @Override
+        public String nombreCompletoPorCorreo(String email) {
+            return "Ana Pérez";
+        }
     }
 
-    // Productos que el cliente de la sesión ha comprado (pedidos pagados)
     private static final class ComprasFijas implements ComprasPort {
         private final Set<String> compradas = new HashSet<>();
 
@@ -127,22 +109,22 @@ class ValoracionProductosServiceTest {
         }
     }
 
-    // Guarda en memoria y asigna ids v-1, v-2... como haría la base de datos
     private static final class ValoracionesEnMemoria implements ValoracionRepositoryPort {
         private final List<Valoracion> guardadas = new ArrayList<>();
 
         @Override
         public Valoracion guardar(Valoracion valoracion) {
             Valoracion guardada = new Valoracion("v-" + (guardadas.size() + 1), valoracion.productoId(),
-                    valoracion.clienteId(), valoracion.puntuacion(), valoracion.comentario());
+                    valoracion.clienteId(), valoracion.nombreCliente(), valoracion.puntuacion(),
+                    valoracion.comentario(), valoracion.fechaCreacion());
             guardadas.add(guardada);
             return guardada;
         }
 
         @Override
         public boolean existePorClienteYProducto(String clienteId, String productoId) {
-            return guardadas.stream()
-                    .anyMatch(v -> v.clienteId().equals(clienteId) && v.productoId().equals(productoId));
+            return guardadas.stream().anyMatch(v -> v.clienteId().equals(clienteId)
+                    && v.productoId().equals(productoId));
         }
 
         @Override

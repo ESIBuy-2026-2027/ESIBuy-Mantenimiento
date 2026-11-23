@@ -67,8 +67,9 @@ class SeguridadValoracionesServiceTest {
         }
 
         @Bean
-        ConsultaValoracionesUseCase consultaValoraciones(ValoracionRepositoryPort valoracionRepository) {
-            return new ConsultaValoracionesService(valoracionRepository);
+        ConsultaValoracionesUseCase consultaValoraciones(ValoracionRepositoryPort valoracionRepository,
+                ClienteEnSesionPort clienteEnSesion, ComprasPort compras) {
+            return new ConsultaValoracionesService(valoracionRepository, clienteEnSesion, compras);
         }
     }
 
@@ -163,6 +164,33 @@ class SeguridadValoracionesServiceTest {
     @DisplayName("HU13-CP16: un cliente sí consulta las valoraciones de un producto")
     void unClienteConsultaValoraciones() {
         assertTrue(consultaValoraciones.consultarPorProducto("p-1").isEmpty());
+    }
+
+
+    @Test
+    @WithMockUser(username = "vendedor@esibuy.test", roles = "VENDEDOR")
+    @DisplayName("CLI-04: un vendedor no puede consultar el estado de compra y valoración")
+    void vendedorNoConsultaEstado() {
+        assertThrows(AccessDeniedException.class,
+                () -> consultaValoraciones.consultarEstado("vendedor@esibuy.test", "p-1"));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("CLI-04: un cliente no puede consultar el estado usando el correo de otro cliente")
+    void clienteNoConsultaEstadoDeOtro() {
+        assertThrows(AccessDeniedException.class,
+                () -> consultaValoraciones.consultarEstado(OTRO_CLIENTE, "p-1"));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @DisplayName("CLI-04: sin sesión no se puede consultar el estado")
+    void sinSesionNoConsultaEstado() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> consultaValoraciones.consultarEstado(CLIENTE, "p-1"));
+        comprobarQueNoSeTocaNada();
     }
 
     @Test

@@ -32,17 +32,19 @@ function valoracionesDeEjemplo(productoId) {
       productoId,
       puntuacion,
       comentario: comentarios[(numero + indice) % comentarios.length],
+      nombreCliente: ['Ana López', 'Carlos García', 'Lucía Martín'][indice % 3],
+      fechaCreacion: new Date(Date.UTC(2026, 0, (indice % 28) + 1)).toISOString(),
     }
   })
 }
 
 // Valoraciones enviadas durante la sesión (POST), por producto, y quién ha valorado qué ("u-3:p-2")
 let valoracionesNuevas = new Map()
-let valoradoPor = new Set()
+let valoradoPor = new Map()
 
 export function resetReviewsMock() {
   valoracionesNuevas = new Map()
-  valoradoPor = new Set()
+  valoradoPor = new Map()
 }
 
 export const valoracionesDe = (productoId) => [
@@ -71,6 +73,20 @@ export function resumenDeValoraciones(productoId) {
 }
 
 export const reviewsHandlers = [
+  http.get('/api/products/:id/valoraciones/estado', ({ params }) => {
+    const usuario = getUsuarioEnSesion()
+    if (!usuario) return new HttpResponse(null, { status: 401 })
+    if (usuario.rol !== 'CLIENTE') return new HttpResponse(null, { status: 403 })
+
+    const clave = `${usuario.id}:${params.id}`
+    const miValoracionId = valoradoPor.get(clave) ?? null
+    return HttpResponse.json({
+      haComprado: COMPRAS_DE_EJEMPLO.get(usuario.id)?.has(params.id) ?? false,
+      haValorado: Boolean(miValoracionId),
+      miValoracionId,
+    })
+  }),
+
   http.get('/api/products/:id/valoraciones', ({ params }) => {
     const usuario = getUsuarioEnSesion()
     if (!usuario) return new HttpResponse(null, { status: 401 })
@@ -98,8 +114,10 @@ export const reviewsHandlers = [
       productoId: params.id,
       puntuacion: datos.puntuacion,
       comentario: (datos.comentario ?? '').trim(),
+      nombreCliente: 'Carlos García',
+      fechaCreacion: new Date().toISOString(),
     }
-    valoradoPor.add(clave)
+    valoradoPor.set(clave, valoracion.id)
     valoracionesNuevas.set(params.id, [...(valoracionesNuevas.get(params.id) ?? []), valoracion])
     return HttpResponse.json(valoracion, { status: 201 })
   }),

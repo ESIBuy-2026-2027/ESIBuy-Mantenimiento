@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.valoraciones.infrastructure.adapter.in.web;
 
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 import es.uclm.esibuy.backend.valoraciones.application.port.in.ConsultaValoracionesUseCase;
+import es.uclm.esibuy.backend.valoraciones.application.port.in.EstadoValoracion;
 import es.uclm.esibuy.backend.valoraciones.application.port.in.ValoracionProductosUseCase;
 import es.uclm.esibuy.backend.valoraciones.application.port.in.ValorarProductoCommand;
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ProductoNoCompradoException;
@@ -19,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
+import java.time.Instant;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -64,7 +66,8 @@ class ValoracionControllerTest {
     @Test
     @DisplayName("HU13-CP14: valorar un producto responde 201 con la valoración creada, con el cliente de la sesión")
     void valorarUnProductoResponde201() throws Exception {
-        when(valoracionProductos.valorar(COMANDO)).thenReturn(new Valoracion("v-1", "p-1", "c-1", 4, "Buena calidad"));
+        when(valoracionProductos.valorar(COMANDO)).thenReturn(new Valoracion("v-1", "p-1", "c-1",
+                "Ana Pérez", 4, "Buena calidad", Instant.parse("2026-11-23T10:30:00Z")));
 
         valorar(CUERPO)
                 .andExpect(status().isCreated())
@@ -72,6 +75,8 @@ class ValoracionControllerTest {
                 .andExpect(jsonPath("$.productoId").value("p-1"))
                 .andExpect(jsonPath("$.puntuacion").value(4))
                 .andExpect(jsonPath("$.comentario").value("Buena calidad"))
+                .andExpect(jsonPath("$.nombreCliente").value("Ana Pérez"))
+                .andExpect(jsonPath("$.fechaCreacion").exists())
                 .andExpect(jsonPath("$.clienteId").doesNotExist());
     }
 
@@ -125,7 +130,9 @@ class ValoracionControllerTest {
     @DisplayName("HU13-CP17: consultar las valoraciones de un producto responde 200 con la lista, sin el cliente")
     void consultarLasValoracionesResponde200ConLaLista() throws Exception {
         when(consultaValoraciones.consultarPorProducto("p-1")).thenReturn(List.of(
-                new Valoracion("v-1", "p-1", "c-1", 4, "Buena calidad"), new Valoracion("v-2", "p-1", "c-2", 2, "")));
+                new Valoracion("v-1", "p-1", "c-1", "Ana Pérez", 4, "Buena calidad",
+                        Instant.parse("2026-11-23T10:30:00Z")),
+                new Valoracion("v-2", "p-1", "c-2", "Luis García", 2, "", Instant.parse("2026-11-22T10:30:00Z"))));
 
         mockMvc.perform(get(URL).with(user(CLIENTE).roles("CLIENTE")))
                 .andExpect(status().isOk())
@@ -135,7 +142,10 @@ class ValoracionControllerTest {
                 .andExpect(jsonPath("$[0].puntuacion").value(4))
                 .andExpect(jsonPath("$[0].comentario").value("Buena calidad"))
                 .andExpect(jsonPath("$[0].clienteId").doesNotExist())
+                .andExpect(jsonPath("$[0].nombreCliente").value("Ana Pérez"))
+                .andExpect(jsonPath("$[0].fechaCreacion").exists())
                 .andExpect(jsonPath("$[1].id").value("v-2"))
+                .andExpect(jsonPath("$[1].nombreCliente").value("Luis García"))
                 .andExpect(jsonPath("$[1].comentario").value(""));
     }
 
@@ -159,4 +169,41 @@ class ValoracionControllerTest {
 
         verify(consultaValoraciones, never()).consultarPorProducto(any());
     }
+    @Test
+    @DisplayName("CLI-04: consultar estado devuelve si ha comprado y su valoración")
+    void consultarEstadoDevuelveElEstadoPersonal() throws Exception {
+        when(consultaValoraciones.consultarEstado(CLIENTE, "p-1"))
+                .thenReturn(new EstadoValoracion(true, true, "v-1"));
+
+        mockMvc.perform(get(URL + "/estado").with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.haComprado").value(true))
+                .andExpect(jsonPath("$.haValorado").value(true))
+                .andExpect(jsonPath("$.miValoracionId").value("v-1"));
+    }
+
+    @Test
+    @DisplayName("CLI-04: un cliente sin compra recibe el estado sin compra ni valoración")
+    void consultarEstadoSinCompra() throws Exception {
+        when(consultaValoraciones.consultarEstado(CLIENTE, "p-1"))
+                .thenReturn(new EstadoValoracion(false, false, null));
+
+        mockMvc.perform(get(URL + "/estado").with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.haComprado").value(false))
+                .andExpect(jsonPath("$.haValorado").value(false))
+                .andExpect(jsonPath("$.miValoracionId").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("CLI-04: consultar estado requiere sesión de cliente")
+    void consultarEstadoRequiereClienteAutenticado() throws Exception {
+        mockMvc.perform(get(URL + "/estado"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get(URL + "/estado").with(user("vendedor@esibuy.test").roles("VENDEDOR")))
+                .andExpect(status().isForbidden());
+
+        verify(consultaValoraciones, never()).consultarEstado(any(), any());
+    }
+
 }

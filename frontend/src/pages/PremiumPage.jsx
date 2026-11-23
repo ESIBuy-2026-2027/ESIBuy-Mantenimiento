@@ -1,7 +1,13 @@
 import PropTypes from 'prop-types'
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import {
   Button,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogSurface,
+  DialogTitle,
   MessageBar,
   MessageBarActions,
   MessageBarBody,
@@ -12,7 +18,7 @@ import {
 } from '@fluentui/react-components'
 import { Diamond20Regular, Diamond48Regular, Sparkle24Regular } from '@fluentui/react-icons'
 import { useLocation } from 'react-router-dom'
-import { getProfile } from '../api/profile'
+import { cancelPremium, getProfile } from '../api/profile'
 import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import { PREMIUM_BENEFITS } from '../features/premium/premiumBenefits'
@@ -99,6 +105,39 @@ const useStyles = makeStyles({
   lead: {
     maxWidth: '60ch',
     color: tokens.colorNeutralForeground2,
+  },
+  cancellationSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalM,
+    padding: tokens.spacingVerticalXL,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusXLarge,
+    backgroundColor: tokens.colorNeutralBackground1,
+    boxShadow: tokens.shadow4,
+  },
+  cancellationTitle: {
+    margin: 0,
+    fontSize: tokens.fontSizeBase500,
+    fontWeight: tokens.fontWeightSemibold,
+  },
+  cancellationText: {
+    color: tokens.colorNeutralForeground2,
+  },
+  cancellationAction: {
+    alignSelf: 'flex-start',
+  },
+  confirmationButton: {
+    minWidth: '210px',
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
+  },
+  lossList: {
+    margin: 0,
+    paddingLeft: tokens.spacingHorizontalXL,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalXS,
   },
   status: {
     display: 'flex',
@@ -262,8 +301,25 @@ export default function PremiumPage() {
   const benefitsTitleId = useId()
   const location = useLocation()
   const profile = useApiQuery(getProfile)
+  const [faseCancelacion, setFaseCancelacion] = useState(null)
+  const [cancelandoPremium, setCancelandoPremium] = useState(false)
+  const [errorCancelacion, setErrorCancelacion] = useState(false)
   const aviso = TEXTO_AVISO_PREMIUM[location.state?.aviso] ?? null
-  const esPremium = profile.data?.tipoCliente === 'PREMIUM' || aviso !== null
+  const esPremium = profile.data?.tipoCliente === 'PREMIUM'
+
+  const confirmarCancelacionPremium = async () => {
+    setCancelandoPremium(true)
+    setErrorCancelacion(false)
+    try {
+      await cancelPremium()
+      setFaseCancelacion(null)
+      profile.retry()
+    } catch {
+      setErrorCancelacion(true)
+    } finally {
+      setCancelandoPremium(false)
+    }
+  }
 
   return (
     <main className={pageStyles.page}>
@@ -276,6 +332,11 @@ export default function PremiumPage() {
           Compra con más ventajas: descuentos exclusivos, envíos sin coste y pedidos que llegan antes.
         </Text>
         <div aria-live="polite">
+          {errorCancelacion && (
+            <MessageBar intent="error">
+              <MessageBarBody>No se ha podido cancelar Premium. Inténtalo de nuevo.</MessageBarBody>
+            </MessageBar>
+          )}
           {aviso && (
             <MessageBar intent={aviso.intent}>
               <MessageBarBody>{aviso.texto}</MessageBarBody>
@@ -284,6 +345,93 @@ export default function PremiumPage() {
         </div>
         <PremiumStatus query={profile} esPremium={esPremium} styles={styles} />
       </section>
+
+      {esPremium && (
+        <section aria-labelledby="cancel-premium-title" className={styles.cancellationSection}>
+          <h2 id="cancel-premium-title" className={styles.cancellationTitle}>Gestionar suscripción</h2>
+          <Text className={styles.cancellationText}>
+            Si cancelas ESIBuy Premium, tu cuenta pasará a ser Estándar y dejarás de disfrutar de sus ventajas.
+          </Text>
+          <Button
+            appearance="secondary"
+            className={styles.cancellationAction}
+            onClick={() => setFaseCancelacion('inicial')}
+          >
+            Cancelar mi suscripción
+          </Button>
+        </section>
+      )}
+
+      <Dialog
+        open={faseCancelacion !== null}
+        modalType="alert"
+        onOpenChange={(_event, data) => !data.open && !cancelandoPremium && setFaseCancelacion(null)}
+      >
+        <DialogSurface>
+          <DialogBody>
+            {faseCancelacion === 'inicial' ? (
+              <>
+                <DialogTitle>¿Estás seguro?</DialogTitle>
+                <DialogContent>
+                  ¿Quieres continuar con la cancelación de tu suscripción ESIBuy Premium?
+                </DialogContent>
+                <DialogActions>
+                  <Button
+                    appearance="secondary"
+                    className={styles.confirmationButton}
+                    onClick={() => setFaseCancelacion(null)}
+                  >
+                    No, mantener Premium
+                  </Button>
+                  <Button
+                    appearance="primary"
+                    className={styles.confirmationButton}
+                    onClick={() => {
+                      setErrorCancelacion(false)
+                      setFaseCancelacion('final')
+                    }}
+                  >
+                    Continuar
+                  </Button>
+                </DialogActions>
+              </>
+            ) : (
+              <>
+                <DialogTitle>Ventajas que perderás</DialogTitle>
+                <DialogContent>
+                  <Text>Al cancelar Premium, tu cuenta pasará a ser Estándar y dejarás de disfrutar de:</Text>
+                  <ul className={styles.lossList}>
+                    <li>Descuentos exclusivos para clientes Premium.</li>
+                    <li>Envíos sin coste.</li>
+                    <li>Prioridad en los envíos.</li>
+                  </ul>
+                  <Text className={styles.cancellationText}>
+                    ¿Confirmas que quieres cancelar tu suscripción?
+                  </Text>
+                </DialogContent>
+                <DialogActions>
+                  <Button
+                    appearance="secondary"
+                    className={styles.confirmationButton}
+                    disabled={cancelandoPremium}
+                    onClick={() => setFaseCancelacion(null)}
+                  >
+                    Mantener Premium
+                  </Button>
+                  <Button
+                    appearance="primary"
+                    className={styles.confirmationButton}
+                    disabled={cancelandoPremium}
+                    onClick={confirmarCancelacionPremium}
+                  >
+                    {cancelandoPremium ? 'Cancelando…' : 'Sí, cancelar Premium'}
+                  </Button>
+                </DialogActions>
+              </>
+            )}
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
 
       <section aria-labelledby={benefitsTitleId} className={styles.benefitsSection}>
         <h2 id={benefitsTitleId} className={styles.sectionTitle}>

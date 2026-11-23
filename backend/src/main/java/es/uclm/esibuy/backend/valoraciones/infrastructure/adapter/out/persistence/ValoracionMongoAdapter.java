@@ -24,7 +24,6 @@ public class ValoracionMongoAdapter implements ValoracionRepositoryPort {
         try {
             return mapper.aDominio(repository.save(mapper.aDocumento(valoracion)));
         } catch (DuplicateKeyException e) {
-            // Dos valoraciones simultáneas del mismo cliente: el índice único rechaza la segunda
             throw new ValoracionDuplicadaException();
         }
     }

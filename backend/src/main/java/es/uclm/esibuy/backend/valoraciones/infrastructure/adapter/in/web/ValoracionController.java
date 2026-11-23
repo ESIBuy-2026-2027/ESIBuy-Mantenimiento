@@ -13,13 +13,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import es.uclm.esibuy.backend.valoraciones.application.port.in.ConsultaValoracionesUseCase;
+import es.uclm.esibuy.backend.valoraciones.application.port.in.EstadoValoracion;
 import es.uclm.esibuy.backend.valoraciones.application.port.in.ValoracionProductosUseCase;
 
-/**
- * Adaptador de entrada web de las valoraciones (HU13). Recibe la petición, delega en el puerto de entrada y responde
- * con la valoración creada o con las valoraciones del producto. El cliente sale siempre de la sesión y el producto,
- * de la URL.
- */
+/** Adaptador web de las valoraciones; el cliente se identifica siempre mediante la sesión. */
 @RestController
 @RequestMapping("/api/products/{productoId}/valoraciones")
 public class ValoracionController {
@@ -44,5 +41,10 @@ public class ValoracionController {
     @GetMapping
     public List<ValoracionResponse> consultar(@PathVariable String productoId) {
         return consultaValoraciones.consultarPorProducto(productoId).stream().map(ValoracionResponse::desde).toList();
+    }
+
+    @GetMapping("/estado")
+    public EstadoValoracion consultarEstado(@PathVariable String productoId, Authentication autenticado) {
+        return consultaValoraciones.consultarEstado(autenticado.getName(), productoId);
     }
 }

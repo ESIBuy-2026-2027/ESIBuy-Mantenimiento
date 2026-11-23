@@ -73,6 +73,16 @@ public class GestionPerfilService implements GestionPerfilUseCase {
         return usuario;
     }
 
+    // Cancelación de Premium (CLI-02): solo el propio cliente; se conserva el resto de sus datos.
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO_POR_EMAIL)
+    @Override
+    public Usuario cancelarPremium(String email) {
+        Usuario usuario = buscarUsuarioEnSesion(email);
+        usuario.cancelarPremium();
+        usuarioRepository.guardar(usuario);
+        return usuario;
+    }
+
     private Usuario buscarUsuarioEnSesion(String email) {
         return usuarioRepository.buscarPorCorreo(email)
                 .orElseThrow(() -> new CredencialesInvalidasException(SESION_NO_VALIDA));
