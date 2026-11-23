@@ -13,7 +13,6 @@ import es.uclm.esibuy.backend.shared.infrastructure.config.InicializadorColeccio
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionDuplicadaException;
 import es.uclm.esibuy.backend.valoraciones.domain.model.Valoracion;
 import java.util.List;
-import java.time.Instant;
 import java.util.Set;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
