@@ -1,3 +1,4 @@
+
 import { useState } from 'react'
 import PropTypes from 'prop-types'
 import { Text, makeStyles, tokens } from '@fluentui/react-components'
@@ -8,19 +9,28 @@ import { TIPOS_DE_METODO } from '../paymentMethods/tiposDeMetodo'
 const PIEZAS_DE_CONFETI = 14
 const NOTCH = '24px'
 
-const dateTimeFormatter = new Intl.DateTimeFormat('es-ES', { dateStyle: 'long', timeStyle: 'short' })
+const dateTimeFormatter = new Intl.DateTimeFormat('es-ES', {
+  dateStyle: 'long',
+  timeStyle: 'short',
+})
+
 const redondear = (importe) => Math.round(importe * 100) / 100
 const productos = (n) => `${n} ${n === 1 ? 'producto' : 'productos'}`
 
 // jsdom y algunos navegadores antiguos no tienen matchMedia: entonces se muestra el confeti.
 const prefiereMenosMovimiento = () =>
-  typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 // Barras del código de barras decorativo: anchos fijos para que no cambie entre renderizados.
-const BARRAS = [3, 1, 2, 1, 3, 2, 1, 1, 3, 1, 2, 2, 1, 3, 1, 1, 2, 3, 1, 2, 1, 1, 3, 2, 1, 2, 1, 3, 1, 1, 2, 1]
+const BARRAS = [
+  3, 1, 2, 1, 3, 2, 1, 1, 3, 1, 2, 2, 1, 3, 1, 1,
+  2, 3, 1, 2, 1, 1, 3, 2, 1, 2, 1, 3, 1, 1, 2, 1,
+].map((ancho, i) => ({ id: `barra-${i}`, ancho }))
 
 // Posición, retraso, giro y deriva de cada pieza de confeti, repartidos de forma determinista.
 const CONFETI = Array.from({ length: PIEZAS_DE_CONFETI }, (_, i) => ({
+  id: `confeti-${i}`,
   left: `${6 + ((i * 37) % 88)}%`,
   delay: `${(i % 5) * 60}ms`,
   giro: `${(i % 2 === 0 ? 1 : -1) * (180 + i * 25)}deg`,
@@ -135,7 +145,20 @@ const useStyles = makeStyles({
     gap: tokens.spacingHorizontalM,
     padding: tokens.spacingHorizontalM,
     backgroundColor: tokens.colorNeutralBackground2,
+    border: 0,
     borderRadius: tokens.borderRadiusLarge,
+    minWidth: 0,
+  },
+  methodLegend: {
+    position: 'absolute',
+    width: '1px',
+    height: '1px',
+    padding: 0,
+    margin: '-1px',
+    overflow: 'hidden',
+    clip: 'rect(0, 0, 0, 0)',
+    whiteSpace: 'nowrap',
+    border: 0,
   },
   methodIcon: {
     display: 'flex',
@@ -224,11 +247,16 @@ export default function PaymentTicket({ orders, paymentMethod, paidAt }) {
     <section aria-label="Recibo del pago" className={styles.ticket}>
       {conConfeti && (
         <div data-testid="confeti" aria-hidden="true" className={styles.confetti}>
-          {CONFETI.map((pieza, i) => (
+          {CONFETI.map((pieza) => (
             <span
-              key={i}
-              className={`${styles.piece} ${styles[`tone${pieza.tono}`]}`}
-              style={{ left: pieza.left, animationDelay: pieza.delay, '--giro': pieza.giro, '--deriva': pieza.deriva }}
+              key={pieza.id}
+              className={[styles.piece, styles[`tone${pieza.tono}`]].join(' ')}
+              style={{
+                left: pieza.left,
+                animationDelay: pieza.delay,
+                '--giro': pieza.giro,
+                '--deriva': pieza.deriva,
+              }}
             />
           ))}
         </div>
@@ -262,26 +290,31 @@ export default function PaymentTicket({ orders, paymentMethod, paidAt }) {
           ))}
         </ul>
 
-        <div role="group" aria-label="Pagado con" className={styles.method}>
+        <fieldset className={styles.method}>
+          <legend className={styles.methodLegend}>Pagado con</legend>
           <span className={styles.methodIcon} aria-hidden="true">
             <Icono />
           </span>
           <div className={styles.methodText}>
             <Text size={200} className={styles.muted}>
-              Pagado con {etiqueta}
+              {etiqueta}
             </Text>
             <Text weight="semibold" className={styles.mask}>
               {paymentMethod.mascara}
             </Text>
           </div>
-        </div>
+        </fieldset>
       </div>
 
       <Perforation styles={styles} />
 
       <div data-testid="codigo-de-barras" aria-hidden="true" className={styles.barcode}>
-        {BARRAS.map((ancho, i) => (
-          <span key={i} className={styles.bar} style={{ width: `${ancho}px` }} />
+        {BARRAS.map((barra) => (
+          <span
+            key={barra.id}
+            className={styles.bar}
+            style={{ width: `${barra.ancho}px` }}
+          />
         ))}
       </div>
     </section>
@@ -292,7 +325,9 @@ PaymentTicket.propTypes = {
   orders: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,
-      vendedor: PropTypes.shape({ nombreComercial: PropTypes.string.isRequired }).isRequired,
+      vendedor: PropTypes.shape({
+        nombreComercial: PropTypes.string.isRequired,
+      }).isRequired,
       total: PropTypes.number.isRequired,
       lineas: PropTypes.array.isRequired,
     }),

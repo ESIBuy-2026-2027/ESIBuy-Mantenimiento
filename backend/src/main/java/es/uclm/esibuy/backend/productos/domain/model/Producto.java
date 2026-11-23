@@ -9,8 +9,10 @@ import java.util.Set;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
 
 /**
- * Producto del catálogo de un vendedor. Java puro: las reglas de negocio se validan aquí, no en el
- * controlador ni en la base de datos. El vendedor y la categoría se referencian por identificador.
+ * Producto del catálogo de un vendedor. Java puro: las reglas de negocio se
+ * validan aquí, no en el
+ * controlador ni en la base de datos. El vendedor y la categoría se referencian
+ * por identificador.
  */
 public class Producto {
 
@@ -30,38 +32,36 @@ public class Producto {
     private final boolean disponible;
     private final Descuento descuento;
     private final Descuento descuentoPremium;
-    // Media y número de valoraciones (HU13): los calcula el módulo de valoraciones; sin valoraciones, null y 0
     private final Double valoracionMedia;
     private final int numeroValoraciones;
 
     // Producto sin valoraciones: el alta, la modificación del vendedor y los tests
-    public Producto(String id, String vendedorId, String nombre, String descripcion, BigDecimal precio,
-            int stock, String categoriaId, String imagen, boolean disponible, Descuento descuento,
-            Descuento descuentoPremium) {
-        this(id, vendedorId, nombre, descripcion, precio, stock, categoriaId, imagen, disponible, descuento,
-                descuentoPremium, null, 0);
-    }
+    public Producto(String id, DatosProducto datos) {
+        DatosProducto.DatosBasicos basicos = datos.datosBasicos();
+        DatosProducto.Configuracion configuracion = datos.configuracion();
+        DatosProducto.Valoraciones valoraciones = datos.valoraciones();
 
-    public Producto(String id, String vendedorId, String nombre, String descripcion, BigDecimal precio,
-            int stock, String categoriaId, String imagen, boolean disponible, Descuento descuento,
-            Descuento descuentoPremium, Double valoracionMedia, int numeroValoraciones) {
         this.id = id;
-        this.vendedorId = exigirTexto(vendedorId, "El vendedor es obligatorio");
-        this.nombre = exigirNombre(nombre);
-        this.descripcion = exigirDescripcion(descripcion);
-        this.precio = exigirPrecio(precio);
-        this.stock = exigirStock(stock);
-        this.categoriaId = exigirTexto(categoriaId, "La categoría es obligatoria");
-        this.imagen = exigirImagen(imagen);
-        this.disponible = disponible;
-        this.descuento = exigirNoNulo(descuento, "El descuento es obligatorio");
-        this.descuentoPremium = exigirNoNulo(descuentoPremium, "El descuento premium es obligatorio");
-        this.valoracionMedia = valoracionMedia;
-        this.numeroValoraciones = numeroValoraciones;
+        this.vendedorId = exigirTexto(basicos.vendedorId(), "El vendedor es obligatorio");
+        this.nombre = exigirNombre(basicos.nombre());
+        this.descripcion = exigirDescripcion(basicos.descripcion());
+        this.precio = exigirPrecio(basicos.precio());
+        this.stock = exigirStock(basicos.stock());
+        this.categoriaId = exigirTexto(basicos.categoriaId(), "La categoría es obligatoria");
+        this.imagen = exigirImagen(basicos.imagen());
+        this.disponible = configuracion.disponible();
+        this.descuento = exigirNoNulo(configuracion.descuento(), "El descuento es obligatorio");
+        this.descuentoPremium = exigirNoNulo(
+                configuracion.descuentoPremium(),
+                "El descuento premium es obligatorio");
+        this.valoracionMedia = valoraciones.valoracionMedia();
+        this.numeroValoraciones = valoraciones.numeroValoraciones();
     }
 
-    // Se guarda sin espacios en los extremos: así el índice único (vendedorId, nombre) trata " Teclado" y
-    // "Teclado" como el mismo nombre, igual que la comprobación previa (T258). El límite cuenta sin ellos.
+    // Se guarda sin espacios en los extremos: así el índice único (vendedorId,
+    // nombre) trata " Teclado" y
+    // "Teclado" como el mismo nombre, igual que la comprobación previa (T258). El
+    // límite cuenta sin ellos.
     private static String exigirNombre(String nombre) {
         String valor = exigirTexto(nombre, "El nombre es obligatorio").strip();
         if (valor.length() > NOMBRE_MAXIMO) {
@@ -95,21 +95,28 @@ public class Producto {
         return stock;
     }
 
-    // La imagen es opcional; si existe, solo se admiten direcciones http o https (nunca javascript: ni data:).
+    // La imagen es opcional; si existe, solo se admiten direcciones http o https
+    // (nunca javascript: ni data:).
     private static String exigirImagen(String imagen) {
         if (imagen == null || imagen.isBlank()) {
             return "";
         }
+        String valor = imagen.trim();
+        // Las imágenes subidas se sirven desde un endpoint interno y autenticado del catálogo.
+        // El identificador es un ObjectId hexadecimal de MongoDB (24 caracteres).
+        if (valor.matches("/api/product-images/[a-fA-F0-9]{24}")) {
+            return valor;
+        }
         String esquema;
         try {
-            esquema = URI.create(imagen.trim()).getScheme();
+            esquema = URI.create(valor).getScheme();
         } catch (IllegalArgumentException e) {
             throw new ProductoInvalidoException("La imagen debe ser una dirección web válida (http o https)");
         }
         if (esquema == null || !ESQUEMAS_IMAGEN.contains(esquema.toLowerCase(Locale.ROOT))) {
             throw new ProductoInvalidoException("La imagen debe ser una dirección web válida (http o https)");
         }
-        return imagen.trim();
+        return valor;
     }
 
     private static String exigirTexto(String valor, String mensaje) {
@@ -179,7 +186,8 @@ public class Producto {
     }
 
     /**
-     * Descuento que se aplica al cliente (HU8): el premium si el cliente es premium y lo tiene activo; si no, el
+     * Descuento que se aplica al cliente (HU8): el premium si el cliente es premium
+     * y lo tiene activo; si no, el
      * general. Puede ser un descuento inactivo (sin descuento).
      */
     public Descuento descuentoAplicado(boolean clientePremium) {
@@ -187,25 +195,71 @@ public class Producto {
     }
 
     /**
-     * Copia del producto con la disponibilidad indicada (HU16) y el resto de datos iguales. El producto es
-     * inmutable: activarlo o desactivarlo no lo cambia, sino que devuelve otro con el mismo id.
+     * Copia del producto con la disponibilidad indicada (HU16) y el resto de datos
+     * iguales. El producto es
+     * inmutable: activarlo o desactivarlo no lo cambia, sino que devuelve otro con
+     * el mismo id.
      */
     public Producto conDisponibilidad(boolean nuevaDisponibilidad) {
-        return new Producto(id, vendedorId, nombre, descripcion, precio, stock, categoriaId, imagen,
-                nuevaDisponibilidad, descuento, descuentoPremium, valoracionMedia, numeroValoraciones);
+        DatosProducto datos = new DatosProducto(
+                new DatosProducto.DatosBasicos(
+                        vendedorId,
+                        nombre,
+                        descripcion,
+                        precio,
+                        stock,
+                        categoriaId,
+                        imagen),
+                new DatosProducto.Configuracion(
+                        nuevaDisponibilidad,
+                        descuento,
+                        descuentoPremium),
+                new DatosProducto.Valoraciones(
+                        valoracionMedia,
+                        numeroValoraciones));
+
+        return new Producto(id, datos);
     }
 
     /**
-     * Copia del producto sin imagen y con el resto de datos iguales (HU31, T397): se usa cuando el antivirus no ha
+     * Copia del producto sin imagen y con el resto de datos iguales (HU31, T397):
+     * se usa cuando el antivirus no ha
      * podido analizar la imagen.
      */
     public Producto sinImagen() {
-        return new Producto(id, vendedorId, nombre, descripcion, precio, stock, categoriaId, "", disponible,
-                descuento, descuentoPremium, valoracionMedia, numeroValoraciones);
+        DatosProducto datos = new DatosProducto(
+                new DatosProducto.DatosBasicos(
+                        vendedorId,
+                        nombre,
+                        descripcion,
+                        precio,
+                        stock,
+                        categoriaId,
+                        ""),
+                new DatosProducto.Configuracion(
+                        disponible,
+                        descuento,
+                        descuentoPremium),
+                new DatosProducto.Valoraciones(
+                        valoracionMedia,
+                        numeroValoraciones));
+
+        return new Producto(id, datos);
+    }
+
+    /** Copia inmutable del producto con una nueva referencia de imagen. */
+    public Producto conImagen(String nuevaImagen) {
+        DatosProducto datos = new DatosProducto(
+                new DatosProducto.DatosBasicos(
+                        vendedorId, nombre, descripcion, precio, stock, categoriaId, nuevaImagen),
+                new DatosProducto.Configuracion(disponible, descuento, descuentoPremium),
+                new DatosProducto.Valoraciones(valoracionMedia, numeroValoraciones));
+        return new Producto(id, datos);
     }
 
     /**
-     * Precio que paga el cliente (HU9): con el descuento premium si el cliente es premium y lo tiene activo;
+     * Precio que paga el cliente (HU9): con el descuento premium si el cliente es
+     * premium y lo tiene activo;
      * si no, con el general. Se redondea a céntimos, la mitad hacia arriba.
      */
     public BigDecimal precioFinal(boolean clientePremium) {

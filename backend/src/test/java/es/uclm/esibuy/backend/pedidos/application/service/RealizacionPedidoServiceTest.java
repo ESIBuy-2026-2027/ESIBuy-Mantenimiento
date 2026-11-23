@@ -43,11 +43,20 @@ class RealizacionPedidoServiceTest {
     private final CarritoFijo carrito = new CarritoFijo();
     private final StockEnMemoria stock = new StockEnMemoria();
     private final ContadorEnMemoria contador = new ContadorEnMemoria();
-    // El método de pago mp-1 y la dirección d-1 son del cliente (MetodosPagoPort y DireccionesPort)
-    private final RealizacionPedidoService servicio = new RealizacionPedidoService(pedidos, new ClienteFijo(),
-            carrito, (email, metodoId) -> "mp-1".equals(metodoId),
-            (email, direccionId) -> "d-1".equals(direccionId) ? Optional.of(DIRECCION) : Optional.empty(),
-            stock, contador, Clock.fixed(AHORA, ZoneOffset.UTC));
+    // El método de pago mp-1 y la dirección d-1 son del cliente (MetodosPagoPort y
+    // DireccionesPort)
+    private final RealizacionPedidoService servicio = new RealizacionPedidoService(
+            new DependenciasRealizacionPedido(
+                    pedidos,
+                    new ClienteFijo(),
+                    carrito,
+                    (email, metodoId) -> "mp-1".equals(metodoId),
+                    (email, direccionId) -> "d-1".equals(direccionId)
+                            ? Optional.of(DIRECCION)
+                            : Optional.empty(),
+                    stock,
+                    contador,
+                    Clock.fixed(AHORA, ZoneOffset.UTC)));
 
     RealizacionPedidoServiceTest() {
         // TecnoVera (u-2): dos auriculares y un teclado; Otero (u-99): un smartwatch
@@ -134,8 +143,11 @@ class RealizacionPedidoServiceTest {
     @Test
     @DisplayName("HU10-CP16: el método de pago tiene que ser del cliente; si no, no se toca nada")
     void elMetodoDePagoTieneQueSerDelCliente() {
+        RealizarPedidoCommand comando = new RealizarPedidoCommand(
+                EMAIL, "u-2", "d-1", "mp-ajeno");
+
         assertThrows(MetodoPagoNoValidoException.class,
-                () -> servicio.realizar(new RealizarPedidoCommand(EMAIL, "u-2", "d-1", "mp-ajeno")));
+                () -> servicio.realizar(comando));
 
         assertEquals(10, stock.unidades.get("p-1"));
         assertTrue(pedidos.guardados.isEmpty());
@@ -144,8 +156,12 @@ class RealizacionPedidoServiceTest {
     @Test
     @DisplayName("HU10-CP16: la dirección tiene que ser del cliente, y el pedido guarda una copia de sus datos")
     void laDireccionTieneQueSerDelClienteYSeCopia() {
+        RealizarPedidoCommand comando = new RealizarPedidoCommand(
+                EMAIL, "u-2", "d-ajena", "mp-1");
+
         assertThrows(DireccionNoValidaException.class,
-                () -> servicio.realizar(new RealizarPedidoCommand(EMAIL, "u-2", "d-ajena", "mp-1")));
+                () -> servicio.realizar(comando));
+
         assertTrue(pedidos.guardados.isEmpty());
 
         assertEquals(DIRECCION, realizar("u-2").getDireccionEnvio());

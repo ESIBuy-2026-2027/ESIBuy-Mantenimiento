@@ -29,7 +29,7 @@ const useStyles = makeStyles({
 })
 
 // Consecuencias de eliminar la cuenta de cada rol, las que hace el backend: el vendedor (HU47, PR #203) conserva
-// los productos con pedidos desactivados; el cliente (HU25, PR #235) pierde todo lo que depende de él y conserva
+// los productos con pedidos desactivados; el cliente (HU25, PR #235) pierde lo que depende de él y conserva
 // los pedidos y las valoraciones para las estadísticas y los históricos.
 const CIERRE_DE_SESION = 'Se cerrará la sesión y no podrás volver a entrar con esta cuenta.'
 const CONSECUENCIAS = {

@@ -1,10 +1,11 @@
-package es.uclm.esibuy.backend.usuarios.application.port.out;
 
+package es.uclm.esibuy.backend.usuarios.application.port.out;
 
 public interface HashContrasenaPort {
 
-    String hashear(String string);
+    String hashear(String contrasena);
 
     boolean coincide(String contrasena, String hash);
 
+    boolean necesitaRehash(String hash);
 }

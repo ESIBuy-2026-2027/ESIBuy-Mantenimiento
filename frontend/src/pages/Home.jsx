@@ -788,7 +788,7 @@ const useStyles = makeStyles({
 })
 
 // Devuelve una referencia y si el elemento ya ha entrado en pantalla. Sin IntersectionObserver (navegadores
-// antiguos o tests) se muestra todo desde el principio, para que el contenido nunca quede oculto.
+// antiguos o tests) se muestra desde el principio, para que el contenido nunca quede oculto.
 function useReveal() {
   const ref = useRef(null)
   const [visible, setVisible] = useState(() => typeof IntersectionObserver === 'undefined')
@@ -882,8 +882,8 @@ function HeroScene() {
           <Text weight="semibold">Acceso verificado</Text>
         </span>
         <span className={styles.codeDigits}>
-          {['4', '8', '1', '5', '9', '2'].map((digit, index) => (
-            <span key={index} className={styles.digit}>
+          {['4', '8', '1', '5', '9', '2'].map((digit) => (
+            <span key={digit} className={styles.digit}>
               {digit}
             </span>
           ))}

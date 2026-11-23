@@ -204,14 +204,16 @@ function DetalleDelPedido({ pedido, onCancelar }) {
         </Table>
       </Card>
 
-      <Card className={styles.section} role="region" aria-label="Dirección de envío">
-        <Title3 as="h2" className={styles.sectionTitle}>
-          Dirección de envío
-        </Title3>
-        <Text weight="semibold">{pedido.direccionEnvio.destinatario}</Text>
-        <Text>{resumenDeDireccion(pedido.direccionEnvio)}</Text>
-        <Text className={styles.muted}>{pedido.direccionEnvio.telefono}</Text>
-      </Card>
+      <section aria-label="Dirección de envío">
+        <Card className={styles.section}>
+          <Title3 as="h2" className={styles.sectionTitle}>
+            Dirección de envío
+          </Title3>
+          <Text weight="semibold">{pedido.direccionEnvio.destinatario}</Text>
+          <Text>{resumenDeDireccion(pedido.direccionEnvio)}</Text>
+          <Text className={styles.muted}>{pedido.direccionEnvio.telefono}</Text>
+        </Card>
+      </section>
     </>
   )
 }

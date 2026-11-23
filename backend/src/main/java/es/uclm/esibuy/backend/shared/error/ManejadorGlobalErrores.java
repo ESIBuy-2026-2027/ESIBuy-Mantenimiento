@@ -67,16 +67,20 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException
 import org.springframework.security.access.AccessDeniedException;
 
 /**
- * Traduce las excepciones que salen de los controladores a respuestas HTTP con un mensaje
+ * Traduce las excepciones que salen de los controladores a respuestas HTTP con
+ * un mensaje
  * genérico, para que los controladores no necesiten {@code try/catch}.
  *
- * <p>PENDIENTE DE DECIDIR (equipo): texto exacto de los mensajes genéricos.
+ * <p>
+ * PENDIENTE DE DECIDIR (equipo): texto exacto de los mensajes genéricos.
  */
 @RestControllerAdvice
 public class ManejadorGlobalErrores {
 
-    // El 409 del registro lleva un código para que el frontend marque el campo repetido; el mensaje sigue
-    // siendo genérico. Decisión acordada con el frontend (T229), con la convención de ACCOUNT_BLOCKED.
+    // El 409 del registro lleva un código para que el frontend marque el campo
+    // repetido; el mensaje sigue
+    // siendo genérico. Decisión acordada con el frontend (T229), con la convención
+    // de ACCOUNT_BLOCKED.
     private static final String REGISTRO_NO_COMPLETADO = "No se ha podido completar el registro";
 
     @ExceptionHandler(CorreoYaRegistradoException.class)
@@ -91,7 +95,8 @@ public class ManejadorGlobalErrores {
         return new RespuestaError(REGISTRO_NO_COMPLETADO, "DNI_ALREADY_REGISTERED");
     }
 
-    // Registro del vendedor (T241): los códigos que espera el formulario del frontend.
+    // Registro del vendedor (T241): los códigos que espera el formulario del
+    // frontend.
     @ExceptionHandler(NombreComercialYaRegistradoException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError nombreComercialYaRegistrado() {
@@ -104,8 +109,10 @@ public class ManejadorGlobalErrores {
         return new RespuestaError(REGISTRO_NO_COMPLETADO, "EMAIL_AND_COMMERCIAL_NAME_ALREADY_REGISTERED");
     }
 
-    // Los 400 del registro llevan un code por motivo (fallos de la demo del Sprint 1) para que el frontend
-    // marque el campo. El mensaje sigue siendo genérico; el motivo lo pone el dominio y el texto del code, aquí.
+    // Los 400 del registro llevan un code por motivo (fallos de la demo del Sprint
+    // 1) para que el frontend
+    // marque el campo. El mensaje sigue siendo genérico; el motivo lo pone el
+    // dominio y el texto del code, aquí.
     private static final String DATOS_DE_REGISTRO_INVALIDOS = "Datos de registro no válidos";
 
     @ExceptionHandler(ContrasenaInvalidaException.class)
@@ -126,19 +133,23 @@ public class ManejadorGlobalErrores {
         return new RespuestaError(DATOS_DE_REGISTRO_INVALIDOS, "INVALID_EMAIL");
     }
 
-    // Un cuerpo que no pasa @Valid (campo vacío o demasiado largo) o que no se puede leer (JSON mal formado o un
-    // valor de un tipo incompatible) responde en todos los endpoints con el formato y el código del resto de 400 de
-    // validación, y no con el cuerpo por defecto de Spring. El mensaje es genérico: el detalle de la validación o de
+    // Un cuerpo que no pasa @Valid (campo vacío o demasiado largo) o que no se
+    // puede leer (JSON mal formado o un
+    // valor de un tipo incompatible) responde en todos los endpoints con el formato
+    // y el código del resto de 400 de
+    // validación, y no con el cuerpo por defecto de Spring. El mensaje es genérico:
+    // el detalle de la validación o de
     // Jackson no sale al cliente (decisión del equipo en la daily del 03/11/2026).
     private static final String DATOS_ENVIADOS_INVALIDOS = "Los datos enviados no son válidos";
 
-    @ExceptionHandler({MethodArgumentNotValidException.class, HttpMessageNotReadableException.class})
+    @ExceptionHandler({ MethodArgumentNotValidException.class, HttpMessageNotReadableException.class })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError cuerpoDeLaPeticionInvalido() {
         return new RespuestaError(DATOS_ENVIADOS_INVALIDOS, CODIGO_VALIDACION);
     }
 
-    // Switch exhaustivo: si el dominio añade un motivo, esto deja de compilar hasta darle su code.
+    // Switch exhaustivo: si el dominio añade un motivo, esto deja de compilar hasta
+    // darle su code.
     private static String codigo(MotivoRechazo motivo) {
         return switch (motivo) {
             case CONTRASENA_CORTA -> "PASSWORD_TOO_SHORT";
@@ -152,6 +163,7 @@ public class ManejadorGlobalErrores {
             case MENOR_DE_EDAD -> "UNDERAGE";
             case PRIVACIDAD_NO_ACEPTADA -> "PRIVACY_NOT_ACCEPTED";
             case DATO_INVALIDO -> CODIGO_VALIDACION;
+            case CONTRASENA_COMPROMETIDA -> "PASSWORD_COMPROMISED";
         };
     }
 
@@ -161,7 +173,8 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("Credenciales Incorrectas");
     }
 
-    // 400 + code al eliminar la cuenta propia con una contraseña incorrecta (HU25 y HU47). No es 401: la sesión sigue
+    // 400 + code al eliminar la cuenta propia con una contraseña incorrecta (HU25 y
+    // HU47). No es 401: la sesión sigue
     // siendo válida y el frontend no debe tratarlo como una sesión caducada.
     @ExceptionHandler(ContrasenaActualIncorrectaException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -199,15 +212,18 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("El usuario no existe");
     }
 
-    // Sin @ResponseStatus Spring respondería 200 y el frontend lo tomaría por un login correcto.
-    // 403 + code, como la cuenta bloqueada: el frontend elige su mensaje por el code (T236).
+    // Sin @ResponseStatus Spring respondería 200 y el frontend lo tomaría por un
+    // login correcto.
+    // 403 + code, como la cuenta bloqueada: el frontend elige su mensaje por el
+    // code (T236).
     @ExceptionHandler(CuentaPendienteException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public RespuestaError cuentaPendiente() {
         return new RespuestaError("La cuenta está pendiente de verificación", "ACCOUNT_PENDING");
     }
 
-    // Seguridad en la capa de negocio (R8): sin permiso, siempre el mismo 403 genérico. También recoge
+    // Seguridad en la capa de negocio (R8): sin permiso, siempre el mismo 403
+    // genérico. También recoge
     // AuthorizationDeniedException, que es una AccessDeniedException.
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
@@ -215,21 +231,24 @@ public class ManejadorGlobalErrores {
         return new RespuestaError(ManejadorAccesoDenegado.MENSAJE, ManejadorAccesoDenegado.CODIGO);
     }
 
-    // Quien ya tiene Authenticator no puede volver a darse de alta: impediría saltarse el tercer factor (T20)
+    // Quien ya tiene Authenticator no puede volver a darse de alta: impediría
+    // saltarse el tercer factor (T20)
     @ExceptionHandler(AuthenticatorYaDadoDeAltaException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public RespuestaError authenticatorYaDadoDeAlta() {
         return new RespuestaError("El usuario ya tiene Authenticator", "AUTHENTICATOR_ALREADY_ENROLLED");
     }
 
-    // 409 + code al bloquear (HU23): códigos acordados con el frontend (frontend/docs/hu23-desactivar-usuario.md).
+    // 409 + code al bloquear (HU23): códigos acordados con el frontend
+    // (frontend/docs/hu23-desactivar-usuario.md).
     @ExceptionHandler(AutobloqueoNoPermitidoException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError autobloqueoNoPermitido() {
         return new RespuestaError("No puedes bloquear tu propia cuenta", "CANNOT_BLOCK_SELF");
     }
 
-    // 409 + code al eliminar (HU37): código esperado por el frontend (CANNOT_DELETE_SELF).
+    // 409 + code al eliminar (HU37): código esperado por el frontend
+    // (CANNOT_DELETE_SELF).
     @ExceptionHandler(AutoeliminacionNoPermitidaException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError autoeliminacionNoPermitida() {
@@ -242,48 +261,58 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("No se puede bloquear al último administrador activo", "LAST_ACTIVE_ADMIN");
     }
 
-    // Código común de los 400 de validación de toda la API: datos de dominio no válidos, un @Valid que falla y un
-    // cuerpo que no se puede leer. Los motivos del registro con campo propio llevan su code (ver codigo()).
+    // Código común de los 400 de validación de toda la API: datos de dominio no
+    // válidos, un @Valid que falla y un
+    // cuerpo que no se puede leer. Los motivos del registro con campo propio llevan
+    // su code (ver codigo()).
     private static final String CODIGO_VALIDACION = "VALIDATION_ERROR";
 
-    // 400 + code al dar de alta un producto (HU31, T179): el mensaje es genérico, nunca el detalle de la regla.
+    // 400 + code al dar de alta un producto (HU31, T179): el mensaje es genérico,
+    // nunca el detalle de la regla.
     @ExceptionHandler(ProductoInvalidoException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError productoInvalido() {
         return new RespuestaError("El producto es inválido", CODIGO_VALIDACION);
     }
 
-    // 409 + code cuando el vendedor ya tiene un producto con ese nombre (HU31, T179).
-    // PENDIENTE: confirmar el code con el frontend (el contrato actual no define ningún 409 de productos).
+    // 409 + code cuando el vendedor ya tiene un producto con ese nombre (HU31,
+    // T179).
+    // PENDIENTE: confirmar el code con el frontend (el contrato actual no define
+    // ningún 409 de productos).
     @ExceptionHandler(ProductoDuplicadoException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError productoDuplicado() {
         return new RespuestaError("El producto ya existe con el mismo nombre", "PRODUCT_NAME_ALREADY_EXISTS");
     }
 
-    // 400 + code cuando la imagen del producto no supera el antivirus (HU31 y HU34, T397), al crear o al modificar.
+    // 400 + code cuando la imagen del producto no supera el antivirus (HU31 y HU34,
+    // T397), al crear o al modificar.
     @ExceptionHandler(ImagenNoSeguraException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError imagenNoSegura() {
         return new RespuestaError("La imagen no ha superado el análisis antivirus", "IMAGE_NOT_SAFE");
     }
 
-    // 404 + code al consultar un producto propio (HU33, T348): un producto ajeno se responde igual que uno
-    // inexistente, para no revelar que existe (frontend/docs/hu31-formulario-producto.md).
+    // 404 + code al consultar un producto propio (HU33, T348): un producto ajeno se
+    // responde igual que uno
+    // inexistente, para no revelar que existe
+    // (frontend/docs/hu31-formulario-producto.md).
     @ExceptionHandler(ProductoNoEncontradoException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public RespuestaError productoNoEncontrado() {
         return new RespuestaError("El producto no existe", "PRODUCT_NOT_FOUND");
     }
 
-    // 400 + code al crear una categoría (HU40, T323): el mensaje es genérico, nunca el detalle de la regla.
+    // 400 + code al crear una categoría (HU40, T323): el mensaje es genérico, nunca
+    // el detalle de la regla.
     @ExceptionHandler(CategoriaInvalidaException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError categoriaInvalida() {
         return new RespuestaError("La categoría es inválida", CODIGO_VALIDACION);
     }
 
-    // 400 + code al guardar las preferencias (HU46, T287): faltan las categorías, o alguna no existe o no está activa.
+    // 400 + code al guardar las preferencias (HU46, T287): faltan las categorías, o
+    // alguna no existe o no está activa.
     // El mensaje es genérico: no dice cuál.
     @ExceptionHandler(PreferenciasInvalidasException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -291,7 +320,8 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("Las preferencias son inválidas", CODIGO_VALIDACION);
     }
 
-    // 409 + code cuando ya hay una categoría con ese nombre, sin distinguir mayúsculas ni tildes (HU40, T323).
+    // 409 + code cuando ya hay una categoría con ese nombre, sin distinguir
+    // mayúsculas ni tildes (HU40, T323).
     // PENDIENTE: confirmar el code con quien haga la vista de creación (T320).
     @ExceptionHandler(CategoriaDuplicadaException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
@@ -306,7 +336,8 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("La categoría no existe", "CATEGORY_NOT_FOUND");
     }
 
-    // 409 + code cuando la categoría que se elimina tiene productos (HU42, T325): el mensaje es genérico.
+    // 409 + code cuando la categoría que se elimina tiene productos (HU42, T325):
+    // el mensaje es genérico.
     // PENDIENTE: confirmar el code con quien haga la vista de eliminación (T324).
     @ExceptionHandler(CategoriaConProductosException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
@@ -314,7 +345,8 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("La categoría tiene productos y no se puede eliminar", "CATEGORY_HAS_PRODUCTS");
     }
 
-    // 409 + code cuando la categoría que se elimina es la principal de algún vendedor (HU42, T325).
+    // 409 + code cuando la categoría que se elimina es la principal de algún
+    // vendedor (HU42, T325).
     // PENDIENTE: confirmar el code con quien haga la vista de eliminación (T324).
     @ExceptionHandler(CategoriaConVendedoresException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
@@ -323,9 +355,11 @@ public class ManejadorGlobalErrores {
                 "CATEGORY_HAS_SELLERS");
     }
 
-    // 400 + code al dar de alta un método de pago (HU6), también si la tarjeta está caducada. El mensaje es
+    // 400 + code al dar de alta un método de pago (HU6), también si la tarjeta está
+    // caducada. El mensaje es
     // genérico: nunca el detalle de la regla ni los datos de pago enviados.
-    // PENDIENTE: confirmar los codes de métodos de pago con quien haga la vista (T113, T269).
+    // PENDIENTE: confirmar los codes de métodos de pago con quien haga la vista
+    // (T113, T269).
     @ExceptionHandler(MetodoPagoInvalidoException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError metodoPagoInvalido() {
@@ -339,7 +373,8 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("Se ha alcanzado el máximo de métodos de pago", "PAYMENT_METHOD_LIMIT_REACHED");
     }
 
-    // 404 + code al marcar o eliminar un método de pago (HU6): uno ajeno se responde igual que uno
+    // 404 + code al marcar o eliminar un método de pago (HU6): uno ajeno se
+    // responde igual que uno
     // inexistente, para no revelar que existe
     @ExceptionHandler(MetodoPagoNoEncontradoException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -347,7 +382,8 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("El método de pago no existe", "PAYMENT_METHOD_NOT_FOUND");
     }
 
-    // 409 + code al eliminar el método predeterminado sin elegir cuál lo sustituye (HU6)
+    // 409 + code al eliminar el método predeterminado sin elegir cuál lo sustituye
+    // (HU6)
     @ExceptionHandler(NuevoPredeterminadoObligatorioException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError nuevoPredeterminadoObligatorio() {
@@ -368,8 +404,9 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("No hay stock suficiente", "INSUFFICIENT_STOCK");
     }
 
-    // Un producto que no existe o no está disponible se responde igual que uno inexistente
-    @ExceptionHandler({ProductoNoComprableException.class, ProductoNoDisponibleException.class})
+    // Un producto que no existe o no está disponible se responde igual que uno
+    // inexistente
+    @ExceptionHandler({ ProductoNoComprableException.class, ProductoNoDisponibleException.class })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public RespuestaError productoNoDisponible() {
         return new RespuestaError("El producto no existe", "PRODUCT_NOT_FOUND");
@@ -381,7 +418,8 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("El producto no está en el carrito", "CART_ITEM_NOT_FOUND");
     }
 
-    // 400 + code al añadir o editar una dirección de envío (HU5). El mensaje es genérico: nunca el detalle de
+    // 400 + code al añadir o editar una dirección de envío (HU5). El mensaje es
+    // genérico: nunca el detalle de
     // la regla ni los datos enviados.
     @ExceptionHandler(DireccionInvalidaException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -389,14 +427,16 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("La dirección de envío es inválida", CODIGO_VALIDACION);
     }
 
-    // 409 + code cuando el cliente ya tiene el máximo de direcciones de envío (HU5: 5)
+    // 409 + code cuando el cliente ya tiene el máximo de direcciones de envío (HU5:
+    // 5)
     @ExceptionHandler(LimiteDireccionesException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError limiteDirecciones() {
         return new RespuestaError("Se ha alcanzado el máximo de direcciones de envío", "ADDRESS_LIMIT_REACHED");
     }
 
-    // 404 + code al editar, marcar o eliminar una dirección (HU5): una ajena se responde igual que una
+    // 404 + code al editar, marcar o eliminar una dirección (HU5): una ajena se
+    // responde igual que una
     // inexistente, para no revelar que existe
     @ExceptionHandler(DireccionNoEncontradaException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -404,7 +444,8 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("La dirección de envío no existe", "ADDRESS_NOT_FOUND");
     }
 
-    // 409 + code al eliminar la dirección principal sin elegir cuál la sustituye (HU5)
+    // 409 + code al eliminar la dirección principal sin elegir cuál la sustituye
+    // (HU5)
     @ExceptionHandler(NuevaPrincipalObligatoriaException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError nuevaPrincipalObligatoria() {
@@ -412,16 +453,18 @@ public class ManejadorGlobalErrores {
                 "PRINCIPAL_ADDRESS_REQUIRED");
     }
 
-    // Pedidos (HU10): un método de pago o una dirección que no son del cliente se responden igual que unos datos
+    // Pedidos (HU10): un método de pago o una dirección que no son del cliente se
+    // responden igual que unos datos
     // inválidos, para no revelar que existen
-    @ExceptionHandler({MetodoPagoNoValidoException.class, DireccionNoValidaException.class,
-            PedidoInvalidoException.class})
+    @ExceptionHandler({ MetodoPagoNoValidoException.class, DireccionNoValidaException.class,
+            PedidoInvalidoException.class })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError pedidoInvalido() {
         return new RespuestaError("El pedido es inválido", CODIGO_VALIDACION);
     }
 
-    // Pedidos (HU11): uno que no existe o es de otro cliente responde 400, no 404, para no revelar si existe
+    // Pedidos (HU11): uno que no existe o es de otro cliente responde 400, no 404,
+    // para no revelar si existe
     @ExceptionHandler(PedidoNoEncontradoException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError pedidoNoEncontrado() {
@@ -453,7 +496,8 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("No se puede comprar un producto del pedido", "INSUFFICIENT_STOCK");
     }
 
-    // Valoraciones (HU13): puntuación fuera de 1 a 5 o comentario de más de 500 caracteres
+    // Valoraciones (HU13): puntuación fuera de 1 a 5 o comentario de más de 500
+    // caracteres
     @ExceptionHandler(ValoracionInvalidaException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError valoracionInvalida() {
@@ -467,28 +511,32 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("Solo puedes valorar productos que has comprado", "PRODUCT_NOT_PURCHASED");
     }
 
-    // Una valoración por cliente y producto, también si llegan dos a la vez (índice único)
+    // Una valoración por cliente y producto, también si llegan dos a la vez (índice
+    // único)
     @ExceptionHandler(ValoracionDuplicadaException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError valoracionDuplicada() {
         return new RespuestaError("Ya has valorado este producto", "REVIEW_ALREADY_EXISTS");
     }
 
-    // Incidencias (HU44, T292): asunto o descripción vacíos o demasiado largos. El mensaje es siempre genérico.
+    // Incidencias (HU44, T292): asunto o descripción vacíos o demasiado largos. El
+    // mensaje es siempre genérico.
     @ExceptionHandler(IncidenciaInvalidaException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError incidenciaInvalida() {
         return new RespuestaError("La incidencia es inválida", CODIGO_VALIDACION);
     }
 
-    // Incidencias (HU50): abrir o cerrar una que no existe, por ejemplo porque otro administrador ya la cerró
+    // Incidencias (HU50): abrir o cerrar una que no existe, por ejemplo porque otro
+    // administrador ya la cerró
     @ExceptionHandler(IncidenciaNoEncontradaException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public RespuestaError incidenciaNoEncontrada() {
         return new RespuestaError("La incidencia no existe", "INCIDENT_NOT_FOUND");
     }
 
-    // Incidencias (HU50): solo se abre una incidencia pendiente, para no sobrescribir la respuesta que ya tiene
+    // Incidencias (HU50): solo se abre una incidencia pendiente, para no
+    // sobrescribir la respuesta que ya tiene
     @ExceptionHandler(IncidenciaYaAbiertaException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError incidenciaYaAbierta() {

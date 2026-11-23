@@ -5,6 +5,12 @@ import {
   Button,
   Card,
   Checkbox,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogSurface,
+  DialogTitle,
   MessageBar,
   MessageBarActions,
   MessageBarBody,
@@ -90,21 +96,45 @@ function AccountDeletion({ rol }) {
   const styles = useStyles()
   const titleId = useId()
   const { accountDeleted } = useAuth()
+  const [confirmacionInicial, setConfirmacionInicial] = useState(false)
   const [abierto, setAbierto] = useState(false)
 
   return (
-    <Card className={styles.deletion} aria-labelledby={titleId} role="region">
+    <section aria-labelledby={titleId}>
+      <Card className={styles.deletion}>
       <Title3 as="h2" id={titleId} className={styles.name}>
         Eliminar mi cuenta
       </Title3>
       <Text className={styles.preferencesText}>
         Dejarás de formar parte de ESIBuy. Tus pedidos y valoraciones se conservan.
       </Text>
-      <Button className={styles.deletionAction} icon={<Delete20Regular />} onClick={() => setAbierto(true)}>
+      <Button className={styles.deletionAction} icon={<Delete20Regular />} onClick={() => setConfirmacionInicial(true)}>
         Eliminar mi cuenta
       </Button>
+      <Dialog open={confirmacionInicial} modalType="alert" onOpenChange={(_event, data) => !data.open && setConfirmacionInicial(false)}>
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle>Confirmar eliminación de cuenta</DialogTitle>
+            <DialogContent>
+              ¿Estás seguro de que quieres eliminar tu cuenta? Esta acción es irreversible.
+            </DialogContent>
+            <DialogActions>
+              <Button appearance="secondary" onClick={() => setConfirmacionInicial(false)}>
+                Cancelar
+              </Button>
+              <Button appearance="primary" onClick={() => {
+                setConfirmacionInicial(false)
+                setAbierto(true)
+              }}>
+                Continuar
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
       {abierto && <DeleteAccountDialog rol={rol} onClose={() => setAbierto(false)} onDeleted={accountDeleted} />}
-    </Card>
+      </Card>
+    </section>
   )
 }
 
@@ -160,7 +190,7 @@ function CustomerPreferences({ categories }) {
           </MessageBarActions>
         </MessageBar>
       ) : (
-        <div role="group" aria-labelledby={titleId} className={styles.categories}>
+        <fieldset aria-labelledby={titleId} className={styles.categories}>
           {categories.map((category) => (
             <Checkbox
               key={category.id}
@@ -170,7 +200,7 @@ function CustomerPreferences({ categories }) {
               onChange={(_event, data) => cambiar(category.id, data.checked === true)}
             />
           ))}
-        </div>
+        </fieldset>
       )}
     </Card>
   )
@@ -272,13 +302,13 @@ export default function ProfilePage() {
       {!perfil && !failed && <Spinner className={pageStyles.loading} label="Cargando tu perfil…" />}
 
       {perfil && (
-        <div role="status">
+        <output>
           {aviso && (
             <MessageBar intent="success">
               <MessageBarBody>{aviso}</MessageBarBody>
             </MessageBar>
           )}
-        </div>
+        </output>
       )}
 
       {perfil && (

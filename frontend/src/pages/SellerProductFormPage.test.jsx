@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
@@ -34,7 +34,7 @@ function capturarEnvio(metodo, ruta, respuesta) {
 async function rellenarFormularioValido(user) {
   await user.type(screen.getByLabelText(/^nombre/i), 'Lámpara de pie')
   await elegirCategoria(user, 'Hogar')
-  await user.type(screen.getByLabelText(/^precio/i), '45.5')
+  await user.type(screen.getByLabelText(/^precio/i), '45')
 }
 
 async function esperarRuta(ruta) {
@@ -49,11 +49,12 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
     expect(screen.getByLabelText(/^descripción/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^precio/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^stock/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/^url de la imagen/i)).toBeInTheDocument()
+    expect(screen.queryByLabelText(/^url de la imagen/i)).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Archivo de imagen')).toHaveAttribute('accept', 'image/jpeg,image/png')
     expect(campoCategoria()).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: 'Disponible para la venta' })).toBeChecked()
-    expect(screen.getByRole('switch', { name: 'Activar descuento' })).not.toBeChecked()
-    expect(screen.getByRole('switch', { name: 'Activar descuento premium' })).not.toBeChecked()
+    expect(screen.getByLabelText(/^descuento general \(%\)/i)).toHaveValue('')
+    expect(screen.getByLabelText(/^descuento adicional premium \(%\)/i)).toHaveValue('')
     expect(screen.getByRole('button', { name: /^guardar$/i })).toBeInTheDocument()
   })
 
@@ -61,27 +62,36 @@ describe('SellerProductFormPage (HU31): alta, campos', () => {
     await abrirFormulario()
 
     expect(screen.getByLabelText(/^nombre/i)).toHaveValue('')
-    expect(screen.getByLabelText(/^precio/i)).toHaveValue(null)
-    expect(campoCategoria()).toHaveValue('')
+    expect(screen.getByLabelText(/^precio/i)).toHaveValue('')
+    expect(campoCategoria()).toHaveTextContent('Selecciona una categoría')
   })
 
   it('sellerProductFormPage_explicaQueLosDescuentosSeAcumulan', async () => {
     await abrirFormulario()
 
-    expect(screen.getByText(/los descuentos se acumulan/i)).toBeInTheDocument()
+    expect(screen.getByText(/ambos descuentos se acumulan/i)).toBeInTheDocument()
     expect(screen.queryByText(/no se acumulan/i)).not.toBeInTheDocument()
   })
 
-  it('sellerProductFormPage_losCamposDeDescuento_aparecenAlActivarElDescuento', async () => {
+  it('sellerProductFormPage_muestraAmbosCamposDeDescuentoEnLaMismaFilaYSonOpcionales', async () => {
+    await abrirFormulario()
+
+    expect(screen.getByLabelText(/^descuento general \(%\)/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^descuento adicional premium \(%\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/si dejas un campo vacío, ese descuento no se aplicará/i)).toBeInTheDocument()
+  })
+
+  it('sellerProductFormPage_limitaLosDescuentosADosDigitos', async () => {
     const user = userEvent.setup()
     await abrirFormulario()
-    expect(screen.queryByLabelText(/^descuento \(%\)/i)).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('switch', { name: 'Activar descuento' }))
-    expect(screen.getByLabelText(/^descuento \(%\)/i)).toBeInTheDocument()
+    const descuento = screen.getByLabelText(/^descuento general \(%\)/i)
+    expect(descuento).toHaveAttribute('maxLength', '2')
+    expect(descuento).toHaveAttribute('inputmode', 'numeric')
 
-    await user.click(screen.getByRole('switch', { name: 'Activar descuento premium' }))
-    expect(screen.getByLabelText(/^descuento premium \(%\)/i)).toBeInTheDocument()
+    await user.type(descuento, '11111')
+
+    expect(descuento).toHaveValue('11')
   })
 
   it('sellerProductFormPage_alPulsarCancelar_vuelveAlListadoSinGuardar', async () => {
@@ -137,6 +147,20 @@ describe('SellerProductFormPage (HU31): validación', () => {
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp(`^${RUTA_NUEVO}$`))
   })
 
+  it('VEN-08: precio y stock solo admiten cifras enteras', async () => {
+    const user = userEvent.setup()
+    await abrirFormulario()
+
+    const precio = screen.getByLabelText(/^precio/i)
+    const stock = screen.getByLabelText(/^stock/i)
+
+    await user.type(precio, '12.5')
+    await user.type(stock, '-3.5')
+
+    expect(precio).toHaveValue('125')
+    expect(stock).toHaveValue('35')
+  })
+
   it('sellerProductFormPage_conPrecioCero_muestraQueDebeSerMayorQueCero', async () => {
     const user = userEvent.setup()
     await abrirFormulario()
@@ -146,29 +170,28 @@ describe('SellerProductFormPage (HU31): validación', () => {
     await user.type(screen.getByLabelText(/^precio/i), '0')
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
-    expect(screen.getByText(/el precio debe ser mayor que 0/i)).toBeInTheDocument()
+    expect(screen.getByText(/el precio debe ser un número entero mayor que 0/i)).toBeInTheDocument()
   })
 
-  it('sellerProductFormPage_conStockNegativo_muestraQueDebeSerMayorOIgualQueCero', async () => {
+  it('sellerProductFormPage_noPermiteIntroducirStockNegativo', async () => {
+    const user = userEvent.setup()
+    await abrirFormulario()
+
+    const stock = screen.getByLabelText(/^stock/i)
+    await user.type(stock, '-1')
+
+    expect(stock).toHaveValue('1')
+  })
+
+  it('sellerProductFormPage_rechazaDescuentoFueraDelRango_0', async () => {
     const user = userEvent.setup()
     await abrirFormulario()
 
     await rellenarFormularioValido(user)
-    await user.type(screen.getByLabelText(/^stock/i), '-1')
+    await user.type(screen.getByLabelText(/^descuento general \(%\)/i), '0')
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
-    expect(screen.getByText(/stock debe ser un número entero mayor o igual que 0/i)).toBeInTheDocument()
-  })
-
-  it('sellerProductFormPage_conDescuentoActivoSinPorcentaje_muestraError', async () => {
-    const user = userEvent.setup()
-    await abrirFormulario()
-
-    await rellenarFormularioValido(user)
-    await user.click(screen.getByRole('switch', { name: 'Activar descuento' }))
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-
-    expect(screen.getByText(/el descuento debe ser mayor que 0 y no superar 100/i)).toBeInTheDocument()
+    expect(screen.getByText(/número entero entre 1 y 99/i)).toBeInTheDocument()
   })
 
   it('sellerProductFormPage_alCorregirUnCampoTrasUnIntentoFallido_loValidaEnVivo', async () => {
@@ -193,16 +216,6 @@ describe('SellerProductFormPage (HU31): validación', () => {
     expect(screen.queryByText(/introduce el nombre del producto/i)).not.toBeInTheDocument()
   })
 
-  it('sellerProductFormPage_conUrlDeImagenNoValida_muestraError', async () => {
-    const user = userEvent.setup()
-    await abrirFormulario()
-
-    await rellenarFormularioValido(user)
-    await user.type(screen.getByLabelText(/^url de la imagen/i), 'esto no es una url')
-    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
-
-    expect(screen.getByText(/dirección web válida/i)).toBeInTheDocument()
-  })
 })
 
 describe('SellerProductFormPage (HU31): alta, guardado', () => {
@@ -213,15 +226,14 @@ describe('SellerProductFormPage (HU31): alta, guardado', () => {
 
     await rellenarFormularioValido(user)
     await user.type(screen.getByLabelText(/^stock/i), '7')
-    await user.click(screen.getByRole('switch', { name: 'Activar descuento' }))
-    await user.type(screen.getByLabelText(/^descuento \(%\)/i), '10')
+    await user.type(screen.getByLabelText(/^descuento general \(%\)/i), '10')
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
     await esperarRuta('/seller/products')
     expect(envio.cuerpo).toEqual({
       nombre: 'Lámpara de pie',
       descripcion: '',
-      precio: 45.5,
+      precio: 45,
       stock: 7,
       categoriaId: 'cat-2',
       imagen: '',
@@ -319,15 +331,15 @@ describe('SellerProductFormPage (HU31): categoría en un desplegable', () => {
     expect(screen.queryByRole('radio', { name: 'Tecnología' })).not.toBeInTheDocument()
   })
 
-  it('HU31-CP26: se puede escribir para buscar la categoría y se envía su identificador', async () => {
+  it('VEN-08: se selecciona una categoría del desplegable y se envía su identificador', async () => {
     const user = userEvent.setup()
     const envio = capturarEnvio('post', '/api/seller/products', () => HttpResponse.json({ id: 'p-nuevo' }, { status: 201 }))
     await abrirFormulario()
 
     await user.type(screen.getByLabelText(/^nombre/i), 'Lámpara de pie')
-    await user.type(campoCategoria(), 'hog')
+    await user.click(campoCategoria())
     await user.click(screen.getByRole('option', { name: 'Hogar' }))
-    await user.type(screen.getByLabelText(/^precio/i), '45.5')
+    await user.type(screen.getByLabelText(/^precio/i), '45')
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
     await esperarRuta('/seller/products')
@@ -377,18 +389,17 @@ describe('SellerProductFormPage (HU34): edición', () => {
     await abrirFormulario(RUTA_EDITAR, /editar producto/i)
 
     await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Auriculares inalámbricos'))
-    expect(screen.getByLabelText(/^precio/i)).toHaveValue(59.9)
-    expect(screen.getByLabelText(/^stock/i)).toHaveValue(34)
-    expect(campoCategoria()).toHaveValue('Tecnología')
+    expect(screen.getByLabelText(/^precio/i)).toHaveValue('59.9')
+    expect(screen.getByLabelText(/^stock/i)).toHaveValue('34')
+    expect(campoCategoria()).toHaveTextContent('Tecnología')
     expect(screen.getByLabelText(/^descripción/i)).toHaveValue('Descripción de Auriculares inalámbricos.')
   })
 
   it('HU34-CP12: la vista de edición muestra los descuentos activos del producto', async () => {
     await abrirFormulario(RUTA_EDITAR, /editar producto/i)
 
-    await waitFor(() => expect(screen.getByRole('switch', { name: 'Activar descuento' })).toBeChecked())
-    expect(screen.getByLabelText(/^descuento \(%\)/i)).toHaveValue(10)
-    expect(screen.getByLabelText(/^descuento premium \(%\)/i)).toHaveValue(15)
+    await waitFor(() => expect(screen.getByLabelText(/^descuento general \(%\)/i)).toHaveValue('10'))
+    expect(screen.getByLabelText(/^descuento adicional premium \(%\)/i)).toHaveValue('15')
   })
 
   it('HU34-CP13: al guardar, envía los cambios al producto indicado y vuelve al listado con un aviso', async () => {
@@ -398,11 +409,11 @@ describe('SellerProductFormPage (HU34): edición', () => {
     await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Auriculares inalámbricos'))
 
     await user.clear(screen.getByLabelText(/^precio/i))
-    await user.type(screen.getByLabelText(/^precio/i), '49.99')
+    await user.type(screen.getByLabelText(/^precio/i), '49')
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
     await esperarRuta('/seller/products')
-    expect(envio.cuerpo).toMatchObject({ nombre: 'Auriculares inalámbricos', precio: 49.99, stock: 34 })
+    expect(envio.cuerpo).toMatchObject({ nombre: 'Auriculares inalámbricos', precio: 49, stock: 34 })
     expect(await screen.findByText(/cambios guardados/i)).toBeInTheDocument()
   })
 
@@ -428,6 +439,9 @@ describe('SellerProductFormPage (HU34): edición', () => {
 
     await user.clear(screen.getByLabelText(/^nombre/i))
     await user.type(screen.getByLabelText(/^nombre/i), 'Teclado mecánico')
+    // El formulario ya exige precios enteros; el producto de prueba conserva un precio histórico decimal.
+    await user.clear(screen.getByLabelText(/^precio/i))
+    await user.type(screen.getByLabelText(/^precio/i), '59')
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
     expect(await screen.findByText(NOMBRE_EN_USO)).toBeInTheDocument()
@@ -462,5 +476,110 @@ describe('SellerProductFormPage (HU34): edición', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: /editar producto/i })).toBeInTheDocument()
     await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Auriculares inalámbricos'))
+  })
+})
+
+
+describe('SellerProductFormPage: subida de imágenes', () => {
+  it('permite arrastrar y soltar una imagen en el área de carga', async () => {
+    const user = userEvent.setup()
+    const llamadas = { alta: 0, subida: 0 }
+
+    server.use(
+      http.post('/api/seller/products', async ({ request }) => {
+        llamadas.alta += 1
+        await request.json()
+        return HttpResponse.json({ id: 'p-drop' }, { status: 201 })
+      }),
+      http.post('/api/seller/products/p-drop/image', async () => {
+        llamadas.subida += 1
+        return HttpResponse.json({ id: 'p-drop' })
+      }),
+    )
+
+    await abrirFormulario()
+    await rellenarFormularioValido(user)
+    const zonaCarga = screen.getByText('Arrastra una imagen aquí').closest('label')
+    const archivo = new File(['contenido png'], 'foto.png', { type: 'image/png' })
+
+    fireEvent.dragOver(zonaCarga, { dataTransfer: { files: [archivo] } })
+    fireEvent.drop(zonaCarga, { dataTransfer: { files: [archivo] } })
+
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+    await esperarRuta('/seller/products')
+
+    expect(llamadas).toEqual({ alta: 1, subida: 1 })
+  })
+
+  it('sube la imagen seleccionada después de crear el producto', async () => {
+    const user = userEvent.setup()
+    const llamadas = { alta: 0, subida: 0 }
+    let cuerpoMultipart = ''
+    let tipoContenido = ''
+
+    server.use(
+      http.post('/api/seller/products', async ({ request }) => {
+        llamadas.alta += 1
+        await request.json()
+        return HttpResponse.json({ id: 'p-imagen' }, { status: 201 })
+      }),
+      http.post('/api/seller/products/p-imagen/image', async ({ request }) => {
+        llamadas.subida += 1
+        tipoContenido = request.headers.get('content-type') ?? ''
+        cuerpoMultipart = await request.text()
+        return HttpResponse.json({ id: 'p-imagen' })
+      }),
+    )
+
+    await abrirFormulario()
+    await rellenarFormularioValido(user)
+    await user.upload(screen.getByLabelText('Archivo de imagen'), new File(['contenido png'], 'foto.png', { type: 'image/png' }))
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+
+    await esperarRuta('/seller/products')
+    expect(llamadas).toEqual({ alta: 1, subida: 1 })
+    expect(tipoContenido).toMatch(/^multipart\/form-data; boundary=/i)
+    expect(cuerpoMultipart).toMatch(/Content-Disposition: form-data; name="file"; filename="[^"]+"/)
+    expect(cuerpoMultipart).toContain('Content-Type: image/png')
+  })
+
+  it('permite reintentar la subida fallida sin duplicar el producto', async () => {
+    const user = userEvent.setup()
+    const llamadas = { alta: 0, modificacion: 0, subida: 0 }
+
+    server.use(
+      http.post('/api/seller/products', async ({ request }) => {
+        llamadas.alta += 1
+        await request.json()
+        return HttpResponse.json({ id: 'p-reintento' }, { status: 201 })
+      }),
+      http.put('/api/seller/products/p-reintento', async ({ request }) => {
+        llamadas.modificacion += 1
+        await request.json()
+        return HttpResponse.json({ id: 'p-reintento' })
+      }),
+      http.post('/api/seller/products/p-reintento/image', async () => {
+        llamadas.subida += 1
+        if (llamadas.subida === 1) {
+          return HttpResponse.json({ code: 'IMAGE_NOT_SAFE' }, { status: 400 })
+        }
+        return HttpResponse.json({ id: 'p-reintento' })
+      }),
+    )
+
+    await abrirFormulario()
+    await rellenarFormularioValido(user)
+    await user.upload(
+      screen.getByLabelText('Archivo de imagen'),
+      new File(['contenido png'], 'foto.png', { type: 'image/png' }),
+    )
+
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+    expect(await screen.findByText(/el producto se ha guardado, pero no se ha podido subir la imagen/i)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+    await esperarRuta('/seller/products')
+
+    expect(llamadas).toEqual({ alta: 1, modificacion: 1, subida: 2 })
   })
 })

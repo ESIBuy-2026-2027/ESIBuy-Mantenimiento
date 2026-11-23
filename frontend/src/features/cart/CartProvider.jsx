@@ -44,9 +44,20 @@ export default function CartProvider({ children }) {
 
   const value = useMemo(() => {
     const ownCart = stored.clientId === clientId
+
+    let status = 'ready'
+
+    if (!clientId) {
+      status = 'idle'
+    } else if (!ownCart) {
+      status = 'loading'
+    } else if (stored.failed) {
+      status = 'failed'
+    }
+
     return {
       cart: clientId && ownCart ? stored.cart : CARRITO_VACIO,
-      status: !clientId ? 'idle' : !ownCart ? 'loading' : stored.failed ? 'failed' : 'ready',
+      status,
       add: (productId, quantity) => apply(() => addCartItem(productId, quantity)),
       setQuantity: (productId, quantity) => apply(() => setCartItemQuantity(productId, quantity)),
       remove: (productId) => apply(() => removeCartItem(productId)),

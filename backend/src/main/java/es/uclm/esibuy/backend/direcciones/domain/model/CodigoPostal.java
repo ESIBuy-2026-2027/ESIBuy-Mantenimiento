@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 public record CodigoPostal(String valor) {
 
     // Cinco dígitos: solo se envía a España
-    private static final Pattern FORMATO = Pattern.compile("^[0-9]{5}$");
+    private static final Pattern FORMATO = Pattern.compile("^\\d{5}$");
 
     public CodigoPostal {
         if (valor == null || !FORMATO.matcher(valor).matches()) {

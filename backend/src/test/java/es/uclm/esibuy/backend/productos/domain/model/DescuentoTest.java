@@ -31,7 +31,7 @@ class DescuentoTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"0.01", "50", "100"})
-    @DisplayName("HU31-CP07: acepta los porcentajes de los extremos válidos (0,01 y 100)")
+    @DisplayName("HU31-CP07: acepta los porcentajes históricos válidos (0,01 y 100)")
     void aceptaLosPorcentajesLimite(String porcentaje) {
         assertDoesNotThrow(() -> new Descuento(true, new BigDecimal(porcentaje)));
     }

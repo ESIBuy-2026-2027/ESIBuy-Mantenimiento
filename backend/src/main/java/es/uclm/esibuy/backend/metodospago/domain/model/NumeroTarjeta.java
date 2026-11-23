@@ -5,8 +5,9 @@ import java.util.regex.Pattern;
 
 public record NumeroTarjeta(String valor) {
 
-    // Entre 13 y 19 dígitos: el rango de longitudes de las tarjetas según ISO/IEC 7812
-    private static final Pattern FORMATO = Pattern.compile("^[0-9]{13,19}$");
+    // Entre 13 y 19 dígitos: el rango de longitudes de las tarjetas según ISO/IEC
+    // 7812
+    private static final Pattern FORMATO = Pattern.compile("^\\d{13,19}$");
 
     public NumeroTarjeta {
         if (valor == null || !FORMATO.matcher(valor).matches() || !cumpleLuhn(valor)) {
@@ -19,7 +20,8 @@ public record NumeroTarjeta(String valor) {
         return "•••• " + valor.substring(valor.length() - 4);
     }
 
-    // Algoritmo de Luhn: desde la derecha se duplica uno de cada dos dígitos (restando 9 si pasa de 9)
+    // Algoritmo de Luhn: desde la derecha se duplica uno de cada dos dígitos
+    // (restando 9 si pasa de 9)
     // y la suma total tiene que ser múltiplo de 10.
     private static boolean cumpleLuhn(String digitos) {
         int suma = 0;

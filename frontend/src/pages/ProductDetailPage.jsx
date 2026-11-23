@@ -19,6 +19,7 @@ import ProductDetail from '../features/catalog/ProductDetail'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { useCategories } from '../hooks/useCategories'
 import { PATHS } from '../routes/paths'
+import PropTypes from 'prop-types'
 
 const NOT_FOUND = 404
 
@@ -71,7 +72,7 @@ const useStyles = makeStyles({
 // Esqueleto de la página mientras llega el producto: respeta el reparto de la vista para que no salte al cargar.
 function DetailSkeleton({ styles }) {
   return (
-    <div role="status" aria-busy="true">
+    <output aria-busy="true">
       <span className={styles.hidden}>Cargando producto…</span>
       <Skeleton aria-hidden="true" className={styles.skeleton}>
         <SkeletonItem className={styles.skeletonImage} />
@@ -86,8 +87,12 @@ function DetailSkeleton({ styles }) {
           <SkeletonItem size={16} style={{ width: '70%' }} />
         </div>
       </Skeleton>
-    </div>
+    </output>
   )
+}
+
+DetailSkeleton.propTypes = {
+  styles: PropTypes.objectOf(PropTypes.string).isRequired,
 }
 
 // Detalle de un producto para el cliente (HU8). El producto se pide al backend por su identificador (404 si no existe
@@ -126,7 +131,7 @@ export default function ProductDetailPage() {
       .then((lista) => {
         if (!cancelled && !cambiado.current) setFavorito(estaEnLaLista(lista, id))
       })
-      .catch(() => {})
+      .catch(() => { })
     return () => {
       cancelled = true
     }

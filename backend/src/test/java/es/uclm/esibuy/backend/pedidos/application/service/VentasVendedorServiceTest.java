@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import es.uclm.esibuy.backend.pedidos.application.port.in.VentaProducto;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
+import es.uclm.esibuy.backend.pedidos.domain.model.DatosPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.LineaPedido;
@@ -65,10 +66,26 @@ class VentasVendedorServiceTest {
     }
 
     private static Pedido pedido(String id, EstadoPedido estado, LineaPedido... lineas) {
-        return new Pedido(id, new NumeroPedido("ESB-2026-000001"), "c-1", "u-2", "TecnoVera", estado,
-                List.of(lineas), new DireccionEnvioPedido("Carlos Cliente", "Calle Mayor 1", null, "13001",
-                        "Ciudad Real", "Ciudad Real", "611222333"),
-                "mp-1", Instant.parse("2026-10-29T10:00:00Z"));
+        DatosPedido datosPedido = new DatosPedido(
+                id,
+                new NumeroPedido("ESB-2026-000001"),
+                "c-1",
+                "u-2",
+                "TecnoVera",
+                estado,
+                List.of(lineas),
+                new DireccionEnvioPedido(
+                        "Carlos Cliente",
+                        "Calle Mayor 1",
+                        null,
+                        "13001",
+                        "Ciudad Real",
+                        "Ciudad Real",
+                        "611222333"),
+                "mp-1",
+                Instant.parse("2026-10-29T10:00:00Z"));
+
+        return new Pedido(datosPedido);
     }
 
     // Los pedidos de cada vendedor; apunta cada consulta que recibe

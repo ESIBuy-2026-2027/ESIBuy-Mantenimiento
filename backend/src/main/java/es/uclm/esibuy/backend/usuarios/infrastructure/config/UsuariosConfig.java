@@ -60,6 +60,7 @@ import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.Java
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.SecureRandomGeneradorCodigoAdapter;
 import es.uclm.esibuy.backend.usuarios.application.port.in.CrearAdministradorUseCase;
 import es.uclm.esibuy.backend.usuarios.application.service.CrearAdministradorService;
+import es.uclm.esibuy.backend.usuarios.application.service.DependenciasGestionCuenta;
 import es.uclm.esibuy.backend.usuarios.application.port.in.GestionSeguridadUseCase;
 import es.uclm.esibuy.backend.usuarios.application.service.GestionSeguridadService;
 
@@ -71,6 +72,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
+
+import es.uclm.esibuy.backend.usuarios.application.port.out.ComprobadorContrasenaComprometidaPort;
+import es.uclm.esibuy.backend.usuarios.application.service.ValidacionContrasenaService;
+import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.HibpContrasenaAdapter;
 
 /**
  * Presenta a Spring las piezas del módulo de usuarios y cómo se conectan entre
@@ -88,8 +93,20 @@ import org.springframework.mail.javamail.JavaMailSender;
 public class UsuariosConfig {
 
     @Bean
-    HashContrasenaPort hashContrasenaPort() {
-        return new BCryptHashContrasenaAdapter();
+    HashContrasenaPort hashContrasenaPort(
+            @Value("${esibuy.contrasenas.pepper}") String pepper) {
+        return new BCryptHashContrasenaAdapter(pepper);
+    }
+
+    @Bean
+    ComprobadorContrasenaComprometidaPort comprobadorContrasenaComprometidaPort() {
+        return new HibpContrasenaAdapter();
+    }
+
+    @Bean
+    ValidacionContrasenaService validacionContrasenaService(
+            ComprobadorContrasenaComprometidaPort comprobadorContrasenaComprometidaPort) {
+        return new ValidacionContrasenaService(comprobadorContrasenaComprometidaPort);
     }
 
     @Bean
@@ -100,9 +117,16 @@ public class UsuariosConfig {
     }
 
     @Bean
-    RegistroUsuarioUseCase registroUsuarioUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-            HashContrasenaPort hashContrasenaPort, Clock reloj) {
-        return new RegistroUsuarioService(usuarioRepositoryPort, hashContrasenaPort, reloj);
+    RegistroUsuarioUseCase registroUsuarioUseCase(
+            UsuarioRepositoryPort usuarioRepositoryPort,
+            HashContrasenaPort hashContrasenaPort,
+            ValidacionContrasenaService validacionContrasenaService,
+            Clock reloj) {
+        return new RegistroUsuarioService(
+                usuarioRepositoryPort,
+                hashContrasenaPort,
+                validacionContrasenaService,
+                reloj);
     }
 
     @Bean
@@ -111,9 +135,14 @@ public class UsuariosConfig {
     }
 
     @Bean
-    CrearAdministradorUseCase crearAdministradorUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-            HashContrasenaPort hashContrasenaPort) {
-        return new CrearAdministradorService(usuarioRepositoryPort, hashContrasenaPort);
+    CrearAdministradorUseCase crearAdministradorUseCase(
+            UsuarioRepositoryPort usuarioRepositoryPort,
+            HashContrasenaPort hashContrasenaPort,
+            ValidacionContrasenaService validacionContrasenaService) {
+        return new CrearAdministradorService(
+                usuarioRepositoryPort,
+                hashContrasenaPort,
+                validacionContrasenaService);
     }
 
     @Bean
@@ -159,14 +188,22 @@ public class UsuariosConfig {
     }
 
     @Bean
-    RecuperacionContrasenaUseCase recuperacionContrasenaUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
+    RecuperacionContrasenaUseCase recuperacionContrasenaUseCase(
+            UsuarioRepositoryPort usuarioRepositoryPort,
             HashContrasenaPort hashContrasenaPort,
+            ValidacionContrasenaService validacionContrasenaService,
             CodigoRecuperacionRepositoryPort codigoRecuperacionRepositoryPort,
             GeneradorCodigoPort generadorCodigoPort,
             EnvioEmailPort envioEmailPort,
             Clock reloj) {
-        return new RecuperacionContrasenaService(usuarioRepositoryPort, hashContrasenaPort,
-                codigoRecuperacionRepositoryPort, generadorCodigoPort, envioEmailPort, reloj);
+        return new RecuperacionContrasenaService(
+                usuarioRepositoryPort,
+                hashContrasenaPort,
+                validacionContrasenaService,
+                codigoRecuperacionRepositoryPort,
+                generadorCodigoPort,
+                envioEmailPort,
+                reloj);
     }
 
     // HU23 (T206): Spring Boot añade este filtro a cada petición e invalida la
@@ -263,17 +300,37 @@ public class UsuariosConfig {
     }
 
     @Bean
-    GestionCuentaUseCase gestionCuentaUseCase(UsuarioRepositoryPort usuarioRepositoryPort,
-            HashContrasenaPort hashContrasena, ProductosVendedorPort productos,
-            PedidosVendedorPort productosConPedidos, ValoracionesProductoPort valoraciones,
+    GestionCuentaUseCase gestionCuentaUseCase(
+            UsuarioRepositoryPort usuarioRepositoryPort,
+            HashContrasenaPort hashContrasena,
+            ProductosVendedorPort productos,
+            PedidosVendedorPort productosConPedidos,
+            ValoracionesProductoPort valoraciones,
             FactorAutenticacionRepositoryPort factores,
             CodigoVerificacionRepositoryPort codigosVerificacion,
-            CodigoRecuperacionRepositoryPort codigosRecuperacion, ListaDeseosClientePort listaDeseos,
-            CarritoClientePort carrito, PreferenciasClientePort preferencias, MetodosPagoClientePort metodosPago,
+            CodigoRecuperacionRepositoryPort codigosRecuperacion,
+            ListaDeseosClientePort listaDeseos,
+            CarritoClientePort carrito,
+            PreferenciasClientePort preferencias,
+            MetodosPagoClientePort metodosPago,
             DireccionesClientePort direcciones) {
-        return new GestionCuentaService(usuarioRepositoryPort, hashContrasena, productos, productosConPedidos,
-                valoraciones, factores, codigosVerificacion, codigosRecuperacion, listaDeseos, carrito,
-                preferencias, metodosPago, direcciones);
+
+        DependenciasGestionCuenta dependencias = new DependenciasGestionCuenta(
+                usuarioRepositoryPort,
+                hashContrasena,
+                productos,
+                productosConPedidos,
+                valoraciones,
+                factores,
+                codigosVerificacion,
+                codigosRecuperacion,
+                listaDeseos,
+                carrito,
+                preferencias,
+                metodosPago,
+                direcciones);
+
+        return new GestionCuentaService(dependencias);
     }
 
     @Bean

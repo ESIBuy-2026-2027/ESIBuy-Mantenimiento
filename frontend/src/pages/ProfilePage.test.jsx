@@ -291,6 +291,8 @@ describe('ProfilePage (HU47): eliminar mi cuenta', () => {
     await abrirPerfil('vendedor@esibuy.test')
 
     await usuario.click(screen.getByRole('button', { name: /^eliminar mi cuenta$/i }))
+    const primeraConfirmacion = await screen.findByRole('alertdialog', { name: /confirmar eliminación de cuenta/i })
+    await usuario.click(within(primeraConfirmacion).getByRole('button', { name: /^continuar$/i }))
     const dialogo = await screen.findByRole('alertdialog', { name: /eliminar mi cuenta/i })
     await usuario.type(within(dialogo).getByLabelText(/^contraseña actual/i), 'Contraseña-de-prueba-1!')
     await usuario.click(within(dialogo).getByRole('button', { name: /^eliminar mi cuenta$/i }))
@@ -318,15 +320,29 @@ describe('ProfilePage (HU25): eliminar mi cuenta de cliente', () => {
     expect(screen.queryByRole('button', { name: /^eliminar mi cuenta$/i })).not.toBeInTheDocument()
   })
 
-  it('HU25-CP07: al pulsar el botón se abre la confirmación y al cancelarla no se elimina nada', async () => {
+  it('VEN-09: al pulsar eliminar aparece una primera confirmación y cancelarla no abre el diálogo de contraseña', async () => {
     const usuario = userEvent.setup()
     await abrirPerfil('cliente@esibuy.test')
 
     await usuario.click(screen.getByRole('button', { name: /^eliminar mi cuenta$/i }))
-    const dialogo = await screen.findByRole('alertdialog', { name: /eliminar mi cuenta/i })
+    const dialogo = await screen.findByRole('alertdialog', { name: /confirmar eliminación de cuenta/i })
+    expect(dialogo).toHaveTextContent(/esta acción es irreversible/i)
     await usuario.click(within(dialogo).getByRole('button', { name: /cancelar/i }))
 
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/profile$/)
+  })
+
+  it('VEN-09: continuar en la primera confirmación abre el diálogo actual que solicita la contraseña', async () => {
+    const usuario = userEvent.setup()
+    await abrirPerfil('cliente@esibuy.test')
+
+    await usuario.click(screen.getByRole('button', { name: /^eliminar mi cuenta$/i }))
+    const primeraConfirmacion = await screen.findByRole('alertdialog', { name: /confirmar eliminación de cuenta/i })
+    await usuario.click(within(primeraConfirmacion).getByRole('button', { name: /^continuar$/i }))
+
+    const dialogo = await screen.findByRole('alertdialog', { name: /eliminar mi cuenta/i })
+    expect(within(dialogo).getByLabelText(/^contraseña actual/i)).toBeInTheDocument()
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/profile$/)
   })
 })
@@ -336,6 +352,8 @@ const CLAVE_DE_LOS_MOCKS = 'Mock-Clave-1!'
 
 async function confirmarEliminacion(usuario, contrasena) {
   await usuario.click(screen.getByRole('button', { name: /^eliminar mi cuenta$/i }))
+  const primeraConfirmacion = await screen.findByRole('alertdialog', { name: /confirmar eliminación de cuenta/i })
+  await usuario.click(within(primeraConfirmacion).getByRole('button', { name: /^continuar$/i }))
   const dialogo = await screen.findByRole('alertdialog', { name: /eliminar mi cuenta/i })
   await usuario.type(within(dialogo).getByLabelText(/^contraseña actual/i), contrasena)
   await usuario.click(within(dialogo).getByRole('button', { name: /^eliminar mi cuenta$/i }))
@@ -500,7 +518,7 @@ describe('ProfilePage (HU45): editar el perfil', () => {
         avatar: 'avatar1',
       },
     ])
-    expect(screen.getByText('Tus cambios se han guardado.').closest('[role="status"]')).not.toBeNull()
+    expect(screen.getByText('Tus cambios se han guardado.').closest('output')).not.toBeNull()
     expect(screen.getByRole('heading', { level: 2, name: 'Carla Cliente' })).toBeInTheDocument()
     expect(screen.getByLabelText('Nombre')).toHaveValue('Carla')
     expect(screen.getByLabelText('Nombre')).toHaveAttribute('readonly')

@@ -61,7 +61,6 @@ const estado = { name: 'estado', label: 'Estado', read: (u) => STATUS_LABELS[u.e
 const fechaAlta = { name: 'fechaAlta', label: 'Fecha de alta', read: (u) => fechaOSinDato(u.fechaAlta) }
 
 const PROFILE_FIELDS = {
-  // Todo menos el email (y la contraseña, que solo se cambia con "He olvidado mi contraseña").
   [ROLES.CLIENTE]: [
     nombre,
     apellidos,
@@ -106,7 +105,7 @@ const PROFILE_FIELDS = {
     estado,
     fechaAlta,
   ],
-  // Se puede modificar todo menos el email (por diseño del backend, de momento no se puede cambiar el correo
+  // Lo único que no se puede modificar es el email (por diseño del backend, de momento no se puede cambiar el correo
   // de un vendedor), y el nombre comercial tiene que seguir siendo único (lo comprueba el backend). Un vendedor
   // tiene una sola categoría. El backend guarda el perfil entero, así que el teléfono y la imagen también viajan:
   // si no, se borrarían. Sus productos, precios y pedidos no se modifican desde aquí (HU26).
@@ -175,7 +174,7 @@ export function initialValues(rolDeLaCuenta, usuario, options) {
   return valores
 }
 
-// Un mensaje por cada campo incorrecto (vacío si todo es correcto), para mostrarlos todos a la vez. Se valida
+// Un mensaje por cada campo incorrecto (vacío si es correcto), para mostrarlos todos a la vez. Se valida
 // con los campos del rol de la cuenta.
 export function validateProfile(rolDeLaCuenta, values, options) {
   const errors = {}

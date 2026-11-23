@@ -12,7 +12,7 @@ export function renderWithProviders(ui, { route = '/' } = {}) {
   )
 }
 
-// Elige una categoría en el desplegable con búsqueda (CategoryCombobox). Las opciones se abren en un portal,
+// Elige una categoría en el desplegable (CategoryCombobox). Las opciones se abren en un portal,
 // así que se buscan en toda la pantalla aunque el desplegable esté dentro de un diálogo.
 export async function elegirCategoria(user, nombre, { campo = /categoría/i, dentro } = {}) {
   const zona = dentro ? within(dentro) : screen

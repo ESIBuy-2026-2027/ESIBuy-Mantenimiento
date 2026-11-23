@@ -83,9 +83,23 @@ class GestionCuentaServiceTest {
 
     @BeforeEach
     void preparar() {
-        servicio = new GestionCuentaService(usuarioRepository, hashContrasena, productos, productosConPedidos,
-                valoraciones, factores, codigosVerificacion, codigosRecuperacion, listaDeseos, carrito, preferencias,
-                metodosPago, direcciones);
+        DependenciasGestionCuenta dependencias = new DependenciasGestionCuenta(
+                usuarioRepository,
+                hashContrasena,
+                productos,
+                productosConPedidos,
+                valoraciones,
+                factores,
+                codigosVerificacion,
+                codigosRecuperacion,
+                listaDeseos,
+                carrito,
+                preferencias,
+                metodosPago,
+                direcciones);
+
+        servicio = new GestionCuentaService(dependencias);
+
         // lenient: cada test usa solo la cuenta de uno de los dos roles
         lenient().when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.of(vendedor()));
         lenient().when(usuarioRepository.buscarPorCorreo(EMAIL_CLIENTE)).thenReturn(Optional.of(cliente()));

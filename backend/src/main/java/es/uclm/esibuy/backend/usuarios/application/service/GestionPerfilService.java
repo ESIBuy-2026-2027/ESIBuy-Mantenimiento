@@ -21,8 +21,10 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Telefono;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 
 /**
- * Implementa la consulta (HU4) y la edición (HU45) del perfil propio. Solo habla con el exterior a través del
- * repositorio de usuarios. El reloj se inyecta para fijar en los tests la fecha con la que se calcula la mayoría de
+ * Implementa la consulta (HU4) y la edición (HU45) del perfil propio. Solo
+ * habla con el exterior a través del
+ * repositorio de usuarios. El reloj se inyecta para fijar en los tests la fecha
+ * con la que se calcula la mayoría de
  * edad.
  */
 public class GestionPerfilService implements GestionPerfilUseCase {
@@ -43,7 +45,8 @@ public class GestionPerfilService implements GestionPerfilUseCase {
         return buscarUsuarioEnSesion(email);
     }
 
-    // El dominio (Usuario.modificarDatos) valida todo antes de asignar: si algo falla, el usuario queda como estaba
+    // El dominio (Usuario.modificarDatos) valida antes de asignar: si algo falla,
+    // el usuario queda como estaba
     @PreAuthorize(Permisos.CLIENTE_O_VENDEDOR_PROPIO)
     @Override
     public Usuario editarPerfil(String email, EditarPerfilCommand comando) {
@@ -59,7 +62,8 @@ public class GestionPerfilService implements GestionPerfilUseCase {
         return usuario;
     }
 
-    // Solo el cliente, sobre su propia cuenta. El dominio rechaza a quien ya es Premium antes de guardar nada.
+    // Solo el cliente, sobre su propia cuenta. El dominio rechaza a quien ya es
+    // Premium antes de guardar nada.
     @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO_POR_EMAIL)
     @Override
     public Usuario pasarAPremium(String email) {
@@ -74,7 +78,8 @@ public class GestionPerfilService implements GestionPerfilUseCase {
                 .orElseThrow(() -> new CredencialesInvalidasException(SESION_NO_VALIDA));
     }
 
-    // El DNI y el tipo de cliente no se editan: se copian del perfil guardado. El permiso solo deja pasar a
+    // El DNI y el tipo de cliente no se editan: se copian del perfil guardado. El
+    // permiso solo deja pasar a
     // clientes y vendedores, y un cliente siempre tiene datos de cliente.
     private static PerfilUsuario perfilEditado(Usuario usuario, EditarPerfilCommand comando) {
         Telefono telefono = telefono(comando);
@@ -84,7 +89,8 @@ public class GestionPerfilService implements GestionPerfilUseCase {
         }
         DatosVendedor actuales = usuario.getDatosVendedor();
         if (actuales == null) {
-            // Cuentas anteriores a la T241 o creadas por un administrador: sin DNI, que aquí no se puede poner
+            // Cuentas anteriores a la T241 o creadas por un administrador: sin DNI, que
+            // aquí no se puede poner
             throw new UsuarioInvalidoException("Un vendedor debe tener datos de vendedor");
         }
         return new DatosVendedor(comando.nombreComercial(), comando.categoriaPrincipalId(), actuales.dni(), telefono);

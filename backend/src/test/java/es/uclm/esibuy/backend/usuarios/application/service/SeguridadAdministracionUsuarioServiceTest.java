@@ -42,11 +42,11 @@ class SeguridadAdministracionUsuariosServiceTest {
 
     private static final String ADMIN = "admin@esibuy.test";
     private static final String OTRO_ADMIN = "otro-admin@esibuy.test";
-    private static final EditarUsuarioCommand EDICION =
-            new EditarUsuarioCommand(null, null, null, null, null, null, null, null, null);
+    private static final EditarUsuarioCommand EDICION = new EditarUsuarioCommand(null, null, null, null, null, null,
+            null, null, null);
     private static final ListarUsuariosQuery CONSULTA = new ListarUsuariosQuery(null, null, null, 0, 10);
-    private static final CrearAdministradorCommand ALTA =
-            new CrearAdministradorCommand("Ana", "López", "ana@esibuy.test", null, "Clave-Segura-123");
+    private static final CrearAdministradorCommand ALTA = new CrearAdministradorCommand("Ana", "López",
+            "ana@esibuy.test", null, "Clave-Segura-123");
 
     @Configuration
     @EnableMethodSecurity
@@ -72,8 +72,20 @@ class SeguridadAdministracionUsuariosServiceTest {
         }
 
         @Bean
-        CrearAdministradorUseCase crearAdministrador(UsuarioRepositoryPort repositorio, HashContrasenaPort hash) {
-            return new CrearAdministradorService(repositorio, hash);
+        CrearAdministradorUseCase crearAdministrador(
+                UsuarioRepositoryPort repositorio,
+                HashContrasenaPort hash,
+                ValidacionContrasenaService validacionContrasena) {
+
+            return new CrearAdministradorService(
+                    repositorio,
+                    hash,
+                    validacionContrasena);
+        }
+
+        @Bean
+        ValidacionContrasenaService validacionContrasena() {
+            return mock(ValidacionContrasenaService.class);
         }
     }
 
@@ -93,7 +105,8 @@ class SeguridadAdministracionUsuariosServiceTest {
         reset(usuarioRepository, hashContrasena);
     }
 
-    // Lo que hace el administrador sobre las cuentas; consultarNombreComercial es del cliente y va aparte
+    // Lo que hace el administrador sobre las cuentas; consultarNombreComercial es
+    // del cliente y va aparte
     private void comprobarQueRechazaLasOperacionesDelAdministrador(String email) {
         assertAll(
                 () -> assertThrows(AccessDeniedException.class, () -> administracionUsuarios.activar("u-1")),
@@ -109,7 +122,7 @@ class SeguridadAdministracionUsuariosServiceTest {
                 () -> assertThrows(AccessDeniedException.class, () -> crearAdministrador.crear(ALTA)));
         verifyNoInteractions(usuarioRepository, hashContrasena);
     }
- 
+
     private void comprobarQueRechazaLaPreguntaPorLosVendedores() {
         assertThrows(AccessDeniedException.class, () -> administracionUsuarios.existenVendedoresConCategoria("c-1"));
         verifyNoInteractions(usuarioRepository);
@@ -210,7 +223,8 @@ class SeguridadAdministracionUsuariosServiceTest {
         verifyNoInteractions(usuarioRepository);
     }
 
-    // El contacto del autor de una incidencia (HU49) solo lo pide la supervisión de incidencias del administrador
+    // El contacto del autor de una incidencia (HU49) solo lo pide la supervisión de
+    // incidencias del administrador
 
     @Test
     @WithMockUser(username = "cliente@esibuy.test", roles = "CLIENTE")

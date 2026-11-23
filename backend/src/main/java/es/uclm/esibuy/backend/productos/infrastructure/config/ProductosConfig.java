@@ -6,9 +6,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
+import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ExistenciasProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ConteoProductosUseCase;
@@ -19,6 +21,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseC
 import es.uclm.esibuy.backend.productos.application.port.in.SupervisionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ValoracionesProductoUseCase;
 import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
+import es.uclm.esibuy.backend.productos.application.port.out.ImagenStoragePort;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
 import es.uclm.esibuy.backend.productos.application.port.out.VendedorPort;
@@ -26,12 +29,15 @@ import es.uclm.esibuy.backend.productos.application.service.CatalogoProductosSer
 import es.uclm.esibuy.backend.productos.application.service.ExistenciasProductosService;
 import es.uclm.esibuy.backend.productos.application.service.ConteoProductosService;
 import es.uclm.esibuy.backend.productos.application.service.GestionProductosService;
+import es.uclm.esibuy.backend.productos.application.service.GestionImagenesProductoService;
+import es.uclm.esibuy.backend.productos.infrastructure.imagen.ValidadorImagen;
 import es.uclm.esibuy.backend.productos.application.service.GestionProductosVendedorService;
 import es.uclm.esibuy.backend.productos.application.service.InventarioVendedorService;
 import es.uclm.esibuy.backend.productos.application.service.ListadoProductosService;
 import es.uclm.esibuy.backend.productos.application.service.SupervisionProductosService;
 import es.uclm.esibuy.backend.productos.application.service.ValoracionesProductoService;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.antivirus.VirusTotalAdapter;
+import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.imagen.GridFsImagenAdapter;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence.ProductoDocumentMapper;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence.ProductoMongoAdapter;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence.ProductoMongoRepository;
@@ -49,10 +55,15 @@ public class ProductosConfig {
 
     private static final String URL_VIRUSTOTAL = "https://www.virustotal.com/api/v3";
     private static final Duration TIEMPO_MAXIMO_VIRUSTOTAL = Duration.ofSeconds(5);
-    // 2 consultas cada 3 s: el alta de una URL nueva espera unos 6 s y gasta 4 peticiones, el límite por minuto de
-    // la API pública (decisión del equipo)
+    // Se mantienen 2 consultas para limitar las peticiones a VirusTotal (1 subida + 2 consultas por archivo).
+    // Se espacian 15 s porque la API puede mantener el análisis en cola durante varios segundos.
     private static final int CONSULTAS_ANALISIS_VIRUSTOTAL = 2;
-    private static final Duration ESPERA_ENTRE_CONSULTAS_VIRUSTOTAL = Duration.ofSeconds(3);
+    private static final Duration ESPERA_ENTRE_CONSULTAS_VIRUSTOTAL = Duration.ofSeconds(15);
+
+    @Bean
+    ImagenStoragePort imagenStoragePort(GridFsTemplate gridFsTemplate) {
+        return new GridFsImagenAdapter(gridFsTemplate);
+    }
 
     @Bean
     ProductoRepositoryPort productoRepositoryPort(ProductoMongoRepository productoMongoRepository,
@@ -84,8 +95,17 @@ public class ProductosConfig {
 
     @Bean
     GestionProductosUseCase gestionProductosUseCase(ProductoRepositoryPort productoRepositoryPort,
-            UsuarioEnSesionPort usuarioEnSesionPort, AnalisisImagenPort analisisImagenPort) {
-        return new GestionProductosService(productoRepositoryPort, usuarioEnSesionPort, analisisImagenPort);
+            CategoriaRepositoryPort categoriaRepositoryPort, UsuarioEnSesionPort usuarioEnSesionPort,
+            AnalisisImagenPort analisisImagenPort) {
+        return new GestionProductosService(productoRepositoryPort, categoriaRepositoryPort, usuarioEnSesionPort,
+                analisisImagenPort);
+    }
+
+    @Bean
+    GestionImagenesProductoService gestionImagenesProductoService(ProductoRepositoryPort productos,
+            ImagenStoragePort almacenamiento, AnalisisImagenPort antivirus, UsuarioEnSesionPort usuarioEnSesion) {
+        return new GestionImagenesProductoService(productos, almacenamiento, antivirus,
+                new ValidadorImagen(), usuarioEnSesion);
     }
 
     @Bean

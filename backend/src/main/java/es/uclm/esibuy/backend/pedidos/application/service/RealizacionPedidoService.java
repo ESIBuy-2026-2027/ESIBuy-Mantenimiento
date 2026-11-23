@@ -27,10 +27,16 @@ import es.uclm.esibuy.backend.pedidos.domain.model.LineaPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.NumeroPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.Pedido;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
+import es.uclm.esibuy.backend.pedidos.domain.model.DatosPedido;
+import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
+
 /**
- * Realiza el pedido de un proveedor (HU10). Solo habla con el exterior a través de los puertos de salida. Sin
- * transacciones (decisión del equipo): si algo falla después de descontar el stock, se repone lo descontado
- * (compensación). El reloj se inyecta para fijar en los tests la fecha y el año del número de pedido.
+ * Realiza el pedido de un proveedor (HU10). Solo habla con el exterior a través
+ * de los puertos de salida. Sin
+ * transacciones (decisión del equipo): si algo falla después de descontar el
+ * stock, se repone lo descontado
+ * (compensación). El reloj se inyecta para fijar en los tests la fecha y el año
+ * del número de pedido.
  */
 public class RealizacionPedidoService implements RealizacionPedidoUseCase {
 
@@ -43,17 +49,15 @@ public class RealizacionPedidoService implements RealizacionPedidoUseCase {
     private final ContadorPedidosPort contador;
     private final Clock reloj;
 
-    public RealizacionPedidoService(PedidoRepositoryPort pedidoRepository, ClienteEnSesionPort clienteEnSesion,
-            CarritoPort carrito, MetodosPagoPort metodosPago, DireccionesPort direcciones, ExistenciasPort existencias,
-            ContadorPedidosPort contador, Clock reloj) {
-        this.pedidoRepository = pedidoRepository;
-        this.clienteEnSesion = clienteEnSesion;
-        this.carrito = carrito;
-        this.metodosPago = metodosPago;
-        this.direcciones = direcciones;
-        this.existencias = existencias;
-        this.contador = contador;
-        this.reloj = reloj;
+    public RealizacionPedidoService(DependenciasRealizacionPedido dependencias) {
+        this.pedidoRepository = dependencias.pedidoRepository();
+        this.clienteEnSesion = dependencias.clienteEnSesion();
+        this.carrito = dependencias.carrito();
+        this.metodosPago = dependencias.metodosPago();
+        this.direcciones = dependencias.direcciones();
+        this.existencias = dependencias.existencias();
+        this.contador = dependencias.contador();
+        this.reloj = dependencias.reloj();
     }
 
     @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO_EN_COMANDO)
@@ -77,8 +81,19 @@ public class RealizacionPedidoService implements RealizacionPedidoUseCase {
             Instant ahora = Instant.now(reloj);
             int anio = ZonedDateTime.ofInstant(ahora, reloj.getZone()).getYear();
             NumeroPedido numero = NumeroPedido.de(anio, contador.siguiente(anio));
-            guardado = pedidoRepository.guardar(Pedido.nuevo(numero, clienteId, compra.vendedorId(),
-                    compra.nombreComercial(), compra.lineas(), direccion, comando.paymentMethodId(), ahora));
+            DatosPedido datosPedido = new DatosPedido(
+                    null,
+                    numero,
+                    clienteId,
+                    compra.vendedorId(),
+                    compra.nombreComercial(),
+                    EstadoPedido.PAGADO,
+                    compra.lineas(),
+                    direccion,
+                    comando.paymentMethodId(),
+                    ahora);
+
+            guardado = pedidoRepository.guardar(Pedido.nuevo(datosPedido));
         } catch (RuntimeException e) {
             reponer(descontadas);
             throw e;
@@ -87,7 +102,8 @@ public class RealizacionPedidoService implements RealizacionPedidoUseCase {
         return guardado;
     }
 
-    // Descuenta línea a línea; si a una le falta stock, repone las anteriores y no se crea el pedido
+    // Descuenta línea a línea; si a una le falta stock, repone las anteriores y no
+    // se crea el pedido
     private List<LineaPedido> descontarStock(List<LineaPedido> lineas) {
         List<LineaPedido> descontadas = new ArrayList<>();
         for (LineaPedido linea : lineas) {

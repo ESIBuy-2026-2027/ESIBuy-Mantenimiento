@@ -242,103 +242,105 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
   }
 
   return (
-    <Card className={styles.panel} aria-labelledby="titulo-nuevo-metodo" role="region">
-      <div className={styles.header}>
+    <section aria-labelledby="titulo-nuevo-metodo">
+      <Card className={styles.panel}>      <div className={styles.header}>
         <Subtitle1 as="h2" id="titulo-nuevo-metodo" className={styles.title}>
           Datos del método de pago
         </Subtitle1>
         <Text className={styles.muted}>Se guardan cifrados.</Text>
       </div>
 
-      {fallo && (
-        <MessageBar intent="error">
-          <MessageBarBody>{fallo}</MessageBarBody>
-        </MessageBar>
-      )}
+        {fallo && (
+          <MessageBar intent="error">
+            <MessageBarBody>{fallo}</MessageBarBody>
+          </MessageBar>
+        )}
 
-      <div className={styles.types} role="group" aria-label="Tipo de método de pago">
-        {TIPOS.map(({ valor, etiqueta, Icono }) => (
-          <ToggleButton
-            key={valor}
-            className={styles.type}
-            icon={<Icono />}
-            checked={tipo === valor}
-            onClick={() => setTipo(valor)}
-          >
-            {etiqueta}
-          </ToggleButton>
-        ))}
-      </div>
+        <fieldset className={styles.types}>
+          <legend>Tipo de método de pago</legend>
+          {TIPOS.map(({ valor, etiqueta, Icono }) => (
+            <ToggleButton
+              key={valor}
+              className={styles.type}
+              icon={<Icono />}
+              checked={tipo === valor}
+              onClick={() => setTipo(valor)}
+            >
+              {etiqueta}
+            </ToggleButton>
+          ))}
+        </fieldset>
 
-      {tipo === 'TARJETA' && (
-        <div className={styles.fields}>
-          <Field label="Número de tarjeta" {...error('numeroTarjeta')}>
-            <Input
-              {...campo('numeroTarjeta')}
-              contentBefore={<Payment20Regular />}
-              placeholder="0000 0000 0000 0000"
-              inputMode="numeric"
-              maxLength={23}
-              autoComplete="cc-number"
-            />
-          </Field>
-          <div className={styles.twoColumns}>
-            <Field label="Caducidad" {...error('caducidad')}>
+        {tipo === 'TARJETA' && (
+          <div className={styles.fields}>
+            <Field label="Número de tarjeta" {...error('numeroTarjeta')}>
               <Input
-                {...campo('caducidad')}
-                className={styles.shrinkable}
-                contentBefore={<Calendar20Regular />}
-                placeholder="MM/AA"
+                {...campo('numeroTarjeta')}
+                contentBefore={<Payment20Regular />}
+                placeholder="0000 0000 0000 0000"
                 inputMode="numeric"
-                maxLength={5}
-                autoComplete="cc-exp"
+                maxLength={23}
+                autoComplete="cc-number"
               />
             </Field>
-            <Field label="CVV" {...error('cvv')}>
-              <Input
-                {...campo('cvv')}
-                className={styles.shrinkable}
-                contentBefore={<LockClosed20Regular />}
-                type="password"
-                placeholder="123"
-                inputMode="numeric"
-                maxLength={4}
-                autoComplete="cc-csc"
-              />
+            <div className={styles.twoColumns}>
+              <Field label="Caducidad" {...error('caducidad')}>
+                <Input
+                  {...campo('caducidad')}
+                  className={styles.shrinkable}
+                  contentBefore={<Calendar20Regular />}
+                  placeholder="MM/AA"
+                  inputMode="numeric"
+                  maxLength={5}
+                  autoComplete="cc-exp"
+                />
+              </Field>
+              <Field label="CVV" {...error('cvv')}>
+                <Input
+                  {...campo('cvv')}
+                  className={styles.shrinkable}
+                  contentBefore={<LockClosed20Regular />}
+                  type="password"
+                  placeholder="123"
+                  inputMode="numeric"
+                  maxLength={4}
+                  autoComplete="cc-csc"
+                />
+              </Field>
+            </div>
+            <Field label="Titular" {...error('titular')}>
+              <Input {...campo('titular')} placeholder="Nombre y apellidos" autoComplete="cc-name" />
             </Field>
           </div>
-          <Field label="Titular" {...error('titular')}>
-            <Input {...campo('titular')} placeholder="Nombre y apellidos" autoComplete="cc-name" />
+        )}
+
+        {tipo === 'PAYPAL' && (
+          <Field label="URL de PayPal" {...error('urlPayPal')}>
+            <Input {...campo('urlPayPal')} contentBefore={<Globe20Regular />} type="url" placeholder="https://paypal.me/tu-cuenta" />
           </Field>
+        )}
+
+        {tipo === 'BIZUM' && (
+          <Field label="Teléfono de Bizum" {...error('telefonoBizum')}>
+            <Input {...campo('telefonoBizum')} contentBefore={<Phone20Regular />} type="tel" inputMode="numeric" maxLength={9} placeholder="600000000" autoComplete="tel-national" />
+          </Field>
+        )}
+
+        <div className={styles.actions}>
+          <Button appearance="primary" onClick={guardar}>
+            Guardar método de pago
+          </Button>
+          <Button appearance="subtle" onClick={cancelar}>
+            Cancelar
+          </Button>
         </div>
-      )}
 
-      {tipo === 'PAYPAL' && (
-        <Field label="URL de PayPal" {...error('urlPayPal')}>
-          <Input {...campo('urlPayPal')} contentBefore={<Globe20Regular />} type="url" placeholder="https://paypal.me/tu-cuenta" />
-        </Field>
-      )}
-
-      {tipo === 'BIZUM' && (
-        <Field label="Teléfono de Bizum" {...error('telefonoBizum')}>
-          <Input {...campo('telefonoBizum')} contentBefore={<Phone20Regular />} type="tel" inputMode="numeric" maxLength={9} placeholder="600000000" autoComplete="tel-national" />
-        </Field>
-      )}
-
-      <div className={styles.actions}>
-        <Button appearance="primary" onClick={guardar}>
-          Guardar método de pago
-        </Button>
-        <Button appearance="subtle" onClick={cancelar}>
-          Cancelar
-        </Button>
-      </div>
-
-      <Text size={200} className={styles.secure}>
-        <LockClosed16Regular aria-hidden />
-        Tus datos de pago se guardan cifrados. El CVV no se guarda.
-      </Text>
-    </Card>
+        <Text size={200} className={styles.secure}>
+          <LockClosed16Regular aria-hidden />
+          Tus datos de pago se guardan cifrados. El CVV no se guarda.
+        </Text>
+      </Card>
+    </section>
   )
 }
 

@@ -9,8 +9,8 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableExcepti
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoEstadoNoAvanzableException;
 
 /**
- * Pedido de un cliente a un solo proveedor (HU10; decisión del equipo: un pedido por proveedor). El total se
- * calcula siempre a partir de las líneas, nunca se recibe.
+ * Pedido de un cliente a un solo proveedor (HU10; decisión del equipo:
+ * un pedido por proveedor). El total se calcula siempre a partir de las líneas.
  */
 public class Pedido {
 
@@ -25,46 +25,70 @@ public class Pedido {
     private final String paymentMethodId;
     private final Instant createdAt;
 
-    public Pedido(String id, NumeroPedido numeroPedido, String clienteId, String vendedorId, String nombreComercial,
-            EstadoPedido estado, List<LineaPedido> lineas, DireccionEnvioPedido direccionEnvio,
-            String paymentMethodId, Instant createdAt) {
-        exigirTexto(clienteId, "El pedido necesita el cliente");
-        exigirTexto(vendedorId, "El pedido necesita el proveedor");
-        exigirTexto(paymentMethodId, "El pedido necesita el método de pago");
-        exigirPresente(numeroPedido, "El pedido necesita su número");
-        exigirPresente(estado, "El pedido necesita su estado");
-        exigirPresente(direccionEnvio, "El pedido necesita la dirección de envío");
-        if (lineas == null || lineas.isEmpty()) {
-            throw new PedidoInvalidoException("El pedido necesita al menos un producto");
+    public Pedido(DatosPedido datos) {
+        exigirPresente(datos, "El pedido necesita sus datos");
+
+        exigirTexto(datos.clienteId(), "El pedido necesita el cliente");
+        exigirTexto(datos.vendedorId(), "El pedido necesita el proveedor");
+        exigirTexto(datos.paymentMethodId(), "El pedido necesita el método de pago");
+
+        exigirPresente(datos.numeroPedido(), "El pedido necesita su número");
+        exigirPresente(datos.estado(), "El pedido necesita su estado");
+        exigirPresente(datos.direccionEnvio(),
+                "El pedido necesita la dirección de envío");
+
+        List<LineaPedido> lineasPedido = datos.lineas();
+
+        if (lineasPedido == null || lineasPedido.isEmpty()) {
+            throw new PedidoInvalidoException(
+                    "El pedido necesita al menos un producto");
         }
-        if (lineas.stream().map(LineaPedido::productoId).distinct().count() != lineas.size()) {
-            throw new PedidoInvalidoException("Un producto solo puede aparecer una vez en el pedido");
+
+        if (lineasPedido.stream()
+                .map(LineaPedido::productoId)
+                .distinct()
+                .count() != lineasPedido.size()) {
+            throw new PedidoInvalidoException(
+                    "Un producto solo puede aparecer una vez en el pedido");
         }
-        this.id = id;
-        this.numeroPedido = numeroPedido;
-        this.clienteId = clienteId;
-        this.vendedorId = vendedorId;
-        this.nombreComercial = nombreComercial;
-        this.estado = estado;
-        this.lineas = List.copyOf(lineas);
-        this.direccionEnvio = direccionEnvio;
-        this.paymentMethodId = paymentMethodId;
-        this.createdAt = createdAt;
+
+        this.id = datos.id();
+        this.numeroPedido = datos.numeroPedido();
+        this.clienteId = datos.clienteId();
+        this.vendedorId = datos.vendedorId();
+        this.nombreComercial = datos.nombreComercial();
+        this.estado = datos.estado();
+        this.lineas = List.copyOf(lineasPedido);
+        this.direccionEnvio = datos.direccionEnvio();
+        this.paymentMethodId = datos.paymentMethodId();
+        this.createdAt = datos.createdAt();
     }
 
-    // Pedido aún no guardado. Nace pagado: el pago se simula antes de crearlo
-    public static Pedido nuevo(NumeroPedido numeroPedido, String clienteId, String vendedorId, String nombreComercial,
-            List<LineaPedido> lineas, DireccionEnvioPedido direccionEnvio, String paymentMethodId, Instant ahora) {
-        return new Pedido(null, numeroPedido, clienteId, vendedorId, nombreComercial, EstadoPedido.PAGADO, lineas,
-                direccionEnvio, paymentMethodId, ahora);
+    // Pedido aún no guardado. Nace pagado.
+    public static Pedido nuevo(DatosPedido datos) {
+        exigirPresente(datos, "El pedido necesita sus datos");
+
+        return new Pedido(new DatosPedido(
+                null,
+                datos.numeroPedido(),
+                datos.clienteId(),
+                datos.vendedorId(),
+                datos.nombreComercial(),
+                EstadoPedido.PAGADO,
+                datos.lineas(),
+                datos.direccionEnvio(),
+                datos.paymentMethodId(),
+                datos.createdAt()));
     }
 
-    // Cancelación (HU12): solo mientras el pedido aún no se ha enviado (PAGADO o PREPARANDO). Un pedido enviado,
-    // entregado o ya cancelado no se puede cancelar.
+    // Cancelación (HU12): solo mientras el pedido no se ha enviado.
     public void cancelar() {
-        if (estado != EstadoPedido.PAGADO && estado != EstadoPedido.PREPARANDO) {
-            throw new PedidoNoCancelableException("El pedido ya no se puede cancelar");
+        if (estado != EstadoPedido.PAGADO
+                && estado != EstadoPedido.PREPARANDO) {
+            throw new PedidoNoCancelableException(
+                    "El pedido ya no se puede cancelar");
         }
+
         estado = EstadoPedido.CANCELADO;
     }
 
@@ -92,17 +116,48 @@ public class Pedido {
     }
 
     public BigDecimal getTotal() {
-        return lineas.stream().map(LineaPedido::subtotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+        return lineas.stream()
+                .map(LineaPedido::subtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public String getId() { return id; }
-    public NumeroPedido getNumeroPedido() { return numeroPedido; }
-    public String getClienteId() { return clienteId; }
-    public String getVendedorId() { return vendedorId; }
-    public String getNombreComercial() { return nombreComercial; }
-    public EstadoPedido getEstado() { return estado; }
-    public List<LineaPedido> getLineas() { return lineas; }
-    public DireccionEnvioPedido getDireccionEnvio() { return direccionEnvio; }
-    public String getPaymentMethodId() { return paymentMethodId; }
-    public Instant getCreatedAt() { return createdAt; }
+    public String getId() {
+        return id;
+    }
+
+    public NumeroPedido getNumeroPedido() {
+        return numeroPedido;
+    }
+
+    public String getClienteId() {
+        return clienteId;
+    }
+
+    public String getVendedorId() {
+        return vendedorId;
+    }
+
+    public String getNombreComercial() {
+        return nombreComercial;
+    }
+
+    public EstadoPedido getEstado() {
+        return estado;
+    }
+
+    public List<LineaPedido> getLineas() {
+        return lineas;
+    }
+
+    public DireccionEnvioPedido getDireccionEnvio() {
+        return direccionEnvio;
+    }
+
+    public String getPaymentMethodId() {
+        return paymentMethodId;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
 }

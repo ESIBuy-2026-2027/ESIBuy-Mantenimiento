@@ -88,8 +88,18 @@ class SeguridadPedidosServiceTest {
         RealizacionPedidoUseCase realizacionPedido(PedidoRepositoryPort pedidoRepository,
                 ClienteEnSesionPort clienteEnSesion, CarritoPort carrito, MetodosPagoPort metodosPago,
                 DireccionesPort direcciones, ExistenciasPort existencias, ContadorPedidosPort contador) {
-            return new RealizacionPedidoService(pedidoRepository, clienteEnSesion, carrito, metodosPago,
-                    direcciones, existencias, contador, Clock.systemUTC());
+
+            DependenciasRealizacionPedido dependencias = new DependenciasRealizacionPedido(
+                    pedidoRepository,
+                    clienteEnSesion,
+                    carrito,
+                    metodosPago,
+                    direcciones,
+                    existencias,
+                    contador,
+                    Clock.systemUTC());
+
+            return new RealizacionPedidoService(dependencias);
         }
 
         @Bean

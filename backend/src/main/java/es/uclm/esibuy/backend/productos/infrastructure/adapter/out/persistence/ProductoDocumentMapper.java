@@ -1,12 +1,15 @@
 package es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence;
 
+import es.uclm.esibuy.backend.productos.domain.model.DatosProducto;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence.ProductoDocument.DescuentoDocument;
 
 /**
- * Convierte entre la entidad de dominio y el documento de MongoDB. Al leer se vuelve a pasar por el
- * constructor de Producto, así que un documento que no cumpla las reglas del dominio se rechaza.
+ * Convierte entre la entidad de dominio y el documento de MongoDB. Al leer se
+ * vuelve a pasar por el
+ * constructor de Producto, así que un documento que no cumpla las reglas del
+ * dominio se rechaza.
  */
 public class ProductoDocumentMapper {
 
@@ -27,12 +30,26 @@ public class ProductoDocumentMapper {
     }
 
     public Producto aDominio(ProductoDocument documento) {
-        return new Producto(documento.getId(), documento.getVendedorId(), documento.getNombre(),
-                documento.getDescripcion(), documento.getPrecio(), documento.getStock(),
-                documento.getCategoriaId(), documento.getImagen(), documento.isDisponible(),
-                aDominio(documento.getDescuento()), aDominio(documento.getDescuentoPremium()),
-                documento.getValoracionMedia(),
-                documento.getNumeroValoraciones() == null ? 0 : documento.getNumeroValoraciones());
+        DatosProducto datos = new DatosProducto(
+                new DatosProducto.DatosBasicos(
+                        documento.getVendedorId(),
+                        documento.getNombre(),
+                        documento.getDescripcion(),
+                        documento.getPrecio(),
+                        documento.getStock(),
+                        documento.getCategoriaId(),
+                        documento.getImagen()),
+                new DatosProducto.Configuracion(
+                        documento.isDisponible(),
+                        aDominio(documento.getDescuento()),
+                        aDominio(documento.getDescuentoPremium())),
+                new DatosProducto.Valoraciones(
+                        documento.getValoracionMedia(),
+                        documento.getNumeroValoraciones() == null
+                                ? 0
+                                : documento.getNumeroValoraciones()));
+
+        return new Producto(documento.getId(), datos);
     }
 
     private static DescuentoDocument aDocumento(Descuento descuento) {
@@ -42,7 +59,8 @@ public class ProductoDocumentMapper {
         return documento;
     }
 
-    // Un documento sin descuento lo rechaza el constructor de Producto (los dos son obligatorios).
+    // Un documento sin descuento lo rechaza el constructor de Producto (los dos son
+    // obligatorios).
     private static Descuento aDominio(DescuentoDocument documento) {
         return documento == null ? null : new Descuento(documento.isActivo(), documento.getPorcentaje());
     }

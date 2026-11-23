@@ -53,7 +53,9 @@ describe('SecurityFactors: configuración de seguridad', () => {
         await abrirSeguridad('cliente@esibuy.test', '/profile')
 
         expect(screen.getByRole('checkbox', { name: /microsoft authenticator/i })).toBeDisabled()
-        expect(screen.getByText(/primero tienes que configurar y verificar/i)).toBeInTheDocument()
+        expect(
+            screen.getByText(/todavía no has configurado microsoft authenticator/i),
+        ).toBeInTheDocument()
     })
 
     it('permite activar ambos factores cuando Authenticator está configurado', async () => {

@@ -1,5 +1,8 @@
 package es.uclm.esibuy.backend.productos.application.service;
 
+import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
+import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaNoEncontradaException;
+import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
@@ -10,6 +13,8 @@ import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort
 import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoNoEncontradoException;
+import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
+import es.uclm.esibuy.backend.productos.domain.model.DatosProducto;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import org.springframework.security.access.prepost.PreAuthorize;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
@@ -17,12 +22,14 @@ import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 public class GestionProductosService implements GestionProductosUseCase {
 
     private final ProductoRepositoryPort productoRepository;
+    private final CategoriaRepositoryPort categoriaRepository;
     private final UsuarioEnSesionPort usuarioEnSesion;
     private final AnalisisImagenPort analisisImagen;
 
-    public GestionProductosService(ProductoRepositoryPort productoRepository, UsuarioEnSesionPort usuarioEnSesion,
-            AnalisisImagenPort analisisImagen) {
+    public GestionProductosService(ProductoRepositoryPort productoRepository, CategoriaRepositoryPort categoriaRepository,
+            UsuarioEnSesionPort usuarioEnSesion, AnalisisImagenPort analisisImagen) {
         this.productoRepository = productoRepository;
+        this.categoriaRepository = categoriaRepository;
         this.usuarioEnSesion = usuarioEnSesion;
         this.analisisImagen = analisisImagen;
     }
@@ -31,33 +38,56 @@ public class GestionProductosService implements GestionProductosUseCase {
     @Override
     public Producto crear(CrearProductoCommand comando) {
         String vendedorId = usuarioEnSesion.idPorCorreo(comando.emailVendedor());
+        validarCategoriaActiva(comando.categoriaId());
 
-        // Las reglas del producto se validan en el dominio: si algo está mal, el constructor de Producto lanza
-        // la excepción y no se guarda nada. No se comprueba que el vendedor exista: el correo viene de la sesión.
+        // Las reglas del producto se validan en el dominio: si algo está mal, el
+        // constructor de Producto lanza
+        // la excepción y no se guarda nada. No se comprueba que el vendedor exista: el
+        // correo viene de la sesión.
         Producto producto = new Producto(
                 null,
-                vendedorId,
-                comando.nombre(),
-                comando.descripcion(),
-                comando.precio(),
-                comando.stock(),
-                comando.categoriaId(),
-                comando.imagen(),
-                comando.disponible(),
-                comando.descuento(),
-                comando.descuentoPremium()
-        );
-        // Comprobación previa para dar el 409 en el caso normal; el índice único de MongoDB cubre la carrera.
+                new DatosProducto(
+                        new DatosProducto.DatosBasicos(
+                                vendedorId,
+                                comando.nombre(),
+                                comando.descripcion(),
+                                comando.precio(),
+                                comando.stock(),
+                                comando.categoriaId(),
+                                comando.imagen()),
+                        new DatosProducto.Configuracion(
+                                comando.disponible(),
+                                comando.descuento(),
+                                comando.descuentoPremium()),
+                        new DatosProducto.Valoraciones(null, 0)));
+        // Comprobación previa para dar el 409 en el caso normal; el índice único de
+        // MongoDB cubre la carrera.
         if (productoRepository.existePorVendedorYNombre(vendedorId, producto.getNombre())) {
             throw new ProductoDuplicadoException();
         }
         return productoRepository.guardar(conImagenAnalizada(producto));
     }
 
-    // Antivirus de la URL de la imagen (HU31, T397), decisión del equipo: una imagen maliciosa no se guarda y, si el
-    // antivirus no da resultado, el producto se guarda sin imagen. Sin imagen, Producto la deja vacía ("") y no se
+
+    private void validarCategoriaActiva(String categoriaId) {
+        if (categoriaId == null || categoriaId.isBlank()) {
+            throw new ProductoInvalidoException("La categoría es obligatoria");
+        }
+        boolean activa = categoriaRepository.buscarPorId(categoriaId)
+                .map(categoria -> categoria.estado() == EstadoCategoria.ACTIVA)
+                .orElse(false);
+        if (!activa) {
+            throw new CategoriaNoEncontradaException();
+        }
+    }
+
+    // Antivirus de la URL de la imagen (HU31, T397), decisión del equipo: una
+    // imagen maliciosa no se guarda y, si el
+    // antivirus no da resultado, el producto se guarda sin imagen. Sin imagen,
+    // Producto la deja vacía ("") y no se
     // analiza nada.
-    // PENDIENTE DE DECIDIR (equipo, frontend): avisar al vendedor de que su imagen se ha descartado; hoy solo lo ve
+    // PENDIENTE DE DECIDIR (equipo, frontend): avisar al vendedor de que su imagen
+    // se ha descartado; hoy solo lo ve
     // porque la respuesta trae la imagen vacía.
     private Producto conImagenAnalizada(Producto producto) {
         if (producto.getImagen().isEmpty()) {
@@ -74,7 +104,8 @@ public class GestionProductosService implements GestionProductosUseCase {
     @Override
     public Producto consultarMiProducto(String emailVendedor, String productoId) {
         String vendedorId = usuarioEnSesion.idPorCorreo(emailVendedor);
-        // Un producto de otro vendedor se trata igual que uno inexistente, para no revelar que existe.
+        // Un producto de otro vendedor se trata igual que uno inexistente, para no
+        // revelar que existe.
         return productoRepository.buscarPorId(productoId)
                 .filter(producto -> producto.getVendedorId().equals(vendedorId))
                 .orElseThrow(ProductoNoEncontradoException::new);
@@ -84,28 +115,38 @@ public class GestionProductosService implements GestionProductosUseCase {
     @Override
     public Producto modificarMiProducto(ModificarProductoCommand comando) {
         Producto actual = consultarMiProducto(comando.emailVendedor(), comando.productoId());
-        // El id y el vendedor se conservan: así se actualiza el mismo documento y sigue siendo del mismo vendedor.
+        validarCategoriaActiva(comando.categoriaId());
+        // El id y el vendedor se conservan: así se actualiza el mismo documento y sigue
+        // siendo del mismo vendedor.
         Producto modificado = new Producto(
                 actual.getId(),
-                actual.getVendedorId(),
-                comando.nombre(),
-                comando.descripcion(),
-                comando.precio(),
-                comando.stock(),
-                comando.categoriaId(),
-                comando.imagen(),
-                comando.disponible(),
-                comando.descuento(),
-                comando.descuentoPremium()
-        );
-        // Solo se comprueba si cambia el nombre: si no, el repositorio encontraría el propio producto. Como el índice
-        // único, no se distinguen mayúsculas; la carrera con otra modificación la sigue cubriendo ese índice.
+                new DatosProducto(
+                        new DatosProducto.DatosBasicos(
+                                actual.getVendedorId(),
+                                comando.nombre(),
+                                comando.descripcion(),
+                                comando.precio(),
+                                comando.stock(),
+                                comando.categoriaId(),
+                                comando.imagen()),
+                        new DatosProducto.Configuracion(
+                                comando.disponible(),
+                                comando.descuento(),
+                                comando.descuentoPremium()),
+                        new DatosProducto.Valoraciones(
+                                actual.getValoracionMedia(),
+                                actual.getNumeroValoraciones())));
+        // Solo se comprueba si cambia el nombre: si no, el repositorio encontraría el
+        // propio producto. Como el índice
+        // único, no se distinguen mayúsculas; la carrera con otra modificación la sigue
+        // cubriendo ese índice.
         boolean cambiaElNombre = !modificado.getNombre().equalsIgnoreCase(actual.getNombre());
         if (cambiaElNombre
                 && productoRepository.existePorVendedorYNombre(modificado.getVendedorId(), modificado.getNombre())) {
             throw new ProductoDuplicadoException();
         }
-        // La imagen solo se analiza si cambia: la que ya estaba guardada pasó el antivirus al guardarla (decisión del
+        // La imagen solo se analiza si cambia: la que ya estaba guardada pasó el
+        // antivirus al guardarla (decisión del
         // equipo, para no gastar la cuota de VirusTotal en cada modificación)
         boolean cambiaLaImagen = !modificado.getImagen().equals(actual.getImagen());
         return productoRepository.guardar(cambiaLaImagen ? conImagenAnalizada(modificado) : modificado);
@@ -114,7 +155,8 @@ public class GestionProductosService implements GestionProductosUseCase {
     @PreAuthorize(Permisos.SOLO_VENDEDOR_PROPIO)
     @Override
     public void eliminarMiProducto(String emailVendedor, String productoId) {
-        // Si el producto no existe o es de otro vendedor, consultarMiProducto lanza la excepción y no se borra nada.
+        // Si el producto no existe o es de otro vendedor, consultarMiProducto lanza la
+        // excepción y no se borra nada.
         Producto propio = consultarMiProducto(emailVendedor, productoId);
         productoRepository.eliminar(propio.getId());
     }

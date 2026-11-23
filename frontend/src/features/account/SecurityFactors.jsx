@@ -181,149 +181,150 @@ export default function SecurityFactors() {
     }
 
     return (
-        <Card className={styles.card} role="region" aria-labelledby={titleId}>
-            <Title3 as="h2" id={titleId}>
+        <section aria-labelledby={titleId}>
+            <Card className={styles.card}>            <Title3 as="h2" id={titleId}>
                 Seguridad de la cuenta
             </Title3>
 
-            <Text className={styles.description}>
-                Configura los métodos adicionales de autenticación que quieres utilizar al iniciar sesión.
-            </Text>
+                <Text className={styles.description}>
+                    Configura los métodos adicionales de autenticación que quieres utilizar al iniciar sesión.
+                </Text>
 
-            {aviso && (
-                <MessageBar intent={aviso.intent}>
-                    <MessageBarBody>{aviso.texto}</MessageBarBody>
-                </MessageBar>
-            )}
+                {aviso && (
+                    <MessageBar intent={aviso.intent}>
+                        <MessageBarBody>{aviso.texto}</MessageBarBody>
+                    </MessageBar>
+                )}
 
-            {failed ? (
-                <MessageBar intent="error">
-                    <MessageBarBody>
-                        No se ha podido cargar la configuración de seguridad.
-                    </MessageBarBody>
-                    <MessageBarActions>
-                        <Button onClick={retry}>Reintentar</Button>
-                    </MessageBarActions>
-                </MessageBar>
-            ) : (
-                <>
-                    <div className={styles.options}>
-                        <div className={styles.option}>
-                            <Checkbox
-                                label="Código de verificación por correo electrónico"
-                                checked={configuracion?.emailOtpEnabled === true}
-                                disabled={guardando || iniciandoAlta || verificandoAlta}
-                                onChange={(_event, option) => cambiar('emailOtpEnabled', option.checked === true)}
-                            />
-                            <Text className={styles.description}>
-                                Solicita un código enviado a tu correo electrónico como paso adicional de autenticación.
-                            </Text>
+                {failed ? (
+                    <MessageBar intent="error">
+                        <MessageBarBody>
+                            No se ha podido cargar la configuración de seguridad.
+                        </MessageBarBody>
+                        <MessageBarActions>
+                            <Button onClick={retry}>Reintentar</Button>
+                        </MessageBarActions>
+                    </MessageBar>
+                ) : (
+                    <>
+                        <div className={styles.options}>
+                            <div className={styles.option}>
+                                <Checkbox
+                                    label="Código de verificación por correo electrónico"
+                                    checked={configuracion?.emailOtpEnabled === true}
+                                    disabled={guardando || iniciandoAlta || verificandoAlta}
+                                    onChange={(_event, option) => cambiar('emailOtpEnabled', option.checked === true)}
+                                />
+                                <Text className={styles.description}>
+                                    Solicita un código enviado a tu correo electrónico como paso adicional de autenticación.
+                                </Text>
+                            </div>
+
+                            <div className={styles.option}>
+                                <Checkbox
+                                    label="Microsoft Authenticator"
+                                    checked={configuracion?.authenticatorEnabled === true}
+                                    disabled={
+                                        guardando ||
+                                        iniciandoAlta ||
+                                        verificandoAlta ||
+                                        configuracion?.authenticatorConfigured !== true
+                                    }
+                                    onChange={(_event, option) => cambiar('authenticatorEnabled', option.checked === true)}
+                                />
+                                <Text className={styles.description}>
+                                    Utiliza códigos temporales generados por Microsoft Authenticator.
+                                </Text>
+
+                                {configuracion?.authenticatorConfigured !== true && !qr && (
+                                    <>
+                                        <Text className={styles.description}>
+                                            Todavía no has configurado Microsoft Authenticator. Puedes iniciar el alta aquí y escanear el QR con la aplicación.
+                                        </Text>
+                                        <div className={styles.actions}>
+                                            <Button
+                                                appearance="secondary"
+                                                disabled={iniciandoAlta || guardando}
+                                                onClick={iniciarAlta}
+                                            >
+                                                {iniciandoAlta ? 'Generando QR…' : 'Configurar Microsoft Authenticator'}
+                                            </Button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
 
-                        <div className={styles.option}>
-                            <Checkbox
-                                label="Microsoft Authenticator"
-                                checked={configuracion?.authenticatorEnabled === true}
+                        {qr && (
+                            <div className={styles.enrollment}>
+                                <Title3 as="h3">Configurar Microsoft Authenticator</Title3>
+                                <Text>
+                                    Abre Microsoft Authenticator, añade una cuenta y escanea este código QR.
+                                    Después introduce el código de 6 dígitos que aparece en la aplicación.
+                                </Text>
+                                <img
+                                    className={styles.qr}
+                                    src={qr}
+                                    alt="Código QR para configurar Microsoft Authenticator"
+                                />
+                                <Input
+                                    className={styles.code}
+                                    value={codigo}
+                                    inputMode="numeric"
+                                    maxLength={6}
+                                    placeholder="Código de 6 dígitos"
+                                    aria-label="Código de Microsoft Authenticator"
+                                    onChange={(_event, valor) => setCodigo(valor.value.replace(/\D/g, '').slice(0, 6))}
+                                />
+                                <div className={styles.actions}>
+                                    <Button
+                                        appearance="primary"
+                                        disabled={verificandoAlta || codigo.length !== 6}
+                                        onClick={confirmarAlta}
+                                    >
+                                        {verificandoAlta ? 'Verificando…' : 'Verificar y terminar'}
+                                    </Button>
+                                    <Button
+                                        appearance="secondary"
+                                        disabled={verificandoAlta}
+                                        onClick={() => {
+                                            setQr(null)
+                                            setCodigo('')
+                                        }}
+                                    >
+                                        Cancelar
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className={styles.actions}>
+                            <Button
+                                appearance="primary"
                                 disabled={
                                     guardando ||
                                     iniciandoAlta ||
                                     verificandoAlta ||
-                                    configuracion?.authenticatorConfigured !== true
+                                    !hayCambios ||
+                                    (configuracion.authenticatorEnabled === true &&
+                                        configuracion.authenticatorConfigured !== true)
                                 }
-                                onChange={(_event, option) => cambiar('authenticatorEnabled', option.checked === true)}
-                            />
-                            <Text className={styles.description}>
-                                Utiliza códigos temporales generados por Microsoft Authenticator.
-                            </Text>
+                                onClick={guardar}
+                            >
+                                {guardando ? 'Guardando…' : 'Guardar configuración'}
+                            </Button>
 
-                            {configuracion?.authenticatorConfigured !== true && !qr && (
-                                <>
-                                    <Text className={styles.description}>
-                                        Todavía no has configurado Microsoft Authenticator. Puedes iniciar el alta aquí y escanear el QR con la aplicación.
-                                    </Text>
-                                    <div className={styles.actions}>
-                                        <Button
-                                            appearance="secondary"
-                                            disabled={iniciandoAlta || guardando}
-                                            onClick={iniciarAlta}
-                                        >
-                                            {iniciandoAlta ? 'Generando QR…' : 'Configurar Microsoft Authenticator'}
-                                        </Button>
-                                    </div>
-                                </>
-                            )}
+                            <Button
+                                appearance="secondary"
+                                disabled={guardando || iniciandoAlta || verificandoAlta || !cambios}
+                                onClick={descartar}
+                            >
+                                Descartar
+                            </Button>
                         </div>
-                    </div>
-
-                    {qr && (
-                        <div className={styles.enrollment}>
-                            <Title3 as="h3">Configurar Microsoft Authenticator</Title3>
-                            <Text>
-                                Abre Microsoft Authenticator, añade una cuenta y escanea este código QR.
-                                Después introduce el código de 6 dígitos que aparece en la aplicación.
-                            </Text>
-                            <img
-                                className={styles.qr}
-                                src={qr}
-                                alt="Código QR para configurar Microsoft Authenticator"
-                            />
-                            <Input
-                                className={styles.code}
-                                value={codigo}
-                                inputMode="numeric"
-                                maxLength={6}
-                                placeholder="Código de 6 dígitos"
-                                aria-label="Código de Microsoft Authenticator"
-                                onChange={(_event, valor) => setCodigo(valor.value.replace(/\D/g, '').slice(0, 6))}
-                            />
-                            <div className={styles.actions}>
-                                <Button
-                                    appearance="primary"
-                                    disabled={verificandoAlta || codigo.length !== 6}
-                                    onClick={confirmarAlta}
-                                >
-                                    {verificandoAlta ? 'Verificando…' : 'Verificar y terminar'}
-                                </Button>
-                                <Button
-                                    appearance="secondary"
-                                    disabled={verificandoAlta}
-                                    onClick={() => {
-                                        setQr(null)
-                                        setCodigo('')
-                                    }}
-                                >
-                                    Cancelar
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className={styles.actions}>
-                        <Button
-                            appearance="primary"
-                            disabled={
-                                guardando ||
-                                iniciandoAlta ||
-                                verificandoAlta ||
-                                !hayCambios ||
-                                (configuracion.authenticatorEnabled === true &&
-                                    configuracion.authenticatorConfigured !== true)
-                            }
-                            onClick={guardar}
-                        >
-                            {guardando ? 'Guardando…' : 'Guardar configuración'}
-                        </Button>
-
-                        <Button
-                            appearance="secondary"
-                            disabled={guardando || iniciandoAlta || verificandoAlta || !cambios}
-                            onClick={descartar}
-                        >
-                            Descartar
-                        </Button>
-                    </div>
-                </>
-            )}
-        </Card>
+                    </>
+                )}
+            </Card>
+        </section>
     )
 }

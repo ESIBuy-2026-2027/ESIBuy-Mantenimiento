@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence;
 
+import es.uclm.esibuy.backend.productos.domain.model.DatosProducto;
 import es.uclm.esibuy.backend.productos.domain.model.Descuento;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence.ProductoDocument.DescuentoDocument;
@@ -23,9 +24,22 @@ class ProductoDocumentMapperTest {
     @Test
     @DisplayName("HU31-CP11: el documento guarda todos los datos del producto y sus dos descuentos")
     void convierteProductoEnDocumento() {
-        Producto producto = new Producto("p-1", "v-1", "Teclado mecánico", "Switches rojos",
-                new BigDecimal("89.50"), 12, "cat-2", "https://esibuy.test/teclado.png", true,
-                new Descuento(true, new BigDecimal("10")), Descuento.sinDescuento());
+        DatosProducto datos = new DatosProducto(
+                new DatosProducto.DatosBasicos(
+                        "v-1",
+                        "Teclado mecánico",
+                        "Switches rojos",
+                        new BigDecimal("89.50"),
+                        12,
+                        "cat-2",
+                        "https://esibuy.test/teclado.png"),
+                new DatosProducto.Configuracion(
+                        true,
+                        new Descuento(true, new BigDecimal("10")),
+                        Descuento.sinDescuento()),
+                new DatosProducto.Valoraciones(null, 0));
+
+        Producto producto = new Producto("p-1", datos);
 
         ProductoDocument documento = mapper.aDocumento(producto);
 

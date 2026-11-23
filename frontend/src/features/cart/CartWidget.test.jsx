@@ -86,11 +86,11 @@ describe('CartWidget (HU9): panel del carrito', () => {
     pintar()
     const panel = await abrirPanel()
 
-    const grupoTecno = within(panel).getByRole('group', { name: /tecnovera/i })
+    const grupoTecno = within(panel).getByRole('region', { name: /tecnovera/i })
     expect(within(grupoTecno).getByText('Auriculares inalámbricos')).toBeInTheDocument()
     expect(within(grupoTecno).getByText('Teclado mecánico')).toBeInTheDocument()
     expect(within(grupoTecno).queryByText('Lámpara de escritorio LED')).not.toBeInTheDocument()
-    const grupoCasa = within(panel).getByRole('group', { name: /casa vicente/i })
+    const grupoCasa = within(panel).getByRole('region', { name: /casa vicente/i })
     expect(within(grupoCasa).getByText('Lámpara de escritorio LED')).toBeInTheDocument()
   })
 
@@ -98,7 +98,7 @@ describe('CartWidget (HU9): panel del carrito', () => {
     pintar()
     const panel = await abrirPanel()
 
-    const grupo = within(panel).getByRole('group', { name: /tecnovera/i })
+    const grupo = within(panel).getByRole('region', { name: /tecnovera/i })
     expect(within(grupo).getByLabelText('Cantidad de Auriculares inalámbricos')).toHaveTextContent('2')
     expect(within(grupo).getByText(/25,00/)).toBeInTheDocument()
     expect(within(grupo).getByText(/12,50.+por unidad/i)).toBeInTheDocument()
@@ -166,7 +166,7 @@ describe('CartWidget (HU9): carrito con muchos productos', () => {
     pintar({ cart: CARRITO_LLENO })
     const panel = await abrirPanel()
 
-    const grupos = within(panel).getAllByRole('group')
+    const grupos = within(panel).getAllByRole('region')
     expect(grupos).toHaveLength(2)
     expect(getComputedStyle(grupos[0].parentElement).overflowY).toBe('auto')
     grupos.forEach((grupo) => {
@@ -199,7 +199,7 @@ describe('CartWidget (HU9): carrito con muchos productos', () => {
     pintar({ cart: carrito })
     const panel = await abrirPanel()
 
-    const grupos = within(panel).getAllByRole('group')
+    const grupos = within(panel).getAllByRole('region')
     expect(grupos).toHaveLength(3)
     grupos.forEach((grupo) => expect(getComputedStyle(grupo).flexShrink).toBe('0'))
     expect(within(grupos[2]).getByRole('heading', { name: /otero hogar: 10,00/i })).toBeInTheDocument()
@@ -213,7 +213,7 @@ describe('CartWidget (HU9): modificar el carrito', () => {
     const setQuantity = vi.fn().mockResolvedValue(undefined)
     pintar({ setQuantity })
     const panel = await abrirPanel()
-    const grupo = within(panel).getByRole('group', { name: /tecnovera/i })
+    const grupo = within(panel).getByRole('region', { name: /tecnovera/i })
     const linea = within(grupo).getByText('Auriculares inalámbricos').closest('li')
 
     await user.click(within(linea).getByRole('button', { name: /aumentar cantidad/i }))

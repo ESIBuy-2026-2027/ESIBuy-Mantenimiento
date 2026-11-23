@@ -1,56 +1,37 @@
 import PropTypes from 'prop-types'
-import { Field, Input, Switch, makeStyles, tokens } from '@fluentui/react-components'
+import { Field, Input } from '@fluentui/react-components'
 
-const useStyles = makeStyles({
-  discount: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalXS,
-  },
-})
-
-// Interruptor para activar un descuento y, solo cuando está activo, el campo de su porcentaje.
-export default function DiscountField({
-  switchLabel,
-  percentLabel,
-  active,
-  percent,
-  error,
-  onActiveChange,
-  onPercentChange,
-}) {
-  const styles = useStyles()
+// Un porcentaje vacío equivale a no aplicar el descuento.
+export default function DiscountField({ label, percent, error, inputClassName, onPercentChange }) {
+  const handleKeyDown = (event) => {
+    if (['-', '+', 'e', 'E', '.', ','].includes(event.key)) event.preventDefault()
+  }
 
   return (
-    <div className={styles.discount}>
-      <Switch label={switchLabel} checked={active} onChange={(_event, data) => onActiveChange(data.checked)} />
-      {active && (
-        <Field
-          label={percentLabel}
-          required
-          validationState={error ? 'error' : 'none'}
-          validationMessage={error}
-        >
-          <Input
-            type="number"
-            min={1}
-            max={100}
-            step="any"
-            value={percent}
-            onChange={(_event, data) => onPercentChange(data.value)}
-          />
-        </Field>
-      )}
-    </div>
+    <Field
+      label={label}
+      hint="Opcional"
+      validationState={error ? 'error' : 'none'}
+      validationMessage={error}
+    >
+      <Input
+        className={inputClassName}
+        type="text"
+        inputMode="numeric"
+        maxLength={2}
+        pattern="[0-9]*"
+        value={percent}
+        onKeyDown={handleKeyDown}
+        onChange={(_event, data) => onPercentChange(data.value.replace(/\\D/g, '').slice(0, 2))}
+      />
+    </Field>
   )
 }
 
 DiscountField.propTypes = {
-  switchLabel: PropTypes.string.isRequired,
-  percentLabel: PropTypes.string.isRequired,
-  active: PropTypes.bool.isRequired,
+  label: PropTypes.string.isRequired,
   percent: PropTypes.string.isRequired,
   error: PropTypes.string,
-  onActiveChange: PropTypes.func.isRequired,
+  inputClassName: PropTypes.string,
   onPercentChange: PropTypes.func.isRequired,
 }

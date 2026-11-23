@@ -30,6 +30,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.GestionProductosUseC
 import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.in.SupervisionProductosUseCase;
+import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
@@ -52,6 +53,11 @@ class SeguridadProductosServiceTest {
     @EnableMethodSecurity
     static class Configuracion {
         @Bean
+        CategoriaRepositoryPort categoriaRepository() {
+            return mock(CategoriaRepositoryPort.class);
+        }
+
+        @Bean
         ProductoRepositoryPort productoRepository() {
             return mock(ProductoRepositoryPort.class);
         }
@@ -72,9 +78,9 @@ class SeguridadProductosServiceTest {
         }
 
         @Bean
-        GestionProductosUseCase gestion(ProductoRepositoryPort repositorio, UsuarioEnSesionPort sesion,
-                AnalisisImagenPort analisisImagen) {
-            return new GestionProductosService(repositorio, sesion, analisisImagen);
+        GestionProductosUseCase gestion(ProductoRepositoryPort repositorio,
+                CategoriaRepositoryPort categorias, UsuarioEnSesionPort sesion, AnalisisImagenPort analisisImagen) {
+            return new GestionProductosService(repositorio, categorias, sesion, analisisImagen);
         }
 
         @Bean

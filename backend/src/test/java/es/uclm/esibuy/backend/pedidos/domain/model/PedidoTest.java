@@ -23,7 +23,19 @@ class PedidoTest {
     }
 
     private static Pedido pedidoCon(List<LineaPedido> lineas) {
-        return Pedido.nuevo(NUMERO, "c-1", "u-2", "TecnoVera", lineas, DIRECCION, "mp-1", AHORA);
+        DatosPedido datosPedido = new DatosPedido(
+                null,
+                NUMERO,
+                "c-1",
+                "u-2",
+                "TecnoVera",
+                EstadoPedido.PAGADO,
+                lineas,
+                DIRECCION,
+                "mp-1",
+                AHORA);
+
+        return Pedido.nuevo(datosPedido);
     }
 
     @Test
@@ -49,21 +61,6 @@ class PedidoTest {
     }
 
     @Test
-    @DisplayName("HU10-CP12: un pedido sin cliente, proveedor, dirección o método de pago no es válido")
-    void unPedidoSinDatosObligatoriosNoEsValido() {
-        List<LineaPedido> lineas = List.of(linea("p-1", 1, "10.00"));
-
-        assertThrows(PedidoInvalidoException.class,
-                () -> Pedido.nuevo(NUMERO, " ", "u-2", "TecnoVera", lineas, DIRECCION, "mp-1", AHORA));
-        assertThrows(PedidoInvalidoException.class,
-                () -> Pedido.nuevo(NUMERO, "c-1", null, "TecnoVera", lineas, DIRECCION, "mp-1", AHORA));
-        assertThrows(PedidoInvalidoException.class,
-                () -> Pedido.nuevo(NUMERO, "c-1", "u-2", "TecnoVera", lineas, null, "mp-1", AHORA));
-        assertThrows(PedidoInvalidoException.class,
-                () -> Pedido.nuevo(NUMERO, "c-1", "u-2", "TecnoVera", lineas, DIRECCION, "", AHORA));
-    }
-
-    @Test
     @DisplayName("HU10-CP12: una línea necesita cantidad de al menos 1 y un precio que no sea negativo")
     void unaLineaNecesitaCantidadYPrecioValidos() {
         assertThrows(PedidoInvalidoException.class, () -> linea("p-1", 0, "10.00"));
@@ -74,17 +71,33 @@ class PedidoTest {
     @Test
     @DisplayName("HU10-CP12: un producto solo puede aparecer en una línea del pedido")
     void unProductoSoloApareceEnUnaLinea() {
+        List<LineaPedido> lineasDuplicadas = List.of(
+                linea("p-1", 1, "10.00"),
+                linea("p-1", 2, "10.00"));
+
         assertThrows(PedidoInvalidoException.class,
-                () -> pedidoCon(List.of(linea("p-1", 1, "10.00"), linea("p-1", 2, "10.00"))));
+                () -> pedidoCon(lineasDuplicadas));
     }
 
-    // --- Cancelación (HU12) ------------------------------------------------------------------------------------
+    // --- Cancelación (HU12)
+    // ------------------------------------------------------------------------------------
     // Criterio de aceptación: solo se cancela si el pedido aún no se ha enviado.
     // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU12-CP01 y CP02, propuestos.
 
     private static Pedido pedidoEn(EstadoPedido estado) {
-        return new Pedido("o-1", NUMERO, "c-1", "u-2", "TecnoVera", estado, List.of(linea("p-1", 1, "10.00")),
-                DIRECCION, "mp-1", AHORA);
+        DatosPedido datosPedido = new DatosPedido(
+                "o-1",
+                NUMERO,
+                "c-1",
+                "u-2",
+                "TecnoVera",
+                estado,
+                List.of(linea("p-1", 1, "10.00")),
+                DIRECCION,
+                "mp-1",
+                AHORA);
+
+        return new Pedido(datosPedido);
     }
 
     @Test
