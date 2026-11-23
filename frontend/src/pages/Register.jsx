@@ -193,7 +193,7 @@ export default function Register() {
   const navigate = useNavigate()
   const flujo = useRegistroPremium()
   const [tipo, setTipo] = useState(flujo.pendiente ? 'cliente' : null)
-  const [datos, setDatos] = useState(flujo.pendiente ?? DATOS_INICIALES)
+  const [datos, setDatos] = useState(() => ({ ...DATOS_INICIALES, ...(flujo.pendiente ?? {}), avatar: flujo.pendiente?.avatar || DATOS_INICIALES.avatar }))
   const [errores, setErrores] = useState(() => erroresTrasLaPasarela(flujo.resultado).campos ?? {})
   const [errorGeneral, setErrorGeneral] = useState(() => erroresTrasLaPasarela(flujo.resultado).general ?? null)
   const [registrado, setRegistrado] = useState(flujo.resultado?.registrado === true)
@@ -234,7 +234,7 @@ export default function Register() {
     }
 
     try {
-      await registrarCliente(sinTelefonoVacio(datos))
+      await registrarCliente(sinTelefonoVacio({ ...datos, avatar: datos.avatar || 'avatar1' }))
       setRegistrado(true)
     } catch (error) {
       mostrarErroresDelServidor(error)
@@ -252,7 +252,7 @@ export default function Register() {
     if (Object.keys(nuevosErrores).length > 0) return
 
     try {
-      await registrarVendedor(sinTelefonoVacio(datos))
+      await registrarVendedor(sinTelefonoVacio({ ...datos, avatar: datos.avatar || 'avatar1' }))
       setRegistrado(true)
     } catch (error) {
       mostrarErroresDelServidor(error)
@@ -332,7 +332,6 @@ export default function Register() {
           Acepto la{' '}
           <Button
             appearance="transparent"
-            size="small"
             className={styles.enlacePrivacidad}
             onClick={() => setPoliticaAbierta(true)}
           >
@@ -457,7 +456,8 @@ export default function Register() {
           <CategoryCombobox
             value={datos.categoriaPrincipalId}
             categories={categoriasDisponibles}
-            placeholder="Escribe o elige una categoría"
+            searchable={false}
+            placeholder="Selecciona una categoría"
             onChange={cambiarCategoria}
           />
         </Field>
