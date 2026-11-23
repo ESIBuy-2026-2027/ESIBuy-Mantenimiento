@@ -55,6 +55,12 @@ public class PerfilController {
         return PerfilResponse.desde(gestionPerfil.pasarAPremium(autenticado.getName()));
     }
 
+    // Cancelar Premium del cliente en sesión (CLI-02): devuelve el perfil actualizado.
+    @DeleteMapping("/premium")
+    public PerfilResponse cancelarPremium(Authentication autenticado) {
+        return PerfilResponse.desde(gestionPerfil.cancelarPremium(autenticado.getName()));
+    }
+
     // Eliminar la cuenta propia: el servicio distingue el rol. 204 sin cuerpo y la sesión cerrada, igual que el
     // logout de SecurityConfig; si el caso de uso falla (p. ej. contraseña incorrecta, 400), la sesión sigue abierta.
     @DeleteMapping
