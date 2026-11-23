@@ -2,6 +2,12 @@ import {
   Button,
   Card,
   Checkbox,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogSurface,
+  DialogTitle,
   Field,
   Input,
   MessageBar,
@@ -153,6 +159,7 @@ export default function Register() {
   const [errorGeneral, setErrorGeneral] = useState(() => erroresTrasLaPasarela(flujo.resultado).general ?? null)
   const [registrado, setRegistrado] = useState(flujo.resultado?.registrado === true)
   const [categoriasDisponibles, setCategoriasDisponibles] = useState([])
+  const [politicaAbierta, setPoliticaAbierta] = useState(false)
 
   useEffect(() => {
     if (tipo !== 'vendedor') return
@@ -281,7 +288,61 @@ export default function Register() {
         checked={datos.aceptaPrivacidad}
         onChange={(e, data) => setDatos({ ...datos, aceptaPrivacidad: data.checked })}
       />
+      <Text>
+        Antes de aceptar, puedes{' '}
+        <Button appearance="transparent" size="small" onClick={() => setPoliticaAbierta(true)}>
+          consultar la política de privacidad
+        </Button>
+        .
+      </Text>
     </Field>
+  )
+
+  const dialogoPoliticaPrivacidad = (
+    <Dialog open={politicaAbierta} onOpenChange={(_event, data) => setPoliticaAbierta(data.open)}>
+      <DialogSurface>
+        <DialogBody>
+          <DialogTitle>Política de privacidad</DialogTitle>
+          <DialogContent>
+            <Text weight="semibold">Información general</Text>
+            <Text>
+              Esta política es un texto informativo de ejemplo para el proyecto académico ESIBuy.
+              Debe sustituirse por la política oficial y revisarse antes de utilizar la aplicación
+              en un entorno real.
+            </Text>
+            <Text weight="semibold">Datos que se solicitan</Text>
+            <Text>
+              Durante el registro se solicitan datos de identificación y contacto, como nombre,
+              apellidos, correo electrónico y, según el tipo de cuenta, otros datos necesarios para
+              crear y gestionar el perfil.
+            </Text>
+            <Text weight="semibold">Finalidad del tratamiento</Text>
+            <Text>
+              Los datos se utilizarán para gestionar el registro, identificar a la persona usuaria,
+              administrar su cuenta y permitir el uso de las funcionalidades de ESIBuy que
+              correspondan a su perfil.
+            </Text>
+            <Text weight="semibold">Uso y conservación</Text>
+            <Text>
+              Los datos solo deben utilizarse para las finalidades descritas y conservarse durante
+              el tiempo necesario para la gestión de la cuenta y las obligaciones que resulten
+              aplicables. Los plazos concretos deben definirse en la política oficial.
+            </Text>
+            <Text weight="semibold">Derechos y contacto</Text>
+            <Text>
+              La política definitiva deberá indicar cómo ejercer los derechos de protección de
+              datos y facilitar los datos de contacto del responsable del tratamiento. Esta
+              información está pendiente de concretar en esta versión de ejemplo.
+            </Text>
+          </DialogContent>
+          <DialogActions>
+            <Button appearance="primary" onClick={() => setPoliticaAbierta(false)}>
+              Cerrar
+            </Button>
+          </DialogActions>
+        </DialogBody>
+      </DialogSurface>
+    </Dialog>
   )
 
   const selectorAvatar = <AvatarSelector value={datos.avatar} onChange={cambiar('avatar')} />
@@ -310,6 +371,7 @@ export default function Register() {
         </Field>
         {selectorAvatar}
         {casillaPrivacidad}
+        {dialogoPoliticaPrivacidad}
         {errorGeneral && (
           <MessageBar intent="error">
             <MessageBarBody>{errorGeneral}</MessageBarBody>
@@ -345,6 +407,7 @@ export default function Register() {
         {camposComunes}
         {selectorAvatar}
         {casillaPrivacidad}
+        {dialogoPoliticaPrivacidad}
         {errorGeneral && (
           <MessageBar intent="error">
             <MessageBarBody>{errorGeneral}</MessageBarBody>
