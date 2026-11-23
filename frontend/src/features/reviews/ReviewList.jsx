@@ -40,7 +40,7 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground3,
   },
   ownItem: {
-    borderColor: tokens.colorBrandStroke1,
+    border: `1px solid ${tokens.colorBrandStroke1}`,
     backgroundColor: tokens.colorBrandBackground2,
     scrollMarginTop: tokens.spacingVerticalXXL,
   },
