@@ -80,7 +80,7 @@ const DATOS_INICIALES = {
   password: '',
   repeticionPassword: '',
   tipoCliente: 'ESTANDAR',
-  avatar: '',
+  avatar: 'avatar1',
   aceptaPrivacidad: false,
 }
 
