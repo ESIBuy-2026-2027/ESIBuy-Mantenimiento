@@ -142,6 +142,25 @@ describe('AdminNewAdminPage (HU21): alta', () => {
     expect(screen.getByText(/nora díaz ruiz ya puede iniciar sesión/i)).toBeInTheDocument()
   })
 
+  it('adminNewAdminPage_siNoSeCambiaElAvatar_enviaElPrimeroPorDefecto', async () => {
+    let cuerpo = null
+    server.use(
+      http.post('/api/admin/admins', async ({ request }) => {
+        cuerpo = await request.json()
+        return HttpResponse.json({ id: 'adm-1' }, { status: 201 })
+      }),
+    )
+    const user = userEvent.setup()
+    await abrirFormulario()
+    await rellenarFormularioValido(user)
+    expect(screen.getByRole('radio', { name: /avatar 1/i })).toBeChecked()
+
+    await crear(user)
+    await screen.findByText(/administrador creado/i)
+
+    expect(cuerpo.avatar).toBe('avatar1')
+  })
+
   it('adminNewAdminPage_alCrear_enviaLosDatosSinLaRepeticionDelPassword', async () => {
     let cuerpo = null
     server.use(
@@ -247,7 +266,7 @@ describe('AdminNewAdminPage (HU21): acceso', () => {
     await abrirFormulario()
 
     const avatares = within(screen.getByRole('radiogroup'))
-    expect(avatares.getByRole('radio', { name: /avatar 1/i })).toBeInTheDocument()
+    expect(avatares.getByRole('radio', { name: /avatar 1/i })).toBeChecked()
     expect(avatares.getByRole('radio', { name: /avatar 3/i })).toBeInTheDocument()
   })
 

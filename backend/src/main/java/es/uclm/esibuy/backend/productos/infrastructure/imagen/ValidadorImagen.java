@@ -1,3 +1,4 @@
+
 package es.uclm.esibuy.backend.productos.infrastructure.imagen;
 
 import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
@@ -25,45 +26,24 @@ public class ValidadorImagen {
     private static final Set<String> EXTENSIONES_ADMITIDAS = Set.of(".jpg", ".jpeg", ".png");
 
     public void validar(byte[] contenido, String nombreArchivo, String tipoContenido) {
-        if (contenido == null || contenido.length == 0 || contenido.length > TAMANO_MAXIMO_BYTES) {
-            throw new ImagenNoSeguraException();
-        }
+        validarContenido(contenido);
 
         String extension = obtenerExtension(nombreArchivo);
-        if (!EXTENSIONES_ADMITIDAS.contains(extension)) {
-            throw new ImagenNoSeguraException();
-        }
+        validarExtension(extension);
 
-        String mime = tipoContenido == null ? "" : tipoContenido.trim().toLowerCase(Locale.ROOT);
-        if (!mime.equals("image/jpeg") && !mime.equals("image/png")) {
-            throw new ImagenNoSeguraException();
-        }
+        String mime = normalizarMime(tipoContenido);
+        validarMime(mime);
 
-        try (ByteArrayInputStream entrada = new ByteArrayInputStream(contenido)) {
-            BufferedImage imagen = ImageIO.read(entrada);
+        try {
+            BufferedImage imagen = ImageIO.read(new ByteArrayInputStream(contenido));
             if (imagen == null) {
                 throw new ImagenNoSeguraException();
             }
 
             String formato = detectarFormato(contenido);
-            boolean esJpeg = "jpeg".equals(formato);
-            boolean esPng = "png".equals(formato);
+            validarFormato(formato, extension, mime);
+            validarDimensiones(imagen);
 
-            if ((!esJpeg && !esPng)
-                    || (esJpeg && (!mime.equals("image/jpeg")
-                            || !(extension.equals(".jpg") || extension.equals(".jpeg"))))
-                    || (esPng && (!mime.equals("image/png") || !extension.equals(".png")))) {
-                throw new ImagenNoSeguraException();
-            }
-
-            int ancho = imagen.getWidth();
-            int alto = imagen.getHeight();
-            if (ancho <= 0 || alto <= 0
-                    || ancho > DIMENSION_MAXIMA_PIXELES
-                    || alto > DIMENSION_MAXIMA_PIXELES
-                    || (long) ancho * alto > PIXELES_MAXIMOS) {
-                throw new ImagenNoSeguraException();
-            }
         } catch (IOException | RuntimeException excepcion) {
             if (excepcion instanceof ImagenNoSeguraException imagenNoSegura) {
                 throw imagenNoSegura;
@@ -72,26 +52,91 @@ public class ValidadorImagen {
         }
     }
 
+    private void validarContenido(byte[] contenido) {
+        if (contenido == null || contenido.length == 0
+                || contenido.length > TAMANO_MAXIMO_BYTES) {
+            throw new ImagenNoSeguraException();
+        }
+    }
+
+    private void validarExtension(String extension) {
+        if (!EXTENSIONES_ADMITIDAS.contains(extension)) {
+            throw new ImagenNoSeguraException();
+        }
+    }
+
+    private String normalizarMime(String tipoContenido) {
+        return tipoContenido == null
+                ? ""
+                : tipoContenido.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private void validarMime(String mime) {
+        if (!mime.equals("image/jpeg") && !mime.equals("image/png")) {
+            throw new ImagenNoSeguraException();
+        }
+    }
+
+    private void validarFormato(String formato, String extension, String mime) {
+        boolean esJpeg = "jpeg".equals(formato);
+        boolean esPng = "png".equals(formato);
+
+        if (!esJpeg && !esPng) {
+            throw new ImagenNoSeguraException();
+        }
+
+        if (esJpeg && (!mime.equals("image/jpeg")
+                || !(extension.equals(".jpg") || extension.equals(".jpeg")))) {
+            throw new ImagenNoSeguraException();
+        }
+
+        if (esPng && (!mime.equals("image/png") || !extension.equals(".png"))) {
+            throw new ImagenNoSeguraException();
+        }
+    }
+
+    private void validarDimensiones(BufferedImage imagen) {
+        int ancho = imagen.getWidth();
+        int alto = imagen.getHeight();
+
+        if (ancho <= 0 || alto <= 0
+                || ancho > DIMENSION_MAXIMA_PIXELES
+                || alto > DIMENSION_MAXIMA_PIXELES
+                || (long) ancho * alto > PIXELES_MAXIMOS) {
+            throw new ImagenNoSeguraException();
+        }
+    }
+
     private String obtenerExtension(String nombreArchivo) {
         if (nombreArchivo == null) {
             return "";
         }
-        int separador = Math.max(nombreArchivo.lastIndexOf('/'), nombreArchivo.lastIndexOf('\\'));
-        String nombre = nombreArchivo.substring(separador + 1).toLowerCase(Locale.ROOT);
+
+        int separador = Math.max(
+                nombreArchivo.lastIndexOf('/'),
+                nombreArchivo.lastIndexOf('\\'));
+
+        String nombre = nombreArchivo.substring(separador + 1)
+                .toLowerCase(Locale.ROOT);
+
         int punto = nombre.lastIndexOf('.');
         return punto < 0 ? "" : nombre.substring(punto);
     }
 
     private String detectarFormato(byte[] contenido) throws IOException {
         // ImageIO reconoce el formato a partir del contenido, no del nombre/MIME.
-        try (var entrada = ImageIO.createImageInputStream(new ByteArrayInputStream(contenido))) {
+        try (var entrada = ImageIO.createImageInputStream(
+                new ByteArrayInputStream(contenido))) {
+
             if (entrada == null) {
                 return "";
             }
+
             var lectores = ImageIO.getImageReaders(entrada);
             if (!lectores.hasNext()) {
                 return "";
             }
+
             var lector = lectores.next();
             try {
                 return lector.getFormatName().toLowerCase(Locale.ROOT);

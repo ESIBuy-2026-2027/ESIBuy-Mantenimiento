@@ -67,6 +67,7 @@ const useStyles = makeStyles({
     justifyContent: 'center',
     gap: tokens.spacingVerticalS,
     minHeight: '150px',
+    width: '100%',
     padding: tokens.spacingVerticalXL,
     border: `1px dashed ${tokens.colorNeutralStroke1}`,
     borderRadius: tokens.borderRadiusXLarge,
@@ -74,9 +75,11 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground2,
     textAlign: 'center',
     cursor: 'pointer',
+    fontFamily: 'inherit',
+    fontSize: 'inherit',
     transitionProperty: 'border-color, background-color, box-shadow',
     transitionDuration: tokens.durationFaster,
-    '&:hover, &:focus-within': {
+    '&:hover, &:focus-visible': {
       borderColor: tokens.colorBrandStroke1,
       boxShadow: tokens.shadow2,
     },
@@ -88,11 +91,14 @@ const useStyles = makeStyles({
   },
   imageInput: {
     position: 'absolute',
-    inset: 0,
-    width: '100%',
-    height: '100%',
-    opacity: 0,
-    cursor: 'pointer',
+    width: '1px',
+    height: '1px',
+    padding: 0,
+    margin: '-1px',
+    overflow: 'hidden',
+    clip: 'rect(0, 0, 0, 0)',
+    whiteSpace: 'nowrap',
+    border: 0,
   },
   imageIcon: { color: tokens.colorBrandForeground1, width: '28px', height: '28px' },
   imageTitle: { fontWeight: tokens.fontWeightSemibold },
@@ -195,29 +201,46 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
       <Field label="Descripción" validationState={errors.descripcion ? 'error' : 'none'} validationMessage={errors.descripcion}>
         <Textarea className={styles.control} value={values.descripcion} onChange={onText('descripcion')} rows={4} resize="vertical" />
       </Field>
-      <Field label="Añade una imagen" hint="Formatos JPG o PNG. Tamaño máximo: 5 MB."
-        validationState={imageError ? 'error' : 'none'} validationMessage={imageError}>
-        <label
+      <Field
+        label="Añade una imagen"
+        hint="Formatos JPG o PNG. Tamaño máximo: 5 MB."
+        validationState={imageError ? 'error' : 'none'}
+        validationMessage={imageError}
+      >
+        <input
+          ref={imageInputRef}
+          className={styles.imageInput}
+          aria-label="Archivo de imagen"
+          type="file"
+          accept="image/jpeg,image/png"
+          onChange={handleImageChange}
+          tabIndex={-1}
+        />
+
+        <button
+          type="button"
           className={`${styles.imageDropzone} ${draggingImage ? styles.imageDropzoneActive : ''}`}
-          onDragEnter={(event) => { event.preventDefault(); setDraggingImage(true) }}
-          onDragOver={(event) => { event.preventDefault(); setDraggingImage(true) }}
+          aria-label="Seleccionar o arrastrar una imagen"
+          onClick={() => imageInputRef.current?.click()}
+          onDragEnter={(event) => {
+            event.preventDefault()
+            setDraggingImage(true)
+          }}
+          onDragOver={(event) => {
+            event.preventDefault()
+            setDraggingImage(true)
+          }}
           onDragLeave={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget)) setDraggingImage(false)
+            if (!event.currentTarget.contains(event.relatedTarget)) {
+              setDraggingImage(false)
+            }
           }}
           onDrop={handleImageDrop}
         >
           <Camera20Regular className={styles.imageIcon} fontSize={28} />
           <Text className={styles.imageTitle}>Arrastra una imagen aquí</Text>
           <Text>o haz clic para seleccionar un archivo</Text>
-          <input
-            ref={imageInputRef}
-            className={styles.imageInput}
-            aria-label="Archivo de imagen"
-            type="file"
-            accept="image/jpeg,image/png"
-            onChange={handleImageChange}
-          />
-        </label>
+        </button>
       </Field>
       {(previewUrl || values.imagen) && (
         <div>

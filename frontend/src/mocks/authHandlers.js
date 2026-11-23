@@ -76,7 +76,7 @@ export const authHandlers = [
     }
 
     if (usuario.estado === 'PENDIENTE') {
-      return HttpResponse.json({ code: 'ACCOUNT_PENDING' }, { status: 403 })
+      return sinAutorizacion()
     }
 
     if (usuario.estado !== 'ACTIVO') {

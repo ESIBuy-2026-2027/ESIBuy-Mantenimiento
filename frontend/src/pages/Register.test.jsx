@@ -70,6 +70,7 @@ async function rellenarFormularioValido() {
 
 describe('Register', () => {
   beforeEach(() => {
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: vi.fn() })
     vi.clearAllMocks()
     getCategories.mockResolvedValue([
       { id: 'cat-1', nombre: 'Tecnología' },
@@ -141,18 +142,27 @@ describe('Register', () => {
   it('register_alElegirVendedor_muestraUnDesplegableConLasCategoriasYSoloPermiteElegirUna', async () => {
     await renderYElegirVendedor()
 
-    await userEvent.click(screen.getByRole('combobox', { name: /categoría/i }))
+    const selectorCategoria = screen.getByRole('combobox', { name: /categoría/i })
+    expect(selectorCategoria.tagName).toBe('BUTTON')
+    await userEvent.click(selectorCategoria)
     expect((await screen.findAllByRole('option')).map((opcion) => opcion.textContent)).toEqual(['Tecnología', 'Hogar'])
     await userEvent.click(screen.getByRole('option', { name: /tecnología/i }))
     await elegirCategoria(userEvent, /hogar/i)
 
-    expect(screen.getByRole('combobox', { name: /categoría/i })).toHaveValue('Hogar')
+    expect(screen.getByRole('combobox', { name: /categoría/i })).toHaveTextContent('Hogar')
+  })
+
+  it('register_alElegirCliente_marcaElPrimerAvatarComoPredeterminado', async () => {
+    await renderYElegirCliente()
+
+    expect(screen.getByRole('radio', { name: /avatar 1/i })).toBeChecked()
   })
 
   it('register_alElegirVendedor_permiteElegirUnAvatar', async () => {
     await renderYElegirVendedor()
 
     expect(screen.getAllByRole('radio', { name: /avatar/i })).toHaveLength(3)
+    expect(screen.getByRole('radio', { name: /avatar 1/i })).toBeChecked()
 
     await userEvent.click(screen.getByRole('radio', { name: /avatar 2/i }))
 
@@ -474,6 +484,68 @@ describe('Register', () => {
     expect(registrarVendedor).not.toHaveBeenCalled()
   })
 
+  it('register_clienteConErroresDeValidacion_desplazaHastaElPrimerCampoConError', async () => {
+    await renderYElegirCliente()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    const primerCampoConError = document.querySelector('[data-register-error="true"]')
+    expect(primerCampoConError).toContainElement(screen.getByLabelText(/^nombre/i))
+    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' })
+  })
+
+  it('register_vendedorConErroresDeValidacion_desplazaHastaElPrimerCampoConError', async () => {
+    await renderYElegirVendedor()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    const primerCampoConError = document.querySelector('[data-register-error="true"]')
+    expect(primerCampoConError).toContainElement(screen.getByLabelText(/^nombre(?! comercial)/i))
+    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' })
+  })
+
+  it('register_clienteConErrorGeneralDelServidor_desplazaHastaElMensajeGeneral', async () => {
+    registrarCliente.mockRejectedValue({ status: 400, code: 'VALIDATION_ERROR' })
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    const mensajeGeneral = await screen.findByText('Revisa los datos del formulario')
+    expect(mensajeGeneral.closest('[data-register-error-message="true"]')).not.toBeNull()
+    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' })
+  })
+
+  it('register_vendedorConErrorDeCampoDelServidor_desplazaHastaElCampoAfectado', async () => {
+    registrarVendedor.mockRejectedValue({ status: 409, code: 'EMAIL_ALREADY_REGISTERED' })
+    await renderYElegirVendedor()
+    await rellenarFormularioVendedorValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    const campoConError = document.querySelector('[data-register-error="true"]')
+    expect(campoConError).toContainElement(screen.getByLabelText(/correo electrónico/i))
+    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' })
+  })
+
+  it('register_clienteConErrorDeCampoDelServidor_desplazaHastaElCampoAfectado', async () => {
+    registrarCliente.mockRejectedValue({ status: 409, code: 'EMAIL_ALREADY_REGISTERED' })
+    await renderYElegirCliente()
+    await rellenarFormularioValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    const campoConError = document.querySelector('[data-register-error="true"]')
+    expect(campoConError).toContainElement(screen.getByLabelText(/correo electrónico/i))
+    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' })
+  })
+
+  it('register_vendedorConErrorGeneralDelServidor_desplazaHastaElMensajeGeneral', async () => {
+    registrarVendedor.mockRejectedValue({ status: 400, code: 'VALIDATION_ERROR' })
+    await renderYElegirVendedor()
+    await rellenarFormularioVendedorValido()
+    await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
+
+    const mensajeGeneral = await screen.findByText('Revisa los datos del formulario')
+    expect(mensajeGeneral.closest('[data-register-error-message="true"]')).not.toBeNull()
+    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' })
+  })
+
   it('register_alEnviarFormularioClienteVacio_muestraErroresDeCamposObligatorios', async () => {
     await renderYElegirCliente()
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
@@ -575,7 +647,7 @@ describe('Register', () => {
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
     expect(registrarCliente).toHaveBeenCalledWith(
-      expect.objectContaining({ nombre: 'Ana', email: 'ana@correo.com' })
+      expect.objectContaining({ nombre: 'Ana', email: 'ana@correo.com', avatar: 'avatar1' })
     )
   })
 

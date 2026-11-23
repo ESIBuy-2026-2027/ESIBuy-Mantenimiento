@@ -15,7 +15,6 @@ import es.uclm.esibuy.backend.usuarios.domain.exception.CodigoInvalidoException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CredencialesInvalidasException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.BloqueoPorIntentosException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaBloqueadaException;
-import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.DatosPersonales;
 import es.uclm.esibuy.backend.usuarios.domain.model.Dni;
@@ -116,6 +115,8 @@ class AutenticacionControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonLogin("juan@uclm.es", "otraClave")))
                 .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.mensaje").value("Credenciales Incorrectas"))
+                .andExpect(jsonPath("$.code").doesNotExist())
                 // Mensaje genérico: la respuesta no devuelve el correo ni la contraseña enviados
                 .andExpect(content().string(not(containsString("juan@uclm.es"))))
                 .andExpect(content().string(not(containsString("otraClave"))));
@@ -153,19 +154,20 @@ class AutenticacionControllerTest {
     }
 
     @Test
-    @DisplayName("HU2-CP16: una cuenta pendiente de verificación devuelve 403 con el código ACCOUNT_PENDING")
-    void cuentaPendienteDevuelve403ConCodigo() throws Exception {
-        // El servicio solo la lanza cuando la contraseña es correcta (T235), igual que la cuenta bloqueada
+    @DisplayName("HU2-CP16: una cuenta pendiente devuelve el mismo 401 que unas credenciales incorrectas")
+    void cuentaPendienteDevuelve401Generico() throws Exception {
         when(autenticacion.iniciarSesion(any()))
-                .thenThrow(new CuentaPendienteException("La cuenta está pendiente de verificación."));
+                .thenThrow(new CredencialesInvalidasException("Credenciales inválidas"));
 
         mockMvc.perform(post(URL_LOGIN)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonLogin("juan@uclm.es", "clave1234")))
-                .andExpect(status().isForbidden())
-                // El frontend lee "code" para mostrar su mensaje de cuenta pendiente (T236)
-                .andExpect(jsonPath("$.code").value("ACCOUNT_PENDING"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.mensaje").value("Credenciales Incorrectas"))
+                .andExpect(jsonPath("$.code").doesNotExist())
+                .andExpect(content().string(not(containsString("ACCOUNT_PENDING"))))
+                .andExpect(content().string(not(containsString("juan@uclm.es"))));
     }
 
     @Test
