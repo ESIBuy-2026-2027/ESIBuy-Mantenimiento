@@ -2,7 +2,7 @@ import PropTypes from 'prop-types'
 import { Field, Input } from '@fluentui/react-components'
 
 // Un porcentaje vacío equivale a no aplicar el descuento.
-export default function DiscountField({ label, percent, error, onPercentChange }) {
+export default function DiscountField({ label, percent, error, inputClassName, onPercentChange }) {
   const handleKeyDown = (event) => {
     if (['-', '+', 'e', 'E', '.', ','].includes(event.key)) event.preventDefault()
   }
@@ -15,6 +15,7 @@ export default function DiscountField({ label, percent, error, onPercentChange }
       validationMessage={error}
     >
       <Input
+        className={inputClassName}
         type="text"
         inputMode="numeric"
         maxLength={2}
@@ -31,5 +32,6 @@ DiscountField.propTypes = {
   label: PropTypes.string.isRequired,
   percent: PropTypes.string.isRequired,
   error: PropTypes.string,
+  inputClassName: PropTypes.string,
   onPercentChange: PropTypes.func.isRequired,
 }
