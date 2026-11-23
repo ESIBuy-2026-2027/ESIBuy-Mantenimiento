@@ -13,6 +13,7 @@ import es.uclm.esibuy.backend.productos.domain.model.Producto;
 public record ProductoListadoResponse(
         String id,
         String nombre,
+        String imagen,
         BigDecimal precio,
         int stock,
         boolean disponible,
@@ -23,6 +24,7 @@ public record ProductoListadoResponse(
         return new ProductoListadoResponse(
                 producto.getId(),
                 producto.getNombre(),
+                producto.getImagen(),
                 producto.getPrecio(),
                 producto.getStock(),
                 producto.isDisponible(),

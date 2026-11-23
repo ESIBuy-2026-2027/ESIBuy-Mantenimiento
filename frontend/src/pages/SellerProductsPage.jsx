@@ -50,9 +50,14 @@ const useFilterStyles = makeStyles({
     width: '25%',
     height: '36px',
     margin: 0,
-  },
-  rangeValue: {
-    color: EA580C,
+    pointerEvents: 'none',
+    accentColor: '#EA580C',
+    '&::-webkit-slider-thumb': {
+      pointerEvents: 'auto',
+    },
+    '&::-moz-range-thumb': {
+      pointerEvents: 'auto',
+    },
   },
   actions: {
     display: 'flex',
@@ -159,7 +164,7 @@ export default function SellerProductsPage() {
             </Select>
           </Field>
           <Field
-            label={`Rango de precio: ${minPrice || 0} € – ${maxPrice || 50000} €`}
+            label={`Rango de precio: ${minPrice || 0} € – ${maxPrice || 200} €`}
             className={filterStyles.range}
           >
             <div className={filterStyles.rangeControl}>
@@ -168,7 +173,7 @@ export default function SellerProductsPage() {
                 aria-label="Precio mínimo"
                 type="range"
                 min="0"
-                max="50000"
+                max="200"
                 step="1"
                 value={minPrice}
                 onChange={(event) => {
@@ -181,7 +186,7 @@ export default function SellerProductsPage() {
                 aria-label="Precio máximo"
                 type="range"
                 min="0"
-                max="50000"
+                max="200"
                 step="1"
                 value={maxPrice}
                 onChange={(event) => {

@@ -78,8 +78,16 @@ export default function SellerProductFormPage() {
       const saved = await guardarProducto(payload, productId)
       const savedId = productId || saved?.id
 
-      const imagenSubida = await subirImagen(imageFile, savedId)
-      if (!imagenSubida) return
+      if (imageFile) {
+        if (isEdit || createdProductId) {
+          const imagenSubida = await subirImagen(imageFile, savedId)
+          if (!imagenSubida) return
+        } else {
+          uploadSellerProductImage(savedId, imageFile).catch(() => {
+            // El producto ya quedó creado; la imagen puede reintentarse editándolo.
+          })
+        }
+      }
 
       navigate(PATHS.SELLER_PRODUCTS, {
         state: {

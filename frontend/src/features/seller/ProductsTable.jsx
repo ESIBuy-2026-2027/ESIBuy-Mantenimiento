@@ -18,7 +18,35 @@ import { formatPrice } from '../../utils/format'
 
 const SIN_CATEGORIA = '—'
 
+const fallbackImage = (nombre) => {
+  const inicial = nombre.trim().charAt(0).toUpperCase() || 'P'
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">` +
+    `<rect width="96" height="96" rx="8" fill="#FFF4EA"/>` +
+    `<text x="48" y="61" text-anchor="middle" font-family="Segoe UI, Arial" font-size="42" ` +
+    `font-weight="700" fill="#EA580C">${inicial}</text></svg>`
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`
+}
+
 const useStyles = makeStyles({
+  product: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalM,
+  },
+  thumbnailWrap: {
+    position: 'relative',
+    width: '48px',
+    height: '48px',
+    flexShrink: 0,
+  },
+  thumbnail: {
+    position: 'relative',
+    width: '48px',
+    height: '48px',
+    borderRadius: tokens.borderRadiusMedium,
+    objectFit: 'cover',
+  },
   noStock: {
     color: tokens.colorPaletteRedForeground1,
     fontWeight: tokens.fontWeightSemibold,
@@ -51,7 +79,20 @@ export default function ProductsTable({ products, categories = [], refreshing, l
           {products.map((product) => (
             <TableRow key={product.id} className={tableStyles.row}>
               <TableCell className={tableStyles.name}>
-                <Text weight="semibold">{product.nombre}</Text>
+                <div className={styles.product}>
+                  <div className={styles.thumbnailWrap}>
+                    <img
+                      className={styles.thumbnail}
+                      src={product.imagen || fallbackImage(product.nombre)}
+                      alt={`Miniatura de ${product.nombre}`}
+                      onError={(event) => {
+                        event.currentTarget.onerror = null
+                        event.currentTarget.src = fallbackImage(product.nombre)
+                      }}
+                    />
+                  </div>
+                  <Text weight="semibold">{product.nombre}</Text>
+                </div>
               </TableCell>
               <TableCell>
                 {categoryNames.has(product.categoriaId) ? (

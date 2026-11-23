@@ -269,7 +269,9 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
         onChange={(_event, data) => setField('disponible')(data.checked)} />
       <div className={styles.actions}>
         <Button type="submit" appearance="primary" disabled={saving}
-          icon={saving ? <Spinner size="tiny" /> : <Save20Regular />}>Guardar</Button>
+          icon={saving ? <Spinner size="tiny" /> : <Save20Regular />}>
+          {saving ? 'Guardando…' : 'Guardar'}
+        </Button>
         <LinkButton to={PATHS.SELLER_PRODUCTS} appearance="subtle">Cancelar</LinkButton>
       </div>
     </form>

@@ -8,6 +8,7 @@ export const categoryPropType = PropTypes.shape({
 export const productPropType = PropTypes.shape({
   id: PropTypes.string.isRequired,
   nombre: PropTypes.string.isRequired,
+  imagen: PropTypes.string,
   precio: PropTypes.number.isRequired,
   stock: PropTypes.number.isRequired,
   disponible: PropTypes.bool.isRequired,

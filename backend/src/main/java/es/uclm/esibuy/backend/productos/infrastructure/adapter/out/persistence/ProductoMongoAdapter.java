@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence;
 
+import java.math.BigDecimal;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;

@@ -7,7 +7,7 @@ export function useListFilters() {
   const [status, setStatus] = useState('')
   const [sort, setSort] = useState('')
   const [minPrice, setMinPrice] = useState('0')
-  const [maxPrice, setMaxPrice] = useState('50000')
+  const [maxPrice, setMaxPrice] = useState('200')
   const [page, setPage] = useState(1)
   const debouncedSearch = useDebouncedValue(search)
   const debouncedMinPrice = useDebouncedValue(minPrice)
@@ -25,7 +25,7 @@ export function useListFilters() {
     debouncedMinPrice,
     debouncedMaxPrice,
     filtersActive: Boolean(
-      search || category || status || sort || minPrice !== '0' || maxPrice !== '50000',
+      search || category || status || sort || minPrice !== '0' || maxPrice !== '200',
     ),
     setPage,
     changeSearch: (value) => {
@@ -58,7 +58,7 @@ export function useListFilters() {
       setStatus('')
       setSort('')
       setMinPrice('0')
-      setMaxPrice('50000')
+      setMaxPrice('200')
       setPage(1)
     },
   }
