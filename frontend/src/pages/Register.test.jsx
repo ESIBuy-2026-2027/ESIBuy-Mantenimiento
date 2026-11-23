@@ -148,7 +148,7 @@ describe('Register', () => {
     await userEvent.click(screen.getByRole('option', { name: /tecnología/i }))
     await elegirCategoria(userEvent, /hogar/i)
 
-    expect(screen.getByRole('combobox', { name: /categoría/i })).toHaveValue('Hogar')
+    expect(screen.getByRole('combobox', { name: /categoría/i })).toHaveTextContent('Hogar')
   })
 
   it('register_alElegirCliente_marcaElPrimerAvatarComoPredeterminado', async () => {
