@@ -25,7 +25,6 @@ import es.uclm.esibuy.backend.usuarios.domain.model.FactorAutenticacion;
 import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
-import es.uclm.esibuy.backend.usuarios.domain.exception.CuentaPendienteException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -479,18 +478,35 @@ class AutenticacionServiceTest {
     }
 
     @Test
-    @DisplayName("HU2-CP16: rechaza el acceso a una cuenta en estado PENDIENTE")
+    @DisplayName("HU2-CP16: una cuenta PENDIENTE devuelve las mismas credenciales inválidas")
     void rechazaCuentaPendiente() {
-        // Una cuenta nueva nace en estado PENDIENTE (T233); clienteNuevo() la crea con
-        // los datos del registro (T229)
         Usuario usuario = clienteNuevo();
         when(usuarioRepository.buscarPorCorreo("juan@uclm.es")).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.buscarPorCorreo("nadie@uclm.es")).thenReturn(Optional.empty());
 
-        // Se comprueba después de validar la contraseña para no revelar el estado de la
-        // cuenta a atacantes
         when(hashContrasena.coincide("clave1234", "hash-guardado")).thenReturn(true);
-        IniciarSesionCommand comando = new IniciarSesionCommand("juan@uclm.es", "clave1234");
-        assertThrows(CuentaPendienteException.class, () -> autenticacion.iniciarSesion(comando));
+        when(hashContrasena.coincide("otraClave", "hash-guardado")).thenReturn(false);
+
+        CredencialesInvalidasException cuentaPendiente = assertThrows(
+                CredencialesInvalidasException.class,
+                () -> autenticacion.iniciarSesion(
+                        new IniciarSesionCommand("juan@uclm.es", "clave1234")));
+
+        CredencialesInvalidasException contrasenaIncorrecta = assertThrows(
+                CredencialesInvalidasException.class,
+                () -> autenticacion.iniciarSesion(
+                        new IniciarSesionCommand("juan@uclm.es", "otraClave")));
+
+        CredencialesInvalidasException correoInexistente = assertThrows(
+                CredencialesInvalidasException.class,
+                () -> autenticacion.iniciarSesion(
+                        new IniciarSesionCommand("nadie@uclm.es", "clave1234")));
+
+        assertEquals(correoInexistente.getMessage(), cuentaPendiente.getMessage());
+        assertEquals(correoInexistente.getMessage(), contrasenaIncorrecta.getMessage());
+
+        verify(generadorCodigo, never()).generar();
+        verify(envioEmail, never()).enviarCodigoVerificacion(any(), any());
     }
 
     @Test
