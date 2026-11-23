@@ -196,7 +196,6 @@ Todas las rutas son relativas a `frontend/src/`.
 |---|---|
 | 401 | Credenciales incorrectas, correo inexistente o cuenta pendiente: mensaje genérico en el paso de credenciales. En los pasos de verificación se muestra el error correspondiente al código. |
 | 403 con `{ "code": "ACCOUNT_BLOCKED" }` | Cuenta bloqueada por un administrador (task AB#245; antes `ACCOUNT_DISABLED`). Se envía antes de enviar ningún código. |
-
 | 429 | Demasiados intentos |
 | 5xx o sin respuesta | "No se ha podido conectar con el servidor" |
 
