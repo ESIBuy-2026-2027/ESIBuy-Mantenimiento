@@ -499,7 +499,7 @@ describe('SellerProductFormPage: subida de imágenes', () => {
 
     await abrirFormulario()
     await rellenarFormularioValido(user)
-    const zonaCarga = screen.getByText('Arrastra una imagen aquí').closest('label')
+    const zonaCarga = screen.getByRole('button', { name: 'Seleccionar o arrastrar una imagen' })
     const archivo = new File(['contenido png'], 'foto.png', { type: 'image/png' })
 
     fireEvent.dragOver(zonaCarga, { dataTransfer: { files: [archivo] } })
