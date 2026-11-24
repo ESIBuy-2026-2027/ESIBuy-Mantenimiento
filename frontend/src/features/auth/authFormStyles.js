@@ -180,7 +180,7 @@ export const useLoginPageStyles = makeStyles({
     placeItems: 'center',
     [MOBILE]: { flex: '1 1 100%', minWidth: '0', height: '230px' },
   },
-  visualIllustration: { position: 'relative', zIndex: 1, display: 'block', width: '150%', maxWidth: 'none', maxHeight: '112%', height: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 22px 22px rgba(124, 45, 18, 0.16))', transform: 'translateX(1%)', },
+  visualIllustration: { position: 'relative', zIndex: 1, display: 'block', width: '150%', maxWidth: 'none', maxHeight: '112%', height: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 22px 22px rgba(124, 45, 18, 0.16))', transform: 'translateX(5%)', },
   visualGlow: {
     position: 'absolute',
     inset: '14% 3%',
