@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.ClienteYaPremiumException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.ClienteNoPremiumException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 
@@ -84,6 +85,17 @@ public class Usuario {
                 dni,
                 fechaNacimiento,
                 telefono);
+    }
+
+    // Cancelación de Premium (CLI-02): conserva todos los datos del cliente y cambia únicamente su tipo.
+    public void cancelarPremium() {
+        if (!(perfil instanceof DatosCliente(TipoCliente tipoCliente, Dni dni, LocalDate fechaNacimiento, Telefono telefono))) {
+            throw new UsuarioInvalidoException("Solo un cliente puede cancelar Premium");
+        }
+        if (tipoCliente != TipoCliente.PREMIUM) {
+            throw new ClienteNoPremiumException("El cliente no tiene una suscripción Premium");
+        }
+        this.perfil = new DatosCliente(TipoCliente.ESTANDAR, dni, fechaNacimiento, telefono);
     }
 
     public static Usuario nuevoCliente(DatosPersonales datosPersonales, Email email, String passwordHash,

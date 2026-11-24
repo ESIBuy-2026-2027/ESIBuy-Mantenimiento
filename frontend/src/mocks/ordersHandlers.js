@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import { direccionesDe } from './addressesHandlers'
 import { getUsuarioEnSesion } from './authHandlers'
-import { rechazarSiNoEsCliente, retirarGrupoDelCarrito } from './cartHandlers'
+import { grupoDelCarrito, rechazarSiNoEsCliente, retirarGrupoDelCarrito } from './cartHandlers'
 import { metodosDePagoDe } from './paymentMethodsHandlers'
 
 const DIRECCION_DE_CARLOS = {
@@ -23,7 +23,8 @@ const linea = (productoId, nombre, cantidad, precioUnitario) => ({
 })
 
 // Pedidos ya hechos (HU11), en estados distintos para ver la línea de estados del envío: tres de Carlos (u-3) y uno
-// de Nora (u-7), que Carlos no puede ver.
+// de Nora (u-7), que Carlos no puede ver. `historial`, `fechaEstimadaEntrega` y `fechaEntrega` son del seguimiento del
+// envío (PBI 540): se sirven por /tracking, no en el pedido, como el backend.
 const pedidosIniciales = () => [
   {
     id: 'o-103',
@@ -36,6 +37,13 @@ const pedidosIniciales = () => [
     direccionEnvio: DIRECCION_DE_CARLOS,
     lineas: [linea('p-1', 'Auriculares', 2, 53.91), linea('p-2', 'Teclado', 1, 89.5)],
     createdAt: '2026-10-30T10:00:00Z',
+    historial: [
+      { estado: 'PAGADO', fecha: '2026-10-30T10:00:00Z' },
+      { estado: 'PREPARANDO', fecha: '2026-10-30T15:00:00Z' },
+      { estado: 'ENVIADO', fecha: '2026-11-01T09:00:00Z' },
+    ],
+    fechaEstimadaEntrega: '2026-11-05T00:00:00Z',
+    fechaEntrega: null,
   },
   {
     id: 'o-102',
@@ -48,6 +56,14 @@ const pedidosIniciales = () => [
     direccionEnvio: DIRECCION_DE_CARLOS,
     lineas: [linea('p-24', 'Smartwatch', 1, 129)],
     createdAt: '2026-10-20T10:00:00Z',
+    historial: [
+      { estado: 'PAGADO', fecha: '2026-10-20T10:00:00Z' },
+      { estado: 'PREPARANDO', fecha: '2026-10-20T16:00:00Z' },
+      { estado: 'ENVIADO', fecha: '2026-10-22T09:00:00Z' },
+      { estado: 'ENTREGADO', fecha: '2026-10-25T12:30:00Z' },
+    ],
+    fechaEstimadaEntrega: '2026-10-26T00:00:00Z',
+    fechaEntrega: '2026-10-25T12:30:00Z',
   },
   {
     id: 'o-101',
@@ -60,6 +76,9 @@ const pedidosIniciales = () => [
     direccionEnvio: DIRECCION_DE_CARLOS,
     lineas: [linea('p-3', 'Ratón', 1, 19.99)],
     createdAt: '2026-10-10T10:00:00Z',
+    historial: [{ estado: 'PAGADO', fecha: '2026-10-10T10:00:00Z' }],
+    fechaEstimadaEntrega: null,
+    fechaEntrega: null,
   },
   {
     id: 'o-201',
@@ -72,6 +91,9 @@ const pedidosIniciales = () => [
     direccionEnvio: { ...DIRECCION_DE_CARLOS, destinatario: 'Nora Nueva' },
     lineas: [linea('p-2', 'Teclado', 1, 89.5)],
     createdAt: '2026-10-25T10:00:00Z',
+    historial: [{ estado: 'PAGADO', fecha: '2026-10-25T10:00:00Z' }],
+    fechaEstimadaEntrega: null,
+    fechaEntrega: null,
   },
 ]
 
@@ -83,8 +105,19 @@ export function resetOrdersMock() {
   pedidos = pedidosIniciales()
 }
 
-// Lo que el backend devuelve de un pedido: sin el cliente, que es el de la sesión
-const aRespuesta = (pedido) => Object.fromEntries(Object.entries(pedido).filter(([campo]) => campo !== 'clienteId'))
+// Lo que el backend devuelve de un pedido: sin el cliente, que es el de la sesión, ni el seguimiento del envío
+const CAMPOS_FUERA_DEL_PEDIDO = ['clienteId', 'historial', 'fechaEstimadaEntrega', 'fechaEntrega']
+const aRespuesta = (pedido) =>
+  Object.fromEntries(Object.entries(pedido).filter(([campo]) => !CAMPOS_FUERA_DEL_PEDIDO.includes(campo)))
+
+// Lo que el backend devuelve del seguimiento del envío de un pedido
+const aSeguimiento = ({ id, estado, fechaEstimadaEntrega, fechaEntrega, historial }) => ({
+  pedidoId: id,
+  estado,
+  fechaEstimadaEntrega,
+  fechaEntrega,
+  historial,
+})
 
 export const ordersHandlers = [
   // Panel real del vendedor (HU pendiente): solo pedidos que contienen productos del vendedor autenticado.
@@ -141,16 +174,25 @@ export const ordersHandlers = [
     const rechazo = rechazarSiNoEsCliente()
     if (rechazo) return rechazo
 
-    const { vendedorId, direccionId, paymentMethodId } = await request.json()
+    const { vendedorId, direccionId, paymentMethodId, totalEsperado } = await request.json()
     const usuarioId = getUsuarioEnSesion().id
-    const metodoDelCliente = metodosDePagoDe(usuarioId).some(({ id }) => id === paymentMethodId)
+    const metodo = metodosDePagoDe(usuarioId).find(({ id }) => id === paymentMethodId)
     const direccion = direccionesDe(usuarioId).find(({ id }) => id === direccionId)
-    if (typeof vendedorId !== 'string' || vendedorId === '' || !metodoDelCliente || !direccion) {
+    if (typeof vendedorId !== 'string' || vendedorId === '' || !metodo || !direccion || typeof totalEsperado !== 'number') {
       return HttpResponse.json({ code: 'VALIDATION_ERROR' }, { status: 400 })
     }
 
-    const grupo = retirarGrupoDelCarrito(usuarioId, vendedorId)
+    const grupo = grupoDelCarrito(usuarioId, vendedorId)
     if (!grupo) return HttpResponse.json({ code: 'CART_EMPTY' }, { status: 409 })
+    // El cliente confirma el total que vio: si ya no es el real, no se hace nada (como el backend)
+    if (Math.round(totalEsperado * 100) !== Math.round(grupo.total * 100)) {
+      return HttpResponse.json({ code: 'TOTAL_MISMATCH', mensaje: 'El total del pedido ha cambiado' }, { status: 409 })
+    }
+    // Pago simulado, como el backend: la tarjeta de prueba acabada en 0000 se rechaza
+    if (metodo.tipo === 'TARJETA' && metodo.mascara.endsWith('0000')) {
+      return HttpResponse.json({ code: 'PAYMENT_REJECTED', mensaje: 'El pago ha sido rechazado' }, { status: 402 })
+    }
+    retirarGrupoDelCarrito(usuarioId, vendedorId)
 
     pedidosCreados += 1
     const { destinatario, calle, detalles, codigoPostal, ciudad, provincia, telefono } = direccion
@@ -171,8 +213,14 @@ export const ordersHandlers = [
       })),
       createdAt: new Date().toISOString(),
     }
-    // También aparece en el historial (HU11), como el más reciente
-    pedidos.unshift({ ...creado, clienteId: usuarioId })
+    // También aparece en el historial (HU11), como el más reciente; su seguimiento empieza en pagado
+    pedidos.unshift({
+      ...creado,
+      clienteId: usuarioId,
+      historial: [{ estado: 'PAGADO', fecha: creado.createdAt }],
+      fechaEstimadaEntrega: null,
+      fechaEntrega: null,
+    })
     return HttpResponse.json(creado, { status: 201 })
   }),
 
@@ -216,5 +264,38 @@ export const ordersHandlers = [
     }
     pedido.estado = 'CANCELADO'
     return HttpResponse.json(aRespuesta(pedido))
+  }),
+
+  // Seguimiento del envío (PBI 540): estado, fechas e histórico; uno ajeno o inexistente responde 400, como el backend
+  http.get('/api/customer/orders/:id/tracking', ({ params }) => {
+    const rechazo = rechazarSiNoEsCliente()
+    if (rechazo) return rechazo
+
+    const pedido = pedidos.find(({ id, clienteId }) => id === params.id && clienteId === getUsuarioEnSesion().id)
+    return pedido
+      ? HttpResponse.json(aSeguimiento(pedido))
+      : HttpResponse.json({ mensaje: 'El pedido no existe', code: 'ORDER_NOT_FOUND' }, { status: 400 })
+  }),
+
+  // Confirmación de recepción por el cliente (PBI 540), como el backend: solo desde ENVIADO, y no se deshace
+  http.post('/api/customer/orders/:id/confirm-delivery', ({ params }) => {
+    const rechazo = rechazarSiNoEsCliente()
+    if (rechazo) return rechazo
+
+    const pedido = pedidos.find(({ id, clienteId }) => id === params.id && clienteId === getUsuarioEnSesion().id)
+    if (!pedido) {
+      return HttpResponse.json({ mensaje: 'El pedido no existe', code: 'ORDER_NOT_FOUND' }, { status: 400 })
+    }
+    if (pedido.estado !== 'ENVIADO') {
+      return HttpResponse.json(
+        { mensaje: 'El pedido no se puede marcar como entregado', code: 'ORDER_NOT_DELIVERABLE' },
+        { status: 409 },
+      )
+    }
+    const ahora = new Date().toISOString()
+    pedido.estado = 'ENTREGADO'
+    pedido.fechaEntrega = ahora
+    pedido.historial = [...pedido.historial, { estado: 'ENTREGADO', fecha: ahora }]
+    return HttpResponse.json(aSeguimiento(pedido))
   }),
 ]

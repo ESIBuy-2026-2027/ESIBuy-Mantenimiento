@@ -142,6 +142,10 @@ class EstadisticasVendedorTest {
         assertEquals(4, estadisticas.productos());
         assertEquals(2, estadisticas.sinStock());
         assertEquals(2, estadisticas.noDisponibles());
+        assertEquals(List.of(
+                producto("p-1", 0, true, null, 0),
+                producto("p-3", 0, false, null, 0)),
+                estadisticas.productosSinStock());
     }
 
     @Test
@@ -157,6 +161,10 @@ class EstadisticasVendedorTest {
 
         // Frontera: 0 es sin stock, no stock bajo; 6 ya no es stock bajo
         assertEquals(2, estadisticas.stockBajo());
+        assertEquals(List.of(
+                producto("p-1", 1, true, null, 0),
+                producto("p-5", 5, true, null, 0)),
+                estadisticas.productosStockBajo());
     }
 
     private static VentaRegistrada venta(String pedidoId, String productoId, int unidades, String importe) {

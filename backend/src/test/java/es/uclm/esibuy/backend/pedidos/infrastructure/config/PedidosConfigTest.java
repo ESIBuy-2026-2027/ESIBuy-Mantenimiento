@@ -11,6 +11,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.ContadorPedidosPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.DireccionesPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ExistenciasPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.MetodosPagoPort;
+import es.uclm.esibuy.backend.pedidos.application.port.out.PagoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
 import es.uclm.esibuy.backend.pedidos.application.service.CancelacionPedidoService;
 import es.uclm.esibuy.backend.pedidos.application.service.ConsultaComprasService;
@@ -19,6 +20,7 @@ import es.uclm.esibuy.backend.pedidos.application.service.VentasVendedorService;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.carrito.CarritoAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.direcciones.DireccionesAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.metodospago.MetodosPagoAdapter;
+import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.pago.PagoSimuladoAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.persistence.ContadorPedidosMongoAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.persistence.PedidoMongoAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.productos.ExistenciasAdapter;
@@ -56,5 +58,6 @@ class PedidosConfigTest {
         assertInstanceOf(MetodosPagoAdapter.class, contexto.getBean(MetodosPagoPort.class));
         assertInstanceOf(DireccionesAdapter.class, contexto.getBean(DireccionesPort.class));
         assertInstanceOf(ExistenciasAdapter.class, contexto.getBean(ExistenciasPort.class));
+        assertInstanceOf(PagoSimuladoAdapter.class, contexto.getBean(PagoPort.class));
     }
 }

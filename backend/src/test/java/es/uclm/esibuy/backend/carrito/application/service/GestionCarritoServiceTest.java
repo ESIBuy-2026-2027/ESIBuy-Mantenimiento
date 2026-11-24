@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.carrito.application.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -38,11 +39,14 @@ class GestionCarritoServiceTest {
 
     // Dos productos de TecnoVera (u-2) y uno de Otero (u-99)
     private static final ProductoCarrito AURICULARES =
-            new ProductoCarrito("p-1", "u-2", "Auriculares", "a.png", new BigDecimal("53.91"), 34);
+            new ProductoCarrito("p-1", "u-2", "Auriculares", "a.png", new BigDecimal("53.91"), 34,
+                    new BigDecimal("59.90"), new BigDecimal("10"));
     private static final ProductoCarrito TECLADO =
-            new ProductoCarrito("p-2", "u-2", "Teclado", "t.png", new BigDecimal("89.50"), 3);
+            new ProductoCarrito("p-2", "u-2", "Teclado", "t.png", new BigDecimal("89.50"), 3,
+                    new BigDecimal("89.50"), null);
     private static final ProductoCarrito RELOJ_DEPORTIVO =
-            new ProductoCarrito("p-24", "u-99", "Smartwatch", "s.png", new BigDecimal("129.00"), 10);
+            new ProductoCarrito("p-24", "u-99", "Smartwatch", "s.png", new BigDecimal("129.00"), 10,
+                    new BigDecimal("129.00"), null);
 
     private final RepositorioEnMemoria repositorio = new RepositorioEnMemoria();
     private final ProductosFijos productos = new ProductosFijos();
@@ -110,6 +114,24 @@ class GestionCarritoServiceTest {
     }
 
     @Test
+    @DisplayName("HU9-CP28: quitar varios productos los quita todos de una vez, deja el resto y recorre el carrito una sola vez")
+    void quitarVariosProductosSeHaceDeUnaVez() {
+        servicio.anadir(EMAIL, "p-1", 1);
+        servicio.anadir(EMAIL, "p-2", 1);
+        servicio.anadir(EMAIL, "p-24", 1);
+        productos.premiumPedidos.clear();
+
+        CarritoDetallado resto = servicio.quitarProductos(EMAIL, List.of("p-1", "p-2", "p-no-esta"));
+
+        assertEquals(1, resto.totalProductos());
+        assertEquals("p-24", resto.grupos().get(0).lineas().get(0).productoId());
+        assertEquals(List.of("p-24"), repositorio.buscarPorCliente(CLIENTE).orElseThrow().getLineas().stream()
+                .map(linea -> linea.productoId()).toList());
+        // Una sola pasada por el carrito: solo se consulta el producto que queda
+        assertEquals(1, productos.premiumPedidos.size());
+    }
+
+    @Test
     @DisplayName("HU9-CP15: el carrito sale agrupado por proveedor, con subtotales y totales calculados")
     void elCarritoSaleAgrupadoPorProveedor() {
         servicio.anadir(EMAIL, "p-1", 2);
@@ -123,8 +145,11 @@ class GestionCarritoServiceTest {
         assertEquals("u-2", tecnovera.vendedorId());
         assertEquals("TecnoVera", tecnovera.nombreComercial());
         assertEquals(new BigDecimal("197.32"), tecnovera.total());
+        // El descuento va en el precio de cada producto: 59.90 con un 10 % son 53.91 por unidad
         assertEquals(new LineaCarritoDetallada("p-1", "Auriculares", "a.png", 2, new BigDecimal("53.91"),
-                new BigDecimal("107.82"), 34), tecnovera.lineas().get(0));
+                new BigDecimal("107.82"), 34, new BigDecimal("59.90"), new BigDecimal("10")),
+                tecnovera.lineas().get(0));
+        assertNull(tecnovera.lineas().get(1).porcentajeDescuento());
         assertEquals("p-2", tecnovera.lineas().get(1).productoId());
         GrupoCarrito otero = carrito.grupos().get(1);
         assertEquals("Otero", otero.nombreComercial());
@@ -149,7 +174,8 @@ class GestionCarritoServiceTest {
         servicio.anadir(EMAIL, "p-1", 1);
         servicio.anadir(EMAIL, "p-2", 3);
         productos.retirar("p-1");
-        productos.anadir(new ProductoCarrito("p-2", "u-2", "Teclado", "t.png", new BigDecimal("89.50"), 1));
+        productos.anadir(new ProductoCarrito("p-2", "u-2", "Teclado", "t.png", new BigDecimal("89.50"), 1,
+                new BigDecimal("89.50"), null));
 
         CarritoDetallado carrito = servicio.consultar(EMAIL);
 

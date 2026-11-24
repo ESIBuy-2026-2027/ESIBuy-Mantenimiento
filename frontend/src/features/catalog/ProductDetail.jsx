@@ -1,3 +1,4 @@
+
 import PropTypes from 'prop-types'
 import { useEffect, useRef, useState } from 'react'
 import { Button, Text, Title1, makeStyles, mergeClasses, tokens } from '@fluentui/react-components'
@@ -5,7 +6,7 @@ import { BuildingShop20Regular, Heart20Filled, Heart20Regular } from '@fluentui/
 import { formatRating } from '../../utils/format'
 import AddToCartButton from '../cart/AddToCartButton'
 import QuantityStepper from '../cart/QuantityStepper'
-import { productDetailPropType, reviewPropType } from '../../utils/propTypes'
+import { productDetailPropType, reviewPropType, reviewStatusPropType } from '../../utils/propTypes'
 import ReviewForm from '../reviews/ReviewForm'
 import ReviewList from '../reviews/ReviewList'
 import { reviewSummary } from '../reviews/reviewSummary'
@@ -118,6 +119,20 @@ const useStyles = makeStyles({
   muted: {
     color: tokens.colorNeutralForeground3,
   },
+  ownReviewLink: {
+    color: tokens.colorPaletteMarigoldForeground2,
+    fontWeight: tokens.fontWeightSemibold,
+    textDecorationLine: 'underline',
+    textUnderlineOffset: '2px',
+    ':hover': {
+      color: tokens.colorPaletteMarigoldForeground1,
+    },
+    ':focus-visible': {
+      outline: `2px solid ${tokens.colorPaletteMarigoldForeground2}`,
+      outlineOffset: '2px',
+      borderRadius: tokens.borderRadiusSmall,
+    },
+  },
   panel: {
     ...aparece,
     animationDelay: '160ms',
@@ -221,6 +236,60 @@ const useStyles = makeStyles({
 
 const valoraciones = (n) => `${n} ${n === 1 ? 'valoración' : 'valoraciones'}`
 
+// Determina qué contenido debe mostrarse según el estado de la valoración del cliente.
+function renderReviewAccess({
+  reviewStatusFailed,
+  reviewStatus,
+  productId,
+  onRetryReviewStatus,
+  onReviewCreated,
+  styles,
+}) {
+  if (reviewStatusFailed) {
+    return (
+      <div>
+        <Text role="alert">
+          No se ha podido comprobar si puedes valorar este producto.
+        </Text>
+        <Button appearance="secondary" onClick={onRetryReviewStatus}>
+          Reintentar
+        </Button>
+      </div>
+    )
+  }
+
+  if (!reviewStatus) {
+    return (
+      <Text className={styles.muted}>
+        Comprobando si puedes valorar este producto…
+      </Text>
+    )
+  }
+
+  if (reviewStatus.haValorado && !reviewStatus.miValoracionId) {
+    return (
+      <Text className={styles.muted}>
+        Ya has valorado este producto.
+      </Text>
+    )
+  }
+
+  if (reviewStatus.haComprado && !reviewStatus.haValorado) {
+    return (
+      <ReviewForm
+        productId={productId}
+        onCreated={onReviewCreated}
+      />
+    )
+  }
+
+  return (
+    <Text className={styles.muted}>
+      Solo puedes valorar productos que has comprado.
+    </Text>
+  )
+}
+
 // Detalle de un producto para el cliente (HU8): imagen, nombre, proveedor, valoración, precio, disponibilidad,
 // descripción, una ficha con los datos del producto y las valoraciones de los clientes (HU13). Solo presenta: la
 // página es la que pide el producto y sus valoraciones. Con `onAddFavorite` ofrece además añadirlo a favoritos y, si
@@ -231,11 +300,16 @@ export default function ProductDetail({
   reviews = null,
   reviewsFailed = false,
   onRetryReviews,
+  reviewStatus = null,
+  reviewStatusFailed = false,
+  onRetryReviewStatus,
+  onReviewCreated,
   favorite = false,
   onAddFavorite,
   onRemoveFavorite,
 }) {
   const styles = useStyles()
+
   // Si la imagen no carga (dirección rota), se enseña el mismo marcador que cuando no hay imagen.
   const [imageFailed, setImageFailed] = useState(false)
   const imageRef = useRef(null)
@@ -255,13 +329,19 @@ export default function ProductDetail({
 
     const handleError = () => setImageFailed(true)
     image.addEventListener('error', handleError)
-    if (image.complete && image.naturalWidth === 0) handleError()
+
+    if (image.complete && image.naturalWidth === 0) {
+      handleError()
+    }
 
     return () => image.removeEventListener('error', handleError)
   }, [])
 
   const favoriteFailure = (failure) => {
-    if (favorite) return 'No se ha podido quitar de favoritos. Inténtalo de nuevo.'
+    if (favorite) {
+      return 'No se ha podido quitar de favoritos. Inténtalo de nuevo.'
+    }
+
     return failure?.code === 'PRODUCT_NOT_FOUND'
       ? 'Este producto ya no está disponible.'
       : 'No se ha podido añadir a favoritos. Inténtalo de nuevo.'
@@ -270,6 +350,7 @@ export default function ProductDetail({
   const toggleFavorite = async () => {
     setFavoriteError('')
     setSavingFavorite(true)
+
     try {
       await (favorite ? onRemoveFavorite(product.id) : onAddFavorite(product.id))
     } catch (failure) {
@@ -283,7 +364,12 @@ export default function ProductDetail({
     <div className={styles.layout}>
       <div className={styles.media}>
         {hasImage ? (
-          <img ref={imageRef} className={styles.image} src={product.imagen} alt={product.nombre} />
+          <img
+            ref={imageRef}
+            className={styles.image}
+            src={product.imagen}
+            alt={product.nombre}
+          />
         ) : (
           <span className={styles.placeholder}>
             <img
@@ -300,54 +386,87 @@ export default function ProductDetail({
           <Text size={200} className={styles.category}>
             {category}
           </Text>
+
           <Title1 as="h1" className={styles.title}>
             {product.nombre}
           </Title1>
+
           <Text className={styles.vendor}>
             <BuildingShop20Regular />
             <span>
               Vendido por <strong>{product.vendedor.nombreComercial}</strong>
             </span>
           </Text>
+
           <div className={styles.rating}>
             {rated ? (
               <>
                 <RatingStars value={valoracion} size={22} />
                 <Text weight="semibold">{formatRating(valoracion)}</Text>
-                <Text className={styles.muted}>{valoraciones(numValoraciones)}</Text>
+                <Text className={styles.muted}>
+                  {valoraciones(numValoraciones)}
+                </Text>
               </>
             ) : (
               <Text className={styles.muted}>Sin valoraciones</Text>
+            )}
+
+            {reviewStatus?.haValorado && reviewStatus.miValoracionId && (
+              <a
+                className={styles.ownReviewLink}
+                href={`#valoracion-${reviewStatus.miValoracionId}`}
+              >
+                Ya has valorado este producto · Ver mi valoración
+              </a>
             )}
           </div>
         </div>
 
         <div className={styles.panel}>
-          <PriceBlock precio={product.precio} descuento={product.descuento} precioFinal={product.precioFinal} />
+          <PriceBlock
+            precio={product.precio}
+            descuento={product.descuento}
+            precioFinal={product.precioFinal}
+          />
+
           <span className={styles.stock}>
-            <span className={mergeClasses(styles.dot, styles[status.tone])} aria-hidden="true" />
+            <span
+              className={mergeClasses(styles.dot, styles[status.tone])}
+              aria-hidden="true"
+            />
             {status.label}
           </span>
+
           {canBuy ? (
             <div className={styles.buy}>
-              <QuantityStepper value={quantity} max={product.stock} onChange={setQuantity} />
+              <QuantityStepper
+                value={quantity}
+                max={product.stock}
+                onChange={setQuantity}
+              />
               <AddToCartButton product={product} quantity={quantity} />
             </div>
           ) : (
             <AddToCartButton product={product} />
           )}
+
           {onAddFavorite && (
             <Button
               as="button"
               appearance="secondary"
               className={styles.favorite}
-              icon={favorite ? <Heart20Filled className={styles.favoriteIcon} /> : <Heart20Regular />}
+              icon={
+                favorite
+                  ? <Heart20Filled className={styles.favoriteIcon} />
+                  : <Heart20Regular />
+              }
               disabled={savingFavorite}
               onClick={toggleFavorite}
             >
               {favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
             </Button>
           )}
+
           {favoriteError && (
             <Text role="alert" size={200} className={styles.favoriteError}>
               {favoriteError}
@@ -355,44 +474,85 @@ export default function ProductDetail({
           )}
         </div>
 
-        <section className={styles.section} aria-labelledby="descripcion-producto">
+        <section
+          className={styles.section}
+          aria-labelledby="descripcion-producto"
+        >
           <h2 id="descripcion-producto" className={styles.sectionTitle}>
             Descripción
           </h2>
-          <Text className={styles.description}>{product.descripcion || SIN_DESCRIPCION}</Text>
+          <Text className={styles.description}>
+            {product.descripcion || SIN_DESCRIPCION}
+          </Text>
         </section>
 
-        <section className={styles.section} aria-labelledby="informacion-producto">
+        <section
+          className={styles.section}
+          aria-labelledby="informacion-producto"
+        >
           <h2 id="informacion-producto" className={styles.sectionTitle}>
             Información del producto
           </h2>
+
           <dl className={styles.facts}>
             <dt className={styles.term}>Categoría</dt>
             <dd className={styles.detail}>{category}</dd>
+
             <dt className={styles.term}>Proveedor</dt>
-            <dd className={styles.detail}>{product.vendedor.nombreComercial}</dd>
+            <dd className={styles.detail}>
+              {product.vendedor.nombreComercial}
+            </dd>
+
             <dt className={styles.term}>Disponibilidad</dt>
             <dd className={styles.detail}>{status.label}</dd>
+
             <dt className={styles.term}>Referencia</dt>
             <dd className={styles.detail}>{product.id}</dd>
           </dl>
         </section>
 
-        <section className={styles.section} aria-labelledby="valoraciones-producto">
+        <section
+          className={styles.section}
+          aria-labelledby="valoraciones-producto"
+        >
           <h2 id="valoraciones-producto" className={styles.sectionTitle}>
             Valoraciones de los clientes
           </h2>
+
           {rated && (
             <div className={styles.summary}>
-              <span className={styles.average}>{formatRating(valoracion)}</span>
+              <span className={styles.average}>
+                {formatRating(valoracion)}
+              </span>
+
               <div className={styles.summaryRating}>
                 <RatingStars value={valoracion} size={24} />
-                <Text className={styles.muted}>Basada en {valoraciones(numValoraciones)}</Text>
+                <Text className={styles.muted}>
+                  Basada en {valoraciones(numValoraciones)}
+                </Text>
               </div>
             </div>
           )}
-          <ReviewForm productId={product.id} onCreated={onRetryReviews} />
-          <ReviewList reviews={reviews} failed={reviewsFailed} onRetry={onRetryReviews} />
+
+          {renderReviewAccess({
+            reviewStatusFailed,
+            reviewStatus,
+            productId: product.id,
+            onRetryReviewStatus,
+            onReviewCreated,
+            styles,
+          })}
+
+          <ReviewList
+            reviews={reviews}
+            failed={reviewsFailed}
+            onRetry={onRetryReviews}
+            myReviewId={
+              reviewStatus?.haValorado
+                ? reviewStatus.miValoracionId
+                : null
+            }
+          />
         </section>
       </div>
     </div>
@@ -405,6 +565,10 @@ ProductDetail.propTypes = {
   reviews: PropTypes.arrayOf(reviewPropType),
   reviewsFailed: PropTypes.bool,
   onRetryReviews: PropTypes.func.isRequired,
+  reviewStatus: reviewStatusPropType,
+  reviewStatusFailed: PropTypes.bool,
+  onRetryReviewStatus: PropTypes.func.isRequired,
+  onReviewCreated: PropTypes.func.isRequired,
   favorite: PropTypes.bool,
   onAddFavorite: PropTypes.func,
   onRemoveFavorite: PropTypes.func,

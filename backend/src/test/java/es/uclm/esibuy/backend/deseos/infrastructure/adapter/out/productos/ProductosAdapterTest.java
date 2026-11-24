@@ -29,7 +29,8 @@ class ProductosAdapterTest {
     @DisplayName("HU14-CP04: un producto que el módulo de productos devuelve está disponible")
     void unProductoQueDevuelveProductosEstaDisponible() {
         when(catalogo.consultarComprable("p-1", false)).thenReturn(Optional.of(
-                new ProductoComercial("p-1", "u-2", "Teclado", "t.png", new BigDecimal("40.00"), 7)));
+                new ProductoComercial("p-1", "u-2", "Teclado", "t.png", new BigDecimal("40.00"), 7,
+                        new BigDecimal("50.00"), new BigDecimal("20"))));
 
         assertTrue(new ProductosAdapter(catalogo).estaDisponible("p-1"));
     }

@@ -20,20 +20,14 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { CheckmarkCircle20Filled, Circle20Regular, RecordStop20Regular } from '@fluentui/react-icons'
 import { useParams } from 'react-router-dom'
 import { confirmOrderDelivery, getOrder } from '../api/orders'
 import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import { resumenDeDireccion } from '../features/addresses/direccionPropType'
 import CancelOrderDialog from '../features/orders/CancelOrderDialog'
-import {
-  CANCELADO,
-  PASOS_DEL_ENVIO,
-  colorDeEstado,
-  esCancelable,
-  etiquetaDeEstado,
-} from '../features/orders/orderStatus'
+import ShipmentTrackingSection from '../features/orders/ShipmentTrackingSection'
+import { CANCELADO, colorDeEstado, esCancelable, etiquetaDeEstado } from '../features/orders/orderStatus'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { PATHS } from '../routes/paths'
 import { formatDate, formatPrice } from '../utils/format'
@@ -46,29 +40,6 @@ const useStyles = makeStyles({
   },
   sectionTitle: {
     margin: 0,
-  },
-  steps: {
-    listStyle: 'none',
-    margin: 0,
-    padding: 0,
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: tokens.spacingHorizontalXL,
-  },
-  step: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: tokens.spacingHorizontalXS,
-  },
-  done: {
-    color: tokens.colorPaletteGreenForeground1,
-  },
-  current: {
-    color: tokens.colorBrandForeground1,
-    fontWeight: tokens.fontWeightSemibold,
-  },
-  pending: {
-    color: tokens.colorNeutralForeground3,
   },
   number: {
     textAlign: 'right',
@@ -166,18 +137,18 @@ function DetalleDelPedido({ pedido, onCancelar, onConfirmarRecepcion, confirmand
         </div>
       </div>
 
-      <Card className={styles.section}>
-        <Title3 as="h2" className={styles.sectionTitle}>
-          Estado del envío
-        </Title3>
-        {pedido.estado === CANCELADO ? (
+      {pedido.estado === CANCELADO ? (
+        <Card className={styles.section}>
+          <Title3 as="h2" className={styles.sectionTitle}>
+            Estado del envío
+          </Title3>
           <MessageBar intent="warning">
             <MessageBarBody>Este pedido está cancelado: no se enviará.</MessageBarBody>
           </MessageBar>
-        ) : (
-          <SeguimientoDelEnvio estado={pedido.estado} />
-        )}
-      </Card>
+        </Card>
+      ) : (
+        <ShipmentTrackingSection pedido={pedido} onDelivered={onEntregado} onStale={onDesactualizado} />
+      )}
 
       <Card className={styles.section}>
         <Title3 as="h2" className={styles.sectionTitle}>
@@ -234,6 +205,7 @@ DetalleDelPedido.propTypes = {
   onConfirmarRecepcion: PropTypes.func.isRequired,
   confirmandoRecepcion: PropTypes.bool.isRequired,
   pedido: PropTypes.shape({
+    id: PropTypes.string.isRequired,
     numeroPedido: PropTypes.string.isRequired,
     createdAt: PropTypes.string.isRequired,
     vendedor: PropTypes.shape({ nombreComercial: PropTypes.string.isRequired }).isRequired,
@@ -255,7 +227,7 @@ DetalleDelPedido.propTypes = {
   }).isRequired,
 }
 
-// Detalle de un pedido del cliente (HU11): productos con el desglose de precios, estado del envío y dirección.
+// Detalle de un pedido del cliente (HU11): productos con el desglose de precios, seguimiento del envío y dirección.
 // El backend responde 400 ORDER_NOT_FOUND si el pedido no existe o es de otro cliente: las dos cosas se ven igual.
 export default function OrderDetailPage() {
   const pageStyles = usePageStyles()

@@ -1,11 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { screen } from '@testing-library/react'
 import { AuthContext } from '../auth/AuthContext'
 import { renderWithProviders } from '../test/utils'
 import Home from './Home'
 
-// La home muestra u oculta «Crear mi cuenta» según la sesión: se renderiza con un contexto de sesión explícito
 function renderHome(user = null) {
   return renderWithProviders(
     <AuthContext.Provider value={{ user, loading: false, signIn: () => {}, signOut: () => {} }}>
@@ -15,76 +13,49 @@ function renderHome(user = null) {
 }
 
 describe('Home', () => {
-  it('home_alRenderizar_muestraTituloDeBienvenida', () => {
+  it('home_alRenderizar_muestraLaPresentacionPrincipal', () => {
     renderHome()
 
-    const heading = screen.getByRole('heading', { level: 1 })
-    expect(heading).toBeInTheDocument()
-    expect(heading).toHaveTextContent(/bienvenid/i)
-    expect(heading).toHaveTextContent(/esibuy/i)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/bienvenido a esibuy/i)
+    expect(screen.getByText(/marketplace de la comunidad universitaria/i)).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /ilustración de un portátil/i })).toHaveAttribute(
+      'src',
+      '/images/esibuy-home-illustration.png',
+    )
   })
 
-  it('home_alRenderizar_muestraTextoDescriptivo', () => {
+  it('home_sinSesion_muestraAccesoYRegistro', () => {
     renderHome()
 
-    expect(screen.getByText(/marketplace/i)).toBeInTheDocument()
-    expect(screen.getByText(/clientes/i)).toBeInTheDocument()
-    expect(screen.getByText(/vendedores/i)).toBeInTheDocument()
-    expect(screen.getByText(/administradores/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /iniciar sesión/i })).toHaveAttribute('href', '/login')
+    expect(screen.getByRole('link', { name: /crear cuenta/i })).toHaveAttribute('href', '/register')
   })
 
-  it('home_alRenderizar_muestraEnlaceDeCrearCuentaHaciaRegistro', () => {
-    renderHome()
-
-    const link = screen.getByRole('link', { name: /crear mi cuenta/i })
-    expect(link).toHaveAttribute('href', '/register')
-  })
-
-  // Fallos de la demo del Sprint 1: con la sesión iniciada se podía ir a crear otra cuenta
-  it('HU1-CP25: con la sesión iniciada no ofrece crear una cuenta', () => {
+  it('home_conSesion_noOfreceCrearOtraCuenta', () => {
     renderHome({ id: 'u-3', nombre: 'Carla', rol: 'CLIENTE' })
 
+    expect(screen.queryByRole('link', { name: /crear cuenta/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /iniciar sesión/i })).not.toBeInTheDocument()
+  })
+
+  it('home_alRenderizar_muestraLasVentajasPrincipales', () => {
+    renderHome()
+
+    expect(screen.getByText('Compras seguras')).toBeInTheDocument()
+    expect(screen.getByText('Seguimiento de pedidos')).toBeInTheDocument()
+    expect(screen.getByText('Gran variedad')).toBeInTheDocument()
+  })
+
+  it('home_alRenderizar_muestraElAccesoAlCatalogo', () => {
+    renderHome()
+
+    expect(screen.getByRole('link', { name: /ver catálogo/i })).toHaveAttribute('href', '/products')
+  })
+
+  it('home_sinSesion_noMuestraLaLlamadaFinalARegistro', () => {
+    renderHome()
+
+    expect(screen.queryByText('Encuentra algo que te guste.')).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /crear mi cuenta/i })).not.toBeInTheDocument()
-  })
-
-  it('home_alRenderizar_explicaComoFuncionaParaQuienCompra', () => {
-    renderHome()
-
-    expect(screen.getByRole('heading', { level: 2, name: /cómo funciona/i })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /quiero comprar/i })).toHaveAttribute('aria-selected', 'true')
-    const pasos = within(screen.getByRole('tabpanel')).getAllByRole('heading', { level: 3 })
-    expect(pasos.map((paso) => paso.textContent)).toEqual([
-      'Crea tu cuenta',
-      'Busca y filtra',
-      'Compra en un paso',
-      'Sigue tu envío y valora',
-    ])
-  })
-
-  it('home_alElegirOtroPerfil_muestraSusPasos', async () => {
-    const user = userEvent.setup()
-    renderHome()
-
-    await user.click(screen.getByRole('tab', { name: /quiero vender/i }))
-
-    const panel = screen.getByRole('tabpanel')
-    expect(within(panel).getByRole('heading', { name: 'Registra tu tienda' })).toBeInTheDocument()
-    expect(within(panel).queryByRole('heading', { name: 'Busca y filtra' })).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('tab', { name: /administro/i }))
-
-    expect(within(screen.getByRole('tabpanel')).getByRole('heading', { name: 'Resuelve incidencias' })).toBeInTheDocument()
-  })
-
-  it('home_sinSesion_invitaAEmpezarHaciaElRegistro', () => {
-    renderHome()
-
-    expect(screen.getByRole('link', { name: /empezar ahora/i })).toHaveAttribute('href', '/register')
-  })
-
-  it('home_conSesion_noInvitaAEmpezar', () => {
-    renderHome({ id: 'u-3', nombre: 'Carla', rol: 'CLIENTE' })
-
-    expect(screen.queryByRole('link', { name: /empezar ahora/i })).not.toBeInTheDocument()
   })
 })

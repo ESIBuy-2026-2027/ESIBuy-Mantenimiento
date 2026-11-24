@@ -1,8 +1,10 @@
 package es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.persistence;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
+import es.uclm.esibuy.backend.pedidos.domain.model.CambioEstado;
 import es.uclm.esibuy.backend.pedidos.domain.model.DatosPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
@@ -29,11 +31,15 @@ public class PedidoDocumentMapper {
         documento.setNombreComercial(pedido.getNombreComercial());
         documento.setEstado(pedido.getEstado().name());
         documento.setLineas(new ArrayList<>(pedido.getLineas().stream()
-                .map(linea -> aDocumento(linea, pedido.getVendedorId())).toList()));
+                .map(linea -> aDocumento(linea)).toList()));
         documento.setTotal(pedido.getTotal());
         documento.setDireccionEnvio(aDocumento(pedido.getDireccionEnvio()));
         documento.setPaymentMethodId(pedido.getPaymentMethodId());
         documento.setCreatedAt(pedido.getCreatedAt());
+        documento.setHistorial(new ArrayList<>(pedido.getHistorial().stream()
+                .map(cambio -> aDocumento(cambio)).toList()));
+        documento.setFechaEstimadaEntrega(pedido.getFechaEstimadaEntrega());
+        documento.setFechaEntrega(pedido.getFechaEntrega());
         return documento;
     }
 
@@ -48,6 +54,7 @@ public class PedidoDocumentMapper {
                 documento.getLineas().stream()
                         .map(linea -> new LineaPedido(
                                 linea.getProductoId(),
+                                linea.getVendedorId(),
                                 linea.getNombreProducto(),
                                 linea.getCantidad(),
                                 linea.getPrecioUnitario(),
@@ -55,12 +62,32 @@ public class PedidoDocumentMapper {
                         .toList(),
                 aDominio(documento.getDireccionEnvio()),
                 documento.getPaymentMethodId(),
-                documento.getCreatedAt());
+                documento.getCreatedAt(),
+                aHistorial(documento),
+                documento.getFechaEstimadaEntrega(),
+                documento.getFechaEntrega());
 
         return new Pedido(datosPedido);
     }
 
-    private static LineaPedidoDocument aDocumento(LineaPedido linea, String vendedorId) {
+    private static CambioEstadoDocument aDocumento(CambioEstado cambio) {
+        CambioEstadoDocument documento = new CambioEstadoDocument();
+        documento.setEstado(cambio.estado().name());
+        documento.setFecha(cambio.fecha());
+        return documento;
+    }
+
+    // Un pedido anterior al seguimiento no tiene histórico guardado
+    private static List<CambioEstado> aHistorial(PedidoDocument documento) {
+        if (documento.getHistorial() == null) {
+            return List.of();
+        }
+        return documento.getHistorial().stream()
+                .map(cambio -> new CambioEstado(aEstado(cambio.getEstado()), cambio.getFecha()))
+                .toList();
+    }
+
+    private static LineaPedidoDocument aDocumento(LineaPedido linea) {
         LineaPedidoDocument documento = new LineaPedidoDocument();
         documento.setProductoId(linea.productoId());
         documento.setNombreProducto(linea.nombreProducto());

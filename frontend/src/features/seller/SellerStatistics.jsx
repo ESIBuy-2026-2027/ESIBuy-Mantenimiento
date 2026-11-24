@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import PropTypes from 'prop-types'
 import {
+  Badge,
   Button,
   Card,
   MessageBar,
@@ -59,6 +60,7 @@ const useStyles = makeStyles({
   card: {
     gap: tokens.spacingVerticalXL,
     padding: tokens.spacingVerticalXL,
+    width: '100%',
   },
   heading: {
     margin: 0,
@@ -94,6 +96,10 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     gap: tokens.spacingVerticalM,
+    padding: tokens.spacingVerticalL,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusXLarge,
+    backgroundColor: tokens.colorNeutralBackground2,
   },
   overviewGrid: {
     display: 'grid',
@@ -194,6 +200,40 @@ const useStyles = makeStyles({
   barValue: {
     color: tokens.colorNeutralForeground2,
     whiteSpace: 'nowrap',
+  },
+  kpiValue: {
+    margin: 0,
+    color: tokens.colorBrandForeground1,
+    fontSize: tokens.fontSizeBase600,
+    fontWeight: tokens.fontWeightSemibold,
+    overflowWrap: 'anywhere',
+  },
+  stockAlerts: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gap: tokens.spacingHorizontalM,
+  },
+  stockAlert: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalM,
+    minWidth: 0,
+    padding: tokens.spacingVerticalM,
+    borderRadius: tokens.borderRadiusMedium,
+  },
+  lowStockAlert: {
+    borderLeft: `4px solid ${tokens.colorPaletteYellowForeground2}`,
+    backgroundColor: tokens.colorPaletteYellowBackground2,
+  },
+  outOfStockAlert: {
+    borderLeft: `4px solid ${tokens.colorPaletteRedForeground1}`,
+    backgroundColor: tokens.colorPaletteRedBackground1,
+  },
+  stockAlertHeading: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: tokens.spacingHorizontalS,
   },
 })
 

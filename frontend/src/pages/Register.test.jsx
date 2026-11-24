@@ -164,9 +164,9 @@ describe('Register', () => {
     expect(screen.getAllByRole('radio', { name: /avatar/i })).toHaveLength(3)
     expect(screen.getByRole('radio', { name: /avatar 1/i })).toBeChecked()
 
-    await userEvent.click(screen.getByRole('radio', { name: /avatar 2/i }))
+    await userEvent.click(screen.getByRole('button', { name: /avatar 2/i }))
 
-    expect(screen.getByRole('radio', { name: /avatar 2/i })).toBeChecked()
+    expect(screen.getByRole('button', { name: /avatar 2/i })).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('register_alElegirVendedor_marcaLaCategoriaComoObligatoria', async () => {
@@ -265,7 +265,7 @@ describe('Register', () => {
     registrarVendedor.mockResolvedValue({})
     await renderYElegirVendedor()
     await rellenarFormularioVendedorValido()
-    await userEvent.click(screen.getByRole('radio', { name: /avatar 2/i }))
+    await userEvent.click(screen.getByRole('button', { name: /avatar 2/i }))
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
     expect(registrarVendedor).toHaveBeenCalledWith(
@@ -583,9 +583,8 @@ describe('Register', () => {
   it('register_alElegirCliente_muestraTipoEstandarPreseleccionadoConLosValoresDelBackend', async () => {
     await renderYElegirCliente()
 
-    expect(screen.getByLabelText(/tipo/i)).toHaveValue('ESTANDAR')
-    expect(screen.getByRole('option', { name: /estándar/i })).toHaveValue('ESTANDAR')
-    expect(screen.getByRole('option', { name: /premium/i })).toHaveValue('PREMIUM')
+    expect(screen.getByRole('button', { name: /estándar/i })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /premium/i })).toHaveAttribute('aria-pressed', 'false')
   })
 
   it('register_alEnviarDatosValidosDeCliente_enviaElTipoEstandarPorDefecto', async () => {
@@ -601,7 +600,7 @@ describe('Register', () => {
   it('HU45-CP21: al elegir Premium, Registrarse no envía el registro y lleva a la pasarela de pago', async () => {
     await renderYElegirCliente()
     await rellenarFormularioValido()
-    await userEvent.selectOptions(screen.getByLabelText(/tipo/i), 'PREMIUM')
+    await userEvent.click(screen.getByRole('button', { name: /premium/i }))
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
     expect(await screen.findByText('Pasarela de prueba')).toBeInTheDocument()
@@ -611,7 +610,7 @@ describe('Register', () => {
 
   it('HU45-CP21: con datos no válidos, elegir Premium marca los errores y no lleva a la pasarela', async () => {
     await renderYElegirCliente()
-    await userEvent.selectOptions(screen.getByLabelText(/tipo/i), 'PREMIUM')
+    await userEvent.click(screen.getByRole('button', { name: /premium/i }))
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
     expect(screen.getAllByText(/obligatorio/i).length).toBeGreaterThan(0)
@@ -700,10 +699,10 @@ describe('Register', () => {
     registrarCliente.mockResolvedValue({})
     await renderYElegirCliente()
 
-    expect(screen.getAllByRole('radio')).toHaveLength(3)
+    expect(screen.getAllByRole('button', { name: /avatar/i })).toHaveLength(3)
 
-    await userEvent.click(screen.getByRole('radio', { name: /avatar 2/i }))
-    expect(screen.getByRole('radio', { name: /avatar 2/i })).toBeChecked()
+    await userEvent.click(screen.getByRole('button', { name: /avatar 2/i }))
+    expect(screen.getByRole('button', { name: /avatar 2/i })).toHaveAttribute('aria-pressed', 'true')
 
     await rellenarFormularioValido()
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))

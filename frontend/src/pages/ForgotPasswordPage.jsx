@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { makeStyles } from '@fluentui/react-components'
 import {
   Button,
   Card,
@@ -33,6 +34,83 @@ const ERROR_ENVIO = 'No se ha podido enviar el código. Inténtalo de nuevo más
 const ERROR_CODIGO = 'El código no es correcto o ha caducado. Revísalo o pide otro.'
 
 const DATOS_VACIOS = { code: '', password: '', repeticionPassword: '' }
+
+const useCodeInputStyles = makeStyles({
+  container: {
+    position: 'relative',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
+    gap: '10px',
+    width: '100%',
+    minHeight: '58px',
+  },
+  digit: {
+    display: 'grid',
+    placeItems: 'center',
+    minWidth: 0,
+    border: '1px solid #d6d3d1',
+    borderRadius: '9px',
+    backgroundColor: '#ffffff',
+    color: '#242424',
+    fontSize: '24px',
+    fontWeight: 600,
+    fontVariantNumeric: 'tabular-nums',
+    transitionProperty: 'border-color, box-shadow, background-color',
+    transitionDuration: '120ms',
+  },
+  digitActive: {
+    borderColor: '#f05a0a',
+    boxShadow: '0 0 0 1px #f05a0a',
+    backgroundColor: '#fffaf6',
+  },
+  input: {
+    position: 'absolute',
+    inset: 0,
+    width: '100%',
+    height: '100%',
+    opacity: 0,
+    cursor: 'text',
+    border: 0,
+    padding: 0,
+  },
+  focused: {
+    outline: '3px solid rgba(240, 90, 10, .16)',
+    outlineOffset: '3px',
+  },
+})
+
+function VerificationCodeInput({ value, onChange }) {
+  const styles = useCodeInputStyles()
+  const [focused, setFocused] = useState(false)
+
+  return (
+    <div className={`${styles.container} ${focused ? styles.focused : ''}`}>
+      {Array.from({ length: CODE_LENGTH }, (_, index) => (
+        <span
+          key={index}
+          className={`${styles.digit} ${focused && index === value.length ? styles.digitActive : ''}`}
+          aria-hidden="true"
+        >
+          {value[index] || ''}
+        </span>
+      ))}
+      <input
+        className={styles.input}
+        type="text"
+        value={value}
+        onChange={(event) => onChange(event.target.value.replace(/\\D/g, '').slice(0, CODE_LENGTH))}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        pattern="[0-9]*"
+        maxLength={CODE_LENGTH}
+        autoFocus
+        aria-label="Código de verificación de seis dígitos"
+      />
+    </div>
+  )
+}
 
 function validarEmail(email) {
   if (!email) return 'Introduce tu correo electrónico.'
@@ -132,6 +210,7 @@ export default function ForgotPasswordPage() {
         validationMessage={errores.email}
       >
         <Input
+          size="large"
           type="email"
           value={email}
           onChange={(_event, data) => setEmail(data.value)}
@@ -157,13 +236,9 @@ export default function ForgotPasswordPage() {
         validationState={errores.code ? 'error' : 'none'}
         validationMessage={errores.code}
       >
-        <Input
+        <VerificationCodeInput
           value={datos.code}
-          onChange={cambiar('code')}
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          maxLength={CODE_LENGTH}
-          autoFocus
+          onChange={(value) => setDatos((anteriores) => ({ ...anteriores, code: value }))}
         />
       </Field>
       <PasswordField
@@ -189,6 +264,7 @@ export default function ForgotPasswordPage() {
         <Button
           type="submit"
           appearance="primary"
+          size="large"
           disabled={enviando}
           icon={enviando ? <Spinner size="tiny" /> : undefined}
         >
@@ -197,6 +273,7 @@ export default function ForgotPasswordPage() {
         <Button
           type="button"
           appearance="subtle"
+          size="large"
           disabled={enviando}
           onClick={() => pedirCodigo(emailEnviado, AVISO_REENVIADO)}
         >

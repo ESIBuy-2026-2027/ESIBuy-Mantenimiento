@@ -38,11 +38,14 @@ export function getCatalogProduct(productId) {
   return request(`/api/products/${encodeURIComponent(productId)}`)
 }
 
-// Valoraciones de un producto del catálogo (HU13; backend en T371, PR #179). Responde
-//   [{ id, productoId, puntuacion, comentario }]
-// sin el cliente ni la fecha y sin orden garantizado; una lista vacía si nadie lo ha valorado.
+// Valoraciones de un producto (CLI-03). Incluye autor y fecha de creación; no expone el identificador del cliente.
 export function getProductReviews(productId) {
   return request(`/api/products/${encodeURIComponent(productId)}/valoraciones`)
+}
+
+// Estado de compra y valoración del cliente autenticado (CLI-04). La identidad se resuelve en el backend mediante la sesión.
+export function getProductReviewStatus(productId) {
+  return request(`/api/products/${encodeURIComponent(productId)}/valoraciones/estado`)
 }
 
 // Valora un producto comprado (HU13; backend en T370, PR #179) con { puntuacion (1 a 5), comentario (hasta 500) }.
@@ -63,6 +66,11 @@ export function updateSellerProductAvailability(productId, disponible) {
 
 // Catálogo del cliente (HU7). Contrato propuesto por el frontend: el backend (T352 y T353) aún no lo tiene.
 // sort: nombre o valoracion. order: asc o desc. minRating: valoración media mínima (de 1 a 5).
+// Selección pública de la portada: no requiere sesión ni expone datos comerciales.
+export function getFeaturedProducts(limit = 10) {
+  return request(`/api/products/featured?${buildQuery({ limit })}`)
+}
+
 export function getCatalogProducts({
   search = '',
   category = '',

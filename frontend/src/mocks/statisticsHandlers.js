@@ -4,7 +4,14 @@ import { getUsuarioEnSesion } from './authHandlers'
 const SIN_ESTADISTICAS = {
   ventas: { pedidos: 0, unidadesVendidas: 0, ingresos: 0, masVendidos: [] },
   valoraciones: { media: null, total: 0, porProducto: [] },
-  stock: { productos: 0, sinStock: 0, stockBajo: 0, noDisponibles: 0 },
+  stock: {
+    productos: 0,
+    sinStock: 0,
+    stockBajo: 0,
+    noDisponibles: 0,
+    productosConStockBajo: [],
+    productosSinStock: [],
+  },
 }
 
 // Estadísticas fijas de los vendedores de ejemplo (HU17), con la forma que devuelve el backend (PR #212). Las de
@@ -32,7 +39,21 @@ const ESTADISTICAS = {
         { productoId: 'p-1', nombre: 'Auriculares inalámbricos', media: 4, numero: 2 },
       ],
     },
-    stock: { productos: 23, sinStock: 3, stockBajo: 2, noDisponibles: 3 },
+    stock: {
+      productos: 23,
+      sinStock: 3,
+      stockBajo: 2,
+      noDisponibles: 3,
+      productosConStockBajo: [
+        { productoId: 'p-11', nombre: 'Aspirador de mano', stock: 3 },
+        { productoId: 'p-13', nombre: 'Robot de cocina', stock: 5 },
+      ],
+      productosSinStock: [
+        { productoId: 'p-14', nombre: 'Freidora de aire', stock: 0 },
+        { productoId: 'p-3', nombre: 'Ratón ergonómico', stock: 0 },
+        { productoId: 'p-6', nombre: 'Webcam Full HD', stock: 0 },
+      ],
+    },
   },
 }
 

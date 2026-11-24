@@ -18,11 +18,13 @@ import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCa
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConfirmacionRecepcionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.SeguimientoEnvioUseCase;
 
 /**
  * Adaptador de entrada web de los pedidos. Recibe la petición y delega en el puerto de entrada: crea el pedido
  * (HU10), sirve el historial de pedidos del cliente y el detalle de cada uno (HU11) y cancela un pedido que aún no
- * se ha enviado (HU12). El cliente sale siempre de la sesión, nunca de un parámetro.
+ * se ha enviado (HU12). También el seguimiento del envío: su estado e histórico y la confirmación de recepción
+ * por el cliente. El cliente sale siempre de la sesión, nunca de un parámetro.
  */
 @RestController
 @RequestMapping("/api/customer/orders")

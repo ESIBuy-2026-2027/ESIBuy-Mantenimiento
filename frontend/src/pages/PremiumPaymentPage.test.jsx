@@ -95,10 +95,14 @@ describe('PremiumPaymentPage (HU45): paso a Premium del cliente Estándar', () =
   })
 
   it('HU45-CP33: si el servidor responde ALREADY_PREMIUM, se avisa con un mensaje propio y queda en estado Premium', async () => {
+    // Antes del intento el cliente sigue siendo Estándar; tras ALREADY_PREMIUM, el GET del perfil debe reflejar Premium.
+    let yaEsPremium = false
     server.use(
-      http.post('/api/perfil/premium', () =>
-        HttpResponse.json({ mensaje: 'Texto del backend', code: 'ALREADY_PREMIUM' }, { status: 400 }),
-      ),
+      http.get('/api/perfil', () => HttpResponse.json({ tipoCliente: yaEsPremium ? 'PREMIUM' : 'ESTANDAR' })),
+      http.post('/api/perfil/premium', () => {
+        yaEsPremium = true
+        return HttpResponse.json({ mensaje: 'Texto del backend', code: 'ALREADY_PREMIUM' }, { status: 400 })
+      }),
     )
     const user = await abrirPasarelaDesdePremium()
 

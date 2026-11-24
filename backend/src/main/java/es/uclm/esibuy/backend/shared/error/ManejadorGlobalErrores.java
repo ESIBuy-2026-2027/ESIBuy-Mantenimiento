@@ -26,9 +26,12 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaExceptio
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEntregableException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PagoRechazadoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoEstadoNoAvanzableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.TotalNoCoincideException;
 import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoInvalidoException;
@@ -57,6 +60,7 @@ import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionDuplicadaE
 import es.uclm.esibuy.backend.valoraciones.domain.exception.ValoracionInvalidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.AutoeliminacionNoPermitidaException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ClienteYaPremiumException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.ClienteNoPremiumException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -490,10 +494,25 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("No hay productos de ese proveedor en el carrito", "CART_EMPTY");
     }
 
+    // Pago simulado rechazado (HU10): el pedido no se confirma ni se descuenta stock
+    @ExceptionHandler(PagoRechazadoException.class)
+    @ResponseStatus(HttpStatus.PAYMENT_REQUIRED)
+    public RespuestaError pagoRechazado() {
+        return new RespuestaError("El pago ha sido rechazado", "PAYMENT_REJECTED");
+    }
+
+    // El total que el cliente vio al confirmar ya no es el real: tiene que volver a revisar la compra
+    @ExceptionHandler(TotalNoCoincideException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError totalNoCoincide() {
+        return new RespuestaError("El total del pedido ha cambiado", "TOTAL_MISMATCH");
+    }
+
     @ExceptionHandler(StockInsuficientePedidoException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public RespuestaError stockInsuficienteEnElPedido() {
-        return new RespuestaError("No se puede comprar un producto del pedido", "INSUFFICIENT_STOCK");
+    public RespuestaError stockInsuficienteEnElPedido(StockInsuficientePedidoException e) {
+        // Dice qué producto falla para que el cliente pueda ajustarlo: es un producto de su propio carrito
+        return new RespuestaError("No queda stock suficiente de «" + e.getNombreProducto() + "»", "INSUFFICIENT_STOCK");
     }
 
     // Valoraciones (HU13): puntuación fuera de 1 a 5 o comentario de más de 500
@@ -541,6 +560,13 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError incidenciaYaAbierta() {
         return new RespuestaError("La incidencia ya está abierta", "INCIDENT_ALREADY_OPEN");
+    }
+
+    // 400 + code al cancelar Premium (CLI-02): el cliente ya era Estándar.
+    @ExceptionHandler(ClienteNoPremiumException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError clienteNoPremium() {
+        return new RespuestaError("El cliente no tiene una suscripción Premium", "NOT_PREMIUM");
     }
 
     // 400 + code al pasar a Premium (HU45, T423): el cliente ya lo era.

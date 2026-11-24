@@ -89,7 +89,8 @@ class SeguridadMetodosPagoServiceTest {
                 () -> assertThrows(AccessDeniedException.class,
                         () -> gestionMetodosPago.marcarPredeterminado(email, "m-1")),
                 () -> assertThrows(AccessDeniedException.class, () -> gestionMetodosPago.eliminar(email, "m-1", null)),
-                () -> assertThrows(AccessDeniedException.class, () -> gestionMetodosPago.esDelCliente(email, "m-1")));
+                () -> assertThrows(AccessDeniedException.class,
+                        () -> gestionMetodosPago.consultarParaPedido(email, "m-1")));
         verifyNoInteractions(metodoPagoRepository, cifradoDatosPago, clienteEnSesion);
     }
 
@@ -120,7 +121,7 @@ class SeguridadMetodosPagoServiceTest {
     void unClienteOperaConSuPropioCorreo() {
         assertAll(
                 () -> assertDoesNotThrow(() -> gestionMetodosPago.listar(CLIENTE)),
-                () -> assertDoesNotThrow(() -> gestionMetodosPago.esDelCliente(CLIENTE, "m-1")));
+                () -> assertDoesNotThrow(() -> gestionMetodosPago.consultarParaPedido(CLIENTE, "m-1")));
     }
 
     @Test

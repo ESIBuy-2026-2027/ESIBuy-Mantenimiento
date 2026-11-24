@@ -56,11 +56,21 @@ export const productDetailPropType = PropTypes.shape({
   numValoraciones: PropTypes.number.isRequired,
 })
 
-// Valoración de un producto (HU13), como la devuelve GET /api/products/{id}/valoraciones
+// Valoración de un producto (CLI-03), como la devuelve GET /api/products/{id}/valoraciones.
 export const reviewPropType = PropTypes.shape({
   id: PropTypes.string.isRequired,
+  productoId: PropTypes.string.isRequired,
   puntuacion: PropTypes.number.isRequired,
   comentario: PropTypes.string,
+  nombreCliente: PropTypes.string.isRequired,
+  fechaCreacion: PropTypes.string.isRequired,
+})
+
+// Estado de compra y valoración del cliente autenticado (CLI-04).
+export const reviewStatusPropType = PropTypes.shape({
+  haComprado: PropTypes.bool.isRequired,
+  haValorado: PropTypes.bool.isRequired,
+  miValoracionId: PropTypes.string,
 })
 
 export const productValuesPropType = PropTypes.shape({

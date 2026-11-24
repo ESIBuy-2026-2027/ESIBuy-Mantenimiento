@@ -38,6 +38,7 @@ import es.uclm.esibuy.backend.usuarios.domain.model.Rol;
 import es.uclm.esibuy.backend.usuarios.domain.model.TipoCliente;
 import es.uclm.esibuy.backend.usuarios.domain.model.Usuario;
 import es.uclm.esibuy.backend.usuarios.domain.exception.ClienteYaPremiumException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.ClienteNoPremiumException;
 
 // Consulta (HU4, T297) y edición (HU45, T298) del perfil propio. El repositorio es un doble de prueba y el reloj
 // está fijo: se prueba el caso de uso sin MongoDB ni Spring, y la mayoría de edad no depende del día en que se
@@ -201,6 +202,38 @@ class GestionPerfilServiceTest {
         when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.empty());
 
         assertThrows(CredencialesInvalidasException.class, () -> servicio.pasarAPremium(EMAIL));
+    }
+
+    @Test
+    @DisplayName("CLI-02: un cliente Premium cancela la suscripción y se guarda como Estándar")
+    void cancelarPremiumGuardaClienteComoEstandar() {
+        Usuario premium = lucia();
+        when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.of(premium));
+
+        Usuario resultado = servicio.cancelarPremium(EMAIL);
+
+        assertEquals(TipoCliente.ESTANDAR, resultado.getDatosCliente().tipoCliente());
+        assertEquals(DNI, resultado.getDatosCliente().dni().valor());
+        verify(usuarioRepository).guardar(premium);
+    }
+
+    @Test
+    @DisplayName("CLI-02: un cliente Estándar no puede cancelar Premium ni se guarda")
+    void cancelarPremiumDeClienteEstandarNoGuarda() {
+        Usuario estandar = clienteEstandar();
+        when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.of(estandar));
+
+        assertThrows(ClienteNoPremiumException.class, () -> servicio.cancelarPremium(EMAIL));
+        verify(usuarioRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("CLI-02: si el usuario de la sesión ya no existe, cancelar Premium falla")
+    void cancelarPremiumDeUsuarioInexistenteLanzaExcepcion() {
+        when(usuarioRepository.buscarPorCorreo(EMAIL)).thenReturn(Optional.empty());
+
+        assertThrows(CredencialesInvalidasException.class, () -> servicio.cancelarPremium(EMAIL));
+        verify(usuarioRepository, never()).guardar(any());
     }
 
     private static Usuario clienteEstandar() {

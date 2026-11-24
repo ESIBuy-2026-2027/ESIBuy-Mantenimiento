@@ -1,7 +1,7 @@
 import { afterEach, describe, it, expect } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http, HttpResponse } from 'msw'
+import { delay, http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
@@ -18,7 +18,8 @@ async function abrirPedido(id) {
   renderApp(`/orders/${id}`)
 }
 
-const pasoDelEnvio = (nombre) => within(screen.getByRole('list', { name: /estado del envío/i })).getByRole('listitem', { name: nombre })
+// Los pasos del seguimiento, en orden: preparación, enviado, en reparto y entregado
+const pasosDelEnvio = () => within(screen.getByRole('list', { name: /pasos del envío/i })).getAllByRole('listitem')
 
 describe('OrderDetailPage (HU11): detalle', () => {
   it('HU11-CP14: muestra el número, la fecha, el vendedor y la dirección de envío del pedido', async () => {
@@ -49,17 +50,27 @@ describe('OrderDetailPage (HU11): detalle', () => {
     expect(productos[3]).toHaveTextContent('197,32')
   })
 
-  it('HU11-CP15: la línea de estados del envío marca los pasos hechos, el actual y los pendientes', async () => {
+  it('HU11-CP15: la línea de tiempo marca los pasos hechos, el actual y los pendientes, con texto y fecha además del icono', async () => {
     await abrirPedido('o-103')
 
-    await screen.findByRole('list', { name: /estado del envío/i })
-    expect(pasoDelEnvio('Pagado: completado')).toBeInTheDocument()
-    expect(pasoDelEnvio('Preparando: completado')).toBeInTheDocument()
-    expect(pasoDelEnvio('Enviado: estado actual')).toHaveAttribute('aria-current', 'step')
-    expect(pasoDelEnvio('Entregado: pendiente')).toBeInTheDocument()
+    await screen.findByRole('list', { name: /pasos del envío/i })
+    const [preparacion, enviado, enReparto, entregado] = pasosDelEnvio()
+    expect(preparacion).toHaveTextContent('Preparación')
+    expect(preparacion).toHaveTextContent('Completado')
+    expect(preparacion).toHaveTextContent('30/10/2026')
+    expect(preparacion).not.toHaveAttribute('aria-current')
+    expect(enviado).toHaveTextContent('Enviado')
+    expect(enviado).toHaveTextContent('Completado')
+    expect(enviado).toHaveTextContent('01/11/2026')
+    expect(enReparto).toHaveTextContent('En reparto')
+    expect(enReparto).toHaveTextContent('Estado actual')
+    expect(enReparto).toHaveAttribute('aria-current', 'step')
+    expect(entregado).toHaveTextContent('Entregado')
+    expect(entregado).toHaveTextContent('Pendiente')
+    expect(entregado).not.toHaveTextContent(/\d{2}\/\d{2}\/\d{4}/)
   })
 
-  it('HU11-CP15: un pedido entregado tiene todos los pasos hechos y el último como actual', async () => {
+  it('HU11-CP15: un pedido entregado tiene los cuatro pasos completados y ninguno como actual', async () => {
     await abrirPedido('o-102')
 
     await screen.findByRole('list', { name: /estado del envío/i })
@@ -74,7 +85,7 @@ describe('OrderDetailPage (HU11): detalle', () => {
     await abrirPedido('o-101')
 
     expect(await screen.findByText(/este pedido está cancelado/i)).toBeInTheDocument()
-    expect(screen.queryByRole('list', { name: /estado del envío/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: /pasos del envío/i })).not.toBeInTheDocument()
   })
 })
 
@@ -203,7 +214,7 @@ describe('OrderDetailPage (HU12): confirmar la cancelación', () => {
 
     expect(await screen.findByText('Pedido cancelado.')).toBeInTheDocument()
     expect(screen.getByText(/este pedido está cancelado/i)).toBeInTheDocument()
-    expect(screen.queryByRole('list', { name: /estado del envío/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: /pasos del envío/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /cancelar pedido/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
   })
@@ -222,5 +233,184 @@ describe('OrderDetailPage (HU12): confirmar la cancelación', () => {
 
     expect(await screen.findByText(/este pedido ya no se puede cancelar/i)).toBeInTheDocument()
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+  })
+})
+
+// --- Seguimiento del envío: fechas, confirmación de recepción, carga y errores (PBI 540) ---------------------------------
+// GET /api/customer/orders/{id}/tracking da el estado, las fechas y el histórico; POST .../confirm-delivery lo pasa a
+// ENTREGADO, solo desde ENVIADO. Del mock: o-103 está ENVIADO con entrega estimada el 05/11/2026; o-102 ENTREGADO el
+// 25/10/2026; o-201 (Nora) PAGADO, sin fecha estimada.
+
+describe('OrderDetailPage (PBI 540): fecha de entrega', () => {
+  it('HU11-CP33: un envío en curso muestra la fecha estimada de entrega', async () => {
+    await abrirPedido('o-103')
+
+    expect(await screen.findByText('Entrega estimada: 05/11/2026')).toBeInTheDocument()
+  })
+
+  it('HU11-CP33: sin fecha estimada lo indica con claridad en lugar de dejarlo vacío', async () => {
+    await abrirPedidoDe(NORA, 'o-201')
+
+    expect(await screen.findByText(/fecha estimada de entrega no disponible/i)).toBeInTheDocument()
+    expect(screen.queryByText(/entrega estimada:/i)).not.toBeInTheDocument()
+  })
+
+  it('HU11-CP33: una vez entregado muestra la fecha real y deja de mostrar la estimada', async () => {
+    await abrirPedido('o-102')
+
+    expect(await screen.findByText('Entregado el 25/10/2026')).toBeInTheDocument()
+    expect(screen.queryByText(/entrega estimada:/i)).not.toBeInTheDocument()
+  })
+})
+
+describe('OrderDetailPage (PBI 540): confirmar la recepción', () => {
+  it('HU11-CP34: «Confirmar recepción» solo aparece cuando el envío está enviado', async () => {
+    await abrirPedido('o-103')
+    expect(await screen.findByRole('button', { name: /confirmar recepción/i })).toBeInTheDocument()
+  })
+
+  it('HU11-CP34: un pedido entregado o cancelado no tiene el botón', async () => {
+    await abrirSesionPorApi(CLIENTE)
+    for (const id of ['o-102', 'o-101']) {
+      const { unmount } = renderApp(`/orders/${id}`)
+      await screen.findByRole('heading', { level: 1, name: /pedido ESB-/i })
+
+      expect(screen.queryByRole('button', { name: /confirmar recepción/i })).not.toBeInTheDocument()
+      unmount()
+    }
+  })
+
+  it('HU11-CP34: un pedido pagado, que aún no ha salido, tampoco tiene el botón', async () => {
+    await abrirPedidoDe(NORA, 'o-201')
+    await screen.findByRole('list', { name: /pasos del envío/i })
+
+    expect(screen.queryByRole('button', { name: /confirmar recepción/i })).not.toBeInTheDocument()
+  })
+
+  it('HU11-CP35: al pulsar «Confirmar recepción» pide confirmación y todavía no confirma nada', async () => {
+    const user = userEvent.setup()
+    const confirmaciones = espiarPeticiones('POST', '/api/customer/orders/o-103/confirm-delivery')
+    await abrirPedido('o-103')
+
+    await user.click(await screen.findByRole('button', { name: /confirmar recepción/i }))
+
+    expect(await screen.findByRole('alertdialog', { name: /confirmar recepción/i })).toBeInTheDocument()
+    expect(confirmaciones).toHaveLength(0)
+  })
+
+  it('HU11-CP35: «Volver» cierra la confirmación sin confirmar', async () => {
+    const user = userEvent.setup()
+    const confirmaciones = espiarPeticiones('POST', '/api/customer/orders/o-103/confirm-delivery')
+    await abrirPedido('o-103')
+
+    await user.click(await screen.findByRole('button', { name: /confirmar recepción/i }))
+    await user.click(await screen.findByRole('button', { name: /^volver$/i }))
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(confirmaciones).toHaveLength(0)
+  })
+
+  it('HU11-CP36: al confirmar, el envío pasa a entregado, se avisa y ya no se puede volver a confirmar', async () => {
+    const user = userEvent.setup()
+    await abrirPedido('o-103')
+
+    await user.click(await screen.findByRole('button', { name: /confirmar recepción/i }))
+    await user.click(await screen.findByRole('button', { name: /sí, he recibido el pedido/i }))
+
+    expect(await screen.findByText(/recepción confirmada/i)).toBeInTheDocument()
+    for (const paso of pasosDelEnvio()) expect(paso).toHaveTextContent('Completado')
+    expect(screen.getByText(/entregado el \d{2}\/\d{2}\/\d{4}/i)).toBeInTheDocument()
+    expect(screen.getByText('Entregado', { selector: '.fui-Badge' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /confirmar recepción/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+  })
+
+  it('HU11-CP37: si el pedido ya no se puede marcar como entregado, cierra la confirmación y lo avisa', async () => {
+    server.use(
+      http.post('/api/customer/orders/o-103/confirm-delivery', () =>
+        HttpResponse.json({ code: 'ORDER_NOT_DELIVERABLE' }, { status: 409 }),
+      ),
+    )
+    const user = userEvent.setup()
+    await abrirPedido('o-103')
+
+    await user.click(await screen.findByRole('button', { name: /confirmar recepción/i }))
+    await user.click(await screen.findByRole('button', { name: /sí, he recibido el pedido/i }))
+
+    expect(await screen.findByText(/ya no se puede marcar como entregado/i)).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+  })
+
+  it('HU11-CP37: si falla por otro motivo lo avisa dentro de la confirmación, sin detalles internos, y permite reintentar', async () => {
+    server.use(
+      http.post('/api/customer/orders/o-103/confirm-delivery', () => new HttpResponse(null, { status: 500 }), {
+        once: true,
+      }),
+    )
+    const user = userEvent.setup()
+    await abrirPedido('o-103')
+
+    await user.click(await screen.findByRole('button', { name: /confirmar recepción/i }))
+    await user.click(await screen.findByRole('button', { name: /sí, he recibido el pedido/i }))
+
+    expect(await screen.findByText(/no se ha podido confirmar la recepción/i)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /sí, he recibido el pedido/i }))
+    expect(await screen.findByText(/recepción confirmada/i)).toBeInTheDocument()
+  })
+})
+
+describe('OrderDetailPage (PBI 540): carga y errores del seguimiento', () => {
+  it('HU11-CP38: mientras llega el seguimiento muestra que está cargando, sin bloquear el resto del detalle', async () => {
+    server.use(
+      http.get('/api/customer/orders/o-103/tracking', async () => {
+        await delay(150)
+        return HttpResponse.json({
+          pedidoId: 'o-103',
+          estado: 'ENVIADO',
+          fechaEstimadaEntrega: null,
+          fechaEntrega: null,
+          historial: [],
+        })
+      }),
+    )
+    await abrirPedido('o-103')
+
+    expect(await screen.findByText(/cargando seguimiento/i)).toBeInTheDocument()
+    expect(screen.getByRole('table', { name: /productos del pedido/i })).toBeInTheDocument()
+    expect(await screen.findByRole('list', { name: /pasos del envío/i })).toBeInTheDocument()
+  })
+
+  it('HU11-CP38: si falla el seguimiento lo avisa con «Reintentar» y el resto del detalle sigue visible', async () => {
+    server.use(
+      http.get('/api/customer/orders/o-103/tracking', () => new HttpResponse(null, { status: 500 }), { once: true }),
+    )
+    const user = userEvent.setup()
+    await abrirPedido('o-103')
+
+    expect(await screen.findByText(/no se ha podido cargar el seguimiento del envío/i)).toBeInTheDocument()
+    expect(screen.getByRole('table', { name: /productos del pedido/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /confirmar recepción/i })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /reintentar/i }))
+
+    expect(await screen.findByRole('list', { name: /pasos del envío/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /confirmar recepción/i })).toBeInTheDocument()
+  })
+
+  it('HU11-CP38: un estado que el frontend no conoce se indica en lugar de marcar todos los pasos como pendientes', async () => {
+    server.use(
+      http.get('/api/customer/orders/o-103/tracking', () =>
+        HttpResponse.json({
+          pedidoId: 'o-103',
+          estado: 'DEVUELTO',
+          fechaEstimadaEntrega: null,
+          fechaEntrega: null,
+          historial: [],
+        }),
+      ),
+    )
+    await abrirPedido('o-103')
+
+    expect(await screen.findByText(/el estado del envío no está disponible/i)).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: /pasos del envío/i })).not.toBeInTheDocument()
   })
 })

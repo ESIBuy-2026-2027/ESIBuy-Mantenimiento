@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.metodospago.application.port.in;
 
 import es.uclm.esibuy.backend.metodospago.domain.model.MetodoPago;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Gestión de sus propios métodos de pago por parte del cliente (HU6). Recibe el correo del cliente en
@@ -37,8 +38,11 @@ public interface GestionMetodosPagoUseCase {
      */
     void eliminar(String emailCliente, String metodoId, String nuevoPredeterminadoId);
 
-    /** Si el método de pago es del cliente en sesión, para el pedido (HU10): así no ve el dominio de metodospago. */
-    boolean esDelCliente(String emailCliente, String metodoId);
+    /**
+     * El tipo y la máscara de un método de pago del cliente en sesión, para el pedido (HU10): así no ve el dominio de
+     * metodospago ni sus datos de pago. Vacío si el método no existe o es de otro cliente.
+     */
+    Optional<MetodoPagoParaPedido> consultarParaPedido(String emailCliente, String metodoId);
 
     /**
      * Borra todos los métodos de pago del cliente, para cuando elimina su cuenta (HU25). Si no tiene ninguno no es

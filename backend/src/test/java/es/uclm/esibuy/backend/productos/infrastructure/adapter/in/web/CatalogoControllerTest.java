@@ -53,6 +53,28 @@ class CatalogoControllerTest {
         private CatalogoProductosUseCase catalogoProductos;
 
         @Test
+        @DisplayName("Portada: los productos destacados se consultan sin sesión y solo exponen datos públicos")
+        void destacadosSonPublicosYSoloDevuelvenDatosPublicos() throws Exception {
+                DatosProducto datos = new DatosProducto(
+                                new DatosProducto.DatosBasicos("v-1", "Teclado mecánico", "", new BigDecimal("89.50"),
+                                                12, "cat-2", "https://esibuy.test/teclado.png"),
+                                new DatosProducto.Configuracion(true, Descuento.sinDescuento(), Descuento.sinDescuento()),
+                                new DatosProducto.Valoraciones(4.5, 2));
+                when(catalogoProductos.buscarDestacados(10)).thenReturn(List.of(new Producto("p-1", datos)));
+
+                mockMvc.perform(get(URL + "/featured"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$[0].id").value("p-1"))
+                                .andExpect(jsonPath("$[0].nombre").value("Teclado mecánico"))
+                                .andExpect(jsonPath("$[0].imagen").value("https://esibuy.test/teclado.png"))
+                                .andExpect(jsonPath("$[0].valoracion").value(4.5))
+                                .andExpect(jsonPath("$[0].precio").doesNotExist())
+                                .andExpect(jsonPath("$[0].stock").doesNotExist());
+
+                verify(catalogoProductos).buscarDestacados(10);
+        }
+
+        @Test
         @DisplayName("HU7-CP16: el cliente recibe el catálogo con el formato del contrato y sin valoraciones todavía")
         void clienteRecibeElCatalogoConElFormatoDelContrato() throws Exception {
                 DatosProducto datos = new DatosProducto(

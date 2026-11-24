@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.time.Instant;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -39,6 +41,15 @@ class ValoracionTest {
         assertEquals("u-1", valoracion.clienteId());
         assertEquals(5, valoracion.puntuacion());
         assertEquals("Muy recomendable", valoracion.comentario());
+    }
+
+    @Test
+    @DisplayName("CLI-03: una valoración nueva registra el autor y su fecha de creación")
+    void unaValoracionNuevaRegistraAutorYFecha() {
+        Valoracion valoracion = Valoracion.nueva("p-1", "u-1", "Ana Pérez", 5, "Muy recomendable");
+
+        assertEquals("Ana Pérez", valoracion.nombreCliente());
+        assertEquals(Instant.class, valoracion.fechaCreacion().getClass());
     }
 
     @Test

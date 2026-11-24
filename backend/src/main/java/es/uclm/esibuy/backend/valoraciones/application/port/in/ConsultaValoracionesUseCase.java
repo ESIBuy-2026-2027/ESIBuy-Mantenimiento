@@ -4,9 +4,10 @@ import java.util.List;
 
 import es.uclm.esibuy.backend.valoraciones.domain.model.Valoracion;
 
-/** Consulta de las valoraciones de un producto por parte del cliente (HU13). */
+/** Consulta de valoraciones y del estado de compra/valoración de un cliente (CLI-03/CLI-04). */
 public interface ConsultaValoracionesUseCase {
 
-    /** Las valoraciones del producto, sin orden garantizado; una lista vacía si no tiene ninguna. */
     List<Valoracion> consultarPorProducto(String productoId);
+
+    EstadoValoracion consultarEstado(String emailCliente, String productoId);
 }

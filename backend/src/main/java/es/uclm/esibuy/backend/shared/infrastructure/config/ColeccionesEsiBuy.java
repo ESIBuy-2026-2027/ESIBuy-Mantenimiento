@@ -217,6 +217,12 @@ final class ColeccionesEsiBuy {
                 object("direccionEnvio"),
                 string("paymentMethodId"),
                 string("numeroPedido").matching("^ESB-[0-9]{4}-[0-9]{6}$"),
+                // Seguimiento del envío: pasos con su fecha y fechas de entrega (null si no están disponibles)
+                array("historial").items(JsonSchemaObject.object()
+                        .required(ESTADO, "fecha")
+                        .properties(textoNoVacio(ESTADO), date("fecha"))),
+                fechaOpcional("fechaEstimadaEntrega"),
+                fechaOpcional("fechaEntrega"),
                 textoNoVacio(VENDEDOR_ID),
                 string(NOMBRE_COMERCIAL)),
                 List.of(indice(CLIENTE_ID), indice(ESTADO), indice("createdAt"), indice("lineas.productoId"),

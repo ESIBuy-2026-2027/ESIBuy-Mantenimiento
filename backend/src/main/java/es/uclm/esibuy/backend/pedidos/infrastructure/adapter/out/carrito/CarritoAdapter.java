@@ -33,6 +33,6 @@ public class CarritoAdapter implements CarritoPort {
 
     @Override
     public void quitar(String emailCliente, List<String> productoIds) {
-        productoIds.forEach(productoId -> gestionCarrito.quitar(emailCliente, productoId));
+        gestionCarrito.quitarProductos(emailCliente, productoIds);
     }
 }

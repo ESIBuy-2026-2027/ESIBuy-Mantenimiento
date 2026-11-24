@@ -1,7 +1,8 @@
 import { makeStyles, tokens } from '@fluentui/react-components'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import CartProvider from '../features/cart/CartProvider'
 import CartWidget from '../features/cart/CartWidget'
+import { PATHS } from '../routes/paths'
 import AppHeader from './AppHeader'
 
 const useStyles = makeStyles({
@@ -15,11 +16,14 @@ const useStyles = makeStyles({
 
 export default function AppLayout() {
   const styles = useStyles()
+  const { pathname } = useLocation()
+  const isRegisterPage = pathname === PATHS.REGISTER
+  const isHomePage = pathname === PATHS.HOME
 
   return (
     <CartProvider>
       <div className={styles.page}>
-        <AppHeader />
+        {!isRegisterPage && !isHomePage && <AppHeader />}
         <Outlet />
         <CartWidget />
       </div>

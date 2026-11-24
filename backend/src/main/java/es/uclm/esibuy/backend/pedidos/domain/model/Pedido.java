@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.pedidos.domain.model;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
@@ -9,8 +10,8 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableExcepti
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoEstadoNoAvanzableException;
 
 /**
- * Pedido de un cliente a un solo proveedor (HU10; decisión del equipo:
- * un pedido por proveedor). El total se calcula siempre a partir de las líneas.
+ * Pedido de un cliente a un solo vendedor (HU10; regla del equipo: no se mezclan productos de vendedores distintos).
+ * El descuento va en el precio de cada producto; el total se calcula siempre sumando las líneas.
  */
 public class Pedido {
 
@@ -24,6 +25,9 @@ public class Pedido {
     private final DireccionEnvioPedido direccionEnvio;
     private final String paymentMethodId;
     private final Instant createdAt;
+    private final List<CambioEstado> historial;
+    private final Instant fechaEstimadaEntrega;
+    private Instant fechaEntrega;
 
     public Pedido(DatosPedido datos) {
         exigirPresente(datos, "El pedido necesita sus datos");
@@ -52,6 +56,11 @@ public class Pedido {
                     "Un producto solo puede aparecer una vez en el pedido");
         }
 
+        if (lineasPedido.stream().anyMatch(linea -> !linea.vendedorId().equals(datos.vendedorId()))) {
+            throw new PedidoInvalidoException(
+                    "Un pedido solo puede tener productos de un vendedor");
+        }
+
         this.id = datos.id();
         this.numeroPedido = datos.numeroPedido();
         this.clienteId = datos.clienteId();
@@ -62,6 +71,9 @@ public class Pedido {
         this.direccionEnvio = datos.direccionEnvio();
         this.paymentMethodId = datos.paymentMethodId();
         this.createdAt = datos.createdAt();
+        this.historial = new ArrayList<>(datos.historial() == null ? List.of() : datos.historial());
+        this.fechaEstimadaEntrega = datos.fechaEstimadaEntrega();
+        this.fechaEntrega = datos.fechaEntrega();
     }
 
     // Pedido aún no guardado. Nace pagado.
@@ -78,7 +90,10 @@ public class Pedido {
                 datos.lineas(),
                 datos.direccionEnvio(),
                 datos.paymentMethodId(),
-                datos.createdAt()));
+                datos.createdAt(),
+                List.of(new CambioEstado(EstadoPedido.PAGADO, datos.createdAt())),
+                null,
+                null));
     }
 
     // Cancelación (HU12): solo mientras el pedido no se ha enviado.
@@ -135,10 +150,15 @@ public class Pedido {
         }
     }
 
-    public BigDecimal getTotal() {
+    // Suma de las líneas, cada una con el descuento ya aplicado a su precio unitario
+    public static BigDecimal totalDe(List<LineaPedido> lineas) {
         return lineas.stream()
                 .map(LineaPedido::subtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public BigDecimal getTotal() {
+        return totalDe(lineas);
     }
 
     public String getId() {

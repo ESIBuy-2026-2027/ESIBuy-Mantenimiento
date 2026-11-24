@@ -54,7 +54,8 @@ class CarritoControllerTest {
 
     private static final CarritoDetallado CARRITO = new CarritoDetallado(List.of(new GrupoCarrito("u-2", "TecnoVera",
             new BigDecimal("107.82"), List.of(new LineaCarritoDetallada("p-1", "Auriculares", "a.png", 2,
-                    new BigDecimal("53.91"), new BigDecimal("107.82"), 34)))), 2, new BigDecimal("107.82"));
+                    new BigDecimal("53.91"), new BigDecimal("107.82"), 34, new BigDecimal("59.90"),
+                    new BigDecimal("10"))))), 2, new BigDecimal("107.82"));
 
     @Test
     @DisplayName("HU9-CP15: consultar devuelve el carrito con el contrato del frontend, agrupado por proveedor")
@@ -73,6 +74,8 @@ class CarritoControllerTest {
                 .andExpect(jsonPath("$.grupos[0].lineas[0].precioUnitario").value(53.91))
                 .andExpect(jsonPath("$.grupos[0].lineas[0].subtotal").value(107.82))
                 .andExpect(jsonPath("$.grupos[0].lineas[0].stock").value(34))
+                .andExpect(jsonPath("$.grupos[0].lineas[0].precioOriginal").value(59.90))
+                .andExpect(jsonPath("$.grupos[0].lineas[0].porcentajeDescuento").value(10))
                 .andExpect(jsonPath("$.totalProductos").value(2))
                 .andExpect(jsonPath("$.total").value(107.82));
     }

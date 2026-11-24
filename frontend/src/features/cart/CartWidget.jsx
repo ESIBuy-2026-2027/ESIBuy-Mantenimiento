@@ -123,6 +123,11 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorBrandBackground2,
     color: tokens.colorBrandForeground1,
   },
+  groupPay: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalM}`,
+  },
   lines: {
     display: 'flex',
     flexDirection: 'column',
@@ -252,6 +257,11 @@ function VendorGroup({ group, busy, onQuantity, onRemove, styles }) {
           </li>
         ))}
       </ul>
+      <div className={styles.groupPay}>
+        <LinkButton to={`${PATHS.CHECKOUT}?vendedor=${encodeURIComponent(group.vendedor.id)}`} appearance="primary">
+          {`Pagar a ${group.vendedor.nombreComercial}`}
+        </LinkButton>
+      </div>
     </section>
   )
 }
@@ -383,9 +393,6 @@ export default function CartWidget() {
               <Button appearance="subtle" disabled={busy} onClick={() => run(clear)}>
                 Vaciar carrito
               </Button>
-              <LinkButton to={PATHS.CHECKOUT} appearance="primary">
-                Proceder al pago
-              </LinkButton>
             </div>
           )}
         </section>

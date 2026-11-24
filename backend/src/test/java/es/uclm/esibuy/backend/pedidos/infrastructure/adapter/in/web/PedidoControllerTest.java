@@ -5,12 +5,17 @@ import es.uclm.esibuy.backend.pedidos.application.port.in.ConfirmacionRecepcionP
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizarPedidoCommand;
+import es.uclm.esibuy.backend.pedidos.application.port.in.SeguimientoEnvioUseCase;
 import es.uclm.esibuy.backend.pedidos.domain.exception.CarritoSinProductosDelProveedorException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEntregableException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PagoRechazadoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.TotalNoCoincideException;
+import es.uclm.esibuy.backend.pedidos.domain.model.CambioEstado;
 import es.uclm.esibuy.backend.pedidos.domain.model.DatosPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
@@ -50,14 +55,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // GET /api/customer/orders/{id}. PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU11-CP07 a CP10, propuestos.
 // Y la cancelación de un pedido (HU12, T374): POST /api/customer/orders/{id}/cancel, con CSRF.
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU12-CP09 a CP12, propuestos.
+// Y el seguimiento del envío: GET /api/customer/orders/{id}/tracking y POST .../confirm-delivery (HU11-CP28 a CP31).
 @WebMvcTest(PedidoController.class)
 @Import(SecurityConfig.class)
 class PedidoControllerTest {
 
         private static final String URL = "/api/customer/orders";
         private static final String CLIENTE = "cliente@esibuy.test";
-        private static final String CUERPO = "{\"vendedorId\": \"u-2\", \"direccionId\": \"d-1\", \"paymentMethodId\": \"mp-1\", \"clienteId\": \"otro\"}";
-        private static final RealizarPedidoCommand COMANDO = new RealizarPedidoCommand(CLIENTE, "u-2", "d-1", "mp-1");
+        private static final String CUERPO = "{\"vendedorId\": \"u-2\", \"direccionId\": \"d-1\", \"paymentMethodId\": \"mp-1\", \"totalEsperado\": 107.82, \"clienteId\": \"otro\"}";
+        private static final RealizarPedidoCommand COMANDO = new RealizarPedidoCommand(CLIENTE, "u-2", "d-1", "mp-1",
+                        new BigDecimal("107.82"));
 
         @Autowired
         private MockMvc mockMvc;
@@ -84,6 +91,7 @@ class PedidoControllerTest {
                                         EstadoPedido.PAGADO,
                                         List.of(new LineaPedido(
                                                         "p-1",
+                                                        "u-2",
                                                         "Auriculares",
                                                         2,
                                                         new BigDecimal("53.91"))),
@@ -146,6 +154,8 @@ class PedidoControllerTest {
                 realizar("{\"vendedorId\": \"u-2\", \"paymentMethodId\": \"mp-1\"}").andExpect(status().isBadRequest());
                 realizar("{\"direccionId\": \"d-1\", \"paymentMethodId\": \"mp-1\"}")
                                 .andExpect(status().isBadRequest());
+                realizar("{\"vendedorId\": \"u-2\", \"direccionId\": \"d-1\", \"paymentMethodId\": \"mp-1\"}")
+                                .andExpect(status().isBadRequest());
 
                 verify(realizacionPedido, never()).realizar(any());
         }
@@ -153,11 +163,30 @@ class PedidoControllerTest {
         @Test
         @DisplayName("HU10-CP15: si falta stock responde 409 con el code INSUFFICIENT_STOCK")
         void siFaltaStockResponde409() throws Exception {
-                when(realizacionPedido.realizar(COMANDO)).thenThrow(new StockInsuficientePedidoException("no"));
+                when(realizacionPedido.realizar(COMANDO)).thenThrow(new StockInsuficientePedidoException("no", "p-1", "Auriculares"));
 
                 realizar(CUERPO).andExpect(status().isConflict())
                                 .andExpect(jsonPath("$.code").value("INSUFFICIENT_STOCK"))
-                                .andExpect(jsonPath("$.mensaje").value("No se puede comprar un producto del pedido"));
+                                .andExpect(jsonPath("$.mensaje").value("No queda stock suficiente de «Auriculares»"));
+        }
+
+        @Test
+        @DisplayName("HU10-CP26: si el pago se rechaza responde 402 con el code PAYMENT_REJECTED")
+        void siElPagoSeRechazaResponde402() throws Exception {
+                when(realizacionPedido.realizar(COMANDO)).thenThrow(new PagoRechazadoException("no"));
+
+                realizar(CUERPO).andExpect(status().isPaymentRequired())
+                                .andExpect(jsonPath("$.code").value("PAYMENT_REJECTED"))
+                                .andExpect(jsonPath("$.mensaje").value("El pago ha sido rechazado"));
+        }
+
+        @Test
+        @DisplayName("HU10-CP27: si el total que vio el cliente ya no es el real responde 409 con el code TOTAL_MISMATCH")
+        void siElTotalNoCoincideResponde409() throws Exception {
+                when(realizacionPedido.realizar(COMANDO)).thenThrow(new TotalNoCoincideException("no"));
+
+                realizar(CUERPO).andExpect(status().isConflict())
+                                .andExpect(jsonPath("$.code").value("TOTAL_MISMATCH"));
         }
 
         @Test
@@ -320,5 +349,90 @@ class PedidoControllerTest {
                 mockMvc.perform(post(url).with(user(CLIENTE).roles("CLIENTE"))).andExpect(status().isForbidden());
 
                 verifyNoInteractions(cancelacionPedido);
+        }
+
+        // --- Seguimiento del envío (HU11-CP28 a CP31) ---
+
+        private static final Instant ENTREGA = Instant.parse("2026-11-05T12:30:00Z");
+
+        private static final Pedido ENVIADO = new Pedido(new DatosPedido("o-1", PEDIDO.getNumeroPedido(), "c-1", "u-2",
+                        "TecnoVera", EstadoPedido.ENVIADO, PEDIDO.getLineas(), PEDIDO.getDireccionEnvio(), "mp-1",
+                        PEDIDO.getCreatedAt(),
+                        List.of(new CambioEstado(EstadoPedido.PAGADO, PEDIDO.getCreatedAt()),
+                                        new CambioEstado(EstadoPedido.ENVIADO, Instant.parse("2026-10-30T09:00:00Z"))),
+                        Instant.parse("2026-11-04T00:00:00Z"), null));
+
+        private ResultActions seguimiento(String id) throws Exception {
+                return mockMvc.perform(get(URL + "/" + id + "/tracking").with(user(CLIENTE).roles("CLIENTE")));
+        }
+
+        private ResultActions confirmarEntrega(String id) throws Exception {
+                return mockMvc.perform(post(URL + "/" + id + "/confirm-delivery").with(user(CLIENTE).roles("CLIENTE"))
+                                .with(csrf()));
+        }
+
+        @Test
+        @DisplayName("HU11-CP28: el seguimiento responde 200 con el estado, la fecha estimada y el histórico del envío")
+        void elSeguimientoResponde200ConElEstadoYElHistorico() throws Exception {
+                when(seguimientoEnvio.consultarSeguimiento(CLIENTE, "o-1")).thenReturn(ENVIADO);
+
+                seguimiento("o-1")
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.pedidoId").value("o-1"))
+                                .andExpect(jsonPath("$.estado").value("ENVIADO"))
+                                .andExpect(jsonPath("$.fechaEstimadaEntrega").value("2026-11-04T00:00:00Z"))
+                                .andExpect(jsonPath("$.fechaEntrega").doesNotExist())
+                                .andExpect(jsonPath("$.historial[0].estado").value("PAGADO"))
+                                .andExpect(jsonPath("$.historial[1].estado").value("ENVIADO"))
+                                .andExpect(jsonPath("$.historial[1].fecha").value("2026-10-30T09:00:00Z"))
+                                .andExpect(jsonPath("$.clienteId").doesNotExist());
+        }
+
+        @Test
+        @DisplayName("HU11-CP29: confirmar la entrega responde 200 con el seguimiento ya entregado")
+        void confirmarLaEntregaResponde200ConElSeguimientoEntregado() throws Exception {
+                Pedido entregado = new Pedido(new DatosPedido("o-1", PEDIDO.getNumeroPedido(), "c-1", "u-2", "TecnoVera",
+                                EstadoPedido.ENTREGADO, PEDIDO.getLineas(), PEDIDO.getDireccionEnvio(), "mp-1",
+                                PEDIDO.getCreatedAt(), List.of(new CambioEstado(EstadoPedido.ENTREGADO, ENTREGA)), null,
+                                ENTREGA));
+                when(seguimientoEnvio.confirmarEntrega(CLIENTE, "o-1")).thenReturn(entregado);
+
+                confirmarEntrega("o-1")
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.estado").value("ENTREGADO"))
+                                .andExpect(jsonPath("$.fechaEntrega").value("2026-11-05T12:30:00Z"))
+                                .andExpect(jsonPath("$.historial[0].estado").value("ENTREGADO"));
+        }
+
+        @Test
+        @DisplayName("HU11-CP30: un pedido que no está enviado responde 409 ORDER_NOT_DELIVERABLE; uno inexistente o ajeno, 400 ORDER_NOT_FOUND")
+        void losErroresDelSeguimientoSonGenericos() throws Exception {
+                when(seguimientoEnvio.confirmarEntrega(CLIENTE, "o-1")).thenThrow(new PedidoNoEntregableException("no"));
+                when(seguimientoEnvio.confirmarEntrega(CLIENTE, "o-9")).thenThrow(new PedidoNoEncontradoException("no"));
+                when(seguimientoEnvio.consultarSeguimiento(CLIENTE, "o-9")).thenThrow(new PedidoNoEncontradoException("no"));
+
+                confirmarEntrega("o-1").andExpect(status().isConflict())
+                                .andExpect(jsonPath("$.code").value("ORDER_NOT_DELIVERABLE"))
+                                .andExpect(jsonPath("$.mensaje").value("El pedido no se puede marcar como entregado"));
+                confirmarEntrega("o-9").andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.code").value("ORDER_NOT_FOUND"));
+                seguimiento("o-9").andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.code").value("ORDER_NOT_FOUND"));
+        }
+
+        @Test
+        @DisplayName("HU11-CP31: sin sesión el seguimiento y la confirmación responden 401, con otro rol 403, y confirmar sin CSRF se rechaza")
+        void soloElClienteUsaElSeguimiento() throws Exception {
+                String tracking = URL + "/o-1/tracking";
+                String confirmar = URL + "/o-1/confirm-delivery";
+                mockMvc.perform(get(tracking)).andExpect(status().isUnauthorized());
+                mockMvc.perform(post(confirmar).with(csrf())).andExpect(status().isUnauthorized());
+                mockMvc.perform(get(tracking).with(user("vendedor@esibuy.test").roles("VENDEDOR")))
+                                .andExpect(status().isForbidden());
+                mockMvc.perform(post(confirmar).with(user("vendedor@esibuy.test").roles("VENDEDOR")).with(csrf()))
+                                .andExpect(status().isForbidden());
+                mockMvc.perform(post(confirmar).with(user(CLIENTE).roles("CLIENTE"))).andExpect(status().isForbidden());
+
+                verifyNoInteractions(seguimientoEnvio);
         }
 }

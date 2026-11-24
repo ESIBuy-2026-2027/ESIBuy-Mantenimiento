@@ -314,6 +314,17 @@ export const productsHandlers = [
     }),
   ),
 
+  // Selección pública de la portada: productos disponibles con valoración, ordenados de mayor a menor.
+  http.get('/api/products/featured', ({ request }) => {
+    const limit = Math.min(Number(new URL(request.url).searchParams.get('limit')) || 10, 10)
+    const destacados = PRODUCTOS.filter(estaDisponible)
+      .map((producto) => aCatalogo(producto))
+      .filter((producto) => producto.valoracion !== null)
+      .sort(ordenDelCatalogo('valoracion', 'desc'))
+      .slice(0, limit)
+    return HttpResponse.json(destacados)
+  }),
+
   // Catálogo del cliente (HU7): los productos disponibles de todos los vendedores.
   http.get('/api/products', ({ request }) => {
     const usuario = getUsuarioEnSesion()

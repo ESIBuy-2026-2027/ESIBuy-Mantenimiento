@@ -52,6 +52,14 @@ describe('OrdersPage (HU11): historial', () => {
     expect(screen.getByRole('link', { name: /ver los productos/i })).toHaveAttribute('href', '/products')
   })
 
+  it('HU11-CP20: desde Mis pedidos se puede volver al catálogo con «Seguir comprando» y desde el menú con «Catálogo»', async () => {
+    await abrirMisPedidos()
+    await screen.findByRole('list', { name: /tus pedidos/i })
+
+    expect(screen.getByRole('link', { name: /seguir comprando/i })).toHaveAttribute('href', '/products')
+    expect(await screen.findByRole('link', { name: 'Catálogo' })).toHaveAttribute('href', '/products')
+  })
+
   it('HU11-CP11: si no se pueden cargar los pedidos lo avisa y permite reintentar', async () => {
     server.use(http.get(URL_PEDIDOS, () => new HttpResponse(null, { status: 500 }), { once: true }))
     const user = userEvent.setup()

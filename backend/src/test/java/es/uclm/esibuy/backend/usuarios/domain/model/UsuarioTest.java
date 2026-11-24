@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 import es.uclm.esibuy.backend.usuarios.domain.exception.ClienteYaPremiumException;
+import es.uclm.esibuy.backend.usuarios.domain.exception.ClienteNoPremiumException;
 import es.uclm.esibuy.backend.usuarios.domain.exception.MotivoRechazo;
 import es.uclm.esibuy.backend.usuarios.domain.exception.UsuarioInvalidoException;
 
@@ -485,6 +486,37 @@ class UsuarioTest {
 
         assertThrows(ClienteYaPremiumException.class, usuario::pasarAPremium);
         assertEquals(DATOS_CLIENTE, usuario.getDatosCliente());
+    }
+
+    @Test
+    @DisplayName("CLI-02: un cliente Premium pasa a Estándar y conserva el resto de sus datos")
+    void cancelarPremiumCambiaTipoYConservaDatos() {
+        Usuario usuario = cliente();
+        DatosCliente premium = usuario.getDatosCliente();
+
+        usuario.cancelarPremium();
+
+        assertEquals(new DatosCliente(TipoCliente.ESTANDAR, premium.dni(), premium.fechaNacimiento(),
+                premium.telefono()), usuario.getDatosCliente());
+    }
+
+    @Test
+    @DisplayName("CLI-02: un cliente Estándar no puede cancelar Premium")
+    void cancelarPremiumRechazaClienteEstandar() {
+        DatosCliente estandar = new DatosCliente(TipoCliente.ESTANDAR, new Dni("12345678Z"),
+                LocalDate.of(1996, 5, 20), null);
+        Usuario usuario = new Usuario("u-2", DATOS_PERSONALES, EMAIL, HASH, Rol.CLIENTE, estandar, CONSENTIMIENTO);
+
+        assertThrows(ClienteNoPremiumException.class, usuario::cancelarPremium);
+        assertEquals(estandar, usuario.getDatosCliente());
+    }
+
+    @Test
+    @DisplayName("CLI-02: un usuario que no es cliente no puede cancelar Premium")
+    void cancelarPremiumRechazaNoCliente() {
+        Usuario administrador = new Usuario("u-3", DATOS_PERSONALES, EMAIL, HASH, Rol.ADMINISTRADOR, null, null);
+
+        assertThrows(UsuarioInvalidoException.class, administrador::cancelarPremium);
     }
 
     @Test

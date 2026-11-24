@@ -133,11 +133,14 @@ describe('CartWidget (HU9): panel del carrito', () => {
     expect(within(panel).queryByRole('button', { name: /vaciar carrito/i })).not.toBeInTheDocument()
   })
 
-  it('HU9-CP08: «Proceder al pago» lleva a la pasarela de pago', async () => {
+  it('HU9-CP08: cada vendedor tiene su enlace «Pagar a…», que lleva a la pasarela de pago de ese vendedor', async () => {
     pintar()
     const panel = await abrirPanel()
 
-    expect(within(panel).getByRole('link', { name: /proceder al pago/i })).toHaveAttribute('href', '/checkout')
+    expect(within(panel).queryByRole('link', { name: /proceder al pago/i })).not.toBeInTheDocument()
+    const enlaces = within(panel).getAllByRole('link', { name: /^pagar a /i })
+    expect(enlaces.length).toBeGreaterThan(0)
+    expect(enlaces[0]).toHaveAttribute('href', expect.stringMatching(/^\/checkout\?vendedor=u-/))
   })
 })
 
@@ -313,6 +316,7 @@ describe('CartWidget (HU9): con el carrito del servidor', () => {
     renderApp('/products')
     expect(await screen.findByRole('button', { name: 'Carrito, vacío' })).toBeInTheDocument()
 
+    await user.click(await screen.findByRole('button', { name: /ver todos los productos/i }))
     const lista = await screen.findByRole('list', { name: /^productos$/i })
     await waitFor(() => expect(within(lista).getAllByRole('listitem').length).toBeGreaterThan(0))
     const tarjeta = within(lista).getByRole('link', { name: /auriculares/i }).closest('li')
@@ -328,6 +332,7 @@ describe('CartWidget (HU9): con el carrito del servidor', () => {
     const user = userEvent.setup()
     await abrirSesionPorApi('cliente@esibuy.test')
     const primera = renderApp('/products')
+    await user.click(await screen.findByRole('button', { name: /ver todos los productos/i }))
     const lista = await screen.findByRole('list', { name: /^productos$/i })
     await waitFor(() => expect(within(lista).getAllByRole('listitem').length).toBeGreaterThan(0))
     await user.click(within(within(lista).getByRole('link', { name: /auriculares/i }).closest('li')).getByRole('button', { name: /añadir al carrito/i }))

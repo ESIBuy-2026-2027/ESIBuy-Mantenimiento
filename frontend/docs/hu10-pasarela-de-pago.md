@@ -14,6 +14,14 @@ Documento para entender la pasarela de pago: qué muestra, cómo se crean los pe
 
 > La task AB#379 (vista de carrito) de la HU10 es la misma pantalla que la AB#384 de la HU9 y está en `CartWidget`.
 
+> **Rediseño de la pasarela (PBI 535 «Realizar pedido - Mant», task AB#561).** Lo que sigue describe la primera versión; estos puntos la sustituyen:
+>
+> - **Un pedido es de un solo vendedor.** El carrito sigue agrupando por vendedor, pero cada grupo tiene su enlace «Pagar a…» (`/checkout?vendedor=<id>`). Sin vendedor elegido y con varios en el carrito, la pasarela pregunta a cuál se paga. Lo de los demás vendedores se queda en el carrito. Ya no se crean varios pedidos a la vez ni existe el reintento por vendedor.
+> - **Por pasos:** 1. Compra (resumen editable), 2. Envío (dirección), 3. Pago (método y pago simulado) y el recibo. Todo en `/checkout`, sin rutas nuevas. Los pasos están en `features/checkout/` (`CartSummaryStep`, `ShippingStep`, `PaymentStep`), y `pages/CheckoutPage.jsx` solo los orquesta.
+> - **El resumen se edita:** cambiar la cantidad (hasta las existencias) y quitar productos, con el precio original tachado, el porcentaje y el precio final (`PriceBlock`). El descuento va en el precio de cada producto; el total es la suma de las líneas.
+> - **Contrato:** `createOrder(vendorId, direccionId, paymentMethodId, totalEsperado)`. El `totalEsperado` es el total que el cliente vio: si ya no es el real, el backend responde 409 `TOTAL_MISMATCH`. Otros errores: 402 `PAYMENT_REJECTED` (la tarjeta de prueba acabada en 0000 se rechaza; Bizum y PayPal siempre se aceptan), 409 `INSUFFICIENT_STOCK` (con el producto en `mensaje`) y 409 `CART_EMPTY`. Los mensajes por código están en `features/checkout/checkoutErrors.js`.
+> - `ApiError` guarda ahora también el `mensaje` del servidor en `detail`.
+
 ---
 
 ## 1. Resumen

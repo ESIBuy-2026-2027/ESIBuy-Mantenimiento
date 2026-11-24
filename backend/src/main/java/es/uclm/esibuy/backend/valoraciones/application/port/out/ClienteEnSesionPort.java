@@ -1,7 +1,9 @@
 package es.uclm.esibuy.backend.valoraciones.application.port.out;
 
-/** Lo que valoraciones necesita del módulo de usuarios: la sesión guarda el correo, pero la valoración, el id. */
+/** Datos mínimos del cliente autenticado que necesita el módulo de valoraciones. */
 public interface ClienteEnSesionPort {
 
     String idPorCorreo(String email);
+
+    String nombreCompletoPorCorreo(String email);
 }

@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 // Catálogo de productos del cliente (HU7, T352). El repositorio es un doble de prueba (Mockito): se prueba
 // el caso de uso sin MongoDB ni Spring.
@@ -66,6 +67,23 @@ class CatalogoProductosServiceTest {
         assertTrue(resultado.clientePremium());
     }
 
+    @Test
+    @DisplayName("Portada: busca hasta diez productos disponibles valorados en orden descendente sin consultar la sesión")
+    void buscaLosProductosDestacadosSinConsultarLaSesion() {
+        Producto valorado = producto(true, 4.5, 2);
+        BuscarCatalogoQuery consultaEsperada = new BuscarCatalogoQuery(
+                null, null, 1, CriterioOrdenCatalogo.VALORACION, true, 0, 10);
+        when(productoRepository.buscarEnCatalogo(consultaEsperada))
+                .thenReturn(new ProductoPage(List.of(valorado), 0, 10, 1));
+        CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort,
+                usuarioEnSesion);
+
+        List<Producto> resultado = servicio.buscarDestacados(10);
+
+        assertEquals(List.of(valorado), resultado);
+        verify(productoRepository).buscarEnCatalogo(consultaEsperada);
+    }
+
     private static Producto producto(boolean disponible) {
         return producto(disponible, null, 0);
     }
@@ -100,9 +118,12 @@ class CatalogoProductosServiceTest {
 
         assertEquals(
                 new ProductoComercial("p-1", "u-2", "Teclado", "https://esibuy.test/teclado.png",
-                        new BigDecimal("40.00"), 7),
+                        new BigDecimal("40.00"), 7, new BigDecimal("50.00"), new BigDecimal("20")),
                 comercial);
-        assertEquals(new BigDecimal("45.00"), servicio.consultarComprable("p-1", false).orElseThrow().precioFinal());
+        ProductoComercial general = servicio.consultarComprable("p-1", false).orElseThrow();
+        assertEquals(new BigDecimal("45.00"), general.precioFinal());
+        assertEquals(new BigDecimal("50.00"), general.precioOriginal());
+        assertEquals(new BigDecimal("10"), general.porcentajeDescuento());
     }
 
     @Test

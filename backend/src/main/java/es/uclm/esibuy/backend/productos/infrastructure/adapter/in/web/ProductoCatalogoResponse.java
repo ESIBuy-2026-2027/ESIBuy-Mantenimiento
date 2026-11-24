@@ -20,7 +20,9 @@ public record ProductoCatalogoResponse(
         int stock,
         boolean disponible,
         Double valoracion,
-        int numValoraciones
+        int numValoraciones,
+        int stock,
+        boolean disponible
 ) {
     static ProductoCatalogoResponse desde(Producto producto, boolean clientePremium) {
         var aplicado = producto.descuentoAplicado(clientePremium);
@@ -35,7 +37,9 @@ public record ProductoCatalogoResponse(
                 producto.getStock(),
                 producto.isDisponible(),
                 producto.getValoracionMedia(),
-                producto.getNumeroValoraciones()
+                producto.getNumeroValoraciones(),
+                producto.getStock(),
+                producto.isDisponible()
         );
     }
 }
