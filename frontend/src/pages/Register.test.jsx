@@ -610,7 +610,7 @@ describe('Register', () => {
 
   it('HU45-CP21: con datos no válidos, elegir Premium marca los errores y no lleva a la pasarela', async () => {
     await renderYElegirCliente()
-    await userEvent.selectOptions(screen.getByLabelText(/tipo/i), 'PREMIUM')
+    await userEvent.click(screen.getByRole('button', { name: /premium/i }))
     await userEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
     expect(screen.getAllByText(/obligatorio/i).length).toBeGreaterThan(0)
