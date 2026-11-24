@@ -66,7 +66,12 @@ export function updateSellerProductAvailability(productId, disponible) {
 
 // Catálogo del cliente (HU7). Contrato propuesto por el frontend: el backend (T352 y T353) aún no lo tiene.
 // sort: nombre o valoracion. order: asc o desc. minRating: valoración media mínima (de 1 a 5).
-// Selección pública de la portada: no requiere sesión ni expone datos comerciales.\nexport function getFeaturedProducts(limit = 10) {\n  return request(`/api/products/featured?${buildQuery({ limit })}`)\n}\n\nexport function getCatalogProducts({
+// Selección pública de la portada: no requiere sesión ni expone datos comerciales.
+export function getFeaturedProducts(limit = 10) {
+  return request(`/api/products/featured?${buildQuery({ limit })}`)
+}
+
+export function getCatalogProducts({
   search = '',
   category = '',
   minRating = '',
