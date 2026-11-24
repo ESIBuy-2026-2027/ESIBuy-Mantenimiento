@@ -60,6 +60,7 @@ export default function LoginPage() {
         <div className={styles.brandCopy}>
           <div className={styles.eyebrow}>
             <span className={styles.eyebrowLine} />
+            {' '}
             <span>Tu marketplace de confianza</span>
           </div>
           <h1 className={styles.headline}>
