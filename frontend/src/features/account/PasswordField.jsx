@@ -8,8 +8,9 @@ const useStyles = makeStyles({
   requisitos: {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-    columnGap: tokens.spacingHorizontalM,
-    rowGap: tokens.spacingVerticalXXS,
+    columnGap: tokens.spacingHorizontalL,
+    rowGap: tokens.spacingVerticalS,
+    marginTop: tokens.spacingVerticalS,
     listStyleType: 'none',
     padding: 0,
     margin: 0,
@@ -17,8 +18,9 @@ const useStyles = makeStyles({
   requisito: {
     display: 'flex',
     alignItems: 'center',
-    gap: tokens.spacingHorizontalXS,
+    gap: tokens.spacingHorizontalS,
     fontSize: tokens.fontSizeBase200,
+    minHeight: '20px',
   },
   cumplido: {
     color: tokens.colorPaletteGreenForeground1,
