@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import { Button, Field, Input, Text, makeStyles, tokens } from '@fluentui/react-components'
-import { CheckmarkCircle16Filled, DismissCircle16Regular, Eye20Regular, EyeOff20Regular } from '@fluentui/react-icons'
+import { CheckmarkCircle16Filled, Eye20Regular, EyeOff20Regular } from '@fluentui/react-icons'
 import { useState } from 'react'
 import { REQUISITOS_PASSWORD } from './accountRules'
 
@@ -10,11 +10,9 @@ const useStyles = makeStyles({
     gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
     columnGap: tokens.spacingHorizontalM,
     rowGap: tokens.spacingVerticalXXS,
-    paddingTop: tokens.spacingVerticalXS,
     listStyleType: 'none',
-    paddingLeft: 0,
-    margin: 0,
     padding: 0,
+    margin: 0,
   },
   requisito: {
     display: 'flex',
@@ -26,7 +24,11 @@ const useStyles = makeStyles({
     color: tokens.colorPaletteGreenForeground1,
   },
   pendiente: {
-    color: tokens.colorNeutralForeground3,
+    width: '7px',
+    height: '7px',
+    flexShrink: 0,
+    borderRadius: tokens.borderRadiusCircular,
+    backgroundColor: tokens.colorNeutralStroke1,
   },
 })
 
