@@ -42,7 +42,7 @@ public class CatalogoProductosService implements CatalogoProductosUseCase {
     @Override
     public List<Producto> buscarDestacados(int limite) {
         BuscarCatalogoQuery query = new BuscarCatalogoQuery(
-                null, null, null, CriterioOrdenCatalogo.VALORACION, true, 0, limite);
+                null, null, 1, CriterioOrdenCatalogo.VALORACION, true, 0, limite);
         return productoRepository.buscarEnCatalogo(query).productos().stream()
                 .filter(producto -> producto.getValoracionMedia() != null)
                 .toList();
