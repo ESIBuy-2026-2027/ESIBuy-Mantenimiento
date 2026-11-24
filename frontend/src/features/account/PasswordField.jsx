@@ -58,6 +58,8 @@ export function PasswordField({
   return (
     <Field label={label} required={required} validationMessage={error}>
       <Input
+        size="large"
+        style={{ width: '100%' }}
         type={visible ? 'text' : 'password'}
         maxLength={maxLength}
         autoComplete={autoComplete}
