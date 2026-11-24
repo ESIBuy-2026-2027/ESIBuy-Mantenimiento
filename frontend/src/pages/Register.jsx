@@ -383,12 +383,35 @@ const useStyles = makeStyles({
   },
 
   submit: {
-    width: '260px',
-    minWidth: '260px',
-    minHeight: '46px',
+    width: '220px',
+    minWidth: '220px',
+    minHeight: '58px',
+    padding: '14px 28px',
+    borderRadius: '12px',
     backgroundColor: '#f05a0a',
+    color: '#ffffff',
+    fontSize: '16px',
+    fontWeight: tokens.fontWeightBold,
+    boxShadow: '0 8px 18px rgba(240, 90, 10, 0.24)',
+    transitionProperty: 'background-color, box-shadow, transform',
+    transitionDuration: '160ms',
     ':hover': {
       backgroundColor: '#d94d06',
+      boxShadow: '0 10px 22px rgba(240, 90, 10, 0.3)',
+      transform: 'translateY(-1px)',
+    },
+    ':active': {
+      transform: 'translateY(0)',
+      boxShadow: '0 4px 10px rgba(240, 90, 10, 0.2)',
+    },
+    ':focus-visible': {
+      outline: '3px solid #ffb27d',
+      outlineOffset: '3px',
+    },
+    [MOBILE]: {
+      width: '100%',
+      minWidth: 0,
+      maxWidth: '320px',
     },
   },
 
