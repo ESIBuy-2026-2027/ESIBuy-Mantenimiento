@@ -162,11 +162,6 @@ const useStyles = makeStyles({
     maxWidth: '1400px',
     margin: '0 auto',
   },
-  catalogLink: {
-    display: 'flex',
-    justifyContent: 'center',
-    paddingTop: tokens.spacingVerticalL,
-  },
 })
 
 const BENEFITS = [
@@ -247,11 +242,6 @@ export default function Home() {
 
         <section className={styles.featured} aria-label="Productos mejor valorados">
           <div className={styles.featuredInner}>
-            <div className={mergeClasses(styles.container, styles.catalogLink)}>
-              <LinkButton to={PATHS.PRODUCTS} appearance="transparent" icon={<ArrowRight20Regular />} iconPosition="after">
-                Ver catálogo
-              </LinkButton>
-            </div>
             <FeaturedProducts />
           </div>
         </section>
