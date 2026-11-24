@@ -86,7 +86,7 @@ const DATOS_INICIALES = {
 const MOBILE = '@media (max-width: 760px)'
 const useStyles = makeStyles({
   page: { minHeight: '100dvh', boxSizing: 'border-box', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '12px 20px', backgroundColor: '#fffaf6', backgroundImage: 'radial-gradient(ellipse at 0% 100%, rgba(255, 139, 64, .18), transparent 35%), radial-gradient(ellipse at 100% 0%, rgba(255, 153, 82, .18), transparent 32%), linear-gradient(135deg, #fffaf6 0%, #ffffff 52%, #fff7f0 100%)', [MOBILE]: { alignItems: 'flex-start', padding: '12px 10px' } },
-  card: { width: '100%', maxWidth: '1060px', maxHeight: 'calc(100dvh - 24px)', overflowY: 'auto', boxSizing: 'border-box', padding: 'clamp(18px, 2.2vh, 28px) clamp(24px, 3.2vw, 42px)', display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid rgba(228, 218, 209, .85)', borderRadius: '22px', backgroundColor: 'rgba(255, 255, 255, .94)', boxShadow: '0 16px 42px rgba(76, 48, 27, .11)', [MOBILE]: { maxHeight: 'none', padding: '20px 16px', borderRadius: '18px' } },
+  card: { width: '100%', maxWidth: '1060px', height: 'calc(100dvh - 24px)', maxHeight: 'calc(100dvh - 24px)', overflowY: 'auto', boxSizing: 'border-box', padding: 'clamp(18px, 2.2vh, 28px) clamp(24px, 3.2vw, 42px)', display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid rgba(228, 218, 209, .85)', borderRadius: '22px', backgroundColor: 'rgba(255, 255, 255, .94)', boxShadow: '0 16px 42px rgba(76, 48, 27, .11)', [MOBILE]: { height: 'auto', minHeight: 'calc(100dvh - 24px)', maxHeight: 'none', padding: '20px 16px', borderRadius: '18px' } },
   heading: { display: 'flex', flexDirection: 'column', gap: '2px' },
   title: { margin: 0, fontSize: 'clamp(26px, 2.6vw, 34px)', lineHeight: 1.12, letterSpacing: '-.8px' },
   description: { color: tokens.colorNeutralForeground2, margin: 0, fontSize: tokens.fontSizeBase200 },
@@ -101,15 +101,19 @@ const useStyles = makeStyles({
   tipoCuentaTexto: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '2px', whiteSpace: 'normal' },
   tipoCuentaNombre: { fontWeight: tokens.fontWeightBold, fontSize: tokens.fontSizeBase300 },
   tipoCuentaDetalle: { color: tokens.colorNeutralForeground2, fontSize: tokens.fontSizeBase200, lineHeight: 1.3, fontWeight: tokens.fontWeightRegular },
-  privacidad: { display: 'flex', alignItems: 'center', columnGap: tokens.spacingHorizontalS, rowGap: tokens.spacingVerticalXS, flexWrap: 'wrap' },
+  privacidad: { display: 'flex', justifyContent: 'center', alignItems: 'center', columnGap: tokens.spacingHorizontalS, rowGap: tokens.spacingVerticalXS, flexWrap: 'wrap', textAlign: 'center' },
+  privacidadContenedor: { display: 'flex', justifyContent: 'center', width: '100%' },
+  tipoCuentaReserva: { minHeight: '98px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' },
+  tipoCuentaReservaVacia: { minHeight: '98px' },
+  zonaInferior: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', width: '100%' },
   textoPrivacidad: { display: 'inline-flex', alignItems: 'baseline', flexWrap: 'wrap', columnGap: tokens.spacingHorizontalXXS },
   enlacePrivacidad: { minWidth: 'auto', padding: 0, height: 'auto', verticalAlign: 'baseline', color: tokens.colorBrandForegroundLink, textDecorationLine: 'underline' },
   contenidoPolitica: { display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalL },
   seccionPolitica: { display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalXS },
   parrafoPolitica: { marginTop: 0, marginBottom: 0, lineHeight: tokens.lineHeightBase300 },
   avisoPolitica: { color: tokens.colorNeutralForeground2 },
-  actions: { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: tokens.spacingHorizontalL, [MOBILE]: { flexDirection: 'column', alignItems: 'stretch' } },
-  submit: { minWidth: '190px', minHeight: '40px', paddingLeft: '24px', paddingRight: '24px', backgroundColor: '#f05a0a', ':hover': { backgroundColor: '#d94d06' }, [MOBILE]: { width: '100%' } },
+  actions: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%' },
+  submit: { minWidth: '190px', minHeight: '40px', paddingLeft: '24px', paddingRight: '24px', backgroundColor: '#f05a0a', ':hover': { backgroundColor: '#d94d06' } },
   loginFooter: { display: 'flex', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', gap: tokens.spacingHorizontalXS, color: tokens.colorNeutralForeground2 },
   loginLink: { color: tokens.colorBrandForeground1, fontWeight: tokens.fontWeightBold },
 })
@@ -280,7 +284,7 @@ export default function Register() {
 
 
   const casillaPrivacidad = (
-    <div data-register-error={errores.aceptaPrivacidad ? 'true' : undefined}>
+    <div className={styles.privacidadContenedor} data-register-error={errores.aceptaPrivacidad ? 'true' : undefined}>
       <Field validationMessage={errores.aceptaPrivacidad}>
         <div className={styles.privacidad}>
           <Checkbox
@@ -433,13 +437,13 @@ export default function Register() {
         </div>
       </div>
       {camposIdentidad}
-      {esVendedor ? null : selectorTipoCliente}
+      <div className={styles.tipoCuentaReserva}>{esVendedor ? <div className={styles.tipoCuentaReservaVacia} aria-hidden="true" /> : selectorTipoCliente}</div>
       {camposSeguridad}
       {selectorAvatar}
       {casillaPrivacidad}
       {dialogoPoliticaPrivacidad}
       {errorGeneral && <div data-register-error-message="true"><MessageBar intent="error"><MessageBarBody>{errorGeneral}</MessageBarBody></MessageBar></div>}
-      <div className={styles.actions}>
+      <div className={styles.zonaInferior}>
         <Button appearance="primary" size="medium" className={styles.submit} onClick={esVendedor ? enviarVendedor : enviarCliente}>Registrarse</Button>
         <div className={styles.loginFooter}>¿Ya tienes una cuenta? <LinkButton to={PATHS.LOGIN} appearance="transparent" className={styles.loginLink}>Iniciar sesión</LinkButton></div>
       </div>
