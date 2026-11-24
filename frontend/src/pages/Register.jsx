@@ -114,13 +114,13 @@ const useStyles = makeStyles({
 
   card: {
     width: '100%',
-    maxWidth: '1060px',
+    maxWidth: '1180px',
     boxSizing: 'border-box',
-    minHeight: '820px',
-    padding: '26px 34px',
+    minHeight: '860px',
+    padding: '34px 44px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px',
+    gap: '16px',
     border: '1px solid rgba(228, 218, 209, .85)',
     borderRadius: '28px',
     backgroundColor: 'rgba(255, 255, 255, .92)',
@@ -139,7 +139,7 @@ const useStyles = makeStyles({
     alignSelf: 'flex-start',
     marginBottom: '2px',
     color: tokens.colorNeutralForeground1,
-    fontSize: '26px',
+    fontSize: '30px',
     fontWeight: tokens.fontWeightBold,
     letterSpacing: '-1px',
     textDecorationLine: 'none',
@@ -161,7 +161,7 @@ const useStyles = makeStyles({
 
   title: {
     margin: 0,
-    fontSize: 'clamp(26px, 2.6vw, 34px)',
+    fontSize: 'clamp(32px, 2.8vw, 40px)',
     lineHeight: 1.12,
     letterSpacing: '-.8px',
   },
@@ -169,14 +169,14 @@ const useStyles = makeStyles({
   description: {
     color: tokens.colorNeutralForeground2,
     margin: 0,
-    fontSize: tokens.fontSizeBase200,
+    fontSize: tokens.fontSizeBase300,
   },
 
   fieldsGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-    columnGap: '22px',
-    rowGap: '7px',
+    columnGap: '28px',
+    rowGap: '14px',
     [MOBILE]: {
       gridTemplateColumns: '1fr',
       rowGap: '10px',
@@ -186,8 +186,8 @@ const useStyles = makeStyles({
   passwordFields: {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-    columnGap: '22px',
-    rowGap: '8px',
+    columnGap: '28px',
+    rowGap: '12px',
     [MOBILE]: {
       gridTemplateColumns: '1fr',
     },
@@ -228,13 +228,13 @@ const useStyles = makeStyles({
   tipoCuenta: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '7px',
+    gap: '10px',
   },
 
   tipoCuentaOpciones: {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-    gap: '12px',
+    gap: '16px',
     [MOBILE]: {
       gridTemplateColumns: '1fr',
     },
@@ -262,13 +262,13 @@ const useStyles = makeStyles({
   },
 
   tipoCuentaCard: {
-    minHeight: '68px',
+    minHeight: '82px',
     height: 'auto',
     display: 'flex',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    gap: '12px',
-    padding: '12px 16px',
+    gap: '16px',
+    padding: '16px 20px',
     whiteSpace: 'normal',
     textAlign: 'left',
     border: '1px solid #cfd6df',
@@ -296,7 +296,7 @@ const useStyles = makeStyles({
   tipoCuentaIcono: {
     color: tokens.colorBrandForeground1,
     flexShrink: 0,
-    fontSize: '25px',
+    fontSize: '28px',
   },
 
   tipoCuentaTexto: {
@@ -309,13 +309,13 @@ const useStyles = makeStyles({
 
   tipoCuentaNombre: {
     fontWeight: tokens.fontWeightBold,
-    fontSize: tokens.fontSizeBase300,
+    fontSize: tokens.fontSizeBase400,
   },
 
   tipoCuentaDetalle: {
     color: tokens.colorNeutralForeground2,
-    fontSize: tokens.fontSizeBase200,
-    lineHeight: 1.3,
+    fontSize: tokens.fontSizeBase300,
+    lineHeight: 1.4,
     fontWeight: tokens.fontWeightRegular,
   },
 
@@ -383,9 +383,9 @@ const useStyles = makeStyles({
   },
 
   submit: {
-    width: '220px',
-    minWidth: '220px',
-    minHeight: '40px',
+    width: '260px',
+    minWidth: '260px',
+    minHeight: '46px',
     backgroundColor: '#f05a0a',
     ':hover': {
       backgroundColor: '#d94d06',
@@ -652,6 +652,7 @@ export default function Register() {
         validationMessage={errores[nombre]}
       >
         <Input
+          size="large"
           type={type}
           maxLength={LONGITUD_MAXIMA[nombre]}
           value={datos[nombre]}
@@ -929,6 +930,7 @@ export default function Register() {
               value={datos.categoriaPrincipalId}
               categories={categoriasDisponibles}
               searchable={false}
+              size="large"
               placeholder="Selecciona una categoría"
               onChange={cambiarCategoria}
             />
