@@ -233,8 +233,8 @@ export const useLoginPageStyles = makeStyles({
     boxShadow: '0 8px 24px rgba(91, 54, 25, 0.06)',
     backdropFilter: 'blur(8px)',
   },
-  benefitSecond: { transform: 'translateX(16px)' },
-  benefitThird: { transform: 'translateX(32px)' },
+  benefitSecond: { transform: 'translateX(20px)' },
+  benefitThird: { transform: 'translateX(40px)' },
   benefitIcon: {
     flexShrink: 0,
     color: tokens.colorBrandForeground1,
