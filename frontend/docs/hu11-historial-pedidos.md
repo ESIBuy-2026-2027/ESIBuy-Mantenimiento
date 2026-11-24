@@ -21,7 +21,7 @@ Criterio de aceptación de la HU11: *«el sistema muestra el detalle de los prod
 | **Detalle** (`/orders/:id`) | Número, fecha, vendedor y estado; la **línea de estados del envío**; los productos con cantidad, precio unitario y subtotal, y el total; la dirección de envío. |
 | **Pantalla final del pago** (HU10) | Nuevo enlace **«Ver mis pedidos»** junto a «Seguir comprando». |
 
-La línea de estados del envío sigue el orden del backend (`EstadoPedido`): **Pagado → Preparando → Enviado → Entregado**. Los pasos ya hechos se marcan con un tick, el actual se resalta (`aria-current="step"`) y los que faltan se ven atenuados.
+La línea de estados del envío se rehízo con el PBI 540 (ver el apartado «Seguimiento del envío» al final): **Preparación → Enviado → En reparto → Entregado**.
 
 Decisiones:
 
@@ -90,3 +90,34 @@ El test «el vendedor y el administrador no tienen el enlace a Mis pedidos» (HU
 ## 5. Pendiente
 
 - ~~La pasarela de pago (HU10) aún no crea los pedidos contra el backend real~~: resuelto en la task AB#133. La pasarela usa `POST /api/customer/orders` con la `direccionId` elegida, y los pedidos nuevos llegan al historial con esa dirección.
+
+---
+
+## 6. Seguimiento del envío (PBI 540 · «Seguimiento envío cliente - Mant»)
+
+Mejora visual y funcional de la línea de estados. Decisiones pendientes de validar con el equipo:
+
+- **Pasos:** Preparación (incluye `PAGADO`), Enviado, En reparto y Entregado. «En reparto» no es un estado nuevo: es el tramo de un pedido `ENVIADO` hasta que el cliente confirma la recepción, así que se muestra como el paso actual y no tiene fecha propia.
+- **Cada paso** se distingue por su **icono, un texto visible** (Completado, Estado actual, Pendiente) y su **fecha** si el histórico la tiene, no solo por el color. Lista ordenada (`<ol>`), `aria-current="step"` en el actual, en vertical en pantallas estrechas y en horizontal desde 640 px.
+- **Fecha de entrega:** «Entrega estimada: dd/mm/aaaa» si existe; si no, «Fecha estimada de entrega no disponible todavía». Una vez entregado se muestra «Entregado el dd/mm/aaaa» y deja de mostrarse la estimada.
+- **Confirmar recepción:** el botón solo aparece con el envío «Enviado», pide confirmación previa y pasa el pedido a «Entregado» (no se deshace). La regla la impone el backend; el frontend solo decide si muestra el botón.
+- **Carga y errores propios:** el seguimiento se pide aparte del pedido, con su «Cargando seguimiento…» y su «Reintentar», sin bloquear el resto del detalle. Un estado que el frontend no conoce se indica en lugar de marcar todo como pendiente.
+
+Contrato (en `src/api/orders.js`):
+
+```
+GET  /api/customer/orders/{id}/tracking          → 200 { pedidoId, estado, fechaEstimadaEntrega, fechaEntrega, historial: [{ estado, fecha }] }
+POST /api/customer/orders/{id}/confirm-delivery   → 200 (mismo formato, ya ENTREGADO) | 409 ORDER_NOT_DELIVERABLE
+                                                   | 400 ORDER_NOT_FOUND (inexistente o de otro cliente)
+```
+
+| Archivo | Cambio |
+|---|---|
+| `src/features/orders/ShipmentTimeline.jsx` | Nuevo: la línea de tiempo y el mensaje de la fecha de entrega. |
+| `src/features/orders/ShipmentTrackingSection.jsx` | Nuevo: la sección «Estado del envío» (carga, error, línea de tiempo y botón). |
+| `src/features/orders/ConfirmDeliveryDialog.jsx` | Nuevo: la confirmación previa de «Confirmar recepción». |
+| `src/features/orders/orderStatus.js` | Pasos del seguimiento, etiquetas, fecha de cada paso y `puedeConfirmarEntrega`. |
+| `src/pages/OrderDetailPage.jsx` | Usa la sección nueva en lugar de la línea de estados que tenía dentro. |
+| `src/api/orders.js` y `src/mocks/ordersHandlers.js` | `getOrderTracking`, `confirmDelivery` y sus mocks. |
+
+Casos HU11-CP15 y HU11-CP21 a CP38 (ver la matriz de trazabilidad). **Pendiente:** ningún pedido llega a «Enviado» en el backend real, porque aún no existe quién lo pase de «Pagado» a «Preparando» y «Enviado» ni quién fije la fecha estimada.

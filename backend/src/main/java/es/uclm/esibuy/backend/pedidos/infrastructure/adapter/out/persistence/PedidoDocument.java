@@ -32,6 +32,9 @@ public class PedidoDocument {
     private DireccionEnvioDocument direccionEnvio;
     private String paymentMethodId;
     private Instant createdAt;
+    private List<CambioEstadoDocument> historial = new ArrayList<>();
+    private Instant fechaEstimadaEntrega;
+    private Instant fechaEntrega;
     @LastModifiedDate
     private Instant updatedAt;
 
@@ -57,6 +60,12 @@ public class PedidoDocument {
     public void setPaymentMethodId(String paymentMethodId) { this.paymentMethodId = paymentMethodId; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public List<CambioEstadoDocument> getHistorial() { return historial; }
+    public void setHistorial(List<CambioEstadoDocument> historial) { this.historial = historial; }
+    public Instant getFechaEstimadaEntrega() { return fechaEstimadaEntrega; }
+    public void setFechaEstimadaEntrega(Instant fechaEstimadaEntrega) { this.fechaEstimadaEntrega = fechaEstimadaEntrega; }
+    public Instant getFechaEntrega() { return fechaEntrega; }
+    public void setFechaEntrega(Instant fechaEntrega) { this.fechaEntrega = fechaEntrega; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }

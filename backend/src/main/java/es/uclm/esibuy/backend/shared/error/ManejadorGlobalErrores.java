@@ -26,6 +26,7 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaExceptio
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEntregableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PagoRechazadoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
@@ -478,6 +479,13 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError pedidoNoCancelable() {
         return new RespuestaError("El pedido ya no se puede cancelar", "ORDER_NOT_CANCELLABLE");
+    }
+
+    // Seguimiento del envío: solo se confirma la recepción de un pedido enviado
+    @ExceptionHandler(PedidoNoEntregableException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError pedidoNoEntregable() {
+        return new RespuestaError("El pedido no se puede marcar como entregado", "ORDER_NOT_DELIVERABLE");
     }
 
     @ExceptionHandler(CarritoSinProductosDelProveedorException.class)

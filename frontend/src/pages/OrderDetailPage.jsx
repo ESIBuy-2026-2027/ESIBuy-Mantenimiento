@@ -20,20 +20,14 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { CheckmarkCircle20Filled, Circle20Regular, RecordStop20Regular } from '@fluentui/react-icons'
 import { useParams } from 'react-router-dom'
 import { getOrder } from '../api/orders'
 import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import { resumenDeDireccion } from '../features/addresses/direccionPropType'
 import CancelOrderDialog from '../features/orders/CancelOrderDialog'
-import {
-  CANCELADO,
-  PASOS_DEL_ENVIO,
-  colorDeEstado,
-  esCancelable,
-  etiquetaDeEstado,
-} from '../features/orders/orderStatus'
+import ShipmentTrackingSection from '../features/orders/ShipmentTrackingSection'
+import { CANCELADO, colorDeEstado, esCancelable, etiquetaDeEstado } from '../features/orders/orderStatus'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { PATHS } from '../routes/paths'
 import { formatDate, formatPrice } from '../utils/format'
@@ -46,29 +40,6 @@ const useStyles = makeStyles({
   },
   sectionTitle: {
     margin: 0,
-  },
-  steps: {
-    listStyle: 'none',
-    margin: 0,
-    padding: 0,
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: tokens.spacingHorizontalXL,
-  },
-  step: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: tokens.spacingHorizontalXS,
-  },
-  done: {
-    color: tokens.colorPaletteGreenForeground1,
-  },
-  current: {
-    color: tokens.colorBrandForeground1,
-    fontWeight: tokens.fontWeightSemibold,
-  },
-  pending: {
-    color: tokens.colorNeutralForeground3,
   },
   number: {
     textAlign: 'right',
@@ -84,50 +55,7 @@ const useStyles = makeStyles({
   },
 })
 
-// Cómo está cada paso del envío respecto al estado actual del pedido
-function estadoDelPaso(indice, indiceActual) {
-  if (indice < indiceActual) return 'completado'
-  if (indice === indiceActual) return 'estado actual'
-  return 'pendiente'
-}
-
-// Línea de estados del envío (HU11): los pasos ya hechos, el actual y los que faltan.
-function SeguimientoDelEnvio({ estado }) {
-  const styles = useStyles()
-  const indiceActual = PASOS_DEL_ENVIO.indexOf(estado)
-  const estilos = { completado: styles.done, 'estado actual': styles.current, pendiente: styles.pending }
-  const iconos = {
-    completado: <CheckmarkCircle20Filled />,
-    'estado actual': <RecordStop20Regular />,
-    pendiente: <Circle20Regular />,
-  }
-
-  return (
-    <ol aria-label="Estado del envío" className={styles.steps}>
-      {PASOS_DEL_ENVIO.map((paso, indice) => {
-        const situacion = estadoDelPaso(indice, indiceActual)
-        const etiqueta = etiquetaDeEstado(paso)
-        return (
-          <li
-            key={paso}
-            aria-label={`${etiqueta}: ${situacion}`}
-            aria-current={situacion === 'estado actual' ? 'step' : undefined}
-            className={`${styles.step} ${estilos[situacion]}`}
-          >
-            {iconos[situacion]}
-            <Text>{etiqueta}</Text>
-          </li>
-        )
-      })}
-    </ol>
-  )
-}
-
-SeguimientoDelEnvio.propTypes = {
-  estado: PropTypes.string.isRequired,
-}
-
-function DetalleDelPedido({ pedido, onCancelar }) {
+function DetalleDelPedido({ pedido, onCancelar, onEntregado, onDesactualizado }) {
   const pageStyles = usePageStyles()
   const styles = useStyles()
 
@@ -155,18 +83,18 @@ function DetalleDelPedido({ pedido, onCancelar }) {
         </div>
       </div>
 
-      <Card className={styles.section}>
-        <Title3 as="h2" className={styles.sectionTitle}>
-          Estado del envío
-        </Title3>
-        {pedido.estado === CANCELADO ? (
+      {pedido.estado === CANCELADO ? (
+        <Card className={styles.section}>
+          <Title3 as="h2" className={styles.sectionTitle}>
+            Estado del envío
+          </Title3>
           <MessageBar intent="warning">
             <MessageBarBody>Este pedido está cancelado: no se enviará.</MessageBarBody>
           </MessageBar>
-        ) : (
-          <SeguimientoDelEnvio estado={pedido.estado} />
-        )}
-      </Card>
+        </Card>
+      ) : (
+        <ShipmentTrackingSection pedido={pedido} onDelivered={onEntregado} onStale={onDesactualizado} />
+      )}
 
       <Card className={styles.section}>
         <Title3 as="h2" className={styles.sectionTitle}>
@@ -220,7 +148,10 @@ function DetalleDelPedido({ pedido, onCancelar }) {
 
 DetalleDelPedido.propTypes = {
   onCancelar: PropTypes.func.isRequired,
+  onEntregado: PropTypes.func.isRequired,
+  onDesactualizado: PropTypes.func.isRequired,
   pedido: PropTypes.shape({
+    id: PropTypes.string.isRequired,
     numeroPedido: PropTypes.string.isRequired,
     createdAt: PropTypes.string.isRequired,
     vendedor: PropTypes.shape({ nombreComercial: PropTypes.string.isRequired }).isRequired,
@@ -242,7 +173,7 @@ DetalleDelPedido.propTypes = {
   }).isRequired,
 }
 
-// Detalle de un pedido del cliente (HU11): productos con el desglose de precios, estado del envío y dirección.
+// Detalle de un pedido del cliente (HU11): productos con el desglose de precios, seguimiento del envío y dirección.
 // El backend responde 400 ORDER_NOT_FOUND si el pedido no existe o es de otro cliente: las dos cosas se ven igual.
 export default function OrderDetailPage() {
   const pageStyles = usePageStyles()
@@ -253,7 +184,10 @@ export default function OrderDetailPage() {
   // Tras cancelar se muestra el pedido que devuelve el backend, sin volver a pedirlo
   const [cancelado, setCancelado] = useState(null)
   const [aviso, setAviso] = useState(null)
-  const pedido = cancelado ?? cargado
+  // Tras confirmar la recepción el pedido figura como entregado sin volver a pedirlo
+  const [recibido, setRecibido] = useState(false)
+  const base = cancelado ?? cargado
+  const pedido = base && recibido && base.estado === 'ENVIADO' ? { ...base, estado: 'ENTREGADO' } : base
 
   const alCancelar = (pedidoCancelado) => {
     setConfirmando(false)
@@ -290,7 +224,14 @@ export default function OrderDetailPage() {
         </MessageBar>
       )}
       {!pedido && !failed && <Spinner label="Cargando pedido…" className={pageStyles.loading} />}
-      {pedido && <DetalleDelPedido pedido={pedido} onCancelar={() => setConfirmando(true)} />}
+      {pedido && (
+        <DetalleDelPedido
+          pedido={pedido}
+          onCancelar={() => setConfirmando(true)}
+          onEntregado={() => setRecibido(true)}
+          onDesactualizado={retry}
+        />
+      )}
       {pedido && confirmando && (
         <CancelOrderDialog
           pedido={pedido}

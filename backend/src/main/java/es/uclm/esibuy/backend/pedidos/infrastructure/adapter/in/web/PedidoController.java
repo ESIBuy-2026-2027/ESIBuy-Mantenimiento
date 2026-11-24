@@ -17,11 +17,13 @@ import jakarta.validation.Valid;
 import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.SeguimientoEnvioUseCase;
 
 /**
  * Adaptador de entrada web de los pedidos. Recibe la petición y delega en el puerto de entrada: crea el pedido
  * (HU10), sirve el historial de pedidos del cliente y el detalle de cada uno (HU11) y cancela un pedido que aún no
- * se ha enviado (HU12). El cliente sale siempre de la sesión, nunca de un parámetro.
+ * se ha enviado (HU12). También el seguimiento del envío: su estado e histórico y la confirmación de recepción
+ * por el cliente. El cliente sale siempre de la sesión, nunca de un parámetro.
  */
 @RestController
 @RequestMapping("/api/customer/orders")
@@ -30,12 +32,14 @@ public class PedidoController {
     private final RealizacionPedidoUseCase realizacionPedido;
     private final ConsultaComprasUseCase consultaCompras;
     private final CancelacionPedidoUseCase cancelacionPedido;
+    private final SeguimientoEnvioUseCase seguimientoEnvio;
 
     public PedidoController(RealizacionPedidoUseCase realizacionPedido, ConsultaComprasUseCase consultaCompras,
-            CancelacionPedidoUseCase cancelacionPedido) {
+            CancelacionPedidoUseCase cancelacionPedido, SeguimientoEnvioUseCase seguimientoEnvio) {
         this.realizacionPedido = realizacionPedido;
         this.consultaCompras = consultaCompras;
         this.cancelacionPedido = cancelacionPedido;
+        this.seguimientoEnvio = seguimientoEnvio;
     }
 
     // Un pedido por proveedor: el frontend pide uno por cada proveedor del carrito
@@ -61,5 +65,17 @@ public class PedidoController {
     @PostMapping("/{id}/cancel")
     public PedidoResponse cancelar(@PathVariable String id, Authentication autenticado) {
         return PedidoResponse.desde(cancelacionPedido.cancelarPedido(autenticado.getName(), id));
+    }
+
+    // Estado, fechas de entrega e histórico del envío del pedido: uno ajeno se responde igual que uno inexistente
+    @GetMapping("/{id}/tracking")
+    public SeguimientoEnvioResponse seguimiento(@PathVariable String id, Authentication autenticado) {
+        return SeguimientoEnvioResponse.desde(seguimientoEnvio.consultarSeguimiento(autenticado.getName(), id));
+    }
+
+    // El cliente confirma que ha recibido el pedido: responde 200 con el seguimiento ya entregado
+    @PostMapping("/{id}/confirm-delivery")
+    public SeguimientoEnvioResponse confirmarEntrega(@PathVariable String id, Authentication autenticado) {
+        return SeguimientoEnvioResponse.desde(seguimientoEnvio.confirmarEntrega(autenticado.getName(), id));
     }
 }

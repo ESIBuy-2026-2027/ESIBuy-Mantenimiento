@@ -2,10 +2,12 @@ package es.uclm.esibuy.backend.pedidos.domain.model;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEntregableException;
 
 /**
  * Pedido de un cliente a un solo vendedor (HU10; regla del equipo: no se mezclan productos de vendedores distintos).
@@ -23,6 +25,9 @@ public class Pedido {
     private final DireccionEnvioPedido direccionEnvio;
     private final String paymentMethodId;
     private final Instant createdAt;
+    private final List<CambioEstado> historial;
+    private final Instant fechaEstimadaEntrega;
+    private Instant fechaEntrega;
 
     public Pedido(DatosPedido datos) {
         exigirPresente(datos, "El pedido necesita sus datos");
@@ -66,6 +71,9 @@ public class Pedido {
         this.direccionEnvio = datos.direccionEnvio();
         this.paymentMethodId = datos.paymentMethodId();
         this.createdAt = datos.createdAt();
+        this.historial = new ArrayList<>(datos.historial() == null ? List.of() : datos.historial());
+        this.fechaEstimadaEntrega = datos.fechaEstimadaEntrega();
+        this.fechaEntrega = datos.fechaEntrega();
     }
 
     // Pedido aún no guardado. Nace pagado.
@@ -82,7 +90,10 @@ public class Pedido {
                 datos.lineas(),
                 datos.direccionEnvio(),
                 datos.paymentMethodId(),
-                datos.createdAt()));
+                datos.createdAt(),
+                List.of(new CambioEstado(EstadoPedido.PAGADO, datos.createdAt())),
+                null,
+                null));
     }
 
     // Cancelación (HU12): solo mientras el pedido no se ha enviado.
@@ -94,6 +105,18 @@ public class Pedido {
         }
 
         estado = EstadoPedido.CANCELADO;
+    }
+
+    // Confirmación de recepción por el cliente: solo desde ENVIADO y no se deshace. Fija la fecha real de entrega.
+    public void confirmarEntrega(Instant ahora) {
+        if (estado != EstadoPedido.ENVIADO) {
+            throw new PedidoNoEntregableException(
+                    "El pedido no se puede marcar como entregado");
+        }
+
+        estado = EstadoPedido.ENTREGADO;
+        fechaEntrega = ahora;
+        historial.add(new CambioEstado(EstadoPedido.ENTREGADO, ahora));
     }
 
     private static void exigirTexto(String valor, String mensaje) {
@@ -157,5 +180,18 @@ public class Pedido {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    // Los pasos del envío con su fecha, del primero al último. Los pedidos anteriores al seguimiento no lo traen.
+    public List<CambioEstado> getHistorial() {
+        return List.copyOf(historial);
+    }
+
+    public Instant getFechaEstimadaEntrega() {
+        return fechaEstimadaEntrega;
+    }
+
+    public Instant getFechaEntrega() {
+        return fechaEntrega;
     }
 }
