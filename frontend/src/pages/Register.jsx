@@ -25,7 +25,7 @@ import {
   Person24Regular,
 } from '@fluentui/react-icons'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { registrarCliente, registrarVendedor } from '../api/auth'
 import { getCategories } from '../api/products'
 import CategoryCombobox from '../components/CategoryCombobox'
@@ -101,11 +101,11 @@ const useStyles = makeStyles({
     boxSizing: 'border-box',
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: '10px 20px',
+    alignItems: 'flex-start',
+    padding: '28px 20px',
     backgroundColor: '#fffaf6',
     backgroundImage:
-      'radial-gradient(ellipse at 0% 100%, rgba(255, 139, 64, .18), transparent 35%), radial-gradient(ellipse at 100% 0%, rgba(255, 153, 82, .18), transparent 32%), linear-gradient(135deg, #fffaf6 0%, #ffffff 52%, #fff7f0 100%)',
+      'radial-gradient(ellipse at 2% 100%, rgba(255, 143, 75, 0.24) 0%, transparent 38%), radial-gradient(ellipse at 48% 0%, rgba(255, 179, 119, 0.18) 0%, transparent 34%), radial-gradient(ellipse at 100% 8%, rgba(255, 155, 82, 0.19) 0%, transparent 35%), linear-gradient(112deg, #fffaf6 0%, #ffffff 54%, #fffaf6 100%)',
     [MOBILE]: {
       alignItems: 'flex-start',
       padding: '12px 10px',
@@ -116,24 +116,47 @@ const useStyles = makeStyles({
     width: '100%',
     maxWidth: '1060px',
     boxSizing: 'border-box',
-    padding: '16px 34px',
+    minHeight: '820px',
+    padding: '26px 34px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '8px',
+    gap: '12px',
     border: '1px solid rgba(228, 218, 209, .85)',
-    borderRadius: '22px',
-    backgroundColor: 'rgba(255, 255, 255, .96)',
-    boxShadow: '0 16px 42px rgba(76, 48, 27, .11)',
+    borderRadius: '28px',
+    backgroundColor: 'rgba(255, 255, 255, .92)',
+    boxShadow: '0 22px 55px rgba(45, 35, 25, .12)',
+    backdropFilter: 'blur(14px)',
     [MOBILE]: {
-      padding: '20px 16px',
-      borderRadius: '18px',
+      minHeight: 'auto',
+      padding: '22px 16px',
+      borderRadius: '20px',
     },
   },
+
+  brand: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginBottom: '2px',
+    color: tokens.colorNeutralForeground1,
+    fontSize: '26px',
+    fontWeight: tokens.fontWeightBold,
+    letterSpacing: '-1px',
+    textDecorationLine: 'none',
+    ':hover': { color: tokens.colorNeutralForeground1 },
+    ':focus-visible': {
+      outline: `3px solid ${tokens.colorBrandStroke1}`,
+      outlineOffset: '4px',
+      borderRadius: tokens.borderRadiusSmall,
+    },
+  },
+
+  logoAccent: { color: tokens.colorBrandForeground1 },
 
   heading: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '2px',
+    gap: '3px',
   },
 
   title: {
@@ -576,6 +599,10 @@ export default function Register() {
   ) => (
     <main className={styles.page}>
       <Card className={styles.card}>
+        <Link to={PATHS.HOME} className={styles.brand} aria-label="ESIBuy, volver al inicio">
+          ESI<span className={styles.logoAccent}>Buy</span>
+        </Link>
+
         <div className={styles.heading}>
           <Title2 as="h1" className={styles.title}>
             {titulo}
