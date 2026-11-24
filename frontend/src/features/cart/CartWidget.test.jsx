@@ -316,6 +316,7 @@ describe('CartWidget (HU9): con el carrito del servidor', () => {
     renderApp('/products')
     expect(await screen.findByRole('button', { name: 'Carrito, vacío' })).toBeInTheDocument()
 
+    await user.click(await screen.findByRole('button', { name: /ver todos los productos/i }))
     const lista = await screen.findByRole('list', { name: /^productos$/i })
     await waitFor(() => expect(within(lista).getAllByRole('listitem').length).toBeGreaterThan(0))
     const tarjeta = within(lista).getByRole('link', { name: /auriculares/i }).closest('li')
@@ -331,6 +332,7 @@ describe('CartWidget (HU9): con el carrito del servidor', () => {
     const user = userEvent.setup()
     await abrirSesionPorApi('cliente@esibuy.test')
     const primera = renderApp('/products')
+    await user.click(await screen.findByRole('button', { name: /ver todos los productos/i }))
     const lista = await screen.findByRole('list', { name: /^productos$/i })
     await waitFor(() => expect(within(lista).getAllByRole('listitem').length).toBeGreaterThan(0))
     await user.click(within(within(lista).getByRole('link', { name: /auriculares/i }).closest('li')).getByRole('button', { name: /añadir al carrito/i }))

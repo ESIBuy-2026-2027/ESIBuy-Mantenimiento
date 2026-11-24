@@ -1245,6 +1245,9 @@ Tests del frontend (bajo `frontend/src/`, con Vitest, React Testing Library y MS
 | HU7-CP18 | Un parámetro no válido (página o tamaño menor que 1, valoración fuera de 1 a 5, orden o sentido desconocidos) devuelve 400 y no llega al caso de uso | Integración (capa web) | 1 | ✅ Pasa (1, AB#353, PR #153) |
 | HU7-CP19 | Sin sesión (401) o sin ser cliente (403) no se ve el catálogo | Integración (capa web) | 2 | ✅ Pasa (2, AB#353, PR #153) |
 | HU7-CP20 | La colección `productos` tiene los índices de filtrado del catálogo: `disponible` con `nombre` y `disponible` con `valoracionMedia` (descendente) y `nombre` | Integración MongoDB | 1 | ✅ Pasa (1, AB#116, PR #240) |
+| HU7-CP21 | Por defecto el catálogo se ve por categorías: una fila que se desliza en horizontal por cada una, con flechas, arrastre y la foto de cada producto; cada fila carga más al llegar al final | Frontend (página) | 4 | 🔍 Pendiente de PR (AB#561) |
+| HU7-CP22 | Arriba hay una cinta de ofertas con los productos con descuento que avanza sola hacia la derecha y se para con el ratón, con el teclado o con el botón de pausa; sin tres ofertas no se muestra | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#561) |
+| HU7-CP23 | «Ver todos los productos» enseña el listado completo de siempre y «Ver por categorías» vuelve a las filas; buscar, filtrar u ordenar pasan solos al listado | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#561) |
 
 Notas:
 - **HU7-CP01 a CP09 (Sprint 2, frontend):** casos propuestos en las tasks AB#350 (vista de productos) y AB#351 (vista de filtrado y búsqueda), a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu7-busqueda-y-filtrado-de-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU7 (AB#69) en Azure Boards.
@@ -1261,6 +1264,8 @@ Notas:
 - **Infraestructura de tests:** `test/setup.js` añade un `IntersectionObserver` que no avisa nunca (jsdom no lo trae); los tests del scroll infinito lo sustituyen por uno que dispara a mano.
 - **Fallo resuelto (no era de esta HU):** `HU7-CP04: al elegir una categoría pide solo los productos de esa categoría` y `HU7-CP04: al filtrar vuelve a empezar desde la primera página, sin conservar lo cargado` fallaban en `develop` desde que el desplegable de categorías de la HU31 sustituyó al selector nativo que usaban. El PR #143 los adapta al desplegable con el helper `elegirCategoria` (abre el desplegable y pulsa la opción).
 - **Test inestable (HU7-CP03):** `HU7-CP03: al llegar otra vez al final carga las últimas y avisa de que no hay más` fallaba a veces con la máquina cargada: el test simulaba la llegada al final antes de que la página conectara el `IntersectionObserver` (lo hace en un `useEffect`, justo después de pintar las tarjetas). En el mismo PR #143, `llegarAlFinal` espera a que haya un observador conectado antes de avisar.
+
+- **HU7-CP21 a CP23 (AB#561, PBI 535):** casos propuestos, pendientes de confirmar con el equipo y de añadir a la HU7 en Azure Boards. La vista por defecto del catálogo pasa de ser un listado a una cinta de ofertas y una fila por categoría; el listado completo de HU7-CP03 a CP06 se abre con «Ver todos los productos» (los tests de esos casos lo hacen en su ayuda `abrirCatalogo`; los de `CartWidget.test.jsx` HU9-CP05 y CP07 también). El carrito y la ficha de producto no cambian.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -1324,6 +1329,15 @@ Notas:
 | HU7-CP19 | `CatalogoControllerTest` | `sinSesionDevuelve401` | Infraestructura | AB#353 | PR #153 | ✅ |
 | HU7-CP19 | `CatalogoControllerTest` | `otroRolDevuelve403` | Infraestructura | AB#353 | PR #153 | ✅ |
 | HU7-CP20 | `InicializadorColeccionesTest` | `HU7-CP20: productos tiene los índices de filtrado del catálogo (disponible con nombre y con valoración)` | Infraestructura · persistencia | AB#116 | PR #240 | ✅ |
+| HU7-CP21 | `ProductsPage.test.jsx` | `HU7-CP21: por defecto el catálogo se ve por categorías: una fila con los productos de cada una` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU7-CP21 | `ProductsPage.test.jsx` | `HU7-CP21: cada fila tiene flechas para moverse; la de volver está desactivada al empezar` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU7-CP21 | `ProductsPage.test.jsx` | `HU7-CP21: las tarjetas de las filas llevan la foto del producto y su precio con descuento` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU7-CP21 | `ProductsPage.test.jsx` | `HU7-CP21: al llegar cerca del final de la fila de una categoría carga los siguientes productos en ella` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU7-CP22 | `ProductsPage.test.jsx` | `HU7-CP22: arriba hay una cinta de ofertas con los productos con descuento y se puede pausar` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU7-CP22 | `ProductsPage.test.jsx` | `HU7-CP22: se para también al poner el ratón encima` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU7-CP22 | `ProductsPage.test.jsx` | `HU7-CP22: si hay menos de tres productos con descuento no se muestra la cinta` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU7-CP23 | `ProductsPage.test.jsx` | `HU7-CP23: «Ver todos los productos» enseña el listado completo y «Ver por categorías» vuelve a las filas` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU7-CP23 | `ProductsPage.test.jsx` | `HU7-CP23: al buscar se pasa a los resultados en el listado completo` | Frontend · página | AB#561 | PR pendiente | 🔍 |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `ProductCard.test.jsx`: `features/catalog/` (Vitest y React Testing Library)

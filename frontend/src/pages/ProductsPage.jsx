@@ -16,7 +16,9 @@ import { addWishlistItem, getWishlist, removeWishlistItem } from '../api/wishlis
 import EmptyState from '../components/EmptyState'
 import { usePageStyles } from '../components/pageStyles'
 import CatalogFilters from '../features/catalog/CatalogFilters'
+import CategoryCarousel from '../features/catalog/CategoryCarousel'
 import FeaturedProducts from '../features/catalog/FeaturedProducts'
+import OffersStrip from '../features/catalog/OffersStrip'
 import ProductCard from '../features/catalog/ProductCard'
 import { useCatalogFeed } from '../features/catalog/useCatalogFeed'
 import { useCatalogFilters } from '../features/catalog/useCatalogFilters'
@@ -92,14 +94,17 @@ const useStyles = makeStyles({
   },
 })
 
-// Vista de productos: lo primero que ve el cliente al iniciar sesión (HU7). Arriba, los mejor valorados; debajo, los
-// productos de diez en diez, que se cargan solos al llegar al final de la página.
+// Vista de productos: lo primero que ve el cliente al iniciar sesión (HU7). Arriba, los mejor valorados; debajo, las
+// ofertas en una cinta que avanza sola y una fila que se desliza por cada categoría. Al buscar, filtrar, ordenar o
+// pulsar «Ver todos los productos» se ve el listado completo, de diez en diez, que se carga solo al llegar al final.
 export default function ProductsPage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
   const { categories } = useCategories()
   const filters = useCatalogFilters()
   const { search, category, minRating, sort, order, debouncedSearch, filtersActive } = filters
+  const [verTodos, setVerTodos] = useState(false)
+  const showGrid = filtersActive || verTodos
   const feed = useCatalogFeed({
     search: debouncedSearch,
     category,
@@ -107,6 +112,7 @@ export default function ProductsPage() {
     sort,
     order,
     size: PAGE_SIZE,
+    enabled: showGrid,
   })
   const endRef = useOnReachEnd(feed.loadMore, feed.hasMore && !feed.loadingMore && !feed.failedMore)
   const categoryNames = new Map(categories.map(({ id, nombre }) => [id, nombre]))
@@ -144,7 +150,16 @@ export default function ProductsPage() {
   const catalogEmpty = feed.loaded && feed.totalItems === 0 && !debouncedSearch && !category && !minRating
   const noMatches = feed.loaded && feed.totalItems === 0 && !catalogEmpty
   const hasItems = feed.items.length > 0
-  const showFilters = filtersActive || hasItems
+  const showFilters = !showGrid || filtersActive || hasItems
+  // Cambiar el orden solo tiene sentido en el listado completo
+  const changeSort = (value) => {
+    setVerTodos(true)
+    filters.changeSort(value)
+  }
+  const changeOrder = (value) => {
+    setVerTodos(true)
+    filters.changeOrder(value)
+  }
 
   return (
     <main className={styles.main}>
@@ -156,6 +171,26 @@ export default function ProductsPage() {
       </div>
 
       {!filtersActive && <FeaturedProducts />}
+
+      {!showGrid && (
+        <OffersStrip
+          categoryNames={categoryNames}
+          favoritos={favoritos}
+          onAddFavorite={anadirFavorito}
+          onRemoveFavorite={quitarFavorito}
+        />
+      )}
+
+      {!showGrid &&
+        categories.map((categoria) => (
+          <CategoryCarousel
+            key={categoria.id}
+            category={categoria}
+            favoritos={favoritos}
+            onAddFavorite={anadirFavorito}
+            onRemoveFavorite={quitarFavorito}
+          />
+        ))}
 
       <div className={styles.column}>
         {showFilters && (
@@ -169,12 +204,28 @@ export default function ProductsPage() {
             onSearchChange={filters.changeSearch}
             onCategoryChange={filters.changeCategory}
             onMinRatingChange={filters.changeMinRating}
-            onSortChange={filters.changeSort}
-            onOrderChange={filters.changeOrder}
+            onSortChange={changeSort}
+            onOrderChange={changeOrder}
           />
         )}
 
-        {feed.failed && (
+        {!showGrid && (
+          <div>
+            <Button appearance="outline" onClick={() => setVerTodos(true)}>
+              Ver todos los productos
+            </Button>
+          </div>
+        )}
+
+        {showGrid && !filtersActive && (
+          <div>
+            <Button appearance="outline" onClick={() => setVerTodos(false)}>
+              Ver por categorías
+            </Button>
+          </div>
+        )}
+
+        {showGrid && feed.failed && (
           <MessageBar intent="error">
             <MessageBarBody>No se han podido cargar los productos. Inténtalo de nuevo.</MessageBarBody>
             <MessageBarActions>
@@ -183,7 +234,9 @@ export default function ProductsPage() {
           </MessageBar>
         )}
 
-        {!feed.loaded && !feed.failed && <Spinner className={pageStyles.loading} label="Cargando productos…" />}
+        {showGrid && !feed.loaded && !feed.failed && (
+          <Spinner className={pageStyles.loading} label="Cargando productos…" />
+        )}
 
         {catalogEmpty && (
           <EmptyState
@@ -203,7 +256,7 @@ export default function ProductsPage() {
           </EmptyState>
         )}
 
-        {hasItems && (
+        {showGrid && hasItems && (
           <>
             <ul
               className={mergeClasses(styles.grid, feed.refreshing && styles.refreshing)}
