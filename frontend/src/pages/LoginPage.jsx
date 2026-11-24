@@ -80,11 +80,11 @@ export default function LoginPage() {
               <ShieldCheckmark24Regular className={styles.benefitIcon} />
               <span>Compras seguras</span>
             </div>
-            <div className={styles.benefit}>
+            <div className={`${styles.benefit} ${styles.benefitSecond}`}>
               <VehicleTruckProfile24Regular className={styles.benefitIcon} />
               <span>Seguimiento de pedidos</span>
             </div>
-            <div className={styles.benefit}>
+            <div className={`${styles.benefit} ${styles.benefitThird}`}>
               <Tag24Regular className={styles.benefitIcon} />
               <span>Gran variedad de productos</span>
             </div>
