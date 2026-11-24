@@ -9,16 +9,18 @@ const AVATARES = [
 ]
 
 const useStyles = makeStyles({
-  opciones: { display: 'flex', flexWrap: 'wrap', gap: tokens.spacingHorizontalM },
+  opciones: { display: 'flex', flexWrap: 'wrap', gap: tokens.spacingHorizontalL },
   opcion: {
-    width: '64px', height: '64px', minWidth: '64px', minHeight: '64px',
+    width: '72px', height: '72px', minWidth: '72px', minHeight: '72px',
     display: 'grid', placeItems: 'center', boxSizing: 'border-box',
     border: '2px solid transparent', borderRadius: '14px',
     backgroundColor: 'transparent', cursor: 'pointer',
-    ':hover': { backgroundColor: '#fff7f0', borderColor: '#f6c6a7' },
+    ':hover': { background: '#fff7f0', border: '1px solid #f6c6a7' },
     ':focus-visible': { outline: '2px solid #f05a0a', outlineOffset: '2px' },
+    '&[aria-pressed="true"]': { border: '1.5px solid #f05a0a', backgroundColor: '#fff5ed' },
+    '&[aria-pressed="true"]:hover': { border: '1.5px solid #f05a0a', backgroundColor: '#fff5ed' },
+
   },
-  seleccionada: { border: '2px solid #f05a0a', outline: '1px solid #f05a0a', outlineOffset: '-3px', boxShadow: '0 0 0 2px rgba(240, 90, 10, .12)', backgroundColor: '#fff5ed' },
 })
 
 export function UserAvatar({ value, name, size = 72 }) {
@@ -30,18 +32,22 @@ export function UserAvatar({ value, name, size = 72 }) {
 export default function AvatarSelector({ value, onChange }) {
   const styles = useStyles()
   return (
-    <Field label="Imagen de perfil">
-      <div className={styles.opciones} role="group" aria-label="Selecciona tu avatar">
+    <Field className={styles.grupo}>
+      <legend className={styles.leyendaOculta}>
+        Selecciona tu avatar
+      </legend>
+
+      <div className={styles.opciones}>
         {AVATARES.map(({ valor, etiqueta, icono, color }) => (
           <button
             key={valor}
             type="button"
-            className={value === valor ? styles.opcion + ' ' + styles.seleccionada : styles.opcion}
+            className={styles.opcion}
             aria-label={etiqueta}
             aria-pressed={value === valor}
             onClick={() => onChange(null, { value: valor })}
           >
-            <Avatar icon={icono} color={color} size={44} />
+            <Avatar icon={icono} color={color} size={50} />
           </button>
         ))}
       </div>

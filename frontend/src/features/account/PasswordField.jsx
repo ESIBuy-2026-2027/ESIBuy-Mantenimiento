@@ -17,6 +17,7 @@ const useStyles = makeStyles({
     marginBottom: 0,
     marginLeft: 0,
   },
+  requisitosVerticales: { display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalM, marginTop: tokens.spacingVerticalS },
   requisito: {
     display: 'flex',
     alignItems: 'center',
@@ -91,11 +92,11 @@ export function PasswordField({
 }
 
 // Lista de requisitos del password con un tick verde en los que ya se cumplen.
-export function PasswordRequirements({ password }) {
+export function PasswordRequirements({ password, vertical = false }) {
   const styles = useStyles()
 
   return (
-    <ul aria-label="Requisitos de la contraseña" className={styles.requisitos}>
+    <ul aria-label="Requisitos de la contraseña" className={vertical ? `${styles.requisitos} ${styles.requisitosVerticales}` : styles.requisitos}>
       {REQUISITOS_PASSWORD.map(({ texto, cumple }) => (
         <li key={texto} className={styles.requisito}>
           {cumple(password) ? (
@@ -127,4 +128,5 @@ PasswordField.propTypes = {
 
 PasswordRequirements.propTypes = {
   password: PropTypes.string.isRequired,
+  vertical: PropTypes.bool,
 }
