@@ -44,23 +44,6 @@ export const useAuthPageStyles = makeStyles({
     lineHeight: 1.12,
     letterSpacing: '-.8px',
   },
-  brand: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    color: tokens.colorNeutralForeground1,
-    fontSize: '30px',
-    fontWeight: tokens.fontWeightBold,
-    letterSpacing: '-1px',
-    textDecorationLine: 'none',
-    ':hover': { color: tokens.colorNeutralForeground1 },
-    ':focus-visible': {
-      outline: `3px solid ${tokens.colorBrandStroke1}`,
-      outlineOffset: '4px',
-      borderRadius: tokens.borderRadiusSmall,
-    },
-  },
-  logoAccent: { color: tokens.colorBrandForeground1 },
   footer: {
     display: 'flex',
     flexWrap: 'wrap',
