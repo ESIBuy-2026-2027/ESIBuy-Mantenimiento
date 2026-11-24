@@ -22,7 +22,7 @@ export default function AppLayout() {
   return (
     <CartProvider>
       <div className={styles.page}>
-        {!isRegisterPage && <AppHeader />}
+        {!isRegisterPage && !isHomePage && <AppHeader />}
         <Outlet />
         <CartWidget />
       </div>
