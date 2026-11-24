@@ -13,6 +13,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import es.uclm.esibuy.backend.pedidos.application.port.out.ExistenciasPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
@@ -25,8 +26,11 @@ import es.uclm.esibuy.backend.pedidos.domain.model.Pedido;
 class GestionPedidosVendedorServiceTest {
 
     private final PedidosEnMemoria pedidos = new PedidosEnMemoria();
-    private final GestionPedidosVendedorService servicio = new GestionPedidosVendedorService(pedidos,
-            email -> "u-2");
+    private final ExistenciasEnMemoria existencias = new ExistenciasEnMemoria();
+    private final GestionPedidosVendedorService servicio = new GestionPedidosVendedorService(
+            pedidos,
+            email -> "u-2",
+            existencias);
 
     @Test
     @DisplayName("gestion-pedidos-vendedor: lista solo los pedidos del vendedor de la sesión")
@@ -123,6 +127,18 @@ class GestionPedidosVendedorServiceTest {
         public List<Pedido> buscarPorVendedor(String vendedorId) {
             consultasVendedor.add(vendedorId);
             return porVendedor.getOrDefault(vendedorId, List.of());
+        }
+    }
+
+    private static final class ExistenciasEnMemoria implements ExistenciasPort {
+        @Override
+        public boolean descontar(String productoId, int cantidad) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void reponer(String productoId, int cantidad) {
+            // No-op para pruebas que no cancelan pedidos
         }
     }
 }
