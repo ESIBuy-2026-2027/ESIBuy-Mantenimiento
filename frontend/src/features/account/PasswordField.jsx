@@ -1,28 +1,39 @@
 import PropTypes from 'prop-types'
 import { Button, Field, Input, Text, makeStyles, tokens } from '@fluentui/react-components'
-import { CheckmarkCircle16Filled, Circle16Regular, Eye20Regular, EyeOff20Regular } from '@fluentui/react-icons'
+import { CheckmarkCircle16Filled, Eye20Regular, EyeOff20Regular } from '@fluentui/react-icons'
 import { useState } from 'react'
 import { REQUISITOS_PASSWORD } from './accountRules'
 
 const useStyles = makeStyles({
   requisitos: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalXXS,
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    columnGap: tokens.spacingHorizontalL,
+    rowGap: tokens.spacingVerticalS,
     listStyleType: 'none',
-    margin: 0,
     padding: 0,
+    marginTop: tokens.spacingVerticalM,
+    marginRight: 0,
+    marginBottom: 0,
+    marginLeft: 0,
   },
+  requisitosVerticales: { display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalM, marginTop: tokens.spacingVerticalS },
   requisito: {
     display: 'flex',
     alignItems: 'center',
-    gap: tokens.spacingHorizontalXS,
+    gap: tokens.spacingHorizontalS,
+    fontSize: tokens.fontSizeBase200,
+    minHeight: '20px',
   },
   cumplido: {
     color: tokens.colorPaletteGreenForeground1,
   },
   pendiente: {
-    color: tokens.colorNeutralForeground3,
+    width: '7px',
+    height: '7px',
+    flexShrink: 0,
+    borderRadius: tokens.borderRadiusCircular,
+    backgroundColor: tokens.colorNeutralStroke1,
   },
 })
 
@@ -58,6 +69,8 @@ export function PasswordField({
   return (
     <Field label={label} required={required} validationMessage={error}>
       <Input
+        size="large"
+        style={{ width: '100%' }}
         type={visible ? 'text' : 'password'}
         maxLength={maxLength}
         autoComplete={autoComplete}
@@ -79,17 +92,17 @@ export function PasswordField({
 }
 
 // Lista de requisitos del password con un tick verde en los que ya se cumplen.
-export function PasswordRequirements({ password }) {
+export function PasswordRequirements({ password, vertical = false }) {
   const styles = useStyles()
 
   return (
-    <ul aria-label="Requisitos de la contraseña" className={styles.requisitos}>
+    <ul aria-label="Requisitos de la contraseña" className={vertical ? `${styles.requisitos} ${styles.requisitosVerticales}` : styles.requisitos}>
       {REQUISITOS_PASSWORD.map(({ texto, cumple }) => (
         <li key={texto} className={styles.requisito}>
           {cumple(password) ? (
             <CheckmarkCircle16Filled aria-label="Cumplido" className={styles.cumplido} />
           ) : (
-            <Circle16Regular aria-label="Pendiente" className={styles.pendiente} />
+            <span aria-label="Pendiente" className={styles.pendiente} />
           )}
           <Text size={200}>{texto}</Text>
         </li>
@@ -115,4 +128,5 @@ PasswordField.propTypes = {
 
 PasswordRequirements.propTypes = {
   password: PropTypes.string.isRequired,
+  vertical: PropTypes.bool,
 }

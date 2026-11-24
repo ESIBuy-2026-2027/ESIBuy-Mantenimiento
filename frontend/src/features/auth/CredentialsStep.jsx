@@ -45,6 +45,8 @@ export default function CredentialsStep({ onSubmit, submitting }) {
         validationMessage={errors.email}
       >
         <Input
+          size="large"
+          style={{ width: '100%' }}
           type="email"
           value={email}
           onChange={(_event, data) => setEmail(data.value)}
@@ -66,10 +68,12 @@ export default function CredentialsStep({ onSubmit, submitting }) {
       <Button
         type="submit"
         appearance="primary"
+        size="large"
+        style={{ width: '100%', minHeight: '52px', fontSize: '16px', fontWeight: 600 }}
         disabled={submitting}
         icon={submitting ? <Spinner size="tiny" /> : undefined}
       >
-        Continuar
+        Entrar
       </Button>
     </form>
   )

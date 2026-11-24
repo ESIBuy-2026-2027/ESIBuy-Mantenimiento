@@ -11,7 +11,7 @@ const CLAVE = 'Mock-Clave-1!'
 async function escribirCredenciales(user, email, clave) {
   await user.type(await screen.findByLabelText(/correo electrónico/i), email)
   await user.type(screen.getByLabelText(/^contraseña/i), clave)
-  await user.click(screen.getByRole('button', { name: /continuar/i }))
+  await user.click(screen.getByRole('button', { name: /entrar/i }))
 }
 
 async function resolverCodigoDeCorreo(user, codigo = '654321') {
@@ -34,7 +34,16 @@ async function esperarRuta(ruta) {
   await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp(`^${ruta}$`)))
 }
 
-describe('Login (HU2): redirección por rol', () => {
+describe('Login (HU2): redirección por rol', () => {\n  it('login_elLogotipoLlevaALaHome', async () => {
+    const user = userEvent.setup()
+    renderApp('/login')
+
+    await user.click(await screen.findByRole('link', { name: /esibuy, volver al inicio/i }))
+
+    await esperarRuta('/')
+  })
+
+
   it('login_administrador_redirigeAlPanelDeAdmin', async () => {
     const user = userEvent.setup()
     renderApp('/login')
@@ -79,7 +88,7 @@ describe('Login (HU2): paso 1, credenciales', () => {
     const user = userEvent.setup()
     renderApp('/login')
 
-    await user.click(await screen.findByRole('button', { name: /continuar/i }))
+    await user.click(await screen.findByRole('button', { name: /entrar/i }))
 
     expect(screen.getByText(/introduce tu correo electrónico/i)).toBeInTheDocument()
     expect(screen.getByText(/introduce tu contraseña/i)).toBeInTheDocument()
@@ -90,7 +99,7 @@ describe('Login (HU2): paso 1, credenciales', () => {
     renderApp('/login')
     await user.type(await screen.findByLabelText(/correo electrónico/i), 'correo-invalido')
     await user.type(screen.getByLabelText(/^contraseña/i), CLAVE)
-    await user.click(screen.getByRole('button', { name: /continuar/i }))
+    await user.click(screen.getByRole('button', { name: /entrar/i }))
 
     expect(screen.getByText(/ejemplo: email@dominio\.es/i)).toBeInTheDocument()
   })
@@ -477,7 +486,7 @@ describe('Recuperación de contraseña (HU3)', () => {
     await user.click(screen.getByLabelText(/^contraseña/i))
     await user.paste(CLAVE)
     expect(screen.getByLabelText(/^contraseña/i)).toHaveValue(CLAVE)
-    await user.click(screen.getByRole('button', { name: /continuar/i }))
+    await user.click(screen.getByRole('button', { name: /entrar/i }))
     await resolverCodigoDeCorreo(user)
     await resolverCodigoDeAutenticador(user)
 
