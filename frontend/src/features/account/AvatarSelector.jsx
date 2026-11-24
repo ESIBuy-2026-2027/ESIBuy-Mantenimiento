@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { Avatar, Button, Field, makeStyles, tokens } from '@fluentui/react-components'
+import { Avatar, Field, makeStyles, tokens } from '@fluentui/react-components'
 import { AnimalCat24Regular, AnimalDog24Regular, AnimalRabbit24Regular } from '@fluentui/react-icons'
 
 const AVATARES = [
@@ -11,11 +11,14 @@ const AVATARES = [
 const useStyles = makeStyles({
   opciones: { display: 'flex', flexWrap: 'wrap', gap: tokens.spacingHorizontalM },
   opcion: {
-    minWidth: '76px', minHeight: '76px', padding: '8px',
-    border: '1px solid transparent', borderRadius: '14px', backgroundColor: 'transparent',
-    ':hover': { backgroundColor: '#fff7f0' },
+    width: '64px', height: '64px', minWidth: '64px', minHeight: '64px',
+    display: 'grid', placeItems: 'center', boxSizing: 'border-box',
+    border: '2px solid transparent', borderRadius: '14px',
+    backgroundColor: 'transparent', cursor: 'pointer',
+    ':hover': { backgroundColor: '#fff7f0', borderColor: '#f6c6a7' },
+    ':focus-visible': { outline: '2px solid #f05a0a', outlineOffset: '2px' },
   },
-  seleccionada: { border: '2px solid #f05a0a', backgroundColor: '#fff5ed', padding: '7px' },
+  seleccionada: { borderColor: '#f05a0a', backgroundColor: '#fff5ed' },
 })
 
 export function UserAvatar({ value, name, size = 72 }) {
@@ -30,17 +33,16 @@ export default function AvatarSelector({ value, onChange }) {
     <Field label="Imagen de perfil">
       <div className={styles.opciones} role="group" aria-label="Selecciona tu avatar">
         {AVATARES.map(({ valor, etiqueta, icono, color }) => (
-          <Button
+          <button
             key={valor}
             type="button"
-            appearance="subtle"
-            className={value === valor ? styles.seleccionada + ' ' + styles.opcion : styles.opcion}
+            className={value === valor ? styles.opcion + ' ' + styles.seleccionada : styles.opcion}
             aria-label={etiqueta}
             aria-pressed={value === valor}
             onClick={() => onChange(null, { value: valor })}
           >
-            <Avatar icon={icono} color={color} size={48} />
-          </Button>
+            <Avatar icon={icono} color={color} size={44} />
+          </button>
         ))}
       </div>
     </Field>
