@@ -96,7 +96,7 @@ const useStyles = makeStyles({
   tipoCuenta: { display: 'flex', flexDirection: 'column', gap: '7px' },
   tipoCuentaOpciones: { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px', [MOBILE]: { gridTemplateColumns: '1fr' } },
   tipoCuentaCard: { minHeight: '72px', height: 'auto', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '12px', padding: '12px 16px', whiteSpace: 'normal', textAlign: 'left', border: '1px solid #d9dfe5', borderRadius: '12px', backgroundColor: '#fff', color: tokens.colorNeutralForeground1, ':hover': { borderColor: '#f05a0a', backgroundColor: '#fffaf6' } },
-  tipoCuentaSeleccionada: { border: '2px solid #f05a0a', backgroundColor: '#fff5ed', padding: '11px 15px' },
+  tipoCuentaSeleccionada: { border: '2px solid #f05a0a', boxShadow: 'inset 0 0 0 1px #f05a0a', backgroundColor: '#fff5ed', padding: '11px 15px' },
   tipoCuentaIcono: { color: tokens.colorBrandForeground1, flexShrink: 0, fontSize: '25px' },
   tipoCuentaTexto: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '2px', whiteSpace: 'normal' },
   tipoCuentaNombre: { fontWeight: tokens.fontWeightBold, fontSize: tokens.fontSizeBase300 },
