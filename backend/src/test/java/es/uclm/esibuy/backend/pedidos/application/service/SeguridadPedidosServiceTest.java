@@ -27,6 +27,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCa
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizarPedidoCommand;
+import es.uclm.esibuy.backend.pedidos.application.port.in.SeguimientoEnvioUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.out.CarritoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ContadorPedidosPort;
@@ -41,7 +42,7 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoExcepti
 // Seguridad en la capa de negocio (R8): realizar un pedido y consultar si se ha comprado un producto exigen el rol
 // CLIENTE y que el correo sea el de la sesión. Las anotaciones solo se evalúan con Spring, así que se usa un
 // contexto mínimo (sin MongoDB) con los servicios reales y dobles de prueba de los puertos de salida.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU10-CP20, HU13-CP07, HU11-CP06 y HU12-CP07, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU10-CP20, HU13-CP07, HU11-CP06, HU11-CP27 y HU12-CP07, propuestos.
 @SpringJUnitConfig(SeguridadPedidosServiceTest.Configuracion.class)
 class SeguridadPedidosServiceTest {
 
@@ -122,6 +123,12 @@ class SeguridadPedidosServiceTest {
                 ClienteEnSesionPort clienteEnSesion, ExistenciasPort existencias) {
             return new CancelacionPedidoService(pedidoRepository, clienteEnSesion, existencias);
         }
+
+        @Bean
+        SeguimientoEnvioUseCase seguimientoEnvio(PedidoRepositoryPort pedidoRepository,
+                ClienteEnSesionPort clienteEnSesion) {
+            return new SeguimientoEnvioService(pedidoRepository, clienteEnSesion, Clock.systemUTC());
+        }
     }
 
     @Autowired
@@ -147,6 +154,8 @@ class SeguridadPedidosServiceTest {
     private ConsultaComprasUseCase consultaCompras;
     @Autowired
     private CancelacionPedidoUseCase cancelacionPedido;
+    @Autowired
+    private SeguimientoEnvioUseCase seguimientoEnvio;
 
     @BeforeEach
     void limpiarDobles() {
@@ -323,6 +332,53 @@ class SeguridadPedidosServiceTest {
     void sinSesionSeRechazaCancelar() {
         assertThrows(AuthenticationCredentialsNotFoundException.class,
                 () -> cancelacionPedido.cancelarPedido(CLIENTE, "o-1"));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @WithMockUser(username = "vendedor@esibuy.test", roles = "VENDEDOR")
+    @DisplayName("HU11-CP27: un vendedor no puede consultar el seguimiento ni confirmar la entrega de un pedido")
+    void unVendedorNoUsaElSeguimiento() {
+        assertThrows(AccessDeniedException.class,
+                () -> seguimientoEnvio.consultarSeguimiento("vendedor@esibuy.test", "o-1"));
+        assertThrows(AccessDeniedException.class, () -> seguimientoEnvio.confirmarEntrega("vendedor@esibuy.test", "o-1"));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @WithMockUser(username = "admin@esibuy.test", roles = "ADMINISTRADOR")
+    @DisplayName("HU11-CP27: un administrador no puede consultar el seguimiento ni confirmar la entrega de un pedido")
+    void unAdministradorNoUsaElSeguimiento() {
+        assertThrows(AccessDeniedException.class,
+                () -> seguimientoEnvio.consultarSeguimiento("admin@esibuy.test", "o-1"));
+        assertThrows(AccessDeniedException.class, () -> seguimientoEnvio.confirmarEntrega("admin@esibuy.test", "o-1"));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU11-CP27: un cliente no puede usar el seguimiento con el correo de otro cliente y no se toca nada")
+    void unClienteNoUsaElSeguimientoConElCorreoDeOtro() {
+        assertThrows(AccessDeniedException.class, () -> seguimientoEnvio.consultarSeguimiento(OTRO_CLIENTE, "o-1"));
+        assertThrows(AccessDeniedException.class, () -> seguimientoEnvio.confirmarEntrega(OTRO_CLIENTE, "o-1"));
+        comprobarQueNoSeTocaNada();
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU11-CP27: un cliente sí usa el seguimiento con su propio correo (el rechazo que llega es el del negocio)")
+    void unClienteUsaElSeguimientoConSuPropioCorreo() {
+        assertThrows(PedidoNoEncontradoException.class, () -> seguimientoEnvio.consultarSeguimiento(CLIENTE, "o-1"));
+        assertThrows(PedidoNoEncontradoException.class, () -> seguimientoEnvio.confirmarEntrega(CLIENTE, "o-1"));
+    }
+
+    @Test
+    @DisplayName("HU11-CP27: sin sesión se rechaza consultar el seguimiento y confirmar la entrega")
+    void sinSesionSeRechazaElSeguimiento() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> seguimientoEnvio.consultarSeguimiento(CLIENTE, "o-1"));
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> seguimientoEnvio.confirmarEntrega(CLIENTE, "o-1"));
         comprobarQueNoSeTocaNada();
     }
 }

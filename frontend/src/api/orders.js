@@ -29,6 +29,20 @@ export function getOrder(orderId) {
   return request(`/api/customer/orders/${encodeURIComponent(orderId)}`)
 }
 
+// Seguimiento del envío de un pedido del cliente (PBI 540). `getOrderTracking` responde
+//   { pedidoId, estado, fechaEstimadaEntrega, fechaEntrega, historial: [{ estado, fecha }] }
+// con las fechas a null si no están disponibles y el histórico del primer estado al último; 400 con
+// `code: ORDER_NOT_FOUND` si el pedido no existe o es de otro cliente. `confirmDelivery` es la confirmación de recepción
+// por el cliente: responde con el mismo formato, ya `ENTREGADO`; 409 con `code: ORDER_NOT_DELIVERABLE` si el pedido no
+// está `ENVIADO` (aún no sale, ya se entregó o se canceló) y 400 `ORDER_NOT_FOUND` como la consulta.
+export function getOrderTracking(orderId) {
+  return request(`/api/customer/orders/${encodeURIComponent(orderId)}/tracking`)
+}
+
+export function confirmDelivery(orderId) {
+  return request(`/api/customer/orders/${encodeURIComponent(orderId)}/confirm-delivery`, { method: 'POST' })
+}
+
 // Cancela un pedido del cliente que aún no se ha enviado (HU12; backend en T374, PR #207). Responde con el pedido ya
 // cancelado; 409 con `code: ORDER_NOT_CANCELLABLE` si ya no se puede cancelar, y 400 con `code: ORDER_NOT_FOUND` si no
 // existe o es de otro cliente.

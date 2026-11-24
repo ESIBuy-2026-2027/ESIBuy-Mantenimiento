@@ -1843,18 +1843,37 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 | HU11-CP12 | Al seleccionar un pedido se abre su detalle | Frontend (página) | 1 | ✅ Pasa |
 | HU11-CP13 | Mis pedidos es solo del cliente: sin sesión lleva al login y un vendedor va a su página | Frontend (página) | 2 | ✅ Pasa |
 | HU11-CP14 | El detalle muestra número, fecha, vendedor y dirección de envío, y desglosa cada producto (cantidad, precio unitario, subtotal) y el total | Frontend (página) | 2 | ✅ Pasa |
-| HU11-CP15 | La línea de estados del envío (Pagado → Preparando → Enviado → Entregado) marca los pasos hechos, el actual y los pendientes | Frontend (página) | 2 | ✅ Pasa |
+| HU11-CP15 | La línea de tiempo del envío (Preparación → Enviado → En reparto → Entregado) marca los pasos hechos, el actual y los pendientes con icono, texto y fecha, y un pedido recién pagado está en la preparación | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#672) |
 | HU11-CP16 | Un pedido cancelado lo indica en lugar de la línea de estados del envío | Frontend (página) | 1 | ✅ Pasa |
 | HU11-CP17 | Un pedido inexistente o de otro cliente se ve como no encontrado; otro error permite reintentar; desde el detalle se vuelve a Mis pedidos | Frontend (página) | 3 | ✅ Pasa |
 | HU11-CP18 | La cabecera del cliente tiene el enlace «Mis pedidos»; la del vendedor y la del administrador, no | Frontend (componente) | 2 | ✅ Pasa |
 | HU11-CP19 | Tras pagar (HU10) se puede ir a Mis pedidos | Frontend (página) | 1 | ✅ Pasa |
 | HU11-CP20 | Desde Mis pedidos se puede volver al catálogo: botón «Seguir comprando» y entrada «Catálogo» en el menú del cliente | Frontend (página) | 1 | 🔍 Pendiente de PR (AB#561) |
+| HU11-CP21 | Un pedido nuevo empieza su histórico en pagado, con la fecha del pedido, y sin fechas de entrega | Unitario (dominio) | 1 | 🔍 Pendiente de PR (AB#673) |
+| HU11-CP22 | Confirmar la entrega de un pedido enviado lo pasa a entregado, fija la fecha real y la añade al histórico | Unitario (dominio) | 1 | 🔍 Pendiente de PR (AB#673) |
+| HU11-CP23 | Solo se confirma la entrega desde enviado: desde cualquier otro estado, y una vez entregado, se rechaza, no cambia y no se deshace | Unitario (dominio) | 2 | 🔍 Pendiente de PR (AB#673) |
+| HU11-CP24 | Consultar el seguimiento devuelve el pedido del cliente de la sesión; uno ajeno o inexistente se trata igual | Unitario (aplicación) | 2 | 🔍 Pendiente de PR (AB#673) |
+| HU11-CP25 | Confirmar la entrega guarda el pedido entregado con la hora del reloj | Unitario (aplicación) | 1 | 🔍 Pendiente de PR (AB#673) |
+| HU11-CP26 | Un pedido que no está enviado, ya entregado, ajeno o inexistente no se confirma ni se guarda | Unitario (aplicación) | 2 | 🔍 Pendiente de PR (AB#673) |
+| HU11-CP27 | Solo el cliente consulta el seguimiento y confirma la entrega de sus pedidos: vendedor, administrador, otro cliente y sin sesión, rechazados | Seguridad (`@PreAuthorize`, contexto mínimo) | 5 | 🔍 Pendiente de PR (AB#675) |
+| HU11-CP28 | `GET /api/customer/orders/{id}/tracking` responde 200 con el estado, la fecha estimada y el histórico del envío; no expone el cliente | Integración web (`@WebMvcTest`) | 1 | 🔍 Pendiente de PR (AB#673) |
+| HU11-CP29 | `POST /api/customer/orders/{id}/confirm-delivery` responde 200 con el seguimiento ya entregado | Integración web (`@WebMvcTest`) | 1 | 🔍 Pendiente de PR (AB#673) |
+| HU11-CP30 | Un pedido que no está enviado responde 409 `ORDER_NOT_DELIVERABLE`; uno inexistente o ajeno, 400 `ORDER_NOT_FOUND`, con mensajes genéricos | Integración web (`@WebMvcTest`) | 1 | 🔍 Pendiente de PR (AB#674) |
+| HU11-CP31 | Sin sesión el seguimiento y la confirmación responden 401, con otro rol 403, y confirmar sin el token CSRF se rechaza | Integración web (`@WebMvcTest`) | 1 | 🔍 Pendiente de PR (AB#675) |
+| HU11-CP32 | El histórico y las fechas de entrega se guardan y se leen sin perder datos; un pedido anterior al seguimiento se lee con el histórico vacío; un estado desconocido es inválido | Unitario (infraestructura) | 3 | 🔍 Pendiente de PR (AB#673) |
+| HU11-CP33 | El detalle muestra la fecha estimada de entrega, o que no está disponible, y la fecha real una vez entregado | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#672) |
+| HU11-CP34 | «Confirmar recepción» solo aparece cuando el envío está enviado | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#672) |
+| HU11-CP35 | «Confirmar recepción» pide confirmación previa y «Volver» no confirma nada | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#672) |
+| HU11-CP36 | Al confirmar, el envío pasa a entregado, se avisa y ya no se puede volver a confirmar | Frontend (página) | 1 | 🔍 Pendiente de PR (AB#672) |
+| HU11-CP37 | Si el pedido ya no se puede marcar como entregado se avisa y se cierra la confirmación; otro fallo se avisa sin detalles internos y permite reintentar | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#674) |
+| HU11-CP38 | El seguimiento tiene su estado de carga y de error con «Reintentar» sin bloquear el resto del detalle, y un estado desconocido se indica | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#674) |
 
 Notas:
 - **HU11-CP01 a CP06 (Sprint 2, backend, TDD):** casos propuestos en la T378 (AB#378, lógica de obtención de pedidos) a partir del criterio de aceptación de la HU11 (AB#73): «el sistema muestra el detalle de los productos, desglose de precios y la máquina de estados de envío cuando el cliente selecciona un pedido concreto». Pendientes de confirmar con el equipo y de añadir a la HU11 en Azure Boards.
 - **Decisiones del equipo:** el historial y el detalle se añaden a `ConsultaComprasUseCase` (mismo actor y propósito que `haComprado` de la HU13). Estados de envío: `PAGADO → PREPARANDO → ENVIADO → ENTREGADO`, más `CANCELADO` para la HU12; los hará avanzar el vendedor en otra HU. Un pedido ajeno se trata como inexistente.
 - **HU11-CP07 a CP10 (Sprint 2, backend, TDD):** casos propuestos en la T377 (AB#377, endpoint de obtención de pedidos): `GET /api/customer/orders` (historial, cada pedido completo con el formato de `PedidoResponse`) y `GET /api/customer/orders/{id}` (detalle). Un pedido ajeno o inexistente responde 400 `ORDER_NOT_FOUND`, como pide el CLAUDE.md para los pedidos. HU11-CP10 pasó sin rojo real: `SecurityConfig` ya protege `/api/customer/**`. Pendientes de confirmar con el equipo y de añadir a la HU11 en Azure Boards.
 - **HU11-CP11 a CP19 (Sprint 2, frontend, TDD):** casos propuestos en la T376 (AB#376, vista de pedidos): «Mis pedidos» (`/orders`) y el detalle (`/orders/:id`) con la línea de estados del envío, el enlace en la cabecera y «Ver mis pedidos» tras pagar (`frontend/docs/hu11-historial-pedidos.md`). El test «el vendedor y el administrador no tienen el enlace» (CP18) pasó sin rojo real. El PR #187 se mergeó antes de añadirle estas filas, así que entran en la rama de la T375 (HU12). Pendientes de confirmar con el equipo y de añadir a la HU11 en Azure Boards.
+- **HU11-CP21 a CP38 (PBI 540 «Seguimiento envío cliente - Mant», tasks AB#672 a AB#676, TDD):** mejora visual y funcional del seguimiento ya implementado. Decisiones tomadas en esta iteración, **pendientes de que el equipo las valide**: (1) «En reparto» no es un estado del pedido: según la regla de negocio, el envío sigue `ENVIADO` hasta que el cliente confirma la recepción, y la línea de tiempo lo muestra como el tramo «En reparto» (Preparación, que incluye `PAGADO`, Enviado, En reparto y Entregado). (2) Es el cliente quien pasa a `ENTREGADO` (`Pedido.confirmarEntrega`, solo desde `ENVIADO`, no reversible, con la fecha real de la entrega), con un caso de uso nuevo `SeguimientoEnvioUseCase` (consultar el seguimiento y confirmar la recepción, mismo actor y propósito) y los endpoints `GET .../{id}/tracking` y `POST .../{id}/confirm-delivery`; un pedido que no está enviado responde 409 `ORDER_NOT_DELIVERABLE`. (3) El histórico (`historial`: estado y fecha) y las fechas `fechaEstimadaEntrega` y `fechaEntrega` se guardan en el documento del pedido; los pedidos anteriores no tienen histórico. Al entregar, el seguimiento muestra la fecha real y deja de mostrar la estimada. (4) **Sin implementar, fuera de alcance:** quién pasa un pedido de `PAGADO` a `PREPARANDO` y `ENVIADO` y quién fija la fecha estimada (los hará el vendedor u otro mecanismo, en otra HU): hasta entonces, en producción ningún pedido llega a `ENVIADO` y el botón no aparece. Los tests de Testcontainers (`PedidoMongoAdapterTest`, validador de colecciones) no se han podido ejecutar en este entorno sin Docker.
 - **Pendiente:** `haComprado` (HU13) solo cuenta los pedidos `PAGADO`: cuando los estados avancen, habrá que decidir si `ENTREGADO` cuenta como compra (comentario «PENDIENTE DE DECIDIR» en `ConsultaComprasService`).
 
 ### Tabla B · casos de prueba ↔ tests
@@ -1887,9 +1906,10 @@ Notas:
 | HU11-CP13 | `OrdersPage.test.jsx` | `HU11-CP13: un vendedor no ve los pedidos de los clientes: va a su página` | Frontend · página | AB#376 | PR #187 | ✅ |
 | HU11-CP14 | `OrderDetailPage.test.jsx` | `HU11-CP14: muestra el número, la fecha, el vendedor y la dirección de envío del pedido` | Frontend · página | AB#376 | PR #187 | ✅ |
 | HU11-CP14 | `OrderDetailPage.test.jsx` | `HU11-CP14: desglosa cada producto con su cantidad, precio unitario y subtotal, y el total` | Frontend · página | AB#376 | PR #187 | ✅ |
-| HU11-CP15 | `OrderDetailPage.test.jsx` | `HU11-CP15: la línea de estados del envío marca los pasos hechos, el actual y los pendientes` | Frontend · página | AB#376 | PR #187 | ✅ |
-| HU11-CP15 | `OrderDetailPage.test.jsx` | `HU11-CP15: un pedido entregado tiene todos los pasos hechos y el último como actual` | Frontend · página | AB#376 | PR #187 | ✅ |
-| HU11-CP16 | `OrderDetailPage.test.jsx` | `HU11-CP16: un pedido cancelado lo indica en lugar de la línea de estados del envío` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP15 | `OrderDetailPage.test.jsx` | `HU11-CP15: la línea de tiempo marca los pasos hechos, el actual y los pendientes, con texto y fecha además del icono` | Frontend · página | AB#376 · AB#672 | PR #187 (modificado en PR pendiente) | 🔍 |
+| HU11-CP15 | `OrderDetailPage.test.jsx` | `HU11-CP15: un pedido entregado tiene los cuatro pasos completados y ninguno como actual` | Frontend · página | AB#376 · AB#672 | PR #187 (modificado en PR pendiente) | 🔍 |
+| HU11-CP15 | `OrderDetailPage.test.jsx` | `HU11-CP15: un pedido recién pagado está en el primer paso, la preparación` | Frontend · página | AB#672 | PR pendiente | 🔍 |
+| HU11-CP16 | `OrderDetailPage.test.jsx` | `HU11-CP16: un pedido cancelado lo indica en lugar de la línea de estados del envío` | Frontend · página | AB#376 · AB#672 | PR #187 (modificado en PR pendiente) | 🔍 |
 | HU11-CP17 | `OrderDetailPage.test.jsx` | `HU11-CP17: un pedido que no existe o es de otro cliente se muestra como no encontrado` | Frontend · página | AB#376 | PR #187 | ✅ |
 | HU11-CP17 | `OrderDetailPage.test.jsx` | `HU11-CP17: si falla por otro motivo lo avisa y permite reintentar` | Frontend · página | AB#376 | PR #187 | ✅ |
 | HU11-CP17 | `OrderDetailPage.test.jsx` | `HU11-CP17: desde el detalle se vuelve a Mis pedidos` | Frontend · página | AB#376 | PR #187 | ✅ |
@@ -1897,10 +1917,45 @@ Notas:
 | HU11-CP18 | `AppHeader.test.jsx` | `HU11-CP18: el vendedor y el administrador no tienen el enlace a Mis pedidos` | Frontend · componente | AB#376 | PR #187 | ✅ |
 | HU11-CP19 | `CheckoutPage.test.jsx` | `HU11-CP19: tras pagar se puede ir a Mis pedidos` | Frontend · página | AB#376 | PR #187 | ✅ |
 | HU11-CP20 | `OrdersPage.test.jsx` | `HU11-CP20: desde Mis pedidos se puede volver al catálogo con «Seguir comprando» y desde el menú con «Catálogo»` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU11-CP21 | `PedidoTest` | `unPedidoNuevoEmpiezaSuHistorico` | Dominio | AB#673 | PR pendiente | 🔍 |
+| HU11-CP22 | `PedidoTest` | `confirmarLaEntregaDeUnPedidoEnviado` | Dominio | AB#673 | PR pendiente | 🔍 |
+| HU11-CP23 | `PedidoTest` | `soloSeConfirmaLaEntregaDesdeEnviado` | Dominio | AB#673 | PR pendiente | 🔍 |
+| HU11-CP23 | `PedidoTest` | `laEntregaNoSeDeshaceNiSeRepite` | Dominio | AB#673 | PR pendiente | 🔍 |
+| HU11-CP24 | `SeguimientoEnvioServiceTest` | `consultarElSeguimientoDevuelveElPedidoDelCliente` | Aplicación | AB#673 | PR pendiente | 🔍 |
+| HU11-CP24 | `SeguimientoEnvioServiceTest` | `elSeguimientoDeUnPedidoAjenoOInexistenteNoLoRevela` | Aplicación | AB#673 | PR pendiente | 🔍 |
+| HU11-CP25 | `SeguimientoEnvioServiceTest` | `confirmarLaEntregaGuardaElPedidoEntregado` | Aplicación | AB#673 | PR pendiente | 🔍 |
+| HU11-CP26 | `SeguimientoEnvioServiceTest` | `unPedidoQueNoEstaEnviadoNoSeConfirmaNiSeGuarda` | Aplicación | AB#673 | PR pendiente | 🔍 |
+| HU11-CP26 | `SeguimientoEnvioServiceTest` | `unPedidoAjenoNoSeConfirma` | Aplicación | AB#673 | PR pendiente | 🔍 |
+| HU11-CP27 | `SeguridadPedidosServiceTest` | `unVendedorNoUsaElSeguimiento` | Aplicación (seguridad) | AB#675 | PR pendiente | 🔍 |
+| HU11-CP27 | `SeguridadPedidosServiceTest` | `unAdministradorNoUsaElSeguimiento` | Aplicación (seguridad) | AB#675 | PR pendiente | 🔍 |
+| HU11-CP27 | `SeguridadPedidosServiceTest` | `unClienteNoUsaElSeguimientoConElCorreoDeOtro` | Aplicación (seguridad) | AB#675 | PR pendiente | 🔍 |
+| HU11-CP27 | `SeguridadPedidosServiceTest` | `unClienteUsaElSeguimientoConSuPropioCorreo` | Aplicación (seguridad) | AB#675 | PR pendiente | 🔍 |
+| HU11-CP27 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaElSeguimiento` | Aplicación (seguridad) | AB#675 | PR pendiente | 🔍 |
+| HU11-CP28 | `PedidoControllerTest` | `elSeguimientoResponde200ConElEstadoYElHistorico` | Infraestructura (web) | AB#673 | PR pendiente | 🔍 |
+| HU11-CP29 | `PedidoControllerTest` | `confirmarLaEntregaResponde200ConElSeguimientoEntregado` | Infraestructura (web) | AB#673 | PR pendiente | 🔍 |
+| HU11-CP30 | `PedidoControllerTest` | `losErroresDelSeguimientoSonGenericos` | Infraestructura (web) | AB#674 | PR pendiente | 🔍 |
+| HU11-CP31 | `PedidoControllerTest` | `soloElClienteUsaElSeguimiento` | Infraestructura (web) | AB#675 | PR pendiente | 🔍 |
+| HU11-CP32 | `PedidoDocumentMapperTest` | `conservaElHistoricoYLasFechasDeEntrega` | Infraestructura | AB#673 | PR pendiente | 🔍 |
+| HU11-CP32 | `PedidoDocumentMapperTest` | `unDocumentoSinHistoricoSeLeeVacio` | Infraestructura | AB#673 | PR pendiente | 🔍 |
+| HU11-CP32 | `PedidoDocumentMapperTest` | `unEstadoDesconocidoEnElHistoricoEsInvalido` | Infraestructura | AB#673 | PR pendiente | 🔍 |
+| HU11-CP33 | `OrderDetailPage.test.jsx` | `HU11-CP33: un envío en curso muestra la fecha estimada de entrega` | Frontend · página | AB#672 | PR pendiente | 🔍 |
+| HU11-CP33 | `OrderDetailPage.test.jsx` | `HU11-CP33: sin fecha estimada lo indica con claridad en lugar de dejarlo vacío` | Frontend · página | AB#672 | PR pendiente | 🔍 |
+| HU11-CP33 | `OrderDetailPage.test.jsx` | `HU11-CP33: una vez entregado muestra la fecha real y deja de mostrar la estimada` | Frontend · página | AB#672 | PR pendiente | 🔍 |
+| HU11-CP34 | `OrderDetailPage.test.jsx` | `HU11-CP34: «Confirmar recepción» solo aparece cuando el envío está enviado` | Frontend · página | AB#672 | PR pendiente | 🔍 |
+| HU11-CP34 | `OrderDetailPage.test.jsx` | `HU11-CP34: un pedido entregado o cancelado no tiene el botón` | Frontend · página | AB#672 | PR pendiente | 🔍 |
+| HU11-CP34 | `OrderDetailPage.test.jsx` | `HU11-CP34: un pedido pagado, que aún no ha salido, tampoco tiene el botón` | Frontend · página | AB#672 | PR pendiente | 🔍 |
+| HU11-CP35 | `OrderDetailPage.test.jsx` | `HU11-CP35: al pulsar «Confirmar recepción» pide confirmación y todavía no confirma nada` | Frontend · página | AB#672 | PR pendiente | 🔍 |
+| HU11-CP35 | `OrderDetailPage.test.jsx` | `HU11-CP35: «Volver» cierra la confirmación sin confirmar` | Frontend · página | AB#672 | PR pendiente | 🔍 |
+| HU11-CP36 | `OrderDetailPage.test.jsx` | `HU11-CP36: al confirmar, el envío pasa a entregado, se avisa y ya no se puede volver a confirmar` | Frontend · página | AB#672 | PR pendiente | 🔍 |
+| HU11-CP37 | `OrderDetailPage.test.jsx` | `HU11-CP37: si el pedido ya no se puede marcar como entregado, cierra la confirmación y lo avisa` | Frontend · página | AB#674 | PR pendiente | 🔍 |
+| HU11-CP37 | `OrderDetailPage.test.jsx` | `HU11-CP37: si falla por otro motivo lo avisa dentro de la confirmación, sin detalles internos, y permite reintentar` | Frontend · página | AB#674 | PR pendiente | 🔍 |
+| HU11-CP38 | `OrderDetailPage.test.jsx` | `HU11-CP38: mientras llega el seguimiento muestra que está cargando, sin bloquear el resto del detalle` | Frontend · página | AB#674 | PR pendiente | 🔍 |
+| HU11-CP38 | `OrderDetailPage.test.jsx` | `HU11-CP38: si falla el seguimiento lo avisa con «Reintentar» y el resto del detalle sigue visible` | Frontend · página | AB#674 | PR pendiente | 🔍 |
+| HU11-CP38 | `OrderDetailPage.test.jsx` | `HU11-CP38: un estado que el frontend no conoce se indica en lugar de marcar todos los pasos como pendientes` | Frontend · página | AB#674 | PR pendiente | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/pedidos/`):
-- `ConsultaComprasServiceTest` y `SeguridadPedidosServiceTest`: `application/service/` (el primero sin Spring; el segundo con un contexto mínimo y `@WithMockUser`)
-- `EstadoPedidoTest`: `domain/model/` (JUnit)
+- `ConsultaComprasServiceTest`, `SeguimientoEnvioServiceTest` y `SeguridadPedidosServiceTest`: `application/service/` (los dos primeros sin Spring; el tercero con un contexto mínimo y `@WithMockUser`)
+- `EstadoPedidoTest` y `PedidoTest`: `domain/model/` (JUnit)
 - `PedidoMongoAdapterTest` y `PedidoDocumentMapperTest`: `infrastructure/adapter/out/persistence/` (el primero con Testcontainers)
 - `PedidoControllerTest`: `infrastructure/adapter/in/web/` (`@WebMvcTest` con `SecurityConfig`, sin MongoDB)
 

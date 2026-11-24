@@ -12,6 +12,7 @@ import es.uclm.esibuy.backend.metodospago.application.port.in.GestionMetodosPago
 import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.SeguimientoEnvioUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ProductosConPedidosUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.VentasVendedorUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.out.CarritoPort;
@@ -27,6 +28,7 @@ import es.uclm.esibuy.backend.pedidos.application.service.ConsultaComprasService
 import es.uclm.esibuy.backend.pedidos.application.service.DependenciasRealizacionPedido;
 import es.uclm.esibuy.backend.pedidos.application.service.RealizacionPedidoService;
 import es.uclm.esibuy.backend.pedidos.application.service.ProductosConPedidosService;
+import es.uclm.esibuy.backend.pedidos.application.service.SeguimientoEnvioService;
 import es.uclm.esibuy.backend.pedidos.application.service.VentasVendedorService;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.carrito.CarritoAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.direcciones.DireccionesAdapter;
@@ -131,6 +133,13 @@ public class PedidosConfig {
     CancelacionPedidoUseCase cancelacionPedidoUseCase(PedidoRepositoryPort pedidoRepositoryPort,
             ClienteEnSesionPort pedidosClienteEnSesionPort, ExistenciasPort pedidosExistenciasPort) {
         return new CancelacionPedidoService(pedidoRepositoryPort, pedidosClienteEnSesionPort, pedidosExistenciasPort);
+    }
+
+    // Seguimiento del envío del cliente: consulta y confirmación de recepción, con el reloj de UsuariosConfig
+    @Bean
+    SeguimientoEnvioUseCase seguimientoEnvioUseCase(PedidoRepositoryPort pedidoRepositoryPort,
+            ClienteEnSesionPort pedidosClienteEnSesionPort, Clock reloj) {
+        return new SeguimientoEnvioService(pedidoRepositoryPort, pedidosClienteEnSesionPort, reloj);
     }
 
     // Ventas del vendedor para sus estadísticas (HU17)

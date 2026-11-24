@@ -1,9 +1,11 @@
 package es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.persistence;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
+import es.uclm.esibuy.backend.pedidos.domain.model.CambioEstado;
 import es.uclm.esibuy.backend.pedidos.domain.model.DatosPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
@@ -103,5 +105,53 @@ class PedidoDocumentMapperTest {
             assertEquals(estado.name(), documento.getEstado());
             assertEquals(estado, mapper.aDominio(documento).getEstado());
         }
+    }
+
+    @Test
+    @DisplayName("HU11-CP32: el histórico y las fechas de entrega pasan a documento y vuelven sin perder ningún dato")
+    void conservaElHistoricoYLasFechasDeEntrega() {
+        Instant enviado = Instant.parse("2026-10-30T09:00:00Z");
+        Instant estimada = Instant.parse("2026-11-04T00:00:00Z");
+        Instant entrega = Instant.parse("2026-11-05T12:30:00Z");
+        Pedido base = pedido("o-1", "ESB-2026-000001");
+        Pedido pedido = new Pedido(new DatosPedido("o-1", base.getNumeroPedido(), "c-1", "u-2", "TecnoVera",
+                EstadoPedido.ENTREGADO, base.getLineas(), base.getDireccionEnvio(), "mp-1", AHORA,
+                List.of(new CambioEstado(EstadoPedido.PAGADO, AHORA), new CambioEstado(EstadoPedido.ENVIADO, enviado),
+                        new CambioEstado(EstadoPedido.ENTREGADO, entrega)),
+                estimada, entrega));
+
+        PedidoDocument documento = mapper.aDocumento(pedido);
+        Pedido leido = mapper.aDominio(documento);
+
+        assertEquals("ENVIADO", documento.getHistorial().get(1).getEstado());
+        assertEquals(enviado, documento.getHistorial().get(1).getFecha());
+        assertEquals(pedido.getHistorial(), leido.getHistorial());
+        assertEquals(estimada, leido.getFechaEstimadaEntrega());
+        assertEquals(entrega, leido.getFechaEntrega());
+    }
+
+    @Test
+    @DisplayName("HU11-CP32: un pedido guardado antes del seguimiento, sin histórico ni fechas, se lee con el histórico vacío")
+    void unDocumentoSinHistoricoSeLeeVacio() {
+        PedidoDocument documento = mapper.aDocumento(pedido("o-1", "ESB-2026-000001"));
+        documento.setHistorial(null);
+
+        Pedido leido = mapper.aDominio(documento);
+
+        assertEquals(List.of(), leido.getHistorial());
+        assertNull(leido.getFechaEstimadaEntrega());
+        assertNull(leido.getFechaEntrega());
+    }
+
+    @Test
+    @DisplayName("HU11-CP32: un estado desconocido en el histórico guardado es un documento inválido")
+    void unEstadoDesconocidoEnElHistoricoEsInvalido() {
+        PedidoDocument documento = mapper.aDocumento(pedido("o-1", "ESB-2026-000001"));
+        CambioEstadoDocument cambio = new CambioEstadoDocument();
+        cambio.setEstado("EN_REPARTO");
+        cambio.setFecha(AHORA);
+        documento.setHistorial(List.of(cambio));
+
+        assertThrows(PedidoInvalidoException.class, () -> mapper.aDominio(documento));
     }
 }

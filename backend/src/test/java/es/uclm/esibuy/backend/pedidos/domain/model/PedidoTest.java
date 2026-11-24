@@ -1,10 +1,12 @@
 package es.uclm.esibuy.backend.pedidos.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEntregableException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -152,5 +154,57 @@ class PedidoTest {
             assertThrows(PedidoNoCancelableException.class, pedido::cancelar);
             assertEquals(estado, pedido.getEstado());
         }
+    }
+
+    private static final Instant ENTREGA = Instant.parse("2026-11-05T12:30:00Z");
+
+    @Test
+    @DisplayName("HU11-CP21: un pedido nuevo empieza su histórico en pagado, con la fecha del pedido, y sin fechas de entrega")
+    void unPedidoNuevoEmpiezaSuHistorico() {
+        Pedido pedido = pedidoCon(List.of(linea("p-1", 1, "10.00")));
+
+        assertEquals(List.of(new CambioEstado(EstadoPedido.PAGADO, AHORA)), pedido.getHistorial());
+        assertNull(pedido.getFechaEstimadaEntrega());
+        assertNull(pedido.getFechaEntrega());
+    }
+
+    @Test
+    @DisplayName("HU11-CP22: confirmar la entrega de un pedido enviado lo pasa a entregado, fija la fecha real y la añade al histórico")
+    void confirmarLaEntregaDeUnPedidoEnviado() {
+        Pedido pedido = pedidoEn(EstadoPedido.ENVIADO);
+
+        pedido.confirmarEntrega(ENTREGA);
+
+        assertEquals(EstadoPedido.ENTREGADO, pedido.getEstado());
+        assertEquals(ENTREGA, pedido.getFechaEntrega());
+        assertEquals(new CambioEstado(EstadoPedido.ENTREGADO, ENTREGA),
+                pedido.getHistorial().get(pedido.getHistorial().size() - 1));
+    }
+
+    @Test
+    @DisplayName("HU11-CP23: solo se confirma la entrega desde enviado: desde cualquier otro estado, también ya entregado, se rechaza y no cambia")
+    void soloSeConfirmaLaEntregaDesdeEnviado() {
+        for (EstadoPedido estado : List.of(EstadoPedido.PAGADO, EstadoPedido.PREPARANDO, EstadoPedido.ENTREGADO,
+                EstadoPedido.CANCELADO)) {
+            Pedido pedido = pedidoEn(estado);
+
+            assertThrows(PedidoNoEntregableException.class, () -> pedido.confirmarEntrega(ENTREGA));
+            assertEquals(estado, pedido.getEstado());
+            assertNull(pedido.getFechaEntrega());
+            assertEquals(List.of(), pedido.getHistorial());
+        }
+    }
+
+    @Test
+    @DisplayName("HU11-CP23: la entrega no es reversible: una vez entregado, confirmar otra vez se rechaza y conserva la primera fecha")
+    void laEntregaNoSeDeshaceNiSeRepite() {
+        Pedido pedido = pedidoEn(EstadoPedido.ENVIADO);
+        pedido.confirmarEntrega(ENTREGA);
+
+        assertThrows(PedidoNoEntregableException.class, () -> pedido.confirmarEntrega(AHORA));
+        assertThrows(PedidoNoCancelableException.class, pedido::cancelar);
+        assertEquals(EstadoPedido.ENTREGADO, pedido.getEstado());
+        assertEquals(ENTREGA, pedido.getFechaEntrega());
+        assertEquals(1, pedido.getHistorial().size());
     }
 }
