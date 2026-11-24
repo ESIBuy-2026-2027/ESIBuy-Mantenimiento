@@ -89,7 +89,11 @@ public class SecurityConfig {
         private static final String RUTAS_CLIENTE = "/api/customer/**";
         // Catálogo de productos del cliente (HU7) y detalle de cada producto (HU8):
         // solo los ve un CLIENTE.
-        // Selección pública de productos destacados para la portada; no expone datos comerciales.\n        private static final String RUTA_PRODUCTOS_DESTACADOS = "/api/products/featured";\n        private static final String RUTAS_CATALOGO = "/api/products/**";
+        // Catálogo de productos del cliente (HU7) y detalle de cada producto (HU8):
+        // solo los ve un CLIENTE.
+        private static final String RUTAS_CATALOGO = "/api/products/**";
+        // Consulta pública y de solo lectura de los productos destacados de la portada.
+        private static final String RUTA_PRODUCTOS_DESTACADOS = "/api/products/featured";
         // Valorar un producto (HU13): solo el CLIENTE, y solo esta ruta, no cualquier
         // POST bajo /api/products
         private static final String RUTA_VALORACIONES = "/api/products/*/valoraciones";
