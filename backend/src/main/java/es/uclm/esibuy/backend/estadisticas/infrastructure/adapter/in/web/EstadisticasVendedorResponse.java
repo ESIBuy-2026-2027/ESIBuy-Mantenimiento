@@ -21,7 +21,12 @@ public record EstadisticasVendedorResponse(Ventas ventas, Valoraciones valoracio
     public record ValoracionDeProducto(String productoId, String nombre, double media, int numero) {
     }
 
-    public record Stock(int productos, int sinStock, int stockBajo, int noDisponibles) {
+    public record Stock(int productos, int sinStock, int stockBajo, int noDisponibles,
+            List<ProductoEnAlertaStock> productosConStockBajo,
+            List<ProductoEnAlertaStock> productosSinStock) {
+    }
+
+    public record ProductoEnAlertaStock(String productoId, String nombre, int stock) {
     }
 
     public static EstadisticasVendedorResponse desde(EstadisticasVendedor estadisticas) {
@@ -33,11 +38,17 @@ public record EstadisticasVendedorResponse(Ventas ventas, Valoraciones valoracio
                 .map(valoracion -> new ValoracionDeProducto(valoracion.productoId(), valoracion.nombre(),
                         valoracion.media(), valoracion.numero()))
                 .toList();
+        List<ProductoEnAlertaStock> productosConStockBajo = estadisticas.productosStockBajo().stream()
+                .map(producto -> new ProductoEnAlertaStock(producto.productoId(), producto.nombre(), producto.stock()))
+                .toList();
+        List<ProductoEnAlertaStock> productosSinStock = estadisticas.productosSinStock().stream()
+                .map(producto -> new ProductoEnAlertaStock(producto.productoId(), producto.nombre(), producto.stock()))
+                .toList();
         return new EstadisticasVendedorResponse(
                 new Ventas(estadisticas.pedidos(), estadisticas.unidadesVendidas(), estadisticas.ingresos(),
                         masVendidos),
                 new Valoraciones(estadisticas.valoracionMedia(), estadisticas.numeroValoraciones(), porProducto),
                 new Stock(estadisticas.productos(), estadisticas.sinStock(), estadisticas.stockBajo(),
-                        estadisticas.noDisponibles()));
+                        estadisticas.noDisponibles(), productosConStockBajo, productosSinStock));
     }
 }
