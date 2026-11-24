@@ -554,7 +554,8 @@ describe('ProductsPage (HU9): precio y carrito', () => {
     await user.click(within(tarjetaDeAuriculares()).getByRole('button', { name: /añadir al carrito/i }))
 
     await waitFor(() => expect(cuerpo).toEqual({ productoId: 'p-1', cantidad: 1 }))
-    expect(await within(tarjetaDeAuriculares()).findByText(/añadido/i)).toBeInTheDocument()
+    // La confirmación es que el producto pasa a estar en el carrito, con sus unidades
+    expect(await within(tarjetaDeAuriculares()).findByText(/en tu carrito: \d+/i)).toBeInTheDocument()
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/)
   })
 

@@ -78,6 +78,9 @@ export default function OrdersPage() {
           </Title1>
           <Text className={pageStyles.subtitle}>Consulta tus compras y en qué punto está cada envío.</Text>
         </div>
+        <LinkButton to={PATHS.PRODUCTS} appearance="primary">
+          Seguir comprando
+        </LinkButton>
       </div>
       {failed && (
         <MessageBar intent="error">

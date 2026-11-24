@@ -1318,7 +1318,7 @@ Notas:
 | HU7-CP14 | `ProductoMongoAdapterTest` | `buscarEnCatalogoOrdenaPorNombreYPagina` | Infraestructura | AB#352 | PR #153 | ✅ |
 | HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoConValoracionMinimaFiltraPorLaMedia` | Infraestructura | AB#352 · AB#415 | PR #153 (sustituido en el PR #195) | ✅ |
 | HU7-CP15 | `ProductoMongoAdapterTest` | `buscarEnCatalogoPorValoracionOrdenaPorLaMedia` | Infraestructura | AB#352 · AB#415 | PR #153 (sustituido en el PR #195) | ✅ |
-| HU7-CP16 | `CatalogoControllerTest` | `clienteRecibeElCatalogoConElFormatoDelContrato` | Infraestructura | AB#353 | PR #153 · este PR | 🔍 |
+| HU7-CP16 | `CatalogoControllerTest` | `clienteRecibeElCatalogoConElFormatoDelContrato` | Infraestructura | AB#353 | PR #153 · este PR; modificado en AB#561 | 🔍 |
 | HU7-CP17 | `CatalogoControllerTest` | `traduceLosParametrosALaConsulta` | Infraestructura | AB#353 | PR #153 | ✅ |
 | HU7-CP18 | `CatalogoControllerTest` | `parametroNoValidoDevuelve400` | Infraestructura | AB#353 | PR #153 | ✅ |
 | HU7-CP19 | `CatalogoControllerTest` | `sinSesionDevuelve401` | Infraestructura | AB#353 | PR #153 | ✅ |
@@ -1466,6 +1466,9 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU9-CP22 | Eliminar por cliente borra su carrito de la colección y no el de otro cliente | Integración (persistencia) | 1 | ✅ Pasa (1, AB#275, PR #235) |
 | HU9-CP23 | Borrar el carrito exige el rol cliente y su propio correo; un vendedor, un administrador o sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#275, PR #235) |
 | HU9-CP28 | Quitar varios productos del carrito a la vez (lo que usa el pedido al terminar) lo hace con una sola lectura y un solo guardado, deja el resto y exige rol cliente y su propio correo | Unitario con y sin Spring Security | 2 | 🔍 Pendiente de PR (AB#565) |
+| HU9-CP29 | La tarjeta del catálogo dice cuántas unidades quedan en stock y deja elegir cuántas añadir al carrito, sin pasar del stock | Frontend (componente) | 2 | 🔍 Pendiente de PR (AB#561) |
+| HU9-CP30 | Si el producto ya está en el carrito, la tarjeta enseña cuántas hay y deja cambiarlas o quitarlo; si ya tienes todo el stock no ofrece añadir más | Frontend (componente) | 2 | 🔍 Pendiente de PR (AB#561) |
+| HU9-CP31 | Un producto agotado dice «Agotado» en la tarjeta, no «No disponible» | Frontend (componente) | 1 | 🔍 Pendiente de PR (AB#561) |
 
 Notas:
 - **HU9-CP01 a CP09 (Sprint 2, frontend):** casos propuestos en las tasks AB#383 (vista añadir al carrito) y AB#384 (vista de carrito) a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu9-carrito-de-compra.md`). Pendientes de confirmar con el equipo y de añadir a la HU9 (AB#71) en Azure Boards.
@@ -1494,7 +1497,7 @@ Notas:
 | HU9-CP02 | `AddToCartButton.test.jsx` | `HU9-CP02: un producto no disponible no se puede añadir` | Frontend · componente | AB#383 | PR #144 | ✅ |
 | HU9-CP02 | `ProductCard.test.jsx` | `HU9-CP02: la tarjeta tiene un botón para añadir una unidad al carrito` | Frontend · componente | AB#383 | PR #144 | ✅ |
 | HU9-CP02 | `ProductCard.test.jsx` | `HU9-CP02: el botón no forma parte del enlace, así que añadir no abre el detalle` | Frontend · componente | AB#383 | PR #144 | ✅ |
-| HU9-CP02 | `ProductsPage.test.jsx` | `HU9-CP02: al pulsar «Añadir al carrito» en una tarjeta se envía ese producto al carrito` | Frontend · página | AB#383 | PR #144 | ✅ |
+| HU9-CP02 | `ProductsPage.test.jsx` | `HU9-CP02: al pulsar «Añadir al carrito» en una tarjeta se envía ese producto al carrito` | Frontend · página | AB#383 | PR #144 | ✅ (modificado en AB#561) |
 | HU9-CP02 | `ProductsPage.test.jsx` | `HU9-CP02: si el servidor dice que no hay existencias, la tarjeta lo avisa` | Frontend · página | AB#383 | PR #144 | ✅ |
 | HU9-CP03 | `ProductDetailPage.test.jsx` | `HU9-CP03: el detalle tiene un botón para añadir el producto al carrito` | Frontend · página | AB#383 | PR #144 | ✅ |
 | HU9-CP03 | `ProductDetailPage.test.jsx` | `HU9-CP03: se puede elegir la cantidad antes de añadir` | Frontend · página | AB#383 | PR #144 | ✅ |
@@ -1593,6 +1596,11 @@ Notas:
 | HU9-CP23 | `SeguridadCarritoServiceTest` | `sinSesionNoSeEliminaElCarrito` | Aplicación | AB#275 | PR #235 | ✅ |
 | HU9-CP28 | `GestionCarritoServiceTest` | `quitarVariosProductosSeHaceDeUnaVez` | Aplicación | AB#565 | PR pendiente | 🔍 |
 | HU9-CP28 | `SeguridadCarritoServiceTest` | `unClienteConsultaSuPropioCarrito` | Aplicación | AB#565 | PR pendiente | 🔍 |
+| HU9-CP29 | `ProductCard.test.jsx` | `HU9-CP29: la tarjeta dice cuántas unidades quedan en stock` | Frontend · componente | AB#561 | PR pendiente | 🔍 |
+| HU9-CP29 | `ProductCard.test.jsx` | `HU9-CP29: se puede elegir cuántas unidades añadir, sin pasar del stock, y se añade esa cantidad` | Frontend · componente | AB#561 | PR pendiente | 🔍 |
+| HU9-CP30 | `ProductCard.test.jsx` | `HU9-CP30: lo que ya hay en el carrito se descuenta de lo que se puede añadir y se puede cambiar o quitar` | Frontend · componente | AB#561 | PR pendiente | 🔍 |
+| HU9-CP30 | `ProductCard.test.jsx` | `HU9-CP30: si ya tienes en el carrito todo el stock no ofrece añadir más` | Frontend · componente | AB#561 | PR pendiente | 🔍 |
+| HU9-CP31 | `ProductCard.test.jsx` | `HU9-CP31: un producto agotado dice «Agotado» y no «No disponible»` | Frontend · componente | AB#561 | PR pendiente | 🔍 |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `AddToCartButton.test.jsx` y `CartWidget.test.jsx`: `features/cart/` (Vitest, React Testing Library y MSW)
@@ -1819,6 +1827,7 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 | HU11-CP17 | Un pedido inexistente o de otro cliente se ve como no encontrado; otro error permite reintentar; desde el detalle se vuelve a Mis pedidos | Frontend (página) | 3 | ✅ Pasa |
 | HU11-CP18 | La cabecera del cliente tiene el enlace «Mis pedidos»; la del vendedor y la del administrador, no | Frontend (componente) | 2 | ✅ Pasa |
 | HU11-CP19 | Tras pagar (HU10) se puede ir a Mis pedidos | Frontend (página) | 1 | ✅ Pasa |
+| HU11-CP20 | Desde Mis pedidos se puede volver al catálogo: botón «Seguir comprando» y entrada «Catálogo» en el menú del cliente | Frontend (página) | 1 | 🔍 Pendiente de PR (AB#561) |
 
 Notas:
 - **HU11-CP01 a CP06 (Sprint 2, backend, TDD):** casos propuestos en la T378 (AB#378, lógica de obtención de pedidos) a partir del criterio de aceptación de la HU11 (AB#73): «el sistema muestra el detalle de los productos, desglose de precios y la máquina de estados de envío cuando el cliente selecciona un pedido concreto». Pendientes de confirmar con el equipo y de añadir a la HU11 en Azure Boards.
@@ -1866,6 +1875,7 @@ Notas:
 | HU11-CP18 | `AppHeader.test.jsx` | `HU11-CP18: el cliente tiene el enlace a sus pedidos y lleva a Mis pedidos` | Frontend · componente | AB#376 | PR #187 | ✅ |
 | HU11-CP18 | `AppHeader.test.jsx` | `HU11-CP18: el vendedor y el administrador no tienen el enlace a Mis pedidos` | Frontend · componente | AB#376 | PR #187 | ✅ |
 | HU11-CP19 | `CheckoutPage.test.jsx` | `HU11-CP19: tras pagar se puede ir a Mis pedidos` | Frontend · página | AB#376 | PR #187 | ✅ |
+| HU11-CP20 | `OrdersPage.test.jsx` | `HU11-CP20: desde Mis pedidos se puede volver al catálogo con «Seguir comprando» y desde el menú con «Catálogo»` | Frontend · página | AB#561 | PR pendiente | 🔍 |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/pedidos/`):
 - `ConsultaComprasServiceTest` y `SeguridadPedidosServiceTest`: `application/service/` (el primero sin Spring; el segundo con un contexto mínimo y `@WithMockUser`)
