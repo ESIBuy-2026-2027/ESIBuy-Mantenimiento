@@ -89,8 +89,6 @@ public class SecurityConfig {
         private static final String RUTAS_CLIENTE = "/api/customer/**";
         // Catálogo de productos del cliente (HU7) y detalle de cada producto (HU8):
         // solo los ve un CLIENTE.
-        // Catálogo de productos del cliente (HU7) y detalle de cada producto (HU8):
-        // solo los ve un CLIENTE.
         private static final String RUTAS_CATALOGO = "/api/products/**";
         // Consulta pública y de solo lectura de los productos destacados de la portada.
         private static final String RUTA_PRODUCTOS_DESTACADOS = "/api/products/featured";
@@ -119,6 +117,8 @@ public class SecurityConfig {
                                                 .requestMatchers(RUTAS_CLIENTE).hasRole(ROL_CLIENTE)
                                                 .requestMatchers(RUTAS_PERFIL).hasAnyRole(ROL_CLIENTE, ROL_VENDEDOR)
                                                 .requestMatchers(HttpMethod.GET, RUTA_PRODUCTOS_DESTACADOS).permitAll()
+                                                // Las imágenes de productos se muestran en el catálogo público y en la portada.
+                                                .requestMatchers(HttpMethod.GET, "/api/product-images/**").permitAll()
                                                 .requestMatchers(HttpMethod.GET, RUTAS_CATALOGO).hasRole(ROL_CLIENTE)
                                                 .requestMatchers(HttpMethod.POST, RUTA_VALORACIONES)
                                                 .hasRole(ROL_CLIENTE)
