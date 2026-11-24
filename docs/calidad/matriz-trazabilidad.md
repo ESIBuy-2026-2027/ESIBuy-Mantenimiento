@@ -1632,7 +1632,7 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 | HU10-CP05 | ~~Si falla el pedido de un vendedor se confirman los demás~~ Retirado: ya no se pagan varios vendedores a la vez (cada pedido es de un solo vendedor, decisión del equipo, PBI 535); lo sustituyen HU10-CP26, CP27 y CP28 | Frontend (página) | 0 | ⏸ Retirado (AB#561) |
 | HU10-CP06 | ~~Cada pedido se pide con un solo proveedor, uno detrás de otro~~ Retirado: lo sustituye HU10-CP28 (un solo vendedor por pedido) | Frontend (página) | 0 | ⏸ Retirado (AB#561) |
 | HU10-CP07 | El paso de pago lista los métodos de pago guardados del cliente (HU6), con su máscara, marca el predeterminado y deja elegir otro antes de pagar | Frontend (página) | 2 | ✅ Pasa |
-| HU10-CP08 | Sin métodos de pago guardados no se puede pagar y se lleva a la vista de métodos de pago (HU6) para añadir uno; si no se pueden cargar, se indica y se puede reintentar | Frontend (página) | 2 | ✅ Pasa |
+| HU10-CP08 | Sin métodos de pago guardados no se puede pagar y se ofrece añadirlo aquí mismo (HU10-CP33); si no se pueden cargar, se indica y se puede reintentar | Frontend (página) | 2 | ✅ Pasa |
 | HU10-CP09 | El pedido se crea con el vendedor, la dirección de envío (`direccionId`), el método de pago (`paymentMethodId`) y el total que vio el cliente (`totalEsperado`) | Frontend (página) | 1 | 🔍 Pendiente de PR (AB#561) |
 | HU10-CP10 | Tras pagar se muestra un recibo con forma de ticket: total pagado, fecha, el pedido con su número, vendedor e importe, y el método de pago usado con su máscara | Frontend (página + componente) | 5 | 🔍 Pendiente de PR (AB#561); el ticket sin cambios ✅ |
 | HU10-CP11 | La decoración del recibo no estorba: el código de barras y el confeti quedan ocultos a los lectores de pantalla y no hay confeti si el usuario prefiere reducir el movimiento | Frontend (componente) | 3 | ✅ Pasa |
@@ -1646,7 +1646,7 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 | HU10-CP19 | Persistencia en `pedidos`: el mapper no pierde datos, importes como Decimal128, número de pedido único y con formato validado por la colección | Unitario + integración | 5 | ✅ Pasa (5, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP20 | Realizar un pedido exige el rol cliente y que el correo del comando sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, PR #168) |
 | HU10-CP21 | El paso de envío lista las direcciones de envío del cliente (HU5), marca la principal y deja elegir otra antes de pagar | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#561) |
-| HU10-CP22 | Sin direcciones de envío no se puede continuar y se lleva a la vista de direcciones (HU5) para añadir una; si no se pueden cargar, se indica y se puede reintentar | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#561) |
+| HU10-CP22 | Sin direcciones de envío no se puede continuar y se ofrece añadirla aquí mismo (HU10-CP32); si no se pueden cargar, se indica y se puede reintentar | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#561) |
 | HU10-CP23 | ~~Cada pedido se crea con la dirección de envío elegida~~ Absorbido por HU10-CP09, que comprueba también la dirección elegida | Frontend (página) | 0 | ⏸ Retirado (AB#561) |
 | HU10-CP24 | Un pedido solo admite productos de un único vendedor: cada línea lleva su vendedor y mezclar vendedores se rechaza | Unitario | 2 | 🔍 Pendiente de PR (AB#563) |
 | HU10-CP25 | El descuento va en el precio de cada producto y el total del pedido es la suma de las líneas ya con su descuento, calculable antes de crear el pedido | Unitario | 1 | 🔍 Pendiente de PR (AB#563) |
@@ -1656,6 +1656,8 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 | HU10-CP29 | En el resumen se puede cambiar la cantidad de cada producto (sin pasar de las existencias) y quitarlo, y el total se actualiza | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#561) |
 | HU10-CP30 | Un producto con descuento enseña su precio original tachado, el porcentaje y el precio final; el descuento va en el precio de cada producto | Frontend (página) | 1 | 🔍 Pendiente de PR (AB#561) |
 | HU10-CP31 | La compra va por pasos (compra, envío, pago), cada uno enseña solo lo suyo, el paso actual se indica y se puede volver atrás sin perder lo elegido | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#561) |
+| HU10-CP32 | En el paso de envío se puede añadir una dirección nueva (o la primera, si no hay ninguna) sin salir de la pasarela; queda guardada y elegida, y se puede cancelar | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#561) |
+| HU10-CP33 | En el paso de pago se puede añadir un método de pago nuevo (tarjeta, PayPal o Bizum) sin salir de la pasarela; queda guardado y elegido, y se puede cancelar | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#561) |
 
 Notas:
 - **HU10-CP01 a CP06 (Sprint 2, frontend):** casos propuestos en la task AB#401 (vista de la pasarela de pago) a partir de lo pedido (`frontend/docs/hu10-pasarela-de-pago.md`). Pendientes de confirmar con el equipo y de añadir a la HU10 (AB#72) en Azure Boards. La task AB#379 (vista de carrito) es la misma pantalla que la AB#384 (HU9).
@@ -1763,13 +1765,13 @@ Notas:
 | HU10-CP04 | `CheckoutPage.test.jsx` | `HU10-CP04: si no queda nada más en el carrito, no ofrece pagar a otro vendedor` | Frontend · página | AB#561 | PR pendiente | 🔍 |
 | HU10-CP07 | `CheckoutPage.test.jsx` | `HU10-CP07: lista los métodos de pago guardados del cliente y marca el predeterminado` | Frontend · página | AB#561 | PR pendiente | 🔍 |
 | HU10-CP07 | `CheckoutPage.test.jsx` | `HU10-CP07: se puede elegir otro método de pago antes de pagar` | Frontend · página | AB#561 | PR pendiente | 🔍 |
-| HU10-CP08 | `CheckoutPage.test.jsx` | `HU10-CP08: sin métodos de pago guardados no deja pagar y lleva a sus métodos de pago para añadir uno` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP08 | `CheckoutPage.test.jsx` | `HU10-CP08: sin métodos de pago guardados no deja pagar y ofrece añadir uno aquí mismo` | Frontend · página | AB#561 | PR pendiente | 🔍 |
 | HU10-CP08 | `CheckoutPage.test.jsx` | `HU10-CP08: si no se pueden cargar los métodos de pago lo indica y deja reintentar` | Frontend · página | AB#561 | PR pendiente | 🔍 |
 | HU10-CP09 | `CheckoutPage.test.jsx` | `HU10-CP09: el pedido se crea con el vendedor, la dirección, el método de pago y el total que vio el cliente` | Frontend · página | AB#561 | PR pendiente | 🔍 |
 | HU10-CP10 | `CheckoutPage.test.jsx` | `HU10-CP10: tras pagar muestra un recibo con el total pagado, el pedido y el método de pago usado` | Frontend · página | AB#561 | PR pendiente | 🔍 |
 | HU10-CP21 | `CheckoutPage.test.jsx` | `HU10-CP21: lista las direcciones de envío del cliente y marca la principal` | Frontend · página | AB#561 | PR pendiente | 🔍 |
 | HU10-CP21 | `CheckoutPage.test.jsx` | `HU10-CP21: se puede elegir otra dirección de envío antes de pagar` | Frontend · página | AB#561 | PR pendiente | 🔍 |
-| HU10-CP22 | `CheckoutPage.test.jsx` | `HU10-CP22: sin direcciones de envío no deja continuar y lleva a sus direcciones para añadir una` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP22 | `CheckoutPage.test.jsx` | `HU10-CP22: sin direcciones de envío no deja continuar y ofrece añadir una aquí mismo` | Frontend · página | AB#561 | PR pendiente | 🔍 |
 | HU10-CP22 | `CheckoutPage.test.jsx` | `HU10-CP22: si no se pueden cargar las direcciones de envío lo indica y deja reintentar` | Frontend · página | AB#561 | PR pendiente | 🔍 |
 | HU10-CP26 | `CheckoutPage.test.jsx` | `HU10-CP26: si el pago se rechaza no se confirma el pedido, se avisa y se puede probar con otro método` | Frontend · página | AB#561 | PR pendiente | 🔍 |
 | HU10-CP27 | `CheckoutPage.test.jsx` | `HU10-CP27: si el total ha cambiado vuelve al resumen y pide revisar la compra` | Frontend · página | AB#561 | PR pendiente | 🔍 |
@@ -1785,6 +1787,11 @@ Notas:
 | HU10-CP30 | `CheckoutPage.test.jsx` | `HU10-CP30: un producto con descuento muestra su precio original tachado, el porcentaje y el precio final` | Frontend · página | AB#561 | PR pendiente | 🔍 |
 | HU10-CP31 | `CheckoutPage.test.jsx` | `HU10-CP31: la compra va por pasos y cada uno enseña solo lo suyo` | Frontend · página | AB#561 | PR pendiente | 🔍 |
 | HU10-CP31 | `CheckoutPage.test.jsx` | `HU10-CP31: se puede volver atrás sin perder lo elegido` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP32 | `CheckoutPage.test.jsx` | `HU10-CP32: se puede añadir una dirección nueva desde el paso de envío y queda elegida` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP32 | `CheckoutPage.test.jsx` | `HU10-CP32: sin direcciones guardadas se puede añadir la primera aquí mismo y seguir con el pago` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP32 | `CheckoutPage.test.jsx` | `HU10-CP32: se puede cancelar la dirección nueva y volver a las que ya hay` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP33 | `CheckoutPage.test.jsx` | `HU10-CP33: se puede añadir una tarjeta nueva desde el paso de pago y queda elegida` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP33 | `CheckoutPage.test.jsx` | `HU10-CP33: se puede cancelar el método de pago nuevo y volver a los que ya hay` | Frontend · página | AB#561 | PR pendiente | 🔍 |
 
 Ruta de la clase de test (bajo `frontend/src/`):
 - `CheckoutPage.test.jsx`: `pages/` (Vitest, React Testing Library y MSW)

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import PropTypes from 'prop-types'
 import {
   Badge,
@@ -11,15 +12,14 @@ import {
   Spinner,
   Text,
 } from '@fluentui/react-components'
-import { LockClosed20Regular } from '@fluentui/react-icons'
-import LinkButton from '../../components/LinkButton'
-import { PATHS } from '../../routes/paths'
+import { Add20Regular, LockClosed20Regular } from '@fluentui/react-icons'
 import { formatPrice } from '../../utils/format'
+import AddPaymentMethodPanel from '../paymentMethods/AddPaymentMethodPanel'
 import { TIPOS_DE_METODO } from '../paymentMethods/tiposDeMetodo'
 import { useCheckoutStyles } from './checkoutStyles'
 
 // Métodos de pago guardados del cliente (HU6).
-function MethodList({ query, selectedId, onSelect }) {
+function MethodList({ query, selectedId, onSelect, onAdd }) {
   const styles = useCheckoutStyles()
 
   if (query.failed) {
@@ -40,7 +40,7 @@ function MethodList({ query, selectedId, onSelect }) {
       <MessageBar intent="warning">
         <MessageBarBody>No tienes ningún método de pago guardado.</MessageBarBody>
         <MessageBarActions>
-          <LinkButton to={PATHS.PAYMENT_METHODS}>Añadir un método de pago</LinkButton>
+          <Button onClick={onAdd}>Añadir un método de pago</Button>
         </MessageBarActions>
       </MessageBar>
     )
@@ -92,11 +92,28 @@ MethodList.propTypes = {
   }).isRequired,
   selectedId: PropTypes.string,
   onSelect: PropTypes.func.isRequired,
+  onAdd: PropTypes.func.isRequired,
 }
 
-// Paso 3 de la pasarela (HU10): con qué método guardado se paga y el pago, que es simulado: no se cobra nada.
+// Paso 3 de la pasarela (HU10): con qué método guardado se paga, o uno nuevo que se añade aquí mismo (HU6), y el pago,
+// que es simulado: no se cobra nada.
 export default function PaymentStep({ group, address, methods, selectedId, paying, error, canPay, onSelect, onBack, onPay }) {
   const styles = useCheckoutStyles()
+  const [adding, setAdding] = useState(false)
+  const [added, setAdded] = useState(false)
+
+  const openForm = () => {
+    setAdded(false)
+    setAdding(true)
+  }
+
+  // El método nuevo queda guardado en su cuenta y elegido para este pago
+  const handleSaved = (created) => {
+    setAdding(false)
+    setAdded(true)
+    methods.retry()
+    onSelect(created.id)
+  }
 
   return (
     <section aria-label="Pago" className={styles.panel}>
@@ -111,7 +128,25 @@ export default function PaymentStep({ group, address, methods, selectedId, payin
         )}
       </div>
 
-      <MethodList query={methods} selectedId={selectedId} onSelect={onSelect} />
+      {adding ? (
+        <AddPaymentMethodPanel onSaved={handleSaved} onCancel={() => setAdding(false)} />
+      ) : (
+        <>
+          {added && (
+            <MessageBar intent="success">
+              <MessageBarBody>Método de pago añadido y elegido para este pedido.</MessageBarBody>
+            </MessageBar>
+          )}
+          <MethodList query={methods} selectedId={selectedId} onSelect={onSelect} onAdd={openForm} />
+          {methods.data?.length > 0 && (
+            <div>
+              <Button appearance="subtle" icon={<Add20Regular />} onClick={openForm}>
+                Añadir un método de pago nuevo
+              </Button>
+            </div>
+          )}
+        </>
+      )}
 
       {error && (
         <MessageBar intent="error" role="alert">
@@ -132,7 +167,7 @@ export default function PaymentStep({ group, address, methods, selectedId, payin
           appearance="primary"
           size="large"
           icon={paying ? <Spinner size="tiny" /> : <LockClosed20Regular />}
-          disabled={paying || !canPay}
+          disabled={paying || adding || !canPay}
           onClick={onPay}
         >
           {paying ? 'Procesando pago…' : 'Simular pago'}

@@ -229,14 +229,14 @@ describe('CheckoutPage (HU10): elegir la dirección de envío', () => {
     expect(screen.getByRole('radio', { name: /calle mayor 1/i })).not.toBeChecked()
   })
 
-  it('HU10-CP22: sin direcciones de envío no deja continuar y lleva a sus direcciones para añadir una', async () => {
+  it('HU10-CP22: sin direcciones de envío no deja continuar y ofrece añadir una aquí mismo', async () => {
     const user = userEvent.setup()
     server.use(http.get('/api/customer/addresses', () => HttpResponse.json([])))
     await abrirPasarela()
     await continuar(user, /continuar con el envío/i)
 
     expect(await screen.findByText(/no tienes ninguna dirección de envío/i)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /añadir una dirección/i })).toHaveAttribute('href', '/addresses')
+    expect(screen.getByRole('button', { name: /añadir una dirección/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /continuar con el pago/i })).toBeDisabled()
   })
 
@@ -279,7 +279,7 @@ describe('CheckoutPage (HU10): elegir el método de pago', () => {
     expect(screen.getByRole('radio', { name: /tarjeta.*1111/i })).not.toBeChecked()
   })
 
-  it('HU10-CP08: sin métodos de pago guardados no deja pagar y lleva a sus métodos de pago para añadir uno', async () => {
+  it('HU10-CP08: sin métodos de pago guardados no deja pagar y ofrece añadir uno aquí mismo', async () => {
     const user = userEvent.setup()
     server.use(http.get('/api/customer/payment-methods', () => HttpResponse.json([])))
     await abrirPasarela()
@@ -287,7 +287,7 @@ describe('CheckoutPage (HU10): elegir el método de pago', () => {
     await continuar(user, /continuar con el pago/i)
 
     expect(await screen.findByText(/no tienes ningún método de pago/i)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /añadir un método de pago/i })).toHaveAttribute('href', '/payment-methods')
+    expect(screen.getByRole('button', { name: /añadir un método de pago/i })).toBeInTheDocument()
     expect(botonDePago()).toBeDisabled()
   })
 
@@ -307,6 +307,89 @@ describe('CheckoutPage (HU10): elegir el método de pago', () => {
 
     expect(await screen.findByRole('radio', { name: /tarjeta.*1111/i })).toBeChecked()
     expect(botonDePago()).toBeEnabled()
+  })
+})
+
+describe('CheckoutPage (HU10): añadir la dirección o el método de pago al comprar', () => {
+  const rellenarDireccion = async (user) => {
+    await user.type(screen.getByLabelText(/destinatario/i), 'Ana López')
+    await user.type(screen.getByLabelText(/calle y número/i), 'Calle Ancha 3')
+    await user.type(screen.getByLabelText(/código postal/i), '45001')
+    await user.type(screen.getByLabelText(/ciudad/i), 'Toledo')
+    await user.type(screen.getByLabelText(/provincia/i), 'Toledo')
+    await user.type(screen.getByLabelText(/teléfono/i), '698765432')
+  }
+
+  it('HU10-CP32: se puede añadir una dirección nueva desde el paso de envío y queda elegida', async () => {
+    const user = userEvent.setup()
+    await abrirPasarela()
+    await irAlEnvio(user)
+
+    await user.click(screen.getByRole('button', { name: /añadir una dirección nueva/i }))
+    await rellenarDireccion(user)
+    await user.click(screen.getByRole('button', { name: /guardar dirección/i }))
+
+    expect(await screen.findByText(/dirección añadida y elegida/i)).toBeInTheDocument()
+    expect(await screen.findByRole('radio', { name: /calle ancha 3/i })).toBeChecked()
+    expect(screen.getByRole('button', { name: /continuar con el pago/i })).toBeEnabled()
+  })
+
+  it('HU10-CP32: sin direcciones guardadas se puede añadir la primera aquí mismo y seguir con el pago', async () => {
+    const user = userEvent.setup()
+    server.use(http.get('/api/customer/addresses', () => HttpResponse.json([]), { once: true }))
+    await abrirPasarela()
+    await continuar(user, /continuar con el envío/i)
+
+    await user.click(await screen.findByRole('button', { name: /añadir una dirección/i }))
+    await rellenarDireccion(user)
+    await user.click(screen.getByRole('button', { name: /guardar dirección/i }))
+
+    expect(await screen.findByRole('radio', { name: /calle ancha 3/i })).toBeChecked()
+    await continuar(user, /continuar con el pago/i)
+    expect(await screen.findByRole('radiogroup', { name: /método de pago/i })).toBeInTheDocument()
+  })
+
+  it('HU10-CP32: se puede cancelar la dirección nueva y volver a las que ya hay', async () => {
+    const user = userEvent.setup()
+    await abrirPasarela()
+    await irAlEnvio(user)
+
+    await user.click(screen.getByRole('button', { name: /añadir una dirección nueva/i }))
+    expect(screen.getByRole('button', { name: /continuar con el pago/i })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: /cancelar/i }))
+
+    expect(await screen.findByRole('radiogroup', { name: /dirección de envío/i })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /calle mayor 1/i })).toBeChecked()
+  })
+
+  it('HU10-CP33: se puede añadir una tarjeta nueva desde el paso de pago y queda elegida', async () => {
+    const user = userEvent.setup()
+    await abrirPasarela()
+    await irAlPago(user)
+
+    await user.click(screen.getByRole('button', { name: /añadir un método de pago nuevo/i }))
+    await user.type(screen.getByLabelText(/número de tarjeta/i), '4242424242424242')
+    await user.type(screen.getByLabelText(/caducidad/i), '12/30')
+    await user.type(screen.getByLabelText(/cvv/i), '123')
+    await user.type(screen.getByLabelText(/titular/i), 'Ana López')
+    await user.click(screen.getByRole('button', { name: /guardar método de pago/i }))
+
+    expect(await screen.findByText(/método de pago añadido y elegido/i)).toBeInTheDocument()
+    expect(await screen.findByRole('radio', { name: /tarjeta.*4242/i })).toBeChecked()
+    expect(botonDePago()).toBeEnabled()
+  })
+
+  it('HU10-CP33: se puede cancelar el método de pago nuevo y volver a los que ya hay', async () => {
+    const user = userEvent.setup()
+    await abrirPasarela()
+    await irAlPago(user)
+
+    await user.click(screen.getByRole('button', { name: /añadir un método de pago nuevo/i }))
+    expect(botonDePago()).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: /cancelar/i }))
+
+    expect(await screen.findByRole('radiogroup', { name: /método de pago/i })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /tarjeta.*1111/i })).toBeChecked()
   })
 })
 
