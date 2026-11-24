@@ -1,20 +1,26 @@
 const BASE_URL = import.meta.env.VITE_API_URL ?? ''
 
+// `code` identifica el error y `detail` es el mensaje del servidor, si lo trae (por ejemplo, qué producto se ha quedado
+// sin stock).
 export class ApiError extends Error {
-  constructor(status, message, code = null) {
+  constructor(status, message, code = null, detail = null) {
     super(message)
     this.name = 'ApiError'
     this.status = status
     this.code = code
+    this.detail = detail
   }
 }
 
-async function readErrorCode(response) {
+async function readErrorBody(response) {
   try {
     const data = await response.json()
-    return typeof data?.code === 'string' ? data.code : null
+    return {
+      code: typeof data?.code === 'string' ? data.code : null,
+      detail: typeof data?.mensaje === 'string' ? data.mensaje : null,
+    }
   } catch {
-    return null
+    return { code: null, detail: null }
   }
 }
 
@@ -94,11 +100,8 @@ export async function request(path, { method = 'GET', body } = {}) {
 
   if (!response.ok) {
     if (response.status === 401) avisoDe401?.()
-    throw new ApiError(
-      response.status,
-      `Error ${response.status} en ${method} ${path}`,
-      await readErrorCode(response),
-    )
+    const { code, detail } = await readErrorBody(response)
+    throw new ApiError(response.status, `Error ${response.status} en ${method} ${path}`, code, detail)
   }
 
   // Una respuesta sin cuerpo (204, o un 201 como el del registro) no es un error: devuelve null

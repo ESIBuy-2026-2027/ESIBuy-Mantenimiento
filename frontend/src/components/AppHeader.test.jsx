@@ -145,7 +145,7 @@ describe('AppHeader', () => {
 
     const nav = await screen.findByRole('navigation', { name: 'Cuenta' })
     await screen.findByRole('button', { name: /cerrar sesión/i })
-    const accesos = ['Premium', 'Mis pedidos', 'Favoritos', 'Métodos de pago', 'Direcciones', 'Incidencias', 'Mi perfil']
+    const accesos = ['Catálogo', 'Premium', 'Mis pedidos', 'Favoritos', 'Métodos de pago', 'Direcciones', 'Incidencias', 'Mi perfil']
     for (const nombre of accesos) {
       expect(within(nav).getByRole('link', { name: nombre })).toHaveAttribute('title', nombre)
     }

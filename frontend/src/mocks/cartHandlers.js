@@ -19,7 +19,7 @@ function aCarrito(lineasPorProducto) {
 
   for (const [productoId, cantidad] of lineasPorProducto) {
     const producto = PRODUCTOS.find((candidato) => candidato.id === productoId)
-    const { vendedor, precioFinal, stock } = datosComerciales(producto)
+    const { vendedor, precio, descuento, precioFinal, stock } = datosComerciales(producto)
     if (!grupos.has(vendedor.id)) grupos.set(vendedor.id, { vendedor, total: 0, lineas: [] })
 
     const subtotal = redondear(precioFinal * cantidad)
@@ -32,6 +32,8 @@ function aCarrito(lineasPorProducto) {
       precioUnitario: precioFinal,
       subtotal,
       stock,
+      precioOriginal: precio,
+      porcentajeDescuento: descuento === null ? null : descuento.porcentaje,
     })
     grupo.total = redondear(grupo.total + subtotal)
     totalProductos += cantidad
@@ -41,12 +43,18 @@ function aCarrito(lineasPorProducto) {
   return { grupos: lista, totalProductos, total: redondear(lista.reduce((suma, grupo) => suma + grupo.total, 0)) }
 }
 
+// El grupo del carrito de un proveedor tal y como está ahora (o null si no hay nada de él).
+export function grupoDelCarrito(usuarioId, vendedorId) {
+  const carrito = carritos.get(usuarioId)
+  return (carrito && aCarrito(carrito).grupos.find((candidato) => candidato.vendedor.id === vendedorId)) || null
+}
+
 // Quita del carrito los productos de un proveedor y devuelve ese grupo tal y como estaba (o null si no había nada).
 // Lo usa la creación de pedidos (HU10), que se lleva del carrito lo que compra.
 export function retirarGrupoDelCarrito(usuarioId, vendedorId) {
-  const carrito = carritos.get(usuarioId)
-  const grupo = carrito && aCarrito(carrito).grupos.find((candidato) => candidato.vendedor.id === vendedorId)
+  const grupo = grupoDelCarrito(usuarioId, vendedorId)
   if (!grupo) return null
+  const carrito = carritos.get(usuarioId)
   for (const linea of grupo.lineas) carrito.delete(linea.productoId)
   return grupo
 }

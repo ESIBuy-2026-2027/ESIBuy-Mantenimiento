@@ -159,6 +159,12 @@ function UserActions({ rol, onSignOut, disabled }) {
           Mis productos
         </NavLink>
       )}
+      {/* El catálogo de productos (HU7) es del cliente: desde cualquier página se puede volver a él */}
+      {esCliente && (
+        <NavLink to={PATHS.PRODUCTS} icon={<BoxMultiple20Regular />} compact={compact}>
+          Catálogo
+        </NavLink>
+      )}
       {/* Las ventajas de ESIBuy Premium (HU45) son solo del cliente */}
       {esCliente && (
         <NavLink to={PATHS.PREMIUM} icon={<Diamond20Regular />} compact={compact}>

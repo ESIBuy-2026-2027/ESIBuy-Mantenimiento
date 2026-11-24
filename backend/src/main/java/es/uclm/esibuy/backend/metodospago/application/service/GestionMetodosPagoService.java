@@ -2,6 +2,7 @@ package es.uclm.esibuy.backend.metodospago.application.service;
 
 import es.uclm.esibuy.backend.metodospago.application.port.in.AnadirMetodoPagoCommand;
 import es.uclm.esibuy.backend.metodospago.application.port.in.GestionMetodosPagoUseCase;
+import es.uclm.esibuy.backend.metodospago.application.port.in.MetodoPagoParaPedido;
 import es.uclm.esibuy.backend.metodospago.application.port.out.CifradoDatosPagoPort;
 import es.uclm.esibuy.backend.metodospago.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.metodospago.application.port.out.MetodoPagoRepositoryPort;
@@ -16,6 +17,7 @@ import es.uclm.esibuy.backend.metodospago.domain.model.UrlPayPal;
 import java.time.Clock;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
@@ -97,8 +99,11 @@ public class GestionMetodosPagoService implements GestionMetodosPagoUseCase {
 
     @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
-    public boolean esDelCliente(String emailCliente, String metodoId) {
-        return listar(emailCliente).stream().anyMatch(metodo -> metodo.getId().equals(metodoId));
+    public Optional<MetodoPagoParaPedido> consultarParaPedido(String emailCliente, String metodoId) {
+        return metodosDelCliente(emailCliente).getMetodos().stream()
+                .filter(metodo -> metodo.getId().equals(metodoId))
+                .findFirst()
+                .map(metodo -> new MetodoPagoParaPedido(metodo.getTipo().name(), metodo.getMascara()));
     }
 
     // Solo los del cliente en sesión: un id de otro cliente no se encuentra

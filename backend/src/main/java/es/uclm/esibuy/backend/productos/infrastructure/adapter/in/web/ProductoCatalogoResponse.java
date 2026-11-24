@@ -5,8 +5,9 @@ import es.uclm.esibuy.backend.productos.domain.model.Producto;
 import java.math.BigDecimal;
 /**
  * Producto del catálogo del cliente (HU7) con el precio que le corresponde (HU9): {@code descuento} es el que se le
- * aplica, o {@code null} si no tiene ninguno, y {@code precioFinal} ya lo lleva aplicado, como en el detalle (HU8). No
- * lleva stock ni vendedorId. {@code valoracion} es la media de sus valoraciones (HU13), o {@code null} si no tiene
+ * aplica, o {@code null} si no tiene ninguno, y {@code precioFinal} ya lo lleva aplicado, como en el detalle (HU8).
+ * Lleva el {@code stock} que queda y si está {@code disponible}, para que la tarjeta deje elegir cuántas unidades
+ * añadir al carrito (HU9); no lleva vendedorId. {@code valoracion} es la media de sus valoraciones (HU13), o {@code null} si no tiene
  * ninguna.
  */
 public record ProductoCatalogoResponse(
@@ -18,7 +19,9 @@ public record ProductoCatalogoResponse(
         DetalleProductoCatalogoResponse.Descuento descuento,
         BigDecimal precioFinal,
         Double valoracion,
-        int numValoraciones
+        int numValoraciones,
+        int stock,
+        boolean disponible
 ) {
     static ProductoCatalogoResponse desde(Producto producto, boolean clientePremium) {
         var aplicado = producto.descuentoAplicado(clientePremium);
@@ -31,7 +34,9 @@ public record ProductoCatalogoResponse(
                 aplicado.activo() ? new DetalleProductoCatalogoResponse.Descuento(aplicado.porcentaje()) : null,
                 producto.precioFinal(clientePremium),
                 producto.getValoracionMedia(),
-                producto.getNumeroValoraciones()
+                producto.getNumeroValoraciones(),
+                producto.getStock(),
+                producto.isDisponible()
         );
     }
 }

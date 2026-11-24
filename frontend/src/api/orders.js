@@ -3,14 +3,16 @@ import { request } from './client'
 // Pedidos del cliente (HU10; backend en PR #166). Crea el pedido de UN proveedor con los productos de ese proveedor
 // que hay en el carrito del cliente en sesión, y los quita del carrito. Cada pedido solo puede tener un proveedor, se
 // envía a una de las direcciones del cliente (HU5), que el servidor copia en `direccionEnvio`, y se paga con uno de
-// sus métodos de pago (HU6). Responde 201 con el pedido en el mismo formato que el detalle (ver getOrder). 400 con
-// `code: VALIDATION_ERROR` si la dirección o el método de pago no son del cliente, 409 con `code: CART_EMPTY` si no
-// hay productos de ese proveedor en el carrito y 409 con `code: INSUFFICIENT_STOCK` si falta stock. El servidor vuelve
-// a comprobar precios y existencias al crearlo.
-export function createOrder(vendorId, direccionId, paymentMethodId) {
+// sus métodos de pago (HU6). `totalEsperado` es el total que el cliente ha visto al confirmar. Responde 201 con el
+// pedido en el mismo formato que el detalle (ver getOrder). Errores: 400 con `code: VALIDATION_ERROR` si la dirección
+// o el método de pago no son del cliente; 402 con `code: PAYMENT_REJECTED` si el pago (simulado) se rechaza; 409 con
+// `code: CART_EMPTY` si no hay productos de ese vendedor en el carrito, `code: INSUFFICIENT_STOCK` si falta stock
+// (con el producto en `mensaje`) y `code: TOTAL_MISMATCH` si el total ya no es el que vio el cliente. El servidor vuelve
+// a comprobar precios, descuentos y existencias al crearlo.
+export function createOrder(vendorId, direccionId, paymentMethodId, totalEsperado) {
   return request('/api/customer/orders', {
     method: 'POST',
-    body: { vendedorId: vendorId, direccionId, paymentMethodId },
+    body: { vendedorId: vendorId, direccionId, paymentMethodId, totalEsperado },
   })
 }
 

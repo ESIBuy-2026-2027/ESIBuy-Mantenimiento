@@ -89,6 +89,7 @@ class PedidoMongoAdapterTest {
         List<LineaPedido> lineas = Arrays.stream(productos)
                 .map(productoId -> new LineaPedido(
                         productoId,
+                        "u-2",
                         "Producto " + productoId,
                         1,
                         new BigDecimal("10.00")))
@@ -129,7 +130,7 @@ class PedidoMongoAdapterTest {
                 "u-3",
                 "Otra tienda",
                 EstadoPedido.PAGADO,
-                List.of(new LineaPedido("p-2", "Producto p-2", 1, new BigDecimal("10.00"))),
+                List.of(new LineaPedido("p-2", "u-3", "Producto p-2", 1, new BigDecimal("10.00"))),
                 DIRECCION,
                 "mp-1",
                 AHORA);
@@ -175,7 +176,7 @@ class PedidoMongoAdapterTest {
                 "u-2",
                 "TecnoVera",
                 EstadoPedido.PAGADO,
-                List.of(new LineaPedido("p-1", "Producto p-1", 1, new BigDecimal("10.00"))),
+                List.of(new LineaPedido("p-1", "u-2", "Producto p-1", 1, new BigDecimal("10.00"))),
                 DIRECCION,
                 "mp-1",
                 creado);
@@ -250,7 +251,7 @@ class PedidoMongoAdapterTest {
                 vendedorId,
                 "TecnoVera",
                 estado,
-                List.of(new LineaPedido("p-1", "Producto p-1", 1, new BigDecimal("10.00"))),
+                List.of(new LineaPedido("p-1", vendedorId, "Producto p-1", 1, new BigDecimal("10.00"))),
                 DIRECCION,
                 "mp-1",
                 AHORA);

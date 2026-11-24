@@ -20,7 +20,7 @@ public record CarritoResponse(List<Grupo> grupos, int totalProductos, BigDecimal
     }
 
     public record Linea(String productoId, String nombre, String imagen, int cantidad, BigDecimal precioUnitario,
-            BigDecimal subtotal, int stock) {
+            BigDecimal subtotal, int stock, BigDecimal precioOriginal, BigDecimal porcentajeDescuento) {
     }
 
     public static CarritoResponse desde(CarritoDetallado carrito) {
@@ -35,6 +35,7 @@ public record CarritoResponse(List<Grupo> grupos, int totalProductos, BigDecimal
 
     private static Linea aLinea(LineaCarritoDetallada linea) {
         return new Linea(linea.productoId(), linea.nombre(), linea.imagen(), linea.cantidad(),
-                linea.precioUnitario(), linea.subtotal(), linea.stock());
+                linea.precioUnitario(), linea.subtotal(), linea.stock(), linea.precioOriginal(),
+                linea.porcentajeDescuento());
     }
 }

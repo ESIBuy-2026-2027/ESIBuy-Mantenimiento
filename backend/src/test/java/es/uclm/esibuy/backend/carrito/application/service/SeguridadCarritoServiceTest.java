@@ -3,11 +3,14 @@ package es.uclm.esibuy.backend.carrito.application.service;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import java.time.Clock;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -84,11 +87,14 @@ class SeguridadCarritoServiceTest {
     }
 
     private void comprobarQueRechaza(String email) {
+        List<String> idsProductos = List.of("p-1");
         assertAll(
                 () -> assertThrows(AccessDeniedException.class, () -> gestionCarrito.consultar(email)),
                 () -> assertThrows(AccessDeniedException.class, () -> gestionCarrito.anadir(email, "p-1", 1)),
                 () -> assertThrows(AccessDeniedException.class, () -> gestionCarrito.fijarCantidad(email, "p-1", 1)),
                 () -> assertThrows(AccessDeniedException.class, () -> gestionCarrito.quitar(email, "p-1")),
+                () -> assertThrows(AccessDeniedException.class,
+                        () -> gestionCarrito.quitarProductos(email, idsProductos)),
                 () -> assertThrows(AccessDeniedException.class, () -> gestionCarrito.vaciar(email)));
         verifyNoInteractions(carritoRepository, clienteEnSesion, productos, vendedores);
     }
@@ -118,7 +124,11 @@ class SeguridadCarritoServiceTest {
     @WithMockUser(username = CLIENTE, roles = "CLIENTE")
     @DisplayName("HU9-CP20: un cliente sí consulta su propio carrito")
     void unClienteConsultaSuPropioCarrito() {
+        // El doble del repositorio devuelve lo mismo que se le guarda
+        when(carritoRepository.guardar(any())).thenAnswer(invocacion -> invocacion.getArgument(0));
+
         assertDoesNotThrow(() -> gestionCarrito.consultar(CLIENTE));
+        assertDoesNotThrow(() -> gestionCarrito.quitarProductos(CLIENTE, List.of("p-1")));
     }
 
     @Test

@@ -32,8 +32,8 @@ class VentasVendedorServiceTest {
     @DisplayName("HU17-CP06: las ventas del vendedor son las líneas de sus pedidos, con el importe de cada una")
     void lasVentasSonLasLineasDeSusPedidos() {
         pedidos.delVendedor.put("u-2", List.of(pedido("o-1", EstadoPedido.PAGADO,
-                new LineaPedido("p-1", "Auriculares", 2, new BigDecimal("20.00")),
-                new LineaPedido("p-2", "Teclado", 1, new BigDecimal("89.50")))));
+                new LineaPedido("p-1", "u-2", "Auriculares", 2, new BigDecimal("20.00")),
+                new LineaPedido("p-2", "u-2", "Teclado", 1, new BigDecimal("89.50")))));
 
         List<VentaProducto> ventas = servicio.ventasDe("u-2");
 
@@ -46,7 +46,7 @@ class VentasVendedorServiceTest {
     @Test
     @DisplayName("HU17-CP06: los pedidos cancelados no cuentan como ventas; los demás estados sí")
     void losPedidosCanceladosNoCuentan() {
-        LineaPedido linea = new LineaPedido("p-1", "Auriculares", 1, new BigDecimal("10.00"));
+        LineaPedido linea = new LineaPedido("p-1", "u-2", "Auriculares", 1, new BigDecimal("10.00"));
         pedidos.delVendedor.put("u-2", List.of(
                 pedido("o-1", EstadoPedido.CANCELADO, linea),
                 pedido("o-2", EstadoPedido.PAGADO, linea),

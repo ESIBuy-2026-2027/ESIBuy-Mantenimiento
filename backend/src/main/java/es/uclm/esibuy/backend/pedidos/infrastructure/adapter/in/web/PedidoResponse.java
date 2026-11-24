@@ -13,9 +13,13 @@ import es.uclm.esibuy.backend.pedidos.domain.model.Pedido;
  * número de pedido, la dirección de envío y la fecha. No lleva el cliente: es el de la sesión.
  */
 public record PedidoResponse(String id, String numeroPedido, Vendedor vendedor, BigDecimal total, String estado,
-        String paymentMethodId, DireccionEnvioPedido direccionEnvio, List<Linea> lineas, Instant createdAt) {
+        String paymentMethodId, DireccionEnvio direccionEnvio, List<Linea> lineas, Instant createdAt) {
 
     public record Vendedor(String id, String nombreComercial) {
+    }
+
+    public record DireccionEnvio(String destinatario, String calle, String detalles, String codigoPostal,
+            String ciudad, String provincia, String telefono) {
     }
 
     public record Linea(String productoId, String nombre, int cantidad, BigDecimal precioUnitario,
@@ -25,8 +29,13 @@ public record PedidoResponse(String id, String numeroPedido, Vendedor vendedor, 
     public static PedidoResponse desde(Pedido pedido) {
         return new PedidoResponse(pedido.getId(), pedido.getNumeroPedido().valor(),
                 new Vendedor(pedido.getVendedorId(), pedido.getNombreComercial()), pedido.getTotal(),
-                pedido.getEstado().name(), pedido.getPaymentMethodId(), pedido.getDireccionEnvio(),
+                pedido.getEstado().name(), pedido.getPaymentMethodId(), aDireccion(pedido.getDireccionEnvio()),
                 pedido.getLineas().stream().map(PedidoResponse::aLinea).toList(), pedido.getCreatedAt());
+    }
+
+    private static DireccionEnvio aDireccion(DireccionEnvioPedido direccion) {
+        return new DireccionEnvio(direccion.destinatario(), direccion.calle(), direccion.detalles(),
+                direccion.codigoPostal(), direccion.ciudad(), direccion.provincia(), direccion.telefono());
     }
 
     private static Linea aLinea(LineaPedido linea) {

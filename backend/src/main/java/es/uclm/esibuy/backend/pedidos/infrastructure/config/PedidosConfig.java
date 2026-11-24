@@ -20,6 +20,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.ContadorPedidosPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.DireccionesPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ExistenciasPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.MetodosPagoPort;
+import es.uclm.esibuy.backend.pedidos.application.port.out.PagoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
 import es.uclm.esibuy.backend.pedidos.application.service.CancelacionPedidoService;
 import es.uclm.esibuy.backend.pedidos.application.service.ConsultaComprasService;
@@ -30,6 +31,7 @@ import es.uclm.esibuy.backend.pedidos.application.service.VentasVendedorService;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.carrito.CarritoAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.direcciones.DireccionesAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.metodospago.MetodosPagoAdapter;
+import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.pago.PagoSimuladoAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.persistence.ContadorPedidosMongoAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.persistence.PedidoDocumentMapper;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.persistence.PedidoMongoAdapter;
@@ -83,13 +85,20 @@ public class PedidosConfig {
         return new ExistenciasAdapter(existenciasProductosUseCase);
     }
 
+    // Pago simulado (HU10): no se mueve dinero
+    @Bean
+    PagoPort pedidosPagoPort() {
+        return new PagoSimuladoAdapter();
+    }
+
     // El reloj es el de UsuariosConfig: con él se fecha el pedido y se elige el año
     // de su número
     @Bean
     RealizacionPedidoUseCase realizacionPedidoUseCase(PedidoRepositoryPort pedidoRepositoryPort,
             ClienteEnSesionPort pedidosClienteEnSesionPort, CarritoPort pedidosCarritoPort,
             MetodosPagoPort pedidosMetodosPagoPort, DireccionesPort pedidosDireccionesPort,
-            ExistenciasPort pedidosExistenciasPort, ContadorPedidosPort contadorPedidosPort, Clock reloj) {
+            ExistenciasPort pedidosExistenciasPort, PagoPort pedidosPagoPort, ContadorPedidosPort contadorPedidosPort,
+            Clock reloj) {
 
         DependenciasRealizacionPedido dependencias = new DependenciasRealizacionPedido(
                 pedidoRepositoryPort,
@@ -98,6 +107,7 @@ public class PedidosConfig {
                 pedidosMetodosPagoPort,
                 pedidosDireccionesPort,
                 pedidosExistenciasPort,
+                pedidosPagoPort,
                 contadorPedidosPort,
                 reloj);
 

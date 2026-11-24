@@ -9,7 +9,9 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaExceptio
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PagoRechazadoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.TotalNoCoincideException;
 import es.uclm.esibuy.backend.pedidos.domain.model.DatosPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
@@ -55,8 +57,9 @@ class PedidoControllerTest {
 
         private static final String URL = "/api/customer/orders";
         private static final String CLIENTE = "cliente@esibuy.test";
-        private static final String CUERPO = "{\"vendedorId\": \"u-2\", \"direccionId\": \"d-1\", \"paymentMethodId\": \"mp-1\", \"clienteId\": \"otro\"}";
-        private static final RealizarPedidoCommand COMANDO = new RealizarPedidoCommand(CLIENTE, "u-2", "d-1", "mp-1");
+        private static final String CUERPO = "{\"vendedorId\": \"u-2\", \"direccionId\": \"d-1\", \"paymentMethodId\": \"mp-1\", \"totalEsperado\": 107.82, \"clienteId\": \"otro\"}";
+        private static final RealizarPedidoCommand COMANDO = new RealizarPedidoCommand(CLIENTE, "u-2", "d-1", "mp-1",
+                        new BigDecimal("107.82"));
 
         @Autowired
         private MockMvc mockMvc;
@@ -80,6 +83,7 @@ class PedidoControllerTest {
                                         EstadoPedido.PAGADO,
                                         List.of(new LineaPedido(
                                                         "p-1",
+                                                        "u-2",
                                                         "Auriculares",
                                                         2,
                                                         new BigDecimal("53.91"))),
@@ -142,6 +146,8 @@ class PedidoControllerTest {
                 realizar("{\"vendedorId\": \"u-2\", \"paymentMethodId\": \"mp-1\"}").andExpect(status().isBadRequest());
                 realizar("{\"direccionId\": \"d-1\", \"paymentMethodId\": \"mp-1\"}")
                                 .andExpect(status().isBadRequest());
+                realizar("{\"vendedorId\": \"u-2\", \"direccionId\": \"d-1\", \"paymentMethodId\": \"mp-1\"}")
+                                .andExpect(status().isBadRequest());
 
                 verify(realizacionPedido, never()).realizar(any());
         }
@@ -149,11 +155,30 @@ class PedidoControllerTest {
         @Test
         @DisplayName("HU10-CP15: si falta stock responde 409 con el code INSUFFICIENT_STOCK")
         void siFaltaStockResponde409() throws Exception {
-                when(realizacionPedido.realizar(COMANDO)).thenThrow(new StockInsuficientePedidoException("no"));
+                when(realizacionPedido.realizar(COMANDO)).thenThrow(new StockInsuficientePedidoException("no", "p-1", "Auriculares"));
 
                 realizar(CUERPO).andExpect(status().isConflict())
                                 .andExpect(jsonPath("$.code").value("INSUFFICIENT_STOCK"))
-                                .andExpect(jsonPath("$.mensaje").value("No se puede comprar un producto del pedido"));
+                                .andExpect(jsonPath("$.mensaje").value("No queda stock suficiente de «Auriculares»"));
+        }
+
+        @Test
+        @DisplayName("HU10-CP26: si el pago se rechaza responde 402 con el code PAYMENT_REJECTED")
+        void siElPagoSeRechazaResponde402() throws Exception {
+                when(realizacionPedido.realizar(COMANDO)).thenThrow(new PagoRechazadoException("no"));
+
+                realizar(CUERPO).andExpect(status().isPaymentRequired())
+                                .andExpect(jsonPath("$.code").value("PAYMENT_REJECTED"))
+                                .andExpect(jsonPath("$.mensaje").value("El pago ha sido rechazado"));
+        }
+
+        @Test
+        @DisplayName("HU10-CP27: si el total que vio el cliente ya no es el real responde 409 con el code TOTAL_MISMATCH")
+        void siElTotalNoCoincideResponde409() throws Exception {
+                when(realizacionPedido.realizar(COMANDO)).thenThrow(new TotalNoCoincideException("no"));
+
+                realizar(CUERPO).andExpect(status().isConflict())
+                                .andExpect(jsonPath("$.code").value("TOTAL_MISMATCH"));
         }
 
         @Test

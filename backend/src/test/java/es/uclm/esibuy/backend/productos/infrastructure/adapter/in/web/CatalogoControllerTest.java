@@ -88,7 +88,9 @@ class CatalogoControllerTest {
                                 // 0
                                 .andExpect(jsonPath("$.items[0].valoracion").value(nullValue()))
                                 .andExpect(jsonPath("$.items[0].numValoraciones").value(0))
-                                .andExpect(jsonPath("$.items[0].stock").doesNotExist())
+                                // El stock que queda y si está disponible: la tarjeta deja elegir cuántas unidades añadir
+                                .andExpect(jsonPath("$.items[0].stock").value(12))
+                                .andExpect(jsonPath("$.items[0].disponible").value(true))
                                 .andExpect(jsonPath("$.items[0].vendedorId").doesNotExist())
                                 .andExpect(jsonPath("$.page").value(1))
                                 .andExpect(jsonPath("$.size").value(10))

@@ -7,7 +7,7 @@ import { Heart20Filled, Heart20Regular } from '@fluentui/react-icons'
 import { getProductDetailPath } from '../../routes/paths'
 import { catalogProductPropType } from '../../utils/propTypes'
 import { formatRating } from '../../utils/format'
-import AddToCartButton from '../cart/AddToCartButton'
+import CartControls from '../cart/CartControls'
 import PriceBlock from './PriceBlock'
 import RatingStars from './RatingStars'
 
@@ -293,7 +293,7 @@ export default function ProductCard({
           precioFinal={product.precioFinal}
         />
 
-        <AddToCartButton product={product} size="small" fullWidth />
+        <CartControls product={product} />
 
         {favoriteError && (
           <Text role="alert" size={200} className={styles.error}>

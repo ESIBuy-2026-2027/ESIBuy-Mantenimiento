@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.productos.application.service;
 
+import java.math.BigDecimal;
 import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
 import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUseCase;
 import es.uclm.esibuy.backend.productos.application.port.in.DetalleProductoCatalogo;
@@ -52,7 +53,14 @@ public class CatalogoProductosService implements CatalogoProductosUseCase {
                                 .map(producto -> new ProductoComercial(producto.getId(), producto.getVendedorId(),
                                                 producto.getNombre(), producto.getImagen(),
                                                 producto.precioFinal(clientePremium),
-                                                producto.getStock()));
+                                                producto.getStock(), producto.getPrecio(),
+                                                porcentajeAplicado(producto, clientePremium)));
+        }
+
+        // El descuento del producto que le toca al cliente; nulo si no tiene ninguno activo
+        private static BigDecimal porcentajeAplicado(Producto producto, boolean clientePremium) {
+                Descuento descuento = producto.descuentoAplicado(clientePremium);
+                return descuento.activo() ? descuento.porcentaje() : null;
         }
 
         @PreAuthorize(Permisos.SOLO_CLIENTE)
