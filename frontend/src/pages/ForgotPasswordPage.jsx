@@ -10,7 +10,7 @@ import {
   Text,
   Title2,
 } from '@fluentui/react-components'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { requestPasswordRecovery, resetPassword } from '../api/auth'
 import { getHomePath } from '../auth/roles'
 import { useAuth } from '../auth/useAuth'
@@ -132,6 +132,7 @@ export default function ForgotPasswordPage() {
         validationMessage={errores.email}
       >
         <Input
+          size="large"
           type="email"
           value={email}
           onChange={(_event, data) => setEmail(data.value)}
@@ -158,6 +159,7 @@ export default function ForgotPasswordPage() {
         validationMessage={errores.code}
       >
         <Input
+          size="large"
           value={datos.code}
           onChange={cambiar('code')}
           inputMode="numeric"
@@ -189,6 +191,7 @@ export default function ForgotPasswordPage() {
         <Button
           type="submit"
           appearance="primary"
+          size="large"
           disabled={enviando}
           icon={enviando ? <Spinner size="tiny" /> : undefined}
         >
@@ -197,6 +200,7 @@ export default function ForgotPasswordPage() {
         <Button
           type="button"
           appearance="subtle"
+          size="large"
           disabled={enviando}
           onClick={() => pedirCodigo(emailEnviado, AVISO_REENVIADO)}
         >
@@ -209,6 +213,9 @@ export default function ForgotPasswordPage() {
   return (
     <main className={pageStyles.page}>
       <Card className={pageStyles.card}>
+        <Link to={PATHS.HOME} className={pageStyles.brand} aria-label="ESIBuy, volver al inicio">
+          ESI<span className={pageStyles.logoAccent}>Buy</span>
+        </Link>
         <Title2 as="h1" className={pageStyles.title}>
           Recuperar contraseña
         </Title2>
