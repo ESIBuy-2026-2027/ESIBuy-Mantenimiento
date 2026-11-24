@@ -11,9 +11,9 @@ const AVATARES = [
 const useStyles = makeStyles({
   opciones: { display: 'flex', flexWrap: 'wrap', gap: tokens.spacingHorizontalL },
   opcion: {
-    width: '72px', height: '72px', minWidth: '72px', minHeight: '72px',
+    width: '88px', height: '88px', minWidth: '88px', minHeight: '88px',
     display: 'grid', placeItems: 'center', boxSizing: 'border-box',
-    border: '2px solid transparent', borderRadius: '14px',
+    border: '2px solid transparent', borderRadius: '16px',
     backgroundColor: 'transparent', cursor: 'pointer',
     ':hover': { background: '#fff7f0', border: '1px solid #f6c6a7' },
     ':focus-visible': { outline: '2px solid #f05a0a', outlineOffset: '2px' },
@@ -47,7 +47,7 @@ export default function AvatarSelector({ value, onChange }) {
             aria-pressed={value === valor}
             onClick={() => onChange(null, { value: valor })}
           >
-            <Avatar icon={icono} color={color} size={50} />
+            <Avatar icon={icono} color={color} size={64} />
           </button>
         ))}
       </div>
