@@ -7,7 +7,6 @@ import {
   Title2,
 } from '@fluentui/react-components'
 import {
-  BoxCheckmark24Regular,
   Cart24Regular,
   ShieldCheckmark24Regular,
   Tag24Regular,
@@ -34,7 +33,7 @@ const PASSWORD_CHANGED_NOTICE = { intent: 'success', text: 'Contraseña cambiada
 
 function MarketplaceIllustration() {
   return (
-    <svg viewBox="0 0 620 390" role="img" aria-label="Caja de ESIBuy con productos tecnológicos" className="marketplace-illustration">
+    <svg viewBox="0 0 620 390" role="img" aria-label="Caja de ESIBuy con productos tecnológicos" style={{ width: "100%", height: "100%", overflow: "visible" }}>
       <defs>
         <linearGradient id="boxFront" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#F8C18F" />
