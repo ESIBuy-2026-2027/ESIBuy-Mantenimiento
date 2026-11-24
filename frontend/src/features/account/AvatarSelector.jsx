@@ -18,7 +18,7 @@ const useStyles = makeStyles({
     ':hover': { backgroundColor: '#fff7f0', borderColor: '#f6c6a7' },
     ':focus-visible': { outline: '2px solid #f05a0a', outlineOffset: '2px' },
   },
-  seleccionada: { borderColor: '#f05a0a', backgroundColor: '#fff5ed' },
+  seleccionada: { border: '2px solid #f05a0a', boxShadow: 'inset 0 0 0 1px #f05a0a', backgroundColor: '#fff5ed' },
 })
 
 export function UserAvatar({ value, name, size = 72 }) {
