@@ -60,7 +60,8 @@ export const useLoginPageStyles = makeStyles({
     color: tokens.colorNeutralForeground1,
     overflow: 'hidden',
     [MOBILE]: {
-      minHeight: '100vh',
+      height: 'auto',
+      minHeight: '100dvh',
       gridTemplateColumns: '1fr',
       overflow: 'visible',
     },
