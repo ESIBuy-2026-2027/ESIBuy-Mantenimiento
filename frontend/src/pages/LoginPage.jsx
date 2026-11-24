@@ -60,13 +60,13 @@ export default function LoginPage() {
         <div className={styles.brandCopy}>
           <div className={styles.eyebrow}>
             <span className={styles.eyebrowLine} />
-            Tu marketplace universitario
+            <span>Tu marketplace de confianza</span>
           </div>
           <h1 className={styles.headline}>
             Compra, vende y descubre con <span className={styles.headlineAccent}>garantía total.</span>
           </h1>
           <p className={styles.description}>
-            El marketplace de la UCLM donde encontrarás productos de calidad, gestionarás tus pedidos
+            El marketplace donde encontrarás productos de calidad, podrás gestionar tus pedidos
             y venderás de forma segura y sencilla.
           </p>
         </div>
