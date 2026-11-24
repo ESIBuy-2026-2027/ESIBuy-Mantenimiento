@@ -638,10 +638,10 @@ export default function Register() {
   const campo = (
     nombre,
     label,
-    { type, required = true } = {},
+    { type, required = true, fullWidth = false } = {},
   ) => (
     <div
-      className={styles.field}
+      className={fullWidth ? `${styles.field} ${styles.fullWidth}` : styles.field}
       data-register-error={
         errores[nombre] ? 'true' : undefined
       }
@@ -938,11 +938,17 @@ export default function Register() {
 
       {tipo === 'vendedor' && campo('dni', 'DNI')}
 
-      {campo('email', 'Correo electrónico', {
-        type: 'email',
+      {tipo === 'vendedor' && campo('telefono', 'Teléfono', {
+        type: 'tel',
+        required: false,
       })}
 
-      {campo('telefono', 'Teléfono', {
+      {campo('email', 'Correo electrónico', {
+        type: 'email',
+        fullWidth: tipo === 'vendedor',
+      })}
+
+      {tipo === 'cliente' && campo('telefono', 'Teléfono', {
         type: 'tel',
         required: false,
       })}
