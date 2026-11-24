@@ -12,13 +12,12 @@ import {
   Input,
   MessageBar,
   MessageBarBody,
-  Select,
   Text,
   Title2,
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { BuildingShop24Regular, Cart24Regular } from '@fluentui/react-icons'
+import { BuildingShop24Regular, Cart24Regular, Crown24Regular, Person24Regular } from '@fluentui/react-icons'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { registrarCliente, registrarVendedor } from '../api/auth'
@@ -84,76 +83,35 @@ const DATOS_INICIALES = {
   aceptaPrivacidad: false,
 }
 
+const MOBILE = '@media (max-width: 760px)'
 const useStyles = makeStyles({
-  page: {
-    flexGrow: 1,
-    boxSizing: 'border-box',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    paddingTop: tokens.spacingVerticalXXXL,
-    paddingBottom: tokens.spacingVerticalXXXL,
-    paddingLeft: tokens.spacingHorizontalL,
-    paddingRight: tokens.spacingHorizontalL,
-  },
-  card: {
-    width: '100%',
-    maxWidth: '560px',
-    padding: tokens.spacingVerticalXXL,
-    gap: tokens.spacingVerticalL,
-    borderRadius: tokens.borderRadiusXLarge,
-    boxShadow: tokens.shadow28,
-  },
-  title: {
-    margin: 0,
-  },
-  description: {
-    color: tokens.colorNeutralForeground2,
-  },
-  opciones: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-    gap: tokens.spacingHorizontalM,
-  },
-  privacidad: {
-    display: 'flex',
-    alignItems: 'center',
-    columnGap: tokens.spacingHorizontalS,
-    rowGap: tokens.spacingVerticalXS,
-    flexWrap: 'wrap',
-  },
-  textoPrivacidad: {
-    display: 'inline-flex',
-    alignItems: 'baseline',
-    flexWrap: 'wrap',
-    columnGap: tokens.spacingHorizontalXXS,
-  },
-  enlacePrivacidad: {
-    minWidth: 'auto',
-    padding: 0,
-    height: 'auto',
-    verticalAlign: 'baseline',
-    color: tokens.colorBrandForegroundLink,
-    textDecorationLine: 'underline',
-  },
-  contenidoPolitica: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalL,
-  },
-  seccionPolitica: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalXS,
-  },
-  parrafoPolitica: {
-    marginTop: 0,
-    marginBottom: 0,
-    lineHeight: tokens.lineHeightBase300,
-  },
-  avisoPolitica: {
-    color: tokens.colorNeutralForeground2,
-  },
+  page: { minHeight: 'calc(100dvh - 64px)', boxSizing: 'border-box', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '28px 24px 56px', backgroundColor: '#fffaf6', backgroundImage: 'radial-gradient(ellipse at 0% 100%, rgba(255, 139, 64, .20), transparent 35%), radial-gradient(ellipse at 100% 0%, rgba(255, 153, 82, .20), transparent 32%), linear-gradient(135deg, #fffaf6 0%, #ffffff 52%, #fff7f0 100%)', [MOBILE]: { padding: '18px 12px 32px' } },
+  card: { width: '100%', maxWidth: '1000px', boxSizing: 'border-box', padding: 'clamp(24px, 4vw, 48px)', display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalL, border: '1px solid rgba(228, 218, 209, .85)', borderRadius: '26px', backgroundColor: 'rgba(255, 255, 255, .92)', boxShadow: '0 18px 48px rgba(76, 48, 27, .12)', [MOBILE]: { padding: '22px 18px', borderRadius: '20px' } },
+  heading: { display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalXS },
+  title: { margin: 0, fontSize: 'clamp(28px, 3vw, 36px)', lineHeight: 1.15, letterSpacing: '-.8px' },
+  description: { color: tokens.colorNeutralForeground2, margin: 0 },
+  fieldsGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', columnGap: '24px', rowGap: '18px', [MOBILE]: { gridTemplateColumns: '1fr', rowGap: '14px' } },
+  field: { minWidth: 0 }, fullWidth: { gridColumn: '1 / -1' },
+  opciones: { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '16px', [MOBILE]: { gridTemplateColumns: '1fr' } },
+  tipoCuenta: { display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalS },
+  tipoCuentaOpciones: { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '16px', [MOBILE]: { gridTemplateColumns: '1fr' } },
+  tipoCuentaCard: { minHeight: '112px', height: 'auto', display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-start', gap: '14px', padding: '18px', whiteSpace: 'normal', textAlign: 'left', border: '1px solid #d9dfe5', borderRadius: '14px', backgroundColor: '#fff', color: tokens.colorNeutralForeground1, ':hover': { borderColor: tokens.colorBrandStroke1, backgroundColor: '#fffaf6' } },
+  tipoCuentaSeleccionada: { border: '2px solid #f05a0a', backgroundColor: '#fff5ed', padding: '17px' },
+  tipoCuentaIcono: { color: tokens.colorBrandForeground1, flexShrink: 0, fontSize: '30px', marginTop: '2px' },
+  tipoCuentaTexto: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '5px', whiteSpace: 'normal' },
+  tipoCuentaNombre: { fontWeight: tokens.fontWeightBold, fontSize: tokens.fontSizeBase400 },
+  tipoCuentaDetalle: { color: tokens.colorNeutralForeground2, fontSize: tokens.fontSizeBase300, lineHeight: 1.4, fontWeight: tokens.fontWeightRegular },
+  privacidad: { display: 'flex', alignItems: 'center', columnGap: tokens.spacingHorizontalS, rowGap: tokens.spacingVerticalXS, flexWrap: 'wrap' },
+  textoPrivacidad: { display: 'inline-flex', alignItems: 'baseline', flexWrap: 'wrap', columnGap: tokens.spacingHorizontalXXS },
+  enlacePrivacidad: { minWidth: 'auto', padding: 0, height: 'auto', verticalAlign: 'baseline', color: tokens.colorBrandForegroundLink, textDecorationLine: 'underline' },
+  contenidoPolitica: { display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalL },
+  seccionPolitica: { display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalXS },
+  parrafoPolitica: { marginTop: 0, marginBottom: 0, lineHeight: tokens.lineHeightBase300 },
+  avisoPolitica: { color: tokens.colorNeutralForeground2 },
+  actions: { display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalM },
+  submit: { width: '100%', minHeight: '48px', backgroundColor: '#f05a0a', ':hover': { backgroundColor: '#d94d06' } },
+  loginFooter: { display: 'flex', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', gap: tokens.spacingHorizontalXS, color: tokens.colorNeutralForeground2 },
+  loginLink: { color: tokens.colorBrandForeground1, fontWeight: tokens.fontWeightBold },
 })
 
 function validarCamposComunes(datos, obligatorios) {
@@ -265,12 +223,13 @@ export default function Register() {
     }
   }
 
-  const pantalla = (titulo, contenido) => (
+  const pantalla = (titulo, contenido, subtitulo = 'Crea tu cuenta y empieza a disfrutar de ESIBuy.') => (
     <main className={styles.page}>
       <Card className={styles.card}>
-        <Title2 as="h1" className={styles.title}>
-          {titulo}
-        </Title2>
+        <div className={styles.heading}>
+          <Title2 as="h1" className={styles.title}>{titulo}</Title2>
+          <Text className={styles.description}>{subtitulo}</Text>
+        </div>
         {contenido}
       </Card>
     </main>
@@ -293,7 +252,7 @@ export default function Register() {
   }
 
   const campo = (nombre, label, { type, required = true } = {}) => (
-    <div data-register-error={errores[nombre] ? 'true' : undefined}>
+    <div className={styles.field} data-register-error={errores[nombre] ? 'true' : undefined}>
       <Field label={label} required={required} validationMessage={errores[nombre]}>
         <Input
           type={type}
@@ -306,7 +265,7 @@ export default function Register() {
   )
 
   const campoPassword = (nombre, label) => (
-    <div data-register-error={errores[nombre] ? 'true' : undefined}>
+    <div className={styles.field} data-register-error={errores[nombre] ? 'true' : undefined}>
       <PasswordField
         label={label}
         value={datos[nombre]}
@@ -415,84 +374,56 @@ export default function Register() {
 
   const selectorAvatar = <AvatarSelector value={datos.avatar} onChange={cambiar('avatar')} />
 
-  if (tipo === 'cliente') {
-    return pantalla(
-      'Registro de cliente',
-      <>
-        {campo('nombre', 'Nombre')}
-        {campo('apellidos', 'Apellidos')}
-        {campo('fechaNacimiento', 'Fecha de nacimiento', { type: 'date' })}
-        {camposComunes}
-        <Field
-          label="Tipo de cliente"
-          required
-          hint={
-            datos.tipoCliente === 'PREMIUM'
-              ? 'Antes de crear la cuenta pasarás por una pasarela de pago simulada.'
-              : undefined
-          }
-        >
-          <Select value={datos.tipoCliente} onChange={cambiar('tipoCliente')}>
-            <option value="ESTANDAR">Estándar</option>
-            <option value="PREMIUM">Premium</option>
-          </Select>
-        </Field>
-        {selectorAvatar}
-        {casillaPrivacidad}
-        {dialogoPoliticaPrivacidad}
-        {errorGeneral && (
-          <div data-register-error-message="true">
-            <MessageBar intent="error">
-              <MessageBarBody>{errorGeneral}</MessageBarBody>
-            </MessageBar>
-          </div>
-        )}
-        <Button appearance="primary" size="large" onClick={enviarCliente}>
-          Registrarse
+  const selectorTipoCliente = (
+    <div className={styles.tipoCuenta}>
+      <Text weight="semibold">Tipo de cuenta</Text>
+      <div className={styles.tipoCuentaOpciones} role="group" aria-label="Tipo de cuenta">
+        <Button type="button" appearance="outline" aria-pressed={datos.tipoCliente === 'ESTANDAR'} className={datos.tipoCliente === 'ESTANDAR' ? styles.tipoCuentaCard + ' ' + styles.tipoCuentaSeleccionada : styles.tipoCuentaCard} onClick={() => setDatos((actuales) => ({ ...actuales, tipoCliente: 'ESTANDAR' }))}>
+          <Person24Regular className={styles.tipoCuentaIcono} />
+          <span className={styles.tipoCuentaTexto}><span className={styles.tipoCuentaNombre}>Estándar</span><span className={styles.tipoCuentaDetalle}>Compra y vende en el marketplace y gestiona tus pedidos.</span></span>
         </Button>
-      </>
-    )
+        <Button type="button" appearance="outline" aria-pressed={datos.tipoCliente === 'PREMIUM'} className={datos.tipoCliente === 'PREMIUM' ? styles.tipoCuentaCard + ' ' + styles.tipoCuentaSeleccionada : styles.tipoCuentaCard} onClick={() => setDatos((actuales) => ({ ...actuales, tipoCliente: 'PREMIUM' }))}>
+          <Crown24Regular className={styles.tipoCuentaIcono} />
+          <span className={styles.tipoCuentaTexto}><span className={styles.tipoCuentaNombre}>Premium</span><span className={styles.tipoCuentaDetalle}>Accede a las ventajas Premium disponibles en ESIBuy.</span></span>
+        </Button>
+      </div>
+      {datos.tipoCliente === 'PREMIUM' && <Text size={200} className={styles.description}>Antes de crear la cuenta pasarás por una pasarela de pago simulada.</Text>}
+    </div>
+  )
+
+  if (tipo === 'cliente') {
+    return pantalla('Registro de cliente', <>
+      <div className={styles.fieldsGrid}>
+        {campo('nombre', 'Nombre')}{campo('apellidos', 'Apellidos')}
+        {campo('fechaNacimiento', 'Fecha de nacimiento', { type: 'date' })}{campo('dni', 'DNI')}
+        {campo('email', 'Correo electrónico', { type: 'email' })}{campo('telefono', 'Teléfono', { type: 'tel', required: false })}
+      </div>
+      {selectorTipoCliente}
+      <div className={styles.fieldsGrid}>
+        <div className={styles.field}>{campoPassword('password', 'Contraseña')}<PasswordRequirements password={datos.password} /></div>
+        {campoPassword('repeticionPassword', 'Repetir contraseña')}
+      </div>
+      {selectorAvatar}{casillaPrivacidad}{dialogoPoliticaPrivacidad}
+      {errorGeneral && <div data-register-error-message="true"><MessageBar intent="error"><MessageBarBody>{errorGeneral}</MessageBarBody></MessageBar></div>}
+      <div className={styles.actions}><Button appearance="primary" size="large" className={styles.submit} onClick={enviarCliente}>Registrarse</Button><div className={styles.loginFooter}>¿Ya tienes una cuenta? <LinkButton to={PATHS.LOGIN} appearance="transparent" className={styles.loginLink}>Iniciar sesión</LinkButton></div></div>
+    </>)
   }
 
   if (tipo === 'vendedor') {
-    return pantalla(
-      'Registro de vendedor',
-      <>
-        {campo('nombre', 'Nombre')}
-        {campo('apellidos', 'Apellidos')}
+    return pantalla('Registro de vendedor', <>
+      <div className={styles.fieldsGrid}>
+        {campo('nombre', 'Nombre')}{campo('apellidos', 'Apellidos')}
         {campo('nombreComercial', 'Nombre comercial')}
-        <div data-register-error={errores.categoriaPrincipalId ? 'true' : undefined}>
-          <Field
-            label="Categoría"
-            required
-            validationState={errores.categoriaPrincipalId ? 'error' : 'none'}
-            validationMessage={errores.categoriaPrincipalId}
-          >
-            <CategoryCombobox
-              value={datos.categoriaPrincipalId}
-              categories={categoriasDisponibles}
-              searchable={false}
-              placeholder="Selecciona una categoría"
-              onChange={cambiarCategoria}
-            />
-          </Field>
-        </div>
-        {camposComunes}
-        {selectorAvatar}
-        {casillaPrivacidad}
-        {dialogoPoliticaPrivacidad}
-        {errorGeneral && (
-          <div data-register-error-message="true">
-            <MessageBar intent="error">
-              <MessageBarBody>{errorGeneral}</MessageBarBody>
-            </MessageBar>
-          </div>
-        )}
-        <Button appearance="primary" size="large" onClick={enviarVendedor}>
-          Registrarse
-        </Button>
-      </>
-    )
+        <div className={styles.field} data-register-error={errores.categoriaPrincipalId ? 'true' : undefined}><Field label="Categoría principal" required validationState={errores.categoriaPrincipalId ? 'error' : 'none'} validationMessage={errores.categoriaPrincipalId}><CategoryCombobox value={datos.categoriaPrincipalId} categories={categoriasDisponibles} searchable={false} placeholder="Selecciona una categoría" onChange={cambiarCategoria} /></Field></div>
+        {campo('dni', 'DNI')}{campo('email', 'Correo electrónico', { type: 'email' })}
+        {campo('telefono', 'Teléfono', { type: 'tel', required: false })}{campoPassword('password', 'Contraseña')}
+        {campoPassword('repeticionPassword', 'Repetir contraseña')}
+        <div className={styles.fullWidth}><PasswordRequirements password={datos.password} /></div>
+      </div>
+      {selectorAvatar}{casillaPrivacidad}{dialogoPoliticaPrivacidad}
+      {errorGeneral && <div data-register-error-message="true"><MessageBar intent="error"><MessageBarBody>{errorGeneral}</MessageBarBody></MessageBar></div>}
+      <div className={styles.actions}><Button appearance="primary" size="large" className={styles.submit} onClick={enviarVendedor}>Registrarse</Button><div className={styles.loginFooter}>¿Ya tienes una cuenta? <LinkButton to={PATHS.LOGIN} appearance="transparent" className={styles.loginLink}>Iniciar sesión</LinkButton></div></div>
+    </>, 'Crea tu cuenta de vendedor y empieza a publicar tus productos en ESIBuy.')
   }
 
   return pantalla(
