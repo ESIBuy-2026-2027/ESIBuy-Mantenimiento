@@ -167,21 +167,6 @@ const useStyles = makeStyles({
     justifyContent: 'center',
     paddingTop: tokens.spacingVerticalL,
   },
-  finalCta: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: tokens.spacingVerticalM,
-    paddingTop: '48px',
-    paddingBottom: '64px',
-    textAlign: 'center',
-  },
-  finalTitle: { margin: 0, fontSize: tokens.fontSizeBase600 },
-  finalText: {
-    maxWidth: '56ch',
-    margin: 0,
-    color: tokens.colorNeutralForeground2,
-  },
 })
 
 const BENEFITS = [
@@ -262,24 +247,15 @@ export default function Home() {
 
         <section className={styles.featured} aria-label="Productos mejor valorados">
           <div className={styles.featuredInner}>
-            <FeaturedProducts />
             <div className={mergeClasses(styles.container, styles.catalogLink)}>
               <LinkButton to={PATHS.PRODUCTS} appearance="transparent" icon={<ArrowRight20Regular />} iconPosition="after">
                 Ver catálogo
               </LinkButton>
             </div>
+            <FeaturedProducts />
           </div>
         </section>
 
-        {!user && (
-          <section className={mergeClasses(styles.container, styles.finalCta)}>
-            <h2 className={styles.finalTitle}>Encuentra algo que te guste.</h2>
-            <p className={styles.finalText}>Crea tu cuenta y empieza a descubrir todo lo que ofrece ESIBuy.</p>
-            <LinkButton to={PATHS.REGISTER} appearance="primary" icon={<ArrowRight20Regular />} iconPosition="after">
-              Crear mi cuenta
-            </LinkButton>
-          </section>
-        )}
       </main>
     </div>
   )
