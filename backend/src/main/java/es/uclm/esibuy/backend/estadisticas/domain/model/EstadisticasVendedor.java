@@ -14,7 +14,8 @@ import java.util.function.Predicate;
 public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal ingresos,
         List<ProductoMasVendido> masVendidos, Double valoracionMedia, int numeroValoraciones,
         List<ValoracionProducto> valoracionesPorProducto, int productos, int sinStock, int stockBajo,
-        int noDisponibles) {
+        int noDisponibles, List<ProductoInventariado> productosStockBajo,
+        List<ProductoInventariado> productosSinStock) {
 
     private static final int MAXIMO_MAS_VENDIDOS = 5;
     // Decisión del equipo: un producto con entre 1 y 5 unidades tiene stock bajo; con 0, no tiene stock
@@ -26,11 +27,19 @@ public record EstadisticasVendedor(int pedidos, int unidadesVendidas, BigDecimal
         BigDecimal ingresos = ventas.stream().map(VentaRegistrada::importe).reduce(BigDecimal.ZERO, BigDecimal::add);
         List<ProductoInventariado> valorados = productos.stream().filter(p -> p.numeroValoraciones() > 0).toList();
         int numeroValoraciones = valorados.stream().mapToInt(ProductoInventariado::numeroValoraciones).sum();
+        List<ProductoInventariado> productosStockBajo = productos.stream()
+                .filter(p -> p.stock() > 0 && p.stock() <= UMBRAL_STOCK_BAJO)
+                .sorted(Comparator.comparingInt(ProductoInventariado::stock).thenComparing(ProductoInventariado::nombre))
+                .toList();
+        List<ProductoInventariado> productosSinStock = productos.stream()
+                .filter(p -> p.stock() == 0)
+                .sorted(Comparator.comparing(ProductoInventariado::nombre))
+                .toList();
         return new EstadisticasVendedor(pedidos, unidades, ingresos, masVendidos(ventas),
                 mediaPonderada(valorados, numeroValoraciones), numeroValoraciones, valoracionesPorProducto(valorados),
                 productos.size(), contar(productos, p -> p.stock() == 0),
                 contar(productos, p -> p.stock() > 0 && p.stock() <= UMBRAL_STOCK_BAJO),
-                contar(productos, p -> !p.disponible()));
+                contar(productos, p -> !p.disponible()), productosStockBajo, productosSinStock);
     }
 
     private static int contar(List<ProductoInventariado> productos, Predicate<ProductoInventariado> condicion) {

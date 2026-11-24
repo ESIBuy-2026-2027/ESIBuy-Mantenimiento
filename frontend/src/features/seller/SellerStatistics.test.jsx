@@ -26,10 +26,12 @@ describe('SellerStatistics (HU17): ventas', () => {
   it('HU17-CP14: el vendedor ve sus pedidos, unidades e ingresos y los más vendidos en orden', async () => {
     await abrirEstadisticas('vendedor@esibuy.test')
 
+    const resumen = await screen.findByRole('region', { name: 'Resumen' })
+    expect(cifra(resumen, 'Pedidos')).toHaveTextContent('6')
+    expect(cifra(resumen, 'Unidades vendidas')).toHaveTextContent('16')
+    expect(cifra(resumen, 'Ingresos')).toHaveTextContent('1095,83')
+
     const ventas = await screen.findByRole('region', { name: 'Ventas' })
-    expect(cifra(ventas, 'Pedidos')).toHaveTextContent('6')
-    expect(cifra(ventas, 'Unidades vendidas')).toHaveTextContent('16')
-    expect(cifra(ventas, 'Ingresos')).toHaveTextContent('1095,83')
 
     const masVendidos = within(ventas).getByRole('table', { name: 'Los más vendidos' })
     const filas = filasDe(masVendidos)
@@ -48,8 +50,10 @@ describe('SellerStatistics (HU17): valoraciones', () => {
   it('HU17-CP15: el vendedor ve la media global, el total y la valoración de cada producto, del mejor al peor', async () => {
     await abrirEstadisticas('vendedor@esibuy.test')
 
+    const resumen = await screen.findByRole('region', { name: 'Resumen' })
+    expect(cifra(resumen, 'Valoración media')).toHaveTextContent('4,4 de 5')
+
     const valoraciones = await screen.findByRole('region', { name: 'Valoraciones' })
-    expect(cifra(valoraciones, 'Valoración media')).toHaveTextContent('4,4 de 5')
     expect(cifra(valoraciones, 'Valoraciones recibidas')).toHaveTextContent('8')
 
     const porProducto = within(valoraciones).getByRole('table', { name: 'Valoración por producto' })
@@ -61,7 +65,7 @@ describe('SellerStatistics (HU17): valoraciones', () => {
 })
 
 describe('SellerStatistics (HU17): stock', () => {
-  it('HU17-CP16: el vendedor ve cuántos productos tiene, sin stock, con stock bajo y no disponibles', async () => {
+  it('HU17-CP16: identifica visualmente sus productos con stock bajo o sin stock', async () => {
     await abrirEstadisticas('vendedor@esibuy.test')
 
     const stock = await screen.findByRole('region', { name: 'Stock' })
@@ -69,26 +73,43 @@ describe('SellerStatistics (HU17): stock', () => {
     expect(cifra(stock, 'Sin stock')).toHaveTextContent('3')
     expect(cifra(stock, 'Stock bajo')).toHaveTextContent('2')
     expect(within(stock).getByText(/de 1 a 5 unidades/i)).toBeInTheDocument()
+    const productosConStockBajo = within(stock).getByRole('table', { name: 'Productos con stock bajo' })
+    expect(filasDe(productosConStockBajo)).toEqual([
+      ['Aspirador de mano', '3 unidades'],
+      ['Robot de cocina', '5 unidades'],
+    ])
+    const productosSinStock = within(stock).getByRole('table', { name: 'Productos sin stock' })
+    expect(filasDe(productosSinStock)).toEqual([
+      ['Freidora de aire', 'Sin stock'],
+      ['Ratón ergonómico', 'Sin stock'],
+      ['Webcam Full HD', 'Sin stock'],
+    ])
     expect(cifra(stock, 'No disponibles')).toHaveTextContent('3')
   })
 })
 
 describe('SellerStatistics (HU17): sin datos', () => {
-  it('HU17-CP17: sin ventas ni valoraciones, avisa de que aún no hay en vez de mostrar tablas vacías', async () => {
+  it('HU17-CP17: sin ventas, valoraciones ni alertas de stock, muestra los estados vacíos', async () => {
     await abrirEstadisticas('vendedor-vacio@esibuy.test')
 
     const ventas = await screen.findByRole('region', { name: 'Ventas' })
-    expect(cifra(ventas, 'Pedidos')).toHaveTextContent('0')
     expect(within(ventas).getByText(/aún no tienes ventas/i)).toBeInTheDocument()
     expect(within(ventas).queryByRole('table')).not.toBeInTheDocument()
 
+    const resumen = screen.getByRole('region', { name: 'Resumen' })
+    expect(cifra(resumen, 'Pedidos')).toHaveTextContent('0')
+    expect(cifra(resumen, 'Unidades vendidas')).toHaveTextContent('0')
+    expect(cifra(resumen, 'Ingresos')).toHaveTextContent('0,00')
+    expect(cifra(resumen, 'Valoración media')).toHaveTextContent('Sin valoraciones')
+
     const valoraciones = screen.getByRole('region', { name: 'Valoraciones' })
-    expect(cifra(valoraciones, 'Valoración media')).toHaveTextContent('Sin valoraciones')
     expect(within(valoraciones).getByText(/aún no tienes valoraciones/i)).toBeInTheDocument()
     expect(within(valoraciones).queryByRole('table')).not.toBeInTheDocument()
 
     const stock = screen.getByRole('region', { name: 'Stock' })
     expect(cifra(stock, 'Productos')).toHaveTextContent('0')
+    expect(within(stock).getByText(/no tienes productos con stock bajo/i)).toBeInTheDocument()
+    expect(within(stock).getByText(/no tienes productos sin stock/i)).toBeInTheDocument()
   })
 })
 
@@ -111,7 +132,7 @@ describe('SellerStatistics (HU17): acceso', () => {
 })
 
 describe('SellerStatistics (HU17): errores', () => {
-  it('HU17-CP19: si las estadísticas no cargan, avisa sin detalles internos, permite reintentar y el perfil sigue visible', async () => {
+  it('HU17-CP19: si falla la petición o la respuesta no cumple el contrato, avisa y permite reintentar', async () => {
     server.use(
       http.get('/api/seller/statistics', () => HttpResponse.json({ message: 'MongoTimeoutException' }, { status: 500 }), {
         once: true,
@@ -124,10 +145,39 @@ describe('SellerStatistics (HU17): errores', () => {
     expect(aviso).toBeInTheDocument()
     expect(screen.queryByText(/mongotimeout/i)).not.toBeInTheDocument()
     expect(screen.getByLabelText('Nombre')).toHaveValue('Vera')
-    await user.click(within(seccion).getByRole('button', { name: /reintentar/i }))
 
-    const ventas = await screen.findByRole('region', { name: 'Ventas' })
-    expect(cifra(ventas, 'Pedidos')).toHaveTextContent('6')
+    let respuestaIncompatibleRecibida = false
+    server.use(
+      http.get(
+        '/api/seller/statistics',
+        () => {
+          respuestaIncompatibleRecibida = true
+          return HttpResponse.json({
+            ventas: { pedidos: 6, unidadesVendidas: 16, ingresos: 1095.83, masVendidos: [] },
+            valoraciones: { media: 4.375, total: 8, porProducto: [] },
+            stock: {
+              productos: 23,
+              sinStock: 3,
+              stockBajo: 2,
+              noDisponibles: 3,
+              productosConStockBajo: [],
+            },
+          })
+        },
+        { once: true },
+      ),
+    )
+    await user.click(within(seccion).getByRole('button', { name: /reintentar/i }))
+    await waitFor(() => expect(respuestaIncompatibleRecibida).toBe(true))
+    await waitFor(() => {
+      expect(within(seccion).getByText(/no se han podido cargar tus estadísticas/i)).toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: 'Unexpected Application Error!' })).not.toBeInTheDocument()
+      expect(screen.getByLabelText('Nombre')).toHaveValue('Vera')
+    })
+
+    await user.click(within(seccion).getByRole('button', { name: /reintentar/i }))
+    const resumen = await screen.findByRole('region', { name: 'Resumen' })
+    expect(cifra(resumen, 'Pedidos')).toHaveTextContent('6')
     expect(within(seccion).queryByText(/no se han podido cargar/i)).not.toBeInTheDocument()
   })
 })
@@ -144,7 +194,14 @@ describe('SellerStatistics (HU17): carga', () => {
         return HttpResponse.json({
           ventas: { pedidos: 0, unidadesVendidas: 0, ingresos: 0, masVendidos: [] },
           valoraciones: { media: null, total: 0, porProducto: [] },
-          stock: { productos: 0, sinStock: 0, stockBajo: 0, noDisponibles: 0 },
+          stock: {
+            productos: 0,
+            sinStock: 0,
+            stockBajo: 0,
+            productosConStockBajo: [],
+            productosSinStock: [],
+            noDisponibles: 0,
+          },
         })
       }),
     )

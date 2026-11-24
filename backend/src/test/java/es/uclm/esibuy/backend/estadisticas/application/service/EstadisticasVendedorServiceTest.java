@@ -37,6 +37,8 @@ class EstadisticasVendedorServiceTest {
                 new VentaRegistrada("o-9", "p-9", "Ajeno", 7, new BigDecimal("700.00"))));
         inventario.delVendedor.put("v-1", List.of(
                 new ProductoInventariado("p-1", "Teclado", 3, true, 4.0, 1)));
+        inventario.delVendedor.put("v-2", List.of(
+                new ProductoInventariado("p-9", "Producto ajeno", 0, false, 1.0, 12)));
 
         EstadisticasVendedor estadisticas = servicio.consultar(EMAIL);
 
@@ -44,6 +46,10 @@ class EstadisticasVendedorServiceTest {
         assertEquals(new BigDecimal("40.00"), estadisticas.ingresos());
         assertEquals(1, estadisticas.productos());
         assertEquals(1, estadisticas.stockBajo());
+        assertEquals(0, estadisticas.sinStock());
+        assertEquals(0, estadisticas.noDisponibles());
+        assertEquals(1, estadisticas.numeroValoraciones());
+        assertEquals(List.of(), estadisticas.productosSinStock());
         assertEquals(List.of("v-1"), ventas.consultas);
         assertEquals(List.of("v-1"), inventario.consultas);
     }

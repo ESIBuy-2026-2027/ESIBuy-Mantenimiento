@@ -2437,7 +2437,7 @@ Rutas de las clases de test:
 | HU17-CP02 | Los 5 productos más vendidos, sumando las unidades de cada uno y de más a menos; a igualdad de unidades, primero el que más ha ingresado | Unitario (dominio) | 3 | ✅ Pasa |
 | HU17-CP03 | La valoración media global pondera la media de cada producto por su número de valoraciones; sin valoraciones no hay media y el total es 0 | Unitario (dominio) | 2 | ✅ Pasa |
 | HU17-CP04 | La valoración por producto solo incluye los valorados, del mejor al peor | Unitario (dominio) | 1 | ✅ Pasa |
-| HU17-CP05 | El stock cuenta los productos, los que no tienen stock, los de stock bajo (de 1 a 5 unidades) y los no disponibles | Unitario (dominio) | 2 | ✅ Pasa |
+| HU17-CP05 | El stock cuenta los productos, los que no tienen stock, los de stock bajo (de 1 a 5 unidades) y los no disponibles; lista los productos con stock bajo y sin stock | Unitario (dominio) | 2 | ✅ Pasa |
 | HU17-CP06 | Las ventas del vendedor son las líneas de sus pedidos con su importe; los pedidos `CANCELADO` no cuentan | Unitario (aplicación, pedidos) | 3 | ✅ Pasa |
 | HU17-CP07 | En MongoDB, `buscarPorVendedor` devuelve todos los pedidos del vendedor, también los cancelados | Integración (Testcontainers) | 1 | ✅ Pasa |
 | HU17-CP08 | El inventario del vendedor da el stock, la disponibilidad y las valoraciones de cada producto | Unitario (aplicación, productos) | 2 | ✅ Pasa |
@@ -2448,10 +2448,10 @@ Rutas de las clases de test:
 | HU17-CP13 | Los adaptadores piden el vendedor en sesión a usuarios, las ventas a pedidos y los productos a productos, sin perder datos | Unitario (infraestructura, Mockito) | 3 | ✅ Pasa |
 | HU17-CP14 | En «Mi perfil» el vendedor ve sus ventas: pedidos, unidades, ingresos y los 5 más vendidos en orden | Frontend (página) | 1 | ✅ Pasa (1, AB#278, PR #214) |
 | HU17-CP15 | Ve la valoración media global con un decimal, el total de valoraciones y la media de cada producto valorado, del mejor al peor | Frontend (página) | 1 | ✅ Pasa (1, AB#278, PR #214) |
-| HU17-CP16 | Ve sus productos, los que no tienen stock, los de stock bajo (de 1 a 5 unidades) y los no disponibles | Frontend (página) | 1 | ✅ Pasa (1, AB#278, PR #214) |
-| HU17-CP17 | Sin ventas ni valoraciones, se avisa con un estado vacío en vez de tablas vacías y la media se ve como «Sin valoraciones» | Frontend (página) | 1 | ✅ Pasa (1, AB#278, PR #214) |
+| HU17-CP16 | Ve sus productos, los que no tienen stock, los de stock bajo (de 1 a 5 unidades) y los no disponibles; identifica visualmente cada producto con stock bajo o sin stock | Frontend (página) | 1 | ✅ Pasa (1, AB#278, PR #214) |
+| HU17-CP17 | Sin ventas, valoraciones ni alertas de stock, se muestran estados vacíos claros y la media aparece como «Sin valoraciones» | Frontend (página) | 1 | ✅ Pasa (1, AB#278, PR #214) |
 | HU17-CP18 | El cliente no ve la sección de estadísticas y no se piden al backend | Frontend (página) | 1 | ✅ Pasa (1, AB#278, PR #214) |
-| HU17-CP19 | Si las estadísticas no cargan, se avisa sin detalles internos, se puede reintentar y el perfil sigue visible | Frontend (página) | 1 | ✅ Pasa (1, AB#278, PR #214) |
+| HU17-CP19 | Si la petición falla o la respuesta no cumple el contrato, se avisa sin detalles internos, se puede reintentar y el perfil sigue visible | Frontend (página) | 1 | ✅ Pasa (1, AB#278, PR #214) |
 | HU17-CP20 | Mientras cargan las estadísticas, la sección muestra que se están cargando | Frontend (página) | 1 | ✅ Pasa (1, AB#278, PR #214) |
 
 Notas:
@@ -2491,10 +2491,10 @@ Notas:
 | HU17-CP13 | `InventarioAdapterTest` | `losProductosSePidenAlModuloDeProductos` | Infraestructura | AB#279 | PR #212 | ✅ |
 | HU17-CP14 | `SellerStatistics.test.jsx` | `HU17-CP14: el vendedor ve sus pedidos, unidades e ingresos y los más vendidos en orden` | Frontend · página | AB#278 | PR #214 | ✅ |
 | HU17-CP15 | `SellerStatistics.test.jsx` | `HU17-CP15: el vendedor ve la media global, el total y la valoración de cada producto, del mejor al peor` | Frontend · página | AB#278 | PR #214 | ✅ |
-| HU17-CP16 | `SellerStatistics.test.jsx` | `HU17-CP16: el vendedor ve cuántos productos tiene, sin stock, con stock bajo y no disponibles` | Frontend · página | AB#278 | PR #214 | ✅ |
-| HU17-CP17 | `SellerStatistics.test.jsx` | `HU17-CP17: sin ventas ni valoraciones, avisa de que aún no hay en vez de mostrar tablas vacías` | Frontend · página | AB#278 | PR #214 | ✅ |
+| HU17-CP16 | `SellerStatistics.test.jsx` | `HU17-CP16: identifica visualmente sus productos con stock bajo o sin stock` | Frontend · página | AB#278 | PR #214 | ✅ |
+| HU17-CP17 | `SellerStatistics.test.jsx` | `HU17-CP17: sin ventas, valoraciones ni alertas de stock, muestra los estados vacíos` | Frontend · página | AB#278 | PR #214 | ✅ |
 | HU17-CP18 | `SellerStatistics.test.jsx` | `HU17-CP18: el cliente no ve las estadísticas y no se le piden al backend` | Frontend · página | AB#278 | PR #214 | ✅ |
-| HU17-CP19 | `SellerStatistics.test.jsx` | `HU17-CP19: si las estadísticas no cargan, avisa sin detalles internos, permite reintentar y el perfil sigue visible` | Frontend · página | AB#278 | PR #214 | ✅ |
+| HU17-CP19 | `SellerStatistics.test.jsx` | `HU17-CP19: si falla la petición o la respuesta no cumple el contrato, avisa y permite reintentar` | Frontend · página | AB#278 | PR #214 | ✅ |
 | HU17-CP20 | `SellerStatistics.test.jsx` | `HU17-CP20: mientras cargan las estadísticas, la sección muestra que se están cargando` | Frontend · página | AB#278 | PR #214 | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):

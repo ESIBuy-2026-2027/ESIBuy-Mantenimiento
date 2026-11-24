@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import es.uclm.esibuy.backend.estadisticas.application.port.in.EstadisticasVendedorUseCase;
 import es.uclm.esibuy.backend.estadisticas.domain.model.EstadisticasVendedor;
+import es.uclm.esibuy.backend.estadisticas.domain.model.ProductoInventariado;
 import es.uclm.esibuy.backend.estadisticas.domain.model.ProductoMasVendido;
 import es.uclm.esibuy.backend.estadisticas.domain.model.ValoracionProducto;
 import es.uclm.esibuy.backend.shared.config.JacksonConfig;
@@ -51,7 +52,9 @@ class EstadisticasVendedorControllerTest {
         when(estadisticasVendedor.consultar(VENDEDOR)).thenReturn(new EstadisticasVendedor(3, 7,
                 new BigDecimal("155.50"),
                 List.of(new ProductoMasVendido("p-1", "Teclado", 5, new BigDecimal("120.00"))),
-                4.25, 8, List.of(new ValoracionProducto("p-1", "Teclado", 4.5, 6)), 4, 1, 2, 1));
+                4.25, 8, List.of(new ValoracionProducto("p-1", "Teclado", 4.5, 6)), 4, 1, 2, 1,
+                List.of(new ProductoInventariado("p-2", "Ratón", 3, true, null, 0)),
+                List.of(new ProductoInventariado("p-3", "Webcam", 0, false, null, 0))));
 
         mockMvc.perform(get(URL).with(user(VENDEDOR).roles("VENDEDOR")))
                 .andExpect(status().isOk())
@@ -70,6 +73,12 @@ class EstadisticasVendedorControllerTest {
                 .andExpect(jsonPath("$.stock.productos").value(4))
                 .andExpect(jsonPath("$.stock.sinStock").value(1))
                 .andExpect(jsonPath("$.stock.stockBajo").value(2))
+                .andExpect(jsonPath("$.stock.productosConStockBajo[0].productoId").value("p-2"))
+                .andExpect(jsonPath("$.stock.productosConStockBajo[0].nombre").value("Ratón"))
+                .andExpect(jsonPath("$.stock.productosConStockBajo[0].stock").value(3))
+                .andExpect(jsonPath("$.stock.productosSinStock[0].productoId").value("p-3"))
+                .andExpect(jsonPath("$.stock.productosSinStock[0].nombre").value("Webcam"))
+                .andExpect(jsonPath("$.stock.productosSinStock[0].stock").value(0))
                 .andExpect(jsonPath("$.stock.noDisponibles").value(1));
     }
 
@@ -77,7 +86,7 @@ class EstadisticasVendedorControllerTest {
     @DisplayName("HU17-CP11: sin valoraciones, la media llega vacía")
     void sinValoracionesLaMediaLlegaVacia() throws Exception {
         when(estadisticasVendedor.consultar(VENDEDOR)).thenReturn(new EstadisticasVendedor(0, 0, BigDecimal.ZERO,
-                List.of(), null, 0, List.of(), 0, 0, 0, 0));
+                List.of(), null, 0, List.of(), 0, 0, 0, 0, List.of(), List.of()));
 
         mockMvc.perform(get(URL).with(user(VENDEDOR).roles("VENDEDOR")))
                 .andExpect(status().isOk())

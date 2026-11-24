@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import PropTypes from 'prop-types'
 import {
+  Badge,
   Button,
   Card,
   MessageBar,
@@ -34,19 +35,32 @@ const useStyles = makeStyles({
   card: {
     gap: tokens.spacingVerticalXL,
     padding: tokens.spacingVerticalXL,
+    width: '100%',
   },
   heading: {
     margin: 0,
+  },
+  subtitle: {
+    marginTop: `-${tokens.spacingVerticalM}`,
+    color: tokens.colorNeutralForeground3,
   },
   block: {
     display: 'flex',
     flexDirection: 'column',
     gap: tokens.spacingVerticalM,
+    padding: tokens.spacingVerticalL,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusXLarge,
+    backgroundColor: tokens.colorNeutralBackground2,
   },
   stats: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
     gap: tokens.spacingHorizontalM,
+  },
+  kpi: {
+    borderTop: `3px solid ${tokens.colorBrandForeground1}`,
+    backgroundColor: tokens.colorBrandBackground2,
   },
   stat: {
     display: 'flex',
@@ -56,24 +70,59 @@ const useStyles = makeStyles({
     padding: tokens.spacingVerticalM,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     borderRadius: tokens.borderRadiusXLarge,
+    backgroundColor: tokens.colorNeutralBackground1,
   },
   statLabel: {
     color: tokens.colorNeutralForeground3,
+  },
+  kpiValue: {
+    margin: 0,
+    color: tokens.colorBrandForeground1,
+    fontSize: tokens.fontSizeBase600,
+    fontWeight: tokens.fontWeightSemibold,
+    overflowWrap: 'anywhere',
+  },
+  stockAlerts: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gap: tokens.spacingHorizontalM,
+  },
+  stockAlert: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalM,
+    minWidth: 0,
+    padding: tokens.spacingVerticalM,
+    borderRadius: tokens.borderRadiusMedium,
+  },
+  lowStockAlert: {
+    borderLeft: `4px solid ${tokens.colorPaletteYellowForeground2}`,
+    backgroundColor: tokens.colorPaletteYellowBackground2,
+  },
+  outOfStockAlert: {
+    borderLeft: `4px solid ${tokens.colorPaletteRedForeground1}`,
+    backgroundColor: tokens.colorPaletteRedBackground1,
+  },
+  stockAlertHeading: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: tokens.spacingHorizontalS,
   },
 })
 
 // Una cifra con su nombre: el grupo toma el nombre de la etiqueta para que se lea como «Pedidos: 6». `hint` aclara
 // qué se cuenta, debajo de la cifra.
-function Stat({ label, value, hint }) {
+function Stat({ label, value, hint, emphasis = false }) {
   const styles = useStyles()
   const labelId = useId('cifra')
 
   return (
-    <dl className={styles.stat}>
+    <dl className={emphasis ? `${styles.stat} ${styles.kpi}` : styles.stat}>
       <dt id={labelId} className={styles.statLabel}>
         {label}
       </dt>
-      <dd className={styles.heading}>
+      <dd className={emphasis ? styles.kpiValue : styles.heading}>
         {value}
       </dd>
       {hint && (
@@ -89,6 +138,7 @@ Stat.propTypes = {
   label: PropTypes.string.isRequired,
   value: PropTypes.node.isRequired,
   hint: PropTypes.string,
+  emphasis: PropTypes.bool,
 }
 
 function StatsBlock({ title, children }) {
@@ -153,16 +203,28 @@ StatsTable.propTypes = {
   ).isRequired,
 }
 
-function SalesBlock({ ventas }) {
+function SummaryBlock({ ventas, valoraciones }) {
   const styles = useStyles()
 
   return (
-    <StatsBlock title="Ventas">
+    <StatsBlock title="Resumen">
       <div className={styles.stats}>
-        <Stat label="Pedidos" value={ventas.pedidos} />
-        <Stat label="Unidades vendidas" value={ventas.unidadesVendidas} />
-        <Stat label="Ingresos" value={formatPrice(ventas.ingresos)} />
+        <Stat label="Pedidos" value={ventas.pedidos} emphasis />
+        <Stat label="Unidades vendidas" value={ventas.unidadesVendidas} emphasis />
+        <Stat label="Ingresos" value={formatPrice(ventas.ingresos)} emphasis />
+        <Stat
+          label="Valoración media"
+          value={valoraciones.media === null ? SIN_VALORACIONES : `${formatRating(valoraciones.media)} de 5`}
+          emphasis
+        />
       </div>
+    </StatsBlock>
+  )
+}
+
+function SalesBlock({ ventas }) {
+  return (
+    <StatsBlock title="Ventas">
       {ventas.masVendidos.length > 0 ? (
         <StatsTable
           label="Los más vendidos"
@@ -206,10 +268,6 @@ function RatingsBlock({ valoraciones }) {
   return (
     <StatsBlock title="Valoraciones">
       <div className={styles.stats}>
-        <Stat
-          label="Valoración media"
-          value={valoraciones.media === null ? SIN_VALORACIONES : `${formatRating(valoraciones.media)} de 5`}
-        />
         <Stat label="Valoraciones recibidas" value={valoraciones.total} />
       </div>
       {valoraciones.porProducto.length > 0 ? (
@@ -248,6 +306,56 @@ RatingsBlock.propTypes = {
   }).isRequired,
 }
 
+function StockAlert({ title, products, emptyMessage, kind }) {
+  const styles = useStyles()
+  const titleId = useId('alerta-stock')
+  const alertClass = kind === 'low' ? styles.lowStockAlert : styles.outOfStockAlert
+  const badgeColor = kind === 'low' ? 'warning' : 'danger'
+
+  return (
+    <section aria-labelledby={titleId} className={`${styles.stockAlert} ${alertClass}`}>
+      <div className={styles.stockAlertHeading}>
+        <Subtitle1 as="h4" id={titleId} className={styles.heading}>
+          {title}
+        </Subtitle1>
+        <Badge appearance="tint" color={badgeColor}>
+          {products.length}
+        </Badge>
+      </div>
+      {products.length > 0 ? (
+        <StatsTable
+          label={title}
+          columns={['Producto', kind === 'low' ? 'Unidades disponibles' : 'Estado']}
+          rows={products.map(({ productoId, nombre, stock }) => ({
+            id: productoId,
+            cells: [
+              nombre,
+              <Badge key={productoId} appearance="tint" color={badgeColor}>
+                {kind === 'low' ? `${stock} unidades` : 'Sin stock'}
+              </Badge>,
+            ],
+          }))}
+        />
+      ) : (
+        <Text>{emptyMessage}</Text>
+      )}
+    </section>
+  )
+}
+
+StockAlert.propTypes = {
+  title: PropTypes.string.isRequired,
+  products: PropTypes.arrayOf(
+    PropTypes.shape({
+      productoId: PropTypes.string.isRequired,
+      nombre: PropTypes.string.isRequired,
+      stock: PropTypes.number.isRequired,
+    }),
+  ).isRequired,
+  emptyMessage: PropTypes.string.isRequired,
+  kind: PropTypes.oneOf(['low', 'none']).isRequired,
+}
+
 function StockBlock({ stock }) {
   const styles = useStyles()
 
@@ -259,6 +367,20 @@ function StockBlock({ stock }) {
         <Stat label="Stock bajo" value={stock.stockBajo} hint="De 1 a 5 unidades" />
         <Stat label="No disponibles" value={stock.noDisponibles} />
       </div>
+      <div className={styles.stockAlerts}>
+        <StockAlert
+          title="Productos con stock bajo"
+          products={stock.productosConStockBajo}
+          emptyMessage="No tienes productos con stock bajo."
+          kind="low"
+        />
+        <StockAlert
+          title="Productos sin stock"
+          products={stock.productosSinStock}
+          emptyMessage="No tienes productos sin stock."
+          kind="none"
+        />
+      </div>
     </StatsBlock>
   )
 }
@@ -269,6 +391,20 @@ StockBlock.propTypes = {
     sinStock: PropTypes.number.isRequired,
     stockBajo: PropTypes.number.isRequired,
     noDisponibles: PropTypes.number.isRequired,
+    productosConStockBajo: PropTypes.arrayOf(
+      PropTypes.shape({
+        productoId: PropTypes.string.isRequired,
+        nombre: PropTypes.string.isRequired,
+        stock: PropTypes.number.isRequired,
+      }),
+    ).isRequired,
+    productosSinStock: PropTypes.arrayOf(
+      PropTypes.shape({
+        productoId: PropTypes.string.isRequired,
+        nombre: PropTypes.string.isRequired,
+        stock: PropTypes.number.isRequired,
+      }),
+    ).isRequired,
   }).isRequired,
 }
 
@@ -286,6 +422,7 @@ export default function SellerStatistics() {
         <Title3 as="h2" id={titleId} className={styles.heading}>
           Mis estadísticas
         </Title3>
+        <Text className={styles.subtitle}>Un resumen de ventas, valoraciones e inventario de tus productos.</Text>
         {failed && (
           <MessageBar intent="error">
             <MessageBarBody>No se han podido cargar tus estadísticas. Inténtalo de nuevo.</MessageBarBody>
@@ -297,6 +434,7 @@ export default function SellerStatistics() {
         {!estadisticas && !failed && <Spinner label="Cargando tus estadísticas…" />}
         {estadisticas && (
           <>
+            <SummaryBlock ventas={estadisticas.ventas} valoraciones={estadisticas.valoraciones} />
             <SalesBlock ventas={estadisticas.ventas} />
             <RatingsBlock valoraciones={estadisticas.valoraciones} />
             <StockBlock stock={estadisticas.stock} />
