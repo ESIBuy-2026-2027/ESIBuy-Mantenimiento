@@ -117,7 +117,7 @@ export const useLoginPageStyles = makeStyles({
     position: 'relative',
     zIndex: 1,
     maxWidth: '650px',
-    marginTop: 'clamp(28px, 6vh, 72px)',
+    marginTop: 'clamp(18px, 3vh, 38px)',
     [MOBILE]: { marginTop: 0 },
   },
   eyebrow: {
@@ -167,7 +167,7 @@ export const useLoginPageStyles = makeStyles({
   },
   visualStage: {
     position: 'relative',
-    flex: '0 1 58%',
+    flex: '0 1 55%',
     minWidth: '250px',
     height: '340px',
     display: 'grid',
@@ -207,8 +207,8 @@ export const useLoginPageStyles = makeStyles({
   benefits: {
     display: 'flex',
     flexDirection: 'column',
-    gap: tokens.spacingVerticalL,
-    flex: '1 1 52%',
+    gap: tokens.spacingVerticalM,
+    flex: '1 1 45%',
     minWidth: 0,
     [MOBILE]: { gap: tokens.spacingVerticalM },
   },
@@ -219,6 +219,11 @@ export const useLoginPageStyles = makeStyles({
     color: tokens.colorNeutralForeground1,
     fontWeight: tokens.fontWeightSemibold,
     fontSize: tokens.fontSizeBase300,
+    padding: '16px 18px',
+    borderRadius: '18px',
+    backgroundColor: 'rgba(255, 255, 255, 0.76)',
+    boxShadow: '0 8px 24px rgba(91, 54, 25, 0.06)',
+    backdropFilter: 'blur(8px)',
   },
   benefitIcon: {
     flexShrink: 0,
