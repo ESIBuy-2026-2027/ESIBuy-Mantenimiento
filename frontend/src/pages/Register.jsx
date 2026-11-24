@@ -277,16 +277,7 @@ export default function Register() {
     </div>
   )
 
-  const camposComunes = (
-    <>
-      {campo('dni', 'DNI')}
-      {campo('email', 'Correo electrónico', { type: 'email' })}
-      {campo('telefono', 'Teléfono', { type: 'tel', required: false })}
-      {campoPassword('password', 'Contraseña')}
-      <PasswordRequirements password={datos.password} />
-      {campoPassword('repeticionPassword', 'Repetir contraseña')}
-    </>
-  )
+
 
   const casillaPrivacidad = (
     <div data-register-error={errores.aceptaPrivacidad ? 'true' : undefined}>
