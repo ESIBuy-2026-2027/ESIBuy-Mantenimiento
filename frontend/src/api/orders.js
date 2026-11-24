@@ -34,6 +34,11 @@ export function cancelOrder(orderId) {
   return request(`/api/customer/orders/${encodeURIComponent(orderId)}/cancel`, { method: 'POST' })
 }
 
+// Confirma que el cliente ha recibido un pedido enviado y lo marca como entregado.
+export function confirmOrderDelivery(orderId) {
+  return request(`/api/customer/orders/${encodeURIComponent(orderId)}/deliver`, { method: 'POST' })
+}
+
 // Pedidos reales del vendedor en sesión (listado y detalle). El backend solo devuelve pedidos cuyo vendedorId
 // coincide con la sesión y nunca permite acceder al pedido de otro vendedor.
 export function getSellerOrders() {

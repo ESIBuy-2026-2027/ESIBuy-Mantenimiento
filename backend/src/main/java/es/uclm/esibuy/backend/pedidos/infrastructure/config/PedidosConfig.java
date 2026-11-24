@@ -10,6 +10,7 @@ import es.uclm.esibuy.backend.carrito.application.port.in.GestionCarritoUseCase;
 import es.uclm.esibuy.backend.direcciones.application.port.in.GestionDireccionesUseCase;
 import es.uclm.esibuy.backend.metodospago.application.port.in.GestionMetodosPagoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.ConfirmacionRecepcionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ProductosConPedidosUseCase;
@@ -24,6 +25,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.MetodosPagoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.VendedorEnSesionPort;
 import es.uclm.esibuy.backend.pedidos.application.service.CancelacionPedidoService;
+import es.uclm.esibuy.backend.pedidos.application.service.ConfirmacionRecepcionPedidoService;
 import es.uclm.esibuy.backend.pedidos.application.service.ConsultaComprasService;
 import es.uclm.esibuy.backend.pedidos.application.service.DependenciasRealizacionPedido;
 import es.uclm.esibuy.backend.pedidos.application.service.RealizacionPedidoService;
@@ -130,6 +132,12 @@ public class PedidosConfig {
     CancelacionPedidoUseCase cancelacionPedidoUseCase(PedidoRepositoryPort pedidoRepositoryPort,
             ClienteEnSesionPort pedidosClienteEnSesionPort, ExistenciasPort pedidosExistenciasPort) {
         return new CancelacionPedidoService(pedidoRepositoryPort, pedidosClienteEnSesionPort, pedidosExistenciasPort);
+    }
+
+    @Bean
+    ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedidoUseCase(PedidoRepositoryPort pedidoRepositoryPort,
+            ClienteEnSesionPort pedidosClienteEnSesionPort) {
+        return new ConfirmacionRecepcionPedidoService(pedidoRepositoryPort, pedidosClienteEnSesionPort);
     }
 
     // Ventas del vendedor para sus estadísticas (HU17)

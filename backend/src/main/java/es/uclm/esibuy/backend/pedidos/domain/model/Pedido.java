@@ -180,4 +180,14 @@ public class Pedido {
     public Instant getCreatedAt() {
         return createdAt;
     }
+
+    // Confirmación de recepción del cliente: solo cuando el pedido está ENVIADO.
+    public void marcarEntregado() {
+        if (estado != EstadoPedido.ENVIADO) {
+            throw new PedidoEstadoNoAvanzableException(
+                    "Solo se puede marcar como entregado un pedido enviado");
+        }
+
+        estado = EstadoPedido.ENTREGADO;
+    }
 }

@@ -64,7 +64,10 @@ describe('OrderDetailPage (HU11): detalle', () => {
 
     await screen.findByRole('list', { name: /estado del envío/i })
     expect(pasoDelEnvio('Enviado: completado')).toBeInTheDocument()
-    expect(pasoDelEnvio('Entregado: estado actual')).toHaveAttribute('aria-current', 'step')
+    const enviado = pasoDelEnvio('Enviado: completado')
+    const entregado = pasoDelEnvio('Entregado: estado actual')
+    expect(entregado).toHaveAttribute('aria-current', 'step')
+    expect(entregado.className).toBe(enviado.className)
   })
 
   it('HU11-CP16: un pedido cancelado lo indica en lugar de la línea de estados del envío', async () => {

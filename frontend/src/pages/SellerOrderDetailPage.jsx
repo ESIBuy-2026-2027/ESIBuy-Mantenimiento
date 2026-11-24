@@ -92,12 +92,17 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground3,
   },
   stepDone: {
-    backgroundColor: '#FFF4EA',
-    color: '#C2410C',
+    backgroundColor: tokens.colorPaletteGreenBackground1,
+    color: tokens.colorPaletteGreenForeground1,
     fontWeight: tokens.fontWeightSemibold,
   },
   stepCurrent: {
     backgroundColor: '#EA580C',
+    color: '#ffffff',
+    fontWeight: tokens.fontWeightSemibold,
+  },
+  stepCurrentDone: {
+    backgroundColor: tokens.colorPaletteGreenBackground3,
     color: '#ffffff',
     fontWeight: tokens.fontWeightSemibold,
   },
@@ -270,7 +275,8 @@ export default function SellerOrderDetailPage() {
                     className={mergeClasses(
                       styles.step,
                       idx < pasoActualIdx && styles.stepDone,
-                      idx === pasoActualIdx && styles.stepCurrent
+                      idx === pasoActualIdx &&
+                        (pedido.estado === 'ENTREGADO' ? styles.stepCurrentDone : styles.stepCurrent)
                     )}
                   >
                     {etiquetaDeEstado(paso)}

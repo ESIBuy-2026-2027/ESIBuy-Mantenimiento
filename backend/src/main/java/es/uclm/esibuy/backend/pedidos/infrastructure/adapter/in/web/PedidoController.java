@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 
 import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.ConfirmacionRecepcionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
 
@@ -30,12 +31,14 @@ public class PedidoController {
     private final RealizacionPedidoUseCase realizacionPedido;
     private final ConsultaComprasUseCase consultaCompras;
     private final CancelacionPedidoUseCase cancelacionPedido;
+    private final ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedido;
 
     public PedidoController(RealizacionPedidoUseCase realizacionPedido, ConsultaComprasUseCase consultaCompras,
-            CancelacionPedidoUseCase cancelacionPedido) {
+            CancelacionPedidoUseCase cancelacionPedido, ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedido) {
         this.realizacionPedido = realizacionPedido;
         this.consultaCompras = consultaCompras;
         this.cancelacionPedido = cancelacionPedido;
+        this.confirmacionRecepcionPedido = confirmacionRecepcionPedido;
     }
 
     // Un pedido por proveedor: el frontend pide uno por cada proveedor del carrito
@@ -61,5 +64,10 @@ public class PedidoController {
     @PostMapping("/{id}/cancel")
     public PedidoResponse cancelar(@PathVariable String id, Authentication autenticado) {
         return PedidoResponse.desde(cancelacionPedido.cancelarPedido(autenticado.getName(), id));
+    }
+    // Confirmación de recepción por el cliente: responde 200 con el pedido ya entregado
+    @PostMapping("/{id}/deliver")
+    public PedidoResponse confirmarRecepcion(@PathVariable String id, Authentication autenticado) {
+        return PedidoResponse.desde(confirmacionRecepcionPedido.confirmarRecepcion(autenticado.getName(), id));
     }
 }
