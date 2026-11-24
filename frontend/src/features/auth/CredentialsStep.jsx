@@ -69,7 +69,7 @@ export default function CredentialsStep({ onSubmit, submitting }) {
         disabled={submitting}
         icon={submitting ? <Spinner size="tiny" /> : undefined}
       >
-        Continuar
+        Entrar
       </Button>
     </form>
   )
