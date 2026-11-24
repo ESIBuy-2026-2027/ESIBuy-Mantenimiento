@@ -1449,7 +1449,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU9-CP05 | El carrito está siempre a la vista abajo a la izquierda, con el número de productos, y su panel separa los productos por proveedor con la cabecera «Proveedor: total», la cantidad y el subtotal de cada producto | Frontend (componente y página) | 11 | ✅ Pasa (11, AB#384, PR #144) |
 | HU9-CP06 | Desde el panel se puede cambiar la cantidad de un producto (sin pasar de las existencias), quitarlo y vaciar el carrito, con aviso si el servidor lo rechaza | Frontend (componente) | 6 | ✅ Pasa (6, AB#384, PR #144) |
 | HU9-CP07 | El carrito tiene estado de carga y de error con reintento, y vive en el servidor: al recargar la página sigue ahí | Frontend (componente y página) | 3 | ✅ Pasa (3, AB#384, PR #144) |
-| HU9-CP08 | «Proceder al pago» lleva a la pasarela de pago | Frontend (componente) | 1 | ✅ Pasa (1, AB#384, PR #146) |
+| HU9-CP08 | Cada vendedor del carrito tiene un enlace «Pagar a…» que lleva a la pasarela de pago de ese vendedor | Frontend (componente) | 1 | ✅ Pasa (1, AB#384, PR #146); modificado en AB#561 (PR pendiente) |
 | HU9-CP09 | Con muchos productos el carrito se puede recorrer entero: el panel tiene un scroll global y la lista de cada proveedor su propio scroll, sin que ningún proveedor se comprima | Frontend (componente) | 3 | ✅ Pasa (3, AB#384, PR #154) |
 | HU9-CP10 | Añadir un producto crea su línea o suma unidades a las que ya hay, y el carrito del cliente se guarda | Unitario + controlador | 4 | ✅ Pasa (4, AB#385 a AB#390, PR #162) |
 | HU9-CP11 | No se puede superar el stock al añadir ni al fijar la cantidad (409 `INSUFFICIENT_STOCK`) | Unitario + controlador | 4 | ✅ Pasa (4, AB#385 a AB#390, PR #162) |
@@ -1465,6 +1465,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU9-CP21 | Al eliminar su cuenta (HU25) se borra el carrito del cliente, sin dejar uno vacío guardado, y no el de otro; si no tiene, no es un error | Unitario (aplicación) | 2 | ✅ Pasa (2, AB#275, PR #235) |
 | HU9-CP22 | Eliminar por cliente borra su carrito de la colección y no el de otro cliente | Integración (persistencia) | 1 | ✅ Pasa (1, AB#275, PR #235) |
 | HU9-CP23 | Borrar el carrito exige el rol cliente y su propio correo; un vendedor, un administrador o sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#275, PR #235) |
+| HU9-CP28 | Quitar varios productos del carrito a la vez (lo que usa el pedido al terminar) lo hace con una sola lectura y un solo guardado, deja el resto y exige rol cliente y su propio correo | Unitario con y sin Spring Security | 2 | 🔍 Pendiente de PR (AB#565) |
 
 Notas:
 - **HU9-CP01 a CP09 (Sprint 2, frontend):** casos propuestos en las tasks AB#383 (vista añadir al carrito) y AB#384 (vista de carrito) a partir de lo pedido en ellas y de las decisiones del equipo (`frontend/docs/hu9-carrito-de-compra.md`). Pendientes de confirmar con el equipo y de añadir a la HU9 (AB#71) en Azure Boards.
@@ -1522,7 +1523,7 @@ Notas:
 | HU9-CP07 | `CartWidget.test.jsx` | `HU9-CP07: mientras carga el carrito lo indica` | Frontend · componente | AB#384 | PR #144 | ✅ |
 | HU9-CP07 | `CartWidget.test.jsx` | `HU9-CP07: si no carga, avisa y permite reintentar` | Frontend · componente | AB#384 | PR #144 | ✅ |
 | HU9-CP07 | `CartWidget.test.jsx` | `HU9-CP07: el carrito vive en el servidor: al recargar la página sigue ahí` | Frontend · componente | AB#384 | PR #144 | ✅ |
-| HU9-CP08 | `CartWidget.test.jsx` | `HU9-CP08: «Proceder al pago» lleva a la pasarela de pago` | Frontend · componente | AB#384 | PR #146 | ✅ |
+| HU9-CP08 | `CartWidget.test.jsx` | `HU9-CP08: cada vendedor tiene su enlace «Pagar a…», que lleva a la pasarela de pago de ese vendedor` | Frontend · componente | AB#384 | PR #146; modificado en AB#561 | ✅ |
 | HU9-CP09 | `CartWidget.test.jsx` | `HU9-CP09: el panel tiene un scroll global y cada proveedor su propio scroll, sin comprimir a ninguno` | Frontend · componente | AB#384 | PR #154 | ✅ |
 | HU9-CP09 | `CartWidget.test.jsx` | `HU9-CP09: con muchos productos siguen estando todos en el carrito, también los últimos de cada proveedor` | Frontend · componente | AB#384 | PR #154 | ✅ |
 | HU9-CP09 | `CartWidget.test.jsx` | `HU9-CP09: con tres proveedores ninguno se comprime, tampoco el que tiene un solo producto` | Frontend · componente | AB#384 | PR #154 | ✅ |
@@ -1577,10 +1578,10 @@ Notas:
 | HU9-CP19 | `ProductoTest` | `elClientePremiumPagaConElDescuentoPremium` | Dominio | AB#388 | PR #162 | ✅ |
 | HU9-CP19 | `ProductoTest` | `sinDescuentoPremiumElPremiumPagaConElGeneral` | Dominio | AB#388 | PR #162 | ✅ |
 | HU9-CP19 | `AutenticacionServiceTest` | `esClientePremiumDiceSiElClienteEsPremium` | Aplicación | AB#388 | PR #162 | ✅ |
-| HU9-CP20 | `SeguridadCarritoServiceTest` | `unVendedorNoUsaElCarrito` | Aplicación | — | PR #168 | ✅ |
+| HU9-CP20 | `SeguridadCarritoServiceTest` | `unVendedorNoUsaElCarrito` | Aplicación | — | PR #168; modificado en AB#565 | ✅ |
 | HU9-CP20 | `SeguridadCarritoServiceTest` | `unAdministradorNoUsaElCarrito` | Aplicación | — | PR #168 | ✅ |
 | HU9-CP20 | `SeguridadCarritoServiceTest` | `unClienteNoOperaConElCorreoDeOtro` | Aplicación | — | PR #168 | ✅ |
-| HU9-CP20 | `SeguridadCarritoServiceTest` | `unClienteConsultaSuPropioCarrito` | Aplicación | — | PR #168 | ✅ |
+| HU9-CP20 | `SeguridadCarritoServiceTest` | `unClienteConsultaSuPropioCarrito` | Aplicación | — | PR #168; modificado en AB#565 | ✅ |
 | HU9-CP20 | `SeguridadCarritoServiceTest` | `sinSesionSeRechazaTodo` | Aplicación | — | PR #168 | ✅ |
 | HU9-CP21 | `GestionCarritoServiceTest` | `eliminarBorraElCarritoDelCliente` | Aplicación | AB#275 | PR #235 | ✅ |
 | HU9-CP21 | `GestionCarritoServiceTest` | `eliminarSinCarritoNoEsUnError` | Aplicación | AB#275 | PR #235 | ✅ |
@@ -1590,6 +1591,8 @@ Notas:
 | HU9-CP23 | `SeguridadCarritoServiceTest` | `unVendedorNoEliminaCarritos` | Aplicación | AB#275 | PR #235 | ✅ |
 | HU9-CP23 | `SeguridadCarritoServiceTest` | `unAdministradorNoEliminaCarritos` | Aplicación | AB#275 | PR #235 | ✅ |
 | HU9-CP23 | `SeguridadCarritoServiceTest` | `sinSesionNoSeEliminaElCarrito` | Aplicación | AB#275 | PR #235 | ✅ |
+| HU9-CP28 | `GestionCarritoServiceTest` | `quitarVariosProductosSeHaceDeUnaVez` | Aplicación | AB#565 | PR pendiente | 🔍 |
+| HU9-CP28 | `SeguridadCarritoServiceTest` | `unClienteConsultaSuPropioCarrito` | Aplicación | AB#565 | PR pendiente | 🔍 |
 
 Rutas de las clases de test (bajo `frontend/src/`):
 - `AddToCartButton.test.jsx` y `CartWidget.test.jsx`: `features/cart/` (Vitest, React Testing Library y MSW)
@@ -1614,29 +1617,37 @@ Rutas de las clases de test del backend (bajo `backend/src/test/java/es/uclm/esi
 
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
-| HU10-CP01 | La pasarela de pago solo la ve un cliente (sin sesión lleva al login; otro rol, a su página) y se llega a ella desde «Proceder al pago» | Frontend (página) | 3 | ✅ Pasa |
-| HU10-CP02 | La pasarela resume la compra con un pedido por proveedor («Proveedor: total»), con sus productos, el aviso de un pedido por proveedor y el importe total a pagar | Frontend (página) | 4 | ✅ Pasa |
-| HU10-CP03 | Con el carrito vacío la pasarela lo indica, no ofrece pagar y permite volver a los productos | Frontend (página) | 1 | ✅ Pasa |
-| HU10-CP04 | Al pulsar «Simular pago» se indica que se procesa, se crea un pedido por cada proveedor, se confirma cada uno y el carrito queda vacío | Frontend (página) | 3 | ✅ Pasa |
-| HU10-CP05 | Si falla el pedido de un proveedor se confirman los demás, se avisa de cuál ha fallado, su compra se conserva en el carrito y se puede reintentar sin repetir lo ya pagado | Frontend (página) | 3 | ✅ Pasa |
-| HU10-CP06 | Cada pedido se pide con un solo proveedor, uno detrás de otro | Frontend (página) | 1 | ✅ Pasa |
-| HU10-CP07 | La pasarela lista los métodos de pago guardados del cliente (HU6), con su máscara, marca el predeterminado y deja elegir otro antes de pagar | Frontend (página) | 2 | ✅ Pasa |
+| HU10-CP01 | La pasarela de pago solo la ve un cliente (sin sesión lleva al login; otro rol, a su página) y se llega a ella desde el enlace «Pagar a…» de cada vendedor del carrito | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#561) |
+| HU10-CP02 | El resumen de la compra del vendedor elegido muestra cada producto con su cantidad y su precio, y el total a pagar | Frontend (página) | 1 | 🔍 Pendiente de PR (AB#561) |
+| HU10-CP03 | Con el carrito vacío la pasarela lo indica, no ofrece pagar y permite volver a los productos | Frontend (página) | 1 | 🔍 Pendiente de PR (AB#561) |
+| HU10-CP04 | Al pulsar «Simular pago» se indica que se procesa, se confirma el pedido de ese vendedor y solo sus productos salen del carrito; lo de los demás vendedores se queda en él | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#561) |
+| HU10-CP05 | ~~Si falla el pedido de un vendedor se confirman los demás~~ Retirado: ya no se pagan varios vendedores a la vez (cada pedido es de un solo vendedor, decisión del equipo, PBI 535); lo sustituyen HU10-CP26, CP27 y CP28 | Frontend (página) | 0 | ⏸ Retirado (AB#561) |
+| HU10-CP06 | ~~Cada pedido se pide con un solo proveedor, uno detrás de otro~~ Retirado: lo sustituye HU10-CP28 (un solo vendedor por pedido) | Frontend (página) | 0 | ⏸ Retirado (AB#561) |
+| HU10-CP07 | El paso de pago lista los métodos de pago guardados del cliente (HU6), con su máscara, marca el predeterminado y deja elegir otro antes de pagar | Frontend (página) | 2 | ✅ Pasa |
 | HU10-CP08 | Sin métodos de pago guardados no se puede pagar y se lleva a la vista de métodos de pago (HU6) para añadir uno; si no se pueden cargar, se indica y se puede reintentar | Frontend (página) | 2 | ✅ Pasa |
-| HU10-CP09 | Cada pedido se crea con el método de pago elegido (`paymentMethodId`) | Frontend (página) | 1 | ✅ Pasa (1, AB#133, PR #194) |
-| HU10-CP10 | Tras pagar se muestra un recibo con forma de ticket: total pagado (solo de los pedidos creados), fecha, cada pedido con su número, proveedor e importe, y el método de pago usado con su máscara | Frontend (página + componente) | 6 | ✅ Pasa |
+| HU10-CP09 | El pedido se crea con el vendedor, la dirección de envío (`direccionId`), el método de pago (`paymentMethodId`) y el total que vio el cliente (`totalEsperado`) | Frontend (página) | 1 | 🔍 Pendiente de PR (AB#561) |
+| HU10-CP10 | Tras pagar se muestra un recibo con forma de ticket: total pagado, fecha, el pedido con su número, vendedor e importe, y el método de pago usado con su máscara | Frontend (página + componente) | 5 | 🔍 Pendiente de PR (AB#561); el ticket sin cambios ✅ |
 | HU10-CP11 | La decoración del recibo no estorba: el código de barras y el confeti quedan ocultos a los lectores de pantalla y no hay confeti si el usuario prefiere reducir el movimiento | Frontend (componente) | 3 | ✅ Pasa |
 | HU10-CP12 | El pedido nace PAGADO, con un solo proveedor, al menos una línea, sin productos repetidos, cliente, dirección y método de pago, y su total es la suma de las líneas | Unitario | 5 | ✅ Pasa (5, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP13 | Número de pedido `ESB-AAAA-NNNNNN`: año y correlativo de seis cifras, un contador por año en `contadores`, atómico aunque haya pedidos a la vez | Unitario + integración | 8 | ✅ Pasa (8, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP14 | El pedido toma del carrito solo los productos de su proveedor, con los precios del servidor, los quita del carrito y responde 201 con el contrato del frontend | Unitario + controlador | 5 | ✅ Pasa (5, AB#380 a AB#382 y AB#131, PR #166) |
-| HU10-CP15 | Se descuenta el stock de forma atómica; si falta de algún producto o no se puede guardar, no se crea el pedido, se repone lo descontado y responde 409 `INSUFFICIENT_STOCK` | Unitario + integración + controlador | 11 | ✅ Pasa (11, AB#380 a AB#382 y AB#131, PR #166) |
-| HU10-CP16 | El método de pago y la dirección tienen que ser del cliente (si no, 400) y la dirección se copia en el pedido; una petición incompleta responde 400 | Unitario + controlador | 10 | ✅ Pasa |
+| HU10-CP15 | Se descuenta el stock de forma atómica; si falta de algún producto o no se puede guardar, no se crea el pedido, se repone lo descontado y responde 409 `INSUFFICIENT_STOCK` | Unitario + integración + controlador | 12 | ✅ Pasa (11, AB#380 a AB#382 y AB#131, PR #166); +1 en AB#563 (PR pendiente) |
+| HU10-CP16 | El método de pago y la dirección tienen que ser del cliente (si no, 400) y la dirección se copia en el pedido; una petición incompleta (también sin el total esperado) responde 400 | Unitario + controlador | 11 | ✅ Pasa; +1 y ajustes en AB#563 (PR pendiente) |
 | HU10-CP17 | Sin productos de ese proveedor en el carrito no se crea el pedido (409 `CART_EMPTY`) | Unitario + controlador | 3 | ✅ Pasa (3, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP18 | Solo el cliente en sesión realiza pedidos: sin sesión 401, otro rol 403 y sin CSRF se rechaza | Unitario + controlador | 2 | ✅ Pasa (2, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP19 | Persistencia en `pedidos`: el mapper no pierde datos, importes como Decimal128, número de pedido único y con formato validado por la colección | Unitario + integración | 5 | ✅ Pasa (5, AB#380 a AB#382 y AB#131, PR #166) |
 | HU10-CP20 | Realizar un pedido exige el rol cliente y que el correo del comando sea el de la sesión; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, PR #168) |
-| HU10-CP21 | La pasarela lista las direcciones de envío del cliente (HU5), marca la principal y deja elegir otra antes de pagar | Frontend (página) | 2 | ✅ Pasa (2, AB#133, PR #194) |
-| HU10-CP22 | Sin direcciones de envío no se puede pagar y se lleva a la vista de direcciones (HU5) para añadir una; si no se pueden cargar, se indica y se puede reintentar | Frontend (página) | 2 | ✅ Pasa (2, AB#133, PR #194) |
-| HU10-CP23 | Cada pedido se crea con la dirección de envío elegida (`direccionId`) | Frontend (página) | 1 | ✅ Pasa (1, AB#133, PR #194) |
+| HU10-CP21 | El paso de envío lista las direcciones de envío del cliente (HU5), marca la principal y deja elegir otra antes de pagar | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#561) |
+| HU10-CP22 | Sin direcciones de envío no se puede continuar y se lleva a la vista de direcciones (HU5) para añadir una; si no se pueden cargar, se indica y se puede reintentar | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#561) |
+| HU10-CP23 | ~~Cada pedido se crea con la dirección de envío elegida~~ Absorbido por HU10-CP09, que comprueba también la dirección elegida | Frontend (página) | 0 | ⏸ Retirado (AB#561) |
+| HU10-CP24 | Un pedido solo admite productos de un único vendedor: cada línea lleva su vendedor y mezclar vendedores se rechaza | Unitario | 2 | 🔍 Pendiente de PR (AB#563) |
+| HU10-CP25 | El descuento va en el precio de cada producto y el total del pedido es la suma de las líneas ya con su descuento, calculable antes de crear el pedido | Unitario | 1 | 🔍 Pendiente de PR (AB#563) |
+| HU10-CP26 | El pago es simulado: se cobra el total con el método elegido; si se rechaza (tarjeta de prueba acabada en 0000) no se confirma el pedido, no se gasta número y el stock queda como estaba (402 `PAYMENT_REJECTED`) | Unitario + controlador + frontend (página) | 7 | 🔍 Pendiente de PR (AB#563) |
+| HU10-CP27 | El cliente confirma el total que vio: si ya no coincide con el real (precio, descuento o cantidad) no se toca nada (409 `TOTAL_MISMATCH`) | Unitario + controlador + frontend (página y cliente HTTP) | 7 | 🔍 Pendiente de PR (AB#563) |
+| HU10-CP28 | Un pedido es de un solo vendedor: con productos de varios vendedores la pasarela pregunta a cuál se paga, solo enseña y paga el elegido, y lo de los demás sigue en el carrito | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#561) |
+| HU10-CP29 | En el resumen se puede cambiar la cantidad de cada producto (sin pasar de las existencias) y quitarlo, y el total se actualiza | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#561) |
+| HU10-CP30 | Un producto con descuento enseña su precio original tachado, el porcentaje y el precio final; el descuento va en el precio de cada producto | Frontend (página) | 1 | 🔍 Pendiente de PR (AB#561) |
+| HU10-CP31 | La compra va por pasos (compra, envío, pago), cada uno enseña solo lo suyo, el paso actual se indica y se puede volver atrás sin perder lo elegido | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#561) |
 
 Notas:
 - **HU10-CP01 a CP06 (Sprint 2, frontend):** casos propuestos en la task AB#401 (vista de la pasarela de pago) a partir de lo pedido (`frontend/docs/hu10-pasarela-de-pago.md`). Pendientes de confirmar con el equipo y de añadir a la HU10 (AB#72) en Azure Boards. La task AB#379 (vista de carrito) es la misma pantalla que la AB#384 (HU9).
@@ -1651,33 +1662,14 @@ Notas:
 - **Tests en clases que ya existían** (un archivo de tests por clase): `ProductoMongoAdapterTest` (productos), `GestionMetodosPagoServiceTest` (métodos de pago), `GestionDireccionesServiceTest` (direcciones) e `InicializadorColeccionesTest` (colecciones) ganan casos HU10, por los métodos y la colección nuevos que usa el pedido.
 - **HU10-CP20 (R8, seguridad en la capa de negocio):** caso propuesto en la rama `fix/seguridad-capa-negocio` (PR #168, mergeado), sin task ni `AB#` por ser un fix transversal. Pendiente de confirmar con el equipo. Comprueba con `@PreAuthorize` que `RealizacionPedidoUseCase` exige el rol cliente y que el correo del comando es el de la sesión. Clase de test nueva `pedidos/application/service/SeguridadPedidosServiceTest` (contexto mínimo de Spring con `@EnableMethodSecurity`, sin MongoDB).
 - **HU10-CP21 a CP23 (frontend):** casos propuestos en la task AB#133 (pasarela con dirección de envío y endpoint real) y aprobados por el equipo junto con el diseño. Pendientes de añadir a la HU10 (AB#72) en Azure Boards. HU10-CP09 cambia porque cada pedido envía también la `direccionId`; los tests de CP05, CP06 y CP10 que espían la petición solo cambian la ruta a `/api/customer/orders`. Sin archivos de tests nuevos.
+- **HU10-CP24 a CP27 (AB#563, rehacer «Realizar pedido», PBI 535):** casos propuestos al rehacer el endpoint de creación de pedido, pendientes de confirmar con el equipo y de añadir a la HU10 en Azure Boards. Decisiones: cada línea lleva el vendedor y el pedido rechaza mezclar vendedores; el pago es simulado y rechaza la tarjeta de prueba acabada en 0000 (no se mira la caducidad, decisión de HU6); el cliente envía el total que vio (`totalEsperado`) y, si no coincide, 409. `MetodosPagoPort.esDelCliente` y `GestionMetodosPagoUseCase.esDelCliente` se sustituyen por `consultar` y `consultarParaPedido` (tipo y máscara). **Archivo de tests nuevo**, aprobado por el equipo: `PagoSimuladoAdapterTest`. Los demás tests ganan casos en clases que ya existían o se ajustan al nuevo `LineaPedido(productoId, vendedorId, …)`.
+
+- **HU10-CP26 a CP31 y rediseño de la pasarela (AB#561, PBI 535):** casos propuestos, pendientes de confirmar con el equipo y de añadir a la HU10 en Azure Boards. La pasarela va ahora por pasos (compra, envío, pago) y cada pedido es de un solo vendedor, que se elige desde el carrito (decisión del equipo, PBI 535). Se retiran HU10-CP05, CP06 y CP23 (varios vendedores a la vez; CP23 queda en CP09). Los tests de `CheckoutPage.test.jsx` se reescriben; `PaymentTicket.test.jsx` no cambia. HU9-CP08 cambia: el carrito tiene un enlace «Pagar a…» por vendedor en vez de «Proceder al pago».
 
 ### Tabla B · casos de prueba ↔ tests
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
-| HU10-CP01 | `CheckoutPage.test.jsx` | `HU10-CP01: sin sesión, la pasarela de pago lleva a iniciar sesión` | Frontend · página | AB#401 | PR #146 | ✅ |
-| HU10-CP01 | `CheckoutPage.test.jsx` | `HU10-CP01: un vendedor no ve la pasarela del cliente: va a su página` | Frontend · página | AB#401 | PR #146 | ✅ |
-| HU10-CP01 | `CheckoutPage.test.jsx` | `HU10-CP01: desde el carrito, «Proceder al pago» lleva a la pasarela` | Frontend · página | AB#401 | PR #146 | ✅ |
-| HU10-CP02 | `CheckoutPage.test.jsx` | `HU10-CP02: muestra un pedido por proveedor, con la cabecera «Proveedor: total»` | Frontend · página | AB#401 | PR #146 | ✅ |
-| HU10-CP02 | `CheckoutPage.test.jsx` | `HU10-CP02: cada pedido lista solo los productos de su proveedor, con cantidad y precio` | Frontend · página | AB#401 | PR #146 | ✅ |
-| HU10-CP02 | `CheckoutPage.test.jsx` | `HU10-CP02: avisa de que se hace un pedido independiente por cada proveedor` | Frontend · página | AB#401 | PR #146 | ✅ |
-| HU10-CP02 | `CheckoutPage.test.jsx` | `HU10-CP02: muestra el importe total a pagar` | Frontend · página | AB#401 | PR #146 | ✅ |
-| HU10-CP03 | `CheckoutPage.test.jsx` | `HU10-CP03: con el carrito vacío lo indica, no ofrece pagar y permite volver a los productos` | Frontend · página | AB#401 | PR #146 | ✅ |
-| HU10-CP04 | `CheckoutPage.test.jsx` | `HU10-CP04: mientras se procesa el pago lo indica y no deja pulsar otra vez` | Frontend · página | AB#401 | PR #146 | ✅ |
-| HU10-CP04 | `CheckoutPage.test.jsx` | `HU10-CP04: tras pagar se confirma un pedido por cada proveedor` | Frontend · página | AB#401 | PR #146 | ✅ |
-| HU10-CP04 | `CheckoutPage.test.jsx` | `HU10-CP04: tras pagar el carrito queda vacío` | Frontend · página | AB#401 | PR #146 | ✅ |
-| HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: confirma los pedidos que sí se han creado e indica cuál ha fallado` | Frontend · página | AB#401 | PR #146 | ✅ |
-| HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: la compra del pedido que ha fallado se conserva en el carrito` | Frontend · página | AB#401 | PR #146 | ✅ |
-| HU10-CP05 | `CheckoutPage.test.jsx` | `HU10-CP05: se puede reintentar el pago de lo que falló, sin repetir lo ya pagado` | Frontend · página | AB#401 | PR #146 | ✅ |
-| HU10-CP06 | `CheckoutPage.test.jsx` | `HU10-CP06: cada pedido se pide con un solo proveedor, uno detrás de otro` | Frontend · página | AB#401 | PR #146; modificado en PR #157 | ✅ |
-| HU10-CP07 | `CheckoutPage.test.jsx` | `HU10-CP07: lista los métodos de pago guardados del cliente y marca el predeterminado` | Frontend · página | AB#133 | PR #157 |✅ |
-| HU10-CP07 | `CheckoutPage.test.jsx` | `HU10-CP07: se puede elegir otro método de pago antes de pagar` | Frontend · página | AB#133 | PR #157 |✅ |
-| HU10-CP08 | `CheckoutPage.test.jsx` | `HU10-CP08: sin métodos de pago guardados no deja pagar y lleva a sus métodos de pago para añadir uno` | Frontend · página | AB#133 | PR #157 |✅ |
-| HU10-CP08 | `CheckoutPage.test.jsx` | `HU10-CP08: si no se pueden cargar los métodos de pago lo indica y deja reintentar` | Frontend · página | AB#133 | PR #157 |✅ |
-| HU10-CP09 | `CheckoutPage.test.jsx` | `HU10-CP09: cada pedido se crea con el método de pago elegido` | Frontend · página | AB#133 | PR #157; modificado en PR #194 | ✅ |
-| HU10-CP10 | `CheckoutPage.test.jsx` | `HU10-CP10: tras pagar muestra un recibo con el total pagado, cada pedido y el método de pago usado` | Frontend · página | AB#133 | PR #157 |✅ |
-| HU10-CP10 | `CheckoutPage.test.jsx` | `HU10-CP10: si falla un pedido, el recibo solo cobra los pedidos creados` | Frontend · página | AB#133 | PR #157 |✅ |
 | HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: muestra el total pagado, la suma de los pedidos` | Frontend · componente | AB#133 | PR #157 |✅ |
 | HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: muestra la fecha del pago` | Frontend · componente | AB#133 | PR #157 |✅ |
 | HU10-CP10 | `PaymentTicket.test.jsx` | `HU10-CP10: lista cada pedido con su número, su proveedor y su importe` | Frontend · componente | AB#133 | PR #157 |✅ |
@@ -1701,11 +1693,12 @@ Notas:
 | HU10-CP14 | `RealizacionPedidoServiceTest` | `elPedidoLlevaSoloLosProductosDeSuProveedor` | Aplicación | AB#382 | PR #166 | ✅ |
 | HU10-CP14 | `RealizacionPedidoServiceTest` | `trasCrearElPedidoSusProductosSalenDelCarrito` | Aplicación | AB#382 | PR #166 | ✅ |
 | HU10-CP14 | `PedidoControllerTest` | `realizarUnPedidoResponde201ConElPedido` | Infraestructura | AB#381 | PR #166 | ✅ |
-| HU10-CP14 | `CarritoAdapterTest` | `laCompraDeUnProveedorSaleDeSuGrupo` | Infraestructura | AB#382 | PR #166 | ✅ |
-| HU10-CP14 | `CarritoAdapterTest` | `quitarLosProductosDelPedidoLosQuitaDelCarrito` | Infraestructura | AB#382 | PR #166 | ✅ |
+| HU10-CP14 | `CarritoAdapterTest` | `laCompraDeUnProveedorSaleDeSuGrupo` | Infraestructura | AB#382 | PR #166; modificado en AB#563 | ✅ |
+| HU10-CP14 | `CarritoAdapterTest` | `quitarLosProductosDelPedidoLosQuitaDelCarrito` | Infraestructura | AB#382 | PR #166; modificado en AB#565 | ✅ |
 | HU10-CP15 | `RealizacionPedidoServiceTest` | `crearElPedidoDescuentaElStock` | Aplicación | AB#382 | PR #166 | ✅ |
-| HU10-CP15 | `RealizacionPedidoServiceTest` | `siFaltaStockNoSeCreaElPedidoYSeRepone` | Aplicación | AB#382 | PR #166 | ✅ |
+| HU10-CP15 | `RealizacionPedidoServiceTest` | `siFaltaStockNoSeCreaElPedidoYSeRepone` | Aplicación | AB#382 | PR #166; modificado en AB#565 | ✅ |
 | HU10-CP15 | `RealizacionPedidoServiceTest` | `siNoSePuedeGuardarSeReponeElStock` | Aplicación | AB#382 | PR #166 | ✅ |
+| HU10-CP15 | `RealizacionPedidoServiceTest` | `siUnaReposicionFallaSeReponeElResto` | Aplicación | AB#563 | PR pendiente | 🔍 |
 | HU10-CP15 | `PedidoControllerTest` | `siFaltaStockResponde409` | Infraestructura | AB#381 | PR #166 | ✅ |
 | HU10-CP15 | `ExistenciasAdapterTest` | `descontarYReponerSePidenAlModuloDeProductos` | Infraestructura | AB#131 | PR #166 | ✅ |
 | HU10-CP15 | `ExistenciasProductosServiceTest` | `descontarDiceSiHabiaStockSuficiente` | Aplicación | AB#131 | PR #166 | ✅ |
@@ -1716,14 +1709,15 @@ Notas:
 | HU10-CP15 | `ProductoMongoAdapterTest` | `reponerStockDevuelveLasUnidades` | Infraestructura | AB#131 | PR #166 | ✅ |
 | HU10-CP16 | `GestionDireccionesServiceTest` | `consultarParaPedidoDevuelveLosDatosDeUnaDireccionPropia` | Aplicación | AB#382 | PR #166 | ✅ |
 | HU10-CP16 | `GestionDireccionesServiceTest` | `consultarParaPedidoNoDevuelveUnaDireccionAjena` | Aplicación | AB#382 | PR #166 | ✅ |
-| HU10-CP16 | `GestionMetodosPagoServiceTest` | `esDelClienteSoloAceptaUnMetodoPropio` | Aplicación | AB#382 | PR #166 | ✅ |
+| HU10-CP16 | `GestionMetodosPagoServiceTest` | `consultarParaPedidoSoloDevuelveUnMetodoPropio` | Aplicación | AB#382 | PR #166; modificado en AB#563 | ✅ |
 | HU10-CP16 | `RealizacionPedidoServiceTest` | `elMetodoDePagoTieneQueSerDelCliente` | Aplicación | AB#382 | PR #166 | ✅ |
 | HU10-CP16 | `RealizacionPedidoServiceTest` | `laDireccionTieneQueSerDelClienteYSeCopia` | Aplicación | AB#382 | PR #166 | ✅ |
 | HU10-CP16 | `PedidoControllerTest` | `unMetodoODireccionAjenosResponden400` | Infraestructura | AB#381 | PR #166 | ✅ |
-| HU10-CP16 | `PedidoControllerTest` | `unaPeticionIncompletaResponde400` | Infraestructura | AB#381 | PR #166 | ✅ |
+| HU10-CP16 | `PedidoControllerTest` | `unaPeticionIncompletaResponde400` | Infraestructura | AB#381 | PR #166; modificado en AB#563 | ✅ |
 | HU10-CP16 | `DireccionesAdapterTest` | `losDatosDeLaDireccionSeCopian` | Infraestructura | AB#382 | PR #166 | ✅ |
 | HU10-CP16 | `DireccionesAdapterTest` | `unaDireccionAjenaNoSeDevuelve` | Infraestructura | AB#382 | PR #166 | ✅ |
-| HU10-CP16 | `MetodosPagoAdapterTest` | `esDelClientePreguntaAlModuloDeMetodosDePago` | Infraestructura | AB#382 | PR #166 | ✅ |
+| HU10-CP16 | `MetodosPagoAdapterTest` | `consultarPreguntaAlModuloDeMetodosDePago` | Infraestructura | AB#382 | PR #166; modificado en AB#563 | ✅ |
+| HU10-CP16 | `MetodosPagoAdapterTest` | `unMetodoAjenoNoSeDevuelve` | Infraestructura | AB#563 | PR pendiente | 🔍 |
 | HU10-CP17 | `RealizacionPedidoServiceTest` | `sinProductosDelProveedorNoSeCreaElPedido` | Aplicación | AB#382 | PR #166 | ✅ |
 | HU10-CP17 | `PedidoControllerTest` | `sinProductosDelProveedorResponde409` | Infraestructura | AB#381 | PR #166 | ✅ |
 | HU10-CP17 | `CarritoAdapterTest` | `sinProductosDelProveedorNoHayCompra` | Infraestructura | AB#382 | PR #166 | ✅ |
@@ -1739,11 +1733,50 @@ Notas:
 | HU10-CP20 | `SeguridadPedidosServiceTest` | `unClienteNoPideConElCorreoDeOtro` | Aplicación | — | PR #168 | ✅ |
 | HU10-CP20 | `SeguridadPedidosServiceTest` | `unClientePideConSuPropioCorreo` | Aplicación | — | PR #168 | ✅ |
 | HU10-CP20 | `SeguridadPedidosServiceTest` | `sinSesionSeRechazaElPedido` | Aplicación | — | PR #168 | ✅ |
-| HU10-CP21 | `CheckoutPage.test.jsx` | `HU10-CP21: lista las direcciones de envío del cliente y marca la principal` | Frontend · página | AB#133 | PR #194 | ✅ |
-| HU10-CP21 | `CheckoutPage.test.jsx` | `HU10-CP21: se puede elegir otra dirección de envío antes de pagar` | Frontend · página | AB#133 | PR #194 | ✅ |
-| HU10-CP22 | `CheckoutPage.test.jsx` | `HU10-CP22: sin direcciones de envío no deja pagar y lleva a sus direcciones para añadir una` | Frontend · página | AB#133 | PR #194 | ✅ |
-| HU10-CP22 | `CheckoutPage.test.jsx` | `HU10-CP22: si no se pueden cargar las direcciones de envío lo indica y deja reintentar` | Frontend · página | AB#133 | PR #194 | ✅ |
-| HU10-CP23 | `CheckoutPage.test.jsx` | `HU10-CP23: cada pedido se crea con la dirección de envío elegida` | Frontend · página | AB#133 | PR #194 | ✅ |
+| HU10-CP24 | `PedidoTest` | `unPedidoNoAdmiteProductosDeOtroVendedor` | Dominio | AB#563 | PR pendiente | 🔍 |
+| HU10-CP24 | `PedidoTest` | `unaLineaNecesitaSuVendedor` | Dominio | AB#563 | PR pendiente | 🔍 |
+| HU10-CP25 | `PedidoTest` | `elTotalEsLaSumaDeLasLineasConSuDescuento` | Dominio | AB#563 | PR pendiente | 🔍 |
+| HU10-CP26 | `RealizacionPedidoServiceTest` | `seCobraElTotalConElMetodoElegido` | Aplicación | AB#563 | PR pendiente | 🔍 |
+| HU10-CP26 | `RealizacionPedidoServiceTest` | `siElPagoSeRechazaNoSeConfirmaNiSeDescuentaStock` | Aplicación | AB#563 | PR pendiente | 🔍 |
+| HU10-CP26 | `PagoSimuladoAdapterTest` | `unaTarjetaNormalSeAcepta` | Infraestructura | AB#563 | PR pendiente | 🔍 |
+| HU10-CP26 | `PagoSimuladoAdapterTest` | `laTarjetaDePruebaAcabadaEnCerosSeRechaza` | Infraestructura | AB#563 | PR pendiente | 🔍 |
+| HU10-CP26 | `PagoSimuladoAdapterTest` | `bizumYPayPalSiempreSeAceptan` | Infraestructura | AB#563 | PR pendiente | 🔍 |
+| HU10-CP26 | `PedidoControllerTest` | `siElPagoSeRechazaResponde402` | Infraestructura | AB#563 | PR pendiente | 🔍 |
+| HU10-CP27 | `RealizacionPedidoServiceTest` | `siElTotalNoCoincideNoSeTocaNada` | Aplicación | AB#563 | PR pendiente | 🔍 |
+| HU10-CP27 | `RealizacionPedidoServiceTest` | `elTotalSeComparaPorValor` | Aplicación | AB#563 | PR pendiente | 🔍 |
+| HU10-CP27 | `PedidoControllerTest` | `siElTotalNoCoincideResponde409` | Infraestructura | AB#563 | PR pendiente | 🔍 |
+| HU10-CP01 | `CheckoutPage.test.jsx` | `HU10-CP01: sin sesión, la pasarela de pago lleva a iniciar sesión` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP01 | `CheckoutPage.test.jsx` | `HU10-CP01: un vendedor no ve la pasarela del cliente: va a su página` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP01 | `CheckoutPage.test.jsx` | `HU10-CP01: desde el carrito, «Pagar a…» lleva a la pasarela de ese vendedor` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP02 | `CheckoutPage.test.jsx` | `HU10-CP02: el resumen muestra cada producto con su cantidad, su precio y el total del pedido` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP03 | `CheckoutPage.test.jsx` | `HU10-CP03: con el carrito vacío lo indica, no ofrece pagar y permite volver a los productos` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP04 | `CheckoutPage.test.jsx` | `HU10-CP04: mientras se procesa el pago lo indica y no deja pulsar otra vez` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP04 | `CheckoutPage.test.jsx` | `HU10-CP04: tras pagar se confirma el pedido del vendedor y solo sus productos salen del carrito` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP04 | `CheckoutPage.test.jsx` | `HU10-CP04: si no queda nada más en el carrito, no ofrece pagar a otro vendedor` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP07 | `CheckoutPage.test.jsx` | `HU10-CP07: lista los métodos de pago guardados del cliente y marca el predeterminado` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP07 | `CheckoutPage.test.jsx` | `HU10-CP07: se puede elegir otro método de pago antes de pagar` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP08 | `CheckoutPage.test.jsx` | `HU10-CP08: sin métodos de pago guardados no deja pagar y lleva a sus métodos de pago para añadir uno` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP08 | `CheckoutPage.test.jsx` | `HU10-CP08: si no se pueden cargar los métodos de pago lo indica y deja reintentar` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP09 | `CheckoutPage.test.jsx` | `HU10-CP09: el pedido se crea con el vendedor, la dirección, el método de pago y el total que vio el cliente` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP10 | `CheckoutPage.test.jsx` | `HU10-CP10: tras pagar muestra un recibo con el total pagado, el pedido y el método de pago usado` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP21 | `CheckoutPage.test.jsx` | `HU10-CP21: lista las direcciones de envío del cliente y marca la principal` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP21 | `CheckoutPage.test.jsx` | `HU10-CP21: se puede elegir otra dirección de envío antes de pagar` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP22 | `CheckoutPage.test.jsx` | `HU10-CP22: sin direcciones de envío no deja continuar y lleva a sus direcciones para añadir una` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP22 | `CheckoutPage.test.jsx` | `HU10-CP22: si no se pueden cargar las direcciones de envío lo indica y deja reintentar` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP26 | `CheckoutPage.test.jsx` | `HU10-CP26: si el pago se rechaza no se confirma el pedido, se avisa y se puede probar con otro método` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP27 | `CheckoutPage.test.jsx` | `HU10-CP27: si el total ha cambiado vuelve al resumen y pide revisar la compra` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP27 | `CheckoutPage.test.jsx` | `HU10-CP27: si falta stock dice de qué producto y vuelve al resumen para ajustarlo` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP27 | `CheckoutPage.test.jsx` | `HU10-CP27: un fallo inesperado avisa con un mensaje genérico y se puede reintentar` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP27 | `client.test.js` | `HU10-CP27: un error con code y mensaje del servidor los guarda en el ApiError` | Frontend · cliente HTTP | AB#561 | PR pendiente | 🔍 |
+| HU10-CP28 | `CheckoutPage.test.jsx` | `HU10-CP28: con productos de dos vendedores, sin elegir uno, pregunta a cuál se paga` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP28 | `CheckoutPage.test.jsx` | `HU10-CP28: la pasarela de un vendedor solo lleva los productos de ese vendedor` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP28 | `CheckoutPage.test.jsx` | `HU10-CP28: si el carrito solo tiene un vendedor, va directo a su resumen` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP29 | `CheckoutPage.test.jsx` | `HU10-CP29: se puede cambiar la cantidad de un producto y el total se actualiza` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP29 | `CheckoutPage.test.jsx` | `HU10-CP29: la cantidad no puede pasar de las existencias` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP29 | `CheckoutPage.test.jsx` | `HU10-CP29: se puede quitar un producto y el total se actualiza` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP30 | `CheckoutPage.test.jsx` | `HU10-CP30: un producto con descuento muestra su precio original tachado, el porcentaje y el precio final` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP31 | `CheckoutPage.test.jsx` | `HU10-CP31: la compra va por pasos y cada uno enseña solo lo suyo` | Frontend · página | AB#561 | PR pendiente | 🔍 |
+| HU10-CP31 | `CheckoutPage.test.jsx` | `HU10-CP31: se puede volver atrás sin perder lo elegido` | Frontend · página | AB#561 | PR pendiente | 🔍 |
 
 Ruta de la clase de test (bajo `frontend/src/`):
 - `CheckoutPage.test.jsx`: `pages/` (Vitest, React Testing Library y MSW)

@@ -18,6 +18,20 @@ describe('request', () => {
     })
   })
 
+  it('HU10-CP27: un error con code y mensaje del servidor los guarda en el ApiError', async () => {
+    server.use(
+      http.post('/api/customer/orders', () =>
+        HttpResponse.json({ code: 'INSUFFICIENT_STOCK', mensaje: 'No queda stock suficiente de «Teclado»' }, { status: 409 }),
+      ),
+    )
+
+    await expect(request('/api/customer/orders', { method: 'POST', body: {} })).rejects.toMatchObject({
+      status: 409,
+      code: 'INSUFFICIENT_STOCK',
+      detail: 'No queda stock suficiente de «Teclado»',
+    })
+  })
+
   it('request_conRespuesta204_devuelveNull', async () => {
     server.use(http.post('/api/auth/logout', () => new HttpResponse(null, { status: 204 })))
 

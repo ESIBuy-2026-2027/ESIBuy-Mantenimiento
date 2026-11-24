@@ -133,11 +133,14 @@ describe('CartWidget (HU9): panel del carrito', () => {
     expect(within(panel).queryByRole('button', { name: /vaciar carrito/i })).not.toBeInTheDocument()
   })
 
-  it('HU9-CP08: «Proceder al pago» lleva a la pasarela de pago', async () => {
+  it('HU9-CP08: cada vendedor tiene su enlace «Pagar a…», que lleva a la pasarela de pago de ese vendedor', async () => {
     pintar()
     const panel = await abrirPanel()
 
-    expect(within(panel).getByRole('link', { name: /proceder al pago/i })).toHaveAttribute('href', '/checkout')
+    expect(within(panel).queryByRole('link', { name: /proceder al pago/i })).not.toBeInTheDocument()
+    const enlaces = within(panel).getAllByRole('link', { name: /^pagar a /i })
+    expect(enlaces.length).toBeGreaterThan(0)
+    expect(enlaces[0]).toHaveAttribute('href', expect.stringMatching(/^\/checkout\?vendedor=u-/))
   })
 })
 

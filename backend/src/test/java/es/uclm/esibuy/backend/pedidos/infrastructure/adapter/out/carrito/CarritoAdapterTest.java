@@ -18,6 +18,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 // Adaptador de pedidos hacia el carrito (HU10). El puerto de entrada del carrito es un doble de prueba (Mockito)
@@ -31,9 +32,9 @@ class CarritoAdapterTest {
 
     private static final CarritoDetallado CARRITO = new CarritoDetallado(List.of(
             new GrupoCarrito("u-2", "TecnoVera", new BigDecimal("107.82"), List.of(new LineaCarritoDetallada("p-1",
-                    "Auriculares", "a.png", 2, new BigDecimal("53.91"), new BigDecimal("107.82"), 34))),
+                    "Auriculares", "a.png", 2, new BigDecimal("53.91"), new BigDecimal("107.82"), 34, new BigDecimal("59.90"), new BigDecimal("10")))),
             new GrupoCarrito("u-99", "Otero", new BigDecimal("129.00"), List.of(new LineaCarritoDetallada("p-24",
-                    "Smartwatch", "s.png", 1, new BigDecimal("129.00"), new BigDecimal("129.00"), 10)))),
+                    "Smartwatch", "s.png", 1, new BigDecimal("129.00"), new BigDecimal("129.00"), 10, new BigDecimal("129.00"), null)))),
             3, new BigDecimal("236.82"));
 
     @Test
@@ -44,7 +45,7 @@ class CarritoAdapterTest {
         CompraProveedor compra = new CarritoAdapter(gestionCarrito).compraDelProveedor(EMAIL, "u-2").orElseThrow();
 
         assertEquals(new CompraProveedor("u-2", "TecnoVera",
-                List.of(new LineaPedido("p-1", "Auriculares", 2, new BigDecimal("53.91")))), compra);
+                List.of(new LineaPedido("p-1", "u-2", "Auriculares", 2, new BigDecimal("53.91")))), compra);
     }
 
     @Test
@@ -56,11 +57,11 @@ class CarritoAdapterTest {
     }
 
     @Test
-    @DisplayName("HU10-CP14: quitar los productos del pedido los quita uno a uno del carrito")
+    @DisplayName("HU10-CP14: quitar los productos del pedido los quita todos del carrito de una sola vez")
     void quitarLosProductosDelPedidoLosQuitaDelCarrito() {
         new CarritoAdapter(gestionCarrito).quitar(EMAIL, List.of("p-1", "p-2"));
 
-        verify(gestionCarrito).quitar(EMAIL, "p-1");
-        verify(gestionCarrito).quitar(EMAIL, "p-2");
+        verify(gestionCarrito).quitarProductos(EMAIL, List.of("p-1", "p-2"));
+        verifyNoMoreInteractions(gestionCarrito);
     }
 }

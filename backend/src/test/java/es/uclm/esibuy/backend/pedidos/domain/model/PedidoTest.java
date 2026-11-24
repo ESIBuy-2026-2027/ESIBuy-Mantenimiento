@@ -19,7 +19,11 @@ class PedidoTest {
     private static final NumeroPedido NUMERO = NumeroPedido.de(2026, 1);
 
     private static LineaPedido linea(String productoId, int cantidad, String precio) {
-        return new LineaPedido(productoId, "Producto " + productoId, cantidad, new BigDecimal(precio));
+        return linea("u-2", productoId, cantidad, precio);
+    }
+
+    private static LineaPedido linea(String vendedorId, String productoId, int cantidad, String precio) {
+        return new LineaPedido(productoId, vendedorId, "Producto " + productoId, cantidad, new BigDecimal(precio));
     }
 
     private static Pedido pedidoCon(List<LineaPedido> lineas) {
@@ -65,7 +69,34 @@ class PedidoTest {
     void unaLineaNecesitaCantidadYPrecioValidos() {
         assertThrows(PedidoInvalidoException.class, () -> linea("p-1", 0, "10.00"));
         assertThrows(PedidoInvalidoException.class, () -> linea("p-1", 1, "-1.00"));
-        assertThrows(PedidoInvalidoException.class, () -> new LineaPedido(" ", "Nombre", 1, BigDecimal.TEN));
+        assertThrows(PedidoInvalidoException.class, () -> new LineaPedido(" ", "u-2", "Nombre", 1, BigDecimal.TEN));
+    }
+
+    @Test
+    @DisplayName("HU10-CP24: un pedido no admite productos de más de un vendedor")
+    void unPedidoNoAdmiteProductosDeOtroVendedor() {
+        List<LineaPedido> lineasMezcladas = List.of(
+                linea("u-2", "p-1", 1, "10.00"),
+                linea("u-99", "p-24", 1, "129.00"));
+
+        assertThrows(PedidoInvalidoException.class, () -> pedidoCon(lineasMezcladas));
+    }
+
+    @Test
+    @DisplayName("HU10-CP24: una línea necesita el vendedor del producto")
+    void unaLineaNecesitaSuVendedor() {
+        assertThrows(PedidoInvalidoException.class, () -> new LineaPedido("p-1", " ", "Nombre", 1, BigDecimal.TEN));
+        assertThrows(PedidoInvalidoException.class, () -> new LineaPedido("p-1", null, "Nombre", 1, BigDecimal.TEN));
+    }
+
+    @Test
+    @DisplayName("HU10-CP25: el total es la suma de las líneas, cada una con el descuento ya aplicado a su precio")
+    void elTotalEsLaSumaDeLasLineasConSuDescuento() {
+        // 59.90 con un 10 % de descuento en el producto son 53.91; el descuento no se aplica al total
+        List<LineaPedido> lineas = List.of(linea("p-1", 2, "53.91"), linea("p-2", 1, "89.50"));
+
+        assertEquals(new BigDecimal("197.32"), Pedido.totalDe(lineas));
+        assertEquals(Pedido.totalDe(lineas), pedidoCon(lineas).getTotal());
     }
 
     @Test

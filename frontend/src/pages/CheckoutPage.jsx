@@ -1,228 +1,70 @@
-
 import { useState } from 'react'
 import PropTypes from 'prop-types'
+import { useSearchParams } from 'react-router-dom'
 import {
-  Badge,
   Button,
-  Field,
   MessageBar,
   MessageBarActions,
   MessageBarBody,
-  Radio,
-  RadioGroup,
   Spinner,
   Text,
   Title1,
-  makeStyles,
   mergeClasses,
-  tokens,
 } from '@fluentui/react-components'
-import { BuildingShop20Regular, Cart24Regular, LockClosed20Regular } from '@fluentui/react-icons'
+import { BuildingShop20Regular, Cart24Regular } from '@fluentui/react-icons'
 import { getAddresses } from '../api/addresses'
-import { getCart } from '../api/cart'
 import { createOrder } from '../api/orders'
 import { getPaymentMethods } from '../api/paymentMethods'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
 import { useCart } from '../features/cart/useCart'
+import CartSummaryStep from '../features/checkout/CartSummaryStep'
+import PaymentStep from '../features/checkout/PaymentStep'
 import PaymentTicket from '../features/checkout/PaymentTicket'
-import { TIPOS_DE_METODO } from '../features/paymentMethods/tiposDeMetodo'
+import ShippingStep from '../features/checkout/ShippingStep'
+import { mensajeDeError, pideRevisarLaCompra } from '../features/checkout/checkoutErrors'
+import { useCheckoutStyles } from '../features/checkout/checkoutStyles'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { PATHS } from '../routes/paths'
 import { formatPrice } from '../utils/format'
 
-// Lo que dura el pago simulado antes de crear los pedidos.
+// Lo que dura el pago simulado antes de crear el pedido.
 const PAGO_SIMULADO_MS = 700
 
+const PASOS = [
+  { id: 'resumen', etiqueta: 'Compra' },
+  { id: 'envio', etiqueta: 'Envío' },
+  { id: 'pago', etiqueta: 'Pago' },
+]
+
 const esperar = (ms) => new Promise((resolver) => setTimeout(resolver, ms))
-const pedidos = (n) => `${n} ${n === 1 ? 'pedido' : 'pedidos'}`
 
-const useStyles = makeStyles({
-  page: {
-    width: '100%',
-    maxWidth: '1000px',
-    margin: '0 auto',
-    boxSizing: 'border-box',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalXL,
-    padding: `${tokens.spacingVerticalXL} ${tokens.spacingHorizontalL} ${tokens.spacingVerticalXXXL}`,
-  },
-  heading: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalXS,
-  },
-  title: {
-    margin: 0,
-  },
-  subtitle: {
-    color: tokens.colorNeutralForeground3,
-  },
-  layout: {
-    display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1fr)',
-    gap: tokens.spacingVerticalXL,
-    alignItems: 'start',
-    '@media (min-width: 860px)': {
-      gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1fr)',
-      gap: tokens.spacingHorizontalXXL,
-    },
-  },
-  orders: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalL,
-  },
-  card: {
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-    backgroundColor: tokens.colorNeutralBackground1,
-    border: `1px solid ${tokens.colorNeutralStroke2}`,
-    borderRadius: tokens.borderRadiusXLarge,
-    boxShadow: tokens.shadow4,
-  },
-  cardHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: tokens.spacingHorizontalS,
-    margin: 0,
-    padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalL}`,
-    fontSize: tokens.fontSizeBase400,
-    fontWeight: tokens.fontWeightSemibold,
-    color: tokens.colorBrandForeground1,
-    backgroundColor: tokens.colorBrandBackground2,
-  },
-  lines: {
-    display: 'flex',
-    flexDirection: 'column',
-    margin: 0,
-    padding: 0,
-    listStyleType: 'none',
-  },
-  line: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: tokens.spacingHorizontalM,
-    padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalL}`,
-    ':not(:first-child)': {
-      borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
-    },
-  },
-  lineInfo: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalXXS,
-    minWidth: 0,
-  },
-  lineName: {
-    fontWeight: tokens.fontWeightSemibold,
-    overflowWrap: 'anywhere',
-  },
-  amount: {
-    fontWeight: tokens.fontWeightBold,
-    fontVariantNumeric: 'tabular-nums',
-  },
-  muted: {
-    color: tokens.colorNeutralForeground3,
-  },
-  summary: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalM,
-    padding: tokens.spacingHorizontalXL,
-    backgroundColor: tokens.colorNeutralBackground1,
-    border: `1px solid ${tokens.colorNeutralStroke2}`,
-    borderRadius: tokens.borderRadiusXLarge,
-    boxShadow: tokens.shadow8,
-    '@media (min-width: 860px)': {
-      position: 'sticky',
-      top: tokens.spacingVerticalXXL,
-    },
-  },
-  summaryTitle: {
-    margin: 0,
-    fontSize: tokens.fontSizeBase400,
-    fontWeight: tokens.fontWeightSemibold,
-  },
-  total: {
-    display: 'flex',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-    gap: tokens.spacingHorizontalM,
-  },
-  totalAmount: {
-    fontSize: tokens.fontSizeHero700,
-    lineHeight: tokens.lineHeightHero700,
-    fontWeight: tokens.fontWeightBold,
-    fontVariantNumeric: 'tabular-nums',
-  },
-  done: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalL,
-  },
-  methodLabel: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: tokens.spacingHorizontalS,
-  },
-  methodIcon: {
-    display: 'flex',
-    color: tokens.colorBrandForeground1,
-  },
-  mask: {
-    fontVariantNumeric: 'tabular-nums',
-  },
-  addressLabel: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalXXS,
-  },
-  addressLine: {
-    overflowWrap: 'anywhere',
-  },
-  failure: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalXS,
-    padding: tokens.spacingHorizontalL,
-    color: tokens.colorPaletteRedForeground1,
-    backgroundColor: tokens.colorPaletteRedBackground1,
-    border: `1px solid ${tokens.colorPaletteRedBorder1}`,
-    borderRadius: tokens.borderRadiusXLarge,
-  },
-  actions: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: tokens.spacingHorizontalM,
-  },
-})
+// El carrito puede tener productos de varios vendedores, pero cada pedido es de un solo vendedor: aquí se elige a
+// cuál se paga ahora. Lo que queda de los demás sigue en el carrito.
+function VendorChoice({ groups }) {
+  const styles = useCheckoutStyles()
 
-// El pedido de un proveedor: su cabecera («Proveedor: total») y sus productos.
-// Cada pedido tiene un solo proveedor.
-function VendorOrder({ group, styles }) {
   return (
-    <section aria-label={`Pedido de ${group.vendedor.nombreComercial}`} className={styles.card}>
-      <h2 className={styles.cardHeader}>
-        <BuildingShop20Regular aria-hidden="true" />
-        <span>
-          {group.vendedor.nombreComercial}: {formatPrice(group.total)}
-        </span>
-      </h2>
-      <ul className={styles.lines}>
-        {group.lineas.map((line) => (
-          <li key={line.productoId} className={styles.line}>
-            <div className={styles.lineInfo}>
-              <Text className={styles.lineName}>{line.nombre}</Text>
-              <Text size={200} className={styles.muted}>
-                {line.cantidad} × {formatPrice(line.precioUnitario)}
-              </Text>
-            </div>
-            <span className={styles.amount}>{formatPrice(line.subtotal)}</span>
+    <section aria-label="Elegir vendedor" className={styles.panel}>
+      <h2 className={styles.panelTitle}>¿A qué vendedor quieres pagar?</h2>
+      <Text className={styles.muted}>
+        Cada pedido es de un solo vendedor. Paga uno ahora; lo de los demás se queda en tu carrito.
+      </Text>
+      <ul className={styles.vendorList}>
+        {groups.map((group) => (
+          <li key={group.vendedor.id} className={styles.vendorItem}>
+            <span className={styles.vendor}>
+              <BuildingShop20Regular aria-hidden="true" />
+              <span>
+                {group.vendedor.nombreComercial}: {formatPrice(group.total)}
+              </span>
+            </span>
+            <LinkButton
+              to={`${PATHS.CHECKOUT}?vendedor=${encodeURIComponent(group.vendedor.id)}`}
+              appearance="primary"
+            >
+              {`Pagar a ${group.vendedor.nombreComercial}`}
+            </LinkButton>
           </li>
         ))}
       </ul>
@@ -230,195 +72,41 @@ function VendorOrder({ group, styles }) {
   )
 }
 
-VendorOrder.propTypes = {
-  group: PropTypes.shape({
-    vendedor: PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      nombreComercial: PropTypes.string.isRequired,
-    }).isRequired,
-    total: PropTypes.number.isRequired,
-    lineas: PropTypes.arrayOf(
-      PropTypes.shape({
-        productoId: PropTypes.string.isRequired,
-        nombre: PropTypes.string.isRequired,
-        cantidad: PropTypes.number.isRequired,
-        precioUnitario: PropTypes.number.isRequired,
-        subtotal: PropTypes.number.isRequired,
-      }),
-    ).isRequired,
-  }).isRequired,
-  styles: PropTypes.object.isRequired,
-}
-
-// Las direcciones de envío del cliente (HU5).
-function ShippingAddressPicker({ query, selectedId, onSelect, styles }) {
-  if (query.failed) {
-    return (
-      <MessageBar intent="error">
-        <MessageBarBody>No se han podido cargar las direcciones de envío.</MessageBarBody>
-        <MessageBarActions>
-          <Button onClick={query.retry}>Reintentar</Button>
-        </MessageBarActions>
-      </MessageBar>
-    )
-  }
-
-  if (!query.data) return <Spinner size="small" label="Cargando direcciones de envío…" />
-
-  if (query.data.length === 0) {
-    return (
-      <MessageBar intent="warning">
-        <MessageBarBody>No tienes ninguna dirección de envío guardada.</MessageBarBody>
-        <MessageBarActions>
-          <LinkButton to={PATHS.ADDRESSES}>Añadir una dirección</LinkButton>
-        </MessageBarActions>
-      </MessageBar>
-    )
-  }
-
-  return (
-    <Field label="Dirección de envío">
-      <RadioGroup value={selectedId} onChange={(_, data) => onSelect(data.value)}>
-        {query.data.map((address) => (
-          <Radio
-            key={address.id}
-            value={address.id}
-            label={
-              <span className={styles.addressLabel}>
-                <span className={styles.methodLabel}>
-                  <span className={styles.lineName}>{address.destinatario}</span>
-                  {address.principal && (
-                    <Badge appearance="tint" color="brand" size="small">
-                      Principal
-                    </Badge>
-                  )}
-                </span>
-                <span className={styles.addressLine}>
-                  {address.detalles ? `${address.calle}, ${address.detalles}` : address.calle}
-                </span>
-                <span className={mergeClasses(styles.addressLine, styles.muted)}>
-                  {address.codigoPostal} {address.ciudad} ({address.provincia})
-                </span>
-              </span>
-            }
-          />
-        ))}
-      </RadioGroup>
-    </Field>
-  )
-}
-
-ShippingAddressPicker.propTypes = {
-  query: PropTypes.shape({
-    failed: PropTypes.bool.isRequired,
-    retry: PropTypes.func.isRequired,
-    data: PropTypes.arrayOf(
-      PropTypes.shape({
+VendorChoice.propTypes = {
+  groups: PropTypes.arrayOf(
+    PropTypes.shape({
+      vendedor: PropTypes.shape({
         id: PropTypes.string.isRequired,
-        destinatario: PropTypes.string.isRequired,
-        principal: PropTypes.bool.isRequired,
-        detalles: PropTypes.string,
-        calle: PropTypes.string.isRequired,
-        codigoPostal: PropTypes.string.isRequired,
-        ciudad: PropTypes.string.isRequired,
-        provincia: PropTypes.string.isRequired,
-      }),
-    ),
-  }).isRequired,
-  selectedId: PropTypes.string,
-  onSelect: PropTypes.func.isRequired,
-  styles: PropTypes.object.isRequired,
+        nombreComercial: PropTypes.string.isRequired,
+      }).isRequired,
+      total: PropTypes.number.isRequired,
+    }),
+  ).isRequired,
 }
 
-// Métodos de pago guardados del cliente (HU6).
-function PaymentMethodPicker({ query, selectedId, onSelect, styles }) {
-  if (query.failed) {
-    return (
-      <MessageBar intent="error">
-        <MessageBarBody>No se han podido cargar los métodos de pago.</MessageBarBody>
-        <MessageBarActions>
-          <Button onClick={query.retry}>Reintentar</Button>
-        </MessageBarActions>
-      </MessageBar>
-    )
-  }
-
-  if (!query.data) return <Spinner size="small" label="Cargando métodos de pago…" />
-
-  if (query.data.length === 0) {
-    return (
-      <MessageBar intent="warning">
-        <MessageBarBody>No tienes ningún método de pago guardado.</MessageBarBody>
-        <MessageBarActions>
-          <LinkButton to={PATHS.PAYMENT_METHODS}>Añadir un método de pago</LinkButton>
-        </MessageBarActions>
-      </MessageBar>
-    )
-  }
-
-  return (
-    <Field label="Método de pago">
-      <RadioGroup value={selectedId} onChange={(_, data) => onSelect(data.value)}>
-        {query.data.map((method) => {
-          const { etiqueta, Icono } = TIPOS_DE_METODO[method.tipo]
-          return (
-            <Radio
-              key={method.id}
-              value={method.id}
-              label={
-                <span className={styles.methodLabel}>
-                  <span className={styles.methodIcon} aria-hidden="true">
-                    <Icono />
-                  </span>
-                  <span>{etiqueta}</span>
-                  <span className={styles.mask}>{method.mascara}</span>
-                  {method.predeterminado && (
-                    <Badge appearance="tint" color="brand" size="small">
-                      Predeterminado
-                    </Badge>
-                  )}
-                </span>
-              }
-            />
-          )
-        })}
-      </RadioGroup>
-    </Field>
-  )
+// El vendedor del pedido: el que pide el enlace del carrito o, si el carrito solo tiene uno, ese.
+function elegirGrupo(groups, vendorId) {
+  if (vendorId) return groups.find(({ vendedor }) => vendedor.id === vendorId)
+  return groups.length === 1 ? groups[0] : undefined
 }
 
-PaymentMethodPicker.propTypes = {
-  query: PropTypes.shape({
-    failed: PropTypes.bool.isRequired,
-    retry: PropTypes.func.isRequired,
-    data: PropTypes.arrayOf(
-      PropTypes.shape({
-        id: PropTypes.string.isRequired,
-        tipo: PropTypes.string.isRequired,
-        mascara: PropTypes.string.isRequired,
-        predeterminado: PropTypes.bool.isRequired,
-      }),
-    ),
-  }).isRequired,
-  selectedId: PropTypes.string,
-  onSelect: PropTypes.func.isRequired,
-  styles: PropTypes.object.isRequired,
-}
-
-// Pasarela de pago (HU10).
+// Pasarela de pago (HU10): un pedido de un solo vendedor, en pasos: revisar la compra, elegir el envío, pagar (simulado) y
+// el recibo.
 export default function CheckoutPage() {
-  const styles = useStyles()
+  const styles = useCheckoutStyles()
   const { cart, status, reload } = useCart()
+  const [params] = useSearchParams()
   const addresses = useApiQuery(getAddresses)
   const paymentMethods = useApiQuery(getPaymentMethods)
+  const [step, setStep] = useState('resumen')
   const [selectedAddressId, setSelectedAddressId] = useState(null)
-  const [selectedId, setSelectedId] = useState(null)
-  const [phase, setPhase] = useState('review')
-  const [orders, setOrders] = useState([])
-  const [failures, setFailures] = useState([])
-  const [paidWith, setPaidWith] = useState(null)
-  const [shippedTo, setShippedTo] = useState(null)
-  const [paidAt, setPaidAt] = useState(null)
+  const [selectedMethodId, setSelectedMethodId] = useState(null)
+  const [paying, setPaying] = useState(false)
+  const [failure, setFailure] = useState(null)
+  const [receipt, setReceipt] = useState(null)
+
+  const groups = cart.grupos
+  const group = elegirGrupo(groups, params.get('vendedor'))
 
   // Mientras el cliente no elige, se usan su dirección principal y su método predeterminado.
   const addressList = addresses.failed ? [] : (addresses.data ?? [])
@@ -429,98 +117,60 @@ export default function CheckoutPage() {
 
   const methods = paymentMethods.failed ? [] : (paymentMethods.data ?? [])
   const selectedMethod =
-    methods.find(({ id }) => id === selectedId) ??
+    methods.find(({ id }) => id === selectedMethodId) ??
     methods.find(({ predeterminado }) => predeterminado) ??
     methods[0]
 
   const pay = async () => {
-    // Al reintentar se envía a la misma dirección y se paga con el mismo método.
-    const address = shippedTo ?? selectedAddress
-    const method = paidWith ?? selectedMethod
-
-    setShippedTo(address)
-    setPaidWith(method)
-    setPhase('paying')
-    setFailures([])
+    setPaying(true)
+    setFailure(null)
 
     await esperar(PAGO_SIMULADO_MS)
 
-    let groups
     try {
-      groups = (await getCart()).grupos
-    } catch {
-      setPhase(orders.length > 0 ? 'done' : 'review')
+      const order = await createOrder(group.vendedor.id, selectedAddress.id, selectedMethod.id, group.total)
+      setReceipt({ order, method: selectedMethod, paidAt: new Date() })
+      setStep('hecho')
+    } catch (error) {
+      setFailure(error)
+      // Si lo que ha cambiado es la compra, el cliente tiene que volver a verla antes de pagar.
+      if (pideRevisarLaCompra(error)) setStep('resumen')
+    } finally {
       reload()
-      return
+      setPaying(false)
     }
-
-    // Un pedido por proveedor, uno detrás de otro. Lo que falla se queda en el carrito.
-    const created = []
-    const failed = []
-
-    for (const group of groups) {
-      try {
-        created.push(await createOrder(group.vendedor.id, address.id, method.id))
-      } catch {
-        failed.push(group.vendedor)
-      }
-    }
-
-    reload()
-
-    if (created.length > 0) setPaidAt(new Date())
-
-    setOrders((previous) => [...previous, ...created])
-    setFailures(failed)
-    setPhase(groups.length === 0 ? 'review' : 'done')
   }
 
-  if (phase === 'done') {
-    const paid = orders.length > 0
-
+  if (step === 'hecho') {
     return (
       <main className={styles.page}>
         <Title1 as="h1" className={styles.title}>
-          {paid ? 'Pago realizado' : 'No se ha podido completar el pago'}
+          Pago realizado
         </Title1>
 
         <div className={styles.done}>
-          {paid && <PaymentTicket orders={orders} paymentMethod={paidWith} paidAt={paidAt} />}
-
-          {failures.length > 0 && (
-            <div role="alert" className={styles.failure}>
-              {failures.map((vendedor) => (
-                <Text key={vendedor.id}>
-                  No se ha podido crear el pedido de {vendedor.nombreComercial}.
-                </Text>
-              ))}
-              <Text size={200}>Su compra sigue en el carrito, sin pagar.</Text>
-            </div>
-          )}
+          <PaymentTicket orders={[receipt.order]} paymentMethod={receipt.method} paidAt={receipt.paidAt} />
 
           <div className={styles.actions}>
-            {failures.length > 0 && (
-              <Button appearance="primary" onClick={pay}>
-                Reintentar el pago
-              </Button>
-            )}
-
-            <LinkButton to={PATHS.PRODUCTS} appearance={failures.length > 0 ? 'secondary' : 'primary'}>
+            <LinkButton to={PATHS.PRODUCTS} appearance="secondary">
               Seguir comprando
             </LinkButton>
-
-            {orders.length > 0 && (
-              <LinkButton to={PATHS.ORDERS} appearance="secondary">
-                Ver mis pedidos
+            {groups.length > 0 && (
+              <LinkButton to={PATHS.CHECKOUT} appearance="secondary">
+                Pagar a otro vendedor
               </LinkButton>
             )}
+            <LinkButton to={PATHS.ORDERS} appearance="primary">
+              Ver mis pedidos
+            </LinkButton>
           </div>
         </div>
       </main>
     )
   }
 
-  const empty = status === 'ready' && cart.grupos.length === 0
+  const empty = status === 'ready' && groups.length === 0
+  const needsChoice = status === 'ready' && groups.length > 0 && !group
 
   return (
     <main className={styles.page}>
@@ -528,7 +178,7 @@ export default function CheckoutPage() {
         <Title1 as="h1" className={styles.title}>
           Pasarela de pago
         </Title1>
-        <Text className={styles.subtitle}>Revisa tu compra antes de pagar.</Text>
+        <Text className={styles.subtitle}>Un pedido es de un solo vendedor. Revisa tu compra antes de pagar.</Text>
       </div>
 
       {status === 'loading' && <Spinner label="Cargando carrito…" />}
@@ -554,55 +204,64 @@ export default function CheckoutPage() {
         </EmptyState>
       )}
 
-      {status === 'ready' && cart.grupos.length > 0 && (
-        <div className={styles.layout}>
-          <div className={styles.orders}>
-            {cart.grupos.map((group) => (
-              <VendorOrder key={group.vendedor.id} group={group} styles={styles} />
+      {needsChoice && <VendorChoice groups={groups} />}
+
+      {group && (
+        <>
+          <ol aria-label="Pasos de la compra" className={styles.steps}>
+            {PASOS.map(({ id, etiqueta }, index) => (
+              <li
+                key={id}
+                aria-current={id === step ? 'step' : undefined}
+                className={mergeClasses(styles.step, id === step && styles.stepCurrent)}
+              >
+                {`${index + 1}. ${etiqueta}`}
+              </li>
             ))}
-          </div>
+          </ol>
 
-          <section aria-label="Resumen del pago" className={styles.summary}>
-            <h2 className={styles.summaryTitle}>Resumen del pago</h2>
+          {failure && step === 'resumen' && (
+            <MessageBar intent="error" role="alert">
+              <MessageBarBody>{mensajeDeError(failure)}</MessageBarBody>
+            </MessageBar>
+          )}
 
-            <div className={styles.total}>
-              <Text className={styles.muted}>Total a pagar</Text>
-              <span className={styles.totalAmount}>{formatPrice(cart.total)}</span>
-            </div>
+          {step === 'resumen' && (
+            <CartSummaryStep
+              group={group}
+              onContinue={() => {
+                setFailure(null)
+                setStep('envio')
+              }}
+            />
+          )}
 
-            <Text size={200} className={styles.muted}>
-              Se creará un pedido por cada proveedor: {pedidos(cart.grupos.length)} en total.
-            </Text>
-
-            <ShippingAddressPicker
-              query={addresses}
+          {step === 'envio' && (
+            <ShippingStep
+              addresses={addresses}
               selectedId={selectedAddress?.id ?? null}
+              canContinue={Boolean(selectedAddress)}
               onSelect={setSelectedAddressId}
-              styles={styles}
+              onBack={() => setStep('resumen')}
+              onContinue={() => setStep('pago')}
             />
+          )}
 
-            <PaymentMethodPicker
-              query={paymentMethods}
+          {step === 'pago' && (
+            <PaymentStep
+              group={group}
+              address={selectedAddress}
+              methods={paymentMethods}
               selectedId={selectedMethod?.id ?? null}
-              onSelect={setSelectedId}
-              styles={styles}
+              paying={paying}
+              error={failure ? mensajeDeError(failure) : null}
+              canPay={Boolean(selectedMethod && selectedAddress)}
+              onSelect={setSelectedMethodId}
+              onBack={() => setStep('envio')}
+              onPay={pay}
             />
-
-            <Button
-              appearance="primary"
-              size="large"
-              icon={phase === 'paying' ? <Spinner size="tiny" /> : <LockClosed20Regular />}
-              disabled={phase === 'paying' || !selectedAddress || !selectedMethod}
-              onClick={pay}
-            >
-              {phase === 'paying' ? 'Procesando pago…' : 'Simular pago'}
-            </Button>
-
-            <Text size={200} className={styles.muted}>
-              Es una simulación: no se realiza ningún cobro real.
-            </Text>
-          </section>
-        </div>
+          )}
+        </>
       )}
     </main>
   )

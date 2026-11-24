@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import { direccionesDe } from './addressesHandlers'
 import { getUsuarioEnSesion } from './authHandlers'
-import { rechazarSiNoEsCliente, retirarGrupoDelCarrito } from './cartHandlers'
+import { grupoDelCarrito, rechazarSiNoEsCliente, retirarGrupoDelCarrito } from './cartHandlers'
 import { metodosDePagoDe } from './paymentMethodsHandlers'
 
 const DIRECCION_DE_CARLOS = {
@@ -94,16 +94,25 @@ export const ordersHandlers = [
     const rechazo = rechazarSiNoEsCliente()
     if (rechazo) return rechazo
 
-    const { vendedorId, direccionId, paymentMethodId } = await request.json()
+    const { vendedorId, direccionId, paymentMethodId, totalEsperado } = await request.json()
     const usuarioId = getUsuarioEnSesion().id
-    const metodoDelCliente = metodosDePagoDe(usuarioId).some(({ id }) => id === paymentMethodId)
+    const metodo = metodosDePagoDe(usuarioId).find(({ id }) => id === paymentMethodId)
     const direccion = direccionesDe(usuarioId).find(({ id }) => id === direccionId)
-    if (typeof vendedorId !== 'string' || vendedorId === '' || !metodoDelCliente || !direccion) {
+    if (typeof vendedorId !== 'string' || vendedorId === '' || !metodo || !direccion || typeof totalEsperado !== 'number') {
       return HttpResponse.json({ code: 'VALIDATION_ERROR' }, { status: 400 })
     }
 
-    const grupo = retirarGrupoDelCarrito(usuarioId, vendedorId)
+    const grupo = grupoDelCarrito(usuarioId, vendedorId)
     if (!grupo) return HttpResponse.json({ code: 'CART_EMPTY' }, { status: 409 })
+    // El cliente confirma el total que vio: si ya no es el real, no se hace nada (como el backend)
+    if (Math.round(totalEsperado * 100) !== Math.round(grupo.total * 100)) {
+      return HttpResponse.json({ code: 'TOTAL_MISMATCH', mensaje: 'El total del pedido ha cambiado' }, { status: 409 })
+    }
+    // Pago simulado, como el backend: la tarjeta de prueba acabada en 0000 se rechaza
+    if (metodo.tipo === 'TARJETA' && metodo.mascara.endsWith('0000')) {
+      return HttpResponse.json({ code: 'PAYMENT_REJECTED', mensaje: 'El pago ha sido rechazado' }, { status: 402 })
+    }
+    retirarGrupoDelCarrito(usuarioId, vendedorId)
 
     pedidosCreados += 1
     const { destinatario, calle, detalles, codigoPostal, ciudad, provincia, telefono } = direccion

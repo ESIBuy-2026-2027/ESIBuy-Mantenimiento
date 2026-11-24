@@ -83,6 +83,14 @@ public class GestionCarritoService implements GestionCarritoUseCase {
 
     @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
+    public CarritoDetallado quitarProductos(String emailCliente, List<String> productoIds) {
+        Carrito carrito = carritoDe(emailCliente);
+        productoIds.forEach(carrito::quitar);
+        return detallar(carritoRepository.guardar(carrito), clienteEnSesion.esPremium(emailCliente));
+    }
+
+    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
+    @Override
     public CarritoDetallado vaciar(String emailCliente) {
         Carrito carrito = carritoDe(emailCliente);
         carrito.vaciar();
@@ -131,7 +139,8 @@ public class GestionCarritoService implements GestionCarritoUseCase {
             BigDecimal subtotal = producto.precioFinal().multiply(BigDecimal.valueOf(linea.cantidad()));
             porVendedor.computeIfAbsent(producto.vendedorId(), id -> new ArrayList<>())
                     .add(new LineaCarritoDetallada(producto.id(), producto.nombre(), producto.imagen(),
-                            linea.cantidad(), producto.precioFinal(), subtotal, producto.stock()));
+                            linea.cantidad(), producto.precioFinal(), subtotal, producto.stock(),
+                            producto.precioOriginal(), producto.porcentajeDescuento()));
             totalProductos += linea.cantidad();
         }
         List<GrupoCarrito> grupos = porVendedor.entrySet().stream()

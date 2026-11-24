@@ -32,8 +32,8 @@ class PedidoDocumentMapperTest {
                 "TecnoVera",
                 EstadoPedido.PAGADO,
                 List.of(
-                        new LineaPedido("p-1", "Auriculares", 2, new BigDecimal("53.91")),
-                        new LineaPedido("p-2", "Teclado", 1, new BigDecimal("89.50"))),
+                        new LineaPedido("p-1", "u-2", "Auriculares", 2, new BigDecimal("53.91")),
+                        new LineaPedido("p-2", "u-2", "Teclado", 1, new BigDecimal("89.50"))),
                 new DireccionEnvioPedido(
                         "Carlos Cliente",
                         "Calle Mayor 1",

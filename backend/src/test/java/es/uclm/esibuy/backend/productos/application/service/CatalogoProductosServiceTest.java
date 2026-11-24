@@ -100,9 +100,12 @@ class CatalogoProductosServiceTest {
 
         assertEquals(
                 new ProductoComercial("p-1", "u-2", "Teclado", "https://esibuy.test/teclado.png",
-                        new BigDecimal("40.00"), 7),
+                        new BigDecimal("40.00"), 7, new BigDecimal("50.00"), new BigDecimal("20")),
                 comercial);
-        assertEquals(new BigDecimal("45.00"), servicio.consultarComprable("p-1", false).orElseThrow().precioFinal());
+        ProductoComercial general = servicio.consultarComprable("p-1", false).orElseThrow();
+        assertEquals(new BigDecimal("45.00"), general.precioFinal());
+        assertEquals(new BigDecimal("50.00"), general.precioOriginal());
+        assertEquals(new BigDecimal("10"), general.porcentajeDescuento());
     }
 
     @Test

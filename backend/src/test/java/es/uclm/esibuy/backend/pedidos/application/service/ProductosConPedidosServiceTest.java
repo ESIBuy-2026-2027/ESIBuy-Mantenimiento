@@ -28,8 +28,8 @@ class ProductosConPedidosServiceTest {
     void devuelveLosProductosDePedidosDelVendedor() {
         Pedido pedido = mock(Pedido.class);
         when(pedido.getLineas()).thenReturn(List.of(
-                new LineaPedido("p-1", "Producto", 1, java.math.BigDecimal.TEN),
-                new LineaPedido("p-2", "Otro", 1, java.math.BigDecimal.ONE)));
+                new LineaPedido("p-1", "v-1", "Producto", 1, java.math.BigDecimal.TEN),
+                new LineaPedido("p-2", "v-1", "Otro", 1, java.math.BigDecimal.ONE)));
         when(pedidoRepository.buscarPorVendedor("v-1")).thenReturn(List.of(pedido));
 
         assertEquals(Set.of("p-1", "p-2"), new ProductosConPedidosService(pedidoRepository)

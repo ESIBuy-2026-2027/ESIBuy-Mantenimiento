@@ -27,9 +27,11 @@ class ProductosAdapterTest {
     @DisplayName("HU9-CP19: los datos y el precio final del producto se piden al módulo de productos")
     void consultarComprablePreguntaAlModuloDeProductos() {
         when(catalogo.consultarComprable("p-1", true)).thenReturn(Optional.of(
-                new ProductoComercial("p-1", "u-2", "Teclado", "t.png", new BigDecimal("40.00"), 7)));
+                new ProductoComercial("p-1", "u-2", "Teclado", "t.png", new BigDecimal("40.00"), 7,
+                        new BigDecimal("50.00"), new BigDecimal("20"))));
 
-        assertEquals(Optional.of(new ProductoCarrito("p-1", "u-2", "Teclado", "t.png", new BigDecimal("40.00"), 7)),
+        assertEquals(Optional.of(new ProductoCarrito("p-1", "u-2", "Teclado", "t.png", new BigDecimal("40.00"), 7,
+                new BigDecimal("50.00"), new BigDecimal("20"))),
                 new ProductosAdapter(catalogo).consultarComprable("p-1", true));
     }
 

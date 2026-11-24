@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.util.List;
 
@@ -32,6 +33,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.ContadorPedidosPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.DireccionesPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ExistenciasPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.MetodosPagoPort;
+import es.uclm.esibuy.backend.pedidos.application.port.out.PagoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
@@ -80,6 +82,11 @@ class SeguridadPedidosServiceTest {
         }
 
         @Bean
+        PagoPort pago() {
+            return mock(PagoPort.class);
+        }
+
+        @Bean
         ContadorPedidosPort contador() {
             return mock(ContadorPedidosPort.class);
         }
@@ -87,7 +94,8 @@ class SeguridadPedidosServiceTest {
         @Bean
         RealizacionPedidoUseCase realizacionPedido(PedidoRepositoryPort pedidoRepository,
                 ClienteEnSesionPort clienteEnSesion, CarritoPort carrito, MetodosPagoPort metodosPago,
-                DireccionesPort direcciones, ExistenciasPort existencias, ContadorPedidosPort contador) {
+                DireccionesPort direcciones, ExistenciasPort existencias, PagoPort pago,
+                ContadorPedidosPort contador) {
 
             DependenciasRealizacionPedido dependencias = new DependenciasRealizacionPedido(
                     pedidoRepository,
@@ -96,6 +104,7 @@ class SeguridadPedidosServiceTest {
                     metodosPago,
                     direcciones,
                     existencias,
+                    pago,
                     contador,
                     Clock.systemUTC());
 
@@ -128,6 +137,9 @@ class SeguridadPedidosServiceTest {
     @Autowired
     private ExistenciasPort existencias;
     @Autowired
+    private PagoPort pago;
+
+    @Autowired
     private ContadorPedidosPort contador;
     @Autowired
     private RealizacionPedidoUseCase realizacionPedido;
@@ -138,16 +150,16 @@ class SeguridadPedidosServiceTest {
 
     @BeforeEach
     void limpiarDobles() {
-        reset(pedidoRepository, clienteEnSesion, carrito, metodosPago, direcciones, existencias, contador);
+        reset(pedidoRepository, clienteEnSesion, carrito, metodosPago, direcciones, existencias, pago, contador);
     }
 
     private static RealizarPedidoCommand pedidoDe(String email) {
-        return new RealizarPedidoCommand(email, "v-1", "d-1", "m-1");
+        return new RealizarPedidoCommand(email, "v-1", "d-1", "m-1", BigDecimal.TEN);
     }
 
     private void comprobarQueNoSeTocaNada() {
         verifyNoInteractions(pedidoRepository, clienteEnSesion, carrito, metodosPago, direcciones, existencias,
-                contador);
+                pago, contador);
     }
 
     @Test

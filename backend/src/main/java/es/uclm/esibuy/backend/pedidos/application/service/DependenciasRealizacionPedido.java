@@ -8,6 +8,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.ContadorPedidosPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.DireccionesPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ExistenciasPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.MetodosPagoPort;
+import es.uclm.esibuy.backend.pedidos.application.port.out.PagoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
 
 public record DependenciasRealizacionPedido(
@@ -17,6 +18,7 @@ public record DependenciasRealizacionPedido(
         MetodosPagoPort metodosPago,
         DireccionesPort direcciones,
         ExistenciasPort existencias,
+        PagoPort pago,
         ContadorPedidosPort contador,
         Clock reloj) {
 }

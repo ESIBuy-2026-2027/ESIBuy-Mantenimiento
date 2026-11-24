@@ -22,6 +22,7 @@ public class ProductosAdapter implements ProductosPort {
     public Optional<ProductoCarrito> consultarComprable(String productoId, boolean clientePremium) {
         return catalogo.consultarComprable(productoId, clientePremium)
                 .map(producto -> new ProductoCarrito(producto.id(), producto.vendedorId(), producto.nombre(),
-                        producto.imagen(), producto.precioFinal(), producto.stock()));
+                        producto.imagen(), producto.precioFinal(), producto.stock(), producto.precioOriginal(),
+                        producto.porcentajeDescuento()));
     }
 }

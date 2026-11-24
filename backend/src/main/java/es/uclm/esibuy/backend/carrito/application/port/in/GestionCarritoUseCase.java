@@ -1,5 +1,7 @@
 package es.uclm.esibuy.backend.carrito.application.port.in;
 
+import java.util.List;
+
 /**
  * Gestión de su carrito por parte del cliente (HU9). Recibe el correo del cliente en sesión: solo puede ver y
  * cambiar su carrito. Todas las operaciones devuelven el carrito completo, como espera el frontend.
@@ -28,6 +30,12 @@ public interface GestionCarritoUseCase {
     CarritoDetallado fijarCantidad(String emailCliente, String productoId, int cantidad);
 
     CarritoDetallado quitar(String emailCliente, String productoId);
+
+    /**
+     * Quita varios productos de una vez, con una sola lectura y un solo guardado del carrito: es lo que usa el pedido
+     * al terminar. Un producto que no está en el carrito se ignora.
+     */
+    CarritoDetallado quitarProductos(String emailCliente, List<String> productoIds);
 
     CarritoDetallado vaciar(String emailCliente);
 

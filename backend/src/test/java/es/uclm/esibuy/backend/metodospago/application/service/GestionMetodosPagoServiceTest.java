@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import es.uclm.esibuy.backend.metodospago.application.port.in.AnadirMetodoPagoCommand;
+import es.uclm.esibuy.backend.metodospago.application.port.in.MetodoPagoParaPedido;
 import es.uclm.esibuy.backend.metodospago.application.port.out.CifradoDatosPagoPort;
 import es.uclm.esibuy.backend.metodospago.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.metodospago.application.port.out.MetodoPagoRepositoryPort;
@@ -22,6 +23,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -378,16 +380,17 @@ class GestionMetodosPagoServiceTest {
         }
     }
 
-    // Para el pedido (HU10): saber si el método con el que se paga es del cliente, sin ver el dominio de metodospago
+    // Para el pedido (HU10): el tipo y la máscara del método con el que se paga, sin ver el dominio de metodospago
     @Test
-    @DisplayName("HU10-CP16: esDelCliente solo acepta un método de pago del cliente en sesión")
-    void esDelClienteSoloAceptaUnMetodoPropio() {
+    @DisplayName("HU10-CP16: consultarParaPedido solo devuelve un método de pago del cliente en sesión, con su tipo y su máscara")
+    void consultarParaPedidoSoloDevuelveUnMetodoPropio() {
         String propio = servicio.anadir(tarjeta("4111111111111111", "Juan Pérez", "12/27")).getId();
         String ajeno = repositorio.guardar(MetodoPago.nuevo("otro-cliente", TipoMetodoPago.BIZUM, "•••• 678",
                 "bloque-cifrado")).getId();
 
-        assertTrue(servicio.esDelCliente(EMAIL_CLIENTE, propio));
-        assertFalse(servicio.esDelCliente(EMAIL_CLIENTE, ajeno));
-        assertFalse(servicio.esDelCliente(EMAIL_CLIENTE, "no-existe"));
+        assertEquals(Optional.of(new MetodoPagoParaPedido("TARJETA", "•••• 1111")),
+                servicio.consultarParaPedido(EMAIL_CLIENTE, propio));
+        assertEquals(Optional.empty(), servicio.consultarParaPedido(EMAIL_CLIENTE, ajeno));
+        assertEquals(Optional.empty(), servicio.consultarParaPedido(EMAIL_CLIENTE, "no-existe"));
     }
 }

@@ -10,11 +10,15 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.CompraProveedor;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ContadorPedidosPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ExistenciasPort;
+import es.uclm.esibuy.backend.pedidos.application.port.out.MetodoPagoPedido;
+import es.uclm.esibuy.backend.pedidos.application.port.out.PagoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
 import es.uclm.esibuy.backend.pedidos.domain.exception.CarritoSinProductosDelProveedorException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PagoRechazadoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.TotalNoCoincideException;
 import es.uclm.esibuy.backend.pedidos.domain.model.DireccionEnvioPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.EstadoPedido;
 import es.uclm.esibuy.backend.pedidos.domain.model.LineaPedido;
@@ -25,9 +29,11 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -39,10 +45,13 @@ class RealizacionPedidoServiceTest {
     private static final DireccionEnvioPedido DIRECCION = new DireccionEnvioPedido("Carlos Cliente",
             "Calle Mayor 1", null, "13001", "Ciudad Real", "Ciudad Real", "611222333");
 
+    private static final MetodoPagoPedido METODO_PAGO = new MetodoPagoPedido("TARJETA", "•••• 4242");
+
     private final PedidosEnMemoria pedidos = new PedidosEnMemoria();
     private final CarritoFijo carrito = new CarritoFijo();
     private final StockEnMemoria stock = new StockEnMemoria();
     private final ContadorEnMemoria contador = new ContadorEnMemoria();
+    private final PagoEnMemoria pago = new PagoEnMemoria();
     // El método de pago mp-1 y la dirección d-1 son del cliente (MetodosPagoPort y
     // DireccionesPort)
     private final RealizacionPedidoService servicio = new RealizacionPedidoService(
@@ -50,26 +59,36 @@ class RealizacionPedidoServiceTest {
                     pedidos,
                     new ClienteFijo(),
                     carrito,
-                    (email, metodoId) -> "mp-1".equals(metodoId),
+                    (email, metodoId) -> "mp-1".equals(metodoId)
+                            ? Optional.of(METODO_PAGO)
+                            : Optional.empty(),
                     (email, direccionId) -> "d-1".equals(direccionId)
                             ? Optional.of(DIRECCION)
                             : Optional.empty(),
                     stock,
+                    pago,
                     contador,
                     Clock.fixed(AHORA, ZoneOffset.UTC)));
 
     RealizacionPedidoServiceTest() {
         // TecnoVera (u-2): dos auriculares y un teclado; Otero (u-99): un smartwatch
         carrito.compras.put("u-2", new CompraProveedor("u-2", "TecnoVera", List.of(
-                new LineaPedido("p-1", "Auriculares", 2, new BigDecimal("53.91")),
-                new LineaPedido("p-2", "Teclado", 1, new BigDecimal("89.50")))));
+                new LineaPedido("p-1", "u-2", "Auriculares", 2, new BigDecimal("53.91")),
+                new LineaPedido("p-2", "u-2", "Teclado", 1, new BigDecimal("89.50")))));
         carrito.compras.put("u-99", new CompraProveedor("u-99", "Otero", List.of(
-                new LineaPedido("p-24", "Smartwatch", 1, new BigDecimal("129.00")))));
+                new LineaPedido("p-24", "u-99", "Smartwatch", 1, new BigDecimal("129.00")))));
         stock.unidades.putAll(Map.of("p-1", 10, "p-2", 1, "p-24", 5));
     }
 
+    // El cliente confirma el total que ha visto: el del carrito de ese vendedor
+    private RealizarPedidoCommand comando(String vendedorId, String direccionId, String metodoId) {
+        CompraProveedor compra = carrito.compras.get(vendedorId);
+        BigDecimal total = compra == null ? BigDecimal.ZERO : Pedido.totalDe(compra.lineas());
+        return new RealizarPedidoCommand(EMAIL, vendedorId, direccionId, metodoId, total);
+    }
+
     private Pedido realizar(String vendedorId) {
-        return servicio.realizar(new RealizarPedidoCommand(EMAIL, vendedorId, "d-1", "mp-1"));
+        return servicio.realizar(comando(vendedorId, "d-1", "mp-1"));
     }
 
     @Test
@@ -121,8 +140,11 @@ class RealizacionPedidoServiceTest {
     void siFaltaStockNoSeCreaElPedidoYSeRepone() {
         stock.unidades.put("p-2", 0);
 
-        assertThrows(StockInsuficientePedidoException.class, () -> realizar("u-2"));
+        StockInsuficientePedidoException error = assertThrows(StockInsuficientePedidoException.class,
+                () -> realizar("u-2"));
 
+        assertEquals("p-2", error.getProductoId());
+        assertEquals("Teclado", error.getNombreProducto());
         assertEquals(10, stock.unidades.get("p-1"));
         assertTrue(pedidos.guardados.isEmpty());
         assertTrue(carrito.quitados.isEmpty());
@@ -143,8 +165,7 @@ class RealizacionPedidoServiceTest {
     @Test
     @DisplayName("HU10-CP16: el método de pago tiene que ser del cliente; si no, no se toca nada")
     void elMetodoDePagoTieneQueSerDelCliente() {
-        RealizarPedidoCommand comando = new RealizarPedidoCommand(
-                EMAIL, "u-2", "d-1", "mp-ajeno");
+        RealizarPedidoCommand comando = comando("u-2", "d-1", "mp-ajeno");
 
         assertThrows(MetodoPagoNoValidoException.class,
                 () -> servicio.realizar(comando));
@@ -156,8 +177,7 @@ class RealizacionPedidoServiceTest {
     @Test
     @DisplayName("HU10-CP16: la dirección tiene que ser del cliente, y el pedido guarda una copia de sus datos")
     void laDireccionTieneQueSerDelClienteYSeCopia() {
-        RealizarPedidoCommand comando = new RealizarPedidoCommand(
-                EMAIL, "u-2", "d-ajena", "mp-1");
+        RealizarPedidoCommand comando = comando("u-2", "d-ajena", "mp-1");
 
         assertThrows(DireccionNoValidaException.class,
                 () -> servicio.realizar(comando));
@@ -165,6 +185,64 @@ class RealizacionPedidoServiceTest {
         assertTrue(pedidos.guardados.isEmpty());
 
         assertEquals(DIRECCION, realizar("u-2").getDireccionEnvio());
+    }
+
+    @Test
+    @DisplayName("HU10-CP26: se cobra el total del pedido con el método de pago elegido")
+    void seCobraElTotalConElMetodoElegido() {
+        realizar("u-2");
+
+        assertEquals(List.of(new Cobro(METODO_PAGO, new BigDecimal("197.32"))), pago.cobros);
+        assertEquals(1, pedidos.guardados.size());
+    }
+
+    @Test
+    @DisplayName("HU10-CP26: si el pago se rechaza no se crea el pedido, no se gasta número y el stock queda como estaba")
+    void siElPagoSeRechazaNoSeConfirmaNiSeDescuentaStock() {
+        pago.rechazar = true;
+
+        assertThrows(PagoRechazadoException.class, () -> realizar("u-2"));
+
+        assertEquals(10, stock.unidades.get("p-1"));
+        assertEquals(1, stock.unidades.get("p-2"));
+        assertTrue(pedidos.guardados.isEmpty());
+        assertTrue(carrito.quitados.isEmpty());
+        assertEquals(List.of(), contador.anios);
+    }
+
+    @Test
+    @DisplayName("HU10-CP15: si una reposición falla se repone el resto y el error original no se pierde")
+    void siUnaReposicionFallaSeReponeElResto() {
+        pago.rechazar = true;
+        stock.noReponibles.add("p-1");
+
+        PagoRechazadoException error = assertThrows(PagoRechazadoException.class, () -> realizar("u-2"));
+
+        assertEquals(1, stock.unidades.get("p-2"));
+        assertEquals(1, error.getSuppressed().length);
+    }
+
+    @Test
+    @DisplayName("HU10-CP27: si el total que vio el cliente no coincide con el real no se toca nada")
+    void siElTotalNoCoincideNoSeTocaNada() {
+        RealizarPedidoCommand comando = new RealizarPedidoCommand(EMAIL, "u-2", "d-1", "mp-1",
+                new BigDecimal("100.00"));
+
+        assertThrows(TotalNoCoincideException.class, () -> servicio.realizar(comando));
+
+        assertEquals(10, stock.unidades.get("p-1"));
+        assertTrue(pago.cobros.isEmpty());
+        assertTrue(pedidos.guardados.isEmpty());
+        assertEquals(List.of(), contador.anios);
+    }
+
+    @Test
+    @DisplayName("HU10-CP27: el total se compara por valor, sin fijarse en los ceros de más (197.320 es 197.32)")
+    void elTotalSeComparaPorValor() {
+        RealizarPedidoCommand comando = new RealizarPedidoCommand(EMAIL, "u-2", "d-1", "mp-1",
+                new BigDecimal("197.320"));
+
+        assertEquals("ESB-2026-000001", servicio.realizar(comando).getNumeroPedido().valor());
     }
 
     @Test
@@ -198,8 +276,23 @@ class RealizacionPedidoServiceTest {
         }
     }
 
+    private record Cobro(MetodoPagoPedido metodo, BigDecimal importe) {
+    }
+
+    private static final class PagoEnMemoria implements PagoPort {
+        private final List<Cobro> cobros = new ArrayList<>();
+        private boolean rechazar;
+
+        @Override
+        public boolean cobrar(MetodoPagoPedido metodo, BigDecimal importe) {
+            cobros.add(new Cobro(metodo, importe));
+            return !rechazar;
+        }
+    }
+
     private static final class StockEnMemoria implements ExistenciasPort {
         private final Map<String, Integer> unidades = new HashMap<>();
+        private final Set<String> noReponibles = new HashSet<>();
 
         @Override
         public boolean descontar(String productoId, int cantidad) {
@@ -213,6 +306,9 @@ class RealizacionPedidoServiceTest {
 
         @Override
         public void reponer(String productoId, int cantidad) {
+            if (noReponibles.contains(productoId)) {
+                throw new IllegalStateException("MongoDB no responde");
+            }
             unidades.merge(productoId, cantidad, Integer::sum);
         }
     }
