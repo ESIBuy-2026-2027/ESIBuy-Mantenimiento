@@ -92,7 +92,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <Text className={styles.copyright}>ESIBuy · Marketplace universitario UCLM</Text>
+        <Text className={styles.copyright}>ESIBuy · Grupo 6</Text>
       </section>
 
       <section className={styles.formPanel} aria-label="Acceso a tu cuenta">
