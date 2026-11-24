@@ -1,15 +1,18 @@
 import PropTypes from 'prop-types'
 import { Button, Field, Input, Text, makeStyles, tokens } from '@fluentui/react-components'
-import { CheckmarkCircle16Filled, Circle16Regular, Eye20Regular, EyeOff20Regular } from '@fluentui/react-icons'
+import { CheckmarkCircle16Filled, DismissCircle16Regular, Eye20Regular, EyeOff20Regular } from '@fluentui/react-icons'
 import { useState } from 'react'
 import { REQUISITOS_PASSWORD } from './accountRules'
 
 const useStyles = makeStyles({
   requisitos: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalXXS,
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    columnGap: tokens.spacingHorizontalM,
+    rowGap: tokens.spacingVerticalXXS,
+    paddingTop: tokens.spacingVerticalXS,
     listStyleType: 'none',
+    paddingLeft: 0,
     margin: 0,
     padding: 0,
   },
@@ -17,6 +20,7 @@ const useStyles = makeStyles({
     display: 'flex',
     alignItems: 'center',
     gap: tokens.spacingHorizontalXS,
+    fontSize: tokens.fontSizeBase200,
   },
   cumplido: {
     color: tokens.colorPaletteGreenForeground1,
@@ -91,7 +95,7 @@ export function PasswordRequirements({ password }) {
           {cumple(password) ? (
             <CheckmarkCircle16Filled aria-label="Cumplido" className={styles.cumplido} />
           ) : (
-            <Circle16Regular aria-label="Pendiente" className={styles.pendiente} />
+            <span aria-label="Pendiente" className={styles.pendiente} />
           )}
           <Text size={200}>{texto}</Text>
         </li>
