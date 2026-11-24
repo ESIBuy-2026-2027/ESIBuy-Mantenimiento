@@ -74,7 +74,7 @@ export default function LoginPage() {
 
         <div className={styles.visual}>
           <div className={styles.visualStage}>
-            <img className={styles.visualIllustration} src="/images/esibuy-login-illustration.webp" alt="Caja de ESIBuy con un portátil, auriculares y productos tecnológicos" />
+            <img className={styles.visualIllustration} src="/images/esibuy-login-illustration.png" alt="Caja de ESIBuy con un portátil, auriculares y productos tecnológicos" />
           </div>
           <div className={styles.benefits}>
             <div className={styles.benefit}>
