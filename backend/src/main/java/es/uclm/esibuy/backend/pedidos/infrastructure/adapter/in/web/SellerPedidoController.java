@@ -37,4 +37,14 @@ public class SellerPedidoController {
     public PedidoResponse avanzar(@PathVariable String id, Authentication autenticado) {
         return PedidoResponse.desde(gestionPedidos.avanzarEstado(autenticado.getName(), id));
     }
+
+    @PostMapping("/{id}/revert")
+    public PedidoResponse retroceder(@PathVariable String id, Authentication autenticado) {
+        return PedidoResponse.desde(gestionPedidos.retrocederEstado(autenticado.getName(), id));
+    }
+
+    @PostMapping("/{id}/cancel")
+    public PedidoResponse cancelar(@PathVariable String id, Authentication autenticado) {
+        return PedidoResponse.desde(gestionPedidos.cancelarPedido(autenticado.getName(), id));
+    }
 }

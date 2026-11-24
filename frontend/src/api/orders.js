@@ -47,3 +47,11 @@ export function getSellerOrder(orderId) {
 export function advanceSellerOrder(orderId) {
   return request(`/api/seller/orders/${encodeURIComponent(orderId)}/advance`, { method: 'POST' })
 }
+
+export function revertSellerOrder(orderId) {
+  return request(`/api/seller/orders/${encodeURIComponent(orderId)}/revert`, { method: 'POST' })
+}
+
+export function cancelSellerOrder(orderId) {
+  return request(`/api/seller/orders/${encodeURIComponent(orderId)}/cancel`, { method: 'POST' })
+}

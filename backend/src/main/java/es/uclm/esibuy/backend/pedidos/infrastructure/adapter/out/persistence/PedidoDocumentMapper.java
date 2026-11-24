@@ -50,7 +50,8 @@ public class PedidoDocumentMapper {
                                 linea.getProductoId(),
                                 linea.getNombreProducto(),
                                 linea.getCantidad(),
-                                linea.getPrecioUnitario()))
+                                linea.getPrecioUnitario(),
+                                linea.getImagen()))
                         .toList(),
                 aDominio(documento.getDireccionEnvio()),
                 documento.getPaymentMethodId(),
@@ -64,6 +65,7 @@ public class PedidoDocumentMapper {
         documento.setProductoId(linea.productoId());
         documento.setNombreProducto(linea.nombreProducto());
         documento.setVendedorId(vendedorId);
+        documento.setImagen(linea.imagen());
         documento.setCantidad(linea.cantidad());
         documento.setPrecioUnitario(linea.precioUnitario());
         documento.setSubtotal(linea.subtotal());

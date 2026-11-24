@@ -19,7 +19,7 @@ public record PedidoResponse(String id, String numeroPedido, Vendedor vendedor, 
     }
 
     public record Linea(String productoId, String nombre, int cantidad, BigDecimal precioUnitario,
-            BigDecimal subtotal) {
+            BigDecimal subtotal, String imagen) {
     }
 
     public static PedidoResponse desde(Pedido pedido) {
@@ -31,6 +31,6 @@ public record PedidoResponse(String id, String numeroPedido, Vendedor vendedor, 
 
     private static Linea aLinea(LineaPedido linea) {
         return new Linea(linea.productoId(), linea.nombreProducto(), linea.cantidad(), linea.precioUnitario(),
-                linea.subtotal());
+                linea.subtotal(), linea.imagen());
     }
 }

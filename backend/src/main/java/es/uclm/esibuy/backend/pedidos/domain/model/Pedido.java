@@ -103,6 +103,26 @@ public class Pedido {
         };
     }
 
+    // Avance del vendedor: solo hasta ENVIADO (ENTREGADO corre por cuenta del cliente).
+    public void avanzarEstadoVendedor() {
+        estado = switch (estado) {
+            case PAGADO -> EstadoPedido.PREPARANDO;
+            case PREPARANDO -> EstadoPedido.ENVIADO;
+            case ENVIADO, ENTREGADO, CANCELADO -> throw new PedidoEstadoNoAvanzableException(
+                    "El vendedor solo puede avanzar el pedido hasta el estado enviado");
+        };
+    }
+
+    // Retroceso del vendedor: solo mientras no esté enviado (PREPARANDO -> PAGADO).
+    public void retrocederEstado() {
+        if (estado != EstadoPedido.PREPARANDO) {
+            throw new PedidoEstadoNoAvanzableException(
+                    "Solo se puede retroceder un pedido en preparación");
+        }
+
+        estado = EstadoPedido.PAGADO;
+    }
+
     private static void exigirTexto(String valor, String mensaje) {
         if (valor == null || valor.isBlank()) {
             throw new PedidoInvalidoException(mensaje);

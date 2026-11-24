@@ -140,7 +140,7 @@ public class PedidosConfig {
 
     @Bean
     GestionPedidosVendedorUseCase gestionPedidosVendedorUseCase(PedidoRepositoryPort pedidoRepositoryPort,
-            VendedorEnSesionPort pedidosVendedorEnSesionPort) {
-        return new GestionPedidosVendedorService(pedidoRepositoryPort, pedidosVendedorEnSesionPort);
+            VendedorEnSesionPort pedidosVendedorEnSesionPort, ExistenciasPort pedidosExistenciasPort) {
+        return new GestionPedidosVendedorService(pedidoRepositoryPort, pedidosVendedorEnSesionPort, pedidosExistenciasPort);
     }
 }
