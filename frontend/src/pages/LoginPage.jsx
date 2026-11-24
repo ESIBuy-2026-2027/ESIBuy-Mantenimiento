@@ -31,63 +31,6 @@ const SESSION_END_NOTICES = {
 // Aviso al volver de la recuperación de contraseña (HU3).
 const PASSWORD_CHANGED_NOTICE = { intent: 'success', text: 'Contraseña cambiada. Ya puedes iniciar sesión.' }
 
-function MarketplaceIllustration() {
-  return (
-    <svg viewBox="0 0 620 390" role="img" aria-label="Caja de ESIBuy con productos tecnológicos" style={{ width: "100%", height: "100%", overflow: "visible" }}>
-      <defs>
-        <linearGradient id="boxFront" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#F8C18F" />
-          <stop offset="1" stopColor="#D98545" />
-        </linearGradient>
-        <linearGradient id="boxSide" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#EAA66D" />
-          <stop offset="1" stopColor="#B96732" />
-        </linearGradient>
-        <linearGradient id="laptop" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#667085" />
-          <stop offset="1" stopColor="#202A36" />
-        </linearGradient>
-        <filter id="softShadow" x="-30%" y="-30%" width="160%" height="170%">
-          <feGaussianBlur stdDeviation="12" />
-        </filter>
-      </defs>
-      <ellipse cx="290" cy="342" rx="245" ry="22" fill="#9A3412" opacity=".16" filter="url(#softShadow)" />
-      <path d="M80 180 L220 120 L485 155 L350 225 Z" fill="#F7D3B0" />
-      <path d="M80 180 L350 225 L350 350 L80 295 Z" fill="url(#boxFront)" />
-      <path d="M350 225 L485 155 L485 285 L350 350 Z" fill="url(#boxSide)" />
-      <path d="M80 180 L155 125 L260 205 L190 226 Z" fill="#E9B17F" stroke="#C27B45" strokeWidth="3" />
-      <path d="M350 225 L425 135 L510 155 L485 155 Z" fill="#F6D0A9" stroke="#C27B45" strokeWidth="3" />
-      <path d="M195 212 L250 76 Q260 57 282 61 L395 82 Q411 85 414 105 L435 220 Z" fill="#303A46" />
-      <path d="M207 204 L259 84 L392 105 L414 215 Z" fill="url(#laptop)" />
-      <path d="M185 218 L435 220 L455 238 L165 238 Z" fill="#AAB2BC" />
-      <path d="M185 218 L435 220 L455 238 L165 238 Z" fill="#596575" opacity=".55" />
-      <path d="M300 124 Q300 76 348 76 Q396 76 396 124" fill="none" stroke="#242B34" strokeWidth="17" strokeLinecap="round" />
-      <rect x="289" y="118" width="23" height="62" rx="10" fill="#252D37" />
-      <rect x="384" y="118" width="23" height="62" rx="10" fill="#252D37" />
-      <path d="M430 160 Q454 135 477 155" fill="none" stroke="#4B7C3A" strokeWidth="8" strokeLinecap="round" />
-      <path d="M464 157 Q455 112 480 93 Q503 124 464 157" fill="#78A65A" />
-      <path d="M466 162 Q493 117 520 126 Q512 157 466 162" fill="#91B96C" />
-      <path d="M456 165 Q428 125 443 103 Q471 125 456 165" fill="#6E9A50" />
-      <path d="M350 350 L350 225 L485 155 L485 285 Z" fill="none" stroke="#A85C2B" strokeWidth="3" opacity=".55" />
-      <path d="M80 180 L350 225 L350 350 L80 295 Z" fill="none" stroke="#B96D38" strokeWidth="3" opacity=".55" />
-      <g transform="translate(405 285)">
-        <path d="M0 18 L38 0 L75 17 L37 37 Z" fill="#E8EAF0" />
-        <path d="M0 18 L37 37 L37 70 L0 51 Z" fill="#C9CED8" />
-        <path d="M37 37 L75 17 L75 50 L37 70 Z" fill="#AAB2C0" />
-        <circle cx="19" cy="35" r="6" fill="#454D5A" /><circle cx="55" cy="35" r="6" fill="#454D5A" />
-        <path d="M38 40 L38 58" stroke="#454D5A" strokeWidth="5" strokeLinecap="round" />
-      </g>
-      <g transform="translate(130 260)">
-        <path d="M0 0 L190 31 L190 53 L0 22 Z" fill="#F3C08D" opacity=".7" />
-      </g>
-      <g transform="translate(180 270)" fill="#783B1D" opacity=".9">
-        <path d="M0 0 h18 v-10 q0-8 8-8 q8 0 8 8 v10 h8 v27 h-42z M23-10 q0-5 5-5 q5 0 5 5 v10 h-10z" />
-        <text x="53" y="22" fontSize="27" fontWeight="700" fontFamily="Arial">ESIBuy</text>
-      </g>
-    </svg>
-  )
-}
-
 export default function LoginPage() {
   const styles = useLoginPageStyles()
   const location = useLocation()
@@ -130,7 +73,7 @@ export default function LoginPage() {
 
         <div className={styles.visual}>
           <div className={styles.visualStage}>
-            <MarketplaceIllustration />
+            <img className={styles.visualIllustration} src="/images/esibuy-login-illustration.webp" alt="Caja de ESIBuy con un portátil, auriculares y productos tecnológicos" />
           </div>
           <div className={styles.benefits}>
             <div className={styles.benefit}>
@@ -172,7 +115,7 @@ export default function LoginPage() {
 
           <div className={styles.footer}>
             <Text>¿Todavía no tienes una cuenta?</Text>
-            <LinkButton to={PATHS.REGISTER} appearance="transparent">
+            <LinkButton to={PATHS.REGISTER} appearance="transparent" className={styles.registerLink}>
               Regístrate
             </LinkButton>
           </div>
