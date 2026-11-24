@@ -4,8 +4,9 @@ import { getCatalogProducts } from '../../api/products'
 const SIN_CARGAR = { key: null, items: [], page: 0, totalItems: 0, totalPages: 0, error: null }
 
 // Catálogo con scroll infinito: pide la primera página y, cada vez que se llama a `loadMore`, la siguiente, y las
-// va acumulando. Cualquier cambio de filtro u orden (`key`) empieza otra vez desde la primera página.
-export function useCatalogFeed({ search, category, minRating, sort, order, size }) {
+// va acumulando. Cualquier cambio de filtro u orden (`key`) empieza otra vez desde la primera página. Con `enabled`
+// en falso no pide nada (la vista que lo usa no está a la vista).
+export function useCatalogFeed({ search, category, minRating, sort, order, size, enabled = true }) {
   const key = JSON.stringify([search, category, minRating, sort, order, size])
   const [feed, setFeed] = useState(SIN_CARGAR)
   // La página que se quiere, ligada a la búsqueda para la que se pidió: con otra búsqueda vuelve a la primera.
@@ -14,6 +15,7 @@ export function useCatalogFeed({ search, category, minRating, sort, order, size 
   const page = wanted.key === key ? wanted.page : 1
 
   useEffect(() => {
+    if (!enabled) return undefined
     let cancelled = false
 
     getCatalogProducts({ search, category, minRating, sort, order, page, size })
@@ -38,7 +40,7 @@ export function useCatalogFeed({ search, category, minRating, sort, order, size 
     return () => {
       cancelled = true
     }
-  }, [key, page, attempt, search, category, minRating, sort, order, size])
+  }, [enabled, key, page, attempt, search, category, minRating, sort, order, size])
 
   const current = feed.key === key
   const failed = feed.error?.key === key && feed.error.page === page
