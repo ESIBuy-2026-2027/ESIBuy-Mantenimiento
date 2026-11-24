@@ -18,6 +18,7 @@ export default function AppLayout() {
   const styles = useStyles()
   const { pathname } = useLocation()
   const isRegisterPage = pathname === PATHS.REGISTER
+  const isHomePage = pathname === PATHS.HOME
 
   return (
     <CartProvider>
