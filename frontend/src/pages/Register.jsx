@@ -392,41 +392,58 @@ export default function Register() {
     </div>
   )
 
-  if (tipo === 'cliente') {
-    return pantalla('Registro de cliente', <>
-      {selectorTipoRegistro}
-      <div className={styles.fieldsGrid}>
-        {campo('nombre', 'Nombre')}{campo('apellidos', 'Apellidos')}
-        {campo('fechaNacimiento', 'Fecha de nacimiento', { type: 'date' })}{campo('dni', 'DNI')}
-        {campo('email', 'Correo electrónico', { type: 'email' })}{campo('telefono', 'Teléfono', { type: 'tel', required: false })}
-      </div>
-      {selectorTipoCliente}
-      <div className={styles.fieldsGrid}>
-        <div className={styles.field}>{campoPassword('password', 'Contraseña')}<PasswordRequirements password={datos.password} /></div>
-        {campoPassword('repeticionPassword', 'Repetir contraseña')}
-      </div>
-      {selectorAvatar}{casillaPrivacidad}{dialogoPoliticaPrivacidad}
-      {errorGeneral && <div data-register-error-message="true"><MessageBar intent="error"><MessageBarBody>{errorGeneral}</MessageBarBody></MessageBar></div>}
-      <div className={styles.actions}><Button appearance="primary" size="large" className={styles.submit} onClick={enviarCliente}>Registrarse</Button><div className={styles.loginFooter}>¿Ya tienes una cuenta? <LinkButton to={PATHS.LOGIN} appearance="transparent" className={styles.loginLink}>Iniciar sesión</LinkButton></div></div>
-    </>)
-  }
+  const camposIdentidad = (
+    <div className={styles.fieldsGrid}>
+      {campo('nombre', 'Nombre')}
+      {campo('apellidos', 'Apellidos')}
+      {tipo === 'cliente' ? campo('fechaNacimiento', 'Fecha de nacimiento', { type: 'date' }) : campo('nombreComercial', 'Nombre comercial')}
+      {tipo === 'vendedor' && (
+        <div className={styles.field} data-register-error={errores.categoriaPrincipalId ? 'true' : undefined}>
+          <Field label="Categoría principal" required validationState={errores.categoriaPrincipalId ? 'error' : 'none'} validationMessage={errores.categoriaPrincipalId}>
+            <CategoryCombobox value={datos.categoriaPrincipalId} categories={categoriasDisponibles} searchable={false} placeholder="Selecciona una categoría" onChange={cambiarCategoria} />
+          </Field>
+        </div>
+      )}
+      {campo('email', 'Correo electrónico', { type: 'email' })}
+      {campo('telefono', 'Teléfono', { type: 'tel', required: false })}
+    </div>
+  )
 
-  if (tipo === 'vendedor') {
-    return pantalla('Registro de vendedor', <>
-      {selectorTipoRegistro}
-      <div className={styles.fieldsGrid}>
-        {campo('nombre', 'Nombre')}{campo('apellidos', 'Apellidos')}
-        {campo('nombreComercial', 'Nombre comercial')}
-        <div className={styles.field} data-register-error={errores.categoriaPrincipalId ? 'true' : undefined}><Field label="Categoría principal" required validationState={errores.categoriaPrincipalId ? 'error' : 'none'} validationMessage={errores.categoriaPrincipalId}><CategoryCombobox value={datos.categoriaPrincipalId} categories={categoriasDisponibles} searchable={false} placeholder="Selecciona una categoría" onChange={cambiarCategoria} /></Field></div>
-        {campo('dni', 'DNI')}{campo('email', 'Correo electrónico', { type: 'email' })}
-        {campo('telefono', 'Teléfono', { type: 'tel', required: false })}{campoPassword('password', 'Contraseña')}
-        {campoPassword('repeticionPassword', 'Repetir contraseña')}
-        <div className={styles.fullWidth}><PasswordRequirements password={datos.password} /></div>
-      </div>
-      {selectorAvatar}{casillaPrivacidad}{dialogoPoliticaPrivacidad}
-      {errorGeneral && <div data-register-error-message="true"><MessageBar intent="error"><MessageBarBody>{errorGeneral}</MessageBarBody></MessageBar></div>}
-      <div className={styles.actions}><Button appearance="primary" size="large" className={styles.submit} onClick={enviarVendedor}>Registrarse</Button><div className={styles.loginFooter}>¿Ya tienes una cuenta? <LinkButton to={PATHS.LOGIN} appearance="transparent" className={styles.loginLink}>Iniciar sesión</LinkButton></div></div>
-    </>, 'Crea tu cuenta de vendedor y empieza a publicar tus productos en ESIBuy.')
-  }
+  const camposSeguridad = (
+    <div className={styles.fieldsGrid}>
+      <div className={styles.field}>{campoPassword('password', 'Contraseña')}<PasswordRequirements password={datos.password} /></div>
+      {campoPassword('repeticionPassword', 'Repetir contraseña')}
+    </div>
+  )
 
+  const contenidoRegistro = (esVendedor) => (
+    <>
+      <div className={styles.tipoCuenta}>
+        <Text weight="semibold">Quiero registrarme como</Text>
+        <div className={styles.tipoCuentaOpciones} role="group" aria-label="Tipo de registro">
+          <Button type="button" appearance="outline" aria-pressed={!esVendedor} className={!esVendedor ? styles.tipoCuentaCard + ' ' + styles.tipoCuentaSeleccionada : styles.tipoCuentaCard} onClick={() => setTipo('cliente')}>
+            <Cart24Regular className={styles.tipoCuentaIcono} />
+            <span className={styles.tipoCuentaTexto}><span className={styles.tipoCuentaNombre}>Cliente</span><span className={styles.tipoCuentaDetalle}>Descubre productos y gestiona tus compras.</span></span>
+          </Button>
+          <Button type="button" appearance="outline" aria-pressed={esVendedor} className={esVendedor ? styles.tipoCuentaCard + ' ' + styles.tipoCuentaSeleccionada : styles.tipoCuentaCard} onClick={() => setTipo('vendedor')}>
+            <BuildingShop24Regular className={styles.tipoCuentaIcono} />
+            <span className={styles.tipoCuentaTexto}><span className={styles.tipoCuentaNombre}>Vendedor</span><span className={styles.tipoCuentaDetalle}>Publica productos y gestiona tu tienda.</span></span>
+          </Button>
+        </div>
+      </div>
+      {camposIdentidad}
+      {esVendedor ? null : selectorTipoCliente}
+      {camposSeguridad}
+      {selectorAvatar}
+      {casillaPrivacidad}
+      {dialogoPoliticaPrivacidad}
+      {errorGeneral && <div data-register-error-message="true"><MessageBar intent="error"><MessageBarBody>{errorGeneral}</MessageBarBody></MessageBar></div>}
+      <div className={styles.actions}>
+        <Button appearance="primary" size="medium" className={styles.submit} onClick={esVendedor ? enviarVendedor : enviarCliente}>Registrarse</Button>
+        <div className={styles.loginFooter}>¿Ya tienes una cuenta? <LinkButton to={PATHS.LOGIN} appearance="transparent" className={styles.loginLink}>Iniciar sesión</LinkButton></div>
+      </div>
+    </>
+  )
+
+  return pantalla(tipo === 'vendedor' ? 'Registro de vendedor' : 'Registro de cliente', contenidoRegistro(tipo === 'vendedor'), tipo === 'vendedor' ? 'Crea tu cuenta de vendedor y empieza a publicar tus productos en ESIBuy.' : 'Crea tu cuenta y empieza a disfrutar de ESIBuy.')
 }
