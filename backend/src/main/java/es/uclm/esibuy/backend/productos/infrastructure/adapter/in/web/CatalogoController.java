@@ -1,5 +1,7 @@
 package es.uclm.esibuy.backend.productos.infrastructure.adapter.in.web;
 
+import java.util.List;
+
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
@@ -16,8 +18,8 @@ import es.uclm.esibuy.backend.productos.application.port.in.CatalogoProductosUse
 import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalogo;
 
 /**
- * Adaptador de entrada web del catálogo de productos del cliente (HU7) y del detalle de cada producto (HU8). Recibe
- * la petición, la traduce a una consulta y delega en el puerto de entrada.
+ * Adaptador de entrada web del catálogo de productos (HU7), sus destacados públicos
+ * para la portada y el detalle de cada producto (HU8).
  */
 @RestController
 @RequestMapping("/api")
@@ -29,8 +31,15 @@ public class CatalogoController {
         this.catalogoProductos = catalogoProductos;
     }
 
-    // Catálogo del cliente (HU7): la página llega empezando en 1 y el caso de uso la recibe empezando en 0.
-    // Un parámetro fuera de rango o un orden desconocido los rechaza Spring con 400 (validación de las anotaciones).
+    /** Consulta pública y de solo lectura de los productos mejor valorados de la portada. */
+    @GetMapping("/products/featured")
+    public List<ProductoDestacadoResponse> consultarDestacados(
+            @RequestParam(defaultValue = "10") @Min(1) @Max(10) int limit) {
+        return catalogoProductos.buscarDestacados(limit).stream()
+                .map(ProductoDestacadoResponse::desde)
+                .toList();
+    }
+
     @GetMapping("/products")
     public ProductoCatalogoPageResponse buscarProductos(
             @RequestParam(defaultValue = "1") @Min(1) int page,
@@ -48,8 +57,6 @@ public class CatalogoController {
                 search, category, minRating, criterio, "desc".equals(order), page - 1, size), autenticado.getName()));
     }
 
-    // Detalle de un producto del catálogo (HU8): el cliente sale de la sesión para aplicarle su descuento. Uno que
-    // no existe o no está disponible da 404 (ProductoNoEncontradoException, en el manejador global).
     @GetMapping("/products/{id}")
     public DetalleProductoCatalogoResponse consultarDetalle(@PathVariable String id, Authentication autenticado) {
         return DetalleProductoCatalogoResponse.desde(catalogoProductos.consultarDetalle(id, autenticado.getName()));

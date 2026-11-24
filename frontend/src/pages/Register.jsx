@@ -25,7 +25,7 @@ import {
   Person24Regular,
 } from '@fluentui/react-icons'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { registrarCliente, registrarVendedor } from '../api/auth'
 import { getCategories } from '../api/products'
 import CategoryCombobox from '../components/CategoryCombobox'
@@ -101,11 +101,11 @@ const useStyles = makeStyles({
     boxSizing: 'border-box',
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: '10px 20px',
+    alignItems: 'flex-start',
+    padding: '28px 20px',
     backgroundColor: '#fffaf6',
     backgroundImage:
-      'radial-gradient(ellipse at 0% 100%, rgba(255, 139, 64, .18), transparent 35%), radial-gradient(ellipse at 100% 0%, rgba(255, 153, 82, .18), transparent 32%), linear-gradient(135deg, #fffaf6 0%, #ffffff 52%, #fff7f0 100%)',
+      'radial-gradient(ellipse at 2% 100%, rgba(255, 143, 75, 0.24) 0%, transparent 38%), radial-gradient(ellipse at 48% 0%, rgba(255, 179, 119, 0.18) 0%, transparent 34%), radial-gradient(ellipse at 100% 8%, rgba(255, 155, 82, 0.19) 0%, transparent 35%), linear-gradient(112deg, #fffaf6 0%, #ffffff 54%, #fffaf6 100%)',
     [MOBILE]: {
       alignItems: 'flex-start',
       padding: '12px 10px',
@@ -114,31 +114,54 @@ const useStyles = makeStyles({
 
   card: {
     width: '100%',
-    maxWidth: '1060px',
+    maxWidth: '1180px',
     boxSizing: 'border-box',
-    padding: '16px 34px',
+    minHeight: '860px',
+    padding: '34px 44px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '8px',
+    gap: '16px',
     border: '1px solid rgba(228, 218, 209, .85)',
-    borderRadius: '22px',
-    backgroundColor: 'rgba(255, 255, 255, .96)',
-    boxShadow: '0 16px 42px rgba(76, 48, 27, .11)',
+    borderRadius: '28px',
+    backgroundColor: 'rgba(255, 255, 255, .92)',
+    boxShadow: '0 22px 55px rgba(45, 35, 25, .12)',
+    backdropFilter: 'blur(14px)',
     [MOBILE]: {
-      padding: '20px 16px',
-      borderRadius: '18px',
+      minHeight: 'auto',
+      padding: '22px 16px',
+      borderRadius: '20px',
     },
   },
+
+  brand: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginBottom: '2px',
+    color: tokens.colorNeutralForeground1,
+    fontSize: '30px',
+    fontWeight: tokens.fontWeightBold,
+    letterSpacing: '-1px',
+    textDecorationLine: 'none',
+    ':hover': { color: tokens.colorNeutralForeground1 },
+    ':focus-visible': {
+      outline: `3px solid ${tokens.colorBrandStroke1}`,
+      outlineOffset: '4px',
+      borderRadius: tokens.borderRadiusSmall,
+    },
+  },
+
+  logoAccent: { color: tokens.colorBrandForeground1 },
 
   heading: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '2px',
+    gap: '3px',
   },
 
   title: {
     margin: 0,
-    fontSize: 'clamp(26px, 2.6vw, 34px)',
+    fontSize: 'clamp(32px, 2.8vw, 40px)',
     lineHeight: 1.12,
     letterSpacing: '-.8px',
   },
@@ -146,14 +169,14 @@ const useStyles = makeStyles({
   description: {
     color: tokens.colorNeutralForeground2,
     margin: 0,
-    fontSize: tokens.fontSizeBase200,
+    fontSize: tokens.fontSizeBase300,
   },
 
   fieldsGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-    columnGap: '22px',
-    rowGap: '7px',
+    columnGap: '28px',
+    rowGap: '14px',
     [MOBILE]: {
       gridTemplateColumns: '1fr',
       rowGap: '10px',
@@ -163,8 +186,8 @@ const useStyles = makeStyles({
   passwordFields: {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-    columnGap: '22px',
-    rowGap: '8px',
+    columnGap: '28px',
+    rowGap: '12px',
     [MOBILE]: {
       gridTemplateColumns: '1fr',
     },
@@ -205,13 +228,13 @@ const useStyles = makeStyles({
   tipoCuenta: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '7px',
+    gap: '10px',
   },
 
   tipoCuentaOpciones: {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-    gap: '12px',
+    gap: '16px',
     [MOBILE]: {
       gridTemplateColumns: '1fr',
     },
@@ -239,13 +262,13 @@ const useStyles = makeStyles({
   },
 
   tipoCuentaCard: {
-    minHeight: '68px',
+    minHeight: '82px',
     height: 'auto',
     display: 'flex',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    gap: '12px',
-    padding: '12px 16px',
+    gap: '16px',
+    padding: '16px 20px',
     whiteSpace: 'normal',
     textAlign: 'left',
     border: '1px solid #cfd6df',
@@ -273,7 +296,7 @@ const useStyles = makeStyles({
   tipoCuentaIcono: {
     color: tokens.colorBrandForeground1,
     flexShrink: 0,
-    fontSize: '25px',
+    fontSize: '28px',
   },
 
   tipoCuentaTexto: {
@@ -286,13 +309,13 @@ const useStyles = makeStyles({
 
   tipoCuentaNombre: {
     fontWeight: tokens.fontWeightBold,
-    fontSize: tokens.fontSizeBase300,
+    fontSize: tokens.fontSizeBase400,
   },
 
   tipoCuentaDetalle: {
     color: tokens.colorNeutralForeground2,
-    fontSize: tokens.fontSizeBase200,
-    lineHeight: 1.3,
+    fontSize: tokens.fontSizeBase300,
+    lineHeight: 1.4,
     fontWeight: tokens.fontWeightRegular,
   },
 
@@ -362,10 +385,33 @@ const useStyles = makeStyles({
   submit: {
     width: '220px',
     minWidth: '220px',
-    minHeight: '40px',
+    minHeight: '58px',
+    padding: '14px 28px',
+    borderRadius: '12px',
     backgroundColor: '#f05a0a',
+    color: '#ffffff',
+    fontSize: '16px',
+    fontWeight: tokens.fontWeightBold,
+    boxShadow: '0 8px 18px rgba(240, 90, 10, 0.24)',
+    transitionProperty: 'background-color, box-shadow, transform',
+    transitionDuration: '160ms',
     ':hover': {
       backgroundColor: '#d94d06',
+      boxShadow: '0 10px 22px rgba(240, 90, 10, 0.3)',
+      transform: 'translateY(-1px)',
+    },
+    ':active': {
+      transform: 'translateY(0)',
+      boxShadow: '0 4px 10px rgba(240, 90, 10, 0.2)',
+    },
+    ':focus-visible': {
+      outline: '3px solid #ffb27d',
+      outlineOffset: '3px',
+    },
+    [MOBILE]: {
+      width: '100%',
+      minWidth: 0,
+      maxWidth: '320px',
     },
   },
 
@@ -576,6 +622,10 @@ export default function Register() {
   ) => (
     <main className={styles.page}>
       <Card className={styles.card}>
+        <Link to={PATHS.HOME} className={styles.brand} aria-label="ESIBuy, volver al inicio">
+          ESI<span className={styles.logoAccent}>Buy</span>
+        </Link>
+
         <div className={styles.heading}>
           <Title2 as="h1" className={styles.title}>
             {titulo}
@@ -611,10 +661,10 @@ export default function Register() {
   const campo = (
     nombre,
     label,
-    { type, required = true } = {},
+    { type, required = true, fullWidth = false } = {},
   ) => (
     <div
-      className={styles.field}
+      className={fullWidth ? `${styles.field} ${styles.fullWidth}` : styles.field}
       data-register-error={
         errores[nombre] ? 'true' : undefined
       }
@@ -625,6 +675,7 @@ export default function Register() {
         validationMessage={errores[nombre]}
       >
         <Input
+          size="large"
           type={type}
           maxLength={LONGITUD_MAXIMA[nombre]}
           value={datos[nombre]}
@@ -902,6 +953,7 @@ export default function Register() {
               value={datos.categoriaPrincipalId}
               categories={categoriasDisponibles}
               searchable={false}
+              size="large"
               placeholder="Selecciona una categoría"
               onChange={cambiarCategoria}
             />
@@ -911,11 +963,17 @@ export default function Register() {
 
       {tipo === 'vendedor' && campo('dni', 'DNI')}
 
-      {campo('email', 'Correo electrónico', {
-        type: 'email',
+      {tipo === 'vendedor' && campo('telefono', 'Teléfono', {
+        type: 'tel',
+        required: false,
       })}
 
-      {campo('telefono', 'Teléfono', {
+      {campo('email', 'Correo electrónico', {
+        type: 'email',
+        fullWidth: tipo === 'vendedor',
+      })}
+
+      {tipo === 'cliente' && campo('telefono', 'Teléfono', {
         type: 'tel',
         required: false,
       })}
