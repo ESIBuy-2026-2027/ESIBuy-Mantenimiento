@@ -30,6 +30,7 @@ export const PATHS = {
   SELLER_ORDER_DETAIL: '/seller/orders/:id',
   SELLER_PRODUCT_NEW: '/seller/products/new',
   SELLER_PRODUCT_EDIT: '/seller/products/:id/edit',
+  SELLER_STATISTICS: '/seller/statistics',
 }
 
 export const getProductDetailPath = (productId) => `/products/${encodeURIComponent(productId)}`

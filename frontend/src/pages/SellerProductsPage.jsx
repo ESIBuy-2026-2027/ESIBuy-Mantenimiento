@@ -75,6 +75,7 @@ export default function SellerProductsPage() {
   )
   const [productToView, setProductToView] = useState(null)
   const [productToDelete, setProductToDelete] = useState(null)
+  const [togglingProductId, setTogglingProductId] = useState(null)
   const { categories } = useCategories()
   const {
     search, category, status, sort, minPrice, maxPrice, page, debouncedSearch,
@@ -93,15 +94,16 @@ export default function SellerProductsPage() {
   })
 
   // Activa un producto no disponible o desactiva uno disponible (HU16), sin confirmación: se deshace con otro clic.
-  // Desde la ficha, la ficha se cierra y el resultado se ve en el listado.
   const toggleAvailability = async (product) => {
-    setProductToView(null)
+    setTogglingProductId(product.id)
     try {
       await updateSellerProductAvailability(product.id, !product.disponible)
       setNotice({ intent: 'success', text: product.disponible ? 'Producto desactivado.' : 'Producto activado.' })
       retry()
     } catch {
       setNotice({ intent: 'error', text: 'No se ha podido cambiar la disponibilidad del producto. Inténtalo de nuevo.' })
+    } finally {
+      setTogglingProductId(null)
     }
   }
 
@@ -241,11 +243,12 @@ export default function SellerProductsPage() {
             products={data.items}
             categories={categories}
             refreshing={refreshing}
+            onToggleAvailability={toggleAvailability}
+            togglingProductId={togglingProductId}
             renderActions={(product) => (
               <ProductRowActions
                 product={product}
                 onView={setProductToView}
-                onToggleAvailability={toggleAvailability}
                 onDelete={setProductToDelete}
               />
             )}
@@ -265,12 +268,6 @@ export default function SellerProductsPage() {
         <ProductDetailDialog
           productId={productToView.id}
           onClose={() => setProductToView(null)}
-          onToggleAvailability={toggleAvailability}
-          onDelete={(product) => {
-            // Se cierra la ficha y se pide la misma confirmación que desde la fila del listado.
-            setProductToView(null)
-            setProductToDelete(product)
-          }}
         />
       )}
 

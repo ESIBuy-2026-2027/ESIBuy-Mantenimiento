@@ -1,48 +1,38 @@
 import PropTypes from 'prop-types'
-import { Button } from '@fluentui/react-components'
-import {
-  CheckmarkCircle20Regular,
-  Delete20Regular,
-  Edit20Regular,
-  Eye20Regular,
-  Prohibited20Regular,
-} from '@fluentui/react-icons'
+import { Button, Tooltip } from '@fluentui/react-components'
+import { Delete20Regular, Edit20Regular, Info20Regular } from '@fluentui/react-icons'
 import LinkButton from '../../components/LinkButton'
 import { getSellerProductEditPath } from '../../routes/paths'
 import { productPropType } from '../../utils/propTypes'
 
-// Acciones de una fila del listado de productos del vendedor: ver su ficha (HU33), editar (abre el formulario),
-// activar o desactivar (HU16; un producto disponible se desactiva y uno no disponible se activa) y eliminar.
-export default function ProductRowActions({ product, onView, onToggleAvailability, onDelete }) {
-  const availabilityAction = product.disponible ? 'Desactivar' : 'Activar'
-
+// Acciones de cada fila en "Mis productos": ficha en modal, editar (HU34) y eliminar (HU35).
+export default function ProductRowActions({ product, onView, onDelete }) {
   return (
     <>
-      <Button
-        appearance="subtle"
-        icon={<Eye20Regular />}
-        aria-label={`Ver ${product.nombre}`}
-        onClick={() => onView(product)}
-      />
-      <LinkButton
-        to={getSellerProductEditPath(product.id)}
-        appearance="subtle"
-        icon={<Edit20Regular />}
-        aria-label={`Editar ${product.nombre}`}
-      />
-      <Button
-        appearance="subtle"
-        icon={product.disponible ? <Prohibited20Regular /> : <CheckmarkCircle20Regular />}
-        aria-label={`${availabilityAction} ${product.nombre}`}
-        title={availabilityAction}
-        onClick={() => onToggleAvailability(product)}
-      />
-      <Button
-        appearance="subtle"
-        icon={<Delete20Regular />}
-        aria-label={`Eliminar ${product.nombre}`}
-        onClick={() => onDelete(product)}
-      />
+      <Tooltip content="Información del producto" relationship="label">
+        <Button
+          appearance="subtle"
+          aria-label={`Información de ${product.nombre}`}
+          icon={<Info20Regular />}
+          onClick={() => onView(product)}
+        />
+      </Tooltip>
+      <Tooltip content="Editar" relationship="label">
+        <LinkButton
+          appearance="subtle"
+          aria-label={`Editar ${product.nombre}`}
+          to={getSellerProductEditPath(product.id)}
+          icon={<Edit20Regular />}
+        />
+      </Tooltip>
+      <Tooltip content="Eliminar" relationship="label">
+        <Button
+          appearance="subtle"
+          aria-label={`Eliminar ${product.nombre}`}
+          icon={<Delete20Regular />}
+          onClick={() => onDelete(product)}
+        />
+      </Tooltip>
     </>
   )
 }
@@ -50,6 +40,5 @@ export default function ProductRowActions({ product, onView, onToggleAvailabilit
 ProductRowActions.propTypes = {
   product: productPropType.isRequired,
   onView: PropTypes.func.isRequired,
-  onToggleAvailability: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
 }

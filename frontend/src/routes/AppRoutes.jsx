@@ -4,6 +4,7 @@ import ProtectedRoute from '../auth/ProtectedRoute'
 import { ROLES } from '../auth/roles'
 import AppLayout from '../components/AppLayout'
 import RegistroPremiumFlow from '../features/account/RegistroPremiumFlow'
+import SellerStatistics from '../features/seller/SellerStatistics'
 import AddressesPage from '../pages/AddressesPage'
 import AdminAdminsPage from '../pages/AdminAdminsPage'
 import AdminCategoriesPage from '../pages/AdminCategoriesPage'
@@ -89,6 +90,7 @@ export default function AppRoutes() {
           <Route path={PATHS.SELLER_ORDER_DETAIL} element={<SellerOrderDetailPage />} />
           <Route path={PATHS.SELLER_PRODUCT_NEW} element={<SellerProductFormPage />} />
           <Route path={PATHS.SELLER_PRODUCT_EDIT} element={<SellerProductFormPage />} />
+          <Route path={PATHS.SELLER_STATISTICS} element={<SellerStatistics />} />
         </Route>
       </Route>
     </Routes>

@@ -4,6 +4,7 @@ import { Button, makeStyles, mergeClasses, tokens } from '@fluentui/react-compon
 import {
   ArrowExit20Regular,
   BoxMultiple20Regular,
+  ChartMultiple20Regular,
   ChatWarning20Regular,
   Diamond20Regular,
   Grid20Regular,
@@ -87,7 +88,9 @@ const useStyles = makeStyles({
       paddingBottom: tokens.spacingVerticalXXS,
       maskImage: 'linear-gradient(to right, black 85%, transparent)',
       WebkitMaskImage: 'linear-gradient(to right, black 85%, transparent)',
-      '::-webkit-scrollbar': { display: 'none' },
+    },
+    '&::-webkit-scrollbar': {
+      display: 'none',
     },
   },
   item: {
@@ -161,6 +164,9 @@ function UserActions({ rol, onSignOut, disabled }) {
           </NavLink>
           <NavLink to={PATHS.SELLER_ORDERS} icon={<Receipt20Regular />}>
             Mis pedidos
+          </NavLink>
+          <NavLink to={PATHS.SELLER_STATISTICS} icon={<ChartMultiple20Regular />}>
+            Mis estadísticas
           </NavLink>
         </>
       )}

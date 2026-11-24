@@ -26,7 +26,6 @@ import DeleteAccountDialog from '../features/account/DeleteAccountDialog'
 import UnsavedChangesDialog from '../features/account/UnsavedChangesDialog'
 import ProfileEditor from '../features/admin/ProfileEditor'
 import ReadOnlyFields from '../features/admin/ReadOnlyFields'
-import SellerStatistics from '../features/seller/SellerStatistics'
 import { profileFieldsFor } from '../features/admin/profileFields'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { useCategories } from '../hooks/useCategories'
@@ -225,7 +224,7 @@ function profileFields(perfil, categoryName) {
 // la sesión. Con «Editar perfil» (HU45) los datos modificables se editan en este mismo panel; al guardar, el perfil
 // pasa a ser el que devuelve el backend y se avisa. Si hay cambios sin guardar, se pregunta antes de cancelar, de ir
 // a otra pantalla y de cerrar o recargar la pestaña. El cliente ve además sus preferencias (HU46) y su acceso a ESIBuy
-// Premium (HU45), y el vendedor, sus estadísticas (HU17). Los dos pueden eliminar su cuenta desde aquí (HU47 y HU25).
+// Premium (HU45). Los dos pueden eliminar su cuenta desde aquí (HU47 y HU25).
 export default function ProfilePage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
@@ -328,7 +327,6 @@ export default function ProfilePage() {
       {guard.blocked && <UnsavedChangesDialog onStay={guard.reset} onLeave={guard.proceed} />}
 
       {perfil?.rol === 'CLIENTE' && <CustomerPreferences categories={categories} />}
-      {perfil?.rol === 'VENDEDOR' && <SellerStatistics />}
 
       {(perfil?.rol === 'CLIENTE' || perfil?.rol === 'VENDEDOR') && <SecurityFactors />}
 

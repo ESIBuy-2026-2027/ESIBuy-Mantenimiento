@@ -9,6 +9,7 @@ import {
   TableHeaderCell,
   TableRow,
   Text,
+  Tooltip,
   makeStyles,
   mergeClasses,
   tokens,
@@ -51,13 +52,38 @@ const useStyles = makeStyles({
     color: tokens.colorPaletteRedForeground1,
     fontWeight: tokens.fontWeightSemibold,
   },
+  statusButton: {
+    padding: 0,
+    border: 'none',
+    backgroundColor: 'transparent',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    borderRadius: tokens.borderRadiusMedium,
+    '&:hover': {
+      opacity: 0.85,
+    },
+    '&:disabled': {
+      cursor: 'default',
+      opacity: 0.65,
+    },
+  },
 })
 
 // El backend devuelve el identificador de la categoría de cada producto (`categoriaId`), no su nombre: la tabla lo
 // traduce con la lista de categorías que recibe en `categories`. Si no la tiene (todavía carga o ha fallado) o la
 // categoría no existe, muestra un guion en lugar de un identificador.
 // `renderActions` es opcional: si se recibe, añade una columna con las acciones de cada fila.
-export default function ProductsTable({ products, categories = [], refreshing, label = 'Mis productos', renderActions }) {
+// `onToggleAvailability` es opcional: si se recibe, permite activar/desactivar el producto pulsando su estado.
+export default function ProductsTable({
+  products,
+  categories = [],
+  refreshing,
+  label = 'Mis productos',
+  renderActions,
+  onToggleAvailability,
+  togglingProductId,
+}) {
   const styles = useStyles()
   const tableStyles = useTableStyles()
   const categoryNames = new Map(categories.map(({ id, nombre }) => [id, nombre]))
@@ -76,45 +102,71 @@ export default function ProductsTable({ products, categories = [], refreshing, l
           </TableRow>
         </TableHeader>
         <TableBody>
-          {products.map((product) => (
-            <TableRow key={product.id} className={tableStyles.row}>
-              <TableCell className={tableStyles.name}>
-                <div className={styles.product}>
-                  <div className={styles.thumbnailWrap}>
-                    <img
-                      className={styles.thumbnail}
-                      src={product.imagen || fallbackImage(product.nombre)}
-                      alt={`Miniatura de ${product.nombre}`}
-                      onError={(event) => {
-                        event.currentTarget.onerror = null
-                        event.currentTarget.src = fallbackImage(product.nombre)
-                      }}
-                    />
+          {products.map((product) => {
+            const statusText = product.disponible ? 'Disponible' : 'No disponible'
+            const toggleActionText = product.disponible
+              ? 'Clic para ocultar a clientes'
+              : 'Clic para mostrar a clientes'
+            const isToggling = togglingProductId === product.id
+
+            const statusBadge = (
+              <Badge appearance="tint" color={product.disponible ? 'success' : 'subtle'}>
+                {statusText}
+              </Badge>
+            )
+
+            return (
+              <TableRow key={product.id} className={tableStyles.row}>
+                <TableCell className={tableStyles.name}>
+                  <div className={styles.product}>
+                    <div className={styles.thumbnailWrap}>
+                      <img
+                        className={styles.thumbnail}
+                        src={product.imagen || fallbackImage(product.nombre)}
+                        alt={`Miniatura de ${product.nombre}`}
+                        onError={(event) => {
+                          event.currentTarget.onerror = null
+                          event.currentTarget.src = fallbackImage(product.nombre)
+                        }}
+                      />
+                    </div>
+                    <Text weight="semibold">{product.nombre}</Text>
                   </div>
-                  <Text weight="semibold">{product.nombre}</Text>
-                </div>
-              </TableCell>
-              <TableCell>
-                {categoryNames.has(product.categoriaId) ? (
-                  <Badge appearance="outline" color="brand" size="medium">
-                    {categoryNames.get(product.categoriaId)}
-                  </Badge>
-                ) : (
-                  <Text>{SIN_CATEGORIA}</Text>
-                )}
-              </TableCell>
-              <TableCell>{formatPrice(product.precio)}</TableCell>
-              <TableCell>
-                <span className={product.stock === 0 ? styles.noStock : undefined}>{product.stock}</span>
-              </TableCell>
-              <TableCell>
-                <Badge appearance="tint" color={product.disponible ? 'success' : 'subtle'}>
-                  {product.disponible ? 'Disponible' : 'No disponible'}
-                </Badge>
-              </TableCell>
-              {renderActions && <TableCell>{renderActions(product)}</TableCell>}
-            </TableRow>
-          ))}
+                </TableCell>
+                <TableCell>
+                  {categoryNames.has(product.categoriaId) ? (
+                    <Badge appearance="outline" color="brand" size="medium">
+                      {categoryNames.get(product.categoriaId)}
+                    </Badge>
+                  ) : (
+                    <Text>{SIN_CATEGORIA}</Text>
+                  )}
+                </TableCell>
+                <TableCell>{formatPrice(product.precio)}</TableCell>
+                <TableCell>
+                  <span className={product.stock === 0 ? styles.noStock : undefined}>{product.stock}</span>
+                </TableCell>
+                <TableCell>
+                  {onToggleAvailability ? (
+                    <Tooltip content={toggleActionText} relationship="description">
+                      <button
+                        type="button"
+                        className={styles.statusButton}
+                        disabled={isToggling}
+                        aria-label={`${statusText} — ${toggleActionText}: ${product.nombre}`}
+                        onClick={() => onToggleAvailability(product)}
+                      >
+                        {statusBadge}
+                      </button>
+                    </Tooltip>
+                  ) : (
+                    statusBadge
+                  )}
+                </TableCell>
+                {renderActions && <TableCell>{renderActions(product)}</TableCell>}
+              </TableRow>
+            )
+          })}
         </TableBody>
       </Table>
     </div>
@@ -127,4 +179,6 @@ ProductsTable.propTypes = {
   refreshing: PropTypes.bool,
   label: PropTypes.string,
   renderActions: PropTypes.func,
+  onToggleAvailability: PropTypes.func,
+  togglingProductId: PropTypes.string,
 }
