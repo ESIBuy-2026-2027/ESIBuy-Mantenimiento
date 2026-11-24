@@ -218,17 +218,12 @@ export default function Home() {
       <main>
         <section className={mergeClasses(styles.container, styles.hero)} aria-labelledby="home-title">
           <div className={styles.copy}>
-            <span className={styles.eyebrow}>
-              <Tag24Regular />
-              Compra y vende con total confianza
-            </span>
             <Display as="h1" id="home-title" className={styles.headline}>
-              Bienvenido a ESIBuy: compra, vende y descubre con{' '}
-              <span className={styles.accent}>garantía total</span>
+              Bienvenido a ESI{''}
+              <span className={styles.accent}>Buy</span>
             </Display>
             <p className={styles.description}>
-              El marketplace de la comunidad universitaria donde encuentras productos, publicas los tuyos
-              y gestionas tus compras de forma sencilla y segura.
+              El marketplace donde encontrarás productos de calidad, podrás gestionar tus pedidos y venderás de forma segura y sencilla.
             </p>
             {!user && (
               <div className={styles.actions}>
