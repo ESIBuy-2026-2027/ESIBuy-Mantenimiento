@@ -6,12 +6,7 @@ import {
   Text,
   Title2,
 } from '@fluentui/react-components'
-import {
-  Cart24Regular,
-  ShieldCheckmark24Regular,
-  Tag24Regular,
-  VehicleTruckProfile24Regular,
-} from '@fluentui/react-icons'
+import { ShieldCheckmark24Regular, } from '@fluentui/react-icons'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import LinkButton from '../components/LinkButton'
 import { SESSION_END } from '../auth/AuthContext'
@@ -50,9 +45,6 @@ export default function LoginPage() {
       <section className={styles.brandPanel} aria-label="Presentación de ESIBuy">
         <div className={styles.brandTop}>
           <Link to={PATHS.HOME} className={styles.logo} aria-label="ESIBuy, volver al inicio">
-            <span className={styles.logoMark} aria-hidden="true">
-              <Cart24Regular />
-            </span>
             <span>ESI<span className={styles.logoAccent}>Buy</span></span>
           </Link>
         </div>
@@ -75,20 +67,6 @@ export default function LoginPage() {
         <div className={styles.visual}>
           <div className={styles.visualStage}>
             <img className={styles.visualIllustration} src="/images/esibuy-login-illustration.png" alt="Caja de ESIBuy con un portátil, auriculares y productos tecnológicos" />
-          </div>
-          <div className={styles.benefits}>
-            <div className={styles.benefit}>
-              <ShieldCheckmark24Regular className={styles.benefitIcon} />
-              <span>Compras seguras</span>
-            </div>
-            <div className={`${styles.benefit} ${styles.benefitSecond}`}>
-              <VehicleTruckProfile24Regular className={styles.benefitIcon} />
-              <span>Seguimiento de pedidos</span>
-            </div>
-            <div className={`${styles.benefit} ${styles.benefitThird}`}>
-              <Tag24Regular className={styles.benefitIcon} />
-              <span>Gran variedad de productos</span>
-            </div>
           </div>
         </div>
 
