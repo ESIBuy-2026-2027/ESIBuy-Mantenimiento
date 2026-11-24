@@ -150,7 +150,7 @@ export default function Register() {
   const styles = useStyles()
   const navigate = useNavigate()
   const flujo = useRegistroPremium()
-  const [tipo, setTipo] = useState(flujo.pendiente ? 'cliente' : null)
+  const [tipo, setTipo] = useState('cliente')
   const [datos, setDatos] = useState(() => ({ ...DATOS_INICIALES, ...(flujo.pendiente ?? {}), avatar: flujo.pendiente?.avatar || DATOS_INICIALES.avatar }))
   const [errores, setErrores] = useState(() => erroresTrasLaPasarela(flujo.resultado).campos ?? {})
   const [errorGeneral, setErrorGeneral] = useState(() => erroresTrasLaPasarela(flujo.resultado).general ?? null)
@@ -365,6 +365,16 @@ export default function Register() {
 
   const selectorAvatar = <AvatarSelector value={datos.avatar} onChange={cambiar('avatar')} />
 
+  const selectorTipoRegistro = (
+    <div className={styles.tipoCuenta}>
+      <Text weight="semibold">Quiero registrarme como</Text>
+      <div className={styles.tipoCuentaOpciones} role="group" aria-label="Tipo de registro">
+        <Button type="button" appearance="outline" aria-pressed={tipo === 'cliente'} className={tipo === 'cliente' ? styles.tipoCuentaCard + ' ' + styles.tipoCuentaSeleccionada : styles.tipoCuentaCard} onClick={() => setTipo('cliente')}><Cart24Regular className={styles.tipoCuentaIcono} /><span className={styles.tipoCuentaTexto}><span className={styles.tipoCuentaNombre}>Cliente</span><span className={styles.tipoCuentaDetalle}>Descubre productos y gestiona tus compras.</span></span></Button>
+        <Button type="button" appearance="outline" aria-pressed={tipo === 'vendedor'} className={tipo === 'vendedor' ? styles.tipoCuentaCard + ' ' + styles.tipoCuentaSeleccionada : styles.tipoCuentaCard} onClick={() => setTipo('vendedor')}><BuildingShop24Regular className={styles.tipoCuentaIcono} /><span className={styles.tipoCuentaTexto}><span className={styles.tipoCuentaNombre}>Vendedor</span><span className={styles.tipoCuentaDetalle}>Publica productos y gestiona tu tienda.</span></span></Button>
+      </div>
+    </div>
+  )
+
   const selectorTipoCliente = (
     <div className={styles.tipoCuenta}>
       <Text weight="semibold">Tipo de cuenta</Text>
@@ -384,6 +394,7 @@ export default function Register() {
 
   if (tipo === 'cliente') {
     return pantalla('Registro de cliente', <>
+      {selectorTipoRegistro}
       <div className={styles.fieldsGrid}>
         {campo('nombre', 'Nombre')}{campo('apellidos', 'Apellidos')}
         {campo('fechaNacimiento', 'Fecha de nacimiento', { type: 'date' })}{campo('dni', 'DNI')}
@@ -402,6 +413,7 @@ export default function Register() {
 
   if (tipo === 'vendedor') {
     return pantalla('Registro de vendedor', <>
+      {selectorTipoRegistro}
       <div className={styles.fieldsGrid}>
         {campo('nombre', 'Nombre')}{campo('apellidos', 'Apellidos')}
         {campo('nombreComercial', 'Nombre comercial')}
@@ -417,18 +429,4 @@ export default function Register() {
     </>, 'Crea tu cuenta de vendedor y empieza a publicar tus productos en ESIBuy.')
   }
 
-  return pantalla(
-    'Crear cuenta',
-    <>
-      <Text className={styles.description}>Elige el tipo de cuenta que quieres crear.</Text>
-      <div className={styles.opciones}>
-        <Button size="large" icon={<Cart24Regular />} onClick={() => setTipo('cliente')}>
-          Cliente
-        </Button>
-        <Button size="large" icon={<BuildingShop24Regular />} onClick={() => setTipo('vendedor')}>
-          Vendedor
-        </Button>
-      </div>
-    </>
-  )
 }
