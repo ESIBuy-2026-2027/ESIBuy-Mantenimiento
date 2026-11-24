@@ -397,13 +397,14 @@ export default function Register() {
       {campo('nombre', 'Nombre')}
       {campo('apellidos', 'Apellidos')}
       {tipo === 'cliente' ? campo('fechaNacimiento', 'Fecha de nacimiento', { type: 'date' }) : campo('nombreComercial', 'Nombre comercial')}
-      {tipo === 'vendedor' && (
+      {tipo === 'cliente' ? campo('dni', 'DNI') : (
         <div className={styles.field} data-register-error={errores.categoriaPrincipalId ? 'true' : undefined}>
           <Field label="Categoría principal" required validationState={errores.categoriaPrincipalId ? 'error' : 'none'} validationMessage={errores.categoriaPrincipalId}>
             <CategoryCombobox value={datos.categoriaPrincipalId} categories={categoriasDisponibles} searchable={false} placeholder="Selecciona una categoría" onChange={cambiarCategoria} />
           </Field>
         </div>
       )}
+      {tipo === 'vendedor' && campo('dni', 'DNI')}
       {campo('email', 'Correo electrónico', { type: 'email' })}
       {campo('telefono', 'Teléfono', { type: 'tel', required: false })}
     </div>
