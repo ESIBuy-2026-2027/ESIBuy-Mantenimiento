@@ -52,9 +52,10 @@ describe('Home', () => {
     expect(screen.getByRole('link', { name: /ver catálogo/i })).toHaveAttribute('href', '/products')
   })
 
-  it('home_sinSesion_invitaARegistrarseAlFinal', () => {
+  it('home_sinSesion_noMuestraLaLlamadaFinalARegistro', () => {
     renderHome()
 
-    expect(screen.getByRole('link', { name: /crear mi cuenta/i })).toHaveAttribute('href', '/register')
+    expect(screen.queryByText('Encuentra algo que te guste.')).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /crear mi cuenta/i })).not.toBeInTheDocument()
   })
 })
