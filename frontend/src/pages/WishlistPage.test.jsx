@@ -162,6 +162,58 @@ describe('WishlistPage (PBI 534): crear, consultar, editar y eliminar listas', (
     expect(await screen.findByRole('heading', { level: 2, name: 'Mi lista de deseos' })).toBeInTheDocument()
   })
 
+  const VARIAS = [
+    LISTAS[0],
+    { id: 'wl-2', nombre: 'Oficina', items: [{ ...LISTAS[0].items[0], productoId: 'p-2', nombre: 'Teclado mecánico' }] },
+    { id: 'wl-3', nombre: 'Vacía', items: [] },
+  ]
+  const productosDe = (nombre) => screen.queryByRole('list', { name: `Productos de ${nombre}` })
+
+  it('HU528-CP44: con varias listas, la primera sale desplegada y las demás, plegadas', async () => {
+    await abrirListas(VARIAS)
+
+    expect(await screen.findByRole('list', { name: 'Productos de Regalos' })).toBeInTheDocument()
+    expect(productosDe('Oficina')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ocultar los productos de Regalos' })).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('button', { name: 'Mostrar los productos de Oficina' })).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('HU528-CP44: cada lista se despliega y se pliega por separado', async () => {
+    const user = userEvent.setup()
+    await abrirListas(VARIAS)
+
+    await user.click(await screen.findByRole('button', { name: 'Mostrar los productos de Oficina' }))
+    expect(productosDe('Oficina')).toBeInTheDocument()
+    expect(productosDe('Regalos')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Ocultar los productos de Regalos' }))
+    expect(productosDe('Regalos')).not.toBeInTheDocument()
+    expect(productosDe('Oficina')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Editar «Regalos»' })).toBeInTheDocument()
+  })
+
+  it('HU528-CP44: una lista vacía lo dice y no se puede plegar', async () => {
+    await abrirListas(VARIAS)
+
+    expect(await screen.findByText('Esta lista aún no tiene productos.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /los productos de Vacía$/ })).not.toBeInTheDocument()
+  })
+
+  it('HU528-CP44: al quitar un producto, la lista sigue desplegada', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.delete('/api/customer/wishlists/:listaId/items/:productoId', () =>
+        HttpResponse.json({ ...LISTAS[0], items: LISTAS[0].items.slice(1) }),
+      ),
+    )
+    await abrirListas(VARIAS)
+
+    await user.click(await screen.findByRole('button', { name: 'Quitar Auriculares inalámbricos de la lista' }))
+
+    expect(await screen.findByText('Auriculares inalámbricos se ha quitado de la lista.')).toBeInTheDocument()
+    expect(within(productosDe('Regalos')).getAllByRole('listitem')).toHaveLength(2)
+  })
+
   it('HU14-CP33: muestra indicador de carga y error con reintento', async () => {
     const user = userEvent.setup()
     server.use(

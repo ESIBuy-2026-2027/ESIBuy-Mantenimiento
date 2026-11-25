@@ -4950,9 +4950,10 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 | HU528-CP41 | En la cinta de ofertas, el corazón y el marcador funcionan también en las ofertas repetidas, a las que no se entra con el teclado, y la cinta sigue avanzando al salir con el ratón | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#528) |
 | HU528-CP42 | En el detalle, la categoría es una pastilla que se marca al pulsarla, distinta del corazón del producto; si no está activa se ve como texto | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#528) |
 | HU528-CP43 | El perfil del cliente ya no tiene la selección de categorías favoritas | Frontend (página) | 1 | 🔍 Pendiente de PR (AB#528) |
+| HU528-CP44 | Las listas de deseos se pliegan y se despliegan por separado; al entrar solo está desplegada la primera, y una vacía no se puede plegar | Frontend (página) | 4 | 🔍 Pendiente de PR (AB#528) |
 
 - **Número de HU:** la historia es la AB#528 de Azure Boards y no tiene otro número en el repositorio; el equipo decidió trazarla como HU528. Rama `feature/categorias-favoritas`.
-- **HU528-CP01 a CP43:** casos propuestos en las tasks AB#684 a AB#687 y AB#689 a partir de los criterios de aceptación. Pendientes de confirmar con el equipo y de añadir a la HU en Azure Boards.
+- **HU528-CP01 a CP44:** casos propuestos en las tasks AB#684 a AB#687 y AB#689 a partir de los criterios de aceptación. Pendientes de confirmar con el equipo y de añadir a la HU en Azure Boards.
 - **Modelo (decisión del equipo):** las favoritas son las preferencias de la HU46, sin módulo, colección ni migración nuevos. Los criterios «consultar las categorías disponibles» y «consultar las favoritas» los cubren además HU39 (`GET /api/categorias`), HU46-CP05 y CP14; borrarlas al eliminar la cuenta, HU46-CP23 a CP25.
 - **Endpoints (AB#684):** `POST /api/customer/preferences/categories` con `{ "categoriaId" }` y `DELETE /api/customer/preferences/categories/{categoriaId}` → 200 `{ "categorias": [id] }` con las favoritas activas, también si no cambia nada. 400 `VALIDATION_ERROR`, 404 `CATEGORY_NOT_FOUND` al marcar una inexistente o inactiva (`CategoriaNoDisponibleException`), 401 sin sesión y 403 con otro rol o sin CSRF.
 - **Pantallas (decisión del equipo):** la categoría se añade desde el detalle del producto (`FavoriteCategoryButton`), no desde las tarjetas del catálogo, y se revisa en la pestaña Categorías de Mis favoritos (`FavoriteCategoriesList`). La selección del perfil (AB#685) se retiró cuando se comprobó que lo demás funcionaba: desaparecen HU528-CP16 a CP18, que cubren CP25, CP27 y CP28, y los casos de aceptación CP15 y CP21 pasan a Mis favoritos. Los textos de los avisos son comunes a las dos pantallas (`favoriteCategoryNotices.js`).
@@ -5056,6 +5057,10 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 | HU528-CP42 | `ProductDetailPage.test.jsx` | `HU528-CP42: la categoría es una pastilla que se marca al pulsarla, distinta del corazón del producto` | Frontend · página | AB#528 | PR pendiente | 🔍 |
 | HU528-CP42 | `ProductDetailPage.test.jsx` | `HU528-CP42: si la categoría no está activa se ve como texto, sin pastilla` | Frontend · página | AB#528 | PR pendiente | 🔍 |
 | HU528-CP43 | `ProfilePage.test.jsx` | `HU528-CP43: el perfil del cliente no tiene la selección de categorías favoritas` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP44 | `WishlistPage.test.jsx` | `HU528-CP44: con varias listas, la primera sale desplegada y las demás, plegadas` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP44 | `WishlistPage.test.jsx` | `HU528-CP44: cada lista se despliega y se pliega por separado` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP44 | `WishlistPage.test.jsx` | `HU528-CP44: una lista vacía lo dice y no se puede plegar` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP44 | `WishlistPage.test.jsx` | `HU528-CP44: al quitar un producto, la lista sigue desplegada` | Frontend · página | AB#528 | PR pendiente | 🔍 |
 
 ---
 
