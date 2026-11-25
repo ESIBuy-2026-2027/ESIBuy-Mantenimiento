@@ -9,6 +9,7 @@ import {
   MessageBarBody,
   Text,
   Title1,
+  Title3,
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
@@ -119,13 +120,13 @@ export default function AddressesPage({ embedded = false }) {
   }
 
   const Root = embedded ? 'section' : 'main'
-  const SectionTitle = embedded ? 'h2' : Title1
+  const SectionTitle = embedded ? Title3 : Title1
 
   return (
     <Root className={embedded ? styles.embeddedPage : pageStyles.page} aria-label={embedded ? 'Direcciones de envío' : undefined}>
       <div className={pageStyles.heading}>
         <div className={pageStyles.titleBlock}>
-          <SectionTitle as={embedded ? undefined : 'h1'} className={pageStyles.title}>
+          <SectionTitle as={embedded ? 'h2' : 'h1'} className={pageStyles.title}>
             Direcciones de envío
           </SectionTitle>
           <Text className={pageStyles.subtitle}>
