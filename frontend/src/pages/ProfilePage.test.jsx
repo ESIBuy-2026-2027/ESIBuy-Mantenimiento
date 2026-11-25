@@ -242,6 +242,7 @@ describe('ProfilePage (HU45): ESIBuy Premium', () => {
     const enlace = screen.getByRole('link', { name: /hazte premium/i })
     expect(enlace).toHaveAttribute('href', '/premium')
     expect(screen.getByRole('heading', { level: 2, name: 'Da el salto a ESIBuy Premium' })).toBeInTheDocument()
+    expect(screen.getByText('Al hacerte Premium, obtendrás las siguientes ventajas:')).toBeInTheDocument()
     expect(main.querySelector('h2')).toHaveTextContent('Da el salto a ESIBuy Premium')
     expect(main.querySelector('h2').compareDocumentPosition(screen.getByLabelText('Nombre')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(screen.getByRole('region', { name: 'Direcciones de envío' })).toBeInTheDocument()
@@ -256,6 +257,7 @@ describe('ProfilePage (HU45): ESIBuy Premium', () => {
   it('HU45-CP28: el cliente Premium ve el distintivo Premium en vez del botón', async () => {
     await abrirPerfil('cliente@esibuy.test')
 
+    expect(screen.getByText('MIEMBRO ESIBUY PREMIUM')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Ya eres ESIBuy Premium' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /cancelar mi suscripción/i })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Ventajas de ESIBuy Premium' })).not.toBeInTheDocument()
