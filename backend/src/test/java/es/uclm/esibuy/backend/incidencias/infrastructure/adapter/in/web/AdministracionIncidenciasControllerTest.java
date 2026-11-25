@@ -37,8 +37,10 @@ import org.springframework.test.web.servlet.ResultActions;
 import es.uclm.esibuy.backend.incidencias.application.port.in.ResolucionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.SupervisionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaInvalidaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaNoAbiertaException;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaNoEncontradaException;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaYaAbiertaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaYaResueltaException;
 import es.uclm.esibuy.backend.incidencias.domain.model.AutorIncidencia;
 import es.uclm.esibuy.backend.incidencias.domain.model.EstadoIncidencia;
 import es.uclm.esibuy.backend.incidencias.domain.model.Incidencia;
@@ -445,5 +447,39 @@ class AdministracionIncidenciasControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(resolucionIncidencias, never()).resolver(any());
+    }
+
+    // Mensajes de error de la resolución (HU192, T395): genéricos, sin detalles internos
+
+    @Test
+    @DisplayName("HU192-CP20: resolver una incidencia ya resuelta responde 409 INCIDENT_ALREADY_RESOLVED")
+    void resolverUnaYaResueltaResponde409() throws Exception {
+        when(resolucionIncidencias.resolver("i-1")).thenThrow(new IncidenciaYaResueltaException());
+
+        resolverComoAdministrador()
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INCIDENT_ALREADY_RESOLVED"))
+                .andExpect(jsonPath("$.mensaje").value("La incidencia ya está resuelta"));
+    }
+
+    @Test
+    @DisplayName("HU192-CP20: abrir una incidencia resuelta responde 409 INCIDENT_ALREADY_RESOLVED")
+    void abrirUnaResueltaResponde409() throws Exception {
+        when(resolucionIncidencias.abrir(anyString(), anyString())).thenThrow(new IncidenciaYaResueltaException());
+
+        abrirComoAdministrador(CUERPO_ABRIR)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INCIDENT_ALREADY_RESOLVED"));
+    }
+
+    @Test
+    @DisplayName("HU192-CP21: resolver una incidencia que no está abierta responde 409 INCIDENT_NOT_OPEN")
+    void resolverUnaQueNoEstaAbiertaResponde409() throws Exception {
+        when(resolucionIncidencias.resolver("i-1")).thenThrow(new IncidenciaNoAbiertaException());
+
+        resolverComoAdministrador()
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INCIDENT_NOT_OPEN"))
+                .andExpect(jsonPath("$.mensaje").value("Solo se puede resolver una incidencia abierta"));
     }
 }

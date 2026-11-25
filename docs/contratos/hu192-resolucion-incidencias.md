@@ -46,6 +46,10 @@ Cuerpo `{mensaje, code}`, sin detalles internos:
 | 401 | — | — | Sin sesión |
 | 403 | `ACCESS_DENIED` | — | La sesión es de un cliente o de un vendedor, o falta el token CSRF |
 | 404 | `INCIDENT_NOT_FOUND` | `La incidencia no existe` | La incidencia no existe (por ejemplo, porque otro administrador la cerró) |
+| 409 | `INCIDENT_ALREADY_RESOLVED` | `La incidencia ya está resuelta` | Ya está resuelta (por ejemplo, porque otro administrador se ha adelantado). También al intentar abrirla |
+| 409 | `INCIDENT_NOT_OPEN` | `Solo se puede resolver una incidencia abierta` | Sigue pendiente |
+
+Ante un 404 o un 409, la vista avisa y vuelve a pedir la página.
 
 ## Cambios en las demás respuestas
 

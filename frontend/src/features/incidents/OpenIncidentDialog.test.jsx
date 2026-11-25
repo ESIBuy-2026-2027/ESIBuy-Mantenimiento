@@ -138,3 +138,23 @@ describe('OpenIncidentDialog (HU50): errores', () => {
     expect(screen.queryByText(/no se ha podido abrir la incidencia/i)).not.toBeInTheDocument()
   })
 })
+
+// Desde la HU192 una incidencia puede estar resuelta: tampoco se abre y la página se actualiza
+describe('OpenIncidentDialog (HU192)', () => {
+  it('HU192-CP26: si la incidencia ya está resuelta (409), lo comunica a la página', async () => {
+    server.use(
+      http.patch(URL_ABRIR, () =>
+        HttpResponse.json({ mensaje: 'La incidencia ya está resuelta', code: 'INCIDENT_ALREADY_RESOLVED' }, { status: 409 }),
+      ),
+    )
+    const user = userEvent.setup()
+    const { onConflict, onOpened } = abrirDialogo()
+
+    await user.type(campoRespuesta(), 'Lo estamos revisando')
+    await user.click(botonAbrir())
+
+    await waitFor(() => expect(onConflict).toHaveBeenCalled())
+    expect(onOpened).not.toHaveBeenCalled()
+    expect(screen.queryByText(/no se ha podido abrir la incidencia/i)).not.toBeInTheDocument()
+  })
+})

@@ -370,3 +370,20 @@ describe('AdminIncidentsPage (PBI 239): filtros, ordenación y detalle', () => {
     await waitFor(async () => expect((await incidencias())[0]).toHaveTextContent('Valoración que no se publica'))
   })
 })
+
+describe('AdminIncidentsPage (HU192): avisos', () => {
+  it('HU192-CP27: los avisos se anuncian en una región viva que ya está en la página', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+    await lista()
+    const region = screen.getByRole('main').querySelector('[aria-live="polite"]')
+    expect(region).toBeEmptyDOMElement()
+
+    await user.click(accion((await incidencias())[0], 'Abrir'))
+    await user.type(screen.getByRole('textbox', { name: /respuesta/i }), 'Lo estamos revisando')
+    await user.click(screen.getByRole('button', { name: 'Abrir incidencia' }))
+
+    await waitFor(() => expect(region).toHaveTextContent('Incidencia abierta.'))
+    expect(screen.getByText('Incidencia abierta.').closest('[aria-live]')).toBe(region)
+  })
+})

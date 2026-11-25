@@ -1,5 +1,14 @@
 import { useCallback, useState } from 'react'
-import { Button, MessageBar, MessageBarActions, MessageBarBody, Spinner, Text, Title1 } from '@fluentui/react-components'
+import {
+  Button,
+  MessageBar,
+  MessageBarActions,
+  MessageBarBody,
+  Spinner,
+  Text,
+  Title1,
+  makeStyles,
+} from '@fluentui/react-components'
 import { ChatWarning24Regular, CheckmarkCircle20Regular, Eye20Regular, Open20Regular } from '@fluentui/react-icons'
 import { getAdminIncidents } from '../api/adminIncidents'
 import EmptyState from '../components/EmptyState'
@@ -15,6 +24,15 @@ import { useApiQuery } from '../hooks/useApiQuery'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
 
 const PAGE_SIZE = 10
+
+// Sin avisos, la región no ocupa sitio ni separación en la página, pero sigue en ella para anunciar el siguiente
+const useStyles = makeStyles({
+  notices: {
+    ':empty': {
+      position: 'absolute',
+    },
+  },
+})
 
 const INCIDENT_STATUS_LABELS = {
   PENDIENTE: 'Pendiente',
@@ -39,6 +57,7 @@ const AVISO_CAMBIADA = {
 // Desde las tarjetas el administrador abre las pendientes con su respuesta y cierra (elimina) cualquiera (HU50).
 export default function AdminIncidentsPage() {
   const styles = usePageStyles()
+  const ownStyles = useStyles()
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [estado, setEstado] = useState('')
@@ -156,11 +175,13 @@ export default function AdminIncidentsPage() {
         </MessageBar>
       )}
 
-      {aviso && (
-        <MessageBar intent={aviso.intent}>
-          <MessageBarBody>{aviso.texto}</MessageBarBody>
-        </MessageBar>
-      )}
+      <div aria-live="polite" className={ownStyles.notices}>
+        {aviso && (
+          <MessageBar intent={aviso.intent}>
+            <MessageBarBody>{aviso.texto}</MessageBarBody>
+          </MessageBar>
+        )}
+      </div>
 
       {!data && !failed && <Spinner className={styles.loading} label="Cargando incidencias…" />}
 

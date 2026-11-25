@@ -4959,6 +4959,14 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 | HU192-CP17 | Resolver una incidencia que no existe responde 404 `INCIDENT_NOT_FOUND` | Controlador | 1 | 🔍 En revisión (1, AB#513, PR pendiente) |
 | HU192-CP18 | Solo el administrador resuelve incidencias; cliente y vendedor reciben 403 y sin sesión se rechaza. Seguridad en la capa de negocio | Unitario con Spring Security (sin MongoDB) | 4 | 🔍 En revisión (4, AB#419, PR pendiente) |
 | HU192-CP19 | Sin sesión resolver responde 401; un cliente o un vendedor, 403 `ACCESS_DENIED`; sin token CSRF, 403 | Controlador | 3 | 🔍 En revisión (3, AB#419, PR pendiente) |
+| HU192-CP20 | Resolver o abrir una incidencia ya resuelta responde 409 `INCIDENT_ALREADY_RESOLVED` con un mensaje genérico | Controlador | 2 | 🔍 En revisión (2, AB#395, PR pendiente) |
+| HU192-CP21 | Resolver una incidencia que no está abierta responde 409 `INCIDENT_NOT_OPEN` con un mensaje genérico | Controlador | 1 | 🔍 En revisión (1, AB#395, PR pendiente) |
+| HU192-CP22 | La llamada pide `PATCH /api/admin/incidencias/{id}/resolver` sin cuerpo y los errores llegan con su estado y su código | Frontend (API y mock) | 4 | 🔍 En revisión (4, AB#395, PR pendiente) |
+| HU192-CP23 | El diálogo pide confirmación con el asunto; confirmar resuelve esa incidencia; volver no envía nada | Frontend (componente) | 3 | 🔍 En revisión (3, AB#395, PR pendiente) |
+| HU192-CP24 | Mientras resuelve, el diálogo muestra el estado de carga, no repite la petición y no se puede cerrar | Frontend (componente) | 1 | 🔍 En revisión (1, AB#395, PR pendiente) |
+| HU192-CP25 | Un fallo o la falta de permiso se anuncian con un mensaje genérico; si la incidencia ha cambiado, se comunica a la página | Frontend (componente) | 3 | 🔍 En revisión (3, AB#395, PR pendiente) |
+| HU192-CP26 | Abrir una incidencia que ya está resuelta se comunica a la página como un cambio de otro administrador | Frontend (componente) | 1 | 🔍 En revisión (1, AB#395, PR pendiente) |
+| HU192-CP27 | Los avisos de la supervisión se anuncian en una región viva que ya está en la página | Frontend (página) | 1 | 🔍 En revisión (1, AB#395, PR pendiente) |
 
 Notas:
 - **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** los propone el desarrollo a partir de los criterios del PBI 192 y no salen de Azure Boards. La HU se identifica con el número del PBI (192). Rama `feature/marcar-incidencia-resuelta`.
@@ -4967,6 +4975,7 @@ Notas:
 - **Solo desde `ABIERTA` (decisión del desarrollo, 25/11/2026):** una pendiente se abre antes (HU50), para que su autor tenga una respuesta.
 - **Sin cambiar la validación de MongoDB (decisión del desarrollo, 25/11/2026):** una resuelta se guarda como `ABIERTA` con `fechaResolucion` (CP10 a CP14).
 - **T419 (AB#419, RBAC):** CP18 comprueba el `@PreAuthorize` del servicio (se verificó el rojo quitando la anotación) y CP19 la regla `/api/admin/**` de `SecurityConfig`. El ID AB#419 aparece también en la HU44 con otro significado: revisar en Azure Boards.
+- **T395 (AB#395, mensajería):** 409 `INCIDENT_ALREADY_RESOLVED` e `INCIDENT_NOT_OPEN` en `ManejadorGlobalErrores`; en el frontend, `resolveIncident`, el mock, `ResolveIncidentDialog` con los mensajes de error y el conflicto en `OpenIncidentDialog` y la región viva de los avisos (CP20 a CP27).
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -5004,6 +5013,22 @@ Notas:
 | HU192-CP19 | `AdministracionIncidenciasControllerTest` | `HU192-CP19: sin sesión resolver responde 401` | Infraestructura (web) | AB#419 | PR pendiente | 🔍 |
 | HU192-CP19 | `AdministracionIncidenciasControllerTest` | `HU192-CP19: un cliente o un vendedor que intentan resolver reciben 403 ACCESS_DENIED` (parametrizado) | Infraestructura (web) | AB#419 | PR pendiente | 🔍 |
 | HU192-CP19 | `AdministracionIncidenciasControllerTest` | `HU192-CP19: sin el token CSRF resolver responde 403 y no llega al caso de uso` | Infraestructura (web) | AB#419 | PR pendiente | 🔍 |
+| HU192-CP20 | `AdministracionIncidenciasControllerTest` | `HU192-CP20: resolver una incidencia ya resuelta responde 409 INCIDENT_ALREADY_RESOLVED` | Infraestructura (web) | AB#395 | PR pendiente | 🔍 |
+| HU192-CP20 | `AdministracionIncidenciasControllerTest` | `HU192-CP20: abrir una incidencia resuelta responde 409 INCIDENT_ALREADY_RESOLVED` | Infraestructura (web) | AB#395 | PR pendiente | 🔍 |
+| HU192-CP21 | `AdministracionIncidenciasControllerTest` | `HU192-CP21: resolver una incidencia que no está abierta responde 409 INCIDENT_NOT_OPEN` | Infraestructura (web) | AB#395 | PR pendiente | 🔍 |
+| HU192-CP22 | `adminIncidents.test.js` | `HU192-CP22: pide PATCH /api/admin/incidencias/{id}/resolver sin cuerpo y devuelve la incidencia resuelta` | Frontend · API | AB#395 | PR pendiente | 🔍 |
+| HU192-CP22 | `adminIncidents.test.js` | `HU192-CP22: el mock resuelve una abierta con su fecha y no la resuelve dos veces` | Frontend · API | AB#395 | PR pendiente | 🔍 |
+| HU192-CP22 | `adminIncidents.test.js` | `HU192-CP22: el mock rechaza resolver %s` (parametrizado) | Frontend · API | AB#395 | PR pendiente | 🔍 |
+| HU192-CP22 | `adminIncidents.test.js` | `HU192-CP22: el mock responde 403 ACCESS_DENIED a quien no es administrador` | Frontend · API | AB#395 | PR pendiente | 🔍 |
+| HU192-CP23 | `ResolveIncidentDialog.test.jsx` | `HU192-CP23: pide confirmación con el asunto y avisa de que no se puede deshacer` | Frontend · componente | AB#395 | PR pendiente | 🔍 |
+| HU192-CP23 | `ResolveIncidentDialog.test.jsx` | `HU192-CP23: al confirmar resuelve esa incidencia y entrega la resuelta` | Frontend · componente | AB#395 | PR pendiente | 🔍 |
+| HU192-CP23 | `ResolveIncidentDialog.test.jsx` | `HU192-CP23: al volver no envía nada` | Frontend · componente | AB#395 | PR pendiente | 🔍 |
+| HU192-CP24 | `ResolveIncidentDialog.test.jsx` | `HU192-CP24: mientras resuelve muestra la carga, no repite la petición y no se puede cerrar` | Frontend · componente | AB#395 | PR pendiente | 🔍 |
+| HU192-CP25 | `ResolveIncidentDialog.test.jsx` | `HU192-CP25: si no se puede resolver lo anuncia sin detalles internos y permite reintentar` | Frontend · componente | AB#395 | PR pendiente | 🔍 |
+| HU192-CP25 | `ResolveIncidentDialog.test.jsx` | `HU192-CP25: sin permiso (403) lo anuncia` | Frontend · componente | AB#395 | PR pendiente | 🔍 |
+| HU192-CP25 | `ResolveIncidentDialog.test.jsx` | `HU192-CP25: si la incidencia %s, lo comunica a la página con su código` (parametrizado) | Frontend · componente | AB#395 | PR pendiente | 🔍 |
+| HU192-CP26 | `OpenIncidentDialog.test.jsx` | `HU192-CP26: si la incidencia ya está resuelta (409), lo comunica a la página` | Frontend · componente | AB#395 | PR pendiente | 🔍 |
+| HU192-CP27 | `AdminIncidentsPage.test.jsx` | `HU192-CP27: los avisos se anuncian en una región viva que ya está en la página` | Frontend · página | AB#395 | PR pendiente | 🔍 |
 
 Rutas de las clases de test:
 - `IncidenciaTest`: `backend/src/test/java/es/uclm/esibuy/backend/incidencias/domain/model/`
@@ -5012,6 +5037,10 @@ Rutas de las clases de test:
 - `IncidenciaMongoAdapterTest`: `backend/src/test/java/es/uclm/esibuy/backend/incidencias/infrastructure/adapter/out/persistence/`
 - `AdministracionIncidenciasControllerTest`: `backend/src/test/java/es/uclm/esibuy/backend/incidencias/infrastructure/adapter/in/web/`
 - `SeguridadIncidenciasServiceTest`: `backend/src/test/java/es/uclm/esibuy/backend/incidencias/application/service/`
+- `adminIncidents.test.js`: `frontend/src/api/`
+- `ResolveIncidentDialog.test.jsx`: `frontend/src/features/incidents/`
+- `OpenIncidentDialog.test.jsx`: `frontend/src/features/incidents/`
+- `AdminIncidentsPage.test.jsx`: `frontend/src/pages/`
 
 ---
 
