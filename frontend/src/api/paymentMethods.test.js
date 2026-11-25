@@ -6,6 +6,7 @@ import {
   addPaymentMethod,
   deletePaymentMethod,
   getPaymentMethods,
+  updatePaymentMethod,
   setDefaultPaymentMethod,
 } from './paymentMethods'
 
@@ -50,6 +51,24 @@ describe('api de métodos de pago', () => {
 
     expect(peticion.cuerpo).toEqual(tarjeta)
     expect(creado).toEqual(METODOS[0])
+  })
+
+  it('HU6: updatePaymentMethod sustituye los datos con un PUT a /{id}', async () => {
+    const peticion = {}
+    server.use(
+      http.put(`${URL_METODOS}/:id`, async ({ params, request }) => {
+        peticion.id = params.id
+        peticion.cuerpo = await request.json()
+        return HttpResponse.json(METODOS[0])
+      }),
+    )
+    const datos = { tipo: 'BIZUM', telefonoBizum: '612345678' }
+
+    const respuesta = await updatePaymentMethod('m1', datos)
+
+    expect(peticion.id).toBe('m1')
+    expect(peticion.cuerpo).toEqual(datos)
+    expect(respuesta).toEqual(METODOS[0])
   })
 
   it('HU6-CP25: setDefaultPaymentMethod marca el método con un PUT a /{id}/default', async () => {
