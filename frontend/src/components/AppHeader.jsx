@@ -117,8 +117,84 @@ const useStyles = makeStyles({
   compactItem: {
     [MEDIO]: { minWidth: 'auto', paddingLeft: tokens.spacingHorizontalS, paddingRight: tokens.spacingHorizontalS },
   },
+  navAction: {
+    minHeight: '40px',
+    paddingLeft: tokens.spacingHorizontalM,
+    paddingRight: tokens.spacingHorizontalM,
+    borderRadius: tokens.borderRadiusCircular,
+    color: '#713512',
+    backgroundColor: 'transparent',
+    transitionProperty: 'background-color, color, box-shadow',
+    transitionDuration: tokens.durationFaster,
+    ':hover': {
+      color: '#B54708',
+      backgroundColor: '#FCE8D5',
+    },
+    ':active': {
+      color: '#963B08',
+      backgroundColor: '#F8D7B8',
+    },
+  },
+  profileTrigger: {
+    minHeight: '40px',
+    paddingLeft: tokens.spacingHorizontalM,
+    paddingRight: tokens.spacingHorizontalM,
+    borderRadius: tokens.borderRadiusCircular,
+    color: '#713512',
+    backgroundColor: '#FFF1E3',
+    border: '1px solid #F4D1B3',
+    ':hover': {
+      color: '#A83F08',
+      backgroundColor: '#FCE4CC',
+      borderColor: '#EFAE79',
+    },
+    ':active': {
+      backgroundColor: '#F8D7B8',
+    },
+  },
   accountMenu: {
-    minWidth: '220px',
+    minWidth: '230px',
+    padding: tokens.spacingVerticalXS,
+    backgroundColor: '#FFFCF8',
+    border: '1px solid #F1D5BF',
+    borderRadius: tokens.borderRadiusXLarge,
+    boxShadow: '0 10px 28px rgba(124, 45, 18, 0.16)',
+  },
+  accountMenuList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '3px',
+  },
+  accountMenuItem: {
+    minHeight: '40px',
+    paddingLeft: tokens.spacingHorizontalM,
+    paddingRight: tokens.spacingHorizontalM,
+    borderRadius: tokens.borderRadiusMedium,
+    color: '#65432F',
+    ':hover': {
+      color: '#9A4514',
+      backgroundColor: '#FCEBDD',
+    },
+    ':focus': {
+      backgroundColor: '#FCEBDD',
+    },
+  },
+  signOutMenuItem: {
+    marginTop: tokens.spacingVerticalXS,
+    borderTop: '1px solid #F1D5BF',
+    borderRadius: tokens.borderRadiusMedium,
+    color: '#B42318',
+    ':hover': {
+      color: '#912018',
+      backgroundColor: '#FEE4E2',
+    },
+    ':focus': {
+      color: '#912018',
+      backgroundColor: '#FEE4E2',
+    },
+    '& svg': {
+      color: '#B42318',
+    },
   },
 })
 
@@ -132,7 +208,7 @@ function NavLink({ to, icon, compact = false, children }) {
       appearance="subtle"
       icon={icon}
       title={compact ? children : undefined}
-      className={mergeClasses(styles.item, compact && styles.compactItem)}
+      className={mergeClasses(styles.item, styles.navAction, compact && styles.compactItem)}
     >
       <span className={compact ? styles.compactLabel : undefined}>{children}</span>
     </LinkButton>
@@ -175,19 +251,19 @@ function ClientMenu({ compact, onSignOut, disabled }) {
           appearance="subtle"
           icon={<Person20Regular />}
           title={compact ? 'Mi perfil' : undefined}
-          className={mergeClasses(styles.item, compact && styles.compactItem)}
+          className={mergeClasses(styles.item, styles.profileTrigger, compact && styles.compactItem)}
         >
           <span className={compact ? styles.compactLabel : undefined}>Mi perfil</span>
         </Button>
       </MenuTrigger>
       <MenuPopover className={styles.accountMenu}>
-        <MenuList>
+        <MenuList className={styles.accountMenuList}>
           {enlaces.map(([to, icon, label]) => (
-            <MenuItem key={to} icon={icon} onClick={() => navigate(to)}>
+            <MenuItem key={to} className={styles.accountMenuItem} icon={icon} onClick={() => navigate(to)}>
               {label}
             </MenuItem>
           ))}
-          <MenuItem icon={<ArrowExit20Regular />} disabled={disabled} onClick={onSignOut}>
+          <MenuItem className={mergeClasses(styles.accountMenuItem, styles.signOutMenuItem)} icon={<ArrowExit20Regular />} disabled={disabled} onClick={onSignOut}>
             Cerrar sesión
           </MenuItem>
         </MenuList>
