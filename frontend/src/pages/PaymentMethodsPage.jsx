@@ -62,9 +62,15 @@ const useStyles = makeStyles({
   },
   methodActions: {
     display: 'flex',
+    flexWrap: 'wrap',
     alignItems: 'center',
+    justifyContent: 'flex-end',
     gap: tokens.spacingHorizontalS,
+    flexBasis: '100%',
+    width: '100%',
     marginLeft: 'auto',
+    paddingTop: tokens.spacingVerticalXS,
+    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
   },
   action: {
     display: 'flex',
