@@ -60,7 +60,7 @@ export function validateProduct(values) {
   if (!values.categoriaId) errors.categoriaId = 'Elige una categoría.'
 
   if (!price) errors.precio = 'Introduce el precio.'
-  else if (!/^\\d+(?:[.,]\\d{1,2})?$/.test(price) || Number(price.replace(',', '.')) <= 0) {
+  else if (!/^\d+(?:[.,]\d{1,2})?$/.test(price) || Number(price.replace(',', '.')) <= 0) {
     errors.precio = 'El precio debe ser un número mayor que 0 y puede tener hasta dos decimales.'
   }
 
