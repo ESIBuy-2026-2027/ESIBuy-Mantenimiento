@@ -351,4 +351,69 @@ class AdministracionIncidenciasControllerTest {
 
         verify(resolucionIncidencias, never()).cerrar(any());
     }
+
+    // Resolver una incidencia (HU192, T513): PATCH /api/admin/incidencias/{id}/resolver, sin cuerpo: la fecha de
+    // resolución la pone el sistema
+
+    private static final String URL_RESOLVER = URL + "/i-1/resolver";
+
+    private static Incidencia resuelta() {
+        return new Incidencia("i-1", "c-1", "No me llega el pedido", "Lo pedi hace una semana",
+                EstadoIncidencia.RESUELTA, "Lo estamos revisando", AHORA, Instant.parse("2026-11-25T12:00:00Z"));
+    }
+
+    private ResultActions resolverComoAdministrador() throws Exception {
+        return mockMvc.perform(patch(URL_RESOLVER).with(user(ADMINISTRADOR).roles("ADMINISTRADOR")).with(csrf()));
+    }
+
+    @Test
+    @DisplayName("HU192-CP15: resolver responde 200 con la incidencia resuelta y su fecha, sin el id del autor")
+    void resolverResponde200ConLaIncidenciaResuelta() throws Exception {
+        when(resolucionIncidencias.resolver("i-1")).thenReturn(resuelta());
+
+        resolverComoAdministrador()
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("i-1"))
+                .andExpect(jsonPath("$.estado").value("RESUELTA"))
+                .andExpect(jsonPath("$.fechaResolucion").value("2026-11-25T12:00:00Z"))
+                .andExpect(jsonPath("$.respuesta").value("Lo estamos revisando"))
+                .andExpect(jsonPath("$.autorId").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("HU192-CP15: la supervisión devuelve la fecha de resolución, vacía si no está resuelta")
+    void laSupervisionDevuelveLaFechaDeResolucion() throws Exception {
+        when(supervisionIncidencias.consultarTodas(0, 10)).thenReturn(new IncidenciaSupervisadaPage(
+                List.of(new IncidenciaSupervisada(resuelta(), CLIENTE), supervisada(CLIENTE)), 0, 10, 2));
+
+        consultarComoAdministrador("")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].fechaResolucion").value("2026-11-25T12:00:00Z"))
+                .andExpect(jsonPath("$.items[1].fechaResolucion").value(nullValue()));
+    }
+
+    @Test
+    @DisplayName("HU192-CP16: una fecha de resolución enviada por el cliente se ignora")
+    void laFechaDelClienteSeIgnora() throws Exception {
+        when(resolucionIncidencias.resolver("i-1")).thenReturn(resuelta());
+
+        mockMvc.perform(patch(URL_RESOLVER).with(user(ADMINISTRADOR).roles("ADMINISTRADOR")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fechaResolucion\": \"2000-01-01T00:00:00Z\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fechaResolucion").value("2026-11-25T12:00:00Z"));
+
+        verify(resolucionIncidencias).resolver("i-1");
+    }
+
+    @Test
+    @DisplayName("HU192-CP17: resolver una incidencia que no existe responde 404 INCIDENT_NOT_FOUND")
+    void resolverUnaQueNoExisteResponde404() throws Exception {
+        when(resolucionIncidencias.resolver("i-1")).thenThrow(new IncidenciaNoEncontradaException());
+
+        resolverComoAdministrador()
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("INCIDENT_NOT_FOUND"))
+                .andExpect(jsonPath("$.mensaje").value("La incidencia no existe"));
+    }
 }

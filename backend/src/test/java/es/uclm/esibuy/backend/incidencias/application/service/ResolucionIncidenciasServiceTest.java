@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.incidencias.application.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -14,12 +15,15 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import es.uclm.esibuy.backend.incidencias.application.port.out.IncidenciaRepositoryPort;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaInvalidaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaNoAbiertaException;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaNoEncontradaException;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaYaAbiertaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaYaResueltaException;
 import es.uclm.esibuy.backend.incidencias.domain.model.EstadoIncidencia;
 import es.uclm.esibuy.backend.incidencias.domain.model.Incidencia;
 import es.uclm.esibuy.backend.incidencias.domain.model.IncidenciaPage;
@@ -51,6 +55,8 @@ class ResolucionIncidenciasServiceTest {
         private int guardados;
         private int eliminados;
         private int resoluciones;
+        // Lo que hace otro administrador justo antes de que se registre la resolución
+        private Runnable antesDeRegistrar = () -> { };
 
         void preparar(Incidencia incidencia) {
             incidencias.put(incidencia.id(), incidencia);
@@ -98,6 +104,7 @@ class ResolucionIncidenciasServiceTest {
         // Como el adaptador real: solo registra la resolución de una incidencia que sigue abierta
         @Override
         public boolean registrarResolucion(Incidencia resuelta) {
+            antesDeRegistrar.run();
             Incidencia actual = incidencias.get(resuelta.id());
             if (actual == null || actual.estado() != EstadoIncidencia.ABIERTA) {
                 return false;
@@ -174,5 +181,70 @@ class ResolucionIncidenciasServiceTest {
         assertThrows(IncidenciaNoEncontradaException.class, () -> servicio.cerrar("no-existe"));
         assertEquals(0, repositorio.eliminados);
         assertTrue(repositorio.buscarPorId("i-1").isPresent());
+    }
+
+    // Resolver (HU192, T513): la fecha de resolución sale del reloj del servicio y no se sobrescribe
+
+    @Test
+    @DisplayName("HU192-CP06: resolver una incidencia abierta la registra resuelta con la hora del reloj")
+    void resolverLaRegistraConLaHoraDelReloj() {
+        repositorio.preparar(incidencia("i-1", EstadoIncidencia.ABIERTA, "Respuesta"));
+
+        Incidencia resuelta = servicio.resolver("i-1");
+
+        assertEquals(EstadoIncidencia.RESUELTA, resuelta.estado());
+        assertEquals(AHORA, resuelta.fechaResolucion());
+        assertEquals(1, repositorio.resoluciones);
+        assertEquals(resuelta, repositorio.buscarPorId("i-1").orElseThrow());
+    }
+
+    @Test
+    @DisplayName("HU192-CP07: resolver una incidencia que no existe se rechaza sin registrar nada")
+    void resolverUnaIncidenciaQueNoExisteSeRechaza() {
+        assertThrows(IncidenciaNoEncontradaException.class, () -> servicio.resolver("no-existe"));
+        assertEquals(0, repositorio.resoluciones);
+        assertEquals(0, repositorio.guardados);
+    }
+
+    @Test
+    @DisplayName("HU192-CP08: resolver una incidencia ya resuelta se rechaza y conserva la fecha original")
+    void resolverUnaYaResueltaConservaLaFechaOriginal() {
+        repositorio.preparar(incidencia("i-1", EstadoIncidencia.RESUELTA, "Respuesta"));
+
+        assertThrows(IncidenciaYaResueltaException.class, () -> servicio.resolver("i-1"));
+        assertEquals(0, repositorio.resoluciones);
+        assertEquals(RESOLUCION_ANTERIOR, repositorio.buscarPorId("i-1").orElseThrow().fechaResolucion());
+    }
+
+    @Test
+    @DisplayName("HU192-CP08: resolver una incidencia pendiente se rechaza y sigue pendiente")
+    void resolverUnaPendienteSeRechaza() {
+        repositorio.preparar(incidencia("i-1", EstadoIncidencia.PENDIENTE, ""));
+
+        assertThrows(IncidenciaNoAbiertaException.class, () -> servicio.resolver("i-1"));
+        assertEquals(0, repositorio.resoluciones);
+        assertNull(repositorio.buscarPorId("i-1").orElseThrow().fechaResolucion());
+    }
+
+    @Test
+    @DisplayName("HU192-CP09: si otro administrador la resuelve a la vez, se rechaza y queda la primera fecha")
+    void siOtroLaResuelveALaVezSeRechaza() {
+        repositorio.preparar(incidencia("i-1", EstadoIncidencia.ABIERTA, "Respuesta"));
+        repositorio.antesDeRegistrar =
+                () -> repositorio.preparar(incidencia("i-1", EstadoIncidencia.RESUELTA, "Respuesta"));
+
+        assertThrows(IncidenciaYaResueltaException.class, () -> servicio.resolver("i-1"));
+        assertEquals(RESOLUCION_ANTERIOR, repositorio.buscarPorId("i-1").orElseThrow().fechaResolucion());
+    }
+
+    @Test
+    @DisplayName("HU192-CP09: si otro administrador la cierra a la vez, se responde que no existe y no reaparece")
+    void siOtroLaCierraALaVezNoReaparece() {
+        repositorio.preparar(incidencia("i-1", EstadoIncidencia.ABIERTA, "Respuesta"));
+        repositorio.antesDeRegistrar = () -> repositorio.eliminar("i-1");
+
+        assertThrows(IncidenciaNoEncontradaException.class, () -> servicio.resolver("i-1"));
+        assertTrue(repositorio.buscarPorId("i-1").isEmpty());
+        assertEquals(0, repositorio.guardados);
     }
 }

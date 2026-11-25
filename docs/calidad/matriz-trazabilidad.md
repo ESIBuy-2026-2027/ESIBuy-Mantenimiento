@@ -4934,6 +4934,76 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 
 ---
 
+## HU192 · Marcar incidencia como resuelta
+
+### Tabla A · HU192 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU192-CP01 | Resolver una incidencia abierta la deja `RESUELTA` con su fecha de resolución y conserva el resto de sus datos | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#513, PR pendiente) |
+| HU192-CP02 | Una incidencia ya resuelta no se vuelve a resolver y conserva su fecha | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#513, PR pendiente) |
+| HU192-CP03 | Una incidencia pendiente no se puede resolver sin abrirla antes | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#513, PR pendiente) |
+| HU192-CP04 | La incidencia tiene fecha de resolución si, y solo si, está resuelta | Unitario (dominio) | 2 | 🔍 En revisión (2, AB#513, PR pendiente) |
+| HU192-CP05 | Una incidencia resuelta no se vuelve a abrir | Unitario (dominio) | 1 | 🔍 En revisión (1, AB#513, PR pendiente) |
+| HU192-CP06 | El servicio resuelve la incidencia con la hora del reloj del sistema, la registra y la devuelve | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#513, PR pendiente) |
+| HU192-CP07 | Resolver una incidencia que no existe se rechaza sin registrar nada | Unitario (aplicación) | 1 | 🔍 En revisión (1, AB#513, PR pendiente) |
+| HU192-CP08 | Si la incidencia está pendiente o ya resuelta, el servicio no registra nada y conserva la fecha original | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#513, PR pendiente) |
+| HU192-CP09 | Si otro administrador la resuelve o la cierra a la vez, se rechaza sin sobrescribir la fecha ni recrearla | Unitario (aplicación) | 2 | 🔍 En revisión (2, AB#513, PR pendiente) |
+| HU192-CP10 | Una incidencia resuelta se guarda como `ABIERTA` con `fechaResolucion` y se lee como `RESUELTA`; una pendiente con fecha se rechaza | Unitario (mapper) | 3 | 🔍 En revisión (3, AB#513, PR pendiente) |
+| HU192-CP11 | Registrar la resolución guarda la fecha, cumple la validación de la colección y la incidencia se lee resuelta | Integración MongoDB | 1 | 🔍 En revisión (1, AB#513, PR pendiente) |
+| HU192-CP12 | El registro no sobrescribe una fecha anterior, no resuelve una pendiente ni recrea una incidencia eliminada | Integración MongoDB | 2 | 🔍 En revisión (2, AB#513, PR pendiente) |
+| HU192-CP13 | Filtrar por estado (con y sin búsqueda) separa las resueltas de las abiertas | Integración MongoDB | 2 | 🔍 En revisión (2, AB#513, PR pendiente) |
+| HU192-CP14 | Ordenar por estado no mezcla las abiertas con las resueltas | Integración MongoDB | 1 | 🔍 En revisión (1, AB#513, PR pendiente) |
+| HU192-CP15 | `PATCH /api/admin/incidencias/{id}/resolver` responde 200 con la incidencia resuelta y su fecha; la supervisión devuelve `fechaResolucion` | Controlador | 2 | 🔍 En revisión (2, AB#513, PR pendiente) |
+| HU192-CP16 | Una fecha de resolución enviada por el cliente HTTP se ignora | Controlador | 1 | 🔍 En revisión (1, AB#513, PR pendiente) |
+| HU192-CP17 | Resolver una incidencia que no existe responde 404 `INCIDENT_NOT_FOUND` | Controlador | 1 | 🔍 En revisión (1, AB#513, PR pendiente) |
+
+Notas:
+- **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** los propone el desarrollo a partir de los criterios del PBI 192 y no salen de Azure Boards. La HU se identifica con el número del PBI (192). Rama `feature/marcar-incidencia-resuelta`.
+- **T512 (AB#512, endpoint de resolución):** `EstadoIncidencia.RESUELTA`, `fechaResolucion` e `Incidencia.resolver` en el dominio; `ResolucionIncidenciasUseCase.resolver` con `Clock` inyectado y `@PreAuthorize(SOLO_ADMINISTRADOR)`; `IncidenciaRepositoryPort.registrarResolucion` (actualización condicionada) y `PATCH /api/admin/incidencias/{id}/resolver`. Contrato en `docs/contratos/hu192-resolucion-incidencias.md`.
+- **T513 (AB#513, pruebas de la resolución):** casos HU192-CP01 a CP17, escritos antes que la implementación (rojo: no compilaban) (TDD).
+- **Solo desde `ABIERTA` (decisión del desarrollo, 25/11/2026):** una pendiente se abre antes (HU50), para que su autor tenga una respuesta.
+- **Sin cambiar la validación de MongoDB (decisión del desarrollo, 25/11/2026):** una resuelta se guarda como `ABIERTA` con `fechaResolucion` (CP10 a CP14).
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU192-CP01 | `IncidenciaTest` | `HU192-CP01: resolver una incidencia abierta la deja resuelta con su fecha de resolución` | Dominio | AB#513 | PR pendiente | 🔍 |
+| HU192-CP02 | `IncidenciaTest` | `HU192-CP02: una incidencia ya resuelta no se vuelve a resolver y conserva su fecha` | Dominio | AB#513 | PR pendiente | 🔍 |
+| HU192-CP03 | `IncidenciaTest` | `HU192-CP03: una incidencia pendiente no se puede resolver sin abrirla antes` | Dominio | AB#513 | PR pendiente | 🔍 |
+| HU192-CP04 | `IncidenciaTest` | `HU192-CP04: tiene fecha de resolución si, y solo si, la incidencia está resuelta` (parametrizado) | Dominio | AB#513 | PR pendiente | 🔍 |
+| HU192-CP04 | `IncidenciaTest` | `HU192-CP04: resolver sin fecha de resolución se rechaza` | Dominio | AB#513 | PR pendiente | 🔍 |
+| HU192-CP05 | `IncidenciaTest` | `HU192-CP05: una incidencia resuelta no se vuelve a abrir` | Dominio | AB#513 | PR pendiente | 🔍 |
+| HU192-CP06 | `ResolucionIncidenciasServiceTest` | `HU192-CP06: resolver una incidencia abierta la registra resuelta con la hora del reloj` | Aplicación | AB#513 | PR pendiente | 🔍 |
+| HU192-CP07 | `ResolucionIncidenciasServiceTest` | `HU192-CP07: resolver una incidencia que no existe se rechaza sin registrar nada` | Aplicación | AB#513 | PR pendiente | 🔍 |
+| HU192-CP08 | `ResolucionIncidenciasServiceTest` | `HU192-CP08: resolver una incidencia ya resuelta se rechaza y conserva la fecha original` | Aplicación | AB#513 | PR pendiente | 🔍 |
+| HU192-CP08 | `ResolucionIncidenciasServiceTest` | `HU192-CP08: resolver una incidencia pendiente se rechaza y sigue pendiente` | Aplicación | AB#513 | PR pendiente | 🔍 |
+| HU192-CP09 | `ResolucionIncidenciasServiceTest` | `HU192-CP09: si otro administrador la resuelve a la vez, se rechaza y queda la primera fecha` | Aplicación | AB#513 | PR pendiente | 🔍 |
+| HU192-CP09 | `ResolucionIncidenciasServiceTest` | `HU192-CP09: si otro administrador la cierra a la vez, se responde que no existe y no reaparece` | Aplicación | AB#513 | PR pendiente | 🔍 |
+| HU192-CP10 | `IncidenciaDocumentMapperTest` | `HU192-CP10: una incidencia resuelta se guarda con su fecha y se lee como resuelta` | Infraestructura · persistencia | AB#513 | PR pendiente | 🔍 |
+| HU192-CP10 | `IncidenciaDocumentMapperTest` | `HU192-CP10: una incidencia sin resolver se guarda sin fecha de resolución` | Infraestructura · persistencia | AB#513 | PR pendiente | 🔍 |
+| HU192-CP10 | `IncidenciaDocumentMapperTest` | `HU192-CP10: un documento pendiente con fecha de resolución se rechaza al leerlo` | Infraestructura · persistencia | AB#513 | PR pendiente | 🔍 |
+| HU192-CP11 | `IncidenciaMongoAdapterTest` | `HU192-CP11: registrar la resolución guarda la fecha y la incidencia se lee como resuelta` | Infraestructura · persistencia | AB#513 | PR pendiente | 🔍 |
+| HU192-CP12 | `IncidenciaMongoAdapterTest` | `HU192-CP12: registrar otra vez la resolución no sobrescribe la fecha original` | Infraestructura · persistencia | AB#513 | PR pendiente | 🔍 |
+| HU192-CP12 | `IncidenciaMongoAdapterTest` | `HU192-CP12: no se registra la resolución de una incidencia pendiente ni se recrea una eliminada` | Infraestructura · persistencia | AB#513 | PR pendiente | 🔍 |
+| HU192-CP13 | `IncidenciaMongoAdapterTest` | `HU192-CP13: filtrar por estado separa las incidencias resueltas de las abiertas` | Infraestructura · persistencia | AB#513 | PR pendiente | 🔍 |
+| HU192-CP13 | `IncidenciaMongoAdapterTest` | `HU192-CP13: la búsqueda por asunto también separa las resueltas de las abiertas` | Infraestructura · persistencia | AB#513 | PR pendiente | 🔍 |
+| HU192-CP14 | `IncidenciaMongoAdapterTest` | `HU192-CP14: ordenar por estado agrupa las abiertas y las resueltas sin mezclarlas` | Infraestructura · persistencia | AB#513 | PR pendiente | 🔍 |
+| HU192-CP15 | `AdministracionIncidenciasControllerTest` | `HU192-CP15: resolver responde 200 con la incidencia resuelta y su fecha, sin el id del autor` | Infraestructura (web) | AB#513 | PR pendiente | 🔍 |
+| HU192-CP15 | `AdministracionIncidenciasControllerTest` | `HU192-CP15: la supervisión devuelve la fecha de resolución, vacía si no está resuelta` | Infraestructura (web) | AB#513 | PR pendiente | 🔍 |
+| HU192-CP16 | `AdministracionIncidenciasControllerTest` | `HU192-CP16: una fecha de resolución enviada por el cliente se ignora` | Infraestructura (web) | AB#513 | PR pendiente | 🔍 |
+| HU192-CP17 | `AdministracionIncidenciasControllerTest` | `HU192-CP17: resolver una incidencia que no existe responde 404 INCIDENT_NOT_FOUND` | Infraestructura (web) | AB#513 | PR pendiente | 🔍 |
+
+Rutas de las clases de test:
+- `IncidenciaTest`: `backend/src/test/java/es/uclm/esibuy/backend/incidencias/domain/model/`
+- `ResolucionIncidenciasServiceTest`: `backend/src/test/java/es/uclm/esibuy/backend/incidencias/application/service/`
+- `IncidenciaDocumentMapperTest`: `backend/src/test/java/es/uclm/esibuy/backend/incidencias/infrastructure/adapter/out/persistence/`
+- `IncidenciaMongoAdapterTest`: `backend/src/test/java/es/uclm/esibuy/backend/incidencias/infrastructure/adapter/out/persistence/`
+- `AdministracionIncidenciasControllerTest`: `backend/src/test/java/es/uclm/esibuy/backend/incidencias/infrastructure/adapter/in/web/`
+
+---
+
 ## Tests técnicos sin caso de prueba
 
 Tests que no validan una HU concreta.

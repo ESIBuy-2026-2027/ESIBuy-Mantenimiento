@@ -68,4 +68,41 @@ class IncidenciaDocumentMapperTest {
 
         assertThrows(IncidenciaInvalidaException.class, () -> mapper.aDominio(documento));
     }
+
+    // Resolución (HU192, T513): la validación de la colección solo admite PENDIENTE y ABIERTA, así que una incidencia
+    // resuelta se guarda como ABIERTA con su fechaResolucion, y esa fecha es la que la distingue al leerla.
+
+    @Test
+    @DisplayName("HU192-CP10: una incidencia resuelta se guarda con su fecha y se lee como resuelta")
+    void unaIncidenciaResueltaSeGuardaConSuFechaYSeLeeResuelta() {
+        Instant resolucion = Instant.parse("2026-11-25T12:00:00Z");
+        Incidencia resuelta = new Incidencia("i-1", "u-1", "Asunto", "Descripción", EstadoIncidencia.RESUELTA,
+                "Respuesta", AHORA, resolucion);
+
+        IncidenciaDocument documento = mapper.aDocumento(resuelta);
+
+        assertEquals("ABIERTA", documento.getEstado());
+        assertEquals(resolucion, documento.getFechaResolucion());
+        assertEquals(resuelta, mapper.aDominio(documento));
+    }
+
+    @Test
+    @DisplayName("HU192-CP10: una incidencia sin resolver se guarda sin fecha de resolución")
+    void unaIncidenciaSinResolverSeGuardaSinFecha() {
+        Incidencia abierta = Incidencia.nueva("u-1", "Asunto", "Descripción", AHORA).abrir("Respuesta");
+
+        IncidenciaDocument documento = mapper.aDocumento(abierta);
+
+        assertNull(documento.getFechaResolucion());
+        assertEquals(EstadoIncidencia.ABIERTA, mapper.aDominio(documento).estado());
+    }
+
+    @Test
+    @DisplayName("HU192-CP10: un documento pendiente con fecha de resolución se rechaza al leerlo")
+    void unDocumentoPendienteConFechaDeResolucionSeRechaza() {
+        IncidenciaDocument documento = mapper.aDocumento(Incidencia.nueva("u-1", "Asunto", "Descripción", AHORA));
+        documento.setFechaResolucion(AHORA);
+
+        assertThrows(IncidenciaInvalidaException.class, () -> mapper.aDominio(documento));
+    }
 }
