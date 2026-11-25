@@ -148,6 +148,12 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         if (query.categoriaId() != null && !query.categoriaId().isBlank()) {
             filtros.add(Criteria.where(CAMPO_CATEGORIA_ID).is(query.categoriaId()));
         }
+        if (query.precioMinimo() != null) {
+            filtros.add(Criteria.where(CAMPO_PRECIO).gte(query.precioMinimo()));
+        }
+        if (query.precioMaximo() != null) {
+            filtros.add(Criteria.where(CAMPO_PRECIO).lte(query.precioMaximo()));
+        }
         // Media de las valoraciones (HU13): un producto sin valoraciones no tiene el
         // campo y no llega a ningún mínimo
         if (query.valoracionMinima() != null) {
