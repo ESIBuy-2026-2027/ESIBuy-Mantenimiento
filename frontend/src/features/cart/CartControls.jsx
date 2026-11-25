@@ -94,7 +94,7 @@ export default function CartControls({ product }) {
           <div className={styles.addButton}>
             <AddToCartButton product={product} quantity={Math.min(quantity, product.stock)} size="small" fullWidth />
           </div>
-        </>
+        </div>
       ) : (
         <>
           <Text size={200}>En tu carrito: {inCart}</Text>
