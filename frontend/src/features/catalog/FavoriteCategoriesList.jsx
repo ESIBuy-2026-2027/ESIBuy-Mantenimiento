@@ -100,7 +100,7 @@ export default function FavoriteCategoriesList() {
         <EmptyState
           icon={<Heart24Regular />}
           title="Aún no tienes categorías favoritas"
-          description="Entra en un producto y pulsa «Añadir a favoritas» junto a su categoría."
+          description="Entra en un producto y pulsa su categoría para añadirla."
         >
           <LinkButton to={PATHS.PRODUCTS} appearance="primary">
             Ver los productos

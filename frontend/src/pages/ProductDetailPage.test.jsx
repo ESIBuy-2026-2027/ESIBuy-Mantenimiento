@@ -944,4 +944,29 @@ describe('ProductDetailPage (AB#528): categoría favorita', () => {
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: QUITAR })).toBeEnabled()
   })
+
+  it('HU528-CP42: la categoría es una pastilla que se marca al pulsarla, distinta del corazón del producto', async () => {
+    responderCon()
+    const user = userEvent.setup()
+    await abrirDetalle()
+
+    const pastilla = await screen.findByRole('button', { name: ANADIR })
+    expect(pastilla).toHaveTextContent(/^Tecnología$/)
+    expect(pastilla).toHaveAttribute('title', 'Añadir a tus categorías favoritas')
+    expect(pastilla).toHaveAttribute('data-marcada', 'false')
+    await user.click(pastilla)
+
+    const marcada = await screen.findByRole('button', { name: QUITAR })
+    expect(marcada).toHaveTextContent(/^Tecnología$/)
+    expect(marcada).toHaveAttribute('title', 'Quitar de tus categorías favoritas')
+    expect(marcada).toHaveAttribute('data-marcada', 'true')
+  })
+
+  it('HU528-CP42: si la categoría no está activa se ve como texto, sin pastilla', async () => {
+    responderCon({ categoriaId: 'cat-9' })
+    await abrirDetalle()
+
+    await screen.findByRole('button', { name: 'Añadir a favoritos' })
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0)
+  })
 })
