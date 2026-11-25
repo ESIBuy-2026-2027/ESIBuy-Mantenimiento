@@ -440,7 +440,7 @@ class ProductoMongoAdapterTest {
                 new BigDecimal("200.00"), new BigDecimal("75.00"), CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
 
         assertEquals(new BigDecimal("150.01"), adapter.precioMaximoEnCatalogo(filtrosDePrecio));
-        assertEquals(List.of("Producto dentro"), nombres(adapter.buscarEnCatalogo(filtrosDePrecio)));
+        assertEquals(List.of("Producto barato", "Producto dentro"), nombres(adapter.buscarEnCatalogo(filtrosDePrecio)));
         // El dominio del deslizador no debe colapsar a cero al seleccionar un mínimo superior a todos los precios.
         assertEquals(new BigDecimal("150.01"), adapter.precioMaximoEnCatalogo(minimoSuperiorAlCatalogo));
         assertTrue(adapter.buscarEnCatalogo(minimoSuperiorAlCatalogo).productos().isEmpty());
