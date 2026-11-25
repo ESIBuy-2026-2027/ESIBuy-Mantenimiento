@@ -26,6 +26,7 @@ import { PREMIUM_BENEFITS } from '../features/premium/premiumBenefits'
 import { TEXTO_AVISO_PREMIUM } from '../features/premium/premiumNotices'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { PATHS } from '../routes/paths'
+import { notifyPremiumStatusChanged } from '../features/premium/premiumEvents'
 
 // Retraso entre la entrada de una tarjeta y la siguiente
 const RETRASO_ENTRADA_MS = 120
@@ -394,6 +395,7 @@ export default function PremiumPage({ embedded = false }) {
     setErrorCancelacion(false)
     try {
       await cancelPremium()
+      notifyPremiumStatusChanged()
       setFaseCancelacion(null)
       profile.retry()
     } catch {
