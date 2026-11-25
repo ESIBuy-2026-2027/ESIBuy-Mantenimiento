@@ -886,6 +886,53 @@ describe('ProductsPage (HU7): ofertas y categorías que se deslizan', () => {
     expect(ofertas).toHaveStyle({ animationPlayState: 'paused' })
   })
 
+  // Las ofertas se repiten para que la cinta no tenga huecos: casi siempre se ve (y se pulsa) una de las repetidas
+  const repetida = async () => {
+    const ofertas = await screen.findByRole('list', { name: /productos en oferta/i })
+    const filas = [...ofertas.querySelectorAll('li[aria-hidden="true"]')]
+    return filas.find((fila) => fila.textContent.includes('Auriculares inalámbricos'))
+  }
+
+  it('HU528-CP41: el corazón y el marcador de una oferta repetida funcionan igual que los de la primera', async () => {
+    const user = userEvent.setup()
+    await abrirCatalogo({ todos: false })
+    const fila = await repetida()
+    const boton = (nombre) => within(fila).getByRole('button', { name: nombre, hidden: true })
+    expect(fila).not.toHaveAttribute('inert')
+
+    await user.click(boton('Añadir Auriculares inalámbricos a favoritos'))
+    await waitFor(() => expect(boton('Quitar Auriculares inalámbricos de favoritos')).toBeEnabled())
+
+    await user.click(boton('Guardar Auriculares inalámbricos en una lista'))
+    expect(screen.getByRole('dialog', { name: 'Guardar en lista de deseos' })).toHaveTextContent('Auriculares inalámbricos')
+  })
+
+  it('HU528-CP41: con el teclado no se entra en las ofertas repetidas', async () => {
+    const user = userEvent.setup()
+    await abrirCatalogo({ todos: false })
+    const fila = await repetida()
+    const controles = () => [...fila.querySelectorAll('a, button')]
+    controles().forEach((control) => expect(control).toHaveAttribute('tabindex', '-1'))
+
+    // También los que aparecen después, al cambiar la tarjeta
+    await user.click(within(fila).getByRole('button', { name: 'Añadir al carrito', hidden: true }))
+    await waitFor(() => expect(fila).toHaveTextContent(/en tu carrito/i))
+    await waitFor(() => controles().forEach((control) => expect(control).toHaveAttribute('tabindex', '-1')))
+  })
+
+  it('HU528-CP41: tras pulsar el corazón y salir con el ratón, la cinta sigue avanzando', async () => {
+    const user = userEvent.setup()
+    await abrirCatalogo({ todos: false })
+    const ofertas = await screen.findByRole('list', { name: /productos en oferta/i })
+    const primera = within(ofertas).getAllByRole('listitem')[0]
+
+    await user.click(within(primera).getByRole('button', { name: /a favoritos$/ }))
+    expect(ofertas).toHaveStyle({ animationPlayState: 'paused' })
+    await user.unhover(ofertas)
+
+    await waitFor(() => expect(ofertas).toHaveStyle({ animationPlayState: 'running' }))
+  })
+
   it('HU7-CP22: si hay menos de tres productos con descuento no se muestra la cinta', async () => {
     server.use(
       http.get('/api/products', ({ request }) => {
