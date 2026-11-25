@@ -47,6 +47,9 @@ const useStyles = makeStyles({
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: tokens.spacingHorizontalL,
+    minHeight: '104px',
+    padding: tokens.spacingHorizontalM,
+    boxSizing: 'border-box',
   },
   icon: {
     flexShrink: 0,
@@ -66,8 +69,13 @@ const useStyles = makeStyles({
   action: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     gap: tokens.spacingVerticalXS,
+    minHeight: '40px',
+  },
+  addButton: {
+    minHeight: '40px',
+    minWidth: '170px',
   },
   limit: {
     color: tokens.colorNeutralForeground3,
@@ -132,9 +140,8 @@ export default function PaymentMethodsPage({ embedded = false }) {
           </SectionTitle>
           <Text className={pageStyles.subtitle}>Gestiona las tarjetas y cuentas con las que pagas tus compras.</Text>
         </div>
-        {metodos?.length > 0 && (
-          <div className={styles.action}>
-            <Button appearance="primary" icon={<Add20Regular />} disabled={limiteAlcanzado} onClick={abrirPanel}>
+        <div className={styles.action}>
+            <Button className={styles.addButton} appearance="primary" icon={<Add20Regular />} disabled={limiteAlcanzado} onClick={abrirPanel}>
               Añadir método de pago
             </Button>
             {limiteAlcanzado && (
@@ -142,8 +149,7 @@ export default function PaymentMethodsPage({ embedded = false }) {
                 Has alcanzado el máximo de {MAXIMO_METODOS} métodos de pago.
               </Text>
             )}
-          </div>
-        )}
+        </div>
       </div>
       {failed && (
         <MessageBar intent="error">
