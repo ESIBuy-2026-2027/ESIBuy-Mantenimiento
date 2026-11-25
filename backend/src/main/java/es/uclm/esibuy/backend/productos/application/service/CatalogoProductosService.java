@@ -42,7 +42,7 @@ public class CatalogoProductosService implements CatalogoProductosUseCase {
     @Override
     public List<Producto> buscarDestacados(int limite) {
         BuscarCatalogoQuery query = new BuscarCatalogoQuery(
-                null, null, 1, false, false, false, CriterioOrdenCatalogo.VALORACION, true, 0, limite);
+                null, null, 1, false, false, false, null, null, CriterioOrdenCatalogo.VALORACION, true, 0, limite);
         return productoRepository.buscarEnCatalogo(query).productos().stream()
                 .filter(producto -> producto.getValoracionMedia() != null)
                 .toList();
@@ -54,7 +54,7 @@ public class CatalogoProductosService implements CatalogoProductosUseCase {
         boolean premium = usuarioEnSesion.esClientePremium(emailCliente);
         BuscarCatalogoQuery consulta = new BuscarCatalogoQuery(
                 query.busqueda(), query.categoriaId(), query.valoracionMinima(), query.soloStock(),
-                query.soloOfertas(), premium, query.criterio(), query.descendente(), query.pagina(), query.tamano());
+                query.soloOfertas(), premium, query.precioMinimo(), query.precioMaximo(), query.criterio(), query.descendente(), query.pagina(), query.tamano());
         return new PaginaCatalogo(productoRepository.buscarEnCatalogo(consulta), premium);
     }
 
