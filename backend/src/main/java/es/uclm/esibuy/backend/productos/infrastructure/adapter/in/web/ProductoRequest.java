@@ -22,7 +22,7 @@ public record ProductoRequest(
         @NotNull @Min(0) Integer stock,
         @NotBlank String categoriaId,
         @Pattern(regexp = "(?i)(https?://\\S+|/api/product-images/[a-f0-9]{24})?") String imagen,
-        boolean disponible,
+        @NotNull Boolean disponible,
         @NotNull @Valid DescuentoDto descuento,
         @NotNull @Valid DescuentoDto descuentoPremium
 ) {
