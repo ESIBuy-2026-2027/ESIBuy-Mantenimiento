@@ -747,3 +747,41 @@ describe('ProfilePage (HU45): cambios sin guardar', () => {
     expect(cerrarLaPestana().defaultPrevented).toBe(false)
   })
 })
+
+
+describe('ProfilePage: resumen de direcciones y métodos de pago', () => {
+  it('muestra tres elementos como máximo y permite abrir cada listado completo', async () => {
+    const direcciones = Array.from({ length: 4 }, (_, i) => ({
+      id: `d-${i + 1}`,
+      destinatario: 'Carlos Cliente',
+      calle: `Calle ${i + 1}`,
+      detalles: null,
+      codigoPostal: '13001',
+      ciudad: 'Ciudad Real',
+      provincia: 'Ciudad Real',
+      telefono: '611222333',
+      principal: i === 0,
+    }))
+    const metodos = Array.from({ length: 4 }, (_, i) => ({
+      id: `m-${i + 1}`,
+      tipo: 'BIZUM',
+      mascara: `•••• ${600 + i}`,
+      predeterminado: i === 0,
+    }))
+    server.use(
+      http.get('/api/customer/addresses', () => HttpResponse.json(direcciones)),
+      http.get('/api/customer/payment-methods', () => HttpResponse.json(metodos)),
+    )
+
+    await abrirPerfil('cliente@esibuy.test')
+
+    const listaDirecciones = screen.getByRole('list', { name: 'Tus direcciones' })
+    const listaMetodos = screen.getByRole('list', { name: 'Tus métodos de pago' })
+    expect(within(listaDirecciones).getAllByRole('listitem')).toHaveLength(3)
+    expect(within(listaMetodos).getAllByRole('listitem')).toHaveLength(3)
+
+    await userEvent.setup().click(screen.getByRole('link', { name: /ver todas las direcciones \(4\)/i }))
+    expect(await screen.findByRole('heading', { level: 1, name: /direcciones de envío/i })).toBeInTheDocument()
+    expect(await screen.findAllByRole('listitem')).toHaveLength(4)
+  })
+})
