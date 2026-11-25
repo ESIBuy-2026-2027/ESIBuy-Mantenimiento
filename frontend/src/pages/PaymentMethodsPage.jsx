@@ -59,6 +59,7 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     flexGrow: 1,
+    minWidth: 0,
   },
   methodActions: {
     display: 'flex',
