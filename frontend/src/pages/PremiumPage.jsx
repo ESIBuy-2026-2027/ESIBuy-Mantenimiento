@@ -114,21 +114,12 @@ const useStyles = makeStyles({
   cancellationSection: {
     display: 'flex',
     flexDirection: 'column',
-    gap: tokens.spacingVerticalM,
-    padding: tokens.spacingVerticalXL,
-    border: `1px solid ${tokens.colorNeutralStroke2}`,
-    borderRadius: tokens.borderRadiusXLarge,
-    backgroundColor: tokens.colorNeutralBackground1,
-    boxShadow: tokens.shadow4,
-    width: '100%',
-    boxSizing: 'border-box',
-    alignSelf: 'stretch',
+    alignItems: 'flex-start',
     justifyContent: 'center',
-  },
-  cancellationTitle: {
-    margin: 0,
-    fontSize: tokens.fontSizeBase500,
-    fontWeight: tokens.fontWeightSemibold,
+    gap: tokens.spacingVerticalM,
+    width: '100%',
+    minHeight: '100%',
+    boxSizing: 'border-box',
   },
   cancellationText: {
     color: tokens.colorNeutralForeground2,
@@ -381,8 +372,7 @@ export default function PremiumPage({ embedded = false }) {
         </div>
 
         {esPremium && (
-          <section aria-labelledby="cancel-premium-title" className={styles.cancellationSection}>
-            <h2 id="cancel-premium-title" className={styles.cancellationTitle}>Gestionar suscripción</h2>
+          <section aria-label="Cancelar suscripción" className={styles.cancellationSection}>
             <Text className={styles.cancellationText}>
               Si cancelas ESIBuy Premium, tu cuenta pasará a ser Estándar y dejarás de disfrutar de sus ventajas.
             </Text>
