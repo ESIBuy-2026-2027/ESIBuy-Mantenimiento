@@ -46,8 +46,8 @@ export default function CategoryCarousel({ category, favoritos, onAddFavorite, o
           product={product}
           categoryName={category.nombre}
           favorite={favoritos.has(product.id)}
-          onAddFavorite={onAddFavorite}
-          onRemoveFavorite={onRemoveFavorite}
+          onAddFavorite={() => onAddFavorite(product)}
+          onRemoveFavorite={() => onRemoveFavorite(product)}
         />
       ))}
     </CatalogCarousel>
