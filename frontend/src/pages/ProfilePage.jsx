@@ -287,6 +287,8 @@ export default function ProfilePage() {
         </output>
       )}
 
+      {perfil?.rol === 'CLIENTE' && <PremiumPage embedded />}
+
       {perfil && (
         <Card className={styles.card}>
           <div className={styles.identity}>
@@ -325,7 +327,6 @@ export default function ProfilePage() {
 
       {perfil?.rol === 'CLIENTE' && (
         <section aria-label="Gestión de mi cuenta" className={styles.accountManagement}>
-          <PremiumPage embedded />
           <div className={styles.accountColumns}>
             <AddressesPage embedded />
             <PaymentMethodsPage embedded />
