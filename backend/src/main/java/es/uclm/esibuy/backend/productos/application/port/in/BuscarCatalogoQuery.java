@@ -6,6 +6,7 @@ public record BuscarCatalogoQuery(
     Integer valoracionMinima,
     boolean soloStock,
     boolean soloOfertas,
+    boolean clientePremium,
     CriterioOrdenCatalogo criterio,
     boolean descendente,
     int pagina,
