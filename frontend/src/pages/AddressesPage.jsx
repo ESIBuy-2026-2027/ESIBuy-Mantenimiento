@@ -99,10 +99,6 @@ const useStyles = makeStyles({
   seeAll: {
     alignSelf: 'flex-start',
   },
-  addressText: {
-    minHeight: '58px',
-    justifyContent: 'center',
-  },
   muted: {
     color: tokens.colorNeutralForeground3,
   },
