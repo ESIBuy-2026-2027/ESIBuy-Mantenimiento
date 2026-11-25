@@ -45,7 +45,7 @@ class CreacionIncidenciasServiceTest {
         public Incidencia guardar(Incidencia incidencia) {
             Incidencia conId = new Incidencia("i-" + (guardadas.size() + 1), incidencia.autorId(),
                     incidencia.asunto(), incidencia.descripcion(), incidencia.estado(), incidencia.respuesta(),
-                    incidencia.fechaCreacion());
+                    incidencia.fechaCreacion(), null);
             guardadas.add(conId);
             return conId;
         }
@@ -61,12 +61,28 @@ class CreacionIncidenciasServiceTest {
         }
 
         @Override
+        public IncidenciaPage buscarPorEstado(EstadoIncidencia estado, int pagina, int tamano) {
+            throw new UnsupportedOperationException("No lo usa la creación");
+        }
+
+        @Override
+        public IncidenciaPage buscarSupervisadas(EstadoIncidencia estado, String busqueda, String ordenarPor,
+                String sentido, int pagina, int tamano) {
+            throw new UnsupportedOperationException("No lo usa la creación");
+        }
+
+        @Override
         public Optional<Incidencia> buscarPorId(String id) {
             throw new UnsupportedOperationException("No lo usa la creación");
         }
 
         @Override
         public void eliminar(String id) {
+            throw new UnsupportedOperationException("No lo usa la creación");
+        }
+
+        @Override
+        public boolean registrarResolucion(Incidencia resuelta) {
             throw new UnsupportedOperationException("No lo usa la creación");
         }
     }

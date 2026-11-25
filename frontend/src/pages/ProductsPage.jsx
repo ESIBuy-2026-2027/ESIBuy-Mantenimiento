@@ -12,16 +12,21 @@ import {
   mergeClasses,
   tokens,
 } from '@fluentui/react-components'
-import { ArrowDown20Regular, Box24Regular, CheckmarkCircle20Regular, SearchInfo24Regular } from '@fluentui/react-icons'
+import {
+  ArrowDown20Regular,
+  Box24Regular,
+  CheckmarkCircle20Regular,
+  SearchInfo24Regular,
+} from '@fluentui/react-icons'
 import { getWishlists } from '../api/wishlist'
 import EmptyState from '../components/EmptyState'
 import { usePageStyles } from '../components/pageStyles'
 import CatalogFilters from '../features/catalog/CatalogFilters'
 import OffersStrip from '../features/catalog/OffersStrip'
 import ProductCard from '../features/catalog/ProductCard'
-import WishlistPickerDialog from '../features/wishlist/WishlistPickerDialog'
 import { useCatalogFeed } from '../features/catalog/useCatalogFeed'
 import { useCatalogFilters } from '../features/catalog/useCatalogFilters'
+import WishlistPickerDialog from '../features/wishlist/WishlistPickerDialog'
 import { useCategories } from '../hooks/useCategories'
 import { useOnReachEnd } from '../hooks/useOnReachEnd'
 
@@ -52,9 +57,15 @@ const useStyles = makeStyles({
   grid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-    '@media (max-width: 1100px)': { gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' },
-    '@media (max-width: 760px)': { gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' },
-    '@media (max-width: 420px)': { gridTemplateColumns: 'minmax(0, 1fr)' },
+    '@media (max-width: 1100px)': {
+      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    },
+    '@media (max-width: 760px)': {
+      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    },
+    '@media (max-width: 420px)': {
+      gridTemplateColumns: 'minmax(0, 1fr)',
+    },
     gap: tokens.spacingHorizontalL,
     margin: 0,
     padding: 0,
@@ -102,6 +113,7 @@ export default function ProductsPage() {
   const styles = useStyles()
   const { categories } = useCategories()
   const filters = useCatalogFilters()
+
   const {
     search,
     category,
@@ -142,7 +154,9 @@ export default function ProductsPage() {
     }
   }, [feed.availableMaxPrice, filters.changeAvailableMaxPrice])
 
-  const categoryNames = new Map(categories.map(({ id, nombre }) => [id, nombre]))
+  const categoryNames = new Map(
+    categories.map(({ id, nombre }) => [id, nombre]),
+  )
 
   // Las listas del cliente se cargan al entrar; el corazón abre un selector para guardar el producto en una o varias.
   const [listasDeseos, setListasDeseos] = useState([])
@@ -150,7 +164,9 @@ export default function ProductsPage() {
   const cambiados = useRef(false)
 
   const favoritos = new Set(
-    listasDeseos.flatMap((lista) => lista.items.map((item) => item.productoId)),
+    listasDeseos.flatMap((lista) =>
+      lista.items.map((item) => item.productoId),
+    ),
   )
 
   useEffect(() => {
@@ -162,7 +178,7 @@ export default function ProductsPage() {
           setListasDeseos(listas)
         }
       })
-      .catch(() => { })
+      .catch(() => {})
 
     return () => {
       cancelled = true
@@ -243,7 +259,10 @@ export default function ProductsPage() {
         )}
 
         {!feed.loaded && !feed.failed && (
-          <Spinner className={pageStyles.loading} label="Cargando productos…" />
+          <Spinner
+            className={pageStyles.loading}
+            label="Cargando productos…"
+          />
         )}
 
         {catalogEmpty && (
@@ -269,7 +288,10 @@ export default function ProductsPage() {
             </Title1>
 
             <ul
-              className={mergeClasses(styles.grid, feed.refreshing && styles.refreshing)}
+              className={mergeClasses(
+                styles.grid,
+                feed.refreshing && styles.refreshing,
+              )}
               aria-label="Productos"
               aria-busy={feed.refreshing || feed.loadingMore}
             >
@@ -293,7 +315,9 @@ export default function ProductsPage() {
             </ul>
 
             <div className={styles.footer}>
-              {feed.loadingMore && <Spinner label="Cargando más productos…" />}
+              {feed.loadingMore && (
+                <Spinner label="Cargando más productos…" />
+              )}
 
               {feed.failedMore && (
                 <MessageBar intent="error">

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { delay, http, HttpResponse } from 'msw'
-import { closeIncident } from '../api/adminIncidents'
+import { closeIncident, openIncident, resolveIncident } from '../api/adminIncidents'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
@@ -68,18 +68,24 @@ describe('AdminIncidentsPage (HU49): lista', () => {
     expect(screen.getByText(/las incidencias que reportan los clientes y los vendedores/i)).toBeInTheDocument()
   })
 
-  it('HU49-CP18: cada incidencia muestra su autor, su estado y su respuesta', async () => {
+  it('HU49-CP18: cada tarjeta muestra título, descripción y estado; autor, fecha y respuesta van en el detalle', async () => {
+    const user = userEvent.setup()
     await abrirSupervision()
 
     const filas = await incidencias()
     expect(filas[1]).toHaveTextContent('Cobro duplicado')
-    expect(filas[1]).toHaveTextContent('cliente@esibuy.test')
-    expect(filas[1]).toHaveTextContent('Cliente')
+    expect(filas[1]).toHaveTextContent('Me han cobrado dos veces el mismo pedido.')
     expect(filas[1]).toHaveTextContent('Abierta')
-    expect(filas[1]).toHaveTextContent('Estamos revisando el cobro con el banco.')
+    expect(filas[1]).not.toHaveTextContent('cliente@esibuy.test')
+    expect(filas[1]).not.toHaveTextContent('Estamos revisando el cobro con el banco.')
+
+    await user.click(accion(filas[1], 'Ver detalle'))
+    const dialogo = screen.getByRole('dialog', { name: 'Detalle de la incidencia' })
+    expect(dialogo).toHaveTextContent('cliente@esibuy.test (Cliente)')
+    expect(dialogo).toHaveTextContent('Estamos revisando el cobro con el banco.')
   })
 
-  it('HU49-CP18: las incidencias de un vendedor muestran su correo y el rol Vendedor', async () => {
+  it('HU49-CP18: las incidencias de un vendedor muestran su correo y el rol Vendedor en el detalle', async () => {
     const user = userEvent.setup()
     await abrirSupervision()
     await irALaSegundaPagina(user)
@@ -87,18 +93,21 @@ describe('AdminIncidentsPage (HU49): lista', () => {
     const filas = await incidencias()
     expect(filas).toHaveLength(5)
     expect(filas[2]).toHaveTextContent('No puedo subir la imagen de un producto')
-    expect(filas[2]).toHaveTextContent('vendedor@esibuy.test')
-    expect(filas[2]).toHaveTextContent('Vendedor')
+
+    await user.click(accion(filas[2], 'Ver detalle'))
+    const dialogo = screen.getByRole('dialog', { name: 'Detalle de la incidencia' })
+    expect(dialogo).toHaveTextContent('vendedor@esibuy.test (Vendedor)')
   })
 
-  it('HU49-CP19: la incidencia de una cuenta eliminada dice Cuenta eliminada', async () => {
+  it('HU49-CP19: la incidencia de una cuenta eliminada dice Cuenta eliminada en el detalle', async () => {
     const user = userEvent.setup()
     await abrirSupervision()
     await irALaSegundaPagina(user)
 
     const filas = await incidencias()
-    expect(filas[4]).toHaveTextContent('Cuenta eliminada')
-    expect(filas[3]).not.toHaveTextContent('Cuenta eliminada')
+    await user.click(accion(filas[4], 'Ver detalle'))
+    const dialogo = screen.getByRole('dialog', { name: 'Detalle de la incidencia' })
+    expect(dialogo).toHaveTextContent('Cuenta eliminada')
   })
 
   it('HU49-CP20: la paginación lleva a la página siguiente y vuelve a la anterior', async () => {
@@ -191,14 +200,14 @@ const accion = (fila, nombre) => within(fila).queryByRole('button', { name: new 
 const AVISO_CAMBIADA = 'Otro administrador ya ha cambiado esa incidencia. Hemos actualizado la lista.'
 
 describe('AdminIncidentsPage (HU50): acciones', () => {
-  it('HU50-CP23: una incidencia pendiente se puede abrir y cerrar; una abierta, solo cerrar', async () => {
+  it('HU50-CP23: una incidencia pendiente se puede abrir y cerrar; una abierta no se vuelve a abrir', async () => {
     await abrirSupervision()
 
     const [pendiente, abierta] = await incidencias()
-    expect(accion(pendiente, 'Abrir')).toBeInTheDocument()
-    expect(accion(pendiente, 'Cerrar')).toBeInTheDocument()
+    expect(within(pendiente).getByRole('button', { name: /^Abrir incidencia/ })).toHaveTextContent('Abrir incidencia')
+    expect(within(pendiente).getByRole('button', { name: /^Cerrar incidencia/ })).toHaveTextContent('Cerrar incidencia')
     expect(accion(abierta, 'Abrir')).not.toBeInTheDocument()
-    expect(accion(abierta, 'Cerrar')).toBeInTheDocument()
+    expect(within(abierta).getByRole('button', { name: /^Cerrar incidencia/ })).toHaveTextContent('Cerrar incidencia')
   })
 
   it('HU50-CP24: al abrir una pendiente con una respuesta queda abierta con ella y lo confirma', async () => {
@@ -212,10 +221,12 @@ describe('AdminIncidentsPage (HU50): acciones', () => {
 
     expect(await screen.findByText('Incidencia abierta.')).toBeInTheDocument()
     expect(screen.queryByRole('dialog', { name: 'Abrir incidencia' })).not.toBeInTheDocument()
-    await waitFor(async () => expect((await incidencias())[0]).toHaveTextContent('Lo estamos revisando'))
+    await waitFor(async () => expect((await incidencias())[0]).toHaveTextContent('Abierta'))
     const [abierta] = await incidencias()
-    expect(abierta).toHaveTextContent('Abierta')
     expect(accion(abierta, 'Abrir')).not.toBeInTheDocument()
+
+    await user.click(accion(abierta, 'Ver detalle'))
+    expect(screen.getByRole('dialog', { name: 'Detalle de la incidencia' })).toHaveTextContent('Lo estamos revisando')
   })
 
   it('HU50-CP25: al cerrar una incidencia desaparece de la lista y lo confirma', async () => {
@@ -304,5 +315,209 @@ describe('AdminIncidentsPage (HU50): cambios de otro administrador', () => {
 
     expect(await screen.findByText(AVISO_CAMBIADA)).toBeInTheDocument()
     await waitFor(() => expect(screen.queryByText('Cobro duplicado')).not.toBeInTheDocument())
+  })
+})
+
+describe('AdminIncidentsPage (PBI 239): filtros, ordenación y detalle', () => {
+  it('PBI239-CP06: permite filtrar por estado y volver a mostrar todas', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+    await irALaSegundaPagina(user)
+
+    const selector = screen.getByRole('combobox', { name: 'Estado' })
+    await user.selectOptions(selector, 'ABIERTA')
+
+    await waitFor(async () => expect(await incidencias()).toHaveLength(4))
+    expect((await incidencias())[0]).toHaveTextContent('Cobro duplicado')
+
+    await user.selectOptions(selector, '')
+    expect(await screen.findByText('Mostrando 1–10 de 15 incidencias')).toBeInTheDocument()
+  })
+
+  it('PBI239-CP07: al pulsar Ver detalle abre el diálogo sin botones de abrir o cerrar incidencia', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+
+    await user.click(accion((await incidencias())[0], 'Ver detalle'))
+
+    const dialogo = screen.getByRole('dialog', { name: 'Detalle de la incidencia' })
+    expect(dialogo).toHaveTextContent('No me llega el pedido')
+    expect(dialogo).toHaveTextContent('Pendiente')
+    expect(dialogo).toHaveTextContent('cliente@esibuy.test (Cliente)')
+    expect(within(dialogo).queryByRole('button', { name: /abrir incidencia/i })).not.toBeInTheDocument()
+    expect(within(dialogo).queryByRole('button', { name: /cerrar incidencia/i })).not.toBeInTheDocument()
+
+    await user.click(within(dialogo).getByRole('button', { name: 'Volver' }))
+    expect(screen.queryByRole('dialog', { name: 'Detalle de la incidencia' })).not.toBeInTheDocument()
+  })
+
+  it('PBI239-CP08: permite buscar por nombre, ordenar por nombre y cambiar a descendente', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+    await lista()
+
+    await user.type(screen.getByPlaceholderText('Escribe un nombre'), 'Estadísticas')
+    await waitFor(async () => expect(await incidencias()).toHaveLength(1))
+    expect((await incidencias())[0]).toHaveTextContent('Estadísticas sin datos')
+
+    await user.clear(screen.getByPlaceholderText('Escribe un nombre'))
+    await waitFor(async () => expect(await incidencias()).toHaveLength(10))
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Ordenar por' }), 'asunto')
+    await waitFor(async () => expect((await incidencias())[0]).toHaveTextContent('Aviso de stock'))
+
+    await user.click(screen.getByRole('button', { name: 'Orden ascendente' }))
+    await waitFor(async () => expect((await incidencias())[0]).toHaveTextContent('Valoración que no se publica'))
+  })
+})
+
+describe('AdminIncidentsPage (HU192): avisos', () => {
+  it('HU192-CP27: los avisos se anuncian en una región viva que ya está en la página', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+    await lista()
+    const region = screen.getByRole('main').querySelector('[aria-live="polite"]')
+    expect(region).toBeEmptyDOMElement()
+
+    await user.click(accion((await incidencias())[0], 'Abrir'))
+    await user.type(screen.getByRole('textbox', { name: /respuesta/i }), 'Lo estamos revisando')
+    await user.click(screen.getByRole('button', { name: 'Abrir incidencia' }))
+
+    await waitFor(() => expect(region).toHaveTextContent('Incidencia abierta.'))
+    expect(screen.getByText('Incidencia abierta.').closest('[aria-live]')).toBe(region)
+  })
+})
+
+// Resolución desde la supervisión (HU192, T511). En la página 1 del mock, «No me llega el pedido» (la primera) está
+// pendiente y «Cobro duplicado» (la segunda), abierta. Hay cuatro abiertas en total.
+const DIALOGO_RESOLVER = 'Marcar incidencia como resuelta'
+const AVISO_RESUELTA = 'Incidencia marcada como resuelta.'
+const AVISO_YA_RESUELTA = 'Esa incidencia ya estaba resuelta. Hemos actualizado la lista.'
+const botonResolver = (fila) => accion(fila, 'Marcar como resuelta')
+const confirmarResolucion = () => screen.getByRole('button', { name: 'Sí, marcar como resuelta' })
+const regionDeAvisos = () => screen.getByRole('main').querySelector('[aria-live="polite"]')
+
+describe('AdminIncidentsPage (HU192): resolver', () => {
+  it('HU192-CP28: solo las incidencias abiertas tienen el botón Marcar como resuelta', async () => {
+    await abrirSupervision()
+
+    const [pendiente, abierta] = await incidencias()
+    expect(botonResolver(pendiente)).not.toBeInTheDocument()
+    expect(botonResolver(abierta)).toHaveTextContent('Marcar como resuelta')
+    expect(botonResolver(abierta)).toHaveAccessibleName('Marcar como resuelta la incidencia «Cobro duplicado»')
+  })
+
+  it('HU192-CP29: al resolver, la lista y el detalle se actualizan sin recargar y lo anuncia', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+    const listaInicial = await lista()
+
+    await user.click(botonResolver((await incidencias())[1]))
+    const dialogo = screen.getByRole('alertdialog', { name: DIALOGO_RESOLVER })
+    await user.click(within(dialogo).getByRole('button', { name: 'Sí, marcar como resuelta' }))
+
+    await waitFor(() => expect(regionDeAvisos()).toHaveTextContent(AVISO_RESUELTA))
+    expect(screen.queryByRole('alertdialog', { name: DIALOGO_RESOLVER })).not.toBeInTheDocument()
+    await waitFor(async () => expect((await incidencias())[1]).toHaveTextContent('Resuelta'))
+    const resuelta = (await incidencias())[1]
+    expect(botonResolver(resuelta)).not.toBeInTheDocument()
+    expect(await lista()).toBe(listaInicial)
+
+    await user.click(accion(resuelta, 'Ver detalle'))
+    // Se localiza por su título: en jsdom, buscar este diálogo por rol y nombre falla a veces justo después de abrirlo
+    const detalle = (await screen.findByText('Detalle de la incidencia')).closest('[role="dialog"]')
+    expect(detalle).toHaveTextContent('Resuelta')
+    expect(detalle).toHaveTextContent(/Fecha de resolución: \d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}/)
+  })
+
+  it('HU192-CP29: al cancelar la confirmación la incidencia sigue abierta', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+
+    await user.click(botonResolver((await incidencias())[1]))
+    await user.click(screen.getByRole('button', { name: 'Volver' }))
+
+    expect(screen.queryByRole('alertdialog', { name: DIALOGO_RESOLVER })).not.toBeInTheDocument()
+    expect((await incidencias())[1]).toHaveTextContent('Abierta')
+    expect(screen.queryByText(AVISO_RESUELTA)).not.toBeInTheDocument()
+  })
+
+  it('HU192-CP30: si otro administrador ya la ha resuelto, lo avisa y la lista recargada la muestra resuelta', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+    const filas = await incidencias()
+    await resolveIncident('inc-seed-2')
+
+    await user.click(botonResolver(filas[1]))
+    await user.click(confirmarResolucion())
+
+    await waitFor(() => expect(regionDeAvisos()).toHaveTextContent(AVISO_YA_RESUELTA))
+    await waitFor(async () => expect((await incidencias())[1]).toHaveTextContent('Resuelta'))
+  })
+
+  it('HU192-CP30: si otro administrador ya la ha cerrado, lo avisa y la lista recargada ya no la muestra', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+    const filas = await incidencias()
+    await closeIncident('inc-seed-2')
+
+    await user.click(botonResolver(filas[1]))
+    await user.click(confirmarResolucion())
+
+    await waitFor(() => expect(regionDeAvisos()).toHaveTextContent(AVISO_CAMBIADA))
+    await waitFor(() => expect(screen.queryByText('Cobro duplicado')).not.toBeInTheDocument())
+  })
+
+  it('HU192-CP31: el filtro de estado permite ver solo las resueltas', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi(ADMIN)
+    await resolveIncident('inc-seed-4')
+    renderApp('/admin/incidents')
+    await lista()
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'RESUELTA')
+
+    await waitFor(async () => expect(await incidencias()).toHaveLength(1))
+    expect((await incidencias())[0]).toHaveTextContent('Producto dañado')
+  })
+
+  it('HU192-CP31: al resolver la única abierta de la última página filtrada vuelve a la anterior', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi(ADMIN)
+    // Abre siete pendientes para que haya once abiertas: dos páginas, la segunda con una sola
+    for (const n of [1, 3, 5, 6, 7, 8, 10]) await openIncident(`inc-seed-${n}`, 'Respuesta')
+    renderApp('/admin/incidents')
+    await lista()
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'ABIERTA')
+    await screen.findByText('Mostrando 1–10 de 11 incidencias')
+    await irALaSegundaPagina(user)
+    await waitFor(async () => expect(await incidencias()).toHaveLength(1))
+
+    await user.click(botonResolver((await incidencias())[0]))
+    await user.click(confirmarResolucion())
+
+    await waitFor(() => expect(screen.queryByRole('navigation', { name: 'Paginación' })).not.toBeInTheDocument())
+    await waitFor(async () => expect(await incidencias()).toHaveLength(10))
+    expect(screen.getByText(AVISO_RESUELTA)).toBeInTheDocument()
+  })
+
+  it('HU192-CP32: se resuelve solo con el teclado y el foco no se pierde', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+    const boton = botonResolver((await incidencias())[1])
+
+    boton.focus()
+    await user.keyboard('{Enter}')
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('alertdialog', { name: DIALOGO_RESOLVER })).not.toBeInTheDocument()
+    await waitFor(() => expect(boton).toHaveFocus())
+
+    await user.keyboard('{Enter}')
+    confirmarResolucion().focus()
+    await user.keyboard('{Enter}')
+
+    await waitFor(() => expect(regionDeAvisos()).toHaveTextContent(AVISO_RESUELTA))
+    await waitFor(() => expect(regionDeAvisos()).toHaveFocus())
   })
 })

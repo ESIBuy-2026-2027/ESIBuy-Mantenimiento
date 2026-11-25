@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.incidencias.application.port.in;
 
+import es.uclm.esibuy.backend.incidencias.domain.model.EstadoIncidencia;
 import es.uclm.esibuy.backend.incidencias.domain.model.IncidenciaSupervisadaPage;
 
 /** Supervisión de las incidencias por el administrador (HU49). */
@@ -15,4 +16,15 @@ public interface SupervisionIncidenciasUseCase {
      *         tamaño no son válidos
      */
     IncidenciaSupervisadaPage consultarTodas(int pagina, int tamano);
+
+    /**
+     * Como {@link #consultarTodas(int, int)}, filtrando por estado cuando {@code estado} no es {@code null}.
+     */
+    IncidenciaSupervisadaPage consultarTodas(int pagina, int tamano, EstadoIncidencia estado);
+
+    /**
+     * Como {@link #consultarTodas(int, int, EstadoIncidencia)}, añadiendo búsqueda por asunto y ordenación.
+     */
+    IncidenciaSupervisadaPage consultarTodas(int pagina, int tamano, EstadoIncidencia estado, String busqueda,
+            String ordenarPor, String sentido);
 }

@@ -85,7 +85,7 @@ class SeguridadIncidenciasServiceTest {
 
         @Bean
         ResolucionIncidenciasUseCase resolucionIncidencias(IncidenciaRepositoryPort repositorio) {
-            return new ResolucionIncidenciasService(repositorio);
+            return new ResolucionIncidenciasService(repositorio, Clock.systemUTC());
         }
     }
 
@@ -240,6 +240,25 @@ class SeguridadIncidenciasServiceTest {
     }
 
     @Test
+    @WithMockUser(username = ADMINISTRADOR, roles = "ADMINISTRADOR")
+    @DisplayName("PBI239-CP02: el administrador consulta las incidencias filtradas por estado")
+    void elAdministradorSupervisaLasIncidenciasPorEstado() {
+        when(incidenciaRepository.buscarPorEstado(EstadoIncidencia.PENDIENTE, 0, 10))
+                .thenReturn(new IncidenciaPage(List.of(), 0, 10, 0));
+
+        assertDoesNotThrow(() -> supervisionIncidencias.consultarTodas(0, 10, EstadoIncidencia.PENDIENTE));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("PBI239-CP02: un cliente no consulta las incidencias filtradas por estado")
+    void unClienteNoSupervisaLasIncidenciasPorEstado() {
+        assertThrows(AccessDeniedException.class,
+                () -> supervisionIncidencias.consultarTodas(0, 10, EstadoIncidencia.PENDIENTE));
+        verifyNoInteractions(incidenciaRepository, autores);
+    }
+
+    @Test
     @WithMockUser(username = CLIENTE, roles = "CLIENTE")
     @DisplayName("HU49-CP09: un cliente no consulta las incidencias de todos")
     void unClienteNoSupervisaLasIncidencias() {
@@ -266,7 +285,7 @@ class SeguridadIncidenciasServiceTest {
     private static final String ID = "i-1";
 
     private static Incidencia pendiente() {
-        return new Incidencia(ID, "u-1", "Asunto", "Descripción", EstadoIncidencia.PENDIENTE, "", Instant.EPOCH);
+        return new Incidencia(ID, "u-1", "Asunto", "Descripción", EstadoIncidencia.PENDIENTE, "", Instant.EPOCH, null);
     }
 
     private void comprobarQueRechazaAbrir() {
@@ -338,6 +357,44 @@ class SeguridadIncidenciasServiceTest {
     @DisplayName("HU50-CP09: sin sesión no se cierran incidencias")
     void sinSesionNoSeCierranIncidencias() {
         assertThrows(AuthenticationCredentialsNotFoundException.class, () -> resolucionIncidencias.cerrar(ID));
+        verifyNoInteractions(incidenciaRepository);
+    }
+
+    // Resolver (HU192, T419): solo el administrador marca una incidencia como resuelta
+
+    private void comprobarQueRechazaResolver() {
+        assertThrows(AccessDeniedException.class, () -> resolucionIncidencias.resolver(ID));
+        verifyNoInteractions(incidenciaRepository);
+    }
+
+    @Test
+    @WithMockUser(username = ADMINISTRADOR, roles = "ADMINISTRADOR")
+    @DisplayName("HU192-CP18: el administrador resuelve una incidencia")
+    void elAdministradorResuelveUnaIncidencia() {
+        when(incidenciaRepository.buscarPorId(ID)).thenReturn(Optional.of(pendiente().abrir("Respuesta")));
+        when(incidenciaRepository.registrarResolucion(any())).thenReturn(true);
+
+        assertDoesNotThrow(() -> resolucionIncidencias.resolver(ID));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU192-CP18: un cliente no resuelve incidencias")
+    void unClienteNoResuelveIncidencias() {
+        comprobarQueRechazaResolver();
+    }
+
+    @Test
+    @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
+    @DisplayName("HU192-CP18: un vendedor no resuelve incidencias")
+    void unVendedorNoResuelveIncidencias() {
+        comprobarQueRechazaResolver();
+    }
+
+    @Test
+    @DisplayName("HU192-CP18: sin sesión no se resuelven incidencias")
+    void sinSesionNoSeResuelvenIncidencias() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class, () -> resolucionIncidencias.resolver(ID));
         verifyNoInteractions(incidenciaRepository);
     }
 }

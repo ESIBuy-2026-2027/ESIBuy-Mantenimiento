@@ -710,22 +710,40 @@ describe('ProductsPage (HU9): precio y carrito', () => {
   })
 })
 
+
 describe('ProductsPage (HU14): múltiples listas de deseos', () => {
   it('muestra el selector de listas al pulsar el corazón y permite añadir el producto a Favoritos', async () => {
     const user = userEvent.setup()
     await abrirCatalogo()
     await esperarTarjetas(10)
 
+    for (const tarjeta of tarjetas()) {
+      expect(
+        within(tarjeta).getByRole('button', { name: /^añadir .+ a favoritos$/i }),
+      ).toBeEnabled()
+    }
+
     await user.click(
-      screen.getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' }),
+      screen.getByRole('button', {
+        name: 'Añadir Auriculares inalámbricos a favoritos',
+      }),
     )
 
-    const dialogo = screen.getByRole('dialog', { name: 'Guardar en lista de deseos' })
-    const lista = within(dialogo).getByRole('checkbox', { name: 'Favoritos (0)' })
+    const dialogo = screen.getByRole('dialog', {
+      name: 'Guardar en lista de deseos',
+    })
+    const lista = within(dialogo).getByRole('checkbox', {
+      name: 'Favoritos (0)',
+    })
 
     await user.click(lista)
 
-    expect(await within(dialogo).findByRole('checkbox', { name: 'Favoritos (1)' })).toBeChecked()
+    expect(
+      await within(dialogo).findByRole('checkbox', {
+        name: 'Favoritos (1)',
+      }),
+    ).toBeChecked()
+
     await user.click(within(dialogo).getByRole('button', { name: 'Cerrar' }))
 
     expect(
@@ -771,24 +789,35 @@ describe('ProductsPage (HU14): múltiples listas de deseos', () => {
     await esperarTarjetas(10)
 
     await user.click(
-      screen.getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' }),
+      screen.getByRole('button', {
+        name: 'Añadir Auriculares inalámbricos a favoritos',
+      }),
     )
 
-    const dialogo = screen.getByRole('dialog', { name: 'Guardar en lista de deseos' })
+    const dialogo = screen.getByRole('dialog', {
+      name: 'Guardar en lista de deseos',
+    })
 
     await user.type(within(dialogo).getByLabelText('Nueva lista'), 'Tecnología')
-    await user.click(within(dialogo).getByRole('button', { name: 'Crear y guardar' }))
+    await user.click(
+      within(dialogo).getByRole('button', { name: 'Crear y guardar' }),
+    )
 
     expect(
-      await within(dialogo).findByRole('checkbox', { name: 'Tecnología (1)' }),
+      await within(dialogo).findByRole('checkbox', {
+        name: 'Tecnología (1)',
+      }),
     ).toBeChecked()
   })
 
   it('si no se pueden cargar las listas, el catálogo sigue disponible y permite abrir el selector', async () => {
     server.use(
-      http.get('/api/customer/wishlists', () => new HttpResponse(null, { status: 500 })),
+      http.get('/api/customer/wishlists', () =>
+        new HttpResponse(null, { status: 500 }),
+      ),
     )
 
+    const user = userEvent.setup()
     await abrirCatalogo()
     await esperarTarjetas(10)
 
@@ -798,10 +827,12 @@ describe('ProductsPage (HU14): múltiples listas de deseos', () => {
 
     expect(corazon).toBeEnabled()
 
-    await userEvent.click(corazon)
+    await user.click(corazon)
 
     expect(
-      screen.getByRole('dialog', { name: 'Guardar en lista de deseos' }),
+      screen.getByRole('dialog', {
+        name: 'Guardar en lista de deseos',
+      }),
     ).toBeInTheDocument()
   })
 })
@@ -810,17 +841,26 @@ describe('ProductsPage (HU7): catálogo con ofertas y listado único', () => {
   it('muestra las ofertas en la parte superior y no muestra carruseles por categoría ni top 10', async () => {
     await abrirCatalogo()
 
-    expect(await screen.findByRole('list', { name: /productos en oferta/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 2, name: 'Ofertas' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('list', { name: /productos en oferta/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Ofertas' }),
+    ).toBeInTheDocument()
     expect(
       screen.queryByRole('heading', { name: /los 10 mejor valorados/i }),
     ).not.toBeInTheDocument()
     expect(
       screen.queryByRole('list', { name: /productos de tecnología/i }),
     ).not.toBeInTheDocument()
-    expect(screen.getByRole('list', { name: /^productos$/i })).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Productos generales' }),
+      screen.getByRole('list', { name: /^productos$/i }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', {
+        level: 2,
+        name: 'Productos generales',
+      }),
     ).toBeInTheDocument()
   })
 
@@ -828,14 +868,15 @@ describe('ProductsPage (HU7): catálogo con ofertas y listado único', () => {
     const user = userEvent.setup()
     await abrirCatalogo()
 
-    const ofertas = await screen.findByRole('list', { name: /productos en oferta/i })
+    const ofertas = await screen.findByRole('list', {
+      name: /productos en oferta/i,
+    })
 
     await user.click(screen.getByRole('button', { name: 'Pausar' }))
 
-    expect(screen.getByRole('button', { name: 'Reanudar' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
+    expect(
+      screen.getByRole('button', { name: 'Reanudar' }),
+    ).toHaveAttribute('aria-pressed', 'true')
     expect(ofertas).toHaveStyle({ animationPlayState: 'paused' })
   })
 
@@ -845,7 +886,9 @@ describe('ProductsPage (HU7): catálogo con ofertas y listado único', () => {
     expect(
       screen.getByRole('searchbox', { name: /buscar por nombre/i }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('list', { name: /^productos$/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('list', { name: /^productos$/i }),
+    ).toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: /ver todos los productos/i }),
     ).not.toBeInTheDocument()
@@ -857,18 +900,26 @@ describe('ProductsPage (HU7): catálogo con ofertas y listado único', () => {
   it('coloca el panel de filtros antes de las ofertas', async () => {
     await abrirCatalogo()
 
-    const filtros = screen.getByRole('region', { name: /filtros del catálogo/i })
-    const ofertas = screen.getByRole('heading', { level: 2, name: 'Ofertas' })
+    const filtros = screen.getByRole('region', {
+      name: /filtros del catálogo/i,
+    })
+    const ofertas = screen.getByRole('heading', {
+      level: 2,
+      name: 'Ofertas',
+    })
 
     expect(
-      filtros.compareDocumentPosition(ofertas) & Node.DOCUMENT_POSITION_FOLLOWING,
+      filtros.compareDocumentPosition(ofertas) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
   })
 
   it('permite interactuar con las tarjetas repetidas de la cinta de ofertas', async () => {
     await abrirCatalogo()
 
-    const ofertas = await screen.findByRole('list', { name: /productos en oferta/i })
+    const ofertas = await screen.findByRole('list', {
+      name: /productos en oferta/i,
+    })
     const tarjetasOferta = within(ofertas).getAllByRole('listitem')
 
     expect(tarjetasOferta.length).toBeGreaterThan(3)
@@ -878,3 +929,4 @@ describe('ProductsPage (HU7): catálogo con ofertas y listado único', () => {
     }
   })
 })
+

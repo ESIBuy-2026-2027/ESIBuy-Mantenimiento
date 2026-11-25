@@ -1,7 +1,8 @@
-﻿import PropTypes from 'prop-types'
+import PropTypes from 'prop-types'
 import { Badge, Card, Text, makeStyles, tokens } from '@fluentui/react-components'
 import { formatDateTime } from '../../utils/format'
-import { colorDeEstado, etiquetaDeEstado } from './incidentStatus'
+import IncidentStatusBadge from './IncidentStatusBadge'
+import { ESTADO_INCIDENCIA } from './incidentStatus'
 
 const SIN_RESPUESTA = 'Sin respuesta todavía'
 const CUENTA_ELIMINADA = 'Cuenta eliminada'
@@ -26,6 +27,12 @@ const useStyles = makeStyles({
   },
   refreshing: {
     opacity: 0.55,
+  },
+  // Una incidencia resuelta (HU192) lleva además una banda en el borde izquierdo de su tarjeta
+  resolved: {
+    borderLeftWidth: tokens.strokeWidthThickest,
+    borderLeftStyle: 'solid',
+    borderLeftColor: tokens.colorPaletteGreenBorderActive,
   },
   // En pantallas estrechas el estado baja a una segunda línea
   header: {
@@ -107,11 +114,12 @@ IncidentAuthor.propTypes = {
 // Las incidencias, una tarjeta cada una como los pedidos de la HU11, en el orden en que llegan del backend: de las más
 // antiguas a las más recientes. Las del usuario en sesión (HU44) y, con `showAuthor`, las de todos para el
 // administrador (HU49), cada una con quién la reportó. Con `renderActions`, cada tarjeta acaba con las acciones que
-// devuelve para su incidencia (abrir y cerrar, HU50).
+// devuelve para su incidencia (abrir y cerrar, HU50, y marcar como resuelta, HU192).
 export default function IncidentsList({
   incidents,
   refreshing = false,
   showAuthor = false,
+  compact = false,
   label = 'Tus incidencias',
   renderActions,
 }) {
@@ -125,28 +133,36 @@ export default function IncidentsList({
     >
       {incidents.map((incident) => (
         <li key={incident.id}>
-          <Card>
+          <Card className={incident.estado === ESTADO_INCIDENCIA.RESUELTA ? styles.resolved : undefined}>
             <div className={styles.header}>
               <div className={styles.title}>
                 <Text className={styles.subject}>{incident.asunto}</Text>
-                <Text className={styles.muted}>
-                  <time dateTime={incident.fechaCreacion}>{formatDateTime(incident.fechaCreacion)}</time>
-                </Text>
-                {showAuthor && <IncidentAuthor author={incident.autor} />}
+                {!compact && (
+                  <Text className={styles.muted}>
+                    <time dateTime={incident.fechaCreacion}>{formatDateTime(incident.fechaCreacion)}</time>
+                  </Text>
+                )}
+                {!compact && incident.fechaResolucion && (
+                  <Text className={styles.muted}>
+                    Resuelta el{' '}
+                    <time dateTime={incident.fechaResolucion}>{formatDateTime(incident.fechaResolucion)}</time>
+                  </Text>
+                )}
+                {!compact && showAuthor && <IncidentAuthor author={incident.autor} />}
               </div>
-              <Badge appearance="tint" color={colorDeEstado(incident.estado)}>
-                {etiquetaDeEstado(incident.estado)}
-              </Badge>
+              <IncidentStatusBadge estado={incident.estado} />
             </div>
             <Text className={styles.text}>{incident.descripcion}</Text>
-            <div className={styles.response}>
-              <Text weight="semibold" size={200}>
-                Respuesta del administrador
-              </Text>
-              <Text className={incident.respuesta ? styles.text : styles.muted}>
-                {incident.respuesta || SIN_RESPUESTA}
-              </Text>
-            </div>
+            {!compact && (
+              <div className={styles.response}>
+                <Text weight="semibold" size={200}>
+                  Respuesta del administrador
+                </Text>
+                <Text className={incident.respuesta ? styles.text : styles.muted}>
+                  {incident.respuesta || SIN_RESPUESTA}
+                </Text>
+              </div>
+            )}
             {renderActions && <div className={styles.actions}>{renderActions(incident)}</div>}
           </Card>
         </li>
@@ -164,6 +180,8 @@ IncidentsList.propTypes = {
       estado: PropTypes.string.isRequired,
       respuesta: PropTypes.string.isRequired,
       fechaCreacion: PropTypes.string.isRequired,
+      // Solo las resueltas (HU192); null en las demás
+      fechaResolucion: PropTypes.string,
       // Solo en la supervisión del administrador (HU49); null si la cuenta del autor se ha eliminado
       autor: PropTypes.shape({
         email: PropTypes.string.isRequired,
@@ -173,6 +191,8 @@ IncidentsList.propTypes = {
   ).isRequired,
   refreshing: PropTypes.bool,
   showAuthor: PropTypes.bool,
+  // En resumen solo muestra asunto, descripción y estado; el resto va en el diálogo de detalle (PBI 239)
+  compact: PropTypes.bool,
   // Nombre accesible de la lista
   label: PropTypes.string,
   // Recibe la incidencia y devuelve sus acciones (HU50); sin él, las tarjetas no tienen acciones

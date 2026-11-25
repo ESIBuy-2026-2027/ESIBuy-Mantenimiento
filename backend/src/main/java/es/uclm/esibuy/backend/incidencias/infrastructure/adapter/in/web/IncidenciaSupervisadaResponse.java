@@ -11,7 +11,7 @@ import es.uclm.esibuy.backend.incidencias.domain.model.IncidenciaSupervisada;
  * y su rol; {@code autor} es {@code null} si la cuenta se ha eliminado.
  */
 public record IncidenciaSupervisadaResponse(String id, String asunto, String descripcion, String estado,
-        String respuesta, Instant fechaCreacion, AutorResponse autor) {
+        String respuesta, Instant fechaCreacion, Instant fechaResolucion, AutorResponse autor) {
 
     public record AutorResponse(String email, String rol) {
     }
@@ -21,6 +21,6 @@ public record IncidenciaSupervisadaResponse(String id, String asunto, String des
         AutorIncidencia autor = supervisada.autor();
         return new IncidenciaSupervisadaResponse(incidencia.id(), incidencia.asunto(), incidencia.descripcion(),
                 incidencia.estado().name(), incidencia.respuesta(), incidencia.fechaCreacion(),
-                autor == null ? null : new AutorResponse(autor.email(), autor.rol()));
+                incidencia.fechaResolucion(), autor == null ? null : new AutorResponse(autor.email(), autor.rol()));
     }
 }
