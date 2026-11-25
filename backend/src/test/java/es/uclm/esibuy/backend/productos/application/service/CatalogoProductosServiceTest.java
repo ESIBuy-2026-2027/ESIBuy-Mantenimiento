@@ -56,6 +56,7 @@ class CatalogoProductosServiceTest {
         BuscarCatalogoQuery consultaPremium = new BuscarCatalogoQuery(
                 "teclado", "cat-2", 4, false, false, true, null, null, CriterioOrdenCatalogo.VALORACION, true, 0, 10);
         when(productoRepository.buscarEnCatalogo(consultaPremium)).thenReturn(pagina);
+        when(productoRepository.precioMaximoEnCatalogo(consultaPremium)).thenReturn(new BigDecimal("89.50"));
         when(usuarioEnSesion.esClientePremium("cliente@esibuy.test")).thenReturn(true);
 
         CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort,
@@ -67,6 +68,7 @@ class CatalogoProductosServiceTest {
         // su precio
         assertSame(pagina, resultado.pagina());
         assertTrue(resultado.clientePremium());
+        assertEquals(new BigDecimal("89.50"), resultado.precioMaximoDisponible());
         verify(productoRepository).buscarEnCatalogo(consultaPremium);
     }
 
