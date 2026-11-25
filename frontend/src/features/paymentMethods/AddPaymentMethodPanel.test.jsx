@@ -81,6 +81,21 @@ describe('AddPaymentMethodPanel (HU6): validación', () => {
     expect(altas()).toBe(0)
   })
 
+  it('HU6-CP31: rechaza números de tarjeta que no superan Luhn antes de llamar al backend', async () => {
+    const altas = contarAltas()
+    const usuario = userEvent.setup()
+    abrirPanel()
+
+    await usuario.type(screen.getByLabelText(/número de tarjeta/i), '1111 1111 1111 1111')
+    await usuario.type(screen.getByLabelText(/caducidad/i), '12/28')
+    await usuario.type(screen.getByLabelText(/cvv/i), '123')
+    await usuario.type(screen.getByLabelText(/titular/i), 'Ivan Moreno')
+    await usuario.click(screen.getByRole('button', { name: /guardar método de pago/i }))
+
+    expect(screen.getByText('El número de tarjeta no es válido. Comprueba sus dígitos.')).toBeInTheDocument()
+    expect(altas()).toBe(0)
+  })
+
   it('HU6-CP31: no envía una URL de PayPal o un teléfono de Bizum con formato incorrecto', async () => {
     const altas = contarAltas()
     const usuario = userEvent.setup()
@@ -244,7 +259,7 @@ describe('AddPaymentMethodPanel (HU6): errores del backend', () => {
     await usuario.click(screen.getByRole('button', { name: /guardar método de pago/i }))
 
     expect(
-      await screen.findByText('No se ha podido guardar el método de pago. Revisa los datos: puede que la tarjeta esté caducada.'),
+      await screen.findByText('No se ha podido guardar el método de pago. Comprueba el número, la fecha de caducidad y el titular de la tarjeta.'),
     ).toBeInTheDocument()
     expect(onSaved).not.toHaveBeenCalled()
     // Ningún texto de la página repite el número ni el CVV (los campos los conservan para corregirlos)
