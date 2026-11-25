@@ -47,6 +47,8 @@ public class CatalogoController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) @Min(1) @Max(5) Integer minRating,
+            @RequestParam(defaultValue = "false") boolean inStock,
+            @RequestParam(defaultValue = "false") boolean offersOnly,
             @RequestParam(defaultValue = "nombre") @Pattern(regexp = "nombre|valoracion") String sort,
             @RequestParam(defaultValue = "asc") @Pattern(regexp = "asc|desc") String order,
             Authentication autenticado) {
@@ -54,7 +56,7 @@ public class CatalogoController {
                 ? CriterioOrdenCatalogo.VALORACION
                 : CriterioOrdenCatalogo.NOMBRE;
         return ProductoCatalogoPageResponse.desde(catalogoProductos.buscarProductos(new BuscarCatalogoQuery(
-                search, category, minRating, criterio, "desc".equals(order), page - 1, size), autenticado.getName()));
+                search, category, minRating, inStock, offersOnly, criterio, "desc".equals(order), page - 1, size), autenticado.getName()));
     }
 
     @GetMapping("/products/{id}")
