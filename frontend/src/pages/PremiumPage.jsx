@@ -113,16 +113,10 @@ const useStyles = makeStyles({
   },
   cancellationSection: {
     display: 'flex',
-    flexDirection: 'column',
+    justifyContent: 'flex-end',
     alignItems: 'flex-start',
-    justifyContent: 'center',
-    gap: tokens.spacingVerticalM,
     width: '100%',
-    minHeight: '100%',
     boxSizing: 'border-box',
-  },
-  cancellationText: {
-    color: tokens.colorNeutralForeground2,
   },
   cancellationAction: {
     alignSelf: 'flex-start',
@@ -373,9 +367,6 @@ export default function PremiumPage({ embedded = false }) {
 
         {esPremium && (
           <section aria-label="Cancelar suscripción" className={styles.cancellationSection}>
-            <Text className={styles.cancellationText}>
-              Si cancelas ESIBuy Premium, tu cuenta pasará a ser Estándar y dejarás de disfrutar de sus ventajas.
-            </Text>
             <Button
               appearance="secondary"
               className={styles.cancellationAction}
@@ -414,6 +405,9 @@ export default function PremiumPage({ embedded = false }) {
                 <DialogTitle>¿Estás seguro?</DialogTitle>
                 <DialogContent>
                   ¿Quieres continuar con la cancelación de tu suscripción ESIBuy Premium?
+                  <Text>
+                    Si cancelas ESIBuy Premium, tu cuenta pasará a ser Estándar y dejarás de disfrutar de sus ventajas.
+                  </Text>
                 </DialogContent>
                 <DialogActions>
                   <Button
