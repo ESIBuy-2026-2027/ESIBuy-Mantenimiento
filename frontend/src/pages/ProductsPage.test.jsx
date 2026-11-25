@@ -679,6 +679,17 @@ describe('ProductsPage (HU7): catálogo con ofertas y listado único', () => {
     })
   })
 
+  it('ajusta el máximo del deslizador al precio más alto de los productos filtrados', async () => {
+    const user = userEvent.setup()
+    await abrirCatalogo()
+    const precioMaximo = await screen.findByRole('slider', { name: 'Precio máximo' })
+
+    await waitFor(() => expect(precioMaximo).toHaveAttribute('max', '349'))
+    await elegirCategoria(user, 'Tecnología')
+    await waitFor(() => expect(precioMaximo).toHaveAttribute('max', '249'))
+    expect(screen.getByText('249 €')).toBeInTheDocument()
+  })
+
   it('permite ordenar por precio y envía el criterio al catálogo', async () => {
     const user = userEvent.setup()
     const peticiones = capturarPeticiones()
@@ -733,9 +744,8 @@ describe('ProductsPage (HU7): catálogo con ofertas y listado único', () => {
     expect(screen.getByRole('checkbox', { name: 'Solo en stock' })).not.toBeChecked()
     expect(screen.getByRole('checkbox', { name: 'Solo ofertas' })).not.toBeChecked()
     expect(screen.getByRole('slider', { name: 'Precio mínimo' })).toHaveValue('0')
-    expect(screen.getByRole('slider', { name: 'Precio máximo' })).toHaveValue('150')
+    await waitFor(() => expect(screen.getByRole('slider', { name: 'Precio máximo' })).toHaveValue('349'))
     expect(screen.getByRole('slider', { name: 'Precio mínimo' })).toHaveValue('0')
-    expect(screen.getByRole('slider', { name: 'Precio máximo' })).toHaveValue('150')
   })
 
   it('permite interactuar con las tarjetas repetidas del carrusel de ofertas', async () => {
