@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Button,
   MessageBar,
@@ -8,8 +8,15 @@ import {
   Text,
   Title1,
   makeStyles,
+  useRestoreFocusTarget,
 } from '@fluentui/react-components'
-import { ChatWarning24Regular, CheckmarkCircle20Regular, Eye20Regular, Open20Regular } from '@fluentui/react-icons'
+import {
+  ChatWarning24Regular,
+  CheckboxChecked20Regular,
+  CheckmarkCircle20Regular,
+  Eye20Regular,
+  Open20Regular,
+} from '@fluentui/react-icons'
 import { getAdminIncidents } from '../api/adminIncidents'
 import EmptyState from '../components/EmptyState'
 import Pagination from '../components/Pagination'
@@ -20,6 +27,8 @@ import CloseIncidentDialog from '../features/incidents/CloseIncidentDialog'
 import IncidentDetailDialog from '../features/incidents/IncidentDetailDialog'
 import IncidentsList from '../features/incidents/IncidentsList'
 import OpenIncidentDialog from '../features/incidents/OpenIncidentDialog'
+import ResolveIncidentDialog from '../features/incidents/ResolveIncidentDialog'
+import { ESTADO_INCIDENCIA, ETIQUETAS_DE_ESTADO } from '../features/incidents/incidentStatus'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
 
@@ -34,11 +43,6 @@ const useStyles = makeStyles({
   },
 })
 
-const INCIDENT_STATUS_LABELS = {
-  PENDIENTE: 'Pendiente',
-  ABIERTA: 'Abierta',
-}
-
 const INCIDENT_SORT_OPTIONS = [
   { value: 'fechaCreacion', label: 'Fecha' },
   { value: 'asunto', label: 'Nombre' },
@@ -47,6 +51,11 @@ const INCIDENT_SORT_OPTIONS = [
 
 const AVISO_ABIERTA = { intent: 'success', texto: 'Incidencia abierta.' }
 const AVISO_CERRADA = { intent: 'success', texto: 'Incidencia cerrada.' }
+const AVISO_RESUELTA = { intent: 'success', texto: 'Incidencia marcada como resuelta.' }
+const AVISO_YA_RESUELTA = {
+  intent: 'warning',
+  texto: 'Esa incidencia ya estaba resuelta. Hemos actualizado la lista.',
+}
 const AVISO_CAMBIADA = {
   intent: 'warning',
   texto: 'Otro administrador ya ha cambiado esa incidencia. Hemos actualizado la lista.',
@@ -54,7 +63,8 @@ const AVISO_CAMBIADA = {
 
 // Supervisión de incidencias del administrador (HU49, PBI 239): las de todos los clientes y vendedores.
 // Las tarjetas muestran asunto, descripción y estado; el detalle completo se abre en un diálogo modal.
-// Desde las tarjetas el administrador abre las pendientes con su respuesta y cierra (elimina) cualquiera (HU50).
+// Desde las tarjetas el administrador abre las pendientes con su respuesta y cierra (elimina) cualquiera (HU50), y
+// marca como resueltas las abiertas (HU192).
 export default function AdminIncidentsPage() {
   const styles = usePageStyles()
   const ownStyles = useStyles()
@@ -80,8 +90,16 @@ export default function AdminIncidentsPage() {
   const { data, failed, refreshing, retry } = useApiQuery(fetcher)
 
   const [aviso, setAviso] = useState(null)
-  // null: ningún diálogo; { tipo: 'detalle' | 'abrir' | 'cerrar', incident }
+  // null: ningún diálogo; { tipo: 'detalle' | 'abrir' | 'cerrar' | 'resolver', incident }
   const [accion, setAccion] = useState(null)
+
+  // Teclado y lector de pantalla (HU192): al cancelar, el foco vuelve al botón que abrió el diálogo; al resolver, ese
+  // botón desaparece y el foco pasa al aviso
+  const restoreFocusTarget = useRestoreFocusTarget()
+  const avisosRef = useRef(null)
+  useEffect(() => {
+    if (aviso?.enfocar) avisosRef.current.focus()
+  }, [aviso])
 
   const cambiarFiltro = (setter) => (value) => {
     setter(value)
@@ -94,12 +112,14 @@ export default function AdminIncidentsPage() {
     setAccion({ tipo, incident })
   }
 
-  // Tras abrir, cerrar o un cambio de otro administrador se vuelve a pedir la página. Si se ha cerrado la única
-  // incidencia de la última página, esa página ya no existe y se pasa a la anterior.
+  // Tras abrir, cerrar, resolver o un cambio de otro administrador se vuelve a pedir la página. Si la única incidencia
+  // de la última página sale de la lista (se cierra, o se resuelve viendo solo las abiertas), se pasa a la anterior.
   const terminar = (nuevoAviso) => {
-    const paginaVacia = accion.tipo === 'cerrar' && data.items.length === 1 && page > 1
+    const resolviendo = accion.tipo === 'resolver'
+    const saleDeLaLista = accion.tipo === 'cerrar' || (resolviendo && estado === ESTADO_INCIDENCIA.ABIERTA)
+    const paginaVacia = saleDeLaLista && data.items.length === 1 && page > 1
     setAccion(null)
-    setAviso(nuevoAviso)
+    setAviso({ ...nuevoAviso, enfocar: resolviendo })
     if (paginaVacia) setPage(page - 1)
     else retry()
   }
@@ -115,7 +135,7 @@ export default function AdminIncidentsPage() {
       >
         Ver detalle
       </Button>
-      {incident.estado === 'PENDIENTE' && (
+      {incident.estado === ESTADO_INCIDENCIA.PENDIENTE && (
         <Button
           appearance="primary"
           icon={<Open20Regular />}
@@ -123,6 +143,17 @@ export default function AdminIncidentsPage() {
           onClick={() => empezar('abrir', incident)}
         >
           Abrir incidencia
+        </Button>
+      )}
+      {incident.estado === ESTADO_INCIDENCIA.ABIERTA && (
+        <Button
+          {...restoreFocusTarget}
+          appearance="primary"
+          icon={<CheckboxChecked20Regular />}
+          aria-label={`Marcar como resuelta la incidencia «${incident.asunto}»`}
+          onClick={() => empezar('resolver', incident)}
+        >
+          Marcar como resuelta
         </Button>
       )}
       <Button
@@ -153,7 +184,7 @@ export default function AdminIncidentsPage() {
         searchLabel="Buscar por nombre"
         searchPlaceholder="Escribe un nombre"
         status={estado}
-        statusLabels={INCIDENT_STATUS_LABELS}
+        statusLabels={ETIQUETAS_DE_ESTADO}
         onSearchChange={cambiarFiltro(setSearch)}
         onStatusChange={cambiarFiltro(setEstado)}
       >
@@ -175,7 +206,7 @@ export default function AdminIncidentsPage() {
         </MessageBar>
       )}
 
-      <div aria-live="polite" className={ownStyles.notices}>
+      <div ref={avisosRef} tabIndex={-1} aria-live="polite" className={ownStyles.notices}>
         {aviso && (
           <MessageBar intent={aviso.intent}>
             <MessageBarBody>{aviso.texto}</MessageBarBody>
@@ -218,7 +249,11 @@ export default function AdminIncidentsPage() {
       )}
 
       {accion?.tipo === 'detalle' && (
-        <IncidentDetailDialog incident={accion.incident} onClose={() => setAccion(null)} />
+        // Con los datos más recientes: si la lista se recarga con el detalle abierto, se actualiza
+        <IncidentDetailDialog
+          incident={data?.items.find((item) => item.id === accion.incident.id) ?? accion.incident}
+          onClose={() => setAccion(null)}
+        />
       )}
       {accion?.tipo === 'abrir' && (
         <OpenIncidentDialog
@@ -226,6 +261,16 @@ export default function AdminIncidentsPage() {
           onClose={() => setAccion(null)}
           onOpened={() => terminar(AVISO_ABIERTA)}
           onConflict={() => terminar(AVISO_CAMBIADA)}
+        />
+      )}
+      {accion?.tipo === 'resolver' && (
+        <ResolveIncidentDialog
+          incident={accion.incident}
+          onClose={() => setAccion(null)}
+          onResolved={() => terminar(AVISO_RESUELTA)}
+          onConflict={(code) =>
+            terminar(code === 'INCIDENT_ALREADY_RESOLVED' ? AVISO_YA_RESUELTA : AVISO_CAMBIADA)
+          }
         />
       )}
       {accion?.tipo === 'cerrar' && (

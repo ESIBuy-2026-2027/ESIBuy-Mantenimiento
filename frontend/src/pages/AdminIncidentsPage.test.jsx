@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { delay, http, HttpResponse } from 'msw'
-import { closeIncident } from '../api/adminIncidents'
+import { closeIncident, openIncident, resolveIncident } from '../api/adminIncidents'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
@@ -200,7 +200,7 @@ const accion = (fila, nombre) => within(fila).queryByRole('button', { name: new 
 const AVISO_CAMBIADA = 'Otro administrador ya ha cambiado esa incidencia. Hemos actualizado la lista.'
 
 describe('AdminIncidentsPage (HU50): acciones', () => {
-  it('HU50-CP23: una incidencia pendiente se puede abrir y cerrar; una abierta, solo cerrar', async () => {
+  it('HU50-CP23: una incidencia pendiente se puede abrir y cerrar; una abierta no se vuelve a abrir', async () => {
     await abrirSupervision()
 
     const [pendiente, abierta] = await incidencias()
@@ -385,5 +385,138 @@ describe('AdminIncidentsPage (HU192): avisos', () => {
 
     await waitFor(() => expect(region).toHaveTextContent('Incidencia abierta.'))
     expect(screen.getByText('Incidencia abierta.').closest('[aria-live]')).toBe(region)
+  })
+})
+
+// Resolución desde la supervisión (HU192, T511). En la página 1 del mock, «No me llega el pedido» (la primera) está
+// pendiente y «Cobro duplicado» (la segunda), abierta. Hay cuatro abiertas en total.
+const DIALOGO_RESOLVER = 'Marcar incidencia como resuelta'
+const AVISO_RESUELTA = 'Incidencia marcada como resuelta.'
+const AVISO_YA_RESUELTA = 'Esa incidencia ya estaba resuelta. Hemos actualizado la lista.'
+const botonResolver = (fila) => accion(fila, 'Marcar como resuelta')
+const confirmarResolucion = () => screen.getByRole('button', { name: 'Sí, marcar como resuelta' })
+const regionDeAvisos = () => screen.getByRole('main').querySelector('[aria-live="polite"]')
+
+describe('AdminIncidentsPage (HU192): resolver', () => {
+  it('HU192-CP28: solo las incidencias abiertas tienen el botón Marcar como resuelta', async () => {
+    await abrirSupervision()
+
+    const [pendiente, abierta] = await incidencias()
+    expect(botonResolver(pendiente)).not.toBeInTheDocument()
+    expect(botonResolver(abierta)).toHaveTextContent('Marcar como resuelta')
+    expect(botonResolver(abierta)).toHaveAccessibleName('Marcar como resuelta la incidencia «Cobro duplicado»')
+  })
+
+  it('HU192-CP29: al resolver, la lista y el detalle se actualizan sin recargar y lo anuncia', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+    const listaInicial = await lista()
+
+    await user.click(botonResolver((await incidencias())[1]))
+    const dialogo = screen.getByRole('alertdialog', { name: DIALOGO_RESOLVER })
+    await user.click(within(dialogo).getByRole('button', { name: 'Sí, marcar como resuelta' }))
+
+    await waitFor(() => expect(regionDeAvisos()).toHaveTextContent(AVISO_RESUELTA))
+    expect(screen.queryByRole('alertdialog', { name: DIALOGO_RESOLVER })).not.toBeInTheDocument()
+    await waitFor(async () => expect((await incidencias())[1]).toHaveTextContent('Resuelta'))
+    const resuelta = (await incidencias())[1]
+    expect(botonResolver(resuelta)).not.toBeInTheDocument()
+    expect(await lista()).toBe(listaInicial)
+
+    await user.click(accion(resuelta, 'Ver detalle'))
+    const detalle = screen.getByRole('dialog', { name: 'Detalle de la incidencia' })
+    expect(detalle).toHaveTextContent('Resuelta')
+    expect(detalle).toHaveTextContent(/Fecha de resolución: \d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}/)
+  })
+
+  it('HU192-CP29: al cancelar la confirmación la incidencia sigue abierta', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+
+    await user.click(botonResolver((await incidencias())[1]))
+    await user.click(screen.getByRole('button', { name: 'Volver' }))
+
+    expect(screen.queryByRole('alertdialog', { name: DIALOGO_RESOLVER })).not.toBeInTheDocument()
+    expect((await incidencias())[1]).toHaveTextContent('Abierta')
+    expect(screen.queryByText(AVISO_RESUELTA)).not.toBeInTheDocument()
+  })
+
+  it('HU192-CP30: si otro administrador ya la ha resuelto, lo avisa y la lista recargada la muestra resuelta', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+    const filas = await incidencias()
+    await resolveIncident('inc-seed-2')
+
+    await user.click(botonResolver(filas[1]))
+    await user.click(confirmarResolucion())
+
+    await waitFor(() => expect(regionDeAvisos()).toHaveTextContent(AVISO_YA_RESUELTA))
+    await waitFor(async () => expect((await incidencias())[1]).toHaveTextContent('Resuelta'))
+  })
+
+  it('HU192-CP30: si otro administrador ya la ha cerrado, lo avisa y la lista recargada ya no la muestra', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+    const filas = await incidencias()
+    await closeIncident('inc-seed-2')
+
+    await user.click(botonResolver(filas[1]))
+    await user.click(confirmarResolucion())
+
+    await waitFor(() => expect(regionDeAvisos()).toHaveTextContent(AVISO_CAMBIADA))
+    await waitFor(() => expect(screen.queryByText('Cobro duplicado')).not.toBeInTheDocument())
+  })
+
+  it('HU192-CP31: el filtro de estado permite ver solo las resueltas', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi(ADMIN)
+    await resolveIncident('inc-seed-4')
+    renderApp('/admin/incidents')
+    await lista()
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'RESUELTA')
+
+    await waitFor(async () => expect(await incidencias()).toHaveLength(1))
+    expect((await incidencias())[0]).toHaveTextContent('Producto dañado')
+  })
+
+  it('HU192-CP31: al resolver la única abierta de la última página filtrada vuelve a la anterior', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi(ADMIN)
+    // Abre siete pendientes para que haya once abiertas: dos páginas, la segunda con una sola
+    for (const n of [1, 3, 5, 6, 7, 8, 10]) await openIncident(`inc-seed-${n}`, 'Respuesta')
+    renderApp('/admin/incidents')
+    await lista()
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'ABIERTA')
+    await screen.findByText('Mostrando 1–10 de 11 incidencias')
+    await irALaSegundaPagina(user)
+    await waitFor(async () => expect(await incidencias()).toHaveLength(1))
+
+    await user.click(botonResolver((await incidencias())[0]))
+    await user.click(confirmarResolucion())
+
+    await waitFor(() => expect(screen.queryByRole('navigation', { name: 'Paginación' })).not.toBeInTheDocument())
+    await waitFor(async () => expect(await incidencias()).toHaveLength(10))
+    expect(screen.getByText(AVISO_RESUELTA)).toBeInTheDocument()
+  })
+
+  it('HU192-CP32: se resuelve solo con el teclado y el foco no se pierde', async () => {
+    const user = userEvent.setup()
+    await abrirSupervision()
+    const boton = botonResolver((await incidencias())[1])
+
+    boton.focus()
+    await user.keyboard('{Enter}')
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('alertdialog', { name: DIALOGO_RESOLVER })).not.toBeInTheDocument()
+    await waitFor(() => expect(boton).toHaveFocus())
+
+    await user.keyboard('{Enter}')
+    confirmarResolucion().focus()
+    await user.keyboard('{Enter}')
+
+    await waitFor(() => expect(regionDeAvisos()).toHaveTextContent(AVISO_RESUELTA))
+    await waitFor(() => expect(regionDeAvisos()).toHaveFocus())
   })
 })

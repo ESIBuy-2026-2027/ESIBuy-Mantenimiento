@@ -4832,7 +4832,7 @@ Rutas de las clases de test (bajo `frontend/src/`):
 | HU50-CP20 | El diálogo de apertura muestra el asunto y el contador, envía la respuesta recortada y entrega la incidencia abierta; sin respuesta o con más de 1000 caracteres no envía; cancelar no envía; un fallo se avisa y se puede reintentar; un 409 o un 404 se comunican a la página | Frontend (componente) | 7 | 🔍 En revisión (7, AB#305, PR pendiente) |
 | HU50-CP21 | El diálogo de cierre pide confirmación con el asunto y avisa de que se elimina; confirmar cierra esa incidencia; volver no cierra nada; un fallo se avisa y se puede reintentar; un 404 se comunica a la página | Frontend (componente) | 5 | 🔍 En revisión (5, AB#305, PR pendiente) |
 | HU50-CP22 | La lista de incidencias muestra en cada tarjeta las acciones que se le pasan; sin ellas, «Mis incidencias» sigue sin acciones | Frontend (componente) | 2 | 🔍 En revisión (2, AB#305, PR pendiente) |
-| HU50-CP23 | En la supervisión, una incidencia pendiente tiene los botones Abrir y Cerrar; una abierta, solo Cerrar | Frontend (página) | 1 | 🔍 En revisión (1, AB#305, PR pendiente) |
+| HU50-CP23 | En la supervisión, una incidencia pendiente tiene los botones Abrir y Cerrar; una abierta no se vuelve a abrir y se puede cerrar | Frontend (página) | 1 | 🔍 En revisión (1, AB#305, PR pendiente) |
 | HU50-CP24 | Abrir una pendiente con una respuesta la deja abierta con ella en la lista, sin el botón Abrir, y lo confirma | Frontend (página) | 1 | 🔍 En revisión (1, AB#305, PR pendiente) |
 | HU50-CP25 | Cerrar una incidencia la quita de la lista y lo confirma; si era la única de la última página, vuelve a la anterior; cancelar la confirmación no cambia nada | Frontend (página) | 3 | 🔍 En revisión (3, AB#305, PR pendiente) |
 | HU50-CP26 | Si otro administrador ya ha abierto o cerrado la incidencia (409 o 404), se avisa y se vuelve a cargar la lista | Frontend (página) | 2 | 🔍 En revisión (2, AB#305, PR pendiente) |
@@ -4912,7 +4912,7 @@ Notas:
 | HU50-CP21 | `CloseIncidentDialog.test.jsx` | `HU50-CP21: si otro administrador ya la ha cerrado (404), lo comunica a la página` | Frontend · componente | AB#305 | PR pendiente | 🔍 |
 | HU50-CP22 | `IncidentsList.test.jsx` | `HU50-CP22: con renderActions, cada tarjeta muestra las acciones de su incidencia` | Frontend · componente | AB#305 | PR pendiente | 🔍 |
 | HU50-CP22 | `IncidentsList.test.jsx` | `HU50-CP22: sin renderActions las tarjetas no tienen acciones, como en Mis incidencias` | Frontend · componente | AB#305 | PR pendiente | 🔍 |
-| HU50-CP23 | `AdminIncidentsPage.test.jsx` | `HU50-CP23: una incidencia pendiente se puede abrir y cerrar; una abierta, solo cerrar` | Frontend · página | AB#305 | PR pendiente | 🔍 |
+| HU50-CP23 | `AdminIncidentsPage.test.jsx` | `HU50-CP23: una incidencia pendiente se puede abrir y cerrar; una abierta no se vuelve a abrir` | Frontend · página | AB#305 | PR pendiente | 🔍 |
 | HU50-CP24 | `AdminIncidentsPage.test.jsx` | `HU50-CP24: al abrir una pendiente con una respuesta queda abierta con ella y lo confirma` | Frontend · página | AB#305 | PR pendiente | 🔍 |
 | HU50-CP25 | `AdminIncidentsPage.test.jsx` | `HU50-CP25: al cerrar una incidencia desaparece de la lista y lo confirma` | Frontend · página | AB#305 | PR pendiente | 🔍 |
 | HU50-CP25 | `AdminIncidentsPage.test.jsx` | `HU50-CP25: al cerrar la única incidencia de la última página vuelve a la anterior` | Frontend · página | AB#305 | PR pendiente | 🔍 |
@@ -4967,6 +4967,12 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 | HU192-CP25 | Un fallo o la falta de permiso se anuncian con un mensaje genérico; si la incidencia ha cambiado, se comunica a la página | Frontend (componente) | 3 | 🔍 En revisión (3, AB#395, PR pendiente) |
 | HU192-CP26 | Abrir una incidencia que ya está resuelta se comunica a la página como un cambio de otro administrador | Frontend (componente) | 1 | 🔍 En revisión (1, AB#395, PR pendiente) |
 | HU192-CP27 | Los avisos de la supervisión se anuncian en una región viva que ya está en la página | Frontend (página) | 1 | 🔍 En revisión (1, AB#395, PR pendiente) |
+| HU192-CP28 | El botón «Marcar como resuelta» solo aparece en las incidencias abiertas de la supervisión del administrador | Frontend (página) | 1 | 🔍 En revisión (1, AB#511, PR pendiente) |
+| HU192-CP29 | Al resolver, la lista y el detalle se actualizan sin recargar y se anuncia el éxito; cancelar no cambia nada | Frontend (página) | 2 | 🔍 En revisión (2, AB#511, PR pendiente) |
+| HU192-CP30 | Si la incidencia ya estaba resuelta o ha cambiado, se avisa y se vuelve a cargar la lista | Frontend (página) | 2 | 🔍 En revisión (2, AB#511, PR pendiente) |
+| HU192-CP31 | Se pueden filtrar las resueltas; resolver la única abierta de la última página filtrada vuelve a la anterior | Frontend (página) | 2 | 🔍 En revisión (2, AB#511, PR pendiente) |
+| HU192-CP32 | Se resuelve solo con el teclado: al cancelar el foco vuelve al botón y al terminar va al aviso | Frontend (página) | 1 | 🔍 En revisión (1, AB#511, PR pendiente) |
+| HU192-CP33 | Las resueltas se distinguen de las abiertas con texto, icono y forma, no solo por color, y muestran su fecha; el usuario no tiene botón | Frontend (componente) | 4 | 🔍 En revisión (4, AB#511, PR pendiente) |
 
 Notas:
 - **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** los propone el desarrollo a partir de los criterios del PBI 192 y no salen de Azure Boards. La HU se identifica con el número del PBI (192). Rama `feature/marcar-incidencia-resuelta`.
@@ -4976,6 +4982,9 @@ Notas:
 - **Sin cambiar la validación de MongoDB (decisión del desarrollo, 25/11/2026):** una resuelta se guarda como `ABIERTA` con `fechaResolucion` (CP10 a CP14).
 - **T419 (AB#419, RBAC):** CP18 comprueba el `@PreAuthorize` del servicio (se verificó el rojo quitando la anotación) y CP19 la regla `/api/admin/**` de `SecurityConfig`. El ID AB#419 aparece también en la HU44 con otro significado: revisar en Azure Boards.
 - **T395 (AB#395, mensajería):** 409 `INCIDENT_ALREADY_RESOLVED` e `INCIDENT_NOT_OPEN` en `ManejadorGlobalErrores`; en el frontend, `resolveIncident`, el mock, `ResolveIncidentDialog` con los mensajes de error y el conflicto en `OpenIncidentDialog` y la región viva de los avisos (CP20 a CP27).
+- **T511 (AB#511, botón de resolución):** botón en `AdminIncidentsPage`, `IncidentStatusBadge`, filtro «Resuelta», fecha de resolución en la lista y el detalle (CP28 a CP33).
+- **Forma (CP33):** el test comprueba el texto, el icono y la banda lateral de la tarjeta; la forma rectangular del badge no se puede comprobar en jsdom y hay que verla en el navegador. «En Mis incidencias no hay botón» pasó al escribirse (sin rojo real).
+- **HU44-CP25:** el test del «estado desconocido» usaba `RESUELTA`, que ya es un estado conocido; ahora usa `ARCHIVADA`.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -5029,6 +5038,18 @@ Notas:
 | HU192-CP25 | `ResolveIncidentDialog.test.jsx` | `HU192-CP25: si la incidencia %s, lo comunica a la página con su código` (parametrizado) | Frontend · componente | AB#395 | PR pendiente | 🔍 |
 | HU192-CP26 | `OpenIncidentDialog.test.jsx` | `HU192-CP26: si la incidencia ya está resuelta (409), lo comunica a la página` | Frontend · componente | AB#395 | PR pendiente | 🔍 |
 | HU192-CP27 | `AdminIncidentsPage.test.jsx` | `HU192-CP27: los avisos se anuncian en una región viva que ya está en la página` | Frontend · página | AB#395 | PR pendiente | 🔍 |
+| HU192-CP28 | `AdminIncidentsPage.test.jsx` | `HU192-CP28: solo las incidencias abiertas tienen el botón Marcar como resuelta` | Frontend · página | AB#511 | PR pendiente | 🔍 |
+| HU192-CP29 | `AdminIncidentsPage.test.jsx` | `HU192-CP29: al resolver, la lista y el detalle se actualizan sin recargar y lo anuncia` | Frontend · página | AB#511 | PR pendiente | 🔍 |
+| HU192-CP29 | `AdminIncidentsPage.test.jsx` | `HU192-CP29: al cancelar la confirmación la incidencia sigue abierta` | Frontend · página | AB#511 | PR pendiente | 🔍 |
+| HU192-CP30 | `AdminIncidentsPage.test.jsx` | `HU192-CP30: si otro administrador ya la ha resuelto, lo avisa y la lista recargada la muestra resuelta` | Frontend · página | AB#511 | PR pendiente | 🔍 |
+| HU192-CP30 | `AdminIncidentsPage.test.jsx` | `HU192-CP30: si otro administrador ya la ha cerrado, lo avisa y la lista recargada ya no la muestra` | Frontend · página | AB#511 | PR pendiente | 🔍 |
+| HU192-CP31 | `AdminIncidentsPage.test.jsx` | `HU192-CP31: el filtro de estado permite ver solo las resueltas` | Frontend · página | AB#511 | PR pendiente | 🔍 |
+| HU192-CP31 | `AdminIncidentsPage.test.jsx` | `HU192-CP31: al resolver la única abierta de la última página filtrada vuelve a la anterior` | Frontend · página | AB#511 | PR pendiente | 🔍 |
+| HU192-CP32 | `AdminIncidentsPage.test.jsx` | `HU192-CP32: se resuelve solo con el teclado y el foco no se pierde` | Frontend · página | AB#511 | PR pendiente | 🔍 |
+| HU192-CP33 | `IncidentsList.test.jsx` | `HU192-CP33: una resuelta se distingue de una abierta por el texto, el icono y la forma` | Frontend · componente | AB#511 | PR pendiente | 🔍 |
+| HU192-CP33 | `IncidentsList.test.jsx` | `HU192-CP33: muestra cuándo se resolvió, solo en las resueltas` | Frontend · componente | AB#511 | PR pendiente | 🔍 |
+| HU192-CP33 | `IncidentsList.test.jsx` | `HU192-CP33: en Mis incidencias no hay botón para resolver` | Frontend · componente | AB#511 | PR pendiente | 🔍 |
+| HU192-CP33 | `incidentStatus.test.js` | `HU192-CP33: RESUELTA se muestra como Resuelta, con un color propio` | Frontend · componente | AB#511 | PR pendiente | 🔍 |
 
 Rutas de las clases de test:
 - `IncidenciaTest`: `backend/src/test/java/es/uclm/esibuy/backend/incidencias/domain/model/`
@@ -5041,6 +5062,8 @@ Rutas de las clases de test:
 - `ResolveIncidentDialog.test.jsx`: `frontend/src/features/incidents/`
 - `OpenIncidentDialog.test.jsx`: `frontend/src/features/incidents/`
 - `AdminIncidentsPage.test.jsx`: `frontend/src/pages/`
+- `IncidentsList.test.jsx`: `frontend/src/features/incidents/`
+- `incidentStatus.test.js`: `frontend/src/features/incidents/`
 
 ---
 
