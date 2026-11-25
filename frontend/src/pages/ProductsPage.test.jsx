@@ -680,10 +680,11 @@ describe('ProductsPage (HU7): catálogo con ofertas y listado único', () => {
   })
 
   it('permite ordenar por precio y envía el criterio al catálogo', async () => {
+    const user = userEvent.setup()
     const peticiones = capturarPeticiones()
     await abrirCatalogo()
 
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Ordenar por' }), 'precio')
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Ordenar por' }), 'precio')
 
     await waitFor(() => {
       expect(peticiones.some((peticion) => peticion.get('sort') === 'precio')).toBe(true)
