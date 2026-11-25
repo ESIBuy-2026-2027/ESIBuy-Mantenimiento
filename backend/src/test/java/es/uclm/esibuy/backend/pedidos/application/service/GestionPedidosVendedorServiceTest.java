@@ -88,7 +88,12 @@ class GestionPedidosVendedorServiceTest {
                 vendedorId,
                 "TecnoVera",
                 estado,
-                List.of(new LineaPedido("p-1", "Auriculares", 2, new BigDecimal("53.91"))),
+                List.of(new LineaPedido(
+                        "p-1",
+                        vendedorId,
+                        "Auriculares",
+                        2,
+                        new BigDecimal("53.91"))),
                 new DireccionEnvioPedido("Carlos Cliente", "Calle Mayor 1", null, "13001",
                         "Ciudad Real", "Ciudad Real", "611222333"),
                 "mp-1",

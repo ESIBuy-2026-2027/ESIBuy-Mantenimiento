@@ -26,7 +26,6 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaExceptio
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
-import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEntregableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PagoRechazadoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoEstadoNoAvanzableException;
@@ -494,14 +493,16 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("No hay productos de ese proveedor en el carrito", "CART_EMPTY");
     }
 
-    // Pago simulado rechazado (HU10): el pedido no se confirma ni se descuenta stock
+    // Pago simulado rechazado (HU10): el pedido no se confirma ni se descuenta
+    // stock
     @ExceptionHandler(PagoRechazadoException.class)
     @ResponseStatus(HttpStatus.PAYMENT_REQUIRED)
     public RespuestaError pagoRechazado() {
         return new RespuestaError("El pago ha sido rechazado", "PAYMENT_REJECTED");
     }
 
-    // El total que el cliente vio al confirmar ya no es el real: tiene que volver a revisar la compra
+    // El total que el cliente vio al confirmar ya no es el real: tiene que volver a
+    // revisar la compra
     @ExceptionHandler(TotalNoCoincideException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError totalNoCoincide() {
@@ -511,7 +512,8 @@ public class ManejadorGlobalErrores {
     @ExceptionHandler(StockInsuficientePedidoException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError stockInsuficienteEnElPedido(StockInsuficientePedidoException e) {
-        // Dice qué producto falla para que el cliente pueda ajustarlo: es un producto de su propio carrito
+        // Dice qué producto falla para que el cliente pueda ajustarlo: es un producto
+        // de su propio carrito
         return new RespuestaError("No queda stock suficiente de «" + e.getNombreProducto() + "»", "INSUFFICIENT_STOCK");
     }
 

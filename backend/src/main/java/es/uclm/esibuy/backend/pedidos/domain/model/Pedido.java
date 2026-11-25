@@ -7,11 +7,14 @@ import java.util.List;
 
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEntregableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoEstadoNoAvanzableException;
 
 /**
- * Pedido de un cliente a un solo vendedor (HU10; regla del equipo: no se mezclan productos de vendedores distintos).
- * El descuento va en el precio de cada producto; el total se calcula siempre sumando las líneas.
+ * Pedido de un cliente a un solo vendedor (HU10; regla del equipo: no se
+ * mezclan productos de vendedores distintos).
+ * El descuento va en el precio de cada producto; el total se calcula siempre
+ * sumando las líneas.
  */
 public class Pedido {
 
@@ -107,7 +110,8 @@ public class Pedido {
         estado = EstadoPedido.CANCELADO;
     }
 
-    // Avance lineal del vendedor: no retrocede ni reabre pedidos cancelados o entregados.
+    // Avance lineal del vendedor: no retrocede ni reabre pedidos cancelados o
+    // entregados.
     public void avanzarEstado() {
         estado = switch (estado) {
             case PAGADO -> EstadoPedido.PREPARANDO;
@@ -118,7 +122,8 @@ public class Pedido {
         };
     }
 
-    // Avance del vendedor: solo hasta ENVIADO (ENTREGADO corre por cuenta del cliente).
+    // Avance del vendedor: solo hasta ENVIADO (ENTREGADO corre por cuenta del
+    // cliente).
     public void avanzarEstadoVendedor() {
         estado = switch (estado) {
             case PAGADO -> EstadoPedido.PREPARANDO;
@@ -150,7 +155,8 @@ public class Pedido {
         }
     }
 
-    // Suma de las líneas, cada una con el descuento ya aplicado a su precio unitario
+    // Suma de las líneas, cada una con el descuento ya aplicado a su precio
+    // unitario
     public static BigDecimal totalDe(List<LineaPedido> lineas) {
         return lineas.stream()
                 .map(LineaPedido::subtotal)
@@ -202,12 +208,35 @@ public class Pedido {
     }
 
     // Confirmación de recepción del cliente: solo cuando el pedido está ENVIADO.
-    public void marcarEntregado() {
+
+    // Confirmación de recepción del cliente:
+    // únicamente se permite cuando el pedido está ENVIADO.
+    public void confirmarEntrega(Instant fecha) {
         if (estado != EstadoPedido.ENVIADO) {
-            throw new PedidoEstadoNoAvanzableException(
-                    "Solo se puede marcar como entregado un pedido enviado");
+            throw new PedidoNoEntregableException(
+                    "Solo se puede confirmar la entrega de un pedido enviado");
+        }
+
+        if (fecha == null) {
+            throw new PedidoInvalidoException(
+                    "La fecha de entrega es obligatoria");
         }
 
         estado = EstadoPedido.ENTREGADO;
+        fechaEntrega = fecha;
+        historial.add(new CambioEstado(EstadoPedido.ENTREGADO, fecha));
     }
+
+    public Instant getFechaEstimadaEntrega() {
+        return fechaEstimadaEntrega;
+    }
+
+    public Instant getFechaEntrega() {
+        return fechaEntrega;
+    }
+
+    public List<CambioEstado> getHistorial() {
+        return List.copyOf(historial);
+    }
+
 }

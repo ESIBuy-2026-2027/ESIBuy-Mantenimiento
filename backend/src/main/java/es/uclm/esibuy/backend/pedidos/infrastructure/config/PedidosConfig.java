@@ -13,7 +13,6 @@ import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCa
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConfirmacionRecepcionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
-import es.uclm.esibuy.backend.pedidos.application.port.in.SeguimientoEnvioUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ProductosConPedidosUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.VentasVendedorUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.GestionPedidosVendedorUseCase;
@@ -32,7 +31,6 @@ import es.uclm.esibuy.backend.pedidos.application.service.ConsultaComprasService
 import es.uclm.esibuy.backend.pedidos.application.service.DependenciasRealizacionPedido;
 import es.uclm.esibuy.backend.pedidos.application.service.RealizacionPedidoService;
 import es.uclm.esibuy.backend.pedidos.application.service.ProductosConPedidosService;
-import es.uclm.esibuy.backend.pedidos.application.service.SeguimientoEnvioService;
 import es.uclm.esibuy.backend.pedidos.application.service.VentasVendedorService;
 import es.uclm.esibuy.backend.pedidos.application.service.GestionPedidosVendedorService;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.carrito.CarritoAdapter;
@@ -147,9 +145,14 @@ public class PedidosConfig {
     }
 
     @Bean
-    ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedidoUseCase(PedidoRepositoryPort pedidoRepositoryPort,
-            ClienteEnSesionPort pedidosClienteEnSesionPort) {
-        return new ConfirmacionRecepcionPedidoService(pedidoRepositoryPort, pedidosClienteEnSesionPort);
+    ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedidoUseCase(
+            PedidoRepositoryPort pedidoRepositoryPort,
+            ClienteEnSesionPort pedidosClienteEnSesionPort,
+            Clock reloj) {
+        return new ConfirmacionRecepcionPedidoService(
+                pedidoRepositoryPort,
+                pedidosClienteEnSesionPort,
+                reloj);
     }
 
     // Ventas del vendedor para sus estadísticas (HU17)
@@ -161,6 +164,7 @@ public class PedidosConfig {
     @Bean
     GestionPedidosVendedorUseCase gestionPedidosVendedorUseCase(PedidoRepositoryPort pedidoRepositoryPort,
             VendedorEnSesionPort pedidosVendedorEnSesionPort, ExistenciasPort pedidosExistenciasPort) {
-        return new GestionPedidosVendedorService(pedidoRepositoryPort, pedidosVendedorEnSesionPort, pedidosExistenciasPort);
+        return new GestionPedidosVendedorService(pedidoRepositoryPort, pedidosVendedorEnSesionPort,
+                pedidosExistenciasPort);
     }
 }

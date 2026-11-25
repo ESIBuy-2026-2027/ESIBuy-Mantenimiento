@@ -18,12 +18,14 @@ import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCa
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConfirmacionRecepcionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
-import es.uclm.esibuy.backend.pedidos.application.port.in.SeguimientoEnvioUseCase;
 
 /**
- * Adaptador de entrada web de los pedidos. Recibe la petición y delega en el puerto de entrada: crea el pedido
- * (HU10), sirve el historial de pedidos del cliente y el detalle de cada uno (HU11) y cancela un pedido que aún no
- * se ha enviado (HU12). También el seguimiento del envío: su estado e histórico y la confirmación de recepción
+ * Adaptador de entrada web de los pedidos. Recibe la petición y delega en el
+ * puerto de entrada: crea el pedido
+ * (HU10), sirve el historial de pedidos del cliente y el detalle de cada uno
+ * (HU11) y cancela un pedido que aún no
+ * se ha enviado (HU12). También el seguimiento del envío: su estado e histórico
+ * y la confirmación de recepción
  * por el cliente. El cliente sale siempre de la sesión, nunca de un parámetro.
  */
 @RestController
@@ -36,7 +38,8 @@ public class PedidoController {
     private final ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedido;
 
     public PedidoController(RealizacionPedidoUseCase realizacionPedido, ConsultaComprasUseCase consultaCompras,
-            CancelacionPedidoUseCase cancelacionPedido, ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedido) {
+            CancelacionPedidoUseCase cancelacionPedido,
+            ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedido) {
         this.realizacionPedido = realizacionPedido;
         this.consultaCompras = consultaCompras;
         this.cancelacionPedido = cancelacionPedido;
@@ -67,7 +70,9 @@ public class PedidoController {
     public PedidoResponse cancelar(@PathVariable String id, Authentication autenticado) {
         return PedidoResponse.desde(cancelacionPedido.cancelarPedido(autenticado.getName(), id));
     }
-    // Confirmación de recepción por el cliente: responde 200 con el pedido ya entregado
+
+    // Confirmación de recepción por el cliente: responde 200 con el pedido ya
+    // entregado
     @PostMapping("/{id}/deliver")
     public PedidoResponse confirmarRecepcion(@PathVariable String id, Authentication autenticado) {
         return PedidoResponse.desde(confirmacionRecepcionPedido.confirmarRecepcion(autenticado.getName(), id));

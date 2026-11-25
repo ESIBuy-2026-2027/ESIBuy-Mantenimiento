@@ -1,12 +1,10 @@
 package es.uclm.esibuy.backend.pedidos.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
-import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEntregableException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -94,7 +92,8 @@ class PedidoTest {
     @Test
     @DisplayName("HU10-CP25: el total es la suma de las líneas, cada una con el descuento ya aplicado a su precio")
     void elTotalEsLaSumaDeLasLineasConSuDescuento() {
-        // 59.90 con un 10 % de descuento en el producto son 53.91; el descuento no se aplica al total
+        // 59.90 con un 10 % de descuento en el producto son 53.91; el descuento no se
+        // aplica al total
         List<LineaPedido> lineas = List.of(linea("p-1", 2, "53.91"), linea("p-2", 1, "89.50"));
 
         assertEquals(new BigDecimal("197.32"), Pedido.totalDe(lineas));
