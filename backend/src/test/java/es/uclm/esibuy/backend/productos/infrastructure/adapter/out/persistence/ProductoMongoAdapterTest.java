@@ -369,6 +369,34 @@ class ProductoMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU7: los filtros de stock y ofertas se combinan en la consulta paginada")
+    void buscarEnCatalogoFiltraPorStockYOfertas() {
+        adapter.guardar(crearProducto(null, "v-1", "Sin stock con oferta", "",
+                new BigDecimal("10"), 0, "cat-1", "", true,
+                new Descuento(true, new BigDecimal("10")), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-2", "Con stock sin oferta", "",
+                new BigDecimal("10"), 5, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-3", "Con stock y oferta", "",
+                new BigDecimal("10"), 3, "cat-1", "", true,
+                new Descuento(true, new BigDecimal("15")), Descuento.sinDescuento()));
+
+        ProductoPage soloStock = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, true, false,
+                        CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+        ProductoPage soloOfertas = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, false, true,
+                        CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+        ProductoPage stockYOfertas = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, true, true,
+                        CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+
+        assertEquals(List.of("Con stock sin oferta", "Con stock y oferta"), nombres(soloStock));
+        assertEquals(List.of("Sin stock con oferta", "Con stock y oferta"), nombres(soloOfertas));
+        assertEquals(List.of("Con stock y oferta"), nombres(stockYOfertas));
+    }
+
+    @Test
     @DisplayName("HU7-CP12: la búsqueda por nombre no distingue mayúsculas ni tildes")
     void buscarEnCatalogoBuscaSinDistinguirMayusculasNiTildes() {
         adapter.guardar(productoNuevo("v-1", "Lámpara de escritorio"));
