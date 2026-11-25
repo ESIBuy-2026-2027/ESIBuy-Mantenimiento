@@ -73,9 +73,27 @@ const useStyles = makeStyles({
     boxShadow: '0 4px 14px rgba(194, 65, 12, 0.12)',
   },
   premiumMember: {
-    border: '1px solid #F2A36B',
-    backgroundImage: 'linear-gradient(120deg, #FFF1E5 0%, #FFF9F3 48%, #FCE8F0 100%)',
-    boxShadow: '0 5px 18px rgba(194, 65, 12, 0.16)',
+    border: '1px solid #EA8A3A',
+    backgroundImage: 'linear-gradient(120deg, #FFE2C2 0%, #FFF1DF 48%, #FFD7B5 100%)',
+    boxShadow: '0 6px 20px rgba(194, 65, 12, 0.22)',
+  },
+  premiumHeadline: {
+    color: '#C2410C',
+    backgroundImage: 'linear-gradient(90deg, #C2410C 0%, #EA580C 55%, #9A3412 100%)',
+    backgroundSize: '100% auto',
+    animationName: 'none',
+    WebkitTextFillColor: 'transparent',
+  },
+  brandRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalM,
+  },
+  brandIcon: {
+    flexShrink: 0,
+    width: '38px',
+    height: '38px',
+    animation: 'none',
   },
   premiumMemberStatus: {
     display: 'inline-flex',
@@ -83,9 +101,9 @@ const useStyles = makeStyles({
     gap: tokens.spacingHorizontalS,
     padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalL}`,
     borderRadius: tokens.borderRadiusCircular,
-    color: '#9A3412',
-    backgroundImage: 'linear-gradient(100deg, #FFE0C2 0%, #FAD1E8 100%)',
-    border: '1px solid #F2B58B',
+    color: '#8A2C08',
+    backgroundImage: 'linear-gradient(100deg, #FFC078 0%, #FF9A45 100%)',
+    border: '1px solid #E97824',
     fontWeight: tokens.fontWeightBold,
     letterSpacing: '0.02em',
     boxShadow: tokens.shadow4,
@@ -381,14 +399,16 @@ export default function PremiumPage({ embedded = false }) {
     <Root className={embedded ? styles.embeddedPage : pageStyles.page}>
       <section className={mergeClasses(styles.hero, embedded && esEstandar && styles.standardPromo, embedded && esPremium && styles.premiumMember)}>
         <div className={styles.heroMain}>
-          <span className={styles.heroIcon} aria-hidden="true">
-            <Diamond48Regular />
-          </span>
-          {embedded ? (
-            <h2 className={styles.headline}>{esEstandar ? 'Da el salto a ESIBuy Premium' : 'ESIBuy Premium'}</h2>
-          ) : (
-            <h1 className={styles.headline}>ESIBuy Premium</h1>
-          )}
+          <div className={styles.brandRow}>
+            <span className={mergeClasses(styles.heroIcon, embedded && esPremium && styles.brandIcon)} aria-hidden="true">
+              <Diamond48Regular />
+            </span>
+            {embedded ? (
+              <h2 className={mergeClasses(styles.headline, esPremium && styles.premiumHeadline)}>{esEstandar ? 'Da el salto a ESIBuy Premium' : 'ESIBuy Premium'}</h2>
+            ) : (
+              <h1 className={styles.headline}>ESIBuy Premium</h1>
+            )}
+          </div>
           <Text size={400} className={styles.lead}>
             {embedded && esEstandar
               ? 'Disfruta de descuentos exclusivos, envíos sin coste y prioridad para recibir tus pedidos antes.'
