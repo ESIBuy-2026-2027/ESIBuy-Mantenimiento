@@ -1,5 +1,7 @@
 package es.uclm.esibuy.backend.productos.application.port.in;
 
+import java.math.BigDecimal;
+
 public record BuscarCatalogoQuery(
     String busqueda,
     String categoriaId,
@@ -7,8 +9,8 @@ public record BuscarCatalogoQuery(
     boolean soloStock,
     boolean soloOfertas,
     boolean clientePremium,
-    Integer precioMinimo,
-    Integer precioMaximo,
+    BigDecimal precioMinimo,
+    BigDecimal precioMaximo,
     CriterioOrdenCatalogo criterio,
     boolean descendente,
     int pagina,
