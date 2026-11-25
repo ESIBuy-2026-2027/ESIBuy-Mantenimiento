@@ -49,13 +49,12 @@ afterEach(() => {
   globalThis.IntersectionObserver = original
 })
 
-// Por defecto abre el listado completo (con «Ver todos los productos»); con `todos: false` se queda en la vista por
-// categorías, que es la que ve el cliente al entrar.
-async function abrirCatalogo({ todos = true } = {}) {
+// El catálogo abre directamente el listado completo; el argumento se conserva para simplificar los casos existentes.
+async function abrirCatalogo() {
   await abrirSesionPorApi(CLIENTE)
   renderApp('/products')
   await screen.findByRole('heading', { level: 1, name: /productos/i })
-  if (todos) await userEvent.click(await screen.findByRole('button', { name: /ver todos los productos/i }))
+  await screen.findByRole('searchbox', { name: /buscar por nombre/i })
 }
 
 const tarjetas = () => within(screen.getByRole('list', { name: /productos/i })).getAllByRole('listitem')
@@ -113,12 +112,12 @@ describe('ProductsPage (HU7): vista de productos del cliente', () => {
     expect(screen.queryByRole('navigation', { name: /paginación/i })).not.toBeInTheDocument()
   })
 
-  it('HU7-CP03: las tarjetas se colocan de dos en dos', async () => {
+  it('HU7-CP03: las tarjetas se colocan en cuatro columnas en escritorio', async () => {
     await abrirCatalogo()
 
     await esperarTarjetas(10)
     expect(screen.getByRole('list', { name: /productos/i })).toHaveStyle({
-      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+      gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
     })
   })
 
@@ -196,8 +195,6 @@ describe('ProductsPage (HU7): vista de productos del cliente', () => {
     )
     await abrirSesionPorApi(CLIENTE)
     renderApp('/products')
-    await user.click(await screen.findByRole('button', { name: /ver todos los productos/i }))
-
     expect(await screen.findByText(/no se han podido cargar los productos/i)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /reintentar/i }))
 
@@ -400,67 +397,6 @@ describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
   })
 })
 
-describe('ProductsPage (HU7): selección de los mejores productos', () => {
-  const MEJORES = /mejor valorados/i
-
-  it('HU7-CP07: arriba muestra los diez productos mejor valorados, numerados y con su valoración', async () => {
-    await abrirCatalogo()
-
-    expect(await screen.findByRole('heading', { level: 2, name: MEJORES })).toBeInTheDocument()
-    const seleccion = screen.getByRole('list', { name: /selección destacada/i })
-    const destacados = within(seleccion).getAllByRole('listitem')
-    expect(destacados).toHaveLength(10)
-    expect(within(destacados[0]).getByText('1')).toBeInTheDocument()
-    expect(within(destacados[0]).getByText('Teclado mecánico')).toBeInTheDocument()
-    expect(within(destacados[0]).getByText('4,7')).toBeInTheDocument()
-    expect(within(destacados[9]).getByText('10')).toBeInTheDocument()
-  })
-
-  it('HU7-CP07: la selección pide los diez mejor valorados: valoración descendente y sin mínimo de estrellas', async () => {
-    const peticiones = capturarPeticiones()
-    await abrirCatalogo()
-
-    await waitFor(() => expect(peticiones.some((peticion) => peticion.get('sort') === 'valoracion')).toBe(true))
-    const peticion = peticiones.find((candidata) => candidata.get('sort') === 'valoracion')
-    expect(peticion.get('order')).toBe('desc')
-    expect(peticion.get('size')).toBe('10')
-    expect(peticion.get('page')).toBe('1')
-    expect(peticion.has('minRating')).toBe(false)
-  })
-
-  it('HU7-CP07: con algún filtro activo la selección se oculta para centrarse en los resultados', async () => {
-    const user = userEvent.setup()
-    await abrirCatalogo()
-    await screen.findByRole('heading', { level: 2, name: MEJORES })
-
-    await user.type(screen.getByRole('searchbox', { name: /buscar por nombre/i }), 'lampara')
-
-    await waitFor(() => expect(screen.queryByRole('heading', { level: 2, name: MEJORES })).not.toBeInTheDocument())
-  })
-
-  it('HU7-CP07: si hay menos de tres productos valorados no se muestra la selección', async () => {
-    capturarPeticiones()
-    await abrirCatalogo()
-
-    await screen.findByRole('searchbox', { name: /buscar por nombre/i })
-    expect(screen.queryByRole('heading', { level: 2, name: MEJORES })).not.toBeInTheDocument()
-  })
-
-  it('HU7-CP07: si la selección no carga, el listado sigue funcionando sin ella', async () => {
-    server.use(
-      http.get('/api/products', ({ request }) =>
-        new URL(request.url).searchParams.get('sort') === 'valoracion'
-          ? new HttpResponse(null, { status: 500 })
-          : undefined,
-      ),
-    )
-    await abrirCatalogo()
-
-    await esperarTarjetas(10)
-    expect(screen.queryByRole('heading', { level: 2, name: MEJORES })).not.toBeInTheDocument()
-  })
-})
-
 describe('ProductsPage (HU8): detalle de un producto', () => {
   const abrirAuriculares = (user) =>
     user.click(within(screen.getByRole('list', { name: /productos/i })).getByRole('link', { name: /auriculares/i }))
@@ -474,34 +410,6 @@ describe('ProductsPage (HU8): detalle de un producto', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Auriculares inalámbricos' })).toBeInTheDocument()
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products\/p-1$/)
-  })
-
-  it('HU8-CP06: al pulsar una tarjeta de la animación de los mejores se abre el detalle de su producto', async () => {
-    const user = userEvent.setup()
-    await abrirCatalogo()
-    const animacion = await screen.findByRole('region', { name: /en movimiento/i })
-    const tarjetasDeLaAnimacion = within(animacion)
-      .getAllByRole('button', { hidden: true })
-      .filter((boton) => boton.closest('[aria-hidden="true"]'))
-    expect(tarjetasDeLaAnimacion.length).toBeGreaterThan(0)
-    const nombre = tarjetasDeLaAnimacion[0].getAttribute('aria-label')
-
-    await user.click(tarjetasDeLaAnimacion[0])
-
-    expect(await screen.findByRole('heading', { level: 1, name: nombre })).toBeInTheDocument()
-    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products\/p-\d+$/)
-  })
-
-  it('HU8-CP06: con el teclado se llega al detalle desde la lista de los mejores', async () => {
-    const user = userEvent.setup()
-    await abrirCatalogo()
-    const seleccion = await screen.findByRole('list', { name: /selección destacada/i })
-
-    within(seleccion).getByRole('link', { name: /teclado mecánico/i }).focus()
-    await user.keyboard('{Enter}')
-
-    expect(await screen.findByRole('heading', { level: 1, name: 'Teclado mecánico' })).toBeInTheDocument()
-    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products\/p-2$/)
   })
 
   it('HU8-CP06: desde el detalle, «Volver a los productos» lleva otra vez al listado', async () => {
@@ -720,150 +628,34 @@ describe('ProductsPage (HU14): favoritos', () => {
   })
 })
 
-describe('ProductsPage (HU7): ofertas y categorías que se deslizan', () => {
-  const filaDe = (categoria) => screen.getByRole('list', { name: `Productos de ${categoria}` })
+describe('ProductsPage (HU7): catálogo con ofertas y listado único', () => {
+  it('muestra las ofertas en la parte superior y no muestra carruseles por categoría ni top 10', async () => {
+    await abrirCatalogo()
 
-  it('HU7-CP21: por defecto el catálogo se ve por categorías: una fila con los productos de cada una', async () => {
-    await abrirCatalogo({ todos: false })
-
-    const tecnologia = await screen.findByRole('list', { name: 'Productos de Tecnología' })
-    await waitFor(() => expect(within(tecnologia).getAllByRole('listitem').length).toBeGreaterThan(5))
-    expect(within(tecnologia).getByText('Auriculares inalámbricos')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 2, name: 'Tecnología' })).toBeInTheDocument()
-
-    const hogar = await screen.findByRole('list', { name: 'Productos de Hogar' })
-    expect(await within(hogar).findByText('Lámpara de escritorio LED')).toBeInTheDocument()
-    expect(within(hogar).queryByText('Auriculares inalámbricos')).not.toBeInTheDocument()
-    // Y no el listado completo
-    expect(screen.queryByRole('list', { name: /^productos$/i })).not.toBeInTheDocument()
+    expect(await screen.findByRole('list', { name: /productos en oferta/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Ofertas' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /los 10 mejor valorados/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: /productos de tecnología/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('list', { name: /^productos$/i })).toBeInTheDocument()
   })
 
-  it('HU7-CP21: cada fila tiene flechas para moverse; la de volver está desactivada al empezar', async () => {
-    await abrirCatalogo({ todos: false })
-    await screen.findByRole('list', { name: 'Productos de Tecnología' })
-
-    expect(screen.getByRole('button', { name: 'Productos anteriores de Tecnología' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Más productos de Tecnología' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Productos anteriores de Hogar' })).toBeInTheDocument()
-  })
-
-  it('HU7-CP21: las tarjetas de las filas llevan la foto del producto y su precio con descuento', async () => {
-    await abrirCatalogo({ todos: false })
-    const tecnologia = await screen.findByRole('list', { name: 'Productos de Tecnología' })
-    const tarjeta = (await within(tecnologia).findByText('Auriculares inalámbricos')).closest('li')
-
-    expect(within(tarjeta).getByRole('img', { name: 'Auriculares inalámbricos' })).toHaveAttribute(
-      'src',
-      expect.stringMatching(/^(data:|https?:)/),
-    )
-    expect(within(tarjeta).getByText(/-10 %/)).toBeInTheDocument()
-    expect(within(tarjeta).getByText(/quedan 34 unidades/i)).toBeInTheDocument()
-  })
-
-  it('HU7-CP21: al llegar cerca del final de la fila de una categoría carga los siguientes productos en ella', async () => {
-    const producto = (id, nombre) => ({
-      id,
-      nombre,
-      imagen: '',
-      categoriaId: 'cat-1',
-      precio: 10,
-      descuento: null,
-      precioFinal: 10,
-      valoracion: null,
-      numValoraciones: 0,
-      stock: 5,
-      disponible: true,
-    })
-    server.use(
-      http.get('/api/products', ({ request }) => {
-        const parametros = new URL(request.url).searchParams
-        if (parametros.get('category') !== 'cat-1') return undefined
-        const pagina = Number(parametros.get('page'))
-        return HttpResponse.json({
-          items: [producto(`x-${pagina}`, pagina === 1 ? 'Primer producto' : 'Producto de la segunda tanda')],
-          page: pagina,
-          size: 10,
-          totalItems: 2,
-          totalPages: 2,
-        })
-      }),
-    )
-    await abrirCatalogo({ todos: false })
-    const tecnologia = await screen.findByRole('list', { name: 'Productos de Tecnología' })
-    expect(await within(tecnologia).findByText('Primer producto')).toBeInTheDocument()
-
-    // Aquí no hay diseño, así que la fila no desborda y está siempre cerca del final: pide la segunda tanda sola
-    expect(await within(filaDe('Tecnología')).findByText('Producto de la segunda tanda')).toBeInTheDocument()
-    expect(within(filaDe('Tecnología')).getByText('Primer producto')).toBeInTheDocument()
-  })
-
-  it('HU7-CP22: arriba hay una cinta de ofertas con los productos con descuento y se puede pausar', async () => {
+  it('permite pausar la cinta de ofertas', async () => {
     const user = userEvent.setup()
-    await abrirCatalogo({ todos: false })
-
+    await abrirCatalogo()
     const ofertas = await screen.findByRole('list', { name: /productos en oferta/i })
-    const tarjetasDeOferta = within(ofertas).getAllByRole('listitem')
-    expect(tarjetasDeOferta.length).toBeGreaterThanOrEqual(3)
-    tarjetasDeOferta.forEach((tarjeta) => expect(within(tarjeta).getByText(/-\d+ %/)).toBeInTheDocument())
 
-    const pausa = screen.getByRole('button', { name: 'Pausar' })
-    expect(pausa).toHaveAttribute('aria-pressed', 'false')
-    expect(ofertas).toHaveStyle({ animationPlayState: 'running' })
-
-    await user.click(pausa)
+    await user.click(screen.getByRole('button', { name: 'Pausar' }))
 
     expect(screen.getByRole('button', { name: 'Reanudar' })).toHaveAttribute('aria-pressed', 'true')
     expect(ofertas).toHaveStyle({ animationPlayState: 'paused' })
   })
 
-  it('HU7-CP22: se para también al poner el ratón encima', async () => {
-    const user = userEvent.setup()
-    await abrirCatalogo({ todos: false })
-    const ofertas = await screen.findByRole('list', { name: /productos en oferta/i })
+  it('mantiene visibles los filtros y el listado completo al entrar', async () => {
+    await abrirCatalogo()
 
-    await user.hover(ofertas)
-
-    expect(ofertas).toHaveStyle({ animationPlayState: 'paused' })
-  })
-
-  it('HU7-CP22: si hay menos de tres productos con descuento no se muestra la cinta', async () => {
-    server.use(
-      http.get('/api/products', ({ request }) => {
-        const parametros = new URL(request.url).searchParams
-        return parametros.get('size') === '50' ? respuesta([]) : undefined
-      }),
-    )
-    await abrirCatalogo({ todos: false })
-    await screen.findByRole('list', { name: 'Productos de Tecnología' })
-
-    expect(screen.queryByRole('list', { name: /productos en oferta/i })).not.toBeInTheDocument()
-  })
-
-  it('HU7-CP23: «Ver todos los productos» enseña el listado completo y «Ver por categorías» vuelve a las filas', async () => {
-    const user = userEvent.setup()
-    await abrirCatalogo({ todos: false })
-    await screen.findByRole('list', { name: 'Productos de Tecnología' })
-
-    await user.click(screen.getByRole('button', { name: /ver todos los productos/i }))
-
-    await esperarTarjetas(10)
-    expect(screen.queryByRole('list', { name: 'Productos de Tecnología' })).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: /ver por categorías/i }))
-
-    expect(await screen.findByRole('list', { name: 'Productos de Tecnología' })).toBeInTheDocument()
-    expect(screen.queryByRole('list', { name: /^productos$/i })).not.toBeInTheDocument()
-  })
-
-  it('HU7-CP23: al buscar se pasa a los resultados en el listado completo', async () => {
-    const user = userEvent.setup()
-    await abrirCatalogo({ todos: false })
-    await screen.findByRole('list', { name: 'Productos de Tecnología' })
-
-    await user.type(screen.getByRole('searchbox', { name: /buscar por nombre/i }), 'cafetera')
-
-    await waitFor(() => expect(tarjetas()).toHaveLength(1))
-    expect(screen.queryByRole('list', { name: 'Productos de Tecnología' })).not.toBeInTheDocument()
+    expect(screen.getByRole('searchbox', { name: /buscar por nombre/i })).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: /^productos$/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /ver todos los productos/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /ver por categorías/i })).not.toBeInTheDocument()
   })
 })
