@@ -4,6 +4,8 @@ public record BuscarCatalogoQuery(
     String busqueda,
     String categoriaId,
     Integer valoracionMinima,
+    boolean soloStock,
+    boolean soloOfertas,
     CriterioOrdenCatalogo criterio,
     boolean descendente,
     int pagina,
