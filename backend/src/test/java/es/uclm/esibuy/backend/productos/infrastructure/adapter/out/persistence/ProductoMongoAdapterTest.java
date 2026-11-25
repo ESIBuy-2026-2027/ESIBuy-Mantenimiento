@@ -414,10 +414,10 @@ class ProductoMongoAdapterTest {
                 Descuento.sinDescuento(), Descuento.sinDescuento()));
 
         ProductoPage resultado = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, null, false, false, false, 25, 150,
+                new BuscarCatalogoQuery(null, null, null, false, false, false, new BigDecimal("24.99"), new BigDecimal("75.00"),
                         CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
 
-        assertEquals(List.of("Producto dentro"), nombres(resultado));
+        assertEquals(List.of("Producto barato", "Producto dentro"), nombres(resultado));
     }
 
     @Test
@@ -435,9 +435,9 @@ class ProductoMongoAdapterTest {
                 "cat-1", "", false, Descuento.sinDescuento(), Descuento.sinDescuento()));
 
         BuscarCatalogoQuery filtrosDePrecio = new BuscarCatalogoQuery(null, "cat-1", null, false, false, false,
-                25, 75, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
+                new BigDecimal("24.99"), new BigDecimal("75.00"), CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
         BuscarCatalogoQuery minimoSuperiorAlCatalogo = new BuscarCatalogoQuery(null, "cat-1", null, false, false, false,
-                200, 75, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
+                new BigDecimal("200.00"), new BigDecimal("75.00"), CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
 
         assertEquals(new BigDecimal("150.01"), adapter.precioMaximoEnCatalogo(filtrosDePrecio));
         assertEquals(List.of("Producto dentro"), nombres(adapter.buscarEnCatalogo(filtrosDePrecio)));
