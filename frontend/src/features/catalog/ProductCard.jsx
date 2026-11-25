@@ -14,9 +14,6 @@ import RatingStars from './RatingStars'
 const SIN_CATEGORIA = '—'
 
 const useStyles = makeStyles({
-  // La tarjeta es un contenedor con dos partes: el enlace al detalle del producto (imagen, categoría, nombre y
-  // valoración) y, debajo, el precio y el botón de añadir al carrito, que no puede ir dentro del enlace. El corazón de
-  // favoritos tampoco: se coloca encima de la esquina de la imagen.
   card: {
     position: 'relative',
     display: 'flex',
@@ -151,7 +148,6 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground1,
     boxShadow: tokens.shadow4,
   },
-  // El corazón relleno en rojo es la señal de que ya está en favoritos, también mientras se quita.
   favoriteIcon: {
     color: tokens.colorPaletteRedForeground1,
   },
@@ -173,23 +169,22 @@ const useStyles = makeStyles({
   },
 })
 
-// Tarjeta de un producto del catálogo: lo que se ve desde fuera (imagen, nombre, categoría, valoración y precio) y
-// el botón para añadirlo al carrito (HU9). `categoryName` lo traduce la página a partir del identificador de
-// categoría del producto. La imagen, el nombre y la valoración llevan al detalle (HU8). Con `onAddFavorite`, la
-// tarjeta tiene además un corazón para añadir el producto a favoritos (HU14), salvo si no está disponible, porque el
-// backend no lo aceptaría; uno agotado sí se puede añadir. Con `favorite`, el corazón sale relleno y, con
-// `onRemoveFavorite`, al pulsarlo se quita de favoritos. Si no se puede añadir o quitar, la tarjeta lo avisa.
+// Tarjeta de producto del catálogo. Permite acceder al detalle, añadir al carrito
+// y gestionar favoritos. Las tarjetas de ofertas utilizan un estilo diferenciado.
 export default function ProductCard({
   product,
   categoryName,
   favorite = false,
   onAddFavorite,
+  onRemoveFavorite,
   offerStyle = false,
 }) {
   const styles = useStyles()
 
-  // Si la imagen no carga (dirección rota), se enseña el mismo marcador que cuando no hay imagen.
   const [imageFailed, setImageFailed] = useState(false)
+  const [savingFavorite, setSavingFavorite] = useState(false)
+  const [favoriteError, setFavoriteError] = useState('')
+
   const imageRef = useRef(null)
   const hasImage = Boolean(product.imagen) && !imageFailed
   const rated = product.valoracion !== null && product.numValoraciones > 0
@@ -200,11 +195,38 @@ export default function ProductCard({
 
     const handleError = () => setImageFailed(true)
     image.addEventListener('error', handleError)
-    if (image.complete && image.naturalWidth === 0) handleError()
+
+    if (image.complete && image.naturalWidth === 0) {
+      handleError()
+    }
 
     return () => image.removeEventListener('error', handleError)
   }, [])
 
+  const favoriteFailure = (failure) => {
+    if (favorite) {
+      return 'No se ha podido quitar de favoritos. Inténtalo de nuevo.'
+    }
+
+    return failure?.code === 'PRODUCT_NOT_FOUND'
+      ? 'Este producto ya no está disponible.'
+      : 'No se ha podido añadir a favoritos. Inténtalo de nuevo.'
+  }
+
+  const toggleFavorite = async () => {
+    setFavoriteError('')
+    setSavingFavorite(true)
+
+    try {
+      await (favorite
+        ? onRemoveFavorite(product.id)
+        : onAddFavorite(product.id))
+    } catch (failure) {
+      setFavoriteError(favoriteFailure(failure))
+    } finally {
+      setSavingFavorite(false)
+    }
+  }
 
   return (
     <div className={mergeClasses(styles.card, offerStyle && styles.offerCard)}>
@@ -227,6 +249,7 @@ export default function ProductCard({
               />
             </span>
           )}
+
           {product.descuento && (
             <span className={styles.discountBadge}>
               {`OFERTA · -${product.descuento.porcentaje}%`}
@@ -257,6 +280,7 @@ export default function ProductCard({
                     <RatingStars value={product.valoracion} />
                   </span>
                 </span>
+
                 <Text weight="semibold">
                   {formatRating(product.valoracion)}
                 </Text>
@@ -277,10 +301,19 @@ export default function ProductCard({
           as="button"
           shape="circular"
           className={styles.favorite}
-          icon={favorite ? <Heart20Filled className={styles.favoriteIcon} /> : <Heart20Regular />}
-          aria-label={favorite ? `Añadir/Quitar ${product.nombre} de favoritos` : `Añadir ${product.nombre} a favoritos`}
+          icon={
+            favorite
+              ? <Heart20Filled className={styles.favoriteIcon} />
+              : <Heart20Regular />
+          }
+          aria-label={
+            favorite
+              ? `Añadir/Quitar ${product.nombre} de favoritos`
+              : `Añadir ${product.nombre} a favoritos`
+          }
           title={favorite ? 'Añadir/Quitar de favoritos' : 'Añadir a favoritos'}
-          onClick={() => onAddFavorite(product.id)}
+          disabled={savingFavorite || (favorite && !onRemoveFavorite)}
+          onClick={toggleFavorite}
         />
       )}
 
@@ -294,6 +327,11 @@ export default function ProductCard({
 
         <CartControls product={product} />
 
+        {favoriteError && (
+          <Text role="alert" size={200} className={styles.error}>
+            {favoriteError}
+          </Text>
+        )}
       </div>
     </div>
   )

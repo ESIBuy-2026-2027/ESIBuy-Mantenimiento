@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from 'react'
 import {
   Button,
@@ -101,7 +102,21 @@ export default function ProductsPage() {
   const styles = useStyles()
   const { categories } = useCategories()
   const filters = useCatalogFilters()
-  const { search, category, minRating, minPrice, maxPrice, priceCeiling, sort, order, debouncedSearch, inStock, offersOnly, filtersActive } = filters
+  const {
+    search,
+    category,
+    minRating,
+    minPrice,
+    maxPrice,
+    priceCeiling,
+    sort,
+    order,
+    debouncedSearch,
+    inStock,
+    offersOnly,
+    filtersActive,
+  } = filters
+
   const feed = useCatalogFeed({
     search: debouncedSearch,
     category,
@@ -115,25 +130,40 @@ export default function ProductsPage() {
     size: PAGE_SIZE,
     enabled: true,
   })
-  const endRef = useOnReachEnd(feed.loadMore, feed.hasMore && !feed.loadingMore && !feed.failedMore)
+
+  const endRef = useOnReachEnd(
+    feed.loadMore,
+    feed.hasMore && !feed.loadingMore && !feed.failedMore,
+  )
 
   useEffect(() => {
-    if (feed.availableMaxPrice !== null) filters.changeAvailableMaxPrice(feed.availableMaxPrice)
+    if (feed.availableMaxPrice !== null) {
+      filters.changeAvailableMaxPrice(feed.availableMaxPrice)
+    }
   }, [feed.availableMaxPrice, filters.changeAvailableMaxPrice])
+
   const categoryNames = new Map(categories.map(({ id, nombre }) => [id, nombre]))
+
   // Las listas del cliente se cargan al entrar; el corazón abre un selector para guardar el producto en una o varias.
   const [listasDeseos, setListasDeseos] = useState([])
   const [productoSelector, setProductoSelector] = useState(null)
   const cambiados = useRef(false)
-  const favoritos = new Set(listasDeseos.flatMap((lista) => lista.items.map((item) => item.productoId)))
+
+  const favoritos = new Set(
+    listasDeseos.flatMap((lista) => lista.items.map((item) => item.productoId)),
+  )
 
   useEffect(() => {
     let cancelled = false
+
     getWishlists()
       .then((listas) => {
-        if (!cancelled && !cambiados.current) setListasDeseos(listas)
+        if (!cancelled && !cambiados.current) {
+          setListasDeseos(listas)
+        }
       })
-      .catch(() => {})
+      .catch(() => { })
+
     return () => {
       cancelled = true
     }
@@ -142,7 +172,17 @@ export default function ProductsPage() {
   const abrirSelectorLista = (producto) => setProductoSelector(producto)
 
   // Sin ningún filtro, que no haya productos significa que el catálogo está vacío; con filtros, que no coinciden.
-  const catalogEmpty = feed.loaded && feed.totalItems === 0 && !debouncedSearch && !category && !minRating && minPrice === 0 && maxPrice === null && !inStock && !offersOnly
+  const catalogEmpty =
+    feed.loaded &&
+    feed.totalItems === 0 &&
+    !debouncedSearch &&
+    !category &&
+    !minRating &&
+    minPrice === 0 &&
+    maxPrice === null &&
+    !inStock &&
+    !offersOnly
+
   const noMatches = feed.loaded && feed.totalItems === 0 && !catalogEmpty
   const hasItems = feed.items.length > 0
   const changeSort = filters.changeSort
@@ -154,7 +194,9 @@ export default function ProductsPage() {
         <Title1 as="h1" className={pageStyles.title}>
           Productos
         </Title1>
-        <Text className={pageStyles.subtitle}>Descubre lo que ofrecen los vendedores de ESIBuy.</Text>
+        <Text className={pageStyles.subtitle}>
+          Descubre lo que ofrecen los vendedores de ESIBuy.
+        </Text>
       </div>
 
       <div className={styles.column}>
@@ -191,7 +233,9 @@ export default function ProductsPage() {
 
         {feed.failed && (
           <MessageBar intent="error">
-            <MessageBarBody>No se han podido cargar los productos. Inténtalo de nuevo.</MessageBarBody>
+            <MessageBarBody>
+              No se han podido cargar los productos. Inténtalo de nuevo.
+            </MessageBarBody>
             <MessageBarActions>
               <Button onClick={feed.retry}>Reintentar</Button>
             </MessageBarActions>
@@ -223,6 +267,7 @@ export default function ProductsPage() {
             <Title1 as="h2" className={pageStyles.title}>
               Productos generales
             </Title1>
+
             <ul
               className={mergeClasses(styles.grid, feed.refreshing && styles.refreshing)}
               aria-label="Productos"
@@ -232,7 +277,9 @@ export default function ProductsPage() {
                 <li
                   key={product.id}
                   className={styles.entry}
-                  style={{ animationDelay: `${(index % PAGE_SIZE) * ENTRADA_ESCALONADA_MS}ms` }}
+                  style={{
+                    animationDelay: `${(index % PAGE_SIZE) * ENTRADA_ESCALONADA_MS}ms`,
+                  }}
                 >
                   <ProductCard
                     product={product}
@@ -250,7 +297,9 @@ export default function ProductsPage() {
 
               {feed.failedMore && (
                 <MessageBar intent="error">
-                  <MessageBarBody>No se han podido cargar más productos. Inténtalo de nuevo.</MessageBarBody>
+                  <MessageBarBody>
+                    No se han podido cargar más productos. Inténtalo de nuevo.
+                  </MessageBarBody>
                   <MessageBarActions>
                     <Button onClick={feed.retry}>Reintentar</Button>
                   </MessageBarActions>
@@ -258,7 +307,11 @@ export default function ProductsPage() {
               )}
 
               {feed.hasMore && !feed.loadingMore && !feed.failedMore && (
-                <Button appearance="subtle" icon={<ArrowDown20Regular />} onClick={feed.loadMore}>
+                <Button
+                  appearance="subtle"
+                  icon={<ArrowDown20Regular />}
+                  onClick={feed.loadMore}
+                >
                   Ver más productos
                 </Button>
               )}
@@ -276,6 +329,7 @@ export default function ProductsPage() {
           </>
         )}
       </div>
+
       {productoSelector && (
         <WishlistPickerDialog
           product={productoSelector}
