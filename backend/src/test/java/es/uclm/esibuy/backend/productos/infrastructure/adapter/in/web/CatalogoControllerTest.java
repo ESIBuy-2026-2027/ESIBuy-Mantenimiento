@@ -138,9 +138,23 @@ class CatalogoControllerTest {
                 verify(catalogoProductos).buscarProductos(new BuscarCatalogoQuery("teclado", "cat-2", 4, true, true, false, 25, 100, CriterioOrdenCatalogo.VALORACION, true, 1, 10), CLIENTE);
         }
 
+        @Test
+        @DisplayName("HU7: acepta el criterio de ordenación por precio")
+        void aceptaOrdenarPorPrecio() throws Exception {
+                when(catalogoProductos.buscarProductos(any(), any()))
+                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 1, 10, 0), false));
+
+                mockMvc.perform(get(URL).param("sort", "precio")
+                                .with(user(CLIENTE).roles("CLIENTE")))
+                                .andExpect(status().isOk());
+
+                verify(catalogoProductos).buscarProductos(
+                                argThat(query -> query.criterio() == CriterioOrdenCatalogo.PRECIO), eq(CLIENTE));
+        }
+
         // Que minRating=6 no sea válido es una propuesta: la valoración va de 1 a 5.
         @ParameterizedTest(name = "{0}={1}")
-        @CsvSource({ "page, 0", "size, 0", "sort, precio", "order, arriba", "minRating, 6" })
+        @CsvSource({ "page, 0", "size, 0", "sort, popular", "order, arriba", "minRating, 6" })
         @DisplayName("HU7-CP18: un parámetro no válido devuelve 400 y no llega al caso de uso")
         void parametroNoValidoDevuelve400(String parametro, String valor) throws Exception {
                 // Con el caso de uso respondiendo, un 200 indicaría que el parámetro se ha
