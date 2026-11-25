@@ -76,8 +76,11 @@ const FORMATEADORES = {
 
 function erroresDeTarjeta({ numeroTarjeta, caducidad, cvv, titular }) {
   const errores = {}
-  if (!FORMATO_NUMERO.test(sinEspacios(numeroTarjeta))) {
+  const numero = sinEspacios(numeroTarjeta)
+  if (!FORMATO_NUMERO.test(numero)) {
     errores.numeroTarjeta = 'El número de tarjeta tiene entre 13 y 19 dígitos.'
+  } else if (!cumpleLuhn(numero)) {
+    errores.numeroTarjeta = 'El número de tarjeta no es válido. Comprueba sus dígitos.'
   }
   if (!FORMATO_CADUCIDAD.test(caducidad.trim())) errores.caducidad = 'Escribe la caducidad como MM/AA.'
   if (!FORMATO_CVV.test(cvv)) errores.cvv = 'El CVV tiene 3 o 4 dígitos.'
@@ -110,7 +113,7 @@ function erroresDe(tipo, campos) {
 
 // Mensajes propios según el código del backend: nunca su texto ni los datos enviados
 const MENSAJE_LIMITE = 'Ya tienes 5 métodos de pago. Elimina uno para añadir otro.'
-const MENSAJE_RECHAZO = 'No se ha podido guardar el método de pago. Revisa los datos: puede que la tarjeta esté caducada.'
+const MENSAJE_RECHAZO = 'No se ha podido guardar el método de pago. Comprueba el número, la fecha de caducidad y el titular de la tarjeta.'
 const mensajeDeFallo = (error) => (error?.code === 'PAYMENT_METHOD_LIMIT_REACHED' ? MENSAJE_LIMITE : MENSAJE_RECHAZO)
 
 // Lo que se envía: solo los campos del tipo elegido, aunque se haya escrito en otros
