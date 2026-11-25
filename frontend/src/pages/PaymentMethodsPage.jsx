@@ -127,6 +127,7 @@ export default function PaymentMethodsPage({ embedded = false }) {
 
   const abrirPanel = () => {
     setAviso(null)
+    setAEditar(null)
     setAnadiendo(true)
   }
 
