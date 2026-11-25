@@ -134,8 +134,7 @@ class CatalogoControllerTest {
                 // La página llega al caso de uso empezando en 0; sort y order se traducen al
                 // enum y al boolean. El cliente
                 // sale de la sesión, para darle su precio
-                verify(catalogoProductos).buscarProductos(new BuscarCatalogoQuery("teclado", "cat-2", 4, true, true, false,
-                                CriterioOrdenCatalogo.VALORACION, true, 1, 10), CLIENTE);
+                verify(catalogoProductos).buscarProductos(new BuscarCatalogoQuery("teclado", "cat-2", 4, true, true, false, null, null, CriterioOrdenCatalogo.VALORACION, true, 1, 10), CLIENTE);
         }
 
         // Que minRating=6 no sea válido es una propuesta: la valoración va de 1 a 5.
