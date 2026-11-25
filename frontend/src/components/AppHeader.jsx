@@ -23,7 +23,7 @@ import {
   Receipt20Regular,
 } from '@fluentui/react-icons'
 import CartWidget from '../features/cart/CartWidget'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ROLES, getHomePath } from '../auth/roles'
 import { useAuth } from '../auth/useAuth'
 import { PATHS } from '../routes/paths'
@@ -124,7 +124,8 @@ const useStyles = makeStyles({
     borderRadius: tokens.borderRadiusCircular,
     color: '#713512',
     backgroundColor: 'transparent',
-    transitionProperty: 'background-color, color, box-shadow',
+    border: '1px solid transparent',
+    transitionProperty: 'background-color, color, border-color',
     transitionDuration: tokens.durationFaster,
     ':hover': {
       color: '#B54708',
@@ -135,21 +136,36 @@ const useStyles = makeStyles({
       backgroundColor: '#F8D7B8',
     },
   },
+  navActionActive: {
+    color: '#A83F08',
+    backgroundColor: '#FFF1E3',
+    borderColor: '#F4D1B3',
+    ':hover': {
+      color: '#963B08',
+      backgroundColor: '#FCE4CC',
+      borderColor: '#EFAE79',
+    },
+  },
   profileTrigger: {
     minHeight: '40px',
     paddingLeft: tokens.spacingHorizontalM,
     paddingRight: tokens.spacingHorizontalM,
     borderRadius: tokens.borderRadiusCircular,
     color: '#713512',
-    backgroundColor: '#FFF1E3',
-    border: '1px solid #F4D1B3',
+    backgroundColor: 'transparent',
+    border: '1px solid transparent',
     ':hover': {
       color: '#A83F08',
       backgroundColor: '#FCE4CC',
-      borderColor: '#EFAE79',
     },
-    ':active': {
-      backgroundColor: '#F8D7B8',
+  },
+  profileTriggerActive: {
+    color: '#A83F08',
+    backgroundColor: '#FFF1E3',
+    borderColor: '#F4D1B3',
+    ':hover': {
+      backgroundColor: '#FCE4CC',
+      borderColor: '#EFAE79',
     },
   },
   accountMenu: {
@@ -202,13 +218,16 @@ const useStyles = makeStyles({
 // ser su tooltip; el nombre accesible no cambia.
 function NavLink({ to, icon, compact = false, children }) {
   const styles = useStyles()
+  const { pathname } = useLocation()
+  const active = pathname === to
   return (
     <LinkButton
       to={to}
       appearance="subtle"
       icon={icon}
       title={compact ? children : undefined}
-      className={mergeClasses(styles.item, styles.navAction, compact && styles.compactItem)}
+      className={mergeClasses(styles.item, styles.navAction, active && styles.navActionActive, compact && styles.compactItem)}
+      aria-current={active ? 'page' : undefined}
     >
       <span className={compact ? styles.compactLabel : undefined}>{children}</span>
     </LinkButton>
@@ -238,6 +257,8 @@ function GuestActions() {
 function ClientMenu({ compact, onSignOut, disabled }) {
   const styles = useStyles()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const profileSectionActive = [PATHS.PROFILE, PATHS.ORDERS, PATHS.INCIDENTS].includes(pathname)
   const enlaces = [
     [PATHS.ORDERS, <Receipt20Regular />, 'Mis pedidos'],
     [PATHS.INCIDENTS, <ChatWarning20Regular />, 'Incidencias'],
@@ -251,7 +272,8 @@ function ClientMenu({ compact, onSignOut, disabled }) {
           appearance="subtle"
           icon={<Person20Regular />}
           title={compact ? 'Mi perfil' : undefined}
-          className={mergeClasses(styles.item, styles.profileTrigger, compact && styles.compactItem)}
+          className={mergeClasses(styles.item, styles.profileTrigger, profileSectionActive && styles.profileTriggerActive, compact && styles.compactItem)}
+          aria-current={profileSectionActive ? 'page' : undefined}
         >
           <span className={compact ? styles.compactLabel : undefined}>Mi perfil</span>
         </Button>
