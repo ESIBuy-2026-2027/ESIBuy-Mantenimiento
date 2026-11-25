@@ -195,7 +195,7 @@ class GestionMetodosPagoServiceTest {
                 () -> servicio.actualizar(EMAIL_CLIENTE, "m1",
                         new AnadirMetodoPagoCommand(EMAIL_CLIENTE, TipoMetodoPago.BIZUM, null, null, null, null,
                                 "612345678")));
-        assertTrue(repositorio.guardados.size() == 1);
+        assertEquals(1, repositorio.guardados.size());
     }
 
     @Test
