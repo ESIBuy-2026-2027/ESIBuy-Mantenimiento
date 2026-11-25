@@ -43,6 +43,22 @@ const CAMPOS_VACIOS = {
 // Solo formatos básicos, con los mismos límites que el backend, para avisar antes de enviar. Lo demás (Luhn, que la
 // tarjeta no esté caducada) lo comprueba el backend.
 const FORMATO_NUMERO = /^\d{13,19}$/
+
+// Comprueba el dígito de control de la tarjeta antes de enviar la petición.
+function cumpleLuhn(numero) {
+  let suma = 0
+  let duplicar = false
+  for (let i = numero.length - 1; i >= 0; i -= 1) {
+    let digito = Number(numero[i])
+    if (duplicar) {
+      digito *= 2
+      if (digito > 9) digito -= 9
+    }
+    suma += digito
+    duplicar = !duplicar
+  }
+  return suma % 10 === 0
+}
 const FORMATO_CADUCIDAD = /^(0[1-9]|1[0-2])\/\d{2}$/
 const FORMATO_CVV = /^\d{3,4}$/
 const FORMATO_TITULAR = /^[\p{L} '-]{1,26}$/u
