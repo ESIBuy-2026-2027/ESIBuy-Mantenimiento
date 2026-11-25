@@ -17,7 +17,7 @@ import {
   mergeClasses,
   tokens,
 } from '@fluentui/react-components'
-import { Diamond20Regular, Diamond48Regular, Sparkle24Regular, CheckmarkStarburst20Filled } from '@fluentui/react-icons'
+import { Diamond20Regular, Diamond48Regular, CheckmarkStarburst20Filled } from '@fluentui/react-icons'
 import { useLocation } from 'react-router-dom'
 import { cancelPremium, getProfile } from '../api/profile'
 import LinkButton from '../components/LinkButton'
@@ -299,6 +299,20 @@ const useStyles = makeStyles({
     backgroundImage: `linear-gradient(135deg, ${tokens.colorBrandBackground} 0%, ${tokens.colorPaletteBerryForeground1} 100%)`,
     boxShadow: tokens.shadow8,
   },
+  premiumBenefit: {
+    backgroundImage: 'linear-gradient(145deg, #FFF7ED 0%, #FFEDD5 100%)',
+    border: '1px solid #FDBA74',
+    boxShadow: '0 4px 12px rgba(194, 65, 12, 0.12)',
+    ':hover': {
+      transform: 'translateY(-6px)',
+      boxShadow: '0 8px 20px rgba(194, 65, 12, 0.2)',
+      borderColor: '#F97316',
+    },
+  },
+  premiumBenefitIcon: {
+    backgroundImage: 'linear-gradient(135deg, #F97316 0%, #C2410C 100%)',
+    boxShadow: '0 3px 10px rgba(194, 65, 12, 0.24)',
+  },
   benefitTitle: {
     margin: 0,
     fontSize: tokens.fontSizeBase400,
@@ -318,10 +332,6 @@ function PremiumStatus({ query, esPremium, styles }) {
           <CheckmarkStarburst20Filled aria-hidden="true" />
           MIEMBRO ESIBUY PREMIUM
         </div>
-        <h2 className={styles.statusTitle}>
-          <Sparkle24Regular aria-hidden="true" />
-          Ya eres ESIBuy Premium
-        </h2>
         <Text className={styles.premiumStatusCopy}>Tu cuenta tiene acceso a todas las ventajas Premium.</Text>
       </div>
     )
@@ -449,8 +459,8 @@ export default function PremiumPage({ embedded = false }) {
           <ul aria-labelledby={embedded ? undefined : benefitsTitleId} aria-label={embedded ? "Ventajas de ESIBuy Premium" : undefined} className={mergeClasses(styles.benefits, embedded && styles.embeddedBenefitsList)}>
             {PREMIUM_BENEFITS.map(({ id, titulo, texto, Icono }, index) => (
               <li key={id} className={styles.benefitItem} style={{ animationDelay: `${(index + 1) * RETRASO_ENTRADA_MS}ms` }}>
-                <article className={styles.benefit}>
-                  <span className={styles.benefitIcon} aria-hidden="true"><Icono /></span>
+                <article className={mergeClasses(styles.benefit, embedded && esPremium && styles.premiumBenefit)}>
+                  <span className={mergeClasses(styles.benefitIcon, embedded && esPremium && styles.premiumBenefitIcon)} aria-hidden="true"><Icono /></span>
                   <h3 className={styles.benefitTitle}>{titulo}</h3>
                   <p className={styles.benefitText}>{texto}</p>
                 </article>
