@@ -18,6 +18,7 @@ import { categoryPropType } from '../../utils/propTypes'
 const SORT_OPTIONS = [
   { value: 'nombre', label: 'Nombre' },
   { value: 'valoracion', label: 'Valoración' },
+  { value: 'precio', label: 'Precio' },
 ]
 
 const RATING_OPTIONS = [
@@ -119,6 +120,14 @@ const useStyles = makeStyles({
       pointerEvents: 'auto',
       cursor: 'pointer',
     },
+  },
+  priceValues: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: '-2px',
+    fontSize: tokens.fontSizeBase300,
+    color: tokens.colorNeutralForeground1,
   },
   options: {
     display: 'flex',
@@ -235,6 +244,10 @@ export default function CatalogFilters({
               aria-label="Precio máximo"
               onChange={changeMax}
             />
+          </div>
+          <div className={styles.priceValues} aria-live="polite">
+            <span>{minPrice.toLocaleString('es-ES')} €</span>
+            <span>{maxPrice === MAX_PRICE ? `${MAX_PRICE} €+` : `${maxPrice.toLocaleString('es-ES')} €`}</span>
           </div>
         </Field>
 
