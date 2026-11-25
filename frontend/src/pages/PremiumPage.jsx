@@ -352,7 +352,11 @@ export default function PremiumPage({ embedded = false }) {
           <span className={styles.heroIcon} aria-hidden="true">
             <Diamond48Regular />
           </span>
-          <h1 className={styles.headline}>{embedded && esEstandar ? 'Da el salto a ESIBuy Premium' : 'ESIBuy Premium'}</h1>
+          {embedded ? (
+            <h2 className={styles.headline}>{esEstandar ? 'Da el salto a ESIBuy Premium' : 'ESIBuy Premium'}</h2>
+          ) : (
+            <h1 className={styles.headline}>ESIBuy Premium</h1>
+          )}
           <Text size={400} className={styles.lead}>
             {embedded && esEstandar
               ? 'Disfruta de descuentos exclusivos, envíos sin coste y prioridad para recibir tus pedidos antes.'
