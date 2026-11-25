@@ -17,11 +17,7 @@ import {
 } from '@fluentui/react-components'
 import {
   Delete20Regular,
-  Diamond16Filled,
-  Diamond20Regular,
   Edit20Regular,
-  Location20Regular,
-  Payment20Regular,
 } from '@fluentui/react-icons'
 import { getPreferences, savePreferences } from '../api/preferences'
 import { getProfile, updateProfile } from '../api/profile'
@@ -40,6 +36,9 @@ import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard'
 import { PATHS } from '../routes/paths'
 import { formatDate } from '../utils/format'
 import SecurityFactors from '../features/account/SecurityFactors'
+import PremiumPage from './PremiumPage'
+import PaymentMethodsPage from './PaymentMethodsPage'
+import AddressesPage from './AddressesPage'
 
 const SIN_DATO = '—'
 // El perfil no trae el estado de la cuenta, y la imagen se muestra como avatar, no como texto.
@@ -86,17 +85,20 @@ const useStyles = makeStyles({
   editAction: {
     alignSelf: 'flex-start',
   },
-  accountLinks: {
+  accountManagement: {
     display: 'flex',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: tokens.spacingHorizontalM,
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalXL,
+    width: '100%',
   },
-  premiumAccess: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: tokens.spacingHorizontalS,
+  accountColumns: {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0, 1fr)',
+    gap: tokens.spacingVerticalXL,
+    alignItems: 'start',
+    '@media (min-width: 900px)': {
+      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    },
   },
 })
 
@@ -206,62 +208,6 @@ function CustomerPreferences({ categories }) {
 CustomerPreferences.propTypes = {
   categories: PropTypes.arrayOf(PropTypes.shape({ id: PropTypes.string.isRequired, nombre: PropTypes.string.isRequired }))
     .isRequired,
-}
-
-// Acceso a ESIBuy Premium desde la sección «Mi cuenta» del perfil: muestra el estado y permite consultar sus beneficios.
-function PremiumAccess({ tipoCliente }) {
-  const styles = useStyles()
-  const esPremium = tipoCliente === 'PREMIUM'
-
-  if (esPremium) {
-    return (
-      <div className={styles.premiumAccess}>
-        <Badge appearance="filled" color="brand" size="large" icon={<Diamond16Filled />}>
-          Premium
-        </Badge>
-        <LinkButton to={PATHS.PREMIUM} appearance="subtle" size="small" icon={<Diamond20Regular />}>
-          Ver beneficios
-        </LinkButton>
-      </div>
-    )
-  }
-  return (
-    <LinkButton to={PATHS.PREMIUM} appearance="primary" size="small" icon={<Diamond20Regular />}>
-      Hazte Premium
-    </LinkButton>
-  )
-}
-
-PremiumAccess.propTypes = {
-  tipoCliente: PropTypes.string,
-}
-
-function CustomerAccountAccess({ tipoCliente }) {
-  const styles = useStyles()
-  const titleId = useId()
-
-  return (
-    <section aria-labelledby={titleId}>
-      <Card className={styles.card}>
-        <Title3 as="h2" id={titleId} className={styles.name}>
-          Mi cuenta
-        </Title3>
-        <div className={styles.accountLinks}>
-          <PremiumAccess tipoCliente={tipoCliente} />
-          <LinkButton to={PATHS.PAYMENT_METHODS} appearance="secondary" icon={<Payment20Regular />}>
-            Métodos de pago
-          </LinkButton>
-          <LinkButton to={PATHS.ADDRESSES} appearance="secondary" icon={<Location20Regular />}>
-            Direcciones
-          </LinkButton>
-        </div>
-      </Card>
-    </section>
-  )
-}
-
-CustomerAccountAccess.propTypes = {
-  tipoCliente: PropTypes.string,
 }
 
 // Pares [etiqueta, texto] del perfil: los mismos campos y formatos que la ficha del administrador (HU20 y HU26),
@@ -379,7 +325,15 @@ export default function ProfilePage() {
       {confirmandoCancelar && <UnsavedChangesDialog onStay={() => setConfirmandoCancelar(false)} onLeave={dejarDeEditar} />}
       {guard.blocked && <UnsavedChangesDialog onStay={guard.reset} onLeave={guard.proceed} />}
 
-      {perfil?.rol === 'CLIENTE' && <CustomerAccountAccess tipoCliente={perfil.tipoCliente} />}
+      {perfil?.rol === 'CLIENTE' && (
+        <section aria-label="Gestión de mi cuenta" className={styles.accountManagement}>
+          <PremiumPage embedded />
+          <div className={styles.accountColumns}>
+            <AddressesPage embedded />
+            <PaymentMethodsPage embedded />
+          </div>
+        </section>
+      )}
 
       {perfil?.rol === 'CLIENTE' && <CustomerPreferences categories={categories} />}
 
