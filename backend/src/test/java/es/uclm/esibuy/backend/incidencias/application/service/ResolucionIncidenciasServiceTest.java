@@ -56,7 +56,9 @@ class ResolucionIncidenciasServiceTest {
         private int eliminados;
         private int resoluciones;
         // Lo que hace otro administrador justo antes de que se registre la resolución
-        private Runnable antesDeRegistrar = () -> { };
+        private Runnable antesDeRegistrar = () -> {
+            // Por defecto, nadie se adelanta
+        };
 
         void preparar(Incidencia incidencia) {
             incidencias.put(incidencia.id(), incidencia);
