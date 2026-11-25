@@ -100,13 +100,15 @@ export default function ProductsPage() {
   const styles = useStyles()
   const { categories } = useCategories()
   const filters = useCatalogFilters()
-  const { search, category, minRating, sort, order, debouncedSearch, inStock, offersOnly, filtersActive } = filters
+  const { search, category, minRating, minPrice, maxPrice, sort, order, debouncedSearch, inStock, offersOnly, filtersActive } = filters
   const feed = useCatalogFeed({
     search: debouncedSearch,
     category,
     minRating,
     inStock,
     offersOnly,
+    minPrice,
+    maxPrice,
     sort,
     order,
     size: PAGE_SIZE,
@@ -166,6 +168,8 @@ export default function ProductsPage() {
           category={category}
           categories={categories}
           minRating={minRating}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
           inStock={inStock}
           offersOnly={offersOnly}
           filtersActive={filtersActive}
@@ -174,6 +178,7 @@ export default function ProductsPage() {
           onSearchChange={filters.changeSearch}
           onCategoryChange={filters.changeCategory}
           onMinRatingChange={filters.changeMinRating}
+          onPriceChange={filters.changePriceRange}
           onInStockChange={filters.changeInStock}
           onOffersOnlyChange={filters.changeOffersOnly}
           onClearFilters={filters.clearFilters}
