@@ -1,5 +1,8 @@
 package es.uclm.esibuy.backend.deseos.infrastructure.adapter.out.persistence;
 
+import java.util.Date;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.springframework.dao.DuplicateKeyException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -55,10 +58,10 @@ class ListaDeseosMongoAdapterTest {
         ListaDeseos guardada = adapter.guardar(listaNueva("cliente-1"));
 
         assertNotNull(guardada.getId());
-        ListaDeseos leida = adapter.buscarPorCliente("cliente-1").orElseThrow();
+        ListaDeseos leida = adapter.buscarFavoritos("cliente-1").orElseThrow();
         assertEquals(guardada.getId(), leida.getId());
         assertEquals(List.of(new ItemDeseo("p-1", AYER)), leida.getItems());
-        assertTrue(adapter.buscarPorCliente("cliente-2").isEmpty());
+        assertTrue(adapter.buscarFavoritos("cliente-2").isEmpty());
     }
 
     @Test
@@ -74,7 +77,7 @@ class ListaDeseosMongoAdapterTest {
         assertEquals(1, mongoTemplate.getCollection(COLECCION).countDocuments());
         Document documento = mongoTemplate.getCollection(COLECCION).find().first();
         assertEquals(creadaEn, documento.get("createdAt"));
-        assertEquals(2, adapter.buscarPorCliente("cliente-1").orElseThrow().getItems().size());
+        assertEquals(2, adapter.buscarFavoritos("cliente-1").orElseThrow().getItems().size());
     }
 
     @Test
@@ -85,8 +88,8 @@ class ListaDeseosMongoAdapterTest {
 
         adapter.eliminarPorCliente("cliente-1");
 
-        assertTrue(adapter.buscarPorCliente("cliente-1").isEmpty());
-        assertTrue(adapter.buscarPorCliente("cliente-2").isPresent());
+        assertTrue(adapter.buscarFavoritos("cliente-1").isEmpty());
+        assertTrue(adapter.buscarFavoritos("cliente-2").isPresent());
     }
 
     @Test
@@ -95,12 +98,100 @@ class ListaDeseosMongoAdapterTest {
         ListaDeseos primera = adapter.guardar(ListaDeseos.nueva("cliente-1", "Regalos"));
         ListaDeseos segunda = adapter.guardar(ListaDeseos.nueva("cliente-1", "Oficina"));
 
-        List<ListaDeseos> todas = adapter.buscarTodasPorCliente("cliente-1");
+        List<ListaDeseos> todas = adapter.buscarListas("cliente-1");
         assertEquals(2, todas.size());
         assertEquals(List.of("Regalos", "Oficina"), todas.stream().map(ListaDeseos::getNombre).toList());
 
         adapter.eliminar(primera.getId(), "cliente-1");
         assertEquals(List.of(segunda.getId()),
-                adapter.buscarTodasPorCliente("cliente-1").stream().map(ListaDeseos::getId).toList());
+                adapter.buscarListas("cliente-1").stream().map(ListaDeseos::getId).toList());
+    }
+
+    @Test
+    @DisplayName("HU528-CP33: los favoritos y las listas del cliente se guardan y se leen por separado")
+    void losFavoritosYLasListasSeLeenPorSeparado() {
+        ListaDeseos favoritos = adapter.guardar(listaNueva("cliente-1"));
+        ListaDeseos lista = adapter.guardar(ListaDeseos.nueva("cliente-1", "Regalos"));
+
+        assertEquals(favoritos.getId(), adapter.buscarFavoritos("cliente-1").orElseThrow().getId());
+        assertEquals(List.of(lista.getId()),
+                adapter.buscarListas("cliente-1").stream().map(ListaDeseos::getId).toList());
+        assertTrue(adapter.buscarLista(lista.getId(), "cliente-1").isPresent());
+        assertTrue(adapter.buscarLista(lista.getId(), "cliente-2").isEmpty());
+        assertTrue(adapter.buscarLista(favoritos.getId(), "cliente-1").isEmpty());
+    }
+
+    @Test
+    @DisplayName("HU528-CP33: la colección solo admite unos favoritos por cliente")
+    void soloUnosFavoritosPorCliente() {
+        adapter.guardar(listaNueva("cliente-1"));
+        ListaDeseos repetidos = listaNueva("cliente-1");
+
+        assertThrows(DuplicateKeyException.class, () -> adapter.guardar(repetidos));
+    }
+
+    // Lo que hay guardado de antes de separarlos: sin el campo tipo
+    private void guardarAntigua(String nombre, String productoId, Instant creadaEn) {
+        Document antigua = new Document("usuarioId", "cliente-1").append("createdAt", Date.from(creadaEn))
+                .append("items", List.of(new Document("productoId", productoId).append("addedAt", Date.from(AYER))));
+        if (nombre != null) {
+            antigua.append("nombre", nombre);
+        }
+        mongoTemplate.getCollection(COLECCION).insertOne(antigua);
+    }
+
+    @Test
+    @DisplayName("HU528-CP34: la lista única que había antes, sin nombre, pasa a ser los favoritos y al guardarla queda marcada")
+    void laListaAntiguaSinNombreSonLosFavoritos() {
+        guardarAntigua(null, "p-1", AYER);
+
+        ListaDeseos favoritos = adapter.buscarFavoritos("cliente-1").orElseThrow();
+        assertEquals(List.of(new ItemDeseo("p-1", AYER)), favoritos.getItems());
+        assertTrue(adapter.buscarListas("cliente-1").isEmpty());
+
+        adapter.guardar(favoritos);
+
+        assertEquals("FAVORITOS", mongoTemplate.getCollection(COLECCION).find().first().getString("tipo"));
+        assertEquals(1, mongoTemplate.getCollection(COLECCION).countDocuments());
+    }
+
+    @Test
+    @DisplayName("HU528-CP34: de las listas antiguas, la primera llamada Favoritos son los favoritos y las demás siguen siendo listas")
+    void deLasListasAntiguasSoloLaPrimeraFavoritosLoEs() {
+        guardarAntigua("Favoritos", "p-1", AYER);
+        guardarAntigua("Regalos", "p-2", HOY);
+        guardarAntigua("Favoritos", "p-3", HOY.plusSeconds(60));
+
+        assertEquals(List.of(new ItemDeseo("p-1", AYER)),
+                adapter.buscarFavoritos("cliente-1").orElseThrow().getItems());
+        assertEquals(List.of("Regalos", "Favoritos"),
+                adapter.buscarListas("cliente-1").stream().map(ListaDeseos::getNombre).toList());
+    }
+
+    @Test
+    @DisplayName("HU528-CP34: una lista antigua a la que el cliente cambió el nombre sigue siendo una lista")
+    void unaListaAntiguaRenombradaSigueSiendoLista() {
+        guardarAntigua("Cumpleaños", "p-1", AYER);
+
+        assertTrue(adapter.buscarFavoritos("cliente-1").isEmpty());
+        assertEquals(List.of("Cumpleaños"),
+                adapter.buscarListas("cliente-1").stream().map(ListaDeseos::getNombre).toList());
+    }
+
+    @Test
+    @DisplayName("HU528-CP33: crear la lista por defecto dos veces a la vez no la duplica ni pierde sus productos")
+    void laListaPorDefectoNoSeDuplica() {
+        ListaDeseos primera = adapter.crearListaPorDefecto("cliente-1");
+        primera.anadir("p-1", HOY);
+        adapter.guardar(primera);
+
+        ListaDeseos segunda = adapter.crearListaPorDefecto("cliente-1");
+
+        assertEquals(primera.getId(), segunda.getId());
+        assertEquals(List.of(new ItemDeseo("p-1", HOY)), segunda.getItems());
+        assertEquals(1, adapter.buscarListas("cliente-1").size());
+        assertEquals("Mi lista de deseos", segunda.getNombre());
+        assertNotNull(mongoTemplate.getCollection(COLECCION).find().first().get("createdAt"));
+        assertEquals(1, adapter.buscarListas("cliente-1").get(0).getItems().size());
     }
 }

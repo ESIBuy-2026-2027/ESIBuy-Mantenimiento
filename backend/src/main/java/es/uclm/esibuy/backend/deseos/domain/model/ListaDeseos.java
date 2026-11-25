@@ -9,40 +9,55 @@ import es.uclm.esibuy.backend.deseos.domain.exception.ListaDeseosInvalidaExcepti
 
 /**
  * Lista de deseos de un cliente (HU14, PBI 534): un cliente puede tener una o varias listas con nombre, cada una
- * con cada producto una sola vez.
+ * con cada producto una sola vez. Sus favoritos (AB#528) son una lista fija aparte, de tipo FAVORITOS.
  */
 public class ListaDeseos {
 
-    public static final String NOMBRE_POR_DEFECTO = "Favoritos";
+    public static final String NOMBRE_FAVORITOS = "Favoritos";
+    public static final String NOMBRE_POR_DEFECTO = "Mi lista de deseos";
     public static final int NOMBRE_MAXIMO = 80;
 
     private final String id;
     private final String clienteId;
+    private final TipoListaDeseos tipo;
     private String nombre;
     private final List<ItemDeseo> items;
 
+    // Los favoritos de un cliente
     public ListaDeseos(String id, String clienteId, List<ItemDeseo> items) {
-        this(id, clienteId, NOMBRE_POR_DEFECTO, items);
+        this(id, clienteId, TipoListaDeseos.FAVORITOS, NOMBRE_FAVORITOS, items);
     }
 
-    public ListaDeseos(String id, String clienteId, String nombre, List<ItemDeseo> items) {
+    public ListaDeseos(String id, String clienteId, TipoListaDeseos tipo, String nombre, List<ItemDeseo> items) {
         this.id = id;
         this.clienteId = clienteId;
-        this.nombre = (nombre == null || nombre.isBlank()) ? NOMBRE_POR_DEFECTO : normalizarNombre(nombre);
+        this.tipo = tipo;
+        this.nombre = tipo == TipoListaDeseos.FAVORITOS ? NOMBRE_FAVORITOS : nombreDeLista(nombre);
         this.items = new ArrayList<>(items);
     }
 
-    // Lista aún no guardada, para un cliente que todavía no tiene ninguna
+    // Favoritos aún no guardados, para un cliente que todavía no tiene ninguno
     public static ListaDeseos vacia(String clienteId) {
-        return new ListaDeseos(null, clienteId, NOMBRE_POR_DEFECTO, List.of());
+        return new ListaDeseos(null, clienteId, List.of());
     }
 
     public static ListaDeseos nueva(String clienteId, String nombre) {
-        return new ListaDeseos(null, clienteId, normalizarNombre(nombre), List.of());
+        return new ListaDeseos(null, clienteId, TipoListaDeseos.LISTA, normalizarNombre(nombre), List.of());
     }
 
     public void renombrar(String nuevoNombre) {
+        if (esFavoritos()) {
+            throw new ListaDeseosInvalidaException("Los favoritos no se pueden renombrar");
+        }
         this.nombre = normalizarNombre(nuevoNombre);
+    }
+
+    public boolean esFavoritos() {
+        return tipo == TipoListaDeseos.FAVORITOS;
+    }
+
+    private static String nombreDeLista(String nombre) {
+        return nombre == null || nombre.isBlank() ? NOMBRE_POR_DEFECTO : normalizarNombre(nombre);
     }
 
     private static String normalizarNombre(String nombre) {
@@ -101,6 +116,10 @@ public class ListaDeseos {
 
     public String getClienteId() {
         return clienteId;
+    }
+
+    public TipoListaDeseos getTipo() {
+        return tipo;
     }
 
     public String getNombre() {

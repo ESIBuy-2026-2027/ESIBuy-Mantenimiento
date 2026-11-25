@@ -10,6 +10,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.CollectionOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.index.IndexResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -45,6 +46,9 @@ public class InicializadorColecciones implements ApplicationRunner {
     // que es el que devuelve Atlas («user is not allowed to do action [collMod]»).
     private static final Set<Integer> SIN_PERMISO = Set.of(13, 8000);
 
+    private static final String LISTAS_DESEOS = "listas_deseos";
+    private static final String INDICE_POR_USUARIO = "usuarioId_1";
+
     private final MongoTemplate mongoTemplate;
     private final MongoMappingContext mappingContext;
 
@@ -55,8 +59,22 @@ public class InicializadorColecciones implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
+        quitarIndiceUnicoDeListasDeseos();
         ColeccionesEsiBuy.todas().forEach(this::preparar);
         crearIndicesDeAnotaciones();
+    }
+
+    // Cuando solo había una lista de deseos por cliente, su índice era único. Ahora tiene el mismo nombre y no lo es, así
+    // que sin quitar el antiguo MongoDB rechaza crearlo (IndexKeySpecsConflict) y la aplicación no arranca.
+    private void quitarIndiceUnicoDeListasDeseos() {
+        if (!mongoTemplate.collectionExists(LISTAS_DESEOS)) {
+            return;
+        }
+        IndexOperations indices = mongoTemplate.indexOps(LISTAS_DESEOS);
+        if (indices.getIndexInfo().stream().anyMatch(i -> INDICE_POR_USUARIO.equals(i.getName()) && i.isUnique())) {
+            indices.dropIndex(INDICE_POR_USUARIO);
+            LOG.info("Quitado el índice único antiguo de {}", LISTAS_DESEOS);
+        }
     }
 
     private void preparar(Coleccion coleccion) {

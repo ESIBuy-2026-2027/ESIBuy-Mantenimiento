@@ -10,8 +10,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Forma en que se guarda una lista de deseos en MongoDB (colección listas_deseos, HU14). El índice único por
- * usuario lo crea InicializadorColecciones. El campo usuarioId es el del esquema de la colección: guarda el id del
+ * Forma en que se guarda una lista de deseos en MongoDB (colección listas_deseos, HU14). Los índices los crea
+ * InicializadorColecciones. El tipo dice si son los favoritos o una lista; los guardados antes de separarlos no lo tienen. El campo usuarioId es el del esquema de la colección: guarda el id del
  * cliente. Solo guarda qué productos y cuándo se añadieron: sus datos se consultan siempre.
  */
 @Document(collection = "listas_deseos")
@@ -20,6 +20,7 @@ public class ListaDeseosDocument {
     @Id
     private String id;
     private String usuarioId;
+    private String tipo;
     private String nombre;
     private List<ItemDeseoDocument> items = new ArrayList<>();
     @CreatedDate
@@ -31,6 +32,8 @@ public class ListaDeseosDocument {
     public void setId(String id) { this.id = id; }
     public String getUsuarioId() { return usuarioId; }
     public void setUsuarioId(String usuarioId) { this.usuarioId = usuarioId; }
+    public String getTipo() { return tipo; }
+    public void setTipo(String tipo) { this.tipo = tipo; }
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
     public List<ItemDeseoDocument> getItems() { return items; }

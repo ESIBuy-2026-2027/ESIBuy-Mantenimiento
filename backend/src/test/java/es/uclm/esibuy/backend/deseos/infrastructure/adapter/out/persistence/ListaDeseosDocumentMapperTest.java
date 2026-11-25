@@ -31,5 +31,7 @@ class ListaDeseosDocumentMapperTest {
         assertEquals("l-1", leida.getId());
         assertEquals("cliente-1", leida.getClienteId());
         assertEquals(lista.getItems(), leida.getItems());
+        assertEquals("FAVORITOS", documento.getTipo());
+        assertEquals(lista.getTipo(), leida.getTipo());
     }
 }

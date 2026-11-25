@@ -322,15 +322,18 @@ final class ColeccionesEsiBuy {
                                                                                 Collation.ComparisonLevel.primary()))));
         }
 
-    // 10. listas_deseos: listas de deseos de cada cliente (HU14, PBI 534).
+    // 10. listas_deseos: los favoritos (uno por cliente, AB#528) y las listas de deseos (HU14, PBI 534) de cada
+    // cliente, según su tipo. Lo guardado antes de separarlos no tiene tipo.
     private static Coleccion listasDeseos() {
         return new Coleccion("listas_deseos", esquema(List.of(USUARIO_ID),
                 textoNoVacio(USUARIO_ID),
+                string("tipo").possibleValues("FAVORITOS", "LISTA"),
                 string(NOMBRE),
                 array("items").items(JsonSchemaObject.object()
                         .required(PRODUCTO_ID)
                         .properties(textoNoVacio(PRODUCTO_ID), date("addedAt")))),
-                List.of(indice(USUARIO_ID)));
+                List.of(indice(USUARIO_ID), indice(USUARIO_ID).named("usuarioId_favoritos").unique()
+                        .partial(PartialIndexFilter.of(Criteria.where("tipo").is("FAVORITOS")))));
     }
 
         // 11. metodos_pago: métodos de pago de cada cliente (HU6), fuera del modelo

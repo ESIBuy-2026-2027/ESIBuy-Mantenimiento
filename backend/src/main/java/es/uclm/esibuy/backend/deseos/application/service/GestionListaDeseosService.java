@@ -22,7 +22,7 @@ import es.uclm.esibuy.backend.deseos.domain.model.ListaDeseos;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 
 /**
- * Implementa la gestión de las listas de deseos del cliente (HU14, PBI 534), hablando con el exterior solo por los
+ * Implementa la gestión de los favoritos (AB#528) y de las listas de deseos del cliente (HU14, PBI 534), hablando con el exterior solo por los
  * puertos de salida. El reloj se inyecta para fijar en los tests la fecha en que se añade un producto.
  */
 public class GestionListaDeseosService implements GestionListaDeseosUseCase {
@@ -44,7 +44,7 @@ public class GestionListaDeseosService implements GestionListaDeseosUseCase {
     @Override
     public ListaDeseos anadir(String emailCliente, String productoId) {
         comprobarDisponible(productoId);
-        ListaDeseos lista = listaDe(emailCliente);
+        ListaDeseos lista = favoritosDe(emailCliente);
         lista.anadir(productoId, Instant.now(reloj));
         return listaDeseosRepository.guardar(lista);
     }
@@ -52,13 +52,13 @@ public class GestionListaDeseosService implements GestionListaDeseosUseCase {
     @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public ListaDeseosDetallada consultar(String emailCliente) {
-        return detallar(listaDe(emailCliente), emailCliente);
+        return detallar(favoritosDe(emailCliente), emailCliente);
     }
 
     @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public ListaDeseosDetallada quitar(String emailCliente, String productoId) {
-        ListaDeseos lista = listaDe(emailCliente);
+        ListaDeseos lista = favoritosDe(emailCliente);
         if (lista.quitar(productoId)) {
             listaDeseosRepository.guardar(lista);
         }
@@ -76,9 +76,9 @@ public class GestionListaDeseosService implements GestionListaDeseosUseCase {
     public List<ListaDeseosDetallada> consultarTodas(String emailCliente) {
         String clienteId = clienteEnSesion.idPorCorreo(emailCliente);
         boolean premium = clienteEnSesion.esPremium(emailCliente);
-        List<ListaDeseos> listas = listaDeseosRepository.buscarTodasPorCliente(clienteId);
+        List<ListaDeseos> listas = listaDeseosRepository.buscarListas(clienteId);
         if (listas.isEmpty()) {
-            listas = List.of(listaDeseosRepository.guardar(ListaDeseos.nueva(clienteId, ListaDeseos.NOMBRE_POR_DEFECTO)));
+            listas = List.of(listaDeseosRepository.crearListaPorDefecto(clienteId));
         }
         return listas.stream()
                 .map(lista -> detallarConRol(lista, premium))
@@ -106,8 +106,8 @@ public class GestionListaDeseosService implements GestionListaDeseosUseCase {
     public void eliminarLista(String emailCliente, String listaId) {
         ListaDeseos lista = listaPropia(emailCliente, listaId);
         listaDeseosRepository.eliminar(lista.getId(), lista.getClienteId());
-        if (listaDeseosRepository.buscarTodasPorCliente(lista.getClienteId()).isEmpty()) {
-            listaDeseosRepository.guardar(ListaDeseos.nueva(lista.getClienteId(), ListaDeseos.NOMBRE_POR_DEFECTO));
+        if (listaDeseosRepository.buscarListas(lista.getClienteId()).isEmpty()) {
+            listaDeseosRepository.crearListaPorDefecto(lista.getClienteId());
         }
     }
 
@@ -151,14 +151,14 @@ public class GestionListaDeseosService implements GestionListaDeseosUseCase {
 
     private ListaDeseos listaPropia(String emailCliente, String listaId) {
         String clienteId = clienteEnSesion.idPorCorreo(emailCliente);
-        return listaDeseosRepository.buscarPorIdYCliente(listaId, clienteId)
+        return listaDeseosRepository.buscarLista(listaId, clienteId)
                 .orElseThrow(ListaDeseosNoEncontradaException::new);
     }
 
-    // La lista principal del cliente en sesión, o una vacía sin guardar si todavía no tiene
-    private ListaDeseos listaDe(String emailCliente) {
+    // Los favoritos del cliente en sesión, o unos vacíos sin guardar si todavía no tiene
+    private ListaDeseos favoritosDe(String emailCliente) {
         String clienteId = clienteEnSesion.idPorCorreo(emailCliente);
-        return listaDeseosRepository.buscarPorCliente(clienteId).orElseGet(() -> ListaDeseos.vacia(clienteId));
+        return listaDeseosRepository.buscarFavoritos(clienteId).orElseGet(() -> ListaDeseos.vacia(clienteId));
     }
 
     // Antes de enseñarla, quita de la lista los productos eliminados y la guarda si ha cambiado

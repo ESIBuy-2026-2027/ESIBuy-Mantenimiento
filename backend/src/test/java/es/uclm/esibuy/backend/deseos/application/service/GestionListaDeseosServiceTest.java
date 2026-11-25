@@ -64,7 +64,7 @@ class GestionListaDeseosServiceTest {
     void elPrimerProductoCreaLaListaDelCliente() {
         ListaDeseos devuelta = servicio.anadir(EMAIL, "p-1");
 
-        ListaDeseos guardada = repositorio.buscarPorCliente(CLIENTE).orElseThrow();
+        ListaDeseos guardada = repositorio.buscarFavoritos(CLIENTE).orElseThrow();
         assertEquals(List.of(new ItemDeseo("p-1", AHORA)), guardada.getItems());
         assertEquals("l-1", devuelta.getId());
     }
@@ -78,7 +78,7 @@ class GestionListaDeseosServiceTest {
 
         assertEquals(1, repositorio.listas.size());
         assertEquals(List.of(new ItemDeseo("p-1", AYER), new ItemDeseo("p-2", AHORA)),
-                repositorio.buscarPorCliente(CLIENTE).orElseThrow().getItems());
+                repositorio.buscarFavoritos(CLIENTE).orElseThrow().getItems());
     }
 
     @Test
@@ -107,7 +107,7 @@ class GestionListaDeseosServiceTest {
         assertThrows(ProductoNoDisponibleException.class, () -> servicio.anadir(EMAIL, "p-9"));
 
         assertEquals(List.of(new ItemDeseo("p-1", AYER)),
-                repositorio.buscarPorCliente(CLIENTE).orElseThrow().getItems());
+                repositorio.buscarFavoritos(CLIENTE).orElseThrow().getItems());
     }
 
     @Test
@@ -139,7 +139,7 @@ class GestionListaDeseosServiceTest {
 
         assertEquals(1, items.size());
         assertFalse(items.get(0).disponible());
-        assertEquals(1, repositorio.buscarPorCliente(CLIENTE).orElseThrow().getItems().size());
+        assertEquals(1, repositorio.buscarFavoritos(CLIENTE).orElseThrow().getItems().size());
     }
 
     @Test
@@ -151,7 +151,7 @@ class GestionListaDeseosServiceTest {
 
         assertEquals(List.of("p-1"), items.stream().map(DeseoDetallado::productoId).toList());
         assertEquals(List.of(new ItemDeseo("p-1", AYER)),
-                repositorio.buscarPorCliente(CLIENTE).orElseThrow().getItems());
+                repositorio.buscarFavoritos(CLIENTE).orElseThrow().getItems());
     }
 
     @Test
@@ -185,7 +185,7 @@ class GestionListaDeseosServiceTest {
 
         assertEquals(List.of("p-2"), lista.items().stream().map(DeseoDetallado::productoId).toList());
         assertEquals(List.of(new ItemDeseo("p-2", AYER)),
-                repositorio.buscarPorCliente(CLIENTE).orElseThrow().getItems());
+                repositorio.buscarFavoritos(CLIENTE).orElseThrow().getItems());
     }
 
     @Test
@@ -215,7 +215,7 @@ class GestionListaDeseosServiceTest {
 
         servicio.quitar(EMAIL, "p-3");
 
-        assertTrue(repositorio.buscarPorCliente(CLIENTE).orElseThrow().getItems().isEmpty());
+        assertTrue(repositorio.buscarFavoritos(CLIENTE).orElseThrow().getItems().isEmpty());
     }
 
     @Test
@@ -226,8 +226,8 @@ class GestionListaDeseosServiceTest {
 
         servicio.eliminar(EMAIL);
 
-        assertTrue(repositorio.buscarPorCliente(CLIENTE).isEmpty());
-        assertTrue(repositorio.buscarPorCliente("c-2").isPresent());
+        assertTrue(repositorio.buscarFavoritos(CLIENTE).isEmpty());
+        assertTrue(repositorio.buscarFavoritos("c-2").isPresent());
     }
 
     @Test
@@ -235,7 +235,7 @@ class GestionListaDeseosServiceTest {
     void eliminarSinListaNoEsUnError() {
         servicio.eliminar(EMAIL);
 
-        assertTrue(repositorio.buscarPorCliente(CLIENTE).isEmpty());
+        assertTrue(repositorio.buscarFavoritos(CLIENTE).isEmpty());
     }
 
     @Test
@@ -269,7 +269,57 @@ class GestionListaDeseosServiceTest {
         servicio.eliminarLista(EMAIL, primera.id());
         List<ListaDeseosDetallada> trasEliminarUltima = servicio.consultarTodas(EMAIL);
         assertEquals(1, trasEliminarUltima.size());
-        assertEquals("Favoritos", trasEliminarUltima.get(0).nombre());
+        assertEquals("Mi lista de deseos", trasEliminarUltima.get(0).nombre());
+    }
+
+    @Test
+    @DisplayName("HU528-CP31: los favoritos y las listas van por separado: un producto puede estar en los dos sin afectarse")
+    void losFavoritosYLasListasVanPorSeparado() {
+        ListaDeseosDetallada lista = servicio.crearLista(EMAIL, "Regalos");
+        servicio.anadir(EMAIL, "p-1");
+        servicio.anadirALista(EMAIL, lista.id(), "p-1");
+        servicio.anadirALista(EMAIL, lista.id(), "p-2");
+
+        servicio.quitar(EMAIL, "p-1");
+
+        assertTrue(servicio.consultar(EMAIL).items().isEmpty());
+        assertEquals(List.of("p-1", "p-2"),
+                servicio.consultarTodas(EMAIL).get(0).items().stream().map(DeseoDetallado::productoId).toList());
+
+        servicio.anadir(EMAIL, "p-2");
+        servicio.quitarDeLista(EMAIL, lista.id(), "p-2");
+
+        assertEquals(List.of("p-2"),
+                servicio.consultar(EMAIL).items().stream().map(DeseoDetallado::productoId).toList());
+    }
+
+    @Test
+    @DisplayName("HU528-CP32: un cliente sin listas tiene una por defecto, aunque tenga favoritos, que no salen entre ellas")
+    void sinListasTieneUnaPorDefecto() {
+        servicio.anadir(EMAIL, "p-1");
+
+        List<ListaDeseosDetallada> listas = servicio.consultarTodas(EMAIL);
+
+        assertEquals(List.of("Mi lista de deseos"), listas.stream().map(ListaDeseosDetallada::nombre).toList());
+        assertTrue(listas.get(0).items().isEmpty());
+        assertEquals(listas.get(0).id(), servicio.consultarTodas(EMAIL).get(0).id());
+    }
+
+    @Test
+    @DisplayName("HU528-CP32: los favoritos no se renombran, no se eliminan ni se cambian como si fueran una lista")
+    void losFavoritosNoSonUnaLista() {
+        String favoritosId = servicio.anadir(EMAIL, "p-1").getId();
+
+        assertThrows(ListaDeseosNoEncontradaException.class,
+                () -> servicio.renombrarLista(EMAIL, favoritosId, "Otra"));
+        assertThrows(ListaDeseosNoEncontradaException.class, () -> servicio.eliminarLista(EMAIL, favoritosId));
+        assertThrows(ListaDeseosNoEncontradaException.class, () -> servicio.anadirALista(EMAIL, favoritosId, "p-2"));
+        assertThrows(ListaDeseosNoEncontradaException.class, () -> servicio.quitarDeLista(EMAIL, favoritosId, "p-1"));
+        assertThrows(ListaDeseosNoEncontradaException.class,
+                () -> servicio.actualizarCantidad(EMAIL, favoritosId, "p-1", 2));
+
+        assertEquals(List.of(new ItemDeseo("p-1", AHORA)),
+                repositorio.buscarFavoritos(CLIENTE).orElseThrow().getItems());
     }
 
     private static final class ClienteFijo implements ClienteEnSesionPort {
@@ -311,27 +361,34 @@ class GestionListaDeseosServiceTest {
         private int guardados;
 
         @Override
-        public Optional<ListaDeseos> buscarPorCliente(String clienteId) {
-            return buscarTodasPorCliente(clienteId).stream().findFirst();
+        public Optional<ListaDeseos> buscarFavoritos(String clienteId) {
+            return listas.values().stream()
+                    .filter(lista -> lista.getClienteId().equals(clienteId) && lista.esFavoritos())
+                    .findFirst();
         }
 
         @Override
-        public List<ListaDeseos> buscarTodasPorCliente(String clienteId) {
+        public List<ListaDeseos> buscarListas(String clienteId) {
             return listas.values().stream()
-                    .filter(lista -> lista.getClienteId().equals(clienteId))
+                    .filter(lista -> lista.getClienteId().equals(clienteId) && !lista.esFavoritos())
                     .toList();
         }
 
         @Override
-        public Optional<ListaDeseos> buscarPorIdYCliente(String id, String clienteId) {
-            return Optional.ofNullable(listas.get(id))
-                    .filter(lista -> lista.getClienteId().equals(clienteId));
+        public Optional<ListaDeseos> buscarLista(String id, String clienteId) {
+            return buscarListas(clienteId).stream().filter(lista -> lista.getId().equals(id)).findFirst();
+        }
+
+        @Override
+        public ListaDeseos crearListaPorDefecto(String clienteId) {
+            return guardar(ListaDeseos.nueva(clienteId, ListaDeseos.NOMBRE_POR_DEFECTO));
         }
 
         @Override
         public ListaDeseos guardar(ListaDeseos lista) {
             String id = lista.getId() != null ? lista.getId() : "l-" + (secuencia++);
-            ListaDeseos guardada = new ListaDeseos(id, lista.getClienteId(), lista.getNombre(), lista.getItems());
+            ListaDeseos guardada = new ListaDeseos(id, lista.getClienteId(), lista.getTipo(), lista.getNombre(),
+                    lista.getItems());
             listas.put(id, guardada);
             guardados++;
             return guardada;
@@ -339,7 +396,7 @@ class GestionListaDeseosServiceTest {
 
         @Override
         public void eliminar(String id, String clienteId) {
-            buscarPorIdYCliente(id, clienteId).ifPresent(l -> listas.remove(l.getId()));
+            buscarLista(id, clienteId).ifPresent(l -> listas.remove(l.getId()));
         }
 
         @Override
