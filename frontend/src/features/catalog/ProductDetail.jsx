@@ -306,7 +306,6 @@ export default function ProductDetail({
   onReviewCreated,
   favorite = false,
   onAddFavorite,
-  onRemoveFavorite,
 }) {
   const styles = useStyles()
 
