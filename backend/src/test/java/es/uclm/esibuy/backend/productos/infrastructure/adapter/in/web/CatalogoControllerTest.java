@@ -126,7 +126,7 @@ class CatalogoControllerTest {
         @DisplayName("HU7-CP17: los parámetros llegan al caso de uso traducidos: página desde 0, criterio y sentido")
         void traduceLosParametrosALaConsulta() throws Exception {
                 when(catalogoProductos.buscarProductos(any(), any()))
-                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 1, 10, 0), false));
+                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 1, 10, 0), false, BigDecimal.ZERO));
 
                 mockMvc.perform(get(URL).param("page", "2").param("size", "10").param("search", "teclado")
                                 .param("category", "cat-2").param("minRating", "4").param("sort", "valoracion")
@@ -145,7 +145,7 @@ class CatalogoControllerTest {
         @DisplayName("HU7: acepta el criterio de ordenación por precio")
         void aceptaOrdenarPorPrecio() throws Exception {
                 when(catalogoProductos.buscarProductos(any(), any()))
-                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 1, 10, 0), false));
+                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 1, 10, 0), false, BigDecimal.ZERO));
 
                 mockMvc.perform(get(URL).param("sort", "precio")
                                 .with(user(CLIENTE).roles("CLIENTE")))
@@ -214,7 +214,7 @@ class CatalogoControllerTest {
 
                 Producto valorado = new Producto("p-1", datos);
                 when(catalogoProductos.buscarProductos(any(), any()))
-                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(valorado), 0, 10, 1), false));
+                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(valorado), 0, 10, 1), false, BigDecimal.ZERO));
 
                 mockMvc.perform(get(URL).with(user(CLIENTE).roles("CLIENTE")))
                                 .andExpect(status().isOk())
