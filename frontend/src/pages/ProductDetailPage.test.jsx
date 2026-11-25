@@ -752,3 +752,107 @@ describe('ProductDetailPage (HU14): favoritos', () => {
     expect(screen.getByRole('button', { name: 'Quitar de favoritos' })).toBeEnabled()
   })
 })
+
+// Categoría del producto en favoritas (AB#528): se añade y se quita desde el detalle, junto a su nombre. Del mock:
+// Tecnología (cat-1) y Hogar (cat-2), las dos activas.
+describe('ProductDetailPage (AB#528): categoría favorita', () => {
+  const ANADIR = 'Añadir a favoritas la categoría Tecnología'
+  const QUITAR = 'Quitar de favoritas la categoría Tecnología'
+  const conFavoritas = (...categorias) =>
+    server.use(http.get('/api/customer/preferences', () => HttpResponse.json({ categorias })))
+
+  it('HU528-CP22: el detalle tiene un botón para añadir a favoritas la categoría del producto', async () => {
+    responderCon()
+    await abrirDetalle()
+
+    expect(await screen.findByRole('button', { name: ANADIR })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: QUITAR })).not.toBeInTheDocument()
+  })
+
+  it('HU528-CP22: si la categoría ya es favorita, el botón permite quitarla', async () => {
+    responderCon()
+    conFavoritas('cat-2', 'cat-1')
+    await abrirDetalle()
+
+    expect(await screen.findByRole('button', { name: QUITAR })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: ANADIR })).not.toBeInTheDocument()
+  })
+
+  it('HU528-CP22: que el producto esté en favoritos no cambia la categoría, ni al revés', async () => {
+    responderCon()
+    conFavoritas('cat-1')
+    await abrirDetalle()
+
+    expect(await screen.findByRole('button', { name: QUITAR })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Añadir a favoritos' })).toBeInTheDocument()
+  })
+
+  it('HU528-CP22: si la categoría del producto no está activa, no se puede añadir', async () => {
+    responderCon({ categoriaId: 'cat-9' })
+    await abrirDetalle()
+
+    await screen.findByRole('button', { name: 'Añadir a favoritos' })
+    expect(screen.queryByRole('button', { name: /favoritas/ })).not.toBeInTheDocument()
+  })
+
+  it('HU528-CP22: si no se pueden leer las favoritas, se ofrece añadirla sin avisar de ningún error', async () => {
+    responderCon()
+    server.use(http.get('/api/customer/preferences', () => new HttpResponse(null, { status: 500 })))
+    await abrirDetalle()
+
+    expect(await screen.findByRole('button', { name: ANADIR })).toBeEnabled()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('HU528-CP23: al pulsar el botón se añade solo esa categoría y pasa a quitarla', async () => {
+    responderCon()
+    const user = userEvent.setup()
+    let cuerpo = null
+    server.use(
+      http.post('/api/customer/preferences/categories', async ({ request }) => {
+        cuerpo = await request.json()
+        return HttpResponse.json({ categorias: ['cat-1'] })
+      }),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: ANADIR }))
+
+    expect(await screen.findByRole('button', { name: QUITAR })).toBeEnabled()
+    expect(cuerpo).toEqual({ categoriaId: 'cat-1' })
+  })
+
+  it('HU528-CP23: al volver a pulsarlo se quita esa categoría y vuelve a ofrecer añadirla', async () => {
+    responderCon()
+    const user = userEvent.setup()
+    let quitada = null
+    conFavoritas('cat-1', 'cat-2')
+    server.use(
+      http.delete('/api/customer/preferences/categories/:categoriaId', ({ params }) => {
+        quitada = params.categoriaId
+        return HttpResponse.json({ categorias: ['cat-2'] })
+      }),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: QUITAR }))
+
+    expect(await screen.findByRole('button', { name: ANADIR })).toBeEnabled()
+    expect(quitada).toBe('cat-1')
+  })
+
+  it('HU528-CP23: mientras se guarda, el botón queda deshabilitado', async () => {
+    responderCon()
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/customer/preferences/categories', async () => {
+        await delay('infinite')
+      }),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: ANADIR }))
+
+    expect(screen.getByRole('button', { name: ANADIR })).toBeDisabled()
+  })
+})

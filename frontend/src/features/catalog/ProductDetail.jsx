@@ -94,6 +94,12 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     gap: tokens.spacingVerticalS,
   },
+  categoryRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalS,
+  },
   category: {
     color: tokens.colorBrandForeground1,
     textTransform: 'uppercase',
@@ -293,10 +299,12 @@ function renderReviewAccess({
 // Detalle de un producto para el cliente (HU8): imagen, nombre, proveedor, valoración, precio, disponibilidad,
 // descripción, una ficha con los datos del producto y las valoraciones de los clientes (HU13). Solo presenta: la
 // página es la que pide el producto y sus valoraciones. Con `onAddFavorite` ofrece además añadirlo a favoritos y, si
-// ya lo está (`favorite`), quitarlo con `onRemoveFavorite` (HU14); si no se puede, lo avisa.
+// ya lo está (`favorite`), quitarlo con `onRemoveFavorite` (HU14); si no se puede, lo avisa. `categoryAction` se muestra
+// junto a la categoría: el botón para añadirla a las favoritas (AB#528).
 export default function ProductDetail({
   product,
   categoryName,
+  categoryAction = null,
   reviews = null,
   reviewsFailed = false,
   onRetryReviews,
@@ -383,9 +391,12 @@ export default function ProductDetail({
 
       <div className={styles.info}>
         <div className={styles.header}>
-          <Text size={200} className={styles.category}>
-            {category}
-          </Text>
+          <div className={styles.categoryRow}>
+            <Text size={200} className={styles.category}>
+              {category}
+            </Text>
+            {categoryAction}
+          </div>
 
           <Title1 as="h1" className={styles.title}>
             {product.nombre}
@@ -562,6 +573,7 @@ export default function ProductDetail({
 ProductDetail.propTypes = {
   product: productDetailPropType.isRequired,
   categoryName: PropTypes.string,
+  categoryAction: PropTypes.node,
   reviews: PropTypes.arrayOf(reviewPropType),
   reviewsFailed: PropTypes.bool,
   onRetryReviews: PropTypes.func.isRequired,

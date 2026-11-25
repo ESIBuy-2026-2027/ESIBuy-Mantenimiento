@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useCallback, useState } from 'react'
+import { useCallback, useId, useState } from 'react'
 import {
   Badge,
   Button,
@@ -8,6 +8,8 @@ import {
   MessageBarActions,
   MessageBarBody,
   Spinner,
+  Tab,
+  TabList,
   Text,
   Title1,
   makeStyles,
@@ -20,11 +22,17 @@ import { getWishlist, removeWishlistItem } from '../api/wishlist'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
+import FavoriteCategoriesList from '../features/catalog/FavoriteCategoriesList'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { PATHS, getProductDetailPath } from '../routes/paths'
 import { formatDate, formatPrice } from '../utils/format'
 
 const useStyles = makeStyles({
+  panel: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalXL,
+  },
   list: {
     listStyle: 'none',
     margin: 0,
@@ -163,10 +171,10 @@ WishlistItem.propTypes = {
   onRemove: PropTypes.func.isRequired,
 }
 
-// «Mis favoritos» del cliente (HU14): su lista de deseos, en el orden en que añadió cada producto y con los datos
-// actuales de cada uno (precio, si está agotado o si el vendedor lo ha desactivado). Cada uno se puede quitar sin
+// Los productos favoritos del cliente (HU14): su lista de deseos, en el orden en que añadió cada producto y con los
+// datos actuales de cada uno (precio, si está agotado o si el vendedor lo ha desactivado). Cada uno se puede quitar sin
 // confirmación, porque se puede volver a añadir desde el catálogo; el backend responde con la lista actualizada.
-export default function WishlistPage() {
+function FavoriteProducts() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
   const fetcher = useCallback(() => getWishlist(), [])
@@ -190,15 +198,7 @@ export default function WishlistPage() {
   }
 
   return (
-    <main className={pageStyles.page}>
-      <div className={pageStyles.heading}>
-        <div className={pageStyles.titleBlock}>
-          <Title1 as="h1" className={pageStyles.title}>
-            Mis favoritos
-          </Title1>
-          <Text className={pageStyles.subtitle}>Los productos que has guardado para más adelante.</Text>
-        </div>
-      </div>
+    <>
       {aviso && (
         <MessageBar intent={aviso.intent}>
           <MessageBarBody>{aviso.texto}</MessageBarBody>
@@ -233,6 +233,39 @@ export default function WishlistPage() {
           ))}
         </ul>
       )}
+    </>
+  )
+}
+
+// «Mis favoritos» del cliente: en una pestaña sus productos (HU14) y en otra sus categorías (AB#528). Se abre en los
+// productos; cada pestaña pide sus datos al abrirse.
+export default function WishlistPage() {
+  const pageStyles = usePageStyles()
+  const styles = useStyles()
+  const id = useId()
+  const [pestana, setPestana] = useState('products')
+
+  return (
+    <main className={pageStyles.page}>
+      <div className={pageStyles.heading}>
+        <div className={pageStyles.titleBlock}>
+          <Title1 as="h1" className={pageStyles.title}>
+            Mis favoritos
+          </Title1>
+          <Text className={pageStyles.subtitle}>Los productos y las categorías que has guardado.</Text>
+        </div>
+      </div>
+      <TabList selectedValue={pestana} onTabSelect={(_event, data) => setPestana(data.value)}>
+        <Tab id={`${id}-products`} value="products">
+          Productos
+        </Tab>
+        <Tab id={`${id}-categories`} value="categories">
+          Categorías
+        </Tab>
+      </TabList>
+      <div role="tabpanel" aria-labelledby={`${id}-${pestana}`} className={styles.panel}>
+        {pestana === 'products' ? <FavoriteProducts /> : <FavoriteCategoriesList />}
+      </div>
     </main>
   )
 }

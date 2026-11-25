@@ -11,10 +11,12 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { ArrowLeft20Regular, BoxSearch24Regular } from '@fluentui/react-icons'
+import { addFavoriteCategory, getPreferences, removeFavoriteCategory } from '../api/preferences'
 import { getCatalogProduct, getProductReviews, getProductReviewStatus } from '../api/products'
 import { addWishlistItem, getWishlist, removeWishlistItem } from '../api/wishlist'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
+import FavoriteCategoryButton from '../features/catalog/FavoriteCategoryButton'
 import ProductDetail from '../features/catalog/ProductDetail'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { useCategories } from '../hooks/useCategories'
@@ -125,8 +127,20 @@ export default function ProductDetailPage() {
     cambiado.current = true
     setFavorito(estaEnLaLista(lista, id))
   }
+  // Categorías favoritas del cliente (AB#528), para saber si ya lo es la del producto. Como con los favoritos, si no se
+  // pueden leer se ofrece añadirla, que no es un error si ya lo era.
+  const [categoriasFavoritas, setCategoriasFavoritas] = useState(() => new Set())
+  const categoriasCambiadas = useRef(false)
+
+  const guardarCategoria = async (peticion) => {
+    const { categorias } = await peticion
+    categoriasCambiadas.current = true
+    setCategoriasFavoritas(new Set(categorias))
+  }
+
   const notFound = failed && error?.status === NOT_FOUND
-  const categoryName = categories.find((category) => category.id === product?.categoriaId)?.nombre
+  // Solo las activas están en el listado: una categoría inactiva no se puede añadir a favoritas
+  const category = categories.find(({ id: categoryId }) => categoryId === product?.categoriaId)
 
   useEffect(() => {
     let cancelled = false
@@ -139,6 +153,18 @@ export default function ProductDetailPage() {
       cancelled = true
     }
   }, [id])
+
+  useEffect(() => {
+    let cancelled = false
+    getPreferences()
+      .then(({ categorias }) => {
+        if (!cancelled && !categoriasCambiadas.current) setCategoriasFavoritas(new Set(categorias))
+      })
+      .catch(() => { })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <main className={styles.page}>
@@ -175,7 +201,17 @@ export default function ProductDetailPage() {
         <ProductDetail
           key={product.id}
           product={product}
-          categoryName={categoryName}
+          categoryName={category?.nombre}
+          categoryAction={
+            category && (
+              <FavoriteCategoryButton
+                category={category}
+                favorite={categoriasFavoritas.has(category.id)}
+                onAdd={(categoryId) => guardarCategoria(addFavoriteCategory(categoryId))}
+                onRemove={(categoryId) => guardarCategoria(removeFavoriteCategory(categoryId))}
+              />
+            )
+          }
           reviews={reviews}
           reviewsFailed={reviewsFailed}
           onRetryReviews={retryReviews}

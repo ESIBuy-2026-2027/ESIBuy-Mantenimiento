@@ -239,3 +239,136 @@ describe('WishlistPage (HU14): quitar de favoritos', () => {
     expect(screen.getByRole('button', { name: 'Quitar Ratón ergonómico de favoritos' })).toBeEnabled()
   })
 })
+
+// Pestaña «Categorías» de Mis favoritos (AB#528): las mismas favoritas que el detalle del producto y el perfil. Del mock
+// de categorías: Tecnología (cat-1) y Hogar (cat-2), las dos activas.
+describe('WishlistPage (AB#528): categorías favoritas', () => {
+  const URL_FAVORITAS = '/api/customer/preferences'
+  const conFavoritas = (...categorias) => server.use(http.get(URL_FAVORITAS, () => HttpResponse.json({ categorias })))
+  const categorias = () =>
+    within(screen.getByRole('list', { name: 'Tus categorías favoritas' }))
+      .getAllByRole('listitem')
+      .map((fila) => fila.textContent)
+
+  async function abrirCategorias(user) {
+    await abrirMisFavoritos()
+    await user.click(screen.getByRole('tab', { name: 'Categorías' }))
+  }
+
+  it('HU528-CP24: Mis favoritos tiene dos pestañas y se abre en Productos', async () => {
+    conFavoritas('cat-1')
+    await abrirMisFavoritos()
+
+    expect(screen.getByRole('tab', { name: 'Productos' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'Categorías' })).toHaveAttribute('aria-selected', 'false')
+    expect(await screen.findByRole('list', { name: 'Tus favoritos' })).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Tus categorías favoritas' })).not.toBeInTheDocument()
+  })
+
+  it('HU528-CP24: la pestaña Categorías muestra las favoritas por su nombre, en el orden en que se marcaron', async () => {
+    const user = userEvent.setup()
+    conFavoritas('cat-2', 'cat-1')
+    await abrirCategorias(user)
+
+    expect(await screen.findByRole('list', { name: 'Tus categorías favoritas' })).toBeInTheDocument()
+    expect(categorias()).toEqual(['Hogar', 'Tecnología'])
+    expect(screen.queryByRole('list', { name: 'Tus favoritos' })).not.toBeInTheDocument()
+  })
+
+  it('HU528-CP24: se puede volver a la pestaña Productos', async () => {
+    const user = userEvent.setup()
+    await abrirCategorias(user)
+
+    await user.click(screen.getByRole('tab', { name: 'Productos' }))
+
+    expect(await screen.findByRole('list', { name: 'Tus favoritos' })).toBeInTheDocument()
+  })
+
+  it('HU528-CP25: mientras cargan las categorías muestra un indicador', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.get(URL_FAVORITAS, async () => {
+        await delay('infinite')
+      }),
+    )
+    await abrirCategorias(user)
+
+    expect(screen.getByText('Cargando tus categorías favoritas…')).toBeInTheDocument()
+  })
+
+  it('HU528-CP25: sin categorías favoritas lo indica y ofrece ir a los productos', async () => {
+    const user = userEvent.setup()
+    await abrirCategorias(user)
+
+    expect(await screen.findByText('Aún no tienes categorías favoritas')).toBeInTheDocument()
+    await user.click(screen.getByRole('link', { name: 'Ver los productos' }))
+    await esperarRuta('/products')
+  })
+
+  it.each([
+    ['las favoritas', URL_FAVORITAS, { categorias: ['cat-1'] }],
+    ['las categorías', '/api/categorias', [{ id: 'cat-1', nombre: 'Tecnología' }]],
+  ])('HU528-CP25: si no se pueden cargar %s, lo avisa y permite reintentar', async (_caso, url, datos) => {
+    const user = userEvent.setup()
+    let falla = true
+    conFavoritas('cat-1')
+    server.use(http.get(url, () => (falla ? new HttpResponse(null, { status: 500 }) : HttpResponse.json(datos))))
+    await abrirCategorias(user)
+
+    expect(
+      await screen.findByText('No se han podido cargar tus categorías favoritas. Inténtalo de nuevo.'),
+    ).toBeInTheDocument()
+    falla = false
+    await user.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+    expect(await screen.findByRole('list', { name: 'Tus categorías favoritas' })).toBeInTheDocument()
+    expect(categorias()).toEqual(['Tecnología'])
+  })
+
+  it('HU528-CP26: al quitar una categoría se pide quitar solo esa y desaparece de la lista', async () => {
+    const user = userEvent.setup()
+    let quitada = null
+    conFavoritas('cat-1', 'cat-2')
+    server.use(
+      http.delete('/api/customer/preferences/categories/:categoriaId', ({ params }) => {
+        quitada = params.categoriaId
+        return HttpResponse.json({ categorias: ['cat-2'] })
+      }),
+    )
+    await abrirCategorias(user)
+
+    await user.click(await screen.findByRole('button', { name: 'Quitar Tecnología de tus categorías favoritas' }))
+
+    await waitFor(() => expect(categorias()).toEqual(['Hogar']))
+    expect(quitada).toBe('cat-1')
+  })
+
+  it('HU528-CP26: mientras se quita una, su botón queda deshabilitado', async () => {
+    const user = userEvent.setup()
+    conFavoritas('cat-1')
+    server.use(
+      http.delete('/api/customer/preferences/categories/:categoriaId', async () => {
+        await delay('infinite')
+      }),
+    )
+    await abrirCategorias(user)
+    const boton = await screen.findByRole('button', { name: 'Quitar Tecnología de tus categorías favoritas' })
+
+    await user.click(boton)
+
+    expect(boton).toBeDisabled()
+  })
+
+  it('HU528-CP26: al quitar la última se muestra el estado vacío', async () => {
+    const user = userEvent.setup()
+    conFavoritas('cat-1')
+    server.use(
+      http.delete('/api/customer/preferences/categories/:categoriaId', () => HttpResponse.json({ categorias: [] })),
+    )
+    await abrirCategorias(user)
+
+    await user.click(await screen.findByRole('button', { name: 'Quitar Tecnología de tus categorías favoritas' }))
+
+    expect(await screen.findByText('Aún no tienes categorías favoritas')).toBeInTheDocument()
+  })
+})
