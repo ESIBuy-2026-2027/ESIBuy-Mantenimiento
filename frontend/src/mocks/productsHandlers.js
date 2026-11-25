@@ -341,7 +341,9 @@ export const productsHandlers = [
         (producto) =>
           normalizar(producto.nombre).includes(busqueda) &&
           (!categoria || producto.categoriaId === categoria) &&
-          (producto.valoracion ?? 0) >= minima,
+          (producto.valoracion ?? 0) >= minima &&
+          (!soloStock || producto.stock > 0) &&
+          (!soloOfertas || Boolean(producto.descuento?.activo || producto.descuentoPremium?.activo)),
       )
       .sort(ordenDelCatalogo(params.get('sort'), params.get('order')))
     return HttpResponse.json(paginar(coincidentes, leerPagina(params, TAMANO_CATALOGO)))
