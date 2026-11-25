@@ -145,6 +145,22 @@ describe('AppHeader', () => {
     expect(screen.queryByRole('link', { name: /panel de control/i })).not.toBeInTheDocument()
   })
 
+  it('appHeader_clientePremium_muestraUnaCoronaEnElAccesoDePerfil', async () => {
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/products')
+
+    const perfil = await screen.findByRole('button', { name: 'Mi perfil' })
+    expect(await within(perfil).findByLabelText('Cliente Premium')).toBeInTheDocument()
+  })
+
+  it('appHeader_clienteEstandar_noMuestraLaCoronaPremium', async () => {
+    await abrirSesionPorApi('nuevo@esibuy.test')
+    renderApp('/products')
+
+    const perfil = await screen.findByRole('button', { name: 'Mi perfil' })
+    await waitFor(() => expect(within(perfil).queryByLabelText('Cliente Premium')).not.toBeInTheDocument())
+  })
+
   it('appHeader_conSesionDeCliente_dejaFavoritosEnCabeceraYElRestoEnElMenuDePerfil', async () => {
     const user = userEvent.setup()
     await abrirSesionPorApi('cliente@esibuy.test')
