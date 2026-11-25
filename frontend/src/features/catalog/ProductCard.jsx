@@ -206,29 +206,6 @@ export default function ProductCard({
     return () => image.removeEventListener('error', handleError)
   }, [])
 
-  const [savingFavorite, setSavingFavorite] = useState(false)
-  const [favoriteError, setFavoriteError] = useState('')
-
-  const favoriteFailure = (failure) => {
-    if (favorite) return 'No se ha podido quitar de favoritos. Inténtalo de nuevo.'
-
-    return failure?.code === 'PRODUCT_NOT_FOUND'
-      ? 'Este producto ya no está disponible.'
-      : 'No se ha podido añadir a favoritos. Inténtalo de nuevo.'
-  }
-
-  const toggleFavorite = async () => {
-    setFavoriteError('')
-    setSavingFavorite(true)
-
-    try {
-      await (favorite ? onRemoveFavorite(product.id) : onAddFavorite(product.id))
-    } catch (failure) {
-      setFavoriteError(favoriteFailure(failure))
-    } finally {
-      setSavingFavorite(false)
-    }
-  }
 
   return (
     <div className={mergeClasses(styles.card, offerStyle && styles.offerCard)}>
@@ -302,14 +279,9 @@ export default function ProductCard({
           shape="circular"
           className={styles.favorite}
           icon={favorite ? <Heart20Filled className={styles.favoriteIcon} /> : <Heart20Regular />}
-          aria-label={
-            favorite
-              ? `Quitar ${product.nombre} de favoritos`
-              : `Añadir ${product.nombre} a favoritos`
-          }
-          title={favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
-          disabled={savingFavorite || (favorite && !onRemoveFavorite)}
-          onClick={toggleFavorite}
+          aria-label={`Gestionar listas de deseos de ${product.nombre}`}
+          title="Gestionar listas de deseos"
+          onClick={() => onAddFavorite(product.id)}
         />
       )}
 
@@ -323,11 +295,6 @@ export default function ProductCard({
 
         <CartControls product={product} />
 
-        {favoriteError && (
-          <Text role="alert" size={200} className={styles.error}>
-            {favoriteError}
-          </Text>
-        )}
       </div>
     </div>
   )
