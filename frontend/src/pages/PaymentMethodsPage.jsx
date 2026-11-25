@@ -14,7 +14,7 @@ import {
   mergeClasses,
   tokens,
 } from '@fluentui/react-components'
-import { Add20Regular, Delete20Regular, Payment24Regular } from '@fluentui/react-icons'
+import { Add20Regular, Delete20Regular, Edit20Regular, Payment24Regular } from '@fluentui/react-icons'
 import { getPaymentMethods, setDefaultPaymentMethod } from '../api/paymentMethods'
 import EmptyState from '../components/EmptyState'
 import { usePageStyles } from '../components/pageStyles'
@@ -120,6 +120,7 @@ export default function PaymentMethodsPage({ embedded = false }) {
   const [aviso, setAviso] = useState(null)
   const [anadiendo, setAnadiendo] = useState(false)
   const [aEliminar, setAEliminar] = useState(null)
+  const [aEditar, setAEditar] = useState(null)
   const limiteAlcanzado = (metodos?.length ?? 0) >= MAXIMO_METODOS
   const metodosVisibles = embedded ? (metodos ?? []).slice(0, 3) : metodos
 
@@ -189,6 +190,14 @@ export default function PaymentMethodsPage({ embedded = false }) {
         </MessageBar>
       )}
       {anadiendo && <AddPaymentMethodPanel onSaved={alGuardar} onCancel={() => setAnadiendo(false)} />}
+      {aEditar && (
+        <AddPaymentMethodPanel
+          key={aEditar.id}
+          metodo={aEditar}
+          onSaved={alActualizar}
+          onCancel={() => setAEditar(null)}
+        />
+      )}
       {metodos?.length === 0 && (
         <EmptyState
           icon={<Payment24Regular />}
@@ -213,6 +222,9 @@ export default function PaymentMethodsPage({ embedded = false }) {
                     <Text className={styles.mask}>{metodo.mascara}</Text>
                   </div>
                   <div className={styles.methodActions}>
+                    <Button appearance="subtle" icon={<Edit20Regular />} onClick={() => { setAnadiendo(false); setAEditar(metodo) }}>
+                      Editar
+                    </Button>
                     {metodo.predeterminado ? (
                       <Badge appearance="tint" color="brand">
                         Predeterminado
