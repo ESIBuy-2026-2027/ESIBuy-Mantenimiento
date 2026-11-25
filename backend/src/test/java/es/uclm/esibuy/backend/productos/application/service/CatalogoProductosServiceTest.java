@@ -53,7 +53,9 @@ class CatalogoProductosServiceTest {
         BuscarCatalogoQuery query = new BuscarCatalogoQuery("teclado", "cat-2", 4, false, false, false, CriterioOrdenCatalogo.VALORACION,
                 true, 0, 10);
         ProductoPage pagina = new ProductoPage(List.of(), 0, 10, 0);
-        when(productoRepository.buscarEnCatalogo(query)).thenReturn(pagina);
+        BuscarCatalogoQuery consultaPremium = new BuscarCatalogoQuery(
+                "teclado", "cat-2", 4, false, false, true, CriterioOrdenCatalogo.VALORACION, true, 0, 10);
+        when(productoRepository.buscarEnCatalogo(consultaPremium)).thenReturn(pagina);
         when(usuarioEnSesion.esClientePremium("cliente@esibuy.test")).thenReturn(true);
 
         CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort,
@@ -65,6 +67,7 @@ class CatalogoProductosServiceTest {
         // su precio
         assertSame(pagina, resultado.pagina());
         assertTrue(resultado.clientePremium());
+        verify(productoRepository).buscarEnCatalogo(consultaPremium);
     }
 
     @Test
