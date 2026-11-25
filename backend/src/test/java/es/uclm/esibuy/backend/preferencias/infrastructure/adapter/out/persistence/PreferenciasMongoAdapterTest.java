@@ -77,12 +77,12 @@ class PreferenciasMongoAdapterTest {
         Object creadasEn = mongoTemplate.getCollection(COLECCION).find().first().get("createdAt");
         assertNotNull(creadasEn);
 
-        guardadas.elegirCategorias(List.of("cat-2", "cat-3"));
+        guardadas.marcar("cat-2");
         adapter.guardar(guardadas);
 
         assertEquals(1, mongoTemplate.getCollection(COLECCION).countDocuments());
         assertEquals(creadasEn, mongoTemplate.getCollection(COLECCION).find().first().get("createdAt"));
-        assertEquals(List.of("cat-2", "cat-3"), adapter.buscarPorCliente("cliente-1").orElseThrow().getCategorias());
+        assertEquals(List.of("cat-1", "cat-2"), adapter.buscarPorCliente("cliente-1").orElseThrow().getCategorias());
     }
 
     @Test

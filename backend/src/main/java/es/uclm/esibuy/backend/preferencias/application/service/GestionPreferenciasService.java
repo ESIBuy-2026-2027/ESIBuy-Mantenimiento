@@ -10,7 +10,6 @@ import es.uclm.esibuy.backend.preferencias.application.port.out.CategoriasPort;
 import es.uclm.esibuy.backend.preferencias.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.preferencias.application.port.out.PreferenciasRepositoryPort;
 import es.uclm.esibuy.backend.preferencias.domain.exception.CategoriaNoDisponibleException;
-import es.uclm.esibuy.backend.preferencias.domain.exception.PreferenciasInvalidasException;
 import es.uclm.esibuy.backend.preferencias.domain.model.Preferencias;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 
@@ -37,20 +36,6 @@ public class GestionPreferenciasService implements GestionPreferenciasUseCase {
     @Override
     public List<String> consultar(String emailCliente) {
         return soloActivas(preferenciasDe(emailCliente), categorias.activas());
-    }
-
-    @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
-    @Override
-    public List<String> guardar(String emailCliente, List<String> elegidas) {
-        if (elegidas == null) {
-            throw new PreferenciasInvalidasException("Las categorías son obligatorias");
-        }
-        if (!categorias.activas().containsAll(elegidas)) {
-            throw new PreferenciasInvalidasException("Alguna categoría no existe o no está activa");
-        }
-        Preferencias preferencias = preferenciasDe(emailCliente);
-        preferencias.elegirCategorias(elegidas);
-        return preferenciasRepository.guardar(preferencias).getCategorias();
     }
 
     @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)

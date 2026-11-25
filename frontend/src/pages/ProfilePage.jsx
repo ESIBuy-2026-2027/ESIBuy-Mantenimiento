@@ -16,7 +16,7 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { Delete20Regular, Diamond16Filled, Diamond20Regular, Edit20Regular } from '@fluentui/react-icons'
-import { getPreferences, savePreferences } from '../api/preferences'
+import { addFavoriteCategory, getPreferences, removeFavoriteCategory } from '../api/preferences'
 import { getProfile, updateProfile } from '../api/profile'
 import { useAuth } from '../auth/useAuth'
 import LinkButton from '../components/LinkButton'
@@ -121,12 +121,12 @@ AccountDeletion.propTypes = {
   rol: PropTypes.oneOf(['CLIENTE', 'VENDEDOR']).isRequired,
 }
 
-// Preferencias del cliente (HU46): una casilla por cada categoría activa, marcadas las que ya le interesan. Cada
-// cambio se guarda al momento, así que al salir del perfil ya están guardadas; mientras se guarda, las casillas
-// quedan deshabilitadas, igual que mientras cargan. La respuesta del backend es lo que se muestra después; si no se
-// pueden guardar, las casillas siguen como estaban. Si no cargan, no se muestran: guardar sin saber cuáles eligió
-// borraría las demás.
-function CustomerPreferences({ categories }) {
+// Categorías favoritas del cliente (AB#528, sobre las preferencias de la HU46): una casilla por cada categoría activa,
+// marcadas sus favoritas. Cada una se marca o se desmarca por separado y se guarda al momento, así que al salir del
+// perfil ya están guardadas; mientras se guarda, las casillas quedan deshabilitadas, igual que mientras cargan. La
+// respuesta del backend es lo que se muestra después; si no se puede guardar, las casillas siguen como estaban. Si no
+// cargan, no se muestran: no se sabría cuáles son ya favoritas.
+function FavoriteCategories({ categories }) {
   const styles = useStyles()
   const titleId = useId()
   const fetcher = useCallback(() => getPreferences(), [])
@@ -137,11 +137,10 @@ function CustomerPreferences({ categories }) {
   const elegidas = new Set((actualizadas ?? cargadas)?.categorias ?? [])
 
   const cambiar = async (categoryId, marcada) => {
-    const nuevas = marcada ? [...elegidas, categoryId] : [...elegidas].filter((id) => id !== categoryId)
     setAviso(null)
     setGuardando(true)
     try {
-      setActualizadas(await savePreferences(nuevas))
+      setActualizadas(await (marcada ? addFavoriteCategory(categoryId) : removeFavoriteCategory(categoryId)))
       setAviso({ intent: 'success', texto: 'Preferencias guardadas.' })
     } catch {
       setAviso({ intent: 'error', texto: 'No se han podido guardar tus preferencias. Inténtalo de nuevo.' })
@@ -153,9 +152,9 @@ function CustomerPreferences({ categories }) {
   return (
     <Card className={styles.card}>
       <Title3 as="h2" id={titleId} className={styles.name}>
-        Mis preferencias
+        Mis categorías favoritas
       </Title3>
-      <Text className={styles.preferencesText}>Elige las categorías que te interesan.</Text>
+      <Text className={styles.preferencesText}>Marca las categorías que más te interesan.</Text>
       {aviso && (
         <MessageBar intent={aviso.intent}>
           <MessageBarBody>{aviso.texto}</MessageBarBody>
@@ -185,7 +184,7 @@ function CustomerPreferences({ categories }) {
   )
 }
 
-CustomerPreferences.propTypes = {
+FavoriteCategories.propTypes = {
   categories: PropTypes.arrayOf(PropTypes.shape({ id: PropTypes.string.isRequired, nombre: PropTypes.string.isRequired }))
     .isRequired,
 }
@@ -224,8 +223,8 @@ function profileFields(perfil, categoryName) {
 // Perfil propio del cliente o del vendedor (HU4), en solo lectura. Los datos se piden al backend, que los saca de
 // la sesión. Con «Editar perfil» (HU45) los datos modificables se editan en este mismo panel; al guardar, el perfil
 // pasa a ser el que devuelve el backend y se avisa. Si hay cambios sin guardar, se pregunta antes de cancelar, de ir
-// a otra pantalla y de cerrar o recargar la pestaña. El cliente ve además sus preferencias (HU46) y su acceso a ESIBuy
-// Premium (HU45), y el vendedor, sus estadísticas (HU17). Los dos pueden eliminar su cuenta desde aquí (HU47 y HU25).
+// a otra pantalla y de cerrar o recargar la pestaña. El cliente ve además sus categorías favoritas (AB#528) y su acceso
+// a ESIBuy Premium (HU45), y el vendedor, sus estadísticas (HU17). Los dos pueden eliminar su cuenta desde aquí (HU47 y HU25).
 export default function ProfilePage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
@@ -327,7 +326,7 @@ export default function ProfilePage() {
       {confirmandoCancelar && <UnsavedChangesDialog onStay={() => setConfirmandoCancelar(false)} onLeave={dejarDeEditar} />}
       {guard.blocked && <UnsavedChangesDialog onStay={guard.reset} onLeave={guard.proceed} />}
 
-      {perfil?.rol === 'CLIENTE' && <CustomerPreferences categories={categories} />}
+      {perfil?.rol === 'CLIENTE' && <FavoriteCategories categories={categories} />}
       {perfil?.rol === 'VENDEDOR' && <SellerStatistics />}
 
       {(perfil?.rol === 'CLIENTE' || perfil?.rol === 'VENDEDOR') && <SecurityFactors />}

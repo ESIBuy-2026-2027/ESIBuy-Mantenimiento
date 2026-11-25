@@ -2,13 +2,11 @@ package es.uclm.esibuy.backend.preferencias.application.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -80,23 +78,19 @@ class SeguridadPreferenciasServiceTest {
 
     private void comprobarQueRechaza(String email) {
         assertThrows(AccessDeniedException.class, () -> gestionPreferencias.consultar(email));
-        assertThrows(AccessDeniedException.class, () -> gestionPreferencias.guardar(email, List.of()));
         verifyNoInteractions(preferenciasRepository, clienteEnSesion, categorias);
     }
 
     @Test
     @WithMockUser(username = CLIENTE, roles = "CLIENTE")
-    @DisplayName("HU46-CP10: el cliente consulta y guarda sus preferencias con su propio correo")
+    @DisplayName("HU46-CP10: el cliente consulta sus preferencias con su propio correo")
     void elClienteUsaSusPreferencias() {
-        when(preferenciasRepository.guardar(any())).thenAnswer(invocacion -> invocacion.getArgument(0));
-
         assertDoesNotThrow(() -> gestionPreferencias.consultar(CLIENTE));
-        assertDoesNotThrow(() -> gestionPreferencias.guardar(CLIENTE, List.of()));
     }
 
     @Test
     @WithMockUser(username = CLIENTE, roles = "CLIENTE")
-    @DisplayName("HU46-CP10: un cliente no consulta ni guarda las preferencias de otro cliente")
+    @DisplayName("HU46-CP10: un cliente no consulta las preferencias de otro cliente")
     void unClienteNoUsaLasPreferenciasDeOtro() {
         comprobarQueRechaza(OTRO_CLIENTE);
     }
@@ -119,8 +113,6 @@ class SeguridadPreferenciasServiceTest {
     @DisplayName("HU46-CP10: sin sesión se rechazan las preferencias")
     void sinSesionSeRechazanLasPreferencias() {
         assertThrows(AuthenticationCredentialsNotFoundException.class, () -> gestionPreferencias.consultar(CLIENTE));
-        assertThrows(AuthenticationCredentialsNotFoundException.class,
-                () -> gestionPreferencias.guardar(CLIENTE, List.of()));
         verifyNoInteractions(preferenciasRepository, clienteEnSesion, categorias);
     }
 

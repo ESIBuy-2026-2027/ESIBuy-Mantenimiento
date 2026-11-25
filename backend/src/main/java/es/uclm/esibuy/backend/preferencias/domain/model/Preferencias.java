@@ -25,12 +25,6 @@ public class Preferencias {
         return new Preferencias(null, clienteId, List.of());
     }
 
-    // Sustituye las categorías elegidas: una lista vacía quita todas
-    public void elegirCategorias(List<String> nuevas) {
-        categorias.clear();
-        categorias.addAll(sinRepetidas(nuevas));
-    }
-
     // Marcar una categoría que ya es favorita no es un error: ya queda como se quería. Dice si ha cambiado
     public boolean marcar(String categoriaId) {
         return !categorias.contains(categoriaId) && categorias.add(categoriaId);
