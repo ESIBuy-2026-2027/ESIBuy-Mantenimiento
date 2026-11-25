@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useId, useState } from 'react'
+import { useState } from 'react'
 import {
   Button,
   Dialog,
