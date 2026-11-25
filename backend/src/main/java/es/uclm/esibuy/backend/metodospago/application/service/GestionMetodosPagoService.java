@@ -7,6 +7,7 @@ import es.uclm.esibuy.backend.metodospago.application.port.out.CifradoDatosPagoP
 import es.uclm.esibuy.backend.metodospago.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.metodospago.application.port.out.MetodoPagoRepositoryPort;
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoInvalidoException;
+import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoNoEncontradoException;
 import es.uclm.esibuy.backend.metodospago.domain.model.CaducidadTarjeta;
 import es.uclm.esibuy.backend.metodospago.domain.model.MetodoPago;
 import es.uclm.esibuy.backend.metodospago.domain.model.MetodosPagoCliente;
@@ -81,7 +82,7 @@ public class GestionMetodosPagoService implements GestionMetodosPagoUseCase {
         MetodoPago existente = metodoPagoRepository.buscarPorCliente(clienteId).stream()
                 .filter(metodo -> metodo.getId().equals(metodoId))
                 .findFirst()
-                .orElseThrow(() -> new es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoNoEncontradoException(
+                .orElseThrow(() -> new MetodoPagoNoEncontradoException(
                         "El método de pago no existe"));
 
         DatosValidados datos = switch (comando.tipo()) {
