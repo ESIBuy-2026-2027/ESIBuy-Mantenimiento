@@ -189,7 +189,7 @@ export default function CatalogFilters({
   const maxPercent = (displayedMaxPrice / sliderMax) * 100
 
   const changeMin = (event) => {
-    const next = Math.min(Number(event.target.value), maxPrice)
+    const next = Math.min(Number(event.target.value), displayedMaxPrice)
     onPriceChange(next, maxPrice)
   }
   const changeMax = (event) => {
@@ -241,7 +241,7 @@ export default function CatalogFilters({
               min="0"
               max={sliderMax}
               step="1"
-              value={maxPrice}
+              value={displayedMaxPrice}
               aria-label="Precio máximo"
               onChange={changeMax}
             />
