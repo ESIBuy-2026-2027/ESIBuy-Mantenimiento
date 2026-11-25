@@ -49,6 +49,10 @@ class SupervisionIncidenciasServiceTest {
         private int consultas;
         private int paginaPedida;
         private int tamanoPedido;
+        private EstadoIncidencia estadoPedido;
+        private String busquedaPedida;
+        private String ordenPedido;
+        private String sentidoPedido;
 
         @Override
         public Incidencia guardar(Incidencia incidencia) {
@@ -65,6 +69,29 @@ class SupervisionIncidenciasServiceTest {
             consultas++;
             paginaPedida = pagina;
             tamanoPedido = tamano;
+            estadoPedido = null;
+            return this.pagina;
+        }
+
+        @Override
+        public IncidenciaPage buscarPorEstado(EstadoIncidencia estado, int pagina, int tamano) {
+            consultas++;
+            paginaPedida = pagina;
+            tamanoPedido = tamano;
+            estadoPedido = estado;
+            return this.pagina;
+        }
+
+        @Override
+        public IncidenciaPage buscarSupervisadas(EstadoIncidencia estado, String busqueda, String ordenarPor,
+                String sentido, int pagina, int tamano) {
+            consultas++;
+            paginaPedida = pagina;
+            tamanoPedido = tamano;
+            estadoPedido = estado;
+            busquedaPedida = busqueda;
+            ordenPedido = ordenarPor;
+            sentidoPedido = sentido;
             return this.pagina;
         }
 
@@ -162,5 +189,33 @@ class SupervisionIncidenciasServiceTest {
         assertThrows(IncidenciaInvalidaException.class, () -> servicio.consultarTodas(pagina, tamano));
         assertEquals(0, repositorio.consultas);
         assertEquals(List.of(), autores.buscados);
+    }
+
+    @Test
+    @DisplayName("PBI239-CP01: al filtrar por estado delega en buscarPorEstado y enriquece los autores")
+    void alFiltrarPorEstadoDelegaEnBuscarPorEstado() {
+        Incidencia pendiente = incidencia("i-1", "c-1");
+        repositorio.pagina = new IncidenciaPage(List.of(pendiente), 0, 10, 1);
+
+        IncidenciaSupervisadaPage devuelta = servicio.consultarTodas(0, 10, EstadoIncidencia.PENDIENTE);
+
+        assertEquals(EstadoIncidencia.PENDIENTE, repositorio.estadoPedido);
+        assertEquals(List.of(new IncidenciaSupervisada(pendiente, CLIENTE)), devuelta.incidencias());
+    }
+
+    @Test
+    @DisplayName("PBI239-CP08: buscar y ordenar delega en buscarSupervisadas y rechaza criterios inválidos")
+    void buscarYOrdenarDelegaEnBuscarSupervisadas() {
+        servicio.consultarTodas(0, 10, EstadoIncidencia.ABIERTA, "pedido", "asunto", "desc");
+
+        assertEquals(EstadoIncidencia.ABIERTA, repositorio.estadoPedido);
+        assertEquals("pedido", repositorio.busquedaPedida);
+        assertEquals("asunto", repositorio.ordenPedido);
+        assertEquals("desc", repositorio.sentidoPedido);
+
+        assertThrows(IncidenciaInvalidaException.class,
+                () -> servicio.consultarTodas(0, 10, null, null, "otro", "asc"));
+        assertThrows(IncidenciaInvalidaException.class,
+                () -> servicio.consultarTodas(0, 10, null, null, "asunto", "invalido"));
     }
 }

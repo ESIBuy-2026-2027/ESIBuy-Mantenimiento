@@ -8,6 +8,8 @@ import es.uclm.esibuy.backend.carrito.domain.exception.CantidadInvalidaException
 import es.uclm.esibuy.backend.carrito.domain.exception.LineaCarritoNoEncontradaException;
 import es.uclm.esibuy.backend.carrito.domain.exception.ProductoNoComprableException;
 import es.uclm.esibuy.backend.carrito.domain.exception.StockInsuficienteException;
+import es.uclm.esibuy.backend.deseos.domain.exception.ListaDeseosInvalidaException;
+import es.uclm.esibuy.backend.deseos.domain.exception.ListaDeseosNoEncontradaException;
 import es.uclm.esibuy.backend.deseos.domain.exception.ProductoNoDisponibleException;
 import es.uclm.esibuy.backend.preferencias.domain.exception.PreferenciasInvalidasException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionInvalidaException;
@@ -414,6 +416,18 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public RespuestaError productoNoDisponible() {
         return new RespuestaError("El producto no existe", "PRODUCT_NOT_FOUND");
+    }
+
+    @ExceptionHandler(ListaDeseosInvalidaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError listaDeseosInvalida() {
+        return new RespuestaError("La lista de deseos es inválida", CODIGO_VALIDACION);
+    }
+
+    @ExceptionHandler(ListaDeseosNoEncontradaException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public RespuestaError listaDeseosNoEncontrada() {
+        return new RespuestaError("La lista de deseos no existe", "WISHLIST_NOT_FOUND");
     }
 
     @ExceptionHandler(LineaCarritoNoEncontradaException.class)

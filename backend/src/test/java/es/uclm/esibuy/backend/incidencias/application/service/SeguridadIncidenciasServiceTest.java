@@ -240,6 +240,25 @@ class SeguridadIncidenciasServiceTest {
     }
 
     @Test
+    @WithMockUser(username = ADMINISTRADOR, roles = "ADMINISTRADOR")
+    @DisplayName("PBI239-CP02: el administrador consulta las incidencias filtradas por estado")
+    void elAdministradorSupervisaLasIncidenciasPorEstado() {
+        when(incidenciaRepository.buscarPorEstado(EstadoIncidencia.PENDIENTE, 0, 10))
+                .thenReturn(new IncidenciaPage(List.of(), 0, 10, 0));
+
+        assertDoesNotThrow(() -> supervisionIncidencias.consultarTodas(0, 10, EstadoIncidencia.PENDIENTE));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("PBI239-CP02: un cliente no consulta las incidencias filtradas por estado")
+    void unClienteNoSupervisaLasIncidenciasPorEstado() {
+        assertThrows(AccessDeniedException.class,
+                () -> supervisionIncidencias.consultarTodas(0, 10, EstadoIncidencia.PENDIENTE));
+        verifyNoInteractions(incidenciaRepository, autores);
+    }
+
+    @Test
     @WithMockUser(username = CLIENTE, roles = "CLIENTE")
     @DisplayName("HU49-CP09: un cliente no consulta las incidencias de todos")
     void unClienteNoSupervisaLasIncidencias() {

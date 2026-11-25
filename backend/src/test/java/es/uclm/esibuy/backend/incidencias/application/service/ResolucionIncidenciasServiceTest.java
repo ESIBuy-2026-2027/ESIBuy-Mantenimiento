@@ -64,6 +64,17 @@ class ResolucionIncidenciasServiceTest {
         }
 
         @Override
+        public IncidenciaPage buscarPorEstado(EstadoIncidencia estado, int pagina, int tamano) {
+            throw new UnsupportedOperationException("No lo usa la resolución");
+        }
+
+        @Override
+        public IncidenciaPage buscarSupervisadas(EstadoIncidencia estado, String busqueda, String ordenarPor,
+                String sentido, int pagina, int tamano) {
+            throw new UnsupportedOperationException("No lo usa la resolución");
+        }
+
+        @Override
         public Optional<Incidencia> buscarPorId(String id) {
             return Optional.ofNullable(incidencias.get(id));
         }

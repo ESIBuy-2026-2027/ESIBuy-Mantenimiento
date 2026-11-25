@@ -1,4 +1,4 @@
-﻿import PropTypes from 'prop-types'
+import PropTypes from 'prop-types'
 import { Badge, Card, Text, makeStyles, tokens } from '@fluentui/react-components'
 import { formatDateTime } from '../../utils/format'
 import { colorDeEstado, etiquetaDeEstado } from './incidentStatus'
@@ -112,6 +112,7 @@ export default function IncidentsList({
   incidents,
   refreshing = false,
   showAuthor = false,
+  compact = false,
   label = 'Tus incidencias',
   renderActions,
 }) {
@@ -129,24 +130,28 @@ export default function IncidentsList({
             <div className={styles.header}>
               <div className={styles.title}>
                 <Text className={styles.subject}>{incident.asunto}</Text>
-                <Text className={styles.muted}>
-                  <time dateTime={incident.fechaCreacion}>{formatDateTime(incident.fechaCreacion)}</time>
-                </Text>
-                {showAuthor && <IncidentAuthor author={incident.autor} />}
+                {!compact && (
+                  <Text className={styles.muted}>
+                    <time dateTime={incident.fechaCreacion}>{formatDateTime(incident.fechaCreacion)}</time>
+                  </Text>
+                )}
+                {!compact && showAuthor && <IncidentAuthor author={incident.autor} />}
               </div>
               <Badge appearance="tint" color={colorDeEstado(incident.estado)}>
                 {etiquetaDeEstado(incident.estado)}
               </Badge>
             </div>
             <Text className={styles.text}>{incident.descripcion}</Text>
-            <div className={styles.response}>
-              <Text weight="semibold" size={200}>
-                Respuesta del administrador
-              </Text>
-              <Text className={incident.respuesta ? styles.text : styles.muted}>
-                {incident.respuesta || SIN_RESPUESTA}
-              </Text>
-            </div>
+            {!compact && (
+              <div className={styles.response}>
+                <Text weight="semibold" size={200}>
+                  Respuesta del administrador
+                </Text>
+                <Text className={incident.respuesta ? styles.text : styles.muted}>
+                  {incident.respuesta || SIN_RESPUESTA}
+                </Text>
+              </div>
+            )}
             {renderActions && <div className={styles.actions}>{renderActions(incident)}</div>}
           </Card>
         </li>
@@ -173,6 +178,8 @@ IncidentsList.propTypes = {
   ).isRequired,
   refreshing: PropTypes.bool,
   showAuthor: PropTypes.bool,
+  // En resumen solo muestra asunto, descripción y estado; el resto va en el diálogo de detalle (PBI 239)
+  compact: PropTypes.bool,
   // Nombre accesible de la lista
   label: PropTypes.string,
   // Recibe la incidencia y devuelve sus acciones (HU50); sin él, las tarjetas no tienen acciones

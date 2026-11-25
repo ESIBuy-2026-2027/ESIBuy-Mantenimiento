@@ -320,16 +320,16 @@ final class ColeccionesEsiBuy {
                                                                                 Collation.ComparisonLevel.primary()))));
         }
 
-        // 10. listas_deseos: varias listas de deseos por cliente (CLI-01).
-        private static Coleccion listasDeseos() {
-                return new Coleccion("listas_deseos", esquema(List.of(USUARIO_ID),
-                                textoNoVacio(USUARIO_ID),
-                                string(NOMBRE),
-                                array("items").items(JsonSchemaObject.object()
-                                                .required(PRODUCTO_ID)
-                                                .properties(textoNoVacio(PRODUCTO_ID), date("addedAt")))),
-                                List.of(indice(USUARIO_ID)));
-        }
+    // 10. listas_deseos: listas de deseos de cada cliente (HU14, PBI 534).
+    private static Coleccion listasDeseos() {
+        return new Coleccion("listas_deseos", esquema(List.of(USUARIO_ID),
+                textoNoVacio(USUARIO_ID),
+                string(NOMBRE),
+                array("items").items(JsonSchemaObject.object()
+                        .required(PRODUCTO_ID)
+                        .properties(textoNoVacio(PRODUCTO_ID), date("addedAt")))),
+                List.of(indice(USUARIO_ID)));
+    }
 
         // 11. metodos_pago: métodos de pago de cada cliente (HU6), fuera del modelo
         // inicial. Solo la máscara y

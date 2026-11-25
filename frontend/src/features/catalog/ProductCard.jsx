@@ -276,10 +276,10 @@ export default function ProductCard({
           icon={favorite ? <Heart20Filled className={styles.favoriteIcon} /> : <Heart20Regular />}
           aria-label={
             favorite
-              ? `Quitar ${product.nombre} de favoritos`
+              ? `Añadir/Quitar ${product.nombre} de favoritos`
               : `Añadir ${product.nombre} a favoritos`
           }
-          title={favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+          title={favorite ? 'Añadir/Quitar de favoritos' : 'Añadir a favoritos'}
           disabled={savingFavorite || (favorite && !onRemoveFavorite)}
           onClick={toggleFavorite}
         />

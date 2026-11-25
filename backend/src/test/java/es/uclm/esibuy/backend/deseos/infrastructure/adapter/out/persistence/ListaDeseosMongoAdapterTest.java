@@ -90,17 +90,17 @@ class ListaDeseosMongoAdapterTest {
     }
 
     @Test
-    @DisplayName("HU14: un cliente puede tener varias listas de deseos")
-    void unClientePuedeTenerVariasListasDeDeseos() {
-        ListaDeseos primera = adapter.guardar(listaNueva("cliente-1"));
+    @DisplayName("PBI534-CP03: un cliente puede guardar varias listas con nombre y eliminar una sin afectar a las demás")
+    void unClientePuedeTenerVariasListasConNombre() {
+        ListaDeseos primera = adapter.guardar(ListaDeseos.nueva("cliente-1", "Regalos"));
+        ListaDeseos segunda = adapter.guardar(ListaDeseos.nueva("cliente-1", "Oficina"));
 
-        ListaDeseos segunda = adapter.guardar(
-                new ListaDeseos(null, "cliente-1", List.of(new ItemDeseo("p-2", HOY))));
+        List<ListaDeseos> todas = adapter.buscarTodasPorCliente("cliente-1");
+        assertEquals(2, todas.size());
+        assertEquals(List.of("Regalos", "Oficina"), todas.stream().map(ListaDeseos::getNombre).toList());
 
-        assertNotNull(primera.getId());
-        assertNotNull(segunda.getId());
-        assertTrue(!primera.getId().equals(segunda.getId()));
-
-        assertEquals(2, mongoTemplate.getCollection(COLECCION).countDocuments());
+        adapter.eliminar(primera.getId(), "cliente-1");
+        assertEquals(List.of(segunda.getId()),
+                adapter.buscarTodasPorCliente("cliente-1").stream().map(ListaDeseos::getId).toList());
     }
 }

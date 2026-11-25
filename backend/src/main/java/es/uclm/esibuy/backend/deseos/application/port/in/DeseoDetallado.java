@@ -8,5 +8,10 @@ import java.time.Instant;
  * al cliente, y {@code disponible} es falso si el vendedor lo ha desactivado.
  */
 public record DeseoDetallado(String productoId, String nombre, String imagen, BigDecimal precioFinal, int stock,
-        boolean disponible, Instant addedAt) {
+        boolean disponible, Instant addedAt, int cantidad) {
+
+    public DeseoDetallado(String productoId, String nombre, String imagen, BigDecimal precioFinal, int stock,
+            boolean disponible, Instant addedAt) {
+        this(productoId, nombre, imagen, precioFinal, stock, disponible, addedAt, 1);
+    }
 }

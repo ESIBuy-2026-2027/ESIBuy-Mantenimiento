@@ -138,7 +138,8 @@ export const incidentsHandlers = [
     return HttpResponse.json(paginar(incidenciasDe(getUsuarioEnSesion()), { pagina, tamano }))
   }),
 
-  // Supervisión del administrador (HU49): las incidencias de todos con su autor, por páginas como las del perfil.
+  // Supervisión del administrador (HU49, PBI 239): las incidencias de todos con su autor, por páginas y opcionalmente
+  // filtradas por estado (PENDIENTE | ABIERTA), búsqueda por asunto y ordenación.
   http.get('/api/admin/incidencias', ({ request }) => {
     const rechazo = rechazarSiNoEsAdministrador()
     if (rechazo) return rechazo
@@ -146,7 +147,23 @@ export const incidentsHandlers = [
     const { error, pagina, tamano } = leerPaginacion(request)
     if (error) return error
 
-    return HttpResponse.json(paginar(incidenciasDeTodos(), { pagina, tamano }))
+    const params = new URL(request.url).searchParams
+    const estado = params.get('estado')
+    if (estado && estado !== 'PENDIENTE' && estado !== 'ABIERTA') {
+      return new HttpResponse(null, { status: 400 })
+    }
+    const search = params.get('search')?.trim().toLowerCase() ?? ''
+    const sort = params.get('sort') || 'fechaCreacion'
+    const order = params.get('order') || 'asc'
+    if (!['fechaCreacion', 'asunto', 'estado'].includes(sort) || !['asc', 'desc'].includes(order)) {
+      return incidenciaInvalida()
+    }
+
+    const factor = order === 'desc' ? -1 : 1
+    const filtradas = incidenciasDeTodos()
+      .filter((item) => (!estado || item.estado === estado) && (!search || item.asunto.toLowerCase().includes(search)))
+      .sort((a, b) => (a[sort].localeCompare(b[sort]) * factor) || a.id.localeCompare(b.id))
+    return HttpResponse.json(paginar(filtradas, { pagina, tamano }))
   }),
 
   // Crea una incidencia del usuario en sesión: nace PENDIENTE, sin respuesta y con los textos sin espacios en los
