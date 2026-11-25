@@ -340,7 +340,7 @@ export const productsHandlers = [
     const soloOfertas = params.get('offersOnly') === 'true'
     const minPrice = params.get('minPrice') === null ? null : Number(params.get('minPrice'))
     const maxPrice = params.get('maxPrice') === null ? null : Number(params.get('maxPrice'))
-    const coincidentes = PRODUCTOS.filter(estaDisponible)
+    const coincidentesSinMaximo = PRODUCTOS.filter(estaDisponible)
       .map((producto) => ({ ...aCatalogo(producto), ...datosComerciales(producto) }))
       .filter(
         (producto) =>
@@ -349,11 +349,16 @@ export const productsHandlers = [
           (producto.valoracion ?? 0) >= minima &&
           (!soloStock || producto.stock > 0) &&
           (!soloOfertas || Boolean(producto.descuento?.activo || producto.descuentoPremium?.activo)) &&
-          (minPrice === null || producto.precio >= minPrice) &&
-          (maxPrice === null || producto.precio <= maxPrice),
+          (minPrice === null || producto.precio >= minPrice),
       )
+    const maxPriceDisponible = Math.max(0, ...coincidentesSinMaximo.map((producto) => producto.precio))
+    const coincidentes = coincidentesSinMaximo
+      .filter((producto) => maxPrice === null || producto.precio <= maxPrice)
       .sort(ordenDelCatalogo(params.get('sort'), params.get('order')))
-    return HttpResponse.json(paginar(coincidentes, leerPagina(params, TAMANO_CATALOGO)))
+    return HttpResponse.json({
+      ...paginar(coincidentes, leerPagina(params, TAMANO_CATALOGO)),
+      maxPrice: maxPriceDisponible,
+    })
   }),
 
   // Detalle de un producto del catálogo (HU8): solo los disponibles; el resto, como si no existieran.
