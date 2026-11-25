@@ -166,9 +166,13 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         // trata como el valor más bajo: al principio en ascendente y al final en
         // descendente.
         Sort.Direction direccion = query.descendente() ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Sort orden = query.criterio() == CriterioOrdenCatalogo.VALORACION
-                ? Sort.by(direccion, CAMPO_VALORACION_MEDIA).and(Sort.by(Sort.Direction.ASC, CAMPO_NOMBRE))
-                : Sort.by(direccion, CAMPO_NOMBRE);
+        Sort orden = switch (query.criterio()) {
+            case VALORACION -> Sort.by(direccion, CAMPO_VALORACION_MEDIA)
+                    .and(Sort.by(Sort.Direction.ASC, CAMPO_NOMBRE));
+            case PRECIO -> Sort.by(direccion, CAMPO_PRECIO)
+                    .and(Sort.by(Sort.Direction.ASC, CAMPO_NOMBRE));
+            case NOMBRE -> Sort.by(direccion, CAMPO_NOMBRE);
+        };
         // PENDIENTE DE DECIDIR (equipo): ordenar como en español con
         // ORDEN_ALFABETICO_ES (UsuarioMongoAdapter).
         // Sin collation, MongoDB ordena por código Unicode: las mayúsculas antes y las
