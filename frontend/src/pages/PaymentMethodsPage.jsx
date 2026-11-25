@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { useCallback, useState } from 'react'
 import {
   Badge,
@@ -24,6 +25,12 @@ import { useApiQuery } from '../hooks/useApiQuery'
 const MAXIMO_METODOS = 5
 
 const useStyles = makeStyles({
+  embeddedPage: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalM,
+    width: '100%',
+  },
   list: {
     listStyle: 'none',
     margin: 0,
@@ -72,7 +79,7 @@ const useStyles = makeStyles({
 })
 
 // Métodos de pago del cliente en sesión (HU6): solo se muestran con su máscara.
-export default function PaymentMethodsPage() {
+export default function PaymentMethodsPage({ embedded = false }) {
   const pageStyles = usePageStyles()
   const styles = useStyles()
   const fetcher = useCallback(() => getPaymentMethods(), [])
@@ -112,13 +119,16 @@ export default function PaymentMethodsPage() {
     retry()
   }
 
+  const Root = embedded ? 'section' : 'main'
+  const SectionTitle = embedded ? 'h2' : Title1
+
   return (
-    <main className={pageStyles.page}>
+    <Root className={embedded ? styles.embeddedPage : pageStyles.page} aria-label={embedded ? 'Métodos de pago' : undefined}>
       <div className={pageStyles.heading}>
         <div className={pageStyles.titleBlock}>
-          <Title1 as="h1" className={pageStyles.title}>
+          <SectionTitle as={embedded ? undefined : 'h1'} className={pageStyles.title}>
             Métodos de pago
-          </Title1>
+          </SectionTitle>
           <Text className={pageStyles.subtitle}>Gestiona las tarjetas y cuentas con las que pagas tus compras.</Text>
         </div>
         {metodos?.length > 0 && (
@@ -199,6 +209,10 @@ export default function PaymentMethodsPage() {
           onDeleted={alEliminar}
         />
       )}
-    </main>
+    </Root>
   )
+}
+
+PaymentMethodsPage.propTypes = {
+  embedded: PropTypes.bool,
 }
