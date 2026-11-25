@@ -10,6 +10,7 @@ import {
   Spinner,
   Text,
   makeStyles,
+  mergeClasses,
   tokens,
 } from '@fluentui/react-components'
 import {
@@ -35,21 +36,31 @@ const useStyles = makeStyles({
   },
   fabButton: {
     minWidth: 'auto',
-    height: '36px',
+    minHeight: '40px',
     padding: `0 ${tokens.spacingHorizontalM}`,
     gap: tokens.spacingHorizontalXS,
-    border: '1px solid #FDBA74',
+    border: '1px solid transparent',
     borderRadius: tokens.borderRadiusCircular,
-    backgroundColor: '#FFF0E3',
-    color: '#C2410C',
-    fontWeight: tokens.fontWeightSemibold,
+    backgroundColor: 'transparent',
+    color: '#713512',
+    fontWeight: tokens.fontWeightRegular,
+    transitionProperty: 'background-color, color, border-color',
+    transitionDuration: tokens.durationFaster,
     ':hover': {
-      backgroundColor: '#FFE2C7',
-      borderColor: '#F97316',
-      color: '#9A3412',
+      backgroundColor: '#FCE8D5',
+      color: '#B54708',
     },
     ':active': {
-      backgroundColor: '#FED7AA',
+      backgroundColor: '#F8D7B8',
+      color: '#963B08',
+    },
+  },
+  fabButtonActive: {
+    backgroundColor: '#FFF1E3',
+    color: '#A83F08',
+    ':hover': {
+      backgroundColor: '#FCE4CC',
+      color: '#963B08',
     },
   },
   badge: {
@@ -422,7 +433,7 @@ export default function CartWidget() {
           ref={button}
           appearance="subtle"
           size="medium"
-          className={styles.fabButton}
+          className={mergeClasses(styles.fabButton, open && styles.fabButtonActive)}
           icon={<Cart24Filled />}
           aria-label={buttonLabel(status, count)}
           aria-expanded={open}
