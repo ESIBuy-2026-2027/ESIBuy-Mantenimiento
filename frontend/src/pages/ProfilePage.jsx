@@ -4,7 +4,6 @@ import {
   Badge,
   Button,
   Card,
-  Checkbox,
   MessageBar,
   MessageBarActions,
   MessageBarBody,
@@ -23,7 +22,6 @@ import {
   Location20Regular,
   Payment20Regular,
 } from '@fluentui/react-icons'
-import { addFavoriteCategory, getPreferences, removeFavoriteCategory } from '../api/preferences'
 import { getProfile, updateProfile } from '../api/profile'
 import { useAuth } from '../auth/useAuth'
 import LinkButton from '../components/LinkButton'
@@ -31,8 +29,6 @@ import { usePageStyles } from '../components/pageStyles'
 import { UserAvatar } from '../features/account/AvatarSelector'
 import DeleteAccountDialog from '../features/account/DeleteAccountDialog'
 import UnsavedChangesDialog from '../features/account/UnsavedChangesDialog'
-import FavoriteCategoryNotice from '../features/catalog/FavoriteCategoryNotice'
-import { FAVORITAS_NO_CARGADAS, avisoDeExito, avisoDeFallo } from '../features/catalog/favoriteCategoryNotices'
 import ProfileEditor from '../features/admin/ProfileEditor'
 import ReadOnlyFields from '../features/admin/ReadOnlyFields'
 import { profileFieldsFor } from '../features/admin/profileFields'
@@ -70,13 +66,8 @@ const useStyles = makeStyles({
   email: {
     color: tokens.colorNeutralForeground3,
   },
-  preferencesText: {
+  mutedText: {
     color: tokens.colorNeutralForeground3,
-  },
-  categories: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    columnGap: tokens.spacingHorizontalL,
   },
   deletion: {
     gap: tokens.spacingVerticalM,
@@ -118,7 +109,7 @@ function AccountDeletion({ rol }) {
       <Title3 as="h2" id={titleId} className={styles.name}>
         Eliminar mi cuenta
       </Title3>
-      <Text className={styles.preferencesText}>
+      <Text className={styles.mutedText}>
         Dejarás de formar parte de ESIBuy. Tus pedidos y valoraciones se conservan.
       </Text>
       <Button className={styles.deletionAction} icon={<Delete20Regular />} onClick={() => setAbierto(true)}>
@@ -139,88 +130,6 @@ function AccountDeletion({ rol }) {
 
 AccountDeletion.propTypes = {
   rol: PropTypes.oneOf(['CLIENTE', 'VENDEDOR']).isRequired,
-}
-
-// Categorías favoritas del cliente (AB#528, sobre las preferencias de la HU46): una casilla por cada categoría activa,
-// marcadas sus favoritas. Cada una se marca o se desmarca por separado y se guarda al momento, así que al salir del
-// perfil ya están guardadas; mientras se guarda, las casillas quedan deshabilitadas, igual que mientras cargan. La
-// respuesta del backend es lo que se muestra después; si no se puede guardar, las casillas siguen como estaban. Si no
-// cargan (las favoritas o las propias categorías), no se muestran y se puede reintentar.
-function FavoriteCategories({ categories, categoriesLoaded, categoriesFailed, onRetryCategories }) {
-  const styles = useStyles()
-  const titleId = useId()
-  const fetcher = useCallback(() => getPreferences(), [])
-  const { data: cargadas, failed, retry } = useApiQuery(fetcher)
-  const [actualizadas, setActualizadas] = useState(null)
-  const [guardando, setGuardando] = useState(false)
-  const [aviso, setAviso] = useState(null)
-  const elegidas = new Set((actualizadas ?? cargadas)?.categorias ?? [])
-
-  const cambiar = async ({ id, nombre }, marcada) => {
-    setAviso(null)
-    setGuardando(true)
-    try {
-      setActualizadas(await (marcada ? addFavoriteCategory(id) : removeFavoriteCategory(id)))
-      setAviso(avisoDeExito(nombre, marcada))
-    } catch (error) {
-      setAviso(avisoDeFallo(nombre, marcada, error))
-    } finally {
-      setGuardando(false)
-    }
-  }
-
-  const reintentar = () => {
-    if (failed) retry()
-    if (categoriesFailed) onRetryCategories()
-  }
-
-  const contenido = () => {
-    if (failed || categoriesFailed) {
-      return (
-        <MessageBar intent="error">
-          <MessageBarBody>{FAVORITAS_NO_CARGADAS}</MessageBarBody>
-          <MessageBarActions>
-            <Button onClick={reintentar}>Reintentar</Button>
-          </MessageBarActions>
-        </MessageBar>
-      )
-    }
-    if (categoriesLoaded && categories.length === 0) {
-      return <Text>Ahora mismo no hay categorías disponibles.</Text>
-    }
-    return (
-      <fieldset aria-labelledby={titleId} className={styles.categories}>
-        {categories.map((category) => (
-          <Checkbox
-            key={category.id}
-            label={category.nombre}
-            checked={elegidas.has(category.id)}
-            disabled={guardando || !(actualizadas ?? cargadas)}
-            onChange={(_event, data) => cambiar(category, data.checked === true)}
-          />
-        ))}
-      </fieldset>
-    )
-  }
-
-  return (
-    <Card className={styles.card}>
-      <Title3 as="h2" id={titleId} className={styles.name}>
-        Mis categorías favoritas
-      </Title3>
-      <Text className={styles.preferencesText}>Marca las categorías que más te interesan.</Text>
-      <FavoriteCategoryNotice aviso={aviso} />
-      {contenido()}
-    </Card>
-  )
-}
-
-FavoriteCategories.propTypes = {
-  categories: PropTypes.arrayOf(PropTypes.shape({ id: PropTypes.string.isRequired, nombre: PropTypes.string.isRequired }))
-    .isRequired,
-  categoriesLoaded: PropTypes.bool.isRequired,
-  categoriesFailed: PropTypes.bool.isRequired,
-  onRetryCategories: PropTypes.func.isRequired,
 }
 
 // Acceso a ESIBuy Premium desde la sección «Mi cuenta» del perfil: muestra el estado y permite consultar sus beneficios.
@@ -293,18 +202,13 @@ function profileFields(perfil, categoryName) {
 // la sesión. Con «Editar perfil» (HU45) los datos modificables se editan en este mismo panel; al guardar, el perfil
 // pasa a ser el que devuelve el backend y se avisa. Si hay cambios sin guardar, se pregunta antes de cancelar, de ir
 // a otra pantalla y de cerrar o recargar la pestaña. El cliente ve además sus accesos de cuenta, con
-// ESIBuy Premium (HU45), y sus categorías favoritas (AB#528). Los dos pueden eliminar su cuenta desde aquí (HU47 y HU25).
+// ESIBuy Premium (HU45). Los dos pueden eliminar su cuenta desde aquí (HU47 y HU25).
 export default function ProfilePage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
   const fetcher = useCallback(() => getProfile(), [])
   const { data: cargado, failed, retry } = useApiQuery(fetcher)
-  const {
-    categories,
-    loaded: categoriesLoaded,
-    failed: categoriesFailed,
-    retry: retryCategories,
-  } = useCategories()
+  const { categories } = useCategories()
   const [editando, setEditando] = useState(false)
   const [conCambios, setConCambios] = useState(false)
   const [confirmandoCancelar, setConfirmandoCancelar] = useState(false)
@@ -400,15 +304,6 @@ export default function ProfilePage() {
       {guard.blocked && <UnsavedChangesDialog onStay={guard.reset} onLeave={guard.proceed} />}
 
       {perfil?.rol === 'CLIENTE' && <CustomerAccountAccess tipoCliente={perfil.tipoCliente} />}
-
-      {perfil?.rol === 'CLIENTE' && (
-        <FavoriteCategories
-          categories={categories}
-          categoriesLoaded={categoriesLoaded}
-          categoriesFailed={categoriesFailed}
-          onRetryCategories={retryCategories}
-        />
-      )}
 
       {(perfil?.rol === 'CLIENTE' || perfil?.rol === 'VENDEDOR') && <SecurityFactors />}
 

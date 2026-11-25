@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { delay, http, HttpResponse } from 'msw'
+import { logout } from '../api/auth'
 import { addItemToWishlist, createWishlist } from '../api/wishlist'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
@@ -415,17 +416,12 @@ describe('FavoritesPage (AB#528): categorías favoritas', () => {
     expect(boton).toBeEnabled()
   })
 
-  it('HU528-CP29: una categoría añadida desde un producto aparece en Mis favoritos y en el perfil, y al quitarla aquí deja de serlo', async () => {
+  it('HU528-CP29: una categoría añadida desde un producto aparece en Mis favoritos y, al quitarla aquí, deja de serlo', async () => {
     const user = userEvent.setup()
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/products/p-1')
     await user.click(await screen.findByRole('button', { name: 'Añadir a favoritas la categoría Tecnología' }))
     await screen.findByText('Tecnología se ha añadido a tus categorías favoritas.')
-    cleanup()
-
-    renderApp('/profile')
-    const perfil = await screen.findByRole('group', { name: 'Mis categorías favoritas' })
-    await waitFor(() => expect(within(perfil).getByRole('checkbox', { name: 'Tecnología' })).toBeChecked())
     cleanup()
 
     renderApp('/favorites')
@@ -436,5 +432,58 @@ describe('FavoritesPage (AB#528): categorías favoritas', () => {
 
     renderApp('/products/p-1')
     expect(await screen.findByRole('button', { name: 'Añadir a favoritas la categoría Tecnología' })).toBeEnabled()
+  })
+
+  // Desde el detalle de un producto: p-1 es de Tecnología y p-10, de Hogar
+  async function anadirCategoriaDesde(user, producto, categoria) {
+    renderApp(`/products/${producto}`)
+    await user.click(await screen.findByRole('button', { name: `Añadir a favoritas la categoría ${categoria}` }))
+    await screen.findByText(`${categoria} se ha añadido a tus categorías favoritas.`)
+    cleanup()
+  }
+
+  async function categoriasDeMisFavoritos(user) {
+    renderApp('/favorites')
+    await user.click(await screen.findByRole('tab', { name: 'Categorías' }))
+    await screen.findByRole('list', { name: 'Tus categorías favoritas' })
+    const nombres = categorias()
+    cleanup()
+    return nombres
+  }
+
+  it('HU528-CP15: se pueden añadir varias categorías, cada una desde un producto suyo', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+
+    await anadirCategoriaDesde(user, 'p-1', 'Tecnología')
+    await anadirCategoriaDesde(user, 'p-10', 'Hogar')
+
+    expect(await categoriasDeMisFavoritos(user)).toEqual(['Tecnología', 'Hogar'])
+  })
+
+  it('HU528-CP21: al cerrar sesión y volver a entrar, el cliente conserva sus categorías favoritas', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    await anadirCategoriaDesde(user, 'p-10', 'Hogar')
+
+    await logout()
+    await abrirSesionPorApi('cliente@esibuy.test')
+
+    expect(await categoriasDeMisFavoritos(user)).toEqual(['Hogar'])
+  })
+
+  it('HU528-CP21: otro cliente no ve ni cambia esas favoritas', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    await anadirCategoriaDesde(user, 'p-10', 'Hogar')
+
+    await logout()
+    await abrirSesionPorApi('nuevo@esibuy.test')
+    await anadirCategoriaDesde(user, 'p-1', 'Tecnología')
+    expect(await categoriasDeMisFavoritos(user)).toEqual(['Tecnología'])
+
+    await logout()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    expect(await categoriasDeMisFavoritos(user)).toEqual(['Hogar'])
   })
 })

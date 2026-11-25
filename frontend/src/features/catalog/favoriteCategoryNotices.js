@@ -1,4 +1,4 @@
-// Avisos de las categorías favoritas (AB#528), los mismos en el detalle del producto, en Mis favoritos y en el perfil.
+// Avisos de las categorías favoritas (AB#528), los mismos en el detalle del producto y en Mis favoritos.
 // Llevan el nombre de la categoría y nunca el texto del backend.
 export const FAVORITAS_NO_CARGADAS = 'No se han podido cargar tus categorías favoritas. Inténtalo de nuevo.'
 
