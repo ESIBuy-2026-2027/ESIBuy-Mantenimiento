@@ -59,7 +59,7 @@ const useStyles = makeStyles({
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: tokens.spacingHorizontalL,
-    minHeight: '128px',
+    minHeight: '148px',
     padding: tokens.spacingHorizontalM,
     boxSizing: 'border-box',
   },
@@ -72,7 +72,8 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     flexGrow: 1,
     minWidth: 0,
-    minHeight: '58px',
+    minHeight: '80px',
+    height: '80px',
     justifyContent: 'center',
   },
   addressActions: {
@@ -229,11 +230,11 @@ export default function AddressesPage({ embedded = false }) {
                 <div className={styles.addressActions}>
                   {direccion.principal ? (
                     <Badge appearance="tint" color="brand">
-                      Principal
+                      Predeterminado
                     </Badge>
                   ) : (
                     <Button appearance="subtle" onClick={() => marcarPrincipal(direccion.id)}>
-                      Marcar como principal
+                      Marcar como predeterminado
                     </Button>
                   )}
                   <Button appearance="subtle" icon={<Edit20Regular />} onClick={() => abrirPanel(direccion)}>
