@@ -56,7 +56,7 @@ public class CatalogoController {
                 ? CriterioOrdenCatalogo.VALORACION
                 : CriterioOrdenCatalogo.NOMBRE;
         return ProductoCatalogoPageResponse.desde(catalogoProductos.buscarProductos(new BuscarCatalogoQuery(
-                search, category, minRating, inStock, offersOnly, criterio, "desc".equals(order), page - 1, size), autenticado.getName()));
+                search, category, minRating, inStock, offersOnly, false, criterio, "desc".equals(order), page - 1, size), autenticado.getName()));
     }
 
     @GetMapping("/products/{id}")
