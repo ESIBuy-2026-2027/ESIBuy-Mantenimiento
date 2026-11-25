@@ -382,21 +382,17 @@ class ProductoMongoAdapterTest {
                 new Descuento(true, new BigDecimal("15")), Descuento.sinDescuento()));
 
         ProductoPage soloStock = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, null, true, false, false,
-                        CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+                new BuscarCatalogoQuery(null, null, null, true, false, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
         adapter.guardar(crearProducto(null, "v-4", "Solo oferta Premium", "",
                 new BigDecimal("10"), 2, "cat-1", "", true,
                 Descuento.sinDescuento(), new Descuento(true, new BigDecimal("20"))));
 
         ProductoPage soloOfertas = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, null, false, true, false,
-                        CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+                new BuscarCatalogoQuery(null, null, null, false, true, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
         ProductoPage ofertasPremium = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, null, false, true, true,
-                        CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+                new BuscarCatalogoQuery(null, null, null, false, true, true, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
         ProductoPage stockYOfertas = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, null, true, true, false,
-                        CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+                new BuscarCatalogoQuery(null, null, null, true, true, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
 
         assertEquals(List.of("Con stock sin oferta", "Con stock y oferta"), nombres(soloStock));
         assertEquals(List.of("Con stock y oferta", "Sin stock con oferta"), nombres(soloOfertas));
@@ -438,7 +434,7 @@ class ProductoMongoAdapterTest {
         guardarProducto("v-2", "Ratón", "cat-2", "2026-10-03T10:00:00Z");
 
         ProductoPage pagina = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery("teclado", "cat-2", null, false, false, false, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+                new BuscarCatalogoQuery("teclado", "cat-2", null, false, false, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
 
         assertEquals(1, pagina.totalElementos());
         assertEquals("Teclado", pagina.productos().getFirst().getNombre());
@@ -455,9 +451,9 @@ class ProductoMongoAdapterTest {
         adapter.guardar(productoNuevo("v-2", "Banco"));
 
         ProductoPage ascendente = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, null, false, false, false, CriterioOrdenCatalogo.NOMBRE, false, 0, 2));
+                new BuscarCatalogoQuery(null, null, null, false, false, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 2));
         ProductoPage descendente = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, null, false, false, false, CriterioOrdenCatalogo.NOMBRE, true, 0, 2));
+                new BuscarCatalogoQuery(null, null, null, false, false, false, null, null, CriterioOrdenCatalogo.NOMBRE, true, 0, 2));
 
         assertEquals(List.of("Atril", "Banco"), nombres(ascendente));
         assertEquals(3, ascendente.totalElementos());
@@ -476,9 +472,9 @@ class ProductoMongoAdapterTest {
         adapter.guardar(productoNuevo("v-1", "Cesta"));
 
         ProductoPage desdeCuatro = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, 4, false, false, false, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+                new BuscarCatalogoQuery(null, null, 4, false, false, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
         ProductoPage desdeTres = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, 3, false, false, false, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+                new BuscarCatalogoQuery(null, null, 3, false, false, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
 
         assertEquals(List.of("Atril"), nombres(desdeCuatro));
         assertEquals(1, desdeCuatro.totalElementos());
@@ -494,9 +490,9 @@ class ProductoMongoAdapterTest {
         guardarValorado("Dado", 2.0);
 
         ProductoPage descendente = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, null, false, false, false, CriterioOrdenCatalogo.VALORACION, true, 0, 10));
+                new BuscarCatalogoQuery(null, null, null, false, false, false, null, null, CriterioOrdenCatalogo.VALORACION, true, 0, 10));
         ProductoPage ascendente = adapter.buscarEnCatalogo(
-                new BuscarCatalogoQuery(null, null, null, false, false, false, CriterioOrdenCatalogo.VALORACION, false, 0, 10));
+                new BuscarCatalogoQuery(null, null, null, false, false, false, null, null, CriterioOrdenCatalogo.VALORACION, false, 0, 10));
 
         // Banco y Cesta empatan a 4,0: el empate se resuelve de la A a la Z en los dos
         // sentidos
@@ -512,12 +508,12 @@ class ProductoMongoAdapterTest {
     // Catálogo sin búsqueda, categoría ni valoración mínima, por nombre de la A a
     // la Z, primera página de 10.
     private static BuscarCatalogoQuery sinFiltros() {
-        return new BuscarCatalogoQuery(null, null, null, false, false, false, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
+        return new BuscarCatalogoQuery(null, null, null, false, false, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
     }
 
     // Como sinFiltros, pero buscando ese texto en el nombre.
     private static BuscarCatalogoQuery buscando(String texto) {
-        return new BuscarCatalogoQuery(texto, null, null, false, false, false, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
+        return new BuscarCatalogoQuery(texto, null, null, false, false, false, null, null, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
     }
 
     private static Producto productoNuevo(String vendedorId, String nombre) {
