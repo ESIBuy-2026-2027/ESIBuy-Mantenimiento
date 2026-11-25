@@ -9,6 +9,7 @@ export function useCatalogFilters() {
   const [order, setOrder] = useState('asc')
   const [inStock, setInStock] = useState(false)
   const [offersOnly, setOffersOnly] = useState(false)
+  const [priceRange, setPriceRange] = useState([0, 150])
 
   return {
     ...base,
@@ -17,14 +18,17 @@ export function useCatalogFilters() {
     order,
     inStock,
     offersOnly,
+    minPrice: priceRange[0],
+    maxPrice: priceRange[1],
     filtersActive: base.filtersActive || Boolean(
-      minRating || inStock || offersOnly || sort !== 'nombre' || order !== 'asc',
+      minRating || inStock || offersOnly || priceRange[0] > 0 || priceRange[1] < 150 || sort !== 'nombre' || order !== 'asc',
     ),
     changeMinRating: setMinRating,
     changeSort: setSort,
     changeOrder: setOrder,
     changeInStock: setInStock,
     changeOffersOnly: setOffersOnly,
+    changePriceRange: (min, max) => setPriceRange([min, max]),
     clearFilters: () => {
       base.clearFilters()
       setMinRating('')
@@ -32,6 +36,7 @@ export function useCatalogFilters() {
       setOrder('asc')
       setInStock(false)
       setOffersOnly(false)
+      setPriceRange([0, 150])
     },
   }
 }
