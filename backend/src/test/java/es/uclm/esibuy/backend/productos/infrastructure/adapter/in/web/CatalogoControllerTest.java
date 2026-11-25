@@ -127,13 +127,14 @@ class CatalogoControllerTest {
 
                 mockMvc.perform(get(URL).param("page", "2").param("size", "10").param("search", "teclado")
                                 .param("category", "cat-2").param("minRating", "4").param("sort", "valoracion")
-                                .param("order", "desc").with(user(CLIENTE).roles("CLIENTE")))
+                                .param("order", "desc").param("inStock", "true").param("offersOnly", "true")
+                                .with(user(CLIENTE).roles("CLIENTE")))
                                 .andExpect(status().isOk());
 
                 // La página llega al caso de uso empezando en 0; sort y order se traducen al
                 // enum y al boolean. El cliente
                 // sale de la sesión, para darle su precio
-                verify(catalogoProductos).buscarProductos(new BuscarCatalogoQuery("teclado", "cat-2", 4, false, false,
+                verify(catalogoProductos).buscarProductos(new BuscarCatalogoQuery("teclado", "cat-2", 4, true, true,
                                 CriterioOrdenCatalogo.VALORACION, true, 1, 10), CLIENTE);
         }
 
