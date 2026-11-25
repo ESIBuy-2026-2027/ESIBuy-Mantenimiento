@@ -776,8 +776,8 @@ describe('ProfilePage: resumen de direcciones y métodos de pago', () => {
 
     await abrirPerfil('cliente@esibuy.test')
 
-    const listaDirecciones = screen.getByRole('list', { name: 'Tus direcciones' })
-    const listaMetodos = screen.getByRole('list', { name: 'Tus métodos de pago' })
+    const listaDirecciones = await screen.findByRole('list', { name: 'Tus direcciones' })
+    const listaMetodos = await screen.findByRole('list', { name: 'Tus métodos de pago' })
     expect(within(listaDirecciones).getAllByRole('listitem')).toHaveLength(3)
     expect(within(listaMetodos).getAllByRole('listitem')).toHaveLength(3)
 
