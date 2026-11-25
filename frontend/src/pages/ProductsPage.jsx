@@ -27,7 +27,7 @@ const PAGE_SIZE = 10
 const ENTRADA_ESCALONADA_MS = 60
 
 const useStyles = makeStyles({
-  // La página ocupa el ancho (la selección de los mejores, también); el resto del contenido va en una columna.
+  // El catálogo utiliza el ancho disponible para distribuir cuatro tarjetas por fila.
   main: {
     display: 'flex',
     flexDirection: 'column',
@@ -47,10 +47,12 @@ const useStyles = makeStyles({
     margin: '0 auto',
     padding: `0 ${tokens.spacingHorizontalL}`,
   },
-  // Las tarjetas se colocan siempre de dos en dos, también en pantallas estrechas.
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+    '@media (max-width: 1100px)': { gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' },
+    '@media (max-width: 760px)': { gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' },
+    '@media (max-width: 420px)': { gridTemplateColumns: 'minmax(0, 1fr)' },
     gap: tokens.spacingHorizontalL,
     margin: 0,
     padding: 0,
@@ -98,7 +100,7 @@ export default function ProductsPage() {
   const styles = useStyles()
   const { categories } = useCategories()
   const filters = useCatalogFilters()
-  const { search, category, minRating, sort, order, debouncedSearch, filtersActive } = filters
+  const { search, category, minRating, sort, order, debouncedSearch } = filters
   const feed = useCatalogFeed({
     search: debouncedSearch,
     category,
