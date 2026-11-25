@@ -437,7 +437,7 @@ export default function ProductDetail({
               }
               onClick={onAddFavorite}
             >
-              {favorite ? 'En listas de deseos' : 'Añadir a lista de deseos'}
+              {favorite ? 'Añadir/Quitar de favoritos' : 'Añadir a favoritos'}
             </Button>
           )}
 
