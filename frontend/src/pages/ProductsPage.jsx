@@ -162,23 +162,23 @@ export default function ProductsPage() {
 
       <div className={styles.column}>
         <CatalogFilters
-            search={search}
-            category={category}
-            categories={categories}
-            minRating={minRating}
-            inStock={inStock}
-            offersOnly={offersOnly}
-            filtersActive={filtersActive}
-            sort={sort}
-            order={order}
-            onSearchChange={filters.changeSearch}
-            onCategoryChange={filters.changeCategory}
-            onMinRatingChange={filters.changeMinRating}
-            onInStockChange={filters.changeInStock}
-            onOffersOnlyChange={filters.changeOffersOnly}
-            onClearFilters={filters.clearFilters}
-            onSortChange={changeSort}
-            onOrderChange={changeOrder}
+          search={search}
+          category={category}
+          categories={categories}
+          minRating={minRating}
+          inStock={inStock}
+          offersOnly={offersOnly}
+          filtersActive={filtersActive}
+          sort={sort}
+          order={order}
+          onSearchChange={filters.changeSearch}
+          onCategoryChange={filters.changeCategory}
+          onMinRatingChange={filters.changeMinRating}
+          onInStockChange={filters.changeInStock}
+          onOffersOnlyChange={filters.changeOffersOnly}
+          onClearFilters={filters.clearFilters}
+          onSortChange={changeSort}
+          onOrderChange={changeOrder}
         />
 
         <OffersStrip
@@ -214,9 +214,7 @@ export default function ProductsPage() {
             icon={<SearchInfo24Regular />}
             title="No hay productos que coincidan con los filtros"
             description="Prueba con otro nombre, otra categoría u otra valoración."
-          >
-            <Button onClick={filters.clearFilters}>Limpiar filtros</Button>
-          </EmptyState>
+          />
         )}
 
         {hasItems && (
