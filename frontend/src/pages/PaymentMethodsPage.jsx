@@ -141,6 +141,12 @@ export default function PaymentMethodsPage({ embedded = false }) {
     retry()
   }
 
+  const alActualizar = () => {
+    setAEditar(null)
+    setAviso({ intent: 'success', texto: 'Método de pago actualizado.' })
+    retry()
+  }
+
   // Tras el cambio se vuelve a pedir la lista: el backend desmarca el anterior. Si el método ya no existe (p. ej.
   // se eliminó desde otra pestaña), se avisa y la lista recargada ya no lo muestra.
   const marcarPredeterminado = async (id) => {
