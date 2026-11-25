@@ -147,7 +147,7 @@ describe('SellerProductFormPage (HU31): validación', () => {
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp(`^${RUTA_NUEVO}$`))
   })
 
-  it('VEN-08: precio y stock solo admiten cifras enteras', async () => {
+  it('VEN-08: el precio admite decimales y el stock conserva solo cifras enteras', async () => {
     const user = userEvent.setup()
     await abrirFormulario()
 
@@ -157,7 +157,7 @@ describe('SellerProductFormPage (HU31): validación', () => {
     await user.type(precio, '12.5')
     await user.type(stock, '-3.5')
 
-    expect(precio).toHaveValue('125')
+    expect(precio).toHaveValue('12.5')
     expect(stock).toHaveValue('35')
   })
 
@@ -170,7 +170,7 @@ describe('SellerProductFormPage (HU31): validación', () => {
     await user.type(screen.getByLabelText(/^precio/i), '0')
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
-    expect(screen.getByText(/el precio debe ser un número entero mayor que 0/i)).toBeInTheDocument()
+    expect(screen.getByText(/el precio debe ser un número mayor que 0/i)).toBeInTheDocument()
   })
 
   it('sellerProductFormPage_noPermiteIntroducirStockNegativo', async () => {
@@ -225,6 +225,8 @@ describe('SellerProductFormPage (HU31): alta, guardado', () => {
     await abrirFormulario()
 
     await rellenarFormularioValido(user)
+    await user.clear(screen.getByLabelText(/^precio/i))
+    await user.type(screen.getByLabelText(/^precio/i), '45,99')
     await user.type(screen.getByLabelText(/^stock/i), '7')
     await user.type(screen.getByLabelText(/^descuento general \(%\)/i), '10')
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
@@ -233,7 +235,7 @@ describe('SellerProductFormPage (HU31): alta, guardado', () => {
     expect(envio.cuerpo).toEqual({
       nombre: 'Lámpara de pie',
       descripcion: '',
-      precio: 45,
+      precio: 45.99,
       stock: 7,
       categoriaId: 'cat-2',
       imagen: '',
@@ -420,11 +422,11 @@ describe('SellerProductFormPage (HU34): edición', () => {
     await waitFor(() => expect(screen.getByLabelText(/^nombre/i)).toHaveValue('Auriculares inalámbricos'))
 
     await user.clear(screen.getByLabelText(/^precio/i))
-    await user.type(screen.getByLabelText(/^precio/i), '49')
+    await user.type(screen.getByLabelText(/^precio/i), '49,75')
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
     await esperarRuta('/seller/products')
-    expect(envio.cuerpo).toMatchObject({ nombre: 'Auriculares inalámbricos', precio: 49, stock: 34 })
+    expect(envio.cuerpo).toMatchObject({ nombre: 'Auriculares inalámbricos', precio: 49.75, stock: 34 })
     expect(await screen.findByText(/cambios guardados/i)).toBeInTheDocument()
   })
 
@@ -450,7 +452,7 @@ describe('SellerProductFormPage (HU34): edición', () => {
 
     await user.clear(screen.getByLabelText(/^nombre/i))
     await user.type(screen.getByLabelText(/^nombre/i), 'Teclado mecánico')
-    // El formulario ya exige precios enteros; el producto de prueba conserva un precio histórico decimal.
+    // La edición admite precios decimales igual que el alta.
     await user.clear(screen.getByLabelText(/^precio/i))
     await user.type(screen.getByLabelText(/^precio/i), '59')
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
