@@ -424,7 +424,8 @@ describe('AdminIncidentsPage (HU192): resolver', () => {
     expect(await lista()).toBe(listaInicial)
 
     await user.click(accion(resuelta, 'Ver detalle'))
-    const detalle = screen.getByRole('dialog', { name: 'Detalle de la incidencia' })
+    // Se localiza por su título: en jsdom, buscar este diálogo por rol y nombre falla a veces justo después de abrirlo
+    const detalle = (await screen.findByText('Detalle de la incidencia')).closest('[role="dialog"]')
     expect(detalle).toHaveTextContent('Resuelta')
     expect(detalle).toHaveTextContent(/Fecha de resolución: \d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}/)
   })
