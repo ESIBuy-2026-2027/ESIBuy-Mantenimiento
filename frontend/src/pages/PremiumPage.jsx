@@ -67,6 +67,11 @@ const useStyles = makeStyles({
     animationFillMode: 'both',
     '@media (prefers-reduced-motion: reduce)': SIN_MOVIMIENTO,
   },
+  standardPromo: {
+    border: '1px solid #F4B183',
+    backgroundImage: 'linear-gradient(115deg, #FFF0E3 0%, #FFF9F4 55%, #FCE7F3 100%)',
+    boxShadow: '0 4px 14px rgba(194, 65, 12, 0.12)',
+  },
   heroIcon: {
     display: 'flex',
     color: tokens.colorBrandForeground1,
@@ -322,6 +327,7 @@ export default function PremiumPage({ embedded = false }) {
   const [errorCancelacion, setErrorCancelacion] = useState(false)
   const aviso = TEXTO_AVISO_PREMIUM[location.state?.aviso] ?? null
   const esPremium = profile.data?.tipoCliente === 'PREMIUM'
+  const esEstandar = profile.data?.tipoCliente === 'ESTANDAR'
 
   const confirmarCancelacionPremium = async () => {
     setCancelandoPremium(true)
@@ -341,14 +347,16 @@ export default function PremiumPage({ embedded = false }) {
 
   return (
     <Root className={embedded ? styles.embeddedPage : pageStyles.page}>
-      <section className={styles.hero}>
+      <section className={mergeClasses(styles.hero, embedded && esEstandar && styles.standardPromo)}>
         <div className={styles.heroMain}>
           <span className={styles.heroIcon} aria-hidden="true">
             <Diamond48Regular />
           </span>
-          <h1 className={styles.headline}>ESIBuy Premium</h1>
+          <h1 className={styles.headline}>{embedded && esEstandar ? 'Da el salto a ESIBuy Premium' : 'ESIBuy Premium'}</h1>
           <Text size={400} className={styles.lead}>
-            Compra con más ventajas: descuentos exclusivos, envíos sin coste y pedidos que llegan antes.
+            {embedded && esEstandar
+              ? 'Disfruta de descuentos exclusivos, envíos sin coste y prioridad para recibir tus pedidos antes.'
+              : 'Compra con más ventajas: descuentos exclusivos, envíos sin coste y pedidos que llegan antes.'}
           </Text>
           <div aria-live="polite">
             {errorCancelacion && (
