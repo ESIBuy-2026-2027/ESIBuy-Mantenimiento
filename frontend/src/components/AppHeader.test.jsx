@@ -150,7 +150,7 @@ describe('AppHeader', () => {
     renderApp('/products')
 
     const perfil = await screen.findByRole('button', { name: 'Mi perfil' })
-    expect(await within(perfil).findByLabelText('Cliente Premium')).toBeInTheDocument()
+    expect(await within(perfil).findByTestId('premium-crown')).toBeInTheDocument()
   })
 
   it('appHeader_clienteEstandar_noMuestraLaCoronaPremium', async () => {
@@ -158,7 +158,7 @@ describe('AppHeader', () => {
     renderApp('/products')
 
     const perfil = await screen.findByRole('button', { name: 'Mi perfil' })
-    await waitFor(() => expect(within(perfil).queryByLabelText('Cliente Premium')).not.toBeInTheDocument())
+    await waitFor(() => expect(within(perfil).queryByTestId('premium-crown')).not.toBeInTheDocument())
   })
 
   it('appHeader_conSesionDeCliente_dejaFavoritosEnCabeceraYElRestoEnElMenuDePerfil', async () => {
