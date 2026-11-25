@@ -335,6 +335,10 @@ export const productsHandlers = [
     const busqueda = normalizar(params.get('search') ?? '')
     const categoria = params.get('category')
     const minima = Number(params.get('minRating')) || 0
+    const soloStock = params.get('inStock') === 'true'
+    const soloOfertas = params.get('offersOnly') === 'true'
+    const minPrice = params.get('minPrice') === null ? null : Number(params.get('minPrice'))
+    const maxPrice = params.get('maxPrice') === null ? null : Number(params.get('maxPrice'))
     const coincidentes = PRODUCTOS.filter(estaDisponible)
       .map((producto) => ({ ...aCatalogo(producto), ...datosComerciales(producto) }))
       .filter(
@@ -343,7 +347,9 @@ export const productsHandlers = [
           (!categoria || producto.categoriaId === categoria) &&
           (producto.valoracion ?? 0) >= minima &&
           (!soloStock || producto.stock > 0) &&
-          (!soloOfertas || Boolean(producto.descuento)),
+          (!soloOfertas || Boolean(producto.descuento?.activo || producto.descuentoPremium?.activo)) &&
+          (minPrice === null || producto.precio >= minPrice) &&
+          (maxPrice === null || producto.precio <= maxPrice),
       )
       .sort(ordenDelCatalogo(params.get('sort'), params.get('order')))
     return HttpResponse.json(paginar(coincidentes, leerPagina(params, TAMANO_CATALOGO)))
