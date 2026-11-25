@@ -145,7 +145,7 @@ describe('PaymentMethodsPage (HU6): edición', () => {
     await abrirMetodosDePago()
     const [, bizum] = await screen.findAllByRole('listitem')
     await usuario.click(within(bizum).getByRole('button', { name: /editar/i }))
-    const panel = screen.getByRole('region', { name: /editar método de pago/i })
+    const panel = screen.getByRole('region', { name: /actualizar método de pago/i })
     await usuario.type(within(panel).getByLabelText(/teléfono de bizum/i), '612345999')
     await usuario.click(within(panel).getByRole('button', { name: /guardar cambios/i }))
 
