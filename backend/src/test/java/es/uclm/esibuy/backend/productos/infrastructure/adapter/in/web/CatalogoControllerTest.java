@@ -96,12 +96,13 @@ class CatalogoControllerTest {
 
                 Producto producto = new Producto("p-1", datos);
                 when(catalogoProductos.buscarProductos(any(), any()))
-                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(producto), 0, 10, 11), false));
+                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(producto), 0, 10, 11), false, new BigDecimal("150.01")));
 
                 mockMvc.perform(get(URL).with(user(CLIENTE).roles("CLIENTE")))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.items[0].id").value("p-1"))
                                 .andExpect(jsonPath("$.items[0].nombre").value("Teclado mecánico"))
+                                .andExpect(jsonPath("$.maxPrice").value(150.01))
                                 .andExpect(jsonPath("$.items[0].imagen").value("https://esibuy.test/teclado.png"))
                                 .andExpect(jsonPath("$.items[0].categoriaId").value("cat-2"))
                                 // El precio que paga el cliente: sin descuento, el precio final es el precio
@@ -162,7 +163,7 @@ class CatalogoControllerTest {
                 // Con el caso de uso respondiendo, un 200 indicaría que el parámetro se ha
                 // aceptado
                 when(catalogoProductos.buscarProductos(any(), any()))
-                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 0, 10, 0), false));
+                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 0, 10, 0), false, BigDecimal.ZERO));
 
                 mockMvc.perform(get(URL).param(parametro, valor).with(user(CLIENTE).roles("CLIENTE")))
                                 .andExpect(status().isBadRequest());
@@ -185,7 +186,7 @@ class CatalogoControllerTest {
         void otroRolDevuelve403(String rol) throws Exception {
                 // Con el caso de uso respondiendo, un 200 indicaría que el rol tiene acceso
                 when(catalogoProductos.buscarProductos(any(), any()))
-                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 0, 10, 0), false));
+                                .thenReturn(new PaginaCatalogo(new ProductoPage(List.of(), 0, 10, 0), false, BigDecimal.ZERO));
 
                 mockMvc.perform(get(URL).with(user("usuario@esibuy.test").roles(rol)))
                                 .andExpect(status().isForbidden());
