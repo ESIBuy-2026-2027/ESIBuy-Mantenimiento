@@ -20,6 +20,7 @@ public class ListaDeseosDocument {
     @Id
     private String id;
     private String usuarioId;
+    private String nombre;
     private List<ItemDeseoDocument> items = new ArrayList<>();
     @CreatedDate
     private Instant createdAt;
@@ -30,6 +31,8 @@ public class ListaDeseosDocument {
     public void setId(String id) { this.id = id; }
     public String getUsuarioId() { return usuarioId; }
     public void setUsuarioId(String usuarioId) { this.usuarioId = usuarioId; }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
     public List<ItemDeseoDocument> getItems() { return items; }
     public void setItems(List<ItemDeseoDocument> items) { this.items = items; }
     public Instant getCreatedAt() { return createdAt; }
