@@ -637,6 +637,7 @@ describe('ProductsPage (HU7): catálogo con ofertas y listado único', () => {
     expect(screen.queryByRole('heading', { name: /los 10 mejor valorados/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('list', { name: /productos de tecnología/i })).not.toBeInTheDocument()
     expect(screen.getByRole('list', { name: /^productos$/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Productos generales' })).toBeInTheDocument()
   })
 
   it('permite pausar la cinta de ofertas', async () => {
