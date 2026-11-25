@@ -77,12 +77,14 @@ export function getCatalogProducts({
   minRating = '',
   inStock = false,
   offersOnly = false,
+  minPrice = 0,
+  maxPrice = 150,
   sort = 'nombre',
   order = 'asc',
   page = 1,
   size = 10,
 } = {}) {
-  return request(`/api/products?${buildQuery({ page, size, search, category, minRating, inStock, offersOnly, sort, order })}`)
+  return request(`/api/products?${buildQuery({ page, size, search, category, minRating, inStock, offersOnly, minPrice: minPrice > 0 ? minPrice : '', maxPrice: maxPrice < 150 ? maxPrice : '', sort, order })}`)
 }
 
 export function getSellerProducts({
