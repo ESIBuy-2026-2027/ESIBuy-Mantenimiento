@@ -4957,6 +4957,8 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 | HU192-CP15 | `PATCH /api/admin/incidencias/{id}/resolver` responde 200 con la incidencia resuelta y su fecha; la supervisión devuelve `fechaResolucion` | Controlador | 2 | 🔍 En revisión (2, AB#513, PR pendiente) |
 | HU192-CP16 | Una fecha de resolución enviada por el cliente HTTP se ignora | Controlador | 1 | 🔍 En revisión (1, AB#513, PR pendiente) |
 | HU192-CP17 | Resolver una incidencia que no existe responde 404 `INCIDENT_NOT_FOUND` | Controlador | 1 | 🔍 En revisión (1, AB#513, PR pendiente) |
+| HU192-CP18 | Solo el administrador resuelve incidencias; cliente y vendedor reciben 403 y sin sesión se rechaza. Seguridad en la capa de negocio | Unitario con Spring Security (sin MongoDB) | 4 | 🔍 En revisión (4, AB#419, PR pendiente) |
+| HU192-CP19 | Sin sesión resolver responde 401; un cliente o un vendedor, 403 `ACCESS_DENIED`; sin token CSRF, 403 | Controlador | 3 | 🔍 En revisión (3, AB#419, PR pendiente) |
 
 Notas:
 - **Casos propuestos, PENDIENTES DE CONFIRMAR CON EL EQUIPO:** los propone el desarrollo a partir de los criterios del PBI 192 y no salen de Azure Boards. La HU se identifica con el número del PBI (192). Rama `feature/marcar-incidencia-resuelta`.
@@ -4964,6 +4966,7 @@ Notas:
 - **T513 (AB#513, pruebas de la resolución):** casos HU192-CP01 a CP17, escritos antes que la implementación (rojo: no compilaban) (TDD).
 - **Solo desde `ABIERTA` (decisión del desarrollo, 25/11/2026):** una pendiente se abre antes (HU50), para que su autor tenga una respuesta.
 - **Sin cambiar la validación de MongoDB (decisión del desarrollo, 25/11/2026):** una resuelta se guarda como `ABIERTA` con `fechaResolucion` (CP10 a CP14).
+- **T419 (AB#419, RBAC):** CP18 comprueba el `@PreAuthorize` del servicio (se verificó el rojo quitando la anotación) y CP19 la regla `/api/admin/**` de `SecurityConfig`. El ID AB#419 aparece también en la HU44 con otro significado: revisar en Azure Boards.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -4994,6 +4997,13 @@ Notas:
 | HU192-CP15 | `AdministracionIncidenciasControllerTest` | `HU192-CP15: la supervisión devuelve la fecha de resolución, vacía si no está resuelta` | Infraestructura (web) | AB#513 | PR pendiente | 🔍 |
 | HU192-CP16 | `AdministracionIncidenciasControllerTest` | `HU192-CP16: una fecha de resolución enviada por el cliente se ignora` | Infraestructura (web) | AB#513 | PR pendiente | 🔍 |
 | HU192-CP17 | `AdministracionIncidenciasControllerTest` | `HU192-CP17: resolver una incidencia que no existe responde 404 INCIDENT_NOT_FOUND` | Infraestructura (web) | AB#513 | PR pendiente | 🔍 |
+| HU192-CP18 | `SeguridadIncidenciasServiceTest` | `HU192-CP18: el administrador resuelve una incidencia` | Aplicación · seguridad | AB#419 | PR pendiente | 🔍 |
+| HU192-CP18 | `SeguridadIncidenciasServiceTest` | `HU192-CP18: un cliente no resuelve incidencias` | Aplicación · seguridad | AB#419 | PR pendiente | 🔍 |
+| HU192-CP18 | `SeguridadIncidenciasServiceTest` | `HU192-CP18: un vendedor no resuelve incidencias` | Aplicación · seguridad | AB#419 | PR pendiente | 🔍 |
+| HU192-CP18 | `SeguridadIncidenciasServiceTest` | `HU192-CP18: sin sesión no se resuelven incidencias` | Aplicación · seguridad | AB#419 | PR pendiente | 🔍 |
+| HU192-CP19 | `AdministracionIncidenciasControllerTest` | `HU192-CP19: sin sesión resolver responde 401` | Infraestructura (web) | AB#419 | PR pendiente | 🔍 |
+| HU192-CP19 | `AdministracionIncidenciasControllerTest` | `HU192-CP19: un cliente o un vendedor que intentan resolver reciben 403 ACCESS_DENIED` (parametrizado) | Infraestructura (web) | AB#419 | PR pendiente | 🔍 |
+| HU192-CP19 | `AdministracionIncidenciasControllerTest` | `HU192-CP19: sin el token CSRF resolver responde 403 y no llega al caso de uso` | Infraestructura (web) | AB#419 | PR pendiente | 🔍 |
 
 Rutas de las clases de test:
 - `IncidenciaTest`: `backend/src/test/java/es/uclm/esibuy/backend/incidencias/domain/model/`
@@ -5001,6 +5011,7 @@ Rutas de las clases de test:
 - `IncidenciaDocumentMapperTest`: `backend/src/test/java/es/uclm/esibuy/backend/incidencias/infrastructure/adapter/out/persistence/`
 - `IncidenciaMongoAdapterTest`: `backend/src/test/java/es/uclm/esibuy/backend/incidencias/infrastructure/adapter/out/persistence/`
 - `AdministracionIncidenciasControllerTest`: `backend/src/test/java/es/uclm/esibuy/backend/incidencias/infrastructure/adapter/in/web/`
+- `SeguridadIncidenciasServiceTest`: `backend/src/test/java/es/uclm/esibuy/backend/incidencias/application/service/`
 
 ---
 

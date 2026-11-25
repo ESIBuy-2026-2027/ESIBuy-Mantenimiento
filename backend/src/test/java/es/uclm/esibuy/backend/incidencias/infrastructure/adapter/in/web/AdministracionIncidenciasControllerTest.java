@@ -416,4 +416,34 @@ class AdministracionIncidenciasControllerTest {
                 .andExpect(jsonPath("$.code").value("INCIDENT_NOT_FOUND"))
                 .andExpect(jsonPath("$.mensaje").value("La incidencia no existe"));
     }
+
+    // Acceso a la resolución (HU192, T419): SecurityConfig es la primera barrera (/api/admin/** solo administrador)
+
+    @Test
+    @DisplayName("HU192-CP19: sin sesión resolver responde 401")
+    void sinSesionResolverResponde401() throws Exception {
+        mockMvc.perform(patch(URL_RESOLVER).with(csrf())).andExpect(status().isUnauthorized());
+
+        verify(resolucionIncidencias, never()).resolver(any());
+    }
+
+    @ParameterizedTest(name = "rol {1}")
+    @CsvSource({"cliente@esibuy.test,CLIENTE", "vendedor@esibuy.test,VENDEDOR"})
+    @DisplayName("HU192-CP19: un cliente o un vendedor que intentan resolver reciben 403 ACCESS_DENIED")
+    void clienteYVendedorNoResuelven(String email, String rol) throws Exception {
+        mockMvc.perform(patch(URL_RESOLVER).with(user(email).roles(rol)).with(csrf()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+
+        verify(resolucionIncidencias, never()).resolver(any());
+    }
+
+    @Test
+    @DisplayName("HU192-CP19: sin el token CSRF resolver responde 403 y no llega al caso de uso")
+    void sinTokenCsrfResolverResponde403() throws Exception {
+        mockMvc.perform(patch(URL_RESOLVER).with(user(ADMINISTRADOR).roles("ADMINISTRADOR")))
+                .andExpect(status().isForbidden());
+
+        verify(resolucionIncidencias, never()).resolver(any());
+    }
 }
