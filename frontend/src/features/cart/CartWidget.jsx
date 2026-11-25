@@ -34,12 +34,29 @@ const useStyles = makeStyles({
     flexShrink: 0,
   },
   fabButton: {
-    minWidth: '40px',
-    height: '40px',
-    padding: `0 ${tokens.spacingHorizontalS}`,
+    minWidth: 'auto',
+    height: '36px',
+    padding: `0 ${tokens.spacingHorizontalM}`,
+    gap: tokens.spacingHorizontalXS,
+    border: '1px solid #FDBA74',
+    borderRadius: tokens.borderRadiusCircular,
+    backgroundColor: '#FFF0E3',
+    color: '#C2410C',
+    fontWeight: tokens.fontWeightSemibold,
+    ':hover': {
+      backgroundColor: '#FFE2C7',
+      borderColor: '#F97316',
+      color: '#9A3412',
+    },
+    ':active': {
+      backgroundColor: '#FED7AA',
+    },
   },
   badge: {
     position: 'absolute',
+    backgroundColor: '#EA580C',
+    color: '#FFFFFF',
+    border: '2px solid #FFF8F1',
     top: '-6px',
     right: '-6px',
     animationName: {
@@ -62,7 +79,7 @@ const useStyles = makeStyles({
     width: 'min(400px, calc(100vw - 32px))',
     maxHeight: 'min(72vh, 580px)',
     backgroundColor: tokens.colorNeutralBackground1,
-    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    border: '1px solid #F3C39F',
     borderRadius: tokens.borderRadiusXLarge,
     boxShadow: tokens.shadow64,
     overflow: 'hidden',
@@ -83,7 +100,8 @@ const useStyles = makeStyles({
     justifyContent: 'space-between',
     gap: tokens.spacingHorizontalS,
     padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalL}`,
-    borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderBottom: '1px solid #F3D2BA',
+    backgroundColor: '#FFF4EA',
   },
   title: {
     margin: 0,
@@ -265,9 +283,7 @@ function VendorGroup({ group, busy, onQuantity, onRemove, styles }) {
   )
 }
 
-// El carrito del cliente (HU9), siempre a la vista abajo a la izquierda: un botón con el número de productos que abre
-// un panel con ellos separados por proveedor, cada uno con su total, y con el acceso a la pasarela de pago. Solo lo
-// tienen los clientes.
+// El carrito del cliente (HU9) se integra en la navegación superior con una etiqueta visible y el contador de productos.
 export default function CartWidget() {
   const styles = useStyles()
   const { cart, status, setQuantity, remove, clear, reload } = useCart()
@@ -407,7 +423,9 @@ export default function CartWidget() {
           aria-label={buttonLabel(status, count)}
           aria-expanded={open}
           onClick={() => setOpenPath(open ? null : pathname)}
-        />
+        >
+          Mi carrito
+        </Button>
         {status === 'ready' && count > 0 && (
           <Badge key={count} className={styles.badge} appearance="filled" color="danger" size="medium" aria-hidden="true">
             {count}
