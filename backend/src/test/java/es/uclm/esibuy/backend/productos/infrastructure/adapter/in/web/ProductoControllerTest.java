@@ -398,11 +398,11 @@ class ProductoControllerTest {
         @DisplayName("HU34-CP06: el vendedor modifica su producto y recibe 200 con el producto actualizado; el vendedor sale de la sesión")
         void vendedorModificaSuProducto() throws Exception {
                 Producto modificado = producto(
-                                "p-9", "v-1", "Lámpara de pie LED", "Con regulador", new BigDecimal("39"),
+                                "p-9", "v-1", "Lámpara de pie LED", "Con regulador", new BigDecimal("39.99"),
                                 3, "cat-2", "https://esibuy.test/lampara.png", false,
                                 Descuento.sinDescuento(), new Descuento(true, new BigDecimal("15")));
                 when(gestionProductos.modificarMiProducto(any())).thenReturn(modificado);
-                String conVendedor = cuerpo("\"Lámpara de pie LED\"", "39", "3", "\"cat-2\"", "\"\"", SIN_DESCUENTO)
+                String conVendedor = cuerpo("\"Lámpara de pie LED\"", "39.99", "3", "\"cat-2\"", "\"\"", SIN_DESCUENTO)
                                 .replace("{\"nombre\"", "{\"vendedorId\": \"v-otro\", \"nombre\"");
 
                 mockMvc.perform(put(URL + "/p-9").with(csrf()).with(user(VENDEDOR).roles("VENDEDOR"))
@@ -410,7 +410,7 @@ class ProductoControllerTest {
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.id").value("p-9"))
                                 .andExpect(jsonPath("$.nombre").value("Lámpara de pie LED"))
-                                .andExpect(jsonPath("$.precio").value(39))
+                                .andExpect(jsonPath("$.precio").value(39.99))
                                 .andExpect(jsonPath("$.stock").value(3))
                                 .andExpect(jsonPath("$.disponible").value(false))
                                 .andExpect(jsonPath("$.descuentoPremium.porcentaje").value(15))
@@ -423,7 +423,7 @@ class ProductoControllerTest {
                 assertEquals(VENDEDOR, comando.emailVendedor());
                 assertEquals("p-9", comando.productoId());
                 assertEquals("Lámpara de pie LED", comando.nombre());
-                assertEquals(0, new BigDecimal("39").compareTo(comando.precio()));
+                assertEquals(0, new BigDecimal("39.99").compareTo(comando.precio()));
                 assertEquals(3, comando.stock());
                 assertEquals("cat-2", comando.categoriaId());
         }
