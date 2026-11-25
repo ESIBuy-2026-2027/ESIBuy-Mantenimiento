@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.productos.infrastructure.adapter.in.web;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import es.uclm.esibuy.backend.productos.application.port.in.PaginaCatalogo;
@@ -10,7 +11,8 @@ public record ProductoCatalogoPageResponse(
         int page,
         int size,
         long totalItems,
-        long totalPages
+        long totalPages,
+        BigDecimal maxPrice
 ) {
 
     // page empieza en 1 para el frontend; totalPages es 0 si no hay resultados.
@@ -24,7 +26,8 @@ public record ProductoCatalogoPageResponse(
                 pagina.pagina() + 1,
                 pagina.tamano(),
                 pagina.totalElementos(),
-                totalPages
+                totalPages,
+                catalogo.precioMaximoDisponible()
         );
     }
 }
