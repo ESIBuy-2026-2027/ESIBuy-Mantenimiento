@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.productos.infrastructure.adapter.out.persistence;
 
+import java.math.BigDecimal;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
@@ -151,12 +152,12 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     }
 
     @Override
-    public java.math.BigDecimal precioMaximoEnCatalogo(BuscarCatalogoQuery query) {
+    public BigDecimal precioMaximoEnCatalogo(BuscarCatalogoQuery query) {
         Criteria criterios = construirCriteriosCatalogo(query, false);
         ProductoDocument masCaro = mongoTemplate.findOne(
                 new Query(criterios).with(Sort.by(Sort.Direction.DESC, CAMPO_PRECIO)).limit(1),
                 ProductoDocument.class);
-        return masCaro == null ? java.math.BigDecimal.ZERO : mapper.aDominio(masCaro).getPrecio();
+        return masCaro == null ? BigDecimal.ZERO : mapper.aDominio(masCaro).getPrecio();
     }
 
     private static Criteria construirCriteriosCatalogo(BuscarCatalogoQuery query, boolean incluirPrecioMaximo) {
