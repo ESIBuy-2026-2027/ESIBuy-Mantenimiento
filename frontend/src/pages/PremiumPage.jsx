@@ -17,7 +17,7 @@ import {
   mergeClasses,
   tokens,
 } from '@fluentui/react-components'
-import { Diamond20Regular, Diamond48Regular, Sparkle24Regular } from '@fluentui/react-icons'
+import { Diamond20Regular, Diamond48Regular, Sparkle24Regular, CheckmarkStarburst20Filled } from '@fluentui/react-icons'
 import { useLocation } from 'react-router-dom'
 import { cancelPremium, getProfile } from '../api/profile'
 import LinkButton from '../components/LinkButton'
@@ -71,6 +71,34 @@ const useStyles = makeStyles({
     border: '1px solid #F4B183',
     backgroundImage: 'linear-gradient(115deg, #FFF0E3 0%, #FFF9F4 55%, #FCE7F3 100%)',
     boxShadow: '0 4px 14px rgba(194, 65, 12, 0.12)',
+  },
+  premiumMember: {
+    border: '1px solid #F2A36B',
+    backgroundImage: 'linear-gradient(120deg, #FFF1E5 0%, #FFF9F3 48%, #FCE8F0 100%)',
+    boxShadow: '0 5px 18px rgba(194, 65, 12, 0.16)',
+  },
+  premiumMemberStatus: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalS,
+    padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalL}`,
+    borderRadius: tokens.borderRadiusCircular,
+    color: '#9A3412',
+    backgroundImage: 'linear-gradient(100deg, #FFE0C2 0%, #FAD1E8 100%)',
+    border: '1px solid #F2B58B',
+    fontWeight: tokens.fontWeightBold,
+    letterSpacing: '0.02em',
+    boxShadow: tokens.shadow4,
+  },
+  premiumStatusCopy: {
+    color: tokens.colorNeutralForeground1,
+    fontWeight: tokens.fontWeightSemibold,
+  },
+  benefitsIntro: {
+    margin: 0,
+    color: '#9A3412',
+    fontWeight: tokens.fontWeightSemibold,
+    fontSize: tokens.fontSizeBase400,
   },
   heroIcon: {
     display: 'flex',
@@ -268,11 +296,15 @@ function PremiumStatus({ query, esPremium, styles }) {
   if (esPremium) {
     return (
       <div className={styles.status}>
+        <div className={styles.premiumMemberStatus}>
+          <CheckmarkStarburst20Filled aria-hidden="true" />
+          MIEMBRO ESIBUY PREMIUM
+        </div>
         <h2 className={styles.statusTitle}>
           <Sparkle24Regular aria-hidden="true" />
           Ya eres ESIBuy Premium
         </h2>
-        <Text>Disfrutas de todas sus ventajas en cada compra.</Text>
+        <Text className={styles.premiumStatusCopy}>Tu cuenta tiene acceso a todas las ventajas Premium.</Text>
       </div>
     )
   }
@@ -347,7 +379,7 @@ export default function PremiumPage({ embedded = false }) {
 
   return (
     <Root className={embedded ? styles.embeddedPage : pageStyles.page}>
-      <section className={mergeClasses(styles.hero, embedded && esEstandar && styles.standardPromo)}>
+      <section className={mergeClasses(styles.hero, embedded && esEstandar && styles.standardPromo, embedded && esPremium && styles.premiumMember)}>
         <div className={styles.heroMain}>
           <span className={styles.heroIcon} aria-hidden="true">
             <Diamond48Regular />
@@ -391,6 +423,9 @@ export default function PremiumPage({ embedded = false }) {
 
         <section aria-label="Ventajas de ESIBuy Premium" className={mergeClasses(styles.benefitsSection, embedded && styles.embeddedBenefits)}>
           {!embedded && <h2 id={benefitsTitleId} className={styles.sectionTitle}>Ventajas de ESIBuy Premium</h2>}
+          {embedded && esEstandar && (
+            <p className={styles.benefitsIntro}>Al hacerte Premium, obtendrás las siguientes ventajas:</p>
+          )}
           <ul aria-labelledby={embedded ? undefined : benefitsTitleId} aria-label={embedded ? "Ventajas de ESIBuy Premium" : undefined} className={mergeClasses(styles.benefits, embedded && styles.embeddedBenefitsList)}>
             {PREMIUM_BENEFITS.map(({ id, titulo, texto, Icono }, index) => (
               <li key={id} className={styles.benefitItem} style={{ animationDelay: `${(index + 1) * RETRASO_ENTRADA_MS}ms` }}>
