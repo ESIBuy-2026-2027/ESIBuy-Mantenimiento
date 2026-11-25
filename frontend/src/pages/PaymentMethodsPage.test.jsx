@@ -127,6 +127,33 @@ describe('PaymentMethodsPage (HU6): predeterminado', () => {
   })
 })
 
+describe('PaymentMethodsPage (HU6): edición', () => {
+  it('permite editar un método y actualiza su máscara en el listado', async () => {
+    const usuario = userEvent.setup()
+    const actualizado = { id: 'm-2', tipo: 'BIZUM', mascara: '•••• 999', predeterminado: false }
+    server.use(
+      http.put(`${URL_METODOS}/:id`, async ({ params, request }) => {
+        expect(params.id).toBe('m-2')
+        expect(await request.json()).toEqual({ tipo: 'BIZUM', telefonoBizum: '612345999' })
+        return HttpResponse.json(actualizado)
+      }),
+      http.get(URL_METODOS, () => HttpResponse.json([
+        { id: 'm-1', tipo: 'TARJETA', mascara: '•••• 1111', predeterminado: true },
+        actualizado,
+      ])),
+    )
+    await abrirMetodosDePago()
+    const [, bizum] = await screen.findAllByRole('listitem')
+    await usuario.click(within(bizum).getByRole('button', { name: /editar/i }))
+    const panel = screen.getByRole('region', { name: /editar método de pago/i })
+    await usuario.type(within(panel).getByLabelText(/teléfono de bizum/i), '612345999')
+    await usuario.click(within(panel).getByRole('button', { name: /guardar cambios/i }))
+
+    expect(await screen.findByText('Método de pago actualizado.')).toBeInTheDocument()
+    await waitFor(() => expect(tarjetasDeMetodo()[1]).toHaveTextContent('•••• 999'))
+  })
+})
+
 describe('PaymentMethodsPage (HU6): añadir', () => {
   it('HU6-CP32: al guardar un método se cierra el panel, se avisa y aparece en la lista', async () => {
     const usuario = userEvent.setup()
