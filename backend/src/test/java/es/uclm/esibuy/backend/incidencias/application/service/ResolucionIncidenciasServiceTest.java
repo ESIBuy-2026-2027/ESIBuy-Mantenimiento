@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -29,11 +31,18 @@ class ResolucionIncidenciasServiceTest {
 
     private static final Instant FECHA = Instant.parse("2026-11-06T10:15:30Z");
 
+    // La hora del reloj del servicio y la de una resolución anterior
+    private static final Instant AHORA = Instant.parse("2026-11-25T12:00:00Z");
+    private static final Instant RESOLUCION_ANTERIOR = Instant.parse("2026-11-20T09:00:00Z");
+
     private final RepositorioEnMemoria repositorio = new RepositorioEnMemoria();
-    private final ResolucionIncidenciasService servicio = new ResolucionIncidenciasService(repositorio);
+    private final ResolucionIncidenciasService servicio =
+            new ResolucionIncidenciasService(repositorio, Clock.fixed(AHORA, ZoneOffset.UTC));
 
     private static Incidencia incidencia(String id, EstadoIncidencia estado, String respuesta) {
-        return new Incidencia(id, "u-1", "No me llega el pedido", "Lo pedí hace una semana", estado, respuesta, FECHA);
+        Instant fechaResolucion = estado == EstadoIncidencia.RESUELTA ? RESOLUCION_ANTERIOR : null;
+        return new Incidencia(id, "u-1", "No me llega el pedido", "Lo pedí hace una semana", estado, respuesta, FECHA,
+                fechaResolucion);
     }
 
     // Guarda las incidencias por id y apunta cuántas veces se ha guardado y eliminado
@@ -41,6 +50,7 @@ class ResolucionIncidenciasServiceTest {
         private final Map<String, Incidencia> incidencias = new HashMap<>();
         private int guardados;
         private int eliminados;
+        private int resoluciones;
 
         void preparar(Incidencia incidencia) {
             incidencias.put(incidencia.id(), incidencia);
@@ -83,6 +93,18 @@ class ResolucionIncidenciasServiceTest {
         public void eliminar(String id) {
             eliminados++;
             incidencias.remove(id);
+        }
+
+        // Como el adaptador real: solo registra la resolución de una incidencia que sigue abierta
+        @Override
+        public boolean registrarResolucion(Incidencia resuelta) {
+            Incidencia actual = incidencias.get(resuelta.id());
+            if (actual == null || actual.estado() != EstadoIncidencia.ABIERTA) {
+                return false;
+            }
+            resoluciones++;
+            incidencias.put(resuelta.id(), resuelta);
+            return true;
         }
     }
 

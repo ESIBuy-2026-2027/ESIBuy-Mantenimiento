@@ -7,7 +7,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * Forma en que se guarda una incidencia en MongoDB (colección incidencias, HU44). El autor se guarda como
- * usuarioId, el nombre del esquema, y el estado como texto.
+ * usuarioId, el nombre del esquema, y el estado como texto. Una incidencia resuelta (HU192) conserva el estado
+ * ABIERTA, que es lo que admite la validación de la colección, y se distingue por tener fechaResolucion.
  */
 @Document(collection = "incidencias")
 public class IncidenciaDocument {
@@ -20,6 +21,7 @@ public class IncidenciaDocument {
     private String estado;
     private String respuesta;
     private Instant fechaCreacion;
+    private Instant fechaResolucion;
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -35,4 +37,6 @@ public class IncidenciaDocument {
     public void setRespuesta(String respuesta) { this.respuesta = respuesta; }
     public Instant getFechaCreacion() { return fechaCreacion; }
     public void setFechaCreacion(Instant fechaCreacion) { this.fechaCreacion = fechaCreacion; }
+    public Instant getFechaResolucion() { return fechaResolucion; }
+    public void setFechaResolucion(Instant fechaResolucion) { this.fechaResolucion = fechaResolucion; }
 }

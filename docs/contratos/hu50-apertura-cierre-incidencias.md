@@ -23,6 +23,7 @@ PENDIENTE ──abrir (con respuesta)──▶ ABIERTA ──cerrar──▶ (el
 ```
 
 - Nace `PENDIENTE` (HU44).
+- Desde la HU192, una incidencia abierta se puede marcar como `RESUELTA` (`hu192-resolucion-incidencias.md`); cerrar la sigue eliminando.
 - **Abrir** solo se puede desde `PENDIENTE`, y exige la respuesta del administrador. Es lo único que el autor llega a ver, porque al cerrarla la incidencia desaparece.
 - **Cerrar** se puede desde cualquier estado y **elimina** la incidencia: no hay estado «cerrada». Cerrar una pendiente sirve para descartar spam o duplicados sin escribir una respuesta.
 

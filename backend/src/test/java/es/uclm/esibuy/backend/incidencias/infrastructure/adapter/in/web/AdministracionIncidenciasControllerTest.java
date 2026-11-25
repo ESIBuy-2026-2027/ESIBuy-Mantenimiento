@@ -70,7 +70,7 @@ class AdministracionIncidenciasControllerTest {
 
     private static IncidenciaSupervisada supervisada(AutorIncidencia autor) {
         Incidencia incidencia = new Incidencia("i-1", "c-1", "No me llega el pedido", "Lo pedi hace una semana",
-                EstadoIncidencia.PENDIENTE, "", AHORA);
+                EstadoIncidencia.PENDIENTE, "", AHORA, null);
         return new IncidenciaSupervisada(incidencia, autor);
     }
 
@@ -218,7 +218,7 @@ class AdministracionIncidenciasControllerTest {
 
     private static Incidencia abierta() {
         return new Incidencia("i-1", "c-1", "No me llega el pedido", "Lo pedi hace una semana",
-                EstadoIncidencia.ABIERTA, "Lo estamos revisando", AHORA);
+                EstadoIncidencia.ABIERTA, "Lo estamos revisando", AHORA, null);
     }
 
     private ResultActions abrirComoAdministrador(String cuerpo) throws Exception {

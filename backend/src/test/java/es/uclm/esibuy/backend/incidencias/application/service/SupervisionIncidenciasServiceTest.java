@@ -40,7 +40,7 @@ class SupervisionIncidenciasServiceTest {
     private final SupervisionIncidenciasService servicio = new SupervisionIncidenciasService(repositorio, autores);
 
     private static Incidencia incidencia(String id, String autorId) {
-        return new Incidencia(id, autorId, "Asunto " + id, "Descripción", EstadoIncidencia.PENDIENTE, "", FECHA);
+        return new Incidencia(id, autorId, "Asunto " + id, "Descripción", EstadoIncidencia.PENDIENTE, "", FECHA, null);
     }
 
     // Devuelve la página que se le prepare y apunta qué se le ha pedido
@@ -102,6 +102,11 @@ class SupervisionIncidenciasServiceTest {
 
         @Override
         public void eliminar(String id) {
+            throw new UnsupportedOperationException("No lo usa la supervisión");
+        }
+
+        @Override
+        public boolean registrarResolucion(Incidencia resuelta) {
             throw new UnsupportedOperationException("No lo usa la supervisión");
         }
     }

@@ -85,7 +85,7 @@ class SeguridadIncidenciasServiceTest {
 
         @Bean
         ResolucionIncidenciasUseCase resolucionIncidencias(IncidenciaRepositoryPort repositorio) {
-            return new ResolucionIncidenciasService(repositorio);
+            return new ResolucionIncidenciasService(repositorio, Clock.systemUTC());
         }
     }
 
@@ -285,7 +285,7 @@ class SeguridadIncidenciasServiceTest {
     private static final String ID = "i-1";
 
     private static Incidencia pendiente() {
-        return new Incidencia(ID, "u-1", "Asunto", "Descripción", EstadoIncidencia.PENDIENTE, "", Instant.EPOCH);
+        return new Incidencia(ID, "u-1", "Asunto", "Descripción", EstadoIncidencia.PENDIENTE, "", Instant.EPOCH, null);
     }
 
     private void comprobarQueRechazaAbrir() {

@@ -27,7 +27,7 @@ class IncidenciaTest {
     @DisplayName("HU44-CP01: crea una incidencia con sus datos")
     void creaUnaIncidenciaConSusDatos() {
         Incidencia incidencia = new Incidencia("i-1", "u-1", "No me llega el pedido", "Lo pedí hace una semana",
-                EstadoIncidencia.ABIERTA, "Lo estamos revisando", AHORA);
+                EstadoIncidencia.ABIERTA, "Lo estamos revisando", AHORA, null);
 
         assertEquals("i-1", incidencia.id());
         assertEquals("u-1", incidencia.autorId());
@@ -72,7 +72,7 @@ class IncidenciaTest {
     @DisplayName("HU44-CP03: el asunto, la descripción y la respuesta se guardan sin espacios en los extremos")
     void seGuardanSinEspaciosEnLosExtremos() {
         Incidencia incidencia = new Incidencia(null, "u-1", "  Asunto  ", "  Descripción  ", EstadoIncidencia.ABIERTA,
-                "  Respuesta  ", AHORA);
+                "  Respuesta  ", AHORA, null);
 
         assertEquals("Asunto", incidencia.asunto());
         assertEquals("Descripción", incidencia.descripcion());
@@ -82,7 +82,7 @@ class IncidenciaTest {
     @Test
     @DisplayName("HU44-CP03: la respuesta es opcional: si falta, queda vacía")
     void laRespuestaEsOpcional() {
-        assertEquals("", new Incidencia(null, "u-1", "Asunto", "Descripción", EstadoIncidencia.PENDIENTE, null, AHORA)
+        assertEquals("", new Incidencia(null, "u-1", "Asunto", "Descripción", EstadoIncidencia.PENDIENTE, null, AHORA, null)
                 .respuesta());
     }
 
@@ -140,7 +140,7 @@ class IncidenciaTest {
     @DisplayName("HU44-CP05: la incidencia necesita un estado")
     void necesitaUnEstado() {
         assertThrows(IncidenciaInvalidaException.class,
-                () -> new Incidencia(null, "u-1", "Asunto", "Descripción", null, "", AHORA));
+                () -> new Incidencia(null, "u-1", "Asunto", "Descripción", null, "", AHORA, null));
     }
 
     // Apertura (HU50, T302): un administrador abre una incidencia pendiente y le escribe la respuesta, que es lo único
@@ -152,7 +152,7 @@ class IncidenciaTest {
     @DisplayName("HU50-CP01: abrir una incidencia pendiente la deja abierta con la respuesta del administrador")
     void abrirUnaIncidenciaPendienteLaDejaAbiertaConLaRespuesta() {
         Incidencia pendiente = new Incidencia("i-1", "u-1", "No me llega el pedido", "Lo pedí hace una semana",
-                EstadoIncidencia.PENDIENTE, "", AHORA);
+                EstadoIncidencia.PENDIENTE, "", AHORA, null);
 
         Incidencia abierta = pendiente.abrir("Lo estamos revisando");
 
@@ -197,7 +197,7 @@ class IncidenciaTest {
     @DisplayName("HU50-CP04: una incidencia ya abierta no se vuelve a abrir")
     void unaIncidenciaYaAbiertaNoSeVuelveAAbrir() {
         Incidencia abierta = new Incidencia("i-1", "u-1", "Asunto", "Descripción", EstadoIncidencia.ABIERTA,
-                "Lo estamos revisando", AHORA);
+                "Lo estamos revisando", AHORA, null);
 
         assertThrows(IncidenciaYaAbiertaException.class, () -> abierta.abrir("Otra respuesta"));
     }

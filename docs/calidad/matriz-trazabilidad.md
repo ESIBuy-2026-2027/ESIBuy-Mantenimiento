@@ -4876,7 +4876,7 @@ Notas:
 | HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un cliente no cierra incidencias` | Aplicación · seguridad | AB#303 | PR #233 | ✅ |
 | HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: un vendedor no cierra incidencias` | Aplicación · seguridad | AB#303 | PR #233 | ✅ |
 | HU50-CP09 | `SeguridadIncidenciasServiceTest` | `HU50-CP09: sin sesión no se cierran incidencias` | Aplicación · seguridad | AB#303 | PR #233 | ✅ |
-| HU50-CP10 | `ResolucionIncidenciasServiceTest` | `HU50-CP10: cerrar una incidencia la elimina, esté pendiente o abierta` (parametrizado: `PENDIENTE` y `ABIERTA`) | Aplicación | AB#303 | PR #233 | ✅ |
+| HU50-CP10 | `ResolucionIncidenciasServiceTest` | `HU50-CP10: cerrar una incidencia la elimina, esté pendiente o abierta` (parametrizado: `PENDIENTE`, `ABIERTA` y, desde la HU192, `RESUELTA`) | Aplicación | AB#303 | PR #233 | ✅ |
 | HU50-CP11 | `ResolucionIncidenciasServiceTest` | `HU50-CP11: cerrar una incidencia que no existe se rechaza sin eliminar nada` | Aplicación | AB#303 | PR #233 | ✅ |
 | HU50-CP12 | `IncidenciaMongoAdapterTest` | `HU50-CP12: eliminar borra solo la incidencia con ese id` | Infraestructura (MongoDB) | AB#303 | PR #233 | ✅ |
 | HU50-CP12 | `IncidenciaMongoAdapterTest` | `HU50-CP12: eliminar una incidencia que no existe no borra nada` | Infraestructura (MongoDB) | AB#303 | PR #233 | ✅ |

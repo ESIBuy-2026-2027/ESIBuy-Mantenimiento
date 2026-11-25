@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import es.uclm.esibuy.backend.incidencias.application.port.out.IncidenciaRepositoryPort;
@@ -50,7 +51,7 @@ public class IncidenciaMongoAdapter implements IncidenciaRepositoryPort {
 
     @Override
     public IncidenciaPage buscarPorEstado(EstadoIncidencia estado, int pagina, int tamano) {
-        Page<IncidenciaDocument> documentos = repository.findByEstado(estado.name(),
+        Page<IncidenciaDocument> documentos = porEstado(estado,
                 PageRequest.of(pagina, tamano, DE_MAS_ANTIGUA_A_MAS_RECIENTE));
         return aPagina(documentos, pagina, tamano);
     }
@@ -60,20 +61,25 @@ public class IncidenciaMongoAdapter implements IncidenciaRepositoryPort {
             int pagina, int tamano) {
         Sort.Direction direccion = "desc".equalsIgnoreCase(sentido) ? Sort.Direction.DESC : Sort.Direction.ASC;
         String campo = (ordenarPor == null || ordenarPor.isBlank()) ? "fechaCreacion" : ordenarPor;
-        PageRequest pageable = PageRequest.of(pagina, tamano, Sort.by(direccion, campo, "id"));
+        PageRequest pageable = PageRequest.of(pagina, tamano, orden(direccion, campo));
         String texto = busqueda == null ? "" : busqueda.trim();
 
         Page<IncidenciaDocument> documentos;
         if (estado != null && !texto.isEmpty()) {
-            documentos = repository.findByEstadoAndAsuntoContainingIgnoreCase(estado.name(), texto, pageable);
+            documentos = porEstadoYAsunto(estado, texto, pageable);
         } else if (estado != null) {
-            documentos = repository.findByEstado(estado.name(), pageable);
+            documentos = porEstado(estado, pageable);
         } else if (!texto.isEmpty()) {
             documentos = repository.findByAsuntoContainingIgnoreCase(texto, pageable);
         } else {
             documentos = repository.findAll(pageable);
         }
         return aPagina(documentos, pagina, tamano);
+    }
+
+    @Override
+    public boolean registrarResolucion(Incidencia resuelta) {
+        return repository.registrarResolucion(resuelta.id(), resuelta.fechaResolucion()) > 0;
     }
 
     @Override
@@ -84,6 +90,26 @@ public class IncidenciaMongoAdapter implements IncidenciaRepositoryPort {
     @Override
     public void eliminar(String id) {
         repository.deleteById(id);
+    }
+
+    // Al ordenar por estado, la fecha de resolución separa las abiertas de las resueltas, que comparten estado guardado
+    private static Sort orden(Sort.Direction direccion, String campo) {
+        return "estado".equals(campo)
+                ? Sort.by(direccion, campo, "fechaResolucion", "id")
+                : Sort.by(direccion, campo, "id");
+    }
+
+    private Page<IncidenciaDocument> porEstado(EstadoIncidencia estado, Pageable pageable) {
+        return estado == EstadoIncidencia.RESUELTA
+                ? repository.findByFechaResolucionNotNull(pageable)
+                : repository.findByEstadoAndFechaResolucionIsNull(estado.name(), pageable);
+    }
+
+    private Page<IncidenciaDocument> porEstadoYAsunto(EstadoIncidencia estado, String asunto, Pageable pageable) {
+        return estado == EstadoIncidencia.RESUELTA
+                ? repository.findByFechaResolucionNotNullAndAsuntoContainingIgnoreCase(asunto, pageable)
+                : repository.findByEstadoAndFechaResolucionIsNullAndAsuntoContainingIgnoreCase(estado.name(), asunto,
+                        pageable);
     }
 
     // Común a las dos búsquedas: convierte la página de documentos en la página del dominio

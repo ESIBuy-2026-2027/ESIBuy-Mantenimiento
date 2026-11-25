@@ -26,7 +26,7 @@ class IncidenciaDocumentMapperTest {
     @DisplayName("HU44-CP06: una incidencia pasa a documento y vuelve sin perder ningún dato")
     void convierteADocumentoYVueltaSinPerderDatos() {
         Incidencia incidencia = new Incidencia("i-1", "u-1", "No me llega el pedido", "Lo pedí hace una semana",
-                EstadoIncidencia.ABIERTA, "Lo estamos revisando", AHORA);
+                EstadoIncidencia.ABIERTA, "Lo estamos revisando", AHORA, null);
 
         IncidenciaDocument documento = mapper.aDocumento(incidencia);
         Incidencia leida = mapper.aDominio(documento);

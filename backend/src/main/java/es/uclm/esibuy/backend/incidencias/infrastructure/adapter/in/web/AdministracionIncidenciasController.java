@@ -17,7 +17,7 @@ import es.uclm.esibuy.backend.incidencias.domain.model.EstadoIncidencia;
 import es.uclm.esibuy.backend.incidencias.domain.model.IncidenciaSupervisadaPage;
 
 /**
- * Adaptador de entrada web de la supervisión (HU49) y la resolución (HU50) de incidencias. Solo lo usa el
+ * Adaptador de entrada web de la supervisión (HU49) y la resolución (HU50 y HU192) de incidencias. Solo lo usa el
  * administrador: lo limitan
  * {@code /api/admin/**} en {@code SecurityConfig} y el {@code @PreAuthorize} del servicio.
  */
@@ -61,7 +61,14 @@ public class AdministracionIncidenciasController {
         return IncidenciaResponse.desde(resolucionIncidencias.abrir(id, request.respuesta()));
     }
 
-    // Cierra una incidencia, pendiente o abierta (HU50, T301): se elimina y se responde 204 sin cuerpo. 404 si no
+    // Marca como resuelta una incidencia abierta (HU192) y la devuelve. No lleva cuerpo: la fecha de resolución la pone
+    // el sistema. 404 si no existe; 409 si está pendiente o ya resuelta.
+    @PatchMapping("/{id}/resolver")
+    public IncidenciaResponse resolver(@PathVariable String id) {
+        return IncidenciaResponse.desde(resolucionIncidencias.resolver(id));
+    }
+
+    // Cierra una incidencia, en cualquier estado (HU50, T301): se elimina y se responde 204 sin cuerpo. 404 si no
     // existe.
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
