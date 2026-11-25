@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import {
   Button,
   Dialog,
@@ -329,6 +329,7 @@ PremiumStatus.propTypes = {
 export default function PremiumPage({ embedded = false }) {
   const pageStyles = usePageStyles()
   const styles = useStyles()
+  const benefitsTitleId = useId()
   const location = useLocation()
   const profile = useApiQuery(getProfile)
   const [faseCancelacion, setFaseCancelacion] = useState(null)
@@ -396,7 +397,8 @@ export default function PremiumPage({ embedded = false }) {
         )}
 
         <section aria-label="Ventajas de ESIBuy Premium" className={mergeClasses(styles.benefitsSection, embedded && styles.embeddedBenefits)}>
-          <ul aria-label="Ventajas de ESIBuy Premium" className={mergeClasses(styles.benefits, embedded && styles.embeddedBenefitsList)}>
+          {!embedded && <h2 id={benefitsTitleId} className={styles.sectionTitle}>Ventajas de ESIBuy Premium</h2>}
+          <ul aria-labelledby={embedded ? undefined : benefitsTitleId} aria-label={embedded ? "Ventajas de ESIBuy Premium" : undefined} className={mergeClasses(styles.benefits, embedded && styles.embeddedBenefitsList)}>
             {PREMIUM_BENEFITS.map(({ id, titulo, texto, Icono }, index) => (
               <li key={id} className={styles.benefitItem} style={{ animationDelay: `${(index + 1) * RETRASO_ENTRADA_MS}ms` }}>
                 <article className={styles.benefit}>
