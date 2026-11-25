@@ -90,7 +90,7 @@ const toDiscount = (percent) => {
 export const toProductPayload = (values) => ({
   nombre: values.nombre.trim(),
   descripcion: values.descripcion.trim(),
-  precio: Number(values.precio),
+  precio: Number(values.precio.replace(',', '.')),
   stock: values.stock.trim() === '' ? 0 : Number(values.stock),
   categoriaId: values.categoriaId,
   imagen: values.imagen.trim(),
