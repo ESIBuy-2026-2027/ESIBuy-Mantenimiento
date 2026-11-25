@@ -22,6 +22,8 @@ import AddressFormPanel from '../features/addresses/AddressFormPanel'
 import DeleteAddressDialog from '../features/addresses/DeleteAddressDialog'
 import { resumenDeDireccion } from '../features/addresses/direccionPropType'
 import { useApiQuery } from '../hooks/useApiQuery'
+import LinkButton from '../components/LinkButton'
+import { PATHS } from '../routes/paths'
 
 // Como el backend: un cliente tiene como máximo 5 direcciones de envío (HU5)
 const MAXIMO_DIRECCIONES = 5
@@ -36,7 +38,11 @@ const useStyles = makeStyles({
     minWidth: 0,
   },
   heading: {
-    alignItems: 'flex-start',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    justifyContent: 'space-between',
+    minHeight: '126px',
   },
   list: {
     listStyle: 'none',
@@ -88,7 +94,14 @@ const useStyles = makeStyles({
   },
   addButton: {
     minHeight: '40px',
-    minWidth: '170px',
+    width: '100%',
+  },
+  seeAll: {
+    alignSelf: 'flex-start',
+  },
+  addressText: {
+    minHeight: '58px',
+    justifyContent: 'center',
   },
   muted: {
     color: tokens.colorNeutralForeground3,
@@ -107,6 +120,7 @@ export default function AddressesPage({ embedded = false }) {
   const [enPanel, setEnPanel] = useState(null)
   const [aEliminar, setAEliminar] = useState(null)
   const limiteAlcanzado = (direcciones?.length ?? 0) >= MAXIMO_DIRECCIONES
+  const direccionesVisibles = embedded ? (direcciones ?? []).slice(0, 3) : direcciones
 
   const abrirPanel = (direccion) => {
     setAviso(null)
@@ -202,7 +216,7 @@ export default function AddressesPage({ embedded = false }) {
       )}
       {direcciones?.length > 0 && (
         <ul aria-label="Tus direcciones" className={styles.list}>
-          {direcciones.map((direccion) => (
+          {direccionesVisibles.map((direccion) => (
             <li key={direccion.id}>
               <Card className={styles.address}>
                 <Location24Regular className={styles.icon} aria-hidden />
@@ -232,6 +246,11 @@ export default function AddressesPage({ embedded = false }) {
             </li>
           ))}
         </ul>
+      )}
+      {embedded && (direcciones?.length ?? 0) > 3 && (
+        <LinkButton to={PATHS.ADDRESSES} appearance="subtle" className={styles.seeAll}>
+          Ver todas las direcciones ({direcciones.length})
+        </LinkButton>
       )}
       {aEliminar && (
         <DeleteAddressDialog
