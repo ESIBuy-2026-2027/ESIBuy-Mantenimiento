@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // Preferencias del cliente (HU46, T287): GET y PUT /api/customer/preferences; y sus categorías favoritas (AB#528): POST y
 // DELETE /api/customer/preferences/categories. El caso de uso es un doble de prueba; la seguridad es la real
 // (SecurityConfig: /api/customer/** solo para CLIENTE, con CSRF) y los errores los traduce ManejadorGlobalErrores.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU46-CP14 a CP18 y HU528-CP08 a CP11, propuestos.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU46-CP14 a CP18 y HU528-CP08 a CP11 y CP13, propuestos.
 @WebMvcTest(PreferenciasController.class)
 @Import(SecurityConfig.class)
 class PreferenciasControllerTest {
@@ -121,6 +121,41 @@ class PreferenciasControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("CATEGORY_NOT_FOUND"))
                 .andExpect(jsonPath("$.mensaje").value("La categoría no existe"));
+    }
+
+    @Test
+    @DisplayName("HU528-CP13: sin sesión no se marcan ni se desmarcan categorías favoritas (401)")
+    void sinSesionNoSeCambianLasFavoritas() throws Exception {
+        mockMvc.perform(marcar(CUERPO_MARCAR)).andExpect(status().isUnauthorized());
+        mockMvc.perform(desmarcar()).andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(gestionPreferencias);
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"VENDEDOR", "ADMINISTRADOR"})
+    @DisplayName("HU528-CP13: un usuario que no es cliente no marca ni desmarca categorías favoritas (403 ACCESS_DENIED)")
+    void noClienteNoCambiaLasFavoritas(String rol) throws Exception {
+        mockMvc.perform(marcar(CUERPO_MARCAR).with(user(CLIENTE).roles(rol)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+        mockMvc.perform(desmarcar().with(user(CLIENTE).roles(rol)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+
+        verifyNoInteractions(gestionPreferencias);
+    }
+
+    @Test
+    @DisplayName("HU528-CP13: una petición sin token CSRF no marca ni desmarca categorías favoritas (403)")
+    void sinTokenCsrfNoSeCambianLasFavoritas() throws Exception {
+        mockMvc.perform(post(URL_CATEGORIAS).with(user(CLIENTE).roles("CLIENTE"))
+                        .contentType(MediaType.APPLICATION_JSON).content(CUERPO_MARCAR))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(delete(URL_CATEGORIAS + "/cat-1").with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(gestionPreferencias);
     }
 
     @Test
