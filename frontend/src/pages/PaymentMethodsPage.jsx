@@ -58,7 +58,7 @@ const useStyles = makeStyles({
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: tokens.spacingHorizontalL,
-    minHeight: '128px',
+    minHeight: '148px',
     padding: tokens.spacingHorizontalM,
     boxSizing: 'border-box',
   },
@@ -71,7 +71,8 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     flexGrow: 1,
     minWidth: 0,
-    minHeight: '58px',
+    minHeight: '80px',
+    height: '80px',
     justifyContent: 'center',
   },
   methodActions: {
@@ -232,9 +233,6 @@ export default function PaymentMethodsPage({ embedded = false }) {
                     <Text className={styles.mask}>{metodo.mascara}</Text>
                   </div>
                   <div className={styles.methodActions}>
-                    <Button appearance="subtle" icon={<Edit20Regular />} onClick={() => { setAnadiendo(false); setAEditar(metodo) }}>
-                      Editar
-                    </Button>
                     {metodo.predeterminado ? (
                       <Badge appearance="tint" color="brand">
                         Predeterminado
@@ -244,6 +242,9 @@ export default function PaymentMethodsPage({ embedded = false }) {
                         Marcar como predeterminado
                       </Button>
                     )}
+                    <Button appearance="subtle" icon={<Edit20Regular />} onClick={() => { setAnadiendo(false); setAEditar(metodo) }}>
+                      Editar
+                    </Button>
                     <Button appearance="subtle" icon={<Delete20Regular />} onClick={() => setAEliminar(metodo)}>
                       Eliminar
                     </Button>
