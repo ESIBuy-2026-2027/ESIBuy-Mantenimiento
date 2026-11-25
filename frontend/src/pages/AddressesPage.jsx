@@ -48,6 +48,9 @@ const useStyles = makeStyles({
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: tokens.spacingHorizontalL,
+    minHeight: '104px',
+    padding: tokens.spacingHorizontalM,
+    boxSizing: 'border-box',
   },
   icon: {
     flexShrink: 0,
@@ -63,14 +66,24 @@ const useStyles = makeStyles({
     display: 'flex',
     flexWrap: 'wrap',
     alignItems: 'center',
+    justifyContent: 'flex-end',
     gap: tokens.spacingHorizontalS,
+    flexBasis: '100%',
+    width: '100%',
     marginLeft: 'auto',
+    paddingTop: tokens.spacingVerticalXS,
+    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
   },
   action: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     gap: tokens.spacingVerticalXS,
+    minHeight: '40px',
+  },
+  addButton: {
+    minHeight: '40px',
+    minWidth: '170px',
   },
   muted: {
     color: tokens.colorNeutralForeground3,
@@ -133,9 +146,9 @@ export default function AddressesPage({ embedded = false }) {
             Gestiona dónde recibes tus pedidos. La principal es la que se propone al pagar.
           </Text>
         </div>
-        {direcciones?.length > 0 && (
-          <div className={styles.action}>
+        <div className={styles.action}>
             <Button
+              className={styles.addButton}
               appearance="primary"
               icon={<Add20Regular />}
               disabled={limiteAlcanzado}
@@ -148,8 +161,7 @@ export default function AddressesPage({ embedded = false }) {
                 Has alcanzado el máximo de {MAXIMO_DIRECCIONES} direcciones.
               </Text>
             )}
-          </div>
-        )}
+        </div>
       </div>
       {failed && (
         <MessageBar intent="error">
