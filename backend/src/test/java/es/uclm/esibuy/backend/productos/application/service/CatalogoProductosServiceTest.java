@@ -50,11 +50,11 @@ class CatalogoProductosServiceTest {
     @Test
     @DisplayName("HU7-CP10: busca en el catálogo con los criterios recibidos y devuelve la página del repositorio")
     void buscaEnElCatalogoConLosCriteriosRecibidos() {
-        BuscarCatalogoQuery query = new BuscarCatalogoQuery("teclado", "cat-2", 4, false, false, false, CriterioOrdenCatalogo.VALORACION,
+        BuscarCatalogoQuery query = new BuscarCatalogoQuery("teclado", "cat-2", 4, false, false, false, null, null, CriterioOrdenCatalogo.VALORACION,
                 true, 0, 10);
         ProductoPage pagina = new ProductoPage(List.of(), 0, 10, 0);
         BuscarCatalogoQuery consultaPremium = new BuscarCatalogoQuery(
-                "teclado", "cat-2", 4, false, false, true, CriterioOrdenCatalogo.VALORACION, true, 0, 10);
+                "teclado", "cat-2", 4, false, false, true, null, null, CriterioOrdenCatalogo.VALORACION, true, 0, 10);
         when(productoRepository.buscarEnCatalogo(consultaPremium)).thenReturn(pagina);
         when(usuarioEnSesion.esClientePremium("cliente@esibuy.test")).thenReturn(true);
 
@@ -75,7 +75,7 @@ class CatalogoProductosServiceTest {
     void buscaLosProductosDestacadosSinConsultarLaSesion() {
         Producto valorado = producto(true, 4.5, 2);
         BuscarCatalogoQuery consultaEsperada = new BuscarCatalogoQuery(
-                null, null, 1, false, false, false, CriterioOrdenCatalogo.VALORACION, true, 0, 10);
+                null, null, 1, false, false, false, null, null, CriterioOrdenCatalogo.VALORACION, true, 0, 10);
         when(productoRepository.buscarEnCatalogo(consultaEsperada))
                 .thenReturn(new ProductoPage(List.of(valorado), 0, 10, 1));
         CatalogoProductosService servicio = new CatalogoProductosService(productoRepository, vendedorPort,
