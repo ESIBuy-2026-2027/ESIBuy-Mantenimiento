@@ -184,7 +184,6 @@ export default function ProductCard({
   categoryName,
   favorite = false,
   onAddFavorite,
-  onRemoveFavorite,
   offerStyle = false,
 }) {
   const styles = useStyles()
