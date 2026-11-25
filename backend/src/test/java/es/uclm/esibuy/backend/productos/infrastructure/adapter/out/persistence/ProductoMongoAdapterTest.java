@@ -434,11 +434,16 @@ class ProductoMongoAdapterTest {
         adapter.guardar(crearProducto(null, "v-5", "Producto no disponible", "", new BigDecimal("500.00"), 5,
                 "cat-1", "", false, Descuento.sinDescuento(), Descuento.sinDescuento()));
 
-        BuscarCatalogoQuery filtros = new BuscarCatalogoQuery(null, "cat-1", null, false, false, false,
+        BuscarCatalogoQuery filtrosDePrecio = new BuscarCatalogoQuery(null, "cat-1", null, false, false, false,
                 25, 75, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
+        BuscarCatalogoQuery minimoSuperiorAlCatalogo = new BuscarCatalogoQuery(null, "cat-1", null, false, false, false,
+                200, 75, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
 
-        assertEquals(new BigDecimal("150.01"), adapter.precioMaximoEnCatalogo(filtros));
-        assertEquals(List.of("Producto dentro"), nombres(adapter.buscarEnCatalogo(filtros)));
+        assertEquals(new BigDecimal("150.01"), adapter.precioMaximoEnCatalogo(filtrosDePrecio));
+        assertEquals(List.of("Producto dentro"), nombres(adapter.buscarEnCatalogo(filtrosDePrecio)));
+        // El dominio del deslizador no debe colapsar a cero al seleccionar un mínimo superior a todos los precios.
+        assertEquals(new BigDecimal("150.01"), adapter.precioMaximoEnCatalogo(minimoSuperiorAlCatalogo));
+        assertTrue(adapter.buscarEnCatalogo(minimoSuperiorAlCatalogo).productos().isEmpty());
     }
 
     @Test
