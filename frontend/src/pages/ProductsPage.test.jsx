@@ -722,6 +722,8 @@ describe('ProductsPage (HU7): catálogo con ofertas y listado único', () => {
     expect(screen.getByRole('checkbox', { name: 'Solo ofertas' })).not.toBeChecked()
     expect(screen.getByRole('slider', { name: 'Precio mínimo' })).toHaveValue('0')
     expect(screen.getByRole('slider', { name: 'Precio máximo' })).toHaveValue('150')
+    expect(screen.getByRole('slider', { name: 'Precio mínimo' })).toHaveValue('0')
+    expect(screen.getByRole('slider', { name: 'Precio máximo' })).toHaveValue('150')
   })
 
   it('permite interactuar con las tarjetas repetidas del carrusel de ofertas', async () => {
