@@ -202,9 +202,8 @@ ClientMenu.propTypes = {
 }
 
 function UserActions({ rol, onSignOut, disabled }) {
-  const styles = useStyles()
   const esCliente = rol === ROLES.CLIENTE
-  // El cliente conserva Favoritos, Mi perfil y Cerrar sesión en la cabecera.
+  // El cliente conserva Favoritos, Carrito y Mi perfil en la cabecera.
   const compact = esCliente
 
   return (
