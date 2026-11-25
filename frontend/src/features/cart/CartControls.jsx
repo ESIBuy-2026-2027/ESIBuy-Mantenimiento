@@ -17,6 +17,21 @@ const useStyles = makeStyles({
     flexWrap: 'wrap',
     gap: tokens.spacingHorizontalS,
   },
+  purchaseRow: {
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'nowrap',
+    gap: tokens.spacingHorizontalS,
+    width: '100%',
+    minWidth: 0,
+  },
+  quantity: {
+    flexShrink: 0,
+  },
+  addButton: {
+    flex: '1 1 auto',
+    minWidth: 0,
+  },
   muted: {
     color: tokens.colorNeutralForeground3,
   },
@@ -67,14 +82,18 @@ export default function CartControls({ product }) {
       </Text>
 
       {inCart === 0 ? (
-        <>
-          <QuantityStepper
-            value={Math.min(quantity, product.stock)}
-            max={product.stock}
-            label={`Cantidad de ${product.nombre}`}
-            onChange={setQuantityToAdd}
-          />
-          <AddToCartButton product={product} quantity={Math.min(quantity, product.stock)} size="small" fullWidth />
+        <div className={styles.purchaseRow}>
+          <span className={styles.quantity}>
+            <QuantityStepper
+              value={Math.min(quantity, product.stock)}
+              max={product.stock}
+              label={`Cantidad de ${product.nombre}`}
+              onChange={setQuantityToAdd}
+            />
+          </span>
+          <div className={styles.addButton}>
+            <AddToCartButton product={product} quantity={Math.min(quantity, product.stock)} size="small" fullWidth />
+          </div>
         </>
       ) : (
         <>
