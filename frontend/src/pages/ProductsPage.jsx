@@ -147,7 +147,7 @@ export default function ProductsPage() {
     setFavoritos(aFavoritos(lista))
   }
   // Sin ningún filtro, que no haya productos significa que el catálogo está vacío; con filtros, que no coinciden.
-  const catalogEmpty = feed.loaded && feed.totalItems === 0 && !debouncedSearch && !category && !minRating && !inStock && !offersOnly
+  const catalogEmpty = feed.loaded && feed.totalItems === 0 && !debouncedSearch && !category && !minRating && minPrice === 0 && maxPrice === 150 && !inStock && !offersOnly
   const noMatches = feed.loaded && feed.totalItems === 0 && !catalogEmpty
   const hasItems = feed.items.length > 0
   const changeSort = filters.changeSort
