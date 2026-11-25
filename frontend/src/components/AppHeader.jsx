@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Button,
   Menu,
@@ -16,7 +16,7 @@ import {
   BoxMultiple20Regular,
   ChartMultiple20Regular,
   ChatWarning20Regular,
-  Crown20Filled,
+  Crown20Regular,
   Grid20Regular,
   Heart20Regular,
   Person20Regular,
@@ -26,6 +26,7 @@ import {
 import CartWidget from '../features/cart/CartWidget'
 import { getProfile } from '../api/profile'
 import { useApiQuery } from '../hooks/useApiQuery'
+import { PREMIUM_STATUS_CHANGED } from '../features/premium/premiumEvents'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ROLES, getHomePath } from '../auth/roles'
 import { useAuth } from '../auth/useAuth'
@@ -172,21 +173,15 @@ const useStyles = makeStyles({
     },
   },
   premiumPersonIcon: {
-    position: 'relative',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
   },
   premiumCrown: {
-    position: 'absolute',
-    top: '-9px',
-    right: '-8px',
-    width: '13px',
-    height: '13px',
-    color: '#D97706',
-    filter: 'drop-shadow(0 0 1px #FFF8F1)',
-    backgroundColor: '#FFF8F1',
-    borderRadius: tokens.borderRadiusCircular,
+    width: '20px',
+    height: '20px',
+    color: '#B54708',
+    strokeWidth: '1.5px',
   },
   accountMenu: {
     minWidth: '230px',
@@ -275,13 +270,19 @@ function GuestActions() {
 }
 
 function PremiumAwarePersonIcon() {
-  const { data: profile } = useApiQuery(getProfile)
+  const { data: profile, retry } = useApiQuery(getProfile)
   const styles = useStyles()
+
+  useEffect(() => {
+    const actualizarPerfil = () => retry()
+    window.addEventListener(PREMIUM_STATUS_CHANGED, actualizarPerfil)
+    return () => window.removeEventListener(PREMIUM_STATUS_CHANGED, actualizarPerfil)
+  }, [retry])
 
   return (
     <span className={styles.premiumPersonIcon}>
       <Person20Regular />
-      {profile?.tipoCliente === 'PREMIUM' && <Crown20Filled className={styles.premiumCrown} aria-hidden="true" data-testid="premium-crown" />}
+      {profile?.tipoCliente === 'PREMIUM' && <Crown20Regular className={styles.premiumCrown} aria-hidden="true" data-testid="premium-crown" />}
     </span>
   )
 }
