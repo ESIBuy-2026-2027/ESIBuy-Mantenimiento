@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.productos.application.port.out;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Optional;
 import java.util.List;
@@ -32,6 +33,9 @@ public interface ProductoRepositoryPort {
     void eliminar(String id);
 
     ProductoPage buscarEnCatalogo(BuscarCatalogoQuery query);
+
+    /** Precio máximo de los productos que coinciden con los filtros, ignorando el límite superior de precio. */
+    BigDecimal precioMaximoEnCatalogo(BuscarCatalogoQuery query);
 
     // Número de productos de cada categoría, por su id (HU39). Las categorías sin productos no aparecen.
     Map<String, Long> contarPorCategoria();
