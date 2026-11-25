@@ -1,15 +1,23 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
-import { Button, makeStyles, mergeClasses, tokens } from '@fluentui/react-components'
+import {
+  Button,
+  Menu,
+  MenuItem,
+  MenuList,
+  MenuPopover,
+  MenuTrigger,
+  makeStyles,
+  mergeClasses,
+  tokens,
+} from '@fluentui/react-components'
 import {
   ArrowExit20Regular,
   BoxMultiple20Regular,
+  ChartMultiple20Regular,
   ChatWarning20Regular,
-  Diamond20Regular,
   Grid20Regular,
   Heart20Regular,
-  Location20Regular,
-  Payment20Regular,
   Person20Regular,
   PersonAdd20Regular,
   Receipt20Regular,
@@ -20,9 +28,8 @@ import { useAuth } from '../auth/useAuth'
 import { PATHS } from '../routes/paths'
 import LinkButton from './LinkButton'
 
-// Tres tamaños. Ancho: iconos con texto. Medio: con muchos accesos (el cliente tiene nueve) solo se ven los iconos;
-// el texto sigue ahí para los lectores de pantalla y como tooltip. Móvil: el logotipo arriba y, debajo, una barra de
-// accesos con su texto que se desliza en horizontal. Es CSS: los enlaces están siempre en la página.
+// Tres tamaños. En el medio se compactan los accesos con icono; en móvil, el logotipo queda arriba y debajo aparece
+// una barra de accesos que se desliza en horizontal.
 const MOVIL = '@media (max-width: 767px)'
 const MEDIO = '@media (min-width: 768px) and (max-width: 1279px)'
 
@@ -87,7 +94,9 @@ const useStyles = makeStyles({
       paddingBottom: tokens.spacingVerticalXXS,
       maskImage: 'linear-gradient(to right, black 85%, transparent)',
       WebkitMaskImage: 'linear-gradient(to right, black 85%, transparent)',
-      '::-webkit-scrollbar': { display: 'none' },
+    },
+    '&::-webkit-scrollbar': {
+      display: 'none',
     },
   },
   item: {
@@ -100,6 +109,9 @@ const useStyles = makeStyles({
   },
   compactItem: {
     [MEDIO]: { minWidth: 'auto', paddingLeft: tokens.spacingHorizontalS, paddingRight: tokens.spacingHorizontalS },
+  },
+  accountMenu: {
+    minWidth: '220px',
   },
 })
 
@@ -140,10 +152,48 @@ function GuestActions() {
   )
 }
 
+function ClientMenu({ compact }) {
+  const styles = useStyles()
+  const navigate = useNavigate()
+  const enlaces = [
+    [PATHS.ORDERS, <Receipt20Regular />, 'Mis pedidos'],
+    [PATHS.INCIDENTS, <ChatWarning20Regular />, 'Incidencias'],
+    [PATHS.PROFILE, <Person20Regular />, 'Mi perfil'],
+  ]
+
+  return (
+    <Menu positioning="below-end">
+      <MenuTrigger>
+        <Button
+          appearance="subtle"
+          icon={<Person20Regular />}
+          title={compact ? 'Mi perfil' : undefined}
+          className={mergeClasses(styles.item, compact && styles.compactItem)}
+        >
+          <span className={compact ? styles.compactLabel : undefined}>Mi perfil</span>
+        </Button>
+      </MenuTrigger>
+      <MenuPopover className={styles.accountMenu}>
+        <MenuList>
+          {enlaces.map(([to, icon, label]) => (
+            <MenuItem key={to} icon={icon} onClick={() => navigate(to)}>
+              {label}
+            </MenuItem>
+          ))}
+        </MenuList>
+      </MenuPopover>
+    </Menu>
+  )
+}
+
+ClientMenu.propTypes = {
+  compact: PropTypes.bool.isRequired,
+}
+
 function UserActions({ rol, onSignOut, disabled }) {
   const styles = useStyles()
   const esCliente = rol === ROLES.CLIENTE
-  // El cliente es quien tiene muchos accesos: solo los suyos se compactan en el tamaño medio
+  // El cliente conserva Favoritos, Mi perfil y Cerrar sesión en la cabecera.
   const compact = esCliente
 
   return (
@@ -155,58 +205,37 @@ function UserActions({ rol, onSignOut, disabled }) {
       )}
       {/* Fallos de la demo del Sprint 1: el vendedor no tenía acceso a sus productos desde el menú */}
       {rol === ROLES.VENDEDOR && (
-        <NavLink to={PATHS.SELLER_PRODUCTS} icon={<BoxMultiple20Regular />}>
-          Mis productos
-        </NavLink>
+        <>
+          <NavLink to={PATHS.SELLER_PRODUCTS} icon={<BoxMultiple20Regular />}>
+            Mis productos
+          </NavLink>
+          <NavLink to={PATHS.SELLER_ORDERS} icon={<Receipt20Regular />}>
+            Mis pedidos
+          </NavLink>
+          <NavLink to={PATHS.SELLER_STATISTICS} icon={<ChartMultiple20Regular />}>
+            Mis estadísticas
+          </NavLink>
+        </>
       )}
-      {/* El catálogo de productos (HU7) es del cliente: desde cualquier página se puede volver a él */}
-      {esCliente && (
-        <NavLink to={PATHS.PRODUCTS} icon={<BoxMultiple20Regular />} compact={compact}>
-          Catálogo
-        </NavLink>
-      )}
-      {/* Las ventajas de ESIBuy Premium (HU45) son solo del cliente */}
-      {esCliente && (
-        <NavLink to={PATHS.PREMIUM} icon={<Diamond20Regular />} compact={compact}>
-          Premium
-        </NavLink>
-      )}
-      {/* El historial de pedidos (HU11) es solo del cliente */}
-      {esCliente && (
-        <NavLink to={PATHS.ORDERS} icon={<Receipt20Regular />} compact={compact}>
-          Mis pedidos
-        </NavLink>
-      )}
-      {/* La lista de deseos (HU14) es solo del cliente */}
+      {/* La lista de deseos (HU14) permanece visible en la cabecera */}
       {esCliente && (
         <NavLink to={PATHS.WISHLIST} icon={<Heart20Regular />} compact={compact}>
           Favoritos
         </NavLink>
       )}
-      {/* Los métodos de pago (HU6) son solo del cliente */}
-      {esCliente && (
-        <NavLink to={PATHS.PAYMENT_METHODS} icon={<Payment20Regular />} compact={compact}>
-          Métodos de pago
-        </NavLink>
-      )}
-      {/* Las direcciones de envío (HU5) son solo del cliente */}
-      {esCliente && (
-        <NavLink to={PATHS.ADDRESSES} icon={<Location20Regular />} compact={compact}>
-          Direcciones
-        </NavLink>
-      )}
       {/* Las incidencias (HU44) son del cliente y del vendedor */}
-      {(esCliente || rol === ROLES.VENDEDOR) && (
+      {rol === ROLES.VENDEDOR && (
         <NavLink to={PATHS.INCIDENTS} icon={<ChatWarning20Regular />} compact={compact}>
           Incidencias
         </NavLink>
       )}
       {/* El perfil propio (HU4) es del cliente y del vendedor */}
-      {(esCliente || rol === ROLES.VENDEDOR) && (
+      {rol === ROLES.VENDEDOR && (
         <NavLink to={PATHS.PROFILE} icon={<Person20Regular />} compact={compact}>
           Mi perfil
         </NavLink>
       )}
+      {esCliente && <ClientMenu compact={compact} />}
       <Button
         appearance="primary"
         icon={<ArrowExit20Regular />}

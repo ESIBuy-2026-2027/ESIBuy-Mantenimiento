@@ -3302,12 +3302,16 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU32-CP03 | Listado paginado, del más reciente al más antiguo, con `totalPages` 0 si no hay resultados | Integración (MongoDB y capa web) | 2 | ✅ Pasa |
 | HU32-CP04 | Una página o un tamaño menor que 1 devuelve 400 | Integración (capa web) | 1 | ✅ Pasa |
 | HU32-CP05 | Sin sesión (401) o sin ser vendedor (403) no se ve el listado | Integración (capa web) | 2 | ✅ Pasa |
+| HU32-CP06 | Los productos se pueden filtrar por estado Visible/No visible y combinar con los demás filtros | Frontend (página) | 1 | ✅ Pasa |
+| HU32-CP07 | Los productos se pueden ordenar por precio ascendente/descendente y stock ascendente/descendente | Frontend (página) | 1 | ✅ Pasa |
+| HU32-CP08 | Los productos se pueden filtrar por un precio mínimo y máximo combinables | Frontend (página) | 1 | ✅ Pasa |
 
 Notas:
 - **HU32-CP01 a CP05:** casos propuestos en la T184 (AB#184) a partir de los criterios de aceptación de la HU32 (`frontend/docs/hu32-listado-productos.md`). Pendientes de confirmar con el equipo y de añadir a la HU32 en Azure Boards.
 - **Backend (T183, AB#183, PR #88):** `GET /api/seller/products`. El vendedor sale de la sesión: productos pide su id al módulo de usuarios por su puerto de entrada (`UsuarioEnSesionPort`).
 - **Pendiente:** el contrato del frontend pide `categorias` con el nombre de la categoría; hasta que exista el módulo de categorías se devuelve `categoriaId`. La búsqueda todavía distingue acentos.
 - **Frontend:** los tests de la HU32 (AB#187) no tienen todavía filas en la matriz.
+- **Filtros ampliados (decisión del equipo):** HU32-CP06 a CP08 añaden estado visible/no visible, orden por precio o stock y rango de precio al listado. Sus descripciones provienen del alcance aprobado por el equipo; task y PR quedan pendientes de asignar.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -3325,6 +3329,9 @@ Notas:
 | HU32-CP04 | `ProductoControllerTest` | `paginaOTamanoMenorQueUnoDevuelve400` (`page` y `size`) | Infraestructura | AB#184 | PR #90 | ✅ |
 | HU32-CP05 | `ProductoControllerTest` | `sinSesionDevuelve401` | Infraestructura | AB#184 | PR #90 | ✅ |
 | HU32-CP05 | `ProductoControllerTest` | `noVendedorNoVeElListado` (cliente y administrador) | Infraestructura | AB#184 | PR #90 | ✅ |
+| HU32-CP06 | `SellerProductsPage.test.jsx` | `sellerProductsPage_filtraPorEstadoVisibleYNoVisible` | Frontend · página | — | Actual | ✅ |
+| HU32-CP07 | `SellerProductsPage.test.jsx` | `sellerProductsPage_ordenaPorPrecioYStockAscendenteYDescendente` | Frontend · página | — | Actual | ✅ |
+| HU32-CP08 | `SellerProductsPage.test.jsx` | `sellerProductsPage_filtraPorPrecioMinimoYMaximo` | Frontend · página | — | Actual | ✅ |
 
 Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/`):
 - `AutenticacionServiceTest`: `usuarios/application/service/` (Mockito, sin Spring)
@@ -3407,7 +3414,7 @@ Rutas de las clases de test:
 | HU34-CP10 | Sin sesión (401), sin ser vendedor (403) o sin token CSRF (403) no se modifica un producto | Integración (capa web) | 3 | ✅ Pasa |
 | HU34-CP11 | Los cambios se reflejan inmediatamente en el catálogo que ven los clientes | — | 0 | ⏳ Pendiente (sin verificar hasta que exista el catálogo de clientes) |
 | HU34-CP12 | La vista de edición se abre con los datos actuales del producto ya cargados (también los descuentos) | Frontend (página) | 2 | ✅ Pasa |
-| HU34-CP13 | Al guardar, se envían los cambios al producto indicado y se vuelve al listado con un aviso | Frontend (página) | 1 | ✅ Pasa |
+| HU34-CP13 | Al guardar, se envían los cambios al producto indicado y se vuelve al listado con un aviso; también existe una salida directa sin guardar | Frontend (página) | 2 | ✅ Pasa |
 | HU34-CP14 | La edición aplica las mismas validaciones que el alta | Frontend (página) | 1 | ✅ Pasa |
 | HU34-CP15 | Un producto de otro vendedor o inexistente no muestra el formulario | Frontend (página) | 2 | ✅ Pasa |
 | HU34-CP16 | Si el producto no carga, la vista muestra un error y permite reintentar | Frontend (página) | 1 | ✅ Pasa |
@@ -3448,6 +3455,7 @@ Notas:
 | HU34-CP12 | `SellerProductFormPage.test.jsx` | `HU34-CP12: la vista de edición se abre con los datos actuales del producto` | Frontend · página | AB#341 | PR #122 | ✅ |
 | HU34-CP12 | `SellerProductFormPage.test.jsx` | `HU34-CP12: la vista de edición muestra los descuentos activos del producto` | Frontend · página | AB#341 | PR #122 | ✅ |
 | HU34-CP13 | `SellerProductFormPage.test.jsx` | `HU34-CP13: al guardar, envía los cambios al producto indicado y vuelve al listado con un aviso` | Frontend · página | AB#341 | PR #122 | ✅ |
+| HU34-CP13 | `SellerProductFormPage.test.jsx` | `HU34-CP13: desde la edición puede volver al listado de mis productos sin guardar` | Frontend · página | — | Actual | ✅ |
 | HU34-CP14 | `SellerProductFormPage.test.jsx` | `HU34-CP14: la edición aplica las mismas validaciones que el alta` | Frontend · página | AB#341 | PR #122 | ✅ |
 | HU34-CP15 | `SellerProductFormPage.test.jsx` | `HU34-CP15: un producto de otro vendedor no muestra el formulario` | Frontend · página | AB#341 | PR #122 | ✅ |
 | HU34-CP15 | `SellerProductFormPage.test.jsx` | `HU34-CP15: un producto inexistente no muestra el formulario` | Frontend · página | AB#341 | PR #122 | ✅ |

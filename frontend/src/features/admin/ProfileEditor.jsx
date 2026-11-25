@@ -31,6 +31,13 @@ const useStyles = makeStyles({
     gap: tokens.spacingVerticalM,
     columnGap: tokens.spacingHorizontalL,
   },
+  readOnlyInput: {
+    cursor: 'default',
+    '& input': {
+      caretColor: 'transparent',
+      cursor: 'default',
+    },
+  },
   wide: {
     gridColumn: '1 / -1',
   },
@@ -162,7 +169,12 @@ export default function ProfileEditor({
     if (!edit) {
       return (
         <Field key={field.name} label={field.label}>
-          <Input readOnly appearance="filled-darker" value={field.read(usuario, rol)} />
+          <Input
+            readOnly
+            appearance="filled-darker"
+            className={styles.readOnlyInput}
+            value={field.read(usuario, rol)}
+          />
         </Field>
       )
     }

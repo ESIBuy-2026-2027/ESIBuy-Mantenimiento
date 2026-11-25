@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.core.TypedPropertyPath;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
@@ -197,7 +198,8 @@ public class UsuarioMongoAdapter implements UsuarioRepositoryPort {
         if (query.ordenarPor() == ListarUsuariosQuery.Orden.NOMBRE) {
             return Sort.by(direccion(query), CAMPO_NOMBRE, CAMPO_APELLIDOS);
         }
-        return Sort.by(Sort.Direction.DESC, "createdAt");
+        return Sort.by(Sort.Direction.DESC,
+                TypedPropertyPath.path(UsuarioDocument::getCreatedAt));
     }
 
     // Por estado (HU26): el orden ascendente es pendientes, activos y bloqueados,

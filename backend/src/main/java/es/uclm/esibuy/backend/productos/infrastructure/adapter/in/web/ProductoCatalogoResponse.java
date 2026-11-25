@@ -3,12 +3,16 @@ package es.uclm.esibuy.backend.productos.infrastructure.adapter.in.web;
 import es.uclm.esibuy.backend.productos.domain.model.Producto;
 
 import java.math.BigDecimal;
+
 /**
- * Producto del catálogo del cliente (HU7) con el precio que le corresponde (HU9): {@code descuento} es el que se le
- * aplica, o {@code null} si no tiene ninguno, y {@code precioFinal} ya lo lleva aplicado, como en el detalle (HU8).
- * Lleva el {@code stock} que queda y si está {@code disponible}, para que la tarjeta deje elegir cuántas unidades
- * añadir al carrito (HU9); no lleva vendedorId. {@code valoracion} es la media de sus valoraciones (HU13), o {@code null} si no tiene
- * ninguna.
+ * Producto del catálogo del cliente (HU7) con el precio que le corresponde
+ * (HU9): {@code descuento} es el que se le
+ * aplica, o {@code null} si no tiene ninguno, y {@code precioFinal} ya lo lleva
+ * aplicado, como en el detalle (HU8).
+ * Incluye stock y disponibilidad para que el cliente pueda añadir al carrito
+ * solo los productos comprables. No lleva
+ * vendedorId. {@code valoracion} es la media de sus valoraciones (HU13), o
+ * {@code null} si no tiene ninguna.
  */
 public record ProductoCatalogoResponse(
         String id,
@@ -18,11 +22,10 @@ public record ProductoCatalogoResponse(
         BigDecimal precio,
         DetalleProductoCatalogoResponse.Descuento descuento,
         BigDecimal precioFinal,
-        Double valoracion,
-        int numValoraciones,
         int stock,
-        boolean disponible
-) {
+        boolean disponible,
+        Double valoracion,
+        int numValoraciones) {
     static ProductoCatalogoResponse desde(Producto producto, boolean clientePremium) {
         var aplicado = producto.descuentoAplicado(clientePremium);
         return new ProductoCatalogoResponse(
@@ -33,10 +36,9 @@ public record ProductoCatalogoResponse(
                 producto.getPrecio(),
                 aplicado.activo() ? new DetalleProductoCatalogoResponse.Descuento(aplicado.porcentaje()) : null,
                 producto.precioFinal(clientePremium),
-                producto.getValoracionMedia(),
-                producto.getNumeroValoraciones(),
                 producto.getStock(),
-                producto.isDisponible()
-        );
+                producto.isDisponible(),
+                producto.getValoracionMedia(),
+                producto.getNumeroValoraciones());
     }
 }

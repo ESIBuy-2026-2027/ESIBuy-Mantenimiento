@@ -15,14 +15,18 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 
 import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.ConfirmacionRecepcionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.SeguimientoEnvioUseCase;
 
 /**
- * Adaptador de entrada web de los pedidos. Recibe la petición y delega en el puerto de entrada: crea el pedido
- * (HU10), sirve el historial de pedidos del cliente y el detalle de cada uno (HU11) y cancela un pedido que aún no
- * se ha enviado (HU12). También el seguimiento del envío: su estado e histórico y la confirmación de recepción
+ * Adaptador de entrada web de los pedidos. Recibe la petición y delega en el
+ * puerto de entrada: crea el pedido
+ * (HU10), sirve el historial de pedidos del cliente y el detalle de cada uno
+ * (HU11) y cancela un pedido que aún no
+ * se ha enviado (HU12). También el seguimiento del envío: su estado e histórico
+ * y la confirmación de recepción
  * por el cliente. El cliente sale siempre de la sesión, nunca de un parámetro.
  */
 @RestController
@@ -32,13 +36,16 @@ public class PedidoController {
     private final RealizacionPedidoUseCase realizacionPedido;
     private final ConsultaComprasUseCase consultaCompras;
     private final CancelacionPedidoUseCase cancelacionPedido;
+    private final ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedido;
     private final SeguimientoEnvioUseCase seguimientoEnvio;
 
     public PedidoController(RealizacionPedidoUseCase realizacionPedido, ConsultaComprasUseCase consultaCompras,
-            CancelacionPedidoUseCase cancelacionPedido, SeguimientoEnvioUseCase seguimientoEnvio) {
+            CancelacionPedidoUseCase cancelacionPedido,
+            ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedido, SeguimientoEnvioUseCase seguimientoEnvio) {
         this.realizacionPedido = realizacionPedido;
         this.consultaCompras = consultaCompras;
         this.cancelacionPedido = cancelacionPedido;
+        this.confirmacionRecepcionPedido = confirmacionRecepcionPedido;
         this.seguimientoEnvio = seguimientoEnvio;
     }
 
@@ -67,15 +74,31 @@ public class PedidoController {
         return PedidoResponse.desde(cancelacionPedido.cancelarPedido(autenticado.getName(), id));
     }
 
-    // Estado, fechas de entrega e histórico del envío del pedido: uno ajeno se responde igual que uno inexistente
-    @GetMapping("/{id}/tracking")
-    public SeguimientoEnvioResponse seguimiento(@PathVariable String id, Authentication autenticado) {
-        return SeguimientoEnvioResponse.desde(seguimientoEnvio.consultarSeguimiento(autenticado.getName(), id));
+    // Confirmación de recepción por el cliente: responde 200 con el pedido ya
+    // entregado
+    @PostMapping("/{id}/deliver")
+    public PedidoResponse confirmarRecepcion(@PathVariable String id, Authentication autenticado) {
+        return PedidoResponse.desde(confirmacionRecepcionPedido.confirmarRecepcion(autenticado.getName(), id));
     }
 
-    // El cliente confirma que ha recibido el pedido: responde 200 con el seguimiento ya entregado
-    @PostMapping("/{id}/confirm-delivery")
-    public SeguimientoEnvioResponse confirmarEntrega(@PathVariable String id, Authentication autenticado) {
-        return SeguimientoEnvioResponse.desde(seguimientoEnvio.confirmarEntrega(autenticado.getName(), id));
+    // Seguimiento del envío (HU11): estado, fechas e histórico.
+    @GetMapping("/{id}/tracking")
+    public SeguimientoEnvioResponse consultarSeguimiento(
+            @PathVariable String id,
+            Authentication autenticado) {
+
+        return SeguimientoEnvioResponse.desde(
+                seguimientoEnvio.consultarSeguimiento(autenticado.getName(), id));
     }
+
+    // Confirmación de recepción (HU11): el pedido pasa a ENTREGADO.
+    @PostMapping("/{id}/confirm-delivery")
+    public SeguimientoEnvioResponse confirmarEntrega(
+            @PathVariable String id,
+            Authentication autenticado) {
+
+        return SeguimientoEnvioResponse.desde(
+                seguimientoEnvio.confirmarEntrega(autenticado.getName(), id));
+    }
+
 }

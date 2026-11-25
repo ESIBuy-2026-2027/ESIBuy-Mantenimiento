@@ -137,19 +137,26 @@ describe('AppHeader', () => {
     expect(screen.queryByRole('link', { name: /panel de control/i })).not.toBeInTheDocument()
   })
 
-  // Fallo de las pruebas del equipo: la cabecera del cliente no cabía. En el tamaño medio sus accesos solo enseñan el
-  // icono (CSS que jsdom no aplica): aquí se comprueba que cada uno conserva su nombre y lleva el texto como tooltip.
-  it('appHeader_conSesionDeCliente_cadaAccesoConservaSuNombreYSuTooltip', async () => {
+  it('appHeader_conSesionDeCliente_dejaFavoritosEnCabeceraYElRestoEnElMenuDePerfil', async () => {
+    const user = userEvent.setup()
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/')
 
     const nav = await screen.findByRole('navigation', { name: 'Cuenta' })
-    await screen.findByRole('button', { name: /cerrar sesión/i })
-    const accesos = ['Catálogo', 'Premium', 'Mis pedidos', 'Favoritos', 'Métodos de pago', 'Direcciones', 'Incidencias', 'Mi perfil']
+    expect(within(nav).getByRole('link', { name: 'Favoritos' })).toHaveAttribute('title', 'Favoritos')
+    await user.click(within(nav).getByRole('button', { name: 'Mi perfil' }))
+
+    const menu = within(await screen.findByRole('menu'))
+    const accesos = ['Mis pedidos', 'Incidencias', 'Mi perfil']
     for (const nombre of accesos) {
-      expect(within(nav).getByRole('link', { name: nombre })).toHaveAttribute('title', nombre)
+      expect(menu.getByRole('menuitem', { name: nombre })).toBeInTheDocument()
+    }
+    for (const nombre of ['Premium', 'Métodos de pago', 'Direcciones']) {
+      expect(menu.queryByRole('menuitem', { name: nombre })).not.toBeInTheDocument()
     }
     expect(within(nav).getByRole('button', { name: 'Cerrar sesión' })).toHaveAttribute('title', 'Cerrar sesión')
+    expect(menu.queryByRole('menuitem', { name: 'Favoritos' })).not.toBeInTheDocument()
+    expect(menu.queryByRole('menuitem', { name: 'Cerrar sesión' })).not.toBeInTheDocument()
   })
 
   it('appHeader_conSesionDeVendedor_susAccesosNoSeCompactan', async () => {
@@ -210,10 +217,32 @@ describe('AppHeader', () => {
     expect(screen.queryByRole('link', { name: /mis productos/i })).not.toBeInTheDocument()
   })
 
+  it('maquetacion-pedidos-vendedor: el vendedor tiene el enlace a su panel de pedidos', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('vendedor@esibuy.test')
+    renderApp('/')
+
+    await user.click(await screen.findByRole('link', { name: /mis pedidos/i }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: /mis pedidos/i })).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/seller\/orders$/))
+  })
+
+  it('maquetacion-pedidos-vendedor: el cliente conserva su propio enlace a Mis pedidos', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/')
+
+    await user.click(await screen.findByRole('button', { name: /mi perfil/i }))
+    expect(await screen.findByRole('menuitem', { name: /mis pedidos/i })).toBeInTheDocument()
+  })
+
   it('HU4-CP11: el cliente y el vendedor tienen el enlace a su perfil', async () => {
+    const user = userEvent.setup()
     await abrirSesionPorApi('cliente@esibuy.test')
     const { unmount } = renderApp('/')
-    expect(await screen.findByRole('link', { name: /mi perfil/i })).toHaveAttribute('href', '/profile')
+    await user.click(await screen.findByRole('button', { name: /mi perfil/i }))
+    expect(await screen.findByRole('menuitem', { name: /mi perfil/i })).toBeInTheDocument()
     unmount()
 
     await abrirSesionPorApi('vendedor@esibuy.test')
@@ -229,12 +258,13 @@ describe('AppHeader', () => {
     expect(screen.queryByRole('link', { name: /mi perfil/i })).not.toBeInTheDocument()
   })
 
-  it('HU4-CP11: al pulsar Mi perfil se abre el perfil del usuario', async () => {
+  it('HU4-CP11: al seleccionar Mi perfil en el desplegable se abre el perfil del usuario', async () => {
     const user = userEvent.setup()
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/')
 
-    await user.click(await screen.findByRole('link', { name: /mi perfil/i }))
+    await user.click(await screen.findByRole('button', { name: /mi perfil/i }))
+    await user.click(await screen.findByRole('menuitem', { name: /mi perfil/i }))
 
     expect(await screen.findByRole('heading', { level: 1, name: /mi perfil/i })).toBeInTheDocument()
     expect(await screen.findByLabelText('Nombre')).toHaveValue('Carlos')
@@ -247,18 +277,13 @@ describe('AppHeader: Mis pedidos (HU11)', () => {
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/')
 
-    await user.click(await screen.findByRole('link', { name: /mis pedidos/i }))
+    await user.click(await screen.findByRole('button', { name: /mi perfil/i }))
+    await user.click(await screen.findByRole('menuitem', { name: /mis pedidos/i }))
 
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/orders$')))
   })
 
-  it('HU11-CP18: el vendedor y el administrador no tienen el enlace a Mis pedidos', async () => {
-    await abrirSesionPorApi('vendedor@esibuy.test')
-    const { unmount } = renderApp('/')
-    await screen.findByRole('button', { name: /cerrar sesión/i })
-    expect(screen.queryByRole('link', { name: /mis pedidos/i })).not.toBeInTheDocument()
-    unmount()
-
+  it('HU11-CP18: el administrador no tiene el enlace a Mis pedidos del cliente', async () => {
     await abrirSesionPorApi('admin@esibuy.test')
     renderApp('/')
     await screen.findByRole('button', { name: /cerrar sesión/i })
@@ -328,24 +353,26 @@ describe('AppHeader (HU30): el logotipo lleva al inicio de cada usuario', () => 
 })
 
 describe('AppHeader (HU44): incidencias del cliente', () => {
-  it('HU44-CP32: el cliente ve el botón Incidencias en la cabecera y lleva a Mis incidencias', async () => {
+  it('HU44-CP32: el cliente ve Incidencias en el desplegable y llega a Mis incidencias', async () => {
     const user = userEvent.setup()
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/')
 
-    await user.click(await screen.findByRole('link', { name: /^incidencias$/i }))
+    await user.click(await screen.findByRole('button', { name: /mi perfil/i }))
+    await user.click(await screen.findByRole('menuitem', { name: /^incidencias$/i }))
 
     await esperarRuta('/incidents')
     expect(await screen.findByRole('heading', { level: 1, name: /mis incidencias/i })).toBeInTheDocument()
   })
 
-  it('HU44-CP32: el botón Incidencias es un enlace con su destino, que recibe el foco con el teclado', async () => {
+  it('HU44-CP32: Incidencias conserva el foco de teclado dentro del desplegable', async () => {
+    const user = userEvent.setup()
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/')
 
-    const enlace = await screen.findByRole('link', { name: /^incidencias$/i })
+    await user.click(await screen.findByRole('button', { name: /mi perfil/i }))
+    const enlace = await screen.findByRole('menuitem', { name: /^incidencias$/i })
 
-    expect(enlace).toHaveAttribute('href', '/incidents')
     enlace.focus()
     expect(enlace).toHaveFocus()
   })
@@ -397,13 +424,13 @@ describe('AppHeader (HU44): incidencias del vendedor, del administrador y sin se
 })
 
 describe('AppHeader (HU45): acceso a ESIBuy Premium', () => {
-  it('HU45-CP27: el cliente ve el botón Premium en la cabecera y lleva a la vista de ventajas Premium', async () => {
+  it('HU45-CP27: el cliente ve Premium en el desplegable y llega a la vista de ventajas', async () => {
     const user = userEvent.setup()
     await abrirSesionPorApi('nuevo@esibuy.test')
     renderApp('/products')
 
-    const premium = await screen.findByRole('link', { name: /^premium$/i })
-    expect(premium).toHaveAttribute('href', '/premium')
+    await user.click(await screen.findByRole('button', { name: /mi perfil/i }))
+    const premium = await screen.findByRole('menuitem', { name: /^premium$/i })
     await user.click(premium)
 
     await esperarRuta('/premium')

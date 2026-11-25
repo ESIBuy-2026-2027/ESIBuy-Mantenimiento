@@ -15,7 +15,14 @@ import {
   makeStyles,
   tokens,
 } from '@fluentui/react-components'
-import { Delete20Regular, Diamond16Filled, Diamond20Regular, Edit20Regular } from '@fluentui/react-icons'
+import {
+  Delete20Regular,
+  Diamond16Filled,
+  Diamond20Regular,
+  Edit20Regular,
+  Location20Regular,
+  Payment20Regular,
+} from '@fluentui/react-icons'
 import { addFavoriteCategory, getPreferences, removeFavoriteCategory } from '../api/preferences'
 import { getProfile, updateProfile } from '../api/profile'
 import { useAuth } from '../auth/useAuth'
@@ -26,7 +33,6 @@ import DeleteAccountDialog from '../features/account/DeleteAccountDialog'
 import UnsavedChangesDialog from '../features/account/UnsavedChangesDialog'
 import ProfileEditor from '../features/admin/ProfileEditor'
 import ReadOnlyFields from '../features/admin/ReadOnlyFields'
-import SellerStatistics from '../features/seller/SellerStatistics'
 import { profileFieldsFor } from '../features/admin/profileFields'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { useCategories } from '../hooks/useCategories'
@@ -83,6 +89,18 @@ const useStyles = makeStyles({
   },
   editAction: {
     alignSelf: 'flex-start',
+  },
+  accountLinks: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalM,
+  },
+  premiumAccess: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalS,
   },
 })
 
@@ -227,14 +245,21 @@ FavoriteCategories.propTypes = {
   onRetryCategories: PropTypes.func.isRequired,
 }
 
-// ESIBuy Premium en el perfil del cliente (HU45): el Estándar tiene el acceso a la vista Premium y el Premium, su
-// distintivo.
+// Acceso a ESIBuy Premium desde la sección «Mi cuenta» del perfil: muestra el estado y permite consultar sus beneficios.
 function PremiumAccess({ tipoCliente }) {
-  if (tipoCliente === 'PREMIUM') {
+  const styles = useStyles()
+  const esPremium = tipoCliente === 'PREMIUM'
+
+  if (esPremium) {
     return (
-      <Badge appearance="filled" color="brand" size="large" icon={<Diamond16Filled />}>
-        Premium
-      </Badge>
+      <div className={styles.premiumAccess}>
+        <Badge appearance="filled" color="brand" size="large" icon={<Diamond16Filled />}>
+          Premium
+        </Badge>
+        <LinkButton to={PATHS.PREMIUM} appearance="subtle" size="small" icon={<Diamond20Regular />}>
+          Ver beneficios
+        </LinkButton>
+      </div>
     )
   }
   return (
@@ -245,6 +270,34 @@ function PremiumAccess({ tipoCliente }) {
 }
 
 PremiumAccess.propTypes = {
+  tipoCliente: PropTypes.string,
+}
+
+function CustomerAccountAccess({ tipoCliente }) {
+  const styles = useStyles()
+  const titleId = useId()
+
+  return (
+    <section aria-labelledby={titleId}>
+      <Card className={styles.card}>
+        <Title3 as="h2" id={titleId} className={styles.name}>
+          Mi cuenta
+        </Title3>
+        <div className={styles.accountLinks}>
+          <PremiumAccess tipoCliente={tipoCliente} />
+          <LinkButton to={PATHS.PAYMENT_METHODS} appearance="secondary" icon={<Payment20Regular />}>
+            Métodos de pago
+          </LinkButton>
+          <LinkButton to={PATHS.ADDRESSES} appearance="secondary" icon={<Location20Regular />}>
+            Direcciones
+          </LinkButton>
+        </div>
+      </Card>
+    </section>
+  )
+}
+
+CustomerAccountAccess.propTypes = {
   tipoCliente: PropTypes.string,
 }
 
@@ -261,8 +314,8 @@ function profileFields(perfil, categoryName) {
 // Perfil propio del cliente o del vendedor (HU4), en solo lectura. Los datos se piden al backend, que los saca de
 // la sesión. Con «Editar perfil» (HU45) los datos modificables se editan en este mismo panel; al guardar, el perfil
 // pasa a ser el que devuelve el backend y se avisa. Si hay cambios sin guardar, se pregunta antes de cancelar, de ir
-// a otra pantalla y de cerrar o recargar la pestaña. El cliente ve además sus categorías favoritas (AB#528) y su acceso
-// a ESIBuy Premium (HU45), y el vendedor, sus estadísticas (HU17). Los dos pueden eliminar su cuenta desde aquí (HU47 y HU25).
+// a otra pantalla y de cerrar o recargar la pestaña. El cliente ve además sus accesos de cuenta, con
+// ESIBuy Premium (HU45), y sus categorías favoritas (AB#528). Los dos pueden eliminar su cuenta desde aquí (HU47 y HU25).
 export default function ProfilePage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
@@ -341,7 +394,6 @@ export default function ProfilePage() {
                 {perfil.nombre} {perfil.apellidos}
               </Title3>
               <Text className={styles.email}>{perfil.email}</Text>
-              {perfil.rol === 'CLIENTE' && <PremiumAccess tipoCliente={perfil.tipoCliente} />}
             </div>
           </div>
           {editando ? (
@@ -369,6 +421,8 @@ export default function ProfilePage() {
       {confirmandoCancelar && <UnsavedChangesDialog onStay={() => setConfirmandoCancelar(false)} onLeave={dejarDeEditar} />}
       {guard.blocked && <UnsavedChangesDialog onStay={guard.reset} onLeave={guard.proceed} />}
 
+      {perfil?.rol === 'CLIENTE' && <CustomerAccountAccess tipoCliente={perfil.tipoCliente} />}
+
       {perfil?.rol === 'CLIENTE' && (
         <FavoriteCategories
           categories={categories}
@@ -377,7 +431,6 @@ export default function ProfilePage() {
           onRetryCategories={retryCategories}
         />
       )}
-      {perfil?.rol === 'VENDEDOR' && <SellerStatistics />}
 
       {(perfil?.rol === 'CLIENTE' || perfil?.rol === 'VENDEDOR') && <SecurityFactors />}
 

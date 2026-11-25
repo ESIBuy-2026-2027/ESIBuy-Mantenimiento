@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.pedidos.infrastructure.adapter.in.web;
 
 import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.ConfirmacionRecepcionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizarPedidoCommand;
@@ -76,6 +77,9 @@ class PedidoControllerTest {
 
         @MockitoBean
         private CancelacionPedidoUseCase cancelacionPedido;
+
+        @MockitoBean
+        private ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedido;
 
         @MockitoBean
         private SeguimientoEnvioUseCase seguimientoEnvio;
@@ -162,7 +166,8 @@ class PedidoControllerTest {
         @Test
         @DisplayName("HU10-CP15: si falta stock responde 409 con el code INSUFFICIENT_STOCK")
         void siFaltaStockResponde409() throws Exception {
-                when(realizacionPedido.realizar(COMANDO)).thenThrow(new StockInsuficientePedidoException("no", "p-1", "Auriculares"));
+                when(realizacionPedido.realizar(COMANDO))
+                                .thenThrow(new StockInsuficientePedidoException("no", "p-1", "Auriculares"));
 
                 realizar(CUERPO).andExpect(status().isConflict())
                                 .andExpect(jsonPath("$.code").value("INSUFFICIENT_STOCK"))
@@ -390,7 +395,8 @@ class PedidoControllerTest {
         @Test
         @DisplayName("HU11-CP29: confirmar la entrega responde 200 con el seguimiento ya entregado")
         void confirmarLaEntregaResponde200ConElSeguimientoEntregado() throws Exception {
-                Pedido entregado = new Pedido(new DatosPedido("o-1", PEDIDO.getNumeroPedido(), "c-1", "u-2", "TecnoVera",
+                Pedido entregado = new Pedido(new DatosPedido("o-1", PEDIDO.getNumeroPedido(), "c-1", "u-2",
+                                "TecnoVera",
                                 EstadoPedido.ENTREGADO, PEDIDO.getLineas(), PEDIDO.getDireccionEnvio(), "mp-1",
                                 PEDIDO.getCreatedAt(), List.of(new CambioEstado(EstadoPedido.ENTREGADO, ENTREGA)), null,
                                 ENTREGA));
@@ -406,9 +412,12 @@ class PedidoControllerTest {
         @Test
         @DisplayName("HU11-CP30: un pedido que no está enviado responde 409 ORDER_NOT_DELIVERABLE; uno inexistente o ajeno, 400 ORDER_NOT_FOUND")
         void losErroresDelSeguimientoSonGenericos() throws Exception {
-                when(seguimientoEnvio.confirmarEntrega(CLIENTE, "o-1")).thenThrow(new PedidoNoEntregableException("no"));
-                when(seguimientoEnvio.confirmarEntrega(CLIENTE, "o-9")).thenThrow(new PedidoNoEncontradoException("no"));
-                when(seguimientoEnvio.consultarSeguimiento(CLIENTE, "o-9")).thenThrow(new PedidoNoEncontradoException("no"));
+                when(seguimientoEnvio.confirmarEntrega(CLIENTE, "o-1"))
+                                .thenThrow(new PedidoNoEntregableException("no"));
+                when(seguimientoEnvio.confirmarEntrega(CLIENTE, "o-9"))
+                                .thenThrow(new PedidoNoEncontradoException("no"));
+                when(seguimientoEnvio.consultarSeguimiento(CLIENTE, "o-9"))
+                                .thenThrow(new PedidoNoEncontradoException("no"));
 
                 confirmarEntrega("o-1").andExpect(status().isConflict())
                                 .andExpect(jsonPath("$.code").value("ORDER_NOT_DELIVERABLE"))

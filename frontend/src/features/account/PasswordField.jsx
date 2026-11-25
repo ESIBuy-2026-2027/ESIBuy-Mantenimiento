@@ -96,7 +96,7 @@ export function PasswordRequirements({ password, vertical = false }) {
   const styles = useStyles()
 
   return (
-    <ul aria-label="Requisitos de la contraseña" className={vertical ? `${styles.requisitos} ${styles.requisitosVerticales}` : styles.requisitos}>
+    <ul aria-label="Requisitos de la contraseña" className={styles.requisitos}>
       {REQUISITOS_PASSWORD.map(({ texto, cumple }) => (
         <li key={texto} className={styles.requisito}>
           {cumple(password) ? (

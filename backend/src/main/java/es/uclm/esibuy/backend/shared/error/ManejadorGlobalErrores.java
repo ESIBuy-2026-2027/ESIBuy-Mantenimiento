@@ -26,9 +26,10 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.DireccionNoValidaExceptio
 import es.uclm.esibuy.backend.pedidos.domain.exception.MetodoPagoNoValidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
-import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEntregableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PagoRechazadoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEntregableException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoEstadoNoAvanzableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.TotalNoCoincideException;
 import es.uclm.esibuy.backend.productos.domain.exception.ImagenNoSeguraException;
@@ -473,11 +474,10 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("El pedido ya no se puede cancelar", "ORDER_NOT_CANCELLABLE");
     }
 
-    // Seguimiento del envío: solo se confirma la recepción de un pedido enviado
-    @ExceptionHandler(PedidoNoEntregableException.class)
+    @ExceptionHandler(PedidoEstadoNoAvanzableException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public RespuestaError pedidoNoEntregable() {
-        return new RespuestaError("El pedido no se puede marcar como entregado", "ORDER_NOT_DELIVERABLE");
+    public RespuestaError pedidoEstadoNoAvanzable() {
+        return new RespuestaError("El estado del pedido ya no se puede avanzar", "ORDER_STATUS_NOT_ADVANCEABLE");
     }
 
     @ExceptionHandler(CarritoSinProductosDelProveedorException.class)
@@ -486,14 +486,16 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("No hay productos de ese proveedor en el carrito", "CART_EMPTY");
     }
 
-    // Pago simulado rechazado (HU10): el pedido no se confirma ni se descuenta stock
+    // Pago simulado rechazado (HU10): el pedido no se confirma ni se descuenta
+    // stock
     @ExceptionHandler(PagoRechazadoException.class)
     @ResponseStatus(HttpStatus.PAYMENT_REQUIRED)
     public RespuestaError pagoRechazado() {
         return new RespuestaError("El pago ha sido rechazado", "PAYMENT_REJECTED");
     }
 
-    // El total que el cliente vio al confirmar ya no es el real: tiene que volver a revisar la compra
+    // El total que el cliente vio al confirmar ya no es el real: tiene que volver a
+    // revisar la compra
     @ExceptionHandler(TotalNoCoincideException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError totalNoCoincide() {
@@ -503,7 +505,8 @@ public class ManejadorGlobalErrores {
     @ExceptionHandler(StockInsuficientePedidoException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError stockInsuficienteEnElPedido(StockInsuficientePedidoException e) {
-        // Dice qué producto falla para que el cliente pueda ajustarlo: es un producto de su propio carrito
+        // Dice qué producto falla para que el cliente pueda ajustarlo: es un producto
+        // de su propio carrito
         return new RespuestaError("No queda stock suficiente de «" + e.getNombreProducto() + "»", "INSUFFICIENT_STOCK");
     }
 
@@ -567,4 +570,14 @@ public class ManejadorGlobalErrores {
     public RespuestaError clienteYaPremium() {
         return new RespuestaError("Ya eres cliente Premium", "ALREADY_PREMIUM");
     }
+
+    // HU11: solo se puede confirmar la recepción de un pedido enviado.
+    @ExceptionHandler(PedidoNoEntregableException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError pedidoNoEntregable() {
+        return new RespuestaError(
+                "El pedido no se puede marcar como entregado",
+                "ORDER_NOT_DELIVERABLE");
+    }
+
 }

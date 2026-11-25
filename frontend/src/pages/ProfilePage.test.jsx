@@ -378,8 +378,11 @@ describe('ProfilePage (HU45): ESIBuy Premium', () => {
     const user = userEvent.setup()
     await abrirPerfil('nuevo@esibuy.test')
 
-    const enlace = within(screen.getByRole('main')).getByRole('link', { name: /hazte premium/i })
+    const cuenta = within(screen.getByRole('region', { name: 'Mi cuenta' }))
+    const enlace = cuenta.getByRole('link', { name: /hazte premium/i })
     expect(enlace).toHaveAttribute('href', '/premium')
+    expect(cuenta.getByRole('link', { name: 'Métodos de pago' })).toHaveAttribute('href', '/payment-methods')
+    expect(cuenta.getByRole('link', { name: 'Direcciones' })).toHaveAttribute('href', '/addresses')
     expect(within(screen.getByRole('main')).queryByText('Premium')).not.toBeInTheDocument()
     await user.click(enlace)
 
@@ -389,7 +392,9 @@ describe('ProfilePage (HU45): ESIBuy Premium', () => {
   it('HU45-CP28: el cliente Premium ve el distintivo Premium en vez del botón', async () => {
     await abrirPerfil('cliente@esibuy.test')
 
-    expect(within(screen.getByRole('main')).getByText('Premium')).toBeInTheDocument()
+    const cuenta = within(screen.getByRole('region', { name: 'Mi cuenta' }))
+    expect(cuenta.getByText('Premium')).toBeInTheDocument()
+    expect(cuenta.getByRole('link', { name: /ver beneficios/i })).toHaveAttribute('href', '/premium')
     expect(screen.queryByRole('link', { name: /hazte premium/i })).not.toBeInTheDocument()
   })
 

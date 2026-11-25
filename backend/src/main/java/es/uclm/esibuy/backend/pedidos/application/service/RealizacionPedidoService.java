@@ -35,10 +35,14 @@ import es.uclm.esibuy.backend.pedidos.domain.model.Pedido;
 import es.uclm.esibuy.backend.shared.seguridad.Permisos;
 
 /**
- * Realiza el pedido de un vendedor (HU10). Solo habla con el exterior a través de los puertos de salida. El orden es:
- * comprobar lo que no cambia nada (método de pago, dirección, carrito y total que vio el cliente), descontar el stock,
- * cobrar, numerar y guardar, y por último quitar los productos del carrito. Sin transacciones (decisión del equipo):
- * si algo falla después de descontar el stock, se repone lo descontado (compensación). El reloj se inyecta para fijar
+ * Realiza el pedido de un vendedor (HU10). Solo habla con el exterior a través
+ * de los puertos de salida. El orden es:
+ * comprobar lo que no cambia nada (método de pago, dirección, carrito y total
+ * que vio el cliente), descontar el stock,
+ * cobrar, numerar y guardar, y por último quitar los productos del carrito. Sin
+ * transacciones (decisión del equipo):
+ * si algo falla después de descontar el stock, se repone lo descontado
+ * (compensación). El reloj se inyecta para fijar
  * en los tests la fecha y el año del número de pedido.
  */
 public class RealizacionPedidoService implements RealizacionPedidoUseCase {
@@ -84,14 +88,16 @@ public class RealizacionPedidoService implements RealizacionPedidoUseCase {
         return guardado;
     }
 
-    // El cliente confirma lo que vio: si un precio, un descuento o una cantidad han cambiado, tiene que volver a verlo
+    // El cliente confirma lo que vio: si un precio, un descuento o una cantidad han
+    // cambiado, tiene que volver a verlo
     private static void exigirTotalVisto(CompraProveedor compra, RealizarPedidoCommand comando) {
         if (comando.totalEsperado() == null || compra.total().compareTo(comando.totalEsperado()) != 0) {
             throw new TotalNoCoincideException("El total del pedido ha cambiado");
         }
     }
 
-    // Descuenta el stock, cobra y guarda. Si algo falla, el stock vuelve a como estaba y no se confirma nada
+    // Descuenta el stock, cobra y guarda. Si algo falla, el stock vuelve a como
+    // estaba y no se confirma nada
     private Pedido confirmar(RealizarPedidoCommand comando, CompraProveedor compra, DireccionEnvioPedido direccion,
             MetodoPagoPedido metodo) {
         List<LineaPedido> descontadas = descontarStock(compra.lineas());
@@ -126,7 +132,8 @@ public class RealizacionPedidoService implements RealizacionPedidoUseCase {
         return pedidoRepository.guardar(Pedido.nuevo(datosPedido));
     }
 
-    // Descuenta línea a línea; si a una le falta stock o algo falla, repone las anteriores y no se crea el pedido
+    // Descuenta línea a línea; si a una le falta stock o algo falla, repone las
+    // anteriores y no se crea el pedido
     private List<LineaPedido> descontarStock(List<LineaPedido> lineas) {
         List<LineaPedido> descontadas = new ArrayList<>();
         try {
@@ -144,8 +151,8 @@ public class RealizacionPedidoService implements RealizacionPedidoUseCase {
         return descontadas;
     }
 
-    // Repone todo lo que se pueda: si una reposición falla, se sigue con las demás y el fallo queda anotado en el
-    // error original, que no se pierde
+    // Repone lo que se pueda: si una reposición falla, se sigue con las demás y el
+    // fallo queda anotado en el error original, que no se pierde
     private void reponer(List<LineaPedido> descontadas, RuntimeException causa) {
         for (LineaPedido linea : descontadas) {
             try {

@@ -8,10 +8,13 @@ import java.util.List;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEntregableException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoEstadoNoAvanzableException;
 
 /**
- * Pedido de un cliente a un solo vendedor (HU10; regla del equipo: no se mezclan productos de vendedores distintos).
- * El descuento va en el precio de cada producto; el total se calcula siempre sumando las líneas.
+ * Pedido de un cliente a un solo vendedor (HU10; regla del equipo: no se
+ * mezclan productos de vendedores distintos).
+ * El descuento va en el precio de cada producto; el total se calcula siempre
+ * sumando las líneas.
  */
 public class Pedido {
 
@@ -107,16 +110,37 @@ public class Pedido {
         estado = EstadoPedido.CANCELADO;
     }
 
-    // Confirmación de recepción por el cliente: solo desde ENVIADO y no se deshace. Fija la fecha real de entrega.
-    public void confirmarEntrega(Instant ahora) {
-        if (estado != EstadoPedido.ENVIADO) {
-            throw new PedidoNoEntregableException(
-                    "El pedido no se puede marcar como entregado");
+    // Avance lineal del vendedor: no retrocede ni reabre pedidos cancelados o
+    // entregados.
+    public void avanzarEstado() {
+        estado = switch (estado) {
+            case PAGADO -> EstadoPedido.PREPARANDO;
+            case PREPARANDO -> EstadoPedido.ENVIADO;
+            case ENVIADO -> EstadoPedido.ENTREGADO;
+            case ENTREGADO, CANCELADO -> throw new PedidoEstadoNoAvanzableException(
+                    "El estado del pedido ya no se puede avanzar");
+        };
+    }
+
+    // Avance del vendedor: solo hasta ENVIADO (ENTREGADO corre por cuenta del
+    // cliente).
+    public void avanzarEstadoVendedor() {
+        estado = switch (estado) {
+            case PAGADO -> EstadoPedido.PREPARANDO;
+            case PREPARANDO -> EstadoPedido.ENVIADO;
+            case ENVIADO, ENTREGADO, CANCELADO -> throw new PedidoEstadoNoAvanzableException(
+                    "El vendedor solo puede avanzar el pedido hasta el estado enviado");
+        };
+    }
+
+    // Retroceso del vendedor: solo mientras no esté enviado (PREPARANDO -> PAGADO).
+    public void retrocederEstado() {
+        if (estado != EstadoPedido.PREPARANDO) {
+            throw new PedidoEstadoNoAvanzableException(
+                    "Solo se puede retroceder un pedido en preparación");
         }
 
-        estado = EstadoPedido.ENTREGADO;
-        fechaEntrega = ahora;
-        historial.add(new CambioEstado(EstadoPedido.ENTREGADO, ahora));
+        estado = EstadoPedido.PAGADO;
     }
 
     private static void exigirTexto(String valor, String mensaje) {
@@ -131,7 +155,8 @@ public class Pedido {
         }
     }
 
-    // Suma de las líneas, cada una con el descuento ya aplicado a su precio unitario
+    // Suma de las líneas, cada una con el descuento ya aplicado a su precio
+    // unitario
     public static BigDecimal totalDe(List<LineaPedido> lineas) {
         return lineas.stream()
                 .map(LineaPedido::subtotal)
@@ -182,9 +207,24 @@ public class Pedido {
         return createdAt;
     }
 
-    // Los pasos del envío con su fecha, del primero al último. Los pedidos anteriores al seguimiento no lo traen.
-    public List<CambioEstado> getHistorial() {
-        return List.copyOf(historial);
+    // Confirmación de recepción del cliente: solo cuando el pedido está ENVIADO.
+
+    // Confirmación de recepción del cliente:
+    // únicamente se permite cuando el pedido está ENVIADO.
+    public void confirmarEntrega(Instant fecha) {
+        if (estado != EstadoPedido.ENVIADO) {
+            throw new PedidoNoEntregableException(
+                    "Solo se puede confirmar la entrega de un pedido enviado");
+        }
+
+        if (fecha == null) {
+            throw new PedidoInvalidoException(
+                    "La fecha de entrega es obligatoria");
+        }
+
+        estado = EstadoPedido.ENTREGADO;
+        fechaEntrega = fecha;
+        historial.add(new CambioEstado(EstadoPedido.ENTREGADO, fecha));
     }
 
     public Instant getFechaEstimadaEntrega() {
@@ -194,4 +234,9 @@ public class Pedido {
     public Instant getFechaEntrega() {
         return fechaEntrega;
     }
+
+    public List<CambioEstado> getHistorial() {
+        return List.copyOf(historial);
+    }
+
 }

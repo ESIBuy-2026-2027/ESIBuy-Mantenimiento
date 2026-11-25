@@ -155,14 +155,14 @@ describe('Register', () => {
   it('register_alElegirCliente_marcaElPrimerAvatarComoPredeterminado', async () => {
     await renderYElegirCliente()
 
-    expect(screen.getByRole('button', { name: /avatar 1/i })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('radio', { name: /avatar 1/i })).toBeChecked()
   })
 
   it('register_alElegirVendedor_permiteElegirUnAvatar', async () => {
     await renderYElegirVendedor()
 
-    expect(screen.getAllByRole('button', { name: /avatar/i })).toHaveLength(3)
-    expect(screen.getByRole('button', { name: /avatar 1/i })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getAllByRole('radio', { name: /avatar/i })).toHaveLength(3)
+    expect(screen.getByRole('radio', { name: /avatar 1/i })).toBeChecked()
 
     await userEvent.click(screen.getByRole('button', { name: /avatar 2/i }))
 
@@ -691,7 +691,7 @@ describe('Register', () => {
     expect(screen.getByLabelText(/correo electrónico/i)).toBeRequired()
     expect(screen.getByLabelText(/^contraseña/i)).toBeRequired()
     expect(screen.getByLabelText(/^repetir contraseña/i)).toBeRequired()
-    expect(screen.getByText('Tipo de cuenta')).toBeInTheDocument()
+    expect(screen.getByLabelText(/tipo/i)).toBeRequired()
     expect(screen.getByLabelText(/teléfono/i)).not.toBeRequired()
   })
 
