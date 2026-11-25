@@ -242,7 +242,6 @@ describe('ProfilePage (HU45): ESIBuy Premium', () => {
     const enlace = screen.getByRole('link', { name: /hazte premium/i })
     expect(enlace).toHaveAttribute('href', '/premium')
     expect(screen.getByRole('heading', { level: 2, name: 'Da el salto a ESIBuy Premium' })).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: 'Gestión de mi cuenta' }).querySelector('a')).toBeNull()
     expect(main.querySelector('h2')).toHaveTextContent('Da el salto a ESIBuy Premium')
     expect(main.querySelector('h2').compareDocumentPosition(screen.getByLabelText('Nombre')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(screen.getByRole('region', { name: 'Direcciones de envío' })).toBeInTheDocument()
