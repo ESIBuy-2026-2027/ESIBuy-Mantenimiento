@@ -11,6 +11,7 @@ import {
   Title1,
   Title3,
   makeStyles,
+  mergeClasses,
   tokens,
 } from '@fluentui/react-components'
 import { Add20Regular, Delete20Regular, Payment24Regular } from '@fluentui/react-icons'
@@ -31,6 +32,10 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     gap: tokens.spacingVerticalM,
     width: '100%',
+    minWidth: 0,
+  },
+  heading: {
+    alignItems: 'flex-start',
   },
   list: {
     listStyle: 'none',
@@ -140,7 +145,7 @@ export default function PaymentMethodsPage({ embedded = false }) {
 
   return (
     <Root className={embedded ? styles.embeddedPage : pageStyles.page} aria-label={embedded ? 'Métodos de pago' : undefined}>
-      <div className={pageStyles.heading}>
+      <div className={mergeClasses(pageStyles.heading, embedded && styles.heading)}>
         <div className={pageStyles.titleBlock}>
           <SectionTitle as={embedded ? 'h2' : 'h1'} className={pageStyles.title}>
             Métodos de pago
