@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { act, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
@@ -667,6 +667,18 @@ describe('ProductsPage (HU7): catálogo con ofertas y listado único', () => {
     expect(filtros.compareDocumentPosition(ofertas) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
+  it('permite filtrar por un rango de precio y envía ambos límites', async () => {
+    const peticiones = capturarPeticiones()
+    await abrirCatalogo()
+
+    fireEvent.change(screen.getByRole('slider', { name: 'Precio mínimo' }), { target: { value: '25' } })
+    fireEvent.change(screen.getByRole('slider', { name: 'Precio máximo' }), { target: { value: '100' } })
+
+    await waitFor(() => {
+      expect(peticiones.some((peticion) => peticion.get('minPrice') === '25' && peticion.get('maxPrice') === '100')).toBe(true)
+    })
+  })
+
   it('permite filtrar por stock y envía el criterio al catálogo', async () => {
     const user = userEvent.setup()
     const peticiones = capturarPeticiones()
@@ -701,12 +713,15 @@ describe('ProductsPage (HU7): catálogo con ofertas y listado único', () => {
     await user.selectOptions(screen.getByRole('combobox', { name: /valoración mínima/i }), '4 estrellas o más')
     await user.click(screen.getByRole('checkbox', { name: 'Solo en stock' }))
     await user.click(screen.getByRole('checkbox', { name: 'Solo ofertas' }))
+    fireEvent.change(screen.getByRole('slider', { name: 'Precio mínimo' }), { target: { value: '25' } })
     await user.click(screen.getByRole('button', { name: /limpiar filtros/i }))
 
     expect(screen.getByRole('searchbox', { name: /buscar por nombre/i })).toHaveValue('')
     expect(screen.getByRole('combobox', { name: /valoración mínima/i })).toHaveValue('')
     expect(screen.getByRole('checkbox', { name: 'Solo en stock' })).not.toBeChecked()
     expect(screen.getByRole('checkbox', { name: 'Solo ofertas' })).not.toBeChecked()
+    expect(screen.getByRole('slider', { name: 'Precio mínimo' })).toHaveValue('0')
+    expect(screen.getByRole('slider', { name: 'Precio máximo' })).toHaveValue('150')
   })
 
   it('permite interactuar con las tarjetas repetidas del carrusel de ofertas', async () => {
