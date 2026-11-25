@@ -2,10 +2,8 @@ package es.uclm.esibuy.backend.deseos.infrastructure.adapter.out.persistence;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.mongodb.MongoWriteException;
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
 import es.uclm.esibuy.backend.deseos.domain.model.ItemDeseo;
 import es.uclm.esibuy.backend.deseos.domain.model.ListaDeseos;
@@ -30,7 +28,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 class ListaDeseosMongoAdapterTest {
 
     private static final String COLECCION = "listas_deseos";
-    private static final int CLAVE_DUPLICADA = 11000;
     private static final Instant AYER = Instant.parse("2026-11-03T10:00:00Z");
     private static final Instant HOY = Instant.parse("2026-11-04T10:00:00Z");
 
