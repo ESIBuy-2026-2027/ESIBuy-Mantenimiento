@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { useCallback, useState } from 'react'
 import {
   Badge,
@@ -25,6 +26,12 @@ const MAXIMO_DIRECCIONES = 5
 
 // Misma composición que la lista de métodos de pago (HU6)
 const useStyles = makeStyles({
+  embeddedPage: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalM,
+    width: '100%',
+  },
   list: {
     listStyle: 'none',
     margin: 0,
@@ -70,7 +77,7 @@ const useStyles = makeStyles({
 })
 
 // Direcciones de envío del cliente en sesión (HU5). La principal es la que el checkout (HU10) usa por defecto.
-export default function AddressesPage() {
+export default function AddressesPage({ embedded = false }) {
   const pageStyles = usePageStyles()
   const styles = useStyles()
   const fetcher = useCallback(() => getAddresses(), [])
@@ -111,13 +118,16 @@ export default function AddressesPage() {
     retry()
   }
 
+  const Root = embedded ? 'section' : 'main'
+  const SectionTitle = embedded ? 'h2' : Title1
+
   return (
-    <main className={pageStyles.page}>
+    <Root className={embedded ? styles.embeddedPage : pageStyles.page} aria-label={embedded ? 'Direcciones de envío' : undefined}>
       <div className={pageStyles.heading}>
         <div className={pageStyles.titleBlock}>
-          <Title1 as="h1" className={pageStyles.title}>
+          <SectionTitle as={embedded ? undefined : 'h1'} className={pageStyles.title}>
             Direcciones de envío
-          </Title1>
+          </SectionTitle>
           <Text className={pageStyles.subtitle}>
             Gestiona dónde recibes tus pedidos. La principal es la que se propone al pagar.
           </Text>
@@ -213,6 +223,10 @@ export default function AddressesPage() {
           onDeleted={alEliminar}
         />
       )}
-    </main>
+    </Root>
   )
+}
+
+AddressesPage.propTypes = {
+  embedded: PropTypes.bool,
 }
