@@ -32,9 +32,11 @@ class CarritoAdapterTest {
 
     private static final CarritoDetallado CARRITO = new CarritoDetallado(List.of(
             new GrupoCarrito("u-2", "TecnoVera", new BigDecimal("107.82"), List.of(new LineaCarritoDetallada("p-1",
-                    "Auriculares", "a.png", 2, new BigDecimal("53.91"), new BigDecimal("107.82"), 34, new BigDecimal("59.90"), new BigDecimal("10")))),
+                    "Auriculares", "a.png", 2, new BigDecimal("53.91"), new BigDecimal("107.82"), 34,
+                    new BigDecimal("59.90"), new BigDecimal("10")))),
             new GrupoCarrito("u-99", "Otero", new BigDecimal("129.00"), List.of(new LineaCarritoDetallada("p-24",
-                    "Smartwatch", "s.png", 1, new BigDecimal("129.00"), new BigDecimal("129.00"), 10, new BigDecimal("129.00"), null)))),
+                    "Smartwatch", "s.png", 1, new BigDecimal("129.00"), new BigDecimal("129.00"), 10,
+                    new BigDecimal("129.00"), null)))),
             3, new BigDecimal("236.82"));
 
     @Test
@@ -44,8 +46,19 @@ class CarritoAdapterTest {
 
         CompraProveedor compra = new CarritoAdapter(gestionCarrito).compraDelProveedor(EMAIL, "u-2").orElseThrow();
 
-        assertEquals(new CompraProveedor("u-2", "TecnoVera",
-                List.of(new LineaPedido("p-1", "u-2", "Auriculares", 2, new BigDecimal("53.91")))), compra);
+        assertEquals(
+                new CompraProveedor(
+                        "u-2",
+                        "TecnoVera",
+                        List.of(
+                                new LineaPedido(
+                                        "p-1",
+                                        "u-2",
+                                        "Auriculares",
+                                        2,
+                                        new BigDecimal("53.91"),
+                                        "a.png"))),
+                compra);
     }
 
     @Test

@@ -18,6 +18,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCa
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConfirmacionRecepcionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.SeguimientoEnvioUseCase;
 
 /**
  * Adaptador de entrada web de los pedidos. Recibe la petición y delega en el
@@ -36,14 +37,16 @@ public class PedidoController {
     private final ConsultaComprasUseCase consultaCompras;
     private final CancelacionPedidoUseCase cancelacionPedido;
     private final ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedido;
+    private final SeguimientoEnvioUseCase seguimientoEnvio;
 
     public PedidoController(RealizacionPedidoUseCase realizacionPedido, ConsultaComprasUseCase consultaCompras,
             CancelacionPedidoUseCase cancelacionPedido,
-            ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedido) {
+            ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedido, SeguimientoEnvioUseCase seguimientoEnvio) {
         this.realizacionPedido = realizacionPedido;
         this.consultaCompras = consultaCompras;
         this.cancelacionPedido = cancelacionPedido;
         this.confirmacionRecepcionPedido = confirmacionRecepcionPedido;
+        this.seguimientoEnvio = seguimientoEnvio;
     }
 
     // Un pedido por proveedor: el frontend pide uno por cada proveedor del carrito
@@ -77,4 +80,25 @@ public class PedidoController {
     public PedidoResponse confirmarRecepcion(@PathVariable String id, Authentication autenticado) {
         return PedidoResponse.desde(confirmacionRecepcionPedido.confirmarRecepcion(autenticado.getName(), id));
     }
+
+    // Seguimiento del envío (HU11): estado, fechas e histórico.
+    @GetMapping("/{id}/tracking")
+    public SeguimientoEnvioResponse consultarSeguimiento(
+            @PathVariable String id,
+            Authentication autenticado) {
+
+        return SeguimientoEnvioResponse.desde(
+                seguimientoEnvio.consultarSeguimiento(autenticado.getName(), id));
+    }
+
+    // Confirmación de recepción (HU11): el pedido pasa a ENTREGADO.
+    @PostMapping("/{id}/confirm-delivery")
+    public SeguimientoEnvioResponse confirmarEntrega(
+            @PathVariable String id,
+            Authentication autenticado) {
+
+        return SeguimientoEnvioResponse.desde(
+                seguimientoEnvio.confirmarEntrega(autenticado.getName(), id));
+    }
+
 }

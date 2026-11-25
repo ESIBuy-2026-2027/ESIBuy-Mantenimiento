@@ -13,6 +13,7 @@ import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCa
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConfirmacionRecepcionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.SeguimientoEnvioUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ProductosConPedidosUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.VentasVendedorUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.GestionPedidosVendedorUseCase;
@@ -30,6 +31,7 @@ import es.uclm.esibuy.backend.pedidos.application.service.ConfirmacionRecepcionP
 import es.uclm.esibuy.backend.pedidos.application.service.ConsultaComprasService;
 import es.uclm.esibuy.backend.pedidos.application.service.DependenciasRealizacionPedido;
 import es.uclm.esibuy.backend.pedidos.application.service.RealizacionPedidoService;
+import es.uclm.esibuy.backend.pedidos.application.service.SeguimientoEnvioService;
 import es.uclm.esibuy.backend.pedidos.application.service.ProductosConPedidosService;
 import es.uclm.esibuy.backend.pedidos.application.service.VentasVendedorService;
 import es.uclm.esibuy.backend.pedidos.application.service.GestionPedidosVendedorService;
@@ -167,4 +169,17 @@ public class PedidosConfig {
         return new GestionPedidosVendedorService(pedidoRepositoryPort, pedidosVendedorEnSesionPort,
                 pedidosExistenciasPort);
     }
+
+    @Bean
+    SeguimientoEnvioUseCase seguimientoEnvioUseCase(
+            PedidoRepositoryPort pedidoRepositoryPort,
+            ClienteEnSesionPort pedidosClienteEnSesionPort,
+            Clock reloj) {
+
+        return new SeguimientoEnvioService(
+                pedidoRepositoryPort,
+                pedidosClienteEnSesionPort,
+                reloj);
+    }
+
 }

@@ -26,7 +26,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 // (Testcontainers): Docker Desktop debe estar abierto. InicializadorColecciones crea las colecciones con su
 // validación y sus índices, como en la aplicación real.
 @DataMongoTest
-@Import({MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class})
+@Import({ MongoTestcontainersConfig.class, MongoConfig.class, InicializadorColecciones.class })
 class ListaDeseosMongoAdapterTest {
 
     private static final String COLECCION = "listas_deseos";
@@ -93,12 +93,17 @@ class ListaDeseosMongoAdapterTest {
     }
 
     @Test
-    @DisplayName("HU14-CP06: la colección solo admite una lista por cliente")
-    void laColeccionSoloAdmiteUnaListaPorCliente() {
-        adapter.guardar(listaNueva("cliente-1"));
+    @DisplayName("HU14: un cliente puede tener varias listas de deseos")
+    void unClientePuedeTenerVariasListasDeDeseos() {
+        ListaDeseos primera = adapter.guardar(listaNueva("cliente-1"));
 
-        MongoWriteException error = assertThrows(MongoWriteException.class,
-                () -> mongoTemplate.getCollection(COLECCION).insertOne(new Document("usuarioId", "cliente-1")));
-        assertEquals(CLAVE_DUPLICADA, error.getCode());
+        ListaDeseos segunda = adapter.guardar(
+                new ListaDeseos(null, "cliente-1", List.of(new ItemDeseo("p-2", HOY))));
+
+        assertNotNull(primera.getId());
+        assertNotNull(segunda.getId());
+        assertTrue(!primera.getId().equals(segunda.getId()));
+
+        assertEquals(2, mongoTemplate.getCollection(COLECCION).countDocuments());
     }
 }

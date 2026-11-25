@@ -28,6 +28,7 @@ import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoInvalidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoCancelableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PagoRechazadoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEncontradoException;
+import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoNoEntregableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.PedidoEstadoNoAvanzableException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.StockInsuficientePedidoException;
 import es.uclm.esibuy.backend.pedidos.domain.exception.TotalNoCoincideException;
@@ -577,4 +578,14 @@ public class ManejadorGlobalErrores {
     public RespuestaError clienteYaPremium() {
         return new RespuestaError("Ya eres cliente Premium", "ALREADY_PREMIUM");
     }
+
+    // HU11: solo se puede confirmar la recepción de un pedido enviado.
+    @ExceptionHandler(PedidoNoEntregableException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError pedidoNoEntregable() {
+        return new RespuestaError(
+                "El pedido no se puede marcar como entregado",
+                "ORDER_NOT_DELIVERABLE");
+    }
+
 }
