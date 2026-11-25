@@ -28,8 +28,6 @@ const RATING_OPTIONS = [
   { value: '2', label: '2 estrellas o más' },
 ]
 
-const MAX_PRICE = 150
-
 const useStyles = makeStyles({
   bar: {
     display: 'flex',
@@ -167,6 +165,7 @@ export default function CatalogFilters({
   minRating,
   minPrice,
   maxPrice,
+  priceCeiling,
   inStock,
   offersOnly,
   filtersActive,
@@ -184,8 +183,10 @@ export default function CatalogFilters({
 }) {
   const styles = useStyles()
   const ascending = order === 'asc'
-  const minPercent = (minPrice / MAX_PRICE) * 100
-  const maxPercent = (maxPrice / MAX_PRICE) * 100
+  const sliderMax = Math.max(1, Math.ceil(priceCeiling))
+  const displayedMaxPrice = maxPrice === null ? priceCeiling : Math.min(maxPrice, priceCeiling)
+  const minPercent = (minPrice / sliderMax) * 100
+  const maxPercent = (displayedMaxPrice / sliderMax) * 100
 
   const changeMin = (event) => {
     const next = Math.min(Number(event.target.value), maxPrice)
@@ -193,7 +194,7 @@ export default function CatalogFilters({
   }
   const changeMax = (event) => {
     const next = Math.max(Number(event.target.value), minPrice)
-    onPriceChange(minPrice, next)
+    onPriceChange(minPrice, next >= priceCeiling ? null : next)
   }
 
   return (
@@ -228,7 +229,7 @@ export default function CatalogFilters({
               className={styles.rangeInput}
               type="range"
               min="0"
-              max={MAX_PRICE}
+              max={sliderMax}
               step="1"
               value={minPrice}
               aria-label="Precio mínimo"
@@ -238,7 +239,7 @@ export default function CatalogFilters({
               className={styles.rangeInput}
               type="range"
               min="0"
-              max={MAX_PRICE}
+              max={sliderMax}
               step="1"
               value={maxPrice}
               aria-label="Precio máximo"
@@ -247,7 +248,7 @@ export default function CatalogFilters({
           </div>
           <div className={styles.priceValues} aria-live="polite">
             <span>{minPrice.toLocaleString('es-ES')} €</span>
-            <span>{maxPrice === MAX_PRICE ? `${MAX_PRICE} €+` : `${maxPrice.toLocaleString('es-ES')} €`}</span>
+            <span>{displayedMaxPrice.toLocaleString('es-ES')} €</span>
           </div>
         </Field>
 
@@ -309,7 +310,8 @@ CatalogFilters.propTypes = {
   categories: PropTypes.arrayOf(categoryPropType).isRequired,
   minRating: PropTypes.string.isRequired,
   minPrice: PropTypes.number.isRequired,
-  maxPrice: PropTypes.number.isRequired,
+  maxPrice: PropTypes.number, 
+  priceCeiling: PropTypes.number.isRequired,
   inStock: PropTypes.bool.isRequired,
   offersOnly: PropTypes.bool.isRequired,
   filtersActive: PropTypes.bool.isRequired,
