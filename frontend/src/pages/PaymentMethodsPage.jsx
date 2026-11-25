@@ -58,7 +58,7 @@ const useStyles = makeStyles({
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: tokens.spacingHorizontalL,
-    minHeight: '104px',
+    minHeight: '128px',
     padding: tokens.spacingHorizontalM,
     boxSizing: 'border-box',
   },
@@ -89,9 +89,10 @@ const useStyles = makeStyles({
   action: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'flex-start',
+    alignItems: 'stretch',
     gap: tokens.spacingVerticalXS,
     minHeight: '40px',
+    width: '100%',
   },
   addButton: {
     minHeight: '40px',
@@ -209,11 +210,7 @@ export default function PaymentMethodsPage({ embedded = false }) {
           icon={<Payment24Regular />}
           title="Aún no tienes métodos de pago"
           description="Añade una tarjeta, una cuenta de PayPal o tu teléfono de Bizum para pagar tus compras."
-        >
-          <Button appearance="primary" icon={<Add20Regular />} onClick={abrirPanel}>
-            Añadir método de pago
-          </Button>
-        </EmptyState>
+        />
       )}
       {metodos?.length > 0 && (
         <ul aria-label="Tus métodos de pago" className={styles.list}>
