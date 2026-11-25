@@ -100,11 +100,13 @@ export default function ProductsPage() {
   const styles = useStyles()
   const { categories } = useCategories()
   const filters = useCatalogFilters()
-  const { search, category, minRating, sort, order, debouncedSearch } = filters
+  const { search, category, minRating, sort, order, debouncedSearch, inStock, offersOnly, filtersActive } = filters
   const feed = useCatalogFeed({
     search: debouncedSearch,
     category,
     minRating,
+    inStock,
+    offersOnly,
     sort,
     order,
     size: PAGE_SIZE,
@@ -143,7 +145,7 @@ export default function ProductsPage() {
     setFavoritos(aFavoritos(lista))
   }
   // Sin ningún filtro, que no haya productos significa que el catálogo está vacío; con filtros, que no coinciden.
-  const catalogEmpty = feed.loaded && feed.totalItems === 0 && !debouncedSearch && !category && !minRating
+  const catalogEmpty = feed.loaded && feed.totalItems === 0 && !debouncedSearch && !category && !minRating && !inStock && !offersOnly
   const noMatches = feed.loaded && feed.totalItems === 0 && !catalogEmpty
   const hasItems = feed.items.length > 0
   const changeSort = filters.changeSort
@@ -158,31 +160,33 @@ export default function ProductsPage() {
         <Text className={pageStyles.subtitle}>Descubre lo que ofrecen los vendedores de ESIBuy.</Text>
       </div>
 
-      {(
+      <div className={styles.column}>
+        <CatalogFilters
+            search={search}
+            category={category}
+            categories={categories}
+            minRating={minRating}
+            inStock={inStock}
+            offersOnly={offersOnly}
+            filtersActive={filtersActive}
+            sort={sort}
+            order={order}
+            onSearchChange={filters.changeSearch}
+            onCategoryChange={filters.changeCategory}
+            onMinRatingChange={filters.changeMinRating}
+            onInStockChange={filters.changeInStock}
+            onOffersOnlyChange={filters.changeOffersOnly}
+            onClearFilters={filters.clearFilters}
+            onSortChange={changeSort}
+            onOrderChange={changeOrder}
+        />
+
         <OffersStrip
           categoryNames={categoryNames}
           favoritos={favoritos}
           onAddFavorite={anadirFavorito}
           onRemoveFavorite={quitarFavorito}
         />
-      )}
-
-      <div className={styles.column}>
-        {(
-          <CatalogFilters
-            search={search}
-            category={category}
-            categories={categories}
-            minRating={minRating}
-            sort={sort}
-            order={order}
-            onSearchChange={filters.changeSearch}
-            onCategoryChange={filters.changeCategory}
-            onMinRatingChange={filters.changeMinRating}
-            onSortChange={changeSort}
-            onOrderChange={changeOrder}
-          />
-        )}
 
         {feed.failed && (
           <MessageBar intent="error">
