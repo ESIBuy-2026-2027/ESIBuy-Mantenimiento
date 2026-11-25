@@ -90,13 +90,19 @@ const useStyles = makeStyles({
   action: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'stretch',
+    alignItems: 'flex-end',
     gap: tokens.spacingVerticalXS,
     minHeight: '40px',
+  },
+  embeddedAction: {
+    alignItems: 'stretch',
     width: '100%',
   },
   addButton: {
     minHeight: '40px',
+    minWidth: '170px',
+  },
+  embeddedAddButton: {
     width: '100%',
   },
   seeAll: {
@@ -164,9 +170,9 @@ export default function AddressesPage({ embedded = false }) {
             Gestiona dónde recibes tus pedidos. La principal es la que se propone al pagar.
           </Text>
         </div>
-        <div className={styles.action}>
+        <div className={mergeClasses(styles.action, embedded && styles.embeddedAction)}>
             <Button
-              className={styles.addButton}
+              className={mergeClasses(styles.addButton, embedded && styles.embeddedAddButton)}
               appearance="primary"
               icon={<Add20Regular />}
               disabled={limiteAlcanzado}
