@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { screen, waitFor, within } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { delay, http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
@@ -403,5 +403,28 @@ describe('WishlistPage (AB#528): categorías favoritas', () => {
     ).toBeInTheDocument()
     expect(categorias()).toEqual(['Tecnología'])
     expect(boton).toBeEnabled()
+  })
+
+  it('HU528-CP29: una categoría añadida desde un producto aparece en Mis favoritos y en el perfil, y al quitarla aquí deja de serlo', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/products/p-1')
+    await user.click(await screen.findByRole('button', { name: 'Añadir a favoritas la categoría Tecnología' }))
+    await screen.findByText('Tecnología se ha añadido a tus categorías favoritas.')
+    cleanup()
+
+    renderApp('/profile')
+    const perfil = await screen.findByRole('group', { name: 'Mis categorías favoritas' })
+    await waitFor(() => expect(within(perfil).getByRole('checkbox', { name: 'Tecnología' })).toBeChecked())
+    cleanup()
+
+    renderApp('/wishlist')
+    await user.click(await screen.findByRole('tab', { name: 'Categorías' }))
+    await user.click(await screen.findByRole('button', { name: 'Quitar Tecnología de tus categorías favoritas' }))
+    await screen.findByText('Tecnología se ha quitado de tus categorías favoritas.')
+    cleanup()
+
+    renderApp('/products/p-1')
+    expect(await screen.findByRole('button', { name: 'Añadir a favoritas la categoría Tecnología' })).toBeEnabled()
   })
 })

@@ -4941,13 +4941,22 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 | HU528-CP19 | Las favoritas marcadas y desmarcadas se conservan en la cuenta del cliente en MongoDB y no cambian las de otro | Integración MongoDB | 1 | 🔍 Pendiente de PR (AB#689) |
 | HU528-CP20 | El modelo permite buscar los clientes que tienen una categoría como favorita (para AB#530), con un índice por categoría | Integración MongoDB | 2 | 🔍 Pendiente de PR (AB#689) |
 | HU528-CP21 | Al cerrar sesión y volver a entrar el cliente conserva sus favoritas; otro cliente no las ve ni las cambia | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#689) |
+| HU528-CP22 | El detalle del producto tiene un botón junto a la categoría para añadirla a favoritas o, si ya lo es, quitarla; no depende de que el producto esté en favoritos, no sale si la categoría no está activa y, si no se pueden leer las favoritas, ofrece añadirla | Frontend (página) | 5 | 🔍 Pendiente de PR (AB#685) |
+| HU528-CP23 | El botón del detalle añade o quita solo esa categoría; mientras se guarda queda deshabilitado | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#685) |
+| HU528-CP24 | Mis favoritos tiene las pestañas Productos (la inicial) y Categorías, con las favoritas por su nombre y en el orden en que se marcaron | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#685) |
+| HU528-CP25 | La pestaña Categorías muestra un indicador mientras carga, un estado vacío que lleva a los productos y, si fallan las favoritas o las categorías, un error con «Reintentar» | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#685) |
+| HU528-CP26 | Desde la pestaña Categorías se quita cada una; mientras se quita su botón queda deshabilitado y al quitar la última sale el estado vacío | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#685) |
+| HU528-CP27 | En el detalle se avisa con el nombre de la categoría al añadirla o quitarla; si falla, o si ya no está disponible, se avisa sin detalles internos y el botón sigue como estaba | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#687) |
+| HU528-CP28 | En la pestaña Categorías se avisa al quitar una, también la última; si falla se avisa y sigue en la lista | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#687) |
+| HU528-CP29 | Una categoría añadida desde un producto aparece en Mis favoritos y en el perfil, y al quitarla deja de ser favorita en el detalle | Frontend (página) | 1 | 🔍 Pendiente de PR (AB#689) |
 
 - **Número de HU:** la historia es la AB#528 de Azure Boards y no tiene otro número en el repositorio; el equipo decidió trazarla como HU528. Rama `feature/categorias-favoritas`.
-- **HU528-CP01 a CP21:** casos propuestos en las tasks AB#684 a AB#687 y AB#689 a partir de los criterios de aceptación. Pendientes de confirmar con el equipo y de añadir a la HU en Azure Boards.
+- **HU528-CP01 a CP29:** casos propuestos en las tasks AB#684 a AB#687 y AB#689 a partir de los criterios de aceptación. Pendientes de confirmar con el equipo y de añadir a la HU en Azure Boards.
 - **Modelo (decisión del equipo):** las favoritas son las preferencias de la HU46, sin módulo, colección ni migración nuevos. Los criterios «consultar las categorías disponibles» y «consultar las favoritas» los cubren además HU39 (`GET /api/categorias`), HU46-CP05, CP14 y CP20; borrarlas al eliminar la cuenta, HU46-CP23 a CP25.
 - **Endpoints (AB#684):** `POST /api/customer/preferences/categories` con `{ "categoriaId" }` y `DELETE /api/customer/preferences/categories/{categoriaId}` → 200 `{ "categorias": [id] }` con las favoritas activas, también si no cambia nada. 400 `VALIDATION_ERROR`, 404 `CATEGORY_NOT_FOUND` al marcar una inexistente o inactiva (`CategoriaNoDisponibleException`), 401 sin sesión y 403 con otro rol o sin CSRF.
+- **Pantallas (decisión del equipo):** la categoría se añade desde el detalle del producto (`FavoriteCategoryButton`), no desde las tarjetas del catálogo, y se revisa en la pestaña Categorías de Mis favoritos (`FavoriteCategoriesList`). La selección del perfil (AB#685) se mantiene de momento y está previsto retirarla. Los textos de los avisos son comunes a las tres pantallas (`favoriteCategoryNotices.js`).
 - **AB#530 (decisión del equipo):** se deja el índice por categoría y la consulta probada (CP20). El método del puerto lo añadirá AB#530, que es quien lo usa.
-- **Tests que nacen en verde:** CP12 y CP13, porque el `@PreAuthorize` va desde la AB#684 y `SecurityConfig` ya cubría `/api/customer/**`. Se comprobó quitando el `@PreAuthorize` y abriendo la ruta de forma temporal, y entonces fallaron los de rol, propietario y sesión; el de CSRF no se comprobó así. También CP19 a CP21, que comprueban lo ya desarrollado; el del índice (CP20) falla si se quita el índice.
+- **Tests que nacen en verde:** CP12 y CP13, porque el `@PreAuthorize` va desde la AB#684 y `SecurityConfig` ya cubría `/api/customer/**`. Se comprobó quitando el `@PreAuthorize` y abriendo la ruta de forma temporal, y entonces fallaron los de rol, propietario y sesión; el de CSRF no se comprobó así. También CP19 a CP21, que comprueban lo ya desarrollado; el del índice (CP20) falla si se quita el índice. En CP22, «si la categoría del producto no está activa, no se puede añadir», porque antes del ciclo no existía el botón; y CP29, que comprueba de extremo a extremo lo ya desarrollado.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -4996,6 +5005,29 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 | HU528-CP20 | `PreferenciasMongoAdapterTest` | `buscarLosClientesDeUnaCategoriaUsaElIndice` | Infraestructura | AB#689 | PR pendiente | 🔍 |
 | HU528-CP21 | `ProfilePage.test.jsx` | `HU528-CP21: al cerrar sesión y volver a entrar, el cliente conserva sus categorías favoritas` | Frontend · página | AB#689 | PR pendiente | 🔍 |
 | HU528-CP21 | `ProfilePage.test.jsx` | `HU528-CP21: otro cliente no ve ni cambia esas favoritas` | Frontend · página | AB#689 | PR pendiente | 🔍 |
+| HU528-CP22 | `ProductDetailPage.test.jsx` | `HU528-CP22: el detalle tiene un botón para añadir a favoritas la categoría del producto` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP22 | `ProductDetailPage.test.jsx` | `HU528-CP22: si la categoría ya es favorita, el botón permite quitarla` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP22 | `ProductDetailPage.test.jsx` | `HU528-CP22: que el producto esté en favoritos no cambia la categoría, ni al revés` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP22 | `ProductDetailPage.test.jsx` | `HU528-CP22: si la categoría del producto no está activa, no se puede añadir` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP22 | `ProductDetailPage.test.jsx` | `HU528-CP22: si no se pueden leer las favoritas, se ofrece añadirla sin avisar de ningún error` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP23 | `ProductDetailPage.test.jsx` | `HU528-CP23: al pulsar el botón se añade solo esa categoría y pasa a quitarla` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP23 | `ProductDetailPage.test.jsx` | `HU528-CP23: al volver a pulsarlo se quita esa categoría y vuelve a ofrecer añadirla` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP23 | `ProductDetailPage.test.jsx` | `HU528-CP23: mientras se guarda, el botón queda deshabilitado` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP24 | `WishlistPage.test.jsx` | `HU528-CP24: Mis favoritos tiene dos pestañas y se abre en Productos` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP24 | `WishlistPage.test.jsx` | `HU528-CP24: la pestaña Categorías muestra las favoritas por su nombre, en el orden en que se marcaron` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP24 | `WishlistPage.test.jsx` | `HU528-CP24: se puede volver a la pestaña Productos` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP25 | `WishlistPage.test.jsx` | `HU528-CP25: mientras cargan las categorías muestra un indicador` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP25 | `WishlistPage.test.jsx` | `HU528-CP25: sin categorías favoritas lo indica y ofrece ir a los productos` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP25 | `WishlistPage.test.jsx` | `HU528-CP25: si no se pueden cargar %s, lo avisa y permite reintentar` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP26 | `WishlistPage.test.jsx` | `HU528-CP26: al quitar una categoría se pide quitar solo esa y desaparece de la lista` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP26 | `WishlistPage.test.jsx` | `HU528-CP26: mientras se quita una, su botón queda deshabilitado` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP26 | `WishlistPage.test.jsx` | `HU528-CP26: al quitar la última se muestra el estado vacío` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP27 | `ProductDetailPage.test.jsx` | `HU528-CP27: al añadir o quitar la categoría avisa con su nombre, y un aviso sustituye al anterior` | Frontend · página | AB#687 | PR pendiente | 🔍 |
+| HU528-CP27 | `ProductDetailPage.test.jsx` | `HU528-CP27: si al añadirla %s, lo avisa sin detalles internos y no queda como favorita` | Frontend · página | AB#687 | PR pendiente | 🔍 |
+| HU528-CP27 | `ProductDetailPage.test.jsx` | `HU528-CP27: si no se puede quitar, lo avisa y sigue como favorita` | Frontend · página | AB#687 | PR pendiente | 🔍 |
+| HU528-CP28 | `WishlistPage.test.jsx` | `HU528-CP28: al quitar una categoría avisa con su nombre, también si era la última` | Frontend · página | AB#687 | PR pendiente | 🔍 |
+| HU528-CP28 | `WishlistPage.test.jsx` | `HU528-CP28: si no se puede quitar, lo avisa y la categoría sigue en la lista` | Frontend · página | AB#687 | PR pendiente | 🔍 |
+| HU528-CP29 | `WishlistPage.test.jsx` | `HU528-CP29: una categoría añadida desde un producto aparece en Mis favoritos y en el perfil, y al quitarla aquí deja de serlo` | Frontend · página | AB#689 | PR pendiente | 🔍 |
 
 ---
 
