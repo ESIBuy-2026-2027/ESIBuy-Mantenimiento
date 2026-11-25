@@ -93,7 +93,7 @@ const useStyles = makeStyles({
     display: 'grid',
     gridTemplateColumns: 'minmax(0, 1fr)',
     gap: tokens.spacingVerticalXL,
-    alignItems: 'start',
+    alignItems: 'stretch',
     '@media (min-width: 900px)': {
       gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
     },
