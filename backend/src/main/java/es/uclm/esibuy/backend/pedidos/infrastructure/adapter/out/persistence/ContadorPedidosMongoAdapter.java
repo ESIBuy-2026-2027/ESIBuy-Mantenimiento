@@ -2,11 +2,12 @@ package es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.persistence;
 
 import org.bson.Document;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
+
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.ReturnDocument;
+import com.mongodb.client.model.Updates;
 
 import es.uclm.esibuy.backend.pedidos.application.port.out.ContadorPedidosPort;
 
@@ -37,11 +38,10 @@ public class ContadorPedidosMongoAdapter implements ContadorPedidosPort {
     }
 
     private long incrementar(int anio) {
-        Document contador = mongoTemplate.findAndModify(
-                new Query(Criteria.where("_id").is("pedidos-" + anio)),
-                new Update().inc(VALOR, 1L),
-                FindAndModifyOptions.options().upsert(true).returnNew(true),
-                Document.class, COLECCION);
-        return ((Number) contador.get(VALOR)).longValue();
+        Document contador = mongoTemplate.getCollection(COLECCION).findOneAndUpdate(
+                Filters.eq("_id", "pedidos-" + anio),
+                Updates.inc(VALOR, 1L),
+                new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
+        return contador.getLong(VALOR);
     }
 }

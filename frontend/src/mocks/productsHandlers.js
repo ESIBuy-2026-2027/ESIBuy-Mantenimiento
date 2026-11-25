@@ -60,6 +60,9 @@ let disponibilidadModificada = new Map()
 
 export function resetProductsMock() {
   disponibilidadModificada = new Map()
+  for (let indice = PRODUCTOS.length - 1; indice >= 0; indice -= 1) {
+    if (PRODUCTOS[indice].id === 'p-nuevo') PRODUCTOS.splice(indice, 1)
+  }
 }
 
 // Si el producto está disponible ahora, contando los cambios de la sesión. El catálogo, su detalle y el carrito
@@ -69,15 +72,19 @@ export const estaDisponible = (producto) => disponibilidadModificada.get(product
 // El producto con la disponibilidad que tiene ahora.
 const conDisponibilidadActual = (producto) => ({ ...producto, disponible: estaDisponible(producto) })
 
-export const aRespuesta = ({ id, nombre, precio, stock, disponible, categoria }) => ({
-  id,
-  nombre,
-  precio,
-  stock,
-  disponible,
-  // Como el backend real: el identificador de la categoría, no su nombre.
-  categoriaId: categoria,
-})
+export const aRespuesta = ({ id, nombre, imagen, precio, stock, disponible, categoria }) => {
+  const numero = Number(id?.replace('p-', '')) || 1
+  return {
+    id,
+    nombre,
+    imagen: imagen || (numero % 9 === 0 ? '' : imagenDeEjemplo(nombre, numero)),
+    precio,
+    stock,
+    disponible,
+    // Como el backend real: el identificador de la categoría, no su nombre.
+    categoriaId: categoria,
+  }
+}
 
 const TAMANO_CATALOGO = 10
 
@@ -239,10 +246,8 @@ function responderAlGuardar(producto, respuestaCorrecta, idEditado) {
   return respuestaCorrecta()
 }
 
-// Las escrituras (POST, PUT y DELETE) validan y responden como el backend real, pero NO modifican
-// los datos de ejemplo: a efectos prácticos, el frontend no añade ni elimina productos. La excepción es
-// activar o desactivar (HU16), que se mantiene durante la sesión para que el listado, el catálogo y el carrito
-// lo reflejen.
+// Las escrituras mantienen la disponibilidad, las altas y las imágenes durante la sesión. PUT y DELETE conservan
+// el comportamiento anterior de los datos de ejemplo: editar y eliminar responden como el backend real.
 export const productsHandlers = [
   http.get('/api/seller/products/:id', ({ params }) =>
     conProductoPropio(params, (producto) => HttpResponse.json(aDetalle(conDisponibilidadActual(producto)))),
@@ -253,8 +258,39 @@ export const productsHandlers = [
     if (rechazo) return rechazo
 
     const producto = await request.json()
-    return responderAlGuardar(producto, () => HttpResponse.json({ ...producto, id: 'p-nuevo' }, { status: 201 }))
+    return responderAlGuardar(
+      producto,
+      () => {
+        const usuario = getUsuarioEnSesion()
+        for (let indice = PRODUCTOS.length - 1; indice >= 0; indice -= 1) {
+          if (PRODUCTOS[indice].id === 'p-nuevo') PRODUCTOS.splice(indice, 1)
+        }
+        const creado = {
+          id: 'p-nuevo',
+          vendedorId: usuario.id,
+          nombre: producto.nombre,
+          descripcion: producto.descripcion,
+          precio: producto.precio,
+          stock: producto.stock,
+          categoria: producto.categoriaId,
+          imagen: '',
+          disponible: producto.disponible,
+          descuento: producto.descuento,
+          descuentoPremium: producto.descuentoPremium,
+        }
+        PRODUCTOS.push(creado)
+        return HttpResponse.json({ ...producto, id: creado.id }, { status: 201 })
+      },
+      null,
+    )
   }),
+
+  http.post('/api/seller/products/:id/image', async ({ params }) =>
+    conProductoPropio(params, (producto) => {
+      producto.imagen = imagenDeEjemplo(producto.nombre, PRODUCTOS.indexOf(producto) + 1)
+      return HttpResponse.json({ imagen: producto.imagen })
+    }),
+  ),
 
   http.put('/api/seller/products/:id', ({ params, request }) =>
     conProductoPropio(params, async (existente) => {
@@ -329,12 +365,26 @@ export const productsHandlers = [
     const params = new URL(request.url).searchParams
     const busqueda = normalizar(params.get('search') ?? '')
     const categoria = params.get('category')
+    const estado = params.get('status')
+    const orden = params.get('sort')
+    const minimo = params.get('minPrice') === null ? null : Number(params.get('minPrice'))
+    const maximo = params.get('maxPrice') === null ? null : Number(params.get('maxPrice'))
     const coincidentes = PRODUCTOS.map(conDisponibilidadActual).filter(
       (producto) =>
         producto.vendedorId === usuario.id &&
         normalizar(producto.nombre).includes(busqueda) &&
-        (!categoria || producto.categoria === categoria),
+        (!categoria || producto.categoria === categoria) &&
+        (!estado || (estado === 'visible' ? producto.disponible : !producto.disponible)) &&
+        (minimo === null || Number.isNaN(minimo) || producto.precio >= minimo) &&
+        (maximo === null || Number.isNaN(maximo) || producto.precio <= maximo),
     )
-    return HttpResponse.json(paginar(coincidentes, leerPagina(params), aRespuesta))
+    const ordenados = [...coincidentes].sort((a, b) => {
+      if (orden === 'price-asc') return a.precio - b.precio
+      if (orden === 'price-desc') return b.precio - a.precio
+      if (orden === 'stock-asc') return a.stock - b.stock
+      if (orden === 'stock-desc') return b.stock - a.stock
+      return 0
+    })
+    return HttpResponse.json(paginar(ordenados, leerPagina(params), aRespuesta))
   }),
 ]

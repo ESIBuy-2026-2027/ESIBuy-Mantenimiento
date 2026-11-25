@@ -41,7 +41,7 @@ public class PedidoMongoAdapter implements PedidoRepositoryPort {
 
     @Override
     public List<Pedido> buscarPorVendedor(String vendedorId) {
-        return repository.findByVendedorId(vendedorId).stream()
+        return repository.findByVendedorIdOrderByCreatedAtDesc(vendedorId).stream()
                 .map(mapper::aDominio).toList();
     }
 }

@@ -11,6 +11,7 @@ public class LineaPedidoDocument {
     private String productoId;
     private String nombreProducto;
     private String vendedorId;
+    private String imagen;
     private int cantidad;
     @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal precioUnitario;
@@ -23,6 +24,8 @@ public class LineaPedidoDocument {
     public void setNombreProducto(String nombreProducto) { this.nombreProducto = nombreProducto; }
     public String getVendedorId() { return vendedorId; }
     public void setVendedorId(String vendedorId) { this.vendedorId = vendedorId; }
+    public String getImagen() { return imagen; }
+    public void setImagen(String imagen) { this.imagen = imagen; }
     public int getCantidad() { return cantidad; }
     public void setCantidad(int cantidad) { this.cantidad = cantidad; }
     public BigDecimal getPrecioUnitario() { return precioUnitario; }

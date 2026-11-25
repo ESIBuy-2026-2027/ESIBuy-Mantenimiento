@@ -8,6 +8,13 @@ const useStyles = makeStyles({
     gap: tokens.spacingVerticalM,
     columnGap: tokens.spacingHorizontalL,
   },
+  readOnlyInput: {
+    cursor: 'default',
+    '& input': {
+      caretColor: 'transparent',
+      cursor: 'default',
+    },
+  },
 })
 
 // Rejilla de campos de solo lectura, más oscuros que los editables. La usan la ficha del vendedor
@@ -19,7 +26,12 @@ export default function ReadOnlyFields({ fields }) {
     <div className={styles.grid}>
       {fields.map(([label, value]) => (
         <Field key={label} label={label}>
-          <Input readOnly appearance="filled-darker" value={value} />
+          <Input
+            readOnly
+            appearance="filled-darker"
+            className={styles.readOnlyInput}
+            value={value}
+          />
         </Field>
       ))}
     </div>

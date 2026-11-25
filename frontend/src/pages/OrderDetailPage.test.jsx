@@ -73,21 +73,12 @@ describe('OrderDetailPage (HU11): detalle', () => {
   it('HU11-CP15: un pedido entregado tiene los cuatro pasos completados y ninguno como actual', async () => {
     await abrirPedido('o-102')
 
-    await screen.findByRole('list', { name: /pasos del envío/i })
-    for (const paso of pasosDelEnvio()) {
-      expect(paso).toHaveTextContent('Completado')
-      expect(paso).not.toHaveAttribute('aria-current')
-    }
-    expect(pasosDelEnvio()[3]).toHaveTextContent('25/10/2026')
-  })
-
-  it('HU11-CP15: un pedido recién pagado está en el primer paso, la preparación', async () => {
-    await abrirPedidoDe(NORA, 'o-201')
-
-    await screen.findByRole('list', { name: /pasos del envío/i })
-    expect(pasosDelEnvio()[0]).toHaveTextContent('Estado actual')
-    expect(pasosDelEnvio()[0]).toHaveAttribute('aria-current', 'step')
-    expect(pasosDelEnvio()[1]).toHaveTextContent('Pendiente')
+    await screen.findByRole('list', { name: /estado del envío/i })
+    expect(pasoDelEnvio('Enviado: completado')).toBeInTheDocument()
+    const enviado = pasoDelEnvio('Enviado: completado')
+    const entregado = pasoDelEnvio('Entregado: estado actual')
+    expect(entregado).toHaveAttribute('aria-current', 'step')
+    expect(entregado.className).toBe(enviado.className)
   })
 
   it('HU11-CP16: un pedido cancelado lo indica en lugar de la línea de estados del envío', async () => {

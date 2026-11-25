@@ -83,6 +83,10 @@ export function getCatalogProducts({
   return request(`/api/products?${buildQuery({ page, size, search, category, minRating, sort, order })}`)
 }
 
-export function getSellerProducts({ search = '', category = '', page = 1, size = 10 } = {}) {
-  return request(`/api/seller/products?${buildQuery({ page, size, search, category })}`)
+export function getSellerProducts({
+  search = '', category = '', status = '', sort = '', minPrice = '', maxPrice = '', page = 1, size = 10,
+} = {}) {
+  return request(`/api/seller/products?${buildQuery({
+    page, size, search, category, status, sort, minPrice, maxPrice,
+  })}`)
 }

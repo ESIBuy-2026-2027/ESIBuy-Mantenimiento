@@ -99,7 +99,7 @@ describe('Login (HU2): paso 1, credenciales', () => {
     renderApp('/login')
     await user.type(await screen.findByLabelText(/correo electrónico/i), 'correo-invalido')
     await user.type(screen.getByLabelText(/^contraseña/i), CLAVE)
-    await user.click(screen.getByRole('button', { name: /entrar/i }))
+    await user.click(screen.getByRole('button', { name: /continuar/i }))
 
     expect(screen.getByText(/ejemplo: email@dominio\.es/i)).toBeInTheDocument()
   })

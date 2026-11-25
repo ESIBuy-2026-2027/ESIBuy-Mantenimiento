@@ -10,11 +10,13 @@ import es.uclm.esibuy.backend.carrito.application.port.in.GestionCarritoUseCase;
 import es.uclm.esibuy.backend.direcciones.application.port.in.GestionDireccionesUseCase;
 import es.uclm.esibuy.backend.metodospago.application.port.in.GestionMetodosPagoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.ConfirmacionRecepcionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.SeguimientoEnvioUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ProductosConPedidosUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.VentasVendedorUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.GestionPedidosVendedorUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.out.CarritoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.ContadorPedidosPort;
@@ -23,13 +25,16 @@ import es.uclm.esibuy.backend.pedidos.application.port.out.ExistenciasPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.MetodosPagoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PagoPort;
 import es.uclm.esibuy.backend.pedidos.application.port.out.PedidoRepositoryPort;
+import es.uclm.esibuy.backend.pedidos.application.port.out.VendedorEnSesionPort;
 import es.uclm.esibuy.backend.pedidos.application.service.CancelacionPedidoService;
+import es.uclm.esibuy.backend.pedidos.application.service.ConfirmacionRecepcionPedidoService;
 import es.uclm.esibuy.backend.pedidos.application.service.ConsultaComprasService;
 import es.uclm.esibuy.backend.pedidos.application.service.DependenciasRealizacionPedido;
 import es.uclm.esibuy.backend.pedidos.application.service.RealizacionPedidoService;
 import es.uclm.esibuy.backend.pedidos.application.service.ProductosConPedidosService;
 import es.uclm.esibuy.backend.pedidos.application.service.SeguimientoEnvioService;
 import es.uclm.esibuy.backend.pedidos.application.service.VentasVendedorService;
+import es.uclm.esibuy.backend.pedidos.application.service.GestionPedidosVendedorService;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.carrito.CarritoAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.direcciones.DireccionesAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.metodospago.MetodosPagoAdapter;
@@ -40,6 +45,7 @@ import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.persistence.Ped
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.persistence.PedidoMongoRepository;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.productos.ExistenciasAdapter;
 import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.usuarios.ClienteEnSesionAdapter;
+import es.uclm.esibuy.backend.pedidos.infrastructure.adapter.out.usuarios.VendedorEnSesionAdapter;
 import es.uclm.esibuy.backend.productos.application.port.in.ExistenciasProductosUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 
@@ -65,6 +71,11 @@ public class PedidosConfig {
     @Bean
     ClienteEnSesionPort pedidosClienteEnSesionPort(AutenticacionUseCase autenticacionUseCase) {
         return new ClienteEnSesionAdapter(autenticacionUseCase);
+    }
+
+    @Bean
+    VendedorEnSesionPort pedidosVendedorEnSesionPort(AutenticacionUseCase autenticacionUseCase) {
+        return new VendedorEnSesionAdapter(autenticacionUseCase);
     }
 
     @Bean
@@ -135,16 +146,21 @@ public class PedidosConfig {
         return new CancelacionPedidoService(pedidoRepositoryPort, pedidosClienteEnSesionPort, pedidosExistenciasPort);
     }
 
-    // Seguimiento del envío del cliente: consulta y confirmación de recepción, con el reloj de UsuariosConfig
     @Bean
-    SeguimientoEnvioUseCase seguimientoEnvioUseCase(PedidoRepositoryPort pedidoRepositoryPort,
-            ClienteEnSesionPort pedidosClienteEnSesionPort, Clock reloj) {
-        return new SeguimientoEnvioService(pedidoRepositoryPort, pedidosClienteEnSesionPort, reloj);
+    ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedidoUseCase(PedidoRepositoryPort pedidoRepositoryPort,
+            ClienteEnSesionPort pedidosClienteEnSesionPort) {
+        return new ConfirmacionRecepcionPedidoService(pedidoRepositoryPort, pedidosClienteEnSesionPort);
     }
 
     // Ventas del vendedor para sus estadísticas (HU17)
     @Bean
     VentasVendedorUseCase ventasVendedorUseCase(PedidoRepositoryPort pedidoRepositoryPort) {
         return new VentasVendedorService(pedidoRepositoryPort);
+    }
+
+    @Bean
+    GestionPedidosVendedorUseCase gestionPedidosVendedorUseCase(PedidoRepositoryPort pedidoRepositoryPort,
+            VendedorEnSesionPort pedidosVendedorEnSesionPort, ExistenciasPort pedidosExistenciasPort) {
+        return new GestionPedidosVendedorService(pedidoRepositoryPort, pedidosVendedorEnSesionPort, pedidosExistenciasPort);
     }
 }

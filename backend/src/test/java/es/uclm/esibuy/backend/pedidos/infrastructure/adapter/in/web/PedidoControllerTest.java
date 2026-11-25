@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.pedidos.infrastructure.adapter.in.web;
 
 import es.uclm.esibuy.backend.pedidos.application.port.in.CancelacionPedidoUseCase;
+import es.uclm.esibuy.backend.pedidos.application.port.in.ConfirmacionRecepcionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.ConsultaComprasUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizacionPedidoUseCase;
 import es.uclm.esibuy.backend.pedidos.application.port.in.RealizarPedidoCommand;
@@ -78,7 +79,7 @@ class PedidoControllerTest {
         private CancelacionPedidoUseCase cancelacionPedido;
 
         @MockitoBean
-        private SeguimientoEnvioUseCase seguimientoEnvio;
+        private ConfirmacionRecepcionPedidoUseCase confirmacionRecepcionPedido;
 
         private static final Pedido PEDIDO = new Pedido(
                         new DatosPedido(

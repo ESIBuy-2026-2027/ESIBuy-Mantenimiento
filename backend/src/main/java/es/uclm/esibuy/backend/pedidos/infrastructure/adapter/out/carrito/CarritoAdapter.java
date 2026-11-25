@@ -26,8 +26,8 @@ public class CarritoAdapter implements CarritoPort {
                 .filter(grupo -> grupo.vendedorId().equals(vendedorId))
                 .findFirst()
                 .map(grupo -> new CompraProveedor(grupo.vendedorId(), grupo.nombreComercial(), grupo.lineas().stream()
-                        .map(linea -> new LineaPedido(linea.productoId(), grupo.vendedorId(), linea.nombre(),
-                                linea.cantidad(), linea.precioUnitario()))
+                        .map(linea -> new LineaPedido(linea.productoId(), linea.nombre(), linea.cantidad(),
+                                linea.precioUnitario(), linea.imagen()))
                         .toList()));
     }
 
