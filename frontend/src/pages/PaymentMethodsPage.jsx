@@ -22,6 +22,8 @@ import AddPaymentMethodPanel from '../features/paymentMethods/AddPaymentMethodPa
 import DeletePaymentMethodDialog from '../features/paymentMethods/DeletePaymentMethodDialog'
 import { TIPOS_DE_METODO } from '../features/paymentMethods/tiposDeMetodo'
 import { useApiQuery } from '../hooks/useApiQuery'
+import LinkButton from '../components/LinkButton'
+import { PATHS } from '../routes/paths'
 
 // Como el backend: un cliente tiene como máximo 5 métodos de pago (HU6)
 const MAXIMO_METODOS = 5
@@ -35,7 +37,11 @@ const useStyles = makeStyles({
     minWidth: 0,
   },
   heading: {
-    alignItems: 'flex-start',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    justifyContent: 'space-between',
+    minHeight: '126px',
   },
   list: {
     listStyle: 'none',
@@ -65,6 +71,8 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     flexGrow: 1,
     minWidth: 0,
+    minHeight: '58px',
+    justifyContent: 'center',
   },
   methodActions: {
     display: 'flex',
@@ -87,7 +95,10 @@ const useStyles = makeStyles({
   },
   addButton: {
     minHeight: '40px',
-    minWidth: '170px',
+    width: '100%',
+  },
+  seeAll: {
+    alignSelf: 'flex-start',
   },
   limit: {
     color: tokens.colorNeutralForeground3,
@@ -110,6 +121,7 @@ export default function PaymentMethodsPage({ embedded = false }) {
   const [anadiendo, setAnadiendo] = useState(false)
   const [aEliminar, setAEliminar] = useState(null)
   const limiteAlcanzado = (metodos?.length ?? 0) >= MAXIMO_METODOS
+  const metodosVisibles = embedded ? (metodos ?? []).slice(0, 3) : metodos
 
   const abrirPanel = () => {
     setAviso(null)
@@ -190,7 +202,7 @@ export default function PaymentMethodsPage({ embedded = false }) {
       )}
       {metodos?.length > 0 && (
         <ul aria-label="Tus métodos de pago" className={styles.list}>
-          {metodos.map((metodo) => {
+          {metodosVisibles.map((metodo) => {
             const { etiqueta, Icono } = TIPOS_DE_METODO[metodo.tipo]
             return (
               <li key={metodo.id}>
@@ -219,6 +231,11 @@ export default function PaymentMethodsPage({ embedded = false }) {
             )
           })}
         </ul>
+      )}
+      {embedded && (metodos?.length ?? 0) > 3 && (
+        <LinkButton to={PATHS.PAYMENT_METHODS} appearance="subtle" className={styles.seeAll}>
+          Ver todos los métodos ({metodos.length})
+        </LinkButton>
       )}
       {aEliminar && (
         <DeletePaymentMethodDialog
