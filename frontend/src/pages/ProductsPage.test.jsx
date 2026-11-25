@@ -698,11 +698,13 @@ describe('ProductsPage (HU7): catálogo con ofertas y listado único', () => {
     await abrirCatalogo()
 
     await user.type(screen.getByRole('searchbox', { name: /buscar por nombre/i }), 'teclado')
+    await user.selectOptions(screen.getByRole('combobox', { name: /valoración mínima/i }), '4 estrellas o más')
     await user.click(screen.getByRole('checkbox', { name: 'Solo en stock' }))
     await user.click(screen.getByRole('checkbox', { name: 'Solo ofertas' }))
     await user.click(screen.getByRole('button', { name: /limpiar filtros/i }))
 
     expect(screen.getByRole('searchbox', { name: /buscar por nombre/i })).toHaveValue('')
+    expect(screen.getByRole('combobox', { name: /valoración mínima/i })).toHaveValue('')
     expect(screen.getByRole('checkbox', { name: 'Solo en stock' })).not.toBeChecked()
     expect(screen.getByRole('checkbox', { name: 'Solo ofertas' })).not.toBeChecked()
   })
