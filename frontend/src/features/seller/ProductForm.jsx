@@ -25,6 +25,17 @@ const NOMBRE_EN_USO = 'Este nombre ya está en uso en tus productos. Usa uno dis
 const TAMANO_MAXIMO_IMAGEN = 5 * 1024 * 1024
 const TIPOS_IMAGEN = ['image/jpeg', 'image/png']
 
+// Conserva solo dígitos y un separador decimal, con un máximo de dos cifras decimales.
+function sanitizePrice(value) {
+  const numeric = value.replace(/[^0-9.,]/g, '')
+  const separatorIndex = numeric.search(/[.,]/)
+  if (separatorIndex === -1) return numeric
+
+  const integer = numeric.slice(0, separatorIndex)
+  const decimals = numeric.slice(separatorIndex + 1).replace(/[.,]/g, '').slice(0, 2)
+  return `${integer}${numeric[separatorIndex]}${decimals}`
+}
+
 const useStyles = makeStyles({
   form: {
     display: 'flex', flexDirection: 'column', gap: tokens.spacingVerticalL, width: '100%',
@@ -189,8 +200,8 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
       </Field>
       <div className={styles.pair}>
         <Field label="Precio (€)" required validationState={errors.precio ? 'error' : 'none'} validationMessage={errors.precio}>
-          <Input className={styles.control} type="text" inputMode="numeric" pattern="[0-9]*" value={values.precio}
-            onChange={(_event, data) => setField('precio')(data.value.replace(/\D/g, ''))} />
+          <Input className={styles.control} type="text" inputMode="decimal" value={values.precio}
+            onChange={(_event, data) => setField('precio')(sanitizePrice(data.value))} />
         </Field>
         <Field label="Stock" hint="Si lo dejas vacío, el stock será 0."
           validationState={errors.stock ? 'error' : 'none'} validationMessage={errors.stock}>

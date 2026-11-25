@@ -414,6 +414,18 @@ public class ManejadorGlobalErrores {
 
     // Un producto que no existe o no está disponible se responde igual que uno
     // inexistente
+    @ExceptionHandler(ListaDeseosInvalidaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RespuestaError listaDeseosInvalida() {
+        return new RespuestaError("La lista de deseos es inválida", CODIGO_VALIDACION);
+    }
+
+    @ExceptionHandler(ListaDeseosNoEncontradaException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public RespuestaError listaDeseosNoEncontrada() {
+        return new RespuestaError("La lista de deseos no existe", "WISHLIST_NOT_FOUND");
+    }
+
     @ExceptionHandler({ ProductoNoComprableException.class, ProductoNoDisponibleException.class })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public RespuestaError productoNoDisponible() {

@@ -21,6 +21,12 @@ public interface GestionMetodosPagoUseCase {
     MetodoPago anadir(AnadirMetodoPagoCommand comando);
 
     /**
+     * Sustituye los datos de un método propio sin descifrar ni devolver los datos anteriores.
+     * Conserva su identificador y si era el método predeterminado.
+     */
+    MetodoPago actualizar(String emailCliente, String metodoId, AnadirMetodoPagoCommand comando);
+
+    /**
      * Marca como predeterminado un método del cliente en sesión; el que lo era deja de serlo.
      *
      * @throws es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoNoEncontradoException si no es suyo

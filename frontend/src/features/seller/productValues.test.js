@@ -28,17 +28,19 @@ describe('validateProduct', () => {
     expect(validateProduct({ ...valoresValidos(), nombre: 'a'.repeat(100) }).nombre).toBeUndefined()
   })
 
-  it.each(['0', '-5', 'abc', '0.00', '12.5'])('validateProduct_conPrecio_%s_devuelveError', (precio) => {
-    expect(validateProduct({ ...valoresValidos(), precio }).precio).toMatch(/mayor que 0|número entero/i)
-  })
+  it.each(['0', '-5', 'abc', '0.00', '12.345', '12,345'])(
+    'validateProduct_conPrecioInvalido_%s_devuelveError',
+    (precio) => {
+      expect(validateProduct({ ...valoresValidos(), precio }).precio).toBeDefined()
+    },
+  )
 
-  it('validateProduct_conPrecioDecimal_devuelveError', () => {
-    expect(validateProduct({ ...valoresValidos(), precio: '12.5' }).precio).toMatch(/número entero/i)
-  })
-
-  it('validateProduct_conPrecioMinimoPositivo_loAcepta', () => {
-    expect(validateProduct({ ...valoresValidos(), precio: '1' }).precio).toBeUndefined()
-  })
+  it.each(['1', '0.99', '12.5', '12.50', '12,5', '12,50'])(
+    'validateProduct_conPrecioDecimal_%s_loAcepta',
+    (precio) => {
+      expect(validateProduct({ ...valoresValidos(), precio }).precio).toBeUndefined()
+    },
+  )
 
   it.each(['', '0', '10'])('validateProduct_conStock_%s_loAcepta', (stock) => {
     expect(validateProduct({ ...valoresValidos(), stock }).stock).toBeUndefined()
@@ -111,6 +113,13 @@ describe('toProductPayload', () => {
       stock: 12,
     })
   })
+
+  it.each([['12.50', 12.5], ['12,50', 12.5]])(
+    'toProductPayload_normalizaElPrecioDecimal_%s',
+    (precio, esperado) => {
+      expect(toProductPayload({ ...valoresValidos(), precio }).precio).toBe(esperado)
+    },
+  )
 
   it('toProductPayload_conDescuentosVacios_envia_porcentajeNulo', () => {
     const payload = toProductPayload(valoresValidos())

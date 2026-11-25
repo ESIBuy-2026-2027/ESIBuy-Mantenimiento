@@ -1,3 +1,4 @@
+
 import { describe, expect, it } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -27,7 +28,9 @@ const DETALLE = {
 // (HU13): así la media y el número de valoraciones son los del detalle.
 const responderCon = (cambios = {}) =>
   server.use(
-    http.get('/api/products/:id', () => HttpResponse.json({ ...DETALLE, ...cambios })),
+    http.get('/api/products/:id', () =>
+      HttpResponse.json({ ...DETALLE, ...cambios }),
+    ),
     http.get('/api/products/:id/valoraciones', () => HttpResponse.json([])),
   )
 
@@ -41,14 +44,18 @@ describe('ProductDetailPage (HU8): acceso', () => {
   it('HU8-CP01: sin sesión, el detalle de un producto lleva a iniciar sesión', async () => {
     renderApp('/products/p-2')
 
-    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/))
+    await waitFor(() =>
+      expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/login$/),
+    )
   })
 
   it('HU8-CP01: un vendedor no ve el detalle del cliente: va a su página', async () => {
     await abrirSesionPorApi('vendedor@esibuy.test')
     renderApp('/products/p-2')
 
-    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/seller\/products$/))
+    await waitFor(() =>
+      expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/seller\/products$/),
+    )
   })
 
   it('HU8-CP01: un cliente ve el detalle del producto con su nombre como título', async () => {
@@ -63,7 +70,10 @@ describe('ProductDetailPage (HU8): información del producto', () => {
     responderCon()
     await abrirDetalle()
 
-    expect(screen.getByRole('img', { name: 'Teclado mecánico' })).toHaveAttribute('src', DETALLE.imagen)
+    expect(screen.getByRole('img', { name: 'Teclado mecánico' })).toHaveAttribute(
+      'src',
+      DETALLE.imagen,
+    )
     expect(await screen.findAllByText('Tecnología')).not.toHaveLength(0)
     expect(screen.getByText(/vendido por/i)).toHaveTextContent('TecnoVera')
     expect(screen.getByText(DETALLE.descripcion)).toBeInTheDocument()
@@ -73,7 +83,9 @@ describe('ProductDetailPage (HU8): información del producto', () => {
     responderCon()
     await abrirDetalle()
 
-    expect(screen.getAllByRole('img', { name: /valoración: 4,7 de 5/i }).length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByRole('img', { name: /valoración: 4,7 de 5/i }).length,
+    ).toBeGreaterThan(0)
     expect(screen.getAllByText('4,7').length).toBeGreaterThan(0)
     expect(screen.getAllByText(/29 valoraciones/i).length).toBeGreaterThan(0)
   })
@@ -89,7 +101,9 @@ describe('ProductDetailPage (HU8): información del producto', () => {
     responderCon()
     await abrirDetalle()
 
-    const ficha = screen.getByRole('region', { name: /información del producto/i })
+    const ficha = screen.getByRole('region', {
+      name: /información del producto/i,
+    })
     expect(within(ficha).getByText('Categoría')).toBeInTheDocument()
     expect(within(ficha).getByText('Proveedor')).toBeInTheDocument()
     expect(within(ficha).getByText('TecnoVera')).toBeInTheDocument()
@@ -102,7 +116,12 @@ describe('ProductDetailPage (HU8): información del producto', () => {
     await abrirSesionPorApi(CLIENTE)
     renderApp('/products/p-2')
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'Teclado mecánico' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', {
+        level: 1,
+        name: 'Teclado mecánico',
+      }),
+    ).toBeInTheDocument()
     expect(screen.getByText(/vendido por/i)).toHaveTextContent('TecnoVera')
     expect(screen.getAllByText(/\d+ valoraciones/i).length).toBeGreaterThan(0)
   })
@@ -112,14 +131,18 @@ describe('ProductDetailPage (HU8): información del producto', () => {
     await abrirDetalle()
 
     expect(screen.getAllByText(/sin valoraciones/i).length).toBeGreaterThan(0)
-    expect(screen.queryByRole('img', { name: /valoración:/i })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('img', { name: /valoración:/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('HU8-CP07: un producto sin imagen muestra un marcador en su lugar', async () => {
     responderCon({ imagen: '' })
     await abrirDetalle()
 
-    expect(screen.queryByRole('img', { name: 'Teclado mecánico' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('img', { name: 'Teclado mecánico' }),
+    ).not.toBeInTheDocument()
     expect(screen.getByRole('img', { name: /sin imagen/i })).toBeInTheDocument()
   })
 
@@ -127,7 +150,9 @@ describe('ProductDetailPage (HU8): información del producto', () => {
     responderCon({ descripcion: '' })
     await abrirDetalle()
 
-    expect(screen.getByText(/este producto no tiene descripción/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/este producto no tiene descripción/i),
+    ).toBeInTheDocument()
   })
 })
 
@@ -141,7 +166,11 @@ describe('ProductDetailPage (HU8): precio', () => {
   })
 
   it('HU8-CP03: con descuento muestra el precio final, el original tachado, el porcentaje y lo que se ahorra', async () => {
-    responderCon({ precio: 59.9, descuento: { porcentaje: 10 }, precioFinal: 53.91 })
+    responderCon({
+      precio: 59.9,
+      descuento: { porcentaje: 10 },
+      precioFinal: 53.91,
+    })
     await abrirDetalle()
 
     expect(screen.getByText(/53,91/)).toBeInTheDocument()
@@ -151,7 +180,11 @@ describe('ProductDetailPage (HU8): precio', () => {
   })
 
   it('HU8-CP03: el precio lo calcula el servidor: se muestra el que llega, no uno recalculado', async () => {
-    responderCon({ precio: 100, descuento: { porcentaje: 25 }, precioFinal: 70 })
+    responderCon({
+      precio: 100,
+      descuento: { porcentaje: 25 },
+      precioFinal: 70,
+    })
     await abrirDetalle()
 
     expect(screen.getByText(/70,00/)).toBeInTheDocument()
@@ -209,16 +242,27 @@ describe('ProductDetailPage (HU8): estados de la pantalla', () => {
     renderApp('/products/p-2')
 
     expect(await screen.findByText(/cargando producto/i)).toBeInTheDocument()
-    expect(await screen.findByRole('heading', { level: 1, name: 'Teclado mecánico' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', {
+        level: 1,
+        name: 'Teclado mecánico',
+      }),
+    ).toBeInTheDocument()
   })
 
   it('HU8-CP05: si el producto no existe lo indica y ofrece volver a los productos', async () => {
-    server.use(http.get('/api/products/:id', () => new HttpResponse(null, { status: 404 })))
+    server.use(
+      http.get('/api/products/:id', () => new HttpResponse(null, { status: 404 })),
+    )
     await abrirSesionPorApi(CLIENTE)
     renderApp('/products/inexistente')
 
-    expect(await screen.findByText(/no se ha encontrado el producto/i)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /volver a los productos/i })).toHaveAttribute('href', '/products')
+    expect(
+      await screen.findByText(/no se ha encontrado el producto/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: /volver a los productos/i }),
+    ).toHaveAttribute('href', '/products')
   })
 
   it('HU8-CP05: si falla la carga avisa y permite reintentar', async () => {
@@ -236,24 +280,35 @@ describe('ProductDetailPage (HU8): estados de la pantalla', () => {
     await abrirSesionPorApi(CLIENTE)
     renderApp('/products/p-2')
 
-    expect(await screen.findByText(/no se ha podido cargar el producto/i)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/no se ha podido cargar el producto/i),
+    ).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /reintentar/i }))
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'Teclado mecánico' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', {
+        level: 1,
+        name: 'Teclado mecánico',
+      }),
+    ).toBeInTheDocument()
   })
 
   it('HU8-CP06: desde el detalle se puede volver a los productos', async () => {
     responderCon()
     await abrirDetalle()
 
-    expect(screen.getAllByRole('link', { name: /volver a los productos/i })[0]).toHaveAttribute('href', '/products')
+    expect(
+      screen.getAllByRole('link', { name: /volver a los productos/i })[0],
+    ).toHaveAttribute('href', '/products')
   })
 
   it('HU8-CP05: un producto que el catálogo no ofrece (no disponible) se trata como no encontrado', async () => {
     await abrirSesionPorApi(CLIENTE)
     renderApp('/products/p-6')
 
-    expect(await screen.findByText(/no se ha encontrado el producto/i)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/no se ha encontrado el producto/i),
+    ).toBeInTheDocument()
   })
 })
 
@@ -280,7 +335,9 @@ describe('ProductDetailPage (HU9): añadir al carrito', () => {
 
     await user.click(screen.getByRole('button', { name: /añadir al carrito/i }))
 
-    await waitFor(() => expect(enviado.cuerpo).toEqual({ productoId: 'p-2', cantidad: 1 }))
+    await waitFor(() =>
+      expect(enviado.cuerpo).toEqual({ productoId: 'p-2', cantidad: 1 }),
+    )
     expect(await screen.findByText(/añadido/i)).toBeInTheDocument()
   })
 
@@ -295,7 +352,9 @@ describe('ProductDetailPage (HU9): añadir al carrito', () => {
     expect(screen.getByLabelText('Cantidad')).toHaveTextContent('3')
     await user.click(screen.getByRole('button', { name: /añadir al carrito/i }))
 
-    await waitFor(() => expect(enviado.cuerpo).toEqual({ productoId: 'p-2', cantidad: 3 }))
+    await waitFor(() =>
+      expect(enviado.cuerpo).toEqual({ productoId: 'p-2', cantidad: 3 }),
+    )
   })
 
   it('HU9-CP03: la cantidad no baja de una unidad', async () => {
@@ -303,7 +362,9 @@ describe('ProductDetailPage (HU9): añadir al carrito', () => {
     await abrirDetalle()
 
     expect(screen.getByLabelText('Cantidad')).toHaveTextContent('1')
-    expect(screen.getByRole('button', { name: /disminuir cantidad/i })).toBeDisabled()
+    expect(
+      screen.getByRole('button', { name: /disminuir cantidad/i }),
+    ).toBeDisabled()
   })
 
   it('HU9-CP03: la cantidad no puede superar las existencias', async () => {
@@ -314,7 +375,9 @@ describe('ProductDetailPage (HU9): añadir al carrito', () => {
     await user.click(screen.getByRole('button', { name: /aumentar cantidad/i }))
 
     expect(screen.getByLabelText('Cantidad')).toHaveTextContent('2')
-    expect(screen.getByRole('button', { name: /aumentar cantidad/i })).toBeDisabled()
+    expect(
+      screen.getByRole('button', { name: /aumentar cantidad/i }),
+    ).toBeDisabled()
   })
 
   it('HU9-CP03: un producto agotado no se puede añadir ni se elige cantidad', async () => {
@@ -331,13 +394,38 @@ describe('ProductDetailPage (HU9): añadir al carrito', () => {
 // equipo: el backend aún no rellena valoracion ni numValoraciones).
 // PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU13-CP18 a CP20, propuestos.
 const VALORACIONES = [
-  { id: 'v-1', productoId: 'p-2', puntuacion: 5, comentario: 'Muy buen tacto, lo recomiendo.', nombreCliente: 'Ana López', fechaCreacion: '2026-01-01T10:00:00Z' },
-  { id: 'v-2', productoId: 'p-2', puntuacion: 4, comentario: '', nombreCliente: 'Carlos García', fechaCreacion: '2026-01-02T10:00:00Z' },
-  { id: 'v-3', productoId: 'p-2', puntuacion: 3, comentario: 'Hace algo de ruido.', nombreCliente: 'Lucía Martín', fechaCreacion: '2026-01-03T10:00:00Z' },
+  {
+    id: 'v-1',
+    productoId: 'p-2',
+    puntuacion: 5,
+    comentario: 'Muy buen tacto, lo recomiendo.',
+    nombreCliente: 'Ana López',
+    fechaCreacion: '2026-01-01T10:00:00Z',
+  },
+  {
+    id: 'v-2',
+    productoId: 'p-2',
+    puntuacion: 4,
+    comentario: '',
+    nombreCliente: 'Carlos García',
+    fechaCreacion: '2026-01-02T10:00:00Z',
+  },
+  {
+    id: 'v-3',
+    productoId: 'p-2',
+    puntuacion: 3,
+    comentario: 'Hace algo de ruido.',
+    nombreCliente: 'Lucía Martín',
+    fechaCreacion: '2026-01-03T10:00:00Z',
+  },
 ]
 
 const responderValoraciones = (valoraciones) =>
-  server.use(http.get('/api/products/:id/valoraciones', () => HttpResponse.json(valoraciones)))
+  server.use(
+    http.get('/api/products/:id/valoraciones', () =>
+      HttpResponse.json(valoraciones),
+    ),
+  )
 
 describe('ProductDetailPage (HU13): valoraciones de los clientes', () => {
   it('HU13-CP18: muestra cada valoración del producto con sus estrellas y su comentario', async () => {
@@ -345,15 +433,29 @@ describe('ProductDetailPage (HU13): valoraciones de los clientes', () => {
     responderValoraciones(VALORACIONES)
     await abrirDetalle()
 
-    const lista = await screen.findByRole('list', { name: /valoraciones de los clientes/i })
+    const lista = await screen.findByRole('list', {
+      name: /valoraciones de los clientes/i,
+    })
     const valoraciones = within(lista).getAllByRole('listitem')
     expect(valoraciones).toHaveLength(3)
-    expect(within(valoraciones[0]).getByRole('img', { name: /valoración: 5,0 de 5/i })).toBeInTheDocument()
+    expect(
+      within(valoraciones[0]).getByRole('img', {
+        name: /valoración: 5,0 de 5/i,
+      }),
+    ).toBeInTheDocument()
     expect(within(valoraciones[0]).getByText('Ana López')).toBeInTheDocument()
-    expect(within(valoraciones[0]).getByText('1 de enero de 2026')).toBeInTheDocument()
-    expect(within(valoraciones[0]).getByText('Muy buen tacto, lo recomiendo.')).toBeInTheDocument()
-    expect(within(valoraciones[2]).getByText('Lucía Martín')).toBeInTheDocument()
-    expect(within(valoraciones[2]).getByText('Hace algo de ruido.')).toBeInTheDocument()
+    expect(
+      within(valoraciones[0]).getByText('1 de enero de 2026'),
+    ).toBeInTheDocument()
+    expect(
+      within(valoraciones[0]).getByText('Muy buen tacto, lo recomiendo.'),
+    ).toBeInTheDocument()
+    expect(
+      within(valoraciones[2]).getByText('Lucía Martín'),
+    ).toBeInTheDocument()
+    expect(
+      within(valoraciones[2]).getByText('Hace algo de ruido.'),
+    ).toBeInTheDocument()
   })
 
   it('HU13-CP18: una valoración sin comentario muestra solo sus estrellas', async () => {
@@ -361,11 +463,19 @@ describe('ProductDetailPage (HU13): valoraciones de los clientes', () => {
     responderValoraciones([VALORACIONES[1]])
     await abrirDetalle()
 
-    const lista = await screen.findByRole('list', { name: /valoraciones de los clientes/i })
+    const lista = await screen.findByRole('list', {
+      name: /valoraciones de los clientes/i,
+    })
     const [valoracion] = within(lista).getAllByRole('listitem')
-    expect(within(valoracion).getByRole('img', { name: /valoración: 4,0 de 5/i })).toBeInTheDocument()
+    expect(
+      within(valoracion).getByRole('img', {
+        name: /valoración: 4,0 de 5/i,
+      }),
+    ).toBeInTheDocument()
     expect(within(valoracion).getByText('Carlos García')).toBeInTheDocument()
-    expect(within(valoracion).queryByText(/comentario/i)).not.toBeInTheDocument()
+    expect(
+      within(valoracion).queryByText(/comentario/i),
+    ).not.toBeInTheDocument()
   })
 
   it('HU13-CP19: la media y el número de valoraciones salen de la lista aunque el catálogo no las tenga', async () => {
@@ -374,7 +484,11 @@ describe('ProductDetailPage (HU13): valoraciones de los clientes', () => {
     await abrirDetalle()
 
     // (5 + 4 + 3) / 3 = 4
-    expect((await screen.findAllByRole('img', { name: /valoración: 4,0 de 5/i })).length).toBeGreaterThan(0)
+    expect(
+      (await screen.findAllByRole('img', {
+        name: /valoración: 4,0 de 5/i,
+      })).length,
+    ).toBeGreaterThan(0)
     expect(screen.getAllByText(/^3 valoraciones$/i).length).toBeGreaterThan(0)
     expect(screen.queryByText(/^sin valoraciones$/i)).not.toBeInTheDocument()
   })
@@ -384,7 +498,9 @@ describe('ProductDetailPage (HU13): valoraciones de los clientes', () => {
     responderValoraciones([])
     await abrirDetalle()
 
-    expect(await screen.findByText(/todavía no hay valoraciones de este producto/i)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/todavía no hay valoraciones de este producto/i),
+    ).toBeInTheDocument()
     expect(screen.getAllByText(/29 valoraciones/i).length).toBeGreaterThan(0)
   })
 
@@ -393,9 +509,17 @@ describe('ProductDetailPage (HU13): valoraciones de los clientes', () => {
     responderValoraciones([])
     await abrirDetalle()
 
-    const seccion = await screen.findByRole('region', { name: /valoraciones de los clientes/i })
-    expect(within(seccion).getByText(/todavía no hay valoraciones de este producto/i)).toBeInTheDocument()
-    expect(screen.queryByRole('list', { name: /valoraciones de los clientes/i })).not.toBeInTheDocument()
+    const seccion = await screen.findByRole('region', {
+      name: /valoraciones de los clientes/i,
+    })
+    expect(
+      within(seccion).getByText(/todavía no hay valoraciones de este producto/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('list', {
+        name: /valoraciones de los clientes/i,
+      }),
+    ).not.toBeInTheDocument()
   })
 
   it('HU13-CP20: si fallan las valoraciones avisa y permite reintentar, sin perder el producto', async () => {
@@ -413,11 +537,22 @@ describe('ProductDetailPage (HU13): valoraciones de los clientes', () => {
     )
     await abrirDetalle()
 
-    expect(await screen.findByText(/no se han podido cargar las valoraciones/i)).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 1, name: 'Teclado mecánico' })).toBeInTheDocument()
+    expect(
+      await screen.findByText(/no se han podido cargar las valoraciones/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: 'Teclado mecánico',
+      }),
+    ).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /reintentar/i }))
 
-    expect(await screen.findByRole('list', { name: /valoraciones de los clientes/i })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('list', {
+        name: /valoraciones de los clientes/i,
+      }),
+    ).toBeInTheDocument()
   })
 })
 
@@ -434,10 +569,15 @@ function responderAlValorar(respuesta) {
   return enviado
 }
 
-const rechazarCon = (status, code) => () => HttpResponse.json({ code }, { status })
+const rechazarCon = (status, code) => () =>
+  HttpResponse.json({ code }, { status })
 
 const responderEstadoValoracion = (estado) =>
-  server.use(http.get('/api/products/:id/valoraciones/estado', () => HttpResponse.json(estado)))
+  server.use(
+    http.get('/api/products/:id/valoraciones/estado', () =>
+      HttpResponse.json(estado),
+    ),
+  )
 
 async function abrirFormulario() {
   await abrirDetalle()
@@ -449,46 +589,95 @@ describe('ProductDetailPage (HU13): valorar el producto', () => {
     const user = userEvent.setup()
     let valoraciones = []
     responderCon()
-    server.use(http.get('/api/products/:id/valoraciones', () => HttpResponse.json(valoraciones)))
+    server.use(
+      http.get('/api/products/:id/valoraciones', () =>
+        HttpResponse.json(valoraciones),
+      ),
+    )
     const enviado = responderAlValorar((cuerpo) => {
-      valoraciones = [{ id: 'v-9', productoId: 'p-2', ...cuerpo, nombreCliente: 'Carlos García', fechaCreacion: '2026-02-01T10:00:00Z' }]
+      valoraciones = [
+        {
+          id: 'v-9',
+          productoId: 'p-2',
+          ...cuerpo,
+          nombreCliente: 'Carlos García',
+          fechaCreacion: '2026-02-01T10:00:00Z',
+        },
+      ]
       return HttpResponse.json(valoraciones[0], { status: 201 })
     })
     const formulario = await abrirFormulario()
 
-    await user.click(within(formulario).getByRole('radio', { name: '4 estrellas' }))
-    await user.type(within(formulario).getByLabelText(/comentario/i), 'Muy cómodo para escribir.')
-    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+    await user.click(
+      within(formulario).getByRole('radio', { name: '4 estrellas' }),
+    )
+    await user.type(
+      within(formulario).getByLabelText(/comentario/i),
+      'Muy cómodo para escribir.',
+    )
+    await user.click(
+      within(formulario).getByRole('button', { name: /enviar valoración/i }),
+    )
 
-    expect(await screen.findByText(/gracias por tu valoración/i)).toBeInTheDocument()
-    expect(enviado).toEqual({ producto: 'p-2', cuerpo: { puntuacion: 4, comentario: 'Muy cómodo para escribir.' } })
-    const lista = await screen.findByRole('list', { name: /valoraciones de los clientes/i })
-    expect(within(lista).getByText('Muy cómodo para escribir.')).toBeInTheDocument()
-    expect(screen.queryByRole('form', { name: /valora este producto/i })).not.toBeInTheDocument()
+    expect(
+      await screen.findByText(/gracias por tu valoración/i),
+    ).toBeInTheDocument()
+    expect(enviado).toEqual({
+      producto: 'p-2',
+      cuerpo: {
+        puntuacion: 4,
+        comentario: 'Muy cómodo para escribir.',
+      },
+    })
+    const lista = await screen.findByRole('list', {
+      name: /valoraciones de los clientes/i,
+    })
+    expect(
+      within(lista).getByText('Muy cómodo para escribir.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('form', { name: /valora este producto/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('HU13-CP21: el comentario es opcional: sin él se envía vacío', async () => {
     const user = userEvent.setup()
     responderCon()
-    const enviado = responderAlValorar((cuerpo) => HttpResponse.json({ id: 'v-9', ...cuerpo }, { status: 201 }))
+    const enviado = responderAlValorar((cuerpo) =>
+      HttpResponse.json({ id: 'v-9', ...cuerpo }, { status: 201 }),
+    )
     const formulario = await abrirFormulario()
 
-    await user.click(within(formulario).getByRole('radio', { name: '5 estrellas' }))
-    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+    await user.click(
+      within(formulario).getByRole('radio', { name: '5 estrellas' }),
+    )
+    await user.click(
+      within(formulario).getByRole('button', { name: /enviar valoración/i }),
+    )
 
-    expect(await screen.findByText(/gracias por tu valoración/i)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/gracias por tu valoración/i),
+    ).toBeInTheDocument()
     expect(enviado.cuerpo).toEqual({ puntuacion: 5, comentario: '' })
   })
 
   it('HU13-CP22: sin puntuación no se envía y se pide elegir una', async () => {
     const user = userEvent.setup()
     responderCon()
-    const enviado = responderAlValorar(() => HttpResponse.json({}, { status: 201 }))
+    const enviado = responderAlValorar(() =>
+      HttpResponse.json({}, { status: 201 }),
+    )
     const formulario = await abrirFormulario()
 
-    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+    await user.click(
+      within(formulario).getByRole('button', { name: /enviar valoración/i }),
+    )
 
-    expect(await within(formulario).findByText(/elige una puntuación de 1 a 5 estrellas/i)).toBeInTheDocument()
+    expect(
+      await within(formulario).findByText(
+        /elige una puntuación de 1 a 5 estrellas/i,
+      ),
+    ).toBeInTheDocument()
     expect(enviado.cuerpo).toBeUndefined()
   })
 
@@ -496,7 +685,9 @@ describe('ProductDetailPage (HU13): valorar el producto', () => {
     responderCon()
     const formulario = await abrirFormulario()
 
-    expect(within(formulario).getByLabelText(/comentario/i)).toHaveAttribute('maxLength', '500')
+    expect(
+      within(formulario).getByLabelText(/comentario/i),
+    ).toHaveAttribute('maxLength', '500')
   })
 
   it('HU13-CP23: si no ha comprado el producto se le avisa y el formulario sigue ahí', async () => {
@@ -505,24 +696,44 @@ describe('ProductDetailPage (HU13): valorar el producto', () => {
     responderAlValorar(rechazarCon(403, 'PRODUCT_NOT_PURCHASED'))
     const formulario = await abrirFormulario()
 
-    await user.click(within(formulario).getByRole('radio', { name: '3 estrellas' }))
-    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+    await user.click(
+      within(formulario).getByRole('radio', { name: '3 estrellas' }),
+    )
+    await user.click(
+      within(formulario).getByRole('button', { name: /enviar valoración/i }),
+    )
 
-    expect(await within(formulario).findByText(/solo puedes valorar productos que has comprado/i)).toBeInTheDocument()
-    expect(screen.getByRole('form', { name: /valora este producto/i })).toBeInTheDocument()
+    expect(
+      await within(formulario).findByText(
+        /solo puedes valorar productos que has comprado/i,
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('form', { name: /valora este producto/i }),
+    ).toBeInTheDocument()
   })
 
   it('HU13-CP23: si ya lo había valorado se le avisa', async () => {
     const user = userEvent.setup()
     responderCon()
-    responderEstadoValoracion({ haComprado: true, haValorado: false, miValoracionId: null })
+    responderEstadoValoracion({
+      haComprado: true,
+      haValorado: false,
+      miValoracionId: null,
+    })
     responderAlValorar(rechazarCon(409, 'REVIEW_ALREADY_EXISTS'))
     const formulario = await abrirFormulario()
 
-    await user.click(within(formulario).getByRole('radio', { name: '2 estrellas' }))
-    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+    await user.click(
+      within(formulario).getByRole('radio', { name: '2 estrellas' }),
+    )
+    await user.click(
+      within(formulario).getByRole('button', { name: /enviar valoración/i }),
+    )
 
-    expect(await within(formulario).findByText(/ya has valorado este producto/i)).toBeInTheDocument()
+    expect(
+      await within(formulario).findByText(/ya has valorado este producto/i),
+    ).toBeInTheDocument()
   })
 
   it('HU13-CP23: si falla el envío avisa y conserva lo escrito para reintentar', async () => {
@@ -531,48 +742,100 @@ describe('ProductDetailPage (HU13): valorar el producto', () => {
     responderAlValorar(() => new HttpResponse(null, { status: 500 }))
     const formulario = await abrirFormulario()
 
-    await user.click(within(formulario).getByRole('radio', { name: '4 estrellas' }))
-    await user.type(within(formulario).getByLabelText(/comentario/i), 'Buen producto')
-    await user.click(within(formulario).getByRole('button', { name: /enviar valoración/i }))
+    await user.click(
+      within(formulario).getByRole('radio', { name: '4 estrellas' }),
+    )
+    await user.type(
+      within(formulario).getByLabelText(/comentario/i),
+      'Buen producto',
+    )
+    await user.click(
+      within(formulario).getByRole('button', { name: /enviar valoración/i }),
+    )
 
-    expect(await within(formulario).findByText(/no se ha podido enviar tu valoración/i)).toBeInTheDocument()
-    expect(within(formulario).getByLabelText(/comentario/i)).toHaveValue('Buen producto')
-    expect(within(formulario).getByRole('radio', { name: '4 estrellas' })).toBeChecked()
+    expect(
+      await within(formulario).findByText(
+        /no se ha podido enviar tu valoración/i,
+      ),
+    ).toBeInTheDocument()
+    expect(
+      within(formulario).getByLabelText(/comentario/i),
+    ).toHaveValue('Buen producto')
+    expect(
+      within(formulario).getByRole('radio', { name: '4 estrellas' }),
+    ).toBeChecked()
   })
 })
-
 
 describe('ProductDetailPage (CLI-04): estado de compra y valoración', () => {
   it('muestra el formulario cuando el cliente ha comprado el producto y aún no lo ha valorado', async () => {
     responderCon()
-    responderEstadoValoracion({ haComprado: true, haValorado: false, miValoracionId: null })
+    responderEstadoValoracion({
+      haComprado: true,
+      haValorado: false,
+      miValoracionId: null,
+    })
     await abrirDetalle()
 
-    expect(await screen.findByRole('form', { name: /valora este producto/i })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('form', { name: /valora este producto/i }),
+    ).toBeInTheDocument()
   })
 
   it('no muestra el formulario si el cliente no ha comprado el producto', async () => {
     responderCon()
-    responderEstadoValoracion({ haComprado: false, haValorado: false, miValoracionId: null })
+    responderEstadoValoracion({
+      haComprado: false,
+      haValorado: false,
+      miValoracionId: null,
+    })
     await abrirDetalle()
 
-    expect(await screen.findByText(/solo puedes valorar productos que has comprado/i)).toBeInTheDocument()
-    expect(screen.queryByRole('form', { name: /valora este producto/i })).not.toBeInTheDocument()
+    expect(
+      await screen.findByText(
+        /solo puedes valorar productos que has comprado/i,
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('form', { name: /valora este producto/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('muestra un acceso junto a la valoración superior y enlaza con la valoración propia', async () => {
     responderCon()
     responderValoraciones([
-      { id: 'v-propia', productoId: 'p-2', puntuacion: 5, comentario: 'Mi valoración', nombreCliente: 'Carlos García', fechaCreacion: '2026-11-20T10:00:00Z' },
-      { id: 'v-otra', productoId: 'p-2', puntuacion: 4, comentario: 'Otra valoración', nombreCliente: 'Ana López', fechaCreacion: '2026-11-21T10:00:00Z' },
+      {
+        id: 'v-propia',
+        productoId: 'p-2',
+        puntuacion: 5,
+        comentario: 'Mi valoración',
+        nombreCliente: 'Carlos García',
+        fechaCreacion: '2026-11-20T10:00:00Z',
+      },
+      {
+        id: 'v-otra',
+        productoId: 'p-2',
+        puntuacion: 4,
+        comentario: 'Otra valoración',
+        nombreCliente: 'Ana López',
+        fechaCreacion: '2026-11-21T10:00:00Z',
+      },
     ])
-    responderEstadoValoracion({ haComprado: true, haValorado: true, miValoracionId: 'v-propia' })
+    responderEstadoValoracion({
+      haComprado: true,
+      haValorado: true,
+      miValoracionId: 'v-propia',
+    })
     await abrirDetalle()
 
-    const acceso = await screen.findByRole('link', { name: /ya has valorado este producto.*ver mi valoración/i })
+    const acceso = await screen.findByRole('link', {
+      name: /ya has valorado este producto.*ver mi valoración/i,
+    })
     expect(acceso).toHaveAttribute('href', '#valoracion-v-propia')
 
-    const lista = await screen.findByRole('list', { name: /valoraciones de los clientes/i })
+    const lista = await screen.findByRole('list', {
+      name: /valoraciones de los clientes/i,
+    })
     const propia = within(lista).getByText('Mi valoración').closest('li')
     const otra = within(lista).getByText('Otra valoración').closest('li')
     expect(propia).toHaveAttribute('id', 'valoracion-v-propia')
@@ -582,37 +845,67 @@ describe('ProductDetailPage (CLI-04): estado de compra y valoración', () => {
 
   it('no muestra el acceso a la valoración propia si el cliente todavía no ha valorado', async () => {
     responderCon()
-    responderEstadoValoracion({ haComprado: true, haValorado: false, miValoracionId: null })
+    responderEstadoValoracion({
+      haComprado: true,
+      haValorado: false,
+      miValoracionId: null,
+    })
     await abrirDetalle()
 
-    expect(screen.queryByRole('link', { name: /ver mi valoración/i })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: /ver mi valoración/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('indica que el cliente ya ha valorado el producto y oculta el formulario', async () => {
     responderCon()
-    responderEstadoValoracion({ haComprado: true, haValorado: true, miValoracionId: 'v-1' })
+    responderEstadoValoracion({
+      haComprado: true,
+      haValorado: true,
+      miValoracionId: 'v-1',
+    })
     await abrirDetalle()
 
-    expect(await screen.findByText(/ya has valorado este producto/i)).toBeInTheDocument()
-    expect(screen.queryByRole('form', { name: /valora este producto/i })).not.toBeInTheDocument()
+    expect(
+      await screen.findByText(/ya has valorado este producto/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('form', { name: /valora este producto/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('si falla la consulta del estado, no muestra el formulario y permite reintentar', async () => {
     let fallado = false
     responderCon()
-    server.use(http.get('/api/products/:id/valoraciones/estado', () => {
-      if (!fallado) {
-        fallado = true
-        return new HttpResponse(null, { status: 500 })
-      }
-      return HttpResponse.json({ haComprado: true, haValorado: false, miValoracionId: null })
-    }))
+    server.use(
+      http.get('/api/products/:id/valoraciones/estado', () => {
+        if (!fallado) {
+          fallado = true
+          return new HttpResponse(null, { status: 500 })
+        }
+        return HttpResponse.json({
+          haComprado: true,
+          haValorado: false,
+          miValoracionId: null,
+        })
+      }),
+    )
     await abrirDetalle()
 
-    expect(await screen.findByText(/no se ha podido comprobar si puedes valorar/i)).toBeInTheDocument()
-    expect(screen.queryByRole('form', { name: /valora este producto/i })).not.toBeInTheDocument()
-    await userEvent.setup().click(screen.getByRole('button', { name: /reintentar/i }))
-    expect(await screen.findByRole('form', { name: /valora este producto/i })).toBeInTheDocument()
+    expect(
+      await screen.findByText(
+        /no se ha podido comprobar si puedes valorar/i,
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('form', { name: /valora este producto/i }),
+    ).not.toBeInTheDocument()
+    await userEvent
+      .setup()
+      .click(screen.getByRole('button', { name: /reintentar/i }))
+    expect(
+      await screen.findByRole('form', { name: /valora este producto/i }),
+    ).toBeInTheDocument()
   })
 })
 
@@ -636,36 +929,61 @@ describe('ProductDetailPage (HU14): favoritos', () => {
     responderCon()
     await abrirDetalle()
 
-    expect(await screen.findByRole('button', { name: 'Añadir a favoritos' })).toBeEnabled()
-    expect(screen.queryByRole('button', { name: 'Quitar de favoritos' })).not.toBeInTheDocument()
+    expect(
+      await screen.findByRole('button', { name: 'Añadir a favoritos' }),
+    ).toBeEnabled()
+    expect(
+      screen.queryByRole('button', { name: 'Quitar de favoritos' }),
+    ).not.toBeInTheDocument()
   })
 
-  it('HU14-CP38: si el producto ya está en favoritos, el botón permite quitarlo', async () => {
+  it('HU14-CP38: si el producto ya está en alguna lista, el botón abre la gestión de listas', async () => {
     responderCon()
     server.use(
       http.get('/api/customer/wishlists', () =>
-        HttpResponse.json([{ id: 'wl-1', nombre: 'Mis favoritos', items: CON_EL_TECLADO.items }]),
+        HttpResponse.json([
+          {
+            id: 'wl-1',
+            nombre: 'Mis favoritos',
+            items: CON_EL_TECLADO.items,
+          },
+        ]),
       ),
     )
     await abrirDetalle()
 
-    expect(await screen.findByRole('button', { name: 'Añadir/Quitar de favoritos' })).toBeEnabled()
-    expect(screen.queryByRole('button', { name: 'Añadir a favoritos' })).not.toBeInTheDocument()
+    expect(
+      await screen.findByRole('button', {
+        name: 'Añadir/Quitar de favoritos',
+      }),
+    ).toBeEnabled()
+    expect(
+      screen.queryByRole('button', { name: 'Añadir a favoritos' }),
+    ).not.toBeInTheDocument()
   })
 
   it('HU14-CP38: un producto agotado también se puede añadir a favoritos', async () => {
     responderCon({ stock: 0 })
     await abrirDetalle()
 
-    expect(await screen.findByRole('button', { name: 'Añadir a favoritos' })).toBeEnabled()
+    expect(
+      await screen.findByRole('button', { name: 'Añadir a favoritos' }),
+    ).toBeEnabled()
   })
 
   it('HU14-CP38: si no se pueden leer los favoritos, se ofrece añadirlo sin avisar de ningún error', async () => {
     responderCon()
-    server.use(http.get('/api/customer/wishlists', () => new HttpResponse(null, { status: 500 })))
+    server.use(
+      http.get(
+        '/api/customer/wishlists',
+        () => new HttpResponse(null, { status: 500 }),
+      ),
+    )
     await abrirDetalle()
 
-    expect(await screen.findByRole('button', { name: 'Añadir a favoritos' })).toBeEnabled()
+    expect(
+      await screen.findByRole('button', { name: 'Añadir a favoritos' }),
+    ).toBeEnabled()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
@@ -674,24 +992,48 @@ describe('ProductDetailPage (HU14): favoritos', () => {
     responderCon()
     await abrirDetalle()
 
-    await user.click(await screen.findByRole('button', { name: 'Añadir a favoritos' }))
+    await user.click(
+      await screen.findByRole('button', { name: 'Añadir a favoritos' }),
+    )
 
-    const dialogo = screen.getByRole('dialog', { name: 'Guardar en lista de deseos' })
+    const dialogo = screen.getByRole('dialog', {
+      name: 'Guardar en lista de deseos',
+    })
     await user.type(within(dialogo).getByLabelText('Nueva lista'), 'Setup')
-    await user.click(within(dialogo).getByRole('button', { name: 'Crear y guardar' }))
+    await user.click(
+      within(dialogo).getByRole('button', { name: 'Crear y guardar' }),
+    )
 
-    const checkbox = await within(dialogo).findByRole('checkbox', { name: 'Setup (1)' })
+    const checkbox = await within(dialogo).findByRole('checkbox', {
+      name: 'Setup (1)',
+    })
     expect(checkbox).toBeChecked()
     await user.click(within(dialogo).getByRole('button', { name: 'Cerrar' }))
 
-    expect(await screen.findByRole('button', { name: 'Añadir/Quitar de favoritos' })).toBeEnabled()
+    expect(
+      await screen.findByRole('button', {
+        name: 'Añadir/Quitar de favoritos',
+      }),
+    ).toBeEnabled()
 
-    await user.click(screen.getByRole('button', { name: 'Quitar de favoritos' }))
-    const dialogo2 = screen.getByRole('dialog', { name: 'Guardar en lista de deseos' })
-    await user.click(within(dialogo2).getByRole('checkbox', { name: 'Setup (1)' }))
-    expect(await within(dialogo2).findByRole('checkbox', { name: 'Setup (0)' })).not.toBeChecked()
+    // En la versión de múltiples listas, el corazón vuelve a abrir el selector.
+    await user.click(
+      screen.getByRole('button', { name: 'Añadir/Quitar de favoritos' }),
+    )
+
+    const dialogo2 = screen.getByRole('dialog', {
+      name: 'Guardar en lista de deseos',
+    })
+    await user.click(
+      within(dialogo2).getByRole('checkbox', { name: 'Setup (1)' }),
+    )
+    expect(
+      await within(dialogo2).findByRole('checkbox', { name: 'Setup (0)' }),
+    ).not.toBeChecked()
     await user.click(within(dialogo2).getByRole('button', { name: 'Cerrar' }))
 
-    expect(await screen.findByRole('button', { name: 'Añadir a favoritos' })).toBeEnabled()
+    expect(
+      await screen.findByRole('button', { name: 'Añadir a favoritos' }),
+    ).toBeEnabled()
   })
 })

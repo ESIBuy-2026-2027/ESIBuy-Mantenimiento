@@ -9,6 +9,7 @@ import PremiumCheckout from '../features/premium/PremiumCheckout'
 import { AVISOS_PREMIUM } from '../features/premium/premiumNotices'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { PATHS } from '../routes/paths'
+import { notifyPremiumStatusChanged } from '../features/premium/premiumEvents'
 
 const ERROR_PERMISO = 'No tienes permiso para realizar esta operación.'
 const ERROR_GENERICO = 'No se ha podido completar el pago. Inténtalo de nuevo más tarde.'
@@ -52,6 +53,7 @@ export default function PremiumPaymentPage() {
     setError(null)
     try {
       await becomePremium()
+      notifyPremiumStatusChanged()
       // Los precios del carrito dependen del tipo de cliente: se piden de nuevo para que reflejen el descuento Premium
       reloadCart()
       volverAPremium(AVISOS_PREMIUM.ACTIVADO)

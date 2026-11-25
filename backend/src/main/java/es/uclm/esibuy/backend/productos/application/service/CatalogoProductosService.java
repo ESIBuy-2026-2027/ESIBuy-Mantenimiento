@@ -42,7 +42,7 @@ public class CatalogoProductosService implements CatalogoProductosUseCase {
     @Override
     public List<Producto> buscarDestacados(int limite) {
         BuscarCatalogoQuery query = new BuscarCatalogoQuery(
-                null, null, 1, CriterioOrdenCatalogo.VALORACION, true, 0, limite);
+                null, null, 1, false, false, false, null, null, CriterioOrdenCatalogo.VALORACION, true, 0, limite);
         return productoRepository.buscarEnCatalogo(query).productos().stream()
                 .filter(producto -> producto.getValoracionMedia() != null)
                 .toList();
@@ -51,8 +51,13 @@ public class CatalogoProductosService implements CatalogoProductosUseCase {
     @PreAuthorize(Permisos.SOLO_CLIENTE_PROPIO)
     @Override
     public PaginaCatalogo buscarProductos(BuscarCatalogoQuery query, String emailCliente) {
-        return new PaginaCatalogo(productoRepository.buscarEnCatalogo(query),
-                usuarioEnSesion.esClientePremium(emailCliente));
+        boolean premium = usuarioEnSesion.esClientePremium(emailCliente);
+        BuscarCatalogoQuery consulta = new BuscarCatalogoQuery(
+                query.busqueda(), query.categoriaId(), query.valoracionMinima(), query.soloStock(),
+                query.soloOfertas(), premium, query.precioMinimo(), query.precioMaximo(), query.criterio(), query.descendente(), query.pagina(), query.tamano());
+        var pagina = productoRepository.buscarEnCatalogo(consulta);
+        var precioMaximo = productoRepository.precioMaximoEnCatalogo(consulta);
+        return new PaginaCatalogo(pagina, premium, precioMaximo);
     }
 
     @PreAuthorize(Permisos.SOLO_CLIENTE)

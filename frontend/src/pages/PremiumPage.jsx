@@ -14,9 +14,10 @@ import {
   Spinner,
   Text,
   makeStyles,
+  mergeClasses,
   tokens,
 } from '@fluentui/react-components'
-import { Diamond20Regular, Diamond48Regular, Sparkle24Regular } from '@fluentui/react-icons'
+import { Diamond20Regular, Diamond48Regular, CheckmarkStarburst20Filled } from '@fluentui/react-icons'
 import { useLocation } from 'react-router-dom'
 import { cancelPremium, getProfile } from '../api/profile'
 import LinkButton from '../components/LinkButton'
@@ -25,6 +26,7 @@ import { PREMIUM_BENEFITS } from '../features/premium/premiumBenefits'
 import { TEXTO_AVISO_PREMIUM } from '../features/premium/premiumNotices'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { PATHS } from '../routes/paths'
+import { notifyPremiumStatusChanged } from '../features/premium/premiumEvents'
 
 // Retraso entre la entrada de una tarjeta y la siguiente
 const RETRASO_ENTRADA_MS = 120
@@ -43,11 +45,15 @@ const useStyles = makeStyles({
   hero: {
     position: 'relative',
     overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column',
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0, 1fr)',
     alignItems: 'flex-start',
     gap: tokens.spacingVerticalM,
     padding: `${tokens.spacingVerticalXXL} ${tokens.spacingHorizontalXL}`,
+    '@media (min-width: 900px)': {
+      gridTemplateColumns: 'minmax(0, 1fr) minmax(280px, 0.85fr)',
+      columnGap: tokens.spacingHorizontalXXL,
+    },
     borderRadius: tokens.borderRadiusXLarge,
     border: `1px solid ${tokens.colorBrandStroke2}`,
     backgroundColor: tokens.colorNeutralBackground1,
@@ -61,6 +67,57 @@ const useStyles = makeStyles({
     animationDirection: 'normal, alternate',
     animationFillMode: 'both',
     '@media (prefers-reduced-motion: reduce)': SIN_MOVIMIENTO,
+  },
+  standardPromo: {
+    border: '1px solid #F4B183',
+    backgroundImage: 'linear-gradient(115deg, #FFF0E3 0%, #FFF9F4 55%, #FCE7F3 100%)',
+    boxShadow: '0 4px 14px rgba(194, 65, 12, 0.12)',
+  },
+  premiumMember: {
+    border: '1px solid #EA8A3A',
+    backgroundImage: 'linear-gradient(120deg, #FFE2C2 0%, #FFF1DF 48%, #FFD7B5 100%)',
+    boxShadow: '0 6px 20px rgba(194, 65, 12, 0.22)',
+  },
+  premiumHeadline: {
+    color: '#C2410C',
+    backgroundImage: 'linear-gradient(90deg, #C2410C 0%, #EA580C 55%, #9A3412 100%)',
+    backgroundSize: '100% auto',
+    animationName: 'none',
+    WebkitTextFillColor: 'transparent',
+  },
+  brandRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalM,
+  },
+  brandIcon: {
+    flexShrink: 0,
+    width: '38px',
+    height: '38px',
+    animation: 'none',
+  },
+  premiumMemberStatus: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalS,
+    padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalL}`,
+    borderRadius: tokens.borderRadiusCircular,
+    color: '#8A2C08',
+    backgroundImage: 'linear-gradient(100deg, #FFC078 0%, #FF9A45 100%)',
+    border: '1px solid #E97824',
+    fontWeight: tokens.fontWeightBold,
+    letterSpacing: '0.02em',
+    boxShadow: tokens.shadow4,
+  },
+  premiumStatusCopy: {
+    color: tokens.colorNeutralForeground1,
+    fontWeight: tokens.fontWeightSemibold,
+  },
+  benefitsIntro: {
+    margin: 0,
+    color: '#9A3412',
+    fontWeight: tokens.fontWeightSemibold,
+    fontSize: tokens.fontSizeBase400,
   },
   heroIcon: {
     display: 'flex',
@@ -108,21 +165,10 @@ const useStyles = makeStyles({
   },
   cancellationSection: {
     display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalM,
-    padding: tokens.spacingVerticalXL,
-    border: `1px solid ${tokens.colorNeutralStroke2}`,
-    borderRadius: tokens.borderRadiusXLarge,
-    backgroundColor: tokens.colorNeutralBackground1,
-    boxShadow: tokens.shadow4,
-  },
-  cancellationTitle: {
-    margin: 0,
-    fontSize: tokens.fontSizeBase500,
-    fontWeight: tokens.fontWeightSemibold,
-  },
-  cancellationText: {
-    color: tokens.colorNeutralForeground2,
+    justifyContent: 'flex-end',
+    alignItems: 'flex-start',
+    width: '100%',
+    boxSizing: 'border-box',
   },
   cancellationAction: {
     alignSelf: 'flex-start',
@@ -165,6 +211,28 @@ const useStyles = makeStyles({
     '@media (prefers-reduced-motion: reduce)': {
       ...SIN_MOVIMIENTO,
       ':hover': { transform: 'none' },
+    },
+  },
+  embeddedPage: {
+    display: 'block',
+    width: '100%',
+  },
+  heroMain: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: tokens.spacingVerticalM,
+    minWidth: 0,
+  },
+  embeddedBenefits: {
+    gridColumn: '1 / -1',
+    marginTop: tokens.spacingVerticalM,
+  },
+  embeddedBenefitsList: {
+    gridTemplateColumns: 'minmax(0, 1fr)',
+    gap: tokens.spacingHorizontalM,
+    '@media (min-width: 720px)': {
+      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
     },
   },
   benefitsSection: {
@@ -232,6 +300,20 @@ const useStyles = makeStyles({
     backgroundImage: `linear-gradient(135deg, ${tokens.colorBrandBackground} 0%, ${tokens.colorPaletteBerryForeground1} 100%)`,
     boxShadow: tokens.shadow8,
   },
+  premiumBenefit: {
+    backgroundImage: 'linear-gradient(145deg, #FFF7ED 0%, #FFEDD5 100%)',
+    border: '1px solid #FDBA74',
+    boxShadow: '0 4px 12px rgba(194, 65, 12, 0.12)',
+    ':hover': {
+      transform: 'translateY(-6px)',
+      boxShadow: '0 8px 20px rgba(194, 65, 12, 0.2)',
+      borderColor: '#F97316',
+    },
+  },
+  premiumBenefitIcon: {
+    backgroundImage: 'linear-gradient(135deg, #F97316 0%, #C2410C 100%)',
+    boxShadow: '0 3px 10px rgba(194, 65, 12, 0.24)',
+  },
   benefitTitle: {
     margin: 0,
     fontSize: tokens.fontSizeBase400,
@@ -247,11 +329,11 @@ function PremiumStatus({ query, esPremium, styles }) {
   if (esPremium) {
     return (
       <div className={styles.status}>
-        <h2 className={styles.statusTitle}>
-          <Sparkle24Regular aria-hidden="true" />
-          Ya eres ESIBuy Premium
-        </h2>
-        <Text>Disfrutas de todas sus ventajas en cada compra.</Text>
+        <div className={styles.premiumMemberStatus}>
+          <CheckmarkStarburst20Filled aria-hidden="true" />
+          MIEMBRO ESIBUY PREMIUM
+        </div>
+        <Text className={styles.premiumStatusCopy}>Tu cuenta tiene acceso a todas las ventajas Premium.</Text>
       </div>
     )
   }
@@ -295,7 +377,7 @@ PremiumStatus.propTypes = {
 // Vista de ventajas de ESIBuy Premium (HU45), solo para clientes. El cliente Estándar puede hacerse Premium desde aquí
 // (por la pasarela de pago simulada); el Premium ve que ya lo es. Sin precio: la suscripción no tiene un importe
 // definido. Las animaciones se desactivan si el usuario prefiere reducir el movimiento.
-export default function PremiumPage() {
+export default function PremiumPage({ embedded = false }) {
   const pageStyles = usePageStyles()
   const styles = useStyles()
   const benefitsTitleId = useId()
@@ -306,12 +388,14 @@ export default function PremiumPage() {
   const [errorCancelacion, setErrorCancelacion] = useState(false)
   const aviso = TEXTO_AVISO_PREMIUM[location.state?.aviso] ?? null
   const esPremium = profile.data?.tipoCliente === 'PREMIUM'
+  const esEstandar = profile.data?.tipoCliente === 'ESTANDAR'
 
   const confirmarCancelacionPremium = async () => {
     setCancelandoPremium(true)
     setErrorCancelacion(false)
     try {
       await cancelPremium()
+      notifyPremiumStatusChanged()
       setFaseCancelacion(null)
       profile.retry()
     } catch {
@@ -321,46 +405,72 @@ export default function PremiumPage() {
     }
   }
 
-  return (
-    <main className={pageStyles.page}>
-      <section className={styles.hero}>
-        <span className={styles.heroIcon} aria-hidden="true">
-          <Diamond48Regular />
-        </span>
-        <h1 className={styles.headline}>ESIBuy Premium</h1>
-        <Text size={400} className={styles.lead}>
-          Compra con más ventajas: descuentos exclusivos, envíos sin coste y pedidos que llegan antes.
-        </Text>
-        <div aria-live="polite">
-          {errorCancelacion && (
-            <MessageBar intent="error">
-              <MessageBarBody>No se ha podido cancelar Premium. Inténtalo de nuevo.</MessageBarBody>
-            </MessageBar>
-          )}
-          {aviso && (
-            <MessageBar intent={aviso.intent}>
-              <MessageBarBody>{aviso.texto}</MessageBarBody>
-            </MessageBar>
-          )}
-        </div>
-        <PremiumStatus query={profile} esPremium={esPremium} styles={styles} />
-      </section>
+  const Root = embedded ? 'div' : 'main'
 
-      {esPremium && (
-        <section aria-labelledby="cancel-premium-title" className={styles.cancellationSection}>
-          <h2 id="cancel-premium-title" className={styles.cancellationTitle}>Gestionar suscripción</h2>
-          <Text className={styles.cancellationText}>
-            Si cancelas ESIBuy Premium, tu cuenta pasará a ser Estándar y dejarás de disfrutar de sus ventajas.
+  return (
+    <Root className={embedded ? styles.embeddedPage : pageStyles.page}>
+      <section className={mergeClasses(styles.hero, embedded && esEstandar && styles.standardPromo, embedded && esPremium && styles.premiumMember)}>
+        <div className={styles.heroMain}>
+          <div className={styles.brandRow}>
+            <span className={mergeClasses(styles.heroIcon, embedded && esPremium && styles.brandIcon)} aria-hidden="true">
+              <Diamond48Regular />
+            </span>
+            {embedded ? (
+              <h2 className={mergeClasses(styles.headline, esPremium && styles.premiumHeadline)}>{esEstandar ? 'Da el salto a ESIBuy Premium' : 'ESIBuy Premium'}</h2>
+            ) : (
+              <h1 className={styles.headline}>ESIBuy Premium</h1>
+            )}
+          </div>
+          <Text size={400} className={styles.lead}>
+            {embedded && esEstandar
+              ? 'Disfruta de descuentos exclusivos, envíos sin coste y prioridad para recibir tus pedidos antes.'
+              : 'Compra con más ventajas: descuentos exclusivos, envíos sin coste y pedidos que llegan antes.'}
           </Text>
-          <Button
-            appearance="secondary"
-            className={styles.cancellationAction}
-            onClick={() => setFaseCancelacion('inicial')}
-          >
-            Cancelar mi suscripción
-          </Button>
+          <div aria-live="polite">
+            {errorCancelacion && (
+              <MessageBar intent="error">
+                <MessageBarBody>No se ha podido cancelar Premium. Inténtalo de nuevo.</MessageBarBody>
+              </MessageBar>
+            )}
+            {aviso && (
+              <MessageBar intent={aviso.intent}>
+                <MessageBarBody>{aviso.texto}</MessageBarBody>
+              </MessageBar>
+            )}
+          </div>
+          <PremiumStatus query={profile} esPremium={esPremium} styles={styles} />
+        </div>
+
+        {esPremium && (
+          <section aria-label="Cancelar suscripción" className={styles.cancellationSection}>
+            <Button
+              appearance="secondary"
+              className={styles.cancellationAction}
+              onClick={() => setFaseCancelacion('inicial')}
+            >
+              Cancelar mi suscripción
+            </Button>
+          </section>
+        )}
+
+        <section aria-label="Ventajas de ESIBuy Premium" className={mergeClasses(styles.benefitsSection, embedded && styles.embeddedBenefits)}>
+          {!embedded && <h2 id={benefitsTitleId} className={styles.sectionTitle}>Ventajas de ESIBuy Premium</h2>}
+          {embedded && esEstandar && (
+            <p className={styles.benefitsIntro}>Al hacerte Premium, obtendrás las siguientes ventajas:</p>
+          )}
+          <ul aria-labelledby={embedded ? undefined : benefitsTitleId} aria-label={embedded ? "Ventajas de ESIBuy Premium" : undefined} className={mergeClasses(styles.benefits, embedded && styles.embeddedBenefitsList)}>
+            {PREMIUM_BENEFITS.map(({ id, titulo, texto, Icono }, index) => (
+              <li key={id} className={styles.benefitItem} style={{ animationDelay: `${(index + 1) * RETRASO_ENTRADA_MS}ms` }}>
+                <article className={mergeClasses(styles.benefit, embedded && esPremium && styles.premiumBenefit)}>
+                  <span className={mergeClasses(styles.benefitIcon, embedded && esPremium && styles.premiumBenefitIcon)} aria-hidden="true"><Icono /></span>
+                  <h3 className={styles.benefitTitle}>{titulo}</h3>
+                  <p className={styles.benefitText}>{texto}</p>
+                </article>
+              </li>
+            ))}
+          </ul>
         </section>
-      )}
+      </section>
 
       <Dialog
         open={faseCancelacion !== null}
@@ -433,28 +543,10 @@ export default function PremiumPage() {
         </DialogSurface>
       </Dialog>
 
-      <section aria-labelledby={benefitsTitleId} className={styles.benefitsSection}>
-        <h2 id={benefitsTitleId} className={styles.sectionTitle}>
-          Ventajas de ESIBuy Premium
-        </h2>
-        <ul aria-labelledby={benefitsTitleId} className={styles.benefits}>
-          {PREMIUM_BENEFITS.map(({ id, titulo, texto, Icono }, index) => (
-            <li
-              key={id}
-              className={styles.benefitItem}
-              style={{ animationDelay: `${(index + 1) * RETRASO_ENTRADA_MS}ms` }}
-            >
-              <article className={styles.benefit}>
-                <span className={styles.benefitIcon} aria-hidden="true">
-                  <Icono />
-                </span>
-                <h3 className={styles.benefitTitle}>{titulo}</h3>
-                <p className={styles.benefitText}>{texto}</p>
-              </article>
-            </li>
-          ))}
-        </ul>
-      </section>
-    </main>
+    </Root>
   )
+}
+
+PremiumPage.propTypes = {
+  embedded: PropTypes.bool,
 }

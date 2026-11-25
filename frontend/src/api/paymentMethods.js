@@ -16,6 +16,11 @@ export function addPaymentMethod(metodo) {
   return request(URL_METODOS, { method: 'POST', body: metodo })
 }
 
+// Sustituye los datos de un método propio. El servidor cifra los nuevos datos y conserva el estado predeterminado.
+export function updatePaymentMethod(id, metodo) {
+  return request(`${URL_METODOS}/${encodeURIComponent(id)}`, { method: 'PUT', body: metodo })
+}
+
 // Solo puede haber uno predeterminado: el backend desmarca el anterior. Responde 204 sin cuerpo.
 export function setDefaultPaymentMethod(id) {
   return request(`${URL_METODOS}/${encodeURIComponent(id)}/default`, { method: 'PUT' })

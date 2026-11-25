@@ -2,7 +2,6 @@ import PropTypes from 'prop-types'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
-  Badge,
   Button,
   MessageBar,
   MessageBarActions,
@@ -10,11 +9,11 @@ import {
   Spinner,
   Text,
   makeStyles,
+  mergeClasses,
   tokens,
 } from '@fluentui/react-components'
 import {
   BuildingShop20Regular,
-  Cart24Filled,
   Cart24Regular,
   Delete20Regular,
   Dismiss20Regular,
@@ -26,44 +25,63 @@ import QuantityStepper from './QuantityStepper'
 import { useCart } from './useCart'
 
 const useStyles = makeStyles({
-  // Botón flotante: siempre a la vista, abajo a la izquierda.
+  // Acceso integrado en la navegación superior.
   fab: {
-    position: 'fixed',
-    left: tokens.spacingHorizontalL,
-    bottom: tokens.spacingVerticalL,
-    zIndex: 1000,
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    flexShrink: 0,
   },
   fabButton: {
-    width: '56px',
-    height: '56px',
-    minWidth: '56px',
-    boxShadow: tokens.shadow16,
+    minWidth: 'auto',
+    minHeight: '40px',
+    padding: `0 ${tokens.spacingHorizontalM}`,
+    gap: tokens.spacingHorizontalXS,
+    border: '1px solid transparent',
+    borderRadius: tokens.borderRadiusCircular,
+    backgroundColor: 'transparent',
+    color: '#713512',
+    fontWeight: tokens.fontWeightRegular,
+    transitionProperty: 'background-color, color, border-color',
+    transitionDuration: tokens.durationFaster,
+    ':hover': {
+      backgroundColor: '#FCE8D5',
+      color: '#B54708',
+    },
+    ':active': {
+      backgroundColor: '#F8D7B8',
+      color: '#963B08',
+    },
   },
-  badge: {
-    position: 'absolute',
-    top: '-6px',
-    right: '-6px',
-    animationName: {
-      '0%': { transform: 'scale(0.4)' },
-      '60%': { transform: 'scale(1.3)' },
-      '100%': { transform: 'scale(1)' },
+  fabButtonActive: {
+    backgroundColor: '#FFF1E3',
+    color: '#A83F08',
+    ':hover': {
+      backgroundColor: '#FCE4CC',
+      color: '#963B08',
     },
-    animationDuration: tokens.durationSlow,
-    '@media (prefers-reduced-motion: reduce)': {
-      animationName: 'none',
-    },
+  },
+  countInline: {
+    marginLeft: '2px',
+    color: '#B54708',
+    fontWeight: tokens.fontWeightSemibold,
+    fontVariantNumeric: 'tabular-nums',
   },
   panel: {
     position: 'fixed',
-    left: tokens.spacingHorizontalL,
-    bottom: '88px',
-    zIndex: 1000,
+    top: '72px',
+    right: tokens.spacingHorizontalL,
+    '@media (max-width: 767px)': {
+      top: '112px',
+      right: tokens.spacingHorizontalM,
+    },
+    zIndex: 1200,
     display: 'flex',
     flexDirection: 'column',
     width: 'min(400px, calc(100vw - 32px))',
     maxHeight: 'min(72vh, 580px)',
     backgroundColor: tokens.colorNeutralBackground1,
-    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    border: '1px solid #F3C39F',
     borderRadius: tokens.borderRadiusXLarge,
     boxShadow: tokens.shadow64,
     overflow: 'hidden',
@@ -84,7 +102,8 @@ const useStyles = makeStyles({
     justifyContent: 'space-between',
     gap: tokens.spacingHorizontalS,
     padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalL}`,
-    borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderBottom: '1px solid #F3D2BA',
+    backgroundColor: '#FFF4EA',
   },
   title: {
     margin: 0,
@@ -266,9 +285,7 @@ function VendorGroup({ group, busy, onQuantity, onRemove, styles }) {
   )
 }
 
-// El carrito del cliente (HU9), siempre a la vista abajo a la izquierda: un botón con el número de productos que abre
-// un panel con ellos separados por proveedor, cada uno con su total, y con el acceso a la pasarela de pago. Solo lo
-// tienen los clientes.
+// El carrito del cliente (HU9) se integra en la navegación superior con una etiqueta visible y el contador de productos.
 export default function CartWidget() {
   const styles = useStyles()
   const { cart, status, setQuantity, remove, clear, reload } = useCart()
@@ -401,20 +418,17 @@ export default function CartWidget() {
       <div className={styles.fab}>
         <Button
           ref={button}
-          appearance="primary"
-          shape="circular"
-          size="large"
-          className={styles.fabButton}
-          icon={<Cart24Filled />}
+          appearance="subtle"
+          size="medium"
+          className={mergeClasses(styles.fabButton, open && styles.fabButtonActive)}
+          icon={<Cart24Regular />}
           aria-label={buttonLabel(status, count)}
           aria-expanded={open}
           onClick={() => setOpenPath(open ? null : pathname)}
-        />
-        {status === 'ready' && count > 0 && (
-          <Badge key={count} className={styles.badge} appearance="filled" color="danger" size="medium" aria-hidden="true">
-            {count}
-          </Badge>
-        )}
+        >
+          Mi carrito
+          {status === 'ready' && count > 0 && <span className={styles.countInline}>({count})</span>}
+        </Button>
       </div>
     </>
   )
