@@ -70,6 +70,10 @@ const useStyles = makeStyles({
     flexWrap: 'wrap',
     columnGap: tokens.spacingHorizontalL,
   },
+  // Sin aviso no ocupa sitio en la tarjeta, pero sigue ahí para que los lectores de pantalla anuncien el siguiente
+  favoritesNotice: {
+    ':empty': { position: 'absolute' },
+  },
   deletion: {
     gap: tokens.spacingVerticalM,
     padding: tokens.spacingVerticalXL,
@@ -121,12 +125,26 @@ AccountDeletion.propTypes = {
   rol: PropTypes.oneOf(['CLIENTE', 'VENDEDOR']).isRequired,
 }
 
+// Mensajes de las categorías favoritas, con el nombre de la categoría: nunca el texto del backend. Al marcar una que ya
+// no existe o no está activa (404), reintentarlo no serviría.
+const FAVORITAS_NO_CARGADAS = 'No se han podido cargar tus categorías favoritas. Inténtalo de nuevo.'
+const avisoDeExito = (nombre, marcada) =>
+  marcada
+    ? `${nombre} se ha añadido a tus categorías favoritas.`
+    : `${nombre} se ha quitado de tus categorías favoritas.`
+const avisoDeFallo = (nombre, marcada, error) => {
+  if (error?.code === 'CATEGORY_NOT_FOUND') return `${nombre} ya no está disponible.`
+  return marcada
+    ? `No se ha podido añadir ${nombre} a tus categorías favoritas. Inténtalo de nuevo.`
+    : `No se ha podido quitar ${nombre} de tus categorías favoritas. Inténtalo de nuevo.`
+}
+
 // Categorías favoritas del cliente (AB#528, sobre las preferencias de la HU46): una casilla por cada categoría activa,
 // marcadas sus favoritas. Cada una se marca o se desmarca por separado y se guarda al momento, así que al salir del
 // perfil ya están guardadas; mientras se guarda, las casillas quedan deshabilitadas, igual que mientras cargan. La
 // respuesta del backend es lo que se muestra después; si no se puede guardar, las casillas siguen como estaban. Si no
-// cargan, no se muestran: no se sabría cuáles son ya favoritas.
-function FavoriteCategories({ categories }) {
+// cargan (las favoritas o las propias categorías), no se muestran y se puede reintentar.
+function FavoriteCategories({ categories, categoriesLoaded, categoriesFailed, onRetryCategories }) {
   const styles = useStyles()
   const titleId = useId()
   const fetcher = useCallback(() => getPreferences(), [])
@@ -136,17 +154,51 @@ function FavoriteCategories({ categories }) {
   const [aviso, setAviso] = useState(null)
   const elegidas = new Set((actualizadas ?? cargadas)?.categorias ?? [])
 
-  const cambiar = async (categoryId, marcada) => {
+  const cambiar = async ({ id, nombre }, marcada) => {
     setAviso(null)
     setGuardando(true)
     try {
-      setActualizadas(await (marcada ? addFavoriteCategory(categoryId) : removeFavoriteCategory(categoryId)))
-      setAviso({ intent: 'success', texto: 'Preferencias guardadas.' })
-    } catch {
-      setAviso({ intent: 'error', texto: 'No se han podido guardar tus preferencias. Inténtalo de nuevo.' })
+      setActualizadas(await (marcada ? addFavoriteCategory(id) : removeFavoriteCategory(id)))
+      setAviso({ intent: 'success', texto: avisoDeExito(nombre, marcada) })
+    } catch (error) {
+      setAviso({ intent: 'error', texto: avisoDeFallo(nombre, marcada, error) })
     } finally {
       setGuardando(false)
     }
+  }
+
+  const reintentar = () => {
+    if (failed) retry()
+    if (categoriesFailed) onRetryCategories()
+  }
+
+  const contenido = () => {
+    if (failed || categoriesFailed) {
+      return (
+        <MessageBar intent="error">
+          <MessageBarBody>{FAVORITAS_NO_CARGADAS}</MessageBarBody>
+          <MessageBarActions>
+            <Button onClick={reintentar}>Reintentar</Button>
+          </MessageBarActions>
+        </MessageBar>
+      )
+    }
+    if (categoriesLoaded && categories.length === 0) {
+      return <Text>Ahora mismo no hay categorías disponibles.</Text>
+    }
+    return (
+      <fieldset aria-labelledby={titleId} className={styles.categories}>
+        {categories.map((category) => (
+          <Checkbox
+            key={category.id}
+            label={category.nombre}
+            checked={elegidas.has(category.id)}
+            disabled={guardando || !(actualizadas ?? cargadas)}
+            onChange={(_event, data) => cambiar(category, data.checked === true)}
+          />
+        ))}
+      </fieldset>
+    )
   }
 
   return (
@@ -155,31 +207,14 @@ function FavoriteCategories({ categories }) {
         Mis categorías favoritas
       </Title3>
       <Text className={styles.preferencesText}>Marca las categorías que más te interesan.</Text>
-      {aviso && (
-        <MessageBar intent={aviso.intent}>
-          <MessageBarBody>{aviso.texto}</MessageBarBody>
-        </MessageBar>
-      )}
-      {failed ? (
-        <MessageBar intent="error">
-          <MessageBarBody>No se han podido cargar tus preferencias. Inténtalo de nuevo.</MessageBarBody>
-          <MessageBarActions>
-            <Button onClick={retry}>Reintentar</Button>
-          </MessageBarActions>
-        </MessageBar>
-      ) : (
-        <fieldset aria-labelledby={titleId} className={styles.categories}>
-          {categories.map((category) => (
-            <Checkbox
-              key={category.id}
-              label={category.nombre}
-              checked={elegidas.has(category.id)}
-              disabled={guardando || !(actualizadas ?? cargadas)}
-              onChange={(_event, data) => cambiar(category.id, data.checked === true)}
-            />
-          ))}
-        </fieldset>
-      )}
+      <output className={styles.favoritesNotice}>
+        {aviso && (
+          <MessageBar intent={aviso.intent}>
+            <MessageBarBody>{aviso.texto}</MessageBarBody>
+          </MessageBar>
+        )}
+      </output>
+      {contenido()}
     </Card>
   )
 }
@@ -187,6 +222,9 @@ function FavoriteCategories({ categories }) {
 FavoriteCategories.propTypes = {
   categories: PropTypes.arrayOf(PropTypes.shape({ id: PropTypes.string.isRequired, nombre: PropTypes.string.isRequired }))
     .isRequired,
+  categoriesLoaded: PropTypes.bool.isRequired,
+  categoriesFailed: PropTypes.bool.isRequired,
+  onRetryCategories: PropTypes.func.isRequired,
 }
 
 // ESIBuy Premium en el perfil del cliente (HU45): el Estándar tiene el acceso a la vista Premium y el Premium, su
@@ -230,7 +268,12 @@ export default function ProfilePage() {
   const styles = useStyles()
   const fetcher = useCallback(() => getProfile(), [])
   const { data: cargado, failed, retry } = useApiQuery(fetcher)
-  const { categories } = useCategories()
+  const {
+    categories,
+    loaded: categoriesLoaded,
+    failed: categoriesFailed,
+    retry: retryCategories,
+  } = useCategories()
   const [editando, setEditando] = useState(false)
   const [conCambios, setConCambios] = useState(false)
   const [confirmandoCancelar, setConfirmandoCancelar] = useState(false)
@@ -326,7 +369,14 @@ export default function ProfilePage() {
       {confirmandoCancelar && <UnsavedChangesDialog onStay={() => setConfirmandoCancelar(false)} onLeave={dejarDeEditar} />}
       {guard.blocked && <UnsavedChangesDialog onStay={guard.reset} onLeave={guard.proceed} />}
 
-      {perfil?.rol === 'CLIENTE' && <FavoriteCategories categories={categories} />}
+      {perfil?.rol === 'CLIENTE' && (
+        <FavoriteCategories
+          categories={categories}
+          categoriesLoaded={categoriesLoaded}
+          categoriesFailed={categoriesFailed}
+          onRetryCategories={retryCategories}
+        />
+      )}
       {perfil?.rol === 'VENDEDOR' && <SellerStatistics />}
 
       {(perfil?.rol === 'CLIENTE' || perfil?.rol === 'VENDEDOR') && <SecurityFactors />}

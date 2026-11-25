@@ -194,7 +194,7 @@ describe('ProfilePage (HU46 y AB#528): categorías favoritas', () => {
     const user = userEvent.setup()
     await abrirPerfil('cliente@esibuy.test')
     await user.click(within(await seccion()).getByRole('checkbox', { name: 'Hogar' }))
-    await screen.findByText('Preferencias guardadas.')
+    await screen.findByText('Hogar se ha añadido a tus categorías favoritas.')
     cleanup()
 
     renderApp('/profile')
@@ -212,7 +212,7 @@ describe('ProfilePage (HU46 y AB#528): categorías favoritas', () => {
     await user.click(within(preferencias).getByRole('checkbox', { name: 'Tecnología' }))
 
     expect(
-      await screen.findByText('No se han podido guardar tus preferencias. Inténtalo de nuevo.'),
+      await screen.findByText('No se ha podido añadir Tecnología a tus categorías favoritas. Inténtalo de nuevo.'),
     ).toBeInTheDocument()
     expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).not.toBeChecked()
     expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).toBeEnabled()
@@ -229,13 +229,102 @@ describe('ProfilePage (HU46 y AB#528): categorías favoritas', () => {
     )
     await abrirPerfil('cliente@esibuy.test')
 
-    expect(await screen.findByText('No se han podido cargar tus preferencias. Inténtalo de nuevo.')).toBeInTheDocument()
+    expect(
+      await screen.findByText('No se han podido cargar tus categorías favoritas. Inténtalo de nuevo.'),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('group', { name: 'Mis categorías favoritas' })).not.toBeInTheDocument()
     falla = false
     await user.click(screen.getByRole('button', { name: 'Reintentar' }))
 
     const preferencias = await seccion()
     await waitFor(() => expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).toBeChecked())
+  })
+
+  it('HU528-CP16: al marcar una categoría avisa de que se ha añadido, con su nombre', async () => {
+    const user = userEvent.setup()
+    await abrirPerfil('cliente@esibuy.test')
+
+    await user.click(within(await seccion()).getByRole('checkbox', { name: 'Tecnología' }))
+
+    const aviso = await screen.findByText('Tecnología se ha añadido a tus categorías favoritas.')
+    expect(aviso.closest('output')).toBeInTheDocument()
+  })
+
+  it('HU528-CP16: al desmarcar una favorita avisa de que se ha quitado y sustituye al aviso anterior', async () => {
+    const user = userEvent.setup()
+    await abrirPerfil('cliente@esibuy.test')
+    const preferencias = await seccion()
+    await user.click(within(preferencias).getByRole('checkbox', { name: 'Hogar' }))
+    await screen.findByText('Hogar se ha añadido a tus categorías favoritas.')
+
+    await user.click(within(preferencias).getByRole('checkbox', { name: 'Hogar' }))
+
+    expect(await screen.findByText('Hogar se ha quitado de tus categorías favoritas.')).toBeInTheDocument()
+    expect(screen.queryByText(/se ha añadido/)).not.toBeInTheDocument()
+  })
+
+  it('HU528-CP17: si no se puede desmarcar, lo avisa y la categoría sigue marcada', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.get('/api/customer/preferences', () => HttpResponse.json({ categorias: ['cat-2'] })),
+      http.delete('/api/customer/preferences/categories/:categoriaId', () =>
+        HttpResponse.json({ mensaje: 'MongoTimeoutException' }, { status: 500 }),
+      ),
+    )
+    await abrirPerfil('cliente@esibuy.test')
+    const preferencias = await seccion()
+    await waitFor(() => expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).toBeChecked())
+
+    await user.click(within(preferencias).getByRole('checkbox', { name: 'Hogar' }))
+
+    expect(
+      await screen.findByText('No se ha podido quitar Hogar de tus categorías favoritas. Inténtalo de nuevo.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/mongotimeout/i)).not.toBeInTheDocument()
+    expect(within(preferencias).getByRole('checkbox', { name: 'Hogar' })).toBeChecked()
+  })
+
+  it('HU528-CP17: si la categoría ya no está disponible, lo avisa y no queda marcada', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/customer/preferences/categories', () =>
+        HttpResponse.json({ code: 'CATEGORY_NOT_FOUND' }, { status: 404 }),
+      ),
+    )
+    await abrirPerfil('cliente@esibuy.test')
+    const preferencias = await seccion()
+
+    await user.click(within(preferencias).getByRole('checkbox', { name: 'Tecnología' }))
+
+    expect(await screen.findByText('Tecnología ya no está disponible.')).toBeInTheDocument()
+    expect(within(preferencias).getByRole('checkbox', { name: 'Tecnología' })).not.toBeChecked()
+  })
+
+  it('HU528-CP18: si no se pueden cargar las categorías, lo avisa y permite reintentar', async () => {
+    const user = userEvent.setup()
+    let falla = true
+    server.use(
+      http.get('/api/categorias', () =>
+        falla ? new HttpResponse(null, { status: 500 }) : HttpResponse.json([{ id: 'cat-1', nombre: 'Tecnología' }]),
+      ),
+    )
+    await abrirPerfil('cliente@esibuy.test')
+
+    expect(
+      await screen.findByText('No se han podido cargar tus categorías favoritas. Inténtalo de nuevo.'),
+    ).toBeInTheDocument()
+    falla = false
+    await user.click(screen.getByRole('button', { name: 'Reintentar' }))
+
+    expect(await within(await seccion()).findByRole('checkbox', { name: 'Tecnología' })).toBeInTheDocument()
+  })
+
+  it('HU528-CP18: si no hay ninguna categoría activa, lo indica', async () => {
+    server.use(http.get('/api/categorias', () => HttpResponse.json([])))
+    await abrirPerfil('cliente@esibuy.test')
+
+    expect(await screen.findByText('Ahora mismo no hay categorías disponibles.')).toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: 'Mis categorías favoritas' })).not.toBeInTheDocument()
   })
 
   it('HU46-CP20: el vendedor no tiene categorías favoritas', async () => {
