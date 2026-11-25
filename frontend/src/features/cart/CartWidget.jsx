@@ -54,7 +54,6 @@ const useStyles = makeStyles({
   },
   panel: {
     position: 'fixed',
-    position: 'fixed',
     top: '88px',
     right: tokens.spacingHorizontalL,
     zIndex: 1200,
