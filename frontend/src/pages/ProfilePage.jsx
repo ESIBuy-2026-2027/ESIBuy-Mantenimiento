@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types'
 import { useCallback, useId, useState } from 'react'
 import {
-  Badge,
   Button,
   Card,
   Checkbox,
@@ -22,7 +21,6 @@ import {
 import { getPreferences, savePreferences } from '../api/preferences'
 import { getProfile, updateProfile } from '../api/profile'
 import { useAuth } from '../auth/useAuth'
-import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import { UserAvatar } from '../features/account/AvatarSelector'
 import DeleteAccountDialog from '../features/account/DeleteAccountDialog'
