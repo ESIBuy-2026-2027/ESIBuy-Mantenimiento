@@ -130,6 +130,36 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     // no distingue mayúsculas ni tildes y trata el texto como literal.
     @Override
     public ProductoPage buscarEnCatalogo(BuscarCatalogoQuery query) {
+        Criteria criterios = construirCriteriosCatalogo(query, true);
+        long total = mongoTemplate.count(new Query(criterios), ProductoDocument.class);
+        // Por valoración, los empates van por nombre de la A a la Z en los dos sentidos.
+        Sort.Direction direccion = query.descendente() ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort orden = switch (query.criterio()) {
+            case VALORACION -> Sort.by(direccion, CAMPO_VALORACION_MEDIA)
+                    .and(Sort.by(Sort.Direction.ASC, CAMPO_NOMBRE));
+            case PRECIO -> Sort.by(direccion, CAMPO_PRECIO)
+                    .and(Sort.by(Sort.Direction.ASC, CAMPO_NOMBRE));
+            case NOMBRE -> Sort.by(direccion, CAMPO_NOMBRE);
+        };
+        // Sin collation, MongoDB ordena por código Unicode.
+        List<Producto> productos = mongoTemplate.find(new Query(criterios).with(PageRequest.of(
+                query.pagina(), query.tamano(), orden)),
+                ProductoDocument.class).stream()
+                .map(mapper::aDominio)
+                .toList();
+        return new ProductoPage(productos, query.pagina(), query.tamano(), total);
+    }
+
+    @Override
+    public java.math.BigDecimal precioMaximoEnCatalogo(BuscarCatalogoQuery query) {
+        Criteria criterios = construirCriteriosCatalogo(query, false);
+        ProductoDocument masCaro = mongoTemplate.findOne(
+                new Query(criterios).with(Sort.by(Sort.Direction.DESC, CAMPO_PRECIO)).limit(1),
+                ProductoDocument.class);
+        return masCaro == null ? java.math.BigDecimal.ZERO : mapper.aDominio(masCaro).getPrecio();
+    }
+
+    private static Criteria construirCriteriosCatalogo(BuscarCatalogoQuery query, boolean incluirPrecioMaximo) {
         List<Criteria> filtros = new ArrayList<>();
         filtros.add(Criteria.where(CAMPO_DISPONIBLE).is(true));
         if (query.soloStock()) {
@@ -151,38 +181,13 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         if (query.precioMinimo() != null) {
             filtros.add(Criteria.where(CAMPO_PRECIO).gte(query.precioMinimo()));
         }
-        if (query.precioMaximo() != null) {
+        if (incluirPrecioMaximo && query.precioMaximo() != null) {
             filtros.add(Criteria.where(CAMPO_PRECIO).lte(query.precioMaximo()));
         }
-        // Media de las valoraciones (HU13): un producto sin valoraciones no tiene el
-        // campo y no llega a ningún mínimo
         if (query.valoracionMinima() != null) {
             filtros.add(Criteria.where(CAMPO_VALORACION_MEDIA).gte(query.valoracionMinima()));
         }
-        Criteria criterios = new Criteria().andOperator(filtros);
-        long total = mongoTemplate.count(new Query(criterios), ProductoDocument.class);
-        // Por valoración, los empates van por nombre de la A a la Z en los dos
-        // sentidos. Sin valoraciones, MongoDB los
-        // trata como el valor más bajo: al principio en ascendente y al final en
-        // descendente.
-        Sort.Direction direccion = query.descendente() ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Sort orden = switch (query.criterio()) {
-            case VALORACION -> Sort.by(direccion, CAMPO_VALORACION_MEDIA)
-                    .and(Sort.by(Sort.Direction.ASC, CAMPO_NOMBRE));
-            case PRECIO -> Sort.by(direccion, CAMPO_PRECIO)
-                    .and(Sort.by(Sort.Direction.ASC, CAMPO_NOMBRE));
-            case NOMBRE -> Sort.by(direccion, CAMPO_NOMBRE);
-        };
-        // PENDIENTE DE DECIDIR (equipo): ordenar como en español con
-        // ORDEN_ALFABETICO_ES (UsuarioMongoAdapter).
-        // Sin collation, MongoDB ordena por código Unicode: las mayúsculas antes y las
-        // vocales con tilde tras la Z.
-        List<Producto> productos = mongoTemplate.find(new Query(criterios).with(PageRequest.of(
-                query.pagina(), query.tamano(), orden)),
-                ProductoDocument.class).stream()
-                .map(mapper::aDominio)
-                .toList();
-        return new ProductoPage(productos, query.pagina(), query.tamano(), total);
+        return new Criteria().andOperator(filtros);
     }
 
     // Mismo vendedor y mismo nombre completo, sin distinguir mayúsculas y como
