@@ -155,8 +155,8 @@ export default function OffersStrip({ categoryNames, favoritos, onAddFavorite, o
                   offerStyle
                   categoryName={categoryNames.get(product.categoriaId)}
                   favorite={favoritos.has(product.id)}
-                  onAddFavorite={onAddFavorite}
-                  onRemoveFavorite={onRemoveFavorite}
+                  onAddFavorite={() => onAddFavorite(product)}
+                  onRemoveFavorite={() => onRemoveFavorite(product)}
                 />
               </li>
             )
