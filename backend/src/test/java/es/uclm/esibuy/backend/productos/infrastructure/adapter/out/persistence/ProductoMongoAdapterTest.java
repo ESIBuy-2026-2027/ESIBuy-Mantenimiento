@@ -480,6 +480,30 @@ class ProductoMongoAdapterTest {
         assertEquals(List.of("Cesta", "Banco"), nombres(descendente));
     }
 
+    @Test
+    @DisplayName("HU7: ordena el catálogo por precio ascendente y descendente")
+    void buscarEnCatalogoOrdenaPorPrecio() {
+        adapter.guardar(crearProducto(null, "v-1", "Precio medio", "",
+                new BigDecimal("50.00"), 5, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-1", "Precio bajo", "",
+                new BigDecimal("10.00"), 5, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-2", "Precio alto", "",
+                new BigDecimal("100.00"), 5, "cat-1", "", true,
+                Descuento.sinDescuento(), Descuento.sinDescuento()));
+
+        ProductoPage ascendente = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, false, false, false, null, null,
+                        CriterioOrdenCatalogo.PRECIO, false, 0, 10));
+        ProductoPage descendente = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, false, false, false, null, null,
+                        CriterioOrdenCatalogo.PRECIO, true, 0, 10));
+
+        assertEquals(List.of("Precio bajo", "Precio medio", "Precio alto"), nombres(ascendente));
+        assertEquals(List.of("Precio alto", "Precio medio", "Precio bajo"), nombres(descendente));
+    }
+
     // Valoración mínima y orden por valoración (HU7) con la media de las
     // valoraciones de HU13 (T415). Un producto
     // sin valoraciones no llega a ningún mínimo y al ordenar cuenta como el que
