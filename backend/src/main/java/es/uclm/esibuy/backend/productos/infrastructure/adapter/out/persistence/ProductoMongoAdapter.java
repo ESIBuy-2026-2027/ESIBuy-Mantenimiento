@@ -132,6 +132,14 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     public ProductoPage buscarEnCatalogo(BuscarCatalogoQuery query) {
         List<Criteria> filtros = new ArrayList<>();
         filtros.add(Criteria.where(CAMPO_DISPONIBLE).is(true));
+        if (query.soloStock()) {
+            filtros.add(Criteria.where(CAMPO_STOCK).gt(0));
+        }
+        if (query.soloOfertas()) {
+            filtros.add(new Criteria().orOperator(
+                    Criteria.where("descuento.activo").is(true),
+                    Criteria.where("descuentoPremium.activo").is(true)));
+        }
         if (query.busqueda() != null && !query.busqueda().isBlank()) {
             filtros.add(Criteria.where(CAMPO_NOMBRE).regex(patronSinTildes(query.busqueda()), "i"));
         }
