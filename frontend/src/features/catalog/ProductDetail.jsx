@@ -320,8 +320,6 @@ export default function ProductDetail({
   const [quantity, setQuantity] = useState(1)
   const canBuy = status.key === 'in' || status.key === 'low'
   const category = categoryName ?? SIN_CATEGORIA
-  const [savingFavorite, setSavingFavorite] = useState(false)
-  const [favoriteError, setFavoriteError] = useState('')
 
   useEffect(() => {
     const image = imageRef.current
@@ -336,29 +334,6 @@ export default function ProductDetail({
 
     return () => image.removeEventListener('error', handleError)
   }, [])
-
-  const favoriteFailure = (failure) => {
-    if (favorite) {
-      return 'No se ha podido quitar de favoritos. Inténtalo de nuevo.'
-    }
-
-    return failure?.code === 'PRODUCT_NOT_FOUND'
-      ? 'Este producto ya no está disponible.'
-      : 'No se ha podido añadir a favoritos. Inténtalo de nuevo.'
-  }
-
-  const toggleFavorite = async () => {
-    setFavoriteError('')
-    setSavingFavorite(true)
-
-    try {
-      await (favorite ? onRemoveFavorite(product.id) : onAddFavorite(product.id))
-    } catch (failure) {
-      setFavoriteError(favoriteFailure(failure))
-    } finally {
-      setSavingFavorite(false)
-    }
-  }
 
   return (
     <div className={styles.layout}>
@@ -460,18 +435,12 @@ export default function ProductDetail({
                   ? <Heart20Filled className={styles.favoriteIcon} />
                   : <Heart20Regular />
               }
-              disabled={savingFavorite}
-              onClick={toggleFavorite}
+              onClick={onAddFavorite}
             >
-              {favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+              {favorite ? 'En listas de deseos' : 'Añadir a lista de deseos'}
             </Button>
           )}
 
-          {favoriteError && (
-            <Text role="alert" size={200} className={styles.favoriteError}>
-              {favoriteError}
-            </Text>
-          )}
         </div>
 
         <section
