@@ -384,15 +384,23 @@ class ProductoMongoAdapterTest {
         ProductoPage soloStock = adapter.buscarEnCatalogo(
                 new BuscarCatalogoQuery(null, null, null, true, false, false,
                         CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+        adapter.guardar(crearProducto(null, "v-4", "Solo oferta Premium", "",
+                new BigDecimal("10"), 2, "cat-1", "", true,
+                Descuento.sinDescuento(), new Descuento(true, new BigDecimal("20"))));
+
         ProductoPage soloOfertas = adapter.buscarEnCatalogo(
                 new BuscarCatalogoQuery(null, null, null, false, true, false,
+                        CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
+        ProductoPage ofertasPremium = adapter.buscarEnCatalogo(
+                new BuscarCatalogoQuery(null, null, null, false, true, true,
                         CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
         ProductoPage stockYOfertas = adapter.buscarEnCatalogo(
                 new BuscarCatalogoQuery(null, null, null, true, true, false,
                         CriterioOrdenCatalogo.NOMBRE, false, 0, 10));
 
         assertEquals(List.of("Con stock sin oferta", "Con stock y oferta"), nombres(soloStock));
-        assertEquals(List.of("Sin stock con oferta", "Con stock y oferta"), nombres(soloOfertas));
+        assertEquals(List.of("Con stock y oferta", "Sin stock con oferta"), nombres(soloOfertas));
+        assertEquals(List.of("Con stock y oferta", "Solo oferta Premium"), nombres(ofertasPremium));
         assertEquals(List.of("Con stock y oferta"), nombres(stockYOfertas));
     }
 
