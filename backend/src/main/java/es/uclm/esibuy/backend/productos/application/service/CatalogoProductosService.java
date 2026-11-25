@@ -55,7 +55,9 @@ public class CatalogoProductosService implements CatalogoProductosUseCase {
         BuscarCatalogoQuery consulta = new BuscarCatalogoQuery(
                 query.busqueda(), query.categoriaId(), query.valoracionMinima(), query.soloStock(),
                 query.soloOfertas(), premium, query.precioMinimo(), query.precioMaximo(), query.criterio(), query.descendente(), query.pagina(), query.tamano());
-        return new PaginaCatalogo(productoRepository.buscarEnCatalogo(consulta), premium);
+        var pagina = productoRepository.buscarEnCatalogo(consulta);
+        var precioMaximo = productoRepository.precioMaximoEnCatalogo(consulta);
+        return new PaginaCatalogo(pagina, premium, precioMaximo);
     }
 
     @PreAuthorize(Permisos.SOLO_CLIENTE)
