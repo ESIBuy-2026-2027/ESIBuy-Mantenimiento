@@ -45,6 +45,14 @@ public class MetodoPagoController {
         return MetodoPagoResponse.desde(gestionMetodosPago.anadir(request.aComando(autenticado.getName())));
     }
 
+    // Sustituye los datos del método propio. Los datos anteriores nunca se descifran ni se devuelven.
+    @PutMapping("/{id}")
+    public MetodoPagoResponse actualizar(@PathVariable String id, @Valid @RequestBody MetodoPagoRequest request,
+            Authentication autenticado) {
+        return MetodoPagoResponse.desde(
+                gestionMetodosPago.actualizar(autenticado.getName(), id, request.aComando(autenticado.getName())));
+    }
+
     // Marca como predeterminado un método propio; uno ajeno o inexistente da 404
     @PutMapping("/{id}/default")
     @ResponseStatus(HttpStatus.NO_CONTENT)
