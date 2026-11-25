@@ -54,6 +54,8 @@ final class ColeccionesEsiBuy {
     private static final String TELEFONO = "telefono";
     private static final String NOMBRE_COMERCIAL = "nombreComercial";
     private static final String DESCRIPCION = "descripcion";
+    // Campo de preferencias que se repite entre su validación y sus índices.
+    private static final String CATEGORIAS = "categorias";
     // Campos de productos que se repiten entre su validación y sus índices.
     private static final String DISPONIBLE = "disponible";
     private static final String VALORACION_MEDIA = "valoracionMedia";
@@ -316,12 +318,13 @@ final class ColeccionesEsiBuy {
         return new Coleccion("contadores", esquema(List.of("valor"), number("valor").gte(1)), List.of());
     }
 
-    // 14. preferencias: las categorías que interesan a cada cliente (HU46), fuera del modelo inicial. Unas por cliente.
+    // 14. preferencias: las categorías favoritas de cada cliente (HU46 y AB#528), fuera del modelo inicial. Unas por
+    // cliente. El índice por categoría sirve para buscar los clientes que tienen una como favorita (AB#530).
     private static Coleccion preferencias() {
         return new Coleccion("preferencias", esquema(List.of(CLIENTE_ID),
                 textoNoVacio(CLIENTE_ID),
-                array("categorias").items(JsonSchemaObject.string())),
-                List.of(indice(CLIENTE_ID).unique()));
+                array(CATEGORIAS).items(JsonSchemaObject.string())),
+                List.of(indice(CLIENTE_ID).unique(), indice(CATEGORIAS)));
     }
 
     // 15. incidencias: lo que un cliente o un vendedor reporta para que un administrador lo revise (HU44). Mismas

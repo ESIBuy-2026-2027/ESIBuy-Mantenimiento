@@ -23,6 +23,21 @@ public interface GestionPreferenciasUseCase {
     List<String> guardar(String emailCliente, List<String> categorias);
 
     /**
+     * Marca una categoría como favorita del cliente (AB#528) y devuelve sus favoritas, como en {@link #consultar}.
+     * Marcar una que ya lo es no es un error: no cambia nada.
+     *
+     * @throws es.uclm.esibuy.backend.preferencias.domain.exception.CategoriaNoDisponibleException si no existe o no
+     *         está activa; entonces no se guarda nada
+     */
+    List<String> marcar(String emailCliente, String categoriaId);
+
+    /**
+     * Quita una categoría de las favoritas del cliente (AB#528), esté o no activa, y devuelve las que quedan, como en
+     * {@link #consultar}. Desmarcar una que no es favorita no es un error: no cambia nada ni se crea nada.
+     */
+    List<String> desmarcar(String emailCliente, String categoriaId);
+
+    /**
      * Borra las preferencias del cliente, para cuando elimina su cuenta (HU25). Si no tiene no es un error. Hay que
      * llamarlo antes de borrar al usuario: las preferencias se buscan por el id del cliente, que se obtiene de su
      * correo.

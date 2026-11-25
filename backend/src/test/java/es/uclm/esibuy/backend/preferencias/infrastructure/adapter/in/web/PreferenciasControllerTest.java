@@ -1,6 +1,7 @@
 package es.uclm.esibuy.backend.preferencias.infrastructure.adapter.in.web;
 
 import es.uclm.esibuy.backend.preferencias.application.port.in.GestionPreferenciasUseCase;
+import es.uclm.esibuy.backend.preferencias.domain.exception.CategoriaNoDisponibleException;
 import es.uclm.esibuy.backend.preferencias.domain.exception.PreferenciasInvalidasException;
 import es.uclm.esibuy.backend.shared.config.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
@@ -24,21 +25,25 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// Preferencias del cliente (HU46, T287): GET y PUT /api/customer/preferences. El caso de uso es un doble de prueba; la
-// seguridad es la real (SecurityConfig: /api/customer/** solo para CLIENTE, con CSRF) y los errores los traduce
-// ManejadorGlobalErrores.
-// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU46-CP14 a CP18, propuestos.
+// Preferencias del cliente (HU46, T287): GET y PUT /api/customer/preferences; y sus categorías favoritas (AB#528): POST y
+// DELETE /api/customer/preferences/categories. El caso de uso es un doble de prueba; la seguridad es la real
+// (SecurityConfig: /api/customer/** solo para CLIENTE, con CSRF) y los errores los traduce ManejadorGlobalErrores.
+// PENDIENTE DE CONFIRMAR CON EL EQUIPO: casos HU46-CP14 a CP18 y HU528-CP08 a CP11, propuestos.
 @WebMvcTest(PreferenciasController.class)
 @Import(SecurityConfig.class)
 class PreferenciasControllerTest {
 
     private static final String URL = "/api/customer/preferences";
+    private static final String URL_CATEGORIAS = URL + "/categories";
     private static final String CLIENTE = "cliente@esibuy.test";
+    private static final String CUERPO_MARCAR = "{\"categoriaId\": \"cat-1\"}";
     private static final String CUERPO = "{\"categorias\": [\"cat-2\", \"cat-1\"]}";
 
     @Autowired
@@ -49,6 +54,73 @@ class PreferenciasControllerTest {
 
     private static MockHttpServletRequestBuilder guardar(String cuerpo) {
         return put(URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(cuerpo);
+    }
+
+    private static MockHttpServletRequestBuilder marcar(String cuerpo) {
+        return post(URL_CATEGORIAS).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(cuerpo);
+    }
+
+    private static MockHttpServletRequestBuilder desmarcar() {
+        return delete(URL_CATEGORIAS + "/cat-1").with(csrf());
+    }
+
+    @Test
+    @DisplayName("HU528-CP08: marcar envía la categoría del cuerpo para el cliente en sesión y responde 200 con sus favoritas")
+    void marcarRespondeConLasFavoritas() throws Exception {
+        when(gestionPreferencias.marcar(CLIENTE, "cat-1")).thenReturn(List.of("cat-2", "cat-1"));
+
+        mockMvc.perform(marcar(CUERPO_MARCAR).with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.categorias.length()").value(2))
+                .andExpect(jsonPath("$.categorias[0]").value("cat-2"))
+                .andExpect(jsonPath("$.categorias[1]").value("cat-1"));
+    }
+
+    @Test
+    @DisplayName("HU528-CP08: el cliente sale de la sesión: un clienteId en el cuerpo se ignora")
+    void marcarIgnoraElClienteDelCuerpo() throws Exception {
+        when(gestionPreferencias.marcar(CLIENTE, "cat-1")).thenReturn(List.of("cat-1"));
+
+        mockMvc.perform(marcar("{\"categoriaId\": \"cat-1\", \"clienteId\": \"otro\"}")
+                        .with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isOk());
+
+        verify(gestionPreferencias).marcar(CLIENTE, "cat-1");
+    }
+
+    @Test
+    @DisplayName("HU528-CP09: desmarcar quita la categoría de la ruta al cliente en sesión y responde 200 con sus favoritas")
+    void desmarcarRespondeConLasFavoritas() throws Exception {
+        when(gestionPreferencias.desmarcar(CLIENTE, "cat-1")).thenReturn(List.of("cat-2"));
+
+        mockMvc.perform(desmarcar().with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.categorias.length()").value(1))
+                .andExpect(jsonPath("$.categorias[0]").value("cat-2"));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"{}", "{\"categoriaId\": null}", "{\"categoriaId\": \"  \"}",
+            "{\"categoriaId\": [\"cat-1\"]}", "{\"categoriaId\": "})
+    @DisplayName("HU528-CP10: marcar sin categoría, en blanco, con una lista o con un cuerpo ilegible devuelve 400 y no llega al caso de uso")
+    void marcarConUnCuerpoInvalidoDevuelve400(String cuerpo) throws Exception {
+        mockMvc.perform(marcar(cuerpo).with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+
+        verifyNoInteractions(gestionPreferencias);
+    }
+
+    @Test
+    @DisplayName("HU528-CP11: marcar una categoría inactiva o que no existe devuelve 404 CATEGORY_NOT_FOUND con un mensaje genérico")
+    void marcarUnaCategoriaNoDisponibleDevuelve404() throws Exception {
+        when(gestionPreferencias.marcar(CLIENTE, "cat-1"))
+                .thenThrow(new CategoriaNoDisponibleException("La categoría no está disponible"));
+
+        mockMvc.perform(marcar(CUERPO_MARCAR).with(user(CLIENTE).roles("CLIENTE")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CATEGORY_NOT_FOUND"))
+                .andExpect(jsonPath("$.mensaje").value("La categoría no existe"));
     }
 
     @Test

@@ -5,8 +5,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
- * Preferencias de un cliente (HU46): las categorías que le interesan, en el orden en que las eligió y sin repetir
- * ninguna. Hay unas por cliente; un cliente que aún no ha elegido nada no tiene ninguna categoría.
+ * Preferencias de un cliente (HU46): sus categorías favoritas (AB#528), en el orden en que las marcó y sin repetir
+ * ninguna. Hay unas por cliente; un cliente que aún no ha marcado nada no tiene ninguna categoría.
  */
 public class Preferencias {
 
@@ -29,6 +29,16 @@ public class Preferencias {
     public void elegirCategorias(List<String> nuevas) {
         categorias.clear();
         categorias.addAll(sinRepetidas(nuevas));
+    }
+
+    // Marcar una categoría que ya es favorita no es un error: ya queda como se quería. Dice si ha cambiado
+    public boolean marcar(String categoriaId) {
+        return !categorias.contains(categoriaId) && categorias.add(categoriaId);
+    }
+
+    // Desmarcar una que no es favorita no es un error: ya queda como se quería. Dice si ha cambiado
+    public boolean desmarcar(String categoriaId) {
+        return categorias.remove(categoriaId);
     }
 
     private static List<String> sinRepetidas(List<String> categorias) {

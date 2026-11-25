@@ -9,6 +9,7 @@ import es.uclm.esibuy.backend.carrito.domain.exception.LineaCarritoNoEncontradaE
 import es.uclm.esibuy.backend.carrito.domain.exception.ProductoNoComprableException;
 import es.uclm.esibuy.backend.carrito.domain.exception.StockInsuficienteException;
 import es.uclm.esibuy.backend.deseos.domain.exception.ProductoNoDisponibleException;
+import es.uclm.esibuy.backend.preferencias.domain.exception.CategoriaNoDisponibleException;
 import es.uclm.esibuy.backend.preferencias.domain.exception.PreferenciasInvalidasException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionInvalidaException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionNoEncontradaException;
@@ -332,8 +333,9 @@ public class ManejadorGlobalErrores {
         return new RespuestaError("La categoría ya existe con el mismo nombre", "CATEGORY_NAME_ALREADY_EXISTS");
     }
 
-    // 404 + code cuando la categoría que se edita no existe (HU41, T328).
-    @ExceptionHandler(CategoriaNoEncontradaException.class)
+    // 404 + code cuando la categoría que se edita no existe (HU41, T328) o la que se marca como favorita no existe o no
+    // está activa (AB#528): una inactiva se responde igual que una inexistente.
+    @ExceptionHandler({ CategoriaNoEncontradaException.class, CategoriaNoDisponibleException.class })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public RespuestaError categoriaNoEncontrada() {
         return new RespuestaError("La categoría no existe", "CATEGORY_NOT_FOUND");
