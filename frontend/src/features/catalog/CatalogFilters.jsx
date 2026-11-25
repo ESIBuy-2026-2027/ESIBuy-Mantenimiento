@@ -310,7 +310,7 @@ CatalogFilters.propTypes = {
   categories: PropTypes.arrayOf(categoryPropType).isRequired,
   minRating: PropTypes.string.isRequired,
   minPrice: PropTypes.number.isRequired,
-  maxPrice: PropTypes.number, 
+  maxPrice: PropTypes.number,
   priceCeiling: PropTypes.number.isRequired,
   inStock: PropTypes.bool.isRequired,
   offersOnly: PropTypes.bool.isRequired,
