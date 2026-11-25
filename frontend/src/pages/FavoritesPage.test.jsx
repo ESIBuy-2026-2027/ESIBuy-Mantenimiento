@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { delay, http, HttpResponse } from 'msw'
+import { addItemToWishlist, createWishlist } from '../api/wishlist'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
@@ -76,6 +77,15 @@ describe('FavoritesPage (HU14): acceso', () => {
     renderApp('/favorites')
 
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/seller/products$')))
+  })
+
+  it('HU528-CP39: los productos de las listas de deseos no salen en favoritos', async () => {
+    await abrirSesionPorApi('cliente@esibuy.test')
+    const lista = await createWishlist('Regalos')
+    await addItemToWishlist(lista.id, 'p-1')
+    renderApp('/favorites')
+
+    expect(await screen.findByText('Aún no tienes favoritos')).toBeInTheDocument()
   })
 })
 

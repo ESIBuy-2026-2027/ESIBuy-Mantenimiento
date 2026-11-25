@@ -12,6 +12,7 @@ import {
   Field,
   Input,
   MessageBar,
+  MessageBarActions,
   MessageBarBody,
   Spinner,
   Text,
@@ -45,8 +46,9 @@ const useStyles = makeStyles({
   },
 })
 
-// Diálogo para elegir en qué lista(s) guardar un producto o crear una nueva lista desde ahí (PBI 534).
-export default function WishlistPickerDialog({ product, wishlists, onClose, onWishlistsChange }) {
+// Diálogo para elegir en qué lista(s) guardar un producto o crear una nueva lista desde ahí (PBI 534). `wishlists` es null
+// mientras no se han cargado; si no se han podido cargar (`failed`), se puede reintentar.
+export default function WishlistPickerDialog({ product, wishlists, failed, onRetry, onClose, onWishlistsChange }) {
   const styles = useStyles()
   const [busyId, setBusyId] = useState(null)
   const [nombreNueva, setNombreNueva] = useState('')
@@ -105,11 +107,21 @@ export default function WishlistPickerDialog({ product, wishlists, onClose, onWi
                 <MessageBarBody>{error}</MessageBarBody>
               </MessageBar>
             )}
-            {wishlists.length === 0 ? (
+            {!wishlists && failed && (
+              <MessageBar intent="error">
+                <MessageBarBody>No se han podido cargar tus listas. Inténtalo de nuevo.</MessageBarBody>
+                <MessageBarActions>
+                  <Button onClick={onRetry}>Reintentar</Button>
+                </MessageBarActions>
+              </MessageBar>
+            )}
+            {!wishlists && !failed && <Spinner label="Cargando tus listas…" />}
+            {wishlists?.length === 0 && (
               <Text size={200} className={styles.muted}>
                 Aún no tienes listas de deseos. Crea una abajo para guardar este producto.
               </Text>
-            ) : (
+            )}
+            {wishlists?.length > 0 && (
               <div className={styles.lists}>
                 {wishlists.map((lista) => {
                   const checked = lista.items.some((item) => item.productoId === product.id)
@@ -125,25 +137,27 @@ export default function WishlistPickerDialog({ product, wishlists, onClose, onWi
                 })}
               </div>
             )}
-            <form onSubmit={crearYGuardar} className={styles.newForm} noValidate>
-              <Field label="Nueva lista" className={styles.newField}>
-                <Input
-                  value={nombreNueva}
-                  placeholder="Ej. Regalos"
-                  maxLength={80}
-                  disabled={creando}
-                  onChange={(_e, data) => setNombreNueva(data.value)}
-                />
-              </Field>
-              <Button
-                type="submit"
-                appearance="primary"
-                disabled={creando || Boolean(busyId)}
-                icon={creando ? <Spinner size="tiny" /> : <Add20Regular />}
-              >
-                Crear y guardar
-              </Button>
-            </form>
+            {wishlists && (
+              <form onSubmit={crearYGuardar} className={styles.newForm} noValidate>
+                <Field label="Nueva lista" className={styles.newField}>
+                  <Input
+                    value={nombreNueva}
+                    placeholder="Ej. Regalos"
+                    maxLength={80}
+                    disabled={creando}
+                    onChange={(_e, data) => setNombreNueva(data.value)}
+                  />
+                </Field>
+                <Button
+                  type="submit"
+                  appearance="primary"
+                  disabled={creando || Boolean(busyId)}
+                  icon={creando ? <Spinner size="tiny" /> : <Add20Regular />}
+                >
+                  Crear y guardar
+                </Button>
+              </form>
+            )}
           </DialogContent>
           <DialogActions>
             <Button appearance="secondary" onClick={onClose} disabled={Boolean(busyId) || creando}>
@@ -167,7 +181,9 @@ WishlistPickerDialog.propTypes = {
       nombre: PropTypes.string.isRequired,
       items: PropTypes.arrayOf(PropTypes.shape({ productoId: PropTypes.string.isRequired })).isRequired,
     }),
-  ).isRequired,
+  ),
+  failed: PropTypes.bool.isRequired,
+  onRetry: PropTypes.func.isRequired,
   onClose: PropTypes.func.isRequired,
   onWishlistsChange: PropTypes.func.isRequired,
 }

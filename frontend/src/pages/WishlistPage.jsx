@@ -23,7 +23,7 @@ import {
   mergeClasses,
   tokens,
 } from '@fluentui/react-components'
-import { Add20Regular, Delete20Regular, Edit20Regular, Heart24Regular } from '@fluentui/react-icons'
+import { Add20Regular, Bookmark24Regular, Delete20Regular, Edit20Regular } from '@fluentui/react-icons'
 import { Link } from 'react-router-dom'
 import {
   createWishlist,
@@ -237,7 +237,7 @@ WishlistItem.propTypes = {
   onRemove: PropTypes.func.isRequired,
 }
 
-// Listas de deseos del cliente (HU14, PBI 534): puede crear una o varias listas, consultarlas,
+// Listas de deseos del cliente (HU14, PBI 534), aparte de sus favoritos (AB#528): puede crear una o varias, consultarlas,
 // editarlas (nombre y productos) y eliminarlas.
 export default function WishlistPage() {
   const pageStyles = usePageStyles()
@@ -355,9 +355,9 @@ export default function WishlistPage() {
 
       {listas?.length === 0 && (
         <EmptyState
-          icon={<Heart24Regular />}
+          icon={<Bookmark24Regular />}
           title="Aún no tienes listas de deseos"
-          description="Crea tu primera lista de deseos o pulsa el corazón de un producto del catálogo."
+          description="Crea tu primera lista de deseos o pulsa «Guardar en una lista» en un producto."
         >
           <Button appearance="primary" icon={<Add20Regular />} onClick={() => setCreando(true)}>
             Nueva lista

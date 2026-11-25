@@ -2,7 +2,13 @@
 import PropTypes from 'prop-types'
 import { useEffect, useRef, useState } from 'react'
 import { Button, Text, Title1, makeStyles, mergeClasses, tokens } from '@fluentui/react-components'
-import { BuildingShop20Regular, Heart20Filled, Heart20Regular } from '@fluentui/react-icons'
+import {
+  Bookmark20Filled,
+  Bookmark20Regular,
+  BuildingShop20Regular,
+  Heart20Filled,
+  Heart20Regular,
+} from '@fluentui/react-icons'
 import { formatRating } from '../../utils/format'
 import AddToCartButton from '../cart/AddToCartButton'
 import QuantityStepper from '../cart/QuantityStepper'
@@ -161,8 +167,14 @@ const useStyles = makeStyles({
   favoriteIcon: {
     color: tokens.colorPaletteRedForeground1,
   },
-  favorite: {
-    alignSelf: 'flex-start',
+  // El marcador relleno es la señal de que está en alguna lista de deseos.
+  listIcon: {
+    color: tokens.colorBrandForeground1,
+  },
+  saveActions: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: tokens.spacingHorizontalS,
   },
   favoriteError: {
     color: tokens.colorPaletteRedForeground1,
@@ -300,7 +312,8 @@ function renderReviewAccess({
 // descripción, una ficha con los datos del producto y las valoraciones de los clientes (HU13). Solo presenta: la
 // página es la que pide el producto y sus valoraciones. Con `onAddFavorite` ofrece además añadirlo a favoritos y, si
 // ya lo está (`favorite`), quitarlo con `onRemoveFavorite` (HU14); si no se puede, lo avisa. `categoryAction` se muestra
-// junto a la categoría: el botón para añadirla a las favoritas (AB#528).
+// junto a la categoría: el botón para añadirla a las favoritas (AB#528). Con `onSaveToList` ofrece además guardarlo en sus
+// listas de deseos (PBI 534); `inList` dice si ya está en alguna.
 export default function ProductDetail({
   product,
   categoryName,
@@ -315,6 +328,8 @@ export default function ProductDetail({
   favorite = false,
   onAddFavorite,
   onRemoveFavorite,
+  inList = false,
+  onSaveToList,
 }) {
   const styles = useStyles()
 
@@ -461,22 +476,30 @@ export default function ProductDetail({
             <AddToCartButton product={product} />
           )}
 
-          {onAddFavorite && (
-            <Button
-              as="button"
-              appearance="secondary"
-              className={styles.favorite}
-              icon={
-                favorite
-                  ? <Heart20Filled className={styles.favoriteIcon} />
-                  : <Heart20Regular />
-              }
-              disabled={savingFavorite}
-              onClick={toggleFavorite}
-            >
-              {favorite ? 'Añadir/Quitar de favoritos' : 'Añadir a favoritos'}
-            </Button>
-          )}
+          <div className={styles.saveActions}>
+            {onAddFavorite && (
+              <Button
+                as="button"
+                appearance="secondary"
+                icon={favorite ? <Heart20Filled className={styles.favoriteIcon} /> : <Heart20Regular />}
+                disabled={savingFavorite}
+                onClick={toggleFavorite}
+              >
+                {favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+              </Button>
+            )}
+
+            {onSaveToList && (
+              <Button
+                as="button"
+                appearance="secondary"
+                icon={inList ? <Bookmark20Filled className={styles.listIcon} /> : <Bookmark20Regular />}
+                onClick={onSaveToList}
+              >
+                {inList ? 'Guardado en una lista' : 'Guardar en una lista'}
+              </Button>
+            )}
+          </div>
 
           {favoriteError && (
             <Text role="alert" size={200} className={styles.favoriteError}>
@@ -584,4 +607,6 @@ ProductDetail.propTypes = {
   favorite: PropTypes.bool,
   onAddFavorite: PropTypes.func,
   onRemoveFavorite: PropTypes.func,
+  inList: PropTypes.bool,
+  onSaveToList: PropTypes.func,
 }

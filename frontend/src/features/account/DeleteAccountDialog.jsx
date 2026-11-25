@@ -40,7 +40,7 @@ const CONSECUENCIAS = {
     CIERRE_DE_SESION,
   ],
   CLIENTE: [
-    'Se eliminan tus direcciones, tus métodos de pago, tu carrito, tu lista de deseos y tus categorías favoritas.',
+    'Se eliminan tus direcciones, tus métodos de pago, tu carrito, tus favoritos y tus listas de deseos.',
     'Se elimina la configuración del doble factor de autenticación.',
     'Los pedidos y las valoraciones se conservan, para las estadísticas y los históricos.',
     CIERRE_DE_SESION,

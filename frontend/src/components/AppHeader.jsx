@@ -13,6 +13,7 @@ import {
 } from '@fluentui/react-components'
 import {
   ArrowExit20Regular,
+  Bookmark20Regular,
   BoxMultiple20Regular,
   ChartMultiple20Regular,
   ChatWarning20Regular,
@@ -193,7 +194,7 @@ ClientMenu.propTypes = {
 function UserActions({ rol, onSignOut, disabled }) {
   const styles = useStyles()
   const esCliente = rol === ROLES.CLIENTE
-  // El cliente conserva Favoritos, Mi perfil y Cerrar sesión en la cabecera.
+  // El cliente conserva Favoritos, Listas de deseos, Mi perfil y Cerrar sesión en la cabecera.
   const compact = esCliente
 
   return (
@@ -217,11 +218,16 @@ function UserActions({ rol, onSignOut, disabled }) {
           </NavLink>
         </>
       )}
-      {/* La lista de deseos (HU14) permanece visible en la cabecera */}
+      {/* Los favoritos (HU14) y las listas de deseos (PBI 534) permanecen visibles en la cabecera, por separado */}
       {esCliente && (
-        <NavLink to={PATHS.WISHLIST} icon={<Heart20Regular />} compact={compact}>
-          Favoritos
-        </NavLink>
+        <>
+          <NavLink to={PATHS.FAVORITES} icon={<Heart20Regular />} compact={compact}>
+            Favoritos
+          </NavLink>
+          <NavLink to={PATHS.WISHLIST} icon={<Bookmark20Regular />} compact={compact}>
+            Listas de deseos
+          </NavLink>
+        </>
       )}
       {/* Las incidencias (HU44) son del cliente y del vendedor */}
       {rol === ROLES.VENDEDOR && (

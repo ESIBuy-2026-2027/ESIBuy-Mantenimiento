@@ -8,7 +8,14 @@ const TAMANO = 10
 
 // Los productos de una categoría en una fila que se desliza (HU7): de diez en diez, por nombre. Pide los siguientes
 // al llegar cerca del final de la fila. Una categoría sin productos no se pinta.
-export default function CategoryCarousel({ category, favoritos, onAddFavorite, onRemoveFavorite }) {
+export default function CategoryCarousel({
+  category,
+  favoritos,
+  onAddFavorite,
+  onRemoveFavorite,
+  enAlgunaLista,
+  onSaveToList,
+}) {
   const feed = useCatalogFeed({
     search: '',
     category: category.id,
@@ -48,6 +55,8 @@ export default function CategoryCarousel({ category, favoritos, onAddFavorite, o
           favorite={favoritos.has(product.id)}
           onAddFavorite={onAddFavorite}
           onRemoveFavorite={onRemoveFavorite}
+          inList={enAlgunaLista.has(product.id)}
+          onSaveToList={onSaveToList}
         />
       ))}
     </CatalogCarousel>
@@ -59,4 +68,6 @@ CategoryCarousel.propTypes = {
   favoritos: PropTypes.instanceOf(Set).isRequired,
   onAddFavorite: PropTypes.func.isRequired,
   onRemoveFavorite: PropTypes.func.isRequired,
+  enAlgunaLista: PropTypes.instanceOf(Set).isRequired,
+  onSaveToList: PropTypes.func.isRequired,
 }

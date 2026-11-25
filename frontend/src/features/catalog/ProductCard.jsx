@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Text, makeStyles, tokens } from '@fluentui/react-components'
-import { Heart20Filled, Heart20Regular } from '@fluentui/react-icons'
+import { Bookmark20Filled, Bookmark20Regular, Heart20Filled, Heart20Regular } from '@fluentui/react-icons'
 import { getProductDetailPath } from '../../routes/paths'
 import { catalogProductPropType } from '../../utils/propTypes'
 import { formatRating } from '../../utils/format'
@@ -129,6 +129,18 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground1,
     boxShadow: tokens.shadow4,
   },
+  // Debajo del corazón, con el mismo aspecto
+  saveToList: {
+    position: 'absolute',
+    top: `calc(${tokens.spacingVerticalS} + 40px)`,
+    right: tokens.spacingHorizontalS,
+    backgroundColor: tokens.colorNeutralBackground1,
+    boxShadow: tokens.shadow4,
+  },
+  // El marcador relleno es la señal de que está en alguna lista de deseos.
+  listIcon: {
+    color: tokens.colorBrandForeground1,
+  },
   // El corazón relleno en rojo es la señal de que ya está en favoritos, también mientras se quita.
   favoriteIcon: {
     color: tokens.colorPaletteRedForeground1,
@@ -156,13 +168,16 @@ const useStyles = makeStyles({
 // categoría del producto. La imagen, el nombre y la valoración llevan al detalle (HU8). Con `onAddFavorite`, la
 // tarjeta tiene además un corazón para añadir el producto a favoritos (HU14), salvo si no está disponible, porque el
 // backend no lo aceptaría; uno agotado sí se puede añadir. Con `favorite`, el corazón sale relleno y, con
-// `onRemoveFavorite`, al pulsarlo se quita de favoritos. Si no se puede añadir o quitar, la tarjeta lo avisa.
+// `onRemoveFavorite`, al pulsarlo se quita de favoritos. Si no se puede añadir o quitar, la tarjeta lo avisa. Con
+// `onSaveToList` tiene otro botón para guardarlo en sus listas de deseos (PBI 534), relleno si está en alguna (`inList`).
 export default function ProductCard({
   product,
   categoryName,
   favorite = false,
   onAddFavorite,
   onRemoveFavorite,
+  inList = false,
+  onSaveToList,
 }) {
   const styles = useStyles()
 
@@ -276,12 +291,24 @@ export default function ProductCard({
           icon={favorite ? <Heart20Filled className={styles.favoriteIcon} /> : <Heart20Regular />}
           aria-label={
             favorite
-              ? `Añadir/Quitar ${product.nombre} de favoritos`
+              ? `Quitar ${product.nombre} de favoritos`
               : `Añadir ${product.nombre} a favoritos`
           }
-          title={favorite ? 'Añadir/Quitar de favoritos' : 'Añadir a favoritos'}
+          title={favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
           disabled={savingFavorite || (favorite && !onRemoveFavorite)}
           onClick={toggleFavorite}
+        />
+      )}
+
+      {onSaveToList && product.disponible && (
+        <Button
+          as="button"
+          shape="circular"
+          className={styles.saveToList}
+          icon={inList ? <Bookmark20Filled className={styles.listIcon} /> : <Bookmark20Regular />}
+          aria-label={inList ? `Cambiar las listas de ${product.nombre}` : `Guardar ${product.nombre} en una lista`}
+          title={inList ? 'Guardado en una lista' : 'Guardar en una lista'}
+          onClick={() => onSaveToList(product)}
         />
       )}
 
@@ -311,4 +338,6 @@ ProductCard.propTypes = {
   favorite: PropTypes.bool,
   onAddFavorite: PropTypes.func,
   onRemoveFavorite: PropTypes.func,
+  inList: PropTypes.bool,
+  onSaveToList: PropTypes.func,
 }

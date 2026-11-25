@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import {
   Button,
   MessageBar,
@@ -12,7 +12,6 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { ArrowDown20Regular, Box24Regular, CheckmarkCircle20Regular, SearchInfo24Regular } from '@fluentui/react-icons'
-import { getWishlists } from '../api/wishlist'
 import EmptyState from '../components/EmptyState'
 import { usePageStyles } from '../components/pageStyles'
 import CatalogFilters from '../features/catalog/CatalogFilters'
@@ -24,7 +23,9 @@ import { useCatalogFeed } from '../features/catalog/useCatalogFeed'
 import { useCatalogFilters } from '../features/catalog/useCatalogFilters'
 import WishlistPickerDialog from '../features/wishlist/WishlistPickerDialog'
 import { useCategories } from '../hooks/useCategories'
+import { useFavoriteProducts } from '../hooks/useFavoriteProducts'
 import { useOnReachEnd } from '../hooks/useOnReachEnd'
+import { useWishlists } from '../hooks/useWishlists'
 
 const PAGE_SIZE = 10
 const ENTRADA_ESCALONADA_MS = 60
@@ -117,32 +118,10 @@ export default function ProductsPage() {
   })
   const endRef = useOnReachEnd(feed.loadMore, feed.hasMore && !feed.loadingMore && !feed.failedMore)
   const categoryNames = new Map(categories.map(({ id, nombre }) => [id, nombre]))
-  // Listas de deseos del cliente (HU14, PBI 534): se leen al entrar; al pulsar el corazón se abre el selector de listas.
-  const [listasDeseos, setListasDeseos] = useState([])
+  // El corazón es de favoritos (HU14) y el marcador, de las listas de deseos (PBI 534): van por separado (AB#528)
+  const { favoritos, anadirFavorito, quitarFavorito } = useFavoriteProducts()
+  const { listas, listasFallidas, recargarListas, cambiarListas, enAlgunaLista } = useWishlists()
   const [productoSelector, setProductoSelector] = useState(null)
-  const cambiados = useRef(false)
-  const favoritos = new Set(listasDeseos.flatMap((lista) => lista.items.map((item) => item.productoId)))
-
-  useEffect(() => {
-    let cancelled = false
-    getWishlists()
-      .then((listas) => {
-        if (!cancelled && !cambiados.current) setListasDeseos(listas)
-      })
-      .catch(() => { })
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  const abrirSelectorLista = (productOrId) => {
-    if (typeof productOrId === 'string') {
-      const encontrado = feed.items.find((item) => item.id === productOrId)
-      setProductoSelector(encontrado ?? { id: productOrId, nombre: 'Producto seleccionado' })
-      return
-    }
-    setProductoSelector(productOrId)
-  }
   // Sin ningún filtro, que no haya productos significa que el catálogo está vacío; con filtros, que no coinciden.
   const catalogEmpty = feed.loaded && feed.totalItems === 0 && !debouncedSearch && !category && !minRating
   const noMatches = feed.loaded && feed.totalItems === 0 && !catalogEmpty
@@ -173,8 +152,10 @@ export default function ProductsPage() {
         <OffersStrip
           categoryNames={categoryNames}
           favoritos={favoritos}
-          onAddFavorite={abrirSelectorLista}
-          onRemoveFavorite={abrirSelectorLista}
+          onAddFavorite={anadirFavorito}
+          onRemoveFavorite={quitarFavorito}
+          enAlgunaLista={enAlgunaLista}
+          onSaveToList={setProductoSelector}
         />
       )}
 
@@ -184,8 +165,10 @@ export default function ProductsPage() {
             key={categoria.id}
             category={categoria}
             favoritos={favoritos}
-            onAddFavorite={abrirSelectorLista}
-            onRemoveFavorite={abrirSelectorLista}
+            onAddFavorite={anadirFavorito}
+            onRemoveFavorite={quitarFavorito}
+            enAlgunaLista={enAlgunaLista}
+            onSaveToList={setProductoSelector}
           />
         ))}
 
@@ -270,8 +253,10 @@ export default function ProductsPage() {
                     product={product}
                     categoryName={categoryNames.get(product.categoriaId)}
                     favorite={favoritos.has(product.id)}
-                    onAddFavorite={() => abrirSelectorLista(product)}
-                    onRemoveFavorite={() => abrirSelectorLista(product)}
+                    onAddFavorite={anadirFavorito}
+                    onRemoveFavorite={quitarFavorito}
+                    inList={enAlgunaLista.has(product.id)}
+                    onSaveToList={setProductoSelector}
                   />
                 </li>
               ))}
@@ -311,12 +296,11 @@ export default function ProductsPage() {
       {productoSelector && (
         <WishlistPickerDialog
           product={productoSelector}
-          wishlists={listasDeseos}
+          wishlists={listas}
+          failed={listasFallidas}
+          onRetry={recargarListas}
           onClose={() => setProductoSelector(null)}
-          onWishlistsChange={(nuevas) => {
-            cambiados.current = true
-            setListasDeseos(nuevas)
-          }}
+          onWishlistsChange={cambiarListas}
         />
       )}
     </main>

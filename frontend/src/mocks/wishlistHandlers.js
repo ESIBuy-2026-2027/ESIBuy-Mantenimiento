@@ -2,11 +2,15 @@ import { http, HttpResponse } from 'msw'
 import { getUsuarioEnSesion } from './authHandlers'
 import { PRODUCTOS, aCatalogo, datosComerciales, estaDisponible } from './productsHandlers'
 
-// Listas de deseos de cada cliente de ejemplo (HU14, PBI 534): usuarioId -> [{ id, nombre, items }]
+// Favoritos (HU14) y listas de deseos (PBI 534) de cada cliente de ejemplo, por separado (AB#528):
+// usuarioId -> { items } y usuarioId -> [{ id, nombre, items }]
+const favoritos = new Map()
 const listas = new Map()
+const LISTA_POR_DEFECTO = 'Mi lista de deseos'
 let siguienteListaId = 1
 
 export function resetWishlistMock() {
+  favoritos.clear()
   listas.clear()
   siguienteListaId = 1
 }
@@ -16,12 +20,15 @@ const listasDe = (usuario) => {
   return listas.get(usuario.id)
 }
 
-const listaPrincipalDe = (usuario) => {
-  const todas = listasDe(usuario)
-  if (todas.length === 0) {
-    todas.push({ id: `wl-${siguienteListaId++}`, nombre: 'Favoritos', items: [] })
-  }
-  return todas[0]
+// Un cliente siempre tiene al menos una lista: si no hay ninguna, se crea la de por defecto
+const conListaPorDefecto = (todas) => {
+  if (todas.length === 0) todas.push({ id: `wl-${siguienteListaId++}`, nombre: LISTA_POR_DEFECTO, items: [] })
+  return todas
+}
+
+const favoritosDe = (usuario) => {
+  if (!favoritos.has(usuario.id)) favoritos.set(usuario.id, { id: `fav-${usuario.id}`, nombre: 'Favoritos', items: [] })
+  return favoritos.get(usuario.id)
 }
 
 const rechazarSiNoEsCliente = () => {
@@ -56,9 +63,7 @@ export const wishlistHandlers = [
   http.get('/api/customer/wishlist', () => {
     const rechazo = rechazarSiNoEsCliente()
     if (rechazo) return rechazo
-    const todas = listasDe(getUsuarioEnSesion())
-    if (todas.length === 0) return HttpResponse.json({ id: null, nombre: 'Mis favoritos', items: [] })
-    return HttpResponse.json(aListaDetallada(todas[0]))
+    return HttpResponse.json(aListaDetallada(favoritosDe(getUsuarioEnSesion())))
   }),
 
   http.post('/api/customer/wishlist/items', async ({ request }) => {
@@ -73,7 +78,7 @@ export const wishlistHandlers = [
       return HttpResponse.json({ code: 'PRODUCT_NOT_FOUND' }, { status: 404 })
     }
 
-    const lista = listaPrincipalDe(getUsuarioEnSesion())
+    const lista = favoritosDe(getUsuarioEnSesion())
     if (!lista.items.some((item) => item.productoId === productoId)) {
       lista.items.push({ productoId, addedAt: new Date().toISOString() })
     }
@@ -84,9 +89,7 @@ export const wishlistHandlers = [
     const rechazo = rechazarSiNoEsCliente()
     if (rechazo) return rechazo
 
-    const todas = listasDe(getUsuarioEnSesion())
-    if (todas.length === 0) return HttpResponse.json({ id: null, nombre: 'Mis favoritos', items: [] })
-    const lista = todas[0]
+    const lista = favoritosDe(getUsuarioEnSesion())
     const posicion = lista.items.findIndex((item) => item.productoId === params.productoId)
     if (posicion >= 0) lista.items.splice(posicion, 1)
     return HttpResponse.json(aListaDetallada(lista))
@@ -96,12 +99,7 @@ export const wishlistHandlers = [
   http.get('/api/customer/wishlists', () => {
     const rechazo = rechazarSiNoEsCliente()
     if (rechazo) return rechazo
-    const usuario = getUsuarioEnSesion()
-    const todas = listasDe(usuario)
-    if (todas.length === 0) {
-      todas.push({ id: `wl-${siguienteListaId++}`, nombre: 'Favoritos', items: [] })
-    }
-    return HttpResponse.json(todas.map(aListaDetallada))
+    return HttpResponse.json(conListaPorDefecto(listasDe(getUsuarioEnSesion())).map(aListaDetallada))
   }),
 
   http.post('/api/customer/wishlists', async ({ request }) => {
@@ -139,9 +137,7 @@ export const wishlistHandlers = [
     const idx = todas.findIndex((item) => item.id === params.listaId)
     if (idx < 0) return HttpResponse.json({ code: 'WISHLIST_NOT_FOUND' }, { status: 404 })
     todas.splice(idx, 1)
-    if (todas.length === 0) {
-      todas.push({ id: `wl-${siguienteListaId++}`, nombre: 'Favoritos', items: [] })
-    }
+    conListaPorDefecto(todas)
     return new HttpResponse(null, { status: 204 })
   }),
 

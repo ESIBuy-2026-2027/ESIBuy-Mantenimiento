@@ -76,7 +76,14 @@ const useStyles = makeStyles({
 // Las ofertas y los productos con descuento, en una cinta que avanza sola hacia la derecha (HU7). Se para al poner el
 // ratón encima, al usar el teclado dentro de ella o con el botón de pausa; con «reducir movimiento» no se mueve.
 // Solo se pinta si hay suficientes productos con descuento; si no cargan, el catálogo sigue sin ella.
-export default function OffersStrip({ categoryNames, favoritos, onAddFavorite, onRemoveFavorite }) {
+export default function OffersStrip({
+  categoryNames,
+  favoritos,
+  onAddFavorite,
+  onRemoveFavorite,
+  enAlgunaLista,
+  onSaveToList,
+}) {
   const styles = useStyles()
   const headingId = useId()
   const fetcher = useCallback(() => getCatalogProducts({ sort: 'nombre', order: 'asc', page: 1, size: PEDIDOS }), [])
@@ -140,6 +147,8 @@ export default function OffersStrip({ categoryNames, favoritos, onAddFavorite, o
                   favorite={favoritos.has(product.id)}
                   onAddFavorite={onAddFavorite}
                   onRemoveFavorite={onRemoveFavorite}
+                  inList={enAlgunaLista.has(product.id)}
+                  onSaveToList={onSaveToList}
                 />
               </li>
             )
@@ -155,4 +164,6 @@ OffersStrip.propTypes = {
   favoritos: PropTypes.instanceOf(Set).isRequired,
   onAddFavorite: PropTypes.func.isRequired,
   onRemoveFavorite: PropTypes.func.isRequired,
+  enAlgunaLista: PropTypes.instanceOf(Set).isRequired,
+  onSaveToList: PropTypes.func.isRequired,
 }
