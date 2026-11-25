@@ -2,7 +2,6 @@ import PropTypes from 'prop-types'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
-  Badge,
   Button,
   MessageBar,
   MessageBarActions,
@@ -15,7 +14,6 @@ import {
 } from '@fluentui/react-components'
 import {
   BuildingShop20Regular,
-  Cart24Filled,
   Cart24Regular,
   Delete20Regular,
   Dismiss20Regular,
@@ -63,22 +61,11 @@ const useStyles = makeStyles({
       color: '#963B08',
     },
   },
-  badge: {
-    position: 'absolute',
-    backgroundColor: '#EA580C',
-    color: '#FFFFFF',
-    border: '2px solid #FFF8F1',
-    top: '-6px',
-    right: '-6px',
-    animationName: {
-      '0%': { transform: 'scale(0.4)' },
-      '60%': { transform: 'scale(1.3)' },
-      '100%': { transform: 'scale(1)' },
-    },
-    animationDuration: tokens.durationSlow,
-    '@media (prefers-reduced-motion: reduce)': {
-      animationName: 'none',
-    },
+  countInline: {
+    marginLeft: '2px',
+    color: '#B54708',
+    fontWeight: tokens.fontWeightSemibold,
+    fontVariantNumeric: 'tabular-nums',
   },
   panel: {
     position: 'fixed',
@@ -434,18 +421,14 @@ export default function CartWidget() {
           appearance="subtle"
           size="medium"
           className={mergeClasses(styles.fabButton, open && styles.fabButtonActive)}
-          icon={<Cart24Filled />}
+          icon={<Cart24Regular />}
           aria-label={buttonLabel(status, count)}
           aria-expanded={open}
           onClick={() => setOpenPath(open ? null : pathname)}
         >
           Mi carrito
+          {status === 'ready' && count > 0 && <span className={styles.countInline}>({count})</span>}
         </Button>
-        {status === 'ready' && count > 0 && (
-          <Badge key={count} className={styles.badge} appearance="filled" color="danger" size="medium" aria-hidden="true">
-            {count}
-          </Badge>
-        )}
       </div>
     </>
   )
