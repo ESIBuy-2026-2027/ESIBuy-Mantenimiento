@@ -59,7 +59,7 @@ const useStyles = makeStyles({
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: tokens.spacingHorizontalL,
-    minHeight: '104px',
+    minHeight: '128px',
     padding: tokens.spacingHorizontalM,
     boxSizing: 'border-box',
   },
@@ -72,6 +72,8 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     flexGrow: 1,
     minWidth: 0,
+    minHeight: '58px',
+    justifyContent: 'center',
   },
   addressActions: {
     display: 'flex',
@@ -88,9 +90,10 @@ const useStyles = makeStyles({
   action: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'flex-start',
+    alignItems: 'stretch',
     gap: tokens.spacingVerticalXS,
     minHeight: '40px',
+    width: '100%',
   },
   addButton: {
     minHeight: '40px',
@@ -204,11 +207,7 @@ export default function AddressesPage({ embedded = false }) {
           icon={<Location24Regular />}
           title="Aún no tienes direcciones de envío"
           description="Añade la dirección donde quieres recibir tus pedidos."
-        >
-          <Button appearance="primary" icon={<Add20Regular />} onClick={() => abrirPanel()}>
-            Añadir dirección
-          </Button>
-        </EmptyState>
+        />
       )}
       {direcciones?.length > 0 && (
         <ul aria-label="Tus direcciones" className={styles.list}>
