@@ -1,7 +1,18 @@
 import PropTypes from 'prop-types'
-import { Button, Checkbox, Field, Select, makeStyles, tokens } from '@fluentui/react-components'
-import ListFilters from '../../components/ListFilters'
-import SortControls from '../admin/SortControls'
+import {
+  ArrowSortDown20Regular,
+  ArrowSortUp20Regular,
+} from '@fluentui/react-icons'
+import {
+  Button,
+  Checkbox,
+  Field,
+  SearchBox,
+  Select,
+  makeStyles,
+  tokens,
+} from '@fluentui/react-components'
+import CategoryCombobox from '../../components/CategoryCombobox'
 import { categoryPropType } from '../../utils/propTypes'
 
 const SORT_OPTIONS = [
@@ -16,45 +27,137 @@ const RATING_OPTIONS = [
   { value: '2', label: '2 estrellas o más' },
 ]
 
+const MAX_PRICE = 150
+
 const useStyles = makeStyles({
   bar: {
     display: 'flex',
     flexDirection: 'column',
     gap: tokens.spacingVerticalM,
-    padding: tokens.spacingHorizontalL,
+    padding: '16px',
     backgroundColor: tokens.colorNeutralBackground1,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     borderRadius: tokens.borderRadiusXLarge,
     boxShadow: tokens.shadow2,
   },
-  filters: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    alignItems: 'end',
-    gap: tokens.spacingHorizontalL,
+  fields: {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(190px, 1.55fr) minmax(170px, 1.2fr) minmax(150px, 1.1fr) minmax(150px, 1fr) minmax(150px, 1fr)',
+    alignItems: 'start',
+    columnGap: tokens.spacingHorizontalL,
+    rowGap: tokens.spacingVerticalM,
+    '@media (max-width: 1050px)': {
+      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    },
+    '@media (max-width: 700px)': {
+      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    },
+    '@media (max-width: 480px)': {
+      gridTemplateColumns: 'minmax(0, 1fr)',
+    },
   },
-  rating: {
-    flexGrow: 1,
-    flexBasis: '160px',
+  field: {
+    minWidth: 0,
+  },
+  priceField: {
+    minWidth: 0,
+  },
+  range: {
+    position: 'relative',
+    height: '32px',
+    display: 'flex',
+    alignItems: 'center',
+    marginTop: '1px',
+    padding: '0 8px',
+  },
+  rangeTrack: {
+    position: 'absolute',
+    left: '8px',
+    right: '8px',
+    height: '4px',
+    borderRadius: tokens.borderRadiusCircular,
+    backgroundColor: tokens.colorNeutralStroke2,
+  },
+  rangeInput: {
+    appearance: 'none',
+    position: 'absolute',
+    left: '0',
+    top: '0',
+    width: '100%',
+    height: '32px',
+    margin: 0,
+    background: 'transparent',
+    pointerEvents: 'none',
+    outlineOffset: '3px',
+    '&::-webkit-slider-runnable-track': {
+      height: '4px',
+      background: 'transparent',
+    },
+    '&::-moz-range-track': {
+      height: '4px',
+      background: 'transparent',
+    },
+    '&::-webkit-slider-thumb': {
+      appearance: 'none',
+      width: '16px',
+      height: '16px',
+      marginTop: '-6px',
+      border: '2px solid white',
+      borderRadius: tokens.borderRadiusCircular,
+      backgroundColor: tokens.colorBrandBackground,
+      boxShadow: tokens.shadow2,
+      pointerEvents: 'auto',
+      cursor: 'pointer',
+    },
+    '&::-moz-range-thumb': {
+      width: '13px',
+      height: '13px',
+      border: '2px solid white',
+      borderRadius: tokens.borderRadiusCircular,
+      backgroundColor: tokens.colorBrandBackground,
+      boxShadow: tokens.shadow2,
+      pointerEvents: 'auto',
+      cursor: 'pointer',
+    },
   },
   options: {
     display: 'flex',
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: tokens.spacingHorizontalXL,
-    minHeight: '32px',
+    minHeight: '28px',
+    marginTop: '2px',
+  },
+  sort: {
+    display: 'flex',
+    alignItems: 'end',
+    gap: tokens.spacingHorizontalXS,
+    minWidth: 0,
+  },
+  sortField: {
+    flex: 1,
+    minWidth: 0,
+  },
+  direction: {
+    minWidth: '36px',
+    width: '36px',
+    height: '32px',
+    padding: 0,
+    alignSelf: 'end',
   },
   clear: {
     marginLeft: 'auto',
   },
 })
 
-// Búsqueda, categoría, valoración, disponibilidad, ofertas y orden del catálogo.
+// Filtros del catálogo organizados en una fila principal y una fila compacta de opciones.
 export default function CatalogFilters({
   search,
   category,
   categories,
   minRating,
+  minPrice,
+  maxPrice,
   inStock,
   offersOnly,
   filtersActive,
@@ -63,6 +166,7 @@ export default function CatalogFilters({
   onSearchChange,
   onCategoryChange,
   onMinRatingChange,
+  onPriceChange,
   onInStockChange,
   onOffersOnlyChange,
   onClearFilters,
@@ -70,36 +174,101 @@ export default function CatalogFilters({
   onOrderChange,
 }) {
   const styles = useStyles()
+  const ascending = order === 'asc'
+  const minPercent = (minPrice / MAX_PRICE) * 100
+  const maxPercent = (maxPrice / MAX_PRICE) * 100
+
+  const changeMin = (event) => {
+    const next = Math.min(Number(event.target.value), maxPrice)
+    onPriceChange(next, maxPrice)
+  }
+  const changeMax = (event) => {
+    const next = Math.max(Number(event.target.value), minPrice)
+    onPriceChange(minPrice, next)
+  }
 
   return (
     <section className={styles.bar} aria-label="Filtros del catálogo">
-      <div className={styles.filters}>
-        <ListFilters
-          search={search}
-          category={category}
-          categories={categories}
-          searchPlaceholder="Escribe el nombre de un producto"
-          onSearchChange={onSearchChange}
-          onCategoryChange={onCategoryChange}
-        >
-          <Field label="Valoración mínima" className={styles.rating}>
-            <Select value={minRating} onChange={(_event, data) => onMinRatingChange(data.value)}>
-              {RATING_OPTIONS.map(({ value, label }) => (
+      <div className={styles.fields}>
+        <Field label="Buscar por nombre" className={styles.field}>
+          <SearchBox
+            value={search}
+            placeholder="Escribe el nombre de un producto"
+            onChange={(_event, data) => onSearchChange(data.value)}
+          />
+        </Field>
+
+        <Field label="Categoría" className={styles.field}>
+          <CategoryCombobox
+            value={category}
+            categories={categories}
+            allLabel="Todas las categorías"
+            onChange={onCategoryChange}
+          />
+        </Field>
+
+        <Field label="Precio" className={styles.priceField}>
+          <div className={styles.range}>
+            <div
+              className={styles.rangeTrack}
+              style={{
+                background: `linear-gradient(to right, ${tokens.colorNeutralStroke2} ${minPercent}%, ${tokens.colorBrandBackground} ${minPercent}%, ${tokens.colorBrandBackground} ${maxPercent}%, ${tokens.colorNeutralStroke2} ${maxPercent}%)`,
+              }}
+            />
+            <input
+              className={styles.rangeInput}
+              type="range"
+              min="0"
+              max={MAX_PRICE}
+              step="1"
+              value={minPrice}
+              aria-label="Precio mínimo"
+              onChange={changeMin}
+            />
+            <input
+              className={styles.rangeInput}
+              type="range"
+              min="0"
+              max={MAX_PRICE}
+              step="1"
+              value={maxPrice}
+              aria-label="Precio máximo"
+              onChange={changeMax}
+            />
+          </div>
+        </Field>
+
+        <Field label="Valoración mínima" className={styles.field}>
+          <Select value={minRating} onChange={(_event, data) => onMinRatingChange(data.value)}>
+            {RATING_OPTIONS.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </Select>
+        </Field>
+
+        <div className={styles.sort}>
+          <Field label="Ordenar por" className={styles.sortField}>
+            <Select value={sort} onChange={(_event, data) => onSortChange(data.value)}>
+              {SORT_OPTIONS.map(({ value, label }) => (
                 <option key={value} value={value}>
                   {label}
                 </option>
               ))}
             </Select>
           </Field>
-          <SortControls
-            options={SORT_OPTIONS}
-            sort={sort}
-            order={order}
-            onSortChange={onSortChange}
-            onOrderChange={onOrderChange}
+          <Button
+            className={styles.direction}
+            appearance="subtle"
+            icon={ascending ? <ArrowSortUp20Regular /> : <ArrowSortDown20Regular />}
+            aria-label={ascending ? 'Orden ascendente' : 'Orden descendente'}
+            title={ascending ? 'Orden ascendente' : 'Orden descendente'}
+            onClick={() => onOrderChange(ascending ? 'desc' : 'asc')}
           />
-        </ListFilters>
+        </div>
       </div>
+
       <div className={styles.options}>
         <Checkbox
           checked={inStock}
@@ -126,6 +295,8 @@ CatalogFilters.propTypes = {
   category: PropTypes.string.isRequired,
   categories: PropTypes.arrayOf(categoryPropType).isRequired,
   minRating: PropTypes.string.isRequired,
+  minPrice: PropTypes.number.isRequired,
+  maxPrice: PropTypes.number.isRequired,
   inStock: PropTypes.bool.isRequired,
   offersOnly: PropTypes.bool.isRequired,
   filtersActive: PropTypes.bool.isRequired,
@@ -134,6 +305,7 @@ CatalogFilters.propTypes = {
   onSearchChange: PropTypes.func.isRequired,
   onCategoryChange: PropTypes.func.isRequired,
   onMinRatingChange: PropTypes.func.isRequired,
+  onPriceChange: PropTypes.func.isRequired,
   onInStockChange: PropTypes.func.isRequired,
   onOffersOnlyChange: PropTypes.func.isRequired,
   onClearFilters: PropTypes.func.isRequired,
