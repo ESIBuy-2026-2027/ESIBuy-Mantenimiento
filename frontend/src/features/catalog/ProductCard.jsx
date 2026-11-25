@@ -2,7 +2,7 @@
 import PropTypes from 'prop-types'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Text, makeStyles, tokens } from '@fluentui/react-components'
+import { Button, Text, makeStyles, mergeClasses, tokens } from '@fluentui/react-components'
 import { Heart20Filled, Heart20Regular } from '@fluentui/react-icons'
 import { getProductDetailPath } from '../../routes/paths'
 import { catalogProductPropType } from '../../utils/propTypes'
@@ -24,8 +24,8 @@ const useStyles = makeStyles({
     width: '100%',
     height: '100%',
     overflow: 'hidden',
-    backgroundColor: '#fff2e2',
-    border: '1px solid #e8c49f',
+    backgroundColor: '#fff0df',
+    border: '1px solid #e6bd91',
     borderRadius: tokens.borderRadiusXLarge,
     boxShadow: tokens.shadow2,
     transitionProperty: 'box-shadow, transform, border-color',
@@ -55,7 +55,15 @@ const useStyles = makeStyles({
     display: 'block',
     aspectRatio: '4 / 3',
     overflow: 'hidden',
-    backgroundColor: '#f8e7d3',
+    backgroundColor: '#fff8f0',
+  },
+  offerCard: {
+    backgroundColor: '#ffe1bd',
+    border: '1px solid #d98b45',
+    boxShadow: '0 3px 10px rgba(166, 86, 24, 0.13)',
+  },
+  offerMedia: {
+    backgroundColor: '#fff1df',
   },
   discountBadge: {
     position: 'absolute',
@@ -177,6 +185,7 @@ export default function ProductCard({
   favorite = false,
   onAddFavorite,
   onRemoveFavorite,
+  offerStyle = false,
 }) {
   const styles = useStyles()
 
@@ -222,9 +231,9 @@ export default function ProductCard({
   }
 
   return (
-    <div className={styles.card}>
+    <div className={mergeClasses(styles.card, offerStyle && styles.offerCard)}>
       <Link to={getProductDetailPath(product.id)} className={styles.link}>
-        <span className={styles.media}>
+        <span className={mergeClasses(styles.media, offerStyle && styles.offerMedia)}>
           {hasImage ? (
             <img
               ref={imageRef}
@@ -330,4 +339,5 @@ ProductCard.propTypes = {
   favorite: PropTypes.bool,
   onAddFavorite: PropTypes.func,
   onRemoveFavorite: PropTypes.func,
+  offerStyle: PropTypes.bool,
 }
