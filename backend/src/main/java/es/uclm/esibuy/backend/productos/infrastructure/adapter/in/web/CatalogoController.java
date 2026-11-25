@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.productos.infrastructure.adapter.in.web;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import jakarta.validation.constraints.Max;
@@ -49,8 +50,8 @@ public class CatalogoController {
             @RequestParam(required = false) @Min(1) @Max(5) Integer minRating,
             @RequestParam(defaultValue = "false") boolean inStock,
             @RequestParam(defaultValue = "false") boolean offersOnly,
-            @RequestParam(required = false) @Min(0) Integer minPrice,
-            @RequestParam(required = false) @Min(0) Integer maxPrice,
+            @RequestParam(required = false) @Min(0) BigDecimal minPrice,
+            @RequestParam(required = false) @Min(0) BigDecimal maxPrice,
             @RequestParam(defaultValue = "nombre") @Pattern(regexp = "nombre|valoracion|precio") String sort,
             @RequestParam(defaultValue = "asc") @Pattern(regexp = "asc|desc") String order,
             Authentication autenticado) {
