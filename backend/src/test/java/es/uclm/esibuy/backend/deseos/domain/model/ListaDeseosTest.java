@@ -10,6 +10,10 @@ import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import es.uclm.esibuy.backend.deseos.domain.exception.ListaDeseosInvalidaException;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 class ListaDeseosTest {
 
     private static final String CLIENTE = "cliente-1";
@@ -91,5 +95,20 @@ class ListaDeseosTest {
 
         assertFalse(cambiada);
         assertEquals(List.of(new ItemDeseo("p-1", AYER)), lista.getItems());
+    }
+
+    @Test
+    @DisplayName("PBI534-CP01: crear y renombrar una lista normaliza el nombre y rechaza nombres vacíos o largos")
+    void crearYRenombrarListaValidaNombre() {
+        ListaDeseos lista = ListaDeseos.nueva(CLIENTE, "  Regalos Navidad  ");
+        assertEquals("Regalos Navidad", lista.getNombre());
+
+        lista.renombrar("  Cumpleaños ");
+        assertEquals("Cumpleaños", lista.getNombre());
+
+        assertThrows(ListaDeseosInvalidaException.class, () -> ListaDeseos.nueva(CLIENTE, "  "));
+        assertThrows(ListaDeseosInvalidaException.class,
+                () -> ListaDeseos.nueva(CLIENTE, "a".repeat(ListaDeseos.NOMBRE_MAXIMO + 1)));
+        assertThrows(ListaDeseosInvalidaException.class, () -> lista.renombrar(null));
     }
 }
