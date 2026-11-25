@@ -255,8 +255,9 @@ describe('ProfilePage (HU45): ESIBuy Premium', () => {
     await abrirPerfil('cliente@esibuy.test')
 
     const cuenta = within(screen.getByRole('region', { name: 'Gestión de mi cuenta' }))
-    expect(cuenta.getByText('Premium')).toBeInTheDocument()
-    expect(cuenta.getByRole('link', { name: /ver beneficios/i })).toHaveAttribute('href', '/premium')
+    expect(cuenta.getByRole('heading', { name: 'Ya eres ESIBuy Premium' })).toBeInTheDocument()
+    expect(cuenta.getByRole('button', { name: /cancelar mi suscripción/i })).toBeInTheDocument()
+    expect(cuenta.getByRole('heading', { name: 'Ventajas de ESIBuy Premium' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /hazte premium/i })).not.toBeInTheDocument()
   })
 
