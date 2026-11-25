@@ -658,4 +658,63 @@ describe('ProductsPage (HU7): catálogo con ofertas y listado único', () => {
     expect(screen.queryByRole('button', { name: /ver todos los productos/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /ver por categorías/i })).not.toBeInTheDocument()
   })
+
+  it('coloca el panel de filtros antes de las ofertas', async () => {
+    await abrirCatalogo()
+
+    const filtros = screen.getByRole('region', { name: /filtros del catálogo/i })
+    const ofertas = screen.getByRole('heading', { level: 2, name: 'Ofertas' })
+    expect(filtros.compareDocumentPosition(ofertas) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('permite filtrar por stock y envía el criterio al catálogo', async () => {
+    const user = userEvent.setup()
+    const peticiones = capturarPeticiones()
+    await abrirCatalogo()
+
+    await user.click(screen.getByRole('checkbox', { name: 'Solo en stock' }))
+
+    await waitFor(() => {
+      expect(peticiones.some((peticion) => peticion.get('size') === '10' && peticion.get('inStock') === 'true')).toBe(true)
+    })
+    expect(screen.getByRole('checkbox', { name: 'Solo en stock' })).toBeChecked()
+  })
+
+  it('permite filtrar por ofertas y envía el criterio al catálogo', async () => {
+    const user = userEvent.setup()
+    const peticiones = capturarPeticiones()
+    await abrirCatalogo()
+
+    await user.click(screen.getByRole('checkbox', { name: 'Solo ofertas' }))
+
+    await waitFor(() => {
+      expect(peticiones.some((peticion) => peticion.get('size') === '10' && peticion.get('offersOnly') === 'true')).toBe(true)
+    })
+    expect(screen.getByRole('checkbox', { name: 'Solo ofertas' })).toBeChecked()
+  })
+
+  it('limpia conjuntamente búsqueda, valoración, stock y ofertas', async () => {
+    const user = userEvent.setup()
+    await abrirCatalogo()
+
+    await user.type(screen.getByRole('searchbox', { name: /buscar por nombre/i }), 'teclado')
+    await user.click(screen.getByRole('checkbox', { name: 'Solo en stock' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Solo ofertas' }))
+    await user.click(screen.getByRole('button', { name: /limpiar filtros/i }))
+
+    expect(screen.getByRole('searchbox', { name: /buscar por nombre/i })).toHaveValue('')
+    expect(screen.getByRole('checkbox', { name: 'Solo en stock' })).not.toBeChecked()
+    expect(screen.getByRole('checkbox', { name: 'Solo ofertas' })).not.toBeChecked()
+  })
+
+  it('permite interactuar con las tarjetas repetidas del carrusel de ofertas', async () => {
+    await abrirCatalogo()
+    const ofertas = await screen.findByRole('list', { name: /productos en oferta/i })
+    const tarjetasOferta = within(ofertas).getAllByRole('listitem')
+
+    expect(tarjetasOferta.length).toBeGreaterThan(3)
+    for (const tarjeta of tarjetasOferta) {
+      expect(within(tarjeta).getByRole('link')).toBeEnabled()
+    }
+  })
 })
