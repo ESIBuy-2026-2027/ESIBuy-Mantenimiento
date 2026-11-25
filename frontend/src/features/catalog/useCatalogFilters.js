@@ -23,7 +23,13 @@ export function useCatalogFilters() {
     maxPrice: priceRange[1],
     priceCeiling: availableMaxPrice,
     filtersActive: base.filtersActive || Boolean(
-      minRating || inStock || offersOnly || priceRange[0] > 0 || (priceRange[1] !== null && priceRange[1] < availableMaxPrice) || sort !== 'nombre' || order !== 'asc',
+      minRating ||
+      inStock ||
+      offersOnly ||
+      priceRange[0] > 0 ||
+      (priceRange[1] !== null && priceRange[1] < availableMaxPrice) ||
+      sort !== 'nombre' ||
+      order !== 'asc',
     ),
     changeMinRating: setMinRating,
     changeSort: setSort,
