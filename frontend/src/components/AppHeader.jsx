@@ -281,7 +281,7 @@ function PremiumAwarePersonIcon() {
   return (
     <span className={styles.premiumPersonIcon}>
       <Person20Regular />
-      {profile?.tipoCliente === 'PREMIUM' && <Crown20Filled className={styles.premiumCrown} aria-label="Cliente Premium" />}
+      {profile?.tipoCliente === 'PREMIUM' && <Crown20Filled className={styles.premiumCrown} aria-hidden="true" data-testid="premium-crown" />}
     </span>
   )
 }
