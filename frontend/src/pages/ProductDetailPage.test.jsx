@@ -640,7 +640,7 @@ describe('ProductDetailPage (HU14): favoritos', () => {
     expect(screen.queryByRole('button', { name: 'Quitar de favoritos' })).not.toBeInTheDocument()
   })
 
-  it('HU14-CP38: si el producto ya está en favoritos, el botón permite quitarlo', async () => {
+  it('HU14-CP38: si el producto ya está en alguna lista, el botón abre la gestión de listas', async () => {
     responderCon()
     server.use(
       http.get('/api/customer/wishlists', () =>
@@ -686,7 +686,7 @@ describe('ProductDetailPage (HU14): favoritos', () => {
 
     expect(await screen.findByRole('button', { name: 'Añadir/Quitar de favoritos' })).toBeEnabled()
 
-    await user.click(screen.getByRole('button', { name: 'Quitar de favoritos' }))
+    await user.click(screen.getByRole('button', { name: 'Añadir/Quitar de favoritos' }))
     const dialogo2 = screen.getByRole('dialog', { name: 'Guardar en lista de deseos' })
     await user.click(within(dialogo2).getByRole('checkbox', { name: 'Setup (1)' }))
     expect(await within(dialogo2).findByRole('checkbox', { name: 'Setup (0)' })).not.toBeChecked()
