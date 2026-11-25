@@ -14,6 +14,7 @@ import {
   Spinner,
   Text,
   makeStyles,
+  mergeClasses,
   tokens,
 } from '@fluentui/react-components'
 import { Diamond20Regular, Diamond48Regular, Sparkle24Regular } from '@fluentui/react-icons'
@@ -43,11 +44,15 @@ const useStyles = makeStyles({
   hero: {
     position: 'relative',
     overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column',
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0, 1fr)',
     alignItems: 'flex-start',
     gap: tokens.spacingVerticalM,
     padding: `${tokens.spacingVerticalXXL} ${tokens.spacingHorizontalXL}`,
+    '@media (min-width: 900px)': {
+      gridTemplateColumns: 'minmax(0, 1fr) minmax(280px, 0.85fr)',
+      columnGap: tokens.spacingHorizontalXXL,
+    },
     borderRadius: tokens.borderRadiusXLarge,
     border: `1px solid ${tokens.colorBrandStroke2}`,
     backgroundColor: tokens.colorNeutralBackground1,
@@ -115,6 +120,10 @@ const useStyles = makeStyles({
     borderRadius: tokens.borderRadiusXLarge,
     backgroundColor: tokens.colorNeutralBackground1,
     boxShadow: tokens.shadow4,
+    width: '100%',
+    boxSizing: 'border-box',
+    alignSelf: 'stretch',
+    justifyContent: 'center',
   },
   cancellationTitle: {
     margin: 0,
@@ -168,10 +177,26 @@ const useStyles = makeStyles({
     },
   },
   embeddedPage: {
+    display: 'block',
+    width: '100%',
+  },
+  heroMain: {
     display: 'flex',
     flexDirection: 'column',
-    gap: tokens.spacingVerticalL,
-    width: '100%',
+    alignItems: 'flex-start',
+    gap: tokens.spacingVerticalM,
+    minWidth: 0,
+  },
+  embeddedBenefits: {
+    gridColumn: '1 / -1',
+    marginTop: tokens.spacingVerticalM,
+  },
+  embeddedBenefitsList: {
+    gridTemplateColumns: 'minmax(0, 1fr)',
+    gap: tokens.spacingHorizontalM,
+    '@media (min-width: 720px)': {
+      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    },
   },
   benefitsSection: {
     display: 'flex',
@@ -304,7 +329,6 @@ PremiumStatus.propTypes = {
 export default function PremiumPage({ embedded = false }) {
   const pageStyles = usePageStyles()
   const styles = useStyles()
-  const benefitsTitleId = useId()
   const location = useLocation()
   const profile = useApiQuery(getProfile)
   const [faseCancelacion, setFaseCancelacion] = useState(null)
@@ -332,43 +356,59 @@ export default function PremiumPage({ embedded = false }) {
   return (
     <Root className={embedded ? styles.embeddedPage : pageStyles.page}>
       <section className={styles.hero}>
-        <span className={styles.heroIcon} aria-hidden="true">
-          <Diamond48Regular />
-        </span>
-        <h1 className={styles.headline}>ESIBuy Premium</h1>
-        <Text size={400} className={styles.lead}>
-          Compra con más ventajas: descuentos exclusivos, envíos sin coste y pedidos que llegan antes.
-        </Text>
-        <div aria-live="polite">
-          {errorCancelacion && (
-            <MessageBar intent="error">
-              <MessageBarBody>No se ha podido cancelar Premium. Inténtalo de nuevo.</MessageBarBody>
-            </MessageBar>
-          )}
-          {aviso && (
-            <MessageBar intent={aviso.intent}>
-              <MessageBarBody>{aviso.texto}</MessageBarBody>
-            </MessageBar>
-          )}
-        </div>
-        <PremiumStatus query={profile} esPremium={esPremium} styles={styles} />
-      </section>
-
-      {esPremium && (
-        <section aria-labelledby="cancel-premium-title" className={styles.cancellationSection}>
-          <h2 id="cancel-premium-title" className={styles.cancellationTitle}>Gestionar suscripción</h2>
-          <Text className={styles.cancellationText}>
-            Si cancelas ESIBuy Premium, tu cuenta pasará a ser Estándar y dejarás de disfrutar de sus ventajas.
+        <div className={styles.heroMain}>
+          <span className={styles.heroIcon} aria-hidden="true">
+            <Diamond48Regular />
+          </span>
+          <h1 className={styles.headline}>ESIBuy Premium</h1>
+          <Text size={400} className={styles.lead}>
+            Compra con más ventajas: descuentos exclusivos, envíos sin coste y pedidos que llegan antes.
           </Text>
-          <Button
-            appearance="secondary"
-            className={styles.cancellationAction}
-            onClick={() => setFaseCancelacion('inicial')}
-          >
-            Cancelar mi suscripción
-          </Button>
+          <div aria-live="polite">
+            {errorCancelacion && (
+              <MessageBar intent="error">
+                <MessageBarBody>No se ha podido cancelar Premium. Inténtalo de nuevo.</MessageBarBody>
+              </MessageBar>
+            )}
+            {aviso && (
+              <MessageBar intent={aviso.intent}>
+                <MessageBarBody>{aviso.texto}</MessageBarBody>
+              </MessageBar>
+            )}
+          </div>
+          <PremiumStatus query={profile} esPremium={esPremium} styles={styles} />
+        </div>
+
+        {esPremium && (
+          <section aria-labelledby="cancel-premium-title" className={styles.cancellationSection}>
+            <h2 id="cancel-premium-title" className={styles.cancellationTitle}>Gestionar suscripción</h2>
+            <Text className={styles.cancellationText}>
+              Si cancelas ESIBuy Premium, tu cuenta pasará a ser Estándar y dejarás de disfrutar de sus ventajas.
+            </Text>
+            <Button
+              appearance="secondary"
+              className={styles.cancellationAction}
+              onClick={() => setFaseCancelacion('inicial')}
+            >
+              Cancelar mi suscripción
+            </Button>
+          </section>
+        )}
+
+        <section aria-label="Ventajas de ESIBuy Premium" className={mergeClasses(styles.benefitsSection, embedded && styles.embeddedBenefits)}>
+          <ul aria-label="Ventajas de ESIBuy Premium" className={mergeClasses(styles.benefits, embedded && styles.embeddedBenefitsList)}>
+            {PREMIUM_BENEFITS.map(({ id, titulo, texto, Icono }, index) => (
+              <li key={id} className={styles.benefitItem} style={{ animationDelay: `${(index + 1) * RETRASO_ENTRADA_MS}ms` }}>
+                <article className={styles.benefit}>
+                  <span className={styles.benefitIcon} aria-hidden="true"><Icono /></span>
+                  <h3 className={styles.benefitTitle}>{titulo}</h3>
+                  <p className={styles.benefitText}>{texto}</p>
+                </article>
+              </li>
+            ))}
+          </ul>
         </section>
-      )}
+      </section>
 
       <Dialog
         open={faseCancelacion !== null}
@@ -441,28 +481,6 @@ export default function PremiumPage({ embedded = false }) {
         </DialogSurface>
       </Dialog>
 
-      <section aria-labelledby={benefitsTitleId} className={styles.benefitsSection}>
-        <h2 id={benefitsTitleId} className={styles.sectionTitle}>
-          Ventajas de ESIBuy Premium
-        </h2>
-        <ul aria-labelledby={benefitsTitleId} className={styles.benefits}>
-          {PREMIUM_BENEFITS.map(({ id, titulo, texto, Icono }, index) => (
-            <li
-              key={id}
-              className={styles.benefitItem}
-              style={{ animationDelay: `${(index + 1) * RETRASO_ENTRADA_MS}ms` }}
-            >
-              <article className={styles.benefit}>
-                <span className={styles.benefitIcon} aria-hidden="true">
-                  <Icono />
-                </span>
-                <h3 className={styles.benefitTitle}>{titulo}</h3>
-                <p className={styles.benefitText}>{texto}</p>
-              </article>
-            </li>
-          ))}
-        </ul>
-      </section>
     </Root>
   )
 }
