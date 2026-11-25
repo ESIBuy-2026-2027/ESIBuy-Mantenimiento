@@ -302,7 +302,7 @@ function ClientMenu({ compact, onSignOut, disabled }) {
       <MenuTrigger>
         <Button
           appearance="subtle"
-          icon={<Person20Regular />}
+          icon={<PremiumAwarePersonIcon />}
           title={compact ? 'Mi perfil' : undefined}
           className={mergeClasses(styles.item, styles.profileTrigger, profileSectionActive && styles.profileTriggerActive, compact && styles.compactItem)}
           aria-current={profileSectionActive ? 'page' : undefined}
