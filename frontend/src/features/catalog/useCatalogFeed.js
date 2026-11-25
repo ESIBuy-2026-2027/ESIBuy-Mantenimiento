@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getCatalogProducts } from '../../api/products'
 
-const SIN_CARGAR = { key: null, items: [], page: 0, totalItems: 0, totalPages: 0, error: null }
+const SIN_CARGAR = { key: null, items: [], page: 0, totalItems: 0, totalPages: 0, availableMaxPrice: 0, error: null }
 
 // Catálogo con scroll infinito: pide la primera página y, cada vez que se llama a `loadMore`, la siguiente, y las
 // va acumulando. Cualquier cambio de filtro u orden (`key`) empieza otra vez desde la primera página. Con `enabled`
@@ -29,6 +29,7 @@ export function useCatalogFeed({ search, category, minRating, inStock, offersOnl
             page: data.page,
             totalItems: data.totalItems,
             totalPages: data.totalPages,
+            availableMaxPrice: data.maxPrice ?? 0,
             error: null,
           }
         })
@@ -63,6 +64,7 @@ export function useCatalogFeed({ search, category, minRating, inStock, offersOnl
     loadingMore: current && page > feed.page && !failed,
     hasMore,
     totalItems: current ? feed.totalItems : null,
+    availableMaxPrice: current ? feed.availableMaxPrice : null,
     loadMore,
     retry: () => setAttempt((value) => value + 1),
   }
