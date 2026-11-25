@@ -189,8 +189,8 @@ export default function ProductForm({ initialValues, categories, saving, saveErr
       </Field>
       <div className={styles.pair}>
         <Field label="Precio (€)" required validationState={errors.precio ? 'error' : 'none'} validationMessage={errors.precio}>
-          <Input className={styles.control} type="text" inputMode="numeric" pattern="[0-9]*" value={values.precio}
-            onChange={(_event, data) => setField('precio')(data.value.replace(/\D/g, ''))} />
+          <Input className={styles.control} type="text" inputMode="decimal" value={values.precio}
+            onChange={(_event, data) => setField('precio')(data.value)} />
         </Field>
         <Field label="Stock" hint="Si lo dejas vacío, el stock será 0."
           validationState={errors.stock ? 'error' : 'none'} validationMessage={errors.stock}>
