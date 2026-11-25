@@ -22,6 +22,7 @@ import {
   PersonAdd20Regular,
   Receipt20Regular,
 } from '@fluentui/react-icons'
+import CartWidget from '../features/cart/CartWidget'
 import { Link, useNavigate } from 'react-router-dom'
 import { ROLES, getHomePath } from '../auth/roles'
 import { useAuth } from '../auth/useAuth'
@@ -48,8 +49,13 @@ const visuallyHidden = {
 
 const useStyles = makeStyles({
   header: {
+    position: 'sticky',
+    top: 0,
+    zIndex: 1100,
     width: '100%',
-    maxWidth: '1280px',
+    maxWidth: 'none',
+    backgroundColor: tokens.colorNeutralBackground1,
+    boxShadow: tokens.shadow4,
     margin: '0 auto',
     boxSizing: 'border-box',
     display: 'flex',
@@ -152,7 +158,7 @@ function GuestActions() {
   )
 }
 
-function ClientMenu({ compact }) {
+function ClientMenu({ compact, onSignOut, disabled }) {
   const styles = useStyles()
   const navigate = useNavigate()
   const enlaces = [
@@ -180,6 +186,9 @@ function ClientMenu({ compact }) {
               {label}
             </MenuItem>
           ))}
+          <MenuItem icon={<ArrowExit20Regular />} disabled={disabled} onClick={onSignOut}>
+            Cerrar sesión
+          </MenuItem>
         </MenuList>
       </MenuPopover>
     </Menu>
@@ -188,6 +197,8 @@ function ClientMenu({ compact }) {
 
 ClientMenu.propTypes = {
   compact: PropTypes.bool.isRequired,
+  onSignOut: PropTypes.func.isRequired,
+  disabled: PropTypes.bool.isRequired,
 }
 
 function UserActions({ rol, onSignOut, disabled }) {
@@ -235,17 +246,13 @@ function UserActions({ rol, onSignOut, disabled }) {
           Mi perfil
         </NavLink>
       )}
-      {esCliente && <ClientMenu compact={compact} />}
-      <Button
-        appearance="primary"
-        icon={<ArrowExit20Regular />}
-        onClick={onSignOut}
-        disabled={disabled}
-        title={compact ? 'Cerrar sesión' : undefined}
-        className={mergeClasses(styles.item, compact && styles.compactItem)}
-      >
-        <span className={compact ? styles.compactLabel : undefined}>Cerrar sesión</span>
-      </Button>
+      {esCliente && <CartWidget />}
+      {esCliente && <ClientMenu compact={compact} onSignOut={onSignOut} disabled={disabled} />}
+      {!esCliente && (
+        <Button appearance="primary" icon={<ArrowExit20Regular />} onClick={onSignOut} disabled={disabled}>
+          Cerrar sesión
+        </Button>
+      )}
     </>
   )
 }
