@@ -160,7 +160,7 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         return masCaro == null ? BigDecimal.ZERO : mapper.aDominio(masCaro).getPrecio();
     }
 
-    private static Criteria construirCriteriosCatalogo(BuscarCatalogoQuery query, boolean incluirPrecioMaximo) {
+    private static Criteria construirCriteriosCatalogo(BuscarCatalogoQuery query, boolean incluirRangoPrecio) {
         List<Criteria> filtros = new ArrayList<>();
         filtros.add(Criteria.where(CAMPO_DISPONIBLE).is(true));
         if (query.soloStock()) {
@@ -179,10 +179,10 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
         if (query.categoriaId() != null && !query.categoriaId().isBlank()) {
             filtros.add(Criteria.where(CAMPO_CATEGORIA_ID).is(query.categoriaId()));
         }
-        if (query.precioMinimo() != null) {
+        if (incluirRangoPrecio && query.precioMinimo() != null) {
             filtros.add(Criteria.where(CAMPO_PRECIO).gte(query.precioMinimo()));
         }
-        if (incluirPrecioMaximo && query.precioMaximo() != null) {
+        if (incluirRangoPrecio && query.precioMaximo() != null) {
             filtros.add(Criteria.where(CAMPO_PRECIO).lte(query.precioMaximo()));
         }
         if (query.valoracionMinima() != null) {
