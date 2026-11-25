@@ -167,6 +167,12 @@ const useStyles = makeStyles({
       ':hover': { transform: 'none' },
     },
   },
+  embeddedPage: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalL,
+    width: '100%',
+  },
   benefitsSection: {
     display: 'flex',
     flexDirection: 'column',
@@ -295,7 +301,7 @@ PremiumStatus.propTypes = {
 // Vista de ventajas de ESIBuy Premium (HU45), solo para clientes. El cliente Estándar puede hacerse Premium desde aquí
 // (por la pasarela de pago simulada); el Premium ve que ya lo es. Sin precio: la suscripción no tiene un importe
 // definido. Las animaciones se desactivan si el usuario prefiere reducir el movimiento.
-export default function PremiumPage() {
+export default function PremiumPage({ embedded = false }) {
   const pageStyles = usePageStyles()
   const styles = useStyles()
   const benefitsTitleId = useId()
@@ -321,8 +327,10 @@ export default function PremiumPage() {
     }
   }
 
+  const Root = embedded ? 'div' : 'main'
+
   return (
-    <main className={pageStyles.page}>
+    <Root className={embedded ? styles.embeddedPage : pageStyles.page}>
       <section className={styles.hero}>
         <span className={styles.heroIcon} aria-hidden="true">
           <Diamond48Regular />
@@ -455,6 +463,10 @@ export default function PremiumPage() {
           ))}
         </ul>
       </section>
-    </main>
+    </Root>
   )
+}
+
+PremiumPage.propTypes = {
+  embedded: PropTypes.bool,
 }
