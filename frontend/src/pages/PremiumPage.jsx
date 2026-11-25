@@ -405,9 +405,6 @@ export default function PremiumPage({ embedded = false }) {
                 <DialogTitle>¿Estás seguro?</DialogTitle>
                 <DialogContent>
                   ¿Quieres continuar con la cancelación de tu suscripción ESIBuy Premium?
-                  <Text>
-                    Si cancelas ESIBuy Premium, tu cuenta pasará a ser Estándar y dejarás de disfrutar de sus ventajas.
-                  </Text>
                 </DialogContent>
                 <DialogActions>
                   <Button

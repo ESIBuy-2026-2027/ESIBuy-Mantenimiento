@@ -168,24 +168,24 @@ export default function AddressesPage({ embedded = false }) {
             Direcciones de envío
           </SectionTitle>
           <Text className={pageStyles.subtitle}>
-            Gestiona dónde recibes tus pedidos. La principal es la que se propone al pagar.
+            Gestiona dónde recibes tus pedidos.
           </Text>
         </div>
         <div className={mergeClasses(styles.action, embedded && styles.embeddedAction)}>
-            <Button
-              className={mergeClasses(styles.addButton, embedded && styles.embeddedAddButton)}
-              appearance="primary"
-              icon={<Add20Regular />}
-              disabled={limiteAlcanzado}
-              onClick={() => abrirPanel()}
-            >
-              Añadir dirección
-            </Button>
-            {limiteAlcanzado && (
-              <Text size={200} className={styles.muted}>
-                Has alcanzado el máximo de {MAXIMO_DIRECCIONES} direcciones.
-              </Text>
-            )}
+          <Button
+            className={mergeClasses(styles.addButton, embedded && styles.embeddedAddButton)}
+            appearance="primary"
+            icon={<Add20Regular />}
+            disabled={limiteAlcanzado}
+            onClick={() => abrirPanel()}
+          >
+            Añadir dirección
+          </Button>
+          {limiteAlcanzado && (
+            <Text size={200} className={styles.muted}>
+              Has alcanzado el máximo de {MAXIMO_DIRECCIONES} direcciones.
+            </Text>
+          )}
         </div>
       </div>
       {failed && (
