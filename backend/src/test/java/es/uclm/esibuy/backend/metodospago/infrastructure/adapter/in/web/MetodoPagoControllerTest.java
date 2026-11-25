@@ -171,6 +171,25 @@ class MetodoPagoControllerTest {
     }
 
     @Test
+    @DisplayName("HU6: actualizar un método propio devuelve la máscara nueva sin exponer datos sensibles")
+    void actualizarMetodoDevuelveDatosEnmascarados() throws Exception {
+        when(gestionMetodosPago.actualizar(org.mockito.ArgumentMatchers.eq(CLIENTE),
+                org.mockito.ArgumentMatchers.eq("m1"), any())).thenReturn(
+                        new MetodoPago("m1", "c-1", TipoMetodoPago.TARJETA, "•••• 2222", "bloque-cifrado", true));
+
+        mockMvc.perform(put(URL + "/m1").with(csrf()).with(user(CLIENTE).roles("CLIENTE"))
+                        .contentType(MediaType.APPLICATION_JSON).content(TARJETA_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("m1"))
+                .andExpect(jsonPath("$.mascara").value("•••• 2222"))
+                .andExpect(jsonPath("$.predeterminado").value(true))
+                .andExpect(jsonPath("$.datosCifrados").doesNotExist());
+
+        verify(gestionMetodosPago).actualizar(org.mockito.ArgumentMatchers.eq(CLIENTE),
+                org.mockito.ArgumentMatchers.eq("m1"), any());
+    }
+
+    @Test
     @DisplayName("HU6-CP22: marcar un método como predeterminado devuelve 204")
     void marcarPredeterminadoDevuelve204() throws Exception {
         mockMvc.perform(put(URL + "/m2/default").with(csrf()).with(user(CLIENTE).roles("CLIENTE")))
