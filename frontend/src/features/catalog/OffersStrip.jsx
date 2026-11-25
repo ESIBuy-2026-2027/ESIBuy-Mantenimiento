@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import { useCallback, useId, useState } from 'react'
 import { Button, makeStyles, tokens } from '@fluentui/react-components'
-import { Pause20Regular, Play20Regular } from '@fluentui/react-icons'
+import { Pause20Regular, Play20Regular, Tag24Regular } from '@fluentui/react-icons'
 import { getCatalogProducts } from '../../api/products'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { ANCHO_TARJETA } from './CatalogCarousel'
@@ -30,11 +30,30 @@ const useStyles = makeStyles({
     justifyContent: 'space-between',
     gap: tokens.spacingHorizontalM,
   },
+  titleGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalM,
+    minWidth: 0,
+  },
+  titleIcon: {
+    color: '#c65b17',
+    width: '34px',
+    height: '34px',
+    flexShrink: 0,
+  },
   title: {
     margin: 0,
-    fontSize: tokens.fontSizeBase600,
-    lineHeight: tokens.lineHeightBase600,
-    fontWeight: tokens.fontWeightSemibold,
+    color: '#8f3d0c',
+    fontSize: 'clamp(25px, 2.4vw, 32px)',
+    lineHeight: 1.15,
+    fontWeight: tokens.fontWeightBold,
+    letterSpacing: '-0.6px',
+  },
+  subtitle: {
+    margin: 0,
+    color: '#a65a28',
+    fontSize: tokens.fontSizeBase300,
   },
   viewport: {
     overflow: 'hidden',
@@ -96,9 +115,13 @@ export default function OffersStrip({ categoryNames, favoritos, onAddFavorite, o
   return (
     <section aria-labelledby={headingId} className={styles.section}>
       <div className={styles.head}>
-        <h2 id={headingId} className={styles.title}>
-          Ofertas
-        </h2>
+        <div className={styles.titleGroup}>
+          <Tag24Regular className={styles.titleIcon} aria-hidden="true" />
+          <div>
+            <h2 id={headingId} className={styles.title}>Ofertas</h2>
+            <p className={styles.subtitle}>Descuentos por tiempo limitado</p>
+          </div>
+        </div>
         <Button
           appearance="subtle"
           icon={pausedByUser ? <Play20Regular /> : <Pause20Regular />}
@@ -129,6 +152,7 @@ export default function OffersStrip({ categoryNames, favoritos, onAddFavorite, o
               >
                 <ProductCard
                   product={product}
+                  offerStyle
                   categoryName={categoryNames.get(product.categoriaId)}
                   favorite={favoritos.has(product.id)}
                   onAddFavorite={onAddFavorite}
