@@ -100,7 +100,7 @@ export default function ProductsPage() {
   const styles = useStyles()
   const { categories } = useCategories()
   const filters = useCatalogFilters()
-  const { search, category, minRating, minPrice, maxPrice, sort, order, debouncedSearch, inStock, offersOnly, filtersActive } = filters
+  const { search, category, minRating, minPrice, maxPrice, priceCeiling, sort, order, debouncedSearch, inStock, offersOnly, filtersActive } = filters
   const feed = useCatalogFeed({
     search: debouncedSearch,
     category,
@@ -115,6 +115,10 @@ export default function ProductsPage() {
     enabled: true,
   })
   const endRef = useOnReachEnd(feed.loadMore, feed.hasMore && !feed.loadingMore && !feed.failedMore)
+
+  useEffect(() => {
+    if (feed.availableMaxPrice !== null) filters.changeAvailableMaxPrice(feed.availableMaxPrice)
+  }, [feed.availableMaxPrice, filters.changeAvailableMaxPrice])
   const categoryNames = new Map(categories.map(({ id, nombre }) => [id, nombre]))
   // Productos que el cliente tiene en favoritos (HU14): se leen al entrar y, después, cada cambio responde con la lista
   // completa. Si la lista no se puede leer, el catálogo funciona igual con los corazones vacíos. `cambiados` evita que
@@ -147,7 +151,7 @@ export default function ProductsPage() {
     setFavoritos(aFavoritos(lista))
   }
   // Sin ningún filtro, que no haya productos significa que el catálogo está vacío; con filtros, que no coinciden.
-  const catalogEmpty = feed.loaded && feed.totalItems === 0 && !debouncedSearch && !category && !minRating && minPrice === 0 && maxPrice === 150 && !inStock && !offersOnly
+  const catalogEmpty = feed.loaded && feed.totalItems === 0 && !debouncedSearch && !category && !minRating && minPrice === 0 && maxPrice === null && !inStock && !offersOnly
   const noMatches = feed.loaded && feed.totalItems === 0 && !catalogEmpty
   const hasItems = feed.items.length > 0
   const changeSort = filters.changeSort
@@ -170,6 +174,7 @@ export default function ProductsPage() {
           minRating={minRating}
           minPrice={minPrice}
           maxPrice={maxPrice}
+          priceCeiling={priceCeiling}
           inStock={inStock}
           offersOnly={offersOnly}
           filtersActive={filtersActive}
