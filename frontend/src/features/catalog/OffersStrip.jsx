@@ -23,7 +23,6 @@ const useStyles = makeStyles({
     boxSizing: 'border-box',
     margin: '0 auto',
     maxWidth: '1320px',
-    padding: `0 ${tokens.spacingHorizontalL}`,
   },
   head: {
     display: 'flex',
