@@ -207,6 +207,23 @@ class IncidenciaMongoAdapterTest {
         assertEquals(0, pagina.totalElementos());
     }
 
+    @Test
+    @DisplayName("PBI239-CP04: buscar por estado devuelve solo las incidencias en ese estado, ordenadas")
+    void buscarPorEstadoDevuelveSoloLasDeEseEstado() {
+        Incidencia pendiente1 = adapter.guardar(incidencia("u-1", "Pendiente 1", 10));
+        Incidencia abierta = adapter.guardar(incidencia("u-2", "Abierta", 20));
+        adapter.guardar(abierta.abrir("Respuesta"));
+        Incidencia pendiente2 = adapter.guardar(incidencia("u-1", "Pendiente 2", 30));
+
+        IncidenciaPage paginaPendientes = adapter.buscarPorEstado(EstadoIncidencia.PENDIENTE, 0, 10);
+        IncidenciaPage paginaAbiertas = adapter.buscarPorEstado(EstadoIncidencia.ABIERTA, 0, 10);
+
+        assertEquals(List.of(pendiente1.asunto(), pendiente2.asunto()), asuntos(paginaPendientes));
+        assertEquals(2, paginaPendientes.totalElementos());
+        assertEquals(List.of(abierta.asunto()), asuntos(paginaAbiertas));
+        assertEquals(1, paginaAbiertas.totalElementos());
+    }
+
     // Resolución de incidencias (HU50): el administrador abre una incidencia concreta por su id
 
     @Test

@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import es.uclm.esibuy.backend.incidencias.application.port.in.ResolucionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.SupervisionIncidenciasUseCase;
+import es.uclm.esibuy.backend.incidencias.domain.model.EstadoIncidencia;
+import es.uclm.esibuy.backend.incidencias.domain.model.IncidenciaSupervisadaPage;
 
 /**
  * Adaptador de entrada web de la supervisión (HU49) y la resolución (HU50) de incidencias. Solo lo usa el
@@ -36,8 +38,20 @@ public class AdministracionIncidenciasController {
     // La API cuenta las páginas desde 1 y el dominio desde 0.
     @GetMapping
     public IncidenciaSupervisadaPageResponse consultar(@RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return IncidenciaSupervisadaPageResponse.desde(supervisionIncidencias.consultarTodas(page - 1, size));
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) EstadoIncidencia estado,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String order) {
+        IncidenciaSupervisadaPage resultado;
+        if (search == null && sort == null && order == null) {
+            resultado = estado == null
+                    ? supervisionIncidencias.consultarTodas(page - 1, size)
+                    : supervisionIncidencias.consultarTodas(page - 1, size, estado);
+        } else {
+            resultado = supervisionIncidencias.consultarTodas(page - 1, size, estado, search, sort, order);
+        }
+        return IncidenciaSupervisadaPageResponse.desde(resultado);
     }
 
     // Abre una incidencia pendiente con la respuesta del administrador (HU50, T300) y la devuelve. 400 si la

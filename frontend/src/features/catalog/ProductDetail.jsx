@@ -474,7 +474,7 @@ export default function ProductDetail({
               disabled={savingFavorite}
               onClick={toggleFavorite}
             >
-              {favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+              {favorite ? 'Añadir/Quitar de favoritos' : 'Añadir a favoritos'}
             </Button>
           )}
 

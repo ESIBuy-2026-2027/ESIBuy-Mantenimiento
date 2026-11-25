@@ -52,6 +52,40 @@ describe('getAdminIncidents', () => {
     expect(respuesta).toEqual(PAGINA)
   })
 
+  it('PBI239-CP05: cuando se indican filtros y ordenación, los envía como parámetros de consulta', async () => {
+    const peticion = {}
+    server.use(
+      http.get('/api/admin/incidencias', ({ request }) => {
+        const params = new URL(request.url).searchParams
+        peticion.page = params.get('page')
+        peticion.size = params.get('size')
+        peticion.estado = params.get('estado')
+        peticion.search = params.get('search')
+        peticion.sort = params.get('sort')
+        peticion.order = params.get('order')
+        return HttpResponse.json(PAGINA)
+      }),
+    )
+
+    await getAdminIncidents({
+      page: 1,
+      size: 10,
+      estado: 'PENDIENTE',
+      search: 'pedido',
+      sort: 'asunto',
+      order: 'desc',
+    })
+
+    expect(peticion).toEqual({
+      page: '1',
+      size: '10',
+      estado: 'PENDIENTE',
+      search: 'pedido',
+      sort: 'asunto',
+      order: 'desc',
+    })
+  })
+
   it('HU49-CP15: un 403 llega como error con su estado y su código', async () => {
     server.use(
       http.get('/api/admin/incidencias', () => HttpResponse.json({ code: 'ACCESS_DENIED' }, { status: 403 })),

@@ -13,20 +13,18 @@ import {
 import { ArrowLeft20Regular, BoxSearch24Regular } from '@fluentui/react-icons'
 import { addFavoriteCategory, getPreferences, removeFavoriteCategory } from '../api/preferences'
 import { getCatalogProduct, getProductReviews, getProductReviewStatus } from '../api/products'
-import { addWishlistItem, getWishlist, removeWishlistItem } from '../api/wishlist'
+import { getWishlists } from '../api/wishlist'
 import EmptyState from '../components/EmptyState'
 import LinkButton from '../components/LinkButton'
 import FavoriteCategoryButton from '../features/catalog/FavoriteCategoryButton'
 import ProductDetail from '../features/catalog/ProductDetail'
+import WishlistPickerDialog from '../features/wishlist/WishlistPickerDialog'
 import { useApiQuery } from '../hooks/useApiQuery'
 import { useCategories } from '../hooks/useCategories'
 import { PATHS } from '../routes/paths'
 import PropTypes from 'prop-types'
 
 const NOT_FOUND = 404
-
-// Si un producto está en la lista de deseos que devuelve el backend (HU14).
-const estaEnLaLista = (lista, productId) => lista.items.some((item) => item.productoId === productId)
 
 const useStyles = makeStyles({
   page: {
@@ -111,22 +109,12 @@ export default function ProductDetailPage() {
   const reviewStatusFetcher = useCallback(() => getProductReviewStatus(id), [id])
   const { data: reviewStatus, failed: reviewStatusFailed, retry: retryReviewStatus } = useApiQuery(reviewStatusFetcher)
   const { categories } = useCategories()
-  // Si el producto está en los favoritos del cliente (HU14). Si la lista no se puede leer, se ofrece añadirlo.
-  // `cambiado` evita que una lectura lenta pise un cambio que el cliente ya ha hecho.
-  const [favorito, setFavorito] = useState(false)
+  // Listas de deseos del cliente (HU14, PBI 534).
+  const [listasDeseos, setListasDeseos] = useState([])
+  const [selectorAbierto, setSelectorAbierto] = useState(false)
   const cambiado = useRef(false)
+  const favorito = listasDeseos.some((lista) => lista.items.some((item) => item.productoId === id))
 
-  const anadirFavorito = async (productId) => {
-    const lista = await addWishlistItem(productId)
-    cambiado.current = true
-    setFavorito(estaEnLaLista(lista, id))
-  }
-
-  const quitarFavorito = async (productId) => {
-    const lista = await removeWishlistItem(productId)
-    cambiado.current = true
-    setFavorito(estaEnLaLista(lista, id))
-  }
   // Categorías favoritas del cliente (AB#528), para saber si ya lo es la del producto. Como con los favoritos, si no se
   // pueden leer se ofrece añadirla, que no es un error si ya lo era.
   const [categoriasFavoritas, setCategoriasFavoritas] = useState(() => new Set())
@@ -144,9 +132,9 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     let cancelled = false
-    getWishlist()
-      .then((lista) => {
-        if (!cancelled && !cambiado.current) setFavorito(estaEnLaLista(lista, id))
+    getWishlists()
+      .then((listas) => {
+        if (!cancelled && !cambiado.current) setListasDeseos(listas)
       })
       .catch(() => { })
     return () => {
@@ -223,8 +211,19 @@ export default function ProductDetailPage() {
             retryReviewStatus()
           }}
           favorite={favorito}
-          onAddFavorite={anadirFavorito}
-          onRemoveFavorite={quitarFavorito}
+          onAddFavorite={() => setSelectorAbierto(true)}
+          onRemoveFavorite={() => setSelectorAbierto(true)}
+        />
+      )}
+      {selectorAbierto && product && (
+        <WishlistPickerDialog
+          product={product}
+          wishlists={listasDeseos}
+          onClose={() => setSelectorAbierto(false)}
+          onWishlistsChange={(nuevas) => {
+            cambiado.current = true
+            setListasDeseos(nuevas)
+          }}
         />
       )}
     </main>

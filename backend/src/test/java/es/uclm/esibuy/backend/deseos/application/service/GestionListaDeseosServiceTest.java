@@ -11,6 +11,8 @@ import es.uclm.esibuy.backend.deseos.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.deseos.application.port.out.ListaDeseosRepositoryPort;
 import es.uclm.esibuy.backend.deseos.application.port.out.ProductoDeseado;
 import es.uclm.esibuy.backend.deseos.application.port.out.ProductosPort;
+import es.uclm.esibuy.backend.deseos.domain.exception.ListaDeseosInvalidaException;
+import es.uclm.esibuy.backend.deseos.domain.exception.ListaDeseosNoEncontradaException;
 import es.uclm.esibuy.backend.deseos.domain.exception.ProductoNoDisponibleException;
 import es.uclm.esibuy.backend.deseos.domain.model.ItemDeseo;
 import es.uclm.esibuy.backend.deseos.domain.model.ListaDeseos;
@@ -19,7 +21,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -236,6 +238,40 @@ class GestionListaDeseosServiceTest {
         assertTrue(repositorio.buscarPorCliente(CLIENTE).isEmpty());
     }
 
+    @Test
+    @DisplayName("PBI534-CP02: el cliente puede crear varias listas, consultarlas, renombrarlas, editar sus productos y eliminarlas")
+    void flujoCompletoMultiplesListas() {
+        ListaDeseosDetallada primera = servicio.crearLista(EMAIL, "Regalos");
+        ListaDeseosDetallada segunda = servicio.crearLista(EMAIL, "Oficina");
+
+        assertEquals(2, servicio.consultarTodas(EMAIL).size());
+
+        ListaDeseosDetallada conProducto = servicio.anadirALista(EMAIL, primera.id(), "p-1");
+        assertEquals(1, conProducto.items().size());
+        assertEquals("Teclado", conProducto.items().get(0).nombre());
+        assertEquals(1, conProducto.items().get(0).cantidad());
+
+        ListaDeseosDetallada conCantidad = servicio.actualizarCantidad(EMAIL, primera.id(), "p-1", 4);
+        assertEquals(4, conCantidad.items().get(0).cantidad());
+        assertThrows(ListaDeseosInvalidaException.class,
+                () -> servicio.actualizarCantidad(EMAIL, primera.id(), "p-1", 99));
+
+        ListaDeseosDetallada renombrada = servicio.renombrarLista(EMAIL, primera.id(), "Regalos 2026");
+        assertEquals("Regalos 2026", renombrada.nombre());
+
+        ListaDeseosDetallada trasQuitar = servicio.quitarDeLista(EMAIL, primera.id(), "p-1");
+        assertTrue(trasQuitar.items().isEmpty());
+
+        servicio.eliminarLista(EMAIL, segunda.id());
+        assertEquals(1, servicio.consultarTodas(EMAIL).size());
+        assertThrows(ListaDeseosNoEncontradaException.class, () -> servicio.eliminarLista(EMAIL, segunda.id()));
+
+        servicio.eliminarLista(EMAIL, primera.id());
+        List<ListaDeseosDetallada> trasEliminarUltima = servicio.consultarTodas(EMAIL);
+        assertEquals(1, trasEliminarUltima.size());
+        assertEquals("Favoritos", trasEliminarUltima.get(0).nombre());
+    }
+
     private static final class ClienteFijo implements ClienteEnSesionPort {
 
         private boolean premium;
@@ -270,26 +306,45 @@ class GestionListaDeseosServiceTest {
     // Guarda una copia, como la base de datos, y asigna el id a las listas nuevas
     private static final class RepositorioEnMemoria implements ListaDeseosRepositoryPort {
 
-        private final Map<String, ListaDeseos> listas = new HashMap<>();
+        private final Map<String, ListaDeseos> listas = new LinkedHashMap<>();
+        private int secuencia = 1;
         private int guardados;
 
         @Override
         public Optional<ListaDeseos> buscarPorCliente(String clienteId) {
-            return Optional.ofNullable(listas.get(clienteId));
+            return buscarTodasPorCliente(clienteId).stream().findFirst();
+        }
+
+        @Override
+        public List<ListaDeseos> buscarTodasPorCliente(String clienteId) {
+            return listas.values().stream()
+                    .filter(lista -> lista.getClienteId().equals(clienteId))
+                    .toList();
+        }
+
+        @Override
+        public Optional<ListaDeseos> buscarPorIdYCliente(String id, String clienteId) {
+            return Optional.ofNullable(listas.get(id))
+                    .filter(lista -> lista.getClienteId().equals(clienteId));
         }
 
         @Override
         public ListaDeseos guardar(ListaDeseos lista) {
-            String id = lista.getId() != null ? lista.getId() : "l-" + (listas.size() + 1);
-            ListaDeseos guardada = new ListaDeseos(id, lista.getClienteId(), lista.getItems());
-            listas.put(lista.getClienteId(), guardada);
+            String id = lista.getId() != null ? lista.getId() : "l-" + (secuencia++);
+            ListaDeseos guardada = new ListaDeseos(id, lista.getClienteId(), lista.getNombre(), lista.getItems());
+            listas.put(id, guardada);
             guardados++;
             return guardada;
         }
 
         @Override
+        public void eliminar(String id, String clienteId) {
+            buscarPorIdYCliente(id, clienteId).ifPresent(l -> listas.remove(l.getId()));
+        }
+
+        @Override
         public void eliminarPorCliente(String clienteId) {
-            listas.remove(clienteId);
+            listas.values().removeIf(lista -> lista.getClienteId().equals(clienteId));
         }
     }
 }

@@ -233,10 +233,10 @@ describe('ProductCard (HU14): favoritos', () => {
   it('HU14-CP22: un producto que ya está en favoritos tiene el corazón relleno para quitarlo', () => {
     pintarConFavoritos(PRODUCTO, { favorite: true, onRemoveFavorite: vi.fn().mockResolvedValue(undefined) })
 
-    const corazon = screen.getByRole('button', { name: 'Quitar Teclado mecánico de favoritos' })
+    const corazon = screen.getByRole('button', { name: 'Añadir/Quitar Teclado mecánico de favoritos' })
     expect(corazon).toBeEnabled()
-    expect(corazon).toHaveAttribute('title', 'Quitar de favoritos')
-    expect(screen.queryByRole('button', { name: /añadir .* a favoritos/i })).not.toBeInTheDocument()
+    expect(corazon).toHaveAttribute('title', 'Añadir/Quitar de favoritos')
+    expect(screen.queryByRole('button', { name: /^Añadir Teclado mecánico a favoritos$/i })).not.toBeInTheDocument()
   })
 
   it.each([
@@ -268,7 +268,7 @@ describe('ProductCard (HU14): favoritos', () => {
     const onRemoveFavorite = vi.fn().mockResolvedValue(undefined)
     pintarConFavoritos(PRODUCTO, { favorite: true, onRemoveFavorite })
 
-    await userEvent.click(screen.getByRole('button', { name: 'Quitar Teclado mecánico de favoritos' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Añadir/Quitar Teclado mecánico de favoritos' }))
 
     expect(onRemoveFavorite).toHaveBeenCalledWith('p-1')
   })
@@ -276,17 +276,17 @@ describe('ProductCard (HU14): favoritos', () => {
   it('HU14-CP37: mientras se quita, el corazón queda deshabilitado', async () => {
     pintarConFavoritos(PRODUCTO, { favorite: true, onRemoveFavorite: vi.fn(() => new Promise(() => {})) })
 
-    await userEvent.click(screen.getByRole('button', { name: 'Quitar Teclado mecánico de favoritos' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Añadir/Quitar Teclado mecánico de favoritos' }))
 
-    expect(screen.getByRole('button', { name: 'Quitar Teclado mecánico de favoritos' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Añadir/Quitar Teclado mecánico de favoritos' })).toBeDisabled()
   })
 
   it('HU14-CP37: si no se puede quitar, la tarjeta lo avisa y el corazón se puede volver a pulsar', async () => {
     pintarConFavoritos(PRODUCTO, { favorite: true, onRemoveFavorite: vi.fn().mockRejectedValue({ status: 500 }) })
 
-    await userEvent.click(screen.getByRole('button', { name: 'Quitar Teclado mecánico de favoritos' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Añadir/Quitar Teclado mecánico de favoritos' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('No se ha podido quitar de favoritos. Inténtalo de nuevo.')
-    expect(screen.getByRole('button', { name: 'Quitar Teclado mecánico de favoritos' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Añadir/Quitar Teclado mecánico de favoritos' })).toBeEnabled()
   })
 })

@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.deseos.infrastructure.adapter.out.persistence;
 
+import java.util.List;
 import java.util.Optional;
 
 import es.uclm.esibuy.backend.deseos.application.port.out.ListaDeseosRepositoryPort;
@@ -18,7 +19,19 @@ public class ListaDeseosMongoAdapter implements ListaDeseosRepositoryPort {
 
     @Override
     public Optional<ListaDeseos> buscarPorCliente(String clienteId) {
-        return repository.findByUsuarioId(clienteId).map(mapper::aDominio);
+        return buscarTodasPorCliente(clienteId).stream().findFirst();
+    }
+
+    @Override
+    public List<ListaDeseos> buscarTodasPorCliente(String clienteId) {
+        return repository.findAllByUsuarioIdOrderByCreatedAtAsc(clienteId).stream()
+                .map(mapper::aDominio)
+                .toList();
+    }
+
+    @Override
+    public Optional<ListaDeseos> buscarPorIdYCliente(String id, String clienteId) {
+        return repository.findByIdAndUsuarioId(id, clienteId).map(mapper::aDominio);
     }
 
     @Override
@@ -30,6 +43,11 @@ public class ListaDeseosMongoAdapter implements ListaDeseosRepositoryPort {
                     .ifPresent(guardado -> documento.setCreatedAt(guardado.getCreatedAt()));
         }
         return mapper.aDominio(repository.save(documento));
+    }
+
+    @Override
+    public void eliminar(String id, String clienteId) {
+        repository.deleteByIdAndUsuarioId(id, clienteId);
     }
 
     @Override

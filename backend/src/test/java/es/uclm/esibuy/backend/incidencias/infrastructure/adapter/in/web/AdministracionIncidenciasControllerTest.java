@@ -162,6 +162,37 @@ class AdministracionIncidenciasControllerTest {
     }
 
     @Test
+    @DisplayName("PBI239-CP03: al filtrar por estado delega en el caso de uso con ese estado")
+    void alFiltrarPorEstadoDelegaEnElCasoDeUso() throws Exception {
+        when(supervisionIncidencias.consultarTodas(0, 10, EstadoIncidencia.PENDIENTE))
+                .thenReturn(new IncidenciaSupervisadaPage(List.of(supervisada(CLIENTE)), 0, 10, 1));
+
+        consultarComoAdministrador("?estado=PENDIENTE")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].estado").value("PENDIENTE"));
+    }
+
+    @Test
+    @DisplayName("PBI239-CP03: un estado desconocido responde 400 y no llega al caso de uso")
+    void unEstadoDesconocidoResponde400() throws Exception {
+        consultarComoAdministrador("?estado=DESCONOCIDO").andExpect(status().isBadRequest());
+
+        verify(supervisionIncidencias, never()).consultarTodas(anyInt(), anyInt(), any());
+    }
+
+    @Test
+    @DisplayName("PBI239-CP09: los parámetros de búsqueda y ordenación se pasan al caso de uso")
+    void busquedaYOrdenacionSePasanAlCasoDeUso() throws Exception {
+        when(supervisionIncidencias.consultarTodas(0, 10, EstadoIncidencia.ABIERTA, "cobro", "asunto", "desc"))
+                .thenReturn(new IncidenciaSupervisadaPage(List.of(supervisada(CLIENTE)), 0, 10, 1));
+
+        consultarComoAdministrador("?estado=ABIERTA&search=cobro&sort=asunto&order=desc")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1));
+    }
+
+    @Test
     @DisplayName("HU49-CP14: sin sesión responde 401")
     void sinSesionResponde401() throws Exception {
         mockMvc.perform(get(URL)).andExpect(status().isUnauthorized());

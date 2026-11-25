@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import es.uclm.esibuy.backend.incidencias.application.port.out.IncidenciaRepositoryPort;
+import es.uclm.esibuy.backend.incidencias.domain.model.EstadoIncidencia;
 import es.uclm.esibuy.backend.incidencias.domain.model.Incidencia;
 import es.uclm.esibuy.backend.incidencias.domain.model.IncidenciaPage;
 
@@ -44,6 +45,34 @@ public class IncidenciaMongoAdapter implements IncidenciaRepositoryPort {
     public IncidenciaPage buscarTodas(int pagina, int tamano) {
         Page<IncidenciaDocument> documentos = repository.findAll(
                 PageRequest.of(pagina, tamano, DE_MAS_ANTIGUA_A_MAS_RECIENTE));
+        return aPagina(documentos, pagina, tamano);
+    }
+
+    @Override
+    public IncidenciaPage buscarPorEstado(EstadoIncidencia estado, int pagina, int tamano) {
+        Page<IncidenciaDocument> documentos = repository.findByEstado(estado.name(),
+                PageRequest.of(pagina, tamano, DE_MAS_ANTIGUA_A_MAS_RECIENTE));
+        return aPagina(documentos, pagina, tamano);
+    }
+
+    @Override
+    public IncidenciaPage buscarSupervisadas(EstadoIncidencia estado, String busqueda, String ordenarPor, String sentido,
+            int pagina, int tamano) {
+        Sort.Direction direccion = "desc".equalsIgnoreCase(sentido) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        String campo = (ordenarPor == null || ordenarPor.isBlank()) ? "fechaCreacion" : ordenarPor;
+        PageRequest pageable = PageRequest.of(pagina, tamano, Sort.by(direccion, campo, "id"));
+        String texto = busqueda == null ? "" : busqueda.trim();
+
+        Page<IncidenciaDocument> documentos;
+        if (estado != null && !texto.isEmpty()) {
+            documentos = repository.findByEstadoAndAsuntoContainingIgnoreCase(estado.name(), texto, pageable);
+        } else if (estado != null) {
+            documentos = repository.findByEstado(estado.name(), pageable);
+        } else if (!texto.isEmpty()) {
+            documentos = repository.findByAsuntoContainingIgnoreCase(texto, pageable);
+        } else {
+            documentos = repository.findAll(pageable);
+        }
         return aPagina(documentos, pagina, tamano);
     }
 

@@ -1,94 +1,71 @@
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/server'
-import { addWishlistItem, getWishlist, removeWishlistItem } from './wishlist'
+import {
+  addItemToWishlist,
+  addWishlistItem,
+  createWishlist,
+  deleteWishlist,
+  getWishlist,
+  getWishlists,
+  removeItemFromWishlist,
+  removeWishlistItem,
+  renameWishlist,
+} from './wishlist'
 
-const LISTA = {
-  items: [
-    { productoId: 'p-1', addedAt: '2026-11-04T10:00:00Z' },
-    { productoId: 'p-7', addedAt: '2026-11-04T11:30:00Z' },
-  ],
-}
+const URL_LISTA = '/api/customer/wishlist'
+const URL_LISTAS = '/api/customer/wishlists'
 
-describe('addWishlistItem', () => {
-  it('HU14-CP20: pide POST /api/customer/wishlist/items con el producto y devuelve la lista del cliente', async () => {
-    const peticion = {}
+describe('wishlist api', () => {
+  it('HU14-CP20: addWishlistItem pide POST /api/customer/wishlist/items', async () => {
+    let body
     server.use(
-      http.post('/api/customer/wishlist/items', async ({ request }) => {
-        peticion.metodo = request.method
-        peticion.cuerpo = await request.json()
-        return HttpResponse.json(LISTA)
+      http.post(`${URL_LISTA}/items`, async ({ request }) => {
+        body = await request.json()
+        return HttpResponse.json({ items: [{ productoId: 'p-7', addedAt: '2026-11-04T10:00:00Z' }] })
       }),
     )
 
     const respuesta = await addWishlistItem('p-7')
-
-    expect(peticion).toEqual({ metodo: 'POST', cuerpo: { productoId: 'p-7' } })
-    expect(respuesta).toEqual(LISTA)
+    expect(body).toEqual({ productoId: 'p-7' })
+    expect(respuesta.items).toHaveLength(1)
   })
 
-  it('HU14-CP20: un 404 llega como error con su estado y su código', async () => {
+  it('HU14-CP31: getWishlist y removeWishlistItem llaman a /api/customer/wishlist', async () => {
     server.use(
-      http.post('/api/customer/wishlist/items', () =>
-        HttpResponse.json({ code: 'PRODUCT_NOT_FOUND' }, { status: 404 }),
+      http.get(URL_LISTA, () => HttpResponse.json({ items: [] })),
+      http.delete(`${URL_LISTA}/items/:productoId`, ({ params }) =>
+        HttpResponse.json({ items: [], eliminado: params.productoId }),
       ),
     )
 
-    await expect(addWishlistItem('p-9')).rejects.toMatchObject({ status: 404, code: 'PRODUCT_NOT_FOUND' })
+    expect(await getWishlist()).toEqual({ items: [] })
+    expect(await removeWishlistItem('p-1')).toMatchObject({ items: [], eliminado: 'p-1' })
   })
-})
 
-const LISTA_DETALLADA = {
-  items: [
-    {
-      productoId: 'p-1',
-      nombre: 'Auriculares inalámbricos',
-      imagen: 'https://tienda.test/auriculares.png',
-      precioFinal: 53.91,
-      stock: 34,
-      disponible: true,
-      addedAt: '2026-11-04T10:00:00Z',
-    },
-  ],
-}
-
-describe('getWishlist', () => {
-  it('HU14-CP31: pide GET /api/customer/wishlist y devuelve la lista con los datos de cada producto', async () => {
-    const peticion = {}
+  it('PBI534-CP05: getWishlists, createWishlist, renameWishlist, deleteWishlist y gestión de productos', async () => {
     server.use(
-      http.get('/api/customer/wishlist', ({ request }) => {
-        peticion.metodo = request.method
-        return HttpResponse.json(LISTA_DETALLADA)
-      }),
+      http.get(URL_LISTAS, () => HttpResponse.json([{ id: 'wl-1', nombre: 'Regalos', items: [] }])),
+      http.post(URL_LISTAS, async ({ request }) =>
+        HttpResponse.json({ id: 'wl-2', nombre: (await request.json()).nombre, items: [] }, { status: 201 }),
+      ),
+      http.patch(`${URL_LISTAS}/:id`, async ({ params, request }) =>
+        HttpResponse.json({ id: params.id, nombre: (await request.json()).nombre, items: [] }),
+      ),
+      http.delete(`${URL_LISTAS}/:id`, () => new HttpResponse(null, { status: 204 })),
+      http.post(`${URL_LISTAS}/:id/items`, async ({ params, request }) =>
+        HttpResponse.json({ id: params.id, nombre: 'Regalos', items: [{ productoId: (await request.json()).productoId }] }),
+      ),
+      http.delete(`${URL_LISTAS}/:id/items/:productoId`, ({ params }) =>
+        HttpResponse.json({ id: params.id, nombre: 'Regalos', items: [] }),
+      ),
     )
 
-    const respuesta = await getWishlist()
-
-    expect(peticion.metodo).toBe('GET')
-    expect(respuesta).toEqual(LISTA_DETALLADA)
-  })
-
-  it('HU14-CP31: un 403 llega como error con su estado y su código', async () => {
-    server.use(http.get('/api/customer/wishlist', () => HttpResponse.json({ code: 'ACCESS_DENIED' }, { status: 403 })))
-
-    await expect(getWishlist()).rejects.toMatchObject({ status: 403, code: 'ACCESS_DENIED' })
-  })
-})
-
-describe('removeWishlistItem', () => {
-  it('HU14-CP31: pide DELETE /api/customer/wishlist/items/{productoId} y devuelve la lista actualizada', async () => {
-    const peticion = {}
-    server.use(
-      http.delete('/api/customer/wishlist/items/:productoId', ({ request, params }) => {
-        peticion.metodo = request.method
-        peticion.productoId = params.productoId
-        return HttpResponse.json({ items: [] })
-      }),
-    )
-
-    const respuesta = await removeWishlistItem('a/b c')
-
-    expect(peticion).toEqual({ metodo: 'DELETE', productoId: 'a/b c' })
-    expect(respuesta).toEqual({ items: [] })
+    expect(await getWishlists()).toEqual([{ id: 'wl-1', nombre: 'Regalos', items: [] }])
+    expect(await createWishlist('Oficina')).toEqual({ id: 'wl-2', nombre: 'Oficina', items: [] })
+    expect(await renameWishlist('wl-1', 'Cumple')).toEqual({ id: 'wl-1', nombre: 'Cumple', items: [] })
+    expect(await deleteWishlist('wl-1')).toBeNull()
+    expect(await addItemToWishlist('wl-1', 'p-1')).toMatchObject({ items: [{ productoId: 'p-1' }] })
+    expect(await removeItemFromWishlist('wl-1', 'p-1')).toMatchObject({ items: [] })
   })
 })

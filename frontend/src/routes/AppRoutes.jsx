@@ -15,6 +15,7 @@ import AdminPage from '../pages/AdminPage'
 import AdminSellersPage from '../pages/AdminSellersPage'
 import AdminUsersPage from '../pages/AdminUsersPage'
 import CheckoutPage from '../pages/CheckoutPage'
+import FavoritesPage from '../pages/FavoritesPage'
 import ForgotPasswordPage from '../pages/ForgotPasswordPage'
 import Home from '../pages/Home'
 import IncidentsPage from '../pages/IncidentsPage'
@@ -61,6 +62,7 @@ export default function AppRoutes() {
           <Route path={PATHS.ADDRESSES} element={<AddressesPage />} />
           <Route path={PATHS.ORDERS} element={<OrdersPage />} />
           <Route path={PATHS.ORDER_DETAIL} element={<OrderDetailPage />} />
+          <Route path={PATHS.FAVORITES} element={<FavoritesPage />} />
           <Route path={PATHS.WISHLIST} element={<WishlistPage />} />
           <Route path={PATHS.PREMIUM} element={<PremiumPage />} />
           <Route path={PATHS.PREMIUM_PAYMENT} element={<PremiumPaymentPage />} />
