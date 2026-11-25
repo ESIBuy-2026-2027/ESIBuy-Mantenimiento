@@ -22,10 +22,10 @@ function contarAltas() {
   return () => altas
 }
 
-function abrirPanel() {
+function abrirPanel(metodo = null) {
   const onSaved = vi.fn()
   const onCancel = vi.fn()
-  renderWithProviders(<AddPaymentMethodPanel onSaved={onSaved} onCancel={onCancel} />)
+  renderWithProviders(<AddPaymentMethodPanel metodo={metodo} onSaved={onSaved} onCancel={onCancel} />)
   return { onSaved, onCancel }
 }
 
@@ -198,6 +198,31 @@ describe('AddPaymentMethodPanel (HU6): guardar', () => {
     expect(screen.getByLabelText(/número de tarjeta/i)).toHaveValue('')
     expect(screen.getByLabelText(/cvv/i)).toHaveValue('')
     expect(altas()).toBe(0)
+  })
+})
+
+describe('AddPaymentMethodPanel (HU6): edición', () => {
+  it('solicita los datos de nuevo sin mostrar información sensible almacenada y actualiza el método', async () => {
+    const peticion = {}
+    const actualizado = { id: 'm-8', tipo: 'BIZUM', mascara: '•••• 678', predeterminado: true }
+    server.use(
+      http.put(`${URL_METODOS}/:id`, async ({ params, request }) => {
+        peticion.id = params.id
+        peticion.cuerpo = await request.json()
+        return HttpResponse.json(actualizado)
+      }),
+    )
+    const usuario = userEvent.setup()
+    const { onSaved } = abrirPanel({ id: 'm-8', tipo: 'BIZUM', mascara: '•••• 678', predeterminado: true })
+
+    expect(screen.getByRole('heading', { level: 2, name: /actualizar método de pago/i })).toBeInTheDocument()
+    expect(screen.getByText(/introduce de nuevo los datos/i)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Tarjeta' })).not.toBeInTheDocument()
+    await usuario.type(screen.getByLabelText(/teléfono de bizum/i), '612345678')
+    await usuario.click(screen.getByRole('button', { name: /guardar cambios/i }))
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(actualizado))
+    expect(peticion).toEqual({ id: 'm-8', cuerpo: { tipo: 'BIZUM', telefonoBizum: '612345678' } })
   })
 })
 
