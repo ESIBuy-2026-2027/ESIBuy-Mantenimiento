@@ -51,12 +51,14 @@ public class CatalogoController {
             @RequestParam(defaultValue = "false") boolean offersOnly,
             @RequestParam(required = false) @Min(0) Integer minPrice,
             @RequestParam(required = false) @Min(0) Integer maxPrice,
-            @RequestParam(defaultValue = "nombre") @Pattern(regexp = "nombre|valoracion") String sort,
+            @RequestParam(defaultValue = "nombre") @Pattern(regexp = "nombre|valoracion|precio") String sort,
             @RequestParam(defaultValue = "asc") @Pattern(regexp = "asc|desc") String order,
             Authentication autenticado) {
-        CriterioOrdenCatalogo criterio = "valoracion".equals(sort)
-                ? CriterioOrdenCatalogo.VALORACION
-                : CriterioOrdenCatalogo.NOMBRE;
+        CriterioOrdenCatalogo criterio = switch (sort) {
+            case "valoracion" -> CriterioOrdenCatalogo.VALORACION;
+            case "precio" -> CriterioOrdenCatalogo.PRECIO;
+            default -> CriterioOrdenCatalogo.NOMBRE;
+        };
         BuscarCatalogoQuery query = new BuscarCatalogoQuery(
                 search, category, minRating, inStock, offersOnly, false, minPrice, maxPrice, criterio,
                 "desc".equals(order), page - 1, size);
