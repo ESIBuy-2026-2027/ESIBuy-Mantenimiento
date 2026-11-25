@@ -84,6 +84,7 @@ describe('ProductCard', () => {
     expect(screen.getByText(/53,91/)).toBeInTheDocument()
     expect(screen.getByText(/59,90/).closest('s')).not.toBeNull()
     expect(screen.getByText('-10 %')).toBeInTheDocument()
+    expect(screen.getByText('OFERTA · -10%')).toBeInTheDocument()
   })
 
   it('HU9-CP02: la tarjeta tiene un botón para añadir una unidad al carrito', async () => {
