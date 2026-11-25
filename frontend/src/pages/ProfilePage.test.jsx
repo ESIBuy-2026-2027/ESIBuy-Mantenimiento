@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { delay, http, HttpResponse } from 'msw'
-import { login } from '../api/auth'
+import { login, logout } from '../api/auth'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
@@ -325,6 +325,44 @@ describe('ProfilePage (HU46 y AB#528): categorías favoritas', () => {
 
     expect(await screen.findByText('Ahora mismo no hay categorías disponibles.')).toBeInTheDocument()
     expect(screen.queryByRole('group', { name: 'Mis categorías favoritas' })).not.toBeInTheDocument()
+  })
+
+  it('HU528-CP21: al cerrar sesión y volver a entrar, el cliente conserva sus categorías favoritas', async () => {
+    const user = userEvent.setup()
+    await abrirPerfil('cliente@esibuy.test')
+    await user.click(within(await seccion()).getByRole('checkbox', { name: 'Hogar' }))
+    await screen.findByText('Hogar se ha añadido a tus categorías favoritas.')
+    await logout()
+    cleanup()
+
+    await abrirPerfil('cliente@esibuy.test')
+
+    const favoritas = await seccion()
+    await waitFor(() => expect(within(favoritas).getByRole('checkbox', { name: 'Hogar' })).toBeChecked())
+    expect(within(favoritas).getByRole('checkbox', { name: 'Tecnología' })).not.toBeChecked()
+  })
+
+  it('HU528-CP21: otro cliente no ve ni cambia esas favoritas', async () => {
+    const user = userEvent.setup()
+    await abrirPerfil('cliente@esibuy.test')
+    await user.click(within(await seccion()).getByRole('checkbox', { name: 'Hogar' }))
+    await screen.findByText('Hogar se ha añadido a tus categorías favoritas.')
+    await logout()
+    cleanup()
+
+    await abrirPerfil('nuevo@esibuy.test')
+    const favoritasDeNora = await seccion()
+    await waitFor(() => expect(within(favoritasDeNora).getByRole('checkbox', { name: 'Hogar' })).toBeEnabled())
+    expect(within(favoritasDeNora).getByRole('checkbox', { name: 'Hogar' })).not.toBeChecked()
+    await user.click(within(favoritasDeNora).getByRole('checkbox', { name: 'Tecnología' }))
+    await screen.findByText('Tecnología se ha añadido a tus categorías favoritas.')
+    await logout()
+    cleanup()
+
+    await abrirPerfil('cliente@esibuy.test')
+    const favoritas = await seccion()
+    await waitFor(() => expect(within(favoritas).getByRole('checkbox', { name: 'Hogar' })).toBeChecked())
+    expect(within(favoritas).getByRole('checkbox', { name: 'Tecnología' })).not.toBeChecked()
   })
 
   it('HU46-CP20: el vendedor no tiene categorías favoritas', async () => {
