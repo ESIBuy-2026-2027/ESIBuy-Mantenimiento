@@ -229,6 +229,9 @@ export default function ProductsPage() {
 
         {hasItems && (
           <>
+            <Title1 as="h2" className={pageStyles.title}>
+              Productos generales
+            </Title1>
             <ul
               className={mergeClasses(styles.grid, feed.refreshing && styles.refreshing)}
               aria-label="Productos"
