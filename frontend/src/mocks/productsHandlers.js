@@ -165,6 +165,7 @@ function ordenDelCatalogo(criterio, sentido) {
   const porNombre = (a, b) => comparar(a.nombre, b.nombre)
   const porCriterio = {
     valoracion: (a, b) => (a.valoracion ?? 0) - (b.valoracion ?? 0),
+    precio: (a, b) => a.precio - b.precio,
   }[criterio]
 
   if (!porCriterio) return (a, b) => signo * porNombre(a, b)
