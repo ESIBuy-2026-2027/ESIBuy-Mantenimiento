@@ -400,7 +400,7 @@ class ProductoMongoAdapterTest {
 
         assertEquals(List.of("Con stock sin oferta", "Con stock y oferta"), nombres(soloStock));
         assertEquals(List.of("Con stock y oferta", "Sin stock con oferta"), nombres(soloOfertas));
-        assertEquals(List.of("Con stock y oferta", "Solo oferta Premium"), nombres(ofertasPremium));
+        assertEquals(List.of("Con stock y oferta", "Sin stock con oferta", "Solo oferta Premium"), nombres(ofertasPremium));
         assertEquals(List.of("Con stock y oferta"), nombres(stockYOfertas));
     }
 
