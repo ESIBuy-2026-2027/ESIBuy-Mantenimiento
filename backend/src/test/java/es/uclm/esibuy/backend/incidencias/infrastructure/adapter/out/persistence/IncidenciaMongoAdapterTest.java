@@ -280,4 +280,104 @@ class IncidenciaMongoAdapterTest {
 
         assertEquals(1, incidenciaMongoRepository.count());
     }
+
+    // Resolución (HU192, T513): se registra sin sobrescribir una fecha anterior y las resueltas quedan separadas de
+    // las abiertas al filtrar y al ordenar
+
+    private static final Instant RESOLUCION = Instant.parse("2026-11-25T12:00:00Z");
+
+    private Incidencia guardarAbierta(String asunto, int segundos) {
+        return adapter.guardar(adapter.guardar(incidencia("u-1", asunto, segundos)).abrir("Respuesta"));
+    }
+
+    private void guardarResuelta(String asunto, int segundos) {
+        adapter.registrarResolucion(guardarAbierta(asunto, segundos).resolver(RESOLUCION));
+    }
+
+    @Test
+    @DisplayName("HU192-CP11: registrar la resolución guarda la fecha y la incidencia se lee como resuelta")
+    void registrarLaResolucionGuardaLaFecha() {
+        Incidencia abierta = guardarAbierta("No me llega el pedido", 0);
+
+        assertTrue(adapter.registrarResolucion(abierta.resolver(RESOLUCION)));
+
+        Incidencia encontrada = adapter.buscarPorId(abierta.id()).orElseThrow();
+        assertEquals(abierta.resolver(RESOLUCION), encontrada);
+        Document documento = mongoTemplate.getCollection("incidencias").find().first();
+        assertNotNull(documento);
+        assertEquals(Date.from(RESOLUCION), documento.get("fechaResolucion"));
+        assertEquals(1, incidenciaMongoRepository.count());
+    }
+
+    @Test
+    @DisplayName("HU192-CP12: registrar otra vez la resolución no sobrescribe la fecha original")
+    void registrarOtraVezNoSobrescribeLaFecha() {
+        Incidencia abierta = guardarAbierta("No me llega el pedido", 0);
+        adapter.registrarResolucion(abierta.resolver(RESOLUCION));
+
+        assertFalse(adapter.registrarResolucion(abierta.resolver(RESOLUCION.plusSeconds(3600))));
+
+        assertEquals(RESOLUCION, adapter.buscarPorId(abierta.id()).orElseThrow().fechaResolucion());
+    }
+
+    @Test
+    @DisplayName("HU192-CP12: no se registra la resolución de una incidencia pendiente ni se recrea una eliminada")
+    void noRegistraUnaPendienteNiRecreaUnaEliminada() {
+        Incidencia pendiente = adapter.guardar(incidencia("u-1", "Pendiente", 0));
+        Incidencia eliminada = guardarAbierta("Eliminada", 5);
+        adapter.eliminar(eliminada.id());
+        Incidencia comoSiEstuvieraAbierta = pendiente.abrir("Respuesta");
+
+        assertFalse(adapter.registrarResolucion(comoSiEstuvieraAbierta.resolver(RESOLUCION)));
+        assertFalse(adapter.registrarResolucion(eliminada.resolver(RESOLUCION)));
+
+        assertEquals(pendiente, adapter.buscarPorId(pendiente.id()).orElseThrow());
+        assertEquals(1, incidenciaMongoRepository.count());
+    }
+
+    @Test
+    @DisplayName("HU192-CP13: filtrar por estado separa las incidencias resueltas de las abiertas")
+    void filtrarPorEstadoSeparaResueltasDeAbiertas() {
+        guardarResuelta("Resuelta", 10);
+        guardarAbierta("Abierta", 20);
+        adapter.guardar(incidencia("u-1", "Pendiente", 30));
+
+        IncidenciaPage abiertas = adapter.buscarPorEstado(EstadoIncidencia.ABIERTA, 0, 10);
+        IncidenciaPage resueltas = adapter.buscarPorEstado(EstadoIncidencia.RESUELTA, 0, 10);
+
+        assertEquals(List.of("Abierta"), asuntos(abiertas));
+        assertEquals(1, abiertas.totalElementos());
+        assertEquals(List.of("Resuelta"), asuntos(resueltas));
+        assertEquals(1, resueltas.totalElementos());
+        assertEquals(List.of("Pendiente"), asuntos(adapter.buscarPorEstado(EstadoIncidencia.PENDIENTE, 0, 10)));
+    }
+
+    @Test
+    @DisplayName("HU192-CP13: la búsqueda por asunto también separa las resueltas de las abiertas")
+    void buscarPorAsuntoYEstadoSeparaResueltasDeAbiertas() {
+        guardarResuelta("Pedido resuelto", 10);
+        guardarAbierta("Pedido abierto", 20);
+
+        assertEquals(List.of("Pedido abierto"),
+                asuntos(adapter.buscarSupervisadas(EstadoIncidencia.ABIERTA, "pedido", null, null, 0, 10)));
+        assertEquals(List.of("Pedido resuelto"),
+                asuntos(adapter.buscarSupervisadas(EstadoIncidencia.RESUELTA, "pedido", null, null, 0, 10)));
+        assertEquals(List.of("Pedido resuelto"),
+                asuntos(adapter.buscarSupervisadas(EstadoIncidencia.RESUELTA, null, "asunto", "asc", 0, 10)));
+    }
+
+    @Test
+    @DisplayName("HU192-CP14: ordenar por estado agrupa las abiertas y las resueltas sin mezclarlas")
+    void ordenarPorEstadoNoMezclaResueltasYAbiertas() {
+        guardarResuelta("Resuelta 1", 10);
+        guardarAbierta("Abierta 1", 20);
+        guardarResuelta("Resuelta 2", 30);
+        guardarAbierta("Abierta 2", 40);
+
+        List<EstadoIncidencia> ascendente = adapter.buscarSupervisadas(null, null, "estado", "asc", 0, 10)
+                .incidencias().stream().map(Incidencia::estado).toList();
+
+        assertEquals(List.of(EstadoIncidencia.ABIERTA, EstadoIncidencia.ABIERTA, EstadoIncidencia.RESUELTA,
+                EstadoIncidencia.RESUELTA), ascendente);
+    }
 }

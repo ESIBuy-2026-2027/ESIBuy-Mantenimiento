@@ -30,4 +30,8 @@ public interface IncidenciaRepositoryPort {
 
     // Borra la incidencia con ese id; si no existe, no hace nada
     void eliminar(String id);
+
+    // Guarda la fecha de resolución solo si la incidencia sigue abierta, en una única operación: así no se sobrescribe
+    // la de otro administrador ni se recrea una incidencia cerrada. Devuelve false si no ha cambiado nada
+    boolean registrarResolucion(Incidencia resuelta);
 }

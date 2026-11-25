@@ -45,7 +45,7 @@ class CreacionIncidenciasServiceTest {
         public Incidencia guardar(Incidencia incidencia) {
             Incidencia conId = new Incidencia("i-" + (guardadas.size() + 1), incidencia.autorId(),
                     incidencia.asunto(), incidencia.descripcion(), incidencia.estado(), incidencia.respuesta(),
-                    incidencia.fechaCreacion());
+                    incidencia.fechaCreacion(), null);
             guardadas.add(conId);
             return conId;
         }
@@ -78,6 +78,11 @@ class CreacionIncidenciasServiceTest {
 
         @Override
         public void eliminar(String id) {
+            throw new UnsupportedOperationException("No lo usa la creación");
+        }
+
+        @Override
+        public boolean registrarResolucion(Incidencia resuelta) {
             throw new UnsupportedOperationException("No lo usa la creación");
         }
     }

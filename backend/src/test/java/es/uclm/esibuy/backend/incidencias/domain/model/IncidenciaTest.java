@@ -9,11 +9,14 @@ import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaInvalidaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaNoAbiertaException;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaYaAbiertaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaYaResueltaException;
 
 // Entidad Incidencia (HU44, T291): lo que un cliente o un vendedor reporta desde su perfil para que un administrador
 // la revise. El asunto (hasta 100 caracteres) y la descripción (hasta 1000) son obligatorios y se guardan sin espacios
@@ -27,7 +30,7 @@ class IncidenciaTest {
     @DisplayName("HU44-CP01: crea una incidencia con sus datos")
     void creaUnaIncidenciaConSusDatos() {
         Incidencia incidencia = new Incidencia("i-1", "u-1", "No me llega el pedido", "Lo pedí hace una semana",
-                EstadoIncidencia.ABIERTA, "Lo estamos revisando", AHORA);
+                EstadoIncidencia.ABIERTA, "Lo estamos revisando", AHORA, null);
 
         assertEquals("i-1", incidencia.id());
         assertEquals("u-1", incidencia.autorId());
@@ -72,7 +75,7 @@ class IncidenciaTest {
     @DisplayName("HU44-CP03: el asunto, la descripción y la respuesta se guardan sin espacios en los extremos")
     void seGuardanSinEspaciosEnLosExtremos() {
         Incidencia incidencia = new Incidencia(null, "u-1", "  Asunto  ", "  Descripción  ", EstadoIncidencia.ABIERTA,
-                "  Respuesta  ", AHORA);
+                "  Respuesta  ", AHORA, null);
 
         assertEquals("Asunto", incidencia.asunto());
         assertEquals("Descripción", incidencia.descripcion());
@@ -82,7 +85,7 @@ class IncidenciaTest {
     @Test
     @DisplayName("HU44-CP03: la respuesta es opcional: si falta, queda vacía")
     void laRespuestaEsOpcional() {
-        assertEquals("", new Incidencia(null, "u-1", "Asunto", "Descripción", EstadoIncidencia.PENDIENTE, null, AHORA)
+        assertEquals("", new Incidencia(null, "u-1", "Asunto", "Descripción", EstadoIncidencia.PENDIENTE, null, AHORA, null)
                 .respuesta());
     }
 
@@ -140,7 +143,7 @@ class IncidenciaTest {
     @DisplayName("HU44-CP05: la incidencia necesita un estado")
     void necesitaUnEstado() {
         assertThrows(IncidenciaInvalidaException.class,
-                () -> new Incidencia(null, "u-1", "Asunto", "Descripción", null, "", AHORA));
+                () -> new Incidencia(null, "u-1", "Asunto", "Descripción", null, "", AHORA, null));
     }
 
     // Apertura (HU50, T302): un administrador abre una incidencia pendiente y le escribe la respuesta, que es lo único
@@ -152,7 +155,7 @@ class IncidenciaTest {
     @DisplayName("HU50-CP01: abrir una incidencia pendiente la deja abierta con la respuesta del administrador")
     void abrirUnaIncidenciaPendienteLaDejaAbiertaConLaRespuesta() {
         Incidencia pendiente = new Incidencia("i-1", "u-1", "No me llega el pedido", "Lo pedí hace una semana",
-                EstadoIncidencia.PENDIENTE, "", AHORA);
+                EstadoIncidencia.PENDIENTE, "", AHORA, null);
 
         Incidencia abierta = pendiente.abrir("Lo estamos revisando");
 
@@ -197,8 +200,76 @@ class IncidenciaTest {
     @DisplayName("HU50-CP04: una incidencia ya abierta no se vuelve a abrir")
     void unaIncidenciaYaAbiertaNoSeVuelveAAbrir() {
         Incidencia abierta = new Incidencia("i-1", "u-1", "Asunto", "Descripción", EstadoIncidencia.ABIERTA,
-                "Lo estamos revisando", AHORA);
+                "Lo estamos revisando", AHORA, null);
 
         assertThrows(IncidenciaYaAbiertaException.class, () -> abierta.abrir("Otra respuesta"));
+    }
+
+    // Resolución (HU192, T513): una incidencia abierta pasa a resuelta y guarda cuándo. La fecha la recibe del caso de
+    // uso, nunca del cliente HTTP. Solo se resuelve una incidencia abierta, una sola vez, y no se vuelve a abrir.
+
+    private static final Instant RESOLUCION = Instant.parse("2026-11-25T12:00:00Z");
+
+    private static Incidencia abiertaPorUnAdministrador() {
+        return new Incidencia("i-1", "u-1", "No me llega el pedido", "Lo pedí hace una semana",
+                EstadoIncidencia.ABIERTA, "Lo estamos revisando", AHORA, null);
+    }
+
+    @Test
+    @DisplayName("HU192-CP01: resolver una incidencia abierta la deja resuelta con su fecha de resolución")
+    void resolverUnaIncidenciaAbiertaLaDejaResueltaConSuFecha() {
+        Incidencia resuelta = abiertaPorUnAdministrador().resolver(RESOLUCION);
+
+        assertEquals(EstadoIncidencia.RESUELTA, resuelta.estado());
+        assertEquals(RESOLUCION, resuelta.fechaResolucion());
+        assertEquals("i-1", resuelta.id());
+        assertEquals("u-1", resuelta.autorId());
+        assertEquals("No me llega el pedido", resuelta.asunto());
+        assertEquals("Lo pedí hace una semana", resuelta.descripcion());
+        assertEquals("Lo estamos revisando", resuelta.respuesta());
+        assertEquals(AHORA, resuelta.fechaCreacion());
+    }
+
+    @Test
+    @DisplayName("HU192-CP02: una incidencia ya resuelta no se vuelve a resolver y conserva su fecha")
+    void unaIncidenciaYaResueltaNoSeVuelveAResolver() {
+        Incidencia resuelta = abiertaPorUnAdministrador().resolver(RESOLUCION);
+        Instant masTarde = RESOLUCION.plusSeconds(60);
+
+        assertThrows(IncidenciaYaResueltaException.class, () -> resuelta.resolver(masTarde));
+        assertEquals(RESOLUCION, resuelta.fechaResolucion());
+    }
+
+    @Test
+    @DisplayName("HU192-CP03: una incidencia pendiente no se puede resolver sin abrirla antes")
+    void unaIncidenciaPendienteNoSeResuelve() {
+        Incidencia pendiente = Incidencia.nueva("u-1", "Asunto", "Descripción", AHORA);
+
+        assertThrows(IncidenciaNoAbiertaException.class, () -> pendiente.resolver(RESOLUCION));
+    }
+
+    @ParameterizedTest(name = "{0} con fecha de resolución {1}")
+    @CsvSource(value = {"RESUELTA, null", "ABIERTA, 2026-11-25T12:00:00Z", "PENDIENTE, 2026-11-25T12:00:00Z"},
+            nullValues = "null")
+    @DisplayName("HU192-CP04: tiene fecha de resolución si, y solo si, la incidencia está resuelta")
+    void soloUnaIncidenciaResueltaTieneFechaDeResolucion(EstadoIncidencia estado, Instant fechaResolucion) {
+        assertThrows(IncidenciaInvalidaException.class, () -> new Incidencia("i-1", "u-1", "Asunto", "Descripción",
+                estado, "Respuesta", AHORA, fechaResolucion));
+    }
+
+    @Test
+    @DisplayName("HU192-CP04: resolver sin fecha de resolución se rechaza")
+    void resolverSinFechaSeRechaza() {
+        Incidencia abierta = abiertaPorUnAdministrador();
+
+        assertThrows(IncidenciaInvalidaException.class, () -> abierta.resolver(null));
+    }
+
+    @Test
+    @DisplayName("HU192-CP05: una incidencia resuelta no se vuelve a abrir")
+    void unaIncidenciaResueltaNoSeVuelveAAbrir() {
+        Incidencia resuelta = abiertaPorUnAdministrador().resolver(RESOLUCION);
+
+        assertThrows(IncidenciaYaResueltaException.class, () -> resuelta.abrir("Otra respuesta"));
     }
 }

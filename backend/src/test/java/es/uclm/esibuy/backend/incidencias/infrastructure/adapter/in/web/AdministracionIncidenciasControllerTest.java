@@ -37,8 +37,10 @@ import org.springframework.test.web.servlet.ResultActions;
 import es.uclm.esibuy.backend.incidencias.application.port.in.ResolucionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.application.port.in.SupervisionIncidenciasUseCase;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaInvalidaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaNoAbiertaException;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaNoEncontradaException;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaYaAbiertaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaYaResueltaException;
 import es.uclm.esibuy.backend.incidencias.domain.model.AutorIncidencia;
 import es.uclm.esibuy.backend.incidencias.domain.model.EstadoIncidencia;
 import es.uclm.esibuy.backend.incidencias.domain.model.Incidencia;
@@ -70,7 +72,7 @@ class AdministracionIncidenciasControllerTest {
 
     private static IncidenciaSupervisada supervisada(AutorIncidencia autor) {
         Incidencia incidencia = new Incidencia("i-1", "c-1", "No me llega el pedido", "Lo pedi hace una semana",
-                EstadoIncidencia.PENDIENTE, "", AHORA);
+                EstadoIncidencia.PENDIENTE, "", AHORA, null);
         return new IncidenciaSupervisada(incidencia, autor);
     }
 
@@ -218,7 +220,7 @@ class AdministracionIncidenciasControllerTest {
 
     private static Incidencia abierta() {
         return new Incidencia("i-1", "c-1", "No me llega el pedido", "Lo pedi hace una semana",
-                EstadoIncidencia.ABIERTA, "Lo estamos revisando", AHORA);
+                EstadoIncidencia.ABIERTA, "Lo estamos revisando", AHORA, null);
     }
 
     private ResultActions abrirComoAdministrador(String cuerpo) throws Exception {
@@ -350,5 +352,134 @@ class AdministracionIncidenciasControllerTest {
                 .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
 
         verify(resolucionIncidencias, never()).cerrar(any());
+    }
+
+    // Resolver una incidencia (HU192, T513): PATCH /api/admin/incidencias/{id}/resolver, sin cuerpo: la fecha de
+    // resolución la pone el sistema
+
+    private static final String URL_RESOLVER = URL + "/i-1/resolver";
+
+    private static Incidencia resuelta() {
+        return new Incidencia("i-1", "c-1", "No me llega el pedido", "Lo pedi hace una semana",
+                EstadoIncidencia.RESUELTA, "Lo estamos revisando", AHORA, Instant.parse("2026-11-25T12:00:00Z"));
+    }
+
+    private ResultActions resolverComoAdministrador() throws Exception {
+        return mockMvc.perform(patch(URL_RESOLVER).with(user(ADMINISTRADOR).roles("ADMINISTRADOR")).with(csrf()));
+    }
+
+    @Test
+    @DisplayName("HU192-CP15: resolver responde 200 con la incidencia resuelta y su fecha, sin el id del autor")
+    void resolverResponde200ConLaIncidenciaResuelta() throws Exception {
+        when(resolucionIncidencias.resolver("i-1")).thenReturn(resuelta());
+
+        resolverComoAdministrador()
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("i-1"))
+                .andExpect(jsonPath("$.estado").value("RESUELTA"))
+                .andExpect(jsonPath("$.fechaResolucion").value("2026-11-25T12:00:00Z"))
+                .andExpect(jsonPath("$.respuesta").value("Lo estamos revisando"))
+                .andExpect(jsonPath("$.autorId").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("HU192-CP15: la supervisión devuelve la fecha de resolución, vacía si no está resuelta")
+    void laSupervisionDevuelveLaFechaDeResolucion() throws Exception {
+        when(supervisionIncidencias.consultarTodas(0, 10)).thenReturn(new IncidenciaSupervisadaPage(
+                List.of(new IncidenciaSupervisada(resuelta(), CLIENTE), supervisada(CLIENTE)), 0, 10, 2));
+
+        consultarComoAdministrador("")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].fechaResolucion").value("2026-11-25T12:00:00Z"))
+                .andExpect(jsonPath("$.items[1].fechaResolucion").value(nullValue()));
+    }
+
+    @Test
+    @DisplayName("HU192-CP16: una fecha de resolución enviada por el cliente se ignora")
+    void laFechaDelClienteSeIgnora() throws Exception {
+        when(resolucionIncidencias.resolver("i-1")).thenReturn(resuelta());
+
+        mockMvc.perform(patch(URL_RESOLVER).with(user(ADMINISTRADOR).roles("ADMINISTRADOR")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fechaResolucion\": \"2000-01-01T00:00:00Z\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fechaResolucion").value("2026-11-25T12:00:00Z"));
+
+        verify(resolucionIncidencias).resolver("i-1");
+    }
+
+    @Test
+    @DisplayName("HU192-CP17: resolver una incidencia que no existe responde 404 INCIDENT_NOT_FOUND")
+    void resolverUnaQueNoExisteResponde404() throws Exception {
+        when(resolucionIncidencias.resolver("i-1")).thenThrow(new IncidenciaNoEncontradaException());
+
+        resolverComoAdministrador()
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("INCIDENT_NOT_FOUND"))
+                .andExpect(jsonPath("$.mensaje").value("La incidencia no existe"));
+    }
+
+    // Acceso a la resolución (HU192, T419): SecurityConfig es la primera barrera (/api/admin/** solo administrador)
+
+    @Test
+    @DisplayName("HU192-CP19: sin sesión resolver responde 401")
+    void sinSesionResolverResponde401() throws Exception {
+        mockMvc.perform(patch(URL_RESOLVER).with(csrf())).andExpect(status().isUnauthorized());
+
+        verify(resolucionIncidencias, never()).resolver(any());
+    }
+
+    @ParameterizedTest(name = "rol {1}")
+    @CsvSource({"cliente@esibuy.test,CLIENTE", "vendedor@esibuy.test,VENDEDOR"})
+    @DisplayName("HU192-CP19: un cliente o un vendedor que intentan resolver reciben 403 ACCESS_DENIED")
+    void clienteYVendedorNoResuelven(String email, String rol) throws Exception {
+        mockMvc.perform(patch(URL_RESOLVER).with(user(email).roles(rol)).with(csrf()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"));
+
+        verify(resolucionIncidencias, never()).resolver(any());
+    }
+
+    @Test
+    @DisplayName("HU192-CP19: sin el token CSRF resolver responde 403 y no llega al caso de uso")
+    void sinTokenCsrfResolverResponde403() throws Exception {
+        mockMvc.perform(patch(URL_RESOLVER).with(user(ADMINISTRADOR).roles("ADMINISTRADOR")))
+                .andExpect(status().isForbidden());
+
+        verify(resolucionIncidencias, never()).resolver(any());
+    }
+
+    // Mensajes de error de la resolución (HU192, T395): genéricos, sin detalles internos
+
+    @Test
+    @DisplayName("HU192-CP20: resolver una incidencia ya resuelta responde 409 INCIDENT_ALREADY_RESOLVED")
+    void resolverUnaYaResueltaResponde409() throws Exception {
+        when(resolucionIncidencias.resolver("i-1")).thenThrow(new IncidenciaYaResueltaException());
+
+        resolverComoAdministrador()
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INCIDENT_ALREADY_RESOLVED"))
+                .andExpect(jsonPath("$.mensaje").value("La incidencia ya está resuelta"));
+    }
+
+    @Test
+    @DisplayName("HU192-CP20: abrir una incidencia resuelta responde 409 INCIDENT_ALREADY_RESOLVED")
+    void abrirUnaResueltaResponde409() throws Exception {
+        when(resolucionIncidencias.abrir(anyString(), anyString())).thenThrow(new IncidenciaYaResueltaException());
+
+        abrirComoAdministrador(CUERPO_ABRIR)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INCIDENT_ALREADY_RESOLVED"));
+    }
+
+    @Test
+    @DisplayName("HU192-CP21: resolver una incidencia que no está abierta responde 409 INCIDENT_NOT_OPEN")
+    void resolverUnaQueNoEstaAbiertaResponde409() throws Exception {
+        when(resolucionIncidencias.resolver("i-1")).thenThrow(new IncidenciaNoAbiertaException());
+
+        resolverComoAdministrador()
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INCIDENT_NOT_OPEN"))
+                .andExpect(jsonPath("$.mensaje").value("Solo se puede resolver una incidencia abierta"));
     }
 }

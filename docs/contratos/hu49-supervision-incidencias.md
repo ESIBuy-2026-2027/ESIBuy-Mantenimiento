@@ -105,7 +105,8 @@ Solo para el **administrador**. Lo limitan `/api/admin/**` en `SecurityConfig` y
 ```
 
 - Las incidencias van **de la más antigua a la más reciente**: la última página tiene las más nuevas.
-- `estado`: `PENDIENTE` o `ABIERTA` (HU50).
+- `estado`: `PENDIENTE`, `ABIERTA` (HU50) o `RESUELTA` (HU192).
+- `fechaResolucion`: la fecha ISO-8601 de una incidencia resuelta y `null` en las demás (HU192, `hu192-resolucion-incidencias.md`).
 - `respuesta`: `""` mientras nadie la haya escrito.
 - `autor`: `{email, rol}`, con `rol` igual a `CLIENTE` o `VENDEDOR`. Es **`null` si la cuenta del autor se ha eliminado**: la clave siempre está presente.
 - No se expone el id interno del autor.
