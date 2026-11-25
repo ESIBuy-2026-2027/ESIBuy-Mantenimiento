@@ -134,7 +134,7 @@ class CatalogoControllerTest {
                 // La página llega al caso de uso empezando en 0; sort y order se traducen al
                 // enum y al boolean. El cliente
                 // sale de la sesión, para darle su precio
-                verify(catalogoProductos).buscarProductos(new BuscarCatalogoQuery("teclado", "cat-2", 4, true, true,
+                verify(catalogoProductos).buscarProductos(new BuscarCatalogoQuery("teclado", "cat-2", 4, true, true, false,
                                 CriterioOrdenCatalogo.VALORACION, true, 1, 10), CLIENTE);
         }
 
