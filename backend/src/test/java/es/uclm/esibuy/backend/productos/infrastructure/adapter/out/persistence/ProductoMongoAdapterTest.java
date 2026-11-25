@@ -421,6 +421,27 @@ class ProductoMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU7: el máximo disponible respeta los filtros activos e ignora el límite superior del precio")
+    void precioMaximoEnCatalogoRespetaFiltrosYOmiteElMaximoSeleccionado() {
+        adapter.guardar(crearProducto(null, "v-1", "Producto barato", "", new BigDecimal("24.99"), 5,
+                "cat-1", "", true, Descuento.sinDescuento(), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-2", "Producto dentro", "", new BigDecimal("75.00"), 5,
+                "cat-1", "", true, Descuento.sinDescuento(), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-3", "Producto caro", "", new BigDecimal("150.01"), 5,
+                "cat-1", "", true, Descuento.sinDescuento(), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-4", "Producto de otra categoría", "", new BigDecimal("999.00"), 5,
+                "cat-2", "", true, Descuento.sinDescuento(), Descuento.sinDescuento()));
+        adapter.guardar(crearProducto(null, "v-5", "Producto no disponible", "", new BigDecimal("500.00"), 5,
+                "cat-1", "", false, Descuento.sinDescuento(), Descuento.sinDescuento()));
+
+        BuscarCatalogoQuery filtros = new BuscarCatalogoQuery(null, "cat-1", null, false, false, false,
+                25, 75, CriterioOrdenCatalogo.NOMBRE, false, 0, 10);
+
+        assertEquals(new BigDecimal("150.01"), adapter.precioMaximoEnCatalogo(filtros));
+        assertEquals(List.of("Producto dentro"), nombres(adapter.buscarEnCatalogo(filtros)));
+    }
+
+    @Test
     @DisplayName("HU7-CP12: la búsqueda por nombre no distingue mayúsculas ni tildes")
     void buscarEnCatalogoBuscaSinDistinguirMayusculasNiTildes() {
         adapter.guardar(productoNuevo("v-1", "Lámpara de escritorio"));
