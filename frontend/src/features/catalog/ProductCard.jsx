@@ -279,8 +279,8 @@ export default function ProductCard({
           shape="circular"
           className={styles.favorite}
           icon={favorite ? <Heart20Filled className={styles.favoriteIcon} /> : <Heart20Regular />}
-          aria-label={`Gestionar listas de deseos de ${product.nombre}`}
-          title="Gestionar listas de deseos"
+          aria-label={favorite ? `Añadir/Quitar ${product.nombre} de favoritos` : `Añadir ${product.nombre} a favoritos`}
+          title={favorite ? 'Añadir/Quitar de favoritos' : 'Añadir a favoritos'}
           onClick={() => onAddFavorite(product.id)}
         />
       )}
