@@ -24,8 +24,8 @@ const useStyles = makeStyles({
     width: '100%',
     height: '100%',
     overflow: 'hidden',
-    backgroundColor: tokens.colorNeutralBackground1,
-    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    backgroundColor: '#fff2e2',
+    border: '1px solid #e8c49f',
     borderRadius: tokens.borderRadiusXLarge,
     boxShadow: tokens.shadow2,
     transitionProperty: 'box-shadow, transform, border-color',
@@ -55,7 +55,21 @@ const useStyles = makeStyles({
     display: 'block',
     aspectRatio: '4 / 3',
     overflow: 'hidden',
-    backgroundColor: tokens.colorNeutralBackground3,
+    backgroundColor: '#f8e7d3',
+  },
+  discountBadge: {
+    position: 'absolute',
+    top: tokens.spacingVerticalM,
+    left: tokens.spacingHorizontalM,
+    zIndex: 1,
+    padding: `${tokens.spacingVerticalXS} ${tokens.spacingHorizontalS}`,
+    borderRadius: tokens.borderRadiusMedium,
+    backgroundColor: '#b42332',
+    color: '#ffffff',
+    fontSize: tokens.fontSizeBase200,
+    fontWeight: tokens.fontWeightBold,
+    lineHeight: tokens.lineHeightBase200,
+    boxShadow: tokens.shadow4,
   },
   image: {
     display: 'block',
@@ -226,6 +240,11 @@ export default function ProductCard({
                 src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 3l18 18M10 12l-4 6h12l-3-4-2 2M6 6h11a2 2 0 0 1 2 2v8' fill='none' stroke='%23999999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
                 alt="Sin imagen"
               />
+            </span>
+          )}
+          {product.descuento && (
+            <span className={styles.discountBadge}>
+              {`OFERTA · -${product.descuento.porcentaje}%`}
             </span>
           )}
         </span>
