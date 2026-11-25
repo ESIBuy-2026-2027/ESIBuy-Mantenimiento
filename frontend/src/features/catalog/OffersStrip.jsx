@@ -22,7 +22,7 @@ const useStyles = makeStyles({
     width: '100%',
     boxSizing: 'border-box',
     margin: '0 auto',
-    maxWidth: '1120px',
+    maxWidth: '1320px',
     padding: `0 ${tokens.spacingHorizontalL}`,
   },
   head: {
@@ -41,10 +41,8 @@ const useStyles = makeStyles({
     overflow: 'hidden',
     paddingTop: tokens.spacingVerticalXS,
     paddingBottom: tokens.spacingVerticalM,
-    maskImage: 'linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent)',
     '@media (prefers-reduced-motion: reduce)': {
       overflowX: 'auto',
-      maskImage: 'none',
     },
   },
   row: {
@@ -91,8 +89,7 @@ export default function OffersStrip({ categoryNames, favoritos, onAddFavorite, o
 
   const paused = pausedByUser || pointerInside || focusInside
   const copies = Math.max(1, Math.ceil(ANCHO_PANTALLA_PX / (offers.length * ANCHO_TARJETA_PX)))
-  // Dos mitades iguales. Solo la primera copia de las ofertas se puede usar con el teclado y los lectores de pantalla;
-  // el resto repite lo mismo para que la cinta no tenga huecos.
+  // Dos mitades iguales para mantener el movimiento continuo. Todas las copias conservan la interacción.
   const cards = [0, 1].flatMap((half) =>
     Array.from({ length: copies }, (_, copy) => offers.map((product) => ({ product, copy, half }))).flat(),
   )
@@ -126,13 +123,10 @@ export default function OffersStrip({ categoryNames, favoritos, onAddFavorite, o
           style={{ animationPlayState: paused ? 'paused' : 'running' }}
         >
           {cards.map(({ product, copy, half }) => {
-            const repeated = half > 0 || copy > 0
             return (
               <li
                 key={`${half}-${copy}-${product.id}`}
                 className={styles.item}
-                aria-hidden={repeated ? true : undefined}
-                inert={repeated}
               >
                 <ProductCard
                   product={product}
