@@ -26,18 +26,17 @@ import QuantityStepper from './QuantityStepper'
 import { useCart } from './useCart'
 
 const useStyles = makeStyles({
-  // Botón flotante: siempre a la vista, abajo a la izquierda.
+  // Acceso integrado en la navegación superior.
   fab: {
-    position: 'fixed',
-    left: tokens.spacingHorizontalL,
-    bottom: tokens.spacingVerticalL,
-    zIndex: 1000,
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    flexShrink: 0,
   },
   fabButton: {
-    width: '56px',
-    height: '56px',
-    minWidth: '56px',
-    boxShadow: tokens.shadow16,
+    minWidth: '40px',
+    height: '40px',
+    padding: `0 ${tokens.spacingHorizontalS}`,
   },
   badge: {
     position: 'absolute',
@@ -55,9 +54,10 @@ const useStyles = makeStyles({
   },
   panel: {
     position: 'fixed',
-    left: tokens.spacingHorizontalL,
-    bottom: '88px',
-    zIndex: 1000,
+    position: 'fixed',
+    top: '88px',
+    right: tokens.spacingHorizontalL,
+    zIndex: 1200,
     display: 'flex',
     flexDirection: 'column',
     width: 'min(400px, calc(100vw - 32px))',
@@ -401,9 +401,8 @@ export default function CartWidget() {
       <div className={styles.fab}>
         <Button
           ref={button}
-          appearance="primary"
-          shape="circular"
-          size="large"
+          appearance="subtle"
+          size="medium"
           className={styles.fabButton}
           icon={<Cart24Filled />}
           aria-label={buttonLabel(status, count)}
