@@ -147,18 +147,22 @@ describe('SellerProductFormPage (HU31): validación', () => {
     expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp(`^${RUTA_NUEVO}$`))
   })
 
-  it('VEN-08: el precio admite decimales y el stock conserva solo cifras enteras', async () => {
+  it('VEN-08: el precio filtra letras y admite punto o coma decimal; el stock sigue siendo entero', async () => {
     const user = userEvent.setup()
     await abrirFormulario()
 
     const precio = screen.getByLabelText(/^precio/i)
     const stock = screen.getByLabelText(/^stock/i)
 
-    await user.type(precio, '12.5')
+    await user.type(precio, '12a.5b')
     await user.type(stock, '-3.5')
 
     expect(precio).toHaveValue('12.5')
     expect(stock).toHaveValue('35')
+
+    await user.clear(precio)
+    await user.type(precio, '12,50')
+    expect(precio).toHaveValue('12,50')
   })
 
   it('sellerProductFormPage_conPrecioCero_muestraQueDebeSerMayorQueCero', async () => {
