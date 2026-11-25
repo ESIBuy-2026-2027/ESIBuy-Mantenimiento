@@ -243,7 +243,7 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel, metodo = null
   }
 
   return (
-    <section aria-labelledby="titulo-nuevo-metodo" aria-label={metodo ? "Editar método de pago" : "Datos del método de pago"}>
+    <section aria-labelledby="titulo-nuevo-metodo">
       <Card className={styles.panel}>
         <div className={styles.header}>
         <Subtitle1 as="h2" id="titulo-nuevo-metodo" className={styles.title}>
