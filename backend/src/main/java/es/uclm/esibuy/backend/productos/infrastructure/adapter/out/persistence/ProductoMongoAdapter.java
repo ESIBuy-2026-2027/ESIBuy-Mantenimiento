@@ -22,7 +22,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import es.uclm.esibuy.backend.productos.application.port.in.BuscarCatalogoQuery;
-import es.uclm.esibuy.backend.productos.application.port.in.CriterioOrdenCatalogo;
 import es.uclm.esibuy.backend.productos.application.port.in.ListarProductosQuery;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.domain.exception.ProductoDuplicadoException;
@@ -133,7 +132,8 @@ public class ProductoMongoAdapter implements ProductoRepositoryPort {
     public ProductoPage buscarEnCatalogo(BuscarCatalogoQuery query) {
         Criteria criterios = construirCriteriosCatalogo(query, true);
         long total = mongoTemplate.count(new Query(criterios), ProductoDocument.class);
-        // Por valoración, los empates van por nombre de la A a la Z en los dos sentidos.
+        // Por valoración, los empates van por nombre de la A a la Z en los dos
+        // sentidos.
         Sort.Direction direccion = query.descendente() ? Sort.Direction.DESC : Sort.Direction.ASC;
         Sort orden = switch (query.criterio()) {
             case VALORACION -> Sort.by(direccion, CAMPO_VALORACION_MEDIA)

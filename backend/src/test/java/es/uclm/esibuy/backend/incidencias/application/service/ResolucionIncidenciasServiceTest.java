@@ -15,7 +15,6 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import es.uclm.esibuy.backend.incidencias.application.port.out.IncidenciaRepositoryPort;
@@ -40,8 +39,8 @@ class ResolucionIncidenciasServiceTest {
     private static final Instant RESOLUCION_ANTERIOR = Instant.parse("2026-11-20T09:00:00Z");
 
     private final RepositorioEnMemoria repositorio = new RepositorioEnMemoria();
-    private final ResolucionIncidenciasService servicio =
-            new ResolucionIncidenciasService(repositorio, Clock.fixed(AHORA, ZoneOffset.UTC));
+    private final ResolucionIncidenciasService servicio = new ResolucionIncidenciasService(repositorio,
+            Clock.fixed(AHORA, ZoneOffset.UTC));
 
     private static Incidencia incidencia(String id, EstadoIncidencia estado, String respuesta) {
         Instant fechaResolucion = estado == EstadoIncidencia.RESUELTA ? RESOLUCION_ANTERIOR : null;
@@ -49,7 +48,8 @@ class ResolucionIncidenciasServiceTest {
                 fechaResolucion);
     }
 
-    // Guarda las incidencias por id y apunta cuántas veces se ha guardado y eliminado
+    // Guarda las incidencias por id y apunta cuántas veces se ha guardado y
+    // eliminado
     private static class RepositorioEnMemoria implements IncidenciaRepositoryPort {
         private final Map<String, Incidencia> incidencias = new HashMap<>();
         private int guardados;
@@ -103,7 +103,8 @@ class ResolucionIncidenciasServiceTest {
             incidencias.remove(id);
         }
 
-        // Como el adaptador real: solo registra la resolución de una incidencia que sigue abierta
+        // Como el adaptador real: solo registra la resolución de una incidencia que
+        // sigue abierta
         @Override
         public boolean registrarResolucion(Incidencia resuelta) {
             antesDeRegistrar.run();
@@ -185,7 +186,8 @@ class ResolucionIncidenciasServiceTest {
         assertTrue(repositorio.buscarPorId("i-1").isPresent());
     }
 
-    // Resolver (HU192, T513): la fecha de resolución sale del reloj del servicio y no se sobrescribe
+    // Resolver (HU192, T513): la fecha de resolución sale del reloj del servicio y
+    // no se sobrescribe
 
     @Test
     @DisplayName("HU192-CP06: resolver una incidencia abierta la registra resuelta con la hora del reloj")
@@ -232,8 +234,8 @@ class ResolucionIncidenciasServiceTest {
     @DisplayName("HU192-CP09: si otro administrador la resuelve a la vez, se rechaza y queda la primera fecha")
     void siOtroLaResuelveALaVezSeRechaza() {
         repositorio.preparar(incidencia("i-1", EstadoIncidencia.ABIERTA, "Respuesta"));
-        repositorio.antesDeRegistrar =
-                () -> repositorio.preparar(incidencia("i-1", EstadoIncidencia.RESUELTA, "Respuesta"));
+        repositorio.antesDeRegistrar = () -> repositorio
+                .preparar(incidencia("i-1", EstadoIncidencia.RESUELTA, "Respuesta"));
 
         assertThrows(IncidenciaYaResueltaException.class, () -> servicio.resolver("i-1"));
         assertEquals(RESOLUCION_ANTERIOR, repositorio.buscarPorId("i-1").orElseThrow().fechaResolucion());
