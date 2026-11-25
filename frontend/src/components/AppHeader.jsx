@@ -16,6 +16,7 @@ import {
   BoxMultiple20Regular,
   ChartMultiple20Regular,
   ChatWarning20Regular,
+  Crown20Filled,
   Grid20Regular,
   Heart20Regular,
   Person20Regular,
@@ -23,6 +24,8 @@ import {
   Receipt20Regular,
 } from '@fluentui/react-icons'
 import CartWidget from '../features/cart/CartWidget'
+import { getProfile } from '../api/profile'
+import { useApiQuery } from '../hooks/useApiQuery'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ROLES, getHomePath } from '../auth/roles'
 import { useAuth } from '../auth/useAuth'
@@ -168,6 +171,23 @@ const useStyles = makeStyles({
       borderColor: '#EFAE79',
     },
   },
+  premiumPersonIcon: {
+    position: 'relative',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  premiumCrown: {
+    position: 'absolute',
+    top: '-9px',
+    right: '-8px',
+    width: '13px',
+    height: '13px',
+    color: '#D97706',
+    filter: 'drop-shadow(0 0 1px #FFF8F1)',
+    backgroundColor: '#FFF8F1',
+    borderRadius: tokens.borderRadiusCircular,
+  },
   accountMenu: {
     minWidth: '230px',
     padding: tokens.spacingVerticalXS,
@@ -251,6 +271,18 @@ function GuestActions() {
         Registrarse
       </LinkButton>
     </>
+  )
+}
+
+function PremiumAwarePersonIcon() {
+  const { data: profile } = useApiQuery(getProfile)
+  const styles = useStyles()
+
+  return (
+    <span className={styles.premiumPersonIcon}>
+      <Person20Regular />
+      {profile?.tipoCliente === 'PREMIUM' && <Crown20Filled className={styles.premiumCrown} aria-label="Cliente Premium" />}
+    </span>
   )
 }
 
