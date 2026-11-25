@@ -71,8 +71,12 @@ const useStyles = makeStyles({
   },
   panel: {
     position: 'fixed',
-    top: '88px',
+    top: '72px',
     right: tokens.spacingHorizontalL,
+    '@media (max-width: 767px)': {
+      top: '112px',
+      right: tokens.spacingHorizontalM,
+    },
     zIndex: 1200,
     display: 'flex',
     flexDirection: 'column',
