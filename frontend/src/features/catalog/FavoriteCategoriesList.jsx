@@ -18,6 +18,8 @@ import { usePageStyles } from '../../components/pageStyles'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { useCategories } from '../../hooks/useCategories'
 import { PATHS } from '../../routes/paths'
+import FavoriteCategoryNotice from './FavoriteCategoryNotice'
+import { FAVORITAS_NO_CARGADAS, avisoDeExito, avisoDeFallo } from './favoriteCategoryNotices'
 
 const useStyles = makeStyles({
   list: {
@@ -52,14 +54,17 @@ export default function FavoriteCategoriesList() {
   const { categories, loaded, failed: categoriesFailed, retry: retryCategories } = useCategories()
   const [actualizadas, setActualizadas] = useState(null)
   const [quitando, setQuitando] = useState(null)
+  const [aviso, setAviso] = useState(null)
   const favoritas = actualizadas ?? cargadas
 
-  const quitar = async ({ id }) => {
+  const quitar = async ({ id, nombre }) => {
+    setAviso(null)
     setQuitando(id)
     try {
       setActualizadas(await removeFavoriteCategory(id))
-    } catch {
-      // Si no se puede quitar, la categoría sigue en la lista
+      setAviso(avisoDeExito(nombre, false))
+    } catch (error) {
+      setAviso(avisoDeFallo(nombre, false, error))
     } finally {
       setQuitando(null)
     }
@@ -73,7 +78,7 @@ export default function FavoriteCategoriesList() {
   if (failed || categoriesFailed) {
     return (
       <MessageBar intent="error">
-        <MessageBarBody>No se han podido cargar tus categorías favoritas. Inténtalo de nuevo.</MessageBarBody>
+        <MessageBarBody>{FAVORITAS_NO_CARGADAS}</MessageBarBody>
         <MessageBarActions>
           <Button onClick={reintentar}>Reintentar</Button>
         </MessageBarActions>
@@ -88,39 +93,40 @@ export default function FavoriteCategoriesList() {
   const porId = new Map(categories.map((category) => [category.id, category]))
   const lista = favoritas.categorias.map((id) => porId.get(id)).filter(Boolean)
 
-  if (lista.length === 0) {
-    return (
-      <EmptyState
-        icon={<Heart24Regular />}
-        title="Aún no tienes categorías favoritas"
-        description="Entra en un producto y pulsa «Añadir a favoritas» junto a su categoría."
-      >
-        <LinkButton to={PATHS.PRODUCTS} appearance="primary">
-          Ver los productos
-        </LinkButton>
-      </EmptyState>
-    )
-  }
-
   return (
-    <ul aria-label="Tus categorías favoritas" className={styles.list}>
-      {lista.map((category) => (
-        <li key={category.id}>
-          <Card className={styles.item}>
-            <Text weight="semibold" className={styles.name}>
-              {category.nombre}
-            </Text>
-            <Button
-              appearance="subtle"
-              icon={<Delete20Regular />}
-              aria-label={`Quitar ${category.nombre} de tus categorías favoritas`}
-              title="Quitar de favoritas"
-              disabled={quitando === category.id}
-              onClick={() => quitar(category)}
-            />
-          </Card>
-        </li>
-      ))}
-    </ul>
+    <>
+      <FavoriteCategoryNotice aviso={aviso} />
+      {lista.length === 0 ? (
+        <EmptyState
+          icon={<Heart24Regular />}
+          title="Aún no tienes categorías favoritas"
+          description="Entra en un producto y pulsa «Añadir a favoritas» junto a su categoría."
+        >
+          <LinkButton to={PATHS.PRODUCTS} appearance="primary">
+            Ver los productos
+          </LinkButton>
+        </EmptyState>
+      ) : (
+        <ul aria-label="Tus categorías favoritas" className={styles.list}>
+          {lista.map((category) => (
+            <li key={category.id}>
+              <Card className={styles.item}>
+                <Text weight="semibold" className={styles.name}>
+                  {category.nombre}
+                </Text>
+                <Button
+                  appearance="subtle"
+                  icon={<Delete20Regular />}
+                  aria-label={`Quitar ${category.nombre} de tus categorías favoritas`}
+                  title="Quitar de favoritas"
+                  disabled={quitando === category.id}
+                  onClick={() => quitar(category)}
+                />
+              </Card>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   )
 }

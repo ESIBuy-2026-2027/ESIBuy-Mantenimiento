@@ -855,4 +855,60 @@ describe('ProductDetailPage (AB#528): categoría favorita', () => {
 
     expect(screen.getByRole('button', { name: ANADIR })).toBeDisabled()
   })
+
+  it('HU528-CP27: al añadir o quitar la categoría avisa con su nombre, y un aviso sustituye al anterior', async () => {
+    responderCon()
+    const user = userEvent.setup()
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: ANADIR }))
+    const aviso = await screen.findByText('Tecnología se ha añadido a tus categorías favoritas.')
+    expect(aviso.closest('output')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: QUITAR }))
+
+    expect(await screen.findByText('Tecnología se ha quitado de tus categorías favoritas.')).toBeInTheDocument()
+    expect(screen.queryByText(/se ha añadido/)).not.toBeInTheDocument()
+  })
+
+  it.each([
+    ['ya no está disponible', 'CATEGORY_NOT_FOUND', 404, 'Tecnología ya no está disponible.'],
+    [
+      'falla por otro motivo',
+      null,
+      500,
+      'No se ha podido añadir Tecnología a tus categorías favoritas. Inténtalo de nuevo.',
+    ],
+  ])('HU528-CP27: si al añadirla %s, lo avisa sin detalles internos y no queda como favorita', async (_caso, code, status, texto) => {
+    responderCon()
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/customer/preferences/categories', () =>
+        HttpResponse.json({ code, mensaje: 'MongoTimeoutException' }, { status }),
+      ),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: ANADIR }))
+
+    expect(await screen.findByText(texto)).toBeInTheDocument()
+    expect(screen.queryByText(/mongotimeout/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: ANADIR })).toBeEnabled()
+  })
+
+  it('HU528-CP27: si no se puede quitar, lo avisa y sigue como favorita', async () => {
+    responderCon()
+    const user = userEvent.setup()
+    conFavoritas('cat-1')
+    server.use(
+      http.delete('/api/customer/preferences/categories/:categoriaId', () => new HttpResponse(null, { status: 500 })),
+    )
+    await abrirDetalle()
+
+    await user.click(await screen.findByRole('button', { name: QUITAR }))
+
+    expect(
+      await screen.findByText('No se ha podido quitar Tecnología de tus categorías favoritas. Inténtalo de nuevo.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: QUITAR })).toBeEnabled()
+  })
 })

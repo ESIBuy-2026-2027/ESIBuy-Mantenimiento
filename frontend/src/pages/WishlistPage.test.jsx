@@ -371,4 +371,37 @@ describe('WishlistPage (AB#528): categorías favoritas', () => {
 
     expect(await screen.findByText('Aún no tienes categorías favoritas')).toBeInTheDocument()
   })
+
+  it('HU528-CP28: al quitar una categoría avisa con su nombre, también si era la última', async () => {
+    const user = userEvent.setup()
+    conFavoritas('cat-1')
+    server.use(
+      http.delete('/api/customer/preferences/categories/:categoriaId', () => HttpResponse.json({ categorias: [] })),
+    )
+    await abrirCategorias(user)
+
+    await user.click(await screen.findByRole('button', { name: 'Quitar Tecnología de tus categorías favoritas' }))
+
+    const aviso = await screen.findByText('Tecnología se ha quitado de tus categorías favoritas.')
+    expect(aviso.closest('output')).toBeInTheDocument()
+    expect(screen.getByText('Aún no tienes categorías favoritas')).toBeInTheDocument()
+  })
+
+  it('HU528-CP28: si no se puede quitar, lo avisa y la categoría sigue en la lista', async () => {
+    const user = userEvent.setup()
+    conFavoritas('cat-1')
+    server.use(
+      http.delete('/api/customer/preferences/categories/:categoriaId', () => new HttpResponse(null, { status: 500 })),
+    )
+    await abrirCategorias(user)
+    const boton = await screen.findByRole('button', { name: 'Quitar Tecnología de tus categorías favoritas' })
+
+    await user.click(boton)
+
+    expect(
+      await screen.findByText('No se ha podido quitar Tecnología de tus categorías favoritas. Inténtalo de nuevo.'),
+    ).toBeInTheDocument()
+    expect(categorias()).toEqual(['Tecnología'])
+    expect(boton).toBeEnabled()
+  })
 })

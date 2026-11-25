@@ -31,6 +31,8 @@ import { usePageStyles } from '../components/pageStyles'
 import { UserAvatar } from '../features/account/AvatarSelector'
 import DeleteAccountDialog from '../features/account/DeleteAccountDialog'
 import UnsavedChangesDialog from '../features/account/UnsavedChangesDialog'
+import FavoriteCategoryNotice from '../features/catalog/FavoriteCategoryNotice'
+import { FAVORITAS_NO_CARGADAS, avisoDeExito, avisoDeFallo } from '../features/catalog/favoriteCategoryNotices'
 import ProfileEditor from '../features/admin/ProfileEditor'
 import ReadOnlyFields from '../features/admin/ReadOnlyFields'
 import { profileFieldsFor } from '../features/admin/profileFields'
@@ -75,10 +77,6 @@ const useStyles = makeStyles({
     display: 'flex',
     flexWrap: 'wrap',
     columnGap: tokens.spacingHorizontalL,
-  },
-  // Sin aviso no ocupa sitio en la tarjeta, pero sigue ahí para que los lectores de pantalla anuncien el siguiente
-  favoritesNotice: {
-    ':empty': { position: 'absolute' },
   },
   deletion: {
     gap: tokens.spacingVerticalM,
@@ -143,20 +141,6 @@ AccountDeletion.propTypes = {
   rol: PropTypes.oneOf(['CLIENTE', 'VENDEDOR']).isRequired,
 }
 
-// Mensajes de las categorías favoritas, con el nombre de la categoría: nunca el texto del backend. Al marcar una que ya
-// no existe o no está activa (404), reintentarlo no serviría.
-const FAVORITAS_NO_CARGADAS = 'No se han podido cargar tus categorías favoritas. Inténtalo de nuevo.'
-const avisoDeExito = (nombre, marcada) =>
-  marcada
-    ? `${nombre} se ha añadido a tus categorías favoritas.`
-    : `${nombre} se ha quitado de tus categorías favoritas.`
-const avisoDeFallo = (nombre, marcada, error) => {
-  if (error?.code === 'CATEGORY_NOT_FOUND') return `${nombre} ya no está disponible.`
-  return marcada
-    ? `No se ha podido añadir ${nombre} a tus categorías favoritas. Inténtalo de nuevo.`
-    : `No se ha podido quitar ${nombre} de tus categorías favoritas. Inténtalo de nuevo.`
-}
-
 // Categorías favoritas del cliente (AB#528, sobre las preferencias de la HU46): una casilla por cada categoría activa,
 // marcadas sus favoritas. Cada una se marca o se desmarca por separado y se guarda al momento, así que al salir del
 // perfil ya están guardadas; mientras se guarda, las casillas quedan deshabilitadas, igual que mientras cargan. La
@@ -177,9 +161,9 @@ function FavoriteCategories({ categories, categoriesLoaded, categoriesFailed, on
     setGuardando(true)
     try {
       setActualizadas(await (marcada ? addFavoriteCategory(id) : removeFavoriteCategory(id)))
-      setAviso({ intent: 'success', texto: avisoDeExito(nombre, marcada) })
+      setAviso(avisoDeExito(nombre, marcada))
     } catch (error) {
-      setAviso({ intent: 'error', texto: avisoDeFallo(nombre, marcada, error) })
+      setAviso(avisoDeFallo(nombre, marcada, error))
     } finally {
       setGuardando(false)
     }
@@ -225,13 +209,7 @@ function FavoriteCategories({ categories, categoriesLoaded, categoriesFailed, on
         Mis categorías favoritas
       </Title3>
       <Text className={styles.preferencesText}>Marca las categorías que más te interesan.</Text>
-      <output className={styles.favoritesNotice}>
-        {aviso && (
-          <MessageBar intent={aviso.intent}>
-            <MessageBarBody>{aviso.texto}</MessageBarBody>
-          </MessageBar>
-        )}
-      </output>
+      <FavoriteCategoryNotice aviso={aviso} />
       {contenido()}
     </Card>
   )
