@@ -26,6 +26,7 @@ import {
   PersonAdd20Regular,
   Receipt20Regular,
 } from '@fluentui/react-icons'
+import AlertsLoginNotice from '../features/alerts/AlertsLoginNotice'
 import { textoSinLeer } from '../features/alerts/alertsText'
 import { useAlerts } from '../features/alerts/useAlerts'
 import CartWidget from '../features/cart/CartWidget'
@@ -464,6 +465,8 @@ export default function AppHeader() {
       <nav className={mergeClasses(styles.actions, user && styles.userActions)} aria-label="Cuenta">
         {!loading && (user ? <UserActions rol={user.rol} onSignOut={handleSignOut} disabled={signingOut} /> : <GuestActions />)}
       </nav>
+      {/* Alertas de los favoritos (AB#529): notificación que sale del botón de la cuenta al iniciar sesión */}
+      {user?.rol === ROLES.CLIENTE && <AlertsLoginNotice />}
     </header>
   )
 }

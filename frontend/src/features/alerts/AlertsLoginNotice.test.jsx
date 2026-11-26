@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { server } from '../../mocks/server'
@@ -14,13 +14,17 @@ const TRAS_INICIAR_SESION = { pathname: '/products', state: { trasIniciarSesion:
 const AVISO = 'Tienes 1 alerta sin leer de tus productos favoritos.'
 
 describe('AlertsLoginNotice', () => {
-  it('HU529-CP29: al iniciar sesión avisa de las alertas sin leer y enlaza a Mis alertas', async () => {
+  it('HU529-CP29: al iniciar sesión avisa de las alertas sin leer con una notificación en la cabecera que enlaza a Mis alertas', async () => {
     const user = userEvent.setup()
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp(TRAS_INICIAR_SESION)
 
-    expect(await screen.findByText(AVISO)).toBeInTheDocument()
-    await user.click(screen.getByRole('link', { name: 'Ver alertas' }))
+    // Como una notificación del móvil, sale del botón de la cuenta: va en la cabecera, no en la página
+    const notificacion = await screen.findByRole('status', { name: 'Notificación de alertas' })
+    expect(notificacion).toHaveTextContent('Novedades en tus favoritos')
+    expect(notificacion).toHaveTextContent(AVISO)
+    expect(within(screen.getByRole('banner')).getByRole('status', { name: 'Notificación de alertas' })).toBe(notificacion)
+    await user.click(within(notificacion).getByRole('link', { name: 'Ver alertas' }))
 
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/alerts$/))
     expect(screen.queryByText(AVISO)).not.toBeInTheDocument()

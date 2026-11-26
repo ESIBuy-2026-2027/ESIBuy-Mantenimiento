@@ -1,6 +1,5 @@
 import { makeStyles, tokens } from '@fluentui/react-components'
 import { Outlet, useLocation } from 'react-router-dom'
-import AlertsLoginNotice from '../features/alerts/AlertsLoginNotice'
 import AlertsProvider from '../features/alerts/AlertsProvider'
 import CartProvider from '../features/cart/CartProvider'
 import { PATHS } from '../routes/paths'
@@ -26,8 +25,6 @@ export default function AppLayout() {
       <AlertsProvider>
         <div className={styles.page}>
           {!isRegisterPage && !isHomePage && <AppHeader />}
-          {/* Alertas de los favoritos (AB#529): aviso justo al iniciar sesión */}
-          <AlertsLoginNotice />
           <Outlet />
         </div>
       </AlertsProvider>
