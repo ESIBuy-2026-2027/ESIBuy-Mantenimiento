@@ -8,3 +8,10 @@ import { request } from './client'
 export function getAlerts() {
   return request('/api/customer/alerts')
 }
+
+// Marca como leída una alerta del cliente en sesión (AB#531): sigue en su lista, pero deja de ser nueva. Responde
+// { mensaje, alerta } con la alerta ya leída (si ya lo estaba, igual). 404 (`code: ALERT_NOT_FOUND`) si no existe o es
+// de otro cliente, 401 sin sesión y 403 (`code: ACCESS_DENIED`) con otro rol.
+export function markAlertAsRead(id) {
+  return request(`/api/customer/alerts/${encodeURIComponent(id)}/read`, { method: 'PATCH' })
+}

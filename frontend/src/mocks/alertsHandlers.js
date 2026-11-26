@@ -74,4 +74,22 @@ export const alertsHandlers = [
       alertas: suyas,
     })
   }),
+
+  // Marcar como leída (AB#531): una alerta de otro cliente se responde igual que una que no existe
+  http.patch('/api/customer/alerts/:id/read', ({ params }) => {
+    const usuario = getUsuarioEnSesion()
+    if (!usuario) return new HttpResponse(null, { status: 401 })
+    if (usuario.rol !== 'CLIENTE') return HttpResponse.json({ code: 'ACCESS_DENIED' }, { status: 403 })
+
+    const suyas = alertas.get(usuario.id) ?? []
+    const alerta = suyas.find((candidata) => candidata.id === params.id)
+    if (!alerta) return HttpResponse.json({ mensaje: 'La alerta no existe', code: 'ALERT_NOT_FOUND' }, { status: 404 })
+
+    const leida = { ...alerta, leida: true }
+    alertas.set(
+      usuario.id,
+      suyas.map((candidata) => (candidata.id === leida.id ? leida : candidata)),
+    )
+    return HttpResponse.json({ mensaje: 'Alerta marcada como leída', alerta: leida })
+  }),
 ]
