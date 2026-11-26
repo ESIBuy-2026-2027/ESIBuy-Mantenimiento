@@ -5,6 +5,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.AutenticacionUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.AuthenticatorUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RecuperacionContrasenaUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.TipoClienteUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CifradoSecretoPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoRecuperacionRepositoryPort;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CodigoVerificacionRepositoryPort;
@@ -18,6 +19,7 @@ import es.uclm.esibuy.backend.usuarios.application.service.AutenticacionService;
 import es.uclm.esibuy.backend.usuarios.application.service.AuthenticatorService;
 import es.uclm.esibuy.backend.usuarios.application.service.RecuperacionContrasenaService;
 import es.uclm.esibuy.backend.usuarios.application.service.RegistroUsuarioService;
+import es.uclm.esibuy.backend.usuarios.application.service.TipoClienteService;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.in.web.CuentaActivaFilter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.email.SmtpEnvioEmailAdapter;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.persistence.CodigoRecuperacionMongoAdapter;
@@ -88,5 +90,11 @@ class UsuariosConfigTest {
         // HU3, T400: usa el generador, el hash y el correo del login, y guarda sus códigos con su propio adaptador
         assertInstanceOf(RecuperacionContrasenaService.class, contexto.getBean(RecuperacionContrasenaUseCase.class));
         assertInstanceOf(CodigoRecuperacionMongoAdapter.class, contexto.getBean(CodigoRecuperacionRepositoryPort.class));
+    }
+
+    @Test
+    @DisplayName("Configuración: el contexto conecta la consulta de qué clientes son premium (alertas, AB#529)")
+    void elContextoConectaElTipoDeCliente() {
+        assertInstanceOf(TipoClienteService.class, contexto.getBean(TipoClienteUseCase.class));
     }
 }

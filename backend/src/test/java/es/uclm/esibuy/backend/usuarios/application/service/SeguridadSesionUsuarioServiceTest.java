@@ -1,7 +1,10 @@
 package es.uclm.esibuy.backend.usuarios.application.service;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.util.List;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
@@ -34,6 +37,7 @@ import es.uclm.esibuy.backend.usuarios.application.port.in.IniciarSesionCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarClienteCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistrarVendedorCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.RegistroUsuarioUseCase;
+import es.uclm.esibuy.backend.usuarios.application.port.in.TipoClienteUseCase;
 import es.uclm.esibuy.backend.usuarios.application.port.in.VerificarCodigoAuthenticatorCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.in.VerificarCodigoEmailCommand;
 import es.uclm.esibuy.backend.usuarios.application.port.out.CifradoSecretoPort;
@@ -167,6 +171,42 @@ class SeguridadSesionUsuarioServiceTest {
         ValidacionContrasenaService validacionContrasena() {
             return mock(ValidacionContrasenaService.class);
         }
+
+        @Bean
+        TipoClienteUseCase tipoCliente(UsuarioRepositoryPort repositorio) {
+            return new TipoClienteService(repositorio);
+        }
+    }
+
+    @Autowired
+    private TipoClienteUseCase tipoCliente;
+
+    @Test
+    @WithMockUser(username = VENDEDOR, roles = "VENDEDOR")
+    @DisplayName("HU529-CP13: un vendedor que rebaja su producto consulta qué clientes son premium, para las alertas")
+    void unVendedorConsultaQueClientesSonPremium() {
+        assertDoesNotThrow(() -> tipoCliente.premiumEntre(List.of("c-1")));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU529-CP13: un cliente que cancela un pedido consulta qué clientes son premium, para las alertas")
+    void unClienteConsultaQueClientesSonPremium() {
+        assertDoesNotThrow(() -> tipoCliente.premiumEntre(List.of("c-1")));
+    }
+
+    @Test
+    @WithMockUser(username = ADMIN, roles = "ADMINISTRADOR")
+    @DisplayName("HU529-CP13: un administrador no consulta qué clientes son premium por esta vía")
+    void unAdministradorNoConsultaQueClientesSonPremium() {
+        assertThrows(AccessDeniedException.class, () -> tipoCliente.premiumEntre(List.of("c-1")));
+    }
+
+    @Test
+    @DisplayName("HU529-CP13: sin sesión no se consulta qué clientes son premium")
+    void sinSesionNoSeConsultaQueClientesSonPremium() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> tipoCliente.premiumEntre(List.of("c-1")));
     }
 
     @Autowired

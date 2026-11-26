@@ -75,6 +75,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 
 import es.uclm.esibuy.backend.usuarios.application.port.out.ComprobadorContrasenaComprometidaPort;
 import es.uclm.esibuy.backend.usuarios.application.service.ValidacionContrasenaService;
+import es.uclm.esibuy.backend.usuarios.application.port.in.TipoClienteUseCase;
+import es.uclm.esibuy.backend.usuarios.application.service.TipoClienteService;
 import es.uclm.esibuy.backend.usuarios.infrastructure.adapter.out.seguridad.HibpContrasenaAdapter;
 
 /**
@@ -166,6 +168,12 @@ public class UsuariosConfig {
     EnvioEmailPort envioEmailPort(JavaMailSender mailSender,
             @Value("${esibuy.mail.remitente}") String remitente) {
         return new SmtpEnvioEmailAdapter(mailSender, remitente);
+    }
+
+    // Alertas de bajada de precio (AB#529): qué clientes son premium
+    @Bean
+    TipoClienteUseCase tipoClienteUseCase(UsuarioRepositoryPort usuarioRepositoryPort) {
+        return new TipoClienteService(usuarioRepositoryPort);
     }
 
     @Bean
