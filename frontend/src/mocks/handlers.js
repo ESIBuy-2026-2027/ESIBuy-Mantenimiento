@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import { addressesHandlers } from './addressesHandlers'
+import { alertsHandlers } from './alertsHandlers'
 import { adminCategoriesHandlers } from './adminCategoriesHandlers'
 import { adminSellersHandlers } from './adminSellersHandlers'
 import { adminsHandlers } from './adminsHandlers'
@@ -30,6 +31,7 @@ export const handlers = [
   ...usersHandlers,
   ...profileHandlers,
   ...preferencesHandlers,
+  ...alertsHandlers,
   ...incidentsHandlers,
   ...statisticsHandlers,
   ...adminCategoriesHandlers,
