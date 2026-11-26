@@ -5099,7 +5099,7 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 | HU529-CP27 | «Mis alertas» muestra un indicador mientras carga, un estado vacío que lleva a los favoritos y, si falla, un error con «Reintentar» | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#529) |
 | HU529-CP28 | «Mis alertas» está en `/alerts`, solo para el cliente: sin sesión va al login y el vendedor, a su página | Frontend (página y rutas) | 2 | 🔍 Pendiente de PR (AB#529) |
 | HU529-CP29 | Al iniciar sesión, una notificación que sale del botón de la cuenta (en la cabecera, como las de un móvil) avisa de las alertas sin leer con un enlace a «Mis alertas»; el aviso se cierra y no sale sin alertas sin leer ni fuera del inicio de sesión | Frontend (componente) | 4 | 🔍 Pendiente de PR (AB#529) |
-| HU529-CP30 | El menú de la cuenta del cliente tiene «Mis alertas», que lleva a `/alerts` (el punto sobre el botón de la cuenta lo sustituye la campanita de AB#531, HU531-CP11) | Frontend (componente) | 1 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP30 | El menú de la cuenta del cliente tenía «Mis alertas» y el botón de la cuenta un punto con alertas sin leer: sustituidos por la campanita de AB#531 (HU531-CP11) | Frontend (componente) | 0 | ⏸ Sustituido por decisión del equipo (AB#531) |
 
 - **Número de HU:** la historia es la AB#529 de Azure Boards; como la AB#528, se traza como HU529. Rama `feature/alertas-favoritos`. Las tasks (690, 692 a 696 y 713) no se han consultado: los casos se trazan contra AB#529.
 - **HU529-CP01 a CP30:** casos propuestos a partir de los criterios de la HU, desarrollados con TDD. Pendientes de confirmar con el equipo y de añadir a la HU en Azure Boards.
@@ -5107,7 +5107,7 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 - **Modelo:** módulo nuevo `alertas` y colección `alertas` (la «migración» es su entrada en `ColeccionesEsiBuy`), genérica para AB#530, AB#531 y AB#532: `tipo` (`BAJADA_PRECIO`, `DISPONIBILIDAD`, `PRODUCTO_NUEVO`), `clienteId`, `productoId`, `fecha` y `leida`, más `nombreProducto`, `imagenProducto`, `precioAnterior` y `precioNuevo` opcionales, para mostrar la alerta aunque el producto se elimine. Índice `cliente_fecha` en `AlertaDocument` e índice `items.productoId` en `listas_deseos`.
 - **Endpoint:** `GET /api/customer/alerts` → 200 `{ "mensaje", "alertas": [{ "id", "tipo", "fecha", "leida", "producto": { "id", "nombre", "imagen", "precioAnterior", "precioNuevo" } }] }`; 401 sin sesión y 403 `ACCESS_DENIED` con otro rol.
 - **Pantallas (decisión del equipo, opción A):** página «Mis alertas» en `/alerts` desde el menú de la cuenta, notificación tras el login que sale del botón de la cuenta, como las de un móvil (`state.trasIniciarSesion` en `LoginPage`) y un punto sobre el icono de la cuenta con alertas sin leer. La campanita y la negrita de las no leídas son de AB#531.
-- **Cambio posterior (AB#531):** los dos tests de HU529-CP30 del punto sobre el botón de la cuenta se quitaron al sustituir el punto por la campanita de la cabecera; ver HU531-CP11.
+- **Cambio posterior (AB#531):** los tests de HU529-CP30 (el punto sobre el botón de la cuenta y «Mis alertas» en su menú) se quitaron al sustituir los dos por la campanita de la cabecera; ver HU531-CP11. La notificación de HU529-CP29 sale ahora de la campanita (HU531-CP12).
 - **Tests modificados:** `ExistenciasProductosServiceTest` (HU10-CP15) crea el servicio con el puerto de alertas y comprueba que descontar no avisa. `appHeader_conSesionDeCliente_dejaFavoritosEnCabeceraYElRestoEnElMenuDePerfil` (sin caso en la matriz) espera también «Mis alertas»; este test y otros 25 de `AppHeader.test.jsx` ya fallaban en `develop`, porque renderizan `/` y la portada no muestra la cabecera.
 ### Tabla B · casos de prueba ↔ tests
 
@@ -5187,7 +5187,6 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 | HU529-CP29 | `AlertsLoginNotice.test.jsx` | `HU529-CP29: el aviso se puede cerrar` | Frontend · componente | AB#529 | PR pendiente | 🔍 |
 | HU529-CP29 | `AlertsLoginNotice.test.jsx` | `HU529-CP29: sin alertas sin leer no hay aviso al iniciar sesión` | Frontend · componente | AB#529 | PR pendiente | 🔍 |
 | HU529-CP29 | `AlertsLoginNotice.test.jsx` | `HU529-CP29: si no viene de iniciar sesión, no hay aviso aunque tenga alertas sin leer` | Frontend · componente | AB#529 | PR pendiente | 🔍 |
-| HU529-CP30 | `AppHeader.test.jsx` | `HU529-CP30: el menú de la cuenta del cliente tiene «Mis alertas», que lleva a /alerts` | Frontend · componente | AB#529 | PR pendiente | 🔍 |
 
 ---
 
@@ -5207,14 +5206,15 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 | HU531-CP08 | En «Mis alertas», una alerta nueva lleva la etiqueta «Nueva» y el botón para marcarla; una leída no, y se anuncia como leída; la página dice cuántas quedan sin leer | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#531) |
 | HU531-CP09 | Al marcarla como leída sigue en la lista sin el distintivo de nueva, con un mensaje de éxito, el foco en «Ver producto» y la campanita de la cabecera actualizada | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#531) |
 | HU531-CP10 | Si marcarla falla, se avisa con un error y sigue siendo nueva; si ya no existe, se avisa y se vuelve a pedir la lista | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#531) |
-| HU531-CP11 | El cliente tiene en la cabecera una campanita que lleva a «Mis alertas» con el número de alertas sin leer (9+ a partir de diez), anunciado sin cambiar su nombre; sin alertas sin leer no lleva número; el vendedor no la tiene | Frontend (componente) | 5 | 🔍 Pendiente de PR (AB#531) |
+| HU531-CP11 | El cliente tiene en la cabecera una campanita que lleva a «Mis alertas» con el número de alertas sin leer (9+ a partir de diez), anunciado sin cambiar su nombre; sin alertas sin leer no lleva número; el vendedor no la tiene; «Mis alertas» ya no está en el menú de la cuenta | Frontend (componente) | 6 | 🔍 Pendiente de PR (AB#531) |
+| HU531-CP12 | Al iniciar sesión con alertas sin leer, la campanita suena (se balancea y su número late) y de ella sale la notificación; se cierra al pulsar fuera | Frontend (componente) | 2 | 🔍 Pendiente de PR (AB#531) |
 
 - **Número de HU:** la historia es la AB#531 de Azure Boards; como la AB#529, se traza como HU531. Rama `feature/alertas-lectura`. Las tasks no se han consultado: los casos se trazan contra AB#531.
-- **HU531-CP01 a CP11:** casos propuestos a partir de los requisitos de la HU, desarrollados con TDD. Pendientes de confirmar con el equipo y de añadir a la HU en Azure Boards.
+- **HU531-CP01 a CP12:** casos propuestos a partir de los requisitos de la HU, desarrollados con TDD. Pendientes de confirmar con el equipo y de añadir a la HU en Azure Boards.
 - **Modelo:** reutiliza la colección `alertas` de AB#529 sin cambios (el campo `leida` ya existía). Puerto de entrada nuevo `GestionAlertasUseCase` (lo ampliará AB#532 con eliminar) y `AlertaNoEncontradaException`.
 - **Endpoint:** `PATCH /api/customer/alerts/{id}/read` → 200 `{ "mensaje": "Alerta marcada como leída", "alerta": { … } }` (si ya estaba leída, igual); 404 `ALERT_NOT_FOUND` si no existe o es de otro cliente; 401 sin sesión y 403 `ACCESS_DENIED` con otro rol.
-- **Decisiones del equipo:** el contador cuenta las alertas sin leer, como una notificación real, y se calcula en el frontend a partir de `leida`. Entrar en «Mis alertas» no marca nada: se marca con el botón. Pantallas, opción A: campanita con contador que lleva a «Mis alertas»; en la página las nuevas conservan su color y llevan la etiqueta «Nueva» y el botón «Marcar como leída», y las leídas quedan con franja gris y la foto atenuada. La campanita sustituye al punto rojo del botón de la cuenta; «Mis alertas» sigue en el menú con su número. Eliminar alertas es de AB#532.
-- **Tests modificados:** los dos tests de HU529-CP30 del punto en el botón de la cuenta se sustituyen por los de HU531-CP11. `AlertsLoginNotice.test.jsx` (HU529-CP29) espera el número de la campanita en lugar del punto. `AlertasConfigTest` (test técnico, sin caso) comprueba también `GestionAlertasUseCase`.
+- **Decisiones del equipo:** el contador cuenta las alertas sin leer, como una notificación real, y se calcula en el frontend a partir de `leida`. Entrar en «Mis alertas» no marca nada: se marca con el botón. Pantallas, opción A: campanita con contador que lleva a «Mis alertas»; en la página las nuevas conservan su color y llevan la etiqueta «Nueva» y el botón «Marcar como leída», y las leídas quedan con franja gris y la foto atenuada. La campanita sustituye al punto rojo del botón de la cuenta y a «Mis alertas» en su menú. El aviso al iniciar sesión (opción D) sale de la campanita, que se balancea y hace latir su número. El botón del carrito de la cabecera muestra solo el icono y el número. Eliminar alertas es de AB#532.
+- **Tests modificados:** los dos tests de HU529-CP30 del punto en el botón de la cuenta y el de «Mis alertas» en su menú se sustituyen por los de HU531-CP11. `AlertsLoginNotice.test.jsx` (HU529-CP29) ya no comprueba que la notificación esté dentro de la cabecera (ahora va en un portal, anclada a la campanita) y espera el número de la campanita en lugar del punto. `CartWidget.test.jsx` (HU9-CP05) espera solo el número en el botón del carrito, sin el texto «Mi carrito». `appHeader_conSesionDeCliente_dejaFavoritosEnCabeceraYElRestoEnElMenuDePerfil` (sin caso, ya fallaba en `develop`) deja de esperar «Mis alertas» en el menú. `AlertasConfigTest` (test técnico, sin caso) comprueba también `GestionAlertasUseCase`.
 
 ### Tabla B · casos de prueba ↔ tests
 
@@ -5249,6 +5249,9 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 | HU531-CP11 | `AppHeader.test.jsx` | `HU531-CP11: con más de nueve alertas sin leer, la campanita muestra 9+ y anuncia el número exacto` | Frontend · componente | AB#531 | PR pendiente | 🔍 |
 | HU531-CP11 | `AppHeader.test.jsx` | `HU531-CP11: sin alertas sin leer, la campanita no lleva número ni descripción` | Frontend · componente | AB#531 | PR pendiente | 🔍 |
 | HU531-CP11 | `AppHeader.test.jsx` | `HU531-CP11: el vendedor no tiene campanita de alertas` | Frontend · componente | AB#531 | PR pendiente | 🔍 |
+| HU531-CP11 | `AppHeader.test.jsx` | `HU531-CP11: «Mis alertas» ya no está en el menú de la cuenta: se llega por la campanita` | Frontend · componente | AB#531 | PR pendiente | 🔍 |
+| HU531-CP12 | `AlertsLoginNotice.test.jsx` | `HU531-CP12: al iniciar sesión con alertas sin leer, la campanita suena y de ella sale la notificación` | Frontend · componente | AB#531 | PR pendiente | 🔍 |
+| HU531-CP12 | `AlertsLoginNotice.test.jsx` | `HU531-CP12: la notificación se cierra al pulsar fuera de ella` | Frontend · componente | AB#531 | PR pendiente | 🔍 |
 
 ---
 
