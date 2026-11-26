@@ -5,10 +5,12 @@ import java.time.Clock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import es.uclm.esibuy.backend.deseos.application.port.in.FavoritosProductoUseCase;
 import es.uclm.esibuy.backend.deseos.application.port.in.GestionListaDeseosUseCase;
 import es.uclm.esibuy.backend.deseos.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.deseos.application.port.out.ListaDeseosRepositoryPort;
 import es.uclm.esibuy.backend.deseos.application.port.out.ProductosPort;
+import es.uclm.esibuy.backend.deseos.application.service.FavoritosProductoService;
 import es.uclm.esibuy.backend.deseos.application.service.GestionListaDeseosService;
 import es.uclm.esibuy.backend.deseos.infrastructure.adapter.out.persistence.ListaDeseosDocumentMapper;
 import es.uclm.esibuy.backend.deseos.infrastructure.adapter.out.persistence.ListaDeseosMongoAdapter;
@@ -46,5 +48,11 @@ public class DeseosConfig {
             ClienteEnSesionPort deseosClienteEnSesionPort, ProductosPort deseosProductosPort, Clock reloj) {
         return new GestionListaDeseosService(deseosRepositoryPort, deseosClienteEnSesionPort, deseosProductosPort,
                 reloj);
+    }
+
+    // Alertas de los productos favoritos (AB#529): quién tiene un producto en favoritos
+    @Bean
+    FavoritosProductoUseCase favoritosProductoUseCase(ListaDeseosRepositoryPort deseosRepositoryPort) {
+        return new FavoritosProductoService(deseosRepositoryPort);
     }
 }

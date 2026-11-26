@@ -95,4 +95,13 @@ public class ListaDeseosMongoAdapter implements ListaDeseosRepositoryPort {
     public void eliminarPorCliente(String clienteId) {
         repository.deleteByUsuarioId(clienteId);
     }
+
+    // Solo los favoritos con tipo: los guardados antes de separarlos lo reciben la próxima vez que se guardan
+    @Override
+    public List<String> clientesConFavorito(String productoId) {
+        return repository.findByTipoAndItemsProductoId(FAVORITOS, productoId).stream()
+                .map(ListaDeseosDocument::getUsuarioId)
+                .distinct()
+                .toList();
+    }
 }

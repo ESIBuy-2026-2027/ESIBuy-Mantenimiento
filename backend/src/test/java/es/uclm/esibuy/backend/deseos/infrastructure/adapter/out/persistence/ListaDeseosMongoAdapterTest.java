@@ -179,6 +179,21 @@ class ListaDeseosMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU529-CP12: devuelve, sin repetir, los clientes que tienen el producto en sus favoritos, pero no en sus listas de deseos")
+    void devuelveLosClientesConElProductoEnFavoritos() {
+        adapter.guardar(new ListaDeseos(null, "cliente-1", List.of(new ItemDeseo("p-1", AYER))));
+        adapter.guardar(new ListaDeseos(null, "cliente-2", List.of(new ItemDeseo("p-2", AYER),
+                new ItemDeseo("p-1", HOY))));
+        adapter.guardar(new ListaDeseos(null, "cliente-3", List.of(new ItemDeseo("p-2", AYER))));
+        ListaDeseos lista = ListaDeseos.nueva("cliente-4", "Cumpleaños");
+        lista.anadir("p-1", HOY);
+        adapter.guardar(lista);
+
+        assertEquals(List.of("cliente-1", "cliente-2"), adapter.clientesConFavorito("p-1").stream().sorted().toList());
+        assertTrue(adapter.clientesConFavorito("p-9").isEmpty());
+    }
+
+    @Test
     @DisplayName("HU528-CP33: crear la lista por defecto dos veces a la vez no la duplica ni pierde sus productos")
     void laListaPorDefectoNoSeDuplica() {
         ListaDeseos primera = adapter.crearListaPorDefecto("cliente-1");

@@ -26,4 +26,7 @@ public interface ListaDeseosRepositoryPort {
 
     // Los favoritos y todas las listas. Si el cliente no tiene no hace nada
     void eliminarPorCliente(String clienteId);
+
+    // Clientes con el producto en sus favoritos, sin repetir (alertas, AB#529). Las listas de deseos no cuentan
+    List<String> clientesConFavorito(String productoId);
 }

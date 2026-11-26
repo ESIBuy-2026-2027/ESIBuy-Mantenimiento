@@ -11,4 +11,7 @@ public interface ListaDeseosMongoRepository extends MongoRepository<ListaDeseosD
     void deleteByIdAndUsuarioId(String id, String usuarioId);
 
     void deleteByUsuarioId(String usuarioId);
+
+    // Usa el índice items.productoId de ColeccionesEsiBuy
+    List<ListaDeseosDocument> findByTipoAndItemsProductoId(String tipo, String productoId);
 }

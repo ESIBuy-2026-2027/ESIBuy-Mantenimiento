@@ -1,7 +1,9 @@
 package es.uclm.esibuy.backend.deseos.infrastructure.config;
 
 import es.uclm.esibuy.backend.MongoTestcontainersConfig;
+import es.uclm.esibuy.backend.deseos.application.port.in.FavoritosProductoUseCase;
 import es.uclm.esibuy.backend.deseos.application.port.in.GestionListaDeseosUseCase;
+import es.uclm.esibuy.backend.deseos.application.service.FavoritosProductoService;
 import es.uclm.esibuy.backend.deseos.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.deseos.application.port.out.ListaDeseosRepositoryPort;
 import es.uclm.esibuy.backend.deseos.application.port.out.ProductosPort;
@@ -34,5 +36,11 @@ class DeseosConfigTest {
         assertInstanceOf(ListaDeseosMongoAdapter.class, contexto.getBean(ListaDeseosRepositoryPort.class));
         assertInstanceOf(ClienteEnSesionAdapter.class, contexto.getBean(ClienteEnSesionPort.class));
         assertInstanceOf(ProductosAdapter.class, contexto.getBean(ProductosPort.class));
+    }
+
+    @Test
+    @DisplayName("Configuración: el contexto conecta la consulta de quién tiene un producto en favoritos (AB#529)")
+    void elContextoConectaLosFavoritosDeUnProducto() {
+        assertInstanceOf(FavoritosProductoService.class, contexto.getBean(FavoritosProductoUseCase.class));
     }
 }

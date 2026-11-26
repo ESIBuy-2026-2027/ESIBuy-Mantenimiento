@@ -323,7 +323,8 @@ final class ColeccionesEsiBuy {
         }
 
     // 10. listas_deseos: los favoritos (uno por cliente, AB#528) y las listas de deseos (HU14, PBI 534) de cada
-    // cliente, según su tipo. Lo guardado antes de separarlos no tiene tipo.
+    // cliente, según su tipo. Lo guardado antes de separarlos no tiene tipo. El índice por producto sirve para buscar
+    // quién tiene un producto en favoritos y avisarle de sus cambios (AB#529).
     private static Coleccion listasDeseos() {
         return new Coleccion("listas_deseos", esquema(List.of(USUARIO_ID),
                 textoNoVacio(USUARIO_ID),
@@ -333,7 +334,8 @@ final class ColeccionesEsiBuy {
                         .required(PRODUCTO_ID)
                         .properties(textoNoVacio(PRODUCTO_ID), date("addedAt")))),
                 List.of(indice(USUARIO_ID), indice(USUARIO_ID).named("usuarioId_favoritos").unique()
-                        .partial(PartialIndexFilter.of(Criteria.where("tipo").is("FAVORITOS")))));
+                        .partial(PartialIndexFilter.of(Criteria.where("tipo").is("FAVORITOS"))),
+                        indice("items." + PRODUCTO_ID)));
     }
 
         // 11. metodos_pago: métodos de pago de cada cliente (HU6), fuera del modelo
