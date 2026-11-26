@@ -1,5 +1,6 @@
 package es.uclm.esibuy.backend.shared.error;
 
+import es.uclm.esibuy.backend.alertas.domain.exception.AlertaNoEncontradaException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaConProductosException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaConVendedoresException;
 import es.uclm.esibuy.backend.categorias.domain.exception.CategoriaDuplicadaException;
@@ -454,6 +455,14 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public RespuestaError direccionNoEncontrada() {
         return new RespuestaError("La dirección de envío no existe", "ADDRESS_NOT_FOUND");
+    }
+
+    // 404 + code al marcar como leída una alerta (AB#531): una ajena se responde igual que una inexistente, para no
+    // revelar que existe
+    @ExceptionHandler(AlertaNoEncontradaException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public RespuestaError alertaNoEncontrada() {
+        return new RespuestaError("La alerta no existe", "ALERT_NOT_FOUND");
     }
 
     // 409 + code al eliminar la dirección principal sin elegir cuál la sustituye
