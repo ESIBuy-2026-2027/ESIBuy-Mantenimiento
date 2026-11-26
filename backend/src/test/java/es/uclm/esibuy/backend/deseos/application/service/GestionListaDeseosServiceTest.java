@@ -403,5 +403,11 @@ class GestionListaDeseosServiceTest {
         public void eliminarPorCliente(String clienteId) {
             listas.values().removeIf(lista -> lista.getClienteId().equals(clienteId));
         }
+
+        // No lo usa la gestión de la lista: lo usan las alertas (AB#529), que se prueban en FavoritosProductoServiceTest
+        @Override
+        public List<String> clientesConFavorito(String productoId) {
+            return List.of();
+        }
     }
 }

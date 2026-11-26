@@ -171,7 +171,7 @@ describe('AppHeader', () => {
     await user.click(within(nav).getByRole('button', { name: 'Mi perfil' }))
 
     const menu = within(await screen.findByRole('menu'))
-    const accesos = ['Mis pedidos', 'Incidencias', 'Mi perfil']
+    const accesos = ['Mis pedidos', 'Mis alertas', 'Incidencias', 'Mi perfil']
     for (const nombre of accesos) {
       expect(menu.getByRole('menuitem', { name: nombre })).toBeInTheDocument()
     }
@@ -484,6 +484,37 @@ describe('AppHeader (HU45): acceso a ESIBuy Premium', () => {
 
     await esperarRuta('/premium')
     expect(await screen.findByRole('heading', { level: 1, name: /esibuy premium/i })).toBeInTheDocument()
+  })
+
+  it('HU529-CP30: el menú de la cuenta del cliente tiene «Mis alertas», que lleva a /alerts', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/products')
+
+    await user.click(await screen.findByRole('button', { name: 'Mi perfil' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Mis alertas' }))
+
+    await esperarRuta('/alerts')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Mis alertas' })).toBeInTheDocument()
+  })
+
+  it('HU529-CP30: con alertas sin leer, el botón de la cuenta lleva un indicador y lo anuncia sin cambiar su nombre', async () => {
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/products')
+
+    const perfil = await screen.findByRole('button', { name: 'Mi perfil' })
+    expect(await within(perfil).findByTestId('alertas-sin-leer')).toBeInTheDocument()
+    expect(perfil).toHaveAccessibleDescription('Tienes 1 alerta sin leer')
+  })
+
+  it('HU529-CP30: sin alertas sin leer, el botón de la cuenta no lleva indicador', async () => {
+    server.use(http.get('/api/customer/alerts', () => HttpResponse.json({ mensaje: 'No tienes alertas', alertas: [] })))
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/products')
+
+    const perfil = await screen.findByRole('button', { name: 'Mi perfil' })
+    await waitFor(() => expect(within(perfil).queryByTestId('alertas-sin-leer')).not.toBeInTheDocument())
+    expect(perfil).not.toHaveAccessibleDescription(/alerta/)
   })
 
   it('HU45-CP27: el vendedor, el administrador y quien no tiene sesión no ven el botón Premium', async () => {

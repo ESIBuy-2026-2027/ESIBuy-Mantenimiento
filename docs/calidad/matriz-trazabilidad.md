@@ -5064,6 +5064,134 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 
 ---
 
+## HU529 · Alertas Productos Favoritos Cliente
+
+### Tabla A · HU529 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU529-CP01 | Una bajada de precio crea una alerta no leída con el cliente, el producto, la fecha y los dos precios | Unitario (dominio) | 1 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP02 | Solo hay bajada de precio si el precio nuevo es menor que el anterior; si es igual o mayor no se crea la alerta | Unitario (dominio) | 2 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP03 | El producto vuelve a estar disponible solo cuando pasa de no poder comprarse a poder comprarse; esa alerta no lleva precios | Unitario (dominio) | 2 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP04 | Una alerta exige cliente, producto, tipo y fecha; una guardada conserva su id y si está leída, y admite el tipo de producto nuevo (AB#530) | Unitario (dominio) | 2 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP05 | Si baja el precio, cada cliente con el producto en favoritos recibe una alerta con el precio que paga él (estándar o premium); si solo baja el premium, solo se avisa a los premium | Unitario (aplicación) | 2 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP06 | Si el precio sube o no cambia y la disponibilidad tampoco, no se genera ninguna alerta | Unitario (aplicación) | 1 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP07 | Si el producto vuelve a poder comprarse, cada cliente con él en favoritos recibe una alerta de disponibilidad; si además baja de precio, recibe las dos | Unitario (aplicación) | 2 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP08 | Si nadie tiene el producto en favoritos, no se guarda ninguna alerta | Unitario (aplicación) | 1 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP09 | El cliente consulta las alertas de su cuenta, de la más reciente a la más antigua; sin alertas, una lista vacía | Unitario (aplicación) | 2 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP10 | Solo el cliente con su propio correo consulta sus alertas; las generan el vendedor que cambia su producto y el cliente que cancela un pedido, no el administrador; sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 8 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP11 | Deseos devuelve los clientes que tienen un producto en favoritos, solo al vendedor o al cliente (no al administrador ni sin sesión) | Unitario (aplicación) y con Spring Security | 5 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP12 | En `listas_deseos` se encuentran, sin repetir, los clientes con el producto en sus favoritos, pero no en sus listas de deseos | Integración MongoDB | 1 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP13 | Usuarios devuelve cuáles de unos clientes son premium, solo al vendedor o al cliente (no al administrador ni sin sesión) | Unitario (aplicación) y con Spring Security | 6 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP14 | Una alerta pasa a su documento de MongoDB y vuelve sin perder datos | Unitario (infraestructura) | 2 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP15 | Persistencia en `alertas`: se guardan varias a la vez con los campos del esquema y cada cliente recupera las suyas, de la más reciente a la más antigua | Integración MongoDB | 2 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP16 | Los adaptadores de alertas preguntan a deseos y a usuarios por sus puertos de entrada | Unitario (infraestructura) | 3 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP17 | `GET /api/customer/alerts` responde 200 con un mensaje de éxito y las alertas del cliente en sesión, con el producto de cada una; sin alertas, una lista vacía y «No tienes alertas» | Controlador | 2 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP18 | Sin sesión (401) o sin ser cliente (403 `ACCESS_DENIED`) no se consultan alertas | Controlador | 2 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP19 | La colección `alertas` valida tipo, cliente, producto, fecha, leída y precios, y tiene el índice por cliente y fecha; `listas_deseos` tiene el índice por producto | Integración MongoDB | 4 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP20 | Un producto se puede comprar si está disponible y tiene stock; reponer stock da una copia con las unidades sumadas | Unitario (dominio) | 2 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP21 | Al reponer stock (pedido cancelado) se avisa a las alertas con el producto antes y después; si ya no existe, no | Unitario (aplicación) | 2 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP22 | Al modificar, activar o desactivar su producto se avisa a las alertas con el producto antes y después; si no se guarda, no | Unitario (aplicación) | 3 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP23 | Reponer stock en MongoDB devuelve el producto como estaba antes, en la misma operación | Integración MongoDB | 1 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP24 | Productos envía a las alertas el nombre, la imagen, el precio estándar y el premium y si se puede comprar; si las alertas fallan, el cambio del producto no da error | Unitario (infraestructura) | 2 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP25 | El cliente de la API pide `GET /api/customer/alerts`; un 403 llega como error con su estado y su código | Frontend · API | 2 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP26 | «Mis alertas» muestra cada alerta como un cartel de tienda: su tipo con su color, la imagen del producto (o un marcador), el producto enlazado a su detalle y la fecha; si es una bajada, el precio nuevo, el anterior tachado, el porcentaje y lo que se ahorra | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP27 | «Mis alertas» muestra un indicador mientras carga, un estado vacío que lleva a los favoritos y, si falla, un error con «Reintentar» | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP28 | «Mis alertas» está en `/alerts`, solo para el cliente: sin sesión va al login y el vendedor, a su página | Frontend (página y rutas) | 2 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP29 | Al iniciar sesión, una notificación que sale del botón de la cuenta (en la cabecera, como las de un móvil) avisa de las alertas sin leer con un enlace a «Mis alertas»; el aviso se cierra y no sale sin alertas sin leer ni fuera del inicio de sesión | Frontend (componente) | 4 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP30 | El menú de la cuenta del cliente tiene «Mis alertas»; con alertas sin leer, el botón de la cuenta lleva un punto y lo anuncia sin cambiar su nombre accesible | Frontend (componente) | 3 | 🔍 Pendiente de PR (AB#529) |
+
+- **Número de HU:** la historia es la AB#529 de Azure Boards; como la AB#528, se traza como HU529. Rama `feature/alertas-favoritos`. Las tasks (690, 692 a 696 y 713) no se han consultado: los casos se trazan contra AB#529.
+- **HU529-CP01 a CP30:** casos propuestos a partir de los criterios de la HU, desarrollados con TDD. Pendientes de confirmar con el equipo y de añadir a la HU en Azure Boards.
+- **Decisiones del equipo:** las alertas no se envían por correo; se guardan y el cliente las ve en su cuenta. Solo cuentan los favoritos (tipo `FAVORITOS`), no las listas de deseos. Hay bajada de precio si baja el precio que paga cada cliente: estándar (`precioFinal(false)`) o premium (`precioFinal(true)`), así que también cuenta una oferta mayor. Hay disponibilidad cuando el producto pasa de no poder comprarse a disponible y con stock: al activarlo, al reponer stock desde 0 en la modificación o al cancelarse un pedido.
+- **Modelo:** módulo nuevo `alertas` y colección `alertas` (la «migración» es su entrada en `ColeccionesEsiBuy`), genérica para AB#530, AB#531 y AB#532: `tipo` (`BAJADA_PRECIO`, `DISPONIBILIDAD`, `PRODUCTO_NUEVO`), `clienteId`, `productoId`, `fecha` y `leida`, más `nombreProducto`, `imagenProducto`, `precioAnterior` y `precioNuevo` opcionales, para mostrar la alerta aunque el producto se elimine. Índice `cliente_fecha` en `AlertaDocument` e índice `items.productoId` en `listas_deseos`.
+- **Endpoint:** `GET /api/customer/alerts` → 200 `{ "mensaje", "alertas": [{ "id", "tipo", "fecha", "leida", "producto": { "id", "nombre", "imagen", "precioAnterior", "precioNuevo" } }] }`; 401 sin sesión y 403 `ACCESS_DENIED` con otro rol.
+- **Pantallas (decisión del equipo, opción A):** página «Mis alertas» en `/alerts` desde el menú de la cuenta, notificación tras el login que sale del botón de la cuenta, como las de un móvil (`state.trasIniciarSesion` en `LoginPage`) y un punto sobre el icono de la cuenta con alertas sin leer. La campanita y la negrita de las no leídas son de AB#531.
+- **Tests modificados:** `ExistenciasProductosServiceTest` (HU10-CP15) crea el servicio con el puerto de alertas y comprueba que descontar no avisa. `appHeader_conSesionDeCliente_dejaFavoritosEnCabeceraYElRestoEnElMenuDePerfil` (sin caso en la matriz) espera también «Mis alertas»; este test y otros 25 de `AppHeader.test.jsx` ya fallaban en `develop`, porque renderizan `/` y la portada no muestra la cabecera.
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU529-CP01 | `AlertaTest` | `HU529-CP01: una bajada de precio crea una alerta no leída con el cliente, el producto, la fecha y los dos precios` | Dominio | AB#529 | PR pendiente | 🔍 |
+| HU529-CP02 | `AlertaTest` | `HU529-CP02: solo es una bajada de precio si el precio nuevo es menor que el anterior` | Dominio | AB#529 | PR pendiente | 🔍 |
+| HU529-CP02 | `AlertaTest` | `HU529-CP02: no se crea una alerta de bajada de precio si el precio no baja` | Dominio | AB#529 | PR pendiente | 🔍 |
+| HU529-CP03 | `AlertaTest` | `HU529-CP03: el producto vuelve a estar disponible solo cuando pasa de no poder comprarse a poder comprarse` | Dominio | AB#529 | PR pendiente | 🔍 |
+| HU529-CP03 | `AlertaTest` | `HU529-CP03: una alerta de disponibilidad guarda el producto y su nombre, sin precios` | Dominio | AB#529 | PR pendiente | 🔍 |
+| HU529-CP04 | `AlertaTest` | `HU529-CP04: una alerta sin cliente, sin producto, sin tipo o sin fecha no es válida` | Dominio | AB#529 | PR pendiente | 🔍 |
+| HU529-CP04 | `AlertaTest` | `HU529-CP04: una alerta guardada conserva su id y si está leída, y admite el tipo de producto nuevo (AB#530)` | Dominio | AB#529 | PR pendiente | 🔍 |
+| HU529-CP05 | `GeneracionAlertasServiceTest` | `HU529-CP05: si baja el precio, cada cliente con el producto en favoritos recibe una alerta con su precio` | Aplicación | AB#529 | PR pendiente | 🔍 |
+| HU529-CP05 | `GeneracionAlertasServiceTest` | `HU529-CP05: si solo baja el precio premium (p. ej. una oferta premium mayor), solo se avisa a los premium` | Aplicación | AB#529 | PR pendiente | 🔍 |
+| HU529-CP06 | `GeneracionAlertasServiceTest` | `HU529-CP06: si el precio sube o no cambia y la disponibilidad tampoco, no se genera ninguna alerta` | Aplicación | AB#529 | PR pendiente | 🔍 |
+| HU529-CP07 | `GeneracionAlertasServiceTest` | `HU529-CP07: si el producto vuelve a poder comprarse, cada cliente con él en favoritos recibe una alerta de disponibilidad` | Aplicación | AB#529 | PR pendiente | 🔍 |
+| HU529-CP07 | `GeneracionAlertasServiceTest` | `HU529-CP07: si a la vez vuelve a estar disponible y baja de precio, el cliente recibe las dos alertas` | Aplicación | AB#529 | PR pendiente | 🔍 |
+| HU529-CP08 | `GeneracionAlertasServiceTest` | `HU529-CP08: si nadie tiene el producto en favoritos, no se guarda ninguna alerta` | Aplicación | AB#529 | PR pendiente | 🔍 |
+| HU529-CP09 | `ConsultaAlertasServiceTest` | `HU529-CP09: el cliente consulta las alertas de su cuenta, en el orden del repositorio (de la más reciente a la más antigua)` | Aplicación | AB#529 | PR pendiente | 🔍 |
+| HU529-CP09 | `ConsultaAlertasServiceTest` | `HU529-CP09: un cliente sin alertas recibe una lista vacía` | Aplicación | AB#529 | PR pendiente | 🔍 |
+| HU529-CP10 | `SeguridadAlertasServiceTest` | `HU529-CP10: el cliente consulta sus propias alertas` | Aplicación · seguridad | AB#529 | PR pendiente | 🔍 |
+| HU529-CP10 | `SeguridadAlertasServiceTest` | `HU529-CP10: un cliente no puede consultar las alertas de otro cliente` | Aplicación · seguridad | AB#529 | PR pendiente | 🔍 |
+| HU529-CP10 | `SeguridadAlertasServiceTest` | `HU529-CP10: un vendedor no consulta alertas de clientes, aunque use el mismo correo` | Aplicación · seguridad | AB#529 | PR pendiente | 🔍 |
+| HU529-CP10 | `SeguridadAlertasServiceTest` | `HU529-CP10: un administrador no consulta alertas de clientes` | Aplicación · seguridad | AB#529 | PR pendiente | 🔍 |
+| HU529-CP10 | `SeguridadAlertasServiceTest` | `HU529-CP10: sin sesión no se consultan ni se generan alertas` | Aplicación · seguridad | AB#529 | PR pendiente | 🔍 |
+| HU529-CP10 | `SeguridadAlertasServiceTest` | `HU529-CP10: un vendedor genera alertas al cambiar su producto` | Aplicación · seguridad | AB#529 | PR pendiente | 🔍 |
+| HU529-CP10 | `SeguridadAlertasServiceTest` | `HU529-CP10: un cliente genera alertas al reponerse stock por la cancelación de su pedido` | Aplicación · seguridad | AB#529 | PR pendiente | 🔍 |
+| HU529-CP10 | `SeguridadAlertasServiceTest` | `HU529-CP10: un administrador no genera alertas: solo lee los productos de los vendedores` | Aplicación · seguridad | AB#529 | PR pendiente | 🔍 |
+| HU529-CP11 | `FavoritosProductoServiceTest` | `HU529-CP11: devuelve los clientes que tienen el producto en sus favoritos` | Aplicación | AB#529 | PR pendiente | 🔍 |
+| HU529-CP11 | `SeguridadDeseosServiceTest` | `HU529-CP11: un vendedor que cambia su producto consulta quién lo tiene en favoritos, para las alertas` | Aplicación · seguridad | AB#529 | PR pendiente | 🔍 |
+| HU529-CP11 | `SeguridadDeseosServiceTest` | `HU529-CP11: un cliente que cancela un pedido consulta quién tiene sus productos en favoritos, para las alertas` | Aplicación · seguridad | AB#529 | PR pendiente | 🔍 |
+| HU529-CP11 | `SeguridadDeseosServiceTest` | `HU529-CP11: un administrador no consulta quién tiene un producto en favoritos` | Aplicación · seguridad | AB#529 | PR pendiente | 🔍 |
+| HU529-CP11 | `SeguridadDeseosServiceTest` | `HU529-CP11: sin sesión no se consulta quién tiene un producto en favoritos` | Aplicación · seguridad | AB#529 | PR pendiente | 🔍 |
+| HU529-CP12 | `ListaDeseosMongoAdapterTest` | `HU529-CP12: devuelve, sin repetir, los clientes que tienen el producto en sus favoritos, pero no en sus listas de deseos` | Infraestructura · persistencia | AB#529 | PR pendiente | 🔍 |
+| HU529-CP13 | `TipoClienteServiceTest` | `HU529-CP13: de los clientes indicados, devuelve solo los premium; los que no existen no lo son` | Aplicación | AB#529 | PR pendiente | 🔍 |
+| HU529-CP13 | `TipoClienteServiceTest` | `HU529-CP13: sin clientes no consulta nada` | Aplicación | AB#529 | PR pendiente | 🔍 |
+| HU529-CP13 | `SeguridadSesionUsuarioServiceTest` | `HU529-CP13: un vendedor que rebaja su producto consulta qué clientes son premium, para las alertas` | Aplicación · seguridad | AB#529 | PR pendiente | 🔍 |
+| HU529-CP13 | `SeguridadSesionUsuarioServiceTest` | `HU529-CP13: un cliente que cancela un pedido consulta qué clientes son premium, para las alertas` | Aplicación · seguridad | AB#529 | PR pendiente | 🔍 |
+| HU529-CP13 | `SeguridadSesionUsuarioServiceTest` | `HU529-CP13: un administrador no consulta qué clientes son premium por esta vía` | Aplicación · seguridad | AB#529 | PR pendiente | 🔍 |
+| HU529-CP13 | `SeguridadSesionUsuarioServiceTest` | `HU529-CP13: sin sesión no se consulta qué clientes son premium` | Aplicación · seguridad | AB#529 | PR pendiente | 🔍 |
+| HU529-CP14 | `AlertaDocumentMapperTest` | `HU529-CP14: una alerta de bajada de precio pasa a documento y vuelve sin perder ningún dato` | Infraestructura | AB#529 | PR pendiente | 🔍 |
+| HU529-CP14 | `AlertaDocumentMapperTest` | `HU529-CP14: una alerta de disponibilidad nueva pasa a documento sin id, no leída y sin precios` | Infraestructura | AB#529 | PR pendiente | 🔍 |
+| HU529-CP15 | `AlertaMongoAdapterTest` | `HU529-CP15: guarda varias alertas a la vez y cada cliente recupera solo las suyas, de la más reciente a la más antigua` | Infraestructura · persistencia | AB#529 | PR pendiente | 🔍 |
+| HU529-CP15 | `AlertaMongoAdapterTest` | `HU529-CP15: la alerta se guarda con tipo, cliente, producto, fecha, leída y fecha de creación, y los precios como número` | Infraestructura · persistencia | AB#529 | PR pendiente | 🔍 |
+| HU529-CP16 | `FavoritosAdapterTest` | `HU529-CP16: quién tiene el producto en favoritos se pide al módulo de deseos por su puerto de entrada` | Infraestructura | AB#529 | PR pendiente | 🔍 |
+| HU529-CP16 | `TiposClienteAdapterTest` | `HU529-CP16: qué clientes son premium se pide al módulo de usuarios por su puerto de entrada` | Infraestructura | AB#529 | PR pendiente | 🔍 |
+| HU529-CP16 | `ClienteEnSesionAdapterTest` (alertas) | `HU529-CP16: el id del cliente en sesión se pide al módulo de usuarios por su puerto de entrada` | Infraestructura | AB#529 | PR pendiente | 🔍 |
+| HU529-CP17 | `AlertasControllerTest` | `HU529-CP17: el cliente en sesión recibe 200 con un mensaje de éxito y sus alertas, con el producto de cada una` | Infraestructura · controlador | AB#529 | PR pendiente | 🔍 |
+| HU529-CP17 | `AlertasControllerTest` | `HU529-CP17: un cliente sin alertas recibe 200 con una lista vacía y un mensaje que lo dice` | Infraestructura · controlador | AB#529 | PR pendiente | 🔍 |
+| HU529-CP18 | `AlertasControllerTest` | `HU529-CP18: sin sesión no se consultan alertas (401)` | Infraestructura · controlador | AB#529 | PR pendiente | 🔍 |
+| HU529-CP18 | `AlertasControllerTest` | `HU529-CP18: un usuario que no es cliente no consulta alertas (403 ACCESS_DENIED)` (parametrizado) | Infraestructura · controlador | AB#529 | PR pendiente | 🔍 |
+| HU529-CP19 | `InicializadorColeccionesTest` | `HU529-CP19: la colección alertas admite alertas de los tres tipos, con o sin precios y varias por cliente` | Infraestructura · persistencia | AB#529 | PR pendiente | 🔍 |
+| HU529-CP19 | `InicializadorColeccionesTest` | `HU529-CP19: la colección alertas rechaza un tipo que no existe, un dato obligatorio ausente o un precio negativo` | Infraestructura · persistencia | AB#529 | PR pendiente | 🔍 |
+| HU529-CP19 | `InicializadorColeccionesTest` | `HU529-CP19: alertas tiene el índice por cliente y fecha (de la más reciente a la más antigua)` | Infraestructura · persistencia | AB#529 | PR pendiente | 🔍 |
+| HU529-CP19 | `InicializadorColeccionesTest` | `HU529-CP19: listas_deseos tiene el índice por producto, para buscar quién lo tiene en favoritos` | Infraestructura · persistencia | AB#529 | PR pendiente | 🔍 |
+| HU529-CP20 | `ProductoTest` | `HU529-CP20: un producto se puede comprar solo si está disponible y tiene stock` | Dominio | AB#529 | PR pendiente | 🔍 |
+| HU529-CP20 | `ProductoTest` | `HU529-CP20: reponer stock devuelve una copia con las unidades sumadas y el resto de datos iguales` | Dominio | AB#529 | PR pendiente | 🔍 |
+| HU529-CP21 | `ExistenciasProductosServiceTest` | `HU529-CP21: al reponer stock se avisa a las alertas con el producto como estaba y como queda` | Aplicación | AB#529 | PR pendiente | 🔍 |
+| HU529-CP21 | `ExistenciasProductosServiceTest` | `HU529-CP21: si el producto ya no existe, reponer no avisa a las alertas` | Aplicación | AB#529 | PR pendiente | 🔍 |
+| HU529-CP22 | `GestionProductosServiceTest` | `HU529-CP22: al modificar su producto se avisa a las alertas con el producto como estaba y como queda guardado` | Aplicación | AB#529 | PR pendiente | 🔍 |
+| HU529-CP22 | `GestionProductosServiceTest` | `HU529-CP22: al activar o desactivar su producto se avisa a las alertas con el producto como estaba y como queda` | Aplicación | AB#529 | PR pendiente | 🔍 |
+| HU529-CP22 | `GestionProductosServiceTest` | `HU529-CP22: si el cambio no se guarda (p. ej. un producto de otro vendedor), no se avisa a las alertas` | Aplicación | AB#529 | PR pendiente | 🔍 |
+| HU529-CP23 | `ProductoMongoAdapterTest` | `HU529-CP23: reponer stock devuelve el producto como estaba antes, para avisar a las alertas; vacío si no existe` | Infraestructura · persistencia | AB#529 | PR pendiente | 🔍 |
+| HU529-CP24 | `AlertasFavoritosAdapterTest` | `HU529-CP24: envía a las alertas el nombre, la imagen, el precio estándar y el premium y si se puede comprar, antes y después` | Infraestructura | AB#529 | PR pendiente | 🔍 |
+| HU529-CP24 | `AlertasFavoritosAdapterTest` | `HU529-CP24: si generar las alertas falla, el error no llega al vendedor ni al cliente` | Infraestructura | AB#529 | PR pendiente | 🔍 |
+| HU529-CP25 | `alerts.test.js` | `HU529-CP25: pide GET /api/customer/alerts y devuelve el mensaje y las alertas del cliente` | Frontend · API | AB#529 | PR pendiente | 🔍 |
+| HU529-CP25 | `alerts.test.js` | `HU529-CP25: un 403 llega como error con su estado y su código` | Frontend · API | AB#529 | PR pendiente | 🔍 |
+| HU529-CP26 | `AlertsPage.test.jsx` | `HU529-CP26: muestra cada alerta con su tipo, el producto enlazado a su detalle y la fecha, de la más reciente a la más antigua` | Frontend · página | AB#529 | PR pendiente | 🔍 |
+| HU529-CP26 | `AlertsPage.test.jsx` | `HU529-CP26: una bajada de precio muestra el precio nuevo, el anterior tachado, el descuento y lo que se ahorra; una de disponibilidad no muestra precios` | Frontend · página | AB#529 | PR pendiente | 🔍 |
+| HU529-CP26 | `AlertsPage.test.jsx` | `HU529-CP26: cada alerta muestra la imagen del producto o, si no tiene, un marcador` | Frontend · página | AB#529 | PR pendiente | 🔍 |
+| HU529-CP27 | `AlertsPage.test.jsx` | `HU529-CP27: sin alertas muestra un estado vacío que lleva a los favoritos` | Frontend · página | AB#529 | PR pendiente | 🔍 |
+| HU529-CP27 | `AlertsPage.test.jsx` | `HU529-CP27: muestra un indicador mientras carga` | Frontend · página | AB#529 | PR pendiente | 🔍 |
+| HU529-CP27 | `AlertsPage.test.jsx` | `HU529-CP27: si falla avisa con un error y «Reintentar» las vuelve a pedir` | Frontend · página | AB#529 | PR pendiente | 🔍 |
+| HU529-CP28 | `AlertsPage.test.jsx` | `HU529-CP28: sin sesión, Mis alertas lleva a iniciar sesión` | Frontend · página | AB#529 | PR pendiente | 🔍 |
+| HU529-CP28 | `AlertsPage.test.jsx` | `HU529-CP28: un vendedor no tiene alertas de favoritos: va a su página` | Frontend · página | AB#529 | PR pendiente | 🔍 |
+| HU529-CP29 | `AlertsLoginNotice.test.jsx` | `HU529-CP29: al iniciar sesión avisa de las alertas sin leer con una notificación en la cabecera que enlaza a Mis alertas` | Frontend · componente | AB#529 | PR pendiente | 🔍 |
+| HU529-CP29 | `AlertsLoginNotice.test.jsx` | `HU529-CP29: el aviso se puede cerrar` | Frontend · componente | AB#529 | PR pendiente | 🔍 |
+| HU529-CP29 | `AlertsLoginNotice.test.jsx` | `HU529-CP29: sin alertas sin leer no hay aviso al iniciar sesión` | Frontend · componente | AB#529 | PR pendiente | 🔍 |
+| HU529-CP29 | `AlertsLoginNotice.test.jsx` | `HU529-CP29: si no viene de iniciar sesión, no hay aviso aunque tenga alertas sin leer` | Frontend · componente | AB#529 | PR pendiente | 🔍 |
+| HU529-CP30 | `AppHeader.test.jsx` | `HU529-CP30: el menú de la cuenta del cliente tiene «Mis alertas», que lleva a /alerts` | Frontend · componente | AB#529 | PR pendiente | 🔍 |
+| HU529-CP30 | `AppHeader.test.jsx` | `HU529-CP30: con alertas sin leer, el botón de la cuenta lleva un indicador y lo anuncia sin cambiar su nombre` | Frontend · componente | AB#529 | PR pendiente | 🔍 |
+| HU529-CP30 | `AppHeader.test.jsx` | `HU529-CP30: sin alertas sin leer, el botón de la cuenta no lleva indicador` | Frontend · componente | AB#529 | PR pendiente | 🔍 |
+
+---
+
 ## HU192 · Marcar incidencia como resuelta
 
 ### Tabla A · HU192 ↔ casos de prueba
@@ -5239,7 +5367,7 @@ Tests que no validan una HU concreta.
 | `UsuarioMongoAdapterTest` | `guardaFechasDeCreacionYModificacion` | Que se guardan `createdAt` y `updatedAt` (auditoría de Spring Data) y que `createdAt` no cambia al actualizar (AB#210, PR #43) |
 | `ProductoMongoAdapterTest` | `guardarUnProductoLeidoLoActualiza` | Que guardar un producto leído lo actualiza sin duplicarlo y conserva `createdAt` (AB#202, PR #86) |
 | `ProductoMongoAdapterTest` | `elPrecioSeGuardaComoNumero` | Que el precio y los porcentajes de descuento se guardan como `Decimal128`, no como texto (AB#202, PR #86) |
-| `InicializadorColeccionesTest` | `creaLasQuinceColecciones` | Que al arrancar se crean las 15 colecciones: las 10 del modelo de BBDD, `metodos_pago`, `direcciones_envio`, `contadores`, `preferencias` e `incidencias` (AB#210, PR #43; ampliado en AB#271, PR #148, y en AB#105, PR #161; ampliado en AB#131, PR #166, y en AB#287, PR #220; ampliado en AB#291, PR #224) |
+| `InicializadorColeccionesTest` | `creaLasDieciseisColecciones` | Que al arrancar se crean las 16 colecciones: las 10 del modelo de BBDD, `metodos_pago`, `direcciones_envio`, `contadores`, `preferencias`, `incidencias` y `alertas` (AB#210, PR #43; ampliado en AB#271, PR #148, y en AB#105, PR #161; ampliado en AB#131, PR #166, y en AB#287, PR #220; ampliado en AB#291, PR #224; ampliado en AB#529, PR pendiente) |
 | `InicializadorColeccionesTest` | `sePuedeEjecutarOtraVez` | Que el inicializador se puede ejecutar en cada arranque sin fallar ni duplicar índices (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `actualizaLaValidacionDeUnaColeccionExistente` | Que aplica la validación a una colección que ya existía sin ella (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `sinPermisoParaCambiarLaValidacionNoFalla` | Que sin permiso `collMod` (usuario de la aplicación en Atlas) avisa y la aplicación arranca igual (AB#210, PR #43) |
@@ -5257,6 +5385,10 @@ Tests que no validan una HU concreta.
 | `ProductosConfigTest` | `elContextoConectaElAnalisisDeImagenesConVirusTotal` | Que Spring conecta el análisis antivirus de las imágenes (`AnalisisImagenPort`) con `VirusTotalAdapter`, con una API key falsa (HU31; AB#397, PR #189) |
 | `ProductosConfigTest` | `elContextoConectaLaActualizacionDeLaValoracion` | Que Spring conecta la actualización de la valoración de los productos (`ValoracionesProductoUseCase`) con `ValoracionesProductoService` (HU13; AB#415, PR #195) |
 | `ProductosConfigTest` | `elContextoConectaElInventarioDelVendedor` | Que Spring conecta el inventario del vendedor (`InventarioVendedorUseCase`) con `InventarioVendedorService` (HU17; AB#280, PR #212) |
+| `ProductosConfigTest` | `elContextoConectaLasAlertasDeLosFavoritos` | Que Spring conecta los cambios de los productos (`AlertasFavoritosPort`) con `AlertasFavoritosAdapter`, hacia el módulo de alertas (HU529; AB#529, PR pendiente) |
+| `AlertasConfigTest` | `elContextoConectaLasPiezasDeLasAlertas` | Que Spring conecta los servicios de las alertas con su adaptador de MongoDB y los adaptadores hacia deseos y usuarios (HU529; AB#529, PR pendiente) |
+| `DeseosConfigTest` | `elContextoConectaLosFavoritosDeUnProducto` | Que Spring conecta la consulta de quién tiene un producto en favoritos (`FavoritosProductoUseCase`) con `FavoritosProductoService` (HU529; AB#529, PR pendiente) |
+| `UsuariosConfigTest` | `elContextoConectaElTipoDeCliente` | Que Spring conecta la consulta de qué clientes son premium (`TipoClienteUseCase`) con `TipoClienteService` (HU529; AB#529, PR pendiente) |
 | `EstadisticasConfigTest` | `elContextoConectaLasPiezasDeLasEstadisticas` | Que Spring conecta las estadísticas del vendedor (`EstadisticasVendedorService`) con sus adaptadores hacia usuarios, pedidos y productos (HU17; AB#279, PR #212) |
 | `Home.test.jsx` (frontend) | `home_alRenderizar_explicaComoFuncionaParaQuienCompra` | Que la home explica «Cómo funciona» con la pestaña «Quiero comprar» elegida y sus 4 pasos (rama `fix/mejora-home`, sin HU ni AB#) |
 | `Home.test.jsx` (frontend) | `home_alElegirOtroPerfil_muestraSusPasos` | Que al elegir «Quiero vender» o «Administro» se muestran los pasos de ese perfil y no los del anterior (rama `fix/mejora-home`, sin HU ni AB#) |

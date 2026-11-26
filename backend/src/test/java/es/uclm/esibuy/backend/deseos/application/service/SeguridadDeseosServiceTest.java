@@ -25,6 +25,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
+import es.uclm.esibuy.backend.deseos.application.port.in.FavoritosProductoUseCase;
 import es.uclm.esibuy.backend.deseos.application.port.in.GestionListaDeseosUseCase;
 import es.uclm.esibuy.backend.deseos.application.port.out.ClienteEnSesionPort;
 import es.uclm.esibuy.backend.deseos.application.port.out.ListaDeseosRepositoryPort;
@@ -62,6 +63,42 @@ class SeguridadDeseosServiceTest {
                 ClienteEnSesionPort sesion, ProductosPort productos) {
             return new GestionListaDeseosService(repositorio, sesion, productos, Clock.systemUTC());
         }
+
+        @Bean
+        FavoritosProductoUseCase favoritosProducto(ListaDeseosRepositoryPort repositorio) {
+            return new FavoritosProductoService(repositorio);
+        }
+    }
+
+    @Autowired
+    private FavoritosProductoUseCase favoritosProducto;
+
+    @Test
+    @WithMockUser(username = "vendedor@esibuy.test", roles = "VENDEDOR")
+    @DisplayName("HU529-CP11: un vendedor que cambia su producto consulta quién lo tiene en favoritos, para las alertas")
+    void unVendedorConsultaQuienTieneElProductoEnFavoritos() {
+        assertDoesNotThrow(() -> favoritosProducto.clientesConFavorito("p-1"));
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU529-CP11: un cliente que cancela un pedido consulta quién tiene sus productos en favoritos, para las alertas")
+    void unClienteConsultaQuienTieneElProductoEnFavoritos() {
+        assertDoesNotThrow(() -> favoritosProducto.clientesConFavorito("p-1"));
+    }
+
+    @Test
+    @WithMockUser(username = "admin@esibuy.test", roles = "ADMINISTRADOR")
+    @DisplayName("HU529-CP11: un administrador no consulta quién tiene un producto en favoritos")
+    void unAdministradorNoConsultaQuienTieneElProductoEnFavoritos() {
+        assertThrows(AccessDeniedException.class, () -> favoritosProducto.clientesConFavorito("p-1"));
+    }
+
+    @Test
+    @DisplayName("HU529-CP11: sin sesión no se consulta quién tiene un producto en favoritos")
+    void sinSesionNoSeConsultaQuienTieneElProductoEnFavoritos() {
+        assertThrows(AuthenticationCredentialsNotFoundException.class,
+                () -> favoritosProducto.clientesConFavorito("p-1"));
     }
 
     @Autowired

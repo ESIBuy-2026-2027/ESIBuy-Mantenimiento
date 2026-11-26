@@ -1,5 +1,6 @@
 import { makeStyles, tokens } from '@fluentui/react-components'
 import { Outlet, useLocation } from 'react-router-dom'
+import AlertsProvider from '../features/alerts/AlertsProvider'
 import CartProvider from '../features/cart/CartProvider'
 import { PATHS } from '../routes/paths'
 import AppHeader from './AppHeader'
@@ -21,10 +22,12 @@ export default function AppLayout() {
 
   return (
     <CartProvider>
-      <div className={styles.page}>
-        {!isRegisterPage && !isHomePage && <AppHeader />}
-        <Outlet />
-      </div>
+      <AlertsProvider>
+        <div className={styles.page}>
+          {!isRegisterPage && !isHomePage && <AppHeader />}
+          <Outlet />
+        </div>
+      </AlertsProvider>
     </CartProvider>
   )
 }

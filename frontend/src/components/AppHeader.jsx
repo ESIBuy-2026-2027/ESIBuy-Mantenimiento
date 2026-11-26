@@ -1,7 +1,8 @@
 import PropTypes from 'prop-types'
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import {
   Button,
+  CounterBadge,
   Menu,
   MenuItem,
   MenuList,
@@ -12,6 +13,7 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import {
+  Alert20Regular,
   ArrowExit20Regular,
   Bookmark20Regular,
   BoxMultiple20Regular,
@@ -24,6 +26,9 @@ import {
   PersonAdd20Regular,
   Receipt20Regular,
 } from '@fluentui/react-icons'
+import AlertsLoginNotice from '../features/alerts/AlertsLoginNotice'
+import { textoSinLeer } from '../features/alerts/alertsText'
+import { useAlerts } from '../features/alerts/useAlerts'
 import CartWidget from '../features/cart/CartWidget'
 import { getProfile } from '../api/profile'
 import { useApiQuery } from '../hooks/useApiQuery'
@@ -174,10 +179,23 @@ const useStyles = makeStyles({
     },
   },
   premiumPersonIcon: {
+    position: 'relative',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Punto sobre el icono de la cuenta cuando hay alertas sin leer (AB#529)
+  alertDot: {
+    position: 'absolute',
+    top: '-2px',
+    right: '-3px',
+    width: '8px',
+    height: '8px',
+    borderRadius: tokens.borderRadiusCircular,
+    backgroundColor: tokens.colorPaletteRedBackground3,
+    boxShadow: `0 0 0 1.5px ${tokens.colorNeutralBackground1}`,
+  },
+  srOnly: visuallyHidden,
   premiumCrown: {
     width: '20px',
     height: '20px',
@@ -270,7 +288,7 @@ function GuestActions() {
   )
 }
 
-function PremiumAwarePersonIcon() {
+function PremiumAwarePersonIcon({ conAlertas }) {
   const { data: profile, retry } = useApiQuery(getProfile)
   const styles = useStyles()
 
@@ -287,47 +305,74 @@ function PremiumAwarePersonIcon() {
       ) : (
         <Person20Regular aria-hidden="true" data-testid="standard-person-icon" />
       )}
+      {conAlertas && <span className={styles.alertDot} aria-hidden="true" data-testid="alertas-sin-leer" />}
     </span>
   )
+}
+
+PremiumAwarePersonIcon.propTypes = {
+  conAlertas: PropTypes.bool.isRequired,
 }
 
 function ClientMenu({ compact, onSignOut, disabled }) {
   const styles = useStyles()
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const profileSectionActive = [PATHS.PROFILE, PATHS.ORDERS, PATHS.INCIDENTS].includes(pathname)
+  // Alertas de los favoritos (AB#529): el punto y el número no cambian el nombre accesible; lo anuncia la descripción
+  const { sinLeer } = useAlerts()
+  const descripcionAlertas = useId()
+  const profileSectionActive = [PATHS.PROFILE, PATHS.ORDERS, PATHS.ALERTS, PATHS.INCIDENTS].includes(pathname)
   const enlaces = [
     [PATHS.ORDERS, <Receipt20Regular />, 'Mis pedidos'],
+    [PATHS.ALERTS, <Alert20Regular />, 'Mis alertas'],
     [PATHS.INCIDENTS, <ChatWarning20Regular />, 'Incidencias'],
     [PATHS.PROFILE, <Person20Regular />, 'Mi perfil'],
   ]
 
   return (
-    <Menu positioning="below-end">
-      <MenuTrigger>
-        <Button
-          appearance="subtle"
-          icon={<PremiumAwarePersonIcon />}
-          title={compact ? 'Mi perfil' : undefined}
-          className={mergeClasses(styles.item, styles.profileTrigger, profileSectionActive && styles.profileTriggerActive, compact && styles.compactItem)}
-          aria-current={profileSectionActive ? 'page' : undefined}
-        >
-          <span className={compact ? styles.compactLabel : undefined}>Mi perfil</span>
-        </Button>
-      </MenuTrigger>
-      <MenuPopover className={styles.accountMenu}>
-        <MenuList className={styles.accountMenuList}>
-          {enlaces.map(([to, icon, label]) => (
-            <MenuItem key={to} className={styles.accountMenuItem} icon={icon} onClick={() => navigate(to)}>
-              {label}
+    <>
+      <Menu positioning="below-end">
+        <MenuTrigger>
+          <Button
+            appearance="subtle"
+            icon={<PremiumAwarePersonIcon conAlertas={sinLeer > 0} />}
+            title={compact ? 'Mi perfil' : undefined}
+            className={mergeClasses(styles.item, styles.profileTrigger, profileSectionActive && styles.profileTriggerActive, compact && styles.compactItem)}
+            aria-current={profileSectionActive ? 'page' : undefined}
+            aria-describedby={sinLeer > 0 ? descripcionAlertas : undefined}
+          >
+            <span className={compact ? styles.compactLabel : undefined}>Mi perfil</span>
+          </Button>
+        </MenuTrigger>
+        <MenuPopover className={styles.accountMenu}>
+          <MenuList className={styles.accountMenuList}>
+            {enlaces.map(([to, icon, label]) => (
+              <MenuItem
+                key={to}
+                className={styles.accountMenuItem}
+                icon={icon}
+                secondaryContent={
+                  to === PATHS.ALERTS && sinLeer > 0 ? (
+                    <CounterBadge count={sinLeer} size="small" color="danger" aria-hidden="true" />
+                  ) : undefined
+                }
+                onClick={() => navigate(to)}
+              >
+                {label}
+              </MenuItem>
+            ))}
+            <MenuItem className={mergeClasses(styles.accountMenuItem, styles.signOutMenuItem)} icon={<ArrowExit20Regular />} disabled={disabled} onClick={onSignOut}>
+              Cerrar sesión
             </MenuItem>
-          ))}
-          <MenuItem className={mergeClasses(styles.accountMenuItem, styles.signOutMenuItem)} icon={<ArrowExit20Regular />} disabled={disabled} onClick={onSignOut}>
-            Cerrar sesión
-          </MenuItem>
-        </MenuList>
-      </MenuPopover>
-    </Menu>
+          </MenuList>
+        </MenuPopover>
+      </Menu>
+      {sinLeer > 0 && (
+        <span id={descripcionAlertas} className={styles.srOnly}>
+          {textoSinLeer(sinLeer)}
+        </span>
+      )}
+    </>
   )
 }
 
@@ -420,6 +465,8 @@ export default function AppHeader() {
       <nav className={mergeClasses(styles.actions, user && styles.userActions)} aria-label="Cuenta">
         {!loading && (user ? <UserActions rol={user.rol} onSignOut={handleSignOut} disabled={signingOut} /> : <GuestActions />)}
       </nav>
+      {/* Alertas de los favoritos (AB#529): notificación que sale del botón de la cuenta al iniciar sesión */}
+      {user?.rol === ROLES.CLIENTE && <AlertsLoginNotice />}
     </header>
   )
 }

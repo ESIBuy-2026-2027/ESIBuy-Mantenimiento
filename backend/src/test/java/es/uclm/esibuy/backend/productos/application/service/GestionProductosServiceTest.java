@@ -5,6 +5,7 @@ import es.uclm.esibuy.backend.categorias.domain.model.Categoria;
 import es.uclm.esibuy.backend.categorias.domain.model.EstadoCategoria;
 import es.uclm.esibuy.backend.productos.application.port.in.CrearProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
+import es.uclm.esibuy.backend.productos.application.port.out.AlertasFavoritosPort;
 import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.ResultadoAnalisis;
@@ -64,11 +65,15 @@ class GestionProductosServiceTest {
     @Mock
     private AnalisisImagenPort analisisImagen;
 
+    @Mock
+    private AlertasFavoritosPort alertas;
+
     private GestionProductosService servicio;
 
     @BeforeEach
     void preparar() {
-        servicio = new GestionProductosService(productoRepository, categoriaRepository, usuarioEnSesion, analisisImagen);
+        servicio = new GestionProductosService(productoRepository, categoriaRepository, usuarioEnSesion, analisisImagen,
+                alertas);
         lenient().when(categoriaRepository.buscarPorId(any())).thenAnswer(invocacion -> Optional.of(
                 new Categoria(invocacion.getArgument(0), "Categoría", "", EstadoCategoria.ACTIVA)));
         // Por defecto el antivirus da la imagen por buena: los tests que no tratan del
@@ -492,6 +497,47 @@ class GestionProductosServiceTest {
                 () -> servicio.cambiarDisponibilidadMiProducto(CORREO, "p-9", false));
 
         verify(productoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("HU529-CP22: al modificar su producto se avisa a las alertas con el producto como estaba y como queda guardado")
+    void modificarAvisaALasAlertas() {
+        Producto actual = producto("p-9", "v-1");
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(actual));
+        when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        Producto guardado = servicio.modificarMiProducto(
+                modificacion("p-9", "Teclado mecánico", new BigDecimal("79.90")));
+
+        verify(alertas).notificarCambio(actual, guardado);
+    }
+
+    @Test
+    @DisplayName("HU529-CP22: al activar o desactivar su producto se avisa a las alertas con el producto como estaba y como queda")
+    void cambiarDisponibilidadAvisaALasAlertas() {
+        Producto noDisponible = producto("p-9", "v-1").conDisponibilidad(false);
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(noDisponible));
+        when(productoRepository.guardar(any(Producto.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        Producto guardado = servicio.cambiarDisponibilidadMiProducto(CORREO, "p-9", true);
+
+        verify(alertas).notificarCambio(noDisponible, guardado);
+    }
+
+    @Test
+    @DisplayName("HU529-CP22: si el cambio no se guarda (p. ej. un producto de otro vendedor), no se avisa a las alertas")
+    void sinGuardarNoSeAvisaALasAlertas() {
+        when(usuarioEnSesion.idPorCorreo(CORREO)).thenReturn("v-1");
+        when(productoRepository.buscarPorId("p-9")).thenReturn(Optional.of(producto("p-9", "v-2")));
+
+        assertThrows(ProductoNoEncontradoException.class,
+                () -> servicio.cambiarDisponibilidadMiProducto(CORREO, "p-9", true));
+        assertThrows(ProductoNoEncontradoException.class,
+                () -> servicio.modificarMiProducto(modificacion("p-9", "Teclado", new BigDecimal("79.90"))));
+
+        verify(alertas, never()).notificarCambio(any(), any());
     }
 
     private Producto productoGuardado() {

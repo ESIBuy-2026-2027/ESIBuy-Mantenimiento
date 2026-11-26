@@ -3,6 +3,7 @@ package es.uclm.esibuy.backend.productos.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -23,6 +24,28 @@ import org.junit.jupiter.params.provider.ValueSource;
 class ProductoTest {
 
     private static final BigDecimal PRECIO = new BigDecimal("89.50");
+
+    @Test
+    @DisplayName("HU529-CP20: un producto se puede comprar solo si está disponible y tiene stock")
+    void esComprableSoloSiEstaDisponibleYConStock() {
+        assertTrue(productoConStock(1).esComprable());
+        assertFalse(productoConStock(0).esComprable());
+        assertFalse(productoConStock(5).conDisponibilidad(false).esComprable());
+    }
+
+    @Test
+    @DisplayName("HU529-CP20: reponer stock devuelve una copia con las unidades sumadas y el resto de datos iguales")
+    void conStockRepuestoSumaLasUnidades() {
+        Producto agotado = productoConStock(0);
+
+        Producto repuesto = agotado.conStockRepuesto(3);
+
+        assertEquals(3, repuesto.getStock());
+        assertEquals(0, agotado.getStock());
+        assertEquals(agotado.getNombre(), repuesto.getNombre());
+        assertEquals(agotado.getPrecio(), repuesto.getPrecio());
+        assertTrue(repuesto.isDisponible());
+    }
 
     @Test
     @DisplayName("HU31-CP01: crea un producto con datos correctos")

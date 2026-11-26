@@ -734,6 +734,19 @@ class ProductoMongoAdapterTest {
     }
 
     @Test
+    @DisplayName("HU529-CP23: reponer stock devuelve el producto como estaba antes, para avisar a las alertas; vacío si no existe")
+    void reponerStockDevuelveElProductoComoEstabaAntes() {
+        String id = adapter.guardar(producto(null, 0)).getId();
+
+        Producto antes = adapter.reponerStock(id, 3).orElseThrow();
+
+        assertEquals(0, antes.getStock());
+        assertEquals(id, antes.getId());
+        assertEquals(3, adapter.buscarPorId(id).orElseThrow().getStock());
+        assertTrue(adapter.reponerStock("000000000000000000000000", 1).isEmpty());
+    }
+
+    @Test
     @DisplayName("HU17-CP09: listarTodosPorVendedor devuelve todos sus productos, también los no disponibles, sin paginar")
     void listarTodosPorVendedorIncluyeLosNoDisponiblesSinPaginar() {
         for (int i = 1; i <= 12; i++) {

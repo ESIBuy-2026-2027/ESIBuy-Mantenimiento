@@ -31,6 +31,7 @@ import es.uclm.esibuy.backend.productos.application.port.in.ListadoProductosUseC
 import es.uclm.esibuy.backend.productos.application.port.in.ModificarProductoCommand;
 import es.uclm.esibuy.backend.productos.application.port.in.SupervisionProductosUseCase;
 import es.uclm.esibuy.backend.categorias.application.port.out.CategoriaRepositoryPort;
+import es.uclm.esibuy.backend.productos.application.port.out.AlertasFavoritosPort;
 import es.uclm.esibuy.backend.productos.application.port.out.AnalisisImagenPort;
 import es.uclm.esibuy.backend.productos.application.port.out.ProductoRepositoryPort;
 import es.uclm.esibuy.backend.productos.application.port.out.UsuarioEnSesionPort;
@@ -78,9 +79,15 @@ class SeguridadProductosServiceTest {
         }
 
         @Bean
+        AlertasFavoritosPort alertasFavoritos() {
+            return mock(AlertasFavoritosPort.class);
+        }
+
+        @Bean
         GestionProductosUseCase gestion(ProductoRepositoryPort repositorio,
-                CategoriaRepositoryPort categorias, UsuarioEnSesionPort sesion, AnalisisImagenPort analisisImagen) {
-            return new GestionProductosService(repositorio, categorias, sesion, analisisImagen);
+                CategoriaRepositoryPort categorias, UsuarioEnSesionPort sesion, AnalisisImagenPort analisisImagen,
+                AlertasFavoritosPort alertas) {
+            return new GestionProductosService(repositorio, categorias, sesion, analisisImagen, alertas);
         }
 
         @Bean
@@ -105,8 +112,8 @@ class SeguridadProductosServiceTest {
         }
 
         @Bean
-        ExistenciasProductosUseCase existencias(ProductoRepositoryPort repositorio) {
-            return new ExistenciasProductosService(repositorio);
+        ExistenciasProductosUseCase existencias(ProductoRepositoryPort repositorio, AlertasFavoritosPort alertas) {
+            return new ExistenciasProductosService(repositorio, alertas);
         }
 
         @Bean
