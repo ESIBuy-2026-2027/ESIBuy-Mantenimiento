@@ -423,10 +423,11 @@ export default function CartWidget() {
           className={mergeClasses(styles.fabButton, open && styles.fabButtonActive)}
           icon={<Cart24Regular />}
           aria-label={buttonLabel(status, count)}
+          title="Mi carrito"
           aria-expanded={open}
           onClick={() => setOpenPath(open ? null : pathname)}
         >
-          Mi carrito
+          {/* Solo el icono y el número (AB#531): el nombre accesible sigue diciendo cuántos productos hay */}
           {status === 'ready' && count > 0 && <span className={styles.countInline}>({count})</span>}
         </Button>
       </div>
