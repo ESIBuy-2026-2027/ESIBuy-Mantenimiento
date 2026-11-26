@@ -111,4 +111,21 @@ class ListaDeseosTest {
                 () -> ListaDeseos.nueva(CLIENTE, "a".repeat(ListaDeseos.NOMBRE_MAXIMO + 1)));
         assertThrows(ListaDeseosInvalidaException.class, () -> lista.renombrar(null));
     }
+
+    @Test
+    @DisplayName("HU528-CP30: los favoritos del cliente son una lista fija: se llaman Favoritos y no se pueden renombrar")
+    void losFavoritosNoSeRenombran() {
+        ListaDeseos favoritos = ListaDeseos.vacia(CLIENTE);
+
+        assertTrue(favoritos.esFavoritos());
+        assertEquals("Favoritos", favoritos.getNombre());
+        assertThrows(ListaDeseosInvalidaException.class, () -> favoritos.renombrar("Otra"));
+        assertEquals("Favoritos", favoritos.getNombre());
+    }
+
+    @Test
+    @DisplayName("HU528-CP30: una lista que crea el cliente no son los favoritos, aunque se llame igual")
+    void unaListaNuevaNoSonLosFavoritos() {
+        assertFalse(ListaDeseos.nueva(CLIENTE, "Favoritos").esFavoritos());
+    }
 }

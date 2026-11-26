@@ -2,7 +2,13 @@
 import PropTypes from 'prop-types'
 import { useEffect, useRef, useState } from 'react'
 import { Button, Text, Title1, makeStyles, mergeClasses, tokens } from '@fluentui/react-components'
-import { BuildingShop20Regular, Heart20Filled, Heart20Regular } from '@fluentui/react-icons'
+import {
+  Bookmark20Filled,
+  Bookmark20Regular,
+  BuildingShop20Regular,
+  Heart20Filled,
+  Heart20Regular,
+} from '@fluentui/react-icons'
 import { formatRating } from '../../utils/format'
 import AddToCartButton from '../cart/AddToCartButton'
 import QuantityStepper from '../cart/QuantityStepper'
@@ -31,17 +37,22 @@ const aparece = {
 }
 
 const useStyles = makeStyles({
-  layout: {
+  page: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalXXXL,
+  },
+  // Dos columnas iguales en las dos filas (foto y compra; descripción e información), para que los bordes coincidan
+  columns: {
     display: 'grid',
     gridTemplateColumns: 'minmax(0, 1fr)',
     gap: tokens.spacingVerticalXXL,
-    alignItems: 'start',
     '@media (min-width: 860px)': {
-      gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 1fr)',
-      gap: tokens.spacingHorizontalXXXL,
+      gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+      gap: tokens.spacingHorizontalXXL,
     },
   },
-  // En pantallas anchas la imagen se queda a la vista mientras se lee el resto.
+  // En pantallas anchas la imagen tiene la misma altura que el bloque de compra.
   media: {
     ...aparece,
     position: 'relative',
@@ -52,11 +63,13 @@ const useStyles = makeStyles({
     borderRadius: tokens.borderRadiusXXLarge,
     boxShadow: tokens.shadow16,
     '@media (min-width: 860px)': {
-      position: 'sticky',
-      top: tokens.spacingVerticalXXL,
+      aspectRatio: 'auto',
+      minHeight: '400px',
     },
   },
   image: {
+    position: 'absolute',
+    inset: 0,
     display: 'block',
     width: '100%',
     height: '100%',
@@ -93,6 +106,12 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     gap: tokens.spacingVerticalS,
+  },
+  categoryRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalS,
   },
   category: {
     color: tokens.colorBrandForeground1,
@@ -136,27 +155,38 @@ const useStyles = makeStyles({
   panel: {
     ...aparece,
     animationDelay: '160ms',
+    flexGrow: 1,
     display: 'flex',
     flexDirection: 'column',
-    gap: tokens.spacingVerticalM,
+    justifyContent: 'center',
+    gap: tokens.spacingVerticalL,
     padding: tokens.spacingHorizontalXL,
     backgroundColor: tokens.colorNeutralBackground1,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     borderRadius: tokens.borderRadiusXLarge,
     boxShadow: tokens.shadow4,
   },
+  // La cantidad y el botón del carrito, a la misma altura; el botón ocupa lo que queda
   buy: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    alignItems: 'flex-start',
+    display: 'grid',
+    gridTemplateColumns: 'auto minmax(0, 1fr)',
+    alignItems: 'start',
     gap: tokens.spacingHorizontalM,
+    '& > :first-child': { minHeight: '32px', boxSizing: 'border-box' },
   },
   // El corazón relleno en rojo es la señal de que el producto ya está en favoritos.
   favoriteIcon: {
     color: tokens.colorPaletteRedForeground1,
   },
-  favorite: {
-    alignSelf: 'flex-start',
+  // El marcador relleno es la señal de que está en alguna lista de deseos.
+  listIcon: {
+    color: tokens.colorBrandForeground1,
+  },
+  // Los dos botones, del mismo ancho; si no caben, uno debajo del otro
+  saveActions: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 190px), 1fr))',
+    gap: tokens.spacingHorizontalM,
   },
   favoriteError: {
     color: tokens.colorPaletteRedForeground1,
@@ -190,6 +220,30 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     gap: tokens.spacingVerticalS,
+  },
+  card: {
+    gap: tokens.spacingVerticalM,
+    padding: tokens.spacingHorizontalXL,
+    backgroundColor: tokens.colorNeutralBackground1,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusXLarge,
+    boxShadow: tokens.shadow4,
+  },
+  // Las valoraciones ocupan todo el ancho: a la izquierda la nota y el formulario, a la derecha las opiniones
+  reviews: {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0, 1fr)',
+    gap: tokens.spacingVerticalL,
+    alignItems: 'start',
+    '@media (min-width: 860px)': {
+      gridTemplateColumns: 'minmax(280px, 360px) minmax(0, 1fr)',
+      gap: tokens.spacingHorizontalXXL,
+    },
+  },
+  reviewsAside: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalL,
   },
   sectionTitle: {
     margin: 0,
@@ -293,10 +347,13 @@ function renderReviewAccess({
 // Detalle de un producto para el cliente (HU8): imagen, nombre, proveedor, valoración, precio, disponibilidad,
 // descripción, una ficha con los datos del producto y las valoraciones de los clientes (HU13). Solo presenta: la
 // página es la que pide el producto y sus valoraciones. Con `onAddFavorite` ofrece además añadirlo a favoritos y, si
-// ya lo está (`favorite`), quitarlo con `onRemoveFavorite` (HU14); si no se puede, lo avisa.
+// ya lo está (`favorite`), quitarlo con `onRemoveFavorite` (HU14); si no se puede, lo avisa. `categoryAction` sustituye al
+// nombre de la categoría: la pastilla para añadirla a las favoritas (AB#528). Con `onSaveToList` ofrece además guardarlo en sus
+// listas de deseos (PBI 534); `inList` dice si ya está en alguna.
 export default function ProductDetail({
   product,
   categoryName,
+  categoryAction = null,
   reviews = null,
   reviewsFailed = false,
   onRetryReviews,
@@ -306,6 +363,9 @@ export default function ProductDetail({
   onReviewCreated,
   favorite = false,
   onAddFavorite,
+  onRemoveFavorite,
+  inList = false,
+  onSaveToList,
 }) {
   const styles = useStyles()
 
@@ -319,6 +379,8 @@ export default function ProductDetail({
   const [quantity, setQuantity] = useState(1)
   const canBuy = status.key === 'in' || status.key === 'low'
   const category = categoryName ?? SIN_CATEGORIA
+  const [savingFavorite, setSavingFavorite] = useState(false)
+  const [favoriteError, setFavoriteError] = useState('')
 
   useEffect(() => {
     const image = imageRef.current
@@ -334,116 +396,161 @@ export default function ProductDetail({
     return () => image.removeEventListener('error', handleError)
   }, [])
 
+  const favoriteFailure = (failure) => {
+    if (favorite) {
+      return 'No se ha podido quitar de favoritos. Inténtalo de nuevo.'
+    }
+
+    return failure?.code === 'PRODUCT_NOT_FOUND'
+      ? 'Este producto ya no está disponible.'
+      : 'No se ha podido añadir a favoritos. Inténtalo de nuevo.'
+  }
+
+  const toggleFavorite = async () => {
+    setFavoriteError('')
+    setSavingFavorite(true)
+
+    try {
+      await (favorite ? onRemoveFavorite(product.id) : onAddFavorite(product.id))
+    } catch (failure) {
+      setFavoriteError(favoriteFailure(failure))
+    } finally {
+      setSavingFavorite(false)
+    }
+  }
+
   return (
-    <div className={styles.layout}>
-      <div className={styles.media}>
-        {hasImage ? (
-          <img
-            ref={imageRef}
-            className={styles.image}
-            src={product.imagen}
-            alt={product.nombre}
-          />
-        ) : (
-          <span className={styles.placeholder}>
+    <div className={styles.page}>
+      <div className={styles.columns}>
+        <div className={styles.media}>
+          {hasImage ? (
             <img
-              className={styles.placeholderImage}
-              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 3l18 18M10 12l-4 6h12l-3-4-2 2M6 6h11a2 2 0 0 1 2 2v8' fill='none' stroke='%23999999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
-              alt="Sin imagen"
+              ref={imageRef}
+              className={styles.image}
+              src={product.imagen}
+              alt={product.nombre}
             />
-          </span>
-        )}
-      </div>
-
-      <div className={styles.info}>
-        <div className={styles.header}>
-          <Text size={200} className={styles.category}>
-            {category}
-          </Text>
-
-          <Title1 as="h1" className={styles.title}>
-            {product.nombre}
-          </Title1>
-
-          <Text className={styles.vendor}>
-            <BuildingShop20Regular />
-            <span>
-              Vendido por <strong>{product.vendedor.nombreComercial}</strong>
+          ) : (
+            <span className={styles.placeholder}>
+              <img
+                className={styles.placeholderImage}
+                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 3l18 18M10 12l-4 6h12l-3-4-2 2M6 6h11a2 2 0 0 1 2 2v8' fill='none' stroke='%23999999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+                alt="Sin imagen"
+              />
             </span>
-          </Text>
+          )}
+        </div>
 
-          <div className={styles.rating}>
-            {rated ? (
-              <>
-                <RatingStars value={valoracion} size={22} />
-                <Text weight="semibold">{formatRating(valoracion)}</Text>
-                <Text className={styles.muted}>
-                  {valoraciones(numValoraciones)}
+        <div className={styles.info}>
+          <div className={styles.header}>
+            <div className={styles.categoryRow}>
+              {categoryAction ?? (
+                <Text size={200} className={styles.category}>
+                  {category}
                 </Text>
-              </>
+              )}
+            </div>
+
+            <Title1 as="h1" className={styles.title}>
+              {product.nombre}
+            </Title1>
+
+            <Text className={styles.vendor}>
+              <BuildingShop20Regular />
+              <span>
+                Vendido por <strong>{product.vendedor.nombreComercial}</strong>
+              </span>
+            </Text>
+
+            <div className={styles.rating}>
+              {rated ? (
+                <>
+                  <RatingStars value={valoracion} size={22} />
+                  <Text weight="semibold">{formatRating(valoracion)}</Text>
+                  <Text className={styles.muted}>
+                    {valoraciones(numValoraciones)}
+                  </Text>
+                </>
+              ) : (
+                <Text className={styles.muted}>Sin valoraciones</Text>
+              )}
+
+              {reviewStatus?.haValorado && reviewStatus.miValoracionId && (
+                <a
+                  className={styles.ownReviewLink}
+                  href={`#valoracion-${reviewStatus.miValoracionId}`}
+                >
+                  Ya has valorado este producto · Ver mi valoración
+                </a>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.panel}>
+            <PriceBlock
+              precio={product.precio}
+              descuento={product.descuento}
+              precioFinal={product.precioFinal}
+            />
+
+            <span className={styles.stock}>
+              <span
+                className={mergeClasses(styles.dot, styles[status.tone])}
+                aria-hidden="true"
+              />
+              {status.label}
+            </span>
+
+            {canBuy ? (
+              <div className={styles.buy}>
+                <QuantityStepper
+                  value={quantity}
+                  max={product.stock}
+                  onChange={setQuantity}
+                />
+                <AddToCartButton product={product} quantity={quantity} fullWidth />
+              </div>
             ) : (
-              <Text className={styles.muted}>Sin valoraciones</Text>
+              <AddToCartButton product={product} fullWidth />
             )}
 
-            {reviewStatus?.haValorado && reviewStatus.miValoracionId && (
-              <a
-                className={styles.ownReviewLink}
-                href={`#valoracion-${reviewStatus.miValoracionId}`}
-              >
-                Ya has valorado este producto · Ver mi valoración
-              </a>
+            <div className={styles.saveActions}>
+              {onAddFavorite && (
+                <Button
+                  as="button"
+                  appearance="secondary"
+                  icon={favorite ? <Heart20Filled className={styles.favoriteIcon} /> : <Heart20Regular />}
+                  disabled={savingFavorite}
+                  onClick={toggleFavorite}
+                >
+                  {favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+                </Button>
+              )}
+
+              {onSaveToList && (
+                <Button
+                  as="button"
+                  appearance="secondary"
+                  icon={inList ? <Bookmark20Filled className={styles.listIcon} /> : <Bookmark20Regular />}
+                  onClick={onSaveToList}
+                >
+                  {inList ? 'Guardado en una lista' : 'Guardar en una lista'}
+                </Button>
+              )}
+            </div>
+
+            {favoriteError && (
+              <Text role="alert" size={200} className={styles.favoriteError}>
+                {favoriteError}
+              </Text>
             )}
           </div>
         </div>
+      </div>
 
-        <div className={styles.panel}>
-          <PriceBlock
-            precio={product.precio}
-            descuento={product.descuento}
-            precioFinal={product.precioFinal}
-          />
-
-          <span className={styles.stock}>
-            <span
-              className={mergeClasses(styles.dot, styles[status.tone])}
-              aria-hidden="true"
-            />
-            {status.label}
-          </span>
-
-          {canBuy ? (
-            <div className={styles.buy}>
-              <QuantityStepper
-                value={quantity}
-                max={product.stock}
-                onChange={setQuantity}
-              />
-              <AddToCartButton product={product} quantity={quantity} />
-            </div>
-          ) : (
-            <AddToCartButton product={product} />
-          )}
-
-          {onAddFavorite && (
-            <Button
-              as="button"
-              appearance="secondary"
-              className={styles.favorite}
-              icon={
-                favorite
-                  ? <Heart20Filled className={styles.favoriteIcon} />
-                  : <Heart20Regular />
-              }
-              onClick={onAddFavorite}
-            >
-              {favorite ? 'Añadir/Quitar de favoritos' : 'Añadir a favoritos'}
-            </Button>
-          )}
-
-        </div>
-
+      <div className={styles.columns}>
         <section
-          className={styles.section}
+          className={mergeClasses(styles.section, styles.card)}
           aria-labelledby="descripcion-producto"
         >
           <h2 id="descripcion-producto" className={styles.sectionTitle}>
@@ -455,7 +562,7 @@ export default function ProductDetail({
         </section>
 
         <section
-          className={styles.section}
+          className={mergeClasses(styles.section, styles.card)}
           aria-labelledby="informacion-producto"
         >
           <h2 id="informacion-producto" className={styles.sectionTitle}>
@@ -478,38 +585,42 @@ export default function ProductDetail({
             <dd className={styles.detail}>{product.id}</dd>
           </dl>
         </section>
+      </div>
 
-        <section
-          className={styles.section}
-          aria-labelledby="valoraciones-producto"
-        >
-          <h2 id="valoraciones-producto" className={styles.sectionTitle}>
-            Valoraciones de los clientes
-          </h2>
+      <section
+        className={styles.section}
+        aria-labelledby="valoraciones-producto"
+      >
+        <h2 id="valoraciones-producto" className={styles.sectionTitle}>
+          Valoraciones de los clientes
+        </h2>
 
-          {rated && (
-            <div className={styles.summary}>
-              <span className={styles.average}>
-                {formatRating(valoracion)}
-              </span>
+        <div className={styles.reviews}>
+          <div className={styles.reviewsAside}>
+            {rated && (
+              <div className={mergeClasses(styles.summary, styles.card)}>
+                <span className={styles.average}>
+                  {formatRating(valoracion)}
+                </span>
 
-              <div className={styles.summaryRating}>
-                <RatingStars value={valoracion} size={24} />
-                <Text className={styles.muted}>
-                  Basada en {valoraciones(numValoraciones)}
-                </Text>
+                <div className={styles.summaryRating}>
+                  <RatingStars value={valoracion} size={24} />
+                  <Text className={styles.muted}>
+                    Basada en {valoraciones(numValoraciones)}
+                  </Text>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {renderReviewAccess({
-            reviewStatusFailed,
-            reviewStatus,
-            productId: product.id,
-            onRetryReviewStatus,
-            onReviewCreated,
-            styles,
-          })}
+            {renderReviewAccess({
+              reviewStatusFailed,
+              reviewStatus,
+              productId: product.id,
+              onRetryReviewStatus,
+              onReviewCreated,
+              styles,
+            })}
+          </div>
 
           <ReviewList
             reviews={reviews}
@@ -521,8 +632,8 @@ export default function ProductDetail({
                 : null
             }
           />
-        </section>
-      </div>
+        </div>
+      </section>
     </div>
   )
 }
@@ -530,6 +641,7 @@ export default function ProductDetail({
 ProductDetail.propTypes = {
   product: productDetailPropType.isRequired,
   categoryName: PropTypes.string,
+  categoryAction: PropTypes.node,
   reviews: PropTypes.arrayOf(reviewPropType),
   reviewsFailed: PropTypes.bool,
   onRetryReviews: PropTypes.func.isRequired,
@@ -540,4 +652,6 @@ ProductDetail.propTypes = {
   favorite: PropTypes.bool,
   onAddFavorite: PropTypes.func,
   onRemoveFavorite: PropTypes.func,
+  inList: PropTypes.bool,
+  onSaveToList: PropTypes.func,
 }

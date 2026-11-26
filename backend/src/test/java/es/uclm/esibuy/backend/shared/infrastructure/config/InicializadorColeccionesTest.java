@@ -1,5 +1,7 @@
 package es.uclm.esibuy.backend.shared.infrastructure.config;
 
+import org.springframework.data.mongodb.core.index.Index;
+import org.springframework.data.domain.Sort;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -355,5 +357,22 @@ class InicializadorColeccionesTest {
     private static Document incidencia(String usuarioId, String asunto, String descripcion, String estado) {
         return new Document("usuarioId", usuarioId).append("asunto", asunto).append("descripcion", descripcion)
                 .append("estado", estado).append("fechaCreacion", AHORA);
+    }
+
+    // Atlas tiene este índice de cuando solo había una lista por cliente: si no se quita, la aplicación no arranca
+    @Test
+    @DisplayName("Índices de listas_deseos: sustituye el índice único antiguo por cliente, que impedía tener varias listas")
+    void sustituyeElIndiceUnicoAntiguoDeListasDeseos() {
+        mongoTemplate.indexOps("listas_deseos").dropIndex("usuarioId_1");
+        mongoTemplate.indexOps("listas_deseos").createIndex(new Index().on("usuarioId", Sort.Direction.ASC).unique());
+
+        inicializador.run(null);
+
+        acepta("listas_deseos", new Document("usuarioId", "u1").append("tipo", "LISTA"));
+        acepta("listas_deseos", new Document("usuarioId", "u1").append("tipo", "LISTA"));
+        acepta("listas_deseos", new Document("usuarioId", "u1").append("tipo", "FAVORITOS"));
+        rechaza(DUPLICADO, "listas_deseos", new Document("usuarioId", "u1").append("tipo", "FAVORITOS"));
+        acepta("listas_deseos", new Document("usuarioId", "u2").append("tipo", "FAVORITOS"));
+        rechaza(VALIDACION, "listas_deseos", new Document("usuarioId", "u3").append("tipo", "OTRO"));
     }
 }

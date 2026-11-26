@@ -23,7 +23,14 @@ import {
   mergeClasses,
   tokens,
 } from '@fluentui/react-components'
-import { Add20Regular, Delete20Regular, Edit20Regular, Heart24Regular } from '@fluentui/react-icons'
+import {
+  Add20Regular,
+  Bookmark24Regular,
+  ChevronDown20Regular,
+  ChevronRight20Regular,
+  Delete20Regular,
+  Edit20Regular,
+} from '@fluentui/react-icons'
 import { Link } from 'react-router-dom'
 import {
   createWishlist,
@@ -63,18 +70,29 @@ const useStyles = makeStyles({
     alignItems: 'center',
     gap: tokens.spacingHorizontalS,
   },
+  listName: {
+    margin: 0,
+    overflowWrap: 'anywhere',
+  },
   listActions: {
     display: 'flex',
     flexWrap: 'wrap',
     gap: tokens.spacingHorizontalS,
   },
+  // Dos columnas si caben; un solo producto ocupa todo el ancho
   list: {
     listStyle: 'none',
     margin: 0,
     padding: 0,
-    display: 'flex',
-    flexDirection: 'column',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))',
     gap: tokens.spacingVerticalM,
+  },
+  // Las tarjetas de una misma fila, de la misma altura
+  entry: {
+    display: 'flex',
+    minWidth: 0,
+    '& > *': { flexGrow: 1, minWidth: 0 },
   },
   item: {
     display: 'flex',
@@ -237,8 +255,8 @@ WishlistItem.propTypes = {
   onRemove: PropTypes.func.isRequired,
 }
 
-// Listas de deseos del cliente (HU14, PBI 534): puede crear una o varias listas, consultarlas,
-// editarlas (nombre y productos) y eliminarlas.
+// Listas de deseos del cliente (HU14, PBI 534), aparte de sus favoritos (AB#528): puede crear una o varias, consultarlas,
+// editarlas (nombre y productos) y eliminarlas. Cada una se puede plegar: al entrar solo está desplegada la primera.
 export default function WishlistPage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
@@ -255,9 +273,12 @@ export default function WishlistPage() {
   const [editandoId, setEditandoId] = useState(null)
   const [eliminando, setEliminando] = useState(null)
   const [borrando, setBorrando] = useState(false)
+  // Las que el cliente ha plegado o desplegado: identificador de la lista → si está desplegada
+  const [desplegadas, setDesplegadas] = useState({})
 
   const listas = actualizadas ?? cargadas
   const listaEditando = listas?.find((l) => l.id === editandoId) ?? null
+  const estaDesplegada = (lista) => desplegadas[lista.id] ?? lista.id === listas[0].id
 
   const quitar = async (listaId, item) => {
     setAviso(null)
@@ -355,9 +376,9 @@ export default function WishlistPage() {
 
       {listas?.length === 0 && (
         <EmptyState
-          icon={<Heart24Regular />}
+          icon={<Bookmark24Regular />}
           title="Aún no tienes listas de deseos"
-          description="Crea tu primera lista de deseos o pulsa el corazón de un producto del catálogo."
+          description="Crea tu primera lista de deseos o pulsa «Guardar en una lista» en un producto."
         >
           <Button appearance="primary" icon={<Add20Regular />} onClick={() => setCreando(true)}>
             Nueva lista
@@ -371,7 +392,17 @@ export default function WishlistPage() {
             <Card key={lista.id} className={styles.listCard}>
               <div className={styles.listHeader}>
                 <div className={styles.listTitle}>
-                  <Title2 as="h2">{lista.nombre}</Title2>
+                  {lista.items.length > 0 && (
+                    <Button
+                      appearance="subtle"
+                      icon={estaDesplegada(lista) ? <ChevronDown20Regular /> : <ChevronRight20Regular />}
+                      aria-expanded={estaDesplegada(lista)}
+                      aria-label={`${estaDesplegada(lista) ? 'Ocultar' : 'Mostrar'} los productos de ${lista.nombre}`}
+                      title={estaDesplegada(lista) ? 'Ocultar los productos' : 'Mostrar los productos'}
+                      onClick={() => setDesplegadas((prev) => ({ ...prev, [lista.id]: !estaDesplegada(lista) }))}
+                    />
+                  )}
+                  <Title2 as="h2" className={styles.listName}>{lista.nombre}</Title2>
                   <Badge appearance="tint">{lista.items.length}</Badge>
                 </div>
                 <div className={styles.listActions}>
@@ -391,14 +422,15 @@ export default function WishlistPage() {
                   </Button>
                 </div>
               </div>
-              {lista.items.length === 0 ? (
+              {lista.items.length === 0 && (
                 <Text size={200} className={styles.muted}>
                   Esta lista aún no tiene productos.
                 </Text>
-              ) : (
+              )}
+              {lista.items.length > 0 && estaDesplegada(lista) && (
                 <ul aria-label={`Productos de ${lista.nombre}`} className={styles.list}>
                   {lista.items.map((item) => (
-                    <li key={item.productoId}>
+                    <li key={item.productoId} className={styles.entry}>
                       <WishlistItem
                         item={item}
                         removing={quitando === `${lista.id}:${item.productoId}`}

@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useCallback, useId, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { Button, makeStyles, tokens } from '@fluentui/react-components'
 import { Pause20Regular, Play20Regular, Tag24Regular } from '@fluentui/react-icons'
 import { getCatalogProducts } from '../../api/products'
@@ -89,10 +89,33 @@ const useStyles = makeStyles({
   },
 })
 
+// Las ofertas repetidas se pueden pulsar con el ratón o el dedo, porque son las que más se ven, pero con el teclado solo
+// se entra en las primeras. Los controles que aparecen después (por ejemplo, al añadir al carrito) también se quitan.
+function useSinTabulador(lista, activa) {
+  useEffect(() => {
+    if (!activa) return undefined
+    const quitar = () =>
+      lista.current
+        .querySelectorAll('li[aria-hidden="true"] a, li[aria-hidden="true"] button')
+        .forEach((control) => control.setAttribute('tabindex', '-1'))
+    quitar()
+    const observador = new MutationObserver(quitar)
+    observador.observe(lista.current, { childList: true, subtree: true })
+    return () => observador.disconnect()
+  }, [lista, activa])
+}
+
 // Las ofertas y los productos con descuento, en una cinta que avanza sola hacia la derecha (HU7). Se para al poner el
 // ratón encima, al usar el teclado dentro de ella o con el botón de pausa; con «reducir movimiento» no se mueve.
 // Solo se pinta si hay suficientes productos con descuento; si no cargan, el catálogo sigue sin ella.
-export default function OffersStrip({ categoryNames, favoritos, onAddFavorite, onRemoveFavorite }) {
+export default function OffersStrip({
+  categoryNames,
+  favoritos,
+  onAddFavorite,
+  onRemoveFavorite,
+  enAlgunaLista,
+  onSaveToList,
+}) {
   const styles = useStyles()
   const headingId = useId()
   const fetcher = useCallback(() => getCatalogProducts({ sort: 'nombre', order: 'asc', page: 1, size: PEDIDOS }), [])
@@ -101,13 +124,18 @@ export default function OffersStrip({ categoryNames, favoritos, onAddFavorite, o
   const [pointerInside, setPointerInside] = useState(false)
   const [focusInside, setFocusInside] = useState(false)
 
-  const offers = (data?.items ?? []).filter((product) => product.descuento)
+  const lista = useRef(null)
 
-  if (offers.length < MINIMO_OFERTAS) return null
+  const offers = (data?.items ?? []).filter((product) => product.descuento)
+  const visible = offers.length >= MINIMO_OFERTAS
+  useSinTabulador(lista, visible)
+
+  if (!visible) return null
 
   const paused = pausedByUser || pointerInside || focusInside
   const copies = Math.max(1, Math.ceil(ANCHO_PANTALLA_PX / (offers.length * ANCHO_TARJETA_PX)))
-  // Dos mitades iguales para mantener el movimiento continuo. Todas las copias conservan la interacción.
+  // Dos mitades iguales. Solo la primera copia de las ofertas se puede usar con el teclado y los lectores de pantalla;
+  // el resto repite lo mismo para que la cinta no tenga huecos y se usa con el ratón o el dedo.
   const cards = [0, 1].flatMap((half) =>
     Array.from({ length: copies }, (_, copy) => offers.map((product) => ({ product, copy, half }))).flat(),
   )
@@ -136,27 +164,35 @@ export default function OffersStrip({ categoryNames, favoritos, onAddFavorite, o
         className={styles.viewport}
         onPointerEnter={() => setPointerInside(true)}
         onPointerLeave={() => setPointerInside(false)}
-        onFocus={() => setFocusInside(true)}
+        // Solo el foco del teclado la para: el de un clic se queda en el botón y no la dejaría seguir al salir
+        onFocus={(event) => setFocusInside(event.target.matches(':focus-visible'))}
         onBlur={() => setFocusInside(false)}
       >
         <ul
+          ref={lista}
           aria-label="Productos en oferta"
           className={styles.row}
           style={{ animationPlayState: paused ? 'paused' : 'running' }}
         >
           {cards.map(({ product, copy, half }) => {
+            const repeated = half > 0 || copy > 0
             return (
               <li
                 key={`${half}-${copy}-${product.id}`}
                 className={styles.item}
+                aria-hidden={repeated ? true : undefined}
+                // Al pulsar una repetida el foco no entra en ella: está oculta para los lectores de pantalla
+                onMouseDown={repeated ? (event) => event.preventDefault() : undefined}
               >
                 <ProductCard
                   product={product}
                   offerStyle
                   categoryName={categoryNames.get(product.categoriaId)}
                   favorite={favoritos.has(product.id)}
-                  onAddFavorite={() => onAddFavorite(product)}
-                  onRemoveFavorite={() => onRemoveFavorite(product)}
+                  onAddFavorite={onAddFavorite}
+                  onRemoveFavorite={onRemoveFavorite}
+                  inList={enAlgunaLista.has(product.id)}
+                  onSaveToList={onSaveToList}
                 />
               </li>
             )
@@ -172,4 +208,6 @@ OffersStrip.propTypes = {
   favoritos: PropTypes.instanceOf(Set).isRequired,
   onAddFavorite: PropTypes.func.isRequired,
   onRemoveFavorite: PropTypes.func.isRequired,
+  enAlgunaLista: PropTypes.instanceOf(Set).isRequired,
+  onSaveToList: PropTypes.func.isRequired,
 }

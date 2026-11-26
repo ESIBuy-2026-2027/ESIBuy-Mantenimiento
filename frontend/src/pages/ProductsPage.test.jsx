@@ -67,7 +67,7 @@ async function abrirCatalogo() {
 }
 
 const tarjetas = () =>
-  within(screen.getByRole('list', { name: /productos/i })).getAllByRole('listitem')
+  within(screen.getByRole('list', { name: /^productos$/i })).getAllByRole('listitem')
 
 async function esperarTarjetas(cantidad) {
   await waitFor(() => expect(tarjetas()).toHaveLength(cantidad))
@@ -112,7 +112,7 @@ describe('ProductsPage (HU7): vista de productos del cliente', () => {
     await abrirCatalogo()
     await esperarTarjetas(10)
 
-    const tarjeta = within(screen.getByRole('list', { name: /productos/i }))
+    const tarjeta = within(screen.getByRole('list', { name: /^productos$/i }))
       .getByText('Auriculares inalámbricos')
       .closest('li')
 
@@ -137,7 +137,7 @@ describe('ProductsPage (HU7): vista de productos del cliente', () => {
     await abrirCatalogo()
     await esperarTarjetas(10)
 
-    expect(screen.getByRole('list', { name: /productos/i })).toHaveStyle({
+    expect(screen.getByRole('list', { name: /^productos$/i })).toHaveStyle({
       gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
     })
   })
@@ -590,7 +590,7 @@ describe('ProductsPage (HU7): búsqueda, filtros y orden', () => {
 describe('ProductsPage (HU8): detalle de un producto', () => {
   const abrirAuriculares = (user) =>
     user.click(
-      within(screen.getByRole('list', { name: /productos/i })).getByRole('link', {
+      within(screen.getByRole('list', { name: /^productos$/i })).getByRole('link', {
         name: /auriculares/i,
       }),
     )
@@ -648,7 +648,7 @@ describe('ProductsPage (HU9): precio y carrito', () => {
   }
 
   const tarjetaDeAuriculares = () =>
-    within(screen.getByRole('list', { name: /productos/i }))
+    within(screen.getByRole('list', { name: /^productos$/i }))
       .getByRole('link', { name: /auriculares/i })
       .closest('li')
 
@@ -710,130 +710,206 @@ describe('ProductsPage (HU9): precio y carrito', () => {
   })
 })
 
+describe('ProductsPage (HU14): favoritos', () => {
+  // Las ofertas también están en la página: los botones se buscan en las tarjetas del listado
+  const listado = () => within(screen.getByRole('list', { name: /^productos$/i }))
 
-describe('ProductsPage (HU14): múltiples listas de deseos', () => {
-  it('muestra el selector de listas al pulsar el corazón y permite añadir el producto a Favoritos', async () => {
-    const user = userEvent.setup()
+  it('HU14-CP21: cada tarjeta del catálogo tiene el corazón para añadir su producto a favoritos', async () => {
     await abrirCatalogo()
     await esperarTarjetas(10)
 
     for (const tarjeta of tarjetas()) {
-      expect(
-        within(tarjeta).getByRole('button', { name: /^añadir .+ a favoritos$/i }),
-      ).toBeEnabled()
+      expect(within(tarjeta).getByRole('button', { name: /^añadir .+ a favoritos$/i })).toBeEnabled()
     }
+  })
 
-    await user.click(
-      screen.getByRole('button', {
-        name: 'Añadir Auriculares inalámbricos a favoritos',
+  it('HU14-CP22: al pulsar el corazón se añade el producto a favoritos y el corazón queda relleno', async () => {
+    const user = userEvent.setup()
+    let cuerpo = null
+    server.use(
+      http.post('/api/customer/wishlist/items', async ({ request }) => {
+        cuerpo = await request.json()
+        return HttpResponse.json({ items: [{ productoId: 'p-1', addedAt: '2026-11-04T10:00:00Z' }] })
       }),
     )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
 
-    const dialogo = screen.getByRole('dialog', {
-      name: 'Guardar en lista de deseos',
-    })
-    const lista = within(dialogo).getByRole('checkbox', {
-      name: 'Favoritos (0)',
-    })
-
-    await user.click(lista)
+    await user.click(listado().getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' }))
 
     expect(
-      await within(dialogo).findByRole('checkbox', {
-        name: 'Favoritos (1)',
-      }),
-    ).toBeChecked()
+      await listado().findByRole('button', { name: 'Quitar Auriculares inalámbricos de favoritos' }),
+    ).toBeEnabled()
+    expect(cuerpo).toEqual({ productoId: 'p-1' })
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/)
+  })
 
+  it('HU14-CP23: al añadir, se rellenan también los corazones de los productos que ya estaban en la lista del cliente', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/customer/wishlist/items', () =>
+        HttpResponse.json({
+          items: [
+            { productoId: 'p-10', addedAt: '2026-11-01T09:00:00Z' },
+            { productoId: 'p-1', addedAt: '2026-11-04T10:00:00Z' },
+          ],
+        }),
+      ),
+    )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    await user.click(listado().getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' }))
+
+    expect(await listado().findByRole('button', { name: 'Quitar Cafetera de cápsulas de favoritos' })).toBeEnabled()
+    expect(listado().getByRole('button', { name: 'Quitar Auriculares inalámbricos de favoritos' })).toBeEnabled()
+    expect(listado().getByRole('button', { name: 'Añadir Altavoz Bluetooth a favoritos' })).toBeEnabled()
+  })
+
+  it('HU14-CP36: al entrar en el catálogo, los productos que ya están en favoritos tienen el corazón relleno', async () => {
+    server.use(
+      http.get('/api/customer/wishlist', () =>
+        HttpResponse.json({
+          items: [
+            {
+              productoId: 'p-10',
+              nombre: 'Cafetera de cápsulas',
+              imagen: '',
+              precioFinal: 79.99,
+              stock: 9,
+              disponible: true,
+              addedAt: '2026-11-01T09:00:00Z',
+            },
+          ],
+        }),
+      ),
+    )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    expect(await listado().findByRole('button', { name: 'Quitar Cafetera de cápsulas de favoritos' })).toBeInTheDocument()
+    expect(listado().getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' })).toBeEnabled()
+  })
+
+  it('HU14-CP36: si no se pueden cargar los favoritos, el catálogo funciona con los corazones vacíos', async () => {
+    server.use(http.get('/api/customer/wishlist', () => new HttpResponse(null, { status: 500 })))
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    for (const tarjeta of tarjetas()) {
+      expect(within(tarjeta).getByRole('button', { name: /^añadir .+ a favoritos$/i })).toBeEnabled()
+    }
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('HU14-CP24: si el producto ya no está disponible, su tarjeta lo avisa y el corazón sigue vacío', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.post('/api/customer/wishlist/items', () =>
+        HttpResponse.json({ code: 'PRODUCT_NOT_FOUND' }, { status: 404 }),
+      ),
+    )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+    const tarjeta = within(screen.getByRole('list', { name: /^productos$/i }))
+      .getByRole('link', { name: /auriculares/i })
+      .closest('li')
+
+    await user.click(within(tarjeta).getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' }))
+
+    expect(await within(tarjeta).findByRole('alert')).toHaveTextContent('Este producto ya no está disponible.')
+    expect(within(tarjeta).getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' })).toBeEnabled()
+  })
+
+  it('HU14-CP37: al pulsar el corazón relleno se quita el producto de favoritos y el corazón queda vacío', async () => {
+    const user = userEvent.setup()
+    let quitado = null
+    const cafetera = {
+      productoId: 'p-10',
+      nombre: 'Cafetera de cápsulas',
+      imagen: '',
+      precioFinal: 79.99,
+      stock: 9,
+      disponible: true,
+      addedAt: '2026-11-01T09:00:00Z',
+    }
+    server.use(
+      http.get('/api/customer/wishlist', () => HttpResponse.json({ items: [cafetera] })),
+      http.delete('/api/customer/wishlist/items/:productoId', ({ params }) => {
+        quitado = params.productoId
+        return HttpResponse.json({ items: [] })
+      }),
+    )
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    await user.click(await listado().findByRole('button', { name: 'Quitar Cafetera de cápsulas de favoritos' }))
+
+    expect(await listado().findByRole('button', { name: 'Añadir Cafetera de cápsulas a favoritos' })).toBeEnabled()
+    expect(quitado).toBe('p-10')
+    expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/products$/)
+  })
+
+  it('PBI534-CP10: el botón de listas abre el selector, permite crear una lista y deja el producto guardado en ella', async () => {
+    const user = userEvent.setup()
+    await abrirCatalogo()
+    await esperarTarjetas(10)
+
+    await user.click(listado().getByRole('button', { name: 'Guardar Auriculares inalámbricos en una lista' }))
+
+    const dialogo = screen.getByRole('dialog', { name: 'Guardar en lista de deseos' })
+    await user.type(await within(dialogo).findByLabelText('Nueva lista'), 'Regalos')
+    await user.click(within(dialogo).getByRole('button', { name: 'Crear y guardar' }))
+
+    expect(await within(dialogo).findByRole('checkbox', { name: 'Regalos (1)' })).toBeChecked()
+    expect(within(dialogo).getByRole('checkbox', { name: 'Mi lista de deseos (0)' })).not.toBeChecked()
     await user.click(within(dialogo).getByRole('button', { name: 'Cerrar' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
-    expect(
-      screen.getByRole('button', {
-        name: 'Añadir/Quitar Auriculares inalámbricos de favoritos',
-      }),
-    ).toBeInTheDocument()
+    expect(listado().getByRole('button', { name: 'Cambiar las listas de Auriculares inalámbricos' })).toBeEnabled()
   })
 
-  it('marca el corazón si el producto está en cualquiera de las listas del cliente', async () => {
-    server.use(
-      http.get('/api/customer/wishlists', () =>
-        HttpResponse.json([
-          { id: 'wl-1', nombre: 'Regalos', items: [] },
-          {
-            id: 'wl-2',
-            nombre: 'Tecnología',
-            items: [
-              {
-                productoId: 'p-1',
-                cantidad: 1,
-                addedAt: '2026-11-04T10:00:00Z',
-              },
-            ],
-          },
-        ]),
-      ),
-    )
-
-    await abrirCatalogo()
-    await esperarTarjetas(10)
-
-    expect(
-      await screen.findByRole('button', {
-        name: 'Añadir/Quitar Auriculares inalámbricos de favoritos',
-      }),
-    ).toBeInTheDocument()
-  })
-
-  it('permite crear una lista y guardar el producto desde el selector', async () => {
+  it('HU528-CP37: guardar un producto en una lista no lo añade a favoritos, ni al revés', async () => {
     const user = userEvent.setup()
     await abrirCatalogo()
     await esperarTarjetas(10)
 
-    await user.click(
-      screen.getByRole('button', {
-        name: 'Añadir Auriculares inalámbricos a favoritos',
-      }),
-    )
+    await user.click(listado().getByRole('button', { name: 'Guardar Auriculares inalámbricos en una lista' }))
+    const dialogo = screen.getByRole('dialog', { name: 'Guardar en lista de deseos' })
+    await user.click(await within(dialogo).findByRole('checkbox', { name: 'Mi lista de deseos (0)' }))
+    await within(dialogo).findByRole('checkbox', { name: 'Mi lista de deseos (1)' })
+    await user.click(within(dialogo).getByRole('button', { name: 'Cerrar' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(listado().getByRole('button', { name: 'Añadir Auriculares inalámbricos a favoritos' })).toBeEnabled()
 
-    const dialogo = screen.getByRole('dialog', {
-      name: 'Guardar en lista de deseos',
-    })
+    await user.click(listado().getByRole('button', { name: 'Añadir Altavoz Bluetooth a favoritos' }))
 
-    await user.type(within(dialogo).getByLabelText('Nueva lista'), 'Tecnología')
-    await user.click(
-      within(dialogo).getByRole('button', { name: 'Crear y guardar' }),
-    )
-
-    expect(
-      await within(dialogo).findByRole('checkbox', {
-        name: 'Tecnología (1)',
-      }),
-    ).toBeChecked()
+    expect(await listado().findByRole('button', { name: 'Quitar Altavoz Bluetooth de favoritos' })).toBeEnabled()
+    expect(listado().getByRole('button', { name: 'Guardar Altavoz Bluetooth en una lista' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('si no se pueden cargar las listas, el catálogo sigue disponible y permite abrir el selector', async () => {
+  it('HU528-CP37: si las listas no se pueden cargar, el catálogo funciona y el selector permite reintentar', async () => {
+    const user = userEvent.setup()
+    let falla = true
     server.use(
       http.get('/api/customer/wishlists', () =>
-        new HttpResponse(null, { status: 500 }),
+        falla
+          ? new HttpResponse(null, { status: 500 })
+          : HttpResponse.json([{ id: 'wl-1', nombre: 'Regalos', items: [] }]),
       ),
     )
-
-    const user = userEvent.setup()
     await abrirCatalogo()
     await esperarTarjetas(10)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
 
-    const corazon = screen.getByRole('button', {
-      name: 'Añadir Auriculares inalámbricos a favoritos',
-    })
+    await user.click(listado().getByRole('button', { name: 'Guardar Auriculares inalámbricos en una lista' }))
+    const dialogo = screen.getByRole('dialog', { name: 'Guardar en lista de deseos' })
+    expect(await within(dialogo).findByText('No se han podido cargar tus listas. Inténtalo de nuevo.')).toBeInTheDocument()
+    falla = false
+    await user.click(within(dialogo).getByRole('button', { name: 'Reintentar' }))
 
-    expect(corazon).toBeEnabled()
-
-    await user.click(corazon)
-
-    expect(
-      screen.getByRole('dialog', {
-        name: 'Guardar en lista de deseos',
-      }),
-    ).toBeInTheDocument()
+    expect(await within(dialogo).findByRole('checkbox', { name: 'Regalos (0)' })).toBeInTheDocument()
   })
 })
 
@@ -928,5 +1004,51 @@ describe('ProductsPage (HU7): catálogo con ofertas y listado único', () => {
       expect(within(tarjeta).getByRole('link')).toBeEnabled()
     }
   })
-})
 
+  // Las ofertas se repiten para que la cinta no tenga huecos: casi siempre se ve (y se pulsa) una de las repetidas
+  const repetida = async () => {
+    const ofertas = await screen.findByRole('list', { name: /productos en oferta/i })
+    const filas = [...ofertas.querySelectorAll('li[aria-hidden="true"]')]
+    return filas.find((fila) => fila.textContent.includes('Auriculares inalámbricos'))
+  }
+
+  it('HU528-CP41: el corazón y el marcador de una oferta repetida funcionan igual que los de la primera', async () => {
+    const user = userEvent.setup()
+    await abrirCatalogo({ todos: false })
+    const fila = await repetida()
+    const boton = (nombre) => within(fila).getByRole('button', { name: nombre, hidden: true })
+    expect(fila).not.toHaveAttribute('inert')
+
+    await user.click(boton('Añadir Auriculares inalámbricos a favoritos'))
+    await waitFor(() => expect(boton('Quitar Auriculares inalámbricos de favoritos')).toBeEnabled())
+
+    await user.click(boton('Guardar Auriculares inalámbricos en una lista'))
+    expect(screen.getByRole('dialog', { name: 'Guardar en lista de deseos' })).toHaveTextContent('Auriculares inalámbricos')
+  })
+
+  it('HU528-CP41: con el teclado no se entra en las ofertas repetidas', async () => {
+    const user = userEvent.setup()
+    await abrirCatalogo({ todos: false })
+    const fila = await repetida()
+    const controles = () => [...fila.querySelectorAll('a, button')]
+    controles().forEach((control) => expect(control).toHaveAttribute('tabindex', '-1'))
+
+    // También los que aparecen después, al cambiar la tarjeta
+    await user.click(within(fila).getByRole('button', { name: 'Añadir al carrito', hidden: true }))
+    await waitFor(() => expect(fila).toHaveTextContent(/en tu carrito/i))
+    await waitFor(() => controles().forEach((control) => expect(control).toHaveAttribute('tabindex', '-1')))
+  })
+
+  it('HU528-CP41: tras pulsar el corazón y salir con el ratón, la cinta sigue avanzando', async () => {
+    const user = userEvent.setup()
+    await abrirCatalogo({ todos: false })
+    const ofertas = await screen.findByRole('list', { name: /productos en oferta/i })
+    const primera = within(ofertas).getAllByRole('listitem')[0]
+
+    await user.click(within(primera).getByRole('button', { name: /a favoritos$/ }))
+    expect(ofertas).toHaveStyle({ animationPlayState: 'paused' })
+    await user.unhover(ofertas)
+
+    await waitFor(() => expect(ofertas).toHaveStyle({ animationPlayState: 'running' }))
+  })
+})

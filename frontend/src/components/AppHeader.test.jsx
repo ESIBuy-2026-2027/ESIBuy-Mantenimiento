@@ -320,11 +320,34 @@ describe('AppHeader: Mis favoritos (HU14)', () => {
   it('HU14-CP32: el cliente tiene el enlace a sus favoritos y lleva a Mis favoritos', async () => {
     const user = userEvent.setup()
     await abrirSesionPorApi('cliente@esibuy.test')
-    renderApp('/')
+    renderApp('/products')
 
     await user.click(await screen.findByRole('link', { name: 'Favoritos' }))
 
+    await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/favorites$')))
+  })
+
+  it('HU528-CP40: el cliente tiene además el enlace a sus listas de deseos y lleva a Mis listas de deseos', async () => {
+    const user = userEvent.setup()
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/products')
+
+    await user.click(await screen.findByRole('link', { name: 'Listas de deseos' }))
+
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(new RegExp('^/wishlist$')))
+  })
+
+  it('HU528-CP40: el vendedor y el administrador no tienen el enlace a las listas de deseos', async () => {
+    await abrirSesionPorApi('vendedor@esibuy.test')
+    const { unmount } = renderApp('/seller/products')
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(screen.queryByRole('link', { name: 'Listas de deseos' })).not.toBeInTheDocument()
+    unmount()
+
+    await abrirSesionPorApi('admin@esibuy.test')
+    renderApp('/admin')
+    await screen.findByRole('button', { name: /cerrar sesión/i })
+    expect(screen.queryByRole('link', { name: 'Listas de deseos' })).not.toBeInTheDocument()
   })
 
   it('HU14-CP32: el vendedor y el administrador no tienen el enlace a favoritos', async () => {

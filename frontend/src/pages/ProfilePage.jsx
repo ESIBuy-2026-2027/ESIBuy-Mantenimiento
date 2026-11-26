@@ -3,7 +3,6 @@ import { useCallback, useId, useState } from 'react'
 import {
   Button,
   Card,
-  Checkbox,
   MessageBar,
   MessageBarActions,
   MessageBarBody,
@@ -18,7 +17,6 @@ import {
   Delete20Regular,
   Edit20Regular,
 } from '@fluentui/react-icons'
-import { getPreferences, savePreferences } from '../api/preferences'
 import { getProfile, updateProfile } from '../api/profile'
 import { useAuth } from '../auth/useAuth'
 import { usePageStyles } from '../components/pageStyles'
@@ -65,13 +63,8 @@ const useStyles = makeStyles({
   email: {
     color: tokens.colorNeutralForeground3,
   },
-  preferencesText: {
+  mutedText: {
     color: tokens.colorNeutralForeground3,
-  },
-  categories: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    columnGap: tokens.spacingHorizontalL,
   },
   deletion: {
     gap: tokens.spacingVerticalM,
@@ -116,7 +109,7 @@ function AccountDeletion({ rol }) {
       <Title3 as="h2" id={titleId} className={styles.name}>
         Eliminar mi cuenta
       </Title3>
-      <Text className={styles.preferencesText}>
+      <Text className={styles.mutedText}>
         Dejarás de formar parte de ESIBuy. Tus pedidos y valoraciones se conservan.
       </Text>
       <Button className={styles.deletionAction} icon={<Delete20Regular />} onClick={() => setAbierto(true)}>
@@ -139,75 +132,6 @@ AccountDeletion.propTypes = {
   rol: PropTypes.oneOf(['CLIENTE', 'VENDEDOR']).isRequired,
 }
 
-// Preferencias del cliente (HU46): una casilla por cada categoría activa, marcadas las que ya le interesan. Cada
-// cambio se guarda al momento, así que al salir del perfil ya están guardadas; mientras se guarda, las casillas
-// quedan deshabilitadas, igual que mientras cargan. La respuesta del backend es lo que se muestra después; si no se
-// pueden guardar, las casillas siguen como estaban. Si no cargan, no se muestran: guardar sin saber cuáles eligió
-// borraría las demás.
-function CustomerPreferences({ categories }) {
-  const styles = useStyles()
-  const titleId = useId()
-  const fetcher = useCallback(() => getPreferences(), [])
-  const { data: cargadas, failed, retry } = useApiQuery(fetcher)
-  const [actualizadas, setActualizadas] = useState(null)
-  const [guardando, setGuardando] = useState(false)
-  const [aviso, setAviso] = useState(null)
-  const elegidas = new Set((actualizadas ?? cargadas)?.categorias ?? [])
-
-  const cambiar = async (categoryId, marcada) => {
-    const nuevas = marcada ? [...elegidas, categoryId] : [...elegidas].filter((id) => id !== categoryId)
-    setAviso(null)
-    setGuardando(true)
-    try {
-      setActualizadas(await savePreferences(nuevas))
-      setAviso({ intent: 'success', texto: 'Preferencias guardadas.' })
-    } catch {
-      setAviso({ intent: 'error', texto: 'No se han podido guardar tus preferencias. Inténtalo de nuevo.' })
-    } finally {
-      setGuardando(false)
-    }
-  }
-
-  return (
-    <Card className={styles.card}>
-      <Title3 as="h2" id={titleId} className={styles.name}>
-        Mis preferencias
-      </Title3>
-      <Text className={styles.preferencesText}>Elige las categorías que te interesan.</Text>
-      {aviso && (
-        <MessageBar intent={aviso.intent}>
-          <MessageBarBody>{aviso.texto}</MessageBarBody>
-        </MessageBar>
-      )}
-      {failed ? (
-        <MessageBar intent="error">
-          <MessageBarBody>No se han podido cargar tus preferencias. Inténtalo de nuevo.</MessageBarBody>
-          <MessageBarActions>
-            <Button onClick={retry}>Reintentar</Button>
-          </MessageBarActions>
-        </MessageBar>
-      ) : (
-        <fieldset aria-labelledby={titleId} className={styles.categories}>
-          {categories.map((category) => (
-            <Checkbox
-              key={category.id}
-              label={category.nombre}
-              checked={elegidas.has(category.id)}
-              disabled={guardando || !(actualizadas ?? cargadas)}
-              onChange={(_event, data) => cambiar(category.id, data.checked === true)}
-            />
-          ))}
-        </fieldset>
-      )}
-    </Card>
-  )
-}
-
-CustomerPreferences.propTypes = {
-  categories: PropTypes.arrayOf(PropTypes.shape({ id: PropTypes.string.isRequired, nombre: PropTypes.string.isRequired }))
-    .isRequired,
-}
-
 // Pares [etiqueta, texto] del perfil: los mismos campos y formatos que la ficha del administrador (HU20 y HU26),
 // sin el estado ni la imagen, y con la fecha de alta. La categoría del vendedor llega como identificador.
 function profileFields(perfil, categoryName) {
@@ -221,8 +145,8 @@ function profileFields(perfil, categoryName) {
 // Perfil propio del cliente o del vendedor (HU4), en solo lectura. Los datos se piden al backend, que los saca de
 // la sesión. Con «Editar perfil» (HU45) los datos modificables se editan en este mismo panel; al guardar, el perfil
 // pasa a ser el que devuelve el backend y se avisa. Si hay cambios sin guardar, se pregunta antes de cancelar, de ir
-// a otra pantalla y de cerrar o recargar la pestaña. El cliente ve además sus accesos de cuenta, preferencias (HU46)
-// y ESIBuy Premium (HU45). Los dos pueden eliminar su cuenta desde aquí (HU47 y HU25).
+// a otra pantalla y de cerrar o recargar la pestaña. El cliente ve además sus accesos de cuenta, con
+// ESIBuy Premium (HU45). Los dos pueden eliminar su cuenta desde aquí (HU47 y HU25).
 export default function ProfilePage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
@@ -333,8 +257,6 @@ export default function ProfilePage() {
           </div>
         </section>
       )}
-
-      {perfil?.rol === 'CLIENTE' && <CustomerPreferences categories={categories} />}
 
       {(perfil?.rol === 'CLIENTE' || perfil?.rol === 'VENDEDOR') && <SecurityFactors />}
 

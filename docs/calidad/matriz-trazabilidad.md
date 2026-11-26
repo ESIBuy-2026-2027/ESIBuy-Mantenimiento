@@ -2220,7 +2220,7 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP29 | `DELETE /api/customer/wishlist/items/{productoId}` devuelve 200 con la lista actualizada; el cliente sale de la sesión | Integración (capa web) | 1 | ✅ Pasa (1, AB#365, PR #209) |
 | HU14-CP30 | Sin sesión (401), sin ser cliente (403) o sin token CSRF (403) no se quita de la lista | Integración (capa web) | 3 | ✅ Pasa (3, AB#365, PR #209) |
 | HU14-CP31 | Las llamadas del cliente piden `GET /api/customer/wishlist` y `DELETE /api/customer/wishlist/items/{productoId}` (con el id codificado) y devuelven la lista; un 403 llega como error con su estado y su código | Frontend (API) | 3 | ✅ Pasa (3, AB#363 y AB#364, PR #213) |
-| HU14-CP32 | Mis favoritos está en `/wishlist` y el cliente llega desde el enlace Favoritos de la cabecera; sin sesión va al login, y el vendedor y el administrador no tienen ni el enlace ni la vista | Frontend (página y rutas) | 5 | ✅ Pasa (5, AB#363, PR #213) |
+| HU14-CP32 | Mis favoritos está en `/favorites` (hasta AB#528, en `/wishlist`) y el cliente llega desde el enlace Favoritos de la cabecera; sin sesión va al login, y el vendedor y el administrador no tienen ni el enlace ni la vista | Frontend (página y rutas) | 5 | ✅ Pasa (5, AB#363, PR #213) |
 | HU14-CP33 | Mis favoritos muestra cada producto en el orden en que se añadió, con su imagen (o un marcador), nombre, precio y fecha; uno agotado lo indica y uno no disponible lo indica y no enlaza al detalle | Frontend (página) | 5 | ✅ Pasa (5, AB#363, PR #213) |
 | HU14-CP34 | Mis favoritos muestra un indicador mientras carga, un estado vacío que lleva al catálogo y, si falla, un error con «Reintentar» | Frontend (página) | 3 | ✅ Pasa (3, AB#363, PR #213) |
 | HU14-CP35 | Desde Mis favoritos se quita cada producto (también uno no disponible): se avisa y la lista se actualiza; mientras se quita, su botón queda deshabilitado; al quitar el último sale el estado vacío, y si falla se avisa y el producto sigue | Frontend (página) | 5 | ✅ Pasa (5, AB#364, PR #213) |
@@ -2353,24 +2353,24 @@ Rutas de las clases de test (bajo `backend/src/test/java/es/uclm/esibuy/backend/
 | HU14-CP31 | `wishlist.test.js` | `HU14-CP31: pide GET /api/customer/wishlist y devuelve la lista con los datos de cada producto` | Frontend · API | AB#363 | PR #213 | ✅ |
 | HU14-CP31 | `wishlist.test.js` | `HU14-CP31: un 403 llega como error con su estado y su código` | Frontend · API | AB#363 | PR #213 | ✅ |
 | HU14-CP31 | `wishlist.test.js` | `HU14-CP31: pide DELETE /api/customer/wishlist/items/{productoId} y devuelve la lista actualizada` | Frontend · API | AB#364 | PR #213 | ✅ |
-| HU14-CP32 | `WishlistPage.test.jsx` | `HU14-CP32: el cliente abre Mis favoritos en /wishlist` | Frontend · página | AB#363 | PR #213 | ✅ |
-| HU14-CP32 | `WishlistPage.test.jsx` | `HU14-CP32: sin sesión, Mis favoritos lleva a iniciar sesión` | Frontend · página | AB#363 | PR #213 | ✅ |
-| HU14-CP32 | `WishlistPage.test.jsx` | `HU14-CP32: un vendedor no tiene lista de deseos: va a su página` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP32 | `FavoritesPage.test.jsx` | `HU14-CP32: el cliente abre Mis favoritos en /favorites` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP32 | `FavoritesPage.test.jsx` | `HU14-CP32: sin sesión, Mis favoritos lleva a iniciar sesión` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP32 | `FavoritesPage.test.jsx` | `HU14-CP32: un vendedor no tiene lista de deseos: va a su página` | Frontend · página | AB#363 | PR #213 | ✅ |
 | HU14-CP32 | `AppHeader.test.jsx` | `HU14-CP32: el cliente tiene el enlace a sus favoritos y lleva a Mis favoritos` | Frontend · componente | AB#363 | PR #213 | ✅ |
 | HU14-CP32 | `AppHeader.test.jsx` | `HU14-CP32: el vendedor y el administrador no tienen el enlace a favoritos` | Frontend · componente | AB#363 | PR #213 | ✅ |
-| HU14-CP33 | `WishlistPage.test.jsx` | `HU14-CP33: muestra los favoritos en el orden en que se añadieron, con su nombre, precio y fecha` | Frontend · página | AB#363 | PR #213 | ✅ |
-| HU14-CP33 | `WishlistPage.test.jsx` | `HU14-CP33: cada favorito muestra su imagen o, si no tiene, un marcador` | Frontend · página | AB#363 | PR #213 | ✅ |
-| HU14-CP33 | `WishlistPage.test.jsx` | `HU14-CP33: el nombre de un producto disponible lleva a su detalle` | Frontend · página | AB#363 | PR #213 | ✅ |
-| HU14-CP33 | `WishlistPage.test.jsx` | `HU14-CP33: un producto agotado lo indica y sigue llevando a su detalle` | Frontend · página | AB#363 | PR #213 | ✅ |
-| HU14-CP33 | `WishlistPage.test.jsx` | `HU14-CP33: un producto que ya no está disponible lo indica y no lleva a su detalle` | Frontend · página | AB#363 | PR #213 | ✅ |
-| HU14-CP34 | `WishlistPage.test.jsx` | `HU14-CP34: mientras carga muestra un indicador` | Frontend · página | AB#363 | PR #213 | ✅ |
-| HU14-CP34 | `WishlistPage.test.jsx` | `HU14-CP34: sin favoritos lo indica y ofrece ir a los productos` | Frontend · página | AB#363 | PR #213 | ✅ |
-| HU14-CP34 | `WishlistPage.test.jsx` | `HU14-CP34: si no se pueden cargar los favoritos lo avisa y permite reintentar` | Frontend · página | AB#363 | PR #213 | ✅ |
-| HU14-CP35 | `WishlistPage.test.jsx` | `HU14-CP35: cada favorito, también uno que ya no está disponible, tiene su botón para quitarlo` | Frontend · página | AB#364 | PR #213 | ✅ |
-| HU14-CP35 | `WishlistPage.test.jsx` | `HU14-CP35: al quitar un favorito pide quitar ese producto, avisa y desaparece de la lista` | Frontend · página | AB#364 | PR #213 | ✅ |
-| HU14-CP35 | `WishlistPage.test.jsx` | `HU14-CP35: mientras se quita, su botón queda deshabilitado` | Frontend · página | AB#364 | PR #213 | ✅ |
-| HU14-CP35 | `WishlistPage.test.jsx` | `HU14-CP35: al quitar el último favorito se muestra el estado vacío` | Frontend · página | AB#364 | PR #213 | ✅ |
-| HU14-CP35 | `WishlistPage.test.jsx` | `HU14-CP35: si no se puede quitar, lo avisa y el producto sigue en la lista` | Frontend · página | AB#364 | PR #213 | ✅ |
+| HU14-CP33 | `FavoritesPage.test.jsx` | `HU14-CP33: muestra los favoritos en el orden en que se añadieron, con su nombre, precio y fecha` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP33 | `FavoritesPage.test.jsx` | `HU14-CP33: cada favorito muestra su imagen o, si no tiene, un marcador` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP33 | `FavoritesPage.test.jsx` | `HU14-CP33: el nombre de un producto disponible lleva a su detalle` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP33 | `FavoritesPage.test.jsx` | `HU14-CP33: un producto agotado lo indica y sigue llevando a su detalle` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP33 | `FavoritesPage.test.jsx` | `HU14-CP33: un producto que ya no está disponible lo indica y no lleva a su detalle` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP34 | `FavoritesPage.test.jsx` | `HU14-CP34: mientras carga muestra un indicador` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP34 | `FavoritesPage.test.jsx` | `HU14-CP34: sin favoritos lo indica y ofrece ir a los productos` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP34 | `FavoritesPage.test.jsx` | `HU14-CP34: si no se pueden cargar los favoritos lo avisa y permite reintentar` | Frontend · página | AB#363 | PR #213 | ✅ |
+| HU14-CP35 | `FavoritesPage.test.jsx` | `HU14-CP35: cada favorito, también uno que ya no está disponible, tiene su botón para quitarlo` | Frontend · página | AB#364 | PR #213 | ✅ |
+| HU14-CP35 | `FavoritesPage.test.jsx` | `HU14-CP35: al quitar un favorito pide quitar ese producto, avisa y desaparece de la lista` | Frontend · página | AB#364 | PR #213 | ✅ |
+| HU14-CP35 | `FavoritesPage.test.jsx` | `HU14-CP35: mientras se quita, su botón queda deshabilitado` | Frontend · página | AB#364 | PR #213 | ✅ |
+| HU14-CP35 | `FavoritesPage.test.jsx` | `HU14-CP35: al quitar el último favorito se muestra el estado vacío` | Frontend · página | AB#364 | PR #213 | ✅ |
+| HU14-CP35 | `FavoritesPage.test.jsx` | `HU14-CP35: si no se puede quitar, lo avisa y el producto sigue en la lista` | Frontend · página | AB#364 | PR #213 | ✅ |
 | HU14-CP36 | `ProductsPage.test.jsx` | `HU14-CP36: al entrar en el catálogo, los productos que ya están en favoritos tienen el corazón relleno` | Frontend · página | AB#363 | PR #213 | ✅ |
 | HU14-CP36 | `ProductsPage.test.jsx` | `HU14-CP36: si no se pueden cargar los favoritos, el catálogo funciona con los corazones vacíos` | Frontend · página | AB#363 | PR #213 | ✅ |
 | HU14-CP37 | `ProductCard.test.jsx` | `HU14-CP37: al pulsar el corazón relleno pide quitar ese producto de favoritos` | Frontend · componente | AB#364 | PR #213 | ✅ |
@@ -4602,27 +4602,16 @@ Rutas de las clases de test del frontend (bajo `frontend/src/`):
 | Caso | Descripción | Tipo | Tests | Estado |
 |---|---|---|---|---|
 | HU46-CP01 | Un cliente que aún no ha elegido preferencias no tiene ninguna categoría | Unitario (dominio) | 1 | ✅ Pasa (1, AB#287, PR #220) |
-| HU46-CP02 | Elegir categorías las guarda en el orden elegido y sin repetir ninguna | Unitario (dominio) | 1 | ✅ Pasa (1, AB#287, PR #220) |
-| HU46-CP03 | Elegir una lista vacía quita todas las categorías | Unitario (dominio) | 1 | ✅ Pasa (1, AB#287, PR #220) |
+| HU46-CP02 | Las categorías se leen en su orden y sin repetir ninguna | Unitario (dominio) | 1 | 🔍 Pendiente de PR (modificado en AB#528, AB#685); antes ✅ PR #220 |
 | HU46-CP04 | Sin preferencias guardadas, consultar devuelve una lista vacía y no guarda nada | Unitario (aplicación) | 1 | ✅ Pasa (1, AB#287, PR #220) |
 | HU46-CP05 | Consultar devuelve, en su orden, las categorías elegidas que siguen activas | Unitario (aplicación) | 1 | ✅ Pasa (1, AB#287, PR #220) |
-| HU46-CP06 | Guardar por primera vez crea las preferencias del cliente con las categorías elegidas, sin repetidas | Unitario (aplicación) | 1 | ✅ Pasa (1, AB#287, PR #220) |
-| HU46-CP07 | Guardar otra vez sustituye las categorías anteriores en las mismas preferencias | Unitario (aplicación) | 1 | ✅ Pasa (1, AB#287, PR #220) |
-| HU46-CP08 | Guardar una categoría inactiva o que no existe falla sin guardar nada | Unitario (aplicación) | 2 | ✅ Pasa (2, AB#287, PR #220) |
-| HU46-CP09 | Guardar sin indicar las categorías falla sin guardar nada | Unitario (aplicación) | 1 | ✅ Pasa (1, AB#287, PR #220) |
-| HU46-CP10 | Solo el cliente con su propio correo consulta y guarda sus preferencias: otro correo, vendedor o administrador reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#287, PR #220) |
+| HU46-CP10 | Solo el cliente con su propio correo consulta sus preferencias: otro correo, vendedor o administrador reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 Pendiente de PR (modificado en AB#528, AB#685); antes ✅ PR #220 |
 | HU46-CP11 | Las preferencias pasan a documento de MongoDB y vuelven sin perder ningún dato | Unitario (adaptador) | 1 | ✅ Pasa (1, AB#287, PR #220) |
-| HU46-CP12 | Persistencia en `preferencias`: guardar y recuperar por cliente; volver a guardar actualiza sin crear otras y conserva la fecha de creación; la colección admite unas por cliente y exige el cliente | Integración MongoDB | 3 | ✅ Pasa (3, AB#287, PR #220) |
+| HU46-CP12 | Persistencia en `preferencias`: guardar y recuperar por cliente; volver a guardar actualiza sin crear otras y conserva la fecha de creación; la colección admite unas por cliente y exige el cliente | Integración MongoDB | 3 | 🔍 Pendiente de PR (modificado en AB#528, AB#685); antes ✅ PR #220 |
 | HU46-CP13 | Los adaptadores preguntan a `usuarios` por el id del cliente y a `categorias` por las activas, por sus puertos de entrada | Unitario (adaptador) | 2 | ✅ Pasa (2, AB#287, PR #220) |
 | HU46-CP14 | `GET /api/customer/preferences` responde 200 con las categorías del cliente en sesión | Controlador | 1 | ✅ Pasa (1, AB#287, PR #220) |
-| HU46-CP15 | `PUT /api/customer/preferences` envía las categorías del cuerpo para el cliente en sesión y responde 200 con las guardadas | Controlador | 1 | ✅ Pasa (1, AB#287, PR #220) |
-| HU46-CP16 | Un cuerpo sin categorías, con categorías que no son una lista o ilegible devuelve 400 `VALIDATION_ERROR` y no llega al caso de uso | Controlador | 4 | ✅ Pasa (4, AB#287, PR #220) |
-| HU46-CP17 | Guardar una categoría inactiva o que no existe devuelve 400 `VALIDATION_ERROR` | Controlador | 1 | ✅ Pasa (1, AB#287, PR #220) |
-| HU46-CP18 | Sin sesión (401), sin ser cliente (403) o sin token CSRF (403) no se consultan ni se guardan las preferencias | Controlador | 3 | ✅ Pasa (3, AB#287, PR #220) |
-| HU46-CP19 | Las llamadas del cliente piden `GET` y `PUT /api/customer/preferences` y devuelven las categorías; un 400 llega como error con su estado y su código | Frontend (API) | 3 | ✅ Pasa (3, AB#286, PR #220) |
-| HU46-CP20 | El perfil del cliente muestra «Mis preferencias» con una casilla por cada categoría activa, marcadas las que ya eligió; el vendedor no la tiene | Frontend (página) | 3 | ✅ Pasa (3, AB#286, PR #220) |
-| HU46-CP21 | Marcar o desmarcar una categoría guarda las preferencias al momento y avisa; mientras se guarda, las casillas quedan deshabilitadas; al volver al perfil siguen guardadas | Frontend (página) | 4 | ✅ Pasa (4, AB#286, PR #220) |
-| HU46-CP22 | Si las preferencias no se pueden guardar, se avisa y la casilla vuelve a como estaba; si no se pueden cargar, se avisa sin mostrar las casillas y se puede reintentar | Frontend (página) | 2 | ✅ Pasa (2, AB#286, PR #220) |
+| HU46-CP18 | Sin sesión (401) o sin ser cliente (403) no se consultan las preferencias | Controlador | 2 | 🔍 Pendiente de PR (modificado en AB#528, AB#685); antes ✅ PR #220 |
+| HU46-CP19 | La llamada del cliente pide `GET /api/customer/preferences` y devuelve las categorías | Frontend (API) | 1 | 🔍 Pendiente de PR (modificado en AB#528, AB#685); antes ✅ PR #220 |
 | HU46-CP23 | Al eliminar su cuenta (HU25) se borran las preferencias del cliente y no las de otro; si no tiene, no es un error | Unitario (aplicación) | 2 | ✅ Pasa (2, AB#275, PR #235) |
 | HU46-CP24 | Eliminar por cliente borra sus preferencias de la colección y no las de otro cliente | Integración (persistencia) | 1 | ✅ Pasa (1, AB#275, PR #235) |
 | HU46-CP25 | Borrar las preferencias exige el rol cliente y su propio correo; un vendedor, un administrador o sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | ✅ Pasa (5, AB#275, PR #235) |
@@ -4636,50 +4625,31 @@ Rutas de las clases de test del frontend (bajo `frontend/src/`):
 - **Tests que nacen en verde:** HU46-CP10 (el `@PreAuthorize` va desde el ciclo 2; se comprobó quitándolo de forma temporal: fallan los cuatro tests de rechazo), HU46-CP18 (la regla de `/api/customer/**` de `SecurityConfig` ya lo cubría) y HU46-CP20 «el vendedor no tiene preferencias».
 - **Pendiente para el siguiente sprint (decisión del equipo):** la lógica de las preferencias en el catálogo. Por ahora solo se guardan y se muestran; usarlas para recomendar u ordenar productos (por ejemplo, una sección «Para ti» o un filtro «Mis categorías») irá en una HU o task nueva.
 - **Test técnico modificado:** `InicializadorColeccionesTest.creaLasTreceColecciones` pasa a `creaLasCatorceColecciones`, con `preferencias`.
+- **AB#528 (categorías favoritas, HU528):** decisión del equipo, las categorías favoritas son estas mismas preferencias: mismo módulo, colección y `GET`. Marcar y desmarcar van ahora una a una (HU528) y se retira el `PUT` de la lista entera con su lógica (`guardar`, `elegirCategorias`, `GuardarPreferenciasRequest` y `PreferenciasInvalidasException`). Por eso desaparecen HU46-CP03, CP06 a CP09 y CP15 a CP17, y parte de CP18, CP19 y CP21, sustituidos por casos de la HU528. El `PUT` además incumplía la decisión de conservar las inactivas: el frontend reenviaba solo las visibles y las demás se perdían (HU528-CP07). Después se retiró también la selección del perfil, y con ella HU46-CP20 a CP22.
 
 ### Tabla B · casos de prueba ↔ tests
 
 | Caso | Clase de test | Método | Capa | Task | Origen | Estado |
 |---|---|---|---|---|---|---|
 | HU46-CP01 | `PreferenciasTest` | `unClienteSinPreferenciasNoTieneCategorias` | Dominio | AB#287 | PR #220 | ✅ |
-| HU46-CP02 | `PreferenciasTest` | `elegirCategoriasLasGuardaSinRepetidas` | Dominio | AB#287 | PR #220 | ✅ |
-| HU46-CP03 | `PreferenciasTest` | `elegirUnaListaVaciaQuitaLasCategorias` | Dominio | AB#287 | PR #220 | ✅ |
+| HU46-CP02 | `PreferenciasTest` | `lasCategoriasNoSeRepiten` | Dominio | AB#287 | PR #220; modificado en AB#528 | 🔍 |
 | HU46-CP04 | `GestionPreferenciasServiceTest` | `consultarSinPreferenciasDevuelveUnaListaVacia` | Aplicación | AB#287 | PR #220 | ✅ |
 | HU46-CP05 | `GestionPreferenciasServiceTest` | `consultarDevuelveSoloLasCategoriasActivas` | Aplicación | AB#287 | PR #220 | ✅ |
-| HU46-CP06 | `GestionPreferenciasServiceTest` | `guardarPorPrimeraVezCreaLasPreferencias` | Aplicación | AB#287 | PR #220 | ✅ |
-| HU46-CP07 | `GestionPreferenciasServiceTest` | `guardarOtraVezSustituyeLasCategorias` | Aplicación | AB#287 | PR #220 | ✅ |
-| HU46-CP08 | `GestionPreferenciasServiceTest` | `guardarUnaCategoriaNoValidaFalla` (inactiva y que no existe) | Aplicación | AB#287 | PR #220 | ✅ |
-| HU46-CP09 | `GestionPreferenciasServiceTest` | `guardarSinCategoriasFalla` | Aplicación | AB#287 | PR #220 | ✅ |
-| HU46-CP10 | `SeguridadPreferenciasServiceTest` | `elClienteUsaSusPreferencias` | Aplicación | AB#287 | PR #220 | ✅ |
-| HU46-CP10 | `SeguridadPreferenciasServiceTest` | `unClienteNoUsaLasPreferenciasDeOtro` | Aplicación | AB#287 | PR #220 | ✅ |
-| HU46-CP10 | `SeguridadPreferenciasServiceTest` | `unVendedorNoTienePreferencias` | Aplicación | AB#287 | PR #220 | ✅ |
-| HU46-CP10 | `SeguridadPreferenciasServiceTest` | `unAdministradorNoTienePreferencias` | Aplicación | AB#287 | PR #220 | ✅ |
-| HU46-CP10 | `SeguridadPreferenciasServiceTest` | `sinSesionSeRechazanLasPreferencias` | Aplicación | AB#287 | PR #220 | ✅ |
+| HU46-CP10 | `SeguridadPreferenciasServiceTest` | `elClienteUsaSusPreferencias` | Aplicación | AB#287 | PR #220; modificado en AB#528 | 🔍 |
+| HU46-CP10 | `SeguridadPreferenciasServiceTest` | `unClienteNoUsaLasPreferenciasDeOtro` | Aplicación | AB#287 | PR #220; modificado en AB#528 | 🔍 |
+| HU46-CP10 | `SeguridadPreferenciasServiceTest` | `unVendedorNoTienePreferencias` | Aplicación | AB#287 | PR #220; modificado en AB#528 | 🔍 |
+| HU46-CP10 | `SeguridadPreferenciasServiceTest` | `unAdministradorNoTienePreferencias` | Aplicación | AB#287 | PR #220; modificado en AB#528 | 🔍 |
+| HU46-CP10 | `SeguridadPreferenciasServiceTest` | `sinSesionSeRechazanLasPreferencias` | Aplicación | AB#287 | PR #220; modificado en AB#528 | 🔍 |
 | HU46-CP11 | `PreferenciasDocumentMapperTest` | `convierteADocumentoYVueltaSinPerderDatos` | Infraestructura | AB#287 | PR #220 | ✅ |
 | HU46-CP12 | `PreferenciasMongoAdapterTest` | `guardarPreferenciasNuevasYRecuperarlasPorCliente` | Infraestructura | AB#287 | PR #220 | ✅ |
-| HU46-CP12 | `PreferenciasMongoAdapterTest` | `guardarOtraVezActualizaLasPreferencias` | Infraestructura | AB#287 | PR #220 | ✅ |
+| HU46-CP12 | `PreferenciasMongoAdapterTest` | `guardarOtraVezActualizaLasPreferencias` | Infraestructura | AB#287 | PR #220; modificado en AB#528 | 🔍 |
 | HU46-CP12 | `PreferenciasMongoAdapterTest` | `laColeccionSoloAdmiteUnasPreferenciasPorCliente` | Infraestructura | AB#287 | PR #220 | ✅ |
 | HU46-CP13 | `ClienteEnSesionAdapterTest` (preferencias) | `idPorCorreoPreguntaAlModuloDeUsuarios` | Infraestructura | AB#287 | PR #220 | ✅ |
 | HU46-CP13 | `CategoriasAdapterTest` | `activasPreguntaAlModuloDeCategorias` | Infraestructura | AB#287 | PR #220 | ✅ |
 | HU46-CP14 | `PreferenciasControllerTest` | `consultarRespondeConLasCategoriasDelCliente` | Infraestructura | AB#287 | PR #220 | ✅ |
-| HU46-CP15 | `PreferenciasControllerTest` | `guardarRespondeConLasCategoriasGuardadas` | Infraestructura | AB#287 | PR #220 | ✅ |
-| HU46-CP16 | `PreferenciasControllerTest` | `cuerpoInvalidoNoLlegaAlCasoDeUso` (4 variantes: sin categorías, nulas, que no son una lista e ilegible) | Infraestructura | AB#287 | PR #220 | ✅ |
-| HU46-CP17 | `PreferenciasControllerTest` | `unaCategoriaNoValidaDevuelve400` | Infraestructura | AB#287 | PR #220 | ✅ |
-| HU46-CP18 | `PreferenciasControllerTest` | `sinSesionNoSeUsanLasPreferencias` | Infraestructura | AB#287 | PR #220 | ✅ |
-| HU46-CP18 | `PreferenciasControllerTest` | `noClienteNoTienePreferencias` (vendedor y administrador) | Infraestructura | AB#287 | PR #220 | ✅ |
-| HU46-CP18 | `PreferenciasControllerTest` | `sinTokenCsrfNoSeGuardan` | Infraestructura | AB#287 | PR #220 | ✅ |
+| HU46-CP18 | `PreferenciasControllerTest` | `sinSesionNoSeUsanLasPreferencias` | Infraestructura | AB#287 | PR #220; modificado en AB#528 | 🔍 |
+| HU46-CP18 | `PreferenciasControllerTest` | `noClienteNoTienePreferencias` (vendedor y administrador) | Infraestructura | AB#287 | PR #220; modificado en AB#528 | 🔍 |
 | HU46-CP19 | `preferences.test.js` | `HU46-CP19: pide GET /api/customer/preferences y devuelve las categorías del cliente` | Frontend · API | AB#286 | PR #220 | ✅ |
-| HU46-CP19 | `preferences.test.js` | `HU46-CP19: pide PUT /api/customer/preferences con las categorías y devuelve las guardadas` | Frontend · API | AB#286 | PR #220 | ✅ |
-| HU46-CP19 | `preferences.test.js` | `HU46-CP19: un 400 llega como error con su estado y su código` | Frontend · API | AB#286 | PR #220 | ✅ |
-| HU46-CP20 | `ProfilePage.test.jsx` | `HU46-CP20: el cliente ve sus preferencias, con una casilla por cada categoría activa` | Frontend · página | AB#286 | PR #220 | ✅ |
-| HU46-CP20 | `ProfilePage.test.jsx` | `HU46-CP20: las categorías que ya eligió aparecen marcadas` | Frontend · página | AB#286 | PR #220 | ✅ |
-| HU46-CP20 | `ProfilePage.test.jsx` | `HU46-CP20: el vendedor no tiene preferencias` | Frontend · página | AB#286 | PR #220 | ✅ |
-| HU46-CP21 | `ProfilePage.test.jsx` | `HU46-CP21: al marcar una categoría se guarda al momento y se avisa` | Frontend · página | AB#286 | PR #220 | ✅ |
-| HU46-CP21 | `ProfilePage.test.jsx` | `HU46-CP21: al desmarcar una categoría elegida se guarda sin ella` | Frontend · página | AB#286 | PR #220 | ✅ |
-| HU46-CP21 | `ProfilePage.test.jsx` | `HU46-CP21: mientras se guarda, las casillas quedan deshabilitadas` | Frontend · página | AB#286 | PR #220 | ✅ |
-| HU46-CP21 | `ProfilePage.test.jsx` | `HU46-CP21: al volver al perfil, las preferencias siguen guardadas` | Frontend · página | AB#286 | PR #220 | ✅ |
-| HU46-CP22 | `ProfilePage.test.jsx` | `HU46-CP22: si no se pueden guardar, lo avisa y la casilla vuelve a como estaba` | Frontend · página | AB#286 | PR #220 | ✅ |
-| HU46-CP22 | `ProfilePage.test.jsx` | `HU46-CP22: si no se pueden cargar, lo avisa sin mostrar las casillas y permite reintentar` | Frontend · página | AB#286 | PR #220 | ✅ |
 | HU46-CP23 | `GestionPreferenciasServiceTest` | `eliminarBorraLasPreferenciasDelCliente` | Aplicación | AB#275 | PR #235 | ✅ |
 | HU46-CP23 | `GestionPreferenciasServiceTest` | `eliminarSinPreferenciasNoEsUnError` | Aplicación | AB#275 | PR #235 | ✅ |
 | HU46-CP24 | `PreferenciasMongoAdapterTest` | `eliminarPorClienteBorraSoloSusPreferencias` | Infraestructura | AB#275 | PR #235 | ✅ |
@@ -4934,6 +4904,166 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 
 ---
 
+## HU528 · Categorías Favoritas Cliente
+
+### Tabla A · HU528 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU528-CP01 | Marcar una categoría la añade al final y conserva las demás; una que ya es favorita no se repite | Unitario (dominio) | 2 | 🔍 Pendiente de PR (AB#684) |
+| HU528-CP02 | Desmarcar una favorita quita solo esa; desmarcar una que no lo es no cambia nada | Unitario (dominio) | 2 | 🔍 Pendiente de PR (AB#684) |
+| HU528-CP03 | Marcar la primera categoría crea las favoritas del cliente; marcar otra la añade y no toca las de otro cliente | Unitario (aplicación) | 2 | 🔍 Pendiente de PR (AB#684) |
+| HU528-CP04 | Marcar una categoría que ya es favorita no es un error y no guarda nada | Unitario (aplicación) | 1 | 🔍 Pendiente de PR (AB#684) |
+| HU528-CP05 | Marcar una categoría inactiva o que no existe falla sin guardar nada | Unitario (aplicación) | 1 | 🔍 Pendiente de PR (AB#684) |
+| HU528-CP06 | Desmarcar quita la favorita y devuelve las que quedan; desmarcar una que no lo es, o sin tener ninguna, no es un error ni guarda nada | Unitario (aplicación) | 3 | 🔍 Pendiente de PR (AB#684) |
+| HU528-CP07 | Marcar y desmarcar conservan las favoritas inactivas, que no se muestran; una inactiva también se puede desmarcar | Unitario (aplicación) | 2 | 🔍 Pendiente de PR (AB#684) |
+| HU528-CP08 | `POST /api/customer/preferences/categories` marca la categoría del cuerpo para el cliente en sesión y responde 200 con sus favoritas; un `clienteId` en el cuerpo se ignora | Controlador | 2 | 🔍 Pendiente de PR (AB#684) |
+| HU528-CP09 | `DELETE /api/customer/preferences/categories/{id}` la desmarca para el cliente en sesión y responde 200 con las que quedan | Controlador | 1 | 🔍 Pendiente de PR (AB#684) |
+| HU528-CP10 | Marcar sin categoría, en blanco, con una lista o con un cuerpo ilegible devuelve 400 `VALIDATION_ERROR` y no llega al caso de uso | Controlador | 1 | 🔍 Pendiente de PR (AB#684) |
+| HU528-CP11 | Marcar una categoría inactiva o que no existe devuelve 404 `CATEGORY_NOT_FOUND` con un mensaje genérico | Controlador | 1 | 🔍 Pendiente de PR (AB#684) |
+| HU528-CP12 | Solo el cliente con su propio correo marca y desmarca sus favoritas: otro cliente, vendedor o administrador reciben 403, y sin sesión se rechaza. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 Pendiente de PR (AB#686) |
+| HU528-CP13 | Sin sesión (401), sin ser cliente (403 `ACCESS_DENIED`) o sin token CSRF (403) no se marcan ni se desmarcan favoritas | Controlador | 3 | 🔍 Pendiente de PR (AB#686) |
+| HU528-CP14 | Las llamadas del cliente piden `POST` y `DELETE` de una categoría y devuelven las favoritas; un 404 llega como error con su estado y su código | Frontend (API) | 3 | 🔍 Pendiente de PR (AB#685) |
+| HU528-CP15 | Se pueden añadir varias categorías favoritas, cada una desde un producto suyo | Frontend (página) | 1 | 🔍 Pendiente de PR (AB#685) |
+| HU528-CP19 | Las favoritas marcadas y desmarcadas se conservan en la cuenta del cliente en MongoDB y no cambian las de otro | Integración MongoDB | 1 | 🔍 Pendiente de PR (AB#689) |
+| HU528-CP20 | El modelo permite buscar los clientes que tienen una categoría como favorita (para AB#530), con un índice por categoría | Integración MongoDB | 2 | 🔍 Pendiente de PR (AB#689) |
+| HU528-CP21 | Al cerrar sesión y volver a entrar el cliente conserva sus favoritas; otro cliente no las ve ni las cambia | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#689) |
+| HU528-CP22 | El detalle del producto tiene un botón junto a la categoría para añadirla a favoritas o, si ya lo es, quitarla; no depende de que el producto esté en favoritos, no sale si la categoría no está activa y, si no se pueden leer las favoritas, ofrece añadirla | Frontend (página) | 5 | 🔍 Pendiente de PR (AB#685) |
+| HU528-CP23 | El botón del detalle añade o quita solo esa categoría; mientras se guarda queda deshabilitado | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#685) |
+| HU528-CP24 | Mis favoritos tiene las pestañas Productos (la inicial) y Categorías, con las favoritas por su nombre y en el orden en que se marcaron | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#685) |
+| HU528-CP25 | La pestaña Categorías muestra un indicador mientras carga, un estado vacío que lleva a los productos y, si fallan las favoritas o las categorías, un error con «Reintentar» | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#685) |
+| HU528-CP26 | Desde la pestaña Categorías se quita cada una; mientras se quita su botón queda deshabilitado y al quitar la última sale el estado vacío | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#685) |
+| HU528-CP27 | En el detalle se avisa con el nombre de la categoría al añadirla o quitarla; si falla, o si ya no está disponible, se avisa sin detalles internos y el botón sigue como estaba | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#687) |
+| HU528-CP28 | En la pestaña Categorías se avisa al quitar una, también la última; si falla se avisa y sigue en la lista | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#687) |
+| HU528-CP29 | Una categoría añadida desde un producto aparece en Mis favoritos y, al quitarla, deja de ser favorita en el detalle | Frontend (página) | 1 | 🔍 Pendiente de PR (AB#689) |
+| HU528-CP30 | Los favoritos del cliente son una lista fija, llamada Favoritos, que no se puede renombrar; una lista creada por él no son los favoritos aunque se llame igual | Unitario (dominio) | 2 | 🔍 Pendiente de PR (AB#528) |
+| HU528-CP31 | Los favoritos y las listas de deseos van por separado: un producto puede estar en los dos y cambiarlo en uno no afecta al otro | Unitario (aplicación) | 1 | 🔍 Pendiente de PR (AB#528) |
+| HU528-CP32 | Un cliente sin listas tiene una por defecto, «Mi lista de deseos», y los favoritos no salen entre ellas ni se renombran, eliminan o cambian como una lista | Unitario (aplicación) | 2 | 🔍 Pendiente de PR (AB#528) |
+| HU528-CP33 | Persistencia en `listas_deseos`: favoritos y listas se leen por separado, solo hay unos favoritos por cliente y la lista por defecto no se duplica al crearla dos veces | Integración MongoDB | 3 | 🔍 Pendiente de PR (AB#528) |
+| HU528-CP34 | Lo guardado antes de separarlos se reparte: la lista sin nombre o la primera llamada Favoritos son los favoritos; las demás, también las renombradas, siguen siendo listas | Integración MongoDB | 3 | 🔍 Pendiente de PR (AB#528) |
+| HU528-CP35 | Solo el cliente con su propio correo usa las listas de deseos: otro cliente, vendedor, administrador o sin sesión se rechazan en todos los casos de uso. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 Pendiente de PR (AB#528) |
+| HU528-CP36 | La tarjeta tiene un botón para guardar el producto en una lista, aparte del corazón, relleno si ya está en alguna; un producto no disponible no lo tiene | Frontend (componente) | 3 | 🔍 Pendiente de PR (AB#528) |
+| HU528-CP37 | En el catálogo, guardar en una lista no añade a favoritos ni al revés; si las listas no cargan, el catálogo funciona y el selector permite reintentar | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#528) |
+| HU528-CP38 | En el detalle, los favoritos y las listas tienen su botón y no se afectan | Frontend (página) | 1 | 🔍 Pendiente de PR (AB#528) |
+| HU528-CP39 | Los favoritos no salen en Mis listas de deseos ni los productos de las listas en Mis favoritos | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#528) |
+| HU528-CP40 | El cliente tiene en la cabecera el enlace a sus listas de deseos, aparte del de favoritos; el vendedor y el administrador no | Frontend (componente) | 2 | 🔍 Pendiente de PR (AB#528) |
+| HU528-CP41 | En la cinta de ofertas, el corazón y el marcador funcionan también en las ofertas repetidas, a las que no se entra con el teclado, y la cinta sigue avanzando al salir con el ratón | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#528) |
+| HU528-CP42 | En el detalle, la categoría es una pastilla que se marca al pulsarla, distinta del corazón del producto; si no está activa se ve como texto | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#528) |
+| HU528-CP43 | El perfil del cliente ya no tiene la selección de categorías favoritas | Frontend (página) | 1 | 🔍 Pendiente de PR (AB#528) |
+| HU528-CP44 | Las listas de deseos se pliegan y se despliegan por separado; al entrar solo está desplegada la primera, y una vacía no se puede plegar | Frontend (página) | 4 | 🔍 Pendiente de PR (AB#528) |
+
+- **Número de HU:** la historia es la AB#528 de Azure Boards y no tiene otro número en el repositorio; el equipo decidió trazarla como HU528. Rama `feature/categorias-favoritas`.
+- **HU528-CP01 a CP44:** casos propuestos en las tasks AB#684 a AB#687 y AB#689 a partir de los criterios de aceptación. Pendientes de confirmar con el equipo y de añadir a la HU en Azure Boards.
+- **Modelo (decisión del equipo):** las favoritas son las preferencias de la HU46, sin módulo, colección ni migración nuevos. Los criterios «consultar las categorías disponibles» y «consultar las favoritas» los cubren además HU39 (`GET /api/categorias`), HU46-CP05 y CP14; borrarlas al eliminar la cuenta, HU46-CP23 a CP25.
+- **Endpoints (AB#684):** `POST /api/customer/preferences/categories` con `{ "categoriaId" }` y `DELETE /api/customer/preferences/categories/{categoriaId}` → 200 `{ "categorias": [id] }` con las favoritas activas, también si no cambia nada. 400 `VALIDATION_ERROR`, 404 `CATEGORY_NOT_FOUND` al marcar una inexistente o inactiva (`CategoriaNoDisponibleException`), 401 sin sesión y 403 con otro rol o sin CSRF.
+- **Pantallas (decisión del equipo):** la categoría se añade desde el detalle del producto (`FavoriteCategoryButton`), no desde las tarjetas del catálogo, y se revisa en la pestaña Categorías de Mis favoritos (`FavoriteCategoriesList`). La selección del perfil (AB#685) se retiró cuando se comprobó que lo demás funcionaba: desaparecen HU528-CP16 a CP18, que cubren CP25, CP27 y CP28, y los casos de aceptación CP15 y CP21 pasan a Mis favoritos. Los textos de los avisos son comunes a las dos pantallas (`favoriteCategoryNotices.js`).
+- **Favoritos y listas de deseos por separado (decisión del equipo):** el corazón vuelve a ser de favoritos en un clic y un marcador aparte abre el selector de listas, en el detalle y, a prueba, en las tarjetas. «Mis favoritos» está en `/favorites` y «Mis listas de deseos», en `/wishlist`. Misma colección con el campo `tipo`: `/api/customer/wishlist` son los favoritos y `/api/customer/wishlists`, las listas. Vuelven los tests HU14-CP21 a CP24 y CP36 a CP41 como estaban antes del selector y se adaptan PBI534-CP02 y CP09 a CP11, que todavía no tienen sección en esta matriz.
+- **Índice antiguo:** `InicializadorColecciones` quita el índice único `usuarioId_1` de `listas_deseos`. Se comprobó que sin quitarlo la aplicación no arranca (error 86, `IndexKeySpecsConflict`).
+- **Detalle del producto (decisión del equipo):** la categoría es una pastilla con + o ✓ (la campana se reserva para las alertas de AB#530). Arriba, la foto y el bloque de compra; debajo, la descripción y la información en dos columnas, y las valoraciones a todo el ancho.
+- **AB#530 (decisión del equipo):** se deja el índice por categoría y la consulta probada (CP20). El método del puerto lo añadirá AB#530, que es quien lo usa.
+- **Tests que nacen en verde:** CP12 y CP13, porque el `@PreAuthorize` va desde la AB#684 y `SecurityConfig` ya cubría `/api/customer/**`. Se comprobó quitando el `@PreAuthorize` y abriendo la ruta de forma temporal, y entonces fallaron los de rol, propietario y sesión; el de CSRF no se comprobó así. También CP19 a CP21, que comprueban lo ya desarrollado; el del índice (CP20) falla si se quita el índice. En CP22, «si la categoría del producto no está activa, no se puede añadir», porque antes del ciclo no existía el botón; y CP29, que comprueba de extremo a extremo lo ya desarrollado. También CP35 y, en CP40, el del vendedor y el administrador. Y en CP42, el de la categoría inactiva.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU528-CP01 | `PreferenciasTest` | `marcarAnadeLaCategoriaAlFinal` | Dominio | AB#684 | PR pendiente | 🔍 |
+| HU528-CP01 | `PreferenciasTest` | `marcarUnaFavoritaNoLaRepite` | Dominio | AB#684 | PR pendiente | 🔍 |
+| HU528-CP02 | `PreferenciasTest` | `desmarcarQuitaSoloEsaCategoria` | Dominio | AB#684 | PR pendiente | 🔍 |
+| HU528-CP02 | `PreferenciasTest` | `desmarcarUnaQueNoEsFavoritaNoCambiaNada` | Dominio | AB#684 | PR pendiente | 🔍 |
+| HU528-CP03 | `GestionPreferenciasServiceTest` | `marcarPorPrimeraVezCreaLasFavoritas` | Aplicación | AB#684 | PR pendiente | 🔍 |
+| HU528-CP03 | `GestionPreferenciasServiceTest` | `marcarOtraLaAnadeSoloAlCliente` | Aplicación | AB#684 | PR pendiente | 🔍 |
+| HU528-CP04 | `GestionPreferenciasServiceTest` | `marcarUnaFavoritaNoGuardaNada` | Aplicación | AB#684 | PR pendiente | 🔍 |
+| HU528-CP05 | `GestionPreferenciasServiceTest` | `marcarUnaCategoriaNoDisponibleFalla` (inactiva y que no existe) | Aplicación | AB#684 | PR pendiente | 🔍 |
+| HU528-CP06 | `GestionPreferenciasServiceTest` | `desmarcarQuitaLaFavorita` | Aplicación | AB#684 | PR pendiente | 🔍 |
+| HU528-CP06 | `GestionPreferenciasServiceTest` | `desmarcarUnaQueNoEsFavoritaNoGuardaNada` | Aplicación | AB#684 | PR pendiente | 🔍 |
+| HU528-CP06 | `GestionPreferenciasServiceTest` | `desmarcarSinFavoritasNoCreaNada` | Aplicación | AB#684 | PR pendiente | 🔍 |
+| HU528-CP07 | `GestionPreferenciasServiceTest` | `marcarYDesmarcarConservanLasInactivas` | Aplicación | AB#684 | PR pendiente | 🔍 |
+| HU528-CP07 | `GestionPreferenciasServiceTest` | `desmarcarUnaInactivaLaQuita` | Aplicación | AB#684 | PR pendiente | 🔍 |
+| HU528-CP08 | `PreferenciasControllerTest` | `marcarRespondeConLasFavoritas` | Infraestructura | AB#684 | PR pendiente | 🔍 |
+| HU528-CP08 | `PreferenciasControllerTest` | `marcarIgnoraElClienteDelCuerpo` | Infraestructura | AB#684 | PR pendiente | 🔍 |
+| HU528-CP09 | `PreferenciasControllerTest` | `desmarcarRespondeConLasFavoritas` | Infraestructura | AB#684 | PR pendiente | 🔍 |
+| HU528-CP10 | `PreferenciasControllerTest` | `marcarConUnCuerpoInvalidoDevuelve400` (5 variantes) | Infraestructura | AB#684 | PR pendiente | 🔍 |
+| HU528-CP11 | `PreferenciasControllerTest` | `marcarUnaCategoriaNoDisponibleDevuelve404` | Infraestructura | AB#684 | PR pendiente | 🔍 |
+| HU528-CP12 | `SeguridadPreferenciasServiceTest` | `elClienteMarcaYDesmarcaSusFavoritas` | Aplicación | AB#686 | PR pendiente | 🔍 |
+| HU528-CP12 | `SeguridadPreferenciasServiceTest` | `unClienteNoCambiaLasFavoritasDeOtro` | Aplicación | AB#686 | PR pendiente | 🔍 |
+| HU528-CP12 | `SeguridadPreferenciasServiceTest` | `unVendedorNoTieneFavoritas` | Aplicación | AB#686 | PR pendiente | 🔍 |
+| HU528-CP12 | `SeguridadPreferenciasServiceTest` | `unAdministradorNoTieneFavoritas` | Aplicación | AB#686 | PR pendiente | 🔍 |
+| HU528-CP12 | `SeguridadPreferenciasServiceTest` | `sinSesionNoSeCambianLasFavoritas` | Aplicación | AB#686 | PR pendiente | 🔍 |
+| HU528-CP13 | `PreferenciasControllerTest` | `sinSesionNoSeCambianLasFavoritas` | Infraestructura | AB#686 | PR pendiente | 🔍 |
+| HU528-CP13 | `PreferenciasControllerTest` | `noClienteNoCambiaLasFavoritas` (vendedor y administrador) | Infraestructura | AB#686 | PR pendiente | 🔍 |
+| HU528-CP13 | `PreferenciasControllerTest` | `sinTokenCsrfNoSeCambianLasFavoritas` | Infraestructura | AB#686 | PR pendiente | 🔍 |
+| HU528-CP14 | `preferences.test.js` | `HU528-CP14: pide POST /api/customer/preferences/categories con la categoría y devuelve las favoritas` | Frontend · API | AB#685 | PR pendiente | 🔍 |
+| HU528-CP14 | `preferences.test.js` | `HU528-CP14: un 404 llega como error con su estado y su código` | Frontend · API | AB#685 | PR pendiente | 🔍 |
+| HU528-CP14 | `preferences.test.js` | `HU528-CP14: pide DELETE /api/customer/preferences/categories/{id} y devuelve las favoritas que quedan` | Frontend · API | AB#685 | PR pendiente | 🔍 |
+| HU528-CP15 | `FavoritesPage.test.jsx` | `HU528-CP15: se pueden añadir varias categorías, cada una desde un producto suyo` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP19 | `PreferenciasMongoAdapterTest` | `lasFavoritasSeConservanEnLaCuentaDelCliente` | Infraestructura | AB#689 | PR pendiente | 🔍 |
+| HU528-CP20 | `PreferenciasMongoAdapterTest` | `seBuscanLosClientesDeUnaCategoria` | Infraestructura | AB#689 | PR pendiente | 🔍 |
+| HU528-CP20 | `PreferenciasMongoAdapterTest` | `buscarLosClientesDeUnaCategoriaUsaElIndice` | Infraestructura | AB#689 | PR pendiente | 🔍 |
+| HU528-CP21 | `FavoritesPage.test.jsx` | `HU528-CP21: al cerrar sesión y volver a entrar, el cliente conserva sus categorías favoritas` | Frontend · página | AB#689 | PR pendiente | 🔍 |
+| HU528-CP21 | `FavoritesPage.test.jsx` | `HU528-CP21: otro cliente no ve ni cambia esas favoritas` | Frontend · página | AB#689 | PR pendiente | 🔍 |
+| HU528-CP22 | `ProductDetailPage.test.jsx` | `HU528-CP22: el detalle tiene un botón para añadir a favoritas la categoría del producto` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP22 | `ProductDetailPage.test.jsx` | `HU528-CP22: si la categoría ya es favorita, el botón permite quitarla` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP22 | `ProductDetailPage.test.jsx` | `HU528-CP22: que el producto esté en favoritos no cambia la categoría, ni al revés` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP22 | `ProductDetailPage.test.jsx` | `HU528-CP22: si la categoría del producto no está activa, no se puede añadir` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP22 | `ProductDetailPage.test.jsx` | `HU528-CP22: si no se pueden leer las favoritas, se ofrece añadirla sin avisar de ningún error` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP23 | `ProductDetailPage.test.jsx` | `HU528-CP23: al pulsar el botón se añade solo esa categoría y pasa a quitarla` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP23 | `ProductDetailPage.test.jsx` | `HU528-CP23: al volver a pulsarlo se quita esa categoría y vuelve a ofrecer añadirla` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP23 | `ProductDetailPage.test.jsx` | `HU528-CP23: mientras se guarda, el botón queda deshabilitado` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP24 | `FavoritesPage.test.jsx` | `HU528-CP24: Mis favoritos tiene dos pestañas y se abre en Productos` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP24 | `FavoritesPage.test.jsx` | `HU528-CP24: la pestaña Categorías muestra las favoritas por su nombre, en el orden en que se marcaron` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP24 | `FavoritesPage.test.jsx` | `HU528-CP24: se puede volver a la pestaña Productos` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP25 | `FavoritesPage.test.jsx` | `HU528-CP25: mientras cargan las categorías muestra un indicador` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP25 | `FavoritesPage.test.jsx` | `HU528-CP25: sin categorías favoritas lo indica y ofrece ir a los productos` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP25 | `FavoritesPage.test.jsx` | `HU528-CP25: si no se pueden cargar %s, lo avisa y permite reintentar` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP26 | `FavoritesPage.test.jsx` | `HU528-CP26: al quitar una categoría se pide quitar solo esa y desaparece de la lista` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP26 | `FavoritesPage.test.jsx` | `HU528-CP26: mientras se quita una, su botón queda deshabilitado` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP26 | `FavoritesPage.test.jsx` | `HU528-CP26: al quitar la última se muestra el estado vacío` | Frontend · página | AB#685 | PR pendiente | 🔍 |
+| HU528-CP27 | `ProductDetailPage.test.jsx` | `HU528-CP27: al añadir o quitar la categoría avisa con su nombre, y un aviso sustituye al anterior` | Frontend · página | AB#687 | PR pendiente | 🔍 |
+| HU528-CP27 | `ProductDetailPage.test.jsx` | `HU528-CP27: si al añadirla %s, lo avisa sin detalles internos y no queda como favorita` | Frontend · página | AB#687 | PR pendiente | 🔍 |
+| HU528-CP27 | `ProductDetailPage.test.jsx` | `HU528-CP27: si no se puede quitar, lo avisa y sigue como favorita` | Frontend · página | AB#687 | PR pendiente | 🔍 |
+| HU528-CP28 | `FavoritesPage.test.jsx` | `HU528-CP28: al quitar una categoría avisa con su nombre, también si era la última` | Frontend · página | AB#687 | PR pendiente | 🔍 |
+| HU528-CP28 | `FavoritesPage.test.jsx` | `HU528-CP28: si no se puede quitar, lo avisa y la categoría sigue en la lista` | Frontend · página | AB#687 | PR pendiente | 🔍 |
+| HU528-CP29 | `FavoritesPage.test.jsx` | `HU528-CP29: una categoría añadida desde un producto aparece en Mis favoritos y, al quitarla aquí, deja de serlo` | Frontend · página | AB#689 | PR pendiente | 🔍 |
+| HU528-CP30 | `ListaDeseosTest` | `losFavoritosNoSeRenombran` | Dominio | AB#528 | PR pendiente | 🔍 |
+| HU528-CP30 | `ListaDeseosTest` | `unaListaNuevaNoSonLosFavoritos` | Dominio | AB#528 | PR pendiente | 🔍 |
+| HU528-CP31 | `GestionListaDeseosServiceTest` | `losFavoritosYLasListasVanPorSeparado` | Aplicación | AB#528 | PR pendiente | 🔍 |
+| HU528-CP32 | `GestionListaDeseosServiceTest` | `sinListasTieneUnaPorDefecto` | Aplicación | AB#528 | PR pendiente | 🔍 |
+| HU528-CP32 | `GestionListaDeseosServiceTest` | `losFavoritosNoSonUnaLista` | Aplicación | AB#528 | PR pendiente | 🔍 |
+| HU528-CP33 | `ListaDeseosMongoAdapterTest` | `losFavoritosYLasListasSeLeenPorSeparado` | Infraestructura | AB#528 | PR pendiente | 🔍 |
+| HU528-CP33 | `ListaDeseosMongoAdapterTest` | `soloUnosFavoritosPorCliente` | Infraestructura | AB#528 | PR pendiente | 🔍 |
+| HU528-CP33 | `ListaDeseosMongoAdapterTest` | `laListaPorDefectoNoSeDuplica` | Infraestructura | AB#528 | PR pendiente | 🔍 |
+| HU528-CP34 | `ListaDeseosMongoAdapterTest` | `laListaAntiguaSinNombreSonLosFavoritos` | Infraestructura | AB#528 | PR pendiente | 🔍 |
+| HU528-CP34 | `ListaDeseosMongoAdapterTest` | `deLasListasAntiguasSoloLaPrimeraFavoritosLoEs` | Infraestructura | AB#528 | PR pendiente | 🔍 |
+| HU528-CP34 | `ListaDeseosMongoAdapterTest` | `unaListaAntiguaRenombradaSigueSiendoLista` | Infraestructura | AB#528 | PR pendiente | 🔍 |
+| HU528-CP35 | `SeguridadDeseosServiceTest` | `unClienteNoUsaLasListasDeOtro` | Aplicación | AB#528 | PR pendiente | 🔍 |
+| HU528-CP35 | `SeguridadDeseosServiceTest` | `unVendedorNoTieneListas` | Aplicación | AB#528 | PR pendiente | 🔍 |
+| HU528-CP35 | `SeguridadDeseosServiceTest` | `unAdministradorNoTieneListas` | Aplicación | AB#528 | PR pendiente | 🔍 |
+| HU528-CP35 | `SeguridadDeseosServiceTest` | `sinSesionSeRechazanLasListas` | Aplicación | AB#528 | PR pendiente | 🔍 |
+| HU528-CP35 | `SeguridadDeseosServiceTest` | `elClienteConsultaSusListas` | Aplicación | AB#528 | PR pendiente | 🔍 |
+| HU528-CP36 | `ProductCard.test.jsx` | `HU528-CP36: la tarjeta tiene un botón para guardar el producto en una lista, fuera del enlace y aparte del corazón` | Frontend · componente | AB#528 | PR pendiente | 🔍 |
+| HU528-CP36 | `ProductCard.test.jsx` | `HU528-CP36: si el producto ya está en alguna lista, el botón lo indica` | Frontend · componente | AB#528 | PR pendiente | 🔍 |
+| HU528-CP36 | `ProductCard.test.jsx` | `HU528-CP36: un producto no disponible no se puede guardar en una lista` | Frontend · componente | AB#528 | PR pendiente | 🔍 |
+| HU528-CP37 | `ProductsPage.test.jsx` | `HU528-CP37: guardar un producto en una lista no lo añade a favoritos, ni al revés` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP37 | `ProductsPage.test.jsx` | `HU528-CP37: si las listas no se pueden cargar, el catálogo funciona y el selector permite reintentar` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP38 | `ProductDetailPage.test.jsx` | `HU528-CP38: guardar en una lista no lo añade a favoritos, y añadirlo a favoritos no lo guarda en ninguna lista` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP39 | `FavoritesPage.test.jsx` | `HU528-CP39: los productos de las listas de deseos no salen en favoritos` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP39 | `WishlistPage.test.jsx` | `HU528-CP39: los favoritos no salen entre las listas` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP40 | `AppHeader.test.jsx` | `HU528-CP40: el cliente tiene además el enlace a sus listas de deseos y lleva a Mis listas de deseos` | Frontend · componente | AB#528 | PR pendiente | 🔍 |
+| HU528-CP40 | `AppHeader.test.jsx` | `HU528-CP40: el vendedor y el administrador no tienen el enlace a las listas de deseos` | Frontend · componente | AB#528 | PR pendiente | 🔍 |
+| HU528-CP41 | `ProductsPage.test.jsx` | `HU528-CP41: el corazón y el marcador de una oferta repetida funcionan igual que los de la primera` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP41 | `ProductsPage.test.jsx` | `HU528-CP41: con el teclado no se entra en las ofertas repetidas` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP41 | `ProductsPage.test.jsx` | `HU528-CP41: tras pulsar el corazón y salir con el ratón, la cinta sigue avanzando` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP42 | `ProductDetailPage.test.jsx` | `HU528-CP42: la categoría es una pastilla que se marca al pulsarla, distinta del corazón del producto` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP42 | `ProductDetailPage.test.jsx` | `HU528-CP42: si la categoría no está activa se ve como texto, sin pastilla` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP43 | `ProfilePage.test.jsx` | `HU528-CP43: el perfil del cliente no tiene la selección de categorías favoritas` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP44 | `WishlistPage.test.jsx` | `HU528-CP44: con varias listas, la primera sale desplegada y las demás, plegadas` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP44 | `WishlistPage.test.jsx` | `HU528-CP44: cada lista se despliega y se pliega por separado` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP44 | `WishlistPage.test.jsx` | `HU528-CP44: una lista vacía lo dice y no se puede plegar` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+| HU528-CP44 | `WishlistPage.test.jsx` | `HU528-CP44: al quitar un producto, la lista sigue desplegada` | Frontend · página | AB#528 | PR pendiente | 🔍 |
+
+---
+
 ## HU192 · Marcar incidencia como resuelta
 
 ### Tabla A · HU192 ↔ casos de prueba
@@ -5123,6 +5253,7 @@ Tests que no validan una HU concreta.
 | `InicializadorColeccionesTest` | `rechazaDuplicadosEnLosIndicesUnicos` | Índices únicos de `carritos`, `valoraciones`, `categorias`, `listas_deseos` y `factores_autenticacion` (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `creaLosIndicesDeLasAnotaciones` | Que también crea los índices de las anotaciones de los `@Document` (email único en `usuarios`) (AB#210, PR #43) |
 | `InicializadorColeccionesTest` | `sesionesYTokensCaducan` | Índices TTL de `expiresAt` en `sesiones` y `tokens_seguridad` (AB#210, PR #43) |
+| `InicializadorColeccionesTest` | `sustituyeElIndiceUnicoAntiguoDeListasDeseos` | Que al arrancar se sustituye el índice único antiguo de `listas_deseos`, y que solo admite unos favoritos por cliente y los tipos previstos (AB#528, PR pendiente) |
 | `ProductosConfigTest` | `elContextoConectaElAnalisisDeImagenesConVirusTotal` | Que Spring conecta el análisis antivirus de las imágenes (`AnalisisImagenPort`) con `VirusTotalAdapter`, con una API key falsa (HU31; AB#397, PR #189) |
 | `ProductosConfigTest` | `elContextoConectaLaActualizacionDeLaValoracion` | Que Spring conecta la actualización de la valoración de los productos (`ValoracionesProductoUseCase`) con `ValoracionesProductoService` (HU13; AB#415, PR #195) |
 | `ProductosConfigTest` | `elContextoConectaElInventarioDelVendedor` | Que Spring conecta el inventario del vendedor (`InventarioVendedorUseCase`) con `InventarioVendedorService` (HU17; AB#280, PR #212) |

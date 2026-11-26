@@ -14,6 +14,7 @@ export const PATHS = {
   ADDRESSES: '/addresses',
   ORDERS: '/orders',
   ORDER_DETAIL: '/orders/:id',
+  FAVORITES: '/favorites',
   WISHLIST: '/wishlist',
   INCIDENTS: '/incidents',
   INCIDENT_NEW: '/incidents/new',

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import es.uclm.esibuy.backend.deseos.domain.model.ItemDeseo;
 import es.uclm.esibuy.backend.deseos.domain.model.ListaDeseos;
+import es.uclm.esibuy.backend.deseos.domain.model.TipoListaDeseos;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -20,7 +21,7 @@ class ListaDeseosDocumentMapperTest {
     @Test
     @DisplayName("HU14-CP06: una lista pasa a documento y vuelve sin perder ningún dato")
     void convierteADocumentoYVueltaSinPerderDatos() {
-        ListaDeseos lista = new ListaDeseos("l-1", "cliente-1", "Regalos",
+        ListaDeseos lista = new ListaDeseos("l-1", "cliente-1", TipoListaDeseos.LISTA, "Regalos",
                 List.of(new ItemDeseo("p-1", AYER, 2), new ItemDeseo("p-2", HOY)));
 
         ListaDeseosDocument documento = mapper.aDocumento(lista);
@@ -34,5 +35,7 @@ class ListaDeseosDocumentMapperTest {
         assertEquals("Regalos", leida.getNombre());
         assertEquals(2, documento.getItems().get(0).getCantidad());
         assertEquals(lista.getItems(), leida.getItems());
+        assertEquals("LISTA", documento.getTipo());
+        assertEquals(lista.getTipo(), leida.getTipo());
     }
 }

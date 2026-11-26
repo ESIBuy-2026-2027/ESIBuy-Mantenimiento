@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { delay, http, HttpResponse } from 'msw'
-import { addItemToWishlist, createWishlist } from '../api/wishlist'
+import { addItemToWishlist, addWishlistItem, createWishlist } from '../api/wishlist'
 import { server } from '../mocks/server'
 import { abrirSesionPorApi, renderApp } from '../test/renderApp'
 
@@ -11,7 +11,7 @@ const URL_LISTAS = '/api/customer/wishlists'
 const LISTAS = [
   {
     id: 'wl-1',
-    nombre: 'Mis favoritos',
+    nombre: 'Regalos',
     items: [
       {
         productoId: 'p-1',
@@ -56,9 +56,9 @@ async function esperarRuta(ruta) {
 }
 
 describe('WishlistPage (HU14, PBI 534): acceso', () => {
-  it('HU14-CP32: el cliente abre Mis listas de deseos en /wishlist y tiene Favoritos por defecto', async () => {
+  it('HU14-CP32: el cliente abre Mis listas de deseos en /wishlist y tiene una lista por defecto', async () => {
     await abrirListas(null)
-    expect(await screen.findByRole('heading', { level: 2, name: 'Favoritos' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 2, name: 'Mi lista de deseos' })).toBeInTheDocument()
   })
 
   it('HU14-CP32: sin sesión lleva a iniciar sesión', async () => {
@@ -74,10 +74,20 @@ describe('WishlistPage (HU14, PBI 534): acceso', () => {
 })
 
 describe('WishlistPage (PBI 534): crear, consultar, editar y eliminar listas', () => {
+  it('HU528-CP39: los favoritos no salen entre las listas', async () => {
+    await abrirSesionPorApi('cliente@esibuy.test')
+    await addWishlistItem('p-1')
+    renderApp('/wishlist')
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Mi lista de deseos' })).toBeInTheDocument()
+    expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(1)
+    expect(screen.getByText('Esta lista aún no tiene productos.')).toBeInTheDocument()
+  })
+
   it('PBI534-CP06: muestra las listas con sus productos, disponibilidad y precio', async () => {
     await abrirListas()
 
-    const lista = await screen.findByRole('list', { name: 'Productos de Mis favoritos' })
+    const lista = await screen.findByRole('list', { name: 'Productos de Regalos' })
     const filas = within(lista).getAllByRole('listitem')
     expect(filas).toHaveLength(3)
     expect(filas[0]).toHaveTextContent('Auriculares inalámbricos')
@@ -139,17 +149,69 @@ describe('WishlistPage (PBI 534): crear, consultar, editar y eliminar listas', (
     expect(await screen.findByRole('heading', { level: 2, name: 'Renombrada' })).toBeInTheDocument()
   })
 
-  it('PBI534-CP09: si se eliminan todas las listas vuelve a existir la lista por defecto Favoritos', async () => {
+  it('PBI534-CP09: si se eliminan todas las listas vuelve a existir la lista por defecto', async () => {
     const user = userEvent.setup()
     await abrirListas(null)
-    await screen.findByRole('heading', { level: 2, name: 'Favoritos' })
+    await screen.findByRole('heading', { level: 2, name: 'Mi lista de deseos' })
 
-    await user.click(screen.getByRole('button', { name: 'Eliminar «Favoritos»' }))
+    await user.click(screen.getByRole('button', { name: 'Eliminar «Mi lista de deseos»' }))
     const confirmacion = screen.getByRole('alertdialog', { name: 'Eliminar lista' })
     await user.click(within(confirmacion).getByRole('button', { name: 'Sí, eliminar' }))
 
-    expect(await screen.findByText('Lista «Favoritos» eliminada.')).toBeInTheDocument()
-    expect(await screen.findByRole('heading', { level: 2, name: 'Favoritos' })).toBeInTheDocument()
+    expect(await screen.findByText('Lista «Mi lista de deseos» eliminada.')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 2, name: 'Mi lista de deseos' })).toBeInTheDocument()
+  })
+
+  const VARIAS = [
+    LISTAS[0],
+    { id: 'wl-2', nombre: 'Oficina', items: [{ ...LISTAS[0].items[0], productoId: 'p-2', nombre: 'Teclado mecánico' }] },
+    { id: 'wl-3', nombre: 'Vacía', items: [] },
+  ]
+  const productosDe = (nombre) => screen.queryByRole('list', { name: `Productos de ${nombre}` })
+
+  it('HU528-CP44: con varias listas, la primera sale desplegada y las demás, plegadas', async () => {
+    await abrirListas(VARIAS)
+
+    expect(await screen.findByRole('list', { name: 'Productos de Regalos' })).toBeInTheDocument()
+    expect(productosDe('Oficina')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ocultar los productos de Regalos' })).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('button', { name: 'Mostrar los productos de Oficina' })).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('HU528-CP44: cada lista se despliega y se pliega por separado', async () => {
+    const user = userEvent.setup()
+    await abrirListas(VARIAS)
+
+    await user.click(await screen.findByRole('button', { name: 'Mostrar los productos de Oficina' }))
+    expect(productosDe('Oficina')).toBeInTheDocument()
+    expect(productosDe('Regalos')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Ocultar los productos de Regalos' }))
+    expect(productosDe('Regalos')).not.toBeInTheDocument()
+    expect(productosDe('Oficina')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Editar «Regalos»' })).toBeInTheDocument()
+  })
+
+  it('HU528-CP44: una lista vacía lo dice y no se puede plegar', async () => {
+    await abrirListas(VARIAS)
+
+    expect(await screen.findByText('Esta lista aún no tiene productos.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /los productos de Vacía$/ })).not.toBeInTheDocument()
+  })
+
+  it('HU528-CP44: al quitar un producto, la lista sigue desplegada', async () => {
+    const user = userEvent.setup()
+    server.use(
+      http.delete('/api/customer/wishlists/:listaId/items/:productoId', () =>
+        HttpResponse.json({ ...LISTAS[0], items: LISTAS[0].items.slice(1) }),
+      ),
+    )
+    await abrirListas(VARIAS)
+
+    await user.click(await screen.findByRole('button', { name: 'Quitar Auriculares inalámbricos de la lista' }))
+
+    expect(await screen.findByText('Auriculares inalámbricos se ha quitado de la lista.')).toBeInTheDocument()
+    expect(within(productosDe('Regalos')).getAllByRole('listitem')).toHaveLength(2)
   })
 
   it('HU14-CP33: muestra indicador de carga y error con reintento', async () => {

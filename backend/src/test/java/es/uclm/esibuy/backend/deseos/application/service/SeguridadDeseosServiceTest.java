@@ -1,5 +1,9 @@
 package es.uclm.esibuy.backend.deseos.application.service;
 
+import es.uclm.esibuy.backend.deseos.domain.model.ListaDeseos;
+import static org.mockito.ArgumentMatchers.any;
+import org.junit.jupiter.api.function.Executable;
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -218,5 +222,58 @@ class SeguridadDeseosServiceTest {
         assertThrows(AuthenticationCredentialsNotFoundException.class,
                 () -> gestionListaDeseos.anadir(CLIENTE, "p-1"));
         verifyNoInteractions(listaDeseosRepository);
+    }
+
+    // Todos los casos de uso de las listas (PBI 534) con ese correo
+    private List<Executable> casosDeUsoDeLasListas(String email) {
+        return List.of(
+                () -> gestionListaDeseos.consultarTodas(email),
+                () -> gestionListaDeseos.crearLista(email, "Regalos"),
+                () -> gestionListaDeseos.renombrarLista(email, "l-1", "Regalos"),
+                () -> gestionListaDeseos.eliminarLista(email, "l-1"),
+                () -> gestionListaDeseos.anadirALista(email, "l-1", "p-1"),
+                () -> gestionListaDeseos.quitarDeLista(email, "l-1", "p-1"),
+                () -> gestionListaDeseos.actualizarCantidad(email, "l-1", "p-1", 1));
+    }
+
+    private void comprobarQueRechazaLasListas(Class<? extends Exception> error, String email) {
+        casosDeUsoDeLasListas(email).forEach(casoDeUso -> assertThrows(error, casoDeUso));
+        verifyNoInteractions(listaDeseosRepository, clienteEnSesion, productos);
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU528-CP35: un cliente no usa las listas de deseos de otro cliente")
+    void unClienteNoUsaLasListasDeOtro() {
+        comprobarQueRechazaLasListas(AccessDeniedException.class, OTRO_CLIENTE);
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "VENDEDOR")
+    @DisplayName("HU528-CP35: un vendedor no tiene listas de deseos")
+    void unVendedorNoTieneListas() {
+        comprobarQueRechazaLasListas(AccessDeniedException.class, CLIENTE);
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "ADMINISTRADOR")
+    @DisplayName("HU528-CP35: un administrador no tiene listas de deseos")
+    void unAdministradorNoTieneListas() {
+        comprobarQueRechazaLasListas(AccessDeniedException.class, CLIENTE);
+    }
+
+    @Test
+    @DisplayName("HU528-CP35: sin sesión se rechazan las listas de deseos")
+    void sinSesionSeRechazanLasListas() {
+        comprobarQueRechazaLasListas(AuthenticationCredentialsNotFoundException.class, CLIENTE);
+    }
+
+    @Test
+    @WithMockUser(username = CLIENTE, roles = "CLIENTE")
+    @DisplayName("HU528-CP35: el cliente consulta sus listas con su propio correo")
+    void elClienteConsultaSusListas() {
+        when(listaDeseosRepository.crearListaPorDefecto(any())).thenReturn(ListaDeseos.nueva("c-1", "Mía"));
+
+        assertDoesNotThrow(() -> gestionListaDeseos.consultarTodas(CLIENTE));
     }
 }
