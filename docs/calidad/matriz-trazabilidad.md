@@ -5099,7 +5099,7 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 | HU529-CP27 | «Mis alertas» muestra un indicador mientras carga, un estado vacío que lleva a los favoritos y, si falla, un error con «Reintentar» | Frontend (página) | 3 | 🔍 Pendiente de PR (AB#529) |
 | HU529-CP28 | «Mis alertas» está en `/alerts`, solo para el cliente: sin sesión va al login y el vendedor, a su página | Frontend (página y rutas) | 2 | 🔍 Pendiente de PR (AB#529) |
 | HU529-CP29 | Al iniciar sesión, una notificación que sale del botón de la cuenta (en la cabecera, como las de un móvil) avisa de las alertas sin leer con un enlace a «Mis alertas»; el aviso se cierra y no sale sin alertas sin leer ni fuera del inicio de sesión | Frontend (componente) | 4 | 🔍 Pendiente de PR (AB#529) |
-| HU529-CP30 | El menú de la cuenta del cliente tiene «Mis alertas»; con alertas sin leer, el botón de la cuenta lleva un punto y lo anuncia sin cambiar su nombre accesible | Frontend (componente) | 3 | 🔍 Pendiente de PR (AB#529) |
+| HU529-CP30 | El menú de la cuenta del cliente tiene «Mis alertas», que lleva a `/alerts` (el punto sobre el botón de la cuenta lo sustituye la campanita de AB#531, HU531-CP11) | Frontend (componente) | 1 | 🔍 Pendiente de PR (AB#529) |
 
 - **Número de HU:** la historia es la AB#529 de Azure Boards; como la AB#528, se traza como HU529. Rama `feature/alertas-favoritos`. Las tasks (690, 692 a 696 y 713) no se han consultado: los casos se trazan contra AB#529.
 - **HU529-CP01 a CP30:** casos propuestos a partir de los criterios de la HU, desarrollados con TDD. Pendientes de confirmar con el equipo y de añadir a la HU en Azure Boards.
@@ -5107,6 +5107,7 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 - **Modelo:** módulo nuevo `alertas` y colección `alertas` (la «migración» es su entrada en `ColeccionesEsiBuy`), genérica para AB#530, AB#531 y AB#532: `tipo` (`BAJADA_PRECIO`, `DISPONIBILIDAD`, `PRODUCTO_NUEVO`), `clienteId`, `productoId`, `fecha` y `leida`, más `nombreProducto`, `imagenProducto`, `precioAnterior` y `precioNuevo` opcionales, para mostrar la alerta aunque el producto se elimine. Índice `cliente_fecha` en `AlertaDocument` e índice `items.productoId` en `listas_deseos`.
 - **Endpoint:** `GET /api/customer/alerts` → 200 `{ "mensaje", "alertas": [{ "id", "tipo", "fecha", "leida", "producto": { "id", "nombre", "imagen", "precioAnterior", "precioNuevo" } }] }`; 401 sin sesión y 403 `ACCESS_DENIED` con otro rol.
 - **Pantallas (decisión del equipo, opción A):** página «Mis alertas» en `/alerts` desde el menú de la cuenta, notificación tras el login que sale del botón de la cuenta, como las de un móvil (`state.trasIniciarSesion` en `LoginPage`) y un punto sobre el icono de la cuenta con alertas sin leer. La campanita y la negrita de las no leídas son de AB#531.
+- **Cambio posterior (AB#531):** los dos tests de HU529-CP30 del punto sobre el botón de la cuenta se quitaron al sustituir el punto por la campanita de la cabecera; ver HU531-CP11.
 - **Tests modificados:** `ExistenciasProductosServiceTest` (HU10-CP15) crea el servicio con el puerto de alertas y comprueba que descontar no avisa. `appHeader_conSesionDeCliente_dejaFavoritosEnCabeceraYElRestoEnElMenuDePerfil` (sin caso en la matriz) espera también «Mis alertas»; este test y otros 25 de `AppHeader.test.jsx` ya fallaban en `develop`, porque renderizan `/` y la portada no muestra la cabecera.
 ### Tabla B · casos de prueba ↔ tests
 
@@ -5187,8 +5188,67 @@ Rutas de los tests del frontend (bajo `frontend/src/`, Vitest con React Testing 
 | HU529-CP29 | `AlertsLoginNotice.test.jsx` | `HU529-CP29: sin alertas sin leer no hay aviso al iniciar sesión` | Frontend · componente | AB#529 | PR pendiente | 🔍 |
 | HU529-CP29 | `AlertsLoginNotice.test.jsx` | `HU529-CP29: si no viene de iniciar sesión, no hay aviso aunque tenga alertas sin leer` | Frontend · componente | AB#529 | PR pendiente | 🔍 |
 | HU529-CP30 | `AppHeader.test.jsx` | `HU529-CP30: el menú de la cuenta del cliente tiene «Mis alertas», que lleva a /alerts` | Frontend · componente | AB#529 | PR pendiente | 🔍 |
-| HU529-CP30 | `AppHeader.test.jsx` | `HU529-CP30: con alertas sin leer, el botón de la cuenta lleva un indicador y lo anuncia sin cambiar su nombre` | Frontend · componente | AB#529 | PR pendiente | 🔍 |
-| HU529-CP30 | `AppHeader.test.jsx` | `HU529-CP30: sin alertas sin leer, el botón de la cuenta no lleva indicador` | Frontend · componente | AB#529 | PR pendiente | 🔍 |
+
+---
+
+## HU531 · Lectura de alertas
+
+### Tabla A · HU531 ↔ casos de prueba
+
+| Caso | Descripción | Tipo | Tests | Estado |
+|---|---|---|---|---|
+| HU531-CP01 | Marcar una alerta nueva como leída da la misma alerta, ya leída y con todos sus datos; si ya estaba leída, la deja igual | Unitario (dominio) | 2 | 🔍 Pendiente de PR (AB#531) |
+| HU531-CP02 | El cliente marca una alerta suya como leída y se guarda leída; si ya lo estaba no se vuelve a guardar; si no existe o es de otro cliente no se encuentra y no se guarda nada | Unitario (aplicación) | 3 | 🔍 Pendiente de PR (AB#531) |
+| HU531-CP03 | Solo el cliente con su propio correo marca como leídas sus alertas; ni otro cliente, ni el vendedor, ni el administrador, ni sin sesión. Seguridad en la capa de negocio (R8) | Unitario con Spring Security (sin MongoDB) | 5 | 🔍 Pendiente de PR (AB#531) |
+| HU531-CP04 | Persistencia en `alertas`: una alerta se encuentra por id solo con su cliente, y guardarla leída la actualiza sin duplicarla y conserva su fecha de creación | Integración MongoDB | 2 | 🔍 Pendiente de PR (AB#531) |
+| HU531-CP05 | `PATCH /api/customer/alerts/{id}/read` responde 200 con un mensaje de éxito y la alerta leída; una inexistente o ajena, 404 `ALERT_NOT_FOUND` | Controlador | 2 | 🔍 Pendiente de PR (AB#531) |
+| HU531-CP06 | Sin sesión (401) o sin ser cliente (403 `ACCESS_DENIED`) no se marcan alertas como leídas | Controlador | 2 | 🔍 Pendiente de PR (AB#531) |
+| HU531-CP07 | El cliente de la API pide `PATCH /api/customer/alerts/{id}/read`; un 404 llega como error con su estado y el código `ALERT_NOT_FOUND` | Frontend · API | 2 | 🔍 Pendiente de PR (AB#531) |
+| HU531-CP08 | En «Mis alertas», una alerta nueva lleva la etiqueta «Nueva» y el botón para marcarla; una leída no, y se anuncia como leída; la página dice cuántas quedan sin leer | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#531) |
+| HU531-CP09 | Al marcarla como leída sigue en la lista sin el distintivo de nueva, con un mensaje de éxito, el foco en «Ver producto» y la campanita de la cabecera actualizada | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#531) |
+| HU531-CP10 | Si marcarla falla, se avisa con un error y sigue siendo nueva; si ya no existe, se avisa y se vuelve a pedir la lista | Frontend (página) | 2 | 🔍 Pendiente de PR (AB#531) |
+| HU531-CP11 | El cliente tiene en la cabecera una campanita que lleva a «Mis alertas» con el número de alertas sin leer (9+ a partir de diez), anunciado sin cambiar su nombre; sin alertas sin leer no lleva número; el vendedor no la tiene | Frontend (componente) | 5 | 🔍 Pendiente de PR (AB#531) |
+
+- **Número de HU:** la historia es la AB#531 de Azure Boards; como la AB#529, se traza como HU531. Rama `feature/alertas-lectura`. Las tasks no se han consultado: los casos se trazan contra AB#531.
+- **HU531-CP01 a CP11:** casos propuestos a partir de los requisitos de la HU, desarrollados con TDD. Pendientes de confirmar con el equipo y de añadir a la HU en Azure Boards.
+- **Modelo:** reutiliza la colección `alertas` de AB#529 sin cambios (el campo `leida` ya existía). Puerto de entrada nuevo `GestionAlertasUseCase` (lo ampliará AB#532 con eliminar) y `AlertaNoEncontradaException`.
+- **Endpoint:** `PATCH /api/customer/alerts/{id}/read` → 200 `{ "mensaje": "Alerta marcada como leída", "alerta": { … } }` (si ya estaba leída, igual); 404 `ALERT_NOT_FOUND` si no existe o es de otro cliente; 401 sin sesión y 403 `ACCESS_DENIED` con otro rol.
+- **Decisiones del equipo:** el contador cuenta las alertas sin leer, como una notificación real, y se calcula en el frontend a partir de `leida`. Entrar en «Mis alertas» no marca nada: se marca con el botón. Pantallas, opción A: campanita con contador que lleva a «Mis alertas»; en la página las nuevas conservan su color y llevan la etiqueta «Nueva» y el botón «Marcar como leída», y las leídas quedan con franja gris y la foto atenuada. La campanita sustituye al punto rojo del botón de la cuenta; «Mis alertas» sigue en el menú con su número. Eliminar alertas es de AB#532.
+- **Tests modificados:** los dos tests de HU529-CP30 del punto en el botón de la cuenta se sustituyen por los de HU531-CP11. `AlertsLoginNotice.test.jsx` (HU529-CP29) espera el número de la campanita en lugar del punto. `AlertasConfigTest` (test técnico, sin caso) comprueba también `GestionAlertasUseCase`.
+
+### Tabla B · casos de prueba ↔ tests
+
+| Caso | Clase de test | Método | Capa | Task | Origen | Estado |
+|---|---|---|---|---|---|---|
+| HU531-CP01 | `AlertaTest` | `HU531-CP01: marcar una alerta nueva como leída da la misma alerta, ya leída y con todos sus datos` | Dominio | AB#531 | PR pendiente | 🔍 |
+| HU531-CP01 | `AlertaTest` | `HU531-CP01: marcar como leída una alerta que ya lo estaba la deja igual` | Dominio | AB#531 | PR pendiente | 🔍 |
+| HU531-CP02 | `GestionAlertasServiceTest` | `HU531-CP02: el cliente marca una alerta suya como leída y se guarda leída` | Aplicación | AB#531 | PR pendiente | 🔍 |
+| HU531-CP02 | `GestionAlertasServiceTest` | `HU531-CP02: marcar como leída una alerta que ya lo estaba no la vuelve a guardar` | Aplicación | AB#531 | PR pendiente | 🔍 |
+| HU531-CP02 | `GestionAlertasServiceTest` | `HU531-CP02: una alerta que no existe o es de otro cliente no se encuentra y no se guarda nada` | Aplicación | AB#531 | PR pendiente | 🔍 |
+| HU531-CP03 | `SeguridadAlertasServiceTest` | `HU531-CP03: el cliente marca como leída una alerta propia` | Aplicación · seguridad | AB#531 | PR pendiente | 🔍 |
+| HU531-CP03 | `SeguridadAlertasServiceTest` | `HU531-CP03: un cliente no puede marcar como leídas las alertas de otro cliente` | Aplicación · seguridad | AB#531 | PR pendiente | 🔍 |
+| HU531-CP03 | `SeguridadAlertasServiceTest` | `HU531-CP03: un vendedor no marca alertas como leídas, aunque use el mismo correo` | Aplicación · seguridad | AB#531 | PR pendiente | 🔍 |
+| HU531-CP03 | `SeguridadAlertasServiceTest` | `HU531-CP03: un administrador no marca alertas como leídas` | Aplicación · seguridad | AB#531 | PR pendiente | 🔍 |
+| HU531-CP03 | `SeguridadAlertasServiceTest` | `HU531-CP03: sin sesión no se marcan alertas como leídas` | Aplicación · seguridad | AB#531 | PR pendiente | 🔍 |
+| HU531-CP04 | `AlertaMongoAdapterTest` | `HU531-CP04: una alerta se encuentra por su id solo con su cliente; con otro cliente o un id que no existe, no` | Infraestructura · persistencia | AB#531 | PR pendiente | 🔍 |
+| HU531-CP04 | `AlertaMongoAdapterTest` | `HU531-CP04: guardar una alerta leída la actualiza sin duplicarla y conserva su fecha de creación` | Infraestructura · persistencia | AB#531 | PR pendiente | 🔍 |
+| HU531-CP05 | `AlertasControllerTest` | `HU531-CP05: el cliente marca una alerta suya como leída: 200 con un mensaje de éxito y la alerta, ya leída` | Infraestructura · controlador | AB#531 | PR pendiente | 🔍 |
+| HU531-CP05 | `AlertasControllerTest` | `HU531-CP05: marcar una alerta inexistente o de otro cliente devuelve 404 con el código ALERT_NOT_FOUND` | Infraestructura · controlador | AB#531 | PR pendiente | 🔍 |
+| HU531-CP06 | `AlertasControllerTest` | `HU531-CP06: sin sesión no se marcan alertas como leídas (401)` | Infraestructura · controlador | AB#531 | PR pendiente | 🔍 |
+| HU531-CP06 | `AlertasControllerTest` | `HU531-CP06: un usuario que no es cliente no marca alertas como leídas (403 ACCESS_DENIED)` | Infraestructura · controlador | AB#531 | PR pendiente | 🔍 |
+| HU531-CP07 | `alerts.test.js` | `HU531-CP07: pide PATCH /api/customer/alerts/{id}/read y devuelve el mensaje y la alerta ya leída` | Frontend · API | AB#531 | PR pendiente | 🔍 |
+| HU531-CP07 | `alerts.test.js` | `HU531-CP07: un 404 llega como error con su estado y el código ALERT_NOT_FOUND` | Frontend · API | AB#531 | PR pendiente | 🔍 |
+| HU531-CP08 | `AlertsPage.test.jsx` | `HU531-CP08: una alerta nueva lleva la etiqueta «Nueva» y el botón para marcarla; una leída no, y se anuncia como leída` | Frontend · página | AB#531 | PR pendiente | 🔍 |
+| HU531-CP08 | `AlertsPage.test.jsx` | `HU531-CP08: la página dice cuántas alertas quedan sin leer` | Frontend · página | AB#531 | PR pendiente | 🔍 |
+| HU531-CP09 | `AlertsPage.test.jsx` | `HU531-CP09: al marcarla como leída sigue en la lista sin el distintivo de nueva, con un mensaje de éxito y el foco en «Ver producto»` | Frontend · página | AB#531 | PR pendiente | 🔍 |
+| HU531-CP09 | `AlertsPage.test.jsx` | `HU531-CP09: al marcarla como leída, la campanita de la cabecera deja de avisar` | Frontend · página | AB#531 | PR pendiente | 🔍 |
+| HU531-CP10 | `AlertsPage.test.jsx` | `HU531-CP10: si falla, avisa con un error y la alerta sigue siendo nueva` | Frontend · página | AB#531 | PR pendiente | 🔍 |
+| HU531-CP10 | `AlertsPage.test.jsx` | `HU531-CP10: si la alerta ya no existe, lo avisa y vuelve a pedir la lista` | Frontend · página | AB#531 | PR pendiente | 🔍 |
+| HU531-CP11 | `AppHeader.test.jsx` | `HU531-CP11: el cliente tiene una campanita en la cabecera que lleva a «Mis alertas»` | Frontend · componente | AB#531 | PR pendiente | 🔍 |
+| HU531-CP11 | `AppHeader.test.jsx` | `HU531-CP11: con alertas sin leer, la campanita lleva su número y lo anuncia sin cambiar su nombre; el botón de la cuenta no lleva indicador` | Frontend · componente | AB#531 | PR pendiente | 🔍 |
+| HU531-CP11 | `AppHeader.test.jsx` | `HU531-CP11: con más de nueve alertas sin leer, la campanita muestra 9+ y anuncia el número exacto` | Frontend · componente | AB#531 | PR pendiente | 🔍 |
+| HU531-CP11 | `AppHeader.test.jsx` | `HU531-CP11: sin alertas sin leer, la campanita no lleva número ni descripción` | Frontend · componente | AB#531 | PR pendiente | 🔍 |
+| HU531-CP11 | `AppHeader.test.jsx` | `HU531-CP11: el vendedor no tiene campanita de alertas` | Frontend · componente | AB#531 | PR pendiente | 🔍 |
 
 ---
 
