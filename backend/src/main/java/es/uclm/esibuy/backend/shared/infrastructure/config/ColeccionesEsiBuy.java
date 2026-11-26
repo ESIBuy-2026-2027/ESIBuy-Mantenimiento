@@ -422,6 +422,7 @@ final class ColeccionesEsiBuy {
                                 date("fecha"),
                                 bool("leida"),
                                 string("nombreProducto"),
+                                string("imagenProducto"),
                                 importe("precioAnterior"),
                                 importe("precioNuevo")),
                                 List.of());

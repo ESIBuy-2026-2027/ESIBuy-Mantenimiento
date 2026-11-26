@@ -29,7 +29,7 @@ public class AlertasFavoritosAdapter implements AlertasFavoritosPort {
     public void notificarCambio(Producto antes, Producto despues) {
         try {
             generacionAlertas.notificarCambio(new CambioProducto(despues.getId(), despues.getNombre(),
-                    situacion(antes), situacion(despues)));
+                    despues.getImagen(), situacion(antes), situacion(despues)));
         } catch (RuntimeException e) {
             LOG.warn("No se han podido generar las alertas del producto {}", despues.getId(), e);
         }

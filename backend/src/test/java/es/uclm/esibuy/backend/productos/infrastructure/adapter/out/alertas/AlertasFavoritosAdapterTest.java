@@ -34,7 +34,7 @@ class AlertasFavoritosAdapterTest {
     private GeneracionAlertasUseCase generacionAlertas;
 
     @Test
-    @DisplayName("HU529-CP24: envía a las alertas el nombre, el precio estándar y el premium y si se puede comprar, antes y después")
+    @DisplayName("HU529-CP24: envía a las alertas el nombre, la imagen, el precio estándar y el premium y si se puede comprar, antes y después")
     void traduceElCambioDelProducto() {
         Producto antes = producto(new BigDecimal("100.00"), 0, Descuento.sinDescuento());
         Producto despues = producto(new BigDecimal("100.00"), 5, new Descuento(true, new BigDecimal("20")));
@@ -47,6 +47,7 @@ class AlertasFavoritosAdapterTest {
         assertAll(
                 () -> assertEquals("p-1", cambio.productoId()),
                 () -> assertEquals("Teclado", cambio.nombreProducto()),
+                () -> assertEquals("https://img.test/teclado.png", cambio.imagenProducto()),
                 () -> assertEquals(new BigDecimal("100.00"), cambio.antes().precioEstandar()),
                 () -> assertEquals(new BigDecimal("100.00"), cambio.antes().precioPremium()),
                 () -> assertFalse(cambio.antes().comprable()),
@@ -66,7 +67,8 @@ class AlertasFavoritosAdapterTest {
 
     private static Producto producto(BigDecimal precio, int stock, Descuento descuentoPremium) {
         return new Producto("p-1", new DatosProducto(
-                new DatosProducto.DatosBasicos("v-1", "Teclado", "", precio, stock, "cat-1", ""),
+                new DatosProducto.DatosBasicos("v-1", "Teclado", "", precio, stock, "cat-1",
+                        "https://img.test/teclado.png"),
                 new DatosProducto.Configuracion(true, Descuento.sinDescuento(), descuentoPremium),
                 new DatosProducto.Valoraciones(null, 0)));
     }

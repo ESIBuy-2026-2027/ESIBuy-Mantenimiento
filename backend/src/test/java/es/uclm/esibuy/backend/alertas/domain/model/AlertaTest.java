@@ -25,7 +25,7 @@ class AlertaTest {
     @Test
     @DisplayName("HU529-CP01: una bajada de precio crea una alerta no leída con el cliente, el producto, la fecha y los dos precios")
     void unaBajadaDePrecioCreaLaAlerta() {
-        Alerta alerta = Alerta.bajadaDePrecio("c-1", "p-1", "Teclado", new BigDecimal("50.00"),
+        Alerta alerta = Alerta.bajadaDePrecio("c-1", "p-1", "Teclado", "https://img.test/p.png", new BigDecimal("50.00"),
                 new BigDecimal("40.00"), AHORA);
 
         assertAll(
@@ -36,6 +36,7 @@ class AlertaTest {
                 () -> assertEquals(AHORA, alerta.getFecha()),
                 () -> assertFalse(alerta.isLeida()),
                 () -> assertEquals("Teclado", alerta.getDetalle().nombreProducto()),
+                () -> assertEquals("https://img.test/p.png", alerta.getDetalle().imagenProducto()),
                 () -> assertEquals(new BigDecimal("50.00"), alerta.getDetalle().precioAnterior()),
                 () -> assertEquals(new BigDecimal("40.00"), alerta.getDetalle().precioNuevo()));
     }
@@ -55,11 +56,11 @@ class AlertaTest {
         BigDecimal sesenta = new BigDecimal("60.00");
 
         assertThrows(AlertaInvalidaException.class,
-                () -> Alerta.bajadaDePrecio("c-1", "p-1", "Teclado", cincuenta, cincuenta, AHORA));
+                () -> Alerta.bajadaDePrecio("c-1", "p-1", "Teclado", "https://img.test/p.png", cincuenta, cincuenta, AHORA));
         assertThrows(AlertaInvalidaException.class,
-                () -> Alerta.bajadaDePrecio("c-1", "p-1", "Teclado", cincuenta, sesenta, AHORA));
+                () -> Alerta.bajadaDePrecio("c-1", "p-1", "Teclado", "https://img.test/p.png", cincuenta, sesenta, AHORA));
         assertThrows(AlertaInvalidaException.class,
-                () -> Alerta.bajadaDePrecio("c-1", "p-1", "Teclado", null, cincuenta, AHORA));
+                () -> Alerta.bajadaDePrecio("c-1", "p-1", "Teclado", "https://img.test/p.png", null, cincuenta, AHORA));
     }
 
     @Test
@@ -74,13 +75,14 @@ class AlertaTest {
     @Test
     @DisplayName("HU529-CP03: una alerta de disponibilidad guarda el producto y su nombre, sin precios")
     void unaAlertaDeDisponibilidadNoLlevaPrecios() {
-        Alerta alerta = Alerta.disponibilidad("c-1", "p-1", "Teclado", AHORA);
+        Alerta alerta = Alerta.disponibilidad("c-1", "p-1", "Teclado", "https://img.test/p.png", AHORA);
 
         assertAll(
                 () -> assertEquals(TipoAlerta.DISPONIBILIDAD, alerta.getTipo()),
                 () -> assertEquals("p-1", alerta.getProductoId()),
                 () -> assertFalse(alerta.isLeida()),
                 () -> assertEquals("Teclado", alerta.getDetalle().nombreProducto()),
+                () -> assertEquals("https://img.test/p.png", alerta.getDetalle().imagenProducto()),
                 () -> assertNull(alerta.getDetalle().precioAnterior()),
                 () -> assertNull(alerta.getDetalle().precioNuevo()));
     }
@@ -88,7 +90,7 @@ class AlertaTest {
     @Test
     @DisplayName("HU529-CP04: una alerta sin cliente, sin producto, sin tipo o sin fecha no es válida")
     void unaAlertaSinSusDatosObligatoriosNoEsValida() {
-        DetalleAlerta detalle = new DetalleAlerta("Teclado", null, null);
+        DetalleAlerta detalle = new DetalleAlerta("Teclado", "https://img.test/p.png", null, null);
 
         assertThrows(AlertaInvalidaException.class,
                 () -> new Alerta(null, " ", "p-1", TipoAlerta.DISPONIBILIDAD, AHORA, false, detalle));

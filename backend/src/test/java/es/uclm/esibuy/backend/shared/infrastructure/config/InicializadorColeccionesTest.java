@@ -313,7 +313,7 @@ class InicializadorColeccionesTest {
     @Test
     @DisplayName("HU529-CP19: la colección alertas admite alertas de los tres tipos, con o sin precios y varias por cliente")
     void aceptaAlertasValidas() {
-        acepta(ALERTAS, alerta("c-1", "BAJADA_PRECIO").append("nombreProducto", "Teclado")
+        acepta(ALERTAS, alerta("c-1", "BAJADA_PRECIO").append("nombreProducto", "Teclado").append("imagenProducto", "https://img.test/p.png")
                 .append("precioAnterior", 50.0).append("precioNuevo", 40.0));
         acepta(ALERTAS, alerta("c-1", "DISPONIBILIDAD"));
         acepta(ALERTAS, alerta("c-1", "PRODUCTO_NUEVO"));

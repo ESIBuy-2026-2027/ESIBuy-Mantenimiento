@@ -42,17 +42,18 @@ public class Alerta {
     }
 
     public static Alerta bajadaDePrecio(String clienteId, String productoId, String nombreProducto,
-            BigDecimal precioAnterior, BigDecimal precioNuevo, Instant fecha) {
+            String imagenProducto, BigDecimal precioAnterior, BigDecimal precioNuevo, Instant fecha) {
         if (!esBajadaDePrecio(precioAnterior, precioNuevo)) {
             throw new AlertaInvalidaException("El precio nuevo debe ser menor que el anterior");
         }
         return new Alerta(null, clienteId, productoId, TipoAlerta.BAJADA_PRECIO, fecha, false,
-                new DetalleAlerta(nombreProducto, precioAnterior, precioNuevo));
+                new DetalleAlerta(nombreProducto, imagenProducto, precioAnterior, precioNuevo));
     }
 
-    public static Alerta disponibilidad(String clienteId, String productoId, String nombreProducto, Instant fecha) {
+    public static Alerta disponibilidad(String clienteId, String productoId, String nombreProducto,
+            String imagenProducto, Instant fecha) {
         return new Alerta(null, clienteId, productoId, TipoAlerta.DISPONIBILIDAD, fecha, false,
-                new DetalleAlerta(nombreProducto, null, null));
+                new DetalleAlerta(nombreProducto, imagenProducto, null, null));
     }
 
     private static String exigirTexto(String valor, String mensaje) {

@@ -36,8 +36,8 @@ class ConsultaAlertasServiceTest {
     @DisplayName("HU529-CP09: el cliente consulta las alertas de su cuenta, en el orden del repositorio (de la más reciente a la más antigua)")
     void elClienteConsultaSusAlertas() {
         List<Alerta> suyas = List.of(
-                Alerta.disponibilidad("c-1", "p-2", "Ratón", Instant.parse("2026-11-26T10:00:00Z")),
-                Alerta.disponibilidad("c-1", "p-1", "Teclado", Instant.parse("2026-11-25T10:00:00Z")));
+                Alerta.disponibilidad("c-1", "p-2", "Ratón", "https://img.test/p.png", Instant.parse("2026-11-26T10:00:00Z")),
+                Alerta.disponibilidad("c-1", "p-1", "Teclado", "https://img.test/p.png", Instant.parse("2026-11-25T10:00:00Z")));
         when(clienteEnSesion.idPorCorreo(CLIENTE)).thenReturn("c-1");
         when(alertaRepository.buscarPorCliente("c-1")).thenReturn(suyas);
 

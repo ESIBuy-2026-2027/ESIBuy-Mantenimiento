@@ -28,7 +28,7 @@ class AlertaDocumentMapperTest {
     @DisplayName("HU529-CP14: una alerta de bajada de precio pasa a documento y vuelve sin perder ningún dato")
     void convierteUnaBajadaDePrecioSinPerderDatos() {
         Alerta alerta = new Alerta("a-1", "c-1", "p-1", TipoAlerta.BAJADA_PRECIO, AHORA, true,
-                new DetalleAlerta("Teclado", new BigDecimal("50.00"), new BigDecimal("40.00")));
+                new DetalleAlerta("Teclado", "https://img.test/p.png", new BigDecimal("50.00"), new BigDecimal("40.00")));
 
         AlertaDocument documento = mapper.aDocumento(alerta);
         Alerta leida = mapper.aDominio(documento);
@@ -47,12 +47,13 @@ class AlertaDocumentMapperTest {
     @Test
     @DisplayName("HU529-CP14: una alerta de disponibilidad nueva pasa a documento sin id, no leída y sin precios")
     void convierteUnaAlertaDeDisponibilidadNueva() {
-        AlertaDocument documento = mapper.aDocumento(Alerta.disponibilidad("c-1", "p-1", "Teclado", AHORA));
+        AlertaDocument documento = mapper.aDocumento(Alerta.disponibilidad("c-1", "p-1", "Teclado", "https://img.test/p.png", AHORA));
 
         assertNull(documento.getId());
         assertEquals("DISPONIBILIDAD", documento.getTipo());
         assertFalse(documento.isLeida());
         assertEquals("Teclado", documento.getNombreProducto());
+        assertEquals("https://img.test/p.png", documento.getImagenProducto());
         assertNull(documento.getPrecioAnterior());
         assertNull(documento.getPrecioNuevo());
     }

@@ -8,10 +8,12 @@ import java.math.BigDecimal;
  *
  * @param productoId id del producto
  * @param nombreProducto nombre del producto, para mostrar la alerta aunque el producto se elimine después
+ * @param imagenProducto imagen del producto (URL o ruta del catálogo; vacía si no tiene), por lo mismo
  * @param antes situación del producto antes del cambio
  * @param despues situación del producto después del cambio
  */
-public record CambioProducto(String productoId, String nombreProducto, Situacion antes, Situacion despues) {
+public record CambioProducto(String productoId, String nombreProducto, String imagenProducto, Situacion antes,
+        Situacion despues) {
 
     /**
      * Lo que importa del producto para las alertas.

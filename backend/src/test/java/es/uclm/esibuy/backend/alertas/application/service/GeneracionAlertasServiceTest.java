@@ -63,7 +63,7 @@ class GeneracionAlertasServiceTest {
     }
 
     private static CambioProducto cambio(Situacion antes, Situacion despues) {
-        return new CambioProducto("p-1", "Teclado", antes, despues);
+        return new CambioProducto("p-1", "Teclado", "https://img.test/p.png", antes, despues);
     }
 
     private List<Alerta> alertasGuardadas() {
@@ -90,6 +90,7 @@ class GeneracionAlertasServiceTest {
                 () -> assertEquals(AHORA, estandar.getFecha()),
                 () -> assertFalse(estandar.isLeida()),
                 () -> assertEquals("Teclado", estandar.getDetalle().nombreProducto()),
+                () -> assertEquals("https://img.test/p.png", estandar.getDetalle().imagenProducto()),
                 () -> assertEquals(CIEN, estandar.getDetalle().precioAnterior()),
                 () -> assertEquals(NOVENTA, estandar.getDetalle().precioNuevo()),
                 () -> assertEquals("c-premium", premium.getClienteId()),

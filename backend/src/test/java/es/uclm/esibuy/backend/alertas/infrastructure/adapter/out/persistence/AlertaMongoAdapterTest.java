@@ -52,9 +52,9 @@ class AlertaMongoAdapterTest {
     @DisplayName("HU529-CP15: guarda varias alertas a la vez y cada cliente recupera solo las suyas, de la más reciente a la más antigua")
     void guardaVariasYCadaClienteRecuperaLasSuyas() {
         adapter.guardarTodas(List.of(
-                Alerta.disponibilidad("c-1", "p-1", "Teclado", AYER),
-                Alerta.bajadaDePrecio("c-1", "p-2", "Ratón", new BigDecimal("20.00"), new BigDecimal("15.50"), HOY),
-                Alerta.disponibilidad("c-2", "p-1", "Teclado", HOY)));
+                Alerta.disponibilidad("c-1", "p-1", "Teclado", "https://img.test/p.png", AYER),
+                Alerta.bajadaDePrecio("c-1", "p-2", "Ratón", "https://img.test/p.png", new BigDecimal("20.00"), new BigDecimal("15.50"), HOY),
+                Alerta.disponibilidad("c-2", "p-1", "Teclado", "https://img.test/p.png", HOY)));
 
         List<Alerta> delCliente = adapter.buscarPorCliente("c-1");
 
@@ -74,13 +74,14 @@ class AlertaMongoAdapterTest {
     @DisplayName("HU529-CP15: la alerta se guarda con tipo, cliente, producto, fecha, leída y fecha de creación, y los precios como número")
     void guardaLosCamposDelEsquema() {
         adapter.guardarTodas(List.of(
-                Alerta.bajadaDePrecio("c-1", "p-2", "Ratón", new BigDecimal("20.00"), new BigDecimal("15.50"), HOY)));
+                Alerta.bajadaDePrecio("c-1", "p-2", "Ratón", "https://img.test/p.png", new BigDecimal("20.00"), new BigDecimal("15.50"), HOY)));
 
         Document guardado = mongoTemplate.getCollection("alertas").find().first();
 
         assertNotNull(guardado);
         assertEquals("c-1", guardado.getString("clienteId"));
         assertEquals("p-2", guardado.getString("productoId"));
+        assertEquals("https://img.test/p.png", guardado.getString("imagenProducto"));
         assertEquals("BAJADA_PRECIO", guardado.getString("tipo"));
         assertEquals(false, guardado.getBoolean("leida"));
         assertNotNull(guardado.getDate("fecha"));

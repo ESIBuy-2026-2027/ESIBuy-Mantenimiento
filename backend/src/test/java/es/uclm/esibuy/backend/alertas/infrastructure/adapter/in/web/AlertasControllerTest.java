@@ -49,9 +49,9 @@ class AlertasControllerTest {
     void elClienteRecibeSusAlertas() throws Exception {
         when(consultaAlertas.consultar(CLIENTE)).thenReturn(List.of(
                 new Alerta("a-2", "c-1", "p-2", TipoAlerta.BAJADA_PRECIO, HOY, false,
-                        new DetalleAlerta("Ratón", new BigDecimal("20.00"), new BigDecimal("15.50"))),
+                        new DetalleAlerta("Ratón", "https://img.test/p.png", new BigDecimal("20.00"), new BigDecimal("15.50"))),
                 new Alerta("a-1", "c-1", "p-1", TipoAlerta.DISPONIBILIDAD, HOY, true,
-                        new DetalleAlerta("Teclado", null, null))));
+                        new DetalleAlerta("Teclado", "https://img.test/p.png", null, null))));
 
         mockMvc.perform(get(URL).with(user(CLIENTE).roles("CLIENTE")))
                 .andExpect(status().isOk())
@@ -63,6 +63,7 @@ class AlertasControllerTest {
                 .andExpect(jsonPath("$.alertas[0].leida").value(false))
                 .andExpect(jsonPath("$.alertas[0].producto.id").value("p-2"))
                 .andExpect(jsonPath("$.alertas[0].producto.nombre").value("Ratón"))
+                .andExpect(jsonPath("$.alertas[0].producto.imagen").value("https://img.test/p.png"))
                 .andExpect(jsonPath("$.alertas[0].producto.precioAnterior").value(20.00))
                 .andExpect(jsonPath("$.alertas[0].producto.precioNuevo").value(15.50))
                 .andExpect(jsonPath("$.alertas[1].tipo").value("DISPONIBILIDAD"))

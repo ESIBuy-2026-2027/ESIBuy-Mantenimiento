@@ -28,6 +28,7 @@ public class AlertaDocument {
     private Instant fecha;
     private boolean leida;
     private String nombreProducto;
+    private String imagenProducto;
     @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal precioAnterior;
     @Field(targetType = FieldType.DECIMAL128)
@@ -51,6 +52,8 @@ public class AlertaDocument {
     public void setLeida(boolean leida) { this.leida = leida; }
     public String getNombreProducto() { return nombreProducto; }
     public void setNombreProducto(String nombreProducto) { this.nombreProducto = nombreProducto; }
+    public String getImagenProducto() { return imagenProducto; }
+    public void setImagenProducto(String imagenProducto) { this.imagenProducto = imagenProducto; }
     public BigDecimal getPrecioAnterior() { return precioAnterior; }
     public void setPrecioAnterior(BigDecimal precioAnterior) { this.precioAnterior = precioAnterior; }
     public BigDecimal getPrecioNuevo() { return precioNuevo; }

@@ -69,13 +69,14 @@ public class GeneracionAlertasService implements GeneracionAlertasUseCase {
             CambioProducto cambio, Instant ahora) {
         List<Alerta> alertas = new ArrayList<>();
         if (vuelve) {
-            alertas.add(Alerta.disponibilidad(clienteId, cambio.productoId(), cambio.nombreProducto(), ahora));
+            alertas.add(Alerta.disponibilidad(clienteId, cambio.productoId(), cambio.nombreProducto(),
+                    cambio.imagenProducto(), ahora));
         }
         BigDecimal anterior = esPremium ? cambio.antes().precioPremium() : cambio.antes().precioEstandar();
         BigDecimal nuevo = esPremium ? cambio.despues().precioPremium() : cambio.despues().precioEstandar();
         if (Alerta.esBajadaDePrecio(anterior, nuevo)) {
-            alertas.add(Alerta.bajadaDePrecio(clienteId, cambio.productoId(), cambio.nombreProducto(), anterior,
-                    nuevo, ahora));
+            alertas.add(Alerta.bajadaDePrecio(clienteId, cambio.productoId(), cambio.nombreProducto(),
+                    cambio.imagenProducto(), anterior, nuevo, ahora));
         }
         return alertas;
     }

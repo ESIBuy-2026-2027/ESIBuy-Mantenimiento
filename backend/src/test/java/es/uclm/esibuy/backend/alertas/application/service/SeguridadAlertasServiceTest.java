@@ -40,7 +40,7 @@ import es.uclm.esibuy.backend.alertas.application.port.out.TiposClientePort;
 class SeguridadAlertasServiceTest {
 
     private static final String CLIENTE = "cliente@esibuy.test";
-    private static final CambioProducto SIN_CAMBIOS = new CambioProducto("p-1", "Teclado",
+    private static final CambioProducto SIN_CAMBIOS = new CambioProducto("p-1", "Teclado", "https://img.test/p.png",
             new Situacion(BigDecimal.TEN, BigDecimal.TEN, true), new Situacion(BigDecimal.TEN, BigDecimal.TEN, true));
 
     @Configuration

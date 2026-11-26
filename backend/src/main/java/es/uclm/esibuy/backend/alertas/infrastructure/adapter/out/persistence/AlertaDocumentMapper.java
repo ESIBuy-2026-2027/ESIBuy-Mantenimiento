@@ -16,6 +16,7 @@ public class AlertaDocumentMapper {
         documento.setFecha(alerta.getFecha());
         documento.setLeida(alerta.isLeida());
         documento.setNombreProducto(alerta.getDetalle().nombreProducto());
+        documento.setImagenProducto(alerta.getDetalle().imagenProducto());
         documento.setPrecioAnterior(alerta.getDetalle().precioAnterior());
         documento.setPrecioNuevo(alerta.getDetalle().precioNuevo());
         return documento;
@@ -24,7 +25,7 @@ public class AlertaDocumentMapper {
     public Alerta aDominio(AlertaDocument documento) {
         return new Alerta(documento.getId(), documento.getClienteId(), documento.getProductoId(),
                 TipoAlerta.valueOf(documento.getTipo()), documento.getFecha(), documento.isLeida(),
-                new DetalleAlerta(documento.getNombreProducto(), documento.getPrecioAnterior(),
-                        documento.getPrecioNuevo()));
+                new DetalleAlerta(documento.getNombreProducto(), documento.getImagenProducto(),
+                        documento.getPrecioAnterior(), documento.getPrecioNuevo()));
     }
 }
