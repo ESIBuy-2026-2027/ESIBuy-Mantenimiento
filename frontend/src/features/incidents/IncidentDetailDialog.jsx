@@ -1,6 +1,5 @@
 import PropTypes from 'prop-types'
 import {
-  Badge,
   Button,
   Dialog,
   DialogActions,
@@ -13,7 +12,7 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { formatDateTime } from '../../utils/format'
-import { colorDeEstado, etiquetaDeEstado } from './incidentStatus'
+import IncidentStatusBadge from './IncidentStatusBadge'
 
 const ROLES = { CLIENTE: 'Cliente', VENDEDOR: 'Vendedor' }
 
@@ -80,14 +79,18 @@ export default function IncidentDetailDialog({ incident, onClose }) {
               <Text size={400} className={styles.subject}>
                 {incident.asunto}
               </Text>
-              <Badge appearance="tint" color={colorDeEstado(incident.estado)}>
-                {etiquetaDeEstado(incident.estado)}
-              </Badge>
+              <IncidentStatusBadge estado={incident.estado} />
             </div>
             <div className={styles.meta}>
               <Text size={200} className={styles.muted}>
                 Fecha: <time dateTime={incident.fechaCreacion}>{formatDateTime(incident.fechaCreacion)}</time>
               </Text>
+              {incident.fechaResolucion && (
+                <Text size={200} className={styles.muted}>
+                  Fecha de resolución:{' '}
+                  <time dateTime={incident.fechaResolucion}>{formatDateTime(incident.fechaResolucion)}</time>
+                </Text>
+              )}
               <Text size={200} className={styles.muted}>
                 Autor: {textoAutor(incident.autor)}
               </Text>
@@ -126,6 +129,7 @@ IncidentDetailDialog.propTypes = {
     estado: PropTypes.string.isRequired,
     respuesta: PropTypes.string.isRequired,
     fechaCreacion: PropTypes.string.isRequired,
+    fechaResolucion: PropTypes.string,
     autor: PropTypes.shape({
       email: PropTypes.string.isRequired,
       rol: PropTypes.string.isRequired,

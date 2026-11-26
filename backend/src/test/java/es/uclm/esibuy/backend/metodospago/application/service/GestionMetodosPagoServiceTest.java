@@ -169,6 +169,36 @@ class GestionMetodosPagoServiceTest {
     }
 
     @Test
+    @DisplayName("HU6: actualizar sustituye los datos cifrados y conserva id y método predeterminado")
+    void actualizarSustituyeDatosYConservaPredeterminado() {
+        MetodoPago original = repositorio.guardar(new MetodoPago(null, ID_CLIENTE, TipoMetodoPago.TARJETA,
+                "•••• 1111", "cifrado-anterior", true));
+        AnadirMetodoPagoCommand nuevoBizum = new AnadirMetodoPagoCommand(EMAIL_CLIENTE, TipoMetodoPago.BIZUM,
+                null, null, null, null, "612345678");
+
+        MetodoPago actualizado = servicio.actualizar(EMAIL_CLIENTE, original.getId(), nuevoBizum);
+
+        assertEquals(original.getId(), actualizado.getId());
+        assertEquals(TipoMetodoPago.BIZUM, actualizado.getTipo());
+        assertEquals("•••• 678", actualizado.getMascara());
+        assertTrue(actualizado.isPredeterminado());
+        assertEquals("612345678", cifrado.ultimoEnClaro);
+        assertEquals(1, repositorio.guardados.size());
+    }
+
+    @Test
+    @DisplayName("HU6: actualizar un método de otro cliente o inexistente lo rechaza")
+    void actualizarMetodoAjenoLoRechaza() {
+        repositorio.guardar(MetodoPago.nuevo("otro-cliente", TipoMetodoPago.BIZUM, "•••• 678", "cifrado"));
+
+        assertThrows(MetodoPagoNoEncontradoException.class,
+                () -> servicio.actualizar(EMAIL_CLIENTE, "m1",
+                        new AnadirMetodoPagoCommand(EMAIL_CLIENTE, TipoMetodoPago.BIZUM, null, null, null, null,
+                                "612345678")));
+        assertEquals(1, repositorio.guardados.size());
+    }
+
+    @Test
     @DisplayName("HU6-CP15: listar devuelve solo los métodos del cliente en sesión")
     void listaSoloLosMetodosDelClienteEnSesion() {
         MetodoPago propio = repositorio.guardar(

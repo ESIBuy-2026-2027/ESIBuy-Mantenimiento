@@ -67,9 +67,10 @@ public class IncidenciasConfig {
         return new SupervisionIncidenciasService(incidenciaRepositoryPort, incidenciasAutoresPort);
     }
 
-    // Resolución (HU50): abrir y cerrar incidencias
+    // Resolución: abrir y cerrar incidencias (HU50) y marcarlas como resueltas (HU192)
     @Bean
-    ResolucionIncidenciasUseCase resolucionIncidenciasUseCase(IncidenciaRepositoryPort incidenciaRepositoryPort) {
-        return new ResolucionIncidenciasService(incidenciaRepositoryPort);
+    ResolucionIncidenciasUseCase resolucionIncidenciasUseCase(IncidenciaRepositoryPort incidenciaRepositoryPort,
+            Clock reloj) {
+        return new ResolucionIncidenciasService(incidenciaRepositoryPort, reloj);
     }
 }

@@ -115,12 +115,17 @@ describe('ProfilePage (HU45): ESIBuy Premium', () => {
     const user = userEvent.setup()
     await abrirPerfil('nuevo@esibuy.test')
 
-    const cuenta = within(screen.getByRole('region', { name: 'Mi cuenta' }))
-    const enlace = cuenta.getByRole('link', { name: /hazte premium/i })
+    const main = screen.getByRole('main')
+    const enlace = screen.getByRole('link', { name: /hazte premium/i })
     expect(enlace).toHaveAttribute('href', '/premium')
-    expect(cuenta.getByRole('link', { name: 'Métodos de pago' })).toHaveAttribute('href', '/payment-methods')
-    expect(cuenta.getByRole('link', { name: 'Direcciones' })).toHaveAttribute('href', '/addresses')
-    expect(within(screen.getByRole('main')).queryByText('Premium')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Da el salto a ESIBuy Premium' })).toBeInTheDocument()
+    expect(screen.getByText('Al hacerte Premium, obtendrás las siguientes ventajas:')).toBeInTheDocument()
+    expect(main.querySelector('h2')).toHaveTextContent('Da el salto a ESIBuy Premium')
+    expect(main.querySelector('h2').compareDocumentPosition(screen.getByLabelText('Nombre')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByRole('region', { name: 'Direcciones de envío' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Métodos de pago' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /añadir dirección/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /añadir método de pago/i })).toBeInTheDocument()
     await user.click(enlace)
 
     await waitFor(() => expect(screen.getByTestId('ruta-actual')).toHaveTextContent(/^\/premium$/))
@@ -129,9 +134,11 @@ describe('ProfilePage (HU45): ESIBuy Premium', () => {
   it('HU45-CP28: el cliente Premium ve el distintivo Premium en vez del botón', async () => {
     await abrirPerfil('cliente@esibuy.test')
 
-    const cuenta = within(screen.getByRole('region', { name: 'Mi cuenta' }))
-    expect(cuenta.getByText('Premium')).toBeInTheDocument()
-    expect(cuenta.getByRole('link', { name: /ver beneficios/i })).toHaveAttribute('href', '/premium')
+    expect(screen.getByText('MIEMBRO ESIBUY PREMIUM')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Ya eres ESIBuy Premium' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /cancelar mi suscripción/i })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Ventajas de ESIBuy Premium' })).not.toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Ventajas de ESIBuy Premium' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /hazte premium/i })).not.toBeInTheDocument()
   })
 
@@ -619,5 +626,43 @@ describe('ProfilePage (HU45): cambios sin guardar', () => {
     await abrirPerfil('cliente@esibuy.test')
 
     expect(cerrarLaPestana().defaultPrevented).toBe(false)
+  })
+})
+
+
+describe('ProfilePage: resumen de direcciones y métodos de pago', () => {
+  it('muestra tres elementos como máximo y permite abrir cada listado completo', async () => {
+    const direcciones = Array.from({ length: 4 }, (_, i) => ({
+      id: `d-${i + 1}`,
+      destinatario: 'Carlos Cliente',
+      calle: `Calle ${i + 1}`,
+      detalles: null,
+      codigoPostal: '13001',
+      ciudad: 'Ciudad Real',
+      provincia: 'Ciudad Real',
+      telefono: '611222333',
+      principal: i === 0,
+    }))
+    const metodos = Array.from({ length: 4 }, (_, i) => ({
+      id: `m-${i + 1}`,
+      tipo: 'BIZUM',
+      mascara: `•••• ${600 + i}`,
+      predeterminado: i === 0,
+    }))
+    server.use(
+      http.get('/api/customer/addresses', () => HttpResponse.json(direcciones)),
+      http.get('/api/customer/payment-methods', () => HttpResponse.json(metodos)),
+    )
+
+    await abrirPerfil('cliente@esibuy.test')
+
+    const listaDirecciones = await screen.findByRole('list', { name: 'Tus direcciones' })
+    const listaMetodos = await screen.findByRole('list', { name: 'Tus métodos de pago' })
+    expect(within(listaDirecciones).getAllByRole('listitem')).toHaveLength(3)
+    expect(within(listaMetodos).getAllByRole('listitem')).toHaveLength(3)
+
+    await userEvent.setup().click(screen.getByRole('link', { name: /ver todas las direcciones \(4\)/i }))
+    expect(await screen.findByRole('heading', { level: 1, name: /direcciones de envío/i })).toBeInTheDocument()
+    expect(await screen.findAllByRole('listitem')).toHaveLength(4)
   })
 })

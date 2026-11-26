@@ -17,8 +17,10 @@ import es.uclm.esibuy.backend.direcciones.domain.exception.DireccionNoEncontrada
 import es.uclm.esibuy.backend.direcciones.domain.exception.LimiteDireccionesException;
 import es.uclm.esibuy.backend.direcciones.domain.exception.NuevaPrincipalObligatoriaException;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaInvalidaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaNoAbiertaException;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaNoEncontradaException;
 import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaYaAbiertaException;
+import es.uclm.esibuy.backend.incidencias.domain.exception.IncidenciaYaResueltaException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.LimiteMetodosPagoException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoInvalidoException;
 import es.uclm.esibuy.backend.metodospago.domain.exception.MetodoPagoNoEncontradoException;
@@ -404,12 +406,6 @@ public class ManejadorGlobalErrores {
 
     // Un producto que no existe o no está disponible se responde igual que uno
     // inexistente
-    @ExceptionHandler({ ProductoNoComprableException.class, ProductoNoDisponibleException.class })
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public RespuestaError productoNoDisponible() {
-        return new RespuestaError("El producto no existe", "PRODUCT_NOT_FOUND");
-    }
-
     @ExceptionHandler(ListaDeseosInvalidaException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public RespuestaError listaDeseosInvalida() {
@@ -420,6 +416,12 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public RespuestaError listaDeseosNoEncontrada() {
         return new RespuestaError("La lista de deseos no existe", "WISHLIST_NOT_FOUND");
+    }
+
+    @ExceptionHandler({ ProductoNoComprableException.class, ProductoNoDisponibleException.class })
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public RespuestaError productoNoDisponible() {
+        return new RespuestaError("El producto no existe", "PRODUCT_NOT_FOUND");
     }
 
     @ExceptionHandler(LineaCarritoNoEncontradaException.class)
@@ -569,6 +571,21 @@ public class ManejadorGlobalErrores {
     @ResponseStatus(HttpStatus.CONFLICT)
     public RespuestaError incidenciaYaAbierta() {
         return new RespuestaError("La incidencia ya está abierta", "INCIDENT_ALREADY_OPEN");
+    }
+
+    // Incidencias (HU192): resolver o abrir una ya resuelta, para no sobrescribir
+    // su fecha de resolución
+    @ExceptionHandler(IncidenciaYaResueltaException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError incidenciaYaResuelta() {
+        return new RespuestaError("La incidencia ya está resuelta", "INCIDENT_ALREADY_RESOLVED");
+    }
+
+    // Incidencias (HU192): solo se resuelve una incidencia abierta
+    @ExceptionHandler(IncidenciaNoAbiertaException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public RespuestaError incidenciaNoAbierta() {
+        return new RespuestaError("Solo se puede resolver una incidencia abierta", "INCIDENT_NOT_OPEN");
     }
 
     // 400 + code al cancelar Premium (CLI-02): el cliente ya era Estándar.

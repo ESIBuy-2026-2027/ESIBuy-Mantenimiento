@@ -20,7 +20,12 @@ async function cerrarSesionDesdeSuZona(email, zona) {
   const { unmount } = renderApp(zona)
 
   try {
-    await user.click(await screen.findByRole('button', { name: /cerrar sesión/i }))
+    if (email === 'cliente@esibuy.test') {
+      await user.click(await screen.findByRole('button', { name: 'Mi perfil' }))
+      await user.click(await screen.findByRole('menuitem', { name: /cerrar sesión/i }))
+    } else {
+      await user.click(await screen.findByRole('button', { name: /cerrar sesión/i }))
+    }
 
     await esperarRuta('/login')
     expect(await screen.findByText('Has cerrado sesión.')).toBeInTheDocument()
@@ -77,7 +82,9 @@ describe('AppHeader', () => {
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/')
 
-    expect(await screen.findByRole('button', { name: /cerrar sesión/i })).toBeInTheDocument()
+    await userEvent.click(await screen.findByRole('button', { name: 'Mi perfil' }))
+    expect(await screen.findByRole('menuitem', { name: /cerrar sesión/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /cerrar sesión/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /iniciar sesión/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /registrarse/i })).not.toBeInTheDocument()
   })
@@ -116,7 +123,8 @@ describe('AppHeader', () => {
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/products')
 
-    await user.click(await screen.findByRole('button', { name: /cerrar sesión/i }))
+    await user.click(await screen.findByRole('button', { name: 'Mi perfil' }))
+    await user.click(await screen.findByRole('menuitem', { name: /cerrar sesión/i }))
 
     await esperarRuta('/login')
     expect(await screen.findByText('Has cerrado sesión.')).toBeInTheDocument()
@@ -137,6 +145,22 @@ describe('AppHeader', () => {
     expect(screen.queryByRole('link', { name: /panel de control/i })).not.toBeInTheDocument()
   })
 
+  it('appHeader_clientePremium_muestraUnaCoronaEnElAccesoDePerfil', async () => {
+    await abrirSesionPorApi('cliente@esibuy.test')
+    renderApp('/products')
+
+    const perfil = await screen.findByRole('button', { name: 'Mi perfil' })
+    expect(await within(perfil).findByTestId('premium-crown')).toBeInTheDocument()
+  })
+
+  it('appHeader_clienteEstandar_noMuestraLaCoronaPremium', async () => {
+    await abrirSesionPorApi('nuevo@esibuy.test')
+    renderApp('/products')
+
+    const perfil = await screen.findByRole('button', { name: 'Mi perfil' })
+    await waitFor(() => expect(within(perfil).queryByTestId('premium-crown')).not.toBeInTheDocument())
+  })
+
   it('appHeader_conSesionDeCliente_dejaFavoritosEnCabeceraYElRestoEnElMenuDePerfil', async () => {
     const user = userEvent.setup()
     await abrirSesionPorApi('cliente@esibuy.test')
@@ -154,9 +178,10 @@ describe('AppHeader', () => {
     for (const nombre of ['Premium', 'Métodos de pago', 'Direcciones']) {
       expect(menu.queryByRole('menuitem', { name: nombre })).not.toBeInTheDocument()
     }
-    expect(within(nav).getByRole('button', { name: 'Cerrar sesión' })).toHaveAttribute('title', 'Cerrar sesión')
+    expect(within(nav).getByRole('button', { name: 'Carrito, vacío' })).toBeInTheDocument()
+    expect(menu.getByRole('menuitem', { name: 'Cerrar sesión' })).toBeInTheDocument()
     expect(menu.queryByRole('menuitem', { name: 'Favoritos' })).not.toBeInTheDocument()
-    expect(menu.queryByRole('menuitem', { name: 'Cerrar sesión' })).not.toBeInTheDocument()
+    expect(within(nav).queryByRole('button', { name: 'Cerrar sesión' })).not.toBeInTheDocument()
   })
 
   it('appHeader_conSesionDeVendedor_susAccesosNoSeCompactan', async () => {
@@ -213,7 +238,7 @@ describe('AppHeader', () => {
     await abrirSesionPorApi('cliente@esibuy.test')
     renderApp('/')
 
-    await screen.findByRole('button', { name: /cerrar sesión/i })
+    await screen.findByRole('button', { name: 'Mi perfil' })
     expect(screen.queryByRole('link', { name: /mis productos/i })).not.toBeInTheDocument()
   })
 
@@ -353,7 +378,8 @@ describe('AppHeader (HU30): el logotipo lleva al inicio de cada usuario', () => 
     await abrirSesionPorApi(email)
     renderApp('/profile')
 
-    await screen.findByRole('button', { name: /cerrar sesión/i })
+    if (email === 'cliente@esibuy.test') await screen.findByRole('button', { name: 'Mi perfil' })
+    else await screen.findByRole('button', { name: /cerrar sesión/i })
     expect(await logotipo()).toHaveAttribute('href', inicio)
   })
 

@@ -22,7 +22,7 @@ import {
   Phone20Regular,
   Wallet20Regular,
 } from '@fluentui/react-icons'
-import { addPaymentMethod } from '../../api/paymentMethods'
+import { addPaymentMethod, updatePaymentMethod } from '../../api/paymentMethods'
 
 // Los tres tipos que admite el backend, en el orden de los botones del selector
 const TIPOS = [
@@ -43,6 +43,22 @@ const CAMPOS_VACIOS = {
 // Solo formatos básicos, con los mismos límites que el backend, para avisar antes de enviar. Lo demás (Luhn, que la
 // tarjeta no esté caducada) lo comprueba el backend.
 const FORMATO_NUMERO = /^\d{13,19}$/
+
+// Comprueba el dígito de control de la tarjeta antes de enviar la petición.
+function cumpleLuhn(numero) {
+  let suma = 0
+  let duplicar = false
+  for (let i = numero.length - 1; i >= 0; i -= 1) {
+    let digito = Number(numero[i])
+    if (duplicar) {
+      digito *= 2
+      if (digito > 9) digito -= 9
+    }
+    suma += digito
+    duplicar = !duplicar
+  }
+  return suma % 10 === 0
+}
 const FORMATO_CADUCIDAD = /^(0[1-9]|1[0-2])\/\d{2}$/
 const FORMATO_CVV = /^\d{3,4}$/
 const FORMATO_TITULAR = /^[\p{L} '-]{1,26}$/u
@@ -76,8 +92,11 @@ const FORMATEADORES = {
 
 function erroresDeTarjeta({ numeroTarjeta, caducidad, cvv, titular }) {
   const errores = {}
-  if (!FORMATO_NUMERO.test(sinEspacios(numeroTarjeta))) {
+  const numero = sinEspacios(numeroTarjeta)
+  if (!FORMATO_NUMERO.test(numero)) {
     errores.numeroTarjeta = 'El número de tarjeta tiene entre 13 y 19 dígitos.'
+  } else if (!cumpleLuhn(numero)) {
+    errores.numeroTarjeta = 'El número de tarjeta no es válido. Comprueba sus dígitos.'
   }
   if (!FORMATO_CADUCIDAD.test(caducidad.trim())) errores.caducidad = 'Escribe la caducidad como MM/AA.'
   if (!FORMATO_CVV.test(cvv)) errores.cvv = 'El CVV tiene 3 o 4 dígitos.'
@@ -110,7 +129,7 @@ function erroresDe(tipo, campos) {
 
 // Mensajes propios según el código del backend: nunca su texto ni los datos enviados
 const MENSAJE_LIMITE = 'Ya tienes 5 métodos de pago. Elimina uno para añadir otro.'
-const MENSAJE_RECHAZO = 'No se ha podido guardar el método de pago. Revisa los datos: puede que la tarjeta esté caducada.'
+const MENSAJE_RECHAZO = 'No se ha podido guardar el método de pago. Comprueba el número, la fecha de caducidad y el titular de la tarjeta.'
 const mensajeDeFallo = (error) => (error?.code === 'PAYMENT_METHOD_LIMIT_REACHED' ? MENSAJE_LIMITE : MENSAJE_RECHAZO)
 
 // Lo que se envía: solo los campos del tipo elegido, aunque se haya escrito en otros
@@ -201,9 +220,9 @@ const useStyles = makeStyles({
 })
 
 // Alta de un método de pago (HU6). Los datos solo viven en este panel mientras se rellena.
-export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
+export default function AddPaymentMethodPanel({ onSaved, onCancel, metodo = null }) {
   const styles = useStyles()
-  const [tipo, setTipo] = useState('TARJETA')
+  const [tipo, setTipo] = useState(metodo?.tipo ?? 'TARJETA')
   const [campos, setCampos] = useState(CAMPOS_VACIOS)
   const [errores, setErrores] = useState({})
   const [fallo, setFallo] = useState(null)
@@ -227,9 +246,10 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
     if (Object.keys(encontrados).length > 0) return
     setFallo(null)
     try {
-      onSaved(await addPaymentMethod(cuerpoDe(tipo, campos)))
+      const cuerpo = cuerpoDe(tipo, campos)
+      onSaved(metodo ? await updatePaymentMethod(metodo.id, cuerpo) : await addPaymentMethod(cuerpo))
     } catch (error) {
-      setFallo(mensajeDeFallo(error))
+      setFallo(metodo ? 'No se han podido actualizar los datos del método de pago. Revisa la información introducida.' : mensajeDeFallo(error))
     }
   }
 
@@ -243,11 +263,16 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
 
   return (
     <section aria-labelledby="titulo-nuevo-metodo">
-      <Card className={styles.panel}>      <div className={styles.header}>
+      <Card className={styles.panel}>
+        <div className={styles.header}>
         <Subtitle1 as="h2" id="titulo-nuevo-metodo" className={styles.title}>
-          Datos del método de pago
+          {metodo ? 'Actualizar método de pago' : 'Datos del método de pago'}
         </Subtitle1>
-        <Text className={styles.muted}>Se guardan cifrados.</Text>
+        <Text className={styles.muted}>
+          {metodo
+            ? 'Por seguridad, introduce de nuevo los datos del método. Los datos anteriores no se muestran.'
+            : 'Se guardan cifrados.'}
+        </Text>
       </div>
 
         {fallo && (
@@ -256,7 +281,7 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
           </MessageBar>
         )}
 
-        <fieldset className={styles.types}>
+        {!metodo && <fieldset className={styles.types}>
           <legend>Tipo de método de pago</legend>
           {TIPOS.map(({ valor, etiqueta, Icono }) => (
             <ToggleButton
@@ -269,7 +294,7 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
               {etiqueta}
             </ToggleButton>
           ))}
-        </fieldset>
+        </fieldset>}
 
         {tipo === 'TARJETA' && (
           <div className={styles.fields}>
@@ -328,7 +353,7 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
 
         <div className={styles.actions}>
           <Button appearance="primary" onClick={guardar}>
-            Guardar método de pago
+            {metodo ? 'Guardar cambios' : 'Guardar método de pago'}
           </Button>
           <Button appearance="subtle" onClick={cancelar}>
             Cancelar
@@ -347,4 +372,5 @@ export default function AddPaymentMethodPanel({ onSaved, onCancel }) {
 AddPaymentMethodPanel.propTypes = {
   onSaved: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
+  metodo: PropTypes.shape({ id: PropTypes.string.isRequired, tipo: PropTypes.oneOf(['TARJETA', 'PAYPAL', 'BIZUM']).isRequired }),
 }

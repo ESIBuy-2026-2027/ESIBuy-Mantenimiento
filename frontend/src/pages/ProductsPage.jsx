@@ -1,4 +1,5 @@
-import { useState } from 'react'
+
+import { useEffect, useState } from 'react'
 import {
   Button,
   MessageBar,
@@ -11,12 +12,15 @@ import {
   mergeClasses,
   tokens,
 } from '@fluentui/react-components'
-import { ArrowDown20Regular, Box24Regular, CheckmarkCircle20Regular, SearchInfo24Regular } from '@fluentui/react-icons'
+import {
+  ArrowDown20Regular,
+  Box24Regular,
+  CheckmarkCircle20Regular,
+  SearchInfo24Regular,
+} from '@fluentui/react-icons'
 import EmptyState from '../components/EmptyState'
 import { usePageStyles } from '../components/pageStyles'
 import CatalogFilters from '../features/catalog/CatalogFilters'
-import CategoryCarousel from '../features/catalog/CategoryCarousel'
-import FeaturedProducts from '../features/catalog/FeaturedProducts'
 import OffersStrip from '../features/catalog/OffersStrip'
 import ProductCard from '../features/catalog/ProductCard'
 import { useCatalogFeed } from '../features/catalog/useCatalogFeed'
@@ -31,7 +35,7 @@ const PAGE_SIZE = 10
 const ENTRADA_ESCALONADA_MS = 60
 
 const useStyles = makeStyles({
-  // La página ocupa el ancho (la selección de los mejores, también); el resto del contenido va en una columna.
+  // El catálogo utiliza el ancho disponible para distribuir cuatro tarjetas por fila.
   main: {
     display: 'flex',
     flexDirection: 'column',
@@ -46,15 +50,23 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     gap: tokens.spacingVerticalXL,
     width: '100%',
-    maxWidth: '860px',
+    maxWidth: '1320px',
     boxSizing: 'border-box',
     margin: '0 auto',
     padding: `0 ${tokens.spacingHorizontalL}`,
   },
-  // Las tarjetas se colocan siempre de dos en dos, también en pantallas estrechas.
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+    '@media (max-width: 1100px)': {
+      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    },
+    '@media (max-width: 760px)': {
+      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    },
+    '@media (max-width: 420px)': {
+      gridTemplateColumns: 'minmax(0, 1fr)',
+    },
     gap: tokens.spacingHorizontalL,
     margin: 0,
     padding: 0,
@@ -96,46 +108,78 @@ const useStyles = makeStyles({
   },
 })
 
-// Vista de productos: lo primero que ve el cliente al iniciar sesión (HU7). Arriba, los mejor valorados; debajo, las
-// ofertas en una cinta que avanza sola y una fila que se desliza por cada categoría. Al buscar, filtrar, ordenar o
-// pulsar «Ver todos los productos» se ve el listado completo, de diez en diez, que se carga solo al llegar al final.
+// Catálogo del cliente: ofertas en la parte superior y listado completo de productos, con filtros y carga progresiva.
 export default function ProductsPage() {
   const pageStyles = usePageStyles()
   const styles = useStyles()
   const { categories } = useCategories()
   const filters = useCatalogFilters()
-  const { search, category, minRating, sort, order, debouncedSearch, filtersActive } = filters
-  const [verTodos, setVerTodos] = useState(false)
-  const showGrid = filtersActive || verTodos
+
+  const {
+    search,
+    category,
+    minRating,
+    minPrice,
+    maxPrice,
+    priceCeiling,
+    sort,
+    order,
+    debouncedSearch,
+    inStock,
+    offersOnly,
+    filtersActive,
+  } = filters
+
   const feed = useCatalogFeed({
     search: debouncedSearch,
     category,
     minRating,
+    inStock,
+    offersOnly,
+    minPrice,
+    maxPrice,
     sort,
     order,
     size: PAGE_SIZE,
-    enabled: showGrid,
+    enabled: true,
   })
-  const endRef = useOnReachEnd(feed.loadMore, feed.hasMore && !feed.loadingMore && !feed.failedMore)
-  const categoryNames = new Map(categories.map(({ id, nombre }) => [id, nombre]))
+
+  const endRef = useOnReachEnd(
+    feed.loadMore,
+    feed.hasMore && !feed.loadingMore && !feed.failedMore,
+  )
+
+  useEffect(() => {
+    if (feed.availableMaxPrice !== null) {
+      filters.changeAvailableMaxPrice(feed.availableMaxPrice)
+    }
+  }, [feed.availableMaxPrice, filters.changeAvailableMaxPrice])
+
+  const categoryNames = new Map(
+    categories.map(({ id, nombre }) => [id, nombre]),
+  )
+
   // El corazón es de favoritos (HU14) y el marcador, de las listas de deseos (PBI 534): van por separado (AB#528)
   const { favoritos, anadirFavorito, quitarFavorito } = useFavoriteProducts()
   const { listas, listasFallidas, recargarListas, cambiarListas, enAlgunaLista } = useWishlists()
   const [productoSelector, setProductoSelector] = useState(null)
+
   // Sin ningún filtro, que no haya productos significa que el catálogo está vacío; con filtros, que no coinciden.
-  const catalogEmpty = feed.loaded && feed.totalItems === 0 && !debouncedSearch && !category && !minRating
+  const catalogEmpty =
+    feed.loaded &&
+    feed.totalItems === 0 &&
+    !debouncedSearch &&
+    !category &&
+    !minRating &&
+    minPrice === 0 &&
+    maxPrice === null &&
+    !inStock &&
+    !offersOnly
+
   const noMatches = feed.loaded && feed.totalItems === 0 && !catalogEmpty
   const hasItems = feed.items.length > 0
-  const showFilters = !showGrid || filtersActive || hasItems
-  // Cambiar el orden solo tiene sentido en el listado completo
-  const changeSort = (value) => {
-    setVerTodos(true)
-    filters.changeSort(value)
-  }
-  const changeOrder = (value) => {
-    setVerTodos(true)
-    filters.changeOrder(value)
-  }
+  const changeSort = filters.changeSort
+  const changeOrder = filters.changeOrder
 
   return (
     <main className={styles.main}>
@@ -143,12 +187,36 @@ export default function ProductsPage() {
         <Title1 as="h1" className={pageStyles.title}>
           Productos
         </Title1>
-        <Text className={pageStyles.subtitle}>Descubre lo que ofrecen los vendedores de ESIBuy.</Text>
+        <Text className={pageStyles.subtitle}>
+          Descubre lo que ofrecen los vendedores de ESIBuy.
+        </Text>
       </div>
 
-      {!filtersActive && <FeaturedProducts />}
+      <div className={styles.column}>
+        <CatalogFilters
+          search={search}
+          category={category}
+          categories={categories}
+          minRating={minRating}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          priceCeiling={priceCeiling}
+          inStock={inStock}
+          offersOnly={offersOnly}
+          filtersActive={filtersActive}
+          sort={sort}
+          order={order}
+          onSearchChange={filters.changeSearch}
+          onCategoryChange={filters.changeCategory}
+          onMinRatingChange={filters.changeMinRating}
+          onPriceChange={filters.changePriceRange}
+          onInStockChange={filters.changeInStock}
+          onOffersOnlyChange={filters.changeOffersOnly}
+          onClearFilters={filters.clearFilters}
+          onSortChange={changeSort}
+          onOrderChange={changeOrder}
+        />
 
-      {!showGrid && (
         <OffersStrip
           categoryNames={categoryNames}
           favoritos={favoritos}
@@ -157,65 +225,23 @@ export default function ProductsPage() {
           enAlgunaLista={enAlgunaLista}
           onSaveToList={setProductoSelector}
         />
-      )}
 
-      {!showGrid &&
-        categories.map((categoria) => (
-          <CategoryCarousel
-            key={categoria.id}
-            category={categoria}
-            favoritos={favoritos}
-            onAddFavorite={anadirFavorito}
-            onRemoveFavorite={quitarFavorito}
-            enAlgunaLista={enAlgunaLista}
-            onSaveToList={setProductoSelector}
-          />
-        ))}
-
-      <div className={styles.column}>
-        {showFilters && (
-          <CatalogFilters
-            search={search}
-            category={category}
-            categories={categories}
-            minRating={minRating}
-            sort={sort}
-            order={order}
-            onSearchChange={filters.changeSearch}
-            onCategoryChange={filters.changeCategory}
-            onMinRatingChange={filters.changeMinRating}
-            onSortChange={changeSort}
-            onOrderChange={changeOrder}
-          />
-        )}
-
-        {!showGrid && (
-          <div>
-            <Button appearance="outline" onClick={() => setVerTodos(true)}>
-              Ver todos los productos
-            </Button>
-          </div>
-        )}
-
-        {showGrid && !filtersActive && (
-          <div>
-            <Button appearance="outline" onClick={() => setVerTodos(false)}>
-              Ver por categorías
-            </Button>
-          </div>
-        )}
-
-        {showGrid && feed.failed && (
+        {feed.failed && (
           <MessageBar intent="error">
-            <MessageBarBody>No se han podido cargar los productos. Inténtalo de nuevo.</MessageBarBody>
+            <MessageBarBody>
+              No se han podido cargar los productos. Inténtalo de nuevo.
+            </MessageBarBody>
             <MessageBarActions>
               <Button onClick={feed.retry}>Reintentar</Button>
             </MessageBarActions>
           </MessageBar>
         )}
 
-        {showGrid && !feed.loaded && !feed.failed && (
-          <Spinner className={pageStyles.loading} label="Cargando productos…" />
+        {!feed.loaded && !feed.failed && (
+          <Spinner
+            className={pageStyles.loading}
+            label="Cargando productos…"
+          />
         )}
 
         {catalogEmpty && (
@@ -231,15 +257,20 @@ export default function ProductsPage() {
             icon={<SearchInfo24Regular />}
             title="No hay productos que coincidan con los filtros"
             description="Prueba con otro nombre, otra categoría u otra valoración."
-          >
-            <Button onClick={filters.clearFilters}>Limpiar filtros</Button>
-          </EmptyState>
+          />
         )}
 
-        {showGrid && hasItems && (
+        {hasItems && (
           <>
+            <Title1 as="h2" className={pageStyles.title}>
+              Productos generales
+            </Title1>
+
             <ul
-              className={mergeClasses(styles.grid, feed.refreshing && styles.refreshing)}
+              className={mergeClasses(
+                styles.grid,
+                feed.refreshing && styles.refreshing,
+              )}
               aria-label="Productos"
               aria-busy={feed.refreshing || feed.loadingMore}
             >
@@ -247,7 +278,9 @@ export default function ProductsPage() {
                 <li
                   key={product.id}
                   className={styles.entry}
-                  style={{ animationDelay: `${(index % PAGE_SIZE) * ENTRADA_ESCALONADA_MS}ms` }}
+                  style={{
+                    animationDelay: `${(index % PAGE_SIZE) * ENTRADA_ESCALONADA_MS}ms`,
+                  }}
                 >
                   <ProductCard
                     product={product}
@@ -263,11 +296,15 @@ export default function ProductsPage() {
             </ul>
 
             <div className={styles.footer}>
-              {feed.loadingMore && <Spinner label="Cargando más productos…" />}
+              {feed.loadingMore && (
+                <Spinner label="Cargando más productos…" />
+              )}
 
               {feed.failedMore && (
                 <MessageBar intent="error">
-                  <MessageBarBody>No se han podido cargar más productos. Inténtalo de nuevo.</MessageBarBody>
+                  <MessageBarBody>
+                    No se han podido cargar más productos. Inténtalo de nuevo.
+                  </MessageBarBody>
                   <MessageBarActions>
                     <Button onClick={feed.retry}>Reintentar</Button>
                   </MessageBarActions>
@@ -275,7 +312,11 @@ export default function ProductsPage() {
               )}
 
               {feed.hasMore && !feed.loadingMore && !feed.failedMore && (
-                <Button appearance="subtle" icon={<ArrowDown20Regular />} onClick={feed.loadMore}>
+                <Button
+                  appearance="subtle"
+                  icon={<ArrowDown20Regular />}
+                  onClick={feed.loadMore}
+                >
                   Ver más productos
                 </Button>
               )}
@@ -293,6 +334,7 @@ export default function ProductsPage() {
           </>
         )}
       </div>
+
       {productoSelector && (
         <WishlistPickerDialog
           product={productoSelector}

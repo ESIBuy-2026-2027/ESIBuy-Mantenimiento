@@ -61,7 +61,7 @@ export default function DeleteAddressDialog({ direccion, direcciones, onClose, o
             )}
             <span>¿Seguro que quieres eliminar «{resumenDeDireccion(direccion)}»?</span>
             {eligeSustituta && (
-              <Field label="Nueva dirección principal" hint="Es tu dirección principal: elige cuál la sustituye.">
+              <Field label="Nueva dirección predeterminada" hint="Es tu dirección predeterminada: elige cuál la sustituye.">
                 <Select value={sustituta} onChange={(_event, data) => setSustituta(data.value)}>
                   <option value="" disabled>
                     Elige una dirección

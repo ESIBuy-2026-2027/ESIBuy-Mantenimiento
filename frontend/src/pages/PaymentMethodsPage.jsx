@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { useCallback, useState } from 'react'
 import {
   Badge,
@@ -8,10 +9,12 @@ import {
   MessageBarBody,
   Text,
   Title1,
+  Title3,
   makeStyles,
+  mergeClasses,
   tokens,
 } from '@fluentui/react-components'
-import { Add20Regular, Delete20Regular, Payment24Regular } from '@fluentui/react-icons'
+import { Add20Regular, Delete20Regular, Edit20Regular, Payment24Regular } from '@fluentui/react-icons'
 import { getPaymentMethods, setDefaultPaymentMethod } from '../api/paymentMethods'
 import EmptyState from '../components/EmptyState'
 import { usePageStyles } from '../components/pageStyles'
@@ -19,11 +22,27 @@ import AddPaymentMethodPanel from '../features/paymentMethods/AddPaymentMethodPa
 import DeletePaymentMethodDialog from '../features/paymentMethods/DeletePaymentMethodDialog'
 import { TIPOS_DE_METODO } from '../features/paymentMethods/tiposDeMetodo'
 import { useApiQuery } from '../hooks/useApiQuery'
+import LinkButton from '../components/LinkButton'
+import { PATHS } from '../routes/paths'
 
 // Como el backend: un cliente tiene como máximo 5 métodos de pago (HU6)
 const MAXIMO_METODOS = 5
 
 const useStyles = makeStyles({
+  embeddedPage: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalM,
+    width: '100%',
+    minWidth: 0,
+  },
+  heading: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    justifyContent: 'space-between',
+    minHeight: '126px',
+  },
   list: {
     listStyle: 'none',
     margin: 0,
@@ -39,6 +58,9 @@ const useStyles = makeStyles({
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: tokens.spacingHorizontalL,
+    minHeight: '148px',
+    padding: tokens.spacingHorizontalM,
+    boxSizing: 'border-box',
   },
   icon: {
     flexShrink: 0,
@@ -48,18 +70,43 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     flexGrow: 1,
+    minWidth: 0,
+    minHeight: '80px',
+    height: '80px',
+    justifyContent: 'center',
   },
   methodActions: {
     display: 'flex',
+    flexWrap: 'wrap',
     alignItems: 'center',
+    justifyContent: 'flex-end',
     gap: tokens.spacingHorizontalS,
+    flexBasis: '100%',
+    width: '100%',
     marginLeft: 'auto',
+    paddingTop: tokens.spacingVerticalXS,
+    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
   },
   action: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-end',
     gap: tokens.spacingVerticalXS,
+    minHeight: '40px',
+  },
+  embeddedAction: {
+    alignItems: 'stretch',
+    width: '100%',
+  },
+  addButton: {
+    minHeight: '40px',
+    minWidth: '170px',
+  },
+  embeddedAddButton: {
+    width: '100%',
+  },
+  seeAll: {
+    alignSelf: 'flex-start',
   },
   limit: {
     color: tokens.colorNeutralForeground3,
@@ -72,7 +119,7 @@ const useStyles = makeStyles({
 })
 
 // Métodos de pago del cliente en sesión (HU6): solo se muestran con su máscara.
-export default function PaymentMethodsPage() {
+export default function PaymentMethodsPage({ embedded = false }) {
   const pageStyles = usePageStyles()
   const styles = useStyles()
   const fetcher = useCallback(() => getPaymentMethods(), [])
@@ -81,10 +128,13 @@ export default function PaymentMethodsPage() {
   const [aviso, setAviso] = useState(null)
   const [anadiendo, setAnadiendo] = useState(false)
   const [aEliminar, setAEliminar] = useState(null)
+  const [aEditar, setAEditar] = useState(null)
   const limiteAlcanzado = (metodos?.length ?? 0) >= MAXIMO_METODOS
+  const metodosVisibles = embedded ? (metodos ?? []).slice(0, 3) : metodos
 
   const abrirPanel = () => {
     setAviso(null)
+    setAEditar(null)
     setAnadiendo(true)
   }
 
@@ -100,6 +150,12 @@ export default function PaymentMethodsPage() {
     retry()
   }
 
+  const alActualizar = () => {
+    setAEditar(null)
+    setAviso({ intent: 'success', texto: 'Método de pago actualizado.' })
+    retry()
+  }
+
   // Tras el cambio se vuelve a pedir la lista: el backend desmarca el anterior. Si el método ya no existe (p. ej.
   // se eliminó desde otra pestaña), se avisa y la lista recargada ya no lo muestra.
   const marcarPredeterminado = async (id) => {
@@ -112,18 +168,20 @@ export default function PaymentMethodsPage() {
     retry()
   }
 
+  const Root = embedded ? 'section' : 'main'
+  const SectionTitle = embedded ? Title3 : Title1
+
   return (
-    <main className={pageStyles.page}>
-      <div className={pageStyles.heading}>
+    <Root className={embedded ? styles.embeddedPage : pageStyles.page} aria-label={embedded ? 'Métodos de pago' : undefined}>
+      <div className={mergeClasses(pageStyles.heading, embedded && styles.heading)}>
         <div className={pageStyles.titleBlock}>
-          <Title1 as="h1" className={pageStyles.title}>
+          <SectionTitle as={embedded ? 'h2' : 'h1'} className={pageStyles.title}>
             Métodos de pago
-          </Title1>
+          </SectionTitle>
           <Text className={pageStyles.subtitle}>Gestiona las tarjetas y cuentas con las que pagas tus compras.</Text>
         </div>
-        {metodos?.length > 0 && (
-          <div className={styles.action}>
-            <Button appearance="primary" icon={<Add20Regular />} disabled={limiteAlcanzado} onClick={abrirPanel}>
+        <div className={mergeClasses(styles.action, embedded && styles.embeddedAction)}>
+            <Button className={mergeClasses(styles.addButton, embedded && styles.embeddedAddButton)} appearance="primary" icon={<Add20Regular />} disabled={limiteAlcanzado} onClick={abrirPanel}>
               Añadir método de pago
             </Button>
             {limiteAlcanzado && (
@@ -131,8 +189,7 @@ export default function PaymentMethodsPage() {
                 Has alcanzado el máximo de {MAXIMO_METODOS} métodos de pago.
               </Text>
             )}
-          </div>
-        )}
+        </div>
       </div>
       {failed && (
         <MessageBar intent="error">
@@ -148,20 +205,24 @@ export default function PaymentMethodsPage() {
         </MessageBar>
       )}
       {anadiendo && <AddPaymentMethodPanel onSaved={alGuardar} onCancel={() => setAnadiendo(false)} />}
+      {aEditar && (
+        <AddPaymentMethodPanel
+          key={aEditar.id}
+          metodo={aEditar}
+          onSaved={alActualizar}
+          onCancel={() => setAEditar(null)}
+        />
+      )}
       {metodos?.length === 0 && (
         <EmptyState
           icon={<Payment24Regular />}
           title="Aún no tienes métodos de pago"
           description="Añade una tarjeta, una cuenta de PayPal o tu teléfono de Bizum para pagar tus compras."
-        >
-          <Button appearance="primary" icon={<Add20Regular />} onClick={abrirPanel}>
-            Añadir método de pago
-          </Button>
-        </EmptyState>
+        />
       )}
       {metodos?.length > 0 && (
         <ul aria-label="Tus métodos de pago" className={styles.list}>
-          {metodos.map((metodo) => {
+          {metodosVisibles.map((metodo) => {
             const { etiqueta, Icono } = TIPOS_DE_METODO[metodo.tipo]
             return (
               <li key={metodo.id}>
@@ -181,6 +242,9 @@ export default function PaymentMethodsPage() {
                         Marcar como predeterminado
                       </Button>
                     )}
+                    <Button appearance="subtle" icon={<Edit20Regular />} onClick={() => { setAnadiendo(false); setAEditar(metodo) }}>
+                      Editar
+                    </Button>
                     <Button appearance="subtle" icon={<Delete20Regular />} onClick={() => setAEliminar(metodo)}>
                       Eliminar
                     </Button>
@@ -191,6 +255,11 @@ export default function PaymentMethodsPage() {
           })}
         </ul>
       )}
+      {embedded && (metodos?.length ?? 0) > 3 && (
+        <LinkButton to={PATHS.PAYMENT_METHODS} appearance="subtle" className={styles.seeAll}>
+          Ver todos los métodos ({metodos.length})
+        </LinkButton>
+      )}
       {aEliminar && (
         <DeletePaymentMethodDialog
           metodo={aEliminar}
@@ -199,6 +268,10 @@ export default function PaymentMethodsPage() {
           onDeleted={alEliminar}
         />
       )}
-    </main>
+    </Root>
   )
+}
+
+PaymentMethodsPage.propTypes = {
+  embedded: PropTypes.bool,
 }

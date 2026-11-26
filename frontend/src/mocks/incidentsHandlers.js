@@ -6,6 +6,7 @@ const ASUNTO_MAXIMO = 100
 const DESCRIPCION_MAXIMA = 1000
 const RESPUESTA_MAXIMA = 1000
 const TAMANO_MAXIMO = 50
+const ESTADOS = ['PENDIENTE', 'ABIERTA', 'RESUELTA']
 
 const fecha = (dia) => `2026-10-${String(dia).padStart(2, '0')}T10:15:30Z`
 
@@ -16,6 +17,7 @@ const incidencia = (n, asunto, descripcion, estado = 'PENDIENTE', respuesta = ''
   estado,
   respuesta,
   fechaCreacion: fecha(n),
+  fechaResolucion: null,
 })
 
 // Incidencias de ejemplo de cada usuario (HU44), de las más antiguas a las más recientes, como las devuelve el
@@ -118,6 +120,17 @@ function buscarIncidencia(id) {
   return null
 }
 
+const conflicto = (mensaje, code) => HttpResponse.json({ mensaje, code }, { status: 409 })
+
+const yaResuelta = () => conflicto('La incidencia ya está resuelta', 'INCIDENT_ALREADY_RESOLVED')
+
+// Como el backend, que guarda las resueltas como abiertas con su fecha (HU192): al ordenar por estado quedan después
+// de las abiertas y antes de las pendientes.
+const claveDeOrden = (item, campo) =>
+  campo === 'estado'
+    ? `${item.estado === 'RESUELTA' ? 'ABIERTA' : item.estado}|${item.fechaResolucion ?? ''}`
+    : item[campo]
+
 const textoValido = (valor, maximo) => {
   if (typeof valor !== 'string') return false
   const recortado = valor.trim()
@@ -139,7 +152,7 @@ export const incidentsHandlers = [
   }),
 
   // Supervisión del administrador (HU49, PBI 239): las incidencias de todos con su autor, por páginas y opcionalmente
-  // filtradas por estado (PENDIENTE | ABIERTA), búsqueda por asunto y ordenación.
+  // filtradas por estado (PENDIENTE | ABIERTA | RESUELTA), búsqueda por asunto y ordenación.
   http.get('/api/admin/incidencias', ({ request }) => {
     const rechazo = rechazarSiNoEsAdministrador()
     if (rechazo) return rechazo
@@ -149,7 +162,7 @@ export const incidentsHandlers = [
 
     const params = new URL(request.url).searchParams
     const estado = params.get('estado')
-    if (estado && estado !== 'PENDIENTE' && estado !== 'ABIERTA') {
+    if (estado && !ESTADOS.includes(estado)) {
       return new HttpResponse(null, { status: 400 })
     }
     const search = params.get('search')?.trim().toLowerCase() ?? ''
@@ -162,7 +175,9 @@ export const incidentsHandlers = [
     const factor = order === 'desc' ? -1 : 1
     const filtradas = incidenciasDeTodos()
       .filter((item) => (!estado || item.estado === estado) && (!search || item.asunto.toLowerCase().includes(search)))
-      .sort((a, b) => (a[sort].localeCompare(b[sort]) * factor) || a.id.localeCompare(b.id))
+      .sort(
+        (a, b) => claveDeOrden(a, sort).localeCompare(claveDeOrden(b, sort)) * factor || a.id.localeCompare(b.id),
+      )
     return HttpResponse.json(paginar(filtradas, { pagina, tamano }))
   }),
 
@@ -184,6 +199,7 @@ export const incidentsHandlers = [
       estado: 'PENDIENTE',
       respuesta: '',
       fechaCreacion: new Date().toISOString(),
+      fechaResolucion: null,
     }
     siguienteId += 1
     incidenciasDe(getUsuarioEnSesion()).push(nueva)
@@ -191,8 +207,8 @@ export const incidentsHandlers = [
   }),
 
   // Abre una incidencia pendiente con la respuesta del administrador (HU50), en el orden del backend: un cuerpo que no
-  // es JSON, 400 sin cuerpo; si no existe, 404; si ya está abierta, 409; y una respuesta vacía o de más de 1000
-  // caracteres, 400 VALIDATION_ERROR. Responde la incidencia abierta, sin autor.
+  // es JSON, 400 sin cuerpo; si no existe, 404; si ya está resuelta o abierta, 409; y una respuesta vacía o de más de
+  // 1000 caracteres, 400 VALIDATION_ERROR. Responde la incidencia abierta, sin autor.
   http.patch('/api/admin/incidencias/:id/abrir', async ({ request, params }) => {
     const rechazo = rechazarSiNoEsAdministrador()
     if (rechazo) return rechazo
@@ -207,8 +223,9 @@ export const incidentsHandlers = [
     const encontrada = buscarIncidencia(params.id)
     if (!encontrada) return incidenciaNoEncontrada()
     const { lista, posicion } = encontrada
+    if (lista[posicion].estado === 'RESUELTA') return yaResuelta()
     if (lista[posicion].estado !== 'PENDIENTE') {
-      return HttpResponse.json({ mensaje: 'La incidencia ya está abierta', code: 'INCIDENT_ALREADY_OPEN' }, { status: 409 })
+      return conflicto('La incidencia ya está abierta', 'INCIDENT_ALREADY_OPEN')
     }
     if (!textoValido(cuerpo?.respuesta, RESPUESTA_MAXIMA)) return incidenciaInvalida()
 
@@ -217,7 +234,26 @@ export const incidentsHandlers = [
     return HttpResponse.json(abierta)
   }),
 
-  // Cierra una incidencia, pendiente o abierta (HU50): se elimina y responde 204 sin cuerpo; si no existe, 404.
+  // Marca como resuelta una incidencia abierta (HU192) con la fecha del servidor, sin leer el cuerpo: si no existe,
+  // 404; si ya está resuelta o sigue pendiente, 409. Responde la incidencia resuelta, sin autor.
+  http.patch('/api/admin/incidencias/:id/resolver', ({ params }) => {
+    const rechazo = rechazarSiNoEsAdministrador()
+    if (rechazo) return rechazo
+
+    const encontrada = buscarIncidencia(params.id)
+    if (!encontrada) return incidenciaNoEncontrada()
+    const { lista, posicion } = encontrada
+    if (lista[posicion].estado === 'RESUELTA') return yaResuelta()
+    if (lista[posicion].estado !== 'ABIERTA') {
+      return conflicto('Solo se puede resolver una incidencia abierta', 'INCIDENT_NOT_OPEN')
+    }
+
+    const resuelta = { ...lista[posicion], estado: 'RESUELTA', fechaResolucion: new Date().toISOString() }
+    lista[posicion] = resuelta
+    return HttpResponse.json(resuelta)
+  }),
+
+  // Cierra una incidencia, en cualquier estado (HU50): se elimina y responde 204 sin cuerpo; si no existe, 404.
   http.delete('/api/admin/incidencias/:id', ({ params }) => {
     const rechazo = rechazarSiNoEsAdministrador()
     if (rechazo) return rechazo

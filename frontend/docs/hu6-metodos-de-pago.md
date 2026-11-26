@@ -42,11 +42,11 @@ El cliente gestiona sus métodos de pago (tarjeta, PayPal o Bizum) en `/payment-
 
 ### Validación en el navegador
 
-Solo formatos básicos, con los mismos límites que el backend, para avisar antes de enviar. Lo demás (Luhn, que la tarjeta no esté caducada) lo decide el backend.
+El navegador valida el formato y el dígito de control Luhn para avisar antes de enviar. El backend vuelve a validar todos los datos y comprueba que la tarjeta no esté caducada.
 
 | Campo | Regla |
 |---|---|
-| Número de tarjeta | De 13 a 19 dígitos. Se puede escribir con espacios y se envía sin ellos. |
+| Número de tarjeta | De 13 a 19 dígitos y debe superar Luhn. Se puede escribir con espacios y se envía sin ellos. |
 | Caducidad | `MM/AA`, con el mes entre 01 y 12 |
 | CVV | 3 o 4 dígitos |
 | Titular | Hasta 26 letras, espacios, guiones y apóstrofos |
@@ -85,7 +85,7 @@ Todos sobre `/api/customer/payment-methods`, solo para `CLIENTE` y con el client
 
 | Código de error | HTTP | Mensaje en la vista |
 |---|---|---|
-| `VALIDATION_ERROR` | 400 | «No se ha podido guardar el método de pago. Revisa los datos: puede que la tarjeta esté caducada.» |
+| `VALIDATION_ERROR` | 400 | «No se ha podido guardar el método de pago. Comprueba el número, la fecha de caducidad y el titular de la tarjeta.» |
 | `PAYMENT_METHOD_LIMIT_REACHED` | 409 | «Ya tienes 5 métodos de pago. Elimina uno para añadir otro.» |
 | `PAYMENT_METHOD_NOT_FOUND` | 404 | «Ese método de pago ya no existe. Hemos actualizado la lista.» |
 | `DEFAULT_PAYMENT_METHOD_REQUIRED` | 409 | Se evita en la vista: no deja eliminar el predeterminado sin elegir sustituto. |

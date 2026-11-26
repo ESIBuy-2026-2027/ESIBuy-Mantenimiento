@@ -17,12 +17,19 @@ export function getAdminIncidents({ page, size, estado, search, sort, order }) {
 
 // Abre una incidencia pendiente con la respuesta del administrador (HU50) y responde 200 con ella. Contrato en
 // docs/contratos/hu50-apertura-cierre-incidencias.md. 400 VALIDATION_ERROR si la respuesta no es válida, 404
-// INCIDENT_NOT_FOUND si ya no existe y 409 INCIDENT_ALREADY_OPEN si ya está abierta.
+// INCIDENT_NOT_FOUND si ya no existe y 409 INCIDENT_ALREADY_OPEN o INCIDENT_ALREADY_RESOLVED si ya no está pendiente.
 export function openIncident(id, respuesta) {
   return request(`/api/admin/incidencias/${encodeURIComponent(id)}/abrir`, { method: 'PATCH', body: { respuesta } })
 }
 
-// Cierra una incidencia, pendiente o abierta (HU50): se elimina y responde 204 sin cuerpo (null). 404
+// Marca como resuelta una incidencia abierta (HU192) y responde 200 con ella; la fecha de resolución la pone el
+// backend, así que no lleva cuerpo. Contrato en docs/contratos/hu192-resolucion-incidencias.md. 404 INCIDENT_NOT_FOUND
+// si ya no existe y 409 INCIDENT_NOT_OPEN o INCIDENT_ALREADY_RESOLVED si ya no se puede resolver.
+export function resolveIncident(id) {
+  return request(`/api/admin/incidencias/${encodeURIComponent(id)}/resolver`, { method: 'PATCH' })
+}
+
+// Cierra una incidencia, en cualquier estado (HU50): se elimina y responde 204 sin cuerpo (null). 404
 // INCIDENT_NOT_FOUND si ya no existe.
 export function closeIncident(id) {
   return request(`/api/admin/incidencias/${encodeURIComponent(id)}`, { method: 'DELETE' })

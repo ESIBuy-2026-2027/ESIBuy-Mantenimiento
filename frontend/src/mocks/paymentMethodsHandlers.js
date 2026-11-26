@@ -69,6 +69,18 @@ export const paymentMethodsHandlers = [
     return HttpResponse.json(metodo, { status: 201 })
   }),
 
+  // Actualiza los datos sustituyéndolos; nunca devuelve los datos sensibles originales.
+  http.put(`${URL_METODOS}/:id`, async ({ params, request }) => {
+    const { error, metodos } = clienteEnSesion()
+    if (error) return error
+    const metodo = metodos.find(({ id }) => id === params.id)
+    if (!metodo) return HttpResponse.json(NO_ENCONTRADO, { status: 404 })
+    const datos = await request.json()
+    metodo.tipo = datos.tipo
+    metodo.mascara = mascaraDe(datos)
+    return HttpResponse.json(metodo)
+  }),
+
   // Solo uno predeterminado; uno de otro cliente se responde igual que uno inexistente (404)
   http.put(`${URL_METODOS}/:id/default`, ({ params }) => {
     const { error, metodos } = clienteEnSesion()

@@ -157,3 +157,48 @@ describe('IncidentsList con acciones (HU50)', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 })
+
+// Las resueltas (HU192, T511) se distinguen de las abiertas sin depender del color
+const CON_RESUELTA = [
+  { ...INCIDENCIAS[1], fechaResolucion: null },
+  {
+    id: 'inc-4',
+    asunto: 'Producto dañado',
+    descripcion: 'La lámpara llegó rota.',
+    estado: 'RESUELTA',
+    respuesta: 'Te enviamos otra.',
+    fechaCreacion: '2026-10-04T10:00:00Z',
+    fechaResolucion: '2026-10-20T16:30:00Z',
+  },
+]
+
+describe('IncidentsList con resueltas (HU192)', () => {
+  it('HU192-CP33: una resuelta se distingue de una abierta por el texto, el icono y la forma', () => {
+    renderWithProviders(<IncidentsList incidents={CON_RESUELTA} />)
+
+    const abierta = within(elemento('Cobro duplicado')).getByText('Abierta')
+    const resuelta = within(elemento('Producto dañado')).getByText('Resuelta')
+    const dibujo = (badge) => badge.querySelector('svg').innerHTML
+    expect(dibujo(resuelta)).not.toBe(dibujo(abierta))
+    expect(resuelta.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
+    // La forma: la tarjeta de una resuelta lleva además una banda en el borde izquierdo
+    const bordeIzquierdo = (asunto) => getComputedStyle(elemento(asunto).firstElementChild).borderLeftStyle
+    expect(bordeIzquierdo('Producto dañado')).toBe('solid')
+    expect(bordeIzquierdo('Cobro duplicado')).not.toBe('solid')
+  })
+
+  it('HU192-CP33: muestra cuándo se resolvió, solo en las resueltas', () => {
+    renderWithProviders(<IncidentsList incidents={CON_RESUELTA} />)
+
+    const fecha = within(elemento('Producto dañado')).getByText(enHoraLocal('2026-10-20T16:30:00Z'))
+    expect(fecha).toHaveAttribute('datetime', '2026-10-20T16:30:00Z')
+    expect(elemento('Producto dañado')).toHaveTextContent('Resuelta el')
+    expect(elemento('Cobro duplicado')).not.toHaveTextContent('Resuelta el')
+  })
+
+  it('HU192-CP33: en Mis incidencias no hay botón para resolver', () => {
+    renderWithProviders(<IncidentsList incidents={CON_RESUELTA} />)
+
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
+})
