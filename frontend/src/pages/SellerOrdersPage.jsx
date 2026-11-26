@@ -27,7 +27,6 @@ import LinkButton from '../components/LinkButton'
 import { usePageStyles } from '../components/pageStyles'
 import {
   CANCELADO,
-  PASOS_DEL_ENVIO,
   colorDeEstado,
   etiquetaDeEstado,
 } from '../features/orders/orderStatus'
@@ -35,7 +34,8 @@ import { useApiQuery } from '../hooks/useApiQuery'
 import { getSellerOrderDetailPath } from '../routes/paths'
 import { formatDateTime, formatPrice } from '../utils/format'
 
-const ESTADOS_TARJETAS = [...PASOS_DEL_ENVIO, CANCELADO]
+// Solo estados persistidos por el pedido. EN_REPARTO es un paso visual del seguimiento del cliente.
+const ESTADOS_TARJETAS = ['PAGADO', 'PREPARANDO', 'ENVIADO', 'ENTREGADO', CANCELADO]
 const MAX_IMPORTE_DEFECTO = 200
 
 const useStyles = makeStyles({

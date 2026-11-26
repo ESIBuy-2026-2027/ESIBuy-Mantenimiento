@@ -11,6 +11,7 @@ describe('SellerOrdersPage', () => {
 
     const enlace = await screen.findByRole('link', { name: 'ESB-2026-000103' })
     expect(screen.getAllByText(/Carlos Cliente/i).length).toBeGreaterThan(0)
+    expect(screen.queryByRole('button', { name: /EN_REPARTO/i })).not.toBeInTheDocument()
     await user.click(enlace)
 
     await waitFor(() =>
