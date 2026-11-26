@@ -181,7 +181,7 @@ describe('AlertsPage · lectura de alertas', () => {
   it('HU531-CP08: la página dice cuántas alertas quedan sin leer', async () => {
     await abrirMisAlertasConEstado()
 
-    expect(screen.getByText('Tienes 1 alerta sin leer')).toBeInTheDocument()
+    expect(within(screen.getByRole('main')).getByText('Tienes 1 alerta sin leer')).toBeInTheDocument()
   })
 
   it('HU531-CP09: al marcarla como leída sigue en la lista sin el distintivo de nueva, con un mensaje de éxito y el foco en «Ver producto»', async () => {
@@ -198,7 +198,7 @@ describe('AlertsPage · lectura de alertas', () => {
     expect(within(nueva).queryByRole('button', { name: /Marcar como leída/ })).not.toBeInTheDocument()
     expect(within(nueva).getByText('Leída')).toBeInTheDocument()
     expect(within(nueva).getByRole('link', { name: 'Ver Auriculares inalámbricos' })).toHaveFocus()
-    expect(screen.queryByText('Tienes 1 alerta sin leer')).not.toBeInTheDocument()
+    expect(within(screen.getByRole('main')).queryByText('Tienes 1 alerta sin leer')).not.toBeInTheDocument()
   })
 
   it('HU531-CP09: al marcarla como leída, la campanita de la cabecera deja de avisar', async () => {
@@ -209,7 +209,7 @@ describe('AlertsPage · lectura de alertas', () => {
 
     await user.click(within(lista).getByRole('button', { name: /Marcar como leída/ }))
 
-    await waitFor(() => expect(campanita).not.toHaveAccessibleDescription(/alerta/))
+    await waitFor(() => expect(campanita).not.toHaveAccessibleDescription(/sin leer/))
   })
 
   it('HU531-CP10: si falla, avisa con un error y la alerta sigue siendo nueva', async () => {

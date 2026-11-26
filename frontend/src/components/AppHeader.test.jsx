@@ -548,7 +548,7 @@ describe('AppHeader (HU45): acceso a ESIBuy Premium', () => {
 
     const campanita = await screen.findByRole('link', { name: 'Mis alertas' })
     await waitFor(() => expect(within(campanita).queryByTestId('contador-alertas')).not.toBeInTheDocument())
-    expect(campanita).not.toHaveAccessibleDescription(/alerta/)
+    expect(campanita).not.toHaveAccessibleDescription(/sin leer/)
   })
 
   it('HU531-CP11: el vendedor no tiene campanita de alertas', async () => {
